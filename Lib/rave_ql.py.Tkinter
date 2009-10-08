@@ -1,0 +1,110 @@
+#!/usr/bin/env python
+# -*- coding: latin-1 -*-
+#
+# $Id: rave_ql.py,v 1.1.1.1 2006/07/14 11:31:54 dmichels Exp $
+#
+# Author: Daniel Michelson
+#
+# Copyright (c): Swedish Meteorological and Hydrological Institute
+#                1999-
+#                All rights reserved.
+#
+# $Log: rave_ql.py,v $
+# Revision 1.1.1.1  2006/07/14 11:31:54  dmichels
+# Project added under CVS
+#
+#
+"""
+rave_ql.py - A QuickLook viewer for 2-D numpy arrays. Default palette is a
+             continuous color scale which starts at black and ends at white,
+	     cycling through B,C,G,Y,R,M. If array's typecode is not 'b', then 
+	     the array is scaled and converted to 'b' before viewing. This 
+	     does not affect the original array.
+"""
+import os
+import numpy
+import Image
+import Tkinter, ImageTk
+import rave_win_colors
+from rave_defines import RAVEICON
+
+# default palette
+palette = rave_win_colors.continuous_dBZ
+
+
+# converts an array to typecode 'B' and stretches its contents to fit in the
+# interval 0-255.
+def stretch(a):
+    MIN = numpy.minimum.reduce(a.flat)
+    if MIN < 0:
+	a = a + abs(MIN)
+    MIN = numpy.minimum.reduce(a.flat)
+    MAX = numpy.maximum.reduce(a.flat)
+    spread = float(MAX-MIN)
+    a = ((1 - ((MAX - a) / spread)) * 255).astype('B')
+    return a
+
+
+def array2pilp(a):
+    i = Image.new('P', (a.shape[1], a.shape[0]))
+    i.fromstring(a.tostring())
+    return i
+
+
+class ql:
+    def __init__(self, a, pal=palette, title="QuickLook"):
+	self.data = a  # the array
+	self.show(pal, title)
+
+    # Kills a given quicklook viewer
+    def quit_ql(self, event=None):
+	os.kill(os.getpid(), 9)
+
+    # A quicklook viewer which uses tk and PIL
+    def show(self, pal, title):
+	import time
+	import Tkinter, ImageTk
+	a = os.fork()
+	if a: return
+	self.app = Tkinter.Tk()
+	self.app.withdraw()
+	
+	self.top = Tkinter.Toplevel(self.app,visual='truecolor')
+	self.top.title(title)
+	self.top.iconbitmap(bitmap="@" + RAVEICON)
+	self.top.protocol("WM_DELETE_WINDOW", self.quit_ql)
+	self.top.bind("<q>",self.quit_ql) # 'q' or 'Q' kills the viewer
+	self.top.bind("<Q>",self.quit_ql) # just like with xv
+
+	self.canvas = Tkinter.Canvas(self.top)
+	self.canvas.pack()
+
+	# linear scaling to 8-bits if necessary
+	if self.data.dtype.char != 'B':
+            self.data = stretch(self.data)
+##	    MIN = Numeric.minimum.reduce(self.data.flat)
+##	    if MIN < 0:
+##		self.data = self.data + abs(MIN)
+##	    MIN = Numeric.minimum.reduce(self.data.flat)
+##	    MAX = Numeric.maximum.reduce(self.data.flat)
+##	    spread = float(MAX-MIN)
+##	    self.data = ((1 - ((MAX - self.data) / spread)) * 255).astype('b')
+	    
+	img = array2pilp(self.data)
+
+	# add the palette
+	img.putpalette(pal)
+
+	p = ImageTk.PhotoImage(img)
+	
+	self.canvas['width'] = img.size[0]+1
+	self.canvas['height'] = img.size[1]+1
+	
+	self.canvas.create_image(1,1,anchor='nw',image=p)
+	self.top.mainloop()
+
+
+__all__ = ['stretch','ql']
+
+if __name__ == "__main__":
+    print __doc__

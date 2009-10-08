@@ -1,0 +1,15 @@
+The BALTRAD project will probably introduce some radical changes to how
+RAVE is designed and built in future versions.
+
+No matter what, the next version of RAVE should be built on Python 3.0 and
+with HDF5 version 1.8.x. Migrating to these two components involves large
+changes, many of which are backwardly incompatible.
+
+It is too speculative to say when the next version will be ready, and what
+it will contain.
+
+Stay tuned...
+
+
+Daniel Michelson
+4 November 2008

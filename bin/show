@@ -1,0 +1,71 @@
+#!/usr/bin/env python
+# -*- coding: latin-1 -*-
+#
+# $Id: show,v 1.1.1.1 2006/07/14 11:31:54 dmichels Exp $
+#
+# Author: Daniel Michelson
+#
+# Copyright (c): Swedish Meteorological and Hydrological Institute
+#                2006-
+#                All rights reserved.
+#
+# $Log: show,v $
+# Revision 1.1.1.1  2006/07/14 11:31:54  dmichels
+# Project added under CVS
+#
+#
+"""
+show
+
+Quick-Look viewer.
+"""
+import rave_win_colors
+
+PALS = {'DBZc' : rave_win_colors.continuous_dBZ,
+        'DBZd' : rave_win_colors.discrete_dBZ_BLT,
+        'MSc' : rave_win_colors.continuous_MS,
+        'MSd' : rave_win_colors.discrete_MS}
+
+
+def main(sourcefile, SET, PAL):
+    import rave, rave_IO, rave_ql
+
+    # This way of reading HDF5 files bypasses the strict 717 info model.
+    # The only requirement is that datasets be called "/imageN/data"
+    this = rave.RAVE()
+    t = rave_IO.open_hdf5(sourcefile)
+    this.info, this.data = t[0], t[1]
+
+    keys = this.data.keys()
+    keys.sort()
+    that = rave_ql.ql(this.data[keys[SET]], pal=PALS[PAL])
+    that.main()
+
+
+if __name__ == "__main__":
+    from optparse import OptionParser
+
+    usage = "usage: %prog -i <infile> -d <dataset index> -p <palette name> [h]"
+    usage += "\nPalette names:\tDBZc (continuous), DBZd (discrete)"
+    usage += "\n\t\tMSc (continuous), MSd (discrete)"
+    parser = OptionParser(usage=usage)
+
+    parser.add_option("-i", "--input", dest="infile",
+                      help="Name of input file to display.")
+
+    parser.add_option("-p", "--palette", dest="pal",
+                      default="DBZc",
+                      help="Name of color palette to apply (DBZ, VRAD).")
+
+    parser.add_option("-d", "--dataset", dest="set", type="int",
+                      default=0,
+                      help="Dataset index (default=0)")
+
+    (options, args) = parser.parse_args()
+
+    if options.infile != None:
+
+        main(options.infile, SET=options.set, PAL=options.pal)
+
+    else:
+        parser.print_help()

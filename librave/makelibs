@@ -1,0 +1,28 @@
+#!/bin/sh
+
+CONFARGS=""
+
+if [ -n "$RAVEROOT" ]; then
+  CONFARGS="--prefix=$RAVEROOT "
+else
+  CONFARGS="--prefix=/opt/rave "
+fi
+
+if [ -n "$HLDIR" ]; then
+  CONFARGS="$CONFARGS --with-hlhdf=$HLDIR "
+fi
+
+if [ -n "$NUMPYDIR" ]; then
+  CONFARGS="$CONFARGS --with-numpy=$NUMPYDIR "
+fi
+
+if [ -n "$CFLAGS" ]; then
+  TEMPSTR=`echo "$CFLAGS" | sed -e "s/-DRAVE_MEMORY_DEBUG//g"`
+  if [ "$CFLAGS" != "$TEMPSTR" ]; then
+    CONFARGS="$CONFARGS --enable-debug-memory "
+  fi
+fi
+
+echo "Running: ./configure $CONFARGS"
+
+./configure $CONFARGS

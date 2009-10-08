@@ -1,0 +1,22 @@
+RAVE reads and writes data to/from the HDF5 file format only.
+
+Input HDF5 data must follow the H5rad version 1.2 information model according 
+to COST 717 Working Document WDF_02_200204_1 (Michelson et al. 2003)
+available at http://smhi.se/cost717/ .
+
+Output from RAVE will attempt to follow the same information model, but in
+some cases does not succeed. This is particularly evident for
+superobservations which are written to plain ASCII.
+
+Using H5rad 1.2 is a natural choice since it is being used operationally by
+several weather services, and as such is the only operational use of HDF5
+for weather radar data internationally at present.
+
+Future versions of RAVE will enable reading/writing HDF5 files according to
+the emerging EUMETNET OPERA standard. This information model is a much
+better choice for many reasons, but it is presently still a draft and it is
+not being used in practise anywhere yet.
+
+
+Daniel Michelson
+4 November 2008

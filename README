@@ -1,0 +1,238 @@
+README with Installation Instructions for
+Radar Analysis and Visualization Environment
+  R  A  V  E
+
+Daniel Michelson and Günther Haase
+Swedish Meteorological and Hydrological Institute
+
+November 2008
+
+
+<caveats>
+RAVE has been developed on Mandrake Limited Edition 2005 (10.2). It has
+been verified on Fedora 8 too. Your experiences may differ when building
+RAVE, and the software on which it is dependent, on a different
+platform. Please collect your experiences and share them.
+
+64-bit platforms are a bit tricky, and require some tweaking. See notes
+below.
+
+RAVE may work on proprietary unices but it is not designed for Windows.
+</caveats>
+
+
+INTRODUCTION
+
+A stock Python build, together with a few extra third-party packages,
+provides the basis for installing RAVE. When these are all installed,
+building and installing RAVE can be done with a single "make" command
+provided the correct environment variables are set.
+
+Some systems bundle all third-party software together with their own
+software. This has not been done for RAVE. The motivation for this is that
+it should be possible to maintain and update the third-party software
+without influencing RAVE, to the furthest extent possible.
+
+All installations will assume that you are root, or that you have done 
+'sudo su -'. There are, however, no problems installing as a mortal user on
+a file system that this user controls.
+
+
+ZLIB (optional)
+---------------
+Most Linux distributions contain this library. It is required for HDF5 and
+the Python Imaging Library. Versions prior to 1.2.3 may contain a security
+vulnerability. You should therefore verify the version on your system
+before continuing. If you need to upgrade, get it at http://www.zlib.net/ .
+
+
+Tcl and Tk 8.5.5
+----------------
+If your IT department is as paranoid as ours, then your computers are
+almost useless and you have to do more work yourself to get them to work
+properly. A simple visualizer in RAVE relies on the Tkinter module, which
+in turn is dependent on Tcl/Tk being available on your computer. It it's
+not there already, download from http://www.tcl.tk/ and install with by:
+
+./configure --prefix=<where you want it> --enable-shared 
+--enable-64bit (optional) 
+make
+make install
+
+Update your $PATH and $LD_LIBRARY_PATH in your .cshrc or .bash_profile .
+
+
+Python 2.6 final
+----------------
+Download Python from python.org .
+We stick with Python 2.6. The migration to 3.0 will come later.
+
+./configure --prefix=<where you want it> --enable-shared
+Important: --with-universal-archs=32-bit or --with-universal-archs=64-bit
+depending on your OS. You may have to specify this if you're running a
+32-bit OS on a 64-bit machine. Maybe...
+Or, to play it safe, use --with-universal-archs=all
+
+make
+make test
+make install
+
+NOTE for 64-bit platforms: after building and installing Python, you have
+to edit <prefix>/lib/python2.6/config/Makefile . Line 59 (of my
+installation) contains the declaration of compiler options "OPT". Add
+-fPIC to the end of the list. (In some of the packages we compile later,
+this option will be used twise but that's OK.)
+
+Modify your $PATH in a .cshrc or .bash_profile so you don't run the wrong
+Python.  
+
+
+Numeric Python (NumPy) 1.2.1
+----------------------------
+Get NumPy from http://numpy.scipy.org/ .
+
+<python prefix from above>/bin/python setup.py install
+Now wasn't that fun!
+
+
+Python Imaging Library 1.1.6
+----------------------------
+Get PIL from http://www.pythonware.com/products/pil/ .
+
+sh BUILDME
+(The "selftest.py" script might fail if you don't have JPEG installed. You
+don't need JPEG for RAVE.)
+
+python setup.py install
+
+
+HDF5 1.6.7
+----------
+See the README-HDF5 file about how the HDF5 file format is dealt with in RAVE.
+
+Download HDF5 from hdfgroup.org .
+We stick with version 1.6.7. The migration to 1.8.x will come later.
+
+HDF5 will determine if you're running a 32- or 64-bit OS.
+
+./configure --prefix=<where you want it>
+Useful but optional features: --enable-fortran --enable-cxx
+
+make
+make check
+make install
+(optionally) make check-install
+
+
+LD_LIBRARY_PATH (reminder!)
+---------------
+Make sure your LD_LIBRARY_PATH points to the correct locations of Python
+and HDF5! If you miss this step, then you're on your own!
+
+
+HL-HDF and PyHL
+---------------
+Download ftp://ftp.hdfgroup.org/HDF5/contrib/hl-hdf5/current/hlhdf.tgz .
+Ignore the version for Numeric.
+
+Important: make sure your $PATH points to the correct Python.
+
+NOTE for 64-bit platforms: the configure script will look for a 'lib64'
+directory. If your <prefix> doesn't have one, just make a symbolic link:
+<prefix>$ ln -s lib lib64
+
+The arguments to the 'configure' script are a little more complicated
+compared to the above. This is a typical configuration at SMHI:
+./configure --prefix=/local_disk/opt
+	    --with-python=yes 
+	    --with-numpy=/local_disk/opt/lib/python2.6/site-packages/numpy/core/include/numpy
+	    --with-hdf5=/local_disk/opt/include,/local_disk/opt/lib
+
+make
+make install
+Copy the file <prefix>/lib/_pyhlmodule.so to the site-packages directory of
+your Python installation. In SMHI's case, it's 
+/local_disk/Python-2.6/lib/python2.6/site-packages
+Alternatively, create a symbolic link from site-packages to the location of
+the _pyhlmodule.so file.
+
+
+PROJ.4 4.6.1
+------------
+Download PROJ.4 from http://trac.osgeo.org/proj/ .
+
+./configure --prefix=<where you want it>
+make
+make install
+
+Add <prefix>/lib to your LD_LIBRARY PATH and <prefix>/bin to your PATH if
+you want to use the binary tools.
+
+
+RAVE
+----
+Better late than never...
+
+If you didn't install all of the above (ie. someone else did it), make sure
+you have write permission in the stock Python directory. You only need this
+to place a single file there, unless you want to add RAVE as one of the
+site-packages, which is probably not a good idea. 
+
+The build process a little manual labour, since you have probably installed
+the above software in unconventional places where you don't need root
+privilages.
+
+1. Edit line 37 of setup.py and add the <prefix> to where you installed
+PROJ.4. 
+
+2. There are three environment variables that need to be set before you can 
+continue. These are:
+
+HLDIR - the root directory of your HL-HDF installation.
+NUMPYDIR - the include directory to your NumPy installation. This is the
+same as what you used above when building HL-HDF.
+RAVEROOT - the root directory where you want to install RAVE,
+e.g. /opt/rave
+
+If you don't set these variables, then your installation will fail and you
+will receive an error message about which variable needs setting.
+
+When the above three environment variables have been set, building and
+installing RAVE should be possible by simply executing the following
+command:
+
+make
+
+If you would prefer to split up the various stages of building and
+installing, you can do things in the following order:
+
+prompt% make librave  # compiles the RAVE supporting library
+prompt% make build    # compiles RAVE shared objects and pre-format
+		      # the Python modules
+prompt% make install  # installs everything to RAVEROOT
+
+With the exception of the first stage, this Makefile is just a
+microscopically-thin disguise over Python distutils.
+
+You don't need the above three environment variables after the installation
+is complete. 
+
+However, if you want to make use of the interactive pydoc utility for
+viewing the system's embedded documentation, you should set the PYTHONDOC
+variable to be $RAVEROOT/Lib whenever you log in.
+
+Once you have installed RAVE, you should add $RAVEROOT/bin to your $PATH.
+
+
+CONFIGURATION
+-------------
+In the 'config' directory, it is your responsibility to ensure that the
+configuration files are up-to-date. If configuration files for your
+country's radars, projections, and areas don't exist, then create them
+using existing files as templates.
+
+Radar configuration: <country>_radars.xml
+Cartographic projections: <country>_projections.xml
+Coverage areas: <country>_areas.xml
+
+Read the TODO file to see how RAVE may evolve.

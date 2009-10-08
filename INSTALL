@@ -1,0 +1,33 @@
+Before installing rave, a number of modules/software packages has to be installed.
+*) ZLIB (optional)
+*) Tcl and Tk 8.5.5
+*) Python 2.6 final
+*) Numeric Python (NumPy) 1.2.1
+*) Python Imaging Library 1.1.6
+*) HDF5 1.8.x
+*) HLHDF/PyHL 0.7+
+
+If these packages has been installed and setup correctly including
+making sure that numpy and _pyhl can be found when importing from python.
+%> python
+>>> import numpy
+>>> import _pyhl
+
+It is possible to do some minor configuration changes.
+Activate memory debug of rave: CFLAGS=-DRAVE_MEMORY_DEBUG
+Change installation directory: RAVEROOT=<some path>
+
+To modify these configuration options, specify the parameters before running make,
+for example:
+%> CFLAGS=-DRAVE_MEMORY_DEBUG RAVEROOT=/opt/testbuilds/rave make
+
+It is possible to install the software at the same time it is built but
+unless you are certain that everything will go well first build, then
+test and finally install the software.
+%> make
+%> make check
+%> make install
+
+or if you are brave
+
+%> make install
