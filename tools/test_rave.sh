@@ -47,9 +47,17 @@ case `uname -s` in
 esac
 
 if [ "x$ISMACOS" = "xyes" ]; then
-  export DYLD_LIBRARY_PATH="${RAVE_LDPATH}:${HLHDF_LDPATH}:${HDF5_LDPATH}"
+  if [ "$DYLD_LIBRARY_PATH" != "" ]; then
+    export DYLD_LIBRARY_PATH="${RAVE_LDPATH}:${HLHDF_LDPATH}:${HDF5_LDPATH}:${LD_LIBRARY_PATH}"
+  else
+    export DYLD_LIBRARY_PATH="${RAVE_LDPATH}:${HLHDF_LDPATH}:${HDF5_LDPATH}"
+  fi
 else
-  export LD_LIBRARY_PATH="${RAVE_LDPATH}:${HLHDF_LDPATH}:${HDF5_LDPATH}"
+  if [ "$LD_LIBRARY_PATH" != "" ]; then
+    export LD_LIBRARY_PATH="${RAVE_LDPATH}:${HLHDF_LDPATH}:${HDF5_LDPATH}:${LD_LIBRARY_PATH}"
+  else
+    export LD_LIBRARY_PATH="${RAVE_LDPATH}:${HLHDF_LDPATH}:${HDF5_LDPATH}"
+  fi
 fi
 
 export RAVEPATH="${HLHDF_LDPATH}:${RBPATH}"
