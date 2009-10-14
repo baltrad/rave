@@ -122,15 +122,14 @@ MODULES.append(
         )
     )
 
-# Commented until there is time to adjust ptoc
-#MODULES.append(
-#    Extension(
-#        "_ptoc", ["modules/ptoc.c"],
-#        include_dirs=INCLUDE_DIRS,
-#        library_dirs=LIBRARY_DIRS,
-#        libraries=LIBRARIES
-#        )
-#    )
+MODULES.append(
+    Extension(
+        "_polarvolume", ["modules/polarvolume.c"],
+        include_dirs=INCLUDE_DIRS,
+        library_dirs=LIBRARY_DIRS,
+        libraries=LIBRARIES
+        )
+    )
 
 # build!
 

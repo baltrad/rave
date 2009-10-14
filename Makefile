@@ -12,31 +12,37 @@ def.mk:
 librave/transform/libravetransform.so librave/pyapi/libravepyapi.so: def.mk
 	$(MAKE) -C librave
 
-check:
+.PHONY:test
+test:
 	@chmod +x ./tools/test_rave.sh
 	@./tools/test_rave.sh
 
 	
-.PHONY=docs
+.PHONY:docs
 docs:
 	$(MAKE) -C doxygen docs
 
+.PHONY:build
 build: librave/transform/libravetransform.so librave/pyapi/libravepyapi.so
 	@\rm -fr build
 	$(SETUP) build
 
+.PHONY:install
 install:
 		$(MAKE) -C librave install
 		$(SETUP) install
 
+.PHONY:uninstall
 uninstall:
 		rm -rf $(RAVEROOT)
 
+.PHONY:clean
 clean:
 		$(SETUP) clean
 		$(MAKE) -C doxygen clean
 		$(MAKE) -C librave clean
-		
+
+.PHONY:distclean
 distclean:
 		$(MAKE) -C librave distclean
 		$(MAKE) -C doxygen distclean

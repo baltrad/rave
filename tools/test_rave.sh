@@ -69,7 +69,7 @@ else
 fi
 
 cd "${SCRIPTPATH}/../test/pytest"
-python RaveTest.py
+python RaveTestSuite.py
 VAL=$?
 if [ $VAL != 0 ]; then
   RESULT=$VAL
