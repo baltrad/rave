@@ -25,7 +25,8 @@ typedef enum RaveDataType {
   RaveDataType_INT,      /**< int */
   RaveDataType_LONG,     /**< long */
   RaveDataType_FLOAT,    /**< float */
-  RaveDataType_DOUBLE    /**< double */
+  RaveDataType_DOUBLE,   /**< double */
+  RaveDataType_LAST      /**< Always has to be at end and is not a real datatype */
 } RaveDataType;
 
 /**
@@ -125,6 +126,14 @@ typedef struct {
    int fieldsn;               /**< number of fields */
    RavePolarField* fields;    /**< The array of fields */
 } RavePolarVolume;
+
+
+/**
+ * Returns the size of the datatype.
+ * @param[in] type - the rave data type
+ * @return the size or -1 if size not can be determined
+ */
+int get_ravetype_size(RaveDataType type);
 
 /**
  * Gets the value at position x,y from the data field.

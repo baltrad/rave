@@ -330,4 +330,5 @@ void rave_alloc_print_statistics(void)
   if (number_of_failed_strdup > 0)
     fprintf(stderr, "Number of failed strdup          : %ld\n", number_of_failed_strdup);
   fprintf(stderr, "\n\n");
+  rave_alloc_dump_heap();
 }

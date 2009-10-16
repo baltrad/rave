@@ -5,8 +5,10 @@ Created on Oct 12, 2009
 '''
 import unittest
 from RaveTest import *
-from PolarVolumeTest import *
-from PolarScanTest import *
+from RaveModulePolarVolumeTest import *
+from RaveModulePolarScanTest import *
+from RaveModuleConstantsTest import *
+from RaveModuleCartesianTest import *
 
 if __name__ == '__main__':
   unittest.main()

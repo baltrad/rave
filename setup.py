@@ -124,7 +124,7 @@ MODULES.append(
 
 MODULES.append(
     Extension(
-        "_polarvolume", ["modules/polarvolume.c"],
+        "_rave", ["modules/rave.c"],
         include_dirs=INCLUDE_DIRS,
         library_dirs=LIBRARY_DIRS,
         libraries=LIBRARIES
