@@ -52,6 +52,8 @@ struct _Cartesian_t {
   double nodata; /**< nodata */
   double undetect; /**< undetect */
 
+  Projection_t* projection;
+
   // Data
   void* data; /**< data ptr */
 
@@ -67,6 +69,7 @@ struct _Cartesian_t {
 static void Cartesian_destroy(Cartesian_t* cartesian)
 {
   if (cartesian != NULL) {
+    Projection_release(cartesian->projection);
     RAVE_FREE(cartesian->data);
     RAVE_FREE(cartesian);
   }
@@ -89,12 +92,12 @@ Cartesian_t* Cartesian_new(void)
     result->llY = 0.0;
     result->urX = 0.0;
     result->urY = 0.0;
-
     strcpy(result->quantity, "");
     result->gain = 0.0;
     result->offset = 0.0;
     result->nodata = 0.0;
     result->undetect = 0.0;
+    result->projection = NULL;
     result->data = NULL;
 
     result->voidPtr = NULL;
@@ -281,6 +284,25 @@ double Cartesian_getUndetect(Cartesian_t* cartesian)
 {
   RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
   return cartesian->undetect;
+}
+
+void Cartesian_setProjection(Cartesian_t* cartesian, Projection_t* projection)
+{
+  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
+  Projection_release(cartesian->projection);
+  cartesian->projection = NULL;
+  if (projection != NULL) {
+    cartesian->projection = Projection_copy(projection);
+  }
+}
+
+Projection_t* Cartesian_getProjection(Cartesian_t* cartesian)
+{
+  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
+  if (cartesian->projection != NULL) {
+    return Projection_copy(cartesian->projection);
+  }
+  return NULL;
 }
 
 int Cartesian_setData(Cartesian_t* cartesian, long xsize, long ysize, void* data, RaveDataType type)

@@ -100,12 +100,6 @@ PolarScan_t* PolarScan_new(void)
   return result;
 }
 
-/**
- * Releases the responsibility for the scan, it is not certain that
- * it will be deleted though if there still are references existing
- * to this scan.
- * @param[in] scan - the polar scan
- */
 void PolarScan_release(PolarScan_t* scan)
 {
   RAVE_ASSERT((scan != NULL), "scan was NULL");
@@ -115,12 +109,6 @@ void PolarScan_release(PolarScan_t* scan)
   }
 }
 
-/**
- * Copies the reference to this instance by increasing a
- * reference counter.
- * @param[in] scan - the scan to be copied
- * @return a pointer to the scan
- */
 PolarScan_t* PolarScan_copy(PolarScan_t* scan)
 {
   RAVE_ASSERT((scan != NULL), "scan was NULL");

@@ -255,6 +255,23 @@ class RaveModuleCartesianTest(unittest.TestCase):
       result = obj.getLocationY(y)
       self.assertAlmostEqual(expected, result, 4)
 
+  def testCartesian_projection(self):
+    obj = _rave.cartesian()
+    proj = _rave.projection("x", "y", "+proj=stere +ellps=bessel +lat_0=90 +lon_0=14 +lat_ts=60 +datum=WGS84")
+    obj.projection = proj
+    self.assertTrue(proj == obj.projection)
+
+  def testCartesian_projection_default(self):
+    obj = _rave.cartesian()
+    self.assertTrue(None == obj.projection)
+
+  def testCartesian_projection_setNone(self):
+    obj = _rave.cartesian()
+    proj = _rave.projection("x", "y", "+proj=stere +ellps=bessel +lat_0=90 +lon_0=14 +lat_ts=60 +datum=WGS84")
+    obj.projection = proj
+    self.assertTrue(proj == obj.projection)
+    obj.projection = None
+    self.assertTrue(None == obj.projection)
 
   def testCartesian_setData_int8(self):
     obj = _rave.cartesian()

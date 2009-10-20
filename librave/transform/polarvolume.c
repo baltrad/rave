@@ -37,8 +37,12 @@ struct _PolarVolume_t {
   double lat; /**< latitude of the radar that this volume originated from */
   double height; /**< altitude of the radar that this volume originated from */
 
+  Projection_t* projection; /**< projection for this volume */
+
   int nrAllocatedScans; /**< Number of scans that the volume currently can hold */
   int nrScans; /**< The number of scans that this volume is defined by */
+
+
   PolarScan_t** scans; /**< the scans that this volume is defined by */
 };
 
@@ -87,6 +91,7 @@ fail:
 static void PolarVolume_destroy(PolarVolume_t* volume)
 {
   if (volume != NULL) {
+    Projection_release(volume->projection);
     if (volume->scans != NULL) {
       int i = 0;
       for (i = 0; i < volume->nrScans; i++) {
@@ -155,7 +160,16 @@ PolarVolume_t* PolarVolume_new(void)
     result->nrAllocatedScans = 0;
     result->nrScans = 0;
     result->scans = NULL;
+    result->projection = NULL;
+
     if (!PolarVolume_ensureScanCapacity(result)) {
+      PolarVolume_destroy(result);
+      result = NULL;
+    }
+
+    // Always initialize to default projection for lon/lat calculations
+    result->projection = Projection_new("lonlat", "lonlat", "+proj=latlong +ellps=WGS84 +datum=WGS84");
+    if (result->projection == NULL) {
       PolarVolume_destroy(result);
       result = NULL;
     }
@@ -227,6 +241,25 @@ double PolarVolume_getHeight(PolarVolume_t* pvol)
   return pvol->height;
 }
 
+void PolarVolume_setProjection(PolarVolume_t* pvol, Projection_t* projection)
+{
+  RAVE_ASSERT((pvol != NULL), "pvol was NULL");
+  Projection_release(pvol->projection);
+  pvol->projection = NULL;
+  if (projection != NULL) {
+    pvol->projection = Projection_copy(projection);
+  }
+}
+
+Projection_t* PolarVolume_getProjection(PolarVolume_t* pvol)
+{
+  RAVE_ASSERT((pvol != NULL), "pvol was NULL");
+  if (pvol->projection != NULL) {
+    return Projection_copy(pvol->projection);
+  }
+  return NULL;
+}
+
 int PolarVolume_addScan(PolarVolume_t* pvol, PolarScan_t* scan)
 {
   int result = 0;
@@ -268,30 +301,4 @@ void PolarVolume_sortByElevations(PolarVolume_t* pvol, int ascending)
   }
 }
 
-int PolarVolume_cappi(PolarVolume_t* pvol, Cartesian_t* cartesian)
-{
-  long xsize = 0, ysize = 0;
-  long x = 0, y = 0;
-
-  xsize = Cartesian_getXSize(cartesian);
-  ysize = Cartesian_getYSize(cartesian);
-
-  for (y = 0; y < ysize; y++) {
-    double herey = Cartesian_getLocationY(cartesian, y);
-    for (x = 0; x < xsize; x++) {
-      double herex = Cartesian_getLocationX(cartesian, x);
-
-    }
-  }
-
-//  for(y=0;y<dest->dimensions[0]; y++) {/* do it! */
-//    UV here_s;
-//    here_s.v = (outUL.v-outyscale*y);
-//    for(x=0;x<dest->dimensions[1]; x++) {
-// here_s.u = (outUL.u+outxscale*x);
-// methfun(x,y,here_s, &tw); /* Call appropriate function to do the job*/
-//    }
-//  return NULL;
-
-}
 /*@} End of Interface functions */

@@ -9,6 +9,8 @@ from RaveModulePolarVolumeTest import *
 from RaveModulePolarScanTest import *
 from RaveModuleConstantsTest import *
 from RaveModuleCartesianTest import *
+from RaveModuleTransformTest import *
+from RaveModuleProjectionTest import *
 
 if __name__ == '__main__':
   unittest.main()

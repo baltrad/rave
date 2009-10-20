@@ -25,6 +25,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef CARTESIAN_H
 #define CARTESIAN_H
 #include "rave_transform.h"
+#include "projection.h"
 
 /**
  * Defines a Polar Scan
@@ -231,6 +232,21 @@ void Cartesian_setUndetect(Cartesian_t* cartesian, double undetect);
  * @return the undetect
  */
 double Cartesian_getUndetect(Cartesian_t* cartesian);
+
+/**
+ * Sets the projection that defines this cartesian product.
+ * @param[in] cartesian - the cartesian product
+ * @param[in] projection - the projection
+ */
+void Cartesian_setProjection(Cartesian_t* cartesian, Projection_t* projection);
+
+/**
+ * Returns a copy of the projection that is used for this cartesian product.
+ * I.e. remember to release it.
+ * @param[in] cartesian - the cartesian product
+ * @returns a projection (or NULL if none is set)
+ */
+Projection_t* Cartesian_getProjection(Cartesian_t* cartesian);
 
 /**
  * Sets the data

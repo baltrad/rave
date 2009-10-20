@@ -20,7 +20,6 @@ class RaveModulePolarVolumeTest(unittest.TestCase):
     
     result = string.find(`type(obj)`, "PolarVolumeCore")
     self.assertNotEqual(-1, result) 
-    self.assertTrue("cappi" in dir(obj))
 
   def testVolume_longitude(self):
     obj = _rave.volume()

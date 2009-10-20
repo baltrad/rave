@@ -34,6 +34,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "polarscan.h"
 #include "polarvolume.h"
 #include "cartesian.h"
+#include "transform.h"
+#include "projection.h"
 #include "rave_debug.h"
 #include "rave_alloc.h"
 
@@ -51,6 +53,17 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  */
 static PyObject *ErrorObject;
 
+/**
+ * A projection
+ */
+typedef struct {
+  PyObject_HEAD /*Always has to be on top*/
+  Projection_t* projection;
+} Projection;
+
+/**
+ * The polar scan
+ */
 typedef struct {
   PyObject_HEAD /*Always has to be on top*/
   PolarScan_t* scan; /**< the scan type */
@@ -70,7 +83,16 @@ typedef struct {
 typedef struct {
    PyObject_HEAD /*Always have to be on top*/
    Cartesian_t* cartesian;
+   Projection* projection;
 } Cartesian;
+
+/**
+ * The transformator
+ */
+typedef struct {
+  PyObject_HEAD /*Always has to be on top*/
+  Transform_t* transform;
+} Transform;
 
 /**
  * PolarScan represents one scan in a pvol
@@ -88,6 +110,16 @@ staticforward PyTypeObject PolarVolume_Type;
 staticforward PyTypeObject Cartesian_Type;
 
 /**
+ * Transform represents one transformator
+ */
+staticforward PyTypeObject Transform_Type;
+
+/**
+ * Projection represents one projection
+ */
+staticforward PyTypeObject Projection_Type;
+
+/**
  * Checks if the object is a PolarScan type
  */
 #define PolarScan_Check(op) ((op)->ob_type == &PolarScan_Type)
@@ -101,6 +133,16 @@ staticforward PyTypeObject Cartesian_Type;
  * Checks if the object is a PolarVolume type
  */
 #define Cartesian_Check(op) ((op)->ob_type == &Cartesian_Type)
+
+/**
+ * Checks if the object is a PolarVolume type
+ */
+#define Transform_Check(op) ((op)->ob_type == &Transform_Type)
+
+/**
+ * Checks if the object is a Projection type
+ */
+#define Projection_Check(op) ((op)->ob_type == &Projection_Type)
 
 /// --------------------------------------------------------------------
 /// Polar Scans
@@ -466,34 +508,6 @@ static PyObject* _polarvolume_sortByElevations(PolarVolume* self, PyObject* args
 }
 
 /**
- * Creates a cappi from a polar volume
- * @param[in] self the polar volume
- * @param[in] args arguments for generating the cappi
- * @return the object on success, otherwise NULL
- */
-static PyObject* _polarvolume_cappi(PolarVolume* self, PyObject* args)
-{
-  Cartesian* cartesian = NULL;
-  PyObject* pycartesian = NULL;
-
-  if(!PyArg_ParseTuple(args, "O", &pycartesian)) {
-    return NULL;
-  }
-
-  if (!Cartesian_Check(pycartesian)) {
-    raiseException_returnNULL(PyExc_TypeError, "Must provide cartesian product");
-  }
-
-  cartesian = (Cartesian*)pycartesian;
-
-  if (!PolarVolume_cappi(self->pvol, cartesian->cartesian)) {
-    raiseException_returnNULL(PyExc_IOError, "Failed to transform volume into a cappi");
-  }
-
-  Py_RETURN_NONE;
-}
-
-/**
  * All methods a polar volume can have
  */
 static struct PyMethodDef _polarvolume_methods[] =
@@ -502,7 +516,6 @@ static struct PyMethodDef _polarvolume_methods[] =
   { "getScan", (PyCFunction) _polarvolume_getScan, 1},
   { "getNumberOfScans", (PyCFunction) _polarvolume_getNumberOfScans, 1},
   { "sortByElevations", (PyCFunction) _polarvolume_sortByElevations, 1},
-  { "cappi", (PyCFunction) _polarvolume_cappi, 1 },
   { NULL, NULL } /* sentinel */
 };
 
@@ -579,6 +592,7 @@ static void _cartesian_dealloc(Cartesian* obj)
   if (obj == NULL) {
     return;
   }
+  Py_XDECREF(obj->projection);
   Cartesian_release(obj->cartesian);
   PyObject_Del(obj);
 }
@@ -596,6 +610,7 @@ static PyObject* _cartesian_new(PyObject* self, PyObject* args)
   if (result == NULL) {
     return NULL;
   }
+  result->projection = NULL;
   result->cartesian = Cartesian_new();
   if (result->cartesian == NULL) {
     RAVE_CRITICAL0("Could not allocate cartesian product");
@@ -732,6 +747,13 @@ static PyObject* _cartesian_getattr(Cartesian* self, char* name)
     double llX = 0.0, llY = 0.0, urX = 0.0, urY = 0.0;
     Cartesian_getAreaExtent(self->cartesian, &llX, &llY, &urX, &urY);
     return Py_BuildValue("(dddd)", llX, llY, urX, urY);
+  } else if (strcmp("projection", name) == 0) {
+    if (self->projection != NULL) {
+      Py_INCREF(self->projection);
+      return (PyObject*)self->projection;
+    } else {
+      Py_RETURN_NONE;
+    }
   }
 
   res = Py_FindMethod(_cartesian_methods, (PyObject*) self, name);
@@ -820,6 +842,19 @@ static int _cartesian_setattr(Cartesian* self, char* name, PyObject* val)
       goto done;
     }
     Cartesian_setAreaExtent(self->cartesian, llX, llY, urX, urY);
+  } else if (strcmp("projection", name) == 0) {
+    if (Projection_Check(val)) {
+      Py_XDECREF(self->projection);
+      self->projection = ((Projection*)val);
+      Py_INCREF(self->projection);
+      Cartesian_setProjection(self->cartesian, ((Projection*)val)->projection);
+    } else if (val == Py_None) {
+      Py_XDECREF(self->projection);
+      Cartesian_setProjection(self->cartesian, NULL);
+      self->projection = NULL;
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError, "projection must be of type ProjectionCore");
+    }
   }
 
   result = 0;
@@ -828,6 +863,287 @@ done:
 }
 
 /*@} End of Cartesian products */
+
+/// --------------------------------------------------------------------
+/// Transform
+/// --------------------------------------------------------------------
+/*@{ Transform */
+
+/**
+ * Deallocates the transformator
+ * @param[in] obj the object to deallocate.
+ */
+static void _transform_dealloc(Transform* obj)
+{
+  /*Nothing yet*/
+  if (obj == NULL) {
+    return;
+  }
+  Transform_release(obj->transform);
+  PyObject_Del(obj);
+}
+
+/**
+ * Creates a new instance of the transformator.
+ * @param[in] self this instance.
+ * @param[in] args arguments for creation (NOT USED).
+ * @return the object on success, otherwise NULL
+ */
+static PyObject* _transform_new(PyObject* self, PyObject* args)
+{
+  Transform* result = NULL;
+  result = PyObject_NEW(Transform, &Transform_Type);
+  if (result == NULL) {
+    return NULL;
+  }
+  result->transform = Transform_new();
+  if (result->transform == NULL) {
+    RAVE_CRITICAL0("Could not allocate transform");
+    PyObject_Del(result);
+    raiseException_returnNULL(PyExc_MemoryError, "Failed to allocate transform");
+  }
+  return (PyObject*)result;
+}
+
+/**
+ * Creates a cappi from a polar volume
+ * @param[in] self the transformer
+ * @param[in] args arguments for generating the cappi (polarvolume, cartesian)
+ * @return Py_None on success, otherwise NULL
+ */
+static PyObject* _transform_cappi(Transform* self, PyObject* args)
+{
+  Cartesian* cartesian = NULL;
+  PyObject* pycartesian = NULL;
+  PolarVolume* pvol = NULL;
+  PyObject* pypvol = NULL;
+
+  if(!PyArg_ParseTuple(args, "OO", &pypvol, &pycartesian)) {
+    return NULL;
+  }
+
+  if (!PolarVolume_Check(pypvol)) {
+    raiseException_returnNULL(PyExc_TypeError, "First argument should be a polar volume")
+  }
+
+  if (!Cartesian_Check(pycartesian)) {
+    raiseException_returnNULL(PyExc_TypeError, "Second argument should be a cartesian product");
+  }
+
+  pvol = (PolarVolume*)pypvol;
+  cartesian = (Cartesian*)pycartesian;
+
+  if (!Transform_cappi(self->transform, pvol->pvol, cartesian->cartesian, 1000.0)) {
+    raiseException_returnNULL(PyExc_IOError, "Failed to transform volume into a cappi");
+  }
+
+  Py_RETURN_NONE;
+}
+/**
+ * All methods a transformator can have
+ */
+static struct PyMethodDef _transform_methods[] =
+{
+  { "cappi", (PyCFunction) _transform_cappi, 1},
+  { NULL, NULL } /* sentinel */
+};
+
+/**
+ * Returns the specified attribute in the transformator
+ * @param[in] self - the cartesian product
+ */
+static PyObject* _transform_getattr(Transform* self, char* name)
+{
+  PyObject* res = NULL;
+
+  if (strcmp("method", name) == 0) {
+    return PyInt_FromLong(Transform_getMethod(self->transform));
+  }
+
+  res = Py_FindMethod(_transform_methods, (PyObject*) self, name);
+  if (res)
+    return res;
+
+  PyErr_Clear();
+  PyErr_SetString(PyExc_AttributeError, name);
+  return NULL;
+}
+
+/**
+ * Returns the specified attribute in the transformator
+ */
+static int _transform_setattr(Transform* self, char* name, PyObject* val)
+{
+  int result = -1;
+  if (name == NULL) {
+    goto done;
+  }
+  if (strcmp("method", name)==0) {
+    if (PyInt_Check(val)) {
+      if (!Transform_setMethod(self->transform, PyInt_AsLong(val))) {
+        raiseException_gotoTag(done, PyExc_ValueError, "method must be in valid range");
+      }
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError,"method must be a valid RaveTransformMethod");
+    }
+  }
+
+  result = 0;
+done:
+  return result;
+}
+
+/*@} End of Transform */
+
+/// --------------------------------------------------------------------
+/// Projection
+/// --------------------------------------------------------------------
+/*@{ Projection */
+
+/**
+ * Deallocates the projection
+ * @param[in] obj the object to deallocate.
+ */
+static void _projection_dealloc(Projection* obj)
+{
+  /*Nothing yet*/
+  if (obj == NULL) {
+    return;
+  }
+  Projection_release(obj->projection);
+  PyObject_Del(obj);
+}
+
+/**
+ * Creates a new projection instance.
+ * @param[in] self this instance.
+ * @param[in] args arguments for creation (id, description, definition).
+ * @return the object on success, otherwise NULL
+ */
+static PyObject* _projection_new(PyObject* self, PyObject* args)
+{
+  Projection* result = NULL;
+  char* id = NULL;
+  char* description = NULL;
+  char* definition = NULL;
+
+  if (!PyArg_ParseTuple(args, "sss", &id, &description, &definition)) {
+    return NULL;
+  }
+
+  result = PyObject_NEW(Projection, &Projection_Type);
+  if (result == NULL) {
+    return NULL;
+  }
+  result->projection = Projection_new(id, description, definition);
+  if (result->projection == NULL) {
+    RAVE_ERROR0("Could not create projection");
+    PyObject_Del(result);
+    raiseException_returnNULL(PyExc_ValueError, "Failed to create projection");
+  }
+  return (PyObject*)result;
+}
+
+/**
+ * Projects a coordinate pair into the new projection coordinate system
+ * @param[in] self the source projection
+ * @param[in] args arguments for projecting)
+ * @return Py_None on success, otherwise NULL
+ */
+static PyObject* _projection_transform(Projection* self, PyObject* args)
+{
+  Projection* tgtproj = NULL;
+  PyObject* pytgtproj = NULL;
+  PyObject* pycoord = NULL;
+  PyObject* result = NULL;
+
+  double x=0.0,y=0.0,z=0.0;
+  int coordlen = 0;
+
+  if(!PyArg_ParseTuple(args, "OO", &pytgtproj,&pycoord)) {
+    return NULL;
+  }
+
+  if (!Projection_Check(pytgtproj)) {
+    raiseException_returnNULL(PyExc_TypeError, "First argument should be the target projection")
+  }
+
+  if (!PyTuple_Check(pycoord)) {
+    raiseException_returnNULL(PyExc_TypeError, "Second argument should be a tuple with either 2 or 3 floats");
+  }
+  coordlen = PyTuple_Size(pycoord);
+  if (coordlen == 2) {
+    if(!PyArg_ParseTuple(pycoord, "dd", &x,&y)) {
+      return NULL;
+    }
+  } else if (coordlen == 3) {
+    if(!PyArg_ParseTuple(pycoord, "ddd", &x,&y,&z)) {
+      return NULL;
+    }
+  } else {
+    raiseException_returnNULL(PyExc_TypeError, "Second argument should be a tuple with either 2 or 3 floats");
+  }
+
+  tgtproj = (Projection*)pytgtproj;
+
+  if (coordlen == 2) {
+    if (!Projection_transform(self->projection, tgtproj->projection, &x, &y, NULL)) {
+      raiseException_returnNULL(PyExc_IOError, "Failed to transform to target projection");
+    }
+    result = Py_BuildValue("(dd)", x, y);
+  } else {
+    if (!Projection_transform(self->projection, tgtproj->projection, &x, &y, &z)) {
+      raiseException_returnNULL(PyExc_IOError, "Failed to transform to target projection");
+    }
+    result = Py_BuildValue("(ddd)", x, y, z);
+  }
+
+  return result;
+}
+
+/**
+ * All methods a projection can have
+ */
+static struct PyMethodDef _projection_methods[] =
+{
+  { "transform", (PyCFunction) _projection_transform, 1},
+  { NULL, NULL } /* sentinel */
+};
+
+/**
+ * Returns the specified attribute in the transformator
+ * @param[in] self - the cartesian product
+ */
+static PyObject* _projection_getattr(Projection* self, char* name)
+{
+  PyObject* res = NULL;
+
+  if (strcmp("id", name) == 0) {
+    return PyString_FromString(Projection_getID(self->projection));
+  } else if (strcmp("description", name) == 0) {
+    return PyString_FromString(Projection_getDescription(self->projection));
+  } else if (strcmp("definition", name) == 0) {
+    return PyString_FromString(Projection_getDefinition(self->projection));
+  }
+
+  res = Py_FindMethod(_projection_methods, (PyObject*) self, name);
+  if (res)
+    return res;
+
+  PyErr_Clear();
+  PyErr_SetString(PyExc_AttributeError, name);
+  return NULL;
+}
+
+/**
+ * Sets the specified attribute in the projection
+ */
+static int _projection_setattr(Projection* self, char* name, PyObject* val)
+{
+  return -1;
+}
+
+/*@} End of Projection */
 
 /// --------------------------------------------------------------------
 /// Type definitions
@@ -889,6 +1205,44 @@ statichere PyTypeObject Cartesian_Type =
   0, /*tp_as_mapping */
   0 /*tp_hash*/
 };
+
+statichere PyTypeObject Transform_Type =
+{
+  PyObject_HEAD_INIT(NULL)0, /*ob_size*/
+  "TransformCore", /*tp_name*/
+  sizeof(Transform), /*tp_size*/
+  0, /*tp_itemsize*/
+  /* methods */
+  (destructor)_transform_dealloc, /*tp_dealloc*/
+  0, /*tp_print*/
+  (getattrfunc)_transform_getattr, /*tp_getattr*/
+  (setattrfunc)_transform_setattr, /*tp_setattr*/
+  0, /*tp_compare*/
+  0, /*tp_repr*/
+  0, /*tp_as_number */
+  0,
+  0, /*tp_as_mapping */
+  0 /*tp_hash*/
+};
+
+statichere PyTypeObject Projection_Type =
+{
+  PyObject_HEAD_INIT(NULL)0, /*ob_size*/
+  "ProjectionCore", /*tp_name*/
+  sizeof(Projection), /*tp_size*/
+  0, /*tp_itemsize*/
+  /* methods */
+  (destructor)_projection_dealloc, /*tp_dealloc*/
+  0, /*tp_print*/
+  (getattrfunc)_projection_getattr, /*tp_getattr*/
+  (setattrfunc)_projection_setattr, /*tp_setattr*/
+  0, /*tp_compare*/
+  0, /*tp_repr*/
+  0, /*tp_as_number */
+  0,
+  0, /*tp_as_mapping */
+  0 /*tp_hash*/
+};
 /*@} End of Type definitions */
 
 /// --------------------------------------------------------------------
@@ -899,6 +1253,8 @@ static PyMethodDef functions[] = {
   {"volume", (PyCFunction)_polarvolume_new, 1},
   {"scan", (PyCFunction)_polarscan_new, 1},
   {"cartesian", (PyCFunction)_cartesian_new, 1},
+  {"transform", (PyCFunction)_transform_new, 1},
+  {"projection", (PyCFunction)_projection_new, 1},
   {NULL,NULL} /*Sentinel*/
 };
 
@@ -927,6 +1283,8 @@ void init_rave(void)
   PolarVolume_Type.ob_type = &PyType_Type;
   PolarScan_Type.ob_type = &PyType_Type;
   Cartesian_Type.ob_type = &PyType_Type;
+  Transform_Type.ob_type = &PyType_Type;
+  Projection_Type.ob_type = &PyType_Type;
 
   module = Py_InitModule("_rave", functions);
   dictionary = PyModule_GetDict(module);
@@ -950,6 +1308,13 @@ void init_rave(void)
   add_long_constant(dictionary, "RaveDataType_LONG", RaveDataType_LONG);
   add_long_constant(dictionary, "RaveDataType_FLOAT", RaveDataType_FLOAT);
   add_long_constant(dictionary, "RaveDataType_DOUBLE", RaveDataType_DOUBLE);
+
+  add_long_constant(dictionary, "NEAREST", NEAREST);
+  add_long_constant(dictionary, "BILINEAR", BILINEAR);
+  add_long_constant(dictionary, "CUBIC", CUBIC);
+  add_long_constant(dictionary, "CRESSMAN", CRESSMAN);
+  add_long_constant(dictionary, "UNIFORM", UNIFORM);
+  add_long_constant(dictionary, "INVERSE", INVERSE);
 
   import_array(); /*To make sure I get access to Numeric*/
 }

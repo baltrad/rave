@@ -26,7 +26,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef POLARVOLUME_H
 #define POLARVOLUME_H
 #include "polarscan.h"
-#include "cartesian.h"
+#include "projection.h"
 
 /**
  * Defines a Polar Volume
@@ -98,6 +98,21 @@ void PolarVolume_setHeight(PolarVolume_t* pvol, double height);
 double PolarVolume_getHeight(PolarVolume_t* pvol);
 
 /**
+ * Sets the projection for this polar volume.
+ * @param[in] pvol - the polar volume
+ * @param[in] projection - the projection
+ */
+void PolarVolume_setProjection(PolarVolume_t* pvol, Projection_t* projection);
+
+/**
+ * Returns a copy of the projection that is used for this polar volume.
+ * I.e. remember to release it.
+ * @param[in] pvol - the polar volume
+ * @returns a projection (or NULL if none is set)
+ */
+Projection_t* PolarVolume_getProjection(PolarVolume_t* pvol);
+
+/**
  * Adds a scan to the volume.
  * @param[in] pvol - the volume
  * @param[in] scan - the scan
@@ -127,13 +142,5 @@ int PolarVolume_getNumberOfScans(PolarVolume_t* pvol);
  * @param[in] ascending - if 1, ascending sort will be done, otherwise descending
  */
 void PolarVolume_sortByElevations(PolarVolume_t* pvol, int ascending);
-
-/**
- * Translates the polar volume into a cartesian cappi.
- * @param[in] pvol - the volume
- * @param[in] cartesian - the cartesian product that should get the data
- * @returns 0 on failure, otherwise it was a success
- */
-int PolarVolume_cappi(PolarVolume_t* pvol, Cartesian_t* cartesian);
 
 #endif
