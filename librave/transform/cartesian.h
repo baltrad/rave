@@ -82,6 +82,26 @@ void Cartesian_setYSize(Cartesian_t* cartesian, long ysize);
 long Cartesian_getYSize(Cartesian_t* cartesian);
 
 /**
+ * Sets the area extent for this cartesian product.
+ * @param[in] cartesian - the cartesian product
+ * @param[in] llX - lower left X position
+ * @param[in] llY - lower left Y position
+ * @param[in] urX - upper right X position
+ * @param[in] urY - upper right Y position
+ */
+void Cartesian_setAreaExtent(Cartesian_t* cartesian, double llX, double llY, double urX, double urY);
+
+/**
+ * Gets the area extent for this cartesian product.
+ * @param[in] cartesian - the cartesian product
+ * @param[out] llX - lower left X position (may be NULL)
+ * @param[out] llY - lower left Y position (may be NULL)
+ * @param[out] urX - upper right X position (may be NULL)
+ * @param[out] urY - upper right Y position (may be NULL)
+ */
+void Cartesian_getAreaExtent(Cartesian_t* cartesian, double* llX, double* llY, double* urX, double* urY);
+
+/**
  * Sets the xscale
  * @param[in] cartesian - the cartesian product
  * @param[in] xscale - the xscale
@@ -108,6 +128,24 @@ void Cartesian_setYScale(Cartesian_t* cartesian, double yscale);
  * @return the yscale
  */
 double Cartesian_getYScale(Cartesian_t* cartesian);
+
+/**
+ * Returns the location within the area as identified by a x-position.
+ * Evaluated as: upperLeft.x + xscale * x
+ * @param[in] cartesian - the cartesian product
+ * @param[in] x - the x position in the area definition
+ * @returns the x location
+ */
+double Cartesian_getLocationX(Cartesian_t* cartesian, long x);
+
+/**
+ * Returns the location within the area as identified by a y-position.
+ * Evaluated as: upperLeft.y - yscale * y
+ * @param[in] cartesian - the cartesian product
+ * @param[in] y - the y position in the area definition
+ * @returns the y location
+ */
+double Cartesian_getLocationY(Cartesian_t* cartesian, long y);
 
 /**
  * Sets the data type of the data that is worked with

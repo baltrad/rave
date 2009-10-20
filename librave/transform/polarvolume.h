@@ -26,6 +26,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef POLARVOLUME_H
 #define POLARVOLUME_H
 #include "polarscan.h"
+#include "cartesian.h"
 
 /**
  * Defines a Polar Volume
@@ -119,5 +120,20 @@ int PolarVolume_getScan(PolarVolume_t* pvol, int index, PolarScan_t** scan);
  * @returns -1 on failure, otherwise a value >= 0
  */
 int PolarVolume_getNumberOfScans(PolarVolume_t* pvol);
+
+/**
+ * Arranges the scans in either ascending or descending elevation.
+ * @param[in] pvol - the volume
+ * @param[in] ascending - if 1, ascending sort will be done, otherwise descending
+ */
+void PolarVolume_sortByElevations(PolarVolume_t* pvol, int ascending);
+
+/**
+ * Translates the polar volume into a cartesian cappi.
+ * @param[in] pvol - the volume
+ * @param[in] cartesian - the cartesian product that should get the data
+ * @returns 0 on failure, otherwise it was a success
+ */
+int PolarVolume_cappi(PolarVolume_t* pvol, Cartesian_t* cartesian);
 
 #endif

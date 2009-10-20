@@ -96,7 +96,53 @@ class RaveModulePolarVolumeTest(unittest.TestCase):
     
     self.assertTrue (scan1 == scanresult1)
     self.assertTrue (scan2 == scanresult2)
-      
+
+  def testSortByElevations_ascending(self):
+    obj = _rave.volume()
+    scan1 = _rave.scan()
+    scan1.elangle = 2.0
+    scan2 = _rave.scan()
+    scan2.elangle = 3.0
+    scan3 = _rave.scan()
+    scan3.elangle = 1.0
+    
+    obj.addScan(scan1)
+    obj.addScan(scan2)
+    obj.addScan(scan3)
+    
+    obj.sortByElevations(1)
+    
+    scanresult1 = obj.getScan(0)
+    scanresult2 = obj.getScan(1)
+    scanresult3 = obj.getScan(2)
+    
+    self.assertTrue (scan3 == scanresult1)
+    self.assertTrue (scan1 == scanresult2)
+    self.assertTrue (scan2 == scanresult3)
+
+  def testSortByElevations_descending(self):
+    obj = _rave.volume()
+    scan1 = _rave.scan()
+    scan1.elangle = 2.0
+    scan2 = _rave.scan()
+    scan2.elangle = 3.0
+    scan3 = _rave.scan()
+    scan3.elangle = 1.0
+    
+    obj.addScan(scan1)
+    obj.addScan(scan2)
+    obj.addScan(scan3)
+    
+    obj.sortByElevations(0)
+    
+    scanresult1 = obj.getScan(0)
+    scanresult2 = obj.getScan(1)
+    scanresult3 = obj.getScan(2)
+    
+    self.assertTrue (scan2 == scanresult1)
+    self.assertTrue (scan1 == scanresult2)
+    self.assertTrue (scan3 == scanresult3)
+        
   def testVolume_ppi(self):
     pass
   

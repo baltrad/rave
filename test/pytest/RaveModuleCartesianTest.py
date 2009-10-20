@@ -192,6 +192,70 @@ class RaveModuleCartesianTest(unittest.TestCase):
       pass
     self.assertAlmostEquals(0.0, obj.undetect, 4)
 
+  def testCartesian_areaextent(self):
+    obj = _rave.cartesian()
+    tt = obj.areaextent
+    self.assertEquals(4, len(tt))
+    self.assertAlmostEquals(0.0, tt[0], 4)
+    self.assertAlmostEquals(0.0, tt[1], 4)
+    self.assertAlmostEquals(0.0, tt[2], 4)
+    self.assertAlmostEquals(0.0, tt[3], 4)
+
+    obj.areaextent = (10.0, 11.0, 12.0, 13.0)
+    tt = obj.areaextent
+    self.assertEquals(4, len(tt))
+    self.assertAlmostEquals(10.0, tt[0], 4)
+    self.assertAlmostEquals(11.0, tt[1], 4)
+    self.assertAlmostEquals(12.0, tt[2], 4)
+    self.assertAlmostEquals(13.0, tt[3], 4)
+
+  def testCartesian_areaextent_badTupleSize(self):
+    obj = _rave.cartesian()
+    try:
+      obj.areaextent = (10.0, 20.0, 30.0)
+      self.fail("Expected type error")
+    except TypeError, e:
+      pass
+
+    try:
+      obj.areaextent = (10.0, 20.0, 30.0, 40.0, 50.0)
+      self.fail("Expected type error")
+    except TypeError, e:
+      pass
+
+  def testCartesian_areaextent_illegalData(self):
+    obj = _rave.cartesian()
+    try:
+      obj.areaextent = (10.0, "a", 30.0, 40.0)
+      self.fail("Expected type error")
+    except TypeError, e:
+      pass
+
+  def testCartesian_getLocationX(self):
+    obj = _rave.cartesian();
+    obj.areaextent = (100.0, 200.0, 300.0, 400.0)
+    obj.xscale = 10.0
+    
+    xpos = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    
+    for x in xpos:
+      expected = 100.0 + x*10.0
+      result = obj.getLocationX(x)
+      self.assertAlmostEqual(expected, result, 4)
+
+  def testCartesian_getLocationY(self):
+    obj = _rave.cartesian();
+    obj.areaextent = (100.0, 200.0, 300.0, 400.0)
+    obj.yscale = 10.0
+    
+    ypos = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    
+    for y in ypos:
+      expected = 400.0 - y*10.0
+      result = obj.getLocationY(y)
+      self.assertAlmostEqual(expected, result, 4)
+
+
   def testCartesian_setData_int8(self):
     obj = _rave.cartesian()
     a=numpy.arange(120)

@@ -99,6 +99,45 @@ static void PolarVolume_destroy(PolarVolume_t* volume)
   }
 }
 
+/**
+ * Used to sort the scans by elevation in ascending order
+ * @param[in] a - scan a (will be casted to *(PolarScan_t**))
+ * @param[in] b - scan b (will be casted to *(PolarScan_t**))
+ * @return -1 if a.elangle < b.elangle, 1 if a.elangle > b.elangle and 0 otherwise
+ */
+static int ascendingElevationSort(const void* a, const void* b)
+{
+  PolarScan_t* scanA = *(PolarScan_t**)a;
+  PolarScan_t* scanB = *(PolarScan_t**)b;
+  double angleA = PolarScan_getElangle(scanA);
+  double angleB = PolarScan_getElangle(scanB);
+  if (angleA < angleB) {
+    return -1;
+  } else if (angleA > angleB) {
+    return 1;
+  }
+  return 0;
+}
+
+/**
+ * Used to sort the scans by elevation in descending order
+ * @param[in] a - scan a (will be casted to *(PolarScan_t**))
+ * @param[in] b - scan b (will be casted to *(PolarScan_t**))
+ * @return -1 if a.elangle > b.elangle, 1 if a.elangle < b.elangle and 0 otherwise
+ */
+static int descendingElevationSort(const void* a, const void* b)
+{
+  PolarScan_t* scanA = *(PolarScan_t**)a;
+  PolarScan_t* scanB = *(PolarScan_t**)b;
+  double angleA = PolarScan_getElangle(scanA);
+  double angleB = PolarScan_getElangle(scanB);
+  if (angleA > angleB) {
+    return -1;
+  } else if (angleA < angleB) {
+    return 1;
+  }
+  return 0;
+}
 /*@} End of Private functions */
 
 /*@{ Interface functions */
@@ -216,5 +255,43 @@ int PolarVolume_getNumberOfScans(PolarVolume_t* pvol)
 {
   RAVE_ASSERT((pvol != NULL), "pvol was NULL");
   return pvol->nrScans;
+}
+
+void PolarVolume_sortByElevations(PolarVolume_t* pvol, int ascending)
+{
+  RAVE_ASSERT((pvol != NULL), "pvol was NULL");
+
+  if (ascending == 1) {
+    qsort(pvol->scans, pvol->nrScans, sizeof(PolarScan_t*), ascendingElevationSort);
+  } else {
+    qsort(pvol->scans, pvol->nrScans, sizeof(PolarScan_t*), descendingElevationSort);
+  }
+}
+
+int PolarVolume_cappi(PolarVolume_t* pvol, Cartesian_t* cartesian)
+{
+  long xsize = 0, ysize = 0;
+  long x = 0, y = 0;
+
+  xsize = Cartesian_getXSize(cartesian);
+  ysize = Cartesian_getYSize(cartesian);
+
+  for (y = 0; y < ysize; y++) {
+    double herey = Cartesian_getLocationY(cartesian, y);
+    for (x = 0; x < xsize; x++) {
+      double herex = Cartesian_getLocationX(cartesian, x);
+
+    }
+  }
+
+//  for(y=0;y<dest->dimensions[0]; y++) {/* do it! */
+//    UV here_s;
+//    here_s.v = (outUL.v-outyscale*y);
+//    for(x=0;x<dest->dimensions[1]; x++) {
+// here_s.u = (outUL.u+outxscale*x);
+// methfun(x,y,here_s, &tw); /* Call appropriate function to do the job*/
+//    }
+//  return NULL;
+
 }
 /*@} End of Interface functions */

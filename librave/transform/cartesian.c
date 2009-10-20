@@ -40,6 +40,11 @@ struct _Cartesian_t {
   double yscale;
   RaveDataType type; /**< data type */
 
+  double llX;
+  double llY;
+  double urX;
+  double urY;
+
   // What
   char quantity[64]; /**< what does this data represent */
   double gain; /**< gain when scaling */
@@ -80,6 +85,11 @@ Cartesian_t* Cartesian_new(void)
     result->ysize = 0;
     result->xscale = 0.0;
     result->yscale = 0.0;
+    result->llX = 0.0;
+    result->llY = 0.0;
+    result->urX = 0.0;
+    result->urY = 0.0;
+
     strcpy(result->quantity, "");
     result->gain = 0.0;
     result->offset = 0.0;
@@ -132,6 +142,32 @@ long Cartesian_getYSize(Cartesian_t* cartesian)
   return cartesian->ysize;
 }
 
+void Cartesian_setAreaExtent(Cartesian_t* cartesian, double llX, double llY, double urX, double urY)
+{
+  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
+  cartesian->llX = llX;
+  cartesian->llY = llY;
+  cartesian->urX = urX;
+  cartesian->urY = urY;
+}
+
+void Cartesian_getAreaExtent(Cartesian_t* cartesian, double* llX, double* llY, double* urX, double* urY)
+{
+  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
+  if (llX != NULL) {
+    *llX = cartesian->llX;
+  }
+  if (llY != NULL) {
+    *llY = cartesian->llY;
+  }
+  if (urX != NULL) {
+    *urX = cartesian->urX;
+  }
+  if (urY != NULL) {
+    *urY = cartesian->urY;
+  }
+}
+
 void Cartesian_setXScale(Cartesian_t* cartesian, double xscale)
 {
   RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
@@ -154,6 +190,18 @@ double Cartesian_getYScale(Cartesian_t* cartesian)
 {
   RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
   return cartesian->yscale;
+}
+
+double Cartesian_getLocationX(Cartesian_t* cartesian, long x)
+{
+  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
+  return cartesian->llX + cartesian->xscale * x;
+}
+
+double Cartesian_getLocationY(Cartesian_t* cartesian, long y)
+{
+  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
+  return cartesian->urY - cartesian->yscale * y;
 }
 
 int Cartesian_setDataType(Cartesian_t* cartesian, RaveDataType type)

@@ -447,6 +447,25 @@ static PyObject* _polarvolume_getNumberOfScans(PolarVolume* self, PyObject* args
 }
 
 /**
+ * Sorts the scans by comparing elevations in either ascending or descending order
+ * @param[in] self - the polar volume
+ * @param[in] args - 1 if soring should be done in ascending order, otherwise descending
+ * @return NULL on failure or a Py_None
+ */
+static PyObject* _polarvolume_sortByElevations(PolarVolume* self, PyObject* args)
+{
+  int order = 0;
+
+  if (!PyArg_ParseTuple(args, "i", &order)) {
+    return NULL;
+  }
+
+  PolarVolume_sortByElevations(self->pvol, order);
+
+  Py_RETURN_NONE;
+}
+
+/**
  * Creates a cappi from a polar volume
  * @param[in] self the polar volume
  * @param[in] args arguments for generating the cappi
@@ -454,7 +473,24 @@ static PyObject* _polarvolume_getNumberOfScans(PolarVolume* self, PyObject* args
  */
 static PyObject* _polarvolume_cappi(PolarVolume* self, PyObject* args)
 {
-  return NULL;
+  Cartesian* cartesian = NULL;
+  PyObject* pycartesian = NULL;
+
+  if(!PyArg_ParseTuple(args, "O", &pycartesian)) {
+    return NULL;
+  }
+
+  if (!Cartesian_Check(pycartesian)) {
+    raiseException_returnNULL(PyExc_TypeError, "Must provide cartesian product");
+  }
+
+  cartesian = (Cartesian*)pycartesian;
+
+  if (!PolarVolume_cappi(self->pvol, cartesian->cartesian)) {
+    raiseException_returnNULL(PyExc_IOError, "Failed to transform volume into a cappi");
+  }
+
+  Py_RETURN_NONE;
 }
 
 /**
@@ -465,6 +501,7 @@ static struct PyMethodDef _polarvolume_methods[] =
   { "addScan", (PyCFunction) _polarvolume_addScan, 1},
   { "getScan", (PyCFunction) _polarvolume_getScan, 1},
   { "getNumberOfScans", (PyCFunction) _polarvolume_getNumberOfScans, 1},
+  { "sortByElevations", (PyCFunction) _polarvolume_sortByElevations, 1},
   { "cappi", (PyCFunction) _polarvolume_cappi, 1 },
   { NULL, NULL } /* sentinel */
 };
@@ -568,6 +605,12 @@ static PyObject* _cartesian_new(PyObject* self, PyObject* args)
   return (PyObject*)result;
 }
 
+/**
+ * Sets the data array that should be used for this product.
+ * @param[in] self this instance.
+ * @param[in] args - the array
+ * @return Py_None on success, otherwise NULL
+ */
 static PyObject* _cartesian_setData(Cartesian* self, PyObject* args)
 {
   PyObject* inarray = NULL;
@@ -609,11 +652,51 @@ static PyObject* _cartesian_setData(Cartesian* self, PyObject* args)
 }
 
 /**
+ * Returns the x location defined by area extent and x scale and the provided x position.
+ * @param[in] self this instance.
+ * @param[in] args - x position
+ * @return the x location on success, otherwise NULL
+ */
+static PyObject* _cartesian_getLocationX(Cartesian* self, PyObject* args)
+{
+  long x = 0;
+  double xloc = 0.0;
+  if (!PyArg_ParseTuple(args, "l", &x)) {
+    return NULL;
+  }
+
+  xloc = Cartesian_getLocationX(self->cartesian, x);
+
+  return PyFloat_FromDouble(xloc);
+}
+
+/**
+ * Returns the y location defined by area extent and y scale and the provided y position.
+ * @param[in] self this instance.
+ * @param[in] args - y position
+ * @return the y location on success, otherwise NULL
+ */
+static PyObject* _cartesian_getLocationY(Cartesian* self, PyObject* args)
+{
+  long y = 0;
+  double yloc = 0.0;
+  if (!PyArg_ParseTuple(args, "l", &y)) {
+    return NULL;
+  }
+
+  yloc = Cartesian_getLocationY(self->cartesian, y);
+
+  return PyFloat_FromDouble(yloc);
+}
+
+/**
  * All methods a cartesian product can have
  */
 static struct PyMethodDef _cartesian_methods[] =
 {
   { "setData", (PyCFunction) _cartesian_setData, 1},
+  { "getLocationX", (PyCFunction) _cartesian_getLocationX, 1},
+  { "getLocationY", (PyCFunction) _cartesian_getLocationY, 1},
   { NULL, NULL } /* sentinel */
 };
 
@@ -645,6 +728,10 @@ static PyObject* _cartesian_getattr(Cartesian* self, char* name)
     return PyFloat_FromDouble(Cartesian_getUndetect(self->cartesian));
   } else if (strcmp("datatype", name) == 0) {
     return PyInt_FromLong(Cartesian_getDataType(self->cartesian));
+  } else if (strcmp("areaextent", name) == 0) {
+    double llX = 0.0, llY = 0.0, urX = 0.0, urY = 0.0;
+    Cartesian_getAreaExtent(self->cartesian, &llX, &llY, &urX, &urY);
+    return Py_BuildValue("(dddd)", llX, llY, urX, urY);
   }
 
   res = Py_FindMethod(_cartesian_methods, (PyObject*) self, name);
@@ -727,6 +814,12 @@ static int _cartesian_setattr(Cartesian* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "datatype must be of type RaveDataType");
     }
+  } else if (strcmp("areaextent", name) == 0) {
+    double llX = 0.0, llY = 0.0, urX = 0.0, urY = 0.0;
+    if (!PyArg_ParseTuple(val, "dddd", &llX, &llY, &urX, &urY)) {
+      goto done;
+    }
+    Cartesian_setAreaExtent(self->cartesian, llX, llY, urX, urY);
   }
 
   result = 0;
