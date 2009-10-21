@@ -127,6 +127,15 @@ typedef struct {
    RavePolarField* fields;    /**< The array of fields */
 } RavePolarVolume;
 
+/**
+ * Structure used for holding necessary parameters during transformation.
+ */
+typedef struct {
+  double undetect; /**< what value that should be used to indicate undetect */
+  double nodata;   /**< what value that should be used to indicate nodata */
+  RaveTransformationMethod method; /**< the transformation method to be used */
+} TransformParam;
+
 
 /**
  * Returns the size of the datatype.

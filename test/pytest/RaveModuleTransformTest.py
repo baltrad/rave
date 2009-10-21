@@ -44,4 +44,3 @@ class RaveModuleTransformTest(unittest.TestCase):
       except ValueError, e:
         pass
       self.assertEqual(_rave.NEAREST, obj.method)
-

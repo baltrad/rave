@@ -290,6 +290,50 @@ int PolarVolume_getNumberOfScans(PolarVolume_t* pvol)
   return pvol->nrScans;
 }
 
+#ifdef KALLE
+double PolarVolume_getNearestByHeight(PolarVolume_t* pvol, double lon,
+  double lat, double height, TransformParam* param)
+{
+  RAVE_ASSERT((pvol != NULL), "pvol was NULL");
+  RAVE_ASSERT((param != NULL), "param was NULL");
+
+  // CAPPI
+  PolarNavigator_llToDa(pvol->navigator, lat, lon, &d, &a);
+  PolarNavigator_dhToRe(pvol->navigator, d, height, &r, &e);
+
+  // According to the ODIM-specification, all scans should have azindex
+  // due north and ordered clockwise.
+
+  azindex = getAzimuthIndex();
+
+
+  if(wrap->slice == PPI) {
+    /* if slice is PPI, the elevation is known, calculate the range */
+    source.elevation = wrap->elev[mytrunc(wrap->height)];
+    deToRh(&source,&source);
+  }
+  else {
+    dhToRe(&source,&source);
+  }
+  Position source;
+  int tmp;
+
+  source.lon0 = wrap->lon0;
+  source.lat0 = wrap->lat0;
+  source.alt0 = wrap->alt0;
+  source.lon = coord.u;
+  source.lat = coord.v;
+
+  source.alt = wrap->height;
+  source.dndh = wrap->dndh;
+
+  wrap->R = wrap->cressmanR_xy*wrap->inscale;
+
+  llToDa(&source,&source);
+
+}
+#endif
+
 void PolarVolume_sortByElevations(PolarVolume_t* pvol, int ascending)
 {
   RAVE_ASSERT((pvol != NULL), "pvol was NULL");

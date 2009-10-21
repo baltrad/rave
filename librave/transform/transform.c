@@ -39,8 +39,8 @@ struct _Transform_t {
 
 /*@{ Private functions */
 /**
- * Destroys the scan
- * @param[in] scan - the scan to destroy
+ * Destroys the transformer
+ * @param[in] transform - the transformer to destroy
  */
 static void Transform_destroy(Transform_t* transform)
 {
@@ -102,6 +102,7 @@ int Transform_cappi(Transform_t* transform, PolarVolume_t* pvol, Cartesian_t* ca
   long x = 0, y = 0;
   Projection_t* sourcepj = NULL;
   Projection_t* targetpj = NULL;
+  TransformParam param;
 
   RAVE_ASSERT((transform != NULL), "transform was NULL");
   RAVE_ASSERT((pvol != NULL), "pvol was NULL");
@@ -122,15 +123,20 @@ int Transform_cappi(Transform_t* transform, PolarVolume_t* pvol, Cartesian_t* ca
   xsize = Cartesian_getXSize(cartesian);
   ysize = Cartesian_getYSize(cartesian);
 
+  param.nodata = Cartesian_getNodata(cartesian);
+  param.undetect = Cartesian_getUndetect(cartesian);
+  param.method = transform->method;
+
   for (y = 0; y < ysize; y++) {
     double herey = Cartesian_getLocationY(cartesian, y);
     for (x = 0; x < xsize; x++) {
       double herex = Cartesian_getLocationX(cartesian, x);
-//      double v = 0.0;
       if (!Projection_transform(sourcepj, targetpj, &herex, &herey, NULL)) {
         RAVE_ERROR0("Transform failed");
         goto done;
       }
+
+      //v = PolarVolume_getWeightedValue(pvol, herex, herey, height, &param);
 /*
       v = PolarVolume_getWeightedValue(pvol, herex, herey, height, transform->method);
 

@@ -137,6 +137,17 @@ int PolarVolume_getScan(PolarVolume_t* pvol, int index, PolarScan_t** scan);
 int PolarVolume_getNumberOfScans(PolarVolume_t* pvol);
 
 /**
+ * Calculates the value at the specified lon/lat/height.
+ * @param[in] pvol - the volume
+ * @param[in] lon - the longitude
+ * @param[in] lat - the latitude
+ * @param[in] height - the height
+ * @param[in] param - the transformation parameters
+ */
+//double PolarVolume_getWeightedValue(PolarVolume_t* pvol, double lon,
+//  double lat, double height, TransformParam* param);
+
+/**
  * Arranges the scans in either ascending or descending elevation.
  * @param[in] pvol - the volume
  * @param[in] ascending - if 1, ascending sort will be done, otherwise descending
