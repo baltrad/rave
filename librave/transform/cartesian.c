@@ -57,6 +57,7 @@ struct _Cartesian_t {
   // Data
   void* data; /**< data ptr */
 
+  int debug;
   // Miscellaneous data that is useful
   void* voidPtr; /**< a pointer for pointing to miscellaneous data */
 };
@@ -99,7 +100,7 @@ Cartesian_t* Cartesian_new(void)
     result->undetect = 0.0;
     result->projection = NULL;
     result->data = NULL;
-
+    result->debug = 0;
     result->voidPtr = NULL;
   }
   return result;
@@ -198,13 +199,13 @@ double Cartesian_getYScale(Cartesian_t* cartesian)
 double Cartesian_getLocationX(Cartesian_t* cartesian, long x)
 {
   RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
-  return cartesian->llX + cartesian->xscale * x;
+  return cartesian->llX + cartesian->xscale * (double)x;
 }
 
 double Cartesian_getLocationY(Cartesian_t* cartesian, long y)
 {
   RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
-  return cartesian->urY - cartesian->yscale * y;
+  return cartesian->urY - cartesian->yscale * (double)y;
 }
 
 int Cartesian_setDataType(Cartesian_t* cartesian, RaveDataType type)
@@ -333,6 +334,44 @@ fail:
   return result;
 }
 
+void* Cartesian_getData(Cartesian_t* cartesian)
+{
+  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
+  return cartesian->data;
+}
+
+int Cartesian_setValue(Cartesian_t* cartesian, long x, long y, double v)
+{
+  int result = 0;
+  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
+  RAVE_ASSERT((cartesian->data != NULL), "data must be set before setValue can be used");
+  if (x >= 0 && x < cartesian->xsize && y >= 0 && y < cartesian->ysize) {
+    set_array_item_2d(cartesian->data, x, y, v, cartesian->type, cartesian->xsize);
+    result = 1;
+  }
+  return result;
+}
+
+RaveValueType Cartesian_getValue(Cartesian_t* cartesian, long x, long y, double* v)
+{
+  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
+  RAVE_ASSERT((v != NULL), "v was NULL");
+  RaveValueType result = RaveValueType_NODATA;
+  RAVE_ASSERT((cartesian->data != NULL), "data must be set before getValue can be used");
+  *v = cartesian->nodata;
+
+  if (x >= 0 && x < cartesian->xsize && y >= 0 && y < cartesian->ysize) {
+    result = RaveValueType_DATA;
+    *v = get_array_item_2d(cartesian->data, x, y, cartesian->type, cartesian->xsize);
+    if (*v == cartesian->nodata) {
+      result = RaveValueType_NODATA;
+    } else if (*v == cartesian->undetect) {
+      result = RaveValueType_UNDETECT;
+    }
+  }
+  return result;
+}
+
 void Cartesian_setVoidPtr(Cartesian_t* cartesian, void* ptr)
 {
   RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
@@ -343,5 +382,11 @@ void* Cartesian_getVoidPtr(Cartesian_t* cartesian)
 {
   RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
   return cartesian->voidPtr;
+}
+
+void Cartesian_setDebug(Cartesian_t* cartesian, int debug)
+{
+  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
+  cartesian->debug = debug;
 }
 /*@} End of Interface functions */

@@ -225,12 +225,115 @@ static PyObject* _polarscan_setData(PolarScan* self, PyObject* args)
   Py_RETURN_NONE;
 }
 
+static PyObject* _polarscan_getData(PolarScan* self, PyObject* args)
+{
+  long nbins = 0, nrays = 0;
+  RaveDataType type = RaveDataType_UNDEFINED;
+  PyObject* result = NULL;
+  npy_intp dims[2] = {0,0};
+  int arrtype = 0;
+  void* data = NULL;
+
+  nbins = PolarScan_getNbins(self->scan);
+  nrays = PolarScan_getNrays(self->scan);
+  type = PolarScan_getDataType(self->scan);
+  data = PolarScan_getData(self->scan);
+
+  dims[0] = (npy_intp)nrays;
+  dims[1] = (npy_intp)nbins;
+  arrtype = translate_ravetype_to_pyarraytype(type);
+
+  if (data == NULL) {
+    raiseException_returnNULL(PyExc_IOError, "polar scan does not have any data");
+  }
+
+  if (arrtype == PyArray_NOTYPE) {
+    raiseException_returnNULL(PyExc_IOError, "Could not translate data type");
+  }
+  result = PyArray_SimpleNew(2, dims, arrtype);
+  if (result == NULL) {
+    raiseException_returnNULL(PyExc_MemoryError, "Could not create resulting array");
+  }
+  if (result != NULL) {
+    int nbytes = nbins*nrays*((PyArrayObject*)result)->descr->elsize;
+    memcpy(((PyArrayObject*)result)->data, PolarScan_getData(self->scan), nbytes);
+  }
+
+  return result;
+}
+
+
+static PyObject* _polarscan_getAzimuthIndex(PolarScan* self, PyObject* args)
+{
+  double azimuth = 0.0L;
+  int index = -1;
+
+  if (!PyArg_ParseTuple(args, "d", &azimuth)) {
+    return NULL;
+  }
+
+  index = PolarScan_getAzimuthIndex(self->scan, azimuth);
+  if (index < 0) {
+    raiseException_returnNULL(PyExc_ValueError, "Invalid azimuth");
+  }
+
+  return PyInt_FromLong(index);
+}
+
+static PyObject* _polarscan_getRangeIndex(PolarScan* self, PyObject* args)
+{
+  double range = 0.0L;
+  int index = -1;
+
+  if (!PyArg_ParseTuple(args, "d", &range)) {
+    return NULL;
+  }
+
+  index = PolarScan_getRangeIndex(self->scan, range);
+
+  return PyInt_FromLong(index);
+}
+
+static PyObject* _polarscan_getValueAtIndex(PolarScan* self, PyObject* args)
+{
+  double value = 0.0L;
+  RaveValueType type = RaveValueType_NODATA;
+  int ai = 0, ri = 0;
+  if (!PyArg_ParseTuple(args, "(ii)", &ai, &ri)) {
+    return NULL;
+  }
+
+  type = PolarScan_getValueAtIndex(self->scan, ai, ri, &value);
+
+  return Py_BuildValue("(id)", type, value);
+}
+
+static PyObject* _polarscan_getValueAtAzimuthAndRange(PolarScan* self, PyObject* args)
+{
+  double value = 0.0L;
+  RaveValueType type = RaveValueType_NODATA;
+  double a = 0, r = 0;
+  if (!PyArg_ParseTuple(args, "(dd)", &a, &r)) {
+    return NULL;
+  }
+
+  type = PolarScan_getValueAtAzimuthAndRange(self->scan, a, r, &value);
+
+  return Py_BuildValue("(id)", type, value);
+}
+
+
 /**
  * All methods a polar scan can have
  */
 static struct PyMethodDef _polarscan_methods[] =
 {
   { "setData", (PyCFunction) _polarscan_setData, 1},
+  { "getData", (PyCFunction) _polarscan_getData, 1},
+  { "getAzimuthIndex", (PyCFunction) _polarscan_getAzimuthIndex, 1},
+  { "getRangeIndex", (PyCFunction) _polarscan_getRangeIndex, 1},
+  { "getValueAtIndex", (PyCFunction) _polarscan_getValueAtIndex, 1},
+  { "getValueAtAzimuthAndRange", (PyCFunction) _polarscan_getValueAtAzimuthAndRange, 1},
   { NULL, NULL } /* sentinel */
 };
 
@@ -508,6 +611,25 @@ static PyObject* _polarvolume_sortByElevations(PolarVolume* self, PyObject* args
 }
 
 /**
+ * Gets the nearest elevation index from a elevation angle.
+ * @param[in] self - the polar volume
+ * @param[in] args - the elevation angle (in radians)
+ * @return an index or -1 on failure
+ */
+static PyObject* _polarvolume_getNearestElevation(PolarVolume* self, PyObject* args)
+{
+  double elevation = 0.0L;
+  int index = -1;
+
+  if (!PyArg_ParseTuple(args, "d", &elevation)) {
+    return NULL;
+  }
+
+  PolarVolume_getNearestElevation(self->pvol, elevation, &index);
+
+  return PyInt_FromLong(index);
+}
+/**
  * All methods a polar volume can have
  */
 static struct PyMethodDef _polarvolume_methods[] =
@@ -516,6 +638,7 @@ static struct PyMethodDef _polarvolume_methods[] =
   { "getScan", (PyCFunction) _polarvolume_getScan, 1},
   { "getNumberOfScans", (PyCFunction) _polarvolume_getNumberOfScans, 1},
   { "sortByElevations", (PyCFunction) _polarvolume_sortByElevations, 1},
+  { "getNearestElevation", (PyCFunction) _polarvolume_getNearestElevation, 1},
   { NULL, NULL } /* sentinel */
 };
 
@@ -666,6 +789,44 @@ static PyObject* _cartesian_setData(Cartesian* self, PyObject* args)
   Py_RETURN_NONE;
 }
 
+static PyObject* _cartesian_getData(Cartesian* self, PyObject* args)
+{
+  long xsize = 0, ysize = 0;
+  RaveDataType type = RaveDataType_UNDEFINED;
+  PyObject* result = NULL;
+  npy_intp dims[2] = {0,0};
+  int arrtype = 0;
+  void* data = NULL;
+
+  xsize = Cartesian_getXSize(self->cartesian);
+  ysize = Cartesian_getYSize(self->cartesian);
+  type = Cartesian_getDataType(self->cartesian);
+  data = Cartesian_getData(self->cartesian);
+
+  dims[0] = (npy_intp)ysize;
+  dims[1] = (npy_intp)xsize;
+  arrtype = translate_ravetype_to_pyarraytype(type);
+
+  if (data == NULL) {
+    raiseException_returnNULL(PyExc_IOError, "cartesian product does not have any data");
+  }
+
+  if (arrtype == PyArray_NOTYPE) {
+    raiseException_returnNULL(PyExc_IOError, "Could not translate data type");
+  }
+  result = PyArray_SimpleNew(2, dims, arrtype);
+  if (result == NULL) {
+    raiseException_returnNULL(PyExc_MemoryError, "Could not create resulting array");
+  }
+  if (result != NULL) {
+    int nbytes = xsize*ysize*PyArray_ITEMSIZE(result);
+    memcpy(((PyArrayObject*)result)->data, (unsigned char*)Cartesian_getData(self->cartesian), nbytes);
+  }
+
+  return result;
+}
+
+
 /**
  * Returns the x location defined by area extent and x scale and the provided x position.
  * @param[in] self this instance.
@@ -705,13 +866,56 @@ static PyObject* _cartesian_getLocationY(Cartesian* self, PyObject* args)
 }
 
 /**
+ * sets the value at the specified position
+ * @param[in] self this instance.
+ * @param[in] args - tuple (x, y) and v
+ * @return 0 on failure, otherwise 1
+ */
+static PyObject* _cartesian_setValue(Cartesian* self, PyObject* args)
+{
+  long x = 0, y = 0;
+  double v = 0.0L;
+  int result = 0;
+  if (!PyArg_ParseTuple(args, "(ll)d", &x, &y, &v)) {
+    return NULL;
+  }
+
+  result = Cartesian_setValue(self->cartesian, x, y, v);
+
+  return PyInt_FromLong(result);
+}
+
+/**
+ * sets the value at the specified position
+ * @param[in] self this instance.
+ * @param[in] args - tuple (x, y) and v
+ * @return 0 on failure, otherwise 1
+ */
+static PyObject* _cartesian_getValue(Cartesian* self, PyObject* args)
+{
+  long x = 0, y = 0;
+  double v = 0.0L;
+  RaveValueType result = RaveValueType_NODATA;
+  if (!PyArg_ParseTuple(args, "(ll)", &x, &y)) {
+    return NULL;
+  }
+
+  result = Cartesian_getValue(self->cartesian, x, y, &v);
+
+  return Py_BuildValue("(id)", result, v);
+}
+
+/**
  * All methods a cartesian product can have
  */
 static struct PyMethodDef _cartesian_methods[] =
 {
   { "setData", (PyCFunction) _cartesian_setData, 1},
+  { "getData", (PyCFunction) _cartesian_getData, 1},
   { "getLocationX", (PyCFunction) _cartesian_getLocationX, 1},
   { "getLocationY", (PyCFunction) _cartesian_getLocationY, 1},
+  { "setValue", (PyCFunction) _cartesian_setValue, 1},
+  { "getValue", (PyCFunction) _cartesian_getValue, 1},
   { NULL, NULL } /* sentinel */
 };
 
@@ -1315,6 +1519,10 @@ void init_rave(void)
   add_long_constant(dictionary, "CRESSMAN", CRESSMAN);
   add_long_constant(dictionary, "UNIFORM", UNIFORM);
   add_long_constant(dictionary, "INVERSE", INVERSE);
+
+  add_long_constant(dictionary, "RaveValueType_UNDETECT", RaveValueType_UNDETECT);
+  add_long_constant(dictionary, "RaveValueType_NODATA", RaveValueType_NODATA);
+  add_long_constant(dictionary, "RaveValueType_DATA", RaveValueType_DATA);
 
   import_array(); /*To make sure I get access to Numeric*/
 }

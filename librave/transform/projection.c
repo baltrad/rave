@@ -36,6 +36,7 @@ struct _Projection_t {
   char* definition;
   PJ* pj;
 
+  int debug;
   void* voidPtr;
   long ps_refCount;
 };
@@ -75,6 +76,7 @@ Projection_t* Projection_new(const char* id, const char* description, const char
     result->description = NULL;
     result->definition = NULL;
     result->pj = NULL;
+    result->debug = 0;
     result->voidPtr = NULL;
     result->ps_refCount = 1;
 
@@ -153,16 +155,34 @@ int Projection_transform(Projection_t* projection, Projection_t* tgt, double* x,
 {
   int pjv = 0;
   int result = 1;
+  double vx,vy;
   RAVE_ASSERT((projection != NULL), "projection was NULL");
   RAVE_ASSERT((tgt != NULL), "target projection was NULL");
   RAVE_ASSERT((x != NULL), "x was NULL");
   RAVE_ASSERT((y != NULL), "y was NULL");
-
+  vx = *x;
+  vy = *y;
   if ((pjv = pj_transform(projection->pj, tgt->pj, 1, 1, x, y, z)) != 0)
   {
     RAVE_ERROR1("Transform failed with pj_errno: %d\n", pjv);
     result = 0;
   }
+
+  return result;
+}
+
+int Projection_inv(Projection_t* projection, double* x, double* y)
+{
+  int result = 1;
+  projUV in,out;
+  RAVE_ASSERT((projection != NULL), "projection was NULL");
+  RAVE_ASSERT((x != NULL), "x was NULL");
+  RAVE_ASSERT((y != NULL), "y was NULL");
+  in.u = *x;
+  in.v = *y;
+  out = pj_inv(in, projection->pj);
+  *x = out.u;
+  *y = out.v;
   return result;
 }
 
@@ -178,4 +198,9 @@ void* Projection_getVoidPtr(Projection_t* projection)
   return projection->voidPtr;
 }
 
+void Projection_setDebug(Projection_t* projection, int debug)
+{
+  RAVE_ASSERT((projection != NULL), "projection was NULL");
+  projection->debug = debug;
+}
 /*@} End of Interface functions */

@@ -1,0 +1,100 @@
+<?xml version='1.0' encoding='iso-8859-1'?>
+<!-- $Id: finnish_radars.xml,v 1.1.1.1 2006/07/14 11:31:54 dmichels Exp $ -->
+<radars>
+<common>
+<description>Characteristics of data from all radars</description>
+<radardef>
+<arg id="rays" type="int">360</arg>
+<arg id="bins" type="int">500</arg>
+<arg id="angles" type="sequence">0.3, 1.5, 3.0, 5.0, 9.0</arg>
+<arg id="xsize" type="float">500.0</arg>
+<arg id="beamwidth" type="float">0.94</arg>
+<arg id="wavelength" type="float">5.35</arg>
+<arg id="highprf" type="int">600</arg>
+<arg id="lowprf" type="int">450</arg>
+</radardef>
+</common>
+<radar id="kor">
+<description>Korpo, Gematronik</description>
+<radardef>
+<arg id="place">Korpo</arg>
+<arg id="WMO" type="int">02933</arg>
+<arg id="lon" type="float">21.64648</arg>
+<arg id="lat" type="float">60.12843</arg>
+<arg id="height" type="int">61</arg>
+<arg id="angles" type="sequence">0.6, 1.5, 3.0, 5.0, 9.0</arg>
+</radardef>
+</radar>
+<radar id="van">
+<description>Vantaa, Gematronik</description>
+<radardef>
+<arg id="place">Vantaa</arg>
+<arg id="WMO" type="int">02975</arg>
+<arg id="lon" type="float">24.8725</arg>
+<arg id="lat" type="float">60.27056</arg>
+<arg id="height" type="int">83</arg>
+</radardef>
+</radar>
+<radar id="anj">
+<description>Anjalankoski, Gematronik</description>
+<radardef>
+<arg id="place">Anjalankoski</arg>
+<arg id="WMO" type="int">02954</arg>
+<arg id="lon" type="float">27.11110</arg>
+<arg id="lat" type="float">60.9036</arg>
+<arg id="height" type="int">139</arg>
+</radardef>
+</radar>
+<radar id="kuo">
+<description>Kuopio, Gematronik</description>
+<radardef>
+<arg id="place">Kuopio</arg>
+<arg id="WMO" type="int">02918</arg>
+<arg id="lon" type="float">27.3854</arg>
+<arg id="lat" type="float">62.8624</arg>
+<arg id="height" type="int">268</arg>
+</radardef>
+</radar>
+<radar id="ika">
+<description>Ikaalinen, Gematronik</description>
+<radardef>
+<arg id="place">Ikaalinen</arg>
+<arg id="WMO" type="int">02941</arg>
+<arg id="lon" type="float">23.0799</arg>
+<arg id="lat" type="float">61.76710</arg>
+<arg id="height" type="int">154</arg>
+</radardef>
+</radar>
+<radar id="vim">
+<description>Vimpeli, Gematronik</description>
+<radardef>
+<arg id="place">Vimpeli</arg>
+<arg id="WMO" type="int">02925</arg>
+<arg id="lon" type="float">23.8167</arg>
+<arg id="lat" type="float">63.1</arg>
+<arg id="height" type="int">198</arg>
+</radardef>
+</radar>
+<radar id="uta">
+<description>Utajärvi, Gematronik</description>
+<radardef>
+<arg id="place">Utajärvi</arg>
+<arg id="WMO" type="int">02870</arg>
+<arg id="lon" type="float">26.3225</arg>
+<arg id="lat" type="float">64.7745</arg>
+<arg id="height" type="int">118</arg>
+</radardef>
+</radar>
+<radar id="luo">
+<description>Luosto, Gematronik</description>
+<radardef>
+<arg id="place">Luosto</arg>
+<arg id="WMO" type="int">02840</arg>
+<arg id="lon" type="float">26.90083</arg>
+<arg id="lat" type="float">67.13861</arg>
+<arg id="height" type="int">534</arg>
+<arg id="angles" type="sequence">0.1, 1.5, 3.0, 5.0, 9.0</arg>
+<arg id="beamwidth" type="float">0.7</arg>
+</radardef>
+</radar>
+</radars>

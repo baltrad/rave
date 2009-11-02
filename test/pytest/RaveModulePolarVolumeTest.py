@@ -7,6 +7,7 @@ import os
 import _rave
 import string
 import _helpers
+import math
 
 class RaveModulePolarVolumeTest(unittest.TestCase):
   def setUp(self):
@@ -95,6 +96,25 @@ class RaveModulePolarVolumeTest(unittest.TestCase):
     
     self.assertTrue (scan1 == scanresult1)
     self.assertTrue (scan2 == scanresult2)
+
+  def testVolume_getNearestElevation(self):
+    obj = _rave.volume()
+    scan1 = _rave.scan()
+    scan1.elangle = 0.1 * math.pi / 180.0
+    obj.addScan(scan1)
+    scan2 = _rave.scan()
+    scan2.elangle = 0.5 * math.pi / 180.0
+    obj.addScan(scan2)
+    scan3 = _rave.scan()
+    scan3.elangle = 2.0 * math.pi / 180.0
+    obj.addScan(scan3)
+    
+    els = [(0.0, 0), (0.1, 0), (0.2, 0), (0.3, 0), (0.31, 1), (1.0, 1), (2.0, 2)]
+
+    for el in els:
+      elevation = el[0]*math.pi / 180.0
+      result = obj.getNearestElevation(elevation)
+      self.assertEquals(el[1], result)
 
   def testSortByElevations_ascending(self):
     obj = _rave.volume()

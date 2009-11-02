@@ -249,6 +249,49 @@ double PolarScan_getUndetect(PolarScan_t* scan);
 int PolarScan_setData(PolarScan_t* scan, long nbins, long nrays, void* data, RaveDataType type);
 
 /**
+ * Returns a pointer to the internal data storage.
+ * @param[in] scan - the scan
+ * @return the internal data pointer (NOTE! Do not release this pointer)
+ */
+void* PolarScan_getData(PolarScan_t* scan);
+
+/**
+ * Returns the range index for the specified range (in meters).
+ * @param[in] scan - the scan
+ * @param[in] r - the range
+ * @return -1 on failure, otherwise a index between 0 and nbins
+ */
+int PolarScan_getRangeIndex(PolarScan_t* scan, double r);
+
+/**
+ * Returns the azimuth index for the specified azimuth.
+ * @param[in] scan - the scan
+ * @param[in] a - the azimuth (in radians)
+ * @return -1 on failure, otherwise a index between 0 and nrays.
+ */
+int PolarScan_getAzimuthIndex(PolarScan_t* scan, double a);
+
+/**
+ * Returns the value at the specified azimuth and range index.
+ * @param[in] scan - the scan
+ * @param[in] ai - the azimuth index
+ * @param[in] ri - the range index
+ * @param[out] v - the data at the specified index
+ * @return the type of data
+ */
+RaveValueType PolarScan_getValueAtIndex(PolarScan_t* scan, int ai, int ri, double* v);
+
+/**
+ * Gets the value at the provided azimuth and range.
+ * @param[in] scan - the scan
+ * @param[in] a - the azimuth (in radians)
+ * @param[in] r - the range (in meters)
+ * @param[out] v - the value
+ * @return a rave value type
+ */
+RaveValueType PolarScan_getValueAtAzimuthAndRange(PolarScan_t* scan, double a, double r, double* v);
+
+/**
  * Function for keeping track of some sort of metadata that should be
  * associated with this scan.
  * @param[in] ptr - a void pointer that should be stored

@@ -87,6 +87,11 @@ const char* Projection_getDefinition(Projection_t* projection);
 int Projection_transform(Projection_t* projection, Projection_t* tgt, double* x, double* y, double* z);
 
 /**
+ *
+ */
+int Projection_inv(Projection_t* projection, double* x, double* y);
+
+/**
  * Function for keeping track of some sort of metadata that should be
  * associated with this projection.
  * @param[in] ptr - a void pointer that should be stored
@@ -98,4 +103,11 @@ void Projection_setVoidPtr(Projection_t* projection, void* ptr);
  * @return the void data
  */
 void* Projection_getVoidPtr(Projection_t* projection);
+
+/**
+ * Enables/disables debugging
+ * @param[in] debug - 0 if debugging should be deactivated (default) and != 0 otherwise
+ */
+void Projection_setDebug(Projection_t* projection, int debug);
+
 #endif

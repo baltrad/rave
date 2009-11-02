@@ -259,6 +259,33 @@ Projection_t* Cartesian_getProjection(Cartesian_t* cartesian);
 int Cartesian_setData(Cartesian_t* cartesian, long xsize, long ysize, void* data, RaveDataType type);
 
 /**
+ * Returns a pointer to the internal data storage.
+ * @param[in] cartesian - the cartesian product
+ * @return the internal data pointer (NOTE! Do not release this pointer)
+ */
+void* Cartesian_getData(Cartesian_t* cartesian);
+
+/**
+ * Sets the value at the specified coordinates.
+ * @param[in] cartesian - the cartesian product
+ * @param[in] x - the x-position
+ * @param[in] y - the y-position
+ * @param[in] v - the value to set
+ * @return 1 on success, otherwise 0
+ */
+int Cartesian_setValue(Cartesian_t* cartesian, long x, long y, double v);
+
+/**
+ * Returns the value at the specified x and y position.
+ * @param[in] cartesian - the cartesian product
+ * @param[in] x - the x index
+ * @param[in] y - the y index
+ * @param[out] v - the data at the specified index
+ * @return the type of data
+ */
+RaveValueType Cartesian_getValue(Cartesian_t* cartesian, long x, long y, double* v);
+
+/**
  * Function for keeping track of some sort of metadata that should be
  * associated with this scan.
  * @param[in] cartesian - the cartesian product
@@ -272,4 +299,10 @@ void Cartesian_setVoidPtr(Cartesian_t* cartesian, void* ptr);
  * @return the void data
  */
 void* Cartesian_getVoidPtr(Cartesian_t* cartesian);
+
+/**
+ * Enables/disables debugging.
+ * @param[in] debug - 0 means no debugging (default) otherwise debugging is enabled.
+ */
+void Cartesian_setDebug(Cartesian_t* cartesian, int debug);
 #endif

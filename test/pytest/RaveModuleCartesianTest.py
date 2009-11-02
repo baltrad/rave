@@ -273,6 +273,53 @@ class RaveModuleCartesianTest(unittest.TestCase):
     obj.projection = None
     self.assertTrue(None == obj.projection)
 
+  def testCartesian_getValue(self):
+    obj = _rave.cartesian()
+    obj.nodata = 255.0
+    obj.undetect = 0.0
+    a=numpy.arange(120)
+    a=numpy.array(a.astype(numpy.float64),numpy.float64)
+    a=numpy.reshape(a,(12,10)).astype(numpy.float64)    
+    a[0][1] = obj.nodata
+    a[1][0] = obj.undetect
+    obj.setData(a)
+    
+    pairs = [(0, 0, 0.0, _rave.RaveValueType_UNDETECT),
+             (1, 0, obj.nodata, _rave.RaveValueType_NODATA), 
+             (0, 1, obj.undetect, _rave.RaveValueType_UNDETECT),
+             (2, 0, 2.0, _rave.RaveValueType_DATA),
+             (0, 3, 30.0, _rave.RaveValueType_DATA)]
+
+    for cval in pairs:
+      result = obj.getValue((cval[0],cval[1]))
+      self.assertAlmostEquals(cval[2], result[1], 4)
+      self.assertEquals(cval[3], result[0])
+
+  def testCartesian_setGetValue(self):
+    obj = _rave.cartesian()
+    obj.nodata = 255.0
+    obj.undetect = 0.0
+    a=numpy.arange(120)
+    a=numpy.array(a.astype(numpy.float64),numpy.float64)
+    a=numpy.reshape(a,(12,10)).astype(numpy.float64)  
+    obj.setData(a)
+    
+    data = [((0,1), 10.0, _rave.RaveValueType_DATA),
+            ((1,1), 20.0, _rave.RaveValueType_DATA),
+            ((2,2), 30.0, _rave.RaveValueType_DATA),
+            ((9,4), 49.0, _rave.RaveValueType_DATA),
+            ((8,4), obj.nodata, _rave.RaveValueType_NODATA),
+            ((4,8), obj.undetect, _rave.RaveValueType_UNDETECT),]
+    
+    for v in data:
+      obj.setValue(v[0],v[1])
+    
+    # Verify
+    for v in data:
+      r = obj.getValue(v[0])
+      self.assertAlmostEquals(v[1], r[1], 4)
+      self.assertEquals(v[2], r[0])
+
   def testCartesian_setData_int8(self):
     obj = _rave.cartesian()
     a=numpy.arange(120)
@@ -321,3 +368,19 @@ class RaveModuleCartesianTest(unittest.TestCase):
     self.assertEqual(_rave.RaveDataType_SHORT, obj.datatype)
     self.assertEqual(10, obj.xsize)
     self.assertEqual(12, obj.ysize)
+
+  def testCartesian_getData_int8(self):
+    obj = _rave.cartesian()
+    a=numpy.arange(120)
+    a=numpy.array(a.astype(numpy.int8),numpy.int8)
+    a=numpy.reshape(a,(12,10)).astype(numpy.int8)    
+    
+    obj.setData(a)
+    obj.setValue((3,2), 5)
+    obj.setValue((4,4), 7)
+    
+    result = obj.getData()
+    self.assertEquals(5, result[2][3])
+    self.assertEquals(7, result[4][4])
+    self.assertEquals("int8", result.dtype.name)
+

@@ -307,6 +307,87 @@ fail:
   return result;
 }
 
+void* PolarScan_getData(PolarScan_t* scan)
+{
+  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  return scan->data;
+}
+
+int PolarScan_getRangeIndex(PolarScan_t* scan, double r)
+{
+  int result = -1;
+  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  RAVE_ASSERT((scan->nbins > 0), "nbins must be > 0");
+  RAVE_ASSERT((scan->rscale > 0.0), "rscale must be > 0.0");
+
+  if (r <= 0.0) {
+    result = 0;
+  } else {
+    result = (int)rint((r/scan->rscale));
+  }
+  if (result >= scan->nbins || result < 0) {
+    result = -1;
+  }
+  return result;
+}
+
+int PolarScan_getAzimuthIndex(PolarScan_t* scan, double a)
+{
+  int result = -1;
+  double azOffset = 0.0L;
+  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  RAVE_ASSERT((scan->nrays > 0), "nrays must be > 0");
+
+  azOffset = 2*M_PI/scan->nrays;
+  result = (int)rint(a/azOffset);
+  if (result >= scan->nrays) {
+    result -= scan->nrays;
+  } else if (result < 0) {
+    result += scan->nrays;
+  }
+  return result;
+}
+
+RaveValueType PolarScan_getValueAtIndex(PolarScan_t* scan, int ai, int ri, double* v)
+{
+  RaveValueType result = RaveValueType_NODATA;
+  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  RAVE_ASSERT((v != NULL), "v was NULL");
+  *v = scan->nodata;
+  if (ai >= 0 && ai < scan->nrays && ri >= 0 && ri < scan->nbins) {
+    result = RaveValueType_DATA;
+    *v = get_array_item_2d(scan->data, ri, ai, scan->type, scan->nbins);
+    if (*v == scan->nodata) {
+      result = RaveValueType_NODATA;
+    } else if (*v == scan->undetect) {
+      result = RaveValueType_UNDETECT;
+    }
+  }
+  return result;
+}
+
+RaveValueType PolarScan_getValueAtAzimuthAndRange(PolarScan_t* scan, double a, double r, double* v)
+{
+  RaveValueType result = RaveValueType_NODATA;
+  int ai = 0, ri = 0;
+  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  RAVE_ASSERT((v != NULL), "v was NULL");
+  ai = PolarScan_getAzimuthIndex(scan, a);
+  if (ai < 0) {
+    goto done;
+  }
+  ri = PolarScan_getRangeIndex(scan, r);
+  if (ri < 0) {
+    goto done;
+  }
+
+  //fprintf(stderr, "azimuth=%f, range=%f => ai = %d, ri = %d\n",a*180.0/M_PI,r,ai,ri);
+
+  result = PolarScan_getValueAtIndex(scan, ai, ri, v);
+done:
+  return result;
+}
+
 void PolarScan_setVoidPtr(PolarScan_t* scan, void* ptr)
 {
   RAVE_ASSERT((scan != NULL), "scan was NULL");

@@ -1,0 +1,54 @@
+<?xml version='1.0' encoding='iso-8859-1'?>
+<!-- $Id: danish_radars.xml,v 1.1.1.1 2006/07/14 11:31:54 dmichels Exp $ -->
+<radars>
+<common>
+<description>Characteristics of data from all radars</description>
+<radardef>
+<arg id="rays" type="int">360</arg>
+<arg id="bins" type="int">120</arg>
+<arg id="angles" type="sequence">0.5, 0.7, 1.0, 1.5, 2.4, 4.5, 8.5, 13.0, 15.0</arg>
+<arg id="xsize" type="float">2000.0</arg>
+<arg id="beamwidth" type="float">0.9</arg>
+<arg id="wavelength" type="float">5.6</arg>
+<arg id="highprf" type="int">600</arg>
+<arg id="lowprf" type="int">450</arg>
+<arg id="WMO" type="int">00000</arg>
+</radardef>
+</common>
+<radar id="sin">
+<description>Sindal, EEC</description>
+<radardef>
+<arg id="place">Sindal</arg>
+<arg id="lon" type="float">10.136</arg>
+<arg id="lat" type="float">57.489</arg>
+<arg id="height" type="int">93</arg>
+</radardef>
+</radar>
+<radar id="rom">
+<description>Rømø, EEC</description>
+<radardef>
+<arg id="place">Romoe</arg>
+<arg id="lon" type="float">8.552</arg>
+<arg id="lat" type="float">55.173</arg>
+<arg id="height" type="int">10</arg>
+</radardef>
+</radar>
+<radar id="ste">
+<description>Stevns, EEC</description>
+<radardef>
+<arg id="place">Stevns</arg>
+<arg id="lon" type="float">12.449278</arg>
+<arg id="lat" type="float">55.326195</arg>
+<arg id="height" type="int">53</arg>
+</radardef>
+</radar>
+<radar id="bor">
+<description>Bornholm, EEC</description>
+<radardef>
+<arg id="place">Bornholm</arg>
+<arg id="lon" type="float">14.887517</arg>
+<arg id="lat" type="float">55.11275</arg>
+<arg id="height" type="int">171</arg>
+</radardef>
+</radar>
+</radars>

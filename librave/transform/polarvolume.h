@@ -137,6 +137,26 @@ int PolarVolume_getScan(PolarVolume_t* pvol, int index, PolarScan_t** scan);
 int PolarVolume_getNumberOfScans(PolarVolume_t* pvol);
 
 /**
+ * Returns the index of the scan that got an elevation that is closest
+ * to the provided elevation.
+ * @param[in] pvol - the polar volume
+ * @param[in] e - the elevation (in radians)
+ * @param[out] index - the found scan index.
+ */
+void PolarVolume_getNearestElevation(PolarVolume_t* pvol, double e, int* index);
+
+/**
+ * Fetches the value nearest to the specified position.
+ * @param[in] pvol - the polar volume
+ * @param[in] lon  - the longitude (in radians)
+ * @param[in] lat  - the latitude (in radians)
+ * @param[in] height - the height
+ * @param[out] v - the value
+ * @return what type of value that has been set in v.
+ */
+RaveValueType PolarVolume_getNearest(PolarVolume_t* pvol, double lon, double lat, double height, double* v);
+
+/**
  * Calculates the value at the specified lon/lat/height.
  * @param[in] pvol - the volume
  * @param[in] lon - the longitude
@@ -153,5 +173,12 @@ int PolarVolume_getNumberOfScans(PolarVolume_t* pvol);
  * @param[in] ascending - if 1, ascending sort will be done, otherwise descending
  */
 void PolarVolume_sortByElevations(PolarVolume_t* pvol, int ascending);
+
+/**
+ * Enables/Disables calculation debugging for a polar volume
+ * @param[in] pvol - the volume
+ * @param[in] enable - 0 to disable (default) 1 to activate
+ */
+void PolarVolume_setDebug(PolarVolume_t* pvol, int enable);
 
 #endif

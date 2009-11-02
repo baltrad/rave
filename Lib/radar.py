@@ -143,6 +143,7 @@ def MakeCartesianArea(proj, rad):
         definition = [projtype, radius, lat, lon]
         name = "%s %s" % (rad.place, proj.proj)
         pcs.define(projid, name, definition)
+        #print "projid=%s, name=%s, definition=%s"%(projid,name,definition)
         a.pcs = projid
         area._registry[a.Id] = a
 

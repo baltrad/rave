@@ -115,6 +115,39 @@ RaveDataType translate_pyarraytype_to_ravetype(int type)
   return result;
 }
 
+int translate_ravetype_to_pyarraytype(RaveDataType type)
+{
+  int result = PyArray_NOTYPE;
+  switch(type) {
+  case RaveDataType_CHAR:
+    result = PyArray_BYTE;
+    break;
+  case RaveDataType_UCHAR:
+    result = PyArray_UBYTE;
+    break;
+  case RaveDataType_SHORT:
+    result = PyArray_SHORT;
+    break;
+  case RaveDataType_INT:
+    result = PyArray_INT;
+    break;
+  case RaveDataType_LONG:
+    result = PyArray_LONG;
+    break;
+  case RaveDataType_FLOAT:
+    result = PyArray_FLOAT;
+    break;
+  case RaveDataType_DOUBLE:
+    result = PyArray_DOUBLE;
+    break;
+  default:
+    result = PyArray_NOTYPE;
+    break;
+  }
+  return result;
+}
+
+
 int pyarraytype_from_type(char type)
 {
   switch (type) {

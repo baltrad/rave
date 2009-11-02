@@ -23,6 +23,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @date 2009-10-15
  */
 #include "polarvolume.h"
+#include "polarnav.h"
 #include "rave_debug.h"
 #include "rave_alloc.h"
 #include <string.h>
@@ -38,10 +39,12 @@ struct _PolarVolume_t {
   double height; /**< altitude of the radar that this volume originated from */
 
   Projection_t* projection; /**< projection for this volume */
+  PolarNavigator_t* navigator; /**< a polar navigator */
 
   int nrAllocatedScans; /**< Number of scans that the volume currently can hold */
   int nrScans; /**< The number of scans that this volume is defined by */
 
+  int debug; /**< debugging flag */
 
   PolarScan_t** scans; /**< the scans that this volume is defined by */
 };
@@ -92,6 +95,7 @@ static void PolarVolume_destroy(PolarVolume_t* volume)
 {
   if (volume != NULL) {
     Projection_release(volume->projection);
+    PolarNavigator_release(volume->navigator);
     if (volume->scans != NULL) {
       int i = 0;
       for (i = 0; i < volume->nrScans; i++) {
@@ -161,10 +165,13 @@ PolarVolume_t* PolarVolume_new(void)
     result->nrScans = 0;
     result->scans = NULL;
     result->projection = NULL;
+    result->navigator = NULL;
+    result->debug = 0;
 
     if (!PolarVolume_ensureScanCapacity(result)) {
       PolarVolume_destroy(result);
       result = NULL;
+      goto done;
     }
 
     // Always initialize to default projection for lon/lat calculations
@@ -172,8 +179,18 @@ PolarVolume_t* PolarVolume_new(void)
     if (result->projection == NULL) {
       PolarVolume_destroy(result);
       result = NULL;
+      goto done;
+    }
+
+    // And a navigator as well
+    result->navigator = PolarNavigator_new();
+    if (result->navigator == NULL) {
+      PolarVolume_destroy(result);
+      result = NULL;
+      goto done;
     }
   }
+done:
   return result;
 }
 
@@ -209,6 +226,7 @@ void PolarVolume_setLongitude(PolarVolume_t* pvol, double lon)
 {
   RAVE_ASSERT((pvol != NULL), "pvol was NULL");
   pvol->lon = lon;
+  PolarNavigator_setLon0(pvol->navigator, lon);
 }
 
 double PolarVolume_getLongitude(PolarVolume_t* pvol)
@@ -221,6 +239,7 @@ void PolarVolume_setLatitude(PolarVolume_t* pvol, double lat)
 {
   RAVE_ASSERT((pvol != NULL), "pvol was NULL");
   pvol->lat = lat;
+  PolarNavigator_setLat0(pvol->navigator, lat);
 }
 
 double PolarVolume_getLatitude(PolarVolume_t* pvol)
@@ -233,6 +252,7 @@ void PolarVolume_setHeight(PolarVolume_t* pvol, double height)
 {
   RAVE_ASSERT((pvol != NULL), "pvol was NULL");
   pvol->height = height;
+  PolarNavigator_setAlt0(pvol->navigator, height);
 }
 
 double PolarVolume_getHeight(PolarVolume_t* pvol)
@@ -290,49 +310,52 @@ int PolarVolume_getNumberOfScans(PolarVolume_t* pvol)
   return pvol->nrScans;
 }
 
-#ifdef KALLE
-double PolarVolume_getNearestByHeight(PolarVolume_t* pvol, double lon,
-  double lat, double height, TransformParam* param)
+void PolarVolume_getNearestElevation(PolarVolume_t* pvol, double e, int* index)
 {
+  double se = 0.0L, eld = 0.0L;
+  int ei = 0;
+  int i = 0;
   RAVE_ASSERT((pvol != NULL), "pvol was NULL");
-  RAVE_ASSERT((param != NULL), "param was NULL");
+  RAVE_ASSERT((index != NULL), "index was NULL");
 
-  // CAPPI
+  se = PolarScan_getElangle(pvol->scans[0]);
+  ei = 0;
+  eld = fabs(e - se);
+  for (i = 1; i < pvol->nrScans; i++) {
+    double elev = PolarScan_getElangle(pvol->scans[i]);
+    double elevd = fabs(e - elev);
+    if (elevd < eld) {
+      se = elev;
+      eld = elevd;
+      ei = i;
+    } else {
+      break;
+    }
+  }
+  *index = ei;
+}
+
+RaveValueType PolarVolume_getNearest(PolarVolume_t* pvol, double lon, double lat, double height, double* v)
+{
+  double d = 0.0L, a = 0.0L, r = 0.0L, e = 0.0L;
+  RaveValueType result = RaveValueType_NODATA;
+  int ei = 0;
+
+  RAVE_ASSERT((pvol != NULL), "pvol was NULL");
+  RAVE_ASSERT((v != NULL), "v was NULL");
+  *v = 0.0;
+
   PolarNavigator_llToDa(pvol->navigator, lat, lon, &d, &a);
   PolarNavigator_dhToRe(pvol->navigator, d, height, &r, &e);
 
-  // According to the ODIM-specification, all scans should have azindex
-  // due north and ordered clockwise.
+  // Find relevant elevation
+  PolarVolume_getNearestElevation(pvol, e, &ei);
 
-  azindex = getAzimuthIndex();
+  // Now we have the elevation angle, fetch value by providing azimuth and range.
+  result = PolarScan_getValueAtAzimuthAndRange(pvol->scans[ei], a, r, v);
 
-
-  if(wrap->slice == PPI) {
-    /* if slice is PPI, the elevation is known, calculate the range */
-    source.elevation = wrap->elev[mytrunc(wrap->height)];
-    deToRh(&source,&source);
-  }
-  else {
-    dhToRe(&source,&source);
-  }
-  Position source;
-  int tmp;
-
-  source.lon0 = wrap->lon0;
-  source.lat0 = wrap->lat0;
-  source.alt0 = wrap->alt0;
-  source.lon = coord.u;
-  source.lat = coord.v;
-
-  source.alt = wrap->height;
-  source.dndh = wrap->dndh;
-
-  wrap->R = wrap->cressmanR_xy*wrap->inscale;
-
-  llToDa(&source,&source);
-
+  return result;
 }
-#endif
 
 void PolarVolume_sortByElevations(PolarVolume_t* pvol, int ascending)
 {
@@ -343,6 +366,12 @@ void PolarVolume_sortByElevations(PolarVolume_t* pvol, int ascending)
   } else {
     qsort(pvol->scans, pvol->nrScans, sizeof(PolarScan_t*), descendingElevationSort);
   }
+}
+
+void PolarVolume_setDebug(PolarVolume_t* pvol, int enable)
+{
+  RAVE_ASSERT((pvol != NULL), "pvol was NULL");
+  pvol->debug = enable;
 }
 
 /*@} End of Interface functions */

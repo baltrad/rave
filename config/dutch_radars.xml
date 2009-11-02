@@ -1,0 +1,37 @@
+<?xml version='1.0' encoding='iso-8859-1'?>
+<!-- $Id: dutch_radars.xml,v 1.1.1.1 2006/07/14 11:31:54 dmichels Exp $ -->
+<radars>
+<common>
+<description>Characteristics of data from all radars</description>
+<radardef>
+<arg id="rays" type="int">360</arg>
+<arg id="bins" type="int">200</arg>
+<arg id="angles" type="sequence">0.3, 1.1, 2.0, 3.0</arg>
+<arg id="xsize" type="float">1000.0</arg>
+<arg id="beamwidth" type="float">0.9</arg>
+<arg id="wavelength" type="float">5.2</arg>
+<arg id="highprf" type="int">600</arg>
+<arg id="lowprf" type="int">450</arg>
+</radardef>
+</common>
+<radar id="dhl">
+<description>Den Helder, Gematronik</description>
+<radardef>
+<arg id="place">Den Helder</arg>
+<arg id="WMO" type="int">06234</arg>
+<arg id="lon" type="float">4.791</arg>
+<arg id="lat" type="float">52.954</arg>
+<arg id="height" type="int">51</arg>
+</radardef>
+</radar>
+<radar id="blt">
+<description>De Bilt, Gematronik</description>
+<radardef>
+<arg id="place">De Bilt</arg>
+<arg id="WMO" type="int">06260</arg>
+<arg id="lon" type="float">5.179</arg>
+<arg id="lat" type="float">52.103</arg>
+<arg id="height" type="int">44</arg>
+</radardef>
+</radar>
+</radars>

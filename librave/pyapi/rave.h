@@ -100,6 +100,13 @@ RaveDataType translate_pytype_to_ravetype(char type);
 RaveDataType translate_pyarraytype_to_ravetype(int type);
 
 /**
+ * Translates a rave data type into a numpy array type
+ * @param[in] type the rave data type
+ * @return the numpy array type (PyArray_NOTYPE if no translation could be performed)
+ */
+int translate_ravetype_to_pyarraytype(RaveDataType type);
+
+/**
  * Returns the corresponding PyArray_Type from the typecode,
  * e.g. input 'f' will return PyArray_FLOAT.
  * @param[in] type the array type code

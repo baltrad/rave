@@ -7,6 +7,7 @@ import os
 import _rave
 import string
 import numpy
+import math
 
 class RaveModulePolarScanTest(unittest.TestCase):
   def setUp(self):
@@ -238,6 +239,91 @@ class RaveModulePolarScanTest(unittest.TestCase):
     except TypeError,e:
       pass
     self.assertAlmostEquals(0.0, obj.undetect, 4)
+
+  def testScan_getRangeIndex(self):
+    obj = _rave.scan()
+    obj.nbins = 200
+    obj.rscale = 1000.0
+
+    # Ranges are tuples (range, expected index)
+    ranges = [(499.0, 0),
+              (501.0, 1),
+              (199000.0, 199),
+              (200000.0, -1)]
+    
+    for rr in ranges:
+      result = obj.getRangeIndex(rr[0])
+      self.assertEquals(rr[1], result)
+  
+  def testScan_getAzimuthIndex(self):
+    obj = _rave.scan()
+    obj.nrays = 400
+    # Azimuths tuple is ordered by an azimuth in degrees and expected index
+    azimuths = [(180.0, 200),
+                (90.0, 100),
+                (0.0, 0),
+                (0.1, 0),
+                (0.4, 0),
+                (359.9, 0),
+                (360.4, 0),
+                (-0.1,0),
+                (-1.0,399)]
+    for azv in azimuths:
+      result = obj.getAzimuthIndex(azv[0]*math.pi/180.0)
+      self.assertEquals(azv[1], result)
+
+  def testScan_getValueAtIndex(self):
+    obj = _rave.scan()
+    obj.nodata = 255.0
+    obj.undetect = 0.0
+    a=numpy.arange(30)
+    a=numpy.array(a.astype(numpy.float64),numpy.float64)
+    a=numpy.reshape(a,(5,6)).astype(numpy.float64)      
+    a[0][0] = obj.undetect
+    a[2][1] = obj.nodata
+    a[4][5] = obj.undetect
+
+    obj.setData(a)
+
+    pts = [((0,0), (_rave.RaveValueType_UNDETECT, 0.0)),
+           ((0,1), (_rave.RaveValueType_DATA, 1.0)),
+           ((1,0), (_rave.RaveValueType_DATA, 6.0)),
+           ((2,1), (_rave.RaveValueType_NODATA, obj.nodata)),
+           ((4,4), (_rave.RaveValueType_DATA, 28.0)),
+           ((4,5), (_rave.RaveValueType_UNDETECT, obj.undetect)),
+           ((5,5), (_rave.RaveValueType_NODATA, obj.nodata))]
+    
+    for tval in pts:
+      result = obj.getValueAtIndex(tval[0])
+      self.assertEquals(tval[1][0], result[0])
+      self.assertAlmostEquals(tval[1][1], result[1], 4)
+
+  def testScan_getValueAtAzimuthAndRange(self):
+    obj = _rave.scan()
+    obj.nodata = 255.0
+    obj.undetect = 0.0
+    obj.rscale = 1000.0
+    a=numpy.arange(3600)
+    a=numpy.array(a.astype(numpy.float64),numpy.float64)
+    a=numpy.reshape(a,(360,10)).astype(numpy.float64)      
+    a[0][0] = obj.undetect
+    a[2][1] = obj.nodata
+    a[4][5] = obj.undetect
+
+    obj.setData(a)
+
+    pts = [((0.0,0.0), (_rave.RaveValueType_UNDETECT, 0.0)),        #0, 0
+           ((10.0,2000.0), (_rave.RaveValueType_DATA, 102.0)),      #10*10 + 2
+           ((20.0,9000), (_rave.RaveValueType_DATA, 209.0)),        #20*10 + 9
+           ((2.0,1000), (_rave.RaveValueType_NODATA, obj.nodata)),  #10*20 + 9
+           ((4.0,5000), (_rave.RaveValueType_UNDETECT, obj.undetect))]
+    
+    for tval in pts:
+      az = tval[0][0]*math.pi/180.0
+      ra = tval[0][1]
+      result = obj.getValueAtAzimuthAndRange((az,ra))
+      self.assertEquals(tval[1][0], result[0])
+      self.assertAlmostEquals(tval[1][1], result[1], 4)
 
   def testScan_setData_int8(self):
     obj = _rave.scan()

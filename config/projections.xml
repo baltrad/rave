@@ -1,0 +1,28 @@
+<?xml version='1.0' encoding='iso-8859-1'?>
+<!-- $Id: projections.xml,v 1.1.1.1 2006/07/14 11:31:54 dmichels Exp $ -->
+<projections>
+<projection id='lcc14e60n'>
+  <description>Lambert Conformal 14E, 60N</description>
+  <projdef>+proj=lcc +R=6371000.0 +lon_0=14 +lat1=55 +lat2=70</projdef>
+</projection>
+<projection id='ps14e60n'>
+  <description>Polar Stereographic 14E, 60N</description>
+  <projdef>+proj=stere +ellps=bessel +lat_0=90 +lon_0=14 +lat_ts=60 +datum=WGS84</projdef>
+</projection>
+<projection id='laea20e60n'>
+  <description>Lambert Azimuthal Equal Area 20E, 60N</description>
+  <projdef>+proj=laea +R=6370997 +lat_0=60 +lon_0=20</projdef>
+</projection>
+<projection id='rot10w30s'>
+  <description>Rotated Equidistant Cylindrical for HIRLAM and MESAN</description>
+  <projdef>+proj=ob_tran +o_proj=eqc +o_lat_p=30 +o_lon_p=10 +lon_0=-10 +R=6371000.0</projdef>
+</projection>
+<projection id='RT90'>
+  <description>Lantmäteriet RT90 (Swedish national grid)</description>
+  <projdef>+proj=tmerc +ellps=bessel +lon_0=15.808277777778 +x_0=1500000</projdef>
+</projection>
+<projection id='llwgs84'>
+  <description>Latlong on WGS84, for whatever purposes</description>
+  <projdef>+proj=latlong +ellps=WGS84 +datum=WGS84</projdef>
+</projection>
+</projections>

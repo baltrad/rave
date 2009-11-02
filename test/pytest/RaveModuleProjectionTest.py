@@ -34,7 +34,7 @@ class RaveModuleProjectionTest(unittest.TestCase):
     
   def testProjectFromCartesianToLonLat(self):
     cproj = _rave.projection("cartesian", "cartesian", "+proj=stere +ellps=bessel +lat_0=90 +lon_0=14 +lat_ts=60 +datum=WGS84")
-    llproj = _rave.projection("lonlat", "lonlat", "+proj=latlong +ellps=WGS84 +datum=WGS84")
+    llproj = _rave.projection("lonlat", "lonlat", "+proj=longlat +ellps=WGS84 +datum=WGS84")
     inx = 60.0 * math.pi / 180.0
     iny = 14.0 * math.pi / 180.0
     x,y = llproj.transform(cproj, (inx,iny))
@@ -46,7 +46,17 @@ class RaveModuleProjectionTest(unittest.TestCase):
     
     self.assertAlmostEquals(60.0, outx, 4)
     self.assertAlmostEquals(14.0, outy, 4)
-    
+      
   # Need some better tests for verifying that projectioning works as expected...
+
+  def transformTo(self, cproj, llproj, coord):
+    x,y = cproj.transform(llproj, coord)
+    x = x*180.0/math.pi
+    y = y*180.0/math.pi
+    return (x,y)
+
+
+if __name__=="__main__":
+  unittest.main()
   
     

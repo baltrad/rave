@@ -1,0 +1,157 @@
+<?xml version='1.0' encoding='iso-8859-1'?>
+<!-- $Id: swedish_radars.xml,v 1.1.1.1 2006/07/14 11:31:54 dmichels Exp $ -->
+<radars>
+<common>
+<description>Characteristics of data from all Swedish radars</description>
+<radardef>
+<arg id="rays" type="int">420</arg>
+<arg id="bins" type="int">120</arg>
+<arg id="angles" type="sequence">0.5, 1.0, 1.5, 2.0</arg>
+<arg id="xsize" mode="non-doppler" type="float">2000.0</arg>
+<arg id="xsize" mode="doppler" type="float">1000.0</arg>
+<arg id="beamwidth" type="float">0.86</arg>
+<arg id="wavelength" type="float">5.6</arg>
+<arg id="prf" mode="non-doppler" type="int">250</arg>
+<arg id="highprf" mode="doppler" type="int">1200</arg>
+<arg id="lowprf" mode="doppler" type="int">900</arg>
+</radardef>
+</common>
+<cartesian>
+<arg id="proj">gnom</arg>
+<arg id="R" type="float">6371000.0</arg>
+<arg id="max_range" mode="non-doppler" type="float">240.0</arg>
+<arg id="max_range" mode="doppler" type="float">120.0</arg>
+<arg id="size" type="int">240</arg>
+</cartesian>
+<radar id="kir">
+<description>Kiruna, Lappland, Ericsson EWR</description>
+<radardef>
+<arg id="place">Kiruna</arg>
+<arg id="WMO" type="int">02032</arg>
+<arg id="lon" type="float">20.6222</arg>
+<arg id="lat" type="float">67.7103</arg>
+<arg id="height" type="int">646</arg>
+</radardef>
+</radar>
+<radar id="lul">
+<description>Luleå, Norrbotten, Ericsson EWR</description>
+<radardef>
+<arg id="place">Luleå</arg>
+<arg id="WMO" type="int">02092</arg>
+<arg id="lon" type="float">21.86972</arg>
+<arg id="lat" type="float">65.43167</arg>
+<arg id="height" type="int">66</arg>
+</radardef>
+</radar>
+<radar id="ovi">
+<description>Örnsköldsvik, Ångermanland, Ericsson EWR</description>
+<radardef>
+<arg id="place">Örnsköldsvik</arg>
+<arg id="WMO" type="int">02262</arg>
+<arg id="lon" type="float">18.4056</arg>
+<arg id="lat" type="float">63.6406</arg>
+<arg id="height" type="int">522</arg>
+</radardef>
+</radar>
+<radar id="osu">
+<description>Östersund, Republiken Jämtland, Ericsson EWR</description>
+<radardef>
+<arg id="place">Östersund</arg>
+<arg id="WMO" type="int">02200</arg>
+<arg id="lon" type="float">14.762</arg>
+<arg id="lat" type="float">63.296</arg>
+<arg id="height" type="int">465</arg>
+</radardef>
+</radar>
+<radar id="hud">
+<description>Hudiksvall, Hälsingland, Ericsson EWR</description>
+<radardef>
+<arg id="place">Hudiksvall</arg>
+<arg id="WMO" type="int">02334</arg>
+<arg id="lon" type="float">16.716</arg>
+<arg id="lat" type="float">61.579</arg>
+<arg id="height" type="int">389</arg>
+</radardef>
+</radar>
+<radar id="lek">
+<description>Leksand, Dalarna, Ericsson EWR</description>
+<radardef>
+<arg id="place">Leksand</arg>
+<arg id="WMO" type="int">02430</arg>
+<arg id="lon" type="float">14.88</arg>
+<arg id="lat" type="float">60.723</arg>
+<arg id="height" type="int">458</arg>
+</radardef>
+</radar>
+<radar id="arl">
+<description>Stockholm-Arlanda, Uppland, Ericsson EWR</description>
+<radardef>
+<arg id="place">Arlanda</arg>
+<arg id="WMO" type="int">02451</arg>
+<arg id="lon" type="float">17.9494</arg>
+<arg id="lat" type="float">59.6547</arg>
+<arg id="height" type="int">74</arg>
+</radardef>
+</radar>
+<radar id="ase">
+<description>Ase, Gotland, Ericsson EWR</description>
+<radardef>
+<arg id="place">Ase</arg>
+<arg id="WMO" type="int">02588</arg>
+<arg id="lon" type="float">18.40004032</arg>
+<arg id="lat" type="float">57.30346281</arg>
+<arg id="height" type="int">111</arg>
+</radardef>
+</radar>
+<radar id="hem">
+<description>Hemse, Gotland, Ericsson EWR</description>
+<radardef>
+<arg id="place">Hemse</arg>
+<arg id="WMO" type="int">02588</arg>
+<arg id="lon" type="float">18.3842</arg>
+<arg id="lat" type="float">57.2378</arg>
+<arg id="height" type="int">56</arg>
+<arg id="angles" type="sequence">0.5, 0.7, 0.9, 1.1, 1.5, 2.3, 3.2, 4.1, 6.0, 12.0, 24.0, 40.0</arg>
+</radardef>
+</radar>
+<radar id="vil">
+<description>Vilebo, Östergötland, Ericsson EWR</description>
+<radardef>
+<arg id="place">Vilebo</arg>
+<arg id="WMO" type="int">02570</arg>
+<arg id="lon" type="float">15.9396</arg>
+<arg id="lat" type="float">58.1063</arg>
+<arg id="height" type="int">222</arg>
+</radardef>
+</radar>
+<radar id="var">
+<description>Vara, Västergötland, Ericsson EWR</description>
+<radardef>
+<arg id="place">Vara</arg>
+<arg id="WMO" type="int">02600</arg>
+<arg id="lon" type="float">12.8287</arg>
+<arg id="lat" type="float">58.2564</arg>
+<arg id="height" type="int">167</arg>
+</radardef>
+</radar>
+<radar id="kkr">
+<description>Karlskrona, Blekinge, Ericsson EWR</description>
+<radardef>
+<arg id="place">Karlskrona</arg>
+<arg id="WMO" type="int">02666</arg>
+<arg id="lon" type="float">15.6128</arg>
+<arg id="lat" type="float">56.296</arg>
+<arg id="height" type="int">122</arg>
+</radardef>
+</radar>
+<radar id="ang">
+<description>Ängelholm, Skåne (Hallandsåsen), Ericsson EWR</description>
+<radardef>
+<arg id="place">Ängelholm</arg>
+<arg id="WMO" type="int">02606</arg>
+<arg id="lon" type="float">12.8544</arg>
+<arg id="lat" type="float">56.3675</arg>
+<arg id="height" type="int">209</arg>
+</radardef>
+</radar>
+</radars>

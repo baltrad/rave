@@ -24,6 +24,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @date 2009-10-20
  */
 #include "transform.h"
+#include "projection.h"
 #include "rave_debug.h"
 #include "rave_alloc.h"
 #include <string.h>
@@ -98,11 +99,10 @@ RaveTransformationMethod Transform_getMethod(Transform_t* transform)
 int Transform_cappi(Transform_t* transform, PolarVolume_t* pvol, Cartesian_t* cartesian, double height)
 {
   int result = 0;
-  long xsize = 0, ysize = 0;
-  long x = 0, y = 0;
+  long xsize = 0, ysize = 0, x = 0, y = 0;
+  double cnodata = 0.0L, cundetect = 0.0L;
   Projection_t* sourcepj = NULL;
   Projection_t* targetpj = NULL;
-  TransformParam param;
 
   RAVE_ASSERT((transform != NULL), "transform was NULL");
   RAVE_ASSERT((pvol != NULL), "pvol was NULL");
@@ -119,39 +119,33 @@ int Transform_cappi(Transform_t* transform, PolarVolume_t* pvol, Cartesian_t* ca
     RAVE_ERROR0("No projection in polar volume");
     goto done;
   }
-
+  cnodata = Cartesian_getNodata(cartesian);
+  cundetect = Cartesian_getUndetect(cartesian);
   xsize = Cartesian_getXSize(cartesian);
   ysize = Cartesian_getYSize(cartesian);
 
-  param.nodata = Cartesian_getNodata(cartesian);
-  param.undetect = Cartesian_getUndetect(cartesian);
-  param.method = transform->method;
-
   for (y = 0; y < ysize; y++) {
     double herey = Cartesian_getLocationY(cartesian, y);
+    double tmpy = herey;
     for (x = 0; x < xsize; x++) {
       double herex = Cartesian_getLocationX(cartesian, x);
+      herey = tmpy; // So that we can use herey over and over again
+      RaveValueType valid = RaveValueType_NODATA;
+      double v = 0.0L;
       if (!Projection_transform(sourcepj, targetpj, &herex, &herey, NULL)) {
         RAVE_ERROR0("Transform failed");
         goto done;
       }
+      valid = PolarVolume_getNearest(pvol, herex, herey, height, &v);
 
-      //v = PolarVolume_getWeightedValue(pvol, herex, herey, height, &param);
-/*
-      v = PolarVolume_getWeightedValue(pvol, herex, herey, height, transform->method);
-
+      if (valid == RaveValueType_NODATA) {
+        v = cnodata;
+      } else if (valid == RaveValueType_UNDETECT) {
+        v = cundetect;
+      }
       Cartesian_setValue(cartesian, x, y, v);
-*/
     }
   }
-  //  for(y=0;y<dest->dimensions[0]; y++) {/* do it! */
-  //    UV here_s;
-  //    here_s.v = (outUL.v-outyscale*y);
-  //    for(x=0;x<dest->dimensions[1]; x++) {
-  // here_s.u = (outUL.u+outxscale*x);
-  // methfun(x,y,here_s, &tw); /* Call appropriate function to do the job*/
-  //    }
-  //  return NULL;
 
   result = 1;
 done:
