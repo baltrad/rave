@@ -171,16 +171,31 @@ int Projection_transform(Projection_t* projection, Projection_t* tgt, double* x,
   return result;
 }
 
-int Projection_inv(Projection_t* projection, double* x, double* y)
+int Projection_inv(Projection_t* projection, double x, double y, double* lon, double* lat)
+{
+  int result = 1;
+  projUV in,out;
+  RAVE_ASSERT((projection != NULL), "projection was NULL");
+  RAVE_ASSERT((lon != NULL), "lon was NULL");
+  RAVE_ASSERT((lat != NULL), "lat was NULL");
+  in.u = x;
+  in.v = y;
+  out = pj_inv(in, projection->pj);
+  *lon = out.u;
+  *lat = out.v;
+  return result;
+}
+
+int Projection_fwd(Projection_t* projection, double lon, double lat, double* x, double* y)
 {
   int result = 1;
   projUV in,out;
   RAVE_ASSERT((projection != NULL), "projection was NULL");
   RAVE_ASSERT((x != NULL), "x was NULL");
   RAVE_ASSERT((y != NULL), "y was NULL");
-  in.u = *x;
-  in.v = *y;
-  out = pj_inv(in, projection->pj);
+  in.u = lon;
+  in.v = lat;
+  out = pj_fwd(in, projection->pj);
   *x = out.u;
   *y = out.v;
   return result;

@@ -87,9 +87,26 @@ const char* Projection_getDefinition(Projection_t* projection);
 int Projection_transform(Projection_t* projection, Projection_t* tgt, double* x, double* y, double* z);
 
 /**
- *
+ * Translates surface coordinate into lon/lat.
+ * @param[in] projection - the projection
+ * @param[in]    x - the x coordinate
+ * @param[in]    y - the y coordinate
+ * @param[out] lon - the longitude (in radians)
+ * @param[out] lat - the latitude  (in radians)
+ * @return 0 on failure otherwise success
  */
-int Projection_inv(Projection_t* projection, double* x, double* y);
+int Projection_inv(Projection_t* projection, double x, double y, double* lon, double* lat);
+
+/**
+ * Translates lon/lat coordinate into a surface coordinate.
+ * @param[in] projection - the projection
+ * @param[in] lon - the longitude (in radians)
+ * @param[in] lat - the latitude (in radians)
+ * @param[out]  x - the x coordinate
+ * @param[out]  y - the y coordinate
+ * @return 0 on failure otherwise success
+ */
+int Projection_fwd(Projection_t* projection, double lon, double lat, double* x, double* y);
 
 /**
  * Function for keeping track of some sort of metadata that should be

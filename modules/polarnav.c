@@ -300,10 +300,6 @@ void init_polarnav(void)
 
   Rave_initializeDebugger();
 
-  if (atexit(rave_alloc_print_statistics) != 0) {
-    fprintf(stderr, "Could not set atexit function");
-  }
-
   import_array(); /*To make sure I get access to Numeric*/
 }
 /*@} End of Module setup */

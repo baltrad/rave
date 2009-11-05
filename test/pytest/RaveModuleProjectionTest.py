@@ -9,6 +9,12 @@ import string
 import numpy
 import math
 
+def deg2rad(coord):
+  return (coord[0]*math.pi/180.0, coord[1]*math.pi/180.0)
+
+def rad2deg(coord):
+  return (coord[0]*180.0/math.pi, coord[1]*180.0/math.pi)
+
 class RaveModuleProjectionTest(unittest.TestCase):
   def setUp(self):
     pass
@@ -21,9 +27,9 @@ class RaveModuleProjectionTest(unittest.TestCase):
     
     istransform = string.find(`type(obj)`, "ProjectionCore")
     self.assertNotEqual(-1, istransform) 
-    self.assertEqual("x", obj.id);
-    self.assertEqual("y", obj.description);
-    self.assertEqual("+proj=latlong +ellps=WGS84 +datum=WGS84", obj.definition);
+    self.assertEqual("x", obj.id)
+    self.assertEqual("y", obj.description)
+    self.assertEqual("+proj=latlong +ellps=WGS84 +datum=WGS84", obj.definition)
 
   def testInvalidProjection(self):
     try:
@@ -46,15 +52,51 @@ class RaveModuleProjectionTest(unittest.TestCase):
     
     self.assertAlmostEquals(60.0, outx, 4)
     self.assertAlmostEquals(14.0, outy, 4)
-      
-  # Need some better tests for verifying that projectioning works as expected...
 
-  def transformTo(self, cproj, llproj, coord):
-    x,y = cproj.transform(llproj, coord)
-    x = x*180.0/math.pi
-    y = y*180.0/math.pi
-    return (x,y)
+  # Test that we move in the right direction around the center
+  def testInv_gnom(self):
+    cproj = _rave.projection("gnom","gnom","+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544")
+    
+    ll = rad2deg(cproj.inv((0.0,0.0)))
+    self.assertAlmostEquals(12.8544, ll[0], 4)
+    self.assertAlmostEquals(56.3675, ll[1], 4)
+    
+    ll = rad2deg(cproj.inv((0.0, 1000.0)))
+    self.assertAlmostEquals(12.8544, ll[0], 4)
+    self.assertTrue(ll[1] > 56.3675)
+    
+    ll = rad2deg(cproj.inv((0.0, -1000.0)))
+    self.assertAlmostEquals(12.8544, ll[0], 4)
+    self.assertTrue(ll[1] < 56.3675)
+    
+    ll = rad2deg(cproj.inv((1000.0,0.0)))
+    self.assertTrue(ll[0] > 12.8544)
+    self.assertAlmostEquals(56.3675, ll[1], 4)
 
+    ll = rad2deg(cproj.inv((-1000.0,0.0)))
+    self.assertTrue(ll[0] < 12.8544)
+    self.assertAlmostEquals(56.3675, ll[1], 4)
+
+  def testFwd_gnom(self):
+    cproj = _rave.projection("gnom","gnom","+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544")
+
+    xy = cproj.fwd(deg2rad((12.8544, 56.3675)))
+    self.assertAlmostEquals(0.0, xy[0], 4)
+    self.assertAlmostEquals(0.0, xy[1], 4)
+    
+    xy = cproj.fwd(deg2rad((12.8544, 56.5675)))
+    self.assertAlmostEquals(0.0, xy[0], 4)
+    self.assertTrue(xy[1] > 0.0)
+
+    xy = cproj.fwd(deg2rad((12.8544, 56.1675)))
+    self.assertAlmostEquals(0.0, xy[0], 4)
+    self.assertTrue(xy[1] < 0.0)
+
+    xy = cproj.fwd(deg2rad((12.8744, 56.3675)))
+    self.assertTrue(xy[0] > 0.0)
+
+    xy = cproj.fwd(deg2rad((12.8344, 56.3675)))
+    self.assertTrue(xy[0] < 0.0)
 
 if __name__=="__main__":
   unittest.main()

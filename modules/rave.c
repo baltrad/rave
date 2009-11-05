@@ -1306,11 +1306,59 @@ static PyObject* _projection_transform(Projection* self, PyObject* args)
 }
 
 /**
+ * Translates surface coordinate into lon/lat.
+ * @param[in] self - the projection
+ * @param[in] args - the (x,y) coordinate as a tuple of two doubles.
+ * @returns a tuple of two doubles representing the lon/lat coordinate in radians or NULL on failure
+ */
+
+static PyObject* _projection_inv(Projection* self, PyObject* args)
+{
+  double lon=0.0L, lat=0.0L;
+  double x=0.0L, y=0.0L;
+
+  if (!PyArg_ParseTuple(args, "(dd)", &x, &y)) {
+    return NULL;
+  }
+
+  if (!Projection_inv(self->projection, x, y, &lon, &lat)) {
+    raiseException_returnNULL(PyExc_IOError, "Failed to project surface coordinates into lon/lat");
+  }
+
+  return Py_BuildValue("(dd)", lon, lat);
+}
+
+/**
+ * Translates lon/lat into surface coordinates.
+ * @param[in] self - the projection
+ * @param[in] args - the (lon,lat) coordinate as a tuple of two doubles.
+ * @returns a tuple of two doubles representing the xy coordinate or NULL on failure
+ */
+
+static PyObject* _projection_fwd(Projection* self, PyObject* args)
+{
+  double lon=0.0L, lat=0.0L;
+  double x=0.0L, y=0.0L;
+
+  if (!PyArg_ParseTuple(args, "(dd)", &lon, &lat)) {
+    return NULL;
+  }
+
+  if (!Projection_fwd(self->projection, lon, lat, &x, &y)) {
+    raiseException_returnNULL(PyExc_IOError, "Failed to project surface coordinates into xy");
+  }
+
+  return Py_BuildValue("(dd)", x, y);
+}
+
+/**
  * All methods a projection can have
  */
 static struct PyMethodDef _projection_methods[] =
 {
   { "transform", (PyCFunction) _projection_transform, 1},
+  { "inv", (PyCFunction) _projection_inv, 1},
+  { "fwd", (PyCFunction) _projection_fwd, 1},
   { NULL, NULL } /* sentinel */
 };
 
