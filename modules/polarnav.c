@@ -104,6 +104,12 @@ static PyObject* _polarnavigator_new(PyObject* self, PyObject* args)
   return (PyObject*)result;
 }
 
+/**
+ * Returns the earth radius at the specified latitude.
+ * @param[in] self - this instance
+ * @param[in] args - the latitude as a double (in radians)
+ * @returns a float representing the radius in meters or NULL on failure
+ */
 static PyObject* _polarnavigator_getEarthRadius(PolarNavigator* self, PyObject* args)
 {
   double lat = 0.0L;
@@ -118,6 +124,12 @@ static PyObject* _polarnavigator_getEarthRadius(PolarNavigator* self, PyObject* 
   return PyFloat_FromDouble(radius);
 }
 
+/**
+ * Returns the earth radius at the origin of this navigator.
+ * @param[in] self - this instance
+ * @param[in] args - Not used
+ * @returns a float representing the radius in meters or NULL on failure
+ */
 static PyObject* _polarnavigator_getEarthRadiusOrigin(PolarNavigator* self, PyObject* args)
 {
   double radius = 0.0L;
@@ -127,6 +139,12 @@ static PyObject* _polarnavigator_getEarthRadiusOrigin(PolarNavigator* self, PyOb
   return PyFloat_FromDouble(radius);
 }
 
+/**
+ * Calculates the distance and azimuth from this navigators origin to the specified lon/lat
+ * @param[in] self - this instance
+ * @param[in] args - a tuple of doubles representing (latitude, longitude) in radians
+ * @returns a tuple of double (distance, azimuth in radians)
+ */
 static PyObject* _polarnavigator_llToDa(PolarNavigator* self, PyObject* args)
 {
   double lon = 0.0L, lat = 0.0L;
@@ -141,18 +159,84 @@ static PyObject* _polarnavigator_llToDa(PolarNavigator* self, PyObject* args)
   return Py_BuildValue("(dd)", d, a);
 }
 
+/**
+ * Calculates the longitude and latitude at the point that is distance meters and azimuth from the origin.
+ * @param[in] self - this instance
+ * @param[in] args - two doubles (distance, azimuth in radians)
+ * @returns a tuple of double (latitude, longitude) in radians or NULL on failure
+ */
 static PyObject* _polarnavigator_daToLl(PolarNavigator* self, PyObject* args)
 {
   double lon = 0.0L, lat = 0.0L;
   double d = 0.0L, a = 0.0L;
 
-  if (!PyArg_ParseTuple(args, "(dd)", &d, &a)) {
+  if (!PyArg_ParseTuple(args, "dd", &d, &a)) {
     return NULL;
   }
 
   PolarNavigator_daToLl(self->navigator, d, a, &lat, &lon);
 
   return Py_BuildValue("(dd)", lat, lon);
+}
+
+/**
+ * Calculates the range and elevation that is reached from the origin to the distance and height.
+ * @param[in] self - this instance
+ * @param[in] args - two doubles (distance, height)
+ * @returns a tuple of double (range, elevation in radians) or NULL on failure
+ */
+static PyObject* _polarnavigator_dhToRe(PolarNavigator* self, PyObject* args)
+{
+  double d = 0.0L, h = 0.0L;
+  double r = 0.0L, e = 0.0L;
+
+  if (!PyArg_ParseTuple(args, "dd", &d, &h)) {
+    return NULL;
+  }
+
+  PolarNavigator_dhToRe(self->navigator, d, h, &r, &e);
+
+  return Py_BuildValue("(dd)", r, e);
+}
+
+/**
+ * Calculates the range and height that is reached from the origin to the distance and elevation.
+ * @param[in] self - this instance
+ * @param[in] args - two doubles (distance, elevation in radians)
+ * @returns a tuple of double (range, height) or NULL on failure
+ */
+static PyObject* _polarnavigator_deToRh(PolarNavigator* self, PyObject* args)
+{
+  double d = 0.0L, e = 0.0L;
+  double r = 0.0L, h = 0.0L;
+
+  if (!PyArg_ParseTuple(args, "dd", &d, &e)) {
+    return NULL;
+  }
+
+  PolarNavigator_deToRh(self->navigator, d, e, &r, &h);
+
+  return Py_BuildValue("(dd)", r, h);
+}
+
+/**
+ * Calculates the distance and height from origin to the specified range and elevation.
+ * @param[in] self - this instance
+ * @param[in] args - two doubles (range, elevation in radians)
+ * @returns a tuple of double (distance, height) or NULL on failure
+ */
+static PyObject* _polarnavigator_reToDh(PolarNavigator* self, PyObject* args)
+{
+  double d = 0.0L, e = 0.0L;
+  double r = 0.0L, h = 0.0L;
+
+  if (!PyArg_ParseTuple(args, "dd", &r, &e)) {
+    return NULL;
+  }
+
+  PolarNavigator_reToDh(self->navigator, r, e, &d, &h);
+
+  return Py_BuildValue("(dd)", d, h);
 }
 
 /**
@@ -164,7 +248,9 @@ static struct PyMethodDef _polarnavigator_methods[] =
   {"getEarthRadiusOrigin", (PyCFunction) _polarnavigator_getEarthRadiusOrigin, 1},
   {"llToDa", (PyCFunction) _polarnavigator_llToDa, 1},
   {"daToLl", (PyCFunction) _polarnavigator_daToLl, 1},
-
+  {"dhToRe", (PyCFunction) _polarnavigator_dhToRe, 1},
+  {"deToRh", (PyCFunction) _polarnavigator_deToRh, 1},
+  {"reToDh", (PyCFunction) _polarnavigator_reToDh, 1},
   { NULL, NULL } /* sentinel */
 };
 

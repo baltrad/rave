@@ -57,6 +57,9 @@ struct _PolarScan_t {
 
   // Miscellaneous data that is useful
   void* voidPtr; /**< a pointer for pointing to miscellaneous data */
+
+  // Debugging
+  int debug; /**< indicates if debugging should be active or not */
 };
 
 /*@{ Private functions */
@@ -96,6 +99,7 @@ PolarScan_t* PolarScan_new(void)
 
     result->ps_refCount = 1;
     result->voidPtr = NULL;
+    result->debug = 0;
   }
   return result;
 }
@@ -372,6 +376,7 @@ RaveValueType PolarScan_getValueAtAzimuthAndRange(PolarScan_t* scan, double a, d
   int ai = 0, ri = 0;
   RAVE_ASSERT((scan != NULL), "scan was NULL");
   RAVE_ASSERT((v != NULL), "v was NULL");
+  *v = scan->nodata;
   ai = PolarScan_getAzimuthIndex(scan, a);
   if (ai < 0) {
     goto done;
@@ -380,8 +385,6 @@ RaveValueType PolarScan_getValueAtAzimuthAndRange(PolarScan_t* scan, double a, d
   if (ri < 0) {
     goto done;
   }
-
-  //fprintf(stderr, "azimuth=%f, range=%f => ai = %d, ri = %d\n",a*180.0/M_PI,r,ai,ri);
 
   result = PolarScan_getValueAtIndex(scan, ai, ri, v);
 done:
@@ -398,5 +401,11 @@ void* PolarScan_getVoidPtr(PolarScan_t* scan)
 {
   RAVE_ASSERT((scan != NULL), "scan was NULL");
   return scan->voidPtr;
+}
+
+void PolarScan_setDebug(PolarScan_t* scan, int enable)
+{
+  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  scan->debug = enable;
 }
 /*@} End of Interface functions */

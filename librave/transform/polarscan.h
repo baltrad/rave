@@ -294,13 +294,23 @@ RaveValueType PolarScan_getValueAtAzimuthAndRange(PolarScan_t* scan, double a, d
 /**
  * Function for keeping track of some sort of metadata that should be
  * associated with this scan.
+ * @param[in] scan - the scan
  * @param[in] ptr - a void pointer that should be stored
  */
 void PolarScan_setVoidPtr(PolarScan_t* scan, void* ptr);
 
 /**
  * Returns the void data.
+ * @param[in] scan - the scan
  * @return the void data
  */
 void* PolarScan_getVoidPtr(PolarScan_t* scan);
+
+/**
+ * Enables/Disables calculation debugging for a polar scan
+ * @param[in] scan - the scan
+ * @param[in] enable - 0 to disable (default) 1 to activate
+ */
+void PolarScan_setDebug(PolarScan_t* scan, int enable);
+
 #endif

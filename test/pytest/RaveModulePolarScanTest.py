@@ -294,7 +294,7 @@ class RaveModulePolarScanTest(unittest.TestCase):
            ((5,5), (_rave.RaveValueType_NODATA, obj.nodata))]
     
     for tval in pts:
-      result = obj.getValueAtIndex(tval[0])
+      result = obj.getValueAtIndex(tval[0][0], tval[0][1])
       self.assertEquals(tval[1][0], result[0])
       self.assertAlmostEquals(tval[1][1], result[1], 4)
 
@@ -321,9 +321,33 @@ class RaveModulePolarScanTest(unittest.TestCase):
     for tval in pts:
       az = tval[0][0]*math.pi/180.0
       ra = tval[0][1]
-      result = obj.getValueAtAzimuthAndRange((az,ra))
+      result = obj.getValueAtAzimuthAndRange(az,ra)
       self.assertEquals(tval[1][0], result[0])
       self.assertAlmostEquals(tval[1][1], result[1], 4)
+
+  def testScan_getValueAtAzimuthAndRange_outsideRange(self):
+    obj = _rave.scan()
+    obj.nodata = 255.0
+    obj.undetect = 0.0
+    obj.rscale = 1000.0
+    a=numpy.zeros((360,10), numpy.float64)      
+    obj.setData(a)    
+
+    t,v = obj.getValueAtAzimuthAndRange(0.0, 15000.0)
+    self.assertEquals(_rave.RaveValueType_NODATA, t)
+    self.assertAlmostEquals(255.0, v, 4)
+
+  def testScan_getValueAtAzimuthAndRange_undetect(self):
+    obj = _rave.scan()
+    obj.nodata = 255.0
+    obj.undetect = 0.0
+    obj.rscale = 1000.0
+    a=numpy.zeros((360,10), numpy.float64)      
+    obj.setData(a)    
+
+    t,v = obj.getValueAtAzimuthAndRange(0.0, 1000.0)
+    self.assertEquals(_rave.RaveValueType_UNDETECT, t)
+    self.assertAlmostEquals(0.0, v, 4)
 
   def testScan_setData_int8(self):
     obj = _rave.scan()

@@ -34,10 +34,6 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 struct _PolarVolume_t {
   long pv_refCount; /**< ref counter */
 
-  double lon; /**< longitude of the radar that this volume originated from */
-  double lat; /**< latitude of the radar that this volume originated from */
-  double height; /**< altitude of the radar that this volume originated from */
-
   Projection_t* projection; /**< projection for this volume */
   PolarNavigator_t* navigator; /**< a polar navigator */
 
@@ -157,10 +153,6 @@ PolarVolume_t* PolarVolume_new(void)
   if (result != NULL) {
     result->pv_refCount = 1;
 
-    result->lon = 0.0;
-    result->lat = 0.0;
-    result->height = 0.0;
-
     result->nrAllocatedScans = 0;
     result->nrScans = 0;
     result->scans = NULL;
@@ -225,40 +217,37 @@ PolarVolume_t* PolarVolume_copy(PolarVolume_t* pvol)
 void PolarVolume_setLongitude(PolarVolume_t* pvol, double lon)
 {
   RAVE_ASSERT((pvol != NULL), "pvol was NULL");
-  pvol->lon = lon;
   PolarNavigator_setLon0(pvol->navigator, lon);
 }
 
 double PolarVolume_getLongitude(PolarVolume_t* pvol)
 {
   RAVE_ASSERT((pvol != NULL), "pvol was NULL");
-  return pvol->lon;
+  return PolarNavigator_getLon0(pvol->navigator);
 }
 
 void PolarVolume_setLatitude(PolarVolume_t* pvol, double lat)
 {
   RAVE_ASSERT((pvol != NULL), "pvol was NULL");
-  pvol->lat = lat;
   PolarNavigator_setLat0(pvol->navigator, lat);
 }
 
 double PolarVolume_getLatitude(PolarVolume_t* pvol)
 {
   RAVE_ASSERT((pvol != NULL), "pvol was NULL");
-  return pvol->lat;
+  return PolarNavigator_getLat0(pvol->navigator);
 }
 
 void PolarVolume_setHeight(PolarVolume_t* pvol, double height)
 {
   RAVE_ASSERT((pvol != NULL), "pvol was NULL");
-  pvol->height = height;
   PolarNavigator_setAlt0(pvol->navigator, height);
 }
 
 double PolarVolume_getHeight(PolarVolume_t* pvol)
 {
   RAVE_ASSERT((pvol != NULL), "pvol was NULL");
-  return pvol->height;
+  return PolarNavigator_getAlt0(pvol->navigator);
 }
 
 void PolarVolume_setProjection(PolarVolume_t* pvol, Projection_t* projection)
@@ -310,7 +299,7 @@ int PolarVolume_getNumberOfScans(PolarVolume_t* pvol)
   return pvol->nrScans;
 }
 
-void PolarVolume_getNearestElevation(PolarVolume_t* pvol, double e, int* index)
+PolarScan_t* PolarVolume_getScanNearestElevation(PolarVolume_t* pvol, double e)
 {
   double se = 0.0L, eld = 0.0L;
   int ei = 0;
@@ -332,15 +321,14 @@ void PolarVolume_getNearestElevation(PolarVolume_t* pvol, double e, int* index)
       break;
     }
   }
-  *index = ei;
+  return PolarScan_copy(pvol->scans[ei]);
 }
 
 RaveValueType PolarVolume_getNearest(PolarVolume_t* pvol, double lon, double lat, double height, double* v)
 {
   double d = 0.0L, a = 0.0L, r = 0.0L, e = 0.0L;
   RaveValueType result = RaveValueType_NODATA;
-  int ei = 0;
-
+  PolarScan_t* scan = NULL;
   RAVE_ASSERT((pvol != NULL), "pvol was NULL");
   RAVE_ASSERT((v != NULL), "v was NULL");
   *v = 0.0;
@@ -349,10 +337,41 @@ RaveValueType PolarVolume_getNearest(PolarVolume_t* pvol, double lon, double lat
   PolarNavigator_dhToRe(pvol->navigator, d, height, &r, &e);
 
   // Find relevant elevation
-  PolarVolume_getNearestElevation(pvol, e, &ei);
+  scan = PolarVolume_getScanNearestElevation(pvol, e);
+
+  //@todo: Eventually use the actual elevation and calculate proper range instead.
 
   // Now we have the elevation angle, fetch value by providing azimuth and range.
-  result = PolarScan_getValueAtAzimuthAndRange(pvol->scans[ei], a, r, v);
+  result = PolarScan_getValueAtAzimuthAndRange(scan, a, r, v);
+
+  PolarScan_release(scan);
+
+  return result;
+}
+
+RaveValueType PolarVolume_getNearestForElevation(PolarVolume_t* pvol, double lon, double lat, int index, double* v)
+{
+  double d = 0.0L, a = 0.0L, r = 0.0L, e = 0.0L, height = 0.0L;
+  RaveValueType result = RaveValueType_NODATA;
+  PolarScan_t* scan = NULL;
+
+  RAVE_ASSERT((pvol != NULL), "pvol was NULL");
+  RAVE_ASSERT((v != NULL), "v was NULL");
+  *v = 0.0;
+
+  if (!PolarVolume_getScan(pvol, index, &scan)) {
+    RAVE_ERROR2("Attempting to get value for elevation index %d but there are only %d elevations available", index, pvol->nrScans);
+    return result;
+  }
+
+  e = PolarScan_getElangle(scan);
+
+  PolarNavigator_llToDa(pvol->navigator, lat, lon, &d, &a);
+  PolarNavigator_deToRh(pvol->navigator, d, e, &r, &height);
+
+  result = PolarScan_getValueAtAzimuthAndRange(scan, a, r, v);
+
+  PolarScan_release(scan);
 
   return result;
 }

@@ -137,13 +137,12 @@ int PolarVolume_getScan(PolarVolume_t* pvol, int index, PolarScan_t** scan);
 int PolarVolume_getNumberOfScans(PolarVolume_t* pvol);
 
 /**
- * Returns the index of the scan that got an elevation that is closest
- * to the provided elevation.
+ * Returns the scan with elevation closest to the specified elevation.
  * @param[in] pvol - the polar volume
  * @param[in] e - the elevation (in radians)
- * @param[out] index - the found scan index.
+ * @returns the scan or NULL if nothing is found
  */
-void PolarVolume_getNearestElevation(PolarVolume_t* pvol, double e, int* index);
+PolarScan_t* PolarVolume_getScanNearestElevation(PolarVolume_t* pvol, double e);
 
 /**
  * Fetches the value nearest to the specified position.
@@ -157,15 +156,14 @@ void PolarVolume_getNearestElevation(PolarVolume_t* pvol, double e, int* index);
 RaveValueType PolarVolume_getNearest(PolarVolume_t* pvol, double lon, double lat, double height, double* v);
 
 /**
- * Calculates the value at the specified lon/lat/height.
- * @param[in] pvol - the volume
- * @param[in] lon - the longitude
- * @param[in] lat - the latitude
- * @param[in] height - the height
- * @param[in] param - the transformation parameters
+ * Fetches the value nearest the specified position at the elevation indexed by index.
+ * @param[in] pvol - the polar volume
+ * @param[in] lon  - the longitude (in radians)
+ * @param[in] lat  - the latitude  (in radians)
+ * @param[in] index - the elevation index (0..n)
+ * @param[out] v - the found value
  */
-//double PolarVolume_getWeightedValue(PolarVolume_t* pvol, double lon,
-//  double lat, double height, TransformParam* param);
+RaveValueType PolarVolume_getNearestForElevation(PolarVolume_t* pvol, double lon, double lat, int index, double* v);
 
 /**
  * Arranges the scans in either ascending or descending elevation.

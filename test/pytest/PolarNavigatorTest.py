@@ -38,9 +38,50 @@ class PolarNavigatorTest(unittest.TestCase):
     
     d,a = obj.llToDa((lat,lon))
     
-    (nlat,nlon) = obj.daToLl((d, a))
+    nlat,nlon = obj.daToLl(d, a)
     
     self.assertAlmostEquals(lat, nlat, 4)
     self.assertAlmostEquals(lon, nlon, 4)
     
-  
+  def test_dhToRe(self):
+    obj = _polarnav.new()
+    obj.lat0 = 60.0 * math.pi / 180.0
+    obj.lon0 = 12.0 * math.pi / 180.0
+    obj.alt0 = 0.0
+
+    r,e = obj.dhToRe(50000.0, 1000.0)
+    self.assertAlmostEquals(50012.88, r, 2)
+    self.assertAlmostEquals(0.976411, e*180.0/math.pi, 4)
+
+  def test_deToRh(self):
+    obj = _polarnav.new()
+    obj.lat0 = 60.0 * math.pi / 180.0
+    obj.lon0 = 12.0 * math.pi / 180.0
+    obj.alt0 = 0.0
+
+    r,h = obj.deToRh(50000.0, 0.976411*math.pi/180.0)
+    self.assertAlmostEquals(50012.88, r, 2)
+    self.assertAlmostEquals(1000.0, h, 2)
+
+  def test_reToDh(self):
+    obj = _polarnav.new()
+    obj.lat0 = 60.0 * math.pi / 180.0
+    obj.lon0 = 12.0 * math.pi / 180.0
+    obj.alt0 = 0.0
+
+    d,h = obj.reToDh(50012.88, 0.976411*math.pi/180.0)
+    self.assertAlmostEquals(50000.0, d, 2)
+    self.assertAlmostEquals(1000.0, h, 2)
+
+  def test_daToLl(self):
+    obj = _polarnav.new()
+    obj.lat0 = 60.0 * math.pi / 180.0
+    obj.lon0 = 12.0 * math.pi / 180.0
+    obj.alt0 = 0.0    
+    nlat,nlon = obj.daToLl(50000.0, 0.0)
+
+    print "nlat=%f,nlon=%f"%(nlat*180.0/math.pi, nlon*180.0/math.pi)
+
+if __name__ == "__main__":
+  #import sys;sys.argv = ['', 'Test.testName']
+  unittest.main()
