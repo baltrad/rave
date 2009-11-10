@@ -79,8 +79,7 @@ class PolarNavigatorTest(unittest.TestCase):
     obj.lon0 = 12.0 * math.pi / 180.0
     obj.alt0 = 0.0    
     nlat,nlon = obj.daToLl(50000.0, 0.0)
-
-    print "nlat=%f,nlon=%f"%(nlat*180.0/math.pi, nlon*180.0/math.pi)
+    #print "nlat=%f,nlon=%f"%(nlat*180.0/math.pi, nlon*180.0/math.pi)
 
   def test_daToLl2(self):
     obj = _polarnav.new()
@@ -89,7 +88,7 @@ class PolarNavigatorTest(unittest.TestCase):
     obj.alt0 = 0.0
     
     lon,lat = obj.daToLl(9000.0, 0.0)
-    print "lon=%f, lat=%f"%(lon*180.0/math.pi, lat*180.0/math.pi)
+    #print "lon=%f, lat=%f"%(lon*180.0/math.pi, lat*180.0/math.pi)
     
 
 if __name__ == "__main__":

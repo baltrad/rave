@@ -379,18 +379,17 @@ void* PolarScan_getData(PolarScan_t* scan)
 int PolarScan_getRangeIndex(PolarScan_t* scan, double r)
 {
   int result = -1;
+  double range = 0.0L;
   RAVE_ASSERT((scan != NULL), "scan was NULL");
   RAVE_ASSERT((scan->nbins > 0), "nbins must be > 0");
   RAVE_ASSERT((scan->rscale > 0.0), "rscale must be > 0.0");
 
-  if (r <= 0.0) {
-    result = 0;
-  } else {
-    result = (int)floor((r/scan->rscale));
+  range = r - scan->rstart*1000.0;
+
+  if (range >= 0.0) {
+    result = (int)floor(range/scan->rscale);
   }
-  if (scan->debug) {
-    fprintf(stderr, "r=%f, scale=%f => result = %d\n", r, scan->rscale, result);
-  }
+
   if (result >= scan->nbins || result < 0) {
     result = -1;
   }
@@ -450,9 +449,6 @@ RaveValueType PolarScan_getValueAtAzimuthAndRange(PolarScan_t* scan, double a, d
 
   result = PolarScan_getValueAtIndex(scan, ai, ri, v);
 done:
-  if (scan->debug) {
-    fprintf(stderr, "INDEX: ai=%d, ri=%d\n", ai, ri);
-  }
   return result;
 }
 
@@ -467,11 +463,7 @@ RaveValueType PolarScan_getNearest(PolarScan_t* scan, double lon, double lat, do
   PolarNavigator_llToDa(scan->navigator, lat, lon, &d, &a);
   PolarNavigator_deToRh(scan->navigator, d, scan->elangle, &r, &h);
 
-  fprintf(stderr, "lon/lat => %f, %f\n", a*180.0/M_PI, r);
-
-  PolarScan_setDebug(scan, 1);
   result = PolarScan_getValueAtAzimuthAndRange(scan, a, r, v);
-  PolarScan_setDebug(scan, 0);
 
   return result;
 }

@@ -286,7 +286,7 @@ class RaveModulePolarScanTest(unittest.TestCase):
       result = obj.getRangeIndex(rr[0])
       self.assertEquals(rr[1], result)
 
-  def XtestScan_getRangeIndex_rstartSet(self):
+  def testScan_getRangeIndex_rstartSet(self):
     obj = _rave.scan()
     obj.nbins = 200
     obj.rscale = 1000.0
@@ -412,8 +412,6 @@ class RaveModulePolarScanTest(unittest.TestCase):
     a=numpy.zeros((4,9), numpy.float64)      
     a[0][8] = 10.0
     obj.setData(a)
-    
-    print `a`
     
     t,v = obj.getNearest((14.0*math.pi/180.0, 60.08*math.pi/180.0))
     self.assertEquals(_rave.RaveValueType_DATA, t)
