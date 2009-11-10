@@ -79,6 +79,21 @@ class RaveModulePolarVolumeTest(unittest.TestCase):
     obj.addScan(_rave.scan())
     self.assertEquals(1, obj.getNumberOfScans())
 
+  def test_addScan_navigatorChanged(self):
+    obj = _rave.volume()
+    obj.longitude = 10.0
+    scan1 = _rave.scan()
+    scan1.longitude = 5.0
+
+    obj.addScan(scan1)
+    self.assertAlmostEquals(10.0, scan1.longitude, 4)
+
+    obj.longitude = 15.0
+    self.assertAlmostEquals(15.0, scan1.longitude, 4)
+
+    scan1.longitude = 20.0
+    self.assertAlmostEquals(20.0, obj.longitude, 4)
+
   def testVolume_getNumberOfScans(self):
     obj = _rave.volume()
     self.assertEquals(0, obj.getNumberOfScans())
@@ -233,10 +248,75 @@ class RaveModulePolarVolumeTest(unittest.TestCase):
     self.assertTrue (scan2 == scanresult1)
     self.assertTrue (scan1 == scanresult2)
     self.assertTrue (scan3 == scanresult3)
-        
-  def testVolume_ppi(self):
-    pass
-  
+
+  def testIsAscending(self):
+    obj = _rave.volume()
+    scan1 = _rave.scan()
+    scan1.elangle = 0.1
+    scan2 = _rave.scan()
+    scan2.elangle = 0.3
+    scan3 = _rave.scan()
+    scan3.elangle = 0.5
+    obj.addScan(scan1)
+    obj.addScan(scan2)
+    obj.addScan(scan3)
+    
+    result = obj.isAscendingScans()
+    self.assertEquals(True, result)
+    
+  def testIsAscending_false(self):
+    obj = _rave.volume()
+    scan1 = _rave.scan()
+    scan1.elangle = 0.1
+    scan2 = _rave.scan()
+    scan2.elangle = 0.3
+    scan3 = _rave.scan()
+    scan3.elangle = 0.5
+    obj.addScan(scan1)
+    obj.addScan(scan3)
+    obj.addScan(scan2)
+    
+    result = obj.isAscendingScans()
+    self.assertEquals(False, result)
+    
+  def testIsTransformable(self):
+    obj = _rave.volume()
+    scan1 = _rave.scan()
+    scan1.elangle = 0.1
+    scan2 = _rave.scan()
+    scan2.elangle = 0.3
+    scan3 = _rave.scan()
+    scan3.elangle = 0.5
+    obj.addScan(scan1)
+    obj.addScan(scan2)
+    obj.addScan(scan3)
+
+    result = obj.isTransformable()
+    self.assertEquals(True, result)
+    
+  def testIsTransformable_noScans(self):
+    obj = _rave.volume()
+    result = obj.isTransformable()
+    self.assertEquals(False, result)
+
+  def testIsTransformable_oneScan(self):
+    obj = _rave.volume()
+    scan1 = _rave.scan()
+    scan1.elangle = 0.1
+    obj.addScan(scan1)
+    result = obj.isTransformable()
+    self.assertEquals(True, result)
+
+  def testIsTransformable_descending(self):
+    obj = _rave.volume()
+    scan1 = _rave.scan()
+    scan1.elangle = 0.1
+    scan2 = _rave.scan()
+    scan2.elangle = 0.01
+    obj.addScan(scan1)
+    obj.addScan(scan2)
+    result = obj.isTransformable()
+    self.assertEquals(False, result)
 
 if __name__ == "__main__":
   #import sys;sys.argv = ['', 'Test.testName']

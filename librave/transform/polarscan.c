@@ -58,6 +58,9 @@ struct _PolarScan_t {
   // Miscellaneous data that is useful
   void* voidPtr; /**< a pointer for pointing to miscellaneous data */
 
+  // Navigator
+  PolarNavigator_t* navigator; /** a navigator for calculating polar navigation */
+
   // Debugging
   int debug; /**< indicates if debugging should be active or not */
 };
@@ -71,6 +74,7 @@ static void PolarScan_destroy(PolarScan_t* scan)
 {
   if (scan != NULL) {
     RAVE_FREE(scan->data);
+    PolarNavigator_release(scan->navigator);
     RAVE_FREE(scan);
   }
 }
@@ -100,6 +104,11 @@ PolarScan_t* PolarScan_new(void)
     result->ps_refCount = 1;
     result->voidPtr = NULL;
     result->debug = 0;
+    result->navigator = PolarNavigator_new();
+    if (result->navigator == NULL) {
+      PolarScan_destroy(result);
+      result = NULL;
+    }
   }
   return result;
 }
@@ -118,6 +127,56 @@ PolarScan_t* PolarScan_copy(PolarScan_t* scan)
   RAVE_ASSERT((scan != NULL), "scan was NULL");
   scan->ps_refCount++;
   return scan;
+}
+
+void PolarScan_setNavigator(PolarScan_t* scan, PolarNavigator_t* navigator)
+{
+  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  RAVE_ASSERT((navigator != NULL), "navigator was NULL");
+  PolarNavigator_release(scan->navigator);
+  scan->navigator = PolarNavigator_copy(navigator);
+}
+
+PolarNavigator_t* PolarScan_getNavigator(PolarScan_t* scan)
+{
+  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  return PolarNavigator_copy(scan->navigator);
+}
+
+void PolarScan_setLongitude(PolarScan_t* scan, double lon)
+{
+  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  PolarNavigator_setLon0(scan->navigator, lon);
+}
+
+double PolarScan_getLongitude(PolarScan_t* scan)
+{
+  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  return PolarNavigator_getLon0(scan->navigator);
+}
+
+void PolarScan_setLatitude(PolarScan_t* scan, double lat)
+{
+  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  PolarNavigator_setLat0(scan->navigator, lat);
+}
+
+double PolarScan_getLatitude(PolarScan_t* scan)
+{
+  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  return PolarNavigator_getLat0(scan->navigator);
+}
+
+void PolarScan_setHeight(PolarScan_t* scan, double height)
+{
+  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  PolarNavigator_setAlt0(scan->navigator, height);
+}
+
+double PolarScan_getHeight(PolarScan_t* scan)
+{
+  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  return PolarNavigator_getAlt0(scan->navigator);
 }
 
 void PolarScan_setElangle(PolarScan_t* scan, double elangle)
@@ -327,7 +386,10 @@ int PolarScan_getRangeIndex(PolarScan_t* scan, double r)
   if (r <= 0.0) {
     result = 0;
   } else {
-    result = (int)rint((r/scan->rscale));
+    result = (int)floor((r/scan->rscale));
+  }
+  if (scan->debug) {
+    fprintf(stderr, "r=%f, scale=%f => result = %d\n", r, scan->rscale, result);
   }
   if (result >= scan->nbins || result < 0) {
     result = -1;
@@ -388,6 +450,29 @@ RaveValueType PolarScan_getValueAtAzimuthAndRange(PolarScan_t* scan, double a, d
 
   result = PolarScan_getValueAtIndex(scan, ai, ri, v);
 done:
+  if (scan->debug) {
+    fprintf(stderr, "INDEX: ai=%d, ri=%d\n", ai, ri);
+  }
+  return result;
+}
+
+RaveValueType PolarScan_getNearest(PolarScan_t* scan, double lon, double lat, double* v)
+{
+  RaveValueType result = RaveValueType_NODATA;
+  double d = 0.0L, a = 0.0L, r = 0.0L, h = 0.0L;
+  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  RAVE_ASSERT((v != NULL), "v was NULL");
+  *v = scan->nodata;
+
+  PolarNavigator_llToDa(scan->navigator, lat, lon, &d, &a);
+  PolarNavigator_deToRh(scan->navigator, d, scan->elangle, &r, &h);
+
+  fprintf(stderr, "lon/lat => %f, %f\n", a*180.0/M_PI, r);
+
+  PolarScan_setDebug(scan, 1);
+  result = PolarScan_getValueAtAzimuthAndRange(scan, a, r, v);
+  PolarScan_setDebug(scan, 0);
+
   return result;
 }
 

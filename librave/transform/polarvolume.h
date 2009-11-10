@@ -124,10 +124,9 @@ int PolarVolume_addScan(PolarVolume_t* pvol, PolarScan_t* scan);
  * Returns the scan at given index.
  * @param[in] pvol - the volume
  * @param[in] index - the index
- * @param[out] scan - the scan at specified index
- * @returns 0 on failure, otherwise it was a success
+ * @returns the scan at the specified index or NULL on failure.
  */
-int PolarVolume_getScan(PolarVolume_t* pvol, int index, PolarScan_t** scan);
+PolarScan_t* PolarVolume_getScan(PolarVolume_t* pvol, int index);
 
 /**
  * Returns the number of scans.
@@ -171,6 +170,21 @@ RaveValueType PolarVolume_getNearestForElevation(PolarVolume_t* pvol, double lon
  * @param[in] ascending - if 1, ascending sort will be done, otherwise descending
  */
 void PolarVolume_sortByElevations(PolarVolume_t* pvol, int ascending);
+
+/**
+ * Verifies that the scans are sorted in ascending order.
+ * @param[in] pvol - the volume
+ * @returns 1 if the scans are sorted in ascending order otherwise 0.
+ */
+int PolarVolume_isAscendingScans(PolarVolume_t* pvol);
+
+/**
+ * Verifies that all preconditions are met in order to perform
+ * a transformation.
+ * @param[in] pvol - the polar volume
+ * @returns 1 if the polar volume is ready, otherwise 0.
+ */
+int PolarVolume_isTransformable(PolarVolume_t* pvol);
 
 /**
  * Enables/Disables calculation debugging for a polar volume

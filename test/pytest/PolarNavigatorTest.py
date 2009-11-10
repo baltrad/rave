@@ -82,6 +82,16 @@ class PolarNavigatorTest(unittest.TestCase):
 
     print "nlat=%f,nlon=%f"%(nlat*180.0/math.pi, nlon*180.0/math.pi)
 
+  def test_daToLl2(self):
+    obj = _polarnav.new()
+    obj.lat0 = 60.0 * math.pi / 180.0
+    obj.lon0 = 14.0 * math.pi / 180.0
+    obj.alt0 = 0.0
+    
+    lon,lat = obj.daToLl(9000.0, 0.0)
+    print "lon=%f, lat=%f"%(lon*180.0/math.pi, lat*180.0/math.pi)
+    
+
 if __name__ == "__main__":
   #import sys;sys.argv = ['', 'Test.testName']
   unittest.main()

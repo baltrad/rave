@@ -49,14 +49,14 @@ static void Rave_defaultDebugFunction(char* filename, int lineno, Rave_Debug lvl
   va_list alist;
   va_start(alist,fmt);
 
-  if (raveDbg.dbgLevel == RAVE_SILENT)
+  if (raveDbg.dbgLevel == RAVE_SILENT && lvl != RAVE_CRITICAL)
     return;
 
   setLogTime(strtime, 24);
 
   strcpy(dbgtype, "");
 
-  if (lvl >= raveDbg.dbgLevel) {
+  if (lvl >= raveDbg.dbgLevel || lvl == RAVE_CRITICAL) {
     switch (lvl) {
     case RAVE_SPEWDEBUG:
       sprintf(dbgtype, "SDEBUG");

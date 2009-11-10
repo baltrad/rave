@@ -22,6 +22,32 @@ class RaveModulePolarScanTest(unittest.TestCase):
     isscan = string.find(`type(obj)`, "PolarScanCore")
     self.assertNotEqual(-1, isscan) 
 
+  def test_longitude(self):
+    obj = _rave.scan()
+    self.assertAlmostEquals(0.0, obj.longitude, 4)
+    obj.longitude = 1.0
+    self.assertAlmostEquals(1.0, obj.longitude, 4)
+
+  def test_latitude(self):
+    obj = _rave.scan()
+    self.assertAlmostEquals(0.0, obj.latitude, 4)
+    obj.latitude = 1.0
+    self.assertAlmostEquals(1.0, obj.latitude, 4)
+
+  def test_height(self):
+    obj = _rave.scan()
+    self.assertAlmostEquals(0.0, obj.height, 4)
+    obj.height = 1.0
+    self.assertAlmostEquals(1.0, obj.height, 4)
+
+  def test_invalid_attributes(self):
+    obj = _rave.scan()
+    try:
+      obj.lon = 1.0
+      self.fail("Expected AttributeError")
+    except AttributeError, e:
+      pass
+
   def testScan_elangle(self):
     obj = _rave.scan()
     self.assertAlmostEquals(0.0, obj.elangle, 4)
@@ -247,9 +273,35 @@ class RaveModulePolarScanTest(unittest.TestCase):
 
     # Ranges are tuples (range, expected index)
     ranges = [(499.0, 0),
-              (501.0, 1),
+              (501.0, 0),
+              (999.0, 0),
+              (1000.0, 1),
+              (1999.0, 1),
+              (2001.0, 2),
               (199000.0, 199),
+              (199999.0, 199),
               (200000.0, -1)]
+    
+    for rr in ranges:
+      result = obj.getRangeIndex(rr[0])
+      self.assertEquals(rr[1], result)
+
+  def XtestScan_getRangeIndex_rstartSet(self):
+    obj = _rave.scan()
+    obj.nbins = 200
+    obj.rscale = 1000.0
+    obj.rstart = 2.0
+
+    # Ranges are tuples (range, expected index)
+    ranges = [(499.0, -1),
+              (501.0, -1),
+              (999.0, -1),
+              (1000.0, -1),
+              (1999.0, -1),
+              (2001.0, 0),
+              (199000.0, 197),
+              (199999.0, 197),
+              (200000.0, 198)]
     
     for rr in ranges:
       result = obj.getRangeIndex(rr[0])
@@ -348,6 +400,24 @@ class RaveModulePolarScanTest(unittest.TestCase):
     t,v = obj.getValueAtAzimuthAndRange(0.0, 1000.0)
     self.assertEquals(_rave.RaveValueType_UNDETECT, t)
     self.assertAlmostEquals(0.0, v, 4)
+
+  def testScan_getNearest(self):
+    obj = _rave.scan()
+    obj.nodata = 255.0
+    obj.longitude = 14.0 * math.pi/180.0
+    obj.latitude = 60.0 * math.pi/180.0
+    obj.height = 0.0
+    obj.undetect = 0.0
+    obj.rscale = 1000.0
+    a=numpy.zeros((4,9), numpy.float64)      
+    a[0][8] = 10.0
+    obj.setData(a)
+    
+    print `a`
+    
+    t,v = obj.getNearest((14.0*math.pi/180.0, 60.08*math.pi/180.0))
+    self.assertEquals(_rave.RaveValueType_DATA, t)
+    self.assertAlmostEquals(10.0, v, 4)
 
   def testScan_setData_int8(self):
     obj = _rave.scan()

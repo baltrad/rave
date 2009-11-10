@@ -275,22 +275,21 @@ int PolarVolume_addScan(PolarVolume_t* pvol, PolarScan_t* scan)
   RAVE_ASSERT((pvol != NULL), "pvol was NULL");
   RAVE_ASSERT((scan != NULL), "scan was NULL");
   if (PolarVolume_ensureScanCapacity(pvol)) {
+    PolarScan_setNavigator(scan, pvol->navigator);
     pvol->scans[pvol->nrScans++] = PolarScan_copy(scan);
     result = 1;
   }
   return result;
 }
 
-int PolarVolume_getScan(PolarVolume_t* pvol, int index, PolarScan_t** scan)
+PolarScan_t* PolarVolume_getScan(PolarVolume_t* pvol, int index)
 {
-  int result = 0;
+  PolarScan_t* scan = NULL;
   RAVE_ASSERT((pvol != NULL), "pvol was NULL");
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
   if (index >= 0 && index < pvol->nrScans) {
-    *scan = PolarScan_copy(pvol->scans[index]);
-    result = 1;
+    scan = PolarScan_copy(pvol->scans[index]);
   }
-  return result;
+  return scan;
 }
 
 int PolarVolume_getNumberOfScans(PolarVolume_t* pvol)
@@ -359,7 +358,7 @@ RaveValueType PolarVolume_getNearestForElevation(PolarVolume_t* pvol, double lon
   RAVE_ASSERT((v != NULL), "v was NULL");
   *v = 0.0;
 
-  if (!PolarVolume_getScan(pvol, index, &scan)) {
+  if ((scan = PolarVolume_getScan(pvol, index)) == NULL) {
     RAVE_ERROR2("Attempting to get value for elevation index %d but there are only %d elevations available", index, pvol->nrScans);
     return result;
   }
@@ -385,6 +384,37 @@ void PolarVolume_sortByElevations(PolarVolume_t* pvol, int ascending)
   } else {
     qsort(pvol->scans, pvol->nrScans, sizeof(PolarScan_t*), descendingElevationSort);
   }
+}
+
+int PolarVolume_isAscendingScans(PolarVolume_t* pvol)
+{
+  int result = 1;
+  int index = 0;
+  double lastelev = 0.0L;
+  RAVE_ASSERT((pvol != NULL), "pvol was NULL");
+  if (pvol->nrScans > 0) {
+    lastelev = PolarScan_getElangle(pvol->scans[0]);
+    for (index = 1; result == 1 && index < pvol->nrScans; index++) {
+      double nextelev = PolarScan_getElangle(pvol->scans[index]);
+      if (nextelev < lastelev) {
+        result = 0;
+      }
+      lastelev = nextelev;
+    }
+  }
+  return result;
+}
+
+int PolarVolume_isTransformable(PolarVolume_t* pvol)
+{
+  int result = 0;
+  RAVE_ASSERT((pvol != NULL), "pvol was NULL");
+  // Verify that the volume at least got one scan and that the scans
+  // are sorted in ascending order.
+  if (pvol->nrScans > 0 && PolarVolume_isAscendingScans(pvol)) {
+    result = 1;
+  }
+  return result;
 }
 
 void PolarVolume_setDebug(PolarVolume_t* pvol, int enable)

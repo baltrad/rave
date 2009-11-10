@@ -25,6 +25,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef POLARSCAN_H
 #define POLARSCAN_H
 #include "rave_transform.h"
+#include "polarnav.h"
 
 /**
  * Defines a Polar Scan
@@ -52,6 +53,66 @@ void PolarScan_release(PolarScan_t* scan);
  * @return a pointer to the scan
  */
 PolarScan_t* PolarScan_copy(PolarScan_t* scan);
+
+/**
+ * Sets a navigator for the polar scan, this is preferrable to use
+ * when this scan is included in a volume since the settings will
+ * be identical for all scans included in the volume. Otherwise,
+ * if the scan is managed separately, use longitude/latitude and height
+ * instead.
+ * @param[in] scan - the scan
+ * @param[in] navigator - the polar navigator
+ */
+void PolarScan_setNavigator(PolarScan_t* scan, PolarNavigator_t* navigator);
+
+/**
+ * Returns the navigator that is used for this scan.
+ * @param[in] scan - the scan
+ * @returns the polar navigator
+ */
+PolarNavigator_t* PolarScan_getNavigator(PolarScan_t* scan);
+
+/**
+ * Sets the longitude for the volume
+ * @param[in] pvol - the polar volume
+ * @param[in] double - the longitude
+ */
+void PolarScan_setLongitude(PolarScan_t* scan, double lon);
+
+/**
+ * Returns the longitude for the volume
+ * @param[in] pvol - the polar volume
+ * @returns the longitude
+ */
+double PolarScan_getLongitude(PolarScan_t* scan);
+
+/**
+ * Sets the latitude for the volume
+ * @param[in] pvol - the polar volume
+ * @param[in] double - the longitude
+ */
+void PolarScan_setLatitude(PolarScan_t* scan, double lat);
+
+/**
+ * Returns the latitude for the volume
+ * @param[in] pvol - the polar volume
+ * @returns the longitude
+ */
+double PolarScan_getLatitude(PolarScan_t* scan);
+
+/**
+ * Sets the height for the volume
+ * @param[in] pvol - the polar volume
+ * @param[in] double - the longitude
+ */
+void PolarScan_setHeight(PolarScan_t* scan, double height);
+
+/**
+ * Returns the latitude for the volume
+ * @param[in] pvol - the polar volume
+ * @returns the longitude
+ */
+double PolarScan_getHeight(PolarScan_t* scan);
 
 /**
  * Sets the elevation angle for the scan
@@ -290,6 +351,15 @@ RaveValueType PolarScan_getValueAtIndex(PolarScan_t* scan, int ai, int ri, doubl
  * @return a rave value type
  */
 RaveValueType PolarScan_getValueAtAzimuthAndRange(PolarScan_t* scan, double a, double r, double* v);
+
+/**
+ * Returns the nearest value to the specified longitude, latitude.
+ * @param[in] scan - the scan
+ * @param[in] lon  - the longitude (in radians)
+ * @param[in] lat  - the latitude  (in radians)
+ * @returns a rave value type
+ */
+RaveValueType PolarScan_getNearest(PolarScan_t* scan, double lon, double lat, double* v);
 
 /**
  * Function for keeping track of some sort of metadata that should be

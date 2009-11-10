@@ -262,7 +262,12 @@ static PyObject* _polarscan_getData(PolarScan* self, PyObject* args)
   return result;
 }
 
-
+/**
+ * Calculates the azimuth index from an azimuth (in radians).
+ * @param[in] self - this instance
+ * @param[in] args - an azimuth value (in radians)
+ * @returns the azimuth index or -1 if none could be determined.
+ */
 static PyObject* _polarscan_getAzimuthIndex(PolarScan* self, PyObject* args)
 {
   double azimuth = 0.0L;
@@ -280,6 +285,12 @@ static PyObject* _polarscan_getAzimuthIndex(PolarScan* self, PyObject* args)
   return PyInt_FromLong(index);
 }
 
+/**
+ * Calculates the range index from a specified range
+ * @param[in] self - this instance
+ * @param[in] args - the range (in meters)
+ * @returns the range index or -1 if outside range
+ */
 static PyObject* _polarscan_getRangeIndex(PolarScan* self, PyObject* args)
 {
   double range = 0.0L;
@@ -294,6 +305,12 @@ static PyObject* _polarscan_getRangeIndex(PolarScan* self, PyObject* args)
   return PyInt_FromLong(index);
 }
 
+/**
+ * Returns the value at the specified azimuth and range index.
+ * @param[in] self - this instance
+ * @param[in] args - azimuth index, range index.
+ * @returns a tuple of value type and value
+ */
 static PyObject* _polarscan_getValueAtIndex(PolarScan* self, PyObject* args)
 {
   double value = 0.0L;
@@ -308,6 +325,12 @@ static PyObject* _polarscan_getValueAtIndex(PolarScan* self, PyObject* args)
   return Py_BuildValue("(id)", type, value);
 }
 
+/**
+ * Returns the value at the specified azimuth and range for this scan.
+ * @param[in] self - this instance
+ * @param[in] args - two doubles, azimuth (in radians) and range (in meters)
+ * @returns a tuple of value type and value
+ */
 static PyObject* _polarscan_getValueAtAzimuthAndRange(PolarScan* self, PyObject* args)
 {
   double value = 0.0L;
@@ -322,19 +345,38 @@ static PyObject* _polarscan_getValueAtAzimuthAndRange(PolarScan* self, PyObject*
   return Py_BuildValue("(id)", type, value);
 }
 
+/**
+ * Returns the value that is nearest to the specified longitude/latitude.
+ * @param[in] self - this instance
+ * @param[in] args - a tuple consisting of (longitude, latitude).
+ * @returns a tuple of (value type, value) or NULL on failure
+ */
+static PyObject* _polarscan_getNearest(PolarScan* self, PyObject* args)
+{
+  double lon = 0.0L, lat = 0.0L, value = 0.0L;
+  RaveValueType type = RaveValueType_NODATA;
+  if (!PyArg_ParseTuple(args, "(dd)", &lon, &lat)) {
+    return NULL;
+  }
+
+  type = PolarScan_getNearest(self->scan, lon, lat, &value);
+
+  return Py_BuildValue("(id)", type, value);
+}
 
 /**
  * All methods a polar scan can have
  */
 static struct PyMethodDef _polarscan_methods[] =
 {
-  { "setData", (PyCFunction) _polarscan_setData, 1},
-  { "getData", (PyCFunction) _polarscan_getData, 1},
-  { "getAzimuthIndex", (PyCFunction) _polarscan_getAzimuthIndex, 1},
-  { "getRangeIndex", (PyCFunction) _polarscan_getRangeIndex, 1},
-  { "getValueAtIndex", (PyCFunction) _polarscan_getValueAtIndex, 1},
-  { "getValueAtAzimuthAndRange", (PyCFunction) _polarscan_getValueAtAzimuthAndRange, 1},
-  { NULL, NULL } /* sentinel */
+  {"setData", (PyCFunction) _polarscan_setData, 1},
+  {"getData", (PyCFunction) _polarscan_getData, 1},
+  {"getAzimuthIndex", (PyCFunction) _polarscan_getAzimuthIndex, 1},
+  {"getRangeIndex", (PyCFunction) _polarscan_getRangeIndex, 1},
+  {"getValueAtIndex", (PyCFunction) _polarscan_getValueAtIndex, 1},
+  {"getValueAtAzimuthAndRange", (PyCFunction) _polarscan_getValueAtAzimuthAndRange, 1},
+  {"getNearest", (PyCFunction) _polarscan_getNearest, 1},
+  {NULL, NULL } /* sentinel */
 };
 
 /**
@@ -369,6 +411,12 @@ static PyObject* _polarscan_getattr(PolarScan* self, char* name)
     return PyInt_FromLong(PolarScan_getDataType(self->scan));
   } else if (strcmp("beamwidth", name) == 0) {
     return PyFloat_FromDouble(PolarScan_getBeamWidth(self->scan));
+  } else if (strcmp("longitude", name) == 0) {
+    return PyFloat_FromDouble(PolarScan_getLongitude(self->scan));
+  } else if (strcmp("latitude", name) == 0) {
+    return PyFloat_FromDouble(PolarScan_getLatitude(self->scan));
+  } else if (strcmp("height", name) == 0) {
+    return PyFloat_FromDouble(PolarScan_getHeight(self->scan));
   }
 
   res = Py_FindMethod(_polarscan_methods, (PyObject*) self, name);
@@ -469,6 +517,26 @@ static int _polarscan_setattr(PolarScan* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "beamwidth must be of type float");
     }
+  } else if (strcmp("longitude", name) == 0) {
+    if (PyFloat_Check(val)) {
+      PolarScan_setLongitude(self->scan, PyFloat_AsDouble(val));
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError, "longitude must be of type float");
+    }
+  } else if (strcmp("latitude", name) == 0) {
+    if (PyFloat_Check(val)) {
+      PolarScan_setLatitude(self->scan, PyFloat_AsDouble(val));
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError, "latitude must be of type float");
+    }
+  } else if (strcmp("height", name) == 0) {
+    if (PyFloat_Check(val)) {
+      PolarScan_setHeight(self->scan, PyFloat_AsDouble(val));
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError, "height must be of type float");
+    }
+  } else {
+    raiseException_gotoTag(done, PyExc_AttributeError, name);
   }
 
   result = 0;
@@ -566,7 +634,7 @@ static PyObject* _polarvolume_getScan(PolarVolume* self, PyObject* args)
     raiseException_returnNULL(PyExc_IndexError, "Index out of range");
   }
 
-  if(!PolarVolume_getScan(self->pvol, index, &scan)) {
+  if((scan = PolarVolume_getScan(self->pvol, index)) == NULL) {
     raiseException_returnNULL(PyExc_IndexError, "Could not aquire scan");
   }
 
@@ -589,6 +657,30 @@ static PyObject* _polarvolume_getScan(PolarVolume* self, PyObject* args)
 static PyObject* _polarvolume_getNumberOfScans(PolarVolume* self, PyObject* args)
 {
   return PyInt_FromLong(PolarVolume_getNumberOfScans(self->pvol));
+}
+
+/**
+ * Returns 1 if the scans in the volume are sorted in ascending order, otherwise
+ * 0 will be returned.
+ * @param[in] self - the polar volume
+ * @param[in] args - not used
+ * @returns NULL on failure or a PyInteger where 1 indicates that the scans are sorted after elevation angle
+ * in ascending order.
+ */
+static PyObject* _polarvolume_isAscendingScans(PolarVolume* self, PyObject* args)
+{
+  return PyBool_FromLong(PolarVolume_isAscendingScans(self->pvol));
+}
+
+/**
+ * Returns 1 if is is possible to perform transform operations on this volume or 0 if it isn't.
+ * @param[in] self - the polar volume
+ * @param[in] args - not used
+ * @returns NULL on failure or a PyInteger where 1 indicates that it is possible to perform a transformation.
+ */
+static PyObject* _polarvolume_isTransformable(PolarVolume* self, PyObject* args)
+{
+  return PyBool_FromLong(PolarVolume_isTransformable(self->pvol));
 }
 
 /**
@@ -683,14 +775,16 @@ static PyObject* _polarvolume_getNearestForElevation(PolarVolume* self, PyObject
  */
 static struct PyMethodDef _polarvolume_methods[] =
 {
-  { "addScan", (PyCFunction) _polarvolume_addScan, 1},
-  { "getScan", (PyCFunction) _polarvolume_getScan, 1},
-  { "getNumberOfScans", (PyCFunction) _polarvolume_getNumberOfScans, 1},
-  { "sortByElevations", (PyCFunction) _polarvolume_sortByElevations, 1},
-  { "getScanNearestElevation", (PyCFunction) _polarvolume_getScanNearestElevation, 1},
-  { "getNearest", (PyCFunction) _polarvolume_getNearest, 1},
-  { "getNearestForElevation", (PyCFunction) _polarvolume_getNearestForElevation, 1},
-  { NULL, NULL } /* sentinel */
+  {"addScan", (PyCFunction) _polarvolume_addScan, 1},
+  {"getScan", (PyCFunction) _polarvolume_getScan, 1},
+  {"getNumberOfScans", (PyCFunction) _polarvolume_getNumberOfScans, 1},
+  {"isAscendingScans", (PyCFunction) _polarvolume_isAscendingScans, 1},
+  {"isTransformable", (PyCFunction) _polarvolume_isTransformable, 1},
+  {"sortByElevations", (PyCFunction) _polarvolume_sortByElevations, 1},
+  {"getScanNearestElevation", (PyCFunction) _polarvolume_getScanNearestElevation, 1},
+  {"getNearest", (PyCFunction) _polarvolume_getNearest, 1},
+  {"getNearestForElevation", (PyCFunction) _polarvolume_getNearestForElevation, 1},
+  {NULL, NULL} /* sentinel */
 };
 
 /**
