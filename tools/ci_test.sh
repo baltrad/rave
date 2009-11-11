@@ -16,54 +16,5 @@
 SCRFILE=`python -c "import os;print os.path.abspath(\"$0\")"`
 SCRIPTPATH=`dirname "$SCRFILE"`
 
-RESULT=0
-BNAME=`python -c 'from distutils import util; import sys; print "lib.%s-%s" % (util.get_platform(), sys.version[0:3])'`
-
-RBPATH="${SCRIPTPATH}/../build/${BNAME}"
-XRUNNERPATH="${SCRIPTPATH}/../test/lib"
-RAVE_LDPATH="${SCRIPTPATH}/../librave/transform:${SCRIPTPATH}/../librave/pyapi"
-
-# Special hack for mac osx.
-ISMACOS=no
-case `uname -s` in
- Darwin*)
-   ISMACOS=yes
-   ;;
- darwin*)
-   ISMACOS=yes
-   ;;
-esac
-
-if [ "x$ISMACOS" = "xyes" ]; then
-  if [ "$DYLD_LIBRARY_PATH" != "" ]; then
-    export DYLD_LIBRARY_PATH="${RAVE_LDPATH}:${DYLD_LIBRARY_PATH}"
-  else
-    export DYLD_LIBRARY_PATH="${RAVE_LDPATH}"
-  fi
-else
-  if [ "$LD_LIBRARY_PATH" != "" ]; then
-    export LD_LIBRARY_PATH="${RAVE_LDPATH}:${LD_LIBRARY_PATH}"
-  else
-    export LD_LIBRARY_PATH="${RAVE_LDPATH}"
-  fi
-fi
-
-export RAVEPATH="${RBPATH}:${XRUNNERPATH}"
-
-if test "${PYTHONPATH}" != ""; then
-  export PYTHONPATH="${RAVEPATH}:${PYTHONPATH}"
-else
-  export PYTHONPATH="${RAVEPATH}"
-fi
-
-cd "${SCRIPTPATH}/../test/pytest"
-python RaveXmlTestSuite.py
-VAL=$?
-if [ $VAL != 0 ]; then
-  RESULT=$VAL
-fi
-
-#RUN OTHER ESSENTIAL TESTS
-
-# EXIT WITH A STATUS CODE, 0 == OK, ANY OTHER VALUE = FAIL
-exit $RESULT
+"$SCRIPTPATH/run_python_script.sh" "${SCRIPTPATH}/../test/pytest/RaveXmlTestSuite.py" "${SCRIPTPATH}/../test/pytest"
+exit $?

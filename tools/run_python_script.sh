@@ -34,6 +34,7 @@ BNAME=`python -c 'from distutils import util; import sys; print "lib.%s-%s" % (u
 
 RBPATH="${SCRIPTPATH}/../Lib:${SCRIPTPATH}/../build/${BNAME}"
 RAVE_LDPATH="${SCRIPTPATH}/../librave/transform:${SCRIPTPATH}/../librave/pyapi"
+XRUNNERPATH="${SCRIPTPATH}/../test/lib"
 
 # Special hack for mac osx.
 ISMACOS=no
@@ -60,7 +61,7 @@ else
   fi
 fi
 
-export RAVEPATH="${HLHDF_LDPATH}:${RBPATH}"
+export RAVEPATH="${HLHDF_LDPATH}:${RBPATH}:${XRUNNERPATH}"
 
 if test "${PYTHONPATH}" != ""; then
   export PYTHONPATH="${RAVEPATH}:${PYTHONPATH}"
