@@ -26,6 +26,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #define POLARSCAN_H
 #include "rave_transform.h"
 #include "polarnav.h"
+#include "projection.h"
 
 /**
  * Defines a Polar Scan
@@ -61,7 +62,7 @@ PolarScan_t* PolarScan_copy(PolarScan_t* scan);
  * if the scan is managed separately, use longitude/latitude and height
  * instead.
  * @param[in] scan - the scan
- * @param[in] navigator - the polar navigator
+ * @param[in] navigator - the polar navigator (MAY NOT BE NULL)
  */
 void PolarScan_setNavigator(PolarScan_t* scan, PolarNavigator_t* navigator);
 
@@ -71,6 +72,20 @@ void PolarScan_setNavigator(PolarScan_t* scan, PolarNavigator_t* navigator);
  * @returns the polar navigator
  */
 PolarNavigator_t* PolarScan_getNavigator(PolarScan_t* scan);
+
+/**
+ * Sets the projection to be used for this scan.
+ * @param[in] scan - the scan
+ * @param[in] projection - the projection (MAY NOT BE NULL)
+ */
+void PolarScan_setProjection(PolarScan_t* scan, Projection_t* projection);
+
+/**
+ * Returns the current projection for this scan.
+ * @param[in] scan - the scan
+ * @returns the projection used within this scan.
+ */
+Projection_t* PolarScan_getProjection(PolarScan_t* scan);
 
 /**
  * Sets the longitude for the volume
@@ -360,6 +375,14 @@ RaveValueType PolarScan_getValueAtAzimuthAndRange(PolarScan_t* scan, double a, d
  * @returns a rave value type
  */
 RaveValueType PolarScan_getNearest(PolarScan_t* scan, double lon, double lat, double* v);
+
+/**
+ * Verifies that all preconditions are met in order to perform
+ * a transformation.
+ * @param[in] scan - the polar scan
+ * @returns 1 if the polar scan is ready, otherwise 0.
+ */
+int PolarScan_isTransformable(PolarScan_t* scan);
 
 /**
  * Function for keeping track of some sort of metadata that should be

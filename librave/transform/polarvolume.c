@@ -194,10 +194,11 @@ done:
  */
 void PolarVolume_release(PolarVolume_t* pvol)
 {
-  RAVE_ASSERT((pvol != NULL), "pvol was NULL");
-  pvol->pv_refCount--;
-  if (pvol->pv_refCount <= 0) {
-    PolarVolume_destroy(pvol);
+  if (pvol != NULL) {
+    pvol->pv_refCount--;
+    if (pvol->pv_refCount <= 0) {
+      PolarVolume_destroy(pvol);
+    }
   }
 }
 
@@ -209,8 +210,9 @@ void PolarVolume_release(PolarVolume_t* pvol)
  */
 PolarVolume_t* PolarVolume_copy(PolarVolume_t* pvol)
 {
-  RAVE_ASSERT((pvol != NULL), "pvol was NULL");
-  pvol->pv_refCount++;
+  if (pvol != NULL) {
+    pvol->pv_refCount++;
+  }
   return pvol;
 }
 
@@ -256,7 +258,11 @@ void PolarVolume_setProjection(PolarVolume_t* pvol, Projection_t* projection)
   Projection_release(pvol->projection);
   pvol->projection = NULL;
   if (projection != NULL) {
+    int index = 0;
     pvol->projection = Projection_copy(projection);
+    for (index = 0; index < pvol->nrScans; index++) {
+      PolarScan_setProjection(pvol->scans[index], projection);
+    }
   }
 }
 
@@ -276,6 +282,7 @@ int PolarVolume_addScan(PolarVolume_t* pvol, PolarScan_t* scan)
   RAVE_ASSERT((scan != NULL), "scan was NULL");
   if (PolarVolume_ensureScanCapacity(pvol)) {
     PolarScan_setNavigator(scan, pvol->navigator);
+    PolarScan_setProjection(scan, pvol->projection);
     pvol->scans[pvol->nrScans++] = PolarScan_copy(scan);
     result = 1;
   }
@@ -298,13 +305,20 @@ int PolarVolume_getNumberOfScans(PolarVolume_t* pvol)
   return pvol->nrScans;
 }
 
-PolarScan_t* PolarVolume_getScanNearestElevation(PolarVolume_t* pvol, double e)
+PolarScan_t* PolarVolume_getScanClosestToElevation(PolarVolume_t* pvol, double e, int inside)
 {
   double se = 0.0L, eld = 0.0L;
   int ei = 0;
   int i = 0;
   RAVE_ASSERT((pvol != NULL), "pvol was NULL");
   RAVE_ASSERT((index != NULL), "index was NULL");
+
+  if (inside) {
+    if ((e < PolarScan_getElangle(pvol->scans[0])) ||
+        (e > PolarScan_getElangle(pvol->scans[pvol->nrScans-1]))) {
+      return NULL;
+    }
+  }
 
   se = PolarScan_getElangle(pvol->scans[0]);
   ei = 0;
@@ -323,7 +337,7 @@ PolarScan_t* PolarVolume_getScanNearestElevation(PolarVolume_t* pvol, double e)
   return PolarScan_copy(pvol->scans[ei]);
 }
 
-RaveValueType PolarVolume_getNearest(PolarVolume_t* pvol, double lon, double lat, double height, double* v)
+RaveValueType PolarVolume_getNearest(PolarVolume_t* pvol, double lon, double lat, double height, int insidee, double* v)
 {
   double d = 0.0L, a = 0.0L, r = 0.0L, e = 0.0L;
   RaveValueType result = RaveValueType_NODATA;
@@ -336,39 +350,12 @@ RaveValueType PolarVolume_getNearest(PolarVolume_t* pvol, double lon, double lat
   PolarNavigator_dhToRe(pvol->navigator, d, height, &r, &e);
 
   // Find relevant elevation
-  scan = PolarVolume_getScanNearestElevation(pvol, e);
-
-  //@todo: Eventually use the actual elevation and calculate proper range instead.
-
-  // Now we have the elevation angle, fetch value by providing azimuth and range.
-  result = PolarScan_getValueAtAzimuthAndRange(scan, a, r, v);
-
-  PolarScan_release(scan);
-
-  return result;
-}
-
-RaveValueType PolarVolume_getNearestForElevation(PolarVolume_t* pvol, double lon, double lat, int index, double* v)
-{
-  double d = 0.0L, a = 0.0L, r = 0.0L, e = 0.0L, height = 0.0L;
-  RaveValueType result = RaveValueType_NODATA;
-  PolarScan_t* scan = NULL;
-
-  RAVE_ASSERT((pvol != NULL), "pvol was NULL");
-  RAVE_ASSERT((v != NULL), "v was NULL");
-  *v = 0.0;
-
-  if ((scan = PolarVolume_getScan(pvol, index)) == NULL) {
-    RAVE_ERROR2("Attempting to get value for elevation index %d but there are only %d elevations available", index, pvol->nrScans);
-    return result;
+  scan = PolarVolume_getScanClosestToElevation(pvol, e, insidee);
+  if (scan != NULL) {
+    //@todo: Eventually use the actual elevation and calculate proper range instead.
+    // Now we have the elevation angle, fetch value by providing azimuth and range.
+    result = PolarScan_getValueAtAzimuthAndRange(scan, a, r, v);
   }
-
-  e = PolarScan_getElangle(scan);
-
-  PolarNavigator_llToDa(pvol->navigator, lat, lon, &d, &a);
-  PolarNavigator_deToRh(pvol->navigator, d, e, &r, &height);
-
-  result = PolarScan_getValueAtAzimuthAndRange(scan, a, r, v);
 
   PolarScan_release(scan);
 

@@ -43,7 +43,7 @@ class rave_loader:
         
       index = index + 1
 
-    vol.sortByElevations(1) # Ascending sort
+    #vol.sortByElevations(1) # Ascending sort
     
     return vol
 
@@ -65,7 +65,7 @@ class rave_loader:
             scan.undetect = nodelist.fetchNode("%s/what/undetect"%scanname).data()
             scan.quantity = nodelist.fetchNode("%s/what/quantity"%scanname).data()
             
-            scan.elangle = nodelist.fetchNode("%s/where/elangle"%name).data()
+            scan.elangle = nodelist.fetchNode("%s/where/elangle"%name).data() * math.pi/180.0
             scan.a1gate = nodelist.fetchNode("%s/where/a1gate"%name).data()
             scan.nbins = nodelist.fetchNode("%s/where/nbins"%name).data()
             scan.nrays = nodelist.fetchNode("%s/where/nrays"%name).data()

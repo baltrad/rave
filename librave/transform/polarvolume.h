@@ -98,7 +98,8 @@ void PolarVolume_setHeight(PolarVolume_t* pvol, double height);
 double PolarVolume_getHeight(PolarVolume_t* pvol);
 
 /**
- * Sets the projection for this polar volume.
+ * Sets the projection for this polar volume. All scans belonging to this volume
+ * will also get this projection assigned.
  * @param[in] pvol - the polar volume
  * @param[in] projection - the projection
  */
@@ -113,7 +114,8 @@ void PolarVolume_setProjection(PolarVolume_t* pvol, Projection_t* projection);
 Projection_t* PolarVolume_getProjection(PolarVolume_t* pvol);
 
 /**
- * Adds a scan to the volume.
+ * Adds a scan to the volume. The scan will automatically be assigned the
+ * volumes navigator and projection.
  * @param[in] pvol - the volume
  * @param[in] scan - the scan
  * ®return 0 on failure, otherwise success
@@ -136,12 +138,15 @@ PolarScan_t* PolarVolume_getScan(PolarVolume_t* pvol, int index);
 int PolarVolume_getNumberOfScans(PolarVolume_t* pvol);
 
 /**
- * Returns the scan with elevation closest to the specified elevation.
+ * Returns the scan with elevation closest to the specified elevation. This function
+ * requires that the scans are ordered in ascending order, otherwise the behaviour
+ * will be undefined.
  * @param[in] pvol - the polar volume
  * @param[in] e - the elevation (in radians)
+ * @param[in] inside - if the elevation must be within the min-max elevation or not. Any value != 0 means that elevation must be within range.
  * @returns the scan or NULL if nothing is found
  */
-PolarScan_t* PolarVolume_getScanNearestElevation(PolarVolume_t* pvol, double e);
+PolarScan_t* PolarVolume_getScanClosestToElevation(PolarVolume_t* pvol, double e, int inside);
 
 /**
  * Fetches the value nearest to the specified position.
@@ -149,20 +154,11 @@ PolarScan_t* PolarVolume_getScanNearestElevation(PolarVolume_t* pvol, double e);
  * @param[in] lon  - the longitude (in radians)
  * @param[in] lat  - the latitude (in radians)
  * @param[in] height - the height
+ * @param[in] insidee - if the estimated elevation must be within the min-max elevation or not to be valid
  * @param[out] v - the value
  * @return what type of value that has been set in v.
  */
-RaveValueType PolarVolume_getNearest(PolarVolume_t* pvol, double lon, double lat, double height, double* v);
-
-/**
- * Fetches the value nearest the specified position at the elevation indexed by index.
- * @param[in] pvol - the polar volume
- * @param[in] lon  - the longitude (in radians)
- * @param[in] lat  - the latitude  (in radians)
- * @param[in] index - the elevation index (0..n)
- * @param[out] v - the found value
- */
-RaveValueType PolarVolume_getNearestForElevation(PolarVolume_t* pvol, double lon, double lat, int index, double* v);
+RaveValueType PolarVolume_getNearest(PolarVolume_t* pvol, double lon, double lat, double height, int insidee, double* v);
 
 /**
  * Arranges the scans in either ascending or descending elevation.

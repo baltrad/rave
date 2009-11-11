@@ -49,6 +49,70 @@ static void Transform_destroy(Transform_t* transform)
     RAVE_FREE(transform);
   }
 }
+
+/**
+ * Internal routine to handle both cappis and pseudo-cappis since they are similar in behaviour.
+ * @param[in] transform - the transformer instance
+ * @param[in] pvol - the polar volume
+ * @param[in] cartesian - the cartesian (resulting) product
+ * @param[in] height - the altitude to create the cappi at
+ * @param[in] insidee - the only difference between cappi and pseudo-cappi is if the range/height evaluates to an elevation that is inside or outside the min-max scan elevations.
+ * @returns 1 on success otherwise 0
+ */
+static int Transform_cappis_internal(Transform_t* transform, PolarVolume_t* pvol, Cartesian_t* cartesian, double height, int insidee)
+{
+  int result = 0;
+  long xsize = 0, ysize = 0, x = 0, y = 0;
+  double cnodata = 0.0L, cundetect = 0.0L;
+  Projection_t* sourcepj = NULL;
+  Projection_t* targetpj = NULL;
+
+  RAVE_ASSERT((transform != NULL), "transform was NULL");
+  RAVE_ASSERT((pvol != NULL), "pvol was NULL");
+  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
+
+  if (!Cartesian_isTransformable(cartesian) ||
+      !PolarVolume_isTransformable(pvol)) {
+    RAVE_ERROR0("Cartesian product or polar volume is not possible to transform");
+    goto done;
+  }
+
+  sourcepj = Cartesian_getProjection(cartesian);
+  targetpj = PolarVolume_getProjection(pvol);
+  cnodata = Cartesian_getNodata(cartesian);
+  cundetect = Cartesian_getUndetect(cartesian);
+  xsize = Cartesian_getXSize(cartesian);
+  ysize = Cartesian_getYSize(cartesian);
+
+  for (y = 0; y < ysize; y++) {
+    double herey = Cartesian_getLocationY(cartesian, y);
+    double tmpy = herey;
+    for (x = 0; x < xsize; x++) {
+      double herex = Cartesian_getLocationX(cartesian, x);
+      herey = tmpy; // So that we can use herey over and over again
+      RaveValueType valid = RaveValueType_NODATA;
+      double v = 0.0L;
+      if (!Projection_transform(sourcepj, targetpj, &herex, &herey, NULL)) {
+        RAVE_ERROR0("Transform failed");
+        goto done;
+      }
+      valid = PolarVolume_getNearest(pvol, herex, herey, height, insidee, &v);
+
+      if (valid == RaveValueType_NODATA) {
+        v = cnodata;
+      } else if (valid == RaveValueType_UNDETECT) {
+        v = cundetect;
+      }
+      Cartesian_setValue(cartesian, x, y, v);
+    }
+  }
+
+  result = 1;
+done:
+  Projection_release(sourcepj);
+  Projection_release(targetpj);
+  return result;
+}
 /*@} End of Private functions */
 
 /*@{ Interface functions */
@@ -96,7 +160,7 @@ RaveTransformationMethod Transform_getMethod(Transform_t* transform)
   return transform->method;
 }
 
-int Transform_ppi(Transform_t* transform, PolarVolume_t* pvol, Cartesian_t* cartesian, int index)
+int Transform_ppi(Transform_t* transform, PolarScan_t* scan, Cartesian_t* cartesian)
 {
   int result = 0;
   long xsize = 0, ysize = 0, x = 0, y = 0;
@@ -105,20 +169,17 @@ int Transform_ppi(Transform_t* transform, PolarVolume_t* pvol, Cartesian_t* cart
   Projection_t* targetpj = NULL;
 
   RAVE_ASSERT((transform != NULL), "transform was NULL");
-  RAVE_ASSERT((pvol != NULL), "pvol was NULL");
+  RAVE_ASSERT((scan != NULL), "scan was NULL");
   RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
 
-  sourcepj = Cartesian_getProjection(cartesian);
-  if (sourcepj == NULL) {
-    RAVE_ERROR0("No projection in cartesian product");
+  if (!Cartesian_isTransformable(cartesian) ||
+      !PolarScan_isTransformable(scan)) {
+    RAVE_ERROR0("Cartesian product or scan is not possible to transform");
     goto done;
   }
 
-  targetpj = PolarVolume_getProjection(pvol);
-  if (targetpj == NULL) {
-    RAVE_ERROR0("No projection in polar volume");
-    goto done;
-  }
+  sourcepj = Cartesian_getProjection(cartesian);
+  targetpj = PolarScan_getProjection(scan);
   cnodata = Cartesian_getNodata(cartesian);
   cundetect = Cartesian_getUndetect(cartesian);
   xsize = Cartesian_getXSize(cartesian);
@@ -136,7 +197,7 @@ int Transform_ppi(Transform_t* transform, PolarVolume_t* pvol, Cartesian_t* cart
         RAVE_ERROR0("Transform failed");
         goto done;
       }
-      valid = PolarVolume_getNearestForElevation(pvol, herex, herey, index, &v);
+      valid = PolarScan_getNearest(scan, herex, herey, &v);
 
       if (valid == RaveValueType_NODATA) {
         v = cnodata;
@@ -151,64 +212,17 @@ int Transform_ppi(Transform_t* transform, PolarVolume_t* pvol, Cartesian_t* cart
 done:
   Projection_release(sourcepj);
   Projection_release(targetpj);
+  PolarScan_release(scan);
   return result;
 }
 
 int Transform_cappi(Transform_t* transform, PolarVolume_t* pvol, Cartesian_t* cartesian, double height)
 {
-  int result = 0;
-  long xsize = 0, ysize = 0, x = 0, y = 0;
-  double cnodata = 0.0L, cundetect = 0.0L;
-  Projection_t* sourcepj = NULL;
-  Projection_t* targetpj = NULL;
+  return Transform_cappis_internal(transform, pvol, cartesian, height, 1);
+}
 
-  RAVE_ASSERT((transform != NULL), "transform was NULL");
-  RAVE_ASSERT((pvol != NULL), "pvol was NULL");
-  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
-
-  sourcepj = Cartesian_getProjection(cartesian);
-  if (sourcepj == NULL) {
-    RAVE_ERROR0("No projection in cartesian product");
-    goto done;
-  }
-
-  targetpj = PolarVolume_getProjection(pvol);
-  if (targetpj == NULL) {
-    RAVE_ERROR0("No projection in polar volume");
-    goto done;
-  }
-  cnodata = Cartesian_getNodata(cartesian);
-  cundetect = Cartesian_getUndetect(cartesian);
-  xsize = Cartesian_getXSize(cartesian);
-  ysize = Cartesian_getYSize(cartesian);
-
-  for (y = 0; y < ysize; y++) {
-    double herey = Cartesian_getLocationY(cartesian, y);
-    double tmpy = herey;
-    for (x = 0; x < xsize; x++) {
-      double herex = Cartesian_getLocationX(cartesian, x);
-      herey = tmpy; // So that we can use herey over and over again
-      RaveValueType valid = RaveValueType_NODATA;
-      double v = 0.0L;
-      if (!Projection_transform(sourcepj, targetpj, &herex, &herey, NULL)) {
-        RAVE_ERROR0("Transform failed");
-        goto done;
-      }
-      valid = PolarVolume_getNearest(pvol, herex, herey, height, &v);
-
-      if (valid == RaveValueType_NODATA) {
-        v = cnodata;
-      } else if (valid == RaveValueType_UNDETECT) {
-        v = cundetect;
-      }
-      Cartesian_setValue(cartesian, x, y, v);
-    }
-  }
-
-  result = 1;
-done:
-  Projection_release(sourcepj);
-  Projection_release(targetpj);
-  return result;
+int Transform_pcappi(Transform_t* transform, PolarVolume_t* pvol, Cartesian_t* cartesian, double height)
+{
+  return Transform_cappis_internal(transform, pvol, cartesian, height, 0);
 }
 /*@} End of Interface functions */

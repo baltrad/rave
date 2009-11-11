@@ -372,6 +372,21 @@ RaveValueType Cartesian_getValue(Cartesian_t* cartesian, long x, long y, double*
   return result;
 }
 
+int Cartesian_isTransformable(Cartesian_t* cartesian)
+{
+  int result = 0;
+  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
+  if (cartesian->xsize > 0 &&
+      cartesian->ysize > 0 &&
+      cartesian->projection != NULL &&
+      cartesian->xscale > 0 &&
+      cartesian->yscale > 0 &&
+      cartesian->data != NULL) {
+    result = 1;
+  }
+  return result;
+}
+
 void Cartesian_setVoidPtr(Cartesian_t* cartesian, void* ptr)
 {
   RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");

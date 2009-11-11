@@ -384,3 +384,56 @@ class RaveModuleCartesianTest(unittest.TestCase):
     self.assertEquals(7, result[4][4])
     self.assertEquals("int8", result.dtype.name)
 
+  def test_isTransformable(self):
+    proj = _rave.projection("x", "y", "+proj=stere +ellps=bessel +lat_0=90 +lon_0=14 +lat_ts=60 +datum=WGS84")
+    data = numpy.zeros((10,10), numpy.float64)
+
+    obj = _rave.cartesian()
+    obj.xscale = 1000.0
+    obj.yscale = 1000.0
+    
+    obj.projection = proj
+    obj.setData(data)
+
+    self.assertEquals(True, obj.isTransformable())
+    
+  def test_isTransformable_noscale(self):
+    proj = _rave.projection("x", "y", "+proj=stere +ellps=bessel +lat_0=90 +lon_0=14 +lat_ts=60 +datum=WGS84")
+    data = numpy.zeros((10,10), numpy.float64)
+
+    obj = _rave.cartesian()
+    obj.xscale = 1000.0
+    obj.yscale = 1000.0
+    
+    obj.projection = proj
+    obj.setData(data)
+
+    self.assertEquals(True, obj.isTransformable())
+    obj.xscale = 1000.0
+    obj.yscale = 0.0
+    self.assertEquals(False, obj.isTransformable())
+    obj.xscale = 0.0
+    obj.yscale = 1000.0
+    self.assertEquals(False, obj.isTransformable())
+
+  def test_isTransformable_nodata(self):
+    proj = _rave.projection("x", "y", "+proj=stere +ellps=bessel +lat_0=90 +lon_0=14 +lat_ts=60 +datum=WGS84")
+
+    obj = _rave.cartesian()
+    obj.xscale = 1000.0
+    obj.yscale = 1000.0
+    
+    obj.projection = proj
+
+    self.assertEquals(False, obj.isTransformable())
+
+  def test_isTransformable_noproj(self):
+    data = numpy.zeros((10,10), numpy.float64)
+
+    obj = _rave.cartesian()
+    obj.xscale = 1000.0
+    obj.yscale = 1000.0
+    
+    obj.setData(data)
+
+    self.assertEquals(False, obj.isTransformable())

@@ -286,6 +286,14 @@ int Cartesian_setValue(Cartesian_t* cartesian, long x, long y, double v);
 RaveValueType Cartesian_getValue(Cartesian_t* cartesian, long x, long y, double* v);
 
 /**
+ * Verifies that all preconditions are met in order to perform
+ * a transformation.
+ * @param[in] cartesian - the cartesian product
+ * @returns 1 if the cartesian product is ready, otherwise 0.
+ */
+int Cartesian_isTransformable(Cartesian_t* cartesian);
+
+/**
  * Function for keeping track of some sort of metadata that should be
  * associated with this scan.
  * @param[in] cartesian - the cartesian product

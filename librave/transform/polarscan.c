@@ -61,6 +61,9 @@ struct _PolarScan_t {
   // Navigator
   PolarNavigator_t* navigator; /** a navigator for calculating polar navigation */
 
+  // Projection wrapper
+  Projection_t* projection; /**< projection for this scan */
+
   // Debugging
   int debug; /**< indicates if debugging should be active or not */
 };
@@ -75,6 +78,7 @@ static void PolarScan_destroy(PolarScan_t* scan)
   if (scan != NULL) {
     RAVE_FREE(scan->data);
     PolarNavigator_release(scan->navigator);
+    Projection_release(scan->projection);
     RAVE_FREE(scan);
   }
 }
@@ -104,28 +108,43 @@ PolarScan_t* PolarScan_new(void)
     result->ps_refCount = 1;
     result->voidPtr = NULL;
     result->debug = 0;
+
+    result->navigator = NULL;
+    result->projection = NULL;
+
+    result->projection = Projection_new("lonlat", "lonlat", "+proj=latlong +ellps=WGS84 +datum=WGS84");
+    if (result->projection == NULL) {
+      PolarScan_destroy(result);
+      result = NULL;
+      goto done;
+    }
+
     result->navigator = PolarNavigator_new();
     if (result->navigator == NULL) {
       PolarScan_destroy(result);
       result = NULL;
+      goto done;
     }
   }
+done:
   return result;
 }
 
 void PolarScan_release(PolarScan_t* scan)
 {
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
-  scan->ps_refCount--;
-  if (scan->ps_refCount <= 0) {
-    PolarScan_destroy(scan);
+  if (scan != NULL) {
+    scan->ps_refCount--;
+    if (scan->ps_refCount <= 0) {
+      PolarScan_destroy(scan);
+    }
   }
 }
 
 PolarScan_t* PolarScan_copy(PolarScan_t* scan)
 {
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
-  scan->ps_refCount++;
+  if (scan != NULL) {
+    scan->ps_refCount++;
+  }
   return scan;
 }
 
@@ -141,6 +160,19 @@ PolarNavigator_t* PolarScan_getNavigator(PolarScan_t* scan)
 {
   RAVE_ASSERT((scan != NULL), "scan was NULL");
   return PolarNavigator_copy(scan->navigator);
+}
+
+void PolarScan_setProjection(PolarScan_t* scan, Projection_t* projection)
+{
+  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  Projection_release(scan->projection);
+  scan->projection = Projection_copy(projection);
+}
+
+Projection_t* PolarScan_getProjection(PolarScan_t* scan)
+{
+  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  return Projection_copy(scan->projection);
 }
 
 void PolarScan_setLongitude(PolarScan_t* scan, double lon)
@@ -465,6 +497,21 @@ RaveValueType PolarScan_getNearest(PolarScan_t* scan, double lon, double lat, do
 
   result = PolarScan_getValueAtAzimuthAndRange(scan, a, r, v);
 
+  return result;
+}
+
+int PolarScan_isTransformable(PolarScan_t* scan)
+{
+  int result = 0;
+  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  if (scan->projection != NULL &&
+      scan->navigator != NULL &&
+      scan->nrays > 0 &&
+      scan->nbins > 0 &&
+      scan->rscale > 0.0 &&
+      scan->data != NULL) {
+    result = 1;
+  }
   return result;
 }
 

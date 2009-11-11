@@ -13,5 +13,8 @@ from RaveModuleTransformTest import *
 from RaveModuleProjectionTest import *
 from PolarNavigatorTest import *
 
+# Some tests for verifying that we are producing products
+from PolarVolumeTransformTest import *
+
 if __name__ == '__main__':
   unittest.main()

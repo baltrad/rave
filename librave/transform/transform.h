@@ -72,14 +72,13 @@ int Transform_setMethod(Transform_t* transform, RaveTransformationMethod method)
 RaveTransformationMethod Transform_getMethod(Transform_t* transform);
 
 /**
- * Creates a ppi from a polar volume.
+ * Creates a ppi from a polar scan.
  * @param[in] transform - the transformer
- * @param[in] pvol - the polar volume
+ * @param[in] scan - the polar scan
  * @param[in] cartesian - the cartesian product
- * @param[in] index - the elevation index
  * @returns 0 on failure, otherwise success
  */
-int Transform_ppi(Transform_t* transform, PolarVolume_t* pvol, Cartesian_t* cartesian, int index);
+int Transform_ppi(Transform_t* transform, PolarScan_t* scan, Cartesian_t* cartesian);
 
 /**
  * Creates a cappi from a polar volume
@@ -90,5 +89,15 @@ int Transform_ppi(Transform_t* transform, PolarVolume_t* pvol, Cartesian_t* cart
  * @returns 0 on failure, otherwise success
  */
 int Transform_cappi(Transform_t* transform, PolarVolume_t* pvol, Cartesian_t* cartesian, double height);
+
+/**
+ * Creates a pseudo-cappi from a polar volume
+ * @param[in] transform - the transformer
+ * @param[in] pvol - the polar volume
+ * @param[in] cartesian - the cartesian product
+ * @param[in] height - the height of the cappi
+ * @returns 0 on failure, otherwise success
+ */
+int Transform_pcappi(Transform_t* transform, PolarVolume_t* pvol, Cartesian_t* cartesian, double height);
 
 #endif

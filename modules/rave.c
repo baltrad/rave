@@ -418,7 +418,6 @@ static PyObject* _polarscan_getattr(PolarScan* self, char* name)
   } else if (strcmp("height", name) == 0) {
     return PyFloat_FromDouble(PolarScan_getHeight(self->scan));
   }
-
   res = Py_FindMethod(_polarscan_methods, (PyObject*) self, name);
   if (res)
     return res;
@@ -556,9 +555,18 @@ done:
  */
 static void _polarvolume_dealloc(PolarVolume* obj)
 {
+  int index = 0, len = 0;
   /*Nothing yet*/
   if (obj == NULL) {
     return;
+  }
+  len = PolarVolume_getNumberOfScans(obj->pvol);
+  for (index = 0; index < len; index++) {
+    PolarScan_t* scan = PolarVolume_getScan(obj->pvol, index);
+    PyObject* pyscan = (PyObject*)PolarScan_getVoidPtr(scan);
+    if (pyscan != NULL) {
+      Py_DECREF(pyscan);
+    }
   }
   PolarVolume_release(obj->pvol);
   PyObject_Del(obj);
@@ -610,6 +618,8 @@ static PyObject* _polarvolume_addScan(PolarVolume* self, PyObject* args)
   if (!PolarVolume_addScan(self->pvol, polarScan->scan)) {
     raiseException_returnNULL(PyExc_MemoryError, "Failed to add scan to volume");
   }
+
+  Py_INCREF(inptr); // Make sure that the scan gets its refcounting increased.
 
   Py_RETURN_NONE;
 }
@@ -705,67 +715,52 @@ static PyObject* _polarvolume_sortByElevations(PolarVolume* self, PyObject* args
 /**
  * Gets the scan that got an elevation angle that is closest to the specified angle.
  * @param[in] self - the polar volume
- * @param[in] args - the elevation angle (in radians)
+ * @param[in] args - the elevation angle (in radians) and an integer where 1 means only include elevations that are within the min-max elevations
  * @return a scan or NULL on failure
  */
-static PyObject* _polarvolume_getScanNearestElevation(PolarVolume* self, PyObject* args)
+static PyObject* _polarvolume_getScanClosestToElevation(PolarVolume* self, PyObject* args)
 {
   double elevation = 0.0L;
+  int inside = 0;
   PolarScan_t* scan = NULL;
   PyObject* result = NULL;
 
-  if (!PyArg_ParseTuple(args, "d", &elevation)) {
+  if (!PyArg_ParseTuple(args, "di", &elevation, &inside)) {
     return NULL;
   }
 
-  scan = PolarVolume_getScanNearestElevation(self->pvol, elevation);
+  scan = PolarVolume_getScanClosestToElevation(self->pvol, elevation, inside);
   if (scan != NULL) {
     result = (PyObject*)PolarScan_getVoidPtr(scan);
     Py_INCREF(result);
   }
 
   PolarScan_release(scan);
-  return result;
+  if (result != NULL) {
+    return result;
+  } else {
+    Py_RETURN_NONE;
+  }
 }
 
 /**
  * Gets the nearest value at the specified lon/lat/height.
  * @param[in] self - the polar volume
- * @param[in] args - the lon/lat (in radians) and height.
+ * @param[in] args - the lon/lat as a tuple in radians), the height and an indicator if elevation must be within min-max elevation or not
  * @return a tuple of (valuetype, value)
  */
 static PyObject* _polarvolume_getNearest(PolarVolume* self, PyObject* args)
 {
   double lon = 0.0L, lat = 0.0L, height = 0.0L;
   double v = 0.0L;
+  int insidee = 0;
   RaveValueType vtype = RaveValueType_NODATA;
 
-  if (!PyArg_ParseTuple(args, "(dd)d", &lon,&lat,&height)) {
+  if (!PyArg_ParseTuple(args, "(dd)di", &lon,&lat,&height,&insidee)) {
     return NULL;
   }
 
-  vtype = PolarVolume_getNearest(self->pvol, lon, lat, height, &v);
-
-  return Py_BuildValue("(id)", vtype, v);
-}
-
-/**
- * Gets the nearest value at the specified lon/lat for the specified elevation index.
- * @param[in] self - the polar volume
- * @param[in] args - the elevation index
- * @returns a tuple of (valuetype, value) or NULL on failure.
- */
-static PyObject* _polarvolume_getNearestForElevation(PolarVolume* self, PyObject* args)
-{
-  double lon = 0.0L, lat = 0.0L, v = 0.0L;
-  int index = -1;
-  RaveValueType vtype = RaveValueType_NODATA;
-
-  if (!PyArg_ParseTuple(args, "(dd)d", &lon,&lat,&index)) {
-    return NULL;
-  }
-
-  vtype = PolarVolume_getNearestForElevation(self->pvol, lon, lat, index, &v);
+  vtype = PolarVolume_getNearest(self->pvol, lon, lat, height, insidee, &v);
 
   return Py_BuildValue("(id)", vtype, v);
 }
@@ -781,9 +776,8 @@ static struct PyMethodDef _polarvolume_methods[] =
   {"isAscendingScans", (PyCFunction) _polarvolume_isAscendingScans, 1},
   {"isTransformable", (PyCFunction) _polarvolume_isTransformable, 1},
   {"sortByElevations", (PyCFunction) _polarvolume_sortByElevations, 1},
-  {"getScanNearestElevation", (PyCFunction) _polarvolume_getScanNearestElevation, 1},
+  {"getScanClosestToElevation", (PyCFunction) _polarvolume_getScanClosestToElevation, 1},
   {"getNearest", (PyCFunction) _polarvolume_getNearest, 1},
-  {"getNearestForElevation", (PyCFunction) _polarvolume_getNearestForElevation, 1},
   {NULL, NULL} /* sentinel */
 };
 
@@ -967,7 +961,6 @@ static PyObject* _cartesian_getData(Cartesian* self, PyObject* args)
     int nbytes = xsize*ysize*PyArray_ITEMSIZE(result);
     memcpy(((PyArrayObject*)result)->data, (unsigned char*)Cartesian_getData(self->cartesian), nbytes);
   }
-
   return result;
 }
 
@@ -1050,18 +1043,24 @@ static PyObject* _cartesian_getValue(Cartesian* self, PyObject* args)
   return Py_BuildValue("(id)", result, v);
 }
 
+static PyObject* _cartesian_isTransformable(Cartesian* self, PyObject* args)
+{
+  return PyBool_FromLong(Cartesian_isTransformable(self->cartesian));
+}
+
 /**
  * All methods a cartesian product can have
  */
 static struct PyMethodDef _cartesian_methods[] =
 {
-  { "setData", (PyCFunction) _cartesian_setData, 1},
-  { "getData", (PyCFunction) _cartesian_getData, 1},
-  { "getLocationX", (PyCFunction) _cartesian_getLocationX, 1},
-  { "getLocationY", (PyCFunction) _cartesian_getLocationY, 1},
-  { "setValue", (PyCFunction) _cartesian_setValue, 1},
-  { "getValue", (PyCFunction) _cartesian_getValue, 1},
-  { NULL, NULL } /* sentinel */
+  {"setData", (PyCFunction) _cartesian_setData, 1},
+  {"getData", (PyCFunction) _cartesian_getData, 1},
+  {"getLocationX", (PyCFunction) _cartesian_getLocationX, 1},
+  {"getLocationY", (PyCFunction) _cartesian_getLocationY, 1},
+  {"setValue", (PyCFunction) _cartesian_setValue, 1},
+  {"getValue", (PyCFunction) _cartesian_getValue, 1},
+  {"isTransformable", (PyCFunction) _cartesian_isTransformable, 1},
+  {NULL, NULL } /* sentinel */
 };
 
 /**
@@ -1264,37 +1263,35 @@ static PyObject* _transform_ppi(Transform* self, PyObject* args)
 {
   Cartesian* cartesian = NULL;
   PyObject* pycartesian = NULL;
-  PolarVolume* pvol = NULL;
-  PyObject* pypvol = NULL;
-  int index = 0;
+  PolarScan* scan = NULL;
+  PyObject* pyscan = NULL;
 
-  if(!PyArg_ParseTuple(args, "OOi", &pypvol, &pycartesian, &index)) {
+  if(!PyArg_ParseTuple(args, "OO", &pyscan, &pycartesian)) {
     return NULL;
   }
 
-  if (!PolarVolume_Check(pypvol)) {
-    raiseException_returnNULL(PyExc_TypeError, "First argument should be a polar volume")
+  if (!PolarScan_Check(pyscan)) {
+    raiseException_returnNULL(PyExc_TypeError, "First argument should be a polar scan")
   }
 
   if (!Cartesian_Check(pycartesian)) {
     raiseException_returnNULL(PyExc_TypeError, "Second argument should be a cartesian product");
   }
 
-  pvol = (PolarVolume*)pypvol;
+  scan = (PolarScan*)pyscan;
   cartesian = (Cartesian*)pycartesian;
 
-  if (!Transform_ppi(self->transform, pvol->pvol, cartesian->cartesian, index)) {
+  if (!Transform_ppi(self->transform, scan->scan, cartesian->cartesian)) {
     raiseException_returnNULL(PyExc_IOError, "Failed to transform volume into a ppi");
   }
 
   Py_RETURN_NONE;
 }
 
-
 /**
  * Creates a cappi from a polar volume
  * @param[in] self the transformer
- * @param[in] args arguments for generating the cappi (polarvolume, cartesian)
+ * @param[in] args arguments for generating the cappi (polarvolume, cartesian, height in meters)
  * @return Py_None on success, otherwise NULL
  */
 static PyObject* _transform_cappi(Transform* self, PyObject* args)
@@ -1303,8 +1300,9 @@ static PyObject* _transform_cappi(Transform* self, PyObject* args)
   PyObject* pycartesian = NULL;
   PolarVolume* pvol = NULL;
   PyObject* pypvol = NULL;
+  double height = 0.0L;
 
-  if(!PyArg_ParseTuple(args, "OO", &pypvol, &pycartesian)) {
+  if(!PyArg_ParseTuple(args, "OOd", &pypvol, &pycartesian, &height)) {
     return NULL;
   }
 
@@ -1319,7 +1317,43 @@ static PyObject* _transform_cappi(Transform* self, PyObject* args)
   pvol = (PolarVolume*)pypvol;
   cartesian = (Cartesian*)pycartesian;
 
-  if (!Transform_cappi(self->transform, pvol->pvol, cartesian->cartesian, 1000.0)) {
+  if (!Transform_cappi(self->transform, pvol->pvol, cartesian->cartesian, height)) {
+    raiseException_returnNULL(PyExc_IOError, "Failed to transform volume into a cappi");
+  }
+
+  Py_RETURN_NONE;
+}
+
+/**
+ * Creates a pseudo-cappi from a polar volume
+ * @param[in] self the transformer
+ * @param[in] args arguments for generating the pseudo-cappi (polarvolume, cartesian)
+ * @return Py_None on success, otherwise NULL
+ */
+static PyObject* _transform_pcappi(Transform* self, PyObject* args)
+{
+  Cartesian* cartesian = NULL;
+  PyObject* pycartesian = NULL;
+  PolarVolume* pvol = NULL;
+  PyObject* pypvol = NULL;
+  double height = 0.0L;
+
+  if(!PyArg_ParseTuple(args, "OOd", &pypvol, &pycartesian,&height)) {
+    return NULL;
+  }
+
+  if (!PolarVolume_Check(pypvol)) {
+    raiseException_returnNULL(PyExc_TypeError, "First argument should be a polar volume")
+  }
+
+  if (!Cartesian_Check(pycartesian)) {
+    raiseException_returnNULL(PyExc_TypeError, "Second argument should be a cartesian product");
+  }
+
+  pvol = (PolarVolume*)pypvol;
+  cartesian = (Cartesian*)pycartesian;
+
+  if (!Transform_pcappi(self->transform, pvol->pvol, cartesian->cartesian, height)) {
     raiseException_returnNULL(PyExc_IOError, "Failed to transform volume into a cappi");
   }
 
@@ -1331,9 +1365,10 @@ static PyObject* _transform_cappi(Transform* self, PyObject* args)
  */
 static struct PyMethodDef _transform_methods[] =
 {
-  { "ppi", (PyCFunction) _transform_ppi, 1},
-  { "cappi", (PyCFunction) _transform_cappi, 1},
-  { NULL, NULL } /* sentinel */
+  {"ppi", (PyCFunction) _transform_ppi, 1},
+  {"cappi", (PyCFunction) _transform_cappi, 1},
+  {"pcappi", (PyCFunction) _transform_pcappi, 1},
+  {NULL, NULL } /* sentinel */
 };
 
 /**

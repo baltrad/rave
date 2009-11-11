@@ -301,6 +301,7 @@ void rave_alloc_dump_heap(void)
 
 void rave_alloc_print_statistics(void)
 {
+#ifdef RAVE_MEMORY_DEBUG
   size_t totalNumberOfAllocations = number_of_allocations + number_of_strdup;
   int maxNbrOfAllocs = 0;
   RaveHeap_t* heapptr = rave_heap;
@@ -331,4 +332,5 @@ void rave_alloc_print_statistics(void)
     fprintf(stderr, "Number of failed strdup          : %ld\n", number_of_failed_strdup);
   fprintf(stderr, "\n\n");
   rave_alloc_dump_heap();
+#endif
 }

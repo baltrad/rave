@@ -94,6 +94,20 @@ class RaveModulePolarVolumeTest(unittest.TestCase):
     scan1.longitude = 20.0
     self.assertAlmostEquals(20.0, obj.longitude, 4)
 
+  def test_addScan_refcountIncreaseOnScan(self):
+    obj = _rave.volume()
+    ids = []
+    for i in range(50):
+      scan = _rave.scan()
+      ids.append(`scan`)
+      obj.addScan(scan)
+    
+    for i in range(obj.getNumberOfScans()):
+      scan = obj.getScan(i)
+      if `scan` != `obj.getScan(i)`:
+        self.fail("Failed to verify scan consistency")
+
+
   def testVolume_getNumberOfScans(self):
     obj = _rave.volume()
     self.assertEquals(0, obj.getNumberOfScans())
@@ -116,7 +130,7 @@ class RaveModulePolarVolumeTest(unittest.TestCase):
     self.assertTrue (scan1 == scanresult1)
     self.assertTrue (scan2 == scanresult2)
 
-  def testVolume_getScanNearestElevation(self):
+  def test_getScanClosestToElevation_outside(self):
     obj = _rave.volume()
     scan1 = _rave.scan()
     scan1.elangle = 0.1 * math.pi / 180.0
@@ -132,8 +146,30 @@ class RaveModulePolarVolumeTest(unittest.TestCase):
 
     for el in els:
       elevation = el[0]*math.pi / 180.0
-      result = obj.getScanNearestElevation(elevation)
+      result = obj.getScanClosestToElevation(elevation, 0)
       self.assertAlmostEquals(el[1], result.elangle*180.0/math.pi, 5)
+
+  def test_getScanClosestToElevation_inside(self):
+    obj = _rave.volume()
+    scan1 = _rave.scan()
+    scan1.elangle = 0.1 * math.pi / 180.0
+    obj.addScan(scan1)
+    scan2 = _rave.scan()
+    scan2.elangle = 0.5 * math.pi / 180.0
+    obj.addScan(scan2)
+    scan3 = _rave.scan()
+    scan3.elangle = 2.0 * math.pi / 180.0
+    obj.addScan(scan3)
+    
+    els = [(0.0, None), (0.1, 0.1), (0.2, 0.1), (0.3, 0.1), (0.31, 0.5), (1.0, 0.5), (2.0, 2.0), (2.1, None)]
+
+    for el in els:
+      elevation = el[0]*math.pi / 180.0
+      result = obj.getScanClosestToElevation(elevation, 1)
+      if el[1] == None:
+        self.assertTrue(result == None)
+      else:
+        self.assertAlmostEquals(el[1], result.elangle*180.0/math.pi, 5)
 
   def testVolume_getNearest(self):
     obj = _rave.volume()
@@ -161,47 +197,23 @@ class RaveModulePolarVolumeTest(unittest.TestCase):
     obj.addScan(scan1)
     obj.addScan(scan2)
     
-    t,v = obj.getNearest((12.0*math.pi/180.0, 60.45*math.pi/180.0), 1000.0)
+    # Allow outside ranges
+    t,v = obj.getNearest((12.0*math.pi/180.0, 60.45*math.pi/180.0), 1000.0, 0)
     self.assertEquals(_rave.RaveValueType_DATA, t)
     self.assertAlmostEquals(1.0, v, 4)
 
-    t,v = obj.getNearest((12.0*math.pi/180.0, 62.00*math.pi/180.0), 1000.0)
+    t,v = obj.getNearest((12.0*math.pi/180.0, 62.00*math.pi/180.0), 1000.0, 0)
     self.assertEquals(_rave.RaveValueType_DATA, t)
     self.assertAlmostEquals(0.0, v, 4)
-
-  def testVolume_getNearestForElevation(self):
-    obj = _rave.volume()
-    obj.longitude = 12.0 * math.pi/180.0
-    obj.latitude = 60.0 * math.pi/180.0
-    obj.height = 0.0
-    scan1 = _rave.scan()
-    scan1.elangle = 0.1 * math.pi / 180.0
-    scan1.rstart = 0.0
-    scan1.rscale = 5000.0
-    scan1.nodata = 10.0
-    scan1.undetect = 11.0
-    data = numpy.zeros((10, 10), numpy.uint8)
-    scan1.setData(data)
     
-    scan2 = _rave.scan()
-    scan2.elangle = 1.0 * math.pi / 180.0
-    scan2.rstart = 0.0
-    scan2.rscale = 5000.0
-    scan2.nodata = 10.0
-    scan2.undetect = 11.0    
-    data = numpy.ones((10, 10), numpy.uint8)
-    scan2.setData(data)
-    
-    obj.addScan(scan1)
-    obj.addScan(scan2)
-    
-    t,v = obj.getNearestForElevation((12.0*math.pi/180.0, 60.40*math.pi/180.0), 0)
+    # Only allow inside ranges
+    t,v = obj.getNearest((12.0*math.pi/180.0, 60.45*math.pi/180.0), 1000.0, 1)
     self.assertEquals(_rave.RaveValueType_DATA, t)
-    self.assertAlmostEquals(0.0, v, 4)
+    self.assertAlmostEquals(1.0, v, 4)
 
-    t,v = obj.getNearestForElevation((12.0*math.pi/180.0, 61.00*math.pi/180.0), 0)
+    t,v = obj.getNearest((12.0*math.pi/180.0, 62.00*math.pi/180.0), 1000.0, 1)
     self.assertEquals(_rave.RaveValueType_NODATA, t)
-    self.assertAlmostEquals(10.0, v, 4)
+    
     
   def testSortByElevations_ascending(self):
     obj = _rave.volume()
