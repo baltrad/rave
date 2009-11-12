@@ -7,8 +7,8 @@ CFLAGS=	$(OPTS) $(CCSHARED) $(DEFS) $(CREATE_ITRUNC) \
 # --------------------------------------------------------------------
 # Fixed definitions
 
-RAVESOURCES= polar.c raveutil.c rave_transform.c rave_alloc.c rave_debug.c polarvolume.c polarscan.c cartesian.c transform.c projection.c polarnav.c
-INSTALL_HEADERS= polar.h rave_transform.h raveutil.h rave_alloc.h polarvolume.h polarscan.h cartesian.h transform.h projection.h polarnav.h
+RAVESOURCES= polar.c raveutil.c rave_transform.c rave_alloc.c rave_debug.c polarvolume.c polarscan.c cartesian.c transform.c projection.c polarnav.c rave_io.c
+INSTALL_HEADERS= polar.h rave_transform.h raveutil.h rave_alloc.h polarvolume.h polarscan.h cartesian.h transform.h projection.h polarnav.h rave_io.h
 
 RAVEOBJS=	$(RAVESOURCES:.c=.o)
 LIBRAVETRANSFORM=	libravetransform.so

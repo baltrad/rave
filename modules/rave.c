@@ -35,6 +35,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "cartesian.h"
 #include "transform.h"
 #include "projection.h"
+#include "rave_io.h"
 #include "rave_debug.h"
 #include "rave_alloc.h"
 
@@ -94,6 +95,14 @@ typedef struct {
 } Transform;
 
 /**
+ * The RaveIO
+ */
+typedef struct {
+  PyObject_HEAD /* Always has to be on top */
+  RaveIO_t* raveio;
+} RaveIO;
+
+/**
  * PolarScan represents one scan in a pvol
  */
 staticforward PyTypeObject PolarScan_Type;
@@ -119,6 +128,11 @@ staticforward PyTypeObject Transform_Type;
 staticforward PyTypeObject Projection_Type;
 
 /**
+ * RaveIO represents the Rave IO operations
+ */
+staticforward PyTypeObject RaveIO_Type;
+
+/**
  * Checks if the object is a PolarScan type
  */
 #define PolarScan_Check(op) ((op)->ob_type == &PolarScan_Type)
@@ -142,6 +156,11 @@ staticforward PyTypeObject Projection_Type;
  * Checks if the object is a Projection type
  */
 #define Projection_Check(op) ((op)->ob_type == &Projection_Type)
+
+/**
+ * Checks if the object is a RaveIO type
+ */
+#define RaveIO_Check(op) ((op)->ob_type == &RaveIO_Type)
 
 /// --------------------------------------------------------------------
 /// Polar Scans
@@ -1617,6 +1636,83 @@ static int _projection_setattr(Projection* self, char* name, PyObject* val)
 /*@} End of Projection */
 
 /// --------------------------------------------------------------------
+/// RaveIO
+/// --------------------------------------------------------------------
+/*@{ RaveIO */
+
+/**
+ * Deallocates the RaveIO
+ * @param[in] obj the object to deallocate.
+ */
+static void _raveio_dealloc(RaveIO* obj)
+{
+  /*Nothing yet*/
+  if (obj == NULL) {
+    return;
+  }
+  RaveIO_release(obj->raveio);
+  PyObject_Del(obj);
+}
+
+/**
+ * Creates a new RaveIO instance.
+ * @param[in] self this instance.
+ * @param[in] args arguments for creation.
+ * @return the object on success, otherwise NULL
+ */
+static PyObject* _raveio_new(PyObject* self, PyObject* args)
+{
+  RaveIO* result = NULL;
+
+  result = PyObject_NEW(RaveIO, &RaveIO_Type);
+  if (result == NULL) {
+    return NULL;
+  }
+  result->raveio = RaveIO_new();
+  if (result->raveio == NULL) {
+    RAVE_ERROR0("Could not create RaveIO");
+    PyObject_Del(result);
+    raiseException_returnNULL(PyExc_ValueError, "Failed to create RaveIO");
+  }
+  return (PyObject*)result;
+}
+
+/**
+ * All methods a RaveIO can have
+ */
+static struct PyMethodDef _raveio_methods[] =
+{
+  {NULL, NULL } /* sentinel */
+};
+
+/**
+ * Returns the specified attribute in the RaveIO
+ * @param[in] self - the RaveIO instance
+ */
+static PyObject* _raveio_getattr(RaveIO* self, char* name)
+{
+  PyObject* res = NULL;
+
+  res = Py_FindMethod(_raveio_methods, (PyObject*) self, name);
+  if (res)
+    return res;
+
+  PyErr_Clear();
+  PyErr_SetString(PyExc_AttributeError, name);
+  return NULL;
+}
+
+/**
+ * Sets the specified attribute in the raveio
+ */
+static int _raveio_setattr(RaveIO* self, char* name, PyObject* val)
+{
+  return -1;
+}
+
+/*@} End of RaveIO */
+
+/// --------------------------------------------------------------------
 /// Type definitions
 /// --------------------------------------------------------------------
 /*@{ Type definitions */
@@ -1714,6 +1810,25 @@ statichere PyTypeObject Projection_Type =
   0, /*tp_as_mapping */
   0 /*tp_hash*/
 };
+
+statichere PyTypeObject RaveIO_Type =
+{
+  PyObject_HEAD_INIT(NULL)0, /*ob_size*/
+  "RaveIOCore", /*tp_name*/
+  sizeof(RaveIO), /*tp_size*/
+  0, /*tp_itemsize*/
+  /* methods */
+  (destructor)_raveio_dealloc, /*tp_dealloc*/
+  0, /*tp_print*/
+  (getattrfunc)_raveio_getattr, /*tp_getattr*/
+  (setattrfunc)_raveio_setattr, /*tp_setattr*/
+  0, /*tp_compare*/
+  0, /*tp_repr*/
+  0, /*tp_as_number */
+  0,
+  0, /*tp_as_mapping */
+  0 /*tp_hash*/
+};
 /*@} End of Type definitions */
 
 /// --------------------------------------------------------------------
@@ -1726,6 +1841,7 @@ static PyMethodDef functions[] = {
   {"cartesian", (PyCFunction)_cartesian_new, 1},
   {"transform", (PyCFunction)_transform_new, 1},
   {"projection", (PyCFunction)_projection_new, 1},
+  {"io", (PyCFunction)_raveio_new, 1},
   {NULL,NULL} /*Sentinel*/
 };
 
@@ -1756,6 +1872,7 @@ void init_rave(void)
   Cartesian_Type.ob_type = &PyType_Type;
   Transform_Type.ob_type = &PyType_Type;
   Projection_Type.ob_type = &PyType_Type;
+  RaveIO_Type.ob_type = &PyType_Type;
 
   module = Py_InitModule("_rave", functions);
   dictionary = PyModule_GetDict(module);

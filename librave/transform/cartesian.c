@@ -108,17 +108,19 @@ Cartesian_t* Cartesian_new(void)
 
 void Cartesian_release(Cartesian_t* cartesian)
 {
-  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
-  cartesian->ps_refCount--;
-  if (cartesian->ps_refCount <= 0) {
-    Cartesian_destroy(cartesian);
+  if (cartesian != NULL) {
+    cartesian->ps_refCount--;
+    if (cartesian->ps_refCount <= 0) {
+      Cartesian_destroy(cartesian);
+    }
   }
 }
 
 Cartesian_t* Cartesian_copy(Cartesian_t* cartesian)
 {
-  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
-  cartesian->ps_refCount++;
+  if (cartesian != NULL) {
+    cartesian->ps_refCount++;
+  }
   return cartesian;
 }
 

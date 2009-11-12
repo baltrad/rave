@@ -11,6 +11,7 @@ from RaveModuleConstantsTest import *
 from RaveModuleCartesianTest import *
 from RaveModuleTransformTest import *
 from RaveModuleProjectionTest import *
+from RaveModuleRaveIOTest import *
 from PolarNavigatorTest import *
 
 # Some tests for verifying that we are producing products
