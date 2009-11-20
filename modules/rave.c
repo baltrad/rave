@@ -38,6 +38,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_io.h"
 #include "rave_debug.h"
 #include "rave_alloc.h"
+#include "hlhdf.h"
+#include "hlhdf_debug.h"
 
 /**
  * Some helpful exception defines.
@@ -181,6 +183,29 @@ static void _polarscan_dealloc(PolarScan* obj)
 }
 
 /**
+ * Creates the polar scan python object from a polar scan.
+ * @param[in] scan - the polar scan
+ * @returns a Python Polar scan on success.
+ */
+static PolarScan* _polarscan_createPyObject(PolarScan_t* scan)
+{
+  PolarScan* result = NULL;
+  if (scan == NULL) {
+    RAVE_CRITICAL0("Trying to create a python polar scan without the scan");
+    raiseException_returnNULL(PyExc_MemoryError, "Failed to allocate memory for polar scan");
+  }
+  result = PyObject_NEW(PolarScan, &PolarScan_Type);
+  if (result == NULL) {
+    RAVE_CRITICAL0("Failed to allocate memory for polar volume");
+    raiseException_returnNULL(PyExc_MemoryError, "Failed to allocate memory for polar volume");
+  }
+  result->scan = PolarScan_copy(scan);
+  // Keep track of pyobjects..
+  PolarScan_setVoidPtr(result->scan, (void*)result);
+  return result;
+}
+
+/**
  * Creates a new instance of the polar scan.
  * @param[in] self this instance.
  * @param[in] args arguments for creation (NOT USED).
@@ -188,19 +213,21 @@ static void _polarscan_dealloc(PolarScan* obj)
  */
 static PyObject* _polarscan_new(PyObject* self, PyObject* args)
 {
+  PolarScan_t* scan = NULL;
   PolarScan* result = NULL;
-  result = PyObject_NEW(PolarScan, &PolarScan_Type);
+  scan = PolarScan_new();
+  if (scan == NULL) {
+    RAVE_CRITICAL0("Failed to allocate polar scan");
+    raiseException_returnNULL(PyExc_MemoryError, "Failed to allocate memory for polar scan");
+  }
+
+  result = _polarscan_createPyObject(scan);
   if (result == NULL) {
-    return NULL;
+    RAVE_CRITICAL0("Failed to allocate py polar scan");
+    PyErr_SetString(PyExc_MemoryError, "Failed to allocate memory for py polar scan");
   }
-  result->scan = PolarScan_new();
-  if (result->scan == NULL) {
-    RAVE_CRITICAL0("Could not allocate scan");
-    PyObject_Del(result);
-    raiseException_returnNULL(PyExc_MemoryError, "Failed to allocate scan");
-  }
-  // Keep track of pyobjects..
-  PolarScan_setVoidPtr(result->scan, (void*)result);
+
+  PolarScan_release(scan);
   return (PyObject*)result;
 }
 
@@ -592,6 +619,28 @@ static void _polarvolume_dealloc(PolarVolume* obj)
 }
 
 /**
+ * Creates the polar volume python object from a polar volume.
+ * @param[in] pvol - the polar volume
+ * @returns a Python Polar Volume on success.
+ */
+static PolarVolume* _polarvolume_createPyObject(PolarVolume_t* pvol)
+{
+  PolarVolume* result = NULL;
+  if (pvol == NULL) {
+    RAVE_CRITICAL0("Trying to create a python polar volume without the volume");
+    raiseException_returnNULL(PyExc_MemoryError, "Failed to allocate memory for polar volume");
+  }
+  result = PyObject_NEW(PolarVolume, &PolarVolume_Type);
+  if (result == NULL) {
+    RAVE_CRITICAL0("Failed to allocate memory for polar volume");
+    raiseException_returnNULL(PyExc_MemoryError, "Failed to allocate memory for polar volume");
+  }
+  result->pvol = PolarVolume_copy(pvol);
+
+  return result;
+}
+
+/**
  * Creates a new instance of the polar volume.
  * @param[in] self this instance.
  * @param[in] args arguments for creation (NOT USED).
@@ -599,17 +648,22 @@ static void _polarvolume_dealloc(PolarVolume* obj)
  */
 static PyObject* _polarvolume_new(PyObject* self, PyObject* args)
 {
+  PolarVolume_t* pvol = NULL;
   PolarVolume* result = NULL;
-  result = PyObject_NEW(PolarVolume, &PolarVolume_Type);
+
+  pvol = PolarVolume_new();
+  if (pvol == NULL) {
+    RAVE_CRITICAL0("Failed to allocate polar volume");
+    raiseException_returnNULL(PyExc_MemoryError, "Failed to allocate memory for polar volume");
+  }
+
+  result = _polarvolume_createPyObject(pvol);
   if (result == NULL) {
-    return NULL;
+    RAVE_CRITICAL0("Failed to allocate py polar volume");
+    PyErr_SetString(PyExc_MemoryError, "Failed to allocate memory for py polar volume");
   }
-  result->pvol = PolarVolume_new();
-  if (result->pvol == NULL) {
-    RAVE_CRITICAL0("Could not allocate volume");
-    PyObject_Del(result);
-    raiseException_returnNULL(PyExc_MemoryError, "Failed to allocate volume");
-  }
+
+  PolarVolume_release(pvol);
   return (PyObject*)result;
 }
 
@@ -1677,11 +1731,152 @@ static PyObject* _raveio_new(PyObject* self, PyObject* args)
   return (PyObject*)result;
 }
 
+static PyObject* _raveio_open(PyObject* self, PyObject* args)
+{
+  RaveIO_t* raveio = NULL;
+  RaveIO* result = NULL;
+
+  char* filename = NULL;
+  if (!PyArg_ParseTuple(args, "s", &filename)) {
+    return NULL;
+  }
+  raveio = RaveIO_open(filename);
+  if (raveio == NULL) {
+    raiseException_gotoTag(done, PyExc_IOError, "Failed to open file");
+  }
+
+  result = PyObject_NEW(RaveIO, &RaveIO_Type);
+  if (result != NULL) {
+    result->raveio = RaveIO_copy(raveio);
+  }
+
+done:
+  RaveIO_release(raveio);
+  return (PyObject*)result;
+}
+
+/**
+ * Returns true or false depending on if a HDF5 nodelist is loaded
+ * or not.
+ * @param[in] self - this instance
+ * @param[in] args - N/A
+ * @returns Py_None on success, otherwise NULL
+ */
+static PyObject* _raveio_isOpen(RaveIO* self, PyObject* args)
+{
+  return PyBool_FromLong(RaveIO_isOpen(self->raveio));
+}
+
+/**
+ * Closes the currently open nodelist.
+ * @param[in] self - this instance
+ * @param[in] args - N/A
+ * @returns Py_None on success, otherwise NULL
+ */
+static PyObject* _raveio_close(RaveIO* self, PyObject* args)
+{
+  RaveIO_close(self->raveio);
+  Py_RETURN_NONE;
+}
+
+/**
+ * Closes the currently open nodelist.
+ * @param[in] self - this instance
+ * @param[in] args - N/A
+ * @returns Py_None on success, otherwise NULL
+ */
+static PyObject* _raveio_openFile(RaveIO* self, PyObject* args)
+{
+  char* filename = NULL;
+  if (!PyArg_ParseTuple(args, "s", &filename)) {
+    return NULL;
+  }
+  if (!RaveIO_openFile(self->raveio, filename)) {
+    raiseException_returnNULL(PyExc_IOError, "Failed to open file");
+  }
+  Py_RETURN_NONE;
+}
+
+/**
+ * Returns the currently opened files object type (/what/object).
+ * @param[in] self - this instance
+ * @param[in] args - N/A
+ * @returns the object type on success, otherwise -1
+ */
+static PyObject* _raveio_getObjectType(RaveIO* self, PyObject* args)
+{
+  return PyInt_FromLong(RaveIO_getObjectType(self->raveio));
+}
+
+/**
+ * Returns if the currently opened file is supported or not.
+ * @param[in] self - this instance
+ * @param[in] args - N/A
+ * @returns True if the file structure is supported, otherwise False
+ */
+static PyObject* _raveio_isSupported(RaveIO* self, PyObject* args)
+{
+  return PyBool_FromLong(RaveIO_isSupported(self->raveio));
+}
+
+static PyObject* _raveio_load(RaveIO* self, PyObject* args)
+{
+  PyObject* result = NULL;
+  switch (RaveIO_getObjectType(self->raveio)) {
+  case RaveIO_ObjectType_PVOL: {
+    PolarVolume_t* pvol = RaveIO_loadVolume(self->raveio);
+    if (pvol != NULL) {
+      int nrScans = PolarVolume_getNumberOfScans(pvol);
+      int i = 0;
+      result = (PyObject*)_polarvolume_createPyObject(pvol);
+      for (i = 0; i < nrScans; i++) {
+        PolarScan_t* scan = PolarVolume_getScan(pvol, i);
+        if (scan != NULL) {
+          PolarScan* pyscan = _polarscan_createPyObject(scan);
+          // We just ignore doing anything with the pyscan =>
+          // object will stay in memory until the volume is released
+          // see _polarvolume_dealloc
+          pyscan = NULL;
+        }
+        PolarScan_release(scan);
+      }
+    }
+    PolarVolume_release(pvol);
+    break;
+  }
+  default:
+    RAVE_DEBUG0("Load: Unsupported object type");
+    break;
+  }
+  if (result == NULL) {
+    fprintf(stderr, "Returning NULL\n");
+  }
+  return result;
+}
+
+/**
+ * Returns the current files version.
+ * @param[in] self - this instance
+ * @param[in] args - N/A
+ * @returns The current files ODIM version
+ */
+static PyObject* _raveio_getOdimVersion(RaveIO* self, PyObject* args)
+{
+  return PyInt_FromLong(RaveIO_getOdimVersion(self->raveio));
+}
+
 /**
  * All methods a RaveIO can have
  */
 static struct PyMethodDef _raveio_methods[] =
 {
+  {"isOpen", (PyCFunction) _raveio_isOpen, 1},
+  {"close", (PyCFunction) _raveio_close, 1},
+  {"open", (PyCFunction) _raveio_openFile, 1},
+  {"getObjectType", (PyCFunction) _raveio_getObjectType, 1},
+  {"isSupported", (PyCFunction) _raveio_isSupported, 1},
+  {"getOdimVersion", (PyCFunction) _raveio_getOdimVersion, 1},
+  {"load", (PyCFunction) _raveio_load, 1},
   {NULL, NULL } /* sentinel */
 };
 
@@ -1842,6 +2037,7 @@ static PyMethodDef functions[] = {
   {"transform", (PyCFunction)_transform_new, 1},
   {"projection", (PyCFunction)_projection_new, 1},
   {"io", (PyCFunction)_raveio_new, 1},
+  {"open", (PyCFunction)_raveio_open, 1},
   {NULL,NULL} /*Sentinel*/
 };
 
@@ -1873,6 +2069,11 @@ void init_rave(void)
   Transform_Type.ob_type = &PyType_Type;
   Projection_Type.ob_type = &PyType_Type;
   RaveIO_Type.ob_type = &PyType_Type;
+
+  HL_init();
+  HL_disableErrorReporting();
+  HL_disableHdf5ErrorReporting();
+  HL_setDebugLevel(HLHDF_SILENT);
 
   module = Py_InitModule("_rave", functions);
   dictionary = PyModule_GetDict(module);
@@ -1907,6 +2108,21 @@ void init_rave(void)
   add_long_constant(dictionary, "RaveValueType_UNDETECT", RaveValueType_UNDETECT);
   add_long_constant(dictionary, "RaveValueType_NODATA", RaveValueType_NODATA);
   add_long_constant(dictionary, "RaveValueType_DATA", RaveValueType_DATA);
+
+  add_long_constant(dictionary, "RaveIO_ObjectType_UNDEFINED", RaveIO_ObjectType_UNDEFINED);
+  add_long_constant(dictionary, "RaveIO_ObjectType_PVOL", RaveIO_ObjectType_PVOL);
+  add_long_constant(dictionary, "RaveIO_ObjectType_CVOL", RaveIO_ObjectType_CVOL);
+  add_long_constant(dictionary, "RaveIO_ObjectType_SCAN", RaveIO_ObjectType_SCAN);
+  add_long_constant(dictionary, "RaveIO_ObjectType_RAY", RaveIO_ObjectType_RAY);
+  add_long_constant(dictionary, "RaveIO_ObjectType_AZIM", RaveIO_ObjectType_AZIM);
+  add_long_constant(dictionary, "RaveIO_ObjectType_IMAGE", RaveIO_ObjectType_IMAGE);
+  add_long_constant(dictionary, "RaveIO_ObjectType_COMP", RaveIO_ObjectType_COMP);
+  add_long_constant(dictionary, "RaveIO_ObjectType_XSEC", RaveIO_ObjectType_XSEC);
+  add_long_constant(dictionary, "RaveIO_ObjectType_VP", RaveIO_ObjectType_VP);
+  add_long_constant(dictionary, "RaveIO_ObjectType_PIC", RaveIO_ObjectType_PIC);
+
+  add_long_constant(dictionary, "RaveIO_ODIM_Version_UNDEFINED", RaveIO_ODIM_Version_UNDEFINED);
+  add_long_constant(dictionary, "RaveIO_ODIM_Version_2_0", RaveIO_ODIM_Version_2_0);
 
   import_array(); /*To make sure I get access to Numeric*/
 }

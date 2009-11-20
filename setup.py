@@ -20,6 +20,7 @@
 Distutils setup file for RAVE.
 """
 import sys, os
+import re, string
 from distutils.core import setup, Extension
 
 NAME = "RAVE"
@@ -60,6 +61,87 @@ if len(INCLUDE_DIRS) == 0 and len(LIBRARY_DIRS) == 0:
     sys.exit()
 
 LIBRARIES = ['proj']
+
+# Determine hlhdf and the other parts (using the same hlhdf information that was available
+# when compiling librave
+def get_param_value(pname,lines):
+  result = None
+  for line in lines:
+    g = re.match(pname+"=[ \t]*([^$]+)", line)
+    if g != None:
+      result = string.strip(g.group(1))
+      break
+  return result
+
+def extract_hlhdf_info(filename):
+  deffp = open(filename)
+  lines = deffp.readlines()
+  incdir = get_param_value("HLHDF_INCLUDE_DIR",lines)
+  libdir = get_param_value("HLHDF_LIB_DIR",lines)
+  hldefmk = get_param_value("HLHDF_HLDEF_MK_FILE",lines)
+
+  if os.path.isfile(incdir+"/hlhdf.h") and \
+     os.path.isfile(libdir+"/libhlhdf.so") and \
+     os.path.isfile(hldefmk):
+    return (incdir,libdir,hldefmk)
+  else:
+    raise IOError, "Failed to determine hlhdf settings"
+
+def get_szinfo_from_hlhdf(defmk):
+  fp = open(defmk)
+  lines = fp.readlines()
+  gotsz = get_param_value("GOT_SZ_COMPRESS",lines)
+  szinc = get_param_value("SZLIB_INCDIR", lines)
+  szlib = get_param_value("SZLIB_LIBDIR", lines)
+  if gotsz == "no":
+    return None
+  else:
+    return (szinc,szlib)
+
+def get_zlibinfo_from_hlhdf(defmk):
+  fp = open(defmk)
+  lines = fp.readlines()
+  zlinc = get_param_value("ZLIB_INCDIR", lines)
+  zllib = get_param_value("ZLIB_LIBDIR", lines)
+  return (zlinc,zllib)
+
+def get_hdf5info_from_hlhdf(defmk):
+  fp = open(defmk)
+  lines = fp.readlines()
+  hdfinc = get_param_value("HDF5_INCDIR", lines)
+  hdflib = get_param_value("HDF5_LIBDIR", lines)
+  return (hdfinc,hdflib)
+
+incdir,libdir,hldefmk = extract_hlhdf_info("./librave/def.mk")
+INCLUDE_DIRS.append(incdir)
+LIBRARY_DIRS.append(libdir)
+
+szinfo = get_szinfo_from_hlhdf(hldefmk)
+zlibinfo = get_zlibinfo_from_hlhdf(hldefmk)
+hdfinfo = get_hdf5info_from_hlhdf(hldefmk)
+
+if szinfo != None:
+  if szinfo[0] != None and szinfo[0] != "":
+    INCLUDE_DIRS.append(szinfo[0])
+  if szinfo[1] != None and szinfo[1] != "":
+    LIBRARY_DIRS.append(szinfo[1])
+
+if zlibinfo[0] != None and zlibinfo[0] != "":
+  INCLUDE_DIRS.append(zlibinfo[0])
+if zlibinfo[1] != None and zlibinfo[1] != "":
+  LIBRARY_DIRS.append(zlibinfo[1])
+  
+if hdfinfo[0] != None and hdfinfo[0] != "":
+  INCLUDE_DIRS.append(hdfinfo[0])
+if hdfinfo[1] != None and hdfinfo[1] != "":
+  LIBRARY_DIRS.append(hdfinfo[1])
+
+LIBRARIES.append("hlhdf")
+LIBRARIES.append("hdf5")
+LIBRARIES.append("z")
+
+if szinfo != None:
+  LIBRARIES.append("sz")
 
 MODULES.append(
     Extension(
