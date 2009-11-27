@@ -33,8 +33,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * Defines the structure for the RaveIO in a volume.
  */
 struct _RaveIO_t {
-  long ps_refCount;
-
+  RAVE_OBJECT_HEAD /** Always on top */
   HL_NodeList* nodelist;
 };
 
@@ -121,15 +120,21 @@ static const struct RaveToHlhdfTypeMap RAVE_TO_HLHDF_MAP[] = {
 /*@} End of Macros */
 
 /*@{ Private functions */
+static int RaveIO_constructor(RaveCoreObject* obj)
+{
+  RaveIO_t* raveio = (RaveIO_t*)obj;
+  raveio->nodelist = NULL;
+  return 1;
+}
 /**
  * Destroys the RaveIO instance
  * @param[in] scan - the cartesian product to destroy
  */
-static void RaveIO_destroy(RaveIO_t* raveio)
+static void RaveIO_destructor(RaveCoreObject* obj)
 {
+  RaveIO_t* raveio = (RaveIO_t*)obj;
   if (raveio != NULL) {
     RaveIO_close(raveio);
-    RAVE_FREE(raveio);
   }
 }
 
@@ -421,36 +426,6 @@ int RaveIOInternal_hasNodeByNameFmt(RaveIO_t* raveio, const char* fmt, ...)
   return 0;
 }
 /*@} End of Private functions */
-
-RaveIO_t* RaveIO_new(void)
-{
-  RaveIO_t* result = NULL;
-  result = RAVE_MALLOC(sizeof(RaveIO_t));
-  if (result != NULL) {
-    result->ps_refCount = 1;
-    result->nodelist = NULL;
-  }
-  return result;
-}
-
-void RaveIO_release(RaveIO_t* raveio)
-{
-  if (raveio != NULL) {
-    raveio->ps_refCount--;
-    if (raveio->ps_refCount <= 0) {
-      RaveIO_destroy(raveio);
-    }
-  }
-}
-
-RaveIO_t* RaveIO_copy(RaveIO_t* raveio)
-{
-  if (raveio != NULL) {
-    raveio->ps_refCount++;
-  }
-  return raveio;
-}
-
 void RaveIO_close(RaveIO_t* raveio)
 {
   RAVE_ASSERT((raveio != NULL), "raveio == NULL");
@@ -458,20 +433,7 @@ void RaveIO_close(RaveIO_t* raveio)
   raveio->nodelist = NULL;
 }
 
-RaveIO_t* RaveIO_open(const char* filename)
-{
-  RaveIO_t* result = NULL;
-  result = RaveIO_new();
-  if (result != NULL) {
-    if (!RaveIO_openFile(result, filename)) {
-      RaveIO_release(result);
-      result = NULL;
-    }
-  }
-  return result;
-}
-
-int RaveIO_openFile(RaveIO_t* raveio, const char* filename)
+int RaveIO_open(RaveIO_t* raveio, const char* filename)
 {
   int result = 0;
   RAVE_ASSERT((raveio != NULL), "raveio == NULL");
@@ -553,7 +515,7 @@ PolarScan_t* RaveIO_loadScanIndex(RaveIO_t* raveio, const int dsindex, const int
     if (dataType == RaveDataType_UNDEFINED) {
       goto done;
     }
-    result = PolarScan_new();
+    result = RAVE_OBJECT_NEW(&PolarScan_TYPE);
     if (result == NULL) {
       goto done;
     }
@@ -601,7 +563,7 @@ PolarVolume_t* RaveIO_loadVolume(RaveIO_t* raveio)
     return NULL;
   }
 
-  result = PolarVolume_new();
+  result = RAVE_OBJECT_NEW(&PolarVolume_TYPE);
   if (result != NULL) {
     PolarVolume_setLongitude(result, lon*M_PI/180.0);
     PolarVolume_setLatitude(result, lat*M_PI/180.0);
@@ -616,7 +578,8 @@ PolarVolume_t* RaveIO_loadVolume(RaveIO_t* raveio)
       if (scan != NULL) {
         PolarVolume_addScan(result, scan);
       }
-      PolarScan_release(scan);
+      RAVE_OBJECT_RELEASE(scan);
+      //PolarScan_release(scan);
       dindex++;
     }
     dsindex++;
@@ -680,4 +643,11 @@ RaveIO_ODIM_Version RaveIO_getOdimVersion(RaveIO_t* raveio)
 done:
   return result;
 }
+/*@} End of Interface functions */
 
+RaveCoreObjectType RaveIO_TYPE = {
+    "RaveIO",
+    sizeof(RaveIO_t),
+    RaveIO_constructor,
+    RaveIO_destructor
+};

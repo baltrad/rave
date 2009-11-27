@@ -80,6 +80,13 @@ def extract_hlhdf_info(filename):
   libdir = get_param_value("HLHDF_LIB_DIR",lines)
   hldefmk = get_param_value("HLHDF_HLDEF_MK_FILE",lines)
 
+  gg = re.match("([ \t]*-I)(.*)", incdir)
+  if gg != None:
+    incdir = gg.group(2)
+  gg = re.match("([ \t]*-L)(.*)", libdir)
+  if gg != None:
+    libdir = gg.group(2)
+
   if os.path.isfile(incdir+"/hlhdf.h") and \
      os.path.isfile(libdir+"/libhlhdf.so") and \
      os.path.isfile(hldefmk):
@@ -110,6 +117,12 @@ def get_hdf5info_from_hlhdf(defmk):
   lines = fp.readlines()
   hdfinc = get_param_value("HDF5_INCDIR", lines)
   hdflib = get_param_value("HDF5_LIBDIR", lines)
+  gg = re.match("([ \t]*-I)(.*)", hdfinc)
+  if gg != None:
+    hdfinc = gg.group(2)
+  gg = re.match("([ \t]*-L)(.*)", hdflib)
+  if gg != None:
+    hdflib = gg.group(2)  
   return (hdfinc,hdflib)
 
 incdir,libdir,hldefmk = extract_hlhdf_info("./librave/def.mk")

@@ -27,6 +27,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "polarvolume.h"
 #include "cartesian.h"
+#include "rave_object.h"
 
 //(PVOL|CVOL|SCAN|RAY|AZIM|IMAGE|COMP|XSEC|VP|PIC)
 //(SCAN|PPI|CAPPI|PCAPPI|ETOP|MAX|RR|VIL|COMP|VP|RHI|XSEC|VSP|HSP|RAY|AZIM|QUAL)
@@ -56,26 +57,9 @@ typedef enum RaveIO_ODIM_Version {
 typedef struct _RaveIO_t RaveIO_t;
 
 /**
- * Creates a new RaveIO instance.
- * @return a new instance or NULL on failure
+ * Type definition to use when creating a rave object.
  */
-RaveIO_t* RaveIO_new(void);
-
-/**
- * Releases the responsibility for the rave IO instance, it is not certain that
- * it will be deleted though if there still are references existing
- * to this rave io.
- * @param[in] transform - the transformer
- */
-void RaveIO_release(RaveIO_t* raveio);
-
-/**
- * Copies the reference to this instance by increasing a
- * reference counter.
- * @param[in] transform - the transformer to be copied
- * @return a pointer to the scan
- */
-RaveIO_t* RaveIO_copy(RaveIO_t* raveio);
+extern RaveCoreObjectType RaveIO_TYPE;
 
 /**
  * Closes the HDF5 file but will keep the RaveIO instance.
@@ -88,7 +72,7 @@ void RaveIO_close(RaveIO_t* raveio);
  * @param[in] filename - the file that should be opened
  * @returns a RaveIO_t instance on success, otherwise NULL
  */
-RaveIO_t* RaveIO_open(const char* filename);
+//RaveIO_t* RaveIO_open(const char* filename);
 
 /**
  * Loads a HDF5 file into the RaveIO instance.
@@ -96,7 +80,7 @@ RaveIO_t* RaveIO_open(const char* filename);
  * @param[in] filename - the HDF5 file to open
  * @returns 0 on failure, otherwise 1
  */
-int RaveIO_openFile(RaveIO_t* raveio, const char* filename);
+int RaveIO_open(RaveIO_t* raveio, const char* filename);
 
 /**
  * Returns if the HDF5 nodelist has been read into memory or not.

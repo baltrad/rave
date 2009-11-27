@@ -31,7 +31,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * Represents one scan in a volume.
  */
 struct _Cartesian_t {
-  long ps_refCount;
+  RAVE_OBJECT_HEAD /** Always on top */
 
   // Where
   long xsize;
@@ -64,66 +64,47 @@ struct _Cartesian_t {
 
 /*@{ Private functions */
 /**
+ * Constructor.
+ */
+static int Cartesian_constructor(RaveCoreObject* obj)
+{
+  Cartesian_t* result = (Cartesian_t*)obj;
+  result->type = RaveDataType_UNDEFINED;
+  result->xsize = 0;
+  result->ysize = 0;
+  result->xscale = 0.0;
+  result->yscale = 0.0;
+  result->llX = 0.0;
+  result->llY = 0.0;
+  result->urX = 0.0;
+  result->urY = 0.0;
+  strcpy(result->quantity, "");
+  result->gain = 0.0;
+  result->offset = 0.0;
+  result->nodata = 0.0;
+  result->undetect = 0.0;
+  result->projection = NULL;
+  result->data = NULL;
+  result->debug = 0;
+  result->voidPtr = NULL;
+  return 1;
+}
+
+/**
  * Destroys the cartesian product
  * @param[in] scan - the cartesian product to destroy
  */
-static void Cartesian_destroy(Cartesian_t* cartesian)
+static void Cartesian_destructor(RaveCoreObject* obj)
 {
+  Cartesian_t* cartesian = (Cartesian_t*)obj;
   if (cartesian != NULL) {
-    Projection_release(cartesian->projection);
+    RAVE_OBJECT_RELEASE(cartesian->projection);
     RAVE_FREE(cartesian->data);
-    RAVE_FREE(cartesian);
   }
 }
 /*@} End of Private functions */
 
 /*@{ Interface functions */
-Cartesian_t* Cartesian_new(void)
-{
-  Cartesian_t* result = NULL;
-  result = RAVE_MALLOC(sizeof(Cartesian_t));
-  if (result != NULL) {
-    result->ps_refCount = 1;
-    result->type = RaveDataType_UNDEFINED;
-    result->xsize = 0;
-    result->ysize = 0;
-    result->xscale = 0.0;
-    result->yscale = 0.0;
-    result->llX = 0.0;
-    result->llY = 0.0;
-    result->urX = 0.0;
-    result->urY = 0.0;
-    strcpy(result->quantity, "");
-    result->gain = 0.0;
-    result->offset = 0.0;
-    result->nodata = 0.0;
-    result->undetect = 0.0;
-    result->projection = NULL;
-    result->data = NULL;
-    result->debug = 0;
-    result->voidPtr = NULL;
-  }
-  return result;
-}
-
-void Cartesian_release(Cartesian_t* cartesian)
-{
-  if (cartesian != NULL) {
-    cartesian->ps_refCount--;
-    if (cartesian->ps_refCount <= 0) {
-      Cartesian_destroy(cartesian);
-    }
-  }
-}
-
-Cartesian_t* Cartesian_copy(Cartesian_t* cartesian)
-{
-  if (cartesian != NULL) {
-    cartesian->ps_refCount++;
-  }
-  return cartesian;
-}
-
 void Cartesian_setXSize(Cartesian_t* cartesian, long xsize)
 {
   RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
@@ -292,10 +273,9 @@ double Cartesian_getUndetect(Cartesian_t* cartesian)
 void Cartesian_setProjection(Cartesian_t* cartesian, Projection_t* projection)
 {
   RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
-  Projection_release(cartesian->projection);
-  cartesian->projection = NULL;
+  RAVE_OBJECT_RELEASE(cartesian->projection);
   if (projection != NULL) {
-    cartesian->projection = Projection_copy(projection);
+    cartesian->projection = RAVE_OBJECT_COPY(projection);
   }
 }
 
@@ -303,7 +283,7 @@ Projection_t* Cartesian_getProjection(Cartesian_t* cartesian)
 {
   RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
   if (cartesian->projection != NULL) {
-    return Projection_copy(cartesian->projection);
+    return RAVE_OBJECT_COPY(cartesian->projection);
   }
   return NULL;
 }
@@ -407,3 +387,11 @@ void Cartesian_setDebug(Cartesian_t* cartesian, int debug)
   cartesian->debug = debug;
 }
 /*@} End of Interface functions */
+
+RaveCoreObjectType Cartesian_TYPE = {
+    "Cartesian",
+    sizeof(Cartesian_t),
+    Cartesian_constructor,
+    Cartesian_destructor
+};
+

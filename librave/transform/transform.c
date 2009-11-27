@@ -33,21 +33,26 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * Represents one transformator
  */
 struct _Transform_t {
+  RAVE_OBJECT_HEAD /** Always on top */
   RaveTransformationMethod method;
-
-  long ps_refCount;
 };
 
 /*@{ Private functions */
 /**
- * Destroys the transformer
- * @param[in] transform - the transformer to destroy
+ * Constructor
  */
-static void Transform_destroy(Transform_t* transform)
+static int Transform_constructor(RaveCoreObject* obj)
 {
-  if (transform != NULL) {
-    RAVE_FREE(transform);
-  }
+  Transform_t* transform = (Transform_t*)obj;
+  transform->method = NEAREST;
+  return 1;
+}
+
+/**
+ * Destructor
+ */
+static void Transform_destructor(RaveCoreObject* obj)
+{
 }
 
 /**
@@ -109,40 +114,13 @@ static int Transform_cappis_internal(Transform_t* transform, PolarVolume_t* pvol
 
   result = 1;
 done:
-  Projection_release(sourcepj);
-  Projection_release(targetpj);
+  RAVE_OBJECT_RELEASE(sourcepj);
+  RAVE_OBJECT_RELEASE(targetpj);
   return result;
 }
 /*@} End of Private functions */
 
 /*@{ Interface functions */
-Transform_t* Transform_new(void)
-{
-  Transform_t* result = NULL;
-  result = RAVE_MALLOC(sizeof(Transform_t));
-  if (result != NULL) {
-    result->method = NEAREST;
-    result->ps_refCount = 1;
-  }
-  return result;
-}
-
-void Transform_release(Transform_t* transform)
-{
-  RAVE_ASSERT((transform != NULL), "transform was NULL");
-  transform->ps_refCount--;
-  if (transform->ps_refCount <= 0) {
-    Transform_destroy(transform);
-  }
-}
-
-Transform_t* Transform_copy(Transform_t* transform)
-{
-  RAVE_ASSERT((transform != NULL), "transform was NULL");
-  transform->ps_refCount++;
-  return transform;
-}
-
 int Transform_setMethod(Transform_t* transform, RaveTransformationMethod method)
 {
   int result = 0;
@@ -210,9 +188,8 @@ int Transform_ppi(Transform_t* transform, PolarScan_t* scan, Cartesian_t* cartes
 
   result = 1;
 done:
-  Projection_release(sourcepj);
-  Projection_release(targetpj);
-  PolarScan_release(scan);
+  RAVE_OBJECT_RELEASE(sourcepj);
+  RAVE_OBJECT_RELEASE(targetpj);
   return result;
 }
 
@@ -226,3 +203,10 @@ int Transform_pcappi(Transform_t* transform, PolarVolume_t* pvol, Cartesian_t* c
   return Transform_cappis_internal(transform, pvol, cartesian, height, 0);
 }
 /*@} End of Interface functions */
+
+RaveCoreObjectType Transform_TYPE = {
+    "Transform",
+    sizeof(Transform_t),
+    Transform_constructor,
+    Transform_destructor
+};

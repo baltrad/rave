@@ -27,6 +27,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_transform.h"
 #include "polarnav.h"
 #include "projection.h"
+#include "rave_object.h"
 
 /**
  * Defines a Polar Scan
@@ -34,26 +35,9 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 typedef struct _PolarScan_t PolarScan_t;
 
 /**
- * Creates a new scan instance
- * @return a new instance or NULL on failure
+ * Type definition to use when creating a rave object.
  */
-PolarScan_t* PolarScan_new(void);
-
-/**
- * Releases the responsibility for the scan, it is not certain that
- * it will be deleted though if there still are references existing
- * to this scan.
- * @param[in] scan - the polar scan
- */
-void PolarScan_release(PolarScan_t* scan);
-
-/**
- * Copies the reference to this instance by increasing a
- * reference counter.
- * @param[in] scan - the scan to be copied
- * @return a pointer to the scan
- */
-PolarScan_t* PolarScan_copy(PolarScan_t* scan);
+extern RaveCoreObjectType PolarScan_TYPE;
 
 /**
  * Sets a navigator for the polar scan, this is preferrable to use
@@ -384,6 +368,7 @@ RaveValueType PolarScan_getNearest(PolarScan_t* scan, double lon, double lat, do
  */
 int PolarScan_isTransformable(PolarScan_t* scan);
 
+#ifdef KALLE
 /**
  * Function for keeping track of some sort of metadata that should be
  * associated with this scan.
@@ -398,6 +383,7 @@ void PolarScan_setVoidPtr(PolarScan_t* scan, void* ptr);
  * @return the void data
  */
 void* PolarScan_getVoidPtr(PolarScan_t* scan);
+#endif
 
 /**
  * Enables/Disables calculation debugging for a polar scan

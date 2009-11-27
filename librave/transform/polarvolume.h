@@ -27,6 +27,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #define POLARVOLUME_H
 #include "polarscan.h"
 #include "projection.h"
+#include "rave_object.h"
 
 /**
  * Defines a Polar Volume
@@ -34,26 +35,9 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 typedef struct _PolarVolume_t PolarVolume_t;
 
 /**
- * Allocates a new instance of PolarVolume_t
- * @returns a new instance or NULL on failure
+ * Type definition to use when creating a rave object.
  */
-PolarVolume_t* PolarVolume_new(void);
-
-/**
- * Releases the responsibility for the volume, it is not certain that
- * it will be deleted though if there still are references existing
- * to this volume.
- * @param[in] pvol - the instance to be released
- */
-void PolarVolume_release(PolarVolume_t* pvol);
-
-/**
- * Copies the reference to this instance by increasing a
- * reference counter.
- * @param[in] pvol - the volume to be copied
- * @return a pointer to the volume
- */
-PolarVolume_t* PolarVolume_copy(PolarVolume_t* pvol);
+extern RaveCoreObjectType PolarVolume_TYPE;
 
 /**
  * Sets the longitude for the volume

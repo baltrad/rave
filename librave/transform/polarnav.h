@@ -24,6 +24,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef POLARNAV_H
 #define POLARNAV_H
+#include "rave_object.h"
 
 /**
  * Defines a polar navigator
@@ -31,26 +32,9 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 typedef struct _PolarNavigator_t PolarNavigator_t;
 
 /**
- * Creates a new polar navigator instance.
- * @return a new instance or NULL on failure
+ * Type definition to use when creating a rave object.
  */
-PolarNavigator_t* PolarNavigator_new(void);
-
-/**
- * Releases the responsibility for the polar navigation, it is not certain that
- * it will be deleted though if there still are references existing
- * to this instance.
- * @param[in] polnav - the polar navigation utility
- */
-void PolarNavigator_release(PolarNavigator_t* polnav);
-
-/**
- * Copies the reference to this instance by increasing a
- * reference counter.
- * @param[in] polnav - the polar navigation utility
- * @return a pointer to this polar navigation utility
- */
-PolarNavigator_t* PolarNavigator_copy(PolarNavigator_t* polnav);
+extern RaveCoreObjectType PolarNavigator_TYPE;
 
 /**
  * Sets the radius to the poles.

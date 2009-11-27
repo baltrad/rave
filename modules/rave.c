@@ -36,6 +36,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "transform.h"
 #include "projection.h"
 #include "rave_io.h"
+#include "raveobject_list.h"
 #include "rave_debug.h"
 #include "rave_alloc.h"
 #include "hlhdf.h"
@@ -49,6 +50,22 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 
 #define raiseException_returnNULL(type, msg) \
 {PyErr_SetString(type, msg); return NULL;}
+
+static int PolarScan_alloc = 0;
+static int PolarScan_dealloc = 0;
+static int PolarVolume_alloc = 0;
+static int PolarVolume_dealloc = 0;
+static int Cartesian_alloc = 0;
+static int Cartesian_dealloc = 0;
+static int Transform_alloc = 0;
+static int Transform_dealloc = 0;
+static int Projection_alloc = 0;
+static int Projection_dealloc = 0;
+static int RaveIO_alloc = 0;
+static int RaveIO_dealloc = 0;
+static int RaveList_alloc = 0;
+static int RaveList_dealloc = 0;
+
 
 /**
  * Error object for reporting errors to the python interpreeter
@@ -85,7 +102,7 @@ typedef struct {
 typedef struct {
    PyObject_HEAD /*Always have to be on top*/
    Cartesian_t* cartesian;
-   Projection* projection;
+   //Projection* projection;
 } Cartesian;
 
 /**
@@ -103,6 +120,14 @@ typedef struct {
   PyObject_HEAD /* Always has to be on top */
   RaveIO_t* raveio;
 } RaveIO;
+
+/**
+ * The RaveList
+ */
+typedef struct {
+  PyObject_HEAD /* Always has to be on top */
+  RaveObjectList_t* list;
+} RaveList;
 
 /**
  * PolarScan represents one scan in a pvol
@@ -135,6 +160,11 @@ staticforward PyTypeObject Projection_Type;
 staticforward PyTypeObject RaveIO_Type;
 
 /**
+ * RaveList represents the Rave Object List operations
+ */
+staticforward PyTypeObject RaveList_Type;
+
+/**
  * Checks if the object is a PolarScan type
  */
 #define PolarScan_Check(op) ((op)->ob_type == &PolarScan_Type)
@@ -164,6 +194,15 @@ staticforward PyTypeObject RaveIO_Type;
  */
 #define RaveIO_Check(op) ((op)->ob_type == &RaveIO_Type)
 
+/**
+ * Checks if the object is a RaveIO type
+ */
+#define RaveList_Check(op) ((op)->ob_type == &RaveList_Type)
+
+/*@{ Forward declarations */
+static Projection* _projection_createPyObject(Projection_t* projection);
+/*@} End of Forward declarations */
+
 /// --------------------------------------------------------------------
 /// Polar Scans
 /// --------------------------------------------------------------------
@@ -178,8 +217,10 @@ static void _polarscan_dealloc(PolarScan* obj)
   if (obj == NULL) {
     return;
   }
-  PolarScan_release(obj->scan);
+  RAVE_OBJECT_UNBIND(obj->scan, obj);
+  RAVE_OBJECT_RELEASE(obj->scan);
   PyObject_Del(obj);
+  PolarScan_dealloc++;
 }
 
 /**
@@ -196,12 +237,12 @@ static PolarScan* _polarscan_createPyObject(PolarScan_t* scan)
   }
   result = PyObject_NEW(PolarScan, &PolarScan_Type);
   if (result == NULL) {
-    RAVE_CRITICAL0("Failed to allocate memory for polar volume");
-    raiseException_returnNULL(PyExc_MemoryError, "Failed to allocate memory for polar volume");
+    RAVE_CRITICAL0("Failed to allocate memory for polar scan");
+    raiseException_returnNULL(PyExc_MemoryError, "Failed to allocate memory for polar scan");
   }
-  result->scan = PolarScan_copy(scan);
-  // Keep track of pyobjects..
-  PolarScan_setVoidPtr(result->scan, (void*)result);
+  result->scan = RAVE_OBJECT_COPY(scan);
+  RAVE_OBJECT_BIND(result->scan, result);
+  PolarScan_alloc++;
   return result;
 }
 
@@ -215,7 +256,7 @@ static PyObject* _polarscan_new(PyObject* self, PyObject* args)
 {
   PolarScan_t* scan = NULL;
   PolarScan* result = NULL;
-  scan = PolarScan_new();
+  scan = RAVE_OBJECT_NEW(&PolarScan_TYPE);
   if (scan == NULL) {
     RAVE_CRITICAL0("Failed to allocate polar scan");
     raiseException_returnNULL(PyExc_MemoryError, "Failed to allocate memory for polar scan");
@@ -227,7 +268,7 @@ static PyObject* _polarscan_new(PyObject* self, PyObject* args)
     PyErr_SetString(PyExc_MemoryError, "Failed to allocate memory for py polar scan");
   }
 
-  PolarScan_release(scan);
+  RAVE_OBJECT_RELEASE(scan);
   return (PyObject*)result;
 }
 
@@ -601,21 +642,14 @@ done:
  */
 static void _polarvolume_dealloc(PolarVolume* obj)
 {
-  int index = 0, len = 0;
   /*Nothing yet*/
   if (obj == NULL) {
     return;
   }
-  len = PolarVolume_getNumberOfScans(obj->pvol);
-  for (index = 0; index < len; index++) {
-    PolarScan_t* scan = PolarVolume_getScan(obj->pvol, index);
-    PyObject* pyscan = (PyObject*)PolarScan_getVoidPtr(scan);
-    if (pyscan != NULL) {
-      Py_DECREF(pyscan);
-    }
-  }
-  PolarVolume_release(obj->pvol);
+  RAVE_OBJECT_UNBIND(obj->pvol, obj);
+  RAVE_OBJECT_RELEASE(obj->pvol);
   PyObject_Del(obj);
+  PolarVolume_dealloc++;
 }
 
 /**
@@ -635,8 +669,9 @@ static PolarVolume* _polarvolume_createPyObject(PolarVolume_t* pvol)
     RAVE_CRITICAL0("Failed to allocate memory for polar volume");
     raiseException_returnNULL(PyExc_MemoryError, "Failed to allocate memory for polar volume");
   }
-  result->pvol = PolarVolume_copy(pvol);
-
+  result->pvol = RAVE_OBJECT_COPY(pvol);
+  RAVE_OBJECT_BIND(result->pvol, result);
+  PolarVolume_alloc++;
   return result;
 }
 
@@ -651,7 +686,7 @@ static PyObject* _polarvolume_new(PyObject* self, PyObject* args)
   PolarVolume_t* pvol = NULL;
   PolarVolume* result = NULL;
 
-  pvol = PolarVolume_new();
+  pvol = RAVE_OBJECT_NEW(&PolarVolume_TYPE);
   if (pvol == NULL) {
     RAVE_CRITICAL0("Failed to allocate polar volume");
     raiseException_returnNULL(PyExc_MemoryError, "Failed to allocate memory for polar volume");
@@ -663,7 +698,7 @@ static PyObject* _polarvolume_new(PyObject* self, PyObject* args)
     PyErr_SetString(PyExc_MemoryError, "Failed to allocate memory for py polar volume");
   }
 
-  PolarVolume_release(pvol);
+  RAVE_OBJECT_RELEASE(pvol);
   return (PyObject*)result;
 }
 
@@ -691,8 +726,6 @@ static PyObject* _polarvolume_addScan(PolarVolume* self, PyObject* args)
   if (!PolarVolume_addScan(self->pvol, polarScan->scan)) {
     raiseException_returnNULL(PyExc_MemoryError, "Failed to add scan to volume");
   }
-
-  Py_INCREF(inptr); // Make sure that the scan gets its refcounting increased.
 
   Py_RETURN_NONE;
 }
@@ -722,11 +755,15 @@ static PyObject* _polarvolume_getScan(PolarVolume* self, PyObject* args)
   }
 
   if (scan != NULL) {
-    result = (PyObject*)PolarScan_getVoidPtr(scan);
-    Py_INCREF(result);
+    result = RAVE_OBJECT_GETBINDING(scan);
+    if (result == NULL) {
+      result = (PyObject*)_polarscan_createPyObject(scan);
+    } else {
+      Py_INCREF(result);
+    }
   }
 
-  PolarScan_release(scan);
+  RAVE_OBJECT_RELEASE(scan);
 
   return result;
 }
@@ -804,11 +841,15 @@ static PyObject* _polarvolume_getScanClosestToElevation(PolarVolume* self, PyObj
 
   scan = PolarVolume_getScanClosestToElevation(self->pvol, elevation, inside);
   if (scan != NULL) {
-    result = (PyObject*)PolarScan_getVoidPtr(scan);
-    Py_INCREF(result);
+    result = RAVE_OBJECT_GETBINDING(scan);
+    if (result == NULL) {
+      result = (PyObject*)_polarscan_createPyObject(scan);
+    } else {
+      Py_INCREF(result);
+    }
   }
 
-  PolarScan_release(scan);
+  RAVE_OBJECT_RELEASE(scan);
   if (result != NULL) {
     return result;
   } else {
@@ -927,9 +968,34 @@ static void _cartesian_dealloc(Cartesian* obj)
   if (obj == NULL) {
     return;
   }
-  Py_XDECREF(obj->projection);
-  Cartesian_release(obj->cartesian);
+  //Py_XDECREF(obj->projection);
+  RAVE_OBJECT_UNBIND(obj->cartesian, obj);
+  RAVE_OBJECT_RELEASE(obj->cartesian);
   PyObject_Del(obj);
+  Cartesian_dealloc++;
+}
+
+/**
+ * Creates the polar scan python object from a polar scan.
+ * @param[in] scan - the polar scan
+ * @returns a Python Polar scan on success.
+ */
+static Cartesian* _cartesian_createPyObject(Cartesian_t* cartesian)
+{
+  Cartesian* result = NULL;
+  if (cartesian == NULL) {
+    RAVE_CRITICAL0("Trying to create a python cartesian without the cartesian");
+    raiseException_returnNULL(PyExc_MemoryError, "Trying to create a python cartesian without the cartesian");
+  }
+  result = PyObject_NEW(Cartesian, &Cartesian_Type);
+  if (result == NULL) {
+    RAVE_CRITICAL0("Failed to allocate memory for cartesian");
+    raiseException_returnNULL(PyExc_MemoryError, "Failed to allocate memory for cartesian");
+  }
+  result->cartesian = RAVE_OBJECT_COPY(cartesian);
+  RAVE_OBJECT_BIND(result->cartesian, result);
+  Cartesian_alloc++;
+  return result;
 }
 
 /**
@@ -941,17 +1007,21 @@ static void _cartesian_dealloc(Cartesian* obj)
 static PyObject* _cartesian_new(PyObject* self, PyObject* args)
 {
   Cartesian* result = NULL;
-  result = PyObject_NEW(Cartesian, &Cartesian_Type);
+  Cartesian_t* cartesian = NULL;
+
+  cartesian = RAVE_OBJECT_NEW(&Cartesian_TYPE);
+  if (cartesian == NULL) {
+    RAVE_CRITICAL0("Failed to allocate cartesian");
+    raiseException_returnNULL(PyExc_MemoryError, "Failed to allocate memory for cartesian");
+  }
+
+  result = _cartesian_createPyObject(cartesian);
   if (result == NULL) {
-    return NULL;
+    RAVE_CRITICAL0("Failed to allocate py cartesian");
+    PyErr_SetString(PyExc_MemoryError, "Failed to allocate memory for py cartesian");
   }
-  result->projection = NULL;
-  result->cartesian = Cartesian_new();
-  if (result->cartesian == NULL) {
-    RAVE_CRITICAL0("Could not allocate cartesian product");
-    PyObject_Del(result);
-    raiseException_returnNULL(PyExc_MemoryError, "Failed to allocate cartesian product");
-  }
+
+  RAVE_OBJECT_RELEASE(cartesian);
   return (PyObject*)result;
 }
 
@@ -1169,12 +1239,27 @@ static PyObject* _cartesian_getattr(Cartesian* self, char* name)
     Cartesian_getAreaExtent(self->cartesian, &llX, &llY, &urX, &urY);
     return Py_BuildValue("(dddd)", llX, llY, urX, urY);
   } else if (strcmp("projection", name) == 0) {
+    Projection_t* projection = Cartesian_getProjection(self->cartesian);
+    if (projection != NULL) {
+      Projection* result = RAVE_OBJECT_GETBINDING(projection);
+      if (result == NULL) {
+        result = _projection_createPyObject(projection);
+      } else {
+        Py_INCREF(result);
+      }
+      RAVE_OBJECT_RELEASE(projection);
+      return (PyObject*)result;
+    } else {
+      Py_RETURN_NONE;
+    }
+#ifdef KALLE
     if (self->projection != NULL) {
       Py_INCREF(self->projection);
       return (PyObject*)self->projection;
     } else {
       Py_RETURN_NONE;
     }
+#endif
   }
 
   res = Py_FindMethod(_cartesian_methods, (PyObject*) self, name);
@@ -1265,6 +1350,12 @@ static int _cartesian_setattr(Cartesian* self, char* name, PyObject* val)
     Cartesian_setAreaExtent(self->cartesian, llX, llY, urX, urY);
   } else if (strcmp("projection", name) == 0) {
     if (Projection_Check(val)) {
+      Cartesian_setProjection(self->cartesian, ((Projection*)val)->projection);
+    } else if (val == Py_None) {
+      Cartesian_setProjection(self->cartesian, NULL);
+    }
+#ifdef KALLE
+    if (Projection_Check(val)) {
       Py_XDECREF(self->projection);
       self->projection = ((Projection*)val);
       Py_INCREF(self->projection);
@@ -1276,6 +1367,7 @@ static int _cartesian_setattr(Cartesian* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "projection must be of type ProjectionCore");
     }
+#endif
   }
 
   result = 0;
@@ -1300,8 +1392,9 @@ static void _transform_dealloc(Transform* obj)
   if (obj == NULL) {
     return;
   }
-  Transform_release(obj->transform);
+  RAVE_OBJECT_RELEASE(obj->transform);
   PyObject_Del(obj);
+  Transform_dealloc++;
 }
 
 /**
@@ -1317,12 +1410,13 @@ static PyObject* _transform_new(PyObject* self, PyObject* args)
   if (result == NULL) {
     return NULL;
   }
-  result->transform = Transform_new();
+  result->transform = RAVE_OBJECT_NEW(&Transform_TYPE);
   if (result->transform == NULL) {
     RAVE_CRITICAL0("Could not allocate transform");
     PyObject_Del(result);
     raiseException_returnNULL(PyExc_MemoryError, "Failed to allocate transform");
   }
+  Transform_alloc++;
   return (PyObject*)result;
 }
 
@@ -1506,8 +1600,28 @@ static void _projection_dealloc(Projection* obj)
   if (obj == NULL) {
     return;
   }
-  Projection_release(obj->projection);
+  RAVE_OBJECT_UNBIND(obj->projection, obj);
+  RAVE_OBJECT_RELEASE(obj->projection);
   PyObject_Del(obj);
+  Projection_dealloc++;
+}
+
+static Projection* _projection_createPyObject(Projection_t* projection)
+{
+  Projection* result = NULL;
+  if (projection == NULL) {
+    RAVE_CRITICAL0("Trying to create a python projection without the projection");
+    raiseException_returnNULL(PyExc_MemoryError, "Trying to create a python projection without the projection");
+  }
+  result = PyObject_NEW(Projection, &Projection_Type);
+  if (result == NULL) {
+    RAVE_CRITICAL0("Failed to allocate memory for projection");
+    raiseException_returnNULL(PyExc_MemoryError, "Failed to allocate memory for projection");
+  }
+  result->projection = RAVE_OBJECT_COPY(projection);
+  RAVE_OBJECT_BIND(result->projection, result);
+  Projection_alloc++;
+  return result;
 }
 
 /**
@@ -1518,6 +1632,7 @@ static void _projection_dealloc(Projection* obj)
  */
 static PyObject* _projection_new(PyObject* self, PyObject* args)
 {
+  Projection_t* projection = NULL;
   Projection* result = NULL;
   char* id = NULL;
   char* description = NULL;
@@ -1527,16 +1642,25 @@ static PyObject* _projection_new(PyObject* self, PyObject* args)
     return NULL;
   }
 
-  result = PyObject_NEW(Projection, &Projection_Type);
+  projection = RAVE_OBJECT_NEW(&Projection_TYPE);
+  if (projection == NULL) {
+    RAVE_CRITICAL0("Failed to allocate projection");
+    raiseException_returnNULL(PyExc_MemoryError, "Failed to allocate memory for projection");
+  }
+
+  if(!Projection_init(projection, id, description, definition)) {
+    RAVE_ERROR0("Could not initialize projection");
+    RAVE_OBJECT_RELEASE(projection);
+    raiseException_returnNULL(PyExc_ValueError, "Failed to initialize projection");
+  }
+
+  result = _projection_createPyObject(projection);
   if (result == NULL) {
-    return NULL;
+    RAVE_CRITICAL0("Failed to allocate py projection");
+    PyErr_SetString(PyExc_MemoryError, "Failed to allocate memory for py projection");
   }
-  result->projection = Projection_new(id, description, definition);
-  if (result->projection == NULL) {
-    RAVE_ERROR0("Could not create projection");
-    PyObject_Del(result);
-    raiseException_returnNULL(PyExc_ValueError, "Failed to create projection");
-  }
+
+  RAVE_OBJECT_RELEASE(projection);
   return (PyObject*)result;
 }
 
@@ -1704,8 +1828,9 @@ static void _raveio_dealloc(RaveIO* obj)
   if (obj == NULL) {
     return;
   }
-  RaveIO_release(obj->raveio);
+  RAVE_OBJECT_RELEASE(obj->raveio);
   PyObject_Del(obj);
+  RaveIO_dealloc++;
 }
 
 /**
@@ -1722,12 +1847,13 @@ static PyObject* _raveio_new(PyObject* self, PyObject* args)
   if (result == NULL) {
     return NULL;
   }
-  result->raveio = RaveIO_new();
+  result->raveio = RAVE_OBJECT_NEW(&RaveIO_TYPE);
   if (result->raveio == NULL) {
     RAVE_ERROR0("Could not create RaveIO");
     PyObject_Del(result);
     raiseException_returnNULL(PyExc_ValueError, "Failed to create RaveIO");
   }
+  RaveIO_alloc++;
   return (PyObject*)result;
 }
 
@@ -1740,18 +1866,22 @@ static PyObject* _raveio_open(PyObject* self, PyObject* args)
   if (!PyArg_ParseTuple(args, "s", &filename)) {
     return NULL;
   }
-  raveio = RaveIO_open(filename);
+  raveio = RAVE_OBJECT_NEW(&RaveIO_TYPE);
   if (raveio == NULL) {
+    raiseException_gotoTag(done, PyExc_MemoryError, "Failed to allocate RaveIO instance");
+  }
+  if (!RaveIO_open(raveio, filename)) {
     raiseException_gotoTag(done, PyExc_IOError, "Failed to open file");
   }
 
   result = PyObject_NEW(RaveIO, &RaveIO_Type);
   if (result != NULL) {
-    result->raveio = RaveIO_copy(raveio);
+    result->raveio = RAVE_OBJECT_COPY(raveio);
+    RaveIO_alloc++;
   }
 
 done:
-  RaveIO_release(raveio);
+  RAVE_OBJECT_RELEASE(raveio);
   return (PyObject*)result;
 }
 
@@ -1791,7 +1921,7 @@ static PyObject* _raveio_openFile(RaveIO* self, PyObject* args)
   if (!PyArg_ParseTuple(args, "s", &filename)) {
     return NULL;
   }
-  if (!RaveIO_openFile(self->raveio, filename)) {
+  if (!RaveIO_open(self->raveio, filename)) {
     raiseException_returnNULL(PyExc_IOError, "Failed to open file");
   }
   Py_RETURN_NONE;
@@ -1826,22 +1956,9 @@ static PyObject* _raveio_load(RaveIO* self, PyObject* args)
   case RaveIO_ObjectType_PVOL: {
     PolarVolume_t* pvol = RaveIO_loadVolume(self->raveio);
     if (pvol != NULL) {
-      int nrScans = PolarVolume_getNumberOfScans(pvol);
-      int i = 0;
       result = (PyObject*)_polarvolume_createPyObject(pvol);
-      for (i = 0; i < nrScans; i++) {
-        PolarScan_t* scan = PolarVolume_getScan(pvol, i);
-        if (scan != NULL) {
-          PolarScan* pyscan = _polarscan_createPyObject(scan);
-          // We just ignore doing anything with the pyscan =>
-          // object will stay in memory until the volume is released
-          // see _polarvolume_dealloc
-          pyscan = NULL;
-        }
-        PolarScan_release(scan);
-      }
     }
-    PolarVolume_release(pvol);
+    RAVE_OBJECT_RELEASE(pvol);
     break;
   }
   default:
@@ -1906,6 +2023,160 @@ static int _raveio_setattr(RaveIO* self, char* name, PyObject* val)
 }
 
 /*@} End of RaveIO */
+
+
+/// --------------------------------------------------------------------
+/// RaveList
+/// --------------------------------------------------------------------
+/*@{ RaveList */
+
+/**
+ * Deallocates the RaveList
+ * @param[in] obj the object to deallocate.
+ */
+static void _ravelist_dealloc(RaveList* obj)
+{
+  /*Nothing yet*/
+  if (obj == NULL) {
+    return;
+  }
+  RAVE_OBJECT_RELEASE(obj->list);
+  PyObject_Del(obj);
+  RaveList_dealloc++;
+}
+
+/**
+ * Creates a new RaveList instance.
+ * @param[in] self this instance.
+ * @param[in] args arguments for creation.
+ * @return the object on success, otherwise NULL
+ */
+static PyObject* _ravelist_new(PyObject* self, PyObject* args)
+{
+  RaveList* result = NULL;
+
+  result = PyObject_NEW(RaveList, &RaveList_Type);
+  if (result == NULL) {
+    return NULL;
+  }
+  result->list = RAVE_OBJECT_NEW(&RaveObjectList_TYPE);
+  if (result->list == NULL) {
+    RAVE_ERROR0("Could not create RaveList");
+    PyObject_Del(result);
+    raiseException_returnNULL(PyExc_ValueError, "Failed to create RaveList");
+  }
+  RaveList_alloc++;
+  return (PyObject*)result;
+}
+
+/**
+ * Adds a rave object to the list
+ * @param[in] self - this instance
+ * @param[in] args - a rave object
+ * @returns Py_None on success, otherwise NULL
+ */
+static PyObject* _ravelist_add(RaveList* self, PyObject* args)
+{
+  PyObject* obj = NULL;
+  if (!PyArg_ParseTuple(args, "O", &obj)) {
+    return NULL;
+  }
+  if (PolarScan_Check(obj)) {
+    if (!RaveObjectList_add(self->list, (RaveCoreObject*)((PolarScan*)obj)->scan)) {
+      raiseException_gotoTag(error, PyExc_MemoryError, "Could not add scan to list");
+    }
+  } else if (PolarVolume_Check(obj)) {
+    if (!RaveObjectList_add(self->list, (RaveCoreObject*)((PolarVolume*)obj)->pvol)) {
+      raiseException_gotoTag(error, PyExc_MemoryError, "Could not add volume to list");
+    }
+  } else {
+    raiseException_gotoTag(error, PyExc_AttributeError, "only supports scans, volumes");
+  }
+
+  Py_RETURN_NONE;
+error:
+  return NULL;
+}
+
+/**
+ * Inserts a rave object at the specified index
+ * @param[in] self - this instance
+ * @param[in] args - a index and a rave object
+ * @returns Py_None on success, otherwise NULL
+ */
+static PyObject* _ravelist_insert(RaveList* self, PyObject* args)
+{
+  PyObject* obj = NULL;
+  int index = -1;
+  if (!PyArg_ParseTuple(args, "iO", &index, &obj)) {
+    return NULL;
+  }
+  if (PolarScan_Check(obj)) {
+    if (!RaveObjectList_insert(self->list, index, (RaveCoreObject*)((PolarScan*)obj)->scan)) {
+      raiseException_gotoTag(error, PyExc_MemoryError, "Could not add object to list");
+    }
+  } else if (PolarVolume_Check(obj)) {
+    if (!RaveObjectList_insert(self->list, index, (RaveCoreObject*)((PolarVolume*)obj)->pvol)) {
+      raiseException_gotoTag(error, PyExc_MemoryError, "Could not add object to list");
+    }
+  } else {
+    raiseException_gotoTag(error, PyExc_AttributeError, "only supports scans, volumes");
+  }
+
+  Py_RETURN_NONE;
+error:
+  return NULL;
+}
+
+/**
+ * Returns the size of a list object
+ * @param[in] self - this instance
+ * @param[in] args - None
+ * @returns the size of the list
+ */
+static PyObject* _ravelist_size(RaveList* self, PyObject* args)
+{
+  return PyInt_FromLong((int)RaveObjectList_size(self->list));
+}
+
+/**
+ * All methods a RaveList can have
+ */
+static struct PyMethodDef _ravelist_methods[] =
+{
+  {"add", (PyCFunction) _ravelist_add, 1},
+  {"insert", (PyCFunction) _ravelist_insert, 1},
+  {"size", (PyCFunction) _ravelist_size, 1},
+  {NULL, NULL } /* sentinel */
+};
+
+/**
+ * Returns the specified attribute in the RaveList
+ * @param[in] self - the RaveList instance
+ */
+static PyObject* _ravelist_getattr(RaveList* self, char* name)
+{
+  PyObject* res = NULL;
+
+  res = Py_FindMethod(_ravelist_methods, (PyObject*) self, name);
+  if (res)
+    return res;
+
+  PyErr_Clear();
+  PyErr_SetString(PyExc_AttributeError, name);
+  return NULL;
+}
+
+/**
+ * Sets the specified attribute in the ravelist
+ */
+static int _ravelist_setattr(RaveIO* self, char* name, PyObject* val)
+{
+  return -1;
+}
+
+/*@} End of RaveList */
+
 
 /// --------------------------------------------------------------------
 /// Type definitions
@@ -2024,6 +2295,25 @@ statichere PyTypeObject RaveIO_Type =
   0, /*tp_as_mapping */
   0 /*tp_hash*/
 };
+
+statichere PyTypeObject RaveList_Type =
+{
+  PyObject_HEAD_INIT(NULL)0, /*ob_size*/
+  "RaveListCore", /*tp_name*/
+  sizeof(RaveList), /*tp_size*/
+  0, /*tp_itemsize*/
+  /* methods */
+  (destructor)_ravelist_dealloc, /*tp_dealloc*/
+  0, /*tp_print*/
+  (getattrfunc)_ravelist_getattr, /*tp_getattr*/
+  (setattrfunc)_ravelist_setattr, /*tp_setattr*/
+  0, /*tp_compare*/
+  0, /*tp_repr*/
+  0, /*tp_as_number */
+  0,
+  0, /*tp_as_mapping */
+  0 /*tp_hash*/
+};
 /*@} End of Type definitions */
 
 /// --------------------------------------------------------------------
@@ -2038,6 +2328,7 @@ static PyMethodDef functions[] = {
   {"projection", (PyCFunction)_projection_new, 1},
   {"io", (PyCFunction)_raveio_new, 1},
   {"open", (PyCFunction)_raveio_open, 1},
+  {"list", (PyCFunction)_ravelist_new, 1},
   {NULL,NULL} /*Sentinel*/
 };
 
@@ -2057,6 +2348,27 @@ static void add_long_constant(PyObject* dictionary, const char* name, long value
   Py_XDECREF(tmp);
 }
 
+static void RavePyModule_statistics(void)
+{
+  if (((PolarScan_alloc-PolarScan_dealloc) != 0) ||
+      ((PolarVolume_alloc-PolarVolume_dealloc) != 0) ||
+      ((Cartesian_alloc-Cartesian_dealloc) != 0) ||
+      ((Transform_alloc-Transform_dealloc) != 0) ||
+      ((Projection_alloc-Projection_dealloc) != 0) ||
+      ((RaveIO_alloc-RaveIO_dealloc) != 0) ||
+      ((RaveList_alloc-RaveList_dealloc) != 0)) {
+    fprintf(stderr, "rave py object statistics\n");
+    fprintf(stderr, "Module Name\t alloc\t dealloc\t lost\n");
+    fprintf(stderr, "PolarScans \t %05d\t %05d  \t %05d\n", PolarScan_alloc, PolarScan_dealloc, (PolarScan_alloc-PolarScan_dealloc));
+    fprintf(stderr, "PolarVolum \t %05d\t %05d  \t %05d\n", PolarVolume_alloc, PolarVolume_dealloc, (PolarVolume_alloc-PolarVolume_dealloc));
+    fprintf(stderr, "Cartesian  \t %05d\t %05d  \t %05d\n", Cartesian_alloc, Cartesian_dealloc, (Cartesian_alloc-Cartesian_dealloc));
+    fprintf(stderr, "Transform  \t %05d\t %05d  \t %05d\n", Transform_alloc, Transform_dealloc, (Transform_alloc-Transform_dealloc));
+    fprintf(stderr, "Projection \t %05d\t %05d  \t %05d\n", Projection_alloc, Projection_dealloc, (Projection_alloc-Projection_dealloc));
+    fprintf(stderr, "RaveIO     \t %05d\t %05d  \t %05d\n", RaveIO_alloc, RaveIO_dealloc, (RaveIO_alloc-RaveIO_dealloc));
+    fprintf(stderr, "RaveList   \t %05d\t %05d  \t %05d\n", RaveList_alloc, RaveList_dealloc, (RaveList_alloc-RaveList_dealloc));
+  }
+}
+
 /**
  * Initializes polar volume.
  */
@@ -2069,6 +2381,7 @@ void init_rave(void)
   Transform_Type.ob_type = &PyType_Type;
   Projection_Type.ob_type = &PyType_Type;
   RaveIO_Type.ob_type = &PyType_Type;
+  RaveList_Type.ob_type = &PyType_Type;
 
   HL_init();
   HL_disableErrorReporting();
@@ -2085,6 +2398,14 @@ void init_rave(void)
   Rave_initializeDebugger();
 
   if (atexit(rave_alloc_print_statistics) != 0) {
+    fprintf(stderr, "Could not set atexit function");
+  }
+
+  if (atexit(RaveCoreObject_printStatistics) != 0) {
+    fprintf(stderr, "Could not set atexit function");
+  }
+
+  if (atexit(RavePyModule_statistics) != 0) {
     fprintf(stderr, "Could not set atexit function");
   }
 

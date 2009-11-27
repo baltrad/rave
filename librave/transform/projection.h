@@ -25,6 +25,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef PROJECTION_H
 #define PROJECTION_H
 #include "projects.h"
+#include "rave_object.h"
 
 /**
  * Defines a transformer
@@ -32,26 +33,14 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 typedef struct _Projection_t Projection_t;
 
 /**
- * Creates a new projection instance.
- * @return a new instance or NULL on failure
+ * Type definition to use when creating a rave object.
  */
-Projection_t* Projection_new(const char* id, const char* description, const char* definition);
+extern RaveCoreObjectType Projection_TYPE;
 
 /**
- * Releases the responsibility for the projection, it is not certain that
- * it will be deleted though if there still are references existing
- * to this projection.
- * @param[in] projection - the projection
+ * Initializes a projection with the projection
  */
-void Projection_release(Projection_t* projection);
-
-/**
- * Copies the reference to this instance by increasing a
- * reference counter.
- * @param[in] projection - the projection to be copied
- * @return a pointer to the projection
- */
-Projection_t* Projection_copy(Projection_t* projection);
+int Projection_init(Projection_t* projection, const char* id, const char* description, const char* definition);
 
 /**
  * Returns the ID for this projection.

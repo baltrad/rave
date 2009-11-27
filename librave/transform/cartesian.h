@@ -26,6 +26,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #define CARTESIAN_H
 #include "rave_transform.h"
 #include "projection.h"
+#include "rave_object.h"
 
 /**
  * Defines a Polar Scan
@@ -33,26 +34,9 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 typedef struct _Cartesian_t Cartesian_t;
 
 /**
- * Creates a new cartesian instance
- * @return a new instance or NULL on failure
+ * Type definition to use when creating a rave object.
  */
-Cartesian_t* Cartesian_new(void);
-
-/**
- * Releases the responsibility for the scan, it is not certain that
- * it will be deleted though if there still are references existing
- * to this scan.
- * @param[in] cartesian - the cartesian product
- */
-void Cartesian_release(Cartesian_t* cartesian);
-
-/**
- * Copies the reference to this instance by increasing a
- * reference counter.
- * @param[in] cartesian - the cartesian product to be copied
- * @return a pointer to the cartesian product
- */
-Cartesian_t* Cartesian_copy(Cartesian_t* cartesian);
+extern RaveCoreObjectType Cartesian_TYPE;
 
 /**
  * Sets the xsize

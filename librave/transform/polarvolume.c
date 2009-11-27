@@ -24,6 +24,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "polarvolume.h"
 #include "polarnav.h"
+#include "raveobject_list.h"
 #include "rave_debug.h"
 #include "rave_alloc.h"
 #include <string.h>
@@ -32,76 +33,79 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * Represents a volume
  */
 struct _PolarVolume_t {
-  long pv_refCount; /**< ref counter */
+  RAVE_OBJECT_HEAD /** Always on top */
 
   Projection_t* projection; /**< projection for this volume */
   PolarNavigator_t* navigator; /**< a polar navigator */
-
-  int nrAllocatedScans; /**< Number of scans that the volume currently can hold */
-  int nrScans; /**< The number of scans that this volume is defined by */
+  RaveObjectList_t* scans; /**< the list of scans */
 
   int debug; /**< debugging flag */
-
-  PolarScan_t** scans; /**< the scans that this volume is defined by */
 };
 
 /*@{ Private functions */
-/**
- * Ensures that the volume can at least manage one more scan
- * @returns 0 on failure, otherwise it was a success
- */
-static int PolarVolume_ensureScanCapacity(PolarVolume_t* pvol)
+static int PolarVolume_constructor(RaveCoreObject* obj)
 {
-  int result = 0;
-  RAVE_ASSERT((pvol != NULL), "pvol was NULL");
-  if (pvol->scans == NULL) {
-    pvol->scans = RAVE_MALLOC(32 * sizeof(PolarScan_t*));
-    if (pvol->scans == NULL) {
-      RAVE_ERROR0("Failed to allocate scans");
-      goto fail;
+  PolarVolume_t* result = (PolarVolume_t*)obj;
+  result->projection = NULL;
+  result->navigator = NULL;
+  result->scans = NULL;
+
+  result->debug = 0;
+
+  // Always initialize to default projection for lon/lat calculations
+  result->projection = RAVE_OBJECT_NEW(&Projection_TYPE);
+  if (result->projection != NULL) {
+    if(!Projection_init(result->projection, "lonlat", "lonlat", "+proj=latlong +ellps=WGS84 +datum=WGS84")) {
+      goto error;
     }
-    memset(pvol->scans, 0, 32*sizeof(PolarScan_t*));
-    pvol->nrAllocatedScans = 32;
   } else {
-    if (pvol->nrScans == pvol->nrAllocatedScans) {
-      int i = 0;
-      int newAllocSize = pvol->nrAllocatedScans + 32;
-      PolarScan_t** newscans = RAVE_REALLOC(pvol->scans, newAllocSize*sizeof(PolarScan_t*));
-      if (newscans == NULL) {
-        RAVE_ERROR0("Failed to reallocate scans");
-        goto fail;
-      }
-      for (i = pvol->nrAllocatedScans; i < newAllocSize; i++) {
-        newscans[i] = NULL;
-      }
-      pvol->scans = newscans;
-      pvol->nrAllocatedScans = newAllocSize;
-    }
+    goto error;
   }
-  result = 1;
-fail:
-  return result;
+  result->navigator = RAVE_OBJECT_NEW(&PolarNavigator_TYPE);
+  if (result->navigator == NULL) {
+    goto error;
+  }
+  result->scans = RAVE_OBJECT_NEW(&RaveObjectList_TYPE);
+  if (result->scans == NULL) {
+    goto error;
+  }
+
+  return 1;
+error:
+  RAVE_OBJECT_RELEASE(result->projection);
+  RAVE_OBJECT_RELEASE(result->navigator);
+  RAVE_OBJECT_RELEASE(result->scans);
+  return 0;
 }
 
 /**
- * Destroys the polar volume.
- * @param[in] volume - the volume to destroy
+ * Destructor
  */
-static void PolarVolume_destroy(PolarVolume_t* volume)
+static void PolarVolume_destructor(RaveCoreObject* obj)
 {
-  if (volume != NULL) {
-    Projection_release(volume->projection);
-    PolarNavigator_release(volume->navigator);
-    if (volume->scans != NULL) {
-      int i = 0;
-      for (i = 0; i < volume->nrScans; i++) {
-        PolarScan_release(volume->scans[i]);
-        volume->scans[i] = NULL;
-      }
-      RAVE_FREE(volume->scans);
-    }
-    RAVE_FREE(volume);
+  PolarVolume_t* volume = (PolarVolume_t*)obj;
+  RAVE_OBJECT_RELEASE(volume->projection);
+  RAVE_OBJECT_RELEASE(volume->navigator);
+  RAVE_OBJECT_RELEASE(volume->scans);
+}
+
+/**
+ * Returns the elevation angle for the specified scan index.
+ * @param
+ */
+static double PolarVolumeInternal_getElangle(PolarVolume_t* pvol, int index)
+{
+  PolarScan_t* scan = NULL;
+  double elangle = 0.0L;
+  scan = (PolarScan_t*)RaveObjectList_get(pvol->scans, index);
+  if (scan != NULL) {
+    elangle = PolarScan_getElangle(scan);
+  } else {
+    RAVE_CRITICAL1("Could not fetch scan for index = %d\n", index);
   }
+
+  RAVE_OBJECT_RELEASE(scan);
+  return elangle;
 }
 
 /**
@@ -146,76 +150,6 @@ static int descendingElevationSort(const void* a, const void* b)
 /*@} End of Private functions */
 
 /*@{ Interface functions */
-PolarVolume_t* PolarVolume_new(void)
-{
-  PolarVolume_t* result = NULL;
-  result = RAVE_MALLOC(sizeof(PolarVolume_t));
-  if (result != NULL) {
-    result->pv_refCount = 1;
-
-    result->nrAllocatedScans = 0;
-    result->nrScans = 0;
-    result->scans = NULL;
-    result->projection = NULL;
-    result->navigator = NULL;
-    result->debug = 0;
-
-    if (!PolarVolume_ensureScanCapacity(result)) {
-      PolarVolume_destroy(result);
-      result = NULL;
-      goto done;
-    }
-
-    // Always initialize to default projection for lon/lat calculations
-    result->projection = Projection_new("lonlat", "lonlat", "+proj=latlong +ellps=WGS84 +datum=WGS84");
-    if (result->projection == NULL) {
-      PolarVolume_destroy(result);
-      result = NULL;
-      goto done;
-    }
-
-    // And a navigator as well
-    result->navigator = PolarNavigator_new();
-    if (result->navigator == NULL) {
-      PolarVolume_destroy(result);
-      result = NULL;
-      goto done;
-    }
-  }
-done:
-  return result;
-}
-
-/**
- * Releases the responsibility for the volume, it is not certain that
- * it will be deleted though if there still are references existing
- * to this scan.
- * @param[in] pvol - the polar volume
- */
-void PolarVolume_release(PolarVolume_t* pvol)
-{
-  if (pvol != NULL) {
-    pvol->pv_refCount--;
-    if (pvol->pv_refCount <= 0) {
-      PolarVolume_destroy(pvol);
-    }
-  }
-}
-
-/**
- * Copies the reference to this instance by increasing a
- * reference counter.
- * @param[in] pvol - the polar volume to be copied
- * @return a pointer to the volume
- */
-PolarVolume_t* PolarVolume_copy(PolarVolume_t* pvol)
-{
-  if (pvol != NULL) {
-    pvol->pv_refCount++;
-  }
-  return pvol;
-}
-
 void PolarVolume_setLongitude(PolarVolume_t* pvol, double lon)
 {
   RAVE_ASSERT((pvol != NULL), "pvol was NULL");
@@ -255,13 +189,16 @@ double PolarVolume_getHeight(PolarVolume_t* pvol)
 void PolarVolume_setProjection(PolarVolume_t* pvol, Projection_t* projection)
 {
   RAVE_ASSERT((pvol != NULL), "pvol was NULL");
-  Projection_release(pvol->projection);
+  RAVE_OBJECT_RELEASE(pvol->projection);
   pvol->projection = NULL;
   if (projection != NULL) {
     int index = 0;
-    pvol->projection = Projection_copy(projection);
-    for (index = 0; index < pvol->nrScans; index++) {
-      PolarScan_setProjection(pvol->scans[index], projection);
+    int nrScans = RaveObjectList_size(pvol->scans);
+    pvol->projection = RAVE_OBJECT_COPY(projection);
+    for (index = 0; index < nrScans; index++) {
+      PolarScan_t* scan = (PolarScan_t*)RaveObjectList_get(pvol->scans, index);
+      PolarScan_setProjection(scan, projection);
+      RAVE_OBJECT_RELEASE(scan);
     }
   }
 }
@@ -270,7 +207,7 @@ Projection_t* PolarVolume_getProjection(PolarVolume_t* pvol)
 {
   RAVE_ASSERT((pvol != NULL), "pvol was NULL");
   if (pvol->projection != NULL) {
-    return Projection_copy(pvol->projection);
+    return RAVE_OBJECT_COPY(pvol->projection);
   }
   return NULL;
 }
@@ -280,10 +217,9 @@ int PolarVolume_addScan(PolarVolume_t* pvol, PolarScan_t* scan)
   int result = 0;
   RAVE_ASSERT((pvol != NULL), "pvol was NULL");
   RAVE_ASSERT((scan != NULL), "scan was NULL");
-  if (PolarVolume_ensureScanCapacity(pvol)) {
+  if (RaveObjectList_add(pvol->scans, (RaveCoreObject*)scan)) {
     PolarScan_setNavigator(scan, pvol->navigator);
     PolarScan_setProjection(scan, pvol->projection);
-    pvol->scans[pvol->nrScans++] = PolarScan_copy(scan);
     result = 1;
   }
   return result;
@@ -291,18 +227,15 @@ int PolarVolume_addScan(PolarVolume_t* pvol, PolarScan_t* scan)
 
 PolarScan_t* PolarVolume_getScan(PolarVolume_t* pvol, int index)
 {
-  PolarScan_t* scan = NULL;
+//  PolarScan_t* scan = NULL;
   RAVE_ASSERT((pvol != NULL), "pvol was NULL");
-  if (index >= 0 && index < pvol->nrScans) {
-    scan = PolarScan_copy(pvol->scans[index]);
-  }
-  return scan;
+  return (PolarScan_t*)RaveObjectList_get(pvol->scans, index);
 }
 
 int PolarVolume_getNumberOfScans(PolarVolume_t* pvol)
 {
   RAVE_ASSERT((pvol != NULL), "pvol was NULL");
-  return pvol->nrScans;
+  return RaveObjectList_size(pvol->scans);
 }
 
 PolarScan_t* PolarVolume_getScanClosestToElevation(PolarVolume_t* pvol, double e, int inside)
@@ -310,21 +243,23 @@ PolarScan_t* PolarVolume_getScanClosestToElevation(PolarVolume_t* pvol, double e
   double se = 0.0L, eld = 0.0L;
   int ei = 0;
   int i = 0;
+  int nrScans = 0;
   RAVE_ASSERT((pvol != NULL), "pvol was NULL");
-  RAVE_ASSERT((index != NULL), "index was NULL");
+
+  nrScans = RaveObjectList_size(pvol->scans);
 
   if (inside) {
-    if ((e < PolarScan_getElangle(pvol->scans[0])) ||
-        (e > PolarScan_getElangle(pvol->scans[pvol->nrScans-1]))) {
+    if ((e < PolarVolumeInternal_getElangle(pvol, 0)) ||
+        (e > PolarVolumeInternal_getElangle(pvol, nrScans-1))) {
       return NULL;
     }
   }
 
-  se = PolarScan_getElangle(pvol->scans[0]);
+  se = PolarVolumeInternal_getElangle(pvol, 0);
   ei = 0;
   eld = fabs(e - se);
-  for (i = 1; i < pvol->nrScans; i++) {
-    double elev = PolarScan_getElangle(pvol->scans[i]);
+  for (i = 1; i < nrScans; i++) {
+    double elev = PolarVolumeInternal_getElangle(pvol, i);
     double elevd = fabs(e - elev);
     if (elevd < eld) {
       se = elev;
@@ -334,7 +269,7 @@ PolarScan_t* PolarVolume_getScanClosestToElevation(PolarVolume_t* pvol, double e
       break;
     }
   }
-  return PolarScan_copy(pvol->scans[ei]);
+  return (PolarScan_t*)RaveObjectList_get(pvol->scans, ei);
 }
 
 RaveValueType PolarVolume_getNearest(PolarVolume_t* pvol, double lon, double lat, double height, int insidee, double* v)
@@ -357,7 +292,7 @@ RaveValueType PolarVolume_getNearest(PolarVolume_t* pvol, double lon, double lat
     result = PolarScan_getValueAtAzimuthAndRange(scan, a, r, v);
   }
 
-  PolarScan_release(scan);
+  RAVE_OBJECT_RELEASE(scan);
 
   return result;
 }
@@ -367,9 +302,9 @@ void PolarVolume_sortByElevations(PolarVolume_t* pvol, int ascending)
   RAVE_ASSERT((pvol != NULL), "pvol was NULL");
 
   if (ascending == 1) {
-    qsort(pvol->scans, pvol->nrScans, sizeof(PolarScan_t*), ascendingElevationSort);
+    RaveObjectList_sort(pvol->scans, ascendingElevationSort);
   } else {
-    qsort(pvol->scans, pvol->nrScans, sizeof(PolarScan_t*), descendingElevationSort);
+    RaveObjectList_sort(pvol->scans, descendingElevationSort);
   }
 }
 
@@ -378,11 +313,13 @@ int PolarVolume_isAscendingScans(PolarVolume_t* pvol)
   int result = 1;
   int index = 0;
   double lastelev = 0.0L;
+  int nrScans = 0;
   RAVE_ASSERT((pvol != NULL), "pvol was NULL");
-  if (pvol->nrScans > 0) {
-    lastelev = PolarScan_getElangle(pvol->scans[0]);
-    for (index = 1; result == 1 && index < pvol->nrScans; index++) {
-      double nextelev = PolarScan_getElangle(pvol->scans[index]);
+  nrScans = RaveObjectList_size(pvol->scans);
+  if (nrScans > 0) {
+    lastelev = PolarVolumeInternal_getElangle(pvol, 0);
+    for (index = 1; result == 1 && index < nrScans; index++) {
+      double nextelev = PolarVolumeInternal_getElangle(pvol, index);
       if (nextelev < lastelev) {
         result = 0;
       }
@@ -398,7 +335,7 @@ int PolarVolume_isTransformable(PolarVolume_t* pvol)
   RAVE_ASSERT((pvol != NULL), "pvol was NULL");
   // Verify that the volume at least got one scan and that the scans
   // are sorted in ascending order.
-  if (pvol->nrScans > 0 && PolarVolume_isAscendingScans(pvol)) {
+  if (RaveObjectList_size(pvol->scans) > 0 && PolarVolume_isAscendingScans(pvol)) {
     result = 1;
   }
   return result;
@@ -411,3 +348,9 @@ void PolarVolume_setDebug(PolarVolume_t* pvol, int enable)
 }
 
 /*@} End of Interface functions */
+RaveCoreObjectType PolarVolume_TYPE = {
+    "PolarVolume",
+    sizeof(PolarVolume_t),
+    PolarVolume_constructor,
+    PolarVolume_destructor
+};

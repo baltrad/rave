@@ -35,26 +35,9 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 typedef struct _Transform_t Transform_t;
 
 /**
- * Creates a new transform instance. Default method is NEAREST.
- * @return a new instance or NULL on failure
+ * Type definition to use when creating a rave object.
  */
-Transform_t* Transform_new(void);
-
-/**
- * Releases the responsibility for the scan, it is not certain that
- * it will be deleted though if there still are references existing
- * to this scan.
- * @param[in] transform - the transformer
- */
-void Transform_release(Transform_t* transform);
-
-/**
- * Copies the reference to this instance by increasing a
- * reference counter.
- * @param[in] transform - the transformer to be copied
- * @return a pointer to the scan
- */
-Transform_t* Transform_copy(Transform_t* transform);
+extern RaveCoreObjectType Transform_TYPE;
 
 /**
  * Sets the transformation method to be used, like NEAREST, BILINEAR, ...

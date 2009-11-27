@@ -31,6 +31,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * Represents one projection
  */
 struct _Projection_t {
+  RAVE_OBJECT_HEAD /** Always on top */
+  int initialized;
   char* id;
   char* description;
   char* definition;
@@ -38,16 +40,29 @@ struct _Projection_t {
 
   int debug;
   void* voidPtr;
-  long ps_refCount;
 };
 
 /*@{ Private functions */
+static int Projection_constructor(RaveCoreObject* obj)
+{
+  Projection_t* projection = (Projection_t*)obj;
+  projection->initialized = 0;
+  projection->id = NULL;
+  projection->description = NULL;
+  projection->definition = NULL;
+  projection->pj = NULL;
+  projection->debug = 0;
+  projection->voidPtr = NULL;
+  return 1;
+}
+
 /**
  * Destroys the projection
  * @param[in] projection - the projection to destroy
  */
-static void Projection_destroy(Projection_t* projection)
+static void Projection_destructor(RaveCoreObject* obj)
 {
+  Projection_t* projection = (Projection_t*)obj;
   if (projection != NULL) {
     RAVE_FREE(projection->id);
     RAVE_FREE(projection->description);
@@ -55,82 +70,49 @@ static void Projection_destroy(Projection_t* projection)
     if (projection->pj != NULL) {
       pj_free(projection->pj);
     }
-    RAVE_FREE(projection);
   }
 }
 /*@} End of Private functions */
 
 /*@{ Interface functions */
-Projection_t* Projection_new(const char* id, const char* description, const char* definition)
+int Projection_init(Projection_t* projection, const char* id, const char* description, const char* definition)
 {
-  Projection_t* result = NULL;
-
-  if (definition == NULL) {
-    RAVE_ERROR0("Must at least provide definition when creating a projection");
-    return NULL;
-  }
-
-  result = RAVE_MALLOC(sizeof(Projection_t));
-  if (result != NULL) {
-    result->id = NULL;
-    result->description = NULL;
-    result->definition = NULL;
-    result->pj = NULL;
-    result->debug = 0;
-    result->voidPtr = NULL;
-    result->ps_refCount = 1;
-
-    if (id != NULL) {
-      result->id = RAVE_STRDUP(id);
-      if (result->id == NULL) {
-        RAVE_ERROR0("Failed to duplicate id");
-        goto error;
-      }
-    }
-    if (description != NULL) {
-      result->description = RAVE_STRDUP(description);
-      if (result->description == NULL) {
-        RAVE_ERROR0("Failed to duplicate description");
-        goto error;
-      }
-    }
-
-    result->definition = RAVE_STRDUP(definition);
-    if (result->definition == NULL) {
-      RAVE_ERROR0("Failed to duplicate definition");
-      goto error;
-    }
-
-    result->pj = pj_init_plus(definition);
-    if (result->pj == NULL) {
-      RAVE_ERROR0("Failed to create projection");
-      goto error;
-    }
-  }
-
-  return result;
-error:
-  if (result != NULL) {
-    Projection_destroy(result);
-  }
-  return NULL;
-}
-
-void Projection_release(Projection_t* projection)
-{
-  if (projection != NULL) {
-    projection->ps_refCount--;
-    if (projection->ps_refCount <= 0) {
-      Projection_destroy(projection);
-    }
-  }
-}
-
-Projection_t* Projection_copy(Projection_t* projection)
-{
+  int result = 0;
   RAVE_ASSERT((projection != NULL), "projection was NULL");
-  projection->ps_refCount++;
-  return projection;
+  RAVE_ASSERT((projection->initialized == 0), "projection was already initalized");
+  if (id == NULL || description == NULL || definition == NULL) {
+    RAVE_ERROR0("One of id, description or definition was NULL when initializing");
+    return 0;
+  }
+  projection->id = RAVE_STRDUP(id);
+  projection->description = RAVE_STRDUP(description);
+  projection->definition = RAVE_STRDUP(definition);
+  projection->pj = pj_init_plus(definition);
+  if (projection->id == NULL || projection->description == NULL ||
+      projection->definition == NULL || projection->pj == NULL) {
+    if (projection->id == NULL) {
+      RAVE_ERROR0("Could not set id");
+    }
+    if (projection->description == NULL) {
+      RAVE_ERROR0("Could not set description");
+    }
+    if (projection->definition == NULL) {
+      RAVE_ERROR0("Could not set definition");
+    }
+    if (projection->pj == NULL) {
+      RAVE_ERROR0("Failed to create projection");
+    }
+    RAVE_FREE(projection->id);
+    RAVE_FREE(projection->description);
+    RAVE_FREE(projection->definition);
+    if (projection->pj != NULL) {
+      pj_free(projection->pj);
+    }
+  } else {
+    result = 1;
+    projection->initialized = 1;
+  }
+  return result;
 }
 
 const char* Projection_getID(Projection_t* projection)
@@ -219,3 +201,10 @@ void Projection_setDebug(Projection_t* projection, int debug)
   projection->debug = debug;
 }
 /*@} End of Interface functions */
+
+RaveCoreObjectType Projection_TYPE = {
+    "Projection",
+    sizeof(Projection_t),
+    Projection_constructor,
+    Projection_destructor
+};

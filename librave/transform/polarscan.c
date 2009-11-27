@@ -26,12 +26,13 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_debug.h"
 #include "rave_alloc.h"
 #include <string.h>
+#include "rave_object.h"
 
 /**
  * Represents one scan in a volume.
  */
 struct _PolarScan_t {
-  long ps_refCount;
+  RAVE_OBJECT_HEAD /** Always on top */
 
   // Where
   double elangle; /**< elevation of scan */
@@ -55,9 +56,6 @@ struct _PolarScan_t {
   // Data
   void* data; /**< data ptr */
 
-  // Miscellaneous data that is useful
-  void* voidPtr; /**< a pointer for pointing to miscellaneous data */
-
   // Navigator
   PolarNavigator_t* navigator; /** a navigator for calculating polar navigation */
 
@@ -70,109 +68,86 @@ struct _PolarScan_t {
 
 /*@{ Private functions */
 /**
- * Destroys the scan
- * @param[in] scan - the scan to destroy
+ * Constructor.
  */
-static void PolarScan_destroy(PolarScan_t* scan)
+static int PolarScan_constructor(RaveCoreObject* obj)
 {
-  if (scan != NULL) {
-    RAVE_FREE(scan->data);
-    PolarNavigator_release(scan->navigator);
-    Projection_release(scan->projection);
-    RAVE_FREE(scan);
+  PolarScan_t* scan = (PolarScan_t*)obj;
+  scan->elangle = 0.0;
+  scan->nbins = 0;
+  scan->rscale = 0.0;
+  scan->type = RaveDataType_UNDEFINED;
+  scan->nrays = 0;
+  scan->rstart = 0.0;
+  scan->a1gate = 0;
+  scan->beamwidth = 0.0;
+  strcpy(scan->quantity, "");
+  scan->gain = 0.0;
+  scan->offset = 0.0;
+  scan->nodata = 0.0;
+  scan->undetect = 0.0;
+  scan->data = NULL;
+  scan->debug = 0;
+  scan->navigator = NULL;
+  scan->projection = NULL;
+
+  scan->projection = RAVE_OBJECT_NEW(&Projection_TYPE);
+  if (scan->projection != NULL) {
+    if(!Projection_init(scan->projection, "lonlat", "lonlat", "+proj=latlong +ellps=WGS84 +datum=WGS84")) {
+      goto error;
+    }
+  } else {
+    goto error;
   }
+  scan->navigator = RAVE_OBJECT_NEW(&PolarNavigator_TYPE);
+  if (scan->navigator == NULL) {
+    goto error;
+  }
+
+  return 1;
+error:
+  return 0;
 }
+
+/**
+ * Destructor.
+ */
+static void PolarScan_destructor(RaveCoreObject* obj)
+{
+  PolarScan_t* scan = (PolarScan_t*)obj;
+  RAVE_FREE(scan->data);
+  RAVE_OBJECT_RELEASE(scan->navigator);
+  RAVE_OBJECT_RELEASE(scan->projection);
+}
+
 /*@} End of Private functions */
 
 /*@{ Interface functions */
-PolarScan_t* PolarScan_new(void)
-{
-  PolarScan_t* result = NULL;
-  result = RAVE_MALLOC(sizeof(PolarScan_t));
-  if (result != NULL) {
-    result->elangle = 0.0;
-    result->nbins = 0;
-    result->rscale = 0.0;
-    result->type = RaveDataType_UNDEFINED;
-    result->nrays = 0;
-    result->rstart = 0.0;
-    result->a1gate = 0;
-    result->beamwidth = 0.0;
-    strcpy(result->quantity, "");
-    result->gain = 0.0;
-    result->offset = 0.0;
-    result->nodata = 0.0;
-    result->undetect = 0.0;
-    result->data = NULL;
-
-    result->ps_refCount = 1;
-    result->voidPtr = NULL;
-    result->debug = 0;
-
-    result->navigator = NULL;
-    result->projection = NULL;
-
-    result->projection = Projection_new("lonlat", "lonlat", "+proj=latlong +ellps=WGS84 +datum=WGS84");
-    if (result->projection == NULL) {
-      PolarScan_destroy(result);
-      result = NULL;
-      goto done;
-    }
-
-    result->navigator = PolarNavigator_new();
-    if (result->navigator == NULL) {
-      PolarScan_destroy(result);
-      result = NULL;
-      goto done;
-    }
-  }
-done:
-  return result;
-}
-
-void PolarScan_release(PolarScan_t* scan)
-{
-  if (scan != NULL) {
-    scan->ps_refCount--;
-    if (scan->ps_refCount <= 0) {
-      PolarScan_destroy(scan);
-    }
-  }
-}
-
-PolarScan_t* PolarScan_copy(PolarScan_t* scan)
-{
-  if (scan != NULL) {
-    scan->ps_refCount++;
-  }
-  return scan;
-}
-
 void PolarScan_setNavigator(PolarScan_t* scan, PolarNavigator_t* navigator)
 {
   RAVE_ASSERT((scan != NULL), "scan was NULL");
   RAVE_ASSERT((navigator != NULL), "navigator was NULL");
-  PolarNavigator_release(scan->navigator);
-  scan->navigator = PolarNavigator_copy(navigator);
+  RAVE_OBJECT_RELEASE(scan->navigator);
+  scan->navigator = RAVE_OBJECT_COPY(navigator);
 }
 
 PolarNavigator_t* PolarScan_getNavigator(PolarScan_t* scan)
 {
   RAVE_ASSERT((scan != NULL), "scan was NULL");
-  return PolarNavigator_copy(scan->navigator);
+  return RAVE_OBJECT_COPY(scan->navigator);
 }
 
 void PolarScan_setProjection(PolarScan_t* scan, Projection_t* projection)
 {
   RAVE_ASSERT((scan != NULL), "scan was NULL");
-  Projection_release(scan->projection);
-  scan->projection = Projection_copy(projection);
+  RAVE_OBJECT_RELEASE(scan->projection);
+  scan->projection = RAVE_OBJECT_COPY(projection);
 }
 
 Projection_t* PolarScan_getProjection(PolarScan_t* scan)
 {
   RAVE_ASSERT((scan != NULL), "scan was NULL");
-  return Projection_copy(scan->projection);
+  return RAVE_OBJECT_COPY(scan->projection);
 }
 
 void PolarScan_setLongitude(PolarScan_t* scan, double lon)
@@ -515,21 +490,16 @@ int PolarScan_isTransformable(PolarScan_t* scan)
   return result;
 }
 
-void PolarScan_setVoidPtr(PolarScan_t* scan, void* ptr)
-{
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
-  scan->voidPtr = ptr;
-}
-
-void* PolarScan_getVoidPtr(PolarScan_t* scan)
-{
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
-  return scan->voidPtr;
-}
-
 void PolarScan_setDebug(PolarScan_t* scan, int enable)
 {
   RAVE_ASSERT((scan != NULL), "scan was NULL");
   scan->debug = enable;
 }
 /*@} End of Interface functions */
+
+RaveCoreObjectType PolarScan_TYPE = {
+    "PolarScan",
+    sizeof(PolarScan_t),
+    PolarScan_constructor,
+    PolarScan_destructor
+};

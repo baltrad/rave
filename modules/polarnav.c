@@ -78,7 +78,7 @@ static void _polarnavigator_dealloc(PolarNavigator* obj)
   if (obj == NULL) {
     return;
   }
-  PolarNavigator_release(obj->navigator);
+  RAVE_OBJECT_RELEASE(obj->navigator);
   PyObject_Del(obj);
 }
 
@@ -95,7 +95,7 @@ static PyObject* _polarnavigator_new(PyObject* self, PyObject* args)
   if (result == NULL) {
     return NULL;
   }
-  result->navigator = PolarNavigator_new();
+  result->navigator = RAVE_OBJECT_NEW(&PolarNavigator_TYPE);
   if (result->navigator == NULL) {
     RAVE_CRITICAL0("Could not allocate polar navigator");
     PyObject_Del(result);

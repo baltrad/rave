@@ -34,7 +34,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * Represents a list
  */
 struct _RaveList_t {
-  long ps_refCount;
+  RAVE_OBJECT_HEAD /** Always on top */
   void** list;
   int nrEntries;
   int nrAlloc;
@@ -52,7 +52,15 @@ static int RaveListInternal_ensureCapacity(RaveList_t* list)
 {
   int result = 0;
   RAVE_ASSERT((list != NULL), "list == NULL");
-  if (list->nrEntries >= list->nrAlloc - 1) {
+  if (list->nrAlloc == 0 && list->list == NULL) {
+    list->list = RAVE_MALLOC(sizeof(void*)*DEFAULT_NR_RAVE_LIST_ENTRIES);
+    if (list->list == NULL) {
+      RAVE_CRITICAL0("Failed to create list storage");
+      goto done;
+    }
+    list->nrAlloc = DEFAULT_NR_RAVE_LIST_ENTRIES;
+  }
+  else if (list->nrEntries >= list->nrAlloc - 1) {
     int nsz = list->nrAlloc + LIST_EXPAND_NR_ENTRIES;
     void** narr = RAVE_REALLOC(list->list, nsz * sizeof(void*));
     int i;
@@ -71,58 +79,36 @@ done:
   return result;
 }
 
+static int RaveList_constructor(RaveCoreObject* obj)
+{
+  RaveList_t* rlist = (RaveList_t*)obj;
+  rlist->list = NULL;
+  rlist->nrAlloc = 0;
+  rlist->nrEntries = 0;
+  return 1;
+}
+
 /**
  * Destroys the list
  * @param[in] list - the list to destroy
  */
-static void RaveList_destroy(RaveList_t* list)
+static void RaveList_destructor(RaveCoreObject* obj)
 {
+  RaveList_t* list = (RaveList_t*)obj;
   if (list != NULL) {
     RAVE_FREE(list->list);
-    RAVE_FREE(list);
   }
 }
 /*@} End of Private functions */
 
 /*@{ Interface functions */
-RaveList_t* RaveList_new(void)
-{
-  RaveList_t* result = NULL;
-  result = RAVE_MALLOC(sizeof(RaveList_t));
-  if (result != NULL) {
-    result->ps_refCount = 1;
-    result->list = RAVE_MALLOC(sizeof(void*)*DEFAULT_NR_RAVE_LIST_ENTRIES);
-    result->nrAlloc = DEFAULT_NR_RAVE_LIST_ENTRIES;
-    result->nrEntries = 0;
-    if (result->list == NULL) {
-      RaveList_destroy(result);
-      result = NULL;
-      goto done;
-    }
-  }
-done:
-  return result;
-}
-
-void RaveList_release(RaveList_t* list)
-{
-  if (list != NULL) {
-    list->ps_refCount--;
-    if (list->ps_refCount <= 0) {
-      RaveList_destroy(list);
-    }
-  }
-}
-
-RaveList_t* RaveList_copy(RaveList_t* list)
-{
-  if (list != NULL) {
-    list->ps_refCount++;
-  }
-  return list;
-}
-
 int RaveList_add(RaveList_t* list, void* ob)
+{
+  RAVE_ASSERT((list != NULL), "list == NULL");
+  return RaveList_insert(list, -1, ob);
+}
+
+int RaveList_insert(RaveList_t* list, int index, void* ob)
 {
   int result = 0;
   RAVE_ASSERT((list != NULL), "list == NULL");
@@ -132,7 +118,16 @@ int RaveList_add(RaveList_t* list, void* ob)
     goto done;
   }
 
-  list->list[list->nrEntries++] = ob;
+  if (index < 0 || index >= list->nrEntries) {
+    list->list[list->nrEntries++] = ob;
+  } else {
+    int i = 0;
+    for (i = list->nrEntries; i > index; i--) {
+      list->list[i] = list->list[i-1];
+    }
+    list->list[index] = ob;
+    list->nrEntries++;
+  }
 
   result = 1;
 done:
@@ -154,6 +149,15 @@ void* RaveList_get(RaveList_t* list, int index)
   return NULL;
 }
 
+void* RaveList_getLast(RaveList_t* list)
+{
+  RAVE_ASSERT((list != NULL), "list == NULL");
+  if (list->nrEntries > 0) {
+    return list->list[list->nrEntries-1];
+  }
+  return NULL;
+}
+
 void* RaveList_remove(RaveList_t* list, int index)
 {
   void* result = NULL;
@@ -170,8 +174,57 @@ void* RaveList_remove(RaveList_t* list, int index)
   return result;
 }
 
+void* RaveList_removeLast(RaveList_t* list)
+{
+  void* result = NULL;
+  RAVE_ASSERT((list != NULL), "list == NULL");
+  if (list->nrEntries > 0) {
+    result = list->list[--list->nrEntries];
+  }
+  return result;
+}
+
+void RaveList_removeObject(RaveList_t* list, void* object)
+{
+  int index = -1;
+  int i = 0;
+  RAVE_ASSERT((list != NULL), "list == NULL");
+  RAVE_ASSERT((object != NULL), "object == NULL");
+  for (i = 0; index == -1 && i < list->nrEntries; i++) {
+    if (list->list[i] == object) {
+      index = i;
+    }
+  }
+  if (index >= 0) {
+    (void)RaveList_remove(list, index);
+  }
+}
+
+void* RaveList_find(RaveList_t* list, void* expected, int (*findfunc)(void*, void*))
+{
+  int i = 0;
+  RAVE_ASSERT((list != NULL), "list == NULL");
+  RAVE_ASSERT((findfunc != NULL), "findfunc == NULL");
+
+  for (i = 0; i < list->nrEntries; i++) {
+    if (findfunc(expected, list->list[i])) {
+      return list->list[i];
+    }
+  }
+  return NULL;
+}
+
+
 void RaveList_sort(RaveList_t* list, int (*sortfun)(const void*, const void*))
 {
   RAVE_ASSERT((list != NULL), "list == NULL");
   qsort(list->list, list->nrEntries, sizeof(void*), sortfun);
 }
+/*@} End of Interface functions */
+
+RaveCoreObjectType RaveList_TYPE = {
+    "RaveList",
+    sizeof(RaveList_t),
+    RaveList_constructor,
+    RaveList_destructor
+};

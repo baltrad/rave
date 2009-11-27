@@ -42,64 +42,42 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * Represents one polar navigator
  */
 struct _PolarNavigator_t {
+  RAVE_OBJECT_HEAD /** Always on top */
+
   double poleRadius; /**< the radius to the poles */
   double equatorRadius; /**< the radius at the equator */
   double lon0; /**< the origin longitude */
   double lat0; /**< the origin latitude */
   double alt0; /**< the origin altitude */
   double dndh; /**< the dndh */
-
-  long ps_refCount;
 };
 
 /*@{ Private functions */
 /**
+ * Constructor.
+ */
+static int PolarNavigator_constructor(RaveCoreObject* obj)
+{
+  PolarNavigator_t* result = (PolarNavigator_t*)obj;
+  result->poleRadius = DEFAULT_POLE_RADIUS;
+  result->equatorRadius = DEFAULT_EQUATOR_RADIUS;
+  result->lon0 = 0.0;
+  result->lat0 = 0.0;
+  result->alt0 = 0.0;
+  result->dndh = (-3.9e-5)/1000;
+  return 1;
+}
+/**
  * Destroys the polar navigator
  * @param[in] polnav - the polar navigator to destroy
  */
-static void PolarNavigator_destroy(PolarNavigator_t* polnav)
+static void PolarNavigator_destructor(RaveCoreObject* obj)
 {
-  if (polnav != NULL) {
-    RAVE_FREE(polnav);
-  }
+  // NO OP
 }
 /*@} End of Private functions */
 
 /*@{ Interface functions */
-PolarNavigator_t* PolarNavigator_new(void)
-{
-  PolarNavigator_t* result = NULL;
-  result = RAVE_MALLOC(sizeof(PolarNavigator_t));
-  if (result != NULL) {
-    result->poleRadius = DEFAULT_POLE_RADIUS;
-    result->equatorRadius = DEFAULT_EQUATOR_RADIUS;
-    result->lon0 = 0.0;
-    result->lat0 = 0.0;
-    result->alt0 = 0.0;
-    result->dndh = (-3.9e-5)/1000;
-    result->ps_refCount = 1;
-  }
-  return result;
-}
-
-void PolarNavigator_release(PolarNavigator_t* polnav)
-{
-  if (polnav != NULL) {
-    polnav->ps_refCount--;
-    if (polnav->ps_refCount <= 0) {
-      PolarNavigator_destroy(polnav);
-    }
-  }
-}
-
-PolarNavigator_t* PolarNavigator_copy(PolarNavigator_t* polnav)
-{
-  if (polnav != NULL) {
-    polnav->ps_refCount++;
-  }
-  return polnav;
-}
-
 void PolarNavigator_setPoleRadius(PolarNavigator_t* polnav, double radius)
 {
   RAVE_ASSERT((polnav != NULL), "polnav was NULL");
@@ -384,3 +362,10 @@ void PolarNavigator_ehToRd(PolarNavigator_t* polnav, double e, double h, double*
 }
 
 /*@} End of Interface functions */
+
+RaveCoreObjectType PolarNavigator_TYPE = {
+    "PolarNavigator",
+    sizeof(PolarNavigator_t),
+    PolarNavigator_constructor,
+    PolarNavigator_destructor
+};
