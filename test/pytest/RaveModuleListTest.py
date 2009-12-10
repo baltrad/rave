@@ -15,12 +15,12 @@ class RaveModuleListTest(unittest.TestCase):
   def tearDown(self):
     pass
 
-  def testNewRaveIO(self):
+  def XtestNewRaveList(self):
     obj = _rave.list()
     isravelist = string.find(`type(obj)`, "RaveListCore")
     self.assertNotEqual(-1, isravelist)
 
-  def testAdd(self):
+  def XtestAdd(self):
     obj = _rave.list()
     scan = _rave.scan()
     scan.elangle = 1.0

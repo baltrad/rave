@@ -114,6 +114,16 @@ typedef struct _raveobjecttype {
   RaveCoreObject_getBindingData((RaveCoreObject*)this)
 
 /**
+ * Returns 1 or 0 depending on if this object has been created with
+ * RAVE_OBJECT_NEW or not.
+ * Note, this is not completly safe if for example passing in a struct
+ * that is too small, i.e. the struct must be at least sizeof(RaveCoreObject)
+ * otherwise the code will most likely crash...
+ */
+#define RAVE_OBJECT_CHECK(this) \
+  (RaveCoreObject_check((RaveCoreObject*)this))
+
+/**
  * Creates a new instance of the provided type.
  * @param[in] type - the object type
  * @param[in] filename - the filename that this allocation was performed in
@@ -178,27 +188,12 @@ void RaveCoreObject_unbind(RaveCoreObject* src, void* bindingData);
  */
 void* RaveCoreObject_getBindingData(RaveCoreObject* src);
 
-
-#ifdef KALLE
 /**
- * Sets a callback function that should be called after the objects destructor
- * has been called but before the object itself is claimed. The destructor callback
- * will be invoked with the provided cbdata.
+ * Returns if this object has been created with RaveCoreObject_new or not.
  * @param[in] src - the rave core object
- * @param[in] cbdata - the data that should be provided to the destructor callback
- * @param[in] destructorcb - the destructor callback
+ * @returns 1 if the object has been created properly.
  */
-void RaveCoreObject_setDestructorCB(RaveCoreObject* src, void* cbdata, void (*destructorcb)(void*));
-
-/**
- * Returns the data that should be sent in the destructor callback, this function
- * can be handy if for example the destructor callback should be resetted but
- * something has to be done with the data.
- * @param[in] src - the rave core object
- * @returns the destructor cb data
- */
-void* RaveCoreObject_getDestructorCBData(RaveCoreObject* src);
-#endif
+int RaveCoreObject_check(RaveCoreObject* src);
 
 /**
  * Prints the rave object statistics.

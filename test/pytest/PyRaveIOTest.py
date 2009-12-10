@@ -5,6 +5,7 @@ Created on Nov 12, 2009
 import unittest
 import os
 import _rave
+import _raveio
 import string
 import numpy
 import _pyhl
@@ -25,17 +26,17 @@ class RaveModuleRaveIOTest(unittest.TestCase):
       os.unlink(self.TEMPORARY_FILE)
 
   def testNewRaveIO(self):
-    obj = _rave.io()
+    obj = _raveio.new()
     israveio = string.find(`type(obj)`, "RaveIOCore")
     self.assertNotEqual(-1, israveio)
 
   def testOpen(self):
-    obj = _rave.io()
+    obj = _raveio.new()
     obj.open(self.FIXTURE_VOLUME)
     self.assertEquals(True, obj.isOpen())
   
   def testOpen_2(self):
-    obj = _rave.open(self.FIXTURE_VOLUME)
+    obj = _raveio.open(self.FIXTURE_VOLUME)
     self.assertEquals(True, obj.isOpen())
     obj.close()
     self.assertEquals(False, obj.isOpen())
@@ -44,13 +45,13 @@ class RaveModuleRaveIOTest(unittest.TestCase):
 
   def testOpen_noSuchFile(self):
     try:
-      _rave.open("No_Such_File_Fixture.h5")
+      _raveio.open("No_Such_File_Fixture.h5")
       self.fail("Expected IOError")
     except IOError, e:
       pass
 
   def testIsOpen(self):
-    obj = _rave.io()
+    obj = _raveio.new()
     self.assertEquals(False, obj.isOpen())
     obj.open(self.FIXTURE_VOLUME)
     self.assertEquals(True, obj.isOpen())
@@ -58,7 +59,7 @@ class RaveModuleRaveIOTest(unittest.TestCase):
     self.assertEquals(False, obj.isOpen())
   
   def testGetObjectType(self):
-    obj = _rave.open(self.FIXTURE_VOLUME)
+    obj = _raveio.open(self.FIXTURE_VOLUME)
     self.assertEquals(_rave.RaveIO_ObjectType_PVOL, obj.getObjectType())
 
   def testGetObjectType_notReckognizedObjectType(self):
@@ -70,11 +71,11 @@ class RaveModuleRaveIOTest(unittest.TestCase):
     nl.write(self.TEMPORARY_FILE)
     nl = None
     
-    obj = _rave.open(self.TEMPORARY_FILE)
+    obj = _raveio.open(self.TEMPORARY_FILE)
     self.assertEquals(_rave.RaveIO_ObjectType_UNDEFINED, obj.getObjectType())
  
   def testIsSupported_pvol(self):
-    obj = _rave.open(self.FIXTURE_VOLUME)
+    obj = _raveio.open(self.FIXTURE_VOLUME)
     self.assertEquals(True, obj.isSupported())
 
   def testIsSupported_notReckognizedObjectType(self):
@@ -86,7 +87,7 @@ class RaveModuleRaveIOTest(unittest.TestCase):
     nl.write(self.TEMPORARY_FILE)
     nl = None
     
-    obj = _rave.open(self.TEMPORARY_FILE)
+    obj = _raveio.open(self.TEMPORARY_FILE)
     self.assertEquals(False, obj.isSupported())
 
   def testIsSupported_missingConventions(self):
@@ -97,7 +98,7 @@ class RaveModuleRaveIOTest(unittest.TestCase):
     nl.write(self.TEMPORARY_FILE)
     nl = None
 
-    obj = _rave.open(self.TEMPORARY_FILE)
+    obj = _raveio.open(self.TEMPORARY_FILE)
     self.assertEquals(False, obj.isSupported())
     
   def testIsSupported_unsupportedConventions(self):
@@ -109,7 +110,7 @@ class RaveModuleRaveIOTest(unittest.TestCase):
     nl.write(self.TEMPORARY_FILE)
     nl = None
 
-    obj = _rave.open(self.TEMPORARY_FILE)
+    obj = _raveio.open(self.TEMPORARY_FILE)
     self.assertEquals(False, obj.isSupported())
 
   def testGetOdimVersion(self):
@@ -119,7 +120,7 @@ class RaveModuleRaveIOTest(unittest.TestCase):
     nl.write(self.TEMPORARY_FILE)
     nl = None
     
-    obj = _rave.open(self.TEMPORARY_FILE)
+    obj = _raveio.open(self.TEMPORARY_FILE)
     self.assertEquals(_rave.RaveIO_ODIM_Version_2_0, obj.getOdimVersion())
     
   def testGetOdimVersion_missingConventions(self):
@@ -129,7 +130,7 @@ class RaveModuleRaveIOTest(unittest.TestCase):
     nl.write(self.TEMPORARY_FILE)
     nl = None
     
-    obj = _rave.open(self.TEMPORARY_FILE)
+    obj = _raveio.open(self.TEMPORARY_FILE)
     self.assertEquals(_rave.RaveIO_ODIM_Version_UNDEFINED, obj.getOdimVersion())
 
   def testGetOdimVersion_undefinedConventions(self):
@@ -139,17 +140,17 @@ class RaveModuleRaveIOTest(unittest.TestCase):
     nl.write(self.TEMPORARY_FILE)
     nl = None
     
-    obj = _rave.open(self.TEMPORARY_FILE)
+    obj = _raveio.open(self.TEMPORARY_FILE)
     self.assertEquals(_rave.RaveIO_ODIM_Version_UNDEFINED, obj.getOdimVersion())
   
   def testLoad_volume(self):
-    obj = _rave.open(self.FIXTURE_VOLUME)
+    obj = _raveio.open(self.FIXTURE_VOLUME)
     vol = obj.load()
     result = string.find(`type(vol)`, "PolarVolumeCore")
     self.assertNotEqual(-1, result)     
 
   def testLoad_volume_checkData(self):
-    obj = _rave.open(self.FIXTURE_VOLUME)
+    obj = _raveio.open(self.FIXTURE_VOLUME)
     vol = obj.load()
     self.assertEquals(20, vol.getNumberOfScans())
     self.assertAlmostEquals(56.3675, vol.latitude*180.0/math.pi, 4)

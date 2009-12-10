@@ -23,23 +23,6 @@ class PolarVolumeTransformTest(unittest.TestCase):
   def tearDown(self):
     pass
 
-  def testSimple(self):
-    scan1 = _rave.scan()
-    scan2 = _rave.scan()
-    scan3 = _rave.scan()
-    scan4 = _rave.scan()
-    scan5 = _rave.scan()
-    
-    vol = _rave.volume()
-    vol.addScan(scan1)
-    vol.addScan(scan2)
-    vol.addScan(scan3)
-    vol.addScan(scan4)
-    vol.addScan(scan5)
-
-    del scan3
-    del vol
-
   def testCAPPI(self):
     volume = rave_loader().load_file(self.VOLUMENAME, "DBZH") 
 

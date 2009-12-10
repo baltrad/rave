@@ -234,6 +234,60 @@ MODULES.append(
         libraries=LIBRARIES
         )
     )
+
+MODULES.append(
+    Extension(
+        "_projection", ["modules/pyprojection.c"],
+        include_dirs=INCLUDE_DIRS,
+        library_dirs=LIBRARY_DIRS,
+        libraries=LIBRARIES
+        )
+    )
+
+MODULES.append(
+    Extension(
+        "_polarscan", ["modules/pypolarscan.c"],
+        include_dirs=INCLUDE_DIRS,
+        library_dirs=LIBRARY_DIRS,
+        libraries=LIBRARIES
+        )
+    )
+
+MODULES.append(
+    Extension(
+        "_polarvolume", ["modules/pypolarvolume.c"],
+        include_dirs=INCLUDE_DIRS,
+        library_dirs=LIBRARY_DIRS,
+        libraries=LIBRARIES
+        )
+    )
+
+MODULES.append(
+    Extension(
+        "_cartesian", ["modules/pycartesian.c"],
+        include_dirs=INCLUDE_DIRS,
+        library_dirs=LIBRARY_DIRS,
+        libraries=LIBRARIES
+        )
+    )
+
+MODULES.append(
+    Extension(
+        "_raveio", ["modules/pyraveio.c"],
+        include_dirs=INCLUDE_DIRS,
+        library_dirs=LIBRARY_DIRS,
+        libraries=LIBRARIES
+        )
+    )
+
+MODULES.append(
+    Extension(
+        "_transform", ["modules/pytransform.c"],
+        include_dirs=INCLUDE_DIRS,
+        library_dirs=LIBRARY_DIRS,
+        libraries=LIBRARIES
+        )
+    )
 # build!
 
 if __name__ == "__main__":

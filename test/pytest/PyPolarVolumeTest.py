@@ -4,6 +4,8 @@ Created on Oct 14, 2009
 '''
 import unittest
 import os
+import _polarvolume
+import _polarscan
 import _rave
 import string
 import _helpers
@@ -18,19 +20,19 @@ class RaveModulePolarVolumeTest(unittest.TestCase):
     pass
     
   def testNewVolume(self):
-    obj = _rave.volume()
+    obj = _polarvolume.new()
     
     result = string.find(`type(obj)`, "PolarVolumeCore")
     self.assertNotEqual(-1, result) 
 
   def testVolume_longitude(self):
-    obj = _rave.volume()
+    obj = _polarvolume.new()
     self.assertAlmostEquals(0.0, obj.longitude, 4)
     obj.longitude = 10.0
     self.assertAlmostEquals(10.0, obj.longitude, 4)
 
   def testVolume_longitude_typeError(self):
-    obj = _rave.volume()
+    obj = _polarvolume.new()
     self.assertAlmostEquals(0.0, obj.longitude, 4)
     try:
       obj.longitude = 10
@@ -40,13 +42,13 @@ class RaveModulePolarVolumeTest(unittest.TestCase):
     self.assertAlmostEquals(0.0, obj.longitude, 4)
 
   def testVolume_latitude(self):
-    obj = _rave.volume()
+    obj = _polarvolume.new()
     self.assertAlmostEquals(0.0, obj.latitude, 4)
     obj.latitude = 10.0
     self.assertAlmostEquals(10.0, obj.latitude, 4)
 
   def testVolume_latitude_typeError(self):
-    obj = _rave.volume()
+    obj = _polarvolume.new()
     self.assertAlmostEquals(0.0, obj.latitude, 4)
     try:
       obj.latitude = 10
@@ -59,13 +61,13 @@ class RaveModulePolarVolumeTest(unittest.TestCase):
     pass
 
   def testVolume_height(self):
-    obj = _rave.volume()
+    obj = _polarvolume.new()
     self.assertAlmostEquals(0.0, obj.height, 4)
     obj.height = 10.0
     self.assertAlmostEquals(10.0, obj.height, 4)
 
   def testVolume_height_typeError(self):
-    obj = _rave.volume()
+    obj = _polarvolume.new()
     self.assertAlmostEquals(0.0, obj.height, 4)
     try:
       obj.height = 10
@@ -75,15 +77,15 @@ class RaveModulePolarVolumeTest(unittest.TestCase):
     self.assertAlmostEquals(0.0, obj.height, 4)
     
   def testVolume_addScan(self):
-    obj = _rave.volume()
-    scan = _rave.scan()
+    obj = _polarvolume.new()
+    scan = _polarscan.new()
     obj.addScan(scan)
     #self.assertEquals(1, obj.getNumberOfScans())
 
   def test_addScan_navigatorChanged(self):
-    obj = _rave.volume()
+    obj = _polarvolume.new()
     obj.longitude = 10.0
-    scan1 = _rave.scan()
+    scan1 = _polarscan.new()
     scan1.longitude = 5.0
 
     obj.addScan(scan1)
@@ -96,10 +98,10 @@ class RaveModulePolarVolumeTest(unittest.TestCase):
     self.assertAlmostEquals(20.0, obj.longitude, 4)
 
   def test_addScan_refcountIncreaseOnScan(self):
-    obj = _rave.volume()
+    obj = _polarvolume.new()
     ids = []
     for i in range(50):
-      scan = _rave.scan()
+      scan = _polarscan.new()
       ids.append(`scan`)
       obj.addScan(scan)
     
@@ -110,17 +112,17 @@ class RaveModulePolarVolumeTest(unittest.TestCase):
 
 
   def testVolume_getNumberOfScans(self):
-    obj = _rave.volume()
+    obj = _polarvolume.new()
     self.assertEquals(0, obj.getNumberOfScans())
-    obj.addScan(_rave.scan())
+    obj.addScan(_polarscan.new())
     self.assertEquals(1, obj.getNumberOfScans())
-    obj.addScan(_rave.scan())
+    obj.addScan(_polarscan.new())
     self.assertEquals(2, obj.getNumberOfScans())
     
   def testVolume_getScan(self):
-    obj = _rave.volume()
-    scan1 = _rave.scan()
-    scan2 = _rave.scan()
+    obj = _polarvolume.new()
+    scan1 = _polarscan.new()
+    scan2 = _polarscan.new()
     
     obj.addScan(scan1)
     obj.addScan(scan2)
@@ -132,14 +134,14 @@ class RaveModulePolarVolumeTest(unittest.TestCase):
     self.assertTrue (scan2 == scanresult2)
 
   def test_getScanClosestToElevation_outside(self):
-    obj = _rave.volume()
-    scan1 = _rave.scan()
+    obj = _polarvolume.new()
+    scan1 = _polarscan.new()
     scan1.elangle = 0.1 * math.pi / 180.0
     obj.addScan(scan1)
-    scan2 = _rave.scan()
+    scan2 = _polarscan.new()
     scan2.elangle = 0.5 * math.pi / 180.0
     obj.addScan(scan2)
-    scan3 = _rave.scan()
+    scan3 = _polarscan.new()
     scan3.elangle = 2.0 * math.pi / 180.0
     obj.addScan(scan3)
     
@@ -151,14 +153,14 @@ class RaveModulePolarVolumeTest(unittest.TestCase):
       self.assertAlmostEquals(el[1], result.elangle*180.0/math.pi, 5)
 
   def test_getScanClosestToElevation_inside(self):
-    obj = _rave.volume()
-    scan1 = _rave.scan()
+    obj = _polarvolume.new()
+    scan1 = _polarscan.new()
     scan1.elangle = 0.1 * math.pi / 180.0
     obj.addScan(scan1)
-    scan2 = _rave.scan()
+    scan2 = _polarscan.new()
     scan2.elangle = 0.5 * math.pi / 180.0
     obj.addScan(scan2)
-    scan3 = _rave.scan()
+    scan3 = _polarscan.new()
     scan3.elangle = 2.0 * math.pi / 180.0
     obj.addScan(scan3)
     
@@ -173,11 +175,11 @@ class RaveModulePolarVolumeTest(unittest.TestCase):
         self.assertAlmostEquals(el[1], result.elangle*180.0/math.pi, 5)
 
   def testVolume_getNearest(self):
-    obj = _rave.volume()
+    obj = _polarvolume.new()
     obj.longitude = 12.0 * math.pi/180.0
     obj.latitude = 60.0 * math.pi/180.0
     obj.height = 0.0
-    scan1 = _rave.scan()
+    scan1 = _polarscan.new()
     scan1.elangle = 0.1 * math.pi / 180.0
     scan1.rstart = 0.0
     scan1.rscale = 5000.0
@@ -186,7 +188,7 @@ class RaveModulePolarVolumeTest(unittest.TestCase):
     data = numpy.zeros((100, 120), numpy.uint8)
     scan1.setData(data)
     
-    scan2 = _rave.scan()
+    scan2 = _polarscan.new()
     scan2.elangle = 1.0 * math.pi / 180.0
     scan2.rstart = 0.0
     scan2.rscale = 5000.0
@@ -217,12 +219,12 @@ class RaveModulePolarVolumeTest(unittest.TestCase):
     
     
   def testSortByElevations_ascending(self):
-    obj = _rave.volume()
-    scan1 = _rave.scan()
+    obj = _polarvolume.new()
+    scan1 = _polarscan.new()
     scan1.elangle = 2.0
-    scan2 = _rave.scan()
+    scan2 = _polarscan.new()
     scan2.elangle = 3.0
-    scan3 = _rave.scan()
+    scan3 = _polarscan.new()
     scan3.elangle = 1.0
     
     obj.addScan(scan1)
@@ -240,12 +242,12 @@ class RaveModulePolarVolumeTest(unittest.TestCase):
     self.assertTrue (scan2 == scanresult3)
 
   def testSortByElevations_descending(self):
-    obj = _rave.volume()
-    scan1 = _rave.scan()
+    obj = _polarvolume.new()
+    scan1 = _polarscan.new()
     scan1.elangle = 2.0
-    scan2 = _rave.scan()
+    scan2 = _polarscan.new()
     scan2.elangle = 3.0
-    scan3 = _rave.scan()
+    scan3 = _polarscan.new()
     scan3.elangle = 1.0
     
     obj.addScan(scan1)
@@ -263,12 +265,12 @@ class RaveModulePolarVolumeTest(unittest.TestCase):
     self.assertTrue (scan3 == scanresult3)
 
   def testIsAscending(self):
-    obj = _rave.volume()
-    scan1 = _rave.scan()
+    obj = _polarvolume.new()
+    scan1 = _polarscan.new()
     scan1.elangle = 0.1
-    scan2 = _rave.scan()
+    scan2 = _polarscan.new()
     scan2.elangle = 0.3
-    scan3 = _rave.scan()
+    scan3 = _polarscan.new()
     scan3.elangle = 0.5
     obj.addScan(scan1)
     obj.addScan(scan2)
@@ -278,12 +280,12 @@ class RaveModulePolarVolumeTest(unittest.TestCase):
     self.assertEquals(True, result)
     
   def testIsAscending_false(self):
-    obj = _rave.volume()
-    scan1 = _rave.scan()
+    obj = _polarvolume.new()
+    scan1 = _polarscan.new()
     scan1.elangle = 0.1
-    scan2 = _rave.scan()
+    scan2 = _polarscan.new()
     scan2.elangle = 0.3
-    scan3 = _rave.scan()
+    scan3 = _polarscan.new()
     scan3.elangle = 0.5
     obj.addScan(scan1)
     obj.addScan(scan3)
@@ -293,12 +295,12 @@ class RaveModulePolarVolumeTest(unittest.TestCase):
     self.assertEquals(False, result)
     
   def testIsTransformable(self):
-    obj = _rave.volume()
-    scan1 = _rave.scan()
+    obj = _polarvolume.new()
+    scan1 = _polarscan.new()
     scan1.elangle = 0.1
-    scan2 = _rave.scan()
+    scan2 = _polarscan.new()
     scan2.elangle = 0.3
-    scan3 = _rave.scan()
+    scan3 = _polarscan.new()
     scan3.elangle = 0.5
     obj.addScan(scan1)
     obj.addScan(scan2)
@@ -308,23 +310,23 @@ class RaveModulePolarVolumeTest(unittest.TestCase):
     self.assertEquals(True, result)
     
   def testIsTransformable_noScans(self):
-    obj = _rave.volume()
+    obj = _polarvolume.new()
     result = obj.isTransformable()
     self.assertEquals(False, result)
 
   def testIsTransformable_oneScan(self):
-    obj = _rave.volume()
-    scan1 = _rave.scan()
+    obj = _polarvolume.new()
+    scan1 = _polarscan.new()
     scan1.elangle = 0.1
     obj.addScan(scan1)
     result = obj.isTransformable()
     self.assertEquals(True, result)
 
   def testIsTransformable_descending(self):
-    obj = _rave.volume()
-    scan1 = _rave.scan()
+    obj = _polarvolume.new()
+    scan1 = _polarscan.new()
     scan1.elangle = 0.1
-    scan2 = _rave.scan()
+    scan2 = _polarscan.new()
     scan2.elangle = 0.01
     obj.addScan(scan1)
     obj.addScan(scan2)

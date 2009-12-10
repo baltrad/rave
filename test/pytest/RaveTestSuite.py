@@ -5,13 +5,13 @@ Created on Oct 12, 2009
 '''
 import unittest
 from RaveTest import *
-from RaveModulePolarVolumeTest import *
-from RaveModulePolarScanTest import *
+from PyPolarVolumeTest import *
+from PyPolarScanTest import *
 from RaveModuleConstantsTest import *
-from RaveModuleCartesianTest import *
-from RaveModuleTransformTest import *
-from RaveModuleProjectionTest import *
-from RaveModuleRaveIOTest import *
+from PyCartesianTest import *
+from PyTransformTest import *
+from PyProjectionTest import *
+from PyRaveIOTest import *
 from PolarNavigatorTest import *
 
 # Some tests for verifying that we are producing products
