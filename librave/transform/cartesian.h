@@ -29,7 +29,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_object.h"
 
 /**
- * Defines a Polar Scan
+ * Defines a Cartesian product
  */
 typedef struct _Cartesian_t Cartesian_t;
 
@@ -276,21 +276,6 @@ RaveValueType Cartesian_getValue(Cartesian_t* cartesian, long x, long y, double*
  * @returns 1 if the cartesian product is ready, otherwise 0.
  */
 int Cartesian_isTransformable(Cartesian_t* cartesian);
-
-/**
- * Function for keeping track of some sort of metadata that should be
- * associated with this scan.
- * @param[in] cartesian - the cartesian product
- * @param[in] ptr - a void pointer that should be stored
- */
-void Cartesian_setVoidPtr(Cartesian_t* cartesian, void* ptr);
-
-/**
- * Returns the void data.
- * @param[in] cartesian - the cartesian product
- * @return the void data
- */
-void* Cartesian_getVoidPtr(Cartesian_t* cartesian);
 
 /**
  * Enables/disables debugging.

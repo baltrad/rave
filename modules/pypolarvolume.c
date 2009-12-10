@@ -115,57 +115,7 @@ static void _pypolarvolume_dealloc(PyPolarVolume* obj)
   RAVE_OBJECT_RELEASE(obj->pvol);
   PyObject_Del(obj);
 }
-#ifdef KALLE
-/**
- * Creates the polar volume python object from a polar volume.
- * @param[in] pvol - the polar volume
- * @returns a Python Polar Volume on success.
- */
-static PolarVolume* _polarvolume_createPyObject(PolarVolume_t* pvol)
-{
-  PolarVolume* result = NULL;
-  if (pvol == NULL) {
-    RAVE_CRITICAL0("Trying to create a python polar volume without the volume");
-    raiseException_returnNULL(PyExc_MemoryError, "Failed to allocate memory for polar volume");
-  }
-  result = PyObject_NEW(PolarVolume, &PolarVolume_Type);
-  if (result == NULL) {
-    RAVE_CRITICAL0("Failed to allocate memory for polar volume");
-    raiseException_returnNULL(PyExc_MemoryError, "Failed to allocate memory for polar volume");
-  }
-  result->pvol = RAVE_OBJECT_COPY(pvol);
-  RAVE_OBJECT_BIND(result->pvol, result);
-  PolarVolume_alloc++;
-  return result;
-}
 
-/**
- * Creates a new instance of the polar volume.
- * @param[in] self this instance.
- * @param[in] args arguments for creation (NOT USED).
- * @return the object on success, otherwise NULL
- */
-static PyObject* _polarvolume_new(PyObject* self, PyObject* args)
-{
-  PolarVolume_t* pvol = NULL;
-  PolarVolume* result = NULL;
-
-  pvol = RAVE_OBJECT_NEW(&PolarVolume_TYPE);
-  if (pvol == NULL) {
-    RAVE_CRITICAL0("Failed to allocate polar volume");
-    raiseException_returnNULL(PyExc_MemoryError, "Failed to allocate memory for polar volume");
-  }
-
-  result = _polarvolume_createPyObject(pvol);
-  if (result == NULL) {
-    RAVE_CRITICAL0("Failed to allocate py polar volume");
-    PyErr_SetString(PyExc_MemoryError, "Failed to allocate memory for py polar volume");
-  }
-
-  RAVE_OBJECT_RELEASE(pvol);
-  return (PyObject*)result;
-}
-#endif
 /**
  * Creates a new instance of the polar volume.
  * @param[in] self this instance.

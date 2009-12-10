@@ -1,6 +1,27 @@
 '''
-Created on Oct 14, 2009
-@author: Anders Henja
+Copyright (C) 2009 Swedish Meteorological and Hydrological Institute, SMHI,
+
+This file is part of RAVE.
+
+RAVE is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+RAVE is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
+------------------------------------------------------------------------*/
+
+Tests the polarscan module.
+
+@file
+@author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
+@date 2009-10-14
 '''
 import unittest
 import os
@@ -10,7 +31,7 @@ import string
 import numpy
 import math
 
-class RaveModulePolarScanTest(unittest.TestCase):
+class PyPolarScanTest(unittest.TestCase):
   def setUp(self):
     pass
 
@@ -348,6 +369,34 @@ class RaveModulePolarScanTest(unittest.TestCase):
     
     for tval in pts:
       result = obj.getValueAtIndex(tval[0][0], tval[0][1])
+      self.assertEquals(tval[1][0], result[0])
+      self.assertAlmostEquals(tval[1][1], result[1], 4)
+
+  def test_getConvertedValueAtIndex(self):
+    obj = _polarscan.new()
+    obj.nodata = 255.0
+    obj.undetect = 0.0
+    obj.gain = 0.5
+    obj.offset = 10.0
+    a=numpy.arange(30)
+    a=numpy.array(a.astype(numpy.float64),numpy.float64)
+    a=numpy.reshape(a,(5,6)).astype(numpy.float64)      
+    a[0][0] = obj.undetect
+    a[2][1] = obj.nodata
+    a[4][5] = obj.undetect
+
+    obj.setData(a)
+
+    pts = [((0,0), (_rave.RaveValueType_UNDETECT, 0.0)),
+           ((0,1), (_rave.RaveValueType_DATA, 10.5)),
+           ((1,0), (_rave.RaveValueType_DATA, 13.0)),
+           ((2,1), (_rave.RaveValueType_NODATA, obj.nodata)),
+           ((4,4), (_rave.RaveValueType_DATA, 24.0)),
+           ((4,5), (_rave.RaveValueType_UNDETECT, obj.undetect)),
+           ((5,5), (_rave.RaveValueType_NODATA, obj.nodata))]
+    
+    for tval in pts:
+      result = obj.getConvertedValueAtIndex(tval[0][0], tval[0][1])
       self.assertEquals(tval[1][0], result[0])
       self.assertAlmostEquals(tval[1][1], result[1], 4)
 

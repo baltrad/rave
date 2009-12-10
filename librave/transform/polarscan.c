@@ -420,20 +420,32 @@ int PolarScan_getAzimuthIndex(PolarScan_t* scan, double a)
   return result;
 }
 
-RaveValueType PolarScan_getValueAtIndex(PolarScan_t* scan, int ai, int ri, double* v)
+RaveValueType PolarScan_getValueAtIndex(PolarScan_t* scan, int ray, int bin, double* v)
 {
   RaveValueType result = RaveValueType_NODATA;
   RAVE_ASSERT((scan != NULL), "scan was NULL");
   RAVE_ASSERT((v != NULL), "v was NULL");
   *v = scan->nodata;
-  if (ai >= 0 && ai < scan->nrays && ri >= 0 && ri < scan->nbins) {
+  if (ray >= 0 && ray < scan->nrays && bin >= 0 && bin < scan->nbins) {
     result = RaveValueType_DATA;
-    *v = get_array_item_2d(scan->data, ri, ai, scan->type, scan->nbins);
+    *v = get_array_item_2d(scan->data, bin, ray, scan->type, scan->nbins);
     if (*v == scan->nodata) {
       result = RaveValueType_NODATA;
     } else if (*v == scan->undetect) {
       result = RaveValueType_UNDETECT;
     }
+  }
+  return result;
+}
+
+RaveValueType PolarScan_getConvertedValueAtIndex(PolarScan_t* scan, int ray, int bin, double* v)
+{
+  RaveValueType result = RaveValueType_NODATA;
+  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  RAVE_ASSERT((v != NULL), "v was NULL");
+  result =  PolarScan_getValueAtIndex(scan, ray, bin, v);
+  if (result == RaveValueType_DATA) {
+    *v = scan->offset + (*v) * scan->gain;
   }
   return result;
 }

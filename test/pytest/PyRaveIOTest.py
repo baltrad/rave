@@ -1,6 +1,27 @@
 '''
-Created on Nov 12, 2009
-@author: Anders Henja
+Copyright (C) 2009 Swedish Meteorological and Hydrological Institute, SMHI,
+
+This file is part of RAVE.
+
+RAVE is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+RAVE is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
+------------------------------------------------------------------------*/
+
+Tests the PyRaveIO module.
+
+@file
+@author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
+@date 2009-10-16
 '''
 import unittest
 import os
@@ -11,7 +32,7 @@ import numpy
 import _pyhl
 import math
 
-class RaveModuleRaveIOTest(unittest.TestCase):
+class PyRaveIOTest(unittest.TestCase):
   FIXTURE_VOLUME="fixture_ODIM_H5_pvol_ang_20090501T1200Z.h5"
   FIXTURE_IMAGE="fixture_old_pcappi-dbz-500.ang-gnom-2000.h5"
   

@@ -1,0 +1,116 @@
+/** \mainpage The Radar and Visualization Environment (RAVE)
+\date December, 10th 2009
+\author Daniel B. Michelson and Anders Henja
+\version x.x
+\par Copyright 
+&copy; 2009 by the Swedish Meteorological and Hydrological Institute (SMHI), Norrköping, Sweden
+
+\par Legals
+RAVE is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+\par
+RAVE is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
+
+\par
+You should have received a copy of the GNU Lesser General Public License
+along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
+By obtaining, using, and/or copying this software and/or its associated 
+documentation, you agree that you have read, understood, and will comply
+with the following terms and conditions:
+
+\section yada "YADA YADA"
+
+\section apioverview "API Overview"
+Rave has been developed as a c-library that provides the necessary functions for
+working with Radar data in various ways. It's base is a small framework for
+manipulating objects by reference counting. It also contains some functions for
+supporting memory tracking and debugging. On top of this framework, several different
+objects has been created in order to support navigation and calculations of data. Most
+of the apis has been developed for radar-processing but there is nothing that says that
+it could not be used for other types of geographical calculations.
+
+\par
+In order to support python, a similar python api has been developed on top of the
+c-api, there are several reasons for this, but the most obvious reason is that it
+is quite simple to work with python instead of c.
+
+\par
+First, a brief version in order to get up and running as fast as possible.
+
+First and foremost, check what header files that exists in <ravesrc>/librave/transform, this is
+where you will get a basic feeling on what (and how) everything is setup.
+Some of the files are:
+area.h: Represents an surface area definition
+cartesian.h: Represents a cartesian product
+polarscan.h: Represents one scan in a polar volume
+polarvolume.h: Represents one polar volume (radar).
+
+With this information (and the information in the header files) it is possible to start
+doing some calculations or whatever feels interesting. As a simple example, let us say that
+you want to validate if a volume contains any DBZH value greater than 70 (linear corrected).
+
+#include "polarvolume.h"
+#include "raveio.h"
+
+static int checkFile(const char* filename)
+{
+  /* Remember to always initialize the struct pointers to NULL since there are a lot of NULL-ptr checks
+   * in the macros that are used */
+  RaveIO_t* raveio = NULL; /* support module */
+  PolarVolume_t* volume = NULL; /* polar volume */
+  int result = -1;
+  int nrScans = 0;
+  int i = 0;
+  raveio = RAVE_OBJECT_NEW(&RaveIO_TYPE); /* Create the raveio */
+  if (!RaveIO_open(raveio, filename)) {
+    goto done;
+  }
+  
+  volume = RaveIO_loadVolume(raveio);
+  if (volume == NULL) {
+    goto done;
+  }
+  nrScans = PolarVolume_getNumberOfScans(volume);
+  
+  /* Check all scans with quantity DBZH */
+  for (i = 0; i < nrScans; i++) {
+    PolarScan_t* scan = PolarVolume_getScan(i);
+    if (strcmp("DBZH", PolarScan_getQuantity(scan)) == 0) {
+      long ri,bi,nrays,nbins;
+      int found = 0;
+      nrays = PolarScan_getNrays(scan);
+      nbins = PolarScan_getNbins(scan);
+      for (ri = 0; found == 0 && ri < nrays; ri++) {
+        for (bi = 0; found == 0 && bi < nbins; bi++) {
+          RaveValueType type = PolarScan_getConvertedValueAtIndex(scan, ri, bi, &v);
+          if (type == RaveValueType_DATA && v > 70.0L) {
+            found = 1;
+          }
+        }
+      }
+      result = found;
+    }
+    RAVE_OBJECT_RELEASE(scan);
+  }
+    
+  result = 0; 
+done:
+  RAVE_OBJECT_RELEASE(raveio);
+  RAVE_OBJECT_RELEASE(volume);
+  return result;
+}
+
+Of course, the above example is probably not very interesting, but it gives a brief overview
+on how to use the APIs. As different requirements arise, we have the intention to introduce
+new functionality in order to simplify these requirements if we see that the function will
+benefit the users.
+
+
+.....
+

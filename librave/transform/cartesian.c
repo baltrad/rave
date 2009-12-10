@@ -28,7 +28,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include <string.h>
 
 /**
- * Represents one scan in a volume.
+ * Represents the cartesian product.
  */
 struct _Cartesian_t {
   RAVE_OBJECT_HEAD /** Always on top */
@@ -58,8 +58,6 @@ struct _Cartesian_t {
   void* data; /**< data ptr */
 
   int debug;
-  // Miscellaneous data that is useful
-  void* voidPtr; /**< a pointer for pointing to miscellaneous data */
 };
 
 /*@{ Private functions */
@@ -86,7 +84,6 @@ static int Cartesian_constructor(RaveCoreObject* obj)
   result->projection = NULL;
   result->data = NULL;
   result->debug = 0;
-  result->voidPtr = NULL;
   return 1;
 }
 
@@ -367,18 +364,6 @@ int Cartesian_isTransformable(Cartesian_t* cartesian)
     result = 1;
   }
   return result;
-}
-
-void Cartesian_setVoidPtr(Cartesian_t* cartesian, void* ptr)
-{
-  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
-  cartesian->voidPtr = ptr;
-}
-
-void* Cartesian_getVoidPtr(Cartesian_t* cartesian)
-{
-  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
-  return cartesian->voidPtr;
 }
 
 void Cartesian_setDebug(Cartesian_t* cartesian, int debug)

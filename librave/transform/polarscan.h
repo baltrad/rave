@@ -332,14 +332,25 @@ int PolarScan_getRangeIndex(PolarScan_t* scan, double r);
 int PolarScan_getAzimuthIndex(PolarScan_t* scan, double a);
 
 /**
- * Returns the value at the specified azimuth and range index.
+ * Returns the value at the specified index.
  * @param[in] scan - the scan
- * @param[in] ai - the azimuth index
- * @param[in] ri - the range index
+ * @param[in] ray - the ray index
+ * @param[in] bin - the bin index
  * @param[out] v - the data at the specified index
  * @return the type of data
  */
-RaveValueType PolarScan_getValueAtIndex(PolarScan_t* scan, int ai, int ri, double* v);
+RaveValueType PolarScan_getValueAtIndex(PolarScan_t* scan, int ray, int bin, double* v);
+
+/**
+ * Returns the linear converted value at the specified index. That is,
+ * offset + gain * value;
+ * @param[in] scan - the scan
+ * @param[in] ray - the ray index
+ * @param[in] bin - the bin index
+ * @param[out] v - the data at the specified index
+ * @return the type of data
+ */
+RaveValueType PolarScan_getConvertedValueAtIndex(PolarScan_t* scan, int ray, int bin, double* v);
 
 /**
  * Gets the value at the provided azimuth and range.
@@ -367,23 +378,6 @@ RaveValueType PolarScan_getNearest(PolarScan_t* scan, double lon, double lat, do
  * @returns 1 if the polar scan is ready, otherwise 0.
  */
 int PolarScan_isTransformable(PolarScan_t* scan);
-
-#ifdef KALLE
-/**
- * Function for keeping track of some sort of metadata that should be
- * associated with this scan.
- * @param[in] scan - the scan
- * @param[in] ptr - a void pointer that should be stored
- */
-void PolarScan_setVoidPtr(PolarScan_t* scan, void* ptr);
-
-/**
- * Returns the void data.
- * @param[in] scan - the scan
- * @return the void data
- */
-void* PolarScan_getVoidPtr(PolarScan_t* scan);
-#endif
 
 /**
  * Enables/Disables calculation debugging for a polar scan

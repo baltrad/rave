@@ -249,21 +249,41 @@ static PyObject* _pypolarscan_getRangeIndex(PyPolarScan* self, PyObject* args)
 }
 
 /**
- * Returns the value at the specified azimuth and range index.
+ * Returns the value at the specified ray and bin index.
  * @param[in] self - this instance
- * @param[in] args - azimuth index, range index.
+ * @param[in] args - ray index, bin index.
  * @returns a tuple of value type and value
  */
 static PyObject* _pypolarscan_getValueAtIndex(PyPolarScan* self, PyObject* args)
 {
   double value = 0.0L;
   RaveValueType type = RaveValueType_NODATA;
-  int ai = 0, ri = 0;
-  if (!PyArg_ParseTuple(args, "ii", &ai, &ri)) {
+  int ray = 0, bin = 0;
+  if (!PyArg_ParseTuple(args, "ii", &ray, &bin)) {
     return NULL;
   }
 
-  type = PolarScan_getValueAtIndex(self->scan, ai, ri, &value);
+  type = PolarScan_getValueAtIndex(self->scan, ray, bin, &value);
+
+  return Py_BuildValue("(id)", type, value);
+}
+
+/**
+ * Returns the converted value at the specified ray and bin index.
+ * @param[in] self - this instance
+ * @param[in] args - ray index, bin index.
+ * @returns a tuple of value type and value
+ */
+static PyObject* _pypolarscan_getConvertedValueAtIndex(PyPolarScan* self, PyObject* args)
+{
+  double value = 0.0L;
+  RaveValueType type = RaveValueType_NODATA;
+  int ray = 0, bin = 0;
+  if (!PyArg_ParseTuple(args, "ii", &ray, &bin)) {
+    return NULL;
+  }
+
+  type = PolarScan_getConvertedValueAtIndex(self->scan, ray, bin, &value);
 
   return Py_BuildValue("(id)", type, value);
 }
@@ -317,6 +337,7 @@ static struct PyMethodDef _pypolarscan_methods[] =
   {"getAzimuthIndex", (PyCFunction) _pypolarscan_getAzimuthIndex, 1},
   {"getRangeIndex", (PyCFunction) _pypolarscan_getRangeIndex, 1},
   {"getValueAtIndex", (PyCFunction) _pypolarscan_getValueAtIndex, 1},
+  {"getConvertedValueAtIndex", (PyCFunction) _pypolarscan_getConvertedValueAtIndex, 1},
   {"getValueAtAzimuthAndRange", (PyCFunction) _pypolarscan_getValueAtAzimuthAndRange, 1},
   {"getNearest", (PyCFunction) _pypolarscan_getNearest, 1},
   {NULL, NULL } /* sentinel */
