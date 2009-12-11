@@ -30,6 +30,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 
 #define PYAREA_MODULE
 #include "pyarea.h"
+#include "pyprojection.h"
 #include "rave_debug.h"
 #include "rave_alloc.h"
 
@@ -138,7 +139,13 @@ static PyObject* _pyarea_getattr(PyArea* self, char* name)
 {
   PyObject* res = NULL;
 
-  if (strcmp("xsize", name) == 0) {
+  if (strcmp("id", name) == 0) {
+    if (Area_getID(self->area) == NULL) {
+      Py_RETURN_NONE;
+    } else {
+      return PyString_FromString(Area_getID(self->area));
+    }
+  } else if (strcmp("xsize", name) == 0) {
     return PyInt_FromLong(Area_getXSize(self->area));
   } else if (strcmp("ysize", name) == 0) {
     return PyInt_FromLong(Area_getYSize(self->area));
@@ -146,6 +153,24 @@ static PyObject* _pyarea_getattr(PyArea* self, char* name)
     return PyFloat_FromDouble(Area_getXScale(self->area));
   } else if (strcmp("yscale", name) == 0) {
     return PyFloat_FromDouble(Area_getYScale(self->area));
+  } else if (strcmp("extent", name) == 0) {
+    double llX, llY, urX, urY;
+    Area_getExtent(self->area, &llX, &llY, &urX, &urY);
+    return Py_BuildValue("(dddd)", llX, llY, urX, urY);
+  } else if (strcmp("projection", name) == 0) {
+    Projection_t* projection = Area_getProjection(self->area);
+    if (projection != NULL) {
+      PyProjection* result = RAVE_OBJECT_GETBINDING(projection);
+      if (result == NULL) {
+        result = PyProjection_New(projection);
+      } else {
+        Py_INCREF(result);
+      }
+      RAVE_OBJECT_RELEASE(projection);
+      return (PyObject*)result;
+    } else {
+      Py_RETURN_NONE;
+    }
   }
 
   res = Py_FindMethod(_pyarea_methods, (PyObject*) self, name);
@@ -166,7 +191,15 @@ static int _pyarea_setattr(PyArea* self, char* name, PyObject* val)
   if (name == NULL) {
     goto done;
   }
-  if (strcmp("xsize", name)==0) {
+  if (strcmp("id", name) == 0) {
+    if (PyString_Check(val)) {
+      Area_setID(self->area, PyString_AsString(val));
+    } else if (val == Py_None) {
+      Area_setID(self->area, NULL);
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError, "id must be a string");
+    }
+  } else if (strcmp("xsize", name)==0) {
     if (PyInt_Check(val)) {
       Area_setXSize(self->area, PyInt_AsLong(val));
     } else {
@@ -189,6 +222,20 @@ static int _pyarea_setattr(PyArea* self, char* name, PyObject* val)
       Area_setYScale(self->area, PyFloat_AsDouble(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError,"yscale must be of type float");
+    }
+  } else if (strcmp("extent", name)==0) {
+    double llX = 0.0L, llY = 0.0L, urX = 0.0L, urY = 0.0L;
+    if (!PyArg_ParseTuple(val, "dddd", &llX, &llY, &urX, &urY)) {
+      raiseException_gotoTag(done, PyExc_TypeError,"extent must be a tuple containing 4 doubles representing llX,llY,urX,urY");
+    }
+    Area_setExtent(self->area, llX, llY, urX, urY);
+  } else if (strcmp("projection", name)==0) {
+    if (PyProjection_Check(val)) {
+      Area_setProjection(self->area, ((PyProjection*)val)->projection);
+    } else if (val == Py_None) {
+      Area_setProjection(self->area, NULL);
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError,"projection must be of ProjectionCore type");
     }
   }
 
@@ -254,6 +301,7 @@ init_area(void)
     Py_FatalError("Can't define _area.error");
   }
 
+  import_pyprojection();
   Rave_initializeDebugger();
 }
 /*@} End of Module setup */

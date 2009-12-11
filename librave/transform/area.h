@@ -39,6 +39,19 @@ typedef struct _Area_t Area_t;
 extern RaveCoreObjectType Area_TYPE;
 
 /**
+ * Sets the ID for this area.
+ * @param[in] area - self
+ * @param[in] id - the id
+ */
+void Area_setID(Area_t* area, const char* id);
+
+/**
+ * Returns the ID for this area.
+ * @param[in] area - self
+ */
+const char* Area_getID(Area_t* area);
+
+/**
  * Sets the xsize
  * @param[in] area - the area
  * @param[in] xsize - the xsize
@@ -93,5 +106,39 @@ void Area_setYScale(Area_t* area, double yscale);
  * @return the yscale
  */
 double Area_getYScale(Area_t* area);
+
+/**
+ * Sets the area extent (lower-left, upper-right)
+ * @param[in] area - self
+ * @param[in] llX - lower left X position
+ * @param[in] llY - lower left Y position
+ * @param[in] urX - upper right X position
+ * @param[in] urY - upper right Y position
+ */
+void Area_setExtent(Area_t* area, double llX, double llY, double urX, double urY);
+
+/**
+ * Returns the area extent (lower-left, upper-right)
+ * @param[in] area - self
+ * @param[out] llX - lower left X position (may be NULL)
+ * @param[out] llY - lower left Y position (may be NULL)
+ * @param[out] urX - upper right X position (may be NULL)
+ * @param[out] urY - upper right Y position (may be NULL)
+ */
+void Area_getExtent(Area_t* area, double* llX, double* llY, double* urX, double* urY);
+
+/**
+ * Sets the projection that defines this area.
+ * @param[in] area - self
+ * @param[in] projection - the projection
+ */
+void Area_setProjection(Area_t* area, Projection_t* projection);
+
+/**
+ * Returns the projection that defines this area.
+ * @param[in] area - self
+ * @returns the projection
+ */
+Projection_t* Area_getProjection(Area_t* area);
 
 #endif /* AREA_H */

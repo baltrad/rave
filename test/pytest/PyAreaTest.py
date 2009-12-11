@@ -26,6 +26,7 @@ Tests the py area module.
 import unittest
 import os
 import _area
+import _projection
 import string
 import math
 
@@ -42,6 +43,25 @@ class PyAreaTest(unittest.TestCase):
     
     isarea = string.find(`type(obj)`, "AreaCore")
     self.assertNotEqual(-1, isarea)
+
+  def test_id(self):
+    obj = _area.new()
+
+    self.assertEquals(None, obj.id)
+    obj.id = "something"
+    self.assertEquals("something", obj.id)
+    obj.id = None
+    self.assertEquals(None, obj.id)
+
+  def test_id_typeError(self):
+    obj = _area.new()
+
+    try:
+      obj.id = 1.2
+      self.fail("Expected TypeError")
+    except TypeError, e:
+      pass
+    self.assertEquals(None, obj.id)
     
   def test_xsize(self):
     obj = _area.new()
@@ -106,3 +126,64 @@ class PyAreaTest(unittest.TestCase):
     except TypeError,e:
       pass
     self.assertAlmostEquals(0.0, obj.yscale, 4)
+
+  def test_extent(self):
+    obj = _area.new()
+    extent = obj.extent
+    self.assertEquals(4, len(extent))
+    self.assertAlmostEquals(0.0, extent[0], 4)
+    self.assertAlmostEquals(0.0, extent[1], 4)
+    self.assertAlmostEquals(0.0, extent[2], 4)
+    self.assertAlmostEquals(0.0, extent[3], 4)
+    
+    obj.extent = (1.0, 2.0, 3.0, 4.0)
+    extent = obj.extent
+    self.assertEquals(4, len(extent))
+    self.assertAlmostEquals(1.0, extent[0], 4)
+    self.assertAlmostEquals(2.0, extent[1], 4)
+    self.assertAlmostEquals(3.0, extent[2], 4)
+    self.assertAlmostEquals(4.0, extent[3], 4)
+
+  def test_extent_typeError(self):
+    obj = _area.new()
+    try:
+      obj.extent = (1.0, 2.0, 3.0)
+      self.fail("Expected TypeError")
+    except TypeError, e:
+      pass
+
+    try:
+      obj.extent = (1.0, 2.0, 3.0, 4.0, 5.0)
+      self.fail("Expected TypeError")
+    except TypeError, e:
+      pass
+    
+    try:
+      obj.extent = (1.0, 2.0, "abc")
+      self.fail("Expected TypeError")
+    except TypeError, e:
+      pass
+
+  def test_projection(self):
+    obj = _area.new()
+    self.assertEquals(None, obj.projection)
+    
+    obj.projection = _projection.new("x", "y", "+proj=latlong +ellps=WGS84 +datum=WGS84")
+    
+    self.assertEquals("x", obj.projection.id)
+    
+    obj.projection = None
+    
+    self.assertEquals(None, obj.projection)
+    
+  def test_projection_typeError(self):
+    obj = _area.new()
+
+    try:
+      obj.projection = "+proj=latlong +ellps=WGS84 +datum=WGS84"
+      self.fail("Expected TypeError")
+    except TypeError, e:
+      pass
+    
+    self.assertEquals(None, obj.projection)
+    

@@ -22,11 +22,10 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2009-12-08
  */
-#include <limits.h>
+#include "Python.h"
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
-#include "Python.h"
 
 #define PYPOLARVOLUME_MODULE
 #include "pypolarvolume.h"

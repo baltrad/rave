@@ -33,11 +33,20 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 struct _Area_t {
   RAVE_OBJECT_HEAD /** Always on top */
 
+  char* id;
+
   // Where
   long xsize;
   long ysize;
   double xscale;
   double yscale;
+
+  double llX;
+  double llY;
+  double urX;
+  double urY;
+
+  Projection_t* projection;
 };
 
 /*@{ Private functions */
@@ -47,10 +56,16 @@ struct _Area_t {
 static int Area_constructor(RaveCoreObject* obj)
 {
   Area_t* result = (Area_t*)obj;
+  result->id = NULL;
   result->xsize = 0;
   result->ysize = 0;
   result->xscale = 0.0L;
   result->yscale = 0.0L;
+  result->llX = 0.0L;
+  result->llY = 0.0L;
+  result->urX = 0.0L;
+  result->urY = 0.0L;
+  result->projection = NULL;
   return 1;
 }
 
@@ -62,11 +77,31 @@ static void Area_destructor(RaveCoreObject* obj)
 {
   Area_t* area = (Area_t*)obj;
   if (area != NULL) {
+    RAVE_FREE(area->id);
+    RAVE_OBJECT_RELEASE(area->projection);
   }
 }
 /*@} End of Private functions */
 
 /*@{ Interface functions */
+void Area_setID(Area_t* area, const char* id)
+{
+  RAVE_ASSERT((area != NULL), "area was NULL");
+  RAVE_FREE(area->id);
+  if (id != NULL) {
+    area->id = RAVE_STRDUP(id);
+    if (area->id == NULL) {
+      RAVE_CRITICAL0("Failure when copying id");
+    }
+  }
+}
+
+const char* Area_getID(Area_t* area)
+{
+  RAVE_ASSERT((area != NULL), "area was NULL");
+  return (const char*)area->id;
+}
+
 void Area_setXSize(Area_t* area, long xsize)
 {
   RAVE_ASSERT((area != NULL), "area was NULL");
@@ -113,6 +148,45 @@ double Area_getYScale(Area_t* area)
 {
   RAVE_ASSERT((area != NULL), "area was NULL");
   return area->yscale;
+}
+
+void Area_setExtent(Area_t* area, double llX, double llY, double urX, double urY)
+{
+  RAVE_ASSERT((area != NULL), "area was NULL");
+  area->llX = llX;
+  area->llY = llY;
+  area->urX = urX;
+  area->urY = urY;
+}
+
+void Area_getExtent(Area_t* area, double* llX, double* llY, double* urX, double* urY)
+{
+  RAVE_ASSERT((area != NULL), "area was NULL");
+  if (llX != NULL) {
+    *llX = area->llX;
+  }
+  if (llY != NULL) {
+    *llY = area->llY;
+  }
+  if (urX != NULL) {
+    *urX = area->urX;
+  }
+  if (urY != NULL) {
+    *urY = area->urY;
+  }
+}
+
+void Area_setProjection(Area_t* area, Projection_t* projection)
+{
+  RAVE_ASSERT((area != NULL), "area was NULL");
+  RAVE_OBJECT_RELEASE(area->projection);
+  area->projection = RAVE_OBJECT_COPY(projection);
+}
+
+Projection_t* Area_getProjection(Area_t* area)
+{
+  RAVE_ASSERT((area != NULL), "area was NULL");
+  return RAVE_OBJECT_COPY(area->projection);
 }
 /*@} End of Interface functions */
 

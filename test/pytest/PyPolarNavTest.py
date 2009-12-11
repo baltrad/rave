@@ -30,7 +30,7 @@ import string
 import numpy
 import math
 
-class PolarNavigatorTest(unittest.TestCase):
+class PyPolarNavTest(unittest.TestCase):
   def setUp(self):
     pass
 

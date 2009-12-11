@@ -91,8 +91,25 @@ void* RaveList_remove(RaveList_t* list, int index);
  */
 void* RaveList_removeLast(RaveList_t* list);
 
+/**
+ * Removes the object that is equal to the provided object. I.e.
+ * pointer comparission is made.
+ * @param[in] list - the list
+ * @param[in] object - the object to remove
+ */
 void RaveList_removeObject(RaveList_t* list, void* object);
 
+/**
+ * Finds the object in the list. If findfunc returns 1, then it is assumed
+ * to be a match and that object will be returned.
+ * The prototype for findfunc is int findfunc(void* expected, void* datavalue).
+ * where expected is passed to findfunc for each item (datavalue) in the list
+ * until a match is found.
+ * @param[in] list - the list
+ * @param[in] expected - the expected data value
+ * @param[in] findfunc - the finder function that takes expected value and data value as arguments.
+ * @returns the found item or NULL if none was found.
+ */
 void* RaveList_find(RaveList_t* list, void* expected, int (*findfunc)(void*, void*));
 
 /**

@@ -32,7 +32,7 @@ from PyCartesianTest import *
 from PyTransformTest import *
 from PyProjectionTest import *
 from PyRaveIOTest import *
-from PolarNavigatorTest import *
+from PyPolarNavTest import *
 from PyAreaTest import *
 
 # Some tests for verifying that we are producing products

@@ -228,7 +228,7 @@ MODULES.append(
 
 MODULES.append(
     Extension(
-        "_polarnav", ["modules/polarnav.c"],
+        "_polarnav", ["modules/pypolarnav.c"],
         include_dirs=INCLUDE_DIRS,
         library_dirs=LIBRARY_DIRS,
         libraries=LIBRARIES

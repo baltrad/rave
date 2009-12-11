@@ -79,6 +79,10 @@ if [ $NARGS -eq 1 ]; then
 elif [ $NARGS -eq 2 ]; then
   PYSCRIPT=`python -c "import os;print os.path.abspath(\"$1\")"`
   DIRNAME="$2"
+elif [ $NARGS -eq 0 ]; then
+  # Do nothing
+  PYSCRIPT=
+  DIRNAME=
 else
   echo "Unknown command"
   exit 255
@@ -88,7 +92,11 @@ if [ "$DIRNAME" != "" ]; then
   cd "$DIRNAME"
 fi
 
-python "$PYSCRIPT"
+if [ "$PYSCRIPT" != "" ]; then
+  python "$PYSCRIPT"
+else
+  python
+fi
 
 VAL=$?
 if [ $VAL != 0 ]; then

@@ -22,13 +22,14 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2009-10-21
  */
-#include <Python.h>
-#include <arrayobject.h>
-#include <limits.h>
+#include "Python.h"
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
-#include "polarnav.h"
+
+#define PYPOLARNAV_MODULE
+#include "pypolarnav.h"
+
 #include "rave_debug.h"
 #include "rave_alloc.h"
 
@@ -46,6 +47,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  */
 static PyObject *ErrorObject;
 
+#ifdef KALLE
 /**
  * A polar navigator
  */
@@ -63,21 +65,69 @@ staticforward PyTypeObject PolarNavigator_Type;
  * Checks if the object is a PolarNavigator type
  */
 #define PolarNavigator_Check(op) ((op)->ob_type == &PolarNavigator_Type)
+#endif
 
 /// --------------------------------------------------------------------
 /// Polar Navigator
 /// --------------------------------------------------------------------
 /*@{ Polar Navigator */
+/**
+ * Returns the native PolarNavigator_t instance.
+ * @param[in] pypolarnav - the python polar navigator instance
+ * @returns the native polar navigator instance.
+ */
+static PolarNavigator_t*
+PyPolarNavigator_GetNative(PyPolarNavigator* pypolarnav)
+{
+  RAVE_ASSERT((pypolarnav != NULL), "pypolarnav == NULL");
+  return RAVE_OBJECT_COPY(pypolarnav->navigator);
+}
 
+/**
+ * Creates a python polar volume from a native polar volume or will create an
+ * initial native PolarVolume if p is NULL.
+ * @param[in] p - the native polar volume (or NULL)
+ * @returns the python polar volume.
+ */
+static PyPolarNavigator*
+PyPolarNavigator_New(PolarNavigator_t* p)
+{
+  PyPolarNavigator* result = NULL;
+  PolarNavigator_t* cp = NULL;
+
+  if (p == NULL) {
+    cp = RAVE_OBJECT_NEW(&PolarNavigator_TYPE);
+    if (cp == NULL) {
+      RAVE_CRITICAL0("Failed to allocate memory for polar navigator.");
+      raiseException_returnNULL(PyExc_MemoryError, "Failed to allocate memory for polar navigator.");
+    }
+  } else {
+    cp = RAVE_OBJECT_COPY(p);
+  }
+
+  result = PyObject_NEW(PyPolarNavigator, &PyPolarNavigator_Type);
+  if (result == NULL) {
+    RAVE_CRITICAL0("Failed to create PyPolarNavigator instance");
+    raiseException_gotoTag(error, PyExc_MemoryError, "Failed to allocate memory for PyPolarNavigator.");
+  }
+
+  result->navigator = RAVE_OBJECT_COPY(cp);
+  RAVE_OBJECT_BIND(result->navigator, result);
+
+error:
+  RAVE_OBJECT_RELEASE(cp);
+  return result;
+}
 /**
  * Deallocates the polar navigator
  * @param[in] obj the object to deallocate.
  */
-static void _polarnavigator_dealloc(PolarNavigator* obj)
+static void _pypolarnavigator_dealloc(PyPolarNavigator* obj)
 {
   if (obj == NULL) {
     return;
   }
+  RAVE_OBJECT_UNBIND(obj->navigator, obj);
   RAVE_OBJECT_RELEASE(obj->navigator);
   PyObject_Del(obj);
 }
@@ -88,8 +138,11 @@ static void _polarnavigator_dealloc(PolarNavigator* obj)
  * @param[in] args arguments for creation (NOT USED).
  * @return the object on success, otherwise NULL
  */
-static PyObject* _polarnavigator_new(PyObject* self, PyObject* args)
+static PyObject* _pypolarnavigator_new(PyObject* self, PyObject* args)
 {
+  PyPolarNavigator* result = PyPolarNavigator_New(NULL);
+  return (PyObject*)result;
+#ifdef KALLE
   PolarNavigator* result = NULL;
   result = PyObject_NEW(PolarNavigator, &PolarNavigator_Type);
   if (result == NULL) {
@@ -102,6 +155,7 @@ static PyObject* _polarnavigator_new(PyObject* self, PyObject* args)
     raiseException_returnNULL(PyExc_MemoryError, "Failed to allocate polar navigator");
   }
   return (PyObject*)result;
+#endif
 }
 
 /**
@@ -110,7 +164,7 @@ static PyObject* _polarnavigator_new(PyObject* self, PyObject* args)
  * @param[in] args - the latitude as a double (in radians)
  * @returns a float representing the radius in meters or NULL on failure
  */
-static PyObject* _polarnavigator_getEarthRadius(PolarNavigator* self, PyObject* args)
+static PyObject* _pypolarnavigator_getEarthRadius(PyPolarNavigator* self, PyObject* args)
 {
   double lat = 0.0L;
   double radius = 0.0L;
@@ -130,7 +184,7 @@ static PyObject* _polarnavigator_getEarthRadius(PolarNavigator* self, PyObject* 
  * @param[in] args - Not used
  * @returns a float representing the radius in meters or NULL on failure
  */
-static PyObject* _polarnavigator_getEarthRadiusOrigin(PolarNavigator* self, PyObject* args)
+static PyObject* _pypolarnavigator_getEarthRadiusOrigin(PyPolarNavigator* self, PyObject* args)
 {
   double radius = 0.0L;
 
@@ -145,7 +199,7 @@ static PyObject* _polarnavigator_getEarthRadiusOrigin(PolarNavigator* self, PyOb
  * @param[in] args - a tuple of doubles representing (latitude, longitude) in radians
  * @returns a tuple of double (distance, azimuth in radians)
  */
-static PyObject* _polarnavigator_llToDa(PolarNavigator* self, PyObject* args)
+static PyObject* _pypolarnavigator_llToDa(PyPolarNavigator* self, PyObject* args)
 {
   double lon = 0.0L, lat = 0.0L;
   double d = 0.0L, a = 0.0L;
@@ -165,7 +219,7 @@ static PyObject* _polarnavigator_llToDa(PolarNavigator* self, PyObject* args)
  * @param[in] args - two doubles (distance, azimuth in radians)
  * @returns a tuple of double (latitude, longitude) in radians or NULL on failure
  */
-static PyObject* _polarnavigator_daToLl(PolarNavigator* self, PyObject* args)
+static PyObject* _pypolarnavigator_daToLl(PyPolarNavigator* self, PyObject* args)
 {
   double lon = 0.0L, lat = 0.0L;
   double d = 0.0L, a = 0.0L;
@@ -185,7 +239,7 @@ static PyObject* _polarnavigator_daToLl(PolarNavigator* self, PyObject* args)
  * @param[in] args - two doubles (distance, height)
  * @returns a tuple of double (range, elevation in radians) or NULL on failure
  */
-static PyObject* _polarnavigator_dhToRe(PolarNavigator* self, PyObject* args)
+static PyObject* _pypolarnavigator_dhToRe(PyPolarNavigator* self, PyObject* args)
 {
   double d = 0.0L, h = 0.0L;
   double r = 0.0L, e = 0.0L;
@@ -205,7 +259,7 @@ static PyObject* _polarnavigator_dhToRe(PolarNavigator* self, PyObject* args)
  * @param[in] args - two doubles (distance, elevation in radians)
  * @returns a tuple of double (range, height) or NULL on failure
  */
-static PyObject* _polarnavigator_deToRh(PolarNavigator* self, PyObject* args)
+static PyObject* _pypolarnavigator_deToRh(PyPolarNavigator* self, PyObject* args)
 {
   double d = 0.0L, e = 0.0L;
   double r = 0.0L, h = 0.0L;
@@ -225,7 +279,7 @@ static PyObject* _polarnavigator_deToRh(PolarNavigator* self, PyObject* args)
  * @param[in] args - two doubles (range, elevation in radians)
  * @returns a tuple of double (distance, height) or NULL on failure
  */
-static PyObject* _polarnavigator_reToDh(PolarNavigator* self, PyObject* args)
+static PyObject* _pypolarnavigator_reToDh(PyPolarNavigator* self, PyObject* args)
 {
   double d = 0.0L, e = 0.0L;
   double r = 0.0L, h = 0.0L;
@@ -242,22 +296,22 @@ static PyObject* _polarnavigator_reToDh(PolarNavigator* self, PyObject* args)
 /**
  * All methods a polar navigator can have
  */
-static struct PyMethodDef _polarnavigator_methods[] =
+static struct PyMethodDef _pypolarnavigator_methods[] =
 {
-  {"getEarthRadius", (PyCFunction) _polarnavigator_getEarthRadius, 1},
-  {"getEarthRadiusOrigin", (PyCFunction) _polarnavigator_getEarthRadiusOrigin, 1},
-  {"llToDa", (PyCFunction) _polarnavigator_llToDa, 1},
-  {"daToLl", (PyCFunction) _polarnavigator_daToLl, 1},
-  {"dhToRe", (PyCFunction) _polarnavigator_dhToRe, 1},
-  {"deToRh", (PyCFunction) _polarnavigator_deToRh, 1},
-  {"reToDh", (PyCFunction) _polarnavigator_reToDh, 1},
+  {"getEarthRadius", (PyCFunction) _pypolarnavigator_getEarthRadius, 1},
+  {"getEarthRadiusOrigin", (PyCFunction) _pypolarnavigator_getEarthRadiusOrigin, 1},
+  {"llToDa", (PyCFunction) _pypolarnavigator_llToDa, 1},
+  {"daToLl", (PyCFunction) _pypolarnavigator_daToLl, 1},
+  {"dhToRe", (PyCFunction) _pypolarnavigator_dhToRe, 1},
+  {"deToRh", (PyCFunction) _pypolarnavigator_deToRh, 1},
+  {"reToDh", (PyCFunction) _pypolarnavigator_reToDh, 1},
   { NULL, NULL } /* sentinel */
 };
 
 /**
  * Returns the specified attribute in the polar navigator
  */
-static PyObject* _polarnavigator_getattr(PolarNavigator* self, char* name)
+static PyObject* _pypolarnavigator_getattr(PyPolarNavigator* self, char* name)
 {
   PyObject* res;
   if (strcmp("poleradius", name) == 0) {
@@ -274,7 +328,7 @@ static PyObject* _polarnavigator_getattr(PolarNavigator* self, char* name)
     return PyInt_FromLong(PolarNavigator_getDndh(self->navigator));
   }
 
-  res = Py_FindMethod(_polarnavigator_methods, (PyObject*) self, name);
+  res = Py_FindMethod(_pypolarnavigator_methods, (PyObject*) self, name);
   if (res)
     return res;
 
@@ -286,7 +340,7 @@ static PyObject* _polarnavigator_getattr(PolarNavigator* self, char* name)
 /**
  * Returns the specified attribute in the polar navigator
  */
-static int _polarnavigator_setattr(PolarNavigator* self, char* name, PyObject* val)
+static int _pypolarnavigator_setattr(PyPolarNavigator* self, char* name, PyObject* val)
 {
   int result = -1;
   if (name == NULL) {
@@ -340,17 +394,17 @@ done:
 /// Type definitions
 /// --------------------------------------------------------------------
 /*@{ Type definitions */
-statichere PyTypeObject PolarNavigator_Type =
+PyTypeObject PyPolarNavigator_Type =
 {
   PyObject_HEAD_INIT(NULL)0, /*ob_size*/
   "PolarNavigatorCore", /*tp_name*/
-  sizeof(PolarNavigator), /*tp_size*/
+  sizeof(PyPolarNavigator), /*tp_size*/
   0, /*tp_itemsize*/
   /* methods */
-  (destructor)_polarnavigator_dealloc, /*tp_dealloc*/
+  (destructor)_pypolarnavigator_dealloc, /*tp_dealloc*/
   0, /*tp_print*/
-  (getattrfunc)_polarnavigator_getattr, /*tp_getattr*/
-  (setattrfunc)_polarnavigator_setattr, /*tp_setattr*/
+  (getattrfunc)_pypolarnavigator_getattr, /*tp_getattr*/
+  (setattrfunc)_pypolarnavigator_setattr, /*tp_setattr*/
   0, /*tp_compare*/
   0, /*tp_repr*/
   0, /*tp_as_number */
@@ -365,7 +419,7 @@ statichere PyTypeObject PolarNavigator_Type =
 /// --------------------------------------------------------------------
 /*@{ Module setup */
 static PyMethodDef functions[] = {
-  {"new", (PyCFunction)_polarnavigator_new, 1},
+  {"new", (PyCFunction)_pypolarnavigator_new, 1},
   {NULL,NULL} /*Sentinel*/
 };
 
@@ -375,9 +429,24 @@ static PyMethodDef functions[] = {
 void init_polarnav(void)
 {
   PyObject *module=NULL,*dictionary=NULL;
-  PolarNavigator_Type.ob_type = &PyType_Type;
+  static void *PyPolarNavigator_API[PyPolarNavigator_API_pointers];
+  PyObject *c_api_object = NULL;
+  PyPolarNavigator_Type.ob_type = &PyType_Type;
 
   module = Py_InitModule("_polarnav", functions);
+  if (module == NULL) {
+    return;
+  }
+  PyPolarNavigator_API[PyPolarNavigator_Type_NUM] = (void*)&PyPolarNavigator_Type;
+  PyPolarNavigator_API[PyPolarNavigator_GetNative_NUM] = (void *)PyPolarNavigator_GetNative;
+  PyPolarNavigator_API[PyPolarNavigator_New_NUM] = (void*)PyPolarNavigator_New;
+
+  c_api_object = PyCObject_FromVoidPtr((void *)PyPolarNavigator_API, NULL);
+
+  if (c_api_object != NULL) {
+    PyModule_AddObject(module, "_C_API", c_api_object);
+  }
+
   dictionary = PyModule_GetDict(module);
   ErrorObject = PyString_FromString("_polarnav.error");
   if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
@@ -385,7 +454,5 @@ void init_polarnav(void)
   }
 
   Rave_initializeDebugger();
-
-  import_array(); /*To make sure I get access to Numeric*/
 }
 /*@} End of Module setup */
