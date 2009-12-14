@@ -63,22 +63,24 @@ static PyArea_New_RETURN PyArea_New PyArea_New_PROTO;
 static void **PyArea_API;
 
 /**
- * Returns a pointer to the internal polar scan, remember to release the reference
+ * Returns a pointer to the internal area, remember to release the reference
  * when done with the object. (RAVE_OBJECT_RELEASE).
  */
 #define PyArea_GetNative \
   (*(PyArea_GetNative_RETURN (*)PyArea_GetNative_PROTO) PyArea_API[PyArea_GetNative_NUM])
 
 /**
- * Creates a new polar scan instance. Release this object with Py_DECREF.
- * @param[in] scan - the PolarScan_t intance.
+ * Creates a new polar scan instance. Release this object with Py_DECREF.  If a Area_t area is
+ * provided and this area already is bound to a python instance, this instance will be increfed and
+ * returned.
+ * @param[in] area - the Area_t intance.
  * @returns the PyArea instance.
  */
 #define PyArea_New \
   (*(PyArea_New_RETURN (*)PyArea_New_PROTO) PyArea_API[PyArea_New_NUM])
 
 /**
- * Checks if the object is a python polar scan.
+ * Checks if the object is a python area.
  */
 #define PyArea_Check(op) \
    ((op)->ob_type == (PyTypeObject *)PyArea_API[PyArea_Type_NUM])

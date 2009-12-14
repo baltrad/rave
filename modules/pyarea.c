@@ -28,11 +28,17 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include <stdio.h>
 #include <string.h>
 
+#include "pyrave_debug.h"
+
 #define PYAREA_MODULE
 #include "pyarea.h"
 #include "pyprojection.h"
-#include "rave_debug.h"
 #include "rave_alloc.h"
+
+/**
+ * Initialize the debug object.
+ */
+PYRAVE_DEBUG_MODULE("_area");
 
 /**
  * Some helpful exception defines.
@@ -81,17 +87,25 @@ PyArea_New(Area_t* p)
     }
   } else {
     cp = RAVE_OBJECT_COPY(p);
+    result = RAVE_OBJECT_GETBINDING(p); // If p already have a binding, then this should only be increfed.
+    if (result != NULL) {
+      Py_INCREF(result);
+    }
   }
 
-  result = PyObject_NEW(PyArea, &PyArea_Type);
   if (result == NULL) {
-    RAVE_CRITICAL0("Failed to create PyArea instance");
-    raiseException_gotoTag(error, PyExc_MemoryError, "Failed to allocate memory for PyArea.");
+    result = PyObject_NEW(PyArea, &PyArea_Type);
+    if (result != NULL) {
+      PYRAVE_DEBUG_OBJECT_CREATED;
+      result->area = RAVE_OBJECT_COPY(cp);
+      RAVE_OBJECT_BIND(result->area, result);
+    } else {
+      RAVE_CRITICAL0("Failed to create PyArea instance");
+      raiseException_gotoTag(done, PyExc_MemoryError, "Failed to allocate memory for PyArea.");
+    }
   }
 
-  result->area = RAVE_OBJECT_COPY(cp);
-  RAVE_OBJECT_BIND(result->area, result);
-error:
+done:
   RAVE_OBJECT_RELEASE(cp);
   return result;
 }
@@ -106,6 +120,7 @@ static void _pyarea_dealloc(PyArea* obj)
   if (obj == NULL) {
     return;
   }
+  PYRAVE_DEBUG_OBJECT_DESTROYED;
   RAVE_OBJECT_UNBIND(obj->area, obj);
   RAVE_OBJECT_RELEASE(obj->area);
   PyObject_Del(obj);
@@ -160,12 +175,7 @@ static PyObject* _pyarea_getattr(PyArea* self, char* name)
   } else if (strcmp("projection", name) == 0) {
     Projection_t* projection = Area_getProjection(self->area);
     if (projection != NULL) {
-      PyProjection* result = RAVE_OBJECT_GETBINDING(projection);
-      if (result == NULL) {
-        result = PyProjection_New(projection);
-      } else {
-        Py_INCREF(result);
-      }
+      PyProjection* result = PyProjection_New(projection);
       RAVE_OBJECT_RELEASE(projection);
       return (PyObject*)result;
     } else {
@@ -302,6 +312,6 @@ init_area(void)
   }
 
   import_pyprojection();
-  Rave_initializeDebugger();
+  PYRAVE_DEBUG_INITIALIZE;
 }
 /*@} End of Module setup */

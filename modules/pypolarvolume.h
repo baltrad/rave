@@ -63,22 +63,24 @@ static PyPolarVolume_New_RETURN PyPolarVolume_New PyPolarVolume_New_PROTO;
 static void **PyPolarVolume_API;
 
 /**
- * Returns a pointer to the internal polar scan, remember to release the reference
+ * Returns a pointer to the internal polar volume, remember to release the reference
  * when done with the object. (RAVE_OBJECT_RELEASE).
  */
 #define PyPolarVolume_GetNative \
   (*(PyPolarVolume_GetNative_RETURN (*)PyPolarVolume_GetNative_PROTO) PyPolarVolume_API[PyPolarVolume_GetNative_NUM])
 
 /**
- * Creates a new polar scan instance. Release this object with Py_DECREF.
- * @param[in] scan - the PolarScan_t intance.
+ * Creates a new polar volume instance. Release this object with Py_DECREF. If a PolarVolume_t instance is
+ * provided and this instance already is bound to a python instance, this instance will be increfed and
+ * returned.
+ * @param[in] volume - the PolarVolume_t intance.
  * @returns the PyPolarVolume instance.
  */
 #define PyPolarVolume_New \
   (*(PyPolarVolume_New_RETURN (*)PyPolarVolume_New_PROTO) PyPolarVolume_API[PyPolarVolume_New_NUM])
 
 /**
- * Checks if the object is a python polar scan.
+ * Checks if the object is a python polar volume.
  */
 #define PyPolarVolume_Check(op) \
    ((op)->ob_type == (PyTypeObject *)PyPolarVolume_API[PyPolarVolume_Type_NUM])

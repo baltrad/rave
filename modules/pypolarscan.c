@@ -32,10 +32,12 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "pypolarscan.h"
 
 #include <arrayobject.h>
-#include "rave_debug.h"
+#include "pyrave_debug.h"
 #include "rave_alloc.h"
 #include "raveutil.h"
 #include "rave.h"
+
+PYRAVE_DEBUG_MODULE("_polarscan");
 
 /**
  * Some helpful exception defines.
@@ -87,17 +89,24 @@ PyPolarScan_New(PolarScan_t* p)
     }
   } else {
     cp = RAVE_OBJECT_COPY(p);
+    result = RAVE_OBJECT_GETBINDING(p); // If p already have a binding, then this should only be increfed.
+    if (result != NULL) {
+      Py_INCREF(result);
+    }
   }
 
-  result = PyObject_NEW(PyPolarScan, &PyPolarScan_Type);
   if (result == NULL) {
-    RAVE_CRITICAL0("Failed to create PyPolarScan instance");
-    raiseException_gotoTag(error, PyExc_MemoryError, "Failed to allocate memory for polar scan.");
+    result = PyObject_NEW(PyPolarScan, &PyPolarScan_Type);
+    if (result != NULL) {
+      PYRAVE_DEBUG_OBJECT_CREATED;
+      result->scan = RAVE_OBJECT_COPY(cp);
+      RAVE_OBJECT_BIND(result->scan, result);
+    } else {
+      RAVE_CRITICAL0("Failed to create PyPolarScan instance");
+      raiseException_gotoTag(done, PyExc_MemoryError, "Failed to allocate memory for polar scan.");
+    }
   }
-
-  result->scan = RAVE_OBJECT_COPY(cp);
-  RAVE_OBJECT_BIND(result->scan, result);
-error:
+done:
   RAVE_OBJECT_RELEASE(cp);
   return result;
 }
@@ -111,6 +120,7 @@ static void _pypolarscan_dealloc(PyPolarScan* obj)
   if (obj == NULL) {
     return;
   }
+  PYRAVE_DEBUG_OBJECT_DESTROYED;
   RAVE_OBJECT_UNBIND(obj->scan, obj);
   RAVE_OBJECT_RELEASE(obj->scan);
   PyObject_Del(obj);
@@ -567,6 +577,6 @@ init_polarscan(void)
   }
 
   import_array(); /*To make sure I get access to Numeric*/
-  Rave_initializeDebugger();
+  PYRAVE_DEBUG_INITIALIZE;
 }
 /*@} End of Module setup */

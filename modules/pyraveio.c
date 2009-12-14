@@ -33,10 +33,12 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "pypolarvolume.h"
 
-#include "rave_debug.h"
+#include "pyrave_debug.h"
 #include "rave_alloc.h"
 #include "hlhdf.h"
 #include "hlhdf_debug.h"
+
+PYRAVE_DEBUG_MODULE("_raveio");
 
 /**
  * Some helpful exception defines.
@@ -85,17 +87,25 @@ PyRaveIO_New(RaveIO_t* p)
     }
   } else {
     cp = RAVE_OBJECT_COPY(p);
+    result = RAVE_OBJECT_GETBINDING(p); // If p already have a binding, then this should only be increfed.
+    if (result != NULL) {
+      Py_INCREF(result);
+    }
   }
 
-  result = PyObject_NEW(PyRaveIO, &PyRaveIO_Type);
   if (result == NULL) {
-    RAVE_CRITICAL0("Failed to create PyRaveIO instance");
-    raiseException_gotoTag(error, PyExc_MemoryError, "Failed to allocate memory for raveio.");
+    result = PyObject_NEW(PyRaveIO, &PyRaveIO_Type);
+    if (result != NULL) {
+      PYRAVE_DEBUG_OBJECT_CREATED;
+      result->raveio = RAVE_OBJECT_COPY(cp);
+      RAVE_OBJECT_BIND(result->raveio, result);
+    } else {
+      RAVE_CRITICAL0("Failed to create PyRaveIO instance");
+      raiseException_gotoTag(done, PyExc_MemoryError, "Failed to allocate memory for raveio.");
+    }
   }
 
-  result->raveio = RAVE_OBJECT_COPY(cp);
-  RAVE_OBJECT_BIND(result->raveio, result);
-error:
+done:
   RAVE_OBJECT_RELEASE(cp);
   return result;
 }
@@ -138,6 +148,7 @@ static void _pyraveio_dealloc(PyRaveIO* obj)
   if (obj == NULL) {
     return;
   }
+  PYRAVE_DEBUG_OBJECT_DESTROYED;
   RAVE_OBJECT_UNBIND(obj->raveio, obj);
   RAVE_OBJECT_RELEASE(obj->raveio);
   PyObject_Del(obj);
@@ -375,6 +386,6 @@ init_raveio(void)
   HL_setDebugLevel(HLHDF_SILENT);
 
   import_pypolarvolume();
-  Rave_initializeDebugger();
+  PYRAVE_DEBUG_INITIALIZE;
 }
 /*@} End of Module setup */

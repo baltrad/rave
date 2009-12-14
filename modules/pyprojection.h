@@ -76,7 +76,8 @@ static void **PyProjection_API;
   (*(PyProjection_GetNative_RETURN (*)PyProjection_GetNative_PROTO) PyProjection_API[PyProjection_GetNative_NUM])
 
 /**
- * Creates a new projection instance. Release this object with Py_DECREF.
+ * Creates a new projection instance. Release this object with Py_DECREF. If the passed Projection_t instance is
+ * bound to a python instance, this instance will be increfed and returned.
  * @param[in] proj - the Projection_t intance.
  * @returns the PyProjection instance.
  */

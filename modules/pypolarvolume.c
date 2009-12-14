@@ -31,8 +31,10 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "pypolarvolume.h"
 
 #include "pypolarscan.h"
-#include "rave_debug.h"
+#include "pyrave_debug.h"
 #include "rave_alloc.h"
+
+PYRAVE_DEBUG_MODULE("_polarvolume");
 
 /**
  * Some helpful exception defines.
@@ -84,18 +86,25 @@ PyPolarVolume_New(PolarVolume_t* p)
     }
   } else {
     cp = RAVE_OBJECT_COPY(p);
+    result = RAVE_OBJECT_GETBINDING(p); // If p already have a binding, then this should only be increfed.
+    if (result != NULL) {
+      Py_INCREF(result);
+    }
   }
 
-  result = PyObject_NEW(PyPolarVolume, &PyPolarVolume_Type);
   if (result == NULL) {
-    RAVE_CRITICAL0("Failed to create PyPolarVolume instance");
-    raiseException_gotoTag(error, PyExc_MemoryError, "Failed to allocate memory for polar volume.");
+    result = PyObject_NEW(PyPolarVolume, &PyPolarVolume_Type);
+    if (result != NULL) {
+      PYRAVE_DEBUG_OBJECT_CREATED;
+      result->pvol = RAVE_OBJECT_COPY(cp);
+      RAVE_OBJECT_BIND(result->pvol, result);
+    } else {
+      RAVE_CRITICAL0("Failed to create PyPolarVolume instance");
+      raiseException_gotoTag(done, PyExc_MemoryError, "Failed to allocate memory for polar volume.");
+    }
   }
 
-  result->pvol = RAVE_OBJECT_COPY(cp);
-  RAVE_OBJECT_BIND(result->pvol, result);
-
-error:
+done:
   RAVE_OBJECT_RELEASE(cp);
   return result;
 }
@@ -110,6 +119,7 @@ static void _pypolarvolume_dealloc(PyPolarVolume* obj)
   if (obj == NULL) {
     return;
   }
+  PYRAVE_DEBUG_OBJECT_DESTROYED;
   RAVE_OBJECT_UNBIND(obj->pvol, obj);
   RAVE_OBJECT_RELEASE(obj->pvol);
   PyObject_Del(obj);
@@ -180,12 +190,7 @@ static PyObject* _pypolarvolume_getScan(PyPolarVolume* self, PyObject* args)
   }
 
   if (scan != NULL) {
-    result = RAVE_OBJECT_GETBINDING(scan);
-    if (result == NULL) {
-      result = (PyObject*)PyPolarScan_New(scan);
-    } else {
-      Py_INCREF(result);
-    }
+    result = (PyObject*)PyPolarScan_New(scan);
   }
 
   RAVE_OBJECT_RELEASE(scan);
@@ -266,12 +271,7 @@ static PyObject* _pypolarvolume_getScanClosestToElevation(PyPolarVolume* self, P
 
   scan = PolarVolume_getScanClosestToElevation(self->pvol, elevation, inside);
   if (scan != NULL) {
-    result = RAVE_OBJECT_GETBINDING(scan);
-    if (result == NULL) {
-      result = (PyObject*)PyPolarScan_New(scan);
-    } else {
-      Py_INCREF(result);
-    }
+    result = (PyObject*)PyPolarScan_New(scan);
   }
 
   RAVE_OBJECT_RELEASE(scan);
@@ -443,6 +443,6 @@ void init_polarvolume(void)
   }
 
   import_pypolarscan();
-  Rave_initializeDebugger();
+  PYRAVE_DEBUG_INITIALIZE;
 }
 /*@} End of Module setup */

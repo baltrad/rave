@@ -30,8 +30,10 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #define PYPROJECTION_MODULE
 #include "pyprojection.h"
 
-#include "rave_debug.h"
+#include "pyrave_debug.h"
 #include "rave_alloc.h"
+
+PYRAVE_DEBUG_MODULE("_projection");
 
 /**
  * Some helpful exception defines.
@@ -72,21 +74,33 @@ static PyProjection*
 PyProjection_New(Projection_t* p)
 {
   PyProjection* result = NULL;
+  Projection_t* cp = NULL;
 
   if (p == NULL) {
     RAVE_CRITICAL0("Trying to create a python projection without the projection");
     raiseException_returnNULL(PyExc_AttributeError, "Trying to create a python projection without the projection");
+  } else {
+    cp = RAVE_OBJECT_COPY(p);
+    result = RAVE_OBJECT_GETBINDING(p); // If p already have a binding, then this should only be increfed.
+    if (result != NULL) {
+      Py_INCREF(result);
+    }
   }
 
-  result = PyObject_NEW(PyProjection, &PyProjection_Type);
   if (result == NULL) {
-    RAVE_CRITICAL0("Failed to create PyProjection instance");
-    return NULL;
+    result = PyObject_NEW(PyProjection, &PyProjection_Type);
+    if (result != NULL) {
+      PYRAVE_DEBUG_OBJECT_CREATED;
+      result->projection = RAVE_OBJECT_COPY(cp);
+      RAVE_OBJECT_BIND(result->projection, result);
+    } else {
+      RAVE_CRITICAL0("Failed to create PyProjection instance");
+      raiseException_gotoTag(done, PyExc_MemoryError, "Failed to create PyProjection instance");
+    }
   }
 
-  result->projection = RAVE_OBJECT_COPY(p);
-  RAVE_OBJECT_BIND(result->projection, result);
-
+done:
+  RAVE_OBJECT_RELEASE(cp);
   return result;
 }
 
@@ -136,6 +150,7 @@ static void _pyprojection_dealloc(PyProjection* obj)
   if (obj == NULL) {
     return;
   }
+  PYRAVE_DEBUG_OBJECT_DESTROYED;
   RAVE_OBJECT_UNBIND(obj->projection, obj);
   RAVE_OBJECT_RELEASE(obj->projection);
   PyObject_Del(obj);
@@ -369,6 +384,6 @@ init_projection(void)
     Py_FatalError("Can't define _projection.error");
   }
 
-  Rave_initializeDebugger();
+  PYRAVE_DEBUG_INITIALIZE;
 }
 /*@} End of Module setup */

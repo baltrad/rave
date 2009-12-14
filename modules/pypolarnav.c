@@ -30,8 +30,13 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #define PYPOLARNAV_MODULE
 #include "pypolarnav.h"
 
-#include "rave_debug.h"
+#include "pyrave_debug.h"
 #include "rave_alloc.h"
+
+/**
+ * Initialize the debug object.
+ */
+PYRAVE_DEBUG_MODULE("_polarnav");
 
 /**
  * Some helpful exception defines.
@@ -46,26 +51,6 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * Error object for reporting errors to the python interpreeter
  */
 static PyObject *ErrorObject;
-
-#ifdef KALLE
-/**
- * A polar navigator
- */
-typedef struct {
-  PyObject_HEAD /*Always has to be on top*/
-  PolarNavigator_t* navigator;
-} PolarNavigator;
-
-/**
- * PolarNavigator represents one polar navigator
- */
-staticforward PyTypeObject PolarNavigator_Type;
-
-/**
- * Checks if the object is a PolarNavigator type
- */
-#define PolarNavigator_Check(op) ((op)->ob_type == &PolarNavigator_Type)
-#endif
 
 /// --------------------------------------------------------------------
 /// Polar Navigator
@@ -103,21 +88,29 @@ PyPolarNavigator_New(PolarNavigator_t* p)
     }
   } else {
     cp = RAVE_OBJECT_COPY(p);
+    result = RAVE_OBJECT_GETBINDING(p); // If p already have a binding, then this should only be increfed.
+    if (result != NULL) {
+      Py_INCREF(result);
+    }
   }
 
-  result = PyObject_NEW(PyPolarNavigator, &PyPolarNavigator_Type);
   if (result == NULL) {
-    RAVE_CRITICAL0("Failed to create PyPolarNavigator instance");
-    raiseException_gotoTag(error, PyExc_MemoryError, "Failed to allocate memory for PyPolarNavigator.");
+    result = PyObject_NEW(PyPolarNavigator, &PyPolarNavigator_Type);
+    if (result != NULL) {
+      PYRAVE_DEBUG_OBJECT_CREATED;
+      result->navigator = RAVE_OBJECT_COPY(cp);
+      RAVE_OBJECT_BIND(result->navigator, result);
+    } else {
+      RAVE_CRITICAL0("Failed to create PyPolarNavigator instance");
+      raiseException_gotoTag(done, PyExc_MemoryError, "Failed to allocate memory for PyPolarNavigator.");
+    }
   }
 
-  result->navigator = RAVE_OBJECT_COPY(cp);
-  RAVE_OBJECT_BIND(result->navigator, result);
-
-error:
+done:
   RAVE_OBJECT_RELEASE(cp);
   return result;
 }
+
 /**
  * Deallocates the polar navigator
  * @param[in] obj the object to deallocate.
@@ -127,6 +120,7 @@ static void _pypolarnavigator_dealloc(PyPolarNavigator* obj)
   if (obj == NULL) {
     return;
   }
+  PYRAVE_DEBUG_OBJECT_DESTROYED;
   RAVE_OBJECT_UNBIND(obj->navigator, obj);
   RAVE_OBJECT_RELEASE(obj->navigator);
   PyObject_Del(obj);
@@ -142,20 +136,6 @@ static PyObject* _pypolarnavigator_new(PyObject* self, PyObject* args)
 {
   PyPolarNavigator* result = PyPolarNavigator_New(NULL);
   return (PyObject*)result;
-#ifdef KALLE
-  PolarNavigator* result = NULL;
-  result = PyObject_NEW(PolarNavigator, &PolarNavigator_Type);
-  if (result == NULL) {
-    return NULL;
-  }
-  result->navigator = RAVE_OBJECT_NEW(&PolarNavigator_TYPE);
-  if (result->navigator == NULL) {
-    RAVE_CRITICAL0("Could not allocate polar navigator");
-    PyObject_Del(result);
-    raiseException_returnNULL(PyExc_MemoryError, "Failed to allocate polar navigator");
-  }
-  return (PyObject*)result;
-#endif
 }
 
 /**
@@ -453,6 +433,6 @@ void init_polarnav(void)
     Py_FatalError("Can't define _polarnav.error");
   }
 
-  Rave_initializeDebugger();
+  PYRAVE_DEBUG_INITIALIZE;
 }
 /*@} End of Module setup */

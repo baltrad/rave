@@ -70,7 +70,9 @@ static void **PyPolarScan_API;
   (*(PyPolarScan_GetNative_RETURN (*)PyPolarScan_GetNative_PROTO) PyPolarScan_API[PyPolarScan_GetNative_NUM])
 
 /**
- * Creates a new polar scan instance. Release this object with Py_DECREF.
+ * Creates a new polar scan instance. Release this object with Py_DECREF. If a PolarScan_t scan is
+ * provided and this scan already is bound to a python instance, this instance will be increfed and
+ * returned.
  * @param[in] scan - the PolarScan_t intance.
  * @returns the PyPolarScan instance.
  */

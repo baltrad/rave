@@ -63,22 +63,24 @@ static PyPolarNavigator_New_RETURN PyPolarNavigator_New PyPolarNavigator_New_PRO
 static void **PyPolarNavigator_API;
 
 /**
- * Returns a pointer to the internal polar scan, remember to release the reference
+ * Returns a pointer to the internal polar navigator, remember to release the reference
  * when done with the object. (RAVE_OBJECT_RELEASE).
  */
 #define PyPolarNavigator_GetNative \
   (*(PyPolarNavigator_GetNative_RETURN (*)PyPolarNavigator_GetNative_PROTO) PyPolarNavigator_API[PyPolarNavigator_GetNative_NUM])
 
 /**
- * Creates a new polar scan instance. Release this object with Py_DECREF.
- * @param[in] scan - the PolarScan_t intance.
+ * Creates a new polar scan instance. Release this object with Py_DECREF. If a PolarNavigator_t instance is
+ * provided and this instance already is bound to a python instance, this instance will be increfed and
+ * returned.
+ * @param[in] polarnav - the PolarNavigator_t instance.
  * @returns the PyPolarNavigator instance.
  */
 #define PyPolarNavigator_New \
   (*(PyPolarNavigator_New_RETURN (*)PyPolarNavigator_New_PROTO) PyPolarNavigator_API[PyPolarNavigator_New_NUM])
 
 /**
- * Checks if the object is a python polar scan.
+ * Checks if the object is a python polar navigator.
  */
 #define PyPolarNavigator_Check(op) \
    ((op)->ob_type == (PyTypeObject *)PyPolarNavigator_API[PyPolarNavigator_Type_NUM])

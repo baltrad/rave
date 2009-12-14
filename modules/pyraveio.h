@@ -76,7 +76,9 @@ static void **PyRaveIO_API;
   (*(PyRaveIO_GetNative_RETURN (*)PyRaveIO_GetNative_PROTO) PyRaveIO_API[PyRaveIO_GetNative_NUM])
 
 /**
- * Creates a new rave io instance. Release this object with Py_DECREF.
+ * Creates a new rave io instance. Release this object with Py_DECREF. If a RaveIO_t instance is
+ * provided and this instance already is bound to a python instance, this instance will be increfed and
+ * returned.
  * @param[in] raveio - the RaveIO_t intance.
  * @returns the PyRaveIO instance.
  */
@@ -92,7 +94,7 @@ static void **PyRaveIO_API;
   (*(PyRaveIO_Open_RETURN (*)PyRaveIO_Open_PROTO) PyRaveIO_API[PyRaveIO_Open_NUM])
 
 /**
- * Checks if the object is a python polar scan.
+ * Checks if the object is a python rave io.
  */
 #define PyRaveIO_Check(op) \
    ((op)->ob_type == (PyTypeObject *)PyRaveIO_API[PyRaveIO_Type_NUM])

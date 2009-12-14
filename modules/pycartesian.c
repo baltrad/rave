@@ -28,15 +28,21 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include <stdio.h>
 #include <string.h>
 
+#include "pyrave_debug.h"
+
 #define PYCARTESIAN_MODULE
 #include "pycartesian.h"
 
 #include "pyprojection.h"
 #include <arrayobject.h>
-#include "rave_debug.h"
 #include "rave_alloc.h"
 #include "raveutil.h"
 #include "rave.h"
+
+/**
+ * Initialize the debug object.
+ */
+PYRAVE_DEBUG_MODULE("_cartesian");
 
 /**
  * Some helpful exception defines.
@@ -85,17 +91,25 @@ PyCartesian_New(Cartesian_t* p)
     }
   } else {
     cp = RAVE_OBJECT_COPY(p);
+    result = RAVE_OBJECT_GETBINDING(p); // If p already have a binding, then this should only be increfed.
+    if (result != NULL) {
+      Py_INCREF(result);
+    }
   }
 
-  result = PyObject_NEW(PyCartesian, &PyCartesian_Type);
   if (result == NULL) {
-    RAVE_CRITICAL0("Failed to create PyCartesian instance");
-    raiseException_gotoTag(error, PyExc_MemoryError, "Failed to allocate memory for cartesian.");
+    result = PyObject_NEW(PyCartesian, &PyCartesian_Type);
+    if (result != NULL) {
+      PYRAVE_DEBUG_OBJECT_CREATED;
+      result->cartesian = RAVE_OBJECT_COPY(cp);
+      RAVE_OBJECT_BIND(result->cartesian, result);
+    } else {
+      RAVE_CRITICAL0("Failed to create PyCartesian instance");
+      raiseException_gotoTag(done, PyExc_MemoryError, "Failed to allocate memory for cartesian.");
+    }
   }
 
-  result->cartesian = RAVE_OBJECT_COPY(cp);
-  RAVE_OBJECT_BIND(result->cartesian, result);
-error:
+done:
   RAVE_OBJECT_RELEASE(cp);
   return result;
 }
@@ -110,6 +124,7 @@ static void _pycartesian_dealloc(PyCartesian* obj)
   if (obj == NULL) {
     return;
   }
+  PYRAVE_DEBUG_OBJECT_DESTROYED;
   RAVE_OBJECT_UNBIND(obj->cartesian, obj);
   RAVE_OBJECT_RELEASE(obj->cartesian);
   PyObject_Del(obj);
@@ -343,12 +358,7 @@ static PyObject* _pycartesian_getattr(PyCartesian* self, char* name)
   } else if (strcmp("projection", name) == 0) {
     Projection_t* projection = Cartesian_getProjection(self->cartesian);
     if (projection != NULL) {
-      PyProjection* result = RAVE_OBJECT_GETBINDING(projection);
-      if (result == NULL) {
-        result = PyProjection_New(projection);
-      } else {
-        Py_INCREF(result);
-      }
+      PyProjection* result = PyProjection_New(projection);
       RAVE_OBJECT_RELEASE(projection);
       return (PyObject*)result;
     } else {
@@ -514,6 +524,6 @@ init_cartesian(void)
 
   import_array(); /*To make sure I get access to Numeric*/
   import_pyprojection();
-  Rave_initializeDebugger();
+  PYRAVE_DEBUG_INITIALIZE;
 }
 /*@} End of Module setup */
