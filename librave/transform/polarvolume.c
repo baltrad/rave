@@ -38,8 +38,9 @@ struct _PolarVolume_t {
   Projection_t* projection; /**< projection for this volume */
   PolarNavigator_t* navigator; /**< a polar navigator */
   RaveObjectList_t* scans; /**< the list of scans */
-
-  int debug; /**< debugging flag */
+  char date[9];
+  char time[7];
+  char* source;
 };
 
 /*@{ Private functions */
@@ -49,8 +50,9 @@ static int PolarVolume_constructor(RaveCoreObject* obj)
   result->projection = NULL;
   result->navigator = NULL;
   result->scans = NULL;
-
-  result->debug = 0;
+  strcpy(result->date,"");
+  strcpy(result->time,"");
+  result->source = NULL;
 
   // Always initialize to default projection for lon/lat calculations
   result->projection = RAVE_OBJECT_NEW(&Projection_TYPE);
@@ -147,9 +149,105 @@ static int descendingElevationSort(const void* a, const void* b)
   }
   return 0;
 }
+
+/**
+ * Verifies that the string only contains digits.
+ * @param[in] value - the null terminated string
+ * @returns 1 if the string only contains digits, otherwise 0
+ */
+static int PolarVolumeInternal_isDigits(const char* value)
+{
+  int result = 0;
+  if (value != NULL) {
+    int len = strlen(value);
+    int i = 0;
+    result = 1;
+    for (i = 0; result == 1 && i < len; i++) {
+      if (value[i] < 0x30 || value[i] > 0x39) {
+        result = 0;
+      }
+    }
+  }
+  return result;
+}
+
 /*@} End of Private functions */
 
 /*@{ Interface functions */
+int PolarVolume_setTime(PolarVolume_t* pvol, const char* value)
+{
+  int result = 0;
+  RAVE_ASSERT((pvol != NULL), "pvol was NULL");
+  if (value == NULL) {
+    strcpy(pvol->time, "");
+  } else {
+    if (strlen(value) == 6 && PolarVolumeInternal_isDigits(value)) {
+      strcpy(pvol->time, value);
+      result = 1;
+    }
+  }
+  return result;
+}
+
+const char* PolarVolume_getTime(PolarVolume_t* pvol)
+{
+  RAVE_ASSERT((pvol != NULL), "pvol was NULL");
+  if (strcmp(pvol->time, "") == 0) {
+    return NULL;
+  }
+  return (const char*)pvol->time;
+}
+
+int PolarVolume_setDate(PolarVolume_t* pvol, const char* value)
+{
+  int result = 0;
+  RAVE_ASSERT((pvol != NULL), "pvol was NULL");
+  if (value == NULL) {
+    strcpy(pvol->date, "");
+  } else {
+    if (strlen(value) == 8 && PolarVolumeInternal_isDigits(value)) {
+      strcpy(pvol->date, value);
+      result = 1;
+    }
+  }
+  return result;
+}
+
+const char* PolarVolume_getDate(PolarVolume_t* pvol)
+{
+  RAVE_ASSERT((pvol != NULL), "pvol was NULL");
+  if (strcmp(pvol->date, "") == 0) {
+    return NULL;
+  }
+  return (const char*)pvol->date;
+}
+
+int PolarVolume_setSource(PolarVolume_t* pvol, const char* value)
+{
+  char* tmp = NULL;
+  int result = 0;
+  RAVE_ASSERT((pvol != NULL), "pvol was NULL");
+  if (value != NULL) {
+    tmp = RAVE_STRDUP(value);
+    if (tmp != NULL) {
+      RAVE_FREE(pvol->source);
+      pvol->source = tmp;
+      tmp = NULL;
+      result = 1;
+    }
+  } else {
+    RAVE_FREE(pvol->source);
+    result = 1;
+  }
+  return result;
+}
+
+const char* PolarVolume_getSource(PolarVolume_t* pvol)
+{
+  RAVE_ASSERT((pvol != NULL), "pvol was NULL");
+  return (const char*)pvol->source;
+}
+
 void PolarVolume_setLongitude(PolarVolume_t* pvol, double lon)
 {
   RAVE_ASSERT((pvol != NULL), "pvol was NULL");
@@ -339,12 +437,6 @@ int PolarVolume_isTransformable(PolarVolume_t* pvol)
     result = 1;
   }
   return result;
-}
-
-void PolarVolume_setDebug(PolarVolume_t* pvol, int enable)
-{
-  RAVE_ASSERT((pvol != NULL), "pvol was NULL");
-  pvol->debug = enable;
 }
 
 /*@} End of Interface functions */

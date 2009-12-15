@@ -40,6 +40,51 @@ typedef struct _PolarVolume_t PolarVolume_t;
 extern RaveCoreObjectType PolarVolume_TYPE;
 
 /**
+ * Sets the nominal time.
+ * @param[in] pvol - self
+ * @param[in] value - the time in the format HHmmss
+ * @returns 1 on success, otherwise 0
+ */
+int PolarVolume_setTime(PolarVolume_t* pvol, const char* value);
+
+/**
+ * Returns the nominal time.
+ * @param[in] pvol - self
+ * @returns the nominal time (or NULL if there is none)
+ */
+const char* PolarVolume_getTime(PolarVolume_t* pvol);
+
+/**
+ * Sets the nominal date.
+ * @param[in] pvol - self
+ * @param[in] value - the date in the format YYYYMMDD
+ * @returns 1 on success, otherwise 0
+ */
+int PolarVolume_setDate(PolarVolume_t* pvol, const char* value);
+
+/**
+ * Returns the nominal date.
+ * @param[in] pvol - self
+ * @returns the nominal time (or NULL if there is none)
+ */
+const char* PolarVolume_getDate(PolarVolume_t* pvol);
+
+/**
+ * Sets the source.
+ * @param[in] pvol - self
+ * @param[in] value - the source
+ * @returns 1 on success, otherwise 0
+ */
+int PolarVolume_setSource(PolarVolume_t* pvol, const char* value);
+
+/**
+ * Returns the source.
+ * @param[in] pvol - self
+ * @returns the source or NULL if there is none
+ */
+const char* PolarVolume_getSource(PolarVolume_t* pvol);
+
+/**
  * Sets the longitude for the volume
  * @param[in] pvol - the polar volume
  * @param[in] double - the longitude
@@ -165,12 +210,5 @@ int PolarVolume_isAscendingScans(PolarVolume_t* pvol);
  * @returns 1 if the polar volume is ready, otherwise 0.
  */
 int PolarVolume_isTransformable(PolarVolume_t* pvol);
-
-/**
- * Enables/Disables calculation debugging for a polar volume
- * @param[in] pvol - the volume
- * @param[in] enable - 0 to disable (default) 1 to activate
- */
-void PolarVolume_setDebug(PolarVolume_t* pvol, int enable);
 
 #endif

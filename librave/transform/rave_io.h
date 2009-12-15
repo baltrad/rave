@@ -29,27 +29,15 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "cartesian.h"
 #include "rave_object.h"
 
-//(PVOL|CVOL|SCAN|RAY|AZIM|IMAGE|COMP|XSEC|VP|PIC)
-//(SCAN|PPI|CAPPI|PCAPPI|ETOP|MAX|RR|VIL|COMP|VP|RHI|XSEC|VSP|HSP|RAY|AZIM|QUAL)
-
-typedef enum RaveIO_ObjectType {
-  RaveIO_ObjectType_UNDEFINED = -1,
-  RaveIO_ObjectType_PVOL = 0,
-  RaveIO_ObjectType_CVOL = 1,
-  RaveIO_ObjectType_SCAN,
-  RaveIO_ObjectType_RAY,
-  RaveIO_ObjectType_AZIM,
-  RaveIO_ObjectType_IMAGE,
-  RaveIO_ObjectType_COMP,
-  RaveIO_ObjectType_XSEC,
-  RaveIO_ObjectType_VP,
-  RaveIO_ObjectType_PIC
-} RaveIO_ObjectType;
-
 typedef enum RaveIO_ODIM_Version {
   RaveIO_ODIM_Version_UNDEFINED = -1,
-  RaveIO_ODIM_Version_2_0 = 0,
+  RaveIO_ODIM_Version_2_0 = 0,        /**< Currently, the only supported ODIM version (and default) */
 } RaveIO_ODIM_Version;
+
+typedef enum RaveIO_ODIM_H5rad_Version {
+  RaveIO_ODIM_H5rad_Version_UNDEFINED = -1,
+  RaveIO_ODIM_H5rad_Version_2_0 = 0,  /**< Currently, the only supported ODIM version (and default) */
+} RaveIO_ODIM_H5rad_Version;
 
 /**
  * Defines a Rave IO instance
@@ -68,64 +56,100 @@ extern RaveCoreObjectType RaveIO_TYPE;
 void RaveIO_close(RaveIO_t* raveio);
 
 /**
- * Opens a HDF5 file.
- * @param[in] filename - the file that should be opened
- * @returns a RaveIO_t instance on success, otherwise NULL
- */
-//RaveIO_t* RaveIO_open(const char* filename);
-
-/**
- * Loads a HDF5 file into the RaveIO instance.
- * @param[in] raveio - the Rave IO instance
+ * Opens a supported HDF5 file and loads it into the RaveIO instance.
+ * Same as:
+ * RaveIO_t* instance = RAVE_OBJECT_NEW(&RaveIO_TYPE);
+ * RaveIO_setFilename(instance, filename);
+ * RaveIO_load(instance);
+ *
  * @param[in] filename - the HDF5 file to open
- * @returns 0 on failure, otherwise 1
+ * @returns The raveio instance on success, otherwise NULL.
  */
-int RaveIO_open(RaveIO_t* raveio, const char* filename);
+RaveIO_t* RaveIO_open(const char* filename);
 
 /**
- * Returns if the HDF5 nodelist has been read into memory or not.
- * @param[in] raveio- the Rave IO instance
- * @returns 1 if nodelist is loaded, otherwise 0
+ * Loads the HDF5 file into the raveio instance.
+ * @param[in] raveio - self
+ * @returns the opened object
  */
-int RaveIO_isOpen(RaveIO_t* raveio);
+int RaveIO_load(RaveIO_t* raveio);
 
 /**
- * Loads a scan at the specified index where the format for the node will
- * be /dataset<dsindex>/data<dindex>.
+ * Saves a rave object as specified according to ODIM HDF5 format specification.
+ * @param[in] raveio - self
+ * @param[in] object - the object to save
+ * @param[in] filename - the file name this file should have
+ * @returns 1 on success, otherwise 0
+ */
+int RaveIO_save(RaveIO_t* raveio);
+
+/**
+ * Sets the object to be saved.
+ * @param[in] raveio - self
+ * @param[in] object - the object to be saved
+ */
+void RaveIO_setObject(RaveIO_t* raveio, RaveCoreObject* object);
+
+/**
+ * Returns the loaded object/object to be saved.
+ * @param[in] raveio - self
+ * @returns the object
+ */
+RaveCoreObject* RaveIO_getObject(RaveIO_t* raveio);
+
+/**
+ * Sets the filename that should be used when saving the object.
+ * @param[in] raveio - self
+ * @param[in] filename - the filename that should be used when saving.
+ * @returns 1 on success, otherwise 0
+ */
+int RaveIO_setFilename(RaveIO_t* raveio, const char* filename);
+
+/**
+ * Returns the current filename.
+ * @param[in] raveio - self
+ * @returns the current filename
+ */
+const char* RaveIO_getFilename(RaveIO_t* raveio);
+
+/**
+ * Returns the object type for the currently opened file. Requires that
+ * a RaveCoreObject has been set.
  * @param[in] raveio - the Rave IO instance
- * @param[in] dsindex - the dataset index
- * @param[in] dindex  - the data index
- * @returns the loaded scan or NULL on failure.
+ * @returns the object type or Rave_ObjectType_UNDEFINED on error.
  */
-PolarScan_t* RaveIO_loadScanIndex(RaveIO_t* raveio, const int dsindex, const int dindex);
+Rave_ObjectType RaveIO_getObjectType(RaveIO_t* raveio);
 
 /**
- * Loads a polar volume.
- * @param[in] raveio - the Rave IO instance
- * @returns a Polar Volume on success, otherwise NULL
+ * Sets the ODIM version to use when saving the file. Currently, the only
+ * supported version is 2.0.
+ * @param[in] raveio - self
+ * @param[in] version - the version to be used
+ * @returns 1 if the specified version is supported, otherwise 0.
  */
-PolarVolume_t* RaveIO_loadVolume(RaveIO_t* raveio);
+int RaveIO_setOdimVersion(RaveIO_t* raveio, RaveIO_ODIM_Version version);
 
 /**
- * Verifies if the currently opened file is supported
- * by the RaveIO interface.
+ * Returns the ODIM version.
  * @param[in] raveio - the Rave IO instance
- * @returns 1 if it is supported, otherwise 0
- */
-int RaveIO_isSupported(RaveIO_t* raveio);
-
-/**
- * Returns the object type for the currently opened file.
- * @param[in] raveio - the Rave IO instance
- * @returns the object type or RaveIO_ObjectType_UNDEFINED on error.
- */
-RaveIO_ObjectType RaveIO_getObjectType(RaveIO_t* raveio);
-
-/**
- * Returns the ODIM version for the opened file.
- * @param[in] raveio - the Rave IO instance
- * @returns a valid ODIM version or RaveIO_ODIM_Version_UNDEFINED.
+ * @returns the ODIM version
  */
 RaveIO_ODIM_Version RaveIO_getOdimVersion(RaveIO_t* raveio);
+
+/**
+ * Sets the ODIM h5rad version to use when saving the file. Currently, the only
+ * supported version is 2.0.
+ * @param[in] raveio - self
+ * @param[in] version - the version to be used
+ * @returns 1 if the specified version is supported, otherwise 0.
+ */
+int RaveIO_setH5radVersion(RaveIO_t* raveio, RaveIO_ODIM_H5rad_Version version);
+
+/**
+ * Returns the h5rad version.
+ * @param[in] raveio - the Rave IO instance
+ * @returns the h5rad version
+ */
+RaveIO_ODIM_H5rad_Version RaveIO_getH5radVersion(RaveIO_t* raveio);
 
 #endif

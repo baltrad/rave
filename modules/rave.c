@@ -235,20 +235,39 @@ void init_rave(void)
   add_long_constant(dictionary, "RaveValueType_NODATA", RaveValueType_NODATA);
   add_long_constant(dictionary, "RaveValueType_DATA", RaveValueType_DATA);
 
-  add_long_constant(dictionary, "RaveIO_ObjectType_UNDEFINED", RaveIO_ObjectType_UNDEFINED);
-  add_long_constant(dictionary, "RaveIO_ObjectType_PVOL", RaveIO_ObjectType_PVOL);
-  add_long_constant(dictionary, "RaveIO_ObjectType_CVOL", RaveIO_ObjectType_CVOL);
-  add_long_constant(dictionary, "RaveIO_ObjectType_SCAN", RaveIO_ObjectType_SCAN);
-  add_long_constant(dictionary, "RaveIO_ObjectType_RAY", RaveIO_ObjectType_RAY);
-  add_long_constant(dictionary, "RaveIO_ObjectType_AZIM", RaveIO_ObjectType_AZIM);
-  add_long_constant(dictionary, "RaveIO_ObjectType_IMAGE", RaveIO_ObjectType_IMAGE);
-  add_long_constant(dictionary, "RaveIO_ObjectType_COMP", RaveIO_ObjectType_COMP);
-  add_long_constant(dictionary, "RaveIO_ObjectType_XSEC", RaveIO_ObjectType_XSEC);
-  add_long_constant(dictionary, "RaveIO_ObjectType_VP", RaveIO_ObjectType_VP);
-  add_long_constant(dictionary, "RaveIO_ObjectType_PIC", RaveIO_ObjectType_PIC);
-
   add_long_constant(dictionary, "RaveIO_ODIM_Version_UNDEFINED", RaveIO_ODIM_Version_UNDEFINED);
   add_long_constant(dictionary, "RaveIO_ODIM_Version_2_0", RaveIO_ODIM_Version_2_0);
+
+  add_long_constant(dictionary, "Rave_ObjectType_UNDEFINED", Rave_ObjectType_UNDEFINED);
+  add_long_constant(dictionary, "Rave_ObjectType_PVOL", Rave_ObjectType_PVOL);
+  add_long_constant(dictionary, "Rave_ObjectType_CVOL", Rave_ObjectType_CVOL);
+  add_long_constant(dictionary, "Rave_ObjectType_SCAN", Rave_ObjectType_SCAN);
+  add_long_constant(dictionary, "Rave_ObjectType_RAY", Rave_ObjectType_RAY);
+  add_long_constant(dictionary, "Rave_ObjectType_AZIM", Rave_ObjectType_AZIM);
+  add_long_constant(dictionary, "Rave_ObjectType_IMAGE", Rave_ObjectType_IMAGE);
+  add_long_constant(dictionary, "Rave_ObjectType_COMP", Rave_ObjectType_COMP);
+  add_long_constant(dictionary, "Rave_ObjectType_XSEC", Rave_ObjectType_XSEC);
+  add_long_constant(dictionary, "Rave_ObjectType_VP", Rave_ObjectType_VP);
+  add_long_constant(dictionary, "Rave_ObjectType_PIC", Rave_ObjectType_PIC);
+
+  add_long_constant(dictionary, "Rave_ProductType_UNDEFINED", Rave_ProductType_UNDEFINED);
+  add_long_constant(dictionary, "Rave_ProductType_SCAN", Rave_ProductType_SCAN);
+  add_long_constant(dictionary, "Rave_ProductType_PPI", Rave_ProductType_PPI);
+  add_long_constant(dictionary, "Rave_ProductType_CAPPI", Rave_ProductType_CAPPI);
+  add_long_constant(dictionary, "Rave_ProductType_PCAPPI", Rave_ProductType_PCAPPI);
+  add_long_constant(dictionary, "Rave_ProductType_ETOP", Rave_ProductType_ETOP);
+  add_long_constant(dictionary, "Rave_ProductType_MAX", Rave_ProductType_MAX);
+  add_long_constant(dictionary, "Rave_ProductType_RR", Rave_ProductType_RR);
+  add_long_constant(dictionary, "Rave_ProductType_VIL", Rave_ProductType_VIL);
+  add_long_constant(dictionary, "Rave_ProductType_COMP", Rave_ProductType_COMP);
+  add_long_constant(dictionary, "Rave_ProductType_VP", Rave_ProductType_VP);
+  add_long_constant(dictionary, "Rave_ProductType_RHI", Rave_ProductType_RHI);
+  add_long_constant(dictionary, "Rave_ProductType_XSEC", Rave_ProductType_XSEC);
+  add_long_constant(dictionary, "Rave_ProductType_VSP", Rave_ProductType_VSP);
+  add_long_constant(dictionary, "Rave_ProductType_HSP", Rave_ProductType_HSP);
+  add_long_constant(dictionary, "Rave_ProductType_RAY", Rave_ProductType_RAY);
+  add_long_constant(dictionary, "Rave_ProductType_AZIM", Rave_ProductType_AZIM);
+  add_long_constant(dictionary, "Rave_ProductType_QUAL", Rave_ProductType_QUAL);
 
   import_array(); /*To make sure I get access to Numeric*/
   import_pyprojection();

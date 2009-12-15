@@ -124,6 +124,17 @@ typedef struct _raveobjecttype {
   (RaveCoreObject_check((RaveCoreObject*)this))
 
 /**
+ * Checks if this object is of the specified type.
+ * For example RAVE_OBJECT_CHECK_TYPE(obj, &PolarScan_TYPE).
+ * @param[in] this - the object
+ * @param[in] type - the type to be checked against.
+ * @returns true if matching, otherwise false.
+ */
+#define RAVE_OBJECT_CHECK_TYPE(this, type) \
+  (((RaveCoreObject*)this)->roh_type == type)
+
+
+/**
  * Creates a new instance of the provided type.
  * @param[in] type - the object type
  * @param[in] filename - the filename that this allocation was performed in

@@ -40,6 +40,9 @@ struct _Cartesian_t {
   double yscale;
   RaveDataType type; /**< data type */
 
+  Rave_ProductType product;
+  Rave_ObjectType objectType;
+
   double llX;
   double llY;
   double urX;
@@ -47,6 +50,9 @@ struct _Cartesian_t {
 
   // What
   char quantity[64]; /**< what does this data represent */
+  char date[9];
+  char time[7];
+  char* source;
   double gain; /**< gain when scaling */
   double offset; /**< offset when scaling */
   double nodata; /**< nodata */
@@ -56,8 +62,6 @@ struct _Cartesian_t {
 
   // Data
   void* data; /**< data ptr */
-
-  int debug;
 };
 
 /*@{ Private functions */
@@ -77,13 +81,17 @@ static int Cartesian_constructor(RaveCoreObject* obj)
   result->urX = 0.0;
   result->urY = 0.0;
   strcpy(result->quantity, "");
+  strcpy(result->time, "");
+  strcpy(result->date, "");
+  result->product = Rave_ProductType_UNDEFINED;
+  result->objectType = Rave_ObjectType_UNDEFINED;
+  result->source = NULL;
   result->gain = 0.0;
   result->offset = 0.0;
   result->nodata = 0.0;
   result->undetect = 0.0;
   result->projection = NULL;
   result->data = NULL;
-  result->debug = 0;
   return 1;
 }
 
@@ -96,12 +104,126 @@ static void Cartesian_destructor(RaveCoreObject* obj)
   Cartesian_t* cartesian = (Cartesian_t*)obj;
   if (cartesian != NULL) {
     RAVE_OBJECT_RELEASE(cartesian->projection);
+    RAVE_FREE(cartesian->source);
     RAVE_FREE(cartesian->data);
   }
 }
+
+/**
+ * Verifies that the string only contains digits.
+ * @param[in] value - the null terminated string
+ * @returns 1 if the string only contains digits, otherwise 0
+ */
+static int CartesianInternal_isDigits(const char* value)
+{
+  int result = 0;
+  if (value != NULL) {
+    int len = strlen(value);
+    int i = 0;
+    result = 1;
+    for (i = 0; result == 1 && i < len; i++) {
+      if (value[i] < 0x30 || value[i] > 0x39) {
+        result = 0;
+      }
+    }
+  }
+  return result;
+}
+
 /*@} End of Private functions */
 
 /*@{ Interface functions */
+int Cartesian_setTime(Cartesian_t* cartesian, const char* value)
+{
+  int result = 0;
+  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
+  if (value == NULL) {
+    strcpy(cartesian->time, "");
+  } else {
+    if (strlen(value) == 6 && CartesianInternal_isDigits(value)) {
+      strcpy(cartesian->time, value);
+      result = 1;
+    }
+  }
+  return result;
+}
+
+const char* Cartesian_getTime(Cartesian_t* cartesian)
+{
+  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
+  if (strcmp(cartesian->time, "") == 0) {
+    return NULL;
+  }
+  return (const char*)cartesian->time;
+}
+
+int Cartesian_setDate(Cartesian_t* cartesian, const char* value)
+{
+  int result = 0;
+  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
+  if (value == NULL) {
+    strcpy(cartesian->date, "");
+  } else {
+    if (strlen(value) == 8 && CartesianInternal_isDigits(value)) {
+      strcpy(cartesian->date, value);
+      result = 1;
+    }
+  }
+  return result;
+}
+
+const char* Cartesian_getDate(Cartesian_t* cartesian)
+{
+  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
+  if (strcmp(cartesian->date, "") == 0) {
+    return NULL;
+  }
+  return (const char*)cartesian->date;
+}
+
+int Cartesian_setSource(Cartesian_t* cartesian, const char* value)
+{
+  char* tmp = NULL;
+  int result = 0;
+  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
+  if (value != NULL) {
+    tmp = RAVE_STRDUP(value);
+    if (tmp != NULL) {
+      RAVE_FREE(cartesian->source);
+      cartesian->source = tmp;
+      tmp = NULL;
+      result = 1;
+    }
+  } else {
+    RAVE_FREE(cartesian->source);
+    result = 1;
+  }
+  return result;
+}
+
+const char* Cartesian_getSource(Cartesian_t* cartesian)
+{
+  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
+  return (const char*)cartesian->source;
+}
+
+int Cartesian_setObjectType(Cartesian_t* cartesian, Rave_ObjectType type)
+{
+  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
+  if (type == Rave_ObjectType_CVOL || type == Rave_ObjectType_IMAGE || type == Rave_ObjectType_COMP) {
+    cartesian->objectType = type;
+    return 1;
+  }
+  return 0;
+}
+
+Rave_ObjectType Cartesian_getObjectType(Cartesian_t* cartesian)
+{
+  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
+  return cartesian->objectType;
+}
+
+
 void Cartesian_setXSize(Cartesian_t* cartesian, long xsize)
 {
   RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
@@ -174,6 +296,19 @@ double Cartesian_getYScale(Cartesian_t* cartesian)
 {
   RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
   return cartesian->yscale;
+}
+
+int Cartesian_setProduct(Cartesian_t* cartesian, Rave_ProductType type)
+{
+  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
+  cartesian->product = type;
+  return 1;
+}
+
+Rave_ProductType Cartesian_getProduct(Cartesian_t* cartesian)
+{
+  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
+  return cartesian->product;
 }
 
 double Cartesian_getLocationX(Cartesian_t* cartesian, long x)
@@ -366,11 +501,6 @@ int Cartesian_isTransformable(Cartesian_t* cartesian)
   return result;
 }
 
-void Cartesian_setDebug(Cartesian_t* cartesian, int debug)
-{
-  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
-  cartesian->debug = debug;
-}
 /*@} End of Interface functions */
 
 RaveCoreObjectType Cartesian_TYPE = {

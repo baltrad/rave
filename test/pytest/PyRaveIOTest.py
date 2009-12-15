@@ -25,8 +25,10 @@ Tests the PyRaveIO module.
 '''
 import unittest
 import os
-import _rave
 import _raveio
+import _cartesian
+import _projection
+import _rave
 import string
 import numpy
 import _pyhl
@@ -46,133 +48,48 @@ class PyRaveIOTest(unittest.TestCase):
     if os.path.isfile(self.TEMPORARY_FILE):
       os.unlink(self.TEMPORARY_FILE)
 
-  def testNewRaveIO(self):
+  def test_new(self):
     obj = _raveio.new()
     israveio = string.find(`type(obj)`, "RaveIOCore")
     self.assertNotEqual(-1, israveio)
 
-  def testOpen(self):
+  def test_load(self):
     obj = _raveio.new()
-    obj.open(self.FIXTURE_VOLUME)
-    self.assertEquals(True, obj.isOpen())
-  
-  def testOpen_2(self):
-    obj = _raveio.open(self.FIXTURE_VOLUME)
-    self.assertEquals(True, obj.isOpen())
-    obj.close()
-    self.assertEquals(False, obj.isOpen())
-    obj.open(self.FIXTURE_VOLUME)
-    self.assertEquals(True, obj.isOpen())
+    self.assertTrue(obj.object == None)
+    obj.filename = self.FIXTURE_VOLUME
+    obj.load()
+    self.assertTrue(obj.object != None)
 
-  def testOpen_noSuchFile(self):
+  def test_open_noSuchFile(self):
     try:
       _raveio.open("No_Such_File_Fixture.h5")
       self.fail("Expected IOError")
     except IOError, e:
       pass
+  
+  def test_objectType(self):
+    obj = _raveio.open(self.FIXTURE_VOLUME)
+    self.assertEquals(_raveio.Rave_ObjectType_PVOL, obj.objectType)
 
-  def testIsOpen(self):
+  def test_objectType_notSettable(self):
     obj = _raveio.new()
-    self.assertEquals(False, obj.isOpen())
-    obj.open(self.FIXTURE_VOLUME)
-    self.assertEquals(True, obj.isOpen())
-    obj.close()
-    self.assertEquals(False, obj.isOpen())
+    self.assertEquals(_raveio.Rave_ObjectType_UNDEFINED, obj.objectType)
+    try:
+      obj.objectType = _raveio.Rave_ObjectType_PVOL
+      self.fail("Expected AttributeError")
+    except AttributeError, e:
+      pass
+    self.assertEquals(_raveio.Rave_ObjectType_UNDEFINED, obj.objectType)
   
-  def testGetObjectType(self):
+  def test_load_volume(self):
     obj = _raveio.open(self.FIXTURE_VOLUME)
-    self.assertEquals(_rave.RaveIO_ObjectType_PVOL, obj.getObjectType())
-
-  def testGetObjectType_notReckognizedObjectType(self):
-    # Create fixture
-    nl = _pyhl.nodelist()
-    self.addAttributeNode(nl, "/Conventions", "string", "ODIM_H5/V2_0")     
-    self.addGroupNode(nl, "/what")
-    self.addAttributeNode(nl, "/what/object", "string", "PYX")
-    nl.write(self.TEMPORARY_FILE)
-    nl = None
-    
-    obj = _raveio.open(self.TEMPORARY_FILE)
-    self.assertEquals(_rave.RaveIO_ObjectType_UNDEFINED, obj.getObjectType())
- 
-  def testIsSupported_pvol(self):
-    obj = _raveio.open(self.FIXTURE_VOLUME)
-    self.assertEquals(True, obj.isSupported())
-
-  def testIsSupported_notReckognizedObjectType(self):
-    # Create fixture
-    nl = _pyhl.nodelist()
-    self.addAttributeNode(nl, "/Conventions", "string", "ODIM_H5/V2_0")    
-    self.addGroupNode(nl, "/what")
-    self.addAttributeNode(nl, "/what/object", "string", "PYX")
-    nl.write(self.TEMPORARY_FILE)
-    nl = None
-    
-    obj = _raveio.open(self.TEMPORARY_FILE)
-    self.assertEquals(False, obj.isSupported())
-
-  def testIsSupported_missingConventions(self):
-    # Create fixture
-    nl = _pyhl.nodelist()
-    self.addGroupNode(nl, "/what")
-    self.addAttributeNode(nl, "/what/object", "string", "PVOL")
-    nl.write(self.TEMPORARY_FILE)
-    nl = None
-
-    obj = _raveio.open(self.TEMPORARY_FILE)
-    self.assertEquals(False, obj.isSupported())
-    
-  def testIsSupported_unsupportedConventions(self):
-    # Create fixture
-    nl = _pyhl.nodelist()
-    self.addAttributeNode(nl, "/Conventions", "string", "ODIM_H5/V3_0")
-    self.addGroupNode(nl, "/what")
-    self.addAttributeNode(nl, "/what/object", "string", "PVOL")
-    nl.write(self.TEMPORARY_FILE)
-    nl = None
-
-    obj = _raveio.open(self.TEMPORARY_FILE)
-    self.assertEquals(False, obj.isSupported())
-
-  def testGetOdimVersion(self):
-    # Create fixture
-    nl = _pyhl.nodelist()
-    self.addAttributeNode(nl, "/Conventions", "string", "ODIM_H5/V2_0")
-    nl.write(self.TEMPORARY_FILE)
-    nl = None
-    
-    obj = _raveio.open(self.TEMPORARY_FILE)
-    self.assertEquals(_rave.RaveIO_ODIM_Version_2_0, obj.getOdimVersion())
-    
-  def testGetOdimVersion_missingConventions(self):
-    # Create fixture
-    nl = _pyhl.nodelist()
-    self.addAttributeNode(nl, "/smurf", "string", "ODIM_H5/V2_0")
-    nl.write(self.TEMPORARY_FILE)
-    nl = None
-    
-    obj = _raveio.open(self.TEMPORARY_FILE)
-    self.assertEquals(_rave.RaveIO_ODIM_Version_UNDEFINED, obj.getOdimVersion())
-
-  def testGetOdimVersion_undefinedConventions(self):
-    # Create fixture
-    nl = _pyhl.nodelist()
-    self.addAttributeNode(nl, "/Conventions", "string", "GLGL")
-    nl.write(self.TEMPORARY_FILE)
-    nl = None
-    
-    obj = _raveio.open(self.TEMPORARY_FILE)
-    self.assertEquals(_rave.RaveIO_ODIM_Version_UNDEFINED, obj.getOdimVersion())
-  
-  def testLoad_volume(self):
-    obj = _raveio.open(self.FIXTURE_VOLUME)
-    vol = obj.load()
+    vol = obj.object
     result = string.find(`type(vol)`, "PolarVolumeCore")
     self.assertNotEqual(-1, result)     
 
-  def testLoad_volume_checkData(self):
+  def test_load_volume_checkData(self):
     obj = _raveio.open(self.FIXTURE_VOLUME)
-    vol = obj.load()
+    vol = obj.object
     self.assertEquals(20, vol.getNumberOfScans())
     self.assertAlmostEquals(56.3675, vol.latitude*180.0/math.pi, 4)
     self.assertAlmostEquals(12.8544, vol.longitude*180.0/math.pi, 4)
@@ -228,7 +145,66 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertAlmostEquals(0.0, scan.undetect, 4)
     self.assertEquals("VRAD", scan.quantity)
     self.assertAlmostEquals(40.0, scan.elangle*180.0/math.pi, 4)   
-       
+
+  def test_save_cartesian(self):
+    obj = _cartesian.new()
+    obj.time = "100000"
+    obj.date = "20091010"
+    obj.objectType = _rave.Rave_ObjectType_CVOL
+    obj.product = _rave.Rave_ProductType_CAPPI
+    obj.source = "PLC:123"
+    obj.quantity = "DBZH"
+    obj.gain = 1.0
+    obj.offset = 0.0
+    obj.nodata = 255.0
+    obj.undetect = 0.0
+    obj.xscale = 2000.0
+    obj.yscale = 2000.0
+    obj.areaextent = (-240000.0, -240000.0, 238000.0, 238000.0)
+    obj.projection = _projection.new("x","y","+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84")
+    data = numpy.zeros((240,240),numpy.uint8)
+    obj.setData(data)
+
+    ios = _raveio.new()
+    ios.object = obj
+    ios.filename = self.TEMPORARY_FILE
+    ios.save()
+    
+    # Verify result
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+    
+    self.assertEquals("ODIM_H5/V2_0", nodelist.getNode("/Conventions").data())
+    # What
+    self.assertEquals("100000", nodelist.getNode("/what/time").data())
+    self.assertEquals("20091010", nodelist.getNode("/what/date").data())
+    self.assertEquals("PLC:123", nodelist.getNode("/what/source").data())
+    self.assertEquals("CVOL", nodelist.getNode("/what/object").data())
+    self.assertEquals("H5rad 2.0", nodelist.getNode("/what/version").data())
+    
+    #Where
+    self.assertEquals("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", nodelist.getNode("/where/projdef").data())
+    self.assertEquals(240, nodelist.getNode("/where/xsize").data())
+    self.assertEquals(240, nodelist.getNode("/where/ysize").data())
+    self.assertAlmostEquals(2000.0, nodelist.getNode("/where/xscale").data(), 4)
+    self.assertAlmostEquals(2000.0, nodelist.getNode("/where/yscale").data(), 4)
+    
+    #dataset1
+    self.assertEquals("DBZH", nodelist.getNode("/dataset1/what/quantity").data())
+    self.assertEquals("100000", nodelist.getNode("/dataset1/what/starttime").data())
+    self.assertEquals("20091010", nodelist.getNode("/dataset1/what/startdate").data())
+    self.assertEquals("100000", nodelist.getNode("/dataset1/what/endtime").data())
+    self.assertEquals("20091010", nodelist.getNode("/dataset1/what/enddate").data())
+    self.assertAlmostEquals(1.0, nodelist.getNode("/dataset1/what/gain").data(), 4)
+    self.assertAlmostEquals(0.0, nodelist.getNode("/dataset1/what/offset").data(), 4)
+    self.assertAlmostEquals(255.0, nodelist.getNode("/dataset1/what/nodata").data(), 4)
+    self.assertAlmostEquals(0.0, nodelist.getNode("/dataset1/what/undetect").data(), 4)
+    
+    self.assertEquals(numpy.uint8, nodelist.getNode("/dataset1/data1/data").data().dtype)
+    self.assertEquals("IMAGE", nodelist.getNode("/dataset1/data1/data/CLASS").data())
+    self.assertEquals("1.2", nodelist.getNode("/dataset1/data1/data/IMAGE_VERSION").data())
+    
   def addGroupNode(self, nodelist, name):
     node = _pyhl.node(_pyhl.GROUP_ID, name)
     nodelist.addNode(node)

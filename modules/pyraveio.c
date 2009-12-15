@@ -32,6 +32,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "pyraveio.h"
 
 #include "pypolarvolume.h"
+#include "pycartesian.h"
+#include "pypolarscan.h"
 
 #include "pyrave_debug.h"
 #include "rave_alloc.h"
@@ -125,14 +127,13 @@ PyRaveIO_Open(const char* filename)
   if (filename == NULL) {
     raiseException_returnNULL(PyExc_ValueError, "providing a filename that is NULL");
   }
-  raveio = RAVE_OBJECT_NEW(&RaveIO_TYPE);
+
+  raveio = RaveIO_open(filename);
   if (raveio == NULL) {
-    raiseException_returnNULL(PyExc_MemoryError, "Failed to create IO instance");
-  }
-  if (!RaveIO_open(raveio, filename)) {
     raiseException_gotoTag(done, PyExc_IOError, "Failed to open file");
   }
   result = PyRaveIO_New(raveio);
+
 done:
   RAVE_OBJECT_RELEASE(raveio);
   return result;
@@ -185,18 +186,6 @@ static PyObject* _pyraveio_open(PyObject* self, PyObject* args)
 }
 
 /**
- * Returns true or false depending on if a HDF5 nodelist is loaded
- * or not.
- * @param[in] self - this instance
- * @param[in] args - N/A
- * @returns Py_None on success, otherwise NULL
- */
-static PyObject* _pyraveio_isOpen(PyRaveIO* self, PyObject* args)
-{
-  return PyBool_FromLong(RaveIO_isOpen(self->raveio));
-}
-
-/**
  * Closes the currently open nodelist.
  * @param[in] self - this instance
  * @param[in] args - N/A
@@ -209,76 +198,31 @@ static PyObject* _pyraveio_close(PyRaveIO* self, PyObject* args)
 }
 
 /**
- * Closes the currently open nodelist.
+ * Atempts to load the file that is defined by filename.
  * @param[in] self - this instance
  * @param[in] args - N/A
  * @returns Py_None on success, otherwise NULL
  */
-static PyObject* _pyraveio_openFile(PyRaveIO* self, PyObject* args)
+static PyObject* _pyraveio_load(PyRaveIO* self, PyObject* args)
 {
-  char* filename = NULL;
-  if (!PyArg_ParseTuple(args, "s", &filename)) {
-    return NULL;
-  }
-  if (!RaveIO_open(self->raveio, filename)) {
-    raiseException_returnNULL(PyExc_IOError, "Failed to open file");
+  if (!RaveIO_load(self->raveio)) {
+    raiseException_returnNULL(PyExc_IOError, "Failed to load file");
   }
   Py_RETURN_NONE;
 }
 
 /**
- * Returns the currently opened files object type (/what/object).
+ * Atempts to save the file.
  * @param[in] self - this instance
  * @param[in] args - N/A
- * @returns the object type on success, otherwise -1
+ * @returns Py_None on success, otherwise NULL
  */
-static PyObject* _pyraveio_getObjectType(PyRaveIO* self, PyObject* args)
+static PyObject* _pyraveio_save(PyRaveIO* self, PyObject* args)
 {
-  return PyInt_FromLong(RaveIO_getObjectType(self->raveio));
-}
-
-/**
- * Returns if the currently opened file is supported or not.
- * @param[in] self - this instance
- * @param[in] args - N/A
- * @returns True if the file structure is supported, otherwise False
- */
-static PyObject* _pyraveio_isSupported(PyRaveIO* self, PyObject* args)
-{
-  return PyBool_FromLong(RaveIO_isSupported(self->raveio));
-}
-
-static PyObject* _pyraveio_load(PyRaveIO* self, PyObject* args)
-{
-  PyObject* result = NULL;
-  switch (RaveIO_getObjectType(self->raveio)) {
-  case RaveIO_ObjectType_PVOL: {
-    PolarVolume_t* pvol = RaveIO_loadVolume(self->raveio);
-    if (pvol != NULL) {
-      result = (PyObject*)PyPolarVolume_New(pvol);
-    }
-    RAVE_OBJECT_RELEASE(pvol);
-    break;
+  if (!RaveIO_save(self->raveio)) {
+    raiseException_returnNULL(PyExc_IOError, "Failed to save file");
   }
-  default:
-    RAVE_DEBUG0("Load: Unsupported object type");
-    break;
-  }
-  if (result == NULL) {
-    fprintf(stderr, "Returning NULL\n");
-  }
-  return result;
-}
-
-/**
- * Returns the current files version.
- * @param[in] self - this instance
- * @param[in] args - N/A
- * @returns The current files ODIM version
- */
-static PyObject* _pyraveio_getOdimVersion(PyRaveIO* self, PyObject* args)
-{
-  return PyInt_FromLong(RaveIO_getOdimVersion(self->raveio));
+  Py_RETURN_NONE;
 }
 
 /**
@@ -286,13 +230,9 @@ static PyObject* _pyraveio_getOdimVersion(PyRaveIO* self, PyObject* args)
  */
 static struct PyMethodDef _pyraveio_methods[] =
 {
-  {"isOpen", (PyCFunction) _pyraveio_isOpen, 1},
   {"close", (PyCFunction) _pyraveio_close, 1},
-  {"open", (PyCFunction) _pyraveio_openFile, 1},
-  {"getObjectType", (PyCFunction) _pyraveio_getObjectType, 1},
-  {"isSupported", (PyCFunction) _pyraveio_isSupported, 1},
-  {"getOdimVersion", (PyCFunction) _pyraveio_getOdimVersion, 1},
   {"load", (PyCFunction) _pyraveio_load, 1},
+  {"save", (PyCFunction) _pyraveio_save, 1},
   {NULL, NULL } /* sentinel */
 };
 
@@ -303,9 +243,34 @@ static struct PyMethodDef _pyraveio_methods[] =
 static PyObject* _pyraveio_getattr(PyRaveIO* self, char* name)
 {
   PyObject* res = NULL;
-
+  if (strcmp("version", name) == 0) {
+    return PyInt_FromLong(RaveIO_getOdimVersion(self->raveio));
+  } else if (strcmp("h5radversion", name) == 0) {
+    return PyInt_FromLong(RaveIO_getH5radVersion(self->raveio));
+  } else if (strcmp("objectType", name) == 0) {
+    return PyInt_FromLong(RaveIO_getObjectType(self->raveio));
+  } else if (strcmp("filename", name) == 0) {
+    return PyString_FromString(RaveIO_getFilename(self->raveio));
+  } else if (strcmp("object", name) == 0) {
+    RaveCoreObject* object = RaveIO_getObject(self->raveio);
+    if (object != NULL) {
+      if (RAVE_OBJECT_CHECK_TYPE(object, &Cartesian_TYPE)) {
+        res = (PyObject*)PyCartesian_New((Cartesian_t*)object);
+      } else if (RAVE_OBJECT_CHECK_TYPE(object, &PolarVolume_TYPE)) {
+        res = (PyObject*)PyPolarVolume_New((PolarVolume_t*)object);
+      } else if (RAVE_OBJECT_CHECK_TYPE(object, &PolarScan_TYPE)) {
+        res = (PyObject*)PyPolarScan_New((PolarScan_t*)object);
+      } else {
+        PyErr_SetString(PyExc_NotImplementedError, "support lacking for object type");
+      }
+      RAVE_OBJECT_RELEASE(object);
+      return res;
+    } else {
+      Py_RETURN_NONE;
+    }
+  }
   res = Py_FindMethod(_pyraveio_methods, (PyObject*) self, name);
-  if (res)
+  if (res != NULL)
     return res;
 
   PyErr_Clear();
@@ -318,7 +283,53 @@ static PyObject* _pyraveio_getattr(PyRaveIO* self, char* name)
  */
 static int _pyraveio_setattr(PyRaveIO* self, char* name, PyObject* val)
 {
-  return -1;
+  int result = -1;
+  if (name == NULL) {
+    goto done;
+  }
+  if (strcmp("version", name)==0) {
+    if (PyInt_Check(val)) {
+      if (!RaveIO_setOdimVersion(self->raveio, PyInt_AsLong(val))) {
+        raiseException_gotoTag(done, PyExc_ValueError, "illegal version number");
+      }
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError,"version must be a valid odim version");
+    }
+  } else if (strcmp("h5radversion", name) == 0) {
+    if (PyInt_Check(val)) {
+      if (!RaveIO_setH5radVersion(self->raveio, PyInt_AsLong(val))) {
+        raiseException_gotoTag(done, PyExc_ValueError, "illegal h5rad version number");
+      }
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError,"version must be a valid h5rad version");
+    }
+  } else if (strcmp("filename", name) == 0) {
+    if (PyString_Check(val)) {
+      if (!RaveIO_setFilename(self->raveio, PyString_AsString(val))) {
+        raiseException_gotoTag(done, PyExc_MemoryError, "failed to set file name");
+      }
+    } else if (val == Py_None) {
+      RaveIO_setFilename(self->raveio, NULL);
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError,"filename must be of type string");
+    }
+  } else if (strcmp("object", name) == 0) {
+    if (PyCartesian_Check(val)) {
+      RaveIO_setObject(self->raveio, (RaveCoreObject*)((PyCartesian*)val)->cartesian);
+    } else if (PyPolarScan_Check(val)) {
+      RaveIO_setObject(self->raveio, (RaveCoreObject*)((PyPolarScan*)val)->scan);
+    } else if (PyPolarVolume_Check(val)) {
+      RaveIO_setObject(self->raveio, (RaveCoreObject*)((PyPolarVolume*)val)->pvol);
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError, "Can only save objects of type : cartesian, polarscan or polarvolume");
+    }
+  } else {
+    raiseException_gotoTag(done, PyExc_AttributeError, name);
+  }
+
+  result = 0;
+done:
+  return result;
 }
 
 /*@} End of RaveIO */
@@ -351,6 +362,22 @@ static PyMethodDef functions[] = {
   {NULL,NULL} /*Sentinel*/
 };
 
+/**
+ * Adds constants to the dictionary (probably the modules dictionary).
+ * @param[in] dictionary - the dictionary the long should be added to
+ * @param[in] name - the name of the constant
+ * @param[in] value - the value
+ */
+static void add_long_constant(PyObject* dictionary, const char* name, long value)
+{
+  PyObject* tmp = NULL;
+  tmp = PyInt_FromLong(value);
+  if (tmp != NULL) {
+    PyDict_SetItemString(dictionary, name, tmp);
+  }
+  Py_XDECREF(tmp);
+}
+
 PyMODINIT_FUNC
 init_raveio(void)
 {
@@ -380,12 +407,32 @@ init_raveio(void)
     Py_FatalError("Can't define _raveio.error");
   }
 
+  add_long_constant(dictionary, "RaveIO_ODIM_Version_UNDEFINED", RaveIO_ODIM_Version_UNDEFINED);
+  add_long_constant(dictionary, "RaveIO_ODIM_Version_2_0", RaveIO_ODIM_Version_2_0);
+
+  add_long_constant(dictionary, "RaveIO_ODIM_H5rad_Version_UNDEFINED", RaveIO_ODIM_H5rad_Version_UNDEFINED);
+  add_long_constant(dictionary, "RaveIO_ODIM_H5rad_Version_2_0", RaveIO_ODIM_H5rad_Version_2_0);
+
+  add_long_constant(dictionary, "Rave_ObjectType_UNDEFINED", Rave_ObjectType_UNDEFINED);
+  add_long_constant(dictionary, "Rave_ObjectType_PVOL", Rave_ObjectType_PVOL);
+  add_long_constant(dictionary, "Rave_ObjectType_CVOL", Rave_ObjectType_CVOL);
+  add_long_constant(dictionary, "Rave_ObjectType_SCAN", Rave_ObjectType_SCAN);
+  add_long_constant(dictionary, "Rave_ObjectType_RAY", Rave_ObjectType_RAY);
+  add_long_constant(dictionary, "Rave_ObjectType_AZIM", Rave_ObjectType_AZIM);
+  add_long_constant(dictionary, "Rave_ObjectType_IMAGE", Rave_ObjectType_IMAGE);
+  add_long_constant(dictionary, "Rave_ObjectType_COMP", Rave_ObjectType_COMP);
+  add_long_constant(dictionary, "Rave_ObjectType_XSEC", Rave_ObjectType_XSEC);
+  add_long_constant(dictionary, "Rave_ObjectType_VP", Rave_ObjectType_VP);
+  add_long_constant(dictionary, "Rave_ObjectType_PIC", Rave_ObjectType_PIC);
+
   HL_init();
   HL_disableErrorReporting();
   HL_disableHdf5ErrorReporting();
   HL_setDebugLevel(HLHDF_SILENT);
 
   import_pypolarvolume();
+  import_pypolarscan();
+  import_pycartesian();
   PYRAVE_DEBUG_INITIALIZE;
 }
 /*@} End of Module setup */

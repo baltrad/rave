@@ -331,7 +331,29 @@ static PyObject* _pycartesian_getattr(PyCartesian* self, char* name)
 {
   PyObject* res = NULL;
 
-  if (strcmp("xsize", name) == 0) {
+  if (strcmp("time", name) == 0) {
+    if (Cartesian_getTime(self->cartesian) != NULL) {
+      return PyString_FromString(Cartesian_getTime(self->cartesian));
+    } else {
+      Py_RETURN_NONE;
+    }
+  } else if (strcmp("date", name) == 0) {
+    if (Cartesian_getDate(self->cartesian) != NULL) {
+      return PyString_FromString(Cartesian_getDate(self->cartesian));
+    } else {
+      Py_RETURN_NONE;
+    }
+  } else if (strcmp("objectType", name) == 0) {
+    return PyInt_FromLong(Cartesian_getObjectType(self->cartesian));
+  } else if (strcmp("product", name) == 0) {
+    return PyInt_FromLong(Cartesian_getProduct(self->cartesian));
+  } else if (strcmp("source", name) == 0) {
+    if (Cartesian_getSource(self->cartesian) != NULL) {
+      return PyString_FromString(Cartesian_getSource(self->cartesian));
+    } else {
+      Py_RETURN_NONE;
+    }
+  } else if (strcmp("xsize", name) == 0) {
     return PyInt_FromLong(Cartesian_getXSize(self->cartesian));
   } else if (strcmp("ysize", name) == 0) {
     return PyInt_FromLong(Cartesian_getYSize(self->cartesian));
@@ -384,7 +406,53 @@ static int _pycartesian_setattr(PyCartesian* self, char* name, PyObject* val)
   if (name == NULL) {
     goto done;
   }
-  if (strcmp("xsize", name)==0) {
+  if (strcmp("time", name) == 0) {
+    if (PyString_Check(val)) {
+      if (!Cartesian_setTime(self->cartesian, PyString_AsString(val))) {
+        raiseException_gotoTag(done, PyExc_ValueError, "time must be in the format HHmmss");
+      }
+    } else if (val == Py_None) {
+      Cartesian_setTime(self->cartesian, NULL);
+    } else {
+      raiseException_gotoTag(done, PyExc_ValueError,"time must be of type string");
+    }
+  } else if (strcmp("date", name) == 0) {
+    if (PyString_Check(val)) {
+      if (!Cartesian_setDate(self->cartesian, PyString_AsString(val))) {
+        raiseException_gotoTag(done, PyExc_ValueError, "date must be in the format YYYYMMSS");
+      }
+    } else if (val == Py_None) {
+      Cartesian_setDate(self->cartesian, NULL);
+    } else {
+      raiseException_gotoTag(done, PyExc_ValueError,"date must be of type string");
+    }
+  } else if (strcmp("objectType", name) == 0) {
+    if (PyInt_Check(val)) {
+      if (!Cartesian_setObjectType(self->cartesian, PyInt_AsLong(val))) {
+        raiseException_gotoTag(done, PyExc_ValueError, "objectType not supported");
+      }
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError, "objectType must be a valid object type")
+    }
+  } else if (strcmp("product", name) == 0) {
+    if (PyInt_Check(val)) {
+      if (!Cartesian_setProduct(self->cartesian, PyInt_AsLong(val))) {
+        raiseException_gotoTag(done, PyExc_ValueError, "product not supported");
+      }
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError, "product must be a valid product type")
+    }
+  } else if (strcmp("source", name) == 0) {
+    if (PyString_Check(val)) {
+      if (!Cartesian_setSource(self->cartesian, PyString_AsString(val))) {
+        raiseException_gotoTag(done, PyExc_ValueError, "Failed to set source");
+      }
+    } else if (val == Py_None) {
+      Cartesian_setSource(self->cartesian, NULL);
+    } else {
+      raiseException_gotoTag(done, PyExc_ValueError,"source must be of type string");
+    }
+  } else if (strcmp("xsize", name)==0) {
     if (PyInt_Check(val)) {
       Cartesian_setXSize(self->cartesian, PyInt_AsLong(val));
     } else {

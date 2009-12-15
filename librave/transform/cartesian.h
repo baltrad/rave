@@ -27,6 +27,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_transform.h"
 #include "projection.h"
 #include "rave_object.h"
+#include "rave_types.h"
 
 /**
  * Defines a Cartesian product
@@ -37,6 +38,66 @@ typedef struct _Cartesian_t Cartesian_t;
  * Type definition to use when creating a rave object.
  */
 extern RaveCoreObjectType Cartesian_TYPE;
+
+/**
+ * Sets the nominal time.
+ * @param[in] cartesian - self
+ * @param[in] value - the time in the format HHmmss
+ * @returns 1 on success, otherwise 0
+ */
+int Cartesian_setTime(Cartesian_t* cartesian, const char* value);
+
+/**
+ * Returns the nominal time.
+ * @param[in] cartesian - self
+ * @returns the nominal time (or NULL if there is none)
+ */
+const char* Cartesian_getTime(Cartesian_t* cartesian);
+
+/**
+ * Sets the nominal date.
+ * @param[in] cartesian - self
+ * @param[in] value - the date in the format YYYYMMDD
+ * @returns 1 on success, otherwise 0
+ */
+int Cartesian_setDate(Cartesian_t* cartesian, const char* value);
+
+/**
+ * Returns the nominal date.
+ * @param[in] cartesian - self
+ * @returns the nominal time (or NULL if there is none)
+ */
+const char* Cartesian_getDate(Cartesian_t* cartesian);
+
+/**
+ * Sets the source.
+ * @param[in] cartesian - self
+ * @param[in] value - the source
+ * @returns 1 on success, otherwise 0
+ */
+int Cartesian_setSource(Cartesian_t* cartesian, const char* value);
+
+/**
+ * Returns the source.
+ * @param[in] cartesian - self
+ * @returns the source or NULL if there is none
+ */
+const char* Cartesian_getSource(Cartesian_t* cartesian);
+
+/**
+ * Sets the object type this cartesian product should represent.
+ * @param[in] cartesian - self
+ * @param[in] type - the object type
+ * @returns 1 if the specified object type is supported, otherwise 0
+ */
+int Cartesian_setObjectType(Cartesian_t* cartesian, Rave_ObjectType type);
+
+/**
+ * Returns the object type this cartesian product represents.
+ * @param[in] cartesian - self
+ * @returns the object type
+ */
+Rave_ObjectType Cartesian_getObjectType(Cartesian_t* cartesian);
 
 /**
  * Sets the xsize
@@ -113,6 +174,21 @@ void Cartesian_setYScale(Cartesian_t* cartesian, double yscale);
  * @return the yscale
  */
 double Cartesian_getYScale(Cartesian_t* cartesian);
+
+/**
+ * Sets the product this cartesian represents.
+ * @param[in] cartesian  self
+ * @param[in] type - the product type
+ * @returns 1 if the operation was successful, otherwise 0
+ */
+int Cartesian_setProduct(Cartesian_t* cartesian, Rave_ProductType type);
+
+/**
+ * Returns the product this cartesian represents.
+ * @param[in] cartesian - self
+ * @returns the product type
+ */
+Rave_ProductType Cartesian_getProduct(Cartesian_t* cartesian);
 
 /**
  * Returns the location within the area as identified by a x-position.
@@ -277,9 +353,4 @@ RaveValueType Cartesian_getValue(Cartesian_t* cartesian, long x, long y, double*
  */
 int Cartesian_isTransformable(Cartesian_t* cartesian);
 
-/**
- * Enables/disables debugging.
- * @param[in] debug - 0 means no debugging (default) otherwise debugging is enabled.
- */
-void Cartesian_setDebug(Cartesian_t* cartesian, int debug);
 #endif
