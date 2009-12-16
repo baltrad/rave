@@ -736,6 +736,13 @@ static int RaveIOInternal_hasNodeByName(HL_NodeList* nodelist, const char* fmt, 
   return 0;
 }
 
+/**
+ * Loads a scan from dataset and data index. I.e. /dataset<dsindex>/data<dindex>.
+ * @param[in] nodelist - the hlhdf node list to read from
+ * @param[in] dsindex - the dataset index
+ * @param[in] dindex - the data index
+ * @returns a polar scan on success or NULL on failure
+ */
 static PolarScan_t* RaveIOInternal_loadScanIndex(HL_NodeList* nodelist, const int dsindex, const int dindex)
 {
   char entryName[30];
@@ -814,6 +821,65 @@ done:
   return result;
 }
 
+/**
+ * Saves a polar scan that belongs to a polar volume.
+ * @param[in] nodelist - the hlhdf node list
+ * @param[in] scan - the scan to save
+ * @param[in] dsindex - the dataset index to use
+ * @returns 1 on success, otherwise failure
+ */
+static int RaveIOInternal_savePolarVolumeScan(HL_NodeList* nodelist, PolarScan_t* scan, int dsindex)
+{
+  double gain, offset, nodata, undetect, elangle, a1gate, rscale, rstart;
+  const char* quantity;
+  const char* starttime;
+  const char* endtime;
+  const char* startdate;
+  const char* enddate;
+  int result = 0;
+
+  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+
+  gain = PolarScan_getGain(scan);
+  offset = PolarScan_getOffset(scan);
+  nodata = PolarScan_getNodata(scan);
+  undetect = PolarScan_getUndetect(scan);
+  quantity = PolarScan_getQuantity(scan);
+  elangle = PolarScan_getElangle(scan) * 180.0 / M_PI;
+  a1gate = PolarScan_getA1gate(scan);
+  rscale = PolarScan_getRscale(scan);
+  rstart = PolarScan_getRstart(scan);
+
+  // Base
+  if (!RaveIOInternal_createGroup(nodelist, "/dataset%d", dsindex) ||
+      !RaveIOInternal_createGroup(nodelist, "/dataset%d/data1", dsindex)) {
+    goto done;
+  }
+
+  // What
+  if (!RaveIOInternal_createGroup(nodelist, "/dataset%d/data1/what", dsindex) ||
+      !RaveIOInternal_createDoubleValue(nodelist, gain, "/dataset%d/data1/what/gain", dsindex) ||
+      !RaveIOInternal_createDoubleValue(nodelist, offset, "/dataset%d/data1/what/offset", dsindex) ||
+      !RaveIOInternal_createDoubleValue(nodelist, nodata, "/dataset%d/data1/what/nodata", dsindex) ||
+      !RaveIOInternal_createDoubleValue(nodelist, undetect, "/dataset%d/data1/what/undetect", dsindex) ||
+      !RaveIOInternal_createStringValue(nodelist, quantity, "/dataset%d/data1/what/quantity", dsindex)) {
+    goto done;
+  }
+
+  // Where
+  if (!RaveIOInternal_createGroup(nodelist, "/dataset%d/where", dsindex) ||
+      !RaveIOInternal_createDoubleValue(nodelist, elangle, "/dataset%d/where/elangle", dsindex) ||
+      !RaveIOInternal_createDoubleValue(nodelist, a1gate, "/dataset%d/where/a1gate", dsindex) ||
+      !RaveIOInternal_createDoubleValue(nodelist, rscale, "/dataset%d/where/rscale", dsindex) ||
+      !RaveIOInternal_createDoubleValue(nodelist, rstart, "/dataset%d/where/rstart", dsindex)) {
+    goto done;
+  }
+
+  result = 1;
+done:
+  return result;
+}
 /**
  * Returns the ODIM version from the /Conventions field in the nodelist.
  * @param[in] nodelist - the hlhdf nodelist
@@ -1405,6 +1471,7 @@ static RaveCoreObject* RaveIOInternal_loadVolume(HL_NodeList* nodelist)
   }
 
   // Read scans
+  dsindex = 1;
   while (RaveIOInternal_hasNodeByName(nodelist, "/dataset%d", dsindex)) {
     int dindex = 1;
     while (RaveIOInternal_hasNodeByName(nodelist, "/dataset%d/data%d", dsindex, dindex)) {
@@ -1422,6 +1489,72 @@ static RaveCoreObject* RaveIOInternal_loadVolume(HL_NodeList* nodelist)
 error:
   RAVE_OBJECT_RELEASE(result);
   return NULL;
+}
+
+static int RaveIOInternal_savePolarVolume(RaveIO_t* raveio)
+{
+  int result = 0;
+  HL_NodeList* nodelist = NULL;
+  PolarVolume_t* object = NULL; //  DO not release this
+  int nrScans = 0;
+  int i = 0;
+
+  RAVE_ASSERT((raveio != NULL), "raveio == NULL");
+  if (raveio->object == NULL || !RAVE_OBJECT_CHECK_TYPE(raveio->object, &PolarVolume_TYPE)) {
+    RAVE_ERROR0("Atempting to save an object that not is a polar volume");
+    return 0;
+  }
+
+  object = (PolarVolume_t*)raveio->object; // So that I dont have to cast the object all the time. DO not release this
+
+  nodelist = HLNodeList_new();
+  if (nodelist == NULL) {
+    RAVE_CRITICAL0("Failed to allocate nodelist");
+    goto done;
+  }
+
+  // Conventions
+  if (!RaveIOInternal_createStringValue(nodelist, RaveIO_ODIM_Version_2_0_STR, "/Conventions")) {
+    goto done;
+  }
+
+  // WHAT
+  if (!RaveIOInternal_createGroup(nodelist, "/what") ||
+      !RaveIOInternal_createStringValue(nodelist, RaveIO_ObjectType_PVOL_STR, "/what/object") ||
+      !RaveIOInternal_createStringValue(nodelist, RaveIO_ODIM_H5rad_Version_2_0_STR, "/what/version") ||
+      !RaveIOInternal_createStringValue(nodelist, PolarVolume_getTime(object), "/what/time") ||
+      !RaveIOInternal_createStringValue(nodelist, PolarVolume_getDate(object), "/what/date") ||
+      !RaveIOInternal_createStringValue(nodelist, PolarVolume_getSource(object), "/what/source")) {
+    goto done;
+  }
+
+  // WHERE
+  if (!RaveIOInternal_createGroup(nodelist, "/where") ||
+      !RaveIOInternal_createDoubleValue(nodelist,
+                                        PolarVolume_getLongitude(object) * 180.0/M_PI, "/where/lon") ||
+      !RaveIOInternal_createDoubleValue(nodelist,
+                                        PolarVolume_getLatitude(object) * 180.0/M_PI, "/where/lat") ||
+      !RaveIOInternal_createDoubleValue(nodelist,
+                                        PolarVolume_getHeight(object), "/where/height")) {
+    goto done;
+  }
+
+  nrScans = PolarVolume_getNumberOfScans(object);
+
+  for (i = 0; i < nrScans; i++) {
+    PolarScan_t* scan = PolarVolume_getScan(object, i);
+    if (scan != NULL) {
+      if (!RaveIOInternal_savePolarVolumeScan(nodelist, scan, i+1)) {
+        RAVE_OBJECT_RELEASE(scan);
+        goto done;
+      }
+      RAVE_OBJECT_RELEASE(scan);
+    }
+  }
+
+  result = 1;
+done:
+  return result;
 }
 
 /*@} End of Private functions */
@@ -1528,9 +1661,15 @@ int RaveIO_save(RaveIO_t* raveio)
     RAVE_ERROR0("Atempting to save an object without a filename");
     return 0;
   }
-  if (raveio->object != NULL && RAVE_OBJECT_CHECK_TYPE(raveio->object, &Cartesian_TYPE)) {
-    result = RaveIOInternal_saveCartesian(raveio);
+
+  if (raveio->object != NULL) {
+    if (RAVE_OBJECT_CHECK_TYPE(raveio->object, &Cartesian_TYPE)) {
+      result = RaveIOInternal_saveCartesian(raveio);
+    } else if (RAVE_OBJECT_CHECK_TYPE(raveio->object, &PolarVolume_TYPE)) {
+      result = RaveIOInternal_savePolarVolume(raveio);
+    }
   }
+
   return result;
 }
 
