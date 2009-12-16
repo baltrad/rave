@@ -36,40 +36,37 @@ struct _PolarScan_t {
   RAVE_OBJECT_HEAD /** Always on top */
 
   // Date/Time
-  RaveDateTime_t* datetime;
+  RaveDateTime_t* datetime;     /**< the date, time instance */
 
-  char* source;
+  char* source;    /**< the source string */
 
   // Where
-  double elangle; /**< elevation of scan */
-  long nbins; /**< number of bins */
-  double rscale; /**< scale */
+  double elangle;    /**< elevation of scan */
+  long nbins;        /**< number of bins */
+  double rscale;     /**< scale */
   RaveDataType type; /**< data type */
-  long nrays; /**< number of rays / scan */
-  double rstart; /**< start of ray */
-  long a1gate; /**< something */
+  long nrays;        /**< number of rays / scan */
+  double rstart;     /**< start of ray */
+  long a1gate;       /**< something */
 
   // How
-  double beamwidth;
+  double beamwidth;  /**< beam width */
 
   // What
   char quantity[64]; /**< what does this data represent */
-  double gain; /**< gain when scaling */
-  double offset; /**< offset when scaling */
-  double nodata; /**< nodata */
-  double undetect; /**< undetect */
+  double gain;       /**< gain when scaling */
+  double offset;     /**< offset when scaling */
+  double nodata;     /**< nodata */
+  double undetect;   /**< undetect */
 
   // Data
-  void* data; /**< data ptr */
+  void* data;        /**< data ptr */
 
   // Navigator
-  PolarNavigator_t* navigator; /** a navigator for calculating polar navigation */
+  PolarNavigator_t* navigator; /**< a navigator for calculating polar navigation */
 
   // Projection wrapper
   Projection_t* projection; /**< projection for this scan */
-
-  // Debugging
-  int debug; /**< indicates if debugging should be active or not */
 };
 
 /*@{ Private functions */
@@ -95,7 +92,6 @@ static int PolarScan_constructor(RaveCoreObject* obj)
   scan->nodata = 0.0;
   scan->undetect = 0.0;
   scan->data = NULL;
-  scan->debug = 0;
   scan->navigator = NULL;
   scan->projection = NULL;
 
@@ -569,12 +565,6 @@ int PolarScan_isTransformable(PolarScan_t* scan)
     result = 1;
   }
   return result;
-}
-
-void PolarScan_setDebug(PolarScan_t* scan, int enable)
-{
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
-  scan->debug = enable;
 }
 /*@} End of Interface functions */
 

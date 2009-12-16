@@ -35,33 +35,33 @@ struct _Cartesian_t {
   RAVE_OBJECT_HEAD /** Always on top */
 
   // Where
-  long xsize;
-  long ysize;
-  double xscale;
-  double yscale;
+  long xsize;        /**< xsize */
+  long ysize;        /**< ysize */
+  double xscale;     /**< xscale */
+  double yscale;     /**< yscale */
   RaveDataType type; /**< data type */
 
-  Rave_ProductType product;
-  Rave_ObjectType objectType;
+  Rave_ProductType product;   /**< product */
+  Rave_ObjectType objectType; /**< object type */
 
-  double llX;
-  double llY;
-  double urX;
-  double urY;
+  double llX;        /**< lower left x-coordinate */
+  double llY;        /**< lower left y-coordinate */
+  double urX;        /**< upper right x-coordinate */
+  double urY;        /**< upper right x-coordinate */
 
   // What
-  char* quantity; /**< what does this data represent */
-  RaveDateTime_t* datetime;
-  char* source;
-  double gain; /**< gain when scaling */
-  double offset; /**< offset when scaling */
-  double nodata; /**< nodata */
-  double undetect; /**< undetect */
+  char* quantity;            /**< what does this data represent */
+  RaveDateTime_t* datetime;  /**< the date and time */
+  char* source;              /**< where does this data come from */
+  double gain;       /**< gain when scaling */
+  double offset;     /**< offset when scaling */
+  double nodata;     /**< nodata */
+  double undetect;   /**< undetect */
 
-  Projection_t* projection;
+  Projection_t* projection; /**< the projection */
 
   // Data
-  void* data; /**< data ptr */
+  void* data;        /**< data ptr */
 };
 
 /*@{ Private functions */
@@ -102,6 +102,65 @@ fail:
   RAVE_OBJECT_RELEASE(scan->datetime);
   return 0;
 }
+
+/**
+ * Copy constructor.
+ */
+static int Cartesian_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj)
+{
+  Cartesian_t* cartesian = (Cartesian_t*)obj;
+  Cartesian_t* src = (Cartesian_t*)srcobj;
+
+  cartesian->type = src->type;
+  cartesian->xsize = src->xsize;
+  cartesian->ysize = src->ysize;
+  cartesian->xscale = src->xscale;
+  cartesian->yscale = src->yscale;
+  cartesian->llX = src->llX;
+  cartesian->llY = src->llY;
+  cartesian->urX = src->urX;
+  cartesian->urY = src->urY;
+  cartesian->product = src->product;
+  cartesian->objectType = src->objectType;
+  cartesian->gain = src->gain;
+  cartesian->offset = src->offset;
+  cartesian->nodata = src->nodata;
+  cartesian->undetect = src->undetect;
+  cartesian->source = NULL;
+  cartesian->quantity = NULL;
+  cartesian->projection = NULL;
+  cartesian->datetime = NULL;
+  cartesian->data = NULL;
+
+  Cartesian_setQuantity(cartesian, Cartesian_getQuantity(src));
+  cartesian->datetime = RAVE_OBJECT_CLONE(src->datetime);
+  if (cartesian->datetime == NULL) {
+    goto fail;
+  }
+
+  Cartesian_setSource(cartesian, Cartesian_getSource(src));
+
+  if (src->projection != NULL) {
+    cartesian->projection = RAVE_OBJECT_CLONE(src->projection);
+    if (cartesian->projection == NULL) {
+      goto fail;
+    }
+  }
+
+  if (!Cartesian_setData(cartesian, src->xsize, src->ysize, src->data, src->type)) {
+    goto fail;
+  }
+
+  return 1;
+fail:
+  RAVE_FREE(cartesian->data);
+  RAVE_FREE(cartesian->source);
+  RAVE_FREE(cartesian->quantity);
+  RAVE_OBJECT_RELEASE(cartesian->datetime);
+  RAVE_OBJECT_RELEASE(cartesian->projection);
+  return 0;
+}
+
 
 /**
  * Destroys the cartesian product
@@ -442,9 +501,9 @@ int Cartesian_setValue(Cartesian_t* cartesian, long x, long y, double v)
 
 RaveValueType Cartesian_getValue(Cartesian_t* cartesian, long x, long y, double* v)
 {
+  RaveValueType result = RaveValueType_NODATA;
   RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
   RAVE_ASSERT((v != NULL), "v was NULL");
-  RaveValueType result = RaveValueType_NODATA;
   RAVE_ASSERT((cartesian->data != NULL), "data must be set before getValue can be used");
   *v = cartesian->nodata;
 
@@ -458,6 +517,36 @@ RaveValueType Cartesian_getValue(Cartesian_t* cartesian, long x, long y, double*
     }
   }
   return result;
+}
+
+RaveValueType Cartesian_getMean(Cartesian_t* cartesian, long x, long y, int N, double* v)
+{
+  RaveValueType xytype = RaveValueType_NODATA;
+  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
+  RAVE_ASSERT((v != NULL), "v was NULL");
+  RAVE_ASSERT((cartesian->data != NULL), "data must be set before getMean can be used");
+
+  xytype = Cartesian_getValue(cartesian, x, y, v);
+  if (xytype == RaveValueType_DATA) {
+    long xk = 0, yk = 0;
+    double sum = 0.0L;
+    int pts = 0;
+    int k = N/2;
+    double value = 0.0L;
+
+    for (yk = -k; yk < k; yk++) {
+      for (xk = -k; xk < k; xk++) {
+        xytype = Cartesian_getValue(cartesian, xk + x, yk + y, &value);
+        if (xytype == RaveValueType_DATA) {
+          sum += value;
+          pts++;
+        }
+      }
+    }
+    *v = sum / (double)pts; // we have at least 1 at pts so division by zero will not occur
+  }
+
+  return xytype;
 }
 
 int Cartesian_isTransformable(Cartesian_t* cartesian)
@@ -481,6 +570,7 @@ RaveCoreObjectType Cartesian_TYPE = {
     "Cartesian",
     sizeof(Cartesian_t),
     Cartesian_constructor,
-    Cartesian_destructor
+    Cartesian_destructor,
+    Cartesian_copyconstructor
 };
 

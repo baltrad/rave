@@ -38,9 +38,9 @@ struct _PolarVolume_t {
 
   Projection_t* projection; /**< projection for this volume */
   PolarNavigator_t* navigator; /**< a polar navigator */
-  RaveObjectList_t* scans; /**< the list of scans */
-  RaveDateTime_t* datetime; /** the date / time */
-  char* source;
+  RaveObjectList_t* scans;  /**< the list of scans */
+  RaveDateTime_t* datetime; /**< the date / time */
+  char* source;             /**< the source string */
 };
 
 /*@{ Private functions */

@@ -49,8 +49,9 @@ typedef struct _raveobject {
 typedef struct _raveobjecttype {
   const char* name; /**< the name, for printout */
   size_t type_size; /**< the size of the object, sizeof(type) */
-  int (*constructor)(RaveCoreObject* obj); /** function to be called for initialization of the object */
-  void (*destructor)(RaveCoreObject* obj); /** function to be called for release of members in the object */
+  int (*constructor)(RaveCoreObject* obj); /**< function to be called for initialization of the object */
+  void (*destructor)(RaveCoreObject* obj); /**< function to be called for release of members in the object */
+  int (*copyconstructor)(RaveCoreObject* obj, RaveCoreObject* source); /**< Function when creating an clone */
 } RaveCoreObjectType;
 
 /**
@@ -82,6 +83,13 @@ typedef struct _raveobjecttype {
  */
 #define RAVE_OBJECT_COPY(src) \
   (void*)RaveCoreObject_copy((RaveCoreObject*)(src), __FILE__, __LINE__)
+
+/**
+ * Creates a clone of a object. Not to be confused with COPY.
+ * I.e. basically the same as doing a NEW followed by a copy of all essential members.
+ */
+#define RAVE_OBJECT_CLONE(src) \
+  (void*)RaveCoreObject_clone((RaveCoreObject*)(src), __FILE__, __LINE__)
 
 /**
  * Returns the provided objects reference count.
@@ -165,6 +173,13 @@ void RaveCoreObject_initialize(RaveCoreObject* obj, const char* rohname, void (*
  * @returns a pointer to the copied object
  */
 RaveCoreObject* RaveCoreObject_copy(RaveCoreObject* src, const char* filename, int lineno);
+
+/**
+ * Creates a clone of the provided object by using the types copyconstructor (if there is any).
+ * @param[in] src - the object to be cloned
+ * @returns a pointer to the cloned object
+ */
+RaveCoreObject* RaveCoreObject_clone(RaveCoreObject* src, const char* filename, int lineno);
 
 /**
  * Returns the current reference count.

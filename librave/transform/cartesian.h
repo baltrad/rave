@@ -333,6 +333,17 @@ int Cartesian_setValue(Cartesian_t* cartesian, long x, long y, double v);
 RaveValueType Cartesian_getValue(Cartesian_t* cartesian, long x, long y, double* v);
 
 /**
+ * Returns the mean value over a NxN square around the specified x and y position.
+ * @param[in] cartesian - the cartesian product
+ * @param[in] x - the x index
+ * @param[in] y - the y index
+ * @param[in] N - the N size
+ * @param[out] v - the data at the specified index
+ * @return the type of data
+ */
+RaveValueType Cartesian_getMean(Cartesian_t* cartesian, long x, long y, int N, double* v);
+
+/**
  * Verifies that all preconditions are met in order to perform
  * a transformation.
  * @param[in] cartesian - the cartesian product

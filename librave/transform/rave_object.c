@@ -32,12 +32,15 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 static long objectsCreated = 0;
 static long objectsDestroyed = 0;
 
+/**
+ * Heap structure when allocating rave objects
+ */
 typedef struct _heapobject {
-  RaveCoreObject* obj;
-  char filename[1024];
-  int lineno;
-  struct _heapobject* next;
-  struct _heapobject* prev;
+  RaveCoreObject* obj;         /**< stored object */
+  char filename[1024];         /**< file the object was allocated in */
+  int lineno;                  /**< line number */
+  struct _heapobject* next;    /**< next */
+  struct _heapobject* prev;    /**< previous */
 } heapobject;
 
 static heapobject* OBJECT_HEAP = NULL;
@@ -157,6 +160,29 @@ RaveCoreObject* RaveCoreObject_copy(RaveCoreObject* src, const char* filename, i
     src->roh_refCnt++;
   }
   return src;
+}
+
+RaveCoreObject* RaveCoreObject_clone(RaveCoreObject* src, const char* filename, int lineno)
+{
+  RaveCoreObject* result = NULL;
+  if (src != NULL) {
+    result = RAVE_MALLOC(src->roh_type->type_size);
+    if (result != NULL) {
+      result->roh_refCnt = 1;
+      result->roh_type = src->roh_type;
+      result->roh_bindingData = NULL;
+      if (result->roh_type->copyconstructor != NULL) {
+        if (!result->roh_type->copyconstructor(result, src)) {
+          RAVE_FREE(result);
+        }
+      }
+    }
+  }
+  if (result != NULL) {
+    RaveCoreObjectInternal_objCreated(result, filename, lineno);
+    objectsCreated++;
+  }
+  return result;
 }
 
 int RaveCoreObject_getRefCount(RaveCoreObject* src)

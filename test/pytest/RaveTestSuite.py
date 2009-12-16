@@ -37,6 +37,7 @@ from PyAreaTest import *
 
 # Some tests for verifying that we are producing products
 from PolarVolumeTransformTest import *
+from MeanTest import *
 
 if __name__ == '__main__':
   unittest.main()

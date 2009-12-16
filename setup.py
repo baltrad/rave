@@ -219,6 +219,15 @@ MODULES.append(
 
 MODULES.append(
     Extension(
+        "_mean", ["modules/mean.c"],
+        include_dirs=INCLUDE_DIRS,
+        library_dirs=LIBRARY_DIRS,
+        libraries=LIBRARIES
+        )
+    )
+
+MODULES.append(
+    Extension(
         "_rave", ["modules/rave.c"],
         include_dirs=INCLUDE_DIRS,
         library_dirs=LIBRARY_DIRS,

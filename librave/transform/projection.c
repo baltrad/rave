@@ -32,14 +32,11 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  */
 struct _Projection_t {
   RAVE_OBJECT_HEAD /** Always on top */
-  int initialized;
-  char* id;
-  char* description;
-  char* definition;
-  PJ* pj;
-
-  int debug;
-  void* voidPtr;
+  int initialized;     /**< if this instance has been initialized */
+  char* id;            /**< the id of this projection */
+  char* description;   /**< the description */
+  char* definition;    /**< the proj.4 definition string */
+  PJ* pj;              /**< the proj.4 instance */
 };
 
 /*@{ Private functions */
@@ -51,9 +48,27 @@ static int Projection_constructor(RaveCoreObject* obj)
   projection->description = NULL;
   projection->definition = NULL;
   projection->pj = NULL;
-  projection->debug = 0;
-  projection->voidPtr = NULL;
   return 1;
+}
+
+/**
+ * Copy constructor.
+ */
+static int Projection_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj)
+{
+  int result = 0;
+  Projection_t* this = (Projection_t*)obj;
+  Projection_t* src = (Projection_t*)srcobj;
+
+  this->initialized = 0;
+  this->id = NULL;
+  this->description = NULL;
+  this->definition = NULL;
+  this->pj = NULL;
+
+  result = Projection_init(this, src->id, src->description, src->definition);
+
+  return result;
 }
 
 /**
@@ -183,23 +198,6 @@ int Projection_fwd(Projection_t* projection, double lon, double lat, double* x, 
   return result;
 }
 
-void Projection_setVoidPtr(Projection_t* projection, void* ptr)
-{
-  RAVE_ASSERT((projection != NULL), "projection was NULL");
-  projection->voidPtr = ptr;
-}
-
-void* Projection_getVoidPtr(Projection_t* projection)
-{
-  RAVE_ASSERT((projection != NULL), "projection was NULL");
-  return projection->voidPtr;
-}
-
-void Projection_setDebug(Projection_t* projection, int debug)
-{
-  RAVE_ASSERT((projection != NULL), "projection was NULL");
-  projection->debug = debug;
-}
 /*@} End of Interface functions */
 
 RaveCoreObjectType Projection_TYPE = {

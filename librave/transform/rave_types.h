@@ -44,7 +44,7 @@ typedef enum Rave_ObjectType {
 } Rave_ObjectType;
 
 /**
- * Product types that defines the <datasetX>/what/product in the ODIM format.
+ * Product types that defines the &lt;datasetX&gt;/what/product in the ODIM format.
  */
 typedef enum Rave_ProductType {
   Rave_ProductType_UNDEFINED = -1, /**< Undefined */

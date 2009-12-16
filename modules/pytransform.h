@@ -31,31 +31,32 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  */
 typedef struct {
   PyObject_HEAD /*Always has to be on top*/
-  Transform_t* transform;
+  Transform_t* transform;  /**< the c-api transformator */
 } PyTransform;
 
-/* C API functions */
-#define PyTransform_Type_NUM 0
+#define PyTransform_Type_NUM 0                     /**< index for Type */
 
-#define PyTransform_GetNative_NUM 1
-#define PyTransform_GetNative_RETURN Transform_t*
-#define PyTransform_GetNative_PROTO (PyTransform*)
+#define PyTransform_GetNative_NUM 1                /**< index for GetNative fp */
+#define PyTransform_GetNative_RETURN Transform_t*  /**< Return type for GetNative */
+#define PyTransform_GetNative_PROTO (PyTransform*) /**< Argument prototype for GetNative */
 
-#define PyTransform_New_NUM 2
-#define PyTransform_New_RETURN PyTransform*
-#define PyTransform_New_PROTO (Transform_t*)
+#define PyTransform_New_NUM 2                      /**< index for New fp */
+#define PyTransform_New_RETURN PyTransform*        /**< Return type for New */
+#define PyTransform_New_PROTO (Transform_t*)       /**< Argument prototype for New */
 
-/* Total number of C API pointers */
-#define PyTransform_API_pointers 3
+#define PyTransform_API_pointers 3                 /**< total number of C API pointers */
 
 #ifdef PYTRANSFORM_MODULE
-/* To be used within the PyTransform-Module */
+/** declared in pytransform module */
 extern PyTypeObject PyTransform_Type;
 
+/** checks if the object is a PyTransform type or not */
 #define PyTransform_Check(op) ((op)->ob_type == &PyTransform_Type)
 
+/** Prototype for PyTransform modules GetNative function */
 static PyTransform_GetNative_RETURN PyTransform_GetNative PyTransform_GetNative_PROTO;
 
+/** Prototype for PyTransform modules New function */
 static PyTransform_New_RETURN PyTransform_New PyTransform_New_PROTO;
 
 #else

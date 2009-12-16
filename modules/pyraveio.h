@@ -31,7 +31,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  */
 typedef struct {
   PyObject_HEAD /* Always has to be on top */
-  RaveIO_t* raveio;
+  RaveIO_t* raveio;  /**< the raveio instance */
 } PyRaveIO;
 
 /* C API functions */

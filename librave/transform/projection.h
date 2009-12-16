@@ -97,23 +97,4 @@ int Projection_inv(Projection_t* projection, double x, double y, double* lon, do
  */
 int Projection_fwd(Projection_t* projection, double lon, double lat, double* x, double* y);
 
-/**
- * Function for keeping track of some sort of metadata that should be
- * associated with this projection.
- * @param[in] ptr - a void pointer that should be stored
- */
-void Projection_setVoidPtr(Projection_t* projection, void* ptr);
-
-/**
- * Returns the void data.
- * @return the void data
- */
-void* Projection_getVoidPtr(Projection_t* projection);
-
-/**
- * Enables/disables debugging
- * @param[in] debug - 0 if debugging should be deactivated (default) and != 0 otherwise
- */
-void Projection_setDebug(Projection_t* projection, int debug);
-
 #endif

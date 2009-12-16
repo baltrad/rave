@@ -32,8 +32,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  */
 struct _RaveDateTime_t {
   RAVE_OBJECT_HEAD /** Always on top */
-  char date[9];
-  char time[7];
+  char date[9];    /**< the date string, format is YYYYMMDD */
+  char time[7];    /**< the time string, format is HHmmss */
 };
 
 /*@{ Private functions */
@@ -45,6 +45,18 @@ static int RaveDateTime_constructor(RaveCoreObject* obj)
   RaveDateTime_t* dt = (RaveDateTime_t*)obj;
   strcpy(dt->date,"");
   strcpy(dt->time,"");
+  return 1;
+}
+
+/**
+ * Copy constructor.
+ */
+static int RaveDateTime_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj)
+{
+  RaveDateTime_t* dt = (RaveDateTime_t*)obj;
+  RaveDateTime_t* srcdt = (RaveDateTime_t*)srcobj;
+  strcpy(dt->date, srcdt->date);
+  strcpy(dt->time, srcdt->time);
   return 1;
 }
 
@@ -133,5 +145,6 @@ RaveCoreObjectType RaveDateTime_TYPE = {
     "RaveDateTime",
     sizeof(RaveDateTime_t),
     RaveDateTime_constructor,
-    RaveDateTime_destructor
+    RaveDateTime_destructor,
+    RaveDateTime_copyconstructor
 };

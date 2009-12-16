@@ -31,7 +31,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  */
 typedef struct {
   PyObject_HEAD /*Always has to be on top*/
-  PolarNavigator_t* navigator;
+  PolarNavigator_t* navigator; /**< the polar navigator */
 } PyPolarNavigator;
 
 /* C API functions */

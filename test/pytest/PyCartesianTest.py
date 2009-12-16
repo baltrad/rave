@@ -175,27 +175,6 @@ class PyCartesianTest(unittest.TestCase):
       d = numpy.zeros((10,10), type[0])
       obj.setData(d)
       self.assertEquals(type[1], obj.datatype)
-
-  def Xtest_setValidDataTypes(self):
-    dtypes = [_rave.RaveDataType_UNDEFINED, _rave.RaveDataType_CHAR, _rave.RaveDataType_UCHAR,
-             _rave.RaveDataType_SHORT, _rave.RaveDataType_INT, _rave.RaveDataType_LONG,
-             _rave.RaveDataType_FLOAT, _rave.RaveDataType_DOUBLE]
-
-    obj = _cartesian.new()
-    for type in types:
-      obj.datatype = type
-      self.assertEqual(type, obj.datatype)
-
-  def Xtest_invalidDatatype(self):
-    obj = _cartesian.new()
-    types = [99,100,-2,30]
-    for type in types:
-      try:
-        obj.datatype = type
-        self.fail("Expected ValueError")
-      except ValueError, e:
-        self.assertEqual(_rave.RaveDataType_UNDEFINED, obj.datatype)
-
     
   def test_quantity(self):
     obj = _cartesian.new()
@@ -379,6 +358,48 @@ class PyCartesianTest(unittest.TestCase):
       self.assertAlmostEquals(cval[2], result[1], 4)
       self.assertEquals(cval[3], result[0])
 
+  def test_getMean(self):
+    obj = _cartesian.new()
+    obj.nodata = 255.0
+    obj.undetect = 0.0
+    data = numpy.zeros((5,5), numpy.float64)
+
+    for y in range(5):
+      for x in range(5):
+        data[y][x] = float(x+y*5)
+        
+    # add some nodata and undetect
+    data[0][0] = obj.nodata    # 0
+    data[0][3] = obj.nodata    # 3
+    data[1][2] = obj.nodata    # 7
+    data[1][3] = obj.undetect  # 8
+    data[3][2] = obj.undetect  # 17
+    data[4][4] = obj.nodata    # 24
+    
+    obj.setData(data)
+    
+    # Nodata
+    (t,v) = obj.getMean((0,0), 2)
+    self.assertEquals(t, _rave.RaveValueType_NODATA)
+
+    # Undetect
+    (t,v) = obj.getMean((3,1), 2)
+    self.assertEquals(t, _rave.RaveValueType_UNDETECT)
+    
+    # Left side with one nodata
+    expected = data[1][0]
+    (t,v) = obj.getMean((0,1), 2) 
+    self.assertEquals(t, _rave.RaveValueType_DATA)
+    self.assertAlmostEquals(v, expected)
+
+    # Both 1 nodata & 1 undetect
+    expected = (data[2][2] + data[2][3])/2
+    (t,v) = obj.getMean((3,2), 2) 
+    self.assertEquals(t, _rave.RaveValueType_DATA)
+    self.assertAlmostEquals(v, expected)
+    
+    
+    
   def test_setGetValue(self):
     obj = _cartesian.new()
     obj.nodata = 255.0

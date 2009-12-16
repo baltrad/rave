@@ -35,10 +35,10 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  */
 struct _RaveIO_t {
   RAVE_OBJECT_HEAD /** Always on top */
-  RaveCoreObject* object;
-  RaveIO_ODIM_Version version;
-  RaveIO_ODIM_H5rad_Version h5radversion;
-  char* filename;
+  RaveCoreObject* object;                 /**< the object */
+  RaveIO_ODIM_Version version;            /**< the odim version */
+  RaveIO_ODIM_H5rad_Version h5radversion; /**< the h5rad object version */
+  char* filename;                         /**< the filename */
 };
 
 /*@{ Constants */
@@ -64,8 +64,8 @@ static const char RaveIO_ObjectType_PIC_STR[]= "PIC";
  * Mapping between a object type and the corresponding string
  */
 struct RaveIO_ObjectTypeMapping {
-  Rave_ObjectType type;
-  const char* str;
+  Rave_ObjectType type;  /**< the object type */
+  const char* str;       /**< the string representation */
 };
 
 /**

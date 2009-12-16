@@ -17,7 +17,7 @@ You should have received a copy of the GNU Lesser General Public License
 along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ------------------------------------------------------------------------*/
 /**
- * Defines an area, the extent, projection, etc..
+ * Defines an area, the extent, projection, etc.
  * @file
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2009-12-10
@@ -33,20 +33,20 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 struct _Area_t {
   RAVE_OBJECT_HEAD /** Always on top */
 
-  char* id;
+  char* id;        /**< the id */
 
   // Where
-  long xsize;
-  long ysize;
-  double xscale;
-  double yscale;
+  long xsize;      /**< xsize */
+  long ysize;      /**< ysize */
+  double xscale;   /**< xscale */
+  double yscale;   /**< yscale */
 
-  double llX;
-  double llY;
-  double urX;
-  double urY;
+  double llX;      /**< lower left x-coordinate */
+  double llY;      /**< lower left y-coordinate */
+  double urX;      /**< upper right x-coordinate */
+  double urY;      /**< upper right y-coordinate */
 
-  Projection_t* projection;
+  Projection_t* projection; /**< the projection that is used for this area */
 };
 
 /*@{ Private functions */

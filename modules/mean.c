@@ -1,21 +1,30 @@
-/* --------------------------------------------------------------------------
- $Id: mean.c,v 1.1.1.1 2006/07/14 11:31:54 dmichels Exp $
- Program:
+/* --------------------------------------------------------------------
+Copyright (C) 2009 Swedish Meteorological and Hydrological Institute, SMHI,
 
- Description:
+This file is part of RAVE.
 
- Author(s):      Daniel Michelson
+RAVE is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
- Copyright:	Swedish Meteorological and Hydrological Institute, 2003
+RAVE is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
 
- $Log: mean.c,v $
- Revision 1.1.1.1  2006/07/14 11:31:54  dmichels
- Project added under CVS
-
- -----------------------------------------------------------------------------*/
+You should have received a copy of the GNU Lesser General Public License
+along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
+------------------------------------------------------------------------*/
+/**
+ * Mean
+ * @file
+ * @author Daniel Michelson (Swedish Meteorological and Hydrological Institute, SMHI)
+ * @author Anders Henja
+ * @date 2009-12-17
+ */
 #include <Python.h>
-#include <arrayobject.h>
-#include "rave.h"
+#include "pycartesian.h"
 
 static PyObject *ErrorObject;
 
@@ -26,91 +35,44 @@ static PyObject *ErrorObject;
  */
 static PyObject* _average_func(PyObject* self, PyObject* args)
 {
-  PyObject *in, *mean;
+  PyObject* pyobject = NULL;
+  PyObject* result = NULL;
+  Cartesian_t* cartesian = NULL;
+  Cartesian_t* target = NULL;
 
-  RaveObject inrave, meanrave;
-  unsigned char *indata, *meandata;
-  char intype, meantype;
-  int instridex, meanstridex;
-  double VAL, KVAL, SUM, MEAN;
-  int N, xsize, ysize;
-  int x, y, k, yk, xk, nodata;
+  int N = 0;
+  long xsize = 0, ysize = 0, x = 0, y = 0;
 
-  initialize_RaveObject(&inrave);
-  initialize_RaveObject(&meanrave);
-
-  if (!PyArg_ParseTuple(args, "OOi", &in, &mean, &k))
+  if (!PyArg_ParseTuple(args, "Oi", &pyobject, &N)) {
     return NULL;
+  }
 
-  if (!fill_rave_object(in, &inrave)) {
-    if (!inrave.info || !inrave.data) {
-      Raise(PyExc_AttributeError,"No info or data in input");
-      goto fail;
+  if (!PyCartesian_Check(pyobject)) {
+    return NULL;
+  }
+
+  cartesian = PyCartesian_GetNative((PyCartesian*)pyobject);
+  target = RAVE_OBJECT_CLONE(cartesian);
+
+  if (target == NULL) {
+    goto done;
+  }
+  xsize = Cartesian_getXSize(cartesian);
+  ysize = Cartesian_getYSize(cartesian);
+
+  for (x = 0; x < xsize; x++) {
+    for (y = 0; y < ysize; y++) {
+      double value = 0.0L;
+      (void)Cartesian_getMean(cartesian, x, y, N, &value);
+      Cartesian_setValue(target, x, y, value);
     }
   }
-  if (!getIntFromDictionary("nodata", &nodata, inrave.info)) {
-    Raise(PyExc_AttributeError,"No nodata in in.info");
-    goto fail;
-  }
 
-  if (!fill_rave_object(mean, &meanrave)) {
-    if (!meanrave.info || !meanrave.data) {
-      Raise(PyExc_AttributeError,"No info or data in mean");
-      goto fail;
-    }
-  }
-
-  indata = array_data_2d(inrave.data);
-  intype = array_type_2d(inrave.data);
-  instridex = array_stride_xsize_2d(inrave.data);
-
-  meandata = array_data_2d(meanrave.data);
-  meantype = array_type_2d(meanrave.data);
-  meanstridex = array_stride_xsize_2d(meanrave.data);
-
-  k = (int) (k / 2);
-  ysize = inrave.data->dimensions[0];
-  xsize = inrave.data->dimensions[1];
-
-  /* Loop through the image */
-  for (y = 0; y < ysize; y++) {
-    for (x = 0; x < xsize; x++) {
-      VAL = get_array_item_2d(indata, x, y, intype, instridex);
-
-      if ((VAL != nodata) && (VAL != 0.0)) {
-        SUM = 0.0;
-        N = 0;
-
-        /* Loop through the kernel */
-        for (yk = -k; yk < k; yk++) {
-          for (xk = -k; xk < k; xk++) {
-
-            /* Make sure we're not out of bounds before doing anything */
-            if ((((yk + k) >= 0) && ((yk + k) < ysize)) || (((xk + k) >= 0)
-                && ((xk + k) < xsize))) {
-              KVAL = get_array_item_2d(indata, xk + x, yk + y, intype,
-                                       instridex);
-              SUM += KVAL;
-              N += 1;
-            }
-          }
-        }
-        MEAN = SUM / N;
-        set_array_item_2d(meandata, x, y, MEAN, meantype, meanstridex);
-
-      } else {
-        set_array_item_2d(meandata, x, y, nodata, meantype, meanstridex);
-      }
-    }
-  }
-  free_rave_object(&inrave);
-  free_rave_object(&meanrave);
-  Py_INCREF(Py_None);
-  return Py_None;
-fail:
-  free_rave_object(&inrave);
-  free_rave_object(&meanrave);
-  return NULL;
+  result = (PyObject*)PyCartesian_New(target);
+done:
+  RAVE_OBJECT_RELEASE(cartesian);
+  RAVE_OBJECT_RELEASE(target);
+  return result;
 }
 
 static struct PyMethodDef _mean_functions[] =
@@ -129,5 +91,5 @@ void init_mean()
     Py_FatalError("Can't define _mean.error");
   }
 
-  import_array(); /*Access to the Numeric PyArray functions*/
+  import_pycartesian();
 }

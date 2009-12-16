@@ -425,11 +425,4 @@ RaveValueType PolarScan_getNearest(PolarScan_t* scan, double lon, double lat, do
  */
 int PolarScan_isTransformable(PolarScan_t* scan);
 
-/**
- * Enables/Disables calculation debugging for a polar scan
- * @param[in] scan - the scan
- * @param[in] enable - 0 to disable (default) 1 to activate
- */
-void PolarScan_setDebug(PolarScan_t* scan, int enable);
-
 #endif

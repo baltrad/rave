@@ -27,10 +27,13 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include <stdio.h>
 #include "rave_debug.h"
 
+/**
+ * Debugger struct to be used in rave python modules.
+ */
 typedef struct {
-  long created;
-  long destroyed;
-  const char* name;
+  long created;        /**< counts how many times an object has been created */
+  long destroyed;      /**< counts how many times an object has been destroyed */
+  const char* name;    /**< the name for this object */
 } PyRaveObjectDebugging;
 
 #define PYRAVE_DEBUG_MODULE(oname) \

@@ -60,7 +60,7 @@ void Area_setXSize(Area_t* area, long xsize);
 
 /**
  * Returns the xsize
- * @param[in] cartesian - the cartesian product
+ * @param[in] area - self
  * @return the xsize
  */
 long Area_getXSize(Area_t* area);

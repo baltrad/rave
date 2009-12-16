@@ -308,6 +308,20 @@ static PyObject* _pycartesian_isTransformable(PyCartesian* self, PyObject* args)
   return PyBool_FromLong(Cartesian_isTransformable(self->cartesian));
 }
 
+static PyObject* _pycartesian_getMean(PyCartesian* self, PyObject* args)
+{
+  long x = 0, y = 0;
+  int N = 0;
+  double v = 0.0L;
+  RaveValueType result = RaveValueType_NODATA;
+  if (!PyArg_ParseTuple(args, "(ll)i", &x, &y, &N)) {
+    return NULL;
+  }
+  result = Cartesian_getMean(self->cartesian, x, y, N, &v);
+
+  return Py_BuildValue("(id)", result, v);
+}
+
 /**
  * All methods a cartesian product can have
  */
@@ -320,6 +334,7 @@ static struct PyMethodDef _pycartesian_methods[] =
   {"setValue", (PyCFunction) _pycartesian_setValue, 1},
   {"getValue", (PyCFunction) _pycartesian_getValue, 1},
   {"isTransformable", (PyCFunction) _pycartesian_isTransformable, 1},
+  {"getMean", (PyCFunction) _pycartesian_getMean, 1},
   {NULL, NULL } /* sentinel */
 };
 

@@ -35,9 +35,9 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  */
 struct _RaveList_t {
   RAVE_OBJECT_HEAD /** Always on top */
-  void** list;
-  int nrEntries;
-  int nrAlloc;
+  void** list;     /**< the list */
+  int nrEntries;   /**< the number of entries */
+  int nrAlloc;     /**< the number of available positions to store entries in */
 };
 
 /*@{ Private functions */

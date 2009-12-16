@@ -1,0 +1,505 @@
+/** \page converting_mean "A practical example on how to convert an old rave module"
+
+Let's start looking at the current implementation of _mean.average (mean.c)
+\verbatim
+#include <Python.h>
+#include <arrayobject.h>
+#include "rave.h"
+
+static PyObject *ErrorObject;
+
+#define Raise(type,msg) {PyErr_SetString(type,msg);}
+
+/*
+ Calculates the average value within an NxN-sized kernel.
+ */
+static PyObject* _average_func(PyObject* self, PyObject* args)
+{
+  PyObject *in, *mean;
+
+  RaveObject inrave, meanrave;
+  unsigned char *indata, *meandata;
+  char intype, meantype;
+  int instridex, meanstridex;
+  double VAL, KVAL, SUM, MEAN;
+  int N, xsize, ysize;
+  int x, y, k, yk, xk, nodata;
+
+  initialize_RaveObject(&inrave);
+  initialize_RaveObject(&meanrave);
+
+  if (!PyArg_ParseTuple(args, "OOi", &in, &mean, &k))
+    return NULL;
+
+  if (!fill_rave_object(in, &inrave)) {
+    if (!inrave.info || !inrave.data) {
+      Raise(PyExc_AttributeError,"No info or data in input");
+      goto fail;
+    }
+  }
+  if (!getIntFromDictionary("nodata", &nodata, inrave.info)) {
+    Raise(PyExc_AttributeError,"No nodata in in.info");
+    goto fail;
+  }
+
+  if (!fill_rave_object(mean, &meanrave)) {
+    if (!meanrave.info || !meanrave.data) {
+      Raise(PyExc_AttributeError,"No info or data in mean");
+      goto fail;
+    }
+  }
+
+  indata = array_data_2d(inrave.data);
+  intype = array_type_2d(inrave.data);
+  instridex = array_stride_xsize_2d(inrave.data);
+
+  meandata = array_data_2d(meanrave.data);
+  meantype = array_type_2d(meanrave.data);
+  meanstridex = array_stride_xsize_2d(meanrave.data);
+
+  k = (int) (k / 2);
+  ysize = inrave.data->dimensions[0];
+  xsize = inrave.data->dimensions[1];
+
+  /* Loop through the image */
+  for (y = 0; y < ysize; y++) {
+    for (x = 0; x < xsize; x++) {
+      VAL = get_array_item_2d(indata, x, y, intype, instridex);
+
+      if ((VAL != nodata) && (VAL != 0.0)) {
+        SUM = 0.0;
+        N = 0;
+
+        /* Loop through the kernel */
+        for (yk = -k; yk < k; yk++) {
+          for (xk = -k; xk < k; xk++) {
+
+            /* Make sure we're not out of bounds before doing anything */
+            if ((((yk + k) >= 0) && ((yk + k) < ysize)) || (((xk + k) >= 0)
+                && ((xk + k) < xsize))) {
+              KVAL = get_array_item_2d(indata, xk + x, yk + y, intype,
+                                       instridex);
+              SUM += KVAL;
+              N += 1;
+            }
+          }
+        }
+        MEAN = SUM / N;
+        set_array_item_2d(meandata, x, y, MEAN, meantype, meanstridex);
+
+      } else {
+        set_array_item_2d(meandata, x, y, nodata, meantype, meanstridex);
+      }
+    }
+  }
+  free_rave_object(&inrave);
+  free_rave_object(&meanrave);
+  Py_INCREF(Py_None);
+  return Py_None;
+fail:
+  free_rave_object(&inrave);
+  free_rave_object(&meanrave);
+  return NULL;
+}
+
+static struct PyMethodDef _mean_functions[] =
+{
+  { "average", (PyCFunction) _average_func, METH_VARARGS },
+  { NULL, NULL }
+};
+
+void init_mean()
+{
+  PyObject* m;
+  m = Py_InitModule("_mean", _mean_functions);
+  ErrorObject = PyString_FromString("_mean.error");
+  if (ErrorObject == NULL || PyDict_SetItemString(PyModule_GetDict(m),
+                                                  "error", ErrorObject) != 0) {
+    Py_FatalError("Can't define _mean.error");
+  }
+
+  import_array(); /*Access to the Numeric PyArray functions*/
+}
+
+\endverbatim
+
+As we can see, it is a quite small function that is calculating the mean over a NxN square with the
+same x- and y-size, otherwise it would not be able to use the same xsize/ysize for both in and out data.
+Other than that, it is quite straight forward implementation and will hopefully be quite easy to translate
+into the new architecture of rave. It probably has been developed for working with 2-dimensional cartesian
+products but (as usual), there could be a layer at python-side that converts a scan to a 2-dimensional image
+as well.
+
+\par
+
+First, let us look at the include files, We are interested in handling Cartesian products so let us include
+\verbatim
+#include "Python.h"
+#include "pycartesian.h"
+\endverbatim
+
+<b>pycartesian.h</b> is the python module interface in order to get hold of the correct memory pointers so
+it is essential.
+
+\par
+
+Now, what can we do about the function <b>_average_func</b>? We want to create an cartesian product containing the average
+values over a NxN square, let's get on with it.
+
+\verbatim
+static PyObject* _average_func(PyObject* self, PyObject* args)
+{
+  PyObject* pyobject = NULL;
+  PyObject* result = NULL;
+  Cartesian_t* cartesian = NULL;
+  Cartesian_t* target = NULL;
+
+  int N = 0, k = 0;
+  long xsize = 0, ysize = 0, x = 0, y = 0;
+  if (!PyArg_ParseTuple(args, "Oi", &pyobject, &N)) {
+    return NULL;
+  }
+\endverbatim
+
+Since, the result should have identical behaviour as the source cartesian product, we only need to pass in the source product
+and the k-value.
+
+\verbatim
+  if (!PyCartesian_Check(pyobject)) {
+    return NULL;
+  } 
+\endverbatim
+
+We can return NULL immediately since we have not got any increased reference count on pyobject. It is also a good idea
+to never asume that the person calling the function send in the correct data so use <b>PyCartesian_Check</b>.
+
+\verbatim
+  cartesian = PyCartesian_GetNative((PyCartesian*)pyobject);
+\endverbatim
+
+This is a bit odd, but all rave-objects are basically a wrapper around a pure c-api, so instead of working through the
+python object we can access the c-object instead. This might not be true for all api's in the future but in that case,
+those api's will describe it.
+
+\verbatim
+  target = RAVE_OBJECT_CLONE(cartesian);
+  if (target == NULL) {
+    goto done; // We can not continue since we haven't got anything to write to.
+  }
+\endverbatim
+
+Some of the c-apis supports cloning which is very useful for these types of operations,
+just pass in an object and you will get a new fresh copy of the object instead of a reference to
+the object. I.e. it would not have been a good idea to use RAVE_OBJECT_COPY here since we would
+have modified the same object.
+
+Also, it is time to consider memory management here, since <b>PyCartesian_GetNative</b> returns
+a reference to the cartesian product with the reference counter increased we need to release this
+reference when we are leaving the function. This is preferrably done at the end of the function. 
+
+Now, we have the cartesian object, it is time to determine how we can implement the same support.
+
+\verbatim
+  k = (int) N/2;
+  xsize = Cartesian_getXSize(cartesian);
+  ysize = Cartesian_getYSize(cartesian);
+  for (y = 0; y < ysize; y++) {
+    for (x = 0; x < xsize; x++) {
+\endverbatim
+
+Ok, let's stop for a minute. <b>Mean</b> is probably something that can be useful for other algorithms as well and
+in any circumstance why clutter the code with an algorithm inside a for loop. So, we take a quick jump to cartesian.c/.h and
+add a new function (WELL, DON'T, but instead create a function that can be integrated into the correct object and ask us
+to do it).
+
+\verbatim
+RaveValueType Cartesian_getMean(Cartesian_t* cartesian, long x, long y, int N, double* v)
+{
+  RaveValueType xytype = RaveValueType_NODATA;
+  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
+  RAVE_ASSERT((v != NULL), "v was NULL");
+  RAVE_ASSERT((cartesian->data != NULL), "data must be set before getMean can be used");
+
+  xytype = Cartesian_getValue(cartesian, x, y, v);
+
+  if (xytype == RaveValueType_DATA) {
+    long xk = 0, yk = 0;
+    double sum = 0.0L;
+    int pts = 0;
+    int k = N/2;
+    double value = 0.0L;
+
+    for (yk = -k; yk < k; yk++) {
+      for (xk = -k; xk < k; xk++) {
+        xytype = Cartesian_getValue(cartesian, xk + x, yk + y, &value);
+        if (xytype == RaveValueType_DATA) {
+          sum += value;
+          pts++;
+        }
+      }
+    }
+    *v = sum / (double)pts; // we have at least 1 at pts so division by zero will not occur
+  }
+
+  return xytype;
+}
+\endverbatim
+
+It really isn't much to say about this function, the asserts are handy during development since they will force a 
+core dump if bad data is provided. However, do not use asserts for completly valid reasons like if an integer value
+is not supported and similar.
+
+We are actually using two identifiers when returning values, first, the RaveValueType, this is an indicator for
+DATA/NODATA or UNDETECT. Try to use this as much as possible since it gives a better overview.
+
+As it is, we have introduced a new public function into the Cartesian object and it's time to consider
+have we done everything correctly or have we missed something. It would be awkward if we have done something
+fundamentally wrong in this function so it probably is worth writing a simple test that at least verifies
+that we get a mean value from this function. There are two ways, one is to write a small c-main function
+that does this or we can add a new function to the python api for the cartesian products as well and write
+unit tests. Unit tests are quite handy since they will be run every time we check in code to our git-server.
+
+Jump to pycartesian.c and do some minor additions. First add a new entry to <b>_pycartesian_methods[] </b>
+\verbatim
+  {"getMean", (PyCFunction) _pycartesian_getMean, 1},
+\endverbatim
+
+and then add the function:
+\verbatim
+static PyObject* _pycartesian_getMean(PyCartesian* self, PyObject* args)
+{
+  long x = 0, y = 0;
+  int N = 0;
+  double v = 0.0L;
+  RaveValueType result = RaveValueType_NODATA;
+  if (!PyArg_ParseTuple(args, "(ll)i", &x, &y, &N)) {
+    return NULL;
+  }
+  result = Cartesian_getMean(self->cartesian, x, y, N, &v);
+
+  return Py_BuildValue("(id)", result, v);
+}
+\endverbatim
+
+As you can see, it is quite easy to add new python functions since it basically just is to pass the arguments
+down to the C-layer. Anyhow, time to write some basic unit tests so jump to PyCartesianTest.py
+
+\verbatim
+  def test_getMean(self):
+    obj = _cartesian.new()
+    obj.nodata = 255.0
+    obj.undetect = 0.0
+    data = numpy.zeros((5,5), numpy.float64)
+
+    for y in range(5):
+      for x in range(5):
+        data[y][x] = float(x+y*5)
+        
+    # add some nodata and undetect
+    data[0][0] = obj.nodata    # 0
+    data[0][3] = obj.nodata    # 3
+    data[1][2] = obj.nodata    # 7
+    data[1][3] = obj.undetect  # 8
+    data[3][2] = obj.undetect  # 17
+    data[4][4] = obj.nodata    # 24
+    
+    obj.setData(data)
+    
+    # Nodata
+    (t,v) = obj.getMean((0,0), 2)
+    self.assertEquals(t, _rave.RaveValueType_NODATA)
+
+    # Undetect
+    (t,v) = obj.getMean((3,1), 2)
+    self.assertEquals(t, _rave.RaveValueType_UNDETECT)
+    
+    # Left side with one nodata
+    expected = data[1][0]
+    (t,v) = obj.getMean((0,1), 2) 
+    self.assertEquals(t, _rave.RaveValueType_DATA)
+    self.assertAlmostEquals(v, expected)
+
+    # Both 1 nodata & 1 undetect
+    expected = (data[2][2] + data[2][3])/2
+    (t,v) = obj.getMean((3,2), 2) 
+    self.assertEquals(t, _rave.RaveValueType_DATA)
+    self.assertAlmostEquals(v, expected)
+
+\endverbatim
+
+This test might look a bit odd and defenetly confusing since getMean is called with (x,y) and
+the data assignment in the array is done by data[y][x]. Just look at it from the bright side, it's
+a good exercise to keep you alert.
+
+The rigid people would now start complaining that this is not test driven development, you should
+write the test case before implementing the code. Personally, I am just trying to avoid delivering
+the most obvious errors.
+
+Ok, enought ranting, let's finish the work in mean.c.
+
+\verbatim
+  for (x = 0; x < xsize; x++) {
+    for (y = 0; y < ysize; y++) {
+      double value = 0.0L;
+      RaveValueType type = Cartesian_getMean(cartesian, x, y, N, &value);
+      Cartesian_setValue(target, x, y, value);
+    }
+  }
+\endverbatim
+
+That's it. Since target is an identical copy of source we do not even have to bother about NODATA & UNDETECT, that is
+handled anyway.
+
+\par
+
+Time to wrap this function up.
+\verbatim
+  result = (PyObject*)PyCartesian_New(target);
+done:
+  RAVE_OBJECT_RELEASE(cartesian);
+  RAVE_OBJECT_RELEASE(target);
+  return result;
+\endverbatim
+
+All rave python modules (with a public interface) contains a _New function that takes the corresponding c-object.
+In this case <b>PyCartesian_New</b>. Just pass the target object into this function and you will get a python object
+back that you can return. 
+
+<b>RAVE_OBJECT_RELEASE</b> is essential if you aquire a copy of an object. If you are not using this correctly, memory
+leaks will occur. If you are uncertain if you have got memory leaks or lost objects, it is always possible to turn on
+the memory statistics by building rave with -DRAVE_DEBUG_MEMORY.
+
+By the way, we atempt to bind python-objects inside our native objects in order to be able to return the identical copy each
+time we return a python object to the python layer. Yes, we have a dual-way dependency, but it is not as bad as
+it sounds, or at least not now.
+
+Each time PyXXX_New(obj) is called, the following is done:
+\verbatim
+static PyXXX* PyXXX_New(XXX_t* obj)
+{
+  ...
+  result = RAVE_OBJECT_GETBINDING(obj);
+  if (result != NULL) {
+    Py_INCREF(result);
+    return result;
+  }
+  ...
+}
+\endverbatim
+
+So, there is one thing to remember unless you want to badly mess upp the system. Do not use RAVE_OBJECT_BIND /RAVE_OBJECT_UNBIND
+unless you really know what you are doing.
+
+We are almost at the end now, we just need to ensure that we get the python cartesian module loaded properly.
+The easiest way is to just change <b>import_array</b> to <b>import_pycartesian</b> in the function init_mean.
+
+\verbatim
+void init_mean()
+{
+  PyObject* m;
+  m = Py_InitModule("_mean", _mean_functions);
+  ErrorObject = PyString_FromString("_mean.error");
+  if (ErrorObject == NULL || PyDict_SetItemString(PyModule_GetDict(m),
+                                                  "error", ErrorObject) != 0) {
+    Py_FatalError("Can't define _mean.error");
+  }
+
+  import_pycartesian();
+}
+\endverbatim
+
+Now we are almost finished, we should just write a couple of testcases that verifies that _mean.average
+works as well. This should be done in a minute or three. Create a file called &lt;ravesrc&gt;/test/pytest/MeanTest.py
+
+\verbatim
+import unittest
+import _mean
+import _cartesian
+import numpy
+import string
+
+class MeanTest(unittest.TestCase):
+  
+  def setUp(self):
+    pass
+
+  def tearDown(self):
+    pass
+
+  def test_average(self):
+    src = _cartesian.new()
+    src.nodata = 255.0
+    src.undetect = 0.0
+    
+    data = numpy.zeros((5,5), numpy.float64)
+    for y in range(5):
+      for x in range(5):
+        data[y][x] = float(x+y*5)
+
+    # add some nodata and undetect
+    data[0][0] = src.nodata    # 0
+    data[0][3] = src.nodata    # 3
+    data[1][2] = src.nodata    # 7
+    data[1][3] = src.undetect  # 8
+    data[3][2] = src.undetect  # 17
+    data[4][4] = src.nodata    # 24
+    #print `data` #to be able to see the array when calculating result
+    
+    src.setData(data)
+    
+    target = _mean.average(src, 2)
+    
+    # Table with the result
+    expected = [[src.nodata, 1, 1.5, src.nodata, 4.0],
+                [5.0, 4.0, src.nodata, src.undetect, 6.5],
+                [7.5, 8.0, 9.67, 12.5, 12.0],
+                [12.5, 13.0, src.undetect, 14.33, 16.0],
+                [17.5, 18.0, 19.67, 21.0, src.nodata]]
+    
+    expectedarr = numpy.array(expected, numpy.float64)
+    
+    actualarr = target.getData()
+    
+    # Unfortunately there is no numpy.compareAlmostEquals or similar (at least as I know).
+    for y in range(5):
+      for x in range(5):
+        self.assertAlmostEquals(expectedarr[y][x], actualarr[y][x], 2)
+\endverbatim
+
+Each function that starts with test in a class that is a subclass of unittest.TestCase
+will automatically be run by the python unit test framework if this class is loaded when
+the unit test runner is started so we add the following entry to
+to &lt;ravesrc&gt;/test/pytest/RaveTestSuite.py.
+
+\verbatim
+from MeanTest import *
+\endverbatim
+
+Lets build and test the code:
+\verbatim
+%> make
+...
+%> make test
+..................................................................................................................................
+............................................
+Ran 174 tests in 0.466s
+
+\endverbatim
+
+Hopefully you don't get any test cases above, but if you do, it is start to hunt them down because we do not want
+any code that contains errors.
+
+<b>DONE!</b>
+
+You can see all the changes and the code described above in the following files:
+\li &lt;rave-src&gt;/librave/transform/cartesian.c
+\li &lt;rave-src&gt;/librave/transform/cartesian.h
+\li &lt;rave-src&gt;/modules/mean.c
+\li &lt;rave-src&gt;/modules/pycartesian.h
+\li &lt;rave-src&gt;/test/pytest/PyCartesianTest.py
+\li &lt;rave-src&gt;/test/pytest/MeanTest.py
+
+<b>Next part is how to translate the python mean.average function into a rave object c-api instead</b>
+
+*/
+

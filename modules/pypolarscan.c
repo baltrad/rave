@@ -75,8 +75,7 @@ PyPolarScan_GetNative(PyPolarScan* pypolarscan)
  * @param[in] p - the native polar scan (or NULL)
  * @returns the python polar scan.
  */
-static PyPolarScan*
-PyPolarScan_New(PolarScan_t* p)
+static PyPolarScan* PyPolarScan_New(PolarScan_t* p)
 {
   PyPolarScan* result = NULL;
   PolarScan_t* cp = NULL;

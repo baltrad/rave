@@ -40,11 +40,14 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_alloc.h"
 
 /**
- * Some helpful exception defines.
+ * Sets python exception and goto tag.
  */
 #define raiseException_gotoTag(tag, type, msg) \
 {PyErr_SetString(type, msg); goto tag;}
 
+/**
+ * Sets python exception string and returns NULL
+ */
 #define raiseException_returnNULL(type, msg) \
 {PyErr_SetString(type, msg); return NULL;}
 

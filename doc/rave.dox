@@ -43,7 +43,7 @@ is quite simple to work with python instead of c.
 \par
 First, a brief version in order to get up and running as fast as possible.
 
-First and foremost, check what header files that exists in <ravesrc>/librave/transform, this is
+First and foremost, check what header files that exists in &lt;ravesrc&gt;/librave/transform, this is
 where you will get a basic feeling on what (and how) everything is setup.
 Some of the files are:
 area.h: Represents an surface area definition
@@ -55,6 +55,7 @@ With this information (and the information in the header files) it is possible t
 doing some calculations or whatever feels interesting. As a simple example, let us say that
 you want to validate if a volume contains any DBZH value greater than 70 (linear corrected).
 
+\verbatim
 #include "polarvolume.h"
 #include "raveio.h"
 
@@ -105,6 +106,7 @@ done:
   RAVE_OBJECT_RELEASE(volume);
   return result;
 }
+\endverbatim
 
 Of course, the above example is probably not very interesting, but it gives a brief overview
 on how to use the APIs. As different requirements arise, we have the intention to introduce
@@ -112,5 +114,4 @@ new functionality in order to simplify these requirements if we see that the fun
 benefit the users.
 
 
-.....
-
+*/
