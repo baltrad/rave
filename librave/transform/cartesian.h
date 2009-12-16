@@ -100,25 +100,11 @@ int Cartesian_setObjectType(Cartesian_t* cartesian, Rave_ObjectType type);
 Rave_ObjectType Cartesian_getObjectType(Cartesian_t* cartesian);
 
 /**
- * Sets the xsize
- * @param[in] cartesian - the cartesian product
- * @param[in] xsize - the xsize
- */
-void Cartesian_setXSize(Cartesian_t* cartesian, long xsize);
-
-/**
  * Returns the xsize
  * @param[in] cartesian - the cartesian product
  * @return the xsize
  */
 long Cartesian_getXSize(Cartesian_t* cartesian);
-
-/**
- * Sets the ysize
- * @param[in] cartesian - the cartesian product
- * @param[in] ysize - the ysize
- */
-void Cartesian_setYSize(Cartesian_t* cartesian, long ysize);
 
 /**
  * Returns the ysize

@@ -456,18 +456,6 @@ static int _pycartesian_setattr(PyCartesian* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_ValueError,"source must be of type string");
     }
-  } else if (strcmp("xsize", name)==0) {
-    if (PyInt_Check(val)) {
-      Cartesian_setXSize(self->cartesian, PyInt_AsLong(val));
-    } else {
-      raiseException_gotoTag(done, PyExc_TypeError,"xsize must be of type int");
-    }
-  } else if (strcmp("ysize", name)==0) {
-    if (PyInt_Check(val)) {
-      Cartesian_setYSize(self->cartesian, PyInt_AsLong(val));
-    } else {
-      raiseException_gotoTag(done, PyExc_TypeError,"ysize must be of type int");
-    }
   } else if (strcmp("xscale", name)==0) {
     if (PyFloat_Check(val)) {
       Cartesian_setXScale(self->cartesian, PyFloat_AsDouble(val));
@@ -514,14 +502,6 @@ static int _pycartesian_setattr(PyCartesian* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "undetect must be of type float");
     }
-  } else if (strcmp("datatype", name) == 0) {
-    if (PyInt_Check(val)) {
-      if (!Cartesian_setDataType(self->cartesian, PyInt_AsLong(val))) {
-        raiseException_gotoTag(done, PyExc_ValueError, "datatype must be in valid range");
-      }
-    } else {
-      raiseException_gotoTag(done, PyExc_TypeError, "datatype must be of type RaveDataType");
-    }
   } else if (strcmp("areaextent", name) == 0) {
     double llX = 0.0, llY = 0.0, urX = 0.0, urY = 0.0;
     if (!PyArg_ParseTuple(val, "dddd", &llX, &llY, &urX, &urY)) {
@@ -534,6 +514,8 @@ static int _pycartesian_setattr(PyCartesian* self, char* name, PyObject* val)
     } else if (val == Py_None) {
       Cartesian_setProjection(self->cartesian, NULL);
     }
+  } else {
+    raiseException_gotoTag(done, PyExc_AttributeError, name);
   }
 
   result = 0;

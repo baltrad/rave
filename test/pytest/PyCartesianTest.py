@@ -90,34 +90,34 @@ class PyCartesianTest(unittest.TestCase):
   def test_xsize(self):
     obj = _cartesian.new()
     self.assertEquals(0, obj.xsize)
-    obj.xsize = 10
-    self.assertEquals(10, obj.xsize)
-
-  def test_xsize_typeError(self):
-    obj = _cartesian.new()
-    self.assertEquals(0, obj.xsize)
     try:
-      obj.xsize = 10.0
-      self.fail("Expected TypeError")
-    except TypeError,e:
+      obj.xsize = 10
+      self.fail("Expected AttributeError")
+    except AttributeError, e:
       pass
     self.assertEquals(0, obj.xsize)
+
+  def test_xsize_fromArray(self):
+    obj = _cartesian.new()
+    data = numpy.zeros((11,10), numpy.uint8)
+    obj.setData(data)
+    self.assertEquals(10, obj.xsize)
 
   def test_ysize(self):
     obj = _cartesian.new()
     self.assertEquals(0, obj.ysize)
-    obj.ysize = 10
-    self.assertEquals(10, obj.ysize)
-
-  def test_ysize_typeError(self):
-    obj = _cartesian.new()
-    self.assertEquals(0, obj.ysize)
     try:
-      obj.ysize = 10.0
-      self.fail("Expected TypeError")
-    except TypeError,e:
+      obj.ysize = 10
+      self.fail("Expected AttributeError")
+    except AttributeError, e:
       pass
     self.assertEquals(0, obj.ysize)
+
+  def test_ysize_fromArray(self):
+    obj = _cartesian.new()
+    data = numpy.zeros((11,10), numpy.uint8)
+    obj.setData(data)
+    self.assertEquals(11, obj.ysize)
 
   def test_xscale(self):
     obj = _cartesian.new()
@@ -154,11 +154,30 @@ class PyCartesianTest(unittest.TestCase):
   def test_datatype(self):
     obj = _cartesian.new()
     self.assertEqual(_rave.RaveDataType_UNDEFINED, obj.datatype)
-    obj.datatype = _rave.RaveDataType_INT
-    self.assertEqual(_rave.RaveDataType_INT, obj.datatype)
+    try:
+      obj.datatype = _rave.RaveDataType_INT
+      self.fail("Expected AttributeError")
+    except AttributeError, e:
+      pass
+    self.assertEqual(_rave.RaveDataType_UNDEFINED, obj.datatype)
 
-  def test_setValidDataTypes(self):
-    types = [_rave.RaveDataType_UNDEFINED, _rave.RaveDataType_CHAR, _rave.RaveDataType_UCHAR,
+  def test_datatypes_fromData(self):
+    types = [(numpy.int8, _rave.RaveDataType_CHAR),
+             (numpy.uint8, _rave.RaveDataType_UCHAR),
+             (numpy.int16, _rave.RaveDataType_SHORT),
+             (numpy.int32, _rave.RaveDataType_INT),
+             (numpy.int64, _rave.RaveDataType_LONG),
+             (numpy.float32, _rave.RaveDataType_FLOAT),
+             (numpy.float64, _rave.RaveDataType_DOUBLE)]
+
+    obj = _cartesian.new()
+    for type in types:
+      d = numpy.zeros((10,10), type[0])
+      obj.setData(d)
+      self.assertEquals(type[1], obj.datatype)
+
+  def Xtest_setValidDataTypes(self):
+    dtypes = [_rave.RaveDataType_UNDEFINED, _rave.RaveDataType_CHAR, _rave.RaveDataType_UCHAR,
              _rave.RaveDataType_SHORT, _rave.RaveDataType_INT, _rave.RaveDataType_LONG,
              _rave.RaveDataType_FLOAT, _rave.RaveDataType_DOUBLE]
 
@@ -167,7 +186,7 @@ class PyCartesianTest(unittest.TestCase):
       obj.datatype = type
       self.assertEqual(type, obj.datatype)
 
-  def test_invalidDatatype(self):
+  def Xtest_invalidDatatype(self):
     obj = _cartesian.new()
     types = [99,100,-2,30]
     for type in types:

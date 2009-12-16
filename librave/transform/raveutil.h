@@ -10,18 +10,6 @@
 
 #include "polar.h"
 
-#ifdef KALLE
-/*
- * Definitions for different interpolation methods
- */
-#define NEAREST 1
-#define BILINEAR 2
-#define CUBIC 3
-#define CRESSMAN 4
-#define UNIFORM 5
-#define INVERSE 6
-#endif
-
 /**
  * Returns the maximum value of a and b.
  * @param[in] a

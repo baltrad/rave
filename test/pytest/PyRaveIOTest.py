@@ -28,6 +28,8 @@ import os
 import _raveio
 import _cartesian
 import _projection
+import _polarvolume
+import _polarscan
 import _rave
 import string
 import numpy
@@ -249,6 +251,131 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEquals(240, cvol.xsize)
     self.assertEquals(240, cvol.ysize)
     self.assertEquals(numpy.uint8, cvol.getData().dtype)
+
+  def test_save_polar_volume(self):
+    obj = _polarvolume.new()
+    obj.time = "100000"
+    obj.date = "20091010"
+    obj.source = "PLC:123"
+    obj.longitude = 12.0 * math.pi/180.0
+    obj.latitude = 60.0 * math.pi/180.0
+    obj.height = 0.0
+    
+    scan1 = _polarscan.new()
+    scan1.elangle = 0.1 * math.pi / 180.0
+    scan1.a1gate = 2
+    scan1.rstart = 0.0
+    scan1.rscale = 5000.0
+    scan1.nodata = 10.0
+    scan1.undetect = 11.0
+    scan1.time = "100001"
+    scan1.date = "20091010"
+    scan1.gain = 1.0
+    scan1.offset = 0.0
+    scan1.quantity = "DBZH"
+    data = numpy.zeros((100, 120), numpy.uint8)
+    scan1.setData(data)
+
+    obj.addScan(scan1)
+
+    scan2 = _polarscan.new()
+    scan2.elangle = 0.5 * math.pi / 180.0
+    scan2.a1gate = 1
+    scan2.rstart = 1000.0
+    scan2.rscale = 2000.0
+    scan2.nodata = 255.0
+    scan2.undetect = 0.0
+    scan2.time = "100002"
+    scan2.date = "20091010"
+    scan2.gain = 1.0
+    scan2.offset = 0.0
+    scan2.quantity = "MMM"
+    data = numpy.zeros((100, 120), numpy.uint8)
+    scan2.setData(data)
+
+    obj.addScan(scan2)
+    
+    ios = _raveio.new()
+    ios.object = obj
+    ios.filename = self.TEMPORARY_FILE
+    ios.save()
+    
+    # Verify result
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+    
+    self.assertEquals("ODIM_H5/V2_0", nodelist.getNode("/Conventions").data())
+    # What
+    self.assertEquals("100000", nodelist.getNode("/what/time").data())
+    self.assertEquals("20091010", nodelist.getNode("/what/date").data())
+    self.assertEquals("PLC:123", nodelist.getNode("/what/source").data())
+    self.assertEquals("PVOL", nodelist.getNode("/what/object").data())
+    self.assertEquals("H5rad 2.0", nodelist.getNode("/what/version").data())
+    
+    #Where
+    self.assertAlmostEquals(12.0, nodelist.getNode("/where/lon").data(), 4)
+    self.assertAlmostEquals(60.0, nodelist.getNode("/where/lat").data(), 4)
+    self.assertAlmostEquals(0.0, nodelist.getNode("/where/height").data(), 4)
+
+    #
+    # dataset1 (scan1)
+    #
+    self.assertEquals("100001", nodelist.getNode("/dataset1/what/starttime").data())
+    self.assertEquals("20091010", nodelist.getNode("/dataset1/what/startdate").data())
+    self.assertEquals("100001", nodelist.getNode("/dataset1/what/endtime").data())
+    self.assertEquals("20091010", nodelist.getNode("/dataset1/what/enddate").data())
+    self.assertEquals("SCAN", nodelist.getNode("/dataset1/what/product").data())
+    
+    # dataset1/where
+    self.assertAlmostEquals(0.1, nodelist.getNode("/dataset1/where/elangle").data(), 4)
+    self.assertEquals(2, nodelist.getNode("/dataset1/where/a1gate").data())
+    self.assertAlmostEquals(0.0, nodelist.getNode("/dataset1/where/rstart").data(), 4)
+    self.assertAlmostEquals(5000.0, nodelist.getNode("/dataset1/where/rscale").data(), 4)
+    self.assertEquals(120, nodelist.getNode("/dataset1/where/nbins").data())
+    self.assertEquals(100, nodelist.getNode("/dataset1/where/nrays").data())
+    
+    # dataset1/data1/what
+    self.assertEquals("DBZH", nodelist.getNode("/dataset1/data1/what/quantity").data())
+    self.assertAlmostEquals(1.0, nodelist.getNode("/dataset1/data1/what/gain").data(), 4)
+    self.assertAlmostEquals(0.0, nodelist.getNode("/dataset1/data1/what/offset").data(), 4)
+    self.assertAlmostEquals(10.0, nodelist.getNode("/dataset1/data1/what/nodata").data(), 4)
+    self.assertAlmostEquals(11.0, nodelist.getNode("/dataset1/data1/what/undetect").data(), 4)
+    
+    # dataset1/data1/data
+    self.assertEquals(numpy.uint8, nodelist.getNode("/dataset1/data1/data").data().dtype)
+    self.assertEquals("IMAGE", nodelist.getNode("/dataset1/data1/data/CLASS").data())
+    self.assertEquals("1.2", nodelist.getNode("/dataset1/data1/data/IMAGE_VERSION").data())
+
+    #
+    # dataset2 (scan2)
+    #
+    self.assertEquals("100002", nodelist.getNode("/dataset2/what/starttime").data())
+    self.assertEquals("20091010", nodelist.getNode("/dataset2/what/startdate").data())
+    self.assertEquals("100002", nodelist.getNode("/dataset2/what/endtime").data())
+    self.assertEquals("20091010", nodelist.getNode("/dataset2/what/enddate").data())
+    self.assertEquals("SCAN", nodelist.getNode("/dataset2/what/product").data())
+    
+    # dataset2/where
+    self.assertAlmostEquals(0.5, nodelist.getNode("/dataset2/where/elangle").data(), 4)
+    self.assertEquals(1, nodelist.getNode("/dataset2/where/a1gate").data())
+    self.assertAlmostEquals(1000.0, nodelist.getNode("/dataset2/where/rstart").data(), 4)
+    self.assertAlmostEquals(2000.0, nodelist.getNode("/dataset2/where/rscale").data(), 4)
+    self.assertEquals(120, nodelist.getNode("/dataset2/where/nbins").data())
+    self.assertEquals(100, nodelist.getNode("/dataset2/where/nrays").data())
+    
+    # dataset2/data1/what
+    self.assertEquals("MMM", nodelist.getNode("/dataset2/data1/what/quantity").data())
+    self.assertAlmostEquals(1.0, nodelist.getNode("/dataset2/data1/what/gain").data(), 4)
+    self.assertAlmostEquals(0.0, nodelist.getNode("/dataset2/data1/what/offset").data(), 4)
+    self.assertAlmostEquals(255.0, nodelist.getNode("/dataset2/data1/what/nodata").data(), 4)
+    self.assertAlmostEquals(0.0, nodelist.getNode("/dataset2/data1/what/undetect").data(), 4)
+    
+    # dataset2/data1/data
+    self.assertEquals(numpy.uint8, nodelist.getNode("/dataset2/data1/data").data().dtype)
+    self.assertEquals("IMAGE", nodelist.getNode("/dataset2/data1/data/CLASS").data())
+    self.assertEquals("1.2", nodelist.getNode("/dataset2/data1/data/IMAGE_VERSION").data())
+
     
   def addGroupNode(self, nodelist, name):
     node = _pyhl.node(_pyhl.GROUP_ID, name)

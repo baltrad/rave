@@ -332,6 +332,27 @@ static PyObject* _pypolarvolume_getattr(PyPolarVolume* self, char* name)
     return PyFloat_FromDouble(PolarVolume_getLatitude(self->pvol));
   } else if (strcmp("height", name) == 0) {
     return PyFloat_FromDouble(PolarVolume_getHeight(self->pvol));
+  } else if (strcmp("time", name) == 0) {
+    const char* str = PolarVolume_getTime(self->pvol);
+    if (str != NULL) {
+      return PyString_FromString(str);
+    } else {
+      Py_RETURN_NONE;
+    }
+  } else if (strcmp("date", name) == 0) {
+    const char* str = PolarVolume_getDate(self->pvol);
+    if (str != NULL) {
+      return PyString_FromString(str);
+    } else {
+      Py_RETURN_NONE;
+    }
+  } else if (strcmp("source", name) == 0) {
+    const char* str = PolarVolume_getSource(self->pvol);
+    if (str != NULL) {
+      return PyString_FromString(str);
+    } else {
+      Py_RETURN_NONE;
+    }
   }
 
   res = Py_FindMethod(_pypolarvolume_methods, (PyObject*) self, name);
@@ -370,6 +391,38 @@ static int _pypolarvolume_setattr(PyPolarVolume* self, char* name, PyObject* val
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "height must be of type float");
     }
+  } else if (strcmp("time", name) == 0) {
+    if (PyString_Check(val)) {
+      if (!PolarVolume_setTime(self->pvol, PyString_AsString(val))) {
+        raiseException_gotoTag(done, PyExc_ValueError, "could not set time");
+      }
+    } else if (val == Py_None) {
+        PolarVolume_setTime(self->pvol, NULL);
+    } else {
+        raiseException_gotoTag(done, PyExc_ValueError, "time should be specified as a string (HHmmss)");
+    }
+  } else if (strcmp("date", name) == 0) {
+    if (PyString_Check(val)) {
+      if (!PolarVolume_setDate(self->pvol, PyString_AsString(val))) {
+        raiseException_gotoTag(done, PyExc_ValueError, "could not set date");
+      }
+    } else if (val == Py_None) {
+      PolarVolume_setDate(self->pvol, NULL);
+    } else {
+      raiseException_gotoTag(done, PyExc_ValueError, "date should be specified as a string (YYYYMMDD)");
+    }
+  } else if (strcmp("source", name) == 0) {
+    if (PyString_Check(val)) {
+      if (!PolarVolume_setSource(self->pvol, PyString_AsString(val))) {
+        raiseException_gotoTag(done, PyExc_ValueError, "could not set source");
+      }
+    } else if (val == Py_None) {
+      PolarVolume_setSource(self->pvol, NULL);
+    } else {
+      raiseException_gotoTag(done, PyExc_ValueError, "source should be specified as a string");
+    }
+  } else {
+    raiseException_gotoTag(done, PyExc_AttributeError, name);
   }
 
   result = 0;

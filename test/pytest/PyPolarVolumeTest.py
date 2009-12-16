@@ -46,13 +46,57 @@ class PyPolarVolumeTest(unittest.TestCase):
     result = string.find(`type(obj)`, "PolarVolumeCore")
     self.assertNotEqual(-1, result) 
 
-  def testVolume_longitude(self):
+  def test_time(self):
+    obj = _polarvolume.new()
+    self.assertEquals(None, obj.time)
+    obj.time = "200500"
+    self.assertEquals("200500", obj.time)
+    obj.time = None
+    self.assertEquals(None, obj.time)
+
+  def test_time_badValues(self):
+    obj = _polarvolume.new()
+    values = ["10101", "1010101", "1010ab", "1010x0", "abcdef", 123456]
+    for val in values:
+      try:
+        obj.time = val
+        self.fail("Expected ValueError")
+      except ValueError, e:
+        pass
+
+  def test_date(self):
+    obj = _polarvolume.new()
+    self.assertEquals(None, obj.date)
+    obj.date = "20050101"
+    self.assertEquals("20050101", obj.date)
+    obj.date = None
+    self.assertEquals(None, obj.date)
+
+  def test_date_badValues(self):
+    obj = _polarvolume.new()
+    values = ["200910101", "2001010", "200a1010", 20091010]
+    for val in values:
+      try:
+        obj.time = val
+        self.fail("Expected ValueError")
+      except ValueError, e:
+        pass
+
+  def test_source(self):
+    obj = _polarvolume.new()
+    self.assertEquals(None, obj.source)
+    obj.source = "ABC:10, ABD:1"
+    self.assertEquals("ABC:10, ABD:1", obj.source)
+    obj.source = None
+    self.assertEquals(None, obj.source)
+
+  def test_longitude(self):
     obj = _polarvolume.new()
     self.assertAlmostEquals(0.0, obj.longitude, 4)
     obj.longitude = 10.0
     self.assertAlmostEquals(10.0, obj.longitude, 4)
 
-  def testVolume_longitude_typeError(self):
+  def test_longitude_typeError(self):
     obj = _polarvolume.new()
     self.assertAlmostEquals(0.0, obj.longitude, 4)
     try:
@@ -62,13 +106,13 @@ class PyPolarVolumeTest(unittest.TestCase):
       pass
     self.assertAlmostEquals(0.0, obj.longitude, 4)
 
-  def testVolume_latitude(self):
+  def test_latitude(self):
     obj = _polarvolume.new()
     self.assertAlmostEquals(0.0, obj.latitude, 4)
     obj.latitude = 10.0
     self.assertAlmostEquals(10.0, obj.latitude, 4)
 
-  def testVolume_latitude_typeError(self):
+  def test_latitude_typeError(self):
     obj = _polarvolume.new()
     self.assertAlmostEquals(0.0, obj.latitude, 4)
     try:
@@ -78,16 +122,27 @@ class PyPolarVolumeTest(unittest.TestCase):
       pass
     self.assertAlmostEquals(0.0, obj.latitude, 4)
 
-  def testVolume_erroneous_member(self):
-    pass
+  def test_erroneous_member(self):
+    obj = _polarvolume.new()
+    try:
+      obj.thisshouldnotexist = 10
+      self.fail("Expected AttributeError")
+    except AttributeError, e:
+      pass
 
-  def testVolume_height(self):
+    try:
+      v = obj.thisshouldnotexist
+      self.fail("Expected AttributeError")
+    except AttributeError, e:
+      pass
+
+  def test_height(self):
     obj = _polarvolume.new()
     self.assertAlmostEquals(0.0, obj.height, 4)
     obj.height = 10.0
     self.assertAlmostEquals(10.0, obj.height, 4)
 
-  def testVolume_height_typeError(self):
+  def test_height_typeError(self):
     obj = _polarvolume.new()
     self.assertAlmostEquals(0.0, obj.height, 4)
     try:
@@ -97,7 +152,7 @@ class PyPolarVolumeTest(unittest.TestCase):
       pass
     self.assertAlmostEquals(0.0, obj.height, 4)
     
-  def testVolume_addScan(self):
+  def test_addScan(self):
     obj = _polarvolume.new()
     scan = _polarscan.new()
     obj.addScan(scan)
@@ -132,7 +187,7 @@ class PyPolarVolumeTest(unittest.TestCase):
         self.fail("Failed to verify scan consistency")
 
 
-  def testVolume_getNumberOfScans(self):
+  def test_getNumberOfScans(self):
     obj = _polarvolume.new()
     self.assertEquals(0, obj.getNumberOfScans())
     obj.addScan(_polarscan.new())
@@ -140,7 +195,7 @@ class PyPolarVolumeTest(unittest.TestCase):
     obj.addScan(_polarscan.new())
     self.assertEquals(2, obj.getNumberOfScans())
     
-  def testVolume_getScan(self):
+  def test_getScan(self):
     obj = _polarvolume.new()
     scan1 = _polarscan.new()
     scan2 = _polarscan.new()
@@ -195,7 +250,7 @@ class PyPolarVolumeTest(unittest.TestCase):
       else:
         self.assertAlmostEquals(el[1], result.elangle*180.0/math.pi, 5)
 
-  def testVolume_getNearest(self):
+  def test_getNearest(self):
     obj = _polarvolume.new()
     obj.longitude = 12.0 * math.pi/180.0
     obj.latitude = 60.0 * math.pi/180.0
@@ -239,7 +294,7 @@ class PyPolarVolumeTest(unittest.TestCase):
     self.assertEquals(_rave.RaveValueType_NODATA, t)
     
     
-  def testSortByElevations_ascending(self):
+  def test_sortByElevations_ascending(self):
     obj = _polarvolume.new()
     scan1 = _polarscan.new()
     scan1.elangle = 2.0
@@ -262,7 +317,7 @@ class PyPolarVolumeTest(unittest.TestCase):
     self.assertTrue (scan1 == scanresult2)
     self.assertTrue (scan2 == scanresult3)
 
-  def testSortByElevations_descending(self):
+  def test_sortByElevations_descending(self):
     obj = _polarvolume.new()
     scan1 = _polarscan.new()
     scan1.elangle = 2.0
@@ -285,7 +340,7 @@ class PyPolarVolumeTest(unittest.TestCase):
     self.assertTrue (scan1 == scanresult2)
     self.assertTrue (scan3 == scanresult3)
 
-  def testIsAscending(self):
+  def test_isAscending(self):
     obj = _polarvolume.new()
     scan1 = _polarscan.new()
     scan1.elangle = 0.1
@@ -300,7 +355,7 @@ class PyPolarVolumeTest(unittest.TestCase):
     result = obj.isAscendingScans()
     self.assertEquals(True, result)
     
-  def testIsAscending_false(self):
+  def test_isAscending_false(self):
     obj = _polarvolume.new()
     scan1 = _polarscan.new()
     scan1.elangle = 0.1
@@ -315,7 +370,7 @@ class PyPolarVolumeTest(unittest.TestCase):
     result = obj.isAscendingScans()
     self.assertEquals(False, result)
     
-  def testIsTransformable(self):
+  def test_isTransformable(self):
     obj = _polarvolume.new()
     scan1 = _polarscan.new()
     scan1.elangle = 0.1
@@ -330,12 +385,12 @@ class PyPolarVolumeTest(unittest.TestCase):
     result = obj.isTransformable()
     self.assertEquals(True, result)
     
-  def testIsTransformable_noScans(self):
+  def test_isTransformable_noScans(self):
     obj = _polarvolume.new()
     result = obj.isTransformable()
     self.assertEquals(False, result)
 
-  def testIsTransformable_oneScan(self):
+  def test_isTransformable_oneScan(self):
     obj = _polarvolume.new()
     scan1 = _polarscan.new()
     scan1.elangle = 0.1
@@ -343,7 +398,7 @@ class PyPolarVolumeTest(unittest.TestCase):
     result = obj.isTransformable()
     self.assertEquals(True, result)
 
-  def testIsTransformable_descending(self):
+  def test_isTransformable_descending(self):
     obj = _polarvolume.new()
     scan1 = _polarscan.new()
     scan1.elangle = 0.1

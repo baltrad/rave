@@ -72,6 +72,51 @@ void PolarScan_setProjection(PolarScan_t* scan, Projection_t* projection);
 Projection_t* PolarScan_getProjection(PolarScan_t* scan);
 
 /**
+ * Sets the nominal time.
+ * @param[in] scan - self
+ * @param[in] value - the time in the format HHmmss
+ * @returns 1 on success, otherwise 0
+ */
+int PolarScan_setTime(PolarScan_t* scan, const char* value);
+
+/**
+ * Returns the nominal time.
+ * @param[in] scan - self
+ * @returns the nominal time (or NULL if there is none)
+ */
+const char* PolarScan_getTime(PolarScan_t* scan);
+
+/**
+ * Sets the nominal date.
+ * @param[in] scan - self
+ * @param[in] value - the date in the format YYYYMMDD
+ * @returns 1 on success, otherwise 0
+ */
+int PolarScan_setDate(PolarScan_t* scan, const char* value);
+
+/**
+ * Returns the nominal date.
+ * @param[in] scan - self
+ * @returns the nominal time (or NULL if there is none)
+ */
+const char* PolarScan_getDate(PolarScan_t* scan);
+
+/**
+ * Sets the source.
+ * @param[in] scan - self
+ * @param[in] value - the source
+ * @returns 1 on success, otherwise 0
+ */
+int PolarScan_setSource(PolarScan_t* scan, const char* value);
+
+/**
+ * Returns the source.
+ * @param[in] scan - self
+ * @returns the source or NULL if there is none
+ */
+const char* PolarScan_getSource(PolarScan_t* scan);
+
+/**
  * Sets the longitude for the volume
  * @param[in] pvol - the polar volume
  * @param[in] double - the longitude
@@ -241,6 +286,7 @@ void PolarScan_setQuantity(PolarScan_t* scan, const char* quantity);
  * @return the quantity
  */
 const char* PolarScan_getQuantity(PolarScan_t* scan);
+
 
 /**
  * Sets the gain

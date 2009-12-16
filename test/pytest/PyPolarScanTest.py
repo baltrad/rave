@@ -44,6 +44,52 @@ class PyPolarScanTest(unittest.TestCase):
     isscan = string.find(`type(obj)`, "PolarScanCore")
     self.assertNotEqual(-1, isscan) 
 
+  def test_time(self):
+    obj = _polarscan.new()
+    self.assertEquals(None, obj.time)
+    obj.time = "200500"
+    self.assertEquals("200500", obj.time)
+    obj.time = None
+    self.assertEquals(None, obj.time)
+
+  def test_time_badValues(self):
+    obj = _polarscan.new()
+    values = ["10101", "1010101", "1010ab", "1010x0", "abcdef", 123456]
+    for val in values:
+      try:
+        obj.time = val
+        self.fail("Expected ValueError")
+      except ValueError, e:
+        pass
+
+  def test_date(self):
+    obj = _polarscan.new()
+    self.assertEquals(None, obj.date)
+    obj.date = "20050101"
+    self.assertEquals("20050101", obj.date)
+    obj.date = None
+    self.assertEquals(None, obj.date)
+
+  def test_date_badValues(self):
+    obj = _polarscan.new()
+    values = ["200910101", "2001010", "200a1010", 20091010]
+    for val in values:
+      try:
+        obj.time = val
+        self.fail("Expected ValueError")
+      except ValueError, e:
+        pass
+
+  def test_source(self):
+    obj = _polarscan.new()
+    self.assertEquals(None, obj.source)
+    obj.source = "ABC:10, ABD:1"
+    self.assertEquals("ABC:10, ABD:1", obj.source)
+    obj.source = None
+    self.assertEquals(None, obj.source)
+
+
+
   def test_longitude(self):
     obj = _polarscan.new()
     self.assertAlmostEquals(0.0, obj.longitude, 4)

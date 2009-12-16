@@ -25,6 +25,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "cartesian.h"
 #include "rave_debug.h"
 #include "rave_alloc.h"
+#include "rave_datetime.h"
 #include <string.h>
 
 /**
@@ -50,8 +51,7 @@ struct _Cartesian_t {
 
   // What
   char* quantity; /**< what does this data represent */
-  char date[9];
-  char time[7];
+  RaveDateTime_t* datetime;
   char* source;
   double gain; /**< gain when scaling */
   double offset; /**< offset when scaling */
@@ -70,29 +70,37 @@ struct _Cartesian_t {
  */
 static int Cartesian_constructor(RaveCoreObject* obj)
 {
-  Cartesian_t* result = (Cartesian_t*)obj;
-  result->type = RaveDataType_UNDEFINED;
-  result->xsize = 0;
-  result->ysize = 0;
-  result->xscale = 0.0;
-  result->yscale = 0.0;
-  result->llX = 0.0;
-  result->llY = 0.0;
-  result->urX = 0.0;
-  result->urY = 0.0;
-  result->quantity = NULL;
-  strcpy(result->time, "");
-  strcpy(result->date, "");
-  result->product = Rave_ProductType_UNDEFINED;
-  result->objectType = Rave_ObjectType_UNDEFINED;
-  result->source = NULL;
-  result->gain = 0.0;
-  result->offset = 0.0;
-  result->nodata = 0.0;
-  result->undetect = 0.0;
-  result->projection = NULL;
-  result->data = NULL;
+  Cartesian_t* scan = (Cartesian_t*)obj;
+  scan->type = RaveDataType_UNDEFINED;
+  scan->xsize = 0;
+  scan->ysize = 0;
+  scan->xscale = 0.0;
+  scan->yscale = 0.0;
+  scan->llX = 0.0;
+  scan->llY = 0.0;
+  scan->urX = 0.0;
+  scan->urY = 0.0;
+  scan->quantity = NULL;
+  scan->datetime = NULL;
+  scan->product = Rave_ProductType_UNDEFINED;
+  scan->objectType = Rave_ObjectType_UNDEFINED;
+  scan->source = NULL;
+  scan->gain = 0.0;
+  scan->offset = 0.0;
+  scan->nodata = 0.0;
+  scan->undetect = 0.0;
+  scan->projection = NULL;
+  scan->data = NULL;
+
+  scan->datetime = RAVE_OBJECT_NEW(&RaveDateTime_TYPE);
+  if (scan->datetime == NULL) {
+    goto fail;
+  }
+
   return 1;
+fail:
+  RAVE_OBJECT_RELEASE(scan->datetime);
+  return 0;
 }
 
 /**
@@ -104,6 +112,7 @@ static void Cartesian_destructor(RaveCoreObject* obj)
   Cartesian_t* cartesian = (Cartesian_t*)obj;
   if (cartesian != NULL) {
     RAVE_OBJECT_RELEASE(cartesian->projection);
+    RAVE_OBJECT_RELEASE(cartesian->datetime);
     RAVE_FREE(cartesian->source);
     RAVE_FREE(cartesian->quantity);
     RAVE_FREE(cartesian->data);
@@ -111,22 +120,18 @@ static void Cartesian_destructor(RaveCoreObject* obj)
 }
 
 /**
- * Verifies that the string only contains digits.
- * @param[in] value - the null terminated string
- * @returns 1 if the string only contains digits, otherwise 0
+ * Sets the data type of the data that is worked with
+ * @param[in] cartesian - the cartesian product
+ * @param[in] type - the data type
+ * @return 0 if type is not known, otherwise the type was set
  */
-static int CartesianInternal_isDigits(const char* value)
+static int CartesianInternal_setDataType(Cartesian_t* cartesian, RaveDataType type)
 {
   int result = 0;
-  if (value != NULL) {
-    int len = strlen(value);
-    int i = 0;
+  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
+  if (type >= RaveDataType_UNDEFINED && type < RaveDataType_LAST) {
+    cartesian->type = type;
     result = 1;
-    for (i = 0; result == 1 && i < len; i++) {
-      if (value[i] < 0x30 || value[i] > 0x39) {
-        result = 0;
-      }
-    }
   }
   return result;
 }
@@ -136,50 +141,26 @@ static int CartesianInternal_isDigits(const char* value)
 /*@{ Interface functions */
 int Cartesian_setTime(Cartesian_t* cartesian, const char* value)
 {
-  int result = 0;
   RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
-  if (value == NULL) {
-    strcpy(cartesian->time, "");
-  } else {
-    if (strlen(value) == 6 && CartesianInternal_isDigits(value)) {
-      strcpy(cartesian->time, value);
-      result = 1;
-    }
-  }
-  return result;
+  return RaveDateTime_setTime(cartesian->datetime, value);
 }
 
 const char* Cartesian_getTime(Cartesian_t* cartesian)
 {
   RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
-  if (strcmp(cartesian->time, "") == 0) {
-    return NULL;
-  }
-  return (const char*)cartesian->time;
+  return RaveDateTime_getTime(cartesian->datetime);
 }
 
 int Cartesian_setDate(Cartesian_t* cartesian, const char* value)
 {
-  int result = 0;
   RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
-  if (value == NULL) {
-    strcpy(cartesian->date, "");
-  } else {
-    if (strlen(value) == 8 && CartesianInternal_isDigits(value)) {
-      strcpy(cartesian->date, value);
-      result = 1;
-    }
-  }
-  return result;
+  return RaveDateTime_setDate(cartesian->datetime, value);
 }
 
 const char* Cartesian_getDate(Cartesian_t* cartesian)
 {
   RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
-  if (strcmp(cartesian->date, "") == 0) {
-    return NULL;
-  }
-  return (const char*)cartesian->date;
+  return RaveDateTime_getDate(cartesian->datetime);
 }
 
 int Cartesian_setSource(Cartesian_t* cartesian, const char* value)
@@ -222,13 +203,6 @@ Rave_ObjectType Cartesian_getObjectType(Cartesian_t* cartesian)
 {
   RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
   return cartesian->objectType;
-}
-
-
-void Cartesian_setXSize(Cartesian_t* cartesian, long xsize)
-{
-  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
-  cartesian->xsize = xsize;
 }
 
 long Cartesian_getXSize(Cartesian_t* cartesian)
@@ -322,17 +296,6 @@ double Cartesian_getLocationY(Cartesian_t* cartesian, long y)
 {
   RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
   return cartesian->urY - cartesian->yscale * (double)y;
-}
-
-int Cartesian_setDataType(Cartesian_t* cartesian, RaveDataType type)
-{
-  int result = 0;
-  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
-  if (type >= RaveDataType_UNDEFINED && type < RaveDataType_LAST) {
-    cartesian->type = type;
-    result = 1;
-  }
-  return result;
 }
 
 RaveDataType Cartesian_getDataType(Cartesian_t* cartesian)
@@ -451,9 +414,9 @@ int Cartesian_setData(Cartesian_t* cartesian, long xsize, long ysize, void* data
   memcpy(ptr, data, nbytes);
   RAVE_FREE(cartesian->data);
   cartesian->data = ptr;
-  Cartesian_setXSize(cartesian, xsize);
-  Cartesian_setYSize(cartesian, ysize);
-  Cartesian_setDataType(cartesian, type);
+  cartesian->xsize = xsize;
+  cartesian->ysize = ysize;
+  CartesianInternal_setDataType(cartesian, type);
   result = 1;
 fail:
   return result;

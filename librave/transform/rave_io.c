@@ -822,6 +822,164 @@ done:
 }
 
 /**
+ * Validates that the scan is valid for storing as a part of a volume.
+ * @param[in] scan - the scan to validate
+ * @returns 1 if all is ok, otherwise 0
+ */
+static int RaveIOInternal_validateVolumeScan(PolarScan_t* scan)
+{
+  int result = 0;
+  if (scan == NULL) {
+    RAVE_INFO0("scan == NULL");
+    goto done;
+  }
+  if (PolarScan_getNrays(scan) <= 0) {
+    RAVE_INFO0("nrays <= 0");
+    goto done;
+  }
+  if (PolarScan_getNbins(scan) <= 0) {
+    RAVE_INFO0("nbins <= 0");
+    goto done;
+  }
+  if (PolarScan_getQuantity(scan) == NULL) {
+    RAVE_INFO0("quantity == NULL");
+    goto done;
+  }
+  if (PolarScan_getTime(scan) == NULL) {
+    RAVE_INFO0("time == NULL");
+    goto done;
+  }
+  if (PolarScan_getDate(scan) == NULL) {
+    RAVE_INFO0("date == NULL");
+    goto done;
+  }
+  if (PolarScan_getData(scan) == NULL) {
+    RAVE_INFO0("data == NULL");
+    goto done;
+  }
+  result = 1;
+done:
+  return result;
+}
+
+/**
+ * Validates that the volume not contains any bogus data before
+ * atempting to store it.
+ * @param[in] pvol - the volume to validate
+ * @returns 1 if all is valid, otherwise 0.
+ */
+static int RaveIOInternal_validateVolume(PolarVolume_t* pvol)
+{
+  int result = 0;
+  int nrScans = 0;
+  int i = 0;
+
+  if (PolarVolume_getTime(pvol) == NULL) {
+    RAVE_INFO0("time == NULL");
+    goto done;
+  }
+  if (PolarVolume_getDate(pvol) == NULL) {
+    RAVE_INFO0("date == NULL");
+    goto done;
+  }
+  if (PolarVolume_getSource(pvol) == NULL) {
+    RAVE_INFO0("source == NULL");
+    goto done;
+  }
+
+  nrScans = PolarVolume_getNumberOfScans(pvol);
+  if (nrScans <= 0) {
+    RAVE_INFO0("volume contains no scans");
+    goto done;
+  }
+
+  for (i = 0; i < nrScans; i++) {
+    PolarScan_t* scan = PolarVolume_getScan(pvol, i);
+    if (!RaveIOInternal_validateVolumeScan(scan)) {
+      RAVE_OBJECT_RELEASE(scan);
+      goto done;
+    }
+    RAVE_OBJECT_RELEASE(scan);
+  }
+
+  result = 1;
+done:
+  return result;
+}
+
+/**
+ * Validates that the cartesian not contains any bogus data before
+ * atempting to store it.
+ * @param[in] cartesian - the cartesian to validate
+ * @returns 1 if all is valid, otherwise 0.
+ */
+static int RaveIOInternal_validateCartesian(Cartesian_t* cartesian)
+{
+  int result = 0;
+  Projection_t* projection = NULL;
+
+  if (Cartesian_getObjectType(cartesian) == Rave_ObjectType_UNDEFINED) {
+    RAVE_INFO0("Storing a cartesian with UNDEFINED ObjectType?");
+    goto done;
+  }
+  if (Cartesian_getDate(cartesian) == NULL) {
+    RAVE_INFO0("date == NULL");
+    goto done;
+  }
+  if (Cartesian_getTime(cartesian) == NULL) {
+    RAVE_INFO0("time == NULL");
+    goto done;
+  }
+  if (Cartesian_getSource(cartesian) == NULL) {
+    RAVE_INFO0("source == NULL");
+    goto done;
+  }
+
+  projection = Cartesian_getProjection(cartesian);
+  if (projection == NULL) {
+    RAVE_INFO0("no projection for cartesian product");
+    goto done;
+  }
+  if (Projection_getDefinition(projection) == NULL) {
+    RAVE_INFO0("projection does not have a definition?");
+    goto done;
+  }
+  if (Cartesian_getXSize(cartesian) <= 0) {
+    RAVE_INFO0("xsize <= 0");
+    goto done;
+  }
+  if (Cartesian_getYSize(cartesian) <= 0) {
+    RAVE_INFO0("ysize <= 0");
+    goto done;
+  }
+  if (Cartesian_getXScale(cartesian) <= 0.0) {
+    RAVE_INFO0("xscale <= 0");
+    goto done;
+  }
+  if (Cartesian_getYScale(cartesian) <= 0) {
+    RAVE_INFO0("yscale <= 0");
+    goto done;
+  }
+  if (Cartesian_getProduct(cartesian) == Rave_ProductType_UNDEFINED) {
+    RAVE_INFO0("Undefined ProductType ?");
+    goto done;
+  }
+  if (Cartesian_getQuantity(cartesian) == NULL) {
+    RAVE_INFO0("quantity == NULL");
+    goto done;
+  }
+  if (Cartesian_getData(cartesian) == NULL) {
+    RAVE_INFO0("data == NULL");
+    goto done;
+  }
+
+  result = 1;
+done:
+  RAVE_OBJECT_RELEASE(projection);
+  return result;
+}
+
+/**
  * Saves a polar scan that belongs to a polar volume.
  * @param[in] nodelist - the hlhdf node list
  * @param[in] scan - the scan to save
@@ -831,6 +989,7 @@ done:
 static int RaveIOInternal_savePolarVolumeScan(HL_NodeList* nodelist, PolarScan_t* scan, int dsindex)
 {
   double gain, offset, nodata, undetect, elangle, a1gate, rscale, rstart;
+  long nrays, nbins;
   const char* quantity;
   const char* starttime;
   const char* endtime;
@@ -841,6 +1000,8 @@ static int RaveIOInternal_savePolarVolumeScan(HL_NodeList* nodelist, PolarScan_t
   RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
   RAVE_ASSERT((scan != NULL), "scan == NULL");
 
+  nrays = PolarScan_getNrays(scan);
+  nbins = PolarScan_getNbins(scan);
   gain = PolarScan_getGain(scan);
   offset = PolarScan_getOffset(scan);
   nodata = PolarScan_getNodata(scan);
@@ -850,10 +1011,24 @@ static int RaveIOInternal_savePolarVolumeScan(HL_NodeList* nodelist, PolarScan_t
   a1gate = PolarScan_getA1gate(scan);
   rscale = PolarScan_getRscale(scan);
   rstart = PolarScan_getRstart(scan);
+  starttime = PolarScan_getTime(scan);
+  startdate = PolarScan_getDate(scan);
+  endtime = PolarScan_getTime(scan);
+  enddate = PolarScan_getDate(scan);
 
   // Base
   if (!RaveIOInternal_createGroup(nodelist, "/dataset%d", dsindex) ||
       !RaveIOInternal_createGroup(nodelist, "/dataset%d/data1", dsindex)) {
+    goto done;
+  }
+
+  // What
+  if (!RaveIOInternal_createGroup(nodelist, "/dataset%d/what", dsindex) ||
+      !RaveIOInternal_createStringValue(nodelist, RaveIO_ProductType_SCAN_STR, "/dataset%d/what/product", dsindex) ||
+      !RaveIOInternal_createStringValue(nodelist, starttime, "/dataset%d/what/starttime", dsindex) ||
+      !RaveIOInternal_createStringValue(nodelist, startdate, "/dataset%d/what/startdate", dsindex) ||
+      !RaveIOInternal_createStringValue(nodelist, endtime, "/dataset%d/what/endtime", dsindex) ||
+      !RaveIOInternal_createStringValue(nodelist, enddate, "/dataset%d/what/enddate", dsindex)) {
     goto done;
   }
 
@@ -872,8 +1047,26 @@ static int RaveIOInternal_savePolarVolumeScan(HL_NodeList* nodelist, PolarScan_t
       !RaveIOInternal_createDoubleValue(nodelist, elangle, "/dataset%d/where/elangle", dsindex) ||
       !RaveIOInternal_createDoubleValue(nodelist, a1gate, "/dataset%d/where/a1gate", dsindex) ||
       !RaveIOInternal_createDoubleValue(nodelist, rscale, "/dataset%d/where/rscale", dsindex) ||
-      !RaveIOInternal_createDoubleValue(nodelist, rstart, "/dataset%d/where/rstart", dsindex)) {
+      !RaveIOInternal_createDoubleValue(nodelist, rstart, "/dataset%d/where/rstart", dsindex) ||
+      !RaveIOInternal_createDoubleValue(nodelist, nbins, "/dataset%d/where/nbins", dsindex) ||
+      !RaveIOInternal_createDoubleValue(nodelist, nrays, "/dataset%d/where/nrays", dsindex)) {
     goto done;
+  }
+
+  if (!RaveIOInternal_createDataset(nodelist, PolarScan_getData(scan),
+                                    PolarScan_getNbins(scan), PolarScan_getNrays(scan),
+                                    PolarScan_getDataType(scan),
+                                    "/dataset%d/data1/data", dsindex)) {
+    goto done;
+  }
+  // If data type is 8-bit UCHAR, IMAGE attributes shall be stored.
+  if (PolarScan_getDataType(scan) == RaveDataType_UCHAR) {
+    if (!RaveIOInternal_createStringValue(nodelist, "IMAGE", "/dataset%d/data1/data/CLASS",dsindex)) {
+      goto done;
+    }
+    if (!RaveIOInternal_createStringValue(nodelist, "1.2", "/dataset%d/data1/data/IMAGE_VERSION", dsindex)) {
+      goto done;
+    }
   }
 
   result = 1;
@@ -1267,6 +1460,9 @@ int RaveIOInternal_saveCartesian(RaveIO_t* raveio)
   }
 
   object = (Cartesian_t*)raveio->object; // So that I dont have to cast the object all the time. DO not release this
+  if (!RaveIOInternal_validateCartesian(object)) {
+    goto done;
+  }
 
   productType = Cartesian_getProduct(object);
 
@@ -1491,7 +1687,7 @@ error:
   return NULL;
 }
 
-static int RaveIOInternal_savePolarVolume(RaveIO_t* raveio)
+static int RaveIOInternal_saveVolume(RaveIO_t* raveio)
 {
   int result = 0;
   HL_NodeList* nodelist = NULL;
@@ -1506,6 +1702,11 @@ static int RaveIOInternal_savePolarVolume(RaveIO_t* raveio)
   }
 
   object = (PolarVolume_t*)raveio->object; // So that I dont have to cast the object all the time. DO not release this
+
+  // First verify that no bogus data is entered into the system.
+  if (!RaveIOInternal_validateVolume(object)) {
+    goto done;
+  }
 
   nodelist = HLNodeList_new();
   if (nodelist == NULL) {
@@ -1550,6 +1751,16 @@ static int RaveIOInternal_savePolarVolume(RaveIO_t* raveio)
       }
       RAVE_OBJECT_RELEASE(scan);
     }
+  }
+
+  if (!HLNodeList_setFileName(nodelist, raveio->filename)) {
+    RAVE_CRITICAL0("Could not set filename on nodelist");
+    goto done;
+  }
+
+  if (!HLNodeList_write(nodelist, NULL, NULL)) {
+    RAVE_CRITICAL0("Could not save file");
+    goto done;
   }
 
   result = 1;
@@ -1666,7 +1877,7 @@ int RaveIO_save(RaveIO_t* raveio)
     if (RAVE_OBJECT_CHECK_TYPE(raveio->object, &Cartesian_TYPE)) {
       result = RaveIOInternal_saveCartesian(raveio);
     } else if (RAVE_OBJECT_CHECK_TYPE(raveio->object, &PolarVolume_TYPE)) {
-      result = RaveIOInternal_savePolarVolume(raveio);
+      result = RaveIOInternal_saveVolume(raveio);
     }
   }
 

@@ -391,8 +391,28 @@ static PyObject* _pypolarscan_getattr(PyPolarScan* self, char* name)
     return PyFloat_FromDouble(PolarScan_getLatitude(self->scan));
   } else if (strcmp("height", name) == 0) {
     return PyFloat_FromDouble(PolarScan_getHeight(self->scan));
-  }
-  res = Py_FindMethod(_pypolarscan_methods, (PyObject*) self, name);
+  } else if (strcmp("time", name) == 0) {
+    const char* str = PolarScan_getTime(self->scan);
+    if (str != NULL) {
+      return PyString_FromString(str);
+    } else {
+      Py_RETURN_NONE;
+    }
+  } else if (strcmp("date", name) == 0) {
+    const char* str = PolarScan_getDate(self->scan);
+    if (str != NULL) {
+      return PyString_FromString(str);
+    } else {
+      Py_RETURN_NONE;
+    }
+  } else if (strcmp("source", name) == 0) {
+    const char* str = PolarScan_getSource(self->scan);
+    if (str != NULL) {
+      return PyString_FromString(str);
+    } else {
+      Py_RETURN_NONE;
+    }
+  }  res = Py_FindMethod(_pypolarscan_methods, (PyObject*) self, name);
   if (res)
     return res;
 
@@ -507,6 +527,36 @@ static int _pypolarscan_setattr(PyPolarScan* self, char* name, PyObject* val)
       PolarScan_setHeight(self->scan, PyFloat_AsDouble(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "height must be of type float");
+    }
+  } else if (strcmp("time", name) == 0) {
+    if (PyString_Check(val)) {
+      if (!PolarScan_setTime(self->scan, PyString_AsString(val))) {
+        raiseException_gotoTag(done, PyExc_ValueError, "time must be a string (HHmmss)");
+      }
+    } else if (val == Py_None) {
+      PolarScan_setTime(self->scan, NULL);
+    } else {
+      raiseException_gotoTag(done, PyExc_ValueError, "time must be a string (HHmmss)");
+    }
+  } else if (strcmp("date", name) == 0) {
+    if (PyString_Check(val)) {
+      if (!PolarScan_setDate(self->scan, PyString_AsString(val))) {
+        raiseException_gotoTag(done, PyExc_ValueError, "date must be a string (YYYYMMSS)");
+      }
+    } else if (val == Py_None) {
+      PolarScan_setDate(self->scan, NULL);
+    } else {
+      raiseException_gotoTag(done, PyExc_ValueError, "date must be a string (YYYYMMSS)");
+    }
+  } else if (strcmp("source", name) == 0) {
+    if (PyString_Check(val)) {
+      if (!PolarScan_setSource(self->scan, PyString_AsString(val))) {
+        raiseException_gotoTag(done, PyExc_ValueError, "source must be a string");
+      }
+    } else if (val == Py_None) {
+      PolarScan_setSource(self->scan, NULL);
+    } else {
+      raiseException_gotoTag(done, PyExc_ValueError, "source must be a string");
     }
   } else {
     raiseException_gotoTag(done, PyExc_AttributeError, name);

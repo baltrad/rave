@@ -27,12 +27,18 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_alloc.h"
 #include <string.h>
 #include "rave_object.h"
+#include "rave_datetime.h"
 
 /**
  * Represents one scan in a volume.
  */
 struct _PolarScan_t {
   RAVE_OBJECT_HEAD /** Always on top */
+
+  // Date/Time
+  RaveDateTime_t* datetime;
+
+  char* source;
 
   // Where
   double elangle; /**< elevation of scan */
@@ -73,6 +79,8 @@ struct _PolarScan_t {
 static int PolarScan_constructor(RaveCoreObject* obj)
 {
   PolarScan_t* scan = (PolarScan_t*)obj;
+  scan->datetime = NULL;
+  scan->source = NULL;
   scan->elangle = 0.0;
   scan->nbins = 0;
   scan->rscale = 0.0;
@@ -91,6 +99,11 @@ static int PolarScan_constructor(RaveCoreObject* obj)
   scan->navigator = NULL;
   scan->projection = NULL;
 
+  scan->datetime = RAVE_OBJECT_NEW(&RaveDateTime_TYPE);
+  if (scan->datetime == NULL) {
+    goto error;
+  }
+
   scan->projection = RAVE_OBJECT_NEW(&Projection_TYPE);
   if (scan->projection != NULL) {
     if(!Projection_init(scan->projection, "lonlat", "lonlat", "+proj=latlong +ellps=WGS84 +datum=WGS84")) {
@@ -106,6 +119,9 @@ static int PolarScan_constructor(RaveCoreObject* obj)
 
   return 1;
 error:
+  RAVE_OBJECT_RELEASE(scan->datetime);
+  RAVE_OBJECT_RELEASE(scan->projection);
+  RAVE_OBJECT_RELEASE(scan->navigator);
   return 0;
 }
 
@@ -115,6 +131,8 @@ error:
 static void PolarScan_destructor(RaveCoreObject* obj)
 {
   PolarScan_t* scan = (PolarScan_t*)obj;
+  RAVE_OBJECT_RELEASE(scan->datetime);
+  RAVE_FREE(scan->source);
   RAVE_FREE(scan->data);
   RAVE_OBJECT_RELEASE(scan->navigator);
   RAVE_OBJECT_RELEASE(scan->projection);
@@ -149,6 +167,57 @@ Projection_t* PolarScan_getProjection(PolarScan_t* scan)
   RAVE_ASSERT((scan != NULL), "scan was NULL");
   return RAVE_OBJECT_COPY(scan->projection);
 }
+
+int PolarScan_setTime(PolarScan_t* scan, const char* value)
+{
+  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  return RaveDateTime_setTime(scan->datetime, value);
+}
+
+const char* PolarScan_getTime(PolarScan_t* scan)
+{
+  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  return RaveDateTime_getTime(scan->datetime);
+}
+
+int PolarScan_setDate(PolarScan_t* scan, const char* value)
+{
+  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  return RaveDateTime_setDate(scan->datetime, value);
+}
+
+const char* PolarScan_getDate(PolarScan_t* scan)
+{
+  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  return RaveDateTime_getDate(scan->datetime);
+}
+
+int PolarScan_setSource(PolarScan_t* scan, const char* value)
+{
+  char* tmp = NULL;
+  int result = 0;
+  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  if (value != NULL) {
+    tmp = RAVE_STRDUP(value);
+    if (tmp != NULL) {
+      RAVE_FREE(scan->source);
+      scan->source = tmp;
+      tmp = NULL;
+      result = 1;
+    }
+  } else {
+    RAVE_FREE(scan->source);
+    result = 1;
+  }
+  return result;
+}
+
+const char* PolarScan_getSource(PolarScan_t* scan)
+{
+  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  return (const char*)scan->source;
+}
+
 
 void PolarScan_setLongitude(PolarScan_t* scan, double lon)
 {
