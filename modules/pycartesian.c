@@ -362,7 +362,11 @@ static PyObject* _pycartesian_getattr(PyCartesian* self, char* name)
   } else if (strcmp("yscale", name) == 0) {
     return PyFloat_FromDouble(Cartesian_getYScale(self->cartesian));
   } else if (strcmp("quantity", name) == 0) {
-    return PyString_FromString(Cartesian_getQuantity(self->cartesian));
+    if (Cartesian_getQuantity(self->cartesian) == NULL) {
+      Py_RETURN_NONE;
+    } else {
+      return PyString_FromString(Cartesian_getQuantity(self->cartesian));
+    }
   } else if (strcmp("gain", name) == 0) {
     return PyFloat_FromDouble(Cartesian_getGain(self->cartesian));
   } else if (strcmp("offset", name) == 0) {
@@ -478,7 +482,11 @@ static int _pycartesian_setattr(PyCartesian* self, char* name, PyObject* val)
     }
   } else if (strcmp("quantity", name) == 0) {
     if (PyString_Check(val)) {
-      Cartesian_setQuantity(self->cartesian, PyString_AsString(val));
+      if (!Cartesian_setQuantity(self->cartesian, PyString_AsString(val))) {
+        raiseException_gotoTag(done, PyExc_MemoryError, "Could not set quantity");
+      }
+    } else if (val == Py_None) {
+      Cartesian_setQuantity(self->cartesian, NULL);
     } else {
       raiseException_gotoTag(done, PyExc_TypeError,"quantity must be of type string");
     }

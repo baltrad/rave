@@ -49,7 +49,7 @@ struct _Cartesian_t {
   double urY;
 
   // What
-  char quantity[64]; /**< what does this data represent */
+  char* quantity; /**< what does this data represent */
   char date[9];
   char time[7];
   char* source;
@@ -80,7 +80,7 @@ static int Cartesian_constructor(RaveCoreObject* obj)
   result->llY = 0.0;
   result->urX = 0.0;
   result->urY = 0.0;
-  strcpy(result->quantity, "");
+  result->quantity = NULL;
   strcpy(result->time, "");
   strcpy(result->date, "");
   result->product = Rave_ProductType_UNDEFINED;
@@ -105,6 +105,7 @@ static void Cartesian_destructor(RaveCoreObject* obj)
   if (cartesian != NULL) {
     RAVE_OBJECT_RELEASE(cartesian->projection);
     RAVE_FREE(cartesian->source);
+    RAVE_FREE(cartesian->quantity);
     RAVE_FREE(cartesian->data);
   }
 }
@@ -340,12 +341,22 @@ RaveDataType Cartesian_getDataType(Cartesian_t* cartesian)
   return cartesian->type;
 }
 
-void Cartesian_setQuantity(Cartesian_t* cartesian, const char* quantity)
+int Cartesian_setQuantity(Cartesian_t* cartesian, const char* quantity)
 {
+  int result = 0;
   RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
   if (quantity != NULL) {
-    strcpy(cartesian->quantity, quantity);
+    char* tmp = RAVE_STRDUP(quantity);
+    if (tmp != NULL) {
+      RAVE_FREE(cartesian->quantity);
+      cartesian->quantity = tmp;
+      result = 1;
+    }
+  } else {
+    RAVE_FREE(cartesian->quantity);
+    result = 1;
   }
+  return result;
 }
 
 const char* Cartesian_getQuantity(Cartesian_t* cartesian)

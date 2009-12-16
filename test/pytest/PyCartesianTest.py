@@ -180,19 +180,18 @@ class PyCartesianTest(unittest.TestCase):
     
   def test_quantity(self):
     obj = _cartesian.new()
-    self.assertEquals("", obj.quantity)
+    self.assertEquals(None, obj.quantity)
     obj.quantity = "DBZH"
     self.assertEquals("DBZH", obj.quantity)
 
   def test_quantity_typeError(self):
     obj = _cartesian.new()
-    self.assertEquals("", obj.quantity)
     try:
       obj.quantity = 10
       self.fail("Expected TypeError")
     except TypeError,e:
       pass
-    self.assertEquals("", obj.quantity)
+    self.assertEquals(None, obj.quantity)
     
   def test_gain(self):
     obj = _cartesian.new()

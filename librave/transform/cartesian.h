@@ -227,8 +227,9 @@ RaveDataType Cartesian_getDataType(Cartesian_t* cartesian);
  * Sets the quantity
  * @param[in] cartesian - the cartesian product
  * @param[in] quantity - the quantity, e.g. DBZH
+ * @returns 1 on success, otherwise 0
  */
-void Cartesian_setQuantity(Cartesian_t* cartesian, const char* quantity);
+int Cartesian_setQuantity(Cartesian_t* cartesian, const char* quantity);
 
 /**
  * Returns the quantity

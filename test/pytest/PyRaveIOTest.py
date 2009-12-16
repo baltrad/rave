@@ -37,6 +37,7 @@ import math
 class PyRaveIOTest(unittest.TestCase):
   FIXTURE_VOLUME="fixture_ODIM_H5_pvol_ang_20090501T1200Z.h5"
   FIXTURE_IMAGE="fixture_old_pcappi-dbz-500.ang-gnom-2000.h5"
+  FIXTURE_CVOL_CAPPI="fixture_ODIM_cvol_cappi.h5"
   
   TEMPORARY_FILE="ravemodule_iotest.h5"
   
@@ -161,7 +162,8 @@ class PyRaveIOTest(unittest.TestCase):
     obj.xscale = 2000.0
     obj.yscale = 2000.0
     obj.areaextent = (-240000.0, -240000.0, 238000.0, 238000.0)
-    obj.projection = _projection.new("x","y","+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84")
+    projection = _projection.new("x","y","+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84")
+    obj.projection = projection
     data = numpy.zeros((240,240),numpy.uint8)
     obj.setData(data)
 
@@ -189,7 +191,22 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEquals(240, nodelist.getNode("/where/ysize").data())
     self.assertAlmostEquals(2000.0, nodelist.getNode("/where/xscale").data(), 4)
     self.assertAlmostEquals(2000.0, nodelist.getNode("/where/yscale").data(), 4)
+
+    #LL = (9.171399, 54.153937)
+    #UR = (16.941843,58.441852)
+    #UL = (8.732727,58.440757)
+    #LR = (16.506793,54.154869)
+    #print "%f,%f"%(self.rad2deg(projection.inv((238000.0, -240000.0))))
     
+    self.assertAlmostEquals(9.1714, nodelist.getNode("/where/LL_lon").data(), 4)
+    self.assertAlmostEquals(54.1539, nodelist.getNode("/where/LL_lat").data(), 4)
+    self.assertAlmostEquals(8.7327, nodelist.getNode("/where/UL_lon").data(), 4)
+    self.assertAlmostEquals(58.4408, nodelist.getNode("/where/UL_lat").data(), 4)
+    self.assertAlmostEquals(16.9418, nodelist.getNode("/where/UR_lon").data(), 4)
+    self.assertAlmostEquals(58.4419, nodelist.getNode("/where/UR_lat").data(), 4)
+    self.assertAlmostEquals(16.5068, nodelist.getNode("/where/LR_lon").data(), 4)
+    self.assertAlmostEquals(54.1549, nodelist.getNode("/where/LR_lat").data(), 4)
+
     #dataset1
     self.assertEquals("DBZH", nodelist.getNode("/dataset1/what/quantity").data())
     self.assertEquals("100000", nodelist.getNode("/dataset1/what/starttime").data())
@@ -204,6 +221,34 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEquals(numpy.uint8, nodelist.getNode("/dataset1/data1/data").data().dtype)
     self.assertEquals("IMAGE", nodelist.getNode("/dataset1/data1/data/CLASS").data())
     self.assertEquals("1.2", nodelist.getNode("/dataset1/data1/data/IMAGE_VERSION").data())
+  
+  def test_load_cartesian(self):
+    obj = _raveio.open(self.FIXTURE_CVOL_CAPPI)
+    self.assertEquals(_raveio.RaveIO_ODIM_Version_2_0, obj.version)
+    self.assertEquals(_raveio.RaveIO_ODIM_H5rad_Version_2_0, obj.h5radversion)
+    self.assertEquals(_rave.Rave_ObjectType_CVOL, obj.objectType)
+    
+    cvol = obj.object
+    self.assertEquals("100000", cvol.time)
+    self.assertEquals("20091010", cvol.date)
+    self.assertEquals(_rave.Rave_ObjectType_CVOL, cvol.objectType)
+    self.assertEquals(_rave.Rave_ProductType_CAPPI, cvol.product)
+    self.assertEquals("PLC:123", cvol.source)
+    self.assertEquals("DBZH", cvol.quantity)
+    self.assertAlmostEquals(1.0, cvol.gain, 4)
+    self.assertAlmostEquals(0.0, cvol.offset, 4)
+    self.assertAlmostEquals(255.0, cvol.nodata, 4)
+    self.assertAlmostEquals(0.0, cvol.undetect, 4)
+    self.assertAlmostEquals(2000.0, cvol.xscale, 4)
+    self.assertAlmostEquals(2000.0, cvol.yscale, 4)
+    self.assertAlmostEquals(-240000.0, cvol.areaextent[0], 4)
+    self.assertAlmostEquals(-240000.0, cvol.areaextent[1], 4)
+    self.assertAlmostEquals(238000.0, cvol.areaextent[2], 4)
+    self.assertAlmostEquals(238000.0, cvol.areaextent[3], 4)
+    self.assertEquals("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", cvol.projection.definition)
+    self.assertEquals(240, cvol.xsize)
+    self.assertEquals(240, cvol.ysize)
+    self.assertEquals(numpy.uint8, cvol.getData().dtype)
     
   def addGroupNode(self, nodelist, name):
     node = _pyhl.node(_pyhl.GROUP_ID, name)
@@ -213,3 +258,7 @@ class PyRaveIOTest(unittest.TestCase):
     node = _pyhl.node(_pyhl.ATTRIBUTE_ID, name)
     node.setScalarValue(-1,value,type,-1)
     nodelist.addNode(node)
+
+  def rad2deg(self, coord):
+    return (coord[0]*180.0/math.pi, coord[1]*180.0/math.pi)
+  

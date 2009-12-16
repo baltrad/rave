@@ -886,11 +886,148 @@ done:
 }
 
 /**
+ * Returns the product type for the specified varargs name.
+ * @param[in] nodelist - the hlhdf node list
+ * @param[in] fmt - the varargs format string
+ * @param[in] ... - the varargs list
+ * @returns a product type or Rave_ProductType_UNDEFINED on error
+ */
+static Rave_ProductType RaveIOInternal_getProductType(HL_NodeList* nodelist, const char* fmt, ...)
+{
+  Rave_ObjectType result = Rave_ObjectType_UNDEFINED;
+  char* productType = NULL;
+  int index = 0;
+  va_list ap;
+  char nodeName[1024];
+  int n = 0;
+  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
+
+  va_start(ap, fmt);
+  n = vsnprintf(nodeName, 1024, fmt, ap);
+  va_end(ap);
+  if (n < 0 || n >= 1024) {
+    RAVE_CRITICAL0("Could not create node name for product type");
+    goto done;
+  }
+
+  if (!RaveIOInternal_getStringValue(nodelist, &productType, nodeName)) {
+    RAVE_ERROR1("Failed to read attribute %s", nodeName);
+    goto done;
+  }
+
+  while (PRODUCT_MAPPING[index].str != NULL) {
+    if (strcmp(PRODUCT_MAPPING[index].str, productType) == 0) {
+      result = PRODUCT_MAPPING[index].type;
+      break;
+    }
+    index++;
+  }
+done:
+  return result;
+}
+
+static int RaveIOInternal_createCartesianExtent(HL_NodeList* nodelist, Cartesian_t* cartesian, Projection_t* projection)
+{
+  int result = 0;
+  double llX = 0.0L, llY = 0.0L, urX = 0.0L, urY = 0.0;
+  double LL_lon = 0.0L, LL_lat = 0.0L, UL_lon = 0.0L, UL_lat = 0.0L;
+  double UR_lon = 0.0L, UR_lat = 0.0L, LR_lon = 0.0L, LR_lat = 0.0L;
+  RAVE_ASSERT((nodelist != NULL),"nodelist == NULL");
+  RAVE_ASSERT((projection != NULL), "projection == NULL");
+  RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
+
+  Cartesian_getAreaExtent(cartesian, &llX, &llY, &urX, &urY);
+
+  if (!Projection_inv(projection, llX, llY, &LL_lon, &LL_lat)) {
+    RAVE_ERROR0("Failed to generate LL-coordinate pair");
+    goto done;
+  }
+
+  if (!Projection_inv(projection, llX, urY, &UL_lon, &UL_lat)) {
+    RAVE_ERROR0("Failed to generate UL-coordinate pair");
+    goto done;
+  }
+
+  if (!Projection_inv(projection, urX, urY, &UR_lon, &UR_lat)) {
+    RAVE_ERROR0("Failed to generate UR-coordinate pair");
+    goto done;
+  }
+
+  if (!Projection_inv(projection, urX, llY, &LR_lon, &LR_lat)) {
+    RAVE_ERROR0("Failed to generate LR-coordinate pair");
+    goto done;
+  }
+
+  if (!RaveIOInternal_createDoubleValue(nodelist, LL_lon * 180.0 / M_PI, "/where/LL_lon")) {
+    goto done;
+  }
+  if (!RaveIOInternal_createDoubleValue(nodelist, LL_lat * 180.0 / M_PI, "/where/LL_lat")) {
+    goto done;
+  }
+  if (!RaveIOInternal_createDoubleValue(nodelist, UL_lon * 180.0 / M_PI, "/where/UL_lon")) {
+    goto done;
+  }
+  if (!RaveIOInternal_createDoubleValue(nodelist, UL_lat * 180.0 / M_PI, "/where/UL_lat")) {
+    goto done;
+  }
+  if (!RaveIOInternal_createDoubleValue(nodelist, UR_lon * 180.0 / M_PI, "/where/UR_lon")) {
+    goto done;
+  }
+  if (!RaveIOInternal_createDoubleValue(nodelist, UR_lat * 180.0 / M_PI, "/where/UR_lat")) {
+    goto done;
+  }
+  if (!RaveIOInternal_createDoubleValue(nodelist, LR_lon * 180.0 / M_PI, "/where/LR_lon")) {
+    goto done;
+  }
+  if (!RaveIOInternal_createDoubleValue(nodelist, LR_lat * 180.0 / M_PI, "/where/LR_lat")) {
+    goto done;
+  }
+
+  result = 1;
+done:
+  return result;
+}
+
+static int RaveIOInternal_loadCartesianExtent(HL_NodeList* nodelist, Cartesian_t* cartesian, Projection_t* projection)
+{
+  int result = 0;
+  double llX = 0.0L, llY = 0.0L, urX = 0.0L, urY = 0.0;
+  double LL_lon = 0.0L, LL_lat = 0.0L, UR_lon = 0.0L, UR_lat = 0.0L;
+  RAVE_ASSERT((nodelist != NULL),"nodelist == NULL");
+  RAVE_ASSERT((projection != NULL), "projection == NULL");
+  RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
+
+  if (!RaveIOInternal_getDoubleValue(nodelist, &LL_lon, "/where/LL_lon") ||
+      !RaveIOInternal_getDoubleValue(nodelist, &LL_lat, "/where/LL_lat") ||
+      !RaveIOInternal_getDoubleValue(nodelist, &UR_lon, "/where/UR_lon") ||
+      !RaveIOInternal_getDoubleValue(nodelist, &UR_lat, "/where/UR_lat")) {
+    RAVE_ERROR0("Could not get cartesian extent coordinates LL & UR");
+    goto done;
+  }
+
+  if (!Projection_fwd(projection, LL_lon * M_PI/180.0, LL_lat * M_PI/180.0, &llX, &llY)) {
+    RAVE_ERROR0("Could not generate XY pair for LL");
+    goto done;
+  }
+
+  if (!Projection_fwd(projection, UR_lon * M_PI/180.0, UR_lat * M_PI/180.0, &urX, &urY)) {
+    RAVE_ERROR0("Could not generate XY pair for UR");
+    goto done;
+  }
+
+  Cartesian_setAreaExtent(cartesian, llX, llY, urX, urY);
+
+  result = 1;
+done:
+  return result;
+}
+
+/**
  * Loads and returns a cartesian object.
  * @param[in] nodelist - the hlhdf nodelist
  * @returns a cartesian object or NULL on failure
  */
-RaveCoreObject* RaveIOInternal_loadCartesian(HL_NodeList* nodelist)
+static RaveCoreObject* RaveIOInternal_loadCartesian(HL_NodeList* nodelist)
 {
   Cartesian_t* result = NULL;
   Projection_t* projection = NULL;
@@ -900,10 +1037,19 @@ RaveCoreObject* RaveIOInternal_loadCartesian(HL_NodeList* nodelist)
   char* projdef = NULL;
   long xsize = 0, ysize = 0;
   double xscale = 0.0L, yscale = 0.0L;
-  double LL_lon = 0.0L, LL_lat = 0.0L, UL_lon = 0.0L, UL_lat = 0.0L;
-  double UR_lon = 0.0L, UR_lat = 0.0L, LR_lon = 0.0L, LR_lat = 0.0L;
-
+  char* quantity = NULL;
+  char* startdate = NULL;
+  char* starttime = NULL;
+  char* enddate = NULL;
+  char* endtime = NULL;
+  double gain = 0.0L;
+  double offset = 0.0L;
+  double nodata = 0.0L;
+  double undetect = 0.0L;
+  HL_Node* node = NULL;
+  RaveDataType dataType = RaveDataType_UNDEFINED;
   Rave_ObjectType objectType = Rave_ObjectType_UNDEFINED;
+  Rave_ProductType productType = Rave_ProductType_UNDEFINED;
 
   RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
 
@@ -925,15 +1071,7 @@ RaveCoreObject* RaveIOInternal_loadCartesian(HL_NodeList* nodelist)
       !RaveIOInternal_getLongValue(nodelist, &xsize, "/where/xsize") ||
       !RaveIOInternal_getLongValue(nodelist, &ysize, "/where/ysize") ||
       !RaveIOInternal_getDoubleValue(nodelist, &xscale, "/where/xscale") ||
-      !RaveIOInternal_getDoubleValue(nodelist, &yscale, "/where/yscale") ||
-      !RaveIOInternal_getDoubleValue(nodelist, &LL_lon, "/where/LL_lon") ||
-      !RaveIOInternal_getDoubleValue(nodelist, &LL_lat, "/where/LL_lat") ||
-      !RaveIOInternal_getDoubleValue(nodelist, &UL_lon, "/where/UL_lon") ||
-      !RaveIOInternal_getDoubleValue(nodelist, &UL_lat, "/where/UL_lat") ||
-      !RaveIOInternal_getDoubleValue(nodelist, &UR_lon, "/where/UR_lon") ||
-      !RaveIOInternal_getDoubleValue(nodelist, &UR_lat, "/where/UR_lat") ||
-      !RaveIOInternal_getDoubleValue(nodelist, &LR_lon, "/where/LR_lon") ||
-      !RaveIOInternal_getDoubleValue(nodelist, &LR_lat, "/where/LR_lat")) {
+      !RaveIOInternal_getDoubleValue(nodelist, &yscale, "/where/yscale")) {
     RAVE_ERROR0("Could not read /where information");
     return NULL;
   }
@@ -949,26 +1087,90 @@ RaveCoreObject* RaveIOInternal_loadCartesian(HL_NodeList* nodelist)
   }
 
   result = RAVE_OBJECT_NEW(&Cartesian_TYPE);
-  if (result != NULL) {
-    if (!Cartesian_setDate(result, date)) {
-      RAVE_ERROR0("Illegal date string");
-      goto error;
-    }
-    if (!Cartesian_setTime(result, time)) {
-      RAVE_ERROR0("Illegal time string");
-      goto error;
-    }
-    if (!Cartesian_setSource(result, src)) {
-      RAVE_ERROR0("Illegal src string");
-      goto error;
-    }
-
-    Cartesian_setXScale(result, xscale);
-    Cartesian_setYScale(result, yscale);
-    Cartesian_setProjection(result, projection);
-
+  if (result == NULL) {
+    RAVE_CRITICAL0("Could not create cartesian object");
+    goto error;
   }
 
+  if (!RaveIOInternal_loadCartesianExtent(nodelist, result, projection)) {
+    RAVE_ERROR0("Failed to load cartesian extent");
+    goto error;
+  }
+
+  if (!Cartesian_setDate(result, date)) {
+    RAVE_ERROR0("Illegal date string");
+    goto error;
+  }
+  if (!Cartesian_setTime(result, time)) {
+    RAVE_ERROR0("Illegal time string");
+    goto error;
+  }
+  if (!Cartesian_setSource(result, src)) {
+    RAVE_ERROR0("Illegal src string");
+    goto error;
+  }
+
+  if (!Cartesian_setObjectType(result, objectType)) {
+    RAVE_ERROR0("Could not set object type");
+    goto error;
+  }
+
+  Cartesian_setXScale(result, xscale);
+  Cartesian_setYScale(result, yscale);
+  Cartesian_setProjection(result, projection);
+
+  productType = RaveIOInternal_getProductType(nodelist, "/dataset1/what/product");
+  if (!Cartesian_setProduct(result, productType)) {
+    RAVE_ERROR0("Could not set product type");
+    goto error;
+  }
+
+  if (!RaveIOInternal_getStringValue(nodelist, &quantity, "/dataset1/what/quantity") ||
+      !RaveIOInternal_getStringValue(nodelist, &startdate, "/dataset1/what/startdate") ||
+      !RaveIOInternal_getStringValue(nodelist, &starttime, "/dataset1/what/starttime") ||
+      !RaveIOInternal_getStringValue(nodelist, &enddate, "/dataset1/what/enddate") ||
+      !RaveIOInternal_getStringValue(nodelist, &endtime, "/dataset1/what/endtime") ||
+      !RaveIOInternal_getDoubleValue(nodelist, &gain, "/dataset1/what/gain") ||
+      !RaveIOInternal_getDoubleValue(nodelist, &offset, "/dataset1/what/offset") ||
+      !RaveIOInternal_getDoubleValue(nodelist, &nodata, "/dataset1/what/nodata") ||
+      !RaveIOInternal_getDoubleValue(nodelist, &undetect, "/dataset1/what/undetect")) {
+    RAVE_ERROR0("Could not read /dataset1/what information");
+    goto error;
+  }
+  if (!Cartesian_setQuantity(result, quantity)) {
+    RAVE_ERROR0("Could not set quantity");
+    goto error;
+  }
+  // Do not bother about setting start and end dates/times
+  Cartesian_setGain(result, gain);
+  Cartesian_setOffset(result, offset);
+  Cartesian_setNodata(result, nodata);
+  Cartesian_setUndetect(result, undetect);
+
+  // And finally read the data.
+  node = RaveIOInternal_getNode(nodelist, "/dataset1/data1/data");
+  if (node == NULL) {
+    RAVE_ERROR0("Failed to load data");
+    goto error;
+  }
+  if (HLNode_getRank(node) != 2) {
+    RAVE_ERROR0("Data is not 2-dimensional");
+    goto error;
+  }
+  if (HLNode_getDimension(node, 0) != xsize || HLNode_getDimension(node, 1) != ysize) {
+    RAVE_ERROR0("xsize/ysize does not correspond to actual data array dimensions");
+    goto error;
+  }
+
+  dataType = RaveIOInternal_hlhdfToRaveType(HLNode_getFormat(node));
+  if (dataType == RaveDataType_UNDEFINED) {
+    RAVE_ERROR0("Bad data type");
+    goto error;
+  }
+  if (!Cartesian_setData(result, xsize, ysize, HLNode_getData(node), dataType)) {
+    RAVE_ERROR0("Could not set data");
+    goto error;
+  }
   RAVE_OBJECT_RELEASE(projection);
   return (RaveCoreObject*)result;
 error:
@@ -1060,16 +1262,9 @@ int RaveIOInternal_saveCartesian(RaveIO_t* raveio)
   if (!RaveIOInternal_createDoubleValue(nodelist, Cartesian_getYScale(object), "/where/yscale")) {
     goto done;
   }
-#ifdef KALLE
-  /where/LL_lon
-  /where/LL_lat
-  /where/UL_lon
-  /where/UL_lat
-  /where/UR_lon
-  /where/UR_lat
-  /where/LR_lon
-  /where/LR_lat
-#endif
+  if (!RaveIOInternal_createCartesianExtent(nodelist, object, projection)) {
+    goto done;
+  }
 
   // dataset
   if (!RaveIOInternal_createGroup(nodelist, "/dataset1")) {
@@ -1086,7 +1281,7 @@ int RaveIOInternal_saveCartesian(RaveIO_t* raveio)
   if (productType == Rave_ProductType_CAPPI || productType == Rave_ProductType_PPI ||
       productType == Rave_ProductType_ETOP || productType == Rave_ProductType_RHI ||
       productType == Rave_ProductType_VIL) {
-    // @todo: FIX ME
+    // @todo: FIX prodpar
   }
 
   if (!RaveIOInternal_createStringValue(nodelist, Cartesian_getQuantity(object), "/dataset1/what/quantity")) {
