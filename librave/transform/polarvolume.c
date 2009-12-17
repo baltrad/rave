@@ -35,7 +35,6 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  */
 struct _PolarVolume_t {
   RAVE_OBJECT_HEAD /** Always on top */
-
   Projection_t* projection; /**< projection for this volume */
   PolarNavigator_t* navigator; /**< a polar navigator */
   RaveObjectList_t* scans;  /**< the list of scans */
@@ -44,44 +43,74 @@ struct _PolarVolume_t {
 };
 
 /*@{ Private functions */
+/**
+ * Constructor
+ */
 static int PolarVolume_constructor(RaveCoreObject* obj)
 {
-  PolarVolume_t* result = (PolarVolume_t*)obj;
-  result->projection = NULL;
-  result->navigator = NULL;
-  result->scans = NULL;
-  result->datetime = NULL;
-  result->source = NULL;
+  PolarVolume_t* this = (PolarVolume_t*)obj;
+  this->projection = NULL;
+  this->navigator = NULL;
+  this->scans = NULL;
+  this->datetime = NULL;
+  this->source = NULL;
 
-  result->datetime = RAVE_OBJECT_NEW(&RaveDateTime_TYPE);
-  if (result->datetime == NULL) {
-    goto error;
-  }
+  this->datetime = RAVE_OBJECT_NEW(&RaveDateTime_TYPE);
 
   // Always initialize to default projection for lon/lat calculations
-  result->projection = RAVE_OBJECT_NEW(&Projection_TYPE);
-  if (result->projection != NULL) {
-    if(!Projection_init(result->projection, "lonlat", "lonlat", "+proj=latlong +ellps=WGS84 +datum=WGS84")) {
+  this->projection = RAVE_OBJECT_NEW(&Projection_TYPE);
+  if (this->projection != NULL) {
+    if(!Projection_init(this->projection, "lonlat", "lonlat", "+proj=latlong +ellps=WGS84 +datum=WGS84")) {
       goto error;
     }
-  } else {
-    goto error;
   }
-  result->navigator = RAVE_OBJECT_NEW(&PolarNavigator_TYPE);
-  if (result->navigator == NULL) {
-    goto error;
-  }
-  result->scans = RAVE_OBJECT_NEW(&RaveObjectList_TYPE);
-  if (result->scans == NULL) {
+  this->navigator = RAVE_OBJECT_NEW(&PolarNavigator_TYPE);
+  this->scans = RAVE_OBJECT_NEW(&RaveObjectList_TYPE);
+
+  if (this->datetime == NULL || this->projection == NULL ||
+      this->scans == NULL || this->navigator == NULL) {
     goto error;
   }
 
   return 1;
 error:
-  RAVE_OBJECT_RELEASE(result->datetime);
-  RAVE_OBJECT_RELEASE(result->projection);
-  RAVE_OBJECT_RELEASE(result->navigator);
-  RAVE_OBJECT_RELEASE(result->scans);
+  RAVE_OBJECT_RELEASE(this->datetime);
+  RAVE_OBJECT_RELEASE(this->projection);
+  RAVE_OBJECT_RELEASE(this->navigator);
+  RAVE_OBJECT_RELEASE(this->scans);
+  return 0;
+}
+
+/**
+ * Copy constructor
+ */
+static int PolarVolume_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj)
+{
+  PolarVolume_t* this = (PolarVolume_t*)obj;
+  PolarVolume_t* src = (PolarVolume_t*)srcobj;
+
+  this->projection = RAVE_OBJECT_CLONE(src->projection);
+  this->navigator = RAVE_OBJECT_CLONE(src->navigator);
+  this->scans = RAVE_OBJECT_CLONE(src->scans); // the list only contains scans and they are cloneable
+  this->datetime = RAVE_OBJECT_CLONE(src->datetime);
+  this->source = NULL;
+
+  if (this->datetime == NULL || this->projection == NULL ||
+      this->scans == NULL || this->navigator == NULL) {
+    goto error;
+  }
+
+  if (!PolarVolume_setSource(this, src->source)) {
+    goto error;
+  }
+
+  return 1;
+error:
+  RAVE_FREE(this->source);
+  RAVE_OBJECT_RELEASE(this->datetime);
+  RAVE_OBJECT_RELEASE(this->projection);
+  RAVE_OBJECT_RELEASE(this->navigator);
+  RAVE_OBJECT_RELEASE(this->scans);
   return 0;
 }
 
@@ -405,5 +434,6 @@ RaveCoreObjectType PolarVolume_TYPE = {
     "PolarVolume",
     sizeof(PolarVolume_t),
     PolarVolume_constructor,
-    PolarVolume_destructor
+    PolarVolume_destructor,
+    PolarVolume_copyconstructor
 };

@@ -18,6 +18,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ------------------------------------------------------------------------*/
 /**
  * Defines an area, the extent, projection, etc.
+ * This object supports \ref #RAVE_OBJECT_CLONE.
  * @file
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2009-12-10

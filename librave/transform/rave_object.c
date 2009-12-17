@@ -218,6 +218,17 @@ void* RaveCoreObject_getBindingData(RaveCoreObject* src)
   return src->roh_bindingData;
 }
 
+int RaveCoreObject_isCloneable(RaveCoreObject* src)
+{
+  int result = 0;
+  if (src != NULL) {
+    if (src->roh_type->copyconstructor != NULL) {
+      result = 1;
+    }
+  }
+  return result;
+}
+
 void RaveCoreObject_printStatistics(void)
 {
   fprintf(stderr, "Objects created: %ld\n", objectsCreated);

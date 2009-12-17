@@ -45,6 +45,9 @@ typedef struct _raveobject {
 
 /**
  * The rave object type definition.
+ * If you are implementing support for the copy constructor, you must ensure that
+ * all members of the object are clones as well so that there are no references
+ * to other objects.
  */
 typedef struct _raveobjecttype {
   const char* name; /**< the name, for printout */
@@ -87,9 +90,27 @@ typedef struct _raveobjecttype {
 /**
  * Creates a clone of a object. Not to be confused with COPY.
  * I.e. basically the same as doing a NEW followed by a copy of all essential members.
+ * Be aware that not all objects supports this function and in that case,
+ * NULL will be returned. If it is interesting to ensure that everything is
+ * successful, you can always do this:
+ * \verbatim
+ * if (RAVE_OBJECT_ISCLONEABLE(src)) {
+ *   clone = RAVE_OBJECT_CLONE(src);
+ *   if (clone == NULL) {
+ *     // memory allocation error or something
+ *   }
+ * }
+ * \endverbatim
  */
 #define RAVE_OBJECT_CLONE(src) \
   (void*)RaveCoreObject_clone((RaveCoreObject*)(src), __FILE__, __LINE__)
+
+/**
+ * Returns if this object is cloneable or not. Is determined by verifying
+ * if the type contains a copy constructor or not.
+ */
+#define RAVE_OBJECT_ISCLONEABLE(src) \
+  RaveCoreObject_isCloneable((RaveCoreObject*)(src))
 
 /**
  * Returns the provided objects reference count.
@@ -120,16 +141,6 @@ typedef struct _raveobjecttype {
  */
 #define RAVE_OBJECT_GETBINDING(this) \
   RaveCoreObject_getBindingData((RaveCoreObject*)this)
-
-/**
- * Returns 1 or 0 depending on if this object has been created with
- * RAVE_OBJECT_NEW or not.
- * Note, this is not completly safe if for example passing in a struct
- * that is too small, i.e. the struct must be at least sizeof(RaveCoreObject)
- * otherwise the code will most likely crash...
- */
-#define RAVE_OBJECT_CHECK(this) \
-  (RaveCoreObject_check((RaveCoreObject*)this))
 
 /**
  * Checks if this object is of the specified type.
@@ -213,11 +224,11 @@ void RaveCoreObject_unbind(RaveCoreObject* src, void* bindingData);
 void* RaveCoreObject_getBindingData(RaveCoreObject* src);
 
 /**
- * Returns if this object has been created with RaveCoreObject_new or not.
+ * Returns if this object is possible to clone or not.
  * @param[in] src - the rave core object
- * @returns 1 if the object has been created properly.
+ * @returns 1 if the object is possible to clone.
  */
-int RaveCoreObject_check(RaveCoreObject* src);
+int RaveCoreObject_isCloneable(RaveCoreObject* src);
 
 /**
  * Prints the rave object statistics.

@@ -18,6 +18,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ------------------------------------------------------------------------*/
 /**
  * Functions for performing rave related IO operations, mostly ODIM-formatted HDF5 files.
+ * This object does NOT support \ref #RAVE_OBJECT_CLONE.
+ *
  * @file
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2009-11-12

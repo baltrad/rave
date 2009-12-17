@@ -19,6 +19,10 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 /**
  * Implementation of a rave object list that ensures that the objects
  * contained within the list are released upon destruction etc.
+ * This object supports \ref #RAVE_OBJECT_CLONE with an exception, if any members
+ * of the list is not possible to clone, they will not be added to the list which
+ * means that the returned list might have fewer entries.
+ *
  * @file
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2009-11-26

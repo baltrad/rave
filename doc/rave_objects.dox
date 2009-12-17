@@ -21,7 +21,6 @@ static void somefun(void)
   RAVE_OBJECT_RELEASE(datetime);
 }
 \endverbatim
-
 What happens if you specify a badly formatted date or time or any other oddity. Try for your self by
 checking the return value from \ref #RaveDateTime_setDate and \ref #RaveDateTime_setTime, or you could
 read the documentation.
@@ -44,9 +43,56 @@ static void somefun(void)
   RAVE_OBJECT_RELEASE(data);
 }
 \endverbatim
-
 All setting and getting of data is actually done as doubles and the casting is done inside the functions. So, if you for example
 would pass in a double that is > 255 into the above call, then the value in the data array will be set to 255.
+
+- \ref #RaveObjectList_t
+A list supporting rave objects. It manages the reference counts and ensures that all objects are
+released upon destruction of the list. A small cave-eat, if any objects are passed to the list and
+these objects are not cloneable. Then, if this list is cloned, the non-cloneable objects will be ignored.
+\verbatim
+#include "raveobject_list.h"
+
+static void somefun(RaveObjectList_t* list)
+{
+  int len = RaveObjectList_size(list);
+  int i = 0;
+  for (i = 0; i < len; i++) {
+    RaveCoreObject* object = RaveObjectList_get(list, i);
+    ....
+    RAVE_OBJECT_RELEASE(object);
+  }
+}
+\endverbatim
+Currently, we only support size and indexing, but eventually we are going to introduce an iterator as well.
+
+- \ref #RaveList_t
+A basic list for storing pointers or values or whatever. It takes void pointers as list entries. However, it will
+not destroy any item for you when it is destroyed, that is up to the user.
+\verbatim
+#include "rave_list.h"
+
+static void somefun(void)
+{
+  RaveList_t* list = RAVE_OBJECT_NEW(&RaveList_TYPE);
+  ...
+  RaveList_add(list, ptr);
+  ...
+  while ((ptr = RaveList_removeLast(list)) != NULL) {
+    RAVE_FREE(ptr);
+  }
+  
+  RAVE_OBJECT_RELEASE(list);  
+}
+\endverbatim
+
+That's the basic objects that only are there for making life a bit easier. We have a number of objects that are
+more interesting when working with radar data (or any other data) for that matter.
+
+- \ref #Area_t
+An area definition describing a surface. It contains corner coordinates, what projection it is defined by and what
+x/y - size + x/y - scale. So, it is quite useful if you are planning to create an cartesian product or similar.
+
 
 T.B.D.
 

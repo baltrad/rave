@@ -34,12 +34,15 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  */
 struct _RaveObjectList_t {
   RAVE_OBJECT_HEAD /** Always on top */
-  RaveList_t* list;
+  RaveList_t* list;   /**< the list */
 };
 
 
 /*@{ Private functions */
 
+/**
+ * Constructor.
+ */
 static int RaveObjectList_constructor(RaveCoreObject* obj)
 {
   RaveObjectList_t* oblist = (RaveObjectList_t*)obj;
@@ -50,6 +53,37 @@ static int RaveObjectList_constructor(RaveCoreObject* obj)
   }
   return result;
 }
+
+/**
+ * Copy constructor.
+ */
+static int RaveObjectList_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj)
+{
+  RaveObjectList_t* this = (RaveObjectList_t*)obj;
+  RaveObjectList_t* src = (RaveObjectList_t*)srcobj;
+  int result = 0;
+  this->list = RAVE_OBJECT_NEW(&RaveList_TYPE);
+  if (this->list != NULL) {
+    int i = 0;
+    result = 1;
+    int len = RaveObjectList_size(src);
+    for (i = 0; result == 1 && i < len; i++) {
+      RaveCoreObject* object = RaveObjectList_get(src, i);
+      if (object != NULL && RAVE_OBJECT_ISCLONEABLE(object)) {
+        RaveCoreObject* clone = RAVE_OBJECT_CLONE(object);
+        if (clone != NULL) {
+          result = RaveObjectList_add(this, clone);
+        } else {
+          result = 0;
+        }
+        RAVE_OBJECT_RELEASE(clone);
+      }
+      RAVE_OBJECT_RELEASE(object);
+    }
+  }
+  return result;
+}
+
 /**
  * Destructor
  */
@@ -136,5 +170,6 @@ RaveCoreObjectType RaveObjectList_TYPE = {
     "RaveObjectList",
     sizeof(RaveObjectList_t),
     RaveObjectList_constructor,
-    RaveObjectList_destructor
+    RaveObjectList_destructor,
+    RaveObjectList_copyconstructor
 };

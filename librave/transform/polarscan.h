@@ -17,7 +17,8 @@ You should have received a copy of the GNU Lesser General Public License
 along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ------------------------------------------------------------------------*/
 /**
- * Defines the functions available when working with polar scans
+ * Defines the functions available when working with polar scans.
+ * This object supports \ref #RAVE_OBJECT_CLONE.
  * @file
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2009-10-15
