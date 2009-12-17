@@ -17,7 +17,7 @@ You should have received a copy of the GNU Lesser General Public License
 along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ------------------------------------------------------------------------*/
 /**
- * Defines an area, the extent, projection, etc..
+ * Defines an area, the extent, projection, etc.
  * @file
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2009-12-10
@@ -42,8 +42,9 @@ extern RaveCoreObjectType Area_TYPE;
  * Sets the ID for this area.
  * @param[in] area - self
  * @param[in] id - the id
+ * @returns 1 on success otherwise 0
  */
-void Area_setID(Area_t* area, const char* id);
+int Area_setID(Area_t* area, const char* id);
 
 /**
  * Returns the ID for this area.

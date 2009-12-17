@@ -30,22 +30,25 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "pyrave_debug.h"
 
-#define PYAREA_MODULE
+#define PYAREA_MODULE    /**< to get correct part in pyarea.h */
 #include "pyarea.h"
 #include "pyprojection.h"
 #include "rave_alloc.h"
 
 /**
- * Initialize the debug object.
+ * Debug this module
  */
 PYRAVE_DEBUG_MODULE("_area");
 
 /**
- * Some helpful exception defines.
+ * Sets a python exception and goto tag
  */
 #define raiseException_gotoTag(tag, type, msg) \
 {PyErr_SetString(type, msg); goto tag;}
 
+/**
+ * Sets a python exception and return NULL
+ */
 #define raiseException_returnNULL(type, msg) \
 {PyErr_SetString(type, msg); return NULL;}
 

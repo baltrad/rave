@@ -39,7 +39,7 @@ extern RaveCoreObjectType RaveList_TYPE;
 /**
  * Add one instance to the list.
  * @param[in] list - the list
- * @param[in] obj - the object
+ * @param[in] ob - the object
  * @returns 1 on success, otherwise 0
  */
 int RaveList_add(RaveList_t* list, void* ob);

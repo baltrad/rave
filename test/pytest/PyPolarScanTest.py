@@ -116,13 +116,13 @@ class PyPolarScanTest(unittest.TestCase):
     except AttributeError, e:
       pass
 
-  def testScan_elangle(self):
+  def test_elangle(self):
     obj = _polarscan.new()
     self.assertAlmostEquals(0.0, obj.elangle, 4)
     obj.elangle = 10.0
     self.assertAlmostEquals(10.0, obj.elangle, 4)
 
-  def testScan_elangle_typeError(self):
+  def test_elangle_typeError(self):
     obj = _polarscan.new()
     self.assertAlmostEquals(0.0, obj.elangle, 4)
     try:
@@ -132,29 +132,29 @@ class PyPolarScanTest(unittest.TestCase):
       pass
     self.assertAlmostEquals(0.0, obj.elangle, 4)
 
-  def testScan_nbins(self):
-    obj = _polarscan.new()
-    self.assertEquals(0, obj.nbins)
-    obj.nbins = 10
-    self.assertEquals(10, obj.nbins)
-
-  def testScan_nbins_typeError(self):
+  def test_nbins(self):
     obj = _polarscan.new()
     self.assertEquals(0, obj.nbins)
     try:
-      obj.nbins = 10.0
-      self.fail("Expected TypeError")
-    except TypeError,e:
+      obj.nbins = 10
+      self.fail("Expected AttributeError")
+    except AttributeError, e:
       pass
     self.assertEquals(0, obj.nbins)
 
-  def testScan_rscale(self):
+  def test_nbins_withData(self):
+    obj = _polarscan.new()
+    data = numpy.zeros((4,5), numpy.int8)
+    obj.setData(data)
+    self.assertEquals(5, obj.nbins)
+
+  def test_rscale(self):
     obj = _polarscan.new()
     self.assertAlmostEquals(0.0, obj.rscale, 4)
     obj.rscale = 10.0
     self.assertAlmostEquals(10.0, obj.rscale, 4)
 
-  def testScan_rscale_typeError(self):
+  def test_rscale_typeError(self):
     obj = _polarscan.new()
     self.assertAlmostEquals(0.0, obj.rscale, 4)
     try:
@@ -164,29 +164,29 @@ class PyPolarScanTest(unittest.TestCase):
       pass
     self.assertAlmostEquals(0.0, obj.rscale, 4)
 
-  def testScan_nrays(self):
-    obj = _polarscan.new()
-    self.assertEquals(0, obj.nrays)
-    obj.nrays = 10
-    self.assertEquals(10, obj.nrays)
-
-  def testScan_nrays_typeError(self):
+  def test_nrays(self):
     obj = _polarscan.new()
     self.assertEquals(0, obj.nrays)
     try:
-      obj.nrays = 10.0
-      self.fail("Expected TypeError")
-    except TypeError,e:
+      obj.nrays = 10
+      self.fail("Expected AttributeError")
+    except AttributeError, e:
       pass
     self.assertEquals(0, obj.nrays)
 
-  def testScan_rstart(self):
+  def test_nrays_withData(self):
+    obj = _polarscan.new()
+    data = numpy.zeros((5,4), numpy.int8)
+    obj.setData(data)
+    self.assertEquals(5, obj.nrays)
+
+  def test_rstart(self):
     obj = _polarscan.new()
     self.assertAlmostEquals(0.0, obj.rstart, 4)
     obj.rstart = 10.0
     self.assertAlmostEquals(10.0, obj.rstart, 4)
 
-  def testScan_rstart_typeError(self):
+  def test_rstart_typeError(self):
     obj = _polarscan.new()
     self.assertAlmostEquals(0.0, obj.rstart, 4)
     try:
@@ -196,39 +196,23 @@ class PyPolarScanTest(unittest.TestCase):
       pass
     self.assertAlmostEquals(0.0, obj.rstart, 4)
 
-  def testScan_datatype(self):
+  def test_datatype(self):
     obj = _polarscan.new()
     self.assertEqual(_rave.RaveDataType_UNDEFINED, obj.datatype)
-    obj.datatype = _rave.RaveDataType_INT
-    self.assertEqual(_rave.RaveDataType_INT, obj.datatype)
+    try:
+      obj.datatype = _rave.RaveDataType_INT
+      self.fail("Expected AttributeError")
+    except AttributeError, e:
+      pass
+    self.assertEqual(_rave.RaveDataType_UNDEFINED, obj.datatype)
 
-  def testScan_setValidDataTypes(self):
-    types = [_rave.RaveDataType_UNDEFINED, _rave.RaveDataType_CHAR, _rave.RaveDataType_UCHAR,
-             _rave.RaveDataType_SHORT, _rave.RaveDataType_INT, _rave.RaveDataType_LONG,
-             _rave.RaveDataType_FLOAT, _rave.RaveDataType_DOUBLE]
-
-    obj = _polarscan.new()
-    for type in types:
-      obj.datatype = type
-      self.assertEqual(type, obj.datatype)
-
-  def testScan_invalidDatatype(self):
-    obj = _polarscan.new()
-    types = [99,100,-2,30]
-    for type in types:
-      try:
-        obj.datatype = type
-        self.fail("Expected ValueError")
-      except ValueError, e:
-        self.assertEqual(_rave.RaveDataType_UNDEFINED, obj.datatype)
-
-  def testScan_a1gate(self):
+  def test_a1gate(self):
     obj = _polarscan.new()
     self.assertEquals(0, obj.a1gate)
     obj.a1gate = 10
     self.assertEquals(10, obj.a1gate)
 
-  def testScan_a1gate_typeError(self):
+  def test_a1gate_typeError(self):
     obj = _polarscan.new()
     self.assertEquals(0, obj.a1gate)
     try:
@@ -238,13 +222,13 @@ class PyPolarScanTest(unittest.TestCase):
       pass
     self.assertEquals(0, obj.a1gate)
 
-  def testScan_beamwidth(self):
+  def test_beamwidth(self):
     obj = _polarscan.new()
     self.assertAlmostEquals(0.0, obj.beamwidth, 4)
     obj.beamwidth = 10.0
     self.assertAlmostEquals(10.0, obj.beamwidth, 4)
 
-  def testScan_beamwidth_typeError(self):
+  def test_beamwidth_typeError(self):
     obj = _polarscan.new()
     self.assertAlmostEquals(0.0, obj.beamwidth, 4)
     try:
@@ -254,21 +238,27 @@ class PyPolarScanTest(unittest.TestCase):
       pass
     self.assertAlmostEquals(0.0, obj.beamwidth, 4)
 
-  def testScan_quantity(self):
+  def test_quantity(self):
     obj = _polarscan.new()
-    self.assertEquals("", obj.quantity)
+    self.assertEquals(None, obj.quantity)
     obj.quantity = "DBZH"
     self.assertEquals("DBZH", obj.quantity)
 
-  def testScan_quantity_typeError(self):
+  def test_quantity_None(self):
     obj = _polarscan.new()
-    self.assertEquals("", obj.quantity)
+    obj.quantity = "DBZH"
+    obj.quantity = None
+    self.assertEquals(None, obj.quantity)
+
+  def test_quantity_typeError(self):
+    obj = _polarscan.new()
+    self.assertEquals(None, obj.quantity)
     try:
       obj.quantity = 10
-      self.fail("Expected TypeError")
-    except TypeError,e:
+      self.fail("Expected ValueError")
+    except ValueError,e:
       pass
-    self.assertEquals("", obj.quantity)
+    self.assertEquals(None, obj.quantity)
 
   def testScan_gain(self):
     obj = _polarscan.new()
@@ -336,7 +326,7 @@ class PyPolarScanTest(unittest.TestCase):
 
   def testScan_getRangeIndex(self):
     obj = _polarscan.new()
-    obj.nbins = 200
+    obj.setData(numpy.zeros((1,200), numpy.int8))
     obj.rscale = 1000.0
 
     # Ranges are tuples (range, expected index)
@@ -354,9 +344,9 @@ class PyPolarScanTest(unittest.TestCase):
       result = obj.getRangeIndex(rr[0])
       self.assertEquals(rr[1], result)
 
-  def testScan_getRangeIndex_rstartSet(self):
+  def test_getRangeIndex_rstartSet(self):
     obj = _polarscan.new()
-    obj.nbins = 200
+    obj.setData(numpy.zeros((1,200), numpy.int8))
     obj.rscale = 1000.0
     obj.rstart = 2.0
 
@@ -377,7 +367,7 @@ class PyPolarScanTest(unittest.TestCase):
   
   def testScan_getAzimuthIndex(self):
     obj = _polarscan.new()
-    obj.nrays = 400
+    obj.setData(numpy.zeros((400,1),numpy.int8))
     # Azimuths tuple is ordered by an azimuth in degrees and expected index
     azimuths = [(180.0, 200),
                 (90.0, 100),
@@ -392,7 +382,7 @@ class PyPolarScanTest(unittest.TestCase):
       result = obj.getAzimuthIndex(azv[0]*math.pi/180.0)
       self.assertEquals(azv[1], result)
 
-  def testScan_getValueAtIndex(self):
+  def test_getValue(self):
     obj = _polarscan.new()
     obj.nodata = 255.0
     obj.undetect = 0.0
@@ -406,19 +396,19 @@ class PyPolarScanTest(unittest.TestCase):
     obj.setData(a)
 
     pts = [((0,0), (_rave.RaveValueType_UNDETECT, 0.0)),
-           ((0,1), (_rave.RaveValueType_DATA, 1.0)),
-           ((1,0), (_rave.RaveValueType_DATA, 6.0)),
-           ((2,1), (_rave.RaveValueType_NODATA, obj.nodata)),
+           ((1,0), (_rave.RaveValueType_DATA, 1.0)),
+           ((0,1), (_rave.RaveValueType_DATA, 6.0)),
+           ((1,2), (_rave.RaveValueType_NODATA, obj.nodata)),
            ((4,4), (_rave.RaveValueType_DATA, 28.0)),
-           ((4,5), (_rave.RaveValueType_UNDETECT, obj.undetect)),
+           ((5,4), (_rave.RaveValueType_UNDETECT, obj.undetect)),
            ((5,5), (_rave.RaveValueType_NODATA, obj.nodata))]
     
     for tval in pts:
-      result = obj.getValueAtIndex(tval[0][0], tval[0][1])
+      result = obj.getValue(tval[0][0], tval[0][1])
       self.assertEquals(tval[1][0], result[0])
       self.assertAlmostEquals(tval[1][1], result[1], 4)
 
-  def test_getConvertedValueAtIndex(self):
+  def test_getConvertedValue(self):
     obj = _polarscan.new()
     obj.nodata = 255.0
     obj.undetect = 0.0
@@ -434,15 +424,15 @@ class PyPolarScanTest(unittest.TestCase):
     obj.setData(a)
 
     pts = [((0,0), (_rave.RaveValueType_UNDETECT, 0.0)),
-           ((0,1), (_rave.RaveValueType_DATA, 10.5)),
-           ((1,0), (_rave.RaveValueType_DATA, 13.0)),
-           ((2,1), (_rave.RaveValueType_NODATA, obj.nodata)),
+           ((1,0), (_rave.RaveValueType_DATA, 10.5)),
+           ((0,1), (_rave.RaveValueType_DATA, 13.0)),
+           ((1,2), (_rave.RaveValueType_NODATA, obj.nodata)),
            ((4,4), (_rave.RaveValueType_DATA, 24.0)),
-           ((4,5), (_rave.RaveValueType_UNDETECT, obj.undetect)),
+           ((5,4), (_rave.RaveValueType_UNDETECT, obj.undetect)),
            ((5,5), (_rave.RaveValueType_NODATA, obj.nodata))]
     
     for tval in pts:
-      result = obj.getConvertedValueAtIndex(tval[0][0], tval[0][1])
+      result = obj.getConvertedValue(tval[0][0], tval[0][1])
       self.assertEquals(tval[1][0], result[0])
       self.assertAlmostEquals(tval[1][1], result[1], 4)
 

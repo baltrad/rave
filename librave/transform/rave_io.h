@@ -29,13 +29,19 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "cartesian.h"
 #include "rave_object.h"
 
+/**
+ * The /Conventions version in a ODIM HDF5 file.
+ */
 typedef enum RaveIO_ODIM_Version {
-  RaveIO_ODIM_Version_UNDEFINED = -1,
+  RaveIO_ODIM_Version_UNDEFINED = -1, /**< Undefined */
   RaveIO_ODIM_Version_2_0 = 0,        /**< Currently, the only supported ODIM version (and default) */
 } RaveIO_ODIM_Version;
 
+/**
+ * The /what/version in a ODIM HDF5 file
+ */
 typedef enum RaveIO_ODIM_H5rad_Version {
-  RaveIO_ODIM_H5rad_Version_UNDEFINED = -1,
+  RaveIO_ODIM_H5rad_Version_UNDEFINED = -1, /**< undefined */
   RaveIO_ODIM_H5rad_Version_2_0 = 0,  /**< Currently, the only supported ODIM version (and default) */
 } RaveIO_ODIM_H5rad_Version;
 
@@ -77,8 +83,6 @@ int RaveIO_load(RaveIO_t* raveio);
 /**
  * Saves a rave object as specified according to ODIM HDF5 format specification.
  * @param[in] raveio - self
- * @param[in] object - the object to save
- * @param[in] filename - the file name this file should have
  * @returns 1 on success, otherwise 0
  */
 int RaveIO_save(RaveIO_t* raveio);

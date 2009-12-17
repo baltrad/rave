@@ -67,8 +67,8 @@ class rave_loader:
             
             scan.elangle = nodelist.fetchNode("%s/where/elangle"%name).data() * math.pi/180.0
             scan.a1gate = nodelist.fetchNode("%s/where/a1gate"%name).data()
-            scan.nbins = nodelist.fetchNode("%s/where/nbins"%name).data()
-            scan.nrays = nodelist.fetchNode("%s/where/nrays"%name).data()
+            #scan.nbins = nodelist.fetchNode("%s/where/nbins"%name).data()
+            #scan.nrays = nodelist.fetchNode("%s/where/nrays"%name).data()
             scan.rscale = nodelist.fetchNode("%s/where/rscale"%name).data()
             scan.rstart = nodelist.fetchNode("%s/where/rstart"%name).data()
             

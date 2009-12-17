@@ -67,6 +67,24 @@ static int PolarNavigator_constructor(RaveCoreObject* obj)
   result->dndh = (-3.9e-5)/1000;
   return 1;
 }
+
+/**
+ * Constructor.
+ */
+static int PolarNavigator_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj)
+{
+  PolarNavigator_t* this = (PolarNavigator_t*)obj;
+  PolarNavigator_t* src = (PolarNavigator_t*)srcobj;
+
+  this->poleRadius = src->poleRadius;
+  this->equatorRadius = src->equatorRadius;
+  this->lon0 = src->lon0;
+  this->lat0 = src->lat0;
+  this->alt0 = src->alt0;
+  this->dndh = src->dndh;
+  return 1;
+}
+
 /**
  * Destroys the polar navigator
  * @param[in] polnav - the polar navigator to destroy
@@ -367,5 +385,6 @@ RaveCoreObjectType PolarNavigator_TYPE = {
     "PolarNavigator",
     sizeof(PolarNavigator_t),
     PolarNavigator_constructor,
-    PolarNavigator_destructor
+    PolarNavigator_destructor,
+    PolarNavigator_copyconstructor
 };

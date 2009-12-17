@@ -34,32 +34,33 @@ typedef struct {
   Cartesian_t* cartesian; /**< the cartesian product */
 } PyCartesian;
 
-/* C API functions */
-#define PyCartesian_Type_NUM 0
+#define PyCartesian_Type_NUM 0                       /**< index of type */
 
-#define PyCartesian_GetNative_NUM 1
-#define PyCartesian_GetNative_RETURN Cartesian_t*
-#define PyCartesian_GetNative_PROTO (PyCartesian*)
+#define PyCartesian_GetNative_NUM 1                  /**< index of GetNative */
+#define PyCartesian_GetNative_RETURN Cartesian_t*    /**< return type for GetNative */
+#define PyCartesian_GetNative_PROTO (PyCartesian*)   /**< arguments for GetNative */
 
-#define PyCartesian_New_NUM 2
-#define PyCartesian_New_RETURN PyCartesian*
-#define PyCartesian_New_PROTO (Cartesian_t*)
+#define PyCartesian_New_NUM 2                        /**< index of New */
+#define PyCartesian_New_RETURN PyCartesian*          /**< return type for New */
+#define PyCartesian_New_PROTO (Cartesian_t*)         /**< arguments for New */
 
-/* Total number of C API pointers */
-#define PyCartesian_API_pointers 3
+#define PyCartesian_API_pointers 3                   /**< number of api pointers */
 
 #ifdef PYCARTESIAN_MODULE
-/* To be used within the PyCartesian-Module */
+/** Forward declaration of type*/
 extern PyTypeObject PyCartesian_Type;
 
+/** Checks if the object is a PyCartesian or not */
 #define PyCartesian_Check(op) ((op)->ob_type == &PyCartesian_Type)
 
+/** Forward declaration of PyCartesian_GetNative */
 static PyCartesian_GetNative_RETURN PyCartesian_GetNative PyCartesian_GetNative_PROTO;
 
+/** Forward declaration of PyCartesian_New */
 static PyCartesian_New_RETURN PyCartesian_New PyCartesian_New_PROTO;
 
 #else
-/* This section is for clients using the PyCartesian API */
+/** pointers to types and functions */
 static void **PyCartesian_API;
 
 /**

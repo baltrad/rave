@@ -28,7 +28,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include <stdio.h>
 #include <string.h>
 
-#define PYRAVEIO_MODULE
+#define PYRAVEIO_MODULE   /**< include correct part of pyraveio.h */
 #include "pyraveio.h"
 
 #include "pypolarvolume.h"
@@ -40,14 +40,20 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "hlhdf.h"
 #include "hlhdf_debug.h"
 
+/**
+ * Name of the module debugged.
+ */
 PYRAVE_DEBUG_MODULE("_raveio");
 
 /**
- * Some helpful exception defines.
+ * Sets a python exception and goto tag
  */
 #define raiseException_gotoTag(tag, type, msg) \
 {PyErr_SetString(type, msg); goto tag;}
 
+/**
+ * Sets a python exception and returns NULL
+ */
 #define raiseException_returnNULL(type, msg) \
 {PyErr_SetString(type, msg); return NULL;}
 

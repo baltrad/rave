@@ -87,7 +87,7 @@ const char* PolarVolume_getSource(PolarVolume_t* pvol);
 /**
  * Sets the longitude for the volume
  * @param[in] pvol - the polar volume
- * @param[in] double - the longitude
+ * @param[in] lon - the longitude
  */
 void PolarVolume_setLongitude(PolarVolume_t* pvol, double lon);
 
@@ -101,28 +101,28 @@ double PolarVolume_getLongitude(PolarVolume_t* pvol);
 /**
  * Sets the latitude for the volume
  * @param[in] pvol - the polar volume
- * @param[in] double - the longitude
+ * @param[in] lat - the latitude
  */
 void PolarVolume_setLatitude(PolarVolume_t* pvol, double lat);
 
 /**
  * Returns the latitude for the volume
  * @param[in] pvol - the polar volume
- * @returns the longitude
+ * @returns the latitude
  */
 double PolarVolume_getLatitude(PolarVolume_t* pvol);
 
 /**
  * Sets the height for the volume
  * @param[in] pvol - the polar volume
- * @param[in] double - the longitude
+ * @param[in] height - the height
  */
 void PolarVolume_setHeight(PolarVolume_t* pvol, double height);
 
 /**
- * Returns the latitude for the volume
+ * Returns the height for the volume
  * @param[in] pvol - the polar volume
- * @returns the longitude
+ * @returns the height
  */
 double PolarVolume_getHeight(PolarVolume_t* pvol);
 

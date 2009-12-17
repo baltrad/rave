@@ -26,6 +26,16 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #define RAVE_TYPES_H
 
 /**
+ * Different value types. When initializing a data field it is wise
+ * to always initiallize to nodata instead of undetect.
+ */
+typedef enum RaveValueType {
+  RaveValueType_UNDETECT = 0,       /**< undetect */
+  RaveValueType_NODATA = 1,         /**< nodata */
+  RaveValueType_DATA = 2            /**< data */
+} RaveValueType;
+
+/**
  * Object types that defines the /what/object in the ODIM format.
  */
 typedef enum Rave_ObjectType {
@@ -67,5 +77,41 @@ typedef enum Rave_ProductType {
   Rave_ProductType_QUAL,     /**< Quality metric */
   Rave_ProductType_ENDOFTYPES /**< Last entry */
 } Rave_ProductType;
+
+
+/**
+ * Different data types that are supported during transformation
+ */
+typedef enum RaveDataType {
+  RaveDataType_UNDEFINED = -1, /**< Undefined data type */
+  RaveDataType_CHAR = 0, /**< char */
+  RaveDataType_UCHAR,    /**< unsigned char */
+  RaveDataType_SHORT,    /**< short */
+  RaveDataType_INT,      /**< int */
+  RaveDataType_LONG,     /**< long */
+  RaveDataType_FLOAT,    /**< float */
+  RaveDataType_DOUBLE,   /**< double */
+  RaveDataType_LAST      /**< Always has to be at end and is not a real datatype */
+} RaveDataType;
+
+/**
+ * Transformation methods
+ */
+typedef enum RaveTransformationMethod {
+  NEAREST = 1,   /**< Nearest */
+  BILINEAR,      /**< Bilinear */
+  CUBIC,         /**< Cubic */
+  CRESSMAN,      /**< Cressman */
+  UNIFORM,       /**< Uniform */
+  INVERSE        /**< Inverse */
+} RaveTransformationMethod;
+
+
+/**
+ * Returns the size of the datatype.
+ * @param[in] type - the rave data type
+ * @return the size or -1 if size not can be determined
+ */
+int get_ravetype_size(RaveDataType type);
 
 #endif /* RAVE_TYPES_H */

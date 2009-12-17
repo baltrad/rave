@@ -28,6 +28,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include <string.h>
 #include "rave_object.h"
 #include "rave_datetime.h"
+#include "rave_transform.h"
+#include "rave_data2d.h"
 
 /**
  * Represents one scan in a volume.
@@ -35,17 +37,11 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 struct _PolarScan_t {
   RAVE_OBJECT_HEAD /** Always on top */
 
-  // Date/Time
-  RaveDateTime_t* datetime;     /**< the date, time instance */
-
   char* source;    /**< the source string */
 
   // Where
   double elangle;    /**< elevation of scan */
-  long nbins;        /**< number of bins */
   double rscale;     /**< scale */
-  RaveDataType type; /**< data type */
-  long nrays;        /**< number of rays / scan */
   double rstart;     /**< start of ray */
   long a1gate;       /**< something */
 
@@ -53,14 +49,17 @@ struct _PolarScan_t {
   double beamwidth;  /**< beam width */
 
   // What
-  char quantity[64]; /**< what does this data represent */
+  char* quantity;    /**< what does this data represent */
   double gain;       /**< gain when scaling */
   double offset;     /**< offset when scaling */
   double nodata;     /**< nodata */
   double undetect;   /**< undetect */
 
   // Data
-  void* data;        /**< data ptr */
+  RaveData2D_t* data; /**< data ptr */
+
+  // Date/Time
+  RaveDateTime_t* datetime;     /**< the date, time instance */
 
   // Navigator
   PolarNavigator_t* navigator; /**< a navigator for calculating polar navigation */
@@ -79,14 +78,11 @@ static int PolarScan_constructor(RaveCoreObject* obj)
   scan->datetime = NULL;
   scan->source = NULL;
   scan->elangle = 0.0;
-  scan->nbins = 0;
   scan->rscale = 0.0;
-  scan->type = RaveDataType_UNDEFINED;
-  scan->nrays = 0;
   scan->rstart = 0.0;
   scan->a1gate = 0;
   scan->beamwidth = 0.0;
-  strcpy(scan->quantity, "");
+  scan->quantity = NULL;
   scan->gain = 0.0;
   scan->offset = 0.0;
   scan->nodata = 0.0;
@@ -96,28 +92,73 @@ static int PolarScan_constructor(RaveCoreObject* obj)
   scan->projection = NULL;
 
   scan->datetime = RAVE_OBJECT_NEW(&RaveDateTime_TYPE);
-  if (scan->datetime == NULL) {
-    goto error;
-  }
 
   scan->projection = RAVE_OBJECT_NEW(&Projection_TYPE);
   if (scan->projection != NULL) {
     if(!Projection_init(scan->projection, "lonlat", "lonlat", "+proj=latlong +ellps=WGS84 +datum=WGS84")) {
       goto error;
     }
-  } else {
-    goto error;
   }
   scan->navigator = RAVE_OBJECT_NEW(&PolarNavigator_TYPE);
-  if (scan->navigator == NULL) {
+  scan->data = RAVE_OBJECT_NEW(&RaveData2D_TYPE);
+
+  if (scan->datetime == NULL || scan->projection == NULL ||
+      scan->navigator == NULL || scan->data == NULL) {
     goto error;
   }
-
   return 1;
 error:
   RAVE_OBJECT_RELEASE(scan->datetime);
   RAVE_OBJECT_RELEASE(scan->projection);
   RAVE_OBJECT_RELEASE(scan->navigator);
+  RAVE_OBJECT_RELEASE(scan->data);
+  return 0;
+}
+
+static int PolarScan_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj)
+{
+  PolarScan_t* this = (PolarScan_t*)obj;
+  PolarScan_t* src = (PolarScan_t*)srcobj;
+  this->datetime = NULL;
+  this->elangle = 0.0;
+  this->rscale = 0.0;
+  this->rstart = 0.0;
+  this->a1gate = 0;
+  this->beamwidth = 0.0;
+  this->gain = 0.0;
+  this->offset = 0.0;
+  this->nodata = 0.0;
+  this->undetect = 0.0;
+  this->data = NULL;
+  this->navigator = NULL;
+  this->projection = NULL;
+
+  this->source = NULL;
+  this->quantity = NULL;
+
+  this->datetime = RAVE_OBJECT_CLONE(src->datetime);
+  this->projection = RAVE_OBJECT_CLONE(src->projection);
+  this->navigator = RAVE_OBJECT_CLONE(src->navigator);
+  this->data = RAVE_OBJECT_CLONE(src->data);
+
+  if (this->datetime == NULL || this->projection == NULL ||
+      this->navigator == NULL || this->data == NULL) {
+    goto error;
+  }
+  if (!PolarScan_setSource(this, PolarScan_getSource(src))) {
+    goto error;
+  }
+  if (!PolarScan_setQuantity(this, PolarScan_getQuantity(src))) {
+    goto error;
+  }
+  return 1;
+error:
+  RAVE_FREE(this->source);
+  RAVE_FREE(this->quantity);
+  RAVE_OBJECT_RELEASE(this->datetime);
+  RAVE_OBJECT_RELEASE(this->projection);
+  RAVE_OBJECT_RELEASE(this->navigator);
+  RAVE_OBJECT_RELEASE(this->data);
   return 0;
 }
 
@@ -127,9 +168,10 @@ error:
 static void PolarScan_destructor(RaveCoreObject* obj)
 {
   PolarScan_t* scan = (PolarScan_t*)obj;
-  RAVE_OBJECT_RELEASE(scan->datetime);
   RAVE_FREE(scan->source);
-  RAVE_FREE(scan->data);
+  RAVE_FREE(scan->quantity);
+  RAVE_OBJECT_RELEASE(scan->datetime);
+  RAVE_OBJECT_RELEASE(scan->data);
   RAVE_OBJECT_RELEASE(scan->navigator);
   RAVE_OBJECT_RELEASE(scan->projection);
 }
@@ -263,16 +305,10 @@ double PolarScan_getElangle(PolarScan_t* scan)
   return scan->elangle;
 }
 
-void PolarScan_setNbins(PolarScan_t* scan, long nbins)
-{
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
-  scan->nbins = nbins;
-}
-
 long PolarScan_getNbins(PolarScan_t* scan)
 {
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
-  return scan->nbins;
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+  return RaveData2D_getXsize(scan->data);
 }
 
 void PolarScan_setRscale(PolarScan_t* scan, double rscale)
@@ -287,16 +323,10 @@ double PolarScan_getRscale(PolarScan_t* scan)
   return scan->rscale;
 }
 
-void PolarScan_setNrays(PolarScan_t* scan, long nrays)
-{
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
-  scan->nrays = nrays;
-}
-
 long PolarScan_getNrays(PolarScan_t* scan)
 {
   RAVE_ASSERT((scan != NULL), "scan was NULL");
-  return scan->nrays;
+  return RaveData2D_getYsize(scan->data);
 }
 
 void PolarScan_setRstart(PolarScan_t* scan, double rstart)
@@ -311,21 +341,10 @@ double PolarScan_getRstart(PolarScan_t* scan)
   return scan->rstart;
 }
 
-int PolarScan_setDataType(PolarScan_t* scan, RaveDataType type)
-{
-  int result = 0;
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
-  if (type >= RaveDataType_UNDEFINED && type < RaveDataType_LAST) {
-    scan->type = type;
-    result = 1;
-  }
-  return result;
-}
-
 RaveDataType PolarScan_getDataType(PolarScan_t* scan)
 {
   RAVE_ASSERT((scan != NULL), "scan was NULL");
-  return scan->type;
+  return RaveData2D_getType(scan->data);
 }
 
 void PolarScan_setA1gate(PolarScan_t* scan, long a1gate)
@@ -352,12 +371,22 @@ double PolarScan_getBeamWidth(PolarScan_t* scan)
   return scan->beamwidth;
 }
 
-void PolarScan_setQuantity(PolarScan_t* scan, const char* quantity)
+int PolarScan_setQuantity(PolarScan_t* scan, const char* quantity)
 {
+  int result = 0;
   RAVE_ASSERT((scan != NULL), "scan was NULL");
   if (quantity != NULL) {
-    strcpy(scan->quantity, quantity);
+    char* tmp = RAVE_STRDUP(quantity);
+    if (tmp != NULL) {
+      RAVE_FREE(scan->quantity);
+      scan->quantity = tmp;
+      result = 1;
+    }
+  } else {
+    RAVE_FREE(scan->quantity);
+    result = 1;
   }
+  return result;
 }
 
 const char* PolarScan_getQuantity(PolarScan_t* scan)
@@ -416,45 +445,37 @@ double PolarScan_getUndetect(PolarScan_t* scan)
 
 int PolarScan_setData(PolarScan_t* scan, long nbins, long nrays, void* data, RaveDataType type)
 {
-  long sz = 0;
-  long nbytes = 0;
-  void* ptr = NULL;
-  int result = 0;
-
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
-
-  sz = get_ravetype_size(type);
-  nbytes = nbins*nrays*sz;
-  ptr = RAVE_MALLOC(nbytes);
-
-  if (ptr == NULL) {
-    RAVE_CRITICAL1("Failed to allocate memory (%d bytes)", (int)nbytes);
-    goto fail;
-  }
-  memcpy(ptr, data, nbytes);
-  RAVE_FREE(scan->data);
-  scan->data = ptr;
-  PolarScan_setNbins(scan, nbins);
-  PolarScan_setNrays(scan, nrays);
-  PolarScan_setDataType(scan, type);
-  result = 1;
-fail:
-  return result;
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+  return RaveData2D_setData(scan->data, nbins, nrays, data, type);
 }
+
+int PolarScan_createData(PolarScan_t* scan, long nbins, long nrays, RaveDataType type)
+{
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+  return RaveData2D_createData(scan->data, nbins, nrays, type);
+}
+
 
 void* PolarScan_getData(PolarScan_t* scan)
 {
   RAVE_ASSERT((scan != NULL), "scan was NULL");
-  return scan->data;
+  return RaveData2D_getData(scan->data);
 }
 
 int PolarScan_getRangeIndex(PolarScan_t* scan, double r)
 {
   int result = -1;
   double range = 0.0L;
+  long nbins = 0;
+
   RAVE_ASSERT((scan != NULL), "scan was NULL");
-  RAVE_ASSERT((scan->nbins > 0), "nbins must be > 0");
-  RAVE_ASSERT((scan->rscale > 0.0), "rscale must be > 0.0");
+
+  nbins = RaveData2D_getXsize(scan->data);
+
+  if (nbins <= 0 || scan->rscale <= 0.0) {
+    RAVE_WARNING0("Can not calculate range index");
+    return -1;
+  }
 
   range = r - scan->rstart*1000.0;
 
@@ -462,7 +483,7 @@ int PolarScan_getRangeIndex(PolarScan_t* scan, double r)
     result = (int)floor(range/scan->rscale);
   }
 
-  if (result >= scan->nbins || result < 0) {
+  if (result >= nbins || result < 0) {
     result = -1;
   }
   return result;
@@ -472,45 +493,58 @@ int PolarScan_getAzimuthIndex(PolarScan_t* scan, double a)
 {
   int result = -1;
   double azOffset = 0.0L;
+  long nrays = 0;
   RAVE_ASSERT((scan != NULL), "scan was NULL");
-  RAVE_ASSERT((scan->nrays > 0), "nrays must be > 0");
 
-  azOffset = 2*M_PI/scan->nrays;
+  nrays = RaveData2D_getYsize(scan->data);
+  if (nrays <= 0) {
+    RAVE_WARNING0("Can not calculate azimuth index");
+    return -1;
+  }
+
+  azOffset = 2*M_PI/nrays;
   result = (int)rint(a/azOffset);
-  if (result >= scan->nrays) {
-    result -= scan->nrays;
+  if (result >= nrays) {
+    result -= nrays;
   } else if (result < 0) {
-    result += scan->nrays;
+    result += nrays;
   }
   return result;
 }
 
-RaveValueType PolarScan_getValueAtIndex(PolarScan_t* scan, int ray, int bin, double* v)
+RaveValueType PolarScan_getValue(PolarScan_t* scan, int bin, int ray, double* v)
 {
   RaveValueType result = RaveValueType_NODATA;
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
-  RAVE_ASSERT((v != NULL), "v was NULL");
-  *v = scan->nodata;
-  if (ray >= 0 && ray < scan->nrays && bin >= 0 && bin < scan->nbins) {
+  double value = 0.0;
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+
+  value = scan->nodata;
+
+  if (RaveData2D_getValue(scan->data, bin, ray, &value)) {
     result = RaveValueType_DATA;
-    *v = get_array_item_2d(scan->data, bin, ray, scan->type, scan->nbins);
-    if (*v == scan->nodata) {
+    if (value == scan->nodata) {
       result = RaveValueType_NODATA;
-    } else if (*v == scan->undetect) {
+    } else if (value == scan->undetect) {
       result = RaveValueType_UNDETECT;
     }
   }
+
+  if (v != NULL) {
+    *v = value;
+  }
+
   return result;
 }
 
-RaveValueType PolarScan_getConvertedValueAtIndex(PolarScan_t* scan, int ray, int bin, double* v)
+RaveValueType PolarScan_getConvertedValue(PolarScan_t* scan, int bin, int ray, double* v)
 {
   RaveValueType result = RaveValueType_NODATA;
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
-  RAVE_ASSERT((v != NULL), "v was NULL");
-  result =  PolarScan_getValueAtIndex(scan, ray, bin, v);
-  if (result == RaveValueType_DATA) {
-    *v = scan->offset + (*v) * scan->gain;
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+  if (v != NULL) {
+    result =  PolarScan_getValue(scan, bin, ray, v);
+    if (result == RaveValueType_DATA) {
+      *v = scan->offset + (*v) * scan->gain;
+    }
   }
   return result;
 }
@@ -531,7 +565,7 @@ RaveValueType PolarScan_getValueAtAzimuthAndRange(PolarScan_t* scan, double a, d
     goto done;
   }
 
-  result = PolarScan_getValueAtIndex(scan, ai, ri, v);
+  result = PolarScan_getValue(scan, ri, ai, v);
 done:
   return result;
 }
@@ -556,12 +590,10 @@ int PolarScan_isTransformable(PolarScan_t* scan)
 {
   int result = 0;
   RAVE_ASSERT((scan != NULL), "scan was NULL");
-  if (scan->projection != NULL &&
+  if (RaveData2D_hasData(scan->data) &&
+      scan->projection != NULL &&
       scan->navigator != NULL &&
-      scan->nrays > 0 &&
-      scan->nbins > 0 &&
-      scan->rscale > 0.0 &&
-      scan->data != NULL) {
+      scan->rscale > 0.0) {
     result = 1;
   }
   return result;
@@ -572,5 +604,6 @@ RaveCoreObjectType PolarScan_TYPE = {
     "PolarScan",
     sizeof(PolarScan_t),
     PolarScan_constructor,
-    PolarScan_destructor
+    PolarScan_destructor,
+    PolarScan_copyconstructor
 };

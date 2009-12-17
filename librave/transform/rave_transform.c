@@ -53,27 +53,6 @@ static double cubf2(double x)
 /*@} End of Private functions */
 
 /*@{ Interface functions */
-int get_ravetype_size(RaveDataType type)
-{
-  switch(type) {
-  case RaveDataType_CHAR:
-    return sizeof(char);
-  case RaveDataType_UCHAR:
-    return sizeof(unsigned char);
-  case RaveDataType_SHORT:
-    return sizeof(short);
-  case RaveDataType_INT:
-    return sizeof(int);
-  case RaveDataType_LONG:
-    return sizeof(long);
-  case RaveDataType_FLOAT:
-    return sizeof(float);
-  case RaveDataType_DOUBLE:
-    return sizeof(double);
-  default:
-    return -1;
-  }
-}
 
 double get_array_item_2d(
   unsigned char* in_a, int x, int y, RaveDataType type, int stride_xsize)

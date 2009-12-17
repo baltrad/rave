@@ -55,18 +55,51 @@ struct _Area_t {
  */
 static int Area_constructor(RaveCoreObject* obj)
 {
-  Area_t* result = (Area_t*)obj;
-  result->id = NULL;
-  result->xsize = 0;
-  result->ysize = 0;
-  result->xscale = 0.0L;
-  result->yscale = 0.0L;
-  result->llX = 0.0L;
-  result->llY = 0.0L;
-  result->urX = 0.0L;
-  result->urY = 0.0L;
-  result->projection = NULL;
+  Area_t* this = (Area_t*)obj;
+  this->id = NULL;
+  this->xsize = 0;
+  this->ysize = 0;
+  this->xscale = 0.0L;
+  this->yscale = 0.0L;
+  this->llX = 0.0L;
+  this->llY = 0.0L;
+  this->urX = 0.0L;
+  this->urY = 0.0L;
+  this->projection = NULL;
   return 1;
+}
+
+/**
+ * Copy constructor
+ */
+static int Area_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj)
+{
+  Area_t* this = (Area_t*)obj;
+  Area_t* src = (Area_t*)srcobj;
+
+  Area_constructor(obj); // First just initialize everything like the constructor
+
+  this->xsize = src->xsize;
+  this->ysize = src->ysize;
+  this->xscale = src->xscale;
+  this->yscale = src->yscale;
+  this->llX = src->llX;
+  this->llY = src->llY;
+  this->urX = src->urX;
+  this->urY = src->urY;
+
+  if (!Area_setID(this, src->id)) {
+    goto error;
+  }
+  this->projection = RAVE_OBJECT_CLONE(src->projection);
+  if (this->projection == NULL) {
+    goto error;
+  }
+  return 1;
+error:
+  RAVE_OBJECT_RELEASE(this->projection);
+  RAVE_FREE(this->id);
+  return 0;
 }
 
 /**
@@ -84,7 +117,7 @@ static void Area_destructor(RaveCoreObject* obj)
 /*@} End of Private functions */
 
 /*@{ Interface functions */
-void Area_setID(Area_t* area, const char* id)
+int Area_setID(Area_t* area, const char* id)
 {
   RAVE_ASSERT((area != NULL), "area was NULL");
   RAVE_FREE(area->id);
@@ -92,8 +125,10 @@ void Area_setID(Area_t* area, const char* id)
     area->id = RAVE_STRDUP(id);
     if (area->id == NULL) {
       RAVE_CRITICAL0("Failure when copying id");
+      return 0;
     }
   }
+  return 1;
 }
 
 const char* Area_getID(Area_t* area)
@@ -194,5 +229,6 @@ RaveCoreObjectType Area_TYPE = {
     "Area",
     sizeof(Area_t),
     Area_constructor,
-    Area_destructor
+    Area_destructor,
+    Area_copyconstructor
 };

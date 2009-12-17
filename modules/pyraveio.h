@@ -34,38 +34,41 @@ typedef struct {
   RaveIO_t* raveio;  /**< the raveio instance */
 } PyRaveIO;
 
-/* C API functions */
-#define PyRaveIO_Type_NUM 0
+#define PyRaveIO_Type_NUM 0                     /**< index for Type */
 
-#define PyRaveIO_GetNative_NUM 1
-#define PyRaveIO_GetNative_RETURN RaveIO_t*
-#define PyRaveIO_GetNative_PROTO (PyRaveIO*)
+#define PyRaveIO_GetNative_NUM 1                /**< index for GetNative */
+#define PyRaveIO_GetNative_RETURN RaveIO_t*     /**< return type for GetNative */
+#define PyRaveIO_GetNative_PROTO (PyRaveIO*)    /**< argument prototype for GetNative */
 
-#define PyRaveIO_New_NUM 2
-#define PyRaveIO_New_RETURN PyRaveIO*
-#define PyRaveIO_New_PROTO (RaveIO_t*)
+#define PyRaveIO_New_NUM 2                      /**< index for New */
+#define PyRaveIO_New_RETURN PyRaveIO*           /**< return type for New */
+#define PyRaveIO_New_PROTO (RaveIO_t*)          /**< argument prototype for New */
 
-#define PyRaveIO_Open_NUM 3
-#define PyRaveIO_Open_RETURN PyRaveIO*
-#define PyRaveIO_Open_PROTO (const char* filename)
+#define PyRaveIO_Open_NUM 3                     /**< index for Open */
+#define PyRaveIO_Open_RETURN PyRaveIO*          /**< return type for Open */
+#define PyRaveIO_Open_PROTO (const char* filename) /**< argument prototype for Open */
 
-/* Total number of C API pointers */
-#define PyRaveIO_API_pointers 4
+
+#define PyRaveIO_API_pointers 4                 /**< Total number of C API pointers */
 
 #ifdef PYRAVEIO_MODULE
-/* To be used within the PyRaveIO-Module */
+/** declared in pyraveio module */
 extern PyTypeObject PyRaveIO_Type;
 
+/** checks if the object is a PyRaveIO type or not */
 #define PyRaveIO_Check(op) ((op)->ob_type == &PyRaveIO_Type)
 
+/** Prototype for PyRaveIO modules GetNative function */
 static PyRaveIO_GetNative_RETURN PyRaveIO_GetNative PyRaveIO_GetNative_PROTO;
 
+/** Prototype for PyRaveIO modules New function */
 static PyRaveIO_New_RETURN PyRaveIO_New PyRaveIO_New_PROTO;
 
+/** Prototype for PyRaveIO modules Open function */
 static PyRaveIO_Open_RETURN PyRaveIO_Open PyRaveIO_Open_PROTO;
 
 #else
-/* This section is for clients using the PyRaveIO API */
+/** static pointer containing the pointers to function pointers and other definitions */
 static void **PyRaveIO_API;
 
 /**

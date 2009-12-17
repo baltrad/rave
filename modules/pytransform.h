@@ -60,7 +60,7 @@ static PyTransform_GetNative_RETURN PyTransform_GetNative PyTransform_GetNative_
 static PyTransform_New_RETURN PyTransform_New PyTransform_New_PROTO;
 
 #else
-/* This section is for clients using the PyTransform API */
+/** static pointer containing the pointers to function pointers and other definitions */
 static void **PyTransform_API;
 
 /**

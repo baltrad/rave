@@ -1,6 +1,12 @@
-/** \page converting_mean "A practical example on how to convert an old rave module"
+/** \page converting_mean "A real-life example on converting existing average functionality"
 
-Let's start looking at the current implementation of _mean.average (mean.c)
+As a background, RAVE has been around for roughly 10 years. During that time several modules has
+seen life and went into oblivion. As an example on how it is possible to work with the rave
+framework I took an existing module called mean.c and have continuosly adapted it into it's
+current state (\ref mean.c). I have tried to document each step but if there is a whole somewhere
+, please excuse me and take a look in the git repository history for the steps you are missing.
+
+Let's start looking at the original implementation of mean.c.
 \verbatim
 #include <Python.h>
 #include <arrayobject.h>
@@ -217,8 +223,6 @@ RaveValueType Cartesian_getMean(Cartesian_t* cartesian, long x, long y, int N, d
 {
   RaveValueType xytype = RaveValueType_NODATA;
   RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
-  RAVE_ASSERT((v != NULL), "v was NULL");
-  RAVE_ASSERT((cartesian->data != NULL), "data must be set before getMean can be used");
 
   xytype = Cartesian_getValue(cartesian, x, y, v);
 
@@ -327,7 +331,7 @@ down to the C-layer. Anyhow, time to write some basic unit tests so jump to PyCa
 
 \endverbatim
 
-This test might look a bit odd and defenetly confusing since getMean is called with (x,y) and
+This test might look a bit odd and more than a little confusing since getMean is called with (x,y) and
 the data assignment in the array is done by data[y][x]. Just look at it from the bright side, it's
 a good exercise to keep you alert.
 
@@ -391,7 +395,9 @@ So, there is one thing to remember unless you want to badly mess upp the system.
 unless you really know what you are doing.
 
 We are almost at the end now, we just need to ensure that we get the python cartesian module loaded properly.
-The easiest way is to just change <b>import_array</b> to <b>import_pycartesian</b> in the function init_mean.
+The easiest way is to just change <b>import_array</b> to <b>import_pycartesian</b> in the function init_mean. The reason for this is
+that we actually not is accessing the array in the mean module any longer, it is PyCartesian that does that so let that module
+worry about importing the array.
 
 \verbatim
 void init_mean()
@@ -408,7 +414,7 @@ void init_mean()
 }
 \endverbatim
 
-Now we are almost finished, we should just write a couple of testcases that verifies that _mean.average
+Let's wrap this up and write a couple of testcases that verifies that _mean.average
 works as well. This should be done in a minute or three. Create a file called &lt;ravesrc&gt;/test/pytest/MeanTest.py
 
 \verbatim
@@ -499,7 +505,8 @@ You can see all the changes and the code described above in the following files:
 \li &lt;rave-src&gt;/test/pytest/PyCartesianTest.py
 \li &lt;rave-src&gt;/test/pytest/MeanTest.py
 
-<b>Next part is how to translate the python mean.average function into a rave object c-api instead</b>
-
+Now we have written our first algorithm that uses the new rave framework, hopefully it wasn't that bad
+and you got a brief overview on how we have approached the software. We should take a look at how
+can make a C-version of the above algorithm instead. <b>T.B.D. next page should be... </b>
 */
 

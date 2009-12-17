@@ -28,6 +28,9 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 
 static PyObject *ErrorObject;
 
+/**
+ * Sets a python exception.
+ */
 #define Raise(type,msg) {PyErr_SetString(type,msg);}
 
 /*
@@ -81,6 +84,9 @@ static struct PyMethodDef _mean_functions[] =
   { NULL, NULL }
 };
 
+/**
+ * Initialize the _mean module
+ */
 void init_mean()
 {
   PyObject* m;

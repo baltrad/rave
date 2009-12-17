@@ -1441,8 +1441,6 @@ error:
 /**
  * Saves a cartesian object as specified according in ODIM HDF5 format specification.
  * @param[in] raveio - self
- * @param[in] object - the object to save
- * @param[in] filename - the file name this file should have
  * @returns 1 on success, otherwise 0
  */
 int RaveIOInternal_saveCartesian(RaveIO_t* raveio)

@@ -24,10 +24,10 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef POLARSCAN_H
 #define POLARSCAN_H
-#include "rave_transform.h"
 #include "polarnav.h"
 #include "projection.h"
 #include "rave_object.h"
+#include "rave_types.h"
 
 /**
  * Defines a Polar Scan
@@ -117,50 +117,50 @@ int PolarScan_setSource(PolarScan_t* scan, const char* value);
 const char* PolarScan_getSource(PolarScan_t* scan);
 
 /**
- * Sets the longitude for the volume
- * @param[in] pvol - the polar volume
- * @param[in] double - the longitude
+ * Sets the longitude
+ * @param[in] scan - self
+ * @param[in] lon - the longitude
  */
 void PolarScan_setLongitude(PolarScan_t* scan, double lon);
 
 /**
- * Returns the longitude for the volume
- * @param[in] pvol - the polar volume
+ * Returns the longitude
+ * @param[in] scan - self
  * @returns the longitude
  */
 double PolarScan_getLongitude(PolarScan_t* scan);
 
 /**
- * Sets the latitude for the volume
- * @param[in] pvol - the polar volume
- * @param[in] double - the longitude
+ * Sets the latitude
+ * @param[in] scan - self
+ * @param[in] lat - the latitude
  */
 void PolarScan_setLatitude(PolarScan_t* scan, double lat);
 
 /**
- * Returns the latitude for the volume
- * @param[in] pvol - the polar volume
- * @returns the longitude
+ * Returns the latitude
+ * @param[in] scan - self
+ * @returns the latitude
  */
 double PolarScan_getLatitude(PolarScan_t* scan);
 
 /**
- * Sets the height for the volume
- * @param[in] pvol - the polar volume
- * @param[in] double - the longitude
+ * Sets the height
+ * @param[in] scan - self
+ * @param[in] height - the height
  */
 void PolarScan_setHeight(PolarScan_t* scan, double height);
 
 /**
- * Returns the latitude for the volume
- * @param[in] pvol - the polar volume
- * @returns the longitude
+ * Returns the height
+ * @param[in] scan - self
+ * @returns the height
  */
 double PolarScan_getHeight(PolarScan_t* scan);
 
 /**
  * Sets the elevation angle for the scan
- * @param[in] scan - the scan
+ * @param[in] scan - self
  * @param[in] elangle - the elevation angle
  */
 void PolarScan_setElangle(PolarScan_t* scan, double elangle);
@@ -173,13 +173,6 @@ void PolarScan_setElangle(PolarScan_t* scan, double elangle);
 double PolarScan_getElangle(PolarScan_t* scan);
 
 /**
- * Sets the number of bins for the scan
- * @param[in] scan - the scan
- * @param[in] nbins - the number of bins
- */
-void PolarScan_setNbins(PolarScan_t* scan, long nbins);
-
-/**
  * Returns the number of bins
  * @param[in] scan - the scan
  * @return the number of bins
@@ -189,23 +182,16 @@ long PolarScan_getNbins(PolarScan_t* scan);
 /**
  * Sets the range scale for the scan
  * @param[in] scan - the scan
- * @param[in] elangle - the elevation angle
+ * @param[in] rscale - the scale of the range bin
  */
 void PolarScan_setRscale(PolarScan_t* scan, double rscale);
 
 /**
- * Returns the range scale for the scan
+ * Returns the range bin scale for the scan
  * @param[in] scan - the scan
- * @return the elevation angle
+ * @return the scale of the range bin
  */
 double PolarScan_getRscale(PolarScan_t* scan);
-
-/**
- * Sets the number of rays/scan
- * @param[in] scan - the scan
- * @param[in] nrays - the number of rays
- */
-void PolarScan_setNrays(PolarScan_t* scan, long nrays);
 
 /**
  * Returns the number of rays/scan
@@ -227,14 +213,6 @@ void PolarScan_setRstart(PolarScan_t* scan, double rstart);
  * @return the ray start position
  */
 double PolarScan_getRstart(PolarScan_t* scan);
-
-/**
- * Sets the data type of the data that is worked with
- * @param[in] scan - the scan
- * @param[in] type - the data type
- * @return 0 if type is not known, otherwise the type was set
- */
-int PolarScan_setDataType(PolarScan_t* scan, RaveDataType type);
 
 /**
  * Returns the data type
@@ -277,13 +255,14 @@ double PolarScan_getBeamWidth(PolarScan_t* scan);
  * Sets the quantity
  * @param[in] scan - the scan
  * @param[in] quantity - the quantity, e.g. DBZH
+ * @returns 1 on success, otherwise 0
  */
-void PolarScan_setQuantity(PolarScan_t* scan, const char* quantity);
+int PolarScan_setQuantity(PolarScan_t* scan, const char* quantity);
 
 /**
  * Returns the quantity
  * @param[in] scan - the scan
- * @return the quantity
+ * @return the quantity or NULL if not set
  */
 const char* PolarScan_getQuantity(PolarScan_t* scan);
 
@@ -355,6 +334,16 @@ double PolarScan_getUndetect(PolarScan_t* scan);
 int PolarScan_setData(PolarScan_t* scan, long nbins, long nrays, void* data, RaveDataType type);
 
 /**
+ * Creates a data field with the specified dimensions and type. The data till be initialized to 0.
+ * @param[in] scan - self
+ * @param[in] nbins - number of bins
+ * @param[in] nrays - number of rays
+ * @param[in] type - the type of the data
+ * @returns 1 on success otherwise 0
+ */
+int PolarScan_createData(PolarScan_t* scan, long nbins, long nrays, RaveDataType type);
+
+/**
  * Returns a pointer to the internal data storage.
  * @param[in] scan - the scan
  * @return the internal data pointer (NOTE! Do not release this pointer)
@@ -380,23 +369,23 @@ int PolarScan_getAzimuthIndex(PolarScan_t* scan, double a);
 /**
  * Returns the value at the specified index.
  * @param[in] scan - the scan
- * @param[in] ray - the ray index
  * @param[in] bin - the bin index
+ * @param[in] ray - the ray index
  * @param[out] v - the data at the specified index
  * @return the type of data
  */
-RaveValueType PolarScan_getValueAtIndex(PolarScan_t* scan, int ray, int bin, double* v);
+RaveValueType PolarScan_getValue(PolarScan_t* scan, int bin, int ray, double* v);
 
 /**
  * Returns the linear converted value at the specified index. That is,
  * offset + gain * value;
  * @param[in] scan - the scan
- * @param[in] ray - the ray index
  * @param[in] bin - the bin index
+ * @param[in] ray - the ray index
  * @param[out] v - the data at the specified index
  * @return the type of data
  */
-RaveValueType PolarScan_getConvertedValueAtIndex(PolarScan_t* scan, int ray, int bin, double* v);
+RaveValueType PolarScan_getConvertedValue(PolarScan_t* scan, int bin, int ray, double* v);
 
 /**
  * Gets the value at the provided azimuth and range.
@@ -413,6 +402,7 @@ RaveValueType PolarScan_getValueAtAzimuthAndRange(PolarScan_t* scan, double a, d
  * @param[in] scan - the scan
  * @param[in] lon  - the longitude (in radians)
  * @param[in] lat  - the latitude  (in radians)
+ * @param[out] v - the found value
  * @returns a rave value type
  */
 RaveValueType PolarScan_getNearest(PolarScan_t* scan, double lon, double lat, double* v);

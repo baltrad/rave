@@ -36,6 +36,14 @@ typedef struct {
   const char* name;    /**< the name for this object */
 } PyRaveObjectDebugging;
 
+/**
+ * Setup of the debugged python module. Use this macro just below the include section.
+ * E.g.
+ * \verbatim
+ * #include "pyrave_debug.h"
+ * PYRAVE_DEBUG_MODULE("mymodule");
+ * \endverbatim
+ */
 #define PYRAVE_DEBUG_MODULE(oname) \
   static PyRaveObjectDebugging _pyravedebug = { \
       0, 0, oname }; \
@@ -51,12 +59,21 @@ typedef struct {
     } \
   }
 
+/**
+ * Call this each time a object has been successfully been created.
+ */
 #define PYRAVE_DEBUG_OBJECT_CREATED \
   _pyravedebug.created++
 
+/**
+ * Call this each time a object has been successfully been destroyed
+ */
 #define PYRAVE_DEBUG_OBJECT_DESTROYED \
   _pyravedebug.destroyed++
 
+/**
+ * Call this function in the module_init function,
+ */
 #define PYRAVE_DEBUG_INITIALIZE \
   if (atexit(_pyravedebug_statistics) != 0) { \
     fprintf(stderr, "Failed to setup debug statistics for module %s\n", _pyravedebug.name); \

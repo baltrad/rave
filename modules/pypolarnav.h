@@ -34,32 +34,33 @@ typedef struct {
   PolarNavigator_t* navigator; /**< the polar navigator */
 } PyPolarNavigator;
 
-/* C API functions */
-#define PyPolarNavigator_Type_NUM 0
+#define PyPolarNavigator_Type_NUM 0                             /**< index of type */
 
-#define PyPolarNavigator_GetNative_NUM 1
-#define PyPolarNavigator_GetNative_RETURN PolarNavigator_t*
-#define PyPolarNavigator_GetNative_PROTO (PyPolarNavigator*)
+#define PyPolarNavigator_GetNative_NUM 1                        /**< index of GetNative */
+#define PyPolarNavigator_GetNative_RETURN PolarNavigator_t*     /**< return type for GetNative */
+#define PyPolarNavigator_GetNative_PROTO (PyPolarNavigator*)    /**< arguments for GetNative */
 
-#define PyPolarNavigator_New_NUM 2
-#define PyPolarNavigator_New_RETURN PyPolarNavigator*
-#define PyPolarNavigator_New_PROTO (PolarNavigator_t*)
+#define PyPolarNavigator_New_NUM 2                              /**< index of New */
+#define PyPolarNavigator_New_RETURN PyPolarNavigator*           /**< return type for New */
+#define PyPolarNavigator_New_PROTO (PolarNavigator_t*)          /**< arguments for New */
 
-/* Total number of C API pointers */
-#define PyPolarNavigator_API_pointers 3
+#define PyPolarNavigator_API_pointers 3                         /**< number of API pointers */
 
 #ifdef PYPOLARNAV_MODULE
-/* To be used within the PyPolarNavigator-Module */
+/** Forward declaration of type */
 extern PyTypeObject PyPolarNavigator_Type;
 
+/** Checks if the object is a PyPolarNavigator or not */
 #define PyPolarNavigator_Check(op) ((op)->ob_type == &PyPolarNavigator_Type)
 
+/** Forward declaration of PyPolarNavigator_GetNative */
 static PyPolarNavigator_GetNative_RETURN PyPolarNavigator_GetNative PyPolarNavigator_GetNative_PROTO;
 
+/** Forward declaration of PyPolarNavigator_New */
 static PyPolarNavigator_New_RETURN PyPolarNavigator_New PyPolarNavigator_New_PROTO;
 
 #else
-/* This section is for clients using the PyPolarNavigator API */
+/** Pointers to the type and functions */
 static void **PyPolarNavigator_API;
 
 /**

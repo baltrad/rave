@@ -34,32 +34,33 @@ typedef struct {
    PolarVolume_t* pvol;  /**< the polar volume */
 } PyPolarVolume;
 
-/* C API functions */
-#define PyPolarVolume_Type_NUM 0
+#define PyPolarVolume_Type_NUM 0                              /**< index of type */
 
-#define PyPolarVolume_GetNative_NUM 1
-#define PyPolarVolume_GetNative_RETURN PolarVolume_t*
-#define PyPolarVolume_GetNative_PROTO (PyPolarVolume*)
+#define PyPolarVolume_GetNative_NUM 1                         /**< index of GetNative*/
+#define PyPolarVolume_GetNative_RETURN PolarVolume_t*         /**< return type for GetNative */
+#define PyPolarVolume_GetNative_PROTO (PyPolarVolume*)        /**< arguments for GetNative */
 
-#define PyPolarVolume_New_NUM 2
-#define PyPolarVolume_New_RETURN PyPolarVolume*
-#define PyPolarVolume_New_PROTO (PolarVolume_t*)
+#define PyPolarVolume_New_NUM 2                               /**< index of New */
+#define PyPolarVolume_New_RETURN PyPolarVolume*               /**< return type for New */
+#define PyPolarVolume_New_PROTO (PolarVolume_t*)              /**< arguments for New */
 
-/* Total number of C API pointers */
-#define PyPolarVolume_API_pointers 3
+#define PyPolarVolume_API_pointers 3                          /**< number of type and function pointers */
 
 #ifdef PYPOLARVOLUME_MODULE
-/* To be used within the PyPolarVolume-Module */
+/** Forward declaration of type */
 extern PyTypeObject PyPolarVolume_Type;
 
+/** Checks if the object is a PyPolarVolume or not */
 #define PyPolarVolume_Check(op) ((op)->ob_type == &PyPolarVolume_Type)
 
+/** Forward declaration of PyPolarVolume_GetNative */
 static PyPolarVolume_GetNative_RETURN PyPolarVolume_GetNative PyPolarVolume_GetNative_PROTO;
 
+/** Forward declaration of PyPolarVolume_New */
 static PyPolarVolume_New_RETURN PyPolarVolume_New PyPolarVolume_New_PROTO;
 
 #else
-/* This section is for clients using the PyPolarVolume API */
+/** Pointers to types and functions */
 static void **PyPolarVolume_API;
 
 /**

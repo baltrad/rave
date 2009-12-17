@@ -28,7 +28,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include <stdio.h>
 #include <string.h>
 
-#define PYPOLARSCAN_MODULE
+#define PYPOLARSCAN_MODULE   /**< to get correct part of pypolarscan,h */
 #include "pypolarscan.h"
 
 #include <arrayobject.h>
@@ -37,14 +37,20 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "raveutil.h"
 #include "rave.h"
 
+/**
+ * Debug this module
+ */
 PYRAVE_DEBUG_MODULE("_polarscan");
 
 /**
- * Some helpful exception defines.
+ * Sets a python exception and goto tag
  */
 #define raiseException_gotoTag(tag, type, msg) \
 {PyErr_SetString(type, msg); goto tag;}
 
+/**
+ * Sets a python exception and return NULL
+ */
 #define raiseException_returnNULL(type, msg) \
 {PyErr_SetString(type, msg); return NULL;}
 
@@ -260,19 +266,19 @@ static PyObject* _pypolarscan_getRangeIndex(PyPolarScan* self, PyObject* args)
 /**
  * Returns the value at the specified ray and bin index.
  * @param[in] self - this instance
- * @param[in] args - ray index, bin index.
+ * @param[in] args - bin index, ray index.
  * @returns a tuple of value type and value
  */
-static PyObject* _pypolarscan_getValueAtIndex(PyPolarScan* self, PyObject* args)
+static PyObject* _pypolarscan_getValue(PyPolarScan* self, PyObject* args)
 {
   double value = 0.0L;
   RaveValueType type = RaveValueType_NODATA;
   int ray = 0, bin = 0;
-  if (!PyArg_ParseTuple(args, "ii", &ray, &bin)) {
+  if (!PyArg_ParseTuple(args, "ii", &bin, &ray)) {
     return NULL;
   }
 
-  type = PolarScan_getValueAtIndex(self->scan, ray, bin, &value);
+  type = PolarScan_getValue(self->scan, bin, ray, &value);
 
   return Py_BuildValue("(id)", type, value);
 }
@@ -280,19 +286,19 @@ static PyObject* _pypolarscan_getValueAtIndex(PyPolarScan* self, PyObject* args)
 /**
  * Returns the converted value at the specified ray and bin index.
  * @param[in] self - this instance
- * @param[in] args - ray index, bin index.
+ * @param[in] args - bin index, ray index.
  * @returns a tuple of value type and value
  */
-static PyObject* _pypolarscan_getConvertedValueAtIndex(PyPolarScan* self, PyObject* args)
+static PyObject* _pypolarscan_getConvertedValue(PyPolarScan* self, PyObject* args)
 {
   double value = 0.0L;
   RaveValueType type = RaveValueType_NODATA;
   int ray = 0, bin = 0;
-  if (!PyArg_ParseTuple(args, "ii", &ray, &bin)) {
+  if (!PyArg_ParseTuple(args, "ii", &bin, &ray)) {
     return NULL;
   }
 
-  type = PolarScan_getConvertedValueAtIndex(self->scan, ray, bin, &value);
+  type = PolarScan_getConvertedValue(self->scan, bin, ray, &value);
 
   return Py_BuildValue("(id)", type, value);
 }
@@ -345,8 +351,8 @@ static struct PyMethodDef _pypolarscan_methods[] =
   {"getData", (PyCFunction) _pypolarscan_getData, 1},
   {"getAzimuthIndex", (PyCFunction) _pypolarscan_getAzimuthIndex, 1},
   {"getRangeIndex", (PyCFunction) _pypolarscan_getRangeIndex, 1},
-  {"getValueAtIndex", (PyCFunction) _pypolarscan_getValueAtIndex, 1},
-  {"getConvertedValueAtIndex", (PyCFunction) _pypolarscan_getConvertedValueAtIndex, 1},
+  {"getValue", (PyCFunction) _pypolarscan_getValue, 1},
+  {"getConvertedValue", (PyCFunction) _pypolarscan_getConvertedValue, 1},
   {"getValueAtAzimuthAndRange", (PyCFunction) _pypolarscan_getValueAtAzimuthAndRange, 1},
   {"getNearest", (PyCFunction) _pypolarscan_getNearest, 1},
   {NULL, NULL } /* sentinel */
@@ -371,7 +377,12 @@ static PyObject* _pypolarscan_getattr(PyPolarScan* self, char* name)
   } else if (strcmp("a1gate", name) == 0) {
     return PyInt_FromLong(PolarScan_getA1gate(self->scan));
   } else if (strcmp("quantity", name) == 0) {
-    return PyString_FromString(PolarScan_getQuantity(self->scan));
+    const char* str = PolarScan_getQuantity(self->scan);
+    if (str != NULL) {
+      return PyString_FromString(str);
+    } else {
+      Py_RETURN_NONE;
+    }
   } else if (strcmp("gain", name) == 0) {
     return PyFloat_FromDouble(PolarScan_getGain(self->scan));
   } else if (strcmp("offset", name) == 0) {
@@ -435,23 +446,11 @@ static int _pypolarscan_setattr(PyPolarScan* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_TypeError,"elangle must be of type float");
     }
-  } else if (strcmp("nbins", name) == 0) {
-    if (PyInt_Check(val)) {
-      PolarScan_setNbins(self->scan, PyInt_AsLong(val));
-    } else {
-      raiseException_gotoTag(done, PyExc_TypeError,"nbins must be of type int");
-    }
   } else if (strcmp("rscale", name) == 0) {
     if (PyFloat_Check(val)) {
       PolarScan_setRscale(self->scan, PyFloat_AsDouble(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "rscale must be of type float");
-    }
-  } else if (strcmp("nrays", name) == 0) {
-    if (PyInt_Check(val)) {
-      PolarScan_setNrays(self->scan, PyInt_AsLong(val));
-    } else {
-      raiseException_gotoTag(done, PyExc_TypeError,"nrays must be of type int");
     }
   } else if (strcmp("rstart", name) == 0) {
     if (PyFloat_Check(val)) {
@@ -467,9 +466,13 @@ static int _pypolarscan_setattr(PyPolarScan* self, char* name, PyObject* val)
     }
   } else if (strcmp("quantity", name) == 0) {
     if (PyString_Check(val)) {
-      PolarScan_setQuantity(self->scan, PyString_AsString(val));
+      if (!PolarScan_setQuantity(self->scan, PyString_AsString(val))) {
+        raiseException_gotoTag(done, PyExc_ValueError, "quantity must be a string");
+      }
+    } else if (val == Py_None) {
+      PolarScan_setQuantity(self->scan, NULL);
     } else {
-      raiseException_gotoTag(done, PyExc_TypeError,"quantity must be of type string");
+      raiseException_gotoTag(done, PyExc_ValueError, "quantity must be a string");
     }
   } else if (strcmp("gain", name) == 0) {
     if (PyFloat_Check(val)) {
@@ -494,14 +497,6 @@ static int _pypolarscan_setattr(PyPolarScan* self, char* name, PyObject* val)
       PolarScan_setUndetect(self->scan, PyFloat_AsDouble(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "undetect must be of type float");
-    }
-  } else if (strcmp("datatype", name) == 0) {
-    if (PyInt_Check(val)) {
-      if (!PolarScan_setDataType(self->scan, PyInt_AsLong(val))) {
-        raiseException_gotoTag(done, PyExc_ValueError, "datatype must be in valid range");
-      }
-    } else {
-      raiseException_gotoTag(done, PyExc_TypeError, "datatype must be of type RaveDataType");
     }
   } else if (strcmp("beamwidth", name) == 0) {
     if (PyFloat_Check(val)) {

@@ -34,32 +34,33 @@ typedef struct {
   PolarScan_t* scan; /**< the scan type */
 } PyPolarScan;
 
-/* C API functions */
-#define PyPolarScan_Type_NUM 0
+#define PyPolarScan_Type_NUM 0                      /**< index of the type */
 
-#define PyPolarScan_GetNative_NUM 1
-#define PyPolarScan_GetNative_RETURN PolarScan_t*
-#define PyPolarScan_GetNative_PROTO (PyPolarScan*)
+#define PyPolarScan_GetNative_NUM 1                 /**< index of GetNative */
+#define PyPolarScan_GetNative_RETURN PolarScan_t*   /**< return type for GetNative */
+#define PyPolarScan_GetNative_PROTO (PyPolarScan*)  /**< arguments for GetNative */
 
-#define PyPolarScan_New_NUM 2
-#define PyPolarScan_New_RETURN PyPolarScan*
-#define PyPolarScan_New_PROTO (PolarScan_t*)
+#define PyPolarScan_New_NUM 2                       /**< index of New */
+#define PyPolarScan_New_RETURN PyPolarScan*         /**< return type for New */
+#define PyPolarScan_New_PROTO (PolarScan_t*)        /**< arguments for New */
 
-/* Total number of C API pointers */
-#define PyPolarScan_API_pointers 3
+#define PyPolarScan_API_pointers 3                  /**< number of pointers */
 
 #ifdef PYPOLARSCAN_MODULE
-/* To be used within the PyPolarScan-Module */
+/** Forward declaration of the type */
 extern PyTypeObject PyPolarScan_Type;
 
+/** Checks if the object is a PyPolarScan or not */
 #define PyPolarScan_Check(op) ((op)->ob_type == &PyPolarScan_Type)
 
+/** Forward declaration of PyPolarScan_GetNative */
 static PyPolarScan_GetNative_RETURN PyPolarScan_GetNative PyPolarScan_GetNative_PROTO;
 
+/** Forward declaration of PyPolarScan_New */
 static PyPolarScan_New_RETURN PyPolarScan_New PyPolarScan_New_PROTO;
 
 #else
-/* This section is for clients using the pypolarscan API */
+/**Forward declaration of the pointers */
 static void **PyPolarScan_API;
 
 /**

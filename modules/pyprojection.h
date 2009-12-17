@@ -34,38 +34,46 @@ typedef struct {
   Projection_t* projection; /**< The projection definition */
 } PyProjection;
 
-/* C API functions */
-#define PyProjection_Type_NUM 0
+#define PyProjection_Type_NUM 0                        /**< index for Type */
 
-#define PyProjection_GetNative_NUM 1
-#define PyProjection_GetNative_RETURN Projection_t*
-#define PyProjection_GetNative_PROTO (PyProjection*)
+#define PyProjection_GetNative_NUM 1                   /**< index for GetNative */
+#define PyProjection_GetNative_RETURN Projection_t*    /**< return type for GetNative */
+#define PyProjection_GetNative_PROTO (PyProjection*)   /**< argument prototype for GetNative */
 
-#define PyProjection_New_NUM 2
-#define PyProjection_New_RETURN PyProjection*
-#define PyProjection_New_PROTO (Projection_t*)
+#define PyProjection_New_NUM 2                         /**< index for New */
+#define PyProjection_New_RETURN PyProjection*          /**< return type for New */
+#define PyProjection_New_PROTO (Projection_t*)         /**< argument prototype for New */
 
-#define PyProjection_NewFromDef_NUM 3
-#define PyProjection_NewFromDef_RETURN PyProjection*
-#define PyProjection_NewFromDef_PROTO (const char* id, const char* definition, const char* description)
+#define PyProjection_NewFromDef_NUM 3                  /**< index for NewFromDef */
+#define PyProjection_NewFromDef_RETURN PyProjection*   /**< return type for NewFromDef */
+#define PyProjection_NewFromDef_PROTO (const char* id, const char* definition, const char* description) /**< argument prototype for NewFromDef */
 
-/* Total number of C API pointers */
-#define PyProjection_API_pointers 4
+#define PyProjection_API_pointers 4                    /**< number of function and variable pointers */
 
 #ifdef PYPROJECTION_MODULE
-/* To be used within the PyProjection-Module */
+/** To be used within the PyProjection-Module */
 extern PyTypeObject PyProjection_Type;
 
+/** Checks if the object is a PyProjection or not */
 #define PyProjection_Check(op) ((op)->ob_type == &PyProjection_Type)
 
+/**
+ * forward declaration of PyProjection_GetNative.
+ */
 static PyProjection_GetNative_RETURN PyProjection_GetNative PyProjection_GetNative_PROTO;
 
+/**
+ * forward declaration of PyProjection_New.
+ */
 static PyProjection_New_RETURN PyProjection_New PyProjection_New_PROTO;
 
+/**
+ * forward declaration of PyProjection_NewFromDef.
+ */
 static PyProjection_NewFromDef_RETURN PyProjection_NewFromDef PyProjection_NewFromDef_PROTO;
 
 #else
-/* This section is for clients using the pyprojection API */
+/** Pointers to the functions and variables */
 static void **PyProjection_API;
 
 /**

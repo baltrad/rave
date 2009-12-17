@@ -34,32 +34,33 @@ typedef struct {
   Area_t* area; /**< the area */
 } PyArea;
 
-/* C API functions */
-#define PyArea_Type_NUM 0
+#define PyArea_Type_NUM 0                   /**< index of type */
 
-#define PyArea_GetNative_NUM 1
-#define PyArea_GetNative_RETURN Area_t*
-#define PyArea_GetNative_PROTO (PyArea*)
+#define PyArea_GetNative_NUM 1              /**< index of GetNative */
+#define PyArea_GetNative_RETURN Area_t*     /**< return type for GetNative */
+#define PyArea_GetNative_PROTO (PyArea*)    /**< arguments for GetNative */
 
-#define PyArea_New_NUM 2
-#define PyArea_New_RETURN PyArea*
-#define PyArea_New_PROTO (Area_t*)
+#define PyArea_New_NUM 2                    /**< index of New */
+#define PyArea_New_RETURN PyArea*           /**< return type for New */
+#define PyArea_New_PROTO (Area_t*)          /**< arguments for New */
 
-/* Total number of C API pointers */
-#define PyArea_API_pointers 3
+#define PyArea_API_pointers 3               /**< number of API pointers */
 
 #ifdef PYAREA_MODULE
-/* To be used within the PyArea-Module */
+/** Forward declaration of type */
 extern PyTypeObject PyArea_Type;
 
+/** Checks if the object is a PyArea or not */
 #define PyArea_Check(op) ((op)->ob_type == &PyArea_Type)
 
+/** Forward declaration of PyArea_GetNative */
 static PyArea_GetNative_RETURN PyArea_GetNative PyArea_GetNative_PROTO;
 
+/** Forward declaration of PyArea_New */
 static PyArea_New_RETURN PyArea_New PyArea_New_PROTO;
 
 #else
-/* This section is for clients using the PyArea API */
+/** Pointers to types and functions */
 static void **PyArea_API;
 
 /**

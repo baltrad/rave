@@ -156,20 +156,16 @@ RaveCoreObject* RaveCoreObject_new(RaveCoreObjectType* type, const char* filenam
  * was provided when creating the instance will be called. Note, regardless on if and how the
  * destructor has been implemented, the object will be freed.
  * @param[in] obj - the object to release (including the object itself)
+ * @param[in] filename - the filename that this operation was performed in
+ * @param[in] lineno - the linenumber that this operation was performed in
  */
 void RaveCoreObject_release(RaveCoreObject* obj, const char* filename, int lineno);
 
 /**
- * Initializes the object. Will set the reference counter to 1 and assign the object name and destructor.
- * @param[in] obj - the object to initialize
- * @param[in] rohname - the object name
- * @param[in] destructor - the destructor to be called
- */
-void RaveCoreObject_initialize(RaveCoreObject* obj, const char* rohname, void (*destructor)(struct _raveobject* obj));
-
-/**
  * Increments the reference counter and returns a pointer to the provided object.
  * @param[in] src - the object to be copied
+ * @param[in] filename - the filename that this operation was performed in
+ * @param[in] lineno - the linenumber that this operation was performed in
  * @returns a pointer to the copied object
  */
 RaveCoreObject* RaveCoreObject_copy(RaveCoreObject* src, const char* filename, int lineno);
@@ -177,6 +173,8 @@ RaveCoreObject* RaveCoreObject_copy(RaveCoreObject* src, const char* filename, i
 /**
  * Creates a clone of the provided object by using the types copyconstructor (if there is any).
  * @param[in] src - the object to be cloned
+ * @param[in] filename - the filename that this operation was performed in
+ * @param[in] lineno - the linenumber that this operation was performed in
  * @returns a pointer to the cloned object
  */
 RaveCoreObject* RaveCoreObject_clone(RaveCoreObject* src, const char* filename, int lineno);

@@ -8,44 +8,11 @@
 #define RAVE_TRANSFORM_H
 
 #include <projects.h>
+#include "rave_types.h"
 
 #ifdef PJ_VERSION
 #define UV projUV
 #endif
-
-
-/**
- * Different data types that are supported during transformation
- */
-typedef enum RaveDataType {
-  RaveDataType_UNDEFINED = -1, /**< Undefined data type */
-  RaveDataType_CHAR = 0, /**< char */
-  RaveDataType_UCHAR,    /**< unsigned char */
-  RaveDataType_SHORT,    /**< short */
-  RaveDataType_INT,      /**< int */
-  RaveDataType_LONG,     /**< long */
-  RaveDataType_FLOAT,    /**< float */
-  RaveDataType_DOUBLE,   /**< double */
-  RaveDataType_LAST      /**< Always has to be at end and is not a real datatype */
-} RaveDataType;
-
-/**
- * Transformation methods
- */
-typedef enum RaveTransformationMethod {
-  NEAREST = 1,   /**< Nearest */
-  BILINEAR,      /**< Bilinear */
-  CUBIC,         /**< Cubic */
-  CRESSMAN,      /**< Cressman */
-  UNIFORM,       /**< Uniform */
-  INVERSE        /**< Inverse */
-} RaveTransformationMethod;
-
-typedef enum RaveValueType {
-  RaveValueType_UNDETECT = 0,
-  RaveValueType_NODATA = 1,
-  RaveValueType_DATA = 2
-} RaveValueType;
 
 /**
  * Data structure when working with 2D projections
@@ -132,13 +99,6 @@ typedef struct {
    int fieldsn;               /**< number of fields */
    RavePolarField* fields;    /**< The array of fields */
 } RavePolarVolume;
-
-/**
- * Returns the size of the datatype.
- * @param[in] type - the rave data type
- * @return the size or -1 if size not can be determined
- */
-int get_ravetype_size(RaveDataType type);
 
 /**
  * Gets the value at position x,y from the data field.

@@ -204,5 +204,6 @@ RaveCoreObjectType Projection_TYPE = {
     "Projection",
     sizeof(Projection_t),
     Projection_constructor,
-    Projection_destructor
+    Projection_destructor,
+    Projection_copyconstructor
 };

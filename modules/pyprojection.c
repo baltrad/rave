@@ -27,20 +27,26 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include <stdio.h>
 #include <string.h>
 
-#define PYPROJECTION_MODULE
+#define PYPROJECTION_MODULE   /**< to get correct part of pyprojection.h */
 #include "pyprojection.h"
 
 #include "pyrave_debug.h"
 #include "rave_alloc.h"
 
+/**
+ * Debug this module.
+ */
 PYRAVE_DEBUG_MODULE("_projection");
 
 /**
- * Some helpful exception defines.
+ * Sets a python exception and goto tag
  */
 #define raiseException_gotoTag(tag, type, msg) \
 {PyErr_SetString(type, msg); goto tag;}
 
+/**
+ * Sets a python exception and returns NULL
+ */
 #define raiseException_returnNULL(type, msg) \
 {PyErr_SetString(type, msg); return NULL;}
 
