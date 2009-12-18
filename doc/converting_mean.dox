@@ -3,7 +3,7 @@
 As a background, RAVE has been around for roughly 10 years. During that time several modules has
 seen life and went into oblivion. As an example on how it is possible to work with the rave
 framework I took an existing module called mean.c and have continuosly adapted it into it's
-current state (\ref mean.c). I have tried to document each step but if there is a whole somewhere
+current state (\ref mean.c). I have tried to document each step but if there is a hole somewhere
 , please excuse me and take a look in the git repository history for the steps you are missing.
 
 Let's start looking at the original implementation of mean.c.

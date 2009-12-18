@@ -89,14 +89,113 @@ static void somefun(void)
 That's the basic objects that only are there for making life a bit easier. We have a number of objects that are
 more interesting when working with radar data (or any other data) for that matter.
 
+- \ref Projection_t
+This is a wrapper around PROJ.4. This object requires initialization after it has been created since it
+needs to know what projection definition is should support. 
+\verbatim
+#include "projection.h"
+
+static void somefun(void)
+{
+  Projection_t* p1 = RAVE_OBJECT_NEW(&Projection_TYPE);
+  Projection_t* p2 = RAVE_OBJECT_NEW(&Projection_TYPE);
+  double x = 0.0L, y = 0.0L;
+  if (!Projection_init(p1, "stere", "a projection", "+proj=stere +ellps=bessel +lat_0=90 +lon_0=14 +lat_ts=60 +datum=WGS84")) {
+    goto error;
+  }
+  if (!Projection_init(p2, "lonlat", "a projection", "+proj=longlat +ellps=WGS84 +datum=WGS84")) {
+    goto error;
+  }
+  x = 60.0 * M_PI/180.0;
+  y = 14.0 * M_PI/180.0;
+  if (!Projection_transform(p2, p1, &x, &y, NULL)) {
+    goto error;
+  }
+  fprintf(stderr, "Surface coordinates %f, %d\n", x, y);
+error:
+  RAVE_OBJECT_RELEASE(p1);
+  RAVE_OBJECT_RELEASE(p2); 
+}
+\endverbatim
+ This code shows how you are able to translate a lon/lat coordinate into a surface coordinate represented by the stereographic
+ projection p1. The most interesting function in this class is Projection_transform that will ensure that datum changes will
+ be performed as long as +datum= has been specified. For further information on the usage, please refer to PROJ.4 documentation.
+ 
 - \ref #Area_t
-An area definition describing a surface. It contains corner coordinates, what projection it is defined by and what
-x/y - size + x/y - scale. So, it is quite useful if you are planning to create an cartesian product or similar.
+An area definition describing a surface. It contains corner coordinates, what projection it is defined by, what
+x/y - size and x/y - scale. So, it is quite useful if you are planning to create an cartesian product or similar.
 
+Currently we have 3 different products that defines the basic needs when working with radar data.
+Instead of writing some examples on how these are used, a list of the other objects will be presented
+below and at the end a simple main program that creates a PPI will be shown.
 
-T.B.D.
+- \ref #Cartesian_t
+This class represents cartesian product. I.e. one or more 2-dimensional surface images that is
+defined by a area extent, projection and the other parts that are defined for an \ref #Area_t.
 
-As it is, we have covered the basics and some of the building blocks, let's take a look at an real-life example that was performed
-when developing the new version of rave, \ref converting_mean.
+- \ref #PolarScan_t
+This class represents one radar scan. I.e. one or more 2-dimensional arrays defining the different
+quantities, currently a scan defines one 2-dimensional array and one quantity but this might change
+so please check documentation for \ref #PolarScan_t.
+
+- \ref #PolarVolume_t
+A polar volume is defined by a number of \ref #PolarScan_t's and some basic information like what,
+where and how.  
+
+Other than that we have a couple of utilities that are useful when working with the products defined
+above.
+
+- \ref #RaveIO_t
+Basic loading and saving of products in the ODIM HDF5 format.
+
+- \ref #Transform_t
+Some product generator algorithms that might be useful.
+
+\verbatim
+/**
+ * Simple example without any error checking or anything.
+ */
+#include "rave_io.h"
+#include "polarscan.h"
+#include "cartesian.h"
+#include "polarvolume.h"
+#include "area.h"
+
+/**
+ * Arguments are: <filename> <scan index> <areaid>
+int main(int argc, char** argv)
+{
+  RaveIO_t* raveio = RaveIO_open(argv[1]);
+  PolarScan_t* scan = NULL;
+  Cartesian_t* result = NULL;
+  Area_t* area = NULL;
+  
+  if (RaveIO_getObjectType(raveio) == Rave_ObjectType_PVOL) {
+    PolarVolume_t* volume = RaveIO_getObject(raveio);
+    scan = PolarVolume_getScan(volume, atoi(argv[2]));
+    RAVE_OBJECT_RELEASE(volume);
+  }
+  
+  area = createArea(argv[3]); 
+  
+  result = createPPI(scan, area);
+  
+  raveio.setFilename("result.h5")
+  raveio.setObject(result);
+  raveio.save();
+  
+  RAVE_OBJECT_RELEASE(raveio);
+  RAVE_OBJECT_RELEASE(scan);
+  RAVE_OBJECT_RELEASE(area);
+  return 0;
+}
+\endverbatim
+
+The above example leaves a couple of unanswered questions but at least it shows how the system can be used. For example,
+the object \ref #Transform_t supports ppi/cappi/pcappi when writing this documentation but this might change in the future
+and hence, I leave it up to the reader of this document to check what api's you have at your disposal.
+
+We have covered the basics and some of the building blocks and now it is time to take a look at a real-life example that was
+performed when developing the new version of rave, \ref converting_mean.
 
 */
