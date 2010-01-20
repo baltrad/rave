@@ -242,12 +242,69 @@ static PyObject* _pyprojection_transform(PyProjection* self, PyObject* args)
 }
 
 /**
+ * Projects a coordinate pair into the new projection coordinate system
+ * @param[in] self - the source projection
+ * @param[in] args - arguments for projecting)
+ * @return Py_None on success, otherwise NULL
+ */
+static PyObject* _pyprojection_transformx(PyProjection* self, PyObject* args)
+{
+  PyProjection* tgtproj = NULL;
+  PyObject* pytgtproj = NULL;
+  PyObject* pycoord = NULL;
+  PyObject* result = NULL;
+
+  double x=0.0,y=0.0,z=0.0;
+  double ox=0.0, oy=0.0, oz=0.0;
+  int coordlen = 0;
+
+  if(!PyArg_ParseTuple(args, "OO", &pytgtproj,&pycoord)) {
+    return NULL;
+  }
+
+  if (!PyProjection_Check(pytgtproj)) {
+    raiseException_returnNULL(PyExc_TypeError, "First argument should be the target projection")
+  }
+
+  if (!PyTuple_Check(pycoord)) {
+    raiseException_returnNULL(PyExc_TypeError, "Second argument should be a tuple with either 2 or 3 floats");
+  }
+  coordlen = PyTuple_Size(pycoord);
+  if (coordlen == 2) {
+    if(!PyArg_ParseTuple(pycoord, "dd", &x,&y)) {
+      return NULL;
+    }
+  } else if (coordlen == 3) {
+    if(!PyArg_ParseTuple(pycoord, "ddd", &x,&y,&z)) {
+      return NULL;
+    }
+  } else {
+    raiseException_returnNULL(PyExc_TypeError, "Second argument should be a tuple with either 2 or 3 floats");
+  }
+
+  tgtproj = (PyProjection*)pytgtproj;
+
+  if (coordlen == 2) {
+    if (!Projection_transformx(self->projection, tgtproj->projection, x, y, 0.0, &ox, &oy, NULL)) {
+      raiseException_returnNULL(PyExc_IOError, "Failed to transform to target projection");
+    }
+    result = Py_BuildValue("(dd)", ox, oy);
+  } else {
+    if (!Projection_transformx(self->projection, tgtproj->projection, x, y, z, &ox, &oy, &oz)) {
+      raiseException_returnNULL(PyExc_IOError, "Failed to transform to target projection");
+    }
+    result = Py_BuildValue("(ddd)", ox, oy, oz);
+  }
+
+  return result;
+}
+
+/**
  * Translates surface coordinate into lon/lat.
  * @param[in] self - the projection
  * @param[in] args - the (x,y) coordinate as a tuple of two doubles.
  * @returns a tuple of two doubles representing the lon/lat coordinate in radians or NULL on failure
  */
-
 static PyObject* _pyprojection_inv(PyProjection* self, PyObject* args)
 {
   double lon=0.0L, lat=0.0L;
@@ -293,6 +350,7 @@ static PyObject* _pyprojection_fwd(PyProjection* self, PyObject* args)
 static struct PyMethodDef _pyprojection_methods[] =
 {
   { "transform", (PyCFunction) _pyprojection_transform, 1},
+  { "transformx", (PyCFunction) _pyprojection_transformx, 1},
   { "inv", (PyCFunction) _pyprojection_inv, 1},
   { "fwd", (PyCFunction) _pyprojection_fwd, 1},
   { NULL, NULL } /* sentinel */

@@ -59,7 +59,7 @@ class PyProjectionTest(unittest.TestCase):
     except ValueError, e:
       pass
     
-  def testProjectFromCartesianToLonLat(self):
+  def testTransform_cartesianToLonLat(self):
     cproj = _projection.new("cartesian", "cartesian", "+proj=stere +ellps=bessel +lat_0=90 +lon_0=14 +lat_ts=60 +datum=WGS84")
     llproj = _projection.new("lonlat", "lonlat", "+proj=longlat +ellps=WGS84 +datum=WGS84")
     inx = 60.0 * math.pi / 180.0
@@ -67,6 +67,21 @@ class PyProjectionTest(unittest.TestCase):
     x,y = llproj.transform(cproj, (inx,iny))
     
     x,y = cproj.transform(llproj, (x,y))
+    
+    outx = x * 180.0 / math.pi
+    outy = y * 180.0 / math.pi
+    
+    self.assertAlmostEquals(60.0, outx, 4)
+    self.assertAlmostEquals(14.0, outy, 4)
+
+  def testTransformx_cartesianToLonLat(self):
+    cproj = _projection.new("cartesian", "cartesian", "+proj=stere +ellps=bessel +lat_0=90 +lon_0=14 +lat_ts=60 +datum=WGS84")
+    llproj = _projection.new("lonlat", "lonlat", "+proj=longlat +ellps=WGS84 +datum=WGS84")
+    inx = 60.0 * math.pi / 180.0
+    iny = 14.0 * math.pi / 180.0
+    x,y = llproj.transformx(cproj, (inx,iny))
+    
+    x,y = cproj.transformx(llproj, (x,y))
     
     outx = x * 180.0 / math.pi
     outy = y * 180.0 / math.pi

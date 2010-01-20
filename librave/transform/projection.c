@@ -168,6 +168,41 @@ int Projection_transform(Projection_t* projection, Projection_t* tgt, double* x,
   return result;
 }
 
+int Projection_transformx(Projection_t* projection, Projection_t* tgt,
+  double x, double y, double z, double* ox, double* oy, double* oz)
+{
+  int pjv = 0;
+  int result = 1;
+  double vx = 0.0, vy = 0.0, vz = 0.0;
+  RAVE_ASSERT((projection != NULL), "projection == NULL");
+  RAVE_ASSERT((tgt != NULL), "tgt == NULL");
+  RAVE_ASSERT((ox != NULL), "ox == NULL");
+  RAVE_ASSERT((oy != NULL), "oy == NULL");
+
+  vx = x;
+  vy = y;
+  vz = z;
+  if (oz == NULL) {
+    if ((pjv = pj_transform(projection->pj, tgt->pj, 1, 1, &vx, &vy, NULL)) != 0) {
+      RAVE_ERROR1("Transform failed with pj_errno: %d\n", pjv);
+      result = 0;
+    }
+  } else {
+    if ((pjv = pj_transform(projection->pj, tgt->pj, 1, 1, &vx, &vy, &vz)) != 0) {
+      RAVE_ERROR1("Transform failed with pj_errno: %d\n", pjv);
+      result = 0;
+    }
+  }
+  if (result == 1) {
+    *ox = vx;
+    *oy = vy;
+    if (oz != NULL) {
+      *oz = vz;
+    }
+  }
+  return result;
+}
+
 int Projection_inv(Projection_t* projection, double x, double y, double* lon, double* lat)
 {
   int result = 1;

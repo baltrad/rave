@@ -77,6 +77,25 @@ const char* Projection_getDefinition(Projection_t* projection);
 int Projection_transform(Projection_t* projection, Projection_t* tgt, double* x, double* y, double* z);
 
 /**
+ * This is an alternate version of \ref #Projection_transform. This function
+ * will set the output valuesin ox, oy and oz respectively. x/y and ox/oy are
+ * always required. Some projections requires the z values as well but
+ * that is not enforced by this function and is up to the user to manage properly.
+ * If oz == NULL, then the transform will atempt to project without the z value.
+ * @param[in] projection - self
+ * @param[in] tgt - the target projection
+ * @param[in] x - coordinate
+ * @param[in] y - coordinate
+ * @param[in] z - coordinate
+ * @param[out] ox - coordinate
+ * @param[out] oy - coordinate
+ * @param[out] oz - coordinate
+ * @returns 1 on success, otherwise 0
+ */
+int Projection_transformx(Projection_t* projection, Projection_t* tgt,
+  double x, double y, double z, double* ox, double* oy, double* oz);
+
+/**
  * Translates surface coordinate into lon/lat.
  * @param[in] projection - the projection
  * @param[in]    x - the x coordinate

@@ -181,7 +181,6 @@ static const struct RaveIO_ProductMapping PRODUCT_MAPPING[] =
 };
 
 /*@} End of Constants */
-
 /*@{ Macros */
 /**
  * Quick access function for reading one atomic value from a

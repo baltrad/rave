@@ -34,6 +34,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "pycartesian.h"
 
 #include "pyprojection.h"
+#include "pyarea.h"
 #include <arrayobject.h>
 #include "rave_alloc.h"
 #include "raveutil.h"
@@ -143,6 +144,30 @@ static PyObject* _pycartesian_new(PyObject* self, PyObject* args)
 {
   PyCartesian* result = PyCartesian_New(NULL);
   return (PyObject*)result;
+}
+
+/**
+ * Initializes a cartesian product with the settings as described by the
+ * area definition.
+ */
+static PyObject* _pycartesian_init(PyCartesian* self, PyObject* args)
+{
+  PyObject* inarea = NULL;
+  RaveDataType type = RaveDataType_UNDEFINED;
+
+  if (!PyArg_ParseTuple(args, "Oi", &inarea, &type)) {
+    return NULL;
+  }
+
+  if (!PyArea_Check(inarea)) {
+    raiseException_returnNULL(PyExc_TypeError, "First argument must be a PyAreaCore instance");
+  }
+
+  if (!Cartesian_init(self->cartesian, ((PyArea*)inarea)->area, type)) {
+    raiseException_returnNULL(PyExc_ValueError, "Failed to initialize cartesian product");
+  }
+
+  Py_RETURN_NONE;
 }
 
 /**
@@ -330,6 +355,7 @@ static PyObject* _pycartesian_getMean(PyCartesian* self, PyObject* args)
  */
 static struct PyMethodDef _pycartesian_methods[] =
 {
+  {"init", (PyCFunction) _pycartesian_init, 1},
   {"setData", (PyCFunction) _pycartesian_setData, 1},
   {"getData", (PyCFunction) _pycartesian_getData, 1},
   {"getLocationX", (PyCFunction) _pycartesian_getLocationX, 1},
@@ -600,6 +626,7 @@ init_cartesian(void)
 
   import_array(); /*To make sure I get access to Numeric*/
   import_pyprojection();
+  import_pyarea();
   PYRAVE_DEBUG_INITIALIZE;
 }
 /*@} End of Module setup */

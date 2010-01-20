@@ -28,6 +28,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #define CARTESIAN_H
 #include "rave_transform.h"
 #include "projection.h"
+#include "area.h"
 #include "rave_object.h"
 #include "rave_types.h"
 
@@ -333,6 +334,15 @@ int Cartesian_setValue(Cartesian_t* cartesian, long x, long y, double v);
  * @return the type of data
  */
 RaveValueType Cartesian_getValue(Cartesian_t* cartesian, long x, long y, double* v);
+
+/**
+ * Initializes a cartesian product with values from the area.
+ * @param[in] cartesian - self
+ * @param[in] area - the area
+ * @param[in] datatype - the type of data
+ * @returns 1 on success, otherwise 0
+ */
+int Cartesian_init(Cartesian_t* cartesian, Area_t* area, RaveDataType datatype);
 
 /**
  * Returns the mean value over a NxN square around the specified x and y position.

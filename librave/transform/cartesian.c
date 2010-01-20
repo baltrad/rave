@@ -23,6 +23,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @date 2009-10-16
  */
 #include "cartesian.h"
+#include "area.h"
 #include "rave_debug.h"
 #include "rave_alloc.h"
 #include "rave_datetime.h"
@@ -455,7 +456,7 @@ RaveValueType Cartesian_getValue(Cartesian_t* cartesian, long x, long y, double*
 {
   RaveValueType result = RaveValueType_NODATA;
   double value = 0.0;
-  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
+  RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
 
   value = cartesian->nodata;
 
@@ -473,6 +474,23 @@ RaveValueType Cartesian_getValue(Cartesian_t* cartesian, long x, long y, double*
   }
 
   return result;
+}
+
+int Cartesian_init(Cartesian_t* cartesian, Area_t* area, RaveDataType datatype)
+{
+  double llX = 0.0L, llY = 0.0L, urX = 0.0L, urY = 0.0L;
+  Projection_t* projection = NULL;
+  RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
+  RAVE_ASSERT((area != NULL), "area == NULL");
+
+  Cartesian_setXScale(cartesian, Area_getXScale(area));
+  Cartesian_setYScale(cartesian, Area_getYScale(area));
+  projection = Area_getProjection(area);
+  Cartesian_setProjection(cartesian, projection);
+  Area_getExtent(area, &llX, &llY, &urX, &urY);
+  Cartesian_setAreaExtent(cartesian, llX, llY, urX, urY);
+  RAVE_OBJECT_RELEASE(projection);
+  return Cartesian_createData(cartesian, Area_getXSize(area), Area_getYSize(area), datatype);
 }
 
 RaveValueType Cartesian_getMean(Cartesian_t* cartesian, long x, long y, int N, double* v)

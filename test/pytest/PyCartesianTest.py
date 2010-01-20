@@ -26,7 +26,9 @@ Tests the cartesian module.
 import unittest
 import os
 import _cartesian
+import _projection
 import _rave
+import _area
 import string
 import numpy
 
@@ -42,6 +44,27 @@ class PyCartesianTest(unittest.TestCase):
     
     isscan = string.find(`type(obj)`, "CartesianCore")
     self.assertNotEqual(-1, isscan)
+  
+  def test_init(self):
+    obj = _cartesian.new()
+    a = _area.new()
+    a.xsize = 10
+    a.ysize = 10
+    a.xscale = 100.0
+    a.yscale = 100.0
+    a.extent = (1.0, 2.0, 3.0, 4.0)
+    a.projection = _projection.new("x", "y", "+proj=latlong +ellps=WGS84 +datum=WGS84")
+
+    obj.init(a, _rave.RaveDataType_SHORT)
+    self.assertEquals(10, obj.xsize)
+    self.assertEquals(10, obj.ysize)
+    self.assertAlmostEquals(100.0, obj.xscale, 4)
+    self.assertAlmostEquals(100.0, obj.yscale, 4)
+    self.assertAlmostEquals(1.0, obj.areaextent[0], 4)
+    self.assertAlmostEquals(2.0, obj.areaextent[1], 4)
+    self.assertAlmostEquals(3.0, obj.areaextent[2], 4)
+    self.assertAlmostEquals(4.0, obj.areaextent[3], 4)
+    self.assertEquals("x", obj.projection.id)
   
   def test_time(self):
     obj = _cartesian.new()
