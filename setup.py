@@ -264,6 +264,15 @@ MODULES.append(
 
 MODULES.append(
     Extension(
+        "_polarscanparam", ["modules/pypolarscanparam.c"],
+        include_dirs=INCLUDE_DIRS,
+        library_dirs=LIBRARY_DIRS,
+        libraries=LIBRARIES
+        )
+    )
+
+MODULES.append(
+    Extension(
         "_polarvolume", ["modules/pypolarvolume.c"],
         include_dirs=INCLUDE_DIRS,
         library_dirs=LIBRARY_DIRS,

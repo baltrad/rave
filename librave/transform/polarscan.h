@@ -27,9 +27,10 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #define POLARSCAN_H
 #include "polarnav.h"
 #include "projection.h"
+#include "polarscanparam.h"
 #include "rave_object.h"
 #include "rave_types.h"
-
+#include "rave_list.h"
 /**
  * Defines a Polar Scan
  */
@@ -236,7 +237,6 @@ void PolarScan_setA1gate(PolarScan_t* scan, long a1gate);
  */
 long PolarScan_getA1gate(PolarScan_t* scan);
 
-
 /**
  * Sets the beamwidth. If not set, it will default to 360/nrays.
  * @param[in] scan - the polar scan
@@ -253,103 +253,68 @@ void PolarScan_setBeamWidth(PolarScan_t* scan, long beamwidth);
 double PolarScan_getBeamWidth(PolarScan_t* scan);
 
 /**
- * Sets the quantity
- * @param[in] scan - the scan
- * @param[in] quantity - the quantity, e.g. DBZH
- * @returns 1 on success, otherwise 0
- */
-int PolarScan_setQuantity(PolarScan_t* scan, const char* quantity);
-
-/**
- * Returns the quantity
- * @param[in] scan - the scan
- * @return the quantity or NULL if not set
- */
-const char* PolarScan_getQuantity(PolarScan_t* scan);
-
-
-/**
- * Sets the gain
- * @param[in] scan - the scan
- * @param[in] gain - the gain
- */
-void PolarScan_setGain(PolarScan_t* scan, double gain);
-
-/**
- * Returns the gain
- * @param[in] scan - the scan
- * @return the gain
- */
-double PolarScan_getGain(PolarScan_t* scan);
-
-/**
- * Sets the offset
- * @param[in] scan - the scan
- * @param[in] offset - the offset
- */
-void PolarScan_setOffset(PolarScan_t* scan, double offset);
-
-/**
- * Returns the offset
- * @param[in] scan - the scan
- * @return the offset
- */
-double PolarScan_getOffset(PolarScan_t* scan);
-
-/**
- * Sets the nodata
- * @param[in] scan - the scan
- * @param[in] nodata - the nodata
- */
-void PolarScan_setNodata(PolarScan_t* scan, double nodata);
-
-/**
- * Returns the nodata
- * @param[in] scan - the scan
- * @return the nodata
- */
-double PolarScan_getNodata(PolarScan_t* scan);
-
-/**
- * Sets the undetect
- * @param[in] scan - the scan
- * @param[in] undetect - the undetect
- */
-void PolarScan_setUndetect(PolarScan_t* scan, double undetect);
-
-/**
- * Returns the undetect
- * @param[in] scan - the scan
- * @return the undetect
- */
-double PolarScan_getUndetect(PolarScan_t* scan);
-
-/**
- * Sets the data
- * @param[in] scan  - the scan
- * @param[in] nbins - number of bins
- * @param[in] nrays - number of rays
- * @param[in] data  - the data
- * @param[in] type  - the data type
- */
-int PolarScan_setData(PolarScan_t* scan, long nbins, long nrays, void* data, RaveDataType type);
-
-/**
- * Creates a data field with the specified dimensions and type. The data till be initialized to 0.
+ * Sets the default parameter for this scan. I.e. all operations
+ * that retrieves/sets values that does not contain a parameter name
+ * as well will use the default parameter. Note, there is nothing
+ * verifying if the parameter actually exists so if you are uncertain
+ * use \ref #hasParameter first.
  * @param[in] scan - self
- * @param[in] nbins - number of bins
- * @param[in] nrays - number of rays
- * @param[in] type - the type of the data
+ * @param[in] quantity - the parameter
  * @returns 1 on success otherwise 0
  */
-int PolarScan_createData(PolarScan_t* scan, long nbins, long nrays, RaveDataType type);
+int PolarScan_setDefaultParameter(PolarScan_t* scan, const char* quantity);
 
 /**
- * Returns a pointer to the internal data storage.
- * @param[in] scan - the scan
- * @return the internal data pointer (NOTE! Do not release this pointer)
+ * Returns the currently specified default parameter name.
+ * @param[in] scan - self
+ * @returns the default parameter name
  */
-void* PolarScan_getData(PolarScan_t* scan);
+const char* PolarScan_getDefaultParameter(PolarScan_t* scan);
+
+/**
+ * Adds a parameter to the polar scan. Note, if there already exists
+ * a parameter with the same quantity, that parameter will be replaced
+ * by this. Also, several consistency checks will be performed to ensure
+ * that dimensions and similar are the same for all parameters that
+ * are added.
+ * @param[in] scan - self
+ * @param[in] parameter - the parameter
+ * @returns 1 on success, otherwise 0
+ */
+int PolarScan_addParameter(PolarScan_t* scan, PolarScanParam_t* parameter);
+
+/**
+ * Removes (and returns) the parameter that is specified by the quantity.
+ * Note, since the parameter returned is inc-refed, remember to release it.
+ * @param[in] scan - self
+ * @param[in] key - the quantity name
+ * @returns NULL if nothing found or the parameter if it exists.
+ */
+PolarScanParam_t* PolarScan_removeParameter(PolarScan_t* scan, const char* quantity);
+
+/**
+ * Returns the parameter that is specified by the quantity.
+ * Note, since the parameter returned is inc-refed, remember to release it.
+ * @param[in] scan - self
+ * @param[in] key - the quantity name
+ * @returns NULL if nothing found or the parameter if it exists.
+ */
+PolarScanParam_t* PolarScan_getParameter(PolarScan_t* scan, const char* quantity);
+
+/**
+ * Returns if the scan contains the specified parameter or not.
+ * @param[in] scan - self
+ * @param[in] quantity - the quantity name
+ * @returns 1 if the parameter exists, otherwise 0
+ */
+int PolarScan_hasParameter(PolarScan_t* scan, const char* quantity);
+
+/**
+ * Returns this scans parameter names.
+ * @param[in] scan - self
+ * @returns this scans contained parameters. NULL on failure. Use \ref #RaveList_freeAndDestroy to destroy
+ */
+RaveList_t* PolarScan_getParameterNames(PolarScan_t* scan);
 
 /**
  * Returns the range index for the specified range (in meters).

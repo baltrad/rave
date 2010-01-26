@@ -736,6 +736,154 @@ static int RaveIOInternal_hasNodeByName(HL_NodeList* nodelist, const char* fmt, 
 }
 
 /**
+ * Loads one parameter in a scan.
+ * @param[in] nodelist - the hlhdf node list
+ * @param[in] dset - the name of the dataset this parameter resides in
+ * @param[in] dindex - the parameter number (beginning at 1)
+ * @returns the read parameter on success otherwise NULL
+ */
+static PolarScanParam_t* RaveIOInternal_loadScanParamIndex(HL_NodeList* nodelist, const char* dset, const int dindex)
+{
+  char entryName[64];
+  double gain = 0.0L, offset = 0.0L, nodata = 0.0L, undetect = 0.0L;
+  long nbins = 0, nrays = 0;
+  char* quantity = NULL;
+  HL_Node* dataNode = NULL;
+  RaveDataType dataType = RaveDataType_UNDEFINED;
+  PolarScanParam_t* result = NULL;
+  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
+
+  sprintf(entryName, "%s/data%d", dset, dindex);
+
+  if (!RaveIOInternal_getDoubleValue(nodelist, &gain, "%s/what/gain", entryName)) {
+    goto done;
+  }
+  if (!RaveIOInternal_getDoubleValue(nodelist, &offset, "%s/what/offset", entryName)) {
+    goto done;
+  }
+  if (!RaveIOInternal_getDoubleValue(nodelist, &nodata, "%s/what/nodata", entryName)) {
+    goto done;
+  }
+  if (!RaveIOInternal_getDoubleValue(nodelist, &undetect, "%s/what/undetect", entryName)) {
+    goto done;
+  }
+  if (!RaveIOInternal_getStringValue(nodelist, &quantity, "%s/what/quantity", entryName)) {
+    goto done;
+  }
+  dataNode = RaveIOInternal_getNode(nodelist, "%s/data", entryName);
+  if (dataNode == NULL) {
+    goto done;
+  }
+  if (HLNode_getRank(dataNode) != 2) {
+    goto done;
+  }
+  dataType = RaveIOInternal_hlhdfToRaveType(HLNode_getFormat(dataNode));
+  if (dataType == RaveDataType_UNDEFINED) {
+    goto done;
+  }
+
+  result = RAVE_OBJECT_NEW(&PolarScanParam_TYPE);
+  if (result == NULL) {
+    goto done;
+  }
+
+  PolarScanParam_setGain(result, gain);
+  PolarScanParam_setOffset(result, offset);
+  PolarScanParam_setNodata(result, nodata);
+  PolarScanParam_setUndetect(result, undetect);
+  if (!PolarScanParam_setQuantity(result, quantity)) {
+    RAVE_OBJECT_RELEASE(result);
+    goto done;
+  }
+  nbins = HLNode_getDimension(dataNode, 1);
+  nrays = HLNode_getDimension(dataNode, 0);
+  if (!PolarScanParam_setData(result, nbins, nrays,HLNode_getData(dataNode), dataType)) {
+    RAVE_OBJECT_RELEASE(result);
+    goto done;
+  }
+
+done:
+  return result;
+}
+
+static PolarScan_t* RaveIOInternal_loadScanIndex(HL_NodeList* nodelist, const int dsindex)
+{
+  char entryName[30];
+  PolarScan_t* result = NULL;
+  double elangle = 0.0L, rscale = 0.0L, rstart = 0.0L;
+  long nbins = 0, nrays = 0, a1gate = 0;
+  char *starttime=NULL, *endtime=NULL, *startdate=NULL, *enddate=NULL;
+  int dindex = 0;
+
+  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
+
+  sprintf(entryName, "/dataset%d", dsindex);
+  if (!HLNodeList_hasNodeByName(nodelist, entryName)) {
+    return NULL;
+  }
+
+  if (!RaveIOInternal_getDoubleValue(nodelist, &elangle, "/dataset%d/where/elangle", dsindex)) {
+    goto done;
+  }
+  if (!RaveIOInternal_getLongValue(nodelist, &a1gate, "/dataset%d/where/a1gate", dsindex)) {
+    goto done;
+  }
+  if (!RaveIOInternal_getLongValue(nodelist, &nbins, "/dataset%d/where/nbins", dsindex)) {
+    goto done;
+  }
+  if (!RaveIOInternal_getLongValue(nodelist, &nrays, "/dataset%d/where/nrays", dsindex)) {
+    goto done;
+  }
+  if (!RaveIOInternal_getDoubleValue(nodelist, &rscale, "/dataset%d/where/rscale", dsindex)) {
+    goto done;
+  }
+  if (!RaveIOInternal_getDoubleValue(nodelist, &rstart, "/dataset%d/where/rstart", dsindex)) {
+    goto done;
+  }
+  if (!RaveIOInternal_getStringValue(nodelist, &startdate, "/dataset%d/what/startdate", dsindex)) {
+    goto done;
+  }
+  if (!RaveIOInternal_getStringValue(nodelist, &starttime, "/dataset%d/what/starttime", dsindex)) {
+    goto done;
+  }
+  if (!RaveIOInternal_getStringValue(nodelist, &enddate, "/dataset%d/what/enddate", dsindex)) {
+    goto done;
+  }
+  if (!RaveIOInternal_getStringValue(nodelist, &endtime, "/dataset%d/what/endtime", dsindex)) {
+    goto done;
+  }
+
+  result = RAVE_OBJECT_NEW(&PolarScan_TYPE);
+  if (result == NULL) {
+    goto done;
+  }
+  PolarScan_setElangle(result, elangle * M_PI/180.0);
+  PolarScan_setA1gate(result, a1gate);
+  PolarScan_setRscale(result, rscale);
+  PolarScan_setRstart(result, rstart);
+  PolarScan_setDate(result, startdate);
+  PolarScan_setTime(result, starttime);
+
+  // And load the parameters
+  dindex = 1;
+  while (RaveIOInternal_hasNodeByName(nodelist, "%s/data%d", entryName, dindex)) {
+    PolarScanParam_t* param = RaveIOInternal_loadScanParamIndex(nodelist, entryName, dindex);
+    if (param != NULL) {
+      if (!PolarScan_addParameter(result, param)) {
+        RAVE_ERROR0("Failed to add scan parameter to scan");
+        goto done;
+      }
+    }
+    RAVE_OBJECT_RELEASE(param);
+    dindex++;
+  }
+
+done:
+  return result;
+}
+
+#ifdef KALLE
+/**
  * Loads a scan from dataset and data index. I.e. /dataset<dsindex>/data<dindex>.
  * @param[in] nodelist - the hlhdf node list to read from
  * @param[in] dsindex - the dataset index
@@ -819,7 +967,74 @@ static PolarScan_t* RaveIOInternal_loadScanIndex(HL_NodeList* nodelist, const in
 done:
   return result;
 }
+#endif
 
+/**
+ * Validates that the scan is valid for storing as a part of a volume.
+ * @param[in] scan - the scan to validate
+ * @returns 1 if all is ok, otherwise 0
+ */
+static int RaveIOInternal_validateVolumeScan(PolarScan_t* scan)
+{
+  int result = 0;
+  long nrays = 0, nbins = 0;
+  RaveList_t* list = NULL;
+  int nparams = 0;
+  int i = 0;
+
+  if (scan == NULL) {
+    RAVE_INFO0("scan == NULL");
+    goto done;
+  }
+  if (PolarScan_getTime(scan) == NULL) {
+    RAVE_INFO0("time == NULL");
+    goto done;
+  }
+  if (PolarScan_getDate(scan) == NULL) {
+    RAVE_INFO0("date == NULL");
+    goto done;
+  }
+  nrays = PolarScan_getNrays(scan);
+  nbins = PolarScan_getNbins(scan);
+  if (nrays <= 0) {
+    RAVE_INFO0("nrays <= 0");
+    goto done;
+  }
+  if (nbins <= 0) {
+    RAVE_INFO0("nbins <= 0");
+    goto done;
+  }
+
+  list = PolarScan_getParameterNames(scan);
+  if (list == NULL) {
+    RAVE_WARNING0("no parameter names");
+    goto done;
+  }
+  nparams = RaveList_size(list);
+  if (nparams == 0) {
+    RAVE_WARNING0("no parameter names");
+    goto done;
+  }
+  for (i = 0; i < nparams; i++) {
+    char* name = RaveList_get(list, i);
+    PolarScanParam_t* param = PolarScan_getParameter(scan, name);
+    if (param == NULL) {
+      goto done;
+    }
+    if (PolarScanParam_getQuantity(param)==NULL) {
+      RAVE_INFO0("Parameter does not specify quantity");
+      RAVE_OBJECT_RELEASE(param);
+      goto done;
+    }
+    RAVE_OBJECT_RELEASE(param);
+  }
+  result = 1;
+done:
+  RaveList_freeAndDestroy(&list);
+  return result;
+}
+
+#ifdef KALLE
 /**
  * Validates that the scan is valid for storing as a part of a volume.
  * @param[in] scan - the scan to validate
@@ -860,6 +1075,7 @@ static int RaveIOInternal_validateVolumeScan(PolarScan_t* scan)
 done:
   return result;
 }
+#endif
 
 /**
  * Validates that the volume not contains any bogus data before
@@ -978,6 +1194,146 @@ done:
   return result;
 }
 
+static int RaveIOInternal_savePolarScanParam(HL_NodeList* nodelist, PolarScanParam_t* param,
+  const char* entryName, int dindex)
+{
+  int result = 0;
+  double gain, offset, nodata, undetect;
+  const char* quantity;
+
+  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
+  RAVE_ASSERT((param != NULL), "param == NULL");
+
+  gain = PolarScanParam_getGain(param);
+  offset = PolarScanParam_getOffset(param);
+  nodata = PolarScanParam_getNodata(param);
+  undetect = PolarScanParam_getUndetect(param);
+  quantity = PolarScanParam_getQuantity(param);
+
+  // Base
+  if (!RaveIOInternal_createGroup(nodelist, "%s/data%d", entryName, dindex)) {
+    goto done;
+  }
+
+  // What
+  if (!RaveIOInternal_createGroup(nodelist, "%s/data%d/what", entryName, dindex) ||
+      !RaveIOInternal_createDoubleValue(nodelist, gain, "%s/data%d/what/gain", entryName, dindex) ||
+      !RaveIOInternal_createDoubleValue(nodelist, offset, "%s/data%d/what/offset", entryName, dindex) ||
+      !RaveIOInternal_createDoubleValue(nodelist, nodata, "%s/data%d/what/nodata", entryName, dindex) ||
+      !RaveIOInternal_createDoubleValue(nodelist, undetect, "%s/data%d/what/undetect", entryName, dindex) ||
+      !RaveIOInternal_createStringValue(nodelist, quantity, "%s/data%d/what/quantity", entryName, dindex)) {
+    goto done;
+  }
+
+  if (!RaveIOInternal_createDataset(nodelist, PolarScanParam_getData(param),
+                                    PolarScanParam_getNbins(param), PolarScanParam_getNrays(param),
+                                    PolarScanParam_getDataType(param),
+                                    "%s/data%d/data", entryName, dindex)) {
+    goto done;
+  }
+
+  // If data type is 8-bit UCHAR, IMAGE attributes shall be stored.
+  if (PolarScanParam_getDataType(param) == RaveDataType_UCHAR) {
+    if (!RaveIOInternal_createStringValue(nodelist, "IMAGE", "%s/data%d/data/CLASS", entryName, dindex)) {
+      goto done;
+    }
+    if (!RaveIOInternal_createStringValue(nodelist, "1.2", "%s/data%d/data/IMAGE_VERSION", entryName, dindex)) {
+      goto done;
+    }
+  }
+  result = 1;
+done:
+  return result;
+}
+
+/**
+ * Saves a polar scan that belongs to a polar volume.
+ * @param[in] nodelist - the hlhdf node list
+ * @param[in] scan - the scan to save
+ * @param[in] dsindex - the dataset index to use
+ * @returns 1 on success, otherwise failure
+ */
+static int RaveIOInternal_savePolarVolumeScan(HL_NodeList* nodelist, PolarScan_t* scan, int dsindex)
+{
+  int result = 0;
+  double elangle, a1gate, rscale, rstart;
+  const char* starttime;
+  const char* endtime;
+  const char* startdate;
+  const char* enddate;
+  long nbins, nrays;
+  RaveList_t* paramnames = NULL;
+  int nparams = 0;
+  int i = 0;
+  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+
+  elangle = PolarScan_getElangle(scan) * 180.0 / M_PI;
+  a1gate = PolarScan_getA1gate(scan);
+  rscale = PolarScan_getRscale(scan);
+  rstart = PolarScan_getRstart(scan);
+  starttime = PolarScan_getTime(scan);
+  startdate = PolarScan_getDate(scan);
+  endtime = PolarScan_getTime(scan);
+  enddate = PolarScan_getDate(scan);
+  nbins = PolarScan_getNbins(scan);
+  nrays = PolarScan_getNrays(scan);
+
+  paramnames = PolarScan_getParameterNames(scan);
+  if (paramnames == NULL) {
+    goto done;
+  }
+  nparams = RaveList_size(paramnames);
+  if (nparams <= 0) {
+    goto done;
+  }
+
+  // Base
+  if (!RaveIOInternal_createGroup(nodelist, "/dataset%d", dsindex)) {
+    goto done;
+  }
+
+  // What
+  if (!RaveIOInternal_createGroup(nodelist, "/dataset%d/what", dsindex) ||
+      !RaveIOInternal_createStringValue(nodelist, RaveIO_ProductType_SCAN_STR, "/dataset%d/what/product", dsindex) ||
+      !RaveIOInternal_createStringValue(nodelist, starttime, "/dataset%d/what/starttime", dsindex) ||
+      !RaveIOInternal_createStringValue(nodelist, startdate, "/dataset%d/what/startdate", dsindex) ||
+      !RaveIOInternal_createStringValue(nodelist, endtime, "/dataset%d/what/endtime", dsindex) ||
+      !RaveIOInternal_createStringValue(nodelist, enddate, "/dataset%d/what/enddate", dsindex)) {
+    goto done;
+  }
+
+  // Where
+  if (!RaveIOInternal_createGroup(nodelist, "/dataset%d/where", dsindex) ||
+      !RaveIOInternal_createDoubleValue(nodelist, elangle, "/dataset%d/where/elangle", dsindex) ||
+      !RaveIOInternal_createDoubleValue(nodelist, a1gate, "/dataset%d/where/a1gate", dsindex) ||
+      !RaveIOInternal_createDoubleValue(nodelist, rscale, "/dataset%d/where/rscale", dsindex) ||
+      !RaveIOInternal_createDoubleValue(nodelist, rstart, "/dataset%d/where/rstart", dsindex) ||
+      !RaveIOInternal_createDoubleValue(nodelist, nbins, "/dataset%d/where/nbins", dsindex) ||
+      !RaveIOInternal_createDoubleValue(nodelist, nrays, "/dataset%d/where/nrays", dsindex)) {
+    goto done;
+  }
+
+  for (i = 0; i < nparams; i++) {
+    char* name = RaveList_get(paramnames, i);
+    PolarScanParam_t* param = PolarScan_getParameter(scan, name);
+    char datasetName[32];
+    sprintf(datasetName, "/dataset%d", dsindex);
+    if (param != NULL) {
+      if (!RaveIOInternal_savePolarScanParam(nodelist, param, datasetName, i+1)) {
+        RAVE_OBJECT_RELEASE(param);
+        goto done;
+      }
+    }
+    RAVE_OBJECT_RELEASE(param);
+  }
+  result = 1;
+done:
+  RaveList_freeAndDestroy(&paramnames);
+  return result;
+}
+
+#ifdef KALLE
 /**
  * Saves a polar scan that belongs to a polar volume.
  * @param[in] nodelist - the hlhdf node list
@@ -1072,6 +1428,8 @@ static int RaveIOInternal_savePolarVolumeScan(HL_NodeList* nodelist, PolarScan_t
 done:
   return result;
 }
+#endif
+
 /**
  * Returns the ODIM version from the /Conventions field in the nodelist.
  * @param[in] nodelist - the hlhdf nodelist
@@ -1666,6 +2024,15 @@ static RaveCoreObject* RaveIOInternal_loadVolume(HL_NodeList* nodelist)
   // Read scans
   dsindex = 1;
   while (RaveIOInternal_hasNodeByName(nodelist, "/dataset%d", dsindex)) {
+    PolarScan_t* scan = RaveIOInternal_loadScanIndex(nodelist, dsindex);
+    if (scan != NULL) {
+      PolarVolume_addScan(result, scan);
+    }
+    RAVE_OBJECT_RELEASE(scan);
+    dsindex++;
+  }
+#ifdef KALLE
+  while (RaveIOInternal_hasNodeByName(nodelist, "/dataset%d", dsindex)) {
     int dindex = 1;
     while (RaveIOInternal_hasNodeByName(nodelist, "/dataset%d/data%d", dsindex, dindex)) {
       PolarScan_t* scan = RaveIOInternal_loadScanIndex(nodelist, dsindex, dindex);
@@ -1677,7 +2044,7 @@ static RaveCoreObject* RaveIOInternal_loadVolume(HL_NodeList* nodelist)
     }
     dsindex++;
   }
-
+#endif
   return (RaveCoreObject*)result;
 error:
   RAVE_OBJECT_RELEASE(result);

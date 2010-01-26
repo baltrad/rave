@@ -27,6 +27,7 @@ import unittest
 import os
 import _polarvolume
 import _polarscan
+import _polarscanparam
 import _rave
 import string
 import _helpers
@@ -256,22 +257,28 @@ class PyPolarVolumeTest(unittest.TestCase):
     obj.latitude = 60.0 * math.pi/180.0
     obj.height = 0.0
     scan1 = _polarscan.new()
+    dbzhParam = _polarscanparam.new()
+    dbzhParam.nodata = 10.0
+    dbzhParam.undetect = 11.0
+    dbzhParam.quantity = "DBZH"    
     scan1.elangle = 0.1 * math.pi / 180.0
     scan1.rstart = 0.0
     scan1.rscale = 5000.0
-    scan1.nodata = 10.0
-    scan1.undetect = 11.0
     data = numpy.zeros((100, 120), numpy.uint8)
-    scan1.setData(data)
+    dbzhParam.setData(data)
+    scan1.addParameter(dbzhParam)
     
     scan2 = _polarscan.new()
+    dbzhParam = _polarscanparam.new()
+    dbzhParam.nodata = 10.0
+    dbzhParam.undetect = 11.0
+    dbzhParam.quantity = "DBZH"    
     scan2.elangle = 1.0 * math.pi / 180.0
     scan2.rstart = 0.0
     scan2.rscale = 5000.0
-    scan2.nodata = 10.0
-    scan2.undetect = 11.0    
     data = numpy.ones((100, 120), numpy.uint8)
-    scan2.setData(data)
+    dbzhParam.setData(data)
+    scan2.addParameter(dbzhParam)
     
     obj.addScan(scan1)
     obj.addScan(scan2)

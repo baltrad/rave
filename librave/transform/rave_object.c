@@ -101,6 +101,7 @@ static void RaveCoreObjectInternal_objDestroyed(RaveCoreObject* obj)
         ho->prev->next = NULL;
         LAST_OBJECT_HEAP = ho->prev;
       }
+      RAVE_FREE(ho);
     } else {
       if (ho->next != NULL) {
         ho->next->prev = ho->prev;

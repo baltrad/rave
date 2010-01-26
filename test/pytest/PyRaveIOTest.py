@@ -30,6 +30,7 @@ import _cartesian
 import _projection
 import _polarvolume
 import _polarscan
+import _polarscanparam
 import _rave
 import string
 import numpy
@@ -93,43 +94,45 @@ class PyRaveIOTest(unittest.TestCase):
   def test_load_volume_checkData(self):
     obj = _raveio.open(self.FIXTURE_VOLUME)
     vol = obj.object
-    self.assertEquals(20, vol.getNumberOfScans())
+    self.assertEquals(10, vol.getNumberOfScans())
     self.assertAlmostEquals(56.3675, vol.latitude*180.0/math.pi, 4)
     self.assertAlmostEquals(12.8544, vol.longitude*180.0/math.pi, 4)
     self.assertAlmostEquals(209, vol.height, 4)
     
-    # Verify the scans
+    # Verify the scan
     scan = vol.getScan(0)
-    self.assertAlmostEquals(0.4, scan.gain, 4)
-    self.assertAlmostEquals(-30.0, scan.offset, 4)
-    self.assertAlmostEquals(255.0, scan.nodata, 4)
-    self.assertAlmostEquals(0.0, scan.undetect, 4)
-    self.assertEquals("DBZH", scan.quantity)
     self.assertEquals(0, scan.a1gate)
     self.assertAlmostEquals(0.5, scan.elangle*180.0/math.pi, 4)
     self.assertEquals(120, scan.nbins)
     self.assertEquals(420, scan.nrays)
     self.assertAlmostEquals(2000.0, scan.rscale, 4)
     self.assertAlmostEquals(0.0, scan.rstart, 4)
+
     #Inherited volume position
     self.assertAlmostEquals(56.3675, scan.latitude*180.0/math.pi, 4)
     self.assertAlmostEquals(12.8544, scan.longitude*180.0/math.pi, 4)
     self.assertAlmostEquals(209, scan.height, 4)
-    
-    scan = vol.getScan(1)
-    self.assertAlmostEquals(0.1875, scan.gain, 4)
-    self.assertAlmostEquals(-24.0, scan.offset, 4)
-    self.assertAlmostEquals(255.0, scan.nodata, 4)
-    self.assertAlmostEquals(0.0, scan.undetect, 4)
-    self.assertEquals("VRAD", scan.quantity)
-    self.assertAlmostEquals(0.5, scan.elangle*180.0/math.pi, 4)
 
-    scan = vol.getScan(18)
-    self.assertAlmostEquals(0.4, scan.gain, 4)
-    self.assertAlmostEquals(-30.0, scan.offset, 4)
-    self.assertAlmostEquals(255.0, scan.nodata, 4)
-    self.assertAlmostEquals(0.0, scan.undetect, 4)
-    self.assertEquals("DBZH", scan.quantity)
+    # Verify the DBZH
+    dbzhParam = scan.getParameter("DBZH")
+    self.assertAlmostEquals(0.4, dbzhParam.gain, 4)
+    self.assertAlmostEquals(-30.0, dbzhParam.offset, 4)
+    self.assertAlmostEquals(255.0, dbzhParam.nodata, 4)
+    self.assertAlmostEquals(0.0, dbzhParam.undetect, 4)
+    self.assertEquals(120, dbzhParam.nbins, 4)
+    self.assertEquals(420, dbzhParam.nrays, 4)
+    self.assertEquals("DBZH", dbzhParam.quantity)
+
+    # And verify the VRAD
+    vradParam = scan.getParameter("VRAD")
+    self.assertAlmostEquals(0.1875, vradParam.gain, 4)
+    self.assertAlmostEquals(-24.0, vradParam.offset, 4)
+    self.assertAlmostEquals(255.0, vradParam.nodata, 4)
+    self.assertAlmostEquals(0.0, vradParam.undetect, 4)
+    self.assertEquals("VRAD", vradParam.quantity)
+
+    # Verify last scan
+    scan = vol.getScan(9)
     self.assertEquals(0, scan.a1gate)
     self.assertAlmostEquals(40.0, scan.elangle*180.0/math.pi, 4)
     self.assertEquals(120, scan.nbins)
@@ -141,13 +144,23 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertAlmostEquals(12.8544, scan.longitude*180.0/math.pi, 4)
     self.assertAlmostEquals(209, scan.height, 4)  
 
-    scan = vol.getScan(19)
-    self.assertAlmostEquals(0.375, scan.gain, 4)
-    self.assertAlmostEquals(-48.0, scan.offset, 4)
-    self.assertAlmostEquals(255.0, scan.nodata, 4)
-    self.assertAlmostEquals(0.0, scan.undetect, 4)
-    self.assertEquals("VRAD", scan.quantity)
-    self.assertAlmostEquals(40.0, scan.elangle*180.0/math.pi, 4)   
+    # Verify last scans DBZH parameter
+    dbzhParam = scan.getParameter("DBZH")
+    self.assertAlmostEquals(0.4, dbzhParam.gain, 4)
+    self.assertAlmostEquals(-30.0, dbzhParam.offset, 4)
+    self.assertAlmostEquals(255.0, dbzhParam.nodata, 4)
+    self.assertAlmostEquals(0.0, dbzhParam.undetect, 4)
+    self.assertEquals("DBZH", dbzhParam.quantity)
+    self.assertEquals(120, dbzhParam.nbins)
+    self.assertEquals(420, dbzhParam.nrays)
+
+    # Verify last scans VRAD parameter
+    vradParam = scan.getParameter("VRAD")
+    self.assertAlmostEquals(0.375, vradParam.gain, 4)
+    self.assertAlmostEquals(-48.0, vradParam.offset, 4)
+    self.assertAlmostEquals(255.0, vradParam.nodata, 4)
+    self.assertAlmostEquals(0.0, vradParam.undetect, 4)
+    self.assertEquals("VRAD", vradParam.quantity)
 
   def test_save_cartesian(self):
     obj = _cartesian.new()
@@ -266,16 +279,17 @@ class PyRaveIOTest(unittest.TestCase):
     scan1.a1gate = 2
     scan1.rstart = 0.0
     scan1.rscale = 5000.0
-    scan1.nodata = 10.0
-    scan1.undetect = 11.0
+    dbzhParam = _polarscanparam.new()
+    dbzhParam.nodata = 10.0
+    dbzhParam.undetect = 11.0
+    dbzhParam.quantity = "DBZH"
+    dbzhParam.gain = 1.0
+    dbzhParam.offset = 0.0
     scan1.time = "100001"
     scan1.date = "20091010"
-    scan1.gain = 1.0
-    scan1.offset = 0.0
-    scan1.quantity = "DBZH"
     data = numpy.zeros((100, 120), numpy.uint8)
-    scan1.setData(data)
-
+    dbzhParam.setData(data)
+    scan1.addParameter(dbzhParam)
     obj.addScan(scan1)
 
     scan2 = _polarscan.new()
@@ -283,16 +297,17 @@ class PyRaveIOTest(unittest.TestCase):
     scan2.a1gate = 1
     scan2.rstart = 1000.0
     scan2.rscale = 2000.0
-    scan2.nodata = 255.0
-    scan2.undetect = 0.0
+    dbzhParam = _polarscanparam.new()
+    dbzhParam.nodata = 255.0
+    dbzhParam.undetect = 0.0
+    dbzhParam.quantity = "MMM"
+    dbzhParam.gain = 1.0
+    dbzhParam.offset = 0.0
     scan2.time = "100002"
     scan2.date = "20091010"
-    scan2.gain = 1.0
-    scan2.offset = 0.0
-    scan2.quantity = "MMM"
     data = numpy.zeros((100, 120), numpy.uint8)
-    scan2.setData(data)
-
+    dbzhParam.setData(data)
+    scan2.addParameter(dbzhParam)
     obj.addScan(scan2)
     
     ios = _raveio.new()

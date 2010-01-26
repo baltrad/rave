@@ -78,6 +78,7 @@ error:
   RAVE_OBJECT_RELEASE(this->projection);
   RAVE_OBJECT_RELEASE(this->navigator);
   RAVE_OBJECT_RELEASE(this->scans);
+  RAVE_FREE(this->source);
   return 0;
 }
 
@@ -111,6 +112,7 @@ error:
   RAVE_OBJECT_RELEASE(this->projection);
   RAVE_OBJECT_RELEASE(this->navigator);
   RAVE_OBJECT_RELEASE(this->scans);
+  RAVE_FREE(this->source);
   return 0;
 }
 
@@ -124,6 +126,7 @@ static void PolarVolume_destructor(RaveCoreObject* obj)
   RAVE_OBJECT_RELEASE(volume->projection);
   RAVE_OBJECT_RELEASE(volume->navigator);
   RAVE_OBJECT_RELEASE(volume->scans);
+  RAVE_FREE(volume->source);
 }
 
 /**

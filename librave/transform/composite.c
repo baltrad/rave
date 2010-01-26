@@ -124,7 +124,6 @@ fail:
 }
 /*@} End of Interface functions */
 
-
 RaveCoreObjectType Composite_TYPE = {
     "Composite",
     sizeof(Composite_t),

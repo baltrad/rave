@@ -30,6 +30,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * to always initiallize to nodata instead of undetect.
  */
 typedef enum RaveValueType {
+  RaveValueType_UNDEFINED = -1,     /**< undefined, i.e. non-existing, etc. */
   RaveValueType_UNDETECT = 0,       /**< undetect */
   RaveValueType_NODATA = 1,         /**< nodata */
   RaveValueType_DATA = 2            /**< data */

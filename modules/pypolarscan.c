@@ -31,7 +31,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #define PYPOLARSCAN_MODULE   /**< to get correct part of pypolarscan,h */
 #include "pypolarscan.h"
 
-#include <arrayobject.h>
+#include "pypolarscanparam.h"
 #include "pyrave_debug.h"
 #include "rave_alloc.h"
 #include "raveutil.h"
@@ -143,81 +143,132 @@ static PyObject* _pypolarscan_new(PyObject* self, PyObject* args)
   return (PyObject*)result;
 }
 
-static PyObject* _pypolarscan_setData(PyPolarScan* self, PyObject* args)
+static PyObject* _pypolarscan_addParameter(PyPolarScan* self, PyObject* args)
 {
-  PyObject* inarray = NULL;
-  PyArrayObject* arraydata = NULL;
-  RaveDataType datatype = RaveDataType_UNDEFINED;
-  long nbins = 0;
-  long nrays = 0;
-  unsigned char* data = NULL;
+  PyObject* inptr = NULL;
+  PyPolarScanParam* polarScanParam = NULL;
 
-  if (!PyArg_ParseTuple(args, "O", &inarray)) {
+  if (!PyArg_ParseTuple(args, "O", &inptr)) {
     return NULL;
   }
 
-  if (!PyArray_Check(inarray)) {
-    raiseException_returnNULL(PyExc_TypeError, "Data must be of arrayobject type")
+  if (!PyPolarScanParam_Check(inptr)) {
+    raiseException_returnNULL(PyExc_TypeError,"Added object must be of type PolarScanParamCore");
   }
 
-  arraydata = (PyArrayObject*)inarray;
+  polarScanParam = (PyPolarScanParam*)inptr;
 
-  if (PyArray_NDIM(arraydata) != 2) {
-    raiseException_returnNULL(PyExc_ValueError, "A scan must be of rank 2");
-  }
-
-  datatype = translate_pyarraytype_to_ravetype(PyArray_TYPE(arraydata));
-
-  if (PyArray_ITEMSIZE(arraydata) != get_ravetype_size(datatype)) {
-    raiseException_returnNULL(PyExc_TypeError, "numpy and rave does not have same data sizes");
-  }
-
-  nbins  = PyArray_DIM(arraydata, 1);
-  nrays  = PyArray_DIM(arraydata, 0);
-  data   = PyArray_DATA(arraydata);
-
-  if (!PolarScan_setData(self->scan, nbins, nrays, data, datatype)) {
-    raiseException_returnNULL(PyExc_MemoryError, "Could not allocate memory");
+  if (!PolarScan_addParameter(self->scan, polarScanParam->scanparam)) {
+    raiseException_returnNULL(PyExc_AttributeError, "Failed to add parameter to scan");
   }
 
   Py_RETURN_NONE;
 }
 
-static PyObject* _pypolarscan_getData(PyPolarScan* self, PyObject* args)
+static PyObject* _pypolarscan_removeParameter(PyPolarScan* self, PyObject* args)
 {
-  long nbins = 0, nrays = 0;
-  RaveDataType type = RaveDataType_UNDEFINED;
+  char* paramname = NULL;
+  PolarScanParam_t* param = NULL;
   PyObject* result = NULL;
-  npy_intp dims[2] = {0,0};
-  int arrtype = 0;
-  void* data = NULL;
 
-  nbins = PolarScan_getNbins(self->scan);
-  nrays = PolarScan_getNrays(self->scan);
-  type = PolarScan_getDataType(self->scan);
-  data = PolarScan_getData(self->scan);
-
-  dims[0] = (npy_intp)nrays;
-  dims[1] = (npy_intp)nbins;
-  arrtype = translate_ravetype_to_pyarraytype(type);
-
-  if (data == NULL) {
-    raiseException_returnNULL(PyExc_IOError, "polar scan does not have any data");
+  if (!PyArg_ParseTuple(args, "s", &paramname)) {
+    return NULL;
   }
 
-  if (arrtype == PyArray_NOTYPE) {
-    raiseException_returnNULL(PyExc_IOError, "Could not translate data type");
+  if (!PolarScan_hasParameter(self->scan, paramname)) {
+    Py_RETURN_NONE;
   }
-  result = PyArray_SimpleNew(2, dims, arrtype);
-  if (result == NULL) {
-    raiseException_returnNULL(PyExc_MemoryError, "Could not create resulting array");
+
+  if((param = PolarScan_removeParameter(self->scan, paramname)) == NULL) {
+    Py_RETURN_NONE;
   }
-  if (result != NULL) {
-    int nbytes = nbins*nrays*((PyArrayObject*)result)->descr->elsize;
-    memcpy(((PyArrayObject*)result)->data, PolarScan_getData(self->scan), nbytes);
+
+  if (param != NULL) {
+    result = (PyObject*)PyPolarScanParam_New(param);
   }
+
+  RAVE_OBJECT_RELEASE(param);
 
   return result;
+}
+
+static PyObject* _pypolarscan_getParameter(PyPolarScan* self, PyObject* args)
+{
+  char* paramname = NULL;
+  PolarScanParam_t* param = NULL;
+  PyObject* result = NULL;
+
+  if (!PyArg_ParseTuple(args, "s", &paramname)) {
+    return NULL;
+  }
+
+  if (!PolarScan_hasParameter(self->scan, paramname)) {
+    Py_RETURN_NONE;
+  }
+
+  if((param = PolarScan_getParameter(self->scan, paramname)) == NULL) {
+    raiseException_returnNULL(PyExc_IndexError, "Could not aquire parameter");
+  }
+
+  if (param != NULL) {
+    result = (PyObject*)PyPolarScanParam_New(param);
+  }
+
+  RAVE_OBJECT_RELEASE(param);
+
+  return result;
+}
+
+static PyObject* _pypolarscan_getParameterNames(PyPolarScan* self, PyObject* args)
+{
+  RaveList_t* paramnames = NULL;
+  PyObject* result = NULL;
+  int nparams = 0;
+  int i = 0;
+  paramnames = PolarScan_getParameterNames(self->scan);
+  if (paramnames == NULL) {
+    raiseException_returnNULL(PyExc_MemoryError, "Could not get names");
+  }
+  nparams = RaveList_size(paramnames);
+  result = PyList_New(0);
+  for (i = 0; result != NULL && i < nparams; i++) {
+    char* param = RaveList_get(paramnames, i);
+    if (param != NULL) {
+      PyObject* pyparamstr = PyString_FromString(param);
+      if (pyparamstr == NULL) {
+        goto fail;
+      }
+      if (PyList_Append(result, pyparamstr) != 0) {
+        Py_DECREF(pyparamstr);
+        goto fail;
+      }
+      Py_DECREF(pyparamstr);
+    }
+  }
+  RaveList_freeAndDestroy(&paramnames);
+  return result;
+fail:
+  RaveList_freeAndDestroy(&paramnames);
+  Py_XDECREF(result);
+  return NULL;
+}
+
+/**
+ * Checks if the specified parameter name exists as a parameter
+ * in the scan.
+ * @param[in] self - self
+ * @param[in] args - a tuple containing a python string
+ * @returns Python true or false on success, otherwise NULL
+ */
+static PyObject* _pypolarscan_hasParameter(PyPolarScan* self, PyObject* args)
+{
+  char* paramname = NULL;
+
+  if (!PyArg_ParseTuple(args, "s", &paramname)) {
+    return NULL;
+  }
+
+  return PyBool_FromLong(PolarScan_hasParameter(self->scan, paramname));
 }
 
 /**
@@ -347,8 +398,11 @@ static PyObject* _pypolarscan_getNearest(PyPolarScan* self, PyObject* args)
  */
 static struct PyMethodDef _pypolarscan_methods[] =
 {
-  {"setData", (PyCFunction) _pypolarscan_setData, 1},
-  {"getData", (PyCFunction) _pypolarscan_getData, 1},
+  {"addParameter", (PyCFunction) _pypolarscan_addParameter, 1},
+  {"removeParameter", (PyCFunction) _pypolarscan_removeParameter, 1},
+  {"getParameter", (PyCFunction) _pypolarscan_getParameter, 1},
+  {"getParameterNames", (PyCFunction) _pypolarscan_getParameterNames, 1},
+  {"hasParameter", (PyCFunction) _pypolarscan_hasParameter, 1},
   {"getAzimuthIndex", (PyCFunction) _pypolarscan_getAzimuthIndex, 1},
   {"getRangeIndex", (PyCFunction) _pypolarscan_getRangeIndex, 1},
   {"getValue", (PyCFunction) _pypolarscan_getValue, 1},
@@ -376,21 +430,6 @@ static PyObject* _pypolarscan_getattr(PyPolarScan* self, char* name)
     return PyFloat_FromDouble(PolarScan_getRstart(self->scan));
   } else if (strcmp("a1gate", name) == 0) {
     return PyInt_FromLong(PolarScan_getA1gate(self->scan));
-  } else if (strcmp("quantity", name) == 0) {
-    const char* str = PolarScan_getQuantity(self->scan);
-    if (str != NULL) {
-      return PyString_FromString(str);
-    } else {
-      Py_RETURN_NONE;
-    }
-  } else if (strcmp("gain", name) == 0) {
-    return PyFloat_FromDouble(PolarScan_getGain(self->scan));
-  } else if (strcmp("offset", name) == 0) {
-    return PyFloat_FromDouble(PolarScan_getOffset(self->scan));
-  } else if (strcmp("nodata", name) == 0) {
-    return PyFloat_FromDouble(PolarScan_getNodata(self->scan));
-  } else if (strcmp("undetect", name) == 0) {
-    return PyFloat_FromDouble(PolarScan_getUndetect(self->scan));
   } else if (strcmp("datatype", name) == 0) {
     return PyInt_FromLong(PolarScan_getDataType(self->scan));
   } else if (strcmp("beamwidth", name) == 0) {
@@ -422,7 +461,15 @@ static PyObject* _pypolarscan_getattr(PyPolarScan* self, char* name)
     } else {
       Py_RETURN_NONE;
     }
-  }  res = Py_FindMethod(_pypolarscan_methods, (PyObject*) self, name);
+  } else if (strcmp("defaultparameter", name) == 0) {
+    const char* str = PolarScan_getDefaultParameter(self->scan);
+    if (str != NULL) {
+      return PyString_FromString(str);
+    } else {
+      Py_RETURN_NONE;
+    }
+  }
+  res = Py_FindMethod(_pypolarscan_methods, (PyObject*) self, name);
   if (res)
     return res;
 
@@ -463,40 +510,6 @@ static int _pypolarscan_setattr(PyPolarScan* self, char* name, PyObject* val)
       PolarScan_setA1gate(self->scan, PyInt_AsLong(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError,"a1gate must be of type int");
-    }
-  } else if (strcmp("quantity", name) == 0) {
-    if (PyString_Check(val)) {
-      if (!PolarScan_setQuantity(self->scan, PyString_AsString(val))) {
-        raiseException_gotoTag(done, PyExc_ValueError, "quantity must be a string");
-      }
-    } else if (val == Py_None) {
-      PolarScan_setQuantity(self->scan, NULL);
-    } else {
-      raiseException_gotoTag(done, PyExc_ValueError, "quantity must be a string");
-    }
-  } else if (strcmp("gain", name) == 0) {
-    if (PyFloat_Check(val)) {
-      PolarScan_setGain(self->scan, PyFloat_AsDouble(val));
-    } else {
-      raiseException_gotoTag(done, PyExc_TypeError, "gain must be of type float");
-    }
-  } else if (strcmp("offset", name) == 0) {
-    if (PyFloat_Check(val)) {
-      PolarScan_setOffset(self->scan, PyFloat_AsDouble(val));
-    } else {
-      raiseException_gotoTag(done, PyExc_TypeError, "offset must be of type float");
-    }
-  } else if (strcmp("nodata", name) == 0) {
-    if (PyFloat_Check(val)) {
-      PolarScan_setNodata(self->scan, PyFloat_AsDouble(val));
-    } else {
-      raiseException_gotoTag(done, PyExc_TypeError, "nodata must be of type float");
-    }
-  } else if (strcmp("undetect", name) == 0) {
-    if (PyFloat_Check(val)) {
-      PolarScan_setUndetect(self->scan, PyFloat_AsDouble(val));
-    } else {
-      raiseException_gotoTag(done, PyExc_TypeError, "undetect must be of type float");
     }
   } else if (strcmp("beamwidth", name) == 0) {
     if (PyFloat_Check(val)) {
@@ -549,6 +562,14 @@ static int _pypolarscan_setattr(PyPolarScan* self, char* name, PyObject* val)
       }
     } else if (val == Py_None) {
       PolarScan_setSource(self->scan, NULL);
+    } else {
+      raiseException_gotoTag(done, PyExc_ValueError, "source must be a string");
+    }
+  } else if (strcmp("defaultparameter", name) == 0) {
+    if (PyString_Check(val)) {
+      if (!PolarScan_setDefaultParameter(self->scan, PyString_AsString(val))) {
+        raiseException_gotoTag(done, PyExc_ValueError, "source must be a string");
+      }
     } else {
       raiseException_gotoTag(done, PyExc_ValueError, "source must be a string");
     }
@@ -620,7 +641,7 @@ init_polarscan(void)
     Py_FatalError("Can't define _polarscan.error");
   }
 
-  import_array(); /*To make sure I get access to Numeric*/
+  import_pypolarscanparam();
   PYRAVE_DEBUG_INITIALIZE;
 }
 /*@} End of Module setup */

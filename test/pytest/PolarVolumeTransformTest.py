@@ -26,9 +26,10 @@ Tests some basic product generation.
 import unittest
 import os
 import _rave
+import _raveio
 import string
 import numpy
-from rave_loader import rave_loader
+#from rave_loader import rave_loader
 import area
 import pcs
 import _pyhl
@@ -44,7 +45,7 @@ class PolarVolumeTransformTest(unittest.TestCase):
     pass
 
   def testCAPPI(self):
-    volume = rave_loader().load_file(self.VOLUMENAME, "DBZH") 
+    volume = _raveio.open(self.VOLUMENAME).object #rave_loader().load_file(self.VOLUMENAME, "DBZH") 
 
     transformer = _rave.transform()
     transformer.method = _rave.NEAREST
@@ -77,7 +78,7 @@ class PolarVolumeTransformTest(unittest.TestCase):
     nodelist.write("cartesian_cappi.h5")    
 
   def testPPI(self):
-    volume = rave_loader().load_file(self.VOLUMENAME, "DBZH") 
+    volume = _raveio.open(self.VOLUMENAME).object #rave_loader().load_file(self.VOLUMENAME, "DBZH") 
 
     transformer = _rave.transform()
     transformer.method = _rave.NEAREST
@@ -111,7 +112,7 @@ class PolarVolumeTransformTest(unittest.TestCase):
     nodelist.write("cartesian_ppi.h5")    
 
   def testPCAPPI(self):
-    volume = rave_loader().load_file(self.VOLUMENAME, "DBZH") 
+    volume = _raveio.open(self.VOLUMENAME).object #rave_loader().load_file(self.VOLUMENAME, "DBZH") 
 
     transformer = _rave.transform()
     transformer.method = _rave.NEAREST

@@ -124,4 +124,14 @@ void* RaveList_find(RaveList_t* list, void* expected, int (*findfunc)(void*, voi
  */
 void RaveList_sort(RaveList_t* list, int (*sortfun)(const void*, const void*));
 
+/**
+ * This is a specialized version that can be used to destroy the list
+ * when it contains single pointers allocated with RAVE_MALLOC. For example
+ * char arrays and similar. NOTE! Before using this function, ensure that
+ * the list you are atempting to destroy really contains entries that
+ * has been allocated with RAVE_MALLOC/RAVE_STRDUP/...
+ * @param[in,out] list - self, when leaving this function, *list will be NULL.
+ */
+void RaveList_freeAndDestroy(RaveList_t** list);
+
 #endif /* RAVE_LIST_H */

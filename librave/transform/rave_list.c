@@ -220,6 +220,18 @@ void RaveList_sort(RaveList_t* list, int (*sortfun)(const void*, const void*))
   RAVE_ASSERT((list != NULL), "list == NULL");
   qsort(list->list, list->nrEntries, sizeof(void*), sortfun);
 }
+
+void RaveList_freeAndDestroy(RaveList_t** list)
+{
+  void* ptr = NULL;
+  RAVE_ASSERT((list != NULL), "list == NULL");
+  if (*list != NULL) {
+    while ((ptr = RaveList_removeLast(*list)) != NULL) {
+      RAVE_FREE(ptr);
+    }
+    RAVE_OBJECT_RELEASE(*list);
+  }
+}
 /*@} End of Interface functions */
 
 RaveCoreObjectType RaveList_TYPE = {
