@@ -249,6 +249,25 @@ class PyPolarScanTest(unittest.TestCase):
     obj.defaultparameter = "MMM"
     self.assertEquals("MMM", obj.defaultparameter)
 
+  def test_defaultparameter_withParmeters(self):
+    obj = _polarscan.new()
+    param1 = _polarscanparam.new()
+    param1.quantity="DBZH"
+    param1.setData(numpy.zeros((3,3), numpy.int8))
+    param2 = _polarscanparam.new()
+    param2.quantity="MMM"
+    param2.setData(numpy.ones((3,3), numpy.int8))
+    obj.addParameter(param1)
+    obj.addParameter(param2)
+    
+    self.assertAlmostEquals(0.0, obj.getValue(1,1)[1], 4)
+    self.assertAlmostEquals(0.0, obj.getValue(2,2)[1], 4)
+    obj.defaultparameter = "MMM"
+    self.assertAlmostEquals(1.0, obj.getValue(1,1)[1], 4)
+    self.assertAlmostEquals(1.0, obj.getValue(2,2)[1], 4)
+    obj.defaultparameter = "NONAME"
+    self.assertEquals(_rave.RaveValueType_UNDEFINED, obj.getValue(1,1)[0])
+
   def test_addParameter(self):
     obj = _polarscan.new()
     param1 = _polarscanparam.new()
@@ -265,6 +284,24 @@ class PyPolarScanTest(unittest.TestCase):
     self.assertEquals(2, len(names))
     self.assertTrue("DBZH" in names)
     self.assertTrue("MMM" in names)
+
+  def test_addParameter_withChangedDefaultName(self):
+    obj = _polarscan.new()
+    param1 = _polarscanparam.new()
+    param1.quantity="DBZH"
+    param1.setData(numpy.zeros((3,3), numpy.int8))
+    param2 = _polarscanparam.new()
+    param2.quantity="MMM"
+    param2.setData(numpy.zeros((3,3), numpy.int8))
+    obj.addParameter(param1)
+    obj.addParameter(param2)
+    obj.defaultparameter = "NONAME" #resets to NULL, tested elsewhere
+    param3 = _polarscanparam.new()
+    param3.quantity="NONAME"
+    param3.setData(numpy.ones((3,3), numpy.int8))
+    obj.addParameter(param3)
+
+    self.assertAlmostEquals(1.0, obj.getValue(1,1)[1], 4)
 
   def test_addParameter_conflictingSizes(self):
     obj = _polarscan.new()
@@ -431,6 +468,63 @@ class PyPolarScanTest(unittest.TestCase):
       self.assertEquals(tval[1][0], result[0])
       self.assertAlmostEquals(tval[1][1], result[1], 4)
 
+  def test_getParameterValue(self):
+    obj = _polarscan.new()
+    dbzhParam = _polarscanparam.new()
+    dbzhParam.nodata = 255.0
+    dbzhParam.undetect = 0.0
+    dbzhParam.quantity = "DBZH"
+    a=numpy.arange(30)
+    a=numpy.array(a.astype(numpy.float64),numpy.float64)
+    a=numpy.reshape(a,(5,6)).astype(numpy.float64)      
+    a[0][0] = dbzhParam.undetect
+    a[2][1] = dbzhParam.nodata
+    a[4][5] = dbzhParam.undetect
+    dbzhParam.setData(a)
+    obj.addParameter(dbzhParam);
+    
+    dbzhParam = _polarscanparam.new()
+    dbzhParam.nodata = 255.0
+    dbzhParam.undetect = 0.0
+    dbzhParam.quantity = "MMM"
+    a=numpy.arange(30)
+    a=numpy.array(a.astype(numpy.float64),numpy.float64)
+    a=numpy.reshape(a,(5,6)).astype(numpy.float64)      
+    a[0][0] = dbzhParam.nodata
+    a[2][1] = dbzhParam.undetect
+    a[4][5] = dbzhParam.nodata
+    a[4][4] = 31.0
+    dbzhParam.setData(a)
+    obj.addParameter(dbzhParam);
+    
+    # DBZH
+    pts = [((0,0), (_rave.RaveValueType_UNDETECT, 0.0)),
+           ((1,0), (_rave.RaveValueType_DATA, 1.0)),
+           ((0,1), (_rave.RaveValueType_DATA, 6.0)),
+           ((1,2), (_rave.RaveValueType_NODATA, dbzhParam.nodata)),
+           ((4,4), (_rave.RaveValueType_DATA, 28.0)),
+           ((5,4), (_rave.RaveValueType_UNDETECT, dbzhParam.undetect)),
+           ((5,5), (_rave.RaveValueType_NODATA, dbzhParam.nodata))]
+    
+    for tval in pts:
+      result = obj.getParameterValue("DBZH", tval[0][0], tval[0][1])
+      self.assertEquals(tval[1][0], result[0])
+      self.assertAlmostEquals(tval[1][1], result[1], 4)
+
+    #MMM
+    pts = [((0,0), (_rave.RaveValueType_NODATA, dbzhParam.nodata)),
+           ((1,0), (_rave.RaveValueType_DATA, 1.0)),
+           ((0,1), (_rave.RaveValueType_DATA, 6.0)),
+           ((1,2), (_rave.RaveValueType_UNDETECT, dbzhParam.undetect)),
+           ((4,4), (_rave.RaveValueType_DATA, 31.0)),
+           ((5,4), (_rave.RaveValueType_NODATA, dbzhParam.nodata)),
+           ((5,5), (_rave.RaveValueType_NODATA, dbzhParam.nodata))]
+    
+    for tval in pts:
+      result = obj.getParameterValue("MMM", tval[0][0], tval[0][1])
+      self.assertEquals(tval[1][0], result[0])
+      self.assertAlmostEquals(tval[1][1], result[1], 4)
+
   def test_getConvertedValue(self):
     obj = _polarscan.new()
     dbzhParam = _polarscanparam.new()
@@ -460,6 +554,71 @@ class PyPolarScanTest(unittest.TestCase):
       result = obj.getConvertedValue(tval[0][0], tval[0][1])
       self.assertEquals(tval[1][0], result[0])
       self.assertAlmostEquals(tval[1][1], result[1], 4)
+
+  def test_getConvertedParameterValue(self):
+    obj = _polarscan.new()
+    param = _polarscanparam.new()
+    param.nodata = 255.0
+    param.undetect = 0.0
+    param.quantity = "DBZH"
+    param.gain = 0.5
+    param.offset = 10.0
+    a=numpy.arange(30)
+    a=numpy.array(a.astype(numpy.float64),numpy.float64)
+    a=numpy.reshape(a,(5,6)).astype(numpy.float64)      
+    a[0][0] = param.undetect
+    a[2][1] = param.nodata
+    a[4][5] = param.undetect
+    param.setData(a)
+    obj.addParameter(param);
+
+    param = _polarscanparam.new()
+    param.nodata = 255.0
+    param.undetect = 0.0
+    param.quantity = "MMM"
+    param.gain = 0.5
+    param.offset = 10.0
+    a=numpy.arange(30)
+    a=numpy.array(a.astype(numpy.float64),numpy.float64)
+    a=numpy.reshape(a,(5,6)).astype(numpy.float64)      
+    a[0][0] = param.nodata
+    a[2][1] = param.undetect
+    a[0][1] = 10.0
+    a[1][0] = 20.0
+    a[4][4] = 30.0
+    a[4][5] = param.nodata
+    param.setData(a)
+    obj.addParameter(param);
+
+    # DBZH
+    pts = [((0,0), (_rave.RaveValueType_UNDETECT, 0.0)),
+           ((1,0), (_rave.RaveValueType_DATA, 10.5)),
+           ((0,1), (_rave.RaveValueType_DATA, 13.0)),
+           ((1,2), (_rave.RaveValueType_NODATA, param.nodata)),
+           ((4,4), (_rave.RaveValueType_DATA, 24.0)),
+           ((5,4), (_rave.RaveValueType_UNDETECT, param.undetect)),
+           ((5,5), (_rave.RaveValueType_NODATA, param.nodata))]
+    
+    for tval in pts:
+      result = obj.getConvertedParameterValue("DBZH", tval[0][0], tval[0][1])
+      self.assertEquals(tval[1][0], result[0])
+      self.assertAlmostEquals(tval[1][1], result[1], 4)
+
+    # MMM
+    pts = [((0,0), (_rave.RaveValueType_NODATA, param.nodata)),
+           ((1,0), (_rave.RaveValueType_DATA, 15.0)),
+           ((0,1), (_rave.RaveValueType_DATA, 20.0)),
+           ((1,2), (_rave.RaveValueType_UNDETECT, param.undetect)),
+           ((4,4), (_rave.RaveValueType_DATA, 25.0)),
+           ((5,4), (_rave.RaveValueType_NODATA, param.nodata)),
+           ((5,5), (_rave.RaveValueType_NODATA, param.nodata))]
+    
+    for tval in pts:
+      result = obj.getConvertedParameterValue("MMM", tval[0][0], tval[0][1])
+      self.assertEquals(tval[1][0], result[0])
+      self.assertAlmostEquals(tval[1][1], result[1], 4)
+
+
 
   def test_getValueAtAzimuthAndRange(self):
     obj = _polarscan.new()
@@ -538,6 +697,40 @@ class PyPolarScanTest(unittest.TestCase):
     t,v = obj.getNearest((14.0*math.pi/180.0, 60.08*math.pi/180.0))
     self.assertEquals(_rave.RaveValueType_DATA, t)
     self.assertAlmostEquals(10.0, v, 4)
+
+  def test_getNearestIndex(self):
+    obj = _polarscan.new()
+    dbzhParam = _polarscanparam.new()
+    dbzhParam.nodata = 255.0
+    dbzhParam.undetect = 0.0
+    dbzhParam.quantity = "DBZH"
+    obj.longitude = 14.0 * math.pi/180.0
+    obj.latitude = 60.0 * math.pi/180.0
+    obj.height = 0.0
+    obj.rscale = 1000.0
+    a=numpy.arange(3600)
+    a=numpy.array(a.astype(numpy.float64),numpy.float64)
+    a=numpy.reshape(a,(360,10)).astype(numpy.float64)      
+    dbzhParam.setData(a)
+    obj.addParameter(dbzhParam)
+
+    pts = [((14.0 * math.pi/180.0, 60.08 * math.pi/180.0), (8, 0)),
+           ((14.08 * math.pi/180.0, 60.00 * math.pi/180.0), (4, 90)),
+           ((17.0 * math.pi/180.0, 60.08 * math.pi/180.0), None)]
+
+    for val in pts:
+      result = obj.getNearestIndex(val[0])
+      if val[1] == None and result == None:
+        pass
+      elif val[1] != None and result != None:
+        self.assertEquals(len(val[1]), len(result))
+        self.assertEquals(val[1][0], result[0])
+        self.assertEquals(val[1][1], result[1])
+      else:
+        if result != None:
+          self.fail("Unexpected result: result = %d,%d"%result)
+        else:
+          self.fail("Unexpected result: result = None")
 
 if __name__ == "__main__":
   #import sys;sys.argv = ['', 'Test.testName']

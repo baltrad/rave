@@ -299,6 +299,17 @@ class PyPolarVolumeTest(unittest.TestCase):
 
     t,v = obj.getNearest((12.0*math.pi/180.0, 62.00*math.pi/180.0), 1000.0, 1)
     self.assertEquals(_rave.RaveValueType_NODATA, t)
+
+  def test_paramname(self):
+    obj = _polarvolume.new()
+    self.assertEquals("DBZH", obj.paramname)
+    obj.paramname = "MMM"
+    self.assertEquals("MMM", obj.paramname)
+    try:
+      obj.paramname = None
+      self.fail("Expected ValueError")
+    except ValueError,e:
+      self.assertEquals("MMM", obj.paramname)
     
     
   def test_sortByElevations_ascending(self):

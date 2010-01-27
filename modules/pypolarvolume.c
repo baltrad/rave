@@ -359,6 +359,13 @@ static PyObject* _pypolarvolume_getattr(PyPolarVolume* self, char* name)
     } else {
       Py_RETURN_NONE;
     }
+  } else if (strcmp("paramname", name) == 0) {
+    const char* str = PolarVolume_getDefaultParameter(self->pvol);
+    if (str != NULL) {
+      return PyString_FromString(str);
+    } else {
+      Py_RETURN_NONE;
+    }
   }
 
   res = Py_FindMethod(_pypolarvolume_methods, (PyObject*) self, name);
@@ -426,6 +433,14 @@ static int _pypolarvolume_setattr(PyPolarVolume* self, char* name, PyObject* val
       PolarVolume_setSource(self->pvol, NULL);
     } else {
       raiseException_gotoTag(done, PyExc_ValueError, "source should be specified as a string");
+    }
+  } else if (strcmp("paramname", name) == 0) {
+    if (PyString_Check(val)) {
+      if (!PolarVolume_setDefaultParameter(self->pvol, PyString_AsString(val))) {
+        raiseException_gotoTag(done, PyExc_ValueError, "could not set default parameter");
+      }
+    } else {
+      raiseException_gotoTag(done, PyExc_ValueError, "paramname should be specified as a string");
     }
   } else {
     raiseException_gotoTag(done, PyExc_AttributeError, name);

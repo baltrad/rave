@@ -191,6 +191,24 @@ PolarScan_t* PolarVolume_getScanClosestToElevation(PolarVolume_t* pvol, double e
 RaveValueType PolarVolume_getNearest(PolarVolume_t* pvol, double lon, double lat, double height, int insidee, double* v);
 
 /**
+ * Sets the default parameter that should be used when operating on this
+ * volume unless the parameter (quantity) explicitly has been specified in the
+ * function. All scans that currently are held by this volume and eventual new
+ * ones will all get the same default parameter.
+ * @param[in] scan - self
+ * @param[in] quantity - the parameter (MAY NOT BE NULL)
+ * @returns 1 on success otherwise 0
+ */
+int PolarVolume_setDefaultParameter(PolarVolume_t* pvol, const char* quantity);
+
+/**
+ * Returns the currently specified default parameter name.
+ * @param[in] scan - self
+ * @returns the default parameter name
+ */
+const char* PolarVolume_getDefaultParameter(PolarVolume_t* pvol);
+
+/**
  * Arranges the scans in either ascending or descending elevation.
  * @param[in] pvol - the volume
  * @param[in] ascending - if 1, ascending sort will be done, otherwise descending

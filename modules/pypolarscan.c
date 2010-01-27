@@ -335,6 +335,27 @@ static PyObject* _pypolarscan_getValue(PyPolarScan* self, PyObject* args)
 }
 
 /**
+ * Gets the parameter value for the provided bin and ray index.
+ * @param[in] self - this instance
+ * @param[in] args - quantity, bin index, ray index
+ * @returns a tuple of value type and value
+ */
+static PyObject* _pypolarscan_getParameterValue(PyPolarScan* self, PyObject* args)
+{
+  double value = 0.0L;
+  RaveValueType type = RaveValueType_NODATA;
+  int ray = 0, bin = 0;
+  char* quantity = NULL;
+  if (!PyArg_ParseTuple(args, "sii", &quantity, &bin, &ray)) {
+    return NULL;
+  }
+
+  type = PolarScan_getParameterValue(self->scan, quantity, bin, ray, &value);
+
+  return Py_BuildValue("(id)", type, value);
+}
+
+/**
  * Returns the converted value at the specified ray and bin index.
  * @param[in] self - this instance
  * @param[in] args - bin index, ray index.
@@ -350,6 +371,27 @@ static PyObject* _pypolarscan_getConvertedValue(PyPolarScan* self, PyObject* arg
   }
 
   type = PolarScan_getConvertedValue(self->scan, bin, ray, &value);
+
+  return Py_BuildValue("(id)", type, value);
+}
+
+/**
+ * Returns the converted parameter value at the specified ray and bin index.
+ * @param[in] self - this instance
+ * @param[in] args - quantity, bin index, ray index.
+ * @returns a tuple of value type and value
+ */
+static PyObject* _pypolarscan_getConvertedParameterValue(PyPolarScan* self, PyObject* args)
+{
+  double value = 0.0L;
+  RaveValueType type = RaveValueType_NODATA;
+  int ray = 0, bin = 0;
+  char* quantity = NULL;
+  if (!PyArg_ParseTuple(args, "sii", &quantity, &bin, &ray)) {
+    return NULL;
+  }
+
+  type = PolarScan_getConvertedParameterValue(self->scan, quantity, bin, ray, &value);
 
   return Py_BuildValue("(id)", type, value);
 }
@@ -394,6 +436,27 @@ static PyObject* _pypolarscan_getNearest(PyPolarScan* self, PyObject* args)
 }
 
 /**
+ * Returns the nearest index for the provided longitude, latitude.
+ * @param[in] self - this instance
+ * @param[in] args - a tuple consisting of (longitude, latitude).
+ * @returns a tuple of (bin index, ray index) or None if either bin index or ray index were oob
+ */
+static PyObject* _pypolarscan_getNearestIndex(PyPolarScan* self, PyObject* args)
+{
+  double lon = 0.0L, lat = 0.0L;
+  int bin = 0, ray = 0;
+  if (!PyArg_ParseTuple(args, "(dd)", &lon, &lat)) {
+    return NULL;
+  }
+
+  if (PolarScan_getNearestIndex(self->scan, lon, lat, &bin, &ray) != 0) {
+    return Py_BuildValue("(ii)",bin,ray);
+  }
+
+  Py_RETURN_NONE;
+}
+
+/**
  * All methods a polar scan can have
  */
 static struct PyMethodDef _pypolarscan_methods[] =
@@ -406,9 +469,12 @@ static struct PyMethodDef _pypolarscan_methods[] =
   {"getAzimuthIndex", (PyCFunction) _pypolarscan_getAzimuthIndex, 1},
   {"getRangeIndex", (PyCFunction) _pypolarscan_getRangeIndex, 1},
   {"getValue", (PyCFunction) _pypolarscan_getValue, 1},
+  {"getParameterValue", (PyCFunction) _pypolarscan_getParameterValue, 1},
   {"getConvertedValue", (PyCFunction) _pypolarscan_getConvertedValue, 1},
+  {"getConvertedParameterValue", (PyCFunction) _pypolarscan_getConvertedParameterValue, 1},
   {"getValueAtAzimuthAndRange", (PyCFunction) _pypolarscan_getValueAtAzimuthAndRange, 1},
   {"getNearest", (PyCFunction) _pypolarscan_getNearest, 1},
+  {"getNearestIndex", (PyCFunction) _pypolarscan_getNearestIndex, 1},
   {NULL, NULL } /* sentinel */
 };
 

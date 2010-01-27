@@ -31,6 +31,12 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include <string.h>
 
 /**
+ * This is the default parameter value that should be used when working
+ * with scans.
+ */
+#define DEFAULT_PARAMETER_NAME "DBZH"
+
+/**
  * Represents a volume
  */
 struct _PolarVolume_t {
@@ -40,6 +46,7 @@ struct _PolarVolume_t {
   RaveObjectList_t* scans;  /**< the list of scans */
   RaveDateTime_t* datetime; /**< the date / time */
   char* source;             /**< the source string */
+  char* paramname;          /**< the default parameter */
 };
 
 /*@{ Private functions */
@@ -54,6 +61,7 @@ static int PolarVolume_constructor(RaveCoreObject* obj)
   this->scans = NULL;
   this->datetime = NULL;
   this->source = NULL;
+  this->paramname = NULL;
 
   this->datetime = RAVE_OBJECT_NEW(&RaveDateTime_TYPE);
 
@@ -72,6 +80,10 @@ static int PolarVolume_constructor(RaveCoreObject* obj)
     goto error;
   }
 
+  if (!PolarVolume_setDefaultParameter(this, DEFAULT_PARAMETER_NAME)) {
+    goto error;
+  }
+
   return 1;
 error:
   RAVE_OBJECT_RELEASE(this->datetime);
@@ -79,6 +91,7 @@ error:
   RAVE_OBJECT_RELEASE(this->navigator);
   RAVE_OBJECT_RELEASE(this->scans);
   RAVE_FREE(this->source);
+  RAVE_FREE(this->paramname);
   return 0;
 }
 
@@ -95,6 +108,7 @@ static int PolarVolume_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srco
   this->scans = RAVE_OBJECT_CLONE(src->scans); // the list only contains scans and they are cloneable
   this->datetime = RAVE_OBJECT_CLONE(src->datetime);
   this->source = NULL;
+  this->paramname = NULL;
 
   if (this->datetime == NULL || this->projection == NULL ||
       this->scans == NULL || this->navigator == NULL) {
@@ -102,6 +116,9 @@ static int PolarVolume_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srco
   }
 
   if (!PolarVolume_setSource(this, src->source)) {
+    goto error;
+  }
+  if (!PolarVolume_setDefaultParameter(this, src->paramname)) {
     goto error;
   }
 
@@ -113,6 +130,7 @@ error:
   RAVE_OBJECT_RELEASE(this->navigator);
   RAVE_OBJECT_RELEASE(this->scans);
   RAVE_FREE(this->source);
+  RAVE_FREE(this->paramname);
   return 0;
 }
 
@@ -127,6 +145,7 @@ static void PolarVolume_destructor(RaveCoreObject* obj)
   RAVE_OBJECT_RELEASE(volume->navigator);
   RAVE_OBJECT_RELEASE(volume->scans);
   RAVE_FREE(volume->source);
+  RAVE_FREE(volume->paramname);
 }
 
 /**
@@ -311,6 +330,7 @@ int PolarVolume_addScan(PolarVolume_t* pvol, PolarScan_t* scan)
   if (RaveObjectList_add(pvol->scans, (RaveCoreObject*)scan)) {
     PolarScan_setNavigator(scan, pvol->navigator);
     PolarScan_setProjection(scan, pvol->projection);
+    PolarScan_setDefaultParameter(scan, pvol->paramname);
     result = 1;
   }
   return result;
@@ -386,6 +406,36 @@ RaveValueType PolarVolume_getNearest(PolarVolume_t* pvol, double lon, double lat
   RAVE_OBJECT_RELEASE(scan);
 
   return result;
+}
+
+int PolarVolume_setDefaultParameter(PolarVolume_t* pvol, const char* quantity)
+{
+  int result = 0;
+  char* tmp = NULL;
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
+  RAVE_ASSERT((quantity != NULL), "quantity == NULL");
+  tmp = RAVE_STRDUP(quantity);
+  if (tmp != NULL) {
+    int i = 0;
+    int nlen = RaveObjectList_size(pvol->scans);
+    result = 1; /* Asume everything is ok and let the scans default parameter decide the result */
+    RAVE_FREE(pvol->paramname);
+    pvol->paramname = tmp;
+    for (i = 0; result == 1 && i < nlen; i++) {
+      PolarScan_t* scan = (PolarScan_t*)RaveObjectList_get(pvol->scans, i);
+      if (scan != NULL) {
+        result = PolarScan_setDefaultParameter(scan, quantity);
+      }
+      RAVE_OBJECT_RELEASE(scan);
+    }
+  }
+  return result;
+}
+
+const char* PolarVolume_getDefaultParameter(PolarVolume_t* pvol)
+{
+  RAVE_ASSERT((pvol != NULL), "pvol was NULL");
+  return (const char*)pvol->paramname;
 }
 
 void PolarVolume_sortByElevations(PolarVolume_t* pvol, int ascending)

@@ -234,6 +234,7 @@ void init_rave(void)
   add_long_constant(dictionary, "UNIFORM", UNIFORM);
   add_long_constant(dictionary, "INVERSE", INVERSE);
 
+  add_long_constant(dictionary, "RaveValueType_UNDEFINED", RaveValueType_UNDEFINED);
   add_long_constant(dictionary, "RaveValueType_UNDETECT", RaveValueType_UNDETECT);
   add_long_constant(dictionary, "RaveValueType_NODATA", RaveValueType_NODATA);
   add_long_constant(dictionary, "RaveValueType_DATA", RaveValueType_DATA);

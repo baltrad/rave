@@ -343,6 +343,16 @@ int PolarScan_getAzimuthIndex(PolarScan_t* scan, double a);
 RaveValueType PolarScan_getValue(PolarScan_t* scan, int bin, int ray, double* v);
 
 /**
+ * Returns the parameter value at the specified index.
+ * @param[in] scan - self
+ * @param[in] quantity - the parameter (MAY NOT be NULL)
+ * @param[in] bin - the bin index
+ * @param[in] ray - the ray index
+ * @param[out] v - the found value
+ */
+RaveValueType PolarScan_getParameterValue(PolarScan_t* scan, const char* quantity, int bin, int ray, double* v);
+
+/**
  * Returns the linear converted value at the specified index. That is,
  * offset + gain * value;
  * @param[in] scan - the scan
@@ -352,6 +362,18 @@ RaveValueType PolarScan_getValue(PolarScan_t* scan, int bin, int ray, double* v)
  * @return the type of data
  */
 RaveValueType PolarScan_getConvertedValue(PolarScan_t* scan, int bin, int ray, double* v);
+
+/**
+ * Returns the linear converted parameter value at the specified index. That is,
+ * offset + gain * value;
+ * @param[in] scan - the scan
+ * @param[in] quantity - the parameter (MAY NOT BE NULL)
+ * @param[in] bin - the bin index
+ * @param[in] ray - the ray index
+ * @param[out] v - the data at the specified index
+ * @return the type of data
+ */
+RaveValueType PolarScan_getConvertedParameterValue(PolarScan_t* scan, const char* quantity, int bin, int ray, double* v);
 
 /**
  * Gets the value at the provided azimuth and range.
@@ -372,6 +394,17 @@ RaveValueType PolarScan_getValueAtAzimuthAndRange(PolarScan_t* scan, double a, d
  * @returns a rave value type
  */
 RaveValueType PolarScan_getNearest(PolarScan_t* scan, double lon, double lat, double* v);
+
+/**
+ * Returns the nearest index to the specified long/lat pair.
+ * @param[in] scan - self
+ * @param[in] lon - the longitude (in radians)
+ * @param[in] lat - the latitude (in radians)
+ * @param[out] bin - the bin index (MAY NOT BE NULL)
+ * @param[out] ray - the ray index (MAY NOT BE NULL)
+ * @returns 0 if either bin and/or ray is outside boundaries, otherwise 1
+ */
+int PolarScan_getNearestIndex(PolarScan_t* scan, double lon, double lat, int* bin, int* ray);
 
 /**
  * Verifies that all preconditions are met in order to perform

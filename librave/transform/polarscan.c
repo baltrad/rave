@@ -398,6 +398,8 @@ int PolarScan_setDefaultParameter(PolarScan_t* scan, const char* quantity)
   if (tmp != NULL) {
     RAVE_FREE(scan->paramname);
     scan->paramname = tmp;
+    RAVE_OBJECT_RELEASE(scan->param);
+    scan->param = (PolarScanParam_t*)RaveObjectHashTable_get(scan->parameters, quantity);
     result = 1;
   }
   return result;
@@ -528,6 +530,20 @@ RaveValueType PolarScan_getValue(PolarScan_t* scan, int bin, int ray, double* v)
   return result;
 }
 
+RaveValueType PolarScan_getParameterValue(PolarScan_t* scan, const char* quantity, int bin, int ray, double* v)
+{
+  PolarScanParam_t* param = NULL;
+  RaveValueType result = 0;
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+  RAVE_ASSERT((quantity != NULL), "quantity == NULL");
+  param = (PolarScanParam_t*)RaveObjectHashTable_get(scan->parameters, quantity);
+  if (param != NULL) {
+    result = PolarScanParam_getValue(param, bin, ray, v);
+  }
+  RAVE_OBJECT_RELEASE(param);
+  return result;
+}
+
 RaveValueType PolarScan_getConvertedValue(PolarScan_t* scan, int bin, int ray, double* v)
 {
   RaveValueType result = RaveValueType_NODATA;
@@ -542,6 +558,21 @@ RaveValueType PolarScan_getConvertedValue(PolarScan_t* scan, int bin, int ray, d
       *v = PolarScanParam_getOffset(scan->param) + (*v) * PolarScanParam_getGain(scan->param);
     }
   }
+  return result;
+}
+
+RaveValueType PolarScan_getConvertedParameterValue(PolarScan_t* scan, const char* quantity, int bin, int ray, double* v)
+{
+  PolarScanParam_t* param = NULL;
+  RaveValueType result = RaveValueType_UNDEFINED;
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+  RAVE_ASSERT((quantity != NULL), "quantity == NULL");
+
+  param = (PolarScanParam_t*)RaveObjectHashTable_get(scan->parameters, quantity);
+  if (param != NULL) {
+    result = PolarScanParam_getConvertedValue(param, bin, ray, v);
+  }
+  RAVE_OBJECT_RELEASE(param);
   return result;
 }
 
@@ -588,6 +619,32 @@ RaveValueType PolarScan_getNearest(PolarScan_t* scan, double lon, double lat, do
 
   return result;
 }
+
+int PolarScan_getNearestIndex(PolarScan_t* scan, double lon, double lat, int* bin, int* ray)
+{
+  double d = 0.0L, a = 0.0L, r = 0.0L, h = 0.0L;
+  int result = 0;
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+  RAVE_ASSERT((bin != NULL), "bin == NULL");
+  RAVE_ASSERT((ray != NULL), "ray == NULL");
+
+  PolarNavigator_llToDa(scan->navigator, lat, lon, &d, &a);
+  PolarNavigator_deToRh(scan->navigator, d, scan->elangle, &r, &h);
+
+  *ray = PolarScan_getAzimuthIndex(scan, a);
+  if (*ray < 0) {
+    goto done;
+  }
+  *bin = PolarScan_getRangeIndex(scan, r);
+  if (*bin < 0) {
+    goto done;
+  }
+
+  result = 1;
+done:
+  return result;
+}
+
 
 int PolarScan_isTransformable(PolarScan_t* scan)
 {
