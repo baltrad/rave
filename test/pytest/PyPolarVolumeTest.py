@@ -257,28 +257,28 @@ class PyPolarVolumeTest(unittest.TestCase):
     obj.latitude = 60.0 * math.pi/180.0
     obj.height = 0.0
     scan1 = _polarscan.new()
-    dbzhParam = _polarscanparam.new()
-    dbzhParam.nodata = 10.0
-    dbzhParam.undetect = 11.0
-    dbzhParam.quantity = "DBZH"    
     scan1.elangle = 0.1 * math.pi / 180.0
     scan1.rstart = 0.0
     scan1.rscale = 5000.0
+    param = _polarscanparam.new()
+    param.nodata = 10.0
+    param.undetect = 11.0
+    param.quantity = "DBZH"    
     data = numpy.zeros((100, 120), numpy.uint8)
-    dbzhParam.setData(data)
-    scan1.addParameter(dbzhParam)
+    param.setData(data)
+    scan1.addParameter(param)
     
     scan2 = _polarscan.new()
-    dbzhParam = _polarscanparam.new()
-    dbzhParam.nodata = 10.0
-    dbzhParam.undetect = 11.0
-    dbzhParam.quantity = "DBZH"    
     scan2.elangle = 1.0 * math.pi / 180.0
     scan2.rstart = 0.0
     scan2.rscale = 5000.0
+    param = _polarscanparam.new()
+    param.nodata = 10.0
+    param.undetect = 11.0
+    param.quantity = "DBZH"    
     data = numpy.ones((100, 120), numpy.uint8)
-    dbzhParam.setData(data)
-    scan2.addParameter(dbzhParam)
+    param.setData(data)
+    scan2.addParameter(param)
     
     obj.addScan(scan1)
     obj.addScan(scan2)
@@ -298,6 +298,88 @@ class PyPolarVolumeTest(unittest.TestCase):
     self.assertAlmostEquals(1.0, v, 4)
 
     t,v = obj.getNearest((12.0*math.pi/180.0, 62.00*math.pi/180.0), 1000.0, 1)
+    self.assertEquals(_rave.RaveValueType_NODATA, t)
+
+  def test_getNearestParameterValue(self):
+    obj = _polarvolume.new()
+    obj.longitude = 12.0 * math.pi/180.0
+    obj.latitude = 60.0 * math.pi/180.0
+    obj.height = 0.0
+    scan1 = _polarscan.new()
+    scan1.elangle = 0.1 * math.pi / 180.0
+    scan1.rstart = 0.0
+    scan1.rscale = 5000.0
+    param = _polarscanparam.new()
+    param.nodata = 10.0
+    param.undetect = 11.0
+    param.quantity = "DBZH"    
+    data = numpy.zeros((100, 120), numpy.uint8)
+    param.setData(data)
+    scan1.addParameter(param)
+    param = _polarscanparam.new()
+    param.nodata = 10.0
+    param.undetect = 11.0
+    param.quantity = "MMM"    
+    data = numpy.ones((100, 120), numpy.uint8)
+    param.setData(data)
+    scan1.addParameter(param)
+    
+    scan2 = _polarscan.new()
+    scan2.elangle = 1.0 * math.pi / 180.0
+    scan2.rstart = 0.0
+    scan2.rscale = 5000.0
+    param = _polarscanparam.new()
+    param.nodata = 10.0
+    param.undetect = 11.0
+    param.quantity = "DBZH"    
+    data = numpy.ones((100, 120), numpy.uint8)
+    param.setData(data)
+    scan2.addParameter(param)
+    param = _polarscanparam.new()
+    param.nodata = 10.0
+    param.undetect = 11.0
+    param.quantity = "MMM"    
+    data = numpy.zeros((100, 120), numpy.uint8)
+    param.setData(data)
+    scan2.addParameter(param)
+    
+    obj.addScan(scan1)
+    obj.addScan(scan2)
+
+    # DBZH
+    # Allow outside ranges
+    t,v = obj.getNearestParameterValue("DBZH", (12.0*math.pi/180.0, 60.45*math.pi/180.0), 1000.0, 0)
+    self.assertEquals(_rave.RaveValueType_DATA, t)
+    self.assertAlmostEquals(1.0, v, 4)
+
+    t,v = obj.getNearestParameterValue("DBZH", (12.0*math.pi/180.0, 62.00*math.pi/180.0), 1000.0, 0)
+    self.assertEquals(_rave.RaveValueType_DATA, t)
+    self.assertAlmostEquals(0.0, v, 4)
+    
+    # Only allow inside ranges
+    t,v = obj.getNearestParameterValue("DBZH", (12.0*math.pi/180.0, 60.45*math.pi/180.0), 1000.0, 1)
+    self.assertEquals(_rave.RaveValueType_DATA, t)
+    self.assertAlmostEquals(1.0, v, 4)
+
+    t,v = obj.getNearestParameterValue("DBZH", (12.0*math.pi/180.0, 62.00*math.pi/180.0), 1000.0, 1)
+    self.assertEquals(_rave.RaveValueType_NODATA, t)
+
+    # MMM
+    # Allow outside ranges
+    t,v = obj.getNearestParameterValue("MMM", (12.0*math.pi/180.0, 60.45*math.pi/180.0), 1000.0, 0)
+    self.assertEquals(_rave.RaveValueType_DATA, t)
+    self.assertAlmostEquals(0.0, v, 4)
+
+    t,v = obj.getNearestParameterValue("MMM", (12.0*math.pi/180.0, 62.00*math.pi/180.0), 1000.0, 0)
+    self.assertEquals(_rave.RaveValueType_DATA, t)
+    self.assertAlmostEquals(1.0, v, 4)
+    
+    # Only allow inside ranges
+    t,v = obj.getNearestParameterValue("MMM", (12.0*math.pi/180.0, 60.45*math.pi/180.0), 1000.0, 1)
+    self.assertEquals(_rave.RaveValueType_DATA, t)
+    self.assertAlmostEquals(0.0, v, 4)
+
+    t,v = obj.getNearestParameterValue("DBZH", (12.0*math.pi/180.0, 62.00*math.pi/180.0), 1000.0, 1)
     self.assertEquals(_rave.RaveValueType_NODATA, t)
 
   def test_paramname(self):

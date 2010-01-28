@@ -618,30 +618,59 @@ class PyPolarScanTest(unittest.TestCase):
       self.assertEquals(tval[1][0], result[0])
       self.assertAlmostEquals(tval[1][1], result[1], 4)
 
-
+  def test_getIndexFromAzimuthAndRange(self):
+    obj = _polarscan.new()
+    param = _polarscanparam.new()
+    param.nodata = 255.0
+    param.undetect = 0.0
+    param.quantity = "DBZH"
+    obj.rscale = 1000.0
+    a=numpy.zeros((400,200), numpy.float64)
+    param.setData(a)
+    obj.addParameter(param)
+           
+    pts = [((0.0, 0.0), (0, 0)),
+           ((0.1, 499.0), (0, 0)),
+           ((0.4, 999.0), (0, 0)),
+           ((-1.0, 2001.0), (399, 2)),
+           ((360.4, 199999.0), (0, 199)),
+           ((360.4, 200000.0), None)]
+ 
+    for tval in pts:
+      az = tval[0][0]*math.pi/180.0
+      ra = tval[0][1]   
+      result = obj.getIndexFromAzimuthAndRange(az,ra)
+      if tval[1] == None and result == None:
+        pass
+      elif tval[1] != None and result != None:
+        self.assertEquals(2, len(result))
+        self.assertEquals(tval[1][0], result[0])
+        self.assertEquals(tval[1][1], result[1])
+      else:
+        self.fail("Unexpected result")
 
   def test_getValueAtAzimuthAndRange(self):
     obj = _polarscan.new()
-    dbzhParam = _polarscanparam.new()
-    dbzhParam.nodata = 255.0
-    dbzhParam.undetect = 0.0
-    dbzhParam.quantity = "DBZH"
+    param = _polarscanparam.new()
+    param.nodata = 255.0
+    param.undetect = 0.0
+    param.quantity = "DBZH"
     obj.rscale = 1000.0
     a=numpy.arange(3600)
     a=numpy.array(a.astype(numpy.float64),numpy.float64)
     a=numpy.reshape(a,(360,10)).astype(numpy.float64)      
-    a[0][0] = dbzhParam.undetect
-    a[2][1] = dbzhParam.nodata
-    a[4][5] = dbzhParam.undetect
+    a[0][0] = param.undetect
+    a[2][1] = param.nodata
+    a[4][5] = param.undetect
 
-    dbzhParam.setData(a)
-    obj.addParameter(dbzhParam)
+    param.setData(a)
+    obj.addParameter(param)
     
     pts = [((0.0,0.0), (_rave.RaveValueType_UNDETECT, 0.0)),        #0, 0
            ((10.0,2000.0), (_rave.RaveValueType_DATA, 102.0)),      #10*10 + 2
            ((20.0,9000), (_rave.RaveValueType_DATA, 209.0)),        #20*10 + 9
-           ((2.0,1000), (_rave.RaveValueType_NODATA, dbzhParam.nodata)),  #10*20 + 9
-           ((4.0,5000), (_rave.RaveValueType_UNDETECT, dbzhParam.undetect))]
+           ((2.0,1000), (_rave.RaveValueType_NODATA, param.nodata)),  #10*20 + 9
+           ((4.0,5000), (_rave.RaveValueType_UNDETECT, param.undetect))]
     
     for tval in pts:
       az = tval[0][0]*math.pi/180.0
@@ -679,7 +708,36 @@ class PyPolarScanTest(unittest.TestCase):
     t,v = obj.getValueAtAzimuthAndRange(0.0, 1000.0)
     self.assertEquals(_rave.RaveValueType_UNDETECT, t)
     self.assertAlmostEquals(0.0, v, 4)
+    
+  def test_getParameterValueAtAzimuthAndRange(self):
+    obj = _polarscan.new()
+    param = _polarscanparam.new()
+    param.nodata = 255.0
+    param.undetect = 0.0
+    param.quantity = "DBZH"
+    obj.rscale = 1000.0
+    a=numpy.zeros((360,10), numpy.float64)
+    a[10][2] = 98
+    param.setData(a)
+    obj.addParameter(param)
 
+    param = _polarscanparam.new()
+    param.nodata = 255.0
+    param.undetect = 0.0
+    param.quantity = "MMM"
+    obj.rscale = 1000.0
+    a=numpy.zeros((360,10), numpy.float64)
+    a[10][2] = 107
+    param.setData(a)
+    obj.addParameter(param)
+    
+    result = obj.getParameterValueAtAzimuthAndRange("DBZH", 10.0*math.pi/180.0, 2000.0)
+    self.assertEquals(_rave.RaveValueType_DATA, result[0])
+    self.assertEquals(98.0, result[1])
+    result = obj.getParameterValueAtAzimuthAndRange("MMM", 10.0*math.pi/180.0, 2000.0)
+    self.assertEquals(_rave.RaveValueType_DATA, result[0])
+    self.assertEquals(107.0, result[1])
+    
   def test_getNearest(self):
     obj = _polarscan.new()
     dbzhParam = _polarscanparam.new()

@@ -397,6 +397,27 @@ static PyObject* _pypolarscan_getConvertedParameterValue(PyPolarScan* self, PyOb
 }
 
 /**
+ * Calculates the bin and ray index from a azimuth and range.
+ * @param[in] self - self
+ * @param[in] args - a python object containing (azimuth (in radians), range (in meters))
+ * @returns a tuple (ray index, bin index) or None if outside boundaries
+ */
+static PyObject* _pypolarscan_getIndexFromAzimuthAndRange(PyPolarScan* self, PyObject* args)
+{
+  double a = 0.0L, r = 0.0L;
+  int ray = -1, bin = -1;
+  if (!PyArg_ParseTuple(args, "dd", &a, &r)) {
+    return NULL;
+  }
+
+  if (PolarScan_getIndexFromAzimuthAndRange(self->scan, a, r, &ray, &bin)) {
+    return Py_BuildValue("(ii)",ray,bin);
+  }
+
+  Py_RETURN_NONE;
+}
+
+/**
  * Returns the value at the specified azimuth and range for this scan.
  * @param[in] self - this instance
  * @param[in] args - two doubles, azimuth (in radians) and range (in meters)
@@ -412,6 +433,27 @@ static PyObject* _pypolarscan_getValueAtAzimuthAndRange(PyPolarScan* self, PyObj
   }
 
   type = PolarScan_getValueAtAzimuthAndRange(self->scan, a, r, &value);
+
+  return Py_BuildValue("(id)", type, value);
+}
+
+/**
+ * Returns the parameter value at the specified azimuth and range for this scan.
+ * @param[in] self - this instance
+ * @param[in] args - quantity, azimuth (in radians) and range (in meters)
+ * @returns a tuple of value type and value
+ */
+static PyObject* _pypolarscan_getParameterValueAtAzimuthAndRange(PyPolarScan* self, PyObject* args)
+{
+  double value = 0.0L;
+  RaveValueType type = RaveValueType_NODATA;
+  double a = 0, r = 0;
+  char* quantity = NULL;
+  if (!PyArg_ParseTuple(args, "sdd", &quantity, &a, &r)) {
+    return NULL;
+  }
+
+  type = PolarScan_getParameterValueAtAzimuthAndRange(self->scan, quantity, a, r, &value);
 
   return Py_BuildValue("(id)", type, value);
 }
@@ -472,7 +514,9 @@ static struct PyMethodDef _pypolarscan_methods[] =
   {"getParameterValue", (PyCFunction) _pypolarscan_getParameterValue, 1},
   {"getConvertedValue", (PyCFunction) _pypolarscan_getConvertedValue, 1},
   {"getConvertedParameterValue", (PyCFunction) _pypolarscan_getConvertedParameterValue, 1},
+  {"getIndexFromAzimuthAndRange", (PyCFunction) _pypolarscan_getIndexFromAzimuthAndRange, 1},
   {"getValueAtAzimuthAndRange", (PyCFunction) _pypolarscan_getValueAtAzimuthAndRange, 1},
+  {"getParameterValueAtAzimuthAndRange", (PyCFunction) _pypolarscan_getParameterValueAtAzimuthAndRange, 1},
   {"getNearest", (PyCFunction) _pypolarscan_getNearest, 1},
   {"getNearestIndex", (PyCFunction) _pypolarscan_getNearestIndex, 1},
   {NULL, NULL } /* sentinel */

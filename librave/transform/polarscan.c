@@ -576,29 +576,65 @@ RaveValueType PolarScan_getConvertedParameterValue(PolarScan_t* scan, const char
   return result;
 }
 
+int PolarScan_getIndexFromAzimuthAndRange(PolarScan_t* scan, double a, double r, int* ray, int* bin)
+{
+  int result = 0;
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+  RAVE_ASSERT((bin != NULL), "bin == NULL");
+  RAVE_ASSERT((ray != NULL), "ray == NULL");
+  *ray = PolarScan_getAzimuthIndex(scan, a);
+  if (*ray < 0) {
+    goto done;
+  }
+  *bin = PolarScan_getRangeIndex(scan, r);
+  if (*bin < 0) {
+    goto done;
+  }
+  result = 1;
+done:
+  return result;
+}
+
 RaveValueType PolarScan_getValueAtAzimuthAndRange(PolarScan_t* scan, double a, double r, double* v)
 {
   RaveValueType result = RaveValueType_NODATA;
   int ai = 0, ri = 0;
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
-  RAVE_ASSERT((v != NULL), "v was NULL");
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+  RAVE_ASSERT((v != NULL), "v == NULL");
   if (scan->param == NULL) {
     return RaveValueType_UNDEFINED;
   }
   if (v != NULL) {
     *v = PolarScanParam_getNodata(scan->param);
   }
-  ai = PolarScan_getAzimuthIndex(scan, a);
-  if (ai < 0) {
-    goto done;
-  }
-  ri = PolarScan_getRangeIndex(scan, r);
-  if (ri < 0) {
+  if (!PolarScan_getIndexFromAzimuthAndRange(scan, a, r, &ai, &ri)) {
     goto done;
   }
 
   result = PolarScan_getValue(scan, ri, ai, v);
 done:
+  return result;
+}
+
+RaveValueType PolarScan_getParameterValueAtAzimuthAndRange(PolarScan_t* scan, const char* quantity, double a, double r, double* v)
+{
+  RaveValueType result = RaveValueType_UNDEFINED;
+  int ai = 0, ri = 0;
+  PolarScanParam_t* param = NULL;
+
+  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  RAVE_ASSERT((v != NULL), "v was NULL");
+  param = PolarScan_getParameter(scan, quantity);
+  if (param != NULL) {
+    result = RaveValueType_NODATA;
+    *v = PolarScanParam_getNodata(param);
+    if (!PolarScan_getIndexFromAzimuthAndRange(scan, a, r, &ai, &ri)) {
+      goto done;
+    }
+    result = PolarScanParam_getValue(param, ri, ai, v);
+  }
+done:
+  RAVE_OBJECT_RELEASE(param);
   return result;
 }
 
@@ -631,17 +667,8 @@ int PolarScan_getNearestIndex(PolarScan_t* scan, double lon, double lat, int* bi
   PolarNavigator_llToDa(scan->navigator, lat, lon, &d, &a);
   PolarNavigator_deToRh(scan->navigator, d, scan->elangle, &r, &h);
 
-  *ray = PolarScan_getAzimuthIndex(scan, a);
-  if (*ray < 0) {
-    goto done;
-  }
-  *bin = PolarScan_getRangeIndex(scan, r);
-  if (*bin < 0) {
-    goto done;
-  }
+  result = PolarScan_getIndexFromAzimuthAndRange(scan, a, r, ray, bin);
 
-  result = 1;
-done:
   return result;
 }
 

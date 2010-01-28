@@ -311,6 +311,29 @@ static PyObject* _pypolarvolume_getNearest(PyPolarVolume* self, PyObject* args)
 }
 
 /**
+ * Gets the nearest parameter value at the specified lon/lat/height.
+ * @param[in] self - the polar volume
+ * @param[in] args - quantity, the lon/lat as a tuple in radians), the height and an indicator if elevation must be within min-max elevation or not
+ * @return a tuple of (valuetype, value)
+ */
+static PyObject* _pypolarvolume_getNearestParameterValue(PyPolarVolume* self, PyObject* args)
+{
+  double lon = 0.0L, lat = 0.0L, height = 0.0L;
+  double v = 0.0L;
+  char* quantity = NULL;
+  int insidee = 0;
+  RaveValueType vtype = RaveValueType_NODATA;
+
+  if (!PyArg_ParseTuple(args, "s(dd)di", &quantity, &lon,&lat,&height,&insidee)) {
+    return NULL;
+  }
+
+  vtype = PolarVolume_getNearestParameterValue(self->pvol, quantity, lon, lat, height, insidee, &v);
+
+  return Py_BuildValue("(id)", vtype, v);
+}
+
+/**
  * All methods a polar volume can have
  */
 static struct PyMethodDef _pypolarvolume_methods[] =
@@ -323,6 +346,7 @@ static struct PyMethodDef _pypolarvolume_methods[] =
   {"sortByElevations", (PyCFunction) _pypolarvolume_sortByElevations, 1},
   {"getScanClosestToElevation", (PyCFunction) _pypolarvolume_getScanClosestToElevation, 1},
   {"getNearest", (PyCFunction) _pypolarvolume_getNearest, 1},
+  {"getNearestParameterValue", (PyCFunction) _pypolarvolume_getNearestParameterValue, 1},
   {NULL, NULL} /* sentinel */
 };
 
