@@ -144,6 +144,24 @@ static PyObject* _pypolarvolume_new(PyObject* self, PyObject* args)
 }
 
 /**
+ * Returns the distance from the radar to the specified lon/lat coordinate.
+ * @param[in] self - self
+ * @param[in] args - a tuple with (lon,lat) in radians.
+ * @returns the distance in meters.
+ */
+static PyObject* _pypolarvolume_getDistance(PyPolarVolume* self, PyObject* args)
+{
+  double lon = 0.0L, lat = 0.0L;
+  double distance = 0.0L;
+  if (!PyArg_ParseTuple(args, "(dd)", &lon,&lat)) {
+    return NULL;
+  }
+  distance = PolarVolume_getDistance(self->pvol, lon, lat);
+
+  return PyFloat_FromDouble(distance);
+}
+
+/**
  * Adds one scan to a volume.
  * @param[in] self - the polar volume
  * @param[in] args - the scan, must be of type PolarScanCore
@@ -338,6 +356,7 @@ static PyObject* _pypolarvolume_getNearestParameterValue(PyPolarVolume* self, Py
  */
 static struct PyMethodDef _pypolarvolume_methods[] =
 {
+  {"getDistance", (PyCFunction) _pypolarvolume_getDistance, 1},
   {"addScan", (PyCFunction) _pypolarvolume_addScan, 1},
   {"getScan", (PyCFunction) _pypolarvolume_getScan, 1},
   {"getNumberOfScans", (PyCFunction) _pypolarvolume_getNumberOfScans, 1},

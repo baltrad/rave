@@ -152,7 +152,16 @@ class PyPolarVolumeTest(unittest.TestCase):
     except TypeError,e:
       pass
     self.assertAlmostEquals(0.0, obj.height, 4)
-    
+  
+  def test_getDistance(self):
+    obj = _polarvolume.new()
+    obj.longitude = 14.0 * math.pi/180.0
+    obj.latitude = 60.0 * math.pi/180.0
+
+    result = obj.getDistance((14.0 * math.pi/180.0, 61.0 * math.pi/180.0))
+    self.assertAlmostEquals(111040.1, result, 1)
+    #print "distance = %f"%result
+  
   def test_addScan(self):
     obj = _polarvolume.new()
     scan = _polarscan.new()

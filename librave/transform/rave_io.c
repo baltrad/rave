@@ -27,6 +27,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_alloc.h"
 #include "hlhdf.h"
 #include "hlhdf_alloc.h"
+#include "hlhdf_debug.h"
 #include "string.h"
 #include "stdarg.h"
 
@@ -650,8 +651,8 @@ static int RaveIOInternal_createDataset(HL_NodeList* nodelist, void* data, long 
     HL_FormatSpecifier specifier = RaveIOInternal_raveToHlhdfType(dataType);
     const char* hlhdfFormat = HL_getFormatSpecifierString(specifier);
     hsize_t dims[2];
-    dims[0] = xsize;
-    dims[1] = ysize;
+    dims[0] = ysize;
+    dims[1] = xsize;
     if (node == NULL) {
       RAVE_CRITICAL1("Failed to create dataset with name %s", nodeName);
       goto done;
@@ -1807,8 +1808,8 @@ int RaveIOInternal_saveCartesian(RaveIO_t* raveio)
   Projection_t* projection = NULL;
   Rave_ProductType productType = Rave_ProductType_UNDEFINED;
   Cartesian_t* object = NULL; //  DO not release this
-
   RAVE_ASSERT((raveio != NULL), "raveio == NULL");
+
   if (raveio->object == NULL || !RAVE_OBJECT_CHECK_TYPE(raveio->object, &Cartesian_TYPE)) {
     RAVE_ERROR0("Atempting to save an object that not is cartesian");
     return 0;
@@ -1931,12 +1932,14 @@ int RaveIOInternal_saveCartesian(RaveIO_t* raveio)
   if (!RaveIOInternal_createGroup(nodelist, "/dataset1/data1")) {
     goto done;
   }
+
   if (!RaveIOInternal_createDataset(nodelist, Cartesian_getData(object),
                                     Cartesian_getXSize(object), Cartesian_getYSize(object),
                                     Cartesian_getDataType(object),
                                     "/dataset1/data1/data")) {
     goto done;
   }
+
   // If data type is 8-bit UCHAR, IMAGE attributes shall be stored.
   if (Cartesian_getDataType(object) == RaveDataType_UCHAR) {
     if (!RaveIOInternal_createStringValue(nodelist, "IMAGE", "/dataset1/data1/data/CLASS")) {

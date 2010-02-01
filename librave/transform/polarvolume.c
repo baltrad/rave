@@ -296,6 +296,14 @@ double PolarVolume_getHeight(PolarVolume_t* pvol)
   return PolarNavigator_getAlt0(pvol->navigator);
 }
 
+double PolarVolume_getDistance(PolarVolume_t* pvol, double lon, double lat)
+{
+  double d = 0.0L, a = 0.0L;
+  RAVE_ASSERT((pvol != NULL), "pvol was NULL");
+  PolarNavigator_llToDa(pvol->navigator, lat, lon, &d, &a);
+  return d;
+}
+
 void PolarVolume_setProjection(PolarVolume_t* pvol, Projection_t* projection)
 {
   RAVE_ASSERT((pvol != NULL), "pvol was NULL");
@@ -388,14 +396,13 @@ RaveValueType PolarVolume_getNearest(PolarVolume_t* pvol, double lon, double lat
   double d = 0.0L, a = 0.0L, r = 0.0L, e = 0.0L;
   RaveValueType result = RaveValueType_NODATA;
   PolarScan_t* scan = NULL;
-  RAVE_ASSERT((pvol != NULL), "pvol was NULL");
-  RAVE_ASSERT((v != NULL), "v was NULL");
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
+  RAVE_ASSERT((v != NULL), "v == NULL");
   *v = 0.0;
 
   PolarNavigator_llToDa(pvol->navigator, lat, lon, &d, &a);
   PolarNavigator_dhToRe(pvol->navigator, d, height, &r, &e);
 
-  // Find relevant elevation
   scan = PolarVolume_getScanClosestToElevation(pvol, e, insidee);
   if (scan != NULL) {
     //@todo: Eventually use the actual elevation and calculate proper range instead.

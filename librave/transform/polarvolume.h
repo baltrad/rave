@@ -128,6 +128,15 @@ void PolarVolume_setHeight(PolarVolume_t* pvol, double height);
 double PolarVolume_getHeight(PolarVolume_t* pvol);
 
 /**
+ * Returns the distance from the radar to the specified lon/lat coordinate pair.
+ * @param[in] pvol - self
+ * @param[in] lon - the longitude
+ * @param[in] lat - the latitude
+ * @returns the distance in meters.
+ */
+double PolarVolume_getDistance(PolarVolume_t* pvol, double lon, double lat);
+
+/**
  * Sets the projection for this polar volume. All scans belonging to this volume
  * will also get this projection assigned.
  * @param[in] pvol - the polar volume
