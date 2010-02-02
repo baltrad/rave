@@ -177,6 +177,21 @@ static PyObject* _pypolarnavigator_getEarthRadiusOrigin(PyPolarNavigator* self, 
 }
 
 /**
+ * Calculates the distance from the lon0/lat0 to the provided lon/lat.
+ * @param[in] self - self
+ * @param[in] args - a tuple containing (lat, lon) in radians
+ * @returns the distance in meters or NULL on failure.
+ */
+static PyObject* _pypolarnavigator_getDistance(PyPolarNavigator* self, PyObject* args)
+{
+  double lon = 0.0L, lat = 0.0L;
+  if (!PyArg_ParseTuple(args, "(dd)", &lat, &lon)) {
+    return NULL;
+  }
+  return PyFloat_FromDouble(PolarNavigator_getDistance(self->navigator, lat, lon));
+}
+
+/**
  * Calculates the distance and azimuth from this navigators origin to the specified lon/lat
  * @param[in] self - this instance
  * @param[in] args - a tuple of doubles representing (latitude, longitude) in radians
@@ -283,6 +298,7 @@ static struct PyMethodDef _pypolarnavigator_methods[] =
 {
   {"getEarthRadius", (PyCFunction) _pypolarnavigator_getEarthRadius, 1},
   {"getEarthRadiusOrigin", (PyCFunction) _pypolarnavigator_getEarthRadiusOrigin, 1},
+  {"getDistance", (PyCFunction) _pypolarnavigator_getDistance, 1},
   {"llToDa", (PyCFunction) _pypolarnavigator_llToDa, 1},
   {"daToLl", (PyCFunction) _pypolarnavigator_daToLl, 1},
   {"dhToRe", (PyCFunction) _pypolarnavigator_dhToRe, 1},

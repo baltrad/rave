@@ -46,6 +46,15 @@ class PyPolarNavTest(unittest.TestCase):
     self.assertAlmostEquals(6378160.0, obj.equatorradius, 4)
     self.assertAlmostEquals((-3.9e-5)/1000, obj.dndh, 4)
 
+  def test_getDistance(self):
+    obj = _polarnav.new()
+    obj.lat0 = 60.0 * math.pi/180.0
+    obj.lon0 = 14.0 * math.pi/180.0
+    
+    result = obj.getDistance((61.0*math.pi/180.0, 14.0 * math.pi/180.0))
+    
+    self.assertAlmostEquals(111040.1, result, 1)
+
   # Define some clever tests for the APIs... Now they just verify that the returned
   # values are tuples
   def testLlToDa_and_daToLl(self):

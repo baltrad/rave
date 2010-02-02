@@ -139,6 +139,15 @@ double PolarNavigator_getEarthRadius(PolarNavigator_t* polnav, double lat);
 double PolarNavigator_getEarthRadiusOrigin(PolarNavigator_t* polnav);
 
 /**
+ * Returns the distance between lon0/lat0 and the provided lon/lat coordinates.
+ * @param[in] polnav - self
+ * @param[in] lat - the latitude
+ * @param[in] lon - the longitude
+ * @returns the distance in meters.
+ */
+double PolarNavigator_getDistance(PolarNavigator_t* polnav, double lat, double lon);
+
+/**
  * Calculates the distance/azimuth from origin to the specified lon/lat.
  * @param[in] polnav - the polar navigator
  * @param[in] lat - the destination latitude (in radians)

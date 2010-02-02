@@ -192,6 +192,18 @@ double PolarNavigator_getEarthRadiusOrigin(PolarNavigator_t* polnav)
   return radius;
 }
 
+double PolarNavigator_getDistance(PolarNavigator_t* polnav, double lat, double lon)
+{
+  double dLon = 0.0L, dLat = 0.0L, distance = 0.0L;
+  RAVE_ASSERT((polnav != NULL), "polnav was NULL");
+  dLon = (lon - polnav->lon0) * cos(polnav->lat0);
+  dLat = lat - polnav->lat0;
+
+  distance = sqrt(dLon * dLon + dLat * dLat) * PolarNavigator_getEarthRadiusOrigin(polnav);
+
+  return distance;
+}
+
 void PolarNavigator_llToDa(PolarNavigator_t* polnav, double lat, double lon, double* d, double* a)
 {
   double dLon = 0.0L;

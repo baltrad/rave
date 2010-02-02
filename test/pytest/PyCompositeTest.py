@@ -86,15 +86,6 @@ class PyCompositeTest(unittest.TestCase):
     result.objectType = _rave.Rave_ObjectType_COMP
     data = result.getData()
     
-    print `numpy.shape(data)`
-    print `data.shape`
-    print `data[0][0]`
-    print `data[1][1]`
-    print `data[2][2]`
-    print `data[500][500]`
-    print `data[847][847]`
-    
-    
     ios = _raveio.new()
     ios.object = result
     ios.filename = "swecomposite.h5"
