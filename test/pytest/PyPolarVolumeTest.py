@@ -178,7 +178,7 @@ class PyPolarVolumeTest(unittest.TestCase):
     self.assertAlmostEquals(10.0, scan1.longitude, 4)
 
     obj.longitude = 15.0
-    self.assertAlmostEquals(1.0, scan1.longitude, 4)
+    self.assertAlmostEquals(15.0, scan1.longitude, 4)
 
     scan1.longitude = 20.0
     self.assertAlmostEquals(20.0, obj.longitude, 4)
