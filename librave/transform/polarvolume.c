@@ -298,10 +298,7 @@ double PolarVolume_getHeight(PolarVolume_t* pvol)
 
 double PolarVolume_getDistance(PolarVolume_t* pvol, double lon, double lat)
 {
-  //double d = 0.0L, a = 0.0L;
   RAVE_ASSERT((pvol != NULL), "pvol was NULL");
-  //PolarNavigator_llToDa(pvol->navigator, lat, lon, &d, &a);
-  //return d;
   return PolarNavigator_getDistance(pvol->navigator, lat, lon);
 }
 
