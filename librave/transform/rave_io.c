@@ -1675,7 +1675,6 @@ static RaveCoreObject* RaveIOInternal_loadCartesian(HL_NodeList* nodelist)
     RAVE_ERROR0("Can not load provided file as a cartesian product");
     return NULL;
   }
-
   // What information
   if (!RaveIOInternal_getStringValue(nodelist, &date, "/what/date") ||
       !RaveIOInternal_getStringValue(nodelist, &time, "/what/time") ||
@@ -1774,7 +1773,8 @@ static RaveCoreObject* RaveIOInternal_loadCartesian(HL_NodeList* nodelist)
     RAVE_ERROR0("Data is not 2-dimensional");
     goto error;
   }
-  if (HLNode_getDimension(node, 0) != xsize || HLNode_getDimension(node, 1) != ysize) {
+
+  if (HLNode_getDimension(node, 1) != xsize || HLNode_getDimension(node, 0) != ysize) {
     RAVE_ERROR0("xsize/ysize does not correspond to actual data array dimensions");
     goto error;
   }
@@ -1784,10 +1784,12 @@ static RaveCoreObject* RaveIOInternal_loadCartesian(HL_NodeList* nodelist)
     RAVE_ERROR0("Bad data type");
     goto error;
   }
+
   if (!Cartesian_setData(result, xsize, ysize, HLNode_getData(node), dataType)) {
     RAVE_ERROR0("Could not set data");
     goto error;
   }
+
   RAVE_OBJECT_RELEASE(projection);
   return (RaveCoreObject*)result;
 error:

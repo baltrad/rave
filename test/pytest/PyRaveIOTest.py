@@ -391,7 +391,35 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEquals("IMAGE", nodelist.getNode("/dataset2/data1/data/CLASS").data())
     self.assertEquals("1.2", nodelist.getNode("/dataset2/data1/data/IMAGE_VERSION").data())
 
-    
+  # (RT: Ticket 8)
+  def test_loadCartesian_differentXYSize(self):
+    src = _cartesian.new()
+    src.time = "100000"
+    src.date = "20091010"
+    src.objectType = _rave.Rave_ObjectType_IMAGE
+    src.product = _rave.Rave_ProductType_COMP
+    src.source = "PLC:123"
+    src.quantity = "DBZH"
+    src.gain = 1.0
+    src.offset = 0.0
+    src.nodata = 255.0
+    src.undetect = 0.0
+    src.xscale = 2000.0
+    src.yscale = 2000.0
+    src.areaextent = (-240000.0, -240000.0, 238000.0, 238000.0)
+    projection = _projection.new("x","y","+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84")
+    src.projection = projection
+    data = numpy.zeros((100,90),numpy.int16)
+    src.setData(data)
+
+    ios = _raveio.new()
+    ios.object = src
+    ios.filename = self.TEMPORARY_FILE
+    ios.save()
+
+    obj = _raveio.open(self.TEMPORARY_FILE)
+    self.assertEquals(_rave.Rave_ObjectType_IMAGE, obj.object.objectType);
+  
   def addGroupNode(self, nodelist, name):
     node = _pyhl.node(_pyhl.GROUP_ID, name)
     nodelist.addNode(node)
