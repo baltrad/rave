@@ -1,10 +1,6 @@
 <?xml version='1.0' encoding='iso-8859-1'?>
 <!-- $Id: projections.xml,v 1.1.1.1 2006/07/14 11:31:54 dmichels Exp $ -->
 <projections>
-<projection id='lcc14e60n'>
-  <description>Lambert Conformal 14E, 60N</description>
-  <projdef>+proj=lcc +R=6371000.0 +lon_0=14 +lat1=55 +lat2=70</projdef>
-</projection>
 <projection id='ps14e60n'>
   <description>Polar Stereographic 14E, 60N</description>
   <projdef>+proj=stere +ellps=bessel +lat_0=90 +lon_0=14 +lat_ts=60 +datum=WGS84</projdef>

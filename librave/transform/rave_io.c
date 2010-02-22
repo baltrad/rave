@@ -651,8 +651,8 @@ static int RaveIOInternal_createDataset(HL_NodeList* nodelist, void* data, long 
     HL_FormatSpecifier specifier = RaveIOInternal_raveToHlhdfType(dataType);
     const char* hlhdfFormat = HL_getFormatSpecifierString(specifier);
     hsize_t dims[2];
-    dims[0] = ysize;
     dims[1] = xsize;
+    dims[0] = ysize;
     if (node == NULL) {
       RAVE_CRITICAL1("Failed to create dataset with name %s", nodeName);
       goto done;

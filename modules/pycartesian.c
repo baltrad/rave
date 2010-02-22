@@ -230,8 +230,8 @@ static PyObject* _pycartesian_getData(PyCartesian* self, PyObject* args)
   type = Cartesian_getDataType(self->cartesian);
   data = Cartesian_getData(self->cartesian);
 
-  dims[0] = (npy_intp)ysize;
   dims[1] = (npy_intp)xsize;
+  dims[0] = (npy_intp)ysize;
   arrtype = translate_ravetype_to_pyarraytype(type);
 
   if (data == NULL) {
