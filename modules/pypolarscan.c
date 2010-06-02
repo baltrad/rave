@@ -503,6 +503,21 @@ static PyObject* _pypolarscan_getNearestIndex(PyPolarScan* self, PyObject* args)
  */
 static struct PyMethodDef _pypolarscan_methods[] =
 {
+  {"elangle", NULL},
+  {"nbins", NULL},
+  {"rscale", NULL},
+  {"nrays", NULL},
+  {"rstart", NULL},
+  {"a1gate", NULL},
+  {"datatype", NULL},
+  {"beamwidth", NULL},
+  {"longitude", NULL},
+  {"latitude", NULL},
+  {"height", NULL},
+  {"time", NULL},
+  {"date", NULL},
+  {"source", NULL},
+  {"defaultparameter", NULL},
   {"addParameter", (PyCFunction) _pypolarscan_addParameter, 1},
   {"removeParameter", (PyCFunction) _pypolarscan_removeParameter, 1},
   {"getParameter", (PyCFunction) _pypolarscan_getParameter, 1},

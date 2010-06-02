@@ -43,7 +43,7 @@ class PyProjectionTest(unittest.TestCase):
   def tearDown(self):
     pass
 
-  def testNewProjection(self):
+  def test_new(self):
     obj = _projection.new("x", "y", "+proj=latlong +ellps=WGS84 +datum=WGS84")
     
     istransform = string.find(`type(obj)`, "ProjectionCore")
@@ -52,7 +52,14 @@ class PyProjectionTest(unittest.TestCase):
     self.assertEqual("y", obj.description)
     self.assertEqual("+proj=latlong +ellps=WGS84 +datum=WGS84", obj.definition)
 
-  def testInvalidProjection(self):
+  def test_attribute_visibility(self):
+    attrs = ['id', 'description', 'definition']
+    obj = _projection.new("x", "y", "+proj=latlong +ellps=WGS84 +datum=WGS84")
+    alist = dir(obj)
+    for a in attrs:
+      self.assertEquals(True, a in alist)
+
+  def test_invalid_projection(self):
     try:
       _projection.new("x", "y", "+proj=unknown + ellps=WGS84")
       self.fail("Expected ValueError")

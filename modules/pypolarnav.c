@@ -296,6 +296,12 @@ static PyObject* _pypolarnavigator_reToDh(PyPolarNavigator* self, PyObject* args
  */
 static struct PyMethodDef _pypolarnavigator_methods[] =
 {
+  {"poleradius", NULL},
+  {"equatorradius", NULL},
+  {"lon0", NULL},
+  {"lat0", NULL},
+  {"alt0", NULL},
+  {"dndh", NULL},
   {"getEarthRadius", (PyCFunction) _pypolarnavigator_getEarthRadius, 1},
   {"getEarthRadiusOrigin", (PyCFunction) _pypolarnavigator_getEarthRadiusOrigin, 1},
   {"getDistance", (PyCFunction) _pypolarnavigator_getDistance, 1},

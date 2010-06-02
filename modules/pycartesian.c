@@ -355,6 +355,23 @@ static PyObject* _pycartesian_getMean(PyCartesian* self, PyObject* args)
  */
 static struct PyMethodDef _pycartesian_methods[] =
 {
+  {"time", NULL},
+  {"date", NULL},
+  {"objectType", NULL},
+  {"product", NULL},
+  {"source", NULL},
+  {"xsize", NULL},
+  {"ysize", NULL},
+  {"xscale", NULL},
+  {"yscale", NULL},
+  {"quantity", NULL},
+  {"gain", NULL},
+  {"offset", NULL},
+  {"nodata", NULL},
+  {"undetect", NULL},
+  {"datatype", NULL},
+  {"areaextent", NULL},
+  {"projection", NULL},
   {"init", (PyCFunction) _pycartesian_init, 1},
   {"setData", (PyCFunction) _pycartesian_setData, 1},
   {"getData", (PyCFunction) _pycartesian_getData, 1},

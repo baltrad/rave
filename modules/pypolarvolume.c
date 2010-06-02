@@ -356,6 +356,13 @@ static PyObject* _pypolarvolume_getNearestParameterValue(PyPolarVolume* self, Py
  */
 static struct PyMethodDef _pypolarvolume_methods[] =
 {
+  {"longitude", NULL},
+  {"latitude", NULL},
+  {"height", NULL},
+  {"time", NULL},
+  {"date", NULL},
+  {"source", NULL},
+  {"paramname", NULL},
   {"getDistance", (PyCFunction) _pypolarvolume_getDistance, 1},
   {"addScan", (PyCFunction) _pypolarvolume_addScan, 1},
   {"getScan", (PyCFunction) _pypolarvolume_getScan, 1},

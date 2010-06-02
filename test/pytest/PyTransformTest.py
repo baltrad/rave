@@ -37,11 +37,18 @@ class PyTransformTest(unittest.TestCase):
   def tearDown(self):
     pass
 
-  def testNewTransform(self):
+  def test_new(self):
     obj = _transform.new()
     
     istransform = string.find(`type(obj)`, "TransformCore")
     self.assertNotEqual(-1, istransform) 
+
+  def test_attribute_visibility(self):
+    attrs = ['method']
+    obj = _transform.new()
+    alist = dir(obj)
+    for a in attrs:
+      self.assertEquals(True, a in alist)
 
   def testMethod(self):
     obj = _transform.new()

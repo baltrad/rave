@@ -38,11 +38,19 @@ class PyPolarScanParamTest(unittest.TestCase):
   def tearDown(self):
     pass
 
-  def testNewScan(self):
+  def test_new(self):
     obj = _polarscanparam.new()
     
     isscan = string.find(`type(obj)`, "PolarScanParamCore")
     self.assertNotEqual(-1, isscan) 
+
+  def test_attribute_visibility(self):
+    attrs = ['nbins', 'nrays', 'quantity', 'gain', 'offset', 'nodata',
+             'undetect', 'datatype']
+    obj = _polarscanparam.new()
+    alist = dir(obj)
+    for a in attrs:
+      self.assertEquals(True, a in alist)
 
   def test_invalid_attributes(self):
     obj = _polarscanparam.new()

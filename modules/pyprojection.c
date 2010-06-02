@@ -349,11 +349,14 @@ static PyObject* _pyprojection_fwd(PyProjection* self, PyObject* args)
  */
 static struct PyMethodDef _pyprojection_methods[] =
 {
-  { "transform", (PyCFunction) _pyprojection_transform, 1},
-  { "transformx", (PyCFunction) _pyprojection_transformx, 1},
-  { "inv", (PyCFunction) _pyprojection_inv, 1},
-  { "fwd", (PyCFunction) _pyprojection_fwd, 1},
-  { NULL, NULL } /* sentinel */
+  {"id", NULL},
+  {"description", NULL},
+  {"definition", NULL},
+  {"transform", (PyCFunction) _pyprojection_transform, 1},
+  {"transformx", (PyCFunction) _pyprojection_transformx, 1},
+  {"inv", (PyCFunction) _pyprojection_inv, 1},
+  {"fwd", (PyCFunction) _pyprojection_fwd, 1},
+  {NULL, NULL } /* sentinel */
 };
 
 /**

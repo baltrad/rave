@@ -265,6 +265,14 @@ static PyObject* _pypolarscanparam_getConvertedValue(PyPolarScanParam* self, PyO
  */
 static struct PyMethodDef _pypolarscanparam_methods[] =
 {
+  {"nbins", NULL},
+  {"nrays", NULL},
+  {"quantity", NULL},
+  {"gain", NULL},
+  {"offset", NULL},
+  {"nodata", NULL},
+  {"undetect", NULL},
+  {"datatype", NULL},
   {"setData", (PyCFunction) _pypolarscanparam_setData, 1},
   {"getData", (PyCFunction) _pypolarscanparam_getData, 1},
   {"getValue", (PyCFunction) _pypolarscanparam_getValue, 1},

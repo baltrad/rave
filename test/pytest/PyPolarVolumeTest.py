@@ -41,11 +41,19 @@ class PyPolarVolumeTest(unittest.TestCase):
   def tearDown(self):
     pass
     
-  def testNewVolume(self):
+  def test_new(self):
     obj = _polarvolume.new()
     
     result = string.find(`type(obj)`, "PolarVolumeCore")
     self.assertNotEqual(-1, result) 
+
+  def test_attribute_visibility(self):
+    attrs = ['longitude', 'latitude', 'height', 'time', 'date', 'source',
+             'paramname']
+    obj = _polarvolume.new()
+    alist = dir(obj)
+    for a in attrs:
+      self.assertEquals(True, a in alist)
 
   def test_time(self):
     obj = _polarvolume.new()

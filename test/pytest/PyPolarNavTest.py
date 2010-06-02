@@ -37,7 +37,7 @@ class PyPolarNavTest(unittest.TestCase):
   def tearDown(self):
     pass
 
-  def testNew(self):
+  def test_new(self):
     obj = _polarnav.new()
     
     ispolnav = string.find(`type(obj)`, "PolarNavigatorCore")
@@ -45,6 +45,13 @@ class PyPolarNavTest(unittest.TestCase):
     self.assertAlmostEquals(6356780.0, obj.poleradius, 4)
     self.assertAlmostEquals(6378160.0, obj.equatorradius, 4)
     self.assertAlmostEquals((-3.9e-5)/1000, obj.dndh, 4)
+
+  def test_attribute_visibility(self):
+    attrs = ['poleradius', 'equatorradius', 'lon0', 'lat0', 'alt0', 'dndh']
+    obj = _polarnav.new()
+    alist = dir(obj)
+    for a in attrs:
+      self.assertEquals(True, a in alist)
 
   def test_getDistance(self):
     obj = _polarnav.new()

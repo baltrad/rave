@@ -236,6 +236,11 @@ static PyObject* _pyraveio_save(PyRaveIO* self, PyObject* args)
  */
 static struct PyMethodDef _pyraveio_methods[] =
 {
+  {"version", NULL},
+  {"h5radversion", NULL},
+  {"objectType", NULL},
+  {"filename", NULL},
+  {"object", NULL},
   {"close", (PyCFunction) _pyraveio_close, 1},
   {"load", (PyCFunction) _pyraveio_load, 1},
   {"save", (PyCFunction) _pyraveio_save, 1},

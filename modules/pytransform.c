@@ -256,6 +256,7 @@ static PyObject* _pytransform_pcappi(PyTransform* self, PyObject* args)
  */
 static struct PyMethodDef _pytransform_methods[] =
 {
+  {"method", NULL},
   {"ppi", (PyCFunction) _pytransform_ppi, 1},
   {"cappi", (PyCFunction) _pytransform_cappi, 1},
   {"pcappi", (PyCFunction) _pytransform_pcappi, 1},

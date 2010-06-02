@@ -57,6 +57,13 @@ class PyRaveIOTest(unittest.TestCase):
     israveio = string.find(`type(obj)`, "RaveIOCore")
     self.assertNotEqual(-1, israveio)
 
+  def test_attribute_visibility(self):
+    attrs = ['version', 'h5radversion', 'objectType', 'filename', 'object']
+    obj = _raveio.new()
+    alist = dir(obj)
+    for a in attrs:
+      self.assertEquals(True, a in alist)
+
   def test_load(self):
     obj = _raveio.new()
     self.assertTrue(obj.object == None)
