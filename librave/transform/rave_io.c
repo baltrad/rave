@@ -1970,6 +1970,124 @@ done:
 }
 
 /**
+ * Parses a name in the format /<x>/<y>/<z>/.. into tokens of the format
+ * tokens[0] = <x>
+ * tokens[1] = <y>
+ * ...
+ * if memory not is enough it will fail.
+ * @param[in] name  - the node name
+ * @param[in,out] tokens - the allocated tokens
+ * @param[in] ntokens - the number of available tokens
+ * @param[in] toklen  - the space available for each token
+ * @param[out] otokens - the number of tokens stored
+ * @return 1 on success otherwise 0
+ */
+static int RaveIOInternal_parseNodeName(const char* name, char** tokens, int ntokens, int toklen, int* otokens)
+{
+  int i = 0;
+  int nlen = 0;
+  char* tmpname = (char*)name;
+  int tokidx = 0;
+  int token = 0;
+
+  RAVE_ASSERT((name != NULL), "name == NULL");
+  RAVE_ASSERT((tokens != NULL), "tokens == NULL");
+  RAVE_ASSERT((otokens != NULL), "otokens == NULL");
+
+  if (strncmp(name, "/", 1) != 0) {
+    RAVE_WARNING0("Name did not start with /");
+    return 0;
+  } else if (ntokens <= 1) {
+    RAVE_WARNING0("Space only allocated for one token !?");
+    return 0;
+  } else if (toklen <= 1) {
+    RAVE_WARNING0("Space only allocated for tokens of 1 in length !?");
+    return 0;
+  }
+  tmpname++;
+  nlen = strlen(tmpname);
+  for (i = 0; i < nlen; i++) {
+    tokens[token][tokidx++] = tmpname[i];
+    if (tokidx >= toklen-1 || token >= ntokens-1) {
+      RAVE_WARNING0("Insufficient space allocated for tokens, please report this as a bug!");
+      return 0;
+    }
+    if (tmpname[i] == '/') {
+      tokens[token][tokidx-1] = '\0';
+      token++;
+      tokidx = 0;
+    } else if (i == nlen - 1) {
+      tokens[token][tokidx] = '\0';
+      token++;
+      tokidx = 0;
+    }
+  }
+  *otokens = token;
+  return 1;
+}
+
+#define RAVEIO_NR_TOKENS 32   /**< nr of tokens that can be filled */
+#define RAVEIO_TOKEN_LENGTH 64 /**< length of each token */
+#ifdef KALLE
+static RaveCoreObject* XRaveIOInternal_loadVolume(HL_NodeList* nodelist)
+{
+  PolarVolume_t* result = NULL;
+  char** tokens = NULL;
+  int i = 0;
+  int nrnodes = 0;
+  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
+
+  if (RaveIOInternal_getObjectType(nodelist) != Rave_ObjectType_PVOL) {
+    RAVE_ERROR0("Can not load provided file as a volume");
+    return NULL;
+  }
+
+  tokens = RAVE_MALLOC(sizeof(char*)*RAVEIO_NR_TOKENS);
+  if (tokens == NULL) {
+    RAVE_ERROR0("Failed to allocate memory for tokens");
+    goto done;
+  }
+  memset(tokens, 0, sizeof(char*)*RAVEIO_NR_TOKENS);
+  for (i = 0; i < RAVEIO_NR_TOKENS; i++) {
+    tokens[i] = RAVE_MALLOC(sizeof(char)*RAVEIO_TOKEN_LENGTH);
+    if (tokens[i] == NULL) {
+      RAVE_ERROR0("Failed to allocate memory for tokens");
+      goto done;
+    }
+  }
+
+  nrnodes = HLNodeList_getNumberOfNodes(nodelist);
+  for (i = 0; i < nrnodes; i++) {
+    HL_Node* node = HLNodeList_getNodeByIndex(nodelist, i);
+    const char* name = HLNode_getName(node);
+    if (!RaveIOInternal_parseNodeName(name, tokens, RAVEIO_NR_TOKENS, RAVEIO_TOKEN_LENGTH, &ntok)) {
+      RAVE_WARNING1("Failed to extract tokens for node %s", name);
+      goto done;
+    }
+
+  }
+  /*
+   /
+   /what
+   /what/this
+   /where
+   /where/that
+   /how
+   /how/come
+   /dataset1
+   ..
+   */
+
+done:
+  for (i = 0; tokens != NULL && i < RAVEIO_NR_TOKENS; i++) {
+    RAVE_FREE(tokens[i]);
+  }
+  RAVE_FREE(tokens);
+
+}
+#endif
+
+/**
  * Loads a polar volume.
  * @param[in] nodelist - the hlhdf nodelist
  * @returns a Polar Volume on success, otherwise NULL
@@ -2036,20 +2154,6 @@ static RaveCoreObject* RaveIOInternal_loadVolume(HL_NodeList* nodelist)
     RAVE_OBJECT_RELEASE(scan);
     dsindex++;
   }
-#ifdef KALLE
-  while (RaveIOInternal_hasNodeByName(nodelist, "/dataset%d", dsindex)) {
-    int dindex = 1;
-    while (RaveIOInternal_hasNodeByName(nodelist, "/dataset%d/data%d", dsindex, dindex)) {
-      PolarScan_t* scan = RaveIOInternal_loadScanIndex(nodelist, dsindex, dindex);
-      if (scan != NULL) {
-        PolarVolume_addScan(result, scan);
-      }
-      RAVE_OBJECT_RELEASE(scan);
-      dindex++;
-    }
-    dsindex++;
-  }
-#endif
   return (RaveCoreObject*)result;
 error:
   RAVE_OBJECT_RELEASE(result);
