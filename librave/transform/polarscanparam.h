@@ -29,6 +29,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "projection.h"
 #include "rave_object.h"
 #include "rave_types.h"
+#include "rave_attribute.h"
+#include "rave_list.h"
 
 /**
  * Defines a Polar Scan Parameter
@@ -179,5 +181,30 @@ RaveValueType PolarScanParam_getValue(PolarScanParam_t* scanparam, int bin, int 
  * @return the type of data
  */
 RaveValueType PolarScanParam_getConvertedValue(PolarScanParam_t* scanparam, int bin, int ray, double* v);
+
+/**
+ * Adds a rave attribute to the parameter.
+ * @param[in] scanparam - self
+ * @param[in] attribute - the attribute
+ * @return 1 on success otherwise 0
+ */
+int PolarScanParam_addAttribute(PolarScanParam_t* scanparam,
+  RaveAttribute_t* attribute);
+
+/**
+ * Returns the rave attribute that is named accordingly.
+ * @param[in] scanparam - self
+ * @param[in] name - the name of the attribute
+ * @returns the attribute if found otherwise NULL
+ */
+RaveAttribute_t* PolarScanParam_getAttribute(PolarScanParam_t* scanparam,
+  const char* name);
+
+/**
+ * Returns a list of attribute names. Release with \@ref #RaveList_freeAndDestroy.
+ * @param[in] scanparam - self
+ * @returns a list of attribute names
+ */
+RaveList_t* PolarScanParam_getAttributeNames(PolarScanParam_t* scanparam);
 
 #endif

@@ -30,6 +30,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_datetime.h"
 #include "rave_transform.h"
 #include "rave_data2d.h"
+#include "raveobject_hashtable.h"
 
 /**
  * Represents one param in a scan
@@ -42,6 +43,7 @@ struct _PolarScanParam_t {
   double offset;     /**< offset when scaling */
   double nodata;     /**< nodata */
   double undetect;   /**< undetect */
+  RaveObjectHashTable_t* attrs; /**< attributes */
 };
 
 /*@{ Private functions */
@@ -52,18 +54,20 @@ static int PolarScanParam_constructor(RaveCoreObject* obj)
 {
   PolarScanParam_t* this = (PolarScanParam_t*)obj;
   this->data = RAVE_OBJECT_NEW(&RaveData2D_TYPE);
+  this->attrs = RAVE_OBJECT_NEW(&RaveObjectHashTable_TYPE);
   this->quantity = NULL;
   this->gain = 0.0L;
   this->offset = 0.0L;
   this->nodata = 0.0L;
   this->undetect = 0.0L;
 
-  if (this->data == NULL) {
+  if (this->data == NULL || this->attrs == NULL) {
     goto error;
   }
   return 1;
 error:
   RAVE_OBJECT_RELEASE(this->data);
+  RAVE_OBJECT_RELEASE(this->attrs);
 
   return 0;
 }
@@ -73,9 +77,10 @@ static int PolarScanParam_copyconstructor(RaveCoreObject* obj, RaveCoreObject* s
   PolarScanParam_t* this = (PolarScanParam_t*)obj;
   PolarScanParam_t* src = (PolarScanParam_t*)srcobj;
   this->data = RAVE_OBJECT_CLONE(src->data);
+  this->attrs = RAVE_OBJECT_CLONE(src->attrs);
   this->quantity = NULL;
 
-  if (this->data == NULL) {
+  if (this->data == NULL || this->attrs == NULL) {
     goto error;
   }
   if (!PolarScanParam_setQuantity(this, PolarScanParam_getQuantity(src))) {
@@ -90,6 +95,7 @@ static int PolarScanParam_copyconstructor(RaveCoreObject* obj, RaveCoreObject* s
   return 1;
 error:
   RAVE_OBJECT_RELEASE(this->data);
+  RAVE_OBJECT_RELEASE(this->attrs);
   RAVE_FREE(this->quantity);
   return 0;
 }
@@ -101,6 +107,7 @@ static void PolarScanParam_destructor(RaveCoreObject* obj)
 {
   PolarScanParam_t* this = (PolarScanParam_t*)obj;
   RAVE_OBJECT_RELEASE(this->data);
+  RAVE_OBJECT_RELEASE(this->attrs);
   RAVE_FREE(this->quantity);
 }
 
@@ -238,7 +245,6 @@ RaveValueType PolarScanParam_getValue(PolarScanParam_t* scanparam, int bin, int 
   }
 
   return result;
-
 }
 
 RaveValueType PolarScanParam_getConvertedValue(PolarScanParam_t* scanparam, int bin, int ray, double* v)
@@ -252,6 +258,53 @@ RaveValueType PolarScanParam_getConvertedValue(PolarScanParam_t* scanparam, int 
     }
   }
   return result;
+}
+
+int PolarScanParam_addAttribute(PolarScanParam_t* scanparam,
+  RaveAttribute_t* attribute)
+{
+  char* name = NULL;
+  char* aname = NULL;
+  char* gname = NULL;
+  int result = 0;
+  RAVE_ASSERT((scanparam != NULL), "scanparam == NULL");
+  RAVE_ASSERT((attribute != NULL), "attribute == NULL");
+
+  name = RaveAttribute_getName(attribute);
+  if (name != NULL) {
+    if (!RaveAttributeHelp_extractGroupAndName(name, &gname, &aname)) {
+      RAVE_ERROR1("Failed to extract group and name from %s", name);
+      goto done;
+    }
+    if ((strcasecmp("how", gname)==0 ||
+         strcasecmp("what", gname)==0 ||
+         strcasecmp("where", gname)==0) &&
+        strchr(aname, '/') == NULL) {
+      result = RaveObjectHashTable_put(scanparam->attrs, name, attribute);
+    }
+  }
+
+done:
+  RAVE_FREE(aname);
+  RAVE_FREE(gname);
+  return result;
+}
+
+RaveAttribute_t* PolarScanParam_getAttribute(PolarScanParam_t* scanparam,
+  const char* name)
+{
+  RAVE_ASSERT((scanparam != NULL), "scanparam == NULL");
+  if (name == NULL) {
+    RAVE_ERROR0("Trying to get an attribute with NULL name");
+    return NULL;
+  }
+  return RaveObjectHashTable_get(scanparam->attrs, name);
+}
+
+RaveList_t* PolarScanParam_getAttributeNames(PolarScanParam_t* scanparam)
+{
+  RAVE_ASSERT((scanparam != NULL), "scanparam == NULL");
+  return RaveObjectHashTable_keys(scanparam->attrs);
 }
 
 /*@} End of Interface functions */

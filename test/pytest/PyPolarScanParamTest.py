@@ -291,6 +291,55 @@ class PyPolarScanParamTest(unittest.TestCase):
     self.assertEqual(10, obj.nbins)
     self.assertEqual(12, obj.nrays)
 
+  def test_addAttribute_goodNames(self):
+    obj = _polarscanparam.new()
+    GOODNAMES = ["how/this", "HOW/this", "HoW/this", "What/that",
+                 "wHAT/that", "Where/doobi", "WHERE/DOOBI"]
+    for n in GOODNAMES:
+      obj.addAttribute(n, "XYZ")
+    
+  def test_addAttribute_badNames(self):
+    obj = _polarscanparam.new()
+    BADNAMES = ["/how/this", "/HOW/this", "/how/this/that", "how/this/that"]
+    for n in BADNAMES:
+      try:
+        obj.addAttribute(n, "XYZ")
+        self.fail("Expected AttributeError")
+      except AttributeError,e:
+        pass
+  
+  def test_attributes(self):
+    obj = _polarscanparam.new()
+    obj.addAttribute("how/this", "ABC")
+    obj.addAttribute("how/that", 1.0)
+    obj.addAttribute("what/value", 2)
+    obj.addAttribute("where/value", "1.0, 2.0, 3.0")
+    
+    names = obj.getAttributeNames()
+    self.assertEquals(4, len(names))
+    self.assertTrue("how/this" in names)
+    self.assertTrue("how/that" in names)
+    self.assertTrue("what/value" in names)
+    self.assertTrue("where/value" in names)
+    
+    self.assertEquals("ABC", obj.getAttribute("how/this"))
+    self.assertAlmostEquals(1.0, obj.getAttribute("how/that"), 4)
+    self.assertEquals(2, obj.getAttribute("what/value"))
+    self.assertEquals("1.0, 2.0, 3.0", obj.getAttribute("where/value"))
+
+  def test_attributes_nonexisting(self):
+    obj = _polarscanparam.new()
+    obj.addAttribute("how/this", "ABC")
+    obj.addAttribute("how/that", 1.0)
+    obj.addAttribute("what/value", 2)
+    obj.addAttribute("where/value", "1.0, 2.0, 3.0")
+    
+    try:
+      obj.getAttribute("how/miffo")
+      self.fail("Expected AttributeError")
+    except AttributeError, e:
+      pass
+    
 if __name__ == "__main__":
   #import sys;sys.argv = ['', 'Test.testName']
   unittest.main()
