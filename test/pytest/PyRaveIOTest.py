@@ -105,7 +105,7 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertAlmostEquals(56.3675, vol.latitude*180.0/math.pi, 4)
     self.assertAlmostEquals(12.8544, vol.longitude*180.0/math.pi, 4)
     self.assertAlmostEquals(209, vol.height, 4)
-    
+
     # Verify the scan
     scan = vol.getScan(0)
     self.assertEquals(0, scan.a1gate)
@@ -286,17 +286,28 @@ class PyRaveIOTest(unittest.TestCase):
     scan1.a1gate = 2
     scan1.rstart = 0.0
     scan1.rscale = 5000.0
+    scan1.time = "100001"
+    scan1.date = "20091010"
     dbzhParam = _polarscanparam.new()
     dbzhParam.nodata = 10.0
     dbzhParam.undetect = 11.0
     dbzhParam.quantity = "DBZH"
     dbzhParam.gain = 1.0
     dbzhParam.offset = 0.0
-    scan1.time = "100001"
-    scan1.date = "20091010"
     data = numpy.zeros((100, 120), numpy.uint8)
     dbzhParam.setData(data)
     scan1.addParameter(dbzhParam)
+
+    mmhParam = _polarscanparam.new()
+    mmhParam.nodata = 12.0
+    mmhParam.undetect = 13.0
+    mmhParam.quantity = "MMH"
+    mmhParam.gain = 10.0
+    mmhParam.offset = 20.0
+    data = numpy.zeros((100, 120), numpy.int16)
+    mmhParam.setData(data)
+    scan1.addParameter(mmhParam)
+
     obj.addScan(scan1)
 
     scan2 = _polarscan.new()
@@ -357,17 +368,36 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEquals(120, nodelist.getNode("/dataset1/where/nbins").data())
     self.assertEquals(100, nodelist.getNode("/dataset1/where/nrays").data())
     
-    # dataset1/data1/what
-    self.assertEquals("DBZH", nodelist.getNode("/dataset1/data1/what/quantity").data())
-    self.assertAlmostEquals(1.0, nodelist.getNode("/dataset1/data1/what/gain").data(), 4)
-    self.assertAlmostEquals(0.0, nodelist.getNode("/dataset1/data1/what/offset").data(), 4)
-    self.assertAlmostEquals(10.0, nodelist.getNode("/dataset1/data1/what/nodata").data(), 4)
-    self.assertAlmostEquals(11.0, nodelist.getNode("/dataset1/data1/what/undetect").data(), 4)
+    # Verify that both DBZH and MMH has been stored properly.
+    d1field = nodelist.getNode("/dataset1/data1/what/quantity").data()
+    d2field = nodelist.getNode("/dataset1/data2/what/quantity").data()
+    dbzhname = "/dataset1/data1"
+    mmhname = "/dataset1/data2"
+    if d1field == "MMH":
+      dbzhname = "/dataset1/data2"
+      mmhname = "/dataset1/data1"
     
-    # dataset1/data1/data
-    self.assertEquals(numpy.uint8, nodelist.getNode("/dataset1/data1/data").data().dtype)
-    self.assertEquals("IMAGE", nodelist.getNode("/dataset1/data1/data/CLASS").data())
-    self.assertEquals("1.2", nodelist.getNode("/dataset1/data1/data/IMAGE_VERSION").data())
+    # dbzh field
+    self.assertEquals("DBZH", nodelist.getNode(dbzhname + "/what/quantity").data())
+    self.assertAlmostEquals(1.0, nodelist.getNode(dbzhname + "/what/gain").data(), 4)
+    self.assertAlmostEquals(0.0, nodelist.getNode(dbzhname + "/what/offset").data(), 4)
+    self.assertAlmostEquals(10.0, nodelist.getNode(dbzhname + "/what/nodata").data(), 4)
+    self.assertAlmostEquals(11.0, nodelist.getNode(dbzhname + "/what/undetect").data(), 4)
+    
+    # 
+    self.assertEquals(numpy.uint8, nodelist.getNode(dbzhname + "/data").data().dtype)
+    self.assertEquals("IMAGE", nodelist.getNode(dbzhname + "/data/CLASS").data())
+    self.assertEquals("1.2", nodelist.getNode(dbzhname + "/data/IMAGE_VERSION").data())
+
+    # mmh field
+    self.assertEquals("MMH", nodelist.getNode(mmhname + "/what/quantity").data())
+    self.assertAlmostEquals(10.0, nodelist.getNode(mmhname + "/what/gain").data(), 4)
+    self.assertAlmostEquals(20.0, nodelist.getNode(mmhname + "/what/offset").data(), 4)
+    self.assertAlmostEquals(12.0, nodelist.getNode(mmhname + "/what/nodata").data(), 4)
+    self.assertAlmostEquals(13.0, nodelist.getNode(mmhname + "/what/undetect").data(), 4)
+    
+    # dataset1/data2/data
+    self.assertEquals(numpy.int16, nodelist.getNode(mmhname + "/data").data().dtype)
 
     #
     # dataset2 (scan2)

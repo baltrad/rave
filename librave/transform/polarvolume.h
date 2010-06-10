@@ -29,6 +29,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "polarscan.h"
 #include "projection.h"
 #include "rave_object.h"
+#include "raveobject_list.h"
 
 /**
  * Defines a Polar Volume
@@ -252,4 +253,41 @@ int PolarVolume_isAscendingScans(PolarVolume_t* pvol);
  */
 int PolarVolume_isTransformable(PolarVolume_t* pvol);
 
+/**
+ * Adds a rave attribute to the volume.
+ * what/date, what/time, what/source, where/lon, where/lat and where/height
+ * are handled specially and will be added to respective member instead
+ * of stored as attributes.
+ * what/date, what/time and what/source must be string.
+ * where/lon and where/lat must be double in degrees.
+ * where/height must be double in meters.
+ * @param[in] pvol - self
+ * @param[in] attribute - the attribute
+ * @return 1 on success otherwise 0
+ */
+int PolarVolume_addAttribute(PolarVolume_t* pvol,
+  RaveAttribute_t* attribute);
+
+/**
+ * Returns the rave attribute that is named accordingly.
+ * @param[in] pvol - self
+ * @param[in] name - the name of the attribute
+ * @returns the attribute if found otherwise NULL
+ */
+RaveAttribute_t* PolarVolume_getAttribute(PolarVolume_t* pvol,
+  const char* name);
+
+/**
+ * Returns a list of attribute names. Release with \@ref #RaveList_freeAndDestroy.
+ * @param[in] pvol - self
+ * @returns a list of attribute names
+ */
+RaveList_t* PolarVolume_getAttributeNames(PolarVolume_t* pvol);
+
+/**
+ * Returns a list of attribute values that should be stored for this volume.
+ * @param[in] pvol - self
+ * @returns a list of RaveAttributes.
+ */
+RaveObjectList_t* PolarVolume_getAttributeValues(PolarVolume_t* pvol);
 #endif

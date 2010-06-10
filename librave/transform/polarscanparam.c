@@ -31,6 +31,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_transform.h"
 #include "rave_data2d.h"
 #include "raveobject_hashtable.h"
+#include "rave_utilities.h"
 
 /**
  * Represents one param in a scan
@@ -47,6 +48,7 @@ struct _PolarScanParam_t {
 };
 
 /*@{ Private functions */
+
 /**
  * Constructor.
  */
@@ -60,7 +62,6 @@ static int PolarScanParam_constructor(RaveCoreObject* obj)
   this->offset = 0.0L;
   this->nodata = 0.0L;
   this->undetect = 0.0L;
-
   if (this->data == NULL || this->attrs == NULL) {
     goto error;
   }
@@ -91,7 +92,6 @@ static int PolarScanParam_copyconstructor(RaveCoreObject* obj, RaveCoreObject* s
   this->offset = src->offset;
   this->nodata = src->nodata;
   this->undetect = src->undetect;
-
   return 1;
 error:
   RAVE_OBJECT_RELEASE(this->data);
@@ -263,7 +263,7 @@ RaveValueType PolarScanParam_getConvertedValue(PolarScanParam_t* scanparam, int 
 int PolarScanParam_addAttribute(PolarScanParam_t* scanparam,
   RaveAttribute_t* attribute)
 {
-  char* name = NULL;
+  const char* name = NULL;
   char* aname = NULL;
   char* gname = NULL;
   int result = 0;
@@ -272,15 +272,58 @@ int PolarScanParam_addAttribute(PolarScanParam_t* scanparam,
 
   name = RaveAttribute_getName(attribute);
   if (name != NULL) {
-    if (!RaveAttributeHelp_extractGroupAndName(name, &gname, &aname)) {
-      RAVE_ERROR1("Failed to extract group and name from %s", name);
-      goto done;
-    }
-    if ((strcasecmp("how", gname)==0 ||
-         strcasecmp("what", gname)==0 ||
-         strcasecmp("where", gname)==0) &&
+    /*
+     * what/gain
+     * what/offset
+     * what/nodata
+     * what/undetect
+     * what/quantity
+     */
+    if (strcasecmp("what/gain", name)==0) {
+      double value = 0.0;
+      if (!(result = RaveAttribute_getDouble(attribute, &value))) {
+        RAVE_ERROR0("Failed to extract what/gain as a double");
+      }
+      PolarScanParam_setGain(scanparam, value);
+    } else if (strcasecmp("what/offset", name)==0) {
+      double value = 0.0;
+      if (!(result = RaveAttribute_getDouble(attribute, &value))) {
+        RAVE_ERROR0("Failed to extract what/offset as a double");
+      }
+      PolarScanParam_setOffset(scanparam, value);
+    } else if (strcasecmp("what/nodata", name)==0) {
+      double value = 0.0;
+      if (!(result = RaveAttribute_getDouble(attribute, &value))) {
+        RAVE_ERROR0("Failed to extract what/nodata as a double");
+      }
+      PolarScanParam_setNodata(scanparam, value);
+    } else if (strcasecmp("what/undetect", name)==0) {
+      double value = 0.0;
+      if (!(result = RaveAttribute_getDouble(attribute, &value))) {
+        RAVE_ERROR0("Failed to extract what/undetect as a double");
+      }
+      PolarScanParam_setUndetect(scanparam, value);
+    } else if (strcasecmp("what/quantity", name)==0) {
+      char* value = NULL;
+      if(!RaveAttribute_getString(attribute, &value)) {
+        RAVE_ERROR0("Failed to extract what/quantity as a string");
+        goto done;
+      }
+      if (!(result = PolarScanParam_setQuantity(scanparam, value))) {
+        RAVE_ERROR1("Failed to add %s attribute", name);
+        goto done;
+      }
+    } else {
+      if (!RaveAttributeHelp_extractGroupAndName(name, &gname, &aname)) {
+        RAVE_ERROR1("Failed to extract group and name from %s", name);
+        goto done;
+      }
+      if ((strcasecmp("how", gname)==0 ||
+          strcasecmp("what", gname)==0 ||
+          strcasecmp("where", gname)==0) &&
         strchr(aname, '/') == NULL) {
-      result = RaveObjectHashTable_put(scanparam->attrs, name, attribute);
+        result = RaveObjectHashTable_put(scanparam->attrs, name, (RaveCoreObject*)attribute);
+      }
     }
   }
 
@@ -298,13 +341,51 @@ RaveAttribute_t* PolarScanParam_getAttribute(PolarScanParam_t* scanparam,
     RAVE_ERROR0("Trying to get an attribute with NULL name");
     return NULL;
   }
-  return RaveObjectHashTable_get(scanparam->attrs, name);
+  return (RaveAttribute_t*)RaveObjectHashTable_get(scanparam->attrs, name);
 }
 
 RaveList_t* PolarScanParam_getAttributeNames(PolarScanParam_t* scanparam)
 {
   RAVE_ASSERT((scanparam != NULL), "scanparam == NULL");
   return RaveObjectHashTable_keys(scanparam->attrs);
+}
+
+RaveObjectList_t* PolarScanParam_getAttributeValues(PolarScanParam_t* scanparam)
+{
+  RaveObjectList_t* result = NULL;
+  RaveObjectList_t* tableattrs = NULL;
+
+  RAVE_ASSERT((scanparam != NULL), "scanparam == NULL");
+  tableattrs = RaveObjectHashTable_values(scanparam->attrs);
+  if (tableattrs == NULL) {
+    goto error;
+  }
+  result = RAVE_OBJECT_CLONE(tableattrs);
+  if (result == NULL) {
+    goto error;
+  }
+
+  /*
+   * what/gain
+   * what/offset
+   * what/nodata
+   * what/undetect
+   * what/quantity
+   */
+  if (!RaveUtilities_addDoubleAttributeToList(result, "what/gain", PolarScanParam_getGain(scanparam)) ||
+      !RaveUtilities_addDoubleAttributeToList(result, "what/offset", PolarScanParam_getOffset(scanparam)) ||
+      !RaveUtilities_addDoubleAttributeToList(result, "what/nodata", PolarScanParam_getNodata(scanparam)) ||
+      !RaveUtilities_addDoubleAttributeToList(result, "what/undetect", PolarScanParam_getUndetect(scanparam)) ||
+      !RaveUtilities_addStringAttributeToList(result, "what/quantity", PolarScanParam_getQuantity(scanparam))) {
+    goto error;
+  }
+
+  RAVE_OBJECT_RELEASE(tableattrs);
+  return result;
+error:
+  RAVE_OBJECT_RELEASE(result);
+  RAVE_OBJECT_RELEASE(tableattrs);
+  return NULL;
 }
 
 /*@} End of Interface functions */

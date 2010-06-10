@@ -154,6 +154,26 @@ static int roht_addkeyfrombuckets(RaveHash_bucket* bucket, RaveList_t* l)
 }
 
 /**
+ * Adds all values from this chain of buckets.
+ * @param[in] bucket - the bucket to start adding values from
+ * @param[in] l - the list to add the values to
+ * @returns 1 on success, otherwise 0.
+ */
+static int roht_addvaluefrombuckets(RaveHash_bucket* bucket, RaveObjectList_t* l)
+{
+  RAVE_ASSERT((l != NULL), "l == NULL");
+  if (bucket != NULL) {
+    if (bucket->object != NULL) {
+      if (!RaveObjectList_add(l, bucket->object)) {
+        return 0;
+      }
+    }
+    return roht_addvaluefrombuckets(bucket->next, l);
+  }
+  return 1;
+}
+
+/**
  * Counts the number of buckets including self.
  * @param[in] bucket - the start bucket (may be NULL and in that case, 0 is returned)
  * @returns the number of buckets
@@ -414,6 +434,25 @@ RaveList_t* RaveObjectHashTable_keys(RaveObjectHashTable_t* table)
   return result;
 fail:
   RaveObjectHashTable_destroyKeyList(result);
+  return NULL;
+}
+
+RaveObjectList_t* RaveObjectHashTable_values(RaveObjectHashTable_t* table)
+{
+  RaveObjectList_t* result = NULL;
+  int i = 0;
+  RAVE_ASSERT((table != NULL), "table == NULL");
+  result = RAVE_OBJECT_NEW(&RaveObjectList_TYPE);
+  if (result != NULL) {
+    for (i = 0; i < table->bucketCount; i++) {
+      if (!roht_addvaluefrombuckets(table->buckets[i], result)) {
+        goto fail;
+      }
+    }
+  }
+  return result;
+fail:
+  RAVE_OBJECT_RELEASE(result);
   return NULL;
 }
 

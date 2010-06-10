@@ -322,6 +322,7 @@ init_pycomposite(void)
   import_pypolarvolume();
   import_pycartesian();
   import_pyarea();
+  import_array(); /*To make sure I get access to Numeric*/
   PYRAVE_DEBUG_INITIALIZE;
 }
 /*@} End of Module setup */

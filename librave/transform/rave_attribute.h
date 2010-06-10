@@ -123,5 +123,36 @@ int RaveAttribute_getString(RaveAttribute_t* attr, char** value);
 int RaveAttributeHelp_extractGroupAndName(
   const char* attrname, char** group, char** name);
 
+/**
+ * Creates a named rave attribute.
+ * @param[in] name - the name of the attribute
+ * @returns the attribute on success otherwise NULL
+ */
+RaveAttribute_t* RaveAttributeHelp_createNamedAttribute(const char* name);
+
+/**
+ * Creates a long rave attribute.
+ * @param[in] name - the name of the attribute
+ * @param[in] value - the long
+ * @returns the attribute on success otherwise NULL
+ */
+RaveAttribute_t* RaveAttributeHelp_createLong(const char* name, long value);
+
+/**
+ * Creates a double rave attribute.
+ * @param[in] name - the name of the attribute
+ * @param[in] value - the double
+ * @returns the attribute on success otherwise NULL
+ */
+RaveAttribute_t* RaveAttributeHelp_createDouble(const char* name, double value);
+
+/**
+ * Creates a string rave attribute.
+ * @param[in] name - the name of the attribute
+ * @param[in] value - the string
+ * @returns the attribute on success otherwise NULL
+ */
+RaveAttribute_t* RaveAttributeHelp_createString(const char* name, const char* value);
+
 #endif /* RAVE_ATTRIBUTE_H */
 

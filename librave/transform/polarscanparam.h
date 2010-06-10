@@ -31,6 +31,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_types.h"
 #include "rave_attribute.h"
 #include "rave_list.h"
+#include "raveobject_list.h"
 
 /**
  * Defines a Polar Scan Parameter
@@ -206,5 +207,14 @@ RaveAttribute_t* PolarScanParam_getAttribute(PolarScanParam_t* scanparam,
  * @returns a list of attribute names
  */
 RaveList_t* PolarScanParam_getAttributeNames(PolarScanParam_t* scanparam);
+
+/**
+ * Returns a list of attribute values that should be stored for this parameter. Corresponding
+ * members will also be added as attribute values. E.g. gain will be stored
+ * as a double with name what/gain.
+ * @param[in] scanparam - self
+ * @returns a list of RaveAttributes.
+ */
+RaveObjectList_t* PolarScanParam_getAttributeValues(PolarScanParam_t* scanparam);
 
 #endif

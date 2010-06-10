@@ -249,6 +249,50 @@ done:
   RAVE_FREE(n2);
   return result;
 }
+
+RaveAttribute_t* RaveAttributeHelp_createNamedAttribute(const char* name)
+{
+  RaveAttribute_t* result = NULL;
+  if (name != NULL) {
+    result = RAVE_OBJECT_NEW(&RaveAttribute_TYPE);
+    if (result != NULL) {
+      if (!RaveAttribute_setName(result, name)) {
+        RAVE_OBJECT_RELEASE(result);
+      }
+    }
+  }
+  return result;
+}
+
+RaveAttribute_t* RaveAttributeHelp_createLong(const char* name, long value)
+{
+  RaveAttribute_t* result = RaveAttributeHelp_createNamedAttribute(name);
+  if (result != NULL) {
+    RaveAttribute_setLong(result, value);
+  }
+  return result;
+}
+
+RaveAttribute_t* RaveAttributeHelp_createDouble(const char* name, double value)
+{
+  RaveAttribute_t* result = RaveAttributeHelp_createNamedAttribute(name);
+  if (result != NULL) {
+    RaveAttribute_setDouble(result, value);
+  }
+  return result;
+}
+
+RaveAttribute_t* RaveAttributeHelp_createString(const char* name, const char* value)
+{
+  RaveAttribute_t* result = RaveAttributeHelp_createNamedAttribute(name);
+  if (result != NULL) {
+    if (!RaveAttribute_setString(result, value)) {
+      RAVE_OBJECT_RELEASE(result);
+    }
+  }
+  return result;
+}
+
 /*@} End of Interface functions */
 
 RaveCoreObjectType RaveAttribute_TYPE = {

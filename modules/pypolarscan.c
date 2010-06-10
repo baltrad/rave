@@ -499,6 +499,130 @@ static PyObject* _pypolarscan_getNearestIndex(PyPolarScan* self, PyObject* args)
 }
 
 /**
+ * Adds an attribute to the parameter. Name of the attribute should be in format
+ * ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis etc.
+ * Currently, the only supported values are double, long, string.
+ * @param[in] self - this instance
+ * @param[in] args - bin index, ray index.
+ * @returns true or false depending if it works.
+ */
+static PyObject* _pypolarscan_addAttribute(PyPolarScan* self, PyObject* args)
+{
+  RaveAttribute_t* attr = NULL;
+  char* name = NULL;
+  PyObject* obj = NULL;
+  PyObject* result = NULL;
+
+  if (!PyArg_ParseTuple(args, "sO", &name, &obj)) {
+    return NULL;
+  }
+
+  attr = RAVE_OBJECT_NEW(&RaveAttribute_TYPE);
+  if (attr == NULL) {
+    return NULL;
+  }
+
+  if (!RaveAttribute_setName(attr, name)) {
+    raiseException_gotoTag(done, PyExc_MemoryError, "Failed to set name");
+  }
+
+  if (PyLong_Check(obj) || PyInt_Check(obj)) {
+    long value = PyLong_AsLong(obj);
+    RaveAttribute_setLong(attr, value);
+  } else if (PyFloat_Check(obj)) {
+    double value = PyFloat_AsDouble(obj);
+    RaveAttribute_setDouble(attr, value);
+  } else if (PyString_Check(obj)) {
+    char* value = PyString_AsString(obj);
+    if (!RaveAttribute_setString(attr, value)) {
+      raiseException_gotoTag(done, PyExc_AttributeError, "Failed to set string value");
+    }
+  } else {
+    raiseException_gotoTag(done, PyExc_AttributeError, "Unsupported data type");
+  }
+
+  if (!PolarScan_addAttribute(self->scan, attr)) {
+    raiseException_gotoTag(done, PyExc_AttributeError, "Failed to add attribute");
+  }
+
+  result = PyBool_FromLong(1);
+done:
+  RAVE_OBJECT_RELEASE(attr);
+  return result;
+}
+
+static PyObject* _pypolarscan_getAttribute(PyPolarScan* self, PyObject* args)
+{
+  RaveAttribute_t* attribute = NULL;
+  char* name = NULL;
+  PyObject* result = NULL;
+  if (!PyArg_ParseTuple(args, "s", &name)) {
+    return NULL;
+  }
+
+  attribute = PolarScan_getAttribute(self->scan, name);
+  if (attribute != NULL) {
+    RaveAttribute_Format format = RaveAttribute_getFormat(attribute);
+    if (format == RaveAttribute_Format_Long) {
+      long value = 0;
+      RaveAttribute_getLong(attribute, &value);
+      result = PyLong_FromLong(value);
+    } else if (format == RaveAttribute_Format_Double) {
+      double value = 0.0;
+      RaveAttribute_getDouble(attribute, &value);
+      result = PyFloat_FromDouble(value);
+    } else if (format == RaveAttribute_Format_String) {
+      char* value = NULL;
+      RaveAttribute_getString(attribute, &value);
+      result = PyString_FromString(value);
+    } else {
+      RAVE_CRITICAL1("Undefined format on requested attribute %s", name);
+      raiseException_gotoTag(done, PyExc_AttributeError, "Undefined attribute");
+    }
+  } else {
+    raiseException_gotoTag(done, PyExc_AttributeError, "No such attribute");
+  }
+done:
+  RAVE_OBJECT_RELEASE(attribute);
+  return result;
+}
+
+static PyObject* _pypolarscan_getAttributeNames(PyPolarScan* self, PyObject* args)
+{
+  RaveList_t* list = NULL;
+  PyObject* result = NULL;
+  int n = 0;
+  int i = 0;
+
+  list = PolarScan_getAttributeNames(self->scan);
+  if (list == NULL) {
+    raiseException_returnNULL(PyExc_MemoryError, "Could not get attribute names");
+  }
+  n = RaveList_size(list);
+  result = PyList_New(0);
+  for (i = 0; result != NULL && i < n; i++) {
+    char* name = RaveList_get(list, i);
+    if (name != NULL) {
+      PyObject* pynamestr = PyString_FromString(name);
+      if (pynamestr == NULL) {
+        goto fail;
+      }
+      if (PyList_Append(result, pynamestr) != 0) {
+        Py_DECREF(pynamestr);
+        goto fail;
+      }
+      Py_DECREF(pynamestr);
+    }
+  }
+  RaveList_freeAndDestroy(&list);
+  return result;
+fail:
+  RaveList_freeAndDestroy(&list);
+  Py_XDECREF(result);
+  return NULL;
+}
+
+/**
  * All methods a polar scan can have
  */
 static struct PyMethodDef _pypolarscan_methods[] =
@@ -534,6 +658,9 @@ static struct PyMethodDef _pypolarscan_methods[] =
   {"getParameterValueAtAzimuthAndRange", (PyCFunction) _pypolarscan_getParameterValueAtAzimuthAndRange, 1},
   {"getNearest", (PyCFunction) _pypolarscan_getNearest, 1},
   {"getNearestIndex", (PyCFunction) _pypolarscan_getNearestIndex, 1},
+  {"addAttribute", (PyCFunction) _pypolarscan_addAttribute, 1},
+  {"getAttribute", (PyCFunction) _pypolarscan_getAttribute, 1},
+  {"getAttributeNames", (PyCFunction) _pypolarscan_getAttributeNames, 1},
   {NULL, NULL } /* sentinel */
 };
 

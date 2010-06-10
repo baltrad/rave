@@ -30,6 +30,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "rave_object.h"
 #include "rave_list.h"
+#include "raveobject_list.h"
 
 /**
  * Defines a hash table
@@ -90,6 +91,14 @@ RaveCoreObject* RaveObjectHashTable_remove(RaveObjectHashTable_t* table, const c
  * @returns a list containing char* pointers.
  */
 RaveList_t* RaveObjectHashTable_keys(RaveObjectHashTable_t* table);
+
+/**
+ * Returns the values for the table. Note, it is not cloned values
+ * but references to them.
+ * @param[in] table - self
+ * @returns a list of values
+ */
+RaveObjectList_t* RaveObjectHashTable_values(RaveObjectHashTable_t* table);
 
 /**
  * Helper function to destroy the returned list of keys.

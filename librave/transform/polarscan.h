@@ -31,6 +31,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_object.h"
 #include "rave_types.h"
 #include "rave_list.h"
+#include "raveobject_list.h"
 /**
  * Defines a Polar Scan
  */
@@ -435,5 +436,40 @@ int PolarScan_getNearestIndex(PolarScan_t* scan, double lon, double lat, int* bi
  * @returns 1 if the polar scan is ready, otherwise 0.
  */
 int PolarScan_isTransformable(PolarScan_t* scan);
+
+/**
+ * Adds a rave attribute to the scan. If attribute maps to the
+ * member attributes it will be used to set the specific member
+ * instead. E.g. where/elangle (in degrees) will be accessible
+ * from PolarScan_getElangle() in radians.
+ * @param[in] scan - self
+ * @param[in] attribute - the attribute
+ * @return 1 on success otherwise 0
+ */
+int PolarScan_addAttribute(PolarScan_t* scan, RaveAttribute_t* attribute);
+
+/**
+ * Returns the rave attribute that is named accordingly.
+ * @param[in] scan - self
+ * @param[in] name - the name of the attribute
+ * @returns the attribute if found otherwise NULL
+ */
+RaveAttribute_t* PolarScan_getAttribute(PolarScan_t* scan, const char* name);
+
+/**
+ * Returns a list of attribute names. Release with \@ref #RaveList_freeAndDestroy.
+ * @param[in] scanparam - self
+ * @returns a list of attribute names
+ */
+RaveList_t* PolarScan_getAttributeNames(PolarScan_t* scan);
+
+/**
+ * Returns a list of attribute values that should be stored for this scan. Corresponding
+ * members will also be added as attribute values. E.g. elangle will be stored
+ * as a double with name where/elangle in degrees.
+ * @param[in] scan - self
+ * @returns a list of RaveAttributes.
+ */
+RaveObjectList_t* PolarScan_getAttributeValues(PolarScan_t* scan);
 
 #endif

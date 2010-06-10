@@ -28,6 +28,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_datetime.h"
 #include "rave_debug.h"
 #include "rave_alloc.h"
+#include "raveobject_hashtable.h"
+#include "rave_utilities.h"
 #include <string.h>
 
 /**
@@ -45,6 +47,7 @@ struct _PolarVolume_t {
   PolarNavigator_t* navigator; /**< a polar navigator */
   RaveObjectList_t* scans;  /**< the list of scans */
   RaveDateTime_t* datetime; /**< the date / time */
+  RaveObjectHashTable_t* attrs; /**< the attributes */
   char* source;             /**< the source string */
   char* paramname;          /**< the default parameter */
 };
@@ -62,7 +65,7 @@ static int PolarVolume_constructor(RaveCoreObject* obj)
   this->datetime = NULL;
   this->source = NULL;
   this->paramname = NULL;
-
+  this->attrs = RAVE_OBJECT_NEW(&RaveObjectHashTable_TYPE);
   this->datetime = RAVE_OBJECT_NEW(&RaveDateTime_TYPE);
 
   // Always initialize to default projection for lon/lat calculations
@@ -76,7 +79,7 @@ static int PolarVolume_constructor(RaveCoreObject* obj)
   this->scans = RAVE_OBJECT_NEW(&RaveObjectList_TYPE);
 
   if (this->datetime == NULL || this->projection == NULL ||
-      this->scans == NULL || this->navigator == NULL) {
+      this->scans == NULL || this->navigator == NULL || this->attrs == NULL) {
     goto error;
   }
 
@@ -90,6 +93,7 @@ error:
   RAVE_OBJECT_RELEASE(this->projection);
   RAVE_OBJECT_RELEASE(this->navigator);
   RAVE_OBJECT_RELEASE(this->scans);
+  RAVE_OBJECT_RELEASE(this->attrs);
   RAVE_FREE(this->source);
   RAVE_FREE(this->paramname);
   return 0;
@@ -107,11 +111,12 @@ static int PolarVolume_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srco
   this->navigator = RAVE_OBJECT_CLONE(src->navigator);
   this->scans = RAVE_OBJECT_CLONE(src->scans); // the list only contains scans and they are cloneable
   this->datetime = RAVE_OBJECT_CLONE(src->datetime);
+  this->attrs = RAVE_OBJECT_CLONE(src->attrs);
   this->source = NULL;
   this->paramname = NULL;
 
   if (this->datetime == NULL || this->projection == NULL ||
-      this->scans == NULL || this->navigator == NULL) {
+      this->scans == NULL || this->navigator == NULL || this->attrs == NULL) {
     goto error;
   }
 
@@ -129,6 +134,7 @@ error:
   RAVE_OBJECT_RELEASE(this->projection);
   RAVE_OBJECT_RELEASE(this->navigator);
   RAVE_OBJECT_RELEASE(this->scans);
+  RAVE_OBJECT_RELEASE(this->attrs);
   RAVE_FREE(this->source);
   RAVE_FREE(this->paramname);
   return 0;
@@ -144,6 +150,7 @@ static void PolarVolume_destructor(RaveCoreObject* obj)
   RAVE_OBJECT_RELEASE(volume->projection);
   RAVE_OBJECT_RELEASE(volume->navigator);
   RAVE_OBJECT_RELEASE(volume->scans);
+  RAVE_OBJECT_RELEASE(volume->attrs);
   RAVE_FREE(volume->source);
   RAVE_FREE(volume->paramname);
 }
@@ -344,7 +351,6 @@ int PolarVolume_addScan(PolarVolume_t* pvol, PolarScan_t* scan)
 
 PolarScan_t* PolarVolume_getScan(PolarVolume_t* pvol, int index)
 {
-//  PolarScan_t* scan = NULL;
   RAVE_ASSERT((pvol != NULL), "pvol was NULL");
   return (PolarScan_t*)RaveObjectList_get(pvol->scans, index);
 }
@@ -510,6 +516,141 @@ int PolarVolume_isTransformable(PolarVolume_t* pvol)
     result = 1;
   }
   return result;
+}
+
+int PolarVolume_addAttribute(PolarVolume_t* pvol,
+  RaveAttribute_t* attribute)
+{
+  const char* name = NULL;
+  char* aname = NULL;
+  char* gname = NULL;
+  int result = 0;
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
+  RAVE_ASSERT((attribute != NULL), "attribute == NULL");
+
+  name = RaveAttribute_getName(attribute);
+  if (name != NULL) {
+    /*
+     * what/date
+     * what/time
+     * what/source
+     * where/lon
+     * where/lat
+     * where/height
+     */
+    if (strcasecmp("what/date", name)==0) {
+      char* value = NULL;
+      if (!RaveAttribute_getString(attribute, &value)) {
+        RAVE_ERROR0("Failed to extract what/date as a string");
+        goto done;
+      }
+      result = PolarVolume_setDate(pvol, value);
+    } else if (strcasecmp("what/time", name)==0) {
+      char* value = NULL;
+      if (!RaveAttribute_getString(attribute, &value)) {
+        RAVE_ERROR0("Failed to extract what/time as a string");
+        goto done;
+      }
+      result = PolarVolume_setTime(pvol, value);
+    } else if (strcasecmp("what/source", name)==0) {
+      char* value = NULL;
+      if (!RaveAttribute_getString(attribute, &value)) {
+        RAVE_ERROR0("Failed to extract what/source as a string");
+        goto done;
+      }
+      result = PolarVolume_setSource(pvol, value);
+    } else if (strcasecmp("where/lon", name)==0) {
+      double value = 0.0;
+      if (!(result = RaveAttribute_getDouble(attribute, &value))) {
+        RAVE_ERROR0("Failed to extract where/lon as a double");
+      }
+      PolarVolume_setLongitude(pvol, value*M_PI/180.0);
+    } else if (strcasecmp("where/lat", name)==0) {
+      double value = 0.0;
+      if (!(result = RaveAttribute_getDouble(attribute, &value))) {
+        RAVE_ERROR0("Failed to extract where/lat as a double");
+      }
+      PolarVolume_setLatitude(pvol, value*M_PI/180.0);
+    } else if (strcasecmp("where/height", name)==0) {
+      double value = 0.0;
+      if (!(result = RaveAttribute_getDouble(attribute, &value))) {
+        RAVE_ERROR0("Failed to extract where/height as a double");
+      }
+      PolarVolume_setHeight(pvol, value);
+    } else {
+      if (!RaveAttributeHelp_extractGroupAndName(name, &gname, &aname)) {
+        RAVE_ERROR1("Failed to extract group and name from %s", name);
+        goto done;
+      }
+      if ((strcasecmp("how", gname)==0 ||
+           strcasecmp("what", gname)==0 ||
+           strcasecmp("where", gname)==0) &&
+           strchr(aname, '/') == NULL) {
+        result = RaveObjectHashTable_put(pvol->attrs, name, (RaveCoreObject*)attribute);
+      }
+    }
+  }
+
+done:
+  RAVE_FREE(aname);
+  RAVE_FREE(gname);
+  return result;
+}
+
+RaveAttribute_t* PolarVolume_getAttribute(PolarVolume_t* pvol,
+  const char* name)
+{
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
+  if (name == NULL) {
+    RAVE_ERROR0("Trying to get an attribute with NULL name");
+    return NULL;
+  }
+  return (RaveAttribute_t*)RaveObjectHashTable_get(pvol->attrs, name);
+}
+
+RaveList_t* PolarVolume_getAttributeNames(PolarVolume_t* pvol)
+{
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
+  return RaveObjectHashTable_keys(pvol->attrs);
+}
+
+RaveObjectList_t* PolarVolume_getAttributeValues(PolarVolume_t* pvol)
+{
+  RaveObjectList_t* result = NULL;
+  RaveObjectList_t* tableattrs = NULL;
+
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
+  tableattrs = RaveObjectHashTable_values(pvol->attrs);
+  if (tableattrs == NULL) {
+    goto error;
+  }
+  result = RAVE_OBJECT_CLONE(tableattrs);
+  if (result == NULL) {
+    goto error;
+  }
+  /*
+   * what/date
+   * what/time
+   * what/source
+   * where/lon
+   * where/lat
+   * where/height
+   */
+  if (!RaveUtilities_addStringAttributeToList(result, "what/date", PolarVolume_getDate(pvol)) ||
+      !RaveUtilities_addStringAttributeToList(result, "what/time", PolarVolume_getTime(pvol)) ||
+      !RaveUtilities_addStringAttributeToList(result, "what/source", PolarVolume_getSource(pvol)) ||
+      !RaveUtilities_addDoubleAttributeToList(result, "where/lon", PolarVolume_getLongitude(pvol)*180.0/M_PI) ||
+      !RaveUtilities_addDoubleAttributeToList(result, "where/lat", PolarVolume_getLatitude(pvol)*180.0/M_PI) ||
+      !RaveUtilities_addDoubleAttributeToList(result, "where/height", PolarVolume_getHeight(pvol))) {
+    goto error;
+  }
+
+  RAVE_OBJECT_RELEASE(tableattrs);
+  return result;
+error:
+  RAVE_OBJECT_RELEASE(result);
+  RAVE_OBJECT_RELEASE(tableattrs);
+  return NULL;
 }
 
 /*@} End of Interface functions */

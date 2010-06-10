@@ -31,6 +31,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_transform.h"
 #include "rave_data2d.h"
 #include "raveobject_hashtable.h"
+#include "rave_utilities.h"
 
 /**
  * This is the default parameter value that should be used when working
@@ -73,6 +74,8 @@ struct _PolarScan_t {
   // Manages the default parameter
   char* paramname;
   PolarScanParam_t* param;
+
+  RaveObjectHashTable_t* attrs; /**< attributes */
 };
 
 /*@{ Private functions */
@@ -96,10 +99,11 @@ static int PolarScan_constructor(RaveCoreObject* obj)
   scan->parameters = NULL;
   scan->paramname = NULL;
   scan->param = NULL;
-
   scan->datetime = RAVE_OBJECT_NEW(&RaveDateTime_TYPE);
   scan->parameters = RAVE_OBJECT_NEW(&RaveObjectHashTable_TYPE);
   scan->projection = RAVE_OBJECT_NEW(&Projection_TYPE);
+  scan->attrs = RAVE_OBJECT_NEW(&RaveObjectHashTable_TYPE);
+
   if (scan->projection != NULL) {
     if(!Projection_init(scan->projection, "lonlat", "lonlat", "+proj=latlong +ellps=WGS84 +datum=WGS84")) {
       goto error;
@@ -107,7 +111,7 @@ static int PolarScan_constructor(RaveCoreObject* obj)
   }
   scan->navigator = RAVE_OBJECT_NEW(&PolarNavigator_TYPE);
   if (scan->datetime == NULL || scan->projection == NULL ||
-      scan->navigator == NULL || scan->parameters == NULL) {
+      scan->navigator == NULL || scan->parameters == NULL || scan->attrs == NULL) {
     goto error;
   }
   if (!PolarScan_setDefaultParameter(scan, DEFAULT_PARAMETER_NAME)) {
@@ -119,6 +123,7 @@ error:
   RAVE_OBJECT_RELEASE(scan->projection);
   RAVE_OBJECT_RELEASE(scan->navigator);
   RAVE_OBJECT_RELEASE(scan->parameters);
+  RAVE_OBJECT_RELEASE(scan->attrs);
   RAVE_FREE(scan->paramname);
   RAVE_OBJECT_RELEASE(scan->param);
   return 0;
@@ -144,9 +149,9 @@ static int PolarScan_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj
   this->projection = RAVE_OBJECT_CLONE(src->projection);
   this->navigator = RAVE_OBJECT_CLONE(src->navigator);
   this->parameters = RAVE_OBJECT_CLONE(src->parameters);
-
+  this->attrs = RAVE_OBJECT_CLONE(src->attrs);
   if (this->datetime == NULL || this->projection == NULL ||
-      this->navigator == NULL || this->parameters == NULL) {
+      this->navigator == NULL || this->parameters == NULL || this->attrs == NULL) {
     goto error;
   }
   if (!PolarScan_setSource(this, PolarScan_getSource(src))) {
@@ -170,6 +175,7 @@ error:
   RAVE_OBJECT_RELEASE(this->parameters);
   RAVE_FREE(this->paramname);
   RAVE_OBJECT_RELEASE(this->param);
+  RAVE_OBJECT_RELEASE(this->attrs);
   return 0;
 }
 
@@ -186,6 +192,7 @@ static void PolarScan_destructor(RaveCoreObject* obj)
   RAVE_OBJECT_RELEASE(scan->parameters);
   RAVE_OBJECT_RELEASE(scan->param);
   RAVE_FREE(scan->paramname);
+  RAVE_OBJECT_RELEASE(scan->attrs);
 }
 
 /*@} End of Private functions */
@@ -672,11 +679,10 @@ int PolarScan_getNearestIndex(PolarScan_t* scan, double lon, double lat, int* bi
   return result;
 }
 
-
 int PolarScan_isTransformable(PolarScan_t* scan)
 {
   int result = 0;
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
   if (scan->projection != NULL &&
       scan->navigator != NULL &&
       scan->rscale > 0.0) {
@@ -684,6 +690,154 @@ int PolarScan_isTransformable(PolarScan_t* scan)
   }
   return result;
 }
+
+int PolarScan_addAttribute(PolarScan_t* scan, RaveAttribute_t* attribute)
+{
+  const char* name = NULL;
+  char* aname = NULL;
+  char* gname = NULL;
+  int result = 0;
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+  RAVE_ASSERT((attribute != NULL), "attribute == NULL");
+
+  name = RaveAttribute_getName(attribute);
+  if (name != NULL) {
+    /*
+     * where/elangle
+     * where/a1gate
+     * where/rscale
+     * where/rstart
+     * what/startdate
+     * what/starttime
+     */
+    if (strcasecmp("where/elangle", name)==0) {
+      double value = 0.0;
+      if (!(result = RaveAttribute_getDouble(attribute, &value))) {
+        RAVE_ERROR0("Failed to extract where/elangle as a double");
+      }
+      PolarScan_setElangle(scan, value * M_PI/180.0);
+    } else if (strcasecmp("where/a1gate", name)==0) {
+      long value = 0;
+      if (!(result = RaveAttribute_getLong(attribute, &value))) {
+        RAVE_ERROR0("Failed to extract where/a1gate as a long");
+      }
+      PolarScan_setA1gate(scan, value);
+    } else if (strcasecmp("where/rscale", name)==0) {
+      double value = 0.0;
+      if (!(result = RaveAttribute_getDouble(attribute, &value))) {
+        RAVE_ERROR0("Failed to extract where/rscale as a double");
+      }
+      PolarScan_setRscale(scan, value);
+    } else if (strcasecmp("where/rstart", name)==0) {
+      double value = 0.0;
+      if (!(result = RaveAttribute_getDouble(attribute, &value))) {
+        RAVE_ERROR0("Failed to extract where/rstart as a double");
+      }
+      PolarScan_setRstart(scan, value);
+    } else if (strcasecmp("what/startdate", name)==0) {
+      char* value = NULL;
+      if (!RaveAttribute_getString(attribute, &value)) {
+        RAVE_ERROR0("Failed to extract where/startdate as a string");
+        goto done;
+      }
+      result = PolarScan_setDate(scan, value);
+    } else if (strcasecmp("what/starttime", name)==0) {
+      char* value = NULL;
+      if (!RaveAttribute_getString(attribute, &value)) {
+        RAVE_ERROR0("Failed to extract where/starttime as a string");
+        goto done;
+      }
+      result = PolarScan_setTime(scan, value);
+    } else {
+      if (!RaveAttributeHelp_extractGroupAndName(name, &gname, &aname)) {
+        RAVE_ERROR1("Failed to extract group and name from %s", name);
+        goto done;
+      }
+      if ((strcasecmp("how", gname)==0 ||
+           strcasecmp("what", gname)==0 ||
+           strcasecmp("where", gname)==0) &&
+        strchr(aname, '/') == NULL) {
+        result = RaveObjectHashTable_put(scan->attrs, name, (RaveCoreObject*)attribute);
+      }
+    }
+  }
+
+done:
+  RAVE_FREE(aname);
+  RAVE_FREE(gname);
+  return result;
+}
+
+RaveAttribute_t* PolarScan_getAttribute(PolarScan_t* scan, const char* name)
+{
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+  if (name == NULL) {
+    RAVE_ERROR0("Trying to get an attribute with NULL name");
+    return NULL;
+  }
+  return (RaveAttribute_t*)RaveObjectHashTable_get(scan->attrs, name);
+}
+
+RaveList_t* PolarScan_getAttributeNames(PolarScan_t* scan)
+{
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+  return RaveObjectHashTable_keys(scan->attrs);
+}
+
+RaveObjectList_t* PolarScan_getAttributeValues(PolarScan_t* scan)
+{
+  RaveObjectList_t* result = NULL;
+  RaveObjectList_t* tableattrs = NULL;
+
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+  tableattrs = RaveObjectHashTable_values(scan->attrs);
+  if (tableattrs == NULL) {
+    goto error;
+  }
+  result = RAVE_OBJECT_CLONE(tableattrs);
+  if (result == NULL) {
+    goto error;
+  }
+
+  /*
+   * where/elangle
+   * where/a1gate
+   * where/rscale
+   * where/rstart
+   * what/startdate
+   * what/starttime
+   *
+   * will add what/enddate, what/endtime if there is none
+   */
+  if (!RaveUtilities_addDoubleAttributeToList(result, "where/elangle", PolarScan_getElangle(scan)*180.0/M_PI) ||
+      !RaveUtilities_addLongAttributeToList(result, "where/a1gate", PolarScan_getA1gate(scan)) ||
+      !RaveUtilities_addDoubleAttributeToList(result, "where/rscale", PolarScan_getRscale(scan)) ||
+      !RaveUtilities_addDoubleAttributeToList(result, "where/rstart", PolarScan_getRstart(scan)) ||
+      !RaveUtilities_addStringAttributeToList(result, "what/startdate", PolarScan_getDate(scan)) ||
+      !RaveUtilities_addStringAttributeToList(result, "what/starttime", PolarScan_getTime(scan))) {
+    goto error;
+  }
+
+  if (!RaveObjectHashTable_exists(scan->attrs, "what/enddate")) {
+    if (!RaveUtilities_addStringAttributeToList(result, "what/enddate", PolarScan_getDate(scan))) {
+      goto error;
+    }
+  }
+  if (!RaveObjectHashTable_exists(scan->attrs, "what/endtime")) {
+    if (!RaveUtilities_addStringAttributeToList(result, "what/endtime", PolarScan_getTime(scan))) {
+      goto error;
+    }
+  }
+
+  RAVE_OBJECT_RELEASE(tableattrs);
+  return result;
+error:
+  RAVE_OBJECT_RELEASE(result);
+  RAVE_OBJECT_RELEASE(tableattrs);
+  return NULL;
+
+}
+
 /*@} End of Interface functions */
 
 RaveCoreObjectType PolarScan_TYPE = {
