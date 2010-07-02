@@ -34,6 +34,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "pypolarvolume.h"
 #include "pycartesian.h"
 #include "pypolarscan.h"
+#include "pycartesianvolume.h"
 
 #include "pyrave_debug.h"
 #include "rave_alloc.h"
@@ -226,6 +227,7 @@ static PyObject* _pyraveio_load(PyRaveIO* self, PyObject* args)
 static PyObject* _pyraveio_save(PyRaveIO* self, PyObject* args)
 {
   if (!RaveIO_save(self->raveio)) {
+    fprintf(stderr, "Raising exception\n");
     raiseException_returnNULL(PyExc_IOError, "Failed to save file");
   }
   Py_RETURN_NONE;
@@ -271,6 +273,8 @@ static PyObject* _pyraveio_getattr(PyRaveIO* self, char* name)
         res = (PyObject*)PyPolarVolume_New((PolarVolume_t*)object);
       } else if (RAVE_OBJECT_CHECK_TYPE(object, &PolarScan_TYPE)) {
         res = (PyObject*)PyPolarScan_New((PolarScan_t*)object);
+      } else if (RAVE_OBJECT_CHECK_TYPE(object, &CartesianVolume_TYPE)) {
+        res = (PyObject*)PyCartesianVolume_New((CartesianVolume_t*)object);
       } else {
         PyErr_SetString(PyExc_NotImplementedError, "support lacking for object type");
       }
@@ -331,6 +335,8 @@ static int _pyraveio_setattr(PyRaveIO* self, char* name, PyObject* val)
       RaveIO_setObject(self->raveio, (RaveCoreObject*)((PyPolarScan*)val)->scan);
     } else if (PyPolarVolume_Check(val)) {
       RaveIO_setObject(self->raveio, (RaveCoreObject*)((PyPolarVolume*)val)->pvol);
+    } else if (PyCartesianVolume_Check(val)) {
+      RaveIO_setObject(self->raveio, (RaveCoreObject*)((PyCartesianVolume*)val)->cvol);
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "Can only save objects of type : cartesian, polarscan or polarvolume");
     }
@@ -444,6 +450,7 @@ init_raveio(void)
   import_pypolarvolume();
   import_pypolarscan();
   import_pycartesian();
+  import_pycartesianvolume();
   PYRAVE_DEBUG_INITIALIZE;
 }
 /*@} End of Module setup */

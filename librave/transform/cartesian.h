@@ -31,6 +31,9 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "area.h"
 #include "rave_object.h"
 #include "rave_types.h"
+#include "rave_list.h"
+#include "raveobject_list.h"
+#include "rave_attribute.h"
 
 /**
  * Defines a Cartesian product
@@ -362,5 +365,61 @@ RaveValueType Cartesian_getMean(Cartesian_t* cartesian, long x, long y, int N, d
  * @returns 1 if the cartesian product is ready, otherwise 0.
  */
 int Cartesian_isTransformable(Cartesian_t* cartesian);
+
+/**
+ * Adds a rave attribute to the cartesian product. If attribute maps to the
+ * member attributes it will be used to set the specific member
+ * instead.
+ * @param[in] cartesian - self
+ * @param[in] attribute - the attribute
+ * @return 1 on success otherwise 0
+ */
+int Cartesian_addAttribute(Cartesian_t* cartesian, RaveAttribute_t* attribute);
+
+/**
+ * Returns the rave attribute that is named accordingly.
+ * @param[in] cartesian - self
+ * @param[in] name - the name of the attribute
+ * @returns the attribute if found otherwise NULL
+ */
+RaveAttribute_t* Cartesian_getAttribute(Cartesian_t* cartesian, const char* name);
+
+/**
+ * Returns a list of attribute names. Release with \@ref #RaveList_freeAndDestroy.
+ * @param[in] cartesian - self
+ * @returns a list of attribute names
+ */
+RaveList_t* Cartesian_getAttributeNames(Cartesian_t* cartesian);
+
+/**
+ * Returns a list of attribute values that should be stored for this cartesian product.
+ * Corresponding members will also be added as attribute values.
+ * @param[in] cartesian - self
+ * @param[in] otype - what type of attributes that should be returned, if it is for a cartesian image or a image
+ * belonging to a cartesian volume
+ * @returns a list of RaveAttributes.
+ */
+RaveObjectList_t* Cartesian_getAttributeValues(Cartesian_t* cartesian, Rave_ObjectType otype);
+
+/**
+ * Returns if the cartesian product has got the specified attribute.
+ * @param[in] cartesian - self
+ * @param[in] name - what to look for
+ * @returns 1 if the attribute exists, otherwise 0
+ */
+int Cartesian_hasAttribute(Cartesian_t* cartesian, const char* name);
+
+/**
+ * Adds the lon lat corner extent to the attribute list. If llX, llY, urX and urY are all 0.0, then
+ * nothing will be added to the attribute list.
+ * @param[in] list - the list to add the attributes to
+ * @param[in] projection - the projection to use for converting to corner coordinates
+ * @param[in] llX - the lower left X coordinate
+ * @param[in] llY - the lower left Y coordinate
+ * @param[in] urX - the upper right X coordinate
+ * @param[in] urY - the upper right Y coordinate
+ * @returns 1 on success otherwise 0
+ */
+int CartesianHelper_addLonLatExtentToAttributeList(RaveObjectList_t* list, Projection_t* projection, double llX, double llY, double urX, double urY);
 
 #endif

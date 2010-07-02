@@ -28,6 +28,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_alloc.h"
 #include "rave_datetime.h"
 #include "rave_data2d.h"
+#include "raveobject_hashtable.h"
+#include "rave_utilities.h"
 #include <string.h>
 
 /**
@@ -60,6 +62,8 @@ struct _Cartesian_t {
   Projection_t* projection; /**< the projection */
 
   RaveData2D_t* data;   /**< 2 dimensional data array */
+
+  RaveObjectHashTable_t* attrs; /**< attributes */
 };
 
 /*@{ Private functions */
@@ -86,14 +90,10 @@ static int Cartesian_constructor(RaveCoreObject* obj)
   this->undetect = 0.0;
   this->projection = NULL;
   this->data = NULL;
-
   this->datetime = RAVE_OBJECT_NEW(&RaveDateTime_TYPE);
-  if (this->datetime == NULL) {
-    goto fail;
-  }
-
   this->data = RAVE_OBJECT_NEW(&RaveData2D_TYPE);
-  if (this->data == NULL) {
+  this->attrs = RAVE_OBJECT_NEW(&RaveObjectHashTable_TYPE);
+  if (this->datetime == NULL || this->data == NULL || this->attrs == NULL) {
     goto fail;
   }
 
@@ -101,6 +101,7 @@ static int Cartesian_constructor(RaveCoreObject* obj)
 fail:
   RAVE_OBJECT_RELEASE(this->data);
   RAVE_OBJECT_RELEASE(this->datetime);
+  RAVE_OBJECT_RELEASE(this->attrs);
   return 0;
 }
 
@@ -130,13 +131,12 @@ static int Cartesian_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj
   this->data = NULL;
 
   Cartesian_setQuantity(this, Cartesian_getQuantity(src));
-  this->datetime = RAVE_OBJECT_CLONE(src->datetime);
-  if (this->datetime == NULL) {
-    goto fail;
-  }
 
+  this->datetime = RAVE_OBJECT_CLONE(src->datetime);
   this->data = RAVE_OBJECT_CLONE(src->data);
-  if (this->data == NULL) {
+  this->attrs = RAVE_OBJECT_CLONE(src->attrs);
+
+  if (this->datetime == NULL || this->data == NULL || this->attrs == NULL) {
     goto fail;
   }
 
@@ -155,6 +155,7 @@ fail:
   RAVE_FREE(this->quantity);
   RAVE_OBJECT_RELEASE(this->data);
   RAVE_OBJECT_RELEASE(this->datetime);
+  RAVE_OBJECT_RELEASE(this->attrs);
   RAVE_OBJECT_RELEASE(this->projection);
   return 0;
 }
@@ -173,8 +174,36 @@ static void Cartesian_destructor(RaveCoreObject* obj)
     RAVE_FREE(cartesian->source);
     RAVE_FREE(cartesian->quantity);
     RAVE_OBJECT_RELEASE(cartesian->data);
+    RAVE_OBJECT_RELEASE(cartesian->attrs);
   }
 }
+
+static int CartesianInternal_setProjectionDefinition(Cartesian_t* cartesian, const char* projdef)
+{
+  int result = 0;
+  Projection_t* projection = NULL;
+
+  RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
+
+  projection = RAVE_OBJECT_NEW(&Projection_TYPE);
+  if (projection == NULL) {
+    RAVE_ERROR0("Could not create projection");
+    goto error;
+  }
+
+  if (!Projection_init(projection, "raveio-projection", "autoloaded projection", projdef)) {
+    RAVE_ERROR0("Could not initialize projection");
+    goto error;
+  }
+
+  Cartesian_setProjection(cartesian, projection);
+
+  result = 1;
+error:
+  RAVE_OBJECT_RELEASE(projection);
+  return result;
+}
+
 /*@} End of Private functions */
 
 /*@{ Interface functions */
@@ -231,7 +260,7 @@ const char* Cartesian_getSource(Cartesian_t* cartesian)
 int Cartesian_setObjectType(Cartesian_t* cartesian, Rave_ObjectType type)
 {
   RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
-  if (type == Rave_ObjectType_CVOL || type == Rave_ObjectType_IMAGE || type == Rave_ObjectType_COMP) {
+  if (type == Rave_ObjectType_IMAGE) {
     cartesian->objectType = type;
     return 1;
   }
@@ -534,6 +563,229 @@ int Cartesian_isTransformable(Cartesian_t* cartesian)
   }
   return result;
 }
+
+int Cartesian_addAttribute(Cartesian_t* cartesian, RaveAttribute_t* attribute)
+{
+  const char* name = NULL;
+  char* aname = NULL;
+  char* gname = NULL;
+  int result = 0;
+  RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
+  RAVE_ASSERT((attribute != NULL), "attribute == NULL");
+
+  name = RaveAttribute_getName(attribute);
+  if (name != NULL) {
+    if (strcasecmp("what/date", name)==0 ||
+        strcasecmp("what/time", name)==0 ||
+        strcasecmp("what/source", name)==0 ||
+        strcasecmp("where/projdef", name)==0 ||
+        strcasecmp("what/quantity", name)==0 ||
+        strcasecmp("what/product", name)==0) {
+      // Strings
+      char* value = NULL;
+      if (!RaveAttribute_getString(attribute, &value)) {
+        RAVE_ERROR1("Failed to extract %s as a string", name);
+        goto done;
+      }
+      if (strcasecmp("what/date", name)==0) {
+        result = Cartesian_setDate(cartesian, value);
+      } else if (strcasecmp("what/time", name)==0) {
+        result = Cartesian_setTime(cartesian, value);
+      } else if (strcasecmp("what/source", name)==0) {
+        result = Cartesian_setSource(cartesian, value);
+      } else if (strcasecmp("where/projdef", name)==0) {
+        result = CartesianInternal_setProjectionDefinition(cartesian, value);
+      } else if (strcasecmp("what/quantity", name)==0) {
+        result = Cartesian_setQuantity(cartesian, value);
+      } else if (strcasecmp("what/product", name)==0) {
+        result = Cartesian_setProduct(cartesian, RaveTypes_getProductTypeFromString(value));
+      }
+    } else if (strcasecmp("what/gain", name)==0 ||
+               strcasecmp("what/nodata", name)==0 ||
+               strcasecmp("what/offset", name)==0 ||
+               strcasecmp("what/undetect", name)==0 ||
+               strcasecmp("where/xscale", name)==0 ||
+               strcasecmp("where/yscale", name)==0) {
+      /* Double values */
+      double value = 0.0;
+      if (!(result = RaveAttribute_getDouble(attribute, &value))) {
+        RAVE_ERROR1("Failed to extract %s as double", name);
+      }
+      if (strcasecmp("what/gain", name)==0) {
+        Cartesian_setGain(cartesian, value);
+      } else if (strcasecmp("what/nodata", name)==0) {
+        Cartesian_setNodata(cartesian, value);
+      } else if (strcasecmp("what/offset", name)==0) {
+        Cartesian_setOffset(cartesian, value);
+      } else if (strcasecmp("what/undetect", name)==0) {
+        Cartesian_setUndetect(cartesian, value);
+      } else if (strcasecmp("where/xscale", name)==0) {
+        Cartesian_setXScale(cartesian, value);
+      } else if (strcasecmp("where/yscale", name)==0) {
+        Cartesian_setYScale(cartesian, value);
+      }
+    } else {
+      if (!RaveAttributeHelp_extractGroupAndName(name, &gname, &aname)) {
+        RAVE_ERROR1("Failed to extract group and name from %s", name);
+        goto done;
+      }
+      if ((strcasecmp("how", gname)==0 ||
+           strcasecmp("what", gname)==0 ||
+           strcasecmp("where", gname)==0) &&
+        strchr(aname, '/') == NULL) {
+        result = RaveObjectHashTable_put(cartesian->attrs, name, (RaveCoreObject*)attribute);
+      }
+    }
+  }
+
+done:
+  RAVE_FREE(aname);
+  RAVE_FREE(gname);
+  return result;
+}
+
+RaveAttribute_t* Cartesian_getAttribute(Cartesian_t* cartesian, const char* name)
+{
+  RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
+  if (name == NULL) {
+    RAVE_ERROR0("Trying to get an attribute with NULL name");
+    return NULL;
+  }
+  return (RaveAttribute_t*)RaveObjectHashTable_get(cartesian->attrs, name);
+}
+
+RaveList_t* Cartesian_getAttributeNames(Cartesian_t* cartesian)
+{
+  RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
+  return RaveObjectHashTable_keys(cartesian->attrs);
+}
+
+RaveObjectList_t* Cartesian_getAttributeValues(Cartesian_t* cartesian, Rave_ObjectType otype)
+{
+  RaveObjectList_t* result = NULL;
+  RaveObjectList_t* tableattrs = NULL;
+
+  RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
+
+  if (otype != Rave_ObjectType_COMP && otype != Rave_ObjectType_CVOL && otype != Rave_ObjectType_IMAGE) {
+    RAVE_ERROR1("Can not get attribute values for object type = %s\n", RaveTypes_getStringFromObjectType(otype));
+    goto error;
+  }
+
+  tableattrs = RaveObjectHashTable_values(cartesian->attrs);
+  if (tableattrs == NULL) {
+    goto error;
+  }
+  result = RAVE_OBJECT_CLONE(tableattrs);
+  if (result == NULL) {
+    goto error;
+  }
+
+  if (otype == Rave_ObjectType_IMAGE) {
+    if (cartesian->projection != NULL) {
+      if (!RaveUtilities_addStringAttributeToList(result, "where/projdef", Projection_getDefinition(cartesian->projection))) {
+        goto error;
+      }
+      if (!CartesianHelper_addLonLatExtentToAttributeList(result, cartesian->projection, cartesian->llX, cartesian->llY, cartesian->urX, cartesian->urY)) {
+        goto error;
+      }
+    }
+
+    if (!RaveUtilities_addStringAttributeToList(result, "what/date", Cartesian_getDate(cartesian)) ||
+        !RaveUtilities_addStringAttributeToList(result, "what/time", Cartesian_getTime(cartesian)) ||
+        !RaveUtilities_addStringAttributeToList(result, "what/source", Cartesian_getSource(cartesian)) ||
+        !RaveUtilities_addDoubleAttributeToList(result, "where/xscale", Cartesian_getXScale(cartesian)) ||
+        !RaveUtilities_addDoubleAttributeToList(result, "where/yscale", Cartesian_getYScale(cartesian)) ||
+        !RaveUtilities_replaceLongAttributeInList(result, "where/xsize", Cartesian_getXSize(cartesian)) ||
+        !RaveUtilities_replaceLongAttributeInList(result, "where/ysize", Cartesian_getYSize(cartesian))) {
+      goto error;
+    }
+  } else if (otype == Rave_ObjectType_COMP || otype == Rave_ObjectType_CVOL) {
+    if (!RaveUtilities_addDoubleAttributeToList(result, "what/gain", Cartesian_getGain(cartesian)) ||
+        !RaveUtilities_addDoubleAttributeToList(result, "what/nodata", Cartesian_getNodata(cartesian)) ||
+        !RaveUtilities_addDoubleAttributeToList(result, "what/offset", Cartesian_getOffset(cartesian)) ||
+        !RaveUtilities_addDoubleAttributeToList(result, "what/undetect", Cartesian_getUndetect(cartesian)) ||
+        !RaveUtilities_addStringAttributeToList(result, "what/quantity", Cartesian_getQuantity(cartesian)) ||
+        !RaveUtilities_replaceStringAttributeInList(result, "what/product",
+                                                    RaveTypes_getStringFromProductType(Cartesian_getProduct(cartesian)))) {
+      goto error;
+    }
+    if (RaveDateTime_getDate(cartesian->datetime) != NULL) {
+      const char* dtdate = RaveDateTime_getDate(cartesian->datetime);
+      if (!RaveObjectHashTable_exists(cartesian->attrs, "what/startdate") &&
+          !RaveUtilities_replaceStringAttributeInList(result, "what/startdate", dtdate)) {
+        goto error;
+      }
+      if (!RaveObjectHashTable_exists(cartesian->attrs, "what/enddate") &&
+          !RaveUtilities_replaceStringAttributeInList(result, "what/enddate", dtdate)) {
+        goto error;
+      }
+    }
+    if (RaveDateTime_getTime(cartesian->datetime) != NULL) {
+      const char* dttime = RaveDateTime_getTime(cartesian->datetime);
+      if (!RaveObjectHashTable_exists(cartesian->attrs, "what/starttime") &&
+          !RaveUtilities_replaceStringAttributeInList(result, "what/starttime", dttime)) {
+        goto error;
+      }
+      if (!RaveObjectHashTable_exists(cartesian->attrs, "what/endtime") &&
+          !RaveUtilities_replaceStringAttributeInList(result, "what/endtime", dttime)) {
+        goto error;
+      }
+    }
+  }
+
+
+  RAVE_OBJECT_RELEASE(tableattrs);
+  return result;
+error:
+  RAVE_OBJECT_RELEASE(result);
+  RAVE_OBJECT_RELEASE(tableattrs);
+  return NULL;
+}
+
+int Cartesian_hasAttribute(Cartesian_t* cartesian, const char* name)
+{
+  RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
+  return RaveObjectHashTable_exists(cartesian->attrs, name);
+}
+
+int CartesianHelper_addLonLatExtentToAttributeList(RaveObjectList_t* list, Projection_t* projection, double llX, double llY, double urX, double urY)
+{
+  int result = 0;
+
+  RAVE_ASSERT((list != NULL), "list == NULL");
+  RAVE_ASSERT((projection != NULL), "projection == NULL");
+
+  if (llX != 0.0 && llY != 0.0 && urX != 0.0 && urY != 0.0) {
+    // Generate the correct corner coordinates.
+    double LL_lat = 0.0, LL_lon = 0.0, LR_lat = 0.0, LR_lon = 0.0;
+    double UL_lat = 0.0, UL_lon = 0.0, UR_lat = 0.0, UR_lon = 0.0;
+
+    if (!Projection_inv(projection, llX, llY, &LL_lon, &LL_lat) ||
+        !Projection_inv(projection, llX, urY, &UL_lon, &UL_lat) ||
+        !Projection_inv(projection, urX, urY, &UR_lon, &UR_lat) ||
+        !Projection_inv(projection, urX, llY, &LR_lon, &LR_lat)) {
+      RAVE_ERROR0("Failed to translate surface extent into lon/lat corner pairs\n");
+      goto done;
+    }
+
+    if (!RaveUtilities_replaceDoubleAttributeInList(list, "where/LL_lat", LL_lat * 180.0/M_PI) ||
+        !RaveUtilities_replaceDoubleAttributeInList(list, "where/LL_lon", LL_lon * 180.0/M_PI) ||
+        !RaveUtilities_replaceDoubleAttributeInList(list, "where/LR_lat", LR_lat * 180.0/M_PI) ||
+        !RaveUtilities_replaceDoubleAttributeInList(list, "where/LR_lon", LR_lon * 180.0/M_PI) ||
+        !RaveUtilities_replaceDoubleAttributeInList(list, "where/UL_lat", UL_lat * 180.0/M_PI) ||
+        !RaveUtilities_replaceDoubleAttributeInList(list, "where/UL_lon", UL_lon * 180.0/M_PI) ||
+        !RaveUtilities_replaceDoubleAttributeInList(list, "where/UR_lat", UR_lat * 180.0/M_PI) ||
+        !RaveUtilities_replaceDoubleAttributeInList(list, "where/UR_lon", UR_lon * 180.0/M_PI)) {
+      goto done;
+    }
+  }
+
+  result = 1;
+done:
+  return result;
+}
+
 
 /*@} End of Interface functions */
 

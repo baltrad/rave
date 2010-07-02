@@ -86,7 +86,7 @@ void RaveAttribute_setDouble(RaveAttribute_t* attr, double value);
  * @param[in] value - the value
  * @return 1 on success otherwise 0
  */
-int RaveAttribute_setString(RaveAttribute_t* attr, char* value);
+int RaveAttribute_setString(RaveAttribute_t* attr, const char* value);
 
 /**
  * Returns the value as a long.

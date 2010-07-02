@@ -48,13 +48,16 @@ class PyCompositeTest(unittest.TestCase):
                      "fixtures/pvol_sevar_20090501T120000Z.h5",
                      "fixtures/pvol_sevil_20090501T120000Z.h5"]
 
+
+  #SWEDISH_VOLUMES = ["fixtures/pvol_sevar_20090501T120000Z.h5"]
+  
   def setUp(self):
     pass
 
   def tearDown(self):
     pass
 
-  def test_new(self):
+  def Xtest_new(self):
     obj = _pycomposite.new()
     
     isscan = string.find(`type(obj)`, "CompositeCore")
@@ -83,7 +86,7 @@ class PyCompositeTest(unittest.TestCase):
     result.date = "20090501"
     result.product = _rave.Rave_ProductType_COMP
     result.source = "nrd2km"
-    result.objectType = _rave.Rave_ObjectType_COMP
+    result.objectType = _rave.Rave_ObjectType_IMAGE
     data = result.getData()
     
     ios = _raveio.new()

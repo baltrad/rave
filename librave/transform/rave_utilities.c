@@ -73,3 +73,102 @@ int RaveUtilities_addStringAttributeToList(RaveObjectList_t* l, const char* name
   return result;
 }
 
+int RaveUtilities_replaceLongAttributeInList(RaveObjectList_t* l, const char* name, long value)
+{
+  int result = 0;
+  RaveAttribute_t* attr = NULL;
+  int n = 0;
+  int i = 0;
+  RAVE_ASSERT((l != NULL), "l == NULL");
+  RAVE_ASSERT((name != NULL), "name == NULL");
+
+  n = RaveObjectList_size(l);
+
+  for (i = 0; result == 0 && i < n; i++) {
+    attr = (RaveAttribute_t*)RaveObjectList_get(l, i);
+    if (attr != NULL && RaveAttribute_getName(attr) != NULL && strcmp(name, RaveAttribute_getName(attr)) == 0) {
+      RaveAttribute_setLong(attr, value);
+      result = 1;
+    }
+    RAVE_OBJECT_RELEASE(attr);
+  }
+
+  if (result == 0) {
+    result = RaveUtilities_addLongAttributeToList(l, name, value);
+  }
+
+  return result;
+
+}
+
+int RaveUtilities_replaceDoubleAttributeInList(RaveObjectList_t* l, const char* name, double value)
+{
+  int result = 0;
+  RaveAttribute_t* attr = NULL;
+  int n = 0;
+  int i = 0;
+  RAVE_ASSERT((l != NULL), "l == NULL");
+  RAVE_ASSERT((name != NULL), "name == NULL");
+
+  n = RaveObjectList_size(l);
+
+  for (i = 0; result == 0 && i < n; i++) {
+    attr = (RaveAttribute_t*)RaveObjectList_get(l, i);
+    if (attr != NULL && RaveAttribute_getName(attr) != NULL && strcmp(name, RaveAttribute_getName(attr)) == 0) {
+      RaveAttribute_setDouble(attr, value);
+      result = 1;
+    }
+    RAVE_OBJECT_RELEASE(attr);
+  }
+
+  if (result == 0) {
+    result = RaveUtilities_addDoubleAttributeToList(l, name, value);
+  }
+
+  return result;
+}
+
+int RaveUtilities_replaceStringAttributeInList(RaveObjectList_t* l, const char* name, const char* value)
+{
+  int result = 0;
+  RaveAttribute_t* attr = NULL;
+  int n = 0;
+  int i = 0;
+  int found = 0;
+  RAVE_ASSERT((l != NULL), "l == NULL");
+  RAVE_ASSERT((name != NULL), "name == NULL");
+
+  n = RaveObjectList_size(l);
+
+  for (i = 0; found == 0 && i < n; i++) {
+    attr = (RaveAttribute_t*)RaveObjectList_get(l, i);
+    if (attr != NULL && RaveAttribute_getName(attr) != NULL && strcmp(name, RaveAttribute_getName(attr)) == 0) {
+      result = RaveAttribute_setString(attr, value);
+      found = 1;
+    }
+    RAVE_OBJECT_RELEASE(attr);
+  }
+
+  if (found == 0) {
+    result = RaveUtilities_addStringAttributeToList(l, name, value);
+  }
+
+  return result;
+}
+
+int RaveUtilities_getRaveAttributeDoubleFromHash(RaveObjectHashTable_t* h, const char* name, double* v)
+{
+  RaveAttribute_t* attr = NULL;
+  int result = 0;
+
+  RAVE_ASSERT((h != NULL), "h == NULL");
+  RAVE_ASSERT((v != NULL), "v == NULL");
+
+  attr = (RaveAttribute_t*)RaveObjectHashTable_get(h, name);
+  if (attr != NULL) {
+    result = RaveAttribute_getDouble(attr, v);
+  }
+
+  RAVE_OBJECT_RELEASE(attr);
+  return result;
+}

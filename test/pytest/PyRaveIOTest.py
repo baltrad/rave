@@ -27,6 +27,7 @@ import unittest
 import os
 import _raveio
 import _cartesian
+import _cartesianvolume
 import _projection
 import _polarvolume
 import _polarscan
@@ -170,27 +171,189 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEquals("VRAD", vradParam.quantity)
 
   def test_save_cartesian(self):
-    obj = _cartesian.new()
-    obj.time = "100000"
-    obj.date = "20091010"
-    obj.objectType = _rave.Rave_ObjectType_CVOL
-    obj.product = _rave.Rave_ProductType_CAPPI
-    obj.source = "PLC:123"
-    obj.quantity = "DBZH"
-    obj.gain = 1.0
-    obj.offset = 0.0
-    obj.nodata = 255.0
-    obj.undetect = 0.0
-    obj.xscale = 2000.0
-    obj.yscale = 2000.0
-    obj.areaextent = (-240000.0, -240000.0, 238000.0, 238000.0)
-    projection = _projection.new("x","y","+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84")
-    obj.projection = projection
+    image = _cartesian.new()
+    image.time = "100000"
+    image.date = "20100101"
+    image.objectType = _rave.Rave_ObjectType_IMAGE
+    image.source = "PLC:123"
+    image.xscale = 2000.0
+    image.yscale = 2000.0
+    image.areaextent = (-240000.0, -240000.0, 238000.0, 238000.0)
+    image.projection = _projection.new("x","y","+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84")
+    image.product = _rave.Rave_ProductType_CAPPI
+    image.quantity = "DBZH"
+    image.gain = 1.0
+    image.offset = 0.0
+    image.nodata = 255.0
+    image.undetect = 0.0
     data = numpy.zeros((240,240),numpy.uint8)
-    obj.setData(data)
+    image.setData(data)
+    
+    ios = _raveio.new()
+    ios.object = image
+    ios.filename = self.TEMPORARY_FILE
+    ios.save()
+
+    # Verify result
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+    
+    self.assertEquals("ODIM_H5/V2_0", nodelist.getNode("/Conventions").data())
+    # What
+    self.assertEquals("100000", nodelist.getNode("/what/time").data())
+    self.assertEquals("20100101", nodelist.getNode("/what/date").data())
+    self.assertEquals("PLC:123", nodelist.getNode("/what/source").data())
+    self.assertEquals("IMAGE", nodelist.getNode("/what/object").data())
+    self.assertEquals("H5rad 2.0", nodelist.getNode("/what/version").data())
+    
+    #Where
+    self.assertEquals("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", nodelist.getNode("/where/projdef").data())
+    self.assertEquals(240, nodelist.getNode("/where/xsize").data())
+    self.assertEquals(240, nodelist.getNode("/where/ysize").data())
+    self.assertAlmostEquals(2000.0, nodelist.getNode("/where/xscale").data(), 4)
+    self.assertAlmostEquals(2000.0, nodelist.getNode("/where/yscale").data(), 4)
+
+    self.assertAlmostEquals(9.1714, nodelist.getNode("/where/LL_lon").data(), 4)
+    self.assertAlmostEquals(54.1539, nodelist.getNode("/where/LL_lat").data(), 4)
+    self.assertAlmostEquals(8.7327, nodelist.getNode("/where/UL_lon").data(), 4)
+    self.assertAlmostEquals(58.4408, nodelist.getNode("/where/UL_lat").data(), 4)
+    self.assertAlmostEquals(16.9418, nodelist.getNode("/where/UR_lon").data(), 4)
+    self.assertAlmostEquals(58.4419, nodelist.getNode("/where/UR_lat").data(), 4)
+    self.assertAlmostEquals(16.5068, nodelist.getNode("/where/LR_lon").data(), 4)
+    self.assertAlmostEquals(54.1549, nodelist.getNode("/where/LR_lat").data(), 4)
+
+    #dataset1
+    self.assertEquals("DBZH", nodelist.getNode("/dataset1/what/quantity").data())
+    self.assertEquals("100000", nodelist.getNode("/dataset1/what/starttime").data())
+    self.assertEquals("20100101", nodelist.getNode("/dataset1/what/startdate").data())
+    self.assertEquals("100000", nodelist.getNode("/dataset1/what/endtime").data())
+    self.assertEquals("20100101", nodelist.getNode("/dataset1/what/enddate").data())
+    self.assertAlmostEquals(1.0, nodelist.getNode("/dataset1/what/gain").data(), 4)
+    self.assertAlmostEquals(0.0, nodelist.getNode("/dataset1/what/offset").data(), 4)
+    self.assertAlmostEquals(255.0, nodelist.getNode("/dataset1/what/nodata").data(), 4)
+    self.assertAlmostEquals(0.0, nodelist.getNode("/dataset1/what/undetect").data(), 4)
+    
+    self.assertEquals(numpy.uint8, nodelist.getNode("/dataset1/data1/data").data().dtype)
+    self.assertEquals("IMAGE", nodelist.getNode("/dataset1/data1/data/CLASS").data())
+    self.assertEquals("1.2", nodelist.getNode("/dataset1/data1/data/IMAGE_VERSION").data())
+
+  def test_save_cartesian_startandstoptime(self):
+    image = _cartesian.new()
+    image.time = "100000"
+    image.date = "20100101"
+    image.objectType = _rave.Rave_ObjectType_IMAGE
+    image.source = "PLC:123"
+    image.xscale = 2000.0
+    image.yscale = 2000.0
+    image.areaextent = (-240000.0, -240000.0, 238000.0, 238000.0)
+    image.projection = _projection.new("x","y","+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84")
+    image.product = _rave.Rave_ProductType_CAPPI
+    image.quantity = "DBZH"
+    image.gain = 1.0
+    image.offset = 0.0
+    image.nodata = 255.0
+    image.undetect = 0.0
+    image.addAttribute("what/starttime", "110000")
+    image.addAttribute("what/startdate", "20110101")
+    image.addAttribute("what/endtime", "110005")
+    image.addAttribute("what/enddate", "20110101")
+    
+    data = numpy.zeros((240,240),numpy.uint8)
+    image.setData(data)
+    
+    ios = _raveio.new()
+    ios.object = image
+    ios.filename = self.TEMPORARY_FILE
+    ios.save()
+
+    # Verify result
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+    
+    self.assertEquals("ODIM_H5/V2_0", nodelist.getNode("/Conventions").data())
+    # What
+    self.assertEquals("100000", nodelist.getNode("/what/time").data())
+    self.assertEquals("20100101", nodelist.getNode("/what/date").data())
+    self.assertEquals("PLC:123", nodelist.getNode("/what/source").data())
+    self.assertEquals("IMAGE", nodelist.getNode("/what/object").data())
+    self.assertEquals("H5rad 2.0", nodelist.getNode("/what/version").data())
+    
+    #Where
+    self.assertEquals("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", nodelist.getNode("/where/projdef").data())
+    self.assertEquals(240, nodelist.getNode("/where/xsize").data())
+    self.assertEquals(240, nodelist.getNode("/where/ysize").data())
+    self.assertAlmostEquals(2000.0, nodelist.getNode("/where/xscale").data(), 4)
+    self.assertAlmostEquals(2000.0, nodelist.getNode("/where/yscale").data(), 4)
+
+    self.assertAlmostEquals(9.1714, nodelist.getNode("/where/LL_lon").data(), 4)
+    self.assertAlmostEquals(54.1539, nodelist.getNode("/where/LL_lat").data(), 4)
+    self.assertAlmostEquals(8.7327, nodelist.getNode("/where/UL_lon").data(), 4)
+    self.assertAlmostEquals(58.4408, nodelist.getNode("/where/UL_lat").data(), 4)
+    self.assertAlmostEquals(16.9418, nodelist.getNode("/where/UR_lon").data(), 4)
+    self.assertAlmostEquals(58.4419, nodelist.getNode("/where/UR_lat").data(), 4)
+    self.assertAlmostEquals(16.5068, nodelist.getNode("/where/LR_lon").data(), 4)
+    self.assertAlmostEquals(54.1549, nodelist.getNode("/where/LR_lat").data(), 4)
+
+    #dataset1
+    self.assertEquals("DBZH", nodelist.getNode("/dataset1/what/quantity").data())
+    self.assertEquals("110000", nodelist.getNode("/dataset1/what/starttime").data())
+    self.assertEquals("20110101", nodelist.getNode("/dataset1/what/startdate").data())
+    self.assertEquals("110005", nodelist.getNode("/dataset1/what/endtime").data())
+    self.assertEquals("20110101", nodelist.getNode("/dataset1/what/enddate").data())
+    self.assertAlmostEquals(1.0, nodelist.getNode("/dataset1/what/gain").data(), 4)
+    self.assertAlmostEquals(0.0, nodelist.getNode("/dataset1/what/offset").data(), 4)
+    self.assertAlmostEquals(255.0, nodelist.getNode("/dataset1/what/nodata").data(), 4)
+    self.assertAlmostEquals(0.0, nodelist.getNode("/dataset1/what/undetect").data(), 4)
+    
+    self.assertEquals(numpy.uint8, nodelist.getNode("/dataset1/data1/data").data().dtype)
+    self.assertEquals("IMAGE", nodelist.getNode("/dataset1/data1/data/CLASS").data())
+    self.assertEquals("1.2", nodelist.getNode("/dataset1/data1/data/IMAGE_VERSION").data())
+
+  def test_save_cartesian_volume(self):
+    cvol = _cartesianvolume.new()
+    cvol.time = "100000"
+    cvol.date = "20091010"
+    cvol.objectType = _rave.Rave_ObjectType_CVOL
+    cvol.source = "PLC:123"
+    cvol.xscale = 2000.0
+    cvol.yscale = 2000.0
+    cvol.areaextent = (-240000.0, -240000.0, 238000.0, 238000.0)
+    projection = _projection.new("x","y","+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84")
+    cvol.projection = projection
+
+    image = _cartesian.new()
+    image.product = _rave.Rave_ProductType_CAPPI
+    image.quantity = "DBZH"
+    image.gain = 1.0
+    image.offset = 0.0
+    image.nodata = 255.0
+    image.undetect = 0.0
+    data = numpy.zeros((240,240),numpy.uint8)
+    image.setData(data)
+
+    cvol.addImage(image)
+
+    image = _cartesian.new()
+    image.product = _rave.Rave_ProductType_CAPPI
+    image.quantity = "MMH"
+    image.gain = 1.0
+    image.offset = 0.0
+    image.nodata = 255.0
+    image.undetect = 0.0
+    image.addAttribute("what/starttime", "110000")
+    image.addAttribute("what/startdate", "20110101")
+    image.addAttribute("what/endtime", "110005")
+    image.addAttribute("what/enddate", "20110101")
+    
+    data = numpy.zeros((240,240),numpy.uint8)
+    image.setData(data)
+
+    cvol.addImage(image)
 
     ios = _raveio.new()
-    ios.object = obj
+    ios.object = cvol
     ios.filename = self.TEMPORARY_FILE
     ios.save()
     
@@ -243,34 +406,106 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEquals(numpy.uint8, nodelist.getNode("/dataset1/data1/data").data().dtype)
     self.assertEquals("IMAGE", nodelist.getNode("/dataset1/data1/data/CLASS").data())
     self.assertEquals("1.2", nodelist.getNode("/dataset1/data1/data/IMAGE_VERSION").data())
+
+    #dataset2
+    self.assertEquals("MMH", nodelist.getNode("/dataset2/what/quantity").data())
+    self.assertEquals("110000", nodelist.getNode("/dataset2/what/starttime").data())
+    self.assertEquals("20110101", nodelist.getNode("/dataset2/what/startdate").data())
+    self.assertEquals("110005", nodelist.getNode("/dataset2/what/endtime").data())
+    self.assertEquals("20110101", nodelist.getNode("/dataset2/what/enddate").data())
+    self.assertAlmostEquals(1.0, nodelist.getNode("/dataset2/what/gain").data(), 4)
+    self.assertAlmostEquals(0.0, nodelist.getNode("/dataset2/what/offset").data(), 4)
+    self.assertAlmostEquals(255.0, nodelist.getNode("/dataset2/what/nodata").data(), 4)
+    self.assertAlmostEquals(0.0, nodelist.getNode("/dataset2/what/undetect").data(), 4)
+    
+    self.assertEquals(numpy.uint8, nodelist.getNode("/dataset2/data1/data").data().dtype)
+    self.assertEquals("IMAGE", nodelist.getNode("/dataset2/data1/data/CLASS").data())
+    self.assertEquals("1.2", nodelist.getNode("/dataset2/data1/data/IMAGE_VERSION").data())
+
   
-  def test_load_cartesian(self):
+  def test_load_cartesian_volume(self):
     obj = _raveio.open(self.FIXTURE_CVOL_CAPPI)
     self.assertEquals(_raveio.RaveIO_ODIM_Version_2_0, obj.version)
     self.assertEquals(_raveio.RaveIO_ODIM_H5rad_Version_2_0, obj.h5radversion)
     self.assertEquals(_rave.Rave_ObjectType_CVOL, obj.objectType)
     
     cvol = obj.object
+    self.assertEquals(_rave.Rave_ObjectType_CVOL, cvol.objectType)
     self.assertEquals("100000", cvol.time)
     self.assertEquals("20091010", cvol.date)
-    self.assertEquals(_rave.Rave_ObjectType_CVOL, cvol.objectType)
-    self.assertEquals(_rave.Rave_ProductType_CAPPI, cvol.product)
     self.assertEquals("PLC:123", cvol.source)
-    self.assertEquals("DBZH", cvol.quantity)
-    self.assertAlmostEquals(1.0, cvol.gain, 4)
-    self.assertAlmostEquals(0.0, cvol.offset, 4)
-    self.assertAlmostEquals(255.0, cvol.nodata, 4)
-    self.assertAlmostEquals(0.0, cvol.undetect, 4)
-    self.assertAlmostEquals(2000.0, cvol.xscale, 4)
-    self.assertAlmostEquals(2000.0, cvol.yscale, 4)
+    self.assertEquals("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", cvol.projection.definition)
     self.assertAlmostEquals(-240000.0, cvol.areaextent[0], 4)
     self.assertAlmostEquals(-240000.0, cvol.areaextent[1], 4)
     self.assertAlmostEquals(238000.0, cvol.areaextent[2], 4)
     self.assertAlmostEquals(238000.0, cvol.areaextent[3], 4)
-    self.assertEquals("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", cvol.projection.definition)
-    self.assertEquals(240, cvol.xsize)
-    self.assertEquals(240, cvol.ysize)
-    self.assertEquals(numpy.uint8, cvol.getData().dtype)
+    self.assertAlmostEquals(2000.0, cvol.xscale, 4)
+    self.assertAlmostEquals(2000.0, cvol.yscale, 4)
+
+    self.assertEquals(1, cvol.getNumberOfImages())
+
+    image = cvol.getImage(0)
+    self.assertEquals(_rave.Rave_ProductType_CAPPI, image.product)
+    self.assertEquals("DBZH", image.quantity)
+    self.assertAlmostEquals(1.0, image.gain, 4)
+    self.assertAlmostEquals(0.0, image.offset, 4)
+    self.assertAlmostEquals(255.0, image.nodata, 4)
+    self.assertAlmostEquals(0.0, image.undetect, 4)
+    self.assertEquals(240, image.xsize)
+    self.assertEquals(240, image.ysize)
+    self.assertEquals(numpy.uint8, image.getData().dtype)
+
+  def test_load_cartesian_volume_save_cartesian_image(self):
+    obj = _raveio.open(self.FIXTURE_CVOL_CAPPI)
+    image = obj.object.getImage(0)
+    ios = _raveio.new()
+    ios.object = image
+    ios.filename = self.TEMPORARY_FILE
+    ios.save()    
+    
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+    
+    self.assertEquals("ODIM_H5/V2_0", nodelist.getNode("/Conventions").data())
+
+    # What
+    self.assertEquals("100000", nodelist.getNode("/what/time").data())
+    self.assertEquals("20091010", nodelist.getNode("/what/date").data())
+    self.assertEquals("PLC:123", nodelist.getNode("/what/source").data())
+    self.assertEquals("IMAGE", nodelist.getNode("/what/object").data())
+    self.assertEquals("H5rad 2.0", nodelist.getNode("/what/version").data())
+    
+    #Where
+    self.assertEquals("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", nodelist.getNode("/where/projdef").data())
+    self.assertEquals(240, nodelist.getNode("/where/xsize").data())
+    self.assertEquals(240, nodelist.getNode("/where/ysize").data())
+    self.assertAlmostEquals(2000.0, nodelist.getNode("/where/xscale").data(), 4)
+    self.assertAlmostEquals(2000.0, nodelist.getNode("/where/yscale").data(), 4)
+
+    self.assertAlmostEquals(9.1714, nodelist.getNode("/where/LL_lon").data(), 4)
+    self.assertAlmostEquals(54.1539, nodelist.getNode("/where/LL_lat").data(), 4)
+    self.assertAlmostEquals(8.7327, nodelist.getNode("/where/UL_lon").data(), 4)
+    self.assertAlmostEquals(58.4408, nodelist.getNode("/where/UL_lat").data(), 4)
+    self.assertAlmostEquals(16.9418, nodelist.getNode("/where/UR_lon").data(), 4)
+    self.assertAlmostEquals(58.4419, nodelist.getNode("/where/UR_lat").data(), 4)
+    self.assertAlmostEquals(16.5068, nodelist.getNode("/where/LR_lon").data(), 4)
+    self.assertAlmostEquals(54.1549, nodelist.getNode("/where/LR_lat").data(), 4)
+
+    #dataset1
+    self.assertEquals("DBZH", nodelist.getNode("/dataset1/what/quantity").data())
+    self.assertEquals("100000", nodelist.getNode("/dataset1/what/starttime").data())
+    self.assertEquals("20091010", nodelist.getNode("/dataset1/what/startdate").data())
+    self.assertEquals("100000", nodelist.getNode("/dataset1/what/endtime").data())
+    self.assertEquals("20091010", nodelist.getNode("/dataset1/what/enddate").data())
+    self.assertAlmostEquals(1.0, nodelist.getNode("/dataset1/what/gain").data(), 4)
+    self.assertAlmostEquals(0.0, nodelist.getNode("/dataset1/what/offset").data(), 4)
+    self.assertAlmostEquals(255.0, nodelist.getNode("/dataset1/what/nodata").data(), 4)
+    self.assertAlmostEquals(0.0, nodelist.getNode("/dataset1/what/undetect").data(), 4)
+    
+    self.assertEquals(numpy.uint8, nodelist.getNode("/dataset1/data1/data").data().dtype)
+    self.assertEquals("IMAGE", nodelist.getNode("/dataset1/data1/data/CLASS").data())
+    self.assertEquals("1.2", nodelist.getNode("/dataset1/data1/data/IMAGE_VERSION").data())
 
   def test_save_polar_volume(self):
     obj = _polarvolume.new()

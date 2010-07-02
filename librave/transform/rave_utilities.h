@@ -27,6 +27,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #define RAVE_UTILITIES_H
 #include "rave_attribute.h"
 #include "raveobject_list.h"
+#include "raveobject_hashtable.h"
 
 /**
  * Adds a long attribute to an object list.
@@ -54,5 +55,44 @@ int RaveUtilities_addDoubleAttributeToList(RaveObjectList_t* l, const char* name
  * @returns 1 on success otherwise 0
  */
 int RaveUtilities_addStringAttributeToList(RaveObjectList_t* l, const char* name, const char* value);
+
+/**
+ * Replaces the content of a attribute in the object list. If the attribute does not exist a new
+ * one will be created.
+ * @param[in] l - the list
+ * @param[in] name - the name of the attribute
+ * @param[in] value - the long
+ * @returns 1 on success otherwise 0
+ */
+int RaveUtilities_replaceLongAttributeInList(RaveObjectList_t* l, const char* name, long value);
+
+/**
+ * Replaces the content of a attribute in the object list. If the attribute does not exist a new
+ * one will be created.
+ * @param[in] l - the list
+ * @param[in] name - the name of the attribute
+ * @param[in] value - the double
+ * @returns 1 on success otherwise 0
+ */
+int RaveUtilities_replaceDoubleAttributeInList(RaveObjectList_t* l, const char* name, double value);
+
+/**
+ * Replaces the content of a attribute in the object list. If the attribute does not exist a new
+ * one will be created.
+ * @param[in] l - the list
+ * @param[in] name - the name of the attribute
+ * @param[in] value - the string
+ * @returns 1 on success otherwise 0
+ */
+int RaveUtilities_replaceStringAttributeInList(RaveObjectList_t* l, const char* name, const char* value);
+
+/**
+ * Gets the double value from a rave attribute that resides in a hash table
+ * @param[in] h - the hash table
+ * @param[in] name - the name
+ * @param[in,out] v - the value
+ * @returns 1 on success otherwise 0
+ */
+int RaveUtilities_getRaveAttributeDoubleFromHash(RaveObjectHashTable_t* h, const char* name, double* v);
 
 #endif /* RAVE_UTILITIES_H */

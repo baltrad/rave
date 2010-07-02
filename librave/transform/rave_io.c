@@ -26,6 +26,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_debug.h"
 #include "rave_alloc.h"
 #include "rave_utilities.h"
+#include "rave_data2d.h"
 #include "hlhdf.h"
 #include "hlhdf_alloc.h"
 #include "hlhdf_debug.h"
@@ -33,6 +34,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "stdarg.h"
 #include "raveobject_hashtable.h"
 #include "raveobject_list.h"
+#include "polarvolume.h"
+#include "cartesianvolume.h"
 
 /**
  * Defines the structure for the RaveIO in a volume.
@@ -49,51 +52,6 @@ struct _RaveIO_t {
 static const char RaveIO_ODIM_Version_2_0_STR[] = "ODIM_H5/V2_0";
 
 static const char RaveIO_ODIM_H5rad_Version_2_0_STR[] = "H5rad 2.0";
-
-#define RAVEIO_NR_TOKENS 32   /**< nr of tokens that can be filled */
-
-#define RAVEIO_TOKEN_LENGTH 64 /**< length of each token */
-
-// Object types
-
-static const char RaveIO_ObjectType_UNDEFINED_STR[]= "UNDEFINED";
-static const char RaveIO_ObjectType_PVOL_STR[]= "PVOL";
-static const char RaveIO_ObjectType_CVOL_STR[]= "CVOL";
-static const char RaveIO_ObjectType_SCAN_STR[]= "SCAN";
-static const char RaveIO_ObjectType_RAY_STR[]= "RAY";
-static const char RaveIO_ObjectType_AZIM_STR[]= "AZIM";
-static const char RaveIO_ObjectType_IMAGE_STR[]= "IMAGE";
-static const char RaveIO_ObjectType_COMP_STR[]= "COMP";
-static const char RaveIO_ObjectType_XSEC_STR[]= "XSEC";
-static const char RaveIO_ObjectType_VP_STR[]= "VP";
-static const char RaveIO_ObjectType_PIC_STR[]= "PIC";
-
-/**
- * Mapping between a object type and the corresponding string
- */
-struct RaveIO_ObjectTypeMapping {
-  Rave_ObjectType type;  /**< the object type */
-  const char* str;       /**< the string representation */
-};
-
-/**
- * The mapping table.
- */
-static const struct RaveIO_ObjectTypeMapping OBJECT_TYPE_MAPPING[] =
-{
-  {Rave_ObjectType_UNDEFINED, RaveIO_ObjectType_UNDEFINED_STR},
-  {Rave_ObjectType_PVOL, RaveIO_ObjectType_PVOL_STR},
-  {Rave_ObjectType_CVOL, RaveIO_ObjectType_CVOL_STR},
-  {Rave_ObjectType_SCAN, RaveIO_ObjectType_SCAN_STR},
-  {Rave_ObjectType_RAY, RaveIO_ObjectType_RAY_STR},
-  {Rave_ObjectType_AZIM, RaveIO_ObjectType_AZIM_STR},
-  {Rave_ObjectType_IMAGE, RaveIO_ObjectType_IMAGE_STR},
-  {Rave_ObjectType_COMP, RaveIO_ObjectType_COMP_STR},
-  {Rave_ObjectType_XSEC, RaveIO_ObjectType_XSEC_STR},
-  {Rave_ObjectType_VP, RaveIO_ObjectType_VP_STR},
-  {Rave_ObjectType_PIC, RaveIO_ObjectType_PIC_STR},
-  {Rave_ObjectType_ENDOFTYPES, NULL}
-};
 
 /**
  * Mapping between hlhdf format and rave data type
@@ -130,62 +88,6 @@ static const struct RaveToHlhdfTypeMap RAVE_TO_HLHDF_MAP[] = {
   {HLHDF_COMPOUND, RaveDataType_UNDEFINED},
   {HLHDF_ARRAY, RaveDataType_UNDEFINED},
   {HLHDF_END_OF_SPECIFIERS, RaveDataType_UNDEFINED}
-};
-
-/**
- * Product Type mappings
- */
-static const char RaveIO_ProductType_UNDEFINED_STR[] = "UNDEFINED";
-static const char RaveIO_ProductType_SCAN_STR[] = "SCAN";
-static const char RaveIO_ProductType_PPI_STR[] = "PPI";
-static const char RaveIO_ProductType_CAPPI_STR[] = "CAPPI";
-static const char RaveIO_ProductType_PCAPPI_STR[] = "PCAPPI";
-static const char RaveIO_ProductType_ETOP_STR[] = "ETOP";
-static const char RaveIO_ProductType_MAX_STR[] = "MAX";
-static const char RaveIO_ProductType_RR_STR[] = "RR";
-static const char RaveIO_ProductType_VIL_STR[] = "VIL";
-static const char RaveIO_ProductType_COMP_STR[] = "COMP";
-static const char RaveIO_ProductType_VP_STR[] = "VP";
-static const char RaveIO_ProductType_RHI_STR[] = "RHI";
-static const char RaveIO_ProductType_XSEC_STR[] = "XSEC";
-static const char RaveIO_ProductType_VSP_STR[] = "VSP";
-static const char RaveIO_ProductType_HSP_STR[] = "HSP";
-static const char RaveIO_ProductType_RAY_STR[] = "RAY";
-static const char RaveIO_ProductType_AZIM_STR[] = "AZIM";
-static const char RaveIO_ProductType_QUAL_STR[] = "QUAL";
-
-/**
- * Mapping between a product type and the corresponding string
- */
-struct RaveIO_ProductMapping {
-  Rave_ProductType type; /**< the product type */
-  const char* str;       /**< the string */
-};
-
-/**
- * The mapping table.
- */
-static const struct RaveIO_ProductMapping PRODUCT_MAPPING[] =
-{
-  {Rave_ProductType_UNDEFINED, RaveIO_ProductType_UNDEFINED_STR},
-  {Rave_ProductType_SCAN, RaveIO_ProductType_SCAN_STR},
-  {Rave_ProductType_PPI, RaveIO_ProductType_PPI_STR},
-  {Rave_ProductType_CAPPI, RaveIO_ProductType_CAPPI_STR},
-  {Rave_ProductType_PCAPPI, RaveIO_ProductType_PCAPPI_STR},
-  {Rave_ProductType_ETOP, RaveIO_ProductType_ETOP_STR},
-  {Rave_ProductType_MAX, RaveIO_ProductType_MAX_STR},
-  {Rave_ProductType_RR, RaveIO_ProductType_RR_STR},
-  {Rave_ProductType_VIL, RaveIO_ProductType_VIL_STR},
-  {Rave_ProductType_COMP, RaveIO_ProductType_COMP_STR},
-  {Rave_ProductType_VP, RaveIO_ProductType_VP_STR},
-  {Rave_ProductType_RHI, RaveIO_ProductType_RHI_STR},
-  {Rave_ProductType_XSEC, RaveIO_ProductType_XSEC_STR},
-  {Rave_ProductType_VSP, RaveIO_ProductType_VSP_STR},
-  {Rave_ProductType_HSP, RaveIO_ProductType_HSP_STR},
-  {Rave_ProductType_RAY, RaveIO_ProductType_RAY_STR},
-  {Rave_ProductType_AZIM, RaveIO_ProductType_AZIM_STR},
-  {Rave_ProductType_QUAL, RaveIO_ProductType_QUAL_STR},
-  {Rave_ProductType_ENDOFTYPES, NULL},
 };
 
 /*@} End of Constants */
@@ -362,61 +264,6 @@ done:
 }
 
 /**
- * Fetches the node with the provided name and returns the
- * value.
- * @param[in] nodelist - the hlhdf node list
- * @param[out] value - the double value
- * @param[in] fmt - the varargs format specifier
- * @param[in] ... - the varargs
- * @returns 0 on failure, otherwise 1
- */
-static int RaveIOInternal_getDoubleValue(HL_NodeList* nodelist, double* value, const char* fmt, ...)
-{
-  int result = 0;
-  va_list ap;
-  char nodeName[1024];
-  int n = 0;
-  size_t sz = 0;
-  HL_Node* node = NULL;
-  HL_FormatSpecifier format = HLHDF_UNDEFINED;
-  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
-  RAVE_ASSERT((value != NULL), "value == NULL");
-
-  va_start(ap, fmt);
-  n = vsnprintf(nodeName, 1024, fmt, ap);
-  va_end(ap);
-  if (n < 0 || n >= 1024) {
-    goto done;
-  }
-
-  node = HLNodeList_getNodeByName(nodelist, nodeName);
-  if (node == NULL) {
-    RAVE_ERROR1("Could not read %s", nodeName);
-    goto done;
-  }
-
-  format = HLNode_getFormat(node);
-  if (format < HLHDF_FLOAT || format > HLHDF_LDOUBLE) {
-    RAVE_ERROR1("%s is not a float or double", nodeName);
-    goto done;
-  }
-  sz = HLNode_getDataSize(node);
-
-  if (sz == sizeof(float)) {
-    RAVEIO_GET_ATOMIC_NODEVALUE(float, node, sz, double, *value);
-  } else if (sz == sizeof(double)) {
-    RAVEIO_GET_ATOMIC_NODEVALUE(double, node, sz, double, *value);
-  } else if (sz == sizeof(long double)) {
-    RAVEIO_GET_ATOMIC_NODEVALUE(long double, node, sz, double, *value);
-    RAVE_WARNING1("Node %s is of type long double, downcasting",nodeName);
-  }
-
-  result = 1;
-done:
-  return result;
-}
-
-/**
  * Creates a double attribute node.
  * @param[in] nodelist - the node list the node should be added to
  * @param[in] value - the value to be saved
@@ -460,112 +307,6 @@ int RaveIOInternal_createDoubleValue(HL_NodeList* nodelist, double value, const 
 done:
   if (result == 0) {
     RAVE_ERROR0("Failed to create double attribute node");
-  }
-  return result;
-}
-
-/**
- * Fetches the node with the provided name and returns the
- * value.
- * @param[in] nodelist - the hlhdf node list
- * @param[out] value - the long value
- * @param[in] fmt - the varargs format specifier
- * @param[in] ... - the varargs
- * @returns 0 on failure, otherwise 1
- */
-static int RaveIOInternal_getLongValue(HL_NodeList* nodelist, long* value, const char* fmt, ...)
-{
-  int result = 0;
-  va_list ap;
-  char nodeName[1024];
-  int n = 0;
-  size_t sz = 0;
-  HL_Node* node = NULL;
-  HL_FormatSpecifier format = HLHDF_UNDEFINED;
-  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
-  RAVE_ASSERT((value != NULL), "value == NULL");
-
-  va_start(ap, fmt);
-  n = vsnprintf(nodeName, 1024, fmt, ap);
-  va_end(ap);
-  if (n < 0 || n >= 1024) {
-    goto done;
-  }
-
-  node = HLNodeList_getNodeByName(nodelist, nodeName);
-  if (node == NULL) {
-    RAVE_ERROR1("Could not read %s", nodeName);
-    goto done;
-  }
-
-  format = HLNode_getFormat(node);
-  if (format < HLHDF_SCHAR || format > HLHDF_ULLONG) {
-    RAVE_ERROR1("%s is not a integer", nodeName);
-    goto done;
-  }
-  sz = HLNode_getDataSize(node);
-  if (sz == sizeof(char)) {
-    RAVEIO_GET_ATOMIC_NODEVALUE(char, node, sz, long, *value);
-  } else if (sz == sizeof(short)) {
-    RAVEIO_GET_ATOMIC_NODEVALUE(short, node, sz, long, *value);
-  } else if (sz == sizeof(int)) {
-    RAVEIO_GET_ATOMIC_NODEVALUE(int, node, sz, long, *value);
-  } else if (sz == sizeof(long)) {
-    RAVEIO_GET_ATOMIC_NODEVALUE(long, node, sz, long, *value);
-  } else if (sz == sizeof(long long)) {
-    RAVEIO_GET_ATOMIC_NODEVALUE(long long, node, sz, long, *value);
-    RAVE_WARNING1("Node %s is of type long long, downcasting",nodeName);
-  }
-
-  result = 1;
-done:
-  return result;
-}
-
-/**
- * Creates a long attribute node in the nodelist
- * @param[in] nodelist - the list the node should be added to
- * @param[in] value - the value to save
- * @param[in] fmt - the variable argument format string representing the node name
- * @param[in] ... - the variable argument list
- * @returns 1 on success, otherwise 0
- */
-static int RaveIOInternal_createLongValue(HL_NodeList* nodelist, long value, const char* fmt, ...)
-{
-  va_list ap;
-  char nodeName[1024];
-  int n = 0;
-  int result = 0;
-
-  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
-  RAVE_ASSERT((fmt != NULL), "fmt == NULL");
-
-  va_start(ap, fmt);
-  n = vsnprintf(nodeName, 1024, fmt, ap);
-  va_end(ap);
-  if (n >= 0 && n < 1024) {
-    HL_Node* node = NULL;
-    node = HLNode_newAttribute(nodeName);
-    if (node == NULL) {
-      RAVE_CRITICAL1("Failed to create an attribute with name %s", nodeName);
-      goto done;
-    }
-    if (!HLNode_setScalarValue(node, sizeof(long), (unsigned char*)&value, "long", -1)) {
-      RAVE_ERROR1("Failed to set long value for %s", nodeName);
-      HLNode_free(node);
-      goto done;
-    }
-    if (!HLNodeList_addNode(nodelist, node)) {
-      RAVE_ERROR1("Failed to add node %s to nodelist", nodeName);
-      HLNode_free(node);
-      goto done;
-    }
-    result = 1;
-  }
-
-done:
-  if (result == 0) {
-    RAVE_ERROR0("Failed to create long attribute node");
   }
   return result;
 }
@@ -629,26 +370,39 @@ done:
 /**
  * Puts an attribute in the nodelist as a hlhdf node.
  * @param[in] nodelist - the node list
- * @param[in] attribute - the attribute
- * @param[in] name - the root name, e.g. /dataset1/data1
+ * @param[in] attribute - the attribute, the name of the attribute will be used as attr-member
+ * @param[in] fmt - the root name, specified as a varargs
+ * @param[in] ... - the varargs list
  * @returns 1 on success otherwise 0
  */
 static int RaveIOInternal_addAttribute(
-  HL_NodeList* nodelist, RaveAttribute_t* attribute, const char* name)
+  HL_NodeList* nodelist, RaveAttribute_t* attribute, const char* fmt, ...)
 {
   const char* attrname = NULL;
   int result = 0;
+  char nodeName[1024];
+  va_list ap;
+  int n = 0;
+
   RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
   RAVE_ASSERT((attribute != NULL), "attribute == NULL");
+
+  va_start(ap, fmt);
+  n = vsnprintf(nodeName, 1024, fmt, ap);
+  va_end(ap);
+  if (n < 0 || n >= 1024) {
+    RAVE_ERROR0("Failed to generate name for data entry");
+    goto done;
+  }
 
   attrname = RaveAttribute_getName(attribute);
   if (attrname != NULL) {
     HL_Node* node = NULL;
-    char nodeName[1024];
-    sprintf(nodeName, "%s/%s", name, attrname);
-    node = HLNode_newAttribute(nodeName);
+    char attrNodeName[1024];
+    sprintf(attrNodeName, "%s/%s", nodeName, attrname);
+    node = HLNode_newAttribute(attrNodeName);
     if (node == NULL) {
-      RAVE_CRITICAL1("Failed to create an attribute with name %s", nodeName);
+      RAVE_CRITICAL1("Failed to create an attribute with name %s", attrNodeName);
       goto done;
     }
     if (RaveAttribute_getFormat(attribute) == RaveAttribute_Format_Long) {
@@ -676,37 +430,13 @@ static int RaveIOInternal_addAttribute(
       if (result == 0) {
         HLNode_free(node);
         node = NULL;
-        RAVE_ERROR1("Could not add node %s", nodeName);
+        RAVE_ERROR1("Could not add node %s", attrNodeName);
       }
     }
   }
 
 done:
   return result;
-}
-
-/**
- * Returns the node with the name as specified by the variable argument
- * list.
- * @param[in] nodelist - the hlhdf nodelist
- * @param[in] fmt    - the variable argument format
- * @param[in] ...    - the argument list
- * @returns the found node or NULL if not found
- */
-static HL_Node* RaveIOInternal_getNode(HL_NodeList* nodelist, const char* fmt, ...)
-{
-  va_list ap;
-  char nodeName[1024];
-  int n = 0;
-  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
-
-  va_start(ap, fmt);
-  n = vsnprintf(nodeName, 1024, fmt, ap);
-  va_end(ap);
-  if (n >= 0 && n < 1024) {
-    return HLNodeList_getNodeByName(nodelist, nodeName);
-  }
-  return NULL;
 }
 
 /**
@@ -773,8 +503,8 @@ static int RaveIOInternal_createDataset(HL_NodeList* nodelist, void* data, long 
     HL_FormatSpecifier specifier = RaveIOInternal_raveToHlhdfType(dataType);
     const char* hlhdfFormat = HL_getFormatSpecifierString(specifier);
     hsize_t dims[2];
-    dims[1] = xsize;
-    dims[0] = ysize;
+    dims[1] = ysize;
+    dims[0] = xsize;
     if (node == NULL) {
       RAVE_CRITICAL1("Failed to create dataset with name %s", nodeName);
       goto done;
@@ -798,40 +528,6 @@ done:
     RAVE_CRITICAL0("Failed to add dataset node");
   }
   return result;
-}
-
-/**
- * Returns the string representation of the product type.
- * @param[in] type - the product type
- * @returns the string representation or NULL if nothing could be found.
- */
-static const char* RaveIOInternal_getProductString(Rave_ProductType type)
-{
-  int index = 0;
-  while (PRODUCT_MAPPING[index].str != NULL) {
-    if (type == PRODUCT_MAPPING[index].type) {
-      return PRODUCT_MAPPING[index].str;
-    }
-    index++;
-  }
-  return NULL;
-}
-
-/**
- * Returns the string representation of the object type.
- * @param[in] type - the product type
- * @returns the string representation or NULL if nothing could be found.
- */
-static const char* RaveIOInternal_getObjectTypeString(Rave_ObjectType type)
-{
-  int index = 0;
-  while (OBJECT_TYPE_MAPPING[index].str != NULL) {
-    if (type == OBJECT_TYPE_MAPPING[index].type) {
-      return OBJECT_TYPE_MAPPING[index].str;
-    }
-    index++;
-  }
-  return NULL;
 }
 
 /**
@@ -900,6 +596,10 @@ static int RaveIOInternal_loadAttributesAndDataForObject(HL_NodeList* nodelist, 
                 result = PolarScan_addAttribute((PolarScan_t*)object, attribute);
               } else if (RAVE_OBJECT_CHECK_TYPE(object, &PolarVolume_TYPE)) {
                 result = PolarVolume_addAttribute((PolarVolume_t*)object, attribute);
+              } else if (RAVE_OBJECT_CHECK_TYPE(object, &Cartesian_TYPE)) {
+                result = Cartesian_addAttribute((Cartesian_t*)object, attribute);
+              } else if (RAVE_OBJECT_CHECK_TYPE(object, &CartesianVolume_TYPE)) {
+                result = CartesianVolume_addAttribute((CartesianVolume_t*)object, attribute);
               } else if (RAVE_OBJECT_CHECK_TYPE(object, &RaveObjectHashTable_TYPE)) {
                 result = RaveObjectHashTable_put((RaveObjectHashTable_t*)object, tmpptr, (RaveCoreObject*)attribute);
               } else if (RAVE_OBJECT_CHECK_TYPE(object, &RaveObjectList_TYPE)) {
@@ -919,6 +619,8 @@ static int RaveIOInternal_loadAttributesAndDataForObject(HL_NodeList* nodelist, 
           if (dataType != RaveDataType_UNDEFINED) {
             if (RAVE_OBJECT_CHECK_TYPE(object, &PolarScanParam_TYPE)) {
               result = PolarScanParam_setData((PolarScanParam_t*)object, d1, d0, HLNode_getData(node), dataType);
+            } else if (RAVE_OBJECT_CHECK_TYPE(object, &Cartesian_TYPE)) {
+              result = Cartesian_setData((Cartesian_t*)object,d1,d0,HLNode_getData(node), dataType);
             }
           } else {
             RAVE_ERROR0("Undefined datatype for dataset");
@@ -954,7 +656,6 @@ static int RaveIOInternal_addAttributes(HL_NodeList* nodelist, RaveObjectList_t*
   haswhere = RaveIOInternal_hasNodeByName(nodelist, "%s/where", name);
 
   nattrs = RaveObjectList_size(attributes);
-
   for (i = 0; i < nattrs; i++) {
     const char* attrname = NULL;
     RAVE_OBJECT_RELEASE(attribute);
@@ -1016,7 +717,8 @@ done:
  * @param[in] xsize - the xsize
  * @param[in] ysize - the ysize
  * @param[in] dataType - type of data
- * @param[in] root - the root name
+ * @param[in] fmt - the varargs format
+ * @param[in] ... - the vararg list
  * @returns 1 on success otherwise 0
  */
 static int RaveIOInternal_addData(
@@ -1025,40 +727,32 @@ static int RaveIOInternal_addData(
   long xsize,
   long ysize,
   RaveDataType dataType,
-  const char* root)
+  const char* fmt,
+  ...)
 {
-  HL_Node* node = NULL;
-  HL_FormatSpecifier specifier = HLHDF_UNDEFINED;
-  hsize_t dims[2];
   int result = 0;
-  const char* hlhdfFormat;
   char nodeName[1024];
-  dims[1] = xsize;
-  dims[0] = ysize;
+  va_list ap;
+  int n = 0;
 
   RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
-  RAVE_ASSERT((root != NULL), "root == NULL");
+
+  va_start(ap, fmt);
+  n = vsnprintf(nodeName, 1024, fmt, ap);
+  va_end(ap);
+  if (n < 0 || n >= 1024) {
+    RAVE_ERROR0("Failed to generate name for data entry");
+    goto done;
+  }
+
   if (data == NULL) {
     goto done;
   }
-  sprintf(nodeName, "%s/data", root);
-  node = HLNode_newDataset(nodeName);
-  if (node == NULL) {
-    RAVE_CRITICAL1("Failed to create dataset with name %s", nodeName);
-    goto done;
-  }
-  specifier = RaveIOInternal_raveToHlhdfType(dataType);
-  hlhdfFormat = HL_getFormatSpecifierString(specifier);
 
-  if (!HLNode_setArrayValue(node,(size_t)get_ravetype_size(dataType),2,dims,data,hlhdfFormat,-1)) {
+  if (!RaveIOInternal_createDataset(nodelist, data, xsize, ysize, dataType, "%s/data", nodeName)) {
+    RAVE_CRITICAL1("Failed to create dataset with name %s/data", nodeName);
     goto done;
   }
-
-  if (!HLNodeList_addNode(nodelist, node)) {
-    RAVE_CRITICAL1("Failed to add dataset node with name %s", nodeName);
-    goto done;
-  }
-  node = NULL; // Node has been added to list so release responsibility
 
   result = 1; // Set result to 1 now, if hdfview specific fails, result will be set back to 0.
 
@@ -1069,17 +763,16 @@ static int RaveIOInternal_addData(
       result = 0;
     }
     if (result == 1) {
-      result = RaveIOInternal_addAttribute(nodelist, imgAttribute, nodeName);
+      result = RaveIOInternal_addAttribute(nodelist, imgAttribute, "%s/data", nodeName);
     }
     if (result == 1) {
-      result = RaveIOInternal_addAttribute(nodelist, verAttribute, nodeName);
+      result = RaveIOInternal_addAttribute(nodelist, verAttribute, "%s/data", nodeName);
     }
     RAVE_OBJECT_RELEASE(imgAttribute);
     RAVE_OBJECT_RELEASE(verAttribute);
   }
 
 done:
-  HLNode_free(node);
   return result;
 }
 
@@ -1136,61 +829,15 @@ static Rave_ObjectType RaveIOInternal_getObjectType(HL_NodeList* nodelist)
 {
   Rave_ObjectType result = Rave_ObjectType_UNDEFINED;
   char* objectType = NULL;
-  int index = 0;
+
   RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
+
   if (!RaveIOInternal_getStringValue(nodelist, &objectType, "/what/object")) {
     RAVE_ERROR0("Failed to read attribute /what/object");
     goto done;
   }
 
-  while (OBJECT_TYPE_MAPPING[index].str != NULL) {
-    if (strcmp(OBJECT_TYPE_MAPPING[index].str, objectType) == 0) {
-      result = OBJECT_TYPE_MAPPING[index].type;
-      break;
-    }
-    index++;
-  }
-done:
-  return result;
-}
-
-/**
- * Returns the product type for the specified varargs name.
- * @param[in] nodelist - the hlhdf node list
- * @param[in] fmt - the varargs format string
- * @param[in] ... - the varargs list
- * @returns a product type or Rave_ProductType_UNDEFINED on error
- */
-static Rave_ProductType RaveIOInternal_getProductType(HL_NodeList* nodelist, const char* fmt, ...)
-{
-  Rave_ObjectType result = Rave_ObjectType_UNDEFINED;
-  char* productType = NULL;
-  int index = 0;
-  va_list ap;
-  char nodeName[1024];
-  int n = 0;
-  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
-
-  va_start(ap, fmt);
-  n = vsnprintf(nodeName, 1024, fmt, ap);
-  va_end(ap);
-  if (n < 0 || n >= 1024) {
-    RAVE_CRITICAL0("Could not create node name for product type");
-    goto done;
-  }
-
-  if (!RaveIOInternal_getStringValue(nodelist, &productType, nodeName)) {
-    RAVE_ERROR1("Failed to read attribute %s", nodeName);
-    goto done;
-  }
-
-  while (PRODUCT_MAPPING[index].str != NULL) {
-    if (strcmp(PRODUCT_MAPPING[index].str, productType) == 0) {
-      result = PRODUCT_MAPPING[index].type;
-      break;
-    }
-    index++;
-  }
+  result = RaveTypes_getObjectTypeFromString(objectType);
 done:
   return result;
 }
@@ -1400,7 +1047,6 @@ done:
   return result;
 }
 
-#ifdef KALLE
 /**
  * Loads a individual polar scan
  * @param[in] nodelist - the node list
@@ -1409,8 +1055,8 @@ done:
  */
 static PolarScan_t* RaveIOInternal_loadScan(HL_NodeList* nodelist)
 {
-  int sindex = 1;
   PolarScan_t* result = NULL;
+  PolarScan_t* scan = NULL;
   RaveObjectHashTable_t* rootattrs = NULL;
   RaveObjectHashTable_t* scanattrs = NULL;
 
@@ -1443,40 +1089,24 @@ static PolarScan_t* RaveIOInternal_loadScan(HL_NodeList* nodelist)
   if (!RaveIOInternal_loadAttributesAndDataForObject(nodelist, "/dataset1", (RaveCoreObject*)scanattrs)) {
     goto done;
   }
-  scan = RaveIOInternal_loadSpecificScan(nodelist, "/dataset1");
-  if (scan == NULL) {
+  if (!RaveIOInternal_loadAttributesAndDataForObject(nodelist, "/dataset1/data1", (RaveCoreObject*)scanattrs)) {
     goto done;
-  }
-  if (!RaveObjectHashTable_exists(scanattrs, "what/startdate")) {
-
-    RaveUtilities_addStringAttributeToList()
-    /*
-    /what/date                               is an attribute
-    /what/object                             is an attribute
-    /what/source                             is an attribute
-    /what/time                               is an attribute
-    /what/version                            is an attribute
-    /where                                   is a group
-    /where/height                            is an attribute
-    /where/lat                               is an attribute
-    /where/lon
-    */
   }
 
   result = RAVE_OBJECT_COPY(scan);
 done:
   RAVE_OBJECT_RELEASE(scan);
-  RAVE_OBJECT_RELEASE(attrs);
+  RAVE_OBJECT_RELEASE(rootattrs);
+  RAVE_OBJECT_RELEASE(scanattrs);
   return result;
 }
-#endif
 
 /**
  * Loads a polar volume.
  * @param[in] nodelist - the node list
  * @returns a polar volume on success otherwise NULL
  */
-static PolarVolume_t* RaveIOInternal_loadVolume(HL_NodeList* nodelist)
+static PolarVolume_t* RaveIOInternal_loadPolarVolume(HL_NodeList* nodelist)
 {
   int sindex = 1;
   PolarVolume_t* result = NULL;
@@ -1608,7 +1238,8 @@ static int RaveIOInternal_addScanToNodeList(PolarScan_t* object, HL_NodeList* no
 
   attributes = PolarScan_getAttributeValues(object);
   if (attributes != NULL) {
-    if (!RaveUtilities_addStringAttributeToList(attributes, "what/product", RaveIO_ProductType_SCAN_STR)) {
+    if (!RaveUtilities_addStringAttributeToList(attributes,
+           "what/product", RaveTypes_getStringFromProductType(Rave_ProductType_SCAN))) {
       goto done;
     }
     if (!RaveUtilities_addLongAttributeToList(attributes, "where/nbins", PolarScan_getNbins(object)) ||
@@ -1651,7 +1282,7 @@ done:
  * @param[in] nodelist - the nodelist the nodes should be added to
  * @returns 1 on success otherwise 0
  */
-static int RaveIOInternal_addVolumeToNodeList(PolarVolume_t* object, HL_NodeList* nodelist)
+static int RaveIOInternal_addPolarVolumeToNodeList(PolarVolume_t* object, HL_NodeList* nodelist)
 {
   int result = 0;
   RaveObjectList_t* attributes = NULL;
@@ -1668,7 +1299,8 @@ static int RaveIOInternal_addVolumeToNodeList(PolarVolume_t* object, HL_NodeList
 
   attributes = PolarVolume_getAttributeValues(object);
   if (attributes != NULL) {
-    if (!RaveUtilities_addStringAttributeToList(attributes, "what/object", RaveIO_ObjectType_PVOL_STR) ||
+    if (!RaveUtilities_addStringAttributeToList(attributes,
+           "what/object", RaveTypes_getStringFromObjectType(Rave_ObjectType_PVOL)) ||
         !RaveUtilities_addStringAttributeToList(attributes, "what/version", RaveIO_ODIM_H5rad_Version_2_0_STR)) {
       RAVE_ERROR0("Failed to add what/object or what/version to attributes");
       goto done;
@@ -1765,98 +1397,74 @@ done:
   return result;
 }
 
-static int RaveIOInternal_createCartesianExtent(HL_NodeList* nodelist, Cartesian_t* cartesian, Projection_t* projection)
+static int RaveIOInternal_validateCartesianVolume(CartesianVolume_t* cvol)
 {
   int result = 0;
-  double llX = 0.0L, llY = 0.0L, urX = 0.0L, urY = 0.0;
-  double LL_lon = 0.0L, LL_lat = 0.0L, UL_lon = 0.0L, UL_lat = 0.0L;
-  double UR_lon = 0.0L, UR_lat = 0.0L, LR_lon = 0.0L, LR_lat = 0.0L;
-  RAVE_ASSERT((nodelist != NULL),"nodelist == NULL");
-  RAVE_ASSERT((projection != NULL), "projection == NULL");
-  RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
 
-  Cartesian_getAreaExtent(cartesian, &llX, &llY, &urX, &urY);
-
-  if (!Projection_inv(projection, llX, llY, &LL_lon, &LL_lat)) {
-    RAVE_ERROR0("Failed to generate LL-coordinate pair");
+  if (CartesianVolume_getObjectType(cvol) == Rave_ObjectType_UNDEFINED) {
+    RAVE_INFO0("Storing a cartesian volume with UNDEFINED ObjectType?");
     goto done;
   }
-
-  if (!Projection_inv(projection, llX, urY, &UL_lon, &UL_lat)) {
-    RAVE_ERROR0("Failed to generate UL-coordinate pair");
+  if (CartesianVolume_getDate(cvol) == NULL) {
+    RAVE_INFO0("date == NULL");
     goto done;
   }
-
-  if (!Projection_inv(projection, urX, urY, &UR_lon, &UR_lat)) {
-    RAVE_ERROR0("Failed to generate UR-coordinate pair");
+  if (CartesianVolume_getTime(cvol) == NULL) {
+    RAVE_INFO0("time == NULL");
     goto done;
   }
-
-  if (!Projection_inv(projection, urX, llY, &LR_lon, &LR_lat)) {
-    RAVE_ERROR0("Failed to generate LR-coordinate pair");
-    goto done;
-  }
-
-  if (!RaveIOInternal_createDoubleValue(nodelist, LL_lon * 180.0 / M_PI, "/where/LL_lon")) {
-    goto done;
-  }
-  if (!RaveIOInternal_createDoubleValue(nodelist, LL_lat * 180.0 / M_PI, "/where/LL_lat")) {
-    goto done;
-  }
-  if (!RaveIOInternal_createDoubleValue(nodelist, UL_lon * 180.0 / M_PI, "/where/UL_lon")) {
-    goto done;
-  }
-  if (!RaveIOInternal_createDoubleValue(nodelist, UL_lat * 180.0 / M_PI, "/where/UL_lat")) {
-    goto done;
-  }
-  if (!RaveIOInternal_createDoubleValue(nodelist, UR_lon * 180.0 / M_PI, "/where/UR_lon")) {
-    goto done;
-  }
-  if (!RaveIOInternal_createDoubleValue(nodelist, UR_lat * 180.0 / M_PI, "/where/UR_lat")) {
-    goto done;
-  }
-  if (!RaveIOInternal_createDoubleValue(nodelist, LR_lon * 180.0 / M_PI, "/where/LR_lon")) {
-    goto done;
-  }
-  if (!RaveIOInternal_createDoubleValue(nodelist, LR_lat * 180.0 / M_PI, "/where/LR_lat")) {
+  if (CartesianVolume_getSource(cvol) == NULL) {
+    RAVE_INFO0("source == NULL");
     goto done;
   }
 
   result = 1;
 done:
   return result;
+
 }
 
-static int RaveIOInternal_loadCartesianExtent(HL_NodeList* nodelist, Cartesian_t* cartesian, Projection_t* projection)
+/**
+ * Loads the 2-d data set with the specified name.
+ * @param[in] nodelist - the hlhdf nodelist
+ * @param[in] fmt - the varargs format string
+ * @param[in] ... - the variable argument list
+ * @returns the rave data 2d on success, otherwise NULL.
+ */
+static RaveData2D_t* RaveIOInternal_loadRave2dData(HL_NodeList* nodelist, const char* fmt, ...)
 {
-  int result = 0;
-  double llX = 0.0L, llY = 0.0L, urX = 0.0L, urY = 0.0;
-  double LL_lon = 0.0L, LL_lat = 0.0L, UR_lon = 0.0L, UR_lat = 0.0L;
-  RAVE_ASSERT((nodelist != NULL),"nodelist == NULL");
-  RAVE_ASSERT((projection != NULL), "projection == NULL");
-  RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
+  char nodeName[1024];
+  va_list ap;
+  int n = 0;
+  RaveData2D_t* result = NULL;
+  HL_Node* node = NULL;
 
-  if (!RaveIOInternal_getDoubleValue(nodelist, &LL_lon, "/where/LL_lon") ||
-      !RaveIOInternal_getDoubleValue(nodelist, &LL_lat, "/where/LL_lat") ||
-      !RaveIOInternal_getDoubleValue(nodelist, &UR_lon, "/where/UR_lon") ||
-      !RaveIOInternal_getDoubleValue(nodelist, &UR_lat, "/where/UR_lat")) {
-    RAVE_ERROR0("Could not get cartesian extent coordinates LL & UR");
+  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
+
+  va_start(ap, fmt);
+  n = vsnprintf(nodeName, 1024, fmt, ap);
+  va_end(ap);
+  if (n < 0 || n >= 1024) {
+    RAVE_ERROR1("Failed to create cartesian name from fmt=%s", fmt);
     goto done;
   }
 
-  if (!Projection_fwd(projection, LL_lon * M_PI/180.0, LL_lat * M_PI/180.0, &llX, &llY)) {
-    RAVE_ERROR0("Could not generate XY pair for LL");
-    goto done;
+  node = HLNodeList_getNodeByName(nodelist, nodeName);
+  if (node != NULL &&
+      HLNode_getType(node) == DATASET_ID) {
+    result = RAVE_OBJECT_NEW(&RaveData2D_TYPE);
+    if (result != NULL) {
+      hsize_t d1 = HLNode_getDimension(node, 1);
+      hsize_t d0 = HLNode_getDimension(node, 0);
+      RaveDataType dataType = RaveIOInternal_hlhdfToRaveType(HLNode_getFormat(node));
+      if(!RaveData2D_setData(result, d1, d0, HLNode_getData(node), dataType)) {
+        RAVE_ERROR0("Failed to set data into RaveData2D-field");
+        RAVE_OBJECT_RELEASE(result);
+        goto done;
+      }
+    }
   }
 
-  if (!Projection_fwd(projection, UR_lon * M_PI/180.0, UR_lat * M_PI/180.0, &urX, &urY)) {
-    RAVE_ERROR0("Could not generate XY pair for UR");
-    goto done;
-  }
-
-  Cartesian_setAreaExtent(cartesian, llX, llY, urX, urY);
-
-  result = 1;
 done:
   return result;
 }
@@ -1866,330 +1474,318 @@ done:
  * @param[in] nodelist - the hlhdf nodelist
  * @returns a cartesian object or NULL on failure
  */
-static RaveCoreObject* RaveIOInternal_loadCartesian(HL_NodeList* nodelist)
+static Cartesian_t* RaveIOInternal_loadCartesian(HL_NodeList* nodelist)
 {
   Cartesian_t* result = NULL;
-  Projection_t* projection = NULL;
-  char* date = NULL;
-  char* time = NULL;
-  char* src = NULL;
-  char* projdef = NULL;
-  long xsize = 0, ysize = 0;
-  double xscale = 0.0L, yscale = 0.0L;
-  char* quantity = NULL;
-  char* startdate = NULL;
-  char* starttime = NULL;
-  char* enddate = NULL;
-  char* endtime = NULL;
-  double gain = 0.0L;
-  double offset = 0.0L;
-  double nodata = 0.0L;
-  double undetect = 0.0L;
-  HL_Node* node = NULL;
-  RaveDataType dataType = RaveDataType_UNDEFINED;
+  Cartesian_t* cartesian = NULL;
+
   Rave_ObjectType objectType = Rave_ObjectType_UNDEFINED;
-  Rave_ProductType productType = Rave_ProductType_UNDEFINED;
 
   RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
 
   objectType = RaveIOInternal_getObjectType(nodelist);
-  if (objectType != Rave_ObjectType_CVOL && objectType != Rave_ObjectType_IMAGE && objectType != Rave_ObjectType_COMP) {
+  if (objectType != Rave_ObjectType_IMAGE) {
     RAVE_ERROR0("Can not load provided file as a cartesian product");
     return NULL;
   }
-  // What information
-  if (!RaveIOInternal_getStringValue(nodelist, &date, "/what/date") ||
-      !RaveIOInternal_getStringValue(nodelist, &time, "/what/time") ||
-      !RaveIOInternal_getStringValue(nodelist, &src, "/what/source")) {
-    RAVE_ERROR0("Could not read /what information");
+  cartesian = RAVE_OBJECT_NEW(&Cartesian_TYPE);
+  if (cartesian == NULL) {
+    RAVE_ERROR0("Failed to create cartesian object");
+    goto done;
+  }
+
+  if (!Cartesian_setObjectType(cartesian, objectType)) {
+    goto done;
+  }
+
+  if (!RaveIOInternal_loadAttributesAndDataForObject(nodelist, "", (RaveCoreObject*)cartesian)) {
+    goto done;
+  }
+
+  if (!RaveIOInternal_loadAttributesAndDataForObject(nodelist, "/dataset1", (RaveCoreObject*)cartesian)) {
+    goto done;
+  }
+
+  if (!RaveIOInternal_loadAttributesAndDataForObject(nodelist, "/dataset1/data1", (RaveCoreObject*)cartesian)) {
+    goto done;
+  }
+
+  result = RAVE_OBJECT_COPY(cartesian);
+done:
+  RAVE_OBJECT_RELEASE(cartesian);
+  return result;
+}
+
+static Cartesian_t* RaveIOInternal_loadCartesianForVolume(HL_NodeList* nodelist, const char* fmt, ...)
+{
+  char nodeName[1024];
+  va_list ap;
+  int n = 0;
+  Cartesian_t* result = NULL;
+  Cartesian_t* cartesian = NULL;
+  RaveData2D_t* data2d = NULL;
+
+  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
+
+  va_start(ap, fmt);
+  n = vsnprintf(nodeName, 1024, fmt, ap);
+  va_end(ap);
+  if (n < 0 || n >= 1024) {
+    RAVE_ERROR1("Failed to create cartesian name from fmt=%s", fmt);
+    goto done;
+  }
+
+  if (!RaveIOInternal_hasNodeByName(nodelist, "%s/data1/data", nodeName)) {
+    RAVE_ERROR1("No data in %s/data1\n",nodeName);
+    goto done;
+  }
+
+  if (HLNodeList_hasNodeByName(nodelist, nodeName)) {
+    cartesian = RAVE_OBJECT_NEW(&Cartesian_TYPE);
+    if (cartesian == NULL) {
+      goto done;
+    }
+    if (!RaveIOInternal_loadAttributesAndDataForObject(nodelist, nodeName, (RaveCoreObject*)cartesian)) {
+      RAVE_OBJECT_RELEASE(cartesian);
+      goto done;
+    }
+  }
+
+  data2d = RaveIOInternal_loadRave2dData(nodelist, "%s/data1/data", nodeName);
+  if (data2d != NULL) {
+    if (!Cartesian_setData(cartesian,
+                           RaveData2D_getXsize(data2d),
+                           RaveData2D_getYsize(data2d),
+                           RaveData2D_getData(data2d),
+                           RaveData2D_getType(data2d))) {
+      goto done;
+    }
+  }
+  Cartesian_setObjectType(cartesian, Rave_ObjectType_IMAGE);
+
+  result = RAVE_OBJECT_COPY(cartesian);
+done:
+  RAVE_OBJECT_RELEASE(cartesian);
+  RAVE_OBJECT_RELEASE(data2d);
+  return result;
+}
+
+static RaveCoreObject* RaveIOInternal_loadCartesianVolume(HL_NodeList* nodelist)
+{
+  int sindex = 1;
+  CartesianVolume_t* result = NULL;
+  CartesianVolume_t* cvol = NULL;
+  Rave_ObjectType objectType = Rave_ObjectType_UNDEFINED;
+
+  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
+
+  objectType = RaveIOInternal_getObjectType(nodelist);
+  if (objectType != Rave_ObjectType_CVOL && objectType != Rave_ObjectType_COMP) {
+    RAVE_ERROR0("Can not load provided file as a cartesian volume");
     return NULL;
   }
-
-  if (!RaveIOInternal_getStringValue(nodelist, &projdef, "/where/projdef") ||
-      !RaveIOInternal_getLongValue(nodelist, &xsize, "/where/xsize") ||
-      !RaveIOInternal_getLongValue(nodelist, &ysize, "/where/ysize") ||
-      !RaveIOInternal_getDoubleValue(nodelist, &xscale, "/where/xscale") ||
-      !RaveIOInternal_getDoubleValue(nodelist, &yscale, "/where/yscale")) {
-    RAVE_ERROR0("Could not read /where information");
-    return NULL;
+  cvol = RAVE_OBJECT_NEW(&CartesianVolume_TYPE);
+  if (cvol == NULL) {
+    RAVE_ERROR0("Failed to create cartesian volume");
+    goto done;
   }
 
-  projection = RAVE_OBJECT_NEW(&Projection_TYPE);
-  if (projection == NULL) {
-    RAVE_ERROR0("Could not create projection");
-    goto error;
-  }
-  if (!Projection_init(projection, "raveio-projection", "autoloaded projection", projdef)) {
-    RAVE_ERROR0("Could not initialize projection");
-    goto error;
+  if (!RaveIOInternal_loadAttributesAndDataForObject(nodelist, "", (RaveCoreObject*)cvol)) {
+    goto done;
   }
 
-  result = RAVE_OBJECT_NEW(&Cartesian_TYPE);
-  if (result == NULL) {
-    RAVE_CRITICAL0("Could not create cartesian object");
-    goto error;
-  }
+  while (RaveIOInternal_hasNodeByName(nodelist, "/dataset%d", sindex)) {
+    Cartesian_t* image = RaveIOInternal_loadCartesianForVolume(nodelist, "/dataset%d", sindex);
+    if (image == NULL) {
+      RAVE_ERROR0("Failed to read image");
+      goto done;
+    }
 
-  if (!RaveIOInternal_loadCartesianExtent(nodelist, result, projection)) {
-    RAVE_ERROR0("Failed to load cartesian extent");
-    goto error;
+    if (!CartesianVolume_addImage(cvol, image)) {
+      RAVE_ERROR0("Failed to add image to cartesian volume");
+      RAVE_OBJECT_RELEASE(image);
+      goto done;
+    }
+    RAVE_OBJECT_RELEASE(image);
+    sindex++;
   }
-
-  if (!Cartesian_setDate(result, date)) {
-    RAVE_ERROR0("Illegal date string");
-    goto error;
-  }
-  if (!Cartesian_setTime(result, time)) {
-    RAVE_ERROR0("Illegal time string");
-    goto error;
-  }
-  if (!Cartesian_setSource(result, src)) {
-    RAVE_ERROR0("Illegal src string");
-    goto error;
-  }
-
-  if (!Cartesian_setObjectType(result, objectType)) {
-    RAVE_ERROR0("Could not set object type");
-    goto error;
-  }
-
-  Cartesian_setXScale(result, xscale);
-  Cartesian_setYScale(result, yscale);
-  Cartesian_setProjection(result, projection);
-
-  productType = RaveIOInternal_getProductType(nodelist, "/dataset1/what/product");
-  if (!Cartesian_setProduct(result, productType)) {
-    RAVE_ERROR0("Could not set product type");
-    goto error;
-  }
-
-  if (!RaveIOInternal_getStringValue(nodelist, &quantity, "/dataset1/what/quantity") ||
-      !RaveIOInternal_getStringValue(nodelist, &startdate, "/dataset1/what/startdate") ||
-      !RaveIOInternal_getStringValue(nodelist, &starttime, "/dataset1/what/starttime") ||
-      !RaveIOInternal_getStringValue(nodelist, &enddate, "/dataset1/what/enddate") ||
-      !RaveIOInternal_getStringValue(nodelist, &endtime, "/dataset1/what/endtime") ||
-      !RaveIOInternal_getDoubleValue(nodelist, &gain, "/dataset1/what/gain") ||
-      !RaveIOInternal_getDoubleValue(nodelist, &offset, "/dataset1/what/offset") ||
-      !RaveIOInternal_getDoubleValue(nodelist, &nodata, "/dataset1/what/nodata") ||
-      !RaveIOInternal_getDoubleValue(nodelist, &undetect, "/dataset1/what/undetect")) {
-    RAVE_ERROR0("Could not read /dataset1/what information");
-    goto error;
-  }
-  if (!Cartesian_setQuantity(result, quantity)) {
-    RAVE_ERROR0("Could not set quantity");
-    goto error;
-  }
-  // Do not bother about setting start and end dates/times
-  Cartesian_setGain(result, gain);
-  Cartesian_setOffset(result, offset);
-  Cartesian_setNodata(result, nodata);
-  Cartesian_setUndetect(result, undetect);
-
-  // And finally read the data.
-  node = RaveIOInternal_getNode(nodelist, "/dataset1/data1/data");
-  if (node == NULL) {
-    RAVE_ERROR0("Failed to load data");
-    goto error;
-  }
-  if (HLNode_getRank(node) != 2) {
-    RAVE_ERROR0("Data is not 2-dimensional");
-    goto error;
-  }
-
-  if (HLNode_getDimension(node, 1) != xsize || HLNode_getDimension(node, 0) != ysize) {
-    RAVE_ERROR0("xsize/ysize does not correspond to actual data array dimensions");
-    goto error;
-  }
-
-  dataType = RaveIOInternal_hlhdfToRaveType(HLNode_getFormat(node));
-  if (dataType == RaveDataType_UNDEFINED) {
-    RAVE_ERROR0("Bad data type");
-    goto error;
-  }
-
-  if (!Cartesian_setData(result, xsize, ysize, HLNode_getData(node), dataType)) {
-    RAVE_ERROR0("Could not set data");
-    goto error;
-  }
-
-  RAVE_OBJECT_RELEASE(projection);
+  result = RAVE_OBJECT_COPY(cvol);
+done:
+  RAVE_OBJECT_RELEASE(cvol);
   return (RaveCoreObject*)result;
-error:
-  RAVE_OBJECT_RELEASE(projection);
-  RAVE_OBJECT_RELEASE(result);
-  return NULL;
+
 }
 
 /**
- * Saves a cartesian object as specified according in ODIM HDF5 format specification.
- * @param[in] raveio - self
- * @returns 1 on success, otherwise 0
+ * Adds a cartesian image (belonging to a volume) to a node list.
+ * @param[in] cvol - the cartesian image to be added to a node list
+ * @param[in] nodelist - the nodelist the nodes should be added to
+ * @returns 1 on success otherwise 0
  */
-int RaveIOInternal_saveCartesian(RaveIO_t* raveio)
+
+static int RaveIOInternal_addCartesianImageToNodeList(Cartesian_t* image, HL_NodeList* nodelist, const char* fmt, ...)
 {
   int result = 0;
-  HL_NodeList* nodelist = NULL;
-  Projection_t* projection = NULL;
-  Rave_ProductType productType = Rave_ProductType_UNDEFINED;
-  Cartesian_t* object = NULL; //  DO not release this
-  RAVE_ASSERT((raveio != NULL), "raveio == NULL");
+  char nodeName[1024];
+  RaveObjectList_t* attributes = NULL;
+  va_list ap;
+  int n = 0;
 
-  if (raveio->object == NULL || !RAVE_OBJECT_CHECK_TYPE(raveio->object, &Cartesian_TYPE)) {
-    RAVE_ERROR0("Atempting to save an object that not is cartesian");
-    return 0;
-  }
+  RAVE_ASSERT((image != NULL), "image == NULL");
+  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
 
-  object = (Cartesian_t*)raveio->object; // So that I dont have to cast the object all the time. DO not release this
-  if (!RaveIOInternal_validateCartesian(object)) {
-    goto done;
-  }
-
-  productType = Cartesian_getProduct(object);
-
-  nodelist = HLNodeList_new();
-  if (nodelist == NULL) {
-    RAVE_CRITICAL0("Failed to allocate nodelist");
+  va_start(ap, fmt);
+  n = vsnprintf(nodeName, 1024, fmt, ap);
+  va_end(ap);
+  if (n < 0 || n >= 1024) {
+    RAVE_ERROR1("Failed to create image name from fmt=%s", fmt);
     goto done;
   }
 
-  if (!RaveIOInternal_createStringValue(nodelist, RaveIO_ODIM_Version_2_0_STR, "/Conventions")) {
-    goto done;
-  }
-
-  // WHAT
-  if (!RaveIOInternal_createGroup(nodelist, "/what")) {
-    goto done;
-  }
-  if (!RaveIOInternal_createStringValue(nodelist,
-       RaveIOInternal_getObjectTypeString(Cartesian_getObjectType(object)), "/what/object")) {
-    goto done;
-  }
-
-  if (!RaveIOInternal_createStringValue(nodelist, RaveIO_ODIM_H5rad_Version_2_0_STR, "/what/version")) {
-    goto done;
-  }
-  if (!RaveIOInternal_createStringValue(nodelist, Cartesian_getDate(object), "/what/date")) {
-    goto done;
-  }
-  if (!RaveIOInternal_createStringValue(nodelist, Cartesian_getTime(object), "/what/time")) {
-    goto done;
-  }
-  if (!RaveIOInternal_createStringValue(nodelist, Cartesian_getSource(object), "/what/source")) {
-    goto done;
-  }
-
-  // WHERE
-  if (!RaveIOInternal_createGroup(nodelist, "/where")) {
-    goto done;
-  }
-  projection = Cartesian_getProjection(object);
-  if (projection == NULL) {
-    RAVE_CRITICAL0("Cartesian product does not have a projection");
-    goto done;
-  }
-
-  if (!RaveIOInternal_createStringValue(nodelist, Projection_getDefinition(projection), "/where/projdef")) {
-    goto done;
-  }
-  if (!RaveIOInternal_createLongValue(nodelist, Cartesian_getXSize(object), "/where/xsize")) {
-    goto done;
-  }
-
-  if (!RaveIOInternal_createLongValue(nodelist, Cartesian_getYSize(object), "/where/ysize")) {
-    goto done;
-  }
-  if (!RaveIOInternal_createDoubleValue(nodelist, Cartesian_getXScale(object), "/where/xscale")) {
-    goto done;
-  }
-  if (!RaveIOInternal_createDoubleValue(nodelist, Cartesian_getYScale(object), "/where/yscale")) {
-    goto done;
-  }
-  if (!RaveIOInternal_createCartesianExtent(nodelist, object, projection)) {
-    goto done;
-  }
-
-  // dataset
-  if (!RaveIOInternal_createGroup(nodelist, "/dataset1")) {
-    goto done;
-  }
-  if (!RaveIOInternal_createGroup(nodelist, "/dataset1/what")) {
-    goto done;
-  }
-  if (!RaveIOInternal_createStringValue(nodelist,
-        RaveIOInternal_getProductString(productType), "/dataset1/what/product")) {
-    goto done;
-  }
-
-  if (productType == Rave_ProductType_CAPPI || productType == Rave_ProductType_PPI ||
-      productType == Rave_ProductType_ETOP || productType == Rave_ProductType_RHI ||
-      productType == Rave_ProductType_VIL) {
-    // @todo: FIX prodpar
-  }
-
-  if (!RaveIOInternal_createStringValue(nodelist, Cartesian_getQuantity(object), "/dataset1/what/quantity")) {
-    goto done;
-  }
-  if (!RaveIOInternal_createStringValue(nodelist, Cartesian_getDate(object), "/dataset1/what/startdate")) {
-    goto done;
-  }
-  if (!RaveIOInternal_createStringValue(nodelist, Cartesian_getTime(object), "/dataset1/what/starttime")) {
-    goto done;
-  }
-  if (!RaveIOInternal_createStringValue(nodelist, Cartesian_getDate(object), "/dataset1/what/enddate")) {
-    goto done;
-  }
-  if (!RaveIOInternal_createStringValue(nodelist, Cartesian_getTime(object), "/dataset1/what/endtime")) {
-    goto done;
-  }
-  if (!RaveIOInternal_createDoubleValue(nodelist, Cartesian_getGain(object), "/dataset1/what/gain")) {
-    goto done;
-  }
-  if (!RaveIOInternal_createDoubleValue(nodelist, Cartesian_getOffset(object), "/dataset1/what/offset")) {
-    goto done;
-  }
-  if (!RaveIOInternal_createDoubleValue(nodelist, Cartesian_getNodata(object), "/dataset1/what/nodata")) {
-    goto done;
-  }
-  if (!RaveIOInternal_createDoubleValue(nodelist, Cartesian_getUndetect(object), "/dataset1/what/undetect")) {
-    goto done;
-  }
-  if (!RaveIOInternal_createGroup(nodelist, "/dataset1/data1")) {
-    goto done;
-  }
-
-  if (!RaveIOInternal_createDataset(nodelist, Cartesian_getData(object),
-                                    Cartesian_getXSize(object), Cartesian_getYSize(object),
-                                    Cartesian_getDataType(object),
-                                    "/dataset1/data1/data")) {
-    goto done;
-  }
-
-  // If data type is 8-bit UCHAR, IMAGE attributes shall be stored.
-  if (Cartesian_getDataType(object) == RaveDataType_UCHAR) {
-    if (!RaveIOInternal_createStringValue(nodelist, "IMAGE", "/dataset1/data1/data/CLASS")) {
-      goto done;
-    }
-    if (!RaveIOInternal_createStringValue(nodelist, "1.2", "/dataset1/data1/data/IMAGE_VERSION")) {
+  if (!RaveIOInternal_hasNodeByName(nodelist, nodeName)) {
+    if (!RaveIOInternal_createGroup(nodelist, nodeName)) {
       goto done;
     }
   }
 
-  if (!HLNodeList_setFileName(nodelist, raveio->filename)) {
-    RAVE_CRITICAL0("Could not set filename on nodelist");
+  if (!RaveIOInternal_hasNodeByName(nodelist, "%s/data1", nodeName)) {
+    if (!RaveIOInternal_createGroup(nodelist,"%s/data1", nodeName)) {
+      goto done;
+    }
+  }
+
+  attributes = Cartesian_getAttributeValues(image, Rave_ObjectType_CVOL);
+
+  if (attributes == NULL || !RaveIOInternal_addAttributes(nodelist, attributes, nodeName)) {
     goto done;
   }
 
-  if (!HLNodeList_write(nodelist, NULL, NULL)) {
-    RAVE_CRITICAL0("Could not save file");
+  if (!RaveIOInternal_addData(nodelist,
+                              Cartesian_getData(image),
+                              Cartesian_getXSize(image),
+                              Cartesian_getYSize(image),
+                              Cartesian_getDataType(image),
+                              "%s/data1", nodeName)) {
     goto done;
   }
 
   result = 1;
 done:
-  HLNodeList_free(nodelist);
-  RAVE_OBJECT_RELEASE(projection);
+  RAVE_OBJECT_RELEASE(attributes);
   return result;
 }
+
+/**
+ * Adds a cartesian volume to a node list.
+ * @param[in] cvol - the cartesian volume to be added to a node list
+ * @param[in] nodelist - the nodelist the nodes should be added to
+ * @returns 1 on success otherwise 0
+ */
+static int RaveIOInternal_addCartesianVolumeToNodeList(CartesianVolume_t* cvol, HL_NodeList* nodelist)
+{
+  int result = 0;
+  RaveObjectList_t* attributes = NULL;
+  int nimages = 0;
+  int i = 0;
+
+  RAVE_ASSERT((cvol != NULL), "cvol == NULL");
+  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
+
+  // First verify that no bogus data is entered into the system.
+  if (!RaveIOInternal_validateCartesianVolume(cvol)) {
+    goto done;
+  }
+
+  attributes = CartesianVolume_getAttributeValues(cvol);
+  if (attributes != NULL) {
+    const char* objectType = RaveTypes_getStringFromObjectType(CartesianVolume_getObjectType(cvol));
+    if (!RaveUtilities_addStringAttributeToList(attributes, "what/object", objectType) ||
+        !RaveUtilities_addStringAttributeToList(attributes, "what/version", RaveIO_ODIM_H5rad_Version_2_0_STR)) {
+      RAVE_ERROR0("Failed to add what/object or what/version to attributes");
+      goto done;
+    }
+  }
+
+  if (attributes == NULL || !RaveIOInternal_addAttributes(nodelist, attributes, "")) {
+    goto done;
+  }
+
+  result = 1; // Set result to 1 now and if adding of scans fails, it will become 0 again
+
+  nimages = CartesianVolume_getNumberOfImages(cvol);
+  for (i = 0; result == 1 && i < nimages; i++) {
+    Cartesian_t* image = CartesianVolume_getImage(cvol, i);
+    result = RaveIOInternal_addCartesianImageToNodeList(image, nodelist, "/dataset%d", (i+1));
+    RAVE_OBJECT_RELEASE(image);
+  }
+done:
+  RAVE_OBJECT_RELEASE(attributes);
+  return result;
+}
+
+/**
+ * Adds a separate cartesian  to a node list.
+ * @param[in] image - the cartesian image to be added to a node list
+ * @param[in] nodelist - the nodelist the nodes should be added to
+ * @returns 1 on success otherwise 0
+ */
+static int RaveIOInternal_addCartesianToNodeList(Cartesian_t* image, HL_NodeList* nodelist)
+{
+  int result = 0;
+  RaveObjectList_t* attributes = NULL;
+
+  RAVE_ASSERT((image != NULL), "image == NULL");
+  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
+
+  if (!RaveIOInternal_validateCartesian(image)) {
+    goto done;
+  }
+
+  attributes = Cartesian_getAttributeValues(image, Rave_ObjectType_IMAGE);
+  if (attributes != NULL) {
+    const char* objectType = RaveTypes_getStringFromObjectType(Cartesian_getObjectType(image));
+    if (!RaveUtilities_addStringAttributeToList(attributes, "what/object", objectType) ||
+        !RaveUtilities_addStringAttributeToList(attributes, "what/version", RaveIO_ODIM_H5rad_Version_2_0_STR)) {
+      RAVE_ERROR0("Failed to add what/object or what/version to attributes");
+      goto done;
+    }
+  }
+
+  if (attributes == NULL || !RaveIOInternal_addAttributes(nodelist, attributes, "")) {
+    goto done;
+  }
+
+  RAVE_OBJECT_RELEASE(attributes);
+
+  attributes = Cartesian_getAttributeValues(image, Rave_ObjectType_CVOL);
+
+  if (!RaveIOInternal_createGroup(nodelist,"/dataset1")) {
+    goto done;
+  }
+
+  if (attributes == NULL || !RaveIOInternal_addAttributes(nodelist, attributes, "/dataset1")) {
+    goto done;
+  }
+
+  if (!RaveIOInternal_createGroup(nodelist,"/dataset1/data1")) {
+    goto done;
+  }
+
+  if (!RaveIOInternal_addData(nodelist,
+                              Cartesian_getData(image),
+                              Cartesian_getYSize(image),
+                              Cartesian_getXSize(image),
+                              Cartesian_getDataType(image),
+                              "/dataset1/data1")) {
+    goto done;
+  }
+
+  result = 1;
+done:
+  RAVE_OBJECT_RELEASE(attributes);
+  return result;
+}
+
 
 /*@} End of Private functions */
 void RaveIO_close(RaveIO_t* raveio)
@@ -2263,17 +1859,15 @@ int RaveIO_load(RaveIO_t* raveio)
   h5radversion = RaveIOInternal_getH5radVersion(nodelist);
 
   objectType = RaveIOInternal_getObjectType(nodelist);
-  if (objectType == Rave_ObjectType_CVOL || objectType == Rave_ObjectType_IMAGE || objectType == Rave_ObjectType_COMP) {
-    object = RaveIOInternal_loadCartesian(nodelist);
+  if (objectType == Rave_ObjectType_CVOL || objectType == Rave_ObjectType_COMP) {
+    object = (RaveCoreObject*)RaveIOInternal_loadCartesianVolume(nodelist);
+  } else if (objectType == Rave_ObjectType_IMAGE) {
+    object = (RaveCoreObject*)RaveIOInternal_loadCartesian(nodelist);
   } else if (objectType == Rave_ObjectType_PVOL) {
-    object = (RaveCoreObject*)RaveIOInternal_loadVolume(nodelist);
-  }
-#ifdef KALLE
-  else if (objectType == Rave_ObjectType_SCAN) {
+    object = (RaveCoreObject*)RaveIOInternal_loadPolarVolume(nodelist);
+  } else if (objectType == Rave_ObjectType_SCAN) {
     object = (RaveCoreObject*)RaveIOInternal_loadScan(nodelist);
-  }
-#endif
-  else {
+  } else {
     RAVE_ERROR1("Currently, RaveIO does not support the object type as defined by '%s'", raveio->filename);
     goto done;
   }
@@ -2303,15 +1897,22 @@ int RaveIO_save(RaveIO_t* raveio)
   }
 
   if (raveio->object != NULL) {
-    if (RAVE_OBJECT_CHECK_TYPE(raveio->object, &Cartesian_TYPE)) {
-      result = RaveIOInternal_saveCartesian(raveio);
-    } else if (RAVE_OBJECT_CHECK_TYPE(raveio->object, &PolarVolume_TYPE)) {
+    if (RAVE_OBJECT_CHECK_TYPE(raveio->object, &Cartesian_TYPE) ||
+        RAVE_OBJECT_CHECK_TYPE(raveio->object, &PolarVolume_TYPE) ||
+        RAVE_OBJECT_CHECK_TYPE(raveio->object, &CartesianVolume_TYPE) ||
+        RAVE_OBJECT_CHECK_TYPE(raveio->object, &PolarScan_TYPE)) {
       HL_NodeList* nodelist = HLNodeList_new();
 
       if (nodelist != NULL) {
         result = RaveIOInternal_createStringValue(nodelist, RaveIO_ODIM_Version_2_0_STR, "/Conventions");
         if (result == 1) {
-          result = RaveIOInternal_addVolumeToNodeList((PolarVolume_t*)raveio->object, nodelist);
+          if (RAVE_OBJECT_CHECK_TYPE(raveio->object, &PolarVolume_TYPE)) {
+            result = RaveIOInternal_addPolarVolumeToNodeList((PolarVolume_t*)raveio->object, nodelist);
+          } else if (RAVE_OBJECT_CHECK_TYPE(raveio->object, &CartesianVolume_TYPE)) {
+            result = RaveIOInternal_addCartesianVolumeToNodeList((CartesianVolume_t*)raveio->object, nodelist);
+          } else if (RAVE_OBJECT_CHECK_TYPE(raveio->object, &Cartesian_TYPE)) {
+            result = RaveIOInternal_addCartesianToNodeList((Cartesian_t*)raveio->object, nodelist);
+          }
         }
         if (result == 1) {
           result = HLNodeList_setFileName(nodelist, raveio->filename);
@@ -2374,6 +1975,10 @@ Rave_ObjectType RaveIO_getObjectType(RaveIO_t* raveio)
       result = Cartesian_getObjectType((Cartesian_t*)raveio->object);
     } else if (RAVE_OBJECT_CHECK_TYPE(raveio->object, &PolarVolume_TYPE)) {
       result = Rave_ObjectType_PVOL;
+    } else if (RAVE_OBJECT_CHECK_TYPE(raveio->object, &PolarScan_TYPE)) {
+      result = Rave_ObjectType_SCAN;
+    } else if (RAVE_OBJECT_CHECK_TYPE(raveio->object, &CartesianVolume_TYPE)) {
+      result = CartesianVolume_getObjectType((CartesianVolume_t*)raveio->object);
     }
   }
   return result;

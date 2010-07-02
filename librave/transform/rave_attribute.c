@@ -150,7 +150,7 @@ void RaveAttribute_setDouble(RaveAttribute_t* attr, double value)
   attr->format = RaveAttribute_Format_Double;
 }
 
-int RaveAttribute_setString(RaveAttribute_t* attr, char* value)
+int RaveAttribute_setString(RaveAttribute_t* attr, const char* value)
 {
   RAVE_ASSERT((attr != NULL), "attr == NULL");
   char* tdata = NULL;

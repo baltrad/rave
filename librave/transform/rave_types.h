@@ -115,4 +115,34 @@ typedef enum RaveTransformationMethod {
  */
 int get_ravetype_size(RaveDataType type);
 
+/**
+ * Translates the string representation of the product type into the
+ * enum.
+ * @param[in] name - the string representation of the product type
+ * @returns a product type or UNDEFINED if not found.
+ */
+Rave_ProductType RaveTypes_getProductTypeFromString(const char* name);
+
+/**
+ * Returns the string representation of the product type.
+ * @param[in] type - the product type
+ * @returns the string representation or NULL if nothing could be found.
+ */
+const char* RaveTypes_getStringFromProductType(Rave_ProductType type);
+
+/**
+ * Translates the string representation of the object type into the
+ * enum.
+ * @param[in] name - the string representation of the object type
+ * @returns a object type or UNDEFINED if not found.
+ */
+Rave_ObjectType RaveTypes_getObjectTypeFromString(const char* name);
+
+/**
+ * Returns the string representation of the object type.
+ * @param[in] type - the object type
+ * @returns the string representation or NULL if nothing could be found.
+ */
+const char* RaveTypes_getStringFromObjectType(Rave_ObjectType type);
+
 #endif /* RAVE_TYPES_H */

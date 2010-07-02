@@ -8,13 +8,13 @@ CFLAGS=	$(OPTS) $(CCSHARED) $(DEFS) $(CREATE_ITRUNC) \
 # Fixed definitions
 
 RAVESOURCES= polar.c raveutil.c rave_transform.c rave_alloc.c rave_debug.c polarvolume.c \
-             polarscan.c polarscanparam.c cartesian.c transform.c projection.c polarnav.c \
+             polarscan.c polarscanparam.c cartesian.c cartesianvolume.c transform.c projection.c polarnav.c \
              rave_io.c rave_list.c rave_object.c raveobject_list.c area.c rave_datetime.c \
              rave_types.c rave_data2d.c composite.c raveobject_hashtable.c rave_attribute.c \
              rave_utilities.c
              
 INSTALL_HEADERS= polar.h rave_transform.h raveutil.h rave_alloc.h polarvolume.h polarscan.h \
-                 polarscanparam.h cartesian.h transform.h projection.h polarnav.h rave_io.h \
+                 polarscanparam.h cartesian.h cartesianvolume.h transform.h projection.h polarnav.h rave_io.h \
                  rave_list.h rave_object.h raveobject_list.h area.h rave_datetime.h \
                  rave_types.h rave_data2d.h composite.h raveobject_hashtable.h rave_attribute.h \
                  rave_utilities.h

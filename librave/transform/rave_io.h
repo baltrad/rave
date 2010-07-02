@@ -27,9 +27,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef RAVE_IO_H
 #define RAVE_IO_H
 
-#include "polarvolume.h"
-#include "cartesian.h"
 #include "rave_object.h"
+#include "rave_types.h"
 
 /**
  * The /Conventions version in a ODIM HDF5 file.
