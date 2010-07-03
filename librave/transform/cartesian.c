@@ -749,6 +749,118 @@ int Cartesian_hasAttribute(Cartesian_t* cartesian, const char* name)
   return RaveObjectHashTable_exists(cartesian->attrs, name);
 }
 
+/**
+ * Validates that all nessecary attributes are set when the cartesian
+ * is worked as a standalone product
+ * @param[in] cartesian - self
+ * @returns 1 if valid, otherwise 0
+ */
+static int CartesianInternal_isValidImage(Cartesian_t* cartesian)
+{
+  int result = 0;
+
+  RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
+
+  if (Cartesian_getDate(cartesian) == NULL ||
+      Cartesian_getTime(cartesian) == NULL ||
+      Cartesian_getSource(cartesian) == NULL) {
+    RAVE_INFO0("Date, Time and Source must be set");
+    goto done;
+  }
+
+  if (cartesian->projection == NULL) {
+    RAVE_INFO0("Projection must be defined for cartesian");
+    goto done;
+  }
+
+  if (Cartesian_getXSize(cartesian) == 0 ||
+      Cartesian_getYSize(cartesian) == 0 ||
+      Cartesian_getXScale(cartesian) == 0.0 ||
+      Cartesian_getYScale(cartesian) == 0.0) {
+    RAVE_INFO0("x/y sizes and scales must be defined");
+    goto done;
+  }
+
+  if (Cartesian_getProduct(cartesian) == Rave_ProductType_UNDEFINED) {
+    RAVE_INFO0("product type must be defined");
+    goto done;
+  }
+  if (Cartesian_getQuantity(cartesian) == NULL) {
+    RAVE_INFO0("Quantity must be defined");
+    goto done;
+  }
+  if (Cartesian_getData(cartesian) == NULL) {
+    RAVE_INFO0("Data must be set");
+    goto done;
+  }
+
+  result = 1;
+done:
+  return result;
+}
+
+/**
+ * Validates that all nessecary attributes are set when the cartesian
+ * belongs to a volume.
+ * @param[in] cartesian - self
+ * @returns 1 if valid, otherwise 0
+ */
+static int CartesianInternal_isValidCvol(Cartesian_t* cartesian)
+{
+  int result = 0;
+
+  RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
+
+  // We must either have date & time or at least some startdate and starttime as
+  // an attribute.
+  if ((Cartesian_getDate(cartesian) == NULL ||
+       Cartesian_getTime(cartesian) == NULL) &&
+      (!Cartesian_hasAttribute(cartesian, "what/startdate") ||
+       !Cartesian_hasAttribute(cartesian, "what/starttime"))) {
+    RAVE_INFO0("Date, Time or what/startdate, what/starttime must be set");
+    goto done;
+  }
+  if (Cartesian_getXSize(cartesian) == 0 ||
+      Cartesian_getYSize(cartesian) == 0 ||
+      Cartesian_getXScale(cartesian) == 0.0 ||
+      Cartesian_getYScale(cartesian) == 0.0) {
+    RAVE_INFO0("x/y sizes and scales must be defined");
+    goto done;
+  }
+
+  if (Cartesian_getProduct(cartesian) == Rave_ProductType_UNDEFINED) {
+    RAVE_INFO0("product type must be defined");
+    goto done;
+  }
+  if (Cartesian_getQuantity(cartesian) == NULL) {
+    RAVE_INFO0("Quantity must be defined");
+    goto done;
+  }
+  if (Cartesian_getData(cartesian) == NULL) {
+    RAVE_INFO0("Data must be set");
+    goto done;
+  }
+
+  result = 1;
+done:
+  return result;
+}
+
+int Cartesian_isValid(Cartesian_t* cartesian, Rave_ObjectType otype)
+{
+  RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
+  if (otype == Rave_ObjectType_IMAGE) {
+    return CartesianInternal_isValidImage(cartesian);
+  } else if (otype == Rave_ObjectType_COMP) {
+    return CartesianInternal_isValidCvol(cartesian);
+  } else if (otype == Rave_ObjectType_CVOL) {
+    return CartesianInternal_isValidCvol(cartesian);
+  } else {
+    RAVE_INFO0("Cartesian does not support other than COMP, CVOL and IMAGE");
+    return 0;
+  }
+}
+
 int CartesianHelper_addLonLatExtentToAttributeList(RaveObjectList_t* list, Projection_t* projection, double llX, double llY, double urX, double urY)
 {
   int result = 0;

@@ -548,6 +548,37 @@ error:
   return NULL;
 }
 
+int CartesianVolume_isValid(CartesianVolume_t* cvol)
+{
+  int result = 0;
+  int ncartesians = 0;
+  int i = 0;
+  RAVE_ASSERT((cvol != NULL), "cvol == NULL");
+  if (CartesianVolume_getDate(cvol) == NULL ||
+      CartesianVolume_getTime(cvol) == NULL ||
+      CartesianVolume_getSource(cvol) == NULL) {
+    RAVE_INFO0("date, time and source MUST be defined");
+    goto done;
+  }
+
+  ncartesians = RaveObjectList_size(cvol->images);
+  if (ncartesians <= 0) {
+    RAVE_INFO0("a cartesian volume must at least contains one product");
+    goto done;
+  }
+
+  result = 1; // on error, let result become 0 and hence break the loop
+  for (i = 0; result == 1 && i < ncartesians; i++) {
+    Cartesian_t* cartesian = (Cartesian_t*)RaveObjectList_get(cvol->images, i);
+    result = Cartesian_isValid(cartesian, cvol->type);
+    RAVE_OBJECT_RELEASE(cartesian);
+  }
+
+  result = 1;
+done:
+  return result;
+}
+
 /*@} End of Interface functions */
 
 RaveCoreObjectType CartesianVolume_TYPE = {

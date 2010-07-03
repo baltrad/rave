@@ -1326,105 +1326,6 @@ done:
 }
 
 /**
- * Validates that the cartesian not contains any bogus data before
- * atempting to store it.
- * @param[in] cartesian - the cartesian to validate
- * @returns 1 if all is valid, otherwise 0.
- */
-static int RaveIOInternal_validateCartesian(Cartesian_t* cartesian)
-{
-  int result = 0;
-  Projection_t* projection = NULL;
-
-  if (Cartesian_getObjectType(cartesian) == Rave_ObjectType_UNDEFINED) {
-    RAVE_INFO0("Storing a cartesian with UNDEFINED ObjectType?");
-    goto done;
-  }
-  if (Cartesian_getDate(cartesian) == NULL) {
-    RAVE_INFO0("date == NULL");
-    goto done;
-  }
-  if (Cartesian_getTime(cartesian) == NULL) {
-    RAVE_INFO0("time == NULL");
-    goto done;
-  }
-  if (Cartesian_getSource(cartesian) == NULL) {
-    RAVE_INFO0("source == NULL");
-    goto done;
-  }
-
-  projection = Cartesian_getProjection(cartesian);
-  if (projection == NULL) {
-    RAVE_INFO0("no projection for cartesian product");
-    goto done;
-  }
-  if (Projection_getDefinition(projection) == NULL) {
-    RAVE_INFO0("projection does not have a definition?");
-    goto done;
-  }
-  if (Cartesian_getXSize(cartesian) <= 0) {
-    RAVE_INFO0("xsize <= 0");
-    goto done;
-  }
-  if (Cartesian_getYSize(cartesian) <= 0) {
-    RAVE_INFO0("ysize <= 0");
-    goto done;
-  }
-  if (Cartesian_getXScale(cartesian) <= 0.0) {
-    RAVE_INFO0("xscale <= 0");
-    goto done;
-  }
-  if (Cartesian_getYScale(cartesian) <= 0) {
-    RAVE_INFO0("yscale <= 0");
-    goto done;
-  }
-  if (Cartesian_getProduct(cartesian) == Rave_ProductType_UNDEFINED) {
-    RAVE_INFO0("Undefined ProductType ?");
-    goto done;
-  }
-  if (Cartesian_getQuantity(cartesian) == NULL) {
-    RAVE_INFO0("quantity == NULL");
-    goto done;
-  }
-  if (Cartesian_getData(cartesian) == NULL) {
-    RAVE_INFO0("data == NULL");
-    goto done;
-  }
-
-  result = 1;
-done:
-  RAVE_OBJECT_RELEASE(projection);
-  return result;
-}
-
-static int RaveIOInternal_validateCartesianVolume(CartesianVolume_t* cvol)
-{
-  int result = 0;
-
-  if (CartesianVolume_getObjectType(cvol) == Rave_ObjectType_UNDEFINED) {
-    RAVE_INFO0("Storing a cartesian volume with UNDEFINED ObjectType?");
-    goto done;
-  }
-  if (CartesianVolume_getDate(cvol) == NULL) {
-    RAVE_INFO0("date == NULL");
-    goto done;
-  }
-  if (CartesianVolume_getTime(cvol) == NULL) {
-    RAVE_INFO0("time == NULL");
-    goto done;
-  }
-  if (CartesianVolume_getSource(cvol) == NULL) {
-    RAVE_INFO0("source == NULL");
-    goto done;
-  }
-
-  result = 1;
-done:
-  return result;
-
-}
-
-/**
  * Loads the 2-d data set with the specified name.
  * @param[in] nodelist - the hlhdf nodelist
  * @param[in] fmt - the varargs format string
@@ -1692,7 +1593,7 @@ static int RaveIOInternal_addCartesianVolumeToNodeList(CartesianVolume_t* cvol, 
   RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
 
   // First verify that no bogus data is entered into the system.
-  if (!RaveIOInternal_validateCartesianVolume(cvol)) {
+  if (!CartesianVolume_isValid(cvol)) {
     goto done;
   }
 
@@ -1737,7 +1638,7 @@ static int RaveIOInternal_addCartesianToNodeList(Cartesian_t* image, HL_NodeList
   RAVE_ASSERT((image != NULL), "image == NULL");
   RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
 
-  if (!RaveIOInternal_validateCartesian(image)) {
+  if (!Cartesian_isValid(image, Rave_ObjectType_IMAGE)) {
     goto done;
   }
 

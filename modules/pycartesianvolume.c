@@ -340,6 +340,11 @@ fail:
   return NULL;
 }
 
+static PyObject* _pycartesianvolume_isValid(PyCartesianVolume* self, PyObject* args)
+{
+  return PyBool_FromLong(CartesianVolume_isValid(self->cvol));
+}
+
 /**
  * All methods a polar volume can have
  */
@@ -351,6 +356,8 @@ static struct PyMethodDef _pycartesianvolume_methods[] =
   {"objectType", NULL},
   {"xscale", NULL},
   {"yscale", NULL},
+  {"xsize", NULL},
+  {"ysize", NULL},
   {"projection", NULL},
   {"areaextent", NULL},
   {"addImage", (PyCFunction) _pycartesianvolume_addImage, 1},
@@ -359,6 +366,7 @@ static struct PyMethodDef _pycartesianvolume_methods[] =
   {"addAttribute", (PyCFunction) _pycartesianvolume_addAttribute, 1},
   {"getAttribute", (PyCFunction) _pycartesianvolume_getAttribute, 1},
   {"getAttributeNames", (PyCFunction) _pycartesianvolume_getAttributeNames, 1},
+  {"isValid", (PyCFunction) _pycartesianvolume_isValid, 1},
   {NULL, NULL} /* sentinel */
 };
 
@@ -404,6 +412,10 @@ static PyObject* _pycartesianvolume_getattr(PyCartesianVolume* self, char* name)
     return PyFloat_FromDouble(CartesianVolume_getXScale(self->cvol));
   } else if (strcmp("yscale", name) == 0) {
     return PyFloat_FromDouble(CartesianVolume_getYScale(self->cvol));
+  } else if (strcmp("xsize", name) == 0) {
+    return PyInt_FromLong(CartesianVolume_getXSize(self->cvol));
+  } else if (strcmp("ysize", name) == 0) {
+    return PyInt_FromLong(CartesianVolume_getYSize(self->cvol));
   } else if (strcmp("areaextent", name) == 0) {
     double llX = 0.0, llY = 0.0, urX = 0.0, urY = 0.0;
     CartesianVolume_getAreaExtent(self->cvol, &llX, &llY, &urX, &urY);

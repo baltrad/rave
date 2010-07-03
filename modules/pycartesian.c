@@ -473,6 +473,18 @@ fail:
   Py_XDECREF(result);
   return NULL;
 }
+
+static PyObject* _pycartesian_isValid(PyCartesian* self, PyObject* args)
+{
+  Rave_ObjectType otype = Rave_ObjectType_UNDEFINED;
+
+  if (!PyArg_ParseTuple(args, "i", &otype)) {
+    return NULL;
+  }
+
+  return PyBool_FromLong(Cartesian_isValid(self->cartesian, otype));
+}
+
 /**
  * All methods a cartesian product can have
  */
@@ -507,6 +519,7 @@ static struct PyMethodDef _pycartesian_methods[] =
   {"addAttribute", (PyCFunction) _pycartesian_addAttribute, 1},
   {"getAttribute", (PyCFunction) _pycartesian_getAttribute, 1},
   {"getAttributeNames", (PyCFunction) _pycartesian_getAttributeNames, 1},
+  {"isValid", (PyCFunction) _pycartesian_isValid, 1},
   {NULL, NULL } /* sentinel */
 };
 

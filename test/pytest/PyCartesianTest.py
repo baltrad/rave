@@ -574,3 +574,69 @@ class PyCartesianTest(unittest.TestCase):
     obj.setData(data)
 
     self.assertEquals(False, obj.isTransformable())
+
+  def test_isValid_asImage(self):
+    obj = _cartesian.new()
+    a = _area.new()
+    a.xsize = 10
+    a.ysize = 10
+    a.xscale = 100.0
+    a.yscale = 100.0
+    a.extent = (1.0, 2.0, 3.0, 4.0)
+    a.projection = _projection.new("x", "y", "+proj=latlong +ellps=WGS84 +datum=WGS84")
+    obj.init(a, _rave.RaveDataType_SHORT)
+    obj.date = "20100101"
+    obj.time = "100000"
+    obj.source = "PLC:1234"
+    obj.product = _rave.Rave_ProductType_CAPPI
+    obj.quantity = "DBZH"
+    
+    self.assertEquals(True, obj.isValid(_rave.Rave_ObjectType_IMAGE))
+    
+  def test_isValid_asImage_no_date(self):
+    obj = _cartesian.new()
+    a = _area.new()
+    a.xsize = 10
+    a.ysize = 10
+    a.xscale = 100.0
+    a.yscale = 100.0
+    a.extent = (1.0, 2.0, 3.0, 4.0)
+    a.projection = _projection.new("x", "y", "+proj=latlong +ellps=WGS84 +datum=WGS84")
+    obj.init(a, _rave.RaveDataType_SHORT)
+    obj.time = "100000"
+    obj.source = "PLC:1234"
+    obj.product = _rave.Rave_ProductType_CAPPI
+    obj.quantity = "DBZH"
+    
+    self.assertEquals(False, obj.isValid(_rave.Rave_ObjectType_IMAGE))
+
+  def test_isValid_asImage_no_quantity(self):
+    obj = _cartesian.new()
+    a = _area.new()
+    a.xsize = 10
+    a.ysize = 10
+    a.xscale = 100.0
+    a.yscale = 100.0
+    a.extent = (1.0, 2.0, 3.0, 4.0)
+    a.projection = _projection.new("x", "y", "+proj=latlong +ellps=WGS84 +datum=WGS84")
+    obj.init(a, _rave.RaveDataType_SHORT)
+    obj.date = "20100101"
+    obj.time = "100000"
+    obj.source = "PLC:1234"
+    obj.product = _rave.Rave_ProductType_CAPPI
+    
+    self.assertEquals(False, obj.isValid(_rave.Rave_ObjectType_IMAGE))
+
+  def test_isValid_asCvol(self):
+    obj = _cartesian.new()
+    obj.addAttribute("what/startdate", "20100101")
+    obj.addAttribute("what/starttime", "100000")    
+    obj.product = _rave.Rave_ProductType_CAPPI
+    obj.quantity = "DBZH"
+    obj.xscale = 100.0
+    obj.yscale = 100.0
+    data = numpy.zeros((240,240),numpy.uint8)
+    obj.setData(data)
+    
+    self.assertEquals(True, obj.isValid(_rave.Rave_ObjectType_CVOL))
+    

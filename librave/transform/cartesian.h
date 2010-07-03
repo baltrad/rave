@@ -410,6 +410,16 @@ RaveObjectList_t* Cartesian_getAttributeValues(Cartesian_t* cartesian, Rave_Obje
 int Cartesian_hasAttribute(Cartesian_t* cartesian, const char* name);
 
 /**
+ * Validates if the cartesian is a valid cartesian product in the means
+ * of storing it.
+ * @param[in] cartesian - self
+ * @param[in] otype - what this cartesian belongs to, e.g IMAGE for self contained
+ * and CVOL for a member of a volume.
+ * @returns 1 if cartesian is valid, otherwise 0
+ */
+int Cartesian_isValid(Cartesian_t* cartesian, Rave_ObjectType otype);
+
+/**
  * Adds the lon lat corner extent to the attribute list. If llX, llY, urX and urY are all 0.0, then
  * nothing will be added to the attribute list.
  * @param[in] list - the list to add the attributes to
