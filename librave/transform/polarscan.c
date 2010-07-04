@@ -784,7 +784,7 @@ RaveList_t* PolarScan_getAttributeNames(PolarScan_t* scan)
   return RaveObjectHashTable_keys(scan->attrs);
 }
 
-RaveObjectList_t* PolarScan_getAttributeValues(PolarScan_t* scan)
+RaveObjectList_t* PolarScan_getAttributeValues(PolarScan_t* scan, Rave_ObjectType otype, int rootattributes)
 {
   RaveObjectList_t* result = NULL;
   RaveObjectList_t* tableattrs = NULL;
@@ -799,32 +799,54 @@ RaveObjectList_t* PolarScan_getAttributeValues(PolarScan_t* scan)
     goto error;
   }
 
-  /*
-   * where/elangle
-   * where/a1gate
-   * where/rscale
-   * where/rstart
-   * what/startdate
-   * what/starttime
-   *
-   * will add what/enddate, what/endtime if there is none
-   */
-  if (!RaveUtilities_addDoubleAttributeToList(result, "where/elangle", PolarScan_getElangle(scan)*180.0/M_PI) ||
-      !RaveUtilities_addLongAttributeToList(result, "where/a1gate", PolarScan_getA1gate(scan)) ||
-      !RaveUtilities_addDoubleAttributeToList(result, "where/rscale", PolarScan_getRscale(scan)) ||
-      !RaveUtilities_addDoubleAttributeToList(result, "where/rstart", PolarScan_getRstart(scan)) ||
-      !RaveUtilities_addStringAttributeToList(result, "what/startdate", PolarScan_getDate(scan)) ||
-      !RaveUtilities_addStringAttributeToList(result, "what/starttime", PolarScan_getTime(scan))) {
-    goto error;
-  }
-
-  if (!RaveObjectHashTable_exists(scan->attrs, "what/enddate")) {
-    if (!RaveUtilities_addStringAttributeToList(result, "what/enddate", PolarScan_getDate(scan))) {
+  if (otype == Rave_ObjectType_SCAN) {
+    if (rootattributes == 1) {
+      if (!RaveUtilities_replaceDoubleAttributeInList(result, "how/beamwidth", PolarScan_getBeamWidth(scan)) ||
+          !RaveUtilities_replaceStringAttributeInList(result, "what/date", PolarScan_getDate(scan)) ||
+          !RaveUtilities_replaceStringAttributeInList(result, "what/time", PolarScan_getTime(scan)) ||
+          !RaveUtilities_replaceStringAttributeInList(result, "what/source", PolarScan_getSource(scan)) ||
+          !RaveUtilities_replaceDoubleAttributeInList(result, "where/height", PolarScan_getHeight(scan)) ||
+          !RaveUtilities_replaceDoubleAttributeInList(result, "where/lat", PolarScan_getLatitude(scan)*180.0/M_PI) ||
+          !RaveUtilities_replaceDoubleAttributeInList(result, "where/lon", PolarScan_getLongitude(scan)*180.0/M_PI)) {
+        goto error;
+      }
+      RaveUtilities_removeAttributeFromList(result, "what/enddate");
+      RaveUtilities_removeAttributeFromList(result, "what/endtime");
+    } else {
+      if (!RaveUtilities_replaceStringAttributeInList(result, "what/product", "SCAN") ||
+          !RaveUtilities_replaceLongAttributeInList(result, "where/a1gate", PolarScan_getA1gate(scan)) ||
+          !RaveUtilities_replaceDoubleAttributeInList(result, "where/elangle", PolarScan_getElangle(scan)*180.0/M_PI) ||
+          !RaveUtilities_replaceLongAttributeInList(result, "where/nbins", PolarScan_getNbins(scan)) ||
+          !RaveUtilities_replaceLongAttributeInList(result, "where/nrays", PolarScan_getNrays(scan)) ||
+          !RaveUtilities_replaceDoubleAttributeInList(result, "where/rscale", PolarScan_getRscale(scan)) ||
+          !RaveUtilities_replaceDoubleAttributeInList(result, "where/rstart", PolarScan_getRstart(scan)) ||
+          !RaveUtilities_replaceStringAttributeInList(result, "what/startdate", PolarScan_getDate(scan)) ||
+          !RaveUtilities_replaceStringAttributeInList(result, "what/starttime", PolarScan_getTime(scan))) {
+        goto error;
+      }
+    }
+  } else {
+    if (!RaveUtilities_replaceDoubleAttributeInList(result, "where/elangle", PolarScan_getElangle(scan)*180.0/M_PI) ||
+        !RaveUtilities_replaceLongAttributeInList(result, "where/a1gate", PolarScan_getA1gate(scan)) ||
+        !RaveUtilities_replaceDoubleAttributeInList(result, "where/rscale", PolarScan_getRscale(scan)) ||
+        !RaveUtilities_replaceDoubleAttributeInList(result, "where/rstart", PolarScan_getRstart(scan))) {
       goto error;
     }
-  }
-  if (!RaveObjectHashTable_exists(scan->attrs, "what/endtime")) {
-    if (!RaveUtilities_addStringAttributeToList(result, "what/endtime", PolarScan_getTime(scan))) {
+    if (!RaveObjectHashTable_exists(scan->attrs, "what/startdate") &&
+        !RaveUtilities_addStringAttributeToList(result, "what/startdate", PolarScan_getDate(scan))) {
+      goto error;
+    }
+    if (!RaveObjectHashTable_exists(scan->attrs, "what/starttime") &&
+        !RaveUtilities_addStringAttributeToList(result, "what/starttime", PolarScan_getTime(scan))) {
+      goto error;
+    }
+
+    if (!RaveObjectHashTable_exists(scan->attrs, "what/enddate") &&
+        !RaveUtilities_addStringAttributeToList(result, "what/enddate", PolarScan_getDate(scan))) {
+      goto error;
+    }
+    if (!RaveObjectHashTable_exists(scan->attrs, "what/endtime") &&
+        !RaveUtilities_addStringAttributeToList(result, "what/endtime", PolarScan_getTime(scan))) {
       goto error;
     }
   }

@@ -87,6 +87,13 @@ int RaveUtilities_replaceDoubleAttributeInList(RaveObjectList_t* l, const char* 
 int RaveUtilities_replaceStringAttributeInList(RaveObjectList_t* l, const char* name, const char* value);
 
 /**
+ * Removes the rave attribute with specified name from the list
+ * @param[in] l - the list
+ * @param[in] name - the name
+ */
+void RaveUtilities_removeAttributeFromList(RaveObjectList_t* l, const char* name);
+
+/**
  * Gets the double value from a rave attribute that resides in a hash table
  * @param[in] h - the hash table
  * @param[in] name - the name

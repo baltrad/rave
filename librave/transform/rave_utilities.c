@@ -156,6 +156,26 @@ int RaveUtilities_replaceStringAttributeInList(RaveObjectList_t* l, const char* 
   return result;
 }
 
+void RaveUtilities_removeAttributeFromList(RaveObjectList_t* l, const char* name)
+{
+  int n = 0;
+  int i;
+  int index = -1;
+  RAVE_ASSERT((l != NULL), "l == NULL");
+  n = RaveObjectList_size(l);
+  for (i = 0; index == -1 && i < n; i++) {
+   RaveAttribute_t* attribute = (RaveAttribute_t*)RaveObjectList_get(l, i);
+   if (strcmp(RaveAttribute_getName(attribute), name)==0) {
+    index = i;
+   }
+   RAVE_OBJECT_RELEASE(attribute);
+  }
+  if (index >= 0) {
+    RaveAttribute_t* attr = RaveObjectList_remove(l, index);
+    RAVE_OBJECT_RELEASE(attr);
+  }
+}
+
 int RaveUtilities_getRaveAttributeDoubleFromHash(RaveObjectHashTable_t* h, const char* name, double* v)
 {
   RaveAttribute_t* attr = NULL;

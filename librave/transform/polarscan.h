@@ -466,10 +466,16 @@ RaveList_t* PolarScan_getAttributeNames(PolarScan_t* scan);
 /**
  * Returns a list of attribute values that should be stored for this scan. Corresponding
  * members will also be added as attribute values. E.g. elangle will be stored
- * as a double with name where/elangle in degrees.
+ * as a double with name where/elangle in degrees. Since a polar scan must contain different
+ * data depending on if it belongs to a volume or not, two more arguments is used.
+ * otype is if this scan belongs to a volume or if it is a stand alone scan. rootattributes is used
+ * if otype is scan, in that case, rootattributes defines if it is the root attributes that should
+ * be returned or if it is the dataset specific ones.
  * @param[in] scan - self
+ * @param[in] otype - what type of attributes that should be returned
+ * @param[in] rootattributes - if it is the root attributes or not.
  * @returns a list of RaveAttributes.
  */
-RaveObjectList_t* PolarScan_getAttributeValues(PolarScan_t* scan);
+RaveObjectList_t* PolarScan_getAttributeValues(PolarScan_t* scan, Rave_ObjectType otype, int rootattributes);
 
 #endif

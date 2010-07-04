@@ -1233,7 +1233,7 @@ done:
  * @param[in] fmt - the variable arguments format string that should be used to define the name of this scan group
  * @returns 1 on success otherwise 0
  */
-static int RaveIOInternal_addScanToNodeList(PolarScan_t* object, HL_NodeList* nodelist, const char* fmt, ...)
+static int RaveIOInternal_addVolumeScanToNodeList(PolarScan_t* object, HL_NodeList* nodelist, const char* fmt, ...)
 {
   int result = 0;
   char nodeName[1024];
@@ -1260,7 +1260,7 @@ static int RaveIOInternal_addScanToNodeList(PolarScan_t* object, HL_NodeList* no
     }
   }
 
-  attributes = PolarScan_getAttributeValues(object);
+  attributes = PolarScan_getAttributeValues(object, Rave_ObjectType_PVOL, 0);
   if (attributes != NULL) {
     if (!RaveUtilities_addStringAttributeToList(attributes,
            "what/product", RaveTypes_getStringFromProductType(Rave_ProductType_SCAN))) {
@@ -1340,11 +1340,69 @@ static int RaveIOInternal_addPolarVolumeToNodeList(PolarVolume_t* object, HL_Nod
   nscans = PolarVolume_getNumberOfScans(object);
   for (i = 0; result == 1 && i < nscans; i++) {
     PolarScan_t* scan = PolarVolume_getScan(object, i);
-    result = RaveIOInternal_addScanToNodeList(scan, nodelist, "/dataset%d", (i+1));
+    result = RaveIOInternal_addVolumeScanToNodeList(scan, nodelist, "/dataset%d", (i+1));
     RAVE_OBJECT_RELEASE(scan);
   }
 
 done:
+  RAVE_OBJECT_RELEASE(attributes);
+  return result;
+}
+
+static int RaveIOInternal_addScanToNodeList(PolarScan_t* object, HL_NodeList* nodelist)
+{
+  int result = 0;
+  RaveObjectList_t* attributes = NULL;
+  RaveList_t* keys = NULL;
+
+  RAVE_ASSERT((object != NULL), "object == NULL");
+  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
+
+  attributes = PolarScan_getAttributeValues(object, Rave_ObjectType_SCAN, 1);
+  if (attributes != NULL) {
+    if (!RaveUtilities_addStringAttributeToList(attributes,
+           "what/object", RaveTypes_getStringFromObjectType(Rave_ObjectType_SCAN)) ||
+        !RaveUtilities_addStringAttributeToList(attributes, "what/version", RaveIO_ODIM_H5rad_Version_2_0_STR)) {
+      RAVE_ERROR0("Failed to add what/object or what/version to attributes");
+      goto done;
+    }
+  }
+
+  if (attributes == NULL || !RaveIOInternal_addAttributes(nodelist, attributes, "")) {
+    goto done;
+  }
+
+  if (!RaveIOInternal_createGroup(nodelist, "/dataset1")) {
+    goto done;
+  }
+
+  RAVE_OBJECT_RELEASE(attributes);
+  attributes = PolarScan_getAttributeValues(object, Rave_ObjectType_SCAN, 0);
+  if (attributes == NULL || !RaveIOInternal_addAttributes(nodelist, attributes, "/dataset1")) {
+    goto done;
+  }
+
+  result = 1;
+
+  keys = PolarScan_getParameterNames(object);
+  if (keys != NULL) {
+    int i = 0;
+    int nkeys = RaveList_size(keys);
+    for (i = 0; result == 1 && i < nkeys; i++) {
+      const char* keyname = RaveList_get(keys, i);
+      PolarScanParam_t* parameter = PolarScan_getParameter(object, keyname);
+      if (parameter == NULL) {
+        result = 0;
+      }
+      if (result == 1) {
+        result = RaveIOInternal_addScanParamToNodeList(parameter, nodelist, "/dataset1/data%d", (i+1));
+      }
+      RAVE_OBJECT_RELEASE(parameter);
+    }
+  }
+
+done:
+  RaveList_freeAndDestroy(&keys);
   RAVE_OBJECT_RELEASE(attributes);
   return result;
 }
@@ -1837,6 +1895,11 @@ int RaveIO_save(RaveIO_t* raveio)
             result = RaveIOInternal_addCartesianVolumeToNodeList((CartesianVolume_t*)raveio->object, nodelist);
           } else if (RAVE_OBJECT_CHECK_TYPE(raveio->object, &Cartesian_TYPE)) {
             result = RaveIOInternal_addCartesianToNodeList((Cartesian_t*)raveio->object, nodelist);
+          } else if (RAVE_OBJECT_CHECK_TYPE(raveio->object, &PolarScan_TYPE)) {
+            result = RaveIOInternal_addScanToNodeList((PolarScan_t*)raveio->object, nodelist);
+          } else {
+            RAVE_ERROR0("No io support for provided object");
+            result = 0;
           }
         }
         if (result == 1) {

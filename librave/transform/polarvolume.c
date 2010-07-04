@@ -344,8 +344,14 @@ int PolarVolume_addScan(PolarVolume_t* pvol, PolarScan_t* scan)
     PolarScan_setNavigator(scan, pvol->navigator);
     PolarScan_setProjection(scan, pvol->projection);
     PolarScan_setDefaultParameter(scan, pvol->paramname);
+    if (PolarScan_getSource(scan) == NULL) {
+      if (!PolarScan_setSource(scan, PolarVolume_getSource(pvol))) {
+        goto done;
+      }
+    }
     result = 1;
   }
+done:
   return result;
 }
 

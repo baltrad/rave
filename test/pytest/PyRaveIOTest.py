@@ -707,6 +707,45 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertAlmostEquals(0.375, p2.gain, 4)
     self.assertAlmostEquals(-48.0, p2.offset, 4)
   
+  def test_write_scan(self):
+    obj = _raveio.open(self.FIXTURE_VOLUME)
+    vol = obj.object
+    scan = vol.getScan(0)
+    
+    obj = _raveio.new()
+    obj.object = scan
+    obj.filename = self.TEMPORARY_FILE
+    obj.save()
+
+    # Verify data
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+    
+    self.assertEquals("120021", nodelist.getNode("/what/time").data())
+    self.assertEquals("20090501", nodelist.getNode("/what/date").data())
+    self.assertEquals("WMO:02606,RAD:SE50", nodelist.getNode("/what/source").data())
+    self.assertEquals("SCAN", nodelist.getNode("/what/object").data())
+    self.assertEquals("H5rad 2.0", nodelist.getNode("/what/version").data())
+    self.assertAlmostEquals(209.0, nodelist.getNode("/where/height").data(), 4)
+    self.assertAlmostEquals(12.8544, nodelist.getNode("/where/lon").data(), 4)
+    self.assertAlmostEquals(56.3675, nodelist.getNode("/where/lat").data(), 4)
+    
+    self.assertEquals("20090501", nodelist.getNode("/dataset1/what/startdate").data())
+    self.assertEquals("120021", nodelist.getNode("/dataset1/what/starttime").data())
+    self.assertEquals("20090501", nodelist.getNode("/dataset1/what/enddate").data())
+    self.assertEquals("120051", nodelist.getNode("/dataset1/what/endtime").data())
+    self.assertEquals("SCAN", nodelist.getNode("/dataset1/what/product").data())
+
+    self.assertEquals(0, nodelist.getNode("/dataset1/where/a1gate").data())
+    self.assertAlmostEquals(0.5, nodelist.getNode("/dataset1/where/elangle").data())
+    self.assertEquals(120, nodelist.getNode("/dataset1/where/nbins").data())
+    self.assertEquals(420, nodelist.getNode("/dataset1/where/nrays").data())
+    self.assertAlmostEquals(2000.0, nodelist.getNode("/dataset1/where/rscale").data(), 4)
+    self.assertAlmostEquals(0.0, nodelist.getNode("/dataset1/where/rstart").data(), 4)
+
+
+  
   def addGroupNode(self, nodelist, name):
     node = _pyhl.node(_pyhl.GROUP_ID, name)
     nodelist.addNode(node)
