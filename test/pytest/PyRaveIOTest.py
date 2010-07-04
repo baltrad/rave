@@ -42,7 +42,7 @@ class PyRaveIOTest(unittest.TestCase):
   FIXTURE_VOLUME="fixture_ODIM_H5_pvol_ang_20090501T1200Z.h5"
   FIXTURE_IMAGE="fixture_old_pcappi-dbz-500.ang-gnom-2000.h5"
   FIXTURE_CVOL_CAPPI="fixture_ODIM_cvol_cappi.h5"
-  
+  FIXTURE_SCAN="fixtures/scan_sevil_20100702T113200Z.h5"
   TEMPORARY_FILE="ravemodule_iotest.h5"
   
   def setUp(self):
@@ -691,6 +691,21 @@ class PyRaveIOTest(unittest.TestCase):
 
     obj = _raveio.open(self.TEMPORARY_FILE)
     self.assertEquals(_rave.Rave_ObjectType_IMAGE, obj.object.objectType);
+  
+  def test_load_scan(self):
+    obj = _raveio.open(self.FIXTURE_SCAN)
+    self.assertNotEqual(-1, string.find(`type(obj.object)`, "PolarScanCore"))
+    scan = obj.object
+
+    self.assertAlmostEquals(40.0, scan.elangle*180.0/math.pi, 4)
+
+    p1 = scan.getParameter("DBZH")
+    self.assertAlmostEquals(0.4, p1.gain, 4)
+    self.assertAlmostEquals(-30.0, p1.offset, 4)
+    
+    p2 = scan.getParameter("VRAD")
+    self.assertAlmostEquals(0.375, p2.gain, 4)
+    self.assertAlmostEquals(-48.0, p2.offset, 4)
   
   def addGroupNode(self, nodelist, name):
     node = _pyhl.node(_pyhl.GROUP_ID, name)

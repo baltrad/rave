@@ -558,21 +558,34 @@ static int RaveIOInternal_hasNodeByName(HL_NodeList* nodelist, const char* fmt, 
  * Loads the attributes from the name into the RaveCoreObject. I.e.
  * name/how/..., name/where/... and name/what/...
  * @param[in] nodelist - the hlhdf list
- * @param[in] name - the name of the object
  * @param[in] object - the object to fill
+ * @param[in] fmt - the varargs name of the object
+ * @param[in] ... - the varargs
+ * @return 1 on success otherwise 0
  */
-static int RaveIOInternal_loadAttributesAndDataForObject(HL_NodeList* nodelist, const char* name, RaveCoreObject* object)
+static int RaveIOInternal_loadAttributesAndDataForObject(HL_NodeList* nodelist, RaveCoreObject* object, const char* fmt, ...)
 {
   int result = 1;
   int n = 0;
   int i = 0;
   int nameLength = 0;
 
+  va_list ap;
+  char name[1024];
+  int nName = 0;
+
   RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
-  RAVE_ASSERT((name != NULL), "nodelist == NULL");
   RAVE_ASSERT((object != NULL), "object == NULL");
 
-  nameLength = strlen(name);
+  va_start(ap, fmt);
+  nName = vsnprintf(name, 1024, fmt, ap);
+  va_end(ap);
+  if (nName < 0 || nName >= 1024) {
+    RAVE_ERROR0("NodeName would evaluate to more than 1024 characters.");
+    result = 0;
+  } else {
+    nameLength = strlen(name);
+  }
 
   n = HLNodeList_getNumberOfNodes(nodelist);
   for (i = 0; result == 1 && i < n; i++) {
@@ -983,7 +996,7 @@ static PolarScanParam_t* RaveIOInternal_loadScanParam(HL_NodeList* nodelist, con
     if (result == NULL) {
       goto done;
     }
-    if (!RaveIOInternal_loadAttributesAndDataForObject(nodelist, nodeName, (RaveCoreObject*)result)) {
+    if (!RaveIOInternal_loadAttributesAndDataForObject(nodelist, (RaveCoreObject*)result, nodeName)) {
       RAVE_OBJECT_RELEASE(result);
     }
   }
@@ -1021,7 +1034,7 @@ static PolarScan_t* RaveIOInternal_loadSpecificScan(HL_NodeList* nodelist, const
     if (scan == NULL) {
       goto done;
     }
-    if (!RaveIOInternal_loadAttributesAndDataForObject(nodelist, nodeName, (RaveCoreObject*)scan)) {
+    if (!RaveIOInternal_loadAttributesAndDataForObject(nodelist, (RaveCoreObject*)scan, nodeName)) {
       RAVE_OBJECT_RELEASE(scan);
     }
   }
@@ -1057,8 +1070,8 @@ static PolarScan_t* RaveIOInternal_loadScan(HL_NodeList* nodelist)
 {
   PolarScan_t* result = NULL;
   PolarScan_t* scan = NULL;
-  RaveObjectHashTable_t* rootattrs = NULL;
-  RaveObjectHashTable_t* scanattrs = NULL;
+  int pindex = 1;
+  int status = 1;
 
   RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
 
@@ -1067,37 +1080,48 @@ static PolarScan_t* RaveIOInternal_loadScan(HL_NodeList* nodelist)
     return NULL;
   }
 
-  rootattrs = RAVE_OBJECT_NEW(&RaveObjectHashTable_TYPE);
-  scanattrs = RAVE_OBJECT_NEW(&RaveObjectHashTable_TYPE);
-  if (rootattrs == NULL || scanattrs == NULL) {
-    RAVE_ERROR0("Failed to create hash table");
-    goto done;
+  scan = RAVE_OBJECT_NEW(&PolarScan_TYPE);
+  if (scan == NULL) {
+    RAVE_ERROR0("Failed to create scan");
+    return NULL;
   }
 
-  if (!RaveIOInternal_hasNodeByName(nodelist, "/dataset1")) {
+  if (!RaveIOInternal_hasNodeByName(nodelist, "/dataset1") ||
+      !RaveIOInternal_hasNodeByName(nodelist, "/dataset1/data1")) {
     RAVE_ERROR0("Scan file does not contain scan...");
     goto done;
   }
 
-  // Separate scans are a bit different to load since they have what/time, ...
-  // that might be overridden by /dataset1/what/time so we need to fetch
-  // the / group and then merge it with the /dataset1/what group so that we
-  // get proper settings.
-  if (!RaveIOInternal_loadAttributesAndDataForObject(nodelist, "", (RaveCoreObject*)rootattrs)) {
+  if (!RaveIOInternal_loadAttributesAndDataForObject(nodelist, (RaveCoreObject*)scan, "")) {
     goto done;
   }
-  if (!RaveIOInternal_loadAttributesAndDataForObject(nodelist, "/dataset1", (RaveCoreObject*)scanattrs)) {
+
+  if (!RaveIOInternal_loadAttributesAndDataForObject(nodelist, (RaveCoreObject*)scan, "/dataset1")) {
     goto done;
   }
-  if (!RaveIOInternal_loadAttributesAndDataForObject(nodelist, "/dataset1/data1", (RaveCoreObject*)scanattrs)) {
-    goto done;
+
+  // And fetch the different parameters that belongs to the scan
+  pindex = 1;
+  while (status == 1) {
+    PolarScanParam_t* param = RaveIOInternal_loadScanParam(nodelist, "/dataset1/data%d", pindex);
+    if (param == NULL) {
+      status = 0;
+    }
+    if (status == 1) {
+      status = PolarScan_addParameter(scan, param);
+      if (status == 0) {
+        RAVE_ERROR0("Failed to add parameter to scan");
+      }
+    }
+
+    pindex++;
+    RAVE_OBJECT_RELEASE(param);
   }
+
 
   result = RAVE_OBJECT_COPY(scan);
 done:
   RAVE_OBJECT_RELEASE(scan);
-  RAVE_OBJECT_RELEASE(rootattrs);
-  RAVE_OBJECT_RELEASE(scanattrs);
   return result;
 }
 
@@ -1123,7 +1147,7 @@ static PolarVolume_t* RaveIOInternal_loadPolarVolume(HL_NodeList* nodelist)
     RAVE_ERROR0("Failed to create volume object");
     goto done;
   }
-  if (!RaveIOInternal_loadAttributesAndDataForObject(nodelist, "", (RaveCoreObject*)volume)) {
+  if (!RaveIOInternal_loadAttributesAndDataForObject(nodelist, (RaveCoreObject*)volume, "")) {
     goto done;
   }
 
@@ -1399,15 +1423,15 @@ static Cartesian_t* RaveIOInternal_loadCartesian(HL_NodeList* nodelist)
     goto done;
   }
 
-  if (!RaveIOInternal_loadAttributesAndDataForObject(nodelist, "", (RaveCoreObject*)cartesian)) {
+  if (!RaveIOInternal_loadAttributesAndDataForObject(nodelist, (RaveCoreObject*)cartesian, "")) {
     goto done;
   }
 
-  if (!RaveIOInternal_loadAttributesAndDataForObject(nodelist, "/dataset1", (RaveCoreObject*)cartesian)) {
+  if (!RaveIOInternal_loadAttributesAndDataForObject(nodelist, (RaveCoreObject*)cartesian, "/dataset1")) {
     goto done;
   }
 
-  if (!RaveIOInternal_loadAttributesAndDataForObject(nodelist, "/dataset1/data1", (RaveCoreObject*)cartesian)) {
+  if (!RaveIOInternal_loadAttributesAndDataForObject(nodelist, (RaveCoreObject*)cartesian, "/dataset1/data1")) {
     goto done;
   }
 
@@ -1446,7 +1470,7 @@ static Cartesian_t* RaveIOInternal_loadCartesianForVolume(HL_NodeList* nodelist,
     if (cartesian == NULL) {
       goto done;
     }
-    if (!RaveIOInternal_loadAttributesAndDataForObject(nodelist, nodeName, (RaveCoreObject*)cartesian)) {
+    if (!RaveIOInternal_loadAttributesAndDataForObject(nodelist, (RaveCoreObject*)cartesian, nodeName)) {
       RAVE_OBJECT_RELEASE(cartesian);
       goto done;
     }
@@ -1491,7 +1515,7 @@ static RaveCoreObject* RaveIOInternal_loadCartesianVolume(HL_NodeList* nodelist)
     goto done;
   }
 
-  if (!RaveIOInternal_loadAttributesAndDataForObject(nodelist, "", (RaveCoreObject*)cvol)) {
+  if (!RaveIOInternal_loadAttributesAndDataForObject(nodelist, (RaveCoreObject*)cvol, "")) {
     goto done;
   }
 
