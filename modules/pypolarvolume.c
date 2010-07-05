@@ -475,6 +475,11 @@ fail:
   return NULL;
 }
 
+static PyObject* _pypolarvolume_isValid(PyPolarVolume* self, PyObject* args)
+{
+  return PyBool_FromLong(PolarVolume_isValid(self->pvol));
+}
+
 /**
  * All methods a polar volume can have
  */
@@ -500,6 +505,7 @@ static struct PyMethodDef _pypolarvolume_methods[] =
   {"addAttribute", (PyCFunction) _pypolarvolume_addAttribute, 1},
   {"getAttribute", (PyCFunction) _pypolarvolume_getAttribute, 1},
   {"getAttributeNames", (PyCFunction) _pypolarvolume_getAttributeNames, 1},
+  {"isValid", (PyCFunction) _pypolarvolume_isValid, 1},
   {NULL, NULL} /* sentinel */
 };
 

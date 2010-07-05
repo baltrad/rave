@@ -622,6 +622,17 @@ fail:
   return NULL;
 }
 
+static PyObject* _pypolarscan_isValid(PyPolarScan* self, PyObject* args)
+{
+  Rave_ObjectType otype = Rave_ObjectType_UNDEFINED;
+
+  if (!PyArg_ParseTuple(args, "i", &otype)) {
+    return NULL;
+  }
+
+  return PyBool_FromLong(PolarScan_isValid(self->scan, otype));
+}
+
 /**
  * All methods a polar scan can have
  */
@@ -661,6 +672,7 @@ static struct PyMethodDef _pypolarscan_methods[] =
   {"addAttribute", (PyCFunction) _pypolarscan_addAttribute, 1},
   {"getAttribute", (PyCFunction) _pypolarscan_getAttribute, 1},
   {"getAttributeNames", (PyCFunction) _pypolarscan_getAttributeNames, 1},
+  {"isValid", (PyCFunction) _pypolarscan_isValid, 1},
   {NULL, NULL } /* sentinel */
 };
 

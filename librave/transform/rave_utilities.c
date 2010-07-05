@@ -171,7 +171,7 @@ void RaveUtilities_removeAttributeFromList(RaveObjectList_t* l, const char* name
    RAVE_OBJECT_RELEASE(attribute);
   }
   if (index >= 0) {
-    RaveAttribute_t* attr = RaveObjectList_remove(l, index);
+    RaveAttribute_t* attr = (RaveAttribute_t*)RaveObjectList_remove(l, index);
     RAVE_OBJECT_RELEASE(attr);
   }
 }

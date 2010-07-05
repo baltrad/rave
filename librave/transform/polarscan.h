@@ -478,4 +478,12 @@ RaveList_t* PolarScan_getAttributeNames(PolarScan_t* scan);
  */
 RaveObjectList_t* PolarScan_getAttributeValues(PolarScan_t* scan, Rave_ObjectType otype, int rootattributes);
 
+/**
+ * Validates the scan can be seen to be valid regarding storage.
+ * @param[in] scan - self
+ * @param[in] otype - the object type this scan should be accounted for
+ * @returns 1 if valid, otherwise 0
+ */
+int PolarScan_isValid(PolarScan_t* scan, Rave_ObjectType otype);
+
 #endif

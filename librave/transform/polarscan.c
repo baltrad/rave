@@ -860,6 +860,54 @@ error:
 
 }
 
+int PolarScan_isValid(PolarScan_t* scan, Rave_ObjectType otype)
+{
+  int result = 1;
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+
+  if (otype == Rave_ObjectType_PVOL) {
+    if (PolarScan_getTime(scan) == NULL ||
+        PolarScan_getDate(scan) == NULL ||
+        !RaveObjectHashTable_exists(scan->attrs, "what/enddate") ||
+        !RaveObjectHashTable_exists(scan->attrs, "what/endtime")) {
+      RAVE_INFO0("Missing start/end date/time information");
+      goto done;
+    }
+    if (PolarScan_getNbins(scan) <= 0 ||
+        PolarScan_getNrays(scan) <= 0) {
+      RAVE_INFO0("Missing size information");
+      goto done;
+    }
+    if (RaveObjectHashTable_size(scan->parameters) <= 0) {
+      RAVE_INFO0("Must at least contain one parameter");
+      goto done;
+    }
+  } else if (otype == Rave_ObjectType_SCAN) {
+    if (PolarScan_getTime(scan) == NULL ||
+        PolarScan_getDate(scan) == NULL ||
+        PolarScan_getSource(scan) == NULL) {
+      RAVE_INFO0("date, time and source must be specified");
+      goto done;
+    }
+    if (PolarScan_getNbins(scan) <= 0 ||
+        PolarScan_getNrays(scan) <= 0) {
+      RAVE_INFO0("Missing size information");
+      goto done;
+    }
+    if (RaveObjectHashTable_size(scan->parameters) <= 0) {
+      RAVE_INFO0("Must at least contain one parameter");
+      goto done;
+    }
+  } else {
+    RAVE_ERROR0("Only valid types for isValid are PVOL and SCAN");
+    goto done;
+  }
+
+  result = 1;
+done:
+  return result;
+}
+
 /*@} End of Interface functions */
 
 RaveCoreObjectType PolarScan_TYPE = {

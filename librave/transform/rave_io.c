@@ -860,116 +860,6 @@ done:
 ///////////////////////////////////////////////////////////////////
 
 /**
- * Validates that the scan is valid for storing as a part of a volume.
- * @param[in] scan - the scan to validate
- * @returns 1 if all is ok, otherwise 0
- */
-static int RaveIOInternal_validateVolumeScan(PolarScan_t* scan)
-{
-  int result = 0;
-  long nrays = 0, nbins = 0;
-  RaveList_t* list = NULL;
-  int nparams = 0;
-  int i = 0;
-
-  if (scan == NULL) {
-    RAVE_INFO0("scan == NULL");
-    goto done;
-  }
-  if (PolarScan_getTime(scan) == NULL) {
-    RAVE_INFO0("time == NULL");
-    goto done;
-  }
-  if (PolarScan_getDate(scan) == NULL) {
-    RAVE_INFO0("date == NULL");
-    goto done;
-  }
-  nrays = PolarScan_getNrays(scan);
-  nbins = PolarScan_getNbins(scan);
-  if (nrays <= 0) {
-    RAVE_INFO0("nrays <= 0");
-    goto done;
-  }
-  if (nbins <= 0) {
-    RAVE_INFO0("nbins <= 0");
-    goto done;
-  }
-
-  list = PolarScan_getParameterNames(scan);
-  if (list == NULL) {
-    RAVE_WARNING0("no parameter names");
-    goto done;
-  }
-  nparams = RaveList_size(list);
-  if (nparams == 0) {
-    RAVE_WARNING0("no parameter names");
-    goto done;
-  }
-  for (i = 0; i < nparams; i++) {
-    char* name = RaveList_get(list, i);
-    PolarScanParam_t* param = PolarScan_getParameter(scan, name);
-    if (param == NULL) {
-      goto done;
-    }
-    if (PolarScanParam_getQuantity(param)==NULL) {
-      RAVE_INFO0("Parameter does not specify quantity");
-      RAVE_OBJECT_RELEASE(param);
-      goto done;
-    }
-    RAVE_OBJECT_RELEASE(param);
-  }
-  result = 1;
-done:
-  RaveList_freeAndDestroy(&list);
-  return result;
-}
-
-/**
- * Validates that the volume not contains any bogus data before
- * atempting to store it.
- * @param[in] pvol - the volume to validate
- * @returns 1 if all is valid, otherwise 0.
- */
-static int RaveIOInternal_validateVolume(PolarVolume_t* pvol)
-{
-  int result = 0;
-  int nrScans = 0;
-  int i = 0;
-
-  if (PolarVolume_getTime(pvol) == NULL) {
-    RAVE_INFO0("time == NULL");
-    goto done;
-  }
-  if (PolarVolume_getDate(pvol) == NULL) {
-    RAVE_INFO0("date == NULL");
-    goto done;
-  }
-  if (PolarVolume_getSource(pvol) == NULL) {
-    RAVE_INFO0("source == NULL");
-    goto done;
-  }
-
-  nrScans = PolarVolume_getNumberOfScans(pvol);
-  if (nrScans <= 0) {
-    RAVE_INFO0("volume contains no scans");
-    goto done;
-  }
-
-  for (i = 0; i < nrScans; i++) {
-    PolarScan_t* scan = PolarVolume_getScan(pvol, i);
-    if (!RaveIOInternal_validateVolumeScan(scan)) {
-      RAVE_OBJECT_RELEASE(scan);
-      goto done;
-    }
-    RAVE_OBJECT_RELEASE(scan);
-  }
-
-  result = 1;
-done:
-  return result;
-}
-
-/**
  * Loads a scan parameter.
  * @param[in] nodelist - the node list
  * @param[in] fmt - the varargs name of the parameter to load
@@ -1317,7 +1207,7 @@ static int RaveIOInternal_addPolarVolumeToNodeList(PolarVolume_t* object, HL_Nod
   RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
 
   // First verify that no bogus data is entered into the system.
-  if (!RaveIOInternal_validateVolume(object)) {
+  if (!PolarVolume_isValid(object)) {
     goto done;
   }
 

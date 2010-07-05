@@ -659,6 +659,37 @@ error:
   return NULL;
 }
 
+int PolarVolume_isValid(PolarVolume_t* pvol)
+{
+  int result = 0;
+  int nscans = 0;
+  int i = 0;
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
+
+  if (PolarVolume_getDate(pvol) == NULL ||
+      PolarVolume_getTime(pvol) == NULL ||
+      PolarVolume_getSource(pvol) == NULL) {
+    RAVE_INFO0("date, time and source must be specified");
+    goto done;
+  }
+
+  if ((nscans = RaveObjectList_size(pvol->scans)) <= 0) {
+    RAVE_INFO0("Must have at least one scan");
+    goto done;
+  }
+
+  result = 1;
+
+  for (i = 0; result == 1 && i < nscans; i++) {
+    PolarScan_t* scan = PolarVolume_getScan(pvol, i);
+    result = PolarScan_isValid(scan, Rave_ObjectType_PVOL);
+    RAVE_OBJECT_RELEASE(scan);
+  }
+
+done:
+  return result;
+}
+
 /*@} End of Interface functions */
 RaveCoreObjectType PolarVolume_TYPE = {
     "PolarVolume",

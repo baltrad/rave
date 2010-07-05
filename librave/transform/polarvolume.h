@@ -290,4 +290,11 @@ RaveList_t* PolarVolume_getAttributeNames(PolarVolume_t* pvol);
  * @returns a list of RaveAttributes.
  */
 RaveObjectList_t* PolarVolume_getAttributeValues(PolarVolume_t* pvol);
+
+/**
+ * Validates the volume regarding storage.
+ * @param[in] pvol - self
+ * @returns 1 if valid, otherwise 0
+ */
+int PolarVolume_isValid(PolarVolume_t* pvol);
 #endif
