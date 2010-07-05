@@ -345,6 +345,15 @@ MODULES.append(
         libraries=LIBRARIES
         )
     )
+
+MODULES.append(
+    Extension(
+        "_ravefield", ["modules/pyravefield.c"],
+        include_dirs=INCLUDE_DIRS,
+        library_dirs=LIBRARY_DIRS,
+        libraries=LIBRARIES
+        )
+    )
 # build!
 
 if __name__ == "__main__":

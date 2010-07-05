@@ -32,6 +32,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_types.h"
 #include "rave_list.h"
 #include "raveobject_list.h"
+#include "rave_field.h"
+
 /**
  * Defines a Polar Scan
  */
@@ -316,6 +318,36 @@ int PolarScan_hasParameter(PolarScan_t* scan, const char* quantity);
  * @returns this scans contained parameters. NULL on failure. Use \ref #RaveList_freeAndDestroy to destroy
  */
 RaveList_t* PolarScan_getParameterNames(PolarScan_t* scan);
+
+/**
+ * Adds a quality field to this scan.
+ * @param[in] scan - self
+ * @param[in] field - the field to add
+ * @returns 1 on success otherwise 0
+ */
+int PolarScan_addQualityField(PolarScan_t* scan, RaveField_t* field);
+
+/**
+ * Returns the quality field at the specified location.
+ * @param[in] scan - self
+ * @param[in] index - the index
+ * @returns the quality field if found, otherwise NULL
+ */
+RaveField_t* PolarScan_getQualityField(PolarScan_t* scan, int index);
+
+/**
+ * Returns the number of quality fields
+ * @param[in] scan - self
+ * @returns the number of quality fields
+ */
+int PolarScan_getNumberOfQualityFields(PolarScan_t* scan);
+
+/**
+ * Removes the quality field at the specified location
+ * @param[in] scan - self
+ * @param[in] index - the index
+ */
+void PolarScan_removeQualityField(PolarScan_t* scan, int index);
 
 /**
  * Returns the range index for the specified range (in meters).

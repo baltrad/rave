@@ -31,6 +31,7 @@ from PyPolarScanParamTest import *
 from RaveModuleConstantsTest import *
 from PyCartesianTest import *
 from PyCartesianVolumeTest import *
+from PyRaveFieldTest import *
 from PyTransformTest import *
 from PyProjectionTest import *
 from PyRaveIOTest import *

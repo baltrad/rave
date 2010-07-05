@@ -76,6 +76,8 @@ struct _PolarScan_t {
   PolarScanParam_t* param;
 
   RaveObjectHashTable_t* attrs; /**< attributes */
+
+  RaveObjectList_t* qualityfields; /**< quality fields */
 };
 
 /*@{ Private functions */
@@ -103,6 +105,7 @@ static int PolarScan_constructor(RaveCoreObject* obj)
   scan->parameters = RAVE_OBJECT_NEW(&RaveObjectHashTable_TYPE);
   scan->projection = RAVE_OBJECT_NEW(&Projection_TYPE);
   scan->attrs = RAVE_OBJECT_NEW(&RaveObjectHashTable_TYPE);
+  scan->qualityfields = RAVE_OBJECT_NEW(&RaveObjectList_TYPE);
 
   if (scan->projection != NULL) {
     if(!Projection_init(scan->projection, "lonlat", "lonlat", "+proj=latlong +ellps=WGS84 +datum=WGS84")) {
@@ -111,7 +114,8 @@ static int PolarScan_constructor(RaveCoreObject* obj)
   }
   scan->navigator = RAVE_OBJECT_NEW(&PolarNavigator_TYPE);
   if (scan->datetime == NULL || scan->projection == NULL ||
-      scan->navigator == NULL || scan->parameters == NULL || scan->attrs == NULL) {
+      scan->navigator == NULL || scan->parameters == NULL ||
+      scan->attrs == NULL || scan->qualityfields == NULL) {
     goto error;
   }
   if (!PolarScan_setDefaultParameter(scan, DEFAULT_PARAMETER_NAME)) {
@@ -124,6 +128,7 @@ error:
   RAVE_OBJECT_RELEASE(scan->navigator);
   RAVE_OBJECT_RELEASE(scan->parameters);
   RAVE_OBJECT_RELEASE(scan->attrs);
+  RAVE_OBJECT_RELEASE(scan->qualityfields);
   RAVE_FREE(scan->paramname);
   RAVE_OBJECT_RELEASE(scan->param);
   return 0;
@@ -150,8 +155,10 @@ static int PolarScan_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj
   this->navigator = RAVE_OBJECT_CLONE(src->navigator);
   this->parameters = RAVE_OBJECT_CLONE(src->parameters);
   this->attrs = RAVE_OBJECT_CLONE(src->attrs);
+  this->qualityfields = RAVE_OBJECT_CLONE(src->qualityfields);
   if (this->datetime == NULL || this->projection == NULL ||
-      this->navigator == NULL || this->parameters == NULL || this->attrs == NULL) {
+      this->navigator == NULL || this->parameters == NULL ||
+      this->attrs == NULL || this->qualityfields == NULL) {
     goto error;
   }
   if (!PolarScan_setSource(this, PolarScan_getSource(src))) {
@@ -176,6 +183,7 @@ error:
   RAVE_FREE(this->paramname);
   RAVE_OBJECT_RELEASE(this->param);
   RAVE_OBJECT_RELEASE(this->attrs);
+  RAVE_OBJECT_RELEASE(this->qualityfields);
   return 0;
 }
 
@@ -193,6 +201,7 @@ static void PolarScan_destructor(RaveCoreObject* obj)
   RAVE_OBJECT_RELEASE(scan->param);
   RAVE_FREE(scan->paramname);
   RAVE_OBJECT_RELEASE(scan->attrs);
+  RAVE_OBJECT_RELEASE(scan->qualityfields);
 }
 
 /*@} End of Private functions */
@@ -200,7 +209,7 @@ static void PolarScan_destructor(RaveCoreObject* obj)
 /*@{ Interface functions */
 void PolarScan_setNavigator(PolarScan_t* scan, PolarNavigator_t* navigator)
 {
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
   RAVE_ASSERT((navigator != NULL), "navigator was NULL");
   RAVE_OBJECT_RELEASE(scan->navigator);
   scan->navigator = RAVE_OBJECT_COPY(navigator);
@@ -208,44 +217,44 @@ void PolarScan_setNavigator(PolarScan_t* scan, PolarNavigator_t* navigator)
 
 PolarNavigator_t* PolarScan_getNavigator(PolarScan_t* scan)
 {
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
   return RAVE_OBJECT_COPY(scan->navigator);
 }
 
 void PolarScan_setProjection(PolarScan_t* scan, Projection_t* projection)
 {
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
   RAVE_OBJECT_RELEASE(scan->projection);
   scan->projection = RAVE_OBJECT_COPY(projection);
 }
 
 Projection_t* PolarScan_getProjection(PolarScan_t* scan)
 {
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
   return RAVE_OBJECT_COPY(scan->projection);
 }
 
 int PolarScan_setTime(PolarScan_t* scan, const char* value)
 {
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
   return RaveDateTime_setTime(scan->datetime, value);
 }
 
 const char* PolarScan_getTime(PolarScan_t* scan)
 {
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
   return RaveDateTime_getTime(scan->datetime);
 }
 
 int PolarScan_setDate(PolarScan_t* scan, const char* value)
 {
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
   return RaveDateTime_setDate(scan->datetime, value);
 }
 
 const char* PolarScan_getDate(PolarScan_t* scan)
 {
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
   return RaveDateTime_getDate(scan->datetime);
 }
 
@@ -253,7 +262,7 @@ int PolarScan_setSource(PolarScan_t* scan, const char* value)
 {
   char* tmp = NULL;
   int result = 0;
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
   if (value != NULL) {
     tmp = RAVE_STRDUP(value);
     if (tmp != NULL) {
@@ -271,56 +280,56 @@ int PolarScan_setSource(PolarScan_t* scan, const char* value)
 
 const char* PolarScan_getSource(PolarScan_t* scan)
 {
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
   return (const char*)scan->source;
 }
 
 
 void PolarScan_setLongitude(PolarScan_t* scan, double lon)
 {
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
   PolarNavigator_setLon0(scan->navigator, lon);
 }
 
 double PolarScan_getLongitude(PolarScan_t* scan)
 {
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
   return PolarNavigator_getLon0(scan->navigator);
 }
 
 void PolarScan_setLatitude(PolarScan_t* scan, double lat)
 {
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
   PolarNavigator_setLat0(scan->navigator, lat);
 }
 
 double PolarScan_getLatitude(PolarScan_t* scan)
 {
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
   return PolarNavigator_getLat0(scan->navigator);
 }
 
 void PolarScan_setHeight(PolarScan_t* scan, double height)
 {
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
   PolarNavigator_setAlt0(scan->navigator, height);
 }
 
 double PolarScan_getHeight(PolarScan_t* scan)
 {
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
   return PolarNavigator_getAlt0(scan->navigator);
 }
 
 void PolarScan_setElangle(PolarScan_t* scan, double elangle)
 {
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
   scan->elangle = elangle;
 }
 
 double PolarScan_getElangle(PolarScan_t* scan)
 {
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
   return scan->elangle;
 }
 
@@ -332,37 +341,37 @@ long PolarScan_getNbins(PolarScan_t* scan)
 
 void PolarScan_setRscale(PolarScan_t* scan, double rscale)
 {
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
   scan->rscale = rscale;
 }
 
 double PolarScan_getRscale(PolarScan_t* scan)
 {
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
   return scan->rscale;
 }
 
 long PolarScan_getNrays(PolarScan_t* scan)
 {
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
   return scan->nrays;
 }
 
 void PolarScan_setRstart(PolarScan_t* scan, double rstart)
 {
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
   scan->rstart = rstart;
 }
 
 double PolarScan_getRstart(PolarScan_t* scan)
 {
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
   return scan->rstart;
 }
 
 RaveDataType PolarScan_getDataType(PolarScan_t* scan)
 {
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
   if (scan->param == NULL) {
     return RaveDataType_UNDEFINED;
   }
@@ -371,25 +380,25 @@ RaveDataType PolarScan_getDataType(PolarScan_t* scan)
 
 void PolarScan_setA1gate(PolarScan_t* scan, long a1gate)
 {
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
   scan->a1gate = a1gate;
 }
 
 long PolarScan_getA1gate(PolarScan_t* scan)
 {
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
   return scan->a1gate;
 }
 
 void PolarScan_setBeamWidth(PolarScan_t* scan, long beamwidth)
 {
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
   scan->beamwidth = beamwidth;
 }
 
 double PolarScan_getBeamWidth(PolarScan_t* scan)
 {
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
   return scan->beamwidth;
 }
 
@@ -397,7 +406,7 @@ int PolarScan_setDefaultParameter(PolarScan_t* scan, const char* quantity)
 {
   int result = 0;
   char* tmp = NULL;
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
   if (quantity == NULL) {
     return 0;
   }
@@ -414,7 +423,7 @@ int PolarScan_setDefaultParameter(PolarScan_t* scan, const char* quantity)
 
 const char* PolarScan_getDefaultParameter(PolarScan_t* scan)
 {
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
   return (const char*)scan->paramname;
 }
 
@@ -422,7 +431,7 @@ int PolarScan_addParameter(PolarScan_t* scan, PolarScanParam_t* parameter)
 {
   const char* quantity;
   int result = 0;
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
   if (parameter == NULL) {
     RAVE_WARNING0("Passing in NULL as parameter");
     return 0;
@@ -453,26 +462,52 @@ int PolarScan_addParameter(PolarScan_t* scan, PolarScanParam_t* parameter)
 
 PolarScanParam_t* PolarScan_removeParameter(PolarScan_t* scan, const char* quantity)
 {
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
   return (PolarScanParam_t*)RaveObjectHashTable_remove(scan->parameters, quantity);
 }
 
 PolarScanParam_t* PolarScan_getParameter(PolarScan_t* scan, const char* quantity)
 {
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
   return (PolarScanParam_t*)RaveObjectHashTable_get(scan->parameters, quantity);
 }
 
 int PolarScan_hasParameter(PolarScan_t* scan, const char* quantity)
 {
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
   return RaveObjectHashTable_exists(scan->parameters, quantity);
 }
 
 RaveList_t* PolarScan_getParameterNames(PolarScan_t* scan)
 {
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
   return RaveObjectHashTable_keys(scan->parameters);
+}
+
+int PolarScan_addQualityField(PolarScan_t* scan, RaveField_t* field)
+{
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+  return RaveObjectList_add(scan->qualityfields, field);
+}
+
+RaveField_t* PolarScan_getQualityField(PolarScan_t* scan, int index)
+{
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+  return RaveObjectList_get(scan->qualityfields, index);
+}
+
+int PolarScan_getNumberOfQualityFields(PolarScan_t* scan)
+{
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+  return RaveObjectList_size(scan->qualityfields);
+}
+
+void PolarScan_removeQualityField(PolarScan_t* scan, int index)
+{
+  RaveField_t* field = NULL;
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+  field = RaveObjectList_remove(scan->qualityfields, index);
+  RAVE_OBJECT_RELEASE(field);
 }
 
 int PolarScan_getRangeIndex(PolarScan_t* scan, double r)
