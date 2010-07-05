@@ -45,22 +45,7 @@ INCLUDE_DIRS.append(os.path.join(os.path.split(numpy.__file__)[0],
 LIBRARY_DIRS.append(os.path.join(os.path.split(numpy.__file__)[0],
                                  'lib'))
 
-for p in prefixes:
-    header = os.path.join(p, 'include/projects.h')
-    if os.path.isfile(header):
-        INCLUDE_DIRS.append(p+'/include')
-
-for p in prefixes:
-    lib = os.path.join(p, 'lib/libproj.a')
-    if os.path.isfile(lib):
-        LIBRARY_DIRS.append(p+'/lib')
-
-if len(INCLUDE_DIRS) == 0 and len(LIBRARY_DIRS) == 0:
-    print '\tCould not find USGS PROJ4.'
-    print '\tManually add its path to "prefixes" and try again.'
-    sys.exit()
-
-LIBRARIES = ['proj']
+LIBRARIES = []
 
 # Determine hlhdf and the other parts (using the same hlhdf information that was available
 # when compiling librave
@@ -133,6 +118,11 @@ szinfo = get_szinfo_from_hlhdf(hldefmk)
 zlibinfo = get_zlibinfo_from_hlhdf(hldefmk)
 hdfinfo = get_hdf5info_from_hlhdf(hldefmk)
 
+if hdfinfo[0] != None and hdfinfo[0] != "":
+  INCLUDE_DIRS.append(hdfinfo[0])
+if hdfinfo[1] != None and hdfinfo[1] != "":
+  LIBRARY_DIRS.append(hdfinfo[1])
+
 if szinfo != None:
   if szinfo[0] != None and szinfo[0] != "":
     INCLUDE_DIRS.append(szinfo[0])
@@ -143,16 +133,38 @@ if zlibinfo[0] != None and zlibinfo[0] != "":
   INCLUDE_DIRS.append(zlibinfo[0])
 if zlibinfo[1] != None and zlibinfo[1] != "":
   LIBRARY_DIRS.append(zlibinfo[1])
-  
-if hdfinfo[0] != None and hdfinfo[0] != "":
-  INCLUDE_DIRS.append(hdfinfo[0])
-if hdfinfo[1] != None and hdfinfo[1] != "":
-  LIBRARY_DIRS.append(hdfinfo[1])
 
+projincdir=''
+projlibdir=''
+for p in prefixes:
+    header = os.path.join(p, 'include/projects.h')
+    if os.path.isfile(header):
+        projincdir=p+'/include'
+        break
+#        INCLUDE_DIRS.append(p+'/include')
+
+for p in prefixes:
+    lib = os.path.join(p, 'lib/libproj.a')
+    if os.path.isfile(lib):
+        projlibdir=p+'/lib'
+        break
+#        LIBRARY_DIRS.append(p+'/lib')
+
+if projincdir=='' and projlibdir=='':
+    print '\tCould not find USGS PROJ4.'
+    sys.exit()  
+
+if projincdir != '':
+    INCLUDE_DIRS.append(projincdir)
+if projlibdir != '':
+    LIBRARY_DIRS.append(projlibdir)
+
+LIBRARIES.append('proj')
 LIBRARIES.append("hlhdf")
 LIBRARIES.append("hdf5")
 LIBRARIES.append("z")
 
+print "LIBDIR: " + `LIBRARY_DIRS`
 if szinfo != None:
   LIBRARIES.append("sz")
 
