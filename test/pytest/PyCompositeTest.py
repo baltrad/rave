@@ -57,7 +57,7 @@ class PyCompositeTest(unittest.TestCase):
   def tearDown(self):
     pass
 
-  def Xtest_new(self):
+  def test_new(self):
     obj = _pycomposite.new()
     
     isscan = string.find(`type(obj)`, "CompositeCore")

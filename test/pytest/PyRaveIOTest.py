@@ -33,6 +33,7 @@ import _polarvolume
 import _polarscan
 import _polarscanparam
 import _rave
+import _ravefield
 import string
 import numpy
 import _pyhl
@@ -50,8 +51,9 @@ class PyRaveIOTest(unittest.TestCase):
       os.unlink(self.TEMPORARY_FILE)
 
   def tearDown(self):
-    if os.path.isfile(self.TEMPORARY_FILE):
-      os.unlink(self.TEMPORARY_FILE)
+    pass
+    #if os.path.isfile(self.TEMPORARY_FILE):
+    #  os.unlink(self.TEMPORARY_FILE)
 
   def test_new(self):
     obj = _raveio.new()
@@ -541,6 +543,12 @@ class PyRaveIOTest(unittest.TestCase):
     mmhParam.offset = 20.0
     data = numpy.zeros((100, 120), numpy.int16)
     mmhParam.setData(data)
+
+    qfield = _ravefield.new()
+    qfield.addAttribute("what/sthis", "a quality field")
+    qfield.setData(numpy.zeros((100,120), numpy.uint8))
+    mmhParam.addQualityField(qfield)
+
     scan1.addParameter(mmhParam)
 
     obj.addScan(scan1)
@@ -634,6 +642,10 @@ class PyRaveIOTest(unittest.TestCase):
     # dataset1/data2/data
     self.assertEquals(numpy.int16, nodelist.getNode(mmhname + "/data").data().dtype)
 
+    # quality field for mmh
+    self.assertEquals("a quality field", nodelist.getNode(mmhname + "/quality1/what/sthis").data())
+    self.assertTrue(nodelist.getNode(mmhname + "/quality1/data").data() != None)
+    
     #
     # dataset2 (scan2)
     #
@@ -744,7 +756,51 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertAlmostEquals(2000.0, nodelist.getNode("/dataset1/where/rscale").data(), 4)
     self.assertAlmostEquals(0.0, nodelist.getNode("/dataset1/where/rstart").data(), 4)
 
+  def test_write_scan_with_quality(self):
+    obj = _raveio.open(self.FIXTURE_VOLUME)
+    vol = obj.object
+    scan = vol.getScan(0)
+    
+    field = _ravefield.new()
+    field.addAttribute("what/strvalue", "a string")
+    field.addAttribute("where/lonvalue", 123)
+    field.addAttribute("how/flovalue", 1.25)
+    field.setData(numpy.zeros((10,10), numpy.uint8))
+    scan.addQualityField(field)
+    
+    p1 = scan.getParameter("DBZH")
+    p1field = _ravefield.new()
+    p1field.addAttribute("what/pstrvalue", "str")
+    p1field.addAttribute("where/plonvalue", 321)
+    p1field.addAttribute("how/pflovalue", 23.0)
+    p1field.setData(numpy.zeros((10,10), numpy.uint8))
+    p1.addQualityField(p1field)
+    
+    obj = _raveio.new()
+    obj.object = scan
+    obj.filename = self.TEMPORARY_FILE
+    obj.save()
 
+    # Verify data
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+    
+    self.assertEquals("a string", nodelist.getNode("/dataset1/quality1/what/strvalue").data())
+    self.assertEquals(123, nodelist.getNode("/dataset1/quality1/where/lonvalue").data())
+    self.assertAlmostEquals(1.25, nodelist.getNode("/dataset1/quality1/how/flovalue").data(), 4)
+
+    data = nodelist.getNode("/dataset1/quality1/data").data()
+    self.assertEquals(data.shape[0], 10)
+    self.assertEquals(data.shape[1], 10)
+
+    self.assertEquals("str", nodelist.getNode("/dataset1/data1/quality1/what/pstrvalue").data())
+    self.assertEquals(321, nodelist.getNode("/dataset1/data1/quality1/where/plonvalue").data())
+    self.assertAlmostEquals(23.0, nodelist.getNode("/dataset1/data1/quality1/how/pflovalue").data(), 4)
+
+    data = nodelist.getNode("/dataset1/data1/quality1/data").data()
+    self.assertEquals(data.shape[0], 10)
+    self.assertEquals(data.shape[1], 10)
   
   def addGroupNode(self, nodelist, name):
     node = _pyhl.node(_pyhl.GROUP_ID, name)

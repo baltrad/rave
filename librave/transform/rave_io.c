@@ -629,14 +629,14 @@ static int RaveIOInternal_loadAttributesAndDataForObject(HL_NodeList* nodelist, 
           RAVE_OBJECT_RELEASE(attribute);
         } else if (HLNode_getType(node) == DATASET_ID &&
             strcasecmp(tmpptr, "data")==0) {
-          hsize_t d1 = HLNode_getDimension(node, 1);
           hsize_t d0 = HLNode_getDimension(node, 0);
+          hsize_t d1 = HLNode_getDimension(node, 1);
           RaveDataType dataType = RaveIOInternal_hlhdfToRaveType(HLNode_getFormat(node));
           if (dataType != RaveDataType_UNDEFINED) {
             if (RAVE_OBJECT_CHECK_TYPE(object, &PolarScanParam_TYPE)) {
               result = PolarScanParam_setData((PolarScanParam_t*)object, d1, d0, HLNode_getData(node), dataType);
             } else if (RAVE_OBJECT_CHECK_TYPE(object, &Cartesian_TYPE)) {
-              result = Cartesian_setData((Cartesian_t*)object,d1,d0,HLNode_getData(node), dataType);
+              result = Cartesian_setData((Cartesian_t*)object,d1, d0,HLNode_getData(node), dataType);
             } else if (RAVE_OBJECT_CHECK_TYPE(object, &RaveField_TYPE)) {
               result = RaveField_setData((RaveField_t*)object, d1, d0, HLNode_getData(node), dataType);
             }
@@ -894,6 +894,51 @@ done:
   return field;
 }
 
+static int RaveIOInternal_addRaveFieldToNodeList(
+  RaveField_t* field, HL_NodeList* nodelist, const char* fmt, ...)
+{
+  va_list ap;
+  char nodeName[1024];
+  int n = 0;
+  int result = 0;
+  RaveObjectList_t* attributes = NULL;
+
+  RAVE_ASSERT((field != NULL), "field == NULL");
+  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
+
+  va_start(ap, fmt);
+  n = vsnprintf(nodeName, 1024, fmt, ap);
+  va_end(ap);
+  if (n < 0 || n >= 1024) {
+    goto done;
+  }
+  if (!RaveIOInternal_hasNodeByName(nodelist, nodeName)) {
+    if (!RaveIOInternal_createGroup(nodelist, nodeName)) {
+      goto done;
+    }
+  }
+
+  attributes = RaveField_getAttributeValues(field);
+
+  if (attributes == NULL || !RaveIOInternal_addAttributes(nodelist, attributes, nodeName)) {
+    goto done;
+  }
+
+  if (!RaveIOInternal_addData(nodelist,
+                              RaveField_getData(field),
+                              RaveField_getXsize(field),
+                              RaveField_getYsize(field),
+                              RaveField_getDataType(field),
+                              nodeName)) {
+    goto done;
+  }
+
+  result = 1;
+done:
+  RAVE_OBJECT_RELEASE(attributes);
+  return result;
+}
+
 ///////////////////////////////////////////////////////////////////
 ///// POLAR SPECIFIC FUNCTIONS
 ///////////////////////////////////////////////////////////////////
@@ -1123,7 +1168,6 @@ static int RaveIOInternal_addScanParamToNodeList(PolarScanParam_t* object, HL_No
 {
   int result = 0;
   char nodeName[1024];
-  RaveList_t* keys = NULL;
   RaveObjectList_t* attributes = NULL;
   va_list ap;
   int n = 0;
@@ -1161,8 +1205,23 @@ static int RaveIOInternal_addScanParamToNodeList(PolarScanParam_t* object, HL_No
   }
 
   result = 1;
+
+  if (PolarScanParam_getNumberOfQualityFields(object) > 0) {
+    int nfields = PolarScanParam_getNumberOfQualityFields(object);
+    int i = 0;
+    for (i = 0; result == 1 && i < nfields; i++) {
+      RaveField_t* field = PolarScanParam_getQualityField(object, i);
+      if (field != NULL) {
+        result = RaveIOInternal_addRaveFieldToNodeList(field, nodelist, "%s/quality%d", nodeName, (i+1));
+      } else {
+        result = 0;
+      }
+      RAVE_OBJECT_RELEASE(field);
+    }
+  }
+
+  result = 1;
 done:
-  RaveList_freeAndDestroy(&keys);
   RAVE_OBJECT_RELEASE(attributes);
   return result;
 }
@@ -1235,6 +1294,21 @@ static int RaveIOInternal_addVolumeScanToNodeList(PolarScan_t* object, HL_NodeLi
       RAVE_OBJECT_RELEASE(parameter);
     }
   }
+
+  if (result == 1 && PolarScan_getNumberOfQualityFields(object) > 0) {
+    int nfields = PolarScan_getNumberOfQualityFields(object);
+    int i = 0;
+    for (i = 0; result == 1 && i < nfields; i++) {
+      RaveField_t* field = PolarScan_getQualityField(object, i);
+      if (field != NULL) {
+        result = RaveIOInternal_addRaveFieldToNodeList(field, nodelist, "%s/quality%d", nodeName, (i+1));
+      } else {
+        result = 0;
+      }
+      RAVE_OBJECT_RELEASE(field);
+    }
+  }
+
 done:
   RaveList_freeAndDestroy(&keys);
   RAVE_OBJECT_RELEASE(attributes);
@@ -1339,6 +1413,20 @@ static int RaveIOInternal_addScanToNodeList(PolarScan_t* object, HL_NodeList* no
         result = RaveIOInternal_addScanParamToNodeList(parameter, nodelist, "/dataset1/data%d", (i+1));
       }
       RAVE_OBJECT_RELEASE(parameter);
+    }
+  }
+
+  if (result == 1 && PolarScan_getNumberOfQualityFields(object) > 0) {
+    int nfields = PolarScan_getNumberOfQualityFields(object);
+    int i = 0;
+    for (i = 0; result == 1 && i < nfields; i++) {
+      RaveField_t* field = PolarScan_getQualityField(object, i);
+      if (field != NULL) {
+        result = RaveIOInternal_addRaveFieldToNodeList(field, nodelist, "/dataset1/quality%d", (i+1));
+      } else {
+        result = 0;
+      }
+      RAVE_OBJECT_RELEASE(field);
     }
   }
 
