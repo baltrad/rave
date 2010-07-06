@@ -32,6 +32,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_attribute.h"
 #include "rave_list.h"
 #include "raveobject_list.h"
+#include "rave_field.h"
 
 /**
  * Defines a Polar Scan Parameter
@@ -216,5 +217,35 @@ RaveList_t* PolarScanParam_getAttributeNames(PolarScanParam_t* scanparam);
  * @returns a list of RaveAttributes.
  */
 RaveObjectList_t* PolarScanParam_getAttributeValues(PolarScanParam_t* scanparam);
+
+/**
+ * Adds a quality field to this scan.
+ * @param[in] param - self
+ * @param[in] field - the field to add
+ * @returns 1 on success otherwise 0
+ */
+int PolarScanParam_addQualityField(PolarScanParam_t* param, RaveField_t* field);
+
+/**
+ * Returns the quality field at the specified location.
+ * @param[in] param - self
+ * @param[in] index - the index
+ * @returns the quality field if found, otherwise NULL
+ */
+RaveField_t* PolarScanParam_getQualityField(PolarScanParam_t* param, int index);
+
+/**
+ * Returns the number of quality fields
+ * @param[in] param - self
+ * @returns the number of quality fields
+ */
+int PolarScanParam_getNumberOfQualityFields(PolarScanParam_t* param);
+
+/**
+ * Removes the quality field at the specified location
+ * @param[in] param - self
+ * @param[in] index - the index
+ */
+void PolarScanParam_removeQualityField(PolarScanParam_t* param, int index);
 
 #endif

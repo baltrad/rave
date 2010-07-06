@@ -487,13 +487,13 @@ RaveList_t* PolarScan_getParameterNames(PolarScan_t* scan)
 int PolarScan_addQualityField(PolarScan_t* scan, RaveField_t* field)
 {
   RAVE_ASSERT((scan != NULL), "scan == NULL");
-  return RaveObjectList_add(scan->qualityfields, field);
+  return RaveObjectList_add(scan->qualityfields, (RaveCoreObject*)field);
 }
 
 RaveField_t* PolarScan_getQualityField(PolarScan_t* scan, int index)
 {
   RAVE_ASSERT((scan != NULL), "scan == NULL");
-  return RaveObjectList_get(scan->qualityfields, index);
+  return (RaveField_t*)RaveObjectList_get(scan->qualityfields, index);
 }
 
 int PolarScan_getNumberOfQualityFields(PolarScan_t* scan)
@@ -506,7 +506,7 @@ void PolarScan_removeQualityField(PolarScan_t* scan, int index)
 {
   RaveField_t* field = NULL;
   RAVE_ASSERT((scan != NULL), "scan == NULL");
-  field = RaveObjectList_remove(scan->qualityfields, index);
+  field = (RaveField_t*)RaveObjectList_remove(scan->qualityfields, index);
   RAVE_OBJECT_RELEASE(field);
 }
 

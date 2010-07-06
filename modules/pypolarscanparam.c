@@ -36,6 +36,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_alloc.h"
 #include "raveutil.h"
 #include "rave.h"
+#include "pyravefield.h"
 
 /**
  * Debug this module
@@ -384,6 +385,94 @@ fail:
   return NULL;
 }
 
+
+/**
+ * Adds a quality field to the scan param
+ * @param[in] self - this instance
+ * @param[in] args - object, of type RaveFieldCore
+ * @returns None
+ */
+static PyObject* _pypolarscanparam_addQualityField(PyPolarScanParam* self, PyObject* args)
+{
+  PyObject* inptr = NULL;
+  PyRaveField* ravefield = NULL;
+
+  if (!PyArg_ParseTuple(args, "O", &inptr)) {
+    return NULL;
+  }
+
+  if (!PyRaveField_Check(inptr)) {
+    raiseException_returnNULL(PyExc_TypeError,"Added object must be of type RaveFieldCore");
+  }
+
+  ravefield = (PyRaveField*)inptr;
+
+  if (!PolarScanParam_addQualityField(self->scanparam, ravefield->field)) {
+    raiseException_returnNULL(PyExc_AttributeError, "Failed to add quality field to scan");
+  }
+
+  Py_RETURN_NONE;
+}
+
+/**
+ * Returns the number of quality fields
+ * @param[in] self - this instance
+ * @param[in] args - N/A
+ * @returns The number of quality fields
+ */
+static PyObject* _pypolarscanparam_getNumberOfQualityFields(PyPolarScanParam* self, PyObject* args)
+{
+  return PyInt_FromLong(PolarScanParam_getNumberOfQualityFields(self->scanparam));
+}
+
+/**
+ * Returns the number of quality fields
+ * @param[in] self - this instance
+ * @param[in] args - N/A
+ * @returns The number of quality fields
+ */
+static PyObject* _pypolarscanparam_getQualityField(PyPolarScanParam* self, PyObject* args)
+{
+  PyObject* result = NULL;
+  RaveField_t* field = NULL;
+  int index = 0;
+  if (!PyArg_ParseTuple(args, "i", &index)) {
+    return NULL;
+  }
+
+  if (index < 0 || index >= PolarScanParam_getNumberOfQualityFields(self->scanparam)) {
+    raiseException_returnNULL(PyExc_IndexError, "Index out of bounds");
+  }
+
+  if ((field = PolarScanParam_getQualityField(self->scanparam, index)) == NULL) {
+    raiseException_returnNULL(PyExc_IndexError, "Could not get quality field");
+  }
+
+  result = (PyObject*)PyRaveField_New(field);
+
+  RAVE_OBJECT_RELEASE(field);
+
+  return result;
+}
+
+/**
+ * Removes the specified quality field from the scan param
+ * @param[in] self - this instance
+ * @param[in] args - the index of the field to be removed
+ * @returns None
+ */
+static PyObject* _pypolarscanparam_removeQualityField(PyPolarScanParam* self, PyObject* args)
+{
+  int index = 0;
+  if (!PyArg_ParseTuple(args, "i", &index)) {
+    return NULL;
+  }
+
+  PolarScanParam_removeQualityField(self->scanparam, index);
+
+  Py_RETURN_NONE;
+}
+
 /**
  * All methods a polar scan can have
  */
@@ -404,6 +493,10 @@ static struct PyMethodDef _pypolarscanparam_methods[] =
   {"addAttribute", (PyCFunction) _pypolarscanparam_addAttribute, 1},
   {"getAttribute", (PyCFunction) _pypolarscanparam_getAttribute, 1},
   {"getAttributeNames", (PyCFunction) _pypolarscanparam_getAttributeNames, 1},
+  {"addQualityField", (PyCFunction) _pypolarscanparam_addQualityField, 1},
+  {"getNumberOfQualityFields", (PyCFunction) _pypolarscanparam_getNumberOfQualityFields, 1},
+  {"getQualityField", (PyCFunction) _pypolarscanparam_getQualityField, 1},
+  {"removeQualityField", (PyCFunction) _pypolarscanparam_removeQualityField, 1},
   {NULL, NULL } /* sentinel */
 };
 
@@ -557,6 +650,7 @@ init_polarscanparam(void)
   }
 
   import_array(); /*To make sure I get access to Numeric*/
+  import_pyravefield();
   PYRAVE_DEBUG_INITIALIZE;
 }
 /*@} End of Module setup */

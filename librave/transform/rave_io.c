@@ -36,6 +36,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "raveobject_list.h"
 #include "polarvolume.h"
 #include "cartesianvolume.h"
+#include "rave_field.h"
 
 /**
  * Defines the structure for the RaveIO in a volume.
@@ -617,6 +618,8 @@ static int RaveIOInternal_loadAttributesAndDataForObject(HL_NodeList* nodelist, 
                 result = RaveObjectHashTable_put((RaveObjectHashTable_t*)object, tmpptr, (RaveCoreObject*)attribute);
               } else if (RAVE_OBJECT_CHECK_TYPE(object, &RaveObjectList_TYPE)) {
                 result = RaveObjectList_add((RaveObjectList_t*)object, (RaveCoreObject*)attribute);
+              } else if (RAVE_OBJECT_CHECK_TYPE(object, &RaveField_TYPE)) {
+                result = RaveField_addAttribute((RaveField_t*)object, attribute);
               } else {
                 RAVE_CRITICAL0("Unsupported type for load attributes");
                 result = 0;
@@ -634,6 +637,8 @@ static int RaveIOInternal_loadAttributesAndDataForObject(HL_NodeList* nodelist, 
               result = PolarScanParam_setData((PolarScanParam_t*)object, d1, d0, HLNode_getData(node), dataType);
             } else if (RAVE_OBJECT_CHECK_TYPE(object, &Cartesian_TYPE)) {
               result = Cartesian_setData((Cartesian_t*)object,d1,d0,HLNode_getData(node), dataType);
+            } else if (RAVE_OBJECT_CHECK_TYPE(object, &RaveField_TYPE)) {
+              result = RaveField_setData((RaveField_t*)object, d1, d0, HLNode_getData(node), dataType);
             }
           } else {
             RAVE_ERROR0("Undefined datatype for dataset");
@@ -855,6 +860,40 @@ done:
   return result;
 }
 
+/**
+ * Reads a field.
+ */
+static RaveField_t* RaveIOInternal_loadField(
+    HL_NodeList* nodelist, const char* fmt, ...)
+{
+  va_list ap;
+  char nodeName[1024];
+  int n = 0;
+  RaveField_t* field = NULL;
+
+  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
+
+  va_start(ap, fmt);
+  n = vsnprintf(nodeName, 1024, fmt, ap);
+  va_end(ap);
+  if (n < 0 || n >= 1024) {
+    goto done;
+  }
+
+  if (HLNodeList_hasNodeByName(nodelist, nodeName)) {
+    field = RAVE_OBJECT_NEW(&RaveField_TYPE);
+    if (field == NULL) {
+      goto done;
+    }
+    if (!RaveIOInternal_loadAttributesAndDataForObject(nodelist, (RaveCoreObject*)field, nodeName)) {
+      RAVE_OBJECT_RELEASE(field);
+    }
+  }
+
+done:
+  return field;
+}
+
 ///////////////////////////////////////////////////////////////////
 ///// POLAR SPECIFIC FUNCTIONS
 ///////////////////////////////////////////////////////////////////
@@ -942,6 +981,18 @@ static PolarScan_t* RaveIOInternal_loadSpecificScan(HL_NodeList* nodelist, const
     }
     pindex++;
     RAVE_OBJECT_RELEASE(parameter);
+  }
+
+  pindex = 1;
+  while (RaveIOInternal_hasNodeByName(nodelist, "%s/quality%d", nodeName, pindex)) {
+    RaveField_t* field = RaveIOInternal_loadField(nodelist, "%s/quality%d", nodeName, pindex);
+    if (field == NULL || !PolarScan_addQualityField(scan, field)) {
+      RAVE_ERROR0("Failed to read quality parameter");
+      RAVE_OBJECT_RELEASE(field);
+      goto done;
+    }
+    pindex++;
+    RAVE_OBJECT_RELEASE(field);
   }
 
   result = RAVE_OBJECT_COPY(scan);

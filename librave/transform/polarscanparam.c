@@ -45,6 +45,7 @@ struct _PolarScanParam_t {
   double nodata;     /**< nodata */
   double undetect;   /**< undetect */
   RaveObjectHashTable_t* attrs; /**< attributes */
+  RaveObjectList_t* qualityfields; /**< quality fields */
 };
 
 /*@{ Private functions */
@@ -57,18 +58,20 @@ static int PolarScanParam_constructor(RaveCoreObject* obj)
   PolarScanParam_t* this = (PolarScanParam_t*)obj;
   this->data = RAVE_OBJECT_NEW(&RaveData2D_TYPE);
   this->attrs = RAVE_OBJECT_NEW(&RaveObjectHashTable_TYPE);
+  this->qualityfields = RAVE_OBJECT_NEW(&RaveObjectList_TYPE);
   this->quantity = NULL;
   this->gain = 0.0L;
   this->offset = 0.0L;
   this->nodata = 0.0L;
   this->undetect = 0.0L;
-  if (this->data == NULL || this->attrs == NULL) {
+  if (this->data == NULL || this->attrs == NULL || this->qualityfields == NULL) {
     goto error;
   }
   return 1;
 error:
   RAVE_OBJECT_RELEASE(this->data);
   RAVE_OBJECT_RELEASE(this->attrs);
+  RAVE_OBJECT_RELEASE(this->qualityfields);
 
   return 0;
 }
@@ -79,9 +82,10 @@ static int PolarScanParam_copyconstructor(RaveCoreObject* obj, RaveCoreObject* s
   PolarScanParam_t* src = (PolarScanParam_t*)srcobj;
   this->data = RAVE_OBJECT_CLONE(src->data);
   this->attrs = RAVE_OBJECT_CLONE(src->attrs);
+  this->qualityfields = RAVE_OBJECT_CLONE(src->qualityfields);
   this->quantity = NULL;
 
-  if (this->data == NULL || this->attrs == NULL) {
+  if (this->data == NULL || this->attrs == NULL || this->qualityfields == NULL) {
     goto error;
   }
   if (!PolarScanParam_setQuantity(this, PolarScanParam_getQuantity(src))) {
@@ -96,6 +100,7 @@ static int PolarScanParam_copyconstructor(RaveCoreObject* obj, RaveCoreObject* s
 error:
   RAVE_OBJECT_RELEASE(this->data);
   RAVE_OBJECT_RELEASE(this->attrs);
+  RAVE_OBJECT_RELEASE(this->qualityfields);
   RAVE_FREE(this->quantity);
   return 0;
 }
@@ -108,6 +113,7 @@ static void PolarScanParam_destructor(RaveCoreObject* obj)
   PolarScanParam_t* this = (PolarScanParam_t*)obj;
   RAVE_OBJECT_RELEASE(this->data);
   RAVE_OBJECT_RELEASE(this->attrs);
+  RAVE_OBJECT_RELEASE(this->qualityfields);
   RAVE_FREE(this->quantity);
 }
 
@@ -386,6 +392,32 @@ error:
   RAVE_OBJECT_RELEASE(result);
   RAVE_OBJECT_RELEASE(tableattrs);
   return NULL;
+}
+
+int PolarScanParam_addQualityField(PolarScanParam_t* param, RaveField_t* field)
+{
+  RAVE_ASSERT((param != NULL), "param == NULL");
+  return RaveObjectList_add(param->qualityfields, (RaveCoreObject*)field);
+}
+
+RaveField_t* PolarScanParam_getQualityField(PolarScanParam_t* param, int index)
+{
+  RAVE_ASSERT((param != NULL), "param == NULL");
+  return (RaveField_t*)RaveObjectList_get(param->qualityfields, index);
+}
+
+int PolarScanParam_getNumberOfQualityFields(PolarScanParam_t* param)
+{
+  RAVE_ASSERT((param != NULL), "param == NULL");
+  return RaveObjectList_size(param->qualityfields);
+}
+
+void PolarScanParam_removeQualityField(PolarScanParam_t* param, int index)
+{
+  RaveField_t* field = NULL;
+  RAVE_ASSERT((param != NULL), "param == NULL");
+  field = (RaveField_t*)RaveObjectList_remove(param->qualityfields, index);
+  RAVE_OBJECT_RELEASE(field);
 }
 
 /*@} End of Interface functions */

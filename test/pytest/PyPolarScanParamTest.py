@@ -27,6 +27,7 @@ import unittest
 import os
 import _polarscanparam
 import _rave
+import _ravefield
 import string
 import numpy
 import math
@@ -339,6 +340,22 @@ class PyPolarScanParamTest(unittest.TestCase):
       self.fail("Expected AttributeError")
     except AttributeError, e:
       pass
+    
+  def test_qualityfields(self):
+    obj = _polarscanparam.new()
+    field1 = _ravefield.new()
+    field2 = _ravefield.new()
+    field1.addAttribute("what/name", "field1")
+    field2.addAttribute("what/name", "field2")
+
+    obj.addQualityField(field1)
+    obj.addQualityField(field2)
+    
+    self.assertEquals(2, obj.getNumberOfQualityFields())
+    self.assertEquals("field1", obj.getQualityField(0).getAttribute("what/name"))
+    obj.removeQualityField(0)
+    self.assertEquals(1, obj.getNumberOfQualityFields())
+    self.assertEquals("field2", obj.getQualityField(0).getAttribute("what/name"))    
     
 if __name__ == "__main__":
   #import sys;sys.argv = ['', 'Test.testName']
