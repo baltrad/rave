@@ -27,7 +27,7 @@ NAME = "RAVE"
 VERSION = "2.0"  # should be the same as the CVS version
 DESCRIPTION = "Radar Analysis and Visualization Environment"
 AUTHOR = "Daniel Michelson", "daniel.michelson@smhi.se"
-HOMEPAGE = "http://nordrad.net/"
+HOMEPAGE = "http://baltrad.eu/"
 
 MODULES = []
 
@@ -379,6 +379,7 @@ if __name__ == "__main__":
                     (rroot+'/include', glob.glob('librave/*.h')),
                     (rroot+'/lib', glob.glob('librave/*.so')),
                     (rroot+'/bin', glob.glob('bin/*[!CVS]*')),
+                    (rroot+'/etc', glob.glob('etc/*')),
                     (rroot+'/tmp', []),
                     (rroot, ['rave.xbm', 'Copyright'])],
         ext_modules = MODULES

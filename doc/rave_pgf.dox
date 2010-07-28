@@ -1,0 +1,368 @@
+/** \page rave_pgf RAVE XML-RPC Server
+
+The Remote Procedure Call (RPC) lets us run software remotely. When
+combined with XML, RPC uses XML as the mechanism whereby
+information is transferred from server to/from client. In practise, an
+XML-RPC server exposes methods and functions that the client can run. This
+is what has been done with RAVE's XML-RPC server. In this section, the way
+in which the server works will be presented, along with the message format
+for generating processing data, and additional functionality.
+
+\section pgf_terms Terminology
+
+There are a few terms associated with the server that require defining in
+this context.
+
+A \em module is a file containing software, either in Python or in C as a
+compiled shared object.
+
+A \em method is the object-oriented term, ie. software functionality found
+in an instance of an object. Likewise, a \em function is functionality
+found in a module.
+
+An \em algorithm is a piece of software containing functionality for
+processing data. For the purposes of this server, an algorithm is accessed
+through a function found in a module.
+
+A \em job is an external request to process data.
+
+A \em registry is a collection of information on algorithms, ie. what they
+are called, which modules and functions they are in, and what arguments
+they take. The registry in this server is stored to file and is found in
+$RAVEROOT/etc/rave_pgf_registry.xml. There is one registry \em entry for
+each algorithm.
+
+
+\section pgf_sb Server behavior
+
+When operated normally, this server is daemonized. It will receive
+client connections and correctly-formatted method calls (see \ref
+pgf_mf). If the server contains the correct method and arguments, then
+the server will run the method and return an appropriate response. The
+method used to process data is called \b generate, and this method will call
+individual data processing algorithms.
+
+The internal chain of events when a call to \b generate is made is,
+slightly simplified, as follows:
+
+<ol>
+<li> Algorithm is looked up in the registry.</li>
+<li> Arguments are verified.</li>
+<li> Job is queued.</li>
+<li> Job is run.</li>
+<li> Result (written to tempfile) is injected in the baltrad-node through the DEX.</li>
+</ol>
+
+Log entries are written for each step, and each \b generate job is assigned
+its own unique ID.
+
+If the server is stopped in a controlled fashion before the job queue is
+emptied, then the queue will be saved to XML file. This file will be read
+the next time the server starts, and the queue will be run then. The queue
+file is $RAVEROOT/etc/rave_pgf_queue.xml. A stub file is provided in the
+uninstalled RAVE distribution, and it can be copied to empty the queue
+"manually" when the server is not running.
+
+Using XML to store entries in the job queue implies that no data or even
+the algorithms themselves are stored in memory as part of the queueing
+process. Instead, it is the \em whereabouts of the data and the algorithms
+that are stored. This means we are not sending data over the wire
+unnecessarily. It also means that modules containing algorithms will be
+garbage collected if they are not used for some time, and this keeps the
+server's memory footprint down.
+
+If you want to add a new algorithm, you can register it with the
+server. Likewise, if you want to remove an algorithm, you can de-register
+it with the server. If the algorithm arguments remain unchanged but its
+module is changed (e.g. updated), the server will detect this automatically
+and reload it the next time it is called. This makes it possible to
+introduce changes during runtime, thereby improving system
+availability. Similarly to the job queue, the algorithm registry is stored
+to XML file. The registry doesn't contain the algorithm themselves, only
+their \em whereabouts and what arguments they take. A registry entry
+contains the following information:
+
+- The name of the entry, ie. how it is identified by the \b generate method.
+- The module containing the algorithm.
+- The function in the module used to run the algorithm.
+- A free-text description of the algorithm.
+- The arguments used with the algorithm. 
+
+The details on how to manage the registry are found in \ref pgf_cl.
+
+
+\section pgf_mf "generate" use and message format
+
+The exact format of the \b generate message is taken care of automatically
+by your XML-RPC library. The method call and its arguments are converted
+into XML and passed to the server by the library. Likewise, whatever
+information is returned to the client from the method will be sent over the
+wire in XML and then converted to native types by your client. It is not
+recommended that you write your own XML to interact with the server; use an
+existing library instead. With this in mind, we can focus on the method
+call and its arguments.
+
+The method call \b generate takes three arguments, as follows:
+
+\verbatim
+generate(algorithm, files, arguments)
+\endverbatim
+
+where
+
+- \b algorithm is a \em string identifying the processing algorithm to
+  run. The corresponding entry will be looked up in the registry.
+- \b files is a \em list of input ODIM_H5 files. Even if there is only one
+  input file, it must still be found in a list.
+- \b arguments is a \em list of argument key-value pairs. In other words, each
+  argument requires two items in the list, the first one is a \em string
+  containing the argument's name, and the second is that argument's
+  value. While the XML-RPC protocol allows the items in the list to be
+  several different types, some of which can be considered exotic, we will
+  only accept \em string, \em int,  \em float, and  \em list types.
+
+It is recommended that the argument keys are assigned names that are as
+ODIM-like as possible, for the sake of consistency.
+
+An example of a properly-formatted call to \b generate that generates a
+500 m CAPPI using a nearest-neighbor polar-to-cartesian transformation to a
+Cartesian surface with identifier "searl_gnom" would be:
+
+\verbatim
+generate("cappi", ["inputfile.h5"], ["transform", "nearest", "areaid", "searl_gnom", "prodpar", 500])
+\endverbatim
+
+<b>It is absolutely critical that arguments are passed in the
+<em>exact</em> order that is expected by the algorithm.</b>
+
+When writing your own application code to interact with the server, calling
+\b generate in Python is done almost exactly as the example above:
+
+\verbatim
+import xmlrpclib
+
+server = xmlrpclib.ServerProxy("http://host:port/RAVE")
+response = server.generate("cappi", ["inputfile.h5"], ["transform", "nearest", "areaid", "searl_gnom", "prodpar", 500])
+\endverbatim
+
+The same call from a Java client would look like this:
+
+\verbatim
+EXAMPLE NEEDED
+\endverbatim
+
+The response returned to the client from the server will be a string:
+either a simple "OK" or a Python traceback (string) if something has gone
+wrong. For example, if you ask \b generate to run an algorithm that isn't
+registered, you'll get something like:
+
+\verbatim
+Traceback (most recent call last):
+  File "/opt/baltrad/rave/Lib/rave_pgf.py", line 240, in generate
+    raise LookupError('Algorithm "%s" not in registry' % algorithm)
+LookupError: Algorithm "bogus_algorithm" not in registry
+\endverbatim
+
+
+\section pgf_interact Interacting with the server
+
+Because you are interacting with an XML-RPC server, you must always
+consider this server to be on the network, even if it is run on the same
+computer. This means that all interaction with the server is performed
+through client connections, so the server's complete address must always be
+specified by the client. Keep in mind when formatting the host address that
+the prefix \b http:// or \b https:// must exist, and that the URL's path
+must be \b /RAVE, e.g.
+
+\verbatim
+http://localhost:8085/RAVE
+\endverbatim
+
+All command-line tools have a \b -h or \b --help option to print usage and
+help.
+
+\subsection pgf_server rave_pgf
+
+The server is started, stopped, and restarted using this command, e.g.
+
+\verbatim
+$ rave_pgf start
+\endverbatim
+
+You can also check the server's status:
+
+\verbatim
+$ rave_pgf status
+rave_pgf is running with PID 54491 and GID 54490
+\endverbatim
+
+If you attempt to start a server that's already running:
+
+\verbatim
+$ rave_pgf start
+pidfile /opt/baltrad/rave/config/rave_pgf_server.pid already exists. Daemon already running?
+\endverbatim
+
+You can run the server in the foreground. In this case, server requests are
+logged to the terminal by default. For example, a successful POST followed
+by an unsuccessful one will look like this:
+
+\verbatim
+$ rave_pgf fg
+localhost - - [27/Jul/2010 11:50:36] "POST /RAVE HTTP/1.0" 200 -
+localhost - - [27/Jul/2010 11:50:59] "POST /RAVE/bogus_path HTTP/1.0" 404 -
+\endverbatim
+
+This output is not the same thing as the system's own logger, and such
+messages are directed to /dev/null when the server is run as a daemon.
+
+Stopping a server running in the foreground is done with ctrl-c
+(KeyboardInterrupt).
+
+\subsection pgf_help pgf_help
+
+This command is used to query the methods available on the server, and
+learn what arguments a method takes. To list available methods:
+
+\verbatim
+$ pgf_help --host http://localhost:8085/RAVE --list
+Available methods:
+Help
+deregister
+generate
+register
+system.listMethods
+system.methodHelp
+\endverbatim
+
+To learn more about a method:
+
+\verbatim
+$ pgf_help --host http://localhost:8085/RAVE --method generate
+generate ("algorithm",[files],[arguments])
+\endverbatim
+
+Note that this functionality is used to query the server's methods, not the
+algorithms in the registry called by the \b generate method.
+
+\subsection pgf_registry pgf_registry
+
+This command is used to add a new entry to the algorithm registry, remove
+an entry, update an entry, list all entries in the registry, and query the
+characteristics of an algorithm in the registry. For example, a server with
+only one algorithm in its registry:
+
+\verbatim
+$ pgf_registry --host http://localhost:8085/RAVE --list
+
+Registered algorithms in RAVE:
+debug           Reads the input file (first input file in the files list) and injects it into a baltrad-node. Just for debugging.
+\endverbatim
+
+To remove an algorithm from the registry:
+
+\verbatim
+$ pgf_registry -r --host http://localhost:8085/RAVE --name debug
+De-registered debug
+\endverbatim
+
+If you try to remove an algorithm that isn't registered, you will get the
+same response. You can check whether the algorithm is registered using the
+--list option.
+
+To add or update a registry entry, you need to know \em exactly which
+arguments the algorithm requires, and what \em type each argument is. When
+we refer to the \em type, we mean any of \b string, \b int, \b float, and
+\b sequence. The sequence type is commonly referred to as a \b list in Python
+and Java. These arguments are given to \ref pgf_registry as comma-separated
+string of argument names.
+
+An example of re-registering the 'debug' algorithm that we de-registered
+above. 
+
+\verbatim
+$ pgf_registry -a --host http://localhost:8085/RAVE --name debug --module
+rave_pgf_debug --function debugme --description "Reads the input file (first 
+input file in the files list) and injects it into a baltrad-node. Just 
+for debugging."
+Registered debug
+\endverbatim
+
+The free-text given with \b --description must be within quotation
+marks. Due to its simplicity, this above example doesn't actually contain any
+arguments. An example of a registration containing two string and one int
+arguments:
+
+\verbatim
+$ pgf_registry -a --host http://localhost:8085/RAVE --name cappi --module 
+rave_pgf_cappi --function cappi --strings "transform,areaid" --ints
+"prodpar" --description "Generates a CAPPI product."
+\endverbatim
+
+Note that registering an algorithm with the same name as an existing
+registry entry will overwrite that entry!
+
+Currently, it is possible to edit the XML file containing the registry,
+but this can only be done when the server is not running. This strategy is not
+recommended, because syntax errors may prevent the registry from loading
+properly when the server is started. It's better to register an algorithm
+"live" because the registration won't be effectuated unless \ref
+pgf_registry is used properly.
+
+To query an algorithm's characteristics, e.g. the CAPPI we just registered:
+
+\verbatim
+$ pgf_registry -q --host http://localhost:8085/RAVE --name cappi
+
+Algorithm: cappi
+Description: Generates a CAPPI product.
+Module: rave_pgf_cappi
+Function: cappi
+Argument names:
+	Strings: transform,areaid
+	Ints: prodpar
+	Floats: None
+	Sequences: None
+\endverbatim
+
+\subsection pgf_init Init script
+
+The server comes with an init script, for placement in
+e.g. /etc/init.d. This is useful in environments where automatic startup
+is necessary when the computer boots, where the server needs to be run as
+another user, and in situations where the server needs to be moved to
+another computer automatically. This script is found in
+$RAVEROOT/etc/rave_pgf. 
+
+The init script comes prepared for use with \b chkconfig, so that the
+computer can be configured to start the server automatically when it boots
+at certain run levels.
+
+Note that the default user in this init script is \b baltrad, and this
+may require changing.
+
+
+\section own_algorithm Creating your own algorithms for the registry
+
+Adding your own algorithms to this server is possible by writing a function in
+a module and then registering it with the server according to \ref
+pgf_registry. The only strict rule is that the function called by \b generate
+must take as its arguments the trilogy (\em algorithm, \em files, \em
+arguments).
+
+In principle, it is possible to write a shared object in C containing a
+function that takes the required arguments. It may be more convenient to
+write a Python module to do the same. It should be clarified, however, that
+shared objects in C must contain Python wrappers in order for them to be
+accessible to the Python intepreter. Please consult \ref rave_capi for
+details on how to write a C module. In practise, the underlying
+functionality can be written as you like, and then the Python wrapper can
+be made relatively simple. 
+
+It is also possible to create a simple algorithm based on a
+shell-escape to a binary executable. This is generally not
+recommended, however, because doing this does not give us the control we
+expect from a production-grade system.
+
+
+*/

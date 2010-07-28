@@ -17,10 +17,10 @@ test:
 	@chmod +x ./tools/test_rave.sh
 	@./tools/test_rave.sh
 
-	
-.PHONY:docs
-docs:
-	$(MAKE) -C doxygen docs
+
+.PHONY:doc
+doc:
+	$(MAKE) -C doxygen doc
 
 .PHONY:build
 build: librave/transform/libravetransform.so librave/pyapi/libravepyapi.so
@@ -48,4 +48,3 @@ distclean:
 		$(MAKE) -C doxygen distclean
 		@\rm -fr build
 		@\rm -f *~
-		

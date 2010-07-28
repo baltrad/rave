@@ -1,15 +1,22 @@
-The BALTRAD project will probably introduce some radical changes to how
-RAVE is designed and built in future versions.
+Elaborate the ODIM data structures so data quality can be represented in
+all polar and Cartesian datasets.
 
-No matter what, the next version of RAVE should be built on Python 3.0 and
-with HDF5 version 1.8.x. Migrating to these two components involves large
-changes, many of which are backwardly incompatible.
+Smarter runtime management of projection and Cartesian area definitions.
 
-It is too speculative to say when the next version will be ready, and what
-it will contain.
+Replace the ElementTree-based Python structures with the ODIM C structures.
 
-Stay tuned...
+The XMLRPC server needs some elaboration:
+    - better options for bin/rave_pgf, e.g. ability to give the host:port
+      on the command line
+    - threading
+    - log to HTTP, maybe so baltrad-node can listen to RAVE's log
+    - authentication/authorization?
+    - https as an alternative to http
+
+The migration to Python 3.0 remains just beyond the horizon...
+
+Stay tuned.
 
 
 Daniel Michelson
-4 November 2008
+26 July 2010

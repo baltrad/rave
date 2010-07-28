@@ -1,9 +1,10 @@
-/** \mainpage The Radar and Visualization Environment (RAVE)
-\date December, 10th 2009
-\author Daniel B. Michelson and Anders Henja
-\version x.x
+/** \mainpage Radar Analysis and Visualization Environment (RAVE)
+\date 26 July 2010
+\author Daniel Michelson and Anders Henja
+\version 2.0
 \par Copyright 
-&copy; 2009 by the Swedish Meteorological and Hydrological Institute (SMHI), Norrköping, Sweden
+&copy; 2010 by the Swedish Meteorological and Hydrological Institute
+(SMHI), Norrk&ouml;ping, Sweden
 
 \par Legals
 RAVE is free software: you can redistribute it and/or modify
@@ -14,32 +15,99 @@ the Free Software Foundation, either version 3 of the License, or
 \par
 RAVE is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 \par
 You should have received a copy of the GNU Lesser General Public License
-along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
+along with RAVE.  If not, see http://www.gnu.org/licenses/.
 By obtaining, using, and/or copying this software and/or its associated 
 documentation, you agree that you have read, understood, and will comply
 with the following terms and conditions:
 
-\section introduction "Go for it Daniel"
-CAN YOU PLEASE WRITE SOMETHING HERE DANIEL?
+\section introduction Introduction
 
-\section apioverview "API Overview"
-Rave has been developed as a c-library that provides the necessary functions for
-working with Radar data in various ways. It's base is a small framework for
-manipulating objects by reference counting. It also contains some functions for
-supporting memory tracking and debugging. On top of this framework, several different
-objects has been created in order to support navigation and calculations of data. Most
-of the apis has been developed for radar-processing but there is nothing that says that
-it could not be used for other types of geographical calculations.
+RAVE was conceived in 1996 by H&aring;kan Bolin who built it as his MSc at
+Ume&aring; University, doing his work at SMHI. It was used for a short time
+as an R&D tool until 1998 when Anders Henja and Daniel Michelson re-wrote
+it as part of an EU Framework IV project called PEP in BALTEX. This version
+was used to establish the BALTEX Radar Data Centre at SMHI in 1999. It was
+also integrated into the second generation operational NORDRAD system,
+where it was (is still) used in real time for several years. A second
+rewrite was started in 2006, focussed on facilitating management of data,
+but it was frozen due to lack of available resources.
 
-In order to support python, a similar python api has been developed on top of the
-c-api, there are several reasons for this, but the most obvious reason is that it
-is quite simple to work with python instead of c.
+So much for history. The BALTRAD project, part-funded by the Baltic Sea
+Region, has given us the ability to perform a much-needed overhaul. The
+underlying data structures have been completely replaced. The new ones are
+built with speed, ease of use, and a small memory footprint as
+priorities. Instead of being largely a Python-based system, RAVE is now
+largely C-based with a thin Python API. This is valid for the underlying
+data structures that are read to/from ODIM_H5 files, the system's native
+format. It is also valid most of the algorithms that process data in
+various ways. However, there is an XML-RPC server included that is designed
+to interface with the so-called baltrad-node, and this server is written
+entirely in Python. See a quick overview below.
 
-Before we dig down to deep, we first should take a look at the fundamentals in \ref rave_capi
+The V in RAVE stands for visualization. A couple of prototypes have been
+created, and a 3-D visualizer using PyVTK was created as another MSc thesis
+by Aron Ernvik at Link&ouml;ping University, but the stock version of RAVE
+has never, and may never, contain its own front end.
+
+\section apioverview API Overview
+
+RAVE processing functionality has been developed as a C library that
+provides the necessary functions for working with radar data in various
+ways. It's base is a small framework for manipulating objects by reference
+counting. It also contains some functions for supporting memory tracking
+and debugging. On top of this framework, several different objects have
+been created in order to support navigation and data processing. Most of
+the APIs have been developed for radar processing, but there is nothing
+that says that it could not be used for other types of processing of raster
+spatial data.
+
+In order to support Python, a similar Python API has been developed on top
+of the C API; there are several reasons for this, but the most obvious
+reason is that it is quite simple to work with Python instead of C.
+
+Before we dig down deep, we should first take a look at the fundamentals in
+\ref rave_capi.
+
+\section xmlrpc RAVE XML-RPC Server
+
+This Python-based server is designed to interact with the BALTRAD system,
+the so-called "baltrad-node". This node exchanges data and manages them
+locally, but doesn't actually process them except by interacting with
+external services like this XML-RPC server. The baltrad-node is the spider
+in the web; it has the knowledge of which data are available and what needs
+to be done with them. If baltrad-node contains a rule to send a given kind
+of data to RAVE for processing, then it's up to the rule to ensure that the
+correct criteria are defined. When the criteria are fulfilled, baltrad-node
+will perform a remote procedure call on RAVE, and RAVE will perform the
+task according to the call and then inject the resulting ODIM_H5 file into
+the baltrad-node via the node's single point of entry managed by the DEX
+(Distribution and Exchange System).
+
+This server is simple and light-weight, but it contains features like:
+- Fully daemonized, but can also be run in the foreground (good for debugging).
+- Data processing functionality can be added to the server, updated, and
+removed during runtime.
+- If the server is stopped before the job queue is empty, jobs that have
+not been run will be saved and then run when the server restarts.
+- Logging, thus far to text file.
+
+Learn more about how the server works and how messages to it must be
+formatted at \ref rave_pgf.
+
+\section interpreter Interactive RAVE
+
+One of the advantages of Python is that it can be used interactively in a
+terminal, more-or-less like interactive scientific toolboxes like MATLAB
+and IDL, but free. RAVE can be used in this way as well, and this
+is intended to facilitate research and development and also rapid
+prototyping of new functionality.
+
+\ref rave_interact contains an introduction to how interactive use of RAVE
+is achieved.
 
 */

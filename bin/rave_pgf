@@ -1,0 +1,121 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2010- Swedish Meteorological and Hydrological Institute (SMHI)
+
+This file is part of RAVE.
+
+RAVE is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+RAVE is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+See the GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
+'''
+## RAVE Product Generation Framework XMLRPC server.
+
+## @file
+## @author Daniel Michelson, SMHI
+## @date 2010-07-08
+
+import sys, os
+import traceback
+import SimpleXMLRPCServer
+from rave_daemon import Daemon
+from rave_defines import PIDFILE, HOST, PORT, STDOE
+
+
+## Stub class for alllowing server POSTs only to one place, providing
+# rudimentary security.
+class RequestHandler(SimpleXMLRPCServer.SimpleXMLRPCRequestHandler):
+    rpc_paths = ('/RAVE',)
+
+
+## The server that implements the product generation framework in \ref RavePGF.
+class rave_pgf_server(Daemon):
+
+  ## Constructor
+  # @param host URI to the host for this server.
+  # @param port int port number to the host for this server.
+  # @param stdin string path to where to direct stdin
+  # @param stdout string path to where to direct stdout
+  # @param stderr string path to where to direct stderr
+  def __init__(self, host=HOST, port=PORT,
+#               stdin='/dev/null', stdout=STDOE, stderr=STDOE):
+               stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
+    self.pidfile = PIDFILE
+    self.stdin = stdin
+    self.stderr = stdout
+    self.stdout = stderr
+    self.host = host
+    self.port = port
+
+
+  ## Determines whether the server is running or not.
+  def status(self):
+      if os.path.isfile(self.pidfile):
+          fd = open(self.pidfile)
+          c = fd.read()
+          fd.close()
+          try:
+              pgid = os.getpgid(int(c))
+              return "running with PID %s and GID %i" % (c[:-1], pgid) 
+          except:
+              return "not running"
+      else:
+          return "not running"
+
+
+  ## Runs the server.
+  # Creates an instance of a SimpleXMLRPCServer (from the Python standard
+  # library), registers a \ref RavePGF instance, and then serves.
+  # Note that the start(), stop(), and restart() methods are inherited from
+  # \ref Daemon , but you can call fg() to run the server in the
+  # foreground, ie. not daemonize, which is useful for debugging.
+  def run(self):
+    import atexit
+    from rave_pgf import RavePGF
+    self.server = SimpleXMLRPCServer.SimpleXMLRPCServer((self.host, self.port),
+                                                        requestHandler=RequestHandler,
+                                                        allow_none=True)
+    self.server.register_instance(RavePGF())
+    self.server.register_introspection_functions()
+    atexit.register(self.server.instance._dump_queue)
+    self.server.serve_forever()
+    
+
+if __name__ == "__main__":
+  prog = "rave_pgf"
+  usage = "usage: %s start|stop|status|restart|fg" % prog
+
+  if len(sys.argv) != 2:
+    print usage
+    sys.exit()
+
+  ARG = sys.argv[1].lower()
+
+  if ARG not in ('start', 'stop', 'status', 'restart', 'fg'):
+    print usage
+    sys.exit()
+
+  this = rave_pgf_server()
+
+  if ARG == 'stop':
+    this.stop()
+
+  if ARG == 'start':
+    this.start()
+
+  if ARG == 'restart':
+    this.restart()
+
+  if ARG == 'status':
+    print "%s is %s" % (prog, this.status())
+
+  if ARG == 'fg':
+    this.run()

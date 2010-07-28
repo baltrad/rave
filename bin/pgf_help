@@ -1,0 +1,64 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2010- Swedish Meteorological and Hydrological Institute (SMHI)
+
+This file is part of RAVE.
+
+RAVE is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+RAVE is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+See the GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
+'''
+## Outputs a help text comprising the names of each registered algorithm and
+# its descriptive text.
+
+## @file
+## @author Daniel Michelson, SMHI
+## @date 2010-07-25
+
+import sys
+import xmlrpclib
+
+
+if __name__ == "__main__":
+    from optparse import OptionParser
+
+    description = "Prints the arguments associated with a method available on the server. This is not the same thing as an algorithm in the registry."
+
+    usage = "usage: %prog -H http(s)://host:port/RAVE -m <method>"
+    parser = OptionParser(usage=usage, description=description)
+
+    parser.add_option("-l", "--list", action="store_true", dest="list",
+                      help="List available methods.")
+
+    parser.add_option("-H", "--host", dest="host",
+                      help="URI of the running server. Don't forget to use the http(s):// prefix and /RAVE .")
+
+    parser.add_option("-m", "--method", dest="method",
+                      help="Name of the method you need help with.")
+
+    (options, args) = parser.parse_args()
+
+    if not (options.host and (options.method or options.list)):
+        parser.print_help()
+        sys.exit()
+
+    server = xmlrpclib.ServerProxy(options.host)
+
+    if options.list:
+        methods = server.system.listMethods()
+        print "Available methods:"
+        for m in methods:
+            if m not in ("system.methodSignature"):
+                print m
+
+    elif options.method:
+        print server.system.methodHelp(options.method)

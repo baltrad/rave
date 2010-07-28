@@ -32,6 +32,7 @@ RAVELIB =  RAVEROOT + '/Lib'
 RAVECONFIG = RAVEROOT + '/config'
 RAVEDB = RAVEROOT + '/db'
 RAVEBIN = RAVEROOT + '/bin'
+RAVEETC = RAVEROOT + '/etc'
 # Can't include RAVETEMP from rave_tempfile here.
 
 LIBRAVEINCLUDE = RAVEROOT + '/include'
@@ -50,7 +51,7 @@ H5RAD_VERSIONS = ('H5rad 1.2', 'H5rad 2.0')
 ODIM_VERSION = 'ODIM_H5/V2_0'
 
 # Default text encoding
-ENCODING = 'iso-8859-1'
+ENCODING = 'UTF-8'
 
 # Default compression to use for DATASET nodes
 COMPRESSION = "zlib" # use "none" (or None), "zlib", or "szip"
@@ -65,6 +66,27 @@ ARRAYTYPES = {'b':'char', 'B':'uchar', 'I':'int',
 # Default gain and offset values for linear transformation between raw and dBZ
 GAIN = 0.4
 OFFSET = -30.0
+
+# XML-RPC server variables
+PIDFILE = os.path.join(RAVEETC, 'rave_pgf_server.pid')
+HOST = 'localhost'
+PORT = 8085
+STDOE = os.path.join(RAVEETC, 'rave_pgf_stdout_stderr.log')
+
+DEX_SPOE = 'http://se.baltrad.eu:8080/BaltradDex/transmitter.htm'
+DEX_CHANNEL = 'smhi_products'
+DEX_USER = 'smhi'
+
+GENREG  = 'generate-registry'  # root registry tag
+REGFILE = os.path.join(RAVEETC, 'rave_pgf_registry.xml')  # registry file
+
+QFILE = os.path.join(RAVEETC, 'rave_pgf_queue.xml')  # queue file
+PGF_TAG = 'bltgenerate'  # used for sending files to the DEX
+
+LOG_ID = "PGF-Logger"  # identifier of the logger instance
+LOGFILE     = os.path.join(RAVEETC, "rave_pgf.log")
+LOGFILESIZE = 5000000  # 5 Mb each
+LOGFILES    = 5
 
 
 if __name__ == "__main__":

@@ -7,8 +7,8 @@
 ############################################################
 all:
 
-.PHONY=docs
-docs:
+.PHONY=doc
+doc:
 	@doxygen rave_doxygen.cfg
 
 .PHONY=clean

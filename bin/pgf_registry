@@ -1,0 +1,148 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2010- Swedish Meteorological and Hydrological Institute (SMHI)
+
+This file is part of RAVE.
+
+RAVE is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+RAVE is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+See the GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
+'''
+## Command-line tool for managing entries in the product generation registry.
+
+## @file
+## @author Daniel Michelson, SMHI
+## @date 2010-07-25
+
+import sys
+import xmlrpclib
+
+
+## Adds an algorithm to the registry. It will be replaced if it's already there.
+# @param server an \ref xmlrpclib.ServerProxy instance.
+# @param name string, the name of the algorithm to register.
+# @param module string, the name of the module to load.
+# @param function string, the name of the function to run in the module.
+# @param descr string free-text description of the algorithm.
+# @param strings string, optional comma-separated string argument names.
+# @param ints string, optional comma-separated int argument names.
+# @param floats string, optional comma-separated float argument names.
+# @param seqs string, optional comma-separated sequence argument names.
+# @return string
+def add(server, name, module, function, descr, strings, ints, floats, seqs):
+    print server.register(name.lower(), module, function, descr,
+                          strings, ints, floats, seqs)
+
+
+## Lists the entries in the registry.
+# @param server an \ref xmlrpclib.ServerProxy instance.
+# @param name string, optionally the name of the algorithm to query.
+def List(server, name=None):
+    print server.Help(name)
+
+
+## Removes an algorithm from the registry. It will return successfully even if
+# the algorithm's already been de-registered.
+# @param server an \ref xmlrpclib.ServerProxy instance.
+# @param name string, the name of the algorithm to de-register.
+# @return string
+def remove(server, name):
+    print server.deregister(name.lower())
+
+
+if __name__ == "__main__":
+    from optparse import OptionParser
+
+    description = "Add or remove an entry in the algorithm registry, or list the registry contents."
+
+    usage = "usage: %prog -arl -H http(s)://host:port/RAVE -n <name> -m <module> -f <function> -d <description> -s <strings> -i <ints> -F <floats> -S <sequences> [h]"
+    parser = OptionParser(usage=usage, description=description)
+
+    parser.add_option("-a", "--add", action="store_true", dest="add",
+                      help="Add an algorithm to the registry.")
+
+    parser.add_option("-r", "--remove", action="store_true", dest="remove",
+                      help="Remove an algorithm from the registry.")
+
+    parser.add_option("-q", "--query", action="store_true", dest="query",
+                      help="Query an algorithm in the registry.")
+
+    parser.add_option("-l", "--list", action="store_true", dest="list",
+                      help="List the entries in the registry.")
+
+    parser.add_option("-H", "--host", dest="host",
+                      help="URI of the running server. Don't forget to use the http(s):// prefix and /RAVE .")
+
+    parser.add_option("-n", "--name", dest="name",
+                      help="Name of the algorithm to (de-)register")
+
+    parser.add_option("-m", "--module", dest="module",
+                      help="Name of the module to load.")
+
+    parser.add_option("-f", "--function", dest="func",
+                      help="Name of the function to run in the module.")
+
+    parser.add_option("-d", "--description", dest="descr", default="",
+                      help="Free-text description of the algorithm being registered. Don't forget quotation marks.")
+
+    parser.add_option("-s", "--strings", dest="strings", default="",
+                      help="Comma-separated list of string argument names.")
+
+    parser.add_option("-i", "--ints", dest="ints", default="",
+                      help="Comma-separated list of integer argument names.")
+
+    parser.add_option("-F", "--floats", dest="floats", default="",
+                      help="Comma-separated list of float argument names.")
+
+    parser.add_option("-S", "--sequences", dest="seqs", default="",
+                      help="Comma-separated list of sequence argument names.")
+
+    (options, args) = parser.parse_args()
+
+    if not (options.add or options.remove or options.list or options.query):
+        parser.print_help()
+        sys.exit()
+    if options.list:
+        if not options.host:
+            parser.print_help()
+            sys.exit()
+    if options.add:
+        if not (options.host and options.name and options.module and options.func):
+            parser.print_help()
+            sys.exit()
+    if options.remove:
+        if not (options.host and options.name):
+            parser.print_help()
+            sys.exit()
+    if options.query:
+        if not (options.host and options.name):
+            parser.print_help()
+            sys.exit()
+
+    server = xmlrpclib.ServerProxy(options.host, allow_none=True)
+
+    if options.remove:
+        remove(server, options.name)
+
+    elif options.list:
+        List(server)
+
+    elif options.add:
+        add(server, options.name, options.module, options.func,
+            options.descr, options.strings, options.ints, options.floats,
+            options.seqs)
+
+    elif options.query:
+        List(server, options.name)
+
+    else:
+        parser.print_help()

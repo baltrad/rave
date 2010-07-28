@@ -1,0 +1,47 @@
+#!/bin/sh
+# Daniel Michelson, SMHI
+# 2010-07-25
+
+# The following line can be tuned for local use if you have chkconfig installed.
+# chkconfig: 2345 90 10
+# description: Init script for rave_pgf, RAVE's product generation framework
+
+# NOTE: This script assumes the user to run the system is 'baltrad'. Careful!
+
+
+export PGF_HOME="/opt/baltrad/bin"
+
+start() {
+  echo $"Starting rave_pgf... "
+  su - baltrad --shell=/bin/bash -c "${PGF_HOME}/rave_pgf start"
+}
+
+stop() {
+  echo $"Stopping rave_pgf... "
+  su - baltrad --shell=/bin/bash -c "${PGF_HOME}/rave_pgf stop"
+}
+
+status() {
+  echo $"Checking rave_pgf's status... "
+  su - baltrad --shell=/bin/bash -c "${PGF_HOME}/rave_pgf status"
+}
+
+# See how we were called.
+case "$1" in
+  start)
+    start
+    ;;
+  stop)
+    stop
+    ;;
+  status)
+    status
+    ;;
+  restart)
+    stop
+    start
+    ;;
+  *)
+    echo $"Usage: ./rave_pgf {start|stop|restart|status}"
+    exit 1
+esac

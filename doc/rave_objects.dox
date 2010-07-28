@@ -1,4 +1,4 @@
-/** \page rave_cobjects "Rave C Objects"
+/** \page rave_cobjects RAVE C Objects
 In the previous chapter we gave a brief overview on how you are supposed to work with the different
 support macros and functions we have delivered in the system. Let's take a look at some of the
 objects we have at our disposal.
@@ -47,7 +47,7 @@ All setting and getting of data is actually done as doubles and the casting is d
 would pass in a double that is > 255 into the above call, then the value in the data array will be set to 255.
 
 - \ref #RaveObjectList_t
-A list supporting rave objects. It manages the reference counts and ensures that all objects are
+A list supporting RAVE objects. It manages the reference counts and ensures that all objects are
 released upon destruction of the list. A small cave-eat, if any objects are passed to the list and
 these objects are not cloneable. Then, if this list is cloned, the non-cloneable objects will be ignored.
 \verbatim
@@ -196,6 +196,6 @@ the object \ref #Transform_t supports ppi/cappi/pcappi when writing this documen
 and hence, I leave it up to the reader of this document to check what api's you have at your disposal.
 
 We have covered the basics and some of the building blocks and now it is time to take a look at a real-life example that was
-performed when developing the new version of rave, \ref converting_mean.
+performed when developing the new version of RAVE, \ref converting_mean.
 
 */

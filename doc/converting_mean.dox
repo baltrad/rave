@@ -1,7 +1,7 @@
-/** \page converting_mean "A real-life example on converting existing average functionality"
+/** \page converting_mean A real-life example on converting existing averaging filter functionality
 
-As a background, RAVE has been around for roughly 10 years. During that time several modules has
-seen life and went into oblivion. As an example on how it is possible to work with the rave
+RAVE has been around for over 10 years. During that time several modules have
+seen life and gone into oblivion. As an example on how it is possible to work with the RAVE
 framework I took an existing module called mean.c and have continuosly adapted it into it's
 current state (\ref mean.c). I have tried to document each step but if there is a hole somewhere
 , please excuse me and take a look in the git repository history for the steps you are missing.
