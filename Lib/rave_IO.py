@@ -25,9 +25,6 @@ import rave, rave_info, rave_defines
 from H5radHelper import typeconv, type_val, geth5attr, h5type
 from rave_defines import *
 
-# Stupid workaround for ENCODING from rave_defines. Requires a proper fix.
-if ENCODING == 'UTF-8': ENCODING = 'iso-8859-1'
-
 
 def open(filename):
     if os.path.isfile(filename):

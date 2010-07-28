@@ -23,7 +23,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @date 2010-07-12
 
 import xml.etree.ElementTree as ET
-from rave_defines import ENCODING, PGF_TAG
+from rave_defines import UTF8, PGF_TAG
 
 
 ## Main container object for manipulating XML. Although this object has a few
@@ -38,7 +38,7 @@ class BltXML(ET._ElementInterface):
     # should probably be UTF-8.
     # @param filename string, file from which to read message.
     # @param msg string, message in memory to format to message.
-    def __init__(self, tag=PGF_TAG, encoding=ENCODING, filename=None, msg=None):
+    def __init__(self, tag=PGF_TAG, encoding=UTF8, filename=None, msg=None):
         self.tag = tag
         self.attrib = {}  # This is needed even if it's empty
         self._children = []
@@ -111,7 +111,7 @@ def read(filename):
 # @param encoding string, should probably always be 'UTF-8'
 # @return string XML envelope
 def MakeBaltradFrameXML(sender, channel, name,
-                        tag='baltrad_frame',encoding=ENCODING):
+                        tag='baltrad_frame',encoding=UTF8):
     this = BltXML(tag=tag, encoding=encoding)
     h, c = ET.Element("header"), ET.Element("content")
     h.set("mimetype", "multipart/form-data")

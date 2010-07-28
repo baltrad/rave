@@ -27,7 +27,7 @@ import os, string
 from rave_defines import RAVECONFIG
 import BaltradMessageXML
 from xml.etree import ElementTree as ET
-from rave_defines import GENREG, REGFILE
+from rave_defines import GENREG, REGFILE, UTF8
 
 
 ## Registry containing product generation algorithm information.
@@ -39,8 +39,7 @@ class PGF_Registry(BaltradMessageXML.BltXML):
     # be UTF-8
     # @param filename string, optional file name from which to read registry.
     # @param msg string, optional XML string containing registry to parse.
-    def __init__(self, tag=GENREG, encoding=BaltradMessageXML.ENCODING,
-                 filename=None, msg=None):
+    def __init__(self, tag=GENREG, encoding=UTF8, filename=None, msg=None):
         self.tag = tag
         self.attrib = {}  # This is needed even if it's empty
         self._children = []

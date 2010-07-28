@@ -51,7 +51,8 @@ H5RAD_VERSIONS = ('H5rad 1.2', 'H5rad 2.0')
 ODIM_VERSION = 'ODIM_H5/V2_0'
 
 # Default text encoding
-ENCODING = 'UTF-8'
+ENCODING = 'iso-8859-1'
+UTF8 = 'UTF-8'
 
 # Default compression to use for DATASET nodes
 COMPRESSION = "zlib" # use "none" (or None), "zlib", or "szip"
