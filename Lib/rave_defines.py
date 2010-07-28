@@ -60,7 +60,7 @@ COMPRESSION = "zlib" # use "none" (or None), "zlib", or "szip"
 COMPRESSION_ZLIB_LEVEL = 6 # default
 
 # Mapping between Numeric and HDF5 dataset types
-ARRAYTYPES = {'b':'char', 'B':'uchar', 'I':'int',
+ARRAYTYPES = {'b':'char', 'B':'uchar', 'I':'int', 'h':'short',
               'L':'long', 'f':'float', 'd':'double'}
 
 # Default gain and offset values for linear transformation between raw and dBZ
