@@ -25,6 +25,9 @@ import rave, rave_info, rave_defines
 from H5radHelper import typeconv, type_val, geth5attr, h5type
 from rave_defines import *
 
+# Stupid workaround for ENCODING from rave_defines. Requires a proper fix.
+if ENCODING == 'UTF-8': ENCODING = 'iso-8859-1'
+
 
 def open(filename):
     if os.path.isfile(filename):
@@ -252,7 +255,7 @@ def traverse_save(e, a, ID, datadict):
 
 # Don't know if writing to tempfile is less efficient than doing everything
 # in memory, since tempfile IS memory these days...
-def MetadataAsXMLstring(element, encoding=rave_defines.ENCODING):
+def MetadataAsXMLstring(element, encoding=ENCODING):
     import __builtin__, os
     import rave_tempfile
 

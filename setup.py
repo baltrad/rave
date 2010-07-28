@@ -381,7 +381,7 @@ if __name__ == "__main__":
                     (rroot+'/bin', glob.glob('bin/*[!CVS]*')),
                     (rroot+'/etc', glob.glob('etc/*')),
                     (rroot+'/tmp', []),
-                    (rroot, ['rave.xbm', 'Copyright'])],
+                    (rroot, ['rave.xbm','COPYING','COPYING.LESSER','LICENSE'])],
         ext_modules = MODULES
         )
 
