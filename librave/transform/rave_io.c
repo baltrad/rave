@@ -1902,6 +1902,8 @@ done:
 int RaveIO_save(RaveIO_t* raveio)
 {
   int result = 0;
+  HL_Compression* theCompression = NULL;   /* FIXME */
+  HL_FileCreationProperty* theFCP = NULL;   /* FIXME */
   RAVE_ASSERT((raveio != NULL), "raveio == NULL");
   if (raveio->filename == NULL) {
     RAVE_ERROR0("Atempting to save an object without a filename");
@@ -1935,9 +1937,25 @@ int RaveIO_save(RaveIO_t* raveio)
           result = HLNodeList_setFileName(nodelist, raveio->filename);
         }
         if (result == 1) {
-          result = HLNodeList_write(nodelist, NULL, NULL);
+
+	   theCompression = HLCompression_new(CT_ZLIB);  /* FIXME */
+	   theCompression->level = 1;
+
+	   /* Why does this only give a slight improvement? Should be better. */
+	   theFCP = HLFileCreationProperty_new();
+	   theFCP->userblock=(hsize_t)0;
+	   theFCP->sizes.sizeof_size=(size_t)4;
+	   theFCP->sizes.sizeof_addr=(size_t)4;
+	   theFCP->sym_k.ik=(int)1;
+	   theFCP->sym_k.lk=(int)1;
+	   theFCP->istore_k=(long)1;
+	   theFCP->meta_block_size=(long)0;
+
+          result = HLNodeList_write(nodelist, theFCP, theCompression); /* FIXME */
         }
       }
+      HLCompression_free(theCompression);  /* FIXME */
+      HLFileCreationProperty_free(theFCP);  /* FIXME */
       HLNodeList_free(nodelist);
     }
   }
