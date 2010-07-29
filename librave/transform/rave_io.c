@@ -1939,7 +1939,7 @@ int RaveIO_save(RaveIO_t* raveio)
         if (result == 1) {
 
 	   theCompression = HLCompression_new(CT_ZLIB);  /* FIXME */
-	   theCompression->level = 1;
+	   theCompression->level = (int)6;
 
 	   /* Why does this only give a slight improvement? Should be better. */
 	   theFCP = HLFileCreationProperty_new();
