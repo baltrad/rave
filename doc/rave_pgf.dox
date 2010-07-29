@@ -88,7 +88,7 @@ contains the following information:
 - A free-text description of the algorithm.
 - The arguments used with the algorithm. 
 
-The details on how to manage the registry are found in \ref pgf_cl.
+The details on how to manage the registry are found in \ref pgf_registry.
 
 
 \section pgf_mf "generate" use and message format
@@ -299,6 +299,12 @@ rave_pgf_cappi --function cappi --strings "transform,areaid" --ints
 "prodpar" --description "Generates a CAPPI product."
 \endverbatim
 
+<b>The module being registered must be placed manually in the $RAVEROOT/Lib
+directory or the server's call to this algorithm will fail.</b> In this
+sense, the purpose of the registration procedure is twofold: 1) we want to
+register algorithms without shutting down the server, 2) we want to
+register algorithms in a controlled manner.
+
 Note that registering an algorithm with the same name as an existing
 registry entry will overwrite that entry!
 
@@ -329,7 +335,7 @@ Argument names:
 
 The server comes with an init script, for placement in
 e.g. /etc/init.d. This is useful in environments where automatic startup
-is necessary when the computer boots, where the server needs to be run as
+is necessary when the computer boots, where the server needs to be run from
 another user, and in situations where the server needs to be moved to
 another computer automatically. This script is found in
 $RAVEROOT/etc/rave_pgf. 
