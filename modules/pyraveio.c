@@ -243,6 +243,12 @@ static struct PyMethodDef _pyraveio_methods[] =
   {"objectType", NULL},
   {"filename", NULL},
   {"object", NULL},
+  {"compression_level", NULL},
+  {"fcp_userblock", NULL},
+  {"fcp_sizes", NULL},
+  {"fcp_symk", NULL},
+  {"fcp_istorek", NULL},
+  {"fcp_metablocksize", NULL},
   {"close", (PyCFunction) _pyraveio_close, 1},
   {"load", (PyCFunction) _pyraveio_load, 1},
   {"save", (PyCFunction) _pyraveio_save, 1},
@@ -283,6 +289,22 @@ static PyObject* _pyraveio_getattr(PyRaveIO* self, char* name)
     } else {
       Py_RETURN_NONE;
     }
+  } else if (strcmp("compression_level", name) == 0) {
+    return PyInt_FromLong(RaveIO_getCompressionLevel(self->raveio));
+  } else if (strcmp("fcp_userblock", name) == 0) {
+    return PyInt_FromLong(RaveIO_getUserBlock(self->raveio));
+  } else if (strcmp("fcp_sizes", name) == 0) {
+    size_t sz = 0, addr = 0;
+    RaveIO_getSizes(self->raveio, &sz, &addr);
+    return Py_BuildValue("(ii)", sz, addr);
+  } else if (strcmp("fcp_symk", name) == 0) {
+    int ik = 0, lk = 0;
+    RaveIO_getSymk(self->raveio, &ik, &lk);
+    return Py_BuildValue("(ii)", ik, lk);
+  } else if (strcmp("fcp_istorek", name) == 0) {
+    return PyInt_FromLong(RaveIO_getIStoreK(self->raveio));
+  } else if (strcmp("fcp_metablocksize", name) == 0) {
+    return PyInt_FromLong(RaveIO_getMetaBlockSize(self->raveio));
   }
   res = Py_FindMethod(_pyraveio_methods, (PyObject*) self, name);
   if (res != NULL)
@@ -339,6 +361,42 @@ static int _pyraveio_setattr(PyRaveIO* self, char* name, PyObject* val)
       RaveIO_setObject(self->raveio, (RaveCoreObject*)((PyCartesianVolume*)val)->cvol);
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "Can only save objects of type : cartesian, polarscan or polarvolume");
+    }
+  } else if (strcmp("compression_level", name) == 0) {
+    if (PyInt_Check(val)) {
+      RaveIO_setCompressionLevel(self->raveio, PyInt_AsLong(val));
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError, "Compression level should be integer value between 0..9");
+    }
+  } else if (strcmp("fcp_userblock", name) == 0) {
+    if (PyInt_Check(val)) {
+      RaveIO_setUserBlock(self->raveio, PyInt_AsLong(val));
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError, "User block should be integer value");
+    }
+  } else if (strcmp("fcp_sizes", name) == 0) {
+    int sz = 0, addr = 0;
+    if (!PyArg_ParseTuple(val, "ii", &sz, &addr)) {
+      raiseException_gotoTag(done, PyExc_TypeError ,"sizes must be a tuple containing 2 integers representing (size, addr)");
+    }
+    RaveIO_setSizes(self->raveio, sz, addr);
+  } else if (strcmp("fcp_symk", name) == 0) {
+    int ik = 0, lk = 0;
+    if (!PyArg_ParseTuple(val, "ii", &ik, &lk)) {
+      raiseException_gotoTag(done, PyExc_TypeError ,"symk must be a tuple containing 2 integers representing (ik, lk)");
+    }
+    RaveIO_setSymk(self->raveio, ik, lk);
+  } else if (strcmp("fcp_istorek", name) == 0) {
+    if (PyInt_Check(val)) {
+      RaveIO_setIStoreK(self->raveio, PyInt_AsLong(val));
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError ,"istorek must be a integer");
+    }
+  } else if (strcmp("fcp_metablocksize", name) == 0) {
+    if (PyInt_Check(val)) {
+      RaveIO_setMetaBlockSize(self->raveio, PyInt_AsLong(val));
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError ,"meta block size must be a integer");
     }
   } else {
     raiseException_gotoTag(done, PyExc_AttributeError, name);

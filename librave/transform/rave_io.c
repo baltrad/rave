@@ -47,6 +47,8 @@ struct _RaveIO_t {
   RaveIO_ODIM_Version version;            /**< the odim version */
   RaveIO_ODIM_H5rad_Version h5radversion; /**< the h5rad object version */
   char* filename;                         /**< the filename */
+  HL_Compression* compression;            /**< the compression to use */
+  HL_FileCreationProperty* property;       /**< the file creation properties */
 };
 
 /*@{ Constants */
@@ -116,12 +118,37 @@ static const struct RaveToHlhdfTypeMap RAVE_TO_HLHDF_MAP[] = {
 static int RaveIO_constructor(RaveCoreObject* obj)
 {
   RaveIO_t* raveio = (RaveIO_t*)obj;
+  int result = 0;
   raveio->object = NULL;
   raveio->version = RaveIO_ODIM_Version_2_0;
   raveio->h5radversion = RaveIO_ODIM_H5rad_Version_2_0;
   raveio->filename = NULL;
-  return 1;
+  raveio->compression = HLCompression_new(CT_ZLIB);
+  raveio->property = HLFileCreationProperty_new();
+  if (raveio->compression == NULL || raveio->property == NULL) {
+    RAVE_ERROR0("Failed to create compression or file creation properties");
+    goto done;
+  }
+  raveio->compression->level = (int)6;
+  raveio->property->userblock = (hsize_t)0;
+  raveio->property->sizes.sizeof_size = (size_t)4;
+  raveio->property->sizes.sizeof_addr = (size_t)4;
+  raveio->property->sym_k.ik = (int)1;
+  raveio->property->sym_k.lk = (int)1;
+  raveio->property->istore_k = (long)1;
+  raveio->property->meta_block_size = (long)0;
+
+  result = 1;
+done:
+  if (result == 0) {
+    HLCompression_free(raveio->compression);
+    HLFileCreationProperty_free(raveio->property);
+    raveio->compression = NULL;
+    raveio->property = NULL;
+  }
+  return result;
 }
+
 /**
  * Destroys the RaveIO instance
  * @param[in] scan - the cartesian product to destroy
@@ -132,6 +159,8 @@ static void RaveIO_destructor(RaveCoreObject* obj)
   if (raveio != NULL) {
     RaveIO_close(raveio);
   }
+  HLCompression_free(raveio->compression);
+  HLFileCreationProperty_free(raveio->property);
 }
 /**
  * Translates a hlhdf format specified into a rave data type.
@@ -1902,8 +1931,6 @@ done:
 int RaveIO_save(RaveIO_t* raveio)
 {
   int result = 0;
-  HL_Compression* theCompression = NULL;   /* FIXME */
-  HL_FileCreationProperty* theFCP = NULL;   /* FIXME */
   RAVE_ASSERT((raveio != NULL), "raveio == NULL");
   if (raveio->filename == NULL) {
     RAVE_ERROR0("Atempting to save an object without a filename");
@@ -1933,29 +1960,15 @@ int RaveIO_save(RaveIO_t* raveio)
             result = 0;
           }
         }
+
         if (result == 1) {
           result = HLNodeList_setFileName(nodelist, raveio->filename);
         }
+
         if (result == 1) {
-
-	   theCompression = HLCompression_new(CT_ZLIB);  /* FIXME */
-	   theCompression->level = (int)6;
-
-	   /* Why does this only give a slight improvement? Should be better. */
-	   theFCP = HLFileCreationProperty_new();
-	   theFCP->userblock=(hsize_t)0;
-	   theFCP->sizes.sizeof_size=(size_t)4;
-	   theFCP->sizes.sizeof_addr=(size_t)4;
-	   theFCP->sym_k.ik=(int)1;
-	   theFCP->sym_k.lk=(int)1;
-	   theFCP->istore_k=(long)1;
-	   theFCP->meta_block_size=(long)0;
-
-          result = HLNodeList_write(nodelist, theFCP, theCompression); /* FIXME */
+          result = HLNodeList_write(nodelist, raveio->property, raveio->compression);
         }
       }
-      HLCompression_free(theCompression);  /* FIXME */
-      HLFileCreationProperty_free(theFCP);  /* FIXME */
       HLNodeList_free(nodelist);
     }
   }
@@ -2049,6 +2062,92 @@ RaveIO_ODIM_H5rad_Version RaveIO_getH5radVersion(RaveIO_t* raveio)
 {
   RAVE_ASSERT((raveio != NULL), "raveio == NULL");
   return raveio->h5radversion;
+}
+
+void RaveIO_setCompressionLevel(RaveIO_t* raveio, int lvl)
+{
+  RAVE_ASSERT((raveio != NULL), "raveio == NULL");
+  if (lvl >= 0 && lvl <= 9) {
+    raveio->compression->level = lvl;
+  }
+}
+
+int RaveIO_getCompressionLevel(RaveIO_t* raveio)
+{
+  RAVE_ASSERT((raveio != NULL), "raveio == NULL");
+  return raveio->compression->level;
+}
+
+void RaveIO_setUserBlock(RaveIO_t* raveio, unsigned long long userblock)
+{
+  RAVE_ASSERT((raveio != NULL), "raveio == NULL");
+  raveio->property->userblock = (hsize_t)userblock;
+}
+
+unsigned long long RaveIO_getUserBlock(RaveIO_t* raveio)
+{
+  RAVE_ASSERT((raveio != NULL), "raveio == NULL");
+  return (unsigned long long)raveio->property->userblock;
+}
+
+void RaveIO_setSizes(RaveIO_t* raveio, size_t sz, size_t addr)
+{
+  RAVE_ASSERT((raveio != NULL), "raveio == NULL");
+  raveio->property->sizes.sizeof_size = sz;
+  raveio->property->sizes.sizeof_addr = addr;
+}
+
+void RaveIO_getSizes(RaveIO_t* raveio, size_t* sz, size_t* addr)
+{
+  RAVE_ASSERT((raveio != NULL), "raveio == NULL");
+  if (sz != NULL) {
+    *sz = raveio->property->sizes.sizeof_size;
+  }
+  if (addr != NULL) {
+    *addr = raveio->property->sizes.sizeof_addr;
+  }
+}
+
+void RaveIO_setSymk(RaveIO_t* raveio, int ik, int lk)
+{
+  RAVE_ASSERT((raveio != NULL), "raveio == NULL");
+  raveio->property->sym_k.ik = ik;
+  raveio->property->sym_k.lk = lk;
+}
+
+void RaveIO_getSymk(RaveIO_t* raveio, int* ik, int* lk)
+{
+  RAVE_ASSERT((raveio != NULL), "raveio == NULL");
+  if (ik != NULL) {
+    *ik = raveio->property->sym_k.ik;
+  }
+  if (lk != NULL) {
+    *lk = raveio->property->sym_k.lk;
+  }
+}
+
+void RaveIO_setIStoreK(RaveIO_t* raveio, long k)
+{
+  RAVE_ASSERT((raveio != NULL), "raveio == NULL");
+  raveio->property->istore_k = k;
+}
+
+long RaveIO_getIStoreK(RaveIO_t* raveio)
+{
+  RAVE_ASSERT((raveio != NULL), "raveio == NULL");
+  return raveio->property->istore_k;
+}
+
+void RaveIO_setMetaBlockSize(RaveIO_t* raveio, long sz)
+{
+  RAVE_ASSERT((raveio != NULL), "raveio == NULL");
+  raveio->property->meta_block_size = sz;
+}
+
+long RaveIO_getMetaBlockSize(RaveIO_t* raveio)
+{
+  RAVE_ASSERT((raveio != NULL), "raveio == NULL");
+  return raveio->property->meta_block_size;
 }
 
 /*@} End of Interface functions */

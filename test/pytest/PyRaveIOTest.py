@@ -61,7 +61,8 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertNotEqual(-1, israveio)
 
   def test_attribute_visibility(self):
-    attrs = ['version', 'h5radversion', 'objectType', 'filename', 'object']
+    attrs = ['version', 'h5radversion', 'objectType', 'filename', 'object', 'compression_level', 'fcp_userblock',
+             'fcp_sizes', 'fcp_symk', 'fcp_istorek', 'fcp_metablocksize']
     obj = _raveio.new()
     alist = dir(obj)
     for a in attrs:
@@ -95,6 +96,52 @@ class PyRaveIOTest(unittest.TestCase):
       pass
     self.assertEquals(_raveio.Rave_ObjectType_UNDEFINED, obj.objectType)
   
+  def test_compression_level(self):
+    obj = _raveio.new()
+    self.assertEquals(6, obj.compression_level)
+    obj.compression_level = 9
+    self.assertEquals(9, obj.compression_level)
+    obj.compression_level = 0
+    self.assertEquals(0, obj.compression_level)
+    obj.compression_level = 10
+    self.assertEquals(0, obj.compression_level)
+    obj.compression_level = -1
+    self.assertEquals(0, obj.compression_level)
+    
+  def test_fcp_userblock(self):
+    obj = _raveio.new()
+    self.assertEquals(0, obj.fcp_userblock)
+    obj.fcp_userblock = 2
+    self.assertEquals(2, obj.fcp_userblock)
+    
+  def test_fcp_sizes(self):
+    obj = _raveio.new()
+    self.assertEquals(4, obj.fcp_sizes[0])
+    self.assertEquals(4, obj.fcp_sizes[1])
+    obj.fcp_sizes = (8, 2)
+    self.assertEquals(8, obj.fcp_sizes[0])
+    self.assertEquals(2, obj.fcp_sizes[1])
+    
+  def test_fcp_symk(self):
+    obj = _raveio.new()
+    self.assertEquals(1, obj.fcp_symk[0])
+    self.assertEquals(1, obj.fcp_symk[1])
+    obj.fcp_symk = (2, 4)
+    self.assertEquals(2, obj.fcp_symk[0])
+    self.assertEquals(4, obj.fcp_symk[1])
+    
+  def test_fcp_istorek(self):
+    obj = _raveio.new()
+    self.assertEquals(1, obj.fcp_istorek)
+    obj.fcp_istorek = 2
+    self.assertEquals(2, obj.fcp_istorek)
+    
+  def test_fcp_metablocksize(self):
+    obj = _raveio.new()
+    self.assertEquals(0, obj.fcp_metablocksize)
+    obj.fcp_metablocksize = 1
+    self.assertEquals(1, obj.fcp_metablocksize)
+    
   def test_load_volume(self):
     obj = _raveio.open(self.FIXTURE_VOLUME)
     vol = obj.object

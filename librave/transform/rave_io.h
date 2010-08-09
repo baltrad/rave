@@ -136,7 +136,7 @@ int RaveIO_setOdimVersion(RaveIO_t* raveio, RaveIO_ODIM_Version version);
 
 /**
  * Returns the ODIM version.
- * @param[in] raveio - the Rave IO instance
+ * @param[in] raveio - self
  * @returns the ODIM version
  */
 RaveIO_ODIM_Version RaveIO_getOdimVersion(RaveIO_t* raveio);
@@ -152,9 +152,97 @@ int RaveIO_setH5radVersion(RaveIO_t* raveio, RaveIO_ODIM_H5rad_Version version);
 
 /**
  * Returns the h5rad version.
- * @param[in] raveio - the Rave IO instance
+ * @param[in] raveio - self
  * @returns the h5rad version
  */
 RaveIO_ODIM_H5rad_Version RaveIO_getH5radVersion(RaveIO_t* raveio);
+
+/**
+ * Sets the compression level.
+ * @param[in] raveio - self
+ * @param[in] lvl - the compression level (0..9)
+ */
+void RaveIO_setCompressionLevel(RaveIO_t* raveio, int lvl);
+
+/**
+ * Returns the compression level
+ * @param[in] raveio- self
+ * @returns the compression level
+ */
+int RaveIO_getCompressionLevel(RaveIO_t* raveio);
+
+/**
+ * Sets the user block.
+ * @param[in] raveio - self
+ * @param[in] userblock - the user block
+ */
+void RaveIO_setUserBlock(RaveIO_t* raveio, unsigned long long userblock);
+
+/**
+ * Returns the user block.
+ * @param[in] raveio - self
+ * @returns the user block
+ */
+unsigned long long RaveIO_getUserBlock(RaveIO_t* raveio);
+
+/**
+ * Sets the sizes
+ * @param[in] raveio - self
+ * @param[in] sz - same as sizes.sizeof_size
+ * @param[in] addr - same as sizes.sizeof_addr
+ */
+void RaveIO_setSizes(RaveIO_t* raveio, size_t sz, size_t addr);
+
+/**
+ * Returns the sizes
+ * @param[in] raveio - self
+ * @param[in] sz - same as sizes.sizeof_size
+ * @param[in] addr - same as sizes.sizeof_addr
+ */
+void RaveIO_getSizes(RaveIO_t* raveio, size_t* sz, size_t* addr);
+
+/**
+ * Sets the symk
+ * @param[in] raveio - self
+ * @param[in] ik - same as sym_k.ik
+ * @param[in] lk - same as sym_k.lk
+ */
+void RaveIO_setSymk(RaveIO_t* raveio, int ik, int lk);
+
+/**
+ * Returns the symk
+ * @param[in] raveio - self
+ * @param[in] ik - same as sym_k.ik
+ * @param[in] lk - same as sym_k.lk
+ */
+void RaveIO_getSymk(RaveIO_t* raveio, int* ik, int* lk);
+
+/**
+ * Sets the istore_k value.
+ * @param[in] raveio - self
+ * @param[in] k - the istore_k value
+ */
+void RaveIO_setIStoreK(RaveIO_t* raveio, long k);
+
+/**
+ * Returns the istore_k value
+ * @param[in] raveio - self
+ * @returns the istore_k value
+ */
+long RaveIO_getIStoreK(RaveIO_t* raveio);
+
+/**
+ * Sets the meta block size
+ * @param[in] raveio - self
+ * @param[in] sz - the meta block size
+ */
+void RaveIO_setMetaBlockSize(RaveIO_t* raveio, long sz);
+
+/**
+ * Returns the meta block size
+ * @param[in] raveio - self
+ * @returns the meta block size
+ */
+long RaveIO_getMetaBlockSize(RaveIO_t* raveio);
 
 #endif
