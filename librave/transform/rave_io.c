@@ -504,8 +504,8 @@ static int RaveIOInternal_createDataset(HL_NodeList* nodelist, void* data, long 
     HL_FormatSpecifier specifier = RaveIOInternal_raveToHlhdfType(dataType);
     const char* hlhdfFormat = HL_getFormatSpecifierString(specifier);
     hsize_t dims[2];
-    dims[1] = ysize;
-    dims[0] = xsize;
+    dims[0] = ysize;
+    dims[1] = xsize;
     if (node == NULL) {
       RAVE_CRITICAL1("Failed to create dataset with name %s", nodeName);
       goto done;
@@ -1785,8 +1785,8 @@ static int RaveIOInternal_addCartesianToNodeList(Cartesian_t* image, HL_NodeList
 
   if (!RaveIOInternal_addData(nodelist,
                               Cartesian_getData(image),
-                              Cartesian_getYSize(image),
                               Cartesian_getXSize(image),
+                              Cartesian_getYSize(image),
                               Cartesian_getDataType(image),
                               "/dataset1/data1")) {
     goto done;
