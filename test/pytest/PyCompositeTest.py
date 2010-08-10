@@ -31,6 +31,7 @@ import _rave
 import _area
 import _projection
 import _raveio
+import math
 import string
 import numpy
 
@@ -93,3 +94,36 @@ class PyCompositeTest(unittest.TestCase):
     ios.object = result
     ios.filename = "swecomposite.h5"
     ios.save()
+
+  # To verify ticket 96
+  def test_nearest_gmapproj(self):
+    generator = _pycomposite.new()
+
+    a = _area.new()
+    a.id = "eua_gmaps"
+    a.xsize = 800
+    a.ysize = 1090
+    a.xscale = 6223.0
+    a.yscale = 6223.0
+    #               llX           llY            urX        urY
+    a.extent = (-3117.83526,-6780019.83039,4975312.43200,3215.41216)
+    # You can also add  +nadgrids=@null, for usage see PROJ.4 documentation
+    a.projection = _projection.new("x", "y", "+proj=merc +lat_ts=0 +lon_0=0 +k=1.0 +x_0=1335833 +y_0=-11000715 +a=6378137.0 +b=6378137.0 +no_defs +datum=WGS84")
+
+    for fname in self.SWEDISH_VOLUMES:
+      rio = _raveio.open(fname)
+      generator.add(rio.object)
+    
+    result = generator.nearest(a, 1000.0)
+    
+    result.quantity = "DBZH"
+    result.time = "120000"
+    result.date = "20090501"
+    result.product = _rave.Rave_ProductType_COMP
+    result.source = "eua_gmaps"
+    result.objectType = _rave.Rave_ObjectType_IMAGE
+    data = result.getData()
+    
+    ios = _raveio.new()
+    ios.object = result
+    ios.save("swecomposite_gmap.h5")

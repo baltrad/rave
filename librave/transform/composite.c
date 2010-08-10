@@ -99,6 +99,7 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, double heig
 {
   Cartesian_t* result = NULL;
   Projection_t* projection = NULL;
+
   int x = 0, y = 0, i = 0, xsize = 0, ysize = 0, nradars = 0;
   double v = 0.0L;
   RaveValueType vtype = RaveValueType_UNDEFINED;
@@ -117,32 +118,50 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, double heig
   for (y = 0; y < ysize; y++) {
     double herey = Cartesian_getLocationY(result, y);
     for (x = 0; x < xsize; x++) {
-      double lon = 0.0L, lat = 0.0L;
+      PolarVolume_t* pvol = NULL;
       double herex = Cartesian_getLocationX(result, x);
+      double olon = 0.0, olat = 0.0, pvollon = 0.0, pvollat = 0.0;
       double mindist = 1e10;
-      int volindex = 0;
-      PolarVolume_t* vol = NULL;
-      Projection_inv(projection, herex, herey, &lon, &lat);
+
       for (i = 0, mindist=1e10; i < nradars; i++) {
+        PolarVolume_t* vol = NULL;
+        Projection_t* volproj = NULL;
+
         vol = (PolarVolume_t*)RaveObjectList_get(composite->list, i);
-        double dist = PolarVolume_getDistance(vol, lon, lat);
-        if (dist < mindist) {
-          mindist = dist;
-          volindex = i;
+        if (vol != NULL) {
+          volproj = PolarVolume_getProjection(vol);
+        }
+
+        if (volproj != NULL) {
+          /* We will go from surface coords into the lonlat projection assuming that a polar volume uses a lonlat projection*/
+          if (!Projection_transformx(projection, volproj, herex, herey, 0.0, &olon, &olat, NULL)) {
+            RAVE_WARNING0("Failed to transform from composite into polar coordinates");
+          } else {
+            double dist = PolarVolume_getDistance(vol, olon, olat);
+            if (dist < mindist) {
+              mindist = dist;
+              RAVE_OBJECT_RELEASE(pvol);
+              pvol = RAVE_OBJECT_COPY(vol);
+              pvollon = olon;
+              pvollat = olat;
+            }
+          }
         }
         RAVE_OBJECT_RELEASE(vol);
+        RAVE_OBJECT_RELEASE(volproj);
       }
 
-      vol = (PolarVolume_t*)RaveObjectList_get(composite->list, volindex);
-      vtype = PolarVolume_getNearest(vol, lon, lat, height, 0, &v);
-      if (vtype == RaveValueType_NODATA) {
-        Cartesian_setValue(result, x, y, Cartesian_getNodata(result));
-      } else if (vtype == RaveValueType_UNDETECT) {
-        Cartesian_setValue(result, x, y, Cartesian_getUndetect(result));
-      } else {
-        Cartesian_setValue(result, x, y, v);
+      if (pvol != NULL) {
+        vtype = PolarVolume_getNearest(pvol, pvollon, pvollat, height, 0, &v);
+        if (vtype == RaveValueType_NODATA) {
+          Cartesian_setValue(result, x, y, Cartesian_getNodata(result));
+        } else if (vtype == RaveValueType_UNDETECT) {
+          Cartesian_setValue(result, x, y, Cartesian_getUndetect(result));
+        } else {
+          Cartesian_setValue(result, x, y, v);
+        }
       }
-      RAVE_OBJECT_RELEASE(vol);
+      RAVE_OBJECT_RELEASE(pvol);
     }
   }
 
