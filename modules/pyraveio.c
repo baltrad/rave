@@ -226,10 +226,15 @@ static PyObject* _pyraveio_load(PyRaveIO* self, PyObject* args)
  */
 static PyObject* _pyraveio_save(PyRaveIO* self, PyObject* args)
 {
-  if (!RaveIO_save(self->raveio)) {
-    fprintf(stderr, "Raising exception\n");
+  char* filename = NULL;
+  if (!PyArg_ParseTuple(args, "|s", &filename)) {
+    return NULL;
+  }
+
+  if (!RaveIO_save(self->raveio, filename)) {
     raiseException_returnNULL(PyExc_IOError, "Failed to save file");
   }
+
   Py_RETURN_NONE;
 }
 
@@ -501,11 +506,6 @@ init_raveio(void)
   add_long_constant(dictionary, "Rave_ObjectType_PIC", Rave_ObjectType_PIC);
 
   HL_init();
-  /*
-  HL_InitializeDebugger();
-  HL_enableErrorReporting();
-  HL_enableHdf5ErrorReporting();
-  HL_setDebugLevel(HLHDF_DEBUG);*/
   HL_disableErrorReporting();
   HL_disableHdf5ErrorReporting();
   HL_setDebugLevel(HLHDF_SILENT);

@@ -1932,10 +1932,17 @@ done:
 
 }
 
-int RaveIO_save(RaveIO_t* raveio)
+int RaveIO_save(RaveIO_t* raveio, const char* filename)
 {
   int result = 0;
   RAVE_ASSERT((raveio != NULL), "raveio == NULL");
+
+  if (filename != NULL) {
+    if (!RaveIO_setFilename(raveio, filename)) {
+      RAVE_ERROR0("Failed to set filename before saving");
+      return 0;
+    }
+  }
 
   if (raveio->filename == NULL) {
     RAVE_ERROR0("Atempting to save an object without a filename");

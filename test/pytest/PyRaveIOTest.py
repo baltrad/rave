@@ -899,6 +899,37 @@ class PyRaveIOTest(unittest.TestCase):
     nodelist.fetch()
     
     self.assertEquals("SCAN", nodelist.getNode("/what/object").data())
+
+  def test_save_filename_scan(self):
+    obj = _raveio.open(self.FIXTURE_SCAN)
+    obj.filename = self.TEMPORARY_FILE
+    obj.save()
+    
+    obj = _raveio.open(self.TEMPORARY_FILE)
+    obj.save(self.TEMPORARY_FILE2)
+    
+    # Verify data
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE2)
+    nodelist.selectAll()
+    nodelist.fetch()
+    
+    self.assertEquals("SCAN", nodelist.getNode("/what/object").data())
+
+  def test_save_nofilename_scan(self):
+    obj = _raveio.open(self.FIXTURE_SCAN)
+    obj.filename = self.TEMPORARY_FILE
+    obj.save()
+    
+    obj = _raveio.open(self.TEMPORARY_FILE)
+    obj.filename = self.TEMPORARY_FILE2
+    obj.save()
+    
+    # Verify data
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE2)
+    nodelist.selectAll()
+    nodelist.fetch()
+    
+    self.assertEquals("SCAN", nodelist.getNode("/what/object").data())
   
   def addGroupNode(self, nodelist, name):
     node = _pyhl.node(_pyhl.GROUP_ID, name)

@@ -84,9 +84,10 @@ int RaveIO_load(RaveIO_t* raveio);
 /**
  * Saves a rave object as specified according to ODIM HDF5 format specification.
  * @param[in] raveio - self
+ * @param[in] filename - the filename to save with. May be NULL, same as calling RaveIO_setFilename followed by RaveIO_save(..., NULL)
  * @returns 1 on success, otherwise 0
  */
-int RaveIO_save(RaveIO_t* raveio);
+int RaveIO_save(RaveIO_t* raveio, const char* filename);
 
 /**
  * Sets the object to be saved.
