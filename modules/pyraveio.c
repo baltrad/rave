@@ -501,6 +501,11 @@ init_raveio(void)
   add_long_constant(dictionary, "Rave_ObjectType_PIC", Rave_ObjectType_PIC);
 
   HL_init();
+  /*
+  HL_InitializeDebugger();
+  HL_enableErrorReporting();
+  HL_enableHdf5ErrorReporting();
+  HL_setDebugLevel(HLHDF_DEBUG);*/
   HL_disableErrorReporting();
   HL_disableHdf5ErrorReporting();
   HL_setDebugLevel(HLHDF_SILENT);

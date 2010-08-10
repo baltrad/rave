@@ -427,41 +427,45 @@ static int RaveIOInternal_addAttribute(
 
   attrname = RaveAttribute_getName(attribute);
   if (attrname != NULL) {
-    HL_Node* node = NULL;
     char attrNodeName[1024];
     sprintf(attrNodeName, "%s/%s", nodeName, attrname);
-    node = HLNode_newAttribute(attrNodeName);
-    if (node == NULL) {
-      RAVE_CRITICAL1("Failed to create an attribute with name %s", attrNodeName);
-      goto done;
-    }
-    if (RaveAttribute_getFormat(attribute) == RaveAttribute_Format_Long) {
-      long value;
-      RaveAttribute_getLong(attribute, &value);
-      result = HLNode_setScalarValue(node, sizeof(long), (unsigned char*)&value, "long", -1);
-    } else if (RaveAttribute_getFormat(attribute) == RaveAttribute_Format_Double) {
-      double value;
-      RaveAttribute_getDouble(attribute, &value);
-      result = HLNode_setScalarValue(node, sizeof(double), (unsigned char*)&value, "double", -1);
-    } else if (RaveAttribute_getFormat(attribute) == RaveAttribute_Format_String) {
-      char* value = NULL;
-      RaveAttribute_getString(attribute, &value);
-      if (value != NULL) {
-        result = HLNode_setScalarValue(node, strlen(value)+1, (unsigned char*)value, "string", -1);
-      } else {
-        RAVE_WARNING1("Attribute %s is NULL and will be ignored", nodeName);
-        HLNode_free(node);
-        node = NULL;
-        result = 1;
+    if (!HLNodeList_hasNodeByName(nodelist, attrNodeName)) {
+      HL_Node* node = HLNode_newAttribute(attrNodeName);
+      if (node == NULL) {
+        RAVE_CRITICAL1("Failed to create an attribute with name %s", attrNodeName);
+        goto done;
       }
-    }
-    if (result == 1 && node != NULL) {
-      result = HLNodeList_addNode(nodelist, node);
-      if (result == 0) {
-        HLNode_free(node);
-        node = NULL;
-        RAVE_ERROR1("Could not add node %s", attrNodeName);
+      if (RaveAttribute_getFormat(attribute) == RaveAttribute_Format_Long) {
+        long value;
+        RaveAttribute_getLong(attribute, &value);
+        result = HLNode_setScalarValue(node, sizeof(long), (unsigned char*)&value, "long", -1);
+      } else if (RaveAttribute_getFormat(attribute) == RaveAttribute_Format_Double) {
+        double value;
+        RaveAttribute_getDouble(attribute, &value);
+        result = HLNode_setScalarValue(node, sizeof(double), (unsigned char*)&value, "double", -1);
+      } else if (RaveAttribute_getFormat(attribute) == RaveAttribute_Format_String) {
+        char* value = NULL;
+        RaveAttribute_getString(attribute, &value);
+        if (value != NULL) {
+          result = HLNode_setScalarValue(node, strlen(value)+1, (unsigned char*)value, "string", -1);
+        } else {
+          RAVE_WARNING1("Attribute %s is NULL and will be ignored", nodeName);
+          HLNode_free(node);
+          node = NULL;
+          result = 1;
+        }
       }
+      if (result == 1 && node != NULL) {
+        result = HLNodeList_addNode(nodelist, node);
+        if (result == 0) {
+          HLNode_free(node);
+          node = NULL;
+          RAVE_ERROR1("Could not add node %s", attrNodeName);
+        }
+      }
+    } else {
+      /* If attribute already has been added, we just count this as successful */
+      result = 1;
     }
   }
 
@@ -1932,6 +1936,7 @@ int RaveIO_save(RaveIO_t* raveio)
 {
   int result = 0;
   RAVE_ASSERT((raveio != NULL), "raveio == NULL");
+
   if (raveio->filename == NULL) {
     RAVE_ERROR0("Atempting to save an object without a filename");
     return 0;

@@ -45,15 +45,19 @@ class PyRaveIOTest(unittest.TestCase):
   FIXTURE_CVOL_CAPPI="fixture_ODIM_cvol_cappi.h5"
   FIXTURE_SCAN="fixtures/scan_sevil_20100702T113200Z.h5"
   TEMPORARY_FILE="ravemodule_iotest.h5"
+  TEMPORARY_FILE2="ravemodule_iotest2.h5"
   
   def setUp(self):
     if os.path.isfile(self.TEMPORARY_FILE):
       os.unlink(self.TEMPORARY_FILE)
+    if os.path.isfile(self.TEMPORARY_FILE2):
+      os.unlink(self.TEMPORARY_FILE2)
 
   def tearDown(self):
-    pass
-    #if os.path.isfile(self.TEMPORARY_FILE):
-    #  os.unlink(self.TEMPORARY_FILE)
+    if os.path.isfile(self.TEMPORARY_FILE):
+      os.unlink(self.TEMPORARY_FILE)
+    if os.path.isfile(self.TEMPORARY_FILE2):
+      os.unlink(self.TEMPORARY_FILE2)
 
   def test_new(self):
     obj = _raveio.new()
@@ -848,6 +852,53 @@ class PyRaveIOTest(unittest.TestCase):
     data = nodelist.getNode("/dataset1/data1/quality1/data").data()
     self.assertEquals(data.shape[0], 10)
     self.assertEquals(data.shape[1], 10)
+
+  def test_read_write_cartesian_image(self):
+    image = _cartesian.new()
+    image.product = _rave.Rave_ProductType_CAPPI
+    image.quantity = "DBZH"
+    image.gain = 1.0
+    image.offset = 0.0
+    image.nodata = 255.0
+    image.undetect = 0.0
+    image.source = "PLC:1234"
+    image.date = "20100810"
+    image.time = "085500"
+    image.xscale = 1000.0
+    image.yscale = 1000.0
+    image.areaextent = (-240000.0, -240000.0, 238000.0, 238000.0)
+    image.projection = _projection.new("x","y","+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84")
+    data = numpy.zeros((240,240),numpy.uint8)
+    image.setData(data)
+
+    obj = _raveio.new()
+    obj.object = image
+    obj.filename = self.TEMPORARY_FILE
+    obj.save()
+    
+    obj = _raveio.open(self.TEMPORARY_FILE)
+    obj.filename = self.TEMPORARY_FILE2
+    obj.save()
+
+    # Verify data
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE2)
+    nodelist.selectAll()
+    nodelist.fetch()
+    
+    self.assertEquals("DBZH", nodelist.getNode("/dataset1/what/quantity").data())
+    self.assertEquals("IMAGE", nodelist.getNode("/what/object").data())
+  
+  def test_read_write_scan(self):
+    obj = _raveio.open(self.FIXTURE_SCAN)
+    obj.filename = self.TEMPORARY_FILE2
+    obj.save()
+    
+    # Verify data
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE2)
+    nodelist.selectAll()
+    nodelist.fetch()
+    
+    self.assertEquals("SCAN", nodelist.getNode("/what/object").data())
   
   def addGroupNode(self, nodelist, name):
     node = _pyhl.node(_pyhl.GROUP_ID, name)

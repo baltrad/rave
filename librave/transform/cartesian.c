@@ -82,7 +82,7 @@ static int Cartesian_constructor(RaveCoreObject* obj)
   this->quantity = NULL;
   this->datetime = NULL;
   this->product = Rave_ProductType_UNDEFINED;
-  this->objectType = Rave_ObjectType_UNDEFINED;
+  this->objectType = Rave_ObjectType_IMAGE;
   this->source = NULL;
   this->gain = 0.0;
   this->offset = 0.0;
