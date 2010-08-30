@@ -209,25 +209,25 @@ error:
 /*@{ Interface functions */
 int Cartesian_setTime(Cartesian_t* cartesian, const char* value)
 {
-  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
+  RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
   return RaveDateTime_setTime(cartesian->datetime, value);
 }
 
 const char* Cartesian_getTime(Cartesian_t* cartesian)
 {
-  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
+  RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
   return RaveDateTime_getTime(cartesian->datetime);
 }
 
 int Cartesian_setDate(Cartesian_t* cartesian, const char* value)
 {
-  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
+  RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
   return RaveDateTime_setDate(cartesian->datetime, value);
 }
 
 const char* Cartesian_getDate(Cartesian_t* cartesian)
 {
-  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
+  RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
   return RaveDateTime_getDate(cartesian->datetime);
 }
 
@@ -260,7 +260,7 @@ const char* Cartesian_getSource(Cartesian_t* cartesian)
 int Cartesian_setObjectType(Cartesian_t* cartesian, Rave_ObjectType type)
 {
   RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
-  if (type == Rave_ObjectType_IMAGE) {
+  if (type == Rave_ObjectType_IMAGE || type == Rave_ObjectType_COMP) {
     cartesian->objectType = type;
     return 1;
   }
@@ -681,7 +681,7 @@ RaveObjectList_t* Cartesian_getAttributeValues(Cartesian_t* cartesian, Rave_Obje
     goto error;
   }
 
-  if (otype == Rave_ObjectType_IMAGE) {
+  if (otype == Rave_ObjectType_COMP || otype == Rave_ObjectType_IMAGE) {
     if (cartesian->projection != NULL) {
       if (!RaveUtilities_addStringAttributeToList(result, "where/projdef", Projection_getDefinition(cartesian->projection))) {
         goto error;
@@ -700,7 +700,11 @@ RaveObjectList_t* Cartesian_getAttributeValues(Cartesian_t* cartesian, Rave_Obje
         !RaveUtilities_replaceLongAttributeInList(result, "where/ysize", Cartesian_getYSize(cartesian))) {
       goto error;
     }
-  } else if (otype == Rave_ObjectType_COMP || otype == Rave_ObjectType_CVOL) {
+
+    // prodpar is dataset specific.. so it should only be there for images in volumes.
+    RaveUtilities_removeAttributeFromList(result, "what/prodpar");
+
+  } else if (otype == Rave_ObjectType_CVOL) {
     if (!RaveUtilities_addDoubleAttributeToList(result, "what/gain", Cartesian_getGain(cartesian)) ||
         !RaveUtilities_addDoubleAttributeToList(result, "what/nodata", Cartesian_getNodata(cartesian)) ||
         !RaveUtilities_addDoubleAttributeToList(result, "what/offset", Cartesian_getOffset(cartesian)) ||

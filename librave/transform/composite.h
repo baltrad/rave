@@ -51,12 +51,85 @@ extern RaveCoreObjectType Composite_TYPE;
 int Composite_add(Composite_t* composite, RaveCoreObject* object);
 
 /**
+ * Sets the product type that should be generated when generating the
+ * composite.
+ * @param[in] composite - self
+ * @param[in] type - the product type, currently only PCAPPI supported.
+ */
+void Composite_setProduct(Composite_t* composite, Rave_ProductType type);
+
+/**
+ * Returns the product type
+ * @returns the product type
+ */
+Rave_ProductType Composite_getProduct(Composite_t* composite);
+
+/**
+ * Sets the height that should be used when generating a
+ * composite as CAPPI or PCAPPI.
+ * @param[in] composite - self
+ * @param[in] height - the height
+ */
+void Composite_setHeight(Composite_t* composite, double height);
+
+/**
+ * Returns the height that is used for composite generation.
+ * @param[in] composite - self
+ * @returns the height
+ */
+double Composite_getHeight(Composite_t* composite);
+
+/**
+ * The quantity to use for this composite
+ * @param[in] composite - self
+ * @param[in] quantity - the quantity, defaults to DBZH
+ * @returns 1 on success otherwise 0
+ */
+int Composite_setQuantity(Composite_t* composite, const char* quantity);
+
+/**
+ * Returns the quantity that is of interest when generating the composite
+ * @param[in] composite - self
+ * @returns the quantity
+ */
+const char* Composite_getQuantity(Composite_t* composite);
+
+/**
+ * Sets the nominal time.
+ * @param[in] composite - self
+ * @param[in] value - the time in the format HHmmss
+ * @returns 1 on success, otherwise 0
+ */
+int Composite_setTime(Composite_t* composite, const char* value);
+
+/**
+ * Returns the nominal time.
+ * @param[in] composite - self
+ * @returns the nominal time (or NULL if there is none)
+ */
+const char* Composite_getTime(Composite_t* composite);
+
+/**
+ * Sets the nominal date.
+ * @param[in] composite - self
+ * @param[in] value - the date in the format YYYYMMDD
+ * @returns 1 on success, otherwise 0
+ */
+int Composite_setDate(Composite_t* composite, const char* value);
+
+/**
+ * Returns the nominal date.
+ * @param[in] composite - self
+ * @returns the nominal time (or NULL if there is none)
+ */
+const char* Composite_getDate(Composite_t* composite);
+
+/**
  * Generates a composite according to the nearest radar principle.
  * @param[in] composite - self
  * @param[in] area - the area that should be used for defining the composite.
- * @param[in] height - the height where the product should be generated at
  * @returns the generated composite.
  */
-Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, double height);
+Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area);
 
 #endif /* COMPOSITE_H */

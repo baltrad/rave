@@ -64,6 +64,30 @@ class PyCompositeTest(unittest.TestCase):
     isscan = string.find(`type(obj)`, "CompositeCore")
     self.assertNotEqual(-1, isscan)
 
+  def test_attribute_visibility(self):
+    attrs = ['height', 'product', 'quantity', 'date', 'time']
+    obj = _pycomposite.new()
+    alist = dir(obj)
+    for a in attrs:
+      self.assertEquals(True, a in alist)
+
+  def test_height(self):
+    obj = _pycomposite.new()
+    self.assertAlmostEquals(1000.0, obj.height, 4)
+    obj.height = 1.0
+    self.assertAlmostEquals(1.0, obj.height, 4)
+
+  def test_product(self):
+    obj = _pycomposite.new()
+    self.assertEquals(_rave.Rave_ProductType_PCAPPI, obj.product)
+
+  def test_quantity(self):
+    obj = _pycomposite.new()
+    self.assertEquals("DBZH", obj.quantity)
+    obj.quantity = "MMH"
+    self.assertEquals("MMH", obj.quantity)
+    
+
   def test_nearest(self):
     generator = _pycomposite.new()
     
@@ -80,14 +104,21 @@ class PyCompositeTest(unittest.TestCase):
       rio = _raveio.open(fname)
       generator.add(rio.object)
     
-    result = generator.nearest(a, 1000.0)
+    generator.quantity = "DBZH"
+    generator.product = _rave.Rave_ProductType_PCAPPI
+    generator.height = 1000.0
+    generator.time = "120000"
+    generator.date = "20090501"
+    result = generator.nearest(a)
     
-    result.quantity = "DBZH"
-    result.time = "120000"
-    result.date = "20090501"
-    result.product = _rave.Rave_ProductType_COMP
-    result.source = "nrd2km"
-    result.objectType = _rave.Rave_ObjectType_IMAGE
+    self.assertEquals("DBZH", result.quantity)
+    self.assertEquals("120000", result.time)
+    self.assertEquals("20090501", result.date)
+    prodpar = result.getAttribute("what/prodpar")
+    self.assertAlmostEquals(1000.0, prodpar, 4)
+    self.assertEquals(_rave.Rave_ProductType_PCAPPI, result.product)
+    self.assertEquals(_rave.Rave_ObjectType_COMP, result.objectType)
+    self.assertEquals("nrd2km", result.source);
     data = result.getData()
     
     ios = _raveio.new()
@@ -114,14 +145,14 @@ class PyCompositeTest(unittest.TestCase):
       rio = _raveio.open(fname)
       generator.add(rio.object)
     
-    result = generator.nearest(a, 1000.0)
+    generator.quantity = "DBZH"
+    generator.product = _rave.Rave_ProductType_PCAPPI
+    generator.height = 1000.0
+    result = generator.nearest(a)
     
-    result.quantity = "DBZH"
     result.time = "120000"
     result.date = "20090501"
-    result.product = _rave.Rave_ProductType_COMP
     result.source = "eua_gmaps"
-    result.objectType = _rave.Rave_ObjectType_IMAGE
     data = result.getData()
     
     ios = _raveio.new()

@@ -185,14 +185,14 @@ static PyObject* _pycomposite_nearest(PyComposite* self, PyObject* args)
   Cartesian_t* result = NULL;
   PyObject* pyresult = NULL;
 
-  if (!PyArg_ParseTuple(args, "Od", &obj, &height)) {
+  if (!PyArg_ParseTuple(args, "O", &obj)) {
     return NULL;
   }
   if (!PyArea_Check(obj)) {
-    raiseException_returnNULL(PyExc_AttributeError, "first argument should be an area");
+    raiseException_returnNULL(PyExc_AttributeError, "argument should be an area");
   }
 
-  result = Composite_nearest(self->composite, ((PyArea*)obj)->area, height);
+  result = Composite_nearest(self->composite, ((PyArea*)obj)->area);
   if (result == NULL) {
     raiseException_returnNULL(PyExc_AttributeError, "failed to generate composite");
   }
@@ -207,6 +207,11 @@ static PyObject* _pycomposite_nearest(PyComposite* self, PyObject* args)
  */
 static struct PyMethodDef _pycomposite_methods[] =
 {
+  {"height", NULL},
+  {"product", NULL},
+  {"quantity", NULL},
+  {"date", NULL},
+  {"time", NULL},
   {"add", (PyCFunction) _pycomposite_add, 1},
   {"nearest", (PyCFunction) _pycomposite_nearest, 1},
   {NULL, NULL } /* sentinel */
@@ -220,7 +225,16 @@ static PyObject* _pycomposite_getattr(PyComposite* self, char* name)
 {
   PyObject* res = NULL;
 
-  if (strcmp("time", name) == 0) {
+  if (strcmp("height", name) == 0) {
+    return PyFloat_FromDouble(Composite_getHeight(self->composite));
+  } else if (strcmp("product", name) == 0) {
+    return PyInt_FromLong(Composite_getProduct(self->composite));
+  } else if (strcmp("quantity", name) == 0) {
+    if (Composite_getQuantity(self->composite) != NULL) {
+      return PyString_FromString(Composite_getQuantity(self->composite));
+    } else {
+      Py_RETURN_NONE;
+    }
   }
 
   res = Py_FindMethod(_pycomposite_methods, (PyObject*) self, name);
@@ -241,18 +255,48 @@ static int _pycomposite_setattr(PyComposite* self, char* name, PyObject* val)
   if (name == NULL) {
     goto done;
   }
-  if (strcmp("time", name) == 0) {
-/*
+  if (strcmp("height", name) == 0) {
+    if (PyFloat_Check(val)) {
+      Composite_setHeight(self->composite, PyFloat_AsDouble(val));
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError,"height must be of type float");
+    }
+  } else if (strcmp("product", name) == 0) {
+    if (PyInt_Check(val)) {
+      Composite_setProduct(self->composite, PyInt_AsLong(val));
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError, "product must be a valid product type")
+    }
+  } else if (strcmp("quantity", name) == 0) {
     if (PyString_Check(val)) {
-      if (!Cartesian_setTime(self->composite, PyString_AsString(val))) {
+      if (!Composite_setQuantity(self->composite, PyString_AsString(val))) {
+        raiseException_gotoTag(done, PyExc_ValueError, "quantity could not be set");
+      }
+    } else if (val == Py_None) {
+      Composite_setQuantity(self->composite, NULL);
+    } else {
+      raiseException_gotoTag(done, PyExc_ValueError,"quantity must be of type string");
+    }
+  } else if (strcmp("time", name) == 0) {
+    if (PyString_Check(val)) {
+      if (!Composite_setTime(self->composite, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "time must be in the format HHmmss");
       }
     } else if (val == Py_None) {
-      Cartesian_setTime(self->composite, NULL);
+      Composite_setTime(self->composite, NULL);
     } else {
       raiseException_gotoTag(done, PyExc_ValueError,"time must be of type string");
     }
-*/
+  } else if (strcmp("date", name) == 0) {
+    if (PyString_Check(val)) {
+      if (!Composite_setDate(self->composite, PyString_AsString(val))) {
+        raiseException_gotoTag(done, PyExc_ValueError, "date must be in the format YYYYMMSS");
+      }
+    } else if (val == Py_None) {
+      Composite_setDate(self->composite, NULL);
+    } else {
+      raiseException_gotoTag(done, PyExc_ValueError,"date must be of type string");
+    }
   } else {
     raiseException_gotoTag(done, PyExc_AttributeError, name);
   }

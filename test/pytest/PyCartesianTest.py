@@ -118,7 +118,22 @@ class PyCartesianTest(unittest.TestCase):
     self.assertEquals("ABC:10, ABD:1", obj.source)
     obj.source = None
     self.assertEquals(None, obj.source)
-    
+  
+  def test_objectType(self):
+    obj = _cartesian.new()
+    obj.objectType = _rave.Rave_ObjectType_COMP
+    self.assertEquals(_rave.Rave_ObjectType_COMP, obj.objectType)
+    obj.objectType = _rave.Rave_ObjectType_IMAGE
+    self.assertEquals(_rave.Rave_ObjectType_IMAGE, obj.objectType)
+  
+  def test_objectType_invalid(self):
+    obj = _cartesian.new()
+    try:
+      obj.objectType = _rave.Rave_ObjectType_CVOL
+      fail("Expected ValueError")
+    except ValueError, e:
+      pass
+  
   def test_xsize(self):
     obj = _cartesian.new()
     self.assertEquals(0, obj.xsize)

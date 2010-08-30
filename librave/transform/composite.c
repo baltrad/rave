@@ -27,6 +27,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "raveobject_list.h"
 #include "rave_debug.h"
 #include "rave_alloc.h"
+#include "rave_datetime.h"
 #include <string.h>
 
 /**
@@ -34,7 +35,10 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  */
 struct _Composite_t {
   RAVE_OBJECT_HEAD /** Always on top */
-
+  Rave_ProductType ptype; /**< the product type, default PCAPPI */
+  double height; /**< the height when generating pcapppi, cappi, default 1000 */
+  char* paramname; /**< the parameter name */
+  RaveDateTime_t* datetime;  /**< the date and time */
   RaveObjectList_t* list;
 };
 
@@ -46,12 +50,20 @@ struct _Composite_t {
 static int Composite_constructor(RaveCoreObject* obj)
 {
   Composite_t* this = (Composite_t*)obj;
+  this->ptype = Rave_ProductType_PCAPPI;
+  this->height = 1000.0;
+  this->paramname = NULL;
   this->list = RAVE_OBJECT_NEW(&RaveObjectList_TYPE);
-  if (this->list == NULL) {
-    return 0;
+  this->datetime = RAVE_OBJECT_NEW(&RaveDateTime_TYPE);
+  if (this->list == NULL || this->datetime == NULL || !Composite_setQuantity(this, "DBZH")) {
+    goto error;
   }
-
   return 1;
+error:
+  RAVE_FREE(this->paramname);
+  RAVE_OBJECT_RELEASE(this->list);
+  RAVE_OBJECT_RELEASE(this->datetime);
+  return 0;
 }
 
 /**
@@ -63,13 +75,22 @@ static int Composite_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj
 {
   Composite_t* this = (Composite_t*)obj;
   Composite_t* src = (Composite_t*)srcobj;
-  this->list = RAVE_OBJECT_COPY(src->list);
-  if (this->list == NULL) {
-    return 0;
+  this->ptype = src->ptype;
+  this->height = src->height;
+  this->paramname = NULL;
+  this->list = RAVE_OBJECT_CLONE(src->list);
+  this->datetime = RAVE_OBJECT_CLONE(src->datetime);
+  if (this->list == NULL || this->datetime == NULL || !Composite_setQuantity(this, Composite_getQuantity(src))) {
+    goto error;
   }
-  return 1;
-}
 
+  return 1;
+error:
+  RAVE_FREE(this->paramname);
+  RAVE_OBJECT_RELEASE(this->list);
+  RAVE_OBJECT_RELEASE(this->datetime);
+  return 0;
+}
 
 /**
  * Destructor
@@ -79,6 +100,7 @@ static void Composite_destructor(RaveCoreObject* obj)
 {
   Composite_t* this = (Composite_t*)obj;
   RAVE_OBJECT_RELEASE(this->list);
+  RAVE_OBJECT_RELEASE(this->datetime);
 }
 /*@} End of Private functions */
 
@@ -95,19 +117,126 @@ int Composite_add(Composite_t* composite, RaveCoreObject* object)
   return RaveObjectList_add(composite->list, object);
 }
 
-Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, double height)
+void Composite_setProduct(Composite_t* composite, Rave_ProductType type)
+{
+  RAVE_ASSERT((composite != NULL), "composite == NULL");
+  if (type == Rave_ProductType_PCAPPI) {
+    composite->ptype = type;
+  } else {
+    RAVE_ERROR0("Only supported algorithm right now is PCAPPI");
+  }
+}
+
+Rave_ProductType Composite_getProduct(Composite_t* composite)
+{
+  RAVE_ASSERT((composite != NULL), "composite == NULL");
+  return composite->ptype;
+}
+
+void Composite_setHeight(Composite_t* composite, double height)
+{
+  RAVE_ASSERT((composite != NULL), "composite == NULL");
+  composite->height = height;
+}
+
+double Composite_getHeight(Composite_t* composite)
+{
+  RAVE_ASSERT((composite != NULL), "composite == NULL");
+  return composite->height;
+}
+
+int Composite_setQuantity(Composite_t* composite, const char* quantity)
+{
+  int result = 0;
+  char* tmp = NULL;
+  RAVE_ASSERT((composite != NULL), "composite == NULL");
+  if (quantity == NULL) {
+    return 0;
+  }
+  tmp = RAVE_STRDUP(quantity);
+  if (tmp != NULL) {
+    RAVE_FREE(composite->paramname);
+    composite->paramname = tmp;
+    result = 1;
+  }
+  return result;
+}
+
+const char* Composite_getQuantity(Composite_t* composite)
+{
+  RAVE_ASSERT((composite != NULL), "composite == NULL");
+  return (const char*)composite->paramname;
+}
+
+int Composite_setTime(Composite_t* composite, const char* value)
+{
+  RAVE_ASSERT((composite != NULL), "composite == NULL");
+  return RaveDateTime_setTime(composite->datetime, value);
+}
+
+const char* Composite_getTime(Composite_t* composite)
+{
+  RAVE_ASSERT((composite != NULL), "composite == NULL");
+  return RaveDateTime_getTime(composite->datetime);
+}
+
+int Composite_setDate(Composite_t* composite, const char* value)
+{
+  RAVE_ASSERT((composite != NULL), "composite == NULL");
+  return RaveDateTime_setDate(composite->datetime, value);
+}
+
+const char* Composite_getDate(Composite_t* composite)
+{
+  RAVE_ASSERT((composite != NULL), "composite == NULL");
+  return RaveDateTime_getDate(composite->datetime);
+}
+
+Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area)
 {
   Cartesian_t* result = NULL;
   Projection_t* projection = NULL;
+  RaveAttribute_t* prodpar = NULL;
 
   int x = 0, y = 0, i = 0, xsize = 0, ysize = 0, nradars = 0;
   double v = 0.0L;
   RaveValueType vtype = RaveValueType_UNDEFINED;
 
+  RAVE_ASSERT((composite != NULL), "composite == NULL");
+  RAVE_ASSERT((area != NULL), "area == NULL");
+
+
   result = RAVE_OBJECT_NEW(&Cartesian_TYPE);
   if (!Cartesian_init(result, area, RaveDataType_UCHAR)) {
     goto fail;
   }
+  prodpar = RaveAttributeHelp_createDouble("what/prodpar", composite->height);
+  if (prodpar == NULL) {
+    goto fail;
+  }
+
+  Cartesian_setObjectType(result, Rave_ObjectType_COMP);
+  Cartesian_setProduct(result, composite->ptype);
+  if (!Cartesian_addAttribute(result, prodpar)) {
+    goto fail;
+  }
+  if (!Cartesian_setQuantity(result, Composite_getQuantity(composite))) {
+    goto fail;
+  }
+  if (Composite_getTime(composite) != NULL) {
+    if (!Cartesian_setTime(result, Composite_getTime(composite))) {
+      goto fail;
+    }
+  }
+  if (Composite_getDate(composite) != NULL) {
+    if (!Cartesian_setDate(result, Composite_getDate(composite))) {
+      goto fail;
+    }
+  }
+  if (!Cartesian_setSource(result, Area_getID(area))) {
+    goto fail;
+  }
+
   Cartesian_setNodata(result, 255.0);
   Cartesian_setUndetect(result, 0.0);
   xsize = Cartesian_getXSize(result);
@@ -152,7 +281,19 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, double heig
       }
 
       if (pvol != NULL) {
-        vtype = PolarVolume_getNearest(pvol, pvollon, pvollat, height, 0, &v);
+        if (composite->ptype == Rave_ProductType_PCAPPI) {
+          //vtype = PolarVolume_getNearest(pvol, pvollon, pvollat, composite->height, 0, &v);
+          vtype = PolarVolume_getNearestParameterValue(pvol,
+                                                       Composite_getQuantity(composite),
+                                                       pvollon,
+                                                       pvollat,
+                                                       Composite_getHeight(composite),
+                                                       0,
+                                                       &v);
+
+        } else {
+          vtype = RaveValueType_NODATA;
+        }
         if (vtype == RaveValueType_NODATA) {
           Cartesian_setValue(result, x, y, Cartesian_getNodata(result));
         } else if (vtype == RaveValueType_UNDETECT) {
@@ -166,9 +307,11 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, double heig
   }
 
   RAVE_OBJECT_RELEASE(projection);
+  RAVE_OBJECT_RELEASE(prodpar);
   return result;
 fail:
   RAVE_OBJECT_RELEASE(projection);
+  RAVE_OBJECT_RELEASE(prodpar);
   RAVE_OBJECT_RELEASE(result);
   return result;
 }
