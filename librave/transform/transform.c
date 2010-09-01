@@ -202,6 +202,64 @@ int Transform_pcappi(Transform_t* transform, PolarVolume_t* pvol, Cartesian_t* c
 {
   return Transform_cappis_internal(transform, pvol, cartesian, height, 0);
 }
+
+int Transform_ctoscan(Transform_t* transform, Cartesian_t* cartesian, PolarScan_t* scan)
+{
+  int result = 0;
+#ifdef KALLE
+  Projection_t* sourcepj = NULL;
+  Projection_t* targetpj = NULL;
+  double snodata = 0.0, sundetect = 0.0;
+  long nbins = 0, nrays = 0;
+  long bin = 0, ray = 0;
+
+  RAVE_ASSERT((transform != NULL), "transform == NULL");
+  RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+  if (!Cartesian_isTransformable(cartesian) ||
+      !PolarScan_isTransformable(scan)) {
+    RAVE_ERROR0("Cartesian product or scan is not possible to transform");
+    goto done;
+  }
+
+  sourcepj = PolarScan_getProjection(scan);
+  targetpj = Cartesian_getProjection(cartesian);
+  //snodata = PolarScan_getN
+  //sundetect = PolarScan_getUndetect(scan);
+  nbins = PolarScan_getNbins(scan);
+  nrays = PolarScan_getNrays(scan);
+
+  result = 1;
+done:
+  RAVE_OBJECT_RELEASE(sourcepj);
+  RAVE_OBJECT_RELEASE(targetpj);
+#endif
+  return result;
+}
+
+int Transform_ctop(Transform_t* transform, Cartesian_t* cartesian, PolarVolume_t* pvol)
+{
+  int result = 0;
+#ifdef KALLE
+  RAVE_ASSERT((transform != NULL), "transform == NULL");
+  RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
+
+  if (!Cartesian_isTransformable(cartesian) ||
+      !PolarVolume_isTransformable(pvol)) {
+    RAVE_ERROR0("Cartesian product or volume is not possible to transform");
+    goto done;
+  }
+
+  sourcepj = PolarVolume_getProjection(pvol);
+  targetpj = Cartesian_getProjection(cartesian);
+  pnodata = PolarVolume_getNodata(pvol);
+  pundetect = PolarVolume_getUndetect(pvol);
+  xsize = Cartesian_getXSize(cartesian);
+  ysize = Cartesian_getYSize(cartesian);
+#endif
+  return 0;
+}
 /*@} End of Interface functions */
 
 RaveCoreObjectType Transform_TYPE = {

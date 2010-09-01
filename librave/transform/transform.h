@@ -84,4 +84,14 @@ int Transform_cappi(Transform_t* transform, PolarVolume_t* pvol, Cartesian_t* ca
  */
 int Transform_pcappi(Transform_t* transform, PolarVolume_t* pvol, Cartesian_t* cartesian, double height);
 
+/**
+ * Mirrors a cartesian product into a polar volume.
+ * @param[in] transform - self
+ * @param[in] cartesian - the source
+ * @param[in] pvol - the target
+ * @return 0 on failure otherwise success
+ */
+int Transform_ctop(Transform_t* transform, Cartesian_t* cartesian, PolarVolume_t* pvol);
+
+
 #endif
