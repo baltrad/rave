@@ -185,6 +185,16 @@ RaveValueType PolarScanParam_getValue(PolarScanParam_t* scanparam, int bin, int 
 RaveValueType PolarScanParam_getConvertedValue(PolarScanParam_t* scanparam, int bin, int ray, double* v);
 
 /**
+ * Sets the value
+ * @param[in] scanparam - self
+ * @param[in] bin - the bin index
+ * @param[in] ray - the ray index
+ * @param[in] v - the value (converted)
+ * @return 1 on success or 0 on failure
+ */
+int PolarScanParam_setValue(PolarScanParam_t* scanparam, int bin, int ray, double v);
+
+/**
  * Adds a rave attribute to the parameter.
  * @param[in] scanparam - self
  * @param[in] attribute - the attribute

@@ -450,6 +450,66 @@ class PyPolarScanTest(unittest.TestCase):
       result = obj.getAzimuthIndex(azv[0]*math.pi/180.0)
       self.assertEquals(azv[1], result)
 
+  def test_setValue(self):
+    obj = _polarscan.new()
+    dbzhParam = _polarscanparam.new()
+    dbzhParam.nodata = 255.0
+    dbzhParam.undetect = 0.0
+    dbzhParam.quantity = "DBZH"
+    dbzhParam.setData(numpy.zeros((10,10), numpy.int8))
+    obj.addParameter(dbzhParam)
+    obj.setValue((5,5), 10.0)
+    
+    self.assertAlmostEquals(10.0, obj.getParameter("DBZH").getData()[5,5], 4)
+
+  def test_setValue_otherDefaultParameter(self):
+    obj = _polarscan.new()
+    dbzhParam = _polarscanparam.new()
+    dbzhParam.nodata = 255.0
+    dbzhParam.undetect = 0.0
+    dbzhParam.quantity = "DBZH"
+    dbzhParam.setData(numpy.zeros((10,10), numpy.int8))
+    mmhParam = _polarscanparam.new()
+    mmhParam.nodata = 255.0
+    mmhParam.undetect = 0.0
+    mmhParam.quantity = "MMH"
+    mmhParam.setData(numpy.zeros((10,10), numpy.int8))
+
+    obj.addParameter(dbzhParam)
+    obj.addParameter(mmhParam)
+    obj.defaultparameter = "MMH"
+    obj.setValue((5,5), 10.0)
+    obj.defaultparameter = "DBZH"
+    obj.setValue((6,6), 20.0)
+    
+    self.assertAlmostEquals(10.0, obj.getParameter("MMH").getData()[5,5], 4)
+    self.assertAlmostEquals(0.0, obj.getParameter("DBZH").getData()[5,5], 4)
+    self.assertAlmostEquals(20.0, obj.getParameter("DBZH").getData()[6,6], 4)
+    self.assertAlmostEquals(0.0, obj.getParameter("MMH").getData()[6,6], 4)
+
+  def test_setParameterValue(self):
+    obj = _polarscan.new()
+    dbzhParam = _polarscanparam.new()
+    dbzhParam.nodata = 255.0
+    dbzhParam.undetect = 0.0
+    dbzhParam.quantity = "DBZH"
+    dbzhParam.setData(numpy.zeros((10,10), numpy.int8))
+    mmhParam = _polarscanparam.new()
+    mmhParam.nodata = 255.0
+    mmhParam.undetect = 0.0
+    mmhParam.quantity = "MMH"
+    mmhParam.setData(numpy.zeros((10,10), numpy.int8))
+
+    obj.addParameter(dbzhParam)
+    obj.addParameter(mmhParam)
+    obj.setParameterValue("DBZH", (5,5), 10.0)
+    obj.setParameterValue("MMH", (6,6), 20.0)
+    
+    self.assertAlmostEquals(0.0, obj.getParameter("MMH").getData()[5,5], 4)
+    self.assertAlmostEquals(10.0, obj.getParameter("DBZH").getData()[5,5], 4)
+    self.assertAlmostEquals(20.0, obj.getParameter("MMH").getData()[6,6], 4)
+    self.assertAlmostEquals(0.0, obj.getParameter("DBZH").getData()[6,6], 4)
+
   def test_getValue(self):
     obj = _polarscan.new()
     dbzhParam = _polarscanparam.new()

@@ -266,6 +266,12 @@ RaveValueType PolarScanParam_getConvertedValue(PolarScanParam_t* scanparam, int 
   return result;
 }
 
+int PolarScanParam_setValue(PolarScanParam_t* scanparam, int bin, int ray, double v)
+{
+  RAVE_ASSERT((scanparam != NULL), "scanparam == NULL");
+  return RaveData2D_setValue(scanparam->data, bin, ray, v);
+}
+
 int PolarScanParam_addAttribute(PolarScanParam_t* scanparam,
   RaveAttribute_t* attribute)
 {

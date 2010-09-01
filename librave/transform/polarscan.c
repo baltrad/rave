@@ -555,6 +555,29 @@ int PolarScan_getAzimuthIndex(PolarScan_t* scan, double a)
   return result;
 }
 
+int PolarScan_setValue(PolarScan_t* scan, int bin, int ray, double v)
+{
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+  if (scan->param == NULL) {
+    return 0;
+  }
+  return PolarScanParam_setValue(scan->param, bin, ray, v);
+}
+
+int PolarScan_setParameterValue(PolarScan_t* scan, const char* quantity, int bin, int ray, double v)
+{
+  PolarScanParam_t* param = NULL;
+  int result = 0;
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+  RAVE_ASSERT((quantity != NULL), "quantity == NULL");
+  param = (PolarScanParam_t*)RaveObjectHashTable_get(scan->parameters, quantity);
+  if (param != NULL) {
+    result = PolarScanParam_setValue(param, bin, ray, v);
+  }
+  RAVE_OBJECT_RELEASE(param);
+  return result;
+}
+
 RaveValueType PolarScan_getValue(PolarScan_t* scan, int bin, int ray, double* v)
 {
   RaveValueType result = RaveValueType_NODATA;

@@ -262,6 +262,28 @@ static PyObject* _pypolarscanparam_getConvertedValue(PyPolarScanParam* self, PyO
 }
 
 /**
+ * sets the value at the specified position
+ * @param[in] self this instance.
+ * @param[in] args - tuple (bin, ray) and v
+ * @return 0 on failure, otherwise 1
+ */
+static PyObject* _pypolarscanparam_setValue(PyPolarScanParam* self, PyObject* args)
+{
+  long bin = 0, ray = 0;
+  double v = 0.0L;
+  int result = 0;
+  if (!PyArg_ParseTuple(args, "(ll)d", &bin, &ray, &v)) {
+    return NULL;
+  }
+
+  if(!PolarScanParam_setValue(self->scanparam, bin, ray, v)) {
+    raiseException_returnNULL(PyExc_ValueError, "Could not set value");
+  }
+
+  Py_RETURN_NONE;
+}
+
+/**
  * Adds an attribute to the parameter. Name of the attribute should be in format
  * ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis etc.
  * Currently, the only supported values are double, long, string.
@@ -490,6 +512,7 @@ static struct PyMethodDef _pypolarscanparam_methods[] =
   {"getData", (PyCFunction) _pypolarscanparam_getData, 1},
   {"getValue", (PyCFunction) _pypolarscanparam_getValue, 1},
   {"getConvertedValue", (PyCFunction) _pypolarscanparam_getConvertedValue, 1},
+  {"setValue", (PyCFunction) _pypolarscanparam_setValue, 1},
   {"addAttribute", (PyCFunction) _pypolarscanparam_addAttribute, 1},
   {"getAttribute", (PyCFunction) _pypolarscanparam_getAttribute, 1},
   {"getAttributeNames", (PyCFunction) _pypolarscanparam_getAttributeNames, 1},

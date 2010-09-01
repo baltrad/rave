@@ -366,6 +366,27 @@ int PolarScan_getRangeIndex(PolarScan_t* scan, double r);
 int PolarScan_getAzimuthIndex(PolarScan_t* scan, double a);
 
 /**
+ * Sets the value at the specified position
+ * @param[in] scan - self
+ * @param[in] bin - the bin index
+ * @param[in] ray - the ray index
+ * @param[in] v - the value
+ * @returns 1 on success otherwise 0
+ */
+int PolarScan_setValue(PolarScan_t* scan, int bin, int ray, double v);
+
+/**
+ * Sets the parameter value at the specified position
+ * @param[in] scan - self
+ * @param[in] quantity - the parameter (MAY NOT BE NULL)
+ * @param[in] bin - the bin index
+ * @param[in] ray - the ray index
+ * @param[in] v - the value
+ * @returns 1 on success otherwise 0
+ */
+int PolarScan_setParameterValue(PolarScan_t* scan, const char* quantity, int bin, int ray, double v);
+
+/**
  * Returns the value at the specified index.
  * @param[in] scan - the scan
  * @param[in] bin - the bin index

@@ -203,10 +203,66 @@ int Transform_pcappi(Transform_t* transform, PolarVolume_t* pvol, Cartesian_t* c
   return Transform_cappis_internal(transform, pvol, cartesian, height, 0);
 }
 
-int Transform_ctoscan(Transform_t* transform, Cartesian_t* cartesian, PolarScan_t* scan)
+PolarScan_t* Transform_ctoscan(Transform_t* transform, Cartesian_t* cartesian, RadarDefinition_t* def, double angle, const char* quantity)
 {
-  int result = 0;
-#ifdef KALLE
+  Projection_t* sourcepj = NULL;
+  Projection_t* targetpj = NULL;
+  PolarScan_t* result = NULL;
+  PolarScanParam_t* parameter = NULL;
+  double nodata = 0.0;
+  double undetect = 0.0;
+  long ray = 0, bin = 0;
+  long nrays = 0, nbins = 0;
+
+  RAVE_ASSERT((transform != NULL), "transform == NULL");
+  RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
+  RAVE_ASSERT((def != NULL), "def == NULL");
+  if (!Cartesian_isTransformable(cartesian)) {
+    RAVE_ERROR0("Cartesian product is not possible transform");
+    goto error;
+  }
+  result = RAVE_OBJECT_NEW(&PolarScan_TYPE);
+  if (result == NULL) {
+    goto error;
+  }
+  parameter = RAVE_OBJECT_NEW(&PolarScanParam_TYPE);
+  if (parameter == NULL) {
+    goto error;
+  }
+  if (!PolarScanParam_setQuantity(parameter, quantity)) {
+    goto error;
+  }
+
+  nodata = Cartesian_getNodata(cartesian);
+  undetect = Cartesian_getUndetect(cartesian);
+
+  PolarScan_setBeamWidth(result, RadarDefinition_getBeamwidth(def));
+  PolarScan_setElangle(result, angle);
+  PolarScan_setHeight(result, RadarDefinition_getHeight(def));
+  PolarScan_setLatitude(result, RadarDefinition_getLatitude(def));
+  PolarScan_setLongitude(result, RadarDefinition_getLongitude(def));
+  PolarScan_setRscale(result, RadarDefinition_getScale(def));
+  PolarScan_setRstart(result, 0.0);
+  PolarScan_setSource(result, RadarDefinition_getID(def));
+  PolarScanParam_setNodata(parameter, nodata);
+  PolarScanParam_setUndetect(parameter, undetect);
+
+  if (!PolarScanParam_createData(parameter,
+                                 RadarDefinition_getNbins(def),
+                                 RadarDefinition_getNrays(def),
+                                 Cartesian_getDataType(cartesian))) {
+    goto error;
+  }
+
+  nbins = RadarDefinition_getNbins(def);
+  nrays = RadarDefinition_getNrays(def);
+
+  for (ray = 0; ray < nrays; ray++) {
+    for (bin = 0; bin < nbins; bin++) {
+    }
+  }
+error:
+  #ifdef KALLE
   Projection_t* sourcepj = NULL;
   Projection_t* targetpj = NULL;
   double snodata = 0.0, sundetect = 0.0;

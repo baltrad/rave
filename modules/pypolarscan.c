@@ -316,6 +316,51 @@ static PyObject* _pypolarscan_getRangeIndex(PyPolarScan* self, PyObject* args)
 }
 
 /**
+ * Seturns the value at the specified ray and bin index.
+ * @param[in] self - this instance
+ * @param[in] args - bin index, ray index.
+ * @returns None on success otherwise NULL
+ */
+static PyObject* _pypolarscan_setValue(PyPolarScan* self, PyObject* args)
+{
+  double value = 0.0L;
+  RaveValueType type = RaveValueType_NODATA;
+  int ray = 0, bin = 0;
+  if (!PyArg_ParseTuple(args, "(ii)d", &bin, &ray, &value)) {
+    return NULL;
+  }
+
+  if (!PolarScan_setValue(self->scan, bin, ray, value)) {
+    raiseException_returnNULL(PyExc_ValueError, "Could not set value");
+  }
+
+  Py_RETURN_NONE;
+}
+
+/**
+ * Sets the parameter value for the provided bin and ray index.
+ * @param[in] self - this instance
+ * @param[in] args - quantity, bin index, ray index
+ * @returns None on success otherwise NULL
+ */
+static PyObject* _pypolarscan_setParameterValue(PyPolarScan* self, PyObject* args)
+{
+  double value = 0.0L;
+  RaveValueType type = RaveValueType_NODATA;
+  int ray = 0, bin = 0;
+  char* quantity = NULL;
+  if (!PyArg_ParseTuple(args, "s(ii)d", &quantity, &bin, &ray, &value)) {
+    return NULL;
+  }
+
+  if (!PolarScan_setParameterValue(self->scan, quantity, bin, ray, value)) {
+    raiseException_returnNULL(PyExc_ValueError, "Could not set parameter value");
+  }
+
+  Py_RETURN_NONE;
+}
+
+/**
  * Returns the value at the specified ray and bin index.
  * @param[in] self - this instance
  * @param[in] args - bin index, ray index.
@@ -766,6 +811,8 @@ static struct PyMethodDef _pypolarscan_methods[] =
   {"hasParameter", (PyCFunction) _pypolarscan_hasParameter, 1},
   {"getAzimuthIndex", (PyCFunction) _pypolarscan_getAzimuthIndex, 1},
   {"getRangeIndex", (PyCFunction) _pypolarscan_getRangeIndex, 1},
+  {"setValue", (PyCFunction) _pypolarscan_setValue, 1},
+  {"setParameterValue", (PyCFunction) _pypolarscan_setParameterValue, 1},
   {"getValue", (PyCFunction) _pypolarscan_getValue, 1},
   {"getParameterValue", (PyCFunction) _pypolarscan_getParameterValue, 1},
   {"getConvertedValue", (PyCFunction) _pypolarscan_getConvertedValue, 1},

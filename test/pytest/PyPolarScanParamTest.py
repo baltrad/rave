@@ -243,6 +243,23 @@ class PyPolarScanParamTest(unittest.TestCase):
       self.assertEquals(tval[1][0], result[0])
       self.assertAlmostEquals(tval[1][1], result[1], 4)
 
+  def test_setValue(self):
+    obj = _polarscanparam.new()
+    a=numpy.zeros((12,10), numpy.int8)
+    obj.setData(a)
+    obj.setValue((4,5), 5)
+    self.assertAlmostEquals(5.0, obj.getData()[5,4], 4)
+
+  def test_setValue_outOfBounds(self):
+    obj = _polarscanparam.new()
+    a=numpy.zeros((12,10), numpy.int8)
+    obj.setData(a)
+    try:
+      obj.setValue((15,5), 5)
+      self.fail("Expected ValueError")
+    except ValueError,e:
+      pass
+
   def test_setData_int8(self):
     obj = _polarscanparam.new()
     a=numpy.arange(120)
