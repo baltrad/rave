@@ -86,13 +86,24 @@ int Transform_cappi(Transform_t* transform, PolarVolume_t* pvol, Cartesian_t* ca
 int Transform_pcappi(Transform_t* transform, PolarVolume_t* pvol, Cartesian_t* cartesian, double height);
 
 /**
+ * Mirrors a cartesian product into a polar scan.
+ * @param[in] transform - self
+ * @param[in] cartesian - the source
+ * @param[in] def - the scan definition
+ * @param[in] angle - the elevation angle that should be used
+ * @param[in] quantity - what parameter that should be transformed
+ * @return the scan on success otherwise NULL
+ */
+PolarScan_t* Transform_ctoscan(Transform_t* transform, Cartesian_t* cartesian, RadarDefinition_t* def, double angle, const char* quantity);
+
+/**
  * Mirrors a cartesian product into a polar volume.
  * @param[in] transform - self
  * @param[in] cartesian - the source
- * @param[in] pvol - the target
- * @return 0 on failure otherwise success
+ * @param[in] def - the volume definition
+ * @param[in] quantity - what parameter that should be transformed
+ * @return the volume on success otherwise NULL
  */
-int Transform_ctop(Transform_t* transform, Cartesian_t* cartesian, PolarVolume_t* pvol);
-
+PolarVolume_t* Transform_ctop(Transform_t* transform, Cartesian_t* cartesian, RadarDefinition_t* def, const char* quantity);
 
 #endif

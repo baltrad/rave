@@ -361,6 +361,21 @@ double Cartesian_getLocationY(Cartesian_t* cartesian, long y)
   return cartesian->urY - cartesian->yscale * (double)y;
 }
 
+long Cartesian_getIndexX(Cartesian_t* cartesian, double x)
+{
+  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
+  RAVE_ASSERT((cartesian->xscale != 0.0), "xcale == 0.0, would result in Division by zero");
+  return (long)((x - cartesian->llX) / cartesian->xscale);
+}
+
+long Cartesian_getIndexY(Cartesian_t* cartesian, double y)
+{
+  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
+  RAVE_ASSERT((cartesian->yscale != 0.0), "ycale == 0.0, would result in Division by zero");
+  return (long)((cartesian->urY - y)/cartesian->yscale);
+
+}
+
 RaveDataType Cartesian_getDataType(Cartesian_t* cartesian)
 {
   RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
@@ -636,6 +651,40 @@ int Cartesian_addAttribute(Cartesian_t* cartesian, RaveAttribute_t* attribute)
         result = RaveObjectHashTable_put(cartesian->attrs, name, (RaveCoreObject*)attribute);
       }
     }
+
+    // Verify if it is possible to generate the area extent.
+    if (strcasecmp("where/LL_lon", name)==0 ||
+        strcasecmp("where/LL_lat", name)==0 ||
+        strcasecmp("where/UR_lon", name)==0 ||
+        strcasecmp("where/UR_lat", name)==0 ||
+        strcasecmp("where/projdef", name)==0) {
+      if (RaveObjectHashTable_exists(cartesian->attrs, "where/LL_lon") &&
+          RaveObjectHashTable_exists(cartesian->attrs, "where/LL_lat") &&
+          RaveObjectHashTable_exists(cartesian->attrs, "where/UR_lon") &&
+          RaveObjectHashTable_exists(cartesian->attrs, "where/UR_lat") &&
+          cartesian->projection != NULL) {
+        double LL_lon = 0.0, LL_lat = 0.0, UR_lon = 0.0, UR_lat = 0.0;
+        result = 0; /* reset result to 0 again since we need to be able to create an extent */
+
+        if (RaveUtilities_getRaveAttributeDoubleFromHash(cartesian->attrs, "where/LL_lon", &LL_lon) &&
+            RaveUtilities_getRaveAttributeDoubleFromHash(cartesian->attrs, "where/LL_lat", &LL_lat) &&
+            RaveUtilities_getRaveAttributeDoubleFromHash(cartesian->attrs, "where/UR_lon", &UR_lon) &&
+            RaveUtilities_getRaveAttributeDoubleFromHash(cartesian->attrs, "where/UR_lat", &UR_lat)) {
+          double llX = 0.0L, llY = 0.0L, urX = 0.0L, urY = 0.0;
+          if (!Projection_fwd(cartesian->projection, LL_lon * M_PI/180.0, LL_lat * M_PI/180.0, &llX, &llY)) {
+            RAVE_ERROR0("Could not generate XY pair for LL");
+            goto done;
+          }
+
+          if (!Projection_fwd(cartesian->projection, UR_lon * M_PI/180.0, UR_lat * M_PI/180.0, &urX, &urY)) {
+            RAVE_ERROR0("Could not generate XY pair for UR");
+            goto done;
+          }
+          result = 1;
+          Cartesian_setAreaExtent(cartesian, llX, llY, urX, urY);
+        }
+      }
+    }
   }
 
 done:
@@ -789,10 +838,12 @@ static int CartesianInternal_isValidImage(Cartesian_t* cartesian)
     RAVE_INFO0("product type must be defined");
     goto done;
   }
+
   if (Cartesian_getQuantity(cartesian) == NULL) {
     RAVE_INFO0("Quantity must be defined");
     goto done;
   }
+
   if (Cartesian_getData(cartesian) == NULL) {
     RAVE_INFO0("Data must be set");
     goto done;

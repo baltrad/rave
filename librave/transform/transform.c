@@ -208,6 +208,7 @@ PolarScan_t* Transform_ctoscan(Transform_t* transform, Cartesian_t* cartesian, R
   Projection_t* sourcepj = NULL;
   Projection_t* targetpj = NULL;
   PolarScan_t* result = NULL;
+  PolarScan_t* scan = NULL;
   PolarScanParam_t* parameter = NULL;
   double nodata = 0.0;
   double undetect = 0.0;
@@ -216,19 +217,22 @@ PolarScan_t* Transform_ctoscan(Transform_t* transform, Cartesian_t* cartesian, R
 
   RAVE_ASSERT((transform != NULL), "transform == NULL");
   RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
+  RAVE_ASSERT((quantity != NULL), "quantity == NULL");
   RAVE_ASSERT((def != NULL), "def == NULL");
+
   if (!Cartesian_isTransformable(cartesian)) {
     RAVE_ERROR0("Cartesian product is not possible transform");
     goto error;
   }
-  result = RAVE_OBJECT_NEW(&PolarScan_TYPE);
-  if (result == NULL) {
+  scan = RAVE_OBJECT_NEW(&PolarScan_TYPE);
+  if (scan == NULL) {
     goto error;
   }
   parameter = RAVE_OBJECT_NEW(&PolarScanParam_TYPE);
   if (parameter == NULL) {
     goto error;
   }
+
   if (!PolarScanParam_setQuantity(parameter, quantity)) {
     goto error;
   }
@@ -236,16 +240,19 @@ PolarScan_t* Transform_ctoscan(Transform_t* transform, Cartesian_t* cartesian, R
   nodata = Cartesian_getNodata(cartesian);
   undetect = Cartesian_getUndetect(cartesian);
 
-  PolarScan_setBeamWidth(result, RadarDefinition_getBeamwidth(def));
-  PolarScan_setElangle(result, angle);
-  PolarScan_setHeight(result, RadarDefinition_getHeight(def));
-  PolarScan_setLatitude(result, RadarDefinition_getLatitude(def));
-  PolarScan_setLongitude(result, RadarDefinition_getLongitude(def));
-  PolarScan_setRscale(result, RadarDefinition_getScale(def));
-  PolarScan_setRstart(result, 0.0);
-  PolarScan_setSource(result, RadarDefinition_getID(def));
+  PolarScan_setBeamWidth(scan, RadarDefinition_getBeamwidth(def));
+  PolarScan_setElangle(scan, angle);
+  PolarScan_setHeight(scan, RadarDefinition_getHeight(def));
+  PolarScan_setLatitude(scan, RadarDefinition_getLatitude(def));
+  PolarScan_setLongitude(scan, RadarDefinition_getLongitude(def));
+  PolarScan_setRscale(scan, RadarDefinition_getScale(def));
+  PolarScan_setRstart(scan, 0.0);
+  PolarScan_setSource(scan, RadarDefinition_getID(def));
   PolarScanParam_setNodata(parameter, nodata);
   PolarScanParam_setUndetect(parameter, undetect);
+
+  sourcepj = PolarScan_getProjection(scan);
+  targetpj = Cartesian_getProjection(cartesian);
 
   if (!PolarScanParam_createData(parameter,
                                  RadarDefinition_getNbins(def),
@@ -254,67 +261,96 @@ PolarScan_t* Transform_ctoscan(Transform_t* transform, Cartesian_t* cartesian, R
     goto error;
   }
 
+  if (!PolarScan_addParameter(scan, parameter) ||
+      !PolarScan_setDefaultParameter(scan, quantity)) {
+    goto error;
+  }
+
   nbins = RadarDefinition_getNbins(def);
   nrays = RadarDefinition_getNrays(def);
 
   for (ray = 0; ray < nrays; ray++) {
     for (bin = 0; bin < nbins; bin++) {
+      double lon = 0.0, lat = 0.0;
+      RaveValueType type = RaveValueType_NODATA;
+      double v = 0.0L;
+      if (PolarScan_getLonLatFromIndex(scan, bin, ray, &lon, &lat)) {
+        double x = 0.0, y = 0.0;
+        long xi = 0, yi = 0;
+        if (!Projection_transformx(sourcepj, targetpj, lon, lat, 0.0, &x, &y, NULL)) {
+          goto error;
+        }
+        xi = Cartesian_getIndexX(cartesian, x);
+        yi = Cartesian_getIndexY(cartesian, y);
+        type = Cartesian_getValue(cartesian, xi, yi, &v);
+        PolarScan_setValue(scan, bin, ray, v);
+      }
     }
   }
+
+  result = RAVE_OBJECT_COPY(scan);
 error:
-  #ifdef KALLE
-  Projection_t* sourcepj = NULL;
-  Projection_t* targetpj = NULL;
-  double snodata = 0.0, sundetect = 0.0;
-  long nbins = 0, nrays = 0;
-  long bin = 0, ray = 0;
-
-  RAVE_ASSERT((transform != NULL), "transform == NULL");
-  RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
-  RAVE_ASSERT((scan != NULL), "scan == NULL");
-  if (!Cartesian_isTransformable(cartesian) ||
-      !PolarScan_isTransformable(scan)) {
-    RAVE_ERROR0("Cartesian product or scan is not possible to transform");
-    goto done;
-  }
-
-  sourcepj = PolarScan_getProjection(scan);
-  targetpj = Cartesian_getProjection(cartesian);
-  //snodata = PolarScan_getN
-  //sundetect = PolarScan_getUndetect(scan);
-  nbins = PolarScan_getNbins(scan);
-  nrays = PolarScan_getNrays(scan);
-
-  result = 1;
-done:
   RAVE_OBJECT_RELEASE(sourcepj);
   RAVE_OBJECT_RELEASE(targetpj);
-#endif
+  RAVE_OBJECT_RELEASE(parameter);
+  RAVE_OBJECT_RELEASE(scan);
   return result;
 }
 
-int Transform_ctop(Transform_t* transform, Cartesian_t* cartesian, PolarVolume_t* pvol)
+PolarVolume_t* Transform_ctop(Transform_t* transform, Cartesian_t* cartesian, RadarDefinition_t* def, const char* quantity)
 {
-  int result = 0;
-#ifdef KALLE
+  unsigned int nangles = 0;
+  unsigned int i = 0;
+  double* angles = NULL;
+  PolarVolume_t* pvol = NULL;
+  PolarVolume_t* result = NULL;
+  PolarScan_t* scan = NULL;
+
   RAVE_ASSERT((transform != NULL), "transform == NULL");
   RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
-  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
+  RAVE_ASSERT((def != NULL), "def == NULL");
+  RAVE_ASSERT((quantity != NULL), "quantity == NULL");
 
-  if (!Cartesian_isTransformable(cartesian) ||
-      !PolarVolume_isTransformable(pvol)) {
-    RAVE_ERROR0("Cartesian product or volume is not possible to transform");
-    goto done;
+  if (!Cartesian_isTransformable(cartesian)) {
+    RAVE_ERROR0("Cartesian product is not possible to transform");
+    goto error;
   }
 
-  sourcepj = PolarVolume_getProjection(pvol);
-  targetpj = Cartesian_getProjection(cartesian);
-  pnodata = PolarVolume_getNodata(pvol);
-  pundetect = PolarVolume_getUndetect(pvol);
-  xsize = Cartesian_getXSize(cartesian);
-  ysize = Cartesian_getYSize(cartesian);
-#endif
-  return 0;
+  pvol = RAVE_OBJECT_NEW(&PolarVolume_TYPE);
+  if (pvol == NULL) {
+    goto error;
+  }
+  PolarVolume_setHeight(pvol, RadarDefinition_getHeight(def));
+  PolarVolume_setLatitude(pvol, RadarDefinition_getLatitude(def));
+  PolarVolume_setLongitude(pvol, RadarDefinition_getLongitude(def));
+  if (!PolarVolume_setSource(pvol, RadarDefinition_getID(def)) ||
+      !PolarVolume_setDate(pvol, Cartesian_getDate(cartesian)) ||
+      !PolarVolume_setTime(pvol, Cartesian_getTime(cartesian))) {
+    goto error;
+  }
+
+  if (!RadarDefinition_getElangles(def, &nangles, &angles)) {
+    goto error;
+  }
+
+  for (i = 0; i < nangles; i++) {
+    scan = Transform_ctoscan(transform, cartesian, def, angles[i], quantity);
+    if (scan != NULL) {
+      if (!PolarVolume_addScan(pvol, scan)) {
+        goto error;
+      }
+    } else {
+      goto error;
+    }
+    RAVE_OBJECT_RELEASE(scan);
+  }
+
+  result = RAVE_OBJECT_COPY(pvol);
+error:
+  RAVE_OBJECT_RELEASE(pvol);
+  RAVE_OBJECT_RELEASE(scan);
+  RAVE_FREE(angles);
+  return result;
 }
 /*@} End of Interface functions */
 

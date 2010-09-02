@@ -452,6 +452,7 @@ int PolarScan_addParameter(PolarScan_t* scan, PolarScanParam_t* parameter)
     }
   }
   result = RaveObjectHashTable_put(scan->parameters, quantity, (RaveCoreObject*)parameter);
+
   if (result == 1 && strcmp(quantity, scan->paramname)==0) {
     RAVE_OBJECT_RELEASE(scan->param);
     scan->param = RAVE_OBJECT_COPY(parameter);
@@ -660,6 +661,16 @@ done:
   return result;
 }
 
+int PolarScan_getAzimuthAndRangeFromIndex(PolarScan_t* scan, int bin, int ray, double* a, double* r)
+{
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+  RAVE_ASSERT((a != NULL), "a == NULL");
+  RAVE_ASSERT((r != NULL), "r == NULL");
+  *r = bin * scan->rscale;
+  *a = (2*M_PI/scan->nrays)*ray;
+  return 1;
+}
+
 RaveValueType PolarScan_getValueAtAzimuthAndRange(PolarScan_t* scan, double a, double r, double* v)
 {
   RaveValueType result = RaveValueType_NODATA;
@@ -734,6 +745,22 @@ int PolarScan_getNearestIndex(PolarScan_t* scan, double lon, double lat, int* bi
 
   result = PolarScan_getIndexFromAzimuthAndRange(scan, a, r, ray, bin);
 
+  return result;
+}
+
+int PolarScan_getLonLatFromIndex(PolarScan_t* scan, int bin, int ray, double* lon, double* lat)
+{
+  int result = 0;
+  double d = 0.0, h = 0.0, a = 0.0, r = 0.0;
+
+  if (!PolarScan_getAzimuthAndRangeFromIndex(scan, bin, ray, &a, &r)) {
+    goto done;
+  }
+  PolarNavigator_reToDh(scan->navigator, r, scan->elangle, &d, &h);
+  PolarNavigator_daToLl(scan->navigator, d, a, lat, lon);
+
+  result = 1;
+done:
   return result;
 }
 

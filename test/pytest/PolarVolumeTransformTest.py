@@ -45,7 +45,7 @@ class PolarVolumeTransformTest(unittest.TestCase):
     pass
 
   def testCAPPI(self):
-    volume = _raveio.open(self.VOLUMENAME).object #rave_loader().load_file(self.VOLUMENAME, "DBZH") 
+    volume = _raveio.open(self.VOLUMENAME).object 
 
     transformer = _rave.transform()
     transformer.method = _rave.NEAREST
@@ -56,7 +56,13 @@ class PolarVolumeTransformTest(unittest.TestCase):
     cartesian.undetect = 0.0
     cartesian.xscale = a.xscale
     cartesian.yscale = a.yscale
+    cartesian.date = "20100101"
+    cartesian.time = "090000"
+    cartesian.source = volume.source
+    cartesian.product = _rave.Rave_ProductType_CAPPI
+    cartesian.objectType = _rave.Rave_ObjectType_IMAGE
     cartesian.areaextent = a.extent
+    cartesian.quantity = "DBZH"
     data = numpy.zeros((a.ysize, a.xsize), numpy.uint8)
     cartesian.setData(data)
     projection = _rave.projection(a.Id, a.name, pcs.pcs(a.pcs).tostring())
@@ -64,21 +70,12 @@ class PolarVolumeTransformTest(unittest.TestCase):
     
     transformer.cappi(volume, cartesian, 1000.0)
 
-    newdata = cartesian.getData()
-    nodelist = _pyhl.nodelist()
-    node = _pyhl.node(_pyhl.DATASET_ID, "/data")
-    node.setArrayValue(-1, newdata.shape, newdata, "uchar", -1)
-    nodelist.addNode(node)
-    node = _pyhl.node(_pyhl.ATTRIBUTE_ID, "/data/CLASS")
-    node.setScalarValue(-1, "IMAGE", "string", -1)
-    nodelist.addNode(node)
-    node = _pyhl.node(_pyhl.ATTRIBUTE_ID, "/data/IMAGE_VERSION")
-    node.setScalarValue(-1, "1.2", "string", -1)
-    nodelist.addNode(node)
-    nodelist.write("cartesian_cappi.h5")    
+    rio = _raveio.new()
+    rio.object = cartesian
+    rio.save("cartesian_cappi.h5")
 
   def testPPI(self):
-    volume = _raveio.open(self.VOLUMENAME).object #rave_loader().load_file(self.VOLUMENAME, "DBZH") 
+    volume = _raveio.open(self.VOLUMENAME).object 
 
     transformer = _rave.transform()
     transformer.method = _rave.NEAREST
@@ -90,6 +87,13 @@ class PolarVolumeTransformTest(unittest.TestCase):
     cartesian.xscale = a.xscale
     cartesian.yscale = a.yscale
     cartesian.areaextent = a.extent
+    cartesian.date = "20100101"
+    cartesian.time = "090000"
+    cartesian.source = volume.source
+    cartesian.product = _rave.Rave_ProductType_CAPPI
+    cartesian.objectType = _rave.Rave_ObjectType_IMAGE
+    cartesian.areaextent = a.extent
+    cartesian.quantity = "DBZH"
     data = numpy.zeros((a.ysize, a.xsize), numpy.uint8)
     cartesian.setData(data)
     projection = _rave.projection(a.Id, a.name, pcs.pcs(a.pcs).tostring())
@@ -98,21 +102,12 @@ class PolarVolumeTransformTest(unittest.TestCase):
     scan = volume.getScan(0)
     transformer.ppi(scan, cartesian)
 
-    newdata = cartesian.getData()
-    nodelist = _pyhl.nodelist()
-    node = _pyhl.node(_pyhl.DATASET_ID, "/data")
-    node.setArrayValue(-1, newdata.shape, newdata, "uchar", -1)
-    nodelist.addNode(node)
-    node = _pyhl.node(_pyhl.ATTRIBUTE_ID, "/data/CLASS")
-    node.setScalarValue(-1, "IMAGE", "string", -1)
-    nodelist.addNode(node)
-    node = _pyhl.node(_pyhl.ATTRIBUTE_ID, "/data/IMAGE_VERSION")
-    node.setScalarValue(-1, "1.2", "string", -1)
-    nodelist.addNode(node)
-    nodelist.write("cartesian_ppi.h5")    
+    rio = _raveio.new()
+    rio.object = cartesian
+    rio.save("cartesian_ppi.h5")
 
   def testPCAPPI(self):
-    volume = _raveio.open(self.VOLUMENAME).object #rave_loader().load_file(self.VOLUMENAME, "DBZH") 
+    volume = _raveio.open(self.VOLUMENAME).object 
 
     transformer = _rave.transform()
     transformer.method = _rave.NEAREST
@@ -124,6 +119,14 @@ class PolarVolumeTransformTest(unittest.TestCase):
     cartesian.xscale = a.xscale
     cartesian.yscale = a.yscale
     cartesian.areaextent = a.extent
+    cartesian.date = "20100101"
+    cartesian.time = "090000"
+    cartesian.source = volume.source
+    cartesian.product = _rave.Rave_ProductType_CAPPI
+    cartesian.objectType = _rave.Rave_ObjectType_IMAGE
+    cartesian.areaextent = a.extent
+    cartesian.quantity = "DBZH"
+
     data = numpy.zeros((a.ysize, a.xsize), numpy.uint8)
     cartesian.setData(data)
     projection = _rave.projection(a.Id, a.name, pcs.pcs(a.pcs).tostring())
@@ -131,18 +134,9 @@ class PolarVolumeTransformTest(unittest.TestCase):
     
     transformer.pcappi(volume, cartesian, 1000.0)
 
-    newdata = cartesian.getData()
-    nodelist = _pyhl.nodelist()
-    node = _pyhl.node(_pyhl.DATASET_ID, "/data")
-    node.setArrayValue(-1, newdata.shape, newdata, "uchar", -1)
-    nodelist.addNode(node)
-    node = _pyhl.node(_pyhl.ATTRIBUTE_ID, "/data/CLASS")
-    node.setScalarValue(-1, "IMAGE", "string", -1)
-    nodelist.addNode(node)
-    node = _pyhl.node(_pyhl.ATTRIBUTE_ID, "/data/IMAGE_VERSION")
-    node.setScalarValue(-1, "1.2", "string", -1)
-    nodelist.addNode(node)
-    nodelist.write("cartesian_pcappi.h5")
+    rio = _raveio.new()
+    rio.object = cartesian
+    rio.save("cartesian_pcappi.h5")
             
 if __name__ == "__main__":
     unittest.main()

@@ -27,10 +27,16 @@ import unittest
 import os
 import _rave
 import _transform
+import _radardef
+import _raveio
 import string
 import numpy
 
 class PyTransformTest(unittest.TestCase):
+  FIXTURE_CARTESIAN_PCAPPI = "fixture_cartesian_pcappi.h5"
+  FIXTURE_CARTESIAN_PPI = "fixture_cartesian_ppi.h5"
+  FIXTURE_VOLUME = "fixture_ODIM_H5_pvol_ang_20090501T1200Z.h5"
+  
   def setUp(self):
     pass
 
@@ -73,3 +79,60 @@ class PyTransformTest(unittest.TestCase):
       except ValueError, e:
         pass
       self.assertEqual(_rave.NEAREST, obj.method)
+
+  def test_ctoscan(self):
+    obj = _transform.new()
+    cartesian = _raveio.open(self.FIXTURE_CARTESIAN_PPI).object
+    volume = _raveio.open(self.FIXTURE_VOLUME).object
+    radardef = _radardef.new()
+    radardef.id = volume.source
+    radardef.description = "ctop test"
+    radardef.longitude = volume.longitude
+    radardef.latitude = volume.latitude
+    radardef.height = volume.height
+    
+    elangles = []
+    nangles = volume.getNumberOfScans()
+    for i in range(nangles):
+      scan = volume.getScan(i)
+      elangles.append(scan.elangle)
+    radardef.elangles = elangles
+    scan = volume.getScan(0)
+    radardef.nrays = scan.nrays
+    radardef.nbins = scan.nbins
+    radardef.scale = scan.rscale
+    radardef.beamwidth = scan.beamwidth
+    elangle = scan.elangle
+    result = obj.ctoscan(cartesian, radardef, elangle, "DBZH")
+    rio = _raveio.new()
+    rio.object = result
+    rio.save("ctop_polarscan.h5")
+
+  def test_ctop(self):
+    obj = _transform.new()
+    cartesian = _raveio.open(self.FIXTURE_CARTESIAN_PCAPPI).object
+    volume = _raveio.open(self.FIXTURE_VOLUME).object
+    radardef = _radardef.new()
+    radardef.id = volume.source
+    radardef.description = "ctop test"
+    radardef.longitude = volume.longitude
+    radardef.latitude = volume.latitude
+    radardef.height = volume.height
+    
+    elangles = []
+    nangles = volume.getNumberOfScans()
+    for i in range(nangles):
+      scan = volume.getScan(i)
+      elangles.append(scan.elangle)
+    radardef.elangles = elangles
+    scan = volume.getScan(0)
+    radardef.nrays = scan.nrays
+    radardef.nbins = scan.nbins
+    radardef.scale = scan.rscale
+    radardef.beamwidth = scan.beamwidth
+    
+    result = obj.ctop(cartesian, radardef, "DBZH")
+    rio = _raveio.new()
+    rio.object = result
+    rio.save("ctop_polarvolume.h5")
+    

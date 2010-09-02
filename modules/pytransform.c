@@ -34,7 +34,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "pypolarscan.h"
 #include "pypolarvolume.h"
 #include "pycartesian.h"
-
+#include "pyradardefinition.h"
 #include "pyrave_debug.h"
 #include "rave_alloc.h"
 
@@ -251,6 +251,75 @@ static PyObject* _pytransform_pcappi(PyTransform* self, PyObject* args)
   Py_RETURN_NONE;
 }
 
+static PyObject* _pytransform_ctoscan(PyTransform* self, PyObject* args)
+{
+  PyCartesian* cartesian = NULL;
+  PyObject* pycartesian = NULL;
+  PyRadarDefinition* radardef = NULL;
+  PyObject* pyradardef = NULL;
+  double elangle = 0.0;
+  char* quantity = NULL;
+  PolarScan_t* scan = NULL;
+  PyPolarScan* pyscan = NULL;
+
+  if(!PyArg_ParseTuple(args, "OOds", &pycartesian, &pyradardef, &elangle, &quantity)) {
+    return NULL;
+  }
+
+  if (!PyCartesian_Check(pycartesian)) {
+    raiseException_returnNULL(PyExc_TypeError, "First argument should be a cartesian product");
+  }
+  if (!PyRadarDefinition_Check(pyradardef)) {
+    raiseException_returnNULL(PyExc_TypeError, "Second argument should be a radar definition");
+  }
+
+  cartesian = (PyCartesian*)pycartesian;
+  radardef = (PyRadarDefinition*)pyradardef;
+
+  scan = Transform_ctoscan(self->transform, cartesian->cartesian, radardef->def, elangle, quantity);
+  if (scan == NULL) {
+    raiseException_returnNULL(PyExc_IOError, "Failed to transform cartesian into a scan");
+  }
+
+  pyscan = PyPolarScan_New(scan);
+  RAVE_OBJECT_RELEASE(scan);
+  return (PyObject*)pyscan;
+}
+
+static PyObject* _pytransform_ctop(PyTransform* self, PyObject* args)
+{
+  PyCartesian* cartesian = NULL;
+  PyObject* pycartesian = NULL;
+  PyRadarDefinition* radardef = NULL;
+  PyObject* pyradardef = NULL;
+  char* quantity = NULL;
+  PolarVolume_t* volume = NULL;
+  PyPolarVolume* pyvolume = NULL;
+
+  if(!PyArg_ParseTuple(args, "OOs", &pycartesian, &pyradardef, &quantity)) {
+    return NULL;
+  }
+
+  if (!PyCartesian_Check(pycartesian)) {
+    raiseException_returnNULL(PyExc_TypeError, "First argument should be a cartesian product");
+  }
+  if (!PyRadarDefinition_Check(pyradardef)) {
+    raiseException_returnNULL(PyExc_TypeError, "Second argument should be a radar definition");
+  }
+
+  cartesian = (PyCartesian*)pycartesian;
+  radardef = (PyRadarDefinition*)pyradardef;
+
+  volume = Transform_ctop(self->transform, cartesian->cartesian, radardef->def, quantity);
+  if (volume == NULL) {
+    raiseException_returnNULL(PyExc_IOError, "Failed to transform cartesian into a volume");
+  }
+
+  pyvolume = PyPolarVolume_New(volume);
+  RAVE_OBJECT_RELEASE(volume);
+  return (PyObject*)pyvolume;
+}
+
 /**
  * All methods a transformator can have
  */
@@ -260,6 +329,8 @@ static struct PyMethodDef _pytransform_methods[] =
   {"ppi", (PyCFunction) _pytransform_ppi, 1},
   {"cappi", (PyCFunction) _pytransform_cappi, 1},
   {"pcappi", (PyCFunction) _pytransform_pcappi, 1},
+  {"ctoscan", (PyCFunction) _pytransform_ctoscan, 1},
+  {"ctop", (PyCFunction) _pytransform_ctop, 1},
   {NULL, NULL } /* sentinel */
 };
 
@@ -368,6 +439,7 @@ init_transform(void)
   import_pypolarvolume();
   import_pypolarscan();
   import_pycartesian();
+  import_pyradardefinition();
   PYRAVE_DEBUG_INITIALIZE;
 }
 /*@} End of Module setup */

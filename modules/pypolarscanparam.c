@@ -271,7 +271,6 @@ static PyObject* _pypolarscanparam_setValue(PyPolarScanParam* self, PyObject* ar
 {
   long bin = 0, ray = 0;
   double v = 0.0L;
-  int result = 0;
   if (!PyArg_ParseTuple(args, "(ll)d", &bin, &ray, &v)) {
     return NULL;
   }

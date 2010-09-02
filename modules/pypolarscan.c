@@ -324,7 +324,6 @@ static PyObject* _pypolarscan_getRangeIndex(PyPolarScan* self, PyObject* args)
 static PyObject* _pypolarscan_setValue(PyPolarScan* self, PyObject* args)
 {
   double value = 0.0L;
-  RaveValueType type = RaveValueType_NODATA;
   int ray = 0, bin = 0;
   if (!PyArg_ParseTuple(args, "(ii)d", &bin, &ray, &value)) {
     return NULL;
@@ -346,7 +345,6 @@ static PyObject* _pypolarscan_setValue(PyPolarScan* self, PyObject* args)
 static PyObject* _pypolarscan_setParameterValue(PyPolarScan* self, PyObject* args)
 {
   double value = 0.0L;
-  RaveValueType type = RaveValueType_NODATA;
   int ray = 0, bin = 0;
   char* quantity = NULL;
   if (!PyArg_ParseTuple(args, "s(ii)d", &quantity, &bin, &ray, &value)) {

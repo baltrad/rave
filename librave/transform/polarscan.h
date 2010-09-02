@@ -441,6 +441,17 @@ RaveValueType PolarScan_getConvertedParameterValue(PolarScan_t* scan, const char
 int PolarScan_getIndexFromAzimuthAndRange(PolarScan_t* scan, double a, double r, int* ray, int* bin);
 
 /**
+ * Calculates the azimuth and range from bin and ray index.
+ * @param[in] scan - self
+ * @param[in] bin - the bin index
+ * @param[in] ray - the ray index
+ * @param[out] a - azimuth
+ * @param[out] r - range
+ * @returns 1 on success otherwise 0
+ */
+int PolarScan_getAzimuthAndRangeFromIndex(PolarScan_t* scan, int bin, int ray, double* a, double* r);
+
+/**
  * Gets the value at the provided azimuth and range.
  * @param[in] scan - the scan
  * @param[in] a - the azimuth (in radians)
@@ -481,6 +492,19 @@ RaveValueType PolarScan_getNearest(PolarScan_t* scan, double lon, double lat, do
  * @returns 0 if either bin and/or ray is outside boundaries, otherwise 1
  */
 int PolarScan_getNearestIndex(PolarScan_t* scan, double lon, double lat, int* bin, int* ray);
+
+/**
+ * Calculates the lon / lat from the index with the adjusted elevation angle.
+ * Beamwidth will also be taken into account. Which means that the maximum position
+ * will be on the edges of the beam.
+ * @param[in] scan - self
+ * @þaram[in] bin - the bin index
+ * @param[in] ray - the ray index
+ * @param[out] lon - the longitude in radians
+ * @param[out] lat - the latitude in radians
+ * @returns 1 on success otherwise 0
+ */
+int PolarScan_getLonLatFromIndex(PolarScan_t* scan, int bin, int ray, double* lon, double* lat);
 
 /**
  * Verifies that all preconditions are met in order to perform

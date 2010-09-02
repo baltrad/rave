@@ -292,6 +292,44 @@ static PyObject* _pycartesian_getLocationY(PyCartesian* self, PyObject* args)
 }
 
 /**
+ * Returns the x index from the surface coordinate x location
+ * @param[in] self this instance.
+ * @param[in] args - x location
+ * @return the x index on success, otherwise NULL
+ */
+static PyObject* _pycartesian_getIndexX(PyCartesian* self, PyObject* args)
+{
+  long x = 0;
+  double xloc = 0.0;
+  if (!PyArg_ParseTuple(args, "d", &xloc)) {
+    return NULL;
+  }
+
+  x = Cartesian_getIndexX(self->cartesian, xloc);
+
+  return PyLong_FromLong(x);
+}
+
+/**
+ * Returns the y index from the surface coordinate y location
+ * @param[in] self this instance.
+ * @param[in] args - y location
+ * @return the y index on success, otherwise NULL
+ */
+static PyObject* _pycartesian_getIndexY(PyCartesian* self, PyObject* args)
+{
+  long y = 0;
+  double yloc = 0.0;
+  if (!PyArg_ParseTuple(args, "d", &yloc)) {
+    return NULL;
+  }
+
+  y = Cartesian_getIndexY(self->cartesian, yloc);
+
+  return PyLong_FromLong(y);
+}
+
+/**
  * sets the value at the specified position
  * @param[in] self this instance.
  * @param[in] args - tuple (x, y) and v
@@ -512,6 +550,8 @@ static struct PyMethodDef _pycartesian_methods[] =
   {"getData", (PyCFunction) _pycartesian_getData, 1},
   {"getLocationX", (PyCFunction) _pycartesian_getLocationX, 1},
   {"getLocationY", (PyCFunction) _pycartesian_getLocationY, 1},
+  {"getIndexX", (PyCFunction) _pycartesian_getIndexX, 1},
+  {"getIndexY", (PyCFunction) _pycartesian_getIndexY, 1},
   {"setValue", (PyCFunction) _pycartesian_setValue, 1},
   {"getValue", (PyCFunction) _pycartesian_getValue, 1},
   {"isTransformable", (PyCFunction) _pycartesian_isTransformable, 1},

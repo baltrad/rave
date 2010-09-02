@@ -201,6 +201,24 @@ double Cartesian_getLocationX(Cartesian_t* cartesian, long x);
 double Cartesian_getLocationY(Cartesian_t* cartesian, long y);
 
 /**
+ * Returns the x index
+ * Evaluated as: (x - lowerLeft.x)/xscale
+ * @param[in] cartesian - the cartesian product
+ * @param[in] x - the x position in the area definition
+ * @returns the x index
+ */
+long Cartesian_getIndexX(Cartesian_t* cartesian, double x);
+
+/**
+ * Returns the y index
+ * Evaluated as: (upperRight.y - y)/yscale
+ * @param[in] cartesian - the cartesian product
+ * @param[in] y - the y position in the area definition
+ * @returns the y index
+ */
+long Cartesian_getIndexY(Cartesian_t* cartesian, double y);
+
+/**
  * Sets the data type of the data that is worked with
  * @param[in] cartesian - the cartesian product
  * @param[in] type - the data type

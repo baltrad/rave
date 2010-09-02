@@ -365,6 +365,31 @@ class PyCartesianTest(unittest.TestCase):
       result = obj.getLocationY(y)
       self.assertAlmostEqual(expected, result, 4)
 
+  def test_getIndexX(self):
+    obj = _cartesian.new();
+    obj.areaextent = (100.0, 200.0, 300.0, 400.0)
+    obj.xscale = 10.0
+    
+    xpos = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    
+    for x in xpos:
+      value = 100.0 + x*10.0
+      result = obj.getIndexX(value)
+      self.assertEquals(x, result)
+
+  def test_getIndexY(self):
+    obj = _cartesian.new();
+    obj.areaextent = (100.0, 200.0, 300.0, 400.0)
+    obj.yscale = 10.0
+    
+    ypos = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    
+    for y in ypos:
+      value = 400.0 - y*10.0
+      result = obj.getIndexY(value)
+      self.assertEquals(y, result)
+
+
   def test_projection(self):
     obj = _cartesian.new()
     proj = _rave.projection("x", "y", "+proj=stere +ellps=bessel +lat_0=90 +lon_0=14 +lat_ts=60 +datum=WGS84")
