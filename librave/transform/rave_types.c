@@ -207,4 +207,5 @@ const char* RaveTypes_getStringFromObjectType(Rave_ObjectType type)
   }
   return NULL;
 }
+
 /*@} End of Interface functions */

@@ -37,6 +37,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "polarvolume.h"
 #include "cartesianvolume.h"
 #include "rave_field.h"
+#include "rave_hlhdf_utilities.h"
 
 /**
  * Defines the structure for the RaveIO in a volume.
@@ -56,44 +57,8 @@ static const char RaveIO_ODIM_Version_2_0_STR[] = "ODIM_H5/V2_0";
 
 static const char RaveIO_ODIM_H5rad_Version_2_0_STR[] = "H5rad 2.0";
 
-/**
- * Mapping between hlhdf format and rave data type
- */
-struct RaveToHlhdfTypeMap {
-  HL_FormatSpecifier hlhdfFormat; /**< the hlhdf format */
-  RaveDataType raveType;          /**< the rave data type */
-};
-
-/**
- * The mapping table
- */
-static const struct RaveToHlhdfTypeMap RAVE_TO_HLHDF_MAP[] = {
-  {HLHDF_UNDEFINED, RaveDataType_UNDEFINED},
-  {HLHDF_CHAR, RaveDataType_CHAR},
-  {HLHDF_SCHAR, RaveDataType_CHAR},
-  {HLHDF_UCHAR, RaveDataType_UCHAR},
-  {HLHDF_SHORT, RaveDataType_SHORT},
-  {HLHDF_USHORT, RaveDataType_SHORT},
-  {HLHDF_INT, RaveDataType_INT},
-  {HLHDF_UINT, RaveDataType_INT},
-  {HLHDF_LONG, RaveDataType_LONG},
-  {HLHDF_ULONG, RaveDataType_LONG},
-  {HLHDF_LLONG, RaveDataType_UNDEFINED},
-  {HLHDF_ULLONG, RaveDataType_UNDEFINED},
-  {HLHDF_FLOAT, RaveDataType_FLOAT},
-  {HLHDF_DOUBLE, RaveDataType_DOUBLE},
-  {HLHDF_LDOUBLE, RaveDataType_UNDEFINED},
-  {HLHDF_HSIZE, RaveDataType_UNDEFINED},
-  {HLHDF_HSSIZE, RaveDataType_UNDEFINED},
-  {HLHDF_HERR, RaveDataType_UNDEFINED},
-  {HLHDF_HBOOL, RaveDataType_UNDEFINED},
-  {HLHDF_STRING, RaveDataType_UNDEFINED},
-  {HLHDF_COMPOUND, RaveDataType_UNDEFINED},
-  {HLHDF_ARRAY, RaveDataType_UNDEFINED},
-  {HLHDF_END_OF_SPECIFIERS, RaveDataType_UNDEFINED}
-};
-
 /*@} End of Constants */
+
 /*@{ Macros */
 /**
  * Quick access function for reading one atomic value from a
@@ -161,43 +126,6 @@ static void RaveIO_destructor(RaveCoreObject* obj)
   }
   HLCompression_free(raveio->compression);
   HLFileCreationProperty_free(raveio->property);
-}
-/**
- * Translates a hlhdf format specified into a rave data type.
- * @param[in] format - the hlhdf format specified
- * @returns the RaveDataType
- */
-static RaveDataType RaveIOInternal_hlhdfToRaveType(HL_FormatSpecifier format)
-{
-  int index = 0;
-  RaveDataType result = RaveDataType_UNDEFINED;
-  while (RAVE_TO_HLHDF_MAP[index].hlhdfFormat != HLHDF_END_OF_SPECIFIERS) {
-    if (RAVE_TO_HLHDF_MAP[index].hlhdfFormat == format) {
-      result = RAVE_TO_HLHDF_MAP[index].raveType;
-      break;
-    }
-    index++;
-  }
-  return result;
-}
-
-/**
- * Translates a rave data type into a hlhdf format specifier
- * @param[in] format - the rave data type
- * @returns the hlhdf format specifier
- */
-static HL_FormatSpecifier RaveIOInternal_raveToHlhdfType(RaveDataType format)
-{
-  int index = 0;
-  HL_FormatSpecifier result = HLHDF_UNDEFINED;
-  while (RAVE_TO_HLHDF_MAP[index].hlhdfFormat != HLHDF_END_OF_SPECIFIERS) {
-    if (RAVE_TO_HLHDF_MAP[index].raveType == format) {
-      result = RAVE_TO_HLHDF_MAP[index].hlhdfFormat;
-      break;
-    }
-    index++;
-  }
-  return result;
 }
 
 /**
@@ -534,7 +462,7 @@ static int RaveIOInternal_createDataset(HL_NodeList* nodelist, void* data, long 
   va_end(ap);
   if (n >= 0 && n < 1024) {
     HL_Node* node = HLNode_newDataset(nodeName);
-    HL_FormatSpecifier specifier = RaveIOInternal_raveToHlhdfType(dataType);
+    HL_FormatSpecifier specifier = RaveHL_raveToHlhdfType(dataType);
     const char* hlhdfFormat = HL_getFormatSpecifierString(specifier);
     hsize_t dims[2];
     dims[0] = ysize;
@@ -664,7 +592,7 @@ static int RaveIOInternal_loadAttributesAndDataForObject(HL_NodeList* nodelist, 
             strcasecmp(tmpptr, "data")==0) {
           hsize_t d0 = HLNode_getDimension(node, 0);
           hsize_t d1 = HLNode_getDimension(node, 1);
-          RaveDataType dataType = RaveIOInternal_hlhdfToRaveType(HLNode_getFormat(node));
+          RaveDataType dataType = RaveHL_hlhdfToRaveType(HLNode_getFormat(node));
           if (dataType != RaveDataType_UNDEFINED) {
             if (RAVE_OBJECT_CHECK_TYPE(object, &PolarScanParam_TYPE)) {
               result = PolarScanParam_setData((PolarScanParam_t*)object, d1, d0, HLNode_getData(node), dataType);
@@ -1501,7 +1429,7 @@ static RaveData2D_t* RaveIOInternal_loadRave2dData(HL_NodeList* nodelist, const 
     if (result != NULL) {
       hsize_t d1 = HLNode_getDimension(node, 1);
       hsize_t d0 = HLNode_getDimension(node, 0);
-      RaveDataType dataType = RaveIOInternal_hlhdfToRaveType(HLNode_getFormat(node));
+      RaveDataType dataType = RaveHL_hlhdfToRaveType(HLNode_getFormat(node));
       if(!RaveData2D_setData(result, d1, d0, HLNode_getData(node), dataType)) {
         RAVE_ERROR0("Failed to set data into RaveData2D-field");
         RAVE_OBJECT_RELEASE(result);
