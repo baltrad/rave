@@ -417,7 +417,7 @@ RaveList_t* Cartesian_getAttributeNames(Cartesian_t* cartesian);
  * belonging to a cartesian volume
  * @returns a list of RaveAttributes.
  */
-RaveObjectList_t* Cartesian_getAttributeValues(Cartesian_t* cartesian, Rave_ObjectType otype);
+RaveObjectList_t* Cartesian_getAttributeValues(Cartesian_t* cartesian);
 
 /**
  * Returns if the cartesian product has got the specified attribute.

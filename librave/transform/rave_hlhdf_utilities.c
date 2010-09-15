@@ -139,16 +139,19 @@ int RaveHL_createStringValue(HL_NodeList* nodelist, const char* value, const cha
       RAVE_CRITICAL1("Failed to create an attribute with name %s", nodeName);
       goto done;
     }
+
     if (!HLNode_setScalarValue(node, strlen(value) + 1, (unsigned char*)value, "string", -1)) {
       RAVE_ERROR1("Failed to set string value for %s", nodeName);
       HLNode_free(node);
       goto done;
     }
+
     if (!HLNodeList_addNode(nodelist, node)) {
       RAVE_ERROR1("Failed to add node %s to nodelist", nodeName);
       HLNode_free(node);
       goto done;
     }
+
     result = 1;
   }
 

@@ -509,6 +509,20 @@ RaveList_t* CartesianVolume_getAttributeNames(CartesianVolume_t* cvol)
 RaveObjectList_t* CartesianVolume_getAttributeValues(CartesianVolume_t* cvol)
 {
   RaveObjectList_t* result = NULL;
+  RaveObjectList_t* attrs = NULL;
+
+  RAVE_ASSERT((cvol != NULL), "cvol == NULL");
+
+  attrs = RaveObjectHashTable_values(cvol->attrs);
+  if (attrs == NULL) {
+    goto error;
+  }
+  result = RAVE_OBJECT_CLONE(attrs);
+error:
+  RAVE_OBJECT_RELEASE(attrs);
+  return result;
+#ifdef KALLE
+  RaveObjectList_t* result = NULL;
   RaveObjectList_t* tableattrs = NULL;
 
   RAVE_ASSERT((cvol != NULL), "cvol == NULL");
@@ -546,6 +560,7 @@ error:
   RAVE_OBJECT_RELEASE(result);
   RAVE_OBJECT_RELEASE(tableattrs);
   return NULL;
+#endif
 }
 
 int CartesianVolume_isValid(CartesianVolume_t* cvol)

@@ -38,6 +38,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "cartesianvolume.h"
 #include "rave_field.h"
 #include "rave_hlhdf_utilities.h"
+#include "cartesian_odim_io.h"
 
 /**
  * Defines the structure for the RaveIO in a volume.
@@ -1590,65 +1591,6 @@ done:
 }
 
 /**
- * Adds a cartesian image (belonging to a volume) to a node list.
- * @param[in] cvol - the cartesian image to be added to a node list
- * @param[in] nodelist - the nodelist the nodes should be added to
- * @returns 1 on success otherwise 0
- */
-
-static int RaveIOInternal_addCartesianImageToNodeList(Cartesian_t* image, HL_NodeList* nodelist, const char* fmt, ...)
-{
-  int result = 0;
-  char nodeName[1024];
-  RaveObjectList_t* attributes = NULL;
-  va_list ap;
-  int n = 0;
-
-  RAVE_ASSERT((image != NULL), "image == NULL");
-  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
-
-  va_start(ap, fmt);
-  n = vsnprintf(nodeName, 1024, fmt, ap);
-  va_end(ap);
-  if (n < 0 || n >= 1024) {
-    RAVE_ERROR1("Failed to create image name from fmt=%s", fmt);
-    goto done;
-  }
-
-  if (!RaveIOInternal_hasNodeByName(nodelist, nodeName)) {
-    if (!RaveIOInternal_createGroup(nodelist, nodeName)) {
-      goto done;
-    }
-  }
-
-  if (!RaveIOInternal_hasNodeByName(nodelist, "%s/data1", nodeName)) {
-    if (!RaveIOInternal_createGroup(nodelist,"%s/data1", nodeName)) {
-      goto done;
-    }
-  }
-
-  attributes = Cartesian_getAttributeValues(image, Rave_ObjectType_CVOL);
-
-  if (attributes == NULL || !RaveIOInternal_addAttributes(nodelist, attributes, nodeName)) {
-    goto done;
-  }
-
-  if (!RaveIOInternal_addData(nodelist,
-                              Cartesian_getData(image),
-                              Cartesian_getXSize(image),
-                              Cartesian_getYSize(image),
-                              Cartesian_getDataType(image),
-                              "%s/data1", nodeName)) {
-    goto done;
-  }
-
-  result = 1;
-done:
-  RAVE_OBJECT_RELEASE(attributes);
-  return result;
-}
-
-/**
  * Adds a cartesian volume to a node list.
  * @param[in] cvol - the cartesian volume to be added to a node list
  * @param[in] nodelist - the nodelist the nodes should be added to
@@ -1657,42 +1599,15 @@ done:
 static int RaveIOInternal_addCartesianVolumeToNodeList(CartesianVolume_t* cvol, HL_NodeList* nodelist)
 {
   int result = 0;
-  RaveObjectList_t* attributes = NULL;
-  int nimages = 0;
-  int i = 0;
+  CartesianOdimIO_t* odimio = NULL;
 
-  RAVE_ASSERT((cvol != NULL), "cvol == NULL");
-  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
-
-  // First verify that no bogus data is entered into the system.
-  if (!CartesianVolume_isValid(cvol)) {
-    goto done;
+  odimio = RAVE_OBJECT_NEW(&CartesianOdimIO_TYPE);
+  if (odimio != NULL) {
+    result = CartesianOdimIO_fillVolume(odimio, nodelist, cvol);
   }
 
-  attributes = CartesianVolume_getAttributeValues(cvol);
-  if (attributes != NULL) {
-    const char* objectType = RaveTypes_getStringFromObjectType(CartesianVolume_getObjectType(cvol));
-    if (!RaveUtilities_addStringAttributeToList(attributes, "what/object", objectType) ||
-        !RaveUtilities_addStringAttributeToList(attributes, "what/version", RaveIO_ODIM_H5rad_Version_2_0_STR)) {
-      RAVE_ERROR0("Failed to add what/object or what/version to attributes");
-      goto done;
-    }
-  }
+  RAVE_OBJECT_RELEASE(odimio);
 
-  if (attributes == NULL || !RaveIOInternal_addAttributes(nodelist, attributes, "")) {
-    goto done;
-  }
-
-  result = 1; // Set result to 1 now and if adding of scans fails, it will become 0 again
-
-  nimages = CartesianVolume_getNumberOfImages(cvol);
-  for (i = 0; result == 1 && i < nimages; i++) {
-    Cartesian_t* image = CartesianVolume_getImage(cvol, i);
-    result = RaveIOInternal_addCartesianImageToNodeList(image, nodelist, "/dataset%d", (i+1));
-    RAVE_OBJECT_RELEASE(image);
-  }
-done:
-  RAVE_OBJECT_RELEASE(attributes);
   return result;
 }
 
@@ -1705,57 +1620,15 @@ done:
 static int RaveIOInternal_addCartesianToNodeList(Cartesian_t* image, HL_NodeList* nodelist)
 {
   int result = 0;
-  RaveObjectList_t* attributes = NULL;
+  CartesianOdimIO_t* odimio = NULL;
 
-  RAVE_ASSERT((image != NULL), "image == NULL");
-  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
-
-  if (!Cartesian_isValid(image, Rave_ObjectType_IMAGE)) {
-    goto done;
+  odimio = RAVE_OBJECT_NEW(&CartesianOdimIO_TYPE);
+  if (odimio != NULL) {
+    result = CartesianOdimIO_fillImage(odimio, nodelist, image);
   }
 
-  attributes = Cartesian_getAttributeValues(image, Rave_ObjectType_IMAGE);
-  if (attributes != NULL) {
-    const char* objectType = RaveTypes_getStringFromObjectType(Cartesian_getObjectType(image));
-    if (!RaveUtilities_addStringAttributeToList(attributes, "what/object", objectType) ||
-        !RaveUtilities_addStringAttributeToList(attributes, "what/version", RaveIO_ODIM_H5rad_Version_2_0_STR)) {
-      RAVE_ERROR0("Failed to add what/object or what/version to attributes");
-      goto done;
-    }
-  }
+  RAVE_OBJECT_RELEASE(odimio);
 
-  if (attributes == NULL || !RaveIOInternal_addAttributes(nodelist, attributes, "")) {
-    goto done;
-  }
-
-  RAVE_OBJECT_RELEASE(attributes);
-
-  attributes = Cartesian_getAttributeValues(image, Rave_ObjectType_CVOL);
-
-  if (!RaveIOInternal_createGroup(nodelist,"/dataset1")) {
-    goto done;
-  }
-
-  if (attributes == NULL || !RaveIOInternal_addAttributes(nodelist, attributes, "/dataset1")) {
-    goto done;
-  }
-
-  if (!RaveIOInternal_createGroup(nodelist,"/dataset1/data1")) {
-    goto done;
-  }
-
-  if (!RaveIOInternal_addData(nodelist,
-                              Cartesian_getData(image),
-                              Cartesian_getXSize(image),
-                              Cartesian_getYSize(image),
-                              Cartesian_getDataType(image),
-                              "/dataset1/data1")) {
-    goto done;
-  }
-
-  result = 1;
-done:
-  RAVE_OBJECT_RELEASE(attributes);
   return result;
 }
 

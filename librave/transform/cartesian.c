@@ -709,91 +709,21 @@ RaveList_t* Cartesian_getAttributeNames(Cartesian_t* cartesian)
   return RaveObjectHashTable_keys(cartesian->attrs);
 }
 
-RaveObjectList_t* Cartesian_getAttributeValues(Cartesian_t* cartesian, Rave_ObjectType otype)
+RaveObjectList_t* Cartesian_getAttributeValues(Cartesian_t* cartesian)
 {
   RaveObjectList_t* result = NULL;
-  RaveObjectList_t* tableattrs = NULL;
+  RaveObjectList_t* attrs = NULL;
 
   RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
 
-  if (otype != Rave_ObjectType_COMP && otype != Rave_ObjectType_CVOL && otype != Rave_ObjectType_IMAGE) {
-    RAVE_ERROR1("Can not get attribute values for object type = %s\n", RaveTypes_getStringFromObjectType(otype));
+  attrs = RaveObjectHashTable_values(cartesian->attrs);
+  if (attrs == NULL) {
     goto error;
   }
-
-  tableattrs = RaveObjectHashTable_values(cartesian->attrs);
-  if (tableattrs == NULL) {
-    goto error;
-  }
-  result = RAVE_OBJECT_CLONE(tableattrs);
-  if (result == NULL) {
-    goto error;
-  }
-
-  if (otype == Rave_ObjectType_COMP || otype == Rave_ObjectType_IMAGE) {
-    if (cartesian->projection != NULL) {
-      if (!RaveUtilities_addStringAttributeToList(result, "where/projdef", Projection_getDefinition(cartesian->projection))) {
-        goto error;
-      }
-      if (!CartesianHelper_addLonLatExtentToAttributeList(result, cartesian->projection, cartesian->llX, cartesian->llY, cartesian->urX, cartesian->urY)) {
-        goto error;
-      }
-    }
-
-    if (!RaveUtilities_addStringAttributeToList(result, "what/date", Cartesian_getDate(cartesian)) ||
-        !RaveUtilities_addStringAttributeToList(result, "what/time", Cartesian_getTime(cartesian)) ||
-        !RaveUtilities_addStringAttributeToList(result, "what/source", Cartesian_getSource(cartesian)) ||
-        !RaveUtilities_addDoubleAttributeToList(result, "where/xscale", Cartesian_getXScale(cartesian)) ||
-        !RaveUtilities_addDoubleAttributeToList(result, "where/yscale", Cartesian_getYScale(cartesian)) ||
-        !RaveUtilities_replaceLongAttributeInList(result, "where/xsize", Cartesian_getXSize(cartesian)) ||
-        !RaveUtilities_replaceLongAttributeInList(result, "where/ysize", Cartesian_getYSize(cartesian))) {
-      goto error;
-    }
-
-    // prodpar is dataset specific.. so it should only be there for images in volumes.
-    RaveUtilities_removeAttributeFromList(result, "what/prodpar");
-
-  } else if (otype == Rave_ObjectType_CVOL) {
-    if (!RaveUtilities_addDoubleAttributeToList(result, "what/gain", Cartesian_getGain(cartesian)) ||
-        !RaveUtilities_addDoubleAttributeToList(result, "what/nodata", Cartesian_getNodata(cartesian)) ||
-        !RaveUtilities_addDoubleAttributeToList(result, "what/offset", Cartesian_getOffset(cartesian)) ||
-        !RaveUtilities_addDoubleAttributeToList(result, "what/undetect", Cartesian_getUndetect(cartesian)) ||
-        !RaveUtilities_addStringAttributeToList(result, "what/quantity", Cartesian_getQuantity(cartesian)) ||
-        !RaveUtilities_replaceStringAttributeInList(result, "what/product",
-                                                    RaveTypes_getStringFromProductType(Cartesian_getProduct(cartesian)))) {
-      goto error;
-    }
-    if (RaveDateTime_getDate(cartesian->datetime) != NULL) {
-      const char* dtdate = RaveDateTime_getDate(cartesian->datetime);
-      if (!RaveObjectHashTable_exists(cartesian->attrs, "what/startdate") &&
-          !RaveUtilities_replaceStringAttributeInList(result, "what/startdate", dtdate)) {
-        goto error;
-      }
-      if (!RaveObjectHashTable_exists(cartesian->attrs, "what/enddate") &&
-          !RaveUtilities_replaceStringAttributeInList(result, "what/enddate", dtdate)) {
-        goto error;
-      }
-    }
-    if (RaveDateTime_getTime(cartesian->datetime) != NULL) {
-      const char* dttime = RaveDateTime_getTime(cartesian->datetime);
-      if (!RaveObjectHashTable_exists(cartesian->attrs, "what/starttime") &&
-          !RaveUtilities_replaceStringAttributeInList(result, "what/starttime", dttime)) {
-        goto error;
-      }
-      if (!RaveObjectHashTable_exists(cartesian->attrs, "what/endtime") &&
-          !RaveUtilities_replaceStringAttributeInList(result, "what/endtime", dttime)) {
-        goto error;
-      }
-    }
-  }
-
-
-  RAVE_OBJECT_RELEASE(tableattrs);
-  return result;
+  result = RAVE_OBJECT_CLONE(attrs);
 error:
-  RAVE_OBJECT_RELEASE(result);
-  RAVE_OBJECT_RELEASE(tableattrs);
-  return NULL;
+  RAVE_OBJECT_RELEASE(attrs);
+  return result;
 }
 
 int Cartesian_hasAttribute(Cartesian_t* cartesian, const char* name)

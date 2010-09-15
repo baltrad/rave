@@ -23,21 +23,22 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2010-09-09
  */
-#ifndef CARTESIAN_ODIM_ADAPTOR_H
-#define CARTESIAN_ODIM_ADAPTOR_H
+#ifndef CARTESIAN_ODIM_IO_H
+#define CARTESIAN_ODIM_IO_H
 #include "rave_object.h"
 #include "hlhdf.h"
 #include "cartesian.h"
+#include "cartesianvolume.h"
 
 /**
  * Defines the odim h5 adaptor for cartesian products
  */
-typedef struct _CartesianOdimAdaptor_t CartesianOdimAdaptor_t;
+typedef struct _CartesianOdimIO_t CartesianOdimIO_t;
 
 /**
  * Type definition to use when creating a rave object.
  */
-extern RaveCoreObjectType CartesianOdimAdaptor_TYPE;
+extern RaveCoreObjectType CartesianOdimIO_TYPE;
 
 /**
  * Fills a HL nodelist with information from a cartesian product.
@@ -46,6 +47,15 @@ extern RaveCoreObjectType CartesianOdimAdaptor_TYPE;
  * @param[in] cartesian - the cartesian product
  * @returns 1 on success, 0 otherwise
  */
-int CartesianOdimAdaptor_fillImageInformation(CartesianOdimAdaptor_t* self, HL_NodeList* nodelist, Cartesian_t* cartesian);
+int CartesianOdimIO_fillImage(CartesianOdimIO_t* self, HL_NodeList* nodelist, Cartesian_t* cartesian);
 
-#endif /* CARTESIAN_ODIM_ADAPTOR_H */
+/**
+ * Fills a HL nodelist with information from a cartesian volume.
+ * @param[in] self - self
+ * @param[in] nodelist - the node list
+ * @param[in] volume - the cartesian volume
+ * @returns 1 on success, 0 otherwise
+ */
+int CartesianOdimIO_fillVolume(CartesianOdimIO_t* self, HL_NodeList* nodelist, CartesianVolume_t* volume);
+
+#endif /* CARTESIAN_ODIM_IO_H */
