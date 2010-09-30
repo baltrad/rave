@@ -227,6 +227,15 @@ fail:
   return NULL;
 }
 
+static void roht_clearbuckets(RaveObjectHashTable_t* this)
+{
+  int i = 0;
+  for (i = 0; i < this->bucketCount; i++) {
+    roht_destroybucket(this->buckets[i]);
+    this->buckets[i] = NULL;
+  }
+}
+
 /**
  * Constructor.
  * @param[in] obj - the created object
@@ -253,11 +262,7 @@ static int RaveObjectHashTable_constructor(RaveCoreObject* obj)
 static void RaveObjectHashTable_destructor(RaveCoreObject* obj)
 {
   RaveObjectHashTable_t* this = (RaveObjectHashTable_t*)obj;
-  int i = 0;
-  for (i = 0; i < this->bucketCount; i++) {
-    roht_destroybucket(this->buckets[i]);
-    this->buckets[i] = NULL;
-  }
+  roht_clearbuckets(this);
   RAVE_FREE(this->buckets);
   this->buckets = NULL;
 }
@@ -414,6 +419,13 @@ RaveCoreObject* RaveObjectHashTable_remove(RaveObjectHashTable_t* table, const c
   }
   return result;
 }
+
+void RaveObjectHashTable_clear(RaveObjectHashTable_t* table)
+{
+  RAVE_ASSERT((table != NULL), "table == NULL");
+  roht_clearbuckets(table);
+}
+
 
 RaveList_t* RaveObjectHashTable_keys(RaveObjectHashTable_t* table)
 {

@@ -305,6 +305,14 @@ int PolarScan_addParameter(PolarScan_t* scan, PolarScanParam_t* parameter);
 PolarScanParam_t* PolarScan_removeParameter(PolarScan_t* scan, const char* quantity);
 
 /**
+ * Removes all parameters that are in the scan as well as dereferencing
+ * the default parameter.
+ * @param[in] scan - self
+ * @returns 1 on success or 0 on failure (if default name can not be reset)
+ */
+int PolarScan_removeAllParameters(PolarScan_t* scan);
+
+/**
  * Returns the parameter that is specified by the quantity.
  * Note, since the parameter returned is inc-refed, remember to release it.
  * @param[in] scan - self

@@ -382,6 +382,21 @@ class PyPolarScanTest(unittest.TestCase):
     names = obj.getParameterNames()
     self.assertEquals(1, len(names))
 
+  def test_removeAllParameters(self):
+    obj = _polarscan.new()
+    param1 = _polarscanparam.new()
+    param1.quantity="DBZH"
+    param1.setData(numpy.zeros((3,3), numpy.int8))
+    param2 = _polarscanparam.new()
+    param2.quantity="MMM"
+    param2.setData(numpy.zeros((3,3), numpy.int8))
+    obj.addParameter(param1)
+    obj.addParameter(param2)
+
+    obj.removeAllParameters()
+    names = obj.getParameterNames()
+    self.assertEquals(0, len(names))
+
   def test_getRangeIndex(self):
     obj = _polarscan.new()
     dbzhParam = _polarscanparam.new()

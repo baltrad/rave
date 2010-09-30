@@ -83,6 +83,12 @@ int RaveObjectHashTable_exists(RaveObjectHashTable_t* table, const char* key);
 RaveCoreObject* RaveObjectHashTable_remove(RaveObjectHashTable_t* table, const char* key);
 
 /**
+ * Clears all entries in the table.
+ * @param[in] table - the table
+ */
+void RaveObjectHashTable_clear(RaveObjectHashTable_t* table);
+
+/**
  * Returns the keys for the table at the current state. Note,
  * remember to deallocate keys appropriately after retrival or
  * use the function \@ref #RaveList_freeAndDestroy that will

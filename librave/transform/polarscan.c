@@ -473,6 +473,13 @@ PolarScanParam_t* PolarScan_removeParameter(PolarScan_t* scan, const char* quant
   return (PolarScanParam_t*)RaveObjectHashTable_remove(scan->parameters, quantity);
 }
 
+int PolarScan_removeAllParameters(PolarScan_t* scan)
+{
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+  RaveObjectHashTable_clear(scan->parameters);
+  return PolarScan_setDefaultParameter(scan, DEFAULT_PARAMETER_NAME);
+}
+
 PolarScanParam_t* PolarScan_getParameter(PolarScan_t* scan, const char* quantity)
 {
   RAVE_ASSERT((scan != NULL), "scan == NULL");

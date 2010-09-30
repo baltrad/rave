@@ -193,6 +193,14 @@ static PyObject* _pypolarscan_removeParameter(PyPolarScan* self, PyObject* args)
   return result;
 }
 
+static PyObject* _pypolarscan_removeAllParameters(PyPolarScan* self, PyObject* args)
+{
+  if (!PolarScan_removeAllParameters(self->scan)) {
+    raiseException_returnNULL(PyExc_MemoryError, "Failed to remove all parameters");
+  }
+  Py_RETURN_NONE;
+}
+
 static PyObject* _pypolarscan_getParameter(PyPolarScan* self, PyObject* args)
 {
   char* paramname = NULL;
@@ -804,6 +812,7 @@ static struct PyMethodDef _pypolarscan_methods[] =
   {"defaultparameter", NULL},
   {"addParameter", (PyCFunction) _pypolarscan_addParameter, 1},
   {"removeParameter", (PyCFunction) _pypolarscan_removeParameter, 1},
+  {"removeAllParameters", (PyCFunction) _pypolarscan_removeAllParameters, 1},
   {"getParameter", (PyCFunction) _pypolarscan_getParameter, 1},
   {"getParameterNames", (PyCFunction) _pypolarscan_getParameterNames, 1},
   {"hasParameter", (PyCFunction) _pypolarscan_hasParameter, 1},
