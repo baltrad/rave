@@ -164,6 +164,15 @@ void PolarScan_setHeight(PolarScan_t* scan, double height);
 double PolarScan_getHeight(PolarScan_t* scan);
 
 /**
+ * Returns the distance from the radar to the specified lon/lat coordinate pair.
+ * @param[in] scan - self
+ * @param[in] lon - the longitude
+ * @param[in] lat - the latitude
+ * @returns the distance in meters.
+ */
+double PolarScan_getDistance(PolarScan_t* scan, double lon, double lat);
+
+/**
  * Sets the elevation angle for the scan
  * @param[in] scan - self
  * @param[in] elangle - the elevation angle
@@ -481,6 +490,17 @@ RaveValueType PolarScan_getParameterValueAtAzimuthAndRange(PolarScan_t* scan, co
  * @returns a rave value type
  */
 RaveValueType PolarScan_getNearest(PolarScan_t* scan, double lon, double lat, double* v);
+
+/**
+ * Returns the nearest parameter value to the specified longitude, latitude.
+ * @param[in] scan - the scan
+ * @param[in] quantity - the quantity
+ * @param[in] lon  - the longitude (in radians)
+ * @param[in] lat  - the latitude  (in radians)
+ * @param[out] v - the found value
+ * @returns a rave value type
+ */
+RaveValueType PolarScan_getNearestParameterValue(PolarScan_t* scan, const char* quantity, double lon, double lat, double* v);
 
 /**
  * Returns the nearest index to the specified long/lat pair.

@@ -80,6 +80,21 @@ void Composite_setHeight(Composite_t* composite, double height);
 double Composite_getHeight(Composite_t* composite);
 
 /**
+ * Sets the elevation angle that should be used when generating a
+ * composite as PPI.
+ * @param[in] composite - self
+ * @param[in] angle - the angle in radians
+ */
+void Composite_setElevationAngle(Composite_t* composite, double angle);
+
+/**
+ * Returns the elevation angle that is used for composite generation.
+ * @param[in] composite - self
+ * @returns the height
+ */
+double Composite_getElevationAngle(Composite_t* composite);
+
+/**
  * The quantity to use for this composite
  * @param[in] composite - self
  * @param[in] quantity - the quantity, defaults to DBZH

@@ -321,6 +321,12 @@ double PolarScan_getHeight(PolarScan_t* scan)
   return PolarNavigator_getAlt0(scan->navigator);
 }
 
+double PolarScan_getDistance(PolarScan_t* scan, double lon, double lat)
+{
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+  return PolarNavigator_getDistance(scan->navigator, lat, lon);
+}
+
 void PolarScan_setElangle(PolarScan_t* scan, double elangle)
 {
   RAVE_ASSERT((scan != NULL), "scan == NULL");
@@ -728,6 +734,24 @@ RaveValueType PolarScan_getNearest(PolarScan_t* scan, double lon, double lat, do
   PolarNavigator_deToRh(scan->navigator, d, scan->elangle, &r, &h);
 
   result = PolarScan_getValueAtAzimuthAndRange(scan, a, r, v);
+
+  return result;
+}
+
+RaveValueType PolarScan_getNearestParameterValue(PolarScan_t* scan, const char* quantity, double lon, double lat, double* v)
+{
+  RaveValueType result = RaveValueType_NODATA;
+  double d = 0.0L, a = 0.0L, r = 0.0L, h = 0.0L;
+  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  RAVE_ASSERT((v != NULL), "v was NULL");
+  if (scan->param == NULL) {
+    return RaveValueType_UNDEFINED;
+  }
+
+  PolarNavigator_llToDa(scan->navigator, lat, lon, &d, &a);
+  PolarNavigator_deToRh(scan->navigator, d, scan->elangle, &r, &h);
+
+  result = PolarScan_getParameterValueAtAzimuthAndRange(scan, quantity, a, r, v);
 
   return result;
 }

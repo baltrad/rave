@@ -37,6 +37,7 @@ struct _Composite_t {
   RAVE_OBJECT_HEAD /** Always on top */
   Rave_ProductType ptype; /**< the product type, default PCAPPI */
   double height; /**< the height when generating pcapppi, cappi, default 1000 */
+  double elangle; /**< the elevation angle when generating ppi, default 0.0 */
   char* paramname; /**< the parameter name */
   RaveDateTime_t* datetime;  /**< the date and time */
   RaveObjectList_t* list;
@@ -52,6 +53,7 @@ static int Composite_constructor(RaveCoreObject* obj)
   Composite_t* this = (Composite_t*)obj;
   this->ptype = Rave_ProductType_PCAPPI;
   this->height = 1000.0;
+  this->elangle = 0.0;
   this->paramname = NULL;
   this->list = RAVE_OBJECT_NEW(&RaveObjectList_TYPE);
   this->datetime = RAVE_OBJECT_NEW(&RaveDateTime_TYPE);
@@ -77,6 +79,7 @@ static int Composite_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj
   Composite_t* src = (Composite_t*)srcobj;
   this->ptype = src->ptype;
   this->height = src->height;
+  this->elangle = src->elangle;
   this->paramname = NULL;
   this->list = RAVE_OBJECT_CLONE(src->list);
   this->datetime = RAVE_OBJECT_CLONE(src->datetime);
@@ -110,8 +113,9 @@ int Composite_add(Composite_t* composite, RaveCoreObject* object)
   RAVE_ASSERT((composite != NULL), "composite == NULL");
   RAVE_ASSERT((object != NULL), "object == NULL");
 
-  if (!RAVE_OBJECT_CHECK_TYPE(object, &PolarVolume_TYPE)) {
-    RAVE_ERROR0("Providing an object that not is a PolarVolume during composite generation");
+  if (!RAVE_OBJECT_CHECK_TYPE(object, &PolarVolume_TYPE) &&
+      !RAVE_OBJECT_CHECK_TYPE(object, &PolarScan_TYPE)) {
+    RAVE_ERROR0("Providing an object that not is a PolarVolume nor a PolarScan during composite generation");
     return 0;
   }
   return RaveObjectList_add(composite->list, object);
@@ -120,10 +124,12 @@ int Composite_add(Composite_t* composite, RaveCoreObject* object)
 void Composite_setProduct(Composite_t* composite, Rave_ProductType type)
 {
   RAVE_ASSERT((composite != NULL), "composite == NULL");
-  if (type == Rave_ProductType_PCAPPI) {
+  if (type == Rave_ProductType_PCAPPI ||
+      type == Rave_ProductType_CAPPI ||
+      type == Rave_ProductType_PPI) {
     composite->ptype = type;
   } else {
-    RAVE_ERROR0("Only supported algorithm right now is PCAPPI");
+    RAVE_ERROR0("Only supported algorithms are PPI, CAPPI and PCAPPI");
   }
 }
 
@@ -143,6 +149,17 @@ double Composite_getHeight(Composite_t* composite)
 {
   RAVE_ASSERT((composite != NULL), "composite == NULL");
   return composite->height;
+}
+
+void Composite_setElevationAngle(Composite_t* composite, double angle)
+{
+  RAVE_ASSERT((composite != NULL), "composite == NULL");
+  composite->elangle = angle;
+}
+
+double Composite_getElevationAngle(Composite_t* composite)
+{
+  return composite->elangle;
 }
 
 int Composite_setQuantity(Composite_t* composite, const char* quantity)
@@ -197,6 +214,7 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area)
   Cartesian_t* result = NULL;
   Projection_t* projection = NULL;
   RaveAttribute_t* prodpar = NULL;
+  RaveCoreObject* pobj = NULL;
 
   int x = 0, y = 0, i = 0, xsize = 0, ysize = 0, nradars = 0;
   double v = 0.0L;
@@ -204,7 +222,6 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area)
 
   RAVE_ASSERT((composite != NULL), "composite == NULL");
   RAVE_ASSERT((area != NULL), "area == NULL");
-
 
   result = RAVE_OBJECT_NEW(&Cartesian_TYPE);
   if (!Cartesian_init(result, area, RaveDataType_UCHAR)) {
@@ -247,53 +264,95 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area)
   for (y = 0; y < ysize; y++) {
     double herey = Cartesian_getLocationY(result, y);
     for (x = 0; x < xsize; x++) {
-      PolarVolume_t* pvol = NULL;
       double herex = Cartesian_getLocationX(result, x);
-      double olon = 0.0, olat = 0.0, pvollon = 0.0, pvollat = 0.0;
+      double olon = 0.0, olat = 0.0, plon = 0.0, plat = 0.0;
       double mindist = 1e10;
 
       for (i = 0, mindist=1e10; i < nradars; i++) {
-        PolarVolume_t* vol = NULL;
-        Projection_t* volproj = NULL;
+        RaveCoreObject* obj = NULL;
+        Projection_t* objproj = NULL;
 
-        vol = (PolarVolume_t*)RaveObjectList_get(composite->list, i);
-        if (vol != NULL) {
-          volproj = PolarVolume_getProjection(vol);
+        obj = RaveObjectList_get(composite->list, i);
+        if (obj != NULL) {
+          if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
+            objproj = PolarVolume_getProjection((PolarVolume_t*)obj);
+          } else if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarScan_TYPE)) {
+            objproj = PolarScan_getProjection((PolarScan_t*)obj);
+          }
         }
 
-        if (volproj != NULL) {
+        if (objproj != NULL) {
           /* We will go from surface coords into the lonlat projection assuming that a polar volume uses a lonlat projection*/
-          if (!Projection_transformx(projection, volproj, herex, herey, 0.0, &olon, &olat, NULL)) {
+          if (!Projection_transformx(projection, objproj, herex, herey, 0.0, &olon, &olat, NULL)) {
             RAVE_WARNING0("Failed to transform from composite into polar coordinates");
           } else {
-            double dist = PolarVolume_getDistance(vol, olon, olat);
+            double dist = 0.0;
+            if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
+              dist = PolarVolume_getDistance((PolarVolume_t*)obj, olon, olat);
+            } else if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarScan_TYPE)) {
+              dist = PolarScan_getDistance((PolarScan_t*)obj, olon, olat);
+            }
             if (dist < mindist) {
               mindist = dist;
-              RAVE_OBJECT_RELEASE(pvol);
-              pvol = RAVE_OBJECT_COPY(vol);
-              pvollon = olon;
-              pvollat = olat;
+              RAVE_OBJECT_RELEASE(pobj);
+              pobj = RAVE_OBJECT_COPY(obj);
+              plon = olon;
+              plat = olat;
             }
           }
         }
-        RAVE_OBJECT_RELEASE(vol);
-        RAVE_OBJECT_RELEASE(volproj);
+        RAVE_OBJECT_RELEASE(obj);
+        RAVE_OBJECT_RELEASE(objproj);
       }
 
-      if (pvol != NULL) {
-        if (composite->ptype == Rave_ProductType_PCAPPI) {
-          //vtype = PolarVolume_getNearest(pvol, pvollon, pvollat, composite->height, 0, &v);
-          vtype = PolarVolume_getNearestParameterValue(pvol,
+      if (pobj != NULL) {
+        if (RAVE_OBJECT_CHECK_TYPE(pobj, &PolarScan_TYPE)) {
+          // We could support CAPPI on scans as well but that is something
+          // for the future.
+          //
+          if (composite->ptype == Rave_ProductType_PPI ||
+              composite->ptype == Rave_ProductType_PCAPPI) {
+            vtype = PolarScan_getNearestParameterValue((PolarScan_t*)pobj,
                                                        Composite_getQuantity(composite),
-                                                       pvollon,
-                                                       pvollat,
-                                                       Composite_getHeight(composite),
-                                                       0,
+                                                       plon,
+                                                       plat,
                                                        &v);
-
+          } else {
+            vtype = RaveValueType_NODATA;
+          }
+        } else  if (RAVE_OBJECT_CHECK_TYPE(pobj, &PolarVolume_TYPE)){
+          if (composite->ptype == Rave_ProductType_PCAPPI ||
+              composite->ptype == Rave_ProductType_CAPPI) {
+            int insidee = (composite->ptype == Rave_ProductType_PCAPPI)?0:1;
+            vtype = PolarVolume_getNearestParameterValue((PolarVolume_t*)pobj,
+                                                         Composite_getQuantity(composite),
+                                                         plon,
+                                                         plat,
+                                                         Composite_getHeight(composite),
+                                                         insidee,
+                                                         &v);
+          } else if (composite->ptype == Rave_ProductType_PPI) {
+            PolarScan_t* scan = PolarVolume_getScanClosestToElevation((PolarVolume_t*)pobj,
+                                                                      Composite_getElevationAngle(composite),
+                                                                      0);
+            if (scan == NULL) {
+              RAVE_ERROR1("Failed to fetch scan nearest to elevation %g",
+                          Composite_getElevationAngle(composite));
+              goto fail;
+            }
+            vtype = PolarScan_getNearestParameterValue(scan,
+                                                       Composite_getQuantity(composite),
+                                                       plon,
+                                                       plat,
+                                                       &v);
+            RAVE_OBJECT_RELEASE(scan);
+          } else {
+            vtype = RaveValueType_NODATA;
+          }
         } else {
           vtype = RaveValueType_NODATA;
         }
+
         if (vtype == RaveValueType_NODATA) {
           Cartesian_setValue(result, x, y, Cartesian_getNodata(result));
         } else if (vtype == RaveValueType_UNDETECT) {
@@ -302,7 +361,7 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area)
           Cartesian_setValue(result, x, y, v);
         }
       }
-      RAVE_OBJECT_RELEASE(pvol);
+      RAVE_OBJECT_RELEASE(pobj);
     }
   }
 
@@ -313,6 +372,7 @@ fail:
   RAVE_OBJECT_RELEASE(projection);
   RAVE_OBJECT_RELEASE(prodpar);
   RAVE_OBJECT_RELEASE(result);
+  RAVE_OBJECT_RELEASE(pobj);
   return result;
 }
 /*@} End of Interface functions */

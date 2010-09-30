@@ -34,6 +34,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "pycomposite.h"
 
 #include "pypolarvolume.h"
+#include "pypolarscan.h"
 #include "pycartesian.h"
 #include "pyarea.h"
 #include "rave_alloc.h"
@@ -156,17 +157,22 @@ static PyObject* _pycomposite_new(PyObject* self, PyObject* args)
 static PyObject* _pycomposite_add(PyComposite* self, PyObject* args)
 {
   PyObject* obj = NULL;
+  RaveCoreObject* rcobject = NULL;
 
   if(!PyArg_ParseTuple(args, "O", &obj)) {
     return NULL;
   }
 
-  if (!PyPolarVolume_Check(obj)) {
-    raiseException_returnNULL(PyExc_AttributeError, "only supported objects are volumes");
+  if (PyPolarVolume_Check(obj)) {
+    rcobject = (RaveCoreObject*)((PyPolarVolume*)obj)->pvol;
+  } else if (PyPolarScan_Check(obj)) {
+    rcobject = (RaveCoreObject*)((PyPolarScan*)obj)->scan;
+  } else {
+    raiseException_returnNULL(PyExc_AttributeError, "only supported objects are volumes and scans");
   }
 
-  if (!Composite_add(self->composite, (RaveCoreObject*)((PyPolarVolume*)obj)->pvol)) {
-    raiseException_returnNULL(PyExc_MemoryError, "failed to add volume to composite generator");
+  if (!Composite_add(self->composite, rcobject)) {
+    raiseException_returnNULL(PyExc_MemoryError, "failed to add object to composite generator");
   }
 
   Py_RETURN_NONE;
@@ -181,7 +187,6 @@ static PyObject* _pycomposite_add(PyComposite* self, PyObject* args)
 static PyObject* _pycomposite_nearest(PyComposite* self, PyObject* args)
 {
   PyObject* obj = NULL;
-  double height = 0.0L;
   Cartesian_t* result = NULL;
   PyObject* pyresult = NULL;
 
@@ -227,6 +232,8 @@ static PyObject* _pycomposite_getattr(PyComposite* self, char* name)
 
   if (strcmp("height", name) == 0) {
     return PyFloat_FromDouble(Composite_getHeight(self->composite));
+  } else if (strcmp("elangle", name) == 0) {
+    return PyFloat_FromDouble(Composite_getElevationAngle(self->composite));
   } else if (strcmp("product", name) == 0) {
     return PyInt_FromLong(Composite_getProduct(self->composite));
   } else if (strcmp("quantity", name) == 0) {
@@ -260,6 +267,16 @@ static int _pycomposite_setattr(PyComposite* self, char* name, PyObject* val)
       Composite_setHeight(self->composite, PyFloat_AsDouble(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError,"height must be of type float");
+    }
+  } else if (strcmp("elangle", name) == 0) {
+    if (PyFloat_Check(val)) {
+      Composite_setHeight(self->composite, PyFloat_AsDouble(val));
+    } else if (PyLong_Check(val)) {
+      Composite_setHeight(self->composite, PyLong_AsDouble(val));
+    } else if (PyInt_Check(val)) {
+      Composite_setHeight(self->composite, (double)PyInt_AsLong(val));
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError, "elangle must be a float or decimal value")
     }
   } else if (strcmp("product", name) == 0) {
     if (PyInt_Check(val)) {
@@ -364,6 +381,7 @@ init_pycomposite(void)
   }
 
   import_pypolarvolume();
+  import_pypolarscan();
   import_pycartesian();
   import_pyarea();
   import_array(); /*To make sure I get access to Numeric*/
