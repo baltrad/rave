@@ -137,4 +137,13 @@ int RaveData2D_getValueUnchecked(RaveData2D_t* self, long x, long y, double* v);
  */
 int RaveData2D_hasData(RaveData2D_t* self);
 
+/**
+ * Utility function for creating a new rave data 2d object.
+ * @param[in] xsize - x-size
+ * @param[in] ysize - y-size
+ * @param[in] type  - the data type
+ * @returns The instance on success, otherwise NULL
+ */
+RaveData2D_t* RaveData2D_createObject(long xsize, long ysize, RaveDataType type);
+
 #endif /* RAVE_DATA2D_H */

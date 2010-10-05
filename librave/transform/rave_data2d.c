@@ -352,6 +352,18 @@ int RaveData2D_hasData(RaveData2D_t* self)
   return 0;
 }
 
+RaveData2D_t* RaveData2D_createObject(long xsize, long ysize, RaveDataType type)
+{
+  RaveData2D_t* result = NULL;
+  result = RAVE_OBJECT_NEW(&RaveData2D_TYPE);
+  if (result != NULL) {
+    if (!RaveData2D_createData(result, xsize, ysize, type)) {
+      RAVE_OBJECT_RELEASE(result);
+    }
+  }
+  return result;
+}
+
 /*@} End of Interface functions */
 RaveCoreObjectType RaveData2D_TYPE = {
     "RaveData2D",
