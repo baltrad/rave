@@ -726,6 +726,46 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEquals("IMAGE", nodelist.getNode("/dataset2/data1/data/CLASS").data())
     self.assertEquals("1.2", nodelist.getNode("/dataset2/data1/data/IMAGE_VERSION").data())
 
+  def test_save_polar_volume_beamwidths(self):
+    obj = _polarvolume.new()
+    obj.time = "100000"
+    obj.date = "20091010"
+    obj.source = "PLC:123"
+    obj.longitude = 12.0 * math.pi/180.0
+    obj.latitude = 60.0 * math.pi/180.0
+    obj.height = 0.0
+    obj.beamwidth = 2.0 * math.pi/180.0
+    
+    scan1 = _polarscan.new()
+    scan1.beamwidth = 3.0 * math.pi/180
+    scan2 = _polarscan.new()
+    scan2.beamwidth = 4.0 * math.pi/180
+    scan3 = _polarscan.new()
+    scan4 = _polarscan.new()
+
+    obj.addScan(scan1)
+    obj.addScan(scan2)
+    obj.addScan(scan3)
+    obj.addScan(scan4)
+    
+    ios = _raveio.new()
+    ios.object = obj
+    ios.filename = self.TEMPORARY_FILE
+    ios.save()
+    
+    # Verify result
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+    
+    self.assertAlmostEquals(2.0, nodelist.getNode("/how/beamwidth").data())
+    self.assertAlmostEquals(3.0, nodelist.getNode("/dataset1/how/beamwidth").data())
+    self.assertAlmostEquals(4.0, nodelist.getNode("/dataset2/how/beamwidth").data())
+
+    nodenames = nodelist.getNodeNames()
+    self.assertTrue("/dataset3/how/beamwidth" not in nodenames)
+    self.assertTrue("/dataset4/how/beamwidth" not in nodenames)
+
   # (RT: Ticket 8)
   def test_loadCartesian_differentXYSize(self):
     src = _cartesian.new()

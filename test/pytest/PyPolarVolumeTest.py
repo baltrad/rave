@@ -526,6 +526,38 @@ class PyPolarVolumeTest(unittest.TestCase):
     result = obj.isTransformable()
     self.assertEquals(False, result)
 
+  def test_addScan_with_noElangleInScan(self):
+    vol = _polarvolume.new()
+    vol.beamwidth = 2.0*math.pi/180.0
+    scan = _polarscan.new()
+    self.assertAlmostEquals(1.0*math.pi/180.0, scan.beamwidth, 4)
+    vol.addScan(scan)    
+    self.assertAlmostEquals(2.0*math.pi/180.0, scan.beamwidth, 4)
+
+  def test_addScan_with_elangleInScan(self):
+    vol = _polarvolume.new()
+    vol.beamwidth = 2.0*math.pi/180.0
+    scan = _polarscan.new()
+    scan.beamwidth = 3.0*math.pi/180.0
+    vol.addScan(scan)    
+    self.assertAlmostEquals(3.0*math.pi/180.0, scan.beamwidth, 4)
+
+  def test_setBeamwidth(self):
+    vol = _polarvolume.new()
+    vol.beamwidth = 2.0*math.pi/180.0
+    scan1 = _polarscan.new()
+    scan1.beamwidth = 3.0*math.pi/180.0
+    vol.addScan(scan1)
+    scan2 = _polarscan.new()
+    vol.addScan(scan2)
+    self.assertAlmostEquals(3.0*math.pi/180.0, scan1.beamwidth, 4)
+    self.assertAlmostEquals(2.0*math.pi/180.0, scan2.beamwidth, 4)
+    
+    vol.beamwidth = 4.0*math.pi/180.0
+    self.assertAlmostEquals(4.0*math.pi/180.0, scan1.beamwidth, 4)
+    self.assertAlmostEquals(4.0*math.pi/180.0, scan2.beamwidth, 4)
+    
+
 if __name__ == "__main__":
   #import sys;sys.argv = ['', 'Test.testName']
   unittest.main()

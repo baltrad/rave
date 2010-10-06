@@ -239,19 +239,19 @@ class PyPolarScanTest(unittest.TestCase):
 
   def test_beamwidth(self):
     obj = _polarscan.new()
-    self.assertAlmostEquals(0.0, obj.beamwidth, 4)
-    obj.beamwidth = 10.0
-    self.assertAlmostEquals(10.0, obj.beamwidth, 4)
+    self.assertAlmostEquals(1.0*math.pi/180.0, obj.beamwidth, 4)
+    obj.beamwidth = 10.0*math.pi/180.0
+    self.assertAlmostEquals(10.0*math.pi/180.0, obj.beamwidth, 4)
 
   def test_beamwidth_typeError(self):
     obj = _polarscan.new()
-    self.assertAlmostEquals(0.0, obj.beamwidth, 4)
+    self.assertAlmostEquals(1.0*math.pi/180.0, obj.beamwidth, 4)
     try:
       obj.beamwidth = 10
       self.fail("Expected TypeError")
     except TypeError,e:
       pass
-    self.assertAlmostEquals(0.0, obj.beamwidth, 4)
+    self.assertAlmostEquals(1.0*math.pi/180.0, obj.beamwidth, 4)
 
   def test_defaultparameter(self):
     obj = _polarscan.new()

@@ -50,6 +50,7 @@ struct _PolarVolume_t {
   RaveObjectHashTable_t* attrs; /**< the attributes */
   char* source;             /**< the source string */
   char* paramname;          /**< the default parameter */
+  double beamwidth;         /**< the beamwidth, default bw is 1.0 * M_PI/180.0 */
 };
 
 /*@{ Private functions */
@@ -65,6 +66,7 @@ static int PolarVolume_constructor(RaveCoreObject* obj)
   this->datetime = NULL;
   this->source = NULL;
   this->paramname = NULL;
+  this->beamwidth = 1.0 * M_PI/180.0;
   this->attrs = RAVE_OBJECT_NEW(&RaveObjectHashTable_TYPE);
   this->datetime = RAVE_OBJECT_NEW(&RaveDateTime_TYPE);
 
@@ -114,6 +116,7 @@ static int PolarVolume_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srco
   this->attrs = RAVE_OBJECT_CLONE(src->attrs);
   this->source = NULL;
   this->paramname = NULL;
+  this->beamwidth = src->beamwidth;
 
   if (this->datetime == NULL || this->projection == NULL ||
       this->scans == NULL || this->navigator == NULL || this->attrs == NULL) {
@@ -219,25 +222,25 @@ static int descendingElevationSort(const void* a, const void* b)
 /*@{ Interface functions */
 int PolarVolume_setTime(PolarVolume_t* pvol, const char* value)
 {
-  RAVE_ASSERT((pvol != NULL), "pvol was NULL");
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
   return RaveDateTime_setTime(pvol->datetime, value);
 }
 
 const char* PolarVolume_getTime(PolarVolume_t* pvol)
 {
-  RAVE_ASSERT((pvol != NULL), "pvol was NULL");
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
   return RaveDateTime_getTime(pvol->datetime);
 }
 
 int PolarVolume_setDate(PolarVolume_t* pvol, const char* value)
 {
-  RAVE_ASSERT((pvol != NULL), "pvol was NULL");
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
   return RaveDateTime_setDate(pvol->datetime, value);
 }
 
 const char* PolarVolume_getDate(PolarVolume_t* pvol)
 {
-  RAVE_ASSERT((pvol != NULL), "pvol was NULL");
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
   return RaveDateTime_getDate(pvol->datetime);
 }
 
@@ -245,7 +248,7 @@ int PolarVolume_setSource(PolarVolume_t* pvol, const char* value)
 {
   char* tmp = NULL;
   int result = 0;
-  RAVE_ASSERT((pvol != NULL), "pvol was NULL");
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
   if (value != NULL) {
     tmp = RAVE_STRDUP(value);
     if (tmp != NULL) {
@@ -263,55 +266,75 @@ int PolarVolume_setSource(PolarVolume_t* pvol, const char* value)
 
 const char* PolarVolume_getSource(PolarVolume_t* pvol)
 {
-  RAVE_ASSERT((pvol != NULL), "pvol was NULL");
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
   return (const char*)pvol->source;
 }
 
 void PolarVolume_setLongitude(PolarVolume_t* pvol, double lon)
 {
-  RAVE_ASSERT((pvol != NULL), "pvol was NULL");
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
   PolarNavigator_setLon0(pvol->navigator, lon);
 }
 
 double PolarVolume_getLongitude(PolarVolume_t* pvol)
 {
-  RAVE_ASSERT((pvol != NULL), "pvol was NULL");
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
   return PolarNavigator_getLon0(pvol->navigator);
 }
 
 void PolarVolume_setLatitude(PolarVolume_t* pvol, double lat)
 {
-  RAVE_ASSERT((pvol != NULL), "pvol was NULL");
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
   PolarNavigator_setLat0(pvol->navigator, lat);
 }
 
 double PolarVolume_getLatitude(PolarVolume_t* pvol)
 {
-  RAVE_ASSERT((pvol != NULL), "pvol was NULL");
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
   return PolarNavigator_getLat0(pvol->navigator);
 }
 
 void PolarVolume_setHeight(PolarVolume_t* pvol, double height)
 {
-  RAVE_ASSERT((pvol != NULL), "pvol was NULL");
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
   PolarNavigator_setAlt0(pvol->navigator, height);
 }
 
 double PolarVolume_getHeight(PolarVolume_t* pvol)
 {
-  RAVE_ASSERT((pvol != NULL), "pvol was NULL");
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
   return PolarNavigator_getAlt0(pvol->navigator);
+}
+
+void PolarVolume_setBeamwidth(PolarVolume_t* pvol, double bw)
+{
+  int i = 0, nlen = 0;
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
+  pvol->beamwidth = bw;
+
+  nlen = RaveObjectList_size(pvol->scans);
+  for (i = 0; i < nlen; i++) {
+    PolarScan_t* scan = (PolarScan_t*)RaveObjectList_get(pvol->scans, i);
+    PolarScanInternal_setPolarVolumeBeamwidth(scan, bw);
+    RAVE_OBJECT_RELEASE(scan);
+  }
+}
+
+double PolarVolume_getBeamwidth(PolarVolume_t* pvol)
+{
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
+  return pvol->beamwidth;
 }
 
 double PolarVolume_getDistance(PolarVolume_t* pvol, double lon, double lat)
 {
-  RAVE_ASSERT((pvol != NULL), "pvol was NULL");
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
   return PolarNavigator_getDistance(pvol->navigator, lat, lon);
 }
 
 void PolarVolume_setProjection(PolarVolume_t* pvol, Projection_t* projection)
 {
-  RAVE_ASSERT((pvol != NULL), "pvol was NULL");
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
   RAVE_OBJECT_RELEASE(pvol->projection);
   pvol->projection = NULL;
   if (projection != NULL) {
@@ -328,7 +351,7 @@ void PolarVolume_setProjection(PolarVolume_t* pvol, Projection_t* projection)
 
 Projection_t* PolarVolume_getProjection(PolarVolume_t* pvol)
 {
-  RAVE_ASSERT((pvol != NULL), "pvol was NULL");
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
   if (pvol->projection != NULL) {
     return RAVE_OBJECT_COPY(pvol->projection);
   }
@@ -338,8 +361,8 @@ Projection_t* PolarVolume_getProjection(PolarVolume_t* pvol)
 int PolarVolume_addScan(PolarVolume_t* pvol, PolarScan_t* scan)
 {
   int result = 0;
-  RAVE_ASSERT((pvol != NULL), "pvol was NULL");
-  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
   if (RaveObjectList_add(pvol->scans, (RaveCoreObject*)scan)) {
     PolarScan_setNavigator(scan, pvol->navigator);
     PolarScan_setProjection(scan, pvol->projection);
@@ -349,6 +372,9 @@ int PolarVolume_addScan(PolarVolume_t* pvol, PolarScan_t* scan)
         goto done;
       }
     }
+    if (PolarScanInternal_isPolarVolumeBeamwidth(scan) == -1) { /* if default beamwidth */
+      PolarScanInternal_setPolarVolumeBeamwidth(scan, pvol->beamwidth);
+    }
     result = 1;
   }
 done:
@@ -357,13 +383,13 @@ done:
 
 PolarScan_t* PolarVolume_getScan(PolarVolume_t* pvol, int index)
 {
-  RAVE_ASSERT((pvol != NULL), "pvol was NULL");
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
   return (PolarScan_t*)RaveObjectList_get(pvol->scans, index);
 }
 
 int PolarVolume_getNumberOfScans(PolarVolume_t* pvol)
 {
-  RAVE_ASSERT((pvol != NULL), "pvol was NULL");
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
   return RaveObjectList_size(pvol->scans);
 }
 
@@ -373,7 +399,7 @@ PolarScan_t* PolarVolume_getScanClosestToElevation(PolarVolume_t* pvol, double e
   int ei = 0;
   int i = 0;
   int nrScans = 0;
-  RAVE_ASSERT((pvol != NULL), "pvol was NULL");
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
 
   nrScans = RaveObjectList_size(pvol->scans);
 
@@ -476,13 +502,13 @@ int PolarVolume_setDefaultParameter(PolarVolume_t* pvol, const char* quantity)
 
 const char* PolarVolume_getDefaultParameter(PolarVolume_t* pvol)
 {
-  RAVE_ASSERT((pvol != NULL), "pvol was NULL");
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
   return (const char*)pvol->paramname;
 }
 
 void PolarVolume_sortByElevations(PolarVolume_t* pvol, int ascending)
 {
-  RAVE_ASSERT((pvol != NULL), "pvol was NULL");
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
 
   if (ascending == 1) {
     RaveObjectList_sort(pvol->scans, ascendingElevationSort);
@@ -497,7 +523,7 @@ int PolarVolume_isAscendingScans(PolarVolume_t* pvol)
   int index = 0;
   double lastelev = 0.0L;
   int nrScans = 0;
-  RAVE_ASSERT((pvol != NULL), "pvol was NULL");
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
   nrScans = RaveObjectList_size(pvol->scans);
   if (nrScans > 0) {
     lastelev = PolarVolumeInternal_getElangle(pvol, 0);
@@ -515,7 +541,7 @@ int PolarVolume_isAscendingScans(PolarVolume_t* pvol)
 int PolarVolume_isTransformable(PolarVolume_t* pvol)
 {
   int result = 0;
-  RAVE_ASSERT((pvol != NULL), "pvol was NULL");
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
   // Verify that the volume at least got one scan and that the scans
   // are sorted in ascending order.
   if (RaveObjectList_size(pvol->scans) > 0 && PolarVolume_isAscendingScans(pvol)) {
@@ -583,6 +609,12 @@ int PolarVolume_addAttribute(PolarVolume_t* pvol,
         RAVE_ERROR0("Failed to extract where/height as a double");
       }
       PolarVolume_setHeight(pvol, value);
+    } else if (strcasecmp("how/beamwidth", name)==0) {
+      double value = 0.0;
+      if (!(result = RaveAttribute_getDouble(attribute, &value))) {
+        RAVE_ERROR0("Failed to extract how/beamwidth as a double");
+      }
+      PolarVolume_setBeamwidth(pvol, value*M_PI/180.0);
     } else {
       if (!RaveAttributeHelp_extractGroupAndName(name, &gname, &aname)) {
         RAVE_ERROR1("Failed to extract group and name from %s", name);
@@ -647,7 +679,8 @@ RaveObjectList_t* PolarVolume_getAttributeValues(PolarVolume_t* pvol)
       !RaveUtilities_addStringAttributeToList(result, "what/source", PolarVolume_getSource(pvol)) ||
       !RaveUtilities_addDoubleAttributeToList(result, "where/lon", PolarVolume_getLongitude(pvol)*180.0/M_PI) ||
       !RaveUtilities_addDoubleAttributeToList(result, "where/lat", PolarVolume_getLatitude(pvol)*180.0/M_PI) ||
-      !RaveUtilities_addDoubleAttributeToList(result, "where/height", PolarVolume_getHeight(pvol))) {
+      !RaveUtilities_addDoubleAttributeToList(result, "where/height", PolarVolume_getHeight(pvol)) ||
+      !RaveUtilities_addDoubleAttributeToList(result, "how/beamwidth", PolarVolume_getBeamwidth(pvol)*180.0/M_PI)) {
     goto error;
   }
 

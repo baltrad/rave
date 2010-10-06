@@ -57,7 +57,8 @@ struct _PolarScan_t {
   long a1gate;       /**< something */
 
   // How
-  double beamwidth;  /**< beam width */
+  double beamwidth;  /**< beam width, default is 1.0 * M_PI/180.0 */
+  int bwpvol; /**< indicates if the beamwidth comes from a polar volume or not */
 
   // Date/Time
   RaveDateTime_t* datetime;     /**< the date, time instance */
@@ -95,7 +96,8 @@ static int PolarScan_constructor(RaveCoreObject* obj)
   scan->rscale = 0.0;
   scan->rstart = 0.0;
   scan->a1gate = 0;
-  scan->beamwidth = 0.0;
+  scan->beamwidth = 1.0 * M_PI/180.0;
+  scan->bwpvol = -1;
   scan->navigator = NULL;
   scan->projection = NULL;
   scan->parameters = NULL;
@@ -139,11 +141,14 @@ static int PolarScan_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj
   PolarScan_t* this = (PolarScan_t*)obj;
   PolarScan_t* src = (PolarScan_t*)srcobj;
   this->datetime = NULL;
-  this->elangle = 0.0;
-  this->rscale = 0.0;
-  this->rstart = 0.0;
-  this->a1gate = 0;
-  this->beamwidth = 0.0;
+  this->nbins = src->nbins;
+  this->nrays = src->nrays;
+  this->elangle = src->elangle;
+  this->rscale = src->rscale;
+  this->rstart = src->rstart;
+  this->a1gate = src->a1gate;
+  this->beamwidth = src->beamwidth;
+  this->bwpvol = src->bwpvol;
   this->navigator = NULL;
   this->projection = NULL;
   this->paramname = NULL;
@@ -396,13 +401,14 @@ long PolarScan_getA1gate(PolarScan_t* scan)
   return scan->a1gate;
 }
 
-void PolarScan_setBeamWidth(PolarScan_t* scan, long beamwidth)
+void PolarScan_setBeamwidth(PolarScan_t* scan, double beamwidth)
 {
   RAVE_ASSERT((scan != NULL), "scan == NULL");
   scan->beamwidth = beamwidth;
+  scan->bwpvol = 0;
 }
 
-double PolarScan_getBeamWidth(PolarScan_t* scan)
+double PolarScan_getBeamwidth(PolarScan_t* scan)
 {
   RAVE_ASSERT((scan != NULL), "scan == NULL");
   return scan->beamwidth;
@@ -864,6 +870,13 @@ int PolarScan_addAttribute(PolarScan_t* scan, RaveAttribute_t* attribute)
         goto done;
       }
       result = PolarScan_setTime(scan, value);
+    } else if (strcasecmp("how/beamwidth", name)==0) {
+      double value = 0.0;
+      if (!(result = RaveAttribute_getDouble(attribute, &value))) {
+        RAVE_ERROR0("Failed to extract how/beamwidth as a double");
+        goto done;
+      }
+      PolarScan_setBeamwidth(scan, value * M_PI/180.0);
     } else {
       if (!RaveAttributeHelp_extractGroupAndName(name, &gname, &aname)) {
         RAVE_ERROR1("Failed to extract group and name from %s", name);
@@ -917,7 +930,7 @@ RaveObjectList_t* PolarScan_getAttributeValues(PolarScan_t* scan, Rave_ObjectTyp
 
   if (otype == Rave_ObjectType_SCAN) {
     if (rootattributes == 1) {
-      if (!RaveUtilities_replaceDoubleAttributeInList(result, "how/beamwidth", PolarScan_getBeamWidth(scan)) ||
+      if (!RaveUtilities_replaceDoubleAttributeInList(result, "how/beamwidth", PolarScan_getBeamwidth(scan)*180.0/M_PI) ||
           !RaveUtilities_replaceStringAttributeInList(result, "what/date", PolarScan_getDate(scan)) ||
           !RaveUtilities_replaceStringAttributeInList(result, "what/time", PolarScan_getTime(scan)) ||
           !RaveUtilities_replaceStringAttributeInList(result, "what/source", PolarScan_getSource(scan)) ||
@@ -942,6 +955,11 @@ RaveObjectList_t* PolarScan_getAttributeValues(PolarScan_t* scan, Rave_ObjectTyp
       }
     }
   } else {
+    if (PolarScanInternal_isPolarVolumeBeamwidth(scan) != 1) {
+      if (!RaveUtilities_replaceDoubleAttributeInList(result, "how/beamwidth", PolarScan_getBeamwidth(scan)*180.0/M_PI)) {
+        goto error;
+      }
+    }
     if (!RaveUtilities_replaceDoubleAttributeInList(result, "where/elangle", PolarScan_getElangle(scan)*180.0/M_PI) ||
         !RaveUtilities_replaceLongAttributeInList(result, "where/a1gate", PolarScan_getA1gate(scan)) ||
         !RaveUtilities_replaceDoubleAttributeInList(result, "where/rscale", PolarScan_getRscale(scan)) ||
@@ -1022,6 +1040,19 @@ int PolarScan_isValid(PolarScan_t* scan, Rave_ObjectType otype)
   result = 1;
 done:
   return result;
+}
+
+void PolarScanInternal_setPolarVolumeBeamwidth(PolarScan_t* scan, double bw)
+{
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+  scan->beamwidth = bw;
+  scan->bwpvol = 1;
+}
+
+int PolarScanInternal_isPolarVolumeBeamwidth(PolarScan_t* scan)
+{
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+  return scan->bwpvol;
 }
 
 /*@} End of Interface functions */

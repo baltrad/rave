@@ -250,19 +250,18 @@ void PolarScan_setA1gate(PolarScan_t* scan, long a1gate);
 long PolarScan_getA1gate(PolarScan_t* scan);
 
 /**
- * Sets the beamwidth. If not set, it will default to 360/nrays.
+ * Sets the beamwidth. Default is 1.0 * M_PI/360.0
  * @param[in] scan - the polar scan
- * @param[in] beamwidth - the beam width
+ * @param[in] beamwidth - the beam width in radians
  */
-void PolarScan_setBeamWidth(PolarScan_t* scan, long beamwidth);
+void PolarScan_setBeamwidth(PolarScan_t* scan, double beamwidth);
 
 /**
- * Returns the beamwidth. If no beamwidth has been explicitly set, the returned
- * value will be 360/nrays or 0.0 if no nrays has been set either.
+ * Returns the beamwidth. Default is 1.0 * M_PI/360.0.
  * @param[in] scan - the polar scan
- * @return the beam width
+ * @return the beam width om radians
  */
-double PolarScan_getBeamWidth(PolarScan_t* scan);
+double PolarScan_getBeamwidth(PolarScan_t* scan);
 
 /**
  * Sets the default parameter for this scan. I.e. all operations
@@ -590,5 +589,22 @@ RaveObjectList_t* PolarScan_getAttributeValues(PolarScan_t* scan, Rave_ObjectTyp
  * @returns 1 if valid, otherwise 0
  */
 int PolarScan_isValid(PolarScan_t* scan, Rave_ObjectType otype);
+
+/**
+ * Framework internal function for setting the beamwidth in a scan,
+ * used to indicate that the beamwidth comes from the polar volume.
+ * I.E. DO NOT USE UNLESS YOU KNOW WHY.
+ * @param[in] scan - self
+ * @param[in] bw - the beam width in radians
+ */
+void PolarScanInternal_setPolarVolumeBeamwidth(PolarScan_t* scan, double bw);
+
+/**
+ * Returns if the beamwidth comes from a volume or not.
+ * I.E. DO NOT USE UNLESS YOU KNOW WHY.
+ * @param[in] scan - self
+ * @returns -1 if default setting, 1 if beamwidth comes from a polar volume otherwise 0
+ */
+int PolarScanInternal_isPolarVolumeBeamwidth(PolarScan_t* scan);
 
 #endif

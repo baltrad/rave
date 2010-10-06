@@ -492,6 +492,7 @@ static struct PyMethodDef _pypolarvolume_methods[] =
   {"date", NULL},
   {"source", NULL},
   {"paramname", NULL},
+  {"beamwidth", NULL},
   {"getDistance", (PyCFunction) _pypolarvolume_getDistance, 1},
   {"addScan", (PyCFunction) _pypolarvolume_addScan, 1},
   {"getScan", (PyCFunction) _pypolarvolume_getScan, 1},
@@ -521,6 +522,8 @@ static PyObject* _pypolarvolume_getattr(PyPolarVolume* self, char* name)
     return PyFloat_FromDouble(PolarVolume_getLatitude(self->pvol));
   } else if (strcmp("height", name) == 0) {
     return PyFloat_FromDouble(PolarVolume_getHeight(self->pvol));
+  } else if (strcmp("beamwidth", name) == 0) {
+    return PyFloat_FromDouble(PolarVolume_getBeamwidth(self->pvol));
   } else if (strcmp("time", name) == 0) {
     const char* str = PolarVolume_getTime(self->pvol);
     if (str != NULL) {
@@ -586,6 +589,12 @@ static int _pypolarvolume_setattr(PyPolarVolume* self, char* name, PyObject* val
       PolarVolume_setHeight(self->pvol, PyFloat_AsDouble(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "height must be of type float");
+    }
+  } else if (strcmp("beamwidth", name) == 0) {
+    if (PyFloat_Check(val)) {
+      PolarVolume_setBeamwidth(self->pvol, PyFloat_AsDouble(val));
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError, "beamwidth must be of type float");
     }
   } else if (strcmp("time", name) == 0) {
     if (PyString_Check(val)) {

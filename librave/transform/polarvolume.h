@@ -129,6 +129,22 @@ void PolarVolume_setHeight(PolarVolume_t* pvol, double height);
 double PolarVolume_getHeight(PolarVolume_t* pvol);
 
 /**
+ * Sets the beamwidth for the volume. All scans will get the specified
+ * beamwidth. If you only want to make the beamwidth affect an individual
+ * scan, modify the scan directly.
+ * @param[in] pvol - self
+ * @param[in] bw - beam width in radians
+ */
+void PolarVolume_setBeamwidth(PolarVolume_t* pvol, double bw);
+
+/**
+ * Returns the beam width for the volume.
+ * @param[in] pvol - self
+ * @returns the beam width in radians
+ */
+double PolarVolume_getBeamwidth(PolarVolume_t* pvol);
+
+/**
  * Returns the distance from the radar to the specified lon/lat coordinate pair.
  * @param[in] pvol - self
  * @param[in] lon - the longitude

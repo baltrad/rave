@@ -861,7 +861,7 @@ static PyObject* _pypolarscan_getattr(PyPolarScan* self, char* name)
   } else if (strcmp("datatype", name) == 0) {
     return PyInt_FromLong(PolarScan_getDataType(self->scan));
   } else if (strcmp("beamwidth", name) == 0) {
-    return PyFloat_FromDouble(PolarScan_getBeamWidth(self->scan));
+    return PyFloat_FromDouble(PolarScan_getBeamwidth(self->scan));
   } else if (strcmp("longitude", name) == 0) {
     return PyFloat_FromDouble(PolarScan_getLongitude(self->scan));
   } else if (strcmp("latitude", name) == 0) {
@@ -941,7 +941,7 @@ static int _pypolarscan_setattr(PyPolarScan* self, char* name, PyObject* val)
     }
   } else if (strcmp("beamwidth", name) == 0) {
     if (PyFloat_Check(val)) {
-      PolarScan_setBeamWidth(self->scan, PyFloat_AsDouble(val));
+      PolarScan_setBeamwidth(self->scan, PyFloat_AsDouble(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "beamwidth must be of type float");
     }
