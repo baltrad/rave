@@ -1,6 +1,14 @@
 <?xml version='1.0' encoding='iso-8859-1'?>
 <!-- $Id: projections.xml,v 1.1.1.1 2006/07/14 11:31:54 dmichels Exp $ -->
 <projections>
+<projection id='llwgs84'>
+  <description>http://spatialreference.org/ref/epsg/4326/</description>
+  <projdef>+proj=latlong +ellps=WGS84 +datum=WGS84 +no_defs</projdef>
+</projection>
+<projection id='rack'>
+  <description>RACK's spherical earth</description>
+  <projdef>+proj=latlong +R=6371000 +nadgrids=@null +no_defs</projdef>
+</projection>
 <projection id='ps14e60n'>
   <description>Polar Stereographic 14E, 60N</description>
   <projdef>+proj=stere +ellps=bessel +lat_0=90 +lon_0=14 +lat_ts=60 +datum=WGS84</projdef>
@@ -16,10 +24,6 @@
 <projection id='RT90'>
   <description>Lantmäteriet RT90 (Swedish national grid)</description>
   <projdef>+proj=tmerc +ellps=bessel +lon_0=15.808277777778 +x_0=1500000</projdef>
-</projection>
-<projection id='llwgs84'>
-  <description>Latlong on WGS84, for whatever purposes</description>
-  <projdef>+proj=latlong +ellps=WGS84 +datum=WGS84</projdef>
 </projection>
 <projection id='gmaps'>
 <description>Google Maps</description>
