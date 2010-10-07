@@ -18,7 +18,7 @@
 rave_IO.py - 
 """
 import os, string
-from types import IntType, LongType, FloatType, StringType, UnicodeType
+from types import IntType, LongType, FloatType
 import _pyhl
 from xml.etree.ElementTree import SubElement, ElementTree
 import rave, rave_info, rave_defines
@@ -85,13 +85,10 @@ def open_hdf5(filename):
                 for n in node.data():
                     node = string.strip(n)
                     node = remove_nulls(node)
-#                    if node[-1] == '\x00': node = node[:-1] # clean up garbage
                     nodes.append(("'"+node+"'"))
-                e.text = str(string.join(nodes, ", ")).decode(ENCODING)
+                e.text = unicode(str(string.join(nodes, ", ")), ENCODING)
             else:
-                # THIS WORKS!
-                e.text = remove_nulls(str(node.data()).decode(ENCODING))
-                #e.text = unicode(str(node.data()), UTF8)
+                e.text = remove_nulls(unicode(str(node.data()), ENCODING))
             if t != "string":
                 e.attrib["type"] = t
         elif typ==2:
@@ -140,13 +137,10 @@ def get_metadata(filename):
                 for n in node.data():
                     node = string.strip(n)
                     node = remove_nulls(node)
-#                    if node[-1] == '\x00': node = node[:-1] # clean up garbage
                     nodes.append(("'"+node+"'"))
-                e.text = str(string.join(nodes, ", ")).decode(ENCODING)
-                #e.text = unicode(str(string.join(nodes, ", ")), ENCODING)
+                e.text = unicode(str(string.join(nodes, ", ")), ENCODING)
             else:
-                e.text = remove_nulls(str(node.data()).decode(ENCODING))
-                #e.text = unicode(str(node.data()), ENCODING)
+                e.text = remove_nulls(unicode(str(node.data()), ENCODING))
             if t != "string":
                 e.attrib["type"] = t
         # Skip typ==2, dataset array
@@ -186,14 +180,11 @@ def get_metadataRAVE(filename):
                 nodes = []
                 for n in node.data():
                     node = string.strip(n)
-                    node = remove_nulls(node)  # clean up garbage
-                    #if node[-1] == '\x00': node = node[:-1] # clean up garbage
+                    node = remove_nulls(node)
                     nodes.append(("'"+node+"'"))
-                e.text = str(string.join(nodes, ", ")).decode(ENCODING)
-                #e.text = unicode(str(string.join(nodes, ", ")), ENCODING)
+                e.text = unicode(str(string.join(nodes, ", ")), ENCODING)
             else:
-                e.text = remove_nulls(str(node.data()).decode(ENCODING))
-                #e.text = unicode(str(node.data()), ENCODING)
+                e.text = remove_nulls(unicode(str(node.data()), ENCODING))
             if t != "string":
                 e.attrib["type"] = t
         # Skip typ==2, dataset array
@@ -249,16 +240,8 @@ def traverse_save(e, a, ID, datadict):
                     value = v
                 b.setArrayValue(-1, [len(value)], value, "string", -1)
             else:
-                if typ is 'ustring': typ = 'string'
                 b =_pyhl.node(_pyhl.ATTRIBUTE_ID, IDA)
                 b.setScalarValue(-1, value, typ, -1)
-##                 print typ, value
-##                 if typ is 'ustring':
-##                     b.setScalarValue(-1, value.encode(rave_defines.UTF8),
-##                                      typ, -1)
-##                 else:
-##                     b.setScalarValue(-1, value, typ, -1)
-
             a.addNode(b)
 
             # Workaround. For 8-bit uchar datasets, add H5IM attributes.

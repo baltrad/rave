@@ -22,10 +22,10 @@
 
 """
 import sys, string
-from types import IntType, FloatType, StringType, ListType, TupleType, LongType, UnicodeType
+from types import IntType, FloatType, StringType, ListType, TupleType, LongType
 #from numpy import ArrayType
 from numpy import ndarray
-from rave_defines import ENCODING, UTF8
+from rave_defines import ENCODING
 from struct import calcsize
 
 # If a long is the same size as an int, ensure that longs are saved as llongs
@@ -40,13 +40,8 @@ def typeconv(typ, val):
         return string.atoi(val)
     elif typ in ["float", "double"]:
         return string.atof(val)
-    if typ in ("ustring", "sequence", "dataset"):
-        return val.encode(UTF8)
-    elif typ == "string":
-        if type(val) is UnicodeType:
-            return val.encode(UTF8)
-        else:
-            return val.decode(ENCODING)
+    if typ in ("string", "sequence", "dataset"):
+        return val.encode(ENCODING)
 
 def findelem(root, attr):
     path = string.split(attr, "/")[1:]
@@ -76,7 +71,6 @@ def geth5attr(e, dict):
     else:
         return typeconv(typ, val)
 
-# Does this always return typ="string"?
 def type_val(e):
     typ = e.get("type", "string")
     val = e.text
@@ -91,12 +85,9 @@ def h5type(value):
         return "double"
     elif type(value) is StringType:
         return "string"
-    elif type(value) is UnicodeType:
-        return "ustring"
     elif type(value) in [ListType, TupleType]:
         for i in value:
-            if type(i) not in [StringType, UnicodeType,
-                               IntType, FloatType, LongType]:
+            if type(i) not in [StringType, IntType, FloatType, LongType]:
                 return None
         return "sequence"
     elif type(value) is ndarray:
@@ -119,21 +110,17 @@ def seth5attr(e, dict, h5typ, attribute, value):
         for n in value:
             node = string.strip(str(n))
             nodes.append(("'"+node+"'"))
-        e.text = str(string.join(nodes, ", "))
-        #e.text = unicode(str(string.join(nodes, ", ")), ENCODING)
+        e.text = unicode(str(string.join(nodes, ", ")), ENCODING)
     elif h5typ is "dataset":
 #        label = string.split(attribute, '/')[1]  # no heirarchy
 #        dict[label] = value                      # no heirarchy
 #        e.text = label                           # no heirarchy
         dict[attribute] = value
-        e.text = attribute
-        #e.text = unicode(attribute, ENCODING)
+        e.text = unicode(attribute, ENCODING)
     elif h5typ in ["int", "long", "llong", "float", "double"]:
-        e.text = str(value)
-        #e.text = unicode(str(value), ENCODING)
-    elif h5typ in ["string", "ustring"]:
-        e.text = value
-        #e.text = unicode(value, ENCODING)
+        e.text = unicode(str(value), ENCODING)
+    elif h5typ is "string":
+        e.text = unicode(value, ENCODING)
     else:
         raise ValueError, "Illegal type"
 
