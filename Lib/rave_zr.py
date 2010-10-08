@@ -34,7 +34,7 @@ def dBZ2R(dbz, A, b):
 def Z2dBZ(Z):
     return 10 * log10(Z)
 
-def Z2R(dbz, A, B):
+def Z2R(dbz, A, b):
     pow_v = 1.0/b
     reallyZ = power(10.0,(dbz/10.0));
     reallyZ /= A;
