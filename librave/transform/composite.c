@@ -39,6 +39,8 @@ struct _Composite_t {
   double height; /**< the height when generating pcapppi, cappi, default 1000 */
   double elangle; /**< the elevation angle when generating ppi, default 0.0 */
   char* paramname; /**< the parameter name */
+  double offset;     /**< the offset, default 0 */
+  double gain;     /**< the gain, default 1 */
   RaveDateTime_t* datetime;  /**< the date and time */
   RaveObjectList_t* list;
 };
@@ -55,6 +57,8 @@ static int Composite_constructor(RaveCoreObject* obj)
   this->height = 1000.0;
   this->elangle = 0.0;
   this->paramname = NULL;
+  this->offset = 0;
+  this->gain = 1;
   this->list = RAVE_OBJECT_NEW(&RaveObjectList_TYPE);
   this->datetime = RAVE_OBJECT_NEW(&RaveDateTime_TYPE);
   if (this->list == NULL || this->datetime == NULL || !Composite_setQuantity(this, "DBZH")) {
@@ -81,6 +85,8 @@ static int Composite_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj
   this->height = src->height;
   this->elangle = src->elangle;
   this->paramname = NULL;
+  this->offset = src->offset;
+  this->gain = src->gain;
   this->list = RAVE_OBJECT_CLONE(src->list);
   this->datetime = RAVE_OBJECT_CLONE(src->datetime);
   if (this->list == NULL || this->datetime == NULL || !Composite_setQuantity(this, Composite_getQuantity(src))) {
@@ -185,6 +191,30 @@ const char* Composite_getQuantity(Composite_t* composite)
   return (const char*)composite->paramname;
 }
 
+void Composite_setOffset(Composite_t* composite, double offset)
+{
+  RAVE_ASSERT((composite != NULL), "composite == NULL");
+  composite->offset = offset;
+}
+
+double Composite_getOffset(Composite_t* composite)
+{
+  RAVE_ASSERT((composite != NULL), "composite == NULL");
+  return composite->offset;
+}
+
+void Composite_setGain(Composite_t* composite, double gain)
+{
+  RAVE_ASSERT((composite != NULL), "composite == NULL");
+  composite->gain = gain;
+}
+
+double Composite_getGain(Composite_t* composite)
+{
+  RAVE_ASSERT((composite != NULL), "composite == NULL");
+  return composite->gain;
+}
+
 int Composite_setTime(Composite_t* composite, const char* value)
 {
   RAVE_ASSERT((composite != NULL), "composite == NULL");
@@ -256,6 +286,9 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area)
 
   Cartesian_setNodata(result, 255.0);
   Cartesian_setUndetect(result, 0.0);
+  Cartesian_setOffset(result, Composite_getOffset(composite));
+  Cartesian_setGain(result, Composite_getGain(composite));
+
   xsize = Cartesian_getXSize(result);
   ysize = Cartesian_getYSize(result);
   projection = Cartesian_getProjection(result);
@@ -312,11 +345,11 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area)
           //
           if (composite->ptype == Rave_ProductType_PPI ||
               composite->ptype == Rave_ProductType_PCAPPI) {
-            vtype = PolarScan_getNearestParameterValue((PolarScan_t*)pobj,
-                                                       Composite_getQuantity(composite),
-                                                       plon,
-                                                       plat,
-                                                       &v);
+            vtype = PolarScan_getNearestConvertedParameterValue((PolarScan_t*)pobj,
+                                                                Composite_getQuantity(composite),
+                                                                plon,
+                                                                plat,
+                                                                &v);
           } else {
             vtype = RaveValueType_NODATA;
           }
@@ -324,13 +357,13 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area)
           if (composite->ptype == Rave_ProductType_PCAPPI ||
               composite->ptype == Rave_ProductType_CAPPI) {
             int insidee = (composite->ptype == Rave_ProductType_PCAPPI)?0:1;
-            vtype = PolarVolume_getNearestParameterValue((PolarVolume_t*)pobj,
-                                                         Composite_getQuantity(composite),
-                                                         plon,
-                                                         plat,
-                                                         Composite_getHeight(composite),
-                                                         insidee,
-                                                         &v);
+            vtype = PolarVolume_getNearestConvertedParameterValue((PolarVolume_t*)pobj,
+                                                                  Composite_getQuantity(composite),
+                                                                  plon,
+                                                                  plat,
+                                                                  Composite_getHeight(composite),
+                                                                  insidee,
+                                                                  &v);
           } else if (composite->ptype == Rave_ProductType_PPI) {
             PolarScan_t* scan = PolarVolume_getScanClosestToElevation((PolarVolume_t*)pobj,
                                                                       Composite_getElevationAngle(composite),
@@ -340,11 +373,11 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area)
                           Composite_getElevationAngle(composite));
               goto fail;
             }
-            vtype = PolarScan_getNearestParameterValue(scan,
-                                                       Composite_getQuantity(composite),
-                                                       plon,
-                                                       plat,
-                                                       &v);
+            vtype = PolarScan_getNearestConvertedParameterValue(scan,
+                                                                Composite_getQuantity(composite),
+                                                                plon,
+                                                                plat,
+                                                                &v);
             RAVE_OBJECT_RELEASE(scan);
           } else {
             vtype = RaveValueType_NODATA;

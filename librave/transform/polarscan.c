@@ -733,6 +733,28 @@ done:
   return result;
 }
 
+RaveValueType PolarScan_getConvertedParameterValueAtAzimuthAndRange(PolarScan_t* scan, const char* quantity, double a, double r, double* v)
+{
+  RaveValueType result = RaveValueType_UNDEFINED;
+  int ai = 0, ri = 0;
+  PolarScanParam_t* param = NULL;
+
+  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  RAVE_ASSERT((v != NULL), "v was NULL");
+  param = PolarScan_getParameter(scan, quantity);
+  if (param != NULL) {
+    result = RaveValueType_NODATA;
+    *v = PolarScanParam_getNodata(param);
+    if (!PolarScan_getIndexFromAzimuthAndRange(scan, a, r, &ai, &ri)) {
+      goto done;
+    }
+    result = PolarScanParam_getConvertedValue(param, ri, ai, v);
+  }
+done:
+  RAVE_OBJECT_RELEASE(param);
+  return result;
+}
+
 RaveValueType PolarScan_getNearest(PolarScan_t* scan, double lon, double lat, double* v)
 {
   RaveValueType result = RaveValueType_NODATA;
@@ -757,14 +779,26 @@ RaveValueType PolarScan_getNearestParameterValue(PolarScan_t* scan, const char* 
   double d = 0.0L, a = 0.0L, r = 0.0L, h = 0.0L;
   RAVE_ASSERT((scan != NULL), "scan was NULL");
   RAVE_ASSERT((v != NULL), "v was NULL");
-  if (scan->param == NULL) {
-    return RaveValueType_UNDEFINED;
-  }
 
   PolarNavigator_llToDa(scan->navigator, lat, lon, &d, &a);
   PolarNavigator_deToRh(scan->navigator, d, scan->elangle, &r, &h);
 
   result = PolarScan_getParameterValueAtAzimuthAndRange(scan, quantity, a, r, v);
+
+  return result;
+}
+
+RaveValueType PolarScan_getNearestConvertedParameterValue(PolarScan_t* scan, const char* quantity, double lon, double lat, double* v)
+{
+  RaveValueType result = RaveValueType_NODATA;
+  double d = 0.0L, a = 0.0L, r = 0.0L, h = 0.0L;
+  RAVE_ASSERT((scan != NULL), "scan was NULL");
+  RAVE_ASSERT((v != NULL), "v was NULL");
+
+  PolarNavigator_llToDa(scan->navigator, lat, lon, &d, &a);
+  PolarNavigator_deToRh(scan->navigator, d, scan->elangle, &r, &h);
+
+  result = PolarScan_getConvertedParameterValueAtAzimuthAndRange(scan, quantity, a, r, v);
 
   return result;
 }

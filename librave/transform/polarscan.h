@@ -489,6 +489,17 @@ RaveValueType PolarScan_getValueAtAzimuthAndRange(PolarScan_t* scan, double a, d
 RaveValueType PolarScan_getParameterValueAtAzimuthAndRange(PolarScan_t* scan, const char* quantity, double a, double r, double* v);
 
 /**
+ * Returns the converted value at the specified azimuth and range
+ * @param[in] scan - self
+ * @param[in] quantity - the parameter name
+ * @param[in] a - the azimuth (in radians)
+ * @param[in] r - the range (in meters)
+ * @param[out] v - the value
+ * @returns a rave value type (if scan does not contain specified parameter, RaveValueType_UNDEFINED will be returned).
+ */
+RaveValueType PolarScan_getConvertedParameterValueAtAzimuthAndRange(PolarScan_t* scan, const char* quantity, double a, double r, double* v);
+
+/**
  * Returns the nearest value to the specified longitude, latitude.
  * @param[in] scan - the scan
  * @param[in] lon  - the longitude (in radians)
@@ -508,6 +519,17 @@ RaveValueType PolarScan_getNearest(PolarScan_t* scan, double lon, double lat, do
  * @returns a rave value type
  */
 RaveValueType PolarScan_getNearestParameterValue(PolarScan_t* scan, const char* quantity, double lon, double lat, double* v);
+
+/**
+ * Returns the nearest converted parameter value to the specified longitude, latitude.
+ * @param[in] scan - the scan
+ * @param[in] quantity - the quantity
+ * @param[in] lon  - the longitude (in radians)
+ * @param[in] lat  - the latitude  (in radians)
+ * @param[out] v - the found value
+ * @returns a rave value type
+ */
+RaveValueType PolarScan_getNearestConvertedParameterValue(PolarScan_t* scan, const char* quantity, double lon, double lat, double* v);
 
 /**
  * Returns the nearest index to the specified long/lat pair.

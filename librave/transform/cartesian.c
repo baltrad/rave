@@ -54,8 +54,8 @@ struct _Cartesian_t {
   char* quantity;            /**< what does this data represent */
   RaveDateTime_t* datetime;  /**< the date and time */
   char* source;              /**< where does this data come from */
-  double gain;       /**< gain when scaling */
-  double offset;     /**< offset when scaling */
+  double gain;       /**< gain when scaling, default 1 */
+  double offset;     /**< offset when scaling, default 0 */
   double nodata;     /**< nodata */
   double undetect;   /**< undetect */
 
@@ -84,7 +84,7 @@ static int Cartesian_constructor(RaveCoreObject* obj)
   this->product = Rave_ProductType_UNDEFINED;
   this->objectType = Rave_ObjectType_IMAGE;
   this->source = NULL;
-  this->gain = 0.0;
+  this->gain = 1.0;
   this->offset = 0.0;
   this->nodata = 0.0;
   this->undetect = 0.0;
@@ -409,7 +409,9 @@ const char* Cartesian_getQuantity(Cartesian_t* cartesian)
 void Cartesian_setGain(Cartesian_t* cartesian, double gain)
 {
   RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
-  cartesian->gain = gain;
+  if (gain != 0.0) {
+    cartesian->gain = gain;
+  }
 }
 
 double Cartesian_getGain(Cartesian_t* cartesian)
@@ -496,6 +498,21 @@ int Cartesian_setValue(Cartesian_t* cartesian, long x, long y, double v)
   return RaveData2D_setValue(cartesian->data, x, y, v);
 }
 
+int Cartesian_setConvertedValue(Cartesian_t* cartesian, long x, long y, double v)
+{
+  double value = v;
+  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
+  if (value != cartesian->undetect && value != cartesian->nodata) {
+    if (cartesian->gain != 0.0) {
+      value = (v - cartesian->offset)/cartesian->gain;
+    } else {
+      RAVE_ERROR0("gain is 0.0 => division by zero error");
+      return 0;
+    }
+  }
+  return RaveData2D_setValue(cartesian->data, x, y, value);
+}
+
 RaveValueType Cartesian_getValue(Cartesian_t* cartesian, long x, long y, double* v)
 {
   RaveValueType result = RaveValueType_NODATA;
@@ -517,6 +534,18 @@ RaveValueType Cartesian_getValue(Cartesian_t* cartesian, long x, long y, double*
     *v = value;
   }
 
+  return result;
+}
+
+RaveValueType Cartesian_getConvertedValue(Cartesian_t* cartesian, long x, long y, double* v)
+{
+  RaveValueType result = RaveValueType_NODATA;
+  RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
+
+  result = Cartesian_getValue(cartesian, x, y, v);
+  if (result == RaveValueType_DATA && v != NULL) {
+    *v = (*v) * cartesian->gain + cartesian->offset;
+  }
   return result;
 }
 

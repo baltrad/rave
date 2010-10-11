@@ -249,9 +249,9 @@ int Cartesian_setQuantity(Cartesian_t* cartesian, const char* quantity);
 const char* Cartesian_getQuantity(Cartesian_t* cartesian);
 
 /**
- * Sets the gain
+ * Sets the gain.
  * @param[in] cartesian - the cartesian product
- * @param[in] gain - the gain
+ * @param[in] gain - the gain (MAY NOT BE 0.0)
  */
 void Cartesian_setGain(Cartesian_t* cartesian, double gain);
 
@@ -347,6 +347,12 @@ void* Cartesian_getData(Cartesian_t* cartesian);
 int Cartesian_setValue(Cartesian_t* cartesian, long x, long y, double v);
 
 /**
+ * Scales the value v according to gain and offset before setting it.
+ * I.e. same as Cartesian_setValue(cartesian, x, y, (v - offset)/gain)
+ */
+int Cartesian_setConvertedValue(Cartesian_t* cartesian, long x, long y, double v);
+
+/**
  * Returns the value at the specified x and y position.
  * @param[in] cartesian - the cartesian product
  * @param[in] x - the x index
@@ -355,6 +361,16 @@ int Cartesian_setValue(Cartesian_t* cartesian, long x, long y, double v);
  * @return the type of data
  */
 RaveValueType Cartesian_getValue(Cartesian_t* cartesian, long x, long y, double* v);
+
+/**
+ * Returns the converted value at the specified x and y position.
+ * @param[in] cartesian - the cartesian product
+ * @param[in] x - the x index
+ * @param[in] y - the y index
+ * @param[out] v - the data at the specified index
+ * @return the type of data
+ */
+RaveValueType Cartesian_getConvertedValue(Cartesian_t* cartesian, long x, long y, double* v);
 
 /**
  * Initializes a cartesian product with values from the area.
