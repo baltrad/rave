@@ -476,6 +476,31 @@ RaveValueType PolarVolume_getNearestParameterValue(PolarVolume_t* pvol, const ch
   return result;
 }
 
+RaveValueType PolarVolume_getNearestConvertedParameterValue(PolarVolume_t* pvol, const char* quantity, double lon, double lat, double height, int insidee, double* v)
+{
+  double d = 0.0L, a = 0.0L, r = 0.0L, e = 0.0L;
+  RaveValueType result = RaveValueType_NODATA;
+  PolarScan_t* scan = NULL;
+
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
+  RAVE_ASSERT((quantity != NULL), "quantity == NULL");
+  RAVE_ASSERT((v != NULL), "v == NULL");
+  *v = 0.0;
+
+  PolarNavigator_llToDa(pvol->navigator, lat, lon, &d, &a);
+  PolarNavigator_dhToRe(pvol->navigator, d, height, &r, &e);
+
+  // Find relevant elevation
+  scan = PolarVolume_getScanClosestToElevation(pvol, e, insidee);
+  if (scan != NULL) {
+    result = PolarScan_getConvertedParameterValueAtAzimuthAndRange(scan, quantity, a, r, v);
+  }
+
+  RAVE_OBJECT_RELEASE(scan);
+
+  return result;
+}
+
 int PolarVolume_setDefaultParameter(PolarVolume_t* pvol, const char* quantity)
 {
   int result = 0;

@@ -240,19 +240,25 @@ class PyCartesianTest(unittest.TestCase):
     
   def test_gain(self):
     obj = _cartesian.new()
-    self.assertAlmostEquals(0.0, obj.gain, 4)
+    self.assertAlmostEquals(1.0, obj.gain, 4)
     obj.gain = 10.0
     self.assertAlmostEquals(10.0, obj.gain, 4)
 
+  def test_setGain_zero(self):
+    obj = _cartesian.new()
+    obj.gain = 0.0
+    self.assertAlmostEquals(1.0, obj.gain, 4)
+
+
   def test_gain_typeError(self):
     obj = _cartesian.new()
-    self.assertAlmostEquals(0.0, obj.gain, 4)
+    self.assertAlmostEquals(1.0, obj.gain, 4)
     try:
       obj.gain = 10
       self.fail("Expected TypeError")
     except TypeError,e:
       pass
-    self.assertAlmostEquals(0.0, obj.gain, 4)
+    self.assertAlmostEquals(1.0, obj.gain, 4)
 
   def test_offset(self):
     obj = _cartesian.new()
@@ -496,6 +502,38 @@ class PyCartesianTest(unittest.TestCase):
       r = obj.getValue(v[0])
       self.assertAlmostEquals(v[1], r[1], 4)
       self.assertEquals(v[2], r[0])
+
+  def test_setGetConvertedValue(self):
+    obj = _cartesian.new()
+    obj.nodata = 255.0
+    obj.undetect = 0.0
+    obj.gain = 2.0
+    obj.offset = 1.0
+    a=numpy.arange(120)
+    a=numpy.array(a.astype(numpy.float64),numpy.float64)
+    a=numpy.reshape(a,(12,10)).astype(numpy.float64)  
+    obj.setData(a)
+    
+    obj.setValue((0,1), 10.0)
+    obj.setValue((1,1), 20.0)
+    obj.setConvertedValue((2,2), 14.5)
+    obj.setConvertedValue((3,3), 15.0)
+
+    r = obj.getConvertedValue((0,1))
+    self.assertEquals(_rave.RaveValueType_DATA, r[0])
+    self.assertAlmostEquals(21.0, r[1], 4)
+
+    r = obj.getConvertedValue((1,1))
+    self.assertEquals(_rave.RaveValueType_DATA, r[0])
+    self.assertAlmostEquals(41.0, r[1], 4)
+    
+    r = obj.getConvertedValue((2,2))
+    self.assertEquals(_rave.RaveValueType_DATA, r[0])
+    self.assertAlmostEquals(14.5, r[1], 4)
+
+    r = obj.getConvertedValue((3,3))
+    self.assertEquals(_rave.RaveValueType_DATA, r[0])
+    self.assertAlmostEquals(15.0, r[1], 4)
 
   def test_setData_int8(self):
     obj = _cartesian.new()

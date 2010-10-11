@@ -822,7 +822,41 @@ class PyPolarScanTest(unittest.TestCase):
     result = obj.getParameterValueAtAzimuthAndRange("MMM", 10.0*math.pi/180.0, 2000.0)
     self.assertEquals(_rave.RaveValueType_DATA, result[0])
     self.assertEquals(107.0, result[1])
+  
+  def testGetConvertedParameterValueAtAzimuthAndRange(self):
+    obj = _polarscan.new()
+    param = _polarscanparam.new()
+    param.nodata = 255.0
+    param.undetect = 0.0
+    param.quantity = "DBZH"
+    param.gain = 2.0
+    param.offset = 3.0
+    obj.rscale = 1000.0
+    a=numpy.zeros((360,10), numpy.float64)
+    a[10][2] = 98
+    param.setData(a)
+    obj.addParameter(param)
+
+    param = _polarscanparam.new()
+    param.nodata = 255.0
+    param.undetect = 0.0
+    param.quantity = "MMM"
+    param.gain = 4.0
+    param.offset = 5.0
+    obj.rscale = 1000.0
+    a=numpy.zeros((360,10), numpy.float64)
+    a[10][2] = 107
+    param.setData(a)
+    obj.addParameter(param)
     
+    result = obj.getConvertedParameterValueAtAzimuthAndRange("DBZH", 10.0*math.pi/180.0, 2000.0)
+    self.assertEquals(_rave.RaveValueType_DATA, result[0])
+    self.assertEquals(98.0*2.0 + 3.0, result[1])
+    result = obj.getConvertedParameterValueAtAzimuthAndRange("MMM", 10.0*math.pi/180.0, 2000.0)
+    self.assertEquals(_rave.RaveValueType_DATA, result[0])
+    self.assertEquals(107.0*4.0 + 5.0, result[1])
+    
+  
   def test_getNearest(self):
     obj = _polarscan.new()
     dbzhParam = _polarscanparam.new()
@@ -840,6 +874,86 @@ class PyPolarScanTest(unittest.TestCase):
     t,v = obj.getNearest((14.0*math.pi/180.0, 60.08*math.pi/180.0))
     self.assertEquals(_rave.RaveValueType_DATA, t)
     self.assertAlmostEquals(10.0, v, 4)
+
+  def test_getNearestParameterValue(self):
+    obj = _polarscan.new()
+    dbzhParam = _polarscanparam.new()
+    dbzhParam.nodata = 255.0
+    dbzhParam.undetect = 0.0
+    dbzhParam.quantity = "DBZH"
+    dbzhParam.offset = 0.0
+    dbzhParam.gain = 2.0
+
+    mmhParam = _polarscanparam.new()
+    mmhParam.nodata = 255.0
+    mmhParam.undetect = 0.0
+    mmhParam.quantity = "MMM"
+    mmhParam.offset = 0.0
+    mmhParam.gain = 3.0
+
+    a=numpy.zeros((4,9), numpy.float64)      
+    a[0][8] = 10.0
+    dbzhParam.setData(a)
+
+    a=numpy.zeros((4,9), numpy.float64)      
+    a[0][8] = 20.0
+    mmhParam.setData(a)
+
+    obj.addParameter(dbzhParam)
+    obj.addParameter(mmhParam)
+        
+    obj.longitude = 14.0 * math.pi/180.0
+    obj.latitude = 60.0 * math.pi/180.0
+    obj.height = 0.0
+    obj.rscale = 1000.0
+
+    t,v = obj.getNearestParameterValue("DBZH", (14.0*math.pi/180.0, 60.08*math.pi/180.0))
+    self.assertEquals(_rave.RaveValueType_DATA, t)
+    self.assertAlmostEquals(10.0, v, 4)
+
+    t,v = obj.getNearestParameterValue("MMM", (14.0*math.pi/180.0, 60.08*math.pi/180.0))
+    self.assertEquals(_rave.RaveValueType_DATA, t)
+    self.assertAlmostEquals(20.0, v, 4)
+
+  def test_getNearestConvertedParameterValue(self):
+    obj = _polarscan.new()
+    dbzhParam = _polarscanparam.new()
+    dbzhParam.nodata = 255.0
+    dbzhParam.undetect = 0.0
+    dbzhParam.quantity = "DBZH"
+    dbzhParam.offset = 0.0
+    dbzhParam.gain = 2.0
+
+    mmhParam = _polarscanparam.new()
+    mmhParam.nodata = 255.0
+    mmhParam.undetect = 0.0
+    mmhParam.quantity = "MMM"
+    mmhParam.offset = 0.0
+    mmhParam.gain = 3.0
+
+    a=numpy.zeros((4,9), numpy.float64)      
+    a[0][8] = 10.0
+    dbzhParam.setData(a)
+
+    a=numpy.zeros((4,9), numpy.float64)      
+    a[0][8] = 20.0
+    mmhParam.setData(a)
+
+    obj.addParameter(dbzhParam)
+    obj.addParameter(mmhParam)
+        
+    obj.longitude = 14.0 * math.pi/180.0
+    obj.latitude = 60.0 * math.pi/180.0
+    obj.height = 0.0
+    obj.rscale = 1000.0
+
+    t,v = obj.getNearestConvertedParameterValue("DBZH", (14.0*math.pi/180.0, 60.08*math.pi/180.0))
+    self.assertEquals(_rave.RaveValueType_DATA, t)
+    self.assertAlmostEquals(20.0, v, 4)
+
+    t,v = obj.getNearestConvertedParameterValue("MMM", (14.0*math.pi/180.0, 60.08*math.pi/180.0))
+    self.assertEquals(_rave.RaveValueType_DATA, t)
+    self.assertAlmostEquals(60.0, v, 4)
 
   def test_getNearestIndex(self):
     obj = _polarscan.new()

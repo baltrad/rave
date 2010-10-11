@@ -110,6 +110,34 @@ int Composite_setQuantity(Composite_t* composite, const char* quantity);
 const char* Composite_getQuantity(Composite_t* composite);
 
 /**
+ * Sets the offset to be used in the composite
+ * @param[in] composite - self
+ * @param[in] offset - the offset
+ */
+void Composite_setOffset(Composite_t* composite, double offset);
+
+/**
+ * Returns the offset that should be used in the composite
+ * @param[in] composite - self
+ * @returns the offset
+ */
+double Composite_getOffset(Composite_t* composite);
+
+/**
+ * Sets the gain to be used in the composite
+ * @param[in] composite - self
+ * @param[in] gain - the gain
+ */
+void Composite_setGain(Composite_t* composite, double gain);
+
+/**
+ * Returns the gain that should be used in the composite
+ * @param[in] composite - self
+ * @returns the gain
+ */
+double Composite_getGain(Composite_t* composite);
+
+/**
  * Sets the nominal time.
  * @param[in] composite - self
  * @param[in] value - the time in the format HHmmss

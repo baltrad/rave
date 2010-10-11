@@ -511,6 +511,27 @@ static PyObject* _pypolarscan_getParameterValueAtAzimuthAndRange(PyPolarScan* se
 }
 
 /**
+ * Returns the converted parameter value at the specified azimuth and range for this scan.
+ * @param[in] self - this instance
+ * @param[in] args - quantity, azimuth (in radians) and range (in meters)
+ * @returns a tuple of value type and value
+ */
+static PyObject* _pypolarscan_getConvertedParameterValueAtAzimuthAndRange(PyPolarScan* self, PyObject* args)
+{
+  double value = 0.0L;
+  RaveValueType type = RaveValueType_NODATA;
+  double a = 0, r = 0;
+  char* quantity = NULL;
+  if (!PyArg_ParseTuple(args, "sdd", &quantity, &a, &r)) {
+    return NULL;
+  }
+
+  type = PolarScan_getConvertedParameterValueAtAzimuthAndRange(self->scan, quantity, a, r, &value);
+
+  return Py_BuildValue("(id)", type, value);
+}
+
+/**
  * Returns the value that is nearest to the specified longitude/latitude.
  * @param[in] self - this instance
  * @param[in] args - a tuple consisting of (longitude, latitude).
@@ -525,6 +546,47 @@ static PyObject* _pypolarscan_getNearest(PyPolarScan* self, PyObject* args)
   }
 
   type = PolarScan_getNearest(self->scan, lon, lat, &value);
+
+  return Py_BuildValue("(id)", type, value);
+}
+
+/**
+ * Returns the parameter value that is nearest to the specified longitude/latitude.
+ * @param[in] self - this instance
+ * @param[in] args - a tuple consisting of (longitude, latitude).
+ * @returns a tuple of (value type, value) or NULL on failure
+ */
+static PyObject* _pypolarscan_getNearestParameterValue(PyPolarScan* self, PyObject* args)
+{
+  double lon = 0.0L, lat = 0.0L, value = 0.0L;
+  RaveValueType type = RaveValueType_NODATA;
+  char* quantity = NULL;
+  if (!PyArg_ParseTuple(args, "s(dd)", &quantity, &lon, &lat)) {
+    return NULL;
+  }
+
+  type = PolarScan_getNearestParameterValue(self->scan, quantity, lon, lat, &value);
+
+  return Py_BuildValue("(id)", type, value);
+}
+
+/**
+ * Returns the converted parameter value that is nearest to the specified longitude/latitude.
+ * @param[in] self - this instance
+ * @param[in] args - a tuple consisting of (longitude, latitude).
+ * @returns a tuple of (value type, value) or NULL on failure
+ */
+static PyObject* _pypolarscan_getNearestConvertedParameterValue(PyPolarScan* self, PyObject* args)
+{
+  double lon = 0.0L, lat = 0.0L, value = 0.0L;
+  RaveValueType type = RaveValueType_NODATA;
+  char* quantity = NULL;
+
+  if (!PyArg_ParseTuple(args, "s(dd)", &quantity, &lon, &lat)) {
+    return NULL;
+  }
+
+  type = PolarScan_getNearestConvertedParameterValue(self->scan, quantity, lon, lat, &value);
 
   return Py_BuildValue("(id)", type, value);
 }
@@ -827,7 +889,10 @@ static struct PyMethodDef _pypolarscan_methods[] =
   {"getIndexFromAzimuthAndRange", (PyCFunction) _pypolarscan_getIndexFromAzimuthAndRange, 1},
   {"getValueAtAzimuthAndRange", (PyCFunction) _pypolarscan_getValueAtAzimuthAndRange, 1},
   {"getParameterValueAtAzimuthAndRange", (PyCFunction) _pypolarscan_getParameterValueAtAzimuthAndRange, 1},
+  {"getConvertedParameterValueAtAzimuthAndRange", (PyCFunction) _pypolarscan_getConvertedParameterValueAtAzimuthAndRange, 1},
   {"getNearest", (PyCFunction) _pypolarscan_getNearest, 1},
+  {"getNearestParameterValue", (PyCFunction) _pypolarscan_getNearestParameterValue, 1},
+  {"getNearestConvertedParameterValue", (PyCFunction) _pypolarscan_getNearestConvertedParameterValue, 1},
   {"getNearestIndex", (PyCFunction) _pypolarscan_getNearestIndex, 1},
   {"addAttribute", (PyCFunction) _pypolarscan_addAttribute, 1},
   {"getAttribute", (PyCFunction) _pypolarscan_getAttribute, 1},

@@ -350,7 +350,28 @@ static PyObject* _pycartesian_setValue(PyCartesian* self, PyObject* args)
 }
 
 /**
- * sets the value at the specified position
+ * sets the converted value at the specified position. Would be same
+ * as setValue((x, y), (v - offset)/gain).
+ * @param[in] self this instance.
+ * @param[in] args - tuple (x, y) and v
+ * @return 0 on failure, otherwise 1
+ */
+static PyObject* _pycartesian_setConvertedValue(PyCartesian* self, PyObject* args)
+{
+  long x = 0, y = 0;
+  double v = 0.0L;
+  int result = 0;
+  if (!PyArg_ParseTuple(args, "(ll)d", &x, &y, &v)) {
+    return NULL;
+  }
+
+  result = Cartesian_setConvertedValue(self->cartesian, x, y, v);
+
+  return PyInt_FromLong(result);
+}
+
+/**
+ * returns the value at the specified position
  * @param[in] self this instance.
  * @param[in] args - tuple (x, y) and v
  * @return 0 on failure, otherwise 1
@@ -365,6 +386,26 @@ static PyObject* _pycartesian_getValue(PyCartesian* self, PyObject* args)
   }
 
   result = Cartesian_getValue(self->cartesian, x, y, &v);
+
+  return Py_BuildValue("(id)", result, v);
+}
+
+/**
+ * returns the converted value at the specified position
+ * @param[in] self this instance.
+ * @param[in] args - tuple (x, y) and v
+ * @return 0 on failure, otherwise 1
+ */
+static PyObject* _pycartesian_getConvertedValue(PyCartesian* self, PyObject* args)
+{
+  long x = 0, y = 0;
+  double v = 0.0L;
+  RaveValueType result = RaveValueType_NODATA;
+  if (!PyArg_ParseTuple(args, "(ll)", &x, &y)) {
+    return NULL;
+  }
+
+  result = Cartesian_getConvertedValue(self->cartesian, x, y, &v);
 
   return Py_BuildValue("(id)", result, v);
 }
@@ -553,7 +594,9 @@ static struct PyMethodDef _pycartesian_methods[] =
   {"getIndexX", (PyCFunction) _pycartesian_getIndexX, 1},
   {"getIndexY", (PyCFunction) _pycartesian_getIndexY, 1},
   {"setValue", (PyCFunction) _pycartesian_setValue, 1},
+  {"setConvertedValue", (PyCFunction) _pycartesian_setConvertedValue, 1},
   {"getValue", (PyCFunction) _pycartesian_getValue, 1},
+  {"getConvertedValue", (PyCFunction) _pycartesian_getConvertedValue, 1},
   {"isTransformable", (PyCFunction) _pycartesian_isTransformable, 1},
   {"getMean", (PyCFunction) _pycartesian_getMean, 1},
   {"addAttribute", (PyCFunction) _pycartesian_addAttribute, 1},
