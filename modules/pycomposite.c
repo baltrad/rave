@@ -217,6 +217,8 @@ static struct PyMethodDef _pycomposite_methods[] =
   {"quantity", NULL},
   {"date", NULL},
   {"time", NULL},
+  {"gain", NULL},
+  {"offset", NULL},
   {"add", (PyCFunction) _pycomposite_add, 1},
   {"nearest", (PyCFunction) _pycomposite_nearest, 1},
   {NULL, NULL } /* sentinel */
@@ -242,6 +244,10 @@ static PyObject* _pycomposite_getattr(PyComposite* self, char* name)
     } else {
       Py_RETURN_NONE;
     }
+  } else if (strcmp("gain", name) == 0) {
+    return PyFloat_FromDouble(Composite_getGain(self->composite));
+  } else if (strcmp("offset", name) == 0) {
+    return PyFloat_FromDouble(Composite_getOffset(self->composite));
   }
 
   res = Py_FindMethod(_pycomposite_methods, (PyObject*) self, name);
@@ -313,6 +319,26 @@ static int _pycomposite_setattr(PyComposite* self, char* name, PyObject* val)
       Composite_setDate(self->composite, NULL);
     } else {
       raiseException_gotoTag(done, PyExc_ValueError,"date must be of type string");
+    }
+  } else if (strcmp("gain", name) == 0) {
+    if (PyFloat_Check(val)) {
+      Composite_setGain(self->composite, PyFloat_AsDouble(val));
+    } else if (PyLong_Check(val)) {
+      Composite_setGain(self->composite, PyLong_AsDouble(val));
+    } else if (PyInt_Check(val)) {
+      Composite_setGain(self->composite, (double)PyInt_AsLong(val));
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError, "gain must be a float or decimal value")
+    }
+  } else if (strcmp("offset", name) == 0) {
+    if (PyFloat_Check(val)) {
+      Composite_setOffset(self->composite, PyFloat_AsDouble(val));
+    } else if (PyLong_Check(val)) {
+      Composite_setOffset(self->composite, PyLong_AsDouble(val));
+    } else if (PyInt_Check(val)) {
+      Composite_setOffset(self->composite, (double)PyInt_AsLong(val));
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError, "gain must be a float or decimal value")
     }
   } else {
     raiseException_gotoTag(done, PyExc_AttributeError, name);

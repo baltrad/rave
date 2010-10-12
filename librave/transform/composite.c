@@ -387,11 +387,11 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area)
         }
 
         if (vtype == RaveValueType_NODATA) {
-          Cartesian_setValue(result, x, y, Cartesian_getNodata(result));
+          Cartesian_setConvertedValue(result, x, y, Cartesian_getNodata(result));
         } else if (vtype == RaveValueType_UNDETECT) {
-          Cartesian_setValue(result, x, y, Cartesian_getUndetect(result));
+          Cartesian_setConvertedValue(result, x, y, Cartesian_getUndetect(result));
         } else {
-          Cartesian_setValue(result, x, y, v);
+          Cartesian_setConvertedValue(result, x, y, v);
         }
       }
       RAVE_OBJECT_RELEASE(pobj);

@@ -65,7 +65,7 @@ class PyCompositeTest(unittest.TestCase):
     self.assertNotEqual(-1, isscan)
 
   def test_attribute_visibility(self):
-    attrs = ['height', 'product', 'quantity', 'date', 'time']
+    attrs = ['height', 'product', 'quantity', 'date', 'time', 'gain', 'offset']
     obj = _pycomposite.new()
     alist = dir(obj)
     for a in attrs:
@@ -86,6 +86,18 @@ class PyCompositeTest(unittest.TestCase):
     self.assertEquals("DBZH", obj.quantity)
     obj.quantity = "MMH"
     self.assertEquals("MMH", obj.quantity)
+  
+  def test_gain(self):
+    obj = _pycomposite.new()
+    self.assertAlmostEquals(1.0, obj.gain, 4)
+    obj.gain = 2.0
+    self.assertAlmostEquals(2.0, obj.gain, 4)
+
+  def test_offset(self):
+    obj = _pycomposite.new()
+    self.assertAlmostEquals(0.0, obj.offset, 4)
+    obj.offset = 2.0
+    self.assertAlmostEquals(2.0, obj.offset, 4)
     
 
   def test_nearest(self):
@@ -147,6 +159,8 @@ class PyCompositeTest(unittest.TestCase):
     generator.quantity = "DBZH"
     generator.product = _rave.Rave_ProductType_PCAPPI
     generator.height = 1000.0
+    generator.gain = 0.4
+    generator.offset = -30.0
     result = generator.nearest(a)
     
     result.time = "120000"
