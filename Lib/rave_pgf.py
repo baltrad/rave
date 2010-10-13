@@ -161,14 +161,14 @@ class RavePGF():
   # how they are prioritized, then run it. Assume no exceptions will be raised
   # and declare that task done before running it.
   # TODO: Thread this.
-  # @return outfile string, assuming it is the last item in the arguments list.
+  # @return outfile string, assuming it is returned from the algorithm.
   def _run_one_job(self):
     if self.queue.qsize() > 0:
       priority, job = self.queue.get()
       self.queue.task_done()  # Count down queue even if job fails.
       algorithm, files, args = rave_pgf_qtools.split(job)
-      self._run(algorithm, files, args)
-      return args[-1]  
+      outfile = self._run(algorithm, files, args)
+      return outfile  
 
 
   ## Internal executor of the product generation algorithm queue, according to
@@ -179,11 +179,16 @@ class RavePGF():
   def _run_all_jobs(self):
     while self.queue.qsize() > 0:
       outfile = self._run_one_job()
-      BaltradFrame.inject(outfile, channel=DEX_CHANNEL,
-                          url=DEX_SPOE, sender=DEX_USER)
-      self.logger.info("ID=%s Injected %s" % (algorithm_entry.get("jobid"),
-                                              outfile))
-      os.remove(outfile)
+      if outfile != None:
+        try:
+          BaltradFrame.inject(outfile, channel=DEX_CHANNEL,
+                              url=DEX_SPOE, sender=DEX_USER)
+          self.logger.info("ID=%s Injected %s" % (algorithm_entry.get("jobid"),
+                                                  outfile))
+        except Exception,e:
+          pass
+        
+        if os.path.isfile(outfile): os.remove(outfile)
 
 
   ## Internal direct executor of the product generation algorithms. This will
@@ -193,7 +198,7 @@ class RavePGF():
   # @param algorithm Element copied from \ref self._algorithm_registry
   # @param files list of file strings
   # @param arguments list of verified arguments to pass to the generator
-  # @return nothing
+  # @return the result from the algorithm, either filename or None
   def _run(self, algorithm, files, arguments):
     import imp
     mod_name, func_name = algorithm.get('module'), algorithm.get('function')
@@ -205,10 +210,11 @@ class RavePGF():
     module = imp.load_module(mod_name, fd, pathname, description)
     fd.close()  # File descriptor is returned open, so close it.
     func = getattr(module, func_name)
-    func(files, arguments)
+    outfile = func(files, arguments)
 
     self.logger.info("ID=%s Finished %s.%s" % (jobid, mod_name, func_name))
 
+    return outfile
 
   ## The mother method that coordinates the product generation calls.
   # This method verifies the integrity of the call and its arguments,
@@ -225,8 +231,9 @@ class RavePGF():
 
     algorithm = algorithm.lower()
     self.logger.info("Request for generate algorithm: %s" % algorithm)
-    fileno, outfile = rave_tempfile.mktemp(suffix='.h5', close="True")
 
+    outfile = None
+    
     try:
 
       # Verify that the file list contains at least one file
@@ -244,8 +251,6 @@ class RavePGF():
                                                       algorithm_entry)
       if not verified:
         raise TypeError('Erroneous arguments given to algorithm "%s"'%algorithm)
-      # Add the outfile to the argument list. We need it later...
-      arguments += ['outfile', outfile]
 
       # Queue this job and then run a job from the queue. If the job queue runs
       # assymetrically, then the outfile string could be different. Therefore,
@@ -257,19 +262,31 @@ class RavePGF():
 
       outfile = self._run_one_job()
 
+      if outfile != None:
+        self.logger.info("ID=%s one job run, outfile=%s" % (jobid, outfile))
+      else:
+        self.logger.info("ID=%s one job run, no output file" % (jobid))
+      
       # Inject the result.
-      BaltradFrame.inject(outfile, channel='smhi_products',
-                          url=DEX_SPOE, sender='smhi')
+      if outfile != None:
+        BaltradFrame.inject(outfile, channel='smhi_products',
+                            url=DEX_SPOE, sender='smhi')
+        # Log the result
+        self.logger.info("ID=%s Injected %s" % (jobid, outfile))
 
-      # Log the result
-      self.logger.info("ID=%s Injected %s" % (jobid, outfile))
     except Exception, err:
       # the 'err' itself is pretty useless
       err_msg = traceback.format_exc()
       self.logger.error("ID=%s failed. Check this out:\n%s" % (jobid, err_msg))
 
-    if os.path.isfile(outfile): os.remove(outfile)
-    return err_msg or "OK"
+    if outfile != None:
+      if os.path.isfile(outfile): os.remove(outfile)
+    
+    if err_msg != None:
+      self.logger.info("Returning: %s "%(err_msg))
+      return err_msg
+    self.logger.info("Returning: OK ")
+    return "OK"
 
 
 ## Pretty useless method used to check argument types.
