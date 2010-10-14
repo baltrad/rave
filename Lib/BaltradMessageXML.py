@@ -115,7 +115,7 @@ def MakeBaltradFrameXML(sender, channel, name,
     this = BltXML(tag=tag, encoding=encoding)
     h, c = ET.Element("header"), ET.Element("content")
     h.set("mimetype", "multipart/form-data")
-    h.set("sender", sender)
+    h.set("sender_node_name", sender)
     this.append(h)
     c.set("channel", channel)
     c.set("name", name)

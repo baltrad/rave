@@ -74,7 +74,7 @@ HOST = 'localhost'
 PORT = 8085
 STDOE = os.path.join(RAVEETC, 'rave_pgf_stdout_stderr.log')
 
-DEX_SPOE = 'http://se.baltrad.eu:8080/BaltradDex/transmitter.htm'
+DEX_SPOE = 'http://se.baltrad.eu:8080/BaltradDex/dispatch.htm'
 DEX_CHANNEL = 'smhi_products'
 DEX_USER = 'smhi'
 

@@ -53,7 +53,7 @@ class BaltradFrameMessage:
   # version of the DEX
   def addEnvelope(self, channel, filename, sender='smhi'):
     envelope = BaltradMessageXML.MakeBaltradFrameXML(sender, channel, filename)
-    self.message.append( ('<baltrad_frame_xml/>',
+    self.message.append( ('<bf_xml/>',
                           (pycurl.FORM_CONTENTTYPE,
                            'multipart/form-data; charset=UTF-8',
                            pycurl.FORM_CONTENTS, envelope)))
@@ -64,7 +64,7 @@ class BaltradFrameMessage:
   # This is an ODIM_H5 file, and the path must be relative to the DEX's
   # IncomingData directory.
   def addBinaryPayload(self, filename):
-    self.message.append( ('<baltrad_frame_file/>',
+    self.message.append( ('<bf_file/>',
                           (pycurl.FORM_FILE, filename)))
     self._ctr = self._ctr + 1
   
