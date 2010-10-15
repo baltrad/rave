@@ -226,7 +226,7 @@ class RavePGF():
   # be parsed into their corrects formats, ie. int, float, list, etc.
   # @return nothing
   def generate(self, algorithm, files, arguments):
-    import rave_tempfile, rave_pgf_verify
+    import rave_pgf_verify, rave_pgf_protocol
     jobid = err_msg = None
 
     algorithm = algorithm.lower()
@@ -235,7 +235,6 @@ class RavePGF():
     outfile = None
     
     try:
-
       # Verify that the file list contains at least one file
       if len(files) == 0:
         raise IndexError("No input files given.")
@@ -245,6 +244,9 @@ class RavePGF():
       if not algorithm_entry:
         raise LookupError('Algorithm "%s" not in registry' % algorithm)
 
+      # Convert arguments from one protocol type into rave protocol
+      arguments = rave_pgf_protocol.convert_arguments(algorithm, algorithm_entry, arguments)
+      
       # Verify that the arguments check out. An IndexError will be raised if
       # the number of items in the argument list is odd.
       verified = rave_pgf_verify.verify_generate_args(arguments,
@@ -269,8 +271,8 @@ class RavePGF():
       
       # Inject the result.
       if outfile != None:
-        BaltradFrame.inject(outfile, channel='smhi_products',
-                            url=DEX_SPOE, sender='smhi')
+        BaltradFrame.inject(outfile, channel=DEX_CHANNEL,
+                            url=DEX_SPOE, sender=DEX_USER)
         # Log the result
         self.logger.info("ID=%s Injected %s" % (jobid, outfile))
 

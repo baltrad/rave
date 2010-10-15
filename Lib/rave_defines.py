@@ -78,6 +78,9 @@ DEX_SPOE = 'http://se.baltrad.eu:8080/BaltradDex/dispatch.htm'
 DEX_CHANNEL = 'smhi_products'
 DEX_USER = 'smhi'
 
+# The originating center id, used to indicate where a product has been generated.
+CENTER_ID = 'ORG:82'
+
 GENREG  = 'generate-registry'  # root registry tag
 REGFILE = os.path.join(RAVEETC, 'rave_pgf_registry.xml')  # registry file
 
