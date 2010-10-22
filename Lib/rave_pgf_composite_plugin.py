@@ -38,7 +38,7 @@ import area
 import string
 import rave_tempfile
 
-from rave_defines import CENTER_ID
+from rave_defines import CENTER_ID, GAIN, OFFSET
 
 
 ## Creates a dictionary from a rave argument list
@@ -95,6 +95,8 @@ def generate(files, arguments):
     
   generator.time = args["time"]
   generator.date = args["date"]
+  generator.gain = GAIN
+  generator.offset = OFFSET
   result = generator.nearest(pyarea)
   
   # Fix so that we get a valid place

@@ -802,6 +802,10 @@ class PyRaveIOTest(unittest.TestCase):
 
     self.assertAlmostEquals(40.0, scan.elangle*180.0/math.pi, 4)
 
+    self.assertAlmostEquals(222, scan.height, 4)
+    self.assertAlmostEquals(58.106, scan.latitude*180.0/math.pi, 4)
+    self.assertAlmostEquals(15.94, scan.longitude*180.0/math.pi, 4)
+
     p1 = scan.getParameter("DBZH")
     self.assertAlmostEquals(0.4, p1.gain, 4)
     self.assertAlmostEquals(-30.0, p1.offset, 4)

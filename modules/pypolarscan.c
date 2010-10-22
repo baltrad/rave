@@ -32,6 +32,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "pypolarscan.h"
 
 #include "pypolarscanparam.h"
+#include "pyprojection.h"
 #include "pyrave_debug.h"
 #include "pyravefield.h"
 #include "rave_alloc.h"
@@ -872,6 +873,7 @@ static struct PyMethodDef _pypolarscan_methods[] =
   {"date", NULL},
   {"source", NULL},
   {"defaultparameter", NULL},
+  {"projection", NULL},
   {"addParameter", (PyCFunction) _pypolarscan_addParameter, 1},
   {"removeParameter", (PyCFunction) _pypolarscan_removeParameter, 1},
   {"removeAllParameters", (PyCFunction) _pypolarscan_removeAllParameters, 1},
@@ -958,6 +960,15 @@ static PyObject* _pypolarscan_getattr(PyPolarScan* self, char* name)
     const char* str = PolarScan_getDefaultParameter(self->scan);
     if (str != NULL) {
       return PyString_FromString(str);
+    } else {
+      Py_RETURN_NONE;
+    }
+  } else if (strcmp("projection", name) == 0) {
+    Projection_t* projection = PolarScan_getProjection(self->scan);
+    if (projection != NULL) {
+      PyProjection* result = PyProjection_New(projection);
+      RAVE_OBJECT_RELEASE(projection);
+      return (PyObject*)result;
     } else {
       Py_RETURN_NONE;
     }
@@ -1066,6 +1077,12 @@ static int _pypolarscan_setattr(PyPolarScan* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_ValueError, "source must be a string");
     }
+  } else if (strcmp("projection", name) == 0) {
+    if (PyProjection_Check(val)) {
+      PolarScan_setProjection(self->scan, ((PyProjection*)val)->projection);
+    } else if (val == Py_None) {
+      PolarScan_setProjection(self->scan, NULL);
+    }
   } else {
     raiseException_gotoTag(done, PyExc_AttributeError, name);
   }
@@ -1135,6 +1152,7 @@ init_polarscan(void)
   }
 
   import_pypolarscanparam();
+  import_pyprojection();
   import_pyravefield();
   PYRAVE_DEBUG_INITIALIZE;
 }

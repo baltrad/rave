@@ -792,6 +792,7 @@ RaveValueType PolarScan_getNearestConvertedParameterValue(PolarScan_t* scan, con
 {
   RaveValueType result = RaveValueType_NODATA;
   double d = 0.0L, a = 0.0L, r = 0.0L, h = 0.0L;
+
   RAVE_ASSERT((scan != NULL), "scan was NULL");
   RAVE_ASSERT((v != NULL), "v was NULL");
 
@@ -911,6 +912,27 @@ int PolarScan_addAttribute(PolarScan_t* scan, RaveAttribute_t* attribute)
         goto done;
       }
       PolarScan_setBeamwidth(scan, value * M_PI/180.0);
+    } else if (strcasecmp("where/lon", name)==0) {
+      double value = 0.0;
+      if (!(result = RaveAttribute_getDouble(attribute, &value))) {
+        RAVE_ERROR0("Failed to extract where/lon as a double");
+        goto done;
+      }
+      PolarScan_setLongitude(scan, value * M_PI/180.0);
+    } else if (strcasecmp("where/lat", name)==0) {
+      double value = 0.0;
+      if (!(result = RaveAttribute_getDouble(attribute, &value))) {
+        RAVE_ERROR0("Failed to extract where/lat as a double");
+        goto done;
+      }
+      PolarScan_setLatitude(scan, value * M_PI/180.0);
+    } else if (strcasecmp("where/height", name)==0) {
+      double value = 0.0;
+      if (!(result = RaveAttribute_getDouble(attribute, &value))) {
+        RAVE_ERROR0("Failed to extract where/height as a double");
+        goto done;
+      }
+      PolarScan_setHeight(scan, value);
     } else {
       if (!RaveAttributeHelp_extractGroupAndName(name, &gname, &aname)) {
         RAVE_ERROR1("Failed to extract group and name from %s", name);
