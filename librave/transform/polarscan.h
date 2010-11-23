@@ -92,6 +92,36 @@ int PolarScan_setTime(PolarScan_t* scan, const char* value);
 const char* PolarScan_getTime(PolarScan_t* scan);
 
 /**
+ * Sets the start time.
+ * @param[in] scan - self
+ * @param[in] value - the time in the format HHmmss
+ * @returns 1 on success, otherwise 0
+ */
+int PolarScan_setStartTime(PolarScan_t* scan, const char* value);
+
+/**
+ * Returns the start time.
+ * @param[in] scan - self
+ * @returns the start time (or NULL if there is none)
+ */
+const char* PolarScan_getStartTime(PolarScan_t* scan);
+
+/**
+ * Sets the end time.
+ * @param[in] scan - self
+ * @param[in] value - the time in the format HHmmss
+ * @returns 1 on success, otherwise 0
+ */
+int PolarScan_setEndTime(PolarScan_t* scan, const char* value);
+
+/**
+ * Returns the end time.
+ * @param[in] scan - self
+ * @returns the end time (or NULL if there is none)
+ */
+const char* PolarScan_getEndTime(PolarScan_t* scan);
+
+/**
  * Sets the nominal date.
  * @param[in] scan - self
  * @param[in] value - the date in the format YYYYMMDD
@@ -105,6 +135,36 @@ int PolarScan_setDate(PolarScan_t* scan, const char* value);
  * @returns the nominal time (or NULL if there is none)
  */
 const char* PolarScan_getDate(PolarScan_t* scan);
+
+/**
+ * Sets the start date.
+ * @param[in] scan - self
+ * @param[in] value - the date in the format YYYYMMDD
+ * @returns 1 on success, otherwise 0
+ */
+int PolarScan_setStartDate(PolarScan_t* scan, const char* value);
+
+/**
+ * Returns the start date.
+ * @param[in] scan - self
+ * @returns the start date (or NULL if there is none)
+ */
+const char* PolarScan_getStartDate(PolarScan_t* scan);
+
+/**
+ * Sets the end date.
+ * @param[in] scan - self
+ * @param[in] value - the date in the format YYYYMMDD
+ * @returns 1 on success, otherwise 0
+ */
+int PolarScan_setEndDate(PolarScan_t* scan, const char* value);
+
+/**
+ * Returns the end date.
+ * @param[in] scan - self
+ * @returns the end date (or NULL if there is none)
+ */
+const char* PolarScan_getEndDate(PolarScan_t* scan);
 
 /**
  * Sets the source.
@@ -321,6 +381,13 @@ int PolarScan_removeAllParameters(PolarScan_t* scan);
 PolarScanParam_t* PolarScan_getParameter(PolarScan_t* scan, const char* quantity);
 
 /**
+ * Returns all parameters belonging to this scan.
+ * @param[in] scan - self
+ * @returns a list of 0 or more parameters on success otherwise NULL.
+ */
+RaveObjectList_t* PolarScan_getParameters(PolarScan_t* scan);
+
+/**
  * Returns if the scan contains the specified parameter or not.
  * @param[in] scan - self
  * @param[in] quantity - the quantity name
@@ -364,6 +431,14 @@ int PolarScan_getNumberOfQualityFields(PolarScan_t* scan);
  * @param[in] index - the index
  */
 void PolarScan_removeQualityField(PolarScan_t* scan, int index);
+
+/**
+ * Returns all quality fields belonging to this scan. The returned
+ * object is only a reference so do not modify it.
+ * @param[in] scan - self
+ * @returns a list of 0 or more quality fields or NULL on error.
+ */
+RaveObjectList_t* PolarScan_getQualityFields(PolarScan_t* scan);
 
 /**
  * Returns the range index for the specified range (in meters).
@@ -564,10 +639,7 @@ int PolarScan_getLonLatFromIndex(PolarScan_t* scan, int bin, int ray, double* lo
 int PolarScan_isTransformable(PolarScan_t* scan);
 
 /**
- * Adds a rave attribute to the scan. If attribute maps to the
- * member attributes it will be used to set the specific member
- * instead. E.g. where/elangle (in degrees) will be accessible
- * from PolarScan_getElangle() in radians.
+ * Adds a rave attribute to the scan.
  * @param[in] scan - self
  * @param[in] attribute - the attribute
  * @return 1 on success otherwise 0
@@ -584,25 +656,17 @@ RaveAttribute_t* PolarScan_getAttribute(PolarScan_t* scan, const char* name);
 
 /**
  * Returns a list of attribute names. Release with \@ref #RaveList_freeAndDestroy.
- * @param[in] scanparam - self
+ * @param[in] scan - self
  * @returns a list of attribute names
  */
 RaveList_t* PolarScan_getAttributeNames(PolarScan_t* scan);
 
 /**
- * Returns a list of attribute values that should be stored for this scan. Corresponding
- * members will also be added as attribute values. E.g. elangle will be stored
- * as a double with name where/elangle in degrees. Since a polar scan must contain different
- * data depending on if it belongs to a volume or not, two more arguments is used.
- * otype is if this scan belongs to a volume or if it is a stand alone scan. rootattributes is used
- * if otype is scan, in that case, rootattributes defines if it is the root attributes that should
- * be returned or if it is the dataset specific ones.
+ * Returns a list of attribute values belonging to this scan.
  * @param[in] scan - self
- * @param[in] otype - what type of attributes that should be returned
- * @param[in] rootattributes - if it is the root attributes or not.
  * @returns a list of RaveAttributes.
  */
-RaveObjectList_t* PolarScan_getAttributeValues(PolarScan_t* scan, Rave_ObjectType otype, int rootattributes);
+RaveObjectList_t* PolarScan_getAttributeValues(PolarScan_t* scan);
 
 /**
  * Validates the scan can be seen to be valid regarding storage.

@@ -152,6 +152,14 @@ RaveCoreObject* RaveObjectList_remove(RaveObjectList_t* list, int index)
   return obj;
 }
 
+void RaveObjectList_release(RaveObjectList_t* list, int index)
+{
+  RAVE_ASSERT((list != NULL), "list == NULL");
+  RaveCoreObject* obj = RaveList_remove(list->list, index);
+  RAVE_OBJECT_RELEASE(obj);
+}
+
+
 RaveCoreObject* RaveObjectList_removeLast(RaveObjectList_t* list)
 {
   RAVE_ASSERT((list != NULL), "list == NULL");

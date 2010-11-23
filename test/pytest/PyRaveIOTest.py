@@ -802,10 +802,13 @@ class PyRaveIOTest(unittest.TestCase):
 
     self.assertAlmostEquals(40.0, scan.elangle*180.0/math.pi, 4)
 
+    self.assertEquals("20100702", scan.date)
+    self.assertEquals("113200", scan.time)
+    self.assertEquals("WMO:02570,RAD:SE48,PLC:Vilebo", scan.source)
     self.assertAlmostEquals(222, scan.height, 4)
     self.assertAlmostEquals(58.106, scan.latitude*180.0/math.pi, 4)
     self.assertAlmostEquals(15.94, scan.longitude*180.0/math.pi, 4)
-
+    
     p1 = scan.getParameter("DBZH")
     self.assertAlmostEquals(0.4, p1.gain, 4)
     self.assertAlmostEquals(-30.0, p1.offset, 4)
@@ -829,7 +832,7 @@ class PyRaveIOTest(unittest.TestCase):
     nodelist.selectAll()
     nodelist.fetch()
     
-    self.assertEquals("120021", nodelist.getNode("/what/time").data())
+    self.assertEquals("120000", nodelist.getNode("/what/time").data())
     self.assertEquals("20090501", nodelist.getNode("/what/date").data())
     self.assertEquals("WMO:02606,RAD:SE50", nodelist.getNode("/what/source").data())
     self.assertEquals("SCAN", nodelist.getNode("/what/object").data())

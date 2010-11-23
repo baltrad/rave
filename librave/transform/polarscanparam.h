@@ -258,4 +258,12 @@ int PolarScanParam_getNumberOfQualityFields(PolarScanParam_t* param);
  */
 void PolarScanParam_removeQualityField(PolarScanParam_t* param, int index);
 
+/**
+ * Returns all quality fields belonging to this scan parameter. The returned
+ * object is only a reference so do not modify it.
+ * @param[in] param - self
+ * @returns a list of 0 or more quality fields or NULL on error
+ */
+RaveObjectList_t* PolarScanParam_getQualityFields(PolarScanParam_t* param);
+
 #endif

@@ -97,6 +97,7 @@ int RaveDateTime_setTime(RaveDateTime_t* dt, const char* value)
   RAVE_ASSERT((dt != NULL), "dt was NULL");
   if (value == NULL) {
     strcpy(dt->time, "");
+    result = 1;
   } else {
     if (strlen(value) == 6 && RaveDateTimeInternal_isDigits(value)) {
       strcpy(dt->time, value);
@@ -121,6 +122,7 @@ int RaveDateTime_setDate(RaveDateTime_t* dt, const char* value)
   RAVE_ASSERT((dt != NULL), "dt was NULL");
   if (value == NULL) {
     strcpy(dt->date, "");
+    result = 1;
   } else {
     if (strlen(value) == 8 && RaveDateTimeInternal_isDigits(value)) {
       strcpy(dt->date, value);

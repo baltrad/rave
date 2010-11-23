@@ -193,6 +193,34 @@ static PyObject* _pyraveio_open(PyObject* self, PyObject* args)
 }
 
 /**
+ * Opens a file that is supported by raveio
+ * @param[in] self this instance.
+ * @param[in] args arguments for creation (filename as a string)
+ * @return the object on success, otherwise NULL
+ */
+static PyObject* _pyraveio_test(PyObject* self, PyObject* args)
+{
+  char* filename = NULL;
+  RaveIO_t* raveio = NULL;
+  PolarScan_t* out = NULL;
+
+  if (!PyArg_ParseTuple(args, "s", &filename)) {
+    return NULL;
+  }
+  raveio = RaveIO_open(filename);
+  if (RaveIO_getObjectType(raveio) == Rave_ObjectType_SCAN) {
+     out = (PolarScan_t*)RaveIO_getObject(raveio);
+  }
+
+  RaveIO_setObject(raveio, (RaveCoreObject*)out);
+  RaveIO_save(raveio, "bobbe.h5");
+
+  RAVE_OBJECT_RELEASE(out);
+  RAVE_OBJECT_RELEASE(raveio);
+  Py_RETURN_NONE;
+}
+
+/**
  * Closes the currently open nodelist.
  * @param[in] self - this instance
  * @param[in] args - N/A
@@ -439,6 +467,7 @@ PyTypeObject PyRaveIO_Type =
 static PyMethodDef functions[] = {
   {"new", (PyCFunction)_pyraveio_new, 1},
   {"open", (PyCFunction)_pyraveio_open, 1},
+  {"test", (PyCFunction)_pyraveio_test, 1},
   {NULL,NULL} /*Sentinel*/
 };
 

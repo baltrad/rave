@@ -39,6 +39,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_field.h"
 #include "rave_hlhdf_utilities.h"
 #include "cartesian_odim_io.h"
+#include "polar_odim_io.h"
 
 /**
  * Defines the structure for the RaveIO in a volume.
@@ -417,40 +418,6 @@ done:
   return result;
 }
 
-/**
- * Reads a field.
- */
-static RaveField_t* RaveIOInternal_loadField(
-    HL_NodeList* nodelist, const char* fmt, ...)
-{
-  va_list ap;
-  char nodeName[1024];
-  int n = 0;
-  RaveField_t* field = NULL;
-
-  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
-
-  va_start(ap, fmt);
-  n = vsnprintf(nodeName, 1024, fmt, ap);
-  va_end(ap);
-  if (n < 0 || n >= 1024) {
-    goto done;
-  }
-
-  if (HLNodeList_hasNodeByName(nodelist, nodeName)) {
-    field = RAVE_OBJECT_NEW(&RaveField_TYPE);
-    if (field == NULL) {
-      goto done;
-    }
-    if (!RaveIOInternal_loadAttributesAndDataForObject(nodelist, (RaveCoreObject*)field, nodeName)) {
-      RAVE_OBJECT_RELEASE(field);
-    }
-  }
-
-done:
-  return field;
-}
-
 static int RaveIOInternal_addRaveFieldToNodeList(
   RaveField_t* field, HL_NodeList* nodelist, const char* fmt, ...)
 {
@@ -501,109 +468,6 @@ done:
 ///////////////////////////////////////////////////////////////////
 
 /**
- * Loads a scan parameter.
- * @param[in] nodelist - the node list
- * @param[in] fmt - the varargs name of the parameter to load
- * @returns a parameter on success otherwise NULL
- */
-static PolarScanParam_t* RaveIOInternal_loadScanParam(HL_NodeList* nodelist, const char* fmt, ...)
-{
-  va_list ap;
-  char nodeName[1024];
-  int n = 0;
-  PolarScanParam_t* result = NULL;
-
-  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
-
-  va_start(ap, fmt);
-  n = vsnprintf(nodeName, 1024, fmt, ap);
-  va_end(ap);
-  if (n < 0 || n >= 1024) {
-    goto done;
-  }
-
-  if (HLNodeList_hasNodeByName(nodelist, nodeName)) {
-    result = RAVE_OBJECT_NEW(&PolarScanParam_TYPE);
-    if (result == NULL) {
-      goto done;
-    }
-    if (!RaveIOInternal_loadAttributesAndDataForObject(nodelist, (RaveCoreObject*)result, nodeName)) {
-      RAVE_OBJECT_RELEASE(result);
-    }
-  }
-
-done:
-  return result;
-}
-
-/**
- * Loads a specific polar scan
- * @param[in] nodelist - the node list
- * @param[in] fmt - the varargs name of the scan to load
- * @returns a polar scan on success otherwise NULL
- */
-static PolarScan_t* RaveIOInternal_loadSpecificScan(HL_NodeList* nodelist, const char* fmt, ...)
-{
-  va_list ap;
-  char nodeName[1024];
-  int pindex = 1;
-  int n = 0;
-  PolarScan_t* result = NULL;
-  PolarScan_t* scan = NULL;
-
-  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
-
-  va_start(ap, fmt);
-  n = vsnprintf(nodeName, 1024, fmt, ap);
-  va_end(ap);
-  if (n < 0 || n >= 1024) {
-    goto done;
-  }
-
-  if (HLNodeList_hasNodeByName(nodelist, nodeName)) {
-    scan = RAVE_OBJECT_NEW(&PolarScan_TYPE);
-    if (scan == NULL) {
-      goto done;
-    }
-    if (!RaveIOInternal_loadAttributesAndDataForObject(nodelist, (RaveCoreObject*)scan, nodeName)) {
-      RAVE_OBJECT_RELEASE(scan);
-    }
-  }
-
-  while (RaveIOInternal_hasNodeByName(nodelist, "%s/data%d", nodeName, pindex)) {
-    PolarScanParam_t* parameter = (PolarScanParam_t*)RaveIOInternal_loadScanParam(nodelist, "%s/data%d", nodeName, pindex);
-    if (parameter == NULL) {
-      RAVE_ERROR0("Failed to read parameter");
-      goto done;
-    }
-    if (!PolarScan_addParameter(scan, parameter)) {
-      RAVE_ERROR0("Failed to add parameter to scan");
-      RAVE_OBJECT_RELEASE(parameter);
-      goto done;
-    }
-    pindex++;
-    RAVE_OBJECT_RELEASE(parameter);
-  }
-
-  pindex = 1;
-  while (RaveIOInternal_hasNodeByName(nodelist, "%s/quality%d", nodeName, pindex)) {
-    RaveField_t* field = RaveIOInternal_loadField(nodelist, "%s/quality%d", nodeName, pindex);
-    if (field == NULL || !PolarScan_addQualityField(scan, field)) {
-      RAVE_ERROR0("Failed to read quality parameter");
-      RAVE_OBJECT_RELEASE(field);
-      goto done;
-    }
-    pindex++;
-    RAVE_OBJECT_RELEASE(field);
-  }
-
-  result = RAVE_OBJECT_COPY(scan);
-done:
-  RAVE_OBJECT_RELEASE(scan);
-  return result;
-}
-
-/**
  * Loads a individual polar scan
  * @param[in] nodelist - the node list
  * @param[in] fmt - the varargs name of the scan to load
@@ -612,59 +476,17 @@ done:
 static PolarScan_t* RaveIOInternal_loadScan(HL_NodeList* nodelist)
 {
   PolarScan_t* result = NULL;
-  PolarScan_t* scan = NULL;
-  int pindex = 1;
-  int status = 1;
-
-  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
-
-  if (RaveIOInternal_getObjectType(nodelist) != Rave_ObjectType_SCAN) {
-    RAVE_ERROR0("Can not load provided file as a scan");
-    return NULL;
-  }
-
-  scan = RAVE_OBJECT_NEW(&PolarScan_TYPE);
-  if (scan == NULL) {
-    RAVE_ERROR0("Failed to create scan");
-    return NULL;
-  }
-
-  if (!RaveIOInternal_hasNodeByName(nodelist, "/dataset1") ||
-      !RaveIOInternal_hasNodeByName(nodelist, "/dataset1/data1")) {
-    RAVE_ERROR0("Scan file does not contain scan...");
-    goto done;
-  }
-
-  if (!RaveIOInternal_loadAttributesAndDataForObject(nodelist, (RaveCoreObject*)scan, "")) {
-    goto done;
-  }
-
-  if (!RaveIOInternal_loadAttributesAndDataForObject(nodelist, (RaveCoreObject*)scan, "/dataset1")) {
-    goto done;
-  }
-
-  // And fetch the different parameters that belongs to the scan
-  pindex = 1;
-  while (status == 1) {
-    PolarScanParam_t* param = RaveIOInternal_loadScanParam(nodelist, "/dataset1/data%d", pindex);
-    if (param == NULL) {
-      status = 0;
-    }
-    if (status == 1) {
-      status = PolarScan_addParameter(scan, param);
-      if (status == 0) {
-        RAVE_ERROR0("Failed to add parameter to scan");
+  PolarOdimIO_t* odimio = RAVE_OBJECT_NEW(&PolarOdimIO_TYPE);
+  if (odimio != NULL) {
+    PolarScan_t* scan = RAVE_OBJECT_NEW(&PolarScan_TYPE);
+    if (scan != NULL) {
+      if (PolarOdimIO_readScan(odimio, nodelist, scan)) {
+        result = RAVE_OBJECT_COPY(scan);
       }
     }
-
-    pindex++;
-    RAVE_OBJECT_RELEASE(param);
+    RAVE_OBJECT_RELEASE(scan);
   }
-
-
-  result = RAVE_OBJECT_COPY(scan);
-done:
-  RAVE_OBJECT_RELEASE(scan);
+  RAVE_OBJECT_RELEASE(odimio);
   return result;
 }
 
@@ -675,42 +497,18 @@ done:
  */
 static PolarVolume_t* RaveIOInternal_loadPolarVolume(HL_NodeList* nodelist)
 {
-  int sindex = 1;
   PolarVolume_t* result = NULL;
-  PolarVolume_t* volume = NULL;
-
-  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
-
-  if (RaveIOInternal_getObjectType(nodelist) != Rave_ObjectType_PVOL) {
-    RAVE_ERROR0("Can not load provided file as a volume");
-    return NULL;
-  }
-  volume = RAVE_OBJECT_NEW(&PolarVolume_TYPE);
-  if (volume == NULL) {
-    RAVE_ERROR0("Failed to create volume object");
-    goto done;
-  }
-  if (!RaveIOInternal_loadAttributesAndDataForObject(nodelist, (RaveCoreObject*)volume, "")) {
-    goto done;
-  }
-
-  while (RaveIOInternal_hasNodeByName(nodelist, "/dataset%d", sindex)) {
-    PolarScan_t* scan = (PolarScan_t*)RaveIOInternal_loadSpecificScan(nodelist, "/dataset%d", sindex);
-    if (scan == NULL) {
-      RAVE_ERROR0("Failed to read scan");
-      goto done;
+  PolarOdimIO_t* odimio = RAVE_OBJECT_NEW(&PolarOdimIO_TYPE);
+  if (odimio != NULL) {
+    PolarVolume_t* volume = RAVE_OBJECT_NEW(&PolarVolume_TYPE);
+    if (volume != NULL) {
+      if (PolarOdimIO_readVolume(odimio, nodelist, volume)) {
+        result = RAVE_OBJECT_COPY(volume);
+      }
     }
-    if (!PolarVolume_addScan(volume, scan)) {
-      RAVE_ERROR0("Failed to add scan to volume");
-      RAVE_OBJECT_RELEASE(scan);
-      goto done;
-    }
-    RAVE_OBJECT_RELEASE(scan);
-    sindex++;
+    RAVE_OBJECT_RELEASE(volume);
   }
-  result = RAVE_OBJECT_COPY(volume);
-done:
-  RAVE_OBJECT_RELEASE(volume);
+  RAVE_OBJECT_RELEASE(odimio);
   return result;
 }
 
@@ -783,6 +581,7 @@ done:
   return result;
 }
 
+#ifdef KALLE
 /**
  * Adds a scan to a node list.
  * @param[in] object - the parameter to translate into hlhdf nodes
@@ -871,6 +670,7 @@ done:
   RAVE_OBJECT_RELEASE(attributes);
   return result;
 }
+#endif
 
 /**
  * Adds a volume to a node list.
@@ -880,6 +680,15 @@ done:
  */
 static int RaveIOInternal_addPolarVolumeToNodeList(PolarVolume_t* object, HL_NodeList* nodelist)
 {
+  int result = 0;
+  PolarOdimIO_t* odimio = RAVE_OBJECT_NEW(&PolarOdimIO_TYPE);
+  if (odimio != NULL) {
+    result = PolarOdimIO_fillVolume(odimio, object, nodelist);
+  }
+  RAVE_OBJECT_RELEASE(odimio);
+  return result;
+
+#ifdef KALLE
   int result = 0;
   RaveObjectList_t* attributes = NULL;
   int nscans = 0;
@@ -919,10 +728,20 @@ static int RaveIOInternal_addPolarVolumeToNodeList(PolarVolume_t* object, HL_Nod
 done:
   RAVE_OBJECT_RELEASE(attributes);
   return result;
+#endif
 }
 
 static int RaveIOInternal_addScanToNodeList(PolarScan_t* object, HL_NodeList* nodelist)
 {
+  int result = 0;
+  PolarOdimIO_t* odimio = RAVE_OBJECT_NEW(&PolarOdimIO_TYPE);
+  if (odimio != NULL) {
+    result = PolarOdimIO_fillScan(odimio, object, nodelist);
+  }
+  RAVE_OBJECT_RELEASE(odimio);
+  return result;
+
+#ifdef KALLE
   int result = 0;
   RaveObjectList_t* attributes = NULL;
   RaveList_t* keys = NULL;
@@ -991,6 +810,7 @@ done:
   RaveList_freeAndDestroy(&keys);
   RAVE_OBJECT_RELEASE(attributes);
   return result;
+#endif
 }
 
 /**

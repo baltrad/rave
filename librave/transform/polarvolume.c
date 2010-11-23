@@ -375,6 +375,15 @@ int PolarVolume_addScan(PolarVolume_t* pvol, PolarScan_t* scan)
     if (PolarScanInternal_isPolarVolumeBeamwidth(scan) == -1) { /* if default beamwidth */
       PolarScanInternal_setPolarVolumeBeamwidth(scan, pvol->beamwidth);
     }
+
+    if (PolarScan_getTime(scan) == NULL || PolarScan_getDate(scan) == NULL) {
+      if (!PolarScan_setTime(scan, PolarVolume_getTime(pvol)) ||
+          !PolarScan_setDate(scan, PolarVolume_getDate(pvol))) {
+        fprintf(stderr, "Failed to add time and/or date\n");
+        goto done;
+      }
+    }
+
     result = 1;
   }
 done:
@@ -587,70 +596,15 @@ int PolarVolume_addAttribute(PolarVolume_t* pvol,
 
   name = RaveAttribute_getName(attribute);
   if (name != NULL) {
-    /*
-     * what/date
-     * what/time
-     * what/source
-     * where/lon
-     * where/lat
-     * where/height
-     */
-    if (strcasecmp("what/date", name)==0) {
-      char* value = NULL;
-      if (!RaveAttribute_getString(attribute, &value)) {
-        RAVE_ERROR0("Failed to extract what/date as a string");
-        goto done;
-      }
-      result = PolarVolume_setDate(pvol, value);
-    } else if (strcasecmp("what/time", name)==0) {
-      char* value = NULL;
-      if (!RaveAttribute_getString(attribute, &value)) {
-        RAVE_ERROR0("Failed to extract what/time as a string");
-        goto done;
-      }
-      result = PolarVolume_setTime(pvol, value);
-    } else if (strcasecmp("what/source", name)==0) {
-      char* value = NULL;
-      if (!RaveAttribute_getString(attribute, &value)) {
-        RAVE_ERROR0("Failed to extract what/source as a string");
-        goto done;
-      }
-      result = PolarVolume_setSource(pvol, value);
-    } else if (strcasecmp("where/lon", name)==0) {
-      double value = 0.0;
-      if (!(result = RaveAttribute_getDouble(attribute, &value))) {
-        RAVE_ERROR0("Failed to extract where/lon as a double");
-      }
-      PolarVolume_setLongitude(pvol, value*M_PI/180.0);
-    } else if (strcasecmp("where/lat", name)==0) {
-      double value = 0.0;
-      if (!(result = RaveAttribute_getDouble(attribute, &value))) {
-        RAVE_ERROR0("Failed to extract where/lat as a double");
-      }
-      PolarVolume_setLatitude(pvol, value*M_PI/180.0);
-    } else if (strcasecmp("where/height", name)==0) {
-      double value = 0.0;
-      if (!(result = RaveAttribute_getDouble(attribute, &value))) {
-        RAVE_ERROR0("Failed to extract where/height as a double");
-      }
-      PolarVolume_setHeight(pvol, value);
-    } else if (strcasecmp("how/beamwidth", name)==0) {
-      double value = 0.0;
-      if (!(result = RaveAttribute_getDouble(attribute, &value))) {
-        RAVE_ERROR0("Failed to extract how/beamwidth as a double");
-      }
-      PolarVolume_setBeamwidth(pvol, value*M_PI/180.0);
-    } else {
-      if (!RaveAttributeHelp_extractGroupAndName(name, &gname, &aname)) {
-        RAVE_ERROR1("Failed to extract group and name from %s", name);
-        goto done;
-      }
-      if ((strcasecmp("how", gname)==0 ||
-           strcasecmp("what", gname)==0 ||
-           strcasecmp("where", gname)==0) &&
-           strchr(aname, '/') == NULL) {
-        result = RaveObjectHashTable_put(pvol->attrs, name, (RaveCoreObject*)attribute);
-      }
+    if (!RaveAttributeHelp_extractGroupAndName(name, &gname, &aname)) {
+      RAVE_ERROR1("Failed to extract group and name from %s", name);
+      goto done;
+    }
+    if ((strcasecmp("how", gname)==0 ||
+         strcasecmp("what", gname)==0 ||
+         strcasecmp("where", gname)==0) &&
+         strchr(aname, '/') == NULL) {
+      result = RaveObjectHashTable_put(pvol->attrs, name, (RaveCoreObject*)attribute);
     }
   }
 
@@ -675,6 +629,12 @@ RaveList_t* PolarVolume_getAttributeNames(PolarVolume_t* pvol)
 {
   RAVE_ASSERT((pvol != NULL), "pvol == NULL");
   return RaveObjectHashTable_keys(pvol->attrs);
+}
+
+int PolarVolume_hasAttribute(PolarVolume_t* pvol, const char* name)
+{
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
+  return RaveObjectHashTable_exists(pvol->attrs, name);
 }
 
 RaveObjectList_t* PolarVolume_getAttributeValues(PolarVolume_t* pvol)

@@ -871,6 +871,10 @@ static struct PyMethodDef _pypolarscan_methods[] =
   {"height", NULL},
   {"time", NULL},
   {"date", NULL},
+  {"starttime", NULL},
+  {"startdate", NULL},
+  {"endtime", NULL},
+  {"enddate", NULL},
   {"source", NULL},
   {"defaultparameter", NULL},
   {"projection", NULL},
@@ -944,6 +948,34 @@ static PyObject* _pypolarscan_getattr(PyPolarScan* self, char* name)
     }
   } else if (strcmp("date", name) == 0) {
     const char* str = PolarScan_getDate(self->scan);
+    if (str != NULL) {
+      return PyString_FromString(str);
+    } else {
+      Py_RETURN_NONE;
+    }
+  } else if (strcmp("starttime", name) == 0) {
+    const char* str = PolarScan_getStartTime(self->scan);
+    if (str != NULL) {
+      return PyString_FromString(str);
+    } else {
+      Py_RETURN_NONE;
+    }
+  } else if (strcmp("startdate", name) == 0) {
+    const char* str = PolarScan_getStartDate(self->scan);
+    if (str != NULL) {
+      return PyString_FromString(str);
+    } else {
+      Py_RETURN_NONE;
+    }
+  } else if (strcmp("endtime", name) == 0) {
+    const char* str = PolarScan_getEndTime(self->scan);
+    if (str != NULL) {
+      return PyString_FromString(str);
+    } else {
+      Py_RETURN_NONE;
+    }
+  } else if (strcmp("enddate", name) == 0) {
+    const char* str = PolarScan_getEndDate(self->scan);
     if (str != NULL) {
       return PyString_FromString(str);
     } else {
@@ -1058,6 +1090,46 @@ static int _pypolarscan_setattr(PyPolarScan* self, char* name, PyObject* val)
       PolarScan_setDate(self->scan, NULL);
     } else {
       raiseException_gotoTag(done, PyExc_ValueError, "date must be a string (YYYYMMSS)");
+    }
+  } else if (strcmp("starttime", name) == 0) {
+    if (PyString_Check(val)) {
+      if (!PolarScan_setStartTime(self->scan, PyString_AsString(val))) {
+        raiseException_gotoTag(done, PyExc_ValueError, "starttime must be a string (HHmmss)");
+      }
+    } else if (val == Py_None) {
+      PolarScan_setStartTime(self->scan, NULL);
+    } else {
+      raiseException_gotoTag(done, PyExc_ValueError, "starttime must be a string (HHmmss)");
+    }
+  } else if (strcmp("startdate", name) == 0) {
+    if (PyString_Check(val)) {
+      if (!PolarScan_setStartDate(self->scan, PyString_AsString(val))) {
+        raiseException_gotoTag(done, PyExc_ValueError, "startdate must be a string (YYYYMMSS)");
+      }
+    } else if (val == Py_None) {
+      PolarScan_setStartDate(self->scan, NULL);
+    } else {
+      raiseException_gotoTag(done, PyExc_ValueError, "startdate must be a string (YYYYMMSS)");
+    }
+  } else if (strcmp("endtime", name) == 0) {
+    if (PyString_Check(val)) {
+      if (!PolarScan_setEndTime(self->scan, PyString_AsString(val))) {
+        raiseException_gotoTag(done, PyExc_ValueError, "endtime must be a string (HHmmss)");
+      }
+    } else if (val == Py_None) {
+      PolarScan_setEndTime(self->scan, NULL);
+    } else {
+      raiseException_gotoTag(done, PyExc_ValueError, "endtime must be a string (HHmmss)");
+    }
+  } else if (strcmp("enddate", name) == 0) {
+    if (PyString_Check(val)) {
+      if (!PolarScan_setEndDate(self->scan, PyString_AsString(val))) {
+        raiseException_gotoTag(done, PyExc_ValueError, "enddate must be a string (YYYYMMSS)");
+      }
+    } else if (val == Py_None) {
+      PolarScan_setEndDate(self->scan, NULL);
+    } else {
+      raiseException_gotoTag(done, PyExc_ValueError, "enddate must be a string (YYYYMMSS)");
     }
   } else if (strcmp("source", name) == 0) {
     if (PyString_Check(val)) {

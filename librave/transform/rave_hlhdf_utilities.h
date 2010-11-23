@@ -40,6 +40,44 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #define RAVE_ODIM_H5RAD_VERSION_2_0_STR "H5rad 2.0"
 
 /**
+ * Attribute function called when an attribute is found.
+ * @param[in] object - the object passed on from the loading functions
+ * @param[in] attr - the attribute
+ * @return 1 on success or 0 at failure
+ */
+typedef int (*RaveHL_attr_f)(void* object, RaveAttribute_t* attr);
+
+/**
+ * Data function called when an dataset is found.
+ * @param[in] object - the object passed on from the loading functions
+ * @param[in] xsize - the xsize
+ * @param[in] ysize - the ysize
+ * @param[in] data - the dataset data
+ * @param[in] dtype - the data type
+ * @return 1 on success or 0 at failure
+ */
+typedef int (*RaveHL_data_f)(void* object, hsize_t xsize, hsize_t ysize, void* data, RaveDataType dtype);
+
+/**
+ * Group function called when a group is found
+ * @param[in] object - the object passed on from the loading functions
+ * @param[in] groupname - the name of the group
+ * @param[in] name - the attribute name
+ * @return 1 on success or 0 at failure
+ */
+typedef int (*RaveHL_group_f)(void* object, const char* groupname, const char* name);
+
+/**
+ * Creates a rave attribute from a HLHDF node value.
+ * Node must contain data that can be translated to long, double or strings otherwise
+ * NULL will be returned. Note, the name will not be set on the attribute and has to
+ * be set after this function has been called.
+ * @param[in] node - the HLHDF node
+ * @returns the rave attribute on success, otherwise NULL.
+ */
+RaveAttribute_t* RaveHL_getAttribute(HL_Node* node);
+
+/**
  * Verifies if the file contains a node with the name as specified by the variable
  * argument list.
  * @param[in] nodelist - the hlhdf nodelist
@@ -137,5 +175,18 @@ HL_FormatSpecifier RaveHL_raveToHlhdfType(RaveDataType format);
  * @returns the RaveDataType
  */
 RaveDataType RaveHL_hlhdfToRaveType(HL_FormatSpecifier format);
+
+/**
+ * Loads the attributes from the nodelist name and calls the
+ * attrf and dataf respectively depending on what type is found.
+ * E.g.
+ * name/how/..., name/where/... and name/what/...
+ * @param[in] nodelist - the hlhdf list
+ * @param[in] object - the object to fill
+ * @param[in] fmt - the varargs name of the object
+ * @param[in] ... - the varargs
+ * @return 1 on success otherwise 0
+ */
+int RaveHL_loadAttributesAndData(HL_NodeList* nodelist, void* object, RaveHL_attr_f attrf, RaveHL_data_f dataf, const char* fmt, ...);
 
 #endif /* RAVE_HLHDF_UTILITIES_H */

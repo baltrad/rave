@@ -176,6 +176,15 @@ class PyPolarVolumeTest(unittest.TestCase):
     obj.addScan(scan)
     #self.assertEquals(1, obj.getNumberOfScans())
 
+  def test_addScan_dateTime(self):
+    obj = _polarvolume.new();
+    obj.date = "20100101"
+    obj.time = "100000"
+    scan = _polarscan.new()
+    obj.addScan(scan)
+    self.assertEquals("20100101", scan.date)
+    self.assertEquals("100000", scan.time);
+
   def test_addScan_navigatorChanged(self):
     obj = _polarvolume.new()
     obj.longitude = 10.0

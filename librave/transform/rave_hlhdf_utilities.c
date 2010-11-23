@@ -70,7 +70,84 @@ static const struct RaveToHlhdfTypeMap RAVE_TO_HLHDF_MAP[] = {
 
 /*@} End of Constants */
 
+/*@{ Defines */
+
+/**
+ * Quick access function for reading one atomic value from a
+ * HLHDF node.
+ *
+ * @param[in] vt - the type for the read data
+ * @param[in] nn - the node
+ * @param[in] ss - the size of the data type
+ * @param[in] ov - the output value
+ * @param[in] ot - the type of the output value where assignment will be done.
+ */
+#define RAVEHL_GET_ATOMIC_NODEVALUE(vt, nn, ss, ot, ov) \
+{ \
+  vt v; \
+  memcpy(&v, HLNode_getData(nn), ss); \
+  ov = (ot)v; \
+}
+
+/*@} End of Defines */
+
 /*@{ Interface functions */
+
+/**
+ * Creates a rave attribute from a HLHDF node value.
+ * Node must contain data that can be translated to long, double or strings otherwise
+ * NULL will be returned. Note, the name will not be set on the attribute and has to
+ * be set after this function has been called.
+ * @param[in] node - the HLHDF node
+ * @returns the rave attribute on success, otherwise NULL.
+ */
+RaveAttribute_t* RaveHL_getAttribute(HL_Node* node)
+{
+  size_t sz = 0;
+  HL_FormatSpecifier format = HLHDF_UNDEFINED;
+  RaveAttribute_t* result = NULL;
+
+  RAVE_ASSERT((node != NULL), "node == NULL");
+
+  result = RAVE_OBJECT_NEW(&RaveAttribute_TYPE);
+  if (result == NULL) {
+    goto done;
+  }
+  format = HLNode_getFormat(node);
+  sz = HLNode_getDataSize(node);
+  if (format >= HLHDF_SCHAR && format <= HLHDF_ULLONG) {
+    long value = 0;
+    if (sz == sizeof(char)) {
+      RAVEHL_GET_ATOMIC_NODEVALUE(char, node, sz, long, value);
+    } else if (sz == sizeof(short)) {
+      RAVEHL_GET_ATOMIC_NODEVALUE(short, node, sz, long, value);
+    } else if (sz == sizeof(int)) {
+      RAVEHL_GET_ATOMIC_NODEVALUE(int, node, sz, long, value);
+    } else if (sz == sizeof(long)) {
+      RAVEHL_GET_ATOMIC_NODEVALUE(long, node, sz, long, value);
+    } else if (sz == sizeof(long long)) {
+      RAVEHL_GET_ATOMIC_NODEVALUE(long long, node, sz, long, value);
+    }
+    RaveAttribute_setLong(result, value);
+  } else if (format >= HLHDF_FLOAT && format <= HLHDF_LDOUBLE) {
+    double value = 0.0;
+    if (sz == sizeof(float)) {
+      RAVEHL_GET_ATOMIC_NODEVALUE(float, node, sz, double, value);
+    } else if (sz == sizeof(double)) {
+      RAVEHL_GET_ATOMIC_NODEVALUE(double, node, sz, double, value);
+    } else if (sz == sizeof(long double)) {
+      RAVEHL_GET_ATOMIC_NODEVALUE(long double, node, sz, double, value);
+    }
+    RaveAttribute_setDouble(result, value);
+  } else if (format == HLHDF_STRING) {
+    RaveAttribute_setString(result, (char*)HLNode_getData(node));
+  } else {
+    RAVE_WARNING0("Node does not contain value conformant to rave_attribute");
+    RAVE_OBJECT_RELEASE(result);
+  }
+done:
+  return result;
+}
 
 int RaveHL_hasNodeByName(HL_NodeList* nodelist, const char* fmt, ...)
 {
@@ -213,7 +290,7 @@ int RaveHL_addAttribute(HL_NodeList* nodelist, RaveAttribute_t* attribute, const
         if (value != NULL) {
           result = HLNode_setScalarValue(node, strlen(value)+1, (unsigned char*)value, "string", -1);
         } else {
-          RAVE_WARNING1("Attribute %s is NULL and will be ignored", nodeName);
+          RAVE_WARNING1("Attribute %s is NULL and will be ignored", attrNodeName);
           HLNode_free(node);
           node = NULL;
           result = 1;
@@ -429,4 +506,77 @@ RaveDataType RaveHL_hlhdfToRaveType(HL_FormatSpecifier format)
   }
   return result;
 }
+
+/**
+ * Loads the attributes from the name into the RaveCoreObject. I.e.
+ * name/how/..., name/where/... and name/what/...
+ * @param[in] nodelist - the hlhdf list
+ * @param[in] object - the object to fill
+ * @param[in] fmt - the varargs name of the object
+ * @param[in] ... - the varargs
+ * @return 1 on success otherwise 0
+ */
+int RaveHL_loadAttributesAndData(HL_NodeList* nodelist, void* object, RaveHL_attr_f attrf, RaveHL_data_f dataf, const char* fmt, ...)
+{
+  int result = 1;
+  int n = 0;
+  int i = 0;
+  int nameLength = 0;
+
+  va_list ap;
+  char name[1024];
+  int nName = 0;
+
+  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
+  RAVE_ASSERT((object != NULL), "object == NULL");
+
+  va_start(ap, fmt);
+  nName = vsnprintf(name, 1024, fmt, ap);
+  va_end(ap);
+  if (nName < 0 || nName >= 1024) {
+    RAVE_ERROR0("NodeName would evaluate to more than 1024 characters.");
+    result = 0;
+  } else {
+    nameLength = strlen(name);
+  }
+
+  n = HLNodeList_getNumberOfNodes(nodelist);
+  for (i = 0; result == 1 && i < n; i++) {
+    HL_Node* node = HLNodeList_getNodeByIndex(nodelist, i);
+    const char* nodeName = HLNode_getName(node);
+    int nNameLength = strlen(nodeName);
+    if (nNameLength>nameLength && strncasecmp(nodeName, name, nameLength)==0) {
+      if (nodeName[nameLength]=='/') {
+        char* tmpptr = (char*)nodeName+(nameLength + 1);
+        if (HLNode_getType(node) == ATTRIBUTE_ID &&
+            (strncasecmp(tmpptr, "how/", 4)==0 ||
+             strncasecmp(tmpptr, "what/", 5)==0 ||
+             strncasecmp(tmpptr, "where/", 6)==0)) {
+          RaveAttribute_t* attribute = RaveHL_getAttribute(node);
+          if (attribute != NULL) {
+            result = RaveAttribute_setName(attribute, tmpptr);
+            if (result == 1 && attrf != NULL) {
+              result = attrf(object, attribute);
+            }
+          }
+          RAVE_OBJECT_RELEASE(attribute);
+        } else if (HLNode_getType(node) == DATASET_ID &&
+            strcasecmp(tmpptr, "data")==0) {
+          hsize_t d0 = HLNode_getDimension(node, 0);
+          hsize_t d1 = HLNode_getDimension(node, 1);
+          RaveDataType dataType = RaveHL_hlhdfToRaveType(HLNode_getFormat(node));
+          if (dataType != RaveDataType_UNDEFINED && dataf != NULL) {
+            result = dataf(object, d1, d0, HLNode_getData(node), dataType);
+          } else {
+            RAVE_ERROR0("Undefined datatype for dataset");
+            result = 0;
+          }
+        }
+      }
+    }
+  }
+
+  return result;
+}
+
 /*@} End of Interface functions */

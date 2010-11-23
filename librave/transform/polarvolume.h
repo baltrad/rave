@@ -321,6 +321,14 @@ RaveList_t* PolarVolume_getAttributeNames(PolarVolume_t* pvol);
 RaveObjectList_t* PolarVolume_getAttributeValues(PolarVolume_t* pvol);
 
 /**
+ * Returns if the volume has the specified attribute or not
+ * @param[in] pvol - self
+ * @param[in] name - the name of the attribute
+ * @returns 1 if it exists otherwise 0
+ */
+int PolarVolume_hasAttribute(PolarVolume_t* pvol, const char* name);
+
+/**
  * Validates the volume regarding storage.
  * @param[in] pvol - self
  * @returns 1 if valid, otherwise 0

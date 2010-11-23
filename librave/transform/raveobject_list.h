@@ -91,6 +91,14 @@ RaveCoreObject* RaveObjectList_getLast(RaveObjectList_t* list);
 RaveCoreObject* RaveObjectList_remove(RaveObjectList_t* list, int index);
 
 /**
+ * Removes the item at the specified position and releases it.
+ * @param[in] list - the list
+ * @param[in] index - the index of the requested item
+ * @returns the object
+ */
+void RaveObjectList_release(RaveObjectList_t* list, int index);
+
+/**
  * Removes the last item.
  * @param[in] list - the list
  * @returns the object or NULL if there are no objects
