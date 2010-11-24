@@ -978,6 +978,72 @@ class PyRaveIOTest(unittest.TestCase):
     
     self.assertEquals("SCAN", nodelist.getNode("/what/object").data())
   
+  def test_save_scan_from_volume_check_metadata(self):
+    obj = _raveio.open(self.FIXTURE_VOLUME)
+    vol = obj.object
+    scan = vol.getScan(0)
+    
+    obj.object = scan
+    obj.filename = self.TEMPORARY_FILE2
+    obj.save()
+
+    # Verify data
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE2)
+    nodelist.selectAll()
+    nodelist.fetch()
+    
+    nodenames = nodelist.getNodeNames().keys();
+    VALID_NAMES=["/Conventions", "/what","/what/date","/what/object","/what/source","/what/time",
+                 "/what/version","/where","/where/height","/where/lat","/where/lon","/how","/how/beamwidth","/dataset1",
+                 "/dataset1/data1","/dataset1/data1/data","/dataset1/data1/data/CLASS","/dataset1/data1/data/IMAGE_VERSION",
+                 "/dataset1/data1/what","/dataset1/data1/what/gain","/dataset1/data1/what/nodata","/dataset1/data1/what/offset",
+                 "/dataset1/data1/what/quantity","/dataset1/data1/what/undetect","/dataset1/data2","/dataset1/data2/data",
+                 "/dataset1/data2/data/CLASS","/dataset1/data2/data/IMAGE_VERSION","/dataset1/data2/what","/dataset1/data2/what/gain",
+                 "/dataset1/data2/what/nodata","/dataset1/data2/what/offset","/dataset1/data2/what/quantity",
+                 "/dataset1/data2/what/undetect","/dataset1/what","/dataset1/what/enddate","/dataset1/what/endtime",
+                 "/dataset1/what/product","/dataset1/what/startdate","/dataset1/what/starttime","/dataset1/where",
+                 "/dataset1/where/a1gate","/dataset1/where/elangle","/dataset1/where/nbins","/dataset1/where/nrays",
+                 "/dataset1/where/rscale","/dataset1/where/rstart"]
+      
+    for name in VALID_NAMES:
+      self.assertTrue(name in nodenames)
+      nodenames.remove(name)
+      
+    self.assertEquals("20090501", nodelist.getNode("/what/date").data())
+    self.assertEquals("SCAN", nodelist.getNode("/what/object").data())
+    self.assertEquals("WMO:02606,RAD:SE50", nodelist.getNode("/what/source").data())
+    self.assertEquals("120000", nodelist.getNode("/what/time").data())
+    self.assertEquals("H5rad 2.0", nodelist.getNode("/what/version").data())
+    self.assertAlmostEquals(209, nodelist.getNode("/where/height").data(), 4)
+    self.assertAlmostEquals(56.3675, nodelist.getNode("/where/lat").data(), 4)
+    self.assertAlmostEquals(12.8544, nodelist.getNode("/where/lon").data(), 4)
+
+    self.assertEquals("20090501", nodelist.getNode("/dataset1/what/startdate").data())
+    self.assertEquals("120021", nodelist.getNode("/dataset1/what/starttime").data())
+    self.assertEquals("SCAN", nodelist.getNode("/dataset1/what/product").data())
+
+    self.assertEquals("20090501", nodelist.getNode("/dataset1/what/enddate").data())
+    self.assertEquals("120051", nodelist.getNode("/dataset1/what/endtime").data())
+
+    self.assertAlmostEquals(0, nodelist.getNode("/dataset1/where/a1gate").data(), 4)
+    self.assertAlmostEquals(0.5, nodelist.getNode("/dataset1/where/elangle").data(), 4)
+    self.assertEquals(120, nodelist.getNode("/dataset1/where/nbins").data())
+    self.assertEquals(420, nodelist.getNode("/dataset1/where/nrays").data())
+    self.assertAlmostEquals(2000, nodelist.getNode("/dataset1/where/rscale").data(), 4)
+    self.assertAlmostEquals(0.0, nodelist.getNode("/dataset1/where/rstart").data(), 4)
+
+    self.assertAlmostEquals(0.4, nodelist.getNode("/dataset1/data1/what/gain").data(), 4)
+    self.assertAlmostEquals(255, nodelist.getNode("/dataset1/data1/what/nodata").data(), 4)
+    self.assertAlmostEquals(-30, nodelist.getNode("/dataset1/data1/what/offset").data(), 4)
+    self.assertEquals("DBZH", nodelist.getNode("/dataset1/data1/what/quantity").data())
+    self.assertAlmostEquals(0, nodelist.getNode("/dataset1/data1/what/undetect").data(), 4)
+
+    self.assertAlmostEquals(0.1875, nodelist.getNode("/dataset1/data2/what/gain").data(), 4)
+    self.assertAlmostEquals(255, nodelist.getNode("/dataset1/data2/what/nodata").data(), 4)
+    self.assertAlmostEquals(-24, nodelist.getNode("/dataset1/data2/what/offset").data(), 4)
+    self.assertEquals("VRAD", nodelist.getNode("/dataset1/data2/what/quantity").data())
+    self.assertAlmostEquals(0, nodelist.getNode("/dataset1/data2/what/undetect").data(), 4)
+  
   def addGroupNode(self, nodelist, name):
     node = _pyhl.node(_pyhl.GROUP_ID, name)
     nodelist.addNode(node)
