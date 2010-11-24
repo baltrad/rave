@@ -41,6 +41,24 @@ typedef struct _CartesianOdimIO_t CartesianOdimIO_t;
 extern RaveCoreObjectType CartesianOdimIO_TYPE;
 
 /**
+ * Reads a cartesian from the nodelist and sets the data in the cartesian.
+ * @param[in] self - self
+ * @param[in] nodelist - the hdf5 node list
+ * @param[in] cartesian - the cartesian that should get the attribute and data set
+ * @returns 1 on success otherwise 0
+ */
+int CartesianOdimIO_readCartesian(CartesianOdimIO_t* self, HL_NodeList* nodelist, Cartesian_t* cartesian);
+
+/**
+ * Reads a volume from the nodelist and sets the data in the volume.
+ * @param[in] self - self
+ * @param[in] nodelist - the hdf5 node list
+ * @param[in] volume - the volume that should get the attribute and data set
+ * @returns 1 on success otherwise 0
+ */
+int CartesianOdimIO_readVolume(CartesianOdimIO_t* self, HL_NodeList* nodelist, CartesianVolume_t* volume);
+
+/**
  * Fills a HL nodelist with information from a cartesian product.
  * @param[in] self - self
  * @param[in] nodelist - the node list
@@ -57,5 +75,29 @@ int CartesianOdimIO_fillImage(CartesianOdimIO_t* self, HL_NodeList* nodelist, Ca
  * @returns 1 on success, 0 otherwise
  */
 int CartesianOdimIO_fillVolume(CartesianOdimIO_t* self, HL_NodeList* nodelist, CartesianVolume_t* volume);
+
+/**
+ * Validates an image in order to verify if it contains necessary information
+ * for writing.
+ * @param[in] cartesian - the cartesian product to validate
+ * @return 1 if valid otherwise 0
+ */
+int CartesianOdimIO_isValidImage(Cartesian_t* cartesian);
+
+/**
+ * Validates an image belonging to a volume in order to verify if it
+ * contains necessary information for writing.
+ * @param[in] cartesian - the cartesian product to validate
+ * @return 1 if valid otherwise 0
+ */
+int CartesianOdimIO_isValidVolumeImage(Cartesian_t* cartesian);
+
+/**
+ * Validates an volume in order to verify if it contains necessary information
+ * for writing.
+ * @param[in] volume - the volume to validate
+ * @return 1 if valid otherwise 0
+ */
+int CartesianOdimIO_isValidVolume(CartesianVolume_t* volume);
 
 #endif /* CARTESIAN_ODIM_IO_H */

@@ -101,7 +101,7 @@ static const struct RaveToHlhdfTypeMap RAVE_TO_HLHDF_MAP[] = {
  * @param[in] node - the HLHDF node
  * @returns the rave attribute on success, otherwise NULL.
  */
-RaveAttribute_t* RaveHL_getAttribute(HL_Node* node)
+RaveAttribute_t* RaveHL_createAttribute(HL_Node* node)
 {
   size_t sz = 0;
   HL_FormatSpecifier format = HLHDF_UNDEFINED;
@@ -149,6 +149,44 @@ done:
   return result;
 }
 
+RaveAttribute_t* RaveHL_getAttribute(HL_NodeList* nodelist, const char* fmt, ...)
+{
+  RaveAttribute_t* result = NULL;
+  RaveAttribute_t* attr = NULL;
+
+  HL_Node* node = NULL;
+
+  char nodeName[1024];
+  va_list ap;
+  int n = 0;
+
+  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
+  RAVE_ASSERT((fmt != NULL), "fmt == NULL");
+
+  va_start(ap, fmt);
+  n = vsnprintf(nodeName, 1024, fmt, ap);
+  va_end(ap);
+  if (n < 0 || n >= 1024) {
+    RAVE_ERROR0("Failed to generate name");
+    goto done;
+  }
+
+  node = HLNodeList_getNodeByName(nodelist, nodeName);
+  if (node != NULL) {
+    attr = RaveHL_createAttribute(node);
+    if (attr != NULL) {
+      if (!RaveAttribute_setName(attr, nodeName)) {
+        goto done;
+      }
+    }
+  }
+  result = RAVE_OBJECT_COPY(attr);
+
+done:
+  RAVE_OBJECT_RELEASE(attr);
+  return result;
+}
+
 int RaveHL_hasNodeByName(HL_NodeList* nodelist, const char* fmt, ...)
 {
   va_list ap;
@@ -164,6 +202,48 @@ int RaveHL_hasNodeByName(HL_NodeList* nodelist, const char* fmt, ...)
   }
   return 0;
 }
+
+int RaveHL_getStringValue(HL_NodeList* nodelist, char** value, const char* fmt, ...)
+{
+  int result = 0;
+  char nodeName[1024];
+  va_list ap;
+  int n = 0;
+  HL_Node* node = NULL;
+
+  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
+  RAVE_ASSERT((value != NULL), "attribute == NULL");
+  RAVE_ASSERT((fmt != NULL), "fmt == NULL");
+
+  *value = NULL;
+
+  va_start(ap, fmt);
+  n = vsnprintf(nodeName, 1024, fmt, ap);
+  va_end(ap);
+  if (n < 0 || n >= 1024) {
+    RAVE_ERROR0("Failed to generate name for data entry");
+    goto done;
+  }
+
+  node = HLNodeList_getNodeByName(nodelist, nodeName);
+  if (node == NULL) {
+    RAVE_ERROR1("Could not read %s", nodeName);
+    goto done;
+  }
+
+  if (HLNode_getFormat(node) != HLHDF_STRING) {
+    RAVE_ERROR1("%s is not of type HLHDF_STRING", nodeName);
+    goto done;
+  }
+
+  *value = (char*)HLNode_getData(node);
+  result = 1;
+
+done:
+  return result;
+}
+
+
 
 int RaveHL_createGroup(HL_NodeList* nodelist, const char* fmt, ...)
 {
@@ -552,7 +632,7 @@ int RaveHL_loadAttributesAndData(HL_NodeList* nodelist, void* object, RaveHL_att
             (strncasecmp(tmpptr, "how/", 4)==0 ||
              strncasecmp(tmpptr, "what/", 5)==0 ||
              strncasecmp(tmpptr, "where/", 6)==0)) {
-          RaveAttribute_t* attribute = RaveHL_getAttribute(node);
+          RaveAttribute_t* attribute = RaveHL_createAttribute(node);
           if (attribute != NULL) {
             result = RaveAttribute_setName(attribute, tmpptr);
             if (result == 1 && attrf != NULL) {

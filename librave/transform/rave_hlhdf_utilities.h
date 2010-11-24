@@ -75,7 +75,16 @@ typedef int (*RaveHL_group_f)(void* object, const char* groupname, const char* n
  * @param[in] node - the HLHDF node
  * @returns the rave attribute on success, otherwise NULL.
  */
-RaveAttribute_t* RaveHL_getAttribute(HL_Node* node);
+RaveAttribute_t* RaveHL_createAttribute(HL_Node* node);
+
+/**
+ * Tries to find the node as defined by the varargs string and then create
+ * a rave attribute from it.
+ * @param[in] nodelist - the node list
+ * @param[in] fmt - the varargs format
+ * @param[in] ... - the varargs
+ */
+RaveAttribute_t* RaveHL_getAttribute(HL_NodeList* nodelist, const char* fmt, ...);
 
 /**
  * Verifies if the file contains a node with the name as specified by the variable
@@ -86,6 +95,18 @@ RaveAttribute_t* RaveHL_getAttribute(HL_Node* node);
  * @returns 1 if the node could be found, otherwise 0
  */
 int RaveHL_hasNodeByName(HL_NodeList* nodelist, const char* fmt, ...);
+
+/**
+ * Gets a string value from a nodelist that is represented by a node named
+ * according to the varargs formatter string. The returned string is
+ * pointing to internal memory in the nodelist so DO NOT FREE!!
+ * @param[in] nodelist - the node list
+ * @param[in|out] value - the value (Pointing to internal memory, DO NOT FREE)
+ * @param[in] fmt - the varargs formatter string
+ * @param[in] ... - the varargs
+ * @returns 1 on success otherwise 0
+ */
+int RaveHL_getStringValue(HL_NodeList* nodelist, char** value, const char* fmt, ...);
 
 /**
  * Creates a group node in the node list.

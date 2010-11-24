@@ -249,6 +249,15 @@ Projection_t* CartesianVolume_getProjection(CartesianVolume_t* cvol)
   return RAVE_OBJECT_COPY(cvol->projection);
 }
 
+const char* CartesianVolume_getProjectionString(CartesianVolume_t* cvol)
+{
+  RAVE_ASSERT((cvol != NULL), "cvol == NULL");
+  if (cvol->projection != NULL) {
+    return Projection_getDefinition(cvol->projection);
+  }
+  return NULL;
+}
+
 void CartesianVolume_setXScale(CartesianVolume_t* cvol, double xscale)
 {
   RAVE_ASSERT((cvol != NULL), "cvol == NULL");
@@ -409,78 +418,18 @@ int CartesianVolume_addAttribute(CartesianVolume_t* cvol, RaveAttribute_t* attri
 
   name = RaveAttribute_getName(attribute);
   if (name != NULL) {
-    if (strcasecmp("what/date", name)==0 ||
-        strcasecmp("what/time", name)==0 ||
-        strcasecmp("what/source", name)==0 ||
-        strcasecmp("where/projdef", name)==0) {
-      char* value = NULL;
-      if (!RaveAttribute_getString(attribute, &value)) {
-        RAVE_ERROR1("Failed to extract %s as a string", name);
-        goto done;
-      }
-      if (strcasecmp("what/date", name)==0) {
-        result = CartesianVolume_setDate(cvol, value);
-      } else if (strcasecmp("what/time", name)==0) {
-        result = CartesianVolume_setTime(cvol, value);
-      } else if (strcasecmp("what/source", name)==0) {
-        result = CartesianVolume_setSource(cvol, value);
-      } else if (strcasecmp("where/projdef", name)==0) {
-        result = CartesianVolumeInternal_setProjectionDefinition(cvol, value);
-      }
-    } else if (strcasecmp("where/xscale", name)==0 ||
-               strcasecmp("where/yscale", name)==0) {
-      double value = 0.0;
-      result = RaveAttribute_getDouble(attribute, &value);
-      if (strcasecmp("where/xscale", name)==0) {
-        CartesianVolume_setXScale(cvol, value);
-      } else if (strcasecmp("where/yscale", name)==0) {
-        CartesianVolume_setYScale(cvol, value);
-      }
-    } else {
-      if (!RaveAttributeHelp_extractGroupAndName(name, &gname, &aname)) {
-        RAVE_ERROR1("Failed to extract group and name from %s", name);
-        goto done;
-      }
-      if ((strcasecmp("how", gname)==0 ||
-           strcasecmp("what", gname)==0 ||
-           strcasecmp("where", gname)==0) &&
-        strchr(aname, '/') == NULL) {
-        result = RaveObjectHashTable_put(cvol->attrs, name, (RaveCoreObject*)attribute);
-      }
+    if (!RaveAttributeHelp_extractGroupAndName(name, &gname, &aname)) {
+      RAVE_ERROR1("Failed to extract group and name from %s", name);
+      goto done;
     }
-
-    // Verify if it is possible to generate the area extent.
-    if (strcasecmp("where/LL_lon", name)==0 ||
-        strcasecmp("where/LL_lat", name)==0 ||
-        strcasecmp("where/UR_lon", name)==0 ||
-        strcasecmp("where/UR_lat", name)==0 ||
-        strcasecmp("where/projdef", name)==0) {
-      if (RaveObjectHashTable_exists(cvol->attrs, "where/LL_lon") &&
-          RaveObjectHashTable_exists(cvol->attrs, "where/LL_lat") &&
-          RaveObjectHashTable_exists(cvol->attrs, "where/UR_lon") &&
-          RaveObjectHashTable_exists(cvol->attrs, "where/UR_lat") &&
-          cvol->projection != NULL) {
-        double LL_lon = 0.0, LL_lat = 0.0, UR_lon = 0.0, UR_lat = 0.0;
-        result = 0; /* reset result to 0 again since we need to be able to create an extent */
-
-        if (RaveUtilities_getRaveAttributeDoubleFromHash(cvol->attrs, "where/LL_lon", &LL_lon) &&
-            RaveUtilities_getRaveAttributeDoubleFromHash(cvol->attrs, "where/LL_lat", &LL_lat) &&
-            RaveUtilities_getRaveAttributeDoubleFromHash(cvol->attrs, "where/UR_lon", &UR_lon) &&
-            RaveUtilities_getRaveAttributeDoubleFromHash(cvol->attrs, "where/UR_lat", &UR_lat)) {
-          double llX = 0.0L, llY = 0.0L, urX = 0.0L, urY = 0.0;
-          if (!Projection_fwd(cvol->projection, LL_lon * M_PI/180.0, LL_lat * M_PI/180.0, &llX, &llY)) {
-            RAVE_ERROR0("Could not generate XY pair for LL");
-            goto done;
-          }
-
-          if (!Projection_fwd(cvol->projection, UR_lon * M_PI/180.0, UR_lat * M_PI/180.0, &urX, &urY)) {
-            RAVE_ERROR0("Could not generate XY pair for UR");
-            goto done;
-          }
-          result = 1;
-          CartesianVolume_setAreaExtent(cvol, llX, llY, urX, urY);
-        }
-      }
+    if (strcasecmp("how", gname)==0 &&
+      strchr(aname, '/') == NULL) {
+      result = RaveObjectHashTable_put(cvol->attrs, name, (RaveCoreObject*)attribute);
+    } else if (strcasecmp("what/prodpar", name)==0) {
+      result = RaveObjectHashTable_put(cvol->attrs, name, (RaveCoreObject*)attribute);
+    } else {
+      RAVE_WARNING1("You are not allowed to add dynamic attributes in other groups than 'how': '%s'", name);
+      goto done;
     }
   }
 
@@ -520,77 +469,6 @@ RaveObjectList_t* CartesianVolume_getAttributeValues(CartesianVolume_t* cvol)
   result = RAVE_OBJECT_CLONE(attrs);
 error:
   RAVE_OBJECT_RELEASE(attrs);
-  return result;
-#ifdef KALLE
-  RaveObjectList_t* result = NULL;
-  RaveObjectList_t* tableattrs = NULL;
-
-  RAVE_ASSERT((cvol != NULL), "cvol == NULL");
-  tableattrs = RaveObjectHashTable_values(cvol->attrs);
-  if (tableattrs == NULL) {
-    goto error;
-  }
-  result = RAVE_OBJECT_CLONE(tableattrs);
-  if (result == NULL) {
-    goto error;
-  }
-  if (!RaveUtilities_addStringAttributeToList(result, "what/date", CartesianVolume_getDate(cvol)) ||
-      !RaveUtilities_addStringAttributeToList(result, "what/time", CartesianVolume_getTime(cvol)) ||
-      !RaveUtilities_addStringAttributeToList(result, "what/source", CartesianVolume_getSource(cvol)) ||
-      !RaveUtilities_addDoubleAttributeToList(result, "where/xscale", CartesianVolume_getXScale(cvol)) ||
-      !RaveUtilities_addDoubleAttributeToList(result, "where/yscale", CartesianVolume_getYScale(cvol)) ||
-      !RaveUtilities_replaceLongAttributeInList(result, "where/xsize", CartesianVolume_getXSize(cvol)) ||
-      !RaveUtilities_replaceLongAttributeInList(result, "where/ysize", CartesianVolume_getYSize(cvol))) {
-    goto error;
-  }
-
-  // Add projection + extent if possible
-  if (cvol->projection != NULL) {
-    if (!RaveUtilities_addStringAttributeToList(result, "where/projdef", Projection_getDefinition(cvol->projection))) {
-      goto error;
-    }
-    if (!CartesianHelper_addLonLatExtentToAttributeList(result, cvol->projection, cvol->llX, cvol->llY, cvol->urX, cvol->urY)) {
-      goto error;
-    }
-  }
-
-  RAVE_OBJECT_RELEASE(tableattrs);
-  return result;
-error:
-  RAVE_OBJECT_RELEASE(result);
-  RAVE_OBJECT_RELEASE(tableattrs);
-  return NULL;
-#endif
-}
-
-int CartesianVolume_isValid(CartesianVolume_t* cvol)
-{
-  int result = 0;
-  int ncartesians = 0;
-  int i = 0;
-  RAVE_ASSERT((cvol != NULL), "cvol == NULL");
-  if (CartesianVolume_getDate(cvol) == NULL ||
-      CartesianVolume_getTime(cvol) == NULL ||
-      CartesianVolume_getSource(cvol) == NULL) {
-    RAVE_INFO0("date, time and source MUST be defined");
-    goto done;
-  }
-
-  ncartesians = RaveObjectList_size(cvol->images);
-  if (ncartesians <= 0) {
-    RAVE_INFO0("a cartesian volume must at least contains one product");
-    goto done;
-  }
-
-  result = 1; // on error, let result become 0 and hence break the loop
-  for (i = 0; result == 1 && i < ncartesians; i++) {
-    Cartesian_t* cartesian = (Cartesian_t*)RaveObjectList_get(cvol->images, i);
-    result = Cartesian_isValid(cartesian, cvol->type);
-    RAVE_OBJECT_RELEASE(cartesian);
-  }
-
-  result = 1;
-done:
   return result;
 }
 

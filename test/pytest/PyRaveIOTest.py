@@ -307,10 +307,10 @@ class PyRaveIOTest(unittest.TestCase):
     image.offset = 0.0
     image.nodata = 255.0
     image.undetect = 0.0
-    image.addAttribute("what/starttime", "110000")
-    image.addAttribute("what/startdate", "20110101")
-    image.addAttribute("what/endtime", "110005")
-    image.addAttribute("what/enddate", "20110101")
+    image.starttime = "110000"
+    image.startdate = "20110101"
+    image.endtime = "110005"
+    image.enddate = "20110101"
     
     data = numpy.zeros((240,240),numpy.uint8)
     image.setData(data)
@@ -395,10 +395,10 @@ class PyRaveIOTest(unittest.TestCase):
     image.offset = 0.0
     image.nodata = 255.0
     image.undetect = 0.0
-    image.addAttribute("what/starttime", "110000")
-    image.addAttribute("what/startdate", "20110101")
-    image.addAttribute("what/endtime", "110005")
-    image.addAttribute("what/enddate", "20110101")
+    image.starttime = "110000"
+    image.startdate = "20110101"
+    image.endtime = "110005"
+    image.enddate = "20110101"
     
     data = numpy.zeros((240,240),numpy.uint8)
     image.setData(data)

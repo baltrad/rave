@@ -30,6 +30,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "pyrave_debug.h"
 
+#include "cartesian_odim_io.h"
+
 #define PYCARTESIAN_MODULE        /**< to get correct part of pycartesian.h */
 #include "pycartesian.h"
 
@@ -560,8 +562,14 @@ static PyObject* _pycartesian_isValid(PyCartesian* self, PyObject* args)
   if (!PyArg_ParseTuple(args, "i", &otype)) {
     return NULL;
   }
-
-  return PyBool_FromLong(Cartesian_isValid(self->cartesian, otype));
+  if (otype == Rave_ObjectType_IMAGE) {
+    return PyBool_FromLong(CartesianOdimIO_isValidImage(self->cartesian));
+  } else if (otype == Rave_ObjectType_COMP) {
+    return PyBool_FromLong(CartesianOdimIO_isValidVolumeImage(self->cartesian));
+  } else if (otype == Rave_ObjectType_CVOL) {
+    return PyBool_FromLong(CartesianOdimIO_isValidVolumeImage(self->cartesian));
+  }
+  return PyBool_FromLong(CartesianOdimIO_isValidImage(self->cartesian));
 }
 
 /**
@@ -586,6 +594,10 @@ static struct PyMethodDef _pycartesian_methods[] =
   {"datatype", NULL},
   {"areaextent", NULL},
   {"projection", NULL},
+  {"starttime", NULL},
+  {"startdate", NULL},
+  {"endtime", NULL},
+  {"enddate", NULL},
   {"init", (PyCFunction) _pycartesian_init, 1},
   {"setData", (PyCFunction) _pycartesian_setData, 1},
   {"getData", (PyCFunction) _pycartesian_getData, 1},
@@ -670,6 +682,30 @@ static PyObject* _pycartesian_getattr(PyCartesian* self, char* name)
       PyProjection* result = PyProjection_New(projection);
       RAVE_OBJECT_RELEASE(projection);
       return (PyObject*)result;
+    } else {
+      Py_RETURN_NONE;
+    }
+  } else if (strcmp("starttime", name) == 0) {
+    if (Cartesian_getStartTime(self->cartesian) != NULL) {
+      return PyString_FromString(Cartesian_getStartTime(self->cartesian));
+    } else {
+      Py_RETURN_NONE;
+    }
+  } else if (strcmp("startdate", name) == 0) {
+    if (Cartesian_getStartDate(self->cartesian) != NULL) {
+      return PyString_FromString(Cartesian_getStartDate(self->cartesian));
+    } else {
+      Py_RETURN_NONE;
+    }
+  } else if (strcmp("endtime", name) == 0) {
+    if (Cartesian_getEndTime(self->cartesian) != NULL) {
+      return PyString_FromString(Cartesian_getEndTime(self->cartesian));
+    } else {
+      Py_RETURN_NONE;
+    }
+  } else if (strcmp("enddate", name) == 0) {
+    if (Cartesian_getEndDate(self->cartesian) != NULL) {
+      return PyString_FromString(Cartesian_getEndDate(self->cartesian));
     } else {
       Py_RETURN_NONE;
     }
@@ -796,6 +832,46 @@ static int _pycartesian_setattr(PyCartesian* self, char* name, PyObject* val)
       Cartesian_setProjection(self->cartesian, ((PyProjection*)val)->projection);
     } else if (val == Py_None) {
       Cartesian_setProjection(self->cartesian, NULL);
+    }
+  } else if (strcmp("starttime", name) == 0) {
+    if (PyString_Check(val)) {
+      if (!Cartesian_setStartTime(self->cartesian, PyString_AsString(val))) {
+        raiseException_gotoTag(done, PyExc_ValueError, "starttime must be in the format HHmmss");
+      }
+    } else if (val == Py_None) {
+      Cartesian_setStartTime(self->cartesian, NULL);
+    } else {
+      raiseException_gotoTag(done, PyExc_ValueError,"time must be of type string");
+    }
+  } else if (strcmp("startdate", name) == 0) {
+    if (PyString_Check(val)) {
+      if (!Cartesian_setStartDate(self->cartesian, PyString_AsString(val))) {
+        raiseException_gotoTag(done, PyExc_ValueError, "startdate must be in the format YYYYMMSS");
+      }
+    } else if (val == Py_None) {
+      Cartesian_setStartDate(self->cartesian, NULL);
+    } else {
+      raiseException_gotoTag(done, PyExc_ValueError,"date must be of type string");
+    }
+  } else if (strcmp("endtime", name) == 0) {
+    if (PyString_Check(val)) {
+      if (!Cartesian_setEndTime(self->cartesian, PyString_AsString(val))) {
+        raiseException_gotoTag(done, PyExc_ValueError, "endtime must be in the format HHmmss");
+      }
+    } else if (val == Py_None) {
+      Cartesian_setEndTime(self->cartesian, NULL);
+    } else {
+      raiseException_gotoTag(done, PyExc_ValueError,"endtime must be of type string");
+    }
+  } else if (strcmp("enddate", name) == 0) {
+    if (PyString_Check(val)) {
+      if (!Cartesian_setEndDate(self->cartesian, PyString_AsString(val))) {
+        raiseException_gotoTag(done, PyExc_ValueError, "enddate must be in the format YYYYMMSS");
+      }
+    } else if (val == Py_None) {
+      Cartesian_setEndDate(self->cartesian, NULL);
+    } else {
+      raiseException_gotoTag(done, PyExc_ValueError,"enddate must be of type string");
     }
   } else {
     raiseException_gotoTag(done, PyExc_AttributeError, name);

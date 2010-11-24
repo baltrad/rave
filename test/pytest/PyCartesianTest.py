@@ -111,6 +111,24 @@ class PyCartesianTest(unittest.TestCase):
       except ValueError, e:
         pass
 
+  def test_startdate(self):
+    obj = _cartesian.new()
+    self.assertEquals(None, obj.startdate)
+    obj.date = "20050101"
+    self.assertEquals("20050101", obj.startdate)
+    obj.startdate = "20060101"
+    self.assertEquals("20050101", obj.date)
+    self.assertEquals("20060101", obj.startdate)
+
+  def test_starttime(self):
+    obj = _cartesian.new()
+    self.assertEquals(None, obj.starttime)
+    obj.time = "100000"
+    self.assertEquals("100000", obj.starttime)
+    obj.starttime = "110000"
+    self.assertEquals("100000", obj.time)
+    self.assertEquals("110000", obj.starttime)
+
   def test_source(self):
     obj = _cartesian.new()
     self.assertEquals(None, obj.source)
@@ -707,8 +725,10 @@ class PyCartesianTest(unittest.TestCase):
 
   def test_isValid_asCvol(self):
     obj = _cartesian.new()
-    obj.addAttribute("what/startdate", "20100101")
-    obj.addAttribute("what/starttime", "100000")    
+    obj.startdate = "20100101"
+    obj.starttime = "100000"
+    obj.enddate = "20100101"
+    obj.endtime = "100000"
     obj.product = _rave.Rave_ProductType_CAPPI
     obj.quantity = "DBZH"
     obj.xscale = 100.0

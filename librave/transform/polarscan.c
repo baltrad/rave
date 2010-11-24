@@ -998,65 +998,6 @@ RaveObjectList_t* PolarScan_getAttributeValues(PolarScan_t* scan)
     goto error;
   }
 
-#ifdef KALLE
-  if (otype == Rave_ObjectType_SCAN) {
-    if (rootattributes == 1) {
-      if (!RaveUtilities_replaceDoubleAttributeInList(result, "how/beamwidth", PolarScan_getBeamwidth(scan)*180.0/M_PI) ||
-          !RaveUtilities_replaceStringAttributeInList(result, "what/date", PolarScan_getDate(scan)) ||
-          !RaveUtilities_replaceStringAttributeInList(result, "what/time", PolarScan_getTime(scan)) ||
-          !RaveUtilities_replaceStringAttributeInList(result, "what/source", PolarScan_getSource(scan)) ||
-          !RaveUtilities_replaceDoubleAttributeInList(result, "where/height", PolarScan_getHeight(scan)) ||
-          !RaveUtilities_replaceDoubleAttributeInList(result, "where/lat", PolarScan_getLatitude(scan)*180.0/M_PI) ||
-          !RaveUtilities_replaceDoubleAttributeInList(result, "where/lon", PolarScan_getLongitude(scan)*180.0/M_PI)) {
-        goto error;
-      }
-      RaveUtilities_removeAttributeFromList(result, "what/enddate");
-      RaveUtilities_removeAttributeFromList(result, "what/endtime");
-    } else {
-      if (!RaveUtilities_replaceStringAttributeInList(result, "what/product", "SCAN") ||
-          !RaveUtilities_replaceLongAttributeInList(result, "where/a1gate", PolarScan_getA1gate(scan)) ||
-          !RaveUtilities_replaceDoubleAttributeInList(result, "where/elangle", PolarScan_getElangle(scan)*180.0/M_PI) ||
-          !RaveUtilities_replaceLongAttributeInList(result, "where/nbins", PolarScan_getNbins(scan)) ||
-          !RaveUtilities_replaceLongAttributeInList(result, "where/nrays", PolarScan_getNrays(scan)) ||
-          !RaveUtilities_replaceDoubleAttributeInList(result, "where/rscale", PolarScan_getRscale(scan)) ||
-          !RaveUtilities_replaceDoubleAttributeInList(result, "where/rstart", PolarScan_getRstart(scan)) ||
-          !RaveUtilities_replaceStringAttributeInList(result, "what/startdate", PolarScan_getDate(scan)) ||
-          !RaveUtilities_replaceStringAttributeInList(result, "what/starttime", PolarScan_getTime(scan))) {
-        goto error;
-      }
-    }
-  } else {
-    if (PolarScanInternal_isPolarVolumeBeamwidth(scan) != 1) {
-      if (!RaveUtilities_replaceDoubleAttributeInList(result, "how/beamwidth", PolarScan_getBeamwidth(scan)*180.0/M_PI)) {
-        goto error;
-      }
-    }
-    if (!RaveUtilities_replaceDoubleAttributeInList(result, "where/elangle", PolarScan_getElangle(scan)*180.0/M_PI) ||
-        !RaveUtilities_replaceLongAttributeInList(result, "where/a1gate", PolarScan_getA1gate(scan)) ||
-        !RaveUtilities_replaceDoubleAttributeInList(result, "where/rscale", PolarScan_getRscale(scan)) ||
-        !RaveUtilities_replaceDoubleAttributeInList(result, "where/rstart", PolarScan_getRstart(scan))) {
-      goto error;
-    }
-    if (!RaveObjectHashTable_exists(scan->attrs, "what/startdate") &&
-        !RaveUtilities_addStringAttributeToList(result, "what/startdate", PolarScan_getDate(scan))) {
-      goto error;
-    }
-    if (!RaveObjectHashTable_exists(scan->attrs, "what/starttime") &&
-        !RaveUtilities_addStringAttributeToList(result, "what/starttime", PolarScan_getTime(scan))) {
-      goto error;
-    }
-
-    if (!RaveObjectHashTable_exists(scan->attrs, "what/enddate") &&
-        !RaveUtilities_addStringAttributeToList(result, "what/enddate", PolarScan_getDate(scan))) {
-      goto error;
-    }
-    if (!RaveObjectHashTable_exists(scan->attrs, "what/endtime") &&
-        !RaveUtilities_addStringAttributeToList(result, "what/endtime", PolarScan_getTime(scan))) {
-      goto error;
-    }
-  }
-#endif
-
   RAVE_OBJECT_RELEASE(tableattrs);
   return result;
 error:

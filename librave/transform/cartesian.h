@@ -71,9 +71,69 @@ int Cartesian_setDate(Cartesian_t* cartesian, const char* value);
 /**
  * Returns the nominal date.
  * @param[in] cartesian - self
- * @returns the nominal time (or NULL if there is none)
+ * @returns the nominal date (or NULL if there is none)
  */
 const char* Cartesian_getDate(Cartesian_t* cartesian);
+
+/**
+ * Sets the start time.
+ * @param[in] cartesian - self
+ * @param[in] value - the time in the format HHmmss
+ * @returns 1 on success, otherwise 0
+ */
+int Cartesian_setStartTime(Cartesian_t* cartesian, const char* value);
+
+/**
+ * Returns the start time.
+ * @param[in] cartesian - self
+ * @returns the start time (or NULL if there is none)
+ */
+const char* Cartesian_getStartTime(Cartesian_t* cartesian);
+
+/**
+ * Sets the start date.
+ * @param[in] cartesian - self
+ * @param[in] value - the date in the format YYYYMMDD
+ * @returns 1 on success, otherwise 0
+ */
+int Cartesian_setStartDate(Cartesian_t* cartesian, const char* value);
+
+/**
+ * Returns the start date.
+ * @param[in] cartesian - self
+ * @returns the start date (or NULL if there is none)
+ */
+const char* Cartesian_getStartDate(Cartesian_t* cartesian);
+
+/**
+ * Sets the end time.
+ * @param[in] cartesian - self
+ * @param[in] value - the time in the format HHmmss
+ * @returns 1 on success, otherwise 0
+ */
+int Cartesian_setEndTime(Cartesian_t* cartesian, const char* value);
+
+/**
+ * Returns the end time.
+ * @param[in] cartesian - self
+ * @returns the end time (or NULL if there is none)
+ */
+const char* Cartesian_getEndTime(Cartesian_t* cartesian);
+
+/**
+ * Sets the end date.
+ * @param[in] cartesian - self
+ * @param[in] value - the date in the format YYYYMMDD
+ * @returns 1 on success, otherwise 0
+ */
+int Cartesian_setEndDate(Cartesian_t* cartesian, const char* value);
+
+/**
+ * Returns the end date.
+ * @param[in] cartesian - self
+ * @returns the end date (or NULL if there is none)
+ */
+const char* Cartesian_getEndDate(Cartesian_t* cartesian);
 
 /**
  * Sets the source.
@@ -320,6 +380,13 @@ void Cartesian_setProjection(Cartesian_t* cartesian, Projection_t* projection);
 Projection_t* Cartesian_getProjection(Cartesian_t* cartesian);
 
 /**
+ * Returns the projection string defining this cartesian product.
+ * @param[in] cartesian - self
+ * @return the projection string or NULL if none defined
+ */
+const char* Cartesian_getProjectionString(Cartesian_t* cartesian);
+
+/**
  * Sets the data
  * @param[in] cartesian  - the cartesian product
  * @param[in] xsize - x-size
@@ -442,28 +509,4 @@ RaveObjectList_t* Cartesian_getAttributeValues(Cartesian_t* cartesian);
  * @returns 1 if the attribute exists, otherwise 0
  */
 int Cartesian_hasAttribute(Cartesian_t* cartesian, const char* name);
-
-/**
- * Validates if the cartesian is a valid cartesian product in the means
- * of storing it.
- * @param[in] cartesian - self
- * @param[in] otype - what this cartesian belongs to, e.g IMAGE for self contained
- * and CVOL for a member of a volume.
- * @returns 1 if cartesian is valid, otherwise 0
- */
-int Cartesian_isValid(Cartesian_t* cartesian, Rave_ObjectType otype);
-
-/**
- * Adds the lon lat corner extent to the attribute list. If llX, llY, urX and urY are all 0.0, then
- * nothing will be added to the attribute list.
- * @param[in] list - the list to add the attributes to
- * @param[in] projection - the projection to use for converting to corner coordinates
- * @param[in] llX - the lower left X coordinate
- * @param[in] llY - the lower left Y coordinate
- * @param[in] urX - the upper right X coordinate
- * @param[in] urY - the upper right Y coordinate
- * @returns 1 on success otherwise 0
- */
-int CartesianHelper_addLonLatExtentToAttributeList(RaveObjectList_t* list, Projection_t* projection, double llX, double llY, double urX, double urY);
-
 #endif

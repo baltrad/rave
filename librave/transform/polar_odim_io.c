@@ -852,13 +852,10 @@ static void PolarOdimIOInternal_removeVolumeAttributesFromList(RaveObjectList_t*
   nrattrs = RaveObjectList_size(attributes);
   for (index = nrattrs-1; index >= 0; index--) {
     RaveAttribute_t* attr = (RaveAttribute_t*)RaveObjectList_get(attributes, index);
-    fprintf(stderr, "Checking attribute %d\n", index);
     if (attr != NULL) {
       const char* name = RaveAttribute_getName(attr);
-      fprintf(stderr, "Attribute name: %s\n", name);
       if (name != NULL && PolarVolume_hasAttribute(volume, name)) {
         RaveAttribute_t* pvolattr = PolarVolume_getAttribute(volume, name);
-        fprintf(stderr, "Volume has attribute %s\n", name);
         if (pvolattr != NULL) {
           RaveAttribute_Format format = RaveAttribute_getFormat(attr);
           if (format == RaveAttribute_getFormat(pvolattr)) {

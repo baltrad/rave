@@ -379,7 +379,6 @@ int PolarVolume_addScan(PolarVolume_t* pvol, PolarScan_t* scan)
     if (PolarScan_getTime(scan) == NULL || PolarScan_getDate(scan) == NULL) {
       if (!PolarScan_setTime(scan, PolarVolume_getTime(pvol)) ||
           !PolarScan_setDate(scan, PolarVolume_getDate(pvol))) {
-        fprintf(stderr, "Failed to add time and/or date\n");
         goto done;
       }
     }
@@ -649,23 +648,6 @@ RaveObjectList_t* PolarVolume_getAttributeValues(PolarVolume_t* pvol)
   }
   result = RAVE_OBJECT_CLONE(tableattrs);
   if (result == NULL) {
-    goto error;
-  }
-  /*
-   * what/date
-   * what/time
-   * what/source
-   * where/lon
-   * where/lat
-   * where/height
-   */
-  if (!RaveUtilities_addStringAttributeToList(result, "what/date", PolarVolume_getDate(pvol)) ||
-      !RaveUtilities_addStringAttributeToList(result, "what/time", PolarVolume_getTime(pvol)) ||
-      !RaveUtilities_addStringAttributeToList(result, "what/source", PolarVolume_getSource(pvol)) ||
-      !RaveUtilities_addDoubleAttributeToList(result, "where/lon", PolarVolume_getLongitude(pvol)*180.0/M_PI) ||
-      !RaveUtilities_addDoubleAttributeToList(result, "where/lat", PolarVolume_getLatitude(pvol)*180.0/M_PI) ||
-      !RaveUtilities_addDoubleAttributeToList(result, "where/height", PolarVolume_getHeight(pvol)) ||
-      !RaveUtilities_addDoubleAttributeToList(result, "how/beamwidth", PolarVolume_getBeamwidth(pvol)*180.0/M_PI)) {
     goto error;
   }
 

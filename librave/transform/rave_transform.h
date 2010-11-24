@@ -208,16 +208,6 @@ TransformWeight* get_cressman_weights_2d(int x, int y, UV here_s, RaveTransform2
  */
 TransformWeight* get_weights_2d(int x, int y, UV here_s, RaveTransform2D* tw);
 
-#ifdef KALLE
-/**
- * Assumes that data is of same type/size/stridesize as the information
- * in trafo has. Then all the weights in tw will get the new values from
- * the data.
- * @param[in]
- */
-void fill_on_new_weight_values(TransformWeight* tw,unsigned char* data,RaveTransform2D* trafo);
-#endif
-
 /**
  * Evaluates the weights specified in the TransformWeight struct,
  * the weights will be normalized within the function by dividing the

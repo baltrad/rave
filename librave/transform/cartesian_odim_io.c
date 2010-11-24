@@ -26,7 +26,14 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_hlhdf_utilities.h"
 #include "rave_debug.h"
 #include "rave_alloc.h"
+#include "raveobject_hashtable.h"
 #include <string.h>
+
+typedef struct CartesianOdimArg {
+  HL_NodeList* nodelist;
+  RaveCoreObject* object;
+  RaveObjectHashTable_t* attrs;
+} CartesianOdimArg;
 
 /**
  * Represents the adaptor
@@ -41,7 +48,6 @@ struct _CartesianOdimIO_t {
  */
 static int CartesianOdimIO_constructor(RaveCoreObject* obj)
 {
-  //CartesianOdimIO_t* this = (CartesianOdimIO_t*)obj;
   return 1;
 }
 
@@ -50,8 +56,6 @@ static int CartesianOdimIO_constructor(RaveCoreObject* obj)
  */
 static int CartesianOdimIO_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj)
 {
-  //CartesianOdimIO_t* this = (CartesianOdimIO_t)obj;
-  //CartesianOdimIO_t* src = (CartesianOdimIO_t*)srcobj;
   return 1;
 }
 
@@ -61,7 +65,384 @@ static int CartesianOdimIO_copyconstructor(RaveCoreObject* obj, RaveCoreObject* 
  */
 static void CartesianOdimIO_destructor(RaveCoreObject* obj)
 {
-  //CartesianOdimIO_t* area = (CartesianOdimIO_t*)obj;
+}
+
+/**
+ * Atempts to create a projection instance from a projdef.
+ * @param[in] projdef - the projection definition
+ * @returns the projection or NULL
+ */
+static Projection_t* CartesianOdimIO_createProjection(const char* projdef)
+{
+  Projection_t* projection = NULL;
+  Projection_t* result = NULL;
+  if (projdef != NULL) {
+    projection = RAVE_OBJECT_NEW(&Projection_TYPE);
+    if (projection == NULL) {
+      RAVE_ERROR0("Could not create projection");
+      goto done;
+    }
+    if (!Projection_init(projection, "raveio-projection", "autoloaded projection", projdef)) {
+      RAVE_ERROR0("Could not initialize projection");
+      goto done;
+    }
+  }
+  result = RAVE_OBJECT_COPY(projection);
+done:
+  RAVE_OBJECT_RELEASE(projection);
+  return result;
+}
+
+/**
+ * Cartesian root attributes.
+ * @param[in] object - the CartesianOdimArg pointing to a polar scan
+ * @param[in] attribute - the attribute found
+ * @return 1 on success otherwise 0
+ */
+static int CartesianOdimIOInternal_loadRootAttribute(void* object, RaveAttribute_t* attribute)
+{
+  Cartesian_t* cartesian = (Cartesian_t*)((CartesianOdimArg*)object)->object;
+  RaveObjectHashTable_t* attrs = (RaveObjectHashTable_t*)((CartesianOdimArg*)object)->attrs;
+  Projection_t* projection = NULL;
+
+  const char* name;
+  int result = 0;
+
+  RAVE_ASSERT((attribute != NULL), "attribute == NULL");
+
+  name = RaveAttribute_getName(attribute);
+  if (strcasecmp("what/date", name)==0 ||
+      strcasecmp("what/time", name)==0 ||
+      strcasecmp("what/source", name)==0 ||
+      strcasecmp("where/projdef", name)==0 ||
+      strcasecmp("what/object", name)==0 ||
+      strcasecmp("what/version", name)==0) {
+    // Strings
+    char* value = NULL;
+    if (!RaveAttribute_getString(attribute, &value)) {
+      RAVE_ERROR1("Failed to extract %s as a string", name);
+      goto done;
+    }
+    if (strcasecmp("what/date", name)==0) {
+      result = Cartesian_setDate(cartesian, value);
+    } else if (strcasecmp("what/time", name)==0) {
+      result = Cartesian_setTime(cartesian, value);
+    } else if (strcasecmp("what/source", name)==0) {
+      result = Cartesian_setSource(cartesian, value);
+    } else if (strcasecmp("where/projdef", name)==0) {
+      projection = CartesianOdimIO_createProjection(value);
+      if (projection == NULL) {
+        RAVE_ERROR1("Failed to generate projection definition from '%s'", (value == NULL)?"NULL":value);
+        goto done;
+      }
+      Cartesian_setProjection(cartesian, projection);
+      result = 1;
+    } else if (strcasecmp("what/object", name)==0) {
+      if (RaveTypes_getObjectTypeFromString(value) == Rave_ObjectType_IMAGE) {
+        result = 1;
+      } else {
+        RAVE_ERROR1("what/object = '%s' but should be IMAGE",value);
+      }
+    } else {
+      // Allowed but not relevant
+      result = 1;
+    }
+  } else if (strcasecmp("where/xscale", name)==0) {
+    double value = 0.0;
+    if (!(result = RaveAttribute_getDouble(attribute, &value))) {
+      RAVE_ERROR0("where/xscale not a double");
+      goto done;
+    }
+    Cartesian_setXScale(cartesian, value);
+  } else if (strcasecmp("where/yscale", name)==0) {
+    double value = 0.0;
+    if (!(result = RaveAttribute_getDouble(attribute, &value))) {
+      RAVE_ERROR0("where/yscale not a double");
+      goto done;
+    }
+    Cartesian_setYScale(cartesian, value);
+  } else if (strcasecmp("where/xsize", name)==0 ||
+             strcasecmp("where/ysize", name)==0 ) {
+    result = 1;
+  } else if (strcasecmp("where/LL_lon", name)==0 ||
+             strcasecmp("where/LL_lat", name)==0 ||
+             strcasecmp("where/UL_lon", name)==0 ||
+             strcasecmp("where/UL_lat", name)==0 ||
+             strcasecmp("where/UR_lon", name)==0 ||
+             strcasecmp("where/UR_lat", name)==0 ||
+             strcasecmp("where/LR_lon", name)==0 ||
+             strcasecmp("where/LR_lat", name)==0) {
+    if (!RaveObjectHashTable_put(attrs, name, (RaveCoreObject*)attribute)) {
+      RAVE_ERROR1("Failed to add %s to internal table", name);
+      goto done;
+    }
+    result = 1;
+  } else {
+    if (!Cartesian_addAttribute(cartesian, attribute)) {
+      RAVE_WARNING1("Ignored attribute %s", name);
+    }
+    result = 1;
+  }
+
+done:
+  RAVE_OBJECT_RELEASE(projection);
+  return result;
+}
+
+/**
+ * Cartesian volume root attributes.
+ * @param[in] object - the CartesianOdimArg pointing to a polar scan
+ * @param[in] attribute - the attribute found
+ * @return 1 on success otherwise 0
+ */
+static int CartesianOdimIOInternal_loadVolumeRootAttribute(void* object, RaveAttribute_t* attribute)
+{
+  CartesianVolume_t* volume = (CartesianVolume_t*)((CartesianOdimArg*)object)->object;
+  RaveObjectHashTable_t* attrs = (RaveObjectHashTable_t*)((CartesianOdimArg*)object)->attrs;
+  Projection_t* projection = NULL;
+
+  const char* name;
+  int result = 0;
+
+  RAVE_ASSERT((attribute != NULL), "attribute == NULL");
+
+  name = RaveAttribute_getName(attribute);
+  if (strcasecmp("what/date", name)==0 ||
+      strcasecmp("what/time", name)==0 ||
+      strcasecmp("what/source", name)==0 ||
+      strcasecmp("where/projdef", name)==0 ||
+      strcasecmp("what/object", name)==0 ||
+      strcasecmp("what/version", name)==0) {
+    // Strings
+    char* value = NULL;
+    if (!RaveAttribute_getString(attribute, &value)) {
+      RAVE_ERROR1("Failed to extract %s as a string", name);
+      goto done;
+    }
+    if (strcasecmp("what/date", name)==0) {
+      result = CartesianVolume_setDate(volume, value);
+    } else if (strcasecmp("what/time", name)==0) {
+      result = CartesianVolume_setTime(volume, value);
+    } else if (strcasecmp("what/source", name)==0) {
+      result = CartesianVolume_setSource(volume, value);
+    } else if (strcasecmp("where/projdef", name)==0) {
+      projection = CartesianOdimIO_createProjection(value);
+      if (projection == NULL) {
+        RAVE_ERROR1("Failed to generate projection definition from '%s'", (value == NULL)?"NULL":value);
+        goto done;
+      }
+      CartesianVolume_setProjection(volume, projection);
+      result = 1;
+    } else if (strcasecmp("what/object", name)==0) {
+      Rave_ObjectType otype = RaveTypes_getObjectTypeFromString(value);
+      if (otype == Rave_ObjectType_COMP ||
+          otype == Rave_ObjectType_CVOL) {
+        CartesianVolume_setObjectType(volume, otype);
+        result = 1;
+      } else {
+        RAVE_ERROR1("what/object = '%s' but should be COMP or CVOL",value);
+      }
+    } else {
+      // Allowed but not relevant
+      result = 1;
+    }
+  } else if (strcasecmp("where/xscale", name)==0) {
+    double value = 0.0;
+    if (!(result = RaveAttribute_getDouble(attribute, &value))) {
+      RAVE_ERROR0("where/xscale not a double");
+      goto done;
+    }
+    CartesianVolume_setXScale(volume, value);
+  } else if (strcasecmp("where/yscale", name)==0) {
+    double value = 0.0;
+    if (!(result = RaveAttribute_getDouble(attribute, &value))) {
+      RAVE_ERROR0("where/yscale not a double");
+      goto done;
+    }
+    CartesianVolume_setYScale(volume, value);
+  } else if (strcasecmp("where/xsize", name)==0 ||
+             strcasecmp("where/ysize", name)==0 ) {
+    result = 1;
+  } else if (strcasecmp("where/LL_lon", name)==0 ||
+             strcasecmp("where/LL_lat", name)==0 ||
+             strcasecmp("where/UL_lon", name)==0 ||
+             strcasecmp("where/UL_lat", name)==0 ||
+             strcasecmp("where/UR_lon", name)==0 ||
+             strcasecmp("where/UR_lat", name)==0 ||
+             strcasecmp("where/LR_lon", name)==0 ||
+             strcasecmp("where/LR_lat", name)==0) {
+    if (!RaveObjectHashTable_put(attrs, name, (RaveCoreObject*)attribute)) {
+      RAVE_ERROR1("Failed to add %s to internal table", name);
+      goto done;
+    }
+    result = 1;
+  } else {
+    if (!CartesianVolume_addAttribute(volume, attribute)) {
+      RAVE_WARNING1("Ignored attribute %s", name);
+    }
+    result = 1;
+  }
+
+done:
+  RAVE_OBJECT_RELEASE(projection);
+  return result;
+}
+
+static int CartesianOdimIOInternal_createExtent(RaveObjectHashTable_t* attrs, Projection_t* projection, double* llX, double* llY, double* urX, double* urY)
+{
+  int result = 0;
+
+  RAVE_ASSERT((attrs != NULL), "attrs == NULL");
+  RAVE_ASSERT((projection != NULL), "projection == NULL");
+  RAVE_ASSERT((llX != NULL), "llX == NULL");
+  RAVE_ASSERT((llY != NULL), "llY == NULL");
+  RAVE_ASSERT((urX != NULL), "urX == NULL");
+  RAVE_ASSERT((urY != NULL), "urY == NULL");
+
+  *llX = 0.0;
+  *llY = 0.0;
+  *urX = 0.0;
+  *urY = 0.0;
+
+  if (projection != NULL &&
+      RaveObjectHashTable_exists(attrs, "where/LL_lon") &&
+      RaveObjectHashTable_exists(attrs, "where/LL_lat") &&
+      RaveObjectHashTable_exists(attrs, "where/UR_lon") &&
+      RaveObjectHashTable_exists(attrs, "where/UR_lat")) {
+    double LL_lon = 0.0, LL_lat = 0.0, UR_lon = 0.0, UR_lat = 0.0;
+    if (RaveUtilities_getRaveAttributeDoubleFromHash(attrs, "where/LL_lon", &LL_lon) &&
+        RaveUtilities_getRaveAttributeDoubleFromHash(attrs, "where/LL_lat", &LL_lat) &&
+        RaveUtilities_getRaveAttributeDoubleFromHash(attrs, "where/UR_lon", &UR_lon) &&
+        RaveUtilities_getRaveAttributeDoubleFromHash(attrs, "where/UR_lat", &UR_lat)) {
+      if (!Projection_fwd(projection, LL_lon * M_PI/180.0, LL_lat * M_PI/180.0, llX, llY)) {
+        RAVE_ERROR0("Could not generate XY pair for LL");
+        goto done;
+      }
+
+      if (!Projection_fwd(projection, UR_lon * M_PI/180.0, UR_lat * M_PI/180.0, urX, urY)) {
+        RAVE_ERROR0("Could not generate XY pair for UR");
+        goto done;
+      }
+      result = 1;
+    }
+  }
+done:
+  return result;
+}
+
+/**
+ * Cartesian dataset attributes.
+ * @param[in] object - the CartesianOdimArg pointing to a polar scan
+ * @param[in] attribute - the attribute found
+ * @return 1 on success otherwise 0
+ */
+static int CartesianOdimIOInternal_loadDatasetAttribute(void* object, RaveAttribute_t* attribute)
+{
+  Cartesian_t* cartesian = (Cartesian_t*)((CartesianOdimArg*)object)->object;
+
+  const char* name;
+  int result = 0;
+
+  RAVE_ASSERT((attribute != NULL), "attribute == NULL");
+  /*
+  /dataset1/what/prodpar Attribute, Table 15
+  */
+  name = RaveAttribute_getName(attribute);
+  if (strcasecmp("what/product", name)==0 ||
+      strcasecmp("what/quantity", name)==0 ||
+      strcasecmp("what/startdate", name)==0 ||
+      strcasecmp("what/starttime", name)==0 ||
+      strcasecmp("what/enddate", name)==0 ||
+      strcasecmp("what/endtime", name)==0) {
+    // Strings
+    char* value = NULL;
+    if (!RaveAttribute_getString(attribute, &value)) {
+      RAVE_ERROR1("Failed to extract %s as a string", name);
+      goto done;
+    }
+    if (strcasecmp("what/product", name)==0) {
+      result = Cartesian_setProduct(cartesian, RaveTypes_getProductTypeFromString(value));
+    } else if (strcasecmp("what/quantity", name)==0) {
+      result = Cartesian_setQuantity(cartesian, value);
+    } else if (strcasecmp("what/startdate", name)==0) {
+      result = Cartesian_setStartDate(cartesian, value);
+    } else if (strcasecmp("what/starttime", name)==0) {
+      result = Cartesian_setStartTime(cartesian, value);
+    } else if (strcasecmp("what/enddate", name)==0) {
+      result = Cartesian_setEndDate(cartesian, value);
+    } else if (strcasecmp("what/endtime", name)==0) {
+      result = Cartesian_setEndTime(cartesian, value);
+    } else {
+      // Allowed but not relevant
+      result = 1;
+    }
+  } else if (strcasecmp("what/gain", name)==0 ||
+             strcasecmp("what/offset", name)==0 ||
+             strcasecmp("what/nodata", name)==0 ||
+             strcasecmp("what/undetect", name)==0) {
+    double value = 0.0;
+    if (!(result = RaveAttribute_getDouble(attribute, &value))) {
+      RAVE_ERROR1("%s not a double", name);
+      goto done;
+    }
+    if (strcasecmp("what/gain", name)==0) {
+      Cartesian_setGain(cartesian, value);
+    } else if (strcasecmp("what/offset", name)==0) {
+      Cartesian_setOffset(cartesian, value);
+    } else if (strcasecmp("what/nodata", name)==0) {
+      Cartesian_setNodata(cartesian, value);
+    } else if (strcasecmp("what/undetect", name)==0) {
+      Cartesian_setUndetect(cartesian, value);
+    }
+  } else {
+    Cartesian_addAttribute(cartesian, attribute);
+    result = 1;
+  }
+
+done:
+  return result;
+}
+
+/**
+ * Cartesian data attributes.
+ * @param[in] object - the CartesianOdimArg pointing to a polar scan
+ * @param[in] attribute - the attribute found
+ * @return 1 on success otherwise 0
+ */
+static int CartesianOdimIOInternal_loadDatasetDataAttribute(void* object, RaveAttribute_t* attribute)
+{
+  Cartesian_t* cartesian = (Cartesian_t*)((CartesianOdimArg*)object)->object;
+
+  const char* name;
+  int result = 0;
+
+  RAVE_ASSERT((attribute != NULL), "attribute == NULL");
+
+  name = RaveAttribute_getName(attribute);
+
+  if (!Cartesian_addAttribute(cartesian, attribute)) {
+    RAVE_INFO1("Ignoring %s", name);
+  }
+
+  result = 1;
+  return result;
+}
+
+/**
+ * Called when an dataset belonging to a cartesian parameter
+ * is found.
+ * @param[in] object - the CartesianOdimArg pointing to a cartesian
+ * @param[in] nbins - the number of bins
+ * @param[in] nrays - the number of rays
+ * @param[in] data  - the data
+ * @param[in] dtype - the type of the data.
+ * @return 1 on success otherwise 0
+ */
+static int CartesianOdimIOInternal_loadDatasetDataDataset(void* object, hsize_t xsize, hsize_t ysize, void* data, RaveDataType dtype)
+{
+  Cartesian_t* cartesian = (Cartesian_t*)((CartesianOdimArg*)object)->object;
+
+  return Cartesian_setData(cartesian, xsize, ysize, data, dtype);
 }
 
 /**
@@ -115,27 +496,11 @@ static int CartesianOdimIOInternal_addCartesianImageToNodeList(Cartesian_t* cart
                                                   RaveTypes_getStringFromProductType(Cartesian_getProduct(cartesian)))) {
     goto done;
   }
-  if (Cartesian_getDate(cartesian) != NULL) {
-    const char* dtdate = Cartesian_getDate(cartesian);
-    if (!Cartesian_hasAttribute(cartesian, "what/startdate") &&
-        !RaveUtilities_replaceStringAttributeInList(attributes, "what/startdate", dtdate)) {
-      goto done;
-    }
-    if (!Cartesian_hasAttribute(cartesian, "what/enddate") &&
-        !RaveUtilities_replaceStringAttributeInList(attributes, "what/enddate", dtdate)) {
-      goto done;
-    }
-  }
-  if (Cartesian_getTime(cartesian) != NULL) {
-    const char* dttime = Cartesian_getTime(cartesian);
-    if (!Cartesian_hasAttribute(cartesian, "what/starttime") &&
-        !RaveUtilities_replaceStringAttributeInList(attributes, "what/starttime", dttime)) {
-      goto done;
-    }
-    if (!Cartesian_hasAttribute(cartesian, "what/endtime") &&
-        !RaveUtilities_replaceStringAttributeInList(attributes, "what/endtime", dttime)) {
-      goto done;
-    }
+  if (!RaveUtilities_addStringAttributeToList(attributes, "what/startdate", Cartesian_getStartDate(cartesian)) ||
+      !RaveUtilities_addStringAttributeToList(attributes, "what/starttime", Cartesian_getStartTime(cartesian)) ||
+      !RaveUtilities_addStringAttributeToList(attributes, "what/enddate", Cartesian_getEndDate(cartesian)) ||
+      !RaveUtilities_addStringAttributeToList(attributes, "what/endtime", Cartesian_getEndTime(cartesian))) {
+    goto done;
   }
 
   if (attributes == NULL || !RaveHL_addAttributes(nodelist, attributes, nodeName)) {
@@ -157,9 +522,211 @@ done:
   return result;
 }
 
+static int CartesianOdimIOInternal_fillCartesianDataset(HL_NodeList* nodelist, Cartesian_t* image, const char* fmt, ...)
+{
+  int result = 0;
+  char nodeName[1024];
+  CartesianOdimArg arg;
+  va_list ap;
+  int n = 0;
+
+  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
+  RAVE_ASSERT((image != NULL), "image == NULL");
+
+  arg.nodelist = nodelist;
+  arg.object = (RaveCoreObject*)image;
+
+  va_start(ap, fmt);
+  n = vsnprintf(nodeName, 1024, fmt, ap);
+  va_end(ap);
+  if (n < 0 || n >= 1024) {
+    RAVE_ERROR1("Failed to create name from fmt=%s", fmt);
+    goto done;
+  }
+
+  if (!RaveHL_loadAttributesAndData(nodelist, &arg,
+                                    CartesianOdimIOInternal_loadDatasetAttribute,
+                                    NULL,
+                                    nodeName)) {
+    RAVE_ERROR1("Failed to load attributes for cartesian at dataset level %s", nodeName);
+    goto done;
+  }
+
+  if (!RaveHL_loadAttributesAndData(nodelist, &arg,
+                                    CartesianOdimIOInternal_loadDatasetDataAttribute,
+                                    CartesianOdimIOInternal_loadDatasetDataDataset,
+                                    "%s/data1", nodeName)) {
+    RAVE_ERROR1("Failed to load data and attributes for cartesian data %s", nodeName);
+    goto done;
+  }
+
+  Cartesian_setObjectType(image, Rave_ObjectType_IMAGE);
+  result = 1;
+done:
+  return result;
+}
+
+/**
+ * Adds the lon lat corner extent to the attribute list. If llX, llY, urX and urY are all 0.0, then
+ * nothing will be added to the attribute list.
+ * @param[in] list - the list to add the attributes to
+ * @param[in] projection - the projection to use for converting to corner coordinates
+ * @param[in] llX - the lower left X coordinate
+ * @param[in] llY - the lower left Y coordinate
+ * @param[in] urX - the upper right X coordinate
+ * @param[in] urY - the upper right Y coordinate
+ * @returns 1 on success otherwise 0
+ */
+int CartesianOdimIOInternal_addLonLatExtentToAttributeList(RaveObjectList_t* attrs, Projection_t* projection, double llX, double llY, double urX, double urY)
+{
+  int result = 0;
+  double LL_lat = 0.0, LL_lon = 0.0, LR_lat = 0.0, LR_lon = 0.0;
+  double UL_lat = 0.0, UL_lon = 0.0, UR_lat = 0.0, UR_lon = 0.0;
+
+  RAVE_ASSERT((attrs != NULL), "attrs == NULL");
+  RAVE_ASSERT((projection != NULL), "projection == NULL");
+
+  // Generate the correct corner coordinates.
+
+  if (!Projection_inv(projection, llX, llY, &LL_lon, &LL_lat) ||
+      !Projection_inv(projection, llX, urY, &UL_lon, &UL_lat) ||
+      !Projection_inv(projection, urX, urY, &UR_lon, &UR_lat) ||
+      !Projection_inv(projection, urX, llY, &LR_lon, &LR_lat)) {
+    RAVE_ERROR0("Failed to translate surface extent into lon/lat corner pairs\n");
+    goto done;
+  }
+
+  if (!RaveUtilities_replaceDoubleAttributeInList(attrs, "where/LL_lat", LL_lat * 180.0/M_PI) ||
+      !RaveUtilities_replaceDoubleAttributeInList(attrs, "where/LL_lon", LL_lon * 180.0/M_PI) ||
+      !RaveUtilities_replaceDoubleAttributeInList(attrs, "where/LR_lat", LR_lat * 180.0/M_PI) ||
+      !RaveUtilities_replaceDoubleAttributeInList(attrs, "where/LR_lon", LR_lon * 180.0/M_PI) ||
+      !RaveUtilities_replaceDoubleAttributeInList(attrs, "where/UL_lat", UL_lat * 180.0/M_PI) ||
+      !RaveUtilities_replaceDoubleAttributeInList(attrs, "where/UL_lon", UL_lon * 180.0/M_PI) ||
+      !RaveUtilities_replaceDoubleAttributeInList(attrs, "where/UR_lat", UR_lat * 180.0/M_PI) ||
+      !RaveUtilities_replaceDoubleAttributeInList(attrs, "where/UR_lon", UR_lon * 180.0/M_PI)) {
+    goto done;
+  }
+
+  result = 1;
+done:
+  return result;
+}
+
 /*@} End of Private functions */
 
 /*@{ Interface functions */
+
+int CartesianOdimIO_readCartesian(CartesianOdimIO_t* self, HL_NodeList* nodelist, Cartesian_t* cartesian)
+{
+  int result = 0;
+  CartesianOdimArg arg;
+  Projection_t* proj = NULL;
+
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
+  RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
+
+  arg.nodelist = nodelist;
+  arg.object = (RaveCoreObject*)cartesian;
+  arg.attrs = RAVE_OBJECT_NEW(&RaveObjectHashTable_TYPE);
+  if (arg.attrs == NULL) {
+    RAVE_ERROR0("Failed to allocate memory");
+    goto done;
+  }
+  if (!RaveHL_loadAttributesAndData(nodelist, &arg,
+                                    CartesianOdimIOInternal_loadRootAttribute,
+                                    NULL,
+                                    "")) {
+    RAVE_ERROR0("Failed to load attributes for cartesian at root level");
+    goto done;
+  }
+  if ((proj = Cartesian_getProjection(cartesian)) != NULL) {
+    double llX = 0.0, llY = 0.0, urX = 0.0, urY = 0.0;
+    if (!CartesianOdimIOInternal_createExtent(arg.attrs, proj, &llX, &llY, &urX, &urY)) {
+      goto done;
+    }
+    Cartesian_setAreaExtent(cartesian, llX, llY, urX, urY);
+  }
+  RAVE_OBJECT_RELEASE(arg.attrs);
+  if (!RaveHL_loadAttributesAndData(nodelist, &arg,
+                                    CartesianOdimIOInternal_loadDatasetAttribute,
+                                    NULL,
+                                    "/dataset1")) {
+    RAVE_ERROR0("Failed to load attributes for cartesian at dataset level");
+    goto done;
+  }
+
+  if (!RaveHL_loadAttributesAndData(nodelist, &arg,
+                                    CartesianOdimIOInternal_loadDatasetDataAttribute,
+                                    CartesianOdimIOInternal_loadDatasetDataDataset,
+                                    "/dataset1/data1")) {
+    RAVE_ERROR0("Failed to load data and attributes for cartesian data");
+    goto done;
+  }
+
+  result = 1;
+done:
+  RAVE_OBJECT_RELEASE(arg.attrs);
+  RAVE_OBJECT_RELEASE(proj);
+
+  return result;
+}
+
+int CartesianOdimIO_readVolume(CartesianOdimIO_t* self, HL_NodeList* nodelist, CartesianVolume_t* volume)
+{
+  int result = 0;
+  CartesianOdimArg arg;
+  int index = 1;
+  Projection_t* proj = NULL;
+
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
+  RAVE_ASSERT((volume != NULL), "volume == NULL");
+
+  arg.nodelist = nodelist;
+  arg.object = (RaveCoreObject*)volume;
+  arg.attrs = RAVE_OBJECT_NEW(&RaveObjectHashTable_TYPE);
+  if (arg.attrs == NULL) {
+    RAVE_ERROR0("Failed to allocate memory");
+    goto done;
+  }
+  if (!RaveHL_loadAttributesAndData(nodelist, &arg,
+                                    CartesianOdimIOInternal_loadVolumeRootAttribute,
+                                    NULL,
+                                    "")) {
+    RAVE_ERROR0("Failed to load attributes for volume at root level");
+    goto done;
+  }
+  if ((proj = CartesianVolume_getProjection(volume)) != NULL) {
+    double llX = 0.0, llY = 0.0, urX = 0.0, urY = 0.0;
+    if (!CartesianOdimIOInternal_createExtent(arg.attrs, proj, &llX, &llY, &urX, &urY)) {
+      goto done;
+    }
+    CartesianVolume_setAreaExtent(volume, llX, llY, urX, urY);
+  }
+
+  result = 1;
+  index = 1;
+  while (result == 1 && RaveHL_hasNodeByName(nodelist, "/dataset%d", index)) {
+    Cartesian_t* image = RAVE_OBJECT_NEW(&Cartesian_TYPE);
+    if (image != NULL) {
+      result = CartesianOdimIOInternal_fillCartesianDataset(nodelist, image, "/dataset%d", index);
+      if (result == 1) {
+        result = CartesianVolume_addImage(volume, image);
+      }
+    } else {
+      result = 0;
+    }
+    index++;
+    RAVE_OBJECT_RELEASE(image);
+  }
+
+done:
+  RAVE_OBJECT_RELEASE(arg.attrs);
+  RAVE_OBJECT_RELEASE(proj);
+  return result;
+}
+
 int CartesianOdimIO_fillImage(CartesianOdimIO_t* self, HL_NodeList* nodelist, Cartesian_t* cartesian)
 {
   int result = 0;
@@ -171,8 +738,8 @@ int CartesianOdimIO_fillImage(CartesianOdimIO_t* self, HL_NodeList* nodelist, Ca
   RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
   RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
 
-  if (!Cartesian_isValid(cartesian, Rave_ObjectType_IMAGE) &&
-      !Cartesian_isValid(cartesian, Rave_ObjectType_COMP)) {
+  if (!CartesianOdimIO_isValidImage(cartesian) &&
+      !CartesianOdimIO_isValidVolumeImage(cartesian)) {
     goto done;
   }
 
@@ -209,7 +776,7 @@ int CartesianOdimIO_fillImage(CartesianOdimIO_t* self, HL_NodeList* nodelist, Ca
       goto done;
     }
     Cartesian_getAreaExtent(cartesian, &llX, &llY, &urX, &urY);
-    if (!CartesianHelper_addLonLatExtentToAttributeList(attributes, projection, llX, llY, urX, urY)) {
+    if (!CartesianOdimIOInternal_addLonLatExtentToAttributeList(attributes, projection, llX, llY, urX, urY)) {
       goto done;
     }
   }
@@ -245,27 +812,11 @@ int CartesianOdimIO_fillImage(CartesianOdimIO_t* self, HL_NodeList* nodelist, Ca
     goto done;
   }
 
-  if (Cartesian_getDate(cartesian) != NULL) {
-    const char* dtdate = Cartesian_getDate(cartesian);
-    if (!Cartesian_hasAttribute(cartesian, "what/startdate") &&
-        !RaveUtilities_replaceStringAttributeInList(attributes, "what/startdate", dtdate)) {
-      goto done;
-    }
-    if (!Cartesian_hasAttribute(cartesian, "what/enddate") &&
-        !RaveUtilities_replaceStringAttributeInList(attributes, "what/enddate", dtdate)) {
-      goto done;
-    }
-  }
-  if (Cartesian_getTime(cartesian) != NULL) {
-    const char* dttime = Cartesian_getTime(cartesian);
-    if (!Cartesian_hasAttribute(cartesian, "what/starttime") &&
-        !RaveUtilities_replaceStringAttributeInList(attributes, "what/starttime", dttime)) {
-      goto done;
-    }
-    if (!Cartesian_hasAttribute(cartesian, "what/endtime") &&
-        !RaveUtilities_replaceStringAttributeInList(attributes, "what/endtime", dttime)) {
-      goto done;
-    }
+  if (!RaveUtilities_addStringAttributeToList(attributes, "what/startdate", Cartesian_getStartDate(cartesian)) ||
+      !RaveUtilities_addStringAttributeToList(attributes, "what/starttime", Cartesian_getStartTime(cartesian)) ||
+      !RaveUtilities_addStringAttributeToList(attributes, "what/enddate", Cartesian_getEndDate(cartesian)) ||
+      !RaveUtilities_addStringAttributeToList(attributes, "what/endtime", Cartesian_getEndTime(cartesian))) {
+    goto done;
   }
 
   if (!RaveHL_createGroup(nodelist,"/dataset1")) {
@@ -309,7 +860,7 @@ int CartesianOdimIO_fillVolume(CartesianOdimIO_t* self, HL_NodeList* nodelist, C
   RAVE_ASSERT((volume != NULL), "volume == NULL");
 
   // First verify that no bogus data is entered into the system.
-  if (!CartesianVolume_isValid(volume)) {
+  if (!CartesianOdimIO_isValidVolume(volume)) {
     goto done;
   }
 
@@ -349,7 +900,7 @@ int CartesianOdimIO_fillVolume(CartesianOdimIO_t* self, HL_NodeList* nodelist, C
       goto done;
     }
     CartesianVolume_getAreaExtent(volume, &llX, &llY, &urX, &urY);
-    if (!CartesianHelper_addLonLatExtentToAttributeList(attributes, projection, llX, llY, urX, urY)) {
+    if (!CartesianOdimIOInternal_addLonLatExtentToAttributeList(attributes, projection, llX, llY, urX, urY)) {
       goto done;
     }
   }
@@ -369,6 +920,125 @@ int CartesianOdimIO_fillVolume(CartesianOdimIO_t* self, HL_NodeList* nodelist, C
 done:
   RAVE_OBJECT_RELEASE(attributes);
   RAVE_OBJECT_RELEASE(projection);
+  return result;
+}
+
+int CartesianOdimIO_isValidImage(Cartesian_t* cartesian)
+{
+  int result = 0;
+  Projection_t* projection = NULL;
+
+  RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
+
+  if (Cartesian_getDate(cartesian) == NULL ||
+      Cartesian_getTime(cartesian) == NULL ||
+      Cartesian_getSource(cartesian) == NULL) {
+    RAVE_INFO0("Date, Time and Source must be set");
+    goto done;
+  }
+
+  if ((projection = Cartesian_getProjection(cartesian)) == NULL) {
+    RAVE_INFO0("Projection must be defined for cartesian");
+    goto done;
+  }
+
+  if (Cartesian_getXSize(cartesian) == 0 ||
+      Cartesian_getYSize(cartesian) == 0 ||
+      Cartesian_getXScale(cartesian) == 0.0 ||
+      Cartesian_getYScale(cartesian) == 0.0) {
+    RAVE_INFO0("x/y sizes and scales must be defined");
+    goto done;
+  }
+
+  if (Cartesian_getProduct(cartesian) == Rave_ProductType_UNDEFINED) {
+    RAVE_INFO0("product type must be defined");
+    goto done;
+  }
+
+  if (Cartesian_getQuantity(cartesian) == NULL) {
+    RAVE_INFO0("Quantity must be defined");
+    goto done;
+  }
+
+  if (Cartesian_getData(cartesian) == NULL) {
+    RAVE_INFO0("Data must be set");
+    goto done;
+  }
+
+  result = 1;
+done:
+  RAVE_OBJECT_RELEASE(projection);
+  return result;
+}
+
+int CartesianOdimIO_isValidVolumeImage(Cartesian_t* cartesian)
+{
+  int result = 0;
+
+  RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
+
+  if (Cartesian_getStartDate(cartesian) == NULL ||
+      Cartesian_getStartTime(cartesian) == NULL ||
+      Cartesian_getEndDate(cartesian) == NULL ||
+      Cartesian_getEndTime(cartesian) == NULL) {
+    RAVE_INFO0("start and end date/time must be set");
+    goto done;
+  }
+
+  if (Cartesian_getXSize(cartesian) == 0 ||
+      Cartesian_getYSize(cartesian) == 0 ||
+      Cartesian_getXScale(cartesian) == 0.0 ||
+      Cartesian_getYScale(cartesian) == 0.0) {
+    RAVE_INFO0("x/y sizes and scales must be defined");
+    goto done;
+  }
+
+  if (Cartesian_getProduct(cartesian) == Rave_ProductType_UNDEFINED) {
+    RAVE_INFO0("product type must be defined");
+    goto done;
+  }
+  if (Cartesian_getQuantity(cartesian) == NULL) {
+    RAVE_INFO0("Quantity must be defined");
+    goto done;
+  }
+  if (Cartesian_getData(cartesian) == NULL) {
+    RAVE_INFO0("Data must be set");
+    goto done;
+  }
+
+  result = 1;
+done:
+  return result;
+}
+
+int CartesianOdimIO_isValidVolume(CartesianVolume_t* volume)
+{
+  int result = 0;
+  int ncartesians = 0;
+  int i = 0;
+  RAVE_ASSERT((volume != NULL), "volume == NULL");
+  if (CartesianVolume_getDate(volume) == NULL ||
+      CartesianVolume_getTime(volume) == NULL ||
+      CartesianVolume_getSource(volume) == NULL) {
+    RAVE_INFO0("date, time and source MUST be defined");
+    goto done;
+  }
+
+  ncartesians = CartesianVolume_getNumberOfImages(volume);
+  if (ncartesians <= 0) {
+    RAVE_INFO0("a cartesian volume must at least contains one product");
+    goto done;
+  }
+
+  result = 1;
+  for (i = 0; result == 1 && i < ncartesians; i++) {
+    Cartesian_t* cartesian = CartesianVolume_getImage(volume, i);
+    result = CartesianOdimIO_isValidVolumeImage(cartesian);
+    RAVE_OBJECT_RELEASE(cartesian);
+  }
+
+  result = 1;
+done:
   return result;
 }
 

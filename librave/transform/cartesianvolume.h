@@ -118,6 +118,13 @@ void CartesianVolume_setProjection(CartesianVolume_t* cvol, Projection_t* projec
 Projection_t* CartesianVolume_getProjection(CartesianVolume_t* cvol);
 
 /**
+ * Returns the projection string defining this cartesian volume.
+ * @param[in] cvol - self
+ * @return the projection string or NULL if none defined
+ */
+const char* CartesianVolume_getProjectionString(CartesianVolume_t* cvol);
+
+/**
  * Sets the xscale
  * @param[in] cvol - self
  * @param[in] xscale - the xscale
@@ -239,12 +246,5 @@ RaveList_t* CartesianVolume_getAttributeNames(CartesianVolume_t* cvol);
  * @returns a list of RaveAttributes.
  */
 RaveObjectList_t* CartesianVolume_getAttributeValues(CartesianVolume_t* cvol);
-
-/**
- * Validates if the cartesian volume and it's cartesian product members are valid.
- * @param[in] cvol - self
- * @returns 1 if cvol is valid, otherwise 0
- */
-int CartesianVolume_isValid(CartesianVolume_t* cvol);
 
 #endif /* CARTESIANVOLUME_H */

@@ -27,6 +27,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include <stdio.h>
 #include <string.h>
 
+#include "cartesian_odim_io.h"
+
 #define PYCARTESIANVOLUME_MODULE   /**< to get correct part in pycartesianvolume.h */
 #include "pycartesianvolume.h"
 
@@ -342,7 +344,7 @@ fail:
 
 static PyObject* _pycartesianvolume_isValid(PyCartesianVolume* self, PyObject* args)
 {
-  return PyBool_FromLong(CartesianVolume_isValid(self->cvol));
+  return PyBool_FromLong(CartesianOdimIO_isValidVolume(self->cvol));
 }
 
 /**

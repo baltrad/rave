@@ -495,19 +495,6 @@ TransformWeight* get_weights_2d(int x, int y, UV here_s, RaveTransform2D* tw)
   }
 }
 
-#ifdef KALLE
-void fill_on_new_weight_values(TransformWeight* tw, unsigned char* data,
-  RaveTransform2D* trafo)
-{
-  int i = 0;
-  for (i = 0; i < tw->weightsn; i++) {
-    tw->weights[i].value = get_array_item_2d(data, tw->weights[i].x,
-                                             tw->weights[i].y, trafo->type,
-                                             trafo->stride_xsize);
-  }
-}
-#endif
-
 double compute_weights_2d(TransformWeight *tw)
 {
   double v = 0.0;
