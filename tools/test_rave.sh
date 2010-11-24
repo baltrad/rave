@@ -12,5 +12,14 @@
 SCRFILE=`python -c "import os;print os.path.abspath(\"$0\")"`
 SCRIPTPATH=`dirname "$SCRFILE"`
 
-"$SCRIPTPATH/run_python_script.sh" "${SCRIPTPATH}/../test/pytest/RaveTestSuite.py" "${SCRIPTPATH}/../test/pytest"
-exit $?
+RES=255
+
+if [ $# -gt 0 -a "$1" = "alltest" ]; then
+  "$SCRIPTPATH/run_python_script.sh" "${SCRIPTPATH}/../test/pytest/RaveFullTestSuite.py" "${SCRIPTPATH}/../test/pytest"
+  RES=$?
+else
+  "$SCRIPTPATH/run_python_script.sh" "${SCRIPTPATH}/../test/pytest/RaveTestSuite.py" "${SCRIPTPATH}/../test/pytest"
+  RES=$?
+fi
+
+exit $RES

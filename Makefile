@@ -38,7 +38,11 @@ test:
 	@chmod +x ./tools/test_rave.sh
 	@./tools/test_rave.sh
 
-
+.PHONY:alltest
+alltest:
+	@chmod +x ./tools/test_rave.sh
+	@./tools/test_rave.sh alltest
+	
 .PHONY:doc
 doc:
 	$(MAKE) -C doxygen doc

@@ -38,10 +38,8 @@ from PyRaveIOTest import *
 from PyPolarNavTest import *
 from PyAreaTest import *
 from PyRadarDefinitionTest import *
-from PyCompositeTest import *
 
 # Some tests for verifying that we are producing products
-from PolarVolumeTransformTest import *
 from MeanTest import *
 
 if __name__ == '__main__':
