@@ -1,2 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<generate-registry><debug function="debugme" help="Reads the input file (first input file in the files list) and injects it into a baltrad-node. Just for debugging." module="rave_pgf_debug"><arguments /></debug></generate-registry>
+<generate-registry>
+<debug function="debugme" help="Reads the input file (first input file in the files list) and injects it into a baltrad-node. Just for debugging." module="rave_pgf_debug"><arguments /></debug>
+<se.smhi.rave.generatecomposite function="generate" help="Generate composite plugin" module="rave_pgf_composite_plugin"><arguments floats="height" strings="area,quantity,method,date,time" /></se.smhi.rave.generatecomposite>
+</generate-registry>
