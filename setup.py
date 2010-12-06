@@ -35,6 +35,7 @@ MODULES = []
 ## USGS PROJ4
 #
 # Add prefix to USGS PROJ4 manually to this list if setup fails.
+PROJ4PREFIXES = ['/usr/local', '/usr', '/']
 prefixes = ['/usr/local', '/usr', '/']
 
 INCLUDE_DIRS, LIBRARY_DIRS = [], []
@@ -110,6 +111,33 @@ def get_hdf5info_from_hlhdf(defmk):
     hdflib = gg.group(2)  
   return (hdfinc,hdflib)
 
+def get_proj4_dirs():
+  proot = os.getenv("PROJ4ROOT")
+  if proot is None:
+    princ = os.getenv("PROJ4INC")
+    prlib = os.getenv("PROJ4LIB")
+  else:
+    princ = "%s/include"%proot
+    prlib = "%s/lib"%proot
+
+  if princ is None or prlib is None:
+    for p in PROJ4PREFIXES:
+      if princ is None:
+        header = os.path.join(p, 'include/projects.h')
+        if os.path.isfile(header):
+          princ = p+'/include'
+          break
+    for p in PROJ4PREFIXES:
+      if prlib is None:
+        library = os.path.join(p, 'lib/libproj.so')
+        if not os.path.isfile(library):
+          library = os.path.join(p, 'lib/libproj.a')
+        if os.path.isfile(library):
+          prlib = p+'/lib'
+          break
+
+  return princ,prlib
+
 incdir,libdir,hldefmk = extract_hlhdf_info("./librave/def.mk")
 INCLUDE_DIRS.append(incdir)
 LIBRARY_DIRS.append(libdir)
@@ -134,21 +162,7 @@ if zlibinfo[0] != None and zlibinfo[0] != "":
 if zlibinfo[1] != None and zlibinfo[1] != "":
   LIBRARY_DIRS.append(zlibinfo[1])
 
-projincdir=''
-projlibdir=''
-for p in prefixes:
-    header = os.path.join(p, 'include/projects.h')
-    if os.path.isfile(header):
-        projincdir=p+'/include'
-        break
-#        INCLUDE_DIRS.append(p+'/include')
-
-for p in prefixes:
-    lib = os.path.join(p, 'lib/libproj.a')
-    if os.path.isfile(lib):
-        projlibdir=p+'/lib'
-        break
-#        LIBRARY_DIRS.append(p+'/lib')
+projincdir,projlibdir = get_proj4_dirs()
 
 if projincdir=='' and projlibdir=='':
     print '\tCould not find USGS PROJ4.'
@@ -156,6 +170,7 @@ if projincdir=='' and projlibdir=='':
 
 if projincdir != '':
     INCLUDE_DIRS.append(projincdir)
+
 if projlibdir != '':
     LIBRARY_DIRS.append(projlibdir)
 
