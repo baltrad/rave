@@ -111,6 +111,23 @@ def get_hdf5info_from_hlhdf(defmk):
     hdflib = gg.group(2)  
   return (hdfinc,hdflib)
 
+def get_expat_info_from_def(defmk):
+  fp = open(defmk)
+  lines = fp.readlines()
+  expatsup=get_param_value("EXPAT_SUPPRESSED", lines)
+  expatinc=get_param_value("EXPAT_INCLUDE_DIR", lines)
+  expatlib=get_param_value("EXPAT_LIB_DIR", lines)
+  if expatsup == None or expatsup == "":
+    expatsup = "yes"
+    
+  gg = re.match("([ \t]*-I)(.*)", expatinc)
+  if gg != None:
+    expatinc = gg.group(2)
+  gg = re.match("([ \t]*-L)(.*)", expatlib)
+  if gg != None:
+    expatlib = gg.group(2)
+  return (expatsup, expatinc, expatlib)
+
 def get_proj4_dirs():
   proot = os.getenv("PROJ4ROOT")
   if proot is None:
@@ -174,11 +191,23 @@ if projincdir != '':
 if projlibdir != '':
     LIBRARY_DIRS.append(projlibdir)
 
+expatsuppressed,expatinc,expatlib = get_expat_info_from_def("./librave/def.mk")
+
+if expatsuppressed == "no":
+  if expatinc != '':
+    INCLUDE_DIRS.append(expatinc)
+  if expatlib != '':
+    LIBRARY_DIRS.append(expatlib)
+    
 LIBRARIES.append('proj')
 LIBRARIES.append("hlhdf")
 LIBRARIES.append("hdf5")
-LIBRARIES.append("z")
 
+if expatsuppressed == "no":
+  LIBRARIES.append("expat")
+  
+LIBRARIES.append("z")
+  
 print "LIBDIR: " + `LIBRARY_DIRS`
 if szinfo != None:
   LIBRARIES.append("sz")
@@ -378,6 +407,26 @@ MODULES.append(
         libraries=LIBRARIES
         )
     )
+
+if expatsuppressed == "no":
+  MODULES.append(
+    Extension(
+      "_projectionregistry", ["modules/pyprojectionregistry.c"],
+      include_dirs=INCLUDE_DIRS,
+      library_dirs=LIBRARY_DIRS,
+      libraries=LIBRARIES
+    )
+  )
+
+  MODULES.append(
+    Extension(
+      "_arearegistry", ["modules/pyarearegistry.c"],
+      include_dirs=INCLUDE_DIRS,
+      library_dirs=LIBRARY_DIRS,
+      libraries=LIBRARIES
+    )
+  )
+  
 # build!
 
 if __name__ == "__main__":

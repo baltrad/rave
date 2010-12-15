@@ -50,8 +50,24 @@ int Area_setID(Area_t* area, const char* id);
 /**
  * Returns the ID for this area.
  * @param[in] area - self
+ * @returns the id
  */
 const char* Area_getID(Area_t* area);
+
+/**
+ * Sets the description for this area.
+ * @param[in] area - self
+ * @param[in] description - the description
+ * @returns 1 on success otherwise 0
+ */
+int Area_setDescription(Area_t* area, const char* description);
+
+/**
+ * Returns the description for this area.
+ * @param[in] area - self
+ * @returns the description
+ */
+const char* Area_getDescription(Area_t* area);
 
 /**
  * Sets the xsize
@@ -142,5 +158,22 @@ void Area_setProjection(Area_t* area, Projection_t* projection);
  * @returns the projection
  */
 Projection_t* Area_getProjection(Area_t* area);
+
+/**
+ * The pcsid (projection id) for this area. When setting this
+ * id, the projection (if any) will be released unless the
+ * pcsid == Projection_getID.
+ * @param[in] area - self
+ * @param[in] pcsid - the projection id
+ * @return 1 on success
+ */
+int Area_setPcsid(Area_t* area, const char* pcsid);
+
+/**
+ * Returns the projection id for this area.
+ * @param[in] area - self
+ * @returns the projection id
+ */
+const char* Area_getPcsid(Area_t* area);
 
 #endif /* AREA_H */

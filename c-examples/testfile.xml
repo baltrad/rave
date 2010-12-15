@@ -1,0 +1,25 @@
+<?xml version='1.0' encoding='iso-8859-1'?>
+<!-- $Id: swedish_areas.xml,v 1.1.1.1 2006/07/14 11:31:54 dmichels Exp $ -->
+<areas>
+<area id="nrd2km">
+  <description>Nordic, all radars, 2 km</description>
+  <areadef>
+    <arg id="pcs">ps14e60n</arg>
+    <arg id="xsize" type="int">848</arg>
+    <arg id="ysize" type="int">1104</arg>
+    <arg id="scale" type="float">2000</arg>
+    <arg id="extent" type="sequence">-738816.513333,-3995515.596160,955183.48666699999,-1787515.59616</arg>
+  </areadef>
+</area>
+<area id="nrd2km_x1">
+  <description>Nordic, all radars, 2 km</description>
+  <areadef>
+    <arg id="pcs">ps14e60n</arg>
+    <arg id="xsize" type="int">858</arg>
+    <arg id="ysize" type="int">799</arg>
+    <arg id="scale" type="float">2000</arg>
+    <arg id="extent" type="sequence"> -738816.513333 , -3995515.596160 , 955183.48666699999 , -1787515.59616 </arg>
+  </areadef>
+</area>
+</areas>
+

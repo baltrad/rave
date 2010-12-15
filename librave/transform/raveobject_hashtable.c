@@ -242,15 +242,15 @@ static void roht_clearbuckets(RaveObjectHashTable_t* this)
  */
 static int RaveObjectHashTable_constructor(RaveCoreObject* obj)
 {
-  RaveObjectHashTable_t* this = (RaveObjectHashTable_t*)obj;
+  RaveObjectHashTable_t* roht = (RaveObjectHashTable_t*)obj;
   int i = 0;
-  this->bucketCount = INITIAL_BUCKET_COUNT;
-  this->buckets = RAVE_MALLOC(sizeof(RaveHash_bucket*) * this->bucketCount);
-  if (this->buckets == NULL) {
+  roht->bucketCount = INITIAL_BUCKET_COUNT;
+  roht->buckets = RAVE_MALLOC(sizeof(RaveHash_bucket*) * roht->bucketCount);
+  if (roht->buckets == NULL) {
     return 0;
   }
-  for (i = 0; i < this->bucketCount; i++) {
-    this->buckets[i] = NULL;
+  for (i = 0; i < roht->bucketCount; i++) {
+    roht->buckets[i] = NULL;
   }
   return 1;
 }

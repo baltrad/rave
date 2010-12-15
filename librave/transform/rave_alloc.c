@@ -46,6 +46,7 @@ static RaveHeapEntry_t* rave_alloc_createHeapEntry(const char* filename, int lin
 {
   RaveHeapEntry_t* result = malloc(sizeof(RaveHeapEntry_t));
   void* ptr = NULL;
+  size_t ptrsize = sizeof(void*);
   if (result == NULL) {
     fprintf(stderr, "RAVE_MEMORY_CHECK: Failed to allocate memory for heap entry\n");
     return NULL;
@@ -53,7 +54,7 @@ static RaveHeapEntry_t* rave_alloc_createHeapEntry(const char* filename, int lin
   result->filename = strdup(filename);
   result->lineno = lineno;
   result->sz = sz;
-  ptr = malloc(sz + 4);
+  ptr = malloc(sz + (ptrsize*2));
   if (result->filename == NULL || ptr == NULL) {
     fprintf(stderr, "RAVE_MEMORY_CHECK: Failed to allocate memory for filename and/or databuffer\n");
     if (result->filename != NULL) free(result->filename);
@@ -61,30 +62,52 @@ static RaveHeapEntry_t* rave_alloc_createHeapEntry(const char* filename, int lin
     free(result);
     return NULL;
   }
-  ((unsigned char*)ptr)[0] = 0xCA;
-  ((unsigned char*)ptr)[1] = 0xFE;
-  ((unsigned char*)ptr)[sz+2] = 0xCA;
-  ((unsigned char*)ptr)[sz+3] = 0xFE;
   result->ptr = ptr;
-  result->b = ptr + 2;
+  if (ptrsize == 4) {
+    memset(&(((unsigned char*)ptr)[0]), 0, 4);
+    ((unsigned char*)ptr)[2] = 0xCA;
+    ((unsigned char*)ptr)[3] = 0xFE;
+    memset(&(((unsigned char*)ptr)[sz+4]), 0, 4);
+    ((unsigned char*)ptr)[sz+4] = 0xCA;
+    ((unsigned char*)ptr)[sz+5] = 0xFE;
+    result->b = ptr + 4;
+  } else {
+    memset(&(((unsigned char*)ptr)[0]), 0, 8);
+    ((unsigned char*)ptr)[6] = 0xCA;
+    ((unsigned char*)ptr)[7] = 0xFE;
+    memset(&(((unsigned char*)ptr)[sz+8]), 0, 8);
+    ((unsigned char*)ptr)[sz+8] = 0xCA;
+    ((unsigned char*)ptr)[sz+9] = 0xFE;
+    result->b = ptr + 8;
+  }
   return result;
 }
 
 static int rave_alloc_reallocateDataInEntry(RaveHeapEntry_t* entry, size_t sz)
 {
+  size_t ptrsize = sizeof(void*);
+
   if (entry == NULL) {
     fprintf(stderr, "RAVE_MEMORY_CHECK: BAD CALL TO REALLOCATION FUNCTION, PROGRAMMING ERROR!!\n");
     abort();
   }
-  entry->ptr = realloc(entry->ptr, sz + 4);
+  entry->ptr = realloc(entry->ptr, sz + (2*ptrsize));
   if (entry->ptr == NULL) {
     fprintf(stderr, "Failed to reallocate memory...\n");
     return 0;
   }
   entry->sz = sz;
-  ((unsigned char*)entry->ptr)[sz+2] = 0xCA;
-  ((unsigned char*)entry->ptr)[sz+3] = 0xFE;
-  entry->b = entry->ptr + 2;
+  if (ptrsize == 4) {
+    memset(&(((unsigned char*)entry->ptr)[sz+4]), 0, 4);
+    ((unsigned char*)entry->ptr)[sz+4] = 0xCA;
+    ((unsigned char*)entry->ptr)[sz+5] = 0xFE;
+    entry->b = entry->ptr + 4;
+  } else {
+    memset(&(((unsigned char*)entry->ptr)[sz+8]), 0, 8);
+    ((unsigned char*)entry->ptr)[sz+8] = 0xCA;
+    ((unsigned char*)entry->ptr)[sz+9] = 0xFE;
+    entry->b = entry->ptr + 8;
+  }
   return 1;
 }
 
@@ -143,13 +166,23 @@ static RaveHeapEntry_t* rave_alloc_findPointer(void* ptr)
 static void rave_alloc_releaseMemory(const char* filename, int lineno, RaveHeap_t* heapptr)
 {
   int status = 0;
+  size_t ptrsize = sizeof(void*);
+
   if (heapptr != NULL && heapptr->entry != NULL) {
     RaveHeapEntry_t* entry = heapptr->entry;
     unsigned char* ptr = (unsigned char*)entry->ptr;
-    if (ptr[0] == 0xCA && ptr[1] == 0xFE &&
-        ptr[entry->sz+2] == 0xCA && ptr[entry->sz+3] == 0xFE) {
-      // Ok, memory still intact...
-      status = 1;
+    if (ptrsize == 4) {
+      if (ptr[2] == 0xCA && ptr[3] == 0xFE &&
+          ptr[entry->sz+4] == 0xCA && ptr[entry->sz+5] == 0xFE) {
+        // Ok, memory still intact...
+        status = 1;
+      }
+    } else {
+      if (ptr[6] == 0xCA && ptr[7] == 0xFE &&
+          ptr[entry->sz+8] == 0xCA && ptr[entry->sz+9] == 0xFE) {
+        // Ok, memory still intact...
+        status = 1;
+      }
     }
     if (status == 0) {
       fprintf(stderr, "RAVE_MEMORY_CHECK: ---------MEMORY CORRUPTION HAS OCCURED-----------------\n");

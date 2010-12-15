@@ -102,4 +102,29 @@ void RaveUtilities_removeAttributeFromList(RaveObjectList_t* l, const char* name
  */
 int RaveUtilities_getRaveAttributeDoubleFromHash(RaveObjectHashTable_t* h, const char* name, double* v);
 
+/**
+ * Returns if the character is a whitespace character or not,
+ * i.e. ' ', '\t', '\r' or '\n'
+ * @param[in] c - the character to check
+ * @returns true if character is a whitespace otherwise 0
+ */
+int RaveUtilities_iswhitespace(char c);
+
+/**
+ * Trims the text from all leading and trailing whitespaces.
+ * @param[in] str - the string to trim
+ * @param[in] len - the length of the string to trim
+ * @returns a new trimmed string, release with RAVE_FREE
+ */
+char* RaveUtilities_trimText(const char* str, int len);
+
+/**
+ * Returns a list of tokens delimited by 'c'. The tokens will
+ * be trimmed from any leading and trailing whitespaces.
+ * @param[in] str - the string to tokenize
+ * @param[in] c - the delimiter
+ * @returns a list of tokens, use @ref RaveList_freeAndDestroy to delete
+ */
+RaveList_t* RaveUtilities_getTrimmedTokens(const char* str, int c);
+
 #endif /* RAVE_UTILITIES_H */

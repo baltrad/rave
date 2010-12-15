@@ -34,7 +34,8 @@ struct _Area_t {
   RAVE_OBJECT_HEAD /** Always on top */
 
   char* id;        /**< the id */
-
+  char* description; /**< the description */
+  char* pcsid;     /**< the pcs id */
   // Where
   long xsize;      /**< xsize */
   long ysize;      /**< ysize */
@@ -57,6 +58,8 @@ static int Area_constructor(RaveCoreObject* obj)
 {
   Area_t* this = (Area_t*)obj;
   this->id = NULL;
+  this->description = NULL;
+  this->pcsid = NULL;
   this->xsize = 0;
   this->ysize = 0;
   this->xscale = 0.0L;
@@ -91,6 +94,13 @@ static int Area_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj)
   if (!Area_setID(this, src->id)) {
     goto error;
   }
+  if (!Area_setDescription(this, src->description)) {
+    goto error;
+  }
+  if (!Area_setPcsid(this, src->pcsid)) {
+    goto error;
+  }
+
   this->projection = RAVE_OBJECT_CLONE(src->projection);
   if (this->projection == NULL) {
     goto error;
@@ -99,6 +109,8 @@ static int Area_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj)
 error:
   RAVE_OBJECT_RELEASE(this->projection);
   RAVE_FREE(this->id);
+  RAVE_FREE(this->description);
+  RAVE_FREE(this->pcsid);
   return 0;
 }
 
@@ -111,6 +123,8 @@ static void Area_destructor(RaveCoreObject* obj)
   Area_t* area = (Area_t*)obj;
   if (area != NULL) {
     RAVE_FREE(area->id);
+    RAVE_FREE(area->description);
+    RAVE_FREE(area->pcsid);
     RAVE_OBJECT_RELEASE(area->projection);
   }
 }
@@ -135,6 +149,26 @@ const char* Area_getID(Area_t* area)
 {
   RAVE_ASSERT((area != NULL), "area was NULL");
   return (const char*)area->id;
+}
+
+int Area_setDescription(Area_t* area, const char* description)
+{
+  RAVE_ASSERT((area != NULL), "area was NULL");
+  RAVE_FREE(area->description);
+  if (description != NULL) {
+    area->description = RAVE_STRDUP(description);
+    if (area->description == NULL) {
+      RAVE_CRITICAL0("Failure when copying id");
+      return 0;
+    }
+  }
+  return 1;
+}
+
+const char* Area_getDescription(Area_t* area)
+{
+  RAVE_ASSERT((area != NULL), "area was NULL");
+  return (const char*)area->description;
 }
 
 void Area_setXSize(Area_t* area, long xsize)
@@ -223,6 +257,46 @@ Projection_t* Area_getProjection(Area_t* area)
   RAVE_ASSERT((area != NULL), "area was NULL");
   return RAVE_OBJECT_COPY(area->projection);
 }
+
+int Area_setPcsid(Area_t* area, const char* pcsid)
+{
+  int result = 0;
+
+  RAVE_ASSERT((area != NULL), "area was NULL");
+  if (pcsid == NULL) {
+    RAVE_OBJECT_RELEASE(area->projection);
+    RAVE_FREE(area->pcsid);
+  } else {
+    if (area->projection != NULL) {
+      if (Projection_getID(area->projection) != NULL &&
+          strcmp(pcsid, Projection_getID(area->projection)) == 0) {
+        result = 1;
+        goto done;
+      }
+    }
+    RAVE_OBJECT_RELEASE(area->projection);
+    RAVE_FREE(area->pcsid);
+    area->pcsid = RAVE_STRDUP(pcsid);
+    if (area->pcsid == NULL) {
+      RAVE_CRITICAL0("Failure when copying id");
+      goto done;
+    }
+  }
+  result = 1;
+done:
+  return result;
+}
+
+const char* Area_getPcsid(Area_t* area)
+{
+  RAVE_ASSERT((area != NULL), "area was NULL");
+  if (area->projection != NULL) {
+    return Projection_getID(area->projection);
+  } else {
+    return area->pcsid;
+  }
+}
+
 /*@} End of Interface functions */
 
 RaveCoreObjectType Area_TYPE = {

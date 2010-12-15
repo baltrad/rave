@@ -139,32 +139,6 @@ static void CartesianVolume_destructor(RaveCoreObject* obj)
   RAVE_FREE(this->source);
   RAVE_OBJECT_RELEASE(this->projection);
 }
-
-static int CartesianVolumeInternal_setProjectionDefinition(CartesianVolume_t* cvol, const char* projdef)
-{
-  int result = 0;
-  Projection_t* projection = NULL;
-
-  RAVE_ASSERT((cvol != NULL), "cvol == NULL");
-
-  projection = RAVE_OBJECT_NEW(&Projection_TYPE);
-  if (projection == NULL) {
-    RAVE_ERROR0("Could not create projection");
-    goto error;
-  }
-
-  if (!Projection_init(projection, "raveio-projection", "autoloaded projection", projdef)) {
-    RAVE_ERROR0("Could not initialize projection");
-    goto error;
-  }
-
-  CartesianVolume_setProjection(cvol, projection);
-
-  result = 1;
-error:
-  RAVE_OBJECT_RELEASE(projection);
-  return result;
-}
 /*@} End of Private functions */
 
 /*@{ Interface functions */

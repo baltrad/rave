@@ -17,6 +17,12 @@ installed.
 - HDF5 1.8.x
 - HLHDF/PyHL 0.7+
 - PycURL 7.19+ (and underlying cURL)
+
+We have also got optional support for a c-based area and
+projection registries. If this is wanted, you will need
+to have.
+- expat 2.0.1
+
 The README file contains more details about these packages.
 
 If these packages have been installed and set up correctly including
@@ -38,6 +44,18 @@ $ export NUMPYDIR=/usr/local/lib/python2.6/site-packages/numpy/core/include/nump
 
 3. HL-HDF installation, e.g. normal place for BALTRAD:
 $ export HLDIR=/opt/baltrad/hlhdf
+
+4. (OPTIONAL) expat
+The default behaviour is to not build with expat support. The environment variable
+EXPATARG can be used to modify the arguments passed to the configure scripts
+and can be one of
+$ export EXPATARG=<inc>,<lib>
+or
+$ export EXPATARG=<expatroot>
+or
+$ export EXPATARG=yes
+or
+$ export EXPATARG=no
 
 To modify memory debugging configuration options, specify the parameters before
 running make, for example:

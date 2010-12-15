@@ -97,7 +97,7 @@ PROJ_LIB_DIR=
 GOT_PROJ_INC=no
 GOT_PROJ_LIB=no
 PROJ_SUPPRESSED=no
-AC_ARG_WITH(proj,[  --with-proj=INC,LIB       Use the proj library],
+AC_ARG_WITH(proj,[  --with-proj=ROOT or INC,LIB       Use the proj library],
 		,withval=yes)
 case $withval in
 	yes)
@@ -110,40 +110,117 @@ case $withval in
 		PROJ_SUPPRESSED=yes
 		;;
 	*)
-		proj_inc="`echo $withval |cut -f1 -d,`"
-		if test "X" != "$proj_inc"; then
-			saved_CPPFLAGS="$CPPFLAGS"
-			CPPFLAGS="$CPPFLAGS -I$proj_inc"
-			AC_CHECK_HEADERS(projects.h,GOT_PROJ_INC=yes)
-			if [[ "x$GOT_PROJ_INC" = "xyes" ]]; then
-				PROJ_INCLUDE_DIR="-I$proj_inc"
-			else
-				CPPFLAGS="$saved_CPPFLAGS"
-			fi
-		else
-			AC_CHECK_HEADERS(projects.h,GOT_PROJ_INC=yes)
-		fi
+    if [[ "$withval" != "" ]]; then
+      if [[ "`echo $withval | grep ','`" = "" ]]; then
+        proj_inc=$withval/include
+        proj_lib=$withval/lib
+        echo "proj_inc=$proj_inc"
+      else
+        proj_inc="`echo $withval |cut -f1 -d,`"
+        proj_lib="`echo $withval |cut -f2 -d,`"
+      fi
+      
+      if [[ "$proj_inc" != "" ]]; then
+        saved_CPPFLAGS="$CPPFLAGS"
+        CPPFLAGS="$CPPFLAGS -I$proj_inc"
+        AC_CHECK_HEADERS(projects.h,GOT_PROJ_INC=yes)
+        if [[ "$GOT_PROJ_INC" = "yes" ]]; then
+          PROJ_INCLUDE_DIR="-I$proj_inc"
+        else
+          CPPFLAGS="$saved_CPPFLAGS"
+        fi
+      else
+        AC_CHECK_HEADERS(projects.h,GOT_PROJ_INC=yes)
+      fi
 
-		proj_lib="`echo $withval |cut -f2 -d,`"
-		if test "X" != "$proj_lib"; then
-			saved_LDFLAGS="$LDFLAGS"
-			LDFLAGS="$LDFLAGS -L$proj_lib"
-			AC_CHECK_LIB(proj,pj_inv,GOT_PROJ_LIB=yes)
-			if [[ "x$GOT_PROJ_LIB" = "xyes" ]]; then
-				PROJ_LIB_DIR="-L$proj_lib"
-			else
-				LDFLAGS="$saved_LDFLAGS"
-			fi
-		else
-			AC_CHECK_LIB(proj,pj_inv,GOT_PROJ_LIB=yes)
-		fi
-		;;
+      if [[ "$proj_lib" != "" ]]; then
+        saved_LDFLAGS="$LDFLAGS"
+        LDFLAGS="$LDFLAGS -L$proj_lib"
+        AC_CHECK_LIB(proj,pj_inv,GOT_PROJ_LIB=yes)
+        if [[ "$GOT_PROJ_LIB" = "yes" ]]; then
+          PROJ_LIB_DIR="-L$proj_lib"
+        else
+          LDFLAGS="$saved_LDFLAGS"
+        fi
+      else
+        AC_CHECK_LIB(proj,pj_inv,GOT_PROJ_LIB=yes)
+      fi
+    else
+      AC_MSG_ERROR("Odd argument passed for proj")
+    fi
+    ;;
 esac
 
 if [[ "x$PROJ_SUPPRESSED" = "xno" ]]; then
 	if [[ "x$GOT_PROJ_INC" = "xno" -o "x$GOT_PROJ_LIB" = "xno" ]]; then
 		AC_MSG_ERROR("Could not successfully find the proj library")
 	fi
+fi
+
+EXPAT_INCLUDE_DIR=
+EXPAT_LIB_DIR=
+GOT_EXPAT_INC=no
+GOT_EXPAT_LIB=no
+EXPAT_SUPPRESSED=yes
+AC_ARG_WITH(expat,[  --with-expat=ROOT or INC,LIB       Use the expat library],
+    ,withval=no)
+case $withval in
+  yes)
+    AC_CHECK_HEADERS(expat.h,GOT_EXPAT_INC=yes)
+    AC_CHECK_LIB(expat,XML_ParserCreate,GOT_EXPAT_LIB=yes)
+    EXPAT_SUPPRESSED=no
+    ;;
+  no)
+    AC_MSG_CHECKING(for expat lib)
+    AC_MSG_RESULT(suppressed)
+    EXPAT_SUPPRESSED=yes
+    ;;
+  *)
+    if [[ "$withval" != "" ]]; then
+      if [[ "`echo $withval | grep ','`" = "" ]]; then
+        expat_inc=$withval/include
+        expat_lib=$withval/lib
+      else
+        expat_inc="`echo $withval |cut -f1 -d,`"
+        expat_lib="`echo $withval |cut -f2 -d,`"
+      fi
+      
+      if [[ "$expat_inc" != "" ]]; then
+        saved_CPPFLAGS="$CPPFLAGS"
+        CPPFLAGS="$CPPFLAGS -I$expat_inc"
+        AC_CHECK_HEADERS(expat.h,GOT_EXPAT_INC=yes)
+        if [[ "$GOT_EXPAT_INC" = "yes" ]]; then
+          EXPAT_INCLUDE_DIR="-I$expat_inc"
+        else
+          CPPFLAGS="$saved_CPPFLAGS"
+        fi
+      else
+        AC_CHECK_HEADERS(expat.h,GOT_EXPAT_INC=yes)
+      fi
+
+      if [[ "$expat_lib" != "" ]]; then
+        saved_LDFLAGS="$LDFLAGS"
+        LDFLAGS="$LDFLAGS -L$expat_lib"
+        AC_CHECK_LIB(expat, XML_ParserCreate, GOT_EXPAT_LIB=yes)
+        if [[ "$GOT_EXPAT_LIB" = "yes" ]]; then
+          EXPAT_LIB_DIR="-L$expat_lib"
+        else
+          LDFLAGS="$saved_LDFLAGS"
+        fi
+      else
+        AC_CHECK_LIB(expat, XML_ParserCreate, GOT_EXPAT_LIB=yes)
+      fi
+    else
+      AC_MSG_ERROR("Odd argument passed for expat")
+    fi
+    EXPAT_SUPPRESSED=no
+    ;;
+esac
+
+if [[ "$EXPAT_SUPPRESSED" = "no" ]]; then
+  if [[ "$GOT_EXPAT_INC" = "no" -o "$GOT_EXPAT_LIB" = "no" ]]; then
+    AC_MSG_ERROR("Could not successfully find the expat library")
+  fi
 fi
 
 dnl -----------------------------
@@ -271,6 +348,11 @@ AC_SUBST(PROJ_LIB_DIR)
 
 #Substitute the numpy argument
 AC_SUBST(NUMPY_INCLUDE_DIR)
+
+# Substitute the expat arguments
+AC_SUBST(EXPAT_INCLUDE_DIR)
+AC_SUBST(EXPAT_LIB_DIR)
+AC_SUBST(EXPAT_SUPPRESSED)
 
 #Substitutes for the HLHDF library.The HLHDF
 #installation contains a mk file that contains

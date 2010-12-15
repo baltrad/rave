@@ -4,22 +4,34 @@ CFLAGS=	$(OPTS) $(CCSHARED) $(DEFS) $(CREATE_ITRUNC) \
 	-I. $(NUMPY_INCLUDE_DIR) $(INCLUDE_PYTHON) -I$(HLHDF_INCLUDE_DIR) \
 	$(ZLIB_INCDIR) $(HDF5_INCDIR) $(PROJ_INCLUDE_DIR)
 
+ifeq ($(EXPAT_SUPPRESSED), no)
+CFLAGS+= $(EXPAT_INCLUDE_DIR)
+endif
+
 # --------------------------------------------------------------------
 # Fixed definitions
 
 RAVESOURCES= polar.c raveutil.c rave_transform.c rave_alloc.c rave_debug.c polarvolume.c \
              polarscan.c polarscanparam.c cartesian.c cartesianvolume.c transform.c projection.c polarnav.c \
              rave_io.c rave_list.c rave_object.c raveobject_list.c area.c rave_datetime.c \
-             rave_types.c rave_data2d.c composite.c raveobject_hashtable.c rave_attribute.c \
+             rave_types.c rave_data2d.c composite.c rave_attribute.c \
              rave_utilities.c rave_field.c radardefinition.c rave_hlhdf_utilities.c cartesian_odim_io.c \
-             polar_odim_io.c
-             
+             polar_odim_io.c raveobject_hashtable.c 
+
+ifeq ($(EXPAT_SUPPRESSED), no)
+RAVESOURCES += arearegistry.c projectionregistry.c rave_simplexml.c 
+endif
+
 INSTALL_HEADERS= polar.h rave_transform.h raveutil.h rave_alloc.h polarvolume.h polarscan.h \
                  polarscanparam.h cartesian.h cartesianvolume.h transform.h projection.h polarnav.h rave_io.h \
                  rave_list.h rave_object.h raveobject_list.h area.h rave_datetime.h \
-                 rave_types.h rave_data2d.h composite.h raveobject_hashtable.h rave_attribute.h \
+                 rave_types.h rave_data2d.h composite.h rave_attribute.h \
                  rave_utilities.h rave_field.h radardefinition.h rave_hlhdf_utilities.h \
-                 cartesian_odim_io.h rave_debug.h polar_odim_io.h
+                 cartesian_odim_io.h rave_debug.h polar_odim_io.h \
+                 raveobject_hashtable.h 
+ifeq ($(EXPAT_SUPPRESSED), no)
+INSTALL_HEADERS+= arearegistry.h projectionregistry.h rave_simplexml.h 
+endif
 
 RAVEOBJS=	$(RAVESOURCES:.c=.o)
 LIBRAVETRANSFORM=	libravetransform.so

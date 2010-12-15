@@ -115,7 +115,7 @@ int Projection_init(Projection_t* projection, const char* id, const char* descri
       RAVE_ERROR0("Could not set definition");
     }
     if (projection->pj == NULL) {
-      RAVE_ERROR0("Failed to create projection");
+      RAVE_ERROR1("Failed to create projection for %s", id);
     }
     RAVE_FREE(projection->id);
     RAVE_FREE(projection->description);

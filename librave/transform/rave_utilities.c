@@ -26,7 +26,9 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_utilities.h"
 #include "rave_object.h"
 #include "rave_debug.h"
+#include "rave_alloc.h"
 #include <string.h>
+#include <stdio.h>
 
 int RaveUtilities_addLongAttributeToList(RaveObjectList_t* l, const char* name, long value)
 {
@@ -190,5 +192,108 @@ int RaveUtilities_getRaveAttributeDoubleFromHash(RaveObjectHashTable_t* h, const
   }
 
   RAVE_OBJECT_RELEASE(attr);
+  return result;
+}
+
+int RaveUtilities_iswhitespace(char c)
+{
+  return (c == ' ' || c == '\t' || c == '\r' || c == '\n');
+}
+
+
+char* RaveUtilities_trimText(const char* str, int len)
+{
+  int index = 0;
+  int startpos = 0;
+  char* result = NULL;
+  int newsize = 0;
+
+  if (str != NULL) {
+    index = 0;
+    while (index < len && RaveUtilities_iswhitespace(str[index])) {
+      index++;
+    }
+    startpos = index;
+
+    index = len-1;
+    while (index > 0 && RaveUtilities_iswhitespace(str[index])) {
+      index--;
+    }
+    index++;
+
+    newsize = (index-startpos);
+    if (newsize < 0) {
+      newsize = 0;
+    }
+
+    result = RAVE_MALLOC((newsize + 1)*sizeof(char));
+    if (result != NULL) {
+      if (startpos < len && startpos + newsize < (len + 1)) {
+        strncpy(result, &str[startpos], newsize);
+      }
+      result[newsize]='\0';
+    }
+  }
+
+  return result;
+}
+
+RaveList_t* RaveUtilities_getTrimmedTokens(const char* str, int c)
+{
+  RaveList_t* result = RAVE_OBJECT_NEW(&RaveList_TYPE);
+  int status = 0;
+
+  if (str != NULL && result != NULL) {
+    char* startptr = (char*)str;
+    char* endptr = NULL;
+
+    if (*startptr == '\0') {
+      status = 1; /* this is ok, but there are no tokens */
+      goto done;
+    }
+
+    while (*startptr != '\0') {
+      endptr = strchr(startptr, c);
+      if (endptr != NULL) {
+        int len = (endptr - startptr);
+        char* tmp = RaveUtilities_trimText(startptr, len);
+        if (tmp == NULL || !RaveList_add(result, tmp)) {
+          RAVE_FREE(tmp);
+          RAVE_ERROR0("Failed to tokenize string");
+          goto done;
+        }
+        startptr += len;
+        /* We might have a delimiter at end of string which
+         * should result it yet another token.
+         */
+        if (*startptr == c && *(startptr+1) == '\0') {
+          tmp = RAVE_MALLOC(sizeof(char));
+          if (tmp != NULL) {
+            tmp[0] = '\0';
+          }
+          if (tmp == NULL || !RaveList_add(result, tmp)) {
+            RAVE_FREE(tmp);
+            RAVE_ERROR0("Failed to allocate empty string");
+            goto done;
+          }
+        }
+        startptr++;
+      } else {
+        int len = strlen(startptr);
+        char* tmp = RaveUtilities_trimText(startptr, len);
+        if (!RaveList_add(result, tmp)) {
+          RAVE_FREE(tmp);
+          RAVE_ERROR0("Failed to tokenize string");
+          goto done;
+        }
+        startptr += len;
+      }
+    }
+  }
+  status = 1;
+done:
+  if (status == 0) {
+    RaveList_freeAndDestroy(&result);
+  }
   return result;
 }

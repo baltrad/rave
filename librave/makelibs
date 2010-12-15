@@ -40,6 +40,10 @@ else
   CONFARGS="$CONFARGS $PROJARG"
 fi
 
+if [ -n "$EXPATARG" ]; then
+  CONFARGS="$CONFARGS --with-expat=$EXPATARG"
+fi
+
 echo "Running: ./configure $CONFARGS"
 
 ./configure $CONFARGS

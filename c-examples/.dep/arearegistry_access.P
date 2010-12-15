@@ -1,0 +1,28 @@
+arearegistry_access.o: arearegistry_access.c \
+  ../librave/transform/arearegistry.h ../librave/transform/area.h \
+  ../librave/transform/rave_transform.h \
+  /opt/node-test/third_party/include/projects.h \
+  /opt/node-test/third_party/include/proj_api.h \
+  ../librave/transform/rave_types.h ../librave/transform/projection.h \
+  ../librave/transform/rave_object.h \
+  ../librave/transform/projectionregistry.h \
+  ../librave/transform/rave_debug.h ../librave/transform/rave_list.h \
+  ../librave/transform/rave_utilities.h \
+  ../librave/transform/rave_attribute.h \
+  ../librave/transform/raveobject_list.h \
+  ../librave/transform/raveobject_hashtable.h \
+  ../librave/transform/rave_list.h
+arearegistry_access.c :
+  ../librave/transform/arearegistry.h ../librave/transform/area.h :
+  ../librave/transform/rave_transform.h :
+  /opt/node-test/third_party/include/projects.h :
+  /opt/node-test/third_party/include/proj_api.h :
+  ../librave/transform/rave_types.h ../librave/transform/projection.h :
+  ../librave/transform/rave_object.h :
+  ../librave/transform/projectionregistry.h :
+  ../librave/transform/rave_debug.h ../librave/transform/rave_list.h :
+  ../librave/transform/rave_utilities.h :
+  ../librave/transform/rave_attribute.h :
+  ../librave/transform/raveobject_list.h :
+  ../librave/transform/raveobject_hashtable.h :
+  ../librave/transform/rave_list.h :
