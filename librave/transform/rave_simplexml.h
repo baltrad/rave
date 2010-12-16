@@ -114,7 +114,7 @@ SimpleXmlNode_t* SimpleXmlNode_getChild(SimpleXmlNode_t* self, int index);
 
 SimpleXmlNode_t* SimpleXmlNode_getChildByName(SimpleXmlNode_t* self, const char* name);
 
-const char* SimpleXmlNode_addAttribute(SimpleXmlNode_t* self, const char* key, const char* value);
+int SimpleXmlNode_addAttribute(SimpleXmlNode_t* self, const char* key, const char* value);
 
 const char* SimpleXmlNode_getAttribute(SimpleXmlNode_t* self, const char* key);
 

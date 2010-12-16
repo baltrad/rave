@@ -44,7 +44,11 @@ typedef struct {
 #define PyProjectionRegistry_New_RETURN PyProjectionRegistry*           /**< return type for New */
 #define PyProjectionRegistry_New_PROTO (ProjectionRegistry_t*)          /**< arguments for New */
 
-#define PyProjectionRegistry_API_pointers 3               /**< number of API pointers */
+#define PyProjectionRegistry_Load_NUM 3                     /**< index for Load */
+#define PyProjectionRegistry_Load_RETURN PyProjectionRegistry*          /**< return type for Load */
+#define PyProjectionRegistry_Load_PROTO (const char* filename) /**< argument prototype for Open */
+
+#define PyProjectionRegistry_API_pointers 4               /**< number of API pointers */
 
 #ifdef PYPROJECTIONREGISTRY_MODULE
 /** Forward declaration of type */
@@ -58,6 +62,9 @@ static PyProjectionRegistry_GetNative_RETURN PyProjectionRegistry_GetNative PyPr
 
 /** Forward declaration of PyArea_New */
 static PyProjectionRegistry_New_RETURN PyProjectionRegistry_New PyProjectionRegistry_New_PROTO;
+
+/** Prototype for PyProjectionRegistry modules Load function */
+static PyProjectionRegistry_Load_RETURN PyProjectionRegistry_Load PyProjectionRegistry_Load_PROTO;
 
 #else
 /** Pointers to types and functions */
@@ -79,6 +86,14 @@ static void **PyProjectionRegistry_API;
  */
 #define PyProjectionRegistry_New \
   (*(PyProjectionRegistry_New_RETURN (*)PyProjectionRegistry_New_PROTO) PyProjectionRegistry_API[PyProjectionRegistry_New_NUM])
+
+/**
+ * Loads a projection registry instance. Release this object with Py_DECREF.
+ * @param[in] filename - the filename.
+ * @returns the PyProjectionRegistry instance.
+ */
+#define PyProjectionRegistry_Load \
+  (*(PyProjectionRegistry_Load_RETURN (*)PyProjectionRegistry_Load_PROTO) PyProjectionRegistry_API[ProjectionRegistry_Load_NUM])
 
 /**
  * Checks if the object is a python projection registry.

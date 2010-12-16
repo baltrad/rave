@@ -120,8 +120,6 @@ static Projection_t* ProjectionRegistryInternal_createProjFromNode(SimpleXmlNode
         goto done;
       }
 
-      fprintf(stderr, "id='%s', descr='%s', projdef='%s'\n", id, descr, projdef);
-
       if (!Projection_init(proj, id, descr, projdef)) {
         RAVE_ERROR0("Failed to initialize projection");
         goto done;
@@ -134,10 +132,58 @@ done:
   RAVE_OBJECT_RELEASE(proj);
   return result;
 }
+
+static SimpleXmlNode_t* ProjectionRegistryInternal_createNode(Projection_t* proj)
+{
+  SimpleXmlNode_t* node = NULL;
+  SimpleXmlNode_t* result = NULL;
+  SimpleXmlNode_t* descrNode = NULL;
+  SimpleXmlNode_t* projNode = NULL;
+  const char* description = NULL;
+  const char* projdef = NULL;
+
+  RAVE_ASSERT((proj != NULL), "proj == NULL");
+
+  node = RAVE_OBJECT_NEW(&SimpleXmlNode_TYPE);
+  descrNode = RAVE_OBJECT_NEW(&SimpleXmlNode_TYPE);
+  projNode = RAVE_OBJECT_NEW(&SimpleXmlNode_TYPE);
+  if (node == NULL || descrNode == NULL || projNode == NULL) {
+    goto done;
+  }
+  if(!SimpleXmlNode_setName(node, "projection") ||
+     !SimpleXmlNode_setName(descrNode, "description") ||
+     !SimpleXmlNode_setName(projNode, "projdef")) {
+    goto done;
+  }
+  if (!SimpleXmlNode_addAttribute(node, "id", Projection_getID(proj))) {
+    goto done;
+  }
+  description = Projection_getDescription(proj);
+  if (description == NULL || !SimpleXmlNode_setText(descrNode,description, strlen(description))) {
+    goto done;
+  }
+  projdef = Projection_getDefinition(proj);
+  if (projdef == NULL || !SimpleXmlNode_setText(projNode, projdef, strlen(projdef))) {
+    goto done;
+  }
+
+  if (!SimpleXmlNode_addChild(node, descrNode) ||
+      !SimpleXmlNode_addChild(node, projNode)) {
+    goto done;
+  }
+
+  result = RAVE_OBJECT_COPY(node);
+done:
+  RAVE_OBJECT_RELEASE(node);
+  RAVE_OBJECT_RELEASE(descrNode);
+  RAVE_OBJECT_RELEASE(projNode);
+  return result;
+}
+
 /*@} End of Private functions */
 
 /*@{ Interface functions */
-ProjectionRegistry_t* ProjectionRegistry_loadRegistry(const char* filename)
+ProjectionRegistry_t* ProjectionRegistry_load(const char* filename)
 {
   SimpleXmlNode_t* node = NULL;
   ProjectionRegistry_t* registry = NULL;
@@ -175,6 +221,16 @@ done:
 
 }
 
+int ProjectionRegistry_add(ProjectionRegistry_t* self, Projection_t* proj)
+{
+  int result = 0;
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  if (proj != NULL) {
+    result = RaveObjectList_add(self->projections, (RaveCoreObject*)proj);
+  }
+  return result;
+}
+
 int ProjectionRegistry_size(ProjectionRegistry_t* self)
 {
   RAVE_ASSERT((self != NULL), "self == NULL");
@@ -205,6 +261,94 @@ Projection_t* ProjectionRegistry_getByName(ProjectionRegistry_t* self, const cha
     }
   }
   return NULL;
+}
+
+void ProjectionRegistry_remove(ProjectionRegistry_t* self, int index)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  RaveObjectList_release(self->projections, index);
+}
+
+void ProjectionRegistry_removeByName(ProjectionRegistry_t* self, const char* pcsid)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  if (pcsid != NULL) {
+    int nlen = 0;
+    int i = 0;
+    int found = 0;
+    nlen = RaveObjectList_size(self->projections);
+    for (i = 0; found == 0 && i < nlen; i++) {
+      Projection_t* proj = (Projection_t*)RaveObjectList_get(self->projections, i);
+      if (proj != NULL && strcmp(pcsid, Projection_getID(proj)) == 0) {
+        found = 1;
+        RaveObjectList_release(self->projections, i);
+      }
+      RAVE_OBJECT_RELEASE(proj);
+    }
+  }
+}
+
+int ProjectionRegistry_write(ProjectionRegistry_t* self, const char* filename)
+{
+  SimpleXmlNode_t* root = NULL;
+  Projection_t* childproj = NULL;
+  SimpleXmlNode_t* childnode = NULL;
+  FILE* fp = NULL;
+  int result = 0;
+  int nproj = 0;
+  int i = 0;
+
+  RAVE_ASSERT((self != NULL), "self == NULL");
+
+  if (filename == NULL) {
+    RAVE_ERROR0("Trying to save registry without filename");
+    goto done;
+  }
+
+  root = RAVE_OBJECT_NEW(&SimpleXmlNode_TYPE);
+  if (root == NULL) {
+    RAVE_ERROR0("Failed to allocate memory for root node");
+    goto done;
+  }
+  if (!SimpleXmlNode_setName(root, "projections")) {
+    goto done;
+  }
+
+  nproj = RaveObjectList_size(self->projections);
+  for (i = 0;  i < nproj; i++) {
+    childproj = (Projection_t*)RaveObjectList_get(self->projections, i);
+    if (childproj == NULL) {
+      goto done;
+    }
+
+    childnode = ProjectionRegistryInternal_createNode(childproj);
+    if (childnode == NULL || !SimpleXmlNode_addChild(root, childnode)) {
+      goto done;
+    }
+    RAVE_OBJECT_RELEASE(childproj);
+    RAVE_OBJECT_RELEASE(childnode);
+  }
+
+  fp = fopen(filename, "w");
+  if (fp == NULL) {
+    RAVE_ERROR1("Failed to open %s for writing", filename);
+    goto done;
+  }
+
+  if (!SimpleXmlNode_write(root, fp)) {
+    RAVE_ERROR0("Failed to write xml file");
+    goto done;
+  }
+
+  result = 1;
+done:
+  RAVE_OBJECT_RELEASE(childproj);
+  RAVE_OBJECT_RELEASE(childnode);
+  RAVE_OBJECT_RELEASE(root);
+  if (fp != NULL) {
+    fclose(fp);
+  }
+  return result;
 }
 
 /*@} End of Interface functions */

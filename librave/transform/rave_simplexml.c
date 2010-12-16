@@ -221,7 +221,9 @@ static void SimpleXmlNodeInternal_expatEndHandler(void *data, const char *el)
     const char* name = SimpleXmlNode_getName(userdata->current);
     if (name != NULL && strcasecmp(name, el)==0) {
       // good, we haven't got a bad scheme
-      userdata->current = SimpleXmlNode_getParent(userdata->current);
+      SimpleXmlNode_t* parent = SimpleXmlNode_getParent(userdata->current);
+      RAVE_OBJECT_RELEASE(userdata->current);
+      userdata->current = parent;
     } else {
       int lineno = (int)XML_GetCurrentLineNumber(userdata->parser);
       RAVE_ERROR2("Unexpected end tag at %d (%s)", lineno, el);
@@ -263,6 +265,7 @@ SimpleXmlNode_t* SimpleXmlNode_parseFile(const char* filename)
   int finished = 0;
   SimpleXmlNodeUserData_t userdata;
   int nrchildren = 0;
+  SimpleXmlNode_t* root = NULL;
 
   userdata.current = NULL;
   userdata.parser = NULL;
@@ -278,10 +281,14 @@ SimpleXmlNode_t* SimpleXmlNode_parseFile(const char* filename)
     goto done;
   }
 
-  userdata.current = RAVE_OBJECT_NEW(&SimpleXmlNode_TYPE);
-  userdata.parser = parser;
+  root = RAVE_OBJECT_NEW(&SimpleXmlNode_TYPE);
+  if (root == NULL || !SimpleXmlNode_setName(root, "ROOT")) {
+    RAVE_ERROR0("Failed to create simple xml node instance");
+    goto done;
+  }
 
-  SimpleXmlNode_setName(userdata.current, "ROOT");
+  userdata.current = RAVE_OBJECT_COPY(root);
+  userdata.parser = parser;
 
   XML_SetElementHandler(parser, SimpleXmlNodeInternal_expatStartHandler, SimpleXmlNodeInternal_expatEndHandler);
   XML_SetCharacterDataHandler(parser, SimpleXmlNodeInternal_characterDataHandler);
@@ -299,14 +306,15 @@ SimpleXmlNode_t* SimpleXmlNode_parseFile(const char* filename)
 
   nrchildren = RaveObjectList_size(userdata.current->children);
   if (nrchildren > 1) {
-    result = RAVE_OBJECT_COPY(userdata.current);
+    result = RAVE_OBJECT_COPY(root);
   } else if (nrchildren == 1) {
-    result = (SimpleXmlNode_t*)RaveObjectList_get(userdata.current->children, 0);
+    result = (SimpleXmlNode_t*)RaveObjectList_get(root->children, 0);
   } else {
     RAVE_INFO0("Empty object list");
   }
 done:
   RAVE_OBJECT_RELEASE(userdata.current);
+  RAVE_OBJECT_RELEASE(root);
   XML_ParserFree(parser);
   if (fp != NULL) fclose(fp);
   return result;
@@ -440,10 +448,29 @@ SimpleXmlNode_t* SimpleXmlNode_getChildByName(SimpleXmlNode_t* self, const char*
   return NULL;
 }
 
-const char* SimpleXmlNode_addAttribute(SimpleXmlNode_t* self, const char* key, const char* value)
+int SimpleXmlNode_addAttribute(SimpleXmlNode_t* self, const char* key, const char* value)
 {
-  RAVE_ASSERT((0), "NOT IMPLEMENTED YET");
-  return NULL;
+  int result = 0;
+  RaveAttribute_t* attribute = NULL;
+  RAVE_ASSERT((self != NULL), "self == NULL");
+
+  if (key == NULL) {
+    goto done;
+  }
+
+  attribute = RaveAttributeHelp_createString(key, value);
+  if (attribute == NULL) {
+    goto done;
+  }
+
+  if (!RaveObjectHashTable_put(self->attributes, key, (RaveCoreObject*)attribute)) {
+    goto done;
+  }
+
+  result = 1;
+done:
+  RAVE_OBJECT_RELEASE(attribute);
+  return result;
 }
 
 const char* SimpleXmlNode_getAttribute(SimpleXmlNode_t* self, const char* key)
@@ -464,48 +491,73 @@ static int SimpleXmlNodeInternal_printNode(SimpleXmlNode_t* self, int scope, FIL
 {
   int i;
   int nchildren = 0;
+  int result = 0;
+  RaveAttribute_t* attr = NULL;
   RaveList_t* attrkeys = NULL;
   for (i = 0; i < scope; i++) {
-    fprintf(fp, "  ");
+    if (fprintf(fp, "  ") < 0) {
+      goto done;
+    }
   }
-  fprintf(fp, "<%s", SimpleXmlNode_getName(self));
+  if (fprintf(fp, "<%s", SimpleXmlNode_getName(self))<0) {
+    goto done;
+  }
   attrkeys = RaveObjectHashTable_keys(self->attributes);
   if (attrkeys != NULL) {
     int nattrs = 0;
     nattrs = RaveList_size(attrkeys);
     for (i = 0; i < nattrs; i++) {
       const char* key = RaveList_get(attrkeys, i);
-      RaveAttribute_t* attr = (RaveAttribute_t*)RaveObjectHashTable_get(self->attributes, key);
       char* value = NULL;
-      if (key != NULL && RaveAttribute_getString(attr, &value)) {
-        fprintf(fp, " %s=\"%s\"", key, (value != NULL)?value:"");
+      attr = (RaveAttribute_t*)RaveObjectHashTable_get(self->attributes, key);
+      if (attr != NULL) {
+        if (key != NULL && RaveAttribute_getString(attr, &value)) {
+          if (fprintf(fp, " %s=\"%s\"", key, (value != NULL)?value:"") < 0) {
+            goto done;
+          }
+        }
       }
       RAVE_OBJECT_RELEASE(attr);
     }
   }
-  fprintf(fp, ">\n");
+  if (fprintf(fp, ">\n") < 0) {
+    goto done;
+  }
   if (self->text != NULL && strcmp("", self->text)!=0) {
     for (i = 0; i < (scope+1); i++) {
-      fprintf(fp, "  ");
+      if (fprintf(fp, "  ") < 0) {
+        goto done;
+      }
     }
-    fprintf(fp, "%s", self->text);
-    fprintf(fp, "\n");
+    if (fprintf(fp, "%s\n", self->text) < 0) {
+      goto done;
+    }
   }
 
   nchildren = RaveObjectList_size(self->children);
   for (i = 0; i < nchildren; i++) {
     SimpleXmlNode_t* node = (SimpleXmlNode_t*)RaveObjectList_get(self->children, i);
     if (node != NULL) {
-      SimpleXmlNodeInternal_printNode(node, scope + 1, fp);
+      if (!SimpleXmlNodeInternal_printNode(node, scope + 1, fp)) {
+        goto done;
+      }
     }
     RAVE_OBJECT_RELEASE(node);
   }
   for (i = 0; i < scope; i++) {
-    fprintf(fp, "  ");
+    if (fprintf(fp, "  ") < 0) {
+      goto done;
+    }
   }
-  fprintf(fp, "</%s>\n", SimpleXmlNode_getName(self));
+  if (fprintf(fp, "</%s>\n", SimpleXmlNode_getName(self)) < 0) {
+    goto done;
+  }
 
-  return 1;
+  result = 1;
+done:
+  RAVE_OBJECT_RELEASE(attr);
+  RaveList_freeAndDestroy(&attrkeys);
+  return result;
 }
 
 int SimpleXmlNode_write(SimpleXmlNode_t* self, FILE* fp)

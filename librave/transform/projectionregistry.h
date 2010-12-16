@@ -44,7 +44,18 @@ extern RaveCoreObjectType ProjectionRegistry_TYPE;
  * @param[in] filename - the name of the xml file
  * @returns the projection registry
  */
-ProjectionRegistry_t* ProjectionRegistry_loadRegistry(const char* filename);
+ProjectionRegistry_t* ProjectionRegistry_load(const char* filename);
+
+/**
+ * Adds a projection to the registry. There will be no check if the
+ * projection already exists so it is up to the user to ensure that
+ * no duplicates are added.
+ *
+ * @param[in] self - self
+ * @param[in] proj - the projection to add
+ * @return 1 on success otherwise 0
+ */
+int ProjectionRegistry_add(ProjectionRegistry_t* self, Projection_t* proj);
 
 /**
  * Returns the number of projections in this registry
@@ -68,5 +79,27 @@ Projection_t* ProjectionRegistry_get(ProjectionRegistry_t* self, int index);
  * @returns the found projection or NULL
  */
 Projection_t* ProjectionRegistry_getByName(ProjectionRegistry_t* self, const char* pcsid);
+
+/**
+ * Removes the projection at the specified index
+ * @param[in] self - self
+ * @param[in] index - the index of the projection to remove
+ */
+void ProjectionRegistry_remove(ProjectionRegistry_t* self, int index);
+
+/**
+ * Removes the projection with the specified pcs id
+ * @param[in] self - self
+ * @param[in] pcsid - the projection id of the projection to remove
+ */
+void ProjectionRegistry_removeByName(ProjectionRegistry_t* self, const char* pcsid);
+
+/**
+ * Writes the current registry to a xml file.
+ * @param[in] self - self
+ * @param[in] filename - the name of the file
+ * @returns 1 on success or 0 on failure
+ */
+int ProjectionRegistry_write(ProjectionRegistry_t* self, const char* filename);
 
 #endif /* PROJECTIONREGISTRY_H */

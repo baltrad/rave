@@ -161,6 +161,8 @@ int RaveField_addAttribute(RaveField_t* field,  RaveAttribute_t* attribute)
   }
 
 done:
+  RAVE_FREE(gname);
+  RAVE_FREE(aname);
   return result;
 }
 

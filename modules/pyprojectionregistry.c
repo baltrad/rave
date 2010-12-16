@@ -114,6 +114,33 @@ done:
 }
 
 /**
+ * Opens a file that is supported by RaveIO.
+ * @param[in] self this instance.
+ * @param[in] args arguments for creation. (A string identifying the file)
+ * @return the object on success, otherwise NULL
+ */
+static PyProjectionRegistry*
+PyProjectionRegistry_Load(const char* filename)
+{
+  ProjectionRegistry_t* registry = NULL;
+  PyProjectionRegistry* result = NULL;
+
+  if (filename == NULL) {
+    raiseException_returnNULL(PyExc_ValueError, "providing a filename that is NULL");
+  }
+
+  registry = ProjectionRegistry_load(filename);
+  if (registry == NULL) {
+    raiseException_gotoTag(done, PyExc_IOError, "Failed to open file");
+  }
+  result = PyProjectionRegistry_New(registry);
+
+done:
+  RAVE_OBJECT_RELEASE(registry);
+  return result;
+}
+
+/**
  * Deallocates the registry
  * @param[in] obj the object to deallocate.
  */
@@ -141,11 +168,178 @@ static PyObject* _pyprojectionregistry_new(PyObject* self, PyObject* args)
   return (PyObject*)result;
 }
 
+static PyObject* _pyprojectionregistry_add(PyProjectionRegistry* self, PyObject* args)
+{
+  PyObject* inptr = NULL;
+  PyProjection* projection = NULL;
+
+  if (!PyArg_ParseTuple(args, "O", &inptr)) {
+    return NULL;
+  }
+
+  if (!PyProjection_Check(inptr)) {
+    raiseException_returnNULL(PyExc_TypeError,"Added object must be of type ProjectionCore");
+  }
+
+  projection = (PyProjection*)inptr;
+
+  if (!ProjectionRegistry_add(self->registry, projection->projection)) {
+    raiseException_returnNULL(PyExc_MemoryError, "Failed to add projection to registry");
+  }
+
+  Py_RETURN_NONE;
+}
+
+/**
+ * Returns the number of projections in this registry
+ * @parma[in] self - this instance
+ * @param[in] args - NA
+ * @returns the number of projections
+ */
+static PyObject* _pyprojectionregistry_size(PyProjectionRegistry* self, PyObject* args)
+{
+  return PyLong_FromLong(ProjectionRegistry_size(self->registry));
+}
+
+/**
+ * Returns the projection at specified index
+ * @parma[in] self - this instance
+ * @param[in] args - index
+ * @returns the projection
+ */
+static PyObject* _pyprojectionregistry_get(PyProjectionRegistry* self, PyObject* args)
+{
+  Projection_t* projection = NULL;
+  PyObject* result = NULL;
+  int index = 0;
+
+  if (!PyArg_ParseTuple(args, "i", &index)) {
+    return NULL;
+  }
+
+  if (index < 0 || index >= ProjectionRegistry_size(self->registry)) {
+    raiseException_returnNULL(PyExc_IndexError, "Index out of range");
+  }
+
+  if((projection = ProjectionRegistry_get(self->registry, index)) == NULL) {
+    raiseException_returnNULL(PyExc_IndexError, "Could not aquire projection");
+  }
+
+  result = (PyObject*)PyProjection_New(projection);
+
+  RAVE_OBJECT_RELEASE(projection);
+
+  return result;
+}
+
+/**
+ * Returns the projection with the specified id
+ * @parma[in] self - this instance
+ * @param[in] args - pcs id
+ * @returns the projection
+ */
+static PyObject* _pyprojectionregistry_getByName(PyProjectionRegistry* self, PyObject* args)
+{
+  Projection_t* projection = NULL;
+  PyObject* result = NULL;
+  char* pcsid = NULL;
+
+  if (!PyArg_ParseTuple(args, "s", &pcsid)) {
+    return NULL;
+  }
+
+  if((projection = ProjectionRegistry_getByName(self->registry, pcsid)) == NULL) {
+    raiseException_returnNULL(PyExc_IndexError, "Could not aquire projection");
+  }
+
+  result = (PyObject*)PyProjection_New(projection);
+
+  RAVE_OBJECT_RELEASE(projection);
+
+  return result;
+}
+
+/**
+ * Removes the projection at specified index
+ * @parma[in] self - this instance
+ * @param[in] args - index
+ * @returns None
+ */
+static PyObject* _pyprojectionregistry_remove(PyProjectionRegistry* self, PyObject* args)
+{
+  int index = 0;
+
+  if (!PyArg_ParseTuple(args, "i", &index)) {
+    return NULL;
+  }
+
+  ProjectionRegistry_remove(self->registry, index);
+
+  Py_RETURN_NONE;
+}
+
+/**
+ * Removes the projection with the specified id
+ * @parma[in] self - this instance
+ * @param[in] args - pcs id
+ * @returns None
+ */
+static PyObject* _pyprojectionregistry_removeByName(PyProjectionRegistry* self, PyObject* args)
+{
+  char* pcsid = NULL;
+
+  if (!PyArg_ParseTuple(args, "s", &pcsid)) {
+    return NULL;
+  }
+
+  ProjectionRegistry_removeByName(self->registry, pcsid);
+
+  Py_RETURN_NONE;
+}
+
+static PyObject* _pyprojectionregistry_write(PyProjectionRegistry* self, PyObject* args)
+{
+  char* filename = NULL;
+  if (!PyArg_ParseTuple(args, "s", &filename)) {
+    return NULL;
+  }
+
+  if (!ProjectionRegistry_write(self->registry, filename)) {
+    raiseException_returnNULL(PyExc_IOError, "Failed to write file");
+  }
+
+  Py_RETURN_NONE;
+}
+
+/**
+ * Loads a registry from an xml file
+ * @param[in] self - this instance
+ * @param[in] args - a string pointing at the projections registry xml file
+ * @return the read registry or NULL on failure
+ */
+static PyObject* _pyprojectionregistry_load(PyObject* self, PyObject* args)
+{
+  PyProjectionRegistry* result = NULL;
+  char* filename = NULL;
+  if (!PyArg_ParseTuple(args, "s", &filename)) {
+    return NULL;
+  }
+  result = PyProjectionRegistry_Load(filename);
+  return (PyObject*)result;
+}
+
 /**
  * All methods a registry can have
  */
 static struct PyMethodDef _pyprojectionregistry_methods[] =
 {
+  {"add", (PyCFunction) _pyprojectionregistry_add, 1},
+  {"size", (PyCFunction) _pyprojectionregistry_size, 1},
+  {"get", (PyCFunction) _pyprojectionregistry_get, 1},
+  {"getByName", (PyCFunction) _pyprojectionregistry_getByName, 1},
+  {"remove", (PyCFunction) _pyprojectionregistry_remove, 1},
+  {"removeByName", (PyCFunction) _pyprojectionregistry_removeByName, 1},
+  {"write", (PyCFunction) _pyprojectionregistry_write, 1},
   {NULL, NULL } /* sentinel */
 };
 
@@ -207,6 +401,7 @@ PyTypeObject PyProjectionRegistry_Type =
 /*@{ Module setup */
 static PyMethodDef functions[] = {
   {"new", (PyCFunction)_pyprojectionregistry_new, 1},
+  {"load", (PyCFunction)_pyprojectionregistry_load, 1},
   {NULL,NULL} /*Sentinel*/
 };
 
@@ -225,6 +420,7 @@ init_projectionregistry(void)
   PyProjectionRegistry_API[PyProjectionRegistry_Type_NUM] = (void*)&PyProjectionRegistry_Type;
   PyProjectionRegistry_API[PyProjectionRegistry_GetNative_NUM] = (void *)PyProjectionRegistry_GetNative;
   PyProjectionRegistry_API[PyProjectionRegistry_New_NUM] = (void*)PyProjectionRegistry_New;
+  PyProjectionRegistry_API[PyProjectionRegistry_Load_NUM] = (void*)PyProjectionRegistry_Load;
 
   c_api_object = PyCObject_FromVoidPtr((void *)PyProjectionRegistry_API, NULL);
 
@@ -240,5 +436,6 @@ init_projectionregistry(void)
 
   import_pyprojection();
   PYRAVE_DEBUG_INITIALIZE;
+  Rave_setDebugLevel(RAVE_DEBUG);
 }
 /*@} End of Module setup */
