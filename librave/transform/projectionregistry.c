@@ -133,6 +133,11 @@ done:
   return result;
 }
 
+/**
+ * Creates a xml node from a projection instance.
+ * @param[in] proj - the projection instance
+ * @returns a xml node on success or NULL on failure
+ */
 static SimpleXmlNode_t* ProjectionRegistryInternal_createNode(Projection_t* proj)
 {
   SimpleXmlNode_t* node = NULL;

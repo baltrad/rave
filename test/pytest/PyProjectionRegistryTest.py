@@ -24,7 +24,13 @@ Tests the py projection registry module.
 @date 2010-12-15
 '''
 import unittest
-import _projectionregistry
+SKIP_TESTS=1
+try:
+  import _projectionregistry
+  SKIP_TESTS=0
+except:
+  print "  Skipping projection registry tests!!"
+
 import _projection
 import _rave
 import string
@@ -45,12 +51,18 @@ class PyProjectionTest(unittest.TestCase):
       os.unlink(self.TEMPORARY_FILE)
 
   def test_new(self):
+    if SKIP_TESTS == 1:
+      return
+    import _projectionregistry
     obj = _projectionregistry.new()
     
     isok = string.find(`type(obj)`, "ProjectionRegistryCore")
     self.assertNotEqual(-1, isok)
 
   def test_load(self):
+    if SKIP_TESTS == 1:
+      return
+    import _projectionregistry    
     registry = _projectionregistry.load(self.FIXTURE)
     self.assertTrue(registry != None)
     
@@ -62,6 +74,9 @@ class PyProjectionTest(unittest.TestCase):
     self.assertEquals("rot10w30s", registry.get(4).id)
 
   def test_getByName(self):
+    if SKIP_TESTS == 1:
+      return
+    import _projectionregistry    
     registry = _projectionregistry.load(self.FIXTURE)
     self.assertTrue(registry != None)
 
@@ -72,6 +87,9 @@ class PyProjectionTest(unittest.TestCase):
     self.assertEquals("rot10w30s", registry.getByName("rot10w30s").id)
 
   def test_add(self):
+    if SKIP_TESTS == 1:
+      return
+    import _projectionregistry    
     registry = _projectionregistry.load(self.FIXTURE)
     newproj = _projection.new("testid", "something", "+proj=latlong +ellps=WGS84 +datum=WGS84")
     registry.add(newproj)
@@ -80,6 +98,9 @@ class PyProjectionTest(unittest.TestCase):
     self.assertEquals("something", registry.getByName("testid").description)
     
   def test_remove(self):
+    if SKIP_TESTS == 1:
+      return
+    import _projectionregistry    
     registry = _projectionregistry.load(self.FIXTURE)
     registry.remove(2)
     self.assertEquals(4, registry.size())
@@ -90,6 +111,9 @@ class PyProjectionTest(unittest.TestCase):
       pass
 
   def test_removeByName(self):
+    if SKIP_TESTS == 1:
+      return
+    import _projectionregistry    
     registry = _projectionregistry.load(self.FIXTURE)
     registry.removeByName("ps14e60n")
     self.assertEquals(4, registry.size())
@@ -100,6 +124,9 @@ class PyProjectionTest(unittest.TestCase):
       pass
 
   def test_write(self):
+    if SKIP_TESTS == 1:
+      return
+    import _projectionregistry    
     registry = _projectionregistry.load(self.FIXTURE)
     newproj = _projection.new("testid", "something", "+proj=latlong +ellps=WGS84 +datum=WGS84")
     registry.add(newproj)
@@ -113,6 +140,9 @@ class PyProjectionTest(unittest.TestCase):
     self.assertEquals("+proj=latlong +ellps=WGS84 +datum=WGS84", string.strip(projs[5].find("projdef").text))
 
   def test_write_2(self):
+    if SKIP_TESTS == 1:
+      return
+    import _projectionregistry    
     registry = _projectionregistry.load(self.FIXTURE)
     newproj = _projection.new("testid", "something", "+proj=latlong +ellps=WGS84 +datum=WGS84")
     registry.add(newproj)

@@ -436,6 +436,5 @@ init_projectionregistry(void)
 
   import_pyprojection();
   PYRAVE_DEBUG_INITIALIZE;
-  Rave_setDebugLevel(RAVE_DEBUG);
 }
 /*@} End of Module setup */

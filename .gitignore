@@ -3,3 +3,6 @@
 *.so
 *.o
 *.a
+.cproject
+.project
+.pydevproject
