@@ -39,6 +39,7 @@ from PyPolarNavTest import *
 from PyAreaTest import *
 from PyRadarDefinitionTest import *
 from PyProjectionRegistryTest import *
+from PyAreaRegistryTest import *
 
 # Some tests for verifying that we are producing products
 from MeanTest import *

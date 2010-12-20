@@ -135,6 +135,7 @@ static int AreaRegistryInternal_parseExtent(const char* extent, double* llx, dou
 
   result = 1;
 done:
+  RAVE_OBJECT_RELEASE(tokens);
   return result;
 }
 
@@ -149,7 +150,8 @@ static Area_t* AreaRegistryInternal_createAreaFromNode(AreaRegistry_t* self, Sim
   Area_t* result = NULL;
   RAVE_ASSERT((self != NULL), "self == NULL");
 
-  if (node != NULL && SimpleXmlNode_getName(node) != NULL && strcasecmp("area", SimpleXmlNode_getName(node)) == 0) {
+  if (node != NULL && SimpleXmlNode_getName(node) != NULL &&
+      strcasecmp("area", SimpleXmlNode_getName(node)) == 0) {
     area = RAVE_OBJECT_NEW(&Area_TYPE);
     if (area != NULL) {
       const char* id = SimpleXmlNode_getAttribute(node, "id");
@@ -214,6 +216,7 @@ static Area_t* AreaRegistryInternal_createAreaFromNode(AreaRegistry_t* self, Sim
           Projection_t* proj = ProjectionRegistry_getByName(self->projRegistry, pcs);
           if (proj != NULL) {
             Area_setProjection(area, proj);
+            RAVE_OBJECT_RELEASE(proj);
           } else {
             if (!Area_setPcsid(area, pcs)) {
               RAVE_ERROR0("Failed to set pcs id");
@@ -307,10 +310,13 @@ done:
   return result;
 }
 
-/*@} End of Private functions */
-
-/*@{ Interface functions */
-int AreaRegistry_loadRegistry(AreaRegistry_t* self, const char* filename)
+/**
+ * Loads an area registry from a xml file
+ * @param[in] self - self
+ * @param[in] filename - the xml file to load
+ * @returns 1 on success 0 otherwise
+ */
+int AreaRegistryInternal_loadRegistry(AreaRegistry_t* self, const char* filename)
 {
   SimpleXmlNode_t* node = NULL;
   int result = 0;
@@ -341,6 +347,177 @@ done:
   return result;
 }
 
+/**
+ * Adds all arguments to the area def node
+ * @param[in] area - the area
+ * @param[in] areadefNode - the xml node to get arguments added
+ * @returns 1 on success or 0 on failure
+ */
+static int AreaRegistryInternal_addArgsToNode(Area_t* area, SimpleXmlNode_t* areadefNode)
+{
+  SimpleXmlNode_t* argNode = NULL;
+  int result = 0;
+
+  RAVE_ASSERT((area != NULL), "area == NULL");
+  RAVE_ASSERT((areadefNode != NULL), "areadefNode == NULL");
+
+  // pcs
+  argNode = SimpleXmlNode_create(areadefNode, "arg");
+  if (argNode != NULL) {
+    const char* pcsid = Area_getPcsid(area);
+    if (pcsid == NULL ||
+        !SimpleXmlNode_addAttribute(argNode, "id", "pcs") ||
+        !SimpleXmlNode_setText(argNode, pcsid, strlen(pcsid))) {
+      RAVE_ERROR0("Failed to add pcs id to area");
+      goto done;
+    }
+  } else {
+    goto done;
+  }
+  RAVE_OBJECT_RELEASE(argNode);
+
+  // xsize
+  argNode = SimpleXmlNode_create(areadefNode, "arg");
+  if (argNode != NULL) {
+    char xsize[32];
+    sprintf(xsize, "%ld", Area_getXSize(area));
+    if (!SimpleXmlNode_addAttribute(argNode, "id", "xsize") ||
+        !SimpleXmlNode_setText(argNode, xsize, strlen(xsize))) {
+      RAVE_ERROR0("Failed to add xsize to area");
+      goto done;
+    }
+  } else {
+    goto done;
+  }
+  RAVE_OBJECT_RELEASE(argNode);
+
+  // ysize
+  argNode = SimpleXmlNode_create(areadefNode, "arg");
+  if (argNode != NULL) {
+    char ysize[32];
+    sprintf(ysize, "%ld", Area_getYSize(area));
+    if (!SimpleXmlNode_addAttribute(argNode, "id", "ysize") ||
+        !SimpleXmlNode_setText(argNode, ysize, strlen(ysize))) {
+      RAVE_ERROR0("Failed to add ysize to area");
+      goto done;
+    }
+  } else {
+    goto done;
+  }
+  RAVE_OBJECT_RELEASE(argNode);
+
+  // xscale
+  argNode = SimpleXmlNode_create(areadefNode, "arg");
+  if (argNode != NULL) {
+    char xscale[32];
+    sprintf(xscale, "%lf", Area_getXScale(area));
+    if (!SimpleXmlNode_addAttribute(argNode, "id", "xscale") ||
+        !SimpleXmlNode_setText(argNode, xscale, strlen(xscale))) {
+      RAVE_ERROR0("Failed to add xscale to area");
+      goto done;
+    }
+  } else {
+    goto done;
+  }
+  RAVE_OBJECT_RELEASE(argNode);
+
+  // yscale
+  argNode = SimpleXmlNode_create(areadefNode, "arg");
+  if (argNode != NULL) {
+    char yscale[32];
+    sprintf(yscale, "%lf", Area_getYScale(area));
+    if (!SimpleXmlNode_addAttribute(argNode, "id", "yscale") ||
+        !SimpleXmlNode_setText(argNode, yscale, strlen(yscale))) {
+      RAVE_ERROR0("Failed to add yscale to area");
+      goto done;
+    }
+  } else {
+    goto done;
+  }
+  RAVE_OBJECT_RELEASE(argNode);
+
+  // extent
+  argNode = SimpleXmlNode_create(areadefNode, "arg");
+  if (argNode != NULL) {
+    double llX = 0.0, llY = 0.0, urX = 0.0, urY = 0.0;
+    char extent[512];
+    Area_getExtent(area, &llX, &llY, &urX, &urY);
+    if (sprintf(extent, "%lf, %lf, %lf, %lf", llX, llY, urX, urY) >= 511) {
+      RAVE_ERROR0("Extent became too large, can not complete writing");
+      goto done;
+    }
+    if (!SimpleXmlNode_addAttribute(argNode, "id", "extent") ||
+        !SimpleXmlNode_setText(argNode, extent, strlen(extent))) {
+      RAVE_ERROR0("Failed to add extent to area");
+      goto done;
+    }
+  } else {
+    goto done;
+  }
+  RAVE_OBJECT_RELEASE(argNode);
+
+  result = 1;
+done:
+  RAVE_OBJECT_RELEASE(argNode);
+  return result;
+}
+
+/**
+ * Creates a xml node from a area instance.
+ * @param[in] proj - the area instance
+ * @returns a xml node on success or NULL on failure
+ */
+static SimpleXmlNode_t* AreanRegistryInternal_createNode(Area_t* area)
+{
+  SimpleXmlNode_t* node = NULL;
+  SimpleXmlNode_t* result = NULL;
+  SimpleXmlNode_t* descrNode = NULL;
+  SimpleXmlNode_t* areadefNode = NULL;
+  const char* description = NULL;
+
+  RAVE_ASSERT((area != NULL), "area == NULL");
+
+  node = RAVE_OBJECT_NEW(&SimpleXmlNode_TYPE);
+  descrNode = RAVE_OBJECT_NEW(&SimpleXmlNode_TYPE);
+  areadefNode = RAVE_OBJECT_NEW(&SimpleXmlNode_TYPE);
+
+  if (node == NULL || descrNode == NULL || areadefNode == NULL) {
+    goto done;
+  }
+  if(!SimpleXmlNode_setName(node, "area") ||
+     !SimpleXmlNode_setName(descrNode, "description") ||
+     !SimpleXmlNode_setName(areadefNode, "areadef")) {
+    goto done;
+  }
+  if (!SimpleXmlNode_addAttribute(node, "id", Area_getID(area))) {
+    goto done;
+  }
+  description = Area_getDescription(area);
+  if (description != NULL &&
+      !SimpleXmlNode_setText(descrNode,description, strlen(description))) {
+    goto done;
+  }
+  if (!AreaRegistryInternal_addArgsToNode(area, areadefNode)) {
+    goto done;
+  }
+
+  if (!SimpleXmlNode_addChild(node, descrNode) ||
+      !SimpleXmlNode_addChild(node, areadefNode)) {
+    goto done;
+  }
+
+  result = RAVE_OBJECT_COPY(node);
+done:
+  RAVE_OBJECT_RELEASE(node);
+  RAVE_OBJECT_RELEASE(descrNode);
+  RAVE_OBJECT_RELEASE(areadefNode);
+  return result;
+}
+
+/*@} End of Private functions */
+
+/*@{ Interface functions */
+
 AreaRegistry_t* AreaRegistry_load(const char* filename, ProjectionRegistry_t* pRegistry)
 {
   AreaRegistry_t* result = NULL;
@@ -348,10 +525,20 @@ AreaRegistry_t* AreaRegistry_load(const char* filename, ProjectionRegistry_t* pR
     result = RAVE_OBJECT_NEW(&AreaRegistry_TYPE);
     if (result != NULL) {
       AreaRegistry_setProjectionRegistry(result, pRegistry);
-      if (!AreaRegistry_loadRegistry(result, filename)) {
+      if (!AreaRegistryInternal_loadRegistry(result, filename)) {
         RAVE_OBJECT_RELEASE(result);
       }
     }
+  }
+  return result;
+}
+
+int AreaRegistry_add(AreaRegistry_t* self, Area_t* area)
+{
+  int result = 0;
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  if (area != NULL) {
+    result = RaveObjectList_add(self->areas, (RaveCoreObject*)area);
   }
   return result;
 }
@@ -368,6 +555,51 @@ Area_t* AreaRegistry_get(AreaRegistry_t* self, int index)
   return (Area_t*)RaveObjectList_get(self->areas, index);
 }
 
+Area_t* AreaRegistry_getByName(AreaRegistry_t* self, const char* id)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  if (id != NULL) {
+    int n = 0;
+    int i = 0;
+    n = RaveObjectList_size(self->areas);
+    for (i = 0; i < n; i++) {
+      Area_t* area = (Area_t*)RaveObjectList_get(self->areas, i);
+      if (area != NULL &&
+          Area_getID(area) != NULL &&
+          strcmp(id, Area_getID(area))==0) {
+        return area;
+      }
+      RAVE_OBJECT_RELEASE(area);
+    }
+  }
+  return NULL;
+}
+
+void AreaRegistry_remove(AreaRegistry_t* self, int index)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  RaveObjectList_release(self->areas, index);
+}
+
+void AreaRegistry_removeByName(AreaRegistry_t* self, const char* id)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  if (id != NULL) {
+    int nlen = 0;
+    int i = 0;
+    int found = 0;
+    nlen = RaveObjectList_size(self->areas);
+    for (i = 0; found == 0 && i < nlen; i++) {
+      Area_t* area = (Area_t*)RaveObjectList_get(self->areas, i);
+      if (area != NULL && strcmp(id, Area_getID(area)) == 0) {
+        found = 1;
+        RaveObjectList_release(self->areas, i);
+      }
+      RAVE_OBJECT_RELEASE(area);
+    }
+  }
+}
+
 void AreaRegistry_setProjectionRegistry(AreaRegistry_t* self, ProjectionRegistry_t* registry)
 {
   RAVE_ASSERT((self != NULL), "self == NULL");
@@ -381,6 +613,68 @@ ProjectionRegistry_t* AreaRegistry_getProjectionRegistry(AreaRegistry_t* self)
   return RAVE_OBJECT_COPY(self->projRegistry);
 }
 
+int AreaRegistry_write(AreaRegistry_t* self, const char* filename)
+{
+  SimpleXmlNode_t* root = NULL;
+  Area_t* childarea = NULL;
+  SimpleXmlNode_t* childnode = NULL;
+  FILE* fp = NULL;
+  int result = 0;
+  int nproj = 0;
+  int i = 0;
+
+  RAVE_ASSERT((self != NULL), "self == NULL");
+
+  if (filename == NULL) {
+    RAVE_ERROR0("Trying to save registry without filename");
+    goto done;
+  }
+
+  root = RAVE_OBJECT_NEW(&SimpleXmlNode_TYPE);
+  if (root == NULL) {
+    RAVE_ERROR0("Failed to allocate memory for root node");
+    goto done;
+  }
+  if (!SimpleXmlNode_setName(root, "areas")) {
+    goto done;
+  }
+
+  nproj = RaveObjectList_size(self->areas);
+  for (i = 0;  i < nproj; i++) {
+    childarea = (Area_t*)RaveObjectList_get(self->areas, i);
+    if (childarea == NULL) {
+      goto done;
+    }
+
+    childnode = AreanRegistryInternal_createNode(childarea);
+    if (childnode == NULL || !SimpleXmlNode_addChild(root, childnode)) {
+      goto done;
+    }
+    RAVE_OBJECT_RELEASE(childarea);
+    RAVE_OBJECT_RELEASE(childnode);
+  }
+
+  fp = fopen(filename, "w");
+  if (fp == NULL) {
+    RAVE_ERROR1("Failed to open %s for writing", filename);
+    goto done;
+  }
+
+  if (!SimpleXmlNode_write(root, fp)) {
+    RAVE_ERROR0("Failed to write xml file");
+    goto done;
+  }
+
+  result = 1;
+done:
+  RAVE_OBJECT_RELEASE(childarea);
+  RAVE_OBJECT_RELEASE(childnode);
+  RAVE_OBJECT_RELEASE(root);
+  if (fp != NULL) {
+    fclose(fp);
+  }
+  return result;
+}
 /*@} End of Interface functions */
 
 RaveCoreObjectType AreaRegistry_TYPE = {

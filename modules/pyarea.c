@@ -147,12 +147,14 @@ static PyObject* _pyarea_new(PyObject* self, PyObject* args)
 static struct PyMethodDef _pyarea_methods[] =
 {
   {"id", NULL},
+  {"description", NULL},
   {"xsize", NULL},
   {"ysize", NULL},
   {"xscale", NULL},
   {"yscale", NULL},
   {"extent", NULL},
   {"projection", NULL},
+  {"pcsid", NULL},
   {NULL, NULL } /* sentinel */
 };
 
@@ -169,6 +171,12 @@ static PyObject* _pyarea_getattr(PyArea* self, char* name)
       Py_RETURN_NONE;
     } else {
       return PyString_FromString(Area_getID(self->area));
+    }
+  } else if (strcmp("description", name) == 0) {
+    if (Area_getDescription(self->area) == NULL) {
+      Py_RETURN_NONE;
+    } else {
+      return PyString_FromString(Area_getDescription(self->area));
     }
   } else if (strcmp("xsize", name) == 0) {
     return PyInt_FromLong(Area_getXSize(self->area));
@@ -190,6 +198,12 @@ static PyObject* _pyarea_getattr(PyArea* self, char* name)
       return (PyObject*)result;
     } else {
       Py_RETURN_NONE;
+    }
+  } else if (strcmp("pcsid", name) == 0) {
+    if (Area_getPcsid(self->area) == NULL) {
+      Py_RETURN_NONE;
+    } else {
+      return PyString_FromString(Area_getPcsid(self->area));
     }
   }
 
@@ -218,6 +232,14 @@ static int _pyarea_setattr(PyArea* self, char* name, PyObject* val)
       Area_setID(self->area, NULL);
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "id must be a string");
+    }
+  } else if (strcmp("description", name) == 0) {
+    if (PyString_Check(val)) {
+      Area_setDescription(self->area, PyString_AsString(val));
+    } else if (val == Py_None) {
+      Area_setDescription(self->area, NULL);
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError, "description must be a string");
     }
   } else if (strcmp("xsize", name)==0) {
     if (PyInt_Check(val)) {
@@ -256,6 +278,14 @@ static int _pyarea_setattr(PyArea* self, char* name, PyObject* val)
       Area_setProjection(self->area, NULL);
     } else {
       raiseException_gotoTag(done, PyExc_TypeError,"projection must be of ProjectionCore type");
+    }
+  } else if (strcmp("pcsid", name) == 0) {
+    if (PyString_Check(val)) {
+      Area_setPcsid(self->area, PyString_AsString(val));
+    } else if (val == Py_None) {
+      Area_setPcsid(self->area, NULL);
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError, "pcsid must be a string");
     }
   }
 

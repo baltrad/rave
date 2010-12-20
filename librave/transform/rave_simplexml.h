@@ -108,14 +108,51 @@ const char* SimpleXmlNode_getText(SimpleXmlNode_t* self);
  */
 int SimpleXmlNode_addChild(SimpleXmlNode_t* self, SimpleXmlNode_t* child);
 
+/**
+ * Removes the given child from the children list
+ * @param[in] self - self
+ * @param[in] child - the node to remove
+ */
+void SimpleXmlNode_remove(SimpleXmlNode_t* self, SimpleXmlNode_t* child);
+
+/**
+ * Returns the number of children
+ * @param[in] self - self
+ * @returns the number of children
+ */
 int SimpleXmlNode_getNumberOfChildren(SimpleXmlNode_t* self);
 
+/**
+ * Returns the child at specified index
+ * @param[in] self - self
+ * @param[in] index - the index
+ * @returns the child node
+ */
 SimpleXmlNode_t* SimpleXmlNode_getChild(SimpleXmlNode_t* self, int index);
 
+/**
+ * Returns the child with the given name
+ * @param[in] self - self
+ * @param[in] name - the name of the node
+ * @returns the child node
+ */
 SimpleXmlNode_t* SimpleXmlNode_getChildByName(SimpleXmlNode_t* self, const char* name);
 
+/**
+ * Adds an attribute to a node
+ * @param[in] self - self
+ * @param[in] key - the name of the attribute
+ * @param[in] value - the value of the attribute
+ * @returns 1 on success otherwise 0
+ */
 int SimpleXmlNode_addAttribute(SimpleXmlNode_t* self, const char* key, const char* value);
 
+/**
+ * Returns the attribute value for the specified attribute
+ * @param[in] self - self
+ * @param[in] key - the name of the attribute
+ * @returns the value
+ */
 const char* SimpleXmlNode_getAttribute(SimpleXmlNode_t* self, const char* key);
 
 /**
@@ -125,4 +162,15 @@ const char* SimpleXmlNode_getAttribute(SimpleXmlNode_t* self, const char* key);
  * @return 1 on success otherwise 0
  */
 int SimpleXmlNode_write(SimpleXmlNode_t* self, FILE* fp);
+
+/**
+ * Creates a xml node. If node is given, the created node will be
+ * created as a child to that node otherwise it will be created
+ * as a root node.
+ * @param[in] parent - the parent node (MAY BE NULL)
+ * @param[in] name - the name of the node (MAY BE NULL)
+ * @return the node on success or NULL on failure
+ */
+SimpleXmlNode_t* SimpleXmlNode_create(SimpleXmlNode_t* parent, const char* name);
+
 #endif /* RAVE_SIMPLEXML_H */

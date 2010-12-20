@@ -115,6 +115,38 @@ done:
 }
 
 /**
+ * Opens a file that is supported by area registry
+ * @param[in] filename - the area registry file to load
+ * @param[in] pyprojregistry - the projection registry to be used in conjunction with the area registry
+ * @return the py area registry on success.
+ */
+static PyAreaRegistry*
+PyAreaRegistry_Load(const char* filename, PyProjectionRegistry* pyprojregistry)
+{
+  AreaRegistry_t* registry = NULL;
+  PyAreaRegistry* result = NULL;
+  ProjectionRegistry_t* projregistry = NULL;
+
+  if (filename == NULL) {
+    raiseException_returnNULL(PyExc_ValueError, "providing a filename that is NULL");
+  }
+
+  if (pyprojregistry != NULL) {
+    projregistry = pyprojregistry->registry;
+  }
+
+  registry = AreaRegistry_load(filename, projregistry);
+  if (registry == NULL) {
+    raiseException_gotoTag(done, PyExc_IOError, "Failed to open file");
+  }
+  result = PyAreaRegistry_New(registry);
+
+done:
+  RAVE_OBJECT_RELEASE(registry);
+  return result;
+}
+
+/**
  * Deallocates the registry
  * @param[in] obj the object to deallocate.
  */
@@ -143,11 +175,196 @@ static PyObject* _pyarearegistry_new(PyObject* self, PyObject* args)
 }
 
 /**
+ * Adds an area to the registry
+ * @param[in] self - self
+ * @param[in] args - the area object
+ * @returns None on success or NULL on failure
+ */
+static PyObject* _pyarearegistry_add(PyAreaRegistry* self, PyObject* args)
+{
+  PyObject* inptr = NULL;
+  PyArea* area = NULL;
+
+  if (!PyArg_ParseTuple(args, "O", &inptr)) {
+    return NULL;
+  }
+
+  if (!PyArea_Check(inptr)) {
+    raiseException_returnNULL(PyExc_TypeError,"Added object must be of type AreaCore");
+  }
+
+  area = (PyArea*)inptr;
+
+  if (!AreaRegistry_add(self->registry, area->area)) {
+    raiseException_returnNULL(PyExc_MemoryError, "Failed to add area to registry");
+  }
+
+  Py_RETURN_NONE;
+}
+
+/**
+ * Returns the number of projections in this registry
+ * @parma[in] self - this instance
+ * @param[in] args - NA
+ * @returns the number of projections
+ */
+static PyObject* _pyarearegistry_size(PyAreaRegistry* self, PyObject* args)
+{
+  return PyLong_FromLong(AreaRegistry_size(self->registry));
+}
+
+/**
+ * Returns the area at specified index
+ * @parma[in] self - this instance
+ * @param[in] args - index
+ * @returns the projection
+ */
+static PyObject* _pyarearegistry_get(PyAreaRegistry* self, PyObject* args)
+{
+  Area_t* area = NULL;
+  PyObject* result = NULL;
+  int index = 0;
+
+  if (!PyArg_ParseTuple(args, "i", &index)) {
+    return NULL;
+  }
+
+  if (index < 0 || index >= AreaRegistry_size(self->registry)) {
+    raiseException_returnNULL(PyExc_IndexError, "Index out of range");
+  }
+
+  if((area = AreaRegistry_get(self->registry, index)) == NULL) {
+    raiseException_returnNULL(PyExc_IndexError, "Could not aquire area");
+  }
+
+  result = (PyObject*)PyArea_New(area);
+
+  RAVE_OBJECT_RELEASE(area);
+
+  return result;
+}
+
+/**
+ * Returns the area with the specified id
+ * @parma[in] self - this instance
+ * @param[in] args - id
+ * @returns the area
+ */
+static PyObject* _pyarearegistry_getByName(PyAreaRegistry* self, PyObject* args)
+{
+  Area_t* area = NULL;
+  PyObject* result = NULL;
+  char* id = NULL;
+
+  if (!PyArg_ParseTuple(args, "s", &id)) {
+    return NULL;
+  }
+
+  if((area = AreaRegistry_getByName(self->registry, id)) == NULL) {
+    raiseException_returnNULL(PyExc_IndexError, "Could not aquire area");
+  }
+
+  result = (PyObject*)PyArea_New(area);
+
+  RAVE_OBJECT_RELEASE(area);
+
+  return result;
+}
+
+/**
+ * Removes the area at specified index
+ * @parma[in] self - this instance
+ * @param[in] args - index
+ * @returns None
+ */
+static PyObject* _pyarearegistry_remove(PyAreaRegistry* self, PyObject* args)
+{
+  int index = 0;
+
+  if (!PyArg_ParseTuple(args, "i", &index)) {
+    return NULL;
+  }
+
+  AreaRegistry_remove(self->registry, index);
+
+  Py_RETURN_NONE;
+}
+
+/**
+ * Removes the area with the specified id
+ * @parma[in] self - this instance
+ * @param[in] args - id
+ * @returns None
+ */
+static PyObject* _pyarearegistry_removeByName(PyAreaRegistry* self, PyObject* args)
+{
+  char* id = NULL;
+
+  if (!PyArg_ParseTuple(args, "s", &id)) {
+    return NULL;
+  }
+
+  AreaRegistry_removeByName(self->registry, id);
+
+  Py_RETURN_NONE;
+}
+
+/**
+ * Writes a area registry to file
+ */
+static PyObject* _pyarearegistry_write(PyAreaRegistry* self, PyObject* args)
+{
+  char* filename = NULL;
+  if (!PyArg_ParseTuple(args, "s", &filename)) {
+    return NULL;
+  }
+
+  if (!AreaRegistry_write(self->registry, filename)) {
+    raiseException_returnNULL(PyExc_IOError, "Failed to write file");
+  }
+
+  Py_RETURN_NONE;
+}
+
+/**
+ * Loads a registry from an xml file
+ * @param[in] self - this instance
+ * @param[in] args - a string pointing at the projections registry xml file
+ * @return the read registry or NULL on failure
+ */
+static PyObject* _pyarearegistry_load(PyObject* self, PyObject* args)
+{
+  PyAreaRegistry* result = NULL;
+  PyObject* pyobject = NULL;
+  PyProjectionRegistry* pyprojregistry = NULL;
+
+  char* filename = NULL;
+  if (!PyArg_ParseTuple(args, "s|O", &filename, &pyobject)) {
+    return NULL;
+  }
+  if (pyobject != NULL) {
+    if (!PyProjectionRegistry_Check(pyobject)) {
+      raiseException_returnNULL(PyExc_AttributeError, "Object must be of ProjectionCoreRegistry type");
+    }
+    pyprojregistry = (PyProjectionRegistry*)pyobject;
+  }
+  result = PyAreaRegistry_Load(filename, pyprojregistry);
+  return (PyObject*)result;
+}
+
+/**
  * All methods a registry can have
  */
 static struct PyMethodDef _pyarearegistry_methods[] =
 {
   {"pregistry", NULL},
+  {"add", (PyCFunction) _pyarearegistry_add, 1},
+  {"size", (PyCFunction) _pyarearegistry_size, 1},
+  {"get", (PyCFunction) _pyarearegistry_get, 1},
+  {"getByName", (PyCFunction) _pyarearegistry_getByName, 1},
+  {"remove", (PyCFunction) _pyarearegistry_remove, 1},
+  {"removeByName", (PyCFunction) _pyarearegistry_removeByName, 1},
+  {"write", (PyCFunction)_pyarearegistry_write, 1},
   {NULL, NULL } /* sentinel */
 };
 
@@ -229,6 +446,7 @@ PyTypeObject PyAreaRegistry_Type =
 /*@{ Module setup */
 static PyMethodDef functions[] = {
   {"new", (PyCFunction)_pyarearegistry_new, 1},
+  {"load", (PyCFunction)_pyarearegistry_load, 1},
   {NULL,NULL} /*Sentinel*/
 };
 
@@ -247,6 +465,7 @@ init_arearegistry(void)
   PyAreaRegistry_API[PyAreaRegistry_Type_NUM] = (void*)&PyAreaRegistry_Type;
   PyAreaRegistry_API[PyAreaRegistry_GetNative_NUM] = (void *)PyAreaRegistry_GetNative;
   PyAreaRegistry_API[PyAreaRegistry_New_NUM] = (void*)PyAreaRegistry_New;
+  PyAreaRegistry_API[PyAreaRegistry_Load_NUM] = (void*)PyAreaRegistry_Load;
 
   c_api_object = PyCObject_FromVoidPtr((void *)PyAreaRegistry_API, NULL);
 

@@ -249,6 +249,7 @@ void Area_setProjection(Area_t* area, Projection_t* projection)
 {
   RAVE_ASSERT((area != NULL), "area was NULL");
   RAVE_OBJECT_RELEASE(area->projection);
+  RAVE_FREE(area->pcsid);
   area->projection = RAVE_OBJECT_COPY(projection);
 }
 

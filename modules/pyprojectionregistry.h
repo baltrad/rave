@@ -93,7 +93,7 @@ static void **PyProjectionRegistry_API;
  * @returns the PyProjectionRegistry instance.
  */
 #define PyProjectionRegistry_Load \
-  (*(PyProjectionRegistry_Load_RETURN (*)PyProjectionRegistry_Load_PROTO) PyProjectionRegistry_API[ProjectionRegistry_Load_NUM])
+  (*(PyProjectionRegistry_Load_RETURN (*)PyProjectionRegistry_Load_PROTO) PyProjectionRegistry_API[PyProjectionRegistry_Load_NUM])
 
 /**
  * Checks if the object is a python projection registry.

@@ -41,20 +41,23 @@ typedef struct _AreaRegistry_t AreaRegistry_t;
 extern RaveCoreObjectType AreaRegistry_TYPE;
 
 /**
- * Loads an area registry from a xml file
- * @param[in] self - self
- * @param[in] filename - the xml file to load
- * @returns 1 on success 0 otherwise
- */
-int AreaRegistry_loadRegistry(AreaRegistry_t* self, const char* filename);
-
-/**
  * Simplified loading function, takes filename and a projection registry
  * @param[in] filename - the area file name
  * @param[in] pRegistry - the projection registry
  * @returns an area registry
  */
 AreaRegistry_t* AreaRegistry_load(const char* filename, ProjectionRegistry_t* pRegistry);
+
+/**
+ * Adds an area to the registry. There will be no check if the
+ * area already exists so it is up to the user to ensure that
+ * no duplicates are added.
+ *
+ * @param[in] self - self
+ * @param[in] area - the area to add
+ * @return 1 on success otherwise 0
+ */
+int AreaRegistry_add(AreaRegistry_t* self, Area_t* area);
 
 /**
  * Returns the number of registered areas
@@ -72,6 +75,28 @@ int AreaRegistry_size(AreaRegistry_t* self);
 Area_t* AreaRegistry_get(AreaRegistry_t* self, int index);
 
 /**
+ * Returns the area with the specified id
+ * @param[in] self - self
+ * @param[in] id - the area id
+ * @returns the found area or NULL
+ */
+Area_t* AreaRegistry_getByName(AreaRegistry_t* self, const char* id);
+
+/**
+ * Removes the area at the specified index
+ * @param[in] self - self
+ * @param[in] index - the index of the area to remove
+ */
+void AreaRegistry_remove(AreaRegistry_t* self, int index);
+
+/**
+ * Removes the area with the specified id
+ * @param[in] self - self
+ * @param[in] id - the id of the area to remove
+ */
+void AreaRegistry_removeByName(AreaRegistry_t* self, const char* id);
+
+/**
  * Sets a projection registry to be able to fetch projections.
  * @param[in] self - self
  * @param[in] registry - the projection registry
@@ -84,5 +109,13 @@ void AreaRegistry_setProjectionRegistry(AreaRegistry_t* self, ProjectionRegistry
  * @returns the projection registry
  */
 ProjectionRegistry_t* AreaRegistry_getProjectionRegistry(AreaRegistry_t* self);
+
+/**
+ * Writes the current registry to a xml file.
+ * @param[in] self - self
+ * @param[in] filename - the name of the file
+ * @returns 1 on success or 0 on failure
+ */
+int AreaRegistry_write(AreaRegistry_t* self, const char* filename);
 
 #endif /* AREAREGISTRY_H */

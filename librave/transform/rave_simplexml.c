@@ -418,6 +418,24 @@ int SimpleXmlNode_addChild(SimpleXmlNode_t* self, SimpleXmlNode_t* child)
   return result;
 }
 
+void SimpleXmlNode_remove(SimpleXmlNode_t* self, SimpleXmlNode_t* child)
+{
+  int nlen = 0;
+  int index = 0;
+  int found = 0;
+  RAVE_ASSERT((self != NULL), "self == NULL");
+
+  nlen = RaveObjectList_size(self->children);
+  for (index = 0; found == 0 && index < nlen; index++) {
+    SimpleXmlNode_t* node = (SimpleXmlNode_t*)RaveObjectList_get(self->children, index);
+    if (node == child) {
+      RaveObjectList_release(self->children, index);
+      found = 1;
+    }
+    RAVE_OBJECT_RELEASE(node);
+  }
+}
+
 int SimpleXmlNode_getNumberOfChildren(SimpleXmlNode_t* self)
 {
   RAVE_ASSERT((self != NULL), "self == NULL");
@@ -567,6 +585,33 @@ int SimpleXmlNode_write(SimpleXmlNode_t* self, FILE* fp)
   RAVE_ASSERT((self != NULL), "self == NULL");
 
   return SimpleXmlNodeInternal_printNode(node, 0, fp);
+}
+
+SimpleXmlNode_t* SimpleXmlNode_create(SimpleXmlNode_t* parent, const char* name)
+{
+  SimpleXmlNode_t* node = NULL;
+  SimpleXmlNode_t* result = NULL;
+
+  node = RAVE_OBJECT_NEW(&SimpleXmlNode_TYPE);
+  if (node == NULL) {
+    goto done;
+  }
+  if (name != NULL) {
+    if (!SimpleXmlNode_setName(node, name)) {
+      goto done;
+    }
+  }
+  if (parent != NULL) {
+    if (!SimpleXmlNode_addChild(parent, node)) {
+      goto done;
+    }
+    SimpleXmlNode_setParent(node, parent);
+  }
+
+  result = RAVE_OBJECT_COPY(node);
+done:
+  RAVE_OBJECT_RELEASE(node);
+  return result;
 }
 
 /*@} End of Interface functions */

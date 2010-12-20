@@ -38,7 +38,7 @@ import os
 
 from xml.etree import ElementTree
 
-class PyProjectionTest(unittest.TestCase):
+class PyProjectionRegistryTest(unittest.TestCase):
   FIXTURE="fixtures/fixture_projections.xml"
   TEMPORARY_FILE="pyprojtest.xml"
   

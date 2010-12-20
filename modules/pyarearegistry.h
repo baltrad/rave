@@ -25,6 +25,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef PYAREAREGISTRY_H
 #define PYAREAREGISTRY_H
 #include "arearegistry.h"
+#include "pyprojectionregistry.h"
 
 /**
  * A cartesian product
@@ -44,7 +45,11 @@ typedef struct {
 #define PyAreaRegistry_New_RETURN PyAreaRegistry*           /**< return type for New */
 #define PyAreaRegistry_New_PROTO (AreaRegistry_t*)          /**< arguments for New */
 
-#define PyAreaRegistry_API_pointers 3               /**< number of API pointers */
+#define PyAreaRegistry_Load_NUM 3                     /**< index for Load */
+#define PyAreaRegistry_Load_RETURN PyAreaRegistry*          /**< return type for Load */
+#define PyAreaRegistry_Load_PROTO (const char* filename, PyProjectionRegistry* pyprojregistry) /**< argument prototype for Open */
+
+#define PyAreaRegistry_API_pointers 4               /**< number of API pointers */
 
 #ifdef PYAREAREGISTRY_MODULE
 /** Forward declaration of type */
@@ -58,6 +63,9 @@ static PyAreaRegistry_GetNative_RETURN PyAreaRegistry_GetNative PyAreaRegistry_G
 
 /** Forward declaration of PyArea_New */
 static PyAreaRegistry_New_RETURN PyAreaRegistry_New PyAreaRegistry_New_PROTO;
+
+/** Prototype for PyProjectionRegistry modules Load function */
+static PyAreaRegistry_Load_RETURN PyAreaRegistry_Load PyAreaRegistry_Load_PROTO;
 
 #else
 /** Pointers to types and functions */
@@ -79,6 +87,17 @@ static void **PyAreaRegistry_API;
  */
 #define PyAreaRegistry_New \
   (*(PyAreaRegistry_New_RETURN (*)PyAreaRegistry_New_PROTO) PyAreaRegistry_API[PyAreaRegistry_New_NUM])
+
+
+/**
+ * Loads a area registry instance. Release this object with Py_DECREF.
+ * @param[in] filename - the filename.
+ * @param[in] pyprojregistry - the py projection registry
+ * @returns the PyAreaRegistry instance.
+ */
+#define PyAreaRegistry_Load \
+  (*(PyAreaRegistry_Load_RETURN (*)PyAreaRegistry_Load_PROTO) PyAreaRegistry_API[PyAreaRegistry_Load_NUM])
+
 
 /**
  * Checks if the object is a python area registry.

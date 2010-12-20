@@ -114,7 +114,7 @@ done:
 }
 
 /**
- * Opens a file that is supported by RaveIO.
+ * Opens a file that is supported by projection registry.
  * @param[in] self this instance.
  * @param[in] args arguments for creation. (A string identifying the file)
  * @return the object on success, otherwise NULL
