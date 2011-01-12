@@ -135,7 +135,7 @@ static int AreaRegistryInternal_parseExtent(const char* extent, double* llx, dou
 
   result = 1;
 done:
-  RAVE_OBJECT_RELEASE(tokens);
+  RaveList_freeAndDestroy(&tokens);
   return result;
 }
 

@@ -72,6 +72,12 @@ class PyRaveIOTest(unittest.TestCase):
     for a in attrs:
       self.assertEquals(True, a in alist)
 
+  def test_no_filename(self):
+    obj = _raveio.new()
+    # According to issue obj.filename should crash
+    obj.filename
+    
+
   def test_load(self):
     obj = _raveio.new()
     self.assertTrue(obj.object == None)

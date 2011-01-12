@@ -262,6 +262,7 @@ RaveList_t* RaveUtilities_getTrimmedTokens(const char* str, int c)
           RAVE_ERROR0("Failed to tokenize string");
           goto done;
         }
+
         startptr += len;
         /* We might have a delimiter at end of string which
          * should result it yet another token.
@@ -281,7 +282,7 @@ RaveList_t* RaveUtilities_getTrimmedTokens(const char* str, int c)
       } else {
         int len = strlen(startptr);
         char* tmp = RaveUtilities_trimText(startptr, len);
-        if (!RaveList_add(result, tmp)) {
+        if (tmp == NULL || !RaveList_add(result, tmp)) {
           RAVE_FREE(tmp);
           RAVE_ERROR0("Failed to tokenize string");
           goto done;

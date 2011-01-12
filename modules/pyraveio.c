@@ -302,7 +302,11 @@ static PyObject* _pyraveio_getattr(PyRaveIO* self, char* name)
   } else if (strcmp("objectType", name) == 0) {
     return PyInt_FromLong(RaveIO_getObjectType(self->raveio));
   } else if (strcmp("filename", name) == 0) {
-    return PyString_FromString(RaveIO_getFilename(self->raveio));
+    if (RaveIO_getFilename(self->raveio) != NULL) {
+      return PyString_FromString(RaveIO_getFilename(self->raveio));
+    } else {
+      Py_RETURN_NONE;
+    }
   } else if (strcmp("object", name) == 0) {
     RaveCoreObject* object = RaveIO_getObject(self->raveio);
     if (object != NULL) {
