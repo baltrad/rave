@@ -1,0 +1,59 @@
+/* --------------------------------------------------------------------
+Copyright (C) 2010 Royal Netherlands Meteorological Institute, KNMI and
+                   Swedish Meteorological and Hydrological Institute, SMHI,
+
+This is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This software is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with HLHDF.  If not, see <http://www.gnu.org/licenses/>.
+------------------------------------------------------------------------*/
+#include "scansun.h"
+
+/**
+ * @file
+ * @author Original algorithm and code: Iwan Holleman, KNMI, and Integration: Daniel Michelson, SMHI
+ * @date 2011-01-18
+ */
+
+int main(int argc,char *argv[]) {
+	RaveList_t* list = RAVE_OBJECT_NEW(&RaveList_TYPE);
+	RVALS* ret = NULL;
+
+	if (argc<2) {
+	   printf("Usage: %s <ODIM_H5-volume>\n",argv[0]);
+	   RAVE_OBJECT_RELEASE(list);
+	   exit(1);
+	}
+	if (!scansun(argv[1], list)) {
+		printf("Could not process %s, exiting ...\n", argv[1]);
+		RAVE_OBJECT_RELEASE(list);
+		exit(1);
+	}
+
+	if (RaveList_size(list) > 0) {
+		printf("#Date    Time   Elevatn Azimuth ElevSun AzimSun dBmMHzSun dBmStdd RelevSun\n");
+		while ((ret = RaveList_removeLast(list)) != NULL) {
+			printf("%08ld %06ld %7.2f %7.2f %7.2f %7.2f %9.2f %7.4f  %7.2f\n", ret->date,
+																		       ret->time,
+																		       ret->Elev,
+																		       ret->Azimuth,
+																		       ret->ElevSun,
+																		       ret->AzimSun,
+																		       ret->dBmSun,
+																		       ret->dBmStdd,
+																		       ret->RelevSun);
+			RAVE_FREE(ret);
+		}
+	}
+	RAVE_OBJECT_RELEASE(list);
+
+	exit(0);
+}

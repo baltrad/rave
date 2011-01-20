@@ -122,13 +122,14 @@ def MakeCartesianArea(proj, rad):
     a = area.AREA()
     a.name = rad.place + " specific projection"
 
+    xsizes, max_ranges = deepcopy(rad.xsize), deepcopy(proj.max_range)
+
     if type(rad.xsize) is ListType:
         # xsizes must be in the same order as max_ranges: must correspond
         for i in range(len(rad.xsize)):
-            tmpr, tmpp = deepcopy(rad), deepcopy(proj)
-            tmpr.xsize = rad.xsize[i]
-            tmpp.max_range = proj.max_range[i]
-            MakeCartesianArea(tmpp, tmpr)
+            rad.xsize, proj.max_range = xsizes[i], max_ranges[i]
+            MakeCartesianArea(proj, rad)
+        rad.xsize, proj.max_range = xsizes, max_ranges
     else:
         a.xsize = a.ysize = proj.size
         a.xscale = a.yscale = proj.max_range*1000*2 / proj.size

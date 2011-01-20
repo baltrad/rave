@@ -426,6 +426,19 @@ if expatsuppressed == "no":
       libraries=LIBRARIES
     )
   )
+
+INCLUDE_DIRS.append('./librave/scansun')
+LIBRARY_DIRS.append('./librave/scansun')
+LIBRARIES.append('ravescansun')
+
+MODULES.append(
+    Extension(
+        "_scansun", ["modules/pyscansun.c"],
+        include_dirs=INCLUDE_DIRS,
+        library_dirs=LIBRARY_DIRS,
+        libraries=LIBRARIES
+        )
+    )
   
 # build!
 
