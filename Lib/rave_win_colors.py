@@ -26,7 +26,7 @@ ZERO = numpy.zeros(256).astype('B')
 HALF = (numpy.zeros(256)+128).astype('B')
 MAX = (numpy.zeros(256)+255).astype('B')
 ASC = numpy.arange(256).astype('B')  # ascending levels
-DESC = numpy.arange(255,-1,-1).astype('B')  # decending levels
+DESC = numpy.arange(255,-1,-1).astype('B')  # descending levels
 BLACK      = [(  0,  0,  0)]
 DARKBLUE   = [(  0,  0,128)]
 BLUE       = [(  0,  0,255)]
@@ -53,6 +53,7 @@ GREY9      = [(189,189,189)]
 GREY10     = [(210,210,210)]
 GREY11     = [(231,231,231)]
 GREY12     = [(252,252,252)]
+
 
 def get_255_colors(rimg):
     retdata=numpy.array(rimg.data)

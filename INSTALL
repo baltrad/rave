@@ -5,7 +5,7 @@ Radar Analysis and Visualization Environment
 Anders Henja and Daniel Michelson
 Swedish Meteorological and Hydrological Institute
 
-July 2010
+December 2010
 
 Before installing RAVE, a number of modules/software packages have to be
 installed.
@@ -18,9 +18,9 @@ installed.
 - HLHDF/PyHL 0.7+
 - PycURL 7.19+ (and underlying cURL)
 
-We have also got optional support for a c-based area and
-projection registries. If this is wanted, you will need
-to have.
+We have also got optional support for C-based handling 
+of area and projection registries. If this is wanted, you 
+will need to have.
 - expat 2.0.1
 
 The README file contains more details about these packages.

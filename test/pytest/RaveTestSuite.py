@@ -40,6 +40,7 @@ from PyAreaTest import *
 from PyRadarDefinitionTest import *
 from PyProjectionRegistryTest import *
 from PyAreaRegistryTest import *
+from RaveScansun import *
 
 # Some tests for verifying that we are producing products
 from MeanTest import *

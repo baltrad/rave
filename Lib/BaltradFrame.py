@@ -106,4 +106,6 @@ def inject(filename, channel='bogus_channel', url=DEX_SPOE, sender='smhi'):
 
 if __name__=="__main__":
   import sys
-  inject(sys.argv[1])
+#  inject(sys.argv[1])
+  inject(sys.argv[1], channel=sys.argv[2],
+         url=sys.argv[3], sender=sys.argv[4])
