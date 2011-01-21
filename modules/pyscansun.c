@@ -22,6 +22,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Daniel Michelson (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2011-01-19
  */
+#include <Python.h>
 #include "scansun.h"
 
 static PyObject *ErrorObject;
@@ -86,17 +87,19 @@ static PyObject* _refraction_func(PyObject* self, PyObject* args)
  */
 static PyObject* _scansun_func(PyObject* self, PyObject* args)
 {
+  char* source=NULL;
 	RaveList_t* list = RAVE_OBJECT_NEW(&RaveList_TYPE);
 	RVALS* ret = NULL;
 	const char* filename;
 	PyObject* rlist;
+	PyObject* reto;
 
 	if (!PyArg_ParseTuple(args, "s", &filename)) {
 		RAVE_OBJECT_RELEASE(list);
 		return NULL;
 	}
 
-	if (!scansun(filename, list)) {
+	if (!scansun(filename, list, &source)) {
 		RAVE_OBJECT_RELEASE(list);
 		return NULL;
 	}
@@ -107,19 +110,21 @@ static PyObject* _scansun_func(PyObject* self, PyObject* args)
 	rlist = PyList_New(0);
 	while ((ret = RaveList_removeLast(list)) != NULL) {
 		PyObject* rtuple = Py_BuildValue("llddddddd", ret->date,
-													  ret->time,
-													  ret->Elev,
-													  ret->Azimuth,
-													  ret->ElevSun,
-													  ret->AzimSun,
-													  ret->dBmSun,
-													  ret->dBmStdd,
-													  ret->RelevSun);
+		                                              ret->time,
+		                                              ret->Elev,
+		                                              ret->Azimuth,
+		                                              ret->ElevSun,
+		                                              ret->AzimSun,
+		                                              ret->dBmSun,
+		                                              ret->dBmStdd,
+		                                              ret->RelevSun);
 		PyList_Append(rlist, rtuple);
 		RAVE_FREE(ret);
 	}
 	RAVE_OBJECT_RELEASE(list);
-	return Py_BuildValue("O", rlist);
+	reto = Py_BuildValue("sO", source, rlist);
+	RAVE_FREE(source);
+	return reto;
 }
 
 static struct PyMethodDef _scansun_functions[] =

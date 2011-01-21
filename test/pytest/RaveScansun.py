@@ -32,19 +32,20 @@ class RaveScansun(unittest.TestCase):
     def testScansun(self):
         # The following validation values are:
         # Date    Time   Elevatn Azimuth ElevSun AzimSun dBmMHzSun dBmStdd RelevSun
-        valid = [(20110111, 75022, 0.30000001192092901, 126.5, 
+        valid = ('RAD:NL51;PLC:nldhl', [(20110111, 75022, 0.30000001192092901, 126.5, 
                   -0.77585925328048244, 126.84009776579752, -113.30817548053685, 
-                  0.67217618344963492, -0.1874983807707411)]
+                  0.67217618344963492, -0.1874983807707411)])
         result = _scansun.scansun(self.KNMI_TESTFILE)
         self.assertEquals(valid[0][0], result[0][0])
-        self.assertEquals(valid[0][1], result[0][1])
-        self.assertAlmostEquals(valid[0][2], result[0][2], 5)
-        self.assertAlmostEquals(valid[0][3], result[0][3], 5)
-        self.assertAlmostEquals(valid[0][4], result[0][4], 5)
-        self.assertAlmostEquals(valid[0][5], result[0][5], 5)
-        self.assertAlmostEquals(valid[0][6], result[0][6], 5)
-        self.assertAlmostEquals(valid[0][7], result[0][7], 5)
-        self.assertAlmostEquals(valid[0][8], result[0][8], 5)
+        self.assertEquals(valid[1][0][0], result[1][0][0])
+        self.assertEquals(valid[1][0][1], result[1][0][1])
+        self.assertAlmostEquals(valid[1][0][2], result[1][0][2], 5)
+        self.assertAlmostEquals(valid[1][0][3], result[1][0][3], 5)
+        self.assertAlmostEquals(valid[1][0][4], result[1][0][4], 5)
+        self.assertAlmostEquals(valid[1][0][5], result[1][0][5], 5)
+        self.assertAlmostEquals(valid[1][0][6], result[1][0][6], 5)
+        self.assertAlmostEquals(valid[1][0][7], result[1][0][7], 5)
+        self.assertAlmostEquals(valid[1][0][8], result[1][0][8], 5)
 	#self.assertEquals(valid, _scansun.scansun(self.KNMI_TESTFILE))
 
 

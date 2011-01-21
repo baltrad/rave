@@ -16,7 +16,7 @@ You should have received a copy of the GNU Lesser General Public License
 along with HLHDF.  If not, see <http://www.gnu.org/licenses/>.
 ------------------------------------------------------------------------*/
 
-/**
+/** Header file for KNMI's sun scanning functionality
  * @file
  * @author Original algorithm and code: Iwan Holleman, KNMI, and Integration: Daniel Michelson, SMHI
  * @date 2010-10-29
@@ -27,8 +27,6 @@ along with HLHDF.  If not, see <http://www.gnu.org/licenses/>.
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
-
-#include <Python.h>
 
 #include "rave_io.h"
 #include "polarscan.h"
@@ -205,8 +203,9 @@ long julday2date(long julian);
 /**
  * @param[in] filename - string containing the name (and path if somewhere else) of the file to process
  * @param[out] list - RaveList_t object for holding one or more sets of return values
+ * @param[out] source - string containing the value of /what/source
  * @returns 1 upon success, otherwise 0
  */
-int scansun(const char* filename, RaveList_t* list);
+int scansun(const char* filename, RaveList_t* list, char** source);
 
 #endif

@@ -231,7 +231,7 @@ return dd+100*(mm+100*yyyy);
 #undef IGREG 
 
 
-int scansun(const char* filename, RaveList_t* list) {
+int scansun(const char* filename, RaveList_t* list, char** source) {
 	int Nscan, id, ia, ir, irn, n;
 	long date,time,addtime;
 	double lonlat[2],range, Azimuth, dBmSun, dBmStdd;
@@ -255,11 +255,12 @@ int scansun(const char* filename, RaveList_t* list) {
 	}
 
 	/* Reading number of scans and radar location from file.
-	 * Note that RAVE reads coordinated directly into radians. */
+	 * Note that RAVE reads coordinates directly into radians. */
 
 	Nscan = PolarVolume_getNumberOfScans(volume);
 	lonlat[0] = PolarVolume_getLongitude(volume)*RAD2DEG;
 	lonlat[1] = PolarVolume_getLatitude(volume)*RAD2DEG;
+	if (source != NULL) *source = RAVE_STRDUP(PolarVolume_getSource(volume));
 
 	/* The following attribute doesn't (yet) exist in ODIM in January 2011.
 	 * Default value is for the Den Helder radar run by KNMI from its most
