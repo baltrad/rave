@@ -234,7 +234,7 @@ return dd+100*(mm+100*yyyy);
 int scansun(const char* filename, RaveList_t* list, char** source) {
 	int Nscan, id, ia, ir, irn, n;
 	long date,time,addtime;
-	double lonlat[2],range, Azimuth, dBmSun, dBmStdd;
+	double lonlat[2], range, Azimuth, dBmSun, dBmStdd;
 	double dBm;
 	double tmpd;
 	SCANMETA meta;

@@ -87,7 +87,7 @@ static PyObject* _refraction_func(PyObject* self, PyObject* args)
  */
 static PyObject* _scansun_func(PyObject* self, PyObject* args)
 {
-  char* source=NULL;
+  char* source = NULL;
 	RaveList_t* list = RAVE_OBJECT_NEW(&RaveList_TYPE);
 	RVALS* ret = NULL;
 	const char* filename;
@@ -103,27 +103,28 @@ static PyObject* _scansun_func(PyObject* self, PyObject* args)
 		RAVE_OBJECT_RELEASE(list);
 		return NULL;
 	}
-	if (RaveList_size(list) == 0) {
-		RAVE_OBJECT_RELEASE(list);
-		return NULL;
-	}
+
 	rlist = PyList_New(0);
-	while ((ret = RaveList_removeLast(list)) != NULL) {
-		PyObject* rtuple = Py_BuildValue("llddddddd", ret->date,
-		                                              ret->time,
-		                                              ret->Elev,
-		                                              ret->Azimuth,
-		                                              ret->ElevSun,
-		                                              ret->AzimSun,
-		                                              ret->dBmSun,
-		                                              ret->dBmStdd,
-		                                              ret->RelevSun);
-		PyList_Append(rlist, rtuple);
-		RAVE_FREE(ret);
-	}
+  if (RaveList_size(list) > 0) {
+    while ((ret = RaveList_removeLast(list)) != NULL) {
+      PyObject* rtuple = Py_BuildValue("llddddddd", ret->date,
+		                                                ret->time,
+		                                                ret->Elev,
+		                                                ret->Azimuth,
+		                                                ret->ElevSun,
+		                                                ret->AzimSun,
+		                                                ret->dBmSun,
+		                                                ret->dBmStdd,
+		                                                ret->RelevSun);
+      PyList_Append(rlist, rtuple);
+      Py_DECREF(rtuple);
+      free(ret);
+    }
+  }
 	RAVE_OBJECT_RELEASE(list);
 	reto = Py_BuildValue("sO", source, rlist);
-	RAVE_FREE(source);
+	Py_DECREF(rlist);
+	free(source);
 	return reto;
 }
 

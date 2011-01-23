@@ -24,7 +24,7 @@ along with HLHDF.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 int main(int argc,char *argv[]) {
-  char* source=NULL;
+  char* source = NULL;
 	RaveList_t* list = RAVE_OBJECT_NEW(&RaveList_TYPE);
 	RVALS* ret = NULL;
 
@@ -56,7 +56,7 @@ int main(int argc,char *argv[]) {
 		}
 	}
 	RAVE_OBJECT_RELEASE(list);
-	RAVE_FREE(source);
+	free(source);
 
 	exit(0);
 }
