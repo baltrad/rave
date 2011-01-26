@@ -56,7 +56,7 @@ int main(int argc,char *argv[]) {
 		}
 	}
 	RAVE_OBJECT_RELEASE(list);
-	free(source);
+	RAVE_FREE(source);
 
 	exit(0);
 }

@@ -118,13 +118,13 @@ static PyObject* _scansun_func(PyObject* self, PyObject* args)
 		                                                ret->RelevSun);
       PyList_Append(rlist, rtuple);
       Py_DECREF(rtuple);
-      free(ret);
+      RAVE_FREE(ret);
     }
   }
 	RAVE_OBJECT_RELEASE(list);
 	reto = Py_BuildValue("sO", source, rlist);
 	Py_DECREF(rlist);
-	free(source);
+	RAVE_FREE(source);
 	return reto;
 }
 
