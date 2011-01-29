@@ -27,6 +27,6 @@
 </projection>
 <projection id='gmaps'>
 <description>Google Maps</description>
-<projdef>+proj=merc +lat_ts=0 +lon_0=0 +k=1.0 +a=6378137.0 +b=6378137.0 +no_defs</projdef>
+<projdef>+proj=merc +lat_ts=0 +lon_0=0 +k=1.0 +R=6378137.0 +no_defs</projdef>
 </projection>
 </projections>

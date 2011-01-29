@@ -15,6 +15,12 @@
 <arg id="WMO" type="int">00000</arg>
 </radardef>
 </common>
+<cartesian>
+<arg id="proj">gnom</arg>
+<arg id="R" type="float">6371000.0</arg>
+<arg id="max_range" type="float">240.0</arg>
+<arg id="size" type="int">480</arg>
+</cartesian>
 <radar id="sin">
 <description>Sindal, EEC</description>
 <radardef>
