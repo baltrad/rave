@@ -21,6 +21,16 @@
     <arg id="extent" type="sequence">971337.728807, 7196461.17902, 3015337.72881, 11028461.179</arg>
   </areadef>
 </area>
+<area id="bltgmaps_4000">
+  <description>BALTRAD, Google Maps, 4 km</description>
+  <areadef>
+    <arg id="pcs">gmaps</arg>
+    <arg id="xsize" type="int">770</arg>
+    <arg id="ysize" type="int">1240</arg>
+    <arg id="scale" type="float">4000</arg>
+    <arg id="extent" type="sequence">525528.78317, 6068461.179, 3605528.78317, 11028461.179</arg>
+  </areadef>
+</area>
 <area id="kir_gmaps">
   <description>Based on kir_240</description>
   <areadef>

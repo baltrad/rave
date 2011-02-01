@@ -17,8 +17,8 @@
 <cartesian>
 <arg id="proj">aeqd</arg>
 <arg id="R" type="float">6371000.0</arg>
-<arg id="max_range" type="float">200.0</arg>
-<arg id="size" type="int">400</arg>
+<arg id="max_range" type="float">250.0</arg>
+<arg id="size" type="int">500</arg>
 </cartesian>
 <radar id="brz">
 <description>Brzuchania, Gematronik</description>

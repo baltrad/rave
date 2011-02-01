@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<generate-registry><debug function="debugme" help="Reads the input file (first input file in the files list) and injects it into a baltrad-node. Just for debugging." module="rave_pgf_debug"><arguments /></debug>
-<se.smhi.rave.generatecomposite function="generate" help="Generate composite plugin" module="rave_pgf_composite_plugin"><arguments floats="height" strings="area,quantity,method,date,time" /></se.smhi.rave.generatecomposite>
+<generate-registry>
+<debug function="debugme" help="Reads the input file (first input file in the files list) and injects it into a baltrad-node. Just for debugging." module="rave_pgf_debug"><arguments /></debug>
 <eu.baltrad.beast.generatecomposite function="generate" help="Generate composite plugin" module="rave_pgf_composite_plugin"><arguments floats="height" strings="area,quantity,method,date,time" /></eu.baltrad.beast.generatecomposite>
-<eu.baltrad.rave.generatescansun function="generate" help="Scans polar volumes for sun hits" module="rave_pgf_scansun_plugin"><arguments /></eu.baltrad.rave.generatescansun></generate-registry>
+<eu.baltrad.beast.generatescansun function="generate" help="Scans polar volumes for sun hits" module="rave_pgf_scansun_plugin"><arguments /></eu.baltrad.beast.generatescansun>
+<eu.baltrad.beast.generatevolume function="generate" help="Polar volume generation from individual scans" module="rave_pgf_volume_plugin"><arguments strings="source,date,time" /></eu.baltrad.beast.generatevolume>
+<se.smhi.rave.creategmapimage function="generate" help="Google Map Plugin" module="googlemap_pgf_plugin"><arguments strings="outfile" /></se.smhi.rave.creategmapimage>
+</generate-registry>

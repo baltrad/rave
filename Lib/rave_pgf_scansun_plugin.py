@@ -19,8 +19,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 '''
 ## Plugin for scanning a polar volume for sun hits, using the RAVE product 
 ## generation framework.
-## Register in the RAVE PGF with: % pgf_registry -H http://<host>:<port>/RAVE
-## --name=eu.baltrad.rave.generatescansun -m rave_pgf_scansun_plugin -f generate
+## Register in the RAVE PGF with: % pgf_registry -a -H http://<host>:<port>/RAVE
+## --name=eu.baltrad.beast.generatescansun -m rave_pgf_scansun_plugin -f generate
 ## -d 'Scans polar volumes for sun hits'
 
 ## @file

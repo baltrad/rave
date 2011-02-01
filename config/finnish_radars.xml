@@ -14,6 +14,12 @@
 <arg id="lowprf" type="int">450</arg>
 </radardef>
 </common>
+<cartesian>
+<arg id="proj">gnom</arg>
+<arg id="R" type="float">6371000.0</arg>
+<arg id="max_range" type="float">250.0</arg>
+<arg id="size" type="int">500</arg>
+</cartesian>
 <radar id="kor">
 <description>Korpo, Gematronik</description>
 <radardef>

@@ -19,8 +19,9 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 '''
 ## Plugin for generating a volume that is initiated from the beast
 ## framework.
-## Register in pgf with
+## Register in the RAVE PGF with: % pgf_registry -a -H http://<host>:<port>/RAVE
 ## --name=eu.baltrad.beast.generatevolume --strings=source,date,time -m rave_pgf_volume_plugin -f generate
+## -d 'Polar volume generation from individual scans'
 ##
 
 ## @file
