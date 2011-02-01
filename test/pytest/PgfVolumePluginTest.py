@@ -28,6 +28,7 @@ import unittest
 import string
 import math
 import _raveio
+import os
 import rave_pgf_volume_plugin
 
 class PgfVolumePluginTest(unittest.TestCase):
@@ -38,11 +39,15 @@ class PgfVolumePluginTest(unittest.TestCase):
             "fixtures/Z_SCAN_C_ESWI_20101023180200_selul_000004.h5",
             "fixtures/Z_SCAN_C_ESWI_20101023180200_selul_000005.h5"]
   
+  TEMPORARY_FILE="ravemodule_pgfvolumetest.h5"
+  
   def setUp(self):
-    pass
-
+    if os.path.isfile(self.TEMPORARY_FILE):
+      os.unlink(self.TEMPORARY_FILE)
+      
   def tearDown(self):
-    pass
+    if os.path.isfile(self.TEMPORARY_FILE):
+      os.unlink(self.TEMPORARY_FILE)
 
   def testGenerateVolume(self):
     args = {"source":"selul","date":"20101023","time":"180000"}
@@ -61,6 +66,17 @@ class PgfVolumePluginTest(unittest.TestCase):
     self.assertAlmostEquals(40.0, volume.getScan(5).elangle * 180.0/math.pi, 4)
     self.assertEquals("WMO:02092,RAD:SE41,PLC:Luleå,CMT:selul", volume.source)
 
+  def testGenerateVolumeAndSave(self):
+    args = {"source":"selul","date":"20101023","time":"180000"}
+    volume = rave_pgf_volume_plugin.generateVolume(self.FIXTURES, args)
+    
+    ios = _raveio.new()
+    ios.object = volume
+    ios.filename = self.TEMPORARY_FILE
+    ios.save()
+
+    ios = None
+    
   def test_fix_source(self):
     s1 = "WMO:02451,RAD:SE46,PLC:Arlanda,CMT:searl"
     s2 = "WMO:02451,RAD:SE46,CMT:searl,PLC:Arlanda"

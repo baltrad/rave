@@ -889,8 +889,10 @@ static void PolarOdimIOInternal_removeVolumeAttributesFromList(RaveObjectList_t*
             RaveObjectList_release(attributes, index);
           }
         }
+        RAVE_OBJECT_RELEASE(pvolattr);
       }
     }
+    RAVE_OBJECT_RELEASE(attr);
   }
 }
 
