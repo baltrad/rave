@@ -275,12 +275,12 @@ class PyRaveIOTest(unittest.TestCase):
 
     self.assertAlmostEquals(9.1714, nodelist.getNode("/where/LL_lon").data(), 4)
     self.assertAlmostEquals(54.1539, nodelist.getNode("/where/LL_lat").data(), 4)
-    self.assertAlmostEquals(8.7327, nodelist.getNode("/where/UL_lon").data(), 4)
-    self.assertAlmostEquals(58.4408, nodelist.getNode("/where/UL_lat").data(), 4)
-    self.assertAlmostEquals(16.9418, nodelist.getNode("/where/UR_lon").data(), 4)
-    self.assertAlmostEquals(58.4419, nodelist.getNode("/where/UR_lat").data(), 4)
-    self.assertAlmostEquals(16.5068, nodelist.getNode("/where/LR_lon").data(), 4)
-    self.assertAlmostEquals(54.1549, nodelist.getNode("/where/LR_lat").data(), 4)
+    self.assertAlmostEquals(8.73067, nodelist.getNode("/where/UL_lon").data(), 4)
+    self.assertAlmostEquals(58.45867, nodelist.getNode("/where/UL_lat").data(), 4)
+    self.assertAlmostEquals(16.9781, nodelist.getNode("/where/UR_lon").data(), 4)
+    self.assertAlmostEquals(58.45867, nodelist.getNode("/where/UR_lat").data(), 4)
+    self.assertAlmostEquals(16.5374, nodelist.getNode("/where/LR_lon").data(), 4)
+    self.assertAlmostEquals(54.1539, nodelist.getNode("/where/LR_lat").data(), 4)
 
     #dataset1
     self.assertEquals("DBZH", nodelist.getNode("/dataset1/what/quantity").data())
@@ -348,12 +348,12 @@ class PyRaveIOTest(unittest.TestCase):
 
     self.assertAlmostEquals(9.1714, nodelist.getNode("/where/LL_lon").data(), 4)
     self.assertAlmostEquals(54.1539, nodelist.getNode("/where/LL_lat").data(), 4)
-    self.assertAlmostEquals(8.7327, nodelist.getNode("/where/UL_lon").data(), 4)
-    self.assertAlmostEquals(58.4408, nodelist.getNode("/where/UL_lat").data(), 4)
-    self.assertAlmostEquals(16.9418, nodelist.getNode("/where/UR_lon").data(), 4)
-    self.assertAlmostEquals(58.4419, nodelist.getNode("/where/UR_lat").data(), 4)
-    self.assertAlmostEquals(16.5068, nodelist.getNode("/where/LR_lon").data(), 4)
-    self.assertAlmostEquals(54.1549, nodelist.getNode("/where/LR_lat").data(), 4)
+    self.assertAlmostEquals(8.73067, nodelist.getNode("/where/UL_lon").data(), 4)
+    self.assertAlmostEquals(58.45867, nodelist.getNode("/where/UL_lat").data(), 4)
+    self.assertAlmostEquals(16.9781, nodelist.getNode("/where/UR_lon").data(), 4)
+    self.assertAlmostEquals(58.45867, nodelist.getNode("/where/UR_lat").data(), 4)
+    self.assertAlmostEquals(16.5374, nodelist.getNode("/where/LR_lon").data(), 4)
+    self.assertAlmostEquals(54.1539, nodelist.getNode("/where/LR_lat").data(), 4)
 
     #dataset1
     self.assertEquals("DBZH", nodelist.getNode("/dataset1/what/quantity").data())
@@ -436,20 +436,14 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertAlmostEquals(2000.0, nodelist.getNode("/where/xscale").data(), 4)
     self.assertAlmostEquals(2000.0, nodelist.getNode("/where/yscale").data(), 4)
 
-    #LL = (9.171399, 54.153937)
-    #UR = (16.941843,58.441852)
-    #UL = (8.732727,58.440757)
-    #LR = (16.506793,54.154869)
-    #print "%f,%f"%(self.rad2deg(projection.inv((238000.0, -240000.0))))
-    
     self.assertAlmostEquals(9.1714, nodelist.getNode("/where/LL_lon").data(), 4)
     self.assertAlmostEquals(54.1539, nodelist.getNode("/where/LL_lat").data(), 4)
-    self.assertAlmostEquals(8.7327, nodelist.getNode("/where/UL_lon").data(), 4)
-    self.assertAlmostEquals(58.4408, nodelist.getNode("/where/UL_lat").data(), 4)
-    self.assertAlmostEquals(16.9418, nodelist.getNode("/where/UR_lon").data(), 4)
-    self.assertAlmostEquals(58.4419, nodelist.getNode("/where/UR_lat").data(), 4)
-    self.assertAlmostEquals(16.5068, nodelist.getNode("/where/LR_lon").data(), 4)
-    self.assertAlmostEquals(54.1549, nodelist.getNode("/where/LR_lat").data(), 4)
+    self.assertAlmostEquals(8.73067, nodelist.getNode("/where/UL_lon").data(), 4)
+    self.assertAlmostEquals(58.45867, nodelist.getNode("/where/UL_lat").data(), 4)
+    self.assertAlmostEquals(16.9781, nodelist.getNode("/where/UR_lon").data(), 4)
+    self.assertAlmostEquals(58.45867, nodelist.getNode("/where/UR_lat").data(), 4)
+    self.assertAlmostEquals(16.5374, nodelist.getNode("/where/LR_lon").data(), 4)
+    self.assertAlmostEquals(54.1539, nodelist.getNode("/where/LR_lat").data(), 4)
 
     #dataset1
     self.assertEquals("DBZH", nodelist.getNode("/dataset1/what/quantity").data())
@@ -496,8 +490,8 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEquals("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", cvol.projection.definition)
     self.assertAlmostEquals(-240000.0, cvol.areaextent[0], 4)
     self.assertAlmostEquals(-240000.0, cvol.areaextent[1], 4)
-    self.assertAlmostEquals(238000.0, cvol.areaextent[2], 4)
-    self.assertAlmostEquals(238000.0, cvol.areaextent[3], 4)
+    self.assertAlmostEquals(236000.0, cvol.areaextent[2], 4)  # Since AE should be projected(UR) - xscale
+    self.assertAlmostEquals(236000.0, cvol.areaextent[3], 4)  # Since AE should be projected(UR) - yscale
     self.assertAlmostEquals(2000.0, cvol.xscale, 4)
     self.assertAlmostEquals(2000.0, cvol.yscale, 4)
 
