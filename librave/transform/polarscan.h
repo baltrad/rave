@@ -233,6 +233,13 @@ double PolarScan_getHeight(PolarScan_t* scan);
 double PolarScan_getDistance(PolarScan_t* scan, double lon, double lat);
 
 /**
+ * Returns the maximum distance (at ground level) that this scan will cover.
+ * @param[in] scan
+ * @return the maximum distance in meters
+ */
+double PolarScan_getMaxDistance(PolarScan_t* scan);
+
+/**
  * Sets the elevation angle for the scan
  * @param[in] scan - self
  * @param[in] elangle - the elevation angle

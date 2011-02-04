@@ -111,6 +111,65 @@ static void Composite_destructor(RaveCoreObject* obj)
   RAVE_OBJECT_RELEASE(this->list);
   RAVE_OBJECT_RELEASE(this->datetime);
 }
+
+static void CompositeInternal_nearestValue(Composite_t* composite, RaveCoreObject* object, double plon, double plat, RaveValueType* type, double* value)
+{
+  RAVE_ASSERT((type != NULL), "type == NULL");
+  RAVE_ASSERT((value != NULL), "value == NULL");
+
+  *type = RaveValueType_NODATA;
+  *value = 0.0;
+
+  if (object != NULL) {
+    if (RAVE_OBJECT_CHECK_TYPE(object, &PolarScan_TYPE)) {
+      // We could support CAPPI on scans as well but that is something
+      // for the future.
+      //
+      if (composite->ptype == Rave_ProductType_PPI ||
+          composite->ptype == Rave_ProductType_PCAPPI) {
+        *type = PolarScan_getNearestConvertedParameterValue((PolarScan_t*)object,
+                                                            Composite_getQuantity(composite),
+                                                            plon,
+                                                            plat,
+                                                            value);
+      } else {
+        *type = RaveValueType_NODATA;
+      }
+    } else  if (RAVE_OBJECT_CHECK_TYPE(object, &PolarVolume_TYPE)){
+      if (composite->ptype == Rave_ProductType_PCAPPI ||
+          composite->ptype == Rave_ProductType_CAPPI) {
+        int insidee = (composite->ptype == Rave_ProductType_PCAPPI)?0:1;
+        *type = PolarVolume_getNearestConvertedParameterValue((PolarVolume_t*)object,
+                                                              Composite_getQuantity(composite),
+                                                              plon,
+                                                              plat,
+                                                              Composite_getHeight(composite),
+                                                              insidee,
+                                                              value);
+      } else if (composite->ptype == Rave_ProductType_PPI) {
+        PolarScan_t* scan = PolarVolume_getScanClosestToElevation((PolarVolume_t*)object,
+                                                                  Composite_getElevationAngle(composite),
+                                                                  0);
+        if (scan == NULL) {
+          RAVE_ERROR1("Failed to fetch scan nearest to elevation %g",
+                      Composite_getElevationAngle(composite));
+          return;
+        }
+        *type = PolarScan_getNearestConvertedParameterValue(scan,
+                                                            Composite_getQuantity(composite),
+                                                            plon,
+                                                            plat,
+                                                            value);
+        RAVE_OBJECT_RELEASE(scan);
+      } else {
+        *type = RaveValueType_NODATA;
+      }
+    } else {
+      *type = RaveValueType_NODATA;
+    }
+  }
+}
+
 /*@} End of Private functions */
 
 /*@{ Interface functions */
@@ -244,11 +303,8 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area)
   Cartesian_t* result = NULL;
   Projection_t* projection = NULL;
   RaveAttribute_t* prodpar = NULL;
-  RaveCoreObject* pobj = NULL;
 
   int x = 0, y = 0, i = 0, xsize = 0, ysize = 0, nradars = 0;
-  double v = 0.0L;
-  RaveValueType vtype = RaveValueType_UNDEFINED;
 
   RAVE_ASSERT((composite != NULL), "composite == NULL");
   RAVE_ASSERT((area != NULL), "area == NULL");
@@ -298,8 +354,10 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area)
     double herey = Cartesian_getLocationY(result, y);
     for (x = 0; x < xsize; x++) {
       double herex = Cartesian_getLocationX(result, x);
-      double olon = 0.0, olat = 0.0, plon = 0.0, plat = 0.0;
+      double olon = 0.0, olat = 0.0;
       double mindist = 1e10;
+      double v = 0.0L;
+      RaveValueType vtype = RaveValueType_NODATA;
 
       for (i = 0, mindist=1e10; i < nradars; i++) {
         RaveCoreObject* obj = NULL;
@@ -320,81 +378,46 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area)
             RAVE_WARNING0("Failed to transform from composite into polar coordinates");
           } else {
             double dist = 0.0;
+            double maxdist = 0.0;
             if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
               dist = PolarVolume_getDistance((PolarVolume_t*)obj, olon, olat);
+              maxdist = PolarVolume_getMaxDistance((PolarVolume_t*)obj);
             } else if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarScan_TYPE)) {
               dist = PolarScan_getDistance((PolarScan_t*)obj, olon, olat);
+              maxdist = PolarScan_getMaxDistance((PolarScan_t*)obj);
             }
-            if (dist < mindist) {
-              mindist = dist;
-              RAVE_OBJECT_RELEASE(pobj);
-              pobj = RAVE_OBJECT_COPY(obj);
-              plon = olon;
-              plat = olat;
+            if (dist <= maxdist) {
+              RaveValueType otype = RaveValueType_NODATA;
+              double ovalue = 0.0;
+              CompositeInternal_nearestValue(composite, obj, olon, olat, &otype, &ovalue);
+
+              if (otype == RaveValueType_DATA) {
+                if (vtype != RaveValueType_DATA || dist < mindist) {
+                  vtype = otype;
+                  v = ovalue;
+                  mindist = dist;
+                }
+              } else if (otype == RaveValueType_UNDETECT && vtype != RaveValueType_DATA) {
+                // I'm a bit uncertain about this, is UNDETECT more important than NODATA?
+                if (dist < mindist) {
+                  vtype = otype;
+                  v = ovalue;
+                  mindist = dist;
+                }
+              }
             }
           }
         }
         RAVE_OBJECT_RELEASE(obj);
         RAVE_OBJECT_RELEASE(objproj);
       }
-
-      if (pobj != NULL) {
-        if (RAVE_OBJECT_CHECK_TYPE(pobj, &PolarScan_TYPE)) {
-          // We could support CAPPI on scans as well but that is something
-          // for the future.
-          //
-          if (composite->ptype == Rave_ProductType_PPI ||
-              composite->ptype == Rave_ProductType_PCAPPI) {
-            vtype = PolarScan_getNearestConvertedParameterValue((PolarScan_t*)pobj,
-                                                                Composite_getQuantity(composite),
-                                                                plon,
-                                                                plat,
-                                                                &v);
-          } else {
-            vtype = RaveValueType_NODATA;
-          }
-        } else  if (RAVE_OBJECT_CHECK_TYPE(pobj, &PolarVolume_TYPE)){
-          if (composite->ptype == Rave_ProductType_PCAPPI ||
-              composite->ptype == Rave_ProductType_CAPPI) {
-            int insidee = (composite->ptype == Rave_ProductType_PCAPPI)?0:1;
-            vtype = PolarVolume_getNearestConvertedParameterValue((PolarVolume_t*)pobj,
-                                                                  Composite_getQuantity(composite),
-                                                                  plon,
-                                                                  plat,
-                                                                  Composite_getHeight(composite),
-                                                                  insidee,
-                                                                  &v);
-          } else if (composite->ptype == Rave_ProductType_PPI) {
-            PolarScan_t* scan = PolarVolume_getScanClosestToElevation((PolarVolume_t*)pobj,
-                                                                      Composite_getElevationAngle(composite),
-                                                                      0);
-            if (scan == NULL) {
-              RAVE_ERROR1("Failed to fetch scan nearest to elevation %g",
-                          Composite_getElevationAngle(composite));
-              goto fail;
-            }
-            vtype = PolarScan_getNearestConvertedParameterValue(scan,
-                                                                Composite_getQuantity(composite),
-                                                                plon,
-                                                                plat,
-                                                                &v);
-            RAVE_OBJECT_RELEASE(scan);
-          } else {
-            vtype = RaveValueType_NODATA;
-          }
-        } else {
-          vtype = RaveValueType_NODATA;
-        }
-
-        if (vtype == RaveValueType_NODATA) {
-          Cartesian_setConvertedValue(result, x, y, Cartesian_getNodata(result));
-        } else if (vtype == RaveValueType_UNDETECT) {
-          Cartesian_setConvertedValue(result, x, y, Cartesian_getUndetect(result));
-        } else {
-          Cartesian_setConvertedValue(result, x, y, v);
-        }
+      if (vtype == RaveValueType_NODATA) {
+        Cartesian_setConvertedValue(result, x, y, Cartesian_getNodata(result));
+      } else if (vtype == RaveValueType_UNDETECT) {
+        Cartesian_setConvertedValue(result, x, y, Cartesian_getUndetect(result));
+      } else {
+        Cartesian_setConvertedValue(result, x, y, v);
       }
-      RAVE_OBJECT_RELEASE(pobj);
     }
   }
 
@@ -405,7 +428,6 @@ fail:
   RAVE_OBJECT_RELEASE(projection);
   RAVE_OBJECT_RELEASE(prodpar);
   RAVE_OBJECT_RELEASE(result);
-  RAVE_OBJECT_RELEASE(pobj);
   return result;
 }
 /*@} End of Interface functions */

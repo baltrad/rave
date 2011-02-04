@@ -81,6 +81,10 @@ struct _PolarScan_t {
   RaveObjectHashTable_t* attrs; /**< attributes */
 
   RaveObjectList_t* qualityfields; /**< quality fields */
+
+  // Keeps track of maximum distance. Should be reset each time
+  // bins, scale or elangle changes.
+  double maxdistance; /** maximum distance, cached value */
 };
 
 /*@{ Private functions */
@@ -112,6 +116,7 @@ static int PolarScan_constructor(RaveCoreObject* obj)
   scan->projection = RAVE_OBJECT_NEW(&Projection_TYPE);
   scan->attrs = RAVE_OBJECT_NEW(&RaveObjectHashTable_TYPE);
   scan->qualityfields = RAVE_OBJECT_NEW(&RaveObjectList_TYPE);
+  scan->maxdistance = -1.0;
 
   if (scan->projection != NULL) {
     if(!Projection_init(scan->projection, "lonlat", "lonlat", "+proj=latlong +ellps=WGS84 +datum=WGS84")) {
@@ -156,6 +161,7 @@ static int PolarScan_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj
   this->a1gate = src->a1gate;
   this->beamwidth = src->beamwidth;
   this->bwpvol = src->bwpvol;
+  this->maxdistance = src->maxdistance;
   this->navigator = NULL;
   this->projection = NULL;
   this->paramname = NULL;
@@ -232,6 +238,7 @@ void PolarScan_setNavigator(PolarScan_t* scan, PolarNavigator_t* navigator)
   RAVE_ASSERT((navigator != NULL), "navigator was NULL");
   RAVE_OBJECT_RELEASE(scan->navigator);
   scan->navigator = RAVE_OBJECT_COPY(navigator);
+  scan->maxdistance = -1.0;
 }
 
 PolarNavigator_t* PolarScan_getNavigator(PolarScan_t* scan)
@@ -371,6 +378,7 @@ const char* PolarScan_getSource(PolarScan_t* scan)
 void PolarScan_setLongitude(PolarScan_t* scan, double lon)
 {
   RAVE_ASSERT((scan != NULL), "scan == NULL");
+  scan->maxdistance = -1.0;
   PolarNavigator_setLon0(scan->navigator, lon);
 }
 
@@ -383,6 +391,7 @@ double PolarScan_getLongitude(PolarScan_t* scan)
 void PolarScan_setLatitude(PolarScan_t* scan, double lat)
 {
   RAVE_ASSERT((scan != NULL), "scan == NULL");
+  scan->maxdistance = -1.0;
   PolarNavigator_setLat0(scan->navigator, lat);
 }
 
@@ -410,10 +419,26 @@ double PolarScan_getDistance(PolarScan_t* scan, double lon, double lat)
   return PolarNavigator_getDistance(scan->navigator, lat, lon);
 }
 
+
+double PolarScan_getMaxDistance(PolarScan_t* scan)
+{
+  double h = 0.0;
+
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+
+  if (scan->maxdistance < 0.0) {
+    scan->maxdistance = 0.0;
+    PolarNavigator_reToDh(scan->navigator, scan->nbins * scan->rscale, scan->elangle, &scan->maxdistance, &h);
+  }
+
+  return scan->maxdistance;
+}
+
 void PolarScan_setElangle(PolarScan_t* scan, double elangle)
 {
   RAVE_ASSERT((scan != NULL), "scan == NULL");
   scan->elangle = elangle;
+  scan->maxdistance = -1.0;
 }
 
 double PolarScan_getElangle(PolarScan_t* scan)
@@ -432,6 +457,7 @@ void PolarScan_setRscale(PolarScan_t* scan, double rscale)
 {
   RAVE_ASSERT((scan != NULL), "scan == NULL");
   scan->rscale = rscale;
+  scan->maxdistance = -1.0;
 }
 
 double PolarScan_getRscale(PolarScan_t* scan)
@@ -534,6 +560,7 @@ int PolarScan_addParameter(PolarScan_t* scan, PolarScanParam_t* parameter)
   if (RaveObjectHashTable_size(scan->parameters)<=0) {
     scan->nrays = PolarScanParam_getNrays(parameter);
     scan->nbins = PolarScanParam_getNbins(parameter);
+    scan->maxdistance = -1.0;
   } else {
     if (scan->nrays != PolarScanParam_getNrays(parameter) ||
         scan->nbins != PolarScanParam_getNbins(parameter)) {

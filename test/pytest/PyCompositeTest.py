@@ -245,3 +245,37 @@ class PyCompositeTest(unittest.TestCase):
     ios.object = result
     ios.filename = "swecomposite_ppi_fromscan.h5"
     ios.save()    
+
+  def test_overlapping_objects(self):
+    # tests ticket 355, composite selection criterion: nearest
+    generator = _pycomposite.new()
+    
+    a = _area.new()
+    a.id = "eua_gmaps"
+    a.xsize = 800
+    a.ysize = 1090
+    a.xscale = 6223.0
+    a.yscale = 6223.0
+    #               llX           llY            urX        urY
+    a.extent = (-3117.83526,-6780019.83039,4975312.43200,3215.41216)
+    a.projection = _projection.new("x", "y", "+proj=merc +lat_ts=0 +lon_0=0 +k=1.0 +x_0=1335833 +y_0=-11000715 +a=6378137.0 +b=6378137.0 +no_defs +datum=WGS84")
+    
+    rio = _raveio.open("fixtures/pvol_seang_20090501T120000Z.h5")
+    scan = rio.object.getScanClosestToElevation(40.0, 0) # Take highest elevation from angelholm
+    generator.add(scan)
+    
+    rio = _raveio.open("fixtures/pvol_sekkr_20090501T120000Z.h5")
+    scan = rio.object.getScanClosestToElevation(0.0, 0) # Take lowest elevation from karlskrona
+    generator.add(scan)
+
+    generator.quantity = "DBZH"
+    generator.product = _rave.Rave_ProductType_PPI
+    generator.elangle = 0.0
+    generator.time = "120000"
+    generator.date = "20090501"
+    result = generator.nearest(a)
+    
+    ios = _raveio.new()
+    ios.object = result
+    ios.filename = "swecomposite_gmap_overlapping.h5"
+    ios.save()

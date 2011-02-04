@@ -154,6 +154,13 @@ double PolarVolume_getBeamwidth(PolarVolume_t* pvol);
 double PolarVolume_getDistance(PolarVolume_t* pvol, double lon, double lat);
 
 /**
+ * Returns the maximum distance (at ground level) that this volume will cover.
+ * @param[in] pvol - self
+ * @return the maximum distance in meters
+ */
+double PolarVolume_getMaxDistance(PolarVolume_t* pvol);
+
+/**
  * Sets the projection for this polar volume. All scans belonging to this volume
  * will also get this projection assigned.
  * @param[in] pvol - the polar volume

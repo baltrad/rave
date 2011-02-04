@@ -332,6 +332,24 @@ double PolarVolume_getDistance(PolarVolume_t* pvol, double lon, double lat)
   return PolarNavigator_getDistance(pvol->navigator, lat, lon);
 }
 
+double PolarVolume_getMaxDistance(PolarVolume_t* pvol)
+{
+  int nrscans = 0;
+  int i = 0;
+  double maxdistance = 0.0;
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
+  nrscans = PolarVolume_getNumberOfScans(pvol);
+  for (i = 0; i < nrscans; i++) {
+    PolarScan_t* scan = PolarVolume_getScan(pvol, i);
+    double dist = PolarScan_getMaxDistance(scan);
+    if (dist > maxdistance) {
+      maxdistance = dist;
+    }
+    RAVE_OBJECT_RELEASE(scan);
+  }
+  return maxdistance;
+}
+
 void PolarVolume_setProjection(PolarVolume_t* pvol, Projection_t* projection)
 {
   RAVE_ASSERT((pvol != NULL), "pvol == NULL");
