@@ -25,10 +25,10 @@
   <description>BALTRAD, Google Maps, 4 km</description>
   <areadef>
     <arg id="pcs">gmaps</arg>
-    <arg id="xsize" type="int">770</arg>
+    <arg id="xsize" type="int">780</arg>
     <arg id="ysize" type="int">1240</arg>
     <arg id="scale" type="float">4000</arg>
-    <arg id="extent" type="sequence">525528.78317, 6068461.179, 3605528.78317, 11028461.179</arg>
+    <arg id="extent" type="sequence">525528.78317, 6068461.179, 3645528.78317, 11028461.179</arg>
   </areadef>
 </area>
 <area id="kir_gmaps">
