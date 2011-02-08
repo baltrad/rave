@@ -428,7 +428,7 @@ double PolarScan_getMaxDistance(PolarScan_t* scan)
 
   if (scan->maxdistance < 0.0) {
     scan->maxdistance = 0.0;
-    PolarNavigator_reToDh(scan->navigator, scan->nbins * scan->rscale, scan->elangle, &scan->maxdistance, &h);
+    PolarNavigator_reToDh(scan->navigator, (scan->nbins+1) * scan->rscale, scan->elangle, &scan->maxdistance, &h);
   }
 
   return scan->maxdistance;
