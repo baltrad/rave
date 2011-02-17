@@ -161,6 +161,13 @@ double PolarVolume_getDistance(PolarVolume_t* pvol, double lon, double lat);
 double PolarVolume_getMaxDistance(PolarVolume_t* pvol);
 
 /**
+ * Returns the scan with the highest distance coverage (at ground level).
+ * @param[in] pvol - self
+ * @return the scan with the highest distance coverage
+ */
+PolarScan_t* PolarVolume_getScanWithMaxDistance(PolarVolume_t* pvol);
+
+/**
  * Sets the projection for this polar volume. All scans belonging to this volume
  * will also get this projection assigned.
  * @param[in] pvol - the polar volume

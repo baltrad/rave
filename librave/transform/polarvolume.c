@@ -350,6 +350,29 @@ double PolarVolume_getMaxDistance(PolarVolume_t* pvol)
   return maxdistance;
 }
 
+PolarScan_t* PolarVolume_getScanWithMaxDistance(PolarVolume_t* pvol)
+{
+  int nrscans = 0;
+  int i = 0;
+  double maxdistance = 0.0;
+  PolarScan_t* result = NULL;
+
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
+  nrscans = PolarVolume_getNumberOfScans(pvol);
+  for (i = 0; i < nrscans; i++) {
+    PolarScan_t* scan = PolarVolume_getScan(pvol, i);
+    double dist = PolarScan_getMaxDistance(scan);
+    if (dist > maxdistance) {
+      maxdistance = dist;
+      RAVE_OBJECT_RELEASE(result);
+      result = RAVE_OBJECT_COPY(scan);
+    }
+    RAVE_OBJECT_RELEASE(scan);
+  }
+  return result;
+
+}
+
 void PolarVolume_setProjection(PolarVolume_t* pvol, Projection_t* projection)
 {
   RAVE_ASSERT((pvol != NULL), "pvol == NULL");

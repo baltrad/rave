@@ -391,15 +391,8 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area)
               double ovalue = 0.0;
               CompositeInternal_nearestValue(composite, obj, olon, olat, &otype, &ovalue);
 
-              if (otype == RaveValueType_DATA) {
-                if (vtype != RaveValueType_DATA || dist < mindist) {
-                  vtype = otype;
-                  v = ovalue;
-                  mindist = dist;
-                }
-              } else if (otype == RaveValueType_UNDETECT && vtype != RaveValueType_DATA) {
-                // I'm a bit uncertain about this, is UNDETECT more important than NODATA?
-                if (dist < mindist) {
+              if (otype == RaveValueType_DATA || otype == RaveValueType_UNDETECT) {
+                if ((vtype != RaveValueType_DATA && vtype != RaveValueType_UNDETECT) || dist < mindist) {
                   vtype = otype;
                   v = ovalue;
                   mindist = dist;

@@ -40,5 +40,6 @@ distclean:
 	@\rm -fr swecomposite_ppi.h5
 	@\rm -fr swecomposite_ppi_fromscan.h5
 	@\rm -fr swecomposite_gmap_overlapping.h5
+	@\rm -fr rixeecomposite.h5
 	@\rm -fr build
 	@\rm -f *~

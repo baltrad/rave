@@ -99,6 +99,43 @@ class PyCompositeTest(unittest.TestCase):
     obj.offset = 2.0
     self.assertAlmostEquals(2.0, obj.offset, 4)
     
+  def test_rix_nearest(self):
+    generator = _pycomposite.new()
+    
+    a = _area.new()
+    a.id = "nrd2km"
+    a.xsize = 848
+    a.ysize = 1104
+    a.xscale = 2000.0
+    a.yscale = 2000.0
+    a.extent = (-738816.513333,-3995515.596160,955183.48666699999,-1787515.59616)
+    a.projection = _projection.new("x", "y", "+proj=stere +ellps=bessel +lat_0=90 +lon_0=14 +lat_ts=60 +datum=WGS84")
+    
+    for fname in ["fixtures/eesyr_volume.h5", "fixtures/rix_volume.h5"]:
+      rio = _raveio.open(fname)
+      generator.add(rio.object)
+    
+    generator.quantity = "DBZH"
+    generator.product = _rave.Rave_ProductType_PPI
+    generator.elangle = 0.0
+    generator.time = "120000"
+    generator.date = "20090501"
+    result = generator.nearest(a)
+    
+    self.assertEquals("DBZH", result.quantity)
+    self.assertEquals("120000", result.time)
+    self.assertEquals("20090501", result.date)
+    #prodpar = result.getAttribute("what/prodpar")
+    #self.assertAlmostEquals(1000.0, prodpar, 4)
+    self.assertEquals(_rave.Rave_ProductType_PPI, result.product)
+    self.assertEquals(_rave.Rave_ObjectType_COMP, result.objectType)
+    self.assertEquals("nrd2km", result.source);
+    
+    ios = _raveio.new()
+    ios.object = result
+    ios.filename = "rixeecomposite.h5"
+    ios.save()
+
 
   def test_nearest(self):
     generator = _pycomposite.new()
