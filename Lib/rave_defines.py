@@ -74,12 +74,12 @@ HOST = 'localhost'
 PORT = 8085
 STDOE = os.path.join(RAVEETC, 'rave_pgf_stdout_stderr.log')
 
-DEX_SPOE = 'http://se.baltrad.eu:8080/BaltradDex/dispatch.htm'
-DEX_CHANNEL = 'smhi_products'
-DEX_USER = 'smhi'
+DEX_SPOE = 'http://localhost:8084/BaltradDex/dispatch.htm'
+DEX_CHANNEL = 'default_products'
+DEX_USER = 'default'
 
 # The originating center id, used to indicate where a product has been generated.
-CENTER_ID = 'ORG:82'
+CENTER_ID = 'ORG:82' # Change this if your country is not Sweden.
 
 GENREG  = 'generate-registry'  # root registry tag
 REGFILE = os.path.join(RAVEETC, 'rave_pgf_registry.xml')  # registry file
