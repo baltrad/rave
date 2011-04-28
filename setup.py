@@ -439,6 +439,25 @@ MODULES.append(
         libraries=LIBRARIES
         )
     )
+
+INCLUDE_DIRS.append('./librave/rack/drain/image')
+INCLUDE_DIRS.append('./librave/rack/drain/radar')
+INCLUDE_DIRS.append('./librave/rack/drain/util')
+INCLUDE_DIRS.append('./librave/rack/main')
+LIBRARY_DIRS.append('./librave/rack/drain')
+LIBRARY_DIRS.append('./librave/rack')
+LIBRARIES.append('rack')
+LIBRARIES.append('drain')
+LIBRARIES.append('png')
+
+MODULES.append(
+    Extension(
+        "_rack", ["modules/pyrack.c"],
+        include_dirs=INCLUDE_DIRS,
+        library_dirs=LIBRARY_DIRS,
+        libraries=LIBRARIES
+        )
+    )
   
 # build!
 

@@ -1,0 +1,59 @@
+DRAIN
+
+'Drain' is a C++ library for general image processing and radar data
+processing.
+
+
+PREREQUISITES
+
+To install this library, 'cmake' must be available in the system. The
+package has been developed utilizing that facility under Eclipse IDE.
+
+There are two external libraries needed, Proj4 (libproj) and Png
+If support for various image formats is needed, Magick++ library
+(libmagick++) can be used as well. 
+
+In some Debian based Linuces they can be installed with
+
+  sudo apt-get install libpng libproj libmagick++1
+
+
+The existence of Magick++ can be checked with command:
+
+  Magick++-config
+
+
+COMPILATION
+
+To compile the code from a command line:
+
+  make release
+
+This unzips automake files to Release/ directory and calls 'make all' there.
+
+
+INSTALLATION
+
+  make release
+  sudo make prefix=/opt install
+
+
+DOCUMENTATION
+
+The documentation for the code is generated using doxygen, with
+command
+
+  make dox
+
+A PDF manual may be shipped with this file, or can be generated with
+
+  make manual
+
+
+
+ 
+
+DOWNLOADING
+
+   git clone gitosis@git.baltrad.eu:drain.git
+
