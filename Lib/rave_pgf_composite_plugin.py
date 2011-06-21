@@ -72,7 +72,10 @@ def generate(files, arguments):
 
   for fname in files:
     rio = _raveio.open(fname)
-    generator.add(rio.object)
+    try:
+      generator.add(rio.object)
+    except:
+      pass  # will passively reject files that fail to read
     
   generator.quantity = "DBZH"
 
