@@ -1,0 +1,24 @@
+<?xml version='1.0' encoding='iso-8859-1'?>
+<!-- $Id: baltex_areas.xml,v 1.1.1.1 2006/07/14 11:31:54 dmichels Exp $ -->
+<areas>
+<area id="baltrad_lambert">
+<description>Azimuthal Equal Area area for all BALTRAD radars</description>
+<areadef>
+<arg id="pcs">laea20e60n</arg>
+<arg id="xsize" type="int">815</arg>
+<arg id="ysize" type="int">1195</arg>
+<arg id="scale" type="float">2000</arg>
+<arg id="extent" type="sequence">-994211.85388,-1291605.15396,635788.14612,1098394.84604</arg>
+</areadef>
+</area>
+<area id="baltex_lambert">
+<description>Azimuthal Equal Area area for BALTEX Region</description>
+<areadef>
+<arg id="pcs">laea20e60n</arg>
+<arg id="xsize" type="int">835</arg>
+<arg id="ysize" type="int">1134</arg>
+<arg id="scale" type="float">2000</arg>
+<arg id="extent" type="sequence">-726561.013648, -1221494.00295,943438.986352, 1046505.99705</arg>
+</areadef>
+</area>
+</areas>

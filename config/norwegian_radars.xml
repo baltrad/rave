@@ -1,0 +1,89 @@
+<?xml version='1.0' encoding='iso-8859-1'?>
+<!-- $Id: norwegian_radars.xml,v 1.1.1.1 2006/07/14 11:31:54 dmichels Exp $ -->
+<radars>
+<common>
+<description>Characteristics of data from all radars</description>
+<radardef>
+<arg id="rays" type="int">360</arg>
+<arg id="bins" type="int">240</arg>
+<arg id="angles" type="sequence">0.5, 1.0, 2.0, 3.0, 4.0, 5.0, 6.5, 8.0, 9.5, 11.0, 12.5, 15.5</arg>
+<arg id="xsize" type="float">1000.0</arg>
+<arg id="beamwidth" type="float">1.0</arg>
+<arg id="wavelength" type="float">5.32</arg>
+<arg id="highprf" type="int">600</arg>
+<arg id="lowprf" type="int">450</arg>
+</radardef>
+</common>
+<radar id="has">
+<description>Hasvik, Gematronik</description>
+<radardef>
+<arg id="place">Hasvik</arg>
+<arg id="WMO" type="int">01042</arg>
+<arg id="lon" type="float">22.443</arg>
+<arg id="lat" type="float">70.6052</arg>
+<arg id="height" type="int">444</arg>
+</radardef>
+</radar>
+<radar id="and">
+<description>Andøya, Gematronik</description>
+<radardef>
+<arg id="place">Andøya</arg>
+<arg id="WMO" type="int">01018</arg>
+<arg id="lon" type="float">16.002972</arg>
+<arg id="lat" type="float">69.241389</arg>
+<arg id="height" type="int">440</arg>
+</radardef>
+</radar>
+<radar id="rst">
+<description>Røst, Gematronik</description>
+<radardef>
+<arg id="place">Røst</arg>
+<arg id="WMO" type="int">01104</arg>
+<arg id="lon" type="float">12.099</arg>
+<arg id="lat" type="float">67.531</arg>
+<arg id="height" type="int">20</arg>
+</radardef>
+</radar>
+<radar id="rsa">
+<description>Rissa, Gematronik</description>
+<radardef>
+<arg id="place">Rissa</arg>
+<arg id="WMO" type="int">01247</arg>
+<arg id="lon" type="float">10.202</arg>
+<arg id="lat" type="float">63.69</arg>
+<arg id="height" type="int">616</arg>
+</radardef>
+</radar>
+<radar id="bml">
+<description>Bømlo, Gematronik</description>
+<radardef>
+<arg id="place">Bømlo</arg>
+<arg id="WMO" type="int">01247</arg>
+<arg id="lon" type="float">10.202</arg>
+<arg id="lat" type="float">63.69</arg>
+<arg id="height" type="int">616</arg>
+</radardef>
+</radar>
+<radar id="hgb">
+<description>Hægebostad, Gematronik</description>
+<radardef>
+<arg id="place">Hægebostad</arg>
+<arg id="WMO" type="int">01438</arg>
+<arg id="lon" type="float">7.166</arg>
+<arg id="lat" type="float">58.36</arg>
+<arg id="height" type="int">631</arg>
+</radardef>
+</radar>
+<radar id="osl">
+<description>Oslo, Ericsson EWR</description>
+<radardef>
+<arg id="place">Oslo</arg>
+<arg id="WMO" type="int">01499</arg>
+<arg id="lon" type="float">10.3811</arg>
+<arg id="lat" type="float">59.8578</arg>
+<arg id="height" type="int">458</arg>
+<arg id="xsize" mode="doppler" type="float">1000.0</arg>
+<arg id="xsize" mode="non-doppler" type="float">2000.0</arg>
+</radardef>
+</radar>
+</radars>

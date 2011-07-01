@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='iso-8859-1'?>
+<areas>
+<area id="polgmaps_2000">
+  <description>POLRAD, Google Maps, 2 km</description>
+  <areadef>
+    <arg id="pcs">gmaps</arg>
+    <arg id="xsize" type="int">754</arg>
+    <arg id="ysize" type="int">810</arg>
+    <arg id="scale" type="float">2000</arg>
+    <arg id="extent" type="sequence">1335807.096179,6065547.928434,2843807.096179,7685547.928434</arg>
+  </areadef>
+</area>
+</areas>

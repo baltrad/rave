@@ -1,0 +1,103 @@
+<?xml version='1.0' encoding='iso-8859-1'?>
+<!-- $Id: polish_radars.xml,v 1.1.1.1 2006/07/14 11:31:54 dmichels Exp $ -->
+<radars>
+<common>
+<description>Characteristics of data from all Polish radars</description>
+<radardef>
+<arg id="rays" type="int">360</arg>
+<arg id="bins" type="int">250</arg>
+<arg id="angles" type="sequence">0.5, 1.4, 2.4, 3.4, 5.3, 7.7, 10.6, 14.1, 18.5, 23.8</arg>
+<arg id="xsize" type="float">1000.0</arg>
+<arg id="beamwidth" type="float">1.0</arg>
+<arg id="wavelength" type="float">5.6</arg>
+<arg id="highprf" type="int">1200</arg>
+<arg id="lowprf" type="int">900</arg>
+</radardef>
+</common>
+<cartesian>
+<arg id="proj">aeqd</arg>
+<arg id="R" type="float">6371000.0</arg>
+<arg id="max_range" type="float">250.0</arg>
+<arg id="size" type="int">500</arg>
+</cartesian>
+<radar id="brz">
+<description>Brzuchania, Gematronik</description>
+<radardef>
+<arg id="place">Brzuchania</arg>
+<arg id="WMO" type="int">12568</arg>
+<arg id="lon" type="float">20.07972</arg>
+<arg id="lat" type="float">50.39417</arg>
+<arg id="height" type="int">453</arg>
+</radardef>
+</radar>
+<radar id="swi">
+<description>Swidwin, Gematronik</description>
+<radardef>
+<arg id="place">Swidwin</arg>
+<arg id="WMO" type="int">12220</arg>
+<arg id="lon" type="float">15.83111</arg>
+<arg id="lat" type="float">53.79028</arg>
+<arg id="height" type="int">146</arg>
+</radardef>
+</radar>
+<radar id="gda">
+<description>Gdansk, Gematronik</description>
+<radardef>
+<arg id="place">Gdansk</arg>
+<arg id="WMO" type="int">12151</arg>
+<arg id="lon" type="float">18.45611</arg>
+<arg id="lat" type="float">54.38417</arg>
+<arg id="height" type="int">158</arg>
+</radardef>
+</radar>
+<radar id="poz">
+<description>Poznan, Gematronik</description>
+<radardef>
+<arg id="place">Poznan</arg>
+<arg id="WMO" type="int">12331</arg>
+<arg id="lon" type="float">16.83222</arg>
+<arg id="lat" type="float">52.40972</arg>
+<arg id="height" type="int">123</arg>
+</radardef>
+</radar>
+<radar id="leg">
+<description>Legionowo, Gematronik</description>
+<radardef>
+<arg id="place">Legionowo</arg>
+<arg id="WMO" type="int">12374</arg>
+<arg id="lon" type="float">20.93139</arg>
+<arg id="lat" type="float">52.40028</arg>
+<arg id="height" type="int">119</arg>
+</radardef>
+</radar>
+<radar id="pas">
+<description>Pastewnik, Gematronik</description>
+<radardef>
+<arg id="place">Pastewnik</arg>
+<arg id="WMO" type="int">12544</arg>
+<arg id="lon" type="float">16.03972</arg>
+<arg id="lat" type="float">50.88278</arg>
+<arg id="height" type="int">692</arg>
+</radardef>
+</radar>
+<radar id="ram">
+<description>Ramza, Gematronik</description>
+<radardef>
+<arg id="place">Ramza</arg>
+<arg id="WMO" type="int">12514</arg>
+<arg id="lon" type="float">18.72667</arg>
+<arg id="lat" type="float">50.15167</arg>
+<arg id="height" type="int">358</arg>
+</radardef>
+</radar>
+<radar id="rze">
+<description>Rzeszow, Gematronik</description>
+<radardef>
+<arg id="place">Rzeszow</arg>
+<arg id="WMO" type="int">12579</arg>
+<arg id="lon" type="float">22.0025</arg>
+<arg id="lat" type="float">50.11417</arg>
+<arg id="height" type="int">241</arg>
+</radardef>
+</radar>
+</radars>
