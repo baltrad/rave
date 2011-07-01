@@ -1,0 +1,165 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2011 - Swedish Meteorological and Hydrological Institute (SMHI)
+
+This file is part of RAVE.
+
+RAVE is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+RAVE is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+See the GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
+'''
+## Command-line tool for managing the registry of Cartesian area definitions.
+
+## @file
+## @author Daniel Michelson, SMHI
+## @date 2011-06-28
+
+import sys
+import rave_defines
+import rave_area
+
+
+## Adds an algorithm to the registry. It will be replaced if it's already there.
+# @param id string identifier of this area
+# @param description string free-text description of this area
+# @param projection_id string identifier of the projection used to define this area
+# @param extent tuple of floats giving the PCS coordinates of the lower-left and upper-right pixels
+#               in the form 'LLx, LLy, URx, URy'. Note that the PCS coordinates of the
+#               UR pixel are for the lower-left corner of the upper-right pixel.
+# @param xsize int number of pixels in the X dimension
+# @param ysize int number of pixels in the Y dimension
+# @param xscale float X scale in PCS space (commonly expressed in meters)
+# @param yscale float Y scale in PCS space (commonly expressed in meters)
+def add(id, description, projection_id, extent, xsize, ysize, xscale, yscale):
+	rave_area.add(id, description, projection_id, extent, xsize, ysize, xscale, yscale)
+
+
+## Creates a new AREA definition based on one or more ODIM_H5 PVOL and/or SCAN files.
+# @param files Complete strings to one or more ODIM_H5 files, or a pattern containing a '*'.
+# @param projection_id string identifier of the projection used to define this area
+# @param xscale float X scale in PCS space (commonly expressed in meters)
+# @param yscale float Y scale in PCS space (commonly expressed in meters)
+# @returns AREA object with geometry but without 'id' and 'name' information
+def make(files, projection_id, xscale, yscale, add=False, area_id=None, description=None):
+	import glob, re
+
+	if re.search("\*", files):  # If there's a wildcard, glob for files
+		files = glob.glob(files)
+	else:
+		files = files.split()
+	A = rave_area.MakeAreaFromPolarFiles(files, projection_id, xscale, yscale)
+	if area_id and description:
+		A.Id, A.name = area_id, description
+	if not area_id:
+		A.Id, A.name = "__PROVISIONAL__", 'Area using projection with identifier "%s"' % projection_id
+	rave_area.register(A)
+	rave_area.describe(A.Id)
+	if not add:
+		del rave_area._registry[A.Id]
+		print 'Run again with -a -i <identifier> -d <"description"> to add this area to the registry.'
+
+
+## Lists the entries in the registry.
+def List():
+    for id in rave_area.keys():
+        rave_area.describe(id)    
+
+
+## Removes an area from the registry.
+# @param id string, the identifier of the area to remove.
+def remove(id):
+    rave_area.remove(id)
+
+
+if __name__ == "__main__":
+    from optparse import OptionParser
+
+    description = "Add/remove an entry in the Cartesian area registry, make a new area definition based on one or more ODIM_H5 PVOL or SCAN files, or list the registry contents."
+
+    usage = 'usage: %prog -larm [-i <identifier> -d <"description"> --files <"file1 file2 file3..."> --extent <"float,float,float,float"> --xsize <int> --ysize <int> --xscale <float> --yscale <float>] [h]'
+    parser = OptionParser(usage=usage, description=description)
+
+    parser.add_option("-a", "--add", action="store_true", dest="add",
+					help="Add an algorithm to the registry.")
+
+    parser.add_option("-r", "--remove", action="store_true", dest="remove", 
+					help="Remove an algorithm from the registry.")
+
+    parser.add_option("-l", "--list", action="store_true", dest="list",
+					help="List the entries in the registry.")
+
+    parser.add_option("-m", "--make", action="store_true", dest="make",
+					help="Make a new area definition based on one or more ODIM_H5 PVOL or SCAN files.")
+
+    parser.add_option("-i", "--identifier", dest="id",
+					help="Identifier string of the area.")
+
+    parser.add_option("-d", "--description", dest="desc",
+					help="Free-text description of the area. A description of more than one word must be written in quotation marks.")
+
+    parser.add_option("--proj_id", dest="pcsid",
+					help="Identifier string of the projection used by this area. Check registered projections with 'projection_registry --list'")
+
+    parser.add_option("--files", dest="files", 
+					help="One or more complete file strings of ODIM_H5 polar volume or polar scan files. PVOL and SCAN files can be combined in the same list. Wildcards can be used in one search pattern. Several file strings must be written in quotation marks and separated by white spaces.")
+
+    parser.add_option("--extent", dest="extent",
+					help="String representation of a 4-tuple containing PCS coordinates for the lower-left and upper-right area corners 'LLx, LLx, URx, URy'. NOTE that upper-right coordinates represent the lower-left corner of the upper-right pixel. Must be written in quotation marks and separated by commas.")
+
+    parser.add_option("--xsize", dest="xsize",
+					help="The number of pixels in the X dimension.")
+
+    parser.add_option("--ysize", dest="ysize",
+					help="The number of pixels in the Y dimension.")
+
+    parser.add_option("--xscale", dest="xscale",
+					help="The pixel resolution in PCS space (commonly meters) in the X dimension.")
+
+    parser.add_option("--yscale", dest="yscale",
+					help="The pixel resolution in PCS space (commonly meters) in the Y dimension.")
+
+    (options, args) = parser.parse_args()
+
+    if not (options.add or options.remove or options.list or options.make):
+        parser.print_help()
+        sys.exit()
+    if options.add:
+        if not (options.id and options.desc and options.pcsid and options.extent and options.xsize and options.ysize and options.xscale and options.yscale):
+            parser.print_help()
+            sys.exit()
+	if options.make:
+		if not (options.make and options.files and options.pcsid and options.xscale and options.yscale):
+			parser.print_help()
+			sys.exit()
+    if options.remove:
+        if not options.id:
+            parser.print_help()
+            sys.exit()
+
+    if options.remove:
+        remove(options.id)
+
+    elif options.list:
+        List()
+
+    elif options.add and not options.make:
+        add(options.id, options.desc, options.pcsid, rave_area.make_tuple(options.extent), 
+            int(options.xsize), int(options.ysize), float(options.xscale), float(options.yscale))
+
+    elif options.make:
+	    if options.add:
+		    make(options.files, options.pcsid, float(options.xscale), float(options.yscale), add=True, area_id=options.id, description=options.desc)
+	    else:
+		    make(options.files, options.pcsid, float(options.xscale), float(options.yscale))
+
+    else:
+        parser.print_help()

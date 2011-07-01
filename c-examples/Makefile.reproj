@@ -1,0 +1,82 @@
+LIBRAVE=../librave
+
+include $(LIBRAVE)/def.mk
+
+REPROJINC= -I. $(NUMPY_INCLUDE_DIR) $(INCLUDE_PYTHON) -I$(HLHDF_INCLUDE_DIR) \
+	$(ZLIB_INCDIR) $(HDF5_INCDIR) $(PROJ_INCLUDE_DIR) \
+	-I$(LIBRAVE)/transform
+
+LDFLAGS+= -L. -L$(LIBRAVE)/transform -L/usr/local/lib -L$(HLHDF_LIB_DIR)
+
+ifeq ($(EXPAT_SUPPRESSED), no)
+REPROJINC+= $(EXPAT_INCLUDE_DIR)
+LDFLAGS+= $(EXPAT_LIB_DIR)
+endif
+
+CFLAGS=	$(OPTS) $(CCSHARED) $(DEFS) $(CREATE_ITRUNC) $(REPROJINC)
+
+# --------------------------------------------------------------------
+# Fixed definitions
+
+REPROJSOURCES= reproj.c
+INSTALL_HEADERS= reproj.h
+REPROJOBJS=	$(REPROJSOURCES:.c=.o)
+LIBRAVEREPROJ=	libravereproj.so
+REPROJMAIN= reproj_main.c
+REPROJBIN= reproj
+REPROJLIBS= -lhlhdf -lproj -lravetransform -lravereproj
+ifeq ($(EXPAT_SUPPRESSED), no)
+REPROJLIBS+= -lexpat
+endif
+
+MAKEDEPEND=gcc -MM $(CFLAGS) -o $(DF).d $<
+DEPDIR=.dep
+DF=$(DEPDIR)/$(*F)
+# --------------------------------------------------------------------
+# Rules
+
+# Contains dependency generation as well, so if you are not using
+# gcc, comment out everything until the $(CC) statement.
+%.o : %.c
+	@$(MAKEDEPEND); \
+	cp $(DF).d $(DF).P; \
+	sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
+		-e '/^$$/ d' -e 's/$$/ :/' < $(DF).d >> $(DF).P; \
+	\rm -f $(DF).d
+	$(CC) -c $(CFLAGS) $<
+
+# Ensures that the .dep directory exists
+.PHONY=$(DEPDIR)
+$(DEPDIR):
+	+@[ -d $@ ] || mkdir -p $@
+
+.PHONY=all
+all:		$(LIBRAVEREPROJ) bin
+
+$(LIBRAVEREPROJ): $(DEPDIR) $(REPROJOBJS)
+	$(LDSHARED) -o $@ $(REPROJOBJS)
+
+.PHONY=bin
+bin: 
+	$(CC) $(REPROJINC) $(LDFLAGS) -o $(REPROJBIN) $(REPROJMAIN) $(REPROJLIBS)
+
+.PHONY=install
+install:
+	@"$(HLHDF_INSTALL_BIN)" -f -o -C $(LIBRAVEREPROJ) "$(prefix)/lib/$(LIBRAVEREPROJ)"
+	@for i in $(INSTALL_HEADERS) ; \
+	do \
+		"$(HLHDF_INSTALL_BIN)" -f -o -m644 -C $$i "$(prefix)/include/$$i"; \
+	done
+	"$(HLHDF_INSTALL_BIN)" -f -o -C $(REPROJBIN) "$(prefix)/bin/$(REPROJBIN)";
+
+.PHONY=clean
+clean:
+		@\rm -f *.o core *~ $(REPROJBIN)
+		@\rm -fr $(DEPDIR)
+
+.PHONY=distclean		 
+distclean:	clean
+		@\rm -f *.so
+
+# NOTE! This ensures that the dependencies are setup at the right time so this should not be moved
+-include $(REPROJSOURCES:%.c=$(DEPDIR)/%.P)

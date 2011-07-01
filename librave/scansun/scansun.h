@@ -70,8 +70,8 @@ along with HLHDF.  If not, see <http://www.gnu.org/licenses/>.
 /******************************************************************************/
 
 struct scanmeta {
-	long date;             /*Date of scan data in YYYYMMDD.*/
-	long time;             /*Time of scan data in HHMMSS.*/
+	long date;             /**<Date of scan data in YYYYMMDD.*/
+	long time;             /**<Time of scan data in HHMMSS.*/
 	double elev;           /*Elevation of scan in deg.*/
 	long nrang;            /*Number of range bins in scan.*/
 	long nazim;            /*Number of azimuth rays in scan.*/

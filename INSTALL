@@ -38,7 +38,7 @@ Some minor configuration changes can be made.
 To activate memory debugging of RAVE: CFLAGS=-DRAVE_MEMORY_DEBUG
 This is recommended for a development system.
 
-Three environment variables are required to find RAVE dependencies. 
+A few environment variables are required to find RAVE dependencies. 
 1. RAVE installation directory (default is /opt/rave):
 $ export RAVEROOT=<install dir>
 
@@ -55,8 +55,9 @@ $ export PROJ4INC=/my/path/include
 $ export PROJ4LIB=/my/path/lib
 
 5. (OPTIONAL) expat
-The default behaviour is to not build with expat support. The environment 
-variable EXPATARG can be used to modify the arguments passed to the configure 
+The default behaviour is to build without expat support. However, management 
+of projection and area registries requires expat. The environment  variable 
+EXPATARG can be used to modify the arguments passed to the configure 
 scripts and can be one of
 $ export EXPATARG=<inc>,<lib>
 or
@@ -65,6 +66,17 @@ or
 $ export EXPATARG=yes
 or
 $ export EXPATARG=no
+
+If you are going to use the XML-RPC server, you can configure a number of
+variables prior to installing RAVE, also using environment variables:
+$ export PGF_HOST=myhost.mydomain  # an IP number works too, default=localhost
+$ export PGF_PORT=8085             # default number
+The host:port for the DEX single point-of-entry:
+$ export DEX_SPOE=host:port        # default is localhost:8084
+WMO originating center number:
+$ export CENTER_ID=82              # Sweden is 82. Use your country's!
+If you need to change back to a default value, set the environment variable
+to the default and then run 'make install' again. You don't have to rebuild.
 
 To modify memory debugging configuration options, specify the parameters before
 running make, for example:
@@ -84,7 +96,9 @@ $ make install
 Important: you must be able to write one file to your Python's site-packages 
 directory! RAVE won't be installed there, but a file pointing to RAVE will be.
 When RAVE is installed, you should add $RAVEROOT/bin to your $PATH and 
-$RAVEROOT/lib to your $LD_LIBRARY_PATH .
+$RAVEROOT/lib to your $LD_LIBRARY_PATH . If you are using a system-wide Python
+installation without write privileges to the site-packages directory, then set
+up a virtual site-packages location and place the rave.pth file there manually. 
 
 Building the documentation system requires that doxygen is installed. If
 you have doxygen, then:

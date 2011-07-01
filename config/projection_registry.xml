@@ -1,5 +1,4 @@
 <?xml version='1.0' encoding='iso-8859-1'?>
-<!-- $Id: projections.xml,v 1.1.1.1 2006/07/14 11:31:54 dmichels Exp $ -->
 <projections>
 <projection id='llwgs84'>
   <description>http://spatialreference.org/ref/epsg/4326/</description>

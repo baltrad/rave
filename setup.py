@@ -155,6 +155,17 @@ def get_proj4_dirs():
 
   return princ,prlib
 
+# Utility function for replacing configuration definitions
+# var = the name of the environment variable
+# lines = the contents of rave_defines.py read with readlines()
+# existing = the part of the (existing) definition that doesn't change
+def replace_def(var, lines, existing='%s\n'):
+    for l in range(len(lines)):
+        if len(lines[l]) > len(var):
+            if lines[l][:len(var)] == var:
+                lines[l] = var + ' = ' + existing % os.getenv(var)
+
+# Continuing ...
 incdir,libdir,hldefmk = extract_hlhdf_info("./librave/def.mk")
 INCLUDE_DIRS.append(incdir)
 LIBRARY_DIRS.append(libdir)
@@ -507,5 +518,21 @@ if __name__ == "__main__":
             os.rename(source, dest)  # doesn't work in some environments
         except:
             import shutil
-            shutil.copyfile(source, dest)
-            os.unlink(source)
+            try:
+                shutil.copyfile(source, dest)
+                os.unlink(source)
+            except:
+                print "Failed to plant rave.pth file in your Python distribution's site-packages directory. This may not matter, but you should probably check..."
+
+        # Replace default definitions with ones given at build time
+        fd = open(rlib + '/rave_defines.py')
+        defs = fd.readlines()
+        fd.close()
+        if os.getenv('PGF_HOST'): replace_def('PGF_HOST', defs, '"%s"\n')
+        if os.getenv('PGF_PORT'): replace_def('PGF_PORT', defs)
+        if os.getenv('DEX_SPOE'): replace_def('DEX_SPOE', defs, '"http://%s/BaltradDex/dispatch.htm"\n')
+        if os.getenv('CENTER_ID'): replace_def('CENTER_ID', defs, '"ORG:%s"\n')    
+        fd = open(rlib + '/rave_defines.py', 'w')
+        for d in defs:
+            fd.write(d)
+        fd.close()
