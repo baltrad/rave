@@ -30,8 +30,8 @@ import _raveio
 import string
 import numpy
 #from rave_loader import rave_loader
-import rave_area as area
-import rave_projection as pcs
+import area
+import pcs
 import _pyhl
 import math
 
