@@ -298,3 +298,12 @@ done:
   }
   return result;
 }
+
+int RaveUtilities_isXmlSupported(void)
+{
+#ifdef RAVE_XML_SUPPORTED
+  return 1;
+#else
+  return 0;
+#endif
+}

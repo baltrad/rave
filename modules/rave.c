@@ -38,6 +38,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "pyraveio.h"
 #include "rave_debug.h"
 #include "rave_alloc.h"
+#include "rave_utilities.h"
 
 /**
  * Sets python exception and goto tag.
@@ -163,6 +164,19 @@ static PyObject* _raveio_open(PyObject* self, PyObject* args)
 
 /*@} End of RaveIO */
 
+/*@{ Rave utilities */
+/**
+ * Returns if xml is supported or not in this build.
+ * @param[in] self - self
+ * @param[in] args - N/A
+ * @returns true if xml is supported otherwise false
+ */
+static PyObject* _rave_isxmlsupported(PyObject* self, PyObject* args)
+{
+  return PyBool_FromLong(RaveUtilities_isXmlSupported());
+}
+/*@} End of Rave utilities */
+
 /// --------------------------------------------------------------------
 /// Module setup
 /// --------------------------------------------------------------------
@@ -175,6 +189,7 @@ static PyMethodDef functions[] = {
   {"projection", (PyCFunction)_projection_new, 1},
   {"io", (PyCFunction)_raveio_new, 1},
   {"open", (PyCFunction)_raveio_open, 1},
+  {"isXmlSupported", (PyCFunction)_rave_isxmlsupported, 1},
   {NULL,NULL} /*Sentinel*/
 };
 

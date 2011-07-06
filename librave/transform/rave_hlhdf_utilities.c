@@ -113,6 +113,7 @@ RaveAttribute_t* RaveHL_createAttribute(HL_Node* node)
   if (result == NULL) {
     goto done;
   }
+
   format = HLNode_getFormat(node);
   sz = HLNode_getDataSize(node);
   if (format >= HLHDF_SCHAR && format <= HLHDF_ULLONG) {

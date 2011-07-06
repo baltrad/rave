@@ -5,7 +5,7 @@ CFLAGS=	$(OPTS) $(CCSHARED) $(DEFS) $(CREATE_ITRUNC) \
 	$(ZLIB_INCDIR) $(HDF5_INCDIR) $(PROJ_INCLUDE_DIR)
 
 ifeq ($(EXPAT_SUPPRESSED), no)
-CFLAGS+= $(EXPAT_INCLUDE_DIR)
+CFLAGS+= $(EXPAT_INCLUDE_DIR) -DRAVE_XML_SUPPORTED
 endif
 
 # --------------------------------------------------------------------

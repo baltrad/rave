@@ -127,4 +127,11 @@ char* RaveUtilities_trimText(const char* str, int len);
  */
 RaveList_t* RaveUtilities_getTrimmedTokens(const char* str, int c);
 
+/**
+ * Returns if xml support is activated or not since expat support
+ * is optional and ought to be tested.
+ * @returns 0 if xml isn't supported in the build, otherwise 1
+ */
+int RaveUtilities_isXmlSupported(void);
+
 #endif /* RAVE_UTILITIES_H */

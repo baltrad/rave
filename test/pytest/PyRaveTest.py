@@ -1,5 +1,5 @@
 '''
-Copyright (C) 2009 Swedish Meteorological and Hydrological Institute, SMHI,
+Copyright (C) 2011 Swedish Meteorological and Hydrological Institute, SMHI,
 
 This file is part of RAVE.
 
@@ -17,33 +17,27 @@ You should have received a copy of the GNU Lesser General Public License
 along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ------------------------------------------------------------------------*/
 
-Test suite for rave
+Tests the rave module.
 
 @file
 @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
-@date 2009-10-12
+@date 2011-07-06
 '''
 import unittest
-from RaveTest import *
-from PyPolarVolumeTest import *
-from PyPolarScanTest import *
-from PyPolarScanParamTest import *
-from RaveModuleConstantsTest import *
-from PyCartesianTest import *
-from PyCartesianVolumeTest import *
-from PyRaveFieldTest import *
-from PyTransformTest import *
-from PyProjectionTest import *
-from PyRaveIOTest import *
-from PyPolarNavTest import *
-from PyAreaTest import *
-from PyRadarDefinitionTest import *
-from PyProjectionRegistryTest import *
-from PyAreaRegistryTest import *
-from PgfVolumePluginTest import *
-from RaveScansun import *
-from PyDetectionRangeTest import *
-from PyRaveTest import *
 
-if __name__ == '__main__':
+import _rave
+
+class PyRaveTest(unittest.TestCase):
+  def testIsXMlSupported(self):
+    modulebuilt=False
+    try:
+      import _projectionregistry
+      import _arearegistry
+      modulebuilt=True
+    except:
+      pass
+    self.assertEquals(modulebuilt, _rave.isXmlSupported())
+
+
+if __name__ == "__main__":
   unittest.main()

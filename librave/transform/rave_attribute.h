@@ -67,6 +67,14 @@ const char* RaveAttribute_getName(RaveAttribute_t* attr);
 RaveAttribute_Format RaveAttribute_getFormat(RaveAttribute_t* attr);
 
 /**
+ * Returns the number of values. If 0 it means that the attribute
+ * is a scalar attribute and if size > 0 it means that it is a simple
+ * array. Use appropriate functions for retrieving the data. I.e.
+ * if size == 0, use _getLong, _getDouble
+ */
+size_t RaveAttribute_getSize(RaveAttribute_t* attr);
+
+/**
  * Sets the value as a long.
  * @param[in] attr - self
  * @param[in] value - the value
