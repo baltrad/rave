@@ -1,0 +1,46 @@
+# This is... Use with include
+
+
+PROJECT_NAME := `basename $$PWD`
+#PROJECT_NAME = $(( basename $$PWD ))
+DOXYFILE = Doxyfile
+DOXYROOT = dox
+DOXYPATTERNS = '*.dox *.cpp *.h'
+
+FOO  := `basename $$PWD`
+FOO2 = $$( basename $$PWD )
+
+
+dox: $(DOXYFILE) $(DOXYROOT)/$(PROJECT_NAME)
+	doxygen $(DOXYFILE)
+
+
+$(DOXYROOT)/$(PROJECT_NAME):
+	mkdir -p $(DOXYROOT)/$(PROJECT_NAME)
+#	mkdir -p -m u+rwx $(DOXYROOT)/$(PROJECT_NAME)
+
+
+# Idea: generate here a minimal Doxyfile, then update it.
+# $(DOXYROOT)/$(PROJECT_NAME) 
+$(DOXYFILE):
+	date +'# Created by $$USER on %Y %m %d %H:%M '	  > $(DOXYFILE)
+	echo PROJECT_NAME = $(PROJECT_NAME)		      >> $(DOXYFILE)
+	echo OUTPUT_DIRECTORY = $(DOXYROOT)/$(PROJECT_NAME)   >> $(DOXYFILE)
+	echo FILE_PATTERNS    =  $(DOXYPATTERNS) 	      >> $(DOXYFILE)
+#	echo SOURCE_BROWSER   = YES >> $(DOXYFILE)
+	cat Doxyfile.ini >> $(DOXYFILE)
+#	echo TAGFILES	 = $(DOXYROOT)/*.tag              >> $(DOXYFILE)
+#	echo GENERATE_TAGFILE = $(DOXYROOT)/$(PROJECT_NAME).tag >> $(DOXYFILE)
+	doxygen -u $(DOXYFILE)
+
+dox-clean:
+	rm -vrf $(DOXYFILE) $(DOXYROOT)/$(PROJECT_NAME)/*
+
+
+manual: dox
+	cd ${DOXYROOT}/$(PROJECT_NAME)/latex/; pdflatex refman.tex; pdflatex refman.tex
+	mv -v ${DOXYROOT}/$(PROJECT_NAME)/latex/refman.pdf $(PROJECT_NAME).pdf
+
+
+#foo:
+#	echo koe/${FOO}/koe ${FOO2}

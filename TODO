@@ -1,3 +1,13 @@
+Summer 2011
+-----------
+Flexible configuration when building - e.g. host and port
+Adapt to accept and process ODIM_H5 2.1
+Consolidation of projection and area registries
+Runtime registration of projections and areas
+Convenience functions for automatic definition of areas
+
+From Summer 2010
+----------------
 Elaborate the ODIM data structures so data quality can be represented in
 all polar and Cartesian datasets.
 
@@ -8,7 +18,7 @@ Replace the ElementTree-based Python structures with the ODIM C structures.
 The XMLRPC server needs some elaboration:
     - better options for bin/rave_pgf, e.g. ability to give the host:port
       on the command line
-    - threading
+    - threading?
     - log to HTTP, maybe so baltrad-node can listen to RAVE's log
     - authentication/authorization?
     - https as an alternative to http

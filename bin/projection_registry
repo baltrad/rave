@@ -1,0 +1,104 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2011 - Swedish Meteorological and Hydrological Institute (SMHI)
+
+This file is part of RAVE.
+
+RAVE is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+RAVE is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+See the GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
+'''
+## Command-line tool for managing the registry of Cartesian projection definitions.
+
+## @file
+## @author Daniel Michelson, SMHI
+## @date 2011-06-27
+
+import sys
+import rave_defines
+import rave_projection
+
+
+## Adds an algorithm to the registry. It will be replaced if it's already there.
+# @param id String containing the identifier of the new projection
+# @param description String containing a description of the new projection
+# @param definition PROJ.4 string containing the new projection's definition
+def add(id, description, definition):
+	rave_projection.add(id, description, definition)
+	
+
+## Lists the entries in the registry.
+def List():
+    for id in rave_projection.keys():
+        rave_projection.describe(id)    
+
+
+## Removes a projection from the registry.
+# @param id string, the identifier of the projection to remove.
+def remove(id):
+    rave_projection.remove(id)
+
+
+if __name__ == "__main__":
+    from optparse import OptionParser
+
+    description = "Add/remove an entry in the projections registry, or list the registry contents."
+
+    usage = "usage: %prog -arl [-i <identifier> -d <'description'> -D <'PROJ.4 definition'>] [h]"
+    parser = OptionParser(usage=usage, description=description)
+
+    parser.add_option("-a", "--add", action="store_true", dest="add",
+                      help="Add an algorithm to the registry.")
+
+    parser.add_option("-r", "--remove", action="store_true", dest="remove",
+                      help="Remove an algorithm from the registry.")
+
+    parser.add_option("-l", "--list", action="store_true", dest="list",
+                      help="List the entries in the registry.")
+
+#    parser.add_option("-H", "--host", dest="host", default='http://%s:%i/RAVE' % (rave_defines.PGF_HOST, rave_defines.PGF_PORT),
+#                      help="URI of the running server. Don't forget to use the http(s):// prefix and /RAVE .")
+
+    parser.add_option("-i", "--identifier", dest="id",
+                      help="Identifier string of the projection.")
+
+    parser.add_option("-d", "--description", dest="desc",
+                      help="Free-text description of the projection.")
+
+    parser.add_option("-D", "--definition", dest="definition",
+                      help="PROJ.4 definition of the projection.")
+
+    (options, args) = parser.parse_args()
+
+    if not (options.add or options.remove or options.list):
+        parser.print_help()
+        sys.exit()
+    if options.add:
+        if not (options.id and options.desc and options.definition):
+            parser.print_help()
+            sys.exit()
+    if options.remove:
+        if not options.id:
+            parser.print_help()
+            sys.exit()
+
+    if options.remove:
+        remove(options.id)
+
+    elif options.list:
+        List()
+
+    elif options.add:
+        add(options.id, options.desc, options.definition)
+
+    else:
+        parser.print_help()

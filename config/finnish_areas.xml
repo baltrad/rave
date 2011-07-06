@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='iso-8859-1'?>
+<areas>
+<area id="fingmaps_2000">
+  <description>FINRAD, Google Maps, 2 km</description>
+  <areadef>
+    <arg id="pcs">gmaps</arg>
+    <arg id="xsize" type="int">870</arg>
+    <arg id="ysize" type="int">1466</arg>
+    <arg id="scale" type="float">2000</arg>
+    <arg id="extent" type="sequence">1905528.78317, 7940461.179, 3645528.78317, 10872461.179</arg>
+  </areadef>
+</area>
+</areas>

@@ -23,6 +23,10 @@ PYCC=
 PYVERSION=`python -c "import sys; print sys.version[[:3]]"`
 PY_EXEC_INSTALLDIR=`python -c "import sys; print sys.exec_prefix"`
 PY_CONFIG_MAKE="$PY_EXEC_INSTALLDIR/lib/python$PYVERSION/config/Makefile"
+if [ ! -f "$PY_CONFIG_MAKE" ] 
+then
+ PY_CONFIG_MAKE="$PY_EXEC_INSTALLDIR/lib64/python$PYVERSION/config/Makefile"
+fi
 PYCC=`cat $PY_CONFIG_MAKE | sed -n "/^CC=/p" | sed -e "s/CC=//g" | awk '{print $1}'`
 AC_MSG_RESULT("$PYCC")
 CC=$PYCC
