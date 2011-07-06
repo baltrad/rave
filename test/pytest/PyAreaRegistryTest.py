@@ -24,13 +24,6 @@ Tests the py area registry module.
 @date 2010-12-20
 '''
 import unittest
-SKIP_TESTS=1
-try:
-  import _projectionregistry
-  import _arearegistry
-  SKIP_TESTS=0
-except:
-  print "  Skipping area registry tests!!"
 import _projection
 import _area
 import _rave
@@ -53,7 +46,7 @@ class PyAreaRegistryTest(unittest.TestCase):
       os.unlink(self.TEMPORARY_FILE)
 
   def test_new(self):
-    if SKIP_TESTS == 1:
+    if not _rave.isXmlSupported():
       return
     import _arearegistry
     obj = _arearegistry.new()
@@ -62,7 +55,7 @@ class PyAreaRegistryTest(unittest.TestCase):
     self.assertNotEqual(-1, isok)
 
   def test_load(self):
-    if SKIP_TESTS == 1:
+    if not _rave.isXmlSupported():
       return
     import _arearegistry
     registry = _arearegistry.load(self.AREA_FIXTURE)
@@ -73,7 +66,7 @@ class PyAreaRegistryTest(unittest.TestCase):
     self.assertEquals("nrd2km_laea20e60n", registry.get(1).id)
 
   def test_load_laea(self):
-    if SKIP_TESTS == 1:
+    if not _rave.isXmlSupported():
       return
     import _arearegistry
     registry = _arearegistry.load(self.AREA_FIXTURE)
@@ -92,7 +85,7 @@ class PyAreaRegistryTest(unittest.TestCase):
     self.assertAlmostEquals(-1787515.59616, area.extent[3], 4)
     
   def test_load_laea_withprojregistry(self):
-    if SKIP_TESTS == 1:
+    if not _rave.isXmlSupported():
       return
     import _arearegistry
     import _projectionregistry
@@ -115,7 +108,7 @@ class PyAreaRegistryTest(unittest.TestCase):
     
     
   def test_getByName(self):
-    if SKIP_TESTS == 1:
+    if not _rave.isXmlSupported():
       return
     import _arearegistry    
     registry = _arearegistry.load(self.AREA_FIXTURE)
@@ -125,7 +118,7 @@ class PyAreaRegistryTest(unittest.TestCase):
     self.assertEquals("nrd2km_laea20e60n", registry.getByName("nrd2km_laea20e60n").id)
 
   def test_add(self):
-    if SKIP_TESTS == 1:
+    if not _rave.isXmlSupported():
       return
     import _arearegistry    
     registry = _arearegistry.load(self.AREA_FIXTURE)
@@ -142,7 +135,7 @@ class PyAreaRegistryTest(unittest.TestCase):
     self.assertEquals("nisse", registry.getByName("nisse").id)
 
   def test_remove(self):
-    if SKIP_TESTS == 1:
+    if not _rave.isXmlSupported():
       return
     import _arearegistry    
     registry = _arearegistry.load(self.AREA_FIXTURE)
@@ -151,7 +144,7 @@ class PyAreaRegistryTest(unittest.TestCase):
     self.assertEquals("nrd2km_laea20e60n", registry.get(0).id)
 
   def test_removeByName(self):
-    if SKIP_TESTS == 1:
+    if not _rave.isXmlSupported():
       return
     import _arearegistry    
     registry = _arearegistry.load(self.AREA_FIXTURE)
@@ -160,7 +153,7 @@ class PyAreaRegistryTest(unittest.TestCase):
     self.assertEquals("nrd2km", registry.get(0).id)
 
   def test_write(self):
-    if SKIP_TESTS == 1:
+    if not _rave.isXmlSupported():
       return
     import _arearegistry    
     registry = _arearegistry.load(self.AREA_FIXTURE)
@@ -194,7 +187,7 @@ class PyAreaRegistryTest(unittest.TestCase):
     self.assertEquals("-1787515.5", string.strip(extent[3])[:10])
 
   def test_write_2(self):
-    if SKIP_TESTS == 1:
+    if not _rave.isXmlSupported():
       return
     import _arearegistry    
     registry = _arearegistry.load(self.AREA_FIXTURE)

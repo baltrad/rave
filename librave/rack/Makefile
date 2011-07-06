@@ -19,7 +19,7 @@ RACKINC= -I. -I.. -I../drain/image -I../drain/radar -I../drain/util \
 	$(ZLIB_INCDIR) $(HDF5_INCDIR) $(PROJ_INCLUDE_DIR) \
 	-I../../transform -I../transform
 
-LDFLAGS+= -L. -L../transform -L../../transform -L/usr/local/lib -L/usr/lib -L$(HLHDF_LIB_DIR) -L./drain -L../drain 
+LDFLAGS+= -L. -L../transform -L../../transform -L$(HLHDF_LIB_DIR) $(ZLIB_LIBDIR) $(HDF5_LIBDIR) $(PROJ_LIB_DIR) -L./drain -L../drain 
 
 ifeq ($(EXPAT_SUPPRESSED), no)
 RACKINC+= $(EXPAT_INCLUDE_DIR)
