@@ -456,6 +456,16 @@ RaveObjectList_t* PolarScan_getQualityFields(PolarScan_t* scan);
 int PolarScan_getRangeIndex(PolarScan_t* scan, double r);
 
 /**
+ * Returns the range for the specified range index.
+ * Same as rscale * ri. If something goes wrong a negative
+ * value will be returned.
+ * @param[in] scan - self
+ * @param[in] ri - range index
+ * @return the range in meters or a negative value upon bad input
+ */
+double PolarScan_getRange(PolarScan_t* scan, int ri);
+
+/**
  * Returns the azimuth index for the specified azimuth.
  * @param[in] scan - the scan
  * @param[in] a - the azimuth (in radians)

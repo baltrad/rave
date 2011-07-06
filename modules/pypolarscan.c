@@ -325,6 +325,24 @@ static PyObject* _pypolarscan_getRangeIndex(PyPolarScan* self, PyObject* args)
 }
 
 /**
+ * Calculates the range from a specific range index
+ * @param[in] self - this instance
+ * @param[in] args - the range index as an integer
+ * @return the range or a negative value if outside boundaries
+ */
+static PyObject* _pypolarscan_getRange(PyPolarScan* self, PyObject* args)
+{
+  double range = 0.0L;
+  int index = -1;
+  if (!PyArg_ParseTuple(args, "i", &index)) {
+    return NULL;
+  }
+  range = PolarScan_getRange(self->scan, index);
+
+  return PyFloat_FromDouble(range);
+}
+
+/**
  * Seturns the value at the specified ray and bin index.
  * @param[in] self - this instance
  * @param[in] args - bin index, ray index.
@@ -886,6 +904,7 @@ static struct PyMethodDef _pypolarscan_methods[] =
   {"hasParameter", (PyCFunction) _pypolarscan_hasParameter, 1},
   {"getAzimuthIndex", (PyCFunction) _pypolarscan_getAzimuthIndex, 1},
   {"getRangeIndex", (PyCFunction) _pypolarscan_getRangeIndex, 1},
+  {"getRange", (PyCFunction) _pypolarscan_getRange, 1},
   {"setValue", (PyCFunction) _pypolarscan_setValue, 1},
   {"setParameterValue", (PyCFunction) _pypolarscan_setParameterValue, 1},
   {"getValue", (PyCFunction) _pypolarscan_getValue, 1},

@@ -188,12 +188,13 @@ static int PolarScan_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj
   if (!PolarScan_setDefaultParameter(this, PolarScan_getDefaultParameter(src))) {
     goto error;
   }
+  /* REMOVED BY AHE
   if (this->paramname != NULL && src->param != NULL) {
     this->param = (PolarScanParam_t*)RaveObjectHashTable_get(this->parameters, this->paramname);
     if (this->param == NULL) {
       goto error;
     }
-  }
+  }*/
   return 1;
 error:
   RAVE_FREE(this->source);
@@ -668,8 +669,28 @@ int PolarScan_getRangeIndex(PolarScan_t* scan, double r)
   if (result >= scan->nbins || result < 0) {
     result = -1;
   }
+
   return result;
 }
+
+double PolarScan_getRange(PolarScan_t* scan, int ri)
+{
+  double result = -1.0L;
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+
+  if (scan->nbins <= 0 || scan->rscale <= 0.0) {
+    RAVE_WARNING0("Can not calculate range");
+    goto done;
+  }
+  if (ri < 0 || ri >= scan->nbins) {
+    RAVE_INFO0("Providing range index outside boundaries");
+    goto done;
+  }
+  result = ((double)ri) * scan->rscale;
+done:
+  return result;
+}
+
 
 int PolarScan_getAzimuthIndex(PolarScan_t* scan, double a)
 {

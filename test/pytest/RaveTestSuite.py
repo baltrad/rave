@@ -42,9 +42,10 @@ from PyProjectionRegistryTest import *
 from PyAreaRegistryTest import *
 from PgfVolumePluginTest import *
 from RaveScansun import *
+from PyDetectionRangeTest import *
 
 # Some tests for verifying that we are producing products
-from MeanTest import *
+#from MeanTest import *
 
 if __name__ == '__main__':
   unittest.main()

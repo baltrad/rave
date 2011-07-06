@@ -444,6 +444,20 @@ class PyPolarScanTest(unittest.TestCase):
       result = obj.getRangeIndex(rr[0])
       self.assertEquals(rr[1], result)
   
+  def test_getRange(self):
+    obj = _polarscan.new()
+    dbzhParam = _polarscanparam.new()
+    dbzhParam.quantity = "DBZH"
+    dbzhParam.setData(numpy.zeros((1,200), numpy.int8))
+    obj.addParameter(dbzhParam)        
+    obj.rscale = 1000.0
+
+    for ri in [0,1,2,3,4,20,40,199]:
+      result = obj.getRange(ri)
+      self.assertAlmostEquals(ri*1000.0, result)
+    self.assertTrue(obj.getRange(200) < 0.0)
+    self.assertTrue(obj.getRange(-1) < 0.0)
+  
   def test_getAzimuthIndex(self):
     obj = _polarscan.new()
     dbzhParam = _polarscanparam.new()

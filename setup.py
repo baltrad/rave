@@ -427,6 +427,15 @@ if expatsuppressed == "no":
     )
   )
 
+MODULES.append(
+    Extension(
+        "_detectionrange", ["modules/pydetectionrange.c"],
+        include_dirs=INCLUDE_DIRS,
+        library_dirs=LIBRARY_DIRS,
+        libraries=LIBRARIES
+        )
+    )
+
 INCLUDE_DIRS.append('./librave/scansun')
 LIBRARY_DIRS.append('./librave/scansun')
 LIBRARIES.append('ravescansun')
