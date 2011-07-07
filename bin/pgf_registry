@@ -61,6 +61,7 @@ def remove(server, name):
 
 if __name__ == "__main__":
     from optparse import OptionParser
+    import rave_defines
 
     description = "Add or remove an entry in the algorithm registry, or list the registry contents."
 
@@ -79,7 +80,7 @@ if __name__ == "__main__":
     parser.add_option("-l", "--list", action="store_true", dest="list",
                       help="List the entries in the registry.")
 
-    parser.add_option("-H", "--host", dest="host",
+    parser.add_option("-H", "--host", dest="host", default='http://%s:%i/RAVE' % (rave_defines.PGF_HOST, rave_defines.PGF_PORT),
                       help="URI of the running server. Don't forget to use the http(s):// prefix and /RAVE .")
 
     parser.add_option("-n", "--name", dest="name",

@@ -27,7 +27,7 @@ import sys, os
 import traceback
 import SimpleXMLRPCServer
 from rave_daemon import Daemon
-from rave_defines import PIDFILE, HOST, PORT, STDOE
+from rave_defines import PIDFILE, PGF_HOST, PGF_PORT, STDOE
 
 
 ## Stub class for alllowing server POSTs only to one place, providing
@@ -45,7 +45,7 @@ class rave_pgf_server(Daemon):
   # @param stdin string path to where to direct stdin
   # @param stdout string path to where to direct stdout
   # @param stderr string path to where to direct stderr
-  def __init__(self, host=HOST, port=PORT,
+  def __init__(self, host=PGF_HOST, port=PGF_PORT,
 #               stdin='/dev/null', stdout=STDOE, stderr=STDOE):
                stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
     self.pidfile = PIDFILE
