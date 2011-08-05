@@ -2,6 +2,7 @@
 
     Copyright 2001 - 2010  Markus Peura, 
     Finnish Meteorological Institute (First.Last@fmi.fi)
+    Copyright 2011 Martin Raspaud, SMHI <martin.raspaud@smhi.se>
 
 
     This file is part of Rack.
@@ -50,6 +51,21 @@ int FMI_IMAGE_COMMENT=YES;
   *b=pseudo_sigmoid(0.1,*b)*(*b);
   }
 */
+
+FmiImage *
+new_image(int sweep_count)
+{
+  FmiImage * result=NULL;
+  int i=0;
+
+  result = (FmiImage *)malloc(sizeof(FmiImage) * sweep_count);
+  for(i=0; i<sweep_count; i++)
+    result[i].heights=NULL;
+    result[i].array=NULL;
+    result[i].type=NULL_IMAGE;
+  reset_image(result);
+  return result;
+}
 
 int initialize_image(FmiImage *img){
   img->type=TRUE_IMAGE;
@@ -120,15 +136,15 @@ void link_image_channel(FmiImage *source,int channel,FmiImage *linked){
 }
 
 void split_to_link_array(FmiImage *source,int segments,FmiImage *target){
-  int hs,ht,k;
+  int hs=0,ht,k;
   if (segments==0)
     fmi_error("split_to_link_array: zero channels?");
-  hs=(source->height*source->channels);
-  if (hs%segments!=0)
-    fmi_error("split_to_link_array: height not divisible by # segments ");
-  ht=hs/segments;
-  for (k=0;k<segments;k++)
-    link_image_segment(source,k*ht,ht,&target[k]);
+  for (k=0;k<segments;k++){
+    ht = source->heights[k] * source->channels;
+    link_image_segment(source,hs,ht,&target[k]);
+    hs += ht;
+  }
+  
 }
 
 void split_to_channels(FmiImage *target,int channels){
@@ -154,6 +170,8 @@ void concatenate_images_vert(FmiImage *source,int count,FmiImage *target){
   // START FROM FIRST
   fmi_debug(3,"concat base");
   copy_image_properties(source,target);
+  target->sweep_count = count;
+  target->heights = (int *)malloc(sizeof(int) * count);
   if (FMI_DEBUG(3)) image_info(target);
   // ADD THE REST
   for (k=1;k<count;k++){
@@ -164,6 +182,7 @@ void concatenate_images_vert(FmiImage *source,int count,FmiImage *target){
     if (source[k].channels!=target->channels)
       fmi_error("concatenate_images: not implemented for variable channel counts");
     target->height+=source[k].height;
+    target->heights[k-1] = source[k].height;
   }
   fmi_debug(3,"to be concat");
   if (FMI_DEBUG(3)) image_info(target);
@@ -189,10 +208,18 @@ void concatenate_images_vert(FmiImage *source,int count,FmiImage *target){
 */
 
 int copy_image_properties(FmiImage *sample,FmiImage *target){
-  target->width    =sample->width;
-  target->height   =sample->height;
-  target->channels =sample->channels;
-  target->max_value=sample->max_value;
+  target->width       = sample->width;
+  target->height      = sample->height;
+  target->channels    = sample->channels;
+  target->max_value   = sample->max_value;
+  target->sweep_count = sample->sweep_count;
+
+  if(sample->heights == NULL)
+    target->heights   = NULL;
+  else
+    target->heights = (int*)malloc(sample->sweep_count * sizeof(int));
+    memcpy(target->heights, sample->heights, sample->sweep_count * sizeof(int));
+
   //  target->format=sample->format; olis ehk� OK
   target->coord_overflow_handler_x=sample->coord_overflow_handler_x;
   target->coord_overflow_handler_y=sample->coord_overflow_handler_y;
@@ -253,6 +280,11 @@ void reset_image(FmiImage *image){
     image->height=0;
     image->channels=0;
     image->max_value=0;
+    image->sweep_count=0;
+    if(image->heights != NULL)
+      free(image->heights);
+    image->heights=NULL;
+    image->array=NULL;
     image->type=NULL_IMAGE;
     return;
   default:

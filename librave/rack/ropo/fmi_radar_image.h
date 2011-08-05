@@ -2,6 +2,7 @@
 
     Copyright 2001 - 2010  Markus Peura,
     Finnish Meteorological Institute (First.Last@fmi.fi)
+    Copyright 2011 Martin Raspaud, SMHI <martin.raspaud@smhi.se>
 
 
     This file is part of Rack.
@@ -65,8 +66,6 @@ int bin_to_bin(int sweep_bin,float sweep_angle,float target_sweep_angle);
 
 int bin_altitude(int sweep_bin,float sweep_angle);
 int altitude_to_altitude(int altitude,float sweep_angle);
-
-int bin_area(int sweep_bin);
 
 void xy_to_polar(int i,int j,int *theta,int *radius);
 

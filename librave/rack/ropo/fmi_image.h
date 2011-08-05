@@ -2,6 +2,7 @@
 
     Copyright 2001 - 2010  Markus Peura,
     Finnish Meteorological Institute (First.Last@fmi.fi)
+    Copyright 2011 Martin Raspaud, SMHI <martin.raspaud@smhi.se>
 
 
     This file is part of Rack.
@@ -130,6 +131,11 @@ struct fmi_image {
   //  int *channel_mapping;
   int area,volume;
   int max_value;
+
+  int sweep_count;
+  int *heights;
+
+
   /* depth ? */
   /* unsigned char **array;*/
   Byte *array;
@@ -147,6 +153,7 @@ int legal_coords(FmiImage *img,int x,int y);
 
 /* BASIC OPERATIONS OFR SETTING AND RESETTING IMAGES */
 /*int set(FmiImage *img,int width,int height,int channels);*/
+FmiImage *new_image(int sweep_count); /* Allocator */
 int initialize_image(FmiImage *img); // constructor
 
 void reset_image(FmiImage *img);

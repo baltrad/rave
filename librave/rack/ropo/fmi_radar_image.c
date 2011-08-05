@@ -2,7 +2,7 @@
 
     Copyright 2001 - 2010  Markus Peura, 
     Finnish Meteorological Institute (First.Last@fmi.fi)
-
+    Copyright 2011 Martin Raspaud, SMHI <martin.raspaud@smhi.se>
 
     This file is part of Rack.
 
@@ -146,16 +146,6 @@ int bin_to_bin(int sweep_bin,float sweep_angle,float target_sweep_angle){
   return  ground_to_bin( bin_to_ground(sweep_bin,sweep_angle), target_sweep_angle);
 }
 
-int bin_area(int sweep_bin){
-  // pi=  3.141592654
-  // 22/7=3.142857143
-#define PI_INT 22/7
-  // sector2 - sector1
-  // AREA of sector: 1/2 * (b+1) * (b+1) * 2PI/360 = (b+1)^2 PI/360
-  // AREA_DIFF=  (b+1)^2  - b^2 PI/360 = (2b+1)+PI/360
-  return (2*sweep_bin+1)*FMI_RADAR_BIN_DEPTH*PI_INT*FMI_RADAR_RAY_COUNT;
-}
-
 void xy_to_polar(int i,int j,int *theta,int *radius){
   //  const int radius=250;
   i=(i-250)*2;
@@ -180,12 +170,17 @@ void volume_to_cappi(FmiImage *volume,int height,FmiImage *cappi){
   int mix;
 
   // assumption: max area = area of lowest ppi
+  /*
+    Can't work with variable ray counts.
+    Actually, that shouldn't be channels, should it ?
+
+    martin.raspaud@NOSPAM.smhi.se, Fri Aug  5 11:04:42 2011.
   if (volume->channels==1){
     fmi_debug(0,"warning: computing CAPPI of only one PPI?");
     channels=volume->channels;
     split_to_channels(volume,volume->height/FMI_RADAR_RAY_COUNT);
   }
-
+  */
   canonize_image(&volume[1],cappi);
   for (i=0;i<cappi->width;i++){
 	  upper=-1;
