@@ -1,8 +1,8 @@
 /**
 
+    Copyright 2011 Martin Raspaud, SMHI <martin.raspaud@smhi.se>
     Copyright 2001 - 2010  Markus Peura,
     Finnish Meteorological Institute (First.Last@fmi.fi)
-    Copyright 2011 Martin Raspaud, SMHI <martin.raspaud@smhi.se>
 
 
     This file is part of Rack.
@@ -43,6 +43,10 @@ extern float fmi_radar_sweep_angles[FMI_RADAR_SWEEP_COUNT];
 //#define FMI_RADAR_RAY_COUNT 360
 
 #define EARTH_RADIUS43 (EARTH_RADIUS*4/3) // 500m
+
+/* Context */
+extern float fmi_radar_bin_depth;
+void setup_context(FmiImage * source);
 
 // TRANSFORMS
 // intensity transforms

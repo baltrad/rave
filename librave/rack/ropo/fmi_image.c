@@ -1,9 +1,8 @@
 /**
 
+    Copyright 2011 Martin Raspaud, SMHI <martin.raspaud@smhi.se>
     Copyright 2001 - 2010  Markus Peura, 
     Finnish Meteorological Institute (First.Last@fmi.fi)
-    Copyright 2011 Martin Raspaud, SMHI <martin.raspaud@smhi.se>
-
 
     This file is part of Rack.
 
@@ -62,6 +61,8 @@ new_image(int sweep_count)
   for(i=0; i<sweep_count; i++)
     result[i].heights=NULL;
     result[i].array=NULL;
+    result[i].elevation_angle=0.0;
+    result[i].bin_depth=0.0;
     result[i].type=NULL_IMAGE;
   reset_image(result);
   return result;
@@ -209,11 +210,13 @@ void concatenate_images_vert(FmiImage *source,int count,FmiImage *target){
 */
 
 int copy_image_properties(FmiImage *sample,FmiImage *target){
-  target->width       = sample->width;
-  target->height      = sample->height;
-  target->channels    = sample->channels;
-  target->max_value   = sample->max_value;
-  target->sweep_count = sample->sweep_count;
+  target->width           = sample->width;
+  target->height          = sample->height;
+  target->channels        = sample->channels;
+  target->max_value       = sample->max_value;
+  target->sweep_count     = sample->sweep_count;
+  target->bin_depth       = sample->bin_depth;
+  target->elevation_angle = sample->elevation_angle;
 
   if(sample->heights == NULL)
     target->heights   = NULL;
@@ -284,6 +287,8 @@ void reset_image(FmiImage *image){
     image->channels=0;
     image->max_value=0;
     image->sweep_count=0;
+    image->bin_depth=0.0;
+    image->elevation_angle=0.0;
     if(image->heights != NULL)
       free(image->heights);
     image->heights=NULL;

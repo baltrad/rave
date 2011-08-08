@@ -1,8 +1,8 @@
 /**
 
+    Copyright 2011 Martin Raspaud, SMHI <martin.raspaud@smhi.se>
     Copyright 2001 - 2010  Markus Peura,
     Finnish Meteorological Institute (First.Last@fmi.fi)
-    Copyright 2011 Martin Raspaud, SMHI <martin.raspaud@smhi.se>
 
 
     This file is part of Rack.
@@ -127,6 +127,11 @@ extern int FMI_IMAGE_COMMENT;
 
 
 struct fmi_image {
+
+  /*
+    width = bins
+    height = rays
+  */
   int width,height,channels;
   //  int *channel_mapping;
   int area,volume;
@@ -134,7 +139,9 @@ struct fmi_image {
 
   int sweep_count;
   int *heights;
-
+  
+  float bin_depth;
+  float elevation_angle;
 
   /* depth ? */
   /* unsigned char **array;*/

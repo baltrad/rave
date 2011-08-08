@@ -1,8 +1,8 @@
 /**
 
+    Copyright 2011 Martin Raspaud, SMHI <martin.raspaud@smhi.se>
     Copyright 2001 - 2010  Markus Peura, 
     Finnish Meteorological Institute (First.Last@fmi.fi)
-    Copyright 2011 Martin Raspaud, SMHI <martin.raspaud@smhi.se>
 
     This file is part of Rack.
 
@@ -36,6 +36,7 @@
 
 
 float fmi_radar_sweep_angles[FMI_RADAR_SWEEP_COUNT]={0.5, 1.5, 2.5, 3.5, 4.5, 6.0, 8.0, 11.0, 20.0, 45.0};
+float fmi_radar_bin_depth = 0.0;
 
 #define RGBCOUNT 14
 int dbz_rgb[RGBCOUNT][4]={
@@ -55,6 +56,11 @@ int dbz_rgb[RGBCOUNT][4]={
   { 90,  255,  0,255}
 };
 
+void
+setup_context(FmiImage * source)
+{
+  fmi_radar_bin_depth = source->bin_depth;
+}
 
 int abs_dbz_to_byte(Dbz dbz){
   int g;
@@ -94,16 +100,16 @@ float radians_to_degree(float radians){ return (radians*360.0/(2.0*PI));}
 float degrees_to_radian(float degrees){ return (degrees*2.0*PI/360.0);}
 
 int bin_to_metre(int bin){
-  return ((1+2*bin) * FMI_RADAR_BIN_DEPTH/2);
-  //    = (0.5+bin) * FMI_RADAR_BIN_DEPTH
+  return ((1+2*bin) * fmi_radar_bin_depth/2);
+  //    = (0.5+bin) * fmi_radar_bin_depth
 }
 
 int metre_to_bin(int metre){
-  return(metre/FMI_RADAR_BIN_DEPTH);
+  return(metre/fmi_radar_bin_depth);
 }
 
 int bin_to_altitude(int sweep_bin,float sweep_angle){
-  //  const float b=(0.5+(float)sweep_bin)*FMI_RADAR_BIN_DEPTH;
+  //  const float b=(0.5+(float)sweep_bin)*fmi_radar_bin_depth;
   const float b=bin_to_metre(sweep_bin);
   const float a=EARTH_RADIUS43;
   // by cosine rule
@@ -117,7 +123,7 @@ int altitude_to_bin(int altitude,float sweep_angle){
   const float beta=PI-gamma-asin(a*sin(gamma)/c);
   // by sine rule
   // sin(gamma)/c = sin(beta)/b  => b=sin(beta)*c/sin(gamma)
-  return (sin(beta)*c/sin(gamma)/FMI_RADAR_BIN_DEPTH);
+  return (sin(beta)*c/sin(gamma)/fmi_radar_bin_depth);
 }
 
 int ground_to_bin(int g_metre,float sweep_angle){
@@ -128,7 +134,7 @@ int ground_to_bin(int g_metre,float sweep_angle){
   //  printf("...%f\n",sweep_angle);
   // SINE RULE
   // sin(beta)/BIN = sin(gamma) / EARTH_RADIUS
-  return (int)(sin(beta)/sin(gamma)*(float)EARTH_RADIUS43/FMI_RADAR_BIN_DEPTH);
+  return (int)(sin(beta)/sin(gamma)*(float)EARTH_RADIUS43/fmi_radar_bin_depth);
   //  return (int)(2.0*sweep_angle);
 }
 
@@ -181,6 +187,8 @@ void volume_to_cappi(FmiImage *volume,int height,FmiImage *cappi){
     split_to_channels(volume,volume->height/FMI_RADAR_RAY_COUNT);
   }
   */
+  setup_context(volume);
+
   canonize_image(&volume[1],cappi);
   for (i=0;i<cappi->width;i++){
 	  upper=-1;
@@ -188,7 +196,7 @@ void volume_to_cappi(FmiImage *volume,int height,FmiImage *cappi){
 	  h_upper=INT_MAX;
 	  h_lower=0;
 	  for (k=0;k<volume->channels;k++){
-		  bin[k]=ground_to_bin(i*FMI_RADAR_BIN_DEPTH,fmi_radar_sweep_angles[k]);
+		  bin[k]=ground_to_bin(i*fmi_radar_bin_depth,fmi_radar_sweep_angles[k]);
 		  if (bin[k]>=FMI_RADAR_BIN_COUNT) bin[k]=FMI_RADAR_BIN_COUNT-1;
 		  h=bin_to_altitude(bin[k],fmi_radar_sweep_angles[k]);
 		  if ((h<=height)&&(h>=h_lower)){
@@ -781,6 +789,8 @@ void detect_ground_echo_minnetgrad(FmiImage *source,int ppi_count,FmiImage *prob
   float altitude[FMI_RADAR_BIN_COUNT];
   int bin[FMI_RADAR_BIN_COUNT];
 
+  setup_context(source);
+
   fmi_debug(2,"detect_ground_echo");
 
   canonize_image(&source[0],prob);
@@ -883,6 +893,8 @@ void detect_ground_echo_mingrad(FmiImage *source,int ppi_count,FmiImage *prob,in
   FmiImage debug_grad_raw,debug_grad;
   float altitude[FMI_RADAR_BIN_COUNT];
   int bin[FMI_RADAR_BIN_COUNT];
+
+  setup_context(source);
 
   fmi_debug(2,"detect_ground_echo");
 
@@ -1312,34 +1324,36 @@ void detect_insect_band(FmiImage *source,FmiImage *prob,int start_intensity,int 
 }
 
 void detect_biomet(FmiImage *source,FmiImage *prob,int intensity_max,int intensity_delta,int altitude_max,int altitude_delta){
-	register int i,j,k;
-	int f,h;
-	//int threshold,temp;
-	canonize_image(source,prob);
-	for (k=0;k<source->channels;k++)
-		for (i=0;i<source->width;i++){
-			h=bin_to_altitude(i,fmi_radar_sweep_angles[k]);
-			//printf("bin %d[%d]: %d metres",i,k,h);
-			h=(pseudo_sigmoid(altitude_delta,altitude_max-h)+255)/2;
-			//      printf(", prob=%d\n",h);
-			//printf("bin %d[%d]: %d\n",i,k,h);
-			for (j=0;j<source->height;j++){
-				//      for (j=0;j<2;j++){
-				f = get_pixel(source,i,j,k);
-				if ((f==0)||(f==NO_DATA)){
-					f=240;  // ?
-					put_pixel(prob,i,j,k,0);
-				}
-				else {
-					f=(pseudo_sigmoid(intensity_delta,intensity_max-f)+255)/2;
-					put_pixel(prob,i,j,k,f*h/255);
-				}
-				//	printf("bin %d[%d]: prob=%d \n",i,k,h);
-				//	put_pixel(prob,i,j,k,f);
-				//	put_pixel(prob,i,j,k,129);
-			}
-			//put_pixel(prob,i,j,k,threshold);
-		}
+  register int i,j,k;
+  int f,h;
+  
+  setup_context(source);
+  //int threshold,temp;
+  canonize_image(source,prob);
+  for (k=0;k<source->channels;k++)
+    for (i=0;i<source->width;i++){
+      h=bin_to_altitude(i,fmi_radar_sweep_angles[k]);
+      //printf("bin %d[%d]: %d metres",i,k,h);
+      h=(pseudo_sigmoid(altitude_delta,altitude_max-h)+255)/2;
+      //      printf(", prob=%d\n",h);
+      //printf("bin %d[%d]: %d\n",i,k,h);
+      for (j=0;j<source->height;j++){
+        //      for (j=0;j<2;j++){
+        f = get_pixel(source,i,j,k);
+        if ((f==0)||(f==NO_DATA)){
+          f=240;  // ?
+          put_pixel(prob,i,j,k,0);
+        }
+        else {
+          f=(pseudo_sigmoid(intensity_delta,intensity_max-f)+255)/2;
+          put_pixel(prob,i,j,k,f*h/255);
+        }
+        //	printf("bin %d[%d]: prob=%d \n",i,k,h);
+        //	put_pixel(prob,i,j,k,f);
+        //	put_pixel(prob,i,j,k,129);
+      }
+      //put_pixel(prob,i,j,k,threshold);
+    }
 }
 
 /* DISPLAY AND VISUALIZATION */
@@ -1471,6 +1485,7 @@ void pgm_to_redgreen(FmiImage *source,FmiImage *target){
 void virtual_rhi(FmiImage *volume){
   int i,j=0,k,j_start=0,j_end;
   FmiImage target;
+  setup_context(volume);
   copy_image_properties(volume,&target);
   target.channels=1;
   initialize_image(&target);
