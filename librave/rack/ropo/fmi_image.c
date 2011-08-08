@@ -62,6 +62,7 @@ new_image(int sweep_count)
     result[i].heights=NULL;
     result[i].array=NULL;
     result[i].elevation_angle=0.0;
+    result[i].sweep_count=0;
     result[i].bin_depth=0.0;
     result[i].type=NULL_IMAGE;
   reset_image(result);
@@ -146,7 +147,7 @@ void split_to_link_array(FmiImage *source,int segments,FmiImage *target){
     link_image_segment(source,hs,ht,&target[k]);
     hs += ht;
   }
-  
+  target->sweep_count = segments;
 }
 
 void split_to_channels(FmiImage *target,int channels){

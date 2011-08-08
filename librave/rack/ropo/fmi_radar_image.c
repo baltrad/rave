@@ -166,7 +166,7 @@ void volume_to_cappi(FmiImage *volume,int height,FmiImage *cappi){
   int i,j,k;
   // VERTICAL INTERPOLATION SCHEME
   int channels = volume->channels;
-  int bin[FMI_RADAR_SWEEP_COUNT];
+  int *bin;
   Byte b,b_upper,b_lower;
   //  const Byte PSEUDOCAPPI_MARKER=31;
   const Byte PSEUDOCAPPI_MARKER=1;
@@ -174,6 +174,8 @@ void volume_to_cappi(FmiImage *volume,int height,FmiImage *cappi){
   int upper,lower;
   int h,h_upper,h_lower;
   int mix;
+
+  bin = (int *)malloc(sizeof(int) * volume->sweep_count);
 
   // assumption: max area = area of lowest ppi
   /*
@@ -191,26 +193,27 @@ void volume_to_cappi(FmiImage *volume,int height,FmiImage *cappi){
 
   canonize_image(&volume[1],cappi);
   for (i=0;i<cappi->width;i++){
-	  upper=-1;
-	  lower=-1;
-	  h_upper=INT_MAX;
-	  h_lower=0;
-	  for (k=0;k<volume->channels;k++){
-		  bin[k]=ground_to_bin(i*fmi_radar_bin_depth,fmi_radar_sweep_angles[k]);
-		  if (bin[k]>=FMI_RADAR_BIN_COUNT) bin[k]=FMI_RADAR_BIN_COUNT-1;
-		  h=bin_to_altitude(bin[k],fmi_radar_sweep_angles[k]);
-		  if ((h<=height)&&(h>=h_lower)){
-			  lower=k;
-			  h_lower=h;
-		  }
-		  if ((h>=height)&&(h<=h_upper)){
-			  upper=k;
-			  h_upper=h;
-		  }
-	  }
+    upper=-1;
+    lower=-1;
+    h_upper=INT_MAX;
+    h_lower=0;
+    for (k=0;k<volume->channels;k++){
+      bin[k]=ground_to_bin(i*fmi_radar_bin_depth,volume[k+1].elevation_angle);
+      if (bin[k]>=volume->width) 
+        bin[k]=volume->width-1;
+      h=bin_to_altitude(bin[k],volume[k+1].elevation_angle);
+      if ((h<=height)&&(h>=h_lower)){
+        lower=k;
+        h_lower=h;
+      }
+      if ((h>=height)&&(h<=h_upper)){
+        upper=k;
+        h_upper=h;
+      }
+    }
 
-	  if (FMI_DEBUG(5))
-		  fprintf(stderr,"lower(%d)=%dm [%d]\t upper(%d)=%dm [%d]\n",lower,h_lower,bin[lower],upper,h_upper,bin[upper]);
+    if (FMI_DEBUG(5))
+      fprintf(stderr,"lower(%d)=%dm [%d]\t upper(%d)=%dm [%d]\n",lower,h_lower,bin[lower],upper,h_upper,bin[upper]);
 
 
     if (upper==-1)
@@ -246,6 +249,7 @@ void volume_to_cappi(FmiImage *volume,int height,FmiImage *cappi){
 
   }
   split_to_channels(volume,channels);
+  free(bin);
 }
 
 void dump_sweep_info(){
@@ -786,8 +790,13 @@ void detect_ground_echo_minnetgrad(FmiImage *source,int ppi_count,FmiImage *prob
   // float beta_h; /* ANGLE OF THE HIGHER SWEEP */
   FmiImage debug_grad_raw,debug_grad;
   FmiImage median0;
-  float altitude[FMI_RADAR_BIN_COUNT];
-  int bin[FMI_RADAR_BIN_COUNT];
+  float *altitude;
+  int *bin;
+  
+  altitude = (float *)malloc(source->width * sizeof(float));
+  bin = (int *)malloc(source->width * sizeof(int));
+
+  
 
   setup_context(source);
 
@@ -817,8 +826,8 @@ void detect_ground_echo_minnetgrad(FmiImage *source,int ppi_count,FmiImage *prob
   for (i=0;i<image_width;i++){
     // save BIN INDICES and ALTITUDES to array
     for (l=0;l<ppi_count;l++){
-      bin[l]=bin_to_bin(i,fmi_radar_sweep_angles[0],fmi_radar_sweep_angles[l]);
-      altitude[l]=bin_to_altitude(i,fmi_radar_sweep_angles[l]);
+      bin[l]=bin_to_bin(i,source[1].elevation_angle,source[l+1].elevation_angle);
+      altitude[l]=bin_to_altitude(i,source[l+1].elevation_angle);
     }
     // traverse one circular sweep
     for (j=0;j<image_height;j++){
@@ -875,6 +884,8 @@ void detect_ground_echo_minnetgrad(FmiImage *source,int ppi_count,FmiImage *prob
     write_image("debug_ground_2grad",&debug_grad,PGM_RAW);
     write_image("debug_ground_3grad",prob,PGM_RAW);
   }
+  free(bin);
+  free(altitude);
 }
 
 void detect_ground_echo_mingrad(FmiImage *source,int ppi_count,FmiImage *prob,int intensity_grad,int half_altitude){
@@ -891,8 +902,11 @@ void detect_ground_echo_mingrad(FmiImage *source,int ppi_count,FmiImage *prob,in
   // float beta_l; /* ANGLE OF THE LOWER  SWEEP */
   // float beta_h; /* ANGLE OF THE HIGHER SWEEP */
   FmiImage debug_grad_raw,debug_grad;
-  float altitude[FMI_RADAR_BIN_COUNT];
-  int bin[FMI_RADAR_BIN_COUNT];
+  float *altitude;
+  int *bin;
+  
+  altitude = (float *)malloc(source->width * sizeof(float));
+  bin = (int *)malloc(source->width * sizeof(int));
 
   setup_context(source);
 
@@ -913,8 +927,8 @@ void detect_ground_echo_mingrad(FmiImage *source,int ppi_count,FmiImage *prob,in
 
   for (i=0;i<image_width;i++){
     for (l=0;l<ppi_count;l++){
-      bin[l]=bin_to_bin(i,fmi_radar_sweep_angles[0],fmi_radar_sweep_angles[l]);
-      altitude[l]=bin_to_altitude(i,fmi_radar_sweep_angles[l]);
+      bin[l]=bin_to_bin(i,source[1].elevation_angle,source[l+1].elevation_angle);
+      altitude[l]=bin_to_altitude(i,source[l+1].elevation_angle);
     }
     for (j=0;j<image_height;j++){
       /*
@@ -969,6 +983,8 @@ void detect_ground_echo_mingrad(FmiImage *source,int ppi_count,FmiImage *prob,in
     write_image("debug_ground_2grad",&debug_grad,PGM_RAW);
     write_image("debug_ground_3grad",prob,PGM_RAW);
   }
+  free(bin);
+  free(altitude);
 }
 
 void detect_too_warm(FmiImage *source,FmiImage *prob,FmiImage *meteosat,Celsius c50,Celsius c75,int min_intensity,int min_size){
@@ -1332,7 +1348,8 @@ void detect_biomet(FmiImage *source,FmiImage *prob,int intensity_max,int intensi
   canonize_image(source,prob);
   for (k=0;k<source->channels;k++)
     for (i=0;i<source->width;i++){
-      h=bin_to_altitude(i,fmi_radar_sweep_angles[k]);
+
+      h=bin_to_altitude(i,source[k+1].elevation_angle);
       //printf("bin %d[%d]: %d metres",i,k,h);
       h=(pseudo_sigmoid(altitude_delta,altitude_max-h)+255)/2;
       //      printf(", prob=%d\n",h);
@@ -1493,7 +1510,7 @@ void virtual_rhi(FmiImage *volume){
   for (i=0;i<volume->width;i++){
     j_start=0;
     for (k=0;j<volume->channels;k++){
-      j_end=bin_to_bin(i,0,fmi_radar_sweep_angles[k]);
+      j_end=bin_to_bin(i,0,volume[k+1].elevation_angle);
       for (j=j_start;j<j_end;j++)
 	put_pixel(&target,i,j,0,5);
       j_start=j_end;}
