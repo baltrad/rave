@@ -37,9 +37,10 @@ typedef signed char Dbz;
 
 extern float fmi_radar_sweep_angles[FMI_RADAR_SWEEP_COUNT];
 
+/* defaults */
 #define FMI_RADAR_BIN_DEPTH 500.0 // 500m
 #define FMI_RADAR_BIN_COUNT 500   // 500 pixels
-#define FMI_RADAR_RAY_COUNT 360
+//#define FMI_RADAR_RAY_COUNT 360
 
 #define EARTH_RADIUS43 (EARTH_RADIUS*4/3) // 500m
 

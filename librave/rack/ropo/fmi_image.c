@@ -126,6 +126,7 @@ int link_image_segment(FmiImage *source,int start_row,int rows,FmiImage *linked)
   linked->volume=linked->area*linked->channels;
   linked->type=LINK_IMAGE;
   linked->array=&(source->array[start_row*source->width]);
+  linked->heights=NULL;
   if (FMI_DEBUG(2)) 
     image_info(linked);
   return 1;
@@ -217,8 +218,10 @@ int copy_image_properties(FmiImage *sample,FmiImage *target){
   if(sample->heights == NULL)
     target->heights   = NULL;
   else
-    target->heights = (int*)malloc(sample->sweep_count * sizeof(int));
-    memcpy(target->heights, sample->heights, sample->sweep_count * sizeof(int));
+    {
+      target->heights = (int*)malloc(sample->sweep_count * sizeof(int));
+      memcpy(target->heights, sample->heights, sample->sweep_count * sizeof(int));
+    }
 
   //  target->format=sample->format; olis ehk� OK
   target->coord_overflow_handler_x=sample->coord_overflow_handler_x;
@@ -1148,7 +1151,7 @@ void to_cart(FmiImage *source,FmiImage *target,Byte outside_fill){
   int i,j,k,i0,j0,max_radius,di,dj,radius,a;
   target->width=source->width;
   target->height=source->width; /* yes, width, -> square */
-  //target->height=source->height; 
+  target->heights=NULL; 
   target->max_value=255;
   target->channels=source->channels;
   initialize_image(target);
