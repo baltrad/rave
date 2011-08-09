@@ -17,11 +17,10 @@
     GNU Lesser Public License for more details.
 
     You should have received a copy of the GNU Lesser Public License
-    along with Rack.  If not, see <http://www.gnu.org/licenses/>.
+    along with Rack.  If not, see <http://www.gnu.org/licenses/>. */
 
-*/
 #include <stdio.h>
-//#include <limits.h>
+/*#include <limits.h> */
 #include "fmi_util.h"
 #include "fmi_image.h"
 #include "fmi_image_filter.h"
@@ -34,7 +33,7 @@
 #define DETECTED  128
 #define DONE      255
 
-// shared with the new fmi_image_speck 
+/* shared with the new fmi_image_speck  */
 FmiImage *PROBE_DOMAIN;
 FmiImage *PROBE_SOURCE;
 FmiImage *PROBE_TARGET;
@@ -45,7 +44,7 @@ int  (* PROBE_SPECK_HISTOGRAM_INFO)(Histogram);
 
 /*=========================================================================*/
 
-// unit steps in four directions
+/* unit steps in four directions */
 int ROTX(int dir){ 
   static int rotx[4]={ 1, 0, 0,-1};
   return (rotx[dir&3]); 
@@ -56,19 +55,19 @@ int ROTY(int dir){
   return (roty[dir&3]); 
 } 
 
-// stack-minimisation trick
+/* stack-minimisation trick */
 int ROT_CODE(int i,int j){ 
   return ( (((i+j)&64)+2*((i-j)&64))/64 ); 
 } 
 
 
-// trace = book keeping image
+/* trace = book keeping image */
 
 /* subroutine: process single speck */
-//void probe_speck(FmiImage *target,FmiImage *trace,int i,int j,unsigned char min_value,Histogram PROBE_SPECK_HISTOGRAM){
-//void probe_speck(FmiImage *domain,FmiImage *trace,int i,int j,unsigned char min_value){
+/*void probe_speck(FmiImage *target,FmiImage *trace,int i,int j,unsigned char min_value,Histogram PROBE_SPECK_HISTOGRAM){ */
+/*void probe_speck(FmiImage *domain,FmiImage *trace,int i,int j,unsigned char min_value){ */
 void probe_speck(int i,int j,unsigned char min_value){
-  // ,int *area,int histogram[256],int *perimeter){
+  /* ,int *area,int histogram[256],int *perimeter){ */
   int dir;
   static unsigned char g;
 
@@ -96,7 +95,7 @@ void probe_speck(int i,int j,unsigned char min_value){
     return; 
 
   put_pixel(PROBE_TARGET,i,j,0,VISITED);
-  //  ++(*area);  
+  /*  ++(*area);   */
   PROBE_SPECK_HISTOGRAM[HIST_AREA]++;
   g=get_pixel(PROBE_SOURCE,i,j,0);
   PROBE_SPECK_HISTOGRAM[g]++;
@@ -112,8 +111,8 @@ void probe_speck(int i,int j,unsigned char min_value){
     histogram[HIST_SUM_JJ]+=j*j;
     histogram[HIST_SUM_IY]+=i*j;
   */
-  //  if (histogram[HIST_SUM_II]>(INT_MAX/16))
-  //  printf("SUM_II=%d\n",histogram[HIST_SUM_II]);
+  /*  if (histogram[HIST_SUM_II]>(INT_MAX/16)) */
+  /*  printf("SUM_II=%d\n",histogram[HIST_SUM_II]); */
 
   dir=ROT_CODE(i,j);
   probe_speck(i+ROTX(dir  ),j+ROTY(dir  ),min_value);
@@ -124,17 +123,16 @@ void probe_speck(int i,int j,unsigned char min_value){
 }
 
 /* subroutine: process single speck */
-//void propagate_attribute(FmiImage *domain,FmiImage *trace,int i,int j,unsigned char min_value,unsigned char attribute){
+/*void propagate_attribute(FmiImage *domain,FmiImage *trace,int i,int j,unsigned char min_value,unsigned char attribute){ */
 void propagate_attribute(int i,int j,unsigned char min_value,unsigned char attribute){
   int dir;
   if (!legal_coords(PROBE_DOMAIN,i,j))    return; /* OUTSIDE IMAGE  */
   if (get_pixel(PROBE_DOMAIN,i,j,0)<min_value)  return; /* OUTSIDE SPECK  */
-  //  if (get_pixel(trace, i,j,0)==attribute) return; /* ALREADY MARKED */
   if (get_pixel(PROBE_BOOK, i,j,0)==DONE) return;
   put_pixel(PROBE_TARGET,i,j,0,attribute);
   put_pixel(PROBE_BOOK,i,j,0,DONE);
   if (FMI_DEBUG(1)){
-    //    fprintf(stderr," i=%d j=%d area=%d\n",i,j,area);fflush(stderr);
+    /*    fprintf(stderr," i=%d j=%d area=%d\n",i,j,area);fflush(stderr); */
   };
   dir=ROT_CODE(i,j);
   propagate_attribute(i+ROTX(dir  ),j+ROTY(dir  ),min_value,attribute);
@@ -144,25 +142,25 @@ void propagate_attribute(int i,int j,unsigned char min_value,unsigned char attri
 }
 
 /* MAIN PROCESS (recursive) */
-//void traverse_image(FmiImage *target,FmiImage *trace,int i,int j,int min_value){
+/*void traverse_image(FmiImage *target,FmiImage *trace,int i,int j,int min_value){ */
 void traverse_image(int i,int j,int min_value){
-  //  static int area,perimeter;
-  //  static int histogram[256];
-  //  static Histogram histogram;
-  //  Histogram histogram;
+  /*  static int area,perimeter; */
+  /*  static int histogram[256]; */
+  /*  static Histogram histogram; */
+  /*  Histogram histogram; */
   int attribute;
   int dir;
   if (!legal_coords(PROBE_DOMAIN,i,j)) return;
-  //  if (get_pixel(trace,i,j,0)!=UNVISITED) return;
+  /*  if (get_pixel(trace,i,j,0)!=UNVISITED) return; */
   if (get_pixel(PROBE_BOOK,i,j,0)!=UNVISITED) return;
   
-  //  fprintf(stderr,"traverse, i=%d, j=%d \n",i,j);
+  /*  fprintf(stderr,"traverse, i=%d, j=%d \n",i,j); */
   if (get_pixel(PROBE_DOMAIN,i,j,0)<min_value){
-    //    put_pixel(trace,i,j,0,0);
+    /*    put_pixel(trace,i,j,0,0); */
     put_pixel(PROBE_BOOK,i,j,0,DETECTED);
     /* SEARCH MODE (continue searching segments in image) */
         dir=ROT_CODE(i,j);
-	//dir=0;
+	/*dir=0; */
     traverse_image(i+ROTX(dir  ),j+ROTY(dir  ),min_value);
     traverse_image(i+ROTX(dir+1),j+ROTY(dir+1),min_value);
     traverse_image(i+ROTX(dir+2),j+ROTY(dir+2),min_value);
@@ -170,12 +168,12 @@ void traverse_image(int i,int j,int min_value){
   else{
     /* SPECK PROBE MODE */
     /* DETECT SPECK, COMPUTE ITS AREA, HISTOGRAM, PERIMETER ON THE RUN */
-    //    histogram[HIST_AREA]=0;
-    //    histogram[HIST_PERIMx3]=0;
-    //    clear_histogram(histogram);
+    /*    histogram[HIST_AREA]=0; */
+    /*    histogram[HIST_PERIMx3]=0; */
+    /*    clear_histogram(histogram); */
 
     clear_histogram_full(PROBE_SPECK_HISTOGRAM);
-    //    PROBE_SPECK_HISTOGRAM[HIST_MIN]=255;
+    /*    PROBE_SPECK_HISTOGRAM[HIST_MIN]=255; */
     PROBE_SPECK_HISTOGRAM[HIST_MIN]=255;
     PROBE_SPECK_HISTOGRAM[HIST_SUM_I]=0;
     PROBE_SPECK_HISTOGRAM[HIST_SUM_J]=0;
@@ -184,11 +182,11 @@ void traverse_image(int i,int j,int min_value){
     PROBE_SPECK_HISTOGRAM[HIST_SUM_IJ]=0;
 
 
-    //    probe_speck(target,trace,i,j,min_value,PROBE_SPECK_HISTOGRAM);
+    /*    probe_speck(target,trace,i,j,min_value,PROBE_SPECK_HISTOGRAM); */
     probe_speck(i,j,min_value);
     put_pixel(PROBE_BOOK,i,j,0,DETECTED);
 
-    //    attribute=histogram_function(PROBE_SPECK_HISTOGRAM);
+    /*    attribute=histogram_function(PROBE_SPECK_HISTOGRAM); */
     attribute=PROBE_SPECK_HISTOGRAM_INFO(PROBE_SPECK_HISTOGRAM);
     if (histogram_scaling_function!=NULL)
       attribute=histogram_scaling_function(histogram_scaling_parameter,attribute);
@@ -209,8 +207,8 @@ void traverse_image(int i,int j,int min_value){
 /* CLIENT (STARTER) */
 void Binaryprobe(FmiImage *domain,FmiImage *source,FmiImage *trace,int (* histogram_function)(Histogram),unsigned char min_value){ 
   register int i,j;
-  //  fprintf(stderr,"\tHIST=%d\n",histogram_function(h));
-  // fprintf(stderr,"\tHIST=%d\n",histogram_area(h));
+  /*  fprintf(stderr,"\tHIST=%d\n",histogram_function(h)); */
+  /* fprintf(stderr,"\tHIST=%d\n",histogram_area(h)); */
   fmi_debug(3,"filter_specks");
   if (source->channels!=1) 
     fmi_error("filter_specks: other than single-channel source");
@@ -229,7 +227,7 @@ void Binaryprobe(FmiImage *domain,FmiImage *source,FmiImage *trace,int (* histog
 
   for (i=0;i<source->width;i++)
     for (j=0;j<source->height;j++)
-      //traverse_image(source,trace,i,j,min_value);
+      /*traverse_image(source,trace,i,j,min_value); */
       traverse_image(i,j,min_value);
 
   fmi_debug(4,"filter_specks, DONE.");
@@ -245,14 +243,14 @@ void detect_specks(FmiImage *source,FmiImage *trace,unsigned char min_value,int 
 /* DEBUGGING... */
 void test_rotation(FmiImage *target,FmiImage *trace,int i,int j,int rec_depth){
   int dir=1;
-  //int k,l;
+  /*int k,l; */
   if (!legal_coords(target,i,j)) return;
   if (get_pixel(trace,i,j,0)!=UNVISITED) return;
-  //  fprintf(stderr,"\ti=%d \tj=%d \tdepth=%d\n",i,j,rec_depth); fflush(stderr);
+  /*  fprintf(stderr,"\ti=%d \tj=%d \tdepth=%d\n",i,j,rec_depth); fflush(stderr); */
   put_pixel(trace,i,j,0,10+dir);
-  //  fprintf(stderr,"ok\n"); fflush(stderr);
-  //  for (i=0;i<target->width;i++)
-  //  for (j=0;j<target->height;j++){
+  /*  fprintf(stderr,"ok\n"); fflush(stderr); */
+  /*  for (i=0;i<target->width;i++) */
+  /*  for (j=0;j<target->height;j++){ */
 
   if ((rec_depth&255)==0)
     fprintf(stderr,"\ti=%d \tj=%d \tdepth=%d\n",i,j,rec_depth); fflush(stderr);
@@ -263,7 +261,7 @@ void test_rotation(FmiImage *target,FmiImage *trace,int i,int j,int rec_depth){
   test_rotation(target,trace,i+ROTX(dir+1),j+ROTY(dir+1),rec_depth+1);
   test_rotation(target,trace,i+ROTX(dir+2),j+ROTY(dir+2),rec_depth+1);
   test_rotation(target,trace,i+ROTX(dir+3),j+ROTY(dir+3),rec_depth+1);
-  //  fmi_debug(1,"finito");
+  /*  fmi_debug(1,"finito"); */
 }
 
 

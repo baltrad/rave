@@ -53,7 +53,7 @@ buildmain:
 	make -C main CFLAGS="${CFLAGS}" CCFLAGS="${CCFLAGS}" LDFLAGS="${LDFLAGS}" -k all
 
 buildropo:
-	make -C ropo CFLAGS="${CFLAGS}" CCFLAGS="${CCFLAGS}" LDFLAGS="${LDFLAGS}" -k all
+	make -C ropo -k all
 
 buildhi5:
 	make -C hi5 CFLAGS="${CFLAGS}" CCFLAGS="${CCFLAGS}" LDFLAGS="${LDFLAGS}" -k all

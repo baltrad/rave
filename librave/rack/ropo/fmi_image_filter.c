@@ -17,9 +17,8 @@
     GNU Lesser Public License for more details.
 
     You should have received a copy of the GNU Lesser Public License
-    along with Rack.  If not, see <http://www.gnu.org/licenses/>.
+    along with Rack.  If not, see <http://www.gnu.org/licenses/>. */
 
-*/
 #include <math.h> 
 #include "fmi_util.h"
 #include "fmi_image.h"
@@ -68,7 +67,7 @@ void detect_vert_maxima(FmiImage *source,FmiImage *trace){
 	int i,j,k;
 	Byte g,g_upper,g_lower,gmax;
 	canonize_image(source,trace);
-	//check_image_properties(source,trace);
+	/*check_image_properties(source,trace); */
 
 	for (k=0;k<source->channels;k++){
 		for (j=1;j<source->height-1;j++){
@@ -77,7 +76,7 @@ void detect_vert_maxima(FmiImage *source,FmiImage *trace){
 				g_upper = get_pixel(source,i,j-1,k);
 				g_lower = get_pixel(source,i,j+1,k);
 				gmax = MAX(g_upper,g_lower);
-				//put_pixel(trace,i,j,k,gmax);
+				/*put_pixel(trace,i,j,k,gmax); */
 				if (g>gmax)
 					put_pixel(trace,i,j,k,(Byte)(g-gmax));
 				else
@@ -90,10 +89,10 @@ void detect_vert_maxima(FmiImage *source,FmiImage *trace){
 /* calculate RELATIVE "shoulder", 242 => 2   393 => 3 , divide by should avg */
 void detect_vert_maxima2(FmiImage *source,FmiImage *trace){
   int i,j,k;
-  Byte g,g_sum; //g_upper,g_lower;
+  Byte g,g_sum; /*g_upper,g_lower; */
   int gt;
   canonize_image(source,trace);
-  //check_image_properties(source,trace);
+  /*check_image_properties(source,trace); */
 
   for (k=0;k<source->channels;k++)
     for (j=1;j<source->height-1;j++)
@@ -106,7 +105,7 @@ void detect_vert_maxima2(FmiImage *source,FmiImage *trace){
 	g_sum=(get_pixel(source,i,j-1,k)+get_pixel(source,i,j+1,k));
 	gt=(2*g-g_sum)/(1+g_sum);
 	gt=MAX(0,gt);
-	//	gt=pseudo_sigmoid(128,gt);
+	/*	gt=pseudo_sigmoid(128,gt); */
 	put_pixel(trace,i,j,k,gt);
       }
 }
@@ -115,7 +114,7 @@ void detect_horz_edges(FmiImage *source,FmiImage *trace){
   int i,j,k;
   int g,g2;
   canonize_image(source,trace);
-  //check_image_properties(source,trace);
+  /*check_image_properties(source,trace); */
 
   for (k=0;k<source->channels;k++){
     for (j=1;j<source->height-1;j++){
@@ -145,8 +144,8 @@ void detect_horz_maxima(FmiImage *source,FmiImage *trace){
 	if (g>gmax){
 	  gt=get_pixel(trace,i,j,k);
 	  put_pixel(trace,i,j,k,MAX(gt,g-gmax));}
-	//	else
-	//  put_pixel(trace,i,j,k,0);
+	/*	else */
+	/*  put_pixel(trace,i,j,k,0); */
       }
     }
   }
@@ -156,7 +155,7 @@ void detect_vert_edges(FmiImage *source,FmiImage *trace){
   int i,j,k;
   int g,g2;
   canonize_image(source,trace);
-  //check_image_properties(source,trace);
+  /*check_image_properties(source,trace); */
 
   for (k=0;k<source->channels;k++){
     for (i=1;i<source->width-1;i++){
@@ -247,13 +246,6 @@ void mask_image(FmiImage *source,FmiImage *mask,Byte threshold,Byte c){
     if (mask->array[i]<threshold)
       source->array[i]=c;
 
-  /*
-  for (k=0;k<source->channels;k++)
-    for (i=0;i<source->width;i++)
-      for (j=0;j<source->height;j++)
-	//if (get_pixel(mask,i,j,k)<60)  put_pixel(source,i,j,k,3);
-	if (get_pixel(mask,i,j,k)<threshold)  put_pixel(source,i,j,k,c);
-  */
 }
 
 void threshold_image(FmiImage *source,FmiImage *target,Byte threshold){
@@ -283,11 +275,11 @@ void propagate_right(FmiImage *source,FmiImage *domain,FmiImage *target, signed 
     for (j=0;j<domain->height;j++){
       c=0;
       for (i=0;i<domain->width;i++){
-	//for (i=1;i<domain->width-1;i++){
-	//	printf("\nDomain (%d,%d)=%d ",i,j,get_pixel(domain,i,j,k)) ;
+	/*for (i=1;i<domain->width-1;i++){ */
+	/*	printf("\nDomain (%d,%d)=%d ",i,j,get_pixel(domain,i,j,k)) ; */
 	if (((int)get_pixel(domain,i,j,k))>0){
 	  if (c==0){
-	    //  printf("N ");
+	    /*  printf("N "); */
 	    if (source!=NULL){ 
 	      c=(int)get_pixel(source,i,j,k);
 	      if (c==0) c=1;}
@@ -299,7 +291,7 @@ void propagate_right(FmiImage *source,FmiImage *domain,FmiImage *target, signed 
 	    if (c<1)   c=1;}}
 	else 
 	  c=0;
-	//	c2=get_pixel(target,i,j,k); c=MAX(c,c2);
+	/*	c2=get_pixel(target,i,j,k); c=MAX(c,c2); */
 	put_func(target,i,j,k,(Byte)c);
       }
     }
@@ -313,23 +305,23 @@ void propagate_left(FmiImage *source,FmiImage *domain,FmiImage *target, signed c
     for (j=0;j<domain->height;j++){
       c=0;
       for (i=domain->width-1;i>=0;i--){
-      //for (i=domain->width-2;i>0;i--){
+      /*for (i=domain->width-2;i>0;i--){ */
 	if (((int)get_pixel(domain,i,j,k))>0){
 	  if (c==0){
-	    // START MARKER MODE ...
+	    /* START MARKER MODE ... */
 	    if (source!=NULL){ 
-	      c=(int)get_pixel(source,i,j,k); // ... with local start value
+	      c=(int)get_pixel(source,i,j,k); /* ... with local start value */
 	      if (c==0) c=1;}
 	    else 
-	      c=1;}                // ... with value 1
+	      c=1;}                /* ... with value 1 */
 	  else {
-	    // CONTINUE MARKER MODE 
+	    /* CONTINUE MARKER MODE  */
 	    c=c+slope;
 	    if (c>MAXVAL) c=MAXVAL-2;
 	    if (c<1)   c=1;}}
-	else // domain==0
-	  c=0; // RETURN TO SEARCH MODE
-	//c2=get_pixel(target,i,j,k);	c=MAX(c,c2);
+	else /* domain==0 */
+	  c=0; /* RETURN TO SEARCH MODE */
+	/*c2=get_pixel(target,i,j,k);	c=MAX(c,c2); */
 	put_func(target,i,j,k,(Byte)c);}
     }
 }
@@ -355,7 +347,7 @@ void propagate_up(FmiImage *source,FmiImage *domain,FmiImage *target, signed cha
 	    if (c<1)   c=1;}}
 	else
 	  c=0;
-	// c2=get_pixel(target,i,j,k); c=MAX(c,c2);
+	/* c2=get_pixel(target,i,j,k); c=MAX(c,c2); */
 	put_func(target,i,j,k,(unsigned char)c);}
     }
 }
@@ -382,7 +374,7 @@ void propagate_down(FmiImage *source,FmiImage *domain,FmiImage *target, signed c
 	    if (c<1)   c=1;}}
 	else
 	  c=0;
-	//c2=get_pixel(target,i,j,k); 	c=MAX(c,c2);
+	/*c2=get_pixel(target,i,j,k); 	c=MAX(c,c2); */
 	put_func(target,i,j,k,(unsigned char)c);}
     }
 }
@@ -413,11 +405,11 @@ void row_statistics(FmiImage *source,Byte *nonzero,Byte *avg,Byte *pow){
     s2=0;
     for (i=0;i<source->width;i++){
       c=get_pixel(source,i,j,0);
-      //nz+=(c>0);
+      /*nz+=(c>0); */
       if (c>0) ++nz;
       s+=c;
       s2+=c*c;}
-    //    printf("%d nz=%d s=%d s2=%d (w=%d)\n",j,nz,s,s2,source->width);
+    /*    printf("%d nz=%d s=%d s2=%d (w=%d)\n",j,nz,s,s2,source->width); */
     if (nonzero!=NULL) nonzero[j]=(255*nz)/source->width;
     if (avg!=NULL)   avg[j]=s/source->width;
     if (pow!=NULL) pow[j]=sqrt(s2/source->width);

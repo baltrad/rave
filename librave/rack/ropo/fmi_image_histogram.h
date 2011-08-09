@@ -17,9 +17,8 @@
     GNU Lesser Public License for more details.
 
     You should have received a copy of the GNU Lesser Public License
-    along with Rack.  If not, see <http://www.gnu.org/licenses/>.
+    along with Rack.  If not, see <http://www.gnu.org/licenses/>. */
 
-*/
 
 
 /* HISTOGRAM as such defined already in fmi_image */
@@ -42,10 +41,10 @@ void right(FmiImage *source,Histogram h,int hrad,int vrad,int *i,int *j);
 Histogram histogram_weights;
 Histogram histogram_sine;
 Histogram histogram_cosine;
-//void initialize_histogram_trigon();
+/*void initialize_histogram_trigon(); */
 
-int histogram_sample_count; //  histogram_median2
-int histogram_threshold; //  histogram_variance_rot
+int histogram_sample_count; /*  histogram_median2 */
+int histogram_threshold; /*  histogram_variance_rot */
 
 FmiImage *histogram_weight_image;
 
@@ -60,7 +59,7 @@ int histogram_area2(Histogram h); /* sigmoid-moderated */
 int histogram_area2_inv255(Histogram h); /* sigmoid-moderated */
 int histogram_perimeter(Histogram h);
 int histogram_perimeter2(Histogram h);
-//int histogram_perimeter_normalized(Histogram h);
+/*int histogram_perimeter_normalized(Histogram h); */
 int histogram_compactness(Histogram h);
 int histogram_min(Histogram h);
 int histogram_max(Histogram h);
@@ -72,9 +71,9 @@ int histogram_median2_top(Histogram h);
 int histogram_mean(Histogram h);
 int histogram_mean2(Histogram h);   /* use this! with precalc'd "count"*/
 int histogram_mean_nonzero(Histogram h);
-//Histogram histogram_weighted_mean2_weights;
-//int histogram_weighted_mean(Histogram h,Histogram weights);
-//int histogram_weighted_mean2(Histogram h);
+/*Histogram histogram_weighted_mean2_weights; */
+/*int histogram_weighted_mean(Histogram h,Histogram weights); */
+/*int histogram_weighted_mean2(Histogram h); */
 int histogram_mean_weighted(Histogram h);
 int (* histogram_mean_weighted_pyramid)(Histogram h);
 

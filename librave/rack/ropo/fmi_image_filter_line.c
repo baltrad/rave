@@ -17,9 +17,8 @@
     GNU Lesser Public License for more details.
 
     You should have received a copy of the GNU Lesser Public License
-    along with Rack.  If not, see <http://www.gnu.org/licenses/>.
+    along with Rack.  If not, see <http://www.gnu.org/licenses/>. */
 
-*/
 #include "fmi_util.h"
 #include "fmi_image.h"
 #include "fmi_image_filter.h"
@@ -70,13 +69,13 @@ void detect_horz_edge_segments(FmiImage *target,FmiImage *trace,unsigned char mi
 }
   
 void detect_vert_line_segments(FmiImage *target,FmiImage *trace,unsigned char min_length,unsigned char min_elevation){
-  //int i,j,k,length;
-  //  const int CRITICAL_LENGTH=4;
-  //int g1,g2,gd,gmax;
-  // FmiImage trace;
-  // canonize_image(target,&trace);
-  //  info(target);
-  //info(trace);
+  /*int i,j,k,length; */
+  /*  const int CRITICAL_LENGTH=4; */
+  /*int g1,g2,gd,gmax; */
+  /* FmiImage trace; */
+  /* canonize_image(target,&trace); */
+  /*  info(target); */
+  /*info(trace); */
 
 
   detect_horz_maxima(target,trace); /* fmi_image_filter.h */
@@ -95,6 +94,6 @@ void detect_vert_line_segments(FmiImage *target,FmiImage *trace,unsigned char mi
   if (FMI_DEBUG(1)) write_image("prop2",trace,PGM_RAW);
 
   mask_image(trace,trace,min_length,0); 
-  //release_image(trace);
+  /*release_image(trace); */
 }
 

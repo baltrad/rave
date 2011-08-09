@@ -17,11 +17,13 @@
     GNU Lesser Public License for more details.
 
     You should have received a copy of the GNU Lesser Public License
-    along with Rack.  If not, see <http://www.gnu.org/licenses/>.
+    along with Rack.  If not, see <http://www.gnu.org/licenses/>. */
 
-*/
-//#include <stdio.h>
+
+/*#include <stdio.h> */
 #include <math.h>
+#include <malloc.h>
+#include <stdlib.h>
 #include "fmi_image.h"
 #include "fmi_util.h"
 
@@ -71,15 +73,15 @@ new_image(int sweep_count)
 
 int initialize_image(FmiImage *img){
   img->type=TRUE_IMAGE;
-  //  img->format=UNDEFINED;
+  /*  img->format=UNDEFINED; */
   img->area=img->width*img->height;
   img->volume=img->area*img->channels;
   
   fmi_debug(2,"initialize_image");
   if (FMI_DEBUG(3)) image_info(img);
   img->array=(Byte *) malloc(img->volume);
-  //  img->channel_mapping=(int *) malloc(img->channels);
-  //  img->coord_overflow_handler=WRAP;
+  /*  img->channel_mapping=(int *) malloc(img->channels); */
+  /*  img->coord_overflow_handler=WRAP; */
   img->coord_overflow_handler_x=BORDER;
   img->coord_overflow_handler_y=BORDER;
   img->max_value=255;
@@ -108,7 +110,7 @@ int initialize_vert_stripe(FmiImage *img,int height){
 }
 
 int link_image_segment(FmiImage *source,int start_row,int rows,FmiImage *linked){
-  //  int a=rows*source->width;
+  /*  int a=rows*source->width; */
   
   fmi_debug(3,"link_image_segment");
   
@@ -124,7 +126,7 @@ int link_image_segment(FmiImage *source,int start_row,int rows,FmiImage *linked)
   copy_image_properties(source,linked);
   linked->channels=1;
   linked->height=rows;
-  linked->area=linked->width*linked->height; // safety
+  linked->area=linked->width*linked->height; /* safety */
   linked->volume=linked->area*linked->channels;
   linked->type=LINK_IMAGE;
   linked->array=&(source->array[start_row*source->width]);
@@ -167,16 +169,16 @@ void split_to_channels(FmiImage *target,int channels){
 
 
 
-// channel-division independent
+/* channel-division independent */
 void concatenate_images_vert(FmiImage *source,int count,FmiImage *target){
   register int i,j,k;
-  // START FROM FIRST
+  /* START FROM FIRST */
   fmi_debug(3,"concat base");
   copy_image_properties(source,target);
   target->sweep_count = count;
   target->heights = (int *)malloc(sizeof(int) * count);
   if (FMI_DEBUG(3)) image_info(target);
-  // ADD THE REST
+  /* ADD THE REST */
   for (k=1;k<count;k++){
     if (FMI_DEBUG(3)) fprintf(stderr,"concatenating #%d\n",k);
     if (FMI_DEBUG(3)) image_info(&source[k]);
@@ -191,7 +193,7 @@ void concatenate_images_vert(FmiImage *source,int count,FmiImage *target){
   if (FMI_DEBUG(3)) image_info(target);
   initialize_image(target);
   if (FMI_DEBUG(3)) image_info(target);
-  // CONCATENATE
+  /* CONCATENATE */
   j=0;
   for (k=0;k<count;k++){
     for (i=0;i<source[k].volume;i++)
@@ -200,8 +202,8 @@ void concatenate_images_vert(FmiImage *source,int count,FmiImage *target){
   }
 }
 
-// NO IMAGE ARRAY SIZE CONTROL
-// SEGMENTATION FAULT RISK
+/* NO IMAGE ARRAY SIZE CONTROL */
+/* SEGMENTATION FAULT RISK */
 /*
   int reclaim_channels(FmiImage *img,int channels){
   img->channels=channels;
@@ -227,7 +229,7 @@ int copy_image_properties(FmiImage *sample,FmiImage *target){
       memcpy(target->heights, sample->heights, sample->sweep_count * sizeof(int));
     }
 
-  //  target->format=sample->format; olis ehk� OK
+  /*  target->format=sample->format; olis ehk� OK */
   target->coord_overflow_handler_x=sample->coord_overflow_handler_x;
   target->coord_overflow_handler_y=sample->coord_overflow_handler_y;
 
@@ -239,20 +241,20 @@ int copy_image_properties(FmiImage *sample,FmiImage *target){
 }
 
 int check_image_properties(FmiImage *sample,FmiImage *target){
-  //register int h;
+  /*register int h; */
   if (target->width!=sample->width){
-    //    h=target->coord_overflow_handler_x;
-    //if ((h!=WRAP)&&(h!=TILE)){
+    /*    h=target->coord_overflow_handler_x; */
+    /*if ((h!=WRAP)&&(h!=TILE)){ */
     fmi_debug(2,"check_image_properties: unequal widths");
     return 0;
-    //}
+    /*} */
   }
   if (target->height!=sample->height){
-    // h=target->coord_overflow_handler_y;
-    // if ((h!=WRAP)&&(h!=TILE)){
+    /* h=target->coord_overflow_handler_y; */
+    /* if ((h!=WRAP)&&(h!=TILE)){ */
     fmi_debug(2,"check_image_properties: unequal heights");
     return 0;
-    //}
+    /*} */
   }
   if (target->channels!=sample->channels){
     fmi_debug(2,"check_image_properties: unequal channel counts");
@@ -272,7 +274,7 @@ int canonize_image(FmiImage *sample,FmiImage *target){
 		copy_image_properties(sample,target);
 		initialize_image(target);
 	}
-	//target->type=TRUE_IMAGE; // VIOLATING SOMETHING?
+	/*target->type=TRUE_IMAGE; // VIOLATING SOMETHING? */
 	fmi_debug(2,"canonize_image END");
 	return 1;
 }
@@ -300,7 +302,7 @@ void reset_image(FmiImage *image){
     fprintf(stderr," IMAGE TYPE:%d\n",image->type);
     fmi_error("reset_image: unknown image type");
   }
-  //  free (image->channel_mapping);
+  /*  free (image->channel_mapping); */
 }
 
 
@@ -313,7 +315,7 @@ int legal_coords(FmiImage *img,int x,int y){
 }
 
 void handle_coord_overflow(FmiImage *img,int *x,int *y){
-  // WRAP = quick TILE "ONCE"
+  /* WRAP = quick TILE "ONCE" */
   if (*x<0)
     switch (img->coord_overflow_handler_x){
     case MIRROR: *x=-*x; break;
@@ -351,7 +353,7 @@ Byte get_pixel_direct(FmiImage *img,int address){
 void put_pixel(FmiImage *img,int x,int y,int channel,Byte c){
   handle_coord_overflow(img,&x,&y);
   img->array[channel*img->area + y*img->width + x]=c;
-  //  return 1;
+  /*  return 1; */
 }
 
 void put_pixel_direct(FmiImage *img,int address,Byte c){
@@ -461,7 +463,7 @@ void subtract_image(FmiImage *source,FmiImage *source2,FmiImage *target){
 
 void subtract_image128(FmiImage *source,FmiImage *source2,FmiImage *target){
   register int i;
-  //  int sum;
+  /*  int sum; */
   if (check_image_properties(source,source2)==0)
     fmi_error("subtract_image: incompatible images");
   canonize_image(source,target);
@@ -551,7 +553,7 @@ void semisigmoid_image_inv(FmiImage *source,int half_width){
    source->array[i]=255-pseudo_sigmoid(half_width,source->array[i]);
 }
 
-// slope = half-width
+/* slope = half-width */
 void sigmoid_image(FmiImage *source,int threshold,int slope){
  register int i;
 
@@ -592,7 +594,7 @@ void extract_channel(FmiImage *source,int channel,FmiImage *target){
   fmi_debug(3,__FILE__);
   fmi_debug(3," extract_channel");
   fmi_debug(4," extract_channel: initialize");
-  //  fmi_debug(1,__LINE__);
+  /*  fmi_debug(1,__LINE__); */
   if (channel>=source->channels) fmi_error("extracting nonexistent channel");
   copy_image_properties(source,target);
   target->channels=1;
@@ -601,8 +603,8 @@ void extract_channel(FmiImage *source,int channel,FmiImage *target){
    for (i=0;i<source->width;i++)
      for (j=0;j<source->height;j++)
              put_pixel(target,i,j,0,get_pixel(source,i,j,channel));
-       //       put_pixel(target,i,j,0,85); 
-   //get_pixel(source,i,j,channel); T�M� SOI
+       /*       put_pixel(target,i,j,0,85);  */
+   /*get_pixel(source,i,j,channel); T�M� SOI */
   fmi_debug(4," extract_channel: ...extracted");
 }
 
@@ -610,11 +612,11 @@ void write_channel(FmiImage *source,int channel,FmiImage *target){
   register int i,j;
   fmi_debug(2,__FILE__);
   fmi_debug(2," write_channel");
-  //  fmi_debug(1,__LINE__);
+  /*  fmi_debug(1,__LINE__); */
   if (channel>=target->channels) fmi_error("extracting nonexistent channel");
-  //  copy_image_properties(source,target);
-  //target->channels=1;
-  //initialize_image(target);
+  /*  copy_image_properties(source,target); */
+  /*target->channels=1; */
+  /*initialize_image(target); */
    for (i=0;i<source->width;i++)
      for (j=0;j<source->height;j++)
        put_pixel(target,i,j,channel,get_pixel(source,i,j,0));
@@ -641,7 +643,7 @@ void insert(FmiImage *source,FmiImage *target,int i0, int j0){
 }
 
 void compose2x2(FmiImage *source_ul,FmiImage *source_ur,FmiImage *source_ll,FmiImage *source_lr,FmiImage *target){
-  //register int i,j;
+  /*register int i,j; */
   int t1,t2,tw,th;
 
   fmi_debug(1,"compose2x2");
@@ -659,7 +661,7 @@ void compose2x2(FmiImage *source_ul,FmiImage *source_ur,FmiImage *source_ll,FmiI
   target->channels=MAX(target->channels,source_ll->channels);
   target->channels=MAX(target->channels,source_lr->channels);
   initialize_image(target);
-  //  fmi_debug(1,"compose2x2 target:"); 
+  /*  fmi_debug(1,"compose2x2 target:");  */
   if (FMI_DEBUG(3)) image_info(target);
   fill_image(target,251);
 
@@ -714,13 +716,13 @@ void compose3x2(FmiImage *source_ul,FmiImage *source_um,FmiImage *source_ur,FmiI
 FmiImageFormat process_image_header(FmiImage *img,FILE *fp){
   int c;
   char str[MAX_COMMENT_LENGTH];
-  //  FmiImageFormat format;
+  /*  FmiImageFormat format; */
   /* DETECT FILE FORMAT FROM MAGIC NUMBER */
   c=getc(fp);
   if ((char)c=='P'){
     c=getc(fp);
     img->format=(FmiImageFormat)(c-'0');
-    //    if (img->channels==0)
+    /*    if (img->channels==0) */
       switch (img->format){
       case PBM_ASC:
       case PBM_RAW:
@@ -743,15 +745,15 @@ FmiImageFormat process_image_header(FmiImage *img,FILE *fp){
     ungetc(c,fp);
 
     /* READ (OPTIONAL) COMMENTS */
-    //    strp=comment_string;
-    //l=0;
+    /*    strp=comment_string; */
+    /*l=0; */
     img->comment_string[0]='\0';
     while ((c=getc(fp))=='#'){
 	/*    getline(str,256,fp);
 	      printf(str);
 	 */
-    	// fgets(str,MAX_COMMENT_LENGTH-strlen(img->comment_string),fp);
-    	// strcat(img->comment_string,str);
+    	/* fgets(str,MAX_COMMENT_LENGTH-strlen(img->comment_string),fp); */
+    	/* strcat(img->comment_string,str); */
     	fgets(str,MAX_COMMENT_LENGTH-1,fp);
     	if (strlen(img->comment_string)+strlen(str)<MAX_COMMENT_LENGTH)
     		strcat(img->comment_string,str);
@@ -761,12 +763,12 @@ FmiImageFormat process_image_header(FmiImage *img,FILE *fp){
     			fprintf(stderr,"%s\n",str);
     	}
     }
-    //    printf(img->comment_string);
-    //printf("channels %d\n",img->channels);
-    //printf("%c\n",c);
-    //    fmi_debug(0,"kaUnimplemented image format");
+    /*    printf(img->comment_string); */
+    /*printf("channels %d\n",img->channels); */
+    /*printf("%c\n",c); */
+    /*    fmi_debug(0,"kaUnimplemented image format"); */
     ungetc(c,fp);
-    // fmi_debug(0," ungetc");
+    /* fmi_debug(0," ungetc"); */
 
     /* READ WIDTH, HEIGHT, MAXVAL  */
     fscanf(fp,"%d %d",&(img->width),&(img->height));
@@ -790,8 +792,8 @@ FmiImageFormat process_image_header(FmiImage *img,FILE *fp){
 
 
 void read_image(char *filename,FmiImage *img){
-  //int i,j,k,c;
-  //char str[STRLENGTH];
+  /*int i,j,k,c; */
+  /*char str[STRLENGTH]; */
   FmiImageFormat format;
   FILE *fp;
 
@@ -836,8 +838,8 @@ void read_pnm_image(FILE *fp,FmiImage *img,FmiImageFormat format){
 	  k=128;
 	  c=getc(fp);}
       	put_pixel(img,i,j,0,((c&k)>0)?1:254);
-      //	put_pixel(img,i,j,0,(i&j>0)?55:22);
-	//	put_pixel(img,i,j,0,(i&j>0)?55:22);
+      /*	put_pixel(img,i,j,0,(i&j>0)?55:22); */
+	/*	put_pixel(img,i,j,0,(i&j>0)?55:22); */
 	k=k>>1;}
     }
     break;
@@ -850,7 +852,7 @@ void read_pnm_image(FILE *fp,FmiImage *img,FmiImageFormat format){
     for (j=0;j<img->height;j++)
       for (i=0;i<img->width;i++){
 	fscanf(fp,"%d",&l);
-	//printf("%d\n",l);
+	/*printf("%d\n",l); */
 	put_pixel(img,i,j,0,(Byte)l);
       }
     break;
@@ -866,7 +868,7 @@ void read_pnm_image(FILE *fp,FmiImage *img,FmiImageFormat format){
       for (i=0;i<img->width;i++)
 	for (k=0;k<3;k++){
 	  fscanf(fp,"%d",&l);
-	  //printf("%d\n",l);
+	  /*printf("%d\n",l); */
 	  put_pixel(img,i,j,0,(Byte)k);
 	}
     break;
@@ -880,8 +882,8 @@ void write_image(char *filename,FmiImage *img,FmiImageFormat format){
   FILE *fp;
   fmi_debug(1,"write_image: ");
   fmi_debug(2,filename);
-  //  if (strcmp(filename,"-")==0)
-  //  fp = stderr;...?
+  /*  if (strcmp(filename,"-")==0) */
+  /*  fp = stderr;...? */
 
   if (file_extension(filename)!=NULL)
     actual_filename=filename;
@@ -903,7 +905,7 @@ void write_image(char *filename,FmiImage *img,FmiImageFormat format){
   }
   else
     fmi_error("Failed opening file for writing.");
-  free(actual_filename);  // segmentation fault? UUSI!
+  free(actual_filename);  /* segmentation fault? UUSI! */
 }
 
 void dump_comments(FILE *fp,char *comment,char *begin_code,char *end_code,int line_length){
@@ -922,7 +924,7 @@ void dump_comments(FILE *fp,char *comment,char *begin_code,char *end_code,int li
       l=0;}
     else
       if ((c=='\n')||(i==len)){
-	//    if ((l==line_length-1)||(i==len-1)){
+	/*    if ((l==line_length-1)||(i==len-1)){ */
 	fprintf(fp,end_code);
 	l=0;}
       else {
@@ -944,10 +946,10 @@ void write_pnm_image(FILE *fp,FmiImage *img,FmiImageFormat format){
     dump_comments(fp,img->comment_string,"# [","]\n",1023);
   dump_comments(fp,fmi_util_command_line,   "# ","\n",1023);
   if (FMI_IMAGE_COMMENT)
-    //    fprintf(fp,"# CREATOR: %s (c) Markus.Peura@fmi.fi\n",FMI_IMAGE_VER);
+    /*    fprintf(fp,"# CREATOR: %s (c) Markus.Peura@fmi.fi\n",FMI_IMAGE_VER); */
     fprintf(fp,"# CREATOR: %s\n",FMI_IMAGE_VER);
-  //  if (fmi_util_command_line[0]!='\0')
-  //  fprintf(fp,"# %s\n",fmi_util_command_line);
+  /*  if (fmi_util_command_line[0]!='\0') */
+  /*  fprintf(fp,"# %s\n",fmi_util_command_line); */
 
 
   /* IMAGE DIMENSIONS */
@@ -988,7 +990,7 @@ void write_pnm_image(FILE *fp,FmiImage *img,FmiImageFormat format){
   default:
 	  break;
   }
-  return 1;
+
 }
 
 
@@ -1060,7 +1062,7 @@ void map_channel_to_colors(FmiImage *source,int channel,FmiImage *target,int map
 
 void map_channel_to_256_colors(FmiImage *source,int channel,FmiImage *target,ColorMap256 map){
   register int i,j,k;
-  //Byte l,c;
+  /*Byte l,c; */
   fmi_debug(4,"fmi_image.c: map_channel_to_256_colors");
   
   /*
@@ -1111,47 +1113,25 @@ void read_colormap256(char *filename,ColorMap256 map){
 
   if ((c=getc(fp))=='#'){
     do {
-      //  printf("koe%c",c);
+      /*  printf("koe%c",c); */
       while ((char)(c=getc(fp))!='\n'){
-	// printf("%c",c);
+	/* printf("%c",c); */
       if (c==EOF) fmi_error("read_colormap256: only comments?");
       }
     } while ((c=getc(fp))=='#');
-    //    printf("Comment: %c\n",c);
-    // fflush(stdout);
+    /*    printf("Comment: %c\n",c); */
+    /* fflush(stdout); */
     ungetc(c,fp);
   }
 
   fmi_debug(5,"read_colormap256: colors");
-  // MAIN LOOP
+  /* MAIN LOOP */
   while (fscanf(fp,"%d",&c)!=EOF)
-    fscanf(fp,"%d %d %d\n",&map[c][0],&map[c][1],&map[c][2]);
+    fscanf(fp,"%d %d %d\n",(int*)&map[c][0],(int*)&map[c][1],(int*)&map[c][2]);
   fclose(fp);
   fmi_debug(5,"read_colormap256 complete");
 }
 
-
-/*
-  int to_rgb(FmiImage *source,FmiImage *target){
-  int i,j,dbz,r,g,b;
-  
-      target->width=source->width;
-      target->height=source->height;
-      target->max_value=255;
-      target->channels=3;
-      initialize_image(target);
-      
-      
-
-      for (i=0;i<source->width;i++)
-      for (j=0;j<source->height;j++){
-      byte_to_rgb(get_pixel(source,i,j,0),&r,&g,&b);
-      //byte_to_rgb(255*i/source->width,&r,&g,&b);
-      put_pixel(target,i,j,0,r);
-      put_pixel(target,i,j,1,g);
-      put_pixel(target,i,j,2,b);}
-}
-*/
 
 void to_cart(FmiImage *source,FmiImage *target,Byte outside_fill){
   int i,j,k,i0,j0,max_radius,di,dj,radius,a;
@@ -1161,7 +1141,7 @@ void to_cart(FmiImage *source,FmiImage *target,Byte outside_fill){
   target->max_value=255;
   target->channels=source->channels;
   initialize_image(target);
-  //  initialize_image(source);
+  /*  initialize_image(source); */
   
 
   fmi_debug(3,"to_cart");
@@ -1182,7 +1162,7 @@ void to_cart(FmiImage *source,FmiImage *target,Byte outside_fill){
 	    a=180*atan2(di,-dj)/3.14;
 	    if (a<0) a+=360;
 	    put_pixel(target,i,j,k,get_pixel(source,radius,a,k));
-	    //	    put_pixel(target,i,j,k,get_pixel(source,radius,a,k));
+	    /*	    put_pixel(target,i,j,k,get_pixel(source,radius,a,k)); */
 	  }
 	} else put_pixel(target,i,j,k,255); 
       }
@@ -1206,8 +1186,8 @@ void calc_histogram(FmiImage *source,Histogram hist){
 void output_histogram(FILE *fp,Histogram hist){
   register int i;
   for (i=0;i<HISTOGRAM_SIZE;i++)  
-    //    fprintf(fp,"%d\n",hist[i]);
-    fprintf(fp,"%d\t%d\n",i,hist[i]);
+    /*    fprintf(fp,"%d\n",hist[i]); */
+    fprintf(fp,"%d\t%ld\n",i,hist[i]);
 }
 
 void write_histogram(char *filename,Histogram hist){
@@ -1223,5 +1203,5 @@ void dump_histogram(Histogram hist){
 
 
 
-//Mask mask_speck1={3,3,"koke"};       NO ERROR
-//Mask mask_speck1={3,3, {'k','o','k','e','\0'} }; ERROR!
+/*Mask mask_speck1={3,3,"koke"};       NO ERROR */
+/*Mask mask_speck1={3,3, {'k','o','k','e','\0'} }; ERROR! */

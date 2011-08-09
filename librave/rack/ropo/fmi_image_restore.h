@@ -17,9 +17,8 @@
     GNU Lesser Public License for more details.
 
     You should have received a copy of the GNU Lesser Public License
-    along with Rack.  If not, see <http://www.gnu.org/licenses/>.
+    along with Rack.  If not, see <http://www.gnu.org/licenses/>. */
 
-*/
 
 
 #ifndef __FMI_IMAGE_RESTORE__
@@ -31,5 +30,6 @@
 void mark_image(FmiImage *target,FmiImage *prob,Byte threshold,Byte marker);
 
 void restore_image(FmiImage *source,FmiImage *target,FmiImage *prob,Byte threshold);
+void restore_image_neg(FmiImage *source,FmiImage *target,FmiImage *prob,Byte threshold);
 
 #endif

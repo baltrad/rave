@@ -11,7 +11,8 @@ ropo/fmi_image_restore.c \
 ropo/fmi_meteosat.c \
 ropo/fmi_radar_image.c \
 ropo/fmi_sunpos.c \
-ropo/fmi_util.c
+ropo/fmi_util.c \
+ropo/ropo_hdf.c
 
 RACKROPOSOURCES_CPP= \
 ropo/Ropo.cpp \

@@ -17,9 +17,8 @@
     GNU Lesser Public License for more details.
 
     You should have received a copy of the GNU Lesser Public License
-    along with Rack.  If not, see <http://www.gnu.org/licenses/>.
+    along with Rack.  If not, see <http://www.gnu.org/licenses/>. */
 
-*/
 
 
 
@@ -35,7 +34,7 @@ void detect_vert_line_segments(FmiImage *target,FmiImage *trace,unsigned char mi
 void detect_vert_line_segments(FmiImage *target,FmiImage *trace,unsigned char min_length,unsigned char min_elevation);
 
 /* aiming at vertical lines (PPI-ortho sidelopes )  */
-//void detect_vert_line_segments(FmiImage *target,FmiImage *trace);
+/*void detect_vert_line_segments(FmiImage *target,FmiImage *trace); */
 
 
 

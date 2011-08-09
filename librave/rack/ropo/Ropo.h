@@ -1,7 +1,6 @@
 /**
 
-
-    Copyright 2010  Markus Peura, Finnish Meteorological Institute (First.Last@fmi.fi)
+    Copyright 2010 Markus Peura, Finnish Meteorological Institute (First.Last@fmi.fi)
 
 
     This file is part of Rack.
@@ -17,9 +16,8 @@
     GNU Lesser Public License for more details.
 
     You should have received a copy of the GNU Lesser Public License
-    along with Rack.  If not, see <http://www.gnu.org/licenses/>.
+    along with Rack.  If not, see <http://www.gnu.org/licenses/>. */
 
- */
 #ifndef  __RACK_ROPO__
 #define  __RACK_ROPO__
 
@@ -32,7 +30,7 @@ extern "C" {
 #include "fmi_image_filter_speck.h"
 #include "fmi_radar_image.h"
 
-//	void testRopo(const char *str);
+/*	void testRopo(const char *str); */
 
 }
 
@@ -46,14 +44,14 @@ namespace drain {
 namespace radar {
 
 
-// This file contains C++ wrappers for the original Ropo in C.
+/* This file contains C++ wrappers for the original Ropo in C. */
 
-/// Detects speckle noise.
+/*/ Detects speckle noise. */
 /**
  *  Segments of intensity > 'threshold' and area=1 get intensity 255, and larger ones
  *  smaller values with descreasing slope 'slope'.
  */
-//template <class T = unsigned char,class T2 = unsigned char>
+/*template <class T = unsigned char,class T2 = unsigned char> */
 class RopoDetector : public AndreDetector<Byte,Byte>
 {
 public:
@@ -117,7 +115,7 @@ public:
 protected:
 
 	void filter(FmiImage &src,FmiImage &dst) const {
-		//const int minIntensity = this->getParameter("minIntensity",1);
+		/*const int minIntensity = this->getParameter("minIntensity",1); */
 		detect_specks(&src, &dst, this->getParameter("minIntensity",1), NULL);
 	};
 
@@ -134,7 +132,7 @@ public:
 protected:
 
 	void filter(FmiImage &src,FmiImage &dst) const {
-		//const int minIntensity = this->getParameter("minIntensity",1);
+		/*const int minIntensity = this->getParameter("minIntensity",1); */
 		detect_biomet(&src, &dst,
 				this->getParameter("maxIntensity",16),
 				this->getParameter("intensitySteepness",4),
@@ -145,33 +143,8 @@ protected:
 };
 
 
-/*
-class RopoBioMet : public RopoDetector {
 
-public:
-
-	RopoBioMet(const string p="16,4,500,50") :
-		RopoDetector("RopoSpeckle","Detects speckle noise.",
-				"maxIntensity,intensitySteepness,maxAltitude,altitudeSteepness",p){};
-
-protected:
-
-	void filter(FmiImage &src,FmiImage &dst) const {
-		//const int minIntensity = this->getParameter("minIntensity",1);
-		double latDeg = src.properties();
-
-		detect_biomet(&src, &dst,
-				this->getParameter("maxIntensity",16),
-				this->getParameter("intensitySteepness",4),
-				this->getParameter("maxAltitude",500),
-				this->getParameter("altitudeSteepness",50));
-	};
-
-};
-*/
-
-
-/// The handler which contains all the Ropo detectors and processes given data with them.
+/*/ The handler which contains all the Ropo detectors and processes given data with them. */
 class Ropo : public Andre<Byte,Byte> {
 public:
 
@@ -180,15 +153,15 @@ public:
 	RopoShip    ship;
 	RopoSpeckle speckle;
 
-	virtual void addDefaultOps(); //		addOperator("speckle",speckle) };
+	virtual void addDefaultOps(); /*		addOperator("speckle",speckle) }; */
 
 };
 
 
 
-}  // namespace radar
+}  /* namespace radar */
 
 
-}  // namespace drain
+}  /* namespace drain */
 
 #endif

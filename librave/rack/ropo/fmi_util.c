@@ -17,9 +17,8 @@
     GNU Lesser Public License for more details.
 
     You should have received a copy of the GNU Lesser Public License
-    along with Rack.  If not, see <http://www.gnu.org/licenses/>.
+    along with Rack.  If not, see <http://www.gnu.org/licenses/>. */
 
-*/
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -34,7 +33,7 @@ char *argument(int argc, char **argv, char *target){
   int i=0;
   while (++i<argc)
     if (!strcmp(argv[i],target)){
-      if (i!=argc-1) // if just a flag
+      if (i!=argc-1) /* if just a flag */
         return argv[i+1];
       else
         return argv[i];
@@ -42,13 +41,13 @@ char *argument(int argc, char **argv, char *target){
   return NULL;
 }
 
-//int param(char *s, char *key,char *shortcut_key){
+/*int param(char *s, char *key,char *shortcut_key){ */
 int param(int argc,char **argv,int index,char *key){
   if (index<1)
     return 0;
   if (index>=argc)
     return 0;
-  //    fmi_error("param arg index overflow");
+  /*    fmi_error("param arg index overflow"); */
   if (strcmp(argv[index],key)==0)
     return 1;
   else 
@@ -60,7 +59,7 @@ int paramn(int argc,char **argv,int index,char *key){
     return 0;
   if (index>=argc)
     return 0;
-  //    fmi_error("param arg index overflow");
+  /*    fmi_error("param arg index overflow"); */
   if (strncmp(key,argv[index],strlen(key))==0)
     return 1;
   else 
@@ -85,15 +84,6 @@ char *extract_command_line(int argc, char **argv){
   return (fmi_util_command_line);
 }
 
-
-/*
-char *basename(char *filename){
-  //const int strlen=256;
-  //static char result[strlen];
-  char *ptr;
-  return ptr=strstr
-}
-*/
 
 void trchr(char *string,char from,char to){
   char *c;
@@ -185,11 +175,11 @@ float pseudo_gauss(float a,float x){
 int pseudo_gauss_int(int a,int x){
   return (255*a*a/(a*a+x*x));
 }
-  //  return (1.0 / (1+x*x/a/a));}
+  /*  return (1.0 / (1+x*x/a/a));} */
 
 /* SIGMOID CURVE in [0,1], ORIGIN=0, A=DERIV AT ORGIN */
 float pseudo_sigmoid(float a,float x){
-  // float xa=x/a;
+  /* float xa=x/a; */
   if (x>0.0) 
     return ( 255.0*x/(a+x) );
   else     
@@ -197,15 +187,15 @@ float pseudo_sigmoid(float a,float x){
 }
 
 int pseudo_sigmoid_int(int a,int x){
-  // float xa=x/a;
+  /* float xa=x/a; */
   if (x>0) 
     return ( (255*x)/(a+x) );
   else     
     return ( (255*x)/(a-x) );
 }
 
-//#define pseudo_sigmoid(a,x) ((x)>0 ? 255*(x)/(a+(x)) : 255*(x)/(a-(x))) 
-//#define pseudo_gauss(a,x) (255*(a)*(a)/((a)*(a)+(x)*(x)))
+/*#define pseudo_sigmoid(a,x) ((x)>0 ? 255*(x)/(a+(x)) : 255*(x)/(a-(x)))  */
+/*#define pseudo_gauss(a,x) (255*(a)*(a)/((a)*(a)+(x)*(x))) */
 
 
 

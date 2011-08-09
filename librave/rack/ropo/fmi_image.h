@@ -18,9 +18,9 @@
     GNU Lesser Public License for more details.
 
     You should have received a copy of the GNU Lesser Public License
-    along with Rack.  If not, see <http://www.gnu.org/licenses/>.
+    along with Rack.  If not, see <http://www.gnu.org/licenses/>. */
 
-*/
+
 #ifndef __FMI_IMAGE__
 #define __FMI_IMAGE__
 #define FMI_IMAGE_VER "fmi_image \t v2.2\t Jul 2002 (c) Markus.Peura@fmi.fi"
@@ -55,11 +55,11 @@ typedef enum {
 typedef enum {
   NULL_IMAGE,
   TRUE_IMAGE,
-  LINK_IMAGE,
+  LINK_IMAGE
 } FmiImageType;
 
 extern char FmiImageFormatExtension[7][4];
-//char FmiImageFormatExtension[][];
+/*char FmiImageFormatExtension[][]; */
 
 typedef enum {
   ZERO,
@@ -70,15 +70,15 @@ typedef enum {
   TILE
 } CoordOverflowHandler;
 
-//typedef signed char Dbz;
+/*typedef signed char Dbz; */
 typedef unsigned char Byte;
 typedef int Celsius;
 
 #define HISTOGRAM_SIZE (256+15)
-//typedef unsigned long Histogram[HISTOGRAM_SIZE];  
-typedef signed long Histogram[HISTOGRAM_SIZE];  // signed is needed for AREA
-// this list contains special entries which are not very useful
-// in standard histogram usage
+/*typedef unsigned long Histogram[HISTOGRAM_SIZE];   */
+typedef signed long Histogram[HISTOGRAM_SIZE];  /* signed is needed for AREA */
+/* this list contains special entries which are not very useful */
+/* in standard histogram usage */
 
 enum histogram_special_data {
   HIST_SIZE = 256,
@@ -97,7 +97,7 @@ enum histogram_special_data {
   HIST_MAX_I,
   HIST_MAX_J
 };
-// lis�� my�s dump_stats:iin
+/* lis�� my�s dump_stats:iin */
 
 /*
 #define HIST_SIZE    256
@@ -133,7 +133,7 @@ struct fmi_image {
     height = rays
   */
   int width,height,channels;
-  //  int *channel_mapping;
+  /*  int *channel_mapping; */
   int area,volume;
   int max_value;
 
@@ -161,15 +161,15 @@ int legal_coords(FmiImage *img,int x,int y);
 /* BASIC OPERATIONS OFR SETTING AND RESETTING IMAGES */
 /*int set(FmiImage *img,int width,int height,int channels);*/
 FmiImage *new_image(int sweep_count); /* Allocator */
-int initialize_image(FmiImage *img); // constructor
+int initialize_image(FmiImage *img); /* constructor */
 
 void reset_image(FmiImage *img);
 
-// virtual images
+/* virtual images */
 int link_image_segment(FmiImage *reference_img,int channel_start,int channel_count,FmiImage *linked_img);
 void link_image_channel(FmiImage *source,int channel,FmiImage *linked);
 
-void release_image(FmiImage *img); // destructor
+void release_image(FmiImage *img); /* destructor */
 
 void split_to_link_array(FmiImage *source,int segments,FmiImage *target);
 void split_to_channels(FmiImage *source,int channels);
@@ -183,7 +183,7 @@ int check_image_properties(FmiImage *sample,FmiImage *target);
 */
 
 void concatenate_images_vert(FmiImage *source,int count,FmiImage *target);
-//int convert_to_linkarray(FmiImage *source,FmiImage *target);
+/*int convert_to_linkarray(FmiImage *source,FmiImage *target); */
 
 int copy_image_properties(FmiImage *sample,FmiImage *target);
 int check_image_integrity(FmiImage *sample,FmiImage *target);
@@ -191,12 +191,12 @@ int canonize_image(FmiImage *sample,FmiImage *target);
 
 
 Byte get_pixel(FmiImage *img,int x,int y,int channel);
-//#define get_pixel(img,x,y,channel) get(img,x,y,channel) 
+/*#define get_pixel(img,x,y,channel) get(img,x,y,channel)  */
 
 Byte get_pixel_direct(FmiImage *img,int i);
 
 void put_pixel(FmiImage *img,int x,int y,int channel,Byte c);
-//#define put_pixel(img,x,y,channel,c) put(img,x,y,channel,c) 
+/*#define put_pixel(img,x,y,channel,c) put(img,x,y,channel,c)  */
 void put_pixel_direct(FmiImage *img,int address,Byte c);
 void put_pixel_direct_inc(FmiImage *img,int address);
 
@@ -221,12 +221,12 @@ void multiply_image255_sigmoid(FmiImage *source,FmiImage *source2,FmiImage *targ
 void max_image(FmiImage *source,FmiImage *source2,FmiImage *target);
 void min_image(FmiImage *source,FmiImage *source2,FmiImage *target);
 
-// intensity mappings
+/* intensity mappings */
 void multiply_image_scalar255(FmiImage *img,int coeff);
-void semisigmoid_image(FmiImage *source,int half_width); // scale
-void semisigmoid_image_inv(FmiImage *source,int half_width); // scale
-void sigmoid_image(FmiImage *source,int threshold,int slope); // soft threshold
-void gaussian_image(FmiImage *source,int mean,int half_width);// soft threshold
+void semisigmoid_image(FmiImage *source,int half_width); /* scale */
+void semisigmoid_image_inv(FmiImage *source,int half_width); /* scale */
+void sigmoid_image(FmiImage *source,int threshold,int slope); /* soft threshold */
+void gaussian_image(FmiImage *source,int mean,int half_width);/* soft threshold */
 
 void copy_image(FmiImage *source,FmiImage *target);
 void insert(FmiImage *source,FmiImage *target,int i0,int j0);
@@ -265,7 +265,7 @@ void to_cart(FmiImage *source,FmiImage *target,Byte outside_fill);
 
 
 /* filters */
-//  typedef struct {int width;int height;int *array;} Mask;
+/*  typedef struct {int width;int height;int *array;} Mask; */
 /*
   typedef struct {int width;int height;char *name;} Mask;
   Mask mask_speck1;
@@ -277,6 +277,8 @@ void calc_histogram(FmiImage *source,Histogram hist);
 void clear_histogram(Histogram hist);
 void write_histogram(char *filename,Histogram hist);
 void dump_histogram(Histogram hist);
+/*initialize_vert_stripe */
+int initialize_vert_stripe(FmiImage *img,int height);
 
 
 #endif

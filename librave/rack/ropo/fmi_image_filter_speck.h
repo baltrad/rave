@@ -1,5 +1,6 @@
 /**
 
+
     Copyright 2001 - 2010  Markus Peura,
     Finnish Meteorological Institute (First.Last@fmi.fi)
 
@@ -17,9 +18,8 @@
     GNU Lesser Public License for more details.
 
     You should have received a copy of the GNU Lesser Public License
-    along with Rack.  If not, see <http://www.gnu.org/licenses/>.
+    along with Rack.  If not, see <http://www.gnu.org/licenses/>. */
 
-*/
 
 
 /* THIS LIBRARY CONTAINS IMAGE PROCESSING OPERATIONS FOR GENERAL PURPOSE */
@@ -28,11 +28,11 @@
 /* Remove specks with area up to A pixels    */
 void detect_specks(FmiImage *target,FmiImage *trace,unsigned char min_value,int (* histogram_function)(Histogram));
 void Binaryprobe(FmiImage *domain,FmiImage *source,FmiImage *target,int (* histogram_function)(Histogram),unsigned char min_value);
-//void remove_specks(FmiImage *img,Byte min_intensity,int max_property,Byte marker,int (* histogram_function)(Histogram));
+/*void remove_specks(FmiImage *img,Byte min_intensity,int max_property,Byte marker,int (* histogram_function)(Histogram)); */
 
 /* debugging and development */
 void test_rotation(FmiImage *target,FmiImage *trace,int i,int j,int rec_depth);
-//int hselector;
+/*int hselector; */
 
 int ROTX(int dir);
 int ROTY(int dir);

@@ -17,9 +17,8 @@
     GNU Lesser Public License for more details.
 
     You should have received a copy of the GNU Lesser Public License
-    along with Rack.  If not, see <http://www.gnu.org/licenses/>.
+    along with Rack.  If not, see <http://www.gnu.org/licenses/>. */
 
-*/
 #include "fmi_image_restore.h"
 #include "fmi_image_filter.h"
 #include "fmi_image_histogram.h"
@@ -32,10 +31,10 @@ void mark_image(FmiImage *target,FmiImage *prob,Byte threshold,Byte marker){
   for (i=0;i<prob->volume;i++)
     if (prob->array[i]>=threshold)
       target->array[i]=marker;
-};
+}
 
 
-// simple
+/* simple */
 void restore_image(FmiImage *source,FmiImage *target,FmiImage *prob,Byte threshold){ 
   register int i;
   canonize_image(source,prob);
@@ -60,7 +59,7 @@ void restore_image_neg(FmiImage *source,FmiImage *target,FmiImage *prob,Byte thr
       target->array[i]=source->array[i];
 }
 
-// other
+/* other */
 void restore_image2(FmiImage *source,FmiImage *target,FmiImage *prob,Byte threshold){ 
   register int i;
   FmiImage median;
@@ -68,17 +67,17 @@ void restore_image2(FmiImage *source,FmiImage *target,FmiImage *prob,Byte thresh
   canonize_image(source,target);
   canonize_image(source,&median);
 
-  // ERASE ANOMALIES (to black)
+  /* ERASE ANOMALIES (to black) */
   for (i=0;i<prob->volume;i++)
     if (prob->array[i]>=threshold)
       target->array[i]=0;
     else
       target->array[i]=source->array[i];
 
-  // CALCULATE ME(DI)AN OF NONZERO PIXELS
+  /* CALCULATE ME(DI)AN OF NONZERO PIXELS */
   pipeline_process(target,&median,2,2,histogram_mean_nonzero);
 
-  // REPLACE ANOMALOUS PIXELS WITH THAT NEIGHBORHOOD ME(DI)AN
+  /* REPLACE ANOMALOUS PIXELS WITH THAT NEIGHBORHOOD ME(DI)AN */
   for (i=0;i<prob->volume;i++)
     if (prob->array[i]>=threshold)
       target->array[i]=median.array[i];

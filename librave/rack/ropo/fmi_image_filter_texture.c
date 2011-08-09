@@ -17,9 +17,8 @@
     GNU Lesser Public License for more details.
 
     You should have received a copy of the GNU Lesser Public License
-    along with Rack.  If not, see <http://www.gnu.org/licenses/>.
+    along with Rack.  If not, see <http://www.gnu.org/licenses/>. */
 
-*/
 #include "fmi_util.h"
 #include "fmi_image.h"
 #include "fmi_image_filter.h"
@@ -33,6 +32,6 @@ void detect_texture(FmiImage *source,FmiImage *trace){
   detect_vert_maxima(source,trace);
   if (FMI_DEBUG(1)) 
     write_image("texture",trace,PGM_RAW);
-  //  detect_vert_maxima(source,trace);
+  /*  detect_vert_maxima(source,trace); */
 }
 

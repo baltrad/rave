@@ -17,28 +17,27 @@
     GNU Lesser Public License for more details.
 
     You should have received a copy of the GNU Lesser Public License
-    along with Rack.  If not, see <http://www.gnu.org/licenses/>.
+    along with Rack.  If not, see <http://www.gnu.org/licenses/>. */
 
-*/
 #include <stdio.h>
-//#include <limits.h>
+/*#include <limits.h> */
 #include <math.h> /* sqrt() */
 #include "fmi_util.h"
 #include "fmi_image.h"
 #include "fmi_image_filter.h"
 #include "fmi_image_histogram.h"
 
-//FmiImage *histogram_weight_image=NULL;
-//histogram_weight_image=NULL;
+/*FmiImage *histogram_weight_image=NULL; */
+/*histogram_weight_image=NULL; */
 int histogram_sample_count=0;
 int (* histogram_scaling_function)(int param, int value)=NULL;
 int histogram_scaling_parameter=128;
 
-int histogram_semisigmoid(int a,int x){ // typical histogram_scaling_function
+int histogram_semisigmoid(int a,int x){ /* typical histogram_scaling_function */
   return  (255*(x)/(a+x));
 }
 
-int histogram_semisigmoid_inv(int a,int x){ // typical histogram_scaling_function
+int histogram_semisigmoid_inv(int a,int x){ /* typical histogram_scaling_function */
   return  (255-255*(x)/(a+x));
 }
 
@@ -52,17 +51,17 @@ void clear_histogram_full(Histogram hist){
 
 
 
-//void set_histogram_sample_count(int width,int height);
+/*void set_histogram_sample_count(int width,int height); */
 
 /* WINDOW (or template or mask)  - BASED FILTERING */
 
 void convolve(FmiImage *source,FmiImage *target,int mask_width,int mask_height,int **mask,int divisor){
-  register int  i,j; //,k,s,t;
+  register int  i,j; /*,k,s,t; */
 
   fmi_debug(2,"convolve");
-  //  printf("\t hey ,%d) =",divisor);
-  //fflush(stdout);
-  //  printf("\t(%d,%d) =",mask_width,mask_height);
+  /*  printf("\t hey ,%d) =",divisor); */
+  /*fflush(stdout); */
+  /*  printf("\t(%d,%d) =",mask_width,mask_height); */
   for (j=0;j<mask_height;j++){
     for (i=0;i<mask_width;i++){
       printf("\t(%d,%d) =",i,j);
@@ -71,7 +70,7 @@ void convolve(FmiImage *source,FmiImage *target,int mask_width,int mask_height,i
       fflush(stdout);
       printf("\n");}
   }
-  //fmi_debug(2,"convolve");
+  /*fmi_debug(2,"convolve"); */
   if (FMI_DEBUG(2)) write_image("conv",target,PGM_RAW);
 }
 
@@ -92,7 +91,7 @@ int histogram_median_biased(Histogram h,int count){
   register int  i;
   int sum;
   sum=0;
-  //  sum2=histogram_sum(h)/2;
+  /*  sum2=histogram_sum(h)/2; */
   for (i=0;i<256;i++){
     sum+=h[i];
     if (sum>=count) 
@@ -147,9 +146,9 @@ return h[HIST_PERIMx3]/3;
 */
 
 int histogram_compactness(Histogram h){
-  // (A=�r�, P=2�r maxA=�(P/2�)�=P/4�
-  // 255*4� = 3204  "theoretical coeff"
-  // * circle aliasing coeff sqrt2 = 4500
+  /* (A=�r�, P=2�r maxA=�(P/2�)�=P/4� */
+  /* 255*4� = 3204  "theoretical coeff" */
+  /* * circle aliasing coeff sqrt2 = 4500 */
   return (4500*ABS(h[HIST_AREA])/(h[HIST_PERIMx3]*h[HIST_PERIMx3]+1));
 }
 
@@ -178,8 +177,8 @@ int histogram_median(Histogram h){ /* computationally heavy */
   return 255;
 }
 
-//histogram_median2_count=0;
-void histogram_median2_reset(Histogram h){  //stupid?
+/*histogram_median2_count=0; */
+void histogram_median2_reset(Histogram h){  /*stupid? */
   histogram_sample_count=histogram_sum(h);
 }
 
@@ -223,7 +222,7 @@ int histogram_mean_nonzero(Histogram h){
   int sum,s;
   sum=0;
   s=0;
-  // i=1,2,...
+  /* i=1,2,... */
   for (i=1;i<256;i++){
     s+=h[i];
     sum+=h[i]*i;}
@@ -237,9 +236,9 @@ int histogram_mean2(Histogram h){
   register int  i;
   int sum;
   sum=0;
-  //  s=0;
+  /*  s=0; */
   for (i=0;i<256;i++){
-    //    s+=h[i];
+    /*    s+=h[i]; */
     sum+=h[i]*i;}
   return (sum/histogram_sample_count);
 }
@@ -252,8 +251,8 @@ int histogram_mean_weighted(Histogram h){
   if (s<1) s=1;
   for (i=0;i<256;i++){
     sum+=h[i]*i;}
-    //    s+=histogram_weights[i]*h[i];
-    //sum+=histogram_weights[i]*h[i]*i;}
+    /*    s+=histogram_weights[i]*h[i]; */
+    /*sum+=histogram_weights[i]*h[i]*i;} */
   return (sum/s);
 }
 
@@ -269,14 +268,14 @@ int histogram_variance_rot(Histogram h){
   sum_y  = 0;
   sum2_y = 0;
 
-  // NOTE k=1,...
+  /* NOTE k=1,... */
   for (i=1;i<256;i++){
     n=h[i];
     N += n;
-    //w=n;
-    //w=(float)n;
-    //    x=cos(((float)i)*2.0*PI/255.0);
-    // y=sin(((float)i)*2.0*PI/255.0);
+    /*w=n; */
+    /*w=(float)n; */
+    /*    x=cos(((float)i)*2.0*PI/255.0); */
+    /* y=sin(((float)i)*2.0*PI/255.0); */
     x=histogram_cosine[i]-128;
     y=histogram_sine[i]-128;
     sum_x  += n*x;
@@ -286,7 +285,7 @@ int histogram_variance_rot(Histogram h){
   }
 
   return pseudo_sigmoid (histogram_threshold,(sum2_x-sum_x*sum_x/N + sum2_y-sum_y*sum_y/N)/N/128);
-  //return pseudo_sigmoid(128.0,255*(sum2_x+sum2_y));
+  /*return pseudo_sigmoid(128.0,255*(sum2_x+sum2_y)); */
 }
 
 /*
@@ -351,7 +350,7 @@ int histogram_meanY(Histogram h){
 }
 
 int histogram_principal_component_ratio(Histogram h){
-  // LONG INT was not enough!
+  /* LONG INT was not enough! */
   double x,y,xx,xy,yy,n;
   double Cxx,Cxy,Cyy,SQRT,ans;
   x= h[HIST_SUM_I];
@@ -359,11 +358,11 @@ int histogram_principal_component_ratio(Histogram h){
   xx=h[HIST_SUM_II];
   xy=h[HIST_SUM_IJ];
   yy=h[HIST_SUM_JJ];
-  //  A=h[HIST_AREA];
-  //  n=h[HIST_PERIMx3];
+  /*  A=h[HIST_AREA]; */
+  /*  n=h[HIST_PERIMx3]; */
   n=h[HIST_SIZE];
   
-  //  histogram_dump_stats(h); return 127;
+  /*  histogram_dump_stats(h); return 127; */
 
   if (n==0) return 255;
   Cxx=(xx-x*x/n)/n;
@@ -373,19 +372,19 @@ int histogram_principal_component_ratio(Histogram h){
     Cxy=(h[HIST_SUM_IJ]-h[HIST_SUM_I]*h[SUM_Y]/A)/A;
     Cyy=(h[SUM_YY]-h[SUM_Y]*h[SUM_Y]/A)/A;
   */
-  //  SQR=((Cxx+Cyy)*(Cxx+Cyy)-4*(Cxx*Cyy-Cxy*Cxy));
+  /*  SQR=((Cxx+Cyy)*(Cxx+Cyy)-4*(Cxx*Cyy-Cxy*Cxy)); */
   SQRT=sqrt((Cxx-Cyy)*(Cxx-Cyy)+4*Cxy*Cxy);
-  //  SQRT=sqrt((double)((Cxx+Cyy)*(Cxx+Cyy)-4*(Cxx*Cyy-Cxy*Cxy)))
-  //  SQRT=sqrt((double)SQR);
+  /*  SQRT=sqrt((double)((Cxx+Cyy)*(Cxx+Cyy)-4*(Cxx*Cyy-Cxy*Cxy))) */
+  /*  SQRT=sqrt((double)SQR); */
   ans=255.0*(Cxx+Cyy-SQRT)/(Cxx+Cyy+SQRT);
-  //ans=sqrt(Cxx/(Cyy));
+  /*ans=sqrt(Cxx/(Cyy)); */
   if ((Cxx+Cyy)==0) 
     return 255;
   else
-    return //255*sqrt((Cxx+Cyy-SQRT)/(Cxx+Cyy+SQRT));
+    return /*255*sqrt((Cxx+Cyy-SQRT)/(Cxx+Cyy+SQRT)); */
       ans;
-  //return 16*d/(a+1);
-  //return 255*D;
+  /*return 16*d/(a+1); */
+  /*return 255*D; */
 }
 
 int histogram_smoothness(Histogram h){
@@ -403,10 +402,10 @@ int histogram_smoothness(Histogram h){
 
 void histogram_dump_nonzero(Histogram h){
   register int  i;
-  //  int sum,s;
-  //sum=0;
-  //s=0;
-  //  for (i=0;i<HISTOGRAM_SIZE;i++)
+  /*  int sum,s; */
+  /*sum=0; */
+  /*s=0; */
+  /*  for (i=0;i<HISTOGRAM_SIZE;i++) */
   for (i=0;i<HISTOGRAM_SIZE;i++)
     if (h[i]!=0)
       fprintf(stderr,"histogram[%d]=%d\n",i,(int)h[i]);
@@ -419,7 +418,7 @@ void histogram_dump(Histogram h){
   sum=0;
   s=0;
  for (i=0;i<256;i++){
-   //   fprintf(stderr," %d \t %d\t",i,h[i]);
+   /*   fprintf(stderr," %d \t %d\t",i,h[i]); */
     s+=h[i];
     sum+=h[i]*i;}
   fprintf(stderr,"\n sum=%d \t hits=%d \t mean=%d \n",sum,s,sum/s);
@@ -449,14 +448,14 @@ void initialize_histogram(FmiImage *source,Histogram histogram,int hrad,int vrad
   int k,m,n,w;
   float alpha;
 
-  clear_histogram(histogram);   //full?
+  clear_histogram(histogram);   /*full? */
 
-  // EXCLUSIVE INITS
+  /* EXCLUSIVE INITS */
   if (hist_func==histogram_mean_weighted){
     fmi_debug(2,"initialize_histogram: histogram_mean_weighted, source:");
     image_info(source);
     fmi_debug(2,"initialize_histogram: histogram_mean_weighted, weight:");
-    // canonize_images(source,histogram_weight_image);
+    /* canonize_images(source,histogram_weight_image); */
     image_info(histogram_weight_image);
     histogram[HIST_SIZE]=0;
     for (k=0;k<source->channels;k++)
@@ -474,11 +473,11 @@ void initialize_histogram(FmiImage *source,Histogram histogram,int hrad,int vrad
 	  ++histogram[get_pixel(source,i+m,j+n,k)];
   } 
 
-  // quick add - check if ok?
+  /* quick add - check if ok? */
   if (histogram_sample_count==0)
     histogram_sample_count=(2*hrad+1)*(2*vrad+1)/2;
 
-  // ADDED INITS
+  /* ADDED INITS */
   if (hist_func==histogram_variance_rot)
     for (i=0;i<256;i++){
       alpha=((float)i)/255*2.0*PI;
@@ -505,7 +504,7 @@ void (* histogram_window_up)(FmiImage    *,Histogram,int,int,int *,int *);
 void (* histogram_window_down)(FmiImage  *,Histogram,int,int,int *,int *);
 void (* histogram_window_right)(FmiImage *,Histogram,int,int,int *,int *);
 void (* histogram_window_left)(FmiImage  *,Histogram,int,int,int *,int *);
-//left(FmiImage *source,Histogram histogram,int hrad,int vrad,int *i,int *j)
+/*left(FmiImage *source,Histogram histogram,int hrad,int vrad,int *i,int *j) */
 
 
 void up(FmiImage *source,Histogram histogram,int hrad,int vrad,int *i,int *j){
@@ -536,9 +535,9 @@ void right(FmiImage *source,Histogram histogram,int hrad,int vrad,int *i,int *j)
 
 void left(FmiImage *source,Histogram histogram,int hrad,int vrad,int *i,int *j){
   register int  n,k;
-  //  const int height=vrad*2+1;
+  /*  const int height=vrad*2+1; */
   k=0;
-  //   for (k=0;k<source->channels;k++)
+  /*   for (k=0;k<source->channels;k++) */
     for (n=-vrad;n<=vrad;n++){
       --histogram[get_pixel(source,*i+hrad  ,*j+n,k)];
       ++histogram[get_pixel(source,*i-hrad-1,*j+n,k)];}
@@ -568,7 +567,7 @@ void down_w(FmiImage *source,Histogram histogram,int hrad,int vrad,int *i,int *j
   register int  ii;
   register int  jo=*j+vrad;
   register int  jn=*j-vrad-1;
-  //  k=0;
+  /*  k=0; */
   for (m=-hrad;m<=hrad;m++){
     ii=*i+m;
     w=get_pixel(histogram_weight_image,ii,jo,0);
@@ -615,21 +614,6 @@ void left_w(FmiImage *source,Histogram histogram,int hrad,int vrad,int *i,int *j
   (*i)--;
 }
 
-/*
-  void left_w(FmiImage *source,Histogram histogram,int hrad,int vrad,int *i,int *j){
-  register int  n,k;
-  //  const int height=vrad*2+1;
-   k=0;
-  //   for (k=0;k<source->channels;k++)
-  for (n=-vrad;n<=vrad;n++){
-  --histogram[get_pixel(source,*i+hrad  ,*j+n,k)];
-  --histogram[get_pixel(histogram_weight_image,*i+hrad  ,*j+n,k)];
-  ++histogram[get_pixel(histogram_weight_image,*i-hrad-1,*j+n,k)];
-  ++histogram[get_pixel(source,*i-hrad-1,*j+n,k)];}
-   (*i)--;
-}
-*/
-
 void pipeline_process_col_major(FmiImage *source,FmiImage *target,int hrad,int vrad,int (* histogram_function)(Histogram),Histogram histogram){
   int i,j,k;
   i=j=k=0;
@@ -640,11 +624,11 @@ void pipeline_process_col_major(FmiImage *source,FmiImage *target,int hrad,int v
 
     /* UP */
     while (j<source->height-1){
-      //      if (0){	fprintf(stderr," - sum=i%d\t j=%d\n",i,j);}
+      /*      if (0){	fprintf(stderr," - sum=i%d\t j=%d\n",i,j);} */
       histogram_window_up(source,histogram,hrad,vrad,&i,&j);
       put_pixel(target,i,j,k,histogram_function(histogram));
       if (0){	fprintf(stderr," - sum=i%d\t j=%d\n",i,j);}
-      //dump_histogram(histogram); 
+      /*dump_histogram(histogram);  */
     }
 
     /* ONE STEP RIGHT */
@@ -708,16 +692,16 @@ void pipeline_process_row_major(FmiImage *source,FmiImage *target,int hrad,int v
 
 
 void pipeline_process(FmiImage *source,FmiImage *target,int hrad,int vrad,int (* histogram_function)(Histogram)){
-  //int i,j;
-  //  register int  k,m,n;
-  //  FmiImage *target_ptr;
+  /*int i,j; */
+  /*  register int  k,m,n; */
+  /*  FmiImage *target_ptr; */
   Histogram histogram;
-  int width, height; //,count;
+  int width, height; /*,count; */
 
   /* INITIALIZE */
   width=hrad*2+1;
   height=vrad*2+1;
-  //  histogram_median2_count=(width*height+1)/2;
+  /*  histogram_median2_count=(width*height+1)/2; */
 
   /*
   if (histogram_function==histogram_mean_weighted_pyramid){ 
@@ -748,9 +732,9 @@ void pipeline_process(FmiImage *source,FmiImage *target,int hrad,int vrad,int (*
 
   /* INITIALIZE */
   initialize_histogram(source,histogram,hrad,vrad,0,0,histogram_function);
-  //  dump_histogram(histogram);
+  /*  dump_histogram(histogram); */
       
-  //  i=j=k=0;
+  /*  i=j=k=0; */
   put_pixel(target,0,0,0,histogram_function(histogram));
 
   if (histogram_function==histogram_mean_weighted){ 
@@ -760,6 +744,6 @@ void pipeline_process(FmiImage *source,FmiImage *target,int hrad,int vrad,int (*
   if (width>height)
     pipeline_process_row_major(source,target,hrad,vrad,histogram_function,histogram);
   else
-  //  printf(" width=%d\t height=%d\n",width,height);
+  /*  printf(" width=%d\t height=%d\n",width,height); */
     pipeline_process_col_major(source,target,hrad,vrad,histogram_function,histogram);
 }

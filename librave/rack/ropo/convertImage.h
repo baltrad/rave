@@ -1,6 +1,5 @@
 /**
-
-    Copyright 2010  Markus Peura,
+    Copyright 2010 Markus Peura,
     Finnish Meteorological Institute (First.Last@fmi.fi)
 
 
@@ -17,9 +16,8 @@
     GNU Lesser Public License for more details.
 
     You should have received a copy of the GNU Lesser Public License
-    along with Rack.  If not, see <http://www.gnu.org/licenses/>.
+    along with Rack.  If not, see <http://www.gnu.org/licenses/>. */
 
-*/
 /*
  * convertImage.h
  *
@@ -35,12 +33,12 @@ extern "C" {
 
 #include <drain/image/Image.h>
 
-/// Converts a drain image to an old image struct.
+/*/ Converts a drain image to an old image struct. */
 void convertImage(const drain::image::Image<Byte> &src,FmiImage &dst);
 
 void viewImage(const drain::image::Image<Byte> &src,FmiImage &dst);
 
-/// Converts an old image struct to a drain Image.
+/*/ Converts an old image struct to a drain Image. */
 void convertImage(const FmiImage &src,drain::image::Image<Byte> &dst);
 
 

@@ -17,9 +17,8 @@
     GNU Lesser Public License for more details.
 
     You should have received a copy of the GNU Lesser Public License
-    along with Rack.  If not, see <http://www.gnu.org/licenses/>.
+    along with Rack.  If not, see <http://www.gnu.org/licenses/>. */
 
-*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -93,7 +92,7 @@ void sunPosition(double latDeg, double lonDeg,char *timestamp,double *azimuth,do
 
 }
 
-/// 10.11.2010
+/*/ 10.11.2010 */
 int mainOld(int argc, char *argv[])
 {
 

@@ -17,9 +17,9 @@
     GNU Lesser Public License for more details.
 
     You should have received a copy of the GNU Lesser Public License
-    along with Rack.  If not, see <http://www.gnu.org/licenses/>.
+    along with Rack.  If not, see <http://www.gnu.org/licenses/>. */
 
-*/
+
 
 
 #ifndef _FMI_UTIL_
@@ -47,19 +47,19 @@
 #define EPSILON 0.0000001
 #define BIGNUMBER 32768
 
-#define EARTH_RADIUS 6372000 // metres, = 6372 KM
+#define EARTH_RADIUS 6372000 /* metres, = 6372 KM */
 
 #define TRUNC(x) ((int)(100*(x))/100.0)
-//#define SIGMOID(x,a) ((x)>0 ? (a)*(x)/(1+(a)*(x)) : (a)*(x)/(1-(a)*(x)) ) 
+/*#define SIGMOID(x,a) ((x)>0 ? (a)*(x)/(1+(a)*(x)) : (a)*(x)/(1-(a)*(x)) )  */
 #define GAUSS(a,x) (1/((x*x)/(a*a+0.000001)+1))
 
 float pseudo_gauss(float a,float x);
 int   pseudo_gauss_int(int a,int x);
 
-float pseudo_sigmoid(float a,float x);  // between -128 and 128
-int pseudo_sigmoid_int(int a,int x);  // between -128 and 128
-//#define pseudo_sigmoid(a,x) ((x)>0 ? 255*(x)/(a+(x)) : 255*(x)/(a-(x))) 
-//#define pseudo_gauss(a,x) (255*(a)*(a)/((a)*(a)+(x)*(x)))
+float pseudo_sigmoid(float a,float x);  /* between -128 and 128 */
+int pseudo_sigmoid_int(int a,int x);  /* between -128 and 128 */
+/*#define pseudo_sigmoid(a,x) ((x)>0 ? 255*(x)/(a+(x)) : 255*(x)/(a-(x)))  */
+/*#define pseudo_gauss(a,x) (255*(a)*(a)/((a)*(a)+(x)*(x))) */
 
 char *argument(int argc, char **argv, char *target);
 int file_count(int argc, char **argv);
@@ -76,7 +76,7 @@ char *extract_command_line(int argc, char **argv);
 #define FMI_FILENAME_LEN 1024
 
 
-//#define BASENAME(s) (strrchr(s,'/')==NULL?s:(strrchr(s,'/'))+1)
+/*#define BASENAME(s) (strrchr(s,'/')==NULL?s:(strrchr(s,'/'))+1) */
 char *file_path(char *filename);
 char *file_basename(char *filename);  /* without path and 1 extension */
 char *file_extension(char *filename);
