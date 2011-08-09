@@ -42,6 +42,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * placed in their own header file. */
 
 #include "scansun.h"
+#include "rave_debug.h"
 
 /******************************************************************************/
 /*LOCAL FUNCTIONS:                                                            */
@@ -84,7 +85,7 @@ int fill_meta(PolarScan_t* scan, PolarScanParam_t* dbzh, SCANMETA *meta)
    meta->ascale = 360.0 / meta->nazim;              /* First guess. FIXME?? */
 
    if (!getDoubleAttribute((RaveCoreObject*)scan, "how/rpm", &tmpd)) meta->antvel = 18.;
-   else meta->antvel = tmpd * 6.0;  /* 360¡/60sec */
+   else meta->antvel = tmpd * 6.0;  /* 360ï¿½/60sec */
 
    if (!getDoubleAttribute((RaveCoreObject*)scan, "how/pulsewidth", &tmpd)) meta->pulse = 2.0;
    else meta->pulse = tmpd;

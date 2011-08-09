@@ -30,6 +30,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_datetime.h"
 #include "rave_transform.h"
 #include "raveobject_hashtable.h"
+#include "rave_data2d.h"
 
 /**
  * This is the default parameter value that should be used when working
@@ -47,6 +48,9 @@ struct _RaveAttribute_t {
   char* sdata;    /**< the string value */
   long ldata;       /**< the long value */
   double ddata;     /**< the double value */
+  long* ldataarray; /**< the long array */
+  double* ddataarray; /**< the double array */
+  int arraylen;     /**< length of arrays */
 };
 
 /*@{ Private functions */
@@ -61,6 +65,9 @@ static int RaveAttribute_constructor(RaveCoreObject* obj)
   attr->sdata = NULL;
   attr->ldata = 0;
   attr->ddata = 0.0;
+  attr->ldataarray = NULL;
+  attr->ddataarray = NULL;
+  attr->arraylen = 0;
   return 1;
 }
 
@@ -73,6 +80,9 @@ static int RaveAttribute_copyconstructor(RaveCoreObject* obj, RaveCoreObject* sr
   this->ldata = 0;
   this->ddata = 0.0;
   this->format = RaveAttribute_Format_Undefined;
+  this->ldataarray = NULL;
+  this->ddataarray = NULL;
+  this->arraylen = 0;
 
   if (!RaveAttribute_setName(this, RaveAttribute_getName(src))) {
     goto error;
@@ -84,6 +94,14 @@ static int RaveAttribute_copyconstructor(RaveCoreObject* obj, RaveCoreObject* sr
     this->ddata = src->ddata;
   } else if (this->format == RaveAttribute_Format_String) {
     if (!RaveAttribute_setString(this, src->sdata)) {
+      goto error;
+    }
+  } else if (this->format == RaveAttribute_Format_LongArray) {
+    if (!RaveAttribute_setLongArray(this, src->ldataarray, src->arraylen)) {
+      goto error;
+    }
+  } else if (this->format == RaveAttribute_Format_DoubleArray) {
+    if (!RaveAttribute_setDoubleArray(this, src->ddataarray, src->arraylen)) {
       goto error;
     }
   }
@@ -103,6 +121,36 @@ static void RaveAttribute_destructor(RaveCoreObject* obj)
   RaveAttribute_t* attr = (RaveAttribute_t*)obj;
   RAVE_FREE(attr->name);
   RAVE_FREE(attr->sdata);
+  RAVE_FREE(attr->ldataarray);
+  RAVE_FREE(attr->ddataarray);
+}
+
+/**
+ * Returns the suggested data type for an array from the rave data type.
+ * E.g. char, uchar, short, etc will result in long and float, double will
+ * result in double.
+ * @param[in] type - the data type
+ * @returns the suggested data type or undefined if not possible
+ */
+static RaveDataType RaveAttributeInternal_getArrayType(RaveDataType type)
+{
+  RaveDataType result = RaveDataType_UNDEFINED;
+  switch(type) {
+  case RaveDataType_CHAR:
+  case RaveDataType_UCHAR:
+  case RaveDataType_SHORT:
+  case RaveDataType_INT:
+  case RaveDataType_LONG:
+    result = RaveDataType_LONG;
+    break;
+  case RaveDataType_FLOAT:
+  case RaveDataType_DOUBLE:
+    result = RaveDataType_DOUBLE;
+    break;
+  default:
+    break;
+  }
+  return result;
 }
 
 /*@} End of Private functions */
@@ -138,6 +186,8 @@ void RaveAttribute_setLong(RaveAttribute_t* attr, long value)
 {
   RAVE_ASSERT((attr != NULL), "attr == NULL");
   RAVE_FREE(attr->sdata);
+  RAVE_FREE(attr->ldataarray);
+  RAVE_FREE(attr->ddataarray);
   attr->ldata = value;
   attr->format = RaveAttribute_Format_Long;
 }
@@ -146,14 +196,18 @@ void RaveAttribute_setDouble(RaveAttribute_t* attr, double value)
 {
   RAVE_ASSERT((attr != NULL), "attr == NULL");
   RAVE_FREE(attr->sdata);
+  RAVE_FREE(attr->ldataarray);
+  RAVE_FREE(attr->ddataarray);
+
   attr->ddata = value;
   attr->format = RaveAttribute_Format_Double;
 }
 
 int RaveAttribute_setString(RaveAttribute_t* attr, const char* value)
 {
-  RAVE_ASSERT((attr != NULL), "attr == NULL");
   char* tdata = NULL;
+  RAVE_ASSERT((attr != NULL), "attr == NULL");
+
   if (value != NULL) {
     tdata = RAVE_STRDUP(value);
     if (tdata == NULL) {
@@ -162,6 +216,8 @@ int RaveAttribute_setString(RaveAttribute_t* attr, const char* value)
     }
   }
   RAVE_FREE(attr->sdata);
+  RAVE_FREE(attr->ldataarray);
+  RAVE_FREE(attr->ddataarray);
   if (tdata != NULL) {
     attr->sdata = tdata;
   }
@@ -171,6 +227,111 @@ error:
   return 0;
 }
 
+int RaveAttribute_setLongArray(RaveAttribute_t* attr, long* value, int len)
+{
+  long* ldata = NULL;
+  RAVE_ASSERT((attr != NULL), "attr == NULL");
+
+  if (value != NULL) {
+    ldata = RAVE_MALLOC(sizeof(long) * len);
+    if (ldata == NULL) {
+      RAVE_CRITICAL0("Failed to allocate memory for long array");
+      goto error;
+    }
+    memcpy(ldata, value, sizeof(long) * len);
+  } else {
+    attr->arraylen = 0;
+  }
+  RAVE_FREE(attr->sdata);
+  RAVE_FREE(attr->ldataarray);
+  RAVE_FREE(attr->ddataarray);
+  if (ldata != NULL) {
+    attr->ldataarray = ldata;
+  }
+  attr->arraylen = len;
+  attr->format = RaveAttribute_Format_LongArray;
+  return 1;
+error:
+  return 0;
+}
+
+int RaveAttribute_setDoubleArray(RaveAttribute_t* attr, double* value, int len)
+{
+  double* ddata = NULL;
+  RAVE_ASSERT((attr != NULL), "attr == NULL");
+
+  if (value != NULL) {
+    ddata = RAVE_MALLOC(sizeof(double) * len);
+    if (ddata == NULL) {
+      RAVE_CRITICAL0("Failed to allocate memory for double array");
+      goto error;
+    }
+    memcpy(ddata, value, sizeof(double) * len);
+  } else {
+    attr->arraylen = 0;
+  }
+  RAVE_FREE(attr->sdata);
+  RAVE_FREE(attr->ldataarray);
+  RAVE_FREE(attr->ddataarray);
+  if (ddata != NULL) {
+    attr->ddataarray = ddata;
+  }
+  attr->arraylen = len;
+  attr->format = RaveAttribute_Format_DoubleArray;
+  return 1;
+error:
+  return 0;
+}
+
+int RaveAttribute_setArrayFromData(RaveAttribute_t* attr, void* value, int len, RaveDataType type)
+{
+  RaveData2D_t* data = NULL;
+  RaveDataType dtype = RaveDataType_UNDEFINED;
+  int result = 0;
+
+  RAVE_ASSERT((attr != NULL), "attr == NULL");
+
+  dtype = RaveAttributeInternal_getArrayType(type);
+
+  if (dtype != RaveDataType_UNDEFINED) {
+    data = RAVE_OBJECT_NEW(&RaveData2D_TYPE);
+    if (data != NULL && RaveData2D_setData(data, len, 1, value, type)) {
+      if (dtype == RaveDataType_LONG) {
+        long* ndata = RAVE_MALLOC(sizeof(long) * len);
+        if (ndata != NULL) {
+          int i = 0;
+          for (i = 0; i < len; i++) {
+            double v;
+            RaveData2D_getValue(data, i, 0, &v);
+            ndata[i] = (long)v;
+          }
+          result = RaveAttribute_setLongArray(attr, ndata, len);
+        }
+        RAVE_FREE(ndata);
+      } else if (dtype == RaveDataType_DOUBLE) {
+        double* ndata = RAVE_MALLOC(sizeof(double) * len);
+        if (ndata != NULL) {
+          int i = 0;
+          for (i = 0; i < len; i++) {
+            double v;
+            RaveData2D_getValue(data, i, 0, &v);
+            ndata[i] = v;
+          }
+          result = RaveAttribute_setDoubleArray(attr, ndata, len);
+        }
+        RAVE_FREE(ndata);
+      }
+    } else {
+      RAVE_ERROR0("Memory error");
+    }
+  } else {
+    RAVE_ERROR0("Unsupported data type for array");
+  }
+  RAVE_OBJECT_RELEASE(data);
+  return result;
+
+}
+
 int RaveAttribute_getLong(RaveAttribute_t* attr, long* value)
 {
   int result = 0;
@@ -178,6 +339,9 @@ int RaveAttribute_getLong(RaveAttribute_t* attr, long* value)
   RAVE_ASSERT((value != NULL), "value == NULL");
   if (attr->format == RaveAttribute_Format_Long) {
     *value = attr->ldata;
+    result = 1;
+  } else if (attr->format == RaveAttribute_Format_LongArray && attr->arraylen == 1) {
+    *value = attr->ldataarray[0];
     result = 1;
   }
   return result;
@@ -191,6 +355,9 @@ int RaveAttribute_getDouble(RaveAttribute_t* attr, double* value)
   if (attr->format == RaveAttribute_Format_Double) {
     *value = attr->ddata;
     result = 1;
+  } else if (attr->format == RaveAttribute_Format_DoubleArray && attr->arraylen == 1) {
+    *value = attr->ddataarray[0];
+    result = 1;
   }
   return result;
 }
@@ -202,6 +369,36 @@ int RaveAttribute_getString(RaveAttribute_t* attr, char** value)
   RAVE_ASSERT((value != NULL), "value == NULL");
   if (attr->format == RaveAttribute_Format_String) {
     *value = attr->sdata;
+    result = 1;
+  }
+  return result;
+}
+
+int RaveAttribute_getLongArray(RaveAttribute_t* attr, long** value, int* len)
+{
+  int result = 0;
+  RAVE_ASSERT((attr != NULL), "attr == NULL");
+  RAVE_ASSERT((value != NULL), "value == NULL");
+  RAVE_ASSERT((len != NULL), "len == NULL");
+
+  if (attr->format == RaveAttribute_Format_LongArray) {
+    *value = attr->ldataarray;
+    *len = attr->arraylen;
+    result = 1;
+  }
+  return result;
+}
+
+int RaveAttribute_getDoubleArray(RaveAttribute_t* attr, double** value, int* len)
+{
+  int result = 0;
+  RAVE_ASSERT((attr != NULL), "attr == NULL");
+  RAVE_ASSERT((value != NULL), "value == NULL");
+  RAVE_ASSERT((len != NULL), "len == NULL");
+
+  if (attr->format == RaveAttribute_Format_DoubleArray) {
+    *value = attr->ddataarray;
+    *len = attr->arraylen;
     result = 1;
   }
   return result;
@@ -287,6 +484,39 @@ RaveAttribute_t* RaveAttributeHelp_createString(const char* name, const char* va
   RaveAttribute_t* result = RaveAttributeHelp_createNamedAttribute(name);
   if (result != NULL) {
     if (!RaveAttribute_setString(result, value)) {
+      RAVE_OBJECT_RELEASE(result);
+    }
+  }
+  return result;
+}
+
+RaveAttribute_t* RaveAttributeHelp_createLongArray(const char* name, long* value, int len)
+{
+  RaveAttribute_t* result = RaveAttributeHelp_createNamedAttribute(name);
+  if (result != NULL) {
+    if (!RaveAttribute_setLongArray(result, value, len)) {
+      RAVE_OBJECT_RELEASE(result);
+    }
+  }
+  return result;
+}
+
+RaveAttribute_t* RaveAttributeHelp_createDoubleArray(const char* name, double* value, int len)
+{
+  RaveAttribute_t* result = RaveAttributeHelp_createNamedAttribute(name);
+  if (result != NULL) {
+    if (!RaveAttribute_setDoubleArray(result, value, len)) {
+      RAVE_OBJECT_RELEASE(result);
+    }
+  }
+  return result;
+}
+
+RaveAttribute_t* RaveAttributeHelp_createArrayFromData(const char* name, void* value, int len, RaveDataType type)
+{
+  RaveAttribute_t* result = RaveAttributeHelp_createNamedAttribute(name);
+  if (result != NULL) {
+    if (!RaveAttribute_setArrayFromData(result, value, len, type)) {
       RAVE_OBJECT_RELEASE(result);
     }
   }

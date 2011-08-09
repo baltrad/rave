@@ -188,7 +188,6 @@ int pyarraytype_from_type(char type)
   return -1;
 }
 
-
 double calculate_cressman(double r, double R)
 {
   return (R * R - r * r) / (R * R + r * r);

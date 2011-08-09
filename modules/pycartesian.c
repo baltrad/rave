@@ -35,6 +35,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #define PYCARTESIAN_MODULE        /**< to get correct part of pycartesian.h */
 #include "pycartesian.h"
 
+#include "arrayobject.h"
 #include "pyprojection.h"
 #include "pyarea.h"
 #include <arrayobject.h>
@@ -470,6 +471,14 @@ static PyObject* _pycartesian_addAttribute(PyCartesian* self, PyObject* args)
     if (!RaveAttribute_setString(attr, value)) {
       raiseException_gotoTag(done, PyExc_AttributeError, "Failed to set string value");
     }
+  } else if (PyArray_Check(obj)) {
+    PyArrayObject* arraydata = (PyArrayObject*)obj;
+    if (PyArray_NDIM(arraydata) != 1) {
+      raiseException_gotoTag(done, PyExc_AttributeError, "Only allowed attribute arrays are 1-dimensional");
+    }
+    if (!RaveAttribute_setArrayFromData(attr, PyArray_DATA(arraydata), PyArray_DIM(arraydata, 0), translate_pyarraytype_to_ravetype(PyArray_TYPE(arraydata)))) {
+      raiseException_gotoTag(done, PyExc_AttributeError, "Failed to set array data");
+    }
   } else {
     raiseException_gotoTag(done, PyExc_AttributeError, "Unsupported data type");
   }
@@ -508,6 +517,28 @@ static PyObject* _pycartesian_getAttribute(PyCartesian* self, PyObject* args)
       char* value = NULL;
       RaveAttribute_getString(attribute, &value);
       result = PyString_FromString(value);
+    } else if (format == RaveAttribute_Format_LongArray) {
+      long* value = NULL;
+      int len = 0;
+      int i = 0;
+      npy_intp dims[1];
+      RaveAttribute_getLongArray(attribute, &value, &len);
+      dims[0] = len;
+      result = PyArray_SimpleNew(1, dims, PyArray_LONG);
+      for (i = 0; i < len; i++) {
+        *((long*) PyArray_GETPTR1(result, i)) = value[i];
+      }
+    } else if (format == RaveAttribute_Format_DoubleArray) {
+      double* value = NULL;
+      int len = 0;
+      int i = 0;
+      npy_intp dims[1];
+      RaveAttribute_getDoubleArray(attribute, &value, &len);
+      dims[0] = len;
+      result = PyArray_SimpleNew(1, dims, PyArray_DOUBLE);
+      for (i = 0; i < len; i++) {
+        *((double*) PyArray_GETPTR1(result, i)) = value[i];
+      }
     } else {
       RAVE_CRITICAL1("Undefined format on requested attribute %s", name);
       raiseException_gotoTag(done, PyExc_AttributeError, "Undefined attribute");

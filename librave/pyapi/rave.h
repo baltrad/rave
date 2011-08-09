@@ -12,6 +12,7 @@
 #include <Python.h>
 #include <arrayobject.h>
 #include "rave_transform.h"
+#include "rave_attribute.h"
 #include "h5rad.h"
 #include "getpy.h"
 

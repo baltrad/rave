@@ -30,14 +30,24 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include <stdarg.h>
 
 /**
- * ODIM Version string
+ * ODIM Version string 2.0
  */
 #define RAVE_ODIM_VERSION_2_0_STR "ODIM_H5/V2_0"
 
 /**
- * ODIM H5 rad version string
+ * ODIM Version string 2.1
+ */
+#define RAVE_ODIM_VERSION_2_1_STR "ODIM_H5/V2_1"
+
+/**
+ * ODIM H5 rad version string 2.0
  */
 #define RAVE_ODIM_H5RAD_VERSION_2_0_STR "H5rad 2.0"
+
+/**
+ * ODIM H5 rad version string 2.1
+ */
+#define RAVE_ODIM_H5RAD_VERSION_2_1_STR "H5rad 2.1"
 
 /**
  * Attribute function called when an attribute is found.

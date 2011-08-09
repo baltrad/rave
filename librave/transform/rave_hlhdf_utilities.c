@@ -79,14 +79,33 @@ static const struct RaveToHlhdfTypeMap RAVE_TO_HLHDF_MAP[] = {
  * @param[in] vt - the type for the read data
  * @param[in] nn - the node
  * @param[in] ss - the size of the data type
- * @param[in] ov - the output value
  * @param[in] ot - the type of the output value where assignment will be done.
+ * @param[in] ov - the output value
  */
 #define RAVEHL_GET_ATOMIC_NODEVALUE(vt, nn, ss, ot, ov) \
 { \
   vt v; \
   memcpy(&v, HLNode_getData(nn), ss); \
   ov = (ot)v; \
+}
+
+/**
+ * Quick access function for reading a simple array from a
+ * HLHDF node.
+ *
+ * @param[in] vt - the type for the read data
+ * @param[in] nn - the node
+ * @param[in] ss - the size of the data type
+ * @param[in] ot - the type of the output value where assignment will be done.
+ * @param[in] ov - the output value
+ * @param[in] dd - the dimension
+ */
+#define RAVEHL_GET_ARRAY_NODEVALUE(vt, nn, ss, ot, ov, dd) \
+{ \
+  int rhlidx; \
+  for (rhlidx=0; rhlidx<dd; rhlidx++) { \
+    ov[rhlidx] = (ot)((vt*)HLNode_getData(nn))[rhlidx]; \
+  } \
 }
 
 /*@} End of Defines */
@@ -117,29 +136,85 @@ RaveAttribute_t* RaveHL_createAttribute(HL_Node* node)
   format = HLNode_getFormat(node);
   sz = HLNode_getDataSize(node);
   if (format >= HLHDF_SCHAR && format <= HLHDF_ULLONG) {
-    long value = 0;
-    if (sz == sizeof(char)) {
-      RAVEHL_GET_ATOMIC_NODEVALUE(char, node, sz, long, value);
-    } else if (sz == sizeof(short)) {
-      RAVEHL_GET_ATOMIC_NODEVALUE(short, node, sz, long, value);
-    } else if (sz == sizeof(int)) {
-      RAVEHL_GET_ATOMIC_NODEVALUE(int, node, sz, long, value);
-    } else if (sz == sizeof(long)) {
-      RAVEHL_GET_ATOMIC_NODEVALUE(long, node, sz, long, value);
-    } else if (sz == sizeof(long long)) {
-      RAVEHL_GET_ATOMIC_NODEVALUE(long long, node, sz, long, value);
+    if (HLNode_getRank(node) == 0) {
+      long value = 0;
+      if (sz == sizeof(char)) {
+        RAVEHL_GET_ATOMIC_NODEVALUE(char, node, sz, long, value);
+      } else if (sz == sizeof(short)) {
+        RAVEHL_GET_ATOMIC_NODEVALUE(short, node, sz, long, value);
+      } else if (sz == sizeof(int)) {
+        RAVEHL_GET_ATOMIC_NODEVALUE(int, node, sz, long, value);
+      } else if (sz == sizeof(long)) {
+        RAVEHL_GET_ATOMIC_NODEVALUE(long, node, sz, long, value);
+      } else if (sz == sizeof(long long)) {
+        RAVEHL_GET_ATOMIC_NODEVALUE(long long, node, sz, long, value);
+      }
+      RaveAttribute_setLong(result, value);
+    } else if (HLNode_getRank(node) == 1) {
+      hsize_t dim = HLNode_getDimension(node, 0);
+      long* value = RAVE_MALLOC(sizeof(long) * dim);
+      if (value == NULL) {
+        RAVE_ERROR0("Failed to allocate memory");
+        RAVE_OBJECT_RELEASE(result);
+        goto done;
+      }
+      if (sz == sizeof(char)) {
+        RAVEHL_GET_ARRAY_NODEVALUE(char, node, sz, long, value, dim);
+      } else if (sz == sizeof(short)) {
+        RAVEHL_GET_ARRAY_NODEVALUE(short, node, sz, long, value, dim);
+      } else if (sz == sizeof(int)) {
+        RAVEHL_GET_ARRAY_NODEVALUE(int, node, sz, long, value, dim);
+      } else if (sz == sizeof(long)) {
+        RAVEHL_GET_ARRAY_NODEVALUE(long, node, sz, long, value, dim);
+      } else if (sz == sizeof(long long)) {
+        RAVEHL_GET_ARRAY_NODEVALUE(long long, node, sz, long, value, dim);
+      }
+      if (!RaveAttribute_setLongArray(result, value, dim)) {
+        RAVE_ERROR1("Failed to set long array for %s", HLNode_getName(node));
+        RAVE_OBJECT_RELEASE(result);
+      }
+      RAVE_FREE(value);
+    } else {
+      RAVE_WARNING1("Node %s contains a simple array of rank != 1", HLNode_getName(node));
+      RAVE_OBJECT_RELEASE(result);
+      goto done;
     }
-    RaveAttribute_setLong(result, value);
   } else if (format >= HLHDF_FLOAT && format <= HLHDF_LDOUBLE) {
     double value = 0.0;
-    if (sz == sizeof(float)) {
-      RAVEHL_GET_ATOMIC_NODEVALUE(float, node, sz, double, value);
-    } else if (sz == sizeof(double)) {
-      RAVEHL_GET_ATOMIC_NODEVALUE(double, node, sz, double, value);
-    } else if (sz == sizeof(long double)) {
-      RAVEHL_GET_ATOMIC_NODEVALUE(long double, node, sz, double, value);
+    if (HLNode_getRank(node) == 0) {
+      if (sz == sizeof(float)) {
+        RAVEHL_GET_ATOMIC_NODEVALUE(float, node, sz, double, value);
+      } else if (sz == sizeof(double)) {
+        RAVEHL_GET_ATOMIC_NODEVALUE(double, node, sz, double, value);
+      } else if (sz == sizeof(long double)) {
+        RAVEHL_GET_ATOMIC_NODEVALUE(long double, node, sz, double, value);
+      }
+      RaveAttribute_setDouble(result, value);
+    } else if (HLNode_getRank(node) == 1) {
+      hsize_t dim = HLNode_getDimension(node, 0);
+      double* value = RAVE_MALLOC(sizeof(double) * dim);
+      if (value == NULL) {
+        RAVE_ERROR0("Failed to allocate memory");
+        RAVE_OBJECT_RELEASE(result);
+        goto done;
+      }
+      if (sz == sizeof(float)) {
+        RAVEHL_GET_ARRAY_NODEVALUE(float, node, sz, double, value, dim);
+      } else if (sz == sizeof(double)) {
+        RAVEHL_GET_ARRAY_NODEVALUE(double, node, sz, double, value, dim);
+      } else if (sz == sizeof(long double)) {
+        RAVEHL_GET_ARRAY_NODEVALUE(long double, node, sz, double, value, dim);
+      }
+      if (!RaveAttribute_setDoubleArray(result, value, dim)) {
+        RAVE_ERROR1("Failed to set double array for %s", HLNode_getName(node));
+        RAVE_OBJECT_RELEASE(result);
+      }
+      RAVE_FREE(value);
+    } else {
+      RAVE_WARNING1("Node %s contains a simple array of rank != 1", HLNode_getName(node));
+      RAVE_OBJECT_RELEASE(result);
+      goto done;
     }
-    RaveAttribute_setDouble(result, value);
   } else if (format == HLHDF_STRING) {
     RaveAttribute_setString(result, (char*)HLNode_getData(node));
   } else {
@@ -370,6 +445,34 @@ int RaveHL_addAttribute(HL_NodeList* nodelist, RaveAttribute_t* attribute, const
         RaveAttribute_getString(attribute, &value);
         if (value != NULL) {
           result = HLNode_setScalarValue(node, strlen(value)+1, (unsigned char*)value, "string", -1);
+        } else {
+          RAVE_WARNING1("Attribute %s is NULL and will be ignored", attrNodeName);
+          HLNode_free(node);
+          node = NULL;
+          result = 1;
+        }
+      } else if (RaveAttribute_getFormat(attribute) == RaveAttribute_Format_LongArray) {
+        long* value = NULL;
+        int len = 0;
+        hsize_t dims = 0;
+        RaveAttribute_getLongArray(attribute, &value, &len);
+        dims = len;
+        if (value != NULL && len != 0) {
+          result = HLNode_setArrayValue(node, sizeof(long), 1, &dims, (unsigned char*)value, "long", -1);
+        } else {
+          RAVE_WARNING1("Attribute %s is NULL and will be ignored", attrNodeName);
+          HLNode_free(node);
+          node = NULL;
+          result = 1;
+        }
+      } else if (RaveAttribute_getFormat(attribute) == RaveAttribute_Format_DoubleArray) {
+        double* value = NULL;
+        int len = 0;
+        hsize_t dims = 0;
+        RaveAttribute_getDoubleArray(attribute, &value, &len);
+        dims = len;
+        if (value != NULL && len != 0) {
+          result = HLNode_setArrayValue(node, sizeof(double), 1, &dims, (unsigned char*)value, "double", -1);
         } else {
           RAVE_WARNING1("Attribute %s is NULL and will be ignored", attrNodeName);
           HLNode_free(node);
@@ -607,7 +710,6 @@ int RaveHL_loadAttributesAndData(HL_NodeList* nodelist, void* object, RaveHL_att
   va_list ap;
   char name[1024];
   int nName = 0;
-
   RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
   RAVE_ASSERT((object != NULL), "object == NULL");
 

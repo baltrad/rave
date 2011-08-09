@@ -44,6 +44,7 @@ class PyRaveIOTest(unittest.TestCase):
   FIXTURE_IMAGE="fixture_old_pcappi-dbz-500.ang-gnom-2000.h5"
   FIXTURE_CVOL_CAPPI="fixture_ODIM_cvol_cappi.h5"
   FIXTURE_SCAN="fixtures/scan_sevil_20100702T113200Z.h5"
+  FIXTURE_SCAN_WITH_ARRAYS="fixtures/scan_with_arrays.h5"
   TEMPORARY_FILE="ravemodule_iotest.h5"
   TEMPORARY_FILE2="ravemodule_iotest2.h5"
   
@@ -258,13 +259,13 @@ class PyRaveIOTest(unittest.TestCase):
     nodelist.selectAll()
     nodelist.fetch()
     
-    self.assertEquals("ODIM_H5/V2_0", nodelist.getNode("/Conventions").data())
+    self.assertEquals("ODIM_H5/V2_1", nodelist.getNode("/Conventions").data())
     # What
     self.assertEquals("100000", nodelist.getNode("/what/time").data())
     self.assertEquals("20100101", nodelist.getNode("/what/date").data())
     self.assertEquals("PLC:123", nodelist.getNode("/what/source").data())
     self.assertEquals("IMAGE", nodelist.getNode("/what/object").data())
-    self.assertEquals("H5rad 2.0", nodelist.getNode("/what/version").data())
+    self.assertEquals("H5rad 2.1", nodelist.getNode("/what/version").data())
     
     #Where
     self.assertEquals("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", nodelist.getNode("/where/projdef").data())
@@ -331,13 +332,13 @@ class PyRaveIOTest(unittest.TestCase):
     nodelist.selectAll()
     nodelist.fetch()
     
-    self.assertEquals("ODIM_H5/V2_0", nodelist.getNode("/Conventions").data())
+    self.assertEquals("ODIM_H5/V2_1", nodelist.getNode("/Conventions").data())
     # What
     self.assertEquals("100000", nodelist.getNode("/what/time").data())
     self.assertEquals("20100101", nodelist.getNode("/what/date").data())
     self.assertEquals("PLC:123", nodelist.getNode("/what/source").data())
     self.assertEquals("IMAGE", nodelist.getNode("/what/object").data())
-    self.assertEquals("H5rad 2.0", nodelist.getNode("/what/version").data())
+    self.assertEquals("H5rad 2.1", nodelist.getNode("/what/version").data())
     
     #Where
     self.assertEquals("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", nodelist.getNode("/where/projdef").data())
@@ -421,13 +422,13 @@ class PyRaveIOTest(unittest.TestCase):
     nodelist.selectAll()
     nodelist.fetch()
     
-    self.assertEquals("ODIM_H5/V2_0", nodelist.getNode("/Conventions").data())
+    self.assertEquals("ODIM_H5/V2_1", nodelist.getNode("/Conventions").data())
     # What
     self.assertEquals("100000", nodelist.getNode("/what/time").data())
     self.assertEquals("20091010", nodelist.getNode("/what/date").data())
     self.assertEquals("PLC:123", nodelist.getNode("/what/source").data())
     self.assertEquals("CVOL", nodelist.getNode("/what/object").data())
-    self.assertEquals("H5rad 2.0", nodelist.getNode("/what/version").data())
+    self.assertEquals("H5rad 2.1", nodelist.getNode("/what/version").data())
     
     #Where
     self.assertEquals("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", nodelist.getNode("/where/projdef").data())
@@ -520,14 +521,14 @@ class PyRaveIOTest(unittest.TestCase):
     nodelist.selectAll()
     nodelist.fetch()
     
-    self.assertEquals("ODIM_H5/V2_0", nodelist.getNode("/Conventions").data())
+    self.assertEquals("ODIM_H5/V2_1", nodelist.getNode("/Conventions").data())
 
     # What
     self.assertEquals("100000", nodelist.getNode("/what/time").data())
     self.assertEquals("20091010", nodelist.getNode("/what/date").data())
     self.assertEquals("PLC:123", nodelist.getNode("/what/source").data())
     self.assertEquals("IMAGE", nodelist.getNode("/what/object").data())
-    self.assertEquals("H5rad 2.0", nodelist.getNode("/what/version").data())
+    self.assertEquals("H5rad 2.1", nodelist.getNode("/what/version").data())
     
     #Where
     self.assertEquals("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", nodelist.getNode("/where/projdef").data())
@@ -632,13 +633,13 @@ class PyRaveIOTest(unittest.TestCase):
     nodelist.selectAll()
     nodelist.fetch()
     
-    self.assertEquals("ODIM_H5/V2_0", nodelist.getNode("/Conventions").data())
+    self.assertEquals("ODIM_H5/V2_1", nodelist.getNode("/Conventions").data())
     # What
     self.assertEquals("100000", nodelist.getNode("/what/time").data())
     self.assertEquals("20091010", nodelist.getNode("/what/date").data())
     self.assertEquals("PLC:123", nodelist.getNode("/what/source").data())
     self.assertEquals("PVOL", nodelist.getNode("/what/object").data())
-    self.assertEquals("H5rad 2.0", nodelist.getNode("/what/version").data())
+    self.assertEquals("H5rad 2.1", nodelist.getNode("/what/version").data())
     
     #Where
     self.assertAlmostEquals(12.0, nodelist.getNode("/where/lon").data(), 4)
@@ -836,7 +837,7 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEquals("20090501", nodelist.getNode("/what/date").data())
     self.assertEquals("WMO:02606,RAD:SE50", nodelist.getNode("/what/source").data())
     self.assertEquals("SCAN", nodelist.getNode("/what/object").data())
-    self.assertEquals("H5rad 2.0", nodelist.getNode("/what/version").data())
+    self.assertEquals("H5rad 2.1", nodelist.getNode("/what/version").data())
     self.assertAlmostEquals(209.0, nodelist.getNode("/where/height").data(), 4)
     self.assertAlmostEquals(12.8544, nodelist.getNode("/where/lon").data(), 4)
     self.assertAlmostEquals(56.3675, nodelist.getNode("/where/lat").data(), 4)
@@ -1013,7 +1014,7 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEquals("SCAN", nodelist.getNode("/what/object").data())
     self.assertEquals("WMO:02606,RAD:SE50", nodelist.getNode("/what/source").data())
     self.assertEquals("120000", nodelist.getNode("/what/time").data())
-    self.assertEquals("H5rad 2.0", nodelist.getNode("/what/version").data())
+    self.assertEquals("H5rad 2.1", nodelist.getNode("/what/version").data())
     self.assertAlmostEquals(209, nodelist.getNode("/where/height").data(), 4)
     self.assertAlmostEquals(56.3675, nodelist.getNode("/where/lat").data(), 4)
     self.assertAlmostEquals(12.8544, nodelist.getNode("/where/lon").data(), 4)
@@ -1044,6 +1045,311 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEquals("VRAD", nodelist.getNode("/dataset1/data2/what/quantity").data())
     self.assertAlmostEquals(0, nodelist.getNode("/dataset1/data2/what/undetect").data(), 4)
   
+  def test_read_arrays_from_scan(self):
+    expected = [0.0109863, 1.01624, 2.02148, 2.99927, 4.0155, 5.03174, 6.00403, \
+                7.00928, 8.02002, 8.9978, 10.0085, 11.0248, 11.9971, 12.9968, \
+                14.0021, 15.0128, 16.0236, 16.9958, 18.0066, 19.0063, 20.0171, \
+                21.0004, 22.0111, 23.0164, 24.0271, 24.9994, 26.0156, 27.0264, \
+                27.9987, 29.0039, 30.0092, 31.0144, 32.0197, 32.9974, 34.0082, \
+                35.0189, 36.0242, 36.9965, 38.0017, 39.007, 40.0177, 41.0284, \
+                42.0007, 43.006, 44.0167, 44.9945, 45.9998, 47.0105, 48.0212, \
+                49.032, 49.9988, 51.004, 52.0203, 53.0035, 54.0198, 55.0195, \
+                56.0138, 57.0245, 58.0188, 59.0021, 60.0128, 61.0236, 61.9958, \
+                63.0231, 64.0118, 64.9951, 66.0168, 66.9946, 67.9999, 68.9996, \
+                70.0214, 71.0046, 72.0209, 72.9987, 74.0094, 75.0037, 75.9979, \
+                77.0087, 78.0249, 78.9972, 80.0079, 81.0187, 81.9965, 83.0072, \
+                84.0179, 84.9957, 86.0065, 87.0007, 88.0115, 89.0277, 90.011, \
+                91.0162, 91.9995, 92.9993, 94.0155, 95.0208, 95.9985, 96.9983, \
+                98.0145, 99.0308, 100.003, 101.008, 102.019, 103.024, 104.002, \
+                105.013, 106.018, 107.023, 108.023, 109.034, 110.006, 111.022, \
+                111.995, 113.027, 114, 115.01, 115.999, 117.004, 118.015, 119.02, \
+                120.026, 120.998, 122.009, 123.008, 123.997, 124.997, 126.002, \
+                127.013, 128.024, 128.996, 130.007, 131.001, 132.012, 133.028, \
+                133.995, 135.005, 136.016, 137, 138.005, 139.01, 140.015, 141.031, \
+                142.004, 143.015, 144.02, 145.025, 146.003, 147.008, 148.019, \
+                148.997, 150.013, 151.007, 151.996, 153.001, 154.012, 155.028, 156, \
+                157.006, 158.016, 159.027, 159.999, 161.005, 162.021, 162.999, \
+                164.004, 165.009, 166.025, 167.003, 168.014, 169.019, 170.024, \
+                170.997, 172.007, 172.996, 174.012, 175.023, 175.995, 177.028, 178, \
+                179.006, 180.016, 181.027, 182, 183.005, 184.016, 185.032, 186.01, \
+                187.015, 187.998, 188.998, 190.009, 191.025, 192.003, 193.008, \
+                194.013, 195.013, 196.024, 197.001, 198.023, 199.001, 200.017, \
+                200.001, 201.017, 202.017, 203.027, 204.027, 204.999, 206.016, \
+                207.026, 208.004, 209.004, 210.004, 211.02, 211.998, 213.003, \
+                214.008, 215.019, 216.019, 217.035, 218.007, 219.007, 220.018, \
+                221.028, 222.001, 223.017, 224.017, 224.995, 226.005, 227.005, \
+                228.016, 229.026, 229.999, 231.01, 232.015, 233.02, 233.998, \
+                235.009, 235.997, 236.997, 238.002, 239.008, 240.013, 241.024, \
+                242.001, 243.012, 244.023, 245.001, 246.006, 247.006, 248.022, \
+                249.005, 250.016, 251.027, 252.021, 252.999, 254.015, 255.026, \
+                256.003, 256.998, 258.014, 259.025, 260.008, 261.03, 262.002, \
+                262.996, 264.001, 265.007, 265.995, 267.001, 268.006, 269.011, \
+                270.022, 271, 272.021, 273.027, 273.999, 275.004, 276.021, 276.998, \
+                278.009, 279.009, 280.014, 281.03, 282.003, 283.008, 284.019, \
+                284.996, 286.007, 287.018, 288.023, 289.001, 290.017, 291.028, \
+                291.995, 293, 294.016, 295.027, 295.999, 296.999, 298.01, 299.026, \
+                300.004, 301.009, 302.02, 303.03, 303.997, 305.002, 306.013, \
+                307.024, 307.996, 309.007, 310.018, 311.028, 312.001, 313, 314.011, \
+                315.027, 316, 317.005, 318.01, 319.026, 320.004, 321.021, 321.998, \
+                323.004, 324.014, 325.014, 326.019, 327.003, 328.019, 328.997, \
+                330.007, 331.002, 332.012, 333.023, 334.001, 335.006, 335.995, \
+                337.022, 338.027, 339.005, 340.016, 341.032, 342.004, 343.004, \
+                344.015, 344.998, 346.02, 346.998, 348.008, 349.003, 350.008, \
+                351.008, 351.996, 353.013, 354.018, 355.023, 355.995, 357.012, \
+                357.995, 359]
+    obj = _raveio.open(self.FIXTURE_SCAN_WITH_ARRAYS)
+    scan = obj.object
+    attr = scan.getAttribute("how/startazA")
+    self.assertTrue(isinstance(attr, numpy.ndarray))
+    self.assertEquals(len(attr), len(expected))
+    for i in range(len(expected)):
+      self.assertAlmostEquals(attr[i], expected[i], 2)
+  
+  def test_write_scan_with_array(self):
+    obj = _raveio.open(self.FIXTURE_VOLUME)
+    vol = obj.object
+    scan = vol.getScan(0)
+
+    scan.addAttribute("how/alongarray", numpy.arange(10).astype(numpy.int32))
+    scan.addAttribute("how/adoublearray", numpy.arange(10).astype(numpy.float32))
+    
+    obj = _raveio.new()
+    obj.object = scan
+    obj.filename = self.TEMPORARY_FILE
+    obj.save()
+
+    # Verify data
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+    
+    ldata = nodelist.getNode("/how/alongarray").data()
+    ddata = nodelist.getNode("/how/adoublearray").data()
+    
+    self.assertEquals(1, ldata[1])
+    self.assertEquals(5, ldata[5])
+    self.assertAlmostEquals(1.0, ddata[1], 2)
+    self.assertAlmostEquals(5.0, ddata[5], 2)
+
+  def test_write_scanparam_with_array(self):
+    obj = _raveio.open(self.FIXTURE_VOLUME)
+    vol = obj.object
+    scan = vol.getScan(0)
+    param = scan.getParameter("DBZH")
+
+    param.addAttribute("how/alongarray", numpy.arange(10).astype(numpy.int32))
+    param.addAttribute("how/adoublearray", numpy.arange(10).astype(numpy.float32))
+    
+    obj = _raveio.new()
+    obj.object = scan
+    obj.filename = self.TEMPORARY_FILE
+    obj.save()
+
+    # Verify data
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+    
+    ldata = nodelist.getNode("/dataset1/data1/how/alongarray").data()
+    ddata = nodelist.getNode("/dataset1/data1/how/adoublearray").data()
+    
+    self.assertEquals(1, ldata[1])
+    self.assertEquals(5, ldata[5])
+    self.assertAlmostEquals(1.0, ddata[1], 2)
+    self.assertAlmostEquals(5.0, ddata[5], 2)
+
+  def test_read_scanparam_with_array(self):
+    obj = _raveio.open(self.FIXTURE_VOLUME)
+    vol = obj.object
+    scan = vol.getScan(0)
+    param = scan.getParameter("DBZH")
+
+    param.addAttribute("how/alongarray", numpy.arange(10).astype(numpy.int32))
+    param.addAttribute("how/adoublearray", numpy.arange(10).astype(numpy.float32))
+    
+    obj = _raveio.new()
+    obj.object = scan
+    obj.filename = self.TEMPORARY_FILE
+    obj.save()
+
+    # Verify data
+    obj = _raveio.open(self.TEMPORARY_FILE)
+    scan = obj.object
+    param = scan.getParameter("DBZH")    
+
+    ldata = param.getAttribute("how/alongarray")
+    ddata = param.getAttribute("how/adoublearray")
+    
+    self.assertEquals(10, len(ldata))
+    self.assertTrue(isinstance(ldata, numpy.ndarray))
+    self.assertEquals(1, ldata[1])
+    self.assertEquals(5, ldata[5])
+    self.assertEquals(10, len(ddata))
+    self.assertTrue(isinstance(ddata, numpy.ndarray))
+    self.assertAlmostEquals(1.0, ddata[1], 2)
+    self.assertAlmostEquals(5.0, ddata[5], 2)
+
+  def test_write_volume_with_array(self):
+    obj = _raveio.open(self.FIXTURE_VOLUME)
+    vol = obj.object
+
+    vol.addAttribute("how/alongarray", numpy.arange(10).astype(numpy.int32))
+    vol.addAttribute("how/adoublearray", numpy.arange(10).astype(numpy.float32))
+    
+    obj = _raveio.new()
+    obj.object = vol
+    obj.filename = self.TEMPORARY_FILE
+    obj.save()
+
+    # Verify data
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+    
+    ldata = nodelist.getNode("/how/alongarray").data()
+    ddata = nodelist.getNode("/how/adoublearray").data()
+    
+    self.assertEquals(1, ldata[1])
+    self.assertEquals(5, ldata[5])
+    self.assertAlmostEquals(1.0, ddata[1], 2)
+    self.assertAlmostEquals(5.0, ddata[5], 2)
+
+  def test_read_volume_with_array(self):
+    obj = _raveio.open(self.FIXTURE_VOLUME)
+    vol = obj.object
+
+    vol.addAttribute("how/alongarray", numpy.arange(10).astype(numpy.int32))
+    vol.addAttribute("how/adoublearray", numpy.arange(10).astype(numpy.float32))
+    
+    obj = _raveio.new()
+    obj.object = vol
+    obj.filename = self.TEMPORARY_FILE
+    obj.save()
+
+    # Verify data
+    obj = _raveio.open(self.TEMPORARY_FILE)
+    vol = obj.object
+    
+    ldata = vol.getAttribute("how/alongarray")
+    ddata = vol.getAttribute("how/adoublearray")
+    
+    self.assertEquals(10, len(ldata))
+    self.assertTrue(isinstance(ldata, numpy.ndarray))
+    self.assertEquals(1, ldata[1])
+    self.assertEquals(5, ldata[5])
+    self.assertEquals(10, len(ddata))
+    self.assertTrue(isinstance(ddata, numpy.ndarray))
+    self.assertAlmostEquals(1.0, ddata[1], 2)
+    self.assertAlmostEquals(5.0, ddata[5], 2)
+
+  def test_write_cartesian_with_array(self):
+    obj = _raveio.open(self.FIXTURE_CVOL_CAPPI)
+    cvol = obj.object
+    img = cvol.getImage(0)
+
+    img.addAttribute("how/alongarray", numpy.arange(10).astype(numpy.int32))
+    img.addAttribute("how/adoublearray", numpy.arange(10).astype(numpy.float32))
+    
+    obj = _raveio.new()
+    obj.object = img
+    obj.filename = self.TEMPORARY_FILE
+    obj.save()
+
+    # Verify data
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+    
+    ldata = nodelist.getNode("/how/alongarray").data()
+    ddata = nodelist.getNode("/how/adoublearray").data()
+    
+    self.assertEquals(1, ldata[1])
+    self.assertEquals(5, ldata[5])
+    self.assertAlmostEquals(1.0, ddata[1], 2)
+    self.assertAlmostEquals(5.0, ddata[5], 2)
+
+  def test_read_cartesian_with_array(self):
+    obj = _raveio.open(self.FIXTURE_CVOL_CAPPI)
+    cvol = obj.object
+    img = cvol.getImage(0)
+
+    img.addAttribute("how/alongarray", numpy.arange(10).astype(numpy.int32))
+    img.addAttribute("how/adoublearray", numpy.arange(10).astype(numpy.float32))
+    
+    obj = _raveio.new()
+    obj.object = img
+    obj.filename = self.TEMPORARY_FILE
+    obj.save()
+
+    # Verify data
+    obj = _raveio.open(self.TEMPORARY_FILE)
+    img = obj.object
+    
+    ldata = img.getAttribute("how/alongarray")
+    ddata = img.getAttribute("how/adoublearray")
+    
+    self.assertEquals(10, len(ldata))
+    self.assertTrue(isinstance(ldata, numpy.ndarray))
+    self.assertEquals(1, ldata[1])
+    self.assertEquals(5, ldata[5])
+    self.assertEquals(10, len(ddata))
+    self.assertTrue(isinstance(ddata, numpy.ndarray))
+    self.assertAlmostEquals(1.0, ddata[1], 2)
+    self.assertAlmostEquals(5.0, ddata[5], 2)
+
+  def test_write_cartesianvolume_with_array(self):
+    obj = _raveio.open(self.FIXTURE_CVOL_CAPPI)
+    cvol = obj.object
+
+    cvol.addAttribute("how/alongarray", numpy.arange(10).astype(numpy.int32))
+    cvol.addAttribute("how/adoublearray", numpy.arange(10).astype(numpy.float32))
+    
+    obj = _raveio.new()
+    obj.object = cvol
+    obj.filename = self.TEMPORARY_FILE
+    obj.save()
+
+    # Verify data
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+    
+    ldata = nodelist.getNode("/how/alongarray").data()
+    ddata = nodelist.getNode("/how/adoublearray").data()
+    
+    self.assertEquals(1, ldata[1])
+    self.assertEquals(5, ldata[5])
+    self.assertAlmostEquals(1.0, ddata[1], 2)
+    self.assertAlmostEquals(5.0, ddata[5], 2)
+   
+  def test_read_cartesianvolume_with_array(self):
+    obj = _raveio.open(self.FIXTURE_CVOL_CAPPI)
+    cvol = obj.object
+
+    cvol.addAttribute("how/alongarray", numpy.arange(10).astype(numpy.int32))
+    cvol.addAttribute("how/adoublearray", numpy.arange(10).astype(numpy.float32))
+    
+    obj = _raveio.new()
+    obj.object = cvol
+    obj.filename = self.TEMPORARY_FILE
+    obj.save()
+
+    # Verify data
+    obj = _raveio.open(self.TEMPORARY_FILE)
+    cvol = obj.object
+    
+    ldata = cvol.getAttribute("how/alongarray")
+    ddata = cvol.getAttribute("how/adoublearray")
+    
+    self.assertEquals(10, len(ldata))
+    self.assertTrue(isinstance(ldata, numpy.ndarray))
+    self.assertEquals(1, ldata[1])
+    self.assertEquals(5, ldata[5])
+    self.assertEquals(10, len(ddata))
+    self.assertTrue(isinstance(ddata, numpy.ndarray))
+    self.assertAlmostEquals(1.0, ddata[1], 2)
+    self.assertAlmostEquals(5.0, ddata[5], 2)
+    
   def addGroupNode(self, nodelist, name):
     node = _pyhl.node(_pyhl.GROUP_ID, name)
     nodelist.addNode(node)

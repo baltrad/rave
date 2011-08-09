@@ -1018,6 +1018,29 @@ class PyPolarScanTest(unittest.TestCase):
     obj.removeQualityField(0)
     self.assertEquals(1, obj.getNumberOfQualityFields())
     self.assertEquals("field2", obj.getQualityField(0).getAttribute("what/name"))
+  
+  def test_add_how_array_attribute_long(self):
+    obj = _polarscan.new()
+    obj.addAttribute("how/something", numpy.arange(10).astype(numpy.int32))
+    result = obj.getAttribute("how/something")
+    self.assertTrue(isinstance(result, numpy.ndarray))
+    self.assertEquals(10, len(result))
+    self.assertEquals(0, result[0])
+    self.assertEquals(3, result[3])
+    self.assertEquals(5, result[5])
+    self.assertEquals(9, result[9])
+
+  def test_add_how_array_attribute_double(self):
+    obj = _polarscan.new()
+    obj.addAttribute("how/something", numpy.arange(10).astype(numpy.float32))
+    result = obj.getAttribute("how/something")
+    self.assertTrue(isinstance(result, numpy.ndarray))
+    self.assertEquals(10, len(result))
+    self.assertAlmostEquals(0.0, result[0], 2)
+    self.assertAlmostEquals(3.0, result[3], 2)
+    self.assertAlmostEquals(5.0, result[5], 2)
+    self.assertAlmostEquals(9.0, result[9], 2)
+    
     
 if __name__ == "__main__":
   #import sys;sys.argv = ['', 'Test.testName']

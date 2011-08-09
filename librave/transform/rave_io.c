@@ -56,8 +56,10 @@ struct _RaveIO_t {
 
 /*@{ Constants */
 static const char RaveIO_ODIM_Version_2_0_STR[] = "ODIM_H5/V2_0";
+static const char RaveIO_ODIM_Version_2_1_STR[] = "ODIM_H5/V2_1";
 
 static const char RaveIO_ODIM_H5rad_Version_2_0_STR[] = "H5rad 2.0";
+static const char RaveIO_ODIM_H5rad_Version_2_1_STR[] = "H5rad 2.1";
 
 /*@} End of Constants */
 
@@ -127,6 +129,8 @@ static RaveIO_ODIM_Version RaveIOInternal_getOdimVersion(HL_NodeList* nodelist)
 
   if (strcmp(RaveIO_ODIM_Version_2_0_STR, version) == 0) {
     result = RaveIO_ODIM_Version_2_0;
+  } else if (strcmp(RaveIO_ODIM_Version_2_1_STR, version) == 0) {
+    result = RaveIO_ODIM_Version_2_1;
   }
 done:
   return result;
@@ -149,6 +153,8 @@ static RaveIO_ODIM_H5rad_Version RaveIOInternal_getH5radVersion(HL_NodeList* nod
 
   if (strcmp(RaveIO_ODIM_H5rad_Version_2_0_STR, version) == 0) {
     result = RaveIO_ODIM_H5rad_Version_2_0;
+  } else if (strcmp(RaveIO_ODIM_H5rad_Version_2_1_STR, version) == 0) {
+    result = RaveIO_ODIM_H5rad_Version_2_1;
   }
 done:
   return result;
@@ -467,7 +473,7 @@ int RaveIO_save(RaveIO_t* raveio, const char* filename)
       HL_NodeList* nodelist = HLNodeList_new();
 
       if (nodelist != NULL) {
-        result = RaveHL_createStringValue(nodelist, RaveIO_ODIM_Version_2_0_STR, "/Conventions");
+        result = RaveHL_createStringValue(nodelist, RaveIO_ODIM_Version_2_1_STR, "/Conventions");
         if (result == 1) {
           if (RAVE_OBJECT_CHECK_TYPE(raveio->object, &PolarVolume_TYPE)) {
             result = RaveIOInternal_addPolarVolumeToNodeList((PolarVolume_t*)raveio->object, nodelist);

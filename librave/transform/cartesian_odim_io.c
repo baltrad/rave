@@ -757,7 +757,7 @@ int CartesianOdimIO_fillImage(CartesianOdimIO_t* self, HL_NodeList* nodelist, Ca
   }
 
   if (!RaveHL_hasNodeByName(nodelist, "/Conventions")) {
-    if (!RaveHL_createStringValue(nodelist, RAVE_ODIM_VERSION_2_0_STR, "/Conventions")) {
+    if (!RaveHL_createStringValue(nodelist, RAVE_ODIM_VERSION_2_1_STR, "/Conventions")) {
       goto done;
     }
   }
@@ -766,7 +766,7 @@ int CartesianOdimIO_fillImage(CartesianOdimIO_t* self, HL_NodeList* nodelist, Ca
   if (attributes != NULL) {
     const char* objectType = RaveTypes_getStringFromObjectType(Cartesian_getObjectType(cartesian));
     if (!RaveUtilities_addStringAttributeToList(attributes, "what/object", objectType) ||
-        !RaveUtilities_addStringAttributeToList(attributes, "what/version", RAVE_ODIM_H5RAD_VERSION_2_0_STR)) {
+        !RaveUtilities_replaceStringAttributeInList(attributes, "what/version", RAVE_ODIM_H5RAD_VERSION_2_1_STR)) {
       RAVE_ERROR0("Failed to add what/object or what/version to attributes");
       goto done;
     }
@@ -872,7 +872,7 @@ int CartesianOdimIO_fillVolume(CartesianOdimIO_t* self, HL_NodeList* nodelist, C
   }
 
   if (!RaveHL_hasNodeByName(nodelist, "/Conventions")) {
-    if (!RaveHL_createStringValue(nodelist, RAVE_ODIM_VERSION_2_0_STR, "/Conventions")) {
+    if (!RaveHL_createStringValue(nodelist, RAVE_ODIM_VERSION_2_1_STR, "/Conventions")) {
       goto done;
     }
   }
@@ -881,7 +881,7 @@ int CartesianOdimIO_fillVolume(CartesianOdimIO_t* self, HL_NodeList* nodelist, C
   if (attributes != NULL) {
     const char* objectType = RaveTypes_getStringFromObjectType(CartesianVolume_getObjectType(volume));
     if (!RaveUtilities_addStringAttributeToList(attributes, "what/object", objectType) ||
-        !RaveUtilities_addStringAttributeToList(attributes, "what/version", RAVE_ODIM_H5RAD_VERSION_2_0_STR)) {
+        !RaveUtilities_replaceStringAttributeInList(attributes, "what/version", RAVE_ODIM_H5RAD_VERSION_2_1_STR)) {
       RAVE_ERROR0("Failed to add what/object or what/version to attributes");
       goto done;
     }

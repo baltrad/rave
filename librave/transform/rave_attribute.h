@@ -26,12 +26,15 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef RAVE_ATTRIBUTE_H
 #define RAVE_ATTRIBUTE_H
 #include "rave_object.h"
+#include "rave_types.h"
 
 typedef enum RaveAttribute_Format {
   RaveAttribute_Format_Undefined = -1, /**< Undefined */
   RaveAttribute_Format_String = 0,     /**< String */
   RaveAttribute_Format_Long = 1,       /**< Long */
-  RaveAttribute_Format_Double = 2      /**< Double */
+  RaveAttribute_Format_Double = 2,     /**< Double */
+  RaveAttribute_Format_LongArray = 3,  /**< Simple 1-dimensional array of longs */
+  RaveAttribute_Format_DoubleArray = 4 /**< Simple 1-dimensional array of doubles */
 } RaveAttribute_Format;
 
 /**
@@ -67,14 +70,6 @@ const char* RaveAttribute_getName(RaveAttribute_t* attr);
 RaveAttribute_Format RaveAttribute_getFormat(RaveAttribute_t* attr);
 
 /**
- * Returns the number of values. If 0 it means that the attribute
- * is a scalar attribute and if size > 0 it means that it is a simple
- * array. Use appropriate functions for retrieving the data. I.e.
- * if size == 0, use _getLong, _getDouble
- */
-size_t RaveAttribute_getSize(RaveAttribute_t* attr);
-
-/**
  * Sets the value as a long.
  * @param[in] attr - self
  * @param[in] value - the value
@@ -95,6 +90,36 @@ void RaveAttribute_setDouble(RaveAttribute_t* attr, double value);
  * @return 1 on success otherwise 0
  */
 int RaveAttribute_setString(RaveAttribute_t* attr, const char* value);
+
+/**
+ * Sets the value as a simple 1-dimensional long array.
+ * @param[in] attr - self
+ * @param[in] value - the value
+ * @param[in] len - the number of longs in the array
+ * @returns 1 on success otherwise 0
+ */
+int RaveAttribute_setLongArray(RaveAttribute_t* attr, long* value, int len);
+
+/**
+ * Sets the value as a simple 1-dimensional double array.
+ * @param[in] attr - self
+ * @param[in] value - the value
+ * @param[in] len - the number of doubles in the array
+ * @returns 1 on success otherwise 0
+ */
+int RaveAttribute_setDoubleArray(RaveAttribute_t* attr, double* value, int len);
+
+/**
+ * Sets the attribute with the array from the provided data with the specified type and converts it into an
+ * appropriate array type.
+ * @param[in] attr - self
+ * @param[in] name - the name of the attribute
+ * @param[in] value - the data
+ * @param[in] len - the number of items in the array
+ * @param[in] type - the data type
+ * @return 1 on success otherwise 0
+ */
+int RaveAttribute_setArrayFromData(RaveAttribute_t* attr, void* value, int len, RaveDataType type);
 
 /**
  * Returns the value as a long.
@@ -119,6 +144,24 @@ int RaveAttribute_getDouble(RaveAttribute_t* attr, double* value);
  * @returns 1 on success or 0 if format of the data not is a string
  */
 int RaveAttribute_getString(RaveAttribute_t* attr, char** value);
+
+/**
+ * Returns the value as a long array.
+ * @param[in] attr - self
+ * @param[out] value - the internal long array, DO NOT RELEASE memory
+ * @param[out] len - the number of values in the array
+ * @returns 1 on success or 0 if format of the data not is a long array
+ */
+int RaveAttribute_getLongArray(RaveAttribute_t* attr, long** value, int* len);
+
+/**
+ * Returns the value as a double array.
+ * @param[in] attr - self
+ * @param[out] value - the internal double array, DO NOT RELEASE memory
+ * @param[out] len - the number of values in the array
+ * @returns 1 on success or 0 if format of the data not is a double array
+ */
+int RaveAttribute_getDoubleArray(RaveAttribute_t* attr, double** value, int* len);
 
 /**
  * Helper function for extracting the group and name part from a
@@ -161,6 +204,35 @@ RaveAttribute_t* RaveAttributeHelp_createDouble(const char* name, double value);
  * @returns the attribute on success otherwise NULL
  */
 RaveAttribute_t* RaveAttributeHelp_createString(const char* name, const char* value);
+
+/**
+ * Creates a long array rave attribute.
+ * @param[in] name - the name of the attribute
+ * @param[in] value - the long array
+ * @param[in] len - the length of the array
+ * @returns the attribute on success otherwise NULL
+ */
+RaveAttribute_t* RaveAttributeHelp_createLongArray(const char* name, long* value, int len);
+
+/**
+ * Creates a double array rave attribute.
+ * @param[in] name - the name of the attribute
+ * @param[in] value - the double array
+ * @param[in] len - the length of the array
+ * @returns the attribute on success otherwise NULL
+ */
+RaveAttribute_t* RaveAttributeHelp_createDoubleArray(const char* name, double* value, int len);
+
+/**
+ * Creates an array from the provided data with the specified type and converts it into an
+ * appropriate array type.
+ * @param[in] name - the name of the attribute
+ * @param[in] value - the data
+ * @param[in] len - the number of items in the array
+ * @param[in] type - the data type
+ * @return a rave attribute on success otherwise NULL
+ */
+RaveAttribute_t* RaveAttributeHelp_createArrayFromData(const char* name, void* value, int len, RaveDataType type);
 
 #endif /* RAVE_ATTRIBUTE_H */
 
