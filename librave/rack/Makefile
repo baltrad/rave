@@ -14,7 +14,7 @@ CCFLAGS+= -DDRAIN_MAGICK_no -DRACK_$RACK
 RACKINC= -I. -I.. -I../drain/image -I../drain/radar -I../drain/util \
 	-I../main -I../hi5 -I../ropo \
 	-I./drain/image -I./drain/radar -I./drain/util \
-	-I./main -I./hi5 -I./ropo \
+	-I./main -I./hi5 -I../ropo \
 	$(NUMPY_INCLUDE_DIR) $(INCLUDE_PYTHON) -I$(HLHDF_INCLUDE_DIR) \
 	$(ZLIB_INCDIR) $(HDF5_INCDIR) $(PROJ_INCLUDE_DIR) \
 	-I../../transform -I../transform
@@ -53,7 +53,7 @@ buildmain:
 	make -C main CFLAGS="${CFLAGS}" CCFLAGS="${CCFLAGS}" LDFLAGS="${LDFLAGS}" -k all
 
 buildropo:
-	make -C ropo -k all
+	make -C ropo CFLAGS="${CFLAGS}" CCFLAGS="${CCFLAGS}" -k all
 
 buildhi5:
 	make -C hi5 CFLAGS="${CFLAGS}" CCFLAGS="${CCFLAGS}" LDFLAGS="${LDFLAGS}" -k all
