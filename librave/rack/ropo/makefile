@@ -7,7 +7,7 @@ include sources.mk
 CC=		gcc
 CFLAGS+=-Wall -pedantic -I../../transform -I. 
 CPPFLAGS+=-I../
-LDFLAGS+=-L$(HLHDF_LIB_DIR) -L../../transform -L.. -L. -lm -lproj -lhlhdf -lstdc++ -lravetransform -lpng
+LDFLAGSROPO=-L$(HLHDF_LIB_DIR) -L../../transform -L.. -L. -lm -lproj -lhlhdf -lstdc++ -lravetransform -lpng
 LDSHARED=	$(CC) -shared
 CCSHARED=	-fPIC
 
@@ -35,10 +35,10 @@ LIB=libropo.so
 	$(CC) -c $(CCSHARED) $(CPPFLAGS) $(CFLAGS) $(CCFLAGS) $<
 
 $(EXEC): $(LIB) main.c main_help.c
-	$(CC) $(CFLAGS) $(LDFLAGS) main.c -o $@ -lropo
+	$(CC) $(CFLAGS) $(LDFLAGS) $(LDFLAGSROPO) main.c -o $@ -lropo
 
 $(LIB): $(OBJS)
-	$(LDSHARED) $(CCSHARED) $(CFLAGS) $(LDFLAGS) -o $@ $(OBJS)
+	$(LDSHARED) $(CCSHARED) $(CFLAGS) $(LDFLAGS) $(LDFLAGSROPO) -o $@ $(OBJS)
 
 .PHONY=clean install
 
