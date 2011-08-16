@@ -1,5 +1,6 @@
 /**
 
+    Copyright 2011  Martin Raspaud <martin.raspaud@smhi.se>
     Copyright 2010  Markus Peura,
     Finnish Meteorological Institute (First.Last@fmi.fi)
 
@@ -65,6 +66,7 @@ void convertImage(const drain::image::Image<Byte> &src,FmiImage &dst){
 	dst.width  = src.getWidth();
 	dst.height = src.getHeight();
 	dst.channels = src.getChannelCount();
+        dst.heights = new int[dst.channels + 1];
 	initialize_image(&dst);
 	image_info(&dst);
 
@@ -104,6 +106,7 @@ void viewImage(const drain::image::Image<Byte> &src,FmiImage &dst){
 	dst.width = src.getWidth();
 	dst.height = src.getHeight();
 	dst.channels = src.getChannelCount();
+        dst.heights = new int[dst.channels + 1];
 	dst.area = dst.width*dst.height;
 	dst.volume = dst.area * dst.channels;
 	dst.max_value = 255; // unneeded?
