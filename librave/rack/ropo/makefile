@@ -11,6 +11,10 @@ LDFLAGSROPO=-L$(HLHDF_LIB_DIR) -L../../transform -L.. -L. -lm -lproj -lhlhdf -ls
 LDSHARED=	$(CC) -shared
 CCSHARED=	-fPIC
 
+ifeq ($(EXPAT_SUPPRESSED), no)
+LDFLAGSROPO+= -lexpat
+endif
+
 SOURCES=$(RACKROPOSOURCES_C:ropo/%.c=%.c)
 OBJS=$(SOURCES:%.c=%.o)
 EXEC=ropo
