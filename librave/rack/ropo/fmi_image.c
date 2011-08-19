@@ -61,12 +61,14 @@ new_image(int sweep_count)
 
   result = (FmiImage *)malloc(sizeof(FmiImage) * sweep_count);
   for(i=0; i<sweep_count; i++)
-    result[i].heights=NULL;
-    result[i].array=NULL;
-    result[i].elevation_angle=0.0;
-    result[i].sweep_count=0;
-    result[i].bin_depth=0.0;
-    result[i].type=NULL_IMAGE;
+    {
+      result[i].heights=NULL;
+      result[i].array=NULL;
+      result[i].elevation_angle=0.0;
+      result[i].channels=0;
+      result[i].bin_depth=0.0;
+      result[i].type=NULL_IMAGE;
+    }
   reset_image(result);
   return result;
 }
