@@ -502,6 +502,7 @@ if __name__ == "__main__":
         package_dir={"": "Lib"},  # all Python modules are here
         data_files=[(rroot+'/config', glob.glob('config/*.xml')),
                     (rroot+'/include', glob.glob('librave/*.h')),
+                    (rroot+'/include/python', glob.glob('modules/*.h')),
                     (rroot+'/lib', glob.glob('librave/*.so')),
                     (rroot+'/bin', glob.glob('bin/*[!CVS]*')),
                     (rroot+'/etc', glob.glob('etc/*')),
