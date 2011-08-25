@@ -38,7 +38,7 @@ static void setLogTime(char* strtime, int len)
   strftime(strtime, len, "%Y/%m/%d %H:%M:%S", tu_time);
 }
 
-static void Rave_defaultDebugFunction(char* filename, int lineno, Rave_Debug lvl,
+static void Rave_defaultDebugFunction(const char* filename, int lineno, Rave_Debug lvl,
   const char* fmt, ...)
 {
   char msgbuff[512];
@@ -108,7 +108,7 @@ void Rave_setDebugLevel(Rave_Debug lvl)
   raveDbg.dbgLevel = lvl;
 }
 
-void Rave_setDebugFunction(void(*dbgfun)(char* filename, int lineno,
+void Rave_setDebugFunction(void(*dbgfun)(const char* filename, int lineno,
   Rave_Debug lvl, const char* fmt, ...))
 {
   raveDbg.dbgfun = dbgfun;
