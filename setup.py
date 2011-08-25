@@ -504,6 +504,7 @@ if __name__ == "__main__":
                     (rroot+'/include', glob.glob('librave/*.h')),
                     (rroot+'/include/python', glob.glob('modules/*.h')),
                     (rroot+'/lib', glob.glob('librave/*.so')),
+                    (rroot+'/mkf', ['librave/def.mk']),
                     (rroot+'/bin', glob.glob('bin/*[!CVS]*')),
                     (rroot+'/etc', glob.glob('etc/*')),
                     (rroot+'/tmp', []),
