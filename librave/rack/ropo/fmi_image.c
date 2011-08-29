@@ -22,7 +22,6 @@
 
 /*#include <stdio.h> */
 #include <math.h>
-#include <malloc.h>
 #include <stdlib.h>
 #include "fmi_image.h"
 #include "fmi_util.h"
