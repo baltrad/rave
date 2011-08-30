@@ -54,12 +54,12 @@ build: librave/transform/libravetransform.so librave/pyapi/libravepyapi.so
 
 .PHONY:install
 install:
-		$(MAKE) -C librave install
-		$(SETUP) install
+	$(MAKE) -C librave install
+	$(SETUP) install
 
 .PHONY:uninstall
 uninstall:
-		rm -rf $(RAVEROOT)
+	rm -rf $(RAVEROOT)
 
 .PHONY:clean
 clean:

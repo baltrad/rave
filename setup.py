@@ -459,38 +459,19 @@ MODULES.append(
         libraries=LIBRARIES
         )
     )
-
-INCLUDE_DIRS.append('./librave/rack/drain/image')
-INCLUDE_DIRS.append('./librave/rack/drain/radar')
-INCLUDE_DIRS.append('./librave/rack/drain/util')
-INCLUDE_DIRS.append('./librave/rack/main')
-LIBRARY_DIRS.append('./librave/rack/drain')
-LIBRARY_DIRS.append('./librave/rack')
-LIBRARIES.append('rack')
-LIBRARIES.append('drain')
-LIBRARIES.append('png')
-
-MODULES.append(
-    Extension(
-        "_rack", ["modules/pyrack.c"],
-        include_dirs=INCLUDE_DIRS,
-        library_dirs=LIBRARY_DIRS,
-        libraries=LIBRARIES
-        )
-    )
   
 # build!
 
 if __name__ == "__main__":
-    import glob, distutils.sysconfig
+  import glob, distutils.sysconfig
 
-    rroot = os.getenv('RAVEROOT')
-    if rroot is None:
-	rroot="/opt/rave"
-	print "No RAVEROOT environment variable set. Will use /opt/rave\n"
-    rlib = rroot + '/Lib'
+  rroot = os.getenv('RAVEROOT')
+  if rroot is None:
+    rroot="/opt/rave"
+    print "No RAVEROOT environment variable set. Will use /opt/rave\n"
+  rlib = rroot + '/Lib'
 
-    setup(
+  setup(
         name=NAME,
         version=VERSION,
         author=AUTHOR[0],
@@ -512,38 +493,42 @@ if __name__ == "__main__":
         ext_modules = MODULES
         )
 
-    # distutils doesn't allow flexible planting of .pth files,
-    # so we have to create it under extra_path and then ship it to
-    # where the default interpreter will find it.
+  # distutils doesn't allow flexible planting of .pth files,
+  # so we have to create it under extra_path and then ship it to
+  # where the default interpreter will find it.
     
-    # Only perform this operation during installation
-    isinstalling = 0
-    for item in sys.argv:
-        if item=="install":
-            isinstalling = 1
-    if isinstalling:
-        source = rlib + '.pth'
-        dest = distutils.sysconfig.get_python_lib() + '/rave.pth'
-        print "Moving %s to %s" % (source, dest)
-        try:
-            os.rename(source, dest)  # doesn't work in some environments
-        except:
-            import shutil
-            try:
-                shutil.copyfile(source, dest)
-                os.unlink(source)
-            except:
-                print "Failed to plant rave.pth file in your Python distribution's site-packages directory. This may not matter, but you should probably check..."
+  # Only perform this operation during installation
+  isinstalling = 0
+  for item in sys.argv:
+    if item=="install":
+      isinstalling = 1
+  if isinstalling:
+    source = rlib + '.pth'
+    dest = distutils.sysconfig.get_python_lib() + '/rave.pth'
+    print "Moving %s to %s" % (source, dest)
+    try:
+      os.rename(source, dest)  # doesn't work in some environments
+    except:
+      import shutil
+      try:
+        shutil.copyfile(source, dest)
+        os.unlink(source)
+      except:
+        print "Failed to plant rave.pth file in your Python distribution's site-packages directory. This may not matter, but you should probably check..."
 
-        # Replace default definitions with ones given at build time
-        fd = open(rlib + '/rave_defines.py')
-        defs = fd.readlines()
-        fd.close()
-        if os.getenv('PGF_HOST'): replace_def('PGF_HOST', defs, '"%s"\n')
-        if os.getenv('PGF_PORT'): replace_def('PGF_PORT', defs)
-        if os.getenv('DEX_SPOE'): replace_def('DEX_SPOE', defs, '"http://%s/BaltradDex/dispatch.htm"\n')
-        if os.getenv('CENTER_ID'): replace_def('CENTER_ID', defs, '"ORG:%s"\n')    
-        fd = open(rlib + '/rave_defines.py', 'w')
-        for d in defs:
-            fd.write(d)
-        fd.close()
+    # Replace default definitions with ones given at build time
+    fd = open(rlib + '/rave_defines.py')
+    defs = fd.readlines()
+    fd.close()
+    if os.getenv('PGF_HOST'): 
+      replace_def('PGF_HOST', defs, '"%s"\n')
+    if os.getenv('PGF_PORT'): 
+      replace_def('PGF_PORT', defs)
+    if os.getenv('DEX_SPOE'): 
+      replace_def('DEX_SPOE', defs, '"http://%s/BaltradDex/dispatch.htm"\n')
+    if os.getenv('CENTER_ID'): 
+      replace_def('CENTER_ID', defs, '"ORG:%s"\n')    
+    fd = open(rlib + '/rave_defines.py', 'w')
+    for d in defs:
+      fd.write(d)
+    fd.close()
