@@ -63,15 +63,15 @@ uninstall:
 
 .PHONY:clean
 clean:
-		$(SETUP) clean
-		$(MAKE) -C doxygen clean
-		$(MAKE) -C librave clean
-		$(MAKE) -C test/pytest clean
+	$(SETUP) clean
+	$(MAKE) -C doxygen clean
+	$(MAKE) -C librave clean
+	$(MAKE) -C test/pytest clean
 
 .PHONY:distclean
 distclean:
-		$(MAKE) -C librave distclean
-		$(MAKE) -C doxygen distclean
-		$(MAKE) -C test/pytest distclean
-		@\rm -fr build
-		@\rm -f *~
+	$(MAKE) -C librave distclean
+	$(MAKE) -C doxygen distclean
+	$(MAKE) -C test/pytest distclean
+	@\rm -fr build
+	@\rm -f *~
