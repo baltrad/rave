@@ -159,6 +159,14 @@ void RaveObjectList_release(RaveObjectList_t* list, int index)
   RAVE_OBJECT_RELEASE(obj);
 }
 
+void RaveObjectList_clear(RaveObjectList_t* list)
+{
+  RaveCoreObject* coreobject = NULL;
+  RAVE_ASSERT((list != NULL), "list == NULL");
+  while ((coreobject = RaveObjectList_removeLast(list)) != NULL) {
+    RAVE_OBJECT_RELEASE(coreobject);
+  }
+}
 
 RaveCoreObject* RaveObjectList_removeLast(RaveObjectList_t* list)
 {

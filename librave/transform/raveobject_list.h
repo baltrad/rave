@@ -99,6 +99,12 @@ RaveCoreObject* RaveObjectList_remove(RaveObjectList_t* list, int index);
 void RaveObjectList_release(RaveObjectList_t* list, int index);
 
 /**
+ * Removes all entries from the list.
+ * @param[in] list - the list
+ */
+void RaveObjectList_clear(RaveObjectList_t* list);
+
+/**
  * Removes the last item.
  * @param[in] list - the list
  * @returns the object or NULL if there are no objects
