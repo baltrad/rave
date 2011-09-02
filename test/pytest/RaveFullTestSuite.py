@@ -28,7 +28,6 @@ import unittest
 from RaveTestSuite import *
 from PyCompositeTest import *
 from PolarVolumeTransformTest import *
-from RaveRack import *
 from MeanTest import *
 
 if __name__ == '__main__':

@@ -47,7 +47,7 @@ typedef enum Rave_Debug {
  */
 typedef struct {
    Rave_Debug dbgLevel; /**< Debug level */
-   void (*dbgfun)(char* filename, int lineno, Rave_Debug lvl, const char* fmt,...); /**< Debug function */
+   void (*dbgfun)(const char* filename, int lineno, Rave_Debug lvl, const char* fmt,...); /**< Debug function */
 } rave_debug_struct;
 
 /**
@@ -73,7 +73,7 @@ void Rave_setDebugLevel(Rave_Debug lvl);
  * @ingroup hlhdf_c_apis
  * @param[in] dbgfun The debug function.
  */
-void Rave_setDebugFunction(void (*dbgfun)(char* filename, int lineno, Rave_Debug lvl, const char* fmt, ...));
+void Rave_setDebugFunction(void (*dbgfun)(const char* filename, int lineno, Rave_Debug lvl, const char* fmt, ...));
 
 /**
  * @defgroup DebugMacros Macros for debugging and error reporting that is used in RAVE.

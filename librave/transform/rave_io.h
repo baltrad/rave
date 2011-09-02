@@ -1,5 +1,5 @@
 /* --------------------------------------------------------------------
-Copyright (C) 2009 Swedish Meteorological and Hydrological Institute, SMHI,
+Copyright (C) 2009, 2011 Swedish Meteorological and Hydrological Institute, SMHI,
 
 This file is part of RAVE.
 
@@ -44,7 +44,7 @@ typedef enum RaveIO_ODIM_Version {
  */
 typedef enum RaveIO_ODIM_H5rad_Version {
   RaveIO_ODIM_H5rad_Version_UNDEFINED = -1, /**< undefined */
-  RaveIO_ODIM_H5rad_Version_2_0 = 0,  /**< Previous ODIM version (and default) */
+  RaveIO_ODIM_H5rad_Version_2_0 = 0,  /**< Previous ODIM version */
   RaveIO_ODIM_H5rad_Version_2_1 = 1   /**< The default version */
 } RaveIO_ODIM_H5rad_Version;
 
