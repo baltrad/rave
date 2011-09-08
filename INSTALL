@@ -93,12 +93,17 @@ or, if you are brave, just
 
 $ make install
 
-Important: you must be able to write one file to your Python's site-packages 
-directory! RAVE won't be installed there, but a file pointing to RAVE will be.
 When RAVE is installed, you should add $RAVEROOT/bin to your $PATH and 
-$RAVEROOT/lib to your $LD_LIBRARY_PATH . If you are using a system-wide Python
-installation without write privileges to the site-packages directory, then set
-up a virtual site-packages location and place the rave.pth file there manually. 
+$RAVEROOT/lib to your $LD_LIBRARY_PATH. 
+You must be able to write one file to your Python's site-packages 
+directory! RAVE won't be installed there, but a file pointing to RAVE will be.
+This should happen automatically when RAVE is installed. However, if you are 
+using a system-wide Python installation without write privileges to the 
+site-packages directory, then you must set up a user site-packages 
+directory and place the rave.pth file there manually. The contents of the 
+rave.pth file are just one line, containing the complete path to your RAVE 
+installation's Lib directory, e.g. /opt/rave/Lib
+Instructions for this are found at http://www.python.org/dev/peps/pep-0370/ 
 
 Building the documentation system requires that doxygen is installed. If
 you have doxygen, then:

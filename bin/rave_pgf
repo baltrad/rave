@@ -30,7 +30,7 @@ from rave_daemon import Daemon
 from rave_defines import PIDFILE, PGF_HOST, PGF_PORT, STDOE
 
 
-## Stub class for alllowing server POSTs only to one place, providing
+## Stub class for allowing server POSTs only to one place, providing
 # rudimentary security.
 class RequestHandler(SimpleXMLRPCServer.SimpleXMLRPCRequestHandler):
     rpc_paths = ('/RAVE',)

@@ -101,6 +101,8 @@ LOGFILE     = os.path.join(RAVEETC, "rave_pgf.log")
 LOGFILESIZE = 5000000  # 5 Mb each
 LOGFILES    = 5
 
+ODIM_SOURCE_FILE = os.path.join(RAVECONFIG, 'odim_source.xml')
+
 
 if __name__ == "__main__":
     print __doc__

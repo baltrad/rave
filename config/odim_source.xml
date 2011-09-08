@@ -1,0 +1,251 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<radar-db>
+  <Austria CCCC="LOWM" org="224">
+    <atrau plc="Wien/Schwechat" rad="OS41" wmo="11038"></atrau>
+    <atfel plc="Salzburg/Feldkirchen" rad="OS43" wmo="11052"></atfel>
+    <atpat plc="Patscherkofel" rad="OS44" wmo="11126"></atpat>
+    <atzir plc="Zirbitzkogel" rad="OS46" wmo="11164"></atzir>
+    <atval plc="Valluga" rad="OS90" wmo="11124"></atval>
+  </Austria>
+  <Belgium CCCC="EBBR" org="227">
+    <bezav plc="Zaventem" rad="BX40" wmo="06451"></bezav>
+    <bewid plc="Wideumont" rad="BX41" wmo="06477"></bewid>
+  </Belgium>
+  <Jersey CCCC="EGRR" org="74">
+    <ukjer plc="Jersey" rad="UK52" wmo="03897"></ukjer>
+  </Jersey>
+  <Croatia CCCC="LDZM" org="221">
+    <hrbil plc="Bilogora" rad="RH42" wmo="14256"></hrbil>
+    <hrosi plc="Osijek" rad="RH43" wmo="14280"></hrosi>
+  </Croatia>
+  <CzechRepublic CCCC="OKPR" org="89">
+    <czska plc="Skalky" rad="CZ50" wmo="11718"></czska>
+    <czbrd plc="Brdy-Praha" rad="CZ60" wmo="11480"></czbrd>
+  </CzechRepublic>
+  <Denmark CCCC="EKMI" org="94">
+    <dkste plc="Stevns" rad="DN41" wmo="06180"></dkste>
+    <dkrom plc="Rømø" rad="DN42" wmo="00000"></dkrom>
+    <dksin plc="Sindal" rad="DN43" wmo="00000"></dksin>
+    <dkbor plc="Bornholm" rad="DN44" wmo="00000"></dkbor>
+    <dkvir plc="Virring" rad="DN45" wmo="00000"></dkvir>
+  </Denmark>
+  <Estonia CCCC="EEMH" org="231">
+    <eehar plc="Harku" rad="EE40" wmo="26038"></eehar>
+    <eesur plc="Sürgavere" rad="EE41" wmo="26232"></eesur>
+  </Estonia>
+  <Finland CCCC="EFKL" org="86">
+    <fivan plc="Vantaa" rad="FI42" wmo="02975"></fivan>
+    <fiika plc="Ikaalinen" rad="FI43" wmo="02941"></fiika>
+    <fianj plc="Anjalankoski" rad="FI44" wmo="02954"></fianj>
+    <fikuo plc="Kuopio" rad="FI45" wmo="02918"></fikuo>
+    <fikor plc="Korpo" rad="FI46" wmo="02933"></fikor>
+    <fiuta plc="Utajärvi" rad="FI47" wmo="02870"></fiuta>
+    <filuo plc="Luosto" rad="FI48" wmo="02840"></filuo>
+    <fivim plc="Vimpeli" rad="FI49" wmo="02925"></fivim>
+  </Finland>
+  <France CCCC="LFPW" org="84">
+    <frabb plc="Abbeville" rad="FR40" wmo="07005"></frabb>
+    <frbor plc="Bordeaux" rad="FR41" wmo="07510"></frbor>
+    <frbou plc="Bourges" rad="FR42" wmo="07255"></frbou>
+    <frgre plc="Grezes" rad="FR44" wmo="07436"></frgre>
+    <frcae plc="Falaise" rad="FR45" wmo="07129"></frcae>
+    <frnan plc="Nancy" rad="FR47" wmo="07182"></frnan>
+    <frnim plc="Nîmes" rad="FR49" wmo="07658"></frnim>
+    <frtou plc="Toulouse" rad="FR50" wmo="07629"></frtou>
+    <frtra plc="Trappes" rad="FR51" wmo="07145"></frtra>
+    <frtro plc="Arcis" rad="FR52" wmo="07167"></frtro>
+    <frlep plc="Sembadel" rad="FR53" wmo="07461"></frlep>
+    <frtre plc="Treilleres" rad="FR54" wmo="07223"></frtre>
+    <frbol plc="Bollene" rad="FR55" wmo="07569"></frbol>
+    <frpla plc="Plabennec" rad="FR56" wmo="07108"></frpla>
+    <fropo plc="Opoul" rad="FR57" wmo="07745"></fropo>
+    <frniz plc="Saint Nizier" rad="FR58" wmo="07381"></frniz>
+    <frcol plc="Collobrières" rad="FR59" wmo="07671"></frcol>
+    <frale plc="Aléria" rad="FR61" wmo="07774"></frale>
+    <frmcl plc="Montclar" rad="FR62" wmo="07637"></frmcl>
+    <frave plc="Avesnois" rad="FR63" wmo="07083"></frave>
+    <frche plc="Cherves" rad="FR64" wmo="07336"></frche>
+    <frbla plc="Blaisy-Haut" rad="FR65" wmo="07274"></frbla>
+    <frmom plc="Momuy" rad="FR66" wmo="07606"></frmom>
+    <frmtc plc="Montancy" rad="FR67" wmo="07291"></frmtc>
+  </France>
+  <Germany CCCC="EDFW" org="78">
+    <deemd plc="Emden" rad="DL41" wmo="10204"></deemd>
+    <deham plc="Hamburg" rad="DL42" wmo="10147"></deham>
+    <deros plc="Rostock" rad="DL43" wmo="10169"></deros>
+    <dehan plc="Hannover" rad="DL44" wmo="10338"></dehan>
+    <debln plc="Berlin" rad="DL45" wmo="10384"></debln>
+    <deess plc="Essen" rad="DL51" wmo="10410"></deess>
+    <defld plc="Flechtdorf" rad="DL52" wmo="10440"></defld>
+    <deumd plc="Ummendorf" rad="DL53" wmo="10356"></deumd>
+    <deoft plc="Offenthal" rad="DL61" wmo="10629"></deoft>
+    <deneu plc="Neuhaus" rad="DL62" wmo="10557"></deneu>
+    <dedrs plc="Dresden" rad="DL63" wmo="10488"></dedrs>
+    <denhb plc="Neuheilenbach" rad="DL71" wmo="10605"></denhb>
+    <detur plc="Tuerkheim" rad="DL72" wmo="10832"></detur>
+    <deeis plc="Eisberg" rad="DL73" wmo="10780"></deeis>
+    <deflg plc="Feldberg" rad="DL81" wmo="10908"></deflg>
+    <demuc plc="Munchen" rad="DL82" wmo="10871"></demuc>
+    <demem plc="Memminggen" rad="DL84" wmo="10950"></demem>
+  </Germany>
+  <Greece CCCC="LGAT" org="96">
+    <grimi plc="Imittos" rad="GR41" wmo="16821"></grimi>
+    <grand plc="Andravida" rad="GR42" wmo="16682"></grand>
+    <grlar plc="Larisa" rad="GR43" wmo="16648"></grlar>
+    <grthe plc="Thessaloniki" rad="GR44" wmo="16622"></grthe>
+    <geaig plc="Aigina" rad="GR45" wmo="16822"></geaig>
+    <grakt plc="Aktio" rad="GR46" wmo="16823"></grakt>
+    <grxri plc="Xrisoupoli" rad="GR47" wmo="16824"></grxri>
+    <grast plc="Astypalaia" rad="GR48" wmo="16825"></grast>
+  </Greece>
+  <Hungary CCCC="HABM" org="218">
+    <hubud plc="Budapest" rad="HU42" wmo="12843"></hubud>
+    <hunap plc="Napkor" rad="HU43" wmo="12892"></hunap>
+    <hupog plc="Pogányvár" rad="HU90" wmo="12921"></hupog>
+  </Hungary>
+  <Iceland CCCC="BIRK" org="213">
+    <iskef plc="Keflavik" rad="IL40" wmo="00000"></iskef>
+  </Iceland>
+  <Ireland CCCC="EIDB" org="233">
+    <iesha plc="Shannon" rad="IE40" wmo="03962"></iesha>
+    <iedub plc="Dublin" rad="IE41" wmo="03969"></iedub>
+  </Ireland>
+  <Italy CCCC="LIIB" org="80">
+    <itbrc plc="Bric della Croce" rad="IY41" wmo="16061"></itbrc>
+    <itset plc="Settepani" rad="IY42" wmo="00000"></itset>
+    <itist plc="Treviso-Istrana" rad="IY43" wmo="16098"></itist>
+    <itmac plc="Monte Macaion" rad="IY44" wmo="00000"></itmac>
+    <itfog plc="Fossalon di Grado" rad="IY45" wmo="00000"></itfog>
+    <itspc plc="S. Pietro Capofiume" rad="IY46" wmo="16144"></itspc>
+    <itgat plc="Gattatico" rad="IY47" wmo="00000"></itgat>
+    <itpis plc="Pisa-S.Giusto" rad="IY48" wmo="16158"></itpis>
+    <itras plc="Monte-Rasu" rad="IY49" wmo="00000"></itras>
+    <itteo plc="Teolo" rad="IY50" wmo="00000"></itteo>
+    <itcos plc="Concordia Sagittaria" rad="IY51" wmo="00000"></itcos>
+    <Itgra plc="Grazzanise" rad="IY52" wmo="16253"></Itgra>
+    <itmid plc="Monte Mida" rad="IY53" wmo="00000"></itmid>
+    <itbri plc="Brindisi" rad="IY54" wmo="16320"></itbri>
+    <itmil plc="Milano-Linate" rad="IY55" wmo="16080"></itmil>
+    <itfiu plc="Roma-Fiumicino" rad="IY56" wmo="16242"></itfiu>
+    <itdec plc="Decimomannu" rad="IY57" wmo="16546"></itdec>
+    <itzou plc="Monte Zoufplan" rad="IY58" wmo="00000"></itzou>
+    <itcro plc="Monte Crocione" rad="IY59" wmo="00000"></itcro>
+    <itzou plc="Monte Zoufplan" rad="IY60" wmo="00000"></itzou>
+    <itmon plc="Monte il Monte" rad="IY61" wmo="00000"></itmon>
+    <itpet plc="Monte Pettinascura" rad="IY62" wmo="00000"></itpet>
+  </Italy>
+  <Latvia CCCC="EVRR" org="236">
+    <lvrix plc="Riga" rad="LV93" wmo="26422"></lvrix>
+  </Latvia>
+  <Netherlands CCCC="EHDB" org="99">
+    <nldbl plc="De Bilt" rad="NL50" wmo="06260"></nldbl>
+    <nldhl plc="Den Helder" rad="NL51" wmo="06234"></nldhl>
+  </Netherlands>
+  <Norway CCCC="ENMI" org="88">
+    <noosl plc="Oslo" rad="NO41" wmo="01499"></noosl>
+    <nohgb plc="Hægebostad" rad="NO42" wmo="01438"></nohgb>
+    <norsa plc="Rissa" rad="NO43" wmo="01247"></norsa>
+    <norst plc="Røst" rad="NO90" wmo="01104"></norst>
+    <nobml plc="Bømlo" rad="NO91" wmo="01405"></nobml>
+    <noand plc="Andøya" rad="NO92" wmo="01018"></noand>
+    <nohas plc="Hasvik" rad="NO93" wmo="01042"></nohas>
+  </Norway>
+  <Poland CCCC="SOWR" org="220">
+    <plleg plc="Legionowo" rad="PL41" wmo="12374"></plleg>
+    <plram plc="Ramza" rad="PL42" wmo="12514"></plram>
+    <plpas plc="Pastewnik" rad="PL43" wmo="12544"></plpas>
+    <plrze plc="Rzeszów" rad="PL44" wmo="12579"></plrze>
+    <plpoz plc="Poznań" rad="PL45" wmo="12331"></plpoz>
+    <plswi plc="Świdwin" rad="PL46" wmo="12220"></plswi>
+    <plgda plc="Gdańsk" rad="PL47" wmo="12151"></plgda>
+    <plbrz plc="Brzuchania" rad="PL48" wmo="12568"></plbrz>
+  </Poland>
+  <Portugal CCCC="LPMG" org="212">
+    <ptlea plc="Cruz do Leão" rad="PO41" wmo="08550"></ptlea>
+    <ptcal plc="Cavalos do Caldeirão" rad="PO42" wmo="08553"></ptcal>
+  </Portugal>
+  <Romania CCCC="YRBK" org="242">
+    <robob plc="Bobohalma" rad="RD45" wmo="15166"></robob>
+    <robuc plc="Bucuresti" rad="RD40" wmo="15438"></robuc>
+    <rocra plc="Craiova" rad="RD43" wmo="15451"></rocra>
+    <robar plc="Barnova" rad="RD46" wmo="15093"></robar>
+    <romed plc="Medgidia" rad="RD47" wmo="15461"></romed>
+    <roora plc="Oradea" rad="RD41" wmo="15077"></roora>
+    <rotim plc="Timisoara" rad="RD44" wmo="15256"></rotim>
+  </Romania>
+  <Serbia CCCC="LYBM" org="87">
+    <rsfru plc="Fruška gora" rad="RS41" wmo="13169"></rsfru>
+    <rsbaj plc="Bajša" rad="RS42" wmo="13164"></rsbaj>
+    <rssam plc="Samoš" rad="RS43" wmo="13176"></rssam>
+    <rsval plc="Valjevo" rad="RS44" wmo="00000"></rsval>
+    <rsbuk plc="Bukulja" rad="RS45" wmo="00000"></rsbuk>
+    <rspet plc="Petrovac" rad="RS46" wmo="00000"></rspet>
+    <rscrn plc="Crni vrh" rad="RS47" wmo="00000"></rscrn>
+    <rsuzi plc="Užice" rad="RS48" wmo="00000"></rsuzi>
+    <rsbes plc="Besnjaja" rad="RS49" wmo="00000"></rsbes>
+    <rssje plc="Sjenica" rad="RS50" wmo="00000"></rssje>
+    <rskru plc="Kruševac" rad="RS51" wmo="00000"></rskru>
+    <rsnis plc="Niš" rad="RS52" wmo="00000"></rsnis>
+    <rskuk plc="Kukavica" rad="RS53" wmo="00000"></rskuk>
+  </Serbia>
+  <Slovakia CCCC="LZIB" org="217">
+    <skjav plc="Maly Javornik" rad="SQ41" wmo="11812"></skjav>
+    <skkoj plc="Kojsovska hola" rad="SQ51" wmo="11958"></skkoj>
+  </Slovakia>
+  <Slovenia CCCC="LJLM" org="219">
+    <silis plc="Lisca" rad="LJ41" wmo="14024"></silis>
+  </Slovenia>
+  <Spain CCCC="LEMM" org="214">
+    <eslid plc="Autilla Pino" rad="SP41" wmo="08072"></eslid>
+    <esmad plc="Torrejón de Velasco" rad="SP42" wmo="08228"></esmad>
+    <esval plc="Cullera" rad="SP43" wmo="08289"></esval>
+    <esmur plc="Fortuna" rad="SP44" wmo="08364"></esmur>
+    <esbar plc="Corbera" rad="SP45" wmo="08179"></esbar>
+    <escor plc="Cerceda" rad="SP46" wmo="08007"></escor>
+    <eszar plc="Perdiguera" rad="SP47" wmo="08162"></eszar>
+    <essan plc="Aguion" rad="SP48" wmo="08019"></essan>
+    <essse plc="Baquio" rad="SP49" wmo="08081"></essse>
+    <esbad plc="Sierra de Fuentes" rad="SP50" wmo="08262"></esbad>
+    <esmal plc="Alhaurín el Grande" rad="SP51" wmo="08475"></esmal>
+    <essev plc="Castillo las Guardas" rad="SP52" wmo="08386"></essev>
+    <esalm plc="Níjar" rad="SP53" wmo="8479"></esalm>
+    <espma plc="Llucmajor" rad="SP54" wmo="08308"></espma>
+    <eslpa plc="Artenara" rad="SP60" wmo="60028"></eslpa>
+  </Spain>
+  <Sweden CCCC="ESWI" org="82">
+    <sekir plc="Kiruna" rad="SE40" wmo="02032"></sekir>
+    <selul plc="Luleå" rad="SE41" wmo="02092"></selul>
+    <seosu plc="Östersund" rad="SE42" wmo="02200"></seosu>
+    <seovi plc="Örnsköldsvik" rad="SE43" wmo="02262"></seovi>
+    <sehud plc="Hudiksvall" rad="SE44" wmo="02334"></sehud>
+    <selek plc="Leksand" rad="SE45" wmo="02430"></selek>
+    <searl plc="Arlanda" rad="SE46" wmo="02451"></searl>
+    <sease plc="Ase" rad="SE47" wmo="02588"></sease>
+    <sevil plc="Vilebo" rad="SE48" wmo="02570"></sevil>
+    <sevar plc="Vara" rad="SE49" wmo="02600"></sevar>
+    <seang plc="Ängelholm" rad="SE50" wmo="02606"></seang>
+    <sekkr plc="Karlskrona" rad="SE51" wmo="02666"></sekkr>
+  </Sweden>
+  <Switzerland CCCC="LSSW" org="215">
+    <chalb plc="Albis" rad="SW41" wmo="06661"></chalb>
+    <chdol plc="La Dôle" rad="SW42" wmo="06699"></chdol>
+    <chlem plc="Monte Lema" rad="SW43" wmo="06768"></chlem>
+  </Switzerland>
+  <UnitedKingdom CCCC="EGRR" org="74">
+    <ukcle plc="Clee Hill" rad="UK43" wmo="03523"></ukcle>
+    <ukham plc="Hameldon Hill" rad="UK44" wmo="03331"></ukham>
+    <ukche plc="Chenies" rad="UK45" wmo="03675"></ukche>
+    <ukcas plc="Castor Bay" rad="UK47" wmo="03918"></ukcas>
+    <ukpre plc="Predannack" rad="UK48" wmo="03813"></ukpre>
+    <uking plc="Ingham" rad="UK49" wmo="03375"></uking>
+    <ukcyg plc="Crugygorllwyn" rad="UK50" wmo="03601"></ukcyg>
+    <ukdud plc="Hill Of Dudwick" rad="UK54" wmo="03086"></ukdud>
+    <uklew plc="Druim a'Starraig" rad="UK55" wmo="03018"></uklew>
+    <ukcob plc="Cobbacombe Cross" rad="UK56" wmo="03842"></ukcob>
+    <ukhhd plc="Holehead" rad="UK58" wmo="03142"></ukhhd>
+    <ukmun plc="Munduff Hill" rad="UK59" wmo="03159"></ukmun>
+    <ukthu plc="Thurnham" rad="UK60" wmo="03771"></ukthu>
+    <ukdea plc="Dean Hill" rad="UK61" wmo="03859"></ukdea>
+    <ukhmy plc="High Moorsley" rad="UK63" wmo="03253"></ukhmy>
+  </UnitedKingdom>
+</radar-db>

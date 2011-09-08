@@ -1,0 +1,5 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<ropo-options>
+  <default threshold="DEFAULT" parameters="DBZH" highest-elev="2.0" restore-thresh="154" restore-fill="True" softcut="5,170,180" speckNormOld="-20,24,8" emitter2="-30,3,2" ship="20,8" speck="10,12"></default>
+  <lvrix threshold="COLD" parameters="DBZH" highest-elev="2.0" restore-thresh="154" restore-fill="True" softcut="5,170,180" speckNormOld="-20,24,8" emitter2="-30,3,2" ship="20,8" speck="10,12"></lvrix>
+</ropo-options>
