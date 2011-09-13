@@ -50,7 +50,9 @@ slightly simplified, as follows:
 <li> Arguments are verified.</li>
 <li> Job is queued.</li>
 <li> Job is run.</li>
-<li> Result (written to tempfile) is injected in the baltrad-node through the DEX.</li>
+<li> Result (written to tempfile) is injected in the baltrad-node through the DEX, 
+\b or <em>something else</em> happens before the job terminates, without a result
+tempfile being injected.</li>
 </ol>
 
 Log entries are written for each step, and each \b generate job is assigned
@@ -111,15 +113,16 @@ generate(algorithm, files, arguments)
 where
 
 - \b algorithm is a \em string identifying the processing algorithm to
-  run. The corresponding entry will be looked up in the registry.
+  run. The corresponding entry will be looked up in the registry. Please
+  follow our Java-esque naming convention for identifying algorithms.
 - \b files is a \em list of input ODIM_H5 files. Even if there is only one
   input file, it must still be found in a list.
-- \b arguments is a \em list of argument key-value pairs. In other words, each
-  argument requires two items in the list, the first one is a \em string
-  containing the argument's name, and the second is that argument's
-  value. While the XML-RPC protocol allows the items in the list to be
-  several different types, some of which can be considered exotic, we will
-  only accept \em string, \em int,  \em float, and  \em list types.
+- \b arguments is a \em list of argument key-value pairs. Each
+  argument key-value pair requires an item in the list, the first part 
+  being a \em string containing the argument's name, and the second is that 
+  argument's value. While the XML-RPC protocol allows the items in the list 
+  to be several different types, some of which can be considered exotic, we 
+  will only accept the \em string type.
 
 It is recommended that the argument keys are assigned names that are as
 ODIM-like as possible, for the sake of consistency.
@@ -129,7 +132,7 @@ An example of a properly-formatted call to \b generate that generates a
 Cartesian surface with identifier "searl_gnom" would be:
 
 \verbatim
-generate("cappi", ["inputfile.h5"], ["transform", "nearest", "areaid", "searl_gnom", "prodpar", 500])
+generate("eu.baltrad.beast.cappi", ["inputfile.h5"], ["--transform=nearest", "--areaid=searl_gnom", "--prodpar=500"])
 \endverbatim
 
 <b>It is absolutely critical that arguments are passed in the
@@ -142,13 +145,23 @@ When writing your own application code to interact with the server, calling
 import xmlrpclib
 
 server = xmlrpclib.ServerProxy("http://host:port/RAVE")
-response = server.generate("cappi", ["inputfile.h5"], ["transform", "nearest", "areaid", "searl_gnom", "prodpar", 500])
+response = server.generate("eu.baltrad.beast.cappi", ["inputfile.h5"], ["--transform=nearest", "--areaid=searl_gnom", "--prodpar=500"])
 \endverbatim
 
 The same call from a Java client would look like this:
 
 \verbatim
-EXAMPLE NEEDED
+String algorithm = "eu.baltrad.beast.cappi";
+String[] files = new String[]{"inputfile.h5"};
+String[] arguments = new String[]{"--transform=nearest", "--areaid=searl_gnom", "--prodpar=500"};
+Object[] parameters = new Object[]{algorithm, files, arguments};
+
+XmlRpcClient client = new XmlRpcClient();
+XmlRpcClientConfigImpl config = new XmlRpcClientConfigImpl();
+config.setServerURL(new URL("http://host:port/RAVE");
+client.setConfig(config);
+
+client.execute("generate", parameters);
 \endverbatim
 
 The response returned to the client from the server will be a string:
@@ -171,7 +184,7 @@ consider this server to be on the network, even if it is run on the same
 computer. This means that all interaction with the server is performed
 through client connections, so the server's complete address must always be
 specified by the client. Keep in mind when formatting the host address that
-the prefix \b http:// or \b https:// must exist, and that the URL's path
+the prefix \b http:// must exist, and that the URL's path
 must be \b /RAVE, e.g.
 
 \verbatim

@@ -1,5 +1,5 @@
 /** \page rave_cobjects RAVE C Objects
-In the previous chapter we gave a brief overview on how you are supposed to work with the different
+On the previous page, we gave a brief overview on how you are supposed to work with the different
 support macros and functions we have delivered in the system. Let's take a look at some of the
 objects we have at our disposal.
 
@@ -21,12 +21,12 @@ static void somefun(void)
   RAVE_OBJECT_RELEASE(datetime);
 }
 \endverbatim
-What happens if you specify a badly formatted date or time or any other oddity. Try for your self by
-checking the return value from \ref #RaveDateTime_setDate and \ref #RaveDateTime_setTime, or you could
+What happens if you specify a badly-formatted date or time, or any other oddity? Try for yourself by
+checking the return value from \ref #RaveDateTime_setDate and \ref #RaveDateTime_setTime ... or you could
 read the documentation.
 
 - \ref #RaveData2D_t
-This is a bit more interesting object since it provides support for a 2-dimensional data array. It is used
+This object is a bit more interesting since it provides support for a two-dimensional data array. It is used
 internally by both \ref #PolarScan_t and \ref #Cartesian_t.
 When you are using this object you will get basic help on memory allocation, indexing and boundary checks.
 \verbatim
@@ -43,13 +43,13 @@ static void somefun(void)
   RAVE_OBJECT_RELEASE(data);
 }
 \endverbatim
-All setting and getting of data is actually done as doubles and the casting is done inside the functions. So, if you for example
-would pass in a double that is > 255 into the above call, then the value in the data array will be set to 255.
+All setting and getting of data is actually done as doubles and the casting is done inside the functions. So, if you
+pass in a double that is > 255 into the above call, then the value in the data array will be set to 255.
 
 - \ref #RaveObjectList_t
 A list supporting RAVE objects. It manages the reference counts and ensures that all objects are
-released upon destruction of the list. A small cave-eat, if any objects are passed to the list and
-these objects are not cloneable. Then, if this list is cloned, the non-cloneable objects will be ignored.
+released upon destruction of the list. A small caveat: if any objects are passed to the list and
+these objects are not cloneable, then, if this list is cloned, the non-cloneable objects will be ignored.
 \verbatim
 #include "raveobject_list.h"
 
@@ -68,7 +68,7 @@ Currently, we only support size and indexing, but eventually we are going to int
 
 - \ref #RaveList_t
 A basic list for storing pointers or values or whatever. It takes void pointers as list entries. However, it will
-not destroy any item for you when it is destroyed, that is up to the user.
+not destroy any item for you when it is destroyed; that is up to the user.
 \verbatim
 #include "rave_list.h"
 
@@ -91,7 +91,7 @@ more interesting when working with radar data (or any other data) for that matte
 
 - \ref Projection_t
 This is a wrapper around PROJ.4. This object requires initialization after it has been created since it
-needs to know what projection definition is should support. 
+needs to know what projection definition it should support. 
 \verbatim
 #include "projection.h"
 
@@ -100,10 +100,10 @@ static void somefun(void)
   Projection_t* p1 = RAVE_OBJECT_NEW(&Projection_TYPE);
   Projection_t* p2 = RAVE_OBJECT_NEW(&Projection_TYPE);
   double x = 0.0L, y = 0.0L;
-  if (!Projection_init(p1, "stere", "a projection", "+proj=stere +ellps=bessel +lat_0=90 +lon_0=14 +lat_ts=60 +datum=WGS84")) {
+  if (!Projection_init(p1, "stere", "my projection", "+proj=stere +ellps=bessel +lat_0=90 +lon_0=14 +lat_ts=60 +datum=WGS84")) {
     goto error;
   }
-  if (!Projection_init(p2, "lonlat", "a projection", "+proj=longlat +ellps=WGS84 +datum=WGS84")) {
+  if (!Projection_init(p2, "lonlat", "another projection description", "+proj=longlat +ellps=WGS84 +datum=WGS84")) {
     goto error;
   }
   x = 60.0 * M_PI/180.0;
@@ -123,37 +123,45 @@ error:
  
 - \ref #Area_t
 An area definition describing a surface. It contains corner coordinates, what projection it is defined by, what
-x/y - size and x/y - scale. So, it is quite useful if you are planning to create an cartesian product or similar.
+x/y - size and x/y - scale. So, it is quite useful if you are planning to create a Cartesian product or similar.
 
-Currently we have 3 different products that defines the basic needs when working with radar data.
+Currently we have three different products that define the basic needs when working with radar data.
 Instead of writing some examples on how these are used, a list of the other objects will be presented
 below and at the end a simple main program that creates a PPI will be shown.
 
 - \ref #Cartesian_t
-This class represents cartesian product. I.e. one or more 2-dimensional surface images that is
-defined by a area extent, projection and the other parts that are defined for an \ref #Area_t.
+This class represents a Cartesian product, i.e. one or more two-dimensional surface images that are
+defined by a area extent, projection and the other bits that are defined in an \ref #Area_t.
+
+- \ref #PolarScanParam_t
+This class represents a physical parameter (variable) measured by the radar for a given scan 
+of the horizon. This object contains one such parameter and any number of supporting quality datasets.
+
+- \ref #RaveField_t
+This class is a generic container for holding a dataset. It is often used (and intended) for 
+representing data quality as a so-called quality-indicator dataset.
 
 - \ref #PolarScan_t
-This class represents one radar scan. I.e. one or more 2-dimensional arrays defining the different
-quantities, currently a scan defines one 2-dimensional array and one quantity but this might change
-so please check documentation for \ref #PolarScan_t.
+This class represents one radar scan. I.e. one or more two-dimensional arrays defining the different
+quantities. This class may contain any number of \ref PolarScanParam_t objects as long as they are
+all valid for the same scan of the horizon.
 
 - \ref #PolarVolume_t
-A polar volume is defined by a number of \ref #PolarScan_t's and some basic information like what,
-where and how.  
+A polar volume is defined by a number of \ref #PolarScan_t objects and some basic information like \em what,
+\em where and \em how attributes.  
 
-Other than that we have a couple of utilities that are useful when working with the products defined
+Other than that we have a couple of utilities that are useful when working with the objects defined
 above.
 
 - \ref #RaveIO_t
-Basic loading and saving of products in the ODIM HDF5 format.
+Basic loading and saving of products in the ODIM_H5 format.
 
 - \ref #Transform_t
 Some product generator algorithms that might be useful.
 
 \verbatim
 /**
- * Simple example without any error checking or anything.
+ * Simple PPI generator example without any checks or controls.
  */
 #include "rave_io.h"
 #include "polarscan.h"
@@ -191,11 +199,12 @@ int main(int argc, char** argv)
 }
 \endverbatim
 
-The above example leaves a couple of unanswered questions but at least it shows how the system can be used. For example,
+The above example may leave a couple of unanswered questions, but at least it shows how the system can be used. For example,
 the object \ref #Transform_t supports ppi/cappi/pcappi when writing this documentation but this might change in the future
-and hence, I leave it up to the reader of this document to check what api's you have at your disposal.
+and hence, I leave it up to the reader of this document to check what APIs you have at your disposal.
 
 We have covered the basics and some of the building blocks and now it is time to take a look at a real-life example that was
-performed when developing the new version of RAVE, \ref converting_mean.
+performed when developing the new version of RAVE, \ref converting_mean. This example provides a complete example of writing 
+a C module and a Python wrapper for it.
 
 */

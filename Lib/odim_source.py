@@ -56,9 +56,9 @@ def init():
             PLC[nod] = plc
             if wmo != "00000": 
                 NOD[wmo] = nod
-                SOURCE[nod] = "WMO:%s,NOD:%s,RAD:%s,ORG:%s,PLC:%s" % (wmo, nod, rad, org, plc)
+                SOURCE[nod] = u"WMO:%s,NOD:%s,RAD:%s,ORG:%s,PLC:%s" % (wmo, nod, rad, org, plc)
             else:
-                SOURCE[nod] = "NOD:%s,RAD:%s,ORG:%s,PLC:%s" % (nod, rad, org, plc)
+                SOURCE[nod] = u"NOD:%s,RAD:%s,ORG:%s,PLC:%s" % (nod, rad, org, plc)
     initialized = 1
 
 
@@ -79,7 +79,7 @@ def text2Element(filename, xmlfile=ODIM_SOURCE_FILE):
     LINES = LINES[0].split("\r")
     fd.close()
 
-    ALL = ET.Element("radar-db")
+    ALL = ET.Element("radar-db", {"author" : "Daniel Michelson"})
     
     for L in LINES:
         l = L.split('\t')
@@ -94,6 +94,8 @@ def text2Element(filename, xmlfile=ODIM_SOURCE_FILE):
             R = ET.Element(nod, {"wmo":wmo, "rad":"%s%s" % (rad_prefix,nr), 
                                  "plc":plc.decode('utf-8')})
             E.append(R)
+        else:
+            print "FAILED to process %s" % l
 
     ALL.append(E)
 
@@ -121,7 +123,7 @@ class ODIM_Source:
             prefix = prefix.lower()  # safety precaution in case someone changes case in their files
             if   prefix == 'wmo': self.wmo = value  # Keep this as a string!
             elif prefix == 'rad': self.rad = value
-            elif prefix == 'plc': self.plc = value
+            elif prefix == 'plc': self.plc = value.decode(UTF8)
             elif prefix == 'nod': self.nod = value
             elif prefix == 'org': self.org = value
             elif prefix == 'cty': self.cty = value

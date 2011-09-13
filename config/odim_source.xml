@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<radar-db>
+<radar-db author="Daniel Michelson">
   <Austria CCCC="LOWM" org="224">
     <atrau plc="Wien/Schwechat" rad="OS41" wmo="11038"></atrau>
     <atfel plc="Salzburg/Feldkirchen" rad="OS43" wmo="11052"></atfel>
@@ -7,6 +7,9 @@
     <atzir plc="Zirbitzkogel" rad="OS46" wmo="11164"></atzir>
     <atval plc="Valluga" rad="OS90" wmo="11124"></atval>
   </Austria>
+  <Belarus CCCC="UMMS" org="226">
+    <bymin plc="Minsk" rad="BY40" wmo="26850"></bymin>
+  </Belarus>
   <Belgium CCCC="EBBR" org="227">
     <bezav plc="Zaventem" rad="BX40" wmo="06451"></bezav>
     <bewid plc="Wideumont" rad="BX41" wmo="06477"></bewid>

@@ -68,7 +68,9 @@ spatial data.
 
 In order to support Python, a similar Python API has been developed on top
 of the C API; there are several reasons for this, but the most obvious
-reason is that it is quite simple to work with Python instead of C.
+one is that it is much easier to work with Python instead of C. The system 
+becomes a lot easier to configure and manage at a high level of 
+abstraction, without taking a performance hit.
 
 Before we dig down deep, we should first take a look at the fundamentals in
 \ref rave_capi.

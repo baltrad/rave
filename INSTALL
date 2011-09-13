@@ -9,25 +9,35 @@ June 2011
 
 Before installing RAVE, a number of modules/software packages have to be
 installed.
-- a (Gnu) C++ compiler
+- (Gnu) C and C++ compilers
 - ZLIB (optional)
 - Tcl and Tk 8.5.5
 - Python 2.6 final or 2.7.x, but not 3.x
-- Numeric Python (NumPy) 1.2.1
-- Python Imaging Library 1.1.6
+- Numeric Python (NumPy) 1.2.1 or higher
+- Python Imaging Library 1.1.6 or higher
 - HDF5 1.8.5-patch1 or higher
-- HLHDF/PyHL 0.7+
 - PycURL 7.19+ (and underlying cURL)
 - PROJ.4 version 4.7.0 or higher
+All of these packages are available on any credible Linux distribution,
+and can be managed through package managers like yum, apt-get, and dpkg.
+
+You also need the following package that you probably won't find 
+bundled with your Linux.
+- HLHDF/PyHL 0.7+
 
 We also have optional support for C-based handling 
 of cartographic projection and geographic area registries. 
 If you want these, you will need
 - expat 2.0.1
+which is also on most Linuces.
+
+If you use pre-compiled packages that come along with your Linux
+distribution, don't forget to install the respective "devel" 
+package containing headers and libraries too.
 
 The README file contains more details about these packages.
 
-If these packages have been installed and set up correctly including
+If these packages have been installed and set up correctly, 
 ensuring that numpy and _pyhl can be found when importing from Python,
 then you can perform the following.
 $ python
@@ -48,7 +58,7 @@ $ export NUMPYDIR=/usr/local/lib/python2.6/site-packages/numpy/core/include/nump
 3. HL-HDF installation, e.g. normal place for BALTRAD:
 $ export HLDIR=/opt/baltrad/hlhdf
 
-4. PROJ.4 projections library, if in a non-standard place
+4. PROJ.4 projections library
 $ PROJ4ROOT=/my/path
   or specify include and lib directories separately
 $ export PROJ4INC=/my/path/include
@@ -56,9 +66,9 @@ $ export PROJ4LIB=/my/path/lib
 
 5. (OPTIONAL) expat
 The default behaviour is to build without expat support. However, management 
-of projection and area registries requires expat. The environment  variable 
-EXPATARG can be used to modify the arguments passed to the configure 
-scripts and can be one of
+of projection and area registries requires expat, so it's probably a good
+idea to install it. The environment  variable EXPATARG can be used to modify 
+the arguments passed to the configure scripts and can be one of
 $ export EXPATARG=<inc>,<lib>
 or
 $ export EXPATARG=<expatroot>

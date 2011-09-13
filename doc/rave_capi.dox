@@ -1,12 +1,12 @@
-/** \page rave_capi Introduction to the RAVE C API
-A lot of work that is performed in RAVE is number crunching in different ways. Some times
-it's to project from one area to another, other times it's more demanding algorithms that
-should be performed.
+/** \page rave_capi Introduction to the RAVE C APIs
+A lot of work done in RAVE is number crunching in different ways. Sometimes
+it can be re-projecting from one area to another, other times it's more demanding algorithms that
+must be performed.
 
-So, why have we decided to go for C instead of high level languages as Python or Java. The
-easiest answer is that we had an old legacy that we have refined but fortunately there
-are other reasons as well. C is fast and since some algorithms will be demanding it's better
-to be prepared for it. Another reason is that it is fairly easy to add both Python and
+So, why have we decided to go for C instead of high-level languages like Python and Java. The
+easiest answer is that we had an old legacy that we have refined, but fortunately there
+are other reasons as well. C is fast and since some algorithms will always be demanding it's better
+to prepared for the worst. Another reason is that it is fairly easy to add both Python and
 Java APIs on top of C by using the native interface support in those languages.
 
 Let's take a look at the core of the transform library (&lt;ravesrc&gt;/librave/transform).
@@ -14,14 +14,14 @@ Let's take a look at the core of the transform library (&lt;ravesrc&gt;/librave/
 \section rave_capi_1 rave_object.h
 
 C might be a bit awkward to use since you need to be careful about memory management. We have tried
-to make parts of this processing a bit easier to work with by using a concept where we are
-using reference counters and objects instead of pure memory allocation. This is not completly true
-since you still will need to allocate memory at times but we try to make it simpler. 
+to make parts of this processing more easily manageable by using a concept where we are
+using reference counters and objects instead of pure memory allocation. This is not completely true
+since you still will need to allocate memory at times, but we try to facilitate this. 
 
 First, we have \ref rave_object.h. This file is essential for manipulating objects within
-RAVE. It is somewhat similar to how Python has implemented their object support.
+RAVE. It is somewhat similar to how Python has implemented its object support.
 
-There are 5 macros that are really necessary and will be used quite a lot.
+There are five macros that are really necessary and will be used quite a lot.
 
 - \ref #RAVE_OBJECT_NEW
 	This is the macro that is used for creating the objects RAVE provides.
@@ -42,7 +42,7 @@ There are 5 macros that are really necessary and will be used quite a lot.
 \endverbatim
 
 - \ref #RAVE_OBJECT_CLONE
-	This is the macro to use when cloning an an object. This will create a completly new object and it is up to the object to support the copy constructor.
+	This is the macro to use when cloning an an object. This will create a completley new object and it is up to the object to support the copy constructor.
 	This means that it is essential to test if the clone has been created or not, cloning might not be supported for the provided object.
 \verbatim
   RaveScan_t* clone = RAVE_OBJECT_CLONE(scan);
@@ -72,7 +72,7 @@ should call \ref #RAVE_OBJECT_RELEASE when you are done with the object.
 
 If you are uncertain if you have managed to release all objects when the application terminates or if you are
 curious on how many pending objects you have at a particular time, the function \ref RaveCoreObject_printStatistics
-will print it out on stderr. If you want the statistics to be printed when the application terminates add this call
+will print it out on stderr. If you want such statistics to be printed when the application terminates, add this call
 during initialization of your program.
 \verbatim
   if (atexit(RaveCoreObject_printStatistics) != 0) {
@@ -110,15 +110,15 @@ situations but that usage must be used with caution.
   PyPolarScan* this = (PyPolarScan*)RAVE_OBJECT_GETBINDING(scan);
 \endverbatim
 
-We will investigate the bindings later on in the RAVE Python API documentation. But for now, just be careful if you determine to use it.
+We will investigate the bindings later on in the RAVE Python API documentation. But for now, just be careful if you decide to use it.
 By the way, \ref #RAVE_OBJECT_COPY will leave the binding as is but \ref #RAVE_OBJECT_CLONE will not pass it on.
 
 \section rave_capi_2 rave_alloc.h
 This is the other API that provides some help when it comes to memory allocation. These macros
-are basically debugging all allocations you are performing (if you use them).
+basically debug all allocations you perform (if you use them).
 Since this is a quite heavy operation, we only debug memory if RAVE has been built with the compile-flag
 <b>-DRAVE_MEMORY_DEBUG</b>, otherwise it will basically be the same as calling the standard
-c-functions directly.
+C-functions directly.
 
 - \ref #RAVE_MALLOC  - Same as malloc
 	
@@ -130,8 +130,8 @@ c-functions directly.
 
 - \ref #RAVE_FREE - Same as free(x); x = NULL
 
-If you have enabled the memory debugging you will get notifications if you are accessing memory out of bounds,
-if you try to free memory != NULL that already has been freed and so forth. However, you will still not get
+If you have enabled memory debugging, you will get notifications if you are accessing memory out of bounds,
+if you try to free memory != NULL that already has been freed, and so forth. However, you will still not get
 a dump of lost memory. To be able to get that, you will need to do one thing manually in your main program or
 module.
 
@@ -142,21 +142,21 @@ module.
 \endverbatim
 
 This little code segment will call the function \ref #rave_alloc_print_statistics when the program exits. This is
-automatically supported if you are using our Python modules but if you prefer to write your own program using the
+automatically supported if you are using our Python modules, but if you prefer to write your own program using the
 transform library you need to do this.
 
 \section rave_capi_3 rave_debug.h
 The final header file that provides some useful macros is \ref rave_debug.h. As it
 sounds, it contains some debug macros. Since we do not know if the system will be compiled
-with a compiler that can manage macros with variable argument lists we have provided
-macros that can take up to 4 arguments. If you need more, then you will need to create your
-own strings and pass them into an appropriate macro.
+with a compiler that can manage macros with variable argument lists, we have provided
+macros that can take up to four (4) arguments. If you need more, then you will need to create your
+own strings and pass them to an appropriate macro.
 
 Some macros will always be enabled and other will only be available when compiling with <b>-DDEBUG_RAVE</b>.
 To be able to get the printouts you need to set a debug level by calling the function \ref #Rave_setDebugLevel.
 The default level is always silent, meaning that nothing will be printed except CRITICAL errors. The levels that
 are possible to print out without enabling <b>-DDEBUG_RAVE</b> are:
-- \ref #RAVE_INFO    - non error related information
+- \ref #RAVE_INFO    - non error-related information
 - \ref #RAVE_WARNING - warnings that not will affect the result in any serious way
 - \ref #RAVE_ERROR   - this is starting to get a bit more serious but it might occur, like trying to open a file that does not exist
 - \ref #RAVE_CRITICAL - these are really bad and should be used with care, this might be that memory allocation fails or other conditions 
@@ -164,7 +164,7 @@ that really not should occur during the life cycle of the application. So, do no
 One should also be aware that a critical error might indicate that it really is time to shut down the application and if someone has
 rerouted the error reporting to their own function, they might actually abort the application.
 
-Talking of which, you are able to send all printouts to your own logger. This is done by using \ref #Rave_setDebugFunction.
+Speaking of which, you are able to send all printouts to your own logger. This is done by using \ref #Rave_setDebugFunction.
 
 \verbatim
 static void MY_debugFunction(char* filename, int lineno, Rave_Debug lvl,  const char* fmt, ...)
@@ -183,12 +183,12 @@ Rave_setDebugFunction(MY_debugFunction);
 
 There is another thing that also can cause mischief related to the debug macros and that is the abuse of \ref #RAVE_ASSERT.
 This macro is currently not possible to deactivate or disable in any way. By using this macro you have actually set up a contract
-on your code that says that unless this criteria is fullfilled I will crash the system.
+on your code that says that unless the given criteria are fulfilled, I will crash the system.
 
 Some people are against this type of behaviour since it forces a running system to dump instead of trying to recover or ignoring
-the reckognized problem. The problem is actually that these macros can be used improperly and in that case they are really, really
+the recognized problem. The problem is actually that these macros can be used improperly and in that case they are really, really
 bad. If they are used with caution you might actually gain from them instead as they will give you an immediate information on where
-the problem occured instead of having a system that runs a bit further and then for some obscure reason crashes.
+the problem occured instead of having a system that runs a bit further and then crashes for unknown reasons.
 
 A good example on how to use the assert:
 \verbatim
@@ -199,7 +199,7 @@ static int MyObject_setSize(MyObject_t* self, int sz) {
 }
 \endverbatim
 
-Here we says that if you pass in a self pointer that is NULL it is something fundamentally wrong in your code.
+Here we say that if you pass in a self-pointer that is NULL, then there is something fundamentally wrong in your code.
 
 A bad example on assert usage:
 \verbatim
@@ -210,7 +210,7 @@ static int MyObject_setSize(MyObject_t* self, int sz) {
 }
 \endverbatim 
 
-Here we on the other hand say that if you try to set a value that not is in the interval 1 - 9, you should crash the system. This
+Here, on the other hand, we say that if you try to set a value that not is in the interval 1 - 9, you should crash the system. This
 might be a bit harsh, but, as usual, it's a matter of taste.
 
 Personally, I would have implemented it like this:
@@ -230,7 +230,7 @@ static int MyObject_setSize(MyObject_t* self, int sz)
 This way I would have ensured that nobody atempts to call the object without the object itself and if someone
 is trying to set a value outside 1 - 9, I will return 0 instead of 1.
 
-With this knowledge, it is time to take a look at the currently implemented RAVE objects that are at your disposal.
+With this knowledge, it is time to take a look at the RAVE objects that are currently implemented and that are therefore at your disposal.
 
 \ref rave_cobjects
 */

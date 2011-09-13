@@ -6,7 +6,11 @@ functionality, and the functionality that is largely Python-based that was
 written a few years ago. This hybrid solution is not going to last, and
 currently the way to distinguish between old and new functionality is that
 the old modules are documented using Python's pydoc system, whereas the new
-functionality is documented using Doxygen. So if you see it in this
-documentation, that means it's been migrated to the new system.
+functionality is documented using Doxygen. So if you see it in this set of
+documentation (not just this page), that means it's been migrated to the new system.
+
+One battle-tested method of learning how the interactivity works is to take a look
+at a RAVE production script and break it down interactively on the command line 
+with input file(s) off line. 
 
 */
