@@ -38,6 +38,7 @@ from rave_defines import DEX_SPOE, DEX_CHANNEL, DEX_USER, LOG_ID, REGFILE
 METHODS = {'generate' : '("algorithm",[files],[arguments])',
            'register': '("name", "module", "function", Help="", strings=",", ints=",", floats=",", seqs=",")',
            'deregister': '("name")',
+           'flush': '("stupid_password")',
            'Help': ''
            }
 
@@ -54,6 +55,7 @@ class RavePGF():
     self._algorithm_registry = rave_pgf_registry.PGF_Registry(filename=REGFILE)
     self.queue = Queue.PriorityQueue()
     self._load_queue()
+    self._queue_dumped = False
     self._run_all_jobs()
 
 
@@ -120,6 +122,18 @@ class RavePGF():
     return "De-registered %s" % name
 
 
+  ## Public method for dumping queue to file.
+  # @param stupid_password A rudimentary safeguard against sabotage.
+  # @return string
+  def flush(self, stupid_password):
+      if stupid_password=="Killing me softly":
+          self._dump_queue()
+          return "Killed softly"
+      else:
+          self.logger.warning("Security breach? Did some scoundrel just try to shut us down?")
+          return ""
+
+
   ## Queue a job for processing. All jobs are calls to the \ref generate method.
   # @param algorithm, an Element object that contains all the information
   # required to run a job.
@@ -142,9 +156,11 @@ class RavePGF():
   ## Dumps the job queue to XML file. Called automatically when the server
   # is stopped.
   def _dump_queue(self):
-    self.logger.info("Dumping job queue containing %i jobs."%self.queue.qsize())
-    rave_pgf_qtools.dump_queue(self.queue)
-    self.logger.info("Shutting down.\n")
+      if not self._queue_dumped:
+          self.logger.info("Dumping job queue containing %i jobs."%self.queue.qsize())
+          rave_pgf_qtools.dump_queue(self.queue)
+          self.logger.info("Shutting down.\n")
+          self._queue_dumped = True
 
 
   ## Loads the job queue from XML file. Called automatically when the server
@@ -165,9 +181,9 @@ class RavePGF():
   def _run_one_job(self):
     if self.queue.qsize() > 0:
       priority, job = self.queue.get()
-      self.queue.task_done()  # Count down queue even if job fails.
       algorithm, files, args = rave_pgf_qtools.split(job)
       outfile = self._run(algorithm, files, args)
+      self.queue.task_done()  # Count down queue even if job fails. !! Moved !!
       return outfile  
 
 
