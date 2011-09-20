@@ -31,6 +31,14 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "area.h"
 
 /**
+ * What type of selection variant to use
+ */
+typedef enum CompositeSelectionMethod_t {
+  CompositeSelectionMethod_NEAREST = 0, /**< Nearest radar defines pixel to use (default) */
+  CompositeSelectionMethod_HEIGHT       /**< Pixel closest to ground defines pixel to use */
+} CompositeSelectionMethod_t;
+
+/**
  * Defines a Composite generator
  */
 typedef struct _Composite_t Composite_t;
@@ -63,6 +71,21 @@ void Composite_setProduct(Composite_t* composite, Rave_ProductType type);
  * @returns the product type
  */
 Rave_ProductType Composite_getProduct(Composite_t* composite);
+
+/**
+ * Sets the selection method to use. @see \ref #CompositeSelectionMethod_t.
+ * @param[in] self - self
+ * @param[in] method - the method to use
+ * @return 1 on success otherwise 0
+ */
+int Composite_setSelectionMethod(Composite_t* self, CompositeSelectionMethod_t method);
+
+/**
+ * Returns the selection method. @see \ref #CompositeSelectionMethod_t
+ * @param[in] self - self
+ * @return the selection method
+ */
+CompositeSelectionMethod_t Composite_getSelectionMethod(Composite_t* self);
 
 /**
  * Sets the height that should be used when generating a

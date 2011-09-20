@@ -214,6 +214,7 @@ static struct PyMethodDef _pycomposite_methods[] =
 {
   {"height", NULL},
   {"product", NULL},
+  {"selection_method", NULL},
   {"quantity", NULL},
   {"date", NULL},
   {"time", NULL},
@@ -238,6 +239,8 @@ static PyObject* _pycomposite_getattr(PyComposite* self, char* name)
     return PyFloat_FromDouble(Composite_getElevationAngle(self->composite));
   } else if (strcmp("product", name) == 0) {
     return PyInt_FromLong(Composite_getProduct(self->composite));
+  } else if (strcmp("selection_method", name) == 0) {
+    return PyInt_FromLong(Composite_getSelectionMethod(self->composite));
   } else if (strcmp("quantity", name) == 0) {
     if (Composite_getQuantity(self->composite) != NULL) {
       return PyString_FromString(Composite_getQuantity(self->composite));
@@ -289,6 +292,10 @@ static int _pycomposite_setattr(PyComposite* self, char* name, PyObject* val)
       Composite_setProduct(self->composite, PyInt_AsLong(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "product must be a valid product type")
+    }
+  } else if (strcmp("selection_method", name) == 0) {
+    if (!PyInt_Check(val) || !Composite_setSelectionMethod(self->composite, PyInt_AsLong(val))) {
+      raiseException_gotoTag(done, PyExc_ValueError, "not a valid selection method");
     }
   } else if (strcmp("quantity", name) == 0) {
     if (PyString_Check(val)) {
@@ -378,6 +385,22 @@ static PyMethodDef functions[] = {
   {NULL,NULL} /*Sentinel*/
 };
 
+/**
+ * Adds constants to the dictionary (probably the modules dictionary).
+ * @param[in] dictionary - the dictionary the long should be added to
+ * @param[in] name - the name of the constant
+ * @param[in] value - the value
+ */
+static void add_long_constant(PyObject* dictionary, const char* name, long value)
+{
+  PyObject* tmp = NULL;
+  tmp = PyInt_FromLong(value);
+  if (tmp != NULL) {
+    PyDict_SetItemString(dictionary, name, tmp);
+  }
+  Py_XDECREF(tmp);
+}
+
 PyMODINIT_FUNC
 init_pycomposite(void)
 {
@@ -405,6 +428,9 @@ init_pycomposite(void)
   if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
     Py_FatalError("Can't define _pycomposite.error");
   }
+
+  add_long_constant(dictionary, "SelectionMethod_NEAREST", CompositeSelectionMethod_NEAREST);
+  add_long_constant(dictionary, "SelectionMethod_HEIGHT", CompositeSelectionMethod_HEIGHT);
 
   import_pypolarvolume();
   import_pypolarscan();

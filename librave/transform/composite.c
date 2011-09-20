@@ -36,6 +36,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 struct _Composite_t {
   RAVE_OBJECT_HEAD /** Always on top */
   Rave_ProductType ptype; /**< the product type, default PCAPPI */
+  CompositeSelectionMethod_t method; /**< selection method, default CompositeSelectionMethod_NEAREST */
   double height; /**< the height when generating pcapppi, cappi, default 1000 */
   double elangle; /**< the elevation angle when generating ppi, default 0.0 */
   char* paramname; /**< the parameter name */
@@ -54,6 +55,7 @@ static int Composite_constructor(RaveCoreObject* obj)
 {
   Composite_t* this = (Composite_t*)obj;
   this->ptype = Rave_ProductType_PCAPPI;
+  this->method = CompositeSelectionMethod_NEAREST;
   this->height = 1000.0;
   this->elangle = 0.0;
   this->paramname = NULL;
@@ -82,6 +84,7 @@ static int Composite_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj
   Composite_t* this = (Composite_t*)obj;
   Composite_t* src = (Composite_t*)srcobj;
   this->ptype = src->ptype;
+  this->method = src->method;
   this->height = src->height;
   this->elangle = src->elangle;
   this->paramname = NULL;
@@ -110,6 +113,7 @@ static void Composite_destructor(RaveCoreObject* obj)
   Composite_t* this = (Composite_t*)obj;
   RAVE_OBJECT_RELEASE(this->list);
   RAVE_OBJECT_RELEASE(this->datetime);
+  RAVE_FREE(this->paramname);
 }
 
 static void CompositeInternal_nearestValue(Composite_t* composite, RaveCoreObject* object, double plon, double plat, RaveValueType* type, double* value)
@@ -202,6 +206,23 @@ Rave_ProductType Composite_getProduct(Composite_t* composite)
 {
   RAVE_ASSERT((composite != NULL), "composite == NULL");
   return composite->ptype;
+}
+
+int Composite_setSelectionMethod(Composite_t* self, CompositeSelectionMethod_t method)
+{
+  int result = 0;
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  if (method >= CompositeSelectionMethod_NEAREST && method <= CompositeSelectionMethod_HEIGHT) {
+    self->method = method;
+    result = 1;
+  }
+  return result;
+}
+
+CompositeSelectionMethod_t Composite_getSelectionMethod(Composite_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return self->method;
 }
 
 void Composite_setHeight(Composite_t* composite, double height)

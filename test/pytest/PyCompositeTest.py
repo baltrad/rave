@@ -81,6 +81,22 @@ class PyCompositeTest(unittest.TestCase):
     obj = _pycomposite.new()
     self.assertEquals(_rave.Rave_ProductType_PCAPPI, obj.product)
 
+  def test_selection_method(self):
+    obj = _pycomposite.new()
+    self.assertEquals(_pycomposite.SelectionMethod_NEAREST, obj.selection_method)
+    obj.selection_method = _pycomposite.SelectionMethod_HEIGHT
+    self.assertEquals(_pycomposite.SelectionMethod_HEIGHT, obj.selection_method)
+
+  def test_selection_method_invalid(self):
+    obj = _pycomposite.new()
+    try:
+      obj.selection_method = 99
+      self.fail("Expected ValueError")
+    except ValueError, e:
+      pass
+    self.assertEquals(_pycomposite.SelectionMethod_NEAREST, obj.selection_method)
+        
+
   def test_quantity(self):
     obj = _pycomposite.new()
     self.assertEquals("DBZH", obj.quantity)
