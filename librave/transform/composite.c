@@ -116,7 +116,8 @@ static void Composite_destructor(RaveCoreObject* obj)
   RAVE_FREE(this->paramname);
 }
 
-static void CompositeInternal_nearestValue(Composite_t* composite, RaveCoreObject* object, double plon, double plat, RaveValueType* type, double* value)
+static void CompositeInternal_nearestValue(Composite_t* composite, RaveCoreObject* object,
+  double plon, double plat, RaveValueType* type, double* value, PolarNavigationInfo* nav)
 {
   RAVE_ASSERT((type != NULL), "type == NULL");
   RAVE_ASSERT((value != NULL), "value == NULL");
@@ -135,7 +136,8 @@ static void CompositeInternal_nearestValue(Composite_t* composite, RaveCoreObjec
                                                             Composite_getQuantity(composite),
                                                             plon,
                                                             plat,
-                                                            value);
+                                                            value,
+                                                            nav);
       } else {
         *type = RaveValueType_NODATA;
       }
@@ -149,7 +151,8 @@ static void CompositeInternal_nearestValue(Composite_t* composite, RaveCoreObjec
                                                               plat,
                                                               Composite_getHeight(composite),
                                                               insidee,
-                                                              value);
+                                                              value,
+                                                              nav);
       } else if (composite->ptype == Rave_ProductType_PPI) {
         PolarScan_t* scan = PolarVolume_getScanClosestToElevation((PolarVolume_t*)object,
                                                                   Composite_getElevationAngle(composite),
@@ -163,7 +166,8 @@ static void CompositeInternal_nearestValue(Composite_t* composite, RaveCoreObjec
                                                             Composite_getQuantity(composite),
                                                             plon,
                                                             plat,
-                                                            value);
+                                                            value,
+                                                            nav);
         RAVE_OBJECT_RELEASE(scan);
       } else {
         *type = RaveValueType_NODATA;
@@ -324,6 +328,7 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area)
   Cartesian_t* result = NULL;
   Projection_t* projection = NULL;
   RaveAttribute_t* prodpar = NULL;
+  PolarNavigationInfo navinfo;
 
   int x = 0, y = 0, i = 0, xsize = 0, ysize = 0, nradars = 0;
 
@@ -410,7 +415,11 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area)
             if (dist <= maxdist) {
               RaveValueType otype = RaveValueType_NODATA;
               double ovalue = 0.0;
-              CompositeInternal_nearestValue(composite, obj, olon, olat, &otype, &ovalue);
+              CompositeInternal_nearestValue(composite, obj, olon, olat, &otype, &ovalue, &navinfo);
+
+              if (composite->method == CompositeSelectionMethod_HEIGHT) {
+                dist = navinfo.height; // We are determining pixel by height above sea level
+              }
 
               if (otype == RaveValueType_DATA || otype == RaveValueType_UNDETECT) {
                 if ((vtype != RaveValueType_DATA && vtype != RaveValueType_UNDETECT) || dist < mindist) {

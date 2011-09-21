@@ -371,7 +371,7 @@ static PyObject* _pypolarvolume_getNearestConvertedParameterValue(PyPolarVolume*
     return NULL;
   }
 
-  vtype = PolarVolume_getNearestConvertedParameterValue(self->pvol, quantity, lon, lat, height, insidee, &v);
+  vtype = PolarVolume_getNearestConvertedParameterValue(self->pvol, quantity, lon, lat, height, insidee, &v, NULL);
 
   return Py_BuildValue("(id)", vtype, v);
 }

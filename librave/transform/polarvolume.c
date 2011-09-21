@@ -476,6 +476,19 @@ PolarScan_t* PolarVolume_getScanClosestToElevation(PolarVolume_t* pvol, double e
   return (PolarScan_t*)RaveObjectList_get(pvol->scans, ei);
 }
 
+void PolarVolume_getLonLatNavigationInfo(PolarVolume_t* pvol, double lon, double lat, double height, PolarNavigationInfo* info)
+{
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
+  RAVE_ASSERT((info != NULL), "info == NULL");
+  info->distance = 0.0L;
+  info->azimuth = 0.0L;
+  info->range = 0.0L;
+  info->height = height;
+  info->elevation = 0.0L;
+  PolarNavigator_llToDa(pvol->navigator, lat, lon, &info->distance, &info->azimuth);
+  PolarNavigator_dhToRe(pvol->navigator, info->distance, info->height, &info->range, &info->elevation);
+}
+
 RaveValueType PolarVolume_getNearest(PolarVolume_t* pvol, double lon, double lat, double height, int insidee, double* v)
 {
   double d = 0.0L, a = 0.0L, r = 0.0L, e = 0.0L;
@@ -525,9 +538,9 @@ RaveValueType PolarVolume_getNearestParameterValue(PolarVolume_t* pvol, const ch
   return result;
 }
 
-RaveValueType PolarVolume_getNearestConvertedParameterValue(PolarVolume_t* pvol, const char* quantity, double lon, double lat, double height, int insidee, double* v)
+RaveValueType PolarVolume_getNearestConvertedParameterValue(PolarVolume_t* pvol, const char* quantity, double lon, double lat, double height, int insidee, double* v, PolarNavigationInfo* navinfo)
 {
-  double d = 0.0L, a = 0.0L, r = 0.0L, e = 0.0L;
+  PolarNavigationInfo info;
   RaveValueType result = RaveValueType_NODATA;
   PolarScan_t* scan = NULL;
 
@@ -536,13 +549,16 @@ RaveValueType PolarVolume_getNearestConvertedParameterValue(PolarVolume_t* pvol,
   RAVE_ASSERT((v != NULL), "v == NULL");
   *v = 0.0;
 
-  PolarNavigator_llToDa(pvol->navigator, lat, lon, &d, &a);
-  PolarNavigator_dhToRe(pvol->navigator, d, height, &r, &e);
+  PolarVolume_getLonLatNavigationInfo(pvol, lon, lat, height, &info);
 
   // Find relevant elevation
-  scan = PolarVolume_getScanClosestToElevation(pvol, e, insidee);
+  scan = PolarVolume_getScanClosestToElevation(pvol, info.elevation, insidee);
   if (scan != NULL) {
-    result = PolarScan_getConvertedParameterValueAtAzimuthAndRange(scan, quantity, a, r, v);
+    info.elevation = PolarScan_getElangle(scan); // So that we get proper scan elevation angle instead
+    result = PolarScan_getConvertedParameterValueAtAzimuthAndRange(scan, quantity, info.azimuth, info.range, v);
+    if (navinfo != NULL) {
+      *navinfo = info;
+    }
   }
 
   RAVE_OBJECT_RELEASE(scan);

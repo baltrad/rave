@@ -299,6 +299,45 @@ class PyCompositeTest(unittest.TestCase):
     ios.filename = "swecomposite_ppi_fromscan.h5"
     ios.save()    
 
+  def test_nearest_ppi_fromscans_byHeight(self):
+    generator = _pycomposite.new()
+    generator.selection_method = _pycomposite.SelectionMethod_HEIGHT
+    
+    a = _area.new()
+    a.id = "nrd2km"
+    a.xsize = 848
+    a.ysize = 1104
+    a.xscale = 2000.0
+    a.yscale = 2000.0
+    a.extent = (-738816.513333,-3995515.596160,955183.48666699999,-1787515.59616)
+    a.projection = _projection.new("x", "y", "+proj=stere +ellps=bessel +lat_0=90 +lon_0=14 +lat_ts=60 +datum=WGS84")
+    
+    for fname in self.SWEDISH_VOLUMES:
+      rio = _raveio.open(fname)
+      scan = rio.object.getScanClosestToElevation(0.0, 0)
+      generator.add(scan)
+    
+    generator.quantity = "DBZH"
+    generator.product = _rave.Rave_ProductType_PPI
+    generator.elangle = 0.0
+    generator.time = "120000"
+    generator.date = "20090501"
+    result = generator.nearest(a)
+    
+    self.assertEquals("DBZH", result.quantity)
+    self.assertEquals("120000", result.time)
+    self.assertEquals("20090501", result.date)
+    prodpar = result.getAttribute("what/prodpar")
+    self.assertAlmostEquals(0.0, prodpar, 4)
+    self.assertEquals(_rave.Rave_ProductType_PPI, result.product)
+    self.assertEquals(_rave.Rave_ObjectType_COMP, result.objectType)
+    self.assertEquals("nrd2km", result.source);
+    
+    ios = _raveio.new()
+    ios.object = result
+    ios.filename = "swecomposite_ppi_fromscan_byheight.h5"
+    ios.save()    
+
   def test_overlapping_objects(self):
     # tests ticket 355, composite selection criterion: nearest
     generator = _pycomposite.new()

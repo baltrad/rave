@@ -107,6 +107,16 @@ typedef enum RaveTransformationMethod {
   INVERSE        /**< Inverse */
 } RaveTransformationMethod;
 
+/**
+ * Provides user with navigation information.
+ */
+typedef struct PolarNavigationInfo {
+  double height; /**< height above sea surface in meters*/
+  double distance; /**< surface distance in meters*/
+  double range;    /**< rays range */
+  double azimuth; /**< azimutal offset in radians */
+  double elevation; /**< elevation angle in radians */
+} PolarNavigationInfo;
 
 /**
  * Returns the size of the datatype.

@@ -219,6 +219,17 @@ int PolarVolume_getNumberOfScans(PolarVolume_t* pvol);
 PolarScan_t* PolarVolume_getScanClosestToElevation(PolarVolume_t* pvol, double e, int inside);
 
 /**
+ * Returns the navigation information that is the result from finding the lon/lat-coordinate
+ * at the specified height for this volume
+ * @param[in] scan - self
+ * @param[in] lon - the longitude (in radians)
+ * @param[in] lat - the latitude (in radians)
+ * @param[in] height - the altitude (in meters)
+ * @param[in,out] info - the navigation information
+ */
+void PolarVolume_getLonLatNavigationInfo(PolarVolume_t* pvol, double lon, double lat, double height, PolarNavigationInfo* info);
+
+/**
  * Fetches the value nearest to the specified position.
  * @param[in] pvol - the polar volume (MAY NOT BE NULL)
  * @param[in] lon  - the longitude (in radians)
@@ -252,9 +263,10 @@ RaveValueType PolarVolume_getNearestParameterValue(PolarVolume_t* pvol, const ch
  * @param[in] height - the height
  * @param[in] insidee - if the estimated elevation must be within the min-max elevation or not to be valid
  * @param[out] v - the value (MAY NOT BE NULL)
+ * @param[in,out] navinfo - the navigation information (may be NULL).
  * @return what type of value that has been set in v. If the parameter does not exist in the found scan, RaveValueType_UNDEFINED will be returned.
  */
-RaveValueType PolarVolume_getNearestConvertedParameterValue(PolarVolume_t* pvol, const char* quantity, double lon, double lat, double height, int insidee, double* v);
+RaveValueType PolarVolume_getNearestConvertedParameterValue(PolarVolume_t* pvol, const char* quantity, double lon, double lat, double height, int insidee, double* v, PolarNavigationInfo* navinfo);
 
 /**
  * Sets the default parameter that should be used when operating on this

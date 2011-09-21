@@ -606,7 +606,7 @@ static PyObject* _pypolarscan_getNearestConvertedParameterValue(PyPolarScan* sel
     return NULL;
   }
 
-  type = PolarScan_getNearestConvertedParameterValue(self->scan, quantity, lon, lat, &value);
+  type = PolarScan_getNearestConvertedParameterValue(self->scan, quantity, lon, lat, &value, NULL);
 
   return Py_BuildValue("(id)", type, value);
 }
