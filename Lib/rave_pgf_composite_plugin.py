@@ -70,6 +70,16 @@ def generate(files, arguments):
   pyarea.extent = a.extent
   pyarea.projection = _projection.new(p.id, p.name, string.join(p.definition, ' '))
 
+  # To incorporate quality detectors
+  # if "anomaly-qc" in args.keys():
+  #   detectors = string.split(args["anomaly-qc"], ",")
+  #   if "ropo" in detectors:
+  #     execute ropo code
+  #   elif "bipo" in detectors:
+  #     execute bipo code
+  #   and so on
+  #
+
   for fname in files:
     rio = _raveio.open(fname)
     try:
@@ -95,7 +105,14 @@ def generate(files, arguments):
   generator.height = 1000.0
   if "height" in args.keys():
     generator.height = args["height"]
-    
+  
+  generator.selection = _pycomposite.SelectionMethod_NEAREST
+  if "selection" in args.keys():
+    if args["selection"] == "NEAREST_RADAR":
+      generator.selection = _pycomposite.SelectionMethod_NEAREST
+    elif args["selection"] == "HEIGHT_ABOVE_SEALEVEL":
+      generator.selection = _pycomposite.SelectionMethod_HEIGHT
+
   generator.time = args["time"]
   generator.date = args["date"]
   generator.gain = GAIN
