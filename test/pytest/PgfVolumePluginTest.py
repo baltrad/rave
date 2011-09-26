@@ -30,6 +30,7 @@ import math
 import _raveio
 import os
 import rave_pgf_volume_plugin
+import odim_source
 
 class PgfVolumePluginTest(unittest.TestCase):
   FIXTURES=["fixtures/Z_SCAN_C_ESWI_20101023180200_selul_000000.h5",
@@ -64,8 +65,9 @@ class PgfVolumePluginTest(unittest.TestCase):
     self.assertAlmostEquals(14.0, volume.getScan(3).elangle * 180.0/math.pi, 4)
     self.assertAlmostEquals(24.0, volume.getScan(4).elangle * 180.0/math.pi, 4)
     self.assertAlmostEquals(40.0, volume.getScan(5).elangle * 180.0/math.pi, 4)
-    self.assertEquals("WMO:02092,RAD:SE41,PLC:Luleå,CMT:selul", volume.source)
+    self.assertEqual("WMO:02092,NOD:selul,RAD:SE41,ORG:82,PLC:Lule\xc3\xa5", volume.source)
 
+  # Where's the test?
   def testGenerateVolumeAndSave(self):
     args = {"source":"selul","date":"20101023","time":"180000"}
     volume = rave_pgf_volume_plugin.generateVolume(self.FIXTURES, args)
@@ -78,15 +80,16 @@ class PgfVolumePluginTest(unittest.TestCase):
     ios = None
     
   def test_fix_source(self):
-    s1 = "WMO:02451,RAD:SE46,PLC:Arlanda,CMT:searl"
-    s2 = "WMO:02451,RAD:SE46,CMT:searl,PLC:Arlanda"
-    s3 = "CMT:searl,WMO:02451,RAD:SE46,PLC:Arlanda"
-    s4 = "WMO:02451,RAD:SE46,PLC:Arlanda"
+      variants = ["WMO:02092,NOD:selul,RAD:SE41,ORG:82,PLC:Lule\xc3\xa5",
+                  "WMO:02092",
+                  "WMO:02092,CMT:searl,RAD:SE49,ORG:82,PLC:Luleaa",
+                  "ORG:82,WMO:02092"]
+      rio = _raveio.open(self.FIXTURES[0])
+      for v in variants:
+          rio.object.source = v
+          odim_source.CheckSource(rio.object)
+          self.assertEquals("WMO:02092,NOD:selul,RAD:SE41,ORG:82,PLC:Lule\xc3\xa5", rio.object.source) 
 
-    self.assertEquals("WMO:02451,RAD:SE46,PLC:Arlanda,CMT:selul", rave_pgf_volume_plugin.fix_source(s1, "selul"))
-    self.assertEquals("WMO:02451,RAD:SE46,CMT:selul,PLC:Arlanda", rave_pgf_volume_plugin.fix_source(s2, "selul"))
-    self.assertEquals("CMT:selul,WMO:02451,RAD:SE46,PLC:Arlanda", rave_pgf_volume_plugin.fix_source(s3, "selul"))
-    self.assertEquals("WMO:02451,RAD:SE46,PLC:Arlanda,CMT:selul", rave_pgf_volume_plugin.fix_source(s4, "selul"))
 
 if __name__ == "__main__":
     unittest.main()

@@ -130,6 +130,33 @@ class ODIM_Source:
             elif prefix == 'cmt': self.cmt = value 
 
 
+## Convenience function. Gets the NOD identifier from /what/source .
+# Assumes that the NOD is there or can be looked up based on the WMO identifier.
+# If WMO isn't there either, then a 'n/a' (not available) is returned.
+# @param obj input SCAN or PVOL object
+# @return the NOD identifier or 'n/a'
+def NODfromSource(obj):
+  S = ODIM_Source(obj.source)
+  if S.nod: return S.nod
+  else:
+    try:
+      return NOD[S.wmo]
+    except KeyError:
+      return 'n/a'
+
+
+## Convenience function. Checks and, if necessary, reformats a complete /what/source attribute .
+# Doesn't return anything. 
+# @param inobj input SCAN or PVOL object
+def CheckSource(inobj):
+    S = ODIM_Source(inobj.source)
+    if not S.nod:
+        try:
+            S.nod = NOD[S.wmo]
+            inobj.source = SOURCE[S.nod].encode(UTF8)
+        except:
+            pass
+
 
 if __name__ == "__main__":
     pass

@@ -20,7 +20,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## Plugin for generating a volume that is initiated from the beast
 ## framework.
 ## Register in the RAVE PGF with: % pgf_registry -a -H http://<host>:<port>/RAVE
-## --name=eu.baltrad.beast.generatevolume --strings=source,date,time -m rave_pgf_volume_plugin -f generate
+## --name=eu.baltrad.beast.generatevolume --strings=source,date,time,anomaly-qc -m rave_pgf_volume_plugin -f generate
 ## -d 'Polar volume generation from individual scans'
 ##
 
@@ -35,6 +35,7 @@ import _polarscan
 import _polarscanparam
 import string
 import rave_tempfile
+import odim_source
 import re
 
 from rave_defines import CENTER_ID
@@ -49,18 +50,6 @@ def arglist2dict(arglist):
     result[arglist[i]] = arglist[i+1]
   return result
 
-## Creates a string that can be used in /what/source
-#@param source the source string
-#@param place what the CMT: field should be, e.g. selul
-#@return a fixed source
-def fix_source(source,place):
-  result = None
-  if source.find("CMT:")>=0:
-    result = re.sub("CMT:[^,]*","CMT:%s"%place, source)
-  else:
-    result = "%s,CMT:%s"%(source,place)
-
-  return result
 
 ## Generates a volume
 #@param files the list of files to be used for generating the volume
@@ -84,9 +73,9 @@ def generateVolume(files, args):
       volume.longitude = rio.object.longitude
       volume.latitude = rio.object.latitude
       volume.height = rio.object.height
-      volume.source = fix_source(rio.object.source,args['source'])
     volume.addScan(rio.object)
-  
+  volume.source = rio.object.source  # Recycle the last input, it won't necessarily be correct ...
+  odim_source.CheckSource(volume)    # ... so check it!
   return volume
 
 ## Creates a volume
@@ -102,6 +91,20 @@ def generate(files, arguments):
   
   ios = _raveio.new()
   ios.object = volume
+
+  if "anomaly-qc" in args.keys():
+      detectors = string.split(args["anomaly-qc"], ",")
+  else:
+      detectors = []
+
+  if "ropo" in detectors:
+    try:
+        import ropo_realtime
+        volume  = ropo_realtime.generate(ios)
+        ios.object = volume
+    except:
+        pass
+  
   ios.filename = outfile
   ios.save()
   

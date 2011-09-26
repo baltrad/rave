@@ -20,8 +20,9 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## Plugin for generating a composite that is initiated from the beast
 ## framework.
 ## Register in pgf with
-## --name=eu.baltrad.beast.generatecomposite --strings=area,quantity,method,date,time --floats=height
-## -m rave_pgf_composite_plugin -f generate
+## --name=eu.baltrad.beast.generatecomposite
+## --strings=area,quantity,method,date,time,selection,anomaly-qc
+## --floats=height -m rave_pgf_composite_plugin -f generate
 ##
 
 ## @file
@@ -37,6 +38,7 @@ import _raveio
 import area
 import string
 import rave_tempfile
+import odim_source
 
 from rave_defines import CENTER_ID, GAIN, OFFSET
 
@@ -49,6 +51,7 @@ def arglist2dict(arglist):
   for i in range(0, len(arglist), 2):
     result[arglist[i]] = arglist[i+1]
   return result
+
 
 ## Creates a composite
 #@param files the list of files to be used for generating the composite
@@ -80,12 +83,35 @@ def generate(files, arguments):
   #   and so on
   #
 
+  if "anomaly-qc" in args.keys():
+      detectors = string.split(args["anomaly-qc"], ",")
+  else:
+      detectors = []
+
+  nodes = ""
+
   for fname in files:
     rio = _raveio.open(fname)
-    try:
-      generator.add(rio.object)
-    except:
-      pass  # will passively reject files that fail to read
+
+    if len(nodes): nodes += ",'%s'" % odim_source.NODfromSource(rio.object)
+    else: nodes += "'%s'" % odim_source.NODfromSource(rio.object)
+
+    if "ropo" in detectors:
+        try:
+            import ropo_realtime
+            rio.object = ropo_realtime.generate(rio)
+            generator.add(rio.object)
+        except:
+            try:
+                generator.add(rio.object)
+            except:
+                pass
+
+    else:
+        try:
+            generator.add(rio.object)
+        except:
+            pass  # will passively reject files that fail to read
     
   generator.quantity = "DBZH"
 
@@ -106,12 +132,12 @@ def generate(files, arguments):
   if "height" in args.keys():
     generator.height = args["height"]
   
-  generator.selection = _pycomposite.SelectionMethod_NEAREST
+  generator.selection_method = _pycomposite.SelectionMethod_NEAREST
   if "selection" in args.keys():
     if args["selection"] == "NEAREST_RADAR":
-      generator.selection = _pycomposite.SelectionMethod_NEAREST
+      generator.selection_method = _pycomposite.SelectionMethod_NEAREST
     elif args["selection"] == "HEIGHT_ABOVE_SEALEVEL":
-      generator.selection = _pycomposite.SelectionMethod_HEIGHT
+      generator.selection_method = _pycomposite.SelectionMethod_HEIGHT
 
   generator.time = args["time"]
   generator.date = args["date"]
@@ -119,9 +145,10 @@ def generate(files, arguments):
   generator.offset = OFFSET
   result = generator.nearest(pyarea)
   
-  # Fix so that we get a valid place
+  # Fix so that we get a valid place for /what/source and /how/nodes 
   plc = result.source
   result.source = "%s,CMT:%s"%(CENTER_ID,plc)
+  result.addAttribute('how/nodes', nodes)
   
   fileno, outfile = rave_tempfile.mktemp(suffix='.h5', close="True")
   

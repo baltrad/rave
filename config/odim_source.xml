@@ -29,8 +29,8 @@
     <dkste plc="Stevns" rad="DN41" wmo="06180"></dkste>
     <dkrom plc="Rømø" rad="DN42" wmo="00000"></dkrom>
     <dksin plc="Sindal" rad="DN43" wmo="00000"></dksin>
-    <dkbor plc="Bornholm" rad="DN44" wmo="00000"></dkbor>
-    <dkvir plc="Virring" rad="DN45" wmo="00000"></dkvir>
+    <dkbor plc="Bornholm" rad="DN44" wmo="06194"></dkbor>
+    <dkvir plc="Virring" rad="DN45" wmo="06103"></dkvir>
   </Denmark>
   <Estonia CCCC="EEMH" org="231">
     <eehar plc="Harku" rad="EE40" wmo="26038"></eehar>

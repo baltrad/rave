@@ -109,10 +109,6 @@ class Daemon:
 
 	## Stop the daemon.
 	def stop(self):
-		import xmlrpclib, rave_defines
-		# First, dump the job queue via client connection
-		server = xmlrpclib.ServerProxy("http://%s:%i/RAVE" % (rave_defines.PGF_HOST, rave_defines.PGF_PORT))
-		response = server.flush("Killing me softly")
 		# Get the pid from the pidfile
 		try:
 			pf = file(self.pidfile,'r')

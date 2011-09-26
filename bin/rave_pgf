@@ -25,6 +25,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys, os
 import traceback
+import xmlrpclib
 import SimpleXMLRPCServer
 from rave_daemon import Daemon
 from rave_defines import PIDFILE, PGF_HOST, PGF_PORT, STDOE
@@ -106,6 +107,9 @@ if __name__ == "__main__":
   this = rave_pgf_server()
 
   if ARG == 'stop':
+    # First, dump the job queue via client connection, then stop
+    server = xmlrpclib.ServerProxy("http://%s:%i/RAVE" % (PGF_HOST, PGF_PORT))
+    response = server.flush("Killing me softly")
     this.stop()
 
   if ARG == 'start':

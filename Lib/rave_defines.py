@@ -97,9 +97,11 @@ QFILE = os.path.join(RAVEETC, 'rave_pgf_queue.xml')  # queue file
 PGF_TAG = 'bltgenerate'  # used for sending files to the DEX
 
 LOG_ID = "PGF-Logger"  # identifier of the logger instance
+LOGPORT = 8090  # Could conceivably conflict with Radan HTTP
 LOGFILE     = os.path.join(RAVEETC, "rave_pgf.log")
 LOGFILESIZE = 5000000  # 5 Mb each
 LOGFILES    = 5
+LOGPIDFILE = os.path.join(RAVEETC, 'rave_pgf_log_server.pid')
 
 ODIM_SOURCE_FILE = os.path.join(RAVECONFIG, 'odim_source.xml')
 
