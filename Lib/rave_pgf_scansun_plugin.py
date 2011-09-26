@@ -29,18 +29,36 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
 from rave_defines import RAVEETC
+import odim_source
 import _scansun
 
 HEADER = "#Date    Time   Elevatn Azimuth ElevSun AzimSun dBmMHzSun dBmStdd RelevSun\n"
 FORMAT = "%08i %06i %7.2f %7.2f %7.2f %7.2f %9.2f %7.4f  %7.2f\n" 
 
 
-## Converts the /what/source string to a file string. If its parent directory doesn't
-# exist, it is created.
+## Convenience function. Gets the NOD identifier from /what/source string.
+# Assumes that the NOD is there or can be looked up based on the WMO identifier.
+# If WMO isn't there either, then a 'n/a' (not available) is returned.
+# @param obj input SCAN or PVOL object
+# @return the NOD identifier or 'n/a'
+def NODfromSourceString(source):
+  S = odim_source.ODIM_Source(source)
+  if S.nod: return S.nod
+  else:
+    try:
+      return odim_source.NOD[S.wmo]
+    except KeyError:
+      return None
+
+
+## Creates a file name, preferably containing the NOD identifier for that radar. 
+# If it can't be found, converts the whole /what/source string to a file string. 
+# If its parent directory doesn't exist, it is created.
 # @param source string containing the full value of /what/source
 # @return string containing the complete path to a file
-def Source2File(source):
-    source = source.replace(';','_').replace(',','_').replace(':','-')
+def Source2File(isource):
+    source = NODfromSourceString(isource)
+    if not source: source = isource.replace(';','_').replace(',','_').replace(':','-')
     path = os.path.join(RAVEETC, "scansun")
     if not os.path.isdir(path): os.makedirs(path)
     return os.path.join(path, source + '.scansun')
