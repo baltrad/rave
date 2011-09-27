@@ -90,6 +90,16 @@ int fill_meta(PolarScan_t* scan, PolarScanParam_t* dbzh, SCANMETA *meta)
    if (!getDoubleAttribute((RaveCoreObject*)scan, "how/pulsewidth", &tmpd)) meta->pulse = 2.0;
    else meta->pulse = tmpd;
 
+   /* Clumsy formulation because we can't be sure where the radar constant is...
+    * Assume default value from Den Helder (late 2010), valid for long pulse
+    * if no radar constant is available. */
+   if (meta->radcnst==-1.0) {
+     if (!getDoubleAttribute((RaveCoreObject*)scan, "how/radconstH", &tmpd)) {
+       if (!getDoubleAttribute((RaveCoreObject*)scan, "how/radconstV", &tmpd)) {
+         meta->radcnst = 64.08;
+       } else meta->radcnst = tmpd;
+     } else meta->radcnst = tmpd;
+   }
    meta->zscale = PolarScanParam_getGain(dbzh);
    meta->zoffset = PolarScanParam_getOffset(dbzh);
    meta->nodata = PolarScanParam_getNodata(dbzh);
@@ -237,7 +247,7 @@ int scansun(const char* filename, RaveList_t* list, char** source) {
 	long date,time,addtime;
 	double lonlat[2], range, Azimuth, dBmSun, dBmStdd;
 	double dBm;
-	double tmpd;
+	double tmpd=-1.0;
 	SCANMETA meta;
 	RaveIO_t* raveio = RaveIO_open(filename);
 	PolarVolume_t* volume = NULL;
@@ -263,11 +273,13 @@ int scansun(const char* filename, RaveList_t* list, char** source) {
 	lonlat[1] = PolarVolume_getLatitude(volume)*RAD2DEG;
 	if (source != NULL) *source = RAVE_STRDUP(PolarVolume_getSource(volume));
 
-	/* The following attribute doesn't (yet) exist in ODIM in January 2011.
-	 * Default value is for the Den Helder radar run by KNMI from its most
-	 * recent calibration and valid for long pulse (2 us). */
-	if (!getDoubleAttribute((RaveCoreObject*)volume, "how/rconst", &tmpd)) meta.radcnst = 64.08;
-	else meta.radcnst = tmpd;
+	/* Radar constant can be either for H or V polarizations. Try H before V.
+	 * This is a first attempt to get the data from top-level how. */
+	if (!getDoubleAttribute((RaveCoreObject*)volume, "how/radconstH", &tmpd)) {
+	  if (!getDoubleAttribute((RaveCoreObject*)volume, "how/radconstV", &tmpd)) {
+	    meta.radcnst = -1.0; /* 64.08 */
+	  } else meta.radcnst = tmpd;
+	} else meta.radcnst = tmpd;
 
 	/*Reading of PPI data and looking for solar interferences.*/
 
