@@ -1,0 +1,70 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2010- Swedish Meteorological and Hydrological Institute (SMHI)
+
+This file is part of RAVE.
+
+RAVE is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+RAVE is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+See the GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
+'''
+## KNMI's determination of the sun's position, as a BALTRAD tool
+
+## @file
+## @author Daniel Michelson, SMHI
+## @date 2011-09-27
+
+import sys
+
+## Main function.
+# @param options arguments object formatted by the option parser
+# @return nothing but prints results to stdout
+def main(options):
+    import _scansun
+
+    DATE, TIME = int(options.dt[:8]), int(options.dt[9:15])
+    el, az, rel = _scansun.solar_elev_azim(float(options.lon), float(options.lat), DATE, TIME)
+    print u"Azimuth: %2.3f\u00B0, Elevation: %2.3f\u00B0, Refracted elevation: %2.3f\u00B0" % (az, el, rel) 
+
+
+if __name__ == "__main__":
+    from optparse import OptionParser
+
+    usage = "usage: %prog -e <longitude> -n <latitude> -d <date_time> [h]"
+    usage += "\n\nCalculates the position of the sun based on a longitude/latitude"
+    usage += "\nposition and a date/time stamp."
+    usage += "\nThe equations and constants are taken from the WMO guide on" 
+    usage += "\nMeteorological Instruments and Methods of Observations"
+    usage += "\n(CIMO, WMO no. 8), annex 7.D. The equations have been slightly" 
+    usage += "\nmodified and extended to include the calculation of both the sine" 
+    usage += "\nand cosine of the azimuth. Modified slightly further to include "
+    usage += "\nthe refracted (perceived) elevation angle."
+    parser = OptionParser(usage=usage)
+
+    parser.add_option("-e", "--lon", dest="lon",
+                      help="Longitude position. Positions east of the Greenwich meridian are positive, west are negative. Fractions of a degree are expressed in hundredths and not minutes/seconds.")
+
+    parser.add_option("-n", "--lat", dest="lat",
+                      help="Latitude position. Positions north of the equator are positive, south are negative. Fractions of a degree are expressed in hundredths and not minutes/seconds.")
+
+    parser.add_option("-d", "--date-time", dest="dt",
+                      help="Date/time stamp in Universal Coordinated Time (UTC) expressed according to ISO 8601 as YYYYMMDDThhmmssZ")
+
+    (options, args) = parser.parse_args()
+
+    if options.lon and options.lat and options.dt:
+        if ( type(eval(options.lon)) == type(eval(options.lat)) ) and len(options.dt) == 16:
+            main(options)
+
+    else:
+        parser.print_help()
+        sys.exit(1)
