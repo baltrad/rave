@@ -65,7 +65,8 @@ class PgfVolumePluginTest(unittest.TestCase):
     self.assertAlmostEquals(14.0, volume.getScan(3).elangle * 180.0/math.pi, 4)
     self.assertAlmostEquals(24.0, volume.getScan(4).elangle * 180.0/math.pi, 4)
     self.assertAlmostEquals(40.0, volume.getScan(5).elangle * 180.0/math.pi, 4)
-    self.assertEqual("WMO:02092,NOD:selul,RAD:SE41,ORG:82,PLC:Lule\xc3\xa5", volume.source)
+    self.assertEqual("WMO:02092,NOD:selul,RAD:SE41,PLC:Lule\xc3\xa5", volume.source)
+    #self.assertEqual("WMO:02092,NOD:selul,RAD:SE41,ORG:82,PLC:Lule\xc3\xa5", volume.source)
 
   # Where's the test?
   def testGenerateVolumeAndSave(self):
@@ -80,15 +81,19 @@ class PgfVolumePluginTest(unittest.TestCase):
     ios = None
     
   def test_fix_source(self):
-      variants = ["WMO:02092,NOD:selul,RAD:SE41,ORG:82,PLC:Lule\xc3\xa5",
-                  "WMO:02092",
-                  "WMO:02092,CMT:searl,RAD:SE49,ORG:82,PLC:Luleaa",
-                  "ORG:82,WMO:02092"]
+#      variants = ["WMO:02092,NOD:selul,RAD:SE41,ORG:82,PLC:Lule\xc3\xa5",
+#                  "WMO:02092",
+#                  "WMO:02092,CMT:searl,RAD:SE49,ORG:82,PLC:Luleaa",
+#                  "ORG:82,WMO:02092"]
+      variants = ["WMO:02092,NOD:selul,RAD:SE41,PLC:Lule\xc3\xa5",
+                  "WMO:02092,CMT:searl,RAD:SE49,PLC:Luleaa",
+                  "WMO:02092"]
       rio = _raveio.open(self.FIXTURES[0])
       for v in variants:
           rio.object.source = v
           odim_source.CheckSource(rio.object)
-          self.assertEquals("WMO:02092,NOD:selul,RAD:SE41,ORG:82,PLC:Lule\xc3\xa5", rio.object.source) 
+          self.assertEquals("WMO:02092,NOD:selul,RAD:SE41,PLC:Lule\xc3\xa5", rio.object.source) 
+          #self.assertEquals("WMO:02092,NOD:selul,RAD:SE41,ORG:82,PLC:Lule\xc3\xa5", rio.object.source) 
 
 
 if __name__ == "__main__":
