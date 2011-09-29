@@ -56,9 +56,11 @@ def init():
             PLC[nod] = plc
             if wmo != "00000": 
                 NOD[wmo] = nod
-                SOURCE[nod] = u"WMO:%s,NOD:%s,RAD:%s,ORG:%s,PLC:%s" % (wmo, nod, rad, org, plc)
+                SOURCE[nod] = u"WMO:%s,NOD:%s,RAD:%s,PLC:%s" % (wmo, nod, rad, plc)
+                #SOURCE[nod] = u"WMO:%s,NOD:%s,RAD:%s,ORG:%s,PLC:%s" % (wmo, nod, rad, org, plc)
             else:
-                SOURCE[nod] = u"NOD:%s,RAD:%s,ORG:%s,PLC:%s" % (nod, rad, org, plc)
+                SOURCE[nod] = u"NOD:%s,RAD:%s,PLC:%s" % (nod, rad, plc)
+                #SOURCE[nod] = u"NOD:%s,RAD:%s,ORG:%s,PLC:%s" % (nod, rad, org, plc)
     initialized = 1
 
 
