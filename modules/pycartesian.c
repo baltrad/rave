@@ -38,6 +38,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "arrayobject.h"
 #include "pyprojection.h"
 #include "pyarea.h"
+#include "pyravefield.h"
 #include <arrayobject.h>
 #include "rave_alloc.h"
 #include "raveutil.h"
@@ -604,6 +605,94 @@ static PyObject* _pycartesian_isValid(PyCartesian* self, PyObject* args)
 }
 
 /**
+ * Adds a quality field to the cartesian product
+ * @param[in] self - this instance
+ * @param[in] args - object, of type RaveFieldCore
+ * @returns None
+ */
+static PyObject* _pycartesian_addQualityField(PyCartesian* self, PyObject* args)
+{
+  PyObject* inptr = NULL;
+  PyRaveField* ravefield = NULL;
+
+  if (!PyArg_ParseTuple(args, "O", &inptr)) {
+    return NULL;
+  }
+
+  if (!PyRaveField_Check(inptr)) {
+    raiseException_returnNULL(PyExc_TypeError,"Added object must be of type RaveFieldCore");
+  }
+
+  ravefield = (PyRaveField*)inptr;
+
+  if (!Cartesian_addQualityField(self->cartesian, ravefield->field)) {
+    raiseException_returnNULL(PyExc_AttributeError, "Failed to add quality field to cartesian");
+  }
+
+  Py_RETURN_NONE;
+}
+
+/**
+ * Returns the number of quality fields
+ * @param[in] self - this instance
+ * @param[in] args - N/A
+ * @returns The number of quality fields
+ */
+static PyObject* _pycartesian_getNumberOfQualityFields(PyCartesian* self, PyObject* args)
+{
+  return PyInt_FromLong(Cartesian_getNumberOfQualityFields(self->cartesian));
+}
+
+/**
+ * Returns the number of quality fields
+ * @param[in] self - this instance
+ * @param[in] args - N/A
+ * @returns The number of quality fields
+ */
+static PyObject* _pycartesian_getQualityField(PyCartesian* self, PyObject* args)
+{
+  PyObject* result = NULL;
+  RaveField_t* field = NULL;
+  int index = 0;
+  if (!PyArg_ParseTuple(args, "i", &index)) {
+    return NULL;
+  }
+
+  if (index < 0 || index >= Cartesian_getNumberOfQualityFields(self->cartesian)) {
+    raiseException_returnNULL(PyExc_IndexError, "Index out of bounds");
+  }
+
+  if ((field = Cartesian_getQualityField(self->cartesian, index)) == NULL) {
+    raiseException_returnNULL(PyExc_IndexError, "Could not get quality field");
+  }
+
+  result = (PyObject*)PyRaveField_New(field);
+
+  RAVE_OBJECT_RELEASE(field);
+
+  return result;
+}
+
+/**
+ * Removes the specified quality field from the scan
+ * @param[in] self - this instance
+ * @param[in] args - the index of the field to be removed
+ * @returns None
+ */
+static PyObject* _pycartesian_removeQualityField(PyCartesian* self, PyObject* args)
+{
+  int index = 0;
+  if (!PyArg_ParseTuple(args, "i", &index)) {
+    return NULL;
+  }
+
+  Cartesian_removeQualityField(self->cartesian, index);
+
+  Py_RETURN_NONE;
+}
+
+
+/**
  * All methods a cartesian product can have
  */
 static struct PyMethodDef _pycartesian_methods[] =
@@ -646,6 +735,10 @@ static struct PyMethodDef _pycartesian_methods[] =
   {"getAttribute", (PyCFunction) _pycartesian_getAttribute, 1},
   {"getAttributeNames", (PyCFunction) _pycartesian_getAttributeNames, 1},
   {"isValid", (PyCFunction) _pycartesian_isValid, 1},
+  {"addQualityField", (PyCFunction) _pycartesian_addQualityField, 1},
+  {"getNumberOfQualityFields", (PyCFunction) _pycartesian_getNumberOfQualityFields, 1},
+  {"getQualityField", (PyCFunction) _pycartesian_getQualityField, 1},
+  {"removeQualityField", (PyCFunction) _pycartesian_removeQualityField, 1},
   {NULL, NULL } /* sentinel */
 };
 
@@ -973,6 +1066,7 @@ init_cartesian(void)
   import_array(); /*To make sure I get access to Numeric*/
   import_pyprojection();
   import_pyarea();
+  import_pyravefield();
   PYRAVE_DEBUG_INITIALIZE;
 }
 /*@} End of Module setup */

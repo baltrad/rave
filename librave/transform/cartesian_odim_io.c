@@ -27,6 +27,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_debug.h"
 #include "rave_alloc.h"
 #include "raveobject_hashtable.h"
+#include "odim_io_utilities.h"
+
 #include <string.h>
 
 typedef struct CartesianOdimArg {
@@ -456,6 +458,8 @@ static int CartesianOdimIOInternal_addCartesianImageToNodeList(Cartesian_t* cart
   int result = 0;
   char nodeName[1024];
   RaveObjectList_t* attributes = NULL;
+  RaveObjectList_t* qualityfields = NULL;
+
   va_list ap;
   int n = 0;
 
@@ -516,9 +520,14 @@ static int CartesianOdimIOInternal_addCartesianImageToNodeList(Cartesian_t* cart
     goto done;
   }
 
-  result = 1;
+  if ((qualityfields = Cartesian_getQualityFields(cartesian)) == NULL) {
+    goto done;
+  }
+
+  result = OdimIoUtilities_addQualityFields(qualityfields, nodelist, nodeName);
 done:
   RAVE_OBJECT_RELEASE(attributes);
+  RAVE_OBJECT_RELEASE(qualityfields);
   return result;
 }
 
@@ -529,6 +538,7 @@ static int CartesianOdimIOInternal_fillCartesianDataset(HL_NodeList* nodelist, C
   CartesianOdimArg arg;
   va_list ap;
   int n = 0;
+  int pindex = 0;
 
   RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
   RAVE_ASSERT((image != NULL), "image == NULL");
@@ -560,8 +570,20 @@ static int CartesianOdimIOInternal_fillCartesianDataset(HL_NodeList* nodelist, C
     goto done;
   }
 
-  Cartesian_setObjectType(image, Rave_ObjectType_IMAGE);
   result = 1;
+  pindex = 1;
+  while (result == 1 && RaveHL_hasNodeByName(nodelist, "%s/quality%d", nodeName, pindex)) {
+    RaveField_t* field = OdimIoUtilities_loadField(nodelist, "%s/quality%d", nodeName, pindex);
+    if (field != NULL) {
+      result = Cartesian_addQualityField(image, field);
+    } else {
+      result = 0;
+    }
+    pindex++;
+    RAVE_OBJECT_RELEASE(field);
+  }
+  Cartesian_setObjectType(image, Rave_ObjectType_IMAGE);
+
 done:
   return result;
 }
@@ -621,6 +643,7 @@ int CartesianOdimIO_readCartesian(CartesianOdimIO_t* self, HL_NodeList* nodelist
   int result = 0;
   CartesianOdimArg arg;
   Projection_t* proj = NULL;
+  int pindex = 0;
 
   RAVE_ASSERT((self != NULL), "self == NULL");
   RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
@@ -665,6 +688,19 @@ int CartesianOdimIO_readCartesian(CartesianOdimIO_t* self, HL_NodeList* nodelist
                                     "/dataset1/data1")) {
     RAVE_ERROR0("Failed to load data and attributes for cartesian data");
     goto done;
+  }
+
+  result = 1;
+  pindex = 1;
+  while (result == 1 && RaveHL_hasNodeByName(nodelist, "/dataset1/quality%d", pindex)) {
+    RaveField_t* field = OdimIoUtilities_loadField(nodelist, "/dataset1/quality%d", pindex);
+    if (field != NULL) {
+      result = Cartesian_addQualityField(cartesian, field);
+    } else {
+      result = 0;
+    }
+    pindex++;
+    RAVE_OBJECT_RELEASE(field);
   }
 
   result = 1;
@@ -738,6 +774,7 @@ int CartesianOdimIO_fillImage(CartesianOdimIO_t* self, HL_NodeList* nodelist, Ca
   RaveObjectList_t* attributes = NULL;
   Rave_ObjectType otype = Rave_ObjectType_UNDEFINED;
   Projection_t* projection = NULL;
+  RaveObjectList_t* qualityfields = NULL;
 
   RAVE_ASSERT((self != NULL), "self == NULL");
   RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
@@ -847,10 +884,16 @@ int CartesianOdimIO_fillImage(CartesianOdimIO_t* self, HL_NodeList* nodelist, Ca
     goto done;
   }
 
-  result = 1;
+
+  if ((qualityfields = Cartesian_getQualityFields(cartesian)) == NULL) {
+    goto done;
+  }
+
+  result = OdimIoUtilities_addQualityFields(qualityfields, nodelist, "/dataset1");
 done:
   RAVE_OBJECT_RELEASE(attributes);
   RAVE_OBJECT_RELEASE(projection);
+  RAVE_OBJECT_RELEASE(qualityfields);
   return result;
 }
 

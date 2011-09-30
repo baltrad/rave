@@ -67,6 +67,8 @@ struct _Cartesian_t {
   RaveData2D_t* data;   /**< 2 dimensional data array */
 
   RaveObjectHashTable_t* attrs; /**< attributes */
+
+  RaveObjectList_t* qualityfields; /**< quality fields */
 };
 
 /*@{ Private functions */
@@ -98,8 +100,9 @@ static int Cartesian_constructor(RaveCoreObject* obj)
   this->enddatetime = RAVE_OBJECT_NEW(&RaveDateTime_TYPE);
   this->data = RAVE_OBJECT_NEW(&RaveData2D_TYPE);
   this->attrs = RAVE_OBJECT_NEW(&RaveObjectHashTable_TYPE);
+  this->qualityfields = RAVE_OBJECT_NEW(&RaveObjectList_TYPE);
   if (this->datetime == NULL || this->data == NULL || this->attrs == NULL ||
-      this->startdatetime == NULL || this->enddatetime == NULL) {
+      this->startdatetime == NULL || this->enddatetime == NULL || this->qualityfields == NULL) {
     goto fail;
   }
 
@@ -110,6 +113,7 @@ fail:
   RAVE_OBJECT_RELEASE(this->attrs);
   RAVE_OBJECT_RELEASE(this->startdatetime);
   RAVE_OBJECT_RELEASE(this->enddatetime);
+  RAVE_OBJECT_RELEASE(this->qualityfields);
   return 0;
 }
 
@@ -147,9 +151,10 @@ static int Cartesian_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj
   this->enddatetime = RAVE_OBJECT_CLONE(src->enddatetime);
   this->data = RAVE_OBJECT_CLONE(src->data);
   this->attrs = RAVE_OBJECT_CLONE(src->attrs);
+  this->qualityfields = RAVE_OBJECT_CLONE(src->qualityfields);
 
   if (this->datetime == NULL || this->data == NULL || this->attrs == NULL ||
-      this->startdatetime == NULL || this->enddatetime == NULL) {
+      this->startdatetime == NULL || this->enddatetime == NULL || this->qualityfields == NULL) {
     goto fail;
   }
 
@@ -172,6 +177,7 @@ fail:
   RAVE_OBJECT_RELEASE(this->enddatetime);
   RAVE_OBJECT_RELEASE(this->attrs);
   RAVE_OBJECT_RELEASE(this->projection);
+  RAVE_OBJECT_RELEASE(this->qualityfields);
   return 0;
 }
 
@@ -192,6 +198,7 @@ static void Cartesian_destructor(RaveCoreObject* obj)
     RAVE_FREE(cartesian->quantity);
     RAVE_OBJECT_RELEASE(cartesian->data);
     RAVE_OBJECT_RELEASE(cartesian->attrs);
+    RAVE_OBJECT_RELEASE(cartesian->qualityfields);
   }
 }
 
@@ -737,6 +744,38 @@ int Cartesian_hasAttribute(Cartesian_t* cartesian, const char* name)
 {
   RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
   return RaveObjectHashTable_exists(cartesian->attrs, name);
+}
+
+int Cartesian_addQualityField(Cartesian_t* cartesian, RaveField_t* field)
+{
+  RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
+  return RaveObjectList_add(cartesian->qualityfields, (RaveCoreObject*)field);
+}
+
+RaveField_t* Cartesian_getQualityField(Cartesian_t* cartesian, int index)
+{
+  RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
+  return (RaveField_t*)RaveObjectList_get(cartesian->qualityfields, index);
+}
+
+int Cartesian_getNumberOfQualityFields(Cartesian_t* cartesian)
+{
+  RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
+  return RaveObjectList_size(cartesian->qualityfields);
+}
+
+void Cartesian_removeQualityField(Cartesian_t* cartesian, int index)
+{
+  RaveField_t* field = NULL;
+  RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
+  field = (RaveField_t*)RaveObjectList_remove(cartesian->qualityfields, index);
+  RAVE_OBJECT_RELEASE(field);
+}
+
+RaveObjectList_t* Cartesian_getQualityFields(Cartesian_t* cartesian)
+{
+  RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
+  return (RaveObjectList_t*)RAVE_OBJECT_COPY(cartesian->qualityfields);
 }
 
 /*@} End of Interface functions */

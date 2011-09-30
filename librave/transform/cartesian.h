@@ -34,6 +34,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_list.h"
 #include "raveobject_list.h"
 #include "rave_attribute.h"
+#include "rave_field.h"
 
 /**
  * Defines a Cartesian product
@@ -509,4 +510,43 @@ RaveObjectList_t* Cartesian_getAttributeValues(Cartesian_t* cartesian);
  * @returns 1 if the attribute exists, otherwise 0
  */
 int Cartesian_hasAttribute(Cartesian_t* cartesian, const char* name);
+
+/**
+ * Adds a quality field to this cartesian product.
+ * @param[in] cartesian - self
+ * @param[in] field - the field to add
+ * @returns 1 on success otherwise 0
+ */
+int Cartesian_addQualityField(Cartesian_t* cartesian, RaveField_t* field);
+
+/**
+ * Returns the quality field at the specified location.
+ * @param[in] cartesian - self
+ * @param[in] index - the index
+ * @returns the quality field if found, otherwise NULL
+ */
+RaveField_t* Cartesian_getQualityField(Cartesian_t* cartesian, int index);
+
+/**
+ * Returns the number of quality fields
+ * @param[in] cartesian - self
+ * @returns the number of quality fields
+ */
+int Cartesian_getNumberOfQualityFields(Cartesian_t* cartesian);
+
+/**
+ * Removes the quality field at the specified location
+ * @param[in] cartesian - self
+ * @param[in] index - the index
+ */
+void Cartesian_removeQualityField(Cartesian_t* cartesian, int index);
+
+/**
+ * Returns all quality fields belonging to this cartesian. The returned
+ * object is only a reference so do not modify it.
+ * @param[in] cartesian - self
+ * @returns a list of 0 or more quality fields or NULL on error.
+ */
+RaveObjectList_t* Cartesian_getQualityFields(Cartesian_t* cartesian);
+
 #endif

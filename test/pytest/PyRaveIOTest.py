@@ -45,8 +45,12 @@ class PyRaveIOTest(unittest.TestCase):
   FIXTURE_CVOL_CAPPI="fixture_ODIM_cvol_cappi.h5"
   FIXTURE_SCAN="fixtures/scan_sevil_20100702T113200Z.h5"
   FIXTURE_SCAN_WITH_ARRAYS="fixtures/scan_with_arrays.h5"
+  FIXTURE_CARTESIAN_IMAGE="fixtures/cartesian_image.h5"
+  FIXTURE_CARTESIAN_VOLUME="fixtures/cartesian_volume.h5"
+  
   TEMPORARY_FILE="ravemodule_iotest.h5"
   TEMPORARY_FILE2="ravemodule_iotest2.h5"
+  
   
   def setUp(self):
     if os.path.isfile(self.TEMPORARY_FILE):
@@ -249,6 +253,16 @@ class PyRaveIOTest(unittest.TestCase):
     data = numpy.zeros((240,240),numpy.uint8)
     image.setData(data)
     
+    qfield1 = _ravefield.new()
+    qfield1.addAttribute("what/sthis", "a quality field")
+    qfield1.setData(numpy.zeros((240,240), numpy.uint8))
+    qfield2 = _ravefield.new()
+    qfield2.addAttribute("what/sthat", "another quality field")
+    qfield2.setData(numpy.zeros((240,240), numpy.uint8))
+    
+    image.addQualityField(qfield1)
+    image.addQualityField(qfield2)
+    
     ios = _raveio.new()
     ios.object = image
     ios.filename = self.TEMPORARY_FILE
@@ -297,6 +311,19 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEquals(numpy.uint8, nodelist.getNode("/dataset1/data1/data").data().dtype)
     self.assertEquals("IMAGE", nodelist.getNode("/dataset1/data1/data/CLASS").data())
     self.assertEquals("1.2", nodelist.getNode("/dataset1/data1/data/IMAGE_VERSION").data())
+
+    #quality information
+    self.assertEquals("a quality field", nodelist.getNode("/dataset1/quality1/what/sthis").data())
+    d = nodelist.getNode("/dataset1/quality1/data").data()
+    self.assertTrue(d != None)
+    self.assertEquals(240, numpy.shape(d)[0])
+    self.assertEquals(240, numpy.shape(d)[1])
+
+    self.assertEquals("another quality field", nodelist.getNode("/dataset1/quality2/what/sthat").data())
+    d = nodelist.getNode("/dataset1/quality2/data").data()
+    self.assertTrue(d != None)
+    self.assertEquals(240, numpy.shape(d)[0])
+    self.assertEquals(240, numpy.shape(d)[1])
 
   def test_save_cartesian_startandstoptime(self):
     image = _cartesian.new()
@@ -410,6 +437,16 @@ class PyRaveIOTest(unittest.TestCase):
     data = numpy.zeros((240,240),numpy.uint8)
     image.setData(data)
 
+    qfield1 = _ravefield.new()
+    qfield1.addAttribute("what/sthis", "a quality field")
+    qfield1.setData(numpy.zeros((240,240), numpy.uint8))
+    qfield2 = _ravefield.new()
+    qfield2.addAttribute("what/sthat", "another quality field")
+    qfield2.setData(numpy.zeros((240,240), numpy.uint8))
+    
+    image.addQualityField(qfield1)
+    image.addQualityField(qfield2)
+
     cvol.addImage(image)
 
     ios = _raveio.new()
@@ -476,6 +513,18 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEquals("IMAGE", nodelist.getNode("/dataset2/data1/data/CLASS").data())
     self.assertEquals("1.2", nodelist.getNode("/dataset2/data1/data/IMAGE_VERSION").data())
 
+    #quality information
+    self.assertEquals("a quality field", nodelist.getNode("/dataset2/quality1/what/sthis").data())
+    d = nodelist.getNode("/dataset2/quality1/data").data()
+    self.assertTrue(d != None)
+    self.assertEquals(240, numpy.shape(d)[0])
+    self.assertEquals(240, numpy.shape(d)[1])
+
+    self.assertEquals("another quality field", nodelist.getNode("/dataset2/quality2/what/sthat").data())
+    d = nodelist.getNode("/dataset2/quality2/data").data()
+    self.assertTrue(d != None)
+    self.assertEquals(240, numpy.shape(d)[0])
+    self.assertEquals(240, numpy.shape(d)[1])
   
   def test_load_cartesian_volume(self):
     obj = _raveio.open(self.FIXTURE_CVOL_CAPPI)
@@ -560,6 +609,110 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEquals(numpy.uint8, nodelist.getNode("/dataset1/data1/data").data().dtype)
     self.assertEquals("IMAGE", nodelist.getNode("/dataset1/data1/data/CLASS").data())
     self.assertEquals("1.2", nodelist.getNode("/dataset1/data1/data/IMAGE_VERSION").data())
+
+  def test_load_cartesian_image2(self):
+    obj = _raveio.open(self.FIXTURE_CARTESIAN_IMAGE)
+    self.assertEquals(_raveio.RaveIO_ODIM_Version_2_1, obj.version)
+    self.assertEquals(_raveio.RaveIO_ODIM_H5rad_Version_2_1, obj.h5radversion)
+    self.assertEquals(_rave.Rave_ObjectType_IMAGE, obj.objectType)
+    
+    image = obj.object
+    self.assertEquals(_rave.Rave_ObjectType_IMAGE, image.objectType)
+    self.assertEquals(_rave.Rave_ProductType_CAPPI, image.product)
+    self.assertEquals("100000", image.time)
+    self.assertEquals("20100101", image.date)
+    self.assertEquals("PLC:123", image.source)
+    self.assertEquals("DBZH", image.quantity)
+    self.assertAlmostEquals(1.0, image.gain, 4)
+    self.assertAlmostEquals(0.0, image.offset, 4)
+    self.assertAlmostEquals(255.0, image.nodata, 4)
+    self.assertAlmostEquals(0.0, image.undetect, 4)
+    self.assertEquals("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", image.projection.definition)
+    self.assertAlmostEquals(-240000.0, image.areaextent[0], 4)
+    self.assertAlmostEquals(-240000.0, image.areaextent[1], 4)
+    self.assertAlmostEquals(238000.0, image.areaextent[2], 4)  # Since AE should be projected(UR) - xscale
+    self.assertAlmostEquals(238000.0, image.areaextent[3], 4)  # Since AE should be projected(UR) - yscale
+    self.assertAlmostEquals(2000.0, image.xscale, 4)
+    self.assertAlmostEquals(2000.0, image.yscale, 4)
+    self.assertEquals(240, image.xsize)
+    self.assertEquals(240, image.ysize)
+    self.assertEquals(numpy.uint8, image.getData().dtype)
+
+    self.assertEquals(2, image.getNumberOfQualityFields())
+    qf = image.getQualityField(0)
+    qf2 = image.getQualityField(1)
+    self.assertEquals("a quality field", qf.getAttribute("what/sthis"))
+    qfd = qf.getData()
+    self.assertEquals(240, numpy.shape(qfd)[0])
+    self.assertEquals(240, numpy.shape(qfd)[1])
+    self.assertEquals("another quality field", qf2.getAttribute("what/sthat"))
+    qf2d = qf2.getData()
+    self.assertEquals(240, numpy.shape(qf2d)[0])
+    self.assertEquals(240, numpy.shape(qf2d)[1])
+ 
+  def test_load_cartesian_volume2(self):
+    obj = _raveio.open(self.FIXTURE_CARTESIAN_VOLUME)
+    self.assertEquals(_raveio.RaveIO_ODIM_Version_2_1, obj.version)
+    self.assertEquals(_raveio.RaveIO_ODIM_H5rad_Version_2_1, obj.h5radversion)
+    self.assertEquals(_rave.Rave_ObjectType_CVOL, obj.objectType)
+    
+    cvol = obj.object
+    self.assertEquals("100000", cvol.time)
+    self.assertEquals("20091010", cvol.date)
+    self.assertEquals(_rave.Rave_ObjectType_CVOL, cvol.objectType)
+    self.assertEquals("PLC:123", cvol.source)
+    self.assertAlmostEquals(2000.0, cvol.xscale, 4)
+    self.assertAlmostEquals(2000.0, cvol.yscale, 4)
+    self.assertEquals("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", cvol.projection.definition)
+    self.assertAlmostEquals(-240000.0, cvol.areaextent[0], 4)
+    self.assertAlmostEquals(-240000.0, cvol.areaextent[1], 4)
+    self.assertAlmostEquals(238000.0, cvol.areaextent[2], 4)  # Since AE should be projected(UR) - xscale
+    self.assertAlmostEquals(238000.0, cvol.areaextent[3], 4)  # Since AE should be projected(UR) - yscale
+
+    self.assertEquals(2, cvol.getNumberOfImages())
+
+    image = cvol.getImage(0)
+    self.assertEquals(_rave.Rave_ProductType_CAPPI, image.product)
+    self.assertEquals("DBZH", image.quantity)
+    self.assertAlmostEquals(1.0, image.gain, 4)
+    self.assertAlmostEquals(0.0, image.offset, 4)
+    self.assertAlmostEquals(255.0, image.nodata, 4)
+    self.assertAlmostEquals(0.0, image.undetect, 4)
+    self.assertEquals(240, image.xsize)
+    self.assertEquals(240, image.ysize)
+    self.assertEquals(numpy.uint8, image.getData().dtype)
+    self.assertEquals(240, numpy.shape(image.getData())[0])
+    self.assertEquals(240, numpy.shape(image.getData())[1])
+
+    image = cvol.getImage(1)
+    self.assertEquals(_rave.Rave_ProductType_CAPPI, image.product)
+    self.assertEquals("MMH", image.quantity)
+    self.assertAlmostEquals(1.0, image.gain, 4)
+    self.assertAlmostEquals(0.0, image.offset, 4)
+    self.assertAlmostEquals(255.0, image.nodata, 4)
+    self.assertAlmostEquals(0.0, image.undetect, 4)
+    self.assertEquals(240, image.xsize)
+    self.assertEquals(240, image.ysize)
+    self.assertEquals("110000", image.starttime)
+    self.assertEquals("20110101", image.startdate)
+    self.assertEquals("110005", image.endtime)
+    self.assertEquals("20110101", image.enddate)
+    self.assertEquals(numpy.uint8, image.getData().dtype)
+    self.assertEquals(240, numpy.shape(image.getData())[0])
+    self.assertEquals(240, numpy.shape(image.getData())[1])
+    
+    self.assertEquals(2, image.getNumberOfQualityFields())
+    qf = image.getQualityField(0)
+    qf2 = image.getQualityField(1)
+    self.assertEquals("a quality field", qf.getAttribute("what/sthis"))
+    qfd = qf.getData()
+    self.assertEquals(240, numpy.shape(qfd)[0])
+    self.assertEquals(240, numpy.shape(qfd)[1])
+    self.assertEquals("another quality field", qf2.getAttribute("what/sthat"))
+    qf2d = qf2.getData()
+    self.assertEquals(240, numpy.shape(qf2d)[0])
+    self.assertEquals(240, numpy.shape(qf2d)[1])
+
 
   def test_save_polar_volume(self):
     obj = _polarvolume.new()

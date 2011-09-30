@@ -29,6 +29,7 @@ import _cartesian
 import _projection
 import _rave
 import _area
+import _ravefield
 import string
 import numpy
 
@@ -737,4 +738,20 @@ class PyCartesianTest(unittest.TestCase):
     obj.setData(data)
     
     self.assertEquals(True, obj.isValid(_rave.Rave_ObjectType_CVOL))
+  
+  def test_qualityfields(self):
+    obj = _cartesian.new()
+    field1 = _ravefield.new()
+    field2 = _ravefield.new()
+    field1.addAttribute("what/name", "field1")
+    field2.addAttribute("what/name", "field2")
+
+    obj.addQualityField(field1)
+    obj.addQualityField(field2)
+    
+    self.assertEquals(2, obj.getNumberOfQualityFields())
+    self.assertEquals("field1", obj.getQualityField(0).getAttribute("what/name"))
+    obj.removeQualityField(0)
+    self.assertEquals(1, obj.getNumberOfQualityFields())
+    self.assertEquals("field2", obj.getQualityField(0).getAttribute("what/name"))
     

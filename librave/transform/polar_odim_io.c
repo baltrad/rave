@@ -27,11 +27,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_debug.h"
 #include "rave_alloc.h"
 #include <string.h>
-
-typedef struct PolarOdimArg {
-  HL_NodeList* nodelist;
-  RaveCoreObject* object;
-} PolarOdimArg;
+#include "odim_io_utilities.h"
 
 /**
  * The Polar ODIM IO adaptor
@@ -67,13 +63,13 @@ static void PolarOdimIO_destructor(RaveCoreObject* obj)
 
 /**
  * Scan root attributes.
- * @param[in] object - the PolarOdimArg pointing to a polar scan
+ * @param[in] object - the OdimIoUtilityArg pointing to a polar scan
  * @param[in] attribute - the attribute found
  * @return 1 on success otherwise 0
  */
 static int PolarOdimIOInternal_loadRootScanAttribute(void* object, RaveAttribute_t* attribute)
 {
-  PolarScan_t* scan = (PolarScan_t*)((PolarOdimArg*)object)->object;
+  PolarScan_t* scan = (PolarScan_t*)((OdimIoUtilityArg*)object)->object;
   const char* name;
   int result = 0;
 
@@ -143,13 +139,13 @@ done:
 
 /**
  * Scan root attributes.
- * @param[in] object - the PolarOdimArg pointing to a polar scan
+ * @param[in] object - the OdimIoUtilityArg pointing to a polar scan
  * @param[in] attribute - the attribute found
  * @return 1 on success otherwise 0
  */
 static int PolarOdimIOInternal_loadRootVolumeAttribute(void* object, RaveAttribute_t* attribute)
 {
-  PolarVolume_t* volume = (PolarVolume_t*)((PolarOdimArg*)object)->object;
+  PolarVolume_t* volume = (PolarVolume_t*)((OdimIoUtilityArg*)object)->object;
   const char* name;
   int result = 0;
 
@@ -218,7 +214,7 @@ done:
 /**
  * Called when an attribute belonging to a dataset in a scan
  * is found.
- * @param[in] object - the PolarOdimArg pointing to a polar scan
+ * @param[in] object - the OdimIoUtilityArg pointing to a polar scan
  * @param[in] attribute - the attribute found
  * @return 1 on success otherwise 0
  */
@@ -231,7 +227,7 @@ static int PolarOdimIOInternal_loadDsScanAttribute(void* object, RaveAttribute_t
   RAVE_ASSERT((object != NULL), "object == NULL");
   RAVE_ASSERT((attribute != NULL), "attribute == NULL");
 
-  scan = (PolarScan_t*)((PolarOdimArg*)object)->object;
+  scan = (PolarScan_t*)((OdimIoUtilityArg*)object)->object;
   name = RaveAttribute_getName(attribute);
   if (name != NULL) {
     if (strcasecmp("where/elangle", name)==0) {
@@ -311,7 +307,7 @@ done:
 /**
  * Called when an attribute belonging to a scan parameter
  * is found.
- * @param[in] object - the PolarOdimArg pointing to a polar scan param
+ * @param[in] object - the OdimIoUtilityArg pointing to a polar scan param
  * @param[in] attribute - the attribute found
  * @return 1 on success otherwise 0
  */
@@ -324,7 +320,7 @@ static int PolarOdimIOInternal_loadDsScanParamAttribute(void* object, RaveAttrib
   RAVE_ASSERT((object != NULL), "object == NULL");
   RAVE_ASSERT((attribute != NULL), "attribute == NULL");
 
-  param = (PolarScanParam_t*)((PolarOdimArg*)object)->object;
+  param = (PolarScanParam_t*)((OdimIoUtilityArg*)object)->object;
   name = RaveAttribute_getName(attribute);
   if (name != NULL) {
     if (strcasecmp("what/gain", name)==0) {
@@ -372,7 +368,7 @@ done:
 /**
  * Called when an dataset belonging to a scan parameter
  * is found.
- * @param[in] object - the PolarOdimArg pointing to a polar scan param
+ * @param[in] object - the OdimIoUtilityArg pointing to a polar scan param
  * @param[in] nbins - the number of bins
  * @param[in] nrays - the number of rays
  * @param[in] data  - the data
@@ -383,100 +379,9 @@ static int PolarOdimIOInternal_loadDsScanParamDataset(void* object, hsize_t nbin
 {
   PolarScanParam_t* param = NULL;
 
-  param = (PolarScanParam_t*)((PolarOdimArg*)object)->object;
+  param = (PolarScanParam_t*)((OdimIoUtilityArg*)object)->object;
 
   return PolarScanParam_setData(param, nbins, nrays, data, dtype);
-}
-
-/**
- * Called when an attribute belonging to a rave field
- * is found.
- * @param[in] object - the PolarOdimArg pointing to a rave field
- * @param[in] attribute - the attribute found
- * @return 1 on success otherwise 0
- */
-static int PolarOdimIOInternal_loadFieldAttribute(void* object, RaveAttribute_t* attribute)
-{
-  RaveField_t* field = NULL;
-  const char* name;
-  int result = 0;
-
-  RAVE_ASSERT((object != NULL), "object == NULL");
-  RAVE_ASSERT((attribute != NULL), "attribute == NULL");
-
-  field = (RaveField_t*)((PolarOdimArg*)object)->object;
-  name = RaveAttribute_getName(attribute);
-  if (name != NULL) {
-    result = RaveField_addAttribute(field, attribute);
-  }
-
-  return result;
-}
-
-/**
- * Called when an dataset belonging to a field parameter
- * is found.
- * @param[in] object - the PolarOdimArg pointing to a rave field
- * @param[in] xsize - the x size
- * @param[in] ysize - the y size
- * @param[in] data  - the data
- * @param[in] dtype - the type of the data.
- * @return 1 on success otherwise 0
- */
-static int PolarOdimIOInternal_loadFieldDataset(void* object, hsize_t xsize, hsize_t ysize, void* data, RaveDataType dtype)
-{
-  RaveField_t* field = NULL;
-
-  field = (RaveField_t*)((PolarOdimArg*)object)->object;
-
-  return RaveField_setData(field, xsize, ysize, data, dtype);
-}
-
-/**
- * Loads a rave field. A rave field can be just about anything with a mapping
- * between attributes and a dataset.
- * @param[in] nodelist - the hlhdf node list
- * @param[in] fmt - the variable argument list string format
- * @param[in] ... - the variable argument list
- * @return a rave field on success otherwise NULL
- */
-static RaveField_t* PolarOdimIOInternal_loadField(HL_NodeList* nodelist, const char* fmt, ...)
-{
-  PolarOdimArg arg;
-  RaveField_t* field = NULL;
-  RaveField_t* result = NULL;
-  va_list ap;
-  char name[1024];
-  int nName = 0;
-
-  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
-  RAVE_ASSERT((fmt != NULL), "fmt == NULL");
-
-  va_start(ap, fmt);
-  nName = vsnprintf(name, 1024, fmt, ap);
-  va_end(ap);
-  if (nName < 0 || nName >= 1024) {
-    RAVE_ERROR0("NodeName would evaluate to more than 1024 characters.");
-    goto fail;
-  }
-
-  field = RAVE_OBJECT_NEW(&RaveField_TYPE);
-  if (field != NULL) {
-    arg.nodelist = nodelist;
-    arg.object = (RaveCoreObject*)field;
-  }
-
-  if (!RaveHL_loadAttributesAndData(nodelist, &arg,
-                                    PolarOdimIOInternal_loadFieldAttribute,
-                                    PolarOdimIOInternal_loadFieldDataset,
-                                    name)) {
-    goto fail;
-  }
-
-  result = RAVE_OBJECT_COPY(field);
-fail:
-  RAVE_OBJECT_RELEASE(field);
-  return result;
 }
 
 /**
@@ -488,7 +393,7 @@ fail:
  */
 static PolarScanParam_t* PolarOdimIOInternal_loadScanParam(HL_NodeList* nodelist, const char* fmt, ...)
 {
-  PolarOdimArg arg;
+  OdimIoUtilityArg arg;
   PolarScanParam_t* param = NULL;
   PolarScanParam_t* result = NULL;
   va_list ap;
@@ -524,7 +429,7 @@ static PolarScanParam_t* PolarOdimIOInternal_loadScanParam(HL_NodeList* nodelist
   pindex = 1;
   status = 1;
   while (status == 1 && RaveHL_hasNodeByName(nodelist, "%s/quality%d", name, pindex)) {
-    RaveField_t* field = PolarOdimIOInternal_loadField(nodelist, "%s/quality%d", name, pindex);
+    RaveField_t* field = OdimIoUtilities_loadField(nodelist, "%s/quality%d", name, pindex);
     if (field != NULL) {
       status = PolarScanParam_addQualityField(param, field);
     } else {
@@ -553,7 +458,7 @@ fail:
 static int PolarOdimIOInternal_fillScanDataset(HL_NodeList* nodelist, PolarScan_t* scan, const char* fmt, ...)
 {
   int result = 0;
-  PolarOdimArg arg;
+  OdimIoUtilityArg arg;
 
   va_list ap;
   char name[1024];
@@ -600,114 +505,13 @@ static int PolarOdimIOInternal_fillScanDataset(HL_NodeList* nodelist, PolarScan_
 
   pindex = 1;
   while (result == 1 && RaveHL_hasNodeByName(nodelist, "%s/quality%d", name, pindex)) {
-    RaveField_t* field = PolarOdimIOInternal_loadField(nodelist, "%s/quality%d", name, pindex);
+    RaveField_t* field = OdimIoUtilities_loadField(nodelist, "%s/quality%d", name, pindex);
     if (field != NULL) {
       result = PolarScan_addQualityField(scan, field);
     } else {
       result = 0;
     }
     pindex++;
-    RAVE_OBJECT_RELEASE(field);
-  }
-
-done:
-  return result;
-}
-
-/**
- * Adds a rave field to a nodelist.
- *
- * @param[in] field - the field
- * @param[in] nodelist - the hlhdf node list
- * @param[in] fmt - the varargs format string
- * @param[in] ... - the varargs
- * @return 1 on success otherwise 0
- */
-static int PolarOdimIOInternal_addRaveField(RaveField_t* field, HL_NodeList* nodelist, const char* fmt, ...)
-{
-  int result = 0;
-  va_list ap;
-  char name[1024];
-  int nName = 0;
-  RaveObjectList_t* attributes = NULL;
-
-  RAVE_ASSERT((field != NULL), "field == NULL");
-  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
-  RAVE_ASSERT((fmt != NULL), "fmt == NULL");
-
-  va_start(ap, fmt);
-  nName = vsnprintf(name, 1024, fmt, ap);
-  va_end(ap);
-  if (nName < 0 || nName >= 1024) {
-    RAVE_ERROR0("NodeName would evaluate to more than 1024 characters.");
-    goto done;
-  }
-  if (!RaveHL_hasNodeByName(nodelist, name)) {
-    if (!RaveHL_createGroup(nodelist, name)) {
-      goto done;
-    }
-  }
-
-  attributes = RaveField_getAttributeValues(field);
-
-  if (attributes == NULL || !RaveHL_addAttributes(nodelist, attributes, name)) {
-    goto done;
-  }
-
-  if (!RaveHL_addData(nodelist,
-                      RaveField_getData(field),
-                      RaveField_getXsize(field),
-                      RaveField_getYsize(field),
-                      RaveField_getDataType(field),
-                      name)) {
-    goto done;
-  }
-
-  result = 1;
-done:
-  RAVE_OBJECT_RELEASE(attributes);
-  return result;
-}
-
-/**
- * Adds a list of quality fields (RaveField_t) to a nodelist.
- *
- * @param[in] fields - the list of fields
- * @param[in] nodelist - the hlhdf node list
- * @param[in] fmt - the varargs format string
- * @param[in] ... - the varargs
- * @return 1 on success otherwise 0
- */
-static int PolarOdimIO_addQualityFields(RaveObjectList_t* fields, HL_NodeList* nodelist, const char* fmt, ...)
-{
-  int result = 0;
-  va_list ap;
-  char name[1024];
-  int nName = 0;
-  int pindex = 0;
-  int nrfields = 0;
-
-  RAVE_ASSERT((fields != NULL), "fields == NULL");
-  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
-  RAVE_ASSERT((fmt != NULL), "fmt == NULL");
-
-  va_start(ap, fmt);
-  nName = vsnprintf(name, 1024, fmt, ap);
-  va_end(ap);
-  if (nName < 0 || nName >= 1024) {
-    RAVE_ERROR0("NodeName would evaluate to more than 1024 characters.");
-    goto done;
-  }
-
-  result = 1;
-  nrfields = RaveObjectList_size(fields);
-  for (pindex = 0; result == 1 && pindex < nrfields; pindex++) {
-    RaveField_t* field = (RaveField_t*)RaveObjectList_get(fields, pindex);
-    if (field != NULL) {
-      result = PolarOdimIOInternal_addRaveField(field, nodelist, "%s/quality%d", name, (pindex+1));
-    } else {
-      result = 0;
-    }
     RAVE_OBJECT_RELEASE(field);
   }
 
@@ -779,7 +583,7 @@ static int PolarOdimIOInternal_addParameter(PolarScanParam_t* param, HL_NodeList
     goto done;
   }
 
-  result = PolarOdimIO_addQualityFields(qualityfields, nodelist, name);
+  result = OdimIoUtilities_addQualityFields(qualityfields, nodelist, name);
 
 done:
   RAVE_OBJECT_RELEASE(attributes);
@@ -963,7 +767,7 @@ static int PolarOdimIOInternal_addVolumeScan(PolarScan_t* scan, HL_NodeList* nod
     goto done;
   }
 
-  result = PolarOdimIO_addQualityFields(qualityfields, nodelist, name);
+  result = OdimIoUtilities_addQualityFields(qualityfields, nodelist, name);
 
 done:
   RAVE_OBJECT_RELEASE(attributes);
@@ -978,7 +782,7 @@ done:
 int PolarOdimIO_readScan(PolarOdimIO_t* self, HL_NodeList* nodelist, PolarScan_t* scan)
 {
   int result = 0;
-  PolarOdimArg arg;
+  OdimIoUtilityArg arg;
 
   RAVE_ASSERT((self != NULL), "self == NULL");
   RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
@@ -1015,7 +819,7 @@ int PolarOdimIO_readVolume(PolarOdimIO_t* self, HL_NodeList* nodelist, PolarVolu
 {
   int result = 0;
   int pindex = 1;
-  PolarOdimArg arg;
+  OdimIoUtilityArg arg;
 
   RAVE_ASSERT((self != NULL), "self == NULL");
   RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
@@ -1129,7 +933,7 @@ int PolarOdimIO_fillScan(PolarOdimIO_t* self, PolarScan_t* scan, HL_NodeList* no
     goto done;
   }
 
-  result = PolarOdimIO_addQualityFields(qualityfields, nodelist, "/dataset1");
+  result = OdimIoUtilities_addQualityFields(qualityfields, nodelist, "/dataset1");
 done:
   RAVE_OBJECT_RELEASE(attributes);
   RAVE_OBJECT_RELEASE(qualityfields);
