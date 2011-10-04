@@ -230,6 +230,11 @@ int RaveCoreObject_isCloneable(RaveCoreObject* src)
   return result;
 }
 
+void RaveCoreObject_printCurrentObjectStatus(void)
+{
+  fprintf(stderr, "Created: %ld, Deleted: %ld, Pending: %ld\n", objectsCreated, objectsDestroyed, objectsCreated-objectsDestroyed);
+}
+
 void RaveCoreObject_printStatistics(void)
 {
   fprintf(stderr, "Objects created: %ld\n", objectsCreated);

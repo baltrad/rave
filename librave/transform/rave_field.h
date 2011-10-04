@@ -76,9 +76,9 @@ void* RaveField_getData(RaveField_t* field);
  * @param[in] x - the x-pos / bin index
  * @param[in] y - the y-pos / ray index
  * @param[out] v - the data at the specified index
- * @return the type of data
+ * @return 1 on success, 0 otherwise
  */
-RaveValueType RaveField_getValue(RaveField_t* field, long x, long y, double* v);
+int RaveField_getValue(RaveField_t* field, long x, long y, double* v);
 
 /**
  * Sets the value at specified position
@@ -139,5 +139,15 @@ RaveList_t* RaveField_getAttributeNames(RaveField_t* field);
  * @returns a list of RaveAttributes.
  */
 RaveObjectList_t* RaveField_getAttributeValues(RaveField_t* field);
+
+/**
+ * Checks if the field has the attribute named name that is of type string
+ * and has a matching value.
+ * @param[in] field - the field
+ * @param[in] name - the name of the attribute
+ * @param[in] value - the value of the attribute
+ * @return 1 if there is such a match, otherwise 0
+ */
+int RaveField_hasAttributeStringValue(RaveField_t* field, const char* name, const char* value);
 
 #endif /* RAVE_FIELD_H */

@@ -448,6 +448,15 @@ void PolarScan_removeQualityField(PolarScan_t* scan, int index);
 RaveObjectList_t* PolarScan_getQualityFields(PolarScan_t* scan);
 
 /**
+ * Returns a quality field based on the value of how/task that should be a
+ * string.
+ * @param[in] scan - self
+ * @param[in] value - the value of the how/task attribute
+ * @return the field if found otherwise NULL
+ */
+RaveField_t* PolarScan_getQualityFieldByHowTask(PolarScan_t* scan, const char* value);
+
+/**
  * Returns the range index for the specified range (in meters).
  * @param[in] scan - the scan
  * @param[in] r - the range
@@ -602,6 +611,16 @@ RaveValueType PolarScan_getConvertedParameterValueAtAzimuthAndRange(PolarScan_t*
 void PolarScan_getLonLatNavigationInfo(PolarScan_t* scan, double lon, double lat, PolarNavigationInfo* info);
 
 /**
+ * Calculates range and elevation index from the azimuth and range
+ * in the info object.
+ * @param[in] scan - self
+ * @param[in,out] info - Will use info.azimuth and info.range to calculate info.ai and info.ri
+ * @return 1 if indexes are in range, otherwise 0
+ */
+int PolarScan_fillNavigationIndexFromAzimuthAndRange(
+  PolarScan_t* scan, PolarNavigationInfo* info);
+
+/**
  * Returns the nearest value to the specified longitude, latitude.
  * @param[in] scan - the scan
  * @param[in] lon  - the longitude (in radians)
@@ -657,6 +676,21 @@ int PolarScan_getNearestIndex(PolarScan_t* scan, double lon, double lat, int* bi
  * @returns 1 on success otherwise 0
  */
 int PolarScan_getLonLatFromIndex(PolarScan_t* scan, int bin, int ray, double* lon, double* lat);
+
+/**
+ * Returns the quality value for the quality field that has a name matching the how/task attribute
+ * in the list of fields. It will first search the parameter for the quality field, then it
+ * will search the scan for the quality field if no field is found it will return 0.
+ *
+ * @param[in] scan - self
+ * @param[in] quantity - the parameter quantity
+ * @param[in] ri - the range index (bin)
+ * @param[in] ai - the azimuth index (ray)
+ * @param[in] name - the value of the how/task attribute
+ * @param[out] v - the found value
+ * @return 1 if value found otherwise 0
+ */
+int PolarScan_getQualityValueAt(PolarScan_t* scan, const char* quantity, int ri, int ai, const char* name, double* v);
 
 /**
  * Verifies that all preconditions are met in order to perform

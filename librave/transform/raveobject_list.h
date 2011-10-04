@@ -122,4 +122,13 @@ RaveCoreObject* RaveObjectList_removeLast(RaveObjectList_t* list);
  */
 void RaveObjectList_sort(RaveObjectList_t* list, int (*sortfun)(const void*, const void*));
 
+/**
+ * Locates the object at returns the index in the list. The comparision is
+ * based on addresses.
+ * @param[in] list - the list
+ * @obj[in] the object to find
+ * @return the index if found, otherwise -1
+ */
+int RaveObjectList_indexOf(RaveObjectList_t* list, RaveCoreObject* obj);
+
 #endif /* RAVEOBJECT_LIST_H */

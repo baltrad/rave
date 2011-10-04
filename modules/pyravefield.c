@@ -243,15 +243,15 @@ static PyObject* _pyravefield_getValue(PyRaveField* self, PyObject* args)
 {
   double value = 0.0L;
   long x = 0, y = 0;
-  RaveValueType type = RaveValueType_NODATA;
+  int result = 0;
 
   if (!PyArg_ParseTuple(args, "ll", &x, &y)) {
     return NULL;
   }
 
-  type = RaveField_getValue(self->field, x, y, &value);
+  result = RaveField_getValue(self->field, x, y, &value);
 
-  return Py_BuildValue("(id)", type, value);
+  return Py_BuildValue("(id)", result, value);
 }
 
 /**

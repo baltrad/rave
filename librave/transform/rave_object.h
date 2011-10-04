@@ -231,6 +231,11 @@ void* RaveCoreObject_getBindingData(RaveCoreObject* src);
 int RaveCoreObject_isCloneable(RaveCoreObject* src);
 
 /**
+ * Print current status of object creation.
+ */
+void RaveCoreObject_printCurrentObjectStatus(void);
+
+/**
  * Prints the rave object statistics.
  */
 void RaveCoreObject_printStatistics(void);

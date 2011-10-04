@@ -108,7 +108,7 @@ void* RaveField_getData(RaveField_t* field)
   return RaveData2D_getData(field->data);
 }
 
-RaveValueType RaveField_getValue(RaveField_t* field, long x, long y, double* v)
+int RaveField_getValue(RaveField_t* field, long x, long y, double* v)
 {
   RAVE_ASSERT((field != NULL), "field == NULL");
   return RaveData2D_getValue(field->data, x, y, v);
@@ -205,6 +205,27 @@ error:
   RAVE_OBJECT_RELEASE(tableattrs);
   return NULL;
 }
+
+int RaveField_hasAttributeStringValue(RaveField_t* field, const char* name, const char* value)
+{
+  RaveAttribute_t* attr = NULL;
+  int result = 0;
+
+  RAVE_ASSERT((field != NULL), "field == NULL");
+  if (name != NULL && value != NULL) {
+    attr = (RaveAttribute_t*)RaveObjectHashTable_get(field->attrs, name);
+    if (attr != NULL && RaveAttribute_getFormat(attr) == RaveAttribute_Format_String) {
+      char* aval = NULL;
+      RaveAttribute_getString(attr, &aval);
+      if (aval != NULL && strcmp(aval, value) == 0) {
+        result = 1;
+      }
+    }
+  }
+  RAVE_OBJECT_RELEASE(attr);
+  return result;
+}
+
 /*@} End of Interface functions */
 
 

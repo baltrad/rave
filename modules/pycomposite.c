@@ -189,21 +189,53 @@ static PyObject* _pycomposite_nearest(PyComposite* self, PyObject* args)
   PyObject* obj = NULL;
   Cartesian_t* result = NULL;
   PyObject* pyresult = NULL;
+  PyObject* pyqualitynames = NULL;
+  RaveList_t* qualitynames = NULL;
 
-  if (!PyArg_ParseTuple(args, "O", &obj)) {
+  if (!PyArg_ParseTuple(args, "O|O", &obj, &pyqualitynames)) {
     return NULL;
   }
   if (!PyArea_Check(obj)) {
     raiseException_returnNULL(PyExc_AttributeError, "argument should be an area");
   }
+  if (pyqualitynames != NULL && !PyList_Check(pyqualitynames)) {
+    raiseException_returnNULL(PyExc_AttributeError, "second argument should be a list of quality (how/task) names");
+  }
+  if (pyqualitynames != NULL && PyObject_Length(pyqualitynames) > 0) {
+    Py_ssize_t nnames = PyObject_Length(pyqualitynames);
+    Py_ssize_t i = 0;
+    qualitynames = RAVE_OBJECT_NEW(&RaveList_TYPE);
+    if (qualitynames == NULL) {
+      raiseException_gotoTag(done, PyExc_MemoryError, "Could not allocate memory");
+    }
+    for (i = 0; i < nnames; i++) {
+      PyObject* pystr = PyList_GetItem(pyqualitynames, i);
+      char* dupstr = NULL;
+      if (pystr == NULL || !PyString_Check(pystr)) {
+        raiseException_gotoTag(done, PyExc_AttributeError, "second argument should be a list of quality (how/task) names (strings)");
+      }
+      dupstr = RAVE_STRDUP(PyString_AsString(pystr));
+      if (dupstr != NULL) {
+        if (!RaveList_add(qualitynames, dupstr)) {
+          raiseException_gotoTag(done, PyExc_MemoryError, "Could not allocate memory");
+          RAVE_FREE(dupstr);
+        }
+      } else {
+        raiseException_gotoTag(done, PyExc_MemoryError, "Could not allocate memory");
+      }
+      dupstr = NULL; // We have handed it over to the rave list.
+    }
+  }
 
-  result = Composite_nearest(self->composite, ((PyArea*)obj)->area);
+  result = Composite_nearest(self->composite, ((PyArea*)obj)->area, qualitynames);
   if (result == NULL) {
     raiseException_returnNULL(PyExc_AttributeError, "failed to generate composite");
   }
 
   pyresult = (PyObject*)PyCartesian_New(result);
+done:
   RAVE_OBJECT_RELEASE(result);
+  RaveList_freeAndDestroy(&qualitynames);
   return pyresult;
 }
 

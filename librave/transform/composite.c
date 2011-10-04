@@ -39,7 +39,7 @@ struct _Composite_t {
   CompositeSelectionMethod_t method; /**< selection method, default CompositeSelectionMethod_NEAREST */
   double height; /**< the height when generating pcapppi, cappi, default 1000 */
   double elangle; /**< the elevation angle when generating ppi, default 0.0 */
-  char* paramname; /**< the parameter name */
+  char* paramname; /**< the parameter name, default DBZH */
   double offset;     /**< the offset, default 0 */
   double gain;     /**< the gain, default 1 */
   RaveDateTime_t* datetime;  /**< the date and time */
@@ -175,6 +175,111 @@ static void CompositeInternal_nearestValue(Composite_t* composite, RaveCoreObjec
     } else {
       *type = RaveValueType_NODATA;
     }
+  }
+}
+
+/**
+ * Adds quality flags to the composite.
+ * @param[in] image - the image to add quality flags to
+ * @param[in] qualityflags - a list of strings identifying the how/task value in the quality fields
+ * @return 1 on success otherwise 0
+ */
+static int CompositeInternal_addQualityFlags(Cartesian_t* image, RaveList_t* qualityflags)
+{
+  int result = 1;
+  int nqualityflags = 0;
+  RaveField_t* field = NULL;
+  RaveAttribute_t* howtaskattribute = NULL;
+  int xsize = 0, ysize = 0;
+  int i = 0;
+
+  RAVE_ASSERT((image != NULL), "image == NULL");
+
+  xsize = Cartesian_getXSize(image);
+  ysize = Cartesian_getYSize(image);
+
+  if (qualityflags != NULL) {
+    nqualityflags = RaveList_size(qualityflags);
+  }
+
+  for (i = 0; result == 1 && i < nqualityflags; i++) {
+    field = RAVE_OBJECT_NEW(&RaveField_TYPE);
+    char* howtaskvaluestr = (char*)RaveList_get(qualityflags, i);
+    howtaskattribute = RaveAttributeHelp_createString("how/task", howtaskvaluestr);
+    if (field == NULL ||
+        howtaskattribute == NULL ||
+        !RaveField_createData(field, xsize, ysize, RaveDataType_UCHAR) ||
+        !RaveField_addAttribute(field, howtaskattribute) ||
+        !Cartesian_addQualityField(image, field)) {
+      RAVE_ERROR0("Failed to add quality field to the cartesian product");
+      result = 0;
+    }
+
+    RAVE_OBJECT_RELEASE(field);
+    RAVE_OBJECT_RELEASE(howtaskattribute);
+  }
+
+  return result;
+}
+
+/**
+ * Uses the navigation information and fills all associated cartesian quality
+ * with the composite objects quality fields.
+ * @param[in] composite - self
+ * @param[in] x - x coordinate
+ * @param[in] y - y coordinate
+ * @param[in] radarindex - the object to use in the composite
+ * @param[in] navinfo - the navigational information
+ */
+static void CompositeInternal_fillQualityInformation(
+  Composite_t* composite,
+  int x, int y,
+  Cartesian_t* cartesian,
+  int radarindex,
+  PolarNavigationInfo* navinfo)
+{
+  int nfields = 0, i = 0;
+  RAVE_ASSERT((composite != NULL), "composite == NULL");
+  RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
+  RAVE_ASSERT((navinfo != NULL), "navinfo == NULL");
+  nfields = Cartesian_getNumberOfQualityFields(cartesian);
+  for (i = 0; i < nfields; i++) {
+    RaveField_t* field = NULL;
+    RaveAttribute_t* attribute = NULL;
+    char* name = NULL;
+    double v = 0.0;
+
+    field = Cartesian_getQualityField(cartesian, i);
+    if (field != NULL) {
+      attribute = RaveField_getAttribute(field, "how/task");
+    }
+    if (attribute != NULL) {
+      RaveAttribute_getString(attribute, &name);
+    }
+
+    if (name != NULL) {
+      RaveCoreObject* obj = RaveObjectList_get(composite->list, radarindex);
+      if (obj != NULL) {
+        if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
+          if (navinfo->ei >= 0 && navinfo->ri >= 0 && navinfo->ai >= 0 &&
+              PolarVolume_getQualityValueAt((PolarVolume_t*)obj, Composite_getQuantity(composite), navinfo->ei, navinfo->ri, navinfo->ai, name, &v)) {
+            RaveField_setValue(field, x, y, v);
+          } else {
+            RaveField_setValue(field, x, y, 0.0); // No data found
+          }
+        } else if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarScan_TYPE)) {
+          if (navinfo->ri >= 0 && navinfo->ai >= 0 &&
+              PolarScan_getQualityValueAt((PolarScan_t*)obj, Composite_getQuantity(composite), navinfo->ri, navinfo->ai, name, &v)) {
+            RaveField_setValue(field, x, y , v);
+          } else {
+            RaveField_setValue(field, x, y, 0.0); // No data found
+          }
+        }
+      }
+      RAVE_OBJECT_RELEASE(obj);
+    }
+    RAVE_OBJECT_RELEASE(field);
+    RAVE_OBJECT_RELEASE(attribute);
   }
 }
 
@@ -323,14 +428,15 @@ const char* Composite_getDate(Composite_t* composite)
   return RaveDateTime_getDate(composite->datetime);
 }
 
-Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area)
+Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t* qualityflags)
 {
   Cartesian_t* result = NULL;
   Projection_t* projection = NULL;
   RaveAttribute_t* prodpar = NULL;
-  PolarNavigationInfo navinfo;
 
+  PolarNavigationInfo navinfo;
   int x = 0, y = 0, i = 0, xsize = 0, ysize = 0, nradars = 0;
+  int nqualityflags = 0;
 
   RAVE_ASSERT((composite != NULL), "composite == NULL");
   RAVE_ASSERT((area != NULL), "area == NULL");
@@ -339,7 +445,12 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area)
   if (!Cartesian_init(result, area, RaveDataType_UCHAR)) {
     goto fail;
   }
-  prodpar = RaveAttributeHelp_createDouble("what/prodpar", composite->height);
+  if (composite->ptype == Rave_ProductType_CAPPI ||
+      composite->ptype == Rave_ProductType_PCAPPI) {
+    prodpar = RaveAttributeHelp_createDouble("what/prodpar", composite->height);
+  } else {
+    prodpar = RaveAttributeHelp_createDouble("what/prodpar", composite->elangle * 180.0/M_PI);
+  }
   if (prodpar == NULL) {
     goto fail;
   }
@@ -376,6 +487,14 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area)
   projection = Cartesian_getProjection(result);
   nradars = RaveObjectList_size(composite->list);
 
+  if (qualityflags != NULL) {
+    nqualityflags = RaveList_size(qualityflags);
+  }
+
+  if (!CompositeInternal_addQualityFlags(result, qualityflags)) {
+    goto fail;
+  }
+
   for (y = 0; y < ysize; y++) {
     double herey = Cartesian_getLocationY(result, y);
     for (x = 0; x < xsize; x++) {
@@ -384,6 +503,11 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area)
       double mindist = 1e10;
       double v = 0.0L;
       RaveValueType vtype = RaveValueType_NODATA;
+      int radarindex = -1;
+      PolarNavigationInfo rememberednav;
+      rememberednav.ei = -1;
+      rememberednav.ai = -1;
+      rememberednav.ri = -1;
 
       for (i = 0, mindist=1e10; i < nradars; i++) {
         RaveCoreObject* obj = NULL;
@@ -418,7 +542,7 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area)
               CompositeInternal_nearestValue(composite, obj, olon, olat, &otype, &ovalue, &navinfo);
 
               if (composite->method == CompositeSelectionMethod_HEIGHT) {
-                dist = navinfo.height; // We are determining pixel by height above sea level
+                dist = navinfo.actual_height; // We are determining pixel by height above sea level
               }
 
               if (otype == RaveValueType_DATA || otype == RaveValueType_UNDETECT) {
@@ -426,6 +550,8 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area)
                   vtype = otype;
                   v = ovalue;
                   mindist = dist;
+                  radarindex = i;
+                  rememberednav = navinfo;
                 }
               }
             }
@@ -434,12 +560,17 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area)
         RAVE_OBJECT_RELEASE(obj);
         RAVE_OBJECT_RELEASE(objproj);
       }
+
       if (vtype == RaveValueType_NODATA) {
         Cartesian_setConvertedValue(result, x, y, Cartesian_getNodata(result));
       } else if (vtype == RaveValueType_UNDETECT) {
         Cartesian_setConvertedValue(result, x, y, Cartesian_getUndetect(result));
       } else {
         Cartesian_setConvertedValue(result, x, y, v);
+      }
+
+      if ((vtype == RaveValueType_DATA || vtype == RaveValueType_UNDETECT) && radarindex >= 0 && nqualityflags > 0) {
+        CompositeInternal_fillQualityInformation(composite, x, y, result, radarindex, &rememberednav);
       }
     }
   }

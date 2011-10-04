@@ -266,4 +266,13 @@ void PolarScanParam_removeQualityField(PolarScanParam_t* param, int index);
  */
 RaveObjectList_t* PolarScanParam_getQualityFields(PolarScanParam_t* param);
 
+/**
+ * Returns a quality field based on the value of how/task that should be a
+ * string.
+ * @param[in] param - self
+ * @param[in] value - the value of the how/task attribute
+ * @return the field if found otherwise NULL
+ */
+RaveField_t* PolarScanParam_getQualityFieldByHowTask(PolarScanParam_t* param, const char* value);
+
 #endif

@@ -111,11 +111,19 @@ typedef enum RaveTransformationMethod {
  * Provides user with navigation information.
  */
 typedef struct PolarNavigationInfo {
+  double lon;    /**< longitude */
+  double lat;    /**< latitude */
   double height; /**< height above sea surface in meters*/
+  double actual_height; /**< actual height above sea surface in meters */
   double distance; /**< surface distance in meters*/
   double range;    /**< rays range */
   double azimuth; /**< azimutal offset in radians */
   double elevation; /**< elevation angle in radians */
+
+  Rave_ObjectType otype; /**< specifies if the data is from a scan or volume (default Rave_ObjectType_UNDEFINED) */
+  int ei;         /**< elevation index in case of volumes (-1 meaning no elevation index found/calculated) */
+  int ri;         /**< range index (-1 meaning no range index found/calculated or out of bounds) */
+  int ai;         /**< azimuth index (-1 meaning no azimuth index found/calculated or out of bounds) */
 } PolarNavigationInfo;
 
 /**

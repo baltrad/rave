@@ -480,11 +480,20 @@ void PolarVolume_getLonLatNavigationInfo(PolarVolume_t* pvol, double lon, double
 {
   RAVE_ASSERT((pvol != NULL), "pvol == NULL");
   RAVE_ASSERT((info != NULL), "info == NULL");
+  info->lon = lon;
+  info->lat = lat;
   info->distance = 0.0L;
   info->azimuth = 0.0L;
   info->range = 0.0L;
   info->height = height;
+  info->actual_height = height;
   info->elevation = 0.0L;
+
+  info->otype = Rave_ObjectType_PVOL;
+  info->ei = -1;
+  info->ri = -1;
+  info->ai = -1;
+
   PolarNavigator_llToDa(pvol->navigator, lat, lon, &info->distance, &info->azimuth);
   PolarNavigator_dhToRe(pvol->navigator, info->distance, info->height, &info->range, &info->elevation);
 }
@@ -554,15 +563,37 @@ RaveValueType PolarVolume_getNearestConvertedParameterValue(PolarVolume_t* pvol,
   // Find relevant elevation
   scan = PolarVolume_getScanClosestToElevation(pvol, info.elevation, insidee);
   if (scan != NULL) {
-    info.elevation = PolarScan_getElangle(scan); // So that we get proper scan elevation angle instead
-    result = PolarScan_getConvertedParameterValueAtAzimuthAndRange(scan, quantity, info.azimuth, info.range, v);
+    double dummydistance = 0.0;
+    info.elevation = PolarScan_getElangle(scan); // So that we get exact scan elevation angle instead
+    info.ei = RaveObjectList_indexOf(pvol->scans, (RaveCoreObject*)scan);
+
+    // To get the actual height
+    PolarNavigator_reToDh(pvol->navigator, info.range, info.elevation, &dummydistance, &info.actual_height);
+
+    if (!PolarScan_fillNavigationIndexFromAzimuthAndRange(scan, &info)) {
+      goto done;
+    }
+    result = PolarScan_getConvertedParameterValue(scan, quantity, info.ri, info.ai, v);
     if (navinfo != NULL) {
       *navinfo = info;
     }
   }
 
+done:
   RAVE_OBJECT_RELEASE(scan);
+  return result;
+}
 
+int PolarVolume_getQualityValueAt(PolarVolume_t* pvol, const char* quantity, int ei, int ri, int ai, const char* name, double* v)
+{
+  int result = 0;
+  PolarScan_t* scan = NULL;
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
+  scan = PolarVolume_getScan(pvol, ei);
+  if (scan != NULL) {
+    result = PolarScan_getQualityValueAt(scan, quantity, ri, ai, name, v);
+  }
+  RAVE_OBJECT_RELEASE(scan);
   return result;
 }
 

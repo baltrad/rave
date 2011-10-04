@@ -194,8 +194,11 @@ const char* Composite_getDate(Composite_t* composite);
  * Generates a composite according to the nearest radar principle.
  * @param[in] composite - self
  * @param[in] area - the area that should be used for defining the composite.
+ * @param[in] qualityflags - A list of char pointers identifying how/task values in the quality fields of the polar data.
+ *            Each entry in this list will result in the atempt to generate a corresponding quality field
+ *            in the resulting cartesian product. (MAY BE NULL)
  * @returns the generated composite.
  */
-Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area);
+Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t* qualityflags);
 
 #endif /* COMPOSITE_H */

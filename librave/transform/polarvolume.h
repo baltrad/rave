@@ -269,6 +269,20 @@ RaveValueType PolarVolume_getNearestParameterValue(PolarVolume_t* pvol, const ch
 RaveValueType PolarVolume_getNearestConvertedParameterValue(PolarVolume_t* pvol, const char* quantity, double lon, double lat, double height, int insidee, double* v, PolarNavigationInfo* navinfo);
 
 /**
+ * Returns the quality value for the quality field that has a name matching the how/task attribute
+ * for the specified scan.
+ *
+ * @param[in] pvol - self
+ * @param[in] quantity - the parameter quantity
+ * @param[in] ri - the range index (bin)
+ * @param[in] ai - the azimuth index (ray)
+ * @param[in] name - the value of the how/task attribute
+ * @param[out] v - the found value
+ * @return 1 if value found otherwise 0
+ */
+int PolarVolume_getQualityValueAt(PolarVolume_t* pvol, const char* quantity, int ei, int ri, int ai, const char* name, double* v);
+
+/**
  * Sets the default parameter that should be used when operating on this
  * volume unless the parameter (quantity) explicitly has been specified in the
  * function. All scans that currently are held by this volume and eventual new

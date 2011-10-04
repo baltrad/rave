@@ -180,6 +180,21 @@ void RaveObjectList_sort(RaveObjectList_t* list, int (*sortfun)(const void*, con
   RAVE_ASSERT((list != NULL), "list == NULL");
   RaveList_sort(list->list, sortfun);
 }
+
+int RaveObjectList_indexOf(RaveObjectList_t* list, RaveCoreObject* obj)
+{
+  int nsize = 0, i = 0;
+  RAVE_ASSERT((list != NULL), "list == NULL");
+  nsize = RaveList_size(list->list);
+  if (obj != NULL) {
+    for (i = 0; i < nsize; i++) {
+      if ((void*)obj == (void*)RaveList_get(list->list, i)) {
+        return i;
+      }
+    }
+  }
+  return -1;
+}
 /*@} End of Interface functions */
 
 RaveCoreObjectType RaveObjectList_TYPE = {

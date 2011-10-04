@@ -648,6 +648,27 @@ RaveObjectList_t* PolarScan_getQualityFields(PolarScan_t* scan)
   return (RaveObjectList_t*)RAVE_OBJECT_COPY(scan->qualityfields);
 }
 
+RaveField_t* PolarScan_getQualityFieldByHowTask(PolarScan_t* scan, const char* value)
+{
+  int nfields = 0, i = 0;
+  RaveField_t* result = NULL;
+
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+  if (value == NULL) {
+    RAVE_WARNING0("Trying to use PolarScan-getQualityFieldByHowTask without a how/task value");
+    return NULL;
+  }
+  nfields = RaveObjectList_size(scan->qualityfields);
+  for (i = 0; result == NULL && i < nfields; i++) {
+    RaveField_t* field = (RaveField_t*)RaveObjectList_get(scan->qualityfields, i);
+    if (field != NULL && RaveField_hasAttributeStringValue(field, "how/task", value)) {
+      result = RAVE_OBJECT_COPY(field);
+    }
+    RAVE_OBJECT_RELEASE(field);
+  }
+  return result;
+}
+
 int PolarScan_getRangeIndex(PolarScan_t* scan, double r)
 {
   int result = -1;
@@ -897,14 +918,39 @@ void PolarScan_getLonLatNavigationInfo(PolarScan_t* scan, double lon, double lat
 {
   RAVE_ASSERT((scan != NULL), "scan == NULL");
   RAVE_ASSERT((info != NULL), "info == NULL");
+  info->lon = lon;
+  info->lat = lat;
   info->distance = 0.0L;
   info->azimuth = 0.0L;
   info->range = 0.0L;
   info->height = 0.0L;
+  info->actual_height = 0.0L;
   info->elevation = scan->elangle;
+
+  info->otype = Rave_ObjectType_SCAN;
+  info->ei = -1;
+  info->ri = -1;
+  info->ai = -1;
 
   PolarNavigator_llToDa(scan->navigator, lat, lon, &info->distance, &info->azimuth);
   PolarNavigator_deToRh(scan->navigator, info->distance, info->elevation, &info->range, &info->height);
+  info->actual_height = info->height;
+}
+
+int PolarScan_fillNavigationIndexFromAzimuthAndRange(
+  PolarScan_t* scan, PolarNavigationInfo* info)
+{
+  int ai = -1, ri = -1, result = 0;
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+  RAVE_ASSERT((info != NULL), "info == NULL");
+  info->ai = -1;
+  info->ri = -1;
+  result = PolarScan_getIndexFromAzimuthAndRange(scan, info->azimuth, info->range, &ai, &ri);
+  if (result) {
+    info->ai = ai;
+    info->ri = ri;
+  }
+  return result;
 }
 
 RaveValueType PolarScan_getNearest(PolarScan_t* scan, double lon, double lat, double* v)
@@ -947,7 +993,10 @@ RaveValueType PolarScan_getNearestConvertedParameterValue(PolarScan_t* scan, con
 
   PolarScan_getLonLatNavigationInfo(scan, lon, lat, &info);
 
-  result = PolarScan_getConvertedParameterValueAtAzimuthAndRange(scan, quantity, info.azimuth, info.range, v);
+  PolarScan_fillNavigationIndexFromAzimuthAndRange(scan, &info);
+
+  result = PolarScan_getConvertedParameterValue(scan, quantity, info.ri, info.ai, v);
+
   if (navinfo != NULL) {
     *navinfo = info;
   }
@@ -982,6 +1031,36 @@ int PolarScan_getLonLatFromIndex(PolarScan_t* scan, int bin, int ray, double* lo
 
   result = 1;
 done:
+  return result;
+}
+
+int PolarScan_getQualityValueAt(PolarScan_t* scan, const char* quantity, int ri, int ai, const char* name, double* v)
+{
+  PolarScanParam_t* param = NULL;
+  RaveField_t* quality = NULL;
+  int result = 0;
+
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+  RAVE_ASSERT((quantity != NULL), "quantity == NULL");
+  RAVE_ASSERT((v != NULL), "v == NULL");
+
+  param = PolarScan_getParameter(scan, quantity);
+  if (param == NULL) {
+    goto done;
+  }
+  quality = PolarScanParam_getQualityFieldByHowTask(param, name);
+  if (quality == NULL) {
+    quality = PolarScan_getQualityFieldByHowTask(scan, name);
+  }
+
+  if (quality == NULL) {
+    RAVE_WARNING1("Failed to locate a quality field with how/task = %s", name);
+    goto done;
+  }
+  result = RaveField_getValue(quality, ri, ai, v);
+done:
+  RAVE_OBJECT_RELEASE(param);
+  RAVE_OBJECT_RELEASE(quality);
   return result;
 }
 

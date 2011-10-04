@@ -374,6 +374,26 @@ RaveObjectList_t* PolarScanParam_getQualityFields(PolarScanParam_t* param)
   return (RaveObjectList_t*)RAVE_OBJECT_COPY(param->qualityfields);
 }
 
+RaveField_t* PolarScanParam_getQualityFieldByHowTask(PolarScanParam_t* param, const char* value)
+{
+  int nfields = 0, i = 0;
+  RaveField_t* result = NULL;
+
+  RAVE_ASSERT((param != NULL), "param == NULL");
+  if (value == NULL) {
+    RAVE_WARNING0("Trying to use PolarScanParam_getQualityFieldByHowTask without a how/task value");
+    return NULL;
+  }
+  nfields = RaveObjectList_size(param->qualityfields);
+  for (i = 0; result == NULL && i < nfields; i++) {
+    RaveField_t* field = (RaveField_t*)RaveObjectList_get(param->qualityfields, i);
+    if (field != NULL && RaveField_hasAttributeStringValue(field, "how/task", value)) {
+      result = RAVE_OBJECT_COPY(field);
+    }
+    RAVE_OBJECT_RELEASE(field);
+  }
+  return result;
+}
 /*@} End of Interface functions */
 
 RaveCoreObjectType PolarScanParam_TYPE = {
