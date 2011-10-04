@@ -39,6 +39,7 @@ import area
 import string
 import rave_tempfile
 import odim_source
+import math
 
 from rave_defines import CENTER_ID, GAIN, OFFSET
 
@@ -51,6 +52,18 @@ def arglist2dict(arglist):
   for i in range(0, len(arglist), 2):
     result[arglist[i]] = arglist[i+1]
   return result
+
+##
+# Converts a string into a number, either int or float
+# @param sval the string to translate
+# @return the translated value
+# @throws ValueError if value not could be translated
+#
+def strToNumber(sval):
+  try:
+    return int(sval)
+  except ValueError, e:
+    return float(sval)
 
 
 ## Creates a composite
@@ -121,6 +134,7 @@ def generate(files, arguments):
   method = "pcappi"
   if "method" in args.keys():
     method = args["method"]
+
   if method == "ppi":
     generator.product = _rave.Rave_ProductType_PPI
   elif method == "cappi":
@@ -129,9 +143,20 @@ def generate(files, arguments):
     generator.product = _rave.Rave_ProductType_PCAPPI
 
   generator.height = 1000.0
-  if "height" in args.keys():
-    generator.height = args["height"]
-  
+  generator.elangle = 0.0
+  if "prodpar" in args.keys():
+    if generator.product in [_rave.Rave_ProductType_CAPPI, _rave.Rave_ProductType_PCAPPI]:
+      try:
+        generator.height = strToNumber(args["prodpar"])
+      except ValueError,e:
+        pass
+    elif generator.product in [_rave.Rave_ProductType_PPI]:
+      try:
+        v = strToNumber(args["prodpar"])
+        generator.elangle = v * math.pi / 180.0
+      except ValueError,e:
+        pass
+
   generator.selection_method = _pycomposite.SelectionMethod_NEAREST
   if "selection" in args.keys():
     if args["selection"] == "NEAREST_RADAR":

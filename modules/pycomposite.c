@@ -245,6 +245,7 @@ done:
 static struct PyMethodDef _pycomposite_methods[] =
 {
   {"height", NULL},
+  {"elangle", NULL},
   {"product", NULL},
   {"selection_method", NULL},
   {"quantity", NULL},
@@ -306,16 +307,20 @@ static int _pycomposite_setattr(PyComposite* self, char* name, PyObject* val)
   if (strcmp("height", name) == 0) {
     if (PyFloat_Check(val)) {
       Composite_setHeight(self->composite, PyFloat_AsDouble(val));
+    } else if (PyLong_Check(val)) {
+      Composite_setHeight(self->composite, PyLong_AsDouble(val));
+    } else if (PyInt_Check(val)) {
+      Composite_setHeight(self->composite, (double)PyInt_AsLong(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError,"height must be of type float");
     }
   } else if (strcmp("elangle", name) == 0) {
     if (PyFloat_Check(val)) {
-      Composite_setHeight(self->composite, PyFloat_AsDouble(val));
+      Composite_setElevationAngle(self->composite, PyFloat_AsDouble(val));
     } else if (PyLong_Check(val)) {
-      Composite_setHeight(self->composite, PyLong_AsDouble(val));
+      Composite_setElevationAngle(self->composite, PyLong_AsDouble(val));
     } else if (PyInt_Check(val)) {
-      Composite_setHeight(self->composite, (double)PyInt_AsLong(val));
+      Composite_setElevationAngle(self->composite, (double)PyInt_AsLong(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "elangle must be a float or decimal value")
     }
