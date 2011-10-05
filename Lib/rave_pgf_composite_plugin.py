@@ -168,7 +168,12 @@ def generate(files, arguments):
   generator.date = args["date"]
   generator.gain = GAIN
   generator.offset = OFFSET
-  result = generator.nearest(pyarea)
+  
+  if "ropo" in detectors:
+    result = generator.nearest(pyarea, ["fi.fmi.ropo.detector.classification"])
+  else:
+    result = generator.nearest(pyarea)
+  
   
   # Fix so that we get a valid place for /what/source and /how/nodes 
   plc = result.source
