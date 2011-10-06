@@ -45,6 +45,21 @@ typedef struct _DetectionRange_t DetectionRange_t;
 extern RaveCoreObjectType DetectionRange_TYPE;
 
 /**
+ * Sets the lookup path where the cache files are stored.
+ * @param[in] self - self
+ * @param[in] path - the path to use for lookup tables MAY NOT BE NULL (default /tmp)
+ * @return 1 on success otherwise 0
+ */
+int DetectionRange_setLookupPath(DetectionRange_t* self, const char* path);
+
+/**
+ * Returns the lookup path where the cache files are stored.
+ * @param[in] self - self
+ * @return the lookup path
+ */
+const char* DetectionRange_getLookupPath(DetectionRange_t* self);
+
+/**
  * Returns the echo top.
  * @param[in] self - self
  * @param[in] pvol - the polar volume
@@ -53,5 +68,13 @@ extern RaveCoreObjectType DetectionRange_TYPE;
  * @returns a PolarScan containing the echo tops
  */
 PolarScan_t* DetectionRange_top(DetectionRange_t* self, PolarVolume_t* pvol, double scale, double threshold_dBZN);
+
+/**
+ * Top field garbage should be filtered.
+ * @param[in] self - self
+ * @param[in] scan - the scan to filter (after top has been calculated)
+ * @returns a PolarScan containing the filtered tops
+ */
+PolarScan_t* DetectionRange_filter(DetectionRange_t* self, PolarScan_t* scan);
 
 #endif /* DETECTION_RANGE_H */

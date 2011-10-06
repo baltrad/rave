@@ -178,11 +178,43 @@ static PyObject* _pydetectionrange_top(PyDetectionRange* self, PyObject* args)
 }
 
 /**
+ * Evaluates the echo tops
+ * @param[in] self - self
+ * @param[in] args - (a volume, scale (of the bins) and dbzn threshold)
+ * @returns a python scan containing the tops
+ */
+static PyObject* _pydetectionrange_filter(PyDetectionRange* self, PyObject* args)
+{
+  PyObject* object = NULL;
+  PyPolarScan* pyscan = NULL;
+  PolarScan_t* filteredscan = NULL;
+  PyObject* result = NULL;
+
+  double scale = 0.0, threshold = 0.0;
+  if (!PyArg_ParseTuple(args, "O", &object)) {
+    return NULL;
+  }
+  if (PyPolarScan_Check(object)) {
+    pyscan = (PyPolarScan*)object;
+  } else {
+    raiseException_returnNULL(PyExc_AttributeError, "filter requires scan");
+  }
+  filteredscan = DetectionRange_filter(self->dr, pyscan->scan);
+  if (filteredscan == NULL) {
+    raiseException_returnNULL(PyExc_Exception, "Failed to filter scan");
+  }
+  result = (PyObject*)PyPolarScan_New(filteredscan);
+  RAVE_OBJECT_RELEASE(filteredscan);
+  return result;
+}
+
+/**
  * All methods a detection range generator
  */
 static struct PyMethodDef _pydetectionrange_methods[] =
 {
   {"top", (PyCFunction) _pydetectionrange_top, 1},
+  {"filter", (PyCFunction) _pydetectionrange_filter, 1},
   {NULL, NULL } /* sentinel */
 };
 

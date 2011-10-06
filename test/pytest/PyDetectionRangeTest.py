@@ -61,3 +61,15 @@ class PyDetectionRangeTest(unittest.TestCase):
     os.filename = self.TEMPORARY_FILE
     os.object = result
     os.save()
+    
+  def test_top_filter(self):
+    dr = _detectionrange.new()
+    o = _raveio.open(self.FIXTURE_VOLUME)
+    
+    topfield = dr.top(o.object, 2000, -40.0)
+    result = dr.filter(topfield)
+    
+    os = _raveio.new()
+    os.filename = self.TEMPORARY_FILE
+    os.object = result
+    os.save()
