@@ -60,6 +60,34 @@ int DetectionRange_setLookupPath(DetectionRange_t* self, const char* path);
 const char* DetectionRange_getLookupPath(DetectionRange_t* self);
 
 /**
+ * Sets the minrange to be processed during the analysis stage.
+ * @param[in] self - self
+ * @param[in] minrange - the min radial range in meters (default is 10000.0)
+ */
+void DetectionRange_setAnalysisMinRange(DetectionRange_t* self, double minrange);
+
+/**
+ * Returns the min radial range to be processed in the analysis stage
+ * @param[in] self - self
+ * @return the min radial range in meters
+ */
+double DetectionRange_getAnalysisMinRange(DetectionRange_t* self);
+
+/**
+ * Sets the maxrange to be processed during the analysis stage.
+ * @param[in] self - self
+ * @param[in] maxrange - the max radial range in meters (default is 240000.0)
+ */
+void DetectionRange_setAnalysisMaxRange(DetectionRange_t* self, double maxrange);
+
+/**
+ * Returns the max radial range to be processed in the analysis stage
+ * @param[in] self - self
+ * @return the max radial range in meters
+ */
+double DetectionRange_getAnalysisMaxRange(DetectionRange_t* self);
+
+/**
  * Returns the echo top.
  * @param[in] self - self
  * @param[in] pvol - the polar volume
@@ -76,5 +104,19 @@ PolarScan_t* DetectionRange_top(DetectionRange_t* self, PolarVolume_t* pvol, dou
  * @returns a PolarScan containing the filtered tops
  */
 PolarScan_t* DetectionRange_filter(DetectionRange_t* self, PolarScan_t* scan);
+
+/**
+ * Analyzes the detection ranges.
+ * @param[in] self - self
+ * @param[in] scan - the HGHT scan to be analyzed
+ * @param[in] avgsector - width of the floating average azimuthal sector
+ * @param[in] sortage - defining the higher portion of sorted ray to be analysed, typically 0.05 - 0.2
+ * @param[in] samplepoint - define the position to pick a representative TOP value from highest
+ *                          valid TOPs, typically near 0.5 (median) lower values (nearer to
+ *                          highest TOP, 0.15) used in noisier radars like KOR.
+ * @returns the analyzed field on success otherwise NULL
+ */
+PolarScan_t* DetectionRange_analyze(DetectionRange_t* self,
+  PolarScan_t* scan, int avgsector, double sortage, double samplepoint);
 
 #endif /* DETECTION_RANGE_H */

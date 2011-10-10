@@ -51,6 +51,24 @@ class PyDetectionRangeTest(unittest.TestCase):
     isscan = string.find(`type(obj)`, "DetectionRangeCore")
     self.assertNotEqual(-1, isscan)
 
+  def test_lookupPath(self):
+    obj = _detectionrange.new()
+    self.assertEquals("/tmp", obj.lookupPath)
+    obj.lookupPath="/tmp/that"
+    self.assertEquals("/tmp/that", obj.lookupPath)
+
+  def test_analysis_minrange(self):
+    obj = _detectionrange.new()
+    self.assertAlmostEquals(10000.0, obj.analysis_minrange, 4)
+    obj.analysis_minrange = 12000.0
+    self.assertAlmostEquals(12000.0, obj.analysis_minrange, 4)
+
+  def test_analysis_maxrange(self):
+    obj = _detectionrange.new()
+    self.assertAlmostEquals(240000.0, obj.analysis_maxrange, 4)
+    obj.analysis_maxrange = 250000.0
+    self.assertAlmostEquals(250000.0, obj.analysis_maxrange, 4)
+
   def test_top(self):
     dr = _detectionrange.new()
     o = _raveio.open(self.FIXTURE_VOLUME)
@@ -69,6 +87,19 @@ class PyDetectionRangeTest(unittest.TestCase):
     topfield = dr.top(o.object, 2000, -40.0)
     result = dr.filter(topfield)
     
+    os = _raveio.new()
+    os.filename = self.TEMPORARY_FILE
+    os.object = result
+    os.save()
+
+  def test_analyze(self):
+    dr = _detectionrange.new()
+    o = _raveio.open(self.FIXTURE_VOLUME)
+    
+    topfield = dr.top(o.object, 2000, -40.0)
+    filterfield = dr.filter(topfield)
+    result = dr.analyze(filterfield, 60, 0.1, 0.5)
+
     os = _raveio.new()
     os.filename = self.TEMPORARY_FILE
     os.object = result

@@ -178,9 +178,9 @@ static PyObject* _pydetectionrange_top(PyDetectionRange* self, PyObject* args)
 }
 
 /**
- * Evaluates the echo tops
+ * Filters out unwanted values
  * @param[in] self - self
- * @param[in] args - (a volume, scale (of the bins) and dbzn threshold)
+ * @param[in] args - (a hght scan retrieved from .top())
  * @returns a python scan containing the tops
  */
 static PyObject* _pydetectionrange_filter(PyDetectionRange* self, PyObject* args)
@@ -190,7 +190,6 @@ static PyObject* _pydetectionrange_filter(PyDetectionRange* self, PyObject* args
   PolarScan_t* filteredscan = NULL;
   PyObject* result = NULL;
 
-  double scale = 0.0, threshold = 0.0;
   if (!PyArg_ParseTuple(args, "O", &object)) {
     return NULL;
   }
@@ -209,12 +208,49 @@ static PyObject* _pydetectionrange_filter(PyDetectionRange* self, PyObject* args
 }
 
 /**
+ * Performs the analyzing
+ * @param[in] self - self
+ * @param[in] args - (a hght scan, avgsector (int), sortage, samplepoint (double))
+ * @returns a python scan containing the tops
+ */
+static PyObject* _pydetectionrange_analyze(PyDetectionRange* self, PyObject* args)
+{
+  PyObject* object = NULL;
+  PyPolarScan* pyscan = NULL;
+  PolarScan_t* analyzedscan = NULL;
+  PyObject* result = NULL;
+  int avgsector = 0;
+  double sortage = 0.0L;
+  double samplepoint = 0.0L;
+
+  if (!PyArg_ParseTuple(args, "Oidd", &object, &avgsector, &sortage, &samplepoint)) {
+    return NULL;
+  }
+  if (PyPolarScan_Check(object)) {
+    pyscan = (PyPolarScan*)object;
+  } else {
+    raiseException_returnNULL(PyExc_AttributeError, "filter requires scan");
+  }
+  analyzedscan = DetectionRange_analyze(self->dr, pyscan->scan, avgsector, sortage, samplepoint);
+  if (analyzedscan == NULL) {
+    raiseException_returnNULL(PyExc_Exception, "Failed to analyze scan");
+  }
+  result = (PyObject*)PyPolarScan_New(analyzedscan);
+  RAVE_OBJECT_RELEASE(analyzedscan);
+  return result;
+}
+
+/**
  * All methods a detection range generator
  */
 static struct PyMethodDef _pydetectionrange_methods[] =
 {
+  {"lookupPath", NULL},
+  {"analysis_minrange", NULL},
+  {"analysis_maxrange", NULL},
   {"top", (PyCFunction) _pydetectionrange_top, 1},
   {"filter", (PyCFunction) _pydetectionrange_filter, 1},
+  {"analyze", (PyCFunction) _pydetectionrange_analyze, 1},
   {NULL, NULL } /* sentinel */
 };
 
@@ -225,6 +261,14 @@ static struct PyMethodDef _pydetectionrange_methods[] =
 static PyObject* _pydetectionrange_getattr(PyDetectionRange* self, char* name)
 {
   PyObject* res = NULL;
+
+  if (strcmp("lookupPath", name) == 0) {
+    return PyString_FromString(DetectionRange_getLookupPath(self->dr));
+  } else if (strcmp("analysis_minrange", name) == 0) {
+    return PyFloat_FromDouble(DetectionRange_getAnalysisMinRange(self->dr));
+  } else if (strcmp("analysis_maxrange", name) == 0) {
+    return PyFloat_FromDouble(DetectionRange_getAnalysisMaxRange(self->dr));
+  }
 
   res = Py_FindMethod(_pydetectionrange_methods, (PyObject*) self, name);
   if (res)
@@ -244,8 +288,37 @@ static int _pydetectionrange_setattr(PyDetectionRange* self, char* name, PyObjec
   if (name == NULL) {
     goto done;
   }
-
-  raiseException_gotoTag(done, PyExc_AttributeError, name);
+  if (strcmp("lookupPath", name) == 0) {
+    if (PyString_Check(val)) {
+      if (!DetectionRange_setLookupPath(self->dr, PyString_AsString(val))) {
+        raiseException_gotoTag(done, PyExc_ValueError, "lookupPath could not be set");
+      }
+    } else {
+      raiseException_gotoTag(done, PyExc_ValueError,"lookupPath must be of type string");
+    }
+  } else if (strcmp("analysis_minrange", name) == 0) {
+    if (PyFloat_Check(val)) {
+      DetectionRange_setAnalysisMinRange(self->dr, PyFloat_AsDouble(val));
+    } else if (PyLong_Check(val)) {
+      DetectionRange_setAnalysisMinRange(self->dr, PyLong_AsDouble(val));
+    } else if (PyInt_Check(val)) {
+      DetectionRange_setAnalysisMinRange(self->dr, (double)PyInt_AsLong(val));
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError, "analysis_minrange must be a float or decimal value")
+    }
+  } else if (strcmp("analysis_maxrange", name) == 0) {
+    if (PyFloat_Check(val)) {
+      DetectionRange_setAnalysisMaxRange(self->dr, PyFloat_AsDouble(val));
+    } else if (PyLong_Check(val)) {
+      DetectionRange_setAnalysisMaxRange(self->dr, PyLong_AsDouble(val));
+    } else if (PyInt_Check(val)) {
+      DetectionRange_setAnalysisMaxRange(self->dr, (double)PyInt_AsLong(val));
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError, "analysis_maxrange must be a float or decimal value")
+    }
+  } else {
+    raiseException_gotoTag(done, PyExc_AttributeError, name);
+  }
 
   result = 0;
 done:

@@ -37,6 +37,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 
 #define ER 8495000.0  /**< effective earth radius for bin height calculations */
 
+#define ERKM 8495     /**< effective earth radius in km */
+
 #define CONSTGRAD 50.0 /**< 10 dB/km = 1000 m / 20 dBN */
 
 /**
@@ -45,6 +47,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 struct _DetectionRange_t {
   RAVE_OBJECT_HEAD /** Always on top */
   char* lookupPath; /**< where lookup files are located, default is /tmp */
+  double analysis_minrange; /**< the min range to be processed in meters, default is 10000.0 */
+  double analysis_maxrange; /**< the min range to be processed in meters, default is 240000.0 */
 };
 
 /*@{ Private functions */
@@ -59,6 +63,8 @@ static int DetectionRange_constructor(RaveCoreObject* obj)
   if (!DetectionRange_setLookupPath(this, "/tmp")) {
     return 0;
   }
+  this->analysis_minrange = 10000.0;
+  this->analysis_maxrange = 240000.0;
   return 1;
 }
 
@@ -75,6 +81,8 @@ static int DetectionRange_copyconstructor(RaveCoreObject* obj, RaveCoreObject* s
   if (!DetectionRange_setLookupPath(this, DetectionRange_getLookupPath(src))) {
     return 0;
   }
+  this->analysis_minrange = src->analysis_minrange;
+  this->analysis_maxrange = src->analysis_maxrange;
   return 1;
 }
 
@@ -111,13 +119,39 @@ static int DetectionRangeInternal_binheight(double m,double e,double h0)
  * @param[in] h - altitude
  * @param[in] e - the elevation in radians
  * @param[in] h0 - altitude0
- * @return the range
+ * @return the range in meters
  */
 static double DetectionRangeInternal_bindist(double h,double e,double h0)
 {
    double r;
-   r = cos(e)*ER*(sqrt(sin(e)*sin(e)+0.002*(h-h0)/ER) - sin(e));
+   r = cos(e)*ER*(sqrt(sin(e)*sin(e)+2*(h-h0)/ER) - sin(e));
    return(r);
+}
+
+/**
+ * Sort function to be used by qsort to get sorting in decending order
+ * @param[in] i1 - one value (unsigned char*)
+ * @param[in] i2 - another value (unsigned char*)
+ * @return the result of i1 < i2
+ */
+static int DetectionRangeInternal_sortUcharDesc(const void *i1, const void *i2)
+{
+  unsigned char *ci1 = (unsigned char *) i1;
+  unsigned char *ci2 = (unsigned char *) i2;
+  return (*ci1 < *ci2);
+}
+
+/**
+ * Sort function to be used by qsort to get sorting in decending order
+ * @param[in] i1 - one value (double*)
+ * @param[in] i2 - another value (double*)
+ * @return the result of i1 < i2
+ */
+static int DetectionRangeInternal_sortDoubleDesc(const void *i1, const void *i2)
+{
+  double *ci1 = (double *) i1;
+  double *ci2 = (double *) i2;
+  return (*ci1 < *ci2);
 }
 
 /**
@@ -240,6 +274,41 @@ done:
   return TOPrev;
 }
 
+/**
+ * Writes the background top to the cache file.
+ * @param[in] self - self
+ * @param[in] source - the source for this value
+ * @param[in] value - the value to be written
+ * @return 1 on success otherwise 0
+ */
+static int DetectionRangeInternal_writeBackgroundTop(DetectionRange_t* self, const char* source, double value)
+{
+  FILE* fp = NULL;
+  char filename[1024];
+  int result = 0;
+  RAVE_ASSERT((self != NULL), "self == NULL");
+
+  if (!DetectionRangeInternal_createPreviousTopFilename(self, source, filename, 1024)) {
+    goto done;
+  }
+  fp = fopen(filename, "w");
+  if (fp == NULL) {
+    RAVE_ERROR1("Failed to open %s for writing", filename);
+    goto done;
+  } else {
+    if (fprintf(fp,"%.1f\n",value)<0) {
+      RAVE_ERROR1("Failed to write background top %.1f to file", value);
+      goto done;
+    }
+  }
+  result = 1;
+done:
+  if (fp != NULL) {
+    fclose(fp);
+  }
+  return result;
+}
+
 static time_t DetectionRangeInternal_getPreviousTopFiletime(DetectionRange_t* self, const char* source)
 {
   time_t result;
@@ -292,6 +361,224 @@ static double DetectionRangeInternal_generateAgedTop(DetectionRange_t* self, con
   return TOPprev;
 }
 
+/**
+ * Calculates the startbin index and the bin count from the provided rscale
+ * and nbins when taking analysis_minrange and analysis_maxrange into account.
+ * @param[in] self - self
+ * @param[in] rscale - the scale of the bins
+ * @param[in] nbins - the maximum number of bins
+ * @param[out] startbin - the start position
+ * @param[out] bincount - the number of bins we should work on from startbin
+ */
+static void DetectionRangeInternal_getStartBinAndCount(
+  DetectionRange_t* self, double rscale, long nbins, int* startbin, int* bincount)
+{
+  double maxrange = rscale * (double)nbins;
+  double minrange = 0.0;
+  RAVE_ASSERT((startbin != NULL), "startbin == NULL");
+  RAVE_ASSERT((bincount != NULL), "bincount == NULL");
+
+  /* We don't want to go outside max and min range boundaries */
+  if (self->analysis_maxrange < maxrange) {
+    maxrange = self->analysis_maxrange;
+  }
+  if (self->analysis_minrange > minrange) {
+    minrange = self->analysis_minrange;
+  }
+
+  if (rscale == 0.0) {
+    *startbin = 0;
+    *bincount = nbins;
+  } else {
+    int sbin = (int)(minrange/rscale);
+    int binc = (int)((maxrange - minrange)/rscale);
+    if (binc > nbins - sbin) {
+      binc = nbins-sbin;
+    }
+    *startbin = sbin;
+    *bincount = binc;
+  }
+}
+
+/* ------------------------------------------------------------------------------------------*/
+/* Sorting of TOP values and selection of representative TOPs per ray */
+
+/**
+ * Sorts top values and selects representative TOPs per ray.
+ * @param[in] self - self
+ * @param[in] param - the top field we are working with
+ * @param[in] startbin - the bin to start with
+ * @param[in] bincount - the number of bins to work with
+ * @param[in] sortage - the sortage in range 0 - 1.0 any other value will result in undefined behaviour
+ * @param[in] samplepoint - define the position to pick a representative TOP value from highest
+ *                          valid TOPs, typically near 0.5 (median) lower values (nearer to
+ *                          highest TOP, 0.15) used in noisier radars like KOR.
+ * @param[out] oray_pickhightop - TOP picked from highest TOPs defined by sortage and samplepoint
+ * @param[out] osorttop -
+ * @param[out] orayweight -
+ */
+static int DetectionRangeInternal_sortAndSelectRepresenativeTops(
+  DetectionRange_t* self, PolarScanParam_t* param, int startbin, int bincount, double sortage, double samplepoint,
+  double** oray_pickhightop, double** osorttop, double** orayweight) {
+
+  long* topcount = NULL;
+  double* ray_pickhightop = NULL;
+  double* sorttop = NULL;
+  unsigned char *ray_sortbuf = NULL;  /* buffer of ray TOPs to be sorted by qsort                  */
+  double* rayweight = NULL;
+
+  int itop = 0;                       /* integer top value ((int)(TOP[m]/100+1)), 0 if no TOP      */
+  int sortpart_ray = 0;
+  int result = 0;
+  int nrays = 0;
+  int rayi = 0;
+
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  RAVE_ASSERT((param != NULL), "param == NULL");
+  RAVE_ASSERT((oray_pickhightop != NULL), "oray_pickhightop == NULL");
+  RAVE_ASSERT((osorttop != NULL), "osorttop == NULL");
+  RAVE_ASSERT((orayweight != NULL), "orayweight == NULL");
+  nrays = PolarScanParam_getNrays(param);
+
+  ray_sortbuf = RAVE_MALLOC(sizeof(unsigned char) * bincount);
+  topcount = RAVE_MALLOC(sizeof(long) * nrays);
+  ray_pickhightop = RAVE_MALLOC(sizeof(double) * nrays);
+  sorttop = RAVE_MALLOC(sizeof(double) * nrays);
+  rayweight = RAVE_MALLOC(sizeof(double) * nrays);
+
+  if (ray_sortbuf == NULL || topcount == NULL || ray_pickhightop == NULL || sorttop == NULL || rayweight == NULL) {
+    RAVE_CRITICAL0("Failed to allocate memory");
+    goto done;
+  }
+
+  for (rayi = 0; rayi < nrays; rayi++) {
+    int i = 0, rsi = 0;
+    double v = 0.0;
+    topcount[rayi]=0;
+    ray_pickhightop[rayi]=-1.0;
+    sorttop[rayi]=0.0;
+
+    for (i = startbin, rsi = 0; i < bincount; i++, rsi++) {
+      PolarScanParam_getValue(param, i, rayi, &v);
+      ray_sortbuf[rsi] = (unsigned char)v;
+      if (ray_sortbuf[rsi] == 254) {
+        ray_sortbuf[rsi] = 0;
+      }
+    }
+
+    /* Sorting ray TOP values in _descending_ order */
+    qsort(ray_sortbuf, bincount, sizeof(unsigned char), DetectionRangeInternal_sortUcharDesc);
+
+    /* sortage [0-1] part of sorted ray taken to further analysis */
+    sortpart_ray = (int)((double)bincount * sortage);
+
+    for (i = 0; i < sortpart_ray; i++) {
+      itop = ray_sortbuf[i];
+      if (itop) {
+        topcount[rayi]++;
+      }
+    }
+
+    /*
+     * TOP from samplepoint [0-1] relative position of sorted, valid TOPs
+     * is taken as representative high TOP. 0 points to highest value, 0.5 median
+     */
+    if (topcount[rayi]) {
+      int picbin = (int)((double)topcount[rayi] * samplepoint);
+      ray_pickhightop[rayi] = sorttop[rayi] = (ray_sortbuf[picbin] - 1)/10.0;
+    }
+
+    /* weight of this ray depends on how many TOPs are existing in sort part of ray */
+    rayweight[rayi] = (double)topcount[rayi]/(double)sortpart_ray;
+  }
+
+  *oray_pickhightop = ray_pickhightop;
+  *osorttop = sorttop;
+  *orayweight = rayweight;
+  ray_pickhightop = NULL; // Not responsible for memory any longer
+  sorttop = NULL;         // Not responsible for memory any longer
+  rayweight = NULL;       // Not responsible for memory any longer
+  result = 1;
+done:
+  RAVE_FREE(ray_sortbuf);
+  RAVE_FREE(topcount)
+  RAVE_FREE(ray_pickhightop)
+  RAVE_FREE(sorttop);
+  RAVE_FREE(rayweight);
+  return result;
+}
+
+/**
+ * Counts the number of valid raytop weights
+ * @param[in] rayweights - the ray weight array (must be != NULL)
+ * @param[in] nrays - the number of rays
+ * @return the number of valid weights
+ */
+static long DetectionRangeInternal_getValidRaytopCount(double* rayweights, long nrays)
+{
+  long i = 0;
+  long result = 0;
+  RAVE_ASSERT((rayweights != NULL), "rayweights == NULL");
+  for (i = 0; i < nrays; i++) {
+    if (rayweights[i] > 0.99) {
+      result++;
+    }
+  }
+  return result;
+}
+
+/**
+ * Creates a detection range scan with the height scan as a template.
+ * @param[in] hghtScan - the height scan
+ * @returns a detection range scan on success otherwise NULL
+ */
+static PolarScan_t* DetectionRangeInternal_createDetectionRangeScan(PolarScan_t* hghtScan)
+{
+  PolarScan_t* result = NULL;
+  PolarScan_t* scanClone = NULL;
+  PolarScanParam_t* hghtScanParam = NULL;
+  PolarScanParam_t* paramClone = NULL;
+  int rayi = 0, bini = 0;
+  long nrays = 0, nbins = 0;
+
+  RAVE_ASSERT((hghtScan != NULL), "hghtScan == NULL");
+
+  hghtScanParam = PolarScan_getParameter(hghtScan, "HGHT");
+  if (hghtScanParam == NULL) {
+    RAVE_ERROR0("Provided scan does not contain a HGHT parameter");
+    goto done;
+  }
+  paramClone = RAVE_OBJECT_CLONE(hghtScanParam);
+  scanClone = RAVE_OBJECT_CLONE(hghtScan);
+  if (scanClone == NULL || paramClone == NULL) {
+    RAVE_ERROR0("Failed to clone scan or parameter");
+    goto done;
+  }
+  PolarScan_removeAllParameters(scanClone);
+  PolarScanParam_setQuantity(paramClone, "DR");
+  nrays = PolarScanParam_getNrays(paramClone);
+  nbins = PolarScanParam_getNbins(paramClone);
+  for (rayi = 0; rayi < nrays; rayi++) {
+    for (bini = 0; bini < nbins; bini++) {
+      PolarScanParam_setValue(paramClone, bini, rayi, 0.0);
+    }
+  }
+  if (!PolarScan_addParameter(scanClone, paramClone)) {
+    RAVE_ERROR0("Failed to add parameter to scan");
+    goto done;
+  }
+  if (!PolarScan_setDefaultParameter(scanClone, "DR")) {
+    RAVE_ERROR0("Failed to set default parameter to DR");
+    goto done;
+  }
+
+  result = RAVE_OBJECT_COPY(scanClone);
+done:
+  RAVE_OBJECT_RELEASE(scanClone);
+  RAVE_OBJECT_RELEASE(hghtScanParam);
+  RAVE_OBJECT_RELEASE(paramClone);
+  return result;
+}
 /*@} End of Private functions */
 
 /*@{ Interface functions */
@@ -316,6 +603,30 @@ const char* DetectionRange_getLookupPath(DetectionRange_t* self)
 {
   RAVE_ASSERT((self != NULL), "self == NULL");
   return (const char*)self->lookupPath;
+}
+
+void DetectionRange_setAnalysisMinRange(DetectionRange_t* self, double minrange)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  self->analysis_minrange = minrange;
+}
+
+double DetectionRange_getAnalysisMinRange(DetectionRange_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return self->analysis_minrange;
+}
+
+void DetectionRange_setAnalysisMaxRange(DetectionRange_t* self, double maxrange)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  self->analysis_maxrange = maxrange;
+}
+
+double DetectionRange_getAnalysisMaxRange(DetectionRange_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return self->analysis_maxrange;
 }
 
 PolarScan_t* DetectionRange_top(DetectionRange_t* self, PolarVolume_t* pvol, double scale, double threshold_dBZN)
@@ -546,51 +857,58 @@ done:
 PolarScan_t* DetectionRange_analyze(DetectionRange_t* self,
   PolarScan_t* scan, int avgsector, double sortage, double samplepoint)
 {
-#ifdef KALLE
-  int i,                        /* common index variable                                     */
-      A,B,                      /* azimuth and bin (range gate) indices                      */
-      weightsector,             /* width of weighting sector [deg]                           */
-      StartBin,BinCount,        /* starting bin and bin count of top "ray" analysis,
-                                   500 m bins assumed !                                      */
-      sortpart_ray,             /* the defined part of height-sorted ray (see sortage)       */
-      valid_raytop_count=0,     /* count of "valid TOP rays" e.g. rays having
+  int weightsector = 0;         /* width of weighting sector [deg]                           */
+  int inW = 0;                  /* weight sector width input value,  weightsector=inW*2+1    */
+  int StartBin=0, BinCount=0;   /* starting bin and bin count of top "ray" analysis,         */
+  int valid_raytop_count = 0;   /* count of "valid TOP rays" e.g. rays having
                                    top_count==sortpart_ray (=ray weight is > 0.99)           */
-      wI,                       /* index of weight factors array                             */
-      rayN,                     /* count of rays having valid top value                      */
-      inW,                      /* weight sector width input value,  weightsector=inW*2+1    */
-      outbyte,                  /* output array (outarr) value (0-255)                       */
-      items,                    /* number of items read with sscanf or fscanf                */
-      picbin;                   /* bin number to pick from valid TOP values of sorted ray
-                                   topcount * samplepoint [median would be 0.5]              */
+  int A = 0, B = 0;             /* azimuth and bin (range gate) indices                      */
+  int wI = 0;                   /* index of weight factors array                             */
+  int rayN = 0;                 /* count of rays having valid top value                      */
+  int limitNrays;               /* Limit on the number of nrays necessary before writing previous top, 10% */
+  double half_bw = 0.0;         /* half beam width [rad]                                     */
+  double maxweight = 0.0;       /* maximum unnormalized sector weight                        */
+  double lowest_elev = 0.0;     /* lowest elevation in radians */
+  double Wsecsum = 0.0;         /* sum of sector weight factors                              */
+  double TOPprev = 0.0;         /* background TOP value (based on previous TOP)              */
+  double prev_maxr=250.0;       /* */
+  double Wsum = 0.0;            /* sum of total weight factors                               */
+  double* weightarr = NULL;     /* array of sector weight factors, dimension=weightsector    */
+  double* ray_pickhightop=NULL; /* TOP picked from highest TOPs defined by sortage and samplepoint */
+  double* sorttop = NULL;       /* */
+  double* rayweight = NULL;     /* weight ray depends on how many TOPs are existing in sort part of ray */
+  double* Final_WTOP = NULL;    /* Final ray-, sector- and background weighted TOP for rays  */
+  long nrays = 0, nbins = 0;
 
-  char *p,                      /* common pointer                                            */
-       hdr[200]={0},            /* TOP pgm header string                                     */
-       *prevTOPfile;
-
-  double half_bw,               /* half beam width [rad]                                     */
-         minrange,maxrange,     /* minimum and maximum radial ranges of analysis [km]        */
-         Wsum,                  /* sum of total weight factors                               */
-         Wsecsum,               /* sum of sector weight factors                              */
-         maxweight,             /* maximum unnormalized sector weight                        */
-         *weightarr = NULL,     /* array of sector weight factors, dimension=weightsector    */
-         TOPprev,               /* background TOP value (based on previous TOP)              */
-         *ray_pickhightop = NULL, /* TOP picked from highest TOPs defined by sortage
-                                   and samplepoint */
-         lowest_elev,
-         *Final_WTOP = NULL,    /* Final ray-, sector- and background weighted TOP for rays  */
-
-         *ray_maxtop = NULL,    /* array of maximum TOPs of rays                             */
-         *rayweight = NULL,     /* weight ray depends on how many TOPs are existing
-                                   in sort part of ray */
-         maxR_analyzed_highbeam=250.0, /* final analysed maximum range of upper edge of ray  */
-         maxR_analyzed_lowbeam=250.0,  /* final analysed maximum range of lower edge of ray  */
-         *sorttop = NULL;
+  PolarScanParam_t* param = NULL;
+  PolarScan_t* result = NULL;   /* The resulting scan, will only be set on success */
+  PolarScan_t* outscan = NULL;  /* The working scan where data will be set and on success copied to result */
 
   RAVE_ASSERT((self != NULL), "self == NULL");
   if (scan == NULL) {
     RAVE_ERROR0("Trying to analyse a NULL field");
     return NULL;
   }
+  if (sortage < 0.0 || sortage > 1.0) {
+    RAVE_ERROR0("sortage should be in range 0 - 1");
+    return NULL;
+  }
+  param = PolarScan_getParameter(scan, "HGHT");
+  if (param == NULL) {
+    RAVE_ERROR0("Providing a scan without a HGHT field?");
+    goto done;
+  }
+
+  outscan = DetectionRangeInternal_createDetectionRangeScan(scan);
+  if (outscan == NULL) {
+    RAVE_ERROR0("Failed to create a detection range scan");
+    goto done;
+  }
+  nrays = PolarScanParam_getNrays(param);
+  nbins = PolarScanParam_getNbins(param);
+
+  limitNrays = (int)((double)nrays * 0.1);
+
   half_bw = PolarScan_getBeamwidth(scan) / 2.0;
   inW = avgsector / 2;
   weightsector = inW*2 + 1;
@@ -598,35 +916,136 @@ PolarScan_t* DetectionRange_analyze(DetectionRange_t* self,
 
   lowest_elev = PolarScan_getElangle(scan); // Original code uses 0.3 here and then later on the real lowest elangle !?
 
+  Final_WTOP = RAVE_MALLOC(sizeof(double) * nrays);
+
   /* Sector weight factors generation. Linear weights with highest value
    * at center of the sector normalized to 1 and sector edges to 0.
    */
   weightarr = DetectionRangeInternal_createSectorWeightFactors(weightsector, maxweight, inW, &Wsecsum);
 
+  if (Final_WTOP == NULL || weightarr == NULL) {
+    RAVE_ERROR0("Failed to allocate memory for Final_WTOP or weightarr");
+    goto done;
+  }
   /** Calculate previous top value */
   TOPprev = DetectionRangeInternal_readPreviousBackgroundTop(self, PolarScan_getSource(scan));
   TOPprev = DetectionRangeInternal_generateAgedTop(self, PolarScan_getSource(scan), TOPprev);
 
   /* maximum range of previous top just under beam */
-  prev_maxr=DetectionRangeInternal_bindist(TOPprev*1000.0,lowest_elev-half_bw,0.0);
+  prev_maxr = DetectionRangeInternal_bindist(TOPprev*1000.0,lowest_elev-half_bw,0.0) / 1000.0;
 
   /* Sorting of TOP values and selection of representative TOPs per ray */
 
-  /* determine StartBin and BinCount assuming 10km start on each side */
-  {
-    double scale = PolarScan_getRscale(scan);
-    if (scale == 0.0) {
-      StartBin = 0;
-      BinCount = PolarScan_getNbins(scan);
-    } else {
-      int gapnbins = (int)(10000.0/scale);
-      StartBin = gapnbins;
-      BinCount = PolarScan_getNbins(scan) - gapnbins;
+  /* determine StartBin and BinCount within the min/max range */
+  DetectionRangeInternal_getStartBinAndCount(self, PolarScan_getRscale(scan), PolarScan_getNbins(scan), &StartBin, &BinCount);
+
+  if (!DetectionRangeInternal_sortAndSelectRepresenativeTops(self, param, StartBin, BinCount, sortage, samplepoint,
+                                                             &ray_pickhightop, &sorttop, &rayweight)) {
+    RAVE_ERROR0("Failed to determine representative tops");
+    goto done;
+  }
+
+  valid_raytop_count = DetectionRangeInternal_getValidRaytopCount(rayweight, PolarScanParam_getNrays(param));
+
+  /* Finally it is time to determine the DR-field */
+
+  /* -------------------------------------------------------------------------------*/
+  /* Azimuthal sector weighting and statistical analysis of selected ray TOP values */
+  for(A = 0; A < nrays; A++) {
+    int bA, eA,                /* beginning and end values of azimuthal weighting sector
+                                   [deg] are +- weightsector/2                               */
+        cA, rA;                /* center-relative and real azimuth inside weighting sector  */
+
+    double  k;            /* coefficient used to convert uncertainty of detection to byte 0-255 */
+    double Secsum=0.0;    /* sum of weighted TOPs over sector         */
+    double maxR_analyzed_highbeam = 250.0; /* final analysed maximum range of upper edge of ray  */
+    double maxR_analyzed_lowbeam = 250.0;  /* final analysed maximum range of lower edge of ray  */
+
+    bA = A - weightsector / 2;
+    eA = A + weightsector / 2;
+
+    Wsum=0.0;
+    wI=0;
+    rayN=0;
+    for(cA = bA; cA < eA; cA++) {
+      double Wray,      /* ray weight from sorted ray TOPs    */
+             Wsec,      /* sector weight of this ray          */
+             highTOP,   /* picked high TOP value of this ray  */
+             Rayval;    /* ray- and background weighted TOP per ray */
+
+      rA=cA;
+      if (cA < 0) {
+        rA = cA + nrays;
+      }
+      if (cA >= nrays) {
+        rA = cA - nrays;
+      }
+
+      Wray = rayweight[rA];
+      highTOP = ray_pickhightop[rA];
+      Wsec = weightarr[wI];
+
+      Rayval = Wray*highTOP + (1.0-Wray)*TOPprev;
+      Secsum += (Wsec * Rayval);
+      wI++;
+    }
+    Final_WTOP[A] = Secsum / Wsecsum;
+
+    maxR_analyzed_lowbeam = DetectionRangeInternal_bindist(Final_WTOP[A]*1000.0, lowest_elev - half_bw, 0.0) / 1000.0;
+    maxR_analyzed_highbeam = DetectionRangeInternal_bindist(Final_WTOP[A]*1000.0, lowest_elev + half_bw, 0.0) / 1000.0;
+
+
+    /* detection range values scaled to 0-255 and range to 500 m resolution for PGM output */
+    k=255.0 / (maxR_analyzed_lowbeam - maxR_analyzed_highbeam);
+
+    for(B = 0; B < nbins; B++) {
+      int outbyte = 0;
+      double rkm = (double)B * PolarScan_getRscale(scan) / 1000.0;
+      if(rkm > maxR_analyzed_highbeam) {
+        outbyte = (int)((rkm - maxR_analyzed_highbeam)*k);
+      }
+      if(outbyte > 255) {
+        outbyte=255;
+      }
+      PolarScan_setValue(outscan, B, A, (double)outbyte);
     }
   }
-#endif
 
-  return NULL;
+  /*---------------------------------------------------------------------------------------*/
+  /* Median of highest 10% of selected rayTOPS is proposed as new backround TOP.           */
+  /* This new previous TOP is written if more than 10% of the rays are selected as valid   */
+  if (valid_raytop_count > limitNrays) {
+    int raysortcount = 0;
+    qsort(sorttop, nrays, sizeof(double), DetectionRangeInternal_sortDoubleDesc);
+    for (A = 0; A < nrays; A++) {
+      if (sorttop[A] > 0) {
+        raysortcount++;
+      }
+      if (raysortcount >= limitNrays) {
+        break;
+      }
+    }
+    if (raysortcount > 0) {
+      TOPprev = sorttop[raysortcount/2];
+    }
+
+    // We don't need to fail here, just write an error and continue.
+    if (!DetectionRangeInternal_writeBackgroundTop(self, PolarScan_getSource(scan), TOPprev)) {
+      RAVE_ERROR0("Failed to write background top");
+    }
+  }
+
+  result = RAVE_OBJECT_COPY(outscan);
+done:
+  RAVE_OBJECT_RELEASE(outscan);
+  RAVE_OBJECT_RELEASE(param);
+  RAVE_FREE(weightarr);
+  RAVE_FREE(ray_pickhightop);
+  RAVE_FREE(sorttop);
+  RAVE_FREE(rayweight);
+  RAVE_FREE(Final_WTOP);
+
+  return result;
 }
 
 //set BEAMWIDTH = 1.0
