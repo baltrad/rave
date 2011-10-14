@@ -39,23 +39,16 @@ class RequestHandler(SimpleXMLRPCServer.SimpleXMLRPCRequestHandler):
 
 ## The server that implements the product generation framework in \ref RavePGF.
 class rave_pgf_server(Daemon):
-
   ## Constructor
   # @param host URI to the host for this server.
   # @param port int port number to the host for this server.
   # @param stdin string path to where to direct stdin
   # @param stdout string path to where to direct stdout
   # @param stderr string path to where to direct stderr
-  def __init__(self, host=PGF_HOST, port=PGF_PORT,
-#               stdin='/dev/null', stdout=STDOE, stderr=STDOE):
-               stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
-    self.pidfile = PIDFILE
-    self.stdin = stdin
-    self.stderr = stdout
-    self.stdout = stderr
+  def __init__(self, host=PGF_HOST, port=PGF_PORT, stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
+    super(rave_pgf_server, self).__init__(PIDFILE, stdin, stdout, stderr)
     self.host = host
     self.port = port
-
 
   ## Determines whether the server is running or not.
   def status(self):
@@ -108,7 +101,7 @@ if __name__ == "__main__":
 
   if ARG == 'stop':
     # First, dump the job queue via client connection, then stop
-    server = xmlrpclib.ServerProxy("http://%s:%i/RAVE" % (PGF_HOST, PGF_PORT))
+    server = xmlrpclib.ServerProxy("http://%s:%i/RAVE" % (PGF_HOST, PGF_PORT), verbose=True)
     response = server.flush("Killing me softly")
     this.stop()
 

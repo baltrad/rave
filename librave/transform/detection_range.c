@@ -97,8 +97,7 @@ static void DetectionRange_destructor(RaveCoreObject* obj)
 }
 
 /**
- * Calculates the height of the bin assuming
- * a ideal sphere.
+ * Calculates the height of the bin, assuming a ideal sphere.
  * @param[in] m - the range near surface (in meters)
  * @param[in] e - the elevation angle
  * @param[in] h0 - the height above ground for the radar
@@ -115,10 +114,10 @@ static int DetectionRangeInternal_binheight(double m,double e,double h0)
 }
 
 /**
- * Calculate the range of the bin.
- * @param[in] h - altitude
+ * Calculate the range of the bin, assuming an ideal sphere.
+ * @param[in] h - altitude in meters
  * @param[in] e - the elevation in radians
- * @param[in] h0 - altitude0
+ * @param[in] h0 - altitude0 the radar altitude
  * @return the range in meters
  */
 static double DetectionRangeInternal_bindist(double h,double e,double h0)
@@ -156,6 +155,8 @@ static int DetectionRangeInternal_sortDoubleDesc(const void *i1, const void *i2)
 
 /**
  * Locates the lowest elevation angle in the volume and returns it.
+ * @param[in] pvol - the polar volume
+ * @returns the lowest elevation angle in radians
  */
 static double DetectionRangeInternal_getLowestElevationAngle(PolarVolume_t* pvol)
 {
@@ -309,6 +310,12 @@ done:
   return result;
 }
 
+/**
+ * Returns the previous top files creation time.
+ * @param[in] self - self
+ * @param[in] source - the source of this radar
+ * @return the time of the file (or current time if file not could be found)
+ */
 static time_t DetectionRangeInternal_getPreviousTopFiletime(DetectionRange_t* self, const char* source)
 {
   time_t result;
@@ -399,9 +406,6 @@ static void DetectionRangeInternal_getStartBinAndCount(
     *bincount = binc;
   }
 }
-
-/* ------------------------------------------------------------------------------------------*/
-/* Sorting of TOP values and selection of representative TOPs per ray */
 
 /**
  * Sorts top values and selects representative TOPs per ray.
@@ -1047,15 +1051,6 @@ done:
 
   return result;
 }
-
-//set BEAMWIDTH = 1.0
-//set AVERAGING_SECTOR = 60  # width of the floating average azimuthal sector
-//         # HELP: Number of azimuthal gates or degrees??
-//set OLDTOP = "$SITE"_oldtop.txt
-//set HIGHPART = 0.1         # What part of the sorted are processed (1 = all)
-//set SAMPLEPOINT = 0.5      # What values of previous existing sorted height
-//#                            is selected to represent the valid TOP value of
-//#                            a ray (0.5 is the median, 0.0 refers to highest value)
 
 /*@} End of Interface functions */
 

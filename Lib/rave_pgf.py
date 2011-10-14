@@ -126,13 +126,12 @@ class RavePGF():
   # @param stupid_password A rudimentary safeguard against sabotage.
   # @return string
   def flush(self, stupid_password):
-      if stupid_password=="Killing me softly":
-          self._dump_queue()
-          return "Killed softly"
-      else:
-          self.logger.warning("Security breach? Did some scoundrel just try to shut us down?")
-          return ""
-
+    if stupid_password=="Killing me softly":
+      self._dump_queue()
+      return "Killed softly"
+    else:
+      self.logger.warning("Security breach? Did some scoundrel just try to shut us down?")
+      return ""
 
   ## Queue a job for processing. All jobs are calls to the \ref generate method.
   # @param algorithm, an Element object that contains all the information

@@ -29,7 +29,7 @@ from signal import SIGINT  # SIGHUP, SIGTERM
 
 ## A generic daemon class.
 # Usage: subclass the Daemon class and override the run() method
-class Daemon:
+class Daemon(object):
 	## Constructor.
 	# @param pidfile string to the file containing the PID
 	# @param stdin string path to where to direct stdin
@@ -88,6 +88,13 @@ class Daemon:
 	def delpid(self):
 		os.remove(self.pidfile)
 
+	## Checks if the process with provided pid is running
+	# by checking the /proc directory.
+	# @param pid - the pid to check for
+	# @return True if a process with provided pid is running, otherwise False
+	def _isprocessrunning(self, pid):
+		return os.path.exists("/proc/%d"%pid)
+
 	## Start the daemon.
 	def start(self):
 		# Check for a pidfile to see if the daemon already runs
@@ -99,9 +106,14 @@ class Daemon:
 			pid = None
 	
 		if pid:
-			message = "pidfile %s already exists. Daemon already running?\n"
-			sys.stderr.write(message % self.pidfile)
-			sys.exit(1)
+			if self._isprocessrunning(pid):
+				message = "pidfile %s already exists with a process with pid=%d is running. Daemon already running?\n"
+				sys.stderr.write(message % (self.pidfile, pid))
+				sys.exit(1)
+			else:
+				message = "pidfile exists but it seems like process is not running, probably due to an uncontrolled shutdown. Resetting.\n"
+				sys.stderr.write(message)
+				self.delpid()
 		
 		# Start the daemon.
 		self.daemonize()
