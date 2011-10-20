@@ -403,6 +403,26 @@ class PyPolarScanParamTest(unittest.TestCase):
     self.assertEqual(_rave.RaveDataType_UCHAR, result.datatype)
     self.assertEqual(10, result.xsize)
     self.assertEqual(12, result.ysize)
+  
+  def test_fromField(self):
+    obj = _ravefield.new()
+    obj.setData(numpy.zeros((12,10), numpy.uint8))
+    obj.addAttribute("what/gain", 2.0)
+    obj.addAttribute("what/offset", 3.0)
+    obj.addAttribute("what/nodata", 4.0)
+    obj.addAttribute("what/undetect", 5.0)
+    obj.addAttribute("what/quantity", "MMH")
+    result = _polarscanparam.fromField(obj)
+ 
+    self.assertNotEqual(-1, string.find(`type(result)`, "PolarScanParamCore"))
+    self.assertAlmostEqual(2.0, result.gain, 4)
+    self.assertAlmostEqual(3.0, result.offset, 4)
+    self.assertAlmostEqual(4.0, result.nodata, 4)
+    self.assertAlmostEqual(5.0, result.undetect, 4)
+    self.assertEquals("MMH", result.quantity)
+    self.assertEquals(10, result.nbins)
+    self.assertEquals(12, result.nrays)
+    self.assertEquals(_rave.RaveDataType_UCHAR, result.datatype)
     
 if __name__ == "__main__":
   #import sys;sys.argv = ['', 'Test.testName']

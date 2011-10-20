@@ -858,7 +858,7 @@ done:
  *                          valid TOPs, typically near 0.5 (median) lower values (nearer to
  *                          highest TOP, 0.15) used in noisier radars like KOR.
  */
-PolarScan_t* DetectionRange_analyze(DetectionRange_t* self,
+RaveField_t* DetectionRange_analyze(DetectionRange_t* self,
   PolarScan_t* scan, int avgsector, double sortage, double samplepoint)
 {
   int weightsector = 0;         /* width of weighting sector [deg]                           */
@@ -885,7 +885,7 @@ PolarScan_t* DetectionRange_analyze(DetectionRange_t* self,
   long nrays = 0, nbins = 0;
 
   PolarScanParam_t* param = NULL;
-  PolarScan_t* result = NULL;   /* The resulting scan, will only be set on success */
+  RaveField_t* result = NULL;   /* The resulting field, will only be set on success */
   PolarScan_t* outscan = NULL;  /* The working scan where data will be set and on success copied to result */
 
   RAVE_ASSERT((self != NULL), "self == NULL");
@@ -1039,7 +1039,24 @@ PolarScan_t* DetectionRange_analyze(DetectionRange_t* self,
     }
   }
 
-  result = RAVE_OBJECT_COPY(outscan);
+  RAVE_OBJECT_RELEASE(param);
+  // Finally, convert the scan parameter into a quality field for detection range.
+  param = PolarScan_getParameter(outscan, "DR");
+  if (param != NULL) {
+    RaveAttribute_t* attr = NULL;
+    result = PolarScanParam_toField(param);
+    if (result == NULL) {
+      RAVE_ERROR0("Failed to convert parameter to field");
+    }
+
+    attr = RaveAttributeHelp_createString("how/task", "se.smhi.detector.poo");
+    if (attr == NULL || !RaveField_addAttribute(result, attr)) {
+      RAVE_ERROR0("Failed to add how/task to detection field");
+      RAVE_OBJECT_RELEASE(result);
+    }
+    RAVE_OBJECT_RELEASE(attr);
+  }
+
 done:
   RAVE_OBJECT_RELEASE(outscan);
   RAVE_OBJECT_RELEASE(param);

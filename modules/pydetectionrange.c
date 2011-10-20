@@ -35,6 +35,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "pypolarvolume.h"
 #include "pypolarscan.h"
+#include "pyravefield.h"
 #include "rave_alloc.h"
 #include "raveutil.h"
 #include "rave.h"
@@ -211,13 +212,13 @@ static PyObject* _pydetectionrange_filter(PyDetectionRange* self, PyObject* args
  * Performs the analyzing
  * @param[in] self - self
  * @param[in] args - (a hght scan, avgsector (int), sortage, samplepoint (double))
- * @returns a python scan containing the tops
+ * @returns a python rave field containing the tops
  */
 static PyObject* _pydetectionrange_analyze(PyDetectionRange* self, PyObject* args)
 {
   PyObject* object = NULL;
   PyPolarScan* pyscan = NULL;
-  PolarScan_t* analyzedscan = NULL;
+  RaveField_t* analyzedfield = NULL;
   PyObject* result = NULL;
   int avgsector = 0;
   double sortage = 0.0L;
@@ -231,12 +232,12 @@ static PyObject* _pydetectionrange_analyze(PyDetectionRange* self, PyObject* arg
   } else {
     raiseException_returnNULL(PyExc_AttributeError, "filter requires scan");
   }
-  analyzedscan = DetectionRange_analyze(self->dr, pyscan->scan, avgsector, sortage, samplepoint);
-  if (analyzedscan == NULL) {
-    raiseException_returnNULL(PyExc_Exception, "Failed to analyze scan");
+  analyzedfield = DetectionRange_analyze(self->dr, pyscan->scan, avgsector, sortage, samplepoint);
+  if (analyzedfield == NULL) {
+    raiseException_returnNULL(PyExc_Exception, "Failed to analyze field");
   }
-  result = (PyObject*)PyPolarScan_New(analyzedscan);
-  RAVE_OBJECT_RELEASE(analyzedscan);
+  result = (PyObject*)PyRaveField_New(analyzedfield);
+  RAVE_OBJECT_RELEASE(analyzedfield);
   return result;
 }
 
@@ -384,6 +385,7 @@ init_detectionrange(void)
 
   import_pypolarvolume();
   import_pypolarscan();
+  import_pyravefield();
   import_array(); /*To make sure I get access to Numeric*/
   PYRAVE_DEBUG_INITIALIZE;
 }

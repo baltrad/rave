@@ -19,7 +19,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 /**
  * Defines the functions available when working with polar scans
  * @file
- * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
+ * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI),,
  * @date 2009-10-15
  */
 #include "polarscanparam.h"
@@ -479,6 +479,77 @@ done:
   RAVE_OBJECT_RELEASE(cloneattr);
   return result;
 }
+
+PolarScanParam_t* PolarScanParam_fromField(RaveField_t* field)
+{
+  PolarScanParam_t* param = NULL;
+  PolarScanParam_t* result = NULL;
+  RaveObjectList_t* attributes = NULL;
+  RaveData2D_t* datafield = NULL;
+  RaveAttribute_t* attr = NULL;
+  RaveAttribute_t* cloneattr = NULL;
+  double nodata = 255.0;
+  double undetect = 0.0;
+  double gain = 1.0;
+  double offset = 0.0;
+  char* quantity = NULL;
+  int nrattrs = 0, i = 0;
+  if (field == NULL) {
+    RAVE_ERROR0("Trying to create a parameter from a NULL field");
+    return NULL;
+  }
+  datafield = RaveField_getDatafield(field);
+  attributes = RaveField_getAttributeValues(field);
+  param = RAVE_OBJECT_NEW(&PolarScanParam_TYPE);
+  if (datafield == NULL || attributes == NULL || param == NULL) {
+    goto done;
+  }
+  nrattrs = RaveObjectList_size(attributes);
+  for (i = 0; i < nrattrs; i++) {
+    attr = (RaveAttribute_t*)RaveObjectList_get(attributes, i);
+    if (attr != NULL) {
+      const char* name = RaveAttribute_getName(attr);
+      if (strcmp("what/gain", name) == 0) {
+        RaveAttribute_getDouble(attr, &gain);
+      } else if (strcmp("what/offset", name) == 0) {
+        RaveAttribute_getDouble(attr, &offset);
+      } else if (strcmp("what/nodata", name) == 0) {
+        RaveAttribute_getDouble(attr, &nodata);
+      } else if (strcmp("what/undetect", name) == 0) {
+        RaveAttribute_getDouble(attr, &undetect);
+      } else if (strcmp("what/quantity", name) == 0) {
+        RaveAttribute_getString(attr, &quantity);
+      } else {
+        cloneattr = RAVE_OBJECT_CLONE(attr);
+        if (cloneattr == NULL || !PolarScanParam_addAttribute(param, cloneattr)) {
+          RAVE_ERROR0("Failed to add attribute to parameter");
+          goto done;
+        }
+        RAVE_OBJECT_RELEASE(cloneattr);
+      }
+    }
+    RAVE_OBJECT_RELEASE(attr);
+  }
+  if (quantity != NULL) {
+    PolarScanParam_setQuantity(param, quantity);
+  }
+  PolarScanParam_setGain(param, gain);
+  PolarScanParam_setOffset(param, offset);
+  PolarScanParam_setNodata(param, nodata);
+  PolarScanParam_setUndetect(param, undetect);
+  RAVE_OBJECT_RELEASE(param->data);
+  param->data = RAVE_OBJECT_COPY(datafield);
+
+  result = RAVE_OBJECT_COPY(param);
+done:
+  RAVE_OBJECT_RELEASE(param);
+  RAVE_OBJECT_RELEASE(attributes);
+  RAVE_OBJECT_RELEASE(datafield);
+  RAVE_OBJECT_RELEASE(attr);
+  RAVE_OBJECT_RELEASE(cloneattr);
+  return result;
+}
+
 /*@} End of Interface functions */
 
 RaveCoreObjectType PolarScanParam_TYPE = {

@@ -37,6 +37,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "pycartesian.h"
 #include "pyrave_debug.h"
 #include "rave_alloc.h"
+#include "rave.h"
 
 /**
  * Debug this module

@@ -107,9 +107,14 @@ int RaveField_setDatafield(RaveField_t* field, RaveData2D_t* datafield)
   int result = 0;
   RAVE_ASSERT((field != NULL), "field == NULL");
   if (datafield != NULL) {
-    RAVE_OBJECT_RELEASE(field->data);
-    field->data = RAVE_OBJECT_COPY(datafield);
-    result = 1;
+    RaveData2D_t* d = RAVE_OBJECT_CLONE(datafield);
+    if (d != NULL) {
+      RAVE_OBJECT_RELEASE(field->data);
+      field->data = d;
+      result = 1;
+    } else {
+      RAVE_ERROR0("Failed to clone 2d field");
+    }
   }
   return result;
 }
@@ -118,6 +123,20 @@ void* RaveField_getData(RaveField_t* field)
 {
   RAVE_ASSERT((field != NULL), "field == NULL");
   return RaveData2D_getData(field->data);
+}
+
+RaveData2D_t* RaveField_getDatafield(RaveField_t* field)
+{
+  RaveData2D_t* result = NULL;
+
+  RAVE_ASSERT((field != NULL), "field == NULL");
+
+  result = RAVE_OBJECT_CLONE(field->data);
+  if (result == NULL) {
+    RAVE_ERROR0("Failed to clone data field");
+  }
+
+  return result;
 }
 
 int RaveField_getValue(RaveField_t* field, long x, long y, double* v)

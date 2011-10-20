@@ -116,7 +116,7 @@ PolarScan_t* DetectionRange_filter(DetectionRange_t* self, PolarScan_t* scan);
  *                          highest TOP, 0.15) used in noisier radars like KOR.
  * @returns the analyzed field on success otherwise NULL
  */
-PolarScan_t* DetectionRange_analyze(DetectionRange_t* self,
+RaveField_t* DetectionRange_analyze(DetectionRange_t* self,
   PolarScan_t* scan, int avgsector, double sortage, double samplepoint);
 
 #endif /* DETECTION_RANGE_H */

@@ -27,6 +27,7 @@ import unittest
 import os
 import _detectionrange
 import _polarscan
+import _polarscanparam
 import _raveio
 import _rave
 import string
@@ -100,7 +101,26 @@ class PyDetectionRangeTest(unittest.TestCase):
     filterfield = dr.filter(topfield)
     result = dr.analyze(filterfield, 60, 0.1, 0.5)
 
+    self.assertNotEqual(-1, string.find(`type(result)`, "RaveFieldCore"))
+    self.assertEquals(120, result.xsize)
+    self.assertEquals(420, result.ysize)
+    self.assertEquals("se.smhi.detector.poo", result.getAttribute("how/task"))
+
+
+  def test_analyze_and_write(self):
+    dr = _detectionrange.new()
+    o = _raveio.open(self.FIXTURE_VOLUME)
+    
+    topfield = dr.top(o.object, 2000, -40.0)
+    filterfield = dr.filter(topfield)
+    result = dr.analyze(filterfield, 60, 0.1, 0.5)
+
+    param = _polarscanparam.fromField(result)
+    scan = _polarscan.new()
+    scan.addParameter(param)
+
     os = _raveio.new()
     os.filename = self.TEMPORARY_FILE
-    os.object = result
+    os.object = scan
     os.save()
+    

@@ -284,4 +284,13 @@ RaveField_t* PolarScanParam_getQualityFieldByHowTask(PolarScanParam_t* param, co
  */
 RaveField_t* PolarScanParam_toField(PolarScanParam_t* param);
 
+/**
+ * Translates a rave field into a polar scan parameter. It will only atempt to find
+ * to use what/gain, what/offset, what/nodata and what/undetect. If these doesn't
+ * exist, default values will be used.
+ * @param[in] field - the field to convert into a polar scan parameter
+ * @returns a polar scan parameter on success otherwise NULL
+ */
+PolarScanParam_t* PolarScanParam_fromField(RaveField_t* field);
+
 #endif

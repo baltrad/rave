@@ -144,6 +144,33 @@ static PyObject* _pypolarscanparam_new(PyObject* self, PyObject* args)
   return (PyObject*)result;
 }
 
+/**
+ * Translates a py rave field into a py polar scan parameter. It will only atempt to find
+ * to use what/gain, what/offset, what/nodata and what/undetect. If these doesn't
+ * exist, default values will be used.
+ * @param[in] field - the field to convert into a polar scan parameter
+ * @returns a polar scan parameter on success otherwise NULL
+ */
+static PyObject* _pypolarscanparam_fromField(PyObject* self, PyObject* args)
+{
+  PyObject* pyobj = NULL;
+  PolarScanParam_t* param = NULL;
+  PyObject* result = NULL;
+  if (!PyArg_ParseTuple(args, "O", &pyobj)) {
+    return NULL;
+  }
+  if (!PyRaveField_Check(pyobj)) {
+    raiseException_returnNULL(PyExc_AttributeError, "Indata should be a rave field");
+  }
+  param = PolarScanParam_fromField(((PyRaveField*)pyobj)->field);
+  if (param == NULL) {
+    raiseException_returnNULL(PyExc_RuntimeError, "Could not create parameter from field");
+  }
+  result = (PyObject*)PyPolarScanParam_New(param);
+  RAVE_OBJECT_RELEASE(param);
+  return result;
+}
+
 static PyObject* _pypolarscanparam_setData(PyPolarScanParam* self, PyObject* args)
 {
   PyObject* inarray = NULL;
@@ -695,6 +722,7 @@ PyTypeObject PyPolarScanParam_Type =
 /*@{ Module setup */
 static PyMethodDef functions[] = {
   {"new", (PyCFunction)_pypolarscanparam_new, 1},
+  {"fromField", (PyCFunction)_pypolarscanparam_fromField, 1},
   {NULL,NULL} /*Sentinel*/
 };
 
