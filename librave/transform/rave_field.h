@@ -64,6 +64,14 @@ int RaveField_setData(RaveField_t* field, long xsize, long ysize, void* data, Ra
 int RaveField_createData(RaveField_t* field, long xsize, long ysize, RaveDataType type);
 
 /**
+ * Sets the rave data 2d field.
+ * @param[in] field - self
+ * @param[in] datafield - the data field to use (MAY NOT BE NULL)
+ * @return 1 on success otherwise 0
+ */
+int RaveField_setDatafield(RaveField_t* field, RaveData2D_t* datafield);
+
+/**
  * Returns a pointer to the internal data storage.
  * @param[in] field - self
  * @return the internal data pointer (NOTE! Do not release this pointer)

@@ -102,6 +102,18 @@ int RaveField_createData(RaveField_t* field, long xsize, long ysize, RaveDataTyp
   return RaveData2D_createData(field->data, xsize, ysize, type);
 }
 
+int RaveField_setDatafield(RaveField_t* field, RaveData2D_t* datafield)
+{
+  int result = 0;
+  RAVE_ASSERT((field != NULL), "field == NULL");
+  if (datafield != NULL) {
+    RAVE_OBJECT_RELEASE(field->data);
+    field->data = RAVE_OBJECT_COPY(datafield);
+    result = 1;
+  }
+  return result;
+}
+
 void* RaveField_getData(RaveField_t* field)
 {
   RAVE_ASSERT((field != NULL), "field == NULL");

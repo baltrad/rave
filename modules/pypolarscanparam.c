@@ -525,6 +525,30 @@ static PyObject* _pypolarscanparam_removeQualityField(PyPolarScanParam* self, Py
 }
 
 /**
+ * Converts the data field portion and the corresponding attributes into
+ * a rave field. I.e. no quality fields will be affected.
+ * @param[in] self - this instance
+ * @param[in] args - N/A
+ * @returns the rave field on success otherwise NULL
+ */
+static PyObject* _pypolarscanparam_toField(PyPolarScanParam* self, PyObject* args)
+{
+  PyObject* result = NULL;
+  RaveField_t* field = NULL;
+
+  if (!PyArg_ParseTuple(args, "")) {
+    return NULL;
+  }
+  field = PolarScanParam_toField(self->scanparam);
+  if (field == NULL) {
+    raiseException_returnNULL(PyExc_RuntimeError, "Failed to convert parameter into a field");
+  }
+  result = (PyObject*)PyRaveField_New(field);
+  RAVE_OBJECT_RELEASE(field);
+  return result;
+}
+
+/**
  * All methods a polar scan can have
  */
 static struct PyMethodDef _pypolarscanparam_methods[] =
@@ -549,6 +573,7 @@ static struct PyMethodDef _pypolarscanparam_methods[] =
   {"getNumberOfQualityFields", (PyCFunction) _pypolarscanparam_getNumberOfQualityFields, 1},
   {"getQualityField", (PyCFunction) _pypolarscanparam_getQualityField, 1},
   {"removeQualityField", (PyCFunction) _pypolarscanparam_removeQualityField, 1},
+  {"toField", (PyCFunction)_pypolarscanparam_toField, 1},
   {NULL, NULL } /* sentinel */
 };
 

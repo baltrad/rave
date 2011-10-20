@@ -394,6 +394,91 @@ RaveField_t* PolarScanParam_getQualityFieldByHowTask(PolarScanParam_t* param, co
   }
   return result;
 }
+
+RaveField_t* PolarScanParam_toField(PolarScanParam_t* param)
+{
+  RaveField_t* result = NULL;
+  RaveField_t* field = NULL;
+  RaveData2D_t* datafield = NULL;
+  RaveObjectList_t* attrlist = NULL;
+  RaveAttribute_t* attr = NULL;
+  RaveAttribute_t* cloneattr = NULL;
+
+  int nrattrs = 0, i = 0;
+
+  RAVE_ASSERT((param != NULL), "param == NULL");
+
+  field = RAVE_OBJECT_NEW(&RaveField_TYPE);
+  if (field == NULL) {
+    goto done;
+  }
+
+  datafield = RAVE_OBJECT_CLONE(param->data);
+  if (datafield == NULL) {
+    goto done;
+  }
+
+  if (!RaveField_setDatafield(field, datafield)) {
+    RAVE_ERROR0("Failed to set data field");
+    goto done;
+  }
+
+  attrlist = RaveObjectHashTable_values(param->attrs);
+  if (attrlist == NULL) {
+    RAVE_ERROR0("Could not get attribute values");
+    goto done;
+  }
+
+  nrattrs = RaveObjectList_size(attrlist);
+  for (i = 0; i < nrattrs; i++) {
+    attr = (RaveAttribute_t*)RaveObjectList_get(attrlist, i);
+    if (attr != NULL) {
+      cloneattr = RAVE_OBJECT_CLONE(attr);
+      if (cloneattr == NULL || !RaveField_addAttribute(field, cloneattr)) {
+        RAVE_ERROR0("Could not clone attribute");
+        goto done;
+      }
+    }
+    RAVE_OBJECT_RELEASE(attr);
+    RAVE_OBJECT_RELEASE(cloneattr);
+  }
+
+  // Copy specific parameter attributes
+  attr = RaveAttributeHelp_createString("what/quantity", param->quantity);
+  if (attr == NULL || !RaveField_addAttribute(field, attr)) {
+    goto done;
+  }
+  RAVE_OBJECT_RELEASE(attr);
+  attr = RaveAttributeHelp_createDouble("what/gain", param->gain);
+  if (attr == NULL || !RaveField_addAttribute(field, attr)) {
+    goto done;
+  }
+  RAVE_OBJECT_RELEASE(attr);
+  attr = RaveAttributeHelp_createDouble("what/offset", param->offset);
+  if (attr == NULL || !RaveField_addAttribute(field, attr)) {
+    goto done;
+  }
+  RAVE_OBJECT_RELEASE(attr);
+  attr = RaveAttributeHelp_createDouble("what/nodata", param->nodata);
+  if (attr == NULL || !RaveField_addAttribute(field, attr)) {
+    goto done;
+  }
+  RAVE_OBJECT_RELEASE(attr);
+  attr = RaveAttributeHelp_createDouble("what/undetect", param->undetect);
+  if (attr == NULL || !RaveField_addAttribute(field, attr)) {
+    goto done;
+  }
+  RAVE_OBJECT_RELEASE(attr);
+
+  result = RAVE_OBJECT_COPY(field);
+done:
+  RAVE_OBJECT_RELEASE(field);
+  RAVE_OBJECT_RELEASE(datafield);
+  RAVE_OBJECT_RELEASE(attrlist);
+  RAVE_OBJECT_RELEASE(attr);
+  RAVE_OBJECT_RELEASE(cloneattr);
+  return result;
+}
 /*@} End of Interface functions */
 
 RaveCoreObjectType PolarScanParam_TYPE = {

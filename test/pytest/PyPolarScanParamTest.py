@@ -373,6 +373,36 @@ class PyPolarScanParamTest(unittest.TestCase):
     obj.removeQualityField(0)
     self.assertEquals(1, obj.getNumberOfQualityFields())
     self.assertEquals("field2", obj.getQualityField(0).getAttribute("what/name"))    
+  
+  def test_toField(self):
+    obj = _polarscanparam.new()
+    
+    a=numpy.arange(120)
+    a=numpy.array(a.astype(numpy.uint8),numpy.uint8)
+    a=numpy.reshape(a,(12,10)).astype(numpy.uint8)    
+    
+    obj.setData(a)
+        
+    obj.addAttribute("how/this", "ABC")
+    obj.addAttribute("how/that", 1.0)
+    obj.addAttribute("what/value", 2)
+    
+    obj.gain = 2.0
+    obj.offset = 3.0
+    obj.undetect = 4.0
+    obj.nodata = 5.0
+    
+    result = obj.toField()
+    self.assertEquals("ABC", result.getAttribute("how/this"))
+    self.assertAlmostEquals(1.0, result.getAttribute("how/that"), 4)
+    self.assertEquals(2, result.getAttribute("what/value"))
+    self.assertAlmostEquals(2.0, result.getAttribute("what/gain"), 4)
+    self.assertAlmostEquals(3.0, result.getAttribute("what/offset"), 4)
+    self.assertAlmostEquals(4.0, result.getAttribute("what/undetect"), 4)
+    self.assertAlmostEquals(5.0, result.getAttribute("what/nodata"), 4)
+    self.assertEqual(_rave.RaveDataType_UCHAR, result.datatype)
+    self.assertEqual(10, result.xsize)
+    self.assertEqual(12, result.ysize)
     
 if __name__ == "__main__":
   #import sys;sys.argv = ['', 'Test.testName']

@@ -275,4 +275,13 @@ RaveObjectList_t* PolarScanParam_getQualityFields(PolarScanParam_t* param);
  */
 RaveField_t* PolarScanParam_getQualityFieldByHowTask(PolarScanParam_t* param, const char* value);
 
+/**
+ * Converts a polar scan parameter into a rave field. I.e. this function will only
+ * take the actual parameter data and convert it into a field. It will not consider
+ * any quality field.
+ * @param[in] param - self
+ * @returns a rave field
+ */
+RaveField_t* PolarScanParam_toField(PolarScanParam_t* param);
+
 #endif
