@@ -77,7 +77,7 @@ def init():
         common.getArgs(E.find('common').find('radardef'))
 
         p = E.find('cartesian')  # Common radar-specific projection info
-        if p:
+        if p is not None:
             proj = RADAR()
             proj.getArgs(p)
 
@@ -93,7 +93,7 @@ def init():
             _registry[this.Id] = this
 
             # Intialize radar-specific cartesian areas
-            if p:
+            if p is not None:
                 MakeCartesianArea(proj, this)
 
     initialized = 1

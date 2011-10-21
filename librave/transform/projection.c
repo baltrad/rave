@@ -152,13 +152,10 @@ int Projection_transform(Projection_t* projection, Projection_t* tgt, double* x,
 {
   int pjv = 0;
   int result = 1;
-  double vx,vy;
   RAVE_ASSERT((projection != NULL), "projection was NULL");
   RAVE_ASSERT((tgt != NULL), "target projection was NULL");
   RAVE_ASSERT((x != NULL), "x was NULL");
   RAVE_ASSERT((y != NULL), "y was NULL");
-  vx = *x;
-  vy = *y;
   if ((pjv = pj_transform(projection->pj, tgt->pj, 1, 1, x, y, z)) != 0)
   {
     RAVE_ERROR1("Transform failed with pj_errno: %d\n", pjv);

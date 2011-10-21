@@ -247,8 +247,9 @@ INCLUDE_DIRS.append('./librave/transform')
 INCLUDE_DIRS.append('./librave/pyapi')
 LIBRARY_DIRS.append('./librave/transform')
 LIBRARY_DIRS.append('./librave/pyapi')
-LIBRARIES.append('ravetransform')
-LIBRARIES.append('ravepyapi')
+# We need to insert libraries so that they are placed correctly during build
+LIBRARIES.insert(0, 'ravepyapi')
+LIBRARIES.insert(0, 'ravetransform')
 
 MODULES.append(
     Extension(
@@ -449,7 +450,7 @@ MODULES.append(
 
 INCLUDE_DIRS.append('./librave/scansun')
 LIBRARY_DIRS.append('./librave/scansun')
-LIBRARIES.append('ravescansun')
+LIBRARIES.insert(0, 'ravescansun')
 
 MODULES.append(
     Extension(

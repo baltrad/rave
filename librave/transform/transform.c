@@ -272,7 +272,6 @@ PolarScan_t* Transform_ctoscan(Transform_t* transform, Cartesian_t* cartesian, R
   for (ray = 0; ray < nrays; ray++) {
     for (bin = 0; bin < nbins; bin++) {
       double lon = 0.0, lat = 0.0;
-      RaveValueType type = RaveValueType_NODATA;
       double v = 0.0L;
       if (PolarScan_getLonLatFromIndex(scan, bin, ray, &lon, &lat)) {
         double x = 0.0, y = 0.0;
@@ -282,7 +281,7 @@ PolarScan_t* Transform_ctoscan(Transform_t* transform, Cartesian_t* cartesian, R
         }
         xi = Cartesian_getIndexX(cartesian, x);
         yi = Cartesian_getIndexY(cartesian, y);
-        type = Cartesian_getValue(cartesian, xi, yi, &v);
+        Cartesian_getValue(cartesian, xi, yi, &v);
         PolarScan_setValue(scan, bin, ray, v);
       }
     }

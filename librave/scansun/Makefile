@@ -22,7 +22,7 @@ SCANSUNOBJS=	$(SCANSUNSOURCES:.c=.o)
 LIBRAVESCANSUN=	libravescansun.so
 SCANSUNMAIN= scansun_main.c
 SCANSUNBIN= scansun
-SCANSUNLIBS= -lhlhdf -lproj -lravetransform -lravescansun
+SCANSUNLIBS= -lravescansun -lravetransform -lhlhdf -lproj  
 ifeq ($(EXPAT_SUPPRESSED), no)
 SCANSUNLIBS+= -lexpat
 endif

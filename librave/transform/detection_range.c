@@ -188,7 +188,7 @@ static double* DetectionRangeInternal_createSectorWeightFactors(
   int weightsector, double maxweight, int inW, double* Wsecsum)
 {
   int i = 0;
-  double wg = 0.0, mx2 = 0.0;
+  double wg = 0.0;
   double* weightarr = NULL;
   double sum = 0.0;
 
@@ -201,7 +201,6 @@ static double* DetectionRangeInternal_createSectorWeightFactors(
   }
   memset(weightarr, 0, sizeof(double)*weightsector);
 
-  mx2 = maxweight*maxweight;
   for(i = 0; i < weightsector; i++) {
     wg = (double)((inW+1)-abs(inW-i));
     weightarr[i] = wg/maxweight;
@@ -253,7 +252,6 @@ static double DetectionRangeInternal_readPreviousBackgroundTop(DetectionRange_t*
   FILE* fp = NULL;
   char filename[1024];
   double TOPrev = 5.5;
-  int nritems = 0;
 
   RAVE_ASSERT((self != NULL), "self == NULL");
 
@@ -265,7 +263,10 @@ static double DetectionRangeInternal_readPreviousBackgroundTop(DetectionRange_t*
     RAVE_INFO1("Could not locate lookup file %s, defaulting to TOPrev = 5.5", filename);
     goto done;
   } else {
-    nritems = fscanf(fp,"%lf",&TOPrev);
+    if (fscanf(fp,"%lf",&TOPrev)<=0) {
+      RAVE_INFO0("Could not read previous top value");
+      goto done;
+    }
   }
 
 done:
@@ -868,15 +869,12 @@ RaveField_t* DetectionRange_analyze(DetectionRange_t* self,
                                    top_count==sortpart_ray (=ray weight is > 0.99)           */
   int A = 0, B = 0;             /* azimuth and bin (range gate) indices                      */
   int wI = 0;                   /* index of weight factors array                             */
-  int rayN = 0;                 /* count of rays having valid top value                      */
   int limitNrays;               /* Limit on the number of nrays necessary before writing previous top, 10% */
   double half_bw = 0.0;         /* half beam width [rad]                                     */
   double maxweight = 0.0;       /* maximum unnormalized sector weight                        */
   double lowest_elev = 0.0;     /* lowest elevation in radians */
   double Wsecsum = 0.0;         /* sum of sector weight factors                              */
   double TOPprev = 0.0;         /* background TOP value (based on previous TOP)              */
-  double prev_maxr=250.0;       /* */
-  double Wsum = 0.0;            /* sum of total weight factors                               */
   double* weightarr = NULL;     /* array of sector weight factors, dimension=weightsector    */
   double* ray_pickhightop=NULL; /* TOP picked from highest TOPs defined by sortage and samplepoint */
   double* sorttop = NULL;       /* */
@@ -935,9 +933,6 @@ RaveField_t* DetectionRange_analyze(DetectionRange_t* self,
   TOPprev = DetectionRangeInternal_readPreviousBackgroundTop(self, PolarScan_getSource(scan));
   TOPprev = DetectionRangeInternal_generateAgedTop(self, PolarScan_getSource(scan), TOPprev);
 
-  /* maximum range of previous top just under beam */
-  prev_maxr = DetectionRangeInternal_bindist(TOPprev*1000.0,lowest_elev-half_bw,0.0) / 1000.0;
-
   /* Sorting of TOP values and selection of representative TOPs per ray */
 
   /* determine StartBin and BinCount within the min/max range */
@@ -968,9 +963,7 @@ RaveField_t* DetectionRange_analyze(DetectionRange_t* self,
     bA = A - weightsector / 2;
     eA = A + weightsector / 2;
 
-    Wsum=0.0;
     wI=0;
-    rayN=0;
     for(cA = bA; cA < eA; cA++) {
       double Wray,      /* ray weight from sorted ray TOPs    */
              Wsec,      /* sector weight of this ray          */
