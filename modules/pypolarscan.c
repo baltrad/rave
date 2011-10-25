@@ -939,12 +939,13 @@ static PyObject* _pypolarscan_findQualityFieldByHowTask(PyPolarScan* self, PyObj
 {
   PyObject* result = NULL;
   char* value = NULL;
+  char* quantity = NULL;
   RaveField_t* field = NULL;
 
-  if (!PyArg_ParseTuple(args, "s", &value)) {
+  if (!PyArg_ParseTuple(args, "s|s", &value, &quantity)) {
     return NULL;
   }
-  field = PolarScan_findQualityFieldByHowTask(self->scan, value);
+  field = PolarScan_findQualityFieldByHowTask(self->scan, value, quantity);
   if (field != NULL) {
     result = (PyObject*)PyRaveField_New(field);
   }

@@ -103,7 +103,7 @@ int RaveObjectList_add(RaveObjectList_t* list, RaveCoreObject* obj)
 {
   int result = 0;
   RAVE_ASSERT((list != NULL), "list == NULL");
-  RAVE_ASSERT((obj != NULL), "list == NULL");
+  RAVE_ASSERT((obj != NULL), "obj == NULL");
   RaveCoreObject* objCopy = RAVE_OBJECT_COPY(obj);
   result = RaveList_add(list->list, objCopy);
   if (!result) {

@@ -39,6 +39,12 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_debug.h"
 #include "rave_alloc.h"
 #include "rave_utilities.h"
+#include "pyrave_debug.h"
+
+/**
+ * This modules name
+ */
+PYRAVE_DEBUG_MODULE("_rave");
 
 /**
  * Sets python exception and goto tag.
@@ -175,6 +181,23 @@ static PyObject* _rave_isxmlsupported(PyObject* self, PyObject* args)
 {
   return PyBool_FromLong(RaveUtilities_isXmlSupported());
 }
+
+/**
+ * Sets a specific debug level
+ * @param[in] self - self
+ * @param[in] args - the debug level as an integer
+ * @return None
+ */
+static PyObject* _rave_setDebugLevel(PyObject* self, PyObject* args)
+{
+  int lvl = RAVE_SILENT;
+  if (!PyArg_ParseTuple(args, "i", &lvl)) {
+    return NULL;
+  }
+  Rave_setDebugLevel(lvl);
+  Py_RETURN_NONE;
+}
+
 /*@} End of Rave utilities */
 
 /// --------------------------------------------------------------------
@@ -190,6 +213,7 @@ static PyMethodDef functions[] = {
   {"io", (PyCFunction)_raveio_new, 1},
   {"open", (PyCFunction)_raveio_open, 1},
   {"isXmlSupported", (PyCFunction)_rave_isxmlsupported, 1},
+  {"setDebugLevel", (PyCFunction)_rave_setDebugLevel, 1},
   {NULL,NULL} /*Sentinel*/
 };
 
@@ -221,8 +245,6 @@ void init_rave(void)
   if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
     Py_FatalError("Can't define _rave.error");
   }
-
-  Rave_initializeDebugger();
 
   if (atexit(rave_alloc_print_statistics) != 0) {
     fprintf(stderr, "Could not set atexit function");
@@ -288,6 +310,15 @@ void init_rave(void)
   add_long_constant(dictionary, "Rave_ProductType_AZIM", Rave_ProductType_AZIM);
   add_long_constant(dictionary, "Rave_ProductType_QUAL", Rave_ProductType_QUAL);
 
+  add_long_constant(dictionary, "Debug_RAVE_SPEWDEBUG", RAVE_SPEWDEBUG);
+  add_long_constant(dictionary, "Debug_RAVE_DEBUG", RAVE_DEBUG);
+  add_long_constant(dictionary, "Debug_RAVE_DEPRECATED", RAVE_DEPRECATED);
+  add_long_constant(dictionary, "Debug_RAVE_INFO", RAVE_INFO);
+  add_long_constant(dictionary, "Debug_RAVE_WARNING", RAVE_WARNING);
+  add_long_constant(dictionary, "Debug_RAVE_ERROR", RAVE_ERROR);
+  add_long_constant(dictionary, "Debug_RAVE_CRITICAL", RAVE_CRITICAL);
+  add_long_constant(dictionary, "Debug_RAVE_SILENT", RAVE_SILENT);
+
   import_array(); /*To make sure I get access to Numeric*/
   import_pyprojection();
   import_pypolarscan();
@@ -295,5 +326,6 @@ void init_rave(void)
   import_pycartesian();
   import_pyraveio();
   import_pytransform();
+  PYRAVE_DEBUG_INITIALIZE;
 }
 /*@} End of Module setup */

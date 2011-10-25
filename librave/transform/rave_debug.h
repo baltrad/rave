@@ -43,17 +43,14 @@ typedef enum Rave_Debug {
 } Rave_Debug;
 
 /**
- * Debug structure.
+ * The debugger function.
+ * @param[in] filename - the name of the file
+ * @param[in] lineno - the line number
+ * @param[in] lvl - the debug level for this message
+ * @param[in] fmt - the varargs formatter string
+ * @param[in] ... - the varargs list
  */
-typedef struct {
-   Rave_Debug dbgLevel; /**< Debug level */
-   void (*dbgfun)(const char* filename, int lineno, Rave_Debug lvl, const char* fmt,...); /**< Debug function */
-} rave_debug_struct;
-
-/**
- * The main structure used for routing errors and debug printouts.
- */
-extern rave_debug_struct raveDbg;
+typedef void(*rave_dbgfun)(const char* filename, int lineno, Rave_Debug lvl, const char* fmt, ...);
 
 /**
  * Initializes the debugger structure, must have been called before executing the code.
@@ -69,11 +66,21 @@ void Rave_initializeDebugger(void);
 void Rave_setDebugLevel(Rave_Debug lvl);
 
 /**
+ * @returns the current rave debug level
+ */
+Rave_Debug Rave_getDebugLevel(void);
+
+/**
  * Sets the debug function where the debug printouts should be routed.
  * @ingroup hlhdf_c_apis
- * @param[in] dbgfun The debug function.
+ * @param[in] rave_dbgfun The debug function.
  */
-void Rave_setDebugFunction(void (*dbgfun)(const char* filename, int lineno, Rave_Debug lvl, const char* fmt, ...));
+void Rave_setDebugFunction(rave_dbgfun dbgfun);
+
+/**
+ * @returns the currently set debugger function
+ */
+rave_dbgfun Rave_getDebugFunction(void);
 
 /**
  * @defgroup DebugMacros Macros for debugging and error reporting that is used in RAVE.
@@ -84,116 +91,116 @@ void Rave_setDebugFunction(void (*dbgfun)(const char* filename, int lineno, Rave
  * Spewdebug macro taking one text string.
  */
 #define RAVE_SPEWDEBUG0(msg) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_SPEWDEBUG,msg)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_SPEWDEBUG,msg)
 
 /**
  * Spewdebug macro taking one text string and one formatter argument.
  */
 #define RAVE_SPEWDEBUG1(msg,arg1) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_SPEWDEBUG,msg,arg1)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_SPEWDEBUG,msg,arg1)
 
 #define RAVE_SPEWDEBUG2(msg,arg1,arg2) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_SPEWDEBUG,msg,arg1,arg2)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_SPEWDEBUG,msg,arg1,arg2)
 
 #define RAVE_SPEWDEBUG3(msg,arg1,arg2,arg3) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_SPEWDEBUG,msg,arg1,arg2,arg3)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_SPEWDEBUG,msg,arg1,arg2,arg3)
 
 #define RAVE_SPEWDEBUG4(msg,arg1,arg2,arg3,arg4) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_SPEWDEBUG,msg,arg1,arg2,arg3,arg4)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_SPEWDEBUG,msg,arg1,arg2,arg3,arg4)
 
 #define RAVE_DEBUG0(msg) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_DEBUG,msg)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_DEBUG,msg)
 
 #define RAVE_DEBUG1(msg,arg1) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_DEBUG,msg,arg1)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_DEBUG,msg,arg1)
 
 #define RAVE_DEBUG2(msg,arg1,arg2) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_DEBUG,msg,arg1,arg2)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_DEBUG,msg,arg1,arg2)
 
 #define RAVE_DEBUG3(msg,arg1,arg2,arg3) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_DEBUG,msg,arg1,arg2,arg3)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_DEBUG,msg,arg1,arg2,arg3)
 
 #define RAVE_DEBUG4(msg,arg1,arg2,arg3,arg4) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_DEBUG,msg,arg1,arg2,arg3,arg4)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_DEBUG,msg,arg1,arg2,arg3,arg4)
 
 #define RAVE_DEPRECATED0(msg) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_DEPRECATED,msg)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_DEPRECATED,msg)
 
 #define RAVE_DEPRECATED1(msg,arg1) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_DEPRECATED,msg,arg1)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_DEPRECATED,msg,arg1)
 
 #define RAVE_DEPRECATED2(msg,arg1,arg2) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_DEPRECATED,msg,arg1,arg2)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_DEPRECATED,msg,arg1,arg2)
 
 #define RAVE_DEPRECATED3(msg,arg1,arg2,arg3) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_DEPRECATED,msg,arg1,arg2,arg3)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_DEPRECATED,msg,arg1,arg2,arg3)
 
 #define RAVE_DEPRECATED4(msg,arg1,arg2,arg3,arg4) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_DEPRECATED,msg,arg1,arg2,arg3,arg4)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_DEPRECATED,msg,arg1,arg2,arg3,arg4)
 
 #define RAVE_INFO0(msg) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_INFO,msg)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_INFO,msg)
 
 #define RAVE_INFO1(msg,arg1) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_INFO,msg,arg1)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_INFO,msg,arg1)
 
 #define RAVE_INFO2(msg,arg1,arg2) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_INFO,msg,arg1,arg2)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_INFO,msg,arg1,arg2)
 
 #define RAVE_INFO3(msg,arg1,arg2,arg3) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_INFO,msg,arg1,arg2,arg3)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_INFO,msg,arg1,arg2,arg3)
 
 #define RAVE_INFO4(msg,arg1,arg2,arg3,arg4) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_INFO,msg,arg1,arg2,arg3,arg4)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_INFO,msg,arg1,arg2,arg3,arg4)
 
 #define RAVE_WARNING0(msg) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_WARNING,msg)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_WARNING,msg)
 
 #define RAVE_WARNING1(msg,arg1) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_WARNING,msg,arg1)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_WARNING,msg,arg1)
 
 #define RAVE_WARNING2(msg,arg1,arg2) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_WARNING,msg,arg1,arg2)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_WARNING,msg,arg1,arg2)
 
 #define RAVE_WARNING3(msg,arg1,arg2,arg3) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_WARNING,msg,arg1,arg2,arg3)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_WARNING,msg,arg1,arg2,arg3)
 
 #define RAVE_WARNING4(msg,arg1,arg2,arg3,arg4) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_WARNING,msg,arg1,arg2,arg3,arg4)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_WARNING,msg,arg1,arg2,arg3,arg4)
 
 #define RAVE_ERROR0(msg) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_ERROR,msg)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_ERROR,msg)
 
 #define RAVE_ERROR1(msg,arg1) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_ERROR,msg,arg1)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_ERROR,msg,arg1)
 
 #define RAVE_ERROR2(msg,arg1,arg2) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_ERROR,msg,arg1,arg2)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_ERROR,msg,arg1,arg2)
 
 #define RAVE_ERROR3(msg,arg1,arg2,arg3) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_ERROR,msg,arg1,arg2,arg3)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_ERROR,msg,arg1,arg2,arg3)
 
 #define RAVE_ERROR4(msg,arg1,arg2,arg3,arg4) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_ERROR,msg,arg1,arg2,arg3,arg4)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_ERROR,msg,arg1,arg2,arg3,arg4)
 
 #define RAVE_CRITICAL0(msg) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_CRITICAL,msg)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_CRITICAL,msg)
 
 #define RAVE_CRITICAL1(msg,arg1) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_CRITICAL,msg,arg1)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_CRITICAL,msg,arg1)
 
 #define RAVE_CRITICAL2(msg,arg1,arg2) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_CRITICAL,msg,arg1,arg2)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_CRITICAL,msg,arg1,arg2)
 
 #define RAVE_CRITICAL3(msg,arg1,arg2,arg3) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_CRITICAL,msg,arg1,arg2,arg3)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_CRITICAL,msg,arg1,arg2,arg3)
 
 #define RAVE_CRITICAL4(msg,arg1,arg2,arg3,arg4) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_CRITICAL,msg,arg1,arg2,arg3,arg4)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_CRITICAL,msg,arg1,arg2,arg3,arg4)
 
 #define RAVE_ASSERT(expr, msg) \
 if(!expr) { \
-raveDbg.dbgfun(__FILE__, __LINE__, RAVE_CRITICAL, msg); \
+Rave_getDebugFunction()(__FILE__, __LINE__, RAVE_CRITICAL, msg); \
 abort(); \
 }
 
@@ -246,83 +253,83 @@ abort(); \
 
 /** Info macro taking one text string.*/
 #define RAVE_INFO0(msg) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_INFO,msg)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_INFO,msg)
 
 /** Info macro taking one text string and one argument.*/
 #define RAVE_INFO1(msg,arg1) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_INFO,msg,arg1)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_INFO,msg,arg1)
 
 /** Info macro taking one text string and two arguments.*/
 #define RAVE_INFO2(msg,arg1,arg2) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_INFO,msg,arg1,arg2)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_INFO,msg,arg1,arg2)
 
 /** Info macro taking one text string and three arguments.*/
 #define RAVE_INFO3(msg,arg1,arg2,arg3) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_INFO,msg,arg1,arg2,arg3)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_INFO,msg,arg1,arg2,arg3)
 
 /** Info macro taking one text string and four arguments.*/
 #define RAVE_INFO4(msg,arg1,arg2,arg3,arg4) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_INFO,msg,arg1,arg2,arg3,arg4)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_INFO,msg,arg1,arg2,arg3,arg4)
 
 /** Warning macro taking one text string.*/
 #define RAVE_WARNING0(msg) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_WARNING,msg)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_WARNING,msg)
 
 /** Warning macro taking one text string and one argument.*/
 #define RAVE_WARNING1(msg,arg1) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_WARNING,msg,arg1)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_WARNING,msg,arg1)
 
 /** Warning macro taking one text string and two arguments.*/
 #define RAVE_WARNING2(msg,arg1,arg2) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_WARNING,msg,arg1,arg2)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_WARNING,msg,arg1,arg2)
 
 /** Warning macro taking one text string and three arguments.*/
 #define RAVE_WARNING3(msg,arg1,arg2,arg3) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_WARNING,msg,arg1,arg2,arg3)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_WARNING,msg,arg1,arg2,arg3)
 
 /** Warning macro taking one text string and four arguments.*/
 #define RAVE_WARNING4(msg,arg1,arg2,arg3,arg4) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_WARNING,msg,arg1,arg2,arg3,arg4)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_WARNING,msg,arg1,arg2,arg3,arg4)
 
 /** Error macro taking one text string.*/
 #define RAVE_ERROR0(msg) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_ERROR,msg)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_ERROR,msg)
 
 /** Error macro taking one text string and one argument.*/
 #define RAVE_ERROR1(msg,arg1) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_ERROR,msg,arg1)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_ERROR,msg,arg1)
 
 /** Error macro taking one text string and two arguments.*/
 #define RAVE_ERROR2(msg,arg1,arg2) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_ERROR,msg,arg1,arg2)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_ERROR,msg,arg1,arg2)
 
 /** Error macro taking one text string and three arguments.*/
 #define RAVE_ERROR3(msg,arg1,arg2,arg3) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_ERROR,msg,arg1,arg2,arg3)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_ERROR,msg,arg1,arg2,arg3)
 
 /** Error macro taking one text string and four arguments.*/
 #define RAVE_ERROR4(msg,arg1,arg2,arg3,arg4) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_ERROR,msg,arg1,arg2,arg3,arg4)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_ERROR,msg,arg1,arg2,arg3,arg4)
 
 /** Critical macro taking one text string.*/
 #define RAVE_CRITICAL0(msg) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_CRITICAL,msg)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_CRITICAL,msg)
 
 /** Critical macro taking one text string and one argument.*/
 #define RAVE_CRITICAL1(msg,arg1) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_CRITICAL,msg,arg1)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_CRITICAL,msg,arg1)
 
 /** Critical macro taking one text string and two arguments.*/
 #define RAVE_CRITICAL2(msg,arg1,arg2) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_CRITICAL,msg,arg1,arg2)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_CRITICAL,msg,arg1,arg2)
 
 /** Critical macro taking one text string and three arguments.*/
 #define RAVE_CRITICAL3(msg,arg1,arg2,arg3) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_CRITICAL,msg,arg1,arg2,arg3)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_CRITICAL,msg,arg1,arg2,arg3)
 
 /** Critical macro taking one text string and four arguments.*/
 #define RAVE_CRITICAL4(msg,arg1,arg2,arg3,arg4) \
-raveDbg.dbgfun(__FILE__,__LINE__,RAVE_CRITICAL,msg,arg1,arg2,arg3,arg4)
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_CRITICAL,msg,arg1,arg2,arg3,arg4)
 
 /**
  * Precondition macro, if the expression does not evaluate to true, then an
@@ -330,7 +337,7 @@ raveDbg.dbgfun(__FILE__,__LINE__,RAVE_CRITICAL,msg,arg1,arg2,arg3,arg4)
  */
 #define RAVE_ASSERT(expr, msg) \
 if(!expr) { \
-raveDbg.dbgfun(__FILE__, __LINE__, RAVE_CRITICAL, msg); \
+Rave_getDebugFunction()(__FILE__, __LINE__, RAVE_CRITICAL, msg); \
 abort(); \
 }
 

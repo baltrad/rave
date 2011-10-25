@@ -284,23 +284,24 @@ static void CompositeInternal_fillQualityInformation(
 }
 
 #ifdef KALLE
-static RaveObjectList_t* CompositeInternal_getPooScanFields(Composite_t* composite)
+static RaveObjectHashTable_t* CompositeInternal_getPooScanFields(Composite_t* composite)
 {
   RaveObjectList_t* result = NULL;
-  RaveObjectList_t* scans = NULL;
+  RaveObjectHashTable_t* scans = NULL;
   int nrobjs = 0, i = 0;
 
-  scans = RAVE_OBJECT_NEW(&RaveObjectList_TYPE);
+  scans = RAVE_OBJECT_NEW(&RaveObjectHashTable_TYPE);
   if (scans == NULL) {
-    RAVE_ERROR0("Failed to allocate memory for object list");
+    RAVE_ERROR0("Failed to allocate memory for object hash table");
     goto done;
   }
   nrobjs = RaveObjectList_size(composite->list);
   for (i = 0; i < nrobjs; i++) {
     RaveCoreObject* obj = RaveObjectList_get(composite->list, i);
     if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarScan_TYPE)) {
-      if (PolarScan_hasQualityField((PolarScan_t*)obj, "se.smhi.detector.poo")) {
-        //PolarScan_t* qfscan = PolarScan_createScanFromQualityField((PolarScan_t*)obj, "se.smhi.detector.poo"))
+      RaveField_t* field = PolarScan_findQualityFieldByHowTask((PolarScan_t*)obj, "se.smhi.detector.poo");
+      if (field != NULL) {
+        PolarScan_t* scan = PolarScan_fromField()
       }
     }
   }
@@ -464,7 +465,6 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t*
 #ifdef KALLE
   RaveObjectList_t* scanlist = NULL;
 #endif
-
   PolarNavigationInfo navinfo;
   int x = 0, y = 0, i = 0, xsize = 0, ysize = 0, nradars = 0;
   int nqualityflags = 0;

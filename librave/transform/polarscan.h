@@ -461,9 +461,10 @@ RaveField_t* PolarScan_getQualityFieldByHowTask(PolarScan_t* scan, const char* v
  * check in the default parameter, then it will check the scan it self.
  * @param[in] scan - self
  * @param[in] value - the how/task value
+ * @param[in] quantity - the parameter to search in. If NULL, then default parameter will be searched.
  * @return the field if found, otherwise NULL
  */
-RaveField_t* PolarScan_findQualityFieldByHowTask(PolarScan_t* scan, const char* value);
+RaveField_t* PolarScan_findQualityFieldByHowTask(PolarScan_t* scan, const char* value, const char* quantity);
 
 /**
  * Returns the range index for the specified range (in meters).

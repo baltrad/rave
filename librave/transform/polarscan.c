@@ -569,6 +569,7 @@ int PolarScan_addParameter(PolarScan_t* scan, PolarScanParam_t* parameter)
       return 0;
     }
   }
+
   result = RaveObjectHashTable_put(scan->parameters, quantity, (RaveCoreObject*)parameter);
 
   if (result == 1 && strcmp(quantity, scan->paramname)==0) {
@@ -669,17 +670,27 @@ RaveField_t* PolarScan_getQualityFieldByHowTask(PolarScan_t* scan, const char* v
   return result;
 }
 
-RaveField_t* PolarScan_findQualityFieldByHowTask(PolarScan_t* scan, const char* value)
+RaveField_t* PolarScan_findQualityFieldByHowTask(PolarScan_t* scan, const char* value, const char* quantity)
 {
   RaveField_t* result = NULL;
+  PolarScanParam_t* param = NULL;
 
   RAVE_ASSERT((scan != NULL), "scan == NULL");
+  if (quantity != NULL) {
+    param = PolarScan_getParameter(scan, quantity);
+  } else {
+    param = RAVE_OBJECT_COPY(scan->param);
+  }
 
-  result = PolarScanParam_getQualityFieldByHowTask(scan->param, value);
+  if (param != NULL) {
+    result = PolarScanParam_getQualityFieldByHowTask(param, value);
+  }
+
   if (result == NULL) {
     result = PolarScan_getQualityFieldByHowTask(scan, value);
   }
 
+  RAVE_OBJECT_RELEASE(param);
   return result;
 }
 

@@ -145,8 +145,6 @@ PyMODINIT_FUNC init_scansun(void)
   m = Py_InitModule("_scansun", _scansun_functions);
   ErrorObject = PyString_FromString("_scansun.error");
 
-  Rave_initializeDebugger();
-
   if (ErrorObject == NULL || PyDict_SetItemString(PyModule_GetDict(m),
                                                   "error", ErrorObject) != 0) {
     Py_FatalError("Can't define _scansun.error");

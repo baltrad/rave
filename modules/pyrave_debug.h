@@ -77,7 +77,6 @@ typedef struct {
 #define PYRAVE_DEBUG_INITIALIZE \
   if (atexit(_pyravedebug_statistics) != 0) { \
     fprintf(stderr, "Failed to setup debug statistics for module %s\n", _pyravedebug.name); \
-  } \
-  Rave_initializeDebugger()
+  }
 
 #endif /* PYRAVE_DEBUG_H */

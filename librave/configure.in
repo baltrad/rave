@@ -277,7 +277,7 @@ dnl Is the hlhdf present? It has a header file 'hlhdf.h' and a library -lhlhdf.
 dnl It also has a include file pyhlhdf_common.h and a library -lpyhlhdf.
 dnl There should also exist a hldef.mk.
 dnl If a file hlinstall.sh exists, it is a bonus :)
-dnl Their locations might be specified with the --with-hlhdf'
+dnl Their locations might be specified with the --with-hlhdf
 dnl command-line switch. The value is an include path and/or a library path.
 dnl It the library path is specified then it must be preceded by a comma.
 dnl -----------------------------

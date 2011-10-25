@@ -24,7 +24,8 @@ along with HLHDF.  If not, see <http://www.gnu.org/licenses/>.
 #include <string.h>
 #include <stdarg.h>
 
-rave_debug_struct raveDbg;
+static rave_dbgfun raveDebugFunction = NULL;
+static Rave_Debug raveDebugLevel = RAVE_SILENT;
 static int initialized = 0;
 
 /*@{ Private functions */
@@ -49,14 +50,16 @@ static void Rave_defaultDebugFunction(const char* filename, int lineno, Rave_Deb
   va_list alist;
   va_start(alist,fmt);
 
-  if (raveDbg.dbgLevel == RAVE_SILENT && lvl != RAVE_CRITICAL)
+  Rave_initializeDebugger(); /* So that we always have an initialized debugger */
+
+  if (raveDebugLevel == RAVE_SILENT && lvl != RAVE_CRITICAL)
     return;
 
   setLogTime(strtime, 24);
 
   strcpy(dbgtype, "");
 
-  if (lvl >= raveDbg.dbgLevel || lvl == RAVE_CRITICAL) {
+  if (lvl >= raveDebugLevel || lvl == RAVE_CRITICAL) {
     switch (lvl) {
     case RAVE_SPEWDEBUG:
       sprintf(dbgtype, "SDEBUG");
@@ -98,19 +101,35 @@ void Rave_initializeDebugger()
 {
   if (initialized == 0) {
     initialized = 1;
-    raveDbg.dbgLevel = RAVE_SILENT;
-    raveDbg.dbgfun = Rave_defaultDebugFunction;
+    raveDebugLevel = RAVE_SILENT;
+    raveDebugFunction = Rave_defaultDebugFunction;
   }
 }
 
 void Rave_setDebugLevel(Rave_Debug lvl)
 {
-  raveDbg.dbgLevel = lvl;
+  Rave_initializeDebugger();
+  if (lvl >= RAVE_SPEWDEBUG && lvl <= RAVE_SILENT) {
+    raveDebugLevel = lvl;
+  }
 }
 
-void Rave_setDebugFunction(void(*dbgfun)(const char* filename, int lineno,
-  Rave_Debug lvl, const char* fmt, ...))
+Rave_Debug Rave_getDebugLevel()
 {
-  raveDbg.dbgfun = dbgfun;
+  Rave_initializeDebugger();
+  return raveDebugLevel;
 }
+
+void Rave_setDebugFunction(rave_dbgfun dbgfun)
+{
+  Rave_initializeDebugger();
+  raveDebugFunction = dbgfun;
+}
+
+rave_dbgfun Rave_getDebugFunction(void)
+{
+  Rave_initializeDebugger();
+  return raveDebugFunction;
+}
+
 /*@} End of Interface functions */
