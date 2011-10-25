@@ -903,6 +903,61 @@ static PyObject* _pypolarscan_removeQualityField(PyPolarScan* self, PyObject* ar
 }
 
 /**
+ * Returns a quality field based on the value of how/task that should be a
+ * string.
+ * @param[in] self - self
+ * @param[in] args - the how/task value string
+ * @return the field if found otherwise NULL
+ */
+static PyObject* _pypolarscan_getQualityFieldByHowTask(PyPolarScan* self, PyObject* args)
+{
+  PyObject* result = NULL;
+  char* value = NULL;
+  RaveField_t* field = NULL;
+
+  if (!PyArg_ParseTuple(args, "s", &value)) {
+    return NULL;
+  }
+  field = PolarScan_getQualityFieldByHowTask(self->scan, value);
+  if (field == NULL) {
+    raiseException_gotoTag(done, PyExc_NameError, "Could not locate quality field");
+  }
+  result = (PyObject*)PyRaveField_New(field);
+done:
+  RAVE_OBJECT_RELEASE(field);
+  return result;
+}
+
+/**
+ * Atempts to locate a quality field with how/task = value. First it will
+ * check in the default parameter, then it will check the scan it self.
+ * @param[in] self - self
+ * @param[in] args - the how/task value string
+ * @return the field if found, otherwise NULL
+ */
+static PyObject* _pypolarscan_findQualityFieldByHowTask(PyPolarScan* self, PyObject* args)
+{
+  PyObject* result = NULL;
+  char* value = NULL;
+  RaveField_t* field = NULL;
+
+  if (!PyArg_ParseTuple(args, "s", &value)) {
+    return NULL;
+  }
+  field = PolarScan_findQualityFieldByHowTask(self->scan, value);
+  if (field != NULL) {
+    result = (PyObject*)PyRaveField_New(field);
+  }
+done:
+  RAVE_OBJECT_RELEASE(field);
+  if (result != NULL) {
+    return result;
+  } else {
+    Py_RETURN_NONE;
+  }
+}
+
+/**
  * All methods a polar scan can have
  */
 static struct PyMethodDef _pypolarscan_methods[] =
@@ -958,6 +1013,8 @@ static struct PyMethodDef _pypolarscan_methods[] =
   {"getNumberOfQualityFields", (PyCFunction) _pypolarscan_getNumberOfQualityFields, 1},
   {"getQualityField", (PyCFunction) _pypolarscan_getQualityField, 1},
   {"removeQualityField", (PyCFunction) _pypolarscan_removeQualityField, 1},
+  {"getQualityFieldByHowTask", (PyCFunction) _pypolarscan_getQualityFieldByHowTask, 1},
+  {"findQualityFieldByHowTask", (PyCFunction) _pypolarscan_findQualityFieldByHowTask, 1},
   {NULL, NULL } /* sentinel */
 };
 

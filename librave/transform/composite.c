@@ -283,6 +283,34 @@ static void CompositeInternal_fillQualityInformation(
   }
 }
 
+#ifdef KALLE
+static RaveObjectList_t* CompositeInternal_getPooScanFields(Composite_t* composite)
+{
+  RaveObjectList_t* result = NULL;
+  RaveObjectList_t* scans = NULL;
+  int nrobjs = 0, i = 0;
+
+  scans = RAVE_OBJECT_NEW(&RaveObjectList_TYPE);
+  if (scans == NULL) {
+    RAVE_ERROR0("Failed to allocate memory for object list");
+    goto done;
+  }
+  nrobjs = RaveObjectList_size(composite->list);
+  for (i = 0; i < nrobjs; i++) {
+    RaveCoreObject* obj = RaveObjectList_get(composite->list, i);
+    if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarScan_TYPE)) {
+      if (PolarScan_hasQualityField((PolarScan_t*)obj, "se.smhi.detector.poo")) {
+        //PolarScan_t* qfscan = PolarScan_createScanFromQualityField((PolarScan_t*)obj, "se.smhi.detector.poo"))
+      }
+    }
+  }
+
+  result = RAVE_OBJECT_COPY(scans);
+done:
+  RAVE_OBJECT_RELEASE(scans);
+  return result;
+}
+#endif
 /*@} End of Private functions */
 
 /*@{ Interface functions */
@@ -433,6 +461,9 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t*
   Cartesian_t* result = NULL;
   Projection_t* projection = NULL;
   RaveAttribute_t* prodpar = NULL;
+#ifdef KALLE
+  RaveObjectList_t* scanlist = NULL;
+#endif
 
   PolarNavigationInfo navinfo;
   int x = 0, y = 0, i = 0, xsize = 0, ysize = 0, nradars = 0;
@@ -494,7 +525,11 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t*
   if (!CompositeInternal_addQualityFlags(result, qualityflags)) {
     goto fail;
   }
-
+#ifdef KALLE
+  if (composite->method == CompositeSelectionMethod_POO) {
+    scanlist = CompositeInternal_getPooScanFields(composite);
+  }
+#endif
   for (y = 0; y < ysize; y++) {
     double herey = Cartesian_getLocationY(result, y);
     for (x = 0; x < xsize; x++) {

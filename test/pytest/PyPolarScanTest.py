@@ -1041,6 +1041,114 @@ class PyPolarScanTest(unittest.TestCase):
     self.assertAlmostEquals(5.0, result[5], 2)
     self.assertAlmostEquals(9.0, result[9], 2)
     
+  def test_getQualityFieldByHowTask(self):
+    obj = _polarscan.new()
+    param = _polarscanparam.new()
+    param.quantity="DBZH"    
+    data = numpy.zeros((4,5), numpy.int8)
+    param.setData(data)
+    
+    field1 = _ravefield.new()
+    field2 = _ravefield.new()
+    field1.addAttribute("how/task", "se.smhi.f1")
+    field1.addAttribute("what/value", "f1")
+    field2.addAttribute("how/task", "se.smhi.f2")
+    field2.addAttribute("what/value", "f2")
+
+    field3 = _ravefield.new()
+    field3.addAttribute("how/task", "se.smhi.f2")
+    field3.addAttribute("what/value", "pf2")
+    param.addQualityField(field3)
+    
+    obj.addQualityField(field1)
+    obj.addQualityField(field2)
+    obj.addParameter(param)
+    
+    result = obj.getQualityFieldByHowTask("se.smhi.f2")
+    self.assertEquals("f2", result.getAttribute("what/value"))
+
+  def test_getQualityFieldByHowTask_notFound(self):
+    obj = _polarscan.new()
+    param = _polarscanparam.new()
+    param.quantity="DBZH"    
+    data = numpy.zeros((4,5), numpy.int8)
+    param.setData(data)
+
+    field1 = _ravefield.new()
+    field2 = _ravefield.new()
+    field1.addAttribute("how/task", "se.smhi.f1")
+    field1.addAttribute("what/value", "f1")
+    field2.addAttribute("how/task", "se.smhi.f2")
+    field2.addAttribute("what/value", "f2")
+
+    field3 = _ravefield.new()
+    field3.addAttribute("how/task", "se.smhi.f3")
+    field3.addAttribute("what/value", "pf2")
+    param.addQualityField(field3)
+
+    obj.addQualityField(field1)
+    obj.addQualityField(field2)
+    
+    try:
+      obj.getQualityFieldByHowTask("se.smhi.f3")
+      self.fail("Expected NameError")
+    except NameError, e:
+      pass
+
+  def test_findQualityFieldByHowTask(self):
+    obj = _polarscan.new()
+    param = _polarscanparam.new()
+    param.quantity="DBZH"    
+    data = numpy.zeros((4,5), numpy.int8)
+    param.setData(data)
+    
+    field1 = _ravefield.new()
+    field2 = _ravefield.new()
+    field1.addAttribute("how/task", "se.smhi.f1")
+    field1.addAttribute("what/value", "f1")
+    field2.addAttribute("how/task", "se.smhi.f2")
+    field2.addAttribute("what/value", "f2")
+
+    field3 = _ravefield.new()
+    field3.addAttribute("how/task", "se.smhi.f2")
+    field3.addAttribute("what/value", "pf2")
+    param.addQualityField(field3)
+    
+    obj.addQualityField(field1)
+    obj.addQualityField(field2)
+    obj.addParameter(param)
+    
+    result = obj.findQualityFieldByHowTask("se.smhi.f2")
+    self.assertEquals("pf2", result.getAttribute("what/value"))
+
+    result = obj.findQualityFieldByHowTask("se.smhi.f1")
+    self.assertEquals("f1", result.getAttribute("what/value"))
+
+  def test_findQualityFieldByHowTask_notFound(self):
+    obj = _polarscan.new()
+    param = _polarscanparam.new()
+    param.quantity="DBZH"    
+    data = numpy.zeros((4,5), numpy.int8)
+    param.setData(data)
+    
+    field1 = _ravefield.new()
+    field2 = _ravefield.new()
+    field1.addAttribute("how/task", "se.smhi.f1")
+    field1.addAttribute("what/value", "f1")
+    field2.addAttribute("how/task", "se.smhi.f2")
+    field2.addAttribute("what/value", "f2")
+
+    field3 = _ravefield.new()
+    field3.addAttribute("how/task", "se.smhi.f2")
+    field3.addAttribute("what/value", "pf2")
+    param.addQualityField(field3)
+    
+    obj.addQualityField(field1)
+    obj.addQualityField(field2)
+    obj.addParameter(param)
+    
+    result = obj.findQualityFieldByHowTask("se.smhi.f3")
+    self.assertEquals(None, result)
     
 if __name__ == "__main__":
   #import sys;sys.argv = ['', 'Test.testName']

@@ -669,6 +669,20 @@ RaveField_t* PolarScan_getQualityFieldByHowTask(PolarScan_t* scan, const char* v
   return result;
 }
 
+RaveField_t* PolarScan_findQualityFieldByHowTask(PolarScan_t* scan, const char* value)
+{
+  RaveField_t* result = NULL;
+
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+
+  result = PolarScanParam_getQualityFieldByHowTask(scan->param, value);
+  if (result == NULL) {
+    result = PolarScan_getQualityFieldByHowTask(scan, value);
+  }
+
+  return result;
+}
+
 int PolarScan_getRangeIndex(PolarScan_t* scan, double r)
 {
   int result = -1;
