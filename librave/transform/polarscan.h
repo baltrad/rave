@@ -749,6 +749,17 @@ RaveObjectList_t* PolarScan_getAttributeValues(PolarScan_t* scan);
 int PolarScan_isValid(PolarScan_t* scan, Rave_ObjectType otype);
 
 /**
+ * Creates a new scan with settings from the scan and data is defined
+ * by the field. Since the field does not necessarily define the quantity
+ * the default parameter will either be UNKNOWN or the how/quantity value
+ * from the field.
+ * @param[in] self - self
+ * @param[in] field - the data field to use
+ * @returns a polar scan on success otherwise NULL
+ */
+PolarScan_t* PolarScan_createFromScanAndField(PolarScan_t* self, RaveField_t* field);
+
+/**
  * Framework internal function for setting the beamwidth in a scan,
  * used to indicate that the beamwidth comes from the polar volume.
  * I.E. DO NOT USE UNLESS YOU KNOW WHY.

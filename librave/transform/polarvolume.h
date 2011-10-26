@@ -374,4 +374,14 @@ int PolarVolume_hasAttribute(PolarVolume_t* pvol, const char* name);
  * @returns 1 if valid, otherwise 0
  */
 int PolarVolume_isValid(PolarVolume_t* pvol);
+
+/**
+ * Locates a scan with a quality field that has a how/task value == howtaskvalue.
+ * @param[in] pvol - self
+ * @param[in] howtaskvalue - the how/task value
+ * @param[in] quantity - the quantity
+ * @return the scan if found, otherwise NULL
+ */
+PolarScan_t* PolarVolume_findScanWithQualityFieldByHowTask(PolarVolume_t* pvol, const char* quantity, const char* howtaskvalue);
+
 #endif

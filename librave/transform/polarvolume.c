@@ -778,6 +778,27 @@ done:
   return result;
 }
 
+PolarScan_t* PolarVolume_findScanWithQualityFieldByHowTask(PolarVolume_t* pvol, const char* quantity, const char* howtaskvalue)
+{
+  PolarScan_t* result = NULL;
+  int nrscans = 0, i = 0;
+
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
+
+  nrscans = RaveObjectList_size(pvol->scans);
+  for (i = 0; result == NULL && i < nrscans; i++) {
+    PolarScan_t* scan = (PolarScan_t*)RaveObjectList_get(pvol->scans, i);
+    RaveField_t* field = PolarScan_findQualityFieldByHowTask(scan, howtaskvalue, quantity);
+    if (field != NULL) {
+      result = RAVE_OBJECT_COPY(scan);
+    }
+    RAVE_OBJECT_RELEASE(field);
+    RAVE_OBJECT_RELEASE(scan);
+  }
+
+  return result;
+}
+
 /*@} End of Interface functions */
 RaveCoreObjectType PolarVolume_TYPE = {
     "PolarVolume",

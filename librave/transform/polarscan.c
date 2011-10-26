@@ -188,13 +188,7 @@ static int PolarScan_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj
   if (!PolarScan_setDefaultParameter(this, PolarScan_getDefaultParameter(src))) {
     goto error;
   }
-  /* REMOVED BY AHE
-  if (this->paramname != NULL && src->param != NULL) {
-    this->param = (PolarScanParam_t*)RaveObjectHashTable_get(this->parameters, this->paramname);
-    if (this->param == NULL) {
-      goto error;
-    }
-  }*/
+
   return 1;
 error:
   RAVE_FREE(this->source);
@@ -1215,6 +1209,74 @@ int PolarScan_isValid(PolarScan_t* scan, Rave_ObjectType otype)
 
   result = 1;
 done:
+  return result;
+}
+
+PolarScan_t* PolarScan_createFromScanAndField(PolarScan_t* self, RaveField_t* field)
+{
+  PolarScan_t* result = NULL;
+  PolarScan_t* scan = NULL;
+  PolarScanParam_t* param = NULL;
+
+  RAVE_ASSERT((self != NULL), "scan == NULL");
+
+  if (field == NULL) {
+    RAVE_ERROR0("Trying to create scan from NULL field");
+    return NULL;
+  }
+
+  scan = RAVE_OBJECT_NEW(&PolarScan_TYPE);
+  if (scan == NULL) {
+    goto done;
+  }
+
+  scan->source = NULL;
+  scan->nbins = self->nbins;
+  scan->nrays = self->nrays;
+  scan->elangle = self->elangle;
+  scan->rscale = self->rscale;
+  scan->rstart = self->rstart;
+  scan->a1gate = self->a1gate;
+  scan->beamwidth = self->beamwidth;
+  scan->bwpvol = self->bwpvol;
+  scan->maxdistance = self->maxdistance;
+  scan->datetime = RAVE_OBJECT_CLONE(self->datetime);
+  scan->startdatetime = RAVE_OBJECT_CLONE(self->startdatetime);
+  scan->enddatetime = RAVE_OBJECT_CLONE(self->enddatetime);
+  scan->projection = RAVE_OBJECT_CLONE(self->projection);
+  scan->navigator = RAVE_OBJECT_CLONE(self->navigator);
+  scan->attrs = RAVE_OBJECT_CLONE(self->attrs);
+  scan->paramname = NULL;
+  scan->param = NULL;
+
+  if (scan->datetime == NULL || scan->projection == NULL ||
+      scan->navigator == NULL || scan->attrs == NULL ||
+      scan->startdatetime == NULL || scan->enddatetime == NULL) {
+    goto done;
+  }
+  if (!PolarScan_setSource(scan, PolarScan_getSource(self))) {
+    goto done;
+  }
+  param = PolarScanParam_fromField(field);
+  if (param == NULL) {
+    goto done;
+  }
+  if (PolarScanParam_getQuantity(param) != NULL) {
+    if (!PolarScanParam_setQuantity(param, "UNKNOWN")) {
+      goto done;
+    }
+  }
+  if (!PolarScan_addParameter(scan, param)) {
+    goto done;
+  }
+  if (!PolarScan_setDefaultParameter(scan, PolarScanParam_getQuantity(param))) {
+    goto done;
+  }
+
+  result = RAVE_OBJECT_COPY(scan);
+done:
+  RAVE_OBJECT_RELEASE(scan);
+  RAVE_OBJECT_RELEASE(param);
   return result;
 }
 

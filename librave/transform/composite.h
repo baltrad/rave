@@ -35,7 +35,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  */
 typedef enum CompositeSelectionMethod_t {
   CompositeSelectionMethod_NEAREST = 0, /**< Nearest radar defines pixel to use (default) */
-  CompositeSelectionMethod_HEIGHT       /**< Pixel closest to ground defines pixel to use */
+  CompositeSelectionMethod_HEIGHT,       /**< Pixel closest to ground defines pixel to use */
+  CompositeSelectionMethod_POO           /**< Create composite by checking poo-fields */
 } CompositeSelectionMethod_t;
 
 /**

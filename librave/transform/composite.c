@@ -29,6 +29,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_alloc.h"
 #include "rave_datetime.h"
 #include <string.h>
+#include "raveobject_hashtable.h"
 
 /**
  * Represents the cartesian product.
@@ -283,12 +284,20 @@ static void CompositeInternal_fillQualityInformation(
   }
 }
 
-#ifdef KALLE
+/**
+ * Will traverse all objects in the list and atempt to find a scan that contains a
+ * quality field that has got a how/task value == se.smhi.detector.poo.
+ * All scans that contains such a field will get a scan set in the resulting
+ * hash table with the quality data set as the default (and only) parameter.
+ * @param[in] composite - self
+ * @return a hash table
+ */
 static RaveObjectHashTable_t* CompositeInternal_getPooScanFields(Composite_t* composite)
 {
-  RaveObjectList_t* result = NULL;
+  RaveObjectHashTable_t* result = NULL;
   RaveObjectHashTable_t* scans = NULL;
   int nrobjs = 0, i = 0;
+  int status = 1;
 
   scans = RAVE_OBJECT_NEW(&RaveObjectHashTable_TYPE);
   if (scans == NULL) {
@@ -296,14 +305,36 @@ static RaveObjectHashTable_t* CompositeInternal_getPooScanFields(Composite_t* co
     goto done;
   }
   nrobjs = RaveObjectList_size(composite->list);
-  for (i = 0; i < nrobjs; i++) {
+  for (i = 0; status == 1 && i < nrobjs; i++) {
     RaveCoreObject* obj = RaveObjectList_get(composite->list, i);
     if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarScan_TYPE)) {
-      RaveField_t* field = PolarScan_findQualityFieldByHowTask((PolarScan_t*)obj, "se.smhi.detector.poo");
+      RaveField_t* field = PolarScan_findQualityFieldByHowTask((PolarScan_t*)obj, "se.smhi.detector.poo", Composite_getQuantity(composite));
       if (field != NULL) {
-        PolarScan_t* scan = PolarScan_fromField()
+        PolarScan_t* scan = PolarScan_createFromScanAndField((PolarScan_t*)obj, field);
+        if (scan == NULL || !RaveObjectHashTable_put(scans, "what/source", (RaveCoreObject*)PolarScan_getSource(scan))) {
+          RAVE_ERROR0("Failed to add poo scan to hash table");
+          status = 0;
+        }
+        RAVE_OBJECT_RELEASE(scan);
       }
+      RAVE_OBJECT_RELEASE(field);
+    } else if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
+      PolarScan_t* pooscan = PolarVolume_findScanWithQualityFieldByHowTask((PolarVolume_t*)obj, "se.smhi.detector.poo", Composite_getQuantity(composite));
+      if (pooscan != NULL) {
+        RaveField_t* field = PolarScan_findQualityFieldByHowTask(pooscan, "se.smhi.detector.poo", Composite_getQuantity(composite));
+        if (field != NULL) {
+          PolarScan_t* scan = PolarScan_createFromScanAndField(pooscan, field);
+          if (scan == NULL || !RaveObjectHashTable_put(scans, "what/source", (RaveCoreObject*)PolarScan_getSource(scan))) {
+            RAVE_ERROR0("Failed to add poo scan to hash table");
+            status = 0;
+          }
+          RAVE_OBJECT_RELEASE(scan);
+        }
+        RAVE_OBJECT_RELEASE(field);
+      }
+      RAVE_OBJECT_RELEASE(pooscan);
     }
+    RAVE_OBJECT_RELEASE(obj);
   }
 
   result = RAVE_OBJECT_COPY(scans);
@@ -311,7 +342,7 @@ done:
   RAVE_OBJECT_RELEASE(scans);
   return result;
 }
-#endif
+
 /*@} End of Private functions */
 
 /*@{ Interface functions */
@@ -462,9 +493,8 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t*
   Cartesian_t* result = NULL;
   Projection_t* projection = NULL;
   RaveAttribute_t* prodpar = NULL;
-#ifdef KALLE
-  RaveObjectList_t* scanlist = NULL;
-#endif
+  RaveObjectHashTable_t* extrascans = NULL;
+
   PolarNavigationInfo navinfo;
   int x = 0, y = 0, i = 0, xsize = 0, ysize = 0, nradars = 0;
   int nqualityflags = 0;
@@ -525,11 +555,11 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t*
   if (!CompositeInternal_addQualityFlags(result, qualityflags)) {
     goto fail;
   }
-#ifdef KALLE
+
   if (composite->method == CompositeSelectionMethod_POO) {
-    scanlist = CompositeInternal_getPooScanFields(composite);
+    extrascans = CompositeInternal_getPooScanFields(composite);
   }
-#endif
+
   for (y = 0; y < ysize; y++) {
     double herey = Cartesian_getLocationY(result, y);
     for (x = 0; x < xsize; x++) {
@@ -564,12 +594,15 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t*
           } else {
             double dist = 0.0;
             double maxdist = 0.0;
+            char* source = NULL;
             if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
               dist = PolarVolume_getDistance((PolarVolume_t*)obj, olon, olat);
               maxdist = PolarVolume_getMaxDistance((PolarVolume_t*)obj);
+              source = (char*)PolarVolume_getSource((PolarVolume_t*)obj);
             } else if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarScan_TYPE)) {
               dist = PolarScan_getDistance((PolarScan_t*)obj, olon, olat);
               maxdist = PolarScan_getMaxDistance((PolarScan_t*)obj);
+              source = (char*)PolarScan_getSource((PolarScan_t*)obj);
             }
             if (dist <= maxdist) {
               RaveValueType otype = RaveValueType_NODATA;
@@ -578,6 +611,13 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t*
 
               if (composite->method == CompositeSelectionMethod_HEIGHT) {
                 dist = navinfo.actual_height; // We are determining pixel by height above sea level
+              } else if (composite->method == CompositeSelectionMethod_POO) {
+                PolarScan_t* pooscan = (PolarScan_t*)RaveObjectHashTable_get(extrascans, source);
+                dist = mindist; /* If we don't find any matching poo-field or we are oor*/
+                if (pooscan != NULL) {
+                  PolarScan_getNearest(pooscan, olon, olat, &dist);
+                }
+                RAVE_OBJECT_RELEASE(pooscan);
               }
 
               if (otype == RaveValueType_DATA || otype == RaveValueType_UNDETECT) {
@@ -610,10 +650,12 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t*
     }
   }
 
+  RAVE_OBJECT_RELEASE(extrascans);
   RAVE_OBJECT_RELEASE(projection);
   RAVE_OBJECT_RELEASE(prodpar);
   return result;
 fail:
+  RAVE_OBJECT_RELEASE(extrascans);
   RAVE_OBJECT_RELEASE(projection);
   RAVE_OBJECT_RELEASE(prodpar);
   RAVE_OBJECT_RELEASE(result);
