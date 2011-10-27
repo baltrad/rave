@@ -699,6 +699,17 @@ done:
   return result;
 }
 
+static PyObject* _pypolarvolume_isPolarVolume(PyObject* self, PyObject* args)
+{
+  PyObject* inobj = NULL;
+  if (!PyArg_ParseTuple(args,"O", &inobj)) {
+    return NULL;
+  }
+  if (PyPolarVolume_Check(inobj)) {
+    return PyBool_FromLong(1);
+  }
+  return PyBool_FromLong(0);
+}
 /*@} End of Polar Volumes */
 
 /// --------------------------------------------------------------------
@@ -731,6 +742,7 @@ PyTypeObject PyPolarVolume_Type =
 /*@{ Module setup */
 static PyMethodDef functions[] = {
   {"new", (PyCFunction)_pypolarvolume_new, 1},
+  {"isPolarVolume", (PyCFunction)_pypolarvolume_isPolarVolume, 1},
   {NULL,NULL} /*Sentinel*/
 };
 

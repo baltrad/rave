@@ -45,7 +45,13 @@ class PyPolarScanTest(unittest.TestCase):
     
     isscan = string.find(`type(obj)`, "PolarScanCore")
     self.assertNotEqual(-1, isscan)
-     
+
+  def test_isPolarScan(self):
+    obj = _polarscan.new()
+    param = _polarscanparam.new()
+    self.assertTrue(_polarscan.isPolarScan(obj))
+    self.assertFalse(_polarscan.isPolarScan(param))
+
   def test_attribute_visibility(self):
     attrs = ['elangle', 'nbins', 'rscale', 'nrays', 'rstart', 'a1gate',
              'datatype', 'beamwidth', 'longitude', 'latitude', 'height',

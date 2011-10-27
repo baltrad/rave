@@ -47,6 +47,12 @@ class PyPolarVolumeTest(unittest.TestCase):
     result = string.find(`type(obj)`, "PolarVolumeCore")
     self.assertNotEqual(-1, result) 
 
+  def test_isPolarVolume(self):
+    obj = _polarvolume.new()
+    scan = _polarscan.new()
+    self.assertTrue(_polarvolume.isPolarVolume(obj))
+    self.assertFalse(_polarvolume.isPolarVolume(scan))
+
   def test_attribute_visibility(self):
     attrs = ['longitude', 'latitude', 'height', 'time', 'date', 'source',
              'paramname']

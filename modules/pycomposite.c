@@ -468,6 +468,7 @@ init_pycomposite(void)
 
   add_long_constant(dictionary, "SelectionMethod_NEAREST", CompositeSelectionMethod_NEAREST);
   add_long_constant(dictionary, "SelectionMethod_HEIGHT", CompositeSelectionMethod_HEIGHT);
+  add_long_constant(dictionary, "SelectionMethod_POO", CompositeSelectionMethod_POO);
 
   import_pypolarvolume();
   import_pypolarscan();

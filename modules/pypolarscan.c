@@ -1271,6 +1271,19 @@ static int _pypolarscan_setattr(PyPolarScan* self, char* name, PyObject* val)
 done:
   return result;
 }
+
+static PyObject* _pypolarscan_isPolarScan(PyObject* self, PyObject* args)
+{
+  PyObject* inobj = NULL;
+  if (!PyArg_ParseTuple(args,"O", &inobj)) {
+    return NULL;
+  }
+  if (PyPolarScan_Check(inobj)) {
+    return PyBool_FromLong(1);
+  }
+  return PyBool_FromLong(0);
+}
+
 /*@} End of Polar Scans */
 
 /// --------------------------------------------------------------------
@@ -1300,6 +1313,7 @@ PyTypeObject PyPolarScan_Type =
 /*@{ Module setup */
 static PyMethodDef functions[] = {
   {"new", (PyCFunction)_pypolarscan_new, 1},
+  {"isPolarScan", (PyCFunction)_pypolarscan_isPolarScan, 1},
   {NULL,NULL} /*Sentinel*/
 };
 
