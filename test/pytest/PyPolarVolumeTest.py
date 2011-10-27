@@ -242,6 +242,38 @@ class PyPolarVolumeTest(unittest.TestCase):
     self.assertTrue (scan1 == scanresult1)
     self.assertTrue (scan2 == scanresult2)
 
+  def test_getScanWithMaxDistance(self):
+    obj = _polarvolume.new()
+    s1 = _polarscan.new()
+    s1.rscale = 500.0
+    s1.elangle = 0.5 * math.pi / 180.0
+    s1.longitude = 60.0 * math.pi / 180.0
+    s1.latitude = 14.0 * math.pi / 180.0
+    s1.height = 100.0
+    s1.addAttribute("how/value", "s1")
+    p1 = _polarscanparam.new()
+    p1.quantity = "DBZH"
+    p1.setData(numpy.zeros((100, 120), numpy.uint8))
+    s1.addParameter(p1)
+    
+    s2 = _polarscan.new()
+    s2.rscale = 1000.0
+    s2.elangle = 0.5 * math.pi / 180.0
+    s2.longitude = 60.0 * math.pi / 180.0
+    s2.latitude = 14.0 * math.pi / 180.0
+    s2.height = 100.0
+    s2.addAttribute("how/value", "s2")
+    p2 = _polarscanparam.new()
+    p2.quantity = "DBZH"
+    p2.setData(numpy.zeros((100, 120), numpy.uint8))
+    s2.addParameter(p2)
+    
+    obj.addScan(s1)
+    obj.addScan(s2)
+    
+    result = obj.getScanWithMaxDistance()
+    self.assertEquals("s2", result.getAttribute("how/value"))
+    
   def test_getScanClosestToElevation_outside(self):
     obj = _polarvolume.new()
     scan1 = _polarscan.new()

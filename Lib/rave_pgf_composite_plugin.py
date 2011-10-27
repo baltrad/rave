@@ -35,6 +35,8 @@ import _rave
 import _area
 import _projection
 import _raveio
+import _polarvolume
+import _polarscan
 import area
 import string
 import rave_tempfile
@@ -106,25 +108,39 @@ def generate(files, arguments):
   for fname in files:
     rio = _raveio.open(fname)
 
-    if len(nodes): nodes += ",'%s'" % odim_source.NODfromSource(rio.object)
-    else: nodes += "'%s'" % odim_source.NODfromSource(rio.object)
+    obj = rio.object
+
+    if len(nodes):
+      nodes += ",'%s'" % odim_source.NODfromSource(obj)
+    else:
+      nodes += "'%s'" % odim_source.NODfromSource(obj)
+
+    if args["selection"] == "OVERSHOOTING" and _polarvolume.isPolarVolume(obj):
+      import _detectionrange
+      drgenerator = _detectionrange.new()
+      maxscan = obj.getScanWithMaxDistance()
+      # We want to have same resolution as maxdistance scan since we are going to add the poo-field to it
+      # The second argument is dbz threshold, modify it accordingly
+      topfield = dr.top(o.object, maxscan.rscale, -40.0)  # Topfield is a scan
+      filterfield = dr.filter(topfield)                   # filterfield is a scan
+      poofield = dr.analyze(filterfield, 60, 0.1, 0.5)    # poofield is a quality field, add it to maxscan
+      maxscan.addQualityField(poofield)                   # We only need to add field since the max scan is a reference
 
     if "ropo" in detectors:
+      try:
+        import ropo_realtime
+        obj = ropo_realtime.generate(obj)
+        generator.add(obj)
+      except:
         try:
-            import ropo_realtime
-            rio.object = ropo_realtime.generate(rio)
-            generator.add(rio.object)
+          generator.add(obj)
         except:
-            try:
-                generator.add(rio.object)
-            except:
-                pass
-
+          pass
     else:
-        try:
-            generator.add(rio.object)
-        except:
-            pass  # will passively reject files that fail to read
+      try:
+        generator.add(obj)
+      except:
+        pass  # will passively reject files that fail to read
     
   generator.quantity = "DBZH"
 
@@ -163,6 +179,8 @@ def generate(files, arguments):
       generator.selection_method = _pycomposite.SelectionMethod_NEAREST
     elif args["selection"] == "HEIGHT_ABOVE_SEALEVEL":
       generator.selection_method = _pycomposite.SelectionMethod_HEIGHT
+    elif args["selection"] == "OVERSHOOTING":
+      generator.selection_method = _pycomposite.SelectionMethod_POO
 
   generator.time = args["time"]
   generator.date = args["date"]

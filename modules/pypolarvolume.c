@@ -236,6 +236,28 @@ static PyObject* _pypolarvolume_getNumberOfScans(PyPolarVolume* self, PyObject* 
 }
 
 /**
+ * Locates the scan that covers the longest distance
+ * @param[in] self - self
+ * @param[in] args - N/A
+ * @return the scan with longest distance, otherwise NULL
+ */
+static PyObject* _pypolarvolume_getScanWithMaxDistance(PyPolarVolume* self, PyObject* args)
+{
+  PyObject* result = NULL;
+  PolarScan_t* scan = NULL;
+  if (!PyArg_ParseTuple(args, "")) {
+    return NULL;
+  }
+  scan = PolarVolume_getScanWithMaxDistance(self->pvol);
+  if (scan == NULL) {
+    raiseException_returnNULL(PyExc_RuntimeError, "Could not find any scan");
+  }
+  result = (PyObject*)PyPolarScan_New(scan);
+  RAVE_OBJECT_RELEASE(scan);
+  return result;
+}
+
+/**
  * Returns 1 if the scans in the volume are sorted in ascending order, otherwise
  * 0 will be returned.
  * @param[in] self - the polar volume
@@ -552,6 +574,7 @@ static struct PyMethodDef _pypolarvolume_methods[] =
   {"addScan", (PyCFunction) _pypolarvolume_addScan, 1},
   {"getScan", (PyCFunction) _pypolarvolume_getScan, 1},
   {"getNumberOfScans", (PyCFunction) _pypolarvolume_getNumberOfScans, 1},
+  {"getScanWithMaxDistance", (PyCFunction) _pypolarvolume_getScanWithMaxDistance, 1},
   {"isAscendingScans", (PyCFunction) _pypolarvolume_isAscendingScans, 1},
   {"isTransformable", (PyCFunction) _pypolarvolume_isTransformable, 1},
   {"sortByElevations", (PyCFunction) _pypolarvolume_sortByElevations, 1},

@@ -381,7 +381,7 @@ int Composite_setSelectionMethod(Composite_t* self, CompositeSelectionMethod_t m
 {
   int result = 0;
   RAVE_ASSERT((self != NULL), "self == NULL");
-  if (method >= CompositeSelectionMethod_NEAREST && method <= CompositeSelectionMethod_HEIGHT) {
+  if (method >= CompositeSelectionMethod_NEAREST && method <= CompositeSelectionMethod_POO) {
     self->method = method;
     result = 1;
   }
