@@ -42,6 +42,7 @@ import string
 import rave_tempfile
 import odim_source
 import math
+import rave_pgf_composite_quality_registry
 
 from rave_defines import CENTER_ID, GAIN, OFFSET
 
@@ -104,6 +105,12 @@ def generate(files, arguments):
       detectors = []
 
   nodes = ""
+  qfields = []  # The quality fields we want to get as a result in the composite
+
+  for d in detectors:
+    p = rave_pgf_composite_quality_registry.get_plugin(d)
+    if p != None:
+      qfields.extend(p.getQualityFields())
 
   for fname in files:
     rio = _raveio.open(fname)
@@ -114,17 +121,11 @@ def generate(files, arguments):
       nodes += ",'%s'" % odim_source.NODfromSource(obj)
     else:
       nodes += "'%s'" % odim_source.NODfromSource(obj)
-
-    if "rave-overshooting" in detectors and _polarvolume.isPolarVolume(obj):
-      import _detectionrange
-      drgenerator = _detectionrange.new()
-      maxscan = obj.getScanWithMaxDistance()
-      # We want to have same resolution as maxdistance scan since we are going to add the poo-field to it
-      # The second argument is dbz threshold, modify it accordingly
-      topfield = drgenerator.top(obj, maxscan.rscale, -40.0)  # Topfield is a scan
-      filterfield = drgenerator.filter(topfield)                   # filterfield is a scan
-      poofield = drgenerator.analyze(filterfield, 60, 0.1, 0.5)    # poofield is a quality field, add it to maxscan
-      maxscan.addQualityField(poofield)                   # We only need to add field since the max scan is a reference
+    
+    for d in detectors:
+      p = rave_pgf_composite_quality_registry.get_plugin(d)
+      if p != None:
+        obj = p.process(obj)
 
     if "ropo" in detectors:
       try:
