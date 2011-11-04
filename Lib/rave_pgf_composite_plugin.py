@@ -115,15 +115,15 @@ def generate(files, arguments):
     else:
       nodes += "'%s'" % odim_source.NODfromSource(obj)
 
-    if args["selection"] == "OVERSHOOTING" and _polarvolume.isPolarVolume(obj):
+    if "rave-overshooting" in detectors and _polarvolume.isPolarVolume(obj):
       import _detectionrange
       drgenerator = _detectionrange.new()
       maxscan = obj.getScanWithMaxDistance()
       # We want to have same resolution as maxdistance scan since we are going to add the poo-field to it
       # The second argument is dbz threshold, modify it accordingly
-      topfield = dr.top(o.object, maxscan.rscale, -40.0)  # Topfield is a scan
-      filterfield = dr.filter(topfield)                   # filterfield is a scan
-      poofield = dr.analyze(filterfield, 60, 0.1, 0.5)    # poofield is a quality field, add it to maxscan
+      topfield = drgenerator.top(obj, maxscan.rscale, -40.0)  # Topfield is a scan
+      filterfield = drgenerator.filter(topfield)                   # filterfield is a scan
+      poofield = drgenerator.analyze(filterfield, 60, 0.1, 0.5)    # poofield is a quality field, add it to maxscan
       maxscan.addQualityField(poofield)                   # We only need to add field since the max scan is a reference
 
     if "ropo" in detectors:
@@ -141,7 +141,7 @@ def generate(files, arguments):
         generator.add(obj)
       except:
         pass  # will passively reject files that fail to read
-    
+
   generator.quantity = "DBZH"
 
   if "quantity" in args.keys():
@@ -179,18 +179,24 @@ def generate(files, arguments):
       generator.selection_method = _pycomposite.SelectionMethod_NEAREST
     elif args["selection"] == "HEIGHT_ABOVE_SEALEVEL":
       generator.selection_method = _pycomposite.SelectionMethod_HEIGHT
-    elif args["selection"] == "OVERSHOOTING":
-      generator.selection_method = _pycomposite.SelectionMethod_POO
 
   generator.time = args["time"]
   generator.date = args["date"]
   generator.gain = GAIN
   generator.offset = OFFSET
-  
+
+  # What quality fields that should be added to the resulting composite
+  qfields = []
+
+  if "rave-overshooting" in detectors:
+    import _poocompositealgorithm
+    generator.algorithm = _poocompositealgorithm.new()
+    qfields.append("se.smhi.detector.poo")
+    
   if "ropo" in detectors:
-    result = generator.nearest(pyarea, ["fi.fmi.ropo.detector.classification"])
-  else:
-    result = generator.nearest(pyarea)
+    qfields.append("fi.fmi.ropo.detector.classification")
+    
+  result = generator.nearest(pyarea, qfields)
   
   
   # Fix so that we get a valid place for /what/source and /how/nodes 

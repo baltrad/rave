@@ -382,6 +382,6 @@ int PolarVolume_isValid(PolarVolume_t* pvol);
  * @param[in] quantity - the quantity
  * @return the scan if found, otherwise NULL
  */
-PolarScan_t* PolarVolume_findScanWithQualityFieldByHowTask(PolarVolume_t* pvol, const char* quantity, const char* howtaskvalue);
+PolarScan_t* PolarVolume_findScanWithQualityFieldByHowTask(PolarVolume_t* pvol, const char* howtaskvalue, const char* quantity);
 
 #endif

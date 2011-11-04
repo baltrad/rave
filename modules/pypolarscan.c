@@ -949,8 +949,9 @@ static PyObject* _pypolarscan_findQualityFieldByHowTask(PyPolarScan* self, PyObj
   if (field != NULL) {
     result = (PyObject*)PyRaveField_New(field);
   }
-done:
+
   RAVE_OBJECT_RELEASE(field);
+
   if (result != NULL) {
     return result;
   } else {

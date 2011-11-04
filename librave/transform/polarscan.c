@@ -542,16 +542,19 @@ int PolarScan_addParameter(PolarScan_t* scan, PolarScanParam_t* parameter)
 {
   const char* quantity;
   int result = 0;
+
   RAVE_ASSERT((scan != NULL), "scan == NULL");
   if (parameter == NULL) {
     RAVE_WARNING0("Passing in NULL as parameter");
     return 0;
   }
+
   quantity = PolarScanParam_getQuantity(parameter);
   if (quantity == NULL) {
     RAVE_WARNING0("No quantity in parameter, can not handle");
     return 0;
   }
+
   if (RaveObjectHashTable_size(scan->parameters)<=0) {
     scan->nrays = PolarScanParam_getNrays(parameter);
     scan->nbins = PolarScanParam_getNbins(parameter);
@@ -565,7 +568,6 @@ int PolarScan_addParameter(PolarScan_t* scan, PolarScanParam_t* parameter)
   }
 
   result = RaveObjectHashTable_put(scan->parameters, quantity, (RaveCoreObject*)parameter);
-
   if (result == 1 && strcmp(quantity, scan->paramname)==0) {
     RAVE_OBJECT_RELEASE(scan->param);
     scan->param = RAVE_OBJECT_COPY(parameter);
@@ -1225,11 +1227,31 @@ PolarScan_t* PolarScan_createFromScanAndField(PolarScan_t* self, RaveField_t* fi
     return NULL;
   }
 
-  scan = RAVE_OBJECT_NEW(&PolarScan_TYPE);
+  scan = RAVE_OBJECT_CLONE(self);
   if (scan == NULL) {
     goto done;
   }
+  RaveObjectHashTable_clear(scan->parameters);
+  RaveObjectList_clear(scan->qualityfields);
+  RAVE_OBJECT_RELEASE(scan->param);
 
+  param = PolarScanParam_fromField(field);
+  if (param == NULL) {
+    goto done;
+  }
+  if (PolarScanParam_getQuantity(param) != NULL) {
+    if (!PolarScanParam_setQuantity(param, "UNKNOWN")) {
+      goto done;
+    }
+  }
+  if (!PolarScan_setDefaultParameter(scan, PolarScanParam_getQuantity(param))) {
+    goto done;
+  }
+  if (!PolarScan_addParameter(scan, param)) {
+    goto done;
+  }
+
+#ifdef KALLE
   scan->source = NULL;
   scan->nbins = self->nbins;
   scan->nrays = self->nrays;
@@ -1266,12 +1288,13 @@ PolarScan_t* PolarScan_createFromScanAndField(PolarScan_t* self, RaveField_t* fi
       goto done;
     }
   }
-  if (!PolarScan_addParameter(scan, param)) {
-    goto done;
-  }
   if (!PolarScan_setDefaultParameter(scan, PolarScanParam_getQuantity(param))) {
     goto done;
   }
+  if (!PolarScan_addParameter(scan, param)) {
+    goto done;
+  }
+#endif
 
   result = RAVE_OBJECT_COPY(scan);
 done:

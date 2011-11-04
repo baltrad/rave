@@ -29,14 +29,14 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_types.h"
 #include "cartesian.h"
 #include "area.h"
+#include "composite_algorithm.h"
 
 /**
  * What type of selection variant to use
  */
 typedef enum CompositeSelectionMethod_t {
   CompositeSelectionMethod_NEAREST = 0, /**< Nearest radar defines pixel to use (default) */
-  CompositeSelectionMethod_HEIGHT,       /**< Pixel closest to ground defines pixel to use */
-  CompositeSelectionMethod_POO           /**< Create composite by checking poo-fields */
+  CompositeSelectionMethod_HEIGHT
 } CompositeSelectionMethod_t;
 
 /**
@@ -58,6 +58,21 @@ extern RaveCoreObjectType Composite_TYPE;
  * @returns 1 on success, otherwise 0
  */
 int Composite_add(Composite_t* composite, RaveCoreObject* object);
+
+/**
+ * Returns the number of objects this composite will process
+ * @param[in] composite - self
+ * @return the number of objects
+ */
+int Composite_getNumberOfObjects(Composite_t* composite);
+
+/**
+ * Return the object at position index.
+ * @param[in] composite - self
+ * @param[in] index - the index, should be >= 0 and < getNumberOfObjects
+ * @return the object or NULL if outside range
+ */
+RaveCoreObject* Composite_get(Composite_t* composite, int index);
 
 /**
  * Sets the product type that should be generated when generating the
@@ -202,4 +217,17 @@ const char* Composite_getDate(Composite_t* composite);
  */
 Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t* qualityflags);
 
+/**
+ * Sets the algorithm to use when generating the composite.
+ * @param[in] composite - self
+ * @param[in] algorithm - the actual algorithm to be run (MAY BE NULL, indicating nothing particular should be done)
+ */
+void Composite_setAlgorithm(Composite_t* composite, CompositeAlgorithm_t* algorithm);
+
+/**
+ * Returns the currently used algorithm.
+ * @param[in] composite - self
+ * @return the algorithm (or NULL)
+ */
+CompositeAlgorithm_t* Composite_getAlgorithm(Composite_t* composite);
 #endif /* COMPOSITE_H */

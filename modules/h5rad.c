@@ -331,6 +331,9 @@ static PyObject* _test_import_func(PyObject* self, PyObject* args)
   if (ok) {
     printf("initializing projection\n");
     retpj = initProjection(pcsdef);
+    if (retpj == NULL) {
+      fprintf(stderr, "Failed to initialize projection\n");
+    }
   }
 
   Py_XDECREF(pcsmodule);

@@ -40,6 +40,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_alloc.h"
 #include "raveutil.h"
 #include "rave.h"
+#include "pycompositealgorithm.h"
 
 /**
  * Debug this module
@@ -284,6 +285,15 @@ static PyObject* _pycomposite_getattr(PyComposite* self, char* name)
     return PyFloat_FromDouble(Composite_getGain(self->composite));
   } else if (strcmp("offset", name) == 0) {
     return PyFloat_FromDouble(Composite_getOffset(self->composite));
+  } else if (strcmp("algorithm", name) == 0) {
+    CompositeAlgorithm_t* algorithm = Composite_getAlgorithm(self->composite);
+    if (algorithm != NULL) {
+      res = (PyObject*)PyCompositeAlgorithm_New(algorithm);
+      RAVE_OBJECT_RELEASE(algorithm);
+      return res;
+    } else {
+      Py_RETURN_NONE;
+    }
   }
 
   res = Py_FindMethod(_pycomposite_methods, (PyObject*) self, name);
@@ -384,6 +394,14 @@ static int _pycomposite_setattr(PyComposite* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "gain must be a float or decimal value")
     }
+  } else if (strcmp("algorithm", name) == 0) {
+    if (val == Py_None) {
+      Composite_setAlgorithm(self->composite, NULL);
+    } else if (PyCompositeAlgorithm_Check(val)) {
+      Composite_setAlgorithm(self->composite, ((PyCompositeAlgorithm*)val)->algorithm);
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError, "algorithm must either be None or a CompositeAlgorithm");
+    }
   } else {
     raiseException_gotoTag(done, PyExc_AttributeError, name);
   }
@@ -468,13 +486,13 @@ init_pycomposite(void)
 
   add_long_constant(dictionary, "SelectionMethod_NEAREST", CompositeSelectionMethod_NEAREST);
   add_long_constant(dictionary, "SelectionMethod_HEIGHT", CompositeSelectionMethod_HEIGHT);
-  add_long_constant(dictionary, "SelectionMethod_POO", CompositeSelectionMethod_POO);
 
   import_pypolarvolume();
   import_pypolarscan();
   import_pycartesian();
   import_pyarea();
   import_array(); /*To make sure I get access to Numeric*/
+  import_compositealgorithm();
   PYRAVE_DEBUG_INITIALIZE;
 }
 /*@} End of Module setup */

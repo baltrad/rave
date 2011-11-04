@@ -45,6 +45,7 @@ struct _Composite_t {
   double gain;     /**< the gain, default 1 */
   RaveDateTime_t* datetime;  /**< the date and time */
   RaveObjectList_t* list;
+  CompositeAlgorithm_t* algorithm; /**< the specific algorithm */
 };
 
 /*@{ Private functions */
@@ -62,6 +63,7 @@ static int Composite_constructor(RaveCoreObject* obj)
   this->paramname = NULL;
   this->offset = 0;
   this->gain = 1;
+  this->algorithm = NULL;
   this->list = RAVE_OBJECT_NEW(&RaveObjectList_TYPE);
   this->datetime = RAVE_OBJECT_NEW(&RaveDateTime_TYPE);
   if (this->list == NULL || this->datetime == NULL || !Composite_setQuantity(this, "DBZH")) {
@@ -89,12 +91,21 @@ static int Composite_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj
   this->height = src->height;
   this->elangle = src->elangle;
   this->paramname = NULL;
+  this->algorithm = NULL;
   this->offset = src->offset;
   this->gain = src->gain;
   this->list = RAVE_OBJECT_CLONE(src->list);
   this->datetime = RAVE_OBJECT_CLONE(src->datetime);
+
   if (this->list == NULL || this->datetime == NULL || !Composite_setQuantity(this, Composite_getQuantity(src))) {
     goto error;
+  }
+
+  if (src->algorithm != NULL) {
+    this->algorithm = RAVE_OBJECT_CLONE(src->algorithm);
+    if (this->algorithm == NULL) {
+      goto error;
+    }
   }
 
   return 1;
@@ -102,6 +113,7 @@ error:
   RAVE_FREE(this->paramname);
   RAVE_OBJECT_RELEASE(this->list);
   RAVE_OBJECT_RELEASE(this->datetime);
+  RAVE_OBJECT_RELEASE(this->algorithm);
   return 0;
 }
 
@@ -115,6 +127,7 @@ static void Composite_destructor(RaveCoreObject* obj)
   RAVE_OBJECT_RELEASE(this->list);
   RAVE_OBJECT_RELEASE(this->datetime);
   RAVE_FREE(this->paramname);
+  RAVE_OBJECT_RELEASE(this->algorithm);
 }
 
 static void CompositeInternal_nearestValue(Composite_t* composite, RaveCoreObject* object,
@@ -261,19 +274,26 @@ static void CompositeInternal_fillQualityInformation(
     if (name != NULL) {
       RaveCoreObject* obj = RaveObjectList_get(composite->list, radarindex);
       if (obj != NULL) {
-        if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
-          if (navinfo->ei >= 0 && navinfo->ri >= 0 && navinfo->ai >= 0 &&
-              PolarVolume_getQualityValueAt((PolarVolume_t*)obj, Composite_getQuantity(composite), navinfo->ei, navinfo->ri, navinfo->ai, name, &v)) {
-            RaveField_setValue(field, x, y, v);
-          } else {
-            RaveField_setValue(field, x, y, 0.0); // No data found
+        if (composite->algorithm != NULL && CompositeAlgorithm_supportsFillQualityInformation(composite->algorithm, name)) {
+          // If the algorithm indicates that it is able to support the provided how/task field, then do so
+          if (!CompositeAlgorithm_fillQualityInformation(composite->algorithm, obj, name, field, x, y, navinfo)) {
+            RaveField_setValue(field, x, y, 0.0);
           }
-        } else if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarScan_TYPE)) {
-          if (navinfo->ri >= 0 && navinfo->ai >= 0 &&
-              PolarScan_getQualityValueAt((PolarScan_t*)obj, Composite_getQuantity(composite), navinfo->ri, navinfo->ai, name, &v)) {
-            RaveField_setValue(field, x, y , v);
-          } else {
-            RaveField_setValue(field, x, y, 0.0); // No data found
+        } else {
+          if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
+            if (navinfo->ei >= 0 && navinfo->ri >= 0 && navinfo->ai >= 0 &&
+                PolarVolume_getQualityValueAt((PolarVolume_t*)obj, Composite_getQuantity(composite), navinfo->ei, navinfo->ri, navinfo->ai, name, &v)) {
+              RaveField_setValue(field, x, y, v);
+            } else {
+              RaveField_setValue(field, x, y, 0.0); // No data found
+            }
+          } else if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarScan_TYPE)) {
+            if (navinfo->ri >= 0 && navinfo->ai >= 0 &&
+                PolarScan_getQualityValueAt((PolarScan_t*)obj, Composite_getQuantity(composite), navinfo->ri, navinfo->ai, name, &v)) {
+              RaveField_setValue(field, x, y , v);
+            } else {
+              RaveField_setValue(field, x, y, 0.0); // No data found
+            }
           }
         }
       }
@@ -283,66 +303,6 @@ static void CompositeInternal_fillQualityInformation(
     RAVE_OBJECT_RELEASE(attribute);
   }
 }
-
-/**
- * Will traverse all objects in the list and atempt to find a scan that contains a
- * quality field that has got a how/task value == se.smhi.detector.poo.
- * All scans that contains such a field will get a scan set in the resulting
- * hash table with the quality data set as the default (and only) parameter.
- * @param[in] composite - self
- * @return a hash table
- */
-static RaveObjectHashTable_t* CompositeInternal_getPooScanFields(Composite_t* composite)
-{
-  RaveObjectHashTable_t* result = NULL;
-  RaveObjectHashTable_t* scans = NULL;
-  int nrobjs = 0, i = 0;
-  int status = 1;
-
-  scans = RAVE_OBJECT_NEW(&RaveObjectHashTable_TYPE);
-  if (scans == NULL) {
-    RAVE_ERROR0("Failed to allocate memory for object hash table");
-    goto done;
-  }
-  nrobjs = RaveObjectList_size(composite->list);
-  for (i = 0; status == 1 && i < nrobjs; i++) {
-    RaveCoreObject* obj = RaveObjectList_get(composite->list, i);
-    if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarScan_TYPE)) {
-      RaveField_t* field = PolarScan_findQualityFieldByHowTask((PolarScan_t*)obj, "se.smhi.detector.poo", Composite_getQuantity(composite));
-      if (field != NULL) {
-        PolarScan_t* scan = PolarScan_createFromScanAndField((PolarScan_t*)obj, field);
-        if (scan == NULL || !RaveObjectHashTable_put(scans, "what/source", (RaveCoreObject*)PolarScan_getSource(scan))) {
-          RAVE_ERROR0("Failed to add poo scan to hash table");
-          status = 0;
-        }
-        RAVE_OBJECT_RELEASE(scan);
-      }
-      RAVE_OBJECT_RELEASE(field);
-    } else if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
-      PolarScan_t* pooscan = PolarVolume_findScanWithQualityFieldByHowTask((PolarVolume_t*)obj, "se.smhi.detector.poo", Composite_getQuantity(composite));
-      if (pooscan != NULL) {
-        RaveField_t* field = PolarScan_findQualityFieldByHowTask(pooscan, "se.smhi.detector.poo", Composite_getQuantity(composite));
-        if (field != NULL) {
-          PolarScan_t* scan = PolarScan_createFromScanAndField(pooscan, field);
-          if (scan == NULL || !RaveObjectHashTable_put(scans, "what/source", (RaveCoreObject*)PolarScan_getSource(scan))) {
-            RAVE_ERROR0("Failed to add poo scan to hash table");
-            status = 0;
-          }
-          RAVE_OBJECT_RELEASE(scan);
-        }
-        RAVE_OBJECT_RELEASE(field);
-      }
-      RAVE_OBJECT_RELEASE(pooscan);
-    }
-    RAVE_OBJECT_RELEASE(obj);
-  }
-
-  result = RAVE_OBJECT_COPY(scans);
-done:
-  RAVE_OBJECT_RELEASE(scans);
-  return result;
-}
-
 /*@} End of Private functions */
 
 /*@{ Interface functions */
@@ -357,6 +317,18 @@ int Composite_add(Composite_t* composite, RaveCoreObject* object)
     return 0;
   }
   return RaveObjectList_add(composite->list, object);
+}
+
+int Composite_getNumberOfObjects(Composite_t* composite)
+{
+  RAVE_ASSERT((composite != NULL), "composite == NULL");
+  return RaveObjectList_size(composite->list);
+}
+
+RaveCoreObject* Composite_get(Composite_t* composite, int index)
+{
+  RAVE_ASSERT((composite != NULL), "composite == NULL");
+  return RaveObjectList_get(composite->list, index);
 }
 
 void Composite_setProduct(Composite_t* composite, Rave_ProductType type)
@@ -381,7 +353,7 @@ int Composite_setSelectionMethod(Composite_t* self, CompositeSelectionMethod_t m
 {
   int result = 0;
   RAVE_ASSERT((self != NULL), "self == NULL");
-  if (method >= CompositeSelectionMethod_NEAREST && method <= CompositeSelectionMethod_POO) {
+  if (method >= CompositeSelectionMethod_NEAREST && method <= CompositeSelectionMethod_HEIGHT) {
     self->method = method;
     result = 1;
   }
@@ -556,8 +528,10 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t*
     goto fail;
   }
 
-  if (composite->method == CompositeSelectionMethod_POO) {
-    extrascans = CompositeInternal_getPooScanFields(composite);
+  if (composite->algorithm != NULL) {
+    if (!CompositeAlgorithm_initialize(composite->algorithm, composite)) {
+      goto fail;
+    }
   }
 
   for (y = 0; y < ysize; y++) {
@@ -573,6 +547,9 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t*
       rememberednav.ei = -1;
       rememberednav.ai = -1;
       rememberednav.ri = -1;
+      if (composite->algorithm != NULL) {
+        CompositeAlgorithm_reset(composite->algorithm, x, y);
+      }
 
       for (i = 0, mindist=1e10; i < nradars; i++) {
         RaveCoreObject* obj = NULL;
@@ -594,39 +571,40 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t*
           } else {
             double dist = 0.0;
             double maxdist = 0.0;
-            char* source = NULL;
             if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
               dist = PolarVolume_getDistance((PolarVolume_t*)obj, olon, olat);
               maxdist = PolarVolume_getMaxDistance((PolarVolume_t*)obj);
-              source = (char*)PolarVolume_getSource((PolarVolume_t*)obj);
             } else if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarScan_TYPE)) {
               dist = PolarScan_getDistance((PolarScan_t*)obj, olon, olat);
               maxdist = PolarScan_getMaxDistance((PolarScan_t*)obj);
-              source = (char*)PolarScan_getSource((PolarScan_t*)obj);
             }
             if (dist <= maxdist) {
               RaveValueType otype = RaveValueType_NODATA;
               double ovalue = 0.0;
               CompositeInternal_nearestValue(composite, obj, olon, olat, &otype, &ovalue, &navinfo);
 
-              if (composite->method == CompositeSelectionMethod_HEIGHT) {
-                dist = navinfo.actual_height; // We are determining pixel by height above sea level
-              } else if (composite->method == CompositeSelectionMethod_POO) {
-                PolarScan_t* pooscan = (PolarScan_t*)RaveObjectHashTable_get(extrascans, source);
-                dist = mindist; /* If we don't find any matching poo-field or we are oor*/
-                if (pooscan != NULL) {
-                  PolarScan_getNearest(pooscan, olon, olat, &dist);
-                }
-                RAVE_OBJECT_RELEASE(pooscan);
-              }
-
-              if (otype == RaveValueType_DATA || otype == RaveValueType_UNDETECT) {
-                if ((vtype != RaveValueType_DATA && vtype != RaveValueType_UNDETECT) || dist < mindist) {
+              if (composite->algorithm != NULL && CompositeAlgorithm_supportsProcess(composite->algorithm)) {
+                if (CompositeAlgorithm_process(composite->algorithm, obj, olon, olat, dist, otype, ovalue, &navinfo)) {
                   vtype = otype;
                   v = ovalue;
-                  mindist = dist;
                   radarindex = i;
                   rememberednav = navinfo;
+                }
+              } else {
+                // Maybe should create a specific nearest/height algorithm !?
+                //
+                if (composite->method == CompositeSelectionMethod_HEIGHT) {
+                  dist = navinfo.actual_height; // We are determining pixel by height above sea level
+                }
+
+                if (otype == RaveValueType_DATA || otype == RaveValueType_UNDETECT) {
+                  if ((vtype != RaveValueType_DATA && vtype != RaveValueType_UNDETECT) || dist < mindist) {
+                    vtype = otype;
+                    v = ovalue;
+                    mindist = dist;
+                    radarindex = i;
+                    rememberednav = navinfo;
+                  }
                 }
               }
             }
@@ -661,6 +639,20 @@ fail:
   RAVE_OBJECT_RELEASE(result);
   return result;
 }
+
+void Composite_setAlgorithm(Composite_t* composite, CompositeAlgorithm_t* algorithm)
+{
+  RAVE_ASSERT((composite != NULL), "composite == NULL");
+  RAVE_OBJECT_RELEASE(composite->algorithm);
+  composite->algorithm = RAVE_OBJECT_COPY(algorithm);
+}
+
+CompositeAlgorithm_t* Composite_getAlgorithm(Composite_t* composite)
+{
+  RAVE_ASSERT((composite != NULL), "composite == NULL");
+  return RAVE_OBJECT_COPY(composite->algorithm);
+}
+
 /*@} End of Interface functions */
 
 RaveCoreObjectType Composite_TYPE = {

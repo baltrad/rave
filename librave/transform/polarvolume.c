@@ -778,7 +778,7 @@ done:
   return result;
 }
 
-PolarScan_t* PolarVolume_findScanWithQualityFieldByHowTask(PolarVolume_t* pvol, const char* quantity, const char* howtaskvalue)
+PolarScan_t* PolarVolume_findScanWithQualityFieldByHowTask(PolarVolume_t* pvol, const char* howtaskvalue, const char* quantity)
 {
   PolarScan_t* result = NULL;
   int nrscans = 0, i = 0;
@@ -795,7 +795,6 @@ PolarScan_t* PolarVolume_findScanWithQualityFieldByHowTask(PolarVolume_t* pvol, 
     RAVE_OBJECT_RELEASE(field);
     RAVE_OBJECT_RELEASE(scan);
   }
-
   return result;
 }
 

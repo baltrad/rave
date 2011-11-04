@@ -44,6 +44,7 @@ from PgfVolumePluginTest import *
 from RaveScansun import *
 from PyDetectionRangeTest import *
 from PyRaveTest import *
+from PyPooCompositeAlgorithmTest import *
 
 if __name__ == '__main__':
   unittest.main()

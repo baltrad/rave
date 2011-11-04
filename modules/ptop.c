@@ -605,7 +605,7 @@ static CoordWeight* getCressmanSE(Position* src, int* weights,
   Position* srcCopy;
   Position target;
 
-  double checkHeight;
+  // double checkHeight;
   //  double heightWeight;
 
   int storedR = -1, storedE = -1, storedA = -1;
@@ -647,7 +647,7 @@ static CoordWeight* getCressmanSE(Position* src, int* weights,
 
   free(srcCopy);
 
-  checkHeight = getCheckHeight(src, &target, wrap);
+  /*checkHeight = */getCheckHeight(src, &target, wrap);
 
   se = minmaxElev[0] = minmaxElev[1] = wrap->height; /* !!! */
 

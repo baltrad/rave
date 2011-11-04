@@ -561,6 +561,8 @@ static PolarScan_t* DetectionRangeInternal_createDetectionRangeScan(PolarScan_t*
   }
   PolarScan_removeAllParameters(scanClone);
   PolarScanParam_setQuantity(paramClone, "DR");
+  PolarScanParam_setUndetect(paramClone, 0.0);
+  PolarScanParam_setNodata(paramClone, 0.0);
   nrays = PolarScanParam_getNrays(paramClone);
   nbins = PolarScanParam_getNbins(paramClone);
   for (rayi = 0; rayi < nrays; rayi++) {
