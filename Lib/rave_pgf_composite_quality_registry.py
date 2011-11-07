@@ -70,8 +70,11 @@ init()
 # Return the plugin with the given name or None if no such
 # plugin exists.  
 def get_plugin(name):
+  print "Trying %s plugin"%name
   if _registry.has_key(name):
+    print "Returning plugin"
     return _registry[name]
+  print "Returning None"
   return None
 
 

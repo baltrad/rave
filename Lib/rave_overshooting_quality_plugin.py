@@ -65,3 +65,11 @@ class rave_overshooting_quality_plugin(rave_composite_quality_plugin):
       poofield = drgenerator.analyze(filterfield, 60, 0.1, 0.5)    # poofield is a quality field, add it to maxscan
       maxscan.addQualityField(poofield)
     return obj
+
+  ##
+  # @return: The poo composite algorithm
+  #
+  def algorithm(self):
+    import _poocompositealgorithm
+    return _poocompositealgorithm.new()
+  

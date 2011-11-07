@@ -43,3 +43,9 @@ class rave_composite_quality_plugin(object):
   # to the object.
   def process(self, obj):
     return obj
+  
+  ##
+  # @return: The algorithm to use or None if no specifiec algorithm wanted
+  #
+  def algorithm(self):
+    return None

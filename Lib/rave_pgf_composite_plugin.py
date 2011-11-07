@@ -126,6 +126,9 @@ def generate(files, arguments):
       p = rave_pgf_composite_quality_registry.get_plugin(d)
       if p != None:
         obj = p.process(obj)
+        na = p.algorithm()
+        if generator.algorithm == None and na != None: # Try to get the generator algorithm != None 
+          generator.algorithm = na
 
     generator.add(obj)
 
@@ -172,16 +175,7 @@ def generate(files, arguments):
   generator.gain = GAIN
   generator.offset = OFFSET
 
-  # What quality fields that should be added to the resulting composite
-  qfields = []
-
-  # For now, it is only rave-overshooting that uses the composite algorithm functionallity
-  if "rave-overshooting" in detectors:
-    import _poocompositealgorithm
-    generator.algorithm = _poocompositealgorithm.new()
-    
   result = generator.nearest(pyarea, qfields)
-  
   
   # Fix so that we get a valid place for /what/source and /how/nodes 
   plc = result.source
