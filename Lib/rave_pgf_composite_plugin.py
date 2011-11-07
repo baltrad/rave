@@ -127,21 +127,7 @@ def generate(files, arguments):
       if p != None:
         obj = p.process(obj)
 
-    if "ropo" in detectors:
-      try:
-        import ropo_realtime
-        obj = ropo_realtime.generate(obj)
-        generator.add(obj)
-      except:
-        try:
-          generator.add(obj)
-        except:
-          pass
-    else:
-      try:
-        generator.add(obj)
-      except:
-        pass  # will passively reject files that fail to read
+    generator.add(obj)
 
   generator.quantity = "DBZH"
 
@@ -189,13 +175,10 @@ def generate(files, arguments):
   # What quality fields that should be added to the resulting composite
   qfields = []
 
+  # For now, it is only rave-overshooting that uses the composite algorithm functionallity
   if "rave-overshooting" in detectors:
     import _poocompositealgorithm
     generator.algorithm = _poocompositealgorithm.new()
-    qfields.append("se.smhi.detector.poo")
-    
-  if "ropo" in detectors:
-    qfields.append("fi.fmi.ropo.detector.classification")
     
   result = generator.nearest(pyarea, qfields)
   
