@@ -320,6 +320,26 @@ static PyObject* _pytransform_ctop(PyTransform* self, PyObject* args)
   return (PyObject*)pyvolume;
 }
 
+static PyObject* _pytransform_fillGap(PyTransform* self, PyObject* args)
+{
+  PyObject* inobj = NULL;
+  Cartesian_t* filled = NULL;
+  PyObject* result = NULL;
+
+  if (!PyArg_ParseTuple(args, "O", &inobj)) {
+    return NULL;
+  }
+  if (!PyCartesian_Check(inobj)) {
+    raiseException_returnNULL(PyExc_AttributeError, "fillGap should be called with a cartesian product");
+  }
+  filled = Transform_fillGap(self->transform, ((PyCartesian*)inobj)->cartesian);
+  if (filled != NULL) {
+    result = PyCartesian_New(filled);
+  }
+  RAVE_OBJECT_RELEASE(filled);
+  return result;
+}
+
 /**
  * All methods a transformator can have
  */
@@ -331,6 +351,7 @@ static struct PyMethodDef _pytransform_methods[] =
   {"pcappi", (PyCFunction) _pytransform_pcappi, 1},
   {"ctoscan", (PyCFunction) _pytransform_ctoscan, 1},
   {"ctop", (PyCFunction) _pytransform_ctop, 1},
+  {"fillGap", (PyCFunction) _pytransform_fillGap, 1},
   {NULL, NULL } /* sentinel */
 };
 

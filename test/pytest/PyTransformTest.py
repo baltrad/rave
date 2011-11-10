@@ -36,12 +36,15 @@ class PyTransformTest(unittest.TestCase):
   FIXTURE_CARTESIAN_PCAPPI = "fixture_cartesian_pcappi.h5"
   FIXTURE_CARTESIAN_PPI = "fixture_cartesian_ppi.h5"
   FIXTURE_VOLUME = "fixture_ODIM_H5_pvol_ang_20090501T1200Z.h5"
+  TRANSFORM_FILLGAP_FILENAME = "transform_filledGap.h5"
   
   def setUp(self):
-    pass
+    if os.path.isfile(self.TRANSFORM_FILLGAP_FILENAME):
+      os.unlink(self.TRANSFORM_FILLGAP_FILENAME)
 
   def tearDown(self):
-    pass
+    if os.path.isfile(self.TRANSFORM_FILLGAP_FILENAME):
+      os.unlink(self.TRANSFORM_FILLGAP_FILENAME)
 
   def test_new(self):
     obj = _transform.new()
@@ -135,4 +138,13 @@ class PyTransformTest(unittest.TestCase):
     rio = _raveio.new()
     rio.object = result
     rio.save("ctop_polarvolume.h5")
+    
+  def test_fillGap(self):
+    obj = _transform.new()
+    io = _raveio.new()
+    
+    cartesian = _raveio.open(self.FIXTURE_CARTESIAN_PCAPPI).object
+    io.object = obj.fillGap(cartesian)
+    io.filename=self.TRANSFORM_FILLGAP_FILENAME
+    io.save()
     

@@ -106,4 +106,12 @@ PolarScan_t* Transform_ctoscan(Transform_t* transform, Cartesian_t* cartesian, R
  */
 PolarVolume_t* Transform_ctop(Transform_t* transform, Cartesian_t* cartesian, RadarDefinition_t* def, const char* quantity);
 
+/**
+ * Fills the gaps in a cartesian product.
+ * @param[in] transform - self
+ * @param[in] cartesian - the product that should be gap filled
+ * @returns the filled cartesian or NULL on failure
+ */
+Cartesian_t* Transform_fillGap(Transform_t* transform, Cartesian_t* cartesian);
+
 #endif

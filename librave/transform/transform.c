@@ -351,6 +351,58 @@ error:
   RAVE_FREE(angles);
   return result;
 }
+
+Cartesian_t* Transform_fillGap(Transform_t* transform, Cartesian_t* cartesian)
+{
+  Cartesian_t* result = NULL;
+  Cartesian_t* filled = NULL;
+  long nxsize = 0, nysize = 0, xsize = 0, ysize = 0, x = 0, y = 0;
+
+  RAVE_ASSERT((transform != NULL), "transform == NULL");
+
+  if (cartesian == NULL) {
+    RAVE_ERROR0("Filling gap on NULL product!?");
+    goto done;
+  }
+
+  filled = RAVE_OBJECT_CLONE(cartesian);
+  if (filled == NULL) {
+    RAVE_ERROR0("Failed to clone product");
+    goto done;
+  }
+  xsize = Cartesian_getXSize(filled);
+  ysize = Cartesian_getYSize(filled);
+  nxsize = xsize - 1;
+  nysize = ysize - 1;
+  for (y = 1; y < nysize; y++) {
+    for (x = 1; x < nxsize; x++) {
+      double v1 = 0.0, v2 = 0.0, v3 = 0.0, v4 = 0.0, v5 = 0.0;
+      RaveValueType t1, t2, t3, t4, t5;
+      t1 = t2 = t3 = t4 = t5 = RaveValueType_NODATA;
+
+      t1 = Cartesian_getValue(cartesian, x, y, &v1);
+      if (t1 == RaveValueType_UNDETECT) {
+        t2 = Cartesian_getValue(cartesian, x-1, y, &v2);
+        t3 = Cartesian_getValue(cartesian, x+1, y, &v3);
+        t4 = Cartesian_getValue(cartesian, x, y-1, &v4);
+        t5 = Cartesian_getValue(cartesian, x, y+1, &v5);
+        if (t2 == RaveValueType_DATA && t3 == RaveValueType_DATA && t4 == RaveValueType_DATA && t5 == RaveValueType_DATA) {
+          v1 = (v2 + v3 + v4 + v5) / 4.0;
+          Cartesian_setValue(filled, x, y, v1);
+        } else {
+          Cartesian_setValue(filled, x, y, v1);
+        }
+      } else {
+        Cartesian_setValue(filled, x, y, v1);
+      }
+    }
+  }
+  result = RAVE_OBJECT_COPY(filled);
+done:
+  RAVE_OBJECT_RELEASE(filled);
+  return result;
+}
+
 /*@} End of Interface functions */
 
 RaveCoreObjectType Transform_TYPE = {
