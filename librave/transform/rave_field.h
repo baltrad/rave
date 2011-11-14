@@ -167,4 +167,14 @@ RaveObjectList_t* RaveField_getAttributeValues(RaveField_t* field);
  */
 int RaveField_hasAttributeStringValue(RaveField_t* field, const char* name, const char* value);
 
+/**
+ * Concatenates field with other horizontally and returns the new field.
+ * The fields and others y-dimension must be the same as well as the data
+ * type.
+ * @param[in] field - self
+ * @param[in] other - the field to contatenate
+ * @returns the concatenated field on success otherwise NULL
+ */
+RaveField_t* RaveField_concatX(RaveField_t* field, RaveField_t* other);
+
 #endif /* RAVE_FIELD_H */

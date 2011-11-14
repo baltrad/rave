@@ -379,6 +379,34 @@ fail:
 }
 
 /**
+ * Concatenates two fields x-wise.
+ * @param[in] self - self
+ * @param[in] args - the other rave field object
+ * @return a rave field object on success otherwise NULL
+ */
+static PyObject* _pyravefield_concatx(PyRaveField* self, PyObject* args)
+{
+  PyObject* result = NULL;
+  PyObject* pyin = NULL;
+  RaveField_t *field = NULL;
+  if (!PyArg_ParseTuple(args, "O", &pyin)) {
+    return NULL;
+  }
+  if (!PyRaveField_Check(pyin)) {
+    raiseException_returnNULL(PyExc_ValueError, "Argument must be another rave field");
+  }
+  field = RaveField_concatX(self->field, ((PyRaveField*)pyin)->field);
+  if (field == NULL) {
+    raiseException_gotoTag(done, PyExc_ValueError, "Failed to concatenate fields");
+  }
+
+  result = (PyObject*)PyRaveField_New(field);
+done:
+  RAVE_OBJECT_RELEASE(field);
+  return result;
+}
+
+/**
  * All methods a cartesian product can have
  */
 static struct PyMethodDef _pyravefield_methods[] =
@@ -393,6 +421,7 @@ static struct PyMethodDef _pyravefield_methods[] =
   {"addAttribute", (PyCFunction) _pyravefield_addAttribute, 1},
   {"getAttribute", (PyCFunction) _pyravefield_getAttribute, 1},
   {"getAttributeNames", (PyCFunction) _pyravefield_getAttributeNames, 1},
+  {"concatx", (PyCFunction) _pyravefield_concatx, 1},
   {NULL, NULL } /* sentinel */
 };
 

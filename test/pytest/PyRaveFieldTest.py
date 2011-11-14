@@ -70,6 +70,42 @@ class PyRaveFieldTest(unittest.TestCase):
     self.assertAlmostEquals(10.0, data[1][0], 4)
     self.assertAlmostEquals(20.0, data[4][5], 4)
 
+  def test_concatx(self):
+    obj = _ravefield.new()
+    obj.setData(numpy.zeros((10,10), numpy.uint8))
+    obj.setValue(0,1,10.0)
+    obj.setValue(5,4,20.0)
+
+    obj2 = _ravefield.new()
+    obj2.setData(numpy.zeros((10,6), numpy.uint8))
+    obj2.setValue(0,1,15.0)
+    obj2.setValue(5,4,25.0)
+
+    result = obj.concatx(obj2)
+    self.assertEquals(16, result.xsize)
+    self.assertEquals(10, result.ysize)
+    self.assertAlmostEquals(10.0, result.getValue(0,1)[1], 4)
+    self.assertAlmostEquals(20.0, result.getValue(5,4)[1], 4)
+    self.assertAlmostEquals(15.0, result.getValue(10,1)[1], 4)
+    self.assertAlmostEquals(25.0, result.getValue(15,4)[1], 4)
+
+  def test_concatx_differentY(self):
+    obj = _ravefield.new()
+    obj.setData(numpy.zeros((10,10), numpy.uint8))
+    obj.setValue(0,1,10.0)
+    obj.setValue(5,4,20.0)
+
+    obj2 = _ravefield.new()
+    obj2.setData(numpy.zeros((9,6), numpy.uint8))
+    obj2.setValue(0,1,15.0)
+    obj2.setValue(5,4,25.0)
+
+    try:
+      obj.concatx(obj2)
+      self.fail("Expected ValueError")
+    except ValueError:
+      pass 
+
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']
     unittest.main()
