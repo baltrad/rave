@@ -352,6 +352,50 @@ int RaveData2D_hasData(RaveData2D_t* self)
   return 0;
 }
 
+RaveData2D_t* RaveData2D_concatX(RaveData2D_t* field, RaveData2D_t* other)
+{
+  RaveData2D_t *result = NULL, *newfield = NULL;
+  long xsize = 0, ysize = 0, x = 0, y = 0;
+  double v = 0.0;
+
+  RAVE_ASSERT((field != NULL), "field == NULL");
+  if (other == NULL) {
+    return NULL;
+  }
+  if (field->ysize != other->ysize ||
+      field->type != other->type) {
+    RAVE_WARNING0("Can not concatenate two fields that has different y-size and/or different data types");
+    return NULL;
+  }
+  newfield = RAVE_OBJECT_NEW(&RaveData2D_TYPE);
+  if (newfield == NULL) {
+    goto done;
+  }
+  xsize = field->xsize + other->xsize;
+  ysize = field->ysize;
+
+  if (!RaveData2D_createData(newfield, xsize, ysize, field->type)) {
+    RAVE_ERROR0("Failed to create field data");
+    goto done;
+  }
+
+  for (y = 0; y < ysize; y++) {
+    for (x = 0; x < field->xsize; x++) {
+      RaveData2D_getValue(field, x, y, &v);
+      RaveData2D_setValue(newfield, x, y, v);
+    }
+    for (x = 0; x < other->xsize; x++) {
+      RaveData2D_getValue(other, x, y, &v);
+      RaveData2D_setValue(newfield, field->xsize + x, y, v);
+    }
+  }
+
+  result = RAVE_OBJECT_COPY(newfield);
+done:
+  RAVE_OBJECT_RELEASE(newfield);
+  return result;
+}
+
 RaveData2D_t* RaveData2D_createObject(long xsize, long ysize, RaveDataType type)
 {
   RaveData2D_t* result = NULL;
