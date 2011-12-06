@@ -41,6 +41,11 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "cartesian_odim_io.h"
 #include "polar_odim_io.h"
 
+#ifdef RAVE_BUFR_SUPPORTED
+#include "rave_bufr_io.h"
+#endif
+
+
 /**
  * Defines the structure for the RaveIO in a volume.
  */
@@ -49,9 +54,11 @@ struct _RaveIO_t {
   RaveCoreObject* object;                 /**< the object */
   RaveIO_ODIM_Version version;            /**< the odim version */
   RaveIO_ODIM_H5rad_Version h5radversion; /**< the h5rad object version */
+  RaveIO_ODIM_FileFormat fileFormat;      /**< the file format */
   char* filename;                         /**< the filename */
   HL_Compression* compression;            /**< the compression to use */
   HL_FileCreationProperty* property;       /**< the file creation properties */
+  char* bufrTableDir;                      /**< the bufr table dir */
 };
 
 /*@{ Constants */
@@ -71,9 +78,11 @@ static int RaveIO_constructor(RaveCoreObject* obj)
   raveio->object = NULL;
   raveio->version = RaveIO_ODIM_Version_2_0;
   raveio->h5radversion = RaveIO_ODIM_H5rad_Version_2_0;
+  raveio->fileFormat = RaveIO_ODIM_FileFormat_UNDEFINED;
   raveio->filename = NULL;
   raveio->compression = HLCompression_new(CT_ZLIB);
   raveio->property = HLFileCreationProperty_new();
+  raveio->bufrTableDir = NULL;
   if (raveio->compression == NULL || raveio->property == NULL) {
     RAVE_ERROR0("Failed to create compression or file creation properties");
     goto done;
@@ -110,6 +119,7 @@ static void RaveIO_destructor(RaveCoreObject* obj)
   }
   HLCompression_free(raveio->compression);
   HLFileCreationProperty_free(raveio->property);
+  RAVE_FREE(raveio->bufrTableDir);
 }
 
 /**
@@ -347,6 +357,92 @@ static int RaveIOInternal_addCartesianToNodeList(Cartesian_t* image, HL_NodeList
   return result;
 }
 
+static int RaveIOInternal_loadHDF5(RaveIO_t* raveio)
+{
+  HL_NodeList* nodelist = NULL;
+  Rave_ObjectType objectType = Rave_ObjectType_UNDEFINED;
+  RaveCoreObject* object = NULL;
+  int result = 0;
+  RaveIO_ODIM_Version version = RaveIO_ODIM_Version_UNDEFINED;
+  RaveIO_ODIM_H5rad_Version h5radversion = RaveIO_ODIM_H5rad_Version_UNDEFINED;
+
+  RAVE_ASSERT((raveio != NULL), "raveio == NULL");
+  RAVE_ASSERT((raveio->filename != NULL), "filename == NULL");
+
+  nodelist = HLNodeList_read(raveio->filename);
+  if (nodelist == NULL) {
+    RAVE_ERROR1("Failed to load hdf5 file '%s'", raveio->filename);
+    goto done;
+  }
+
+  HLNodeList_selectAllNodes(nodelist);
+  if (!HLNodeList_fetchMarkedNodes(nodelist)) {
+    RAVE_ERROR1("Failed to load hdf5 file '%s'", raveio->filename);
+    goto done;
+  }
+
+  version = RaveIOInternal_getOdimVersion(nodelist);
+  h5radversion = RaveIOInternal_getH5radVersion(nodelist);
+
+  objectType = RaveIOInternal_getObjectType(nodelist);
+  if (objectType == Rave_ObjectType_CVOL || objectType == Rave_ObjectType_COMP) {
+    object = (RaveCoreObject*)RaveIOInternal_loadCartesianVolume(nodelist);
+  } else if (objectType == Rave_ObjectType_IMAGE) {
+    object = (RaveCoreObject*)RaveIOInternal_loadCartesian(nodelist);
+  } else if (objectType == Rave_ObjectType_PVOL) {
+    object = (RaveCoreObject*)RaveIOInternal_loadPolarVolume(nodelist);
+  } else if (objectType == Rave_ObjectType_SCAN) {
+    object = (RaveCoreObject*)RaveIOInternal_loadScan(nodelist);
+  } else {
+    RAVE_ERROR1("Currently, RaveIO does not support the object type as defined by '%s'", raveio->filename);
+    goto done;
+  }
+
+  if (object != NULL) {
+    RAVE_OBJECT_RELEASE(raveio->object);
+    raveio->object = RAVE_OBJECT_COPY(object);
+    raveio->version = version;
+    raveio->h5radversion = h5radversion;
+    raveio->fileFormat = RaveIO_ODIM_FileFormat_HDF5;
+  }
+
+  result = 1;
+done:
+  RAVE_OBJECT_RELEASE(object);
+  HLNodeList_free(nodelist);
+  return result;
+}
+
+#ifdef RAVE_BUFR_SUPPORTED
+static int RaveIOInternal_loadBUFR(RaveIO_t* raveio)
+{
+  RaveBufrIO_t* bufrio = NULL;
+  int result = 0;
+
+  RAVE_ASSERT((raveio != NULL), "raveio == NULL");
+  RAVE_ASSERT((raveio->filename != NULL), "filename == NULL");
+
+  bufrio = RAVE_OBJECT_NEW(&RaveBufrIO_TYPE);
+  if (bufrio != NULL) {
+    RaveCoreObject* obj = RaveBufrIO_read(bufrio, raveio->filename);
+    if (obj != NULL) {
+      RAVE_OBJECT_RELEASE(raveio->object);
+      raveio->object = RAVE_OBJECT_COPY(obj);
+      raveio->h5radversion = RaveIO_ODIM_H5rad_Version_UNDEFINED;
+      raveio->version = RaveIO_ODIM_Version_UNDEFINED;
+      raveio->fileFormat = RaveIO_ODIM_FileFormat_BUFR;
+      RAVE_OBJECT_RELEASE(obj);
+    } else {
+      goto done;
+    }
+    result = 1;
+  }
+
+done:
+  RAVE_OBJECT_RELEASE(bufrio);
+  return result;
+}
+#endif
 
 /*@} End of Private functions */
 void RaveIO_close(RaveIO_t* raveio)
@@ -390,12 +486,7 @@ done:
 
 int RaveIO_load(RaveIO_t* raveio)
 {
-  HL_NodeList* nodelist = NULL;
-  Rave_ObjectType objectType = Rave_ObjectType_UNDEFINED;
-  RaveCoreObject* object = NULL;
   int result = 0;
-  RaveIO_ODIM_Version version = RaveIO_ODIM_Version_UNDEFINED;
-  RaveIO_ODIM_H5rad_Version h5radversion = RaveIO_ODIM_H5rad_Version_UNDEFINED;
 
   RAVE_ASSERT((raveio != NULL), "raveio == NULL");
 
@@ -404,48 +495,21 @@ int RaveIO_load(RaveIO_t* raveio)
     goto done;
   }
 
-  nodelist = HLNodeList_read(raveio->filename);
-  if (nodelist == NULL) {
-    RAVE_ERROR1("Failed to load hdf5 file '%s'", raveio->filename);
-    goto done;
-  }
-
-  HLNodeList_selectAllNodes(nodelist);
-  if (!HLNodeList_fetchMarkedNodes(nodelist)) {
-    RAVE_ERROR1("Failed to load hdf5 file '%s'", raveio->filename);
-    goto done;
-  }
-
-  version = RaveIOInternal_getOdimVersion(nodelist);
-  h5radversion = RaveIOInternal_getH5radVersion(nodelist);
-
-  objectType = RaveIOInternal_getObjectType(nodelist);
-  if (objectType == Rave_ObjectType_CVOL || objectType == Rave_ObjectType_COMP) {
-    object = (RaveCoreObject*)RaveIOInternal_loadCartesianVolume(nodelist);
-  } else if (objectType == Rave_ObjectType_IMAGE) {
-    object = (RaveCoreObject*)RaveIOInternal_loadCartesian(nodelist);
-  } else if (objectType == Rave_ObjectType_PVOL) {
-    object = (RaveCoreObject*)RaveIOInternal_loadPolarVolume(nodelist);
-  } else if (objectType == Rave_ObjectType_SCAN) {
-    object = (RaveCoreObject*)RaveIOInternal_loadScan(nodelist);
+  if(HL_isHDF5File(raveio->filename)) {
+    result = RaveIOInternal_loadHDF5(raveio);
+#ifdef RAVE_BUFR_SUPPORTED
+  } else if (RaveBufrIO_isBufr(raveio->filename)) {
+    result = RaveIOInternal_loadBUFR(raveio);
+#endif
   } else {
-    RAVE_ERROR1("Currently, RaveIO does not support the object type as defined by '%s'", raveio->filename);
+    RAVE_ERROR1("Atempting to load '%s', but file format does not seem to be supported by rave", raveio->filename);
     goto done;
   }
 
-  if (object != NULL) {
-    RAVE_OBJECT_RELEASE(raveio->object);
-    raveio->object = RAVE_OBJECT_COPY(object);
-    raveio->version = version;
-    raveio->h5radversion = h5radversion;
-  }
 
   result = 1;
 done:
-  RAVE_OBJECT_RELEASE(object);
-  HLNodeList_free(nodelist);
   return result;
-
 }
 
 int RaveIO_save(RaveIO_t* raveio, const char* filename)
@@ -592,6 +656,12 @@ RaveIO_ODIM_H5rad_Version RaveIO_getH5radVersion(RaveIO_t* raveio)
   return raveio->h5radversion;
 }
 
+RaveIO_ODIM_FileFormat RaveIO_getFileFormat(RaveIO_t* raveio)
+{
+  RAVE_ASSERT((raveio != NULL), "raveio == NULL");
+  return raveio->fileFormat;
+}
+
 void RaveIO_setCompressionLevel(RaveIO_t* raveio, int lvl)
 {
   RAVE_ASSERT((raveio != NULL), "raveio == NULL");
@@ -676,6 +746,49 @@ long RaveIO_getMetaBlockSize(RaveIO_t* raveio)
 {
   RAVE_ASSERT((raveio != NULL), "raveio == NULL");
   return raveio->property->meta_block_size;
+}
+
+int RaveIO_setBufrTableDir(RaveIO_t* raveio, const char* dname)
+{
+  char* tmp = NULL;
+  int result = 0;
+
+  RAVE_ASSERT((raveio != NULL), "raveio == NULL");
+
+  if (dname != NULL) {
+    tmp = RAVE_STRDUP(dname);
+    if (tmp == NULL) {
+      goto done;
+    }
+  }
+  RAVE_FREE(raveio->bufrTableDir);
+  raveio->bufrTableDir = tmp;
+  tmp = NULL; /* Not responsible any longer */
+  result = 1;
+done:
+  RAVE_FREE(tmp);
+  return result;
+}
+
+const char* RaveIO_getBufrTableDir(RaveIO_t* raveio)
+{
+  RAVE_ASSERT((raveio != NULL), "raveio == NULL");
+  return (const char*)raveio->bufrTableDir;
+}
+
+int RaveIO_supports(RaveIO_ODIM_FileFormat format)
+{
+  int result = 0;
+  if (format == RaveIO_ODIM_FileFormat_HDF5) {
+    result = 1;
+#ifdef RAVE_BUFR_SUPPORTED
+  } else if (format == RaveIO_ODIM_FileFormat_BUFR) {
+    result = 1;
+#endif
+  } else {
+    result = 0;
+  }
+  return result;
 }
 
 /*@} End of Interface functions */

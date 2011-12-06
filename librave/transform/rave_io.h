@@ -49,6 +49,18 @@ typedef enum RaveIO_ODIM_H5rad_Version {
 } RaveIO_ODIM_H5rad_Version;
 
 /**
+ * The file format of the data that has been read.
+ * When reading a file through rave io, you might sometime
+ * read exotic formats like BUFR. This type provides information
+ * on what type of format we found it to be.
+ */
+typedef enum RaveIO_ODIM_FileFormat {
+  RaveIO_ODIM_FileFormat_UNDEFINED = -1, /**< undefined */
+  RaveIO_ODIM_FileFormat_HDF5 = 0,       /**< HDF 5 */
+  RaveIO_ODIM_FileFormat_BUFR = 1        /**< BUFR */
+} RaveIO_ODIM_FileFormat;
+
+/**
  * Defines a Rave IO instance
  */
 typedef struct _RaveIO_t RaveIO_t;
@@ -161,6 +173,14 @@ int RaveIO_setH5radVersion(RaveIO_t* raveio, RaveIO_ODIM_H5rad_Version version);
 RaveIO_ODIM_H5rad_Version RaveIO_getH5radVersion(RaveIO_t* raveio);
 
 /**
+ * Will return the file format that this file was read as. Note, it is currently
+ * not possible to save data files in any other formats than HDF5.
+ * @param[in] raveio - self
+ * @return the file format.
+ */
+RaveIO_ODIM_FileFormat RaveIO_getFileFormat(RaveIO_t* raveio);
+
+/**
  * Sets the compression level.
  * @param[in] raveio - self
  * @param[in] lvl - the compression level (0..9)
@@ -247,5 +267,30 @@ void RaveIO_setMetaBlockSize(RaveIO_t* raveio, long sz);
  * @returns the meta block size
  */
 long RaveIO_getMetaBlockSize(RaveIO_t* raveio);
+
+/**
+ * Sets the bufr table directory to use when reading bufr files.
+ * This function is only relevant if BUFR support has been enabled
+ * otherwise it will just be a setter that isn't used.
+ *
+ * @param[in] raveio - self
+ * @param[in] dname - the directory name
+ * @return 1 on success otherwise 0
+ */
+int RaveIO_setBufrTableDir(RaveIO_t* raveio, const char* dname);
+
+/**
+ * Returns the bufr table directory.
+ * @param[in] raveio - self
+ * @return the bufr table directory
+ */
+const char* RaveIO_getBufrTableDir(RaveIO_t* raveio);
+
+/**
+ * Returns if the raveio supports the provided file format.
+ * @param[in] format - the inquiried file format
+ * @return 1 if rave io supports the format, otherwise 0
+ */
+int RaveIO_supports(RaveIO_ODIM_FileFormat format);
 
 #endif

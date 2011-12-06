@@ -128,6 +128,31 @@ def get_expat_info_from_def(defmk):
     expatlib = gg.group(2)
   return (expatsup, expatinc, expatlib)
 
+def get_bufr_info_from_def(defmk):
+  fp = open(defmk)
+  lines = fp.readlines()
+  bufrsup=get_param_value("BUFR_SUPPRESSED", lines)
+  bufrinc=get_param_value("BUFR_INCLUDE_DIR", lines)
+  bufrlib=get_param_value("BUFR_LIB_DIR", lines)
+  if bufrsup == None or bufrsup == "":
+    bufrsup = "yes"
+    
+  gg = re.match("([ \t]*-I)(.*)", bufrinc)
+  if gg != None:
+    bufrinc = gg.group(2)
+  gg = re.match("([ \t]*-L)(.*)", bufrlib)
+  if gg != None:
+    bufrlib = gg.group(2)
+  return (bufrsup, bufrinc, bufrlib)
+
+def get_pthread_info_from_def(defmk):
+  fp = open(defmk)
+  lines = fp.readlines()
+  pthrsupport=get_param_value("GOT_PTHREAD_SUPPORT", lines)
+  if pthrsupport == None or pthrsupport == "":
+    pthrsupport = "no"
+  return pthrsupport
+
 def get_proj4_dirs():
   proot = os.getenv("PROJ4ROOT")
   if proot is None:
@@ -209,19 +234,35 @@ if expatsuppressed == "no":
     INCLUDE_DIRS.append(expatinc)
   if expatlib != '':
     LIBRARY_DIRS.append(expatlib)
-    
+
+bufrsuppressed,bufrinc,bufrlib = get_bufr_info_from_def("./librave/def.mk")
+if bufrsuppressed == "no":
+  if bufrinc != '':
+    INCLUDE_DIRS.append(bufrinc)
+  if bufrlib != '':
+    LIBRARY_DIRS.append(bufrlib)
+
+pthrsupported = get_pthread_info_from_def("./librave/def.mk")
+
 LIBRARIES.append('proj')
 LIBRARIES.append("hlhdf")
 LIBRARIES.append("hdf5")
 
+if bufrsuppressed == "no":
+  LIBRARIES.append("OperaBufr")
+  
 if expatsuppressed == "no":
   LIBRARIES.append("expat")
-  
+
 LIBRARIES.append("z")
-  
-print "LIBDIR: " + `LIBRARY_DIRS`
+
+#print "LIBDIR: " + `LIBRARY_DIRS`
 if szinfo != None:
   LIBRARIES.append("sz")
+
+if pthrsupported == "yes":
+  LIBRARIES.append("pthread")
+  
 
 MODULES.append(
     Extension(

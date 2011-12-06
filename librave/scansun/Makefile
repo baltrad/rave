@@ -11,6 +11,11 @@ SCANSUNINC+= $(EXPAT_INCLUDE_DIR)
 LDFLAGS+= $(EXPAT_LIB_DIR)
 endif
 
+ifeq ($(BUFR_SUPPRESSED), no)
+SCANSUNINC+= $(BUFR_INCLUDE_DIR)
+LDFLAGS+= $(BUFR_LIB_DIR)
+endif
+
 CFLAGS=	$(OPTS) $(CCSHARED) $(DEFS) $(CREATE_ITRUNC) $(SCANSUNINC)
 
 # --------------------------------------------------------------------
@@ -22,9 +27,16 @@ SCANSUNOBJS=	$(SCANSUNSOURCES:.c=.o)
 LIBRAVESCANSUN=	libravescansun.so
 SCANSUNMAIN= scansun_main.c
 SCANSUNBIN= scansun
-SCANSUNLIBS= -lravescansun -lravetransform -lhlhdf -lproj  
+SCANSUNLIBS= -lravescansun -lravetransform -lhlhdf -lproj 
+ifeq ($(BUFR_SUPPRESSED), no)
+SCANSUNLIBS+= -lOperaBufr
+endif 
 ifeq ($(EXPAT_SUPPRESSED), no)
 SCANSUNLIBS+= -lexpat
+endif
+
+ifeq ($(GOT_PTHREAD_SUPPORT), yes)
+SCANSUNLIBS+= -lpthread
 endif
 
 MAKEDEPEND=gcc -MM $(CFLAGS) -o $(DF).d $<

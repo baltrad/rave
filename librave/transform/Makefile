@@ -8,6 +8,14 @@ ifeq ($(EXPAT_SUPPRESSED), no)
 CFLAGS+= $(EXPAT_INCLUDE_DIR) -DRAVE_XML_SUPPORTED
 endif
 
+ifeq ($(BUFR_SUPPRESSED), no)
+CFLAGS+= $(BUFR_INCLUDE_DIR) -DRAVE_BUFR_SUPPORTED
+endif
+
+ifeq ($(GOT_PTHREAD_SUPPORT), yes)
+CFLAGS+= -DPTHREAD_SUPPORTED
+endif
+
 # --------------------------------------------------------------------
 # Fixed definitions
 
@@ -22,6 +30,10 @@ ifeq ($(EXPAT_SUPPRESSED), no)
 RAVESOURCES += arearegistry.c projectionregistry.c rave_simplexml.c 
 endif
 
+ifeq ($(BUFR_SUPPRESSED), no)
+RAVESOURCES += rave_bufr_io.c
+endif 
+
 INSTALL_HEADERS= polar.h rave_transform.h raveutil.h rave_alloc.h polarvolume.h polarscan.h \
                  polarscanparam.h cartesian.h cartesianvolume.h transform.h projection.h polarnav.h rave_io.h \
                  rave_list.h rave_object.h raveobject_list.h area.h rave_datetime.h \
@@ -33,6 +45,10 @@ INSTALL_HEADERS= polar.h rave_transform.h raveutil.h rave_alloc.h polarvolume.h 
 ifeq ($(EXPAT_SUPPRESSED), no)
 INSTALL_HEADERS+= arearegistry.h projectionregistry.h rave_simplexml.h 
 endif
+
+ifeq ($(BUFR_SUPPRESSED), no)
+INSTALL_HEADERS += rave_bufr_io.h
+endif 
 
 RAVEOBJS=	$(RAVESOURCES:.c=.o)
 LIBRAVETRANSFORM=	libravetransform.so

@@ -23,13 +23,24 @@ PYCC=
 PYVERSION=`python -c "import sys; print sys.version[[:3]]"`
 PY_EXEC_INSTALLDIR=`python -c "import sys; print sys.exec_prefix"`
 PY_CONFIG_MAKE="$PY_EXEC_INSTALLDIR/lib/python$PYVERSION/config/Makefile"
-if [ ! -f "$PY_CONFIG_MAKE" ] 
-then
+if [[ ! -f "$PY_CONFIG_MAKE" ]]; then
  PY_CONFIG_MAKE="$PY_EXEC_INSTALLDIR/lib64/python$PYVERSION/config/Makefile"
 fi
 PYCC=`cat $PY_CONFIG_MAKE | sed -n "/^CC=/p" | sed -e "s/CC=//g" | awk '{print $1}'`
 AC_MSG_RESULT("$PYCC")
 CC=$PYCC
+
+dnl Later on we are going to check for pthread support but since we know that
+dnl python might determine pthread flags we can at least see what python
+dnl came up with.
+
+AC_MSG_CHECKING(if python CC defines pthread usage)
+PYPTHREADCC=`cat $PY_CONFIG_MAKE | sed -n "/^CC=/p" | sed -e "s/CC=//g" | grep "pthread"`
+PYGOTPTHREAD=no
+if [[ "$PYPTHREADCC" != "" ]]; then
+  PYGOTPTHREAD=yes
+fi
+AC_MSG_RESULT($PYGOTPTHREAD)
 
 AC_PROG_RANLIB
 AC_PROG_CC
@@ -307,6 +318,151 @@ case $withval in
     ;;
 esac
 
+dnl Do we want to have BUFR support, default is NO
+GOT_BUFR_INC=no
+GOT_BUFR_LIB=no
+BUFR_INCLUDE_DIR=
+BUFR_LIB_DIR=
+BUFR_TABLE_DIR=
+BUFR_SUPPRESSED=yes
+AC_ARG_WITH(bufr,[  --with-bufr=ROOT       Use the bufr library],
+		,withval=no)
+		
+case $withval in
+	yes)
+		AC_CHECK_HEADERS(bufrlib.h,GOT_BUFR_INC=yes)
+		AC_CHECK_LIB(OperaBufr,bufr_read_file,GOT_BUFR_LIB=yes)
+		BUFR_SUPPRESSED=no
+		;;
+	no)
+		AC_MSG_CHECKING(for BUFR lib)
+		AC_MSG_RESULT(suppressed)
+		BUFR_SUPPRESSED=yes
+		;;
+	*)
+    BUFR_SUPPRESSED=no	
+    if [[ "$withval" != "" ]]; then
+      bufr_inc=$withval/include
+      bufr_lib=$withval/lib
+      saved_CPPFLAGS="$CPPFLAGS"
+      CPPFLAGS="$CPPFLAGS -I$bufr_inc"
+      AC_CHECK_HEADERS(bufrlib.h,GOT_BUFR_INC=yes)
+
+      saved_LDFLAGS="$LDFLAGS"
+      LDFLAGS="$LDFLAGS -L$bufr_lib"
+      AC_CHECK_LIB(OperaBufr,bufr_read_file,GOT_BUFR_LIB=yes)
+      
+      CPPFLAGS=$saved_CPPFLAGS
+      LDFLAGS=$saved_LDFLAGS
+      if [[ "$GOT_BUFR_INC" = "yes" -a "$GOT_BUFR_LIB" = "yes" ]]; then
+        BUFR_INCLUDE_DIR="-I$withval/include"
+        BUFR_LIB_DIR="-L$withval/lib"
+      fi
+      if [[ -d "$withval/share/bbufr/tables" ]]; then
+        BUFR_TABLE_DIR="$withval/share/bbufr/tables"
+      fi
+    else
+      AC_MSG_ERROR("Odd argument passed for bufr")
+    fi
+    ;;
+esac
+
+if [[ "$BUFR_SUPPRESSED" = "no" ]]; then
+  if [[ "$GOT_BUFR_INC" = "no" -o "$GOT_BUFR_LIB" = "no" ]]; then
+    AC_MSG_ERROR(Could not find opera bufr includes and/or libraries)
+  fi
+fi
+
+AC_ARG_WITH(bufr-tables,[  --with-bufr-tables=DIR       Use the bufr tables in specified directory as default],
+		,withval=no)
+case $withval in
+	no)
+	  if [[ "$BUFR_SUPPRESSED" = "no" ]]; then
+	    if [[ "$BUFR_TABLE_DIR" = "" ]]; then
+	      AC_MSG_ERROR(You need to specify a directory where the bufr tables can be found)
+	    else
+	      if [[ ! -d "$BUFR_TABLE_DIR" ]]; then
+	        AC_MSG_ERROR(Bad bufr table directory)
+	      fi
+	    fi
+	  fi
+	  ;;
+    *)
+      if [[ "$withval" != "" ]]; then
+        if [[ -d "$withval" ]]; then
+          BUFR_TABLE_DIR="$withval"
+        else
+          AC_MSG_ERROR(Bad bufr table directory)
+        fi
+      else
+        if [[ "$BUFR_TABLE_DIR" = "" -o -d "$BUFR_TABLE_DIR" ]]; then
+          AC_MSG_ERROR(Bad bufr table directory, have you tried to use with-bufr-tables)
+        fi 
+      fi
+      ;;
+esac	  
+
+dnl if [[ "x$BUFR_SUPPRESSED" = "xno" ]]; then
+dnl   if [[ "x$BUFR_TABLE_DIR" = "x" ]]; then
+dnl     AC_MSG_ERROR("Could not locate any bufr table dir, try  option with bufr tables")
+dnl   fi
+
+dnl   if [[ "x$GOT_BUFR_INC" = "xno" -o "x$GOT_BUFR_LIB" = "xno" ]]; then
+dnl     AC_MSG_ERROR("Could not successfully find the Opera Bufr library")
+dnl   fi
+dnl fi
+
+AC_MSG_CHECKING(if pthread support is default)
+AC_TRY_RUN([
+#include <pthread.h>
+void* runme(void*p){return NULL;}
+int main(int argc, char** argv) {
+  pthread_t p;
+  if (pthread_create(&p,NULL,runme,NULL) != 0)
+    return 1;
+  (void)pthread_detach(p);
+  return 0;
+}],try_result=yes,try_result=no,try_result=no)
+AC_MSG_RESULT($try_result)
+PTHREAD_SUPPORT_DEFAULT=$try_result
+
+PTHREAD_CC_OPTION_NEEDED=no
+
+dnl If pthread support isn't default, we need to try out pthread
+
+if [[ "$PTHREAD_SUPPORT_DEFAULT" != "yes" ]]; then
+saved_CC="$CC"
+CC="$CC -pthread"
+AC_MSG_CHECKING(if -pthread option is required)
+AC_TRY_RUN([
+#include <pthread.h>
+void* runme(void*p){return NULL;}
+int main(int argc, char** argv) {
+  pthread_t p;
+  if (pthread_create(&p,NULL,runme,NULL) != 0)
+    return 1;
+  (void)pthread_detach(p);
+  return 0;
+}],try_result=yes,try_result=no,try_result=no)
+AC_MSG_RESULT($try_result)
+CC="$saved_CC"
+if [[ "$try_result" != "no" ]]; then
+  PTHREAD_CC_OPTION_NEEDED=yes
+fi
+fi
+
+dnl PYGOTPTHREAD is yes/no depending on if python found pthread option necessary
+dnl
+GOT_PTHREAD_SUPPORT=no
+if [[ "$PTHREAD_CC_OPTION_NEEDED" == "yes" ]]; then
+  PYOPT="$PYOPT -pthread"
+  LDFLAGS="$LDFLAGS -pthread"
+fi
+
+if [[ "$PTHREAD_CC_OPTION_NEEDED" == "yes" -o "$PTHREAD_SUPPORT_DEFAULT" == "yes" ]]; then
+  GOT_PTHREAD_SUPPORT=yes
+fi
+
 dnl It is possible to turn on memory debugging within RAVE
 debugmemory=no
 AC_ARG_ENABLE(debug-memory,
@@ -358,6 +514,15 @@ AC_SUBST(EXPAT_INCLUDE_DIR)
 AC_SUBST(EXPAT_LIB_DIR)
 AC_SUBST(EXPAT_SUPPRESSED)
 
+# Substitute the bufr arguments
+AC_SUBST(BUFR_INCLUDE_DIR)
+AC_SUBST(BUFR_LIB_DIR)
+AC_SUBST(BUFR_TABLE_DIR)
+AC_SUBST(BUFR_SUPPRESSED)
+
+# Substitute the pthread arguments
+AC_SUBST(GOT_PTHREAD_SUPPORT)
+
 #Substitutes for the HLHDF library.The HLHDF
 #installation contains a mk file that contains
 #the paths for HDF5 and possibly ZLIB.
@@ -367,5 +532,5 @@ AC_SUBST(HLHDF_LIB_DIR)
 AC_SUBST(HLHDF_INSTALL_BIN)
 AC_SUBST(HLHDF_HLDEF_MK_FILE)
 
-AC_CONFIG_FILES(def.mk)
+AC_CONFIG_FILES(def.mk transform/rave_config.h)
 AC_OUTPUT

@@ -193,31 +193,21 @@ static PyObject* _pyraveio_open(PyObject* self, PyObject* args)
 }
 
 /**
- * Opens a file that is supported by raveio
- * @param[in] self this instance.
- * @param[in] args arguments for creation (filename as a string)
- * @return the object on success, otherwise NULL
+ * Returns if the raveio supports the requested file format.
+ * @param[in] self - self
+ * @param[in] args - one integer value defining the ODIM file format.
+ * @return a python true or false
  */
-static PyObject* _pyraveio_test(PyObject* self, PyObject* args)
+static PyObject* _pyraveio_supports(PyObject* self, PyObject* args)
 {
-  char* filename = NULL;
-  RaveIO_t* raveio = NULL;
-  PolarScan_t* out = NULL;
-
-  if (!PyArg_ParseTuple(args, "s", &filename)) {
+  RaveIO_ODIM_FileFormat format = RaveIO_ODIM_FileFormat_UNDEFINED;
+  int ival = 0;
+  if (!PyArg_ParseTuple(args, "i", &ival)) {
     return NULL;
   }
-  raveio = RaveIO_open(filename);
-  if (RaveIO_getObjectType(raveio) == Rave_ObjectType_SCAN) {
-     out = (PolarScan_t*)RaveIO_getObject(raveio);
-  }
+  format = (RaveIO_ODIM_FileFormat)ival;
 
-  RaveIO_setObject(raveio, (RaveCoreObject*)out);
-  RaveIO_save(raveio, "bobbe.h5");
-
-  RAVE_OBJECT_RELEASE(out);
-  RAVE_OBJECT_RELEASE(raveio);
-  Py_RETURN_NONE;
+  return PyBool_FromLong(RaveIO_supports(format));
 }
 
 /**
@@ -282,6 +272,8 @@ static struct PyMethodDef _pyraveio_methods[] =
   {"fcp_symk", NULL},
   {"fcp_istorek", NULL},
   {"fcp_metablocksize", NULL},
+  {"file_format", NULL},
+  {"bufr_table_dir", NULL},
   {"close", (PyCFunction) _pyraveio_close, 1},
   {"load", (PyCFunction) _pyraveio_load, 1},
   {"save", (PyCFunction) _pyraveio_save, 1},
@@ -342,6 +334,14 @@ static PyObject* _pyraveio_getattr(PyRaveIO* self, char* name)
     return PyInt_FromLong(RaveIO_getIStoreK(self->raveio));
   } else if (strcmp("fcp_metablocksize", name) == 0) {
     return PyInt_FromLong(RaveIO_getMetaBlockSize(self->raveio));
+  } else if (strcmp("file_format", name) == 0) {
+    return PyInt_FromLong(RaveIO_getFileFormat(self->raveio));
+  } else if (strcmp("bufr_table_dir", name) == 0) {
+    if (RaveIO_getBufrTableDir(self->raveio) != NULL) {
+      return PyString_FromString(RaveIO_getBufrTableDir(self->raveio));
+    } else {
+      Py_RETURN_NONE;
+    }
   }
   res = Py_FindMethod(_pyraveio_methods, (PyObject*) self, name);
   if (res != NULL)
@@ -435,6 +435,18 @@ static int _pyraveio_setattr(PyRaveIO* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_TypeError ,"meta block size must be a integer");
     }
+  } else if (strcmp("file_format", name) == 0) {
+    raiseException_gotoTag(done, PyExc_AttributeError, "file_format can only be read");
+  } else if (strcmp("bufr_table_dir", name) == 0) {
+    if (PyString_Check(val)) {
+      if (!RaveIO_setBufrTableDir(self->raveio, PyString_AsString(val))) {
+        raiseException_gotoTag(done, PyExc_MemoryError, "failed to set bufr table dir");
+      }
+    } else if (val == Py_None) {
+      RaveIO_setBufrTableDir(self->raveio, NULL);
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError,"bufr table dir must be of type string");
+    }
   } else {
     raiseException_gotoTag(done, PyExc_AttributeError, name);
   }
@@ -471,7 +483,7 @@ PyTypeObject PyRaveIO_Type =
 static PyMethodDef functions[] = {
   {"new", (PyCFunction)_pyraveio_new, 1},
   {"open", (PyCFunction)_pyraveio_open, 1},
-  {"test", (PyCFunction)_pyraveio_test, 1},
+  {"supports", (PyCFunction)_pyraveio_supports, 1},
   {NULL,NULL} /*Sentinel*/
 };
 
@@ -527,6 +539,10 @@ init_raveio(void)
   add_long_constant(dictionary, "RaveIO_ODIM_H5rad_Version_UNDEFINED", RaveIO_ODIM_H5rad_Version_UNDEFINED);
   add_long_constant(dictionary, "RaveIO_ODIM_H5rad_Version_2_0", RaveIO_ODIM_H5rad_Version_2_0);
   add_long_constant(dictionary, "RaveIO_ODIM_H5rad_Version_2_1", RaveIO_ODIM_H5rad_Version_2_1);
+
+  add_long_constant(dictionary, "RaveIO_ODIM_FileFormat_UNDEFINED", RaveIO_ODIM_FileFormat_UNDEFINED);
+  add_long_constant(dictionary, "RaveIO_ODIM_FileFormat_HDF5", RaveIO_ODIM_FileFormat_HDF5);
+  add_long_constant(dictionary, "RaveIO_ODIM_FileFormat_BUFR", RaveIO_ODIM_FileFormat_BUFR);
 
   add_long_constant(dictionary, "Rave_ObjectType_UNDEFINED", Rave_ObjectType_UNDEFINED);
   add_long_constant(dictionary, "Rave_ObjectType_PVOL", Rave_ObjectType_PVOL);

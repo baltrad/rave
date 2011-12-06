@@ -47,6 +47,7 @@ class PyRaveIOTest(unittest.TestCase):
   FIXTURE_SCAN_WITH_ARRAYS="fixtures/scan_with_arrays.h5"
   FIXTURE_CARTESIAN_IMAGE="fixtures/cartesian_image.h5"
   FIXTURE_CARTESIAN_VOLUME="fixtures/cartesian_volume.h5"
+  FIXTURE_BUFR_PVOL="fixtures/odim_polar_ref.bfr"
   
   TEMPORARY_FILE="ravemodule_iotest.h5"
   TEMPORARY_FILE2="ravemodule_iotest2.h5"
@@ -1502,6 +1503,30 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertTrue(isinstance(ddata, numpy.ndarray))
     self.assertAlmostEquals(1.0, ddata[1], 2)
     self.assertAlmostEquals(5.0, ddata[5], 2)
+  
+  def testBufrTableDir(self):
+    obj = _raveio.new()
+    self.assertEquals(None, obj.bufr_table_dir)
+    obj.bufr_table_dir = "/tmp"
+    self.assertEquals("/tmp", obj.bufr_table_dir)
+    obj.bufr_table_dir = None
+    self.assertEquals(None, obj.bufr_table_dir)
+  
+  def testReadBufr(self):
+    if not _raveio.supports(_raveio.RaveIO_ODIM_FileFormat_BUFR):
+      return
+    result = _raveio.open(self.FIXTURE_BUFR_PVOL)
+    
+    self.assertEquals(_raveio.RaveIO_ODIM_FileFormat_BUFR, result.file_format);
+    
+    volume = result.object
+    self.assertAlmostEquals(1.8347, volume.longitude, 4)
+    self.assertAlmostEquals(50.1358, volume.latitude, 4)
+    self.assertAlmostEquals(70.0, volume.height, 4)
+    self.assertEquals("20090615", volume.date)
+    self.assertEquals("032142", volume.time)
+    self.assertEquals("WMO:07005", volume.source)
+    #beam width is missing !? !? both in scans and volume
     
   def addGroupNode(self, nodelist, name):
     node = _pyhl.node(_pyhl.GROUP_ID, name)
