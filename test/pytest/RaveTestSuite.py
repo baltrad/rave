@@ -24,27 +24,27 @@ Test suite for rave
 @date 2009-10-12
 '''
 import unittest
-#from RaveTest import *
-#from PyPolarVolumeTest import *
-#from PyPolarScanTest import *
-#from PyPolarScanParamTest import *
-#from RaveModuleConstantsTest import *
-#from PyCartesianTest import *
-#from PyCartesianVolumeTest import *
-#from PyRaveFieldTest import *
-#from PyTransformTest import *
-#from PyProjectionTest import *
+from RaveTest import *
+from PyPolarVolumeTest import *
+from PyPolarScanTest import *
+from PyPolarScanParamTest import *
+from RaveModuleConstantsTest import *
+from PyCartesianTest import *
+from PyCartesianVolumeTest import *
+from PyRaveFieldTest import *
+from PyTransformTest import *
+from PyProjectionTest import *
 from PyRaveIOTest import *
-#from PyPolarNavTest import *
-#from PyAreaTest import *
-#from PyRadarDefinitionTest import *
-#from PyProjectionRegistryTest import *
-#from PyAreaRegistryTest import *
-#from PgfVolumePluginTest import *
-#from RaveScansun import *
-#from PyDetectionRangeTest import *
-#from PyRaveTest import *
-#from PyPooCompositeAlgorithmTest import *
+from PyPolarNavTest import *
+from PyAreaTest import *
+from PyRadarDefinitionTest import *
+from PyProjectionRegistryTest import *
+from PyAreaRegistryTest import *
+from PgfVolumePluginTest import *
+from RaveScansun import *
+from PyDetectionRangeTest import *
+from PyRaveTest import *
+from PyPooCompositeAlgorithmTest import *
 
 if __name__ == '__main__':
   unittest.main()
