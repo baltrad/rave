@@ -1520,12 +1520,30 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEquals(_raveio.RaveIO_ODIM_FileFormat_BUFR, result.file_format);
     
     volume = result.object
-    self.assertAlmostEquals(1.8347, volume.longitude, 4)
-    self.assertAlmostEquals(50.1358, volume.latitude, 4)
+    self.assertAlmostEquals(1.8347, volume.longitude * 180.0 / math.pi, 4)
+    self.assertAlmostEquals(50.1358, volume.latitude * 180.0 / math.pi, 4)
     self.assertAlmostEquals(70.0, volume.height, 4)
     self.assertEquals("20090615", volume.date)
     self.assertEquals("032142", volume.time)
     self.assertEquals("WMO:07005", volume.source)
+    self.assertEquals(3, volume.getNumberOfScans())
+    
+    scan = volume.getScan(0)
+    self.assertAlmostEquals(0.4, scan.elangle * 180.0 / math.pi, 4)
+    self.assertEquals(256, scan.nbins)
+    self.assertEquals(720, scan.nrays)
+    self.assertAlmostEquals(900.0, scan.rscale, 4)
+    self.assertEquals(0, scan.a1gate)
+    # beamwidth !? !?
+    self.assertAlmostEquals(1.8347, scan.longitude * 180.0 / math.pi, 4)
+    self.assertAlmostEquals(50.1358, scan.latitude * 180.0 / math.pi, 4)
+    self.assertAlmostEquals(70.0, scan.height, 4)
+    self.assertEquals("20090615", scan.startdate)
+    self.assertEquals("031642", scan.starttime)
+    self.assertEquals("20090615", scan.enddate)
+    self.assertEquals("032142", scan.endtime)
+    self.assertEquals("WMO:07005", scan.source)
+    
     #beam width is missing !? !? both in scans and volume
     
   def addGroupNode(self, nodelist, name):

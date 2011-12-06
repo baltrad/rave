@@ -266,8 +266,8 @@ static int RaveBufrIOInternal_polarVolumeCallback(varfl val, int ind)
       i++; /* Day  vv[i++]*/
       i++; /* Hour vv[i++] */
       i++; /* Minute vv[i++] */
-      PolarVolume_setLatitude((PolarVolume_t*)raveObject, (double)vv[i++]);
-      PolarVolume_setLongitude((PolarVolume_t*)raveObject, (double)vv[i++]);
+      PolarVolume_setLatitude((PolarVolume_t*)raveObject, (double)vv[i++] * M_PI / 180.0);
+      PolarVolume_setLongitude((PolarVolume_t*)raveObject, (double)vv[i++] * M_PI / 180.0);
       PolarVolume_setHeight((PolarVolume_t*)raveObject, (double)vv[i++]);
     } else if (bufr_check_fxy (d, 3, 21, 203)) {
       int i = 0;
@@ -308,7 +308,7 @@ static int RaveBufrIOInternal_polarVolumeCallback(varfl val, int ind)
           RAVE_WARNING1("vv[%d] is not 90", i);
           goto done;
         }
-        PolarScan_setElangle(scan, (double)vv[i++]);
+        PolarScan_setElangle(scan, (double)vv[i++] * M_PI / 180.0);
         nbins = (long)vv[i++];
         PolarScan_setRscale(scan, (double)vv[i++]);
         PolarScan_setRstart(scan, (double)vv[i++]);
