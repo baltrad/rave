@@ -1544,7 +1544,15 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEquals("032142", scan.endtime)
     self.assertEquals("WMO:07005", scan.source)
     
-    #beam width is missing !? !? both in scans and volume
+    param = scan.getParameter("DBZH")
+    self.assertEquals(256, param.nbins)
+    self.assertEquals(720, param.nrays)
+    self.assertEquals("DBZH", param.quantity)
+    self.assertAlmostEquals(1.0, param.gain, 4)
+    self.assertAlmostEquals(0.0, param.offset, 4)
+    self.assertTrue(param.nodata > 1e30)
+    self.assertTrue(param.undetect < -1e30)
+    self.assertEquals(_rave.RaveDataType_DOUBLE, param.datatype)
     
   def addGroupNode(self, nodelist, name):
     node = _pyhl.node(_pyhl.GROUP_ID, name)
