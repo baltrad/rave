@@ -146,7 +146,10 @@ static RaveCoreObject* RaveBufrIOInternal_createRaveObject(dd* dds, int ndescs)
       RaveBufrInternal_hasDescriptor(dds, ndescs, 3,1,31) &&
       RaveBufrInternal_hasDescriptor(dds, ndescs, 3,21,203)) {
     obj = RAVE_OBJECT_NEW(&PolarVolume_TYPE);
-  } else if (
+  } else {
+    RAVE_ERROR0("Does not reckognize BUFR descriptor combination");
+/*
+    if (
       RaveBufrInternal_hasDescriptor(dds, ndescs, 3,1,11) &&
       RaveBufrInternal_hasDescriptor(dds, ndescs, 3,1,13) &&
       RaveBufrInternal_hasDescriptor(dds, ndescs, 3,21,204) &&
@@ -164,6 +167,7 @@ static RaveCoreObject* RaveBufrIOInternal_createRaveObject(dd* dds, int ndescs)
       RaveBufrInternal_hasDescriptor(dds, ndescs, 0,31,1) &&
       RaveBufrInternal_hasDescriptor(dds, ndescs, 3,21,205)) {
     obj = RAVE_OBJECT_NEW(&Cartesian_TYPE);
+*/
   }
 
   result = RAVE_OBJECT_COPY(obj);
@@ -438,17 +442,6 @@ done:
 }
 
 /**
- * Callback function that handles cartesian products
- * @param[in] val - val
- * @param[in] ind - int
- * @return return code
- */
-static int RaveBufrIOInternal_cartesianCallback(varfl val, int ind)
-{
-  return 0;
-}
-
-/**
  * Callback function used by bufr:s parse out function. Depending on
  * type of global raveObject different types of data will be handled.
  * @param[in] val - val
@@ -462,8 +455,6 @@ static int RaveBufrIOInternal_parseOutCallback(varfl val, int ind)
     RAVE_ERROR0("raveObject not initialized when comming to callback");
   } else if (RAVE_OBJECT_CHECK_TYPE(raveObject, &PolarVolume_TYPE)) {
     result = RaveBufrIOInternal_polarVolumeCallback(val, ind);
-  } else if (RAVE_OBJECT_CHECK_TYPE(raveObject, &Cartesian_TYPE)) {
-    result = RaveBufrIOInternal_cartesianCallback(val, ind);
   }
   return result;
 }
@@ -530,6 +521,8 @@ static RaveCoreObject* RaveBufrIOInternal_read(RaveBufrIO_t* self, bufr_t* msg)
         goto done;
       }
     }
+  } else {
+    RAVE_ERROR0("Could not match BUFR descriptors to a RAVE object");
   }
 
   result = RAVE_OBJECT_COPY(raveObject);

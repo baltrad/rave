@@ -48,6 +48,7 @@ class PyRaveIOTest(unittest.TestCase):
   FIXTURE_CARTESIAN_IMAGE="fixtures/cartesian_image.h5"
   FIXTURE_CARTESIAN_VOLUME="fixtures/cartesian_volume.h5"
   FIXTURE_BUFR_PVOL="fixtures/odim_polar_ref.bfr"
+  FIXTURE_BUFR_COMPO="fixtures/odim_compo_ref.bfr"
   
   TEMPORARY_FILE="ravemodule_iotest.h5"
   TEMPORARY_FILE2="ravemodule_iotest2.h5"
@@ -1553,6 +1554,16 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertTrue(param.nodata > 1e30)
     self.assertTrue(param.undetect < -1e30)
     self.assertEquals(_rave.RaveDataType_DOUBLE, param.datatype)
+
+  def testReadBufrComposite(self):
+    if not _raveio.supports(_raveio.RaveIO_ODIM_FileFormat_BUFR):
+      return
+    try:
+      _raveio.open(self.FIXTURE_BUFR_COMPO)
+      self.fail("Expected IOError")
+    except IOError,e:
+      pass
+
     
   def addGroupNode(self, nodelist, name):
     node = _pyhl.node(_pyhl.GROUP_ID, name)

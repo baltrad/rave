@@ -506,8 +506,6 @@ int RaveIO_load(RaveIO_t* raveio)
     goto done;
   }
 
-
-  result = 1;
 done:
   return result;
 }
