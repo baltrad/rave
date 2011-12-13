@@ -73,7 +73,9 @@ def generateVolume(files, args):
       volume.longitude = rio.object.longitude
       volume.latitude = rio.object.latitude
       volume.height = rio.object.height
+      volume.beamwidth = rio.object.beamwidth
     volume.addScan(rio.object)
+
   volume.source = rio.object.source  # Recycle the last input, it won't necessarily be correct ...
   odim_source.CheckSource(volume)    # ... so check it!
   return volume
