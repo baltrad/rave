@@ -37,6 +37,7 @@ import string
 import rave_tempfile
 import odim_source
 import re
+import rave_pgf_quality_registry
 
 from rave_defines import CENTER_ID
 
@@ -91,22 +92,18 @@ def generate(files, arguments):
   
   fileno, outfile = rave_tempfile.mktemp(suffix='.h5', close="True")
   
-  ios = _raveio.new()
-  ios.object = volume
-
   if "anomaly-qc" in args.keys():
       detectors = string.split(args["anomaly-qc"], ",")
   else:
       detectors = []
 
-  if "ropo" in detectors:
-    try:
-        import ropo_realtime
-        volume  = ropo_realtime.generate(ios)
-        ios.object = volume
-    except:
-        pass
-  
+  for d in detectors:
+    p = rave_pgf_quality_registry.get_plugin(d)
+    if p != None:
+      volume = p.process(volume)
+
+  ios = _raveio.new()
+  ios.object = volume
   ios.filename = outfile
   ios.save()
   

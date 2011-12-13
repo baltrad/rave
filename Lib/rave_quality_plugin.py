@@ -18,14 +18,14 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
 ##
-# Base class for all composite quality plugins
+# Base class for all quality plugins
 
 ## 
 # @file
 # @author Anders Henja, SMHI
 # @date 2011-11-04
 
-class rave_composite_quality_plugin(object):
+class rave_quality_plugin(object):
   ##
   # Default sonstructor
   def __init__(self):

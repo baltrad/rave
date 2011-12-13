@@ -1251,51 +1251,6 @@ PolarScan_t* PolarScan_createFromScanAndField(PolarScan_t* self, RaveField_t* fi
     goto done;
   }
 
-#ifdef KALLE
-  scan->source = NULL;
-  scan->nbins = self->nbins;
-  scan->nrays = self->nrays;
-  scan->elangle = self->elangle;
-  scan->rscale = self->rscale;
-  scan->rstart = self->rstart;
-  scan->a1gate = self->a1gate;
-  scan->beamwidth = self->beamwidth;
-  scan->bwpvol = self->bwpvol;
-  scan->maxdistance = self->maxdistance;
-  scan->datetime = RAVE_OBJECT_CLONE(self->datetime);
-  scan->startdatetime = RAVE_OBJECT_CLONE(self->startdatetime);
-  scan->enddatetime = RAVE_OBJECT_CLONE(self->enddatetime);
-  scan->projection = RAVE_OBJECT_CLONE(self->projection);
-  scan->navigator = RAVE_OBJECT_CLONE(self->navigator);
-  scan->attrs = RAVE_OBJECT_CLONE(self->attrs);
-  scan->paramname = NULL;
-  scan->param = NULL;
-
-  if (scan->datetime == NULL || scan->projection == NULL ||
-      scan->navigator == NULL || scan->attrs == NULL ||
-      scan->startdatetime == NULL || scan->enddatetime == NULL) {
-    goto done;
-  }
-  if (!PolarScan_setSource(scan, PolarScan_getSource(self))) {
-    goto done;
-  }
-  param = PolarScanParam_fromField(field);
-  if (param == NULL) {
-    goto done;
-  }
-  if (PolarScanParam_getQuantity(param) != NULL) {
-    if (!PolarScanParam_setQuantity(param, "UNKNOWN")) {
-      goto done;
-    }
-  }
-  if (!PolarScan_setDefaultParameter(scan, PolarScanParam_getQuantity(param))) {
-    goto done;
-  }
-  if (!PolarScan_addParameter(scan, param)) {
-    goto done;
-  }
-#endif
-
   result = RAVE_OBJECT_COPY(scan);
 done:
   RAVE_OBJECT_RELEASE(scan);

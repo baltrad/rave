@@ -35,10 +35,10 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 # @author Anders Henja, SMHI
 # @date 2011-11-04
 
-from rave_composite_quality_plugin import rave_composite_quality_plugin
+from rave_quality_plugin import rave_quality_plugin
 import _polarvolume
 
-class rave_overshooting_quality_plugin(rave_composite_quality_plugin):
+class rave_overshooting_quality_plugin(rave_quality_plugin):
   ##
   # Default constructor
   def __init__(self):

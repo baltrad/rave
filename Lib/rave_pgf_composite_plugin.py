@@ -42,7 +42,7 @@ import string
 import rave_tempfile
 import odim_source
 import math
-import rave_pgf_composite_quality_registry
+import rave_pgf_quality_registry
 
 from rave_defines import CENTER_ID, GAIN, OFFSET
 
@@ -108,7 +108,7 @@ def generate(files, arguments):
   qfields = []  # The quality fields we want to get as a result in the composite
 
   for d in detectors:
-    p = rave_pgf_composite_quality_registry.get_plugin(d)
+    p = rave_pgf_quality_registry.get_plugin(d)
     if p != None:
       qfields.extend(p.getQualityFields())
 
@@ -123,7 +123,7 @@ def generate(files, arguments):
       nodes += "'%s'" % odim_source.NODfromSource(obj)
     
     for d in detectors:
-      p = rave_pgf_composite_quality_registry.get_plugin(d)
+      p = rave_pgf_quality_registry.get_plugin(d)
       if p != None:
         obj = p.process(obj)
         na = p.algorithm()

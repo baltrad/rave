@@ -105,7 +105,7 @@ LOGPIDFILE = os.path.join(RAVEETC, 'rave_pgf_log_server.pid')
 
 ODIM_SOURCE_FILE = os.path.join(RAVECONFIG, 'odim_source.xml')
 
-COMPOSITE_QUALITY_REGISTRY=os.path.join(RAVEETC, 'rave_pgf_composite_quality_registry.xml')
+QUALITY_REGISTRY=os.path.join(RAVEETC, 'rave_pgf_quality_registry.xml')
 
 if __name__ == "__main__":
     print __doc__

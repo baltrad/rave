@@ -1,28 +1,27 @@
 '''
-Created on Dec 13, 2011
-def generateVolume(files, args):
-  if len(files) <=0:
-    raise AttributeError, "Volume must consist of at least 1 scan"
+Copyright (C) 2010 Swedish Meteorological and Hydrological Institute, SMHI,
 
-  firstscan=False  
-  volume = _polarvolume.new()
-  volume.date = args['date']
-  volume.time = args['time']
-  
-  #'longitude', 'latitude', 'height', 'time', 'date', 'source'
+This file is part of RAVE.
 
-  for fname in files:
-    rio = _raveio.open(fname)
-    if firstscan == False:
-      firstscan = True
-      volume.longitude = rio.object.longitude
-      volume.latitude = rio.object.latitude
-      volume.height = rio.object.height
-    volume.addScan(rio.object)
+RAVE is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-  volume.source = rio.object.source  # Recycle the last input, it won't necessarily be correct ...
-  odim_source.CheckSo
-@author: anders
+RAVE is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
+------------------------------------------------------------------------*/
+
+Tests the pgf volume plugin
+
+@file
+@author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
+@date 2011-12-13
 '''
 import unittest
 import os
@@ -57,5 +56,3 @@ class rave_pgf_volume_plugin_test(unittest.TestCase):
     self.assertAlmostEquals(0.86, result.getScan(0).beamwidth * 180.0 / math.pi, 4)
     self.assertAlmostEquals(0.86, result.getScan(1).beamwidth * 180.0 / math.pi, 4)
     self.assertAlmostEquals(0.86, result.getScan(2).beamwidth * 180.0 / math.pi, 4)
-    
-    

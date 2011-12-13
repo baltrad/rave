@@ -36,18 +36,22 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 # @author Anders Henja, SMHI
 # @date 2011-11-04
 
-from rave_defines import COMPOSITE_QUALITY_REGISTRY
+from rave_defines import QUALITY_REGISTRY
 import xml.etree.ElementTree as ET
 
 _initialized = False
 _registry = {}
 
+##
+# Initializes the registry by reading the xml file with the plugin
+# definitions.
+#
 def init():
   global _initialized
   if _initialized: return
   import imp
     
-  O = ET.parse(COMPOSITE_QUALITY_REGISTRY)
+  O = ET.parse(QUALITY_REGISTRY)
   registry = O.getroot()
   for plugin in list(registry):
     name, module, c = plugin.attrib["name"], plugin.attrib["module"], plugin.attrib["class"]
@@ -63,18 +67,24 @@ def init():
   _initialized = True
 
 ##
+# Adds a plugin to the registry. Used for debugging
+# and testing purposes.
+#
+def add_plugin(name, plug):
+  _registry[name] = plug
+   
+
+##
 # Load the registry
 init()
+
 
 ##
 # Return the plugin with the given name or None if no such
 # plugin exists.  
 def get_plugin(name):
-  print "Trying %s plugin"%name
   if _registry.has_key(name):
-    print "Returning plugin"
     return _registry[name]
-  print "Returning None"
   return None
 
 
