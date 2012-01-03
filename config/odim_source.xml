@@ -133,7 +133,7 @@
     <itdec plc="Decimomannu" rad="IY57" wmo="16546"></itdec>
     <itzou plc="Monte Zoufplan" rad="IY58" wmo="00000"></itzou>
     <itcro plc="Monte Crocione" rad="IY59" wmo="00000"></itcro>
-    <itzou plc="Monte Zoufplan" rad="IY60" wmo="00000"></itzou>
+    <itser plc="Monte Serano" rad="IY60" wmo="00000"></itser>
     <itmon plc="Monte il Monte" rad="IY61" wmo="00000"></itmon>
     <itpet plc="Monte Pettinascura" rad="IY62" wmo="00000"></itpet>
   </it>
