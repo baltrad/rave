@@ -75,11 +75,15 @@ class PyRaveFieldTest(unittest.TestCase):
     obj.setData(numpy.zeros((10,10), numpy.uint8))
     obj.setValue(0,1,10.0)
     obj.setValue(5,4,20.0)
+    obj.setValue(9,4,35.0)
 
     obj2 = _ravefield.new()
     obj2.setData(numpy.zeros((10,6), numpy.uint8))
     obj2.setValue(0,1,15.0)
     obj2.setValue(5,4,25.0)
+
+    obj2.setValue(0,4,36.0)
+    obj2.setValue(1,4,37.0)
 
     result = obj.concatx(obj2)
     self.assertEquals(16, result.xsize)
@@ -88,6 +92,9 @@ class PyRaveFieldTest(unittest.TestCase):
     self.assertAlmostEquals(20.0, result.getValue(5,4)[1], 4)
     self.assertAlmostEquals(15.0, result.getValue(10,1)[1], 4)
     self.assertAlmostEquals(25.0, result.getValue(15,4)[1], 4)
+    self.assertAlmostEquals(35.0, result.getValue(9,4)[1], 4)
+    self.assertAlmostEquals(36.0, result.getValue(10,4)[1], 4)
+    self.assertAlmostEquals(37.0, result.getValue(11,4)[1], 4)
 
   def test_concatx_differentY(self):
     obj = _ravefield.new()

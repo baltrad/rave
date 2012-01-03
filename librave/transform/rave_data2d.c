@@ -355,8 +355,8 @@ int RaveData2D_hasData(RaveData2D_t* self)
 RaveData2D_t* RaveData2D_concatX(RaveData2D_t* field, RaveData2D_t* other)
 {
   RaveData2D_t *result = NULL, *newfield = NULL;
-  long xsize = 0, ysize = 0, x = 0, y = 0;
-  double v = 0.0;
+  long xsize = 0, ysize = 0, y = 0;
+  int typesize = 0;
 
   RAVE_ASSERT((field != NULL), "field == NULL");
   if (other == NULL) {
@@ -379,15 +379,14 @@ RaveData2D_t* RaveData2D_concatX(RaveData2D_t* field, RaveData2D_t* other)
     goto done;
   }
 
+  typesize = get_ravetype_size(field->type);
+
   for (y = 0; y < ysize; y++) {
-    for (x = 0; x < field->xsize; x++) {
-      RaveData2D_getValue(field, x, y, &v);
-      RaveData2D_setValue(newfield, x, y, v);
-    }
-    for (x = 0; x < other->xsize; x++) {
-      RaveData2D_getValue(other, x, y, &v);
-      RaveData2D_setValue(newfield, field->xsize + x, y, v);
-    }
+    unsigned char* nfd = newfield->data;
+    unsigned char* fd = field->data;
+    unsigned char* od = other->data;
+    memcpy(&nfd[y*xsize], &fd[y*field->xsize], typesize * field->xsize);
+    memcpy(&nfd[y*xsize + field->xsize], &od[y*other->xsize], typesize * other->xsize);
   }
 
   result = RAVE_OBJECT_COPY(newfield);
