@@ -87,6 +87,9 @@ DEX_SPOE = 'http://localhost:8084/BaltradDex/dispatch.htm'
 DEX_CHANNEL = 'default_products'
 DEX_USER = 'rave_pgf'
 
+DEX_NODENAME = 'localhost'
+DEX_PRIVATEKEY = None
+
 # The originating center id, used to indicate where a product has been generated.
 CENTER_ID = 'ORG:82' # Change this if your country is not Sweden.
 

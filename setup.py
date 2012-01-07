@@ -586,7 +586,11 @@ if __name__ == "__main__":
     if os.getenv('DEX_SPOE'): 
       replace_def('DEX_SPOE', defs, '"http://%s/BaltradDex/dispatch.htm"\n')
     if os.getenv('CENTER_ID'): 
-      replace_def('CENTER_ID', defs, '"ORG:%s"\n')    
+      replace_def('CENTER_ID', defs, '"ORG:%s"\n')  
+    if os.getenv('DEX_NODENAME'):
+      replace_def('DEX_NODENAME', defs, '"%s"\n')
+    if os.getenv("DEX_PRIVATEKEY"):
+      replace_def('DEX_PRIVATEKEY', defs, '"%s"\n')
     fd = open(rlib + '/rave_defines.py', 'w')
     for d in defs:
       fd.write(d)

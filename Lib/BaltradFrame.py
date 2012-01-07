@@ -1,111 +1,192 @@
-'''
-Copyright (C) 2010- Swedish Meteorological and Hydrological Institute (SMHI)
+import httplib
+import mimetools
+import mimetypes
+import sys
+import time
+import urlparse
+from Crypto.Util import asn1, number
+from Crypto.PublicKey import DSA
+import Crypto.Hash.SHA as SHA
+from Crypto.Util.asn1 import DerSequence
 
-This file is part of RAVE.
+from rave_defines import DEX_NODENAME, DEX_PRIVATEKEY, DEX_SPOE
 
-RAVE is free software: you can redistribute it and/or modify
-it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
+PRIVKEY=None
+try:
+  PRIVKEY=open(DEX_PRIVATEKEY).read()
+except:
+  print "Failed to read the private key: '%s'"%DEX_PRIVATEKEY
+  print "Secure communication disabled"
+  
 
-RAVE is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-See the GNU Lesser General Public License for more details.
-
-You should have received a copy of the GNU Lesser General Public License
-along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
-'''
-## Equivalent functionality to using OdimH5.jar on the command line to inject
-# individual files to a BALTRAD node.
-
-## @file
-## @author Daniel Michelson, SMHI
-## @date 2010-07-08
-
-import os, pycurl
-import BaltradMessageXML
-from rave_defines import DEX_SPOE
-
-
-## Class for managing and sending BaltradFrame messages.
-class BaltradFrameMessage:
-
-  ## Constructor
-  # @param url string containing the initialized URL
-  def __init__(self, url):
-    self._ctr = 0
-    ## @param message initialized empty message
-    self.message = []
-    ## @param url string containing the initialized URL
-    self.url = url
-
-  ## Changes the URL to that given.
-  # @param url string containing the URL to which to transmit the message
-  def setURL(self, url=DEX_SPOE):
-    self.url = url
+class BaltradFrame(object):
+  def __init__(self):
+    self.fields = {}
+    self.files = {}
+    self.set_timestamp(int(time.time() * 1000))
     
-  ## Adds an XML envelope to the message.
-  # @param channel string denoting the identifier of the data channel
-  # @param filename input file string, must be relative to the DEX's
-  # IncomingData directory!
-  # @param sender string, the sender's identifier. Totally bogus in this
-  # version of the DEX
-  def addEnvelope(self, channel, filename, sender='smhi'):
-    envelope = BaltradMessageXML.MakeBaltradFrameXML(sender, channel, filename)
-    self.message.append( ('<bf_xml/>',
-                          (pycurl.FORM_CONTENTTYPE,
-                           'multipart/form-data; charset=UTF-8',
-                           pycurl.FORM_CONTENTS, envelope)))
-  
-  ## Adds a binary payload to the message. The file's physical location
-  # must be relative to the DEX's IncomingData directory.
-  # @param filename string containing the input data to include in the message.
-  # This is an ODIM_H5 file, and the path must be relative to the DEX's
-  # IncomingData directory.
-  def addBinaryPayload(self, filename):
-    self.message.append( ('<bf_file/>',
-                          (pycurl.FORM_FILE, filename)))
-    self._ctr = self._ctr + 1
-  
-  ## Creates a pycurl.Curl object, puts the message inside it, and injects
-  # it into the DEX.
-  def send(self):
-    c = pycurl.Curl()
-    c.setopt(c.POST, 1)
-    c.setopt(c.URL, self.url)
-    c.setopt(c.HTTPPOST, self.message)
-    c.perform()
-    c.close()
+  def set_request_type(self, type_):
+    self.fields["BF_RequestType"] = type_
+    
+  def set_timestamp(self, timestamp):
+    self.fields["BF_TimeStamp"] = str(timestamp)
+
+  def set_local_uri(self, uri):
+    self.fields["BF_LocalURI"] = uri
+    
+  def set_node_name(self, name):
+    self.fields["BF_NodeName"] = name
+    
+  def set_certificate(self, path):
+    with open(path) as f:
+      self.files["BF_CertificateFileField"] = (path, f.read())
+    
+  def set_payload_file(self, path):
+    with open(path) as f:
+      self.files["BF_PayloadFileField"] = (path, f.read())
+    
+  def sign(self, key):
+    hash=SHA.new(self.fields["BF_TimeStamp"]).digest()
+    sig = key.sign(hash, 2)
+    der = DerSequence()
+    der.append(sig[0])
+    der.append(sig[1])
+    data = der.encode()
+    self.files["BF_SignatureFileField"] = ("signature.file", data)
+    
+  def post(self, url):
+    fields = []
+    for key, value in self.fields.iteritems():
+      fields.append((key, value))
+    files = []
+
+    for key, (filename, value) in self.files.iteritems():
+      files.append((key, filename, value))
+
+    urlparts = urlparse.urlsplit(url)
+    host = urlparts[1]
+    query = urlparts[2]
+
+    return post_multipart(host, query, fields, files)
 
 
-## Convenience function for injecting a file into the DEX of a baltrad-node
-# @param filename input file string, must be relative to the DEX's IncomingData
-# directory!
-# @param channel string denoting the identifier of the data channel
-# @param url string containing the URL to which to transmit the message
-# @param sender string, the sender's identifier. Totally bogus in this version
-# of the DEX
-def inject(filename, channel='bogus_channel', url=DEX_SPOE, sender='smhi'):
-  import _pyhl
+def post_multipart(host, selector, fields, files):
+    content_type, body = encode_multipart_formdata(fields, files)
+    conn = httplib.HTTPConnection(host)
+    headers = {
+        "Content-Type": content_type
+    }
+    try:
+        conn.request('POST', selector, body, headers)
+        response = conn.getresponse()
+    finally:
+        conn.close()
+    return response.status, response.reason, response.read()
 
-  if os.path.isfile(filename) and os.path.getsize(filename) > 0 and _pyhl.is_file_hdf5(filename):
-    path, fstr = os.path.split(filename)
-    if len(path):
-      here = os.getcwd()
-      os.chdir(path)
-    this = BaltradFrameMessage(url)
-    this.addEnvelope(channel, fstr)
-    this.addBinaryPayload(fstr)
-    this.send()
-    if len(path): os.chdir(here)  # Critical that we don't chdir before sending.
+def encode_multipart_formdata(fields, files):
+    """
+    :param fields: a sequence of (name, value) elements for regular form
+                   fields.
+    :param files: a sequence of (name, filename, value) elements for data
+                  to be uploaded as files
+    :return: *(content_type, body)* ready for httplib.HTTP instance
+    """
+    BOUNDARY = mimetools.choose_boundary()
+    L = []
+    for (key, value) in fields:
+        L.append('--' + BOUNDARY)
+        L.append('Content-Disposition: form-data; name="%s"' % key)
+        L.append('')
+        L.append(value)
+    for (key, filename, value) in files:
+        L.append('--' + BOUNDARY)
+        L.append('Content-Disposition: form-data; name="%s"; filename="%s"' % (key, filename))
+        L.append('Content-Type: %s' % get_content_type(filename))
+        L.append('')
+        L.append(value)
+    L.append('--' + BOUNDARY + '--')
+    L.append('')
+    content_type = 'multipart/form-data; boundary=%s' % BOUNDARY
+    return content_type, "\r\n".join(L)
+
+def createDsaKey(key):
+    seq = asn1.DerSequence()
+    data = "\n".join(key.strip().split("\n")[1:-1]).decode("base64")
+    seq.decode(data)
+    p, q, g, y, x = seq[1:]
+    return DSA.construct((y, g, p, q, x))
+
+def get_content_type(filename):
+    return mimetypes.guess_type(filename)[0] or 'application/octet-stream'
+
+def inject_certificate(dex_uri, certificate):
+    frame = BaltradFrame()
+    frame.set_request_type("BF_PostCertificate")
+    frame.set_node_name(DEX_NODENAME)
+    frame.set_local_uri("http://localhost")
+    frame.set_certificate(certificate)
+    return frame.post(dex_uri)
+
+def inject_file(path, dex_uri):
+    if PRIVKEY == None:
+      raise Exception, "BaltradFrame only support encrypted communication"
+
+    frame = BaltradFrame()
+    frame.set_request_type("BF_PostDataDeliveryRequest")
+    frame.set_node_name(DEX_NODENAME)
+    frame.set_local_uri("http://localhost")
+
+    key = createDsaKey(PRIVKEY)
+    frame.sign(key)
+    frame.set_payload_file(path)
+    return frame.post(dex_uri)
+
+
+#PRIVKEY2 = """-----BEGIN DSA PRIVATE KEY-----
+#MIIBuwIBAAKBgQD9f1OBHXUSKVLfSpwu7OTn9hG3UjzvRADDHj+AtlEmaUVdQCJR
+#+1k9jVj6v8X1ujD2y5tVbNeBO4AdNG/yZmC3a5lQpaSfn+gEexAiwk+7qdf+t8Yb
+#+DtX58aophUPBPuD9tPFHsMCNVQTWhaRMvZ1864rYdcq7/IiAxmd0UgBxwIVAJdg
+#UI8VIwvMspK5gqLrhAvwWBz1AoGBAPfhoIXWmz3ey7yrXDa4V7l5lK+7+jrqgvlX
+#TAs9B4JnUVlXjrrUWU/mcQcQgYC0SRZxI+hMKBYTt88JMozIpuE8FnqLVHyNKOCj
+#rh4rs6Z1kW6jfwv6ITVi8ftiegEkO8yk8b6oUZCJqIPf4VrlnwaSi2ZegHtVJWQB
+#TDv+z0kqAoGAafFTFzcMqfCwbf0Q/BnmCsk6PRU3Efy/iz2D4s8WHRDM9lg2drBb
+#yCIpPLJkmzi+qFFgSMMcKKYVMNbEs3BdyjsrnjW3zXc6zZWzDYY9nraoVVXPJ7Ik
+#N3u2HwtB1m/afHED8mcBf2OpcfJ6GWyeB1kh56BB2b3jSW+hj6Gsw7ACFD+SquSp
+#SGNQVh+cc+gW72maAOR3
+#-----END DSA PRIVATE KEY-----"""
+
+#PRIVKEY = """-----BEGIN DSA PRIVATE KEY-----
+#MIIBvAIBAAKBgQD9f1OBHXUSKVLfSpwu7OTn9hG3UjzvRADDHj+AtlEmaUVdQCJR
+#+1k9jVj6v8X1ujD2y5tVbNeBO4AdNG/yZmC3a5lQpaSfn+gEexAiwk+7qdf+t8Yb
+#+DtX58aophUPBPuD9tPFHsMCNVQTWhaRMvZ1864rYdcq7/IiAxmd0UgBxwIVAJdg
+#UI8VIwvMspK5gqLrhAvwWBz1AoGBAPfhoIXWmz3ey7yrXDa4V7l5lK+7+jrqgvlX
+#TAs9B4JnUVlXjrrUWU/mcQcQgYC0SRZxI+hMKBYTt88JMozIpuE8FnqLVHyNKOCj
+#rh4rs6Z1kW6jfwv6ITVi8ftiegEkO8yk8b6oUZCJqIPf4VrlnwaSi2ZegHtVJWQB
+#TDv+z0kqAoGBANBoawdam6WE3jAebLhUQ7XP5aD9EimPTAjtt+PdTWx1zqH4hKFr
+#ygmL/8nh/BsQOiLKo/XOUmmafuby8P5Uke30t/BphU07fVepan1oQicYdlNVemNX
+#AIGdB3a58AJ8XAkx9ayDRDQ9w2VDMd2R75qF1gwjxPYPSL6XO39E1FQVAhQXiFyh
+#AmWPEVj0t8HEp4nAePTX2w==
+#-----END DSA PRIVATE KEY-----"""
+
+if __name__ == "__main__":
+  dex_url = DEX_SPOE
+  if sys.argv[1] == "certificate" or sys.argv[1] == "file":
+    filename = sys.argv[2]
+    if len(sys.argv) > 3:
+      dex_url = sys.argv[2]
   else:
-    raise IOError, "File %s is not a regular file, it is zero length, or it is not an HDF5 file." % filename
-
-
-
-if __name__=="__main__":
-  import sys
-#  inject(sys.argv[1])
-  inject(sys.argv[1], channel=sys.argv[2],
-         url=sys.argv[3], sender=sys.argv[4])
+    print "Syntax is BaltradFrame.py <command> <file> [<url>}"
+    print "where command either is certificate or file."
+    print "  if certificate, then a CERTIFICATE should be provided as <file>"
+    print "  if file, then a hdf 5 file should be provided as <file>"
+    print ""
+    print "url is optional, if not specified, then it will default to DEX_SPOE in rave_defines"
+    print ""
+    sys.exit(0)
+    #dex_url = "http://localhost:9001/BaltradDex/dispatch.htm"
+    #node_name = "test_node"
+    #    print inject_certificate(dex_url, node_name, sys.argv[1])
+    if sys.argv[1] == "certificate":
+      print inject_certificate(dex_url, filename)
+    else:
+      print inject_file(filename, dex_url)
