@@ -1,0 +1,263 @@
+#!/opt/baltrad/third_party/bin/python
+'''
+Copyright (C) 2010- Swedish Meteorological and Hydrological Institute (SMHI)
+
+This file is part of RAVE.
+
+RAVE is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+RAVE is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
+------------------------------------------------------------------------*/
+
+Daemon for monitoring an input direcory for ODIM_H5 files and injecting them
+into a BALTRAD node securely.
+
+The original use of this was also for converting files from NORDRAD2, thefore
+the name ...
+
+This functionality can be considered a boilerplate for doing whatever you want
+with inotify and ODIM_H5 files. Just add your own functionality in the MAIN
+function.
+
+This version injects files to a secure BaltradDex.
+Make sure you have followed the instructions on how to transmit a security
+certificate to the DEX prior to using this.
+
+This daemon uses pyinotify.
+
+@file
+@author Daniel Michelson, SMHI
+@date 2012-01-08
+'''
+import sys, os
+import pyinotify
+import _raveio
+from rave_defines import DEX_SPOE  # Files are injected to this URI
+
+BLTROOT     = '/opt/baltrad' # CHANGE if necessary
+N2BROOT     = BLTROOT + '/n2b' # CHANGE if necessary
+DEFAULTIN   = N2BROOT + '/data' # CHANGE if necessary
+PIDFILE     = N2BROOT + '/n2b.pid'
+LOGFILE     = N2BROOT + '/n2b.log'
+LOGFILESIZE = 5000000  # 5 Mb each
+LOGFILES    = 5
+
+sys.path.append(N2BROOT)
+
+MASK = pyinotify.IN_CLOSE_WRITE
+
+
+## Determines whether the daemon is running, based on the PID in the PIDFILE.
+# @return True if the daemon is running, otherwise False
+def alive():
+    if os.path.isfile(PIDFILE):
+        fd = open(PIDFILE)
+        c = fd.read()
+        fd.close()
+        try:
+            pgid = os.getpgid(int(c))
+            return True
+        except:
+            return False
+    else:
+        return False
+
+
+## Kills the daemon, first softly, then hard if necessary.
+def killme():
+    import signal
+    try:
+        fd = open(PIDFILE)
+        c = fd.read()
+        fd.close()
+        try:
+            os.kill(int(c), signal.SIGHUP)
+        except:
+            os.kill(int(c), signal.SIGKILL)
+        os.remove(PIDFILE)
+    except:
+        print "Could not kill daemon. Check pid."
+
+
+## Processes all the files that have arrived in the input directory.
+# While catchup() is grinding through a long list of files, new ones can
+# arrive and they'll be ignored unless this functionality is looped.
+# @param in_dir string containing the input directory to be monitored
+# @param janitor boolean saying whether or not to delete inbound files
+# @param uri string containing the URI of the BALTRAD node to which to inject
+def catchup(in_dir, janitor, uri):
+    import glob
+    while 1:
+        flist = glob.glob(os.path.join(in_dir, '*'))
+        if len(flist) == 0:
+            break
+        else:
+            for fstr in flist:
+                MAIN(fstr, janitor, uri)
+
+
+## Checks if the file is an ODIM_H5 file. The only real verification is
+# the /Conventions attribute, which isn't good but will suffice for now...
+# @param filename string containing the name of the input file to query
+# @return the string in the /Conventions attribute or None if none there
+def isODIM(filename):
+    import _pyhl
+
+    try:
+        a = _pyhl.read_nodelist(filename)
+        a.selectNode('/Conventions')
+        a.fetch()
+        b = a.getNode('/Conventions')
+        return b.data()
+    except:
+        return None
+
+
+## Main function, queries the input file, injects it to the BALTRAD node if
+# it is ODIM_H5 and the "janitor" is turned off. The input file is deleted
+# afterwards.
+# @param in_file string containing the full path and file name of an input file
+# @param janitor boolean saying whether or not to delete this file instead of
+# inject it
+# @param uri string containing the URI of the BALTRAD node to which to inject
+def MAIN(in_file, janitor=False, uri=DEX_SPOE):
+    """
+    The main action to take within the main loop.
+    Assume that in_file contains an absolute path.
+    """
+    import _pyhl
+
+    if os.path.isfile(in_file):
+        if os.path.getsize(in_file) != 0:
+            if _pyhl.is_file_hdf5(in_file):
+
+                if janitor:
+                    pyinotify.log.info("Janitor: %s" % in_file)
+                else:
+                    try:
+                        import BaltradFrame, odim_source
+
+                        if isODIM(in_file):
+                            this = _raveio.open(in_file).object
+                            s = odim_source.ODIM_Source(this.source)
+
+                            pyinotify.log.info("%s %sT%sZ angle=%2.1f" % (s.nod,
+                                                                          this.date,
+                                                                          this.time,
+                                                                          this.elangle))
+
+                            # Send file to BALTRAD
+                            try:
+                                BaltradFrame.inject_file(in_file, DEX_SPOE)
+                            except Exception, e:
+                                pyinotify.log.error("Failed to inject %s. Error message: %s" % (in_file, e))
+                            if os.path.isfile(in_file):
+                                os.remove(in_file)
+                        else:
+                            os.remove(in_file)
+                            pyinotify.log.warn(in_file + " not ODIM_H5, removed.")
+
+                    except Exception, e:
+                        pyinotify.log.error("%s" % e)
+                        os.remove(in_file)
+
+            else:
+                os.remove(in_file)
+                pyinotify.log.warn(in_file + " not HDF5, removed.")
+        else:
+            os.remove(in_file)
+            pyinotify.log.warn(in_file + " is zero length, removed.")
+    else:
+        pyinotify.log.warn(in_file + " not a regular file, ignored.")
+
+
+# This class, and especially its method, overrides the default process
+# in (py)inotify
+class N2B(pyinotify.ProcessEvent):
+    ## Initializer
+    # @param options variable options list
+    def __init__(self, options):
+        self.options = options
+
+    ## Inherited from pyinotify
+    # @param event object containing a path, probably ...
+    def process_IN_CLOSE_WRITE(self, event):
+        MAIN(event.pathname, janitor=self.options.janitor, uri=self.dex_uri)
+
+
+if __name__ == "__main__":
+    from optparse import OptionParser
+    import logging, logging.handlers
+
+    usage = "usage: n2b -i <input dir> -p <pidfile> -l <logfile> [hkcj]"
+    usage += ""
+    parser = OptionParser(usage=usage)
+
+    parser.add_option("-i", "--indir", dest="in_dir",
+                      default=DEFAULTIN,
+                      help="Name of input directory to monitor.")
+
+    parser.add_option("-u", "--dex_uri", dest="dex_uri",
+                      default=DEX_SPOE,
+                      help="The URI of the BALTRAD node in which to inject files. Defaults to the URI given in rave_defines.DEX_SPOE.")
+
+    parser.add_option("-p", "--pidfile", dest="pid_file",
+                      default=PIDFILE,
+                      help="Name of PID file to write.")
+
+    parser.add_option("-l", "--logfile", dest="log_file",
+                      default=LOGFILE,
+                      help="Name of rotating log file.")
+
+    parser.add_option("-c", "--catchup",  action="store_true", dest="catchup",
+                      help="Process all files that have collected in the input directory. Otherwise only act on new files arriving.")
+
+    parser.add_option("-j", "--janitor",  action="store_true", dest="janitor",
+                      help="Remove files that arrive in the input directory.")
+
+    parser.add_option("-k", "--kill",  action="store_true", dest="kill",
+                      help="Attempt to kill a running daemon. Will only work with a PID file in the default location.")
+
+    (options, args) = parser.parse_args()
+
+    if not options.kill:
+        if alive():
+            print "n2b is already running."
+            sys.exit()
+
+
+    # Shut down a previous incarnation of this daemon.
+    if options.kill:
+        killme()
+        sys.exit()
+
+    # Start the logging system
+    pyinotify.log.setLevel(logging.INFO)
+    handler = logging.handlers.RotatingFileHandler(options.log_file,
+                                                   maxBytes = LOGFILESIZE,
+                                                   backupCount = LOGFILES)
+    formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s',
+                                  '%Y-%m-%d %H:%M:%S %Z')
+    handler.setFormatter(formatter)
+    pyinotify.log.addHandler(handler)
+    
+    # Process files that have arrived since I was running last.
+    if options.catchup:
+        catchup(options.in_dir, options.janitor, options.dex_uri)
+
+    wm = pyinotify.WatchManager()
+    notifier = pyinotify.Notifier(wm, N2B(options))
+
+    # Only act on closed files, or whatever's been moved into in_dir
+    wm.add_watch(options.in_dir, MASK)
+
+    notifier.loop(daemonize=True, pid_file=options.pid_file)

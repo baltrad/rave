@@ -32,7 +32,7 @@ import rave_pgf_registry
 import rave_pgf_qtools
 import BaltradFrame
 import _pyhl
-from rave_defines import DEX_SPOE, DEX_CHANNEL, DEX_USER, LOG_ID, REGFILE
+from rave_defines import DEX_SPOE, LOG_ID, REGFILE
 
 
 METHODS = {'generate' : '("algorithm",[files],[arguments])',
@@ -196,8 +196,7 @@ class RavePGF():
       outfile = self._run_one_job()
       if outfile != None:
         try:
-          BaltradFrame.inject(outfile, channel=DEX_CHANNEL,
-                              url=DEX_SPOE, sender=DEX_USER)
+          BaltradFrame.inject_file(outfile, DEX_SPOE)
           self.logger.info("ID=%s Injected %s" % (algorithm_entry.get("jobid"),
                                                   outfile))
         except Exception,e:
@@ -286,8 +285,7 @@ class RavePGF():
       
       # Inject the result.
       if outfile != None:
-        BaltradFrame.inject(outfile, channel=DEX_CHANNEL,
-                            url=DEX_SPOE, sender=DEX_USER)
+        BaltradFrame.inject_file(outfile, DEX_SPOE)
         # Log the result
         self.logger.info("ID=%s Injected %s" % (jobid, outfile))
 
