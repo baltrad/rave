@@ -1,21 +1,17 @@
 import httplib
 import mimetools
 import mimetypes
+import os
 import sys
 import time
 import urlparse
-from Crypto.Util import asn1, number
-from Crypto.PublicKey import DSA
-import Crypto.Hash.SHA as SHA
-from Crypto.Util.asn1 import DerSequence
+
+from keyczar import keyczar 
 
 from rave_defines import DEX_NODENAME, DEX_PRIVATEKEY, DEX_SPOE
 
-PRIVKEY=None
-try:
-  PRIVKEY=open(DEX_PRIVATEKEY).read()
-except:
-  print "Failed to read the private key: '%s'"%DEX_PRIVATEKEY
+if not DEX_PRIVATEKEY or not os.path.exists(DEX_PRIVATEKEY):
+  print "Private key does not exist: '%s'" % DEX_PRIVATEKEY
   print "Secure communication disabled"
   
 
@@ -45,14 +41,9 @@ class BaltradFrame(object):
     with open(path) as f:
       self.files["BF_PayloadFileField"] = (path, f.read())
     
-  def sign(self, key):
-    hash=SHA.new(self.fields["BF_TimeStamp"]).digest()
-    sig = key.sign(hash, 2)
-    der = DerSequence()
-    der.append(sig[0])
-    der.append(sig[1])
-    data = der.encode()
-    self.files["BF_SignatureFileField"] = ("signature.file", data)
+  def sign(self, signer):
+    signature = signer.Sign(self.fields["BF_TimeStamp"])
+    self.fields["BF_SignatureField"] = signature
     
   def post(self, url):
     fields = []
@@ -66,6 +57,8 @@ class BaltradFrame(object):
     urlparts = urlparse.urlsplit(url)
     host = urlparts[1]
     query = urlparts[2]
+
+    print host, query
 
     return post_multipart(host, query, fields, files)
 
@@ -110,36 +103,21 @@ def encode_multipart_formdata(fields, files):
   content_type = 'multipart/form-data; boundary=%s' % BOUNDARY
   return content_type, "\r\n".join(L)
 
-def createDsaKey(key):
-  seq = asn1.DerSequence()
-  data = "\n".join(key.strip().split("\n")[1:-1]).decode("base64")
-  seq.decode(data)
-  p, q, g, y, x = seq[1:]
-  return DSA.construct((y, g, p, q, x))
-
 def get_content_type(filename):
   return mimetypes.guess_type(filename)[0] or 'application/octet-stream'
 
-def inject_certificate(dex_uri, certificate):
-  frame = BaltradFrame()
-  frame.set_request_type("BF_PostCertificate")
-  frame.set_node_name(DEX_NODENAME)
-  frame.set_local_uri("http://localhost")
-  frame.set_certificate(certificate)
-  return frame.post(dex_uri)
-
 def inject_file(path, dex_uri):
-  if PRIVKEY == None:
+  if DEX_PRIVATEKEY == None:
     raise Exception, "BaltradFrame only support encrypted communication"
 
   frame = BaltradFrame()
   frame.set_request_type("BF_PostDataDeliveryRequest")
   frame.set_node_name(DEX_NODENAME)
   frame.set_local_uri("http://localhost")
-
-  key = createDsaKey(PRIVKEY)
-  frame.sign(key)
+  
   frame.set_payload_file(path)
+  signer = keyczar.Signer.Read(DEX_PRIVATEKEY)
+  frame.sign(signer)
   return frame.post(dex_uri)
 
 if __name__ == "__main__":
@@ -147,18 +125,15 @@ if __name__ == "__main__":
   if sys.argv[1] == "certificate" or sys.argv[1] == "file":
     filename = sys.argv[2]
     if len(sys.argv) > 3:
-      dex_url = sys.argv[2]
+      dex_url = sys.argv[3]
   else:
     print "Syntax is BaltradFrame.py <command> <file> [<url>}"
-    print "where command either is certificate or file."
-    print "  if certificate, then a CERTIFICATE should be provided as <file>"
+    print "where command either is one of: 'file'"
     print "  if file, then a hdf 5 file should be provided as <file>"
     print ""
     print "url is optional, if not specified, then it will default to DEX_SPOE in rave_defines"
     print ""
     sys.exit(0)
-    
-  if sys.argv[1] == "certificate":
-    print inject_certificate(dex_url, filename)
-  else:
+  
+  if sys.argv[1] == "file":
     print inject_file(filename, dex_url)
