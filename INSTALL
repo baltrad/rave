@@ -18,6 +18,7 @@ installed.
 - HDF5 1.8.5-patch1 or higher
 - PycURL 7.19+ (and underlying cURL)
 - PROJ.4 version 4.7.0 or higher
+- python-keyczar
 All of these packages are available on any credible Linux distribution,
 and can be managed through package managers like yum, apt-get, and dpkg.
 
@@ -85,8 +86,17 @@ The host:port for the DEX single point-of-entry:
 $ export DEX_SPOE=host:port        # default is localhost:8084
 WMO originating center number:
 $ export CENTER_ID=82              # Sweden is 82. Use your country's!
+The nodename to use when sending messages to DEX. Dex uses this to
+look up an appropriate public key to verify the message signature. This
+must be set to whatever name you export your key to DEX.
+$ export DEX_NODENAME=nodename     # default is localhost
+You also want to set the location of your private key you sign the
+messages sent to DEX. See "Using Keyczar keys" in the README for details.
+$ export DEX_PRIVATEKEY=/path/to/pkey # no default
+
 If you need to change back to a default value, set the environment variable
 to the default and then run 'make install' again. You don't have to rebuild.
+
 
 To modify memory debugging configuration options, specify the parameters before
 running make, for example:

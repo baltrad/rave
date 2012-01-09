@@ -181,3 +181,35 @@ Cartographic projections: <country>_projections.xml
 Coverage areas: <country>_areas.xml
 
 Read the TODO file to see how RAVE may evolve.
+
+USING KEYCZAR KEYS
+------------------
+If you want to inject files into DEX, you have to generate a key for signing
+the messages. The following assumes you have installed the python package, but
+should be pretty much the same if you use the java package. We'll create an
+asymmetric DSA key and then export the public key from it.
+
+First, create a "store" for your key:
+
+$ python -m keyczar.keyczart create \
+    --location=/path/to/your/key \
+    --purpose=sign \
+    --name=keyname \
+    --asymmetric=dsa
+
+Then generate the key itself:
+
+$ python -m keyczar.keyczart addkey \
+    --location=/path/to/your/key \
+    --status=primary
+
+Then export the public key:
+
+$ python -m keyczar.keyczart pubkey \
+    --location=/path/to/your/key \
+    --destination=/path/to/your/key.pub
+
+The public key should then be put to the BALTRAD-NODE installation at
+etc/bltnode-keys/$DEX_NODENAME.pub. 
+
+Remember to keep you private key (at /path/to/your/key) secret and safe!
