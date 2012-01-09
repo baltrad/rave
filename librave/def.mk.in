@@ -45,3 +45,35 @@ HLHDF_HLDEF_MK_FILE= @HLHDF_HLDEF_MK_FILE@
 RAVE_VERSION= @RAVE_VERSION@
 RAVE_PATCH_LEVEL=@RAVE_PATCH_LEVEL@
 
+#
+# These flags should be used by extension modules that are using
+# rave in order to compile and link properly.
+# The CFLAGS contains include directives for the extras
+# LDFLAGS contains library paths for the extras
+# LIBRARIES is a list of libraries, like -lOperaBufr -lexpat -l....
+#
+RAVE_MODULE_CFLAGS=$(SHARED_FLAG) $(CCOPTS) $(DEFS) $(RAVE_INCLUDE_FLAG) $(HLHDF_INCLUDE_FLAG) $(ZLIB_INCDIR) $(HDF5_INCDIR) $(PROJ_INCLUDE_FLAG)
+RAVE_MODULE_PYCFLAGS= $(SHARED_FLAG) $(CCOPTS) $(DEFS) $(PYTHON_INCLUDE_FLAG) $(NUMPY_INCLUDE_FLAG) $(RAVE_INCLUDE_FLAG) $(RAVE_INCLUDE_FLAG)/python $(HLHDF_INCLUDE_FLAG) $(ZLIB_INCDIR) $(HDF5_INCDIR) $(PROJ_INCLUDE_FLAG)
+RAVE_MODULE_LDFLAGS= $(RAVE_LIB_FLAG) $(HLHDF_LIBRARY_FLAG) $(ZLIB_LIBDIR) $(HDF5_LIBDIR) $(PROJ_LIB_FLAG)
+RAVE_MODULE_LIBRARIES=-lravetransform -lhlhdf -lproj
+RAVE_MODULE_PYLIBRARIES=-lravepyapi -lravetransform -lhlhdf -lproj
+
+ifeq ($(EXPAT_SUPPRESSED), no)
+RAVE_MODULE_LDFLAGS+= $(EXPAT_LIB_DIR)
+RAVE_MODULE_LIBRARIES+= -lexpat
+RAVE_MODULE_PYLIBRARIES+= -lexpat
+endif
+
+ifeq ($(BUFR_SUPPRESSED), no)
+RAVE_MODULE_LDFLAGS+= $(BUFR_LIB_DIR)
+RAVE_MODULE_LIBRARIES+= -lOperaBufr
+RAVE_MODULE_PYLIBRARIES+= -lOperaBufr
+endif
+
+ifeq ($(GOT_PTHREAD_SUPPORT), yes)
+RAVE_MODULE_LIBRARIES+= -lpthread
+RAVE_MODULE_PYLIBRARIES+= -lpthread
+endif
+
+
+
