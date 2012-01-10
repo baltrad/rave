@@ -10,11 +10,6 @@ from keyczar import keyczar
 
 from rave_defines import DEX_NODENAME, DEX_PRIVATEKEY, DEX_SPOE
 
-if not DEX_PRIVATEKEY or not os.path.exists(DEX_PRIVATEKEY):
-  print "Private key does not exist: '%s'" % DEX_PRIVATEKEY
-  print "Secure communication disabled"
-  
-
 class BaltradFrame(object):
   def __init__(self):
     self.fields = {}
@@ -106,17 +101,19 @@ def encode_multipart_formdata(fields, files):
 def get_content_type(filename):
   return mimetypes.guess_type(filename)[0] or 'application/octet-stream'
 
-def inject_file(path, dex_uri):
-  if DEX_PRIVATEKEY == None:
-    raise Exception, "BaltradFrame only support encrypted communication"
+def inject_file(path, dex_uri, dex_privatekey=DEX_PRIVATEKEY, dex_nodename=DEX_NODENAME):
+  if dex_privatekey == None:
+    raise RuntimeError("BaltradFrame only support encrypted communication")
+  if not os.path.exists(dex_privatekey):
+    raise RuntimeError("Private key does not exist: '%s'" % dex_privatekey)
 
   frame = BaltradFrame()
   frame.set_request_type("BF_PostDataDeliveryRequest")
-  frame.set_node_name(DEX_NODENAME)
+  frame.set_node_name(dex_nodename)
   frame.set_local_uri("http://localhost")
   
   frame.set_payload_file(path)
-  signer = keyczar.Signer.Read(DEX_PRIVATEKEY)
+  signer = keyczar.Signer.Read(dex_privatekey)
   frame.sign(signer)
   return frame.post(dex_uri)
 
