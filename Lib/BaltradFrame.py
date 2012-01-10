@@ -52,9 +52,6 @@ class BaltradFrame(object):
     urlparts = urlparse.urlsplit(url)
     host = urlparts[1]
     query = urlparts[2]
-
-    print host, query
-
     return post_multipart(host, query, fields, files)
 
 
