@@ -101,8 +101,11 @@ if __name__ == "__main__":
 
   if ARG == 'stop':
     # First, dump the job queue via client connection, then stop
-    server = xmlrpclib.ServerProxy("http://%s:%i/RAVE" % (PGF_HOST, PGF_PORT), verbose=False)
-    response = server.flush("Killing me softly")
+    try:
+    	server = xmlrpclib.ServerProxy("http://%s:%i/RAVE" % (PGF_HOST, PGF_PORT), verbose=False)
+    	response = server.flush("Killing me softly")
+    except:
+    	print "Could not connect to server"
     this.stop()
 
   if ARG == 'start':

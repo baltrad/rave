@@ -139,9 +139,15 @@ class Daemon(object):
 		# registered to atexit. This is a soft exit, and may require
 		# toughening up in the future.
 		try:
-			while 1:
+			ctr = 0   # We don't want to hang indefenetly trying to kill a process..
+			sys.stderr.write("Waiting for server to shutdown ")
+			sys.stderr.flush()
+			while ctr <= 15:
 				os.kill(pid, SIGINT)  # Was originally SIGTERM
 				time.sleep(0.1)
+				sys.stderr.write(".")
+				sys.stderr.flush()
+				ctr = ctr + 1
 		except OSError, err:
 			err = str(err)
 			if err.find("No such process") > 0:
@@ -150,6 +156,9 @@ class Daemon(object):
 			else:
 				print str(err)
 				sys.exit(1)
+
+		sys.stderr.write("\n")
+		sys.stderr.flush()
 
 	## Restart the daemon.
 	def restart(self):
