@@ -5,7 +5,7 @@ Radar Analysis and Visualization Environment
 Anders Henja and Daniel Michelson
 Swedish Meteorological and Hydrological Institute
 
-June 2011
+January 2012
 
 Before installing RAVE, a number of modules/software packages have to be
 installed.
@@ -78,6 +78,16 @@ $ export EXPATARG=yes
 or
 $ export EXPATARG=no
 
+6. (OPTIONAL) BUFR
+The default behaviour is to build without BUFR support. Note that we are 
+referring to the EUMETNET OPERA BUFR software in this context. The separate
+package bbufr needs to be installed in order to build with BUFR support. This
+support is presently limited to reading polar data, both scans and volumes. If 
+you want this support, install bbufr, and then set the following environment 
+variable:
+$ export BUFRARG=<bbufr-prefix>
+where bbufr-prefix is the directory where bbufr was installed.
+
 If you are going to use the XML-RPC server, you can configure a number of
 variables prior to installing RAVE, also using environment variables:
 $ export PGF_HOST=myhost.mydomain  # an IP number works too, default=localhost
@@ -91,12 +101,11 @@ look up an appropriate public key to verify the message signature. This
 must be set to whatever name you export your key to DEX.
 $ export DEX_NODENAME=nodename     # default is localhost
 You also want to set the location of your private key you sign the
-messages sent to DEX. See "Using Keyczar keys" in the README for details.
+messages sent to DEX. See "Using keyCzar keys" in the README for details.
 $ export DEX_PRIVATEKEY=/path/to/pkey # no default
 
 If you need to change back to a default value, set the environment variable
 to the default and then run 'make install' again. You don't have to rebuild.
-
 
 To modify memory debugging configuration options, specify the parameters before
 running make, for example:

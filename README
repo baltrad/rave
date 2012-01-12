@@ -5,7 +5,7 @@ Radar Analysis and Visualization Environment
 Anders Henja and Daniel Michelson
 Swedish Meteorological and Hydrological Institute
 
-July 2010
+January 2012
 
 <caveats>
 RAVE has been developed on Ubuntu starting at version 8.04, and (Snow)
@@ -34,8 +34,10 @@ without influencing RAVE, to the furthest extent possible.
 VERIFIED SYSTEMS
 
 RAVE is known to work on the following systems:
-Ubuntu 8.04, 8.10, 9.04, and 9.10
-CentOS 5.3, 5.4
+Ubuntu 8.04 through 11.10
+Debian 6 (Squeeze)
+CentOS 5.3, 5.4, 5.5 (Final), and 5.7 (Final)
+Red Hat Enterprise 6
 Mac OSX 10.5 (Leopard), 10.6 (Snow Leopard)
 
 
@@ -106,8 +108,8 @@ don't need JPEG for RAVE.)
 $ <python prefix from above>/bin/python setup.py install
 
 
-HDF5 1.8.x
-----------
+HDF5 1.8.5-patch1 or higher
+---------------------------
 See the README-HDF5 file about how the HDF5 file format is dealt with in RAVE.
 
 Download HDF5 from hdfgroup.org .
@@ -128,7 +130,7 @@ $ (optionally) make check-install
 LD_LIBRARY_PATH (reminder!)
 ---------------
 Make sure your LD_LIBRARY_PATH points to the correct locations of Python
-and HDF5! If you miss this step, then you're on your own!
+and HDF5! If you miss this step, then weirdness will happen!
 
 
 HL-HDF and PyHL
@@ -137,7 +139,7 @@ Download the hlhdf.git package from git.baltrad.eu and follow the
 directives in the INSTALL file.
 
 
-PROJ.4 4.6.1
+PROJ.4 4.7.0
 ------------
 Download PROJ.4 from http://trac.osgeo.org/proj/ .
 
@@ -182,12 +184,14 @@ Coverage areas: <country>_areas.xml
 
 Read the TODO file to see how RAVE may evolve.
 
+
 USING KEYCZAR KEYS
 ------------------
-If you want to inject files into DEX, you have to generate a key for signing
-the messages. The following assumes you have installed the python package, but
-should be pretty much the same if you use the java package. We'll create an
-asymmetric DSA key and then export the public key from it.
+If you want to inject files into a BALTRAD DEX, you have to generate a key
+for signing the messages. The following assumes you have installed the
+Python package, but should be pretty much the same if you use the Java
+package. We'll create an asymmetric DSA key and then export the public key
+from it.
 
 First, create a "store" for your key:
 
@@ -209,7 +213,7 @@ $ python -m keyczar.keyczart pubkey \
     --location=/path/to/your/key \
     --destination=/path/to/your/key.pub
 
-The public key should then be put to the BALTRAD-NODE installation at
+The public key should then be put to the BALTRAD NODE installation at
 etc/bltnode-keys/$DEX_NODENAME.pub. 
 
-Remember to keep you private key (at /path/to/your/key) secret and safe!
+Remember to keep your private key (at /path/to/your/key) secret and safe!

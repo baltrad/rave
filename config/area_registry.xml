@@ -70,4 +70,14 @@
 <arg id="extent" type="sequence">-726561.013648, -1221494.00295,943438.986352, 1046505.99705</arg>
 </areadef>
 </area>
+<area id="odc_area">
+<description>Odyssey composite area</description>
+<areadef>
+<arg id="pcs">odc_laea</arg>
+<arg id="xsize" type="int">1900</arg>
+<arg id="ysize" type="int">2200</arg>
+<arg id="scale" type="float">2000</arg>
+<arg id="extent" type="sequence">-1950002.529151, -2300001.025971, 1849997.470849, 2099998.974029</arg>
+</areadef>
+</area>
 </areas>

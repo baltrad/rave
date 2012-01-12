@@ -28,4 +28,8 @@
 <description>Google Maps</description>
 <projdef>+proj=merc +lat_ts=0 +lon_0=0 +k=1.0 +R=6378137.0 +no_defs</projdef>
 </projection>
+<projection id='odc_laea'>
+<description>Odyssey composite area</description>
+<projdef>+proj=laea +lat_0=55.0 +lon_0=10.0 +ellps=WGS84 +datum=WGS84</projdef>
+</projection>
 </projections>
