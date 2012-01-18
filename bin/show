@@ -1,67 +1,97 @@
 #!/usr/bin/env python
-# -*- coding: latin-1 -*-
-#
-# $Id: show,v 1.1.1.1 2006/07/14 11:31:54 dmichels Exp $
-#
-# Author: Daniel Michelson
-#
-# Copyright (c): Swedish Meteorological and Hydrological Institute
-#                2006-
-#                All rights reserved.
-#
-# $Log: show,v $
-# Revision 1.1.1.1  2006/07/14 11:31:54  dmichels
-# Project added under CVS
-#
-#
-"""
-show
+'''
+Copyright (C) 2012- Swedish Meteorological and Hydrological Institute (SMHI)
 
-Quick-Look viewer.
-"""
+This file is part of RAVE.
+
+RAVE is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+RAVE is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+See the GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
+'''
+
+## show Quick-Look viewer.
+
+## @file
+## @author Daniel Michelson, SMHI
+## @date 2012-01-26
+
 import rave_win_colors
 
+
+## Dictionary containing palettes
 PALS = {'DBZc' : rave_win_colors.continuous_dBZ,
         'DBZd' : rave_win_colors.discrete_dBZ_BLT,
         'MSc' : rave_win_colors.continuous_MS,
-        'MSd' : rave_win_colors.discrete_MS}
+        'MSd' : rave_win_colors.discrete_MS,
+        'BW' : rave_win_colors.continuous_RAW}
 
 
+## Main function. Uses "old" rave instead of _raveio to read data,
+# but this is simply for convenience.
+# @param sourcefile string of the input ODIM_H5 file
+# @param SET string path to the dataset to show
+# @param PAL string name of the palette with which to show the dataset
 def main(sourcefile, SET, PAL):
-    import rave, rave_IO, rave_ql
+    import rave, rave_ql
 
-    # This way of reading HDF5 files bypasses the strict 717 info model.
-    # The only requirement is that datasets be called "/imageN/data"
-    this = rave.RAVE()
-    t = rave_IO.open_hdf5(sourcefile)
-    this.info, this.data = t[0], t[1]
+    this = rave.open(sourcefile)
+    data = this.get(SET)
 
-    keys = this.data.keys()
-    keys.sort()
-    that = rave_ql.ql(this.data[keys[SET]], pal=PALS[PAL])
+    that = rave_ql.ql(data, pal=PALS[PAL])
     that.main()
 
 
 if __name__ == "__main__":
+    import sys
     from optparse import OptionParser
 
     usage = "usage: %prog -i <infile> -d <dataset index> -p <palette name> [h]"
     usage += "\nPalette names:\tDBZc (continuous), DBZd (discrete)"
-    usage += "\n\t\tMSc (continuous), MSd (discrete)"
+    usage += "\n\t\tMSc (continuous), MSd (discrete), BW (grayscale)"
     parser = OptionParser(usage=usage)
 
     parser.add_option("-i", "--input", dest="infile",
                       help="Name of input file to display.")
 
+    parser.add_option("-d", "--dataset", dest="set",
+                      default='/dataset1/data1/data',
+                      help="Dataset name (default=/dataset1/data1/data)")
+
     parser.add_option("-p", "--palette", dest="pal",
                       default="DBZc",
                       help="Name of color palette to apply (DBZ, VRAD).")
 
-    parser.add_option("-d", "--dataset", dest="set", type="int",
-                      default=0,
-                      help="Dataset index (default=0)")
 
     (options, args) = parser.parse_args()
+
+    try:
+        import pygtk
+    except ImportError:
+        parser.print_help()
+        print "\nshow requires PyGTK. Exiting ..."
+        sys.exit(1)
+    pygtk.require('2.0')
+    try:
+        import gtk
+    except ImportError:
+        parser.print_help()
+        print "\nshow requires GTK. Exiting ..."
+        sys.exit(1)
+    try:
+        import threading
+    except ImportError:
+        parser.print_help()
+        print "\nYou need Python compiled with threading support to run show.\nExiting ..."
+        sys.exit(1)
 
     if options.infile != None:
 
