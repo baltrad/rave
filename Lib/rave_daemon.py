@@ -24,7 +24,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @date 2010-07-15
 
 import sys, os, time, atexit
-from signal import SIGINT  # SIGHUP, SIGTERM
+from signal import SIGTERM
 
 
 ## A generic daemon class.
@@ -143,7 +143,7 @@ class Daemon(object):
 			sys.stderr.write("Waiting for server to shutdown ")
 			sys.stderr.flush()
 			while ctr <= 15:
-				os.kill(pid, SIGINT)  # Was originally SIGTERM
+				os.kill(pid, SIGTERM)
 				time.sleep(0.1)
 				sys.stderr.write(".")
 				sys.stderr.flush()
