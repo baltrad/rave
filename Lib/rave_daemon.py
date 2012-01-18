@@ -142,7 +142,7 @@ class Daemon(object):
 			ctr = 0   # We don't want to hang indefenetly trying to kill a process..
 			sys.stderr.write("Waiting for server to shutdown ")
 			sys.stderr.flush()
-			while ctr <= 15:
+			while ctr <= 30:
 				os.kill(pid, SIGTERM)
 				time.sleep(0.1)
 				sys.stderr.write(".")
