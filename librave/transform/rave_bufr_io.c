@@ -597,7 +597,7 @@ done:
 #ifdef  PTHREAD_SUPPORTED
   pthread_mutex_unlock(&bufrio_mutex);
 #endif
-  bufr_free_data(msg);
+  bufr_free_data(&msg);
   return result;
 }
 
