@@ -35,7 +35,10 @@ class BaltradFrame(object):
   def set_payload_file(self, path):
     with open(path) as f:
       self.files["BF_PayloadFileField"] = (path, f.read())
-    
+
+  def set_message(self, msg):
+    self.fields["BF_MessageField"] = msg
+
   def sign(self, signer):
     signature = signer.Sign(self.fields["BF_TimeStamp"])
     self.fields["BF_SignatureField"] = signature
@@ -110,6 +113,29 @@ def inject_file(path, dex_uri, dex_privatekey=DEX_PRIVATEKEY, dex_nodename=DEX_N
   frame.set_local_uri("http://localhost")
   
   frame.set_payload_file(path)
+  signer = keyczar.Signer.Read(dex_privatekey)
+  frame.sign(signer)
+  return frame.post(dex_uri)
+
+##
+# Sends a message to the dex.
+# @param msg: the message to send
+# @param dex_uri: the dex to send the message to
+# @param dex_privatekey: the private key for signing
+# @param dex_nodename: the name of this node
+#
+def send_message(msg, dex_uri, dex_privatekey=DEX_PRIVATEKEY, dex_nodename=DEX_NODENAME):
+  if dex_privatekey == None:
+    raise RuntimeError("BaltradFrame only support encrypted communication")
+  if not os.path.exists(dex_privatekey):
+    raise RuntimeError("Private key does not exist: '%s'" % dex_privatekey)
+
+  frame = BaltradFrame()
+  frame.set_request_type("BF_PostMessageDeliveryRequest")
+  frame.set_node_name(dex_nodename)
+  frame.set_local_uri("http://localhost")
+  
+  frame.set_message(msg)
   signer = keyczar.Signer.Read(dex_privatekey)
   frame.sign(signer)
   return frame.post(dex_uri)
