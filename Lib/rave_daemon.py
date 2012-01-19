@@ -150,7 +150,7 @@ class Daemon(object):
 				ctr = ctr + 1
 		except OSError, err:
 			err = str(err)
-			if err.find("No such process") > 0:
+			if err.find("No such process") > 0 or err.find("Operation not permitted") > 0:
 				if os.path.exists(self.pidfile):
 					os.remove(self.pidfile)
 			else:
