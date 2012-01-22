@@ -1,168 +1,160 @@
-#!/usr/bin/env python
-# -*- coding: latin-1 -*-
-#
-# $Id: rave_composite.py,v 1.1.1.1 2006/07/14 11:31:54 dmichels Exp $
-#
-# Author: Daniel Michelson
-#
-# Copyright (c): Swedish Meteorological and Hydrological Institute
-#                2006-
-#                All rights reserved.
-#
-# $Log: rave_composite.py,v $
-# Revision 1.1.1.1  2006/07/14 11:31:54  dmichels
-# Project added under CVS
-#
-#
-"""
-rave_composite.py
+'''
+Copyright (C) 2012- Swedish Meteorological and Hydrological Institute (SMHI)
 
-Functionality for compositing in RAVE.
-"""
-import os
-import rave, rave_IO, rave_defines, radar, area
-import _composite, _helpers
+This file is part of RAVE.
+
+RAVE is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+RAVE is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+See the GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
+
+'''
+## Python interface to composite generation functionality.
+#  This module is based on the PGF plugin. For the time
+#  being we will live with some code duplication.
+
+## @file
+## @author Anders Henja and Daniel Michelson, SMHI
+## @date 2012-01-21
+
+import _cartesian
+import _pycomposite
+import _rave
+import _area
+import _projection
+import _raveio
+import _polarvolume
+import _polarscan
+import _transform
+import rave_area
+import string
+import rave_tempfile
+import odim_source
+import math
+import rave_pgf_quality_registry
+
+from rave_defines import CENTER_ID, GAIN, OFFSET
 
 
-# Composite algorithm constants
-NEAREST = 0  # nearest radar
-LOWEST  = 1  # lowest pixel
+## Generates a composite
+#@param list of objects (usually polar volumes or scans) in memory used to generate the composite
+#@param args tuple containing variable-length number of arguments
+#@return a composite object in memory
+def generate(in_objects, **args):  
+  generator = _pycomposite.new()
 
-# Other constants
-NODATA = 255.0
-UNDETECT = 0.0
-TYPECODE = 'b'
+  a = rave_area.area(args["area"])
+  p = a.pcs
+  pyarea = _area.new()
+  pyarea.id = a.Id
+  pyarea.xsize = a.xsize
+  pyarea.ysize = a.ysize
+  pyarea.xscale = a.xscale
+  pyarea.yscale = a.yscale
+  pyarea.extent = a.extent
+  pyarea.projection = _projection.new(p.id, p.name, string.join(p.definition, ' '))
 
-def composite(sources, areaid, method=NEAREST, bitmap=1,
-              gain=rave_defines.GAIN, offset=rave_defines.OFFSET,
-              nodata=NODATA, undetect=UNDETECT, typecode=TYPECODE, qc=0):
-    """
-    """
-    nodes = []
+  if "qc" in args.keys():
+      detectors = string.split(args["qc"], ",")
+  else:
+      detectors = []
 
-    # Initialize a reference object containing output area's characteristics
-    projdef = area.area(areaid).pcs.definition
+  nodes = ""
+  qfields = []  # The quality fields we want to get as a result in the composite
 
-    # Loop through input images
-    for image in sources:
+  for d in detectors:
+    p = rave_pgf_quality_registry.get_plugin(d)
+    if p != None:
+      qfields.extend(p.getQualityFields())
 
-        # Does this image have the right projection?
-        pj = image.get('/where/projdef').split()
-        for p in pj:
-            if p not in projdef:
-                raise AttributeError, "Incorrect input image projection"
+  for obj in in_objects:
 
-        # Common gain and offset!
-        if image.get('/image1/what/gain') != gain or \
-           image.get('/image1/what/offset') != offset:
-            _helpers.CommonGainOffset(image, 1, gain, offset)
-
-        # Correct value of 'nodata'? Pretty likely, but you never know...
-        if image.get('/image1/what/nodata') != nodata:
-            NewNodata(image, nodata)
-
-        # Do all images have the same depth? If not, convert.
-        if image.typecode() != typecode:
-            image.data['image1'] = image.data['image1'].astype(typecode)
-
-        image.MakeExtentFromCorners()
-        imagearea = image.get('/how/area')
-        r = radar.radar(imagearea[:3])
-        image.set('/how/lon_0', r.lon)
-        image.set('/how/lat_0', r.lat)
-        nodes.append(r.Id)
-
-        # If LOWEST algorithm: load radar_height lookup-table for each input
-        # and add it as /image2/data
-        if method == LOWEST:
-            a = area.area(imagearea)
-            p = a.pcs.id
-            radar_height = "radar_height/radar_height.%s_%s.h5" % (imagearea[:3], p)
-            radar_height = os.path.join(rave_defines.RAVEDB, radar_height)
-            this = rave.RAVE()  # temporary container object
-            t = rave_IO.open_hdf5(radar_height)
-            this.info, this.data = t[0], t[1]
-            image.set('/image2/data', this.get('/image1/data'))
-
-    dest = initDest(image, areaid)
-    dest.set('/how/nodes', nodes)
-
-    # Quality control using information from overlapping radar,
-    # as performed in MESAN.
-    if qc:
-        print "Warning: quality control is not available yet; compositing anyway..."
-
-    # compositing using the shortest distance to a given radar
-    if method == NEAREST:
-        _composite.nearest(sources, dest, bitmap)
-
-    # compositing using the shortest distance to the Earth's surface
-    elif method == LOWEST:
-        _composite.lowest(sources, dest, bitmap)
-
+    if len(nodes):
+      nodes += ",'%s'" % odim_source.NODfromSource(obj)
     else:
-        raise AttributeError, "Only NEAREST and LOWEST algorithms supported"
+      nodes += "'%s'" % odim_source.NODfromSource(obj)
+    
+    for d in detectors:
+      p = rave_pgf_quality_registry.get_plugin(d)
+      if p != None:
+        obj = p.process(obj)
+        na = p.algorithm()
+        if generator.algorithm == None and na != None: # Try to get the generator algorithm != None 
+          generator.algorithm = na
 
-    return dest
+    generator.add(obj)
 
+  generator.quantity = "DBZH"
 
-def NewNodata(image, nodata):
-    """
-    """
-    from numpy import where, equal
+  if "quantity" in args.keys():
+    generator.quantity = args["quantity"].upper()
+  
+  product = "pcappi"
+  if "product" in args.keys():
+    product = args["product"].lower()
 
-    data = image.data['image1']
-    data = where(equal(data, image.get('/image1/what/nodata')),
-                 nodata, data)
-    image.data['image1'] = data.astype(image.typecode())
-    image.set('/image1/what/nodata', nodata)
+  if product == "ppi":
+    generator.product = _rave.Rave_ProductType_PPI
+  elif product == "cappi":
+    generator.product = _rave.Rave_ProductType_CAPPI
+  else:
+    generator.product = _rave.Rave_ProductType_PCAPPI
 
+  generator.height = 1000.0
+  generator.elangle = 0.0
+  if "prodpar" in args.keys():
+    if generator.product in [_rave.Rave_ProductType_CAPPI, _rave.Rave_ProductType_PCAPPI]:
+      try:
+        generator.height = args["prodpar"]
+      except ValueError,e:
+        pass
+    elif generator.product in [_rave.Rave_ProductType_PPI]:
+      try:
+        v = args["prodpar"]
+        generator.elangle = v * math.pi / 180.0
+      except ValueError,e:
+        pass
 
-def initDest(image, areaid):
-    """
-    """
-    nodata = image.get('/image1/what/nodata')
-    undetect = image.get('/image1/what/undetect')
+  generator.selection_method = _pycomposite.SelectionMethod_NEAREST
+  if "method" in args.keys():
+    if args["method"].upper() == "NEAREST_RADAR":
+      generator.selection_method = _pycomposite.SelectionMethod_NEAREST
+    elif args["method"].upper() == "HEIGHT_ABOVE_SEALEVEL":
+      generator.selection_method = _pycomposite.SelectionMethod_HEIGHT
 
-    out = rave.RAVE(area=areaid, nodata=nodata)
-    out.addDataset(initval=0.0)
-    out.MakeCornersFromArea(areaid)
-    out.MakeExtentFromCorners()
+  generator.date = obj.date # First guess: date of last input object
+  generator.time = obj.time # A bit risky if nominal times of input data are different
+  if "date" in args.keys() and args["date"] is not None:
+      generator.time = args["date"]
+  if "time" in args.keys() and args["time"] is not None:
+      generator.date = args["time"]
 
-    DATE, TIME = image.get('/what/date'), image.get('/what/time')
-    out.set('/what/date', DATE)
-    out.set('/what/time', TIME)
+  generator.gain = GAIN
+  generator.offset = OFFSET
+  if "gain" in args.keys():
+      generator.gain = args["gain"]
+  if "offset" in args.keys():
+      generator.offset = args["offset"]
 
-    out.set('/image1/what/nodata', nodata)
-    out.set('/image1/what/undetect', undetect)
-    out.set('/image1/what/gain', image.get('/image1/what/gain'))
-    out.set('/image1/what/offset', image.get('/image1/what/offset'))
-    out.set('/image1/what/product', image.get('/image1/what/product'))
-    out.set('/image1/what/quantity', image.get('/image1/what/quantity'))
-    out.set('/image1/what/prodpar', image.get('/image1/what/prodpar'))
-    out.set('/image1/what/startdate', DATE)
-    out.set('/image1/what/starttime', TIME)
-    out.set('/image1/what/enddate', DATE)
-    out.set('/image1/what/endtime', TIME)
+  result = generator.nearest(pyarea, qfields)  # Might want to rename this method...
 
-    out.set('/image2/what/nodata', nodata)
-    out.set('/image2/what/undetect', undetect)
-    out.set('/image2/what/gain', 1.0)
-    out.set('/image2/what/offset', 0.0)
-    out.set('/image2/what/product', 'COMP')
-    out.set('/image2/what/quantity', 'BRDR')
-    out.set('/image2/what/prodpar', image.get('/image1/what/prodpar'))
-    out.set('/image2/what/startdate', DATE)
-    out.set('/image2/what/starttime', TIME)
-    out.set('/image2/what/enddate', DATE)
-    out.set('/image2/what/endtime', TIME)
-
-    out.set('/what/object', 'COMP')
-    return out
-
-
-
-__all__ = ["composite"]
-
-if __name__ == "__main__":
-    print __doc__
+  # Optional gap filling
+  if eval(args["gf"]):
+      t = _transform.new()
+      gap_filled = t.fillGap(result)
+      result.setData(gap_filled.getData())      
+  
+  # Fix so that we get a valid place for /what/source and /how/nodes 
+  plc = result.source
+  result.source = "%s,CMT:%s"%(CENTER_ID,plc)
+  result.addAttribute('how/nodes', nodes)
+  
+  return result

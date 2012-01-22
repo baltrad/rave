@@ -1,4 +1,4 @@
-#!/opt/baltrad/third_party/bin/python
+#!/usr/bin/env python
 '''
 Copyright (C) 2010- Swedish Meteorological and Hydrological Institute (SMHI)
 
