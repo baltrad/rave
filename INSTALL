@@ -23,7 +23,7 @@ All of these packages are available on any credible Linux distribution,
 and can be managed through package managers like yum, apt-get, and dpkg.
 
 You also need the following package that you probably won't find 
-bundled with your Linux.
+bundled with your Linux. 
 - HLHDF/PyHL 0.8+
 
 We also have optional support for C-based handling 
