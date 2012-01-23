@@ -19,7 +19,7 @@ RAVE may work on proprietary unices but it is not designed for Windows.
 
 
 INTRODUCTION
-
+ 
 A stock Python build, together with a few extra third-party packages,
 provides the basis for installing RAVE. When these are all installed,
 building and installing RAVE can be done with a single "make" command
