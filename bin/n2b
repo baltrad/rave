@@ -191,7 +191,7 @@ class N2B(pyinotify.ProcessEvent):
     ## Inherited from pyinotify
     # @param event object containing a path, probably ...
     def process_IN_CLOSE_WRITE(self, event):
-        MAIN(event.pathname, janitor=self.options.janitor, uri=self.dex_uri)
+        MAIN(event.pathname, janitor=self.options.janitor, uri=self.options.dex_uri)
 
 
 if __name__ == "__main__":
