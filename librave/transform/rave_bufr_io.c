@@ -576,6 +576,9 @@ RaveCoreObject* RaveBufrIO_read(RaveBufrIO_t* self, const char* filename)
   bufr_t msg;
   RaveCoreObject* result = NULL;
 
+  /* BUFR library lacks initializer so we must be very careful */
+  memset (&msg, 0, sizeof(bufr_t));
+
 #ifdef  PTHREAD_SUPPORTED
   if (bufrio_mutex_initialized == 0) {
     pthread_mutex_init(&bufrio_mutex, NULL);
