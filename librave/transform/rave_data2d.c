@@ -364,7 +364,7 @@ RaveData2D_t* RaveData2D_concatX(RaveData2D_t* field, RaveData2D_t* other)
   }
   if (field->ysize != other->ysize ||
       field->type != other->type) {
-    RAVE_WARNING0("Can not concatenate two fields that has different y-size and/or different data types");
+    RAVE_WARNING0("Cannot concatenate two fields that have different y-sizes and/or different data types");
     return NULL;
   }
   newfield = RAVE_OBJECT_NEW(&RaveData2D_TYPE);
@@ -385,9 +385,50 @@ RaveData2D_t* RaveData2D_concatX(RaveData2D_t* field, RaveData2D_t* other)
     unsigned char* nfd = newfield->data;
     unsigned char* fd = field->data;
     unsigned char* od = other->data;
-    memcpy(&nfd[y*xsize], &fd[y*field->xsize], typesize * field->xsize);
-    memcpy(&nfd[y*xsize + field->xsize], &od[y*other->xsize], typesize * other->xsize);
+    memcpy(&nfd[typesize*y*xsize], &fd[typesize*y*field->xsize], typesize * field->xsize);
+    memcpy(&nfd[typesize*y*xsize + typesize*field->xsize], &od[typesize*y*other->xsize], typesize * other->xsize);
   }
+
+  result = RAVE_OBJECT_COPY(newfield);
+done:
+  RAVE_OBJECT_RELEASE(newfield);
+  return result;
+}
+
+RaveData2D_t* RaveData2D_concatY(RaveData2D_t* field, RaveData2D_t* other)
+{
+  RaveData2D_t *result = NULL, *newfield = NULL;
+  long xsize = 0, ysize = 0;
+  int typesize = 0;
+
+  RAVE_ASSERT((field != NULL), "field == NULL");
+  if (other == NULL) {
+    return NULL;
+  }
+  if (field->xsize != other->xsize ||
+      field->type != other->type) {
+    RAVE_WARNING0("Cannot concatenate two fields that have different x-sizes and/or different data types");
+    return NULL;
+  }
+  newfield = RAVE_OBJECT_NEW(&RaveData2D_TYPE);
+  if (newfield == NULL) {
+    goto done;
+  }
+  xsize = field->xsize;
+  ysize = field->ysize + other->ysize;
+
+  if (!RaveData2D_createData(newfield, xsize, ysize, field->type)) {
+    RAVE_ERROR0("Failed to create field data");
+    goto done;
+  }
+
+  typesize = get_ravetype_size(field->type);
+
+  unsigned char* nfd = newfield->data;
+  unsigned char* fd = field->data;
+  unsigned char* od = other->data;
+  memcpy(&nfd[0], &fd[0], typesize * field->xsize * field->ysize);
+  memcpy(&nfd[typesize * field->xsize * field->ysize], &od[0], typesize * other->xsize * other->ysize);
 
   result = RAVE_OBJECT_COPY(newfield);
 done:

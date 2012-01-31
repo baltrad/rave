@@ -139,13 +139,23 @@ int RaveData2D_hasData(RaveData2D_t* self);
 
 /**
  * Concatenates field with other horizontally and returns the new field.
- * The fields and others y-dimension must be the same as well as the data
+ * The field's and other's y-dimensions must be the same as well as the data
  * type.
  * @param[in] field - self
  * @param[in] other - the field to contatenate
  * @returns the concatenated field on success otherwise NULL
  */
 RaveData2D_t* RaveData2D_concatX(RaveData2D_t* field, RaveData2D_t* other);
+
+/**
+ * Concatenates field with other vertically and returns the new field.
+ * The field's and other's x-dimensions must be the same as well as the data
+ * type.
+ * @param[in] field - self
+ * @param[in] other - the field to contatenate
+ * @returns the concatenated field on success otherwise NULL
+ */
+RaveData2D_t* RaveData2D_concatY(RaveData2D_t* field, RaveData2D_t* other);
 
 /**
  * Utility function for creating a new rave data 2d object.

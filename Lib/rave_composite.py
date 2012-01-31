@@ -133,9 +133,9 @@ def generate(in_objects, **args):
   generator.date = obj.date # First guess: date of last input object
   generator.time = obj.time # A bit risky if nominal times of input data are different
   if "date" in args.keys() and args["date"] is not None:
-      generator.time = args["date"]
+      generator.time = args["time"]
   if "time" in args.keys() and args["time"] is not None:
-      generator.date = args["time"]
+      generator.date = args["date"]
 
   generator.gain = GAIN
   generator.offset = OFFSET
