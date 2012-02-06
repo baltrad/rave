@@ -48,6 +48,12 @@ struct _Composite_t {
   CompositeAlgorithm_t* algorithm; /**< the specific algorithm */
 };
 
+/** The resolution to use for scaling the distance from pixel to used radar */
+#define DISTANCE_TO_RADAR_RESOLUTION 2000.0
+
+/** The name of the task for specifying distance to radar */
+#define DISTANCE_TO_RADAR_HOW_TASK "se.smhi.composite.distance.radar"
+
 /*@{ Private functions */
 /**
  * Constructor.
@@ -229,6 +235,16 @@ static int CompositeInternal_addQualityFlags(Cartesian_t* image, RaveList_t* qua
       result = 0;
     }
 
+    if (result == 1 && strcmp(DISTANCE_TO_RADAR_HOW_TASK, howtaskvaluestr) == 0) {
+      RaveAttribute_t* gainattribute = RaveAttributeHelp_createDouble("what/gain", DISTANCE_TO_RADAR_RESOLUTION);
+      if (gainattribute == NULL ||
+          !RaveField_addAttribute(field, gainattribute)) {
+        RAVE_ERROR0("Failed to create gain for distance resolution");
+        result = 0;
+      }
+      RAVE_OBJECT_RELEASE(gainattribute);
+    }
+
     RAVE_OBJECT_RELEASE(field);
     RAVE_OBJECT_RELEASE(howtaskattribute);
   }
@@ -242,6 +258,7 @@ static int CompositeInternal_addQualityFlags(Cartesian_t* image, RaveList_t* qua
  * @param[in] composite - self
  * @param[in] x - x coordinate
  * @param[in] y - y coordinate
+ * @param[in] radardist - the distance to the radar in meters
  * @param[in] radarindex - the object to use in the composite
  * @param[in] navinfo - the navigational information
  */
@@ -249,6 +266,7 @@ static void CompositeInternal_fillQualityInformation(
   Composite_t* composite,
   int x, int y,
   Cartesian_t* cartesian,
+  double radardist,
   int radarindex,
   PolarNavigationInfo* navinfo)
 {
@@ -274,7 +292,9 @@ static void CompositeInternal_fillQualityInformation(
     if (name != NULL) {
       RaveCoreObject* obj = RaveObjectList_get(composite->list, radarindex);
       if (obj != NULL) {
-        if (composite->algorithm != NULL && CompositeAlgorithm_supportsFillQualityInformation(composite->algorithm, name)) {
+        if (strcmp(DISTANCE_TO_RADAR_HOW_TASK, name) == 0) {
+          RaveField_setValue(field, x, y, radardist/DISTANCE_TO_RADAR_RESOLUTION);
+        } else if (composite->algorithm != NULL && CompositeAlgorithm_supportsFillQualityInformation(composite->algorithm, name)) {
           // If the algorithm indicates that it is able to support the provided how/task field, then do so
           if (!CompositeAlgorithm_fillQualityInformation(composite->algorithm, obj, name, field, x, y, navinfo)) {
             RaveField_setValue(field, x, y, 0.0);
@@ -540,6 +560,7 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t*
       double herex = Cartesian_getLocationX(result, x);
       double olon = 0.0, olat = 0.0;
       double mindist = 1e10;
+      double radardist = 0.0;
       double v = 0.0L;
       RaveValueType vtype = RaveValueType_NODATA;
       int radarindex = -1;
@@ -571,6 +592,7 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t*
           } else {
             double dist = 0.0;
             double maxdist = 0.0;
+            double rdist = 0.0;
             if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
               dist = PolarVolume_getDistance((PolarVolume_t*)obj, olon, olat);
               maxdist = PolarVolume_getMaxDistance((PolarVolume_t*)obj);
@@ -582,6 +604,7 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t*
               RaveValueType otype = RaveValueType_NODATA;
               double ovalue = 0.0;
               CompositeInternal_nearestValue(composite, obj, olon, olat, &otype, &ovalue, &navinfo);
+              rdist = dist; /* Remember distance to radar */
 
               if (composite->algorithm != NULL && CompositeAlgorithm_supportsProcess(composite->algorithm)) {
                 if (CompositeAlgorithm_process(composite->algorithm, obj, olon, olat, dist, otype, ovalue, &navinfo)) {
@@ -602,6 +625,7 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t*
                     vtype = otype;
                     v = ovalue;
                     mindist = dist;
+                    radardist = rdist;
                     radarindex = i;
                     rememberednav = navinfo;
                   }
@@ -623,7 +647,7 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t*
       }
 
       if ((vtype == RaveValueType_DATA || vtype == RaveValueType_UNDETECT) && radarindex >= 0 && nqualityflags > 0) {
-        CompositeInternal_fillQualityInformation(composite, x, y, result, radarindex, &rememberednav);
+        CompositeInternal_fillQualityInformation(composite, x, y, result, radardist, radarindex, &rememberednav);
       }
     }
   }
