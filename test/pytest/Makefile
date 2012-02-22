@@ -36,6 +36,7 @@ distclean:
 	@\rm -fr ctop_polarvolume.h5
 	@\rm -fr smurf.h5
 	@\rm -fr swecomposite.h5
+	@\rm -fr swemulticomposite.h5
 	@\rm -fr swecomposite_gmap.h5
 	@\rm -fr swecomposite_ppi.h5
 	@\rm -fr swecomposite_ppi_fromscan.h5
@@ -43,5 +44,6 @@ distclean:
 	@\rm -fr swecomposite_gmap_overlapping.h5
 	@\rm -fr rixeecomposite.h5
 	@\rm -fr swecomposite_ppi_distancequality.h5
+	@\rm -fr transform_filledGap.h5
 	@\rm -fr build
 	@\rm -f *~

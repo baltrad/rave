@@ -67,12 +67,12 @@ class PyCartesianVolumeTest(unittest.TestCase):
     a.yscale = 100.0
     a.extent = (1.0, 2.0, 3.0, 4.0)
     a.projection = _projection.new("x", "y", "+proj=latlong +ellps=WGS84 +datum=WGS84")
-    image.init(a, _rave.RaveDataType_SHORT)
+    
+    image.init(a)
     image.date = "20100101"
     image.time = "100000"
     image.source = "PLC:1234"
     image.product = _rave.Rave_ProductType_CAPPI
-    image.quantity = "DBZH"
     
     self.assertEquals(0, obj.xsize)
     self.assertEquals(0, obj.ysize)
@@ -93,9 +93,7 @@ class PyCartesianVolumeTest(unittest.TestCase):
     obj.source = "PLC:1234"
     
     image = _cartesian.new()
-    image.setData(numpy.zeros((10,10), numpy.uint8))
     image.product = _rave.Rave_ProductType_CAPPI
-    image.quantity = "DBZH"
     
     obj.addImage(image)
     

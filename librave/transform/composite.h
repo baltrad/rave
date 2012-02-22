@@ -134,47 +134,39 @@ void Composite_setElevationAngle(Composite_t* composite, double angle);
 double Composite_getElevationAngle(Composite_t* composite);
 
 /**
- * The quantity to use for this composite
+ * Adds a parameter to be processed.
  * @param[in] composite - self
- * @param[in] quantity - the quantity, defaults to DBZH
- * @returns 1 on success otherwise 0
+ * @param[in] quantity - the parameter quantity
+ * @param[in] gain - the gain to be used for the parameter
+ * @param[in] offset - the offset to be used for the parameter
+ * @return 1 on success
  */
-int Composite_setQuantity(Composite_t* composite, const char* quantity);
+int Composite_addParameter(Composite_t* composite, const char* quantity, double gain, double offset);
 
 /**
- * Returns the quantity that is of interest when generating the composite
+ * Returns if this composite generator is going to process specified parameter
  * @param[in] composite - self
- * @returns the quantity
+ * @param[in] quantity - the parameter quantity
+ * @return 1 if yes otherwise 0
  */
-const char* Composite_getQuantity(Composite_t* composite);
+int Composite_hasParameter(Composite_t* composite, const char* quantity);
 
 /**
- * Sets the offset to be used in the composite
+ * Returns the number of parameters to be processed
  * @param[in] composite - self
- * @param[in] offset - the offset
+ * @return the number of parameters
  */
-void Composite_setOffset(Composite_t* composite, double offset);
+int Composite_getParameterCount(Composite_t* composite);
 
 /**
- * Returns the offset that should be used in the composite
+ * Returns the parameter at specified index
  * @param[in] composite - self
- * @returns the offset
+ * @param[in] index - the index
+ * @param[out] gain - the gain to be used for the parameter (MAY BE NULL)
+ * @param[out] offset - the offset to be used for the parameter (MAY BE NULL)
+ * @return the parameter name
  */
-double Composite_getOffset(Composite_t* composite);
-
-/**
- * Sets the gain to be used in the composite
- * @param[in] composite - self
- * @param[in] gain - the gain
- */
-void Composite_setGain(Composite_t* composite, double gain);
-
-/**
- * Returns the gain that should be used in the composite
- * @param[in] composite - self
- * @returns the gain
- */
-double Composite_getGain(Composite_t* composite);
+const char* Composite_getParameter(Composite_t* composite, int index, double* gain, double* offset);
 
 /**
  * Sets the nominal time.

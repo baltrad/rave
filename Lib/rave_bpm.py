@@ -5,7 +5,7 @@
 # Copyright: SMHI, 2010
 
 import _projection, _area
-import _rave, _raveio, _polarvolume, _polarscan, _cartesian, _pycomposite
+import _rave, _raveio, _polarvolume, _polarscan, _cartesian, _cartesianparam, _pycomposite
 import _pyhl
 from numpy import *
 from pylab import *
@@ -78,11 +78,16 @@ def read_topo():
 		src.objectType = _rave.Rave_ObjectType_IMAGE
 		src.product = _rave.Rave_ProductType_COMP
 		src.source = "GTOPO30 topography"
-		src.quantity = "TOPO"
-		src.gain = 1.0
-		src.offset = 0.0
-		src.nodata = -9999.0
-		src.setData(data)
+		
+		param = _cartesianparam.new()
+		param.quantity = "TOPO"
+		param.gain = 1.0
+		param.offset = 0.0
+		param.nodata = -9999.0
+		param.setData(data)
+		
+		src.addParameter(param)
+		src.defaultParameter="TOPO"
 		
 		ios = _raveio.new()
 		ios.object = src
@@ -92,10 +97,10 @@ def read_topo():
 def concatenate_topo():
 	ios1 = _raveio.open("./W020N90.h5")
 	src1 = ios1.object
-	data1 = src1.getData()
+	data1 = src1.getParameter("TOPO").getData()
 	ios2 = _raveio.open("./E020N90.h5")
 	src2 = ios2.object
-	data2 = src2.getData()
+	data2 = src2.getParameter("TOPO").getData()
 	#data2 = numpy.zeros((6000,4800), numpy.int16)
 	a1 = array([[1,2,3],[4,5,6],[7,8,9]],numpy.int16)
 	data = concatenate((a1, a1), 1)
@@ -123,11 +128,14 @@ def concatenate_topo():
 	src.objectType = src1.objectType
 	src.product = src1.product
 	src.source = src1.source
-	src.quantity = src1.quantity
-	src.gain = src1.gain
-	src.offset = src1.offset
-	src.nodata = src1.nodata
-	src.setData(data)
+	
+	param1 = src1.getParameter("TOPO")
+	param = _cartesianparam.new()
+	param.quantity = param1.quantity
+	param.gain = param1.gain
+	param.offset = param1.offset
+	param.nodata = param1.nodata
+	param.setData(data)
 	
 	ios = _raveio.new()
 	ios.object = src

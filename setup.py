@@ -400,6 +400,15 @@ MODULES.append(
 
 MODULES.append(
     Extension(
+        "_cartesianparam", ["modules/pycartesianparam.c"],
+        include_dirs=INCLUDE_DIRS,
+        library_dirs=LIBRARY_DIRS,
+        libraries=LIBRARIES
+        )
+    )
+
+MODULES.append(
+    Extension(
         "_raveio", ["modules/pyraveio.c"],
         include_dirs=INCLUDE_DIRS,
         library_dirs=LIBRARY_DIRS,

@@ -35,6 +35,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "raveobject_list.h"
 #include "rave_attribute.h"
 #include "rave_field.h"
+#include "cartesianparam.h"
 
 /**
  * Defines a Cartesian product
@@ -153,18 +154,32 @@ const char* Cartesian_getSource(Cartesian_t* cartesian);
 
 /**
  * Sets the object type this cartesian product should represent.
- * @param[in] cartesian - self
+ * @param[in] self - self
  * @param[in] type - the object type
  * @returns 1 if the specified object type is supported, otherwise 0
  */
-int Cartesian_setObjectType(Cartesian_t* cartesian, Rave_ObjectType type);
+int Cartesian_setObjectType(Cartesian_t* self, Rave_ObjectType type);
 
 /**
  * Returns the object type this cartesian product represents.
- * @param[in] cartesian - self
+ * @param[in] self - self
  * @returns the object type
  */
-Rave_ObjectType Cartesian_getObjectType(Cartesian_t* cartesian);
+Rave_ObjectType Cartesian_getObjectType(Cartesian_t* self);
+
+/**
+ * The xsize to use for the parameters
+ * @param[in] self - self
+ * @param[in] xsize - the xsize to use
+ */
+void Cartesian_setXSize(Cartesian_t* self, long xsize);
+
+/**
+ * The ysize to use for the parameters
+ * @param[in] self - self
+ * @param[in] ysize - the ysize to use
+ */
+void Cartesian_setYSize(Cartesian_t* self, long ysize);
 
 /**
  * Returns the xsize
@@ -244,6 +259,20 @@ int Cartesian_setProduct(Cartesian_t* cartesian, Rave_ProductType type);
 Rave_ProductType Cartesian_getProduct(Cartesian_t* cartesian);
 
 /**
+ * Returns the nodata value
+ * @param[in] self - self
+ * @return the nodata value
+ */
+double Cartesian_getNodata(Cartesian_t* self);
+
+/**
+ * Returns the undetect value
+ * @param[in] self - self
+ * @return the undetect value
+ */
+double Cartesian_getUndetect(Cartesian_t* self);
+
+/**
  * Returns the location within the area as identified by a x-position.
  * Evaluated as: upperLeft.x + xscale * x
  * @param[in] cartesian - the cartesian product
@@ -280,90 +309,19 @@ long Cartesian_getIndexX(Cartesian_t* cartesian, double x);
 long Cartesian_getIndexY(Cartesian_t* cartesian, double y);
 
 /**
- * Sets the data type of the data that is worked with
- * @param[in] cartesian - the cartesian product
- * @param[in] type - the data type
- * @return 0 if type is not known, otherwise the type was set
- */
-int Cartesian_setDataType(Cartesian_t* cartesian, RaveDataType type);
-
-/**
- * Returns the data type
- * @param[in] cartesian - the cartesian product
- * @return the data type
- */
-RaveDataType Cartesian_getDataType(Cartesian_t* cartesian);
-
-/**
- * Sets the quantity
- * @param[in] cartesian - the cartesian product
- * @param[in] quantity - the quantity, e.g. DBZH
+ * Sets the default parameter
+ * @param[in] self - self
+ * @param[in] name - the quantity, e.g. DBZH
  * @returns 1 on success, otherwise 0
  */
-int Cartesian_setQuantity(Cartesian_t* cartesian, const char* quantity);
+int Cartesian_setDefaultParameter(Cartesian_t* self, const char* name);
 
 /**
- * Returns the quantity
- * @param[in] cartesian - the cartesian product
- * @return the quantity
+ * Returns the default parameter
+ * @param[in] self - self
+ * @return the default parameter
  */
-const char* Cartesian_getQuantity(Cartesian_t* cartesian);
-
-/**
- * Sets the gain.
- * @param[in] cartesian - the cartesian product
- * @param[in] gain - the gain (MAY NOT BE 0.0)
- */
-void Cartesian_setGain(Cartesian_t* cartesian, double gain);
-
-/**
- * Returns the gain
- * @param[in] cartesian - the cartesian product
- * @return the gain
- */
-double Cartesian_getGain(Cartesian_t* cartesian);
-
-/**
- * Sets the offset
- * @param[in] cartesian - the cartesian product
- * @param[in] offset - the offset
- */
-void Cartesian_setOffset(Cartesian_t* cartesian, double offset);
-
-/**
- * Returns the offset
- * @param[in] cartesian - the cartesian product
- * @return the offset
- */
-double Cartesian_getOffset(Cartesian_t* cartesian);
-
-/**
- * Sets the nodata
- * @param[in] cartesian - the cartesian product
- * @param[in] nodata - the nodata
- */
-void Cartesian_setNodata(Cartesian_t* cartesian, double nodata);
-
-/**
- * Returns the nodata
- * @param[in] cartesian - the cartesian product
- * @return the nodata
- */
-double Cartesian_getNodata(Cartesian_t* cartesian);
-
-/**
- * Sets the undetect
- * @param[in] cartesian - the cartesian product
- * @param[in] undetect - the undetect
- */
-void Cartesian_setUndetect(Cartesian_t* cartesian, double undetect);
-
-/**
- * Returns the undetect
- * @param[in] cartesian - the cartesian product
- * @return the undetect
- */
-double Cartesian_getUndetect(Cartesian_t* cartesian);
+const char* Cartesian_getDefaultParameter(Cartesian_t* self);
 
 /**
  * Sets the projection that defines this cartesian product.
@@ -386,23 +344,6 @@ Projection_t* Cartesian_getProjection(Cartesian_t* cartesian);
  * @return the projection string or NULL if none defined
  */
 const char* Cartesian_getProjectionString(Cartesian_t* cartesian);
-
-/**
- * Sets the data
- * @param[in] cartesian  - the cartesian product
- * @param[in] xsize - x-size
- * @param[in] ysize - y-size
- * @param[in] data  - the data
- * @param[in] type  - the data type
- */
-int Cartesian_setData(Cartesian_t* cartesian, long xsize, long ysize, void* data, RaveDataType type);
-
-/**
- * Returns a pointer to the internal data storage.
- * @param[in] cartesian - the cartesian product
- * @return the internal data pointer (NOTE! Do not release this pointer)
- */
-void* Cartesian_getData(Cartesian_t* cartesian);
 
 /**
  * Sets the value at the specified coordinates.
@@ -441,13 +382,13 @@ RaveValueType Cartesian_getValue(Cartesian_t* cartesian, long x, long y, double*
 RaveValueType Cartesian_getConvertedValue(Cartesian_t* cartesian, long x, long y, double* v);
 
 /**
- * Initializes a cartesian product with values from the area.
+ * Initializes this cartesian product with basic information. No parameter is created but
+ * the dimensions and projection information is setup.
  * @param[in] cartesian - self
  * @param[in] area - the area
- * @param[in] datatype - the type of data
  * @returns 1 on success, otherwise 0
  */
-int Cartesian_init(Cartesian_t* cartesian, Area_t* area, RaveDataType datatype);
+void Cartesian_init(Cartesian_t* cartesian, Area_t* area);
 
 /**
  * Returns the mean value over a NxN square around the specified x and y position.
@@ -549,4 +490,61 @@ void Cartesian_removeQualityField(Cartesian_t* cartesian, int index);
  */
 RaveObjectList_t* Cartesian_getQualityFields(Cartesian_t* cartesian);
 
+/**
+ * Adds a parameter to the cartesian product. The quantity is used as unique
+ * identifier which means that any existing one will be removed.
+ * @param[in] self - self
+ * @param[in] param - the parameter
+ * @return 1 on success
+ */
+int Cartesian_addParameter(Cartesian_t* self, CartesianParam_t* param);
+
+/**
+ * Returns the parameter with the specified quantity.
+ * @param[in] self - self
+ * @param[in] name - the name of the parameter
+ * @return the parameter or NULL
+ */
+CartesianParam_t* Cartesian_getParameter(Cartesian_t* self, const char* name);
+
+/**
+ * Returns if the product contains the specified parameter or not.
+ * @param[in] self - self
+ * @param[in] name - the quantity name
+ * @returns 1 if the parameter exists, otherwise 0
+ */
+int Cartesian_hasParameter(Cartesian_t* self, const char* name);
+
+/**
+ * Removes the parameter with the specified quantity
+ * @param[in] self - self
+ * @param[in] name - the quantity name
+ */
+void Cartesian_removeParameter(Cartesian_t* self, const char* name);
+
+/**
+ * Return the number of parameters
+ * @param[in] self - self
+ * @return the number of parameters
+ */
+int Cartesian_getParameterCount(Cartesian_t* self);
+
+/**
+ * Returns a list of parameter names
+ * @param[in] self - self
+ * @returns a list of parameter names
+ */
+RaveList_t* Cartesian_getParameterNames(Cartesian_t* self);
+
+/**
+ * Creates a parameter. The created parameter will be added to the internal
+ * list of parameters. So if you are just going to create one, wrap the call in
+ * a RAVE_OBJECT_RELEASE. It is essential that _init has been called in order
+ * for this to have any effect.
+ * @param[in] self - self
+ * @param[in] quantity - the quantity of the created parameter
+ * @param[in] type - the data type
+ * @return the created parameter
+ */
+CartesianParam_t* Cartesian_createParameter(Cartesian_t* self, const char* quantity, RaveDataType type);
 #endif

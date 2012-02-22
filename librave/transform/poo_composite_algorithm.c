@@ -138,7 +138,7 @@ static RaveObjectHashTable_t* PooCompositeAlgorithmInternal_getPooScanFields(Com
   for (i = 0; status == 1 && i < nrobjs; i++) {
     RaveCoreObject* obj = Composite_get(composite, i);
     if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarScan_TYPE)) {
-      RaveField_t* field = PolarScan_findQualityFieldByHowTask((PolarScan_t*)obj, "se.smhi.detector.poo", Composite_getQuantity(composite));
+      RaveField_t* field = PolarScan_findAnyQualityFieldByHowTask((PolarScan_t*)obj, "se.smhi.detector.poo");
       if (field != NULL) {
         PolarScan_t* scan = PolarScan_createFromScanAndField((PolarScan_t*)obj, field);
         if (scan == NULL || !RaveObjectHashTable_put(scans, PolarScan_getSource(scan), (RaveCoreObject*)scan)) {
@@ -149,9 +149,9 @@ static RaveObjectHashTable_t* PooCompositeAlgorithmInternal_getPooScanFields(Com
       }
       RAVE_OBJECT_RELEASE(field);
     } else if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
-      PolarScan_t* pooscan = PolarVolume_findScanWithQualityFieldByHowTask((PolarVolume_t*)obj, "se.smhi.detector.poo", Composite_getQuantity(composite));
+      PolarScan_t* pooscan = PolarVolume_findAnyScanWithQualityFieldByHowTask((PolarVolume_t*)obj, "se.smhi.detector.poo");
       if (pooscan != NULL) {
-        RaveField_t* field = PolarScan_findQualityFieldByHowTask(pooscan, "se.smhi.detector.poo", Composite_getQuantity(composite));
+        RaveField_t* field = PolarScan_findAnyQualityFieldByHowTask(pooscan, "se.smhi.detector.poo");
         if (field != NULL) {
           PolarScan_t* scan = PolarScan_createFromScanAndField(pooscan, field);
           if (scan == NULL || !RaveObjectHashTable_put(scans, PolarScan_getSource(scan), (RaveCoreObject*)scan)) {
@@ -194,7 +194,7 @@ int PooCompositeAlgorithm_supportsProcess(CompositeAlgorithm_t* self)
 }
 
 int PooCompositeAlgorithm_process(CompositeAlgorithm_t* self, \
-  RaveCoreObject* obj, double olon, double olat, double dist, RaveValueType otype, double ovalue, \
+  RaveCoreObject* obj, const char* quantity, double olon, double olat, double dist, RaveValueType* otype, double* ovalue, \
   PolarNavigationInfo* navinfo)
 {
   return 0;
@@ -228,7 +228,7 @@ int PooCompositeAlgorithm_supportsFillQualityInformation(CompositeAlgorithm_t* s
   return 0;
 }
 
-int PooCompositeAlgorithm_fillQualityInformation(CompositeAlgorithm_t* self, RaveCoreObject* obj, const char* howtask, RaveField_t* field,long x, long y, PolarNavigationInfo* navinfo)
+int PooCompositeAlgorithm_fillQualityInformation(CompositeAlgorithm_t* self, RaveCoreObject* obj, const char* howtask, const char* quantity, RaveField_t* field,long x, long y, PolarNavigationInfo* navinfo)
 {
   int result = 0;
   PolarScan_t* pooscan = NULL;
@@ -253,7 +253,7 @@ int PooCompositeAlgorithm_fillQualityInformation(CompositeAlgorithm_t* self, Rav
     }
     if (pooscan != NULL) {
       double v = 0.0;
-      RaveValueType t = PolarScan_getNearest(pooscan, navinfo->lon, navinfo->lat, &v);
+      RaveValueType t = PolarScan_getNearestParameterValue(pooscan, quantity, navinfo->lon, navinfo->lat, &v);
       if (t == RaveValueType_DATA) {
         RaveField_setValue(field, x, y, v);
       } else {

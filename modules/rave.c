@@ -33,6 +33,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "pypolarscan.h"
 #include "pypolarvolume.h"
 #include "pycartesian.h"
+#include "pycartesianparam.h"
 #include "pytransform.h"
 #include "pyprojection.h"
 #include "pyraveio.h"
@@ -101,6 +102,18 @@ static PyObject* _polarvolume_new(PyObject* self, PyObject* args)
 static PyObject* _cartesian_new(PyObject* self, PyObject* args)
 {
   PyCartesian* result = PyCartesian_New(NULL);
+  return (PyObject*)result;
+}
+
+/**
+ * Creates a new instance of the cartesian parameter.
+ * @param[in] self this instance.
+ * @param[in] args arguments for creation (NOT USED).
+ * @return the object on success, otherwise NULL
+ */
+static PyObject* _cartesianparam_new(PyObject* self, PyObject* args)
+{
+  PyCartesianParam* result = PyCartesianParam_New(NULL);
   return (PyObject*)result;
 }
 /*@} End of Cartesian products */
@@ -208,6 +221,7 @@ static PyMethodDef functions[] = {
   {"volume", (PyCFunction)_polarvolume_new, 1},
   {"scan", (PyCFunction)_polarscan_new, 1},
   {"cartesian", (PyCFunction)_cartesian_new, 1},
+  {"cartesianparam", (PyCFunction)_cartesianparam_new, 1},
   {"transform", (PyCFunction)_transform_new, 1},
   {"projection", (PyCFunction)_projection_new, 1},
   {"io", (PyCFunction)_raveio_new, 1},
@@ -324,6 +338,7 @@ void init_rave(void)
   import_pypolarscan();
   import_pypolarvolume();
   import_pycartesian();
+  import_pycartesianparam();
   import_pyraveio();
   import_pytransform();
   PYRAVE_DEBUG_INITIALIZE;

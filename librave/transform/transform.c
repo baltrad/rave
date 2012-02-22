@@ -210,6 +210,9 @@ PolarScan_t* Transform_ctoscan(Transform_t* transform, Cartesian_t* cartesian, R
   PolarScan_t* result = NULL;
   PolarScan_t* scan = NULL;
   PolarScanParam_t* parameter = NULL;
+  CartesianParam_t* cparam = NULL;
+  RaveDataType datatype = RaveDataType_UCHAR;
+
   double nodata = 0.0;
   double undetect = 0.0;
   long ray = 0, bin = 0;
@@ -231,6 +234,10 @@ PolarScan_t* Transform_ctoscan(Transform_t* transform, Cartesian_t* cartesian, R
   parameter = RAVE_OBJECT_NEW(&PolarScanParam_TYPE);
   if (parameter == NULL) {
     goto error;
+  }
+  cparam = Cartesian_getParameter(cartesian, quantity);
+  if (cparam != NULL) {
+    datatype = CartesianParam_getDataType(cparam);
   }
 
   if (!PolarScanParam_setQuantity(parameter, quantity)) {
@@ -257,7 +264,7 @@ PolarScan_t* Transform_ctoscan(Transform_t* transform, Cartesian_t* cartesian, R
   if (!PolarScanParam_createData(parameter,
                                  RadarDefinition_getNbins(def),
                                  RadarDefinition_getNrays(def),
-                                 Cartesian_getDataType(cartesian))) {
+                                 datatype)) {
     goto error;
   }
 
@@ -292,6 +299,7 @@ error:
   RAVE_OBJECT_RELEASE(sourcepj);
   RAVE_OBJECT_RELEASE(targetpj);
   RAVE_OBJECT_RELEASE(parameter);
+  RAVE_OBJECT_RELEASE(cparam);
   RAVE_OBJECT_RELEASE(scan);
   return result;
 }

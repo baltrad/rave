@@ -92,10 +92,17 @@ def generate(in_objects, **args):
 
     generator.add(obj)
 
-  generator.quantity = "DBZH"
-
+  quantity = "DBZH"
+  gain = GAIN
+  offset = OFFSET
   if "quantity" in args.keys():
-    generator.quantity = args["quantity"].upper()
+    quantity = args["quantity"].upper()
+  if "gain" in args.keys():
+    gain = args["gain"]
+  if "offset" in args.keys():
+    offset = args["offset"]
+
+  generator.addParameter(quantity, gain, offset)
   
   product = "pcappi"
   if "product" in args.keys():
@@ -136,13 +143,6 @@ def generate(in_objects, **args):
       generator.time = args["time"]
   if "time" in args.keys() and args["time"] is not None:
       generator.date = args["date"]
-
-  generator.gain = GAIN
-  generator.offset = OFFSET
-  if "gain" in args.keys():
-      generator.gain = args["gain"]
-  if "offset" in args.keys():
-      generator.offset = args["offset"]
 
   result = generator.nearest(pyarea, qfields)  # Might want to rename this method...
 

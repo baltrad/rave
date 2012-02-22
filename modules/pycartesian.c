@@ -35,10 +35,10 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #define PYCARTESIAN_MODULE        /**< to get correct part of pycartesian.h */
 #include "pycartesian.h"
 
-#include "arrayobject.h"
 #include "pyprojection.h"
 #include "pyarea.h"
 #include "pyravefield.h"
+#include "pycartesianparam.h"
 #include <arrayobject.h>
 #include "rave_alloc.h"
 #include "raveutil.h"
@@ -157,9 +157,8 @@ static PyObject* _pycartesian_new(PyObject* self, PyObject* args)
 static PyObject* _pycartesian_init(PyCartesian* self, PyObject* args)
 {
   PyObject* inarea = NULL;
-  RaveDataType type = RaveDataType_UNDEFINED;
 
-  if (!PyArg_ParseTuple(args, "Oi", &inarea, &type)) {
+  if (!PyArg_ParseTuple(args, "O", &inarea)) {
     return NULL;
   }
 
@@ -167,95 +166,10 @@ static PyObject* _pycartesian_init(PyCartesian* self, PyObject* args)
     raiseException_returnNULL(PyExc_TypeError, "First argument must be a PyAreaCore instance");
   }
 
-  if (!Cartesian_init(self->cartesian, ((PyArea*)inarea)->area, type)) {
-    raiseException_returnNULL(PyExc_ValueError, "Failed to initialize cartesian product");
-  }
+  Cartesian_init(self->cartesian, ((PyArea*)inarea)->area);
 
   Py_RETURN_NONE;
 }
-
-/**
- * Sets the data array that should be used for this product.
- * @param[in] self this instance.
- * @param[in] args - the array
- * @return Py_None on success, otherwise NULL
- */
-static PyObject* _pycartesian_setData(PyCartesian* self, PyObject* args)
-{
-  PyObject* inarray = NULL;
-  PyArrayObject* arraydata = NULL;
-  RaveDataType datatype = RaveDataType_UNDEFINED;
-  long xsize = 0;
-  long ysize = 0;
-  unsigned char* data = NULL;
-
-  if (!PyArg_ParseTuple(args, "O", &inarray)) {
-    return NULL;
-  }
-
-  if (!PyArray_Check(inarray)) {
-    raiseException_returnNULL(PyExc_TypeError, "Data must be of arrayobject type")
-  }
-
-  arraydata = (PyArrayObject*)inarray;
-
-  if (PyArray_NDIM(arraydata) != 2) {
-    raiseException_returnNULL(PyExc_ValueError, "A cartesian product must be of rank 2");
-  }
-
-  datatype = translate_pyarraytype_to_ravetype(PyArray_TYPE(arraydata));
-
-  if (PyArray_ITEMSIZE(arraydata) != get_ravetype_size(datatype)) {
-    raiseException_returnNULL(PyExc_TypeError, "numpy and rave does not have same data sizes");
-  }
-
-  xsize  = PyArray_DIM(arraydata, 1);
-  ysize  = PyArray_DIM(arraydata, 0);
-  data   = PyArray_DATA(arraydata);
-
-  if (!Cartesian_setData(self->cartesian, xsize, ysize, data, datatype)) {
-    raiseException_returnNULL(PyExc_MemoryError, "Could not allocate memory");
-  }
-
-  Py_RETURN_NONE;
-}
-
-static PyObject* _pycartesian_getData(PyCartesian* self, PyObject* args)
-{
-  long xsize = 0, ysize = 0;
-  RaveDataType type = RaveDataType_UNDEFINED;
-  PyObject* result = NULL;
-  npy_intp dims[2] = {0,0};
-  int arrtype = 0;
-  void* data = NULL;
-
-  xsize = Cartesian_getXSize(self->cartesian);
-  ysize = Cartesian_getYSize(self->cartesian);
-  type = Cartesian_getDataType(self->cartesian);
-  data = Cartesian_getData(self->cartesian);
-
-  dims[1] = (npy_intp)xsize;
-  dims[0] = (npy_intp)ysize;
-  arrtype = translate_ravetype_to_pyarraytype(type);
-
-  if (data == NULL) {
-    raiseException_returnNULL(PyExc_IOError, "cartesian product does not have any data");
-  }
-
-  if (arrtype == PyArray_NOTYPE) {
-    raiseException_returnNULL(PyExc_IOError, "Could not translate data type");
-  }
-  result = PyArray_SimpleNew(2, dims, arrtype);
-  if (result == NULL) {
-    raiseException_returnNULL(PyExc_MemoryError, "Could not create resulting array");
-  }
-  if (result != NULL) {
-    int nbytes = xsize*ysize*PyArray_ITEMSIZE(result);
-    memcpy(((PyArrayObject*)result)->data, (unsigned char*)Cartesian_getData(self->cartesian), nbytes);
-  }
-  return result;
-}
-
 
 /**
  * Returns the x location defined by area extent and x scale and the provided x position.
@@ -691,6 +605,184 @@ static PyObject* _pycartesian_removeQualityField(PyCartesian* self, PyObject* ar
   Py_RETURN_NONE;
 }
 
+/**
+ * Adds a parameter to the cartesian product.
+ * @param[in] self - self
+ * @param[in] args - an CartesianParamCore object
+ * @return NONE on success otherwise NULL
+ */
+static PyObject* _pycartesian_addParameter(PyCartesian* self, PyObject* args)
+{
+  PyObject* inptr = NULL;
+  PyCartesianParam* param = NULL;
+
+  if (!PyArg_ParseTuple(args, "O", &inptr)) {
+    return NULL;
+  }
+
+  if (!PyCartesianParam_Check(inptr)) {
+    raiseException_returnNULL(PyExc_TypeError,"Added object must be of type CartesianParamCore");
+  }
+
+  param = (PyCartesianParam*)inptr;
+
+  if (!Cartesian_addParameter(self->cartesian, param->param)) {
+    raiseException_returnNULL(PyExc_AttributeError, "Failed to add parameter to cartesian");
+  }
+
+  Py_RETURN_NONE;
+}
+
+/**
+ * Creates a parameter that is added to the cartesian product. This
+ * call requires that the cartesian product has been initialized.
+ * @param[in] self - self
+ * @param[in] args - a string defining quantity and a type defining array data type
+ * @return None on success otherwise NULL
+ */
+static PyObject* _pycartesian_createParameter(PyCartesian* self, PyObject* args)
+{
+  char* quantity = NULL;
+  RaveDataType type = RaveDataType_UNDEFINED;
+  CartesianParam_t* param = NULL;
+  PyObject* result = NULL;
+
+  if (!PyArg_ParseTuple(args, "si", &quantity, &type)) {
+    return NULL;
+  }
+
+  param = Cartesian_createParameter(self->cartesian, quantity, type);
+  if (param != NULL) {
+    result = (PyObject*)PyCartesianParam_New(param);
+  } else {
+    raiseException_gotoTag(done, PyExc_AttributeError, "Could not create parameter, has cartesian been initialized?");
+  }
+
+done:
+  RAVE_OBJECT_RELEASE(param);
+  return result;
+}
+
+/**
+ * Returns the parameter with specified quantity.
+ * @param[in] self - self
+ * @param[in] args - the quantity as a string
+ * @return the associated CartesianParamCore instance if found otherwise None
+ */
+static PyObject* _pycartesian_getParameter(PyCartesian* self, PyObject* args)
+{
+  char* paramname = NULL;
+  CartesianParam_t* param = NULL;
+  PyObject* result = NULL;
+
+  if (!PyArg_ParseTuple(args, "s", &paramname)) {
+    return NULL;
+  }
+
+  if (!Cartesian_hasParameter(self->cartesian, paramname)) {
+    Py_RETURN_NONE;
+  }
+
+  if((param = Cartesian_getParameter(self->cartesian, paramname)) == NULL) {
+    raiseException_returnNULL(PyExc_IndexError, "Could not aquire parameter");
+  }
+
+  if (param != NULL) {
+    result = (PyObject*)PyCartesianParam_New(param);
+  }
+
+  RAVE_OBJECT_RELEASE(param);
+
+  return result;
+}
+
+/**
+ * Returns True or False depending on if the cartesian product has a
+ * parameter with specified quantity or not.
+ * @param[in] self - self
+ * @param[in] args - a string specifying the quantity
+ * @return True if product has the specified parameter
+ */
+static PyObject* _pycartesian_hasParameter(PyCartesian* self, PyObject* args)
+{
+  char* paramname = NULL;
+
+  if (!PyArg_ParseTuple(args, "s", &paramname)) {
+    return NULL;
+  }
+
+  return PyBool_FromLong(Cartesian_hasParameter(self->cartesian, paramname));
+}
+
+/**
+ * Removes the parameter with the specified name
+ * @param[in] self - self
+ * @param[in] args - a string defining the parameter name (quantity)
+ * @return None on success or NULL on failure
+ */
+static PyObject* _pycartesian_removeParameter(PyCartesian* self, PyObject* args)
+{
+  char* paramname = NULL;
+
+  if (!PyArg_ParseTuple(args, "s", &paramname)) {
+    return NULL;
+  }
+
+  Cartesian_removeParameter(self->cartesian, paramname);
+
+  Py_RETURN_NONE;
+}
+
+/**
+ * Returns the number of parameters that exists in this product
+ * @param[in] self - self
+ * @param[in] args - NA
+ * @return the number of parameters
+ */
+static PyObject* _pycartesian_getParameterCount(PyCartesian* self, PyObject* args)
+{
+  return PyInt_FromLong(Cartesian_getParameterCount(self->cartesian));
+}
+
+/**
+ * Returns the parameter names that exists in this product
+ * @param[in] self - self
+ * @param[in] args - NA
+ * @return a list of parameter names
+ */
+static PyObject* _pycartesian_getParameterNames(PyCartesian* self, PyObject* args)
+{
+  RaveList_t* paramnames = NULL;
+  PyObject* result = NULL;
+  int nparams = 0;
+  int i = 0;
+  paramnames = Cartesian_getParameterNames(self->cartesian);
+  if (paramnames == NULL) {
+    raiseException_returnNULL(PyExc_MemoryError, "Could not get names");
+  }
+  nparams = RaveList_size(paramnames);
+  result = PyList_New(0);
+  for (i = 0; result != NULL && i < nparams; i++) {
+    char* param = RaveList_get(paramnames, i);
+    if (param != NULL) {
+      PyObject* pyparamstr = PyString_FromString(param);
+      if (pyparamstr == NULL) {
+        goto fail;
+      }
+      if (PyList_Append(result, pyparamstr) != 0) {
+        Py_DECREF(pyparamstr);
+        goto fail;
+      }
+      Py_DECREF(pyparamstr);
+    }
+  }
+  RaveList_freeAndDestroy(&paramnames);
+  return result;
+fail:
+  RaveList_freeAndDestroy(&paramnames);
+  Py_XDECREF(result);
+  return NULL;
+}
 
 /**
  * All methods a cartesian product can have
@@ -706,21 +798,14 @@ static struct PyMethodDef _pycartesian_methods[] =
   {"ysize", NULL},
   {"xscale", NULL},
   {"yscale", NULL},
-  {"quantity", NULL},
-  {"gain", NULL},
-  {"offset", NULL},
-  {"nodata", NULL},
-  {"undetect", NULL},
-  {"datatype", NULL},
   {"areaextent", NULL},
   {"projection", NULL},
   {"starttime", NULL},
   {"startdate", NULL},
   {"endtime", NULL},
   {"enddate", NULL},
+  {"defaultParameter", NULL},
   {"init", (PyCFunction) _pycartesian_init, 1},
-  {"setData", (PyCFunction) _pycartesian_setData, 1},
-  {"getData", (PyCFunction) _pycartesian_getData, 1},
   {"getLocationX", (PyCFunction) _pycartesian_getLocationX, 1},
   {"getLocationY", (PyCFunction) _pycartesian_getLocationY, 1},
   {"getIndexX", (PyCFunction) _pycartesian_getIndexX, 1},
@@ -739,6 +824,13 @@ static struct PyMethodDef _pycartesian_methods[] =
   {"getNumberOfQualityFields", (PyCFunction) _pycartesian_getNumberOfQualityFields, 1},
   {"getQualityField", (PyCFunction) _pycartesian_getQualityField, 1},
   {"removeQualityField", (PyCFunction) _pycartesian_removeQualityField, 1},
+  {"addParameter", (PyCFunction)_pycartesian_addParameter, 1},
+  {"createParameter", (PyCFunction)_pycartesian_createParameter, 1},
+  {"getParameter", (PyCFunction)_pycartesian_getParameter, 1},
+  {"hasParameter", (PyCFunction)_pycartesian_hasParameter, 1},
+  {"removeParameter", (PyCFunction)_pycartesian_removeParameter, 1},
+  {"getParameterCount", (PyCFunction)_pycartesian_getParameterCount, 1},
+  {"getParameterNames", (PyCFunction)_pycartesian_getParameterNames, 1},
   {NULL, NULL } /* sentinel */
 };
 
@@ -780,22 +872,6 @@ static PyObject* _pycartesian_getattr(PyCartesian* self, char* name)
     return PyFloat_FromDouble(Cartesian_getXScale(self->cartesian));
   } else if (strcmp("yscale", name) == 0) {
     return PyFloat_FromDouble(Cartesian_getYScale(self->cartesian));
-  } else if (strcmp("quantity", name) == 0) {
-    if (Cartesian_getQuantity(self->cartesian) == NULL) {
-      Py_RETURN_NONE;
-    } else {
-      return PyString_FromString(Cartesian_getQuantity(self->cartesian));
-    }
-  } else if (strcmp("gain", name) == 0) {
-    return PyFloat_FromDouble(Cartesian_getGain(self->cartesian));
-  } else if (strcmp("offset", name) == 0) {
-    return PyFloat_FromDouble(Cartesian_getOffset(self->cartesian));
-  } else if (strcmp("nodata", name) == 0) {
-    return PyFloat_FromDouble(Cartesian_getNodata(self->cartesian));
-  } else if (strcmp("undetect", name) == 0) {
-    return PyFloat_FromDouble(Cartesian_getUndetect(self->cartesian));
-  } else if (strcmp("datatype", name) == 0) {
-    return PyInt_FromLong(Cartesian_getDataType(self->cartesian));
   } else if (strcmp("areaextent", name) == 0) {
     double llX = 0.0, llY = 0.0, urX = 0.0, urY = 0.0;
     Cartesian_getAreaExtent(self->cartesian, &llX, &llY, &urX, &urY);
@@ -830,6 +906,12 @@ static PyObject* _pycartesian_getattr(PyCartesian* self, char* name)
   } else if (strcmp("enddate", name) == 0) {
     if (Cartesian_getEndDate(self->cartesian) != NULL) {
       return PyString_FromString(Cartesian_getEndDate(self->cartesian));
+    } else {
+      Py_RETURN_NONE;
+    }
+  } else if (strcmp("defaultParameter", name) == 0) {
+    if (Cartesian_getDefaultParameter(self->cartesian) != NULL) {
+      return PyString_FromString(Cartesian_getDefaultParameter(self->cartesian));
     } else {
       Py_RETURN_NONE;
     }
@@ -911,40 +993,6 @@ static int _pycartesian_setattr(PyCartesian* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_TypeError,"yscale must be of type float");
     }
-  } else if (strcmp("quantity", name) == 0) {
-    if (PyString_Check(val)) {
-      if (!Cartesian_setQuantity(self->cartesian, PyString_AsString(val))) {
-        raiseException_gotoTag(done, PyExc_MemoryError, "Could not set quantity");
-      }
-    } else if (val == Py_None) {
-      Cartesian_setQuantity(self->cartesian, NULL);
-    } else {
-      raiseException_gotoTag(done, PyExc_TypeError,"quantity must be of type string");
-    }
-  } else if (strcmp("gain", name) == 0) {
-    if (PyFloat_Check(val)) {
-      Cartesian_setGain(self->cartesian, PyFloat_AsDouble(val));
-    } else {
-      raiseException_gotoTag(done, PyExc_TypeError, "gain must be of type float");
-    }
-  } else if (strcmp("offset", name) == 0) {
-    if (PyFloat_Check(val)) {
-      Cartesian_setOffset(self->cartesian, PyFloat_AsDouble(val));
-    } else {
-      raiseException_gotoTag(done, PyExc_TypeError, "offset must be of type float");
-    }
-  } else if (strcmp("nodata", name) == 0) {
-    if (PyFloat_Check(val)) {
-      Cartesian_setNodata(self->cartesian, PyFloat_AsDouble(val));
-    } else {
-      raiseException_gotoTag(done, PyExc_TypeError, "nodata must be of type float");
-    }
-  } else if (strcmp("undetect", name) == 0) {
-    if (PyFloat_Check(val)) {
-      Cartesian_setUndetect(self->cartesian, PyFloat_AsDouble(val));
-    } else {
-      raiseException_gotoTag(done, PyExc_TypeError, "undetect must be of type float");
-    }
   } else if (strcmp("areaextent", name) == 0) {
     double llX = 0.0, llY = 0.0, urX = 0.0, urY = 0.0;
     if (!PyArg_ParseTuple(val, "dddd", &llX, &llY, &urX, &urY)) {
@@ -996,6 +1044,14 @@ static int _pycartesian_setattr(PyCartesian* self, char* name, PyObject* val)
       Cartesian_setEndDate(self->cartesian, NULL);
     } else {
       raiseException_gotoTag(done, PyExc_ValueError,"enddate must be of type string");
+    }
+  } else if (strcmp("defaultParameter", name) == 0) {
+    if (PyString_Check(val)) {
+      if (!Cartesian_setDefaultParameter(self->cartesian, PyString_AsString(val))) {
+        raiseException_gotoTag(done, PyExc_ValueError, "could not set defaultParameter");
+      }
+    } else {
+      raiseException_gotoTag(done, PyExc_ValueError,"defaultParameter must be of type string");
     }
   } else {
     raiseException_gotoTag(done, PyExc_AttributeError, name);
@@ -1067,6 +1123,7 @@ init_cartesian(void)
   import_pyprojection();
   import_pyarea();
   import_pyravefield();
+  import_pycartesianparam();
   PYRAVE_DEBUG_INITIALIZE;
 }
 /*@} End of Module setup */

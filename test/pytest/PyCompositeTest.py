@@ -49,8 +49,12 @@ class PyCompositeTest(unittest.TestCase):
                      "fixtures/pvol_sevar_20090501T120000Z.h5",
                      "fixtures/pvol_sevil_20090501T120000Z.h5"]
 
-
-  #SWEDISH_VOLUMES = ["fixtures/pvol_sevar_20090501T120000Z.h5"]
+  QC_VOLUMES = [
+                "fixtures/searl_qcvol_20120131T0000Z.h5",
+                "fixtures/sease_qcvol_20120131T0000Z.h5",
+                "fixtures/sevil_qcvol_20120131T0000Z.h5",
+                "fixtures/seang_qcvol_20120131T0000Z.h5"
+                ]
   
   def setUp(self):
     pass
@@ -65,7 +69,7 @@ class PyCompositeTest(unittest.TestCase):
     self.assertNotEqual(-1, isscan)
 
   def test_attribute_visibility(self):
-    attrs = ['height', 'product', 'quantity', 'date', 'time', 'gain', 'offset']
+    attrs = ['height', 'product', 'date', 'time']
     obj = _pycomposite.new()
     alist = dir(obj)
     for a in attrs:
@@ -95,26 +99,53 @@ class PyCompositeTest(unittest.TestCase):
     except ValueError, e:
       pass
     self.assertEquals(_pycomposite.SelectionMethod_NEAREST, obj.selection_method)
-        
-
-  def test_quantity(self):
-    obj = _pycomposite.new()
-    self.assertEquals("DBZH", obj.quantity)
-    obj.quantity = "MMH"
-    self.assertEquals("MMH", obj.quantity)
   
-  def test_gain(self):
+  def test_addParameter(self):
     obj = _pycomposite.new()
-    self.assertAlmostEquals(1.0, obj.gain, 4)
-    obj.gain = 2.0
-    self.assertAlmostEquals(2.0, obj.gain, 4)
+    obj.addParameter("DBZH", 2.0, 3.0)
+    result = obj.getParameter(0)
+    self.assertEquals("DBZH", result[0])
+    self.assertAlmostEquals(2.0, result[1], 4)
+    self.assertAlmostEquals(3.0, result[2], 4)
 
-  def test_offset(self):
+  def test_addParameter_duplicate(self):
     obj = _pycomposite.new()
-    self.assertAlmostEquals(0.0, obj.offset, 4)
-    obj.offset = 2.0
-    self.assertAlmostEquals(2.0, obj.offset, 4)
-    
+    obj.addParameter("DBZH", 2.0, 3.0)
+    obj.addParameter("DBZH", 3.0, 4.0)
+    self.assertEquals(1, obj.getParameterCount())
+    result = obj.getParameter(0)
+    self.assertEquals("DBZH", result[0])
+    self.assertAlmostEquals(3.0, result[1], 4)
+    self.assertAlmostEquals(4.0, result[2], 4)
+
+  def test_addParameter_multiple(self):
+    obj = _pycomposite.new()
+    obj.addParameter("DBZH", 2.0, 3.0)
+    obj.addParameter("MMH", 3.0, 4.0)
+    self.assertEquals(2, obj.getParameterCount())
+    result = obj.getParameter(0)
+    self.assertEquals("DBZH", result[0])
+    self.assertAlmostEquals(2.0, result[1], 4)
+    self.assertAlmostEquals(3.0, result[2], 4)
+    result = obj.getParameter(1)
+    self.assertEquals("MMH", result[0])
+    self.assertAlmostEquals(3.0, result[1], 4)
+    self.assertAlmostEquals(4.0, result[2], 4)
+
+  def test_hasParameter(self):
+    obj = _pycomposite.new()
+    self.assertEquals(False, obj.hasParameter("DBZH"))
+    obj.addParameter("DBZH", 2.0, 3.0)
+    self.assertEquals(True, obj.hasParameter("DBZH"))
+
+  def test_getParameterCount(self):
+    obj = _pycomposite.new()
+    self.assertEquals(0, obj.getParameterCount())
+    obj.addParameter("DBZH", 2.0, 3.0)
+    self.assertEquals(1, obj.getParameterCount())
+    obj.addParameter("MMH", 1.0, 2.0)
+    self.assertEquals(2, obj.getParameterCount())
+
   def test_rix_nearest(self):
     generator = _pycomposite.new()
     
@@ -131,18 +162,21 @@ class PyCompositeTest(unittest.TestCase):
       rio = _raveio.open(fname)
       generator.add(rio.object)
     
-    generator.quantity = "DBZH"
+    generator.addParameter("DBZH", 1.0, 0.0)
+    
     generator.product = _rave.Rave_ProductType_PPI
     generator.elangle = 0.0
     generator.time = "120000"
     generator.date = "20090501"
     result = generator.nearest(a)
     
-    self.assertEquals("DBZH", result.quantity)
+    self.assertEquals("DBZH", result.getParameter("DBZH").quantity)
+    self.assertAlmostEquals(1.0, result.getParameter("DBZH").gain, 4)
+    self.assertAlmostEquals(0.0, result.getParameter("DBZH").offset, 4)
     self.assertEquals("120000", result.time)
     self.assertEquals("20090501", result.date)
-    #prodpar = result.getAttribute("what/prodpar")
-    #self.assertAlmostEquals(1000.0, prodpar, 4)
+    prodpar = result.getAttribute("what/prodpar")
+    self.assertAlmostEquals(0.0, prodpar, 4)
     self.assertEquals(_rave.Rave_ProductType_PPI, result.product)
     self.assertEquals(_rave.Rave_ObjectType_COMP, result.objectType)
     self.assertEquals("nrd2km", result.source);
@@ -169,14 +203,14 @@ class PyCompositeTest(unittest.TestCase):
       rio = _raveio.open(fname)
       generator.add(rio.object)
     
-    generator.quantity = "DBZH"
+    generator.addParameter("DBZH", 1.0, 0.0)
     generator.product = _rave.Rave_ProductType_PCAPPI
     generator.height = 1000.0
     generator.time = "120000"
     generator.date = "20090501"
     result = generator.nearest(a)
     
-    self.assertEquals("DBZH", result.quantity)
+    self.assertEquals("DBZH", result.getParameter("DBZH").quantity)
     self.assertEquals("120000", result.time)
     self.assertEquals("20090501", result.date)
     prodpar = result.getAttribute("what/prodpar")
@@ -188,6 +222,49 @@ class PyCompositeTest(unittest.TestCase):
     ios = _raveio.new()
     ios.object = result
     ios.filename = "swecomposite.h5"
+    ios.save()
+
+  def test_nearest_multicomposite(self):
+    generator = _pycomposite.new()
+    
+    a = _area.new()
+    a.id = "nrd2km"
+    a.xsize = 848
+    a.ysize = 1104
+    a.xscale = 2000.0
+    a.yscale = 2000.0
+    a.extent = (-738816.513333,-3995515.596160,955183.48666699999,-1787515.59616)
+    a.projection = _projection.new("x", "y", "+proj=stere +ellps=bessel +lat_0=90 +lon_0=14 +lat_ts=60 +datum=WGS84")
+    
+    for fname in self.QC_VOLUMES:
+      rio = _raveio.open(fname)
+      generator.add(rio.object)
+    
+    generator.addParameter("DBZH", 1.0, 0.0)
+    generator.addParameter("TH", 1.0, 0.0)
+    generator.product = _rave.Rave_ProductType_PPI
+    generator.elangle = 0.0
+    generator.time = "000000"
+    generator.date = "20120131"
+    result = generator.nearest(a, ["fi.fmi.ropo.detector.classification", "se.smhi.detector.poo", "se.smhi.composite.distance.radar"])
+    
+    self.assertEquals("DBZH", result.getParameter("DBZH").quantity)
+    self.assertEquals("000000", result.time)
+    self.assertEquals("20120131", result.date)
+    
+    self.assertEquals("TH", result.getParameter("TH").quantity)
+    self.assertEquals("000000", result.time)
+    self.assertEquals("20120131", result.date)
+    
+    prodpar = result.getAttribute("what/prodpar")
+    self.assertAlmostEquals(0.0, prodpar, 4)
+    self.assertEquals(_rave.Rave_ProductType_PPI, result.product)
+    self.assertEquals(_rave.Rave_ObjectType_COMP, result.objectType)
+    self.assertEquals("nrd2km", result.source);
+    
+    ios = _raveio.new()
+    ios.object = result
+    ios.filename = "swemulticomposite.h5"
     ios.save()
 
   # To verify ticket 96
@@ -209,11 +286,9 @@ class PyCompositeTest(unittest.TestCase):
       rio = _raveio.open(fname)
       generator.add(rio.object)
     
-    generator.quantity = "DBZH"
+    generator.addParameter("DBZH", 0.4, -30.0)
     generator.product = _rave.Rave_ProductType_PCAPPI
     generator.height = 1000.0
-    generator.gain = 0.4
-    generator.offset = -30.0
     result = generator.nearest(a)
     
     result.time = "120000"
@@ -240,14 +315,14 @@ class PyCompositeTest(unittest.TestCase):
       rio = _raveio.open(fname)
       generator.add(rio.object)
     
-    generator.quantity = "DBZH"
+    generator.addParameter("DBZH", 1.0, 0.0)
     generator.product = _rave.Rave_ProductType_PPI
     generator.elangle = 0.0
     generator.time = "120000"
     generator.date = "20090501"
     result = generator.nearest(a)
     
-    self.assertEquals("DBZH", result.quantity)
+    self.assertEquals("DBZH", result.getParameter("DBZH").quantity)
     self.assertEquals("120000", result.time)
     self.assertEquals("20090501", result.date)
     prodpar = result.getAttribute("what/prodpar")
@@ -278,14 +353,14 @@ class PyCompositeTest(unittest.TestCase):
       scan = rio.object.getScanClosestToElevation(0.0, 0)
       generator.add(scan)
     
-    generator.quantity = "DBZH"
+    generator.addParameter("DBZH", 1.0, 0.0)
     generator.product = _rave.Rave_ProductType_PPI
     generator.elangle = 0.0
     generator.time = "120000"
     generator.date = "20090501"
     result = generator.nearest(a)
     
-    self.assertEquals("DBZH", result.quantity)
+    self.assertEquals("DBZH", result.getParameter("DBZH").quantity)
     self.assertEquals("120000", result.time)
     self.assertEquals("20090501", result.date)
     prodpar = result.getAttribute("what/prodpar")
@@ -317,14 +392,14 @@ class PyCompositeTest(unittest.TestCase):
       scan = rio.object.getScanClosestToElevation(0.0, 0)
       generator.add(scan)
     
-    generator.quantity = "DBZH"
+    generator.addParameter("DBZH", 1.0, 0.0)
     generator.product = _rave.Rave_ProductType_PPI
     generator.elangle = 0.0
     generator.time = "120000"
     generator.date = "20090501"
     result = generator.nearest(a)
     
-    self.assertEquals("DBZH", result.quantity)
+    self.assertEquals("DBZH", result.getParameter("DBZH").quantity)
     self.assertEquals("120000", result.time)
     self.assertEquals("20090501", result.date)
     prodpar = result.getAttribute("what/prodpar")
@@ -360,7 +435,7 @@ class PyCompositeTest(unittest.TestCase):
     scan = rio.object.getScanClosestToElevation(0.0, 0) # Take lowest elevation from karlskrona
     generator.add(scan)
 
-    generator.quantity = "DBZH"
+    generator.addParameter("DBZH", 1.0, 0.0)
     generator.product = _rave.Rave_ProductType_PPI
     generator.elangle = 0.0
     generator.time = "120000"
@@ -388,14 +463,14 @@ class PyCompositeTest(unittest.TestCase):
       scan = rio.object.getScanClosestToElevation(0.0, 0)
       generator.add(scan)
     
-    generator.quantity = "DBZH"
+    generator.addParameter("DBZH", 1.0, 0.0)
     generator.product = _rave.Rave_ProductType_PPI
     generator.elangle = 0.0
     generator.time = "120000"
     generator.date = "20090501"
     result = generator.nearest(a, ["se.smhi.composite.distance.radar"])
     
-    field = result.getQualityField(0)
+    field = result.getParameter("DBZH").getQualityField(0)
     self.assertEquals("se.smhi.composite.distance.radar", field.getAttribute("how/task"))
     
     ios = _raveio.new()

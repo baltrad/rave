@@ -690,6 +690,29 @@ RaveField_t* PolarScan_findQualityFieldByHowTask(PolarScan_t* scan, const char* 
   return result;
 }
 
+RaveField_t* PolarScan_findAnyQualityFieldByHowTask(PolarScan_t* scan, const char* value)
+{
+  RaveField_t *result = NULL;
+  PolarScanParam_t* param = NULL;
+  RaveObjectList_t* params = NULL;
+
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+
+  params = RaveObjectHashTable_values(scan->parameters);
+  if (params != NULL) {
+    int nparams = 0, i = 0;
+    nparams = RaveObjectList_size(params);
+    for (i = 0; result == NULL && i < nparams; i++) {
+      param = (PolarScanParam_t*)RaveObjectList_get(params, i);
+      result = PolarScanParam_getQualityFieldByHowTask(param, value);
+      RAVE_OBJECT_RELEASE(param);
+    }
+  }
+
+  RAVE_OBJECT_RELEASE(params);
+  return result;
+}
+
 int PolarScan_getRangeIndex(PolarScan_t* scan, double r)
 {
   int result = -1;
@@ -1004,6 +1027,19 @@ RaveValueType PolarScan_getNearestParameterValue(PolarScan_t* scan, const char* 
   return result;
 }
 
+int PolarScan_getNearestNavigationInfo(PolarScan_t* scan, double lon, double lat, PolarNavigationInfo* navinfo)
+{
+  int result = 0;
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+  RAVE_ASSERT((navinfo != NULL), "navinfo == NULL");
+  PolarScan_getLonLatNavigationInfo(scan, lon, lat, navinfo);
+  PolarScan_fillNavigationIndexFromAzimuthAndRange(scan, navinfo);
+  if (navinfo->ai >= 0 && navinfo->ri >= 0) {
+    result = 1;
+  }
+  return result;
+}
+
 RaveValueType PolarScan_getNearestConvertedParameterValue(PolarScan_t* scan, const char* quantity, double lon, double lat, double* v, PolarNavigationInfo* navinfo)
 {
   RaveValueType result = RaveValueType_NODATA;
@@ -1012,9 +1048,7 @@ RaveValueType PolarScan_getNearestConvertedParameterValue(PolarScan_t* scan, con
   RAVE_ASSERT((scan != NULL), "scan was NULL");
   RAVE_ASSERT((v != NULL), "v was NULL");
 
-  PolarScan_getLonLatNavigationInfo(scan, lon, lat, &info);
-
-  PolarScan_fillNavigationIndexFromAzimuthAndRange(scan, &info);
+  PolarScan_getNearestNavigationInfo(scan, lon, lat, &info);
 
   result = PolarScan_getConvertedParameterValue(scan, quantity, info.ri, info.ai, v);
 
@@ -1062,14 +1096,16 @@ int PolarScan_getQualityValueAt(PolarScan_t* scan, const char* quantity, int ri,
   int result = 0;
 
   RAVE_ASSERT((scan != NULL), "scan == NULL");
-  RAVE_ASSERT((quantity != NULL), "quantity == NULL");
   RAVE_ASSERT((v != NULL), "v == NULL");
 
-  param = PolarScan_getParameter(scan, quantity);
-  if (param == NULL) {
-    goto done;
+  if (quantity != NULL) {
+    param = PolarScan_getParameter(scan, quantity);
+    if (param == NULL) {
+      goto done;
+    }
+    quality = PolarScanParam_getQualityFieldByHowTask(param, name);
   }
-  quality = PolarScanParam_getQualityFieldByHowTask(param, name);
+
   if (quality == NULL) {
     quality = PolarScan_getQualityFieldByHowTask(scan, name);
   }

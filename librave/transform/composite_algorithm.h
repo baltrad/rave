@@ -68,17 +68,19 @@ typedef int(*composite_algorithm_supportsProcess_fun)(struct _CompositeAlgorithm
  *
  * @param[in] self - self
  * @param[in] obj - the polar object (currently only scan and volume)
+ * @param[in] quantity - the quantity we currently are working with
  * @param[in] olon - the longitude in radians
  * @param[in] olat - the latitude in radians
  * @param[in] dist - the distance from the radar origin to the given lon/lat.
- * @param[in] otype - the type of the data found
- * @param[in] ovalue - the value of the data found
+ * @param[in,out] otype - the type of the data found
+ * @param[in,out] ovalue - the value of the data found
  * @param[in] navinfo - the navigation info for the provided obj/olon/olat
  * @returns 1 if this value should be used
  */
 typedef int(*composite_algorithm_processor_fun)(struct _CompositeAlgorithm_t* self, \
-    RaveCoreObject* obj, double olon, double olat, double dist ,RaveValueType otype, double ovalue, \
+    RaveCoreObject* obj, const char* quantity, double olon, double olat, double dist ,RaveValueType* otype, double* ovalue, \
     PolarNavigationInfo* navinfo);
+
 
 /**
  * The initializing function so that we know what composite we are working with. Note, this
@@ -97,13 +99,14 @@ typedef int(*composite_algorithm_supportsFillQualityInformation_fun)(struct _Com
  * @param[in] self - self
  * @param[in] obj - the object that was selected for setting the composite value
  * @param[in] howtask - the how/task value  defining what quality attribute we are processing
+ * @param[in] quantity - the quantity we are working with
  * @param[in] field - the quality field to be set
  * @param[in] x - the x position to be set in the field
  * @param[in] y - the y position to be set in the field
  * @param[in] navinfo - the navigation information that was used within the rave object
  * @return 1 on success otherwise 0
  */
-typedef int(*composite_algorithm_fillQualityInformation_fun)(struct _CompositeAlgorithm_t* self, RaveCoreObject* obj, const char* howtask, RaveField_t* field, long x, long y, PolarNavigationInfo* navinfo);
+typedef int(*composite_algorithm_fillQualityInformation_fun)(struct _CompositeAlgorithm_t* self, RaveCoreObject* obj, const char* howtask, const char* quantity, RaveField_t* field, long x, long y, PolarNavigationInfo* navinfo);
 
 /**
  * The head part for a CompositeAlgorithm subclass. Should be placed directly under
@@ -152,16 +155,17 @@ typedef struct _CompositeAlgorithm_t {
  * Macro expansion for calling the process function
  * @param[in] self - self
  * @param[in] obj - the polar object (currently only scan and volume)
+ * @param[in] quantity - the quantity we currently are working with
  * @param[in] olon - the longitude in radians
  * @param[in] olat - the latitude in radians
  * @param[in] dist - the distance from the radar origin to the given lon/lat.
- * @param[in] otype - the type of the data found
- * @param[in] ovalue - the value of the data found
+ * @param[in,out] otype - the type of the data found
+ * @param[in,out] ovalue - the value of the data found
  * @param[in] navinfo - the navigation info for the provided obj/olon/olat
  * @returns 1 if this value should be considered
  */
-#define CompositeAlgorithm_process(self,obj,olon,olat,dist,otype,ovalue,navinfo) \
-    ((CompositeAlgorithm_t*)self)->process((CompositeAlgorithm_t*)self,obj,olon,olat,dist,otype,ovalue,navinfo)
+#define CompositeAlgorithm_process(self,obj,quantity,olon,olat,dist,otype,ovalue,navinfo) \
+    ((CompositeAlgorithm_t*)self)->process((CompositeAlgorithm_t*)self,obj,quantity,olon,olat,dist,otype,ovalue,navinfo)
 
 /**
  * Macro expansion for initializing the algorithm
@@ -181,7 +185,7 @@ typedef struct _CompositeAlgorithm_t {
 /**
  * Macro expansion if this algorithm supports process or not
  */
-#define CompositeAlgorithm_fillQualityInformation(self,obj,howtask,field,x,y,navinfo) \
-    ((CompositeAlgorithm_t*)self)->fillQualityInformation((CompositeAlgorithm_t*)self,obj,howtask,field,x,y,navinfo)
+#define CompositeAlgorithm_fillQualityInformation(self,obj,howtask,quantity,field,x,y,navinfo) \
+    ((CompositeAlgorithm_t*)self)->fillQualityInformation((CompositeAlgorithm_t*)self,obj,howtask,quantity,field,x,y,navinfo)
 
 #endif /* COMPOSITE_ALGORITHM_H */

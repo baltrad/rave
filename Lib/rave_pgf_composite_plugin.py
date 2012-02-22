@@ -132,10 +132,10 @@ def generate(files, arguments):
 
     generator.add(obj)
 
-  generator.quantity = "DBZH"
-
+  quantity = "DBZH"
   if "quantity" in args.keys():
-    generator.quantity = args["quantity"]
+    quantity = args["quantity"]
+  generator.addParameter(quantity, GAIN, OFFSET)
   
   method = "pcappi"
   if "method" in args.keys():
@@ -172,8 +172,6 @@ def generate(files, arguments):
 
   generator.time = args["time"]
   generator.date = args["date"]
-  generator.gain = GAIN
-  generator.offset = OFFSET
 
   result = generator.nearest(pyarea, qfields)
   

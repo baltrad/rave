@@ -26,6 +26,7 @@ Tests the _mean module.
 import unittest
 import _mean
 import _cartesian
+import _cartesianparam
 import numpy
 import string
 
@@ -38,9 +39,9 @@ class MeanTest(unittest.TestCase):
     pass
 
   def test_average(self):
-    src = _cartesian.new()
-    src.nodata = 255.0
-    src.undetect = 0.0
+    param = _cartesianparam.new()
+    param.nodata = 255.0
+    param.undetect = 0.0
     
     data = numpy.zeros((5,5), numpy.float64)
     for y in range(5):
@@ -48,28 +49,32 @@ class MeanTest(unittest.TestCase):
         data[y][x] = float(x+y*5)
 
     # add some nodata and undetect
-    data[0][0] = src.nodata    # 0
-    data[0][3] = src.nodata    # 3
-    data[1][2] = src.nodata    # 7
-    data[1][3] = src.undetect  # 8
-    data[3][2] = src.undetect  # 17
-    data[4][4] = src.nodata    # 24
+    data[0][0] = param.nodata    # 0
+    data[0][3] = param.nodata    # 3
+    data[1][2] = param.nodata    # 7
+    data[1][3] = param.undetect  # 8
+    data[3][2] = param.undetect  # 17
+    data[4][4] = param.nodata    # 24
     #print `data` #to be able to see the array when calculating result
     
-    src.setData(data)
+    param.setData(data)
+    param.quantity="DBZH"
+    
+    src = _cartesian.new()
+    src.addParameter(param)
     
     target = _mean.average(src, 2)
     
     # Table with the result
-    expected = [[src.nodata, 1, 1.5, src.nodata, 4.0],
-                [5.0, 4.0, src.nodata, src.undetect, 6.5],
+    expected = [[param.nodata, 1, 1.5, param.nodata, 4.0],
+                [5.0, 4.0, param.nodata, param.undetect, 6.5],
                 [7.5, 8.0, 9.67, 12.5, 12.0],
-                [12.5, 13.0, src.undetect, 14.33, 16.0],
-                [17.5, 18.0, 19.67, 21.0, src.nodata]]
+                [12.5, 13.0, param.undetect, 14.33, 16.0],
+                [17.5, 18.0, 19.67, 21.0, param.nodata]]
     
     expectedarr = numpy.array(expected, numpy.float64)
     
-    actualarr = target.getData()
+    actualarr = target.getParameter("DBZH").getData()
     
     # Unfortunately there is no numpy.compareAlmostEquals or similar (at least as I know).
     for y in range(5):

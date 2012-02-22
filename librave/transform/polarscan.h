@@ -467,6 +467,15 @@ RaveField_t* PolarScan_getQualityFieldByHowTask(PolarScan_t* scan, const char* v
 RaveField_t* PolarScan_findQualityFieldByHowTask(PolarScan_t* scan, const char* value, const char* quantity);
 
 /**
+ * Basically the same as \ref #PolarScan_findQualityFieldByHowTask with the exception that
+ * all quantities are searched until first occurance is found.
+ * @param[in] scan - self
+ * @param[in] value - the how/task value
+ * @return the field if found, otherwise NULL
+ */
+RaveField_t* PolarScan_findAnyQualityFieldByHowTask(PolarScan_t* scan, const char* value);
+
+/**
  * Returns the range index for the specified range (in meters).
  * @param[in] scan - the scan
  * @param[in] r - the range
@@ -650,6 +659,16 @@ RaveValueType PolarScan_getNearest(PolarScan_t* scan, double lon, double lat, do
  * @returns a rave value type
  */
 RaveValueType PolarScan_getNearestParameterValue(PolarScan_t* scan, const char* quantity, double lon, double lat, double* v);
+
+/**
+ * Returns the navigation information for the specified lon/lat.
+ * @param[in] scan - self
+ * @param[in] lon - longitude (in radians)
+ * @param[in] lat - latitude (in radians)
+ * @param[in,out] navinfo - the navigation information (MAY NOT BE NULL)
+ * @returns 1 if navigation info is in range of scan otherwise 0
+ */
+int PolarScan_getNearestNavigationInfo(PolarScan_t* scan, double lon, double lat, PolarNavigationInfo* navinfo);
 
 /**
  * Returns the nearest converted parameter value to the specified longitude, latitude.

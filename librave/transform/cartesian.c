@@ -42,6 +42,10 @@ struct _Cartesian_t {
   double xscale;     /**< xscale */
   double yscale;     /**< yscale */
 
+  // x / ysize to use for parameters
+  long xsize;        /**< xsize to use */
+  long ysize;        /**< ysize to use */
+
   Rave_ProductType product;   /**< product */
   Rave_ObjectType objectType; /**< object type */
 
@@ -51,24 +55,22 @@ struct _Cartesian_t {
   double urY;        /**< upper right x-coordinate */
 
   // What
-  char* quantity;            /**< what does this data represent */
   RaveDateTime_t* datetime;  /**< the date and time */
   RaveDateTime_t* startdatetime;  /**< the start date and time */
   RaveDateTime_t* enddatetime;  /**< the end date and time */
 
   char* source;              /**< where does this data come from */
-  double gain;       /**< gain when scaling, default 1 */
-  double offset;     /**< offset when scaling, default 0 */
-  double nodata;     /**< nodata */
-  double undetect;   /**< undetect */
 
+  RaveDataType datatype;     /**< the datatype to use */
   Projection_t* projection; /**< the projection */
-
-  RaveData2D_t* data;   /**< 2 dimensional data array */
 
   RaveObjectHashTable_t* attrs; /**< attributes */
 
   RaveObjectList_t* qualityfields; /**< quality fields */
+
+  char* defaultParameter;                     /**< the default parameter */
+  CartesianParam_t* currentParameter; /**< the current parameter */
+  RaveObjectHashTable_t* parameters;  /**< the cartesian data fields */
 };
 
 /*@{ Private functions */
@@ -78,42 +80,43 @@ struct _Cartesian_t {
 static int Cartesian_constructor(RaveCoreObject* obj)
 {
   Cartesian_t* this = (Cartesian_t*)obj;
+  this->xsize = 0;
+  this->ysize = 0;
   this->xscale = 0.0;
   this->yscale = 0.0;
   this->llX = 0.0;
   this->llY = 0.0;
   this->urX = 0.0;
   this->urY = 0.0;
-  this->quantity = NULL;
   this->datetime = NULL;
   this->product = Rave_ProductType_UNDEFINED;
   this->objectType = Rave_ObjectType_IMAGE;
   this->source = NULL;
-  this->gain = 1.0;
-  this->offset = 0.0;
-  this->nodata = 0.0;
-  this->undetect = 0.0;
+  this->datatype = RaveDataType_UCHAR;
   this->projection = NULL;
-  this->data = NULL;
+  this->currentParameter = NULL;
+  this->defaultParameter = RAVE_STRDUP("DBZH");
   this->datetime = RAVE_OBJECT_NEW(&RaveDateTime_TYPE);
   this->startdatetime = RAVE_OBJECT_NEW(&RaveDateTime_TYPE);
   this->enddatetime = RAVE_OBJECT_NEW(&RaveDateTime_TYPE);
-  this->data = RAVE_OBJECT_NEW(&RaveData2D_TYPE);
   this->attrs = RAVE_OBJECT_NEW(&RaveObjectHashTable_TYPE);
   this->qualityfields = RAVE_OBJECT_NEW(&RaveObjectList_TYPE);
-  if (this->datetime == NULL || this->data == NULL || this->attrs == NULL ||
-      this->startdatetime == NULL || this->enddatetime == NULL || this->qualityfields == NULL) {
+  this->parameters = RAVE_OBJECT_NEW(&RaveObjectHashTable_TYPE);
+  if (this->datetime == NULL || this->defaultParameter == NULL || this->attrs == NULL ||
+      this->startdatetime == NULL || this->enddatetime == NULL || this->qualityfields == NULL ||
+      this->parameters == NULL) {
     goto fail;
   }
 
   return 1;
 fail:
-  RAVE_OBJECT_RELEASE(this->data);
+  RAVE_OBJECT_RELEASE(this->currentParameter);
   RAVE_OBJECT_RELEASE(this->datetime);
   RAVE_OBJECT_RELEASE(this->attrs);
   RAVE_OBJECT_RELEASE(this->startdatetime);
   RAVE_OBJECT_RELEASE(this->enddatetime);
   RAVE_OBJECT_RELEASE(this->qualityfields);
+  RAVE_OBJECT_RELEASE(this->parameters);
   return 0;
 }
 
@@ -126,35 +129,42 @@ static int Cartesian_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj
   Cartesian_t* src = (Cartesian_t*)srcobj;
   this->xscale = src->xscale;
   this->yscale = src->yscale;
+  this->xsize = src->xsize;
+  this->ysize = src->ysize;
   this->llX = src->llX;
   this->llY = src->llY;
   this->urX = src->urX;
   this->urY = src->urY;
   this->product = src->product;
   this->objectType = src->objectType;
-  this->gain = src->gain;
-  this->offset = src->offset;
-  this->nodata = src->nodata;
-  this->undetect = src->undetect;
+  this->datatype = src->datatype;
   this->source = NULL;
-  this->quantity = NULL;
   this->projection = NULL;
   this->datetime = NULL;
   this->startdatetime = NULL;
   this->enddatetime = NULL;
-  this->data = NULL;
-
-  Cartesian_setQuantity(this, Cartesian_getQuantity(src));
+  this->currentParameter = NULL;
+  this->defaultParameter = NULL;
 
   this->datetime = RAVE_OBJECT_CLONE(src->datetime);
   this->startdatetime = RAVE_OBJECT_CLONE(src->startdatetime);
   this->enddatetime = RAVE_OBJECT_CLONE(src->enddatetime);
-  this->data = RAVE_OBJECT_CLONE(src->data);
+  this->currentParameter = RAVE_OBJECT_CLONE(src->currentParameter);
   this->attrs = RAVE_OBJECT_CLONE(src->attrs);
   this->qualityfields = RAVE_OBJECT_CLONE(src->qualityfields);
+  this->parameters = RAVE_OBJECT_CLONE(src->parameters);
 
-  if (this->datetime == NULL || this->data == NULL || this->attrs == NULL ||
-      this->startdatetime == NULL || this->enddatetime == NULL || this->qualityfields == NULL) {
+  if (this->datetime == NULL || (src->currentParameter != NULL && this->currentParameter == NULL) || this->attrs == NULL ||
+      this->startdatetime == NULL || this->enddatetime == NULL || this->qualityfields == NULL ||
+      this->parameters == NULL || !Cartesian_setDefaultParameter(this, Cartesian_getDefaultParameter(src))) {
+    if (this->datetime == NULL) {
+      fprintf(stderr, "Failed datetime\n");
+    } else if (this->currentParameter == NULL) {
+      fprintf(stderr, "currentParameter\n");
+    } else if (this->attrs == NULL) {
+      fprintf(stderr, "attrs\n");
+    }
+    fprintf(stderr, "Failed to clone something\n");
     goto fail;
   }
 
@@ -170,17 +180,17 @@ static int Cartesian_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj
   return 1;
 fail:
   RAVE_FREE(this->source);
-  RAVE_FREE(this->quantity);
-  RAVE_OBJECT_RELEASE(this->data);
+  RAVE_OBJECT_RELEASE(this->currentParameter);
   RAVE_OBJECT_RELEASE(this->datetime);
   RAVE_OBJECT_RELEASE(this->startdatetime);
   RAVE_OBJECT_RELEASE(this->enddatetime);
   RAVE_OBJECT_RELEASE(this->attrs);
   RAVE_OBJECT_RELEASE(this->projection);
   RAVE_OBJECT_RELEASE(this->qualityfields);
+  RAVE_OBJECT_RELEASE(this->parameters);
+  RAVE_FREE(this->defaultParameter);
   return 0;
 }
-
 
 /**
  * Destroys the cartesian product
@@ -195,10 +205,11 @@ static void Cartesian_destructor(RaveCoreObject* obj)
     RAVE_OBJECT_RELEASE(cartesian->startdatetime);
     RAVE_OBJECT_RELEASE(cartesian->enddatetime);
     RAVE_FREE(cartesian->source);
-    RAVE_FREE(cartesian->quantity);
-    RAVE_OBJECT_RELEASE(cartesian->data);
+    RAVE_OBJECT_RELEASE(cartesian->currentParameter);
     RAVE_OBJECT_RELEASE(cartesian->attrs);
     RAVE_OBJECT_RELEASE(cartesian->qualityfields);
+    RAVE_OBJECT_RELEASE(cartesian->parameters);
+    RAVE_FREE(cartesian->defaultParameter);
   }
 }
 
@@ -315,33 +326,45 @@ const char* Cartesian_getSource(Cartesian_t* cartesian)
   return (const char*)cartesian->source;
 }
 
-int Cartesian_setObjectType(Cartesian_t* cartesian, Rave_ObjectType type)
+int Cartesian_setObjectType(Cartesian_t* self, Rave_ObjectType type)
 {
-  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
+  RAVE_ASSERT((self != NULL), "self == NULL");
   if (type == Rave_ObjectType_IMAGE || type == Rave_ObjectType_COMP) {
-    cartesian->objectType = type;
+    self->objectType = type;
     return 1;
   }
   return 0;
 }
 
-Rave_ObjectType Cartesian_getObjectType(Cartesian_t* cartesian)
+Rave_ObjectType Cartesian_getObjectType(Cartesian_t* self)
 {
-  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
-  return cartesian->objectType;
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return self->objectType;
 }
 
-long Cartesian_getXSize(Cartesian_t* cartesian)
+void Cartesian_setXSize(Cartesian_t* self, long xsize)
 {
-  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
-  return RaveData2D_getXsize(cartesian->data);
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  self->xsize = xsize;
+
 }
 
-long Cartesian_getYSize(Cartesian_t* cartesian)
+void Cartesian_setYSize(Cartesian_t* self, long ysize)
 {
-  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
-  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
-  return RaveData2D_getYsize(cartesian->data);
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  self->ysize = ysize;
+}
+
+long Cartesian_getXSize(Cartesian_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return self->xsize;
+}
+
+long Cartesian_getYSize(Cartesian_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return self->ysize;
 }
 
 void Cartesian_setAreaExtent(Cartesian_t* cartesian, double llX, double llY, double urX, double urY)
@@ -407,6 +430,24 @@ Rave_ProductType Cartesian_getProduct(Cartesian_t* cartesian)
   return cartesian->product;
 }
 
+double Cartesian_getNodata(Cartesian_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  if (self->currentParameter != NULL) {
+    return CartesianParam_getNodata(self->currentParameter);
+  }
+  return 0.0;
+}
+
+double Cartesian_getUndetect(Cartesian_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  if (self->currentParameter != NULL) {
+    return CartesianParam_getUndetect(self->currentParameter);
+  }
+  return 0.0;
+}
+
 double Cartesian_getLocationX(Cartesian_t* cartesian, long x)
 {
   RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
@@ -431,87 +472,37 @@ long Cartesian_getIndexY(Cartesian_t* cartesian, double y)
   RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
   RAVE_ASSERT((cartesian->yscale != 0.0), "ycale == 0.0, would result in Division by zero");
   return (long)((cartesian->urY - y)/cartesian->yscale);
-
 }
 
-RaveDataType Cartesian_getDataType(Cartesian_t* cartesian)
-{
-  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
-  return RaveData2D_getType(cartesian->data);
-}
-
-int Cartesian_setQuantity(Cartesian_t* cartesian, const char* quantity)
+int Cartesian_setDefaultParameter(Cartesian_t* cartesian, const char* name)
 {
   int result = 0;
   RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
-  if (quantity != NULL) {
-    char* tmp = RAVE_STRDUP(quantity);
-    if (tmp != NULL) {
-      RAVE_FREE(cartesian->quantity);
-      cartesian->quantity = tmp;
-      result = 1;
+  if (name != NULL) {
+    char* tmp = RAVE_STRDUP(name);
+    if (tmp == NULL) {
+      RAVE_CRITICAL0("Failed to allocate memory");
+      goto done;
     }
-  } else {
-    RAVE_FREE(cartesian->quantity);
+    RAVE_FREE(cartesian->defaultParameter);
+    cartesian->defaultParameter = tmp;
+    RAVE_OBJECT_RELEASE(cartesian->currentParameter);
+    if (RaveObjectHashTable_exists(cartesian->parameters, name)) {
+      cartesian->currentParameter = (CartesianParam_t*)RaveObjectHashTable_get(cartesian->parameters, name);
+    }
     result = 1;
+  } else {
+    RAVE_WARNING0("Not supported parameter name");
   }
+
+done:
   return result;
 }
 
-const char* Cartesian_getQuantity(Cartesian_t* cartesian)
+const char* Cartesian_getDefaultParameter(Cartesian_t* cartesian)
 {
   RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
-  return (const char*)cartesian->quantity;
-}
-
-void Cartesian_setGain(Cartesian_t* cartesian, double gain)
-{
-  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
-  if (gain != 0.0) {
-    cartesian->gain = gain;
-  }
-}
-
-double Cartesian_getGain(Cartesian_t* cartesian)
-{
-  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
-  return cartesian->gain;
-}
-
-void Cartesian_setOffset(Cartesian_t* cartesian, double offset)
-{
-  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
-  cartesian->offset = offset;
-}
-
-double Cartesian_getOffset(Cartesian_t* cartesian)
-{
-  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
-  return cartesian->offset;
-}
-
-void Cartesian_setNodata(Cartesian_t* cartesian, double nodata)
-{
-  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
-  cartesian->nodata = nodata;
-}
-
-double Cartesian_getNodata(Cartesian_t* cartesian)
-{
-  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
-  return cartesian->nodata;
-}
-
-void Cartesian_setUndetect(Cartesian_t* cartesian, double undetect)
-{
-  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
-  cartesian->undetect = undetect;
-}
-
-double Cartesian_getUndetect(Cartesian_t* cartesian)
-{
-  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
-  return cartesian->undetect;
+  return (const char*)cartesian->defaultParameter;
 }
 
 void Cartesian_setProjection(Cartesian_t* cartesian, Projection_t* projection)
@@ -541,96 +532,58 @@ const char* Cartesian_getProjectionString(Cartesian_t* cartesian)
   return NULL;
 }
 
-int Cartesian_setData(Cartesian_t* cartesian, long xsize, long ysize, void* data, RaveDataType type)
-{
-  RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
-  return RaveData2D_setData(cartesian->data, xsize, ysize, data, type);
-}
-
-int Cartesian_createData(Cartesian_t* cartesian, long xsize, long ysize, RaveDataType type)
-{
-  RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
-  return RaveData2D_createData(cartesian->data, xsize, ysize, type);
-}
-
-void* Cartesian_getData(Cartesian_t* cartesian)
-{
-  RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
-  return RaveData2D_getData(cartesian->data);
-}
-
 int Cartesian_setValue(Cartesian_t* cartesian, long x, long y, double v)
 {
   RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
-  return RaveData2D_setValue(cartesian->data, x, y, v);
+  if (cartesian->currentParameter != NULL) {
+    return CartesianParam_setValue(cartesian->currentParameter, x, y, v);
+  }
+  return 0;
 }
 
 int Cartesian_setConvertedValue(Cartesian_t* cartesian, long x, long y, double v)
 {
-  double value = v;
   RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
-  if (value != cartesian->undetect && value != cartesian->nodata) {
-    if (cartesian->gain != 0.0) {
-      value = (v - cartesian->offset)/cartesian->gain;
-    } else {
-      RAVE_ERROR0("gain is 0.0 => division by zero error");
-      return 0;
-    }
+  if (cartesian->currentParameter != NULL) {
+    return CartesianParam_setConvertedValue(cartesian->currentParameter, x, y, v);
   }
-  return RaveData2D_setValue(cartesian->data, x, y, value);
+  return 0;
 }
 
 RaveValueType Cartesian_getValue(Cartesian_t* cartesian, long x, long y, double* v)
 {
-  RaveValueType result = RaveValueType_NODATA;
-  double value = 0.0;
   RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
-
-  value = cartesian->nodata;
-
-  if (RaveData2D_getValue(cartesian->data, x, y, &value)) {
-    result = RaveValueType_DATA;
-    if (value == cartesian->nodata) {
-      result = RaveValueType_NODATA;
-    } else if (value == cartesian->undetect) {
-      result = RaveValueType_UNDETECT;
-    }
+  if (cartesian->currentParameter != NULL) {
+    return CartesianParam_getValue(cartesian->currentParameter, x, y, v);
   }
-
-  if (v != NULL) {
-    *v = value;
-  }
-
-  return result;
+  return RaveValueType_UNDEFINED;
 }
 
 RaveValueType Cartesian_getConvertedValue(Cartesian_t* cartesian, long x, long y, double* v)
 {
-  RaveValueType result = RaveValueType_NODATA;
   RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
-
-  result = Cartesian_getValue(cartesian, x, y, v);
-  if (result == RaveValueType_DATA && v != NULL) {
-    *v = (*v) * cartesian->gain + cartesian->offset;
+  if (cartesian->currentParameter != NULL) {
+    return CartesianParam_getConvertedValue(cartesian->currentParameter, x, y, v);
   }
-  return result;
+  return RaveValueType_UNDEFINED;
 }
 
-int Cartesian_init(Cartesian_t* cartesian, Area_t* area, RaveDataType datatype)
+void Cartesian_init(Cartesian_t* self, Area_t* area)
 {
   double llX = 0.0L, llY = 0.0L, urX = 0.0L, urY = 0.0L;
   Projection_t* projection = NULL;
-  RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
+  RAVE_ASSERT((self != NULL), "self == NULL");
   RAVE_ASSERT((area != NULL), "area == NULL");
 
-  Cartesian_setXScale(cartesian, Area_getXScale(area));
-  Cartesian_setYScale(cartesian, Area_getYScale(area));
+  Cartesian_setXScale(self, Area_getXScale(area));
+  Cartesian_setYScale(self, Area_getYScale(area));
+  Cartesian_setXSize(self, Area_getXSize(area));
+  Cartesian_setYSize(self, Area_getYSize(area));
   projection = Area_getProjection(area);
-  Cartesian_setProjection(cartesian, projection);
+  Cartesian_setProjection(self, projection);
   Area_getExtent(area, &llX, &llY, &urX, &urY);
-  Cartesian_setAreaExtent(cartesian, llX, llY, urX, urY);
+  Cartesian_setAreaExtent(self, llX, llY, urX, urY);
   RAVE_OBJECT_RELEASE(projection);
-  return Cartesian_createData(cartesian, Area_getXSize(area), Area_getYSize(area), datatype);
 }
 
 RaveValueType Cartesian_getMean(Cartesian_t* cartesian, long x, long y, int N, double* v)
@@ -664,14 +617,34 @@ RaveValueType Cartesian_getMean(Cartesian_t* cartesian, long x, long y, int N, d
 int Cartesian_isTransformable(Cartesian_t* cartesian)
 {
   int result = 0;
+  int ncount = 0;
+  int i = 0;
+  RaveObjectList_t* params = NULL;
+
   RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
 
-  if (RaveData2D_hasData(cartesian->data) &&
-      cartesian->projection != NULL &&
-      cartesian->xscale > 0 &&
-      cartesian->yscale > 0) {
-    result = 1;
+  params = RaveObjectHashTable_values(cartesian->parameters);
+  if (params == NULL) {
+    goto done;
   }
+  ncount = RaveObjectList_size(params);
+  if (ncount <= 0 || cartesian->xscale <= 0.0 || cartesian->yscale <= 0.0 || cartesian->projection == NULL) {
+    goto done;
+  }
+
+  result = 1;
+  for (i = 0; result == 1 && i < ncount; i++) {
+    CartesianParam_t* param = (CartesianParam_t*)RaveObjectList_get(params, i);
+    if (param != NULL) {
+      result = CartesianParam_isTransformable(param);
+    } else {
+      result = 0;
+    }
+    RAVE_OBJECT_RELEASE(param);
+  }
+
+done:
+  RAVE_OBJECT_RELEASE(params);
   return result;
 }
 
@@ -776,6 +749,94 @@ RaveObjectList_t* Cartesian_getQualityFields(Cartesian_t* cartesian)
 {
   RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
   return (RaveObjectList_t*)RAVE_OBJECT_COPY(cartesian->qualityfields);
+}
+
+int Cartesian_addParameter(Cartesian_t* self, CartesianParam_t* param)
+{
+  int result = 0;
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  if (param != NULL) {
+    const char* p = CartesianParam_getQuantity(param);
+    if (p == NULL) {
+      RAVE_ERROR0("Parameter does not contain any quantity");
+      goto done;
+    }
+    if (RaveObjectHashTable_size(self->parameters) == 0) {
+      self->xsize = CartesianParam_getXSize(param);
+      self->ysize = CartesianParam_getYSize(param);
+    }
+
+    if (CartesianParam_getXSize(param) != self->xsize ||
+        CartesianParam_getYSize(param) != self->ysize) {
+      RAVE_ERROR0("Inconsistent x/y size between parameters");
+      goto done;
+    }
+
+    if (!RaveObjectHashTable_put(self->parameters, p, (RaveCoreObject*)param)) {
+      RAVE_ERROR0("Could not add parameter to cartesian");
+      goto done;
+    }
+
+    if (strcmp(self->defaultParameter, p) == 0) {
+      RAVE_OBJECT_RELEASE(self->currentParameter);
+      self->currentParameter = RAVE_OBJECT_COPY(param);
+    }
+    result = 1;
+  }
+
+done:
+  return result;
+}
+
+CartesianParam_t* Cartesian_getParameter(Cartesian_t* self, const char* name)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  if (RaveObjectHashTable_exists(self->parameters, name)) {
+    return (CartesianParam_t*)RaveObjectHashTable_get(self->parameters, name);
+  }
+  return NULL;
+}
+
+int Cartesian_hasParameter(Cartesian_t* self, const char* quantity)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return RaveObjectHashTable_exists(self->parameters, quantity);
+}
+
+
+void Cartesian_removeParameter(Cartesian_t* self, const char* name)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  CartesianParam_t* param = (CartesianParam_t*)RaveObjectHashTable_remove(self->parameters, name);
+  RAVE_OBJECT_RELEASE(param);
+}
+
+int Cartesian_getParameterCount(Cartesian_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return RaveObjectHashTable_size(self->parameters);
+}
+
+RaveList_t* Cartesian_getParameterNames(Cartesian_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return RaveObjectHashTable_keys(self->parameters);
+}
+
+CartesianParam_t* Cartesian_createParameter(Cartesian_t* self, const char* quantity, RaveDataType type)
+{
+  CartesianParam_t* result = NULL;
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  if (self->xsize > 0 && self->ysize > 0 && quantity != NULL && type != RaveDataType_UNDEFINED) {
+    result = RAVE_OBJECT_NEW(&CartesianParam_TYPE);
+    if (result == NULL ||
+        !CartesianParam_createData(result, self->xsize, self->ysize, type) ||
+        !CartesianParam_setQuantity(result, quantity) ||
+        !Cartesian_addParameter(self, result)) {
+      RAVE_OBJECT_RELEASE(result);
+    }
+  }
+  return result;
 }
 
 /*@} End of Interface functions */

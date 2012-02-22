@@ -64,16 +64,17 @@ int PooCompositeAlgorithm_supportsProcess(CompositeAlgorithm_t* self);
  *
  * @param[in] self - self
  * @param[in] obj - the polar object (currently only scan and volume)
+ * @param[in] quantity - the quantity
  * @param[in] olon - the longitude in radians
  * @param[in] olat - the latitude in radians
  * @param[in] dist - the distance from the radar origin to the given lon/lat. Can be calculated by using the obj as well
- * @param[in] otype - the type of the data found
- * @param[in] ovalue - the value of the data found
+ * @param[in,out] otype - the type of the data found
+ * @param[in,out] ovalue - the value of the data found
  * @param[in] navinfo - the navigation info for the provided obj/olon/olat
  * @return 1 if the catype/cavalue should be used, otherwise 0
  */
 int PooCompositeAlgorithm_process(CompositeAlgorithm_t* self, \
-  RaveCoreObject* obj, double olon, double olat, double dist, RaveValueType otype, double ovalue, \
+  RaveCoreObject* obj, const char* quantity, double olon, double olat, double dist, RaveValueType* otype, double* ovalue, \
   PolarNavigationInfo* navinfo);
 
 /**
@@ -95,12 +96,13 @@ int PooCompositeAlgorithm_supportsFillQualityInformation(CompositeAlgorithm_t* s
  * @param[in] self - self
  * @param[in] obj - the rave core object, most likely a volume or scan
  * @param[in] howtask - the how/task value
+ * @param[in] quantity - the quantity
  * @param[in] field - the rave quality field that should get it's value set
  * @param[in] x - the x coordinate in the field
  * @param[in] y - the y coordinate in the field
  * @param[in] navinfo - the navigation information that was used for the provided obj
  * @return 1 on success otherwise 0
  */
-int PooCompositeAlgorithm_fillQualityInformation(CompositeAlgorithm_t* self, RaveCoreObject* obj,const char* howtask,RaveField_t* field,long x, long y, PolarNavigationInfo* navinfo);
+int PooCompositeAlgorithm_fillQualityInformation(CompositeAlgorithm_t* self, RaveCoreObject* obj,const char* howtask,const char* quantity,RaveField_t* field,long x, long y, PolarNavigationInfo* navinfo);
 
 #endif /* POO_COMPOSITE_ALGORITHM_H */

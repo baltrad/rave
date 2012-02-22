@@ -51,9 +51,14 @@ class PolarVolumeTransformTest(unittest.TestCase):
     transformer.method = _rave.NEAREST
     
     a = area.area("ang_240")
+    param = _rave.cartesianparam()
+    param.nodata = 255.0
+    param.undetect = 0.0
+    param.quantity = "DBZH"
+    data = numpy.zeros((a.ysize, a.xsize), numpy.uint8)
+    param.setData(data)
+    
     cartesian = _rave.cartesian()
-    cartesian.nodata = 255.0
-    cartesian.undetect = 0.0
     cartesian.xscale = a.xscale
     cartesian.yscale = a.yscale
     cartesian.date = "20100101"
@@ -62,11 +67,10 @@ class PolarVolumeTransformTest(unittest.TestCase):
     cartesian.product = _rave.Rave_ProductType_CAPPI
     cartesian.objectType = _rave.Rave_ObjectType_IMAGE
     cartesian.areaextent = a.extent
-    cartesian.quantity = "DBZH"
-    data = numpy.zeros((a.ysize, a.xsize), numpy.uint8)
-    cartesian.setData(data)
-    projection = _rave.projection(a.Id, a.name, pcs.pcs(a.pcs).tostring())
-    cartesian.projection = projection
+    cartesian.projection = _rave.projection(a.Id, a.name, pcs.pcs(a.pcs).tostring())
+
+    cartesian.addParameter(param)
+    cartesian.defaultParameter = "DBZH"
     
     transformer.cappi(volume, cartesian, 1000.0)
 
@@ -81,9 +85,13 @@ class PolarVolumeTransformTest(unittest.TestCase):
     transformer.method = _rave.NEAREST
     
     a = area.area("ang_240")
+    param = _rave.cartesianparam()
+    param.nodata = 255.0
+    param.undetect = 0.0
+    param.quantity = "DBZH"
+    param.setData(numpy.zeros((a.ysize, a.xsize), numpy.uint8))
+    
     cartesian = _rave.cartesian()
-    cartesian.nodata = 255.0
-    cartesian.undetect = 0.0
     cartesian.xscale = a.xscale
     cartesian.yscale = a.yscale
     cartesian.areaextent = a.extent
@@ -93,11 +101,10 @@ class PolarVolumeTransformTest(unittest.TestCase):
     cartesian.product = _rave.Rave_ProductType_CAPPI
     cartesian.objectType = _rave.Rave_ObjectType_IMAGE
     cartesian.areaextent = a.extent
-    cartesian.quantity = "DBZH"
-    data = numpy.zeros((a.ysize, a.xsize), numpy.uint8)
-    cartesian.setData(data)
-    projection = _rave.projection(a.Id, a.name, pcs.pcs(a.pcs).tostring())
-    cartesian.projection = projection
+    cartesian.projection = _rave.projection(a.Id, a.name, pcs.pcs(a.pcs).tostring())
+
+    cartesian.addParameter(param)
+    cartesian.defaultParameter = "DBZH"
     
     scan = volume.getScan(0)
     transformer.ppi(scan, cartesian)
@@ -113,9 +120,13 @@ class PolarVolumeTransformTest(unittest.TestCase):
     transformer.method = _rave.NEAREST
     
     a = area.area("ang_240")
+    param = _rave.cartesianparam()
+    param.nodata = 255.0
+    param.undetect = 0.0
+    param.quantity = "DBZH"
+    param.setData(numpy.zeros((a.ysize, a.xsize), numpy.uint8))
+        
     cartesian = _rave.cartesian()
-    cartesian.nodata = 255.0
-    cartesian.undetect = 0.0
     cartesian.xscale = a.xscale
     cartesian.yscale = a.yscale
     cartesian.areaextent = a.extent
@@ -125,13 +136,11 @@ class PolarVolumeTransformTest(unittest.TestCase):
     cartesian.product = _rave.Rave_ProductType_CAPPI
     cartesian.objectType = _rave.Rave_ObjectType_IMAGE
     cartesian.areaextent = a.extent
-    cartesian.quantity = "DBZH"
+    cartesian.projection = _rave.projection(a.Id, a.name, pcs.pcs(a.pcs).tostring())
 
-    data = numpy.zeros((a.ysize, a.xsize), numpy.uint8)
-    cartesian.setData(data)
-    projection = _rave.projection(a.Id, a.name, pcs.pcs(a.pcs).tostring())
-    cartesian.projection = projection
-    
+    cartesian.addParameter(param)
+    cartesian.defaultParameter = "DBZH"
+        
     transformer.pcappi(volume, cartesian, 1000.0)
 
     rio = _raveio.new()

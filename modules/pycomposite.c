@@ -149,6 +149,76 @@ static PyObject* _pycomposite_new(PyObject* self, PyObject* args)
 }
 
 /**
+ * Adds a parameter to the composite generator
+ * @param[in] self - self
+ * @param[in] args - <quantity as a string>, <gain as double>, <offset as double>
+ * @return None on success otherwise NULL
+ */
+static PyObject* _pycomposite_addParameter(PyComposite* self, PyObject* args)
+{
+  char* quantity = NULL;
+  double gain = 1.0, offset = 0.0;
+
+  if (!PyArg_ParseTuple(args, "sdd", &quantity, &gain, &offset)) {
+    return NULL;
+  }
+  if (!Composite_addParameter(self->composite, quantity, gain, offset)) {
+    raiseException_returnNULL(PyExc_AttributeError, "Could not add parameter");
+  }
+
+  Py_RETURN_NONE;
+}
+
+/**
+ * Returns if the composite generator will composite specified parameter
+ * @param[in] self - self
+ * @param[in] args - <quantity as a string>
+ * @return True or False
+ */
+static PyObject* _pycomposite_hasParameter(PyComposite* self, PyObject* args)
+{
+  char* quantity = NULL;
+  if (!PyArg_ParseTuple(args, "s", &quantity)) {
+    return NULL;
+  }
+  return PyBool_FromLong(Composite_hasParameter(self->composite, quantity));
+}
+
+/**
+ * Returns the number of parameters this generator will process
+ * @param[in] self - self
+ * @param[in] args - N/A
+ * @return The number of parameters
+ */
+static PyObject* _pycomposite_getParameterCount(PyComposite* self, PyObject* args)
+{
+  return PyLong_FromLong(Composite_getParameterCount(self->composite));
+}
+
+/**
+ * Returns the parameter at specified index.
+ * @param[in] self - self
+ * @param[in] args - <index as int>
+ * @return A tuple containing (<quantity as string>,<gain as double>,<offset as double>)
+ */
+static PyObject* _pycomposite_getParameter(PyComposite* self, PyObject* args)
+{
+  int i = 0;
+  const char* quantity;
+  double gain = 1.0, offset = 0.0;
+
+  if (!PyArg_ParseTuple(args, "i", &i)) {
+    return NULL;
+  }
+  quantity = Composite_getParameter(self->composite, i, &gain, &offset);
+  if (quantity == NULL) {
+    raiseException_returnNULL(PyExc_IndexError, "No parameter at specified index");
+  }
+
+  return Py_BuildValue("(sdd)", quantity, gain, offset);
+}
+
+/**
  * Adds a transformable rave object to the composite generator. Currently,
  * only volumes are supported.
  * @param[in] self - self
@@ -230,7 +300,7 @@ static PyObject* _pycomposite_nearest(PyComposite* self, PyObject* args)
 
   result = Composite_nearest(self->composite, ((PyArea*)obj)->area, qualitynames);
   if (result == NULL) {
-    raiseException_returnNULL(PyExc_AttributeError, "failed to generate composite");
+    raiseException_gotoTag(done, PyExc_AttributeError, "failed to generate composite");
   }
 
   pyresult = (PyObject*)PyCartesian_New(result);
@@ -249,11 +319,12 @@ static struct PyMethodDef _pycomposite_methods[] =
   {"elangle", NULL},
   {"product", NULL},
   {"selection_method", NULL},
-  {"quantity", NULL},
   {"date", NULL},
   {"time", NULL},
-  {"gain", NULL},
-  {"offset", NULL},
+  {"addParameter", (PyCFunction)_pycomposite_addParameter, 1},
+  {"hasParameter", (PyCFunction)_pycomposite_hasParameter, 1},
+  {"getParameterCount", (PyCFunction)_pycomposite_getParameterCount, 1},
+  {"getParameter", (PyCFunction)_pycomposite_getParameter, 1},
   {"add", (PyCFunction) _pycomposite_add, 1},
   {"nearest", (PyCFunction) _pycomposite_nearest, 1},
   {NULL, NULL } /* sentinel */
@@ -275,16 +346,6 @@ static PyObject* _pycomposite_getattr(PyComposite* self, char* name)
     return PyInt_FromLong(Composite_getProduct(self->composite));
   } else if (strcmp("selection_method", name) == 0) {
     return PyInt_FromLong(Composite_getSelectionMethod(self->composite));
-  } else if (strcmp("quantity", name) == 0) {
-    if (Composite_getQuantity(self->composite) != NULL) {
-      return PyString_FromString(Composite_getQuantity(self->composite));
-    } else {
-      Py_RETURN_NONE;
-    }
-  } else if (strcmp("gain", name) == 0) {
-    return PyFloat_FromDouble(Composite_getGain(self->composite));
-  } else if (strcmp("offset", name) == 0) {
-    return PyFloat_FromDouble(Composite_getOffset(self->composite));
   } else if (strcmp("algorithm", name) == 0) {
     CompositeAlgorithm_t* algorithm = Composite_getAlgorithm(self->composite);
     if (algorithm != NULL) {
@@ -344,16 +405,6 @@ static int _pycomposite_setattr(PyComposite* self, char* name, PyObject* val)
     if (!PyInt_Check(val) || !Composite_setSelectionMethod(self->composite, PyInt_AsLong(val))) {
       raiseException_gotoTag(done, PyExc_ValueError, "not a valid selection method");
     }
-  } else if (strcmp("quantity", name) == 0) {
-    if (PyString_Check(val)) {
-      if (!Composite_setQuantity(self->composite, PyString_AsString(val))) {
-        raiseException_gotoTag(done, PyExc_ValueError, "quantity could not be set");
-      }
-    } else if (val == Py_None) {
-      Composite_setQuantity(self->composite, NULL);
-    } else {
-      raiseException_gotoTag(done, PyExc_ValueError,"quantity must be of type string");
-    }
   } else if (strcmp("time", name) == 0) {
     if (PyString_Check(val)) {
       if (!Composite_setTime(self->composite, PyString_AsString(val))) {
@@ -373,26 +424,6 @@ static int _pycomposite_setattr(PyComposite* self, char* name, PyObject* val)
       Composite_setDate(self->composite, NULL);
     } else {
       raiseException_gotoTag(done, PyExc_ValueError,"date must be of type string");
-    }
-  } else if (strcmp("gain", name) == 0) {
-    if (PyFloat_Check(val)) {
-      Composite_setGain(self->composite, PyFloat_AsDouble(val));
-    } else if (PyLong_Check(val)) {
-      Composite_setGain(self->composite, PyLong_AsDouble(val));
-    } else if (PyInt_Check(val)) {
-      Composite_setGain(self->composite, (double)PyInt_AsLong(val));
-    } else {
-      raiseException_gotoTag(done, PyExc_TypeError, "gain must be a float or decimal value")
-    }
-  } else if (strcmp("offset", name) == 0) {
-    if (PyFloat_Check(val)) {
-      Composite_setOffset(self->composite, PyFloat_AsDouble(val));
-    } else if (PyLong_Check(val)) {
-      Composite_setOffset(self->composite, PyLong_AsDouble(val));
-    } else if (PyInt_Check(val)) {
-      Composite_setOffset(self->composite, (double)PyInt_AsLong(val));
-    } else {
-      raiseException_gotoTag(done, PyExc_TypeError, "gain must be a float or decimal value")
     }
   } else if (strcmp("algorithm", name) == 0) {
     if (val == Py_None) {

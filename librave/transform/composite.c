@@ -40,13 +40,34 @@ struct _Composite_t {
   CompositeSelectionMethod_t method; /**< selection method, default CompositeSelectionMethod_NEAREST */
   double height; /**< the height when generating pcapppi, cappi, default 1000 */
   double elangle; /**< the elevation angle when generating ppi, default 0.0 */
-  char* paramname; /**< the parameter name, default DBZH */
-  double offset;     /**< the offset, default 0 */
-  double gain;     /**< the gain, default 1 */
+  RaveList_t* parameters; /**< the parameters to generate */
   RaveDateTime_t* datetime;  /**< the date and time */
   RaveObjectList_t* list;
   CompositeAlgorithm_t* algorithm; /**< the specific algorithm */
 };
+
+/**
+ * Structure for keeping track on parameters that should be composited.
+ */
+typedef struct CompositingParameter_t {
+  char* name;    /**< quantity */
+  double gain;   /**< gain to be used in composite data*/
+  double offset; /**< offset to be used in composite data*/
+} CompositingParameter_t;
+
+/**
+ * Structure for keeping track on values / parameter
+ */
+typedef struct CompositeValues_t {
+  RaveValueType vtype; /**< value type */
+  double value;       /**< value */
+  double mindist;     /**< min distance */
+  double radardist;   /**< distance to radar */
+  int radarindex;     /**< radar index in list of radars */
+  PolarNavigationInfo navinfo; /**< navigation info for this parameter */
+  const char* name;   /**< name of quantity */
+  CartesianParam_t* parameter; /**< the cartesian parameter */
+} CompositeValues_t;
 
 /** The resolution to use for scaling the distance from pixel to used radar */
 #define DISTANCE_TO_RADAR_RESOLUTION 2000.0
@@ -55,6 +76,133 @@ struct _Composite_t {
 #define DISTANCE_TO_RADAR_HOW_TASK "se.smhi.composite.distance.radar"
 
 /*@{ Private functions */
+/**
+ * Creates a parameter that should be composited
+ * @param[in] name - quantity
+ * @param[in] gain - gain
+ * @param[in] offset - offset
+ * @return the parameter or NULL on failure
+ */
+static CompositingParameter_t* CompositeInternal_createParameter(const char* name, double gain, double offset)
+{
+  CompositingParameter_t* result = NULL;
+  if (name != NULL) {
+    result = RAVE_MALLOC(sizeof(CompositingParameter_t));
+    if (result != NULL) {
+      result->name = RAVE_STRDUP(name);
+      result->gain = gain;
+      result->offset = offset;
+      if (result->name == NULL) {
+        RAVE_FREE(result);
+        result = NULL;
+      }
+    }
+  }
+  return result;
+}
+
+/**
+ * Frees the parameter including its members
+ * @param[in] p - the parameter to release
+ */
+static void CompositeInternal_freeParameter(CompositingParameter_t* p)
+{
+  if (p != NULL) {
+    RAVE_FREE(p->name);
+    RAVE_FREE(p);
+  }
+}
+
+/**
+ * Releases the complete parameter list including its items
+ * @param[in] p - a pointer to the parameter list
+ */
+static void CompositeInternal_freeParameterList(RaveList_t** p)
+{
+  if (p != NULL && *p != NULL) {
+    CompositingParameter_t* cp = RaveList_removeLast(*p);
+    while (cp != NULL) {
+      CompositeInternal_freeParameter(cp);
+      cp = RaveList_removeLast(*p);
+    }
+    RAVE_OBJECT_RELEASE(*p);
+  }
+}
+
+/**
+ * Clones a parameter
+ * @param[in] p - parameter to clone
+ * @return the clone or NULL on failure
+ */
+static CompositingParameter_t* CompositeInternal_cloneParameter(CompositingParameter_t* p)
+{
+  CompositingParameter_t* result = NULL;
+  if (p != NULL) {
+    result = RAVE_MALLOC(sizeof(CompositingParameter_t));
+    if (result != NULL) {
+      result->name = RAVE_STRDUP(p->name);
+      result->gain = p->gain;
+      result->offset = p->offset;
+      if (result->name == NULL) {
+        RAVE_FREE(result);
+        result = NULL;
+      }
+    }
+  }
+  return result;
+}
+
+/**
+ * Clones a parameter list
+ * @param[in] p - the parameter list to clone
+ * @return the clone or NULL on failure
+ */
+static RaveList_t* CompositeInternal_cloneParameterList(RaveList_t* p)
+{
+  int len = 0, i = 0;
+  RaveList_t *result = NULL, *clone = NULL;;
+  if (p != NULL) {
+    clone = RAVE_OBJECT_NEW(&RaveList_TYPE);
+    if (clone != NULL) {
+      len = RaveList_size(p);
+      for (i = 0; i < len; i++) {
+        CompositingParameter_t* cp = RaveList_get(p, i);
+        CompositingParameter_t* cpclone = CompositeInternal_cloneParameter(cp);
+        if (cpclone == NULL || !RaveList_add(clone, cpclone)) {
+          CompositeInternal_freeParameter(cpclone);
+          goto done;
+        }
+      }
+    }
+  }
+
+  result = RAVE_OBJECT_COPY(clone);
+done:
+  RAVE_OBJECT_RELEASE(clone);
+  return result;
+}
+
+/**
+ * Returns a pointer to the internall stored parameter in the composite.
+ * @param[in] composite - composite
+ * @param[in] quantity - the parameter
+ * @return the found parameter or NULL if not found
+ */
+static CompositingParameter_t* CompositeInternal_getParameterByName(Composite_t* composite, const char* quantity)
+{
+  int len = 0, i = 0;
+  if (quantity != NULL) {
+    len = RaveList_size(composite->parameters);
+    for (i = 0; i < len; i++) {
+      CompositingParameter_t* cp = RaveList_get(composite->parameters, i);
+      if (strcmp(cp->name, quantity) == 0) {
+        return cp;
+      }
+    }
+  }
+  return NULL;
+}
+
 /**
  * Constructor.
  * @param[in] obj - the created object
@@ -66,18 +214,17 @@ static int Composite_constructor(RaveCoreObject* obj)
   this->method = CompositeSelectionMethod_NEAREST;
   this->height = 1000.0;
   this->elangle = 0.0;
-  this->paramname = NULL;
-  this->offset = 0;
-  this->gain = 1;
+  this->parameters = NULL;
   this->algorithm = NULL;
   this->list = RAVE_OBJECT_NEW(&RaveObjectList_TYPE);
   this->datetime = RAVE_OBJECT_NEW(&RaveDateTime_TYPE);
-  if (this->list == NULL || this->datetime == NULL || !Composite_setQuantity(this, "DBZH")) {
+  this->parameters = RAVE_OBJECT_NEW(&RaveList_TYPE);
+  if (this->list == NULL || this->parameters == NULL || this->datetime == NULL) {
     goto error;
   }
   return 1;
 error:
-  RAVE_FREE(this->paramname);
+  CompositeInternal_freeParameterList(&this->parameters);
   RAVE_OBJECT_RELEASE(this->list);
   RAVE_OBJECT_RELEASE(this->datetime);
   return 0;
@@ -96,14 +243,12 @@ static int Composite_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj
   this->method = src->method;
   this->height = src->height;
   this->elangle = src->elangle;
-  this->paramname = NULL;
   this->algorithm = NULL;
-  this->offset = src->offset;
-  this->gain = src->gain;
+  this->parameters = CompositeInternal_cloneParameterList(src->parameters);
   this->list = RAVE_OBJECT_CLONE(src->list);
   this->datetime = RAVE_OBJECT_CLONE(src->datetime);
 
-  if (this->list == NULL || this->datetime == NULL || !Composite_setQuantity(this, Composite_getQuantity(src))) {
+  if (this->list == NULL || this->datetime == NULL || this->parameters == NULL) {
     goto error;
   }
 
@@ -116,7 +261,7 @@ static int Composite_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj
 
   return 1;
 error:
-  RAVE_FREE(this->paramname);
+  CompositeInternal_freeParameterList(&this->parameters);
   RAVE_OBJECT_RELEASE(this->list);
   RAVE_OBJECT_RELEASE(this->datetime);
   RAVE_OBJECT_RELEASE(this->algorithm);
@@ -132,47 +277,86 @@ static void Composite_destructor(RaveCoreObject* obj)
   Composite_t* this = (Composite_t*)obj;
   RAVE_OBJECT_RELEASE(this->list);
   RAVE_OBJECT_RELEASE(this->datetime);
-  RAVE_FREE(this->paramname);
+  CompositeInternal_freeParameterList(&this->parameters);
   RAVE_OBJECT_RELEASE(this->algorithm);
 }
 
-static void CompositeInternal_nearestValue(Composite_t* composite, RaveCoreObject* object,
-  double plon, double plat, RaveValueType* type, double* value, PolarNavigationInfo* nav)
+/**
+ * Creates an array of CompositeValues_t with length nparam.
+ * @param[in] nparam - the number of items in the array
+ * @returns the array on success or NULL on failure
+ */
+static CompositeValues_t* CompositeInternal_createCompositeValues(int nparam)
 {
-  RAVE_ASSERT((type != NULL), "type == NULL");
-  RAVE_ASSERT((value != NULL), "value == NULL");
+  CompositeValues_t* result = NULL;
+  if (nparam > 0) {
+    result = RAVE_MALLOC(sizeof(CompositeValues_t) * nparam);
+    if (result == NULL) {
+      RAVE_CRITICAL0("Failed to allocate memory for composite values");
+    } else {
+      memset(result, 0, sizeof(CompositeValues_t) * nparam);
+    }
+  }
+  return result;
+}
 
-  *type = RaveValueType_NODATA;
-  *value = 0.0;
+/**
+ * Resets the array of composite values except the CartesianParam parameter
+ * and the dToRadar field.
+ * @param[in] nparam - number of parameters
+ * @param[in] p - pointer at the array
+ */
+static void CompositeInternal_resetCompositeValues(Composite_t* composite, int nparam, CompositeValues_t* p)
+{
+  int i = 0;
+  for (i = 0; i < nparam; i++) {
+    p[i].mindist = 1e10;
+    p[i].radarindex = -1;
+    p[i].navinfo.ei = -1;
+    p[i].navinfo.ai = -1;
+    p[i].navinfo.ri = -1;
+    p[i].vtype = RaveValueType_NODATA;
+    p[i].name = (const char*)((CompositingParameter_t*)RaveList_get(composite->parameters, i))->name;
+  }
+}
 
+/**
+ * Returns the position that is closest to the specified lon/lat according to
+ * the composites attributes like type/elevation/height/etc.
+ * @param[in] composite - self
+ * @param[in] object - the data object
+ * @param[in] plon - the longitude
+ * @param[in] plat - the latitude
+ * @param[out] nav - the navigation information
+ * @return 1 if hit or 0 if outside
+ */
+static int CompositeInternal_nearestPosition(
+  Composite_t* composite,
+  RaveCoreObject* object,
+  double plon,
+  double plat,
+  PolarNavigationInfo* nav)
+{
+  int result = 0;
+
+  RAVE_ASSERT((composite != NULL), "composite == NULL");
+  RAVE_ASSERT((nav != NULL), "nav == NULL");
   if (object != NULL) {
     if (RAVE_OBJECT_CHECK_TYPE(object, &PolarScan_TYPE)) {
-      // We could support CAPPI on scans as well but that is something
-      // for the future.
-      //
       if (composite->ptype == Rave_ProductType_PPI ||
           composite->ptype == Rave_ProductType_PCAPPI) {
-        *type = PolarScan_getNearestConvertedParameterValue((PolarScan_t*)object,
-                                                            Composite_getQuantity(composite),
-                                                            plon,
-                                                            plat,
-                                                            value,
-                                                            nav);
-      } else {
-        *type = RaveValueType_NODATA;
+        result = PolarScan_getNearestNavigationInfo((PolarScan_t*)object, plon, plat, nav);
       }
-    } else  if (RAVE_OBJECT_CHECK_TYPE(object, &PolarVolume_TYPE)){
+    } else if (RAVE_OBJECT_CHECK_TYPE(object, &PolarVolume_TYPE)) {
       if (composite->ptype == Rave_ProductType_PCAPPI ||
           composite->ptype == Rave_ProductType_CAPPI) {
         int insidee = (composite->ptype == Rave_ProductType_PCAPPI)?0:1;
-        *type = PolarVolume_getNearestConvertedParameterValue((PolarVolume_t*)object,
-                                                              Composite_getQuantity(composite),
-                                                              plon,
-                                                              plat,
-                                                              Composite_getHeight(composite),
-                                                              insidee,
-                                                              value,
-                                                              nav);
+        result = PolarVolume_getNearestNavigationInfo((PolarVolume_t*)object,
+                                                      plon,
+                                                      plat,
+                                                      Composite_getHeight(composite),
+                                                      insidee,
+                                                      nav);
       } else if (composite->ptype == Rave_ProductType_PPI) {
         PolarScan_t* scan = PolarVolume_getScanClosestToElevation((PolarVolume_t*)object,
                                                                   Composite_getElevationAngle(composite),
@@ -180,75 +364,143 @@ static void CompositeInternal_nearestValue(Composite_t* composite, RaveCoreObjec
         if (scan == NULL) {
           RAVE_ERROR1("Failed to fetch scan nearest to elevation %g",
                       Composite_getElevationAngle(composite));
-          return;
+          goto done;
         }
-        *type = PolarScan_getNearestConvertedParameterValue(scan,
-                                                            Composite_getQuantity(composite),
-                                                            plon,
-                                                            plat,
-                                                            value,
-                                                            nav);
+        result = PolarScan_getNearestNavigationInfo((PolarScan_t*)scan, plon, plat, nav);
+        nav->ei = PolarVolume_indexOf((PolarVolume_t*)object, scan);
         RAVE_OBJECT_RELEASE(scan);
-      } else {
-        *type = RaveValueType_NODATA;
       }
-    } else {
-      *type = RaveValueType_NODATA;
     }
   }
+
+done:
+  return result;
+}
+
+/**
+ * Gets the value at the specified position for the specified quantity.
+ * @param[in] composite - self
+ * @param[in] obj - the object
+ * @param[in] quantity - the quantity
+ * @param[in] nav - the navigation information
+ * @param[out] type - the value type
+ * @param[out] value - the value
+ * @return 1 on success or 0 if value not could be retrieved
+ */
+static int CompositeInternal_getValueAtPosition(
+  Composite_t* composite,
+  RaveCoreObject* obj,
+  const char* quantity,
+  PolarNavigationInfo* nav,
+  RaveValueType* type,
+  double* value)
+{
+  int result = 0;
+  RAVE_ASSERT((composite != NULL), "composite == NULL");
+  RAVE_ASSERT((nav != NULL), "nav == NULL");
+  RAVE_ASSERT((type != NULL), "type == NULL");
+  RAVE_ASSERT((value != NULL), "value == NULL");
+
+  if (obj != NULL) {
+    if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarScan_TYPE)) {
+      *type = PolarScan_getConvertedParameterValue((PolarScan_t*)obj, quantity, nav->ri, nav->ai, value);
+    } else if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
+      *type = PolarVolume_getConvertedParameterValueAt((PolarVolume_t*)obj, quantity, nav->ei, nav->ri, nav->ai, value);
+    } else {
+      RAVE_WARNING0("Unsupported object type");
+      goto done;
+    }
+  }
+
+  result = 1;
+done:
+  return result;
 }
 
 /**
  * Adds quality flags to the composite.
+ * @apram[in] self - self
  * @param[in] image - the image to add quality flags to
  * @param[in] qualityflags - a list of strings identifying the how/task value in the quality fields
  * @return 1 on success otherwise 0
  */
-static int CompositeInternal_addQualityFlags(Cartesian_t* image, RaveList_t* qualityflags)
+static int CompositeInternal_addQualityFlags(Composite_t* self, Cartesian_t* image, RaveList_t* qualityflags)
 {
-  int result = 1;
+  int result = 0;
   int nqualityflags = 0;
   RaveField_t* field = NULL;
   RaveAttribute_t* howtaskattribute = NULL;
-  int xsize = 0, ysize = 0;
-  int i = 0;
+  RaveAttribute_t* gainattribute = NULL;
+  CartesianParam_t* param = NULL;
+  RaveList_t* paramNames = NULL;
 
+  int xsize = 0, ysize = 0;
+  int i = 0, j = 0;
+  int nparam = 0;
+
+  RAVE_ASSERT((self != NULL), "self == NULL");
   RAVE_ASSERT((image != NULL), "image == NULL");
 
   xsize = Cartesian_getXSize(image);
   ysize = Cartesian_getYSize(image);
 
+  paramNames = Cartesian_getParameterNames(image);
+  if (paramNames == NULL) {
+    goto done;
+  }
+
+  nparam = RaveList_size(paramNames);
+
   if (qualityflags != NULL) {
     nqualityflags = RaveList_size(qualityflags);
   }
 
-  for (i = 0; result == 1 && i < nqualityflags; i++) {
-    field = RAVE_OBJECT_NEW(&RaveField_TYPE);
+  for (i = 0; i < nqualityflags; i++) {
     char* howtaskvaluestr = (char*)RaveList_get(qualityflags, i);
+    field = RAVE_OBJECT_NEW(&RaveField_TYPE);
     howtaskattribute = RaveAttributeHelp_createString("how/task", howtaskvaluestr);
     if (field == NULL ||
         howtaskattribute == NULL ||
         !RaveField_createData(field, xsize, ysize, RaveDataType_UCHAR) ||
-        !RaveField_addAttribute(field, howtaskattribute) ||
-        !Cartesian_addQualityField(image, field)) {
-      RAVE_ERROR0("Failed to add quality field to the cartesian product");
-      result = 0;
+        !RaveField_addAttribute(field, howtaskattribute)) {
+      RAVE_ERROR0("Failed to create quality field");
+      goto done;
     }
-
-    if (result == 1 && strcmp(DISTANCE_TO_RADAR_HOW_TASK, howtaskvaluestr) == 0) {
-      RaveAttribute_t* gainattribute = RaveAttributeHelp_createDouble("what/gain", DISTANCE_TO_RADAR_RESOLUTION);
+    if (strcmp(DISTANCE_TO_RADAR_HOW_TASK, howtaskvaluestr) == 0) {
+      gainattribute = RaveAttributeHelp_createDouble("what/gain", DISTANCE_TO_RADAR_RESOLUTION);
       if (gainattribute == NULL ||
           !RaveField_addAttribute(field, gainattribute)) {
-        RAVE_ERROR0("Failed to create gain for distance resolution");
-        result = 0;
+        RAVE_ERROR0("Failed to create gain attribute for quality field");
+        goto done;
       }
-      RAVE_OBJECT_RELEASE(gainattribute);
+    }
+
+    for (j = 0; j < nparam; j++) {
+      param = Cartesian_getParameter(image, (const char*)RaveList_get(paramNames, j));
+      if (param != NULL) {
+        RaveField_t* cfield = RAVE_OBJECT_CLONE(field);
+        if (cfield == NULL ||
+            !CartesianParam_addQualityField(param, cfield)) {
+          RAVE_OBJECT_RELEASE(cfield);
+          RAVE_ERROR0("Failed to add quality field");
+          goto done;
+        }
+        RAVE_OBJECT_RELEASE(cfield);
+      }
+      RAVE_OBJECT_RELEASE(param);
     }
 
     RAVE_OBJECT_RELEASE(field);
     RAVE_OBJECT_RELEASE(howtaskattribute);
   }
 
+  result = 1;
+done:
+  RAVE_OBJECT_RELEASE(field);
+  RAVE_OBJECT_RELEASE(howtaskattribute);
+  RAVE_OBJECT_RELEASE(gainattribute);
+  RAVE_OBJECT_RELEASE(param);
+  RaveList_freeAndDestroy(&paramNames);
   return result;
 }
 
@@ -258,30 +510,35 @@ static int CompositeInternal_addQualityFlags(Cartesian_t* image, RaveList_t* qua
  * @param[in] composite - self
  * @param[in] x - x coordinate
  * @param[in] y - y coordinate
- * @param[in] radardist - the distance to the radar in meters
+ * @param[in] radardist - distance to radar for this position
  * @param[in] radarindex - the object to use in the composite
  * @param[in] navinfo - the navigational information
  */
 static void CompositeInternal_fillQualityInformation(
   Composite_t* composite,
-  int x, int y,
-  Cartesian_t* cartesian,
+  int x,
+  int y,
+  CartesianParam_t* param,
   double radardist,
   int radarindex,
   PolarNavigationInfo* navinfo)
 {
   int nfields = 0, i = 0;
+  const char* quantity;
   RAVE_ASSERT((composite != NULL), "composite == NULL");
-  RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
+  RAVE_ASSERT((param != NULL), "param == NULL");
   RAVE_ASSERT((navinfo != NULL), "navinfo == NULL");
-  nfields = Cartesian_getNumberOfQualityFields(cartesian);
+
+  nfields = CartesianParam_getNumberOfQualityFields(param);
+  quantity = CartesianParam_getQuantity(param);
+
   for (i = 0; i < nfields; i++) {
     RaveField_t* field = NULL;
     RaveAttribute_t* attribute = NULL;
     char* name = NULL;
     double v = 0.0;
 
-    field = Cartesian_getQualityField(cartesian, i);
+    field = CartesianParam_getQualityField(param, i);
     if (field != NULL) {
       attribute = RaveField_getAttribute(field, "how/task");
     }
@@ -296,20 +553,20 @@ static void CompositeInternal_fillQualityInformation(
           RaveField_setValue(field, x, y, radardist/DISTANCE_TO_RADAR_RESOLUTION);
         } else if (composite->algorithm != NULL && CompositeAlgorithm_supportsFillQualityInformation(composite->algorithm, name)) {
           // If the algorithm indicates that it is able to support the provided how/task field, then do so
-          if (!CompositeAlgorithm_fillQualityInformation(composite->algorithm, obj, name, field, x, y, navinfo)) {
+          if (!CompositeAlgorithm_fillQualityInformation(composite->algorithm, obj, name, quantity, field, x, y, navinfo)) {
             RaveField_setValue(field, x, y, 0.0);
           }
         } else {
           if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
             if (navinfo->ei >= 0 && navinfo->ri >= 0 && navinfo->ai >= 0 &&
-                PolarVolume_getQualityValueAt((PolarVolume_t*)obj, Composite_getQuantity(composite), navinfo->ei, navinfo->ri, navinfo->ai, name, &v)) {
+                PolarVolume_getQualityValueAt((PolarVolume_t*)obj, quantity, navinfo->ei, navinfo->ri, navinfo->ai, name, &v)) {
               RaveField_setValue(field, x, y, v);
             } else {
               RaveField_setValue(field, x, y, 0.0); // No data found
             }
           } else if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarScan_TYPE)) {
             if (navinfo->ri >= 0 && navinfo->ai >= 0 &&
-                PolarScan_getQualityValueAt((PolarScan_t*)obj, Composite_getQuantity(composite), navinfo->ri, navinfo->ai, name, &v)) {
+                PolarScan_getQualityValueAt((PolarScan_t*)obj, quantity, navinfo->ri, navinfo->ai, name, &v)) {
               RaveField_setValue(field, x, y , v);
             } else {
               RaveField_setValue(field, x, y, 0.0); // No data found
@@ -323,6 +580,83 @@ static void CompositeInternal_fillQualityInformation(
     RAVE_OBJECT_RELEASE(attribute);
   }
 }
+
+/**
+ * Creates the resulting composite image.
+ * @param[in] self - self
+ * @param[in] area - the area the composite image(s) should have
+ * @returns the cartesian on success otherwise NULL
+ */
+static Cartesian_t* CompositeInternal_createCompositeImage(Composite_t* self, Area_t* area)
+{
+  Cartesian_t *result = NULL, *cartesian = NULL;
+  RaveAttribute_t* prodpar = NULL;
+  int nparam = 0, i = 0;
+
+  RAVE_ASSERT((self != NULL), "self == NULL");
+
+  cartesian = RAVE_OBJECT_NEW(&Cartesian_TYPE);
+  if (cartesian == NULL) {
+    goto done;
+  }
+  Cartesian_init(cartesian, area);
+
+  nparam = Composite_getParameterCount(self);
+  if (nparam <= 0) {
+    RAVE_ERROR0("You can not generate a composite without specifying at least one parameter");
+    goto done;
+  }
+
+  if (self->ptype == Rave_ProductType_CAPPI ||
+      self->ptype == Rave_ProductType_PCAPPI) {
+    prodpar = RaveAttributeHelp_createDouble("what/prodpar", self->height);
+  } else {
+    prodpar = RaveAttributeHelp_createDouble("what/prodpar", self->elangle * 180.0/M_PI);
+  }
+  if (prodpar == NULL) {
+    goto done;
+  }
+
+  Cartesian_setObjectType(cartesian, Rave_ObjectType_COMP);
+  Cartesian_setProduct(cartesian, self->ptype);
+  if (!Cartesian_addAttribute(cartesian, prodpar)) {
+    goto done;
+  }
+  if (Composite_getTime(self) != NULL) {
+    if (!Cartesian_setTime(cartesian, Composite_getTime(self))) {
+      goto done;
+    }
+  }
+  if (Composite_getDate(self) != NULL) {
+    if (!Cartesian_setDate(cartesian, Composite_getDate(self))) {
+      goto done;
+    }
+  }
+  if (!Cartesian_setSource(cartesian, Area_getID(area))) {
+    goto done;
+  }
+
+  for (i = 0; i < nparam; i++) {
+    double gain = 0.0, offset = 0.0;
+    const char* name = Composite_getParameter(self, i, &gain, &offset);
+    CartesianParam_t* cp = Cartesian_createParameter(cartesian, name, RaveDataType_UCHAR);
+    if (cp == NULL) {
+      goto done;
+    }
+    CartesianParam_setNodata(cp, 255.0);
+    CartesianParam_setUndetect(cp, 0.0);
+    CartesianParam_setGain(cp, gain);
+    CartesianParam_setOffset(cp, offset);
+    RAVE_OBJECT_RELEASE(cp);
+  }
+
+  result = RAVE_OBJECT_COPY(cartesian);
+done:
+  RAVE_OBJECT_RELEASE(cartesian);
+  RAVE_OBJECT_RELEASE(prodpar);
+  return result;
+}
+
 /*@} End of Private functions */
 
 /*@{ Interface functions */
@@ -409,51 +743,68 @@ double Composite_getElevationAngle(Composite_t* composite)
   return composite->elangle;
 }
 
-int Composite_setQuantity(Composite_t* composite, const char* quantity)
+int Composite_addParameter(Composite_t* composite, const char* quantity, double gain, double offset)
 {
   int result = 0;
-  char* tmp = NULL;
+  CompositingParameter_t* param = NULL;
+
   RAVE_ASSERT((composite != NULL), "composite == NULL");
-  if (quantity == NULL) {
-    return 0;
-  }
-  tmp = RAVE_STRDUP(quantity);
-  if (tmp != NULL) {
-    RAVE_FREE(composite->paramname);
-    composite->paramname = tmp;
+
+  param = CompositeInternal_getParameterByName(composite, quantity);
+  if (param != NULL) {
+    param->gain = gain;
+    param->offset = offset;
     result = 1;
+  } else {
+    param = CompositeInternal_createParameter(quantity, gain, offset);
+    if (param != NULL) {
+      result = RaveList_add(composite->parameters, param);
+      if (!result) {
+        CompositeInternal_freeParameter(param);
+      }
+    }
   }
   return result;
 }
 
-const char* Composite_getQuantity(Composite_t* composite)
+int Composite_hasParameter(Composite_t* composite, const char* quantity)
 {
+  int result = 0;
   RAVE_ASSERT((composite != NULL), "composite == NULL");
-  return (const char*)composite->paramname;
+  if (quantity != NULL) {
+    int i = 0;
+    int len = RaveList_size(composite->parameters);
+    for (i = 0; result == 0 && i < len ; i++) {
+      CompositingParameter_t* s = RaveList_get(composite->parameters, i);
+      if (s != NULL && s->name != NULL && strcmp(quantity, s->name) == 0) {
+        result = 1;
+      }
+    }
+  }
+  return result;
 }
 
-void Composite_setOffset(Composite_t* composite, double offset)
+int Composite_getParameterCount(Composite_t* composite)
 {
   RAVE_ASSERT((composite != NULL), "composite == NULL");
-  composite->offset = offset;
+  return RaveList_size(composite->parameters);
 }
 
-double Composite_getOffset(Composite_t* composite)
+const char* Composite_getParameter(Composite_t* composite, int index, double* gain, double* offset)
 {
+  CompositingParameter_t* param = NULL;
   RAVE_ASSERT((composite != NULL), "composite == NULL");
-  return composite->offset;
-}
-
-void Composite_setGain(Composite_t* composite, double gain)
-{
-  RAVE_ASSERT((composite != NULL), "composite == NULL");
-  composite->gain = gain;
-}
-
-double Composite_getGain(Composite_t* composite)
-{
-  RAVE_ASSERT((composite != NULL), "composite == NULL");
-  return composite->gain;
+  param = RaveList_get(composite->parameters, index);
+  if (param != NULL) {
+    if (gain != NULL) {
+      *gain = param->gain;
+    }
+    if (offset != NULL) {
+      *offset = param->offset;
+    }
+    return (const char*)param->name;
+  }
+  return NULL;
 }
 
 int Composite_setTime(Composite_t* composite, const char* value)
@@ -484,56 +835,41 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t*
 {
   Cartesian_t* result = NULL;
   Projection_t* projection = NULL;
-  RaveAttribute_t* prodpar = NULL;
-  RaveObjectHashTable_t* extrascans = NULL;
-
   PolarNavigationInfo navinfo;
+  CompositeValues_t* cvalues = NULL;
   int x = 0, y = 0, i = 0, xsize = 0, ysize = 0, nradars = 0;
   int nqualityflags = 0;
+  int nparam = 0;
 
   RAVE_ASSERT((composite != NULL), "composite == NULL");
-  RAVE_ASSERT((area != NULL), "area == NULL");
-
-  result = RAVE_OBJECT_NEW(&Cartesian_TYPE);
-  if (!Cartesian_init(result, area, RaveDataType_UCHAR)) {
-    goto fail;
-  }
-  if (composite->ptype == Rave_ProductType_CAPPI ||
-      composite->ptype == Rave_ProductType_PCAPPI) {
-    prodpar = RaveAttributeHelp_createDouble("what/prodpar", composite->height);
-  } else {
-    prodpar = RaveAttributeHelp_createDouble("what/prodpar", composite->elangle * 180.0/M_PI);
-  }
-  if (prodpar == NULL) {
+  if (area == NULL) {
+    RAVE_ERROR0("Trying to generate composite with NULL area");
     goto fail;
   }
 
-  Cartesian_setObjectType(result, Rave_ObjectType_COMP);
-  Cartesian_setProduct(result, composite->ptype);
-  if (!Cartesian_addAttribute(result, prodpar)) {
+  nparam = Composite_getParameterCount(composite);
+  if (nparam <= 0) {
+    RAVE_ERROR0("You can not generate a composite without specifying at least one parameter");
     goto fail;
   }
-  if (!Cartesian_setQuantity(result, Composite_getQuantity(composite))) {
+
+  result = CompositeInternal_createCompositeImage(composite, area);
+  if (result == NULL) {
     goto fail;
   }
-  if (Composite_getTime(composite) != NULL) {
-    if (!Cartesian_setTime(result, Composite_getTime(composite))) {
+
+  if ((cvalues = CompositeInternal_createCompositeValues(nparam)) == NULL) {
+    goto fail;
+  }
+
+  for (i = 0; i < nparam; i++) {
+    const char* name = Composite_getParameter(composite, i, NULL, NULL);
+    cvalues[i].parameter = Cartesian_getParameter(result, name); // Keep track on parameters
+    if (cvalues[i].parameter == NULL) {
+      RAVE_ERROR0("Failure in parameter handling\n");
       goto fail;
     }
   }
-  if (Composite_getDate(composite) != NULL) {
-    if (!Cartesian_setDate(result, Composite_getDate(composite))) {
-      goto fail;
-    }
-  }
-  if (!Cartesian_setSource(result, Area_getID(area))) {
-    goto fail;
-  }
-
-  Cartesian_setNodata(result, 255.0);
-  Cartesian_setUndetect(result, 0.0);
-  Cartesian_setOffset(result, Composite_getOffset(composite));
-  Cartesian_setGain(result, Composite_getGain(composite));
 
   xsize = Cartesian_getXSize(result);
   ysize = Cartesian_getYSize(result);
@@ -542,10 +878,9 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t*
 
   if (qualityflags != NULL) {
     nqualityflags = RaveList_size(qualityflags);
-  }
-
-  if (!CompositeInternal_addQualityFlags(result, qualityflags)) {
-    goto fail;
+    if (!CompositeInternal_addQualityFlags(composite, result, qualityflags)) {
+      goto fail;
+    }
   }
 
   if (composite->algorithm != NULL) {
@@ -557,22 +892,16 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t*
   for (y = 0; y < ysize; y++) {
     double herey = Cartesian_getLocationY(result, y);
     for (x = 0; x < xsize; x++) {
+      int cindex = 0;
       double herex = Cartesian_getLocationX(result, x);
       double olon = 0.0, olat = 0.0;
-      double mindist = 1e10;
-      double radardist = 0.0;
-      double v = 0.0L;
-      RaveValueType vtype = RaveValueType_NODATA;
-      int radarindex = -1;
-      PolarNavigationInfo rememberednav;
-      rememberednav.ei = -1;
-      rememberednav.ai = -1;
-      rememberednav.ri = -1;
+
+      CompositeInternal_resetCompositeValues(composite, nparam, cvalues);
       if (composite->algorithm != NULL) {
         CompositeAlgorithm_reset(composite->algorithm, x, y);
       }
 
-      for (i = 0, mindist=1e10; i < nradars; i++) {
+      for (i = 0; i < nradars; i++) {
         RaveCoreObject* obj = NULL;
         Projection_t* objproj = NULL;
 
@@ -601,33 +930,40 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t*
               maxdist = PolarScan_getMaxDistance((PolarScan_t*)obj);
             }
             if (dist <= maxdist) {
-              RaveValueType otype = RaveValueType_NODATA;
-              double ovalue = 0.0;
-              CompositeInternal_nearestValue(composite, obj, olon, olat, &otype, &ovalue, &navinfo);
-              rdist = dist; /* Remember distance to radar */
+              if (CompositeInternal_nearestPosition(composite, obj, olon, olat, &navinfo)) {
+                double originaldist = dist;
+                rdist = dist; /* Remember distance to radar */
 
-              if (composite->algorithm != NULL && CompositeAlgorithm_supportsProcess(composite->algorithm)) {
-                if (CompositeAlgorithm_process(composite->algorithm, obj, olon, olat, dist, otype, ovalue, &navinfo)) {
-                  vtype = otype;
-                  v = ovalue;
-                  radarindex = i;
-                  rememberednav = navinfo;
-                }
-              } else {
-                // Maybe should create a specific nearest/height algorithm !?
-                //
                 if (composite->method == CompositeSelectionMethod_HEIGHT) {
-                  dist = navinfo.actual_height; // We are determining pixel by height above sea level
+                  dist = navinfo.actual_height;
                 }
 
-                if (otype == RaveValueType_DATA || otype == RaveValueType_UNDETECT) {
-                  if ((vtype != RaveValueType_DATA && vtype != RaveValueType_UNDETECT) || dist < mindist) {
-                    vtype = otype;
-                    v = ovalue;
-                    mindist = dist;
-                    radardist = rdist;
-                    radarindex = i;
-                    rememberednav = navinfo;
+                for (cindex = 0; cindex < nparam; cindex++) {
+                  RaveValueType otype = RaveValueType_NODATA;
+                  double ovalue = 0.0;
+                  CompositeInternal_getValueAtPosition(composite, obj, cvalues[cindex].name, &navinfo, &otype, &ovalue);
+
+                  if (composite->algorithm != NULL && CompositeAlgorithm_supportsProcess(composite->algorithm)) {
+                    if (CompositeAlgorithm_process(composite->algorithm, obj, cvalues[cindex].name, olon, olat, originaldist, &otype, &ovalue, &cvalues[cindex].navinfo)) {
+                      cvalues[cindex].vtype = otype;
+                      cvalues[cindex].value = ovalue;
+                      cvalues[cindex].mindist = originaldist;
+                      cvalues[cindex].radardist = rdist;
+                      cvalues[cindex].radarindex = i;
+                      cvalues[cindex].navinfo = navinfo;
+                    }
+                  } else {
+                    if (otype == RaveValueType_DATA || otype == RaveValueType_UNDETECT) {
+                      if ((cvalues[cindex].vtype != RaveValueType_DATA && cvalues[cindex].vtype != RaveValueType_UNDETECT) ||
+                          dist < cvalues[cindex].mindist) {
+                        cvalues[cindex].vtype = otype;
+                        cvalues[cindex].value = ovalue;
+                        cvalues[cindex].mindist = dist;
+                        cvalues[cindex].radardist = rdist;
+                        cvalues[cindex].radarindex = i;
+                        cvalues[cindex].navinfo = navinfo;
+                      }
+                    }
                   }
                 }
               }
@@ -638,28 +974,34 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t*
         RAVE_OBJECT_RELEASE(objproj);
       }
 
-      if (vtype == RaveValueType_NODATA) {
-        Cartesian_setConvertedValue(result, x, y, Cartesian_getNodata(result));
-      } else if (vtype == RaveValueType_UNDETECT) {
-        Cartesian_setConvertedValue(result, x, y, Cartesian_getUndetect(result));
-      } else {
-        Cartesian_setConvertedValue(result, x, y, v);
-      }
-
-      if ((vtype == RaveValueType_DATA || vtype == RaveValueType_UNDETECT) && radarindex >= 0 && nqualityflags > 0) {
-        CompositeInternal_fillQualityInformation(composite, x, y, result, radardist, radarindex, &rememberednav);
+      for (cindex = 0; cindex < nparam; cindex++) {
+        if (cvalues[cindex].vtype == RaveValueType_NODATA) {
+          CartesianParam_setConvertedValue(cvalues[cindex].parameter, x, y, CartesianParam_getNodata(cvalues[cindex].parameter));
+        } else if (cvalues[cindex].vtype == RaveValueType_UNDETECT) {
+          CartesianParam_setConvertedValue(cvalues[cindex].parameter, x, y, CartesianParam_getUndetect(cvalues[cindex].parameter));
+        } else {
+          CartesianParam_setConvertedValue(cvalues[cindex].parameter, x, y, cvalues[cindex].value);
+        }
+        if ((cvalues[cindex].vtype == RaveValueType_DATA || cvalues[cindex].vtype == RaveValueType_UNDETECT) &&
+            cvalues[cindex].radarindex >= 0 && nqualityflags > 0) {
+          CompositeInternal_fillQualityInformation(composite, x, y, cvalues[cindex].parameter, cvalues[cindex].radardist, cvalues[cindex].radarindex, &(cvalues[cindex].navinfo));
+        }
       }
     }
   }
 
-  RAVE_OBJECT_RELEASE(extrascans);
+  for (i = 0; cvalues != NULL && i < nparam; i++) {
+    RAVE_OBJECT_RELEASE(cvalues[i].parameter);
+  }
+  RAVE_FREE(cvalues);
   RAVE_OBJECT_RELEASE(projection);
-  RAVE_OBJECT_RELEASE(prodpar);
   return result;
 fail:
-  RAVE_OBJECT_RELEASE(extrascans);
+  for (i = 0; cvalues != NULL && i < nparam; i++) {
+    RAVE_OBJECT_RELEASE(cvalues[i].parameter);
+  }
+  RAVE_FREE(cvalues);
   RAVE_OBJECT_RELEASE(projection);
-  RAVE_OBJECT_RELEASE(prodpar);
   RAVE_OBJECT_RELEASE(result);
   return result;
 }

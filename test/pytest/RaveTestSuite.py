@@ -30,6 +30,7 @@ from PyPolarScanTest import *
 from PyPolarScanParamTest import *
 from RaveModuleConstantsTest import *
 from PyCartesianTest import *
+from PyCartesianParamTest import *
 from PyCartesianVolumeTest import *
 from PyRaveFieldTest import *
 from PyTransformTest import *

@@ -219,6 +219,14 @@ int PolarVolume_getNumberOfScans(PolarVolume_t* pvol);
 PolarScan_t* PolarVolume_getScanClosestToElevation(PolarVolume_t* pvol, double e, int inside);
 
 /**
+ * Returns the index in the list of scans of the specified scan.
+ * @param[in] pvol - self
+ * @param[in] scan - the scan that is searched for
+ * @return -1 if not found, otherwise the index of the scan
+ */
+int PolarVolume_indexOf(PolarVolume_t* pvol, PolarScan_t* scan);
+
+/**
  * Returns the navigation information that is the result from finding the lon/lat-coordinate
  * at the specified height for this volume
  * @param[in] scan - self
@@ -253,6 +261,29 @@ RaveValueType PolarVolume_getNearest(PolarVolume_t* pvol, double lon, double lat
  * @return what type of value that has been set in v. If the parameter does not exist in the found scan, RaveValueType_UNDEFINED will be returned.
  */
 RaveValueType PolarVolume_getNearestParameterValue(PolarVolume_t* pvol, const char* quantity, double lon, double lat, double height, int insidee, double* v);
+
+/**
+ * Returns the converted parameter value at the specified location
+ * @param[in] pvol - self
+ * @param[in] quantity - the quantity
+ * @param[in] ei - elevation index
+ * @param[in] ri - bin index
+ * @param[in] ai - azimuthal index
+ * @return the type of the value
+ */
+RaveValueType PolarVolume_getConvertedParameterValueAt(PolarVolume_t* pvol, const char* quantity, int ei, int ri, int ai, double* v);
+
+/**
+ * Returns the navigation nearest to specified lon/lat/height.
+ * @param[in] pvol - self (MAY NOT BE NULL)
+ * @param[in] lon  - the longitude (in radians)
+ * @param[in] lat  - the latitude (in radians)
+ * @param[in] height - the height
+ * @param[in] insidee - if the estimated elevation must be within the min-max elevation or not to be valid
+ * @param[in,out] navinfo - the navigation information (may be NULL).
+ * @return 1 if ei, ri and ai are inside boundaries otherwise 0
+ */
+int PolarVolume_getNearestNavigationInfo(PolarVolume_t* pvol, double lon, double lat, double height, int insidee, PolarNavigationInfo* navinfo);
 
 /**
  * Fetches the nearest converted parameter value for the specified position.
@@ -383,5 +414,14 @@ int PolarVolume_isValid(PolarVolume_t* pvol);
  * @return the scan if found, otherwise NULL
  */
 PolarScan_t* PolarVolume_findScanWithQualityFieldByHowTask(PolarVolume_t* pvol, const char* howtaskvalue, const char* quantity);
+
+/**
+ * Basically the same as \ref #PolarVolume_findScanWithQualityFieldByHowTask with the exception that all
+ * parameters are traversed until a how/task value field is found to be matching.
+ * @param[in] pvol - self
+ * @param[in] howtaskvalue - the how/task value
+ * @return the scan if found otherwise NULL
+ */
+PolarScan_t* PolarVolume_findAnyScanWithQualityFieldByHowTask(PolarVolume_t* pvol, const char* howtaskvalue);
 
 #endif

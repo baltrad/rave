@@ -26,6 +26,7 @@ Tests the cartesian module.
 import unittest
 import os
 import _cartesian
+import _cartesianparam
 import _projection
 import _rave
 import _area
@@ -47,9 +48,9 @@ class PyCartesianTest(unittest.TestCase):
     self.assertNotEqual(-1, isscan)
   
   def test_attribute_visibility(self):
-    attrs = ['areaextent', 'datatype', 'date', 'gain', 'nodata', 'objectType', 
-     'offset', 'product', 'projection', 'quantity', 'source', 'time',
-     'undetect', 'xscale', 'xsize', 'yscale', 'ysize']
+    attrs = ['areaextent', 'date', 'objectType', 
+     'product', 'projection', 'source', 'time',
+     'xscale', 'xsize', 'yscale', 'ysize']
     obj = _cartesian.new()
     alist = dir(obj)
     for a in attrs:
@@ -65,7 +66,7 @@ class PyCartesianTest(unittest.TestCase):
     a.extent = (1.0, 2.0, 3.0, 4.0)
     a.projection = _projection.new("x", "y", "+proj=latlong +ellps=WGS84 +datum=WGS84")
 
-    obj.init(a, _rave.RaveDataType_SHORT)
+    obj.init(a)
     self.assertEquals(10, obj.xsize)
     self.assertEquals(10, obj.ysize)
     self.assertAlmostEquals(100.0, obj.xscale, 4)
@@ -163,12 +164,6 @@ class PyCartesianTest(unittest.TestCase):
       pass
     self.assertEquals(0, obj.xsize)
 
-  def test_xsize_fromArray(self):
-    obj = _cartesian.new()
-    data = numpy.zeros((11,10), numpy.uint8)
-    obj.setData(data)
-    self.assertEquals(10, obj.xsize)
-
   def test_ysize(self):
     obj = _cartesian.new()
     self.assertEquals(0, obj.ysize)
@@ -178,12 +173,6 @@ class PyCartesianTest(unittest.TestCase):
     except AttributeError, e:
       pass
     self.assertEquals(0, obj.ysize)
-
-  def test_ysize_fromArray(self):
-    obj = _cartesian.new()
-    data = numpy.zeros((11,10), numpy.uint8)
-    obj.setData(data)
-    self.assertEquals(11, obj.ysize)
 
   def test_xscale(self):
     obj = _cartesian.new()
@@ -216,116 +205,6 @@ class PyCartesianTest(unittest.TestCase):
     except TypeError,e:
       pass
     self.assertAlmostEquals(0.0, obj.yscale, 4)
-
-  def test_datatype(self):
-    obj = _cartesian.new()
-    self.assertEqual(_rave.RaveDataType_UNDEFINED, obj.datatype)
-    try:
-      obj.datatype = _rave.RaveDataType_INT
-      self.fail("Expected AttributeError")
-    except AttributeError, e:
-      pass
-    self.assertEqual(_rave.RaveDataType_UNDEFINED, obj.datatype)
-
-  def test_datatypes_fromData(self):
-    types = [(numpy.int8, _rave.RaveDataType_CHAR),
-             (numpy.uint8, _rave.RaveDataType_UCHAR),
-             (numpy.int16, _rave.RaveDataType_SHORT),
-             (numpy.int32, _rave.RaveDataType_INT),
-             (numpy.int64, _rave.RaveDataType_LONG),
-             (numpy.float32, _rave.RaveDataType_FLOAT),
-             (numpy.float64, _rave.RaveDataType_DOUBLE)]
-
-    obj = _cartesian.new()
-    for type in types:
-      d = numpy.zeros((10,10), type[0])
-      obj.setData(d)
-      self.assertEquals(type[1], obj.datatype)
-    
-  def test_quantity(self):
-    obj = _cartesian.new()
-    self.assertEquals(None, obj.quantity)
-    obj.quantity = "DBZH"
-    self.assertEquals("DBZH", obj.quantity)
-
-  def test_quantity_typeError(self):
-    obj = _cartesian.new()
-    try:
-      obj.quantity = 10
-      self.fail("Expected TypeError")
-    except TypeError,e:
-      pass
-    self.assertEquals(None, obj.quantity)
-    
-  def test_gain(self):
-    obj = _cartesian.new()
-    self.assertAlmostEquals(1.0, obj.gain, 4)
-    obj.gain = 10.0
-    self.assertAlmostEquals(10.0, obj.gain, 4)
-
-  def test_setGain_zero(self):
-    obj = _cartesian.new()
-    obj.gain = 0.0
-    self.assertAlmostEquals(1.0, obj.gain, 4)
-
-
-  def test_gain_typeError(self):
-    obj = _cartesian.new()
-    self.assertAlmostEquals(1.0, obj.gain, 4)
-    try:
-      obj.gain = 10
-      self.fail("Expected TypeError")
-    except TypeError,e:
-      pass
-    self.assertAlmostEquals(1.0, obj.gain, 4)
-
-  def test_offset(self):
-    obj = _cartesian.new()
-    self.assertAlmostEquals(0.0, obj.offset, 4)
-    obj.offset = 10.0
-    self.assertAlmostEquals(10.0, obj.offset, 4)
-
-  def test_offset_typeError(self):
-    obj = _cartesian.new()
-    self.assertAlmostEquals(0.0, obj.offset, 4)
-    try:
-      obj.offset = 10
-      self.fail("Expected TypeError")
-    except TypeError,e:
-      pass
-    self.assertAlmostEquals(0.0, obj.offset, 4)
-
-  def test_nodata(self):
-    obj = _cartesian.new()
-    self.assertAlmostEquals(0.0, obj.nodata, 4)
-    obj.nodata = 10.0
-    self.assertAlmostEquals(10.0, obj.nodata, 4)
-
-  def test_nodata_typeError(self):
-    obj = _cartesian.new()
-    self.assertAlmostEquals(0.0, obj.nodata, 4)
-    try:
-      obj.nodata = 10
-      self.fail("Expected TypeError")
-    except TypeError,e:
-      pass
-    self.assertAlmostEquals(0.0, obj.nodata, 4)
-
-  def test_undetect(self):
-    obj = _cartesian.new()
-    self.assertAlmostEquals(0.0, obj.undetect, 4)
-    obj.undetect = 10.0
-    self.assertAlmostEquals(10.0, obj.undetect, 4)
-
-  def test_undetect_typeError(self):
-    obj = _cartesian.new()
-    self.assertAlmostEquals(0.0, obj.undetect, 4)
-    try:
-      obj.undetect = 10
-      self.fail("Expected TypeError")
-    except TypeError,e:
-      pass
-    self.assertAlmostEquals(0.0, obj.undetect, 4)
 
   def test_areaextent(self):
     obj = _cartesian.new()
@@ -435,18 +314,25 @@ class PyCartesianTest(unittest.TestCase):
 
   def test_getValue(self):
     obj = _cartesian.new()
-    obj.nodata = 255.0
-    obj.undetect = 0.0
+
+    param = _cartesianparam.new()
+    param.quantity = "DBZH"
+    param.nodata = 255.0
+    param.undetect = 0.0
+
     a=numpy.arange(120)
     a=numpy.array(a.astype(numpy.float64),numpy.float64)
     a=numpy.reshape(a,(12,10)).astype(numpy.float64)    
-    a[0][1] = obj.nodata
-    a[1][0] = obj.undetect
-    obj.setData(a)
+    a[0][1] = param.nodata
+    a[1][0] = param.undetect
     
+    param.setData(a)
+    
+    obj.addParameter(param)
+    obj.defaultParameter = "DBZH"
     pairs = [(0, 0, 0.0, _rave.RaveValueType_UNDETECT),
-             (1, 0, obj.nodata, _rave.RaveValueType_NODATA), 
-             (0, 1, obj.undetect, _rave.RaveValueType_UNDETECT),
+             (1, 0, param.nodata, _rave.RaveValueType_NODATA), 
+             (0, 1, param.undetect, _rave.RaveValueType_UNDETECT),
              (2, 0, 2.0, _rave.RaveValueType_DATA),
              (0, 3, 30.0, _rave.RaveValueType_DATA)]
 
@@ -457,8 +343,12 @@ class PyCartesianTest(unittest.TestCase):
 
   def test_getMean(self):
     obj = _cartesian.new()
-    obj.nodata = 255.0
-    obj.undetect = 0.0
+    
+    param = _cartesianparam.new()
+    param.quantity = "DBZH"
+    param.nodata = 255.0
+    param.undetect = 0.0
+
     data = numpy.zeros((5,5), numpy.float64)
 
     for y in range(5):
@@ -466,14 +356,17 @@ class PyCartesianTest(unittest.TestCase):
         data[y][x] = float(x+y*5)
         
     # add some nodata and undetect
-    data[0][0] = obj.nodata    # 0
-    data[0][3] = obj.nodata    # 3
-    data[1][2] = obj.nodata    # 7
-    data[1][3] = obj.undetect  # 8
-    data[3][2] = obj.undetect  # 17
-    data[4][4] = obj.nodata    # 24
+    data[0][0] = param.nodata    # 0
+    data[0][3] = param.nodata    # 3
+    data[1][2] = param.nodata    # 7
+    data[1][3] = param.undetect  # 8
+    data[3][2] = param.undetect  # 17
+    data[4][4] = param.nodata    # 24
     
-    obj.setData(data)
+    param.setData(data)
+    
+    obj.addParameter(param)
+    obj.defaultParameter = "DBZH"
     
     # Nodata
     (t,v) = obj.getMean((0,0), 2)
@@ -495,23 +388,28 @@ class PyCartesianTest(unittest.TestCase):
     self.assertEquals(t, _rave.RaveValueType_DATA)
     self.assertAlmostEquals(v, expected)
     
-    
-    
   def test_setGetValue(self):
     obj = _cartesian.new()
-    obj.nodata = 255.0
-    obj.undetect = 0.0
+    
+    param = _cartesianparam.new()
+    param.quantity = "DBZH"
+    param.nodata = 255.0
+    param.undetect = 0.0
+    
     a=numpy.arange(120)
     a=numpy.array(a.astype(numpy.float64),numpy.float64)
     a=numpy.reshape(a,(12,10)).astype(numpy.float64)  
-    obj.setData(a)
+    param.setData(a)
+    
+    obj.addParameter(param)
+    obj.defaultParameter = "DBZH"
     
     data = [((0,1), 10.0, _rave.RaveValueType_DATA),
             ((1,1), 20.0, _rave.RaveValueType_DATA),
             ((2,2), 30.0, _rave.RaveValueType_DATA),
             ((9,4), 49.0, _rave.RaveValueType_DATA),
-            ((8,4), obj.nodata, _rave.RaveValueType_NODATA),
-            ((4,8), obj.undetect, _rave.RaveValueType_UNDETECT),]
+            ((8,4), param.nodata, _rave.RaveValueType_NODATA),
+            ((4,8), param.undetect, _rave.RaveValueType_UNDETECT),]
     
     for v in data:
       obj.setValue(v[0],v[1])
@@ -524,14 +422,21 @@ class PyCartesianTest(unittest.TestCase):
 
   def test_setGetConvertedValue(self):
     obj = _cartesian.new()
-    obj.nodata = 255.0
-    obj.undetect = 0.0
-    obj.gain = 2.0
-    obj.offset = 1.0
+
+    param = _cartesianparam.new()
+    param.quantity = "DBZH"
+    param.nodata = 255.0
+    param.undetect = 0.0
+    param.gain = 2.0
+    param.offset = 1.0
+    
     a=numpy.arange(120)
     a=numpy.array(a.astype(numpy.float64),numpy.float64)
     a=numpy.reshape(a,(12,10)).astype(numpy.float64)  
-    obj.setData(a)
+    param.setData(a)
+    
+    obj.addParameter(param)
+    obj.defaultParameter = "DBZH"
     
     obj.setValue((0,1), 10.0)
     obj.setValue((1,1), 20.0)
@@ -554,80 +459,20 @@ class PyCartesianTest(unittest.TestCase):
     self.assertEquals(_rave.RaveValueType_DATA, r[0])
     self.assertAlmostEquals(15.0, r[1], 4)
 
-  def test_setData_int8(self):
-    obj = _cartesian.new()
-    a=numpy.arange(120)
-    a=numpy.array(a.astype(numpy.int8),numpy.int8)
-    a=numpy.reshape(a,(12,10)).astype(numpy.int8)    
-    
-    obj.setData(a)
-    
-    self.assertEqual(_rave.RaveDataType_CHAR, obj.datatype)
-    self.assertEqual(10, obj.xsize)
-    self.assertEqual(12, obj.ysize)
-
-
-  def test_setData_uint8(self):
-    obj = _cartesian.new()
-    a=numpy.arange(120)
-    a=numpy.array(a.astype(numpy.uint8),numpy.uint8)
-    a=numpy.reshape(a,(12,10)).astype(numpy.uint8)    
-    
-    obj.setData(a)
-    
-    self.assertEqual(_rave.RaveDataType_UCHAR, obj.datatype)
-    self.assertEqual(10, obj.xsize)
-    self.assertEqual(12, obj.ysize)
-
-  def test_setData_int16(self):
-    obj = _cartesian.new()
-    a=numpy.arange(120)
-    a=numpy.array(a.astype(numpy.int16),numpy.int16)
-    a=numpy.reshape(a,(12,10)).astype(numpy.int16)    
-    
-    obj.setData(a)
-    
-    self.assertEqual(_rave.RaveDataType_SHORT, obj.datatype)
-    self.assertEqual(10, obj.xsize)
-    self.assertEqual(12, obj.ysize)
-
-  def test_setData_uint16(self):
-    obj = _cartesian.new()
-    a=numpy.arange(120)
-    a=numpy.array(a.astype(numpy.uint16),numpy.uint16)
-    a=numpy.reshape(a,(12,10)).astype(numpy.uint16)    
-    
-    obj.setData(a)
-    
-    self.assertEqual(_rave.RaveDataType_SHORT, obj.datatype)
-    self.assertEqual(10, obj.xsize)
-    self.assertEqual(12, obj.ysize)
-
-  def test_getData_int8(self):
-    obj = _cartesian.new()
-    a=numpy.arange(120)
-    a=numpy.array(a.astype(numpy.int8),numpy.int8)
-    a=numpy.reshape(a,(12,10)).astype(numpy.int8)    
-    
-    obj.setData(a)
-    obj.setValue((3,2), 5)
-    obj.setValue((4,4), 7)
-    
-    result = obj.getData()
-    self.assertEquals(5, result[2][3])
-    self.assertEquals(7, result[4][4])
-    self.assertEquals("int8", result.dtype.name)
-
   def test_isTransformable(self):
     proj = _rave.projection("x", "y", "+proj=stere +ellps=bessel +lat_0=90 +lon_0=14 +lat_ts=60 +datum=WGS84")
     data = numpy.zeros((10,10), numpy.float64)
 
+    param = _cartesianparam.new()
+    param.setData(data)
+    param.quantity = "DBZH"
+    
     obj = _cartesian.new()
     obj.xscale = 1000.0
     obj.yscale = 1000.0
     
     obj.projection = proj
-    obj.setData(data)
+    obj.addParameter(param);
 
     self.assertEquals(True, obj.isTransformable())
     
@@ -635,12 +480,16 @@ class PyCartesianTest(unittest.TestCase):
     proj = _rave.projection("x", "y", "+proj=stere +ellps=bessel +lat_0=90 +lon_0=14 +lat_ts=60 +datum=WGS84")
     data = numpy.zeros((10,10), numpy.float64)
 
+    param = _cartesianparam.new()
+    param.quantity = "DBZH"    
+    param.setData(data)
+    
     obj = _cartesian.new()
     obj.xscale = 1000.0
     obj.yscale = 1000.0
     
     obj.projection = proj
-    obj.setData(data)
+    obj.addParameter(param)
 
     self.assertEquals(True, obj.isTransformable())
     obj.xscale = 1000.0
@@ -664,16 +513,24 @@ class PyCartesianTest(unittest.TestCase):
   def test_isTransformable_noproj(self):
     data = numpy.zeros((10,10), numpy.float64)
 
+    param = _cartesianparam.new()
+    param.quantity = "DBZH"    
+    param.setData(data)
+    
     obj = _cartesian.new()
     obj.xscale = 1000.0
     obj.yscale = 1000.0
     
-    obj.setData(data)
+    obj.addParameter(param)
 
     self.assertEquals(False, obj.isTransformable())
 
   def test_isValid_asImage(self):
     obj = _cartesian.new()
+    param = _cartesianparam.new()
+    param.quantity = "DBZH"
+    param.setData(numpy.zeros((10,10), numpy.uint8))
+    
     a = _area.new()
     a.xsize = 10
     a.ysize = 10
@@ -681,17 +538,21 @@ class PyCartesianTest(unittest.TestCase):
     a.yscale = 100.0
     a.extent = (1.0, 2.0, 3.0, 4.0)
     a.projection = _projection.new("x", "y", "+proj=latlong +ellps=WGS84 +datum=WGS84")
-    obj.init(a, _rave.RaveDataType_SHORT)
+    obj.init(a)
     obj.date = "20100101"
     obj.time = "100000"
     obj.source = "PLC:1234"
     obj.product = _rave.Rave_ProductType_CAPPI
-    obj.quantity = "DBZH"
+    obj.addParameter(param)
     
     self.assertEquals(True, obj.isValid(_rave.Rave_ObjectType_IMAGE))
     
   def test_isValid_asImage_no_date(self):
     obj = _cartesian.new()
+    param = _cartesianparam.new()
+    param.quantity = "DBZH"
+    param.setData(numpy.zeros((10,10), numpy.uint8))
+    
     a = _area.new()
     a.xsize = 10
     a.ysize = 10
@@ -699,43 +560,41 @@ class PyCartesianTest(unittest.TestCase):
     a.yscale = 100.0
     a.extent = (1.0, 2.0, 3.0, 4.0)
     a.projection = _projection.new("x", "y", "+proj=latlong +ellps=WGS84 +datum=WGS84")
-    obj.init(a, _rave.RaveDataType_SHORT)
+    obj.init(a)
     obj.time = "100000"
     obj.source = "PLC:1234"
     obj.product = _rave.Rave_ProductType_CAPPI
-    obj.quantity = "DBZH"
+    obj.addParameter(param)
     
     self.assertEquals(False, obj.isValid(_rave.Rave_ObjectType_IMAGE))
 
-  def test_isValid_asImage_no_quantity(self):
+  def test_addParameter_no_quantity(self):
     obj = _cartesian.new()
-    a = _area.new()
-    a.xsize = 10
-    a.ysize = 10
-    a.xscale = 100.0
-    a.yscale = 100.0
-    a.extent = (1.0, 2.0, 3.0, 4.0)
-    a.projection = _projection.new("x", "y", "+proj=latlong +ellps=WGS84 +datum=WGS84")
-    obj.init(a, _rave.RaveDataType_SHORT)
-    obj.date = "20100101"
-    obj.time = "100000"
-    obj.source = "PLC:1234"
-    obj.product = _rave.Rave_ProductType_CAPPI
-    
-    self.assertEquals(False, obj.isValid(_rave.Rave_ObjectType_IMAGE))
+
+    param = _cartesianparam.new()
+    param.setData(numpy.zeros((10,10), numpy.uint8))
+
+    try:
+      obj.addParameter(param)
+      self.fail("Expected AttributeError")
+    except AttributeError:
+      pass
 
   def test_isValid_asCvol(self):
     obj = _cartesian.new()
+    param = _cartesianparam.new()
+    param.quantity = "DBZH"
+    data = numpy.zeros((240,240),numpy.uint8)
+    param.setData(data)
+    
     obj.startdate = "20100101"
     obj.starttime = "100000"
     obj.enddate = "20100101"
     obj.endtime = "100000"
     obj.product = _rave.Rave_ProductType_CAPPI
-    obj.quantity = "DBZH"
     obj.xscale = 100.0
     obj.yscale = 100.0
-    data = numpy.zeros((240,240),numpy.uint8)
-    obj.setData(data)
+    obj.addParameter(param)
     
     self.assertEquals(True, obj.isValid(_rave.Rave_ObjectType_CVOL))
   
@@ -754,4 +613,159 @@ class PyCartesianTest(unittest.TestCase):
     obj.removeQualityField(0)
     self.assertEquals(1, obj.getNumberOfQualityFields())
     self.assertEquals("field2", obj.getQualityField(0).getAttribute("what/name"))
+  
+  def test_addParameter(self):
+    obj = _cartesian.new()
+    param = _cartesianparam.new()
+    param.quantity="DBZH"
+    param.setData(numpy.zeros((240,240),numpy.uint8))
+    param2 = _cartesianparam.new()
+    param2.quantity="MMH"
+    param2.setData(numpy.zeros((240,240),numpy.uint8))
     
+    self.assertFalse(obj.hasParameter("DBZH"))
+    obj.addParameter(param)
+    self.assertTrue(obj.hasParameter("DBZH"))
+    obj.addParameter(param2)
+    self.assertTrue(obj.hasParameter("DBZH"))
+    self.assertTrue(obj.hasParameter("MMH"))
+
+  def test_addParameter_differentSizes(self):
+    obj = _cartesian.new()
+    param = _cartesianparam.new()
+    param.quantity="DBZH"
+    param.setData(numpy.zeros((240,240),numpy.uint8))
+    param2 = _cartesianparam.new()
+    param2.quantity="MMH"
+    param2.setData(numpy.zeros((241,241),numpy.uint8))
+    
+    obj.addParameter(param)
+    try:
+      obj.addParameter(param2)
+      self.fail("Expected AttributeError")
+    except AttributeError:
+      pass
+    
+    self.assertTrue(obj.hasParameter("DBZH"))
+    self.assertFalse(obj.hasParameter("MMH"))
+  
+  def test_createParameter(self):
+    obj = _cartesian.new()
+    a = _area.new()
+    a.xsize = 10
+    a.ysize = 10
+    a.xscale = 100.0
+    a.yscale = 100.0
+    a.extent = (1.0, 2.0, 3.0, 4.0)
+    a.projection = _projection.new("x", "y", "+proj=latlong +ellps=WGS84 +datum=WGS84")
+    obj.init(a)
+    
+    param = obj.createParameter("DBZH", _rave.RaveDataType_UCHAR)
+    self.assertEquals(10, param.xsize)
+    self.assertEquals(10, param.ysize)
+    self.assertEquals("DBZH", param.quantity)
+
+    param = obj.createParameter("MMH", _rave.RaveDataType_UCHAR)
+    self.assertEquals(10, param.xsize)
+    self.assertEquals(10, param.ysize)
+    self.assertEquals("MMH", param.quantity)
+
+    self.assertTrue(obj.hasParameter("DBZH"))
+    self.assertTrue(obj.hasParameter("MMH"))
+    
+  def test_createParameter_notInitialized(self):
+    obj = _cartesian.new()
+
+    try:
+      obj.createParameter("DBZH",  _rave.RaveDataType_UCHAR)
+      self.fail("Expected AttributeError")
+    except AttributeError:
+      pass    
+    self.assertFalse(obj.hasParameter("DBZH"))
+    
+  def test_getParameter(self):
+    obj = _cartesian.new()
+    param = _cartesianparam.new()
+    param.quantity="DBZH"
+    param.setData(numpy.zeros((240,240),numpy.uint8))
+    param2 = _cartesianparam.new()
+    param2.quantity="MMH"
+    param2.setData(numpy.zeros((240,240),numpy.uint8))
+    obj.addParameter(param)
+    obj.addParameter(param2)
+    
+    result = obj.getParameter("DBZH")
+    result2 = obj.getParameter("MMH")
+    self.assertTrue(param == result)
+    self.assertTrue(param2 == result2)
+
+    self.assertTrue(None == obj.getParameter("MMHH"))
+
+  def test_hasParameter(self):
+    obj = _cartesian.new()
+    param = _cartesianparam.new()
+    param.quantity="DBZH"
+    param.setData(numpy.zeros((240,240),numpy.uint8))
+    
+    self.assertFalse(obj.hasParameter("DBZH"))
+    obj.addParameter(param)
+    self.assertTrue(obj.hasParameter("DBZH"))
+    
+  def test_removeParameter(self):
+    obj = _cartesian.new()
+    param = _cartesianparam.new()
+    param.quantity="DBZH"
+    param.setData(numpy.zeros((240,240),numpy.uint8))
+    param2 = _cartesianparam.new()
+    param2.quantity="MMH"
+    param2.setData(numpy.zeros((240,240),numpy.uint8))
+
+    obj.addParameter(param)
+    obj.addParameter(param2)
+    obj.removeParameter("DBZH")
+    
+    self.assertTrue(obj.hasParameter("MMH"))
+    self.assertFalse(obj.hasParameter("DBZH"))
+
+  def test_getParameterCount(self):
+    obj = _cartesian.new()
+    param = _cartesianparam.new()
+    param.quantity="DBZH"
+    param.setData(numpy.zeros((240,240),numpy.uint8))
+    param2 = _cartesianparam.new()
+    param2.quantity="MMH"
+    param2.setData(numpy.zeros((240,240),numpy.uint8))
+    param3 = _cartesianparam.new()
+    param3.quantity="MMH"
+    param3.setData(numpy.zeros((240,240),numpy.uint8))
+
+    self.assertEquals(0, obj.getParameterCount())
+    obj.addParameter(param)
+    self.assertEquals(1, obj.getParameterCount())
+    obj.addParameter(param2)
+    self.assertEquals(2, obj.getParameterCount())
+    obj.addParameter(param3)
+    self.assertEquals(2, obj.getParameterCount())
+
+  def test_getParameterNames(self):
+    obj = _cartesian.new()
+    param = _cartesianparam.new()
+    param.quantity="DBZH"
+    param.setData(numpy.zeros((240,240),numpy.uint8))
+    param2 = _cartesianparam.new()
+    param2.quantity="MMH"
+    param2.setData(numpy.zeros((240,240),numpy.uint8))
+
+    result = obj.getParameterNames()
+    self.assertEquals(0, len(result))
+    
+    obj.addParameter(param)
+    result = obj.getParameterNames()
+    self.assertEquals(1, len(result))
+    self.assertTrue("DBZH" in result)
+
+    obj.addParameter(param2)
+    result = obj.getParameterNames()
+    self.assertEquals(2, len(result))
+    self.assertTrue("DBZH" in result)
+    self.assertTrue("MMH" in result)
