@@ -437,6 +437,51 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEquals("IMAGE", nodelist.getNode("/dataset1/data1/data/CLASS").data())
     self.assertEquals("1.2", nodelist.getNode("/dataset1/data1/data/IMAGE_VERSION").data())
 
+  def test_save_cartesian_attribute_visibility(self):
+    image = _cartesian.new()
+    image.time = "100000"
+    image.date = "20100101"
+    image.objectType = _rave.Rave_ObjectType_IMAGE
+    image.source = "PLC:123"
+    image.xscale = 2000.0
+    image.yscale = 2000.0
+    image.areaextent = (-240000.0, -240000.0, 238000.0, 238000.0)
+    image.projection = _projection.new("x","y","+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84")
+    image.product = _rave.Rave_ProductType_CAPPI
+    image.starttime = "110000"
+    image.startdate = "20110101"
+    image.endtime = "110005"
+    image.enddate = "20110101"
+
+    param = _cartesianparam.new()    
+    param.quantity = "DBZH"
+    param.gain = 1.0
+    param.offset = 0.0
+    param.nodata = 255.0
+    param.undetect = 0.0
+    data = numpy.zeros((240,240),numpy.uint8)
+    param.setData(data)
+    image.addParameter(param)
+
+    param.addAttribute("how/something", 1.0)
+    image.addAttribute("how/else", 2.0)
+    
+    ios = _raveio.new()
+    ios.object = image
+    ios.filename = self.TEMPORARY_FILE
+    ios.save()
+
+    # Verify result
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+    
+    self.assertAlmostEquals(1.0, nodelist.getNode("/dataset1/data1/how/something").data(), 4)
+    self.assertTrue("/how/something" not in nodelist.getNodeNames())
+    self.assertAlmostEquals(2.0, nodelist.getNode("/how/else").data(), 4)
+    self.assertTrue("/dataset1/data1/how/else" not in nodelist.getNodeNames())
+
+
   def test_save_cartesian_volume(self):
     cvol = _cartesianvolume.new()
     cvol.time = "100000"

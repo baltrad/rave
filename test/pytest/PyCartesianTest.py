@@ -525,6 +525,25 @@ class PyCartesianTest(unittest.TestCase):
 
     self.assertEquals(False, obj.isTransformable())
 
+  def test_attributes_visibility(self):
+    obj = _cartesian.new()
+    param = _cartesianparam.new()
+    param.quantity = "DBZH"
+    param.setData(numpy.zeros((10,10), numpy.uint8))
+    obj.addParameter(param)
+    
+    obj.addAttribute("how/something", 1.0)
+    self.assertTrue("how/something" in obj.getAttributeNames())
+    self.assertTrue("how/something" not in param.getAttributeNames())
+
+    param.addAttribute("how/else", 2.0)
+    self.assertTrue("how/else" not in obj.getAttributeNames())
+    self.assertTrue("how/else" in param.getAttributeNames())
+    
+    param.addAttribute("how/something", 2.0)
+    self.assertAlmostEquals(1.0, obj.getAttribute("how/something"))
+    self.assertAlmostEquals(2.0, param.getAttribute("how/something"))
+
   def test_isValid_asImage(self):
     obj = _cartesian.new()
     param = _cartesianparam.new()
