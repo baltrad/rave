@@ -583,6 +583,9 @@ RaveValueType PolarVolume_getConvertedVerticalMaxValue(PolarVolume_t* self, cons
           info.ei = i;
           info.elevation = PolarScan_getElangle(scan); // So that we get exact scan elevation angle instead
           PolarNavigator_reToDh(self->navigator, info.range, info.elevation, &dummydistance, &info.actual_height);
+          if (navinfo != NULL) {
+            *navinfo = info;
+          }
         }
       } else if (result != RaveValueType_DATA) {
         double dummydistance = 0.0;
@@ -591,6 +594,9 @@ RaveValueType PolarVolume_getConvertedVerticalMaxValue(PolarVolume_t* self, cons
         info.ei = i;
         info.elevation = PolarScan_getElangle(scan); // So that we get exact scan elevation angle instead
         PolarNavigator_reToDh(self->navigator, info.range, info.elevation, &dummydistance, &info.actual_height);
+        if (navinfo != NULL) {
+          *navinfo = info;
+        }
       }
     }
     RAVE_OBJECT_RELEASE(scan);
