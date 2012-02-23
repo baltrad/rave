@@ -323,6 +323,7 @@ void init_rave(void)
   add_long_constant(dictionary, "Rave_ProductType_RAY", Rave_ProductType_RAY);
   add_long_constant(dictionary, "Rave_ProductType_AZIM", Rave_ProductType_AZIM);
   add_long_constant(dictionary, "Rave_ProductType_QUAL", Rave_ProductType_QUAL);
+  add_long_constant(dictionary, "Rave_ProductType_PMAX", Rave_ProductType_PMAX);
 
   add_long_constant(dictionary, "Debug_RAVE_SPEWDEBUG", RAVE_SPEWDEBUG);
   add_long_constant(dictionary, "Debug_RAVE_DEBUG", RAVE_DEBUG);

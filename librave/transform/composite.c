@@ -38,8 +38,9 @@ struct _Composite_t {
   RAVE_OBJECT_HEAD /** Always on top */
   Rave_ProductType ptype; /**< the product type, default PCAPPI */
   CompositeSelectionMethod_t method; /**< selection method, default CompositeSelectionMethod_NEAREST */
-  double height; /**< the height when generating pcapppi, cappi, default 1000 */
+  double height; /**< the height when generating pcapppi, cappi, pmax default 1000 */
   double elangle; /**< the elevation angle when generating ppi, default 0.0 */
+  double range;  /*< the range when generating pmax, default = 500000 meters */
   RaveList_t* parameters; /**< the parameters to generate */
   RaveDateTime_t* datetime;  /**< the date and time */
   RaveObjectList_t* list;
@@ -214,6 +215,7 @@ static int Composite_constructor(RaveCoreObject* obj)
   this->method = CompositeSelectionMethod_NEAREST;
   this->height = 1000.0;
   this->elangle = 0.0;
+  this->range = 500000.0;
   this->parameters = NULL;
   this->algorithm = NULL;
   this->list = RAVE_OBJECT_NEW(&RaveObjectList_TYPE);
@@ -243,6 +245,7 @@ static int Composite_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj
   this->method = src->method;
   this->height = src->height;
   this->elangle = src->elangle;
+  this->range = src->range;
   this->algorithm = NULL;
   this->parameters = CompositeInternal_cloneParameterList(src->parameters);
   this->list = RAVE_OBJECT_CLONE(src->list);
@@ -344,13 +347,15 @@ static int CompositeInternal_nearestPosition(
   if (object != NULL) {
     if (RAVE_OBJECT_CHECK_TYPE(object, &PolarScan_TYPE)) {
       if (composite->ptype == Rave_ProductType_PPI ||
-          composite->ptype == Rave_ProductType_PCAPPI) {
+          composite->ptype == Rave_ProductType_PCAPPI ||
+          composite->ptype == Rave_ProductType_PMAX) {
         result = PolarScan_getNearestNavigationInfo((PolarScan_t*)object, plon, plat, nav);
       }
     } else if (RAVE_OBJECT_CHECK_TYPE(object, &PolarVolume_TYPE)) {
       if (composite->ptype == Rave_ProductType_PCAPPI ||
-          composite->ptype == Rave_ProductType_CAPPI) {
-        int insidee = (composite->ptype == Rave_ProductType_PCAPPI)?0:1;
+          composite->ptype == Rave_ProductType_CAPPI ||
+          composite->ptype == Rave_ProductType_PMAX) {
+        int insidee = (composite->ptype == Rave_ProductType_PCAPPI || composite->ptype == Rave_ProductType_PMAX)?0:1;
         result = PolarVolume_getNearestNavigationInfo((PolarVolume_t*)object,
                                                       plon,
                                                       plat,
@@ -414,6 +419,52 @@ static int CompositeInternal_getValueAtPosition(
 
   result = 1;
 done:
+  return result;
+}
+
+/**
+ * Returns the vertical max value for the specified quantity at the provided lon/lat position.
+ * If no suitable value is found, vtype and vvalue will be left as is.
+ *
+ * @param[in] self - self
+ * @param[in] radarindex - the index of the radar object in the composite list
+ * @param[in] quantity - the parameter
+ * @param[in] lon - longitude in radians
+ * @param[in] lat - latitude in radians
+ * @param[out] vtype - the value type (MUST NOT BE NULL)
+ * @param[out] vvalue - the value (MUST NOT BE NULL)
+ * @return 1 on success or 0 on failure.
+ */
+static int CompositeInternal_getPseudoMaxValue(
+  Composite_t* self,
+  int radarindex,
+  const char* quantity,
+  double lon,
+  double lat,
+  RaveValueType* vtype,
+  double* vvalue)
+{
+  int result = 0;
+  RaveCoreObject* obj = NULL;
+
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  RAVE_ASSERT((vtype != NULL), "vtype == NULL");
+  RAVE_ASSERT((vvalue != NULL), "vvalue == NULL");
+
+  obj = RaveObjectList_get(self->list, radarindex);
+  if (obj == NULL) {
+    goto done;
+  }
+
+  if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarScan_TYPE)) {
+    *vtype = PolarScan_getNearestConvertedParameterValue((PolarScan_t*)obj, quantity, lon, lat, vvalue, NULL);
+  } else {
+    *vtype = PolarVolume_getConvertedVerticalMaxValue((PolarVolume_t*)obj, quantity, lon, lat, vvalue, NULL);
+  }
+
+  result = 1;
+done:
+  RAVE_OBJECT_RELEASE(obj);
   return result;
 }
 
@@ -610,6 +661,8 @@ static Cartesian_t* CompositeInternal_createCompositeImage(Composite_t* self, Ar
   if (self->ptype == Rave_ProductType_CAPPI ||
       self->ptype == Rave_ProductType_PCAPPI) {
     prodpar = RaveAttributeHelp_createDouble("what/prodpar", self->height);
+  } else if (self->ptype == Rave_ProductType_PMAX) {
+    prodpar = RaveAttributeHelp_createDouble("what/prodpar", self->range);
   } else {
     prodpar = RaveAttributeHelp_createDouble("what/prodpar", self->elangle * 180.0/M_PI);
   }
@@ -690,10 +743,11 @@ void Composite_setProduct(Composite_t* composite, Rave_ProductType type)
   RAVE_ASSERT((composite != NULL), "composite == NULL");
   if (type == Rave_ProductType_PCAPPI ||
       type == Rave_ProductType_CAPPI ||
-      type == Rave_ProductType_PPI) {
+      type == Rave_ProductType_PPI ||
+      type == Rave_ProductType_PMAX) {
     composite->ptype = type;
   } else {
-    RAVE_ERROR0("Only supported algorithms are PPI, CAPPI and PCAPPI");
+    RAVE_ERROR0("Only supported algorithms are PPI, CAPPI, PCAPPI and PMAX");
   }
 }
 
@@ -740,7 +794,20 @@ void Composite_setElevationAngle(Composite_t* composite, double angle)
 
 double Composite_getElevationAngle(Composite_t* composite)
 {
+  RAVE_ASSERT((composite != NULL), "composite == NULL");
   return composite->elangle;
+}
+
+void Composite_setRange(Composite_t* self, double range)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  self->range = range;
+}
+
+double Composite_getRange(Composite_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return self->range;
 }
 
 int Composite_addParameter(Composite_t* composite, const char* quantity, double gain, double offset)
@@ -980,8 +1047,20 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t*
         } else if (cvalues[cindex].vtype == RaveValueType_UNDETECT) {
           CartesianParam_setConvertedValue(cvalues[cindex].parameter, x, y, CartesianParam_getUndetect(cvalues[cindex].parameter));
         } else {
-          CartesianParam_setConvertedValue(cvalues[cindex].parameter, x, y, cvalues[cindex].value);
+          RaveValueType vtype = RaveValueType_UNDEFINED;
+          if (composite->ptype == Rave_ProductType_PMAX && cvalues[cindex].radardist < composite->range) {
+            double vvalue = cvalues[cindex].value;
+            CompositeInternal_getPseudoMaxValue(composite, cvalues[cindex].radarindex, cvalues[cindex].name, olon, olat, &vtype, &vvalue);
+            if (vtype == RaveValueType_DATA) {
+              CartesianParam_setConvertedValue(cvalues[cindex].parameter, x, y, vvalue);
+            } else {
+              CartesianParam_setConvertedValue(cvalues[cindex].parameter, x, y, cvalues[cindex].value);
+            }
+          } else {
+            CartesianParam_setConvertedValue(cvalues[cindex].parameter, x, y, cvalues[cindex].value);
+          }
         }
+
         if ((cvalues[cindex].vtype == RaveValueType_DATA || cvalues[cindex].vtype == RaveValueType_UNDETECT) &&
             cvalues[cindex].radarindex >= 0 && nqualityflags > 0) {
           CompositeInternal_fillQualityInformation(composite, x, y, cvalues[cindex].parameter, cvalues[cindex].radardist, cvalues[cindex].radarindex, &(cvalues[cindex].navinfo));

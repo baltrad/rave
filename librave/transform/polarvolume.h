@@ -263,6 +263,18 @@ RaveValueType PolarVolume_getNearest(PolarVolume_t* pvol, double lon, double lat
 RaveValueType PolarVolume_getNearestParameterValue(PolarVolume_t* pvol, const char* quantity, double lon, double lat, double height, int insidee, double* v);
 
 /**
+ * Returns the vertical max value at the specified lon/lat coordinate.
+ * @param[in] self - self
+ * @param[in] quantity - the parameter (MAY NOT BE NULL)
+ * @param[in] lon - the longitude (in radians)
+ * @param[in] lat - the latitude (in radians)
+ * @param[out] v - the value (MAY NOT BE NULL)
+ * @param[out] navinfo - will be updated with navigation information
+ * @returns the type of the value that has been set in v.
+ */
+RaveValueType PolarVolume_getConvertedVerticalMaxValue(PolarVolume_t* self, const char* quantity, double lon, double lat, double* v, PolarNavigationInfo* navinfo);
+
+/**
  * Returns the converted parameter value at the specified location
  * @param[in] pvol - self
  * @param[in] quantity - the quantity

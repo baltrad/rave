@@ -77,8 +77,13 @@ RaveCoreObject* Composite_get(Composite_t* composite, int index);
 /**
  * Sets the product type that should be generated when generating the
  * composite.
+ * Height/Elevation angle and range are used in combination with the products.
+ * PPI requires elevation angle
+ * CAPPI, PCAPPI and PMAX requires height above sea level
+ * PMAX also requires range in meters
+ *
  * @param[in] composite - self
- * @param[in] type - the product type, currently only PCAPPI supported.
+ * @param[in] type - the product type, PPI, CAPPI, PCAPPI and PMAX are currently supported.
  */
 void Composite_setProduct(Composite_t* composite, Rave_ProductType type);
 
@@ -105,7 +110,7 @@ CompositeSelectionMethod_t Composite_getSelectionMethod(Composite_t* self);
 
 /**
  * Sets the height that should be used when generating a
- * composite as CAPPI or PCAPPI.
+ * composite as CAPPI, PCAPPI or PMAX.
  * @param[in] composite - self
  * @param[in] height - the height
  */
@@ -129,9 +134,26 @@ void Composite_setElevationAngle(Composite_t* composite, double angle);
 /**
  * Returns the elevation angle that is used for composite generation.
  * @param[in] composite - self
- * @returns the height
+ * @returns the elevation angle in radians
  */
 double Composite_getElevationAngle(Composite_t* composite);
+
+/**
+ * Sets the range that should be used when generating the Pseudo MAX. This range
+ * is the limit in meters for when the vertical max should be used. When outside
+ * this range, the PCAPPI value is used instead.
+ *
+ * @param[in] composite - self
+ * @param[in] angle - the range in meters
+ */
+void Composite_setRange(Composite_t* composite, double range);
+
+/**
+ * Returns the range in meters
+ * @param[in] composite - self
+ * @returns the range in meters
+ */
+double Composite_getRange(Composite_t* composite);
 
 /**
  * Adds a parameter to be processed.

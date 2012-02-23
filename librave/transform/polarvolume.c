@@ -557,6 +557,48 @@ RaveValueType PolarVolume_getNearestParameterValue(PolarVolume_t* pvol, const ch
   return result;
 }
 
+RaveValueType PolarVolume_getConvertedVerticalMaxValue(PolarVolume_t* self, const char* quantity, double lon, double lat, double* v, PolarNavigationInfo* navinfo)
+{
+  RaveValueType result = RaveValueType_NODATA;
+  int nrscans = 0, i = 0;
+  PolarNavigationInfo info;
+
+  RAVE_ASSERT((self != NULL), "pvol == NULL");
+  RAVE_ASSERT((quantity != NULL), "quantity == NULL");
+  RAVE_ASSERT((v != NULL), "v == NULL");
+
+  memset(&info, 0, sizeof(PolarNavigationInfo));
+
+  nrscans = RaveObjectList_size(self->scans);
+
+  for (i = 0; i < nrscans; i++) {
+    PolarScan_t* scan = (PolarScan_t*)RaveObjectList_get(self->scans, i);
+    double value = 0.0;
+    RaveValueType type = PolarScan_getNearestConvertedParameterValue(scan, quantity, lon, lat, &value, &info);
+    if (type == RaveValueType_UNDETECT || type == RaveValueType_DATA) {
+      if (result == RaveValueType_DATA && type == RaveValueType_DATA) {
+        if (value > *v) {
+          double dummydistance = 0.0;
+          *v = value;
+          info.ei = i;
+          info.elevation = PolarScan_getElangle(scan); // So that we get exact scan elevation angle instead
+          PolarNavigator_reToDh(self->navigator, info.range, info.elevation, &dummydistance, &info.actual_height);
+        }
+      } else if (result != RaveValueType_DATA) {
+        double dummydistance = 0.0;
+        *v = value;
+        result = type;
+        info.ei = i;
+        info.elevation = PolarScan_getElangle(scan); // So that we get exact scan elevation angle instead
+        PolarNavigator_reToDh(self->navigator, info.range, info.elevation, &dummydistance, &info.actual_height);
+      }
+    }
+    RAVE_OBJECT_RELEASE(scan);
+  }
+
+  return result;
+}
+
 RaveValueType PolarVolume_getConvertedParameterValueAt(PolarVolume_t* pvol, const char* quantity, int ei, int ri, int ai, double* v)
 {
   RaveValueType result = RaveValueType_NODATA;

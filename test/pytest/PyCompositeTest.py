@@ -69,7 +69,7 @@ class PyCompositeTest(unittest.TestCase):
     self.assertNotEqual(-1, isscan)
 
   def test_attribute_visibility(self):
-    attrs = ['height', 'product', 'date', 'time']
+    attrs = ['height', 'range', 'elangle', 'product', 'date', 'time', 'selection_method']
     obj = _pycomposite.new()
     alist = dir(obj)
     for a in attrs:
@@ -80,7 +80,19 @@ class PyCompositeTest(unittest.TestCase):
     self.assertAlmostEquals(1000.0, obj.height, 4)
     obj.height = 1.0
     self.assertAlmostEquals(1.0, obj.height, 4)
-
+    
+  def test_range(self):
+    obj = _pycomposite.new()
+    self.assertAlmostEquals(500000.0, obj.range, 4)
+    obj.range = 1.0
+    self.assertAlmostEquals(1.0, obj.range, 4)
+ 
+  def test_elangle(self):
+    obj = _pycomposite.new()
+    self.assertAlmostEquals(0.0, obj.elangle, 4)
+    obj.elangle = 1.0
+    self.assertAlmostEquals(1.0, obj.elangle, 4)
+    
   def test_product(self):
     obj = _pycomposite.new()
     self.assertEquals(_rave.Rave_ProductType_PCAPPI, obj.product)
@@ -265,6 +277,45 @@ class PyCompositeTest(unittest.TestCase):
     ios = _raveio.new()
     ios.object = result
     ios.filename = "swemulticomposite.h5"
+    ios.save()
+
+  def test_nearest_pseudomax(self):
+    generator = _pycomposite.new()
+    
+    a = _area.new()
+    a.id = "nrd2km"
+    a.xsize = 848
+    a.ysize = 1104
+    a.xscale = 2000.0
+    a.yscale = 2000.0
+    a.extent = (-738816.513333,-3995515.596160,955183.48666699999,-1787515.59616)
+    a.projection = _projection.new("x", "y", "+proj=stere +ellps=bessel +lat_0=90 +lon_0=14 +lat_ts=60 +datum=WGS84")
+    
+    for fname in self.SWEDISH_VOLUMES:
+      rio = _raveio.open(fname)
+      generator.add(rio.object)
+    
+    generator.addParameter("DBZH", 1.0, 0.0)
+    generator.product = _rave.Rave_ProductType_PMAX
+    generator.height = 1000.0
+    generator.range = 70000.0
+    generator.time = "120000"
+    generator.date = "20090501"    
+    result = generator.nearest(a, ["se.smhi.composite.distance.radar"])
+    
+    self.assertEquals("DBZH", result.getParameter("DBZH").quantity)
+    self.assertEquals("120000", result.time)
+    self.assertEquals("20090501", result.date)
+    
+    prodpar = result.getAttribute("what/prodpar")
+    self.assertAlmostEquals(70000.0, prodpar, 4)
+    self.assertEquals(_rave.Rave_ProductType_PMAX, result.product)
+    self.assertEquals(_rave.Rave_ObjectType_COMP, result.objectType)
+    self.assertEquals("nrd2km", result.source);
+    
+    ios = _raveio.new()
+    ios.object = result
+    ios.filename = "swepseudomaxcomposite.h5"
     ios.save()
 
   # To verify ticket 96

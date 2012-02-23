@@ -399,6 +399,27 @@ static PyObject* _pypolarvolume_getNearestConvertedParameterValue(PyPolarVolume*
 }
 
 /**
+ * Gets the vertical max value for the specified lon/lat coordinate.
+ * @param[in] self - the polar volume
+ * @param[in] args - quantity, the lon/lat as a tuple in radians.
+ */
+static PyObject* _pypolarvolume_getConvertedVerticalMaxValue(PyPolarVolume* self, PyObject* args)
+{
+  double lon = 0.0L, lat = 0.0L;
+  double v = 0.0L;
+  char* quantity = NULL;
+  RaveValueType vtype = RaveValueType_NODATA;
+
+  if (!PyArg_ParseTuple(args, "s(dd)", &quantity, &lon, &lat)) {
+    return NULL;
+  }
+
+  vtype = PolarVolume_getConvertedVerticalMaxValue(self->pvol, quantity, lon, lat, &v, NULL);
+
+  return Py_BuildValue("(id)", vtype, v);
+}
+
+/**
  * Adds an attribute to the parameter. Name of the attribute should be in format
  * ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis etc.
  * Currently, the only supported values are double, long, string.
@@ -582,6 +603,7 @@ static struct PyMethodDef _pypolarvolume_methods[] =
   {"getNearest", (PyCFunction) _pypolarvolume_getNearest, 1},
   {"getNearestParameterValue", (PyCFunction) _pypolarvolume_getNearestParameterValue, 1},
   {"getNearestConvertedParameterValue", (PyCFunction) _pypolarvolume_getNearestConvertedParameterValue, 1},
+  {"getConvertedVerticalMaxValue", (PyCFunction)_pypolarvolume_getConvertedVerticalMaxValue, 1},
   {"addAttribute", (PyCFunction) _pypolarvolume_addAttribute, 1},
   {"getAttribute", (PyCFunction) _pypolarvolume_getAttribute, 1},
   {"getAttributeNames", (PyCFunction) _pypolarvolume_getAttributeNames, 1},

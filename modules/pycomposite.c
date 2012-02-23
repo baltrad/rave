@@ -317,6 +317,7 @@ static struct PyMethodDef _pycomposite_methods[] =
 {
   {"height", NULL},
   {"elangle", NULL},
+  {"range", NULL},
   {"product", NULL},
   {"selection_method", NULL},
   {"date", NULL},
@@ -342,6 +343,8 @@ static PyObject* _pycomposite_getattr(PyComposite* self, char* name)
     return PyFloat_FromDouble(Composite_getHeight(self->composite));
   } else if (strcmp("elangle", name) == 0) {
     return PyFloat_FromDouble(Composite_getElevationAngle(self->composite));
+  } else if (strcmp("range", name) == 0) {
+    return PyFloat_FromDouble(Composite_getRange(self->composite));
   } else if (strcmp("product", name) == 0) {
     return PyInt_FromLong(Composite_getProduct(self->composite));
   } else if (strcmp("selection_method", name) == 0) {
@@ -394,6 +397,16 @@ static int _pycomposite_setattr(PyComposite* self, char* name, PyObject* val)
       Composite_setElevationAngle(self->composite, (double)PyInt_AsLong(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "elangle must be a float or decimal value")
+    }
+  } else if (strcmp("range", name) == 0) {
+    if (PyFloat_Check(val)) {
+      Composite_setRange(self->composite, PyFloat_AsDouble(val));
+    } else if (PyLong_Check(val)) {
+      Composite_setRange(self->composite, PyLong_AsDouble(val));
+    } else if (PyInt_Check(val)) {
+      Composite_setRange(self->composite, (double)PyInt_AsLong(val));
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError, "range must be a float or decimal value")
     }
   } else if (strcmp("product", name) == 0) {
     if (PyInt_Check(val)) {

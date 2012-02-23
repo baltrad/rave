@@ -667,6 +667,33 @@ class PyPolarVolumeTest(unittest.TestCase):
     self.assertAlmostEquals(4.0*math.pi/180.0, scan1.beamwidth, 4)
     self.assertAlmostEquals(4.0*math.pi/180.0, scan2.beamwidth, 4)
     
+  def test_getConvertedVerticalMaxValue(self):
+    import _raveio
+    vol = _raveio.open("fixtures/pvol_seang_20090501T120000Z.h5").object
+    nrscans = vol.getNumberOfScans()
+    lon = 12.879571 * math.pi / 180.0
+    lat = 56.356382 * math.pi / 180.0
+    
+    # First dig out max values scan wise
+    svalue = 0.0
+    stype = _rave.RaveValueType_NODATA
+    
+    for i in range(nrscans):
+      scan = vol.getScan(i)
+      type, value = scan.getNearestConvertedParameterValue("DBZH", (lon, lat))
+      if type in [_rave.RaveValueType_DATA, _rave.RaveValueType_UNDETECT]:
+        if stype == _rave.RaveValueType_DATA and type == _rave.RaveValueType_DATA:
+          if svalue < value:
+            svalue = value
+        elif stype != _rave.RaveValueType_DATA:
+          stype = type
+          svalue = value
+
+    # Now test the converted max value method
+    type, value = vol.getConvertedVerticalMaxValue("DBZH", (lon, lat))
+    self.assertEquals(stype, type)
+    self.assertAlmostEquals(svalue, value, 4)
+
 
 if __name__ == "__main__":
   #import sys;sys.argv = ['', 'Test.testName']

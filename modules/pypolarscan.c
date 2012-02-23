@@ -633,6 +633,27 @@ static PyObject* _pypolarscan_getNearestIndex(PyPolarScan* self, PyObject* args)
 }
 
 /**
+ * Calculates the lon/lat from a specified ray/bin index.
+ * @param[in] self - self
+ * @param[in] args - tuple of two integers (bin, ray)
+ * @returns a tuple of double (lon, lat) in radians
+ */
+static PyObject* _pypolarscan_getLonLatFromIndex(PyPolarScan* self, PyObject* args)
+{
+  double lon = 0.0L, lat = 0.0L;
+  int bin = 0, ray = 0;
+  if (!PyArg_ParseTuple(args, "ii", &bin, &ray)) {
+    return NULL;
+  }
+
+  if (PolarScan_getLonLatFromIndex(self->scan, bin, ray, &lon, &lat) != 0) {
+    return Py_BuildValue("(dd)",lon,lat);
+  }
+
+  Py_RETURN_NONE;
+}
+
+/**
  * Adds an attribute to the parameter. Name of the attribute should be in format
  * ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis etc.
  * Currently, the only supported values are double, long, string.
@@ -1007,6 +1028,7 @@ static struct PyMethodDef _pypolarscan_methods[] =
   {"getNearestParameterValue", (PyCFunction) _pypolarscan_getNearestParameterValue, 1},
   {"getNearestConvertedParameterValue", (PyCFunction) _pypolarscan_getNearestConvertedParameterValue, 1},
   {"getNearestIndex", (PyCFunction) _pypolarscan_getNearestIndex, 1},
+  {"getLonLatFromIndex", (PyCFunction) _pypolarscan_getLonLatFromIndex, 1},
   {"addAttribute", (PyCFunction) _pypolarscan_addAttribute, 1},
   {"getAttribute", (PyCFunction) _pypolarscan_getAttribute, 1},
   {"getAttributeNames", (PyCFunction) _pypolarscan_getAttributeNames, 1},
