@@ -1039,6 +1039,11 @@ RaveField_t* DetectionRange_analyze(DetectionRange_t* self,
   param = PolarScan_getParameter(outscan, "DR");
   if (param != NULL) {
     RaveAttribute_t* attr = NULL;
+
+    /* Set gain and offset before converting it into a quality field */
+    PolarScanParam_setOffset(param, 0.0);
+    PolarScanParam_setGain(param, 1.0/255.0);
+
     result = PolarScanParam_toField(param);
     if (result == NULL) {
       RAVE_ERROR0("Failed to convert parameter to field");
