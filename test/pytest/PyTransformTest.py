@@ -29,6 +29,8 @@ import _rave
 import _transform
 import _radardef
 import _raveio
+import _cartesian
+import _cartesianparam
 import string
 import numpy
 
@@ -147,4 +149,63 @@ class PyTransformTest(unittest.TestCase):
     io.object = obj.fillGap(cartesian)
     io.filename=self.TRANSFORM_FILLGAP_FILENAME
     io.save()
+  
+  ##
+  # A number of static tests to verify that the gap filling is working as expected
+  #
+  #
+  # 0   1   2   3   4   5
+  # 1       X
+  # 2   X   ?   X
+  # 3       X
+  # 4
+  # 5
+  def testFillGap_onParameter(self):
+    data = numpy.zeros((6, 6), numpy.uint8)
+    data[1][2] = 1
+    data[2][1] = 1
+    data[3][2] = 1
+    data[2][3] = 1
+     
+    param = _cartesianparam.new()
+    param.setData(data)
+    param.nodata = 255.0
+    t = _transform.new()
+    result = t.fillGap(param)
+    
+    data = result.getData() 
+    self.assertEquals(1, data[2][2])
+
+  def testFillGap_onCartesianParameters(self):
+    data = numpy.zeros((6, 6), numpy.uint8)
+    data[1][2] = 1
+    data[2][1] = 1
+    data[3][2] = 1
+    data[2][3] = 1
+    
+    obj = _cartesian.new()
+    
+    param = _cartesianparam.new()
+    param.setData(data)
+    param.nodata = 255.0
+    param.quantity = "DBZH"
+    obj.addParameter(param)
+
+    param = _cartesianparam.new()
+    data[1][2] = 2
+    data[2][1] = 2
+    data[3][2] = 2
+    data[2][3] = 2    
+    param.setData(data)
+    param.nodata = 255.0
+    param.quantity = "TH"
+    obj.addParameter(param)
+    
+    t = _transform.new()
+    result = t.fillGap(obj)
+    
+    data = result.getParameter("DBZH").getData() 
+    self.assertEquals(1, data[2][2])
+    data = result.getParameter("TH").getData() 
+    self.assertEquals(2, data[2][2])
     

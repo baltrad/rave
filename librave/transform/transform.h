@@ -114,4 +114,12 @@ PolarVolume_t* Transform_ctop(Transform_t* transform, Cartesian_t* cartesian, Ra
  */
 Cartesian_t* Transform_fillGap(Transform_t* transform, Cartesian_t* cartesian);
 
+/**
+ * Fills the gaps in a cartesian parameter.
+ * @param[in] transform - self
+ * @param[in] param - the parameter that should be gap filled
+ * @returns the filled cartesian or NULL on failure
+ */
+CartesianParam_t* Transform_fillGapOnParameter(Transform_t* transform, CartesianParam_t* param);
+
 #endif

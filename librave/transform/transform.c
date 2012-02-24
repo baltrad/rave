@@ -364,10 +364,12 @@ Cartesian_t* Transform_fillGap(Transform_t* transform, Cartesian_t* cartesian)
 {
   Cartesian_t* result = NULL;
   Cartesian_t* filled = NULL;
-  long nxsize = 0, nysize = 0, xsize = 0, ysize = 0, x = 0, y = 0;
+  RaveList_t* names = NULL;
+  int i = 0, nrnames = 0;
+  CartesianParam_t* parameter = NULL;
+  CartesianParam_t* paramclone = NULL;
 
   RAVE_ASSERT((transform != NULL), "transform == NULL");
-
   if (cartesian == NULL) {
     RAVE_ERROR0("Filling gap on NULL product!?");
     goto done;
@@ -378,8 +380,60 @@ Cartesian_t* Transform_fillGap(Transform_t* transform, Cartesian_t* cartesian)
     RAVE_ERROR0("Failed to clone product");
     goto done;
   }
-  xsize = Cartesian_getXSize(filled);
-  ysize = Cartesian_getYSize(filled);
+
+  names = Cartesian_getParameterNames(filled);
+  if (names == NULL) {
+    RAVE_ERROR0("Failed to get parameter names");
+    goto done;
+  }
+
+  nrnames = RaveList_size(names);
+  for (i = 0; i < nrnames; i++) {
+    parameter = Cartesian_getParameter(filled, (const char*)RaveList_get(names, i));
+    if (parameter != NULL) {
+      paramclone = Transform_fillGapOnParameter(transform, parameter);
+      if (paramclone == NULL ||
+          !Cartesian_addParameter(filled, paramclone)) {
+        RAVE_ERROR0("Failed to clone of add parameter clone to result");
+        goto done;
+      }
+    } else {
+      RAVE_ERROR0("Null parameter in cartesian product");
+      goto done;
+    }
+    RAVE_OBJECT_RELEASE(parameter);
+    RAVE_OBJECT_RELEASE(paramclone);
+  }
+
+  result = RAVE_OBJECT_COPY(filled);
+done:
+  RaveList_freeAndDestroy(&names);
+  RAVE_OBJECT_RELEASE(parameter);
+  RAVE_OBJECT_RELEASE(paramclone);
+  RAVE_OBJECT_RELEASE(filled);
+  return result;
+}
+
+CartesianParam_t* Transform_fillGapOnParameter(Transform_t* transform, CartesianParam_t* param)
+{
+  CartesianParam_t* result = NULL;
+  CartesianParam_t* filled = NULL;
+  long nxsize = 0, nysize = 0, xsize = 0, ysize = 0, x = 0, y = 0;
+
+  RAVE_ASSERT((transform != NULL), "transform == NULL");
+
+  if (param == NULL) {
+    RAVE_ERROR0("Filling gap on NULL param!?");
+    goto done;
+  }
+
+  filled = RAVE_OBJECT_CLONE(param);
+  if (filled == NULL) {
+    RAVE_ERROR0("Failed to clone parameter");
+    goto done;
+  }
+  xsize = CartesianParam_getXSize(filled);
+  ysize = CartesianParam_getYSize(filled);
   nxsize = xsize - 1;
   nysize = ysize - 1;
   for (y = 1; y < nysize; y++) {
@@ -388,20 +442,20 @@ Cartesian_t* Transform_fillGap(Transform_t* transform, Cartesian_t* cartesian)
       RaveValueType t1, t2, t3, t4, t5;
       t1 = t2 = t3 = t4 = t5 = RaveValueType_NODATA;
 
-      t1 = Cartesian_getValue(cartesian, x, y, &v1);
+      t1 = CartesianParam_getValue(param, x, y, &v1);
       if (t1 == RaveValueType_UNDETECT) {
-        t2 = Cartesian_getValue(cartesian, x-1, y, &v2);
-        t3 = Cartesian_getValue(cartesian, x+1, y, &v3);
-        t4 = Cartesian_getValue(cartesian, x, y-1, &v4);
-        t5 = Cartesian_getValue(cartesian, x, y+1, &v5);
+        t2 = CartesianParam_getValue(param, x-1, y, &v2);
+        t3 = CartesianParam_getValue(param, x+1, y, &v3);
+        t4 = CartesianParam_getValue(param, x, y-1, &v4);
+        t5 = CartesianParam_getValue(param, x, y+1, &v5);
         if (t2 == RaveValueType_DATA && t3 == RaveValueType_DATA && t4 == RaveValueType_DATA && t5 == RaveValueType_DATA) {
           v1 = (v2 + v3 + v4 + v5) / 4.0;
-          Cartesian_setValue(filled, x, y, v1);
+          CartesianParam_setValue(filled, x, y, v1);
         } else {
-          Cartesian_setValue(filled, x, y, v1);
+          CartesianParam_setValue(filled, x, y, v1);
         }
       } else {
-        Cartesian_setValue(filled, x, y, v1);
+        CartesianParam_setValue(filled, x, y, v1);
       }
     }
   }

@@ -34,6 +34,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "pypolarscan.h"
 #include "pypolarvolume.h"
 #include "pycartesian.h"
+#include "pycartesianparam.h"
 #include "pyradardefinition.h"
 #include "pyrave_debug.h"
 #include "rave_alloc.h"
@@ -320,23 +321,41 @@ static PyObject* _pytransform_ctop(PyTransform* self, PyObject* args)
   return (PyObject*)pyvolume;
 }
 
+/**
+ * If a value is == UNDETECT and the surrounding 4 pixels == DATA, then
+ * the value set is the avg for the surrounding 4 pixels.
+ * If provided object is a cartesian parameter, only that parameter will be modified
+ * and if the provided object is a cartesian product, all parameters will be modified.
+ * @param[in] self - self
+ * @param[in] args - a object, either a cartesian parameter or a cartesian product.
+ * @return a new object with modified data.
+ */
 static PyObject* _pytransform_fillGap(PyTransform* self, PyObject* args)
 {
   PyObject* inobj = NULL;
-  Cartesian_t* filled = NULL;
   PyObject* result = NULL;
 
   if (!PyArg_ParseTuple(args, "O", &inobj)) {
     return NULL;
   }
-  if (!PyCartesian_Check(inobj)) {
-    raiseException_returnNULL(PyExc_AttributeError, "fillGap should be called with a cartesian product");
+  if (!PyCartesian_Check(inobj) && !PyCartesianParam_Check(inobj)) {
+    raiseException_returnNULL(PyExc_AttributeError, "fillGap should be called with a cartesian or cartesian parameter");
   }
-  filled = Transform_fillGap(self->transform, ((PyCartesian*)inobj)->cartesian);
-  if (filled != NULL) {
-    result = PyCartesian_New(filled);
+
+  if (PyCartesian_Check(inobj)) {
+    Cartesian_t* filled = Transform_fillGap(self->transform, ((PyCartesian*)inobj)->cartesian);
+    if (filled != NULL) {
+      result = PyCartesian_New(filled);
+    }
+    RAVE_OBJECT_RELEASE(filled);
+  } else {
+    CartesianParam_t* filled = Transform_fillGapOnParameter(self->transform, ((PyCartesianParam*)inobj)->param);
+    if (filled != NULL) {
+      result = PyCartesianParam_New(filled);
+    }
+    RAVE_OBJECT_RELEASE(filled);
   }
-  RAVE_OBJECT_RELEASE(filled);
+
   return result;
 }
 
@@ -460,6 +479,7 @@ init_transform(void)
   import_pypolarvolume();
   import_pypolarscan();
   import_pycartesian();
+  import_pycartesianparam();
   import_pyradardefinition();
   PYRAVE_DEBUG_INITIALIZE;
 }
