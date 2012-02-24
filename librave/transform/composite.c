@@ -1059,7 +1059,12 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t*
           if (composite->ptype == Rave_ProductType_PMAX && cvalues[cindex].radardist < composite->range) {
             RaveValueType ntype = RaveValueType_NODATA;
             double nvalue = 0.0;
-            CompositeInternal_getPseudoMaxValue(composite, cvalues[cindex].radarindex, cvalues[cindex].name, olon, olat, &ntype, &nvalue, &info);
+            if (vtype == RaveValueType_UNDETECT) {
+              /* Undetect should not affect navigation information */
+              CompositeInternal_getPseudoMaxValue(composite, cvalues[cindex].radarindex, cvalues[cindex].name, olon, olat, &ntype, &nvalue, NULL);
+            } else {
+              CompositeInternal_getPseudoMaxValue(composite, cvalues[cindex].radarindex, cvalues[cindex].name, olon, olat, &ntype, &nvalue, &info);
+            }
             if (ntype != RaveValueType_NODATA) {
               vtype = ntype;
               vvalue = nvalue;
