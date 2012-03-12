@@ -22,16 +22,18 @@
 # @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
 # @date 2009-12-10
 ###########################################################################
+all: modules
 
-SETUP = python setup.py
-
-all: build
-
-def.mk:
-	$(MAKE) -C librave def.mk
-
-librave/transform/libravetransform.so librave/pyapi/libravepyapi.so: def.mk
+.PHONY:librave
+librave: def.mk
 	$(MAKE) -C librave
+	
+.PHONY:modules
+modules: librave
+	$(MAKE) -C modules
+
+def.mk: def.mk.in configure
+	sh makelibs
 
 .PHONY:test
 test:
@@ -47,15 +49,11 @@ alltest:
 doc:
 	$(MAKE) -C doxygen doc
 
-.PHONY:build
-build: librave/transform/libravetransform.so librave/pyapi/libravepyapi.so
-	@\rm -fr build
-	$(SETUP) build
-
 .PHONY:install
 install:
 	$(MAKE) -C librave install
-	$(SETUP) install
+	$(MAKE) -C modules install
+	$(MAKE) -C Lib install
 
 .PHONY:uninstall
 uninstall:
@@ -63,15 +61,18 @@ uninstall:
 
 .PHONY:clean
 clean:
-	$(SETUP) clean
 	$(MAKE) -C doxygen clean
 	$(MAKE) -C librave clean
+	$(MAKE) -C modules clean
 	$(MAKE) -C test/pytest clean
+	$(MAKE) -C Lib clean
 
 .PHONY:distclean
 distclean:
+	$(MAKE) -C modules distclean
 	$(MAKE) -C librave distclean
 	$(MAKE) -C doxygen distclean
 	$(MAKE) -C test/pytest distclean
+	$(MAKE) -C Lib distclean
 	@\rm -fr build
-	@\rm -f *~
+	@\rm -f *~ def.mk config.log config.status

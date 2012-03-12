@@ -12,7 +12,7 @@
 SCRFILE=`python -c "import os;print os.path.abspath(\"$0\")"`
 SCRIPTPATH=`dirname "$SCRFILE"`
 
-DEF_MK_FILE="${SCRIPTPATH}/../librave/def.mk"
+DEF_MK_FILE="${SCRIPTPATH}/../def.mk"
 
 if [ ! -f "${DEF_MK_FILE}" ]; then
   echo "configure has not been run"
@@ -32,7 +32,7 @@ HLHDF_LDPATH=`fgrep HLHDF_LIB_DIR "${DEF_MK_FILE}" | sed -e"s/\(HLHDF_LIB_DIR=[ 
 
 BNAME=`python -c 'from distutils import util; import sys; print "lib.%s-%s" % (util.get_platform(), sys.version[0:3])'`
 
-RBPATH="${SCRIPTPATH}/../Lib:${SCRIPTPATH}/../build/${BNAME}"
+RBPATH="${SCRIPTPATH}/../Lib:${SCRIPTPATH}/../modules"
 RAVE_LDPATH="${SCRIPTPATH}/../librave/transform:${SCRIPTPATH}/../librave/pyapi:${SCRIPTPATH}/../librave/scansun"
 XRUNNERPATH="${SCRIPTPATH}/../test/lib"
 
