@@ -1,5 +1,5 @@
 ###########################################################################
-# Copyright (C) 2009 Swedish Meteorological and Hydrological Institute, SMHI,
+# Copyright (C) 2012 Swedish Meteorological and Hydrological Institute, SMHI,
 #
 # This file is part of RAVE.
 #
@@ -17,24 +17,43 @@
 # along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 # ------------------------------------------------------------------------
 # 
-# For Lib directory, only install and clean functionality
+# Updates the rave_defines.py file with the proper configuration
 # @file
 # @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
 # @date 2012-03-12
 ###########################################################################
--include ../def.mk
 
-.PHONY=install
-install:
-	@mkdir -p ${prefix}/Lib
-	@cp -v -f *.py "${prefix}/Lib/"
-	@./make_script_update_config.sh "${prefix}/Lib/rave_defines.py"
-	@-echo "$(prefix)/Lib" > "$(SITEPACK_PYTHON)/rave.pth"
-	
-.PHONY:clean
-clean: ;
-	@\rm -f *~
-	 
-.PHONY:distclean
-distclean:
-	@\rm -f *~
+if [ $# -ne 1 ]; then
+  echo "Usage: $0 <rave_defines.py>"
+  exit 127
+fi
+
+if [ ! -f "$1" ]; then
+  echo "No such file '$1'"
+  exit 127
+fi  
+
+if [ -n "$PGF_HOST" ]; then
+  sed -i "s/^PGF_HOST.*/PGF_HOST = '$PGF_HOST'/g" "$1"
+fi
+
+if [ -n "$PGF_PORT" ]; then
+  sed -i "s/^PGF_PORT.*/PGF_PORT = $PGF_PORT/g" "$1"
+fi
+
+if [ -n "$DEX_SPOE" ]; then
+  sed -i "s/^DEX_SPOE.*/DEX_SPOE = \"http:\/\/$DEX_SPOE\/BaltradDex\/dispatch.htm\"/g" "$1"
+fi
+
+if [ -n "$CENTER_ID" ]; then
+  sed -i "s/^CENTER_ID.*/CENTER_ID = \"ORG:$CENTER_ID\"/g" "$1"
+fi
+
+if [ -n "$DEX_NODENAME" ]; then
+  sed -i "s/^DEX_NODENAME.*/DEX_NODENAME = \"$DEX_NODENAME\"/g" "$1"
+fi
+
+if [ -n "$DEX_PRIVATEKEY" ]; then
+  NEW_PKEY=`echo "$DEX_PRIVATEKEY" | sed -e "s;/;\\\\\/;g"`
+  sed -i "s/^DEX_PRIVATEKEY.*/DEX_PRIVATEKEY = \"$NEW_PKEY\"/g" "$1"
+fi
