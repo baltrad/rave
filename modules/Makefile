@@ -177,9 +177,28 @@ TARGETS=$(TARGET_1) $(TARGET_2) $(TARGET_3) $(TARGET_4) $(TARGET_5) $(TARGET_6) 
 		$(TARGET_13) $(TARGET_15) $(TARGET_16) $(TARGET_17) $(TARGET_18) \
 		$(TARGET_19) $(TARGET_20) $(TARGET_21) $(TARGET_24) \
 		$(TARGET_25) $(TARGET_26) $(TARGET_27) $(TARGET_28) $(TARGET_29)
-	
+
+INSTALL_HEADERS= pyarea.h \
+				 pycartesian.h \
+				 pycartesianparam.h \
+				 pycartesianvolume.h \
+				 pycompositealgorithm.h \
+				 pycomposite.h \
+				 pydetectionrange.h \
+				 pypolarnav.h \
+				 pypolarscan.h \
+				 pypolarscanparam.h \
+				 pypolarvolume.h \
+				 pyprojection.h \
+				 pyradardefinition.h \
+				 pyrave_debug.h \
+				 pyravefield.h \
+				 pyraveio.h \
+				 pytransform.h
+
 ifeq ($(EXPAT_SUPPRESSED), no)
-TARGETS += $(TARGET_22) $(TARGET_23)    
+TARGETS += $(TARGET_22) $(TARGET_23)
+INSTALL_HEADERS += pyprojectionregistry.h pyarearegistry.h
 endif
 
 MAKECDEPEND=$(CC) -MM $(CFLAGS) -MT '$(@D)/$(@F)' -o $(DF).d $<
@@ -287,11 +306,16 @@ $(TARGET_29): $(DEPDIR) $(OBJECTS_29) ../librave/transform/libravetransform.so .
 .PHONY=install
 install:
 	@mkdir -p ${prefix}/Lib
+	@mkdir -p ${prefix}/include/python
 	@for i in $(TARGETS) ; \
 	do \
 		"$(HLHDF_INSTALL_BIN)" -f -o -m755 -C $$i "$(prefix)/Lib/$$i"; \
 	done
-
+	@for i in $(INSTALL_HEADERS) ; \
+	do \
+		"$(HLHDF_INSTALL_BIN)" -f -o -m644 -C $$i "$(prefix)/include/python/$$i"; \
+	done
+	
 .PHONY=clean
 clean:
 	@\rm -f *.o core *~

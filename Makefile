@@ -54,6 +54,10 @@ install:
 	$(MAKE) -C librave install
 	$(MAKE) -C modules install
 	$(MAKE) -C Lib install
+	$(MAKE) -C config install
+	$(MAKE) -C bin install
+	$(MAKE) -C etc install
+	$(MAKE) -f install-target.mk install
 
 .PHONY:uninstall
 uninstall:
@@ -66,6 +70,9 @@ clean:
 	$(MAKE) -C modules clean
 	$(MAKE) -C test/pytest clean
 	$(MAKE) -C Lib clean
+	$(MAKE) -C config clean
+	$(MAKE) -C bin clean
+	$(MAKE) -C etc clean
 
 .PHONY:distclean
 distclean:
@@ -74,5 +81,8 @@ distclean:
 	$(MAKE) -C doxygen distclean
 	$(MAKE) -C test/pytest distclean
 	$(MAKE) -C Lib distclean
+	$(MAKE) -C config distclean
+	$(MAKE) -C bin distclean
+	$(MAKE) -C etc distclean
 	@\rm -fr build
 	@\rm -f *~ def.mk config.log config.status
