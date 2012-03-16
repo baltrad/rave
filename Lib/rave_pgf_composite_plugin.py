@@ -37,6 +37,7 @@ import _projection
 import _raveio
 import _polarvolume
 import _polarscan
+import area_registry
 import area
 import string
 import rave_tempfile
@@ -46,6 +47,9 @@ import rave_pgf_quality_registry
 
 from rave_defines import CENTER_ID, GAIN, OFFSET
 
+##
+# The area registry to be used by this composite generator.
+my_area_registry = area_registry.area_registry()
 
 ## Creates a dictionary from a rave argument list
 #@param arglist the argument list
@@ -77,17 +81,8 @@ def generate(files, arguments):
   args = arglist2dict(arguments)
   
   generator = _pycomposite.new()
-  
-  a = area.area(args["area"])
-  p = a.pcs
-  pyarea = _area.new()
-  pyarea.id = a.Id
-  pyarea.xsize = a.xsize
-  pyarea.ysize = a.ysize
-  pyarea.xscale = a.xscale
-  pyarea.yscale = a.yscale
-  pyarea.extent = a.extent
-  pyarea.projection = _projection.new(p.id, p.name, string.join(p.definition, ' '))
+
+  pyarea = my_area_registry.getarea(args["area"])
 
   # To incorporate quality detectors
   # if "anomaly-qc" in args.keys():
