@@ -1,6 +1,6 @@
 # Make sure I get access to all variables set when
 # installing the hlhdf package.
-include @HLHDF_HLDEF_MK_FILE@
+-include @HLHDF_HLDEF_MK_FILE@
 
 srcdir = 	@srcdir@
 prefix =        @prefix@
