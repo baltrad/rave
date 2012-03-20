@@ -41,6 +41,8 @@ This daemon uses pyinotify.
 import sys, os
 import pyinotify
 import _raveio
+import _rave
+import math
 from rave_defines import DEX_SPOE  # Files are injected to this URI
 
 BLTROOT     = '/opt/baltrad' # CHANGE if necessary
@@ -147,13 +149,21 @@ def MAIN(in_file, janitor=False, uri=DEX_SPOE):
                         import BaltradFrame, odim_source
 
                         if isODIM(in_file):
-                            this = _raveio.open(in_file).object
+                            rio = _raveio.open(in_file)
+                            this = rio.object
                             s = odim_source.ODIM_Source(this.source)
-
-                            pyinotify.log.info("%s %sT%sZ angle=%2.1f" % (s.nod,
-                                                                          this.date,
-                                                                          this.time,
-                                                                          this.elangle))
+                            if rio.objectType == _rave.Rave_ObjectType_SCAN:
+                                pyinotify.log.info("SCAN: %s %sT%sZ angle=%2.1f" % (s.nod,
+                                                                              this.date,
+                                                                              this.time,
+                                                                              this.elangle * 180.0 / math.pi))
+                            elif rio.objectType == _rave.Rave_ObjectType_PVOL:
+                                pyinotify.log.info("PVOL: %s %sT%sZ" % (s.nod,
+                                                                        this.date,
+                                                                        this.time))
+                            else:
+                                pyinotify.log.info("Unknown ODIM file")
+                            
 
                             # Send file to BALTRAD
                             try:
