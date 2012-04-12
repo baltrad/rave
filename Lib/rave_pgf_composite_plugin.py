@@ -47,6 +47,13 @@ import rave_pgf_quality_registry
 
 from rave_defines import CENTER_ID, GAIN, OFFSET
 
+ravebdb = None
+try:
+  import rave_bdb
+  ravebdb = rave_bdb.rave_bdb()
+except:
+  pass
+
 ##
 # The area registry to be used by this composite generator.
 my_area_registry = area_registry.area_registry()
@@ -108,9 +115,12 @@ def generate(files, arguments):
       qfields.extend(p.getQualityFields())
 
   for fname in files:
-    rio = _raveio.open(fname)
-
-    obj = rio.object
+    obj = None
+    if ravebdb != None:
+      obj = ravebdb.get_rave_object(fname)
+    else:
+      rio = _raveio.open(fname)
+      obj = rio.object
 
     if len(nodes):
       nodes += ",'%s'" % odim_source.NODfromSource(obj)

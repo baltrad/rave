@@ -57,3 +57,8 @@ if [ -n "$DEX_PRIVATEKEY" ]; then
   NEW_PKEY=`echo "$DEX_PRIVATEKEY" | sed -e "s;/;\\\\\/;g"`
   sed -i "s/^DEX_PRIVATEKEY.*/DEX_PRIVATEKEY = \"$NEW_PKEY\"/g" "$1"
 fi
+
+if [ -n "$BDB_CONFIG_FILE" ]; then
+  NEW_CONFFILE=`echo "$BDB_CONFIG_FILE" | sed -e "s;/;\\\\\/;g"`
+  sed -i "s/^BDB_CONFIG_FILE.*/BDB_CONFIG_FILE = \"$NEW_CONFFILE\"/g" "$1"
+fi
