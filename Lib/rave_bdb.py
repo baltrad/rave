@@ -126,9 +126,43 @@ class rave_bdb(object):
     else:
       raise Exception, "No content for file %s"%fname
 
+  def get_file(self, uuid):
+    ''' returns a file name to a file that can be accessed. The uuid should be an
+    identifier in bdb. The returned filename will be a temporary file so it is 
+    recommended to remove the file after usage.
+    For example
+      myname = None
+      try:
+        myname = bdb.get_file(uuid)
+        ... process file ...
+      finally:
+        if myname != None and os.path.exists(myname):
+          os.unlink(myname)
+    :param fname: The file name
+    :return a temporary file on success
+    :raises an Exception on failure or no file could be found
+    '''
+    content = self.get_database().get_file_content(uuid)
+    if content:
+      fpd, tmppath = tempfile.mkstemp(suffix='.h5', prefix='ravetmp')
+      try:
+        with contextlib.closing(content):
+          with os.fdopen(fpd, "w") as outf:
+            shutil.copyfileobj(content, outf)
+            outf.close()
+        return tmppath
+      except Exception, e:
+        if os.path.exists(tmppath):
+          os.unlink(tmppath)
+        raise e
+    else:
+      raise Exception, "No content for file %s"%uuid
+
 if __name__=='__main__':
   dbapi = rave_bdb()
-  print dbapi.get_rave_object('c3ba1289-59d8-498d-8894-414f552ca2a2').date
+  #print dbapi.get_rave_object('c3ba1289-59d8-498d-8894-414f552ca2a2').date
+  print dbapi.get_file('7ced67c2-a519-4d7d-9ad7-a7c239d6b784')
+  
 #  import math
 #  print `get_database().get_sources()`
 #  print get_rave_object('c3ba1289-59d8-498d-8894-414f552ca2a2').elangle * 180.0 / math.pi
