@@ -53,8 +53,8 @@ class rave_bdb(object):
     try:
       with open(configfile) as fp:
         properties = jprops.load_properties(fp)
-    except Exception, e:
-      traceback.print_exc(e)
+    except:
+      pass
 
     return properties
 
