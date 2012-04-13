@@ -41,6 +41,12 @@ import rave_pgf_quality_registry
 
 from rave_defines import CENTER_ID
 
+ravebdb = None
+try:
+  import rave_bdb
+  ravebdb = rave_bdb.rave_bdb()
+except:
+  pass
 
 ## Creates a dictionary from a rave argument list
 #@param arglist the argument list
@@ -68,16 +74,20 @@ def generateVolume(files, args):
   #'longitude', 'latitude', 'height', 'time', 'date', 'source'
 
   for fname in files:
-    rio = _raveio.open(fname)
+    scan = None
+    if ravebdb != None:
+      scan = ravebdb.get_rave_object(fname)
+    else:
+      scan = _raveio.open(fname).object
     if firstscan == False:
       firstscan = True
-      volume.longitude = rio.object.longitude
-      volume.latitude = rio.object.latitude
-      volume.height = rio.object.height
-      volume.beamwidth = rio.object.beamwidth
-    volume.addScan(rio.object)
+      volume.longitude = scan.longitude
+      volume.latitude = scan.latitude
+      volume.height = scan.height
+      volume.beamwidth = scan.beamwidth
+    volume.addScan(scan)
 
-  volume.source = rio.object.source  # Recycle the last input, it won't necessarily be correct ...
+  volume.source = scan.source  # Recycle the last input, it won't necessarily be correct ...
   odim_source.CheckSource(volume)    # ... so check it!
   return volume
 
