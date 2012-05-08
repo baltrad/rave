@@ -23,7 +23,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @author Daniel Michelson, SMHI
 ## @date 2010-07-09
 
-import sys, os, traceback
+import sys, os, traceback, string
 from copy import deepcopy as copy
 import logging
 import Queue
@@ -36,6 +36,7 @@ from rave_defines import DEX_SPOE, LOG_ID, REGFILE
 
 
 METHODS = {'generate' : '("algorithm",[files],[arguments])',
+           'execute' : '("shell command")',
            'register': '("name", "module", "function", Help="", strings=",", ints=",", floats=",", seqs=",")',
            'deregister': '("name")',
            'flush': '("stupid_password")',
@@ -303,9 +304,30 @@ class RavePGF():
     self.logger.info("Returning: OK ")
     return "OK"
 
+  ##
+  # Executes a shell escape command
+  # @param command: the shell command without &
+  # @return: OK
+  #
+  def execute(self, command):
+    import subprocess
+    cmd = command.strip() 
+    try:
+      if not cmd.endswith("&"):
+        cmd = "%s &"%cmd
+      code = subprocess.call(cmd, shell=True)
+      if code != 0:
+        raise Exception, "Failure when executing %s"%command
+    except Exception:
+      err_msg = traceback.format_exc()
+      self.logger.error("Failed to execute command %s, msg: %s"%(command, err_msg))
+    
+    self.logger.info("Returning: OK")
+    return "OK"
+    
 
-## Pretty useless method used to check argument types.
-# @param arguments sequence of ints, floats, strings in arbitrary order.
+  ## Pretty useless method used to check argument types.
+  # @param arguments sequence of ints, floats, strings in arbitrary order.
   def echo_args(self, arguments):
     import types
     ret = ''
