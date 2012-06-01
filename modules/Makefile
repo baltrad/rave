@@ -172,11 +172,15 @@ SOURCE_29= ptop.c
 OBJECTS_29= $(SOURCE_29:.c=.o)
 TARGET_29= _ptop.so
 
+SOURCE_30= pyacrr.c
+OBJECTS_30= $(SOURCE_30:.c=.o)
+TARGET_30= _acrr.so
+
 TARGETS=$(TARGET_1) $(TARGET_2) $(TARGET_3) $(TARGET_4) $(TARGET_5) $(TARGET_6) \
 		$(TARGET_7) $(TARGET_8) $(TARGET_9) $(TARGET_10) $(TARGET_11) $(TARGET_12) \
 		$(TARGET_13) $(TARGET_15) $(TARGET_16) $(TARGET_17) $(TARGET_18) \
 		$(TARGET_19) $(TARGET_20) $(TARGET_21) $(TARGET_24) \
-		$(TARGET_25) $(TARGET_26) $(TARGET_27) $(TARGET_28) $(TARGET_29)
+		$(TARGET_25) $(TARGET_26) $(TARGET_27) $(TARGET_28) $(TARGET_29) $(TARGET_30)
 
 INSTALL_HEADERS= pyarea.h \
 				 pycartesian.h \
@@ -194,7 +198,8 @@ INSTALL_HEADERS= pyarea.h \
 				 pyrave_debug.h \
 				 pyravefield.h \
 				 pyraveio.h \
-				 pytransform.h
+				 pytransform.h \
+				 pyacrr.h
 
 ifeq ($(EXPAT_SUPPRESSED), no)
 TARGETS += $(TARGET_22) $(TARGET_23)
@@ -303,6 +308,9 @@ $(TARGET_28): $(DEPDIR) $(OBJECTS_28) ../librave/transform/libravetransform.so .
 $(TARGET_29): $(DEPDIR) $(OBJECTS_29) ../librave/transform/libravetransform.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_29) $(LDFLAGS) $(LIBRARIES)
 
+$(TARGET_30): $(DEPDIR) $(OBJECTS_30) ../librave/transform/libravetransform.so ../librave/pyapi/libravepyapi.so
+	$(LDSHARED) -o $@ $(OBJECTS_30) $(LDFLAGS) $(LIBRARIES)
+
 .PHONY=install
 install:
 	@mkdir -p ${prefix}/Lib
@@ -370,4 +378,5 @@ endif
 -include $(SOURCE_27:%.c=$(DEPDIR)/%.P)
 -include $(SOURCE_28:%.c=$(DEPDIR)/%.P)
 -include $(SOURCE_29:%.c=$(DEPDIR)/%.P)
+-include $(SOURCE_30:%.c=$(DEPDIR)/%.P)
 

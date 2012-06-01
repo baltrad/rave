@@ -315,4 +315,13 @@ void CartesianParam_removeQualityField(CartesianParam_t* self, int index);
  */
 RaveObjectList_t* CartesianParam_getQualityFields(CartesianParam_t* self);
 
+/**
+ * Returns a quality field based on the value of how/task that should be a
+ * string.
+ * @param[in] self - self
+ * @param[in] value - the value of the how/task attribute
+ * @return the field if found otherwise NULL
+ */
+RaveField_t* CartesianParam_getQualityFieldByHowTask(CartesianParam_t* self, const char* value);
+
 #endif

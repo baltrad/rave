@@ -122,4 +122,11 @@ Cartesian_t* Transform_fillGap(Transform_t* transform, Cartesian_t* cartesian);
  */
 CartesianParam_t* Transform_fillGapOnParameter(Transform_t* transform, CartesianParam_t* param);
 
+/**
+ * Accumulated precipitation from reflectivity composites.
+ * @param[in] self - self
+ * @param[in] param - the cartesian parameter. Should contain
+ */
+CartesianParam_t* Transform_accumulate(Transform_t* self, CartesianParam_t* param, double zr_a, double zr_b);
+
 #endif

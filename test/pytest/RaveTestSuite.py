@@ -40,6 +40,7 @@ from PyPolarNavTest import *
 from PyAreaTest import *
 from PyRadarDefinitionTest import *
 from PyProjectionRegistryTest import *
+from PyAcrrTest import *
 from PyAreaRegistryTest import *
 from PgfVolumePluginTest import *
 from RaveScansun import *

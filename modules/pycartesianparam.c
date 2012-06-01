@@ -571,6 +571,32 @@ static PyObject* _pycartesianparam_removeQualityField(PyCartesianParam* self, Py
 }
 
 /**
+ * Returns a quality field based on the value of how/task that should be a
+ * string.
+ * @param[in] self - self
+ * @param[in] args - the how/task value string
+ * @return the field if found otherwise NULL
+ */
+static PyObject* _pycartesianparam_getQualityFieldByHowTask(PyCartesianParam* self, PyObject* args)
+{
+  PyObject* result = NULL;
+  char* value = NULL;
+  RaveField_t* field = NULL;
+
+  if (!PyArg_ParseTuple(args, "s", &value)) {
+    return NULL;
+  }
+  field = CartesianParam_getQualityFieldByHowTask(self->param, value);
+  if (field == NULL) {
+    raiseException_gotoTag(done, PyExc_NameError, "Could not locate quality field");
+  }
+  result = (PyObject*)PyRaveField_New(field);
+done:
+  RAVE_OBJECT_RELEASE(field);
+  return result;
+}
+
+/**
  * All methods a cartesian product can have
  */
 static struct PyMethodDef _pycartesianparam_methods[] =
@@ -598,6 +624,7 @@ static struct PyMethodDef _pycartesianparam_methods[] =
   {"getNumberOfQualityFields", (PyCFunction) _pycartesianparam_getNumberOfQualityFields, 1},
   {"getQualityField", (PyCFunction) _pycartesianparam_getQualityField, 1},
   {"removeQualityField", (PyCFunction) _pycartesianparam_removeQualityField, 1},
+  {"getQualityFieldByHowTask", (PyCFunction) _pycartesianparam_getQualityFieldByHowTask, 1},
   {NULL, NULL } /* sentinel */
 };
 

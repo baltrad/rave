@@ -399,4 +399,45 @@ class PyCartesianParamTest(unittest.TestCase):
     obj.removeQualityField(0)
     self.assertEquals(1, obj.getNumberOfQualityFields())
     self.assertEquals("field2", obj.getQualityField(0).getAttribute("what/name"))
+
+  def test_getQualityFieldByHowTask(self):
+    param = _cartesianparam.new()
+    param.quantity="DBZH"    
+    data = numpy.zeros((4,5), numpy.int8)
+    param.setData(data)
     
+    field1 = _ravefield.new()
+    field2 = _ravefield.new()
+    field1.addAttribute("how/task", "se.smhi.f1")
+    field1.addAttribute("what/value", "f1")
+    field2.addAttribute("how/task", "se.smhi.f2")
+    field2.addAttribute("what/value", "f2")
+
+    param.addQualityField(field1)
+    param.addQualityField(field2)
+   
+    result = param.getQualityFieldByHowTask("se.smhi.f2")
+    self.assertEquals("f2", result.getAttribute("what/value"))
+
+  def test_getQualityFieldByHowTask_notFound(self):
+    param = _cartesianparam.new()
+    param.quantity="DBZH"    
+    data = numpy.zeros((4,5), numpy.int8)
+    param.setData(data)
+
+    field1 = _ravefield.new()
+    field2 = _ravefield.new()
+    field1.addAttribute("how/task", "se.smhi.f1")
+    field1.addAttribute("what/value", "f1")
+    field2.addAttribute("how/task", "se.smhi.f2")
+    field2.addAttribute("what/value", "f2")
+
+    param.addQualityField(field1)
+    param.addQualityField(field2)
+    
+    try:
+      obj.getQualityFieldByHowTask("se.smhi.f3")
+      self.fail("Expected NameError")
+    except NameError, e:
+      pass
+  

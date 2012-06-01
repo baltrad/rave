@@ -465,6 +465,41 @@ done:
   return result;
 }
 
+CartesianParam_t* Transform_accumulate(Transform_t* self, CartesianParam_t* param, double zr_a, double zr_b)
+{
+  CartesianParam_t* result = NULL;
+  RaveField_t *nd = NULL, *dd = NULL, *cd = NULL, *sd = NULL;
+  long xsize = 0, ysize = 0;
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  if (param == NULL) {
+    RAVE_ERROR0("CartesianParam == NULL");
+    return NULL;
+  }
+
+  xsize = CartesianParam_getXSize(param);
+  ysize = CartesianParam_getXSize(param);
+
+  nd = RAVE_OBJECT_NEW(&RaveField_TYPE);
+  dd = RAVE_OBJECT_NEW(&RaveField_TYPE);
+  cd = RAVE_OBJECT_NEW(&RaveField_TYPE);
+  sd = RAVE_OBJECT_NEW(&RaveField_TYPE);
+  if (nd == NULL || dd == NULL || cd == NULL || sd == NULL ||
+      !RaveField_createData(nd, xsize, ysize, RaveDataType_SHORT) ||
+      !RaveField_createData(dd, xsize, ysize, RaveDataType_DOUBLE) ||
+      !RaveField_createData(cd, xsize, ysize, RaveDataType_SHORT) ||
+      !RaveField_createData(sd, xsize, ysize, RaveDataType_DOUBLE)) {
+    RAVE_ERROR0("Memory allocation problems");
+    goto done;
+  }
+
+done:
+  RAVE_OBJECT_RELEASE(nd);
+  RAVE_OBJECT_RELEASE(dd);
+  RAVE_OBJECT_RELEASE(cd);
+  RAVE_OBJECT_RELEASE(sd);
+  return result;
+}
+
 /*@} End of Interface functions */
 
 RaveCoreObjectType Transform_TYPE = {

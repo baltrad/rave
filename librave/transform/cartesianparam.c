@@ -440,6 +440,29 @@ RaveObjectList_t* CartesianParam_getQualityFields(CartesianParam_t* self)
   return (RaveObjectList_t*)RAVE_OBJECT_COPY(self->qualityfields);
 }
 
+RaveField_t* CartesianParam_getQualityFieldByHowTask(CartesianParam_t* self, const char* value)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+
+  int nfields = 0, i = 0;
+  RaveField_t* result = NULL;
+
+  RAVE_ASSERT((self != NULL), "scan == NULL");
+  if (value == NULL) {
+    RAVE_WARNING0("Trying to use CartesianParam_getQualityFieldByHowTask without a how/task value");
+    return NULL;
+  }
+  nfields = RaveObjectList_size(self->qualityfields);
+  for (i = 0; result == NULL && i < nfields; i++) {
+    RaveField_t* field = (RaveField_t*)RaveObjectList_get(self->qualityfields, i);
+    if (field != NULL && RaveField_hasAttributeStringValue(field, "how/task", value)) {
+      result = RAVE_OBJECT_COPY(field);
+    }
+    RAVE_OBJECT_RELEASE(field);
+  }
+  return result;
+}
+
 /*@} End of Interface functions */
 
 RaveCoreObjectType CartesianParam_TYPE = {
