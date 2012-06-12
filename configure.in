@@ -318,6 +318,55 @@ case $withval in
     ;;
 esac
 
+dnl We might want to compile rave with a java api
+
+AC_ARG_WITH(jdk,[  --with-jdk=jdkhome    Compile with java support],
+		,withval=no)
+JDK_ROOT=
+JDK_SUPRESSED=yes
+JDK_VERSION=
+case $withval in
+  no)
+    AC_MSG_CHECKING(for java)
+    AC_MSG_RESULT(suppressed)
+    ;;
+  *)
+    AC_MSG_CHECKING(for java)
+    java_jdk_root="`echo $withval`"
+    if test "yes" = "$java_jdk_root"; then
+      java_bin_dir=`which java | sed -e "s/\/java$//g"`;
+      javac_bin_dir=`which javac | sed -e "s/\/javac$//g"`;
+      jdk_root=`echo $java_bin_dir | sed -e "s/\/bin$//g"`
+    else
+      java_bin_dir="$java_jdk_root/bin";
+      javac_bin_dir="$java_jdk_root/bin";
+      jdk_root="$java_jdk_root"
+    fi
+    if [[ "$java_bin_dir" != "$javac_bin_dir" ]]; then
+      AC_MSG_ERROR(java and javac bin directories seems to be placed at different places)
+    elif [[ "$java_bin_dir" = "" ]]; then
+      AC_MSG_ERROR(Java: No jdk-home dir reckognized)
+    fi
+    javaversion=`$java_bin_dir/java -version 2>&1 | grep "java version \"" | sed -e "s/\(java version \"\)\([[0-9\.]]*\)\(_.*\"\)/\2/g"`
+    if [[ $? -ne 0 ]]; then
+      AC_MSG_ERROR(Failure to execute $java_bin_dir/java -version, is this OpenJDK or SUN JDK?)
+    fi
+    mx_jversion=`echo $javaversion | cut -d '.' -f1`
+    ma_jversion=`echo $javaversion | cut -d '.' -f2`
+    if [[ "$mx_jversion" = "" -o "$ma_jversion" = "" ]]; then
+      AC_MSG_ERROR(Java must be OpenJDK or Sun JDK version 1.6 or higher, found $javaversion)
+    fi
+    if [[ $mx_jversion -ne 1 -o $ma_jversion -lt 6 ]]; then
+      AC_MSG_ERROR(Java must be OpenJDK or SUN version 1.6 or higher, found $javaversion)
+    else
+      JDK_ROOT="$jdk_root"
+      JDK_SUPRESSED=no
+      JDK_VERSION=$javaversion
+      AC_MSG_RESULT($JDK_ROOT)
+    fi    
+    ;;
+esac
+
 dnl Do we want to have BUFR support, default is NO
 GOT_BUFR_INC=no
 GOT_BUFR_LIB=no
@@ -513,6 +562,11 @@ AC_SUBST(NUMPY_INCLUDE_DIR)
 AC_SUBST(EXPAT_INCLUDE_DIR)
 AC_SUBST(EXPAT_LIB_DIR)
 AC_SUBST(EXPAT_SUPPRESSED)
+
+# Substitute the jdk home arguments
+AC_SUBST(JDK_SUPRESSED)
+AC_SUBST(JDK_ROOT)
+AC_SUBST(JDK_VERSION)
 
 # Substitute the bufr arguments
 AC_SUBST(BUFR_INCLUDE_DIR)
