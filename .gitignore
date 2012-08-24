@@ -9,3 +9,7 @@
 .csettings
 .settings
 rave_config.h
+config.log
+config.status
+.dep
+def.mk

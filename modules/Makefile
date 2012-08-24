@@ -108,9 +108,9 @@ SOURCE_13= pypoocompositealgorithm.c
 OBJECTS_13= $(SOURCE_13:.c=.o)
 TARGET_13= _poocompositealgorithm.so
 
-#SOURCE_14= pyxxx.c
-#OBJECTS_14= $(SOURCE_14:.c=.o)
-#TARGET_14= _xxx.so
+SOURCE_14= pyverticalprofile.c
+OBJECTS_14= $(SOURCE_14:.c=.o)
+TARGET_14= _verticalprofile.so
 
 SOURCE_15= pyprojection.c
 OBJECTS_15= $(SOURCE_15:.c=.o)
@@ -178,7 +178,7 @@ TARGET_30= _acrr.so
 
 TARGETS=$(TARGET_1) $(TARGET_2) $(TARGET_3) $(TARGET_4) $(TARGET_5) $(TARGET_6) \
 		$(TARGET_7) $(TARGET_8) $(TARGET_9) $(TARGET_10) $(TARGET_11) $(TARGET_12) \
-		$(TARGET_13) $(TARGET_15) $(TARGET_16) $(TARGET_17) $(TARGET_18) \
+		$(TARGET_13) $(TARGET_14) $(TARGET_15) $(TARGET_16) $(TARGET_17) $(TARGET_18) \
 		$(TARGET_19) $(TARGET_20) $(TARGET_21) $(TARGET_24) \
 		$(TARGET_25) $(TARGET_26) $(TARGET_27) $(TARGET_28) $(TARGET_29) $(TARGET_30)
 
@@ -199,7 +199,8 @@ INSTALL_HEADERS= pyarea.h \
 				 pyravefield.h \
 				 pyraveio.h \
 				 pytransform.h \
-				 pyacrr.h
+				 pyacrr.h \
+				 pyverticalprofile.h
 
 ifeq ($(EXPAT_SUPPRESSED), no)
 TARGETS += $(TARGET_22) $(TARGET_23)
@@ -260,8 +261,8 @@ $(TARGET_12): $(DEPDIR) $(OBJECTS_12) ../librave/transform/libravetransform.so .
 $(TARGET_13): $(DEPDIR) $(OBJECTS_13) ../librave/transform/libravetransform.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_13) $(LDFLAGS) $(LIBRARIES)
 
-#$(TARGET_14): $(DEPDIR) $(OBJECTS_14) ../librave/transform/libravetransform.so ../librave/pyapi/libravepyapi.so
-#	$(LDSHARED) -o $@ $(OBJECTS_14) $(LDFLAGS) $(LIBRARIES)
+$(TARGET_14): $(DEPDIR) $(OBJECTS_14) ../librave/transform/libravetransform.so ../librave/pyapi/libravepyapi.so
+	$(LDSHARED) -o $@ $(OBJECTS_14) $(LDFLAGS) $(LIBRARIES)
 
 $(TARGET_15): $(DEPDIR) $(OBJECTS_15) ../librave/transform/libravetransform.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_15) $(LDFLAGS) $(LIBRARIES)
@@ -360,7 +361,7 @@ distclean:	clean
 -include $(SOURCE_11:%.c=$(DEPDIR)/%.P)
 -include $(SOURCE_12:%.c=$(DEPDIR)/%.P)
 -include $(SOURCE_13:%.c=$(DEPDIR)/%.P)
-#-include $(SOURCE_14:%.c=$(DEPDIR)/%.P)
+-include $(SOURCE_14:%.c=$(DEPDIR)/%.P)
 -include $(SOURCE_15:%.c=$(DEPDIR)/%.P)
 -include $(SOURCE_16:%.c=$(DEPDIR)/%.P)
 -include $(SOURCE_17:%.c=$(DEPDIR)/%.P)

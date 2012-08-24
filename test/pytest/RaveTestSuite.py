@@ -32,6 +32,7 @@ from RaveModuleConstantsTest import *
 from PyCartesianTest import *
 from PyCartesianParamTest import *
 from PyCartesianVolumeTest import *
+from PyVerticalProfileTest import *
 from PyRaveFieldTest import *
 from PyTransformTest import *
 from PyProjectionTest import *
