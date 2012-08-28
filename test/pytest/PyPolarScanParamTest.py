@@ -423,6 +423,38 @@ class PyPolarScanParamTest(unittest.TestCase):
     self.assertEquals(10, result.nbins)
     self.assertEquals(12, result.nrays)
     self.assertEquals(_rave.RaveDataType_UCHAR, result.datatype)
+
+  def test_convertDataDoubleToUchar(self):
+    obj = _polarscanparam.new()
+    obj.setData(numpy.array([[-32.0,-32.0,-32.0],
+                             [ 31.5, 31.5, 31.5],
+                             [ 95.5, 95.5, 95.5]]).astype(numpy.float64))      
+    self.assertEquals(_rave.RaveDataType_DOUBLE, obj.datatype)
+
+    obj.gain =     0.5
+    obj.offset = -32.0
+    obj.nodata = 255.0
+    obj.undetect = 0.0
+
+    obj.convertDataDoubleToUchar()
+    self.assertEquals(_rave.RaveDataType_UCHAR, obj.datatype)
+    self.assertEquals([[  0,  0,  0],
+                       [127,127,127],
+                       [255,255,255]], obj.getData().tolist())
+
+  def test_convertWrongDataType(self):
+    obj = _polarscanparam.new()
+    obj.setData(numpy.array([[-32.0,-32.0,-32.0],
+                             [ 31.5, 31.5, 31.5],
+                             [ 95.5, 95.5, 95.5]]).astype(numpy.float32))
+    obj.gain =     0.5
+    obj.offset = -32.0
+    obj.nodata = 255.0
+    obj.undetect = 0.0
+    try:
+        obj.convertDataDoubleToUchar()
+    except TypeError:
+        pass
     
 if __name__ == "__main__":
   #import sys;sys.argv = ['', 'Test.testName']

@@ -293,4 +293,12 @@ RaveField_t* PolarScanParam_toField(PolarScanParam_t* param);
  */
 PolarScanParam_t* PolarScanParam_fromField(RaveField_t* field);
 
+/**
+ * Converter for 64-bit float (from BUFR) to 8-bit uint,
+ * primarily for reverting reflectivity data back to what they once were.
+ * @param[in] param - the quantity to convert
+ * @return 1 on success otherwise 0
+ */
+int PolarScanParam_convertDataDoubleToUchar(PolarScanParam_t* param);
+
 #endif

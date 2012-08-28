@@ -564,8 +564,8 @@ static PyObject* _pypolarscanparam_toField(PyPolarScanParam* self, PyObject* arg
   RaveField_t* field = NULL;
 
   if (!PyArg_ParseTuple(args, "")) {
-    return NULL;
-  }
+      return NULL;
+    }
   field = PolarScanParam_toField(self->scanparam);
   if (field == NULL) {
     raiseException_returnNULL(PyExc_RuntimeError, "Failed to convert parameter into a field");
@@ -573,6 +573,25 @@ static PyObject* _pypolarscanparam_toField(PyPolarScanParam* self, PyObject* arg
   result = (PyObject*)PyRaveField_New(field);
   RAVE_OBJECT_RELEASE(field);
   return result;
+}
+
+/**
+ * Converter for 64-bit float (from BUFR) to 8-bit uint,
+ * primarily for reverting reflectivity data back to what they once were.
+ * @param[in] self - this instance
+ * @param[in] args - N/A
+ * @returns None
+ */
+static PyObject* _pypolarscanparam_convertDataDoubleToUchar(PyPolarScanParam* self, PyObject* args)
+{
+  int retval=0;
+  if (!PyArg_ParseTuple(args, "")) {
+      return NULL;
+    }
+  if (!PolarScanParam_convertDataDoubleToUchar(self->scanparam)) {
+    raiseException_returnNULL(PyExc_TypeError, "Failed to convert dataset, not double data?");
+  }
+  Py_RETURN_NONE;
 }
 
 /**
@@ -601,6 +620,7 @@ static struct PyMethodDef _pypolarscanparam_methods[] =
   {"getQualityField", (PyCFunction) _pypolarscanparam_getQualityField, 1},
   {"removeQualityField", (PyCFunction) _pypolarscanparam_removeQualityField, 1},
   {"toField", (PyCFunction)_pypolarscanparam_toField, 1},
+  {"convertDataDoubleToUchar", (PyCFunction)_pypolarscanparam_convertDataDoubleToUchar, 1},
   {NULL, NULL } /* sentinel */
 };
 

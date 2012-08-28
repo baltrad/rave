@@ -32,6 +32,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_data2d.h"
 #include "raveobject_hashtable.h"
 #include "rave_utilities.h"
+#include <float.h>
 
 /**
  * Represents one param in a scan
@@ -548,6 +549,57 @@ done:
   RAVE_OBJECT_RELEASE(attr);
   RAVE_OBJECT_RELEASE(cloneattr);
   return result;
+}
+
+int PolarScanParam_convertDataDoubleToUchar(PolarScanParam_t* param) {
+  RaveField_t* field=NULL;
+  void* data=NULL;
+  double iv, ov, gain, offset, nodata, undetect;
+  int r, b, nrays, nbins;
+  int retval=0;
+  RaveValueType rvt;
+  RaveDataType rdt;
+
+  rdt = PolarScanParam_getDataType(param);
+  if (rdt != RaveDataType_DOUBLE) {
+    RAVE_ERROR0("Trying to convert a non-double dataset");
+    return retval;
+  }
+
+  gain = PolarScanParam_getGain(param);
+  offset = PolarScanParam_getOffset(param);
+  nodata = PolarScanParam_getNodata(param);
+  undetect = PolarScanParam_getUndetect(param);
+  nrays = (int)PolarScanParam_getNrays(param);
+  nbins = (int)PolarScanParam_getNbins(param);
+
+  field = RAVE_OBJECT_NEW(&RaveField_TYPE);
+  RaveField_createData(field, (long)nbins, (long)nrays, RaveDataType_UCHAR);
+
+  for (r = 0; r < nrays; r++) {
+    for (b = 0; b < nbins; b++) {
+      rvt = PolarScanParam_getValue(param, b, r, &iv);
+
+      if ( (iv > -DBL_MAX) && (iv < DBL_MAX) ) {
+        ov = (iv - offset) / gain;
+        if (ov < undetect)
+          ov = undetect;
+        else if (ov > nodata)
+          ov = nodata;
+      } else if (iv == -DBL_MAX) {
+        ov = undetect;
+      } else {
+        ov = nodata;
+      }
+
+      retval = RaveField_setValue(field, b, r, ov);
+    }
+  }
+  data = RaveField_getData(field);
+  PolarScanParam_setData(param, (long)nbins, (long)nrays, data, RaveDataType_UCHAR);
+  RAVE_OBJECT_RELEASE(field);
+
+  return retval;
 }
 
 /*@} End of Interface functions */
