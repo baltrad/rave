@@ -89,6 +89,21 @@ class PyVerticalProfileTest(unittest.TestCase):
     self.assertEquals(0, obj.getLevels())
     obj.setLevels(1)
     self.assertEquals(1, obj.getLevels(), 4)
+
+  def test_setLevels_withField(self):
+    obj = _verticalprofile.new()
+    f = _ravefield.new()
+    f.setData(numpy.zeros((10,1), numpy.uint8))
+    f.addAttribute("how/this", 1.0)
+    f.addAttribute("what/quantity", "ff")
+    obj.addField(f)
+    self.assertEquals(10, obj.getLevels())
+    try:
+      obj.setLevels(1)
+      self.fail("Expected AttributeError")
+    except AttributeError, e:
+      pass
+    self.assertEquals(10, obj.getLevels())
   
   def test_setGetFF(self):
     obj = _verticalprofile.new()
@@ -246,7 +261,6 @@ class PyVerticalProfileTest(unittest.TestCase):
 
   def test_addField(self):
     obj = _verticalprofile.new()
-    self.assertTrue(None == obj.getDBZDev())
     f = _ravefield.new()
     f.setData(numpy.zeros((10,1), numpy.uint8))
     f.addAttribute("how/this", 1.0)
@@ -260,7 +274,6 @@ class PyVerticalProfileTest(unittest.TestCase):
   def test_addField_withLevels_preset(self):
     obj = _verticalprofile.new()
     obj.setLevels(10)
-    self.assertTrue(None == obj.getDBZDev())
     f = _ravefield.new()
     f.setData(numpy.zeros((11,1), numpy.uint8))
     f.addAttribute("how/this", 1.0)
@@ -275,7 +288,6 @@ class PyVerticalProfileTest(unittest.TestCase):
 
   def test_addField_differentSize(self):
     obj = _verticalprofile.new()
-    self.assertTrue(None == obj.getDBZDev())
     f = _ravefield.new()
     f.setData(numpy.zeros((10,1), numpy.uint8))
     f.addAttribute("how/this", 1.0)
@@ -298,7 +310,6 @@ class PyVerticalProfileTest(unittest.TestCase):
 
   def test_addField_tooHighXsize(self):
     obj = _verticalprofile.new()
-    self.assertTrue(None == obj.getDBZDev())
     f = _ravefield.new()
     f.setData(numpy.zeros((10,10), numpy.uint8))
     f.addAttribute("how/this", 1.0)
@@ -312,7 +323,6 @@ class PyVerticalProfileTest(unittest.TestCase):
 
   def test_getFields(self):
     obj = _verticalprofile.new()
-    self.assertTrue(None == obj.getDBZDev())
     f = _ravefield.new()
     f.setData(numpy.zeros((10,1), numpy.uint8))
     f.addAttribute("how/this", 1.0)

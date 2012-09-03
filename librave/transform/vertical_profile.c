@@ -233,6 +233,10 @@ double VerticalProfile_getHeight(VerticalProfile_t* self)
 int VerticalProfile_setLevels(VerticalProfile_t* self, long l)
 {
   RAVE_ASSERT((self != NULL), "self == NULL");
+  if (RaveObjectHashTable_size(self->fields) != 0) {
+    RAVE_ERROR0("Setting levels when fields already exists");
+    return 0;
+  }
   self->levels = l;
   return 1;
 }
