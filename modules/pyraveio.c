@@ -35,7 +35,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "pycartesian.h"
 #include "pypolarscan.h"
 #include "pycartesianvolume.h"
-
+#include "pyverticalprofile.h"
 #include "pyrave_debug.h"
 #include "rave_alloc.h"
 #include "hlhdf.h"
@@ -310,6 +310,8 @@ static PyObject* _pyraveio_getattr(PyRaveIO* self, char* name)
         res = (PyObject*)PyPolarScan_New((PolarScan_t*)object);
       } else if (RAVE_OBJECT_CHECK_TYPE(object, &CartesianVolume_TYPE)) {
         res = (PyObject*)PyCartesianVolume_New((CartesianVolume_t*)object);
+      } else if (RAVE_OBJECT_CHECK_TYPE(object, &VerticalProfile_TYPE)) {
+        res = (PyObject*)PyVerticalProfile_New((VerticalProfile_t*)object);
       } else {
         PyErr_SetString(PyExc_NotImplementedError, "support lacking for object type");
       }
@@ -396,8 +398,10 @@ static int _pyraveio_setattr(PyRaveIO* self, char* name, PyObject* val)
       RaveIO_setObject(self->raveio, (RaveCoreObject*)((PyPolarVolume*)val)->pvol);
     } else if (PyCartesianVolume_Check(val)) {
       RaveIO_setObject(self->raveio, (RaveCoreObject*)((PyCartesianVolume*)val)->cvol);
+    } else if (PyVerticalProfile_Check(val)) {
+      RaveIO_setObject(self->raveio, (RaveCoreObject*)((PyVerticalProfile*)val)->vp);
     } else {
-      raiseException_gotoTag(done, PyExc_TypeError, "Can only save objects of type : cartesian, polarscan or polarvolume");
+      raiseException_gotoTag(done, PyExc_TypeError, "Can only save objects of type : cartesian, polarscan, polarvolume or verticalprofile");
     }
   } else if (strcmp("compression_level", name) == 0) {
     if (PyInt_Check(val)) {
@@ -565,6 +569,7 @@ init_raveio(void)
   import_pypolarscan();
   import_pycartesian();
   import_pycartesianvolume();
+  import_pyverticalprofile();
   PYRAVE_DEBUG_INITIALIZE;
 }
 /*@} End of Module setup */

@@ -40,6 +40,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_hlhdf_utilities.h"
 #include "cartesian_odim_io.h"
 #include "polar_odim_io.h"
+#include "vp_odim_io.h"
 
 #ifdef RAVE_BUFR_SUPPORTED
 #include "rave_bufr_io.h"
@@ -357,6 +358,44 @@ static int RaveIOInternal_addCartesianToNodeList(Cartesian_t* image, HL_NodeList
   return result;
 }
 
+static RaveCoreObject* RaveIOInternal_loadVP(HL_NodeList* nodelist)
+{
+  VerticalProfile_t* result = NULL;
+  VpOdimIO_t* odimio = RAVE_OBJECT_NEW(&VpOdimIO_TYPE);
+  if (odimio != NULL) {
+    VerticalProfile_t* vp = RAVE_OBJECT_NEW(&VerticalProfile_TYPE);
+    if (vp != NULL) {
+      if (VpOdimIO_read(odimio, nodelist, vp)) {
+        result = RAVE_OBJECT_COPY(vp);
+      }
+    }
+    RAVE_OBJECT_RELEASE(vp);
+  }
+  RAVE_OBJECT_RELEASE(odimio);
+  return (RaveCoreObject*)result;
+}
+
+/**
+ * Adds a vertical profile  to a node list.
+ * @param[in] vp - the vertical profile to be added to a node list
+ * @param[in] nodelist - the nodelist the nodes should be added to
+ * @returns 1 on success otherwise 0
+ */
+static int RaveIOInternal_addVPToNodeList(VerticalProfile_t* vp, HL_NodeList* nodelist)
+{
+  int result = 0;
+  VpOdimIO_t* odimio = NULL;
+
+  odimio = RAVE_OBJECT_NEW(&VpOdimIO_TYPE);
+  if (odimio != NULL) {
+    result = VpOdimIO_fill(odimio, vp, nodelist);
+  }
+
+  RAVE_OBJECT_RELEASE(odimio);
+
+  return result;
+}
+
 static int RaveIOInternal_loadHDF5(RaveIO_t* raveio)
 {
   HL_NodeList* nodelist = NULL;
@@ -393,6 +432,8 @@ static int RaveIOInternal_loadHDF5(RaveIO_t* raveio)
     object = (RaveCoreObject*)RaveIOInternal_loadPolarVolume(nodelist);
   } else if (objectType == Rave_ObjectType_SCAN) {
     object = (RaveCoreObject*)RaveIOInternal_loadScan(nodelist);
+  } else if (objectType == Rave_ObjectType_VP) {
+    object = (RaveCoreObject*)RaveIOInternal_loadVP(nodelist);
   } else {
     RAVE_ERROR1("Currently, RaveIO does not support the object type as defined by '%s'", raveio->filename);
     goto done;
@@ -526,12 +567,12 @@ int RaveIO_save(RaveIO_t* raveio, const char* filename)
     RAVE_ERROR0("Atempting to save an object without a filename");
     return 0;
   }
-
   if (raveio->object != NULL) {
     if (RAVE_OBJECT_CHECK_TYPE(raveio->object, &Cartesian_TYPE) ||
         RAVE_OBJECT_CHECK_TYPE(raveio->object, &PolarVolume_TYPE) ||
         RAVE_OBJECT_CHECK_TYPE(raveio->object, &CartesianVolume_TYPE) ||
-        RAVE_OBJECT_CHECK_TYPE(raveio->object, &PolarScan_TYPE)) {
+        RAVE_OBJECT_CHECK_TYPE(raveio->object, &PolarScan_TYPE) ||
+        RAVE_OBJECT_CHECK_TYPE(raveio->object, &VerticalProfile_TYPE)) {
       HL_NodeList* nodelist = HLNodeList_new();
 
       if (nodelist != NULL) {
@@ -545,6 +586,8 @@ int RaveIO_save(RaveIO_t* raveio, const char* filename)
             result = RaveIOInternal_addCartesianToNodeList((Cartesian_t*)raveio->object, nodelist);
           } else if (RAVE_OBJECT_CHECK_TYPE(raveio->object, &PolarScan_TYPE)) {
             result = RaveIOInternal_addScanToNodeList((PolarScan_t*)raveio->object, nodelist);
+          } else if (RAVE_OBJECT_CHECK_TYPE(raveio->object, &VerticalProfile_TYPE)) {
+            result = RaveIOInternal_addVPToNodeList((VerticalProfile_t*)raveio->object, nodelist);
           } else {
             RAVE_ERROR0("No io support for provided object");
             result = 0;

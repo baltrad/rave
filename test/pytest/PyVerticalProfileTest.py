@@ -94,12 +94,246 @@ class PyVerticalProfileTest(unittest.TestCase):
     obj = _verticalprofile.new()
     self.assertTrue(None == obj.getFF())
     f = _ravefield.new()
-    f.setData(numpy.zeros((1,10), numpy.uint8))
+    f.setData(numpy.zeros((10,1), numpy.uint8))
     f.addAttribute("how/this", 1.0)
     obj.setFF(f)
     result = obj.getFF()
     self.assertAlmostEquals(1.0, result.getAttribute("how/this"), 4)
+    self.assertEquals("ff", result.getAttribute("what/quantity"))
+ 
+  def test_setGetFFDev(self):
+    obj = _verticalprofile.new()
+    self.assertTrue(None == obj.getFFDev())
+    f = _ravefield.new()
+    f.setData(numpy.zeros((10,1), numpy.uint8))
+    f.addAttribute("how/this", 1.0)
+    obj.setFFDev(f)
+    result = obj.getFFDev()
+    self.assertAlmostEquals(1.0, result.getAttribute("how/this"), 4)
+    self.assertEquals("ff_dev", result.getAttribute("what/quantity"))
     
+  def test_setGetW(self):
+    obj = _verticalprofile.new()
+    self.assertTrue(None == obj.getW())
+    f = _ravefield.new()
+    f.setData(numpy.zeros((10,1), numpy.uint8))
+    f.addAttribute("how/this", 1.0)
+    obj.setW(f)
+    result = obj.getW()
+    self.assertAlmostEquals(1.0, result.getAttribute("how/this"), 4)
+    self.assertEquals("w", result.getAttribute("what/quantity"))
+
+  def test_setGetWDev(self):
+    obj = _verticalprofile.new()
+    self.assertTrue(None == obj.getWDev())
+    f = _ravefield.new()
+    f.setData(numpy.zeros((10,1), numpy.uint8))
+    f.addAttribute("how/this", 1.0)
+    obj.setWDev(f)
+    result = obj.getWDev()
+    self.assertAlmostEquals(1.0, result.getAttribute("how/this"), 4)
+    self.assertEquals("w_dev", result.getAttribute("what/quantity"))
+
+  def test_setGetDD(self):
+    obj = _verticalprofile.new()
+    self.assertTrue(None == obj.getDD())
+    f = _ravefield.new()
+    f.setData(numpy.zeros((10,1), numpy.uint8))
+    f.addAttribute("how/this", 1.0)
+    obj.setDD(f)
+    result = obj.getDD()
+    self.assertAlmostEquals(1.0, result.getAttribute("how/this"), 4)
+    self.assertEquals("dd", result.getAttribute("what/quantity"))
+
+  def test_setGetDDDev(self):
+    obj = _verticalprofile.new()
+    self.assertTrue(None == obj.getDDDev())
+    f = _ravefield.new()
+    f.setData(numpy.zeros((10,1), numpy.uint8))
+    f.addAttribute("how/this", 1.0)
+    obj.setDDDev(f)
+    result = obj.getDDDev()
+    self.assertAlmostEquals(1.0, result.getAttribute("how/this"), 4)
+    self.assertEquals("dd_dev", result.getAttribute("what/quantity"))
+
+  def test_setGetDiv(self):
+    obj = _verticalprofile.new()
+    self.assertTrue(None == obj.getDiv())
+    f = _ravefield.new()
+    f.setData(numpy.zeros((10,1), numpy.uint8))
+    f.addAttribute("how/this", 1.0)
+    obj.setDiv(f)
+    result = obj.getDiv()
+    self.assertAlmostEquals(1.0, result.getAttribute("how/this"), 4)
+    self.assertEquals("div", result.getAttribute("what/quantity"))
+
+  def test_setGetDivDev(self):
+    obj = _verticalprofile.new()
+    self.assertTrue(None == obj.getDivDev())
+    f = _ravefield.new()
+    f.setData(numpy.zeros((10,1), numpy.uint8))
+    f.addAttribute("how/this", 1.0)
+    obj.setDivDev(f)
+    result = obj.getDivDev()
+    self.assertAlmostEquals(1.0, result.getAttribute("how/this"), 4)
+    self.assertEquals("div_dev", result.getAttribute("what/quantity"))
+
+  def test_setGetDef(self):
+    obj = _verticalprofile.new()
+    self.assertTrue(None == obj.getDef())
+    f = _ravefield.new()
+    f.setData(numpy.zeros((10,1), numpy.uint8))
+    f.addAttribute("how/this", 1.0)
+    obj.setDef(f)
+    result = obj.getDef()
+    self.assertAlmostEquals(1.0, result.getAttribute("how/this"), 4)
+    self.assertEquals("def", result.getAttribute("what/quantity"))
+
+  def test_setGetDefDev(self):
+    obj = _verticalprofile.new()
+    self.assertTrue(None == obj.getDefDev())
+    f = _ravefield.new()
+    f.setData(numpy.zeros((10,1), numpy.uint8))
+    f.addAttribute("how/this", 1.0)
+    obj.setDefDev(f)
+    result = obj.getDefDev()
+    self.assertAlmostEquals(1.0, result.getAttribute("how/this"), 4)
+    self.assertEquals("def_dev", result.getAttribute("what/quantity"))
+
+  def test_setGetAD(self):
+    obj = _verticalprofile.new()
+    self.assertTrue(None == obj.getAD())
+    f = _ravefield.new()
+    f.setData(numpy.zeros((10,1), numpy.uint8))
+    f.addAttribute("how/this", 1.0)
+    obj.setAD(f)
+    result = obj.getAD()
+    self.assertAlmostEquals(1.0, result.getAttribute("how/this"), 4)
+    self.assertEquals("ad", result.getAttribute("what/quantity"))
+
+  def test_setGetADDev(self):
+    obj = _verticalprofile.new()
+    self.assertTrue(None == obj.getADDev())
+    f = _ravefield.new()
+    f.setData(numpy.zeros((10,1), numpy.uint8))
+    f.addAttribute("how/this", 1.0)
+    obj.setADDev(f)
+    result = obj.getADDev()
+    self.assertAlmostEquals(1.0, result.getAttribute("how/this"), 4)
+    self.assertEquals("ad_dev", result.getAttribute("what/quantity"))
+
+  def test_setGetDBZ(self):
+    obj = _verticalprofile.new()
+    self.assertTrue(None == obj.getDBZ())
+    f = _ravefield.new()
+    f.setData(numpy.zeros((10,1), numpy.uint8))
+    f.addAttribute("how/this", 1.0)
+    obj.setDBZ(f)
+    result = obj.getDBZ()
+    self.assertAlmostEquals(1.0, result.getAttribute("how/this"), 4)
+    self.assertEquals("dbz", result.getAttribute("what/quantity"))
+
+  def test_setGetDBZDev(self):
+    obj = _verticalprofile.new()
+    self.assertTrue(None == obj.getDBZDev())
+    f = _ravefield.new()
+    f.setData(numpy.zeros((10,1), numpy.uint8))
+    f.addAttribute("how/this", 1.0)
+    obj.setDBZDev(f)
+    result = obj.getDBZDev()
+    self.assertAlmostEquals(1.0, result.getAttribute("how/this"), 4)
+    self.assertEquals("dbz_dev", result.getAttribute("what/quantity"))
+
+  def test_addField(self):
+    obj = _verticalprofile.new()
+    self.assertTrue(None == obj.getDBZDev())
+    f = _ravefield.new()
+    f.setData(numpy.zeros((10,1), numpy.uint8))
+    f.addAttribute("how/this", 1.0)
+    f.addAttribute("what/quantity", "ff")
+    obj.addField(f)
+    result = obj.getField("ff")
+    self.assertAlmostEquals(1.0, result.getAttribute("how/this"), 4)
+    self.assertEquals("ff", result.getAttribute("what/quantity"))
+    self.assertEquals(10, obj.getLevels())
+
+  def test_addField_withLevels_preset(self):
+    obj = _verticalprofile.new()
+    obj.setLevels(10)
+    self.assertTrue(None == obj.getDBZDev())
+    f = _ravefield.new()
+    f.setData(numpy.zeros((11,1), numpy.uint8))
+    f.addAttribute("how/this", 1.0)
+    f.addAttribute("what/quantity", "ff")
+    try:
+      obj.addField(f)
+      self.fail("Expected AttributeError")
+    except AttributeError, e:
+      pass
+    result = obj.getField("ff")
+    self.assertEquals(None, result)
+
+  def test_addField_differentSize(self):
+    obj = _verticalprofile.new()
+    self.assertTrue(None == obj.getDBZDev())
+    f = _ravefield.new()
+    f.setData(numpy.zeros((10,1), numpy.uint8))
+    f.addAttribute("how/this", 1.0)
+    f.addAttribute("what/quantity", "ff")
+    obj.addField(f)
+    f2 = _ravefield.new()
+    f2.setData(numpy.zeros((11,1), numpy.uint8))
+    f2.addAttribute("how/this", 2.0)
+    f2.addAttribute("what/quantity", "ff_dev")
+
+    try:
+      obj.addField(f2)
+      self.fail("Expected AttributeError")
+    except AttributeError, e:
+      pass
+    result = obj.getField("ff")
+    self.assertAlmostEquals(1.0, result.getAttribute("how/this"), 4)
+    result2 = obj.getField("ff_dev")
+    self.assertEquals(None, result2)
+
+  def test_addField_tooHighXsize(self):
+    obj = _verticalprofile.new()
+    self.assertTrue(None == obj.getDBZDev())
+    f = _ravefield.new()
+    f.setData(numpy.zeros((10,10), numpy.uint8))
+    f.addAttribute("how/this", 1.0)
+    f.addAttribute("what/quantity", "ff")
+    try:
+      obj.addField(f)
+      self.fail("Expected AttributeError")
+    except AttributeError, e:
+      pass
+    self.assertEquals(None, obj.getField("ff"))
+
+  def test_getFields(self):
+    obj = _verticalprofile.new()
+    self.assertTrue(None == obj.getDBZDev())
+    f = _ravefield.new()
+    f.setData(numpy.zeros((10,1), numpy.uint8))
+    f.addAttribute("how/this", 1.0)
+    f.addAttribute("what/quantity", "ff")
+    obj.addField(f)
+
+    f2 = _ravefield.new()
+    f2.setData(numpy.zeros((10,1), numpy.uint8))
+    f2.addAttribute("how/this", 2.0)
+    f2.addAttribute("what/quantity", "ff_dev")
+    obj.addField(f2)
+    
+    result = obj.getFields()
+    self.assertEquals(2, len(result))
+    if result[0].getAttribute("what/quantity") == "ff":
+      self.assertEquals("ff_dev", result[1].getAttribute("what/quantity"))
+    elif result[0].getAttribute("what/quantity") == "ff_dev":
+      self.assertEquals("ff", result[1].getAttribute("what/quantity"))
+    else:
+      self.fail("Unexpected combination of quantities")
+
 if __name__ == "__main__":
   #import sys;sys.argv = ['', 'Test.testName']
   unittest.main()

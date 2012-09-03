@@ -184,7 +184,37 @@ void VerticalProfile_setMaxheight(VerticalProfile_t* self, double h);
 double VerticalProfile_getMaxheight(VerticalProfile_t* self);
 
 /**
- * Returns the Mean horizontal wind velocity (m/s)
+ * Adds a rave attribute to the vertical profile.
+ * @param[in] self - self
+ * @param[in] attribute - the attribute
+ * @return 1 on success otherwise 0
+ */
+int VerticalProfile_addAttribute(VerticalProfile_t* self, RaveAttribute_t* attribute);
+
+/**
+ * Returns the rave attribute that is named accordingly.
+ * @param[in] self - self
+ * @param[in] name - the name of the attribute
+ * @returns the attribute if found otherwise NULL
+ */
+RaveAttribute_t* VerticalProfile_getAttribute(VerticalProfile_t* self, const char* name);
+
+/**
+ * Returns a list of attribute names. Release with \@ref #RaveList_freeAndDestroy.
+ * @param[in] self - self
+ * @returns a list of attribute names
+ */
+RaveList_t* VerticalProfile_getAttributeNames(VerticalProfile_t* self);
+
+/**
+ * Returns a list of attribute values belonging to this vertical profile.
+ * @param[in] self - self
+ * @returns a list of RaveAttributes.
+ */
+RaveObjectList_t* VerticalProfile_getAttributeValues(VerticalProfile_t* self);
+
+/**
+ * Returns the Mean horizontal wind velocity (m/s).
  * @param[in] self - self
  * @return the mean horizontal wind velocity
  */
@@ -192,10 +222,247 @@ RaveField_t* VerticalProfile_getFF(VerticalProfile_t* self);
 
 /**
  * Sets the Mean horizontal wind velocity (m/s)
+ * This function will modify ff and add the attribute what/quantity = ff.
  * @param[in] self - self
  * @param[in] ff - ff (must be a 1 dimensional field with same dim as the other members).
  * @return 1 on success otherwise 0
  */
 int VerticalProfile_setFF(VerticalProfile_t* self, RaveField_t* ff);
+
+/**
+ * Returns the Standard deviation of the horizontal wind velocity
+ * @param[in] self - self
+ * @return the field
+ */
+RaveField_t* VerticalProfile_getFFDev(VerticalProfile_t* self);
+
+/**
+ * Sets the Standard deviation of the horizontal wind velocity
+ * This function will modify ff and add the attribute what/quantity = ff_dev.
+ * @param[in] self - self
+ * @param[in] ff - ff (must be a 1 dimensional field with same dim as the other members).
+ * @return 1 on success otherwise 0
+ */
+int VerticalProfile_setFFDev(VerticalProfile_t* self, RaveField_t* ff);
+
+/**
+ * Returns the Mean vertical wind velocity (positive upwards)
+ * @param[in] self - self
+ * @return the field
+ */
+RaveField_t* VerticalProfile_getW(VerticalProfile_t* self);
+
+/**
+ * Sets the Mean vertical wind velocity (positive upwards)
+ * This function will modify ff and add the attribute what/quantity = w.
+ * @param[in] self - self
+ * @param[in] ff - ff (must be a 1 dimensional field with same dim as the other members).
+ * @return 1 on success otherwise 0
+ */
+int VerticalProfile_setW(VerticalProfile_t* self, RaveField_t* ff);
+
+/**
+ * Returns the Standard deviation of the vertical wind velocity
+ * @param[in] self - self
+ * @return the field
+ */
+RaveField_t* VerticalProfile_getWDev(VerticalProfile_t* self);
+
+/**
+ * Sets the Standard deviation of the vertical wind velocity
+ * This function will modify ff and add the attribute what/quantity = w_dev.
+ * @param[in] self - self
+ * @param[in] ff - ff (must be a 1 dimensional field with same dim as the other members).
+ * @return 1 on success otherwise 0
+ */
+int VerticalProfile_setWDev(VerticalProfile_t* self, RaveField_t* ff);
+
+/**
+ * Returns the Mean horizontal wind direction
+ * @param[in] self - self
+ * @return the field
+ */
+RaveField_t* VerticalProfile_getDD(VerticalProfile_t* self);
+
+/**
+ * Sets the Mean horizontal wind direction
+ * This function will modify ff and add the attribute what/quantity = dd.
+ * @param[in] self - self
+ * @param[in] ff - ff (must be a 1 dimensional field with same dim as the other members).
+ * @return 1 on success otherwise 0
+ */
+int VerticalProfile_setDD(VerticalProfile_t* self, RaveField_t* ff);
+
+/**
+ * Returns the Standard deviation of the horizontal wind direction
+ * @param[in] self - self
+ * @return the field
+ */
+RaveField_t* VerticalProfile_getDDDev(VerticalProfile_t* self);
+
+/**
+ * Sets the Standard deviation of the horizontal wind direction
+ * This function will modify ff and add the attribute what/quantity = dd_dev.
+ * @param[in] self - self
+ * @param[in] ff - ff (must be a 1 dimensional field with same dim as the other members).
+ * @return 1 on success otherwise 0
+ */
+int VerticalProfile_setDDDev(VerticalProfile_t* self, RaveField_t* ff);
+
+/**
+ * Returns the Divergence
+ * @param[in] self - self
+ * @return the field
+ */
+RaveField_t* VerticalProfile_getDiv(VerticalProfile_t* self);
+
+/**
+ * Sets the Divergence
+ * This function will modify ff and add the attribute what/quantity = div.
+ * @param[in] self - self
+ * @param[in] ff - ff (must be a 1 dimensional field with same dim as the other members).
+ * @return 1 on success otherwise 0
+ */
+int VerticalProfile_setDiv(VerticalProfile_t* self, RaveField_t* ff);
+
+/**
+ * Returns the  Standard deviation of the divergence
+ * @param[in] self - self
+ * @return the field
+ */
+RaveField_t* VerticalProfile_getDivDev(VerticalProfile_t* self);
+
+/**
+ * Sets the  Standard deviation of the divergence
+ * This function will modify ff and add the attribute what/quantity = div_dev.
+ * @param[in] self - self
+ * @param[in] ff - ff (must be a 1 dimensional field with same dim as the other members).
+ * @return 1 on success otherwise 0
+ */
+int VerticalProfile_setDivDev(VerticalProfile_t* self, RaveField_t* ff);
+
+/**
+ * Returns the Deformation
+ * @param[in] self - self
+ * @return the field
+ */
+RaveField_t* VerticalProfile_getDef(VerticalProfile_t* self);
+
+/**
+ * Sets the Deformation
+ * This function will modify ff and add the attribute what/quantity = def.
+ * @param[in] self - self
+ * @param[in] ff - ff (must be a 1 dimensional field with same dim as the other members).
+ * @return 1 on success otherwise 0
+ */
+int VerticalProfile_setDef(VerticalProfile_t* self, RaveField_t* ff);
+
+/**
+ * Returns the Standard deviation of the deformation
+ * @param[in] self - self
+ * @return the field
+ */
+RaveField_t* VerticalProfile_getDefDev(VerticalProfile_t* self);
+
+/**
+ * Sets the Standard deviation of the deformation
+ * This function will modify ff and add the attribute what/quantity = def_dev.
+ * @param[in] self - self
+ * @param[in] ff - ff (must be a 1 dimensional field with same dim as the other members).
+ * @return 1 on success otherwise 0
+ */
+int VerticalProfile_setDefDev(VerticalProfile_t* self, RaveField_t* ff);
+
+/**
+ * Returns the Axis of dilation (0-360)
+ * @param[in] self - self
+ * @return the field
+ */
+RaveField_t* VerticalProfile_getAD(VerticalProfile_t* self);
+
+/**
+ * Sets the Axis of dilation (0-360)
+ * This function will modify ff and add the attribute what/quantity = ad.
+ * @param[in] self - self
+ * @param[in] ff - ff (must be a 1 dimensional field with same dim as the other members).
+ * @return 1 on success otherwise 0
+ */
+int VerticalProfile_setAD(VerticalProfile_t* self, RaveField_t* ff);
+
+/**
+ * Returns the Standard deviation of the axis of dilation
+ * @param[in] self - self
+ * @return the field
+ */
+RaveField_t* VerticalProfile_getADDev(VerticalProfile_t* self);
+
+/**
+ * Sets the Standard deviation of the axis of dilation
+ * This function will modify ff and add the attribute what/quantity = ad_dev.
+ * @param[in] self - self
+ * @param[in] ff - ff (must be a 1 dimensional field with same dim as the other members).
+ * @return 1 on success otherwise 0
+ */
+int VerticalProfile_setADDev(VerticalProfile_t* self, RaveField_t* ff);
+
+/**
+ * Returns the Mean radar reflectivity factor
+ * @param[in] self - self
+ * @return the field
+ */
+RaveField_t* VerticalProfile_getDBZ(VerticalProfile_t* self);
+
+/**
+ * Sets the Mean radar reflectivity factor
+ * This function will modify ff and add the attribute what/quantity = dbz.
+ * @param[in] self - self
+ * @param[in] ff - ff (must be a 1 dimensional field with same dim as the other members).
+ * @return 1 on success otherwise 0
+ */
+int VerticalProfile_setDBZ(VerticalProfile_t* self, RaveField_t* ff);
+
+/**
+ * Returns the Standard deviation of the radar reflectivity factor
+ * @param[in] self - self
+ * @return the field
+ */
+RaveField_t* VerticalProfile_getDBZDev(VerticalProfile_t* self);
+
+/**
+ * Sets the Standard deviation of the radar reflectivity factor
+ * This function will modify ff and add the attribute what/quantity = dbz_dev.
+ * @param[in] self - self
+ * @param[in] ff - ff (must be a 1 dimensional field with same dim as the other members).
+ * @return 1 on success otherwise 0
+ */
+int VerticalProfile_setDBZDev(VerticalProfile_t* self, RaveField_t* ff);
+
+/**
+ * Returns a list of all existing fields in the vertical profile. Each field will contain
+ * a what/quantity attribute for identification purposes.
+ * @param[in] self - self
+ * @return a list of all existing (set) fields
+ */
+RaveObjectList_t* VerticalProfile_getFields(VerticalProfile_t* self);
+
+/**
+ * Adds a field to the vertical profile. The field must have what/quantity set in order to
+ * identify the type. This basically means that if addField is called with a field having
+ * what/quantity = ff, it would be the same as calling \ref VerticalProfile_setFF.
+ * Allowed quantities are: ff, ff_dev, w, w_dev, dd, dd_dev
+ *   div, div_dev, def, def_dev. ad, ad_dev, dbz, dbz_dev
+ * @param[in] self - self
+ * @param[in] field - the field
+ * @return 1 on success or 0 on failure, either inconsistency or missing/bad what/quantity.
+ */
+int VerticalProfile_addField(VerticalProfile_t* self, RaveField_t* field);
+
+/**
+ * Another variant of getting the field, but use the quantity instead.
+ * @param[in] self - self
+ * @param[in] quantity - the quantity
+ * @return the field or NULL if not found or error
+ */
+RaveField_t* VerticalProfile_getField(VerticalProfile_t* self, const char* quantity);
 
 #endif

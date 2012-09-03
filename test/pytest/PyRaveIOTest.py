@@ -35,6 +35,7 @@ import _polarscan
 import _polarscanparam
 import _rave
 import _ravefield
+import _verticalprofile
 import string
 import numpy
 import _pyhl
@@ -48,6 +49,7 @@ class PyRaveIOTest(unittest.TestCase):
   FIXTURE_SCAN_WITH_ARRAYS="fixtures/scan_with_arrays.h5"
   FIXTURE_CARTESIAN_IMAGE="fixtures/cartesian_image.h5"
   FIXTURE_CARTESIAN_VOLUME="fixtures/cartesian_volume.h5"
+  FIXTURE_VP="fixtures/vp_fixture.h5"
   FIXTURE_BUFR_PVOL="fixtures/odim_polar_ref.bfr"
   FIXTURE_BUFR_COMPO="fixtures/odim_compo_ref.bfr"
   
@@ -1609,7 +1611,89 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertAlmostEquals(1.0, ddata[1], 2)
     self.assertAlmostEquals(5.0, ddata[5], 2)
   
-  def testBufrTableDir(self):
+  def test_read_vp(self):
+    # Read VP
+    vp = _raveio.open(self.FIXTURE_VP).object
+    self.assertEquals("PLC:1234", vp.source)
+    self.assertEquals("20100101", vp.date)
+    self.assertEquals("111500", vp.time)
+    self.assertAlmostEquals(10.0, vp.longitude * 180.0 / math.pi, 4)
+    self.assertAlmostEquals(15.0, vp.latitude * 180.0 / math.pi, 4)
+    self.assertAlmostEquals(200.0, vp.height, 4)
+    self.assertEquals(10, vp.getLevels())
+    self.assertAlmostEquals(5.0, vp.interval, 4)
+    self.assertAlmostEquals(10.0, vp.minheight, 4)
+    self.assertAlmostEquals(20.0, vp.maxheight, 4)
+    
+    field = vp.getField("ff")
+    self.assertEquals("ff", field.getAttribute("what/quantity"))
+    data = field.getData()
+    self.assertEquals(10, numpy.shape(data)[0])
+    self.assertEquals(1, numpy.shape(data)[1])
+  
+  def test_write_vp(self):
+    vp = _verticalprofile.new()
+    vp.date="20100101"
+    vp.time="120000"
+    vp.source="PLC:1234"
+    vp.longitude = 10.0 * math.pi / 180.0
+    vp.latitude = 15.0 * math.pi / 180.0
+    vp.setLevels(10)
+    vp.height = 100.0
+    vp.interval = 5.0
+    vp.minheight = 10.0
+    vp.maxheight = 20.0
+    f1 = _ravefield.new()
+    f1.setData(numpy.zeros((10,1), numpy.uint8))
+    f1.addAttribute("what/quantity", "ff")
+    vp.addField(f1)
+    f2 = _ravefield.new()
+    f2.setData(numpy.zeros((10,1), numpy.uint8))
+    f2.addAttribute("what/quantity", "ff_dev")
+    vp.addField(f2)
+
+    obj = _raveio.new()
+    obj.object = vp
+    obj.filename = self.TEMPORARY_FILE2
+    obj.save()
+    
+    # Verify written data
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE2)
+    nodelist.selectAll()
+    nodelist.fetch()
+    
+    self.assertEquals("20100101", nodelist.getNode("/what/date").data())
+    self.assertEquals("VP", nodelist.getNode("/what/object").data())
+    self.assertEquals("PLC:1234", nodelist.getNode("/what/source").data())
+    self.assertEquals("120000", nodelist.getNode("/what/time").data())
+    self.assertEquals("H5rad 2.1", nodelist.getNode("/what/version").data())
+    
+    self.assertAlmostEquals(100.0, nodelist.getNode("/where/height").data(), 4)
+    self.assertAlmostEquals(15.0, nodelist.getNode("/where/lat").data(), 4)
+    self.assertAlmostEquals(10.0, nodelist.getNode("/where/lon").data(), 4)
+
+    self.assertEquals(10, nodelist.getNode("/where/levels").data())
+    self.assertAlmostEquals(5.0, nodelist.getNode("/where/interval").data(), 4)
+    self.assertAlmostEquals(10.0, nodelist.getNode("/where/minheight").data(), 4)
+    self.assertAlmostEquals(20.0, nodelist.getNode("/where/maxheight").data(), 4)
+    
+    f1 = nodelist.getNode("/dataset1/data1/what/quantity").data()
+    f1data = nodelist.getNode("/dataset1/data1/data").data()
+    f2 = nodelist.getNode("/dataset1/data2/what/quantity").data()
+    f2data = nodelist.getNode("/dataset1/data2/data").data() 
+
+    if f1 == "ff":
+      self.assertEquals("ff_dev", f2)
+    elif f1 == "ff_dev":
+      self.assertEquals("ff", f2)
+  
+    self.assertEquals(10, numpy.shape(f1data)[0])
+    self.assertEquals(1, numpy.shape(f1data)[1])
+    self.assertEquals(10, numpy.shape(f2data)[0])
+    self.assertEquals(1, numpy.shape(f2data)[1])
+
+    
+  def XtestBufrTableDir(self):
     obj = _raveio.new()
     self.assertEquals(None, obj.bufr_table_dir)
     obj.bufr_table_dir = "/tmp"
@@ -1617,7 +1701,7 @@ class PyRaveIOTest(unittest.TestCase):
     obj.bufr_table_dir = None
     self.assertEquals(None, obj.bufr_table_dir)
   
-  def testReadBufr(self):
+  def XtestReadBufr(self):
     if not _raveio.supports(_raveio.RaveIO_ODIM_FileFormat_BUFR):
       return
     result = _raveio.open(self.FIXTURE_BUFR_PVOL)
@@ -1659,7 +1743,7 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertTrue(param.undetect < -1e30)
     self.assertEquals(_rave.RaveDataType_DOUBLE, param.datatype)
 
-  def testReadBufrComposite(self):
+  def XtestReadBufrComposite(self):
     if not _raveio.supports(_raveio.RaveIO_ODIM_FileFormat_BUFR):
       return
     try:
@@ -1676,6 +1760,11 @@ class PyRaveIOTest(unittest.TestCase):
   def addAttributeNode(self, nodelist, name, type, value):
     node = _pyhl.node(_pyhl.ATTRIBUTE_ID, name)
     node.setScalarValue(-1,value,type,-1)
+    nodelist.addNode(node)
+
+  def addDatasetNode(self, nodelist, name, type, dims, value):
+    node = _pyhl.node(_pyhl.DATASET_ID, name)
+    node.setArrayValue(-1, dims, value, type, -1)
     nodelist.addNode(node)
 
   def rad2deg(self, coord):
