@@ -24,14 +24,14 @@
 ###########################################################################
 -include ../def.mk
 
-CFLAGS= $(CCSHARED) $(OPTS) $(DEFS) -I../librave/transform -I../librave/pyapi \
+CFLAGS= $(CCSHARED) $(OPTS) $(DEFS) -I../librave/toolbox -I../librave/pyapi \
 			-I../librave/scansun -I. $(INCLUDE_PYTHON) \
 			-I$(HLHDF_INCLUDE_DIR) $(NUMPY_INCLUDE_DIR) \
 			$(ZLIB_INCDIR) $(HDF5_INCDIR) $(PROJ_INCLUDE_DIR)
 
 # Linker flags
 #
-LDFLAGS= -L../librave/transform -L../librave/pyapi -L../librave/scansun -L. \
+LDFLAGS= -L../librave/toolbox -L../librave/pyapi -L../librave/scansun -L. \
 			-L$(HLHDF_LIB_DIR) $(ZLIB_LIBDIR) $(HDF5_LIBDIR) $(PROJ_LIB_DIR)
 
 ifeq ($(EXPAT_SUPPRESSED), no)
@@ -51,7 +51,7 @@ CFLAGS+= -DPTHREAD_SUPPORTED
 PTHREAD_LIBRARY=-lpthread
 endif
 
-LIBRARIES= -lravetransform -lravepyapi -lhlhdf -lproj  $(EXPAT_LIBRARY) $(BUFR_LIBRARY) $(PTHREAD_LIBRARY)
+LIBRARIES= -lravetoolbox -lravepyapi -lhlhdf -lproj  $(EXPAT_LIBRARY) $(BUFR_LIBRARY) $(PTHREAD_LIBRARY)
 
 # --------------------------------------------------------------------
 # Fixed definitions
@@ -222,94 +222,94 @@ $(DEPDIR):
 .PHONY=all
 all:		$(TARGETS)
 
-$(TARGET_1): $(DEPDIR) $(OBJECTS_1) ../librave/transform/libravetransform.so ../librave/pyapi/libravepyapi.so
+$(TARGET_1): $(DEPDIR) $(OBJECTS_1) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_1) $(LDFLAGS) $(LIBRARIES)
 	
-$(TARGET_2): $(DEPDIR) $(OBJECTS_2) ../librave/transform/libravetransform.so ../librave/pyapi/libravepyapi.so
+$(TARGET_2): $(DEPDIR) $(OBJECTS_2) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_2) $(LDFLAGS) $(LIBRARIES)
 	
-$(TARGET_3): $(DEPDIR) $(OBJECTS_3) ../librave/transform/libravetransform.so ../librave/pyapi/libravepyapi.so
+$(TARGET_3): $(DEPDIR) $(OBJECTS_3) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_3) $(LDFLAGS) $(LIBRARIES)
 	
-$(TARGET_4): $(DEPDIR) $(OBJECTS_4) ../librave/transform/libravetransform.so ../librave/pyapi/libravepyapi.so
+$(TARGET_4): $(DEPDIR) $(OBJECTS_4) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_4) $(LDFLAGS) $(LIBRARIES)
 	
-$(TARGET_5): $(DEPDIR) $(OBJECTS_5) ../librave/transform/libravetransform.so ../librave/pyapi/libravepyapi.so
+$(TARGET_5): $(DEPDIR) $(OBJECTS_5) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_5) $(LDFLAGS) $(LIBRARIES)
 	
-$(TARGET_6): $(DEPDIR) $(OBJECTS_6) ../librave/transform/libravetransform.so ../librave/pyapi/libravepyapi.so
+$(TARGET_6): $(DEPDIR) $(OBJECTS_6) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_6) $(LDFLAGS) $(LIBRARIES)
 	
-$(TARGET_7): $(DEPDIR) $(OBJECTS_7) ../librave/transform/libravetransform.so ../librave/pyapi/libravepyapi.so
+$(TARGET_7): $(DEPDIR) $(OBJECTS_7) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_7) $(LDFLAGS) $(LIBRARIES)
 
-$(TARGET_8): $(DEPDIR) $(OBJECTS_8) ../librave/transform/libravetransform.so ../librave/pyapi/libravepyapi.so
+$(TARGET_8): $(DEPDIR) $(OBJECTS_8) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_8) $(LDFLAGS) $(LIBRARIES)
 
-$(TARGET_9): $(DEPDIR) $(OBJECTS_9) ../librave/transform/libravetransform.so ../librave/pyapi/libravepyapi.so
+$(TARGET_9): $(DEPDIR) $(OBJECTS_9) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_9) $(LDFLAGS) $(LIBRARIES)
 
-$(TARGET_10): $(DEPDIR) $(OBJECTS_10) ../librave/transform/libravetransform.so ../librave/pyapi/libravepyapi.so
+$(TARGET_10): $(DEPDIR) $(OBJECTS_10) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_10) $(LDFLAGS) $(LIBRARIES)
 
-$(TARGET_11): $(DEPDIR) $(OBJECTS_11) ../librave/transform/libravetransform.so ../librave/pyapi/libravepyapi.so
+$(TARGET_11): $(DEPDIR) $(OBJECTS_11) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_11) $(LDFLAGS) $(LIBRARIES)
 
-$(TARGET_12): $(DEPDIR) $(OBJECTS_12) ../librave/transform/libravetransform.so ../librave/pyapi/libravepyapi.so
+$(TARGET_12): $(DEPDIR) $(OBJECTS_12) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_12) $(LDFLAGS) $(LIBRARIES)
 
-$(TARGET_13): $(DEPDIR) $(OBJECTS_13) ../librave/transform/libravetransform.so ../librave/pyapi/libravepyapi.so
+$(TARGET_13): $(DEPDIR) $(OBJECTS_13) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_13) $(LDFLAGS) $(LIBRARIES)
 
-$(TARGET_14): $(DEPDIR) $(OBJECTS_14) ../librave/transform/libravetransform.so ../librave/pyapi/libravepyapi.so
+$(TARGET_14): $(DEPDIR) $(OBJECTS_14) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_14) $(LDFLAGS) $(LIBRARIES)
 
-$(TARGET_15): $(DEPDIR) $(OBJECTS_15) ../librave/transform/libravetransform.so ../librave/pyapi/libravepyapi.so
+$(TARGET_15): $(DEPDIR) $(OBJECTS_15) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_15) $(LDFLAGS) $(LIBRARIES)
 
-$(TARGET_16): $(DEPDIR) $(OBJECTS_16) ../librave/transform/libravetransform.so ../librave/pyapi/libravepyapi.so
+$(TARGET_16): $(DEPDIR) $(OBJECTS_16) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_16) $(LDFLAGS) $(LIBRARIES)
 
-$(TARGET_17): $(DEPDIR) $(OBJECTS_17) ../librave/transform/libravetransform.so ../librave/pyapi/libravepyapi.so
+$(TARGET_17): $(DEPDIR) $(OBJECTS_17) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_17) $(LDFLAGS) $(LIBRARIES)
 
-$(TARGET_18): $(DEPDIR) $(OBJECTS_18) ../librave/transform/libravetransform.so ../librave/pyapi/libravepyapi.so
+$(TARGET_18): $(DEPDIR) $(OBJECTS_18) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_18) $(LDFLAGS) $(LIBRARIES)
 
-$(TARGET_19): $(DEPDIR) $(OBJECTS_19) ../librave/transform/libravetransform.so ../librave/pyapi/libravepyapi.so ../librave/scansun/libravescansun.so
+$(TARGET_19): $(DEPDIR) $(OBJECTS_19) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so ../librave/scansun/libravescansun.so
 	$(LDSHARED) -o $@ $(OBJECTS_19) $(LDFLAGS) -lravescansun $(LIBRARIES)
 
-$(TARGET_20): $(DEPDIR) $(OBJECTS_20) ../librave/transform/libravetransform.so ../librave/pyapi/libravepyapi.so
+$(TARGET_20): $(DEPDIR) $(OBJECTS_20) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_20) $(LDFLAGS) $(LIBRARIES)
 
-$(TARGET_21): $(DEPDIR) $(OBJECTS_21) ../librave/transform/libravetransform.so ../librave/pyapi/libravepyapi.so
+$(TARGET_21): $(DEPDIR) $(OBJECTS_21) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_21) $(LDFLAGS) $(LIBRARIES)
 
-$(TARGET_22): $(DEPDIR) $(OBJECTS_22) ../librave/transform/libravetransform.so ../librave/pyapi/libravepyapi.so
+$(TARGET_22): $(DEPDIR) $(OBJECTS_22) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_22) $(LDFLAGS) $(LIBRARIES)
 
-$(TARGET_23): $(DEPDIR) $(OBJECTS_23) ../librave/transform/libravetransform.so ../librave/pyapi/libravepyapi.so
+$(TARGET_23): $(DEPDIR) $(OBJECTS_23) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_23) $(LDFLAGS) $(LIBRARIES)
 
-$(TARGET_24): $(DEPDIR) $(OBJECTS_24) ../librave/transform/libravetransform.so ../librave/pyapi/libravepyapi.so
+$(TARGET_24): $(DEPDIR) $(OBJECTS_24) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_24) $(LDFLAGS) $(LIBRARIES)
 
-$(TARGET_25): $(DEPDIR) $(OBJECTS_25) ../librave/transform/libravetransform.so ../librave/pyapi/libravepyapi.so
+$(TARGET_25): $(DEPDIR) $(OBJECTS_25) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_25) $(LDFLAGS) $(LIBRARIES)
 
-$(TARGET_26): $(DEPDIR) $(OBJECTS_26) ../librave/transform/libravetransform.so ../librave/pyapi/libravepyapi.so
+$(TARGET_26): $(DEPDIR) $(OBJECTS_26) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_26) $(LDFLAGS) $(LIBRARIES)
 
-$(TARGET_27): $(DEPDIR) $(OBJECTS_27) ../librave/transform/libravetransform.so ../librave/pyapi/libravepyapi.so
+$(TARGET_27): $(DEPDIR) $(OBJECTS_27) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_27) $(LDFLAGS) $(LIBRARIES)
 
-$(TARGET_28): $(DEPDIR) $(OBJECTS_28) ../librave/transform/libravetransform.so ../librave/pyapi/libravepyapi.so
+$(TARGET_28): $(DEPDIR) $(OBJECTS_28) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_28) $(LDFLAGS) $(LIBRARIES)
 
-$(TARGET_29): $(DEPDIR) $(OBJECTS_29) ../librave/transform/libravetransform.so ../librave/pyapi/libravepyapi.so
+$(TARGET_29): $(DEPDIR) $(OBJECTS_29) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_29) $(LDFLAGS) $(LIBRARIES)
 
-$(TARGET_30): $(DEPDIR) $(OBJECTS_30) ../librave/transform/libravetransform.so ../librave/pyapi/libravepyapi.so
+$(TARGET_30): $(DEPDIR) $(OBJECTS_30) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_30) $(LDFLAGS) $(LIBRARIES)
 
 .PHONY=install

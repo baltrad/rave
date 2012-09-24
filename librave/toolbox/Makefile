@@ -53,7 +53,7 @@ INSTALL_HEADERS += rave_bufr_io.h
 endif 
 
 RAVEOBJS=	$(RAVESOURCES:.c=.o)
-LIBRAVETRANSFORM=	libravetransform.so
+LIBRAVETOOLBOX=	libravetoolbox.so
 
 MAKEDEPEND=gcc -MM $(CFLAGS) -o $(DF).d $<
 DEPDIR=.dep
@@ -77,14 +77,14 @@ $(DEPDIR):
 	+@[ -d $@ ] || mkdir -p $@
 
 .PHONY=all
-all:		$(LIBRAVETRANSFORM)
+all:		$(LIBRAVETOOLBOX)
 
-$(LIBRAVETRANSFORM): $(DEPDIR) $(RAVEOBJS)
+$(LIBRAVETOOLBOX): $(DEPDIR) $(RAVEOBJS)
 	$(LDSHARED) -o $@ $(RAVEOBJS)
 
 .PHONY=install
 install:
-	@"$(HLHDF_INSTALL_BIN)" -f -o -C $(LIBRAVETRANSFORM) "$(prefix)/lib/$(LIBRAVETRANSFORM)"
+	@"$(HLHDF_INSTALL_BIN)" -f -o -C $(LIBRAVETOOLBOX) "$(prefix)/lib/$(LIBRAVETOOLBOX)"
 	@for i in $(INSTALL_HEADERS) ; \
 	do \
 		"$(HLHDF_INSTALL_BIN)" -f -o -m644 -C $$i "$(prefix)/include/$$i"; \

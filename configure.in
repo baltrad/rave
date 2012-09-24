@@ -586,5 +586,5 @@ AC_SUBST(HLHDF_LIB_DIR)
 AC_SUBST(HLHDF_INSTALL_BIN)
 AC_SUBST(HLHDF_HLDEF_MK_FILE)
 
-AC_CONFIG_FILES(def.mk librave/transform/rave_config.h)
+AC_CONFIG_FILES(def.mk librave/toolbox/rave_config.h)
 AC_OUTPUT
