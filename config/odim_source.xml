@@ -72,12 +72,15 @@
     <frmom plc="Momuy" rad="FR66" wmo="07606"></frmom>
     <frmtc plc="Montancy" rad="FR67" wmo="07291"></frmtc>
   </fr>
-  <de CCCC="EDFW" org="78">
+  <de CCCC="EDZW" org="78">
     <deemd plc="Emden" rad="DL41" wmo="10204"></deemd>
     <deham plc="Hamburg" rad="DL42" wmo="10147"></deham>
+    <deboo plc="Boostedt" rad="DL42" wmo="10132"></deboo>
     <deros plc="Rostock" rad="DL43" wmo="10169"></deros>
     <dehan plc="Hannover" rad="DL44" wmo="10338"></dehan>
+    <dehnr plc="Hannover" rad="DL44" wmo="10339"></dehnr>
     <debln plc="Berlin" rad="DL45" wmo="10384"></debln>
+    <depro plc="Proetzel" rad="DL45" wmo="10392"></depro>
     <deess plc="Essen" rad="DL51" wmo="10410"></deess>
     <defld plc="Flechtdorf" rad="DL52" wmo="10440"></defld>
     <deumd plc="Ummendorf" rad="DL53" wmo="10356"></deumd>
@@ -89,6 +92,7 @@
     <deeis plc="Eisberg" rad="DL73" wmo="10780"></deeis>
     <deflg plc="Feldberg" rad="DL81" wmo="10908"></deflg>
     <demuc plc="Munchen" rad="DL82" wmo="10871"></demuc>
+    <desna plc="Schnaupping" rad="DL82" wmo="10873"></desna>
     <demem plc="Memminggen" rad="DL84" wmo="10950"></demem>
   </de>
   <gr CCCC="LGAT" org="96">
@@ -152,6 +156,8 @@
     <nobml plc="Bømlo" rad="NO91" wmo="01405"></nobml>
     <noand plc="Andøya" rad="NO92" wmo="01018"></noand>
     <nohas plc="Hasvik" rad="NO93" wmo="01042"></nohas>
+    <nosta plc="Stad" rad="NO38" wmo="01206"></nosta>
+    <nohur plc="Hurum" rad="NO39" wmo="01498"></nohur>
   </no>
   <pl CCCC="SOWR" org="220">
     <plleg plc="Legionowo" rad="PL41" wmo="12374"></plleg>
@@ -251,4 +257,7 @@
     <ukdea plc="Dean Hill" rad="UK61" wmo="03859"></ukdea>
     <ukhmy plc="High Moorsley" rad="UK63" wmo="03253"></ukhmy>
   </uk>
+  <eh CCCC="EUSK" org="999">
+    <ehkap plc="Kapildui" rad="EH40" wmo="08082"></ehkap>
+  </eh>
 </radar-db>
