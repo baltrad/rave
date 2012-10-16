@@ -31,6 +31,14 @@
     <dksin plc="Sindal" rad="DN43" wmo="06034"></dksin>
     <dkbor plc="Bornholm" rad="DN44" wmo="06194"></dkbor>
     <dkvir plc="Virring" rad="DN45" wmo="06103"></dkvir>
+    <dkaal plc="Aalborg" rad="DN99" wmo="00000"></dkaal>
+    <dkaar plc="Aarhus" rad="DN98" wmo="00000"></dkaar>
+    <dkhvi plc="Hvidovre" rad="DN97" wmo="00000"></dkhvi>
+    <dkvej plc="Vejle" rad="DN96" wmo="00000"></dkvej>
+    <dkvix plc="Virring" rad="DN95" wmo="00000"></dkvix>
+    <dkode plc="Odense" rad="DN94" wmo="00000"></dkode>
+    <dkege plc="Egedal" rad="DN93" wmo="00000"></dkege>
+    <dkhor plc="Horsholm" rad="DN92" wmo="00000"></dkhor>
   </dk>
   <ee CCCC="EEMH" org="231">
     <eehar plc="Harku" rad="EE40" wmo="26038"></eehar>
