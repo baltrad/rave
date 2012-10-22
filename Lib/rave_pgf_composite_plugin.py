@@ -150,7 +150,7 @@ def generate(files, arguments):
     generator.product = _rave.Rave_ProductType_PPI
   elif method == "cappi":
     generator.product = _rave.Rave_ProductType_CAPPI
-  elif product == "pmax":
+  elif method == "pmax":
     generator.product = _rave.Rave_ProductType_PMAX
   else:
     generator.product = _rave.Rave_ProductType_PCAPPI
