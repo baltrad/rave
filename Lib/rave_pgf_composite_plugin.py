@@ -150,13 +150,15 @@ def generate(files, arguments):
     generator.product = _rave.Rave_ProductType_PPI
   elif method == "cappi":
     generator.product = _rave.Rave_ProductType_CAPPI
+  elif product == "pmax":
+    generator.product = _rave.Rave_ProductType_PMAX
   else:
     generator.product = _rave.Rave_ProductType_PCAPPI
 
   generator.height = 1000.0
   generator.elangle = 0.0
   if "prodpar" in args.keys():
-    if generator.product in [_rave.Rave_ProductType_CAPPI, _rave.Rave_ProductType_PCAPPI]:
+    if generator.product in [_rave.Rave_ProductType_CAPPI, _rave.Rave_ProductType_PCAPPI, _rave.Rave_ProductType_PMAX]:
       try:
         generator.height = strToNumber(args["prodpar"])
       except ValueError,e:
@@ -167,6 +169,10 @@ def generate(files, arguments):
         generator.elangle = v * math.pi / 180.0
       except ValueError,e:
         pass
+
+  generator.range = 200000.0
+  if "range" in args.keys() and generator.product == _rave.Rave_ProductType_PMAX:
+    generator.range = args["range"]
 
   generator.selection_method = _pycomposite.SelectionMethod_NEAREST
   if "selection" in args.keys():

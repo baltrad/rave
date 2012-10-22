@@ -1,5 +1,11 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <rave-pgf-quality-registry>
-  <!--<quality-plugin name="ropo" module="ropo_pgf_composite_quality_plugin" class="ropo_pgf_composite_quality_plugin"/>-->
+  <quality-plugin name="3overshooting" module="rave_overshooting_quality_plugin" class="rave_overshooting_quality_plugin"/>
+  <quality-plugin name="1ropo" module="ropo_quality_plugin" class="ropo_quality_plugin"/>
+  <quality-plugin name="2beamb" module="beamb_quality_plugin" class="beamb_quality_plugin"/>
+  <quality-plugin name="4distance" module="rave_distance_quality_plugin" class="rave_distance_quality_plugin"/>
   <quality-plugin name="rave-overshooting" module="rave_overshooting_quality_plugin" class="rave_overshooting_quality_plugin"/>
+  <quality-plugin name="ropo" module="ropo_quality_plugin" class="ropo_quality_plugin"/>
+  <quality-plugin name="beamb" module="beamb_quality_plugin" class="beamb_quality_plugin"/>
+  <quality-plugin name="distance" module="rave_distance_quality_plugin" class="rave_distance_quality_plugin"/>
 </rave-pgf-quality-registry>

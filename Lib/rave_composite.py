@@ -35,7 +35,7 @@ import _polarvolume
 import _polarscan
 import _transform
 import rave_area
-import string
+import string, types
 import rave_tempfile
 import odim_source
 import math
@@ -75,6 +75,9 @@ def generate(in_objects, **args):
     if p != None:
       qfields.extend(p.getQualityFields())
 
+  if len(qfields) == 0 and "qfields" in args.keys():
+    qfields = args["qfields"]
+
   for obj in in_objects:
 
     if len(nodes):
@@ -93,16 +96,20 @@ def generate(in_objects, **args):
     generator.add(obj)
 
   quantity = "DBZH"
-  gain = GAIN
+  gain = GAIN      # assume common gain and offset for now
   offset = OFFSET
   if "quantity" in args.keys():
-    quantity = args["quantity"].upper()
+    quantity = args["quantity"]
   if "gain" in args.keys():
     gain = args["gain"]
   if "offset" in args.keys():
     offset = args["offset"]
 
-  generator.addParameter(quantity, gain, offset)
+  if type(quantity) == types.ListType:
+    for q in quantity:
+      generator.addParameter(q.upper(), gain, offset)
+  else:
+    generator.addParameter(quantity.upper(), gain, offset)
   
   product = "pcappi"
   if "product" in args.keys():
@@ -112,13 +119,15 @@ def generate(in_objects, **args):
     generator.product = _rave.Rave_ProductType_PPI
   elif product == "cappi":
     generator.product = _rave.Rave_ProductType_CAPPI
+  elif product == "pmax":
+    generator.product = _rave.Rave_ProductType_PMAX
   else:
     generator.product = _rave.Rave_ProductType_PCAPPI
 
   generator.height = 1000.0
   generator.elangle = 0.0
   if "prodpar" in args.keys():
-    if generator.product in [_rave.Rave_ProductType_CAPPI, _rave.Rave_ProductType_PCAPPI]:
+    if generator.product in [_rave.Rave_ProductType_CAPPI, _rave.Rave_ProductType_PCAPPI, _rave.Rave_ProductType_PMAX]:
       try:
         generator.height = args["prodpar"]
       except ValueError,e:
@@ -129,6 +138,10 @@ def generate(in_objects, **args):
         generator.elangle = v * math.pi / 180.0
       except ValueError,e:
         pass
+
+  generator.range = 200000.0
+  if "range" in args.keys() and generator.product == _rave.Rave_ProductType_PMAX:
+    generator.range = args["range"]
 
   generator.selection_method = _pycomposite.SelectionMethod_NEAREST
   if "method" in args.keys():

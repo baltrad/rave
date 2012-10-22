@@ -56,14 +56,17 @@ class rave_overshooting_quality_plugin(rave_quality_plugin):
   def process(self, obj):
     if obj != None and _polarvolume.isPolarVolume(obj):
       import _detectionrange
+      ascending = obj.isAscendingScans()
       drgenerator = _detectionrange.new()
       maxscan = obj.getScanWithMaxDistance()
       # We want to have same resolution as maxdistance scan since we are going to add the poo-field to it
       # The second argument is dbz threshold, modify it accordingly
       topfield = drgenerator.top(obj, maxscan.rscale, -40.0)       # Topfield is a scan
       filterfield = drgenerator.filter(topfield)                   # filterfield is a scan
-      poofield = drgenerator.analyze(filterfield, 60, 0.1, 0.5)    # poofield is a quality field, add it to maxscan
+      poofield = drgenerator.analyze(filterfield, 60, 0.1, 0.35)   # poofield is a quality field, add it to maxscan
       maxscan.addQualityField(poofield)
+      if ascending:
+        obj.sortByElevations(1)
     return obj
 
   ##
