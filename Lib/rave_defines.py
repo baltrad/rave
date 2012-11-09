@@ -81,6 +81,7 @@ AREA_REGISTRY = os.path.join(RAVECONFIG, 'area_registry.xml')
 PIDFILE = os.path.join(RAVEETC, 'rave_pgf_server.pid')
 PGF_HOST = 'localhost'
 PGF_PORT = 8085
+PGFs = 4
 STDOE = os.path.join(RAVEETC, 'rave_pgf_stdout_stderr.log')
 
 DEX_SPOE = 'http://localhost:8084/BaltradDex/dispatch.htm'
@@ -101,11 +102,12 @@ REGFILE = os.path.join(RAVEETC, 'rave_pgf_registry.xml')  # registry file
 QFILE = os.path.join(RAVEETC, 'rave_pgf_queue.xml')  # queue file
 PGF_TAG = 'bltgenerate'  # used for sending files to the DEX
 
-LOG_ID = "PGF-Logger"  # identifier of the logger instance
+LOG_ID = "PGF"  # identifier of the logger instance
 LOGPORT = 8090  # Could conceivably conflict with Radan HTTP
 LOGFILE     = os.path.join(RAVEETC, "rave_pgf.log")
 LOGFILESIZE = 5000000  # 5 Mb each
 LOGFILES    = 5
+LOGLEVEL = "info"
 LOGPIDFILE = os.path.join(RAVEETC, 'rave_pgf_log_server.pid')
 
 ODIM_SOURCE_FILE = os.path.join(RAVECONFIG, 'odim_source.xml')

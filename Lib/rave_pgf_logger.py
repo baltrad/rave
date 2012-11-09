@@ -29,27 +29,57 @@ import cPickle
 import logging
 import logging.handlers
 import SocketServer
+import multiprocessing
 from types import StringType, UnicodeType
-from rave_defines import PGF_HOST, LOGFILE, LOGFILESIZE, LOGFILES, LOGPORT, LOGPIDFILE, STDOE
+from rave_defines import PGF_HOST, LOGFILE, LOGFILESIZE, LOGFILES, LOGPORT, LOGPIDFILE, LOGLEVEL, STDOE
 from rave_daemon import Daemon
+
+LOGLEVELS = {"notset"   : logging.NOTSET,
+             "debug"    : logging.DEBUG,
+             "info"     : logging.INFO,
+             "warn"     : logging.WARN,
+             "warning"  : logging.WARNING,
+             "error"    : logging.ERROR,
+             "critical" : logging.CRITICAL,
+             "fatal"    : logging.FATAL}
 
 
 ## Initializes the system logger.
 # @param logger an instance returned by \ref logging.getLogger()
-def init_logger(logger):
-    logger.setLevel(logging.INFO)
-    handler = logging.handlers.RotatingFileHandler(LOGFILE,
-                                                   maxBytes = LOGFILESIZE,
-                                                   backupCount = LOGFILES)
-    # This formatter removes the fractions of a second in the time.
-#     formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s',
-#                                   '%Y-%m-%d %H:%M:%S %Z')
-    # The default formatter contains fractions of a second in the time.
-    formatter = logging.Formatter('%(asctime)-15s %(levelname)-7s %(name)-8s: %(message)s')
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
-    logger.info("Logging system initialized. Starting...")
+# @param level int log level
+def init_logger(logger, level=LOGLEVEL):
+    logger.setLevel(LOGLEVELS[level])
+    if not len(logger.handlers):
+        handler = logging.handlers.RotatingFileHandler(LOGFILE,
+                                                       maxBytes = LOGFILESIZE,
+                                                       backupCount = LOGFILES)
+        # This formatter removes the fractions of a second in the time.
+#       formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s',
+#                                     '%Y-%m-%d %H:%M:%S %Z')
+        # The default formatter contains fractions of a second in the time.
+        formatter = logging.Formatter('%(asctime)-15s %(levelname)-8s %(message)s')
+        handler.setFormatter(formatter)
+        handler.lock = multiprocessing.RLock()
+        #handler.createLock()
+        logger.addHandler(handler)
+        #logger.info("Logging system initialized. Starting...")
+        #log(logger, "info", "Logging system initialized. Starting...")
 
+
+## Locks, logs, and unlocks, with rudimentary level filtering.
+# @param logger the logger object initialized with \ref init_logger()
+# @param level string log level
+# @param msg string log message
+def log(logger, level, msg):
+    if LOGLEVELS[level] >= logger.level:
+        #logger.handlers[0].lock.acquire(block=True, timeout=None)
+        logger.handlers[0].acquire()
+        name = multiprocessing.current_process().name
+        logger.log(LOGLEVELS[level], "%s: %s" % (name, msg))
+        logger.handlers[0].release()
+
+
+# Stuff below is for creating a logger server, currently unused.
 
 ## Handler for a streaming logging request.
 #  This basically logs the record using whatever logging policy is
@@ -92,6 +122,8 @@ class LogRecordStreamHandler(SocketServer.StreamRequestHandler):
         else:
             name = record.name
         logger = logging.getLogger(name)
+        init_logger(logger)        
+
         # N.B. EVERY record gets logged. This is because Logger.handle
         # is normally called AFTER logger-level filtering. If you want
         # to do filtering, do it at the client end to save wasting
@@ -168,6 +200,7 @@ class rave_pgf_logger_server(Daemon):
   # foreground, ie. not daemonize, which is useful for debugging.
   def run(self):
     #import atexit
+    logging.basicConfig(format='%(asctime)-15s %(levelname)-8s %(message)s')
     self.server = LogRecordSocketReceiver(host=self.host, port=self.port)
     #atexit.register(self.server.instance._dump_queue)
     self.server.serve_until_stopped()

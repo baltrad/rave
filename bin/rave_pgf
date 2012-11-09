@@ -27,8 +27,12 @@ import sys, os
 import traceback
 import xmlrpclib
 import SimpleXMLRPCServer
+import logging
+import Queue
+import multiprocessing
+import rave_pgf_registry
 from rave_daemon import Daemon
-from rave_defines import PIDFILE, PGF_HOST, PGF_PORT, STDOE
+from rave_defines import PIDFILE, PGF_HOST, PGF_PORT, STDOE, LOG_ID, REGFILE, PGFs, LOGLEVEL
 
 
 ## Stub class for allowing server POSTs only to one place, providing
@@ -73,13 +77,25 @@ class rave_pgf_server(Daemon):
   # foreground, ie. not daemonize, which is useful for debugging.
   def run(self):
     import atexit
-    from rave_pgf import RavePGF
+    from rave_pgf import RavePGF, initialized
     self.server = SimpleXMLRPCServer.SimpleXMLRPCServer((self.host, self.port),
                                                         requestHandler=RequestHandler,
                                                         allow_none=True)
+    
     self.server.register_instance(RavePGF())
+    self.server.instance.logger = logging.getLogger(LOG_ID)
+    self.server.instance._init_logger(level=LOGLEVEL)
+    self.server.instance.log("info", "Logger initialized. Starting ...")
+    self.server.instance._algorithm_registry = rave_pgf_registry.PGF_Registry(filename=REGFILE)
+    self.server.instance.queue = Queue.PriorityQueue()
+    self.server.instance._load_queue()
+    self.server.instance.pool = multiprocessing.Pool(PGFs)
+    
     self.server.register_introspection_functions()
     atexit.register(self.server.instance._dump_queue)
+    
+    self.server.instance._run_all_jobs()
+    
     self.server.serve_forever()
     
 
