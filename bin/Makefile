@@ -37,6 +37,7 @@ install:
 	@cp -v -f rave_pgf "${prefix}/bin/"
 	@cp -v -f show "${prefix}/bin/"
 	@cp -v -f sunpos "${prefix}/bin/"
+	@cp -v -f dealias "${prefix}/bin/"
 
 .PHONY:clean
 clean: ;

@@ -1,5 +1,5 @@
 /* --------------------------------------------------------------------
-Copyright (C) 2009 Swedish Meteorological and Hydrological Institute, SMHI,
+Copyright (C) 2012 Swedish Meteorological and Hydrological Institute, SMHI,
 
 This file is part of RAVE.
 
@@ -29,7 +29,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include <Python.h>
 
 /**
- * A polar scan
+ * A generic vertical profile
  */
 typedef struct {
   PyObject_HEAD /*Always has to be on top*/
@@ -66,30 +66,30 @@ static PyVerticalProfile_New_RETURN PyVerticalProfile_New PyVerticalProfile_New_
 static void **PyVerticalProfile_API;
 
 /**
- * Returns a pointer to the internal polar scan, remember to release the reference
+ * Returns a pointer to the internal vertical profile, remember to release the reference
  * when done with the object. (RAVE_OBJECT_RELEASE).
  */
 #define PyVerticalProfile_GetNative \
   (*(PyVerticalProfile_GetNative_RETURN (*)PyVerticalProfile_GetNative_PROTO) PyVerticalProfile_API[PyVerticalProfile_GetNative_NUM])
 
 /**
- * Creates a new polar scan instance. Release this object with Py_DECREF. If a VerticalProfile_t scan is
- * provided and this scan already is bound to a python instance, this instance will be increfed and
+ * Creates a new vertical profile instance. Release this object with Py_DECREF. If a VerticalProfile_t is
+ * provided and this object is already bound to a Python instance, this instance will be increfed and
  * returned.
- * @param[in] scan - the VerticalProfile_t intance.
+ * @param[in] vertical profile - the VerticalProfile_t intance.
  * @returns the PyVerticalProfile instance.
  */
 #define PyVerticalProfile_New \
   (*(PyVerticalProfile_New_RETURN (*)PyVerticalProfile_New_PROTO) PyVerticalProfile_API[PyVerticalProfile_New_NUM])
 
 /**
- * Checks if the object is a python polar scan.
+ * Checks if the object is a Python vertical profile.
  */
 #define PyVerticalProfile_Check(op) \
    ((op)->ob_type == (PyTypeObject *)PyVerticalProfile_API[PyVerticalProfile_Type_NUM])
 
 /**
- * Imports the pypolarscan module (like import _polarscan in python).
+ * Imports the pyverticalprofile module (like import _verticalprofile in Python).
  */
 static int
 import_pyverticalprofile(void)
