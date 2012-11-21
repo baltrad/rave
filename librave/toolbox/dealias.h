@@ -26,6 +26,9 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #define DEALIAS_H
 
 #include <math.h>
+#ifndef NAN
+#include <bits/nan.h>
+#endif
 #include <string.h>
 
 #include "polarvolume.h"
