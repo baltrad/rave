@@ -38,6 +38,7 @@ install:
 	@cp -v -f show "${prefix}/bin/"
 	@cp -v -f sunpos "${prefix}/bin/"
 	@cp -v -f dealias "${prefix}/bin/"
+	@cp -v -f radvol "${prefix}/bin/"
 
 .PHONY:clean
 clean: ;

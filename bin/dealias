@@ -33,22 +33,26 @@ if __name__ == "__main__":
 
     description = "Dealiasing of polar scan and volume data"
 
-    usage = "usage: %prog -i <infile> -o <outfile> [h]"
+    usage = "usage: %prog -i <infile> [-o <outfile>] [h]"
     parser = OptionParser(usage=usage, description=description)
 
     parser.add_option("-i", "--input", dest="ifile", help="Input file name")
-    parser.add_option("-o", "--output", dest="ofile", help="Output file name")
+    parser.add_option("-o", "--output", dest="ofile", help="Output file name. If not specified, input file will be overwritten.")
 
     (options, args) = parser.parse_args()
 
-    if not (options.ifile and options.ofile):
+    if not options.ifile:
         parser.print_help()
         sys.exit()
+
+    if not options.ofile: 
+        options.ofile = options.ifile
 
     rio = _raveio.open(options.ifile)
     obj = rio.object
 
     if not _dealias.dealias(obj):
+        print "Input data are already dealiased. Exiting ..."
         sys.exit(1)
 
     rio.object = obj

@@ -60,8 +60,8 @@ static PyObject *ErrorObject;
 
 
 /**
- * Checks whether a scan is dealised by looking up its
- * "VRAD" param/how/dealised attribute.
+ * Checks whether a scan is dealiased by looking up its
+ * "VRAD" param/how/dealiased attribute.
  * @param[in] PolarScan_t object, hopefully containing a "VRAD" parameter
  * @returns Py_True or Py_False
  */

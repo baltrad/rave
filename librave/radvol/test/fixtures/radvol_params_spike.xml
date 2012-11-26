@@ -1,0 +1,72 @@
+<?xml version='1.0' encoding='iso-8859-1'?>
+
+<parameters>
+  
+  <BROAD name="Beam broadening">
+    <QIOn>0</QIOn>
+    <QCOn>0</QCOn>
+    <LhQI1>1.1</LhQI1>
+    <LhQI0>2.5</LhQI0>
+    <LvQI1>1.5</LvQI1>
+    <LvQI0>3.2</LvQI0>
+    <Pulse>0.15</Pulse>
+  </BROAD>
+  
+  <SPIKE name="Removal of spikes">
+    <QIOn>1</QIOn>
+    <QCOn>1</QCOn>
+    <QI>0.5</QI>
+    <QIUn>0.3</QIUn>
+    <ACovFrac>0.9</ACovFrac>
+    <AAzim>3</AAzim>
+    <AVarAzim>1000</AVarAzim>
+    <ABeam>15</ABeam>
+    <AVarBeam>5</AVarBeam>
+    <AFrac>0.45</AFrac>
+    <BDiff>10.0</BDiff>
+    <BAzim>3</BAzim>
+    <BFrac>0.25</BFrac>
+    <CAlt>20.0</CAlt>
+  </SPIKE>
+  
+  <SPECK name="Removal of speckles">
+    <QIOn>0</QIOn>
+    <QCOn>0</QCOn>
+    <QI>0.9</QI>
+    <QIUn>0.5</QIUn>
+    <AGrid>1.0</AGrid>
+    <ANum>2.0</ANum>
+    <AStep>1.0</AStep>
+    <BGrid>1.0</BGrid>
+    <BNum>2.0</BNum>
+    <BStep>2.0</BStep>
+  </SPECK>
+  
+  <BLOCK name="Beam blockage correction">
+    <QIOn>0</QIOn>
+    <QCOn>0</QCOn>
+    <MaxElev>5.0</MaxElev>
+    <dBLim>-3.0</dBLim>
+    <GCQI>0.5</GCQI>
+    <GCQIUn>0.1</GCQIUn>
+    <GCMinPbb>0.005</GCMinPbb>
+    <PBBQIUn>0.5</PBBQIUn>
+    <PBBMax>0.7</PBBMax>
+  </BLOCK>
+  
+  <ATT name="Attenuation correction">
+    <QIOn>0</QIOn>
+    <QCOn>0</QCOn>
+    <a>0.0044</a>
+    <b>1.17</b>
+    <MPa>200.0</MPa>
+    <MPb>1.6</MPb>
+    <QIUn>0.9</QIUn>
+    <QI1>1.0</QI1>
+    <QI0>5.0</QI0>
+    <Refl>4.0</Refl>
+    <Last>1.0</Last>
+    <Sum>5.0</Sum>
+  </ATT>
+  
+</parameters>

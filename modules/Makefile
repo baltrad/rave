@@ -25,13 +25,14 @@
 -include ../def.mk
 
 CFLAGS= $(CCSHARED) $(OPTS) $(DEFS) -I../librave/toolbox -I../librave/pyapi \
-			-I../librave/scansun -I. $(INCLUDE_PYTHON) \
+			-I../librave/scansun -I../librave/radvol/lib -I. $(INCLUDE_PYTHON) \
 			-I$(HLHDF_INCLUDE_DIR) $(NUMPY_INCLUDE_DIR) \
 			$(ZLIB_INCDIR) $(HDF5_INCDIR) $(PROJ_INCLUDE_DIR)
 
 # Linker flags
 #
 LDFLAGS= -L../librave/toolbox -L../librave/pyapi -L../librave/scansun -L. \
+			-L../librave/radvol/lib \
 			-L$(HLHDF_LIB_DIR) $(ZLIB_LIBDIR) $(HDF5_LIBDIR) $(PROJ_LIB_DIR)
 
 ifeq ($(EXPAT_SUPPRESSED), no)
@@ -51,7 +52,7 @@ CFLAGS+= -DPTHREAD_SUPPORTED
 PTHREAD_LIBRARY=-lpthread
 endif
 
-LIBRARIES= -lravetoolbox -lravepyapi -lhlhdf -lproj  $(EXPAT_LIBRARY) $(BUFR_LIBRARY) $(PTHREAD_LIBRARY)
+LIBRARIES= -lravetoolbox -lradvol -lravepyapi -lhlhdf -lproj  $(EXPAT_LIBRARY) $(BUFR_LIBRARY) $(PTHREAD_LIBRARY)
 
 # --------------------------------------------------------------------
 # Fixed definitions
@@ -180,11 +181,15 @@ SOURCE_31= pydealias.c
 OBJECTS_31= $(SOURCE_31:.c=.o)
 TARGET_31= _dealias.so
 
+SOURCE_32= pyradvol.c
+OBJECTS_32= $(SOURCE_32:.c=.o)
+TARGET_32= _radvol.so
+
 TARGETS=$(TARGET_1) $(TARGET_2) $(TARGET_3) $(TARGET_4) $(TARGET_5) $(TARGET_6) \
 		$(TARGET_7) $(TARGET_8) $(TARGET_9) $(TARGET_10) $(TARGET_11) $(TARGET_12) \
 		$(TARGET_13) $(TARGET_14) $(TARGET_15) $(TARGET_16) $(TARGET_17) $(TARGET_18) \
 		$(TARGET_19) $(TARGET_20) $(TARGET_21) $(TARGET_24) $(TARGET_25) $(TARGET_26) \
-		$(TARGET_27) $(TARGET_28) $(TARGET_29) $(TARGET_30) $(TARGET_31)
+		$(TARGET_27) $(TARGET_28) $(TARGET_29) $(TARGET_30) $(TARGET_31) $(TARGET_32)
 
 INSTALL_HEADERS= pyarea.h \
 				 pycartesian.h \
@@ -319,6 +324,9 @@ $(TARGET_30): $(DEPDIR) $(OBJECTS_30) ../librave/toolbox/libravetoolbox.so ../li
 $(TARGET_31): $(DEPDIR) $(OBJECTS_31) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_31) $(LDFLAGS) $(LIBRARIES)
 
+$(TARGET_32): $(DEPDIR) $(OBJECTS_32) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so ../librave/radvol/lib/libradvol.so
+	$(LDSHARED) -o $@ $(OBJECTS_32) $(LDFLAGS) $(LIBRARIES)
+
 .PHONY=install
 install:
 	@mkdir -p ${prefix}/Lib
@@ -388,4 +396,5 @@ endif
 -include $(SOURCE_29:%.c=$(DEPDIR)/%.P)
 -include $(SOURCE_30:%.c=$(DEPDIR)/%.P)
 -include $(SOURCE_31:%.c=$(DEPDIR)/%.P)
+-include $(SOURCE_32:%.c=$(DEPDIR)/%.P)
 

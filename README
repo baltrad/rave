@@ -8,9 +8,9 @@ Swedish Meteorological and Hydrological Institute
 January 2012
 
 <caveats>
-RAVE has been developed on Ubuntu starting at version 8.04, and (Snow)
-Leopard. It has  been verified on a number of other systems too (see
-below). Your experiences may differ when building RAVE, and the software on
+RAVE has been developed on Ubuntu starting at version 8.04, and OSX. 
+It has  been verified on a number of other systems too (see below). 
+Your experiences may differ when building RAVE, and the software on
 which it is dependent, on a different platform. Please collect your 
 experiences and share them.
 
@@ -33,18 +33,18 @@ without influencing RAVE, to the furthest extent possible.
 
 VERIFIED SYSTEMS
 
-RAVE is known to work on the following systems:
+RAVE is known to work on the following 64-bit systems:
 Ubuntu 8.04 through 11.10
 Debian 6 (Squeeze)
 CentOS 5.3, 5.4, 5.5 (Final), and 5.7 (Final)
 Red Hat Enterprise 6
-Mac OSX 10.5 (Leopard), 10.6 (Snow Leopard)
+Mac OSX 10.5 (Leopard), 10.6 (Snow Leopard), 10.8 (Mountain Lion)
 
 
 ZLIB (optional)
 ---------------
-Most Linux distributions contain this library. It is required for HDF5 and
-the Python Imaging Library. Versions prior to 1.2.3 may contain a security
+Most 64-bit  Linux distributions contain this library. It is required for HDF5 
+and the Python Imaging Library. Versions prior to 1.2.3 may contain a security
 vulnerability. You should therefore verify the version on your system
 before continuing. If you need to upgrade, get it at http://www.zlib.net/ .
 

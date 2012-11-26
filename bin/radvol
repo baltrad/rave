@@ -1,0 +1,101 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2012- Swedish Meteorological and Hydrological Institute (SMHI)
+
+This file is part of RAVE.
+
+RAVE is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+RAVE is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+See the GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
+'''
+## Command-line RADVOL-QC
+
+## @file
+## @author Daniel Michelson, SMHI
+## @date 2012-11-26
+
+import sys
+import _raveio
+import _radvol
+import _polarvolume, _polarscan
+
+
+if __name__ == "__main__":
+    from optparse import OptionParser
+
+    description = "RADVOL-QC"
+
+    usage = "usage: %prog -i <infile> -absS [-o <outfile>] [h]"
+    parser = OptionParser(usage=usage, description=description)
+
+    parser.add_option("-i", "--input", dest="ifile", help="Input file name")
+
+    parser.add_option("-o", "--output", dest="ofile", help="Output file name. If not specified, input file will be overwritten.")
+
+    parser.add_option("-a", "--att", action="store_true", dest="att", 
+                      help="Performs attenuation correction.")
+
+    parser.add_option("-b", "--broad", action="store_true", dest="broad", 
+                      help="Performs broad assessment.")
+
+    parser.add_option("-s", "--speck", action="store_true", dest="speck", 
+                      help="Performs speckle removal.")
+
+    parser.add_option("-S", "--spike", action="store_true", dest="spike", 
+                      help="Performs spike removal.")
+
+    (options, args) = parser.parse_args()
+
+    if not options.ifile:
+        parser.print_help()
+        sys.exit()
+
+    if not options.ofile: 
+        options.ofile = options.ifile
+
+    rio = _raveio.open(options.ifile)
+
+    if not options.att and not options.broad and not options.speck and not options.spike:
+        print "No QC algorithm selected. Exiting ..."
+        sys.exit(1)
+
+    # Workaround for processing SCANs
+    isScan = False
+    if rio.objectType is _raveio.Rave_ObjectType_SCAN:
+        isScan = True
+        obj = _polarvolume.new()
+        obj.addScan(rio.object)
+    else:
+        obj = rio.object
+
+    if rio.objectType not in (_raveio.Rave_ObjectType_SCAN, _raveio.Rave_ObjectType_PVOL):
+        print "Input data not SCAN or PVOL. Exiting ..."
+        sys.exit(-1)
+
+    if options.att:
+        _radvol.attCorrection(obj)
+        
+    if options.broad:
+        _radvol.broadAssessment(obj)
+    
+    if options.speck:
+        _radvol.speckRemoval(obj)
+        
+    if options.spike:
+        _radvol.spikeRemoval(obj)
+
+    if isScan:
+        rio.object = obj.getScan(0)
+    else:
+        rio.object = obj
+
+    rio.save(options.ofile)

@@ -1,0 +1,22 @@
+INSTALL instructions for
+Radvol-QC package
+
+Katarzyna Osrodka
+Institute of Meteorology and Water Management - National Research Institute, 
+IMGW-PIB (Poland)
+
+November 2012
+
+Radvol-QC is integrated into a working RAVE installation, so following RAVE's 
+installation instructions will also build RADVOL.
+
+The Python wrappers to RADVOL's functionality are found in RAVE's "modules"
+directory. Similarly, the toolbox's framework for unit testing is used to
+test this functionality through the Python wrappers. However, RADVOL's own 
+testing functionality using the CUnit package can be run here with 
+
+radvol$ make test
+
+RADVOL's headers and library will be installed in $RAVEROOT/include and
+$RAVEROOT/lib respectively. There should be no need to update your
+LD_LIBRARY_PATH.

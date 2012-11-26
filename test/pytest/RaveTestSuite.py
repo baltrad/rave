@@ -52,6 +52,7 @@ from rave_pgf_volume_plugin_test import *
 from rave_overshooting_quality_plugin_test import *
 from area_registry_test import *
 from PyDealiasTest import *
+from PyRadvolTest import *
 
 if __name__ == '__main__':
   unittest.main()
