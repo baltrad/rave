@@ -39,6 +39,8 @@ install:
 	@cp -v -f sunpos "${prefix}/bin/"
 	@cp -v -f dealias "${prefix}/bin/"
 	@cp -v -f radvol "${prefix}/bin/"
+	@cp -v -f odc_toolbox "${prefix}/bin/"
+	@cp -v -f poo "${prefix}/bin/"
 
 .PHONY:clean
 clean: ;
