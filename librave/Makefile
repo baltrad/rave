@@ -1,10 +1,18 @@
+-include ../def.mk
+
 # --------------------------------------------------------------------
 # Fixed definitions
 
 # --------------------------------------------------------------------
 # Rules
+TARGETS=libtoolbox libpyapi libscansun
 
-all: libtoolbox libpyapi libscansun libradvol
+ifeq ($(EXPAT_SUPPRESSED), no)
+TARGETS += libradvol
+endif
+
+.PHONY=all
+all: $(TARGETS)
 
 libtoolbox:
 	$(MAKE) -C toolbox
@@ -23,7 +31,9 @@ install:
 	$(MAKE) -C toolbox install
 	$(MAKE) -C pyapi install
 	$(MAKE) -C scansun install
+ifeq ($(EXPAT_SUPPRESSED), no)
 	$(MAKE) -C radvol install
+endif
 
 .PHONY=clean
 clean:

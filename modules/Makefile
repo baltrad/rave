@@ -25,19 +25,18 @@
 -include ../def.mk
 
 CFLAGS= $(CCSHARED) $(OPTS) $(DEFS) -I../librave/toolbox -I../librave/pyapi \
-			-I../librave/scansun -I../librave/radvol/lib -I. $(INCLUDE_PYTHON) \
+			-I../librave/scansun -I. $(INCLUDE_PYTHON) \
 			-I$(HLHDF_INCLUDE_DIR) $(NUMPY_INCLUDE_DIR) \
 			$(ZLIB_INCDIR) $(HDF5_INCDIR) $(PROJ_INCLUDE_DIR)
 
 # Linker flags
 #
 LDFLAGS= -L../librave/toolbox -L../librave/pyapi -L../librave/scansun -L. \
-			-L../librave/radvol/lib \
 			-L$(HLHDF_LIB_DIR) $(ZLIB_LIBDIR) $(HDF5_LIBDIR) $(PROJ_LIB_DIR)
 
 ifeq ($(EXPAT_SUPPRESSED), no)
-CFLAGS+= $(EXPAT_INCLUDE_DIR) -DRAVE_XML_SUPPORTED
-LDFLAGS+= $(EXPAT_LIB_DIR)
+CFLAGS+= -I../librave/radvol/lib $(EXPAT_INCLUDE_DIR) -DRAVE_XML_SUPPORTED  
+LDFLAGS+= -L../librave/radvol/lib $(EXPAT_LIB_DIR) 
 EXPAT_LIBRARY=-lexpat
 endif
 
@@ -52,7 +51,7 @@ CFLAGS+= -DPTHREAD_SUPPORTED
 PTHREAD_LIBRARY=-lpthread
 endif
 
-LIBRARIES= -lravetoolbox -lradvol -lravepyapi -lhlhdf -lproj  $(EXPAT_LIBRARY) $(BUFR_LIBRARY) $(PTHREAD_LIBRARY)
+LIBRARIES= -lravetoolbox -lravepyapi -lhlhdf -lproj  $(EXPAT_LIBRARY) $(BUFR_LIBRARY) $(PTHREAD_LIBRARY)
 
 # --------------------------------------------------------------------
 # Fixed definitions
@@ -189,7 +188,7 @@ TARGETS=$(TARGET_1) $(TARGET_2) $(TARGET_3) $(TARGET_4) $(TARGET_5) $(TARGET_6) 
 		$(TARGET_7) $(TARGET_8) $(TARGET_9) $(TARGET_10) $(TARGET_11) $(TARGET_12) \
 		$(TARGET_13) $(TARGET_14) $(TARGET_15) $(TARGET_16) $(TARGET_17) $(TARGET_18) \
 		$(TARGET_19) $(TARGET_20) $(TARGET_21) $(TARGET_24) $(TARGET_25) $(TARGET_26) \
-		$(TARGET_27) $(TARGET_28) $(TARGET_29) $(TARGET_30) $(TARGET_31) $(TARGET_32)
+		$(TARGET_27) $(TARGET_28) $(TARGET_29) $(TARGET_30) $(TARGET_31)
 
 INSTALL_HEADERS= pyarea.h \
 				 pycartesian.h \
@@ -212,7 +211,7 @@ INSTALL_HEADERS= pyarea.h \
 				 pyverticalprofile.h
 
 ifeq ($(EXPAT_SUPPRESSED), no)
-TARGETS += $(TARGET_22) $(TARGET_23)
+TARGETS += $(TARGET_22) $(TARGET_23) $(TARGET_32)
 INSTALL_HEADERS += pyprojectionregistry.h pyarearegistry.h
 endif
 
@@ -325,7 +324,7 @@ $(TARGET_31): $(DEPDIR) $(OBJECTS_31) ../librave/toolbox/libravetoolbox.so ../li
 	$(LDSHARED) -o $@ $(OBJECTS_31) $(LDFLAGS) $(LIBRARIES)
 
 $(TARGET_32): $(DEPDIR) $(OBJECTS_32) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so ../librave/radvol/lib/libradvol.so
-	$(LDSHARED) -o $@ $(OBJECTS_32) $(LDFLAGS) $(LIBRARIES)
+	$(LDSHARED) -o $@ $(OBJECTS_32) $(LDFLAGS) -lradvol $(LIBRARIES)
 
 .PHONY=install
 install:
@@ -396,5 +395,8 @@ endif
 -include $(SOURCE_29:%.c=$(DEPDIR)/%.P)
 -include $(SOURCE_30:%.c=$(DEPDIR)/%.P)
 -include $(SOURCE_31:%.c=$(DEPDIR)/%.P)
+ifeq ($(EXPAT_SUPPRESSED), no)
 -include $(SOURCE_32:%.c=$(DEPDIR)/%.P)
+endif
+
 

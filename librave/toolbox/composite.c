@@ -609,16 +609,15 @@ static void CompositeInternal_fillQualityInformation(
       if (obj != NULL) {
         if (strcmp(DISTANCE_TO_RADAR_HOW_TASK, name) == 0) {
           RaveField_setValue(field, x, y, radardist/DISTANCE_TO_RADAR_RESOLUTION);
+        } else if (composite->algorithm != NULL && CompositeAlgorithm_supportsFillQualityInformation(composite->algorithm, name)) {
+          // If the algorithm indicates that it is able to support the provided how/task field, then do so
+          if (!CompositeAlgorithm_fillQualityInformation(composite->algorithm, obj, name, quantity, field, x, y, navinfo)) {
+            RaveField_setValue(field, x, y, 0.0);
+          }
         } else {
           if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
-            if (navinfo->ei >= 0 && navinfo->ri >= 0 && navinfo->ai >= 0) {
-              if (strcmp(name,"se.smhi.detector.poo")==0) {  /* Temporary workaround for #192 */
-                PolarScan_t* tmpscan = PolarVolume_findScanWithQualityFieldByHowTask((PolarVolume_t*)obj, "se.smhi.detector.poo", quantity);
-                PolarScan_getQualityValueAt(tmpscan, quantity, navinfo->ri, navinfo->ai, name, &v);
-                RAVE_OBJECT_RELEASE(tmpscan);
-              } else {
-                PolarVolume_getQualityValueAt((PolarVolume_t*)obj, quantity, navinfo->ei, navinfo->ri, navinfo->ai, name, &v);
-              }
+            if (navinfo->ei >= 0 && navinfo->ri >= 0 && navinfo->ai >= 0 &&
+                PolarVolume_getQualityValueAt((PolarVolume_t*)obj, quantity, navinfo->ei, navinfo->ri, navinfo->ai, name, &v)) {
               RaveField_setValue(field, x, y, v);
             } else {
               RaveField_setValue(field, x, y, 0.0); // No data found

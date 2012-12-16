@@ -26,7 +26,7 @@ Tests RADVOL-QC functionality
 import unittest
 import os
 import _raveio
-import _radvol
+import _rave
 from numpy import *
 
 class PyRadvolTest(unittest.TestCase):
@@ -44,6 +44,9 @@ class PyRadvolTest(unittest.TestCase):
         pass
 
     def testRadvolAttCorrection(self):
+        if not _rave.isXmlSupported():
+            return
+        import _radvol      
         pvol = _raveio.open(self.FIXATT).object
         status = _radvol.attCorrection(pvol)
         self.assertTrue(status)
@@ -61,6 +64,9 @@ class PyRadvolTest(unittest.TestCase):
         self.assertFalse(different(myscan, refscan))
 
     def testRadvolBroadAssessment(self):
+        if not _rave.isXmlSupported():
+            return
+        import _radvol        
         pvol = _raveio.open(self.FIXBROAD).object
         status = _radvol.broadAssessment(pvol)
         self.assertTrue(status)
@@ -78,6 +84,9 @@ class PyRadvolTest(unittest.TestCase):
         self.assertFalse(different(myscan, refscan))
 
     def testRadvolSpeckRemoval(self):
+        if not _rave.isXmlSupported():
+            return
+        import _radvol        
         pvol = _raveio.open(self.FIXSPECK).object
         status = _radvol.speckRemoval(pvol)
         self.assertTrue(status)
@@ -95,6 +104,9 @@ class PyRadvolTest(unittest.TestCase):
         self.assertFalse(different(myscan, refscan))
 
     def testRadvolSpikeRemoval(self):
+        if not _rave.isXmlSupported():
+            return
+        import _radvol        
         pvol = _raveio.open(self.FIXSPIKE).object
         status = _radvol.spikeRemoval(pvol)
         self.assertTrue(status)
@@ -112,6 +124,9 @@ class PyRadvolTest(unittest.TestCase):
         self.assertFalse(different(myscan, refscan))
 
     def testWrongAttInput(self):
+        if not _rave.isXmlSupported():
+            return
+        import _radvol        
         vertical_profile = _raveio.open(self.BADINPUT).object
         try:
             status = _radvol.attCorrection(vertical_profile)
