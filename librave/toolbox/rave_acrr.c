@@ -378,6 +378,8 @@ CartesianParam_t* RaveAcrr_accumulate(RaveAcrr_t* self, double accept, long N, d
             RAVE_INFO0("N == nval => Division by zero");
             CartesianParam_setValue(param, x, y, self->nodata);
           }
+        } else {
+          CartesianParam_setValue(param, x, y, self->undetect);
         }
       }
     }
