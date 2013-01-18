@@ -31,7 +31,9 @@ import xml.etree.ElementTree as ET
 ## Dictionaries containing look-ups for identifiers except CTY.
 # WMO, RAD, PLC, and SOURCE all use the NOD as the look-up
 # NOD uses the WMO number as the look-up 
-NOD, WMO, RAD, PLC = {None:None}, {None:None}, {None:None}, {None:None}
+# CCCC will be the same for all radars from a given country, so there'll be
+# a lot of redundancy, but this is needed to create Odyssey file strings.
+NOD, WMO, RAD, PLC, CCCC = {None:None}, {None:None}, {None:None}, {None:None}, {None:None}
 SOURCE = {None:None}
 
 
@@ -47,13 +49,14 @@ def init():
     O = ET.parse(ODIM_SOURCE_FILE)
     DB = O.getroot()
     for country in list(DB):
-        CCCC, org = country.attrib["CCCC"], country.attrib["org"]
+        cccc, org = country.attrib["CCCC"], country.attrib["org"]
         for radar in list(country):
             nod = radar.tag
             wmo, rad, plc = radar.attrib['wmo'], radar.attrib['rad'], radar.attrib['plc']
             WMO[nod] = wmo
             RAD[nod] = rad
             PLC[nod] = plc
+            CCCC[nod] = cccc
             if wmo != "00000": 
                 NOD[wmo] = nod
                 SOURCE[nod] = u"WMO:%s,NOD:%s,RAD:%s,PLC:%s" % (wmo, nod, rad, plc)
