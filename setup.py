@@ -593,7 +593,7 @@ if __name__ == "__main__":
     if os.getenv('PGF_PORT'): 
       replace_def('PGF_PORT', defs)
     if os.getenv('DEX_SPOE'): 
-      replace_def('DEX_SPOE', defs, '"http://%s/BaltradDex/dispatch.htm"\n')
+      replace_def('DEX_SPOE', defs, '"http://%s/BaltradDex"\n')
     if os.getenv('CENTER_ID'): 
       replace_def('CENTER_ID', defs, '"ORG:%s"\n')  
     if os.getenv('DEX_NODENAME'):

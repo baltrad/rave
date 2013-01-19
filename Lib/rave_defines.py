@@ -84,7 +84,7 @@ PGF_PORT = 8085
 PGFs = 4
 STDOE = os.path.join(RAVEETC, 'rave_pgf_stdout_stderr.log')
 
-DEX_SPOE = 'http://localhost:8084/BaltradDex/dispatch.htm'
+DEX_SPOE = 'http://localhost:8084/BaltradDex'
 DEX_CHANNEL = 'default_products'
 DEX_USER = 'rave_pgf'
 
