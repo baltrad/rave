@@ -157,6 +157,7 @@
     <nldhl plc="Den Helder" rad="NL51" wmo="06234"></nldhl>
   </nl>
   <no CCCC="ENMI" org="88">
+    <nober plc="Berlevåg" rad="NO40" wmo="01079"></nober>
     <noosl plc="Oslo" rad="NO41" wmo="01499"></noosl>
     <nohgb plc="Hægebostad" rad="NO42" wmo="01438"></nohgb>
     <norsa plc="Rissa" rad="NO43" wmo="01247"></norsa>

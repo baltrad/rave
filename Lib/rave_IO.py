@@ -320,6 +320,8 @@ def Array2Tempfile(value):
 
 
 def remove_nulls(s):
+    if s == '\x00':
+        return ''
     while s[-1] == '\x00':
         s = s[:-1]
     return s

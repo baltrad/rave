@@ -125,6 +125,13 @@ def repair_odim_source(obj):
         source = re.sub("PLC", "NOD", source)
         s = odim_source.ODIM_Source(source)
         return odim_source.SOURCE[s.nod].encode(UTF8)
+    # met.no
+    elif re.search("1438", obj.source):
+        return odim_source.SOURCE["nohgb"].encode(UTF8)
+    elif re.search("1104", obj.source):
+        return odim_source.SOURCE["norst"].encode(UTF8)
+    elif re.search("1405", obj.source):
+        return odim_source.SOURCE["nobml"].encode(UTF8)
 
 
 ## Manages the conversion of datasets from float64 to uint8.
