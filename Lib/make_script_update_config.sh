@@ -42,7 +42,7 @@ if [ -n "$PGF_PORT" ]; then
 fi
 
 if [ -n "$DEX_SPOE" ]; then
-  sed -i "s/^DEX_SPOE.*/DEX_SPOE = \"http:\/\/$DEX_SPOE\/BaltradDex\/dispatch.htm\"/g" "$1"
+  sed -i "s/^DEX_SPOE.*/DEX_SPOE = \"http:\/\/$DEX_SPOE\/BaltradDex\"/g" "$1"
 fi
 
 if [ -n "$CENTER_ID" ]; then
