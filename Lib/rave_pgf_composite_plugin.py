@@ -152,6 +152,8 @@ def generate(files, arguments):
     generator.product = _rave.Rave_ProductType_CAPPI
   elif method == "pmax":
     generator.product = _rave.Rave_ProductType_PMAX
+  elif method == "max":
+    generator.product = _rave.Rave_ProductType_MAX
   else:
     generator.product = _rave.Rave_ProductType_PCAPPI
 
