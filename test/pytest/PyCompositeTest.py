@@ -56,6 +56,10 @@ class PyCompositeTest(unittest.TestCase):
                 "fixtures/seang_qcvol_20120131T0000Z.h5"
                 ]
   
+  MAX_VOLUMES = ["fixtures/prepared_max_fixture_hud.h5",
+                 "fixtures/prepared_max_fixture_osu.h5",
+                 "fixtures/prepared_max_fixture_ovi.h5"]
+  
   def setUp(self):
     pass
 
@@ -96,6 +100,38 @@ class PyCompositeTest(unittest.TestCase):
   def test_product(self):
     obj = _pycomposite.new()
     self.assertEquals(_rave.Rave_ProductType_PCAPPI, obj.product)
+
+  def test_product_valid(self):
+    valid_products = [_rave.Rave_ProductType_PCAPPI, 
+                      _rave.Rave_ProductType_CAPPI, 
+                      _rave.Rave_ProductType_PPI, 
+                      _rave.Rave_ProductType_PMAX, 
+                      _rave.Rave_ProductType_MAX]
+    obj = _pycomposite.new()
+    for p in valid_products:
+      obj.product = p
+      self.assertEquals(p, obj.product)
+
+  def test_product_invalid(self):
+    invalid_products = [_rave.Rave_ProductType_SCAN, 
+                        _rave.Rave_ProductType_ETOP, 
+                        _rave.Rave_ProductType_RR, 
+                        _rave.Rave_ProductType_VIL, 
+                        _rave.Rave_ProductType_COMP,
+                        _rave.Rave_ProductType_VP,
+                        _rave.Rave_ProductType_RHI,
+                        _rave.Rave_ProductType_XSEC,
+                        _rave.Rave_ProductType_VSP,
+                        _rave.Rave_ProductType_HSP,
+                        _rave.Rave_ProductType_RAY,
+                        _rave.Rave_ProductType_AZIM,
+                        _rave.Rave_ProductType_QUAL,
+                        _rave.Rave_ProductType_HSP]
+    obj = _pycomposite.new()
+    obj.product = _rave.Rave_ProductType_PCAPPI
+    for p in invalid_products:
+      obj.product = p
+      self.assertEquals(_rave.Rave_ProductType_PCAPPI, obj.product)
 
   def test_selection_method(self):
     obj = _pycomposite.new()
@@ -278,6 +314,46 @@ class PyCompositeTest(unittest.TestCase):
     ios.object = result
     ios.filename = "swemulticomposite.h5"
     ios.save()
+
+  def test_nearest_max(self):
+    generator = _pycomposite.new()
+    
+    a = _area.new()
+    a.id = "nrd2km"
+    a.xsize = 848
+    a.ysize = 1104
+    a.xscale = 2000.0
+    a.yscale = 2000.0
+    a.extent = (-738816.513333,-3995515.596160,955183.48666699999,-1787515.59616)
+    a.projection = _projection.new("x", "y", "+proj=stere +ellps=bessel +lat_0=90 +lon_0=14 +lat_ts=60 +datum=WGS84")
+    
+    for fname in self.MAX_VOLUMES:
+      rio = _raveio.open(fname)
+      generator.add(rio.object)
+    
+    generator.addParameter("DBZH", 1.0, 0.0)
+    generator.product = _rave.Rave_ProductType_MAX
+    generator.height = 0.0
+    generator.range = 0.0
+    generator.time = "120000"
+    generator.date = "20090501"    
+    result = generator.nearest(a, ["se.smhi.composite.distance.radar"])
+    
+    self.assertEquals("DBZH", result.getParameter("DBZH").quantity)
+    self.assertEquals("120000", result.time)
+    self.assertEquals("20090501", result.date)
+    
+    prodpar = result.getAttribute("what/prodpar")
+    self.assertAlmostEquals(0.0, prodpar, 4)
+    self.assertEquals(_rave.Rave_ProductType_MAX, result.product)
+    self.assertEquals(_rave.Rave_ObjectType_COMP, result.objectType)
+    self.assertEquals("nrd2km", result.source);
+    
+    ios = _raveio.new()
+    ios.object = result
+    ios.filename = "swemaxcomposite.h5"
+    ios.save()
+
 
   def test_nearest_pseudomax(self):
     generator = _pycomposite.new()

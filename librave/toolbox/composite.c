@@ -436,7 +436,7 @@ done:
  * @param[out] navinfo - the navigation information (MAY BE NULL)
  * @return 1 on success or 0 on failure.
  */
-static int CompositeInternal_getPseudoMaxValue(
+static int CompositeInternal_getVerticalMaxValue(
   Composite_t* self,
   int radarindex,
   const char* quantity,
@@ -717,6 +717,212 @@ done:
   return result;
 }
 
+/**
+ * Returns the projection object that belongs to this obj.
+ * @param[in] obj - the rave core object instance
+ * @return the projection or NULL if there is no projection instance
+ */
+static Projection_t* CompositeInternal_getProjection(RaveCoreObject* obj)
+{
+  Projection_t* result = NULL;
+  if (obj != NULL) {
+    if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
+      result = PolarVolume_getProjection((PolarVolume_t*)obj);
+    } else if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarScan_TYPE)) {
+      result = PolarScan_getProjection((PolarScan_t*)obj);
+    }
+  }
+  return result;
+}
+
+static int CompositeInternal_getDistances(RaveCoreObject* obj, double lon, double lat, double* distance, double* maxdistance)
+{
+  int result = 0;
+  RAVE_ASSERT((distance != NULL), "distance == NULL");
+  RAVE_ASSERT((maxdistance != NULL), "maxdistance == NULL");
+  if (obj != NULL) {
+    if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
+      *distance = PolarVolume_getDistance((PolarVolume_t*)obj, lon, lat);
+      *maxdistance = PolarVolume_getMaxDistance((PolarVolume_t*)obj);
+      result = 1;
+    } else if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarScan_TYPE)) {
+      *distance = PolarScan_getDistance((PolarScan_t*)obj, lon, lat);
+      *maxdistance = PolarScan_getMaxDistance((PolarScan_t*)obj);
+      result = 1;
+    }
+  }
+  return result;
+}
+
+/**
+ * Pure max is a quite difference composite generator that does not care about proximity to ground
+ * or radar or anything else. It only cares about maximum value at the specific position so we handle
+ * this as a separate scheme instead of trying to mix into _nearest.
+ *
+ * This processing scheme does not support algorithm.process but it support algorithm.fillQualityInformation.
+ *
+ * @param[in] composite - self
+ * @param[in] area - the area we are working with
+ * @param[in] qualityflags - the quality flags we want to have set
+ * @return the cartesian product
+ */
+static Cartesian_t* Composite_nearest_max(Composite_t* composite, Area_t* area, RaveList_t* qualityflags)
+{
+  Cartesian_t* result = NULL;
+  Projection_t* projection = NULL;
+  PolarNavigationInfo navinfo;
+  CompositeValues_t* cvalues = NULL;
+  int x = 0, y = 0, i = 0, xsize = 0, ysize = 0, nradars = 0;
+  int nqualityflags = 0;
+  int nparam = 0;
+
+  RAVE_ASSERT((composite != NULL), "composite == NULL");
+  if (area == NULL) {
+    RAVE_ERROR0("Trying to generate composite with NULL area");
+    goto fail;
+  }
+
+  nparam = Composite_getParameterCount(composite);
+  if (nparam <= 0) {
+    RAVE_ERROR0("You can not generate a composite without specifying at least one parameter");
+    goto fail;
+  }
+
+  result = CompositeInternal_createCompositeImage(composite, area);
+  if (result == NULL) {
+    goto fail;
+  }
+
+  if ((cvalues = CompositeInternal_createCompositeValues(nparam)) == NULL) {
+    goto fail;
+  }
+
+  for (i = 0; i < nparam; i++) {
+    const char* name = Composite_getParameter(composite, i, NULL, NULL);
+    cvalues[i].parameter = Cartesian_getParameter(result, name); // Keep track on parameters
+    if (cvalues[i].parameter == NULL) {
+      RAVE_ERROR0("Failure in parameter handling\n");
+      goto fail;
+    }
+  }
+
+  xsize = Cartesian_getXSize(result);
+  ysize = Cartesian_getYSize(result);
+  projection = Cartesian_getProjection(result);
+  nradars = RaveObjectList_size(composite->list);
+
+  if (qualityflags != NULL) {
+    nqualityflags = RaveList_size(qualityflags);
+    if (!CompositeInternal_addQualityFlags(composite, result, qualityflags)) {
+      goto fail;
+    }
+  }
+
+  if (composite->algorithm != NULL) {
+    if (!CompositeAlgorithm_initialize(composite->algorithm, composite)) {
+      goto fail;
+    }
+  }
+
+  for (y = 0; y < ysize; y++) {
+    double herey = Cartesian_getLocationY(result, y);
+    for (x = 0; x < xsize; x++) {
+      int cindex = 0;
+      double herex = Cartesian_getLocationX(result, x);
+      double olon = 0.0, olat = 0.0;
+      double vvalue = 0.0;
+      RaveValueType vtype = RaveValueType_NODATA;
+
+      CompositeInternal_resetCompositeValues(composite, nparam, cvalues);
+      if (composite->algorithm != NULL) {
+        CompositeAlgorithm_reset(composite->algorithm, x, y);
+      }
+
+      for (i = 0; i < nradars; i++) {
+        RaveCoreObject* obj = NULL;
+        Projection_t* objproj = NULL;
+
+        obj = RaveObjectList_get(composite->list, i);
+        if (obj != NULL) {
+          objproj = CompositeInternal_getProjection(obj);
+        }
+
+        if (objproj != NULL) {
+          /* We will go from surface coords into the lonlat projection assuming that a polar volume uses a lonlat projection*/
+          if (!Projection_transformx(projection, objproj, herex, herey, 0.0, &olon, &olat, NULL)) {
+            RAVE_WARNING0("Failed to transform from composite into polar coordinates");
+          } else {
+            double dist = 0.0;
+            double maxdist = 0.0;
+
+            // We only use distance & max distance to speed up processing but it isn't used for anything else
+            // in the pure vertical max implementation.
+            if (CompositeInternal_getDistances(obj, olon, olat, &dist, &maxdist) && dist <= maxdist) {
+              for (cindex = 0; cindex < nparam; cindex++) {
+                RaveValueType otype = RaveValueType_NODATA;
+                double ovalue = 0.0;
+                CompositeInternal_getVerticalMaxValue(composite, i, cvalues[cindex].name, olon, olat, &otype, &ovalue, &navinfo);
+                if (otype == RaveValueType_DATA || otype == RaveValueType_UNDETECT) {
+                  if ((cvalues[cindex].vtype != RaveValueType_DATA && cvalues[cindex].vtype != RaveValueType_UNDETECT) ||
+                      (cvalues[cindex].vtype == RaveValueType_DATA && otype == RaveValueType_DATA && ovalue > cvalues[cindex].value)) {
+                    cvalues[cindex].vtype = otype;
+                    cvalues[cindex].value = ovalue;
+                    cvalues[cindex].mindist = dist;
+                    cvalues[cindex].radardist = dist;
+                    cvalues[cindex].radarindex = i;
+                    cvalues[cindex].navinfo = navinfo;
+                  }
+                }
+              }
+            }
+          }
+        }
+        RAVE_OBJECT_RELEASE(obj);
+        RAVE_OBJECT_RELEASE(objproj);
+      }
+
+      for (cindex = 0; cindex < nparam; cindex++) {
+        double vvalue = cvalues[cindex].value;
+        double vtype = cvalues[cindex].vtype;
+        PolarNavigationInfo info = cvalues[cindex].navinfo;
+
+        if (vtype == RaveValueType_NODATA) {
+          CartesianParam_setConvertedValue(cvalues[cindex].parameter, x, y, CartesianParam_getNodata(cvalues[cindex].parameter));
+        } else {
+          if (vtype == RaveValueType_UNDETECT) {
+            CartesianParam_setConvertedValue(cvalues[cindex].parameter, x, y, CartesianParam_getUndetect(cvalues[cindex].parameter));
+          } else {
+            CartesianParam_setConvertedValue(cvalues[cindex].parameter, x, y, vvalue);
+          }
+        }
+        if ((vtype == RaveValueType_DATA || vtype == RaveValueType_UNDETECT) &&
+            cvalues[cindex].radarindex >= 0 && nqualityflags > 0) {
+          PolarNavigationInfo info = cvalues[cindex].navinfo;
+          CompositeInternal_fillQualityInformation(composite, x, y, cvalues[cindex].parameter,
+                                                   cvalues[cindex].radardist, cvalues[cindex].radarindex, &info);
+        }
+      }
+    }
+  }
+
+  for (i = 0; cvalues != NULL && i < nparam; i++) {
+    RAVE_OBJECT_RELEASE(cvalues[i].parameter);
+  }
+  RAVE_FREE(cvalues);
+  RAVE_OBJECT_RELEASE(projection);
+  return result;
+fail:
+  for (i = 0; cvalues != NULL && i < nparam; i++) {
+    RAVE_OBJECT_RELEASE(cvalues[i].parameter);
+  }
+  RAVE_FREE(cvalues);
+  RAVE_OBJECT_RELEASE(projection);
+  RAVE_OBJECT_RELEASE(result);
+  return result;
+
+}
+
+
 /*@} End of Private functions */
 
 /*@{ Interface functions */
@@ -751,10 +957,11 @@ void Composite_setProduct(Composite_t* composite, Rave_ProductType type)
   if (type == Rave_ProductType_PCAPPI ||
       type == Rave_ProductType_CAPPI ||
       type == Rave_ProductType_PPI ||
-      type == Rave_ProductType_PMAX) {
+      type == Rave_ProductType_PMAX ||
+      type == Rave_ProductType_MAX) {
     composite->ptype = type;
   } else {
-    RAVE_ERROR0("Only supported algorithms are PPI, CAPPI, PCAPPI and PMAX");
+    RAVE_ERROR0("Only supported algorithms are PPI, CAPPI, PCAPPI, PMAX and MAX");
   }
 }
 
@@ -916,6 +1123,11 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t*
   int nparam = 0;
 
   RAVE_ASSERT((composite != NULL), "composite == NULL");
+
+  if (composite->ptype == Rave_ProductType_MAX) { // Special handling of the max algorithm.
+    return Composite_nearest_max(composite, area, qualityflags);
+  }
+
   if (area == NULL) {
     RAVE_ERROR0("Trying to generate composite with NULL area");
     goto fail;
@@ -1061,9 +1273,9 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t*
             double nvalue = 0.0;
             if (vtype == RaveValueType_UNDETECT) {
               /* Undetect should not affect navigation information */
-              CompositeInternal_getPseudoMaxValue(composite, cvalues[cindex].radarindex, cvalues[cindex].name, olon, olat, &ntype, &nvalue, NULL);
+              CompositeInternal_getVerticalMaxValue(composite, cvalues[cindex].radarindex, cvalues[cindex].name, olon, olat, &ntype, &nvalue, NULL);
             } else {
-              CompositeInternal_getPseudoMaxValue(composite, cvalues[cindex].radarindex, cvalues[cindex].name, olon, olat, &ntype, &nvalue, &info);
+              CompositeInternal_getVerticalMaxValue(composite, cvalues[cindex].radarindex, cvalues[cindex].name, olon, olat, &ntype, &nvalue, &info);
             }
             if (ntype != RaveValueType_NODATA) {
               vtype = ntype;

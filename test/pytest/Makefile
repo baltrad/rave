@@ -38,6 +38,7 @@ distclean:
 	@\rm -fr swecomposite.h5
 	@\rm -fr swemulticomposite.h5
 	@\rm -fr swepseudomaxcomposite.h5
+	@\rm -fr swemaxcomposite.h5
 	@\rm -fr swecomposite_gmap.h5
 	@\rm -fr swecomposite_ppi.h5
 	@\rm -fr swecomposite_ppi_fromscan.h5
