@@ -159,22 +159,36 @@ def generate(files, arguments):
 
   generator.height = 1000.0
   generator.elangle = 0.0
+  generator.range = 200000.0
+  
   if "prodpar" in args.keys():
-    if generator.product in [_rave.Rave_ProductType_CAPPI, _rave.Rave_ProductType_PCAPPI, _rave.Rave_ProductType_PMAX]:
+    if generator.product in [_rave.Rave_ProductType_CAPPI, _rave.Rave_ProductType_PCAPPI]:
       try:
         generator.height = strToNumber(args["prodpar"])
       except ValueError,e:
         pass
+    elif generator.product in [_rave.Rave_ProductType_PMAX]:
+      if isinstance(args["prodpar"], basestring):
+        pp = args["prodpar"].split(",")
+        if len(pp) == 2:
+          try:
+            generator.height = strToNumber(pp[0].strip())
+            generator.range = strToNumber(pp[1].strip())
+          except ValueError,e:
+            pass
+        elif len(pp) == 1:
+          try:
+            generator.height = strToNumber(pp[0].strip())
+          except ValueError,e:
+            pass
     elif generator.product in [_rave.Rave_ProductType_PPI]:
       try:
         v = strToNumber(args["prodpar"])
         generator.elangle = v * math.pi / 180.0
       except ValueError,e:
         pass
-
-  generator.range = 200000.0
   if "range" in args.keys() and generator.product == _rave.Rave_ProductType_PMAX:
-    generator.range = args["range"]
+    generator.range = strToNumber(args["range"])
 
   generator.selection_method = _pycomposite.SelectionMethod_NEAREST
   if "selection" in args.keys():
@@ -199,6 +213,9 @@ def generate(files, arguments):
   ios.object = result
   ios.filename = outfile
   ios.save()
+
+  import shutil
+  shutil.copyfile(ios.filename, "/tmp/%s.h5"%prodpar)
   
   return outfile
   

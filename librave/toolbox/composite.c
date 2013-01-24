@@ -669,7 +669,9 @@ static Cartesian_t* CompositeInternal_createCompositeImage(Composite_t* self, Ar
       self->ptype == Rave_ProductType_PCAPPI) {
     prodpar = RaveAttributeHelp_createDouble("what/prodpar", self->height);
   } else if (self->ptype == Rave_ProductType_PMAX) {
-    prodpar = RaveAttributeHelp_createDouble("what/prodpar", self->range);
+    char s[256];
+    sprintf(s, "%f,%f",self->height,self->range);
+    prodpar = RaveAttributeHelp_createString("what/prodpar", s);
   } else {
     prodpar = RaveAttributeHelp_createDouble("what/prodpar", self->elangle * 180.0/M_PI);
   }
@@ -830,8 +832,6 @@ static Cartesian_t* Composite_nearest_max(Composite_t* composite, Area_t* area, 
       int cindex = 0;
       double herex = Cartesian_getLocationX(result, x);
       double olon = 0.0, olat = 0.0;
-      double vvalue = 0.0;
-      RaveValueType vtype = RaveValueType_NODATA;
 
       CompositeInternal_resetCompositeValues(composite, nparam, cvalues);
       if (composite->algorithm != NULL) {
@@ -884,8 +884,6 @@ static Cartesian_t* Composite_nearest_max(Composite_t* composite, Area_t* area, 
       for (cindex = 0; cindex < nparam; cindex++) {
         double vvalue = cvalues[cindex].value;
         double vtype = cvalues[cindex].vtype;
-        PolarNavigationInfo info = cvalues[cindex].navinfo;
-
         if (vtype == RaveValueType_NODATA) {
           CartesianParam_setConvertedValue(cvalues[cindex].parameter, x, y, CartesianParam_getNodata(cvalues[cindex].parameter));
         } else {

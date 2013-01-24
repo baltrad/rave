@@ -384,7 +384,12 @@ class PyCompositeTest(unittest.TestCase):
     self.assertEquals("20090501", result.date)
     
     prodpar = result.getAttribute("what/prodpar")
-    self.assertAlmostEquals(70000.0, prodpar, 4)
+    v = prodpar.split(",")
+    vh = float(v[0])
+    vr = float(v[1])
+    self.assertAlmostEquals(1000.0, vh, 4)
+    self.assertAlmostEquals(70000.0, vr, 4)
+    #self.assertAlmostEquals(70000.0, prodpar, 4)
     self.assertEquals(_rave.Rave_ProductType_PMAX, result.product)
     self.assertEquals(_rave.Rave_ObjectType_COMP, result.objectType)
     self.assertEquals("nrd2km", result.source);
