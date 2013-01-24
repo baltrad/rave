@@ -214,9 +214,6 @@ def generate(files, arguments):
   ios.filename = outfile
   ios.save()
 
-  import shutil
-  shutil.copyfile(ios.filename, "/tmp/%s.h5"%prodpar)
-  
   return outfile
   
   
