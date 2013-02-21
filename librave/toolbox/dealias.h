@@ -19,8 +19,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 /**
  * Provides functionality for dealiasing radial wind data.
  * @file
- * @author GŸnther Haase, SMHI
-  * @date 2012-11-13
+ * @author Gunther Haase, SMHI
+  * @date 2013-02-06
  */
 #ifndef DEALIAS_H
 #define DEALIAS_H
@@ -47,11 +47,29 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 
 #define DEG2RAD    DEG_TO_RAD      /* Degrees to radians. From PROJ.4 */
 #define RAD2DEG    RAD_TO_DEG      /* Radians to degrees. From PROJ.4 */
-#define VMAX       50              /* Maximum velocity */
+#define VMAX       48              /* Maximum velocity */
 #define VAF        4               /*   */
 #define NF         40              /*   */
 #define MVA        8               /*   */
+#define EPSILON    1E-10           /*   */
+#define EMAX       2.0             /* Maximum elevation angle [deg] */
 
+
+/**
+ * Returns the maximum of a vector.
+ * @param[in] a - input vector
+ * @param[in] n - vector length
+ * @returns maximum of a vector
+ */
+double max_vector (double *a, int n);
+
+/**
+ * Returns the minimum of a vector.
+ * @param[in] a - input vector
+ * @param[in] n - vector length
+ * @returns minimum of a vector
+ */
+double min_vector (double *a, int n);
 
 /**
  * Determines whether a scan is dealiased or not
