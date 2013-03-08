@@ -41,6 +41,7 @@ install:
 	@cp -v -f radvol "${prefix}/bin/"
 	@cp -v -f odc_toolbox "${prefix}/bin/"
 	@cp -v -f poo "${prefix}/bin/"
+	@cp -v -f odc_hac "${prefix}/bin/"
 
 .PHONY:clean
 clean: ;

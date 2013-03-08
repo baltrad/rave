@@ -184,11 +184,15 @@ SOURCE_32= pyradvol.c
 OBJECTS_32= $(SOURCE_32:.c=.o)
 TARGET_32= _radvol.so
 
+SOURCE_33= pyodc_hac.c
+OBJECTS_33= $(SOURCE_33:.c=.o)
+TARGET_33= _odc_hac.so
+
 TARGETS=$(TARGET_1) $(TARGET_2) $(TARGET_3) $(TARGET_4) $(TARGET_5) $(TARGET_6) \
 		$(TARGET_7) $(TARGET_8) $(TARGET_9) $(TARGET_10) $(TARGET_11) $(TARGET_12) \
 		$(TARGET_13) $(TARGET_14) $(TARGET_15) $(TARGET_16) $(TARGET_17) $(TARGET_18) \
 		$(TARGET_19) $(TARGET_20) $(TARGET_21) $(TARGET_24) $(TARGET_25) $(TARGET_26) \
-		$(TARGET_27) $(TARGET_28) $(TARGET_29) $(TARGET_30) $(TARGET_31)
+		$(TARGET_27) $(TARGET_28) $(TARGET_29) $(TARGET_30) $(TARGET_31) $(TARGET_33)
 
 INSTALL_HEADERS= pyarea.h \
 				 pycartesian.h \
@@ -326,6 +330,9 @@ $(TARGET_31): $(DEPDIR) $(OBJECTS_31) ../librave/toolbox/libravetoolbox.so ../li
 $(TARGET_32): $(DEPDIR) $(OBJECTS_32) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so ../librave/radvol/lib/libradvol.so
 	$(LDSHARED) -o $@ $(OBJECTS_32) $(LDFLAGS) -lradvol $(LIBRARIES)
 
+$(TARGET_33): $(DEPDIR) $(OBJECTS_33) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so ../librave/radvol/lib/libradvol.so
+	$(LDSHARED) -o $@ $(OBJECTS_33) $(LDFLAGS) -lradvol $(LIBRARIES)
+
 .PHONY=install
 install:
 	@mkdir -p ${prefix}/Lib
@@ -395,8 +402,8 @@ endif
 -include $(SOURCE_29:%.c=$(DEPDIR)/%.P)
 -include $(SOURCE_30:%.c=$(DEPDIR)/%.P)
 -include $(SOURCE_31:%.c=$(DEPDIR)/%.P)
+-include $(SOURCE_33:%.c=$(DEPDIR)/%.P)
 ifeq ($(EXPAT_SUPPRESSED), no)
 -include $(SOURCE_32:%.c=$(DEPDIR)/%.P)
 endif
-
 

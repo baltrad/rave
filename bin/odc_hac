@@ -1,0 +1,83 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2013- Swedish Meteorological and Hydrological Institute (SMHI)
+
+This file is part of RAVE.
+
+RAVE is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+RAVE is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+See the GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
+'''
+## Command-line HAC utility
+
+## @file
+## @author Daniel Michelson, SMHI
+## @date 2013-01-25
+
+import sys
+import _raveio
+import odc_hac
+
+
+if __name__ == "__main__":
+    from optparse import OptionParser
+
+    description = "Hit-accumulation clutter mapping and filtering"
+
+    usage = "usage: %prog -i <infile> -IfF [-o <outfile> -q <quantity>] [h]"
+    parser = OptionParser(usage=usage, description=description)
+
+    parser.add_option("-i", "--input", dest="ifile", help="Input file name")
+
+    parser.add_option("-o", "--output", dest="ofile", help="Output file name. If not specified, input file will be overwritten.")
+
+    parser.add_option("-I", "--increment", action="store_true", dest="increment", 
+                      help="Increments the hit accumulation for the given input data.")
+
+    parser.add_option("-f", "--filter", action="store_true", dest="filter", 
+                      help="Filters the input data.")
+
+    parser.add_option("-F", "--force", action="store_true", dest="force",
+                      help="Used to force incrementing the hit accumulation and filtering input data in the same run. By default, odc_hac won't do that.")
+
+    parser.add_option("-q", "--quantity", dest="quantity", default="DBZH",
+                      help="Specifies which input quantity to process. Defaults to DBZH.")
+
+    (options, args) = parser.parse_args()
+
+    if not options.ifile:
+        parser.print_help()
+        sys.exit()
+
+    if not options.ofile: 
+        options.ofile = options.ifile
+
+    if not options.increment and not options.filter:
+        parser.print_help()
+        print "No processing option given. Choose whether to increment or to filter."
+        sys.exit()
+
+    if options.increment and options.filter and not options.force:
+        print "Not a good idea to increment the hit accumulation and filter data at the same time. Wimping out ..."
+        print "Override with the -F or --force option."
+        sys.exit()
+
+    rio = _raveio.open(options.ifile)
+    obj = rio.object
+
+    if options.increment:
+        odc_hac.hacIncrement(obj, options.quantity)
+
+    if options.filter:
+        odc_hac.hacFilter(obj, options.quantity)
+        rio.object = obj
+        rio.save(options.ofile)

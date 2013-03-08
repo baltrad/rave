@@ -864,6 +864,7 @@ static Cartesian_t* Composite_nearest_max(Composite_t* composite, Area_t* area, 
                 CompositeInternal_getVerticalMaxValue(composite, i, cvalues[cindex].name, olon, olat, &otype, &ovalue, &navinfo);
                 if (otype == RaveValueType_DATA || otype == RaveValueType_UNDETECT) {
                   if ((cvalues[cindex].vtype != RaveValueType_DATA && cvalues[cindex].vtype != RaveValueType_UNDETECT) ||
+                      (cvalues[cindex].vtype == RaveValueType_UNDETECT && otype == RaveValueType_DATA) ||
                       (cvalues[cindex].vtype == RaveValueType_DATA && otype == RaveValueType_DATA && ovalue > cvalues[cindex].value)) {
                     cvalues[cindex].vtype = otype;
                     cvalues[cindex].value = ovalue;
