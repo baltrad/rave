@@ -315,7 +315,7 @@ done:
   return result;
 }
 
-CartesianParam_t* RaveAcrr_accumulate(RaveAcrr_t* self, double accept, long N, double hours)
+CartesianParam_t* RaveAcrr_accumulate(RaveAcrr_t* self, double acpt, long N, double hours)
 {
   CartesianParam_t* result = NULL;
   CartesianParam_t* param = NULL;
@@ -323,7 +323,7 @@ CartesianParam_t* RaveAcrr_accumulate(RaveAcrr_t* self, double accept, long N, d
 
   long xsize = 0, ysize = 0;
   long x = 0, y = 0;
-  long acceptN = (long)(accept * (double)N);
+  long acceptN = (long)(acpt * (double)N);
 
   RAVE_ASSERT((self != NULL), "self == NULL");
 
@@ -331,7 +331,7 @@ CartesianParam_t* RaveAcrr_accumulate(RaveAcrr_t* self, double accept, long N, d
     RAVE_ERROR0("acrr has not got any data to perform accumulation on");
     goto done;
   }
-  if (accept < 0.0 || accept > 1.0) {
+  if (acpt < 0.0 || acpt > 1.0) {
     RAVE_ERROR0("ACCEPT not >= 0 and <= 1.0");
     goto done;
   }

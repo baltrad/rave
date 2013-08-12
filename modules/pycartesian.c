@@ -1062,6 +1062,18 @@ done:
   return result;
 }
 
+static PyObject* _pycartesian_isCartesian(PyObject* self, PyObject* args)
+{
+  PyObject* inobj = NULL;
+  if (!PyArg_ParseTuple(args,"O", &inobj)) {
+    return NULL;
+  }
+  if (PyCartesian_Check(inobj)) {
+    return PyBool_FromLong(1);
+  }
+  return PyBool_FromLong(0);
+}
+
 /*@} End of Cartesian products */
 
 /*@{ Type definitions */
@@ -1088,6 +1100,7 @@ PyTypeObject PyCartesian_Type =
 /*@{ Module setup */
 static PyMethodDef functions[] = {
   {"new", (PyCFunction)_pycartesian_new, 1},
+  {"isCartesian", (PyCFunction)_pycartesian_isCartesian, 1},
   {NULL,NULL} /*Sentinel*/
 };
 

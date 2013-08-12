@@ -47,12 +47,12 @@ int RaveAcrr_sum(RaveAcrr_t* self, CartesianParam_t* param, double zr_a, double 
 /**
  * Generates the result
  * @param[in] self - self
- * @param[in] accept - the limit for accepting the accumulation (percent between 0 - 1)
+ * @param[in] acpt - the limit for accepting the accumulation (percent between 0 - 1)
  * @param[in] N - the number of expected calls to sum (will be used when calculating acceptable limit)
  * @param[in] hours - the number of hours this accumulation has been performed on.
  * @return the cartesian parameter with quantity ACRR on success otherwise NULL
  */
-CartesianParam_t* RaveAcrr_accumulate(RaveAcrr_t* self, double accept, long N, double hours);
+CartesianParam_t* RaveAcrr_accumulate(RaveAcrr_t* self, double acpt, long N, double hours);
 
 /**
  * Returns if this instance has been initialized or not

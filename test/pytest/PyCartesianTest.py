@@ -47,6 +47,12 @@ class PyCartesianTest(unittest.TestCase):
     isscan = string.find(`type(obj)`, "CartesianCore")
     self.assertNotEqual(-1, isscan)
   
+  def test_isCartesian(self):
+    obj = _cartesian.new()
+    parm = _cartesianparam.new()
+    self.assertTrue(_cartesian.isCartesian(obj))
+    self.assertFalse(_cartesian.isCartesian(parm))
+  
   def test_attribute_visibility(self):
     attrs = ['areaextent', 'date', 'objectType', 
      'product', 'projection', 'source', 'time',

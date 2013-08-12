@@ -330,8 +330,8 @@ $(TARGET_31): $(DEPDIR) $(OBJECTS_31) ../librave/toolbox/libravetoolbox.so ../li
 $(TARGET_32): $(DEPDIR) $(OBJECTS_32) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so ../librave/radvol/lib/libradvol.so
 	$(LDSHARED) -o $@ $(OBJECTS_32) $(LDFLAGS) -lradvol $(LIBRARIES)
 
-$(TARGET_33): $(DEPDIR) $(OBJECTS_33) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so ../librave/radvol/lib/libradvol.so
-	$(LDSHARED) -o $@ $(OBJECTS_33) $(LDFLAGS) -lradvol $(LIBRARIES)
+$(TARGET_33): $(DEPDIR) $(OBJECTS_33) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
+	$(LDSHARED) -o $@ $(OBJECTS_33) $(LDFLAGS) $(LIBRARIES)
 
 .PHONY=install
 install:
