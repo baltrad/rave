@@ -128,7 +128,7 @@ def generate(files, arguments):
   if "N" in args.keys():
     N = args["N"]
   
-  if "distancefield" == "eu.baltrad.composite.quality.distance.radar":
+  if distancefield == "eu.baltrad.composite.quality.distance.radar":
     distancefield = "se.smhi.composite.distance.radar"
   
   acrr = _acrr.new()
@@ -163,8 +163,11 @@ def generate(files, arguments):
       raise AttributeError, "Scale or projdef inconsistancy for used area"
 
     par = obj.getParameter(quantity)
-    if par.getQualityFieldByHowTask(distancefield) != None:
-      acrr.sum(par, zr_a, zr_b)
+    if par == None:
+      logger.info("Could not find parameter (%s) for %s %s"%(quantity, obj.date, obj.time))
+    else:
+      if par.getQualityFieldByHowTask(distancefield) != None:
+        acrr.sum(par, zr_a, zr_b)
 
   # accept, N, hours
   result = acrr.accumulate(accept, N, hours)
