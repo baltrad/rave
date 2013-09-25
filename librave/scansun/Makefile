@@ -39,6 +39,8 @@ ifeq ($(GOT_PTHREAD_SUPPORT), yes)
 SCANSUNLIBS+= -lpthread
 endif
 
+SCANSUNLIBS+= -lm
+
 MAKEDEPEND=gcc -MM $(CFLAGS) -o $(DF).d $<
 DEPDIR=.dep
 DF=$(DEPDIR)/$(*F)
