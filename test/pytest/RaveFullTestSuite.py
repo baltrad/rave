@@ -25,11 +25,11 @@ Test suite for rave
 '''
 import unittest
 
-#from RaveTestSuite import *
-#from PyCompositeTest import *
+from RaveTestSuite import *
+from PyCompositeTest import *
 from PyCartesianCompositeTest import *
-#from PolarVolumeTransformTest import *
-#from MeanTest import *
+from PolarVolumeTransformTest import *
+from MeanTest import *
 
 if __name__ == '__main__':
   unittest.main()
