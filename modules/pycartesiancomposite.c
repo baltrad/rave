@@ -148,10 +148,85 @@ static PyObject* _pycartesiancomposite_new(PyObject* self, PyObject* args)
 }
 
 /**
+ * Adds a cartesian object to the composite generator.
+ * @param[in] self - self
+ * @param[in] args - a cartesian object
+ * @returns None on success, otherwise NULL
+ */
+static PyObject* _pycartesiancomposite_add(PyCartesianComposite* self, PyObject* args)
+{
+  PyObject* obj = NULL;
+  Cartesian_t* ct = NULL;
+
+  if(!PyArg_ParseTuple(args, "O", &obj)) {
+    return NULL;
+  }
+
+  if (PyCartesian_Check(obj)) {
+    ct = ((PyCartesian*)obj)->cartesian;
+  } else {
+    raiseException_returnNULL(PyExc_AttributeError, "only supported objects are cartesian products");
+  }
+
+  if (!CartesianComposite_add(self->generator, ct)) {
+    raiseException_returnNULL(PyExc_MemoryError, "failed to add object to composite generator");
+  }
+
+  Py_RETURN_NONE;
+}
+
+/**
+ * Returns the number of cartesian products that has been added to the composite generator
+ * @param[in] self - self
+ * @param[in] args - N/A
+ * @returns Number of objects
+ */
+static PyObject* _pycartesiancomposite_getNumberOfObjects(PyCartesianComposite* self, PyObject* args)
+{
+  return PyInt_FromLong(CartesianComposite_getNumberOfObjects(self->generator));
+}
+
+/**
+ * Returns the cartesian object at specified position
+ * @param[in] self - self
+ * @param[in] args - an index as integer
+ * @returns the object at specified index
+ * @throws IndexError if the object not could be found
+ */
+static PyObject* _pycartesiancomposite_get(PyCartesianComposite* self, PyObject* args)
+{
+  int idx = 0;
+  Cartesian_t* cobj = NULL;
+  PyObject* pyresult = NULL;
+
+  if (!PyArg_ParseTuple(args, "i", &idx)) {
+    return NULL;
+  }
+  cobj = CartesianComposite_get(self->generator, idx);
+  if (cobj == NULL) {
+    raiseException_gotoTag(done, PyExc_IndexError, "no cartesian object at index");
+  }
+  pyresult = (PyObject*)PyCartesian_New(cobj);
+
+done:
+  RAVE_OBJECT_RELEASE(cobj);
+  return pyresult;
+}
+
+/**
  * All methods a cartesian product can have
  */
 static struct PyMethodDef _pycartesiancomposite_methods[] =
 {
+  {"date", NULL},
+  {"time", NULL},
+  {"quantity", NULL},
+  {"offset", NULL},
+  {"gain", NULL},
+  {"add", (PyCFunction)_pycartesiancomposite_add, 1},
+  {"getNumberOfObjects", (PyCFunction)_pycartesiancomposite_getNumberOfObjects, 1},
+  {"get", (PyCFunction)_pycartesiancomposite_get, 1},
+
     /*
   {"height", NULL},
   {"elangle", NULL},

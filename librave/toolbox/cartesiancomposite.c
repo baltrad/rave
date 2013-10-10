@@ -185,6 +185,19 @@ int CartesianComposite_add(CartesianComposite_t* self, Cartesian_t* o)
   return RaveObjectList_add(self->list, (RaveCoreObject*)o);
 }
 
+int CartesianComposite_getNumberOfObjects(CartesianComposite_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return RaveObjectList_size(self->list);
+}
+
+Cartesian_t* CartesianComposite_get(CartesianComposite_t* self, int index)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return (Cartesian_t*)RaveObjectList_get(self->list, index);
+}
+
+
 int CartesianComposite_setTime(CartesianComposite_t* self, const char* value)
 {
   RAVE_ASSERT((self != NULL), "self == NULL");

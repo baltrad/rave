@@ -58,6 +58,22 @@ extern RaveCoreObjectType CartesianComposite_TYPE;
 int CartesianComposite_add(CartesianComposite_t* self, Cartesian_t* object);
 
 /**
+ * Returns the number of objects this composite will process
+ * @param[in] self - self
+ * @return the number of objects
+ */
+int CartesianComposite_getNumberOfObjects(CartesianComposite_t* self);
+
+/**
+ * Return the object at position index.
+ * @param[in] self - self
+ * @param[in] index - the index, should be >= 0 and < getNumberOfObjects
+ * @return the object or NULL if outside range
+ */
+Cartesian_t* CartesianComposite_get(CartesianComposite_t* self, int index);
+
+
+/**
  * Sets the nominal time.
  * @param[in] self - self
  * @param[in] value - the time in the format HHmmss

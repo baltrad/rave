@@ -45,6 +45,14 @@ class PyCartesianCompositeTest(unittest.TestCase):
   def test_new(self):
     obj = _cartesiancomposite.new()
     self.assertNotEqual(-1, string.find(`type(obj)`, "CartesianCompositeCore"))
+    
+  def test_attribute_visibility(self):
+    attrs = ['date', 'time', 'quantity', 'offset', 'gain']
+    obj = _cartesiancomposite.new()
+    alist = dir(obj)
+    for a in attrs:
+      self.assertEquals(True, a in alist)
+  
 
   def test_date(self):
     obj = _cartesiancomposite.new()
@@ -86,10 +94,24 @@ class PyCartesianCompositeTest(unittest.TestCase):
     obj.gain = 2.0
     self.assertAlmostEquals(2.0, obj.gain, 4)
 
-  #def test_attribute_visibility(self):
-  #  attrs = ['height', 'range', 'elangle', 'product', 'date', 'time', 'selection_method']
-  #  obj = _pycomposite.new()
-  #  alist = dir(obj)
-  #  for a in attrs:
-  #    self.assertEquals(True, a in alist)
-  
+  def test_cartesian_objects(self):
+    obj = _cartesiancomposite.new()
+    self.assertEquals(0, obj.getNumberOfObjects())
+    c1 = _cartesian.new()
+    c2 = _cartesian.new()
+    c3 = _cartesian.new()
+    c4 = _cartesian.new()
+    obj.add(c1)
+    self.assertEquals(1, obj.getNumberOfObjects())
+    obj.add(c2)
+    obj.add(c3)
+    obj.add(c4)
+    self.assertEquals(4, obj.getNumberOfObjects())
+    rc1 = obj.get(0)
+    rc2 = obj.get(1)
+    rc3 = obj.get(2)
+    rc4 = obj.get(3)
+    self.assertTrue(c1 == rc1)
+    self.assertTrue(c2 == rc2)
+    self.assertTrue(c3 == rc3)
+    self.assertTrue(c4 == rc4)
