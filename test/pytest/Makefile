@@ -47,6 +47,7 @@ distclean:
 	@\rm -fr rixeecomposite.h5
 	@\rm -fr swecomposite_ppi_distancequality.h5
 	@\rm -fr transform_filledGap.h5
-	@\rm -fr cart_composite_first.h5
+	@\rm -fr cart_composite_first.h5 cart_composite_avg.h5 cart_composite_max.h5 cart_composite_min.h5
 	@\rm -fr build
 	@\rm -f *~
+	

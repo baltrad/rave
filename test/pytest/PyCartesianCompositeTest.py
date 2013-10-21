@@ -65,7 +65,6 @@ class PyCartesianCompositeTest(unittest.TestCase):
     alist = dir(obj)
     for a in attrs:
       self.assertEquals(True, a in alist)
-  
 
   def test_date(self):
     obj = _cartesiancomposite.new()
@@ -164,6 +163,66 @@ class PyCartesianCompositeTest(unittest.TestCase):
     rio = _raveio.new()
     rio.object = result
     rio.save("cart_composite_first.h5")
+
+  def test_nearest_min(self):
+    a = self.create_area()
+    
+    obj = _cartesiancomposite.new()
+    obj.method = _cartesiancomposite.SelectionMethod_MINVALUE
+    for f in self.FIXTURES:
+      ic = _raveio.open(f).object
+      obj.add(ic)
+
+    obj.nodata = 255.0
+    obj.undetect = 0.0
+    result = obj.nearest(a)
+    result.time = "120000"
+    result.date = "20090501"
+    result.source = "eua_gmaps"
+    
+    rio = _raveio.new()
+    rio.object = result
+    rio.save("cart_composite_min.h5")
+
+  def test_nearest_max(self):
+    a = self.create_area()
+    
+    obj = _cartesiancomposite.new()
+    obj.method = _cartesiancomposite.SelectionMethod_MAXVALUE
+    for f in self.FIXTURES:
+      ic = _raveio.open(f).object
+      obj.add(ic)
+
+    obj.nodata = 255.0
+    obj.undetect = 0.0
+    result = obj.nearest(a)
+    result.time = "120000"
+    result.date = "20090501"
+    result.source = "eua_gmaps"
+    
+    rio = _raveio.new()
+    rio.object = result
+    rio.save("cart_composite_max.h5")
+
+  def test_nearest_avg(self):
+    a = self.create_area()
+    
+    obj = _cartesiancomposite.new()
+    obj.method = _cartesiancomposite.SelectionMethod_AVGVALUE
+    for f in self.FIXTURES:
+      ic = _raveio.open(f).object
+      obj.add(ic)
+
+    obj.nodata = 255.0
+    obj.undetect = 0.0
+    result = obj.nearest(a)
+    result.time = "120000"
+    result.date = "20090501"
+    result.source = "eua_gmaps"
+    
+    rio = _raveio.new()
+    rio.object = result
+    rio.save("cart_composite_avg.h5")
     
   def create_area(self):
     a = _area.new()

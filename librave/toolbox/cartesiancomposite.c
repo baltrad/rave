@@ -323,7 +323,6 @@ Cartesian_t* CartesianComposite_nearest(CartesianComposite_t* self, Area_t* area
   Cartesian_t* result = NULL;
   int x = 0, y = 0, i = 0, xsize = 0, ysize = 0, nimages = 0;
   double ctnodata = 255.0, ctundetect = 0.0;
-  double mindist = 1e10;
   Projection_t *tgtpj = NULL, *srcpj = NULL;
 
   ct = CartesianComposite_createCompositeImage(self, area);
@@ -342,7 +341,6 @@ Cartesian_t* CartesianComposite_nearest(CartesianComposite_t* self, Area_t* area
       double sum = 0.0;
       int nvals = 0;
       double minval = ctnodata, maxval = ctnodata;
-      RaveValueType lastsetval = RaveValueType_NODATA;
 
       Cartesian_setValue(ct, x, y, self->nodata);
 
@@ -369,14 +367,12 @@ Cartesian_t* CartesianComposite_nearest(CartesianComposite_t* self, Area_t* area
         if (self->method == CartesianCompositeSelectionMethod_FIRST &&
             valid == RaveValueType_DATA) {
           Cartesian_setValue(ct, x, y, v);
-          lastsetval = valid;
           foundradar = 1;
         } else if (self->method == CartesianCompositeSelectionMethod_AVGVALUE &&
             valid == RaveValueType_DATA) {
           sum += v;
           nvals++;
           Cartesian_setValue(ct, x, y, (sum / (double)nvals));
-          lastsetval = valid;
         } else if (self->method == CartesianCompositeSelectionMethod_MINVALUE &&
             valid == RaveValueType_DATA) {
           if (minval == ctnodata || minval == ctundetect) {
@@ -385,24 +381,21 @@ Cartesian_t* CartesianComposite_nearest(CartesianComposite_t* self, Area_t* area
             minval = v;
           }
           Cartesian_setValue(ct, x, y, minval);
-          lastsetval = RaveValueType_DATA;
         } else if (self->method == CartesianCompositeSelectionMethod_MAXVALUE &&
-            (valid == RaveValueType_DATA || valid == RaveValueType_UNDETECT)) {
+            valid == RaveValueType_DATA) {
           if (maxval == ctnodata || maxval == ctundetect) {
             maxval = v;
           } else if (maxval < v) {
             maxval = v;
           }
           Cartesian_setValue(ct, x, y, maxval);
-          lastsetval = RaveValueType_DATA;
         } else if (self->method == CartesianCompositeSelectionMethod_NEAREST &&
             (valid == RaveValueType_DATA || valid == RaveValueType_UNDETECT)) {
         } else if (valid == RaveValueType_UNDETECT) {
           double xx = 0.0;
           RaveValueType xxvalid = Cartesian_getValue(ct, x, y, &xx);
-          if (xx != RaveValueType_DATA) {
+          if (xxvalid != RaveValueType_DATA) {
             Cartesian_setValue(ct, x, y, ctundetect);
-            lastsetval = RaveValueType_UNDETECT;
           }
         }
 
