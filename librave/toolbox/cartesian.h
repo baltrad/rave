@@ -382,6 +382,28 @@ RaveValueType Cartesian_getValue(Cartesian_t* cartesian, long x, long y, double*
 RaveValueType Cartesian_getConvertedValue(Cartesian_t* cartesian, long x, long y, double* v);
 
 /**
+ * Returns the value from the location as defined by the area definition. Same as calling
+ * Cartesian_getValue(c, Cartesian_getIndexX(c), Cartesian_getIndexY(c), &v).
+ * @param[in] cartesian - self
+ * @param[in] lx - the position as defined in the area definition
+ * @param[in] ly - the position as defined in the area definition
+ * @param[out] v - the data at the specified position
+ * @return the type of data
+ */
+RaveValueType Cartesian_getValueAtLocation(Cartesian_t* cartesian, double lx, double ly, double* v);
+
+/**
+ * Returns the converted value from the location as defined by the area definition. Same as calling
+ * Cartesian_getConvertedValue(c, Cartesian_getIndexX(c), Cartesian_getIndexY(c), &v).
+ * @param[in] cartesian - self
+ * @param[in] lx - the position as defined in the area definition
+ * @param[in] ly - the position as defined in the area definition
+ * @param[out] v - the data at the specified position
+ * @return the type of data
+ */
+RaveValueType Cartesian_getConvertedValueAtLocation(Cartesian_t* cartesian, double lx, double ly, double* v);
+
+/**
  * Initializes this cartesian product with basic information. No parameter is created but
  * the dimensions and projection information is setup.
  * @param[in] cartesian - self

@@ -76,9 +76,12 @@ static int Transform_cappis_internal(Transform_t* transform, PolarVolume_t* pvol
   RAVE_ASSERT((pvol != NULL), "pvol was NULL");
   RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
 
-  if (!Cartesian_isTransformable(cartesian) ||
-      !PolarVolume_isTransformable(pvol)) {
-    RAVE_ERROR0("Cartesian product or polar volume is not possible to transform");
+  if (!Cartesian_isTransformable(cartesian)) {
+    RAVE_ERROR0("Cartesian product is not possible to transform");
+    goto done;
+  }
+  if (!PolarVolume_isTransformable(pvol)) {
+    RAVE_ERROR0("Polar volume is not possible to transform");
     goto done;
   }
 

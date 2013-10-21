@@ -38,14 +38,15 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  */
 struct _CartesianComposite_t {
   RAVE_OBJECT_HEAD /** Always on top */
-  CompositeSelectionMethod_t method; /**< selection method, default CompositeSelectionMethod_NEAREST */
-  /*RaveList_t* parameters;*/ /**< the parameters to generate */
+  CartesianCompositeSelectionMethod_t method; /**< selection method, default CartesianCompositeSelectionMethod_FIRST */
   RaveObjectList_t* list; /**< the list of cartesian objects */
   RaveDateTime_t* datetime;  /**< the date and time */
 
   char* quantity; /**< the quantity to make a composite of */
   double offset; /**< the offset for the data */
   double gain; /**< the gain for the data */
+  double nodata; /**< the nodata value for the composite */
+  double undetect; /**< the undetect value for the composite */
 };
 
 /** The name of the task for specifying distance to radar */
@@ -59,12 +60,14 @@ struct _CartesianComposite_t {
 static int CartesianComposite_constructor(RaveCoreObject* obj)
 {
   CartesianComposite_t* this = (CartesianComposite_t*)obj;
-  this->method = CompositeSelectionMethod_NEAREST;
+  this->method = CartesianCompositeSelectionMethod_FIRST;
   this->datetime = RAVE_OBJECT_NEW(&RaveDateTime_TYPE);
   this->list = RAVE_OBJECT_NEW(&RaveObjectList_TYPE);
   this->quantity = RAVE_STRDUP("DBZH");
   this->offset = 0.0;
   this->gain = 1.0;
+  this->nodata = 0.0;
+  this->undetect = 0.0;
   if (this->list == NULL || this->datetime == NULL || this->quantity == NULL) {
     goto error;
   }
@@ -91,6 +94,8 @@ static int CartesianComposite_copyconstructor(RaveCoreObject* obj, RaveCoreObjec
   this->quantity = RAVE_STRDUP(src->quantity); /* Assuming that we never let a quantity be set to NULL */
   this->offset = src->offset;
   this->gain = src->gain;
+  this->nodata = src->nodata;
+  this->undetect = src->undetect;
   if (this->datetime == NULL || this->list == NULL || this->quantity == NULL) {
     goto error;
   }
@@ -121,60 +126,60 @@ static void CartesianComposite_destructor(RaveCoreObject* obj)
  * @param[in] area - the area the composite image(s) should have
  * @returns the cartesian on success otherwise NULL
  */
-//static Cartesian_t* CartesianComposite_createCompositeImage(CartesianComposite_t* self, Area_t* area)
-//{
-//  Cartesian_t *result = NULL, *cartesian = NULL;
-//  RaveAttribute_t* prodpar = NULL;
-//  CartesianParam_t* cp = NULL;
-//
-//  RAVE_ASSERT((self != NULL), "self == NULL");
-//
-//  cartesian = RAVE_OBJECT_NEW(&Cartesian_TYPE);
-//  if (cartesian == NULL) {
-//    goto done;
-//  }
-//  Cartesian_init(cartesian, area);
-//
-//  prodpar = RaveAttributeHelp_createString("what/prodpar", "some relevant information");
-//  if (prodpar == NULL) {
-//    goto done;
-//  }
-//
-//  Cartesian_setObjectType(cartesian, Rave_ObjectType_COMP);
-//  Cartesian_setProduct(cartesian, Rave_ProductType_COMP);
-//  if (!Cartesian_addAttribute(cartesian, prodpar)) {
-//    goto done;
-//  }
-//  if (CartesianComposite_getTime(self) != NULL) {
-//    if (!Cartesian_setTime(cartesian, CartesianComposite_getTime(self))) {
-//      goto done;
-//    }
-//  }
-//  if (CartesianComposite_getDate(self) != NULL) {
-//    if (!Cartesian_setDate(cartesian, CartesianComposite_getDate(self))) {
-//      goto done;
-//    }
-//  }
-//  if (!Cartesian_setSource(cartesian, Area_getID(area))) {
-//    goto done;
-//  }
-//
-//  cp = Cartesian_createParameter(cartesian, self->quantity, RaveDataType_UCHAR);
-//  if (cp == NULL) {
-//    goto done;
-//  }
-//  CartesianParam_setNodata(cp, 255.0);
-//  CartesianParam_setUndetect(cp, 0.0);
-//  CartesianParam_setGain(cp, self->gain);
-//  CartesianParam_setOffset(cp, self->offset);
-//  RAVE_OBJECT_RELEASE(cp);
-//
-//  result = RAVE_OBJECT_COPY(cartesian);
-//done:
-//  RAVE_OBJECT_RELEASE(cartesian);
-//  RAVE_OBJECT_RELEASE(prodpar);
-//  return result;
-//}
+static Cartesian_t* CartesianComposite_createCompositeImage(CartesianComposite_t* self, Area_t* area)
+{
+  Cartesian_t *result = NULL, *cartesian = NULL;
+  RaveAttribute_t* prodpar = NULL;
+  CartesianParam_t* cp = NULL;
+
+  RAVE_ASSERT((self != NULL), "self == NULL");
+
+  cartesian = RAVE_OBJECT_NEW(&Cartesian_TYPE);
+  if (cartesian == NULL) {
+    goto done;
+  }
+  Cartesian_init(cartesian, area);
+
+  prodpar = RaveAttributeHelp_createString("what/prodpar", "some relevant information");
+  if (prodpar == NULL) {
+    goto done;
+  }
+
+  Cartesian_setObjectType(cartesian, Rave_ObjectType_COMP);
+  Cartesian_setProduct(cartesian, Rave_ProductType_COMP);
+  if (!Cartesian_addAttribute(cartesian, prodpar)) {
+    goto done;
+  }
+  if (CartesianComposite_getTime(self) != NULL) {
+    if (!Cartesian_setTime(cartesian, CartesianComposite_getTime(self))) {
+      goto done;
+    }
+  }
+  if (CartesianComposite_getDate(self) != NULL) {
+    if (!Cartesian_setDate(cartesian, CartesianComposite_getDate(self))) {
+      goto done;
+    }
+  }
+  if (!Cartesian_setSource(cartesian, Area_getID(area))) {
+    goto done;
+  }
+
+  cp = Cartesian_createParameter(cartesian, self->quantity, RaveDataType_UCHAR);
+  if (cp == NULL) {
+    goto done;
+  }
+  CartesianParam_setNodata(cp, self->nodata);
+  CartesianParam_setUndetect(cp, self->undetect);
+  CartesianParam_setGain(cp, self->gain);
+  CartesianParam_setOffset(cp, self->offset);
+  RAVE_OBJECT_RELEASE(cp);
+
+  result = RAVE_OBJECT_COPY(cartesian);
+done:
+  RAVE_OBJECT_RELEASE(cartesian);
+  RAVE_OBJECT_RELEASE(prodpar);
+  return result;
+}
 /*@} End of Private functions */
 
 /*@{ Interface functions */
@@ -197,6 +202,22 @@ Cartesian_t* CartesianComposite_get(CartesianComposite_t* self, int index)
   return (Cartesian_t*)RaveObjectList_get(self->list, index);
 }
 
+int CartesianComposite_setMethod(CartesianComposite_t* self, CartesianCompositeSelectionMethod_t method)
+{
+  int result = 0;
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  if (method >= CartesianCompositeSelectionMethod_FIRST && method <= CartesianCompositeSelectionMethod_NEAREST) {
+    self->method = method;
+    result = 1;
+  }
+  return result;
+}
+
+CartesianCompositeSelectionMethod_t CartesianComposite_getMethod(CartesianComposite_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return self->method;
+}
 
 int CartesianComposite_setTime(CartesianComposite_t* self, const char* value)
 {
@@ -271,10 +292,133 @@ double CartesianComposite_getOffset(CartesianComposite_t* self)
   return self->offset;
 }
 
+void CartesianComposite_setNodata(CartesianComposite_t* self, double nodata)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  self->nodata = nodata;
+}
+
+double CartesianComposite_getNodata(CartesianComposite_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return self->nodata;
+}
+
+void CartesianComposite_setUndetect(CartesianComposite_t* self, double undetect)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  self->undetect = undetect;
+}
+
+double CartesianComposite_getUndetect(CartesianComposite_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return self->undetect;
+}
+
 
 Cartesian_t* CartesianComposite_nearest(CartesianComposite_t* self, Area_t* area)
 {
-  return NULL;
+  Cartesian_t* ct = NULL, *inobj = NULL;
+  Cartesian_t* result = NULL;
+  int x = 0, y = 0, i = 0, xsize = 0, ysize = 0, nimages = 0;
+  double ctnodata = 255.0, ctundetect = 0.0;
+  double mindist = 1e10;
+  Projection_t *tgtpj = NULL, *srcpj = NULL;
+
+  ct = CartesianComposite_createCompositeImage(self, area);
+  ctnodata = Cartesian_getNodata(ct);
+  ctundetect = Cartesian_getUndetect(ct);
+  xsize = Cartesian_getXSize(ct);
+  ysize = Cartesian_getYSize(ct);
+  srcpj = Cartesian_getProjection(ct);
+  nimages = CartesianComposite_getNumberOfObjects(self);
+
+  for (y = 0; y < ysize; y++) {
+    double herey = Cartesian_getLocationY(ct, y);
+    double tmpy = herey;
+    for (x = 0; x < xsize; x++) {
+      int foundradar = 0; /* Used if we want to break early or similar */
+      double sum = 0.0;
+      int nvals = 0;
+      double minval = ctnodata, maxval = ctnodata;
+      RaveValueType lastsetval = RaveValueType_NODATA;
+
+      Cartesian_setValue(ct, x, y, self->nodata);
+
+      for (i = 0; !foundradar && i < nimages; i++) {
+        double herex = Cartesian_getLocationX(ct, x);
+        RaveValueType valid = RaveValueType_NODATA;
+        double v = 0.0L;
+        herey = tmpy; // So that we can use herey over and over again
+        inobj = CartesianComposite_get(self, i);
+        tgtpj = Cartesian_getProjection(inobj);
+
+        if (!Projection_transform(srcpj, tgtpj, &herex, &herey, NULL)) {
+          RAVE_ERROR0("Composite generation failed");
+          goto done;
+        }
+
+        valid = Cartesian_getValueAtLocation(inobj, herex, herey, &v);
+        if (valid == RaveValueType_NODATA) {
+          v = ctnodata;
+        } else if (valid == RaveValueType_UNDETECT) {
+          v = ctundetect;
+        }
+
+        if (self->method == CartesianCompositeSelectionMethod_FIRST &&
+            valid == RaveValueType_DATA) {
+          Cartesian_setValue(ct, x, y, v);
+          lastsetval = valid;
+          foundradar = 1;
+        } else if (self->method == CartesianCompositeSelectionMethod_AVGVALUE &&
+            valid == RaveValueType_DATA) {
+          sum += v;
+          nvals++;
+          Cartesian_setValue(ct, x, y, (sum / (double)nvals));
+          lastsetval = valid;
+        } else if (self->method == CartesianCompositeSelectionMethod_MINVALUE &&
+            valid == RaveValueType_DATA) {
+          if (minval == ctnodata || minval == ctundetect) {
+            minval = v;
+          } else if (minval > v) {
+            minval = v;
+          }
+          Cartesian_setValue(ct, x, y, minval);
+          lastsetval = RaveValueType_DATA;
+        } else if (self->method == CartesianCompositeSelectionMethod_MAXVALUE &&
+            (valid == RaveValueType_DATA || valid == RaveValueType_UNDETECT)) {
+          if (maxval == ctnodata || maxval == ctundetect) {
+            maxval = v;
+          } else if (maxval < v) {
+            maxval = v;
+          }
+          Cartesian_setValue(ct, x, y, maxval);
+          lastsetval = RaveValueType_DATA;
+        } else if (self->method == CartesianCompositeSelectionMethod_NEAREST &&
+            (valid == RaveValueType_DATA || valid == RaveValueType_UNDETECT)) {
+        } else if (valid == RaveValueType_UNDETECT) {
+          double xx = 0.0;
+          RaveValueType xxvalid = Cartesian_getValue(ct, x, y, &xx);
+          if (xx != RaveValueType_DATA) {
+            Cartesian_setValue(ct, x, y, ctundetect);
+            lastsetval = RaveValueType_UNDETECT;
+          }
+        }
+
+        RAVE_OBJECT_RELEASE(inobj);
+        RAVE_OBJECT_RELEASE(tgtpj);
+      }
+    }
+  }
+
+  result = RAVE_OBJECT_COPY(ct);
+done:
+  RAVE_OBJECT_RELEASE(tgtpj);
+  RAVE_OBJECT_RELEASE(srcpj);
+  RAVE_OBJECT_RELEASE(inobj);
+  RAVE_OBJECT_RELEASE(ct);
+  return result;
 }
 
 /*@} End of Interface functions */

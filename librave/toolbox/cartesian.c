@@ -568,6 +568,30 @@ RaveValueType Cartesian_getConvertedValue(Cartesian_t* cartesian, long x, long y
   return RaveValueType_UNDEFINED;
 }
 
+RaveValueType Cartesian_getValueAtLocation(Cartesian_t* cartesian, double lx, double ly, double* v)
+{
+  RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
+  if (cartesian->currentParameter != NULL) {
+    int x = 0, y = 0;
+    x = Cartesian_getIndexX(cartesian, lx);
+    y = Cartesian_getIndexY(cartesian, ly);
+    return CartesianParam_getValue(cartesian->currentParameter, x, y, v);
+  }
+  return RaveValueType_UNDEFINED;
+}
+
+RaveValueType Cartesian_getConvertedAtFromLocation(Cartesian_t* cartesian, double lx, double ly, double* v)
+{
+  RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
+  if (cartesian->currentParameter != NULL) {
+    int x = 0, y = 0;
+    x = Cartesian_getIndexX(cartesian, lx);
+    y = Cartesian_getIndexY(cartesian, ly);
+    return CartesianParam_getConvertedValue(cartesian->currentParameter, x, y, v);
+  }
+  return RaveValueType_UNDEFINED;
+}
+
 void Cartesian_init(Cartesian_t* self, Area_t* area)
 {
   double llX = 0.0L, llY = 0.0L, urX = 0.0L, urY = 0.0L;

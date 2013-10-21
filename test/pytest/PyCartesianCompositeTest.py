@@ -36,6 +36,19 @@ import string
 import numpy
 
 class PyCartesianCompositeTest(unittest.TestCase):
+  FIXTURES=["fixtures/pcappi_gn_seang_20090501120000.h5",
+            "fixtures/pcappi_gn_searl_20090501120000.h5",
+            "fixtures/pcappi_gn_sease_20090501120000.h5",
+            "fixtures/pcappi_gn_sehud_20090501120000.h5",
+            "fixtures/pcappi_gn_sekir_20090501120000.h5",
+            "fixtures/pcappi_gn_sekkr_20090501120000.h5",
+            "fixtures/pcappi_gn_selek_20090501120000.h5",
+            "fixtures/pcappi_gn_selul_20090501120000.h5",
+            "fixtures/pcappi_gn_seosu_20090501120000.h5",
+            "fixtures/pcappi_gn_seovi_20090501120000.h5",
+            "fixtures/pcappi_gn_sevar_20090501120000.h5",
+            "fixtures/pcappi_gn_sevil_20090501120000.h5"]
+  
   def setUp(self):
     pass
 
@@ -93,6 +106,24 @@ class PyCartesianCompositeTest(unittest.TestCase):
     self.assertAlmostEquals(1.0, obj.gain, 4)
     obj.gain = 2.0
     self.assertAlmostEquals(2.0, obj.gain, 4)
+    
+  def test_method(self):
+    values = [_cartesiancomposite.SelectionMethod_FIRST, 
+              _cartesiancomposite.SelectionMethod_MINVALUE, 
+              _cartesiancomposite.SelectionMethod_MAXVALUE,
+              _cartesiancomposite.SelectionMethod_AVGVALUE,
+              _cartesiancomposite.SelectionMethod_NEAREST]
+    obj = _cartesiancomposite.new()
+    self.assertEquals(_cartesiancomposite.SelectionMethod_FIRST, obj.method)
+    for v in values:
+      obj.method = v
+      self.assertEquals(v, obj.method)
+    
+    try:
+      obj.method = 99
+      self.fail("Expected ValueError")
+    except ValueError, e:
+      pass
 
   def test_cartesian_objects(self):
     obj = _cartesiancomposite.new()
@@ -115,3 +146,33 @@ class PyCartesianCompositeTest(unittest.TestCase):
     self.assertTrue(c2 == rc2)
     self.assertTrue(c3 == rc3)
     self.assertTrue(c4 == rc4)
+    
+  def test_nearest_first(self):
+    a = self.create_area()
+    
+    obj = _cartesiancomposite.new()
+    obj.method = _cartesiancomposite.SelectionMethod_FIRST
+    for f in self.FIXTURES:
+      obj.add(_raveio.open(f).object)
+    obj.nodata = 255.0
+    obj.undetect = 0.0
+    result = obj.nearest(a)
+    result.time = "120000"
+    result.date = "20090501"
+    result.source = "eua_gmaps"
+    
+    rio = _raveio.new()
+    rio.object = result
+    rio.save("cart_composite_first.h5")
+    
+  def create_area(self):
+    a = _area.new()
+    a.id = "eua_gmaps"
+    a.xsize = 800
+    a.ysize = 1090
+    a.xscale = 6223.0
+    a.yscale = 6223.0
+    a.extent = (-3117.83526,-6780019.83039,4975312.43200,3215.41216)
+    a.projection = _projection.new("x", "y", "+proj=merc +lat_ts=0 +lon_0=0 +k=1.0 +x_0=1335833 +y_0=-11000715 +a=6378137.0 +b=6378137.0 +no_defs +datum=WGS84")
+    return a
+  

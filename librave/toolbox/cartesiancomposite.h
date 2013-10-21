@@ -40,6 +40,17 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "composite.h"
 
 /**
+ * What type of selection variant to use
+ */
+typedef enum CartesianCompositeSelectionMethod_t {
+  CartesianCompositeSelectionMethod_FIRST = 0, /**< First found value for all overlapping radars */
+  CartesianCompositeSelectionMethod_MINVALUE, /**< Minimum value of all overlapping radars */
+  CartesianCompositeSelectionMethod_MAXVALUE, /**< Maximum value of all overlapping radars */
+  CartesianCompositeSelectionMethod_AVGVALUE, /**< Average value for all overlapping radars */
+  CartesianCompositeSelectionMethod_NEAREST /**< Min value according to the distance field. Requires a distance field */
+} CartesianCompositeSelectionMethod_t;
+
+/**
  * Defines a Cartesian composite generator
  */
 typedef struct _CartesianComposite_t CartesianComposite_t;
@@ -72,6 +83,20 @@ int CartesianComposite_getNumberOfObjects(CartesianComposite_t* self);
  */
 Cartesian_t* CartesianComposite_get(CartesianComposite_t* self, int index);
 
+/**
+ * Sets the selection method to use.
+ * @param[in] self - self
+ * @param[in] method - the selection method
+ * @returns 1 if the method can be used, otherwise 0
+ */
+int CartesianComposite_setMethod(CartesianComposite_t* self, CartesianCompositeSelectionMethod_t method);
+
+/**
+ * Returns the currently selection method. Default is CartesianCompositeSelectionMethod_NEAREST.
+ * @param[in] self - self
+ * @returns the selection method
+ */
+CartesianCompositeSelectionMethod_t CartesianComposite_getMethod(CartesianComposite_t* self);
 
 /**
  * Sets the nominal time.
@@ -145,6 +170,34 @@ void CartesianComposite_setOffset(CartesianComposite_t* self, double offset);
  * @return the offset
  */
 double CartesianComposite_getOffset(CartesianComposite_t* self);
+
+/**
+ * Sets the nodata
+ * @param[in] self - self
+ * @param[in] nodata - the nodata
+ */
+void CartesianComposite_setNodata(CartesianComposite_t* self, double nodata);
+
+/**
+ * Returns the nodata
+ * @param[in] self - self
+ * @return the nodata
+ */
+double CartesianComposite_getNodata(CartesianComposite_t* self);
+
+/**
+ * Sets the undetect
+ * @param[in] self - self
+ * @param[in] undetect - the undetect
+ */
+void CartesianComposite_setUndetect(CartesianComposite_t* self, double undetect);
+
+/**
+ * Returns the undetect
+ * @param[in] self - self
+ * @return the undetect
+ */
+double CartesianComposite_getUndetect(CartesianComposite_t* self);
 
 /**
  * Generates a composite according to the nearest radar principle.

@@ -328,6 +328,46 @@ static PyObject* _pycartesian_getConvertedValue(PyCartesian* self, PyObject* arg
   return Py_BuildValue("(id)", result, v);
 }
 
+/**
+ * returns the value at the specified position as defined by the area definition
+ * @param[in] self this instance.
+ * @param[in] args - tuple (lx, ly) and v
+ * @return 0 on failure, otherwise 1
+ */
+static PyObject* _pycartesian_getValueAtLocation(PyCartesian* self, PyObject* args)
+{
+  double lx = 0, ly = 0;
+  double v = 0.0L;
+  RaveValueType result = RaveValueType_NODATA;
+  if (!PyArg_ParseTuple(args, "(dd)", &lx, &ly)) {
+    return NULL;
+  }
+
+  result = Cartesian_getValueAtLocation(self->cartesian, lx, ly, &v);
+
+  return Py_BuildValue("(id)", result, v);
+}
+
+/**
+ * returns the converted value at the specified position as defined by the area definition
+ * @param[in] self this instance.
+ * @param[in] args - tuple (lx, ly) and v
+ * @return 0 on failure, otherwise 1
+ */
+static PyObject* _pycartesian_getConvertedValueAtLocation(PyCartesian* self, PyObject* args)
+{
+  double lx = 0, ly = 0;
+  double v = 0.0L;
+  RaveValueType result = RaveValueType_NODATA;
+  if (!PyArg_ParseTuple(args, "(dd)", &lx, &ly)) {
+    return NULL;
+  }
+
+  result = Cartesian_getConvertedAtFromLocation(self->cartesian, lx, ly, &v);
+
+  return Py_BuildValue("(id)", result, v);
+}
+
 static PyObject* _pycartesian_isTransformable(PyCartesian* self, PyObject* args)
 {
   return PyBool_FromLong(Cartesian_isTransformable(self->cartesian));
@@ -814,6 +854,8 @@ static struct PyMethodDef _pycartesian_methods[] =
   {"setConvertedValue", (PyCFunction) _pycartesian_setConvertedValue, 1},
   {"getValue", (PyCFunction) _pycartesian_getValue, 1},
   {"getConvertedValue", (PyCFunction) _pycartesian_getConvertedValue, 1},
+  {"getValueFromLocation", (PyCFunction) _pycartesian_getValueAtLocation, 1},
+  {"getConvertedValueFromLocation", (PyCFunction) _pycartesian_getValueAtLocation, 1},
   {"isTransformable", (PyCFunction) _pycartesian_isTransformable, 1},
   {"getMean", (PyCFunction) _pycartesian_getMean, 1},
   {"addAttribute", (PyCFunction) _pycartesian_addAttribute, 1},
