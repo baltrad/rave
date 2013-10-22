@@ -139,6 +139,22 @@ class PyCompositeTest(unittest.TestCase):
     obj.selection_method = _pycomposite.SelectionMethod_HEIGHT
     self.assertEquals(_pycomposite.SelectionMethod_HEIGHT, obj.selection_method)
 
+  def test_date(self):
+    obj = _pycomposite.new()
+    self.assertEquals(None, obj.date)
+    obj.date = "20130101"
+    self.assertEquals("20130101", obj.date)
+    obj.date = None
+    self.assertEquals(None, obj.date)
+
+  def test_time(self):
+    obj = _pycomposite.new()
+    self.assertEquals(None, obj.time)
+    obj.time = "101010"
+    self.assertEquals("101010", obj.time)
+    obj.time = None
+    self.assertEquals(None, obj.time)
+
   def test_selection_method_invalid(self):
     obj = _pycomposite.new()
     try:

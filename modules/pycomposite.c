@@ -358,6 +358,18 @@ static PyObject* _pycomposite_getattr(PyComposite* self, char* name)
     } else {
       Py_RETURN_NONE;
     }
+  } else if (strcmp("date", name) == 0) {
+    if (Composite_getDate(self->composite) != NULL) {
+      return PyString_FromString(Composite_getDate(self->composite));
+    } else {
+      Py_RETURN_NONE;
+    }
+  } else if (strcmp("time", name) == 0) {
+    if (Composite_getTime(self->composite) != NULL) {
+      return PyString_FromString(Composite_getTime(self->composite));
+    } else {
+      Py_RETURN_NONE;
+    }
   }
 
   res = Py_FindMethod(_pycomposite_methods, (PyObject*) self, name);
