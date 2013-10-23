@@ -646,6 +646,69 @@ static PyObject* _pycartesian_removeQualityField(PyCartesian* self, PyObject* ar
 }
 
 /**
+ * Gets the quality field with the specified how/task value
+ * @param[in] self - this instance
+ * @param[in] args - the how/task string value
+ * @returns the quality field or None if there is no such quality field
+ */
+static PyObject* _pycartesian_getQualityFieldByHowTask(PyCartesian* self, PyObject* args)
+{
+  PyObject* result = NULL;
+  RaveField_t* field = NULL;
+  int index = 0;
+  char* howtask = NULL;
+  if (!PyArg_ParseTuple(args, "s", &howtask)) {
+    return NULL;
+  }
+
+  field = Cartesian_getQualityFieldByHowTask(self->cartesian, howtask);
+
+  if (field != NULL) {
+    result = (PyObject*)PyRaveField_New(field);
+  }
+
+  RAVE_OBJECT_RELEASE(field);
+
+  if (result != NULL) {
+    return result;
+  }
+
+  Py_RETURN_NONE;
+}
+
+/**
+ * Finds the quality field with the specified how/task value by first checking in the current
+ * parameter and if there is no such quality field, self is checked.
+ * @param[in] self - this instance
+ * @param[in] args - the how/task string value
+ * @returns the quality field or None if there is no such quality field
+ */
+static PyObject* _pycartesian_findQualityFieldByHowTask(PyCartesian* self, PyObject* args)
+{
+  PyObject* result = NULL;
+  RaveField_t* field = NULL;
+  int index = 0;
+  char* howtask = NULL;
+  if (!PyArg_ParseTuple(args, "s", &howtask)) {
+    return NULL;
+  }
+
+  field = Cartesian_findQualityFieldByHowTask(self->cartesian, howtask);
+
+  if (field != NULL) {
+    result = (PyObject*)PyRaveField_New(field);
+  }
+
+  RAVE_OBJECT_RELEASE(field);
+
+  if (result != NULL) {
+    return result;
+  }
+
+  Py_RETURN_NONE;
+}
+
+/**
  * Adds a parameter to the cartesian product.
  * @param[in] self - self
  * @param[in] args - an CartesianParamCore object
@@ -866,6 +929,8 @@ static struct PyMethodDef _pycartesian_methods[] =
   {"getNumberOfQualityFields", (PyCFunction) _pycartesian_getNumberOfQualityFields, 1},
   {"getQualityField", (PyCFunction) _pycartesian_getQualityField, 1},
   {"removeQualityField", (PyCFunction) _pycartesian_removeQualityField, 1},
+  {"getQualityFieldByHowTask", (PyCFunction) _pycartesian_getQualityFieldByHowTask, 1},
+  {"findQualityFieldByHowTask", (PyCFunction) _pycartesian_findQualityFieldByHowTask, 1},
   {"addParameter", (PyCFunction)_pycartesian_addParameter, 1},
   {"createParameter", (PyCFunction)_pycartesian_createParameter, 1},
   {"getParameter", (PyCFunction)_pycartesian_getParameter, 1},

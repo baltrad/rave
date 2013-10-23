@@ -404,6 +404,20 @@ RaveValueType Cartesian_getValueAtLocation(Cartesian_t* cartesian, double lx, do
 RaveValueType Cartesian_getConvertedValueAtLocation(Cartesian_t* cartesian, double lx, double ly, double* v);
 
 /**
+ * Returns the quality value at the specified location from the specified quality field. First the code
+ * tests if the quality field exist in the default param. If not, it will check for the quality field
+ * in self.
+ * @param[in] cartesian - self
+ * @param[in] lx - the position as defined in the area definition
+ * @param[in] ly - the position as defined in the area definition
+ * @param[in] name - the name of the quality field (how/task)
+ * @param[out] v - the data at the specified position
+ * @return 1 if value could be returned otherwise 0
+ */
+int Cartesian_getQualityValueAtLocation(Cartesian_t* cartesian, double lx, double ly, const char* name, double *v);
+
+
+/**
  * Initializes this cartesian product with basic information. No parameter is created but
  * the dimensions and projection information is setup.
  * @param[in] cartesian - self
@@ -511,6 +525,22 @@ void Cartesian_removeQualityField(Cartesian_t* cartesian, int index);
  * @returns a list of 0 or more quality fields or NULL on error.
  */
 RaveObjectList_t* Cartesian_getQualityFields(Cartesian_t* cartesian);
+
+/**
+ * Returns a quality field based on the value of how/task that should be a
+ * string.
+ * @param[in] cartesian - cartesian
+ * @param[in] value - the value of the how/task attribute
+ * @return the field if found otherwise NULL
+ */
+RaveField_t* Cartesian_getQualityFieldByHowTask(Cartesian_t* cartesian, const char* name);
+
+/**
+ * Same as Cartesian_getQualityFieldByHowTask but it first tries if there are any quality
+ * fields in the current parameter before checking self.
+ * @param[in] self - self
+ */
+RaveField_t* Cartesian_findQualityFieldByHowTask(Cartesian_t* self, const char* value);
 
 /**
  * Adds a parameter to the cartesian product. The quantity is used as unique

@@ -639,6 +639,59 @@ class PyCartesianTest(unittest.TestCase):
     self.assertEquals(1, obj.getNumberOfQualityFields())
     self.assertEquals("field2", obj.getQualityField(0).getAttribute("what/name"))
   
+  def test_getQualityFieldByHowTask(self):
+    obj = _cartesian.new()
+    field1 = _ravefield.new()
+    field2 = _ravefield.new()
+    field3 = _ravefield.new()
+    field1.addAttribute("how/task", "se.task.1")
+    field2.addAttribute("how/task", "se.task.2")
+    field3.addAttribute("how/notask", "abc")
+
+    obj.addQualityField(field1)
+    obj.addQualityField(field2)
+    obj.addQualityField(field3)
+
+    self.assertEquals("se.task.1", obj.getQualityFieldByHowTask("se.task.1").getAttribute("how/task"))
+    self.assertEquals("se.task.2", obj.getQualityFieldByHowTask("se.task.2").getAttribute("how/task"))
+    self.assertEquals(None, obj.getQualityFieldByHowTask("abc"))
+
+  def test_findQualityFieldByHowTask(self):
+    obj = _cartesian.new()
+    param = _cartesianparam.new()
+
+    field1 = _ravefield.new()
+    field2 = _ravefield.new()
+    field3 = _ravefield.new()
+    
+    field1.addAttribute("how/task", "se.task.1")
+    field1.addAttribute("how/some", "should not be found")
+    field2.addAttribute("how/task", "se.task.2")
+    field3.addAttribute("how/notask", "abc")
+
+    obj.addQualityField(field1)
+    obj.addQualityField(field2)
+    obj.addQualityField(field3)
+
+    field4 = _ravefield.new()
+    field5 = _ravefield.new()
+    field4.addAttribute("how/task", "se.task.1")
+    field4.addAttribute("how/some", "should be found")
+    field5.addAttribute("how/task", "se.task.3")
+
+    param.addQualityField(field4)
+    param.addQualityField(field5)    
+
+    param.quantity = "DBZH"
+    param.setData(numpy.zeros((240,240),numpy.uint8))
+    obj.addParameter(param)
+
+    self.assertEquals("should be found", obj.findQualityFieldByHowTask("se.task.1").getAttribute("how/some"))
+    self.assertEquals("se.task.2", obj.findQualityFieldByHowTask("se.task.2").getAttribute("how/task"))
+    self.assertEquals("se.task.3", obj.findQualityFieldByHowTask("se.task.3").getAttribute("how/task"))
+    self.assertEquals(None, obj.findQualityFieldByHowTask("abc"))
+
+  
   def test_addParameter(self):
     obj = _cartesian.new()
     param = _cartesianparam.new()

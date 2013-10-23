@@ -47,7 +47,7 @@ typedef enum CartesianCompositeSelectionMethod_t {
   CartesianCompositeSelectionMethod_MINVALUE, /**< Minimum value of all overlapping radars */
   CartesianCompositeSelectionMethod_MAXVALUE, /**< Maximum value of all overlapping radars */
   CartesianCompositeSelectionMethod_AVGVALUE, /**< Average value for all overlapping radars */
-  CartesianCompositeSelectionMethod_NEAREST /**< Min value according to the distance field. Requires a distance field */
+  CartesianCompositeSelectionMethod_DISTANCE /**< Min value according to the distance field. Requires a distance field */
 } CartesianCompositeSelectionMethod_t;
 
 /**
@@ -92,11 +92,27 @@ Cartesian_t* CartesianComposite_get(CartesianComposite_t* self, int index);
 int CartesianComposite_setMethod(CartesianComposite_t* self, CartesianCompositeSelectionMethod_t method);
 
 /**
- * Returns the currently selection method. Default is CartesianCompositeSelectionMethod_NEAREST.
+ * Returns the currently selection method. Default is CartesianCompositeSelectionMethod_FIRST.
  * @param[in] self - self
  * @returns the selection method
  */
 CartesianCompositeSelectionMethod_t CartesianComposite_getMethod(CartesianComposite_t* self);
+
+/**
+ * Sets the distance field to use when executing the DISTANCE selection method. (MAY NOT BE NULL)
+ * @param[in] self - self
+ * @param[in] fieldname - the how/task name for the quality field with the distance information
+ * @returns 1 on success otherwise 0
+ */
+int CartesianComposite_setDistanceField(CartesianComposite_t* self, const char* fieldname);
+
+/**
+ * Returns the quality field name (how/task) for the distance field to use when executing the
+ * DISTANCE selection method.
+ * @param[in] self - self
+ * @returns the distance field (default is se.smhi.composite.distance.radar)
+ */
+const char* CartesianComposite_getDistanceField(CartesianComposite_t* self);
 
 /**
  * Sets the nominal time.

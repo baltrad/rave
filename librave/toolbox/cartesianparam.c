@@ -442,8 +442,6 @@ RaveObjectList_t* CartesianParam_getQualityFields(CartesianParam_t* self)
 
 RaveField_t* CartesianParam_getQualityFieldByHowTask(CartesianParam_t* self, const char* value)
 {
-  RAVE_ASSERT((self != NULL), "self == NULL");
-
   int nfields = 0, i = 0;
   RaveField_t* result = NULL;
 

@@ -250,6 +250,7 @@ static struct PyMethodDef _pycartesiancomposite_methods[] =
   {"nodata", NULL},
   {"undetect", NULL},
   {"method", NULL},
+  {"distance_field", NULL},
   {"add", (PyCFunction)_pycartesiancomposite_add, 1},
   {"getNumberOfObjects", (PyCFunction)_pycartesiancomposite_getNumberOfObjects, 1},
   {"get", (PyCFunction)_pycartesiancomposite_get, 1},
@@ -292,6 +293,12 @@ static PyObject* _pycartesiancomposite_getattr(PyCartesianComposite* self, char*
     return PyFloat_FromDouble(CartesianComposite_getUndetect(self->generator));
   } else if (strcmp("method", name) == 0) {
     return PyInt_FromLong(CartesianComposite_getMethod(self->generator));
+  } else if (strcmp("distance_field", name) == 0) {
+    if (CartesianComposite_getDistanceField(self->generator) != NULL) {
+      return PyString_FromString(CartesianComposite_getDistanceField(self->generator));
+    } else {
+      Py_RETURN_NONE;
+    }
   }
 
   res = Py_FindMethod(_pycartesiancomposite_methods, (PyObject*) self, name);
@@ -382,6 +389,22 @@ static int _pycartesiancomposite_setattr(PyCartesianComposite* self, char* name,
       raiseException_gotoTag(done, PyExc_ValueError,
                              "not a valid selection method");
     }
+  } else if (strcmp("distance_field", name) == 0) {
+    if (PyString_Check(val)) {
+      if (!CartesianComposite_setDistanceField(self->generator,
+                                               PyString_AsString(val))) {
+        raiseException_gotoTag(done, PyExc_ValueError,
+                               "Could not set distance_field");
+      }
+    } else if (val == Py_None) {
+      if (!CartesianComposite_setDistanceField(self->generator, NULL)) {
+        raiseException_gotoTag(done, PyExc_ValueError,
+                               "Could not set distance_field to nothing");
+      }
+    } else {
+      raiseException_gotoTag(done, PyExc_ValueError,
+                             "distance_field must be of type string");
+    }
   } else {
     raiseException_gotoTag(done, PyExc_AttributeError, name);
   }
@@ -467,7 +490,7 @@ init_cartesiancomposite(void)
   add_long_constant(dictionary, "SelectionMethod_MINVALUE", CartesianCompositeSelectionMethod_MINVALUE);
   add_long_constant(dictionary, "SelectionMethod_MAXVALUE", CartesianCompositeSelectionMethod_MAXVALUE);
   add_long_constant(dictionary, "SelectionMethod_AVGVALUE", CartesianCompositeSelectionMethod_AVGVALUE);
-  add_long_constant(dictionary, "SelectionMethod_NEAREST", CartesianCompositeSelectionMethod_NEAREST);
+  add_long_constant(dictionary, "SelectionMethod_DISTANCE", CartesianCompositeSelectionMethod_DISTANCE);
 
   import_pycartesian();
   import_pycartesianparam();

@@ -580,7 +580,7 @@ RaveValueType Cartesian_getValueAtLocation(Cartesian_t* cartesian, double lx, do
   return RaveValueType_UNDEFINED;
 }
 
-RaveValueType Cartesian_getConvertedAtFromLocation(Cartesian_t* cartesian, double lx, double ly, double* v)
+RaveValueType Cartesian_getConvertedValueAtLocation(Cartesian_t* cartesian, double lx, double ly, double* v)
 {
   RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
   if (cartesian->currentParameter != NULL) {
@@ -591,6 +591,26 @@ RaveValueType Cartesian_getConvertedAtFromLocation(Cartesian_t* cartesian, doubl
   }
   return RaveValueType_UNDEFINED;
 }
+
+int Cartesian_getQualityValueAtLocation(Cartesian_t* cartesian, double lx, double ly, const char* name, double *v)
+{
+  RaveField_t* field = NULL;
+  int result = -1;
+  RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
+
+  field = Cartesian_findQualityFieldByHowTask(cartesian, name);
+
+  if (field != NULL) {
+    int x = 0, y = 0;
+    x = Cartesian_getIndexX(cartesian, lx);
+    y = Cartesian_getIndexY(cartesian, ly);
+    result = RaveField_getValue(field, x, y, v);
+  }
+  RAVE_OBJECT_RELEASE(field);
+
+  return result;
+}
+
 
 void Cartesian_init(Cartesian_t* self, Area_t* area)
 {
@@ -773,6 +793,45 @@ RaveObjectList_t* Cartesian_getQualityFields(Cartesian_t* cartesian)
 {
   RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
   return (RaveObjectList_t*)RAVE_OBJECT_COPY(cartesian->qualityfields);
+}
+
+RaveField_t* Cartesian_getQualityFieldByHowTask(Cartesian_t* cartesian, const char* value)
+{
+  int nfields = 0, i = 0;
+  RaveField_t* result = NULL;
+
+  RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
+  if (value == NULL) {
+    RAVE_WARNING0("Trying to use Cartesian_getQualityFieldByHowTask without a how/task value");
+    return NULL;
+  }
+  nfields = RaveObjectList_size(cartesian->qualityfields);
+  for (i = 0; result == NULL && i < nfields; i++) {
+    RaveField_t* field = (RaveField_t*)RaveObjectList_get(cartesian->qualityfields, i);
+    if (field != NULL && RaveField_hasAttributeStringValue(field, "how/task", value)) {
+      result = RAVE_OBJECT_COPY(field);
+    }
+    RAVE_OBJECT_RELEASE(field);
+  }
+
+  return result;
+}
+
+RaveField_t* Cartesian_findQualityFieldByHowTask(Cartesian_t* self, const char* value)
+{
+  RaveField_t* result = NULL;
+
+  RAVE_ASSERT((self != NULL), "self == NULL");
+
+  if (self->currentParameter != NULL) {
+    result = CartesianParam_getQualityFieldByHowTask(self->currentParameter, value);
+  }
+
+  if (result == NULL) {
+    result = Cartesian_getQualityFieldByHowTask(self, value);
+  }
+
+  return result;
 }
 
 int Cartesian_addParameter(Cartesian_t* self, CartesianParam_t* param)

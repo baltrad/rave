@@ -41,7 +41,7 @@ struct _CartesianComposite_t {
   CartesianCompositeSelectionMethod_t method; /**< selection method, default CartesianCompositeSelectionMethod_FIRST */
   RaveObjectList_t* list; /**< the list of cartesian objects */
   RaveDateTime_t* datetime;  /**< the date and time */
-
+  char* distance_field; /**< the name (how/task) of the distance field */
   char* quantity; /**< the quantity to make a composite of */
   double offset; /**< the offset for the data */
   double gain; /**< the gain for the data */
@@ -64,11 +64,12 @@ static int CartesianComposite_constructor(RaveCoreObject* obj)
   this->datetime = RAVE_OBJECT_NEW(&RaveDateTime_TYPE);
   this->list = RAVE_OBJECT_NEW(&RaveObjectList_TYPE);
   this->quantity = RAVE_STRDUP("DBZH");
+  this->distance_field = RAVE_STRDUP(DISTANCE_TO_RADAR_HOW_TASK);
   this->offset = 0.0;
   this->gain = 1.0;
   this->nodata = 0.0;
   this->undetect = 0.0;
-  if (this->list == NULL || this->datetime == NULL || this->quantity == NULL) {
+  if (this->list == NULL || this->datetime == NULL || this->quantity == NULL || this->distance_field == NULL) {
     goto error;
   }
   return 1;
@@ -76,6 +77,7 @@ error:
   RAVE_OBJECT_RELEASE(this->list);
   RAVE_OBJECT_RELEASE(this->datetime);
   RAVE_FREE(this->quantity);
+  RAVE_FREE(this->distance_field);
   return 0;
 }
 
@@ -92,11 +94,12 @@ static int CartesianComposite_copyconstructor(RaveCoreObject* obj, RaveCoreObjec
   this->list = RAVE_OBJECT_CLONE(src->list);
   this->datetime = RAVE_OBJECT_CLONE(src->datetime);
   this->quantity = RAVE_STRDUP(src->quantity); /* Assuming that we never let a quantity be set to NULL */
+  this->distance_field = RAVE_STRDUP(src->distance_field);
   this->offset = src->offset;
   this->gain = src->gain;
   this->nodata = src->nodata;
   this->undetect = src->undetect;
-  if (this->datetime == NULL || this->list == NULL || this->quantity == NULL) {
+  if (this->datetime == NULL || this->list == NULL || this->quantity == NULL || this->distance_field == NULL) {
     goto error;
   }
 
@@ -105,6 +108,7 @@ error:
   RAVE_OBJECT_RELEASE(this->list);
   RAVE_OBJECT_RELEASE(this->datetime);
   RAVE_FREE(this->quantity);
+  RAVE_FREE(this->distance_field);
   return 0;
 }
 
@@ -118,6 +122,7 @@ static void CartesianComposite_destructor(RaveCoreObject* obj)
   RAVE_OBJECT_RELEASE(this->datetime);
   RAVE_OBJECT_RELEASE(this->list);
   RAVE_FREE(this->quantity);
+  RAVE_FREE(this->distance_field);
 }
 
 /**
@@ -180,6 +185,35 @@ done:
   RAVE_OBJECT_RELEASE(prodpar);
   return result;
 }
+
+static int HasAllCartesianDistanceField(CartesianComposite_t* self)
+{
+  Cartesian_t* cartesian = NULL;
+  RaveField_t* howtaskfield = NULL;
+  int i = 0;
+  int nc = CartesianComposite_getNumberOfObjects(self);
+  int result = 0;
+  for (i = 0; i < nc; i++) {
+    cartesian = CartesianComposite_get(self, i);
+    if (cartesian == NULL) {
+      RAVE_WARNING0("Something is wrong with the in-objects to the composite generator");
+      goto done;
+    }
+    howtaskfield = Cartesian_findQualityFieldByHowTask(cartesian, self->distance_field);
+    if (howtaskfield == NULL) {
+      RAVE_WARNING0("All in-objects must contain the wanted distance field when generating a composite according to DISTANCE");
+      goto done;
+    }
+    RAVE_OBJECT_RELEASE(howtaskfield);
+    RAVE_OBJECT_RELEASE(cartesian);
+  }
+  result = 1;
+done:
+  RAVE_OBJECT_RELEASE(cartesian);
+  RAVE_OBJECT_RELEASE(howtaskfield);
+  return result;
+}
+
 /*@} End of Private functions */
 
 /*@{ Interface functions */
@@ -206,7 +240,7 @@ int CartesianComposite_setMethod(CartesianComposite_t* self, CartesianCompositeS
 {
   int result = 0;
   RAVE_ASSERT((self != NULL), "self == NULL");
-  if (method >= CartesianCompositeSelectionMethod_FIRST && method <= CartesianCompositeSelectionMethod_NEAREST) {
+  if (method >= CartesianCompositeSelectionMethod_FIRST && method <= CartesianCompositeSelectionMethod_DISTANCE) {
     self->method = method;
     result = 1;
   }
@@ -217,6 +251,29 @@ CartesianCompositeSelectionMethod_t CartesianComposite_getMethod(CartesianCompos
 {
   RAVE_ASSERT((self != NULL), "self == NULL");
   return self->method;
+}
+
+int CartesianComposite_setDistanceField(CartesianComposite_t* self, const char* fieldname)
+{
+  int result = 0;
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  if (fieldname != NULL) {
+    char* tmp = RAVE_STRDUP(fieldname);
+    if (tmp != NULL) {
+      RAVE_FREE(self->distance_field);
+      self->distance_field = tmp;
+      result = 1;
+    }
+  } else {
+    RAVE_INFO0("distance field can not be NULL");
+  }
+  return result;
+}
+
+const char* CartesianComposite_getDistanceField(CartesianComposite_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return (const char*)self->distance_field;
 }
 
 int CartesianComposite_setTime(CartesianComposite_t* self, const char* value)
@@ -325,6 +382,13 @@ Cartesian_t* CartesianComposite_nearest(CartesianComposite_t* self, Area_t* area
   double ctnodata = 255.0, ctundetect = 0.0;
   Projection_t *tgtpj = NULL, *srcpj = NULL;
 
+  if (self->method == CartesianCompositeSelectionMethod_DISTANCE) {
+    if (!HasAllCartesianDistanceField(self)) {
+      RAVE_WARNING0("All in-objects does not have the required distance field");
+      goto done;
+    }
+  }
+
   ct = CartesianComposite_createCompositeImage(self, area);
   ctnodata = Cartesian_getNodata(ct);
   ctundetect = Cartesian_getUndetect(ct);
@@ -341,6 +405,7 @@ Cartesian_t* CartesianComposite_nearest(CartesianComposite_t* self, Area_t* area
       double sum = 0.0;
       int nvals = 0;
       double minval = ctnodata, maxval = ctnodata;
+      double mindistance = 1e10;
 
       Cartesian_setValue(ct, x, y, self->nodata);
 
@@ -358,6 +423,7 @@ Cartesian_t* CartesianComposite_nearest(CartesianComposite_t* self, Area_t* area
         }
 
         valid = Cartesian_getValueAtLocation(inobj, herex, herey, &v);
+
         if (valid == RaveValueType_NODATA) {
           v = ctnodata;
         } else if (valid == RaveValueType_UNDETECT) {
@@ -389,8 +455,15 @@ Cartesian_t* CartesianComposite_nearest(CartesianComposite_t* self, Area_t* area
             maxval = v;
           }
           Cartesian_setValue(ct, x, y, maxval);
-        } else if (self->method == CartesianCompositeSelectionMethod_NEAREST &&
-            (valid == RaveValueType_DATA || valid == RaveValueType_UNDETECT)) {
+        } else if (self->method == CartesianCompositeSelectionMethod_DISTANCE &&
+            valid == RaveValueType_DATA) {
+          double cdistance = 0.0;
+          if (Cartesian_getQualityValueAtLocation(inobj, herex, herey, self->distance_field, &cdistance)) {
+            if (cdistance < mindistance) {
+              mindistance = cdistance;
+              Cartesian_setValue(ct, x, y, v);
+            }
+          }
         } else if (valid == RaveValueType_UNDETECT) {
           double xx = 0.0;
           RaveValueType xxvalid = Cartesian_getValue(ct, x, y, &xx);

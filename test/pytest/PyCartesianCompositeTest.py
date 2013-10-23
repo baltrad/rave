@@ -49,6 +49,19 @@ class PyCartesianCompositeTest(unittest.TestCase):
             "fixtures/pcappi_gn_sevar_20090501120000.h5",
             "fixtures/pcappi_gn_sevil_20090501120000.h5"]
   
+  DISTANCE_FIXTURES=["fixtures/ppi_gn_seang_20090501120000_distance.h5",
+                     "fixtures/ppi_gn_searl_20090501120000_distance.h5",
+                     "fixtures/ppi_gn_sease_20090501120000_distance.h5",
+                     "fixtures/ppi_gn_sehud_20090501120000_distance.h5",
+                     "fixtures/ppi_gn_sekir_20090501120000_distance.h5",
+                     "fixtures/ppi_gn_sekkr_20090501120000_distance.h5",
+                     "fixtures/ppi_gn_selek_20090501120000_distance.h5",
+                     "fixtures/ppi_gn_selul_20090501120000_distance.h5",
+                     "fixtures/ppi_gn_seosu_20090501120000_distance.h5",
+                     "fixtures/ppi_gn_seovi_20090501120000_distance.h5",
+                     "fixtures/ppi_gn_sevar_20090501120000_distance.h5",
+                     "fixtures/ppi_gn_sevil_20090501120000_distance.h5"]
+  
   def setUp(self):
     pass
 
@@ -111,7 +124,7 @@ class PyCartesianCompositeTest(unittest.TestCase):
               _cartesiancomposite.SelectionMethod_MINVALUE, 
               _cartesiancomposite.SelectionMethod_MAXVALUE,
               _cartesiancomposite.SelectionMethod_AVGVALUE,
-              _cartesiancomposite.SelectionMethod_NEAREST]
+              _cartesiancomposite.SelectionMethod_DISTANCE]
     obj = _cartesiancomposite.new()
     self.assertEquals(_cartesiancomposite.SelectionMethod_FIRST, obj.method)
     for v in values:
@@ -123,6 +136,19 @@ class PyCartesianCompositeTest(unittest.TestCase):
       self.fail("Expected ValueError")
     except ValueError, e:
       pass
+
+  def test_distance_field(self):
+    obj = _cartesiancomposite.new()
+    self.assertEquals("se.smhi.composite.distance.radar", obj.distance_field)
+    obj.distance_field = "eu.baltrad.something"
+    self.assertEquals("eu.baltrad.something", obj.distance_field)
+    try:
+      obj.distance_field = None
+      self.fail("Expected ValueError")
+    except ValueError, e:
+      pass
+    self.assertEquals("eu.baltrad.something", obj.distance_field)
+    
 
   def test_cartesian_objects(self):
     obj = _cartesiancomposite.new()
@@ -223,7 +249,27 @@ class PyCartesianCompositeTest(unittest.TestCase):
     rio = _raveio.new()
     rio.object = result
     rio.save("cart_composite_avg.h5")
+  
+  def test_nearest_distance(self):
+    a = self.create_area()
     
+    obj = _cartesiancomposite.new()
+    obj.method = _cartesiancomposite.SelectionMethod_DISTANCE
+    for f in self.DISTANCE_FIXTURES:
+      ic = _raveio.open(f).object.getImage(0)
+      obj.add(ic)
+
+    obj.nodata = 255.0
+    obj.undetect = 0.0
+    result = obj.nearest(a)
+    result.time = "120000"
+    result.date = "20090501"
+    result.source = "eua_gmaps"
+    
+    rio = _raveio.new()
+    rio.object = result
+    rio.save("cart_composite_distance.h5")
+  
   def create_area(self):
     a = _area.new()
     a.id = "eua_gmaps"
