@@ -27,7 +27,7 @@
 .PHONY=install
 install:
 	@mkdir -p "${prefix}/config"
-	@cp -v -f *.xml "${prefix}/config/"
+	@cp -v -f -n *.xml "${prefix}/config/"
 
 .PHONY:clean
 clean: ;
