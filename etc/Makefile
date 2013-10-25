@@ -24,13 +24,17 @@
 ###########################################################################
 -include ../def.mk
 
+CONFIG_FILES=rave_pgf_quality_registry.xml rave_pgf_queue.xml rave_pgf_registry.xml
+
 .PHONY=install
 install:
 	@mkdir -p "${prefix}/etc"
 	@cp -v -f rave_pgf "${prefix}/etc/"
-	@cp -v -f rave_pgf_quality_registry.xml "${prefix}/etc/"
-	@cp -v -f rave_pgf_queue.xml "${prefix}/etc/"
-	@cp -v -f rave_pgf_registry.xml "${prefix}/etc/"
+	@for i in $(CONFIG_FILES) ; do \
+	    if [ ! -f ${prefix}/etc/$$i ]; then \
+	      cp -v -f $$i ${prefix}/etc/; \
+	    fi; \
+	done
 
 .PHONY:clean
 clean: ;
