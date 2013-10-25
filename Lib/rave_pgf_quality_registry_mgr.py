@@ -89,7 +89,7 @@ class rave_pgf_quality_registry_mgr(ET._ElementInterface):
   # @param module - the module where the plugin class is defined
   # @param cls - the plugin class, should be a subclass of rave_quality_plugin
   def add_plugin(self, name, module, cls):
-    e = ET._ElementInterface("quality-plugin")
+    e = ET._ElementInterface("quality-plugin", {})
     e.set("name", name)
     e.set("module", module)
     e.set("class", cls)
