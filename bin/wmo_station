@@ -1,0 +1,88 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2011 - Swedish Meteorological and Hydrological Institute (SMHI)
+
+This file is part of RAVE.
+
+RAVE is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+RAVE is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+See the GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
+'''
+## Command-line tool for importing and managing wmo station information in the rave-db
+
+## @file
+## @author Anders Henja, SMHI
+## @date 2013-11-08
+
+import sys, getopt
+
+def Usage(brief=True,doexit=False):
+  print "Imports the wmo_stations from a wmo flatfile or prints information about a specific station."
+  print "Usage: %s --uri=<pgsqluri> [--flatfile=<flatfile>] [--station=<station1,station2,...>] import|print"
+  if brief == False:
+    print "  --uri=<pgsqluri> The postgresql uri to the dbhost. "
+    print "        Default value [postgresql://baltrad:baltrad@127.0.0.1/baltrad]"
+    print "  --flatfile=<flatfile> The WMO flatfile containing the wmo stations, specified on import"
+    print "        Default value [wmo_flatfile.txt]"
+    print "  --station=<station1,station2,...> A list of stations that should be printed."
+  if doexit:
+    import sys
+    sys.exit(0)
+
+if __name__ == "__main__":
+  optlist = []
+  args = []
+  try:
+    optlist, args = getopt.getopt(sys.argv[1:], '', 
+                                  ['uri=','flatfile=','station=','help'])
+  except getopt.GetoptError, e:
+    usage(True, e.__str__())
+    sys.exit(127)
+  
+  dburi="postgresql://baltrad:baltrad@127.0.0.1/baltrad"
+  flatfile="wmo_flatfile.txt"
+  stationlist=[]
+  
+  for o, a in optlist:
+    if o == "--uri":
+      dburi=a
+    elif o == "--flatfile":
+      flatfile=a
+    elif o == "--station":
+      stationlist=a.split(",")
+    elif o == "--help":
+      Usage(False,True)
+    else:
+      Usage(True,True)
+  
+  if len(args) <= 0:
+    Usage(True, True)
+  
+  if args[0] == "import":
+    from rave_wmo_flatfile import rave_wmo_flatfile
+    import rave_dom_db
+    
+    db = rave_dom_db.create_db(dburi, True)
+    
+    parser = rave_wmo_flatfile()
+    result = parser.parse(flatfile)
+    db.merge(result)
+  elif args[0] == "print":
+    import rave_dom_db
+    
+    db = rave_dom_db.create_db(dburi, True)
+    
+    for s in stationlist:
+      ws = db.get_station(s)
+      print `ws`
+  else:
+    Usage(True,True)

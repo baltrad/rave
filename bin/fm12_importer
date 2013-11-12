@@ -1,0 +1,200 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2011 - Swedish Meteorological and Hydrological Institute (SMHI)
+
+This file is part of RAVE.
+
+RAVE is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+RAVE is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+See the GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
+'''
+## Command-line tool for importing fm12 synop observations into the rave database
+
+## @file
+## @author Anders Henja, SMHI
+## @date 2013-11-08
+
+import sys, getopt, os, logging, logging.handlers
+from rave_dom import observation
+import fm12_importer
+import pyinotify
+
+MASK = pyinotify.IN_CLOSE_WRITE
+sys.path.append(os.path.abspath(__file__))
+
+def Usage(brief=True,doexit=False):
+  print "Imports the fm12 synop observations into the rave observation database."
+  print "Usage: %s [--monitored=<path>] [--uri=<pgsqluri>] [--conf=<conffile> "
+  print "          [--uriproperty=<propname>]] [--file=<fm12 file>] "
+  print "          [--logfile=<logfile>] [--verbose] "
+  print "          [--janitor] [--catchup]"
+  print "          daemon | import | kill"
+  if brief == False:
+    print "  --uri=<pgsqluri> The postgresql uri to the dbhost. "
+    print "        Default value [postgresql://baltrad:baltrad@127.0.0.1/baltrad]"
+    print "  --conf=<conffile> The configuration file containing the pgsql uri in a property. Used together with --uriproperty."
+    print "        Default value [None]"
+    print "  --uriproperty=<propname>. If a configuration file has been specified, you can define what property that is containing the dburi."
+    print "        Default value [rave.db.uri]." 
+    print "  --file=<fm12 file> The fm12 defined synop file to import if not --monitored=<..> has been specified."
+    print "  --logfile=<log file> The file that log messages should be written to"
+    print "  --verbose Print a more verbose debug information"
+    print "  --pidfile=<pidfile> The process id file. Default [./fm12_importer.pid]"
+    print "  --monitored=<path> a path to be monitored for synop files. [Default: None]"
+    print "  --janitor Remove files that arrive in the input directory."
+    print "  --catchup Process all files that have collected in the input directory. Otherwise only act on new files arriving."
+    print ""
+    print "  import - Will import the specified file (Requires --file=<file name>)"
+    print "  daemon - If the program should be run as a daemon. (Requires --monitored=<path>)"
+    print "  kill - Tries to kill a running daemon."
+    
+  if doexit:
+    import sys
+    sys.exit(0)
+
+def init_logger(logger, logfile, loglevel, daemon):
+  logger.setLevel(loglevel)
+  if not daemon:
+    logger.addHandler(logging.StreamHandler(sys.stdout))
+    
+  if logfile != None:
+    handler = logging.handlers.RotatingFileHandler(logfile,
+                                                   maxBytes = 5000000,
+                                                   backupCount = 5)
+    formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s',
+                                  '%Y-%m-%d %H:%M:%S %Z')
+    handler.setFormatter(formatter)
+    
+    logger.addHandler(handler)
+
+# This class, and especially its method, overrides the default process
+# in (py)inotify
+class NotifierListener(pyinotify.ProcessEvent):
+  ## Initializer
+  # @param options variable options list
+  def __init__(self, importer):
+    print "CONSTRUCTOR"
+    self.importer = importer
+
+  ## Inherited from pyinotify
+  # @param event object containing a path, probably ...
+  def process_IN_CLOSE_WRITE(self, event):
+    self.importer.import_file(event.pathname)
+
+
+
+if __name__ == "__main__":
+  optlist = []
+  args = []
+  try:
+    optlist, args = getopt.getopt(sys.argv[1:], '', 
+                                  ['uri=',
+                                   'conf=','uriproperty=',
+                                   'file=', 
+                                   'logfile=','verbose',
+                                   'pidfile=','monitored=',
+                                   'janitor','catchup', 
+                                   'help'])
+  except getopt.GetoptError, e:
+    Usage(True, e.__str__())
+    sys.exit(127)
+  
+  dburi="postgresql://baltrad:baltrad@127.0.0.1/baltrad"
+  cfgfile=None
+  uriproperty="rave.db.uri"
+  fname=None
+  logfile=None
+  pidfile="/tmp/fm12_importer.pid"
+  monitored_dir=None
+  runasdaemon=False
+  janitor=False
+  catchup=False
+  loglvl = logging.INFO
+  
+  for o, a in optlist:
+    if o == "--uri":
+      dburi=a
+    elif o == "--conf":
+      cfgfile = a
+    elif o == "--uriproperty":
+      uriproperty = a
+    elif o == "--conf":
+      cfgfile = a
+    elif o == "--file":
+      fname=a
+    elif o == "--logfile":
+      logfile = a
+    elif o == "--monitored":
+      monitored_dir=a
+    elif o == "--verbose":
+      loglvl = logging.DEBUG
+    elif o == "--janitor":
+      janitor = True
+    elif o == "--catchup":
+      catchup = True
+    elif o == "--pidfile":
+      pidfile = a
+    elif o == "--help":
+      Usage(False,True)
+    else:
+      Usage(True,True)
+  
+  if len(args) <= 0:
+    Usage(True, True)
+
+  if not os.path.isabs(pidfile):
+    print "pidfile must be defined with an absolute path"
+    sys.exit()
+  
+  if cfgfile != None:
+    dburi = fm12_importer.get_dburi_from_conf(cfgfile, uriproperty)
+
+  if len(args) > 0 and args[0] == "daemon":
+    runasdaemon = True
+
+  ## Setup the logging fascility
+  logger = logging.getLogger("fm12_importer")
+  if runasdaemon:
+    logger = pyinotify.log
+  init_logger(logger, logfile, loglvl, runasdaemon)
+  
+  importer = fm12_importer.fm12_importer(dburi, monitored_dir, pidfile)
+  importer.set_logger(logger)
+  
+  if janitor:
+    logger.info("Activating janitor")
+    importer.janitor = janitor
+  if catchup:
+    logger.info("Activating catchup")
+    importer.docatchup = catchup
+    
+  if importer.isalive():
+    logger.info("fm12_importer is already running")
+    sys.exit()
+  
+  if len(args) > 0 and args[0] == "import":
+    importer.import_file(fname)
+    sys.exit()
+  elif len(args) > 0 and args[0] == "daemon":
+    importer.catchup()
+
+    wm = pyinotify.WatchManager()
+    notifier = pyinotify.Notifier(wm, NotifierListener(importer))
+    # Only act on closed files, or whatever's been moved into in_dir
+    wm.add_watch(importer.monitored_dir, MASK)
+    notifier.loop(daemonize=True, pid_file=importer.pidfile)
+  elif len(args) > 0 and args[0] == "kill":
+    importer.killme()
+    sys.exit()
+  else:
+    Usage(True,True)
+    sys.exit()

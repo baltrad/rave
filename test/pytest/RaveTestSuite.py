@@ -23,7 +23,8 @@ Test suite for rave
 @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
 @date 2009-10-12
 '''
-import unittest
+import unittest, os
+
 from RaveTest import *
 from PyPolarVolumeTest import *
 from PyPolarScanTest import *
@@ -54,6 +55,15 @@ from rave_pgf_quality_registry_mgr_test import *
 from area_registry_test import *
 from PyDealiasTest import *
 from PyRadvolTest import *
+
+#
+# Unless RAVE_TESTDB_URI has been set we don't want to run the dom db tests
+#
+if os.environ.get("RAVE_TESTDB_URI", "") != "":
+  from rave_dom_db_test import *
+
+from rave_wmo_flatfile_test import *
+from rave_fm12_test import *
 
 if __name__ == '__main__':
   unittest.main()
