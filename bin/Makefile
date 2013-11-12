@@ -42,6 +42,9 @@ install:
 	@cp -v -f odc_toolbox "${prefix}/bin/"
 	@cp -v -f poo "${prefix}/bin/"
 	@cp -v -f odc_hac "${prefix}/bin/"
+	@cp -v -f fm12_importer "${prefix}/bin/"
+	@cp -v -f wmo_station "${prefix}/bin/"
+	
 
 .PHONY:clean
 clean: ;
