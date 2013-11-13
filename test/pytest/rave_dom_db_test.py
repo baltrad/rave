@@ -228,7 +228,73 @@ class rave_dom_db_test(unittest.TestCase):
     self.assertEquals("54325", result[1].station)   
     self.assertEquals("2010-10-10", result[1].date.strftime("%Y-%m-%d"))
     self.assertEquals("11:30:00", result[1].time.strftime("%H:%M:%S"))
+  
+  def test_get_observations_in_interval(self):
+    db = testdb()
+    db.add(observation("54321", "SWEDEN", 0, "20101010", "113000", 13.031, 60.123))
+    db.add(observation("54321", "SWEDEN", 0, "20101010", "114500", 13.031, 60.123))
+    db.add(observation("54321", "SWEDEN", 0, "20101010", "120000", 13.031, 60.123))
+    db.add(observation("54322", "SWEDEN", 0, "20101010", "113000", 14.031, 61.123)) #X
+    db.add(observation("54322", "SWEDEN", 0, "20101010", "114500", 13.531, 60.523)) #X
+    db.add(observation("54323", "SWEDEN", 0, "20101010", "120000", 16.031, 62.123))
+    db.add(observation("54324", "SWEDEN", 0, "20101010", "120030", 16.031, 62.123))
     
+    # Test
+    result = self.classUnderTest.get_observations_in_interval(datetime.datetime(2010,10,10,11,30),
+                                                              datetime.datetime(2010,10,10,11,45))
+    self.assertEquals(4, len(result))
+    self.assertEquals("54321", result[0].station)
+    self.assertEquals("11:30:00", result[0].time.strftime("%H:%M:%S"))
+    self.assertEquals("54321", result[1].station)
+    self.assertEquals("11:45:00", result[1].time.strftime("%H:%M:%S"))
+    self.assertEquals("54322", result[2].station)
+    self.assertEquals("11:30:00", result[2].time.strftime("%H:%M:%S"))
+    self.assertEquals("54322", result[3].station)
+    self.assertEquals("11:45:00", result[3].time.strftime("%H:%M:%S"))
+
+  def test_get_observations_in_interval_2(self):
+    db = testdb()
+    db.add(observation("54321", "SWEDEN", 0, "20101010", "113000", 13.031, 60.123))
+    db.add(observation("54321", "SWEDEN", 0, "20101010", "114500", 13.031, 60.123))
+    db.add(observation("54321", "SWEDEN", 0, "20101010", "120000", 13.031, 60.123))
+    db.add(observation("54322", "SWEDEN", 0, "20101010", "113000", 14.031, 61.123)) #X
+    db.add(observation("54322", "SWEDEN", 0, "20101010", "114500", 13.531, 60.523)) #X
+    db.add(observation("54323", "SWEDEN", 0, "20101010", "120000", 16.031, 62.123))
+    db.add(observation("54324", "SWEDEN", 0, "20101010", "120030", 16.031, 62.123))
+    
+    # Test
+    result = self.classUnderTest.get_observations_in_interval(datetime.datetime(2010,10,10,11,30),
+                                                              datetime.datetime(2010,10,10,11,45),
+                                                              ["54322","54323"])
+    self.assertEquals(2, len(result))
+    self.assertEquals("54322", result[0].station)
+    self.assertEquals("11:30:00", result[0].time.strftime("%H:%M:%S"))
+    self.assertEquals("54322", result[1].station)
+    self.assertEquals("11:45:00", result[1].time.strftime("%H:%M:%S"))
+
+  def test_get_observations_in_interval_3(self):
+    db = testdb()
+    db.add(observation("54321", "SWEDEN", 0, "20101010", "113000", 13.031, 60.123))
+    db.add(observation("54321", "SWEDEN", 0, "20101010", "114500", 13.031, 60.123))
+    db.add(observation("54321", "SWEDEN", 0, "20101010", "120000", 13.031, 60.123))
+    db.add(observation("54322", "SWEDEN", 0, "20101010", "113000", 14.031, 61.123)) #X
+    db.add(observation("54322", "SWEDEN", 0, "20101010", "114500", 13.531, 60.523)) #X
+    db.add(observation("54323", "SWEDEN", 0, "20101010", "120000", 16.031, 62.123))
+    db.add(observation("54324", "SWEDEN", 0, "20101010", "120030", 16.031, 62.123))
+    
+    # Test
+    result = self.classUnderTest.get_observations_in_interval(datetime.datetime(2010,10,10,11,30),
+                                                              datetime.datetime(2010,10,10,12,00),
+                                                              ["54322","54323"])
+    self.assertEquals(3, len(result))
+    self.assertEquals("54322", result[0].station)
+    self.assertEquals("11:30:00", result[0].time.strftime("%H:%M:%S"))
+    self.assertEquals("54322", result[1].station)
+    self.assertEquals("11:45:00", result[1].time.strftime("%H:%M:%S"))
+    self.assertEquals("54323", result[2].station)
+    self.assertEquals("12:00:00", result[2].time.strftime("%H:%M:%S"))
+    
+  
   def test_add_duplicate_observation(self):
     db = testdb()
     obs = observation("54321", "SWEDEN", 0, "20101010", "113000", 13.031, 60.123)

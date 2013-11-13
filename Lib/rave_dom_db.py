@@ -182,6 +182,22 @@ class rave_db(object):
               .order_by(desc(observation.time)) \
               .distinct(observation.station).all()
   
+  def get_observations_in_interval(self, startdt, enddt, stations=[]):
+    with self.get_session() as s:
+      q = s.query(observation)
+      if startdt != None:
+        q = q.filter(observation.time>=startdt.time()).filter(observation.date>=startdt.date())
+
+      if enddt != None:
+        q = q.filter(observation.time<=enddt.time()).filter(observation.date<=enddt.date())
+
+      if stations != None and len(stations) > 0:
+        q = q.filter(observation.station.in_(stations))
+      
+      return q.order_by(asc(observation.station)) \
+              .order_by(asc(observation.date)) \
+              .order_by(asc(observation.time)).all()
+  
   def get_station(self, stationid):
     with self.get_session() as s:
       return s.query(wmo_station).filter(wmo_station.stationnumber==stationid).first()
