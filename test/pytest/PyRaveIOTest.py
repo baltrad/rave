@@ -364,6 +364,51 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEquals(240, numpy.shape(d)[0])
     self.assertEquals(240, numpy.shape(d)[1])
 
+  def test_save_cartesian_SURF(self):
+    image = _cartesian.new()
+    image.time = "100000"
+    image.date = "20100101"
+    image.objectType = _rave.Rave_ObjectType_IMAGE
+    image.product = _rave.Rave_ProductType_SURF
+    image.source = "PLC:123"
+    image.xscale = 2000.0
+    image.yscale = 2000.0
+    image.areaextent = (-240000.0, -240000.0, 238000.0, 238000.0)
+    image.projection = _projection.new("x","y","+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84")
+
+    param = _cartesianparam.new()
+    param.quantity = "PROB"
+    param.gain = 1.0
+    param.offset = 0.0
+    param.nodata = 255.0
+    param.undetect = 0.0
+    data = numpy.zeros((240,240),numpy.uint8)
+    param.setData(data)
+    image.addParameter(param)
+    
+    ios = _raveio.new()
+    ios.object = image
+    ios.filename = self.TEMPORARY_FILE
+    _rave.setDebugLevel(_rave.Debug_RAVE_SPEWDEBUG)
+
+    ios.save()
+
+    _rave.setDebugLevel(_rave.Debug_RAVE_SILENT)
+    
+    # Verify result
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+    
+    # Assume that rest is working as expected according to full cartesian test, now we only want to know that
+    # SURF can be written and read
+    self.assertEquals("SURF", nodelist.getNode("/dataset1/what/product").data())
+
+    robj = _raveio.open(self.TEMPORARY_FILE).object
+    self.assertEquals(True, _cartesian.isCartesian(robj))
+    self.assertEquals(_rave.Rave_ProductType_SURF, robj.product)
+    
+
   def test_save_cartesian_startandstoptime(self):
     image = _cartesian.new()
     image.time = "100000"

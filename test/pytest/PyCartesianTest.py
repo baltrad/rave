@@ -550,6 +550,33 @@ class PyCartesianTest(unittest.TestCase):
     self.assertAlmostEquals(1.0, obj.getAttribute("how/something"))
     self.assertAlmostEquals(2.0, param.getAttribute("how/something"))
 
+  def test_product_type(self):
+    obj = _cartesian.new()
+    producttypes=[_rave.Rave_ProductType_UNDEFINED,
+                  _rave.Rave_ProductType_SCAN,
+                  _rave.Rave_ProductType_PPI,
+                  _rave.Rave_ProductType_CAPPI,
+                  _rave.Rave_ProductType_PCAPPI,
+                  _rave.Rave_ProductType_ETOP,
+                  _rave.Rave_ProductType_MAX,
+                  _rave.Rave_ProductType_RR,
+                  _rave.Rave_ProductType_VIL,
+                  _rave.Rave_ProductType_COMP,
+                  _rave.Rave_ProductType_VP,
+                  _rave.Rave_ProductType_RHI,
+                  _rave.Rave_ProductType_XSEC,
+                  _rave.Rave_ProductType_VSP,
+                  _rave.Rave_ProductType_HSP,
+                  _rave.Rave_ProductType_RAY,
+                  _rave.Rave_ProductType_AZIM,
+                  _rave.Rave_ProductType_QUAL,
+                  _rave.Rave_ProductType_PMAX,
+                  _rave.Rave_ProductType_SURF]
+    self.assertEquals(obj.product, _rave.Rave_ProductType_UNDEFINED)
+    for pt in producttypes:
+      obj.product = pt
+      self.assertEquals(obj.product, pt)
+
   def test_isValid_asImage(self):
     obj = _cartesian.new()
     param = _cartesianparam.new()
