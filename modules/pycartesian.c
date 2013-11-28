@@ -363,7 +363,7 @@ static PyObject* _pycartesian_getConvertedValueAtLocation(PyCartesian* self, PyO
     return NULL;
   }
 
-  result = Cartesian_getConvertedAtFromLocation(self->cartesian, lx, ly, &v);
+  result = Cartesian_getConvertedValueAtLocation(self->cartesian, lx, ly, &v);
 
   return Py_BuildValue("(id)", result, v);
 }
@@ -655,7 +655,7 @@ static PyObject* _pycartesian_getQualityFieldByHowTask(PyCartesian* self, PyObje
 {
   PyObject* result = NULL;
   RaveField_t* field = NULL;
-  int index = 0;
+
   char* howtask = NULL;
   if (!PyArg_ParseTuple(args, "s", &howtask)) {
     return NULL;
@@ -687,7 +687,7 @@ static PyObject* _pycartesian_findQualityFieldByHowTask(PyCartesian* self, PyObj
 {
   PyObject* result = NULL;
   RaveField_t* field = NULL;
-  int index = 0;
+
   char* howtask = NULL;
   if (!PyArg_ParseTuple(args, "s", &howtask)) {
     return NULL;
@@ -917,8 +917,8 @@ static struct PyMethodDef _pycartesian_methods[] =
   {"setConvertedValue", (PyCFunction) _pycartesian_setConvertedValue, 1},
   {"getValue", (PyCFunction) _pycartesian_getValue, 1},
   {"getConvertedValue", (PyCFunction) _pycartesian_getConvertedValue, 1},
-  {"getValueFromLocation", (PyCFunction) _pycartesian_getValueAtLocation, 1},
-  {"getConvertedValueFromLocation", (PyCFunction) _pycartesian_getValueAtLocation, 1},
+  {"getValueAtLocation", (PyCFunction) _pycartesian_getValueAtLocation, 1},
+  {"getConvertedValueAtLocation", (PyCFunction) _pycartesian_getConvertedValueAtLocation, 1},
   {"isTransformable", (PyCFunction) _pycartesian_isTransformable, 1},
   {"getMean", (PyCFunction) _pycartesian_getMean, 1},
   {"addAttribute", (PyCFunction) _pycartesian_addAttribute, 1},

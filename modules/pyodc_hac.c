@@ -89,9 +89,9 @@ static PyObject* _hacFilter_func(PyObject* self, PyObject* args) {
   }
 
   if (hacFilter(pyscan->scan, pyhac->field, quant)) {
-    Py_RETURN_TRUE;
+    return PyBool_FromLong(1); /* Instead of Py_RETURN_TRUE since compiler screams about dereferencing */
   }
-  Py_RETURN_FALSE;
+  return PyBool_FromLong(0); /* Instead of Py_RETURN_FALSE since compiler screams about dereferencing */
 }
 
 
@@ -124,9 +124,9 @@ static PyObject* _hacIncrement_func(PyObject* self, PyObject* args) {
   }
 
   if (hacIncrement(pyscan->scan, pyhac->field, quant)) {
-    Py_RETURN_TRUE;
+    return PyBool_FromLong(1); /* Instead of Py_RETURN_TRUE since compiler screams about dereferencing */
   }
-  Py_RETURN_FALSE;
+  return PyBool_FromLong(0); /* Instead of Py_RETURN_FALSE since compiler screams about dereferencing */
 }
 
 

@@ -29,6 +29,7 @@ import _polarvolume
 import _polarscan
 import _polarscanparam
 import _rave
+import _polarnav
 import string
 import _helpers
 import math
@@ -694,6 +695,123 @@ class PyPolarVolumeTest(unittest.TestCase):
     self.assertEquals(stype, type)
     self.assertAlmostEquals(svalue, value, 4)
 
+  def test_getDistanceField(self):
+    polnav = _polarnav.new()
+    polnav.lat0 = 60.0 * math.pi / 180.0
+    polnav.lon0 = 12.0 * math.pi / 180.0
+    polnav.alt0 = 0.0
+
+    expected = []
+    rarr=[]
+    for i in range(10):
+      rarr.append(polnav.reToDh(100.0 * i, (math.pi / 180.0)*0.5)[0])
+    rarr.append(-99999.0)
+    rarr.append(-99999.0)
+    
+    expected.append(rarr)
+    rarr=[]
+    for i in range(12):
+      rarr.append(polnav.reToDh(100.0 * i, (math.pi / 180.0)*1.0)[0])
+    expected.append(rarr)
+    
+    s1 = _polarscan.new()
+    s1.longitude = polnav.lon0 # We want same settings as the polar navigator so that we can test result
+    s1.latitude = polnav.lat0
+    s1.height = polnav.alt0
+    s1.rscale = 100.0
+    s1.elangle = (math.pi / 180.0)*0.5
+    
+    p1 = _polarscanparam.new()
+    p1.quantity="DBZH"    
+    data = numpy.zeros((5, 10), numpy.int8)
+    p1.setData(data)
+    
+    s1.addParameter(p1)
+
+    s2 = _polarscan.new()
+    s2.longitude = polnav.lon0 # We want same settings as the polar navigator so that we can test result
+    s2.latitude = polnav.lat0
+    s2.height = polnav.alt0
+    s2.rscale = 100.0
+    s2.elangle = (math.pi / 180.0)*1.0
+    
+    p2 = _polarscanparam.new()
+    p2.quantity="DBZH"    
+    data = numpy.zeros((5, 12), numpy.int8)
+    p2.setData(data)
+    
+    s2.addParameter(p2)
+
+    obj = _polarvolume.new()
+    obj.addScan(s1)
+    obj.addScan(s2)
+
+    f = obj.getDistanceField()
+    self.assertEquals(12, f.xsize)
+    self.assertEquals(2, f.ysize)
+    
+    for j in range(2):
+      for i in range(12):
+        self.assertAlmostEquals(expected[j][i], f.getValue(i, j)[1], 4)
+
+  def test_getHeightField(self):
+    polnav = _polarnav.new()
+    polnav.lat0 = 60.0 * math.pi / 180.0
+    polnav.lon0 = 12.0 * math.pi / 180.0
+    polnav.alt0 = 0.0
+
+    expected = []
+    rarr=[]
+    for i in range(10):
+      rarr.append(polnav.reToDh(100.0 * i, (math.pi / 180.0)*0.5)[1])
+    rarr.append(-99999.0)
+    rarr.append(-99999.0)
+    
+    expected.append(rarr)
+    rarr=[]
+    for i in range(12):
+      rarr.append(polnav.reToDh(100.0 * i, (math.pi / 180.0)*1.0)[1])
+    expected.append(rarr)
+    
+    s1 = _polarscan.new()
+    s1.longitude = polnav.lon0 # We want same settings as the polar navigator so that we can test result
+    s1.latitude = polnav.lat0
+    s1.height = polnav.alt0
+    s1.rscale = 100.0
+    s1.elangle = (math.pi / 180.0)*0.5
+    
+    p1 = _polarscanparam.new()
+    p1.quantity="DBZH"    
+    data = numpy.zeros((5, 10), numpy.int8)
+    p1.setData(data)
+    
+    s1.addParameter(p1)
+
+    s2 = _polarscan.new()
+    s2.longitude = polnav.lon0 # We want same settings as the polar navigator so that we can test result
+    s2.latitude = polnav.lat0
+    s2.height = polnav.alt0
+    s2.rscale = 100.0
+    s2.elangle = (math.pi / 180.0)*1.0
+    
+    p2 = _polarscanparam.new()
+    p2.quantity="DBZH"    
+    data = numpy.zeros((5, 12), numpy.int8)
+    p2.setData(data)
+    
+    s2.addParameter(p2)
+
+    obj = _polarvolume.new()
+    obj.addScan(s1)
+    obj.addScan(s2)
+
+    f = obj.getHeightField()
+    self.assertEquals(12, f.xsize)
+    self.assertEquals(2, f.ysize)
+    
+    for j in range(2):
+      for i in range(12):
+        self.assertAlmostEquals(expected[j][i], f.getValue(i, j)[1], 2)
 
 if __name__ == "__main__":
   #import sys;sys.argv = ['', 'Test.testName']

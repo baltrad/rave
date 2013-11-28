@@ -322,15 +322,15 @@ static PyObject* _pypolarnavigator_getattr(PyPolarNavigator* self, char* name)
   if (strcmp("poleradius", name) == 0) {
     return PyFloat_FromDouble(PolarNavigator_getPoleRadius(self->navigator));
   } else if (strcmp("equatorradius", name) == 0) {
-    return PyInt_FromLong(PolarNavigator_getEquatorRadius(self->navigator));
+    return PyFloat_FromDouble(PolarNavigator_getEquatorRadius(self->navigator));
   } else if (strcmp("lon0", name) == 0) {
     return PyFloat_FromDouble(PolarNavigator_getLon0(self->navigator));
   } else if (strcmp("lat0", name) == 0) {
-    return PyInt_FromLong(PolarNavigator_getLat0(self->navigator));
+    return PyFloat_FromDouble(PolarNavigator_getLat0(self->navigator));
   } else if (strcmp("alt0", name) == 0) {
     return PyFloat_FromDouble(PolarNavigator_getAlt0(self->navigator));
   } else if (strcmp("dndh", name) == 0) {
-    return PyInt_FromLong(PolarNavigator_getDndh(self->navigator));
+    return PyFloat_FromDouble(PolarNavigator_getDndh(self->navigator));
   }
 
   res = Py_FindMethod(_pypolarnavigator_methods, (PyObject*) self, name);

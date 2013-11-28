@@ -779,6 +779,22 @@ int PolarScan_isValid(PolarScan_t* scan, Rave_ObjectType otype);
 PolarScan_t* PolarScan_createFromScanAndField(PolarScan_t* self, RaveField_t* field);
 
 /**
+ * Gets the distance field for self. Will always be a 1-dimensional array with nbins length.
+ * The distance represents the distance on ground to get to the same position as the bin location.
+ * @param[in] self - self
+ * @returns the distance field
+ */
+RaveField_t* PolarScan_getDistanceField(PolarScan_t* self);
+
+/**
+ * Gets the height field for self. Will always be a 1-dimensional array with nbins length.
+ * The height represents the altitude for the bin
+ * @param[in] self - self
+ * @returns the height field
+ */
+RaveField_t* PolarScan_getHeightField(PolarScan_t* self);
+
+/**
  * Framework internal function for setting the beamwidth in a scan,
  * used to indicate that the beamwidth comes from the polar volume.
  * I.E. DO NOT USE UNLESS YOU KNOW WHY.

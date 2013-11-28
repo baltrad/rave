@@ -33,6 +33,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include <arrayobject.h>
 #include "pypolarscan.h"
 #include "pyrave_debug.h"
+#include "pyravefield.h"
 #include "rave_alloc.h"
 #include "rave.h"
 
@@ -578,6 +579,44 @@ static PyObject* _pypolarvolume_isValid(PyPolarVolume* self, PyObject* args)
   return PyBool_FromLong(PolarVolume_isValid(self->pvol));
 }
 
+static PyObject* _pypolarvolume_getDistanceField(PyPolarVolume* self, PyObject* args)
+{
+  PyObject* result = NULL;
+  RaveField_t* field = NULL;
+  if (!PyArg_ParseTuple(args, "")) {
+    return NULL;
+  }
+  field = PolarVolume_getDistanceField(self->pvol);
+  if (field != NULL) {
+    result = (PyObject*)PyRaveField_New(field);
+  }
+
+  RAVE_OBJECT_RELEASE(field);
+  if (result == NULL) {
+    raiseException_returnNULL(PyExc_RuntimeError, "Could not create distance field");
+  }
+  return result;
+}
+
+static PyObject* _pypolarvolume_getHeightField(PyPolarVolume* self, PyObject* args)
+{
+  PyObject* result = NULL;
+  RaveField_t* field = NULL;
+  if (!PyArg_ParseTuple(args, "")) {
+    return NULL;
+  }
+  field = PolarVolume_getHeightField(self->pvol);
+  if (field != NULL) {
+    result = (PyObject*)PyRaveField_New(field);
+  }
+
+  RAVE_OBJECT_RELEASE(field);
+  if (result == NULL) {
+    raiseException_returnNULL(PyExc_RuntimeError, "Could not create height field");
+  }
+  return result;
+}
+
 /**
  * All methods a polar volume can have
  */
@@ -608,6 +647,8 @@ static struct PyMethodDef _pypolarvolume_methods[] =
   {"getAttribute", (PyCFunction) _pypolarvolume_getAttribute, 1},
   {"getAttributeNames", (PyCFunction) _pypolarvolume_getAttributeNames, 1},
   {"isValid", (PyCFunction) _pypolarvolume_isValid, 1},
+  {"getDistanceField", (PyCFunction) _pypolarvolume_getDistanceField, 1},
+  {"getHeightField", (PyCFunction) _pypolarvolume_getHeightField, 1},
   {NULL, NULL} /* sentinel */
 };
 
@@ -823,6 +864,8 @@ void init_polarvolume(void)
 
   import_array(); /*To make sure I get access to Numeric*/
   import_pypolarscan();
+  import_pyravefield();
+
   PYRAVE_DEBUG_INITIALIZE;
 }
 /*@} End of Module setup */

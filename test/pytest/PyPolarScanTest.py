@@ -29,6 +29,7 @@ import _polarscan
 import _polarscanparam
 import _rave
 import _ravefield
+import _polarnav
 import string
 import numpy
 import math
@@ -1169,6 +1170,62 @@ class PyPolarScanTest(unittest.TestCase):
     
     result = obj.findQualityFieldByHowTask("se.smhi.f3")
     self.assertEquals(None, result)
+    
+  def test_getDistanceField(self):
+    polnav = _polarnav.new()
+    polnav.lat0 = 60.0 * math.pi / 180.0
+    polnav.lon0 = 12.0 * math.pi / 180.0
+    polnav.alt0 = 0.0
+
+    expected = []
+    for i in range(10):
+      expected.append(polnav.reToDh(100.0 * i, (math.pi / 180.0)*0.5)[0])
+    
+    obj = _polarscan.new()
+    obj.longitude = polnav.lon0 # We want same settings as the polar navigator so that we can test result
+    obj.latitude = polnav.lat0
+    obj.height = polnav.alt0
+    
+    obj.rscale = 100.0
+    obj.elangle = (math.pi / 180.0)*0.5
+    param = _polarscanparam.new()
+    param.quantity="DBZH"    
+    data = numpy.zeros((5, 10), numpy.int8)
+    param.setData(data)
+    obj.addParameter(param)
+
+    f = obj.getDistanceField()
+    self.assertEquals(10, f.xsize)
+    for i in range(10):
+      self.assertAlmostEquals(expected[i], f.getValue(i, 0)[1], 4)
+
+  def test_getHeightField(self):
+    polnav = _polarnav.new()
+    polnav.lat0 = 60.0 * math.pi / 180.0
+    polnav.lon0 = 12.0 * math.pi / 180.0
+    polnav.alt0 = 0.0
+
+    expected = []
+    for i in range(10):
+      expected.append(polnav.reToDh(100.0 * i, (math.pi / 180.0)*0.5)[1])
+    
+    obj = _polarscan.new()
+    obj.longitude = polnav.lon0 # We want same settings as the polar navigator so that we can test result
+    obj.latitude = polnav.lat0
+    obj.height = polnav.alt0
+    
+    obj.rscale = 100.0
+    obj.elangle = (math.pi / 180.0)*0.5
+    param = _polarscanparam.new()
+    param.quantity="DBZH"    
+    data = numpy.zeros((5, 10), numpy.int8)
+    param.setData(data)
+    obj.addParameter(param)
+
+    f = obj.getHeightField()
+    self.assertEquals(10, f.xsize)
+    for i in range(10):
+      self.assertAlmostEquals(expected[i], f.getValue(i, 0)[1], 4)
     
 if __name__ == "__main__":
   #import sys;sys.argv = ['', 'Test.testName']

@@ -912,6 +912,80 @@ PolarScan_t* PolarVolume_findAnyScanWithQualityFieldByHowTask(PolarVolume_t* pvo
   return result;
 }
 
+/**
+ * Returns the height or distance field for this volume. The height is the altitude at the
+ * location represented by each bin and the distance is the distance on ground level.
+ * @param[in] self - self
+ * @param[in] ftype - if 0 then distance field will be generated otherwise the height field will be generated.
+ * @returns the rave field
+ */
+static RaveField_t* PolarVolumeInternal_getHeightOrDistanceField(PolarVolume_t* self, int ftype)
+{
+  RaveField_t *f = NULL, *result = NULL;
+  int i = 0, j = 0, nscans = 0, maxnbins = 0;
+
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  nscans = RaveObjectList_size(self->scans);
+
+  for (i = 0; i < nscans; i++) {
+    PolarScan_t* scan = PolarVolume_getScan(self, i);
+    int nbins = PolarScan_getNbins(scan);
+    if (nbins > maxnbins) {
+      maxnbins = nbins;
+    }
+    RAVE_OBJECT_RELEASE(scan);
+  }
+  f = RAVE_OBJECT_NEW(&RaveField_TYPE);
+  if (f == NULL || !RaveField_createData(f, maxnbins, nscans, RaveDataType_DOUBLE)) {
+    RAVE_ERROR0("Failed to create field for distance field");
+    goto done;
+  }
+  for (i = 0; i < nscans; i++) {
+    PolarScan_t* scan = PolarVolume_getScan(self, i);
+    RaveField_t* dfield = NULL;
+
+    if (ftype == 0) {
+      dfield = PolarScan_getDistanceField(scan);
+    } else {
+      dfield = PolarScan_getHeightField(scan);
+    }
+    int nbins = 0;
+    if (dfield == NULL) {
+      RAVE_OBJECT_RELEASE(scan);
+      goto done;
+    }
+    nbins = RaveField_getXsize(dfield);
+
+    for (j = 0; j < nbins; j++) {
+      double v = -99999.0;
+      RaveField_getValue(dfield,j,0,&v);
+      RaveField_setValue(f, j, i, v);
+    }
+    // And if for some reason we have less than max number of bins, we just set a negative value
+    for (j=nbins; j < maxnbins; j++) {
+      RaveField_setValue(f, j, i, -99999.0);
+    }
+    RAVE_OBJECT_RELEASE(dfield);
+    RAVE_OBJECT_RELEASE(scan);
+  }
+
+  result = RAVE_OBJECT_COPY(f);
+done:
+  RAVE_OBJECT_RELEASE(f);
+  return result;
+
+}
+
+RaveField_t* PolarVolume_getDistanceField(PolarVolume_t* self)
+{
+  return PolarVolumeInternal_getHeightOrDistanceField(self, 0);
+}
+
+RaveField_t* PolarVolume_getHeightField(PolarVolume_t* self)
+{
+  return PolarVolumeInternal_getHeightOrDistanceField(self, 1);
+}
+
 /*@} End of Interface functions */
 RaveCoreObjectType PolarVolume_TYPE = {
     "PolarVolume",

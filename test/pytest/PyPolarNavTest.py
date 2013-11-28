@@ -53,6 +53,42 @@ class PyPolarNavTest(unittest.TestCase):
     for a in attrs:
       self.assertEquals(True, a in alist)
 
+  def test_poleradius(self):
+    obj = _polarnav.new()
+    self.assertAlmostEquals(6356780.0, obj.poleradius, 4)
+    obj.poleradius = 10.2
+    self.assertAlmostEquals(10.2, obj.poleradius, 4)
+  
+  def test_equatorradius(self):
+    obj = _polarnav.new()
+    self.assertAlmostEquals(6378160.0, obj.equatorradius, 4)
+    obj.equatorradius = 10.2
+    self.assertAlmostEquals(10.2, obj.equatorradius, 4)
+
+  def test_lon0(self):
+    obj = _polarnav.new()
+    self.assertAlmostEquals(0.0, obj.lon0, 4)
+    obj.lon0 = 0.2
+    self.assertAlmostEquals(0.2, obj.lon0, 4)
+
+  def test_lat0(self):
+    obj = _polarnav.new()
+    self.assertAlmostEquals(0.0, obj.lat0, 4)
+    obj.lat0 = 0.2
+    self.assertAlmostEquals(0.2, obj.lat0, 4)
+
+  def test_alt0(self):
+    obj = _polarnav.new()
+    self.assertAlmostEquals(0.0, obj.alt0, 4)
+    obj.alt0 = 10.2
+    self.assertAlmostEquals(10.2, obj.alt0, 4)
+
+  def test_dndh(self):
+    obj = _polarnav.new()
+    self.assertAlmostEquals((-3.9e-5)/1000.0, obj.dndh, 4)
+    obj.dndh = 0.2
+    self.assertAlmostEquals(0.2, obj.dndh, 4)
+
   def test_getDistance(self):
     obj = _polarnav.new()
     obj.lat0 = 60.0 * math.pi/180.0
@@ -126,7 +162,6 @@ class PyPolarNavTest(unittest.TestCase):
     
     lon,lat = obj.daToLl(9000.0, 0.0)
     #print "lon=%f, lat=%f"%(lon*180.0/math.pi, lat*180.0/math.pi)
-    
 
 if __name__ == "__main__":
   #import sys;sys.argv = ['', 'Test.testName']

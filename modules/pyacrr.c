@@ -211,7 +211,7 @@ static PyObject* _pyacrr_accumulate(PyAcrr* self, PyObject* args)
 
   param = RaveAcrr_accumulate(self->acrr, accept, N, hours);
   if (param != NULL) {
-    result = PyCartesianParam_New(param);
+    result = (PyObject*)PyCartesianParam_New(param);
   } else {
     raiseException_returnNULL(PyExc_IOError, "Failure when accumulating result");
   }

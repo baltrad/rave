@@ -557,7 +557,6 @@ int PolarScanParam_convertDataDoubleToUchar(PolarScanParam_t* param) {
   double iv, ov, gain, offset, nodata, undetect;
   int r, b, nrays, nbins;
   int retval=0;
-  RaveValueType rvt;
   RaveDataType rdt;
 
   rdt = PolarScanParam_getDataType(param);
@@ -578,7 +577,7 @@ int PolarScanParam_convertDataDoubleToUchar(PolarScanParam_t* param) {
 
   for (r = 0; r < nrays; r++) {
     for (b = 0; b < nbins; b++) {
-      rvt = PolarScanParam_getValue(param, b, r, &iv);
+      PolarScanParam_getValue(param, b, r, &iv);
 
       if ( (iv > -DBL_MAX) && (iv < DBL_MAX) ) {
         ov = (iv - offset) / gain;

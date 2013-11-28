@@ -436,4 +436,26 @@ PolarScan_t* PolarVolume_findScanWithQualityFieldByHowTask(PolarVolume_t* pvol, 
  */
 PolarScan_t* PolarVolume_findAnyScanWithQualityFieldByHowTask(PolarVolume_t* pvol, const char* howtaskvalue);
 
+/**
+ * Gets the distance field for self. Will always be a 2-dimensional array with n elevation angles * nbins.
+ * nbins will be the same number of bins as the scan with most bins has. Scans with less bins than the maximum number of bins will
+ * get a -99999.0 value at each location that not can be represented. ysize represents the number of elevations and distance
+ * is represented by xsize. The order of the elevation angles will be the same as the current volume so the scans probably should
+ * be sorted before calling this method.
+ * @param[in] self - self
+ * @returns the distance field
+ */
+RaveField_t* PolarVolume_getDistanceField(PolarVolume_t* self);
+
+/**
+ * Gets the height field for self. Will always be a 2-dimensional array with n elevation angles * nbins.
+ * nbins will be the same number of bins as the scan with most bins has. Scans with less bins than the maximum number of bins will
+ * get a -99999.0 value at each location that not can be represented. ysize represents the number of elevations and distance
+ * is represented by xsize. The order of the elevation angles will be the same as the current volume so the scans probably should
+ * be sorted before calling this method.
+ * @param[in] self - self
+ * @returns the height field
+ */
+RaveField_t* PolarVolume_getHeightField(PolarVolume_t* self);
+
 #endif

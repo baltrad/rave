@@ -89,7 +89,7 @@ int dealias_scan(PolarScan_t* scan) {
   PolarScanParam_t* vrad = NULL;
   RaveAttribute_t* attr = NULL;
   RaveAttribute_t* dattr = RAVE_OBJECT_NEW(&RaveAttribute_TYPE);;
-  int nbins, nrays, i, j, n, m, ib, ir, eind, ret;
+  int nbins, nrays, i, j, n, m, ib, ir, eind;
   int retval = 0;
   double elangle, gain, offset, nodata, undetect, NI, val, vm, min1, esum, u1, v1, min2, dmy, vmin, vmax;
 
@@ -99,7 +99,6 @@ int dealias_scan(PolarScan_t* scan) {
 
   if ( (PolarScan_hasParameter(scan, "VRAD")) && (!dealiased(scan)) ) {
     if (elangle*RAD2DEG<=EMAX) {
-      //printf("elangle: %f \n",elangle*RAD2DEG);
       vrad = PolarScan_getParameter(scan, "VRAD");
       gain = PolarScanParam_getGain(vrad);
       offset = PolarScanParam_getOffset(vrad);
@@ -107,7 +106,7 @@ int dealias_scan(PolarScan_t* scan) {
       undetect = PolarScanParam_getUndetect(vrad);
       attr = PolarScan_getAttribute(scan, "how/NI");  /* only location? */
       if (attr != NULL) {
-        ret = RaveAttribute_getDouble(attr, &NI);
+        RaveAttribute_getDouble(attr, &NI);
       } else {
         NI = abs(offset);
       }
@@ -239,9 +238,9 @@ int dealias_scan(PolarScan_t* scan) {
         }
       }
 
-      ret = RaveAttribute_setName(dattr, "how/dealiased");
-      ret = RaveAttribute_setString(dattr, "True");
-      ret = PolarScanParam_addAttribute(vrad, dattr);
+      RaveAttribute_setName(dattr, "how/dealiased");
+      RaveAttribute_setString(dattr, "True");
+      PolarScanParam_addAttribute(vrad, dattr);
 
       RAVE_FREE(vrad_nodata);
       RAVE_FREE(vrad_undetect);

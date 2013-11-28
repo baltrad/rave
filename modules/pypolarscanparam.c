@@ -584,7 +584,6 @@ static PyObject* _pypolarscanparam_toField(PyPolarScanParam* self, PyObject* arg
  */
 static PyObject* _pypolarscanparam_convertDataDoubleToUchar(PyPolarScanParam* self, PyObject* args)
 {
-  int retval=0;
   if (!PyArg_ParseTuple(args, "")) {
       return NULL;
     }

@@ -345,13 +345,13 @@ static PyObject* _pytransform_fillGap(PyTransform* self, PyObject* args)
   if (PyCartesian_Check(inobj)) {
     Cartesian_t* filled = Transform_fillGap(self->transform, ((PyCartesian*)inobj)->cartesian);
     if (filled != NULL) {
-      result = PyCartesian_New(filled);
+      result = (PyObject*)PyCartesian_New(filled);
     }
     RAVE_OBJECT_RELEASE(filled);
   } else {
     CartesianParam_t* filled = Transform_fillGapOnParameter(self->transform, ((PyCartesianParam*)inobj)->param);
     if (filled != NULL) {
-      result = PyCartesianParam_New(filled);
+      result = (PyObject*)PyCartesianParam_New(filled);
     }
     RAVE_OBJECT_RELEASE(filled);
   }

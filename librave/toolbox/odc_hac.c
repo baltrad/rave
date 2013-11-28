@@ -32,7 +32,7 @@ int hacFilter(PolarScan_t* scan, RaveField_t* hac, char* quant) {
   int retval = 0;
   int ir, ib;
   long nrays, nbins, N;
-  double gain, offset, nodata, ni, Pi, val, thresh;
+  double nodata, ni, Pi, val, thresh;
   
   nbins = PolarScan_getNbins(scan);
   nrays = PolarScan_getNrays(scan);
@@ -41,8 +41,6 @@ int hacFilter(PolarScan_t* scan, RaveField_t* hac, char* quant) {
      param = PolarScan_getParameter(scan, quant);
      qind = PolarScan_getQualityFieldByHowTask(scan, "eu.opera.odc.hac");
      nodata = PolarScanParam_getNodata(param);
-     gain = PolarScanParam_getGain(param);
-     offset = PolarScanParam_getOffset(param);
 
      attr = RaveField_getAttribute(qind, "how/task_args");
      RaveAttribute_getDouble(attr, &thresh);
@@ -51,19 +49,19 @@ int hacFilter(PolarScan_t* scan, RaveField_t* hac, char* quant) {
      RaveAttribute_getLong(attr, &N);
      
      for (ir=0; ir<nrays; ir++) {
-	for (ib=0; ib<nbins; ib++) {
-	   rvt = PolarScanParam_getValue(param, ib, ir, &val);
+       for (ib=0; ib<nbins; ib++) {
+         rvt = PolarScanParam_getValue(param, ib, ir, &val);
 
-	   if (rvt==RaveValueType_DATA) {
-	      RaveField_getValue(hac, ib, ir, &ni);
-	      Pi = 100 * (ni/(double)N);
+         if (rvt==RaveValueType_DATA) {
+           RaveField_getValue(hac, ib, ir, &ni);
+           Pi = 100 * (ni/(double)N);
 
-	      if (Pi > thresh) {
-		 PolarScanParam_setValue(param, ib, ir, nodata);
-		 RaveField_setValue(qind, ib, ir, val);
-	      }
-	   }
-	}
+           if (Pi > thresh) {
+             PolarScanParam_setValue(param, ib, ir, nodata);
+             RaveField_setValue(qind, ib, ir, val);
+           }
+         }
+       }
      }
 
      retval = 1;

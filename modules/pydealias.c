@@ -80,9 +80,9 @@ static PyObject* _dealiased_func(PyObject* self, PyObject* args) {
   }
 
   if (dealiased(pyscan->scan)) {
-    Py_RETURN_TRUE;
+    return PyBool_FromLong(1); /* Instead of Py_RETURN_TRUE since compiler screams about dereferencing */
   }
-  Py_RETURN_FALSE;
+  return PyBool_FromLong(0); /* Instead of Py_RETURN_FALSE since compiler screams about dereferencing */
 }
 
 
@@ -117,9 +117,9 @@ static PyObject* _dealias_func(PyObject* self, PyObject* args)
   }
 
   if (ret) {
-    Py_RETURN_TRUE;
+    return PyBool_FromLong(1); /* Instead of Py_RETURN_TRUE since compiler screams about dereferencing */
   } else {
-    Py_RETURN_FALSE;
+    return PyBool_FromLong(0); /* Instead of Py_RETURN_FALSE since compiler screams about dereferencing */
   }
 }
 

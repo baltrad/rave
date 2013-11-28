@@ -980,6 +980,44 @@ static PyObject* _pypolarscan_findQualityFieldByHowTask(PyPolarScan* self, PyObj
   }
 }
 
+static PyObject* _pypolarscan_getDistanceField(PyPolarScan* self, PyObject* args)
+{
+  PyObject* result = NULL;
+  RaveField_t* field = NULL;
+  if (!PyArg_ParseTuple(args, "")) {
+    return NULL;
+  }
+  field = PolarScan_getDistanceField(self->scan);
+  if (field != NULL) {
+    result = (PyObject*)PyRaveField_New(field);
+  }
+
+  RAVE_OBJECT_RELEASE(field);
+  if (result == NULL) {
+    raiseException_returnNULL(PyExc_RuntimeError, "Could not create distance field");
+  }
+  return result;
+}
+
+static PyObject* _pypolarscan_getHeightField(PyPolarScan* self, PyObject* args)
+{
+  PyObject* result = NULL;
+  RaveField_t* field = NULL;
+  if (!PyArg_ParseTuple(args, "")) {
+    return NULL;
+  }
+  field = PolarScan_getHeightField(self->scan);
+  if (field != NULL) {
+    result = (PyObject*)PyRaveField_New(field);
+  }
+
+  RAVE_OBJECT_RELEASE(field);
+  if (result == NULL) {
+    raiseException_returnNULL(PyExc_RuntimeError, "Could not create height field");
+  }
+  return result;
+}
+
 /**
  * All methods a polar scan can have
  */
@@ -1039,6 +1077,8 @@ static struct PyMethodDef _pypolarscan_methods[] =
   {"removeQualityField", (PyCFunction) _pypolarscan_removeQualityField, 1},
   {"getQualityFieldByHowTask", (PyCFunction) _pypolarscan_getQualityFieldByHowTask, 1},
   {"findQualityFieldByHowTask", (PyCFunction) _pypolarscan_findQualityFieldByHowTask, 1},
+  {"getDistanceField", (PyCFunction) _pypolarscan_getDistanceField, 1},
+  {"getHeightField", (PyCFunction) _pypolarscan_getHeightField, 1},
   {NULL, NULL } /* sentinel */
 };
 

@@ -1295,6 +1295,57 @@ done:
   return result;
 }
 
+/**
+ * Returns the height or distance field for this scan. The height is the altitude at the
+ * location represented by each bin and the distance is the distance on ground level.
+ * @param[in] self - self
+ * @param[in] ftype - if 0 then distance field will be generated otherwise the height field will be generated.
+ * @returns the rave field
+ */
+static RaveField_t* PolarScanInternal_getHeightOrDistanceField(PolarScan_t* self, int ftype)
+{
+  RaveField_t *f = NULL, *result = NULL;
+  int i = 0;
+
+  RAVE_ASSERT((self != NULL), "self == NULL");
+
+  f = RAVE_OBJECT_NEW(&RaveField_TYPE);
+  if (f == NULL) {
+    RAVE_ERROR0("Failed to allocate memory for rave field");
+    goto done;
+  }
+
+  if (!RaveField_createData(f, self->nbins, 1, RaveDataType_DOUBLE)) {
+    RAVE_ERROR0("Failed to create data for distance field");
+    goto done;
+  }
+
+  for (i = 0; i < self->nbins; i++) {
+    double d = 0.0, h = 0.0;
+    PolarNavigator_reToDh(self->navigator, i*self->rscale, self->elangle, &d, &h);
+    if (ftype == 0) {
+      RaveField_setValue(f, i, 0, d);
+    } else {
+      RaveField_setValue(f, i, 0, h);
+    }
+  }
+
+  result = RAVE_OBJECT_COPY(f);
+done:
+  RAVE_OBJECT_RELEASE(f);
+  return result;
+}
+
+RaveField_t* PolarScan_getDistanceField(PolarScan_t* self)
+{
+  return PolarScanInternal_getHeightOrDistanceField(self, 0);
+}
+
+RaveField_t* PolarScan_getHeightField(PolarScan_t* self)
+{
+  return PolarScanInternal_getHeightOrDistanceField(self, 1);
+}
+
 void PolarScanInternal_setPolarVolumeBeamwidth(PolarScan_t* scan, double bw)
 {
   RAVE_ASSERT((scan != NULL), "scan == NULL");

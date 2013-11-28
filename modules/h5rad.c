@@ -15,6 +15,7 @@ static PyObject *ErrorObject;
  */
 #define Raise(type,msg) {PyErr_SetString(type,msg);}
 
+#ifdef KALLE
 static int gimme(PyObject *info, RaveImageStruct *p)
 {
   int ret = 1;
@@ -57,6 +58,7 @@ static int gimme(PyObject *info, RaveImageStruct *p)
   Py_DECREF(po);
   return ret;
 }
+#endif
 
 static PyObject* _read_h5rad_func(PyObject* self, PyObject* args)
 {

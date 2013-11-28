@@ -87,7 +87,7 @@ static struct PyMethodDef _mean_functions[] =
 /**
  * Initialize the _mean module
  */
-void init_mean()
+void init_mean(void)
 {
   PyObject* m;
   m = Py_InitModule("_mean", _mean_functions);
