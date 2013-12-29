@@ -124,9 +124,9 @@ def generate(files, arguments):
   if "distancefield" in args.keys():
     distancefield = args["distancefield"]
   if "hours" in args.keys():
-    hours = args["hours"]
+    hours = int(args["hours"])
   if "N" in args.keys():
-    N = args["N"]
+    N = int(args["N"])
   
   if distancefield == "eu.baltrad.composite.quality.distance.radar":
     distancefield = "se.smhi.composite.distance.radar"
