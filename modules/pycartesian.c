@@ -247,6 +247,18 @@ static PyObject* _pycartesian_getIndexY(PyCartesian* self, PyObject* args)
   return PyLong_FromLong(y);
 }
 
+static PyObject* _pycartesian_getExtremeLonLatBoundaries(PyCartesian* self, PyObject* args)
+{
+  double ulLon = 0.0, ulLat = 0.0, lrLon = 0.0, lrLat = 0.0;
+  if (!PyArg_ParseTuple(args, "")) {
+    return NULL;
+  }
+  if (!Cartesian_getExtremeLonLatBoundaries(self->cartesian, &ulLon, &ulLat, &lrLon, &lrLat)) {
+    raiseException_returnNULL(PyExc_ValueError, "Could not get extreme boundaries for cartesian product");
+  }
+  return Py_BuildValue("(dd)(dd)",ulLon,ulLat,lrLon,lrLat);
+}
+
 /**
  * sets the value at the specified position
  * @param[in] self this instance.
@@ -367,6 +379,81 @@ static PyObject* _pycartesian_getConvertedValueAtLocation(PyCartesian* self, PyO
 
   return Py_BuildValue("(id)", result, v);
 }
+
+/**
+ * returns the converted value at the specified lon/lat position as defined by the area definition
+ * @param[in] self this instance.
+ * @param[in] args - tuple (lon, lat) and v
+ * @return 0 on failure, otherwise 1
+ */
+static PyObject* _pycartesian_getConvertedValueAtLonLat(PyCartesian* self, PyObject* args)
+{
+  double lon = 0, lat = 0;
+  double v = 0.0L;
+  RaveValueType result = RaveValueType_NODATA;
+  if (!PyArg_ParseTuple(args, "(dd)", &lon, &lat)) {
+    return NULL;
+  }
+
+  result = Cartesian_getConvertedValueAtLonLat(self->cartesian, lon, lat, &v);
+
+  return Py_BuildValue("(id)", result, v);
+}
+
+/**
+ * returns the quality value at the specified location as defined by the area definition
+ * @param[in] self this instance.
+ * @param[in] args - tuple (lx, ly) and fieldname
+ * @return the quality value if found otherwise None
+ */
+static PyObject* _pycartesian_getQualityValueAtLocation(PyCartesian* self, PyObject* args)
+{
+  double lx = 0, ly = 0;
+  double v = 0.0L;
+  char* fieldname = NULL;
+  RaveValueType result = RaveValueType_NODATA;
+  if (!PyArg_ParseTuple(args, "(dd)s", &lx, &ly,&fieldname)) {
+    return NULL;
+  }
+
+  result = Cartesian_getQualityValueAtLocation(self->cartesian, lx, ly, fieldname, &v);
+
+  if (result == 0) {
+    Py_RETURN_NONE;
+  } else {
+    return PyFloat_FromDouble(v);
+  }
+}
+
+/**
+ * returns the quality value at the specified lon/lat position as defined by the area definition
+ * @param[in] self this instance.
+ * @param[in] args - tuple (lon, lat) and fieldname
+ * @return the quality value if found otherwise None
+ */
+static PyObject* _pycartesian_getQualityValueAtLonLat(PyCartesian* self, PyObject* args)
+{
+  double lon = 0, lat = 0;
+  double v = 0.0L;
+  char* fieldname = NULL;
+  RaveValueType result = RaveValueType_NODATA;
+  if (!PyArg_ParseTuple(args, "(dd)s", &lon, &lat,&fieldname)) {
+    return NULL;
+  }
+
+  result = Cartesian_getQualityValueAtLonLat(self->cartesian, lon, lat, fieldname, &v);
+
+  if (result == 0) {
+    Py_RETURN_NONE;
+  } else {
+    return PyFloat_FromDouble(v);
+  }
+}
+
+/*
+{"getQualityValueAtLocation", (PyCFunction) _pycartesian_getQualityValueAtLocation, 1},
+{"getQualityValueAtLonLat", (PyCFunction) _pycartesian_getQualityValueAtLonLat, 1},
+*/
 
 static PyObject* _pycartesian_isTransformable(PyCartesian* self, PyObject* args)
 {
@@ -913,12 +1000,16 @@ static struct PyMethodDef _pycartesian_methods[] =
   {"getLocationY", (PyCFunction) _pycartesian_getLocationY, 1},
   {"getIndexX", (PyCFunction) _pycartesian_getIndexX, 1},
   {"getIndexY", (PyCFunction) _pycartesian_getIndexY, 1},
+  {"getExtremeLonLatBoundaries", (PyCFunction) _pycartesian_getExtremeLonLatBoundaries, 1},
   {"setValue", (PyCFunction) _pycartesian_setValue, 1},
   {"setConvertedValue", (PyCFunction) _pycartesian_setConvertedValue, 1},
   {"getValue", (PyCFunction) _pycartesian_getValue, 1},
   {"getConvertedValue", (PyCFunction) _pycartesian_getConvertedValue, 1},
   {"getValueAtLocation", (PyCFunction) _pycartesian_getValueAtLocation, 1},
   {"getConvertedValueAtLocation", (PyCFunction) _pycartesian_getConvertedValueAtLocation, 1},
+  {"getConvertedValueAtLonLat", (PyCFunction) _pycartesian_getConvertedValueAtLonLat, 1},
+  {"getQualityValueAtLocation", (PyCFunction) _pycartesian_getQualityValueAtLocation, 1},
+  {"getQualityValueAtLonLat", (PyCFunction) _pycartesian_getQualityValueAtLonLat, 1},
   {"isTransformable", (PyCFunction) _pycartesian_isTransformable, 1},
   {"getMean", (PyCFunction) _pycartesian_getMean, 1},
   {"addAttribute", (PyCFunction) _pycartesian_addAttribute, 1},

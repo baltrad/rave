@@ -52,6 +52,7 @@ from PyPooCompositeAlgorithmTest import *
 from rave_pgf_volume_plugin_test import *
 from rave_overshooting_quality_plugin_test import *
 from rave_pgf_quality_registry_mgr_test import *
+
 from area_registry_test import *
 from PyDealiasTest import *
 from PyRadvolTest import *
@@ -64,6 +65,15 @@ if os.environ.get("RAVE_TESTDB_URI", "") != "":
 
 from rave_wmo_flatfile_test import *
 from rave_fm12_test import *
+
+# Gra adjustment tests requires mock version 1.0.1 or higher.
+try:
+  import mock
+  if mock.__version__ == '1.0.1':
+    from gadjust_obsmatcher_test import *
+    from gadjust_gra_test import *
+except:
+  pass
 
 if __name__ == '__main__':
   unittest.main()

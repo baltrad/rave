@@ -24,17 +24,22 @@ Tests the cartesian module.
 @date 2009-10-14
 '''
 import unittest
-import os
+import os, math
 import _cartesian
 import _cartesianparam
 import _projection
 import _rave
+import _raveio
 import _area
 import _ravefield
 import string
 import numpy
 
+def deg2rad(coord):
+  return (coord[0]*math.pi/180.0, coord[1]*math.pi/180.0)
+
 class PyCartesianTest(unittest.TestCase):
+  CARTESIAN_FIXTURE = "fixtures/cartesian_image.h5"
   def setUp(self):
     pass
 
@@ -299,6 +304,13 @@ class PyCartesianTest(unittest.TestCase):
       result = obj.getIndexY(value)
       self.assertEquals(y, result)
 
+  def test_getExtremeLonLatBoundaries(self):
+    obj = _raveio.open(self.CARTESIAN_FIXTURE).object
+    ul,lr = obj.getExtremeLonLatBoundaries()
+    self.assertAlmostEquals(8.7327, ul[0]*180.0/math.pi, 4)
+    self.assertAlmostEquals(58.4419, ul[1]*180.0/math.pi, 4)
+    self.assertAlmostEquals(16.9418, lr[0]*180.0/math.pi, 4)
+    self.assertAlmostEquals(54.1539, lr[1]*180.0/math.pi, 4)
 
   def test_projection(self):
     obj = _cartesian.new()
@@ -346,6 +358,80 @@ class PyCartesianTest(unittest.TestCase):
       result = obj.getValue((cval[0],cval[1]))
       self.assertAlmostEquals(cval[2], result[1], 4)
       self.assertEquals(cval[3], result[0])
+
+  def test_getConvertedValueAtLonLat(self):
+    obj = _cartesian.new()
+    obj.projection = _rave.projection("gnom","gnom","+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544")
+    obj.xscale = 100.0
+    obj.yscale = 100.0
+
+    xy = obj.projection.fwd(deg2rad((12.8544, 56.3675)))
+    obj.areaextent = (xy[0] - 4*100.0, xy[1] - 5*100.0, xy[0] + 6*100.0, xy[1] + 5*100.0)
+    param = _cartesianparam.new()
+    param.quantity = "DBZH"
+    param.nodata = 255.0
+    param.undetect = 0.0
+
+    a=numpy.arange(99)
+    a=numpy.array(a.astype(numpy.float64),numpy.float64)
+    a=numpy.reshape(a,(11,9)).astype(numpy.float64)    
+
+    param.setData(a)
+
+    obj.addParameter(param)
+    obj.defaultParameter = "DBZH"
+    
+    expected = obj.getConvertedValue((4,5))
+    actual = obj.getConvertedValueAtLonLat(deg2rad((12.8544, 56.3675)))
+    self.assertAlmostEquals(expected, actual, 4)
+
+  def test_getQualityValueAtLonLat(self):
+    obj = _cartesian.new()
+    obj.projection = _rave.projection("gnom","gnom","+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544")
+    obj.xscale = 100.0
+    obj.yscale = 100.0
+
+    xy = obj.projection.fwd(deg2rad((12.8544, 56.3675)))
+    obj.areaextent = (xy[0] - 4*100.0, xy[1] - 5*100.0, xy[0] + 6*100.0, xy[1] + 5*100.0)
+    param = _cartesianparam.new()
+    param.quantity = "DBZH"
+    param.nodata = 255.0
+    param.undetect = 0.0
+
+    a=numpy.zeros((11,9))
+    a=numpy.array(a.astype(numpy.float64),numpy.float64)
+    a=numpy.reshape(a,(11,9)).astype(numpy.float64)    
+
+    param.setData(a)
+
+    qf = numpy.arange(99)
+    qf = numpy.array(qf.astype(numpy.float64),numpy.float64)
+    qf = numpy.reshape(qf,(11,9)).astype(numpy.float64)
+
+    qf2 = numpy.arange(99)
+    qf2 = numpy.array(qf.astype(numpy.float64),numpy.float64)
+    qf2 = numpy.reshape(qf,(11,9)).astype(numpy.float64)
+    qf2[5][4]=199.0
+
+    field1 = _ravefield.new()
+    field1.addAttribute("how/task", "se.task.1")
+    field1.setData(qf)
+    param.addQualityField(field1)
+
+    field2 = _ravefield.new()
+    field2.addAttribute("how/task", "se.task.2")
+    field2.setData(qf2)
+    param.addQualityField(field2)
+
+    obj.addParameter(param)
+    obj.defaultParameter = "DBZH"
+    
+    #expected = obj.getConvertedValue((4,5))
+    result = obj.getQualityValueAtLonLat(deg2rad((12.8544, 56.3675)), "se.task.1")
+    self.assertAlmostEquals(49.0, result, 4)
+    result = obj.getQualityValueAtLonLat(deg2rad((12.8544, 56.3675)), "se.task.2")
+    self.assertAlmostEquals(199.0, result, 4)
+
 
   def test_getMean(self):
     obj = _cartesian.new()

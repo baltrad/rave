@@ -216,6 +216,20 @@ void Cartesian_setAreaExtent(Cartesian_t* cartesian, double llX, double llY, dou
 void Cartesian_getAreaExtent(Cartesian_t* cartesian, double* llX, double* llY, double* urX, double* urY);
 
 /**
+ * Determines the extreme lon lat boundaries for this area. I.e. the outer boundaries of this cartesian image
+ * will be steped over until the absolute min/max lon/lat positions are found for this image.
+ * Note, that the bounding box returned will be in a different setup than area extent
+ * @param[in] self - self
+ * @param[out] ulLon - Upper left longitude
+ * @param[out] ulLat - Upper left latitude
+ * @param[out] lrLon - Lower right longitude
+ * @param[out] lrLat - Lower right latitude
+ * @returns 1 if the boundaries could be determined otherwise 0
+ *
+ */
+int Cartesian_getExtremeLonLatBoundaries(Cartesian_t* self, double* ulLon, double* ulLat, double* lrLon, double* lrLat);
+
+/**
  * Sets the xscale
  * @param[in] cartesian - the cartesian product
  * @param[in] xscale - the xscale
@@ -404,6 +418,17 @@ RaveValueType Cartesian_getValueAtLocation(Cartesian_t* cartesian, double lx, do
 RaveValueType Cartesian_getConvertedValueAtLocation(Cartesian_t* cartesian, double lx, double ly, double* v);
 
 /**
+ * Returns the converted value from the lon/lat position within the area.
+ *
+ * @param[in] cartesian - self
+ * @param[in] lon - the longitude (in radians)
+ * @param[in] lat - the latitude (in radians)
+ * @param[out] v - the data at the specified position
+ * @return the type of data
+ */
+RaveValueType Cartesian_getConvertedValueAtLonLat(Cartesian_t* cartesian, double lon, double lat, double* v);
+
+/**
  * Returns the quality value at the specified location from the specified quality field. First the code
  * tests if the quality field exist in the default param. If not, it will check for the quality field
  * in self.
@@ -416,6 +441,18 @@ RaveValueType Cartesian_getConvertedValueAtLocation(Cartesian_t* cartesian, doub
  */
 int Cartesian_getQualityValueAtLocation(Cartesian_t* cartesian, double lx, double ly, const char* name, double *v);
 
+/**
+ * Returns the quality value at the specified lon/lat from the specified quality field. First the code
+ * tests if the quality field exist in the default param. If not, it will check for the quality field
+ * in self.
+ * @param[in] cartesian - self
+ * @param[in] lon - the longitude in radians
+ * @param[in] lat - the latitude in radians
+ * @param[in] name - the name of the quality field (how/task)
+ * @param[out] v - the data at the specified position
+ * @return 1 if value could be returned otherwise 0
+ */
+int Cartesian_getQualityValueAtLonLat(Cartesian_t* cartesian, double lon, double lat, const char* name, double *v);
 
 /**
  * Initializes this cartesian product with basic information. No parameter is created but

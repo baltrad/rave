@@ -213,6 +213,21 @@ static void Cartesian_destructor(RaveCoreObject* obj)
   }
 }
 
+static void CartesianInternal_getLonLatFromXY(Cartesian_t* self, int x, int y, double* lon, double* lat)
+{
+  double xpos=self->llX + self->xscale * (double)x;
+  double ypos=self->urY - self->yscale * (double)y;
+  Projection_inv(self->projection, xpos, ypos, lon, lat);
+}
+
+static void CartesianInternal_getXYFromLonLat(Cartesian_t* self, double lon, double lat, int* x, int* y)
+{
+  double xpos = 0.0, ypos = 0.0;
+  Projection_fwd(self->projection, lon, lat, &xpos, &ypos);
+  *x = (int)((xpos - self->llX) / self->xscale);
+  *y = (int)((self->urY - ypos)/self->yscale);
+}
+
 /*@} End of Private functions */
 
 /*@{ Interface functions */
@@ -392,6 +407,81 @@ void Cartesian_getAreaExtent(Cartesian_t* cartesian, double* llX, double* llY, d
     *urY = cartesian->urY;
   }
 }
+
+int Cartesian_getExtremeLonLatBoundaries(Cartesian_t* self, double* ulLon, double* ulLat, double* lrLon, double* lrLat)
+{
+  double ulX = 0.0, ulY = 0.0, lrX = 0.0, lrY = 0.0;
+  int x = 0, y = 0;
+
+  RAVE_ASSERT((self != NULL), "self == NULL");
+
+  if (self->projection == NULL) {
+    return 0;
+  }
+
+  CartesianInternal_getLonLatFromXY(self, 0, 0, &ulX, &ulY);
+  CartesianInternal_getLonLatFromXY(self, self->xsize-1, self->ysize-1, &lrX, &lrY);
+
+  /* First we travel along the upper and lower boundaries */
+  for (x = 0; x < self->xsize; x++) {
+    double tmpLon = 0.0, tmpLat = 0.0;
+    /* top boundary */
+    CartesianInternal_getLonLatFromXY(self, x, 0, &tmpLon, &tmpLat);
+    if (ulX > tmpLon) {/* Lon goes towards -180 the more west we travel */
+      ulX = tmpLon;
+    }
+    if (lrX < tmpLon) { /* Lon goes towards +180 the more east we travel */
+      lrX = tmpLon;
+    }
+
+    /* lower boundary */
+    CartesianInternal_getLonLatFromXY(self, x, self->ysize-1, &tmpLon, &tmpLat);
+    if (ulX > tmpLon) { /* Lon goes towards -180 the more west we travel */
+      ulX = tmpLon;
+    }
+    if (lrX < tmpLon) { /* Lon goes towards +180 the more east we travel */
+      lrX = tmpLon;
+    }
+  }
+
+  /* After that we travel along the east and west boundaries */
+  for (y = 0; y < self->ysize; y++) {
+    double tmpLon = 0.0, tmpLat = 0.0;
+    /* west boundary */
+    CartesianInternal_getLonLatFromXY(self, 0, y, &tmpLon, &tmpLat);
+    if (ulY < tmpLat) {/* Lat goes towards +90 the more north we travel */
+      ulY = tmpLat;
+    }
+    if (lrY > tmpLat) { /* Lat goes towards -90 the more south we travel */
+      lrY = tmpLat;
+    }
+
+    /* east boundary */
+    CartesianInternal_getLonLatFromXY(self, self->xsize-1, y, &tmpLon, &tmpLat);
+    if (ulY < tmpLat) { /* Lat goes towards +90 the more north we travel */
+      ulY = tmpLat;
+    }
+    if (lrY > tmpLat) { /* Lat goes towards -90 the more south we travel */
+      lrY = tmpLat;
+    }
+  }
+
+  if (ulLon != NULL) {
+    *ulLon = ulX;
+  }
+  if (ulLat != NULL) {
+    *ulLat = ulY;
+  }
+  if (lrLon != NULL) {
+    *lrLon = lrX;
+  }
+  if (lrLat != NULL) {
+    *lrLat = lrY;
+  }
+
+  return 1;
+}
+
 
 void Cartesian_setXScale(Cartesian_t* cartesian, double xscale)
 {
@@ -592,10 +682,21 @@ RaveValueType Cartesian_getConvertedValueAtLocation(Cartesian_t* cartesian, doub
   return RaveValueType_UNDEFINED;
 }
 
+RaveValueType Cartesian_getConvertedValueAtLonLat(Cartesian_t* cartesian, double lon, double lat, double* v)
+{
+  RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
+  if (cartesian->currentParameter != NULL) {
+    int x = 0, y = 0;
+    CartesianInternal_getXYFromLonLat(cartesian, lon, lat, &x, &y);
+    return Cartesian_getConvertedValue(cartesian, x, y, v);
+  }
+  return RaveValueType_UNDEFINED;
+}
+
 int Cartesian_getQualityValueAtLocation(Cartesian_t* cartesian, double lx, double ly, const char* name, double *v)
 {
   RaveField_t* field = NULL;
-  int result = -1;
+  int result = 0;
   RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
 
   field = Cartesian_findQualityFieldByHowTask(cartesian, name);
@@ -611,6 +712,23 @@ int Cartesian_getQualityValueAtLocation(Cartesian_t* cartesian, double lx, doubl
   return result;
 }
 
+int Cartesian_getQualityValueAtLonLat(Cartesian_t* cartesian, double lon, double lat, const char* name, double *v)
+{
+  RaveField_t* field = NULL;
+  int result = 0;
+  RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
+
+  field = Cartesian_findQualityFieldByHowTask(cartesian, name);
+
+  if (field != NULL) {
+    int x = 0, y = 0;
+    CartesianInternal_getXYFromLonLat(cartesian, lon, lat, &x, &y);
+    result = RaveField_getValue(field, x, y, v);
+  }
+  RAVE_OBJECT_RELEASE(field);
+
+  return result;
+}
 
 void Cartesian_init(Cartesian_t* self, Area_t* area)
 {

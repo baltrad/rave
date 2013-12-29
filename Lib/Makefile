@@ -26,8 +26,10 @@
 
 .PHONY=install
 install:
-	@mkdir -p ${prefix}/Lib
+	@mkdir -p "${prefix}/Lib"
 	@cp -v -f *.py "${prefix}/Lib/"
+	@mkdir -p "${prefix}/Lib/gadjust"
+	@cp -v -f gadjust/*.py "${prefix}/Lib/gadjust/"
 	@./make_script_update_config.sh "${prefix}/Lib/rave_defines.py"
 	@-echo "$(prefix)/Lib" > "$(SITEPACK_PYTHON)/rave.pth"
 	

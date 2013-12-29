@@ -39,12 +39,58 @@ typedef struct _RaveVprCorrection_t RaveVprCorrection_t;
 extern RaveCoreObjectType RaveVprCorrection_TYPE;
 
 /**
+ * Sets the min limit for when the reflectivity should be seen as stratiform. All values
+ * about this limit will be defined to be stratiform
+ * @param[in] self - self
+ * @param[in] limit - the min reflectivity for stratiform rain
+ */
+void RaveVprCorrection_setMinZLimitStratiformCloud(RaveVprCorrection_t* self, double limit);
+
+/**
+ * Returns the min limit for when the reflectivity should be seen as stratiform. All values
+ * about this limit will be defined to be stratiform
+ * @param[in] self - self
+ * @returns - the min reflectivity for stratiform rain
+ */
+double RaveVprCorrection_getMinZLimitStratiformCloud(RaveVprCorrection_t* self);
+
+/**
+ * Sets the height limit for what reflectivities should be used
+ * @param[in] self - self
+ * @param[in] limit - the max height for when reflectivities should be used in the identification
+ * of stratiform and convective rain
+ */
+void RaveVprCorrection_setSCHeightLimit(RaveVprCorrection_t* self, double limit);
+
+/**
+ * Returns the height limit for what reflectivities should be used in the identification of stratiform and convective rain
+ * @param[in] self - self
+ * @returns the height limit
+ */
+double RaveVprCorrection_getSCHeightLimit(RaveVprCorrection_t* self);
+
+/**
+ * Sets the distance limit for what reflectivities should be used
+ * @param[in] self - self
+ * @param[in] limit - the max distance for when reflectivities should be used in the identification
+ * of stratiform and convective rain
+ */
+void RaveVprCorrection_setSCDistanceLimit(RaveVprCorrection_t* self, double limit);
+
+/**
+ * Returns the distance limit for what reflectivities should be used in the identification of stratiform and convective rain
+ * @param[in] self - self
+ * @returns the distance limit
+ */
+double RaveVprCorrection_getSCDistanceLimit(RaveVprCorrection_t* self);
+
+/**
  * Separates stratiform and convective rain
  * @param[in] self - self
  * @param[in] pvol - the polar volume
  * @return 1 on success otherwise 0
  */
-int RaveVprCorrection_separateSC(RaveVprCorrection_t* self, PolarVolume_t* pvol);
+PolarVolume_t* RaveVprCorrection_separateSC(RaveVprCorrection_t* self, PolarVolume_t* pvol);
 
 
 #endif /* RAVE_VPR_CORRECTION_H */
