@@ -383,7 +383,8 @@ class PyCartesianTest(unittest.TestCase):
     
     expected = obj.getConvertedValue((4,5))
     actual = obj.getConvertedValueAtLonLat(deg2rad((12.8544, 56.3675)))
-    self.assertAlmostEquals(expected, actual, 4)
+    self.assertEquals(expected[0], actual[0])
+    self.assertAlmostEquals(expected[1], actual[1], 4)
 
   def test_getQualityValueAtLonLat(self):
     obj = _cartesian.new()
