@@ -6,5 +6,6 @@
 <eu.baltrad.beast.generatevolume function="generate" help="Polar volume generation from individual scans" module="rave_pgf_volume_plugin"><arguments strings="source,date,time,anomaly-qc" /></eu.baltrad.beast.generatevolume>
 <se.smhi.rave.creategmapimage function="generate" help="Google Map Plugin" module="googlemap_pgf_plugin"><arguments strings="outfile" /></se.smhi.rave.creategmapimage>
 <eu.baltrad.beast.generateacrr function="generate" help="Generate ACRR plugin" module="rave_pgf_acrr_plugin"><arguments floats="zra,zrb" strings="date,time,quantity,distancefield" ints="hours,N,accept"/></eu.baltrad.beast.generateacrr>
+<eu.baltrad.beast.creategracoefficient function="generate" help="Generate GRA coefficient plugin" module="rave_pgf_gra_plugin"><arguments floats="zra,zrb" strings="date,time,quantity,distancefield,adjustmentfile" ints="hours,N,accept"/></eu.baltrad.beast.creategracoefficient>
 
 </generate-registry>
