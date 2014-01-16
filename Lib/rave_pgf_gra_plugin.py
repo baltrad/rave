@@ -103,8 +103,8 @@ def generate(files, arguments):
   quantity = "DBZH"
   accept = 0.0
   distancefield = "se.smhi.composite.distance.radar"
-  hours = 1
-  N = 5
+  interval = 12
+  N = 13
   adjustmentfile = None
   
   #Accept is the required limit for how many nodata-pixels that are allowed in order for the
@@ -127,8 +127,8 @@ def generate(files, arguments):
     accept = strToNumber(args["accept"]) / 100.0 
   if "distancefield" in args.keys():
     distancefield = args["distancefield"]
-  if "hours" in args.keys():
-    hours = strToNumber(args["hours"])
+  if "interval" in args.keys():
+    interval = strToNumber(args["interval"])
   if "N" in args.keys():
     N = strToNumber(args["N"])
   if "adjustmentfile" in args.keys():
@@ -176,14 +176,14 @@ def generate(files, arguments):
         acrr.sum(par, zr_a, zr_b)
 
   # accept, N, hours
-  acrrparam = acrr.accumulate(accept, N, hours)
+  acrrparam = acrr.accumulate(accept, N, interval)
   acrrproduct.addParameter(acrrparam)
   
   db = rave_dom_db.create_db_from_conf()
   
   matcher = obsmatcher.obsmatcher(db)
   
-  points = matcher.match(acrrproduct, offset=hours, quantity="ACRR", how_task=distancefield)
+  points = matcher.match(acrrproduct, offset=interval, quantity="ACRR", how_task=distancefield)
   if len(points) == 0:
     logger.warn("Could not find any matching observations")
     return None
