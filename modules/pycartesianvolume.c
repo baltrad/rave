@@ -545,6 +545,18 @@ done:
   return result;
 }
 
+static PyObject* _pycartesianvolume_isCartesianVolume(PyObject* self, PyObject* args)
+{
+  PyObject* inobj = NULL;
+  if (!PyArg_ParseTuple(args,"O", &inobj)) {
+    return NULL;
+  }
+  if (PyCartesianVolume_Check(inobj)) {
+    return PyBool_FromLong(1);
+  }
+  return PyBool_FromLong(0);
+}
+
 /*@} End of Cartesian Volumes */
 
 /// --------------------------------------------------------------------
@@ -577,6 +589,7 @@ PyTypeObject PyCartesianVolume_Type =
 /*@{ Module setup */
 static PyMethodDef functions[] = {
   {"new", (PyCFunction)_pycartesianvolume_new, 1},
+  {"isCartesianVolume", (PyCFunction)_pycartesianvolume_isCartesianVolume, 1},
   {NULL,NULL} /*Sentinel*/
 };
 

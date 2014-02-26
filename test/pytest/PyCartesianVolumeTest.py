@@ -46,6 +46,14 @@ class PyCartesianVolumeTest(unittest.TestCase):
     iscvol = string.find(`type(obj)`, "CartesianVolumeCore")
     self.assertNotEqual(-1, iscvol)
 
+  def test_isCartesianVolume(self):
+    obj = _cartesianvolume.new()
+    self.assertEquals(True, _cartesianvolume.isCartesianVolume(obj))
+    
+  def test_isCartesianVolumeFalse(self):
+    obj = _cartesian.new()
+    self.assertEquals(False, _cartesianvolume.isCartesianVolume(obj))
+
   def test_attribute_visibility(self):
     attrs = ['areaextent', 'date', 'objectType', 
      'projection', 'source', 'time',

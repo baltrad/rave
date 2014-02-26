@@ -45,6 +45,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @date 2013-08-08
 
 import _cartesian
+import _cartesianvolume
 import _acrr
 import _rave
 import _raveio
@@ -143,6 +144,9 @@ def generate(files, arguments):
     else:
       rio = _raveio.open(fname)
       obj = rio.object
+
+    if _cartesianvolume.isCartesianVolume(obj):
+      obj = obj.getImage(0)
 
     if not _cartesian.isCartesian(obj):
       raise AttributeError, "Must call plugin with cartesian products"
