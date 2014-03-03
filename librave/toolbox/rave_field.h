@@ -158,6 +158,11 @@ RaveList_t* RaveField_getAttributeNames(RaveField_t* field);
 RaveObjectList_t* RaveField_getAttributeValues(RaveField_t* field);
 
 /**
+ * Removes all attributes from the field.
+ */
+void RaveField_removeAttributes(RaveField_t* field);
+
+/**
  * Checks if the field has the attribute named name that is of type string
  * and has a matching value.
  * @param[in] field - the field

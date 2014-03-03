@@ -48,6 +48,7 @@ from PgfVolumePluginTest import *
 from RaveScansun import *
 from PyDetectionRangeTest import *
 from PyRaveTest import *
+from PyQITotalTest import *
 from PyPooCompositeAlgorithmTest import *
 from rave_pgf_volume_plugin_test import *
 from rave_overshooting_quality_plugin_test import *

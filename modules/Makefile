@@ -192,12 +192,16 @@ SOURCE_34= pycartesiancomposite.c
 OBJECTS_34= $(SOURCE_34:.c=.o)
 TARGET_34= _cartesiancomposite.so
 
+SOURCE_35= pyqitotal.c
+OBJECTS_35= $(SOURCE_35:.c=.o)
+TARGET_35= _qitotal.so
+
 
 TARGETS=$(TARGET_1) $(TARGET_2) $(TARGET_3) $(TARGET_4) $(TARGET_5) $(TARGET_6) \
 		$(TARGET_7) $(TARGET_8) $(TARGET_9) $(TARGET_10) $(TARGET_11) $(TARGET_12) \
 		$(TARGET_13) $(TARGET_14) $(TARGET_15) $(TARGET_16) $(TARGET_17) $(TARGET_18) \
 		$(TARGET_19) $(TARGET_20) $(TARGET_21) $(TARGET_24) $(TARGET_25) $(TARGET_26) \
-		$(TARGET_27) $(TARGET_28) $(TARGET_29) $(TARGET_30) $(TARGET_31) $(TARGET_33) $(TARGET_34)
+		$(TARGET_27) $(TARGET_28) $(TARGET_29) $(TARGET_30) $(TARGET_31) $(TARGET_33) $(TARGET_34) $(TARGET_35)
 
 INSTALL_HEADERS= pyarea.h \
 				 pycartesian.h \
@@ -218,7 +222,8 @@ INSTALL_HEADERS= pyarea.h \
 				 pytransform.h \
 				 pyacrr.h \
 				 pyverticalprofile.h \
-				 pycartesiancomposite.h
+				 pycartesiancomposite.h \
+				 pyqitotal.h
 
 ifeq ($(EXPAT_SUPPRESSED), no)
 TARGETS += $(TARGET_22) $(TARGET_23) $(TARGET_32)
@@ -342,6 +347,9 @@ $(TARGET_33): $(DEPDIR) $(OBJECTS_33) ../librave/toolbox/libravetoolbox.so ../li
 $(TARGET_34): $(DEPDIR) $(OBJECTS_34) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_34) $(LDFLAGS) $(LIBRARIES)
 
+$(TARGET_35): $(DEPDIR) $(OBJECTS_35) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
+	$(LDSHARED) -o $@ $(OBJECTS_35) $(LDFLAGS) $(LIBRARIES)
+
 .PHONY=install
 install:
 	@mkdir -p ${prefix}/Lib
@@ -416,4 +424,5 @@ ifeq ($(EXPAT_SUPPRESSED), no)
 -include $(SOURCE_32:%.c=$(DEPDIR)/%.P)
 endif
 -include $(SOURCE_34:%.c=$(DEPDIR)/%.P)
+-include $(SOURCE_35:%.c=$(DEPDIR)/%.P)
 

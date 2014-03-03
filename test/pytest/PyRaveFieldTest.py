@@ -43,6 +43,17 @@ class PyRaveFieldTest(unittest.TestCase):
     self.assertEquals("that", obj.getAttribute("where/is"))
     self.assertEquals(5, obj.getAttribute("how/are"))
 
+  def test_removeAttributes(self):
+    obj = _ravefield.new()
+    obj.addAttribute("what/is", 10.0)
+    obj.addAttribute("where/is", "that")
+    obj.addAttribute("how/are", 5)
+
+    obj.removeAttributes()
+    
+    names = obj.getAttributeNames()
+    self.assertEquals(0, len(names))
+    
   def test_bad_names(self):
     obj = _ravefield.new()
     BAD_NAMES = ["xyz/is", "what", "is"]

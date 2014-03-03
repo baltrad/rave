@@ -378,6 +378,13 @@ fail:
   return NULL;
 }
 
+static PyObject* _pyravefield_removeAttributes(PyRaveField* self, PyObject* args)
+{
+  RaveField_removeAttributes(self->field);
+  Py_RETURN_NONE;
+}
+
+
 /**
  * Concatenates two fields x-wise.
  * @param[in] self - self
@@ -421,6 +428,7 @@ static struct PyMethodDef _pyravefield_methods[] =
   {"addAttribute", (PyCFunction) _pyravefield_addAttribute, 1},
   {"getAttribute", (PyCFunction) _pyravefield_getAttribute, 1},
   {"getAttributeNames", (PyCFunction) _pyravefield_getAttributeNames, 1},
+  {"removeAttributes", (PyCFunction) _pyravefield_removeAttributes, 1},
   {"concatx", (PyCFunction) _pyravefield_concatx, 1},
   {NULL, NULL } /* sentinel */
 };

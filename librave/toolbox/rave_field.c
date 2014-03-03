@@ -237,6 +237,12 @@ error:
   return NULL;
 }
 
+void RaveField_removeAttributes(RaveField_t* field)
+{
+  RAVE_ASSERT((field != NULL), "field == NULL");
+  RaveObjectHashTable_clear(field->attrs);
+}
+
 int RaveField_hasAttributeStringValue(RaveField_t* field, const char* name, const char* value)
 {
   RaveAttribute_t* attr = NULL;
