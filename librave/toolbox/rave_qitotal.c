@@ -180,6 +180,20 @@ done:
   return result;
 }
 
+static int QITotalInternal_addStringAttribute(RaveField_t* field, const char* attrname, const char* v)
+{
+  int result = 0;
+  RaveAttribute_t* attr =  RaveAttributeHelp_createString(attrname, v);
+  if (attr == NULL || !RaveField_addAttribute(field, attr)) {
+    RAVE_ERROR1("Failed to add %s to field", attrname);
+    goto done;
+  }
+  result = 1;
+done:
+  RAVE_OBJECT_RELEASE(attr);
+  return result;
+}
+
 /*@} End of Private functions */
 
 /*@{ Interface functions */
@@ -254,7 +268,9 @@ RaveField_t* RaveQITotal_multiplicative(RaveQITotal_t* self, RaveObjectList_t* f
   }
 
   if (!QITotalInternal_addDoubleAttribute(qifield_conv, "what/gain", self->gain) ||
-      !QITotalInternal_addDoubleAttribute(qifield_conv, "what/offset", self->offset)) {
+      !QITotalInternal_addDoubleAttribute(qifield_conv, "what/offset", self->offset) ||
+      !QITotalInternal_addStringAttribute(qifield_conv, "how/task", "pl.imgw.quality.qi_total") ||
+      !QITotalInternal_addStringAttribute(qifield_conv, "how/task_args", "method:multiplicative")) {
     goto done;
   }
 
@@ -334,7 +350,9 @@ RaveField_t* RaveQITotal_additive(RaveQITotal_t* self, RaveObjectList_t* fields)
   }
 
   if (!QITotalInternal_addDoubleAttribute(qifield_conv, "what/gain", self->gain) ||
-      !QITotalInternal_addDoubleAttribute(qifield_conv, "what/offset", self->offset)) {
+      !QITotalInternal_addDoubleAttribute(qifield_conv, "what/offset", self->offset) ||
+      !QITotalInternal_addStringAttribute(qifield_conv, "how/task", "pl.imgw.quality.qi_total") ||
+      !QITotalInternal_addStringAttribute(qifield_conv, "how/task_args", "method:additive")) {
     goto done;
   }
 
@@ -416,7 +434,9 @@ RaveField_t* RaveQITotal_minimum(RaveQITotal_t* self, RaveObjectList_t* fields)
   }
 
   if (!QITotalInternal_addDoubleAttribute(qifield_conv, "what/gain", self->gain) ||
-      !QITotalInternal_addDoubleAttribute(qifield_conv, "what/offset", self->offset)) {
+      !QITotalInternal_addDoubleAttribute(qifield_conv, "what/offset", self->offset) ||
+      !QITotalInternal_addStringAttribute(qifield_conv, "how/task", "pl.imgw.quality.qi_total") ||
+      !QITotalInternal_addStringAttribute(qifield_conv, "how/task_args", "method:minimum")) {
     goto done;
   }
 

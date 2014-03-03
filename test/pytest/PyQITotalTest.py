@@ -112,7 +112,10 @@ class PyQITotalTest(unittest.TestCase):
     f3.setValue(1,1,4)  #0.2 + 4*0.1 = 0.6
     
     result = obj.multiplicative([f1,f2,f3])
-    
+
+    self.assertEquals("pl.imgw.quality.qi_total", result.getAttribute("how/task"))
+    self.assertEquals("method:multiplicative", result.getAttribute("how/task_args"))
+
     #0,0 = 0.1 * 0.1 * 0.3 = 0.003
     self.assertAlmostEqual(0.003, result.getValue(0,0)[1], 4)
     
@@ -217,6 +220,10 @@ class PyQITotalTest(unittest.TestCase):
     
     result = obj.additive([f1,f2,f3])
     
+    self.assertEquals("pl.imgw.quality.qi_total", result.getAttribute("how/task"))
+    self.assertEquals("method:additive", result.getAttribute("how/task_args"))
+
+    
     #0,0 = (0.1 + 0.1 + 0.3)/3 = 0.1667
     self.assertAlmostEqual(0.1667, result.getValue(0,0)[1], 4)
     
@@ -273,6 +280,9 @@ class PyQITotalTest(unittest.TestCase):
     
     result = obj.minimum([f1,f2,f3])
     
+    self.assertEquals("pl.imgw.quality.qi_total", result.getAttribute("how/task"))
+    self.assertEquals("method:minimum", result.getAttribute("how/task_args"))
+
     #0,0 = min(0.1, 0.1, 0.3) = 0.1
     self.assertAlmostEqual(0.1, result.getValue(0,0)[1], 4)
     
