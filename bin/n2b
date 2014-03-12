@@ -240,10 +240,13 @@ if __name__ == "__main__":
     (options, args) = parser.parse_args()
 
     if not options.kill:
-        if alive():
+        ALIVE = alive()
+        if not ALIVE and os.path.isfile(PIDFILE):
+            print "n2b is not alive but PIDFILE exists, removing."
+            os.remove(PIFDILE)
+        elif ALIVE:
             print "n2b is already running."
             sys.exit()
-
 
     # Shut down a previous incarnation of this daemon.
     if options.kill:

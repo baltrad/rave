@@ -1041,8 +1041,8 @@ RaveField_t* DetectionRange_analyze(DetectionRange_t* self,
     RaveAttribute_t* attr = NULL;
 
     /* Set gain and offset before converting it into a quality field */
-    PolarScanParam_setOffset(param, 0.0);
-    PolarScanParam_setGain(param, 1.0/255.0);
+    PolarScanParam_setOffset(param, 1.0);
+    PolarScanParam_setGain(param, -1.0/255.0);
 
     result = PolarScanParam_toField(param);
     if (result == NULL) {

@@ -531,6 +531,13 @@ static int CompositeInternal_addQualityFlags(Composite_t* self, Cartesian_t* ima
         RAVE_ERROR0("Failed to create gain attribute for quality field");
         goto done;
       }
+      RAVE_OBJECT_RELEASE(gainattribute);
+      gainattribute = RaveAttributeHelp_createDouble("what/offset", 0.0);
+      if (gainattribute == NULL ||
+          !RaveField_addAttribute(field, gainattribute)) {
+        RAVE_ERROR0("Failed to create offset attribute for quality field");
+        goto done;
+      }
     }
 
     for (j = 0; j < nparam; j++) {
