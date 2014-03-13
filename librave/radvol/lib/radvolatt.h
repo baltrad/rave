@@ -21,12 +21,13 @@ along with Radvol-QC.  If not, see <http://www.gnu.org/licenses/>.
  * Radvol-QC algorithms of correction for attenuation in rain.
  * @file radvolatt.h
  * @author Katarzyna Osrodka (Institute of Meteorology and Water Management, IMGW-PIB)
- * @date 2012-07-12
+ * @date 2012-12-20
  */
 #ifndef RADVOLATT_H
 #define RADVOLATT_H
 #include "rave_object.h"
 #include "polarvolume.h"
+#include "polarscan.h"
 
 /**
  * Defines a RadvolAtt
@@ -40,10 +41,18 @@ extern RaveCoreObjectType RadvolAtt_TYPE;
 
 /**
  * Runs algorithm of correction for attenuation in rain and quality characterization with parameters from XML file
+ * @param scan - input polar scan
+ * @param paramFileName - name of XML file with parameters (otherwise default values are applied)
+ * @returns 1 upon success, otherwise 0
+ */
+int RadvolAtt_attCorrection_scan(PolarScan_t* scan, char* paramFileName);
+
+/**
+ * Runs algorithm of correction for attenuation in rain and quality characterization with parameters from XML file
  * @param pvol - input polar volume
  * @param paramFileName - name of XML file with parameters (otherwise default values are applied)
  * @returns 1 upon success, otherwise 0
  */
-int RadvolAtt_attCorrection(PolarVolume_t* pvol, char* paramFileName);
+int RadvolAtt_attCorrection_pvol(PolarVolume_t* pvol, char* paramFileName);
 
 #endif

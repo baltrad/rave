@@ -46,7 +46,7 @@ char* H5_FILE_COR;
 static FILE* temp_file = NULL;
 
 int init_suite_testRadvolAtt(void) {
-  XML_FILE = "fixtures/radvol_params_att.xml";
+  XML_FILE = "fixtures/radvol_params.xml";
   if (NULL == (temp_file = fopen(XML_FILE, "r"))) {
     return -1;
   } else {
@@ -75,20 +75,15 @@ void testRadvolAtt_attCorrection(void) {
   PolarVolume_t* pvol = NULL;
   PolarScan_t* scan = NULL;
   RaveIO_t* raveio = NULL;
-//  RadvolAtt_t* radvolAtt = NULL;
   PolarScanParam_t* parameter = NULL;
   RaveAttribute_t* attribute = NULL;
   char* value = NULL;
-  int retatt;
 
   raveio = RaveIO_open(H5_FILE);
   CU_ASSERT_PTR_NOT_NULL_FATAL(raveio);
   pvol = (PolarVolume_t*) RaveIO_getObject(raveio);
   CU_ASSERT_PTR_NOT_NULL_FATAL(pvol);
-//  radvolAtt = RAVE_OBJECT_NEW(&RadvolAtt_TYPE);
-//  CU_ASSERT_PTR_NOT_NULL_FATAL(radvolAtt);
-//  pvol = RadvolAtt_attCorrection(radvolAtt, pvol, XML_FILE);
-  retatt = RadvolAtt_attCorrection(pvol, XML_FILE);
+  RadvolAtt_attCorrection_pvol(pvol, XML_FILE);
   CU_ASSERT_PTR_NOT_NULL_FATAL(pvol);
   CU_ASSERT_EQUAL_FATAL(PolarVolume_getNumberOfScans(pvol), 1);
   scan = PolarVolume_getScan(pvol, 0);
@@ -102,13 +97,12 @@ void testRadvolAtt_attCorrection(void) {
   attribute = PolarScanParam_getAttribute(parameter, "how/task_args");
   CU_ASSERT_PTR_NOT_NULL_FATAL(attribute);
   RaveAttribute_getString(attribute, &value);
-  CU_ASSERT_STRING_EQUAL(value, "ATT: ATT_QI1=1.0, ATT_QI0=5.0, ATT_QIUn=0.9, ATT_a= 0.0044, ATT_b= 1.17, ATT_MPa=200.0, ATT_MPb= 1.6, ATT_Refl= 4.0, ATT_Last= 1.0, ATT_Sum= 5.0");
+  CU_ASSERT_STRING_EQUAL(value, "ATT: ATT_QI1=1.0, ATT_QI0=5.0, ATT_QIUn=0.9, ATT_a= 0.0044, ATT_b= 1.17, ATT_ZRa=200.0, ATT_ZRb= 1.6, ATT_Refl= 4.0, ATT_Last= 1.0, ATT_Sum= 5.0");
 
   RAVE_OBJECT_RELEASE(pvol);
   RAVE_OBJECT_RELEASE(scan);
   RAVE_OBJECT_RELEASE(parameter);
   RAVE_OBJECT_RELEASE(attribute);
-//  RAVE_OBJECT_RELEASE(radvolAtt);
   RAVE_OBJECT_RELEASE(raveio);
 }
 
@@ -119,20 +113,16 @@ void testRadvolAtt_attCorrection_topLevel_correction(void) {
   RaveIO_t* raveio_cor = NULL;
   PolarVolume_t* pvol_cor = NULL;
   PolarScan_t* scan_cor = NULL;
-//  RadvolAtt_t* radvolAtt = NULL;
   int nbin;
   int nray;
   int bi, ri;
-  int retatt;
   double value_in, value_cor;
 
   raveio_in = RaveIO_open(H5_FILE);
   CU_ASSERT_PTR_NOT_NULL_FATAL(raveio_in);
   pvol_in = (PolarVolume_t*) RaveIO_getObject(raveio_in);
   CU_ASSERT_PTR_NOT_NULL_FATAL(pvol_in);
-//  radvolAtt = RAVE_OBJECT_NEW(&RadvolAtt_TYPE);
-//  CU_ASSERT_PTR_NOT_NULL_FATAL(radvolAtt);
-  retatt = RadvolAtt_attCorrection(pvol_in, XML_FILE);
+  RadvolAtt_attCorrection_pvol(pvol_in, XML_FILE);
   CU_ASSERT_PTR_NOT_NULL_FATAL(pvol_in);
   CU_ASSERT_EQUAL_FATAL(PolarVolume_getNumberOfScans(pvol_in), 1);
   scan_in = PolarVolume_getScan(pvol_in, 0);
@@ -165,7 +155,6 @@ void testRadvolAtt_attCorrection_topLevel_correction(void) {
     }
   }
 
-//  RAVE_OBJECT_RELEASE(radvolAtt);
   RAVE_OBJECT_RELEASE(pvol_in);
   RAVE_OBJECT_RELEASE(scan_in);
   RAVE_OBJECT_RELEASE(raveio_in);
@@ -183,20 +172,16 @@ void testRadvolAtt_attCorrection_topLevel_quality(void) {
   PolarVolume_t* pvol_cor = NULL;
   PolarScan_t* scan_cor = NULL;
   RaveField_t* field_cor = NULL;
-//  RadvolAtt_t* radvolAtt = NULL;
   int nbin;
   int nray;
   int bi, ri;
-  int retatt;
   double value_in, value_cor;
 
   raveio_in = RaveIO_open(H5_FILE);
   CU_ASSERT_PTR_NOT_NULL_FATAL(raveio_in);
   pvol_in = (PolarVolume_t*) RaveIO_getObject(raveio_in);
   CU_ASSERT_PTR_NOT_NULL_FATAL(pvol_in);
-//  radvolAtt = RAVE_OBJECT_NEW(&RadvolAtt_TYPE);
-//  CU_ASSERT_PTR_NOT_NULL_FATAL(radvolAtt);
-  retatt = RadvolAtt_attCorrection(pvol_in, XML_FILE);
+  RadvolAtt_attCorrection_pvol(pvol_in, XML_FILE);
   CU_ASSERT_PTR_NOT_NULL_FATAL(pvol_in);
   CU_ASSERT_EQUAL_FATAL(PolarVolume_getNumberOfScans(pvol_in), 1);
   scan_in = PolarVolume_getScan(pvol_in, 0);
@@ -233,7 +218,6 @@ void testRadvolAtt_attCorrection_topLevel_quality(void) {
     }
   }
 
-//  RAVE_OBJECT_RELEASE(radvolAtt);
   RAVE_OBJECT_RELEASE(pvol_in);
   RAVE_OBJECT_RELEASE(scan_in);
   RAVE_OBJECT_RELEASE(field_in);

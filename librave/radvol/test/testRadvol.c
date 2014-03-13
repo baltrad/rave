@@ -45,7 +45,7 @@ static FILE* temp_file = NULL;
 
 int init_suite_testRadvol(void) {
 
-  XML_FILE = "fixtures/radvol_params_att.xml";
+  XML_FILE = "fixtures/radvol_params.xml";
   if (NULL == (temp_file = fopen(XML_FILE, "r"))) {
     return -1;
   } else {
@@ -64,34 +64,65 @@ int clean_suite_testRadvol(void) {
   return 0;
 }
 
-void testRadvol_getAltitude(void) {
-  Elevation_t aElev;
-  int result;
+void testRadvol_getCurvature(void) {
+  Radvol_t* self = NULL;
+  PolarVolume_t* pvol = NULL;
+  RaveIO_t* raveio = NULL;
+  double result;
 
-  aElev.rscale = 0.0;
-  aElev.elangle = 0.0;
-  result = Radvol_getAltitude(aElev, -10);
+  raveio = RaveIO_open(H5_FILE);
+  CU_ASSERT_PTR_NOT_NULL_FATAL(raveio);
+
+  pvol = (PolarVolume_t*) RaveIO_getObject(raveio);
+  CU_ASSERT_PTR_NOT_NULL_FATAL(pvol);
+
+  self = RAVE_OBJECT_NEW(&Radvol_TYPE);
+  result = Radvol_load_pvol(self, pvol);
+  CU_ASSERT_FATAL(result);
+  CU_ASSERT_PTR_NOT_NULL_FATAL(self);
+  self->TabElev[0].rscale = 0.0;
+  result = Radvol_getCurvature(self, 0, -10);
   CU_ASSERT_EQUAL(result, 0);
-  aElev.rscale = 1.0;
-  result = Radvol_getAltitude(aElev, 20);
-  CU_ASSERT_EQUAL(result, 26);
-  aElev.elangle = 0.017453;
-  result = Radvol_getAltitude(aElev, 20);
-  CU_ASSERT_EQUAL(result, 392);
+  self->TabElev[0].rscale = 1.0;
+  result = Radvol_getCurvature(self, 0, 20);
+  CU_ASSERT_DOUBLE_EQUAL(result, 0.025963, 0.00001);
+  self->TabElev[0].elangle = 0.017453;
+  result = Radvol_getCurvature(self, 0, 20);
+  CU_ASSERT_DOUBLE_EQUAL(result, 0.392448, 0.00001);
+  CU_ASSERT_DOUBLE_EQUAL(self->Eer, 8493.0, 0.001);
+  Radvol_setEquivalentEarthRadius(self, PolarVolume_getLatitude(pvol));
+  CU_ASSERT_DOUBLE_EQUAL(self->Eer, 8452.203, 0.001);
+  result = Radvol_getCurvature(self, 0, 20);
+  CU_ASSERT_DOUBLE_EQUAL(result, 0.392573, 0.00001);
+
+  RAVE_OBJECT_RELEASE(self);
+  RAVE_OBJECT_RELEASE(pvol);
+  RAVE_OBJECT_RELEASE(raveio);
 }
 
 void testRadvol_getFactorChild(void) {
   SimpleXmlNode_t* node = NULL;
+  int IsDefault;
+  Radvol_t* self = NULL;
+  self = RAVE_OBJECT_NEW(&Radvol_TYPE);
 
-  node = Radvol_getFactorChild("nonexisting.xml", "nothing");
+  node = Radvol_getFactorChild(NULL, "nonexisting.xml", "nothing", &IsDefault);
   CU_ASSERT_PTR_NULL(node);
-
-  node = Radvol_getFactorChild(XML_FILE, "nothing");
-  CU_ASSERT_PTR_NULL(node);
-
-  node = Radvol_getFactorChild(XML_FILE, "ATT");
+  node = Radvol_getFactorChild(NULL, XML_FILE, "nothing", &IsDefault);
   CU_ASSERT_PTR_NOT_NULL(node);
+  CU_ASSERT_EQUAL(IsDefault, 1);
   RAVE_OBJECT_RELEASE(node);
+  Radvol_getName(self,"NOD:plram");
+  node = Radvol_getFactorChild(self, XML_FILE, "nothing", &IsDefault);
+  CU_ASSERT_PTR_NOT_NULL(node);
+  CU_ASSERT_EQUAL(IsDefault, 1);
+  RAVE_OBJECT_RELEASE(node);
+  node = Radvol_getFactorChild(self, XML_FILE, "ATT_QIOn", &IsDefault);
+  CU_ASSERT_PTR_NOT_NULL(node);
+  CU_ASSERT_EQUAL(IsDefault, 0);
+
+  RAVE_OBJECT_RELEASE(node);
+  RAVE_OBJECT_RELEASE(self);
 }
 
 void testRadvol_getLinearQuality(void) {
@@ -131,37 +162,39 @@ void testRadvol_getLinearQuality(void) {
 void testRadvol_getParValueDouble(void) {
   SimpleXmlNode_t* node = NULL;
   double value;
+  int IsDefault;
   int result;
 
-  node = Radvol_getFactorChild(XML_FILE, "ATT");
+  node = Radvol_getFactorChild(NULL, XML_FILE, "ATT", &IsDefault);
   CU_ASSERT_PTR_NOT_NULL_FATAL(node);
 
-  result = Radvol_getParValueDouble(node, "b1", &value);
+  result = Radvol_getParValueDouble(node, "ATT_ZRb1", &value);
   CU_ASSERT_FALSE(result);
 
-  result = Radvol_getParValueDouble(node, "b", &value);
+  result = Radvol_getParValueDouble(node, "ATT_ZRb", &value);
   CU_ASSERT_TRUE_FATAL(result);
-  CU_ASSERT_DOUBLE_EQUAL(value, 1.17, 0.001);
+  CU_ASSERT_DOUBLE_EQUAL(value, 1.6, 0.001);
   RAVE_OBJECT_RELEASE(node);
 }
 
 void testRadvol_getParValueInt(void) {
   SimpleXmlNode_t* node = NULL;
   int value;
+  int IsDefault;
   int result;
 
-  node = Radvol_getFactorChild(XML_FILE, "ATT");
+  node = Radvol_getFactorChild(NULL, XML_FILE, "ATT", &IsDefault);
   CU_ASSERT_PTR_NOT_NULL_FATAL(node);
-  result = Radvol_getParValueInt(node, "QIOn1", &value);
+  result = Radvol_getParValueInt(node, "ATT_QIOn1", &value);
   CU_ASSERT_FALSE(result);
 
-  result = Radvol_getParValueInt(node, "QIOn", &value);
+  result = Radvol_getParValueInt(node, "ATT_QIOn", &value);
   CU_ASSERT_TRUE_FATAL(result);
   CU_ASSERT_EQUAL(value, 1);
   RAVE_OBJECT_RELEASE(node);
 }
 
-void testRadvol_loadVol(void) {
+void testRadvol_load_pvol(void) {
   Radvol_t* self = NULL;
   PolarVolume_t* pvol = NULL;
   RaveIO_t* raveio = NULL;
@@ -174,7 +207,7 @@ void testRadvol_loadVol(void) {
   CU_ASSERT_PTR_NOT_NULL_FATAL(pvol);
 
   self = RAVE_OBJECT_NEW(&Radvol_TYPE);
-  result = Radvol_loadVol(self, pvol);
+  result = Radvol_load_pvol(self, pvol);
   CU_ASSERT_FATAL(result);
   CU_ASSERT_PTR_NOT_NULL_FATAL(self);
   CU_ASSERT_EQUAL(self->nele, 1);
@@ -187,7 +220,7 @@ void testRadvol_loadVol(void) {
   RAVE_OBJECT_RELEASE(raveio);
 }
 
-void testRadvol_saveVol(void) {
+void testRadvol_save_pvol(void) {
   Radvol_t* self = NULL;
   PolarVolume_t* pvol = NULL;
   PolarScan_t* scan = NULL;
@@ -206,12 +239,12 @@ void testRadvol_saveVol(void) {
   RAVE_OBJECT_RELEASE(scan);
 
   self = RAVE_OBJECT_NEW(&Radvol_TYPE);
-  result = Radvol_loadVol(self, pvol);
+  result = Radvol_load_pvol(self, pvol);
   CU_ASSERT_FATAL(result);
   CU_ASSERT_PTR_NOT_NULL_FATAL(self->TabElev);
   CU_ASSERT_PTR_NOT_NULL_FATAL(self->TabElev[0].ReflElev);
 
-  result = Radvol_saveVol(self, pvol);
+  result = Radvol_save_pvol(self, pvol);
   CU_ASSERT_FATAL(result);
   CU_ASSERT_EQUAL_FATAL(PolarVolume_getNumberOfScans(pvol), 1);
   scan = PolarVolume_getScan(pvol, 0);
@@ -222,7 +255,7 @@ void testRadvol_saveVol(void) {
 
   Radvol_setTaskArgs(self, NULL);
   Radvol_setTaskName(self, "task name");
-  result = Radvol_saveVol(self, pvol);
+  result = Radvol_save_pvol(self, pvol);
   CU_ASSERT_FATAL(result);
   CU_ASSERT_EQUAL_FATAL(PolarVolume_getNumberOfScans(pvol), 1);
   scan = PolarVolume_getScan(pvol, 0);
@@ -232,7 +265,7 @@ void testRadvol_saveVol(void) {
 
   Radvol_setTaskArgs(self, "test args");
   Radvol_setTaskName(self, NULL);
-  result = Radvol_saveVol(self, pvol);
+  result = Radvol_save_pvol(self, pvol);
   CU_ASSERT_FATAL(result);
   CU_ASSERT_EQUAL_FATAL(PolarVolume_getNumberOfScans(pvol), 1);
   scan = PolarVolume_getScan(pvol, 0);
@@ -242,7 +275,7 @@ void testRadvol_saveVol(void) {
 
   Radvol_setTaskArgs(self, "test args");
   Radvol_setTaskName(self, "task name");
-  result = Radvol_saveVol(self, pvol);
+  result = Radvol_save_pvol(self, pvol);
   CU_ASSERT_FATAL(result);
   CU_ASSERT_EQUAL_FATAL(PolarVolume_getNumberOfScans(pvol), 1);
   scan = PolarVolume_getScan(pvol, 0);
@@ -271,12 +304,12 @@ void testRadvol_setTaskArgs(void) {
   CU_ASSERT_PTR_NOT_NULL_FATAL(pvol);
 
   self = RAVE_OBJECT_NEW(&Radvol_TYPE);
-  result = Radvol_loadVol(self, pvol);
+  result = Radvol_load_pvol(self, pvol);
   CU_ASSERT_FATAL(result);
 
   Radvol_setTaskName(self, "task name");
   Radvol_setTaskArgs(self, "test args");
-  result = Radvol_saveVol(self, pvol);
+  result = Radvol_save_pvol(self, pvol);
   CU_ASSERT_FATAL(result);
   CU_ASSERT_EQUAL_FATAL(PolarVolume_getNumberOfScans(pvol), 1);
   scan = PolarVolume_getScan(pvol, 0);
@@ -312,12 +345,12 @@ void testRadvol_setTaskName(void) {
   CU_ASSERT_PTR_NOT_NULL_FATAL(pvol);
 
   self = RAVE_OBJECT_NEW(&Radvol_TYPE);
-  result = Radvol_loadVol(self, pvol);
+  result = Radvol_load_pvol(self, pvol);
   CU_ASSERT_FATAL(result);
 
   Radvol_setTaskName(self, "task name");
   Radvol_setTaskArgs(self, "test args");
-  result = Radvol_saveVol(self, pvol);
+  result = Radvol_save_pvol(self, pvol);
   CU_ASSERT_FATAL(result);
   CU_ASSERT_EQUAL_FATAL(PolarVolume_getNumberOfScans(pvol), 1);
   scan = PolarVolume_getScan(pvol, 0);
@@ -349,13 +382,13 @@ int testRadvol_main(void) {
   }
 
   /* Add the tests to the suite */
-  if ((NULL == CU_add_test(pSuite, "testRadvol_getAltitude", testRadvol_getAltitude)) ||
+  if ((NULL == CU_add_test(pSuite, "testRadvol_getCurvature", testRadvol_getCurvature)) ||
           (NULL == CU_add_test(pSuite, "testRadvol_getFactorChild", testRadvol_getFactorChild)) ||
           (NULL == CU_add_test(pSuite, "testRadvol_getLinearQuality", testRadvol_getLinearQuality)) ||
           (NULL == CU_add_test(pSuite, "testRadvol_getParValueDouble", testRadvol_getParValueDouble)) ||
           (NULL == CU_add_test(pSuite, "testRadvol_getParValueInt", testRadvol_getParValueInt)) ||
-          (NULL == CU_add_test(pSuite, "testRadvol_loadVol", testRadvol_loadVol)) ||
-          (NULL == CU_add_test(pSuite, "testRadvol_saveVol", testRadvol_saveVol)) ||
+          (NULL == CU_add_test(pSuite, "testRadvol_load_pvol", testRadvol_load_pvol)) ||
+          (NULL == CU_add_test(pSuite, "testRadvol_save_pvol", testRadvol_save_pvol)) ||
           (NULL == CU_add_test(pSuite, "testRadvol_setTaskArgs", testRadvol_setTaskArgs)) ||
           (NULL == CU_add_test(pSuite, "testRadvol_setTaskName", testRadvol_setTaskName))) {
     CU_cleanup_registry();

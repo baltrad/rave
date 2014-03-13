@@ -14,11 +14,11 @@
 </projection>
 <projection id='laea20e60n'>
   <description>Lambert Azimuthal Equal Area 20E, 60N</description>
-  <projdef>+proj=laea +R=6370997 +lat_0=60 +lon_0=20</projdef>
+  <projdef>+proj=laea +R=6370997 +lat_0=60 +lon_0=20 +nadgrids=@null +no_defs</projdef>
 </projection>
 <projection id='rot10w30s'>
   <description>Rotated Equidistant Cylindrical for HIRLAM and MESAN</description>
-  <projdef>+proj=ob_tran +o_proj=eqc +o_lat_p=30 +o_lon_p=10 +lon_0=-10 +R=6371000.0</projdef>
+  <projdef>+proj=ob_tran +o_proj=eqc +o_lat_p=30 +o_lon_p=10 +lon_0=-10 +R=6371000.0 +nadgrids=@null +no_defs</projdef>
 </projection>
 <projection id='RT90'>
   <description>Lantmäteriet RT90 (Swedish national grid)</description>
@@ -26,7 +26,7 @@
 </projection>
 <projection id='gmaps'>
 <description>Google Maps</description>
-<projdef>+proj=merc +lat_ts=0 +lon_0=0 +k=1.0 +R=6378137.0 +no_defs</projdef>
+<projdef>+proj=merc +lat_ts=0 +lon_0=0 +k=1.0 +R=6378137.0 +nadgrids=@null +no_defs</projdef>
 </projection>
 <projection id='odc_laea'>
 <description>Odyssey composite area</description>

@@ -53,6 +53,15 @@ LOGFILE     = N2BROOT + '/n2b.log'
 LOGFILESIZE = 5000000  # 5 Mb each
 LOGFILES    = 5
 
+if not os.path.isdir(N2BROOT):
+    try:
+        os.makedirs(N2BROOT)
+        print "Created directory %s" % N2BROOT
+    except OSError:
+        print "Directory %s does not exist. Failed to create it. Exiting." % N2BROOT
+        sys.exit(1)
+
+
 sys.path.append(N2BROOT)
 
 MASK = pyinotify.IN_CLOSE_WRITE

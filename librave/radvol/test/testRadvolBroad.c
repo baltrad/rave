@@ -45,7 +45,7 @@ char* H5_FILE_COR;
 static FILE* temp_file = NULL;
 
 int init_suite_testRadvolBroad(void) {
-  XML_FILE = "fixtures/radvol_params_broad.xml";
+  XML_FILE = "fixtures/radvol_params.xml";
   if (NULL == (temp_file = fopen(XML_FILE, "r"))) {
     return -1;
   } else {
@@ -74,19 +74,15 @@ void testRadvolBroad_broadAssessment(void) {
   PolarVolume_t* pvol = NULL;
   PolarScan_t* scan = NULL;
   RaveIO_t* raveio = NULL;
-//  RadvolBroad_t* radvolBroad = NULL;
   RaveAttribute_t* attribute = NULL;
   RaveField_t* field = NULL;
   char* value = NULL;
-  int retval;
 
   raveio = RaveIO_open(H5_FILE);
   CU_ASSERT_PTR_NOT_NULL_FATAL(raveio);
   pvol = (PolarVolume_t*) RaveIO_getObject(raveio);
   CU_ASSERT_PTR_NOT_NULL_FATAL(pvol);
-//  radvolBroad = RAVE_OBJECT_NEW(&RadvolBroad_TYPE);
-//  CU_ASSERT_PTR_NOT_NULL_FATAL(radvolBroad);
-  retval = RadvolBroad_broadAssessment(pvol, XML_FILE);
+  RadvolBroad_broadAssessment_pvol(pvol, XML_FILE);
   CU_ASSERT_PTR_NOT_NULL_FATAL(pvol);
   CU_ASSERT_EQUAL_FATAL(PolarVolume_getNumberOfScans(pvol), 1);
   scan = PolarVolume_getScan(pvol, 0);
@@ -101,13 +97,12 @@ void testRadvolBroad_broadAssessment(void) {
   attribute = RaveField_getAttribute(field, "how/task_args");
   CU_ASSERT_PTR_NOT_NULL_FATAL(attribute);
   RaveAttribute_getString(attribute, &value);
-  CU_ASSERT_STRING_EQUAL(value, "BROAD: BROAD_LhQI1=1.1, BROAD_LhQI0=2.5, BROAD_LvQI1=1.5, BROAD_LvQI0=3.2, BROAD_Pulse=0.15");
+  CU_ASSERT_STRING_EQUAL(value, "BROAD: BROAD_LhQI1=1.1, BROAD_LhQI0=2.5, BROAD_LvQI1=1.6, BROAD_LvQI0=4.3, BROAD_Pulse=0.30");
 
   RAVE_OBJECT_RELEASE(pvol);
   RAVE_OBJECT_RELEASE(scan);
   RAVE_OBJECT_RELEASE(field);
   RAVE_OBJECT_RELEASE(attribute);
-//  RAVE_OBJECT_RELEASE(radvolBroad);
   RAVE_OBJECT_RELEASE(raveio);
 }
 
@@ -120,20 +115,16 @@ void testRadvolBroad_broadAssessment_topLevel_quality(void) {
   PolarVolume_t* pvol_cor = NULL;
   PolarScan_t* scan_cor = NULL;
   RaveField_t* field_cor = NULL;
-//  RadvolBroad_t* radvolBroad = NULL;
   int nbin;
   int nray;
   int bi, ri;
-  int retval;
   double value_in, value_cor;
 
   raveio_in = RaveIO_open(H5_FILE);
   CU_ASSERT_PTR_NOT_NULL_FATAL(raveio_in);
   pvol_in = (PolarVolume_t*) RaveIO_getObject(raveio_in);
   CU_ASSERT_PTR_NOT_NULL_FATAL(pvol_in);
-//  radvolBroad = RAVE_OBJECT_NEW(&RadvolBroad_TYPE);
-//  CU_ASSERT_PTR_NOT_NULL_FATAL(radvolBroad);
-  retval = RadvolBroad_broadAssessment(pvol_in, XML_FILE);
+  RadvolBroad_broadAssessment_pvol(pvol_in, XML_FILE);
   CU_ASSERT_PTR_NOT_NULL_FATAL(pvol_in);
   CU_ASSERT_EQUAL_FATAL(PolarVolume_getNumberOfScans(pvol_in), 1);
   scan_in = PolarVolume_getScan(pvol_in, 0);
@@ -170,7 +161,6 @@ void testRadvolBroad_broadAssessment_topLevel_quality(void) {
     }
   }
 
-//  RAVE_OBJECT_RELEASE(radvolBroad);
   RAVE_OBJECT_RELEASE(pvol_in);
   RAVE_OBJECT_RELEASE(scan_in);
   RAVE_OBJECT_RELEASE(field_in);

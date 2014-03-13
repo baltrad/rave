@@ -21,7 +21,7 @@ along with Radvol-QC.  If not, see <http://www.gnu.org/licenses/>.
  * Radvol-QC algorithms for speck removal.
  * @file radvolspeck.c
  * @author Katarzyna Osrodka (Institute of Meteorology and Water Management, IMGW-PIB)
- * @date 2012-07-12
+ * @date 2012-12-20
  */
 #include "radvolspeck.h"
 #include "radvol.h"
@@ -34,16 +34,16 @@ along with Radvol-QC.  If not, see <http://www.gnu.org/licenses/>.
  * Represents the RadvolSpeck algorithm
  */
 struct _RadvolSpeck_t {
-  RAVE_OBJECT_HEAD 	/** Always on top */
-  Radvol_t* radvol;	/**< volume of reflectivity and QI */
-  double SPECK_QI;	/**< QI<sub>SPECK</sub> value for speck */
-  double SPECK_QIUn;	/**< QI<sub>SPECK</sub> value for uncorrected speck */
-  int    SPECK_AGrid;	/**< Reverse speck vicinity (algorithm A) */   
-  int    SPECK_ANum;	/**< Maximum number of non-rainy gates (algorithm A) */
-  int    SPECK_AStep;	/**< Number of reverse speck removal cycles (algorithm A) */
-  int    SPECK_BGrid;	/**< Speck vicinity (algorithm B) */
-  int    SPECK_BNum;	/**< Maximum number of rainy gates (algorithm B) */
-  int    SPECK_BStep;	/**< Number of speck removal cycles (algorithm B) */
+  RAVE_OBJECT_HEAD    /** Always on top */
+  Radvol_t* radvol;   /**< volume of reflectivity and QI */
+  double SPECK_QI;    /**< QI<sub>SPECK</sub> value for speck */
+  double SPECK_QIUn;  /**< QI<sub>SPECK</sub> value for uncorrected speck */
+  int    SPECK_AGrid; /**< Reverse speck vicinity (algorithm A) */
+  int    SPECK_ANum;  /**< Maximum number of non-rainy gates (algorithm A) */
+  int    SPECK_AStep; /**< Number of reverse speck removal cycles (algorithm A) */
+  int    SPECK_BGrid; /**< Speck vicinity (algorithm B) */
+  int    SPECK_BNum;  /**< Maximum number of rainy gates (algorithm B) */
+  int    SPECK_BStep; /**< Number of speck removal cycles (algorithm B) */
 };
 
 /*@{ Private functions */
@@ -114,21 +114,22 @@ static void RadvolSpeck_destructor(RaveCoreObject* obj)
 static int RadvolSpeckInternal_readParams(RadvolSpeck_t* self, char* paramFileName)
 {
   int result = 0;
+  int IsDefaultChild;
   SimpleXmlNode_t* node = NULL;
   
-  node = Radvol_getFactorChild(paramFileName, "SPECK");
-  if (node != NULL) {
+  if ((paramFileName != NULL) && ((node = Radvol_getFactorChild(self->radvol, paramFileName, "SPECK_QIOn", &IsDefaultChild)) != NULL)) {
     result = 1;
-    result = RAVEMIN(result, Radvol_getParValueInt(node,    "QIOn", &self->radvol->QIOn));
-    result = RAVEMIN(result, Radvol_getParValueInt(node,    "QCOn", &self->radvol->QCOn));
-    result = RAVEMIN(result, Radvol_getParValueDouble(node, "QI", &self->SPECK_QI));
-    result = RAVEMIN(result, Radvol_getParValueDouble(node, "QIUn", &self->SPECK_QIUn));
-    result = RAVEMIN(result, Radvol_getParValueInt(node,    "AGrid", &self->SPECK_AGrid));
-    result = RAVEMIN(result, Radvol_getParValueInt(node,    "ANum", &self->SPECK_ANum));
-    result = RAVEMIN(result, Radvol_getParValueInt(node,    "AStep", &self->SPECK_AStep));
-    result = RAVEMIN(result, Radvol_getParValueInt(node,    "BGrid", &self->SPECK_BGrid));
-    result = RAVEMIN(result, Radvol_getParValueInt(node,    "BNum", &self->SPECK_BNum));
-    result = RAVEMIN(result, Radvol_getParValueInt(node,    "BStep", &self->SPECK_BStep));
+    result = RAVEMIN(result, Radvol_getParValueInt(node,    "SPECK_QIOn", &self->radvol->QIOn));
+    result = RAVEMIN(result, Radvol_getParValueInt(node,    "SPECK_QCOn", &self->radvol->QCOn));
+    result = RAVEMIN(result, Radvol_getParValueInt(node,    "DBZHtoTH", &self->radvol->DBZHtoTH));
+    result = RAVEMIN(result, Radvol_getParValueDouble(node, "SPECK_QI", &self->SPECK_QI));
+    result = RAVEMIN(result, Radvol_getParValueDouble(node, "SPECK_QIUn", &self->SPECK_QIUn));
+    result = RAVEMIN(result, Radvol_getParValueInt(node,    "SPECK_AGrid", &self->SPECK_AGrid));
+    result = RAVEMIN(result, Radvol_getParValueInt(node,    "SPECK_ANum", &self->SPECK_ANum));
+    result = RAVEMIN(result, Radvol_getParValueInt(node,    "SPECK_AStep", &self->SPECK_AStep));
+    result = RAVEMIN(result, Radvol_getParValueInt(node,    "SPECK_BGrid", &self->SPECK_BGrid));
+    result = RAVEMIN(result, Radvol_getParValueInt(node,    "SPECK_BNum", &self->SPECK_BNum));
+    result = RAVEMIN(result, Radvol_getParValueInt(node,    "SPECK_BStep", &self->SPECK_BStep));
     RAVE_OBJECT_RELEASE(node);
   } 
   return result;
@@ -145,7 +146,7 @@ static int RadvolSpeckInternal_addTaskArgs(RadvolSpeck_t* self)
   char task_args[1000];
   
   sprintf(task_args, "SPECK: SPECK_QI=%3.1f, SPECK_QIUn=%3.1f, SPECK_AGrid=%d, SPECK_ANum=%d, SPECK_AStep=%d, SPECK_BGrid=%d, SPECK_BNum=%d, SPECK_BStep=%d", 
-	  self->SPECK_QI, self->SPECK_QIUn, self->SPECK_AGrid, self->SPECK_ANum, self->SPECK_AStep, self->SPECK_BGrid, self->SPECK_BNum, self->SPECK_BStep);
+          self->SPECK_QI, self->SPECK_QIUn, self->SPECK_AGrid, self->SPECK_ANum, self->SPECK_AStep, self->SPECK_BGrid, self->SPECK_BNum, self->SPECK_BStep);
   if (Radvol_setTaskArgs(self->radvol, task_args)) {
     result = 1;
   }
@@ -167,36 +168,35 @@ static void RadvolSpeckInternal_ElevRevSpecleRemoval(RadvolSpeck_t* self, int el
   int sum, sum1;
   long int l1, l2;
   double aver;
-  
+
   for (aRay = 0; aRay < self->radvol->TabElev[ele].nray; aRay++) {
     for (aBin = 0; aBin < self->radvol->TabElev[ele].nbin; aBin++) {
       l2 = aRay * self->radvol->TabElev[ele].nbin;
-      if (SameValue(aTabElev[l2 + aBin], cNoRain)) {
-	sum = 0;
-	sum1 = 0;
-	aver = 0.0;
-	for (bRay = aRay - self->SPECK_AGrid; bRay <= aRay + self->SPECK_AGrid; bRay++) {
-	  l1 = ((bRay + self->radvol->TabElev[ele].nray) % self->radvol->TabElev[ele].nray) * self->radvol->TabElev[ele].nbin;
-	  for (bBin = RAVEMAX(0, aBin - self->SPECK_AGrid); bBin <= RAVEMIN(aBin + self->SPECK_AGrid, self->radvol->TabElev[ele].nbin - 1); bBin++) {
-	    if (SameValue(aTabElev[l1 + bBin], cNoRain)) {
-	      sum++;
-	    }
-	    else if (!SameValue(aTabElev[l1 + aBin], cNull)) {
-	      aver += aTabElev[l1 + bBin];
-	      sum1++;
-	    } 
-	  }
-	}
-	if (sum <= self->SPECK_ANum) {
-	  bTabElev[l2 + aBin] = aver / sum1;
-	  if (self->radvol->QIOn) {
-	    self->radvol->TabElev[ele].QIElev[l2 + aBin] = aQI;
-	  }
-	} else {
-	  bTabElev[l2 + aBin] = aTabElev[l2 + aBin];
-	}
+      if (SameValue(aTabElev[l2 + aBin], self->radvol->TabElev[ele].offset)) {
+        sum = 0;
+        sum1 = 0;
+        aver = 0.0;
+        for (bRay = aRay - self->SPECK_AGrid; bRay <= aRay + self->SPECK_AGrid; bRay++) {
+          l1 = ((bRay + self->radvol->TabElev[ele].nray) % self->radvol->TabElev[ele].nray) * self->radvol->TabElev[ele].nbin;
+          for (bBin = RAVEMAX(0, aBin - self->SPECK_AGrid); bBin <= RAVEMIN(aBin + self->SPECK_AGrid, self->radvol->TabElev[ele].nbin - 1); bBin++) {
+            if (SameValue(aTabElev[l1 + bBin], self->radvol->TabElev[ele].offset)) {
+              sum++;
+            } else if (!SameValue(aTabElev[l1 + aBin], cNull)) {
+              aver += aTabElev[l1 + bBin];
+              sum1++;
+            }
+          }
+        }
+        if (sum <= self->SPECK_ANum) {
+          bTabElev[l2 + aBin] = aver / sum1;
+          if (self->radvol->QIOn) {
+            self->radvol->TabElev[ele].QIElev[l2 + aBin] = aQI;
+          }
+        } else {
+          bTabElev[l2 + aBin] = aTabElev[l2 + aBin];
+        }
       } else {
-	bTabElev[l2 + aBin] = aTabElev[l2 + aBin];
+        bTabElev[l2 + aBin] = aTabElev[l2 + aBin];
       }
     }
   }
@@ -218,30 +218,30 @@ static void RadvolSpeckInternal_ElevSpecleRemoval(RadvolSpeck_t* self, int ele, 
   long int l1, l2;
   int bRay;
   int bBin;
-  
+
   for (aRay = 0; aRay < self->radvol->TabElev[ele].nray; aRay++) {
     for (aBin = 0; aBin < self->radvol->TabElev[ele].nbin; aBin++) {
       l2 = aRay * self->radvol->TabElev[ele].nbin;
-      if (!SameValue(aTabElev[l2 + aBin], cNoRain) && !SameValue(aTabElev[l2 + aBin], cNull)) {
-	sum = 0;
-	for (bRay = aRay - self->SPECK_BGrid; bRay <= aRay + self->SPECK_BGrid; bRay++) {
-	  l1 = ((bRay + self->radvol->TabElev[ele].nray) % self->radvol->TabElev[ele].nray) * self->radvol->TabElev[ele].nbin;
-	  for (bBin = RAVEMAX(0, aBin - self->SPECK_BGrid); bBin <= RAVEMIN(aBin + self->SPECK_BGrid, self->radvol->TabElev[ele].nbin - 1); bBin++) {
-	    if (!SameValue(aTabElev[l1 + bBin], cNoRain) && !SameValue(aTabElev[l1 + bBin], cNull)) {
-	      sum++;
-	    }
-	  }
-	}
-	if (sum <= self->SPECK_BNum) {
-	  bTabElev[l2 + aBin] = cNoRain;
-	  if (self->radvol->QIOn) {
-	    self->radvol->TabElev[ele].QIElev[l2 + aBin] = aQI;
-	  }
-	} else {
-	  bTabElev[l2 + aBin] = aTabElev[l2 + aBin];
-	}
+      if (!SameValue(aTabElev[l2 + aBin], self->radvol->TabElev[ele].offset) && !SameValue(aTabElev[l2 + aBin], cNull)) {
+        sum = 0;
+        for (bRay = aRay - self->SPECK_BGrid; bRay <= aRay + self->SPECK_BGrid; bRay++) {
+          l1 = ((bRay + self->radvol->TabElev[ele].nray) % self->radvol->TabElev[ele].nray) * self->radvol->TabElev[ele].nbin;
+          for (bBin = RAVEMAX(0, aBin - self->SPECK_BGrid); bBin <= RAVEMIN(aBin + self->SPECK_BGrid, self->radvol->TabElev[ele].nbin - 1); bBin++) {
+            if (!SameValue(aTabElev[l1 + bBin], self->radvol->TabElev[ele].offset) && !SameValue(aTabElev[l1 + bBin], cNull)) {
+              sum++;
+            }
+          }
+        }
+        if (sum <= self->SPECK_BNum) {
+          bTabElev[l2 + aBin] = self->radvol->TabElev[ele].offset;
+          if (self->radvol->QIOn) {
+            self->radvol->TabElev[ele].QIElev[l2 + aBin] = aQI;
+          }
+        } else {
+          bTabElev[l2 + aBin] = aTabElev[l2 + aBin];
+        }
       } else {
-	bTabElev[l2 + aBin] = aTabElev[l2 + aBin];
+        bTabElev[l2 + aBin] = aTabElev[l2 + aBin];
       }
     }
   }
@@ -270,11 +270,11 @@ static int RadvolSpeckInternal_speckRemoval(RadvolSpeck_t* self)
       RAVE_CRITICAL0("Failed to allocate memory");
       goto error;
     }
-    if ((self->SPECK_AStep > 1) || (self->SPECK_BStep > 1)){
-      TabElev2 = RAVE_MALLOC(sizeof(double) * nbin * nray);
+    if ((self->SPECK_AStep > 1) || (self->SPECK_BStep > 1)) {
+      TabElev2 = RAVE_MALLOC(sizeof (double) * nbin * nray);
       if (TabElev2 == NULL) {
-	RAVE_CRITICAL0("Failed to allocate memory");
-	goto error;
+        RAVE_CRITICAL0("Failed to allocate memory");
+        goto error;
       }
     }
     
@@ -282,44 +282,44 @@ static int RadvolSpeckInternal_speckRemoval(RadvolSpeck_t* self)
     RadvolSpeckInternal_ElevRevSpecleRemoval(self, aEle, self->radvol->TabElev[aEle].ReflElev, TabElev1, QI);
     for (step = 2; step <= self->SPECK_AStep; step++) {
       if (step % 2) {
-	RadvolSpeckInternal_ElevRevSpecleRemoval(self, aEle, TabElev2, TabElev1, QI);
+        RadvolSpeckInternal_ElevRevSpecleRemoval(self, aEle, TabElev2, TabElev1, QI);
       } else {
-	RadvolSpeckInternal_ElevRevSpecleRemoval(self, aEle, TabElev1, TabElev2, QI);
+        RadvolSpeckInternal_ElevRevSpecleRemoval(self, aEle, TabElev1, TabElev2, QI);
       }
     }
     if (self->radvol->QCOn) {
       if (self->SPECK_AStep % 2) {
-	for (l1 = 0; l1 < nbin * nray; l1++) {
-	  self->radvol->TabElev[aEle].ReflElev[l1] = TabElev1[l1];
-	}
+        for (l1 = 0; l1 < nbin * nray; l1++) {
+          self->radvol->TabElev[aEle].ReflElev[l1] = TabElev1[l1];
+        }
       } else {
-	for (l1 = 0; l1 < nbin * nray; l1++) {
-	  self->radvol->TabElev[aEle].ReflElev[l1] = TabElev2[l1];
-	}
+        for (l1 = 0; l1 < nbin * nray; l1++) {
+          self->radvol->TabElev[aEle].ReflElev[l1] = TabElev2[l1];
+        }
       }
     }
-   
+
    //algorithm B - specle removal
-   RadvolSpeckInternal_ElevSpecleRemoval(self, aEle, self->radvol->TabElev[aEle].ReflElev, TabElev1, QI);
-   for (step = 2; step <= self->SPECK_BStep; step++) {
-     if (step % 2) {
-       RadvolSpeckInternal_ElevSpecleRemoval(self, aEle, TabElev2, TabElev1, QI);
-     } else {
-       RadvolSpeckInternal_ElevSpecleRemoval(self, aEle, TabElev1, TabElev2, QI);
-     }
-   }
-   if (self->radvol->QCOn) {
-     if (self->SPECK_BStep % 2) {
-       for (l1 = 0; l1 < nbin * nray; l1++) {
-	 self->radvol->TabElev[aEle].ReflElev[l1] = TabElev1[l1];
-       }
-     } else {
-       for (l1 = 0; l1 < nbin * nray; l1++) {
-	 self->radvol->TabElev[aEle].ReflElev[l1] = TabElev2[l1];
-       }
-     }
-   }
-   
+    RadvolSpeckInternal_ElevSpecleRemoval(self, aEle, self->radvol->TabElev[aEle].ReflElev, TabElev1, QI);
+    for (step = 2; step <= self->SPECK_BStep; step++) {
+      if (step % 2) {
+        RadvolSpeckInternal_ElevSpecleRemoval(self, aEle, TabElev2, TabElev1, QI);
+      } else {
+        RadvolSpeckInternal_ElevSpecleRemoval(self, aEle, TabElev1, TabElev2, QI);
+      }
+    }
+    if (self->radvol->QCOn) {
+      if (self->SPECK_BStep % 2) {
+        for (l1 = 0; l1 < nbin * nray; l1++) {
+          self->radvol->TabElev[aEle].ReflElev[l1] = TabElev1[l1];
+        }
+      } else {
+        for (l1 = 0; l1 < nbin * nray; l1++) {
+          self->radvol->TabElev[aEle].ReflElev[l1] = TabElev2[l1];
+        }
+      }
+    }
+
    RAVE_FREE(TabElev1);
    if ((self->SPECK_AStep > 1) || (self->SPECK_BStep > 1)) {
      RAVE_FREE(TabElev2);
@@ -339,16 +339,17 @@ error:
 
 /*@{ Interface functions */
 
-int RadvolSpeck_speckRemoval(PolarVolume_t* pvol, char* paramFileName)
+int RadvolSpeck_speckRemoval_scan(PolarScan_t* scan, char* paramFileName)
 {
   RadvolSpeck_t* self = RAVE_OBJECT_NEW(&RadvolSpeck_TYPE);
   int retval = 0;
 
   RAVE_ASSERT((self != NULL), "self == NULL");
-  if (pvol == NULL) {
-    RAVE_ERROR0("Polar volume == NULL");
+  if (scan == NULL) {
+    RAVE_ERROR0("Polar scan == NULL");
     return retval;
   }
+  Radvol_getName(self->radvol, PolarScan_getSource(scan));
   if (paramFileName == NULL || !RadvolSpeckInternal_readParams(self, paramFileName)) {
     RAVE_WARNING0("Default parameter values");
   }
@@ -361,7 +362,52 @@ int RadvolSpeck_speckRemoval(PolarVolume_t* pvol, char* paramFileName)
       RAVE_ERROR0("Processing failed (setting task args)");
       goto done;    
     } 
-    if (!Radvol_loadVol(self->radvol, pvol)) {
+    if (!Radvol_load_scan(self->radvol, scan)) {
+      RAVE_ERROR0("Processing failed (loading scan)");
+      goto done;
+    }
+    if (!RadvolSpeckInternal_speckRemoval(self)) {
+      RAVE_ERROR0("Processing failed (speck removal)");
+      goto done;
+    }
+    if (!Radvol_save_scan(self->radvol, scan)) {
+      RAVE_ERROR0("Processing failed (saving scan)");
+      goto done;
+    }
+    retval = 1;
+  } else {
+    RAVE_WARNING0("Processing stopped because QC and QI switched off");
+  }
+
+done:
+  RAVE_OBJECT_RELEASE(self);
+  return retval;
+}
+
+int RadvolSpeck_speckRemoval_pvol(PolarVolume_t* pvol, char* paramFileName)
+{
+  RadvolSpeck_t* self = RAVE_OBJECT_NEW(&RadvolSpeck_TYPE);
+  int retval = 0;
+
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  if (pvol == NULL) {
+    RAVE_ERROR0("Polar volume == NULL");
+    return retval;
+  }
+  Radvol_getName(self->radvol, PolarVolume_getSource(pvol));
+  if (paramFileName == NULL || !RadvolSpeckInternal_readParams(self, paramFileName)) {
+    RAVE_WARNING0("Default parameter values");
+  }
+  if (self->radvol->QCOn || self->radvol->QIOn) {
+    if (!Radvol_setTaskName(self->radvol,"pl.imgw.radvolqc.speck")) {
+      RAVE_ERROR0("Processing failed (setting task name)");
+      goto done;
+    }
+    if (!RadvolSpeckInternal_addTaskArgs(self)) {
+      RAVE_ERROR0("Processing failed (setting task args)");
+      goto done;
+    }
+    if (!Radvol_load_pvol(self->radvol, pvol)) {
       RAVE_ERROR0("Processing failed (loading volume)");
       goto done;
     }
@@ -369,7 +415,7 @@ int RadvolSpeck_speckRemoval(PolarVolume_t* pvol, char* paramFileName)
       RAVE_ERROR0("Processing failed (speck removal)");
       goto done;
     }
-    if (!Radvol_saveVol(self->radvol, pvol)) {
+    if (!Radvol_save_pvol(self->radvol, pvol)) {
       RAVE_ERROR0("Processing failed (saving volume)");
       goto done;
     }

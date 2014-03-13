@@ -18,38 +18,16 @@ You should have received a copy of the GNU Lesser General Public License
 along with Radvol-QC.  If not, see <http://www.gnu.org/licenses/>.
 ------------------------------------------------------------------------*/
 /**
- * Tests for Radvol-QC package.
- * @file testRadvolQC.c
+ * Tests for radvolblock.
+ * @file testRadvolBlock.h
  * @author Katarzyna Osrodka (Institute of Meteorology and Water Management, IMGW-PIB)
  * @date 2012-10-15
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include "CUnit/Basic.h"
-#include "testRadvol.h"
-#include "testRadvolAtt.h"
-#include "testRadvolBroad.h"
-#include "testRadvolNmet.h"
-#include "testRadvolSpeck.h"
-#include "testRadvolSpike.h"
+#ifndef TESTRADVOLBLOCK_H
+#define	TESTRADVOLBLOCK_H
 
-int main(int argc, char** argv) {
-  /* Initialize the CUnit test registry */
-  if (CUE_SUCCESS != CU_initialize_registry())
-    return CU_get_error();
+int testRadvolBlock_main();
 
-  testRadvol_main();
-  testRadvolAtt_main();
-  testRadvolBroad_main();
-  testRadvolNmet_main();
-  testRadvolSpeck_main();
-  testRadvolSpike_main();
-
-  /* Run all tests using the CUnit Basic interface */
-  CU_basic_set_mode(CU_BRM_VERBOSE);
-  CU_basic_run_tests();
-  CU_cleanup_registry();
-  return CU_get_error();
-}
+#endif	/* TESTRADVOLBLOCK_H */
 

@@ -21,12 +21,13 @@ along with Radvol-QC.  If not, see <http://www.gnu.org/licenses/>.
  * Radvol-QC algorithms for speck removal.
  * @file radvolspeck.h
  * @author Katarzyna Osrodka (Institute of Meteorology and Water Management, IMGW-PIB)
- * @date 2012-07-12
+ * @date 2012-12-20
  */
 #ifndef RADVOLSPECK_H
 #define RADVOLSPECK_H
 #include "rave_object.h"
 #include "polarvolume.h"
+#include "polarscan.h"
 
 /**
  * Defines a RadvolSpeck
@@ -40,10 +41,18 @@ extern RaveCoreObjectType RadvolSpeck_TYPE;
 
 /**
  * Runs algorithm for speck removal and quality characterization with parameters from XML file
+ * @param scan - input polar scan
+ * @param paramFileName - name of XML file with parameters (otherwise default values are applied)
+ * @returns 1 upon success, otherwise 0
+ */
+int RadvolSpeck_speckRemoval_scan(PolarScan_t* scan, char* paramFileName);
+
+/**
+ * Runs algorithm for speck removal and quality characterization with parameters from XML file
  * @param pvol - input polar volume
  * @param paramFileName - name of XML file with parameters (otherwise default values are applied)
  * @returns 1 upon success, otherwise 0
  */
-int RadvolSpeck_speckRemoval(PolarVolume_t* pvol, char* paramFileName);
+int RadvolSpeck_speckRemoval_pvol(PolarVolume_t* pvol, char* paramFileName);
 
 #endif

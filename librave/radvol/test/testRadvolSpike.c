@@ -46,7 +46,7 @@ char* H5_FILE_COR;
 static FILE* temp_file = NULL;
 
 int init_suite_testRadvolSpike(void) {
-  XML_FILE = "fixtures/radvol_params_spike.xml";
+  XML_FILE = "fixtures/radvol_params.xml";
   if (NULL == (temp_file = fopen(XML_FILE, "r"))) {
     return -1;
   } else {
@@ -75,19 +75,15 @@ void testRadvolSpike_spikeRemoval(void) {
   PolarVolume_t* pvol = NULL;
   PolarScan_t* scan = NULL;
   RaveIO_t* raveio = NULL;
-//  RadvolSpike_t* radvolSpike = NULL;
   PolarScanParam_t* parameter = NULL;
   RaveAttribute_t* attribute = NULL;
   char* value = NULL;
-  int ret;
 
   raveio = RaveIO_open(H5_FILE);
   CU_ASSERT_PTR_NOT_NULL_FATAL(raveio);
   pvol = (PolarVolume_t*) RaveIO_getObject(raveio);
   CU_ASSERT_PTR_NOT_NULL_FATAL(pvol);
-//  radvolSpike = RAVE_OBJECT_NEW(&RadvolSpike_TYPE);
-//  CU_ASSERT_PTR_NOT_NULL_FATAL(radvolSpike);
-  ret = RadvolSpike_spikeRemoval(pvol, XML_FILE);
+  RadvolSpike_spikeRemoval_pvol(pvol, XML_FILE);
   CU_ASSERT_PTR_NOT_NULL_FATAL(pvol);
   CU_ASSERT_EQUAL_FATAL(PolarVolume_getNumberOfScans(pvol), 1);
   scan = PolarVolume_getScan(pvol, 0);
@@ -101,13 +97,12 @@ void testRadvolSpike_spikeRemoval(void) {
   attribute = PolarScanParam_getAttribute(parameter, "how/task_args");
   CU_ASSERT_PTR_NOT_NULL_FATAL(attribute);
   RaveAttribute_getString(attribute, &value);
-  CU_ASSERT_STRING_EQUAL(value, "SPIKE: SPIKE_QI=0.5, SPIKE_QIUn=0.3, SPIKE_ACovFrac=0.9, SPIKE_AAzim=3, SPIKE_AVarAzim=  1000.0, SPIKE_ABeam=15, SPIKE_AVarBeam=5.0, SPIKE_AFrac=0.45, SPIKE_BDiff=10.0, SPIKE_BAzim=3, SPIKE_BFrac=0.25, SPIKE_CAlt=20.0");
+  CU_ASSERT_STRING_EQUAL(value, "SPIKE: SPIKE_QI=0.5, SPIKE_QIUn=0.3, SPIKE_ACovFrac=0.9, SPIKE_AAzim=3, SPIKE_AVarAzim=  1000.0, SPIKE_ABeam=15, SPIKE_AVarBeam=5.0, SPIKE_AFrac=0.45, SPIKE_BDiff=10.0, SPIKE_BAzim=3, SPIKE_BFrac=0.25");
 
   RAVE_OBJECT_RELEASE(pvol);
   RAVE_OBJECT_RELEASE(scan);
   RAVE_OBJECT_RELEASE(parameter);
   RAVE_OBJECT_RELEASE(attribute);
-//  RAVE_OBJECT_RELEASE(radvolSpike);
   RAVE_OBJECT_RELEASE(raveio);
 }
 
@@ -118,20 +113,16 @@ void testRadvolSpike_spikeRemoval_topLevel_correction(void) {
   RaveIO_t* raveio_cor = NULL;
   PolarVolume_t* pvol_cor = NULL;
   PolarScan_t* scan_cor = NULL;
-//  RadvolSpike_t* radvolSpike = NULL;
   int nbin;
   int nray;
   int bi, ri;
-  int ret;
   double value_in, value_cor;
 
   raveio_in = RaveIO_open(H5_FILE);
   CU_ASSERT_PTR_NOT_NULL_FATAL(raveio_in);
   pvol_in = (PolarVolume_t*) RaveIO_getObject(raveio_in);
   CU_ASSERT_PTR_NOT_NULL_FATAL(pvol_in);
-//  radvolSpike = RAVE_OBJECT_NEW(&RadvolSpike_TYPE);
-//  CU_ASSERT_PTR_NOT_NULL_FATAL(radvolSpike);
-  ret = RadvolSpike_spikeRemoval(pvol_in, XML_FILE);
+  RadvolSpike_spikeRemoval_pvol(pvol_in, XML_FILE);
   CU_ASSERT_PTR_NOT_NULL_FATAL(pvol_in);
   CU_ASSERT_EQUAL_FATAL(PolarVolume_getNumberOfScans(pvol_in), 1);
   scan_in = PolarVolume_getScan(pvol_in, 0);
@@ -164,7 +155,6 @@ void testRadvolSpike_spikeRemoval_topLevel_correction(void) {
     }
   }
 
-//  RAVE_OBJECT_RELEASE(radvolSpike);
   RAVE_OBJECT_RELEASE(pvol_in);
   RAVE_OBJECT_RELEASE(scan_in);
   RAVE_OBJECT_RELEASE(raveio_in);
@@ -182,20 +172,16 @@ void testRadvolSpike_spikeRemoval_topLevel_quality(void) {
   PolarVolume_t* pvol_cor = NULL;
   PolarScan_t* scan_cor = NULL;
   RaveField_t* field_cor = NULL;
-//  RadvolSpike_t* radvolSpike = NULL;
   int nbin;
   int nray;
   int bi, ri;
-  int ret;
   double value_in, value_cor;
 
   raveio_in = RaveIO_open(H5_FILE);
   CU_ASSERT_PTR_NOT_NULL_FATAL(raveio_in);
   pvol_in = (PolarVolume_t*) RaveIO_getObject(raveio_in);
   CU_ASSERT_PTR_NOT_NULL_FATAL(pvol_in);
-//  radvolSpike = RAVE_OBJECT_NEW(&RadvolSpike_TYPE);
-//  CU_ASSERT_PTR_NOT_NULL_FATAL(radvolSpike);
-  ret = RadvolSpike_spikeRemoval(pvol_in, XML_FILE);
+  RadvolSpike_spikeRemoval_pvol(pvol_in, XML_FILE);
   CU_ASSERT_PTR_NOT_NULL_FATAL(pvol_in);
   CU_ASSERT_EQUAL_FATAL(PolarVolume_getNumberOfScans(pvol_in), 1);
   scan_in = PolarVolume_getScan(pvol_in, 0);
@@ -232,7 +218,6 @@ void testRadvolSpike_spikeRemoval_topLevel_quality(void) {
     }
   }
 
-//  RAVE_OBJECT_RELEASE(radvolSpike);
   RAVE_OBJECT_RELEASE(pvol_in);
   RAVE_OBJECT_RELEASE(scan_in);
   RAVE_OBJECT_RELEASE(field_in);

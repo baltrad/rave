@@ -18,41 +18,42 @@ You should have received a copy of the GNU Lesser General Public License
 along with Radvol-QC.  If not, see <http://www.gnu.org/licenses/>.
 ------------------------------------------------------------------------*/
 /**
- * Radvol-QC algorithms for spike removal.
- * @file radvolspike.h
+ * Radvol-QC algorithms for non-meteorological echoes removal.
+ * @file radvolnmet.h
  * @author Katarzyna Osrodka (Institute of Meteorology and Water Management, IMGW-PIB)
- * @date 2012-12-20
+ * @date 2013
  */
-#ifndef RADVOLSPIKE_H
-#define RADVOLSPIKE_H
+#ifndef RADVOLNMET_H
+#define	RADVOLNMET_H
 #include "rave_object.h"
 #include "polarvolume.h"
 #include "polarscan.h"
 
 /**
- * Defines a RadvolSpike
+ * Defines a RadvolNmet
  */
-typedef struct _RadvolSpike_t RadvolSpike_t;
+typedef struct _RadvolNmet_t RadvolNmet_t;
 
 /**
  * Type definition to use when creating a rave object.
  */
-extern RaveCoreObjectType RadvolSpike_TYPE;
+extern RaveCoreObjectType RadvolNmet_TYPE;
 
 /**
- * Runs algorithm for spike removal and quality characterization with parameters from XML file
+ * Runs algorithm for non-meteorological echoes removal and quality characterization with parameters from XML file
  * @param scan - input polar scan
  * @param paramFileName - name of XML file with parameters (otherwise default values are applied)
  * @returns 1 upon success, otherwise 0
  */
-int RadvolSpike_spikeRemoval_scan(PolarScan_t* scan, char* paramFileName);
+int RadvolNmet_nmetRemoval_scan(PolarScan_t* scan, char* paramFileName);
 
 /**
- * Runs algorithm for spike removal and quality characterization with parameters from XML file
+ * Runs algorithm for non-meteorological echoes removal and quality characterization with parameters from XML file
  * @param pvol - input polar volume
  * @param paramFileName - name of XML file with parameters (otherwise default values are applied)
  * @returns 1 upon success, otherwise 0
  */
-int RadvolSpike_spikeRemoval_pvol(PolarVolume_t* pvol, char* paramFileName);
+int RadvolNmet_nmetRemoval_pvol(PolarVolume_t* pvol, char* paramFileName);
 
-#endif
+#endif	/* RADVOLNMET_H */
+

@@ -21,12 +21,13 @@ along with Radvol-QC.  If not, see <http://www.gnu.org/licenses/>.
  * Radvol-QC algorithms for assessment of distance-to-radar related effects.
  * @file radvolbroad.h
  * @author Katarzyna Osrodka (Institute of Meteorology and Water Management, IMGW-PIB)
- * @date 2012-07-12
+ * @date 2012-12-20
  */
 #ifndef RADVOLBROAD_H
 #define RADVOLBROAD_H
 #include "rave_object.h"
 #include "polarvolume.h"
+#include "polarscan.h"
 
 /**
  * Defines a RadvolBroad
@@ -40,10 +41,18 @@ extern RaveCoreObjectType RadvolBroad_TYPE;
 
 /**
  * Runs algorithm for assessment of distance-to-radar related effects with parameters from XML file
+ * @param scan - input polar scan
+ * @param paramFileName - name of XML file with parameters (otherwise default values are applied)
+ * @returns 1 upon success, otherwise 0
+ */
+int RadvolBroad_broadAssessment_scan(PolarScan_t* scan, char* paramFileName);
+
+/**
+ * Runs algorithm for assessment of distance-to-radar related effects with parameters from XML file
  * @param pvol - input polar volume
  * @param paramFileName - name of XML file with parameters (otherwise default values are applied)
  * @returns 1 upon success, otherwise 0
  */
-int RadvolBroad_broadAssessment(PolarVolume_t* pvol, char* paramFileName);
+int RadvolBroad_broadAssessment_pvol(PolarVolume_t* pvol, char* paramFileName);
 
 #endif
