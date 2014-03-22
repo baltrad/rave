@@ -44,8 +44,12 @@ import rave_tempfile
 import odim_source
 import math
 import rave_pgf_quality_registry
+import logging
+import rave_pgf_logger
 
-from rave_defines import CENTER_ID, GAIN, OFFSET
+from rave_defines import CENTER_ID, GAIN, OFFSET, LOG_ID
+
+logger = logging.getLogger(LOG_ID)
 
 ravebdb = None
 try:
@@ -54,6 +58,12 @@ try:
 except:
   pass
 
+QITOTAL_INFO = {}
+try:
+  QITOTAL_INFO = get_qitotal_site_information
+except Exception, e:
+  logger.error("Failed to load qitotal site information", e)
+  
 ##
 # The area registry to be used by this composite generator.
 my_area_registry = area_registry.area_registry()

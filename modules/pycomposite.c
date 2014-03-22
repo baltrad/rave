@@ -322,6 +322,7 @@ static struct PyMethodDef _pycomposite_methods[] =
   {"selection_method", NULL},
   {"date", NULL},
   {"time", NULL},
+  {"quality_indicator_field_name", NULL},
   {"addParameter", (PyCFunction)_pycomposite_addParameter, 1},
   {"hasParameter", (PyCFunction)_pycomposite_hasParameter, 1},
   {"getParameterCount", (PyCFunction)_pycomposite_getParameterCount, 1},
@@ -367,6 +368,12 @@ static PyObject* _pycomposite_getattr(PyComposite* self, char* name)
   } else if (strcmp("time", name) == 0) {
     if (Composite_getTime(self->composite) != NULL) {
       return PyString_FromString(Composite_getTime(self->composite));
+    } else {
+      Py_RETURN_NONE;
+    }
+  } else if (strcmp("quality_indicator_field_name", name) == 0) {
+    if (Composite_getQualityIndicatorFieldName(self->composite) != NULL) {
+      return PyString_FromString(Composite_getQualityIndicatorFieldName(self->composite));
     } else {
       Py_RETURN_NONE;
     }
@@ -449,6 +456,16 @@ static int _pycomposite_setattr(PyComposite* self, char* name, PyObject* val)
       Composite_setDate(self->composite, NULL);
     } else {
       raiseException_gotoTag(done, PyExc_ValueError,"date must be of type string");
+    }
+  } else if (strcmp("quality_indicator_field_name", name) == 0) {
+    if (PyString_Check(val)) {
+      if (!Composite_setQualityIndicatorFieldName(self->composite, PyString_AsString(val))) {
+        raiseException_gotoTag(done, PyExc_MemoryError, "Failed to set quality indicator field name");
+      }
+    } else if (val == Py_None) {
+      Composite_setQualityIndicatorFieldName(self->composite, NULL);
+    } else {
+      raiseException_gotoTag(done, PyExc_ValueError, "quality_indicator_field_name must be a string");
     }
   } else if (strcmp("algorithm", name) == 0) {
     if (val == Py_None) {

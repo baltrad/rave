@@ -191,6 +191,71 @@ done:
 }
 
 /**
+ * Sets the weight for the specified how/task
+ * @param[in] self - self
+ * @param[in] args - the arguments
+ * @return Py_None on success
+ * @throws RuntimeError on error
+ */
+static PyObject* _pyqitotal_setWeight(PyQITotal* self, PyObject* args)
+{
+  char* howtask = NULL;
+  double w = 0.0;
+
+  if (!PyArg_ParseTuple(args, "sd", &howtask, &w)) {
+    return NULL;
+  }
+
+  if (!RaveQITotal_setWeight(self->qitotal, howtask, w)) {
+    raiseException_returnNULL(PyExc_RuntimeError, "Failed to set weight for how/task");
+  }
+
+  Py_RETURN_NONE;
+}
+
+/**
+ * Returns the weight for specified how/task.
+ * @param[in] self - self
+ * @param[in] args - the how/task name
+ * @return the weight if found
+ * @throws AttributeError if attribute not could be found
+ */
+static PyObject* _pyqitotal_getWeight(PyQITotal* self, PyObject* args)
+{
+  char* howtask = NULL;
+  double w = 0.0;
+
+  if (!PyArg_ParseTuple(args, "s", &howtask)) {
+    return NULL;
+  }
+
+  if (!RaveQITotal_getWeight(self->qitotal, howtask, &w)) {
+    raiseException_returnNULL(PyExc_AttributeError, "Failed to get weight for how/task");
+  }
+
+  return PyFloat_FromDouble(w);
+}
+
+/**
+ * Removes the weight for the specified how/task
+ * @param[in] self - self
+ * @param[in] args - the how/task name
+ * @return None
+ */
+static PyObject* _pyqitotal_removeWeight(PyQITotal* self, PyObject* args)
+{
+  char* howtask = NULL;
+  double w = 0.0;
+
+  if (!PyArg_ParseTuple(args, "s", &howtask)) {
+    return NULL;
+  }
+  RaveQITotal_removeWeight(self->qitotal, howtask);
+
+  Py_RETURN_NONE;
+}
+
+/**
  * Generates the multiplicative QI total
  * @param[in] self - self
  * @return the resulting quality field
@@ -228,6 +293,9 @@ static struct PyMethodDef _pyqitotal_methods[] =
   {"gain", NULL},
   {"offset", NULL},
   {"datatype", NULL},
+  {"setWeight", (PyCFunction) _pyqitotal_setWeight, 1},
+  {"getWeight", (PyCFunction) _pyqitotal_getWeight, 1},
+  {"removeWeight", (PyCFunction) _pyqitotal_removeWeight, 1},
   {"multiplicative", (PyCFunction) _pyqitotal_multiplicative, 1},
   {"additive", (PyCFunction) _pyqitotal_additive, 1},
   {"minimum", (PyCFunction) _pyqitotal_minimum, 1},

@@ -1116,6 +1116,7 @@ int PolarScan_getQualityValueAt(PolarScan_t* scan, const char* quantity, int ri,
     goto done;
   }
   result = RaveField_getValue(quality, ri, ai, v);
+
 done:
   RAVE_OBJECT_RELEASE(param);
   RAVE_OBJECT_RELEASE(quality);

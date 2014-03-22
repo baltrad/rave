@@ -31,6 +31,8 @@ import _rave
 import _area
 import _projection
 import _raveio
+import _ravefield
+import numpy
 import math
 import string
 import numpy
@@ -73,7 +75,7 @@ class PyCompositeTest(unittest.TestCase):
     self.assertNotEqual(-1, isscan)
 
   def test_attribute_visibility(self):
-    attrs = ['height', 'range', 'elangle', 'product', 'date', 'time', 'selection_method']
+    attrs = ['height', 'range', 'elangle', 'product', 'date', 'time', 'selection_method', 'quality_indicator_field_name']
     obj = _pycomposite.new()
     alist = dir(obj)
     for a in attrs:
@@ -90,6 +92,14 @@ class PyCompositeTest(unittest.TestCase):
     self.assertAlmostEquals(500000.0, obj.range, 4)
     obj.range = 1.0
     self.assertAlmostEquals(1.0, obj.range, 4)
+ 
+  def test_quality_indicator_field_name(self):
+    obj = _pycomposite.new()
+    self.assertEquals(None, obj.quality_indicator_field_name)
+    obj.quality_indicator_field_name = "se.some.field"
+    self.assertEquals("se.some.field", obj.quality_indicator_field_name)
+    obj.quality_indicator_field_name = None
+    self.assertEquals(None, obj.quality_indicator_field_name)
  
   def test_elangle(self):
     obj = _pycomposite.new()
@@ -593,6 +603,66 @@ class PyCompositeTest(unittest.TestCase):
     ios = _raveio.new()
     ios.object = result
     ios.filename = "swecomposite_gmap_overlapping.h5"
+    ios.save()
+
+  def test_nearest_by_quality_indicator(self):
+    # tests ticket 355, composite selection criterion: nearest
+    generator = _pycomposite.new()
+    
+    a = _area.new()
+    a.id = "eua_gmaps"
+    a.xsize = 800
+    a.ysize = 1090
+    a.xscale = 6223.0
+    a.yscale = 6223.0
+    #               llX           llY            urX        urY
+    a.extent = (-3117.83526,-6780019.83039,4975312.43200,3215.41216)
+    a.projection = _projection.new("x", "y", "+proj=merc +lat_ts=0 +lon_0=0 +k=1.0 +x_0=1335833 +y_0=-11000715 +a=6378137.0 +b=6378137.0 +no_defs +datum=WGS84")
+    
+    rio = _raveio.open("fixtures/pvol_seang_20090501T120000Z.h5")
+    scan = rio.object.getScanClosestToElevation(0.0, 0)
+    for x in range(scan.nbins):
+       for y in range(scan.nrays):
+         scan.setValue((x,y), 50)
+    
+    f1 = _ravefield.new()
+    d = numpy.zeros((scan.nrays, scan.nbins), numpy.float64)
+    for x in range(scan.nbins):
+      for y in range(scan.nrays):
+        d[y][x] = 0.99
+    f1.setData(d)
+    f1.addAttribute("how/task", "a.test.field")
+    scan.addQualityField(f1)
+    generator.add(scan)
+    
+    rio = _raveio.open("fixtures/pvol_sekkr_20090501T120000Z.h5")
+    scan = rio.object.getScanClosestToElevation(0.0, 0)
+    for x in range(scan.nbins):
+       for y in range(scan.nrays):
+         scan.setValue((x,y), 200)
+    f2 = _ravefield.new()
+    d = numpy.zeros((scan.nrays, scan.nbins), numpy.float64)
+    f2.setData(d)
+    for x in range(scan.nbins):
+      for y in range(scan.nrays):
+        d[y][x] = 0.10
+    f2.addAttribute("how/task", "a.test.field")
+    scan.addQualityField(f2)
+         
+    generator.add(scan)
+
+    generator.addParameter("DBZH", 1.0, 0.0)
+    generator.product = _rave.Rave_ProductType_PPI
+    generator.elangle = 0.0
+    generator.time = "120000"
+    generator.date = "20090501"
+    #generator.quality_indicator_field_name = "a.test.field"
+    
+    result = generator.nearest(a)
+    
+    ios = _raveio.new()
+    ios.object = result
+    ios.filename = "swecomposite_quality_field.h5"
     ios.save()
 
   def test_nearest_ppi_fromscans_adddistancequality(self):

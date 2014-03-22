@@ -26,6 +26,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_debug.h"
 #include "rave_alloc.h"
 #include "raveutil.h"
+#include "raveobject_hashtable.h"
 #include <string.h>
 #include <stdio.h>
 /**
@@ -36,7 +37,7 @@ struct _RaveQITotal_t {
   RaveDataType dtype; /**< data type to be used for the result */
   double offset; /**< offset to use for the result */
   double gain; /**< gain to use for the result */
-
+  RaveObjectHashTable_t* weights; /**< the weights to use when combining the fields */
 };
 
 /*@{ Private functions */
@@ -49,7 +50,14 @@ static int RaveQITotal_constructor(RaveCoreObject* obj)
   self->dtype = RaveDataType_DOUBLE;
   self->gain = 1.0;
   self->offset = 0.0;
+  self->weights = RAVE_OBJECT_NEW(&RaveObjectHashTable_TYPE);
+  if (self->weights == NULL) {
+    goto fail;
+  }
   return 1;
+fail:
+  RAVE_OBJECT_RELEASE(self->weights);
+  return 0;
 }
 
 /**
@@ -62,7 +70,14 @@ static int RaveQITotal_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srco
   self->dtype = src->dtype;
   self->gain = src->gain;
   self->offset = src->offset;
+  self->weights = RAVE_OBJECT_CLONE(src->weights);
+  if (self->weights == NULL) {
+    goto fail;
+  }
   return 1;
+fail:
+  RAVE_OBJECT_RELEASE(self->weights);
+  return 0;
 }
 
 /**
@@ -70,7 +85,8 @@ static int RaveQITotal_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srco
  */
 static void RaveQITotal_destructor(RaveCoreObject* obj)
 {
-  /*RaveQITotal_t* self = (RaveQITotal_t*)obj;*/
+  RaveQITotal_t* self = (RaveQITotal_t*)obj;
+  RAVE_OBJECT_RELEASE(self->weights);
 }
 
 static int RaveQITotalInternal_checkFieldsInList(RaveObjectList_t* fields)
@@ -129,6 +145,18 @@ static int RaveQITotalInternal_checkFieldConsistency(RaveObjectList_t* fields, l
 done:
   RAVE_OBJECT_RELEASE(field);
   return result;
+}
+
+static const char* RaveQITotalInternal_getAttributeString(RaveField_t* field, const char* attrname)
+{
+  RaveAttribute_t* attr = RaveField_getAttribute(field, attrname);
+  char* result = NULL;
+  if (attr != NULL &&
+      RaveAttribute_getFormat(attr) == RaveAttribute_Format_String) {
+    RaveAttribute_getString(attr, &result);
+  }
+  RAVE_OBJECT_RELEASE(attr);
+  return (const char*)result;
 }
 
 static void RaveQITotalInternal_getOffsetGain(RaveField_t* field, double* offset, double* gain)
@@ -194,6 +222,49 @@ done:
   return result;
 }
 
+static double* QITotalInternal_buildWeightArray(RaveQITotal_t* self, RaveObjectList_t* fields, double* wsum)
+{
+  double* fweight = NULL;
+  double fwsum = 0.0;
+  int nlen = RaveObjectList_size(fields);
+  int i = 0;
+
+  fweight = RAVE_MALLOC(sizeof(double) * nlen);
+  if (!fweight) {
+    goto done;
+  }
+
+  memset(fweight, 0, sizeof(double)*nlen);
+  fwsum = 0.0;
+  for (i = 0; i < nlen; i++) {
+    double w = 0.0;
+    RaveField_t* f = (RaveField_t*)RaveObjectList_get(fields, i);
+    const char* aname = RaveQITotalInternal_getAttributeString(f, "how/task");
+    if (aname != NULL && RaveQITotal_getWeight(self, aname, &w)) {
+      fweight[i] = w;
+    } else {
+      fweight[i] = 1.0 / (double)nlen;
+    }
+    fwsum += fweight[i];
+    RAVE_OBJECT_RELEASE(f);
+  }
+
+  if (fwsum == 0.0) {
+    RAVE_ERROR0("Can not set all weights to 0.0 or that sums to 0.0");
+    RAVE_FREE(fweight);
+    fweight = NULL;
+    goto done;
+  }
+
+  for (i = 0; i < nlen; i++) { /* We want the total sum of the weights to be 1.0 */
+    fweight[i] /= fwsum;
+  }
+
+done:
+  *wsum = fwsum;
+  return fweight;
+}
+
 /*@} End of Private functions */
 
 /*@{ Interface functions */
@@ -236,6 +307,45 @@ double RaveQITotal_getOffset(RaveQITotal_t* self)
 {
   RAVE_ASSERT((self != NULL), "self == NULL");
   return self->offset;
+}
+
+int RaveQITotal_setWeight(RaveQITotal_t* self, const char* howtask, double w)
+{
+  RaveAttribute_t* attr = NULL;
+  int result = 0;
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  if (!(attr = RaveAttributeHelp_createDouble(howtask, w))) {
+    goto fail;
+  }
+  if (!RaveObjectHashTable_put(self->weights, howtask, (RaveCoreObject*)attr)) {
+    goto fail;
+  }
+
+  result = 1;
+fail:
+  RAVE_OBJECT_RELEASE(attr);
+  return result;
+}
+
+int RaveQITotal_getWeight(RaveQITotal_t* self, const char* howtask, double* w)
+{
+  RaveAttribute_t* attr = NULL;
+  int result = 0;
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  attr = (RaveAttribute_t*)RaveObjectHashTable_get(self->weights, howtask);
+  if (attr != NULL) {
+    result = RaveAttribute_getDouble(attr, w);
+  }
+  RAVE_OBJECT_RELEASE(attr);
+  return result;
+}
+
+void RaveQITotal_removeWeight(RaveQITotal_t* self, const char* howtask)
+{
+  RaveCoreObject* obj = NULL;
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  obj = RaveObjectHashTable_remove(self->weights, howtask);
+  RAVE_OBJECT_RELEASE(obj);
 }
 
 RaveField_t* RaveQITotal_multiplicative(RaveQITotal_t* self, RaveObjectList_t* fields)
@@ -325,6 +435,9 @@ RaveField_t* RaveQITotal_additive(RaveQITotal_t* self, RaveObjectList_t* fields)
   int nlen = 0, i = 0;
   long xsize = 0, ysize = 0, x = 0, y = 0;
   double offset = 0.0, gain = 0.0;
+  double* fweight = NULL;
+  double fwsum = 0.0;
+
   RaveField_t* result = NULL;
   RaveField_t* qifield = NULL;
   RaveField_t* qifield_conv = NULL;
@@ -356,15 +469,21 @@ RaveField_t* RaveQITotal_additive(RaveQITotal_t* self, RaveObjectList_t* fields)
     goto done;
   }
 
+
   nlen = RaveObjectList_size(fields);
   field = (RaveField_t*)RaveObjectList_get(fields, 0);
   RaveQITotalInternal_getOffsetGain(field, &offset, &gain);
+
+  fweight = QITotalInternal_buildWeightArray(self, fields, &fwsum);
+  if (fweight == NULL) {
+    goto done;
+  }
 
   for (x = 0; x < xsize; x++) {
     for (y = 0; y < ysize; y++) {
       double v = 0.0;
       RaveField_getValue(field, x, y, &v);
-      RaveField_setValue(qifield, x, y, v * gain + offset);
+      RaveField_setValue(qifield, x, y, (v * gain + offset)*fweight[0]);
     }
   }
 
@@ -379,7 +498,7 @@ RaveField_t* RaveQITotal_additive(RaveQITotal_t* self, RaveObjectList_t* fields)
         double qivalue = 0.0;
         RaveField_getValue(qifield, x, y, &qivalue);
         RaveField_getValue(field, x, y, &v);
-        RaveField_setValue(qifield, x, y, (v * gain + offset) + qivalue);
+        RaveField_setValue(qifield, x, y, ((v * gain + offset) * fweight[i]) + qivalue);
       }
     }
     RAVE_OBJECT_RELEASE(field);
@@ -389,7 +508,7 @@ RaveField_t* RaveQITotal_additive(RaveQITotal_t* self, RaveObjectList_t* fields)
     for (y = 0; y < ysize; y++) {
       double v = 0.0;
       RaveField_getValue(qifield, x, y, &v);
-      RaveField_setValue(qifield_conv, x, y, ((v/(double)nlen) - self->offset)/self->gain);
+      RaveField_setValue(qifield_conv, x, y, (v - self->offset)/self->gain);
     }
   }
 
@@ -399,6 +518,7 @@ done:
   RAVE_OBJECT_RELEASE(qifield_conv);
   RAVE_OBJECT_RELEASE(qifield);
   RAVE_OBJECT_RELEASE(field);
+  RAVE_FREE(fweight);
   return result;
 }
 
@@ -409,10 +529,14 @@ RaveField_t* RaveQITotal_minimum(RaveQITotal_t* self, RaveObjectList_t* fields)
   int nlen = 0, i = 0;
   long xsize = 0, ysize = 0, x = 0, y = 0;
   double offset = 0.0, gain = 0.0;
+  double* fweight = NULL;
+  double fwsum = 0.0;
+
   RaveField_t* result = NULL;
   RaveField_t* qifield = NULL;
   RaveField_t* qifield_conv = NULL;
   RaveField_t* field = NULL;
+  RaveField_t* wfield = NULL; /* We need to keep track on the weights for each field so that we can get the original values back */
 
   RAVE_ASSERT((self != NULL), "self == NULL");
 
@@ -423,6 +547,12 @@ RaveField_t* RaveQITotal_minimum(RaveQITotal_t* self, RaveObjectList_t* fields)
 
   qifield = RAVE_OBJECT_NEW(&RaveField_TYPE);
   if (!qifield || !RaveField_createData(qifield, xsize, ysize, RaveDataType_DOUBLE)) {
+    RAVE_CRITICAL0("Memory allocation error");
+    goto done;
+  }
+
+  wfield = RAVE_OBJECT_NEW(&RaveField_TYPE);
+  if (!wfield || !RaveField_createData(wfield, xsize, ysize, RaveDataType_DOUBLE)) {
     RAVE_CRITICAL0("Memory allocation error");
     goto done;
   }
@@ -444,11 +574,17 @@ RaveField_t* RaveQITotal_minimum(RaveQITotal_t* self, RaveObjectList_t* fields)
   field = (RaveField_t*)RaveObjectList_get(fields, 0);
   RaveQITotalInternal_getOffsetGain(field, &offset, &gain);
 
+  fweight = QITotalInternal_buildWeightArray(self, fields, &fwsum);
+  if (fweight == NULL) {
+    goto done;
+  }
+
   for (x = 0; x < xsize; x++) {
     for (y = 0; y < ysize; y++) {
       double v = 0.0;
       RaveField_getValue(field, x, y, &v);
-      RaveField_setValue(qifield, x, y, v * gain + offset);
+      RaveField_setValue(qifield, x, y, (v * gain + offset) * (1.0 - fweight[0]));
+      RaveField_setValue(wfield, x, y, (1.0 - fweight[0]));
     }
   }
 
@@ -463,7 +599,10 @@ RaveField_t* RaveQITotal_minimum(RaveQITotal_t* self, RaveObjectList_t* fields)
         double qivalue = 0.0;
         RaveField_getValue(qifield, x, y, &qivalue);
         RaveField_getValue(field, x, y, &v);
-        RaveField_setValue(qifield, x, y, RQIT_MIN(v * gain + offset, qivalue));
+        if ((v * gain + offset)*(1.0 - fweight[i]) < qivalue) {
+          RaveField_setValue(qifield, x, y, (v * gain + offset)*(1.0 - fweight[i]));
+          RaveField_setValue(wfield, x, y, (1.0 - fweight[i]));
+        }
       }
     }
     RAVE_OBJECT_RELEASE(field);
@@ -472,8 +611,12 @@ RaveField_t* RaveQITotal_minimum(RaveQITotal_t* self, RaveObjectList_t* fields)
   for (x = 0; x < xsize; x++) {
     for (y = 0; y < ysize; y++) {
       double v = 0.0;
+      double w = 0.0;
       RaveField_getValue(qifield, x, y, &v);
-      RaveField_setValue(qifield_conv, x, y, (v - self->offset)/self->gain);
+      RaveField_getValue(wfield, x, y, &w);
+      if (w != 0.0) {
+        RaveField_setValue(qifield_conv, x, y, ((v/w) - self->offset)/self->gain);
+      }
     }
   }
 
@@ -483,6 +626,8 @@ done:
   RAVE_OBJECT_RELEASE(qifield_conv);
   RAVE_OBJECT_RELEASE(qifield);
   RAVE_OBJECT_RELEASE(field);
+  RAVE_OBJECT_RELEASE(wfield);
+  RAVE_FREE(fweight);
   return result;
 }
 /*@} End of Interface functions */

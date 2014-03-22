@@ -45,6 +45,7 @@ struct _Composite_t {
   RaveDateTime_t* datetime;  /**< the date and time */
   RaveObjectList_t* list;
   CompositeAlgorithm_t* algorithm; /**< the specific algorithm */
+  char* qiFieldName; /**< the Quality Indicator field name to use when determining the radar usage */
 };
 
 /**
@@ -68,7 +69,20 @@ typedef struct CompositeValues_t {
   PolarNavigationInfo navinfo; /**< navigation info for this parameter */
   const char* name;   /**< name of quantity */
   CartesianParam_t* parameter; /**< the cartesian parameter */
+  double qivalue;     /**< quality index value */
 } CompositeValues_t;
+
+/**
+ * Struct for helping out with performance when it comes to digging out quality based values.
+ * It basically maps a quality field with an object+quality+elevation index so that it does not have
+ * to look the quality field up all the time.
+ */
+typedef struct PolarAndQuality_t {
+  RaveField_t* qualityField;
+  RaveCoreObject* object;
+  char* quality;
+  long ei;
+} PolarAndQuality_t;
 
 /** The resolution to use for scaling the distance from pixel to used radar */
 #define DISTANCE_TO_RADAR_RESOLUTION 2000.0
@@ -221,6 +235,8 @@ static int Composite_constructor(RaveCoreObject* obj)
   this->list = RAVE_OBJECT_NEW(&RaveObjectList_TYPE);
   this->datetime = RAVE_OBJECT_NEW(&RaveDateTime_TYPE);
   this->parameters = RAVE_OBJECT_NEW(&RaveList_TYPE);
+  this->qiFieldName = NULL;
+
   if (this->list == NULL || this->parameters == NULL || this->datetime == NULL) {
     goto error;
   }
@@ -250,8 +266,12 @@ static int Composite_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj
   this->parameters = CompositeInternal_cloneParameterList(src->parameters);
   this->list = RAVE_OBJECT_CLONE(src->list);
   this->datetime = RAVE_OBJECT_CLONE(src->datetime);
+  this->qiFieldName = NULL;
 
   if (this->list == NULL || this->datetime == NULL || this->parameters == NULL) {
+    goto error;
+  }
+  if (!Composite_setQualityIndicatorFieldName(this, src->qiFieldName)) {
     goto error;
   }
 
@@ -268,6 +288,7 @@ error:
   RAVE_OBJECT_RELEASE(this->list);
   RAVE_OBJECT_RELEASE(this->datetime);
   RAVE_OBJECT_RELEASE(this->algorithm);
+  RAVE_FREE(this->qiFieldName);
   return 0;
 }
 
@@ -282,6 +303,7 @@ static void Composite_destructor(RaveCoreObject* obj)
   RAVE_OBJECT_RELEASE(this->datetime);
   CompositeInternal_freeParameterList(&this->parameters);
   RAVE_OBJECT_RELEASE(this->algorithm);
+  RAVE_FREE(this->qiFieldName);
 }
 
 /**
@@ -302,6 +324,37 @@ static CompositeValues_t* CompositeInternal_createCompositeValues(int nparam)
   }
   return result;
 }
+
+/* PAQ
+static PolarAndQuality_t* CompositeInternal_createPolarAndQuality(Composite_t* composite)
+{
+  int i = 0;
+  int len = RaveObjectList_size(composite->list);
+  PolarAndQuality_t* result = RAVE_MALLOC(sizeof(PolarAndQuality_t)*len);
+  if (result == NULL) {
+    RAVE_CRITICAL0("Failed to allocate memory for paq array");
+  } else {
+    for (i = 0; i < len; i++) {
+      result[i].object = RaveObjectList_get(composite->list, index);
+      result[i].qualityField = NULL;
+    }
+  }
+
+  return result;
+}
+
+static void CompositeInternal_releasePolarAndQuality(PolarAndQuality_t** paqarr, int nitems)
+{
+  int i = 0;
+  if (paqarr != NULL && (*paqarr) != NULL) {
+    for (i = 0; i < nitems; i++) {
+      RAVE_OBJECT_RELEASE((*paqarr)[i].object);
+    }
+    RAVE_FREE(*paqarr);
+    *paqarr = NULL;
+  }
+}
+*/
 
 /**
  * Resets the array of composite values except the CartesianParam parameter
@@ -395,20 +448,34 @@ done:
 static int CompositeInternal_getValueAtPosition(
   Composite_t* composite,
   RaveCoreObject* obj,
+  /*PAQ  PolarAndQuality_t* paq, */
   const char* quantity,
   PolarNavigationInfo* nav,
   RaveValueType* type,
-  double* value)
+  double* value,
+  double* qiv)
 {
   int result = 0;
+  static int bval = 0;
   RAVE_ASSERT((composite != NULL), "composite == NULL");
   RAVE_ASSERT((nav != NULL), "nav == NULL");
   RAVE_ASSERT((type != NULL), "type == NULL");
   RAVE_ASSERT((value != NULL), "value == NULL");
+  /*RAVE_ASSERT((paq != NULL), "paq == NULL");*/
+  *qiv = 0.0;
 
   if (obj != NULL) {
     if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarScan_TYPE)) {
       *type = PolarScan_getConvertedParameterValue((PolarScan_t*)obj, quantity, nav->ri, nav->ai, value);
+      if (composite->qiFieldName != NULL) {
+        if (!PolarScan_getQualityValueAt((PolarScan_t*)obj, quantity, nav->ri, nav->ai, (const char*)composite->qiFieldName, qiv)) {
+          if (bval == 0) {
+            fprintf(stderr, "Failed to locate quality field value\n");
+            bval = 1;
+          }
+          *qiv = 0.0;
+        }
+      }
     } else if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
       *type = PolarVolume_getConvertedParameterValueAt((PolarVolume_t*)obj, quantity, nav->ei, nav->ri, nav->ai, value);
     } else {
@@ -1023,6 +1090,34 @@ double Composite_getRange(Composite_t* self)
   return self->range;
 }
 
+int Composite_setQualityIndicatorFieldName(Composite_t* self, const char* qiFieldName)
+{
+  char* tmp = NULL;
+  int result = 0;
+
+  RAVE_ASSERT((self != NULL), "self == NULL");
+
+  if (qiFieldName != NULL) {
+    tmp = RAVE_STRDUP(qiFieldName);
+    if (tmp != NULL) {
+      RAVE_FREE(self->qiFieldName);
+      self->qiFieldName = tmp;
+      tmp = NULL;
+      result = 1;
+    }
+  } else {
+    RAVE_FREE(self->qiFieldName);
+    result = 1;
+  }
+  return result;
+}
+
+const char* Composite_getQualityIndicatorFieldName(Composite_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return (const char*)self->qiFieldName;
+}
+
 int Composite_addParameter(Composite_t* composite, const char* quantity, double gain, double offset)
 {
   int result = 0;
@@ -1117,6 +1212,7 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t*
   Projection_t* projection = NULL;
   PolarNavigationInfo navinfo;
   CompositeValues_t* cvalues = NULL;
+  /*PAQ PolarAndQuality_t* paqarr = NULL; */
   int x = 0, y = 0, i = 0, xsize = 0, ysize = 0, nradars = 0;
   int nqualityflags = 0;
   int nparam = 0;
@@ -1146,6 +1242,12 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t*
   if ((cvalues = CompositeInternal_createCompositeValues(nparam)) == NULL) {
     goto fail;
   }
+
+  /* PAQ
+  if ((paqarr = CompositeInternal_createPolarAndQuality(composite)) == NULL) {
+    goto fail;
+  }
+  */
 
   for (i = 0; i < nparam; i++) {
     const char* name = Composite_getParameter(composite, i, NULL, NULL);
@@ -1225,8 +1327,9 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t*
 
                 for (cindex = 0; cindex < nparam; cindex++) {
                   RaveValueType otype = RaveValueType_NODATA;
-                  double ovalue = 0.0;
-                  CompositeInternal_getValueAtPosition(composite, obj, cvalues[cindex].name, &navinfo, &otype, &ovalue);
+                  double ovalue = 0.0, qivalue = 0.0;
+                  /* PAQ CompositeInternal_getValueAtPosition(composite, &(paqarr[i]), cvalues[cindex].name, &navinfo, &otype, &ovalue); */
+                  CompositeInternal_getValueAtPosition(composite, obj, cvalues[cindex].name, &navinfo, &otype, &ovalue, &qivalue);
 
                   if (composite->algorithm != NULL && CompositeAlgorithm_supportsProcess(composite->algorithm)) {
                     if (CompositeAlgorithm_process(composite->algorithm, obj, cvalues[cindex].name, olon, olat, originaldist, &otype, &ovalue, &cvalues[cindex].navinfo)) {
@@ -1236,9 +1339,41 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t*
                       cvalues[cindex].radardist = rdist;
                       cvalues[cindex].radarindex = i;
                       cvalues[cindex].navinfo = navinfo;
+                      cvalues[cindex].qivalue = qivalue;
                     }
                   } else {
                     if (otype == RaveValueType_DATA || otype == RaveValueType_UNDETECT) {
+                      if (cvalues[cindex].vtype != RaveValueType_DATA && cvalues[cindex].vtype != RaveValueType_UNDETECT) {
+                        /* First time */
+                        cvalues[cindex].vtype = otype;
+                        cvalues[cindex].value = ovalue;
+                        cvalues[cindex].mindist = dist;
+                        cvalues[cindex].radardist = rdist;
+                        cvalues[cindex].radarindex = i;
+                        cvalues[cindex].navinfo = navinfo;
+                        cvalues[cindex].qivalue = qivalue;
+                      } else if (
+                          composite->qiFieldName != NULL &&
+                          ((qivalue > cvalues[cindex].qivalue) ||
+                           (qivalue == cvalues[cindex].qivalue && dist < cvalues[cindex].mindist))) {
+                        cvalues[cindex].vtype = otype;
+                        cvalues[cindex].value = ovalue;
+                        cvalues[cindex].mindist = dist;
+                        cvalues[cindex].radardist = rdist;
+                        cvalues[cindex].radarindex = i;
+                        cvalues[cindex].navinfo = navinfo;
+                        cvalues[cindex].qivalue = qivalue;
+                      } else if (composite->qiFieldName == NULL && dist < cvalues[cindex].mindist) {
+                        cvalues[cindex].vtype = otype;
+                        cvalues[cindex].value = ovalue;
+                        cvalues[cindex].mindist = dist;
+                        cvalues[cindex].radardist = rdist;
+                        cvalues[cindex].radarindex = i;
+                        cvalues[cindex].navinfo = navinfo;
+                        cvalues[cindex].qivalue = qivalue;
+                      }
+
+                      /* PAQ
                       if ((cvalues[cindex].vtype != RaveValueType_DATA && cvalues[cindex].vtype != RaveValueType_UNDETECT) ||
                           dist < cvalues[cindex].mindist) {
                         cvalues[cindex].vtype = otype;
@@ -1248,6 +1383,7 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t*
                         cvalues[cindex].radarindex = i;
                         cvalues[cindex].navinfo = navinfo;
                       }
+                      */
                     }
                   }
                 }
@@ -1309,6 +1445,7 @@ fail:
   for (i = 0; cvalues != NULL && i < nparam; i++) {
     RAVE_OBJECT_RELEASE(cvalues[i].parameter);
   }
+  /* CompositeInternal_releasePolarAndQuality(paqarr); */
   RAVE_FREE(cvalues);
   RAVE_OBJECT_RELEASE(projection);
   RAVE_OBJECT_RELEASE(result);

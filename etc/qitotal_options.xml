@@ -1,0 +1,108 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<qitotal-options>
+  <qitotal nod="default" weight="1.0">
+    <field name="se.smhi.detector.poo" weight="1.0"/>
+    <field name="fi.fmi.ropo.detector.classification" weight="1.0"/>
+    <field name="se.smhi.detector.beamblockage" weight="1.0"/>
+    <field name="eu.opera.odyssey.hac" weight="1.0"/>
+    <field name="pl.imgw.radvolqc.att" weight="1.0"/>
+    <field name="pl.imgw.radvolqc.broad" weight="1.0"/>
+  </qitotal>
+  
+  <qitotal nod="sekir" weight="1.0">
+    <field name="se.smhi.detector.poo" weight="1.0"/>
+    <field name="fi.fmi.ropo.detector.classification" weight="1.0"/>
+    <field name="se.smhi.detector.beamblockage" weight="1.0"/>
+    <field name="eu.opera.odyssey.hac" weight="1.0"/>
+    <field name="pl.imgw.radvolqc.att" weight="1.0"/>
+    <field name="pl.imgw.radvolqc.broad" weight="1.0"/>
+  </qitotal>
+  <qitotal nod="selul" weight="1.0">
+    <field name="se.smhi.detector.poo" weight="1.0"/>
+    <field name="fi.fmi.ropo.detector.classification" weight="1.0"/>
+    <field name="se.smhi.detector.beamblockage" weight="1.0"/>
+    <field name="eu.opera.odyssey.hac" weight="1.0"/>
+    <field name="pl.imgw.radvolqc.att" weight="1.0"/>
+    <field name="pl.imgw.radvolqc.broad" weight="1.0"/>
+  </qitotal>
+  <qitotal nod="seovi" weight="1.0">
+    <field name="se.smhi.detector.poo" weight="1.0"/>
+    <field name="fi.fmi.ropo.detector.classification" weight="1.0"/>
+    <field name="se.smhi.detector.beamblockage" weight="1.0"/>
+    <field name="eu.opera.odyssey.hac" weight="1.0"/>
+    <field name="pl.imgw.radvolqc.att" weight="1.0"/>
+    <field name="pl.imgw.radvolqc.broad" weight="1.0"/>
+  </qitotal>
+  <qitotal nod="seosu" weight="1.0">
+    <field name="se.smhi.detector.poo" weight="1.0"/>
+    <field name="fi.fmi.ropo.detector.classification" weight="1.0"/>
+    <field name="se.smhi.detector.beamblockage" weight="1.0"/>
+    <field name="eu.opera.odyssey.hac" weight="1.0"/>
+    <field name="pl.imgw.radvolqc.att" weight="1.0"/>
+    <field name="pl.imgw.radvolqc.broad" weight="1.0"/>
+  </qitotal>
+  <qitotal nod="sehud" weight="1.0">
+    <field name="se.smhi.detector.poo" weight="1.0"/>
+    <field name="fi.fmi.ropo.detector.classification" weight="1.0"/>
+    <field name="se.smhi.detector.beamblockage" weight="1.0"/>
+    <field name="eu.opera.odyssey.hac" weight="1.0"/>
+    <field name="pl.imgw.radvolqc.att" weight="1.0"/>
+    <field name="pl.imgw.radvolqc.broad" weight="1.0"/>
+  </qitotal>
+  <qitotal nod="selek" weight="1.0">
+    <field name="se.smhi.detector.poo" weight="1.0"/>
+    <field name="fi.fmi.ropo.detector.classification" weight="1.0"/>
+    <field name="se.smhi.detector.beamblockage" weight="1.0"/>
+    <field name="eu.opera.odyssey.hac" weight="1.0"/>
+    <field name="pl.imgw.radvolqc.att" weight="1.0"/>
+    <field name="pl.imgw.radvolqc.broad" weight="1.0"/>
+  </qitotal>
+  <qitotal nod="searl" weight="1.0">
+    <field name="se.smhi.detector.poo" weight="1.0"/>
+    <field name="fi.fmi.ropo.detector.classification" weight="1.0"/>
+    <field name="se.smhi.detector.beamblockage" weight="1.0"/>
+    <field name="eu.opera.odyssey.hac" weight="1.0"/>
+    <field name="pl.imgw.radvolqc.att" weight="1.0"/>
+    <field name="pl.imgw.radvolqc.broad" weight="1.0"/>
+  </qitotal>
+  <qitotal nod="sease" weight="1.0">
+    <field name="se.smhi.detector.poo" weight="1.0"/>
+    <field name="fi.fmi.ropo.detector.classification" weight="1.0"/>
+    <field name="se.smhi.detector.beamblockage" weight="1.0"/>
+    <field name="eu.opera.odyssey.hac" weight="1.0"/>
+    <field name="pl.imgw.radvolqc.att" weight="1.0"/>
+    <field name="pl.imgw.radvolqc.broad" weight="1.0"/>
+  </qitotal>
+  <qitotal nod="sevil" weight="1.0">
+    <field name="se.smhi.detector.poo" weight="1.0"/>
+    <field name="fi.fmi.ropo.detector.classification" weight="1.0"/>
+    <field name="se.smhi.detector.beamblockage" weight="1.0"/>
+    <field name="eu.opera.odyssey.hac" weight="1.0"/>
+    <field name="pl.imgw.radvolqc.att" weight="1.0"/>
+    <field name="pl.imgw.radvolqc.broad" weight="1.0"/>
+  </qitotal>
+  <qitotal nod="sevar" weight="1.0">
+    <field name="se.smhi.detector.poo" weight="1.0"/>
+    <field name="fi.fmi.ropo.detector.classification" weight="1.0"/>
+    <field name="se.smhi.detector.beamblockage" weight="1.0"/>
+    <field name="eu.opera.odyssey.hac" weight="1.0"/>
+    <field name="pl.imgw.radvolqc.att" weight="1.0"/>
+    <field name="pl.imgw.radvolqc.broad" weight="1.0"/>
+  </qitotal>
+  <qitotal nod="seang" weight="1.0">
+    <field name="se.smhi.detector.poo" weight="1.0"/>
+    <field name="fi.fmi.ropo.detector.classification" weight="1.0"/>
+    <field name="se.smhi.detector.beamblockage" weight="1.0"/>
+    <field name="eu.opera.odyssey.hac" weight="1.0"/>
+    <field name="pl.imgw.radvolqc.att" weight="1.0"/>
+    <field name="pl.imgw.radvolqc.broad" weight="1.0"/>
+  </qitotal>
+  <qitotal nod="sekkr" weight="1.0">
+    <field name="se.smhi.detector.poo" weight="1.0"/>
+    <field name="fi.fmi.ropo.detector.classification" weight="1.0"/>
+    <field name="se.smhi.detector.beamblockage" weight="1.0"/>
+    <field name="eu.opera.odyssey.hac" weight="1.0"/>
+    <field name="pl.imgw.radvolqc.att" weight="1.0"/>
+    <field name="pl.imgw.radvolqc.broad" weight="1.0"/>
+  </qitotal>
+</qitotal-options>
