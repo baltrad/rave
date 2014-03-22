@@ -245,7 +245,6 @@ static PyObject* _pyqitotal_getWeight(PyQITotal* self, PyObject* args)
 static PyObject* _pyqitotal_removeWeight(PyQITotal* self, PyObject* args)
 {
   char* howtask = NULL;
-  double w = 0.0;
 
   if (!PyArg_ParseTuple(args, "s", &howtask)) {
     return NULL;

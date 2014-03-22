@@ -122,6 +122,7 @@ double RaveVprCorrection_getSCDistanceLimit(RaveVprCorrection_t* self)
 
 PolarVolume_t* RaveVprCorrection_separateSC(RaveVprCorrection_t* self, PolarVolume_t* pvol)
 {
+#ifdef KALLE
   int i = 0, j = 0, k = 0;
   int nbins = 0, nscans = 0;
   RaveObjectList_t* distanceVectors = NULL;
@@ -141,6 +142,7 @@ PolarVolume_t* RaveVprCorrection_separateSC(RaveVprCorrection_t* self, PolarVolu
   nscans = PolarVolume_getNumberOfScans(pvol);
 
   outvol = RAVE_OBJECT_NEW(&PolarVolume_TYPE);
+#endif
 
 //  for (k = 0; k < nscans; k++) {
 //    for (i = 0; i < nbins; i++) {
