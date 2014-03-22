@@ -36,7 +36,7 @@ LDFLAGS+= -L. -L$(HLHDF_LIB_DIR) $(ZLIB_LIBDIR) $(HDF5_LIBDIR) \
 # --------------------------------------------------------------------
 # Fixed definitions
 
-SOURCES= radvol.c radvolatt.c radvolbroad.c radvolspeck.c radvolspike.c 
+SOURCES= radvol.c radvolatt.c radvolbroad.c radvolnmet.c radvolspeck.c radvolspike.c 
 
 OBJECTS= $(SOURCES:.c=.o)
 

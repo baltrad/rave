@@ -21,7 +21,7 @@ along with Radvol-QC.  If not, see <http://www.gnu.org/licenses/>.
  * Radvol-QC general structures and algorithms.
  * @file radvol.h
  * @author Katarzyna Osrodka (Institute of Meteorology and Water Management, IMGW-PIB)
- * @date 2012-07-12
+ * @date 2012-12-20
  */
 
 #ifndef RADVOL_H
@@ -29,49 +29,55 @@ along with Radvol-QC.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_object.h"
 #include "rave_simplexml.h"
 #include "polarvolume.h"
+#include "polarscan.h"
 
 /** the best QI value */
-#define QI_GOOD	1.0
+#define QI_GOOD 1.0
 /** the worst QI value */
 #define QI_BAD 0.0
-/** value for no rain */
-#define cNoRain -32.0   
 /** value for no data */
 #define cNull 9999.0
 /** equivalent earth's radius [km] */
 #define cEer 8493
-/** equivalent earth's radius squared [km] */
-#define cEer2 8493*8493
+/** Radius at the equator */
+#define DEFAULT_EQUATOR_RADIUS 6378160.0
+/** Radius to the poles */
+#define DEFAULT_POLE_RADIUS 6356780.0
 
 /**
  * Represents an elevation
  */
 typedef struct Elevation_t {
-    int nbin		/**< number of bins */;
-    int nray		/**< number of rays */;
-    double rscale	/**< resolution of bins along the ray [km] */;
-    double elangle	/**< ray width [rad] */;
-    double gain		/**< gain */;
-    double offset	/**< offset */;
-    double nodata	/**< nodata */;
-    double undetect	/**< undetect */;
-    double* ReflElev	/**< reflectivity data */;
-    double* QIElev	/**< quality data */;
+    int nbin;         /**< number of bins */
+    int nray;         /**< number of rays */
+    double rscale;    /**< resolution of bins along the ray [km] */
+    double elangle;   /**< elevation angle [rad] */
+    double gain;      /**< gain */
+    double offset;    /**< offset */
+    double nodata;    /**< nodata */
+    double undetect;  /**< undetect */
+    double* ReflElev; /**< reflectivity data */
+    double* QIElev;   /**< quality data */
 }Elevation_t;
 
 /**
  * Represents the Radvol
  */
 struct _Radvol_t {
-  RAVE_OBJECT_HEAD	/** Always on top */
-  Elevation_t *TabElev;	/**< elevation data */
-  int nele;		/**< number of elevations in TabElev*/
-  double beam;		/**< ray width [rad] */
-  int altitude;		/**< altitude of antenna */
-  char* task_name;	/**< task name to be saved in *.h5 file */
-  char* task_args;	/**< task arguments to be saved in *.h5 file */
-  int QIOn;		/**< 1 if QI is calculated, 0 otherwise */
-  int QCOn;		/**< 1 if QC is on, 0 otherwise */
+  RAVE_OBJECT_HEAD      /** Always on top */
+  Elevation_t *TabElev; /**< elevation data */
+  int nele;             /**< number of elevations in TabElev*/
+  double beamwidth;     /**< ray width [rad] */
+  double wavelength;    /**< length of wave [cm] */
+  double pulselength;   /**< half of radar pulse length */
+  double Eer;           /**< equivalent earth's radius [km] */
+  int altitude;         /**< altitude of antenna */
+  char* name;           /**< radar name what->source->NOD */
+  char* task_name;      /**< task name to be saved in *.h5 file */
+  char* task_args;      /**< task arguments to be saved in *.h5 file */
+  int QIOn;             /**< 1 if QI is calculated, 0 otherwise */
+  int QCOn;             /**< 1 if QC is on, 0 otherwise */
+  int DBZHtoTH;         /**< 1 if to copy unprocessed DBZH into TH if TH does not exist, 0 otherwise */
 };
 
 typedef struct _Radvol_t Radvol_t;
@@ -80,6 +86,31 @@ typedef struct _Radvol_t Radvol_t;
  * Type definition to use when creating a rave object.
  */
 extern RaveCoreObjectType Radvol_TYPE;
+
+/**
+ * Reads radar node name (NOD) into self->name
+ * @param self - self
+ * @param source - what/source from PVOL or SCAN
+ */
+void Radvol_getName(Radvol_t* self, const char* source);
+
+/**
+ * Reads attribute value from scan
+ * @param scan - polar scan
+ * @param name - attribute name
+ * @param value - read value
+ * @returns 1 on success, otherwise 0
+ */
+int Radvol_getAttrDouble_scan(PolarScan_t* scan, char* name, double* value);
+
+/**
+ * Reads attribute value from volume
+ * @param pvol - polar volume
+ * @param name - attribute name
+ * @param value - read value
+ * @returns 1 on success, otherwise 0
+ */
+int Radvol_getAttrDouble_pvol(PolarVolume_t* pvol, char* name, double* value);
 
 /**
  * Sets name of task
@@ -98,12 +129,28 @@ int Radvol_setTaskName(Radvol_t* self, const char* task_name);
 int Radvol_setTaskArgs(Radvol_t* self, const char* task_args);
 
 /**
+ * Reads polar scan into radvolqc structure
+ * @param self - self
+ * @param scan - polar scan
+ * @returns 1 on success, otherwise 0
+ */
+int Radvol_load_scan(Radvol_t* self, PolarScan_t* scan);
+
+/**
  * Reads polar volume into radvolqc structure
  * @param self - self
  * @param pvol - polar volume
  * @returns 1 on success, otherwise 0
  */
-int Radvol_loadVol(Radvol_t* self, PolarVolume_t* pvol);
+int Radvol_load_pvol(Radvol_t* self, PolarVolume_t* pvol);
+
+/**
+ * Writes data from radvolqc into polar scan
+ * @param self - self
+ * @param scan - polar scan
+ * @returns 1 on success, otherwise 0
+ */
+int Radvol_save_scan(Radvol_t* self, PolarScan_t* scan);
 
 /**
  * Writes data from radvolqc into polar volume
@@ -111,15 +158,17 @@ int Radvol_loadVol(Radvol_t* self, PolarVolume_t* pvol);
  * @param pvol - polar volume
  * @returns 1 on success, otherwise 0
  */
-int Radvol_saveVol(Radvol_t* self, PolarVolume_t* pvol);
+int Radvol_save_pvol(Radvol_t* self, PolarVolume_t* pvol);
 
 /**
- * Reads xml child for a specific factor/algorithm from xml file 
+ * Reads xml child for a specific radar and factor/algorithm from xml file
+ * @param self - self
  * @param aFileName - xml filename
  * @param aFactorName - factor/algorithm name
- * @returns related xml child on success, NULL otherwise 
+ * @param IsDefault - 1 if returned child is default, 0 otherwise
+ * @returns related or default xml child on success, NULL otherwise
  */
-SimpleXmlNode_t *Radvol_getFactorChild( char* aFileName, char* aFactorName);
+SimpleXmlNode_t *Radvol_getFactorChild(Radvol_t* self, char* aFileName, char* aFactorName, int* IsDefault);
 
 /**
  * Returns value of a specific parameter as double from xml child
@@ -140,12 +189,20 @@ int Radvol_getParValueDouble(SimpleXmlNode_t* node, char* aParamName, double* va
 int Radvol_getParValueInt( SimpleXmlNode_t* node, char* aParamName, int* value); 
 
 /**
- * Returns altitude of a particular bin in elevation
- * @param aElev - elevation
- * @param aBin - bin number
- * @returns altitude [m]
+ * Estimates equivalent Earth radius based on radar site latitude
+ * @param self - self
+ * @param lat - radar site latitude
  */
-int Radvol_getAltitude(Elevation_t aElev, int aBin);
+void Radvol_setEquivalentEarthRadius(Radvol_t* self, double lat);
+
+/**
+ * Returns height of a particular bin in the scan resulting from Earth curvature
+ * @param self - self
+ * @param ele - elevation number
+ * @param aBin - bin number
+ * @returns altitude [km]
+ */
+double Radvol_getCurvature(Radvol_t* self, int ele, int aBin);
 
 /**
  * Returns quality index value for linear relationship

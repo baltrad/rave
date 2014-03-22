@@ -53,6 +53,9 @@ if __name__ == "__main__":
     parser.add_option("-S", "--spike", action="store_true", dest="spike", 
                       help="Performs spike removal.")
 
+    parser.add_option("-n", "--nmet", action="store_true", dest="nmet", 
+                      help="Performs removal of non-meteorological echoes.")
+
     (options, args) = parser.parse_args()
 
     if not options.ifile:
@@ -92,6 +95,9 @@ if __name__ == "__main__":
         
     if options.spike:
         _radvol.spikeRemoval(obj)
+
+    if options.nmet:
+        _radvol.nmetRemoval(obj)
 
     if isScan:
         rio.object = obj.getScan(0)

@@ -18,8 +18,8 @@ You should have received a copy of the GNU Lesser General Public License
 along with Radvol-QC.  If not, see <http://www.gnu.org/licenses/>.
 ------------------------------------------------------------------------*/
 /**
- * Tests for radvolspeck.
- * @file testRadvolSpeck.c
+ * Tests for radvolblock.
+ * @file testRadvolBlock.c
  * @author Katarzyna Osrodka (Institute of Meteorology and Water Management, IMGW-PIB)
  * @date 2012-10-15
  */
@@ -27,7 +27,7 @@ along with Radvol-QC.  If not, see <http://www.gnu.org/licenses/>.
 #include <stdio.h>
 #include <stdlib.h>
 #include "CUnit/Basic.h"
-#include "radvolspeck.h"
+#include "radvolblock.h"
 #include "rave_io.h"
 #include "rave_alloc.h"
 #include "rave_attribute.h"
@@ -45,20 +45,20 @@ char* H5_FILE;
 char* H5_FILE_COR;
 static FILE* temp_file = NULL;
 
-int init_suite_testRadvolSpeck(void) {
-  XML_FILE = "fixtures/radvol_params.xml";
+int init_suite_testRadvolBlock(void) {
+  XML_FILE = "fixtures/radvol_params_block.xml";
   if (NULL == (temp_file = fopen(XML_FILE, "r"))) {
     return -1;
   } else {
     fclose(temp_file);
   }
-  H5_FILE = "fixtures/fake_speck.h5";
+  H5_FILE = "fixtures/fake_block.h5";
   if (NULL == (temp_file = fopen(H5_FILE, "r"))) {
     return -1;
   } else {
     fclose(temp_file);
   }
-  H5_FILE_COR = "fixtures/fake_speck_cor.h5";
+  H5_FILE_COR = "fixtures/fake_block_cor.h5";
   if (NULL == (temp_file = fopen(H5_FILE_COR, "r"))) {
     return -1;
   } else {
@@ -67,14 +67,15 @@ int init_suite_testRadvolSpeck(void) {
   return 0;
 }
 
-int clean_suite_testRadvolSpeck(void) {
+int clean_suite_testRadvolBlock(void) {
   return 0;
 }
 
-void testRadvolSpeck_speckRemoval(void) {
+void testRadvolBlock_blockageCorrection() {
   PolarVolume_t* pvol = NULL;
   PolarScan_t* scan = NULL;
   RaveIO_t* raveio = NULL;
+  RadvolBlock_t* radvolBlock = NULL;
   PolarScanParam_t* parameter = NULL;
   RaveAttribute_t* attribute = NULL;
   char* value = NULL;
@@ -83,7 +84,9 @@ void testRadvolSpeck_speckRemoval(void) {
   CU_ASSERT_PTR_NOT_NULL_FATAL(raveio);
   pvol = (PolarVolume_t*) RaveIO_getObject(raveio);
   CU_ASSERT_PTR_NOT_NULL_FATAL(pvol);
-  RadvolSpeck_speckRemoval_pvol(pvol, XML_FILE);
+  radvolBlock = RAVE_OBJECT_NEW(&RadvolBlock_TYPE);
+  CU_ASSERT_PTR_NOT_NULL_FATAL(radvolBlock);
+  pvol = RadvolBlock_blockageCorrection(radvolBlock, pvol, XML_FILE);
   CU_ASSERT_PTR_NOT_NULL_FATAL(pvol);
   CU_ASSERT_EQUAL_FATAL(PolarVolume_getNumberOfScans(pvol), 1);
   scan = PolarVolume_getScan(pvol, 0);
@@ -93,26 +96,28 @@ void testRadvolSpeck_speckRemoval(void) {
   attribute = PolarScanParam_getAttribute(parameter, "how/task");
   CU_ASSERT_PTR_NOT_NULL_FATAL(attribute);
   RaveAttribute_getString(attribute, &value);
-  CU_ASSERT_STRING_EQUAL(value, "pl.imgw.radvolqc.speck");
+  CU_ASSERT_STRING_EQUAL(value, "pl.imgw.radvolqc.block");
   attribute = PolarScanParam_getAttribute(parameter, "how/task_args");
   CU_ASSERT_PTR_NOT_NULL_FATAL(attribute);
   RaveAttribute_getString(attribute, &value);
-  CU_ASSERT_STRING_EQUAL(value, "SPECK: SPECK_QI=0.9, SPECK_QIUn=0.5, SPECK_AGrid=1, SPECK_ANum=2, SPECK_AStep=1, SPECK_BGrid=1, SPECK_BNum=2, SPECK_BStep=2");
+  CU_ASSERT_STRING_EQUAL(value, "BLOCK: BLOCK_MaxElev= 5.0, BLOCK_dBLim=-3.0, BLOCK_GCQI=0.5, BLOCK_GCQIUn=0.1, BLOCK_GCMinPbb=0.005, BLOCK_PBBQIUn=0.5, BLOCK_PBBMax=0.7");
 
   RAVE_OBJECT_RELEASE(pvol);
   RAVE_OBJECT_RELEASE(scan);
   RAVE_OBJECT_RELEASE(parameter);
   RAVE_OBJECT_RELEASE(attribute);
+  RAVE_OBJECT_RELEASE(radvolBlock);
   RAVE_OBJECT_RELEASE(raveio);
 }
 
-void testRadvolSpeck_speckRemoval_topLevel_correction(void) {
+void testRadvolBlock_blockageCorrection_topLevel_correction() {
   RaveIO_t* raveio_in = NULL;
   PolarVolume_t* pvol_in = NULL;
   PolarScan_t* scan_in = NULL;
   RaveIO_t* raveio_cor = NULL;
   PolarVolume_t* pvol_cor = NULL;
   PolarScan_t* scan_cor = NULL;
+  RadvolBlock_t* radvolBlock = NULL;
   int nbin;
   int nray;
   int bi, ri;
@@ -122,7 +127,9 @@ void testRadvolSpeck_speckRemoval_topLevel_correction(void) {
   CU_ASSERT_PTR_NOT_NULL_FATAL(raveio_in);
   pvol_in = (PolarVolume_t*) RaveIO_getObject(raveio_in);
   CU_ASSERT_PTR_NOT_NULL_FATAL(pvol_in);
-  RadvolSpeck_speckRemoval_pvol(pvol_in, XML_FILE);
+  radvolBlock = RAVE_OBJECT_NEW(&RadvolBlock_TYPE);
+  CU_ASSERT_PTR_NOT_NULL_FATAL(radvolBlock);
+  pvol_in = RadvolBlock_blockageCorrection(radvolBlock, pvol_in, XML_FILE);
   CU_ASSERT_PTR_NOT_NULL_FATAL(pvol_in);
   CU_ASSERT_EQUAL_FATAL(PolarVolume_getNumberOfScans(pvol_in), 1);
   scan_in = PolarVolume_getScan(pvol_in, 0);
@@ -149,12 +156,13 @@ void testRadvolSpeck_speckRemoval_topLevel_correction(void) {
       PolarScan_getParameterValue(scan_in, "DBZH", bi, ri, &value_in);
       PolarScan_getParameterValue(scan_cor, "DBZH", bi, ri, &value_cor);
       if (value_in != value_cor) {
-        printf("\nbin=%d ray=%d value_in=%d value_cor=%d %f\n", bi, ri, (int) value_in, (int) value_cor, fabs(value_in - value_cor));
-        CU_ASSERT_FALSE_FATAL(fabs(value_in - value_cor) > 1);
+        printf("\nbin=%d ray=%d value_in=%d value_cor=%d\n", bi, ri, (int) value_in, (int) value_cor);
+        CU_ASSERT_FATAL(fabs(value_in - value_cor) > 1);
       }
     }
   }
 
+  RAVE_OBJECT_RELEASE(radvolBlock);
   RAVE_OBJECT_RELEASE(pvol_in);
   RAVE_OBJECT_RELEASE(scan_in);
   RAVE_OBJECT_RELEASE(raveio_in);
@@ -163,7 +171,7 @@ void testRadvolSpeck_speckRemoval_topLevel_correction(void) {
   RAVE_OBJECT_RELEASE(raveio_cor);
 }
 
-void testRadvolSpeck_speckRemoval_topLevel_quality(void) {
+void testRadvolBlock_blockageCorrection_topLevel_quality() {
   RaveIO_t* raveio_in = NULL;
   PolarVolume_t* pvol_in = NULL;
   PolarScan_t* scan_in = NULL;
@@ -172,6 +180,7 @@ void testRadvolSpeck_speckRemoval_topLevel_quality(void) {
   PolarVolume_t* pvol_cor = NULL;
   PolarScan_t* scan_cor = NULL;
   RaveField_t* field_cor = NULL;
+  RadvolBlock_t* radvolBlock = NULL;
   int nbin;
   int nray;
   int bi, ri;
@@ -181,7 +190,9 @@ void testRadvolSpeck_speckRemoval_topLevel_quality(void) {
   CU_ASSERT_PTR_NOT_NULL_FATAL(raveio_in);
   pvol_in = (PolarVolume_t*) RaveIO_getObject(raveio_in);
   CU_ASSERT_PTR_NOT_NULL_FATAL(pvol_in);
-  RadvolSpeck_speckRemoval_pvol(pvol_in, XML_FILE);
+  radvolBlock = RAVE_OBJECT_NEW(&RadvolBlock_TYPE);
+  CU_ASSERT_PTR_NOT_NULL_FATAL(radvolBlock);
+  pvol_in = RadvolBlock_blockageCorrection(radvolBlock, pvol_in, XML_FILE);
   CU_ASSERT_PTR_NOT_NULL_FATAL(pvol_in);
   CU_ASSERT_EQUAL_FATAL(PolarVolume_getNumberOfScans(pvol_in), 1);
   scan_in = PolarVolume_getScan(pvol_in, 0);
@@ -194,7 +205,6 @@ void testRadvolSpeck_speckRemoval_topLevel_quality(void) {
   CU_ASSERT_EQUAL_FATAL(PolarVolume_getNumberOfScans(pvol_cor), 1);
   scan_cor = PolarVolume_getScan(pvol_cor, 0);
   CU_ASSERT_PTR_NOT_NULL_FATAL(scan_cor);
-
 
   CU_ASSERT_EQUAL_FATAL(PolarScan_getNumberOfQualityFields(scan_in), 1);
   field_in = PolarScan_getQualityField(scan_in, 0);
@@ -219,6 +229,7 @@ void testRadvolSpeck_speckRemoval_topLevel_quality(void) {
     }
   }
 
+  RAVE_OBJECT_RELEASE(radvolBlock);
   RAVE_OBJECT_RELEASE(pvol_in);
   RAVE_OBJECT_RELEASE(scan_in);
   RAVE_OBJECT_RELEASE(field_in);
@@ -229,23 +240,23 @@ void testRadvolSpeck_speckRemoval_topLevel_quality(void) {
   RAVE_OBJECT_RELEASE(raveio_cor);
 }
 
-int testRadvolSpeck_main(void) {
-  CU_pSuite pSuiteSpeck = NULL;
+int testRadvolBlock_main() {
+  CU_pSuite pSuiteBlock = NULL;
 
   /* Add a suite to the registry */
-  pSuiteSpeck = CU_add_suite("testRadvolSpeck", init_suite_testRadvolSpeck, clean_suite_testRadvolSpeck);
-  if (NULL == pSuiteSpeck) {
+  pSuiteBlock = CU_add_suite("testRadvolBlock", init_suite_testRadvolBlock, clean_suite_testRadvolBlock);
+  if (NULL == pSuiteBlock) {
     CU_cleanup_registry();
     return CU_get_error();
   }
 
   /* Add the tests to the suite */
-  if ((NULL == CU_add_test(pSuiteSpeck, "testRadvolSpeck_speckRemoval", testRadvolSpeck_speckRemoval)) ||
-          (NULL == CU_add_test(pSuiteSpeck, "testRadvolSpeck_speckRemoval_topLevel_correction", testRadvolSpeck_speckRemoval_topLevel_correction)) ||
-          (NULL == CU_add_test(pSuiteSpeck, "testRadvolSpeck_speckRemoval_topLevel_quality", testRadvolSpeck_speckRemoval_topLevel_quality))) {
+  if ((NULL == CU_add_test(pSuiteBlock, "testRadvolBlock_blockageCorrection", testRadvolBlock_blockageCorrection)) ||
+          (NULL == CU_add_test(pSuiteBlock, "testRadvolBlock_blockageCorrection_topLevel_correction", testRadvolBlock_blockageCorrection_topLevel_correction)) ||
+          (NULL == CU_add_test(pSuiteBlock, "testRadvolBlock_blockageCorrection_topLevel_quality", testRadvolBlock_blockageCorrection_topLevel_quality))) {
     CU_cleanup_registry();
     return CU_get_error();
   }
-  return 0;
+
 }
 

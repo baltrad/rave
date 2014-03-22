@@ -13,6 +13,7 @@
   <be CCCC="EBBR" org="227">
     <bezav plc="Zaventem" rad="BX40" wmo="06451"></bezav>
     <bewid plc="Wideumont" rad="BX41" wmo="06477"></bewid>
+    <bejab plc="Jabbeke" rad="BX42" wmo="06410"></bejab>
   </be>
   <je CCCC="EGRR" org="74">
     <ukjer plc="Jersey" rad="UK52" wmo="03897"></ukjer>
@@ -98,6 +99,7 @@
     <denhb plc="Neuheilenbach" rad="DL71" wmo="10605"></denhb>
     <detur plc="Tuerkheim" rad="DL72" wmo="10832"></detur>
     <deeis plc="Eisberg" rad="DL73" wmo="10780"></deeis>
+    <deisn plc="Isen" rad="DL75" wmo="10873"></deisn>
     <deflg plc="Feldberg" rad="DL81" wmo="10908"></deflg>
     <demuc plc="Munchen" rad="DL82" wmo="10871"></demuc>
     <desna plc="Schnaupping" rad="DL82" wmo="10873"></desna>
@@ -120,6 +122,7 @@
   </hu>
   <is CCCC="BIRK" org="213">
     <iskef plc="Keflavik" rad="IL40" wmo="00000"></iskef>
+    <istgb plc="Teigsbjarg" rad="IL41" wmo="00000"></istgb>
   </is>
   <ie CCCC="EIDB" org="233">
     <iesha plc="Shannon" rad="IE40" wmo="03962"></iesha>
@@ -149,6 +152,10 @@
     <itmon plc="Monte il Monte" rad="IY61" wmo="00000"></itmon>
     <itpet plc="Monte Pettinascura" rad="IY62" wmo="00000"></itpet>
   </it>
+  <lt CCCC="EYHM" org="238">
+    <ltlau plc="Laukuva" rad="LT40" wmo="26518"></ltlau>
+    <ltvln plc="Vilnius" rad="LT41" wmo="26730"></ltvln>
+  </lt>
   <lv CCCC="EVRR" org="236">
     <lvrix plc="Riga" rad="LV93" wmo="26422"></lvrix>
   </lv>
@@ -170,7 +177,7 @@
   </no>
   <pl CCCC="SOWR" org="220">
     <plleg plc="Legionowo" rad="PL41" wmo="12374"></plleg>
-    <plram plc="Ramza" rad="PL42" wmo="12514"></plram>
+    <plram plc="Ramża" rad="PL42" wmo="12514"></plram>
     <plpas plc="Pastewnik" rad="PL43" wmo="12544"></plpas>
     <plrze plc="Rzeszów" rad="PL44" wmo="12579"></plrze>
     <plpoz plc="Poznań" rad="PL45" wmo="12331"></plpoz>
@@ -178,10 +185,10 @@
     <plgda plc="Gdańsk" rad="PL47" wmo="12151"></plgda>
     <plbrz plc="Brzuchania" rad="PL48" wmo="12568"></plbrz>
   </pl>
-  <po CCCC="LPMG" org="212">
+  <pt CCCC="LPMG" org="212">
     <ptlea plc="Cruz do Leão" rad="PO41" wmo="08550"></ptlea>
     <ptcal plc="Cavalos do Caldeirão" rad="PO42" wmo="08553"></ptcal>
-  </po>
+  </pt>
   <ro CCCC="YRBK" org="242">
     <robob plc="Bobohalma" rad="RD45" wmo="15166"></robob>
     <robuc plc="Bucuresti" rad="RD40" wmo="15438"></robuc>

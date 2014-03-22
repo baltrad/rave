@@ -31,6 +31,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "pyrave_debug.h"
 #include "radvolatt.h"
 #include "radvolbroad.h"
+#include "radvolnmet.h"
 #include "radvolspeck.h"
 #include "radvolspike.h"
 
@@ -64,12 +65,14 @@ static PyObject *ErrorObject;
 
 /**
  * Attenuation correction on "DBZH"
- * @param[in] PolarVolume_t object
+ * @param[in] PolarVolume_t or PolarScan_t object
  * @returns Py_True or Py_False
  */
 static PyObject* _radvolatt_func(PyObject* self, PyObject* args) {
   PyObject* object = NULL;
   PyPolarVolume* pyvolume = NULL;
+  PyPolarScan* pyscan = NULL;
+  int ret = 0;
 
   if (!PyArg_ParseTuple(args, "O", &object)) {
     return NULL;
@@ -77,25 +80,36 @@ static PyObject* _radvolatt_func(PyObject* self, PyObject* args) {
 
   if (PyPolarVolume_Check(object)) {
     pyvolume = (PyPolarVolume*)object;
+  } else if (PyPolarScan_Check(object)) {
+    pyscan = (PyPolarScan*)object;
   } else {
-    raiseException_returnNULL(PyExc_AttributeError, "attCorrection requires PVOL as input");
+    raiseException_returnNULL(PyExc_AttributeError, "attCorrection requires PVOL or SCAN as input");
   }
 
-  if (RadvolAtt_attCorrection(pyvolume->pvol, NULL)) {
-    Py_RETURN_TRUE;
+  if (PyPolarVolume_Check(object)) {
+    ret = RadvolAtt_attCorrection_pvol(pyvolume->pvol, NULL);
+  } else {
+    ret = RadvolAtt_attCorrection_scan(pyscan->scan, NULL);
   }
-  Py_RETURN_FALSE;
+
+  if (ret) {
+    Py_RETURN_TRUE;
+  } else {
+    Py_RETURN_FALSE;
+  }
 }
 
 
 /**
  * Assessment of distance-to-radar related effects on "DBZH"
- * @param[in] PolarVolume_t object
+ * @param[in] PolarVolume_t or PolarScan_t object
  * @returns Py_True or Py_False
  */
 static PyObject* _radvolbroad_func(PyObject* self, PyObject* args) {
   PyObject* object = NULL;
   PyPolarVolume* pyvolume = NULL;
+  PyPolarScan* pyscan = NULL;
+  int ret = 0;
 
   if (!PyArg_ParseTuple(args, "O", &object)) {
     return NULL;
@@ -103,51 +117,108 @@ static PyObject* _radvolbroad_func(PyObject* self, PyObject* args) {
 
   if (PyPolarVolume_Check(object)) {
     pyvolume = (PyPolarVolume*)object;
+  } else if (PyPolarScan_Check(object)) {
+    pyscan = (PyPolarScan*)object;
   } else {
-    raiseException_returnNULL(PyExc_AttributeError, "broadAssessment requires PVOL as input");
+    raiseException_returnNULL(PyExc_AttributeError, "broadAssessment requires PVOL or SCAN as input");
   }
 
-  if (RadvolBroad_broadAssessment(pyvolume->pvol, NULL)) {
-    Py_RETURN_TRUE;
+  if (PyPolarVolume_Check(object)) {
+    ret = RadvolBroad_broadAssessment_pvol(pyvolume->pvol, NULL);
+  } else {
+    ret = RadvolBroad_broadAssessment_scan(pyscan->scan, NULL);
   }
-  Py_RETURN_FALSE;
+
+  if (ret) {
+    Py_RETURN_TRUE;
+  } else {
+    Py_RETURN_FALSE;
+  }
 }
 
+/**
+ * Non-meteorological echoes removal
+ * @param[in] PolarVolume_t or PolarScan_t object
+ * @returns Py_True or Py_False
+ */
+static PyObject* _radvolnmet_func(PyObject* self, PyObject* args) {
+  PyObject* object = NULL;
+  PyPolarVolume* pyvolume = NULL;
+  PyPolarScan* pyscan = NULL;
+  int ret = 0;
+
+  if (!PyArg_ParseTuple(args, "O", &object)) {
+    return NULL;
+  }
+
+  if (PyPolarVolume_Check(object)) {
+    pyvolume = (PyPolarVolume*)object;
+  } else if (PyPolarScan_Check(object)) {
+    pyscan = (PyPolarScan*)object;
+  } else {
+    raiseException_returnNULL(PyExc_AttributeError, "nmetRemoval requires PVOL or SCAN as input");
+  }
+
+  if (PyPolarVolume_Check(object)) {
+    ret = RadvolNmet_nmetRemoval_pvol(pyvolume->pvol, NULL);
+  } else {
+    ret = RadvolNmet_nmetRemoval_scan(pyscan->scan, NULL);
+  }
+
+  if (ret) {
+    Py_RETURN_TRUE;
+  } else {
+    Py_RETURN_FALSE;
+  }
+}
 
 /**
  * Speck removal
- * @param[in] PolarVolume_t object
+ * @param[in] PolarVolume_t or PolarScan_t object
  * @returns Py_True or Py_False
  */
 static PyObject* _radvolspeck_func(PyObject* self, PyObject* args) {
   PyObject* object = NULL;
   PyPolarVolume* pyvolume = NULL;
+  PyPolarScan* pyscan = NULL;
+  int ret = 0;
 
   if (!PyArg_ParseTuple(args, "O", &object)) {
     return NULL;
   }
 
-  if (PyPolarVolume_Check(object)) {
+   if (PyPolarVolume_Check(object)) {
     pyvolume = (PyPolarVolume*)object;
+  } else if (PyPolarScan_Check(object)) {
+    pyscan = (PyPolarScan*)object;
   } else {
-    raiseException_returnNULL(PyExc_AttributeError, "speckRemoval requires PVOL as input");
+    raiseException_returnNULL(PyExc_AttributeError, "speckRemoval requires PVOL or SCAN as input");
   }
 
-  if (RadvolSpeck_speckRemoval(pyvolume->pvol, NULL)) {
-    Py_RETURN_TRUE;
+  if (PyPolarVolume_Check(object)) {
+    ret = RadvolSpeck_speckRemoval_pvol(pyvolume->pvol, NULL);
+  } else {
+    ret = RadvolSpeck_speckRemoval_scan(pyscan->scan, NULL);
   }
-  Py_RETURN_FALSE;
+
+  if (ret) {
+    Py_RETURN_TRUE;
+  } else {
+    Py_RETURN_FALSE;
+  }
 }
 
 
 /**
  * Spike removal
- * @param[in] PolarVolume_t object
+ * @param[in] PolarVolume_t or PolarScan_t object
  * @returns Py_True or Py_False
  */
 static PyObject* _radvolspike_func(PyObject* self, PyObject* args) {
   PyObject* object = NULL;
   PyPolarVolume* pyvolume = NULL;
+  PyPolarScan* pyscan = NULL;
+  int ret = 0;
 
   if (!PyArg_ParseTuple(args, "O", &object)) {
     return NULL;
@@ -155,14 +226,23 @@ static PyObject* _radvolspike_func(PyObject* self, PyObject* args) {
 
   if (PyPolarVolume_Check(object)) {
     pyvolume = (PyPolarVolume*)object;
+  } else if (PyPolarScan_Check(object)) {
+    pyscan = (PyPolarScan*)object;
   } else {
-    raiseException_returnNULL(PyExc_AttributeError, "spikeRemoval requires PVOL as input");
+    raiseException_returnNULL(PyExc_AttributeError, "spikeRemoval requires PVOL or SCAN as input");
   }
 
-  if (RadvolSpike_spikeRemoval(pyvolume->pvol, NULL)) {
-    Py_RETURN_TRUE;
+  if (PyPolarVolume_Check(object)) {
+    ret = RadvolSpike_spikeRemoval_pvol(pyvolume->pvol, NULL);
+  } else {
+    ret = RadvolSpike_spikeRemoval_scan(pyscan->scan, NULL);
   }
-  Py_RETURN_FALSE;
+
+  if (ret) {
+    Py_RETURN_TRUE;
+  } else {
+    Py_RETURN_FALSE;
+  }
 }
 
 
@@ -170,6 +250,7 @@ static struct PyMethodDef _radvol_functions[] =
 {
   { "attCorrection", (PyCFunction) _radvolatt_func, METH_VARARGS },
   { "broadAssessment", (PyCFunction) _radvolbroad_func, METH_VARARGS },
+  { "nmetRemoval", (PyCFunction) _radvolnmet_func, METH_VARARGS },
   { "speckRemoval", (PyCFunction) _radvolspeck_func, METH_VARARGS },
   { "spikeRemoval", (PyCFunction) _radvolspike_func, METH_VARARGS },
   { NULL, NULL }

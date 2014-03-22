@@ -73,6 +73,30 @@ class radvol_broad_plugin(rave_quality_plugin):
       pass
     return obj
 
+    
+class radvol_nmet_plugin(rave_quality_plugin):
+  ##
+  # Default constructor
+  def __init__(self):
+    super(radvol_nmet_plugin, self).__init__()
+  
+  ##
+  # @return a list containing the string se.smhi.detector.poo
+  def getQualityFields(self):
+    return ["pl.imgw.radvolqc.nmet"]
+  
+  ##
+  # @param obj: A RAVE object that should be processed.
+  # @return: The modified object if this quality plugin has performed changes 
+  # to the object.
+  def process(self, obj):
+    try:
+      import _radvol
+      _radvol.nmetRemoval(obj)
+    except:
+      pass
+    return obj
+    
 
 class radvol_speck_plugin(rave_quality_plugin):
   ##

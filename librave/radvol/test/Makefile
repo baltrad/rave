@@ -26,27 +26,28 @@
 
 # c flags, use rave suggested ones
 #
-CFLAGS= -I. $(RAVE_MODULE_CFLAGS) -I../lib -ICUnit-2.1-2/include
-LDFLAGS= $(RAVE_MODULE_LDFLAGS) -L../lib -LCUnit-2.1-2/lib
+CFLAGS= -I. -I../lib -I../../toolbox $(RAVE_MODULE_CFLAGS) -ICUnit-2.1-2/include
+LDFLAGS= -L../lib -L../../toolbox $(RAVE_MODULE_LDFLAGS) -LCUnit-2.1-2/lib
 LIBRARIES= $(RAVE_MODULE_LIBRARIES) -lradvol -lcunit
-export LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:../lib:CUnit-2.1-2/lib
+export LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:../lib:../../toolbox:CUnit-2.1-2/lib:$(prefix)/lib
 
 # --------------------------------------------------------------------
 # Fixed definitions
 
-SOURCES= testRadvol.c testRadvolAtt.c testRadvolBroad.c testRadvolSpeck.c testRadvolSpike.c testRadvolQC.c 
+SOURCES= testRadvol.c testRadvolAtt.c testRadvolBroad.c testRadvolNmet.c testRadvolSpeck.c testRadvolSpike.c testRadvolQC.c 
 
 TARGET= testRadvolQC
 
 .PHONY:test
 test:
-	@\tar -xvjf CUnit-2.1-2-src.tar.bz2	
-	@\cd CUnit-2.1-2 && ./configure --prefix=`pwd`
-	@\cd CUnit-2.1-2/CUnit && make
-	@\cd CUnit-2.1-2/CUnit && make install
+	@if ! test -d CUnit-2.1-2; then \
+	tar -xvjf CUnit-2.1-2-src.tar.bz2; \
+	cd CUnit-2.1-2 && ./configure --prefix=`pwd`; \
+	cd CUnit && make; \
+	make install; \
+	fi
 	$(CC) $(LDFLAGS) $(CFLAGS)  $(SOURCES) -o $(TARGET) $(LIBRARIES) 
 	./testRadvolQC
-	rm -fr CUnit-2.1-2
 
 .PHONY=clean
 clean:

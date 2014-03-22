@@ -87,25 +87,34 @@ def repair_odim_source(obj):
     source = obj.source
     # France - Falaise
     if obj.source == 'WMO:07027':
-        return odim_source.SOURCE["frcae"].encode(UTF8)    
+        return odim_source.SOURCE["frcae"].encode(UTF8)
     # France - Nancy
     elif obj.source == 'WMO:07180':
-        return odim_source.SOURCE["frnan"].encode(UTF8)    
+        return odim_source.SOURCE["frnan"].encode(UTF8)
     # France - Nimes
     elif obj.source == 'WMO:07645':
-        return odim_source.SOURCE["frnim"].encode(UTF8)    
+        return odim_source.SOURCE["frnim"].encode(UTF8)
     # France - Arcis
     elif obj.source == 'WMO:07168':
-        return odim_source.SOURCE["frtro"].encode(UTF8)    
+        return odim_source.SOURCE["frtro"].encode(UTF8)
     # France - Sembadel
     elif obj.source == 'WMO:07471':
-        return odim_source.SOURCE["frlep"].encode(UTF8)    
+        return odim_source.SOURCE["frlep"].encode(UTF8)
     # Cerceda - Spain
     elif obj.source[:9] == 'WMO:08007':
-        return odim_source.SOURCE["escor"].encode(UTF8)    
+        return odim_source.SOURCE["escor"].encode(UTF8)
     # Almeria - Spain
     elif obj.source[:9] == 'WMO:08489':
-        return odim_source.SOURCE["esalm"].encode(UTF8)    
+        return odim_source.SOURCE["esalm"].encode(UTF8)
+    # Spain - Sierra de Fuentes, a k a Badajoz
+    elif obj.source[:9] == "WMO:08262":
+        return odim_source.SOURCE["esbad"].encode(UTF8)
+    # Spain - Autilla Pino, a k a Valladolid
+    elif obj.source[:9] == "WMO:08262":
+        return odim_source.SOURCE["eslid"].encode(UTF8)
+    # Spain - Aguion, a k a Santander
+    elif obj.source[:9] == "WMO:08019":
+        return odim_source.SOURCE["essan"].encode(UTF8)
     # Jersey
     elif obj.source == 'WMO:00897':
         return odim_source.SOURCE["ukjer"].encode(UTF8)
@@ -132,6 +141,14 @@ def repair_odim_source(obj):
         return odim_source.SOURCE["norst"].encode(UTF8)
     elif re.search("1405", obj.source):
         return odim_source.SOURCE["nobml"].encode(UTF8)
+    elif obj.source == 'WMO:01079,NOD:nober,PLC:Berlev\xe5g':
+        return odim_source.SOURCE["nober"].encode(UTF8)
+    # Serbia
+    elif obj.source == "WMO:0,PLC:Samos":
+        return odim_source.SOURCE["rssam"].encode(UTF8)
+    # Iceland
+    elif obj.source == "WMO:0,PLC:Teigsbjarg":
+        return odim_source.SOURCE["istgb"].encode(UTF8)
 
 
 ## Manages the conversion of datasets from float64 to uint8.
