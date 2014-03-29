@@ -43,10 +43,12 @@ QITOTAL_REGISTRY = {}
 # @return: a float value if possible
 # @raise ValueError: if it wasn't possible to convert to a float 
 def strToFloat(sval):
+  result = 0.0
   try:
-    return float(int(sval))
+    result = float(sval)
   except ValueError, e:
-    return float(sval)
+    result = float(int(sval))
+  return result
 
 ## Relation between a name (how/task quality field name) and a weight.
 # 
@@ -109,15 +111,14 @@ class qitotal_site_information(object):
       r = "%s\t%s\n"%(r, f.__repr__())
     return r
 
-##
-# Creates the qitotal site information
-#
-def get_qitotal_site_information():
-  global initialized
-  if initialized: return QITOTAL_REGISTRY
-    
-  qitotal_sites = ET.parse(CONFIG_FILE).getroot().findall("qitotal")
-    
+  #<qitotal nod="sehud" weight="1.0">
+  #  <field name="se.smhi.test.1" weight="0.3"/>
+  #  <field name="se.smhi.test.2" weight="0.7"/>
+  #</qitotal>
+def parse_qitotal_site_information(cfile):
+  qitotal_sites = ET.parse(cfile).getroot().findall("qitotal")
+  site_information = {}
+  
   for site in qitotal_sites:
     nod = site.attrib["nod"]
     weight = 100.0
@@ -125,24 +126,44 @@ def get_qitotal_site_information():
       
     try:
       w = site.attrib["weight"]
-      weight = float(strToNumber(w))
-    except:
-      pass
+      weight = float(strToFloat(w))
+    except Exception, e:
+      print e.__str__()
+    
     qfields = site.findall("field")
     for f in qfields:
       fname = f.attrib["name"]
       fweight = 100.0
       try:
-        w = site.attrib["weight"]
-        fweight = float(strToNumber(w))
-      except:
-        pass
+        w = f.attrib["weight"]
+        fweight = float(strToFloat(w))
+      except Exception, e:
+        print e.__str__()
+      
       fields.append(qifield_information(fname, fweight))
         
-      QITOTAL_REGISTRY[nod] = qitotal_site_information(nod, fields, weight)
+    site_information[nod] = qitotal_site_information(nod, fields, weight)
+      
+  return site_information
+  
+
+def get_global_qitotal_site_information():
+  global initialized
+  if initialized: return QITOTAL_REGISTRY
+
+  QITOTAL_REGISTRY = parse_qitotal_site_information(CONFIG_FILE)
   
   initialized = 1
-  return QITOTAL_REGISTRY
+  return QITOTAL_REGISTRY  
+
+##
+# Creates the qitotal site information
+#
+def get_qitotal_site_information(cfile=None):
+  if cfile == None:
+    return get_global_qitotal_site_information()
+  
+  return parse_qitotal_site_information(cfile)
 
 if __name__=="__main__":
   print get_qitotal_site_information().__repr__()

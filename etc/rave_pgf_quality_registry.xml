@@ -9,4 +9,5 @@
   <quality-plugin name="radvol-spike" module="rave_radvol_quality_plugin" class="radvol_spike_plugin"/>
   <quality-plugin name="hac-increment" module="odc_hac_quality_plugin" class="odc_hac_increment_plugin"/>
   <quality-plugin name="hac-filter" module="odc_hac_quality_plugin" class="odc_hac_filter_plugin"/>
+  <quality-plugin name="qi-total" module="rave_qitotal_quality_plugin" class="rave_qitotal_quality_plugin"/>
 </rave-pgf-quality-registry>
