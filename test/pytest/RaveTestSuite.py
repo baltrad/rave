@@ -43,6 +43,7 @@ from PyAreaTest import *
 from PyRadarDefinitionTest import *
 from PyProjectionRegistryTest import *
 from PyAcrrTest import *
+from PyGraTest import *
 from PyAreaRegistryTest import *
 from PgfVolumePluginTest import *
 from RaveScansun import *
