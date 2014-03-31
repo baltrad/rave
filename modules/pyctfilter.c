@@ -86,9 +86,11 @@ static PyObject* _ctFilter_func(PyObject* self, PyObject* args) {
   }
 
   if (ctFilter(pyProd->cartesian, pyCt->cartesian)) {
-    Py_RETURN_TRUE;
+    return PyBool_FromLong(1);
+    /*Py_RETURN_TRUE;*/
   }
-  Py_RETURN_FALSE;
+  return PyBool_FromLong(0);
+  /*Py_RETURN_FALSE;*/
 }
 
 
