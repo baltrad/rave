@@ -39,6 +39,7 @@ import string, types
 import rave_tempfile
 import odim_source
 import math
+import rave_ctfilter
 import rave_pgf_quality_registry
 
 from rave_defines import CENTER_ID, GAIN, OFFSET
@@ -164,6 +165,10 @@ def generate(in_objects, **args):
       t = _transform.new()
       gap_filled = t.fillGap(result)
       result.setData(gap_filled.getData())      
+
+  # Optional cloud-type residual non-precip filter
+  if eval(args["ctfilter"]):
+      ret = rave_ctfilter.ctFilter(result, quantity)
   
   # Fix so that we get a valid place for /what/source and /how/nodes 
   plc = result.source

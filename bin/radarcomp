@@ -52,7 +52,8 @@ def main(options):
                                    time = options.time,
                                    method = options.method,
                                    qc = options.qc,
-                                   gf = options.gf)
+                                   gf = options.gf,
+                                   ctfilter = options.ctfilter)
     
     rio = _raveio.new()
     rio.object = comp
@@ -119,9 +120,11 @@ if __name__ == "__main__":
                       default="",
                       help="Which quality-controls to apply. Current choices are 'ropo', 'beamb', and 'rave-overshooting'. Default=None")
 
-    parser.add_option("-G", "--gap-fill", dest="gf",
-                      default="False",
+    parser.add_option("-G", "--gap-fill", action="store_true", dest="gf",
                       help="Gap-fill small holes in output composite. Default=False")
+
+    parser.add_option("-c", "--ctfilter", action="store_true", dest="ctfilter",
+                      help="Filter residual non-precipitation echoes using SAF-NWC cloud-type product. Default=False")
 
     (options, args) = parser.parse_args()
 

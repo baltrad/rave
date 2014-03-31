@@ -46,6 +46,7 @@ import math
 import rave_pgf_quality_registry
 import logging
 import rave_pgf_logger
+import rave_ctfilter
 
 from rave_defines import CENTER_ID, GAIN, OFFSET, LOG_ID
 
@@ -212,6 +213,10 @@ def generate(files, arguments):
 
   result = generator.nearest(pyarea, qfields)
   
+  # Optional cloud-type residual non-precip filter
+  if eval(args["ctfilter"]):
+      ret = rave_ctfilter.ctFilter(result, quantity)
+
   # Fix so that we get a valid place for /what/source and /how/nodes 
   plc = result.source
   result.source = "%s,CMT:%s"%(CENTER_ID,plc)

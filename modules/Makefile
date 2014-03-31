@@ -200,12 +200,16 @@ SOURCE_36= pygra.c
 OBJECTS_36= $(SOURCE_36:.c=.o)
 TARGET_36= _gra.so
 
+SOURCE_37= pyctfilter.c
+OBJECTS_37= $(SOURCE_37:.c=.o)
+TARGET_37= _ctfilter.so
+
 TARGETS=$(TARGET_1) $(TARGET_2) $(TARGET_3) $(TARGET_4) $(TARGET_5) $(TARGET_6) \
 		$(TARGET_7) $(TARGET_8) $(TARGET_9) $(TARGET_10) $(TARGET_11) $(TARGET_12) \
 		$(TARGET_13) $(TARGET_14) $(TARGET_15) $(TARGET_16) $(TARGET_17) $(TARGET_18) \
 		$(TARGET_19) $(TARGET_20) $(TARGET_21) $(TARGET_24) $(TARGET_25) $(TARGET_26) \
 		$(TARGET_27) $(TARGET_28) $(TARGET_29) $(TARGET_30) $(TARGET_31) $(TARGET_33) $(TARGET_34) $(TARGET_35) \
-		$(TARGET_36)
+		$(TARGET_36) $(TARGET_37)
 
 INSTALL_HEADERS= pyarea.h \
 				 pycartesian.h \
@@ -358,6 +362,9 @@ $(TARGET_35): $(DEPDIR) $(OBJECTS_35) ../librave/toolbox/libravetoolbox.so ../li
 $(TARGET_36): $(DEPDIR) $(OBJECTS_36) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_36) $(LDFLAGS) $(LIBRARIES)
 
+$(TARGET_37): $(DEPDIR) $(OBJECTS_37) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
+	$(LDSHARED) -o $@ $(OBJECTS_37) $(LDFLAGS) $(LIBRARIES)
+
 .PHONY=install
 install:
 	@mkdir -p ${prefix}/Lib
@@ -434,4 +441,4 @@ endif
 -include $(SOURCE_34:%.c=$(DEPDIR)/%.P)
 -include $(SOURCE_35:%.c=$(DEPDIR)/%.P)
 -include $(SOURCE_36:%.c=$(DEPDIR)/%.P)
-
+-include $(SOURCE_37:%.c=$(DEPDIR)/%.P)
