@@ -44,13 +44,13 @@ install:
 	@cp -v -f odc_hac "${prefix}/bin/"
 	@cp -v -f fm12_importer "${prefix}/bin/"
 	@cp -v -f wmo_station "${prefix}/bin/"
-	
+	@cp -v -f ctfilter "${prefix}/bin/"
+
 
 .PHONY:clean
 clean: ;
 	@\rm -f *~
-	 
+
 .PHONY:distclean
 distclean:
 	@\rm -f *~
-	

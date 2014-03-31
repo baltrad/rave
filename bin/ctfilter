@@ -1,0 +1,86 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2010- Swedish Meteorological and Hydrological Institute (SMHI)
+
+This file is part of RAVE.
+
+RAVE is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+RAVE is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+See the GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
+'''
+## Identification and removal of residual non-precipitation echoes using the
+## Meteosat Second Generation Cloud-Type product: CTFILTER
+
+## @file
+## @author Daniel Michelson, SMHI
+## @date 2014-03-28
+
+import sys, os
+import _rave, _raveio
+import rave_ctfilter
+
+
+if __name__ == "__main__":
+    from optparse import OptionParser
+
+    description = "SAF-NWC MSG cloud-top residual non-precipitation filter"
+
+    usage = "usage: %prog -i <input_file> [-o <output_file> -q <quantity> -p <path> -t <template> -I <image_index>] [h]"
+    parser = OptionParser(usage=usage, description=description)
+
+    parser.add_option("-i", "--input", dest="ifile", help="Input file name of the radar image to filter")
+
+    parser.add_option("-o", "--output", dest="ofile", help="Output file name. If not given, input file will be overwritten.")
+
+    parser.add_option("-q", "--quantity", dest="quantity", default="DBZH", help="Quantity to filter. Defaults to DBZH.")
+
+    parser.add_option("-p", "--path", dest="path", help="Input path to the directory containing CT products")
+
+    parser.add_option("-t", "--template", dest="template", help="CT file name template. Defaults to EUMETSAT standard used with files available through EUMETCAST.")
+
+    parser.add_option("-I", "--image", dest="image", type="int", default=0, help="If a composite, which image index to read. Defaults to 0.")
+
+    (options, args) = parser.parse_args()
+
+    if not options.ifile:
+        parser.print_help()
+        sys.exit(1)
+
+    if not options.ofile:
+        options.ofile = options.ifile
+
+    if options.path:
+        if not os.path.isdir(options.path):
+            print "CT path %s does not exist. Giving up." % options.path
+        else:
+            rave_ctfilter.CTPATH = options.path
+
+    if options.template:
+        rave_ctfilter.FTEMPLATE = options.template
+
+    rio = _raveio.open(options.ifile)
+
+    if rio.objectType is _rave.Rave_ObjectType_COMP:
+        prod = rio.object.getImage(options.image)
+    elif rio.objectType is _rave.Rave_ObjectType_IMAGE:
+        prod = rio.object
+    else:
+        raise TypeError, "Input file contains neither COMP nor IMAGE. Exiting ..."
+
+    ret = rave_ctfilter.ctFilter(prod, options.quantity)
+    if ret:
+        if rio.objectType is _rave.Rave_ObjectType_COMP:
+            prod.objectType = _rave.Rave_ObjectType_COMP
+        rio.object = prod
+        rio.save(options.ofile)
+    else:
+        print "No filtering performed"
