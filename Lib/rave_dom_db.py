@@ -54,6 +54,7 @@ from sqlalchemy.types import (
 from sqlalchemy import asc,desc
 
 from rave_dom import wmo_station, observation
+from gadjust.gra import gra_coefficient
 from rave_defines import BDB_CONFIG_FILE
 
 def psql_set_extra_float_digits(dbapi_con, con_record):
@@ -101,9 +102,27 @@ rave_observation=Table("rave_observation", meta,
                        Column("liquid_precipitation", Float, nullable=True),
                        Column("accumulation_period", Integer, nullable=True),
                        PrimaryKeyConstraint("station", "date", "time"))
+
+rave_gra_coefficient=Table("rave_gra_coefficient", meta,
+                           Column("area", Text, nullable=False),
+                           Column("date", Date, nullable=False),
+                           Column("time", Time, nullable=False),
+                           Column("significant", Text, nullable=False),
+                           Column("points", Integer, nullable=False),
+                           Column("loss", Integer, nullable=False),
+                           Column("r", Float, nullable=False),
+                           Column("r_significant", Text, nullable=False),
+                           Column("corr_coeff", Float, nullable=False),
+                           Column("a", Float, nullable=False),
+                           Column("b", Float, nullable=False),
+                           Column("c", Float, nullable=False),
+                           Column("mean", Float, nullable=False),
+                           Column("stddev", Float, nullable=False),
+                           PrimaryKeyConstraint("area","date","time"))
                        
 mapper(wmo_station, rave_wmo_station)
 mapper(observation, rave_observation)
+mapper(gra_coefficient, rave_gra_coefficient)
 
 ##
 # Class for connecting with the database
@@ -201,6 +220,12 @@ class rave_db(object):
   def get_station(self, stationid):
     with self.get_session() as s:
       return s.query(wmo_station).filter(wmo_station.stationnumber==stationid).first()
+  
+  def get_gra_coefficient(self, dt):
+    with self.get_session() as s:
+      q = s.query(gra_coefficient).filter(gra_coefficient.date>=dt.date()).filter(gra_coefficient.time>=dt.time())
+      q = q.order_by(asc(gra_coefficient.date)).order_by(asc(gra_coefficient.time))
+      return q.first()
   
 ##
 # Creates a rave db instance

@@ -78,6 +78,24 @@ def general_correlation(points):
   r = Sxy / (n * Sx * Sy)
   return r, n, ttest.ttest(r, n)
 
+
+class gra_coefficient(object):
+  def __init__(self, area, date, time, significant, points, loss, r, r_significant, corr_coeff, a, b, c, mean, stddev):
+    self.area = area
+    self.date = date
+    self.time = time
+    self.significant = significant
+    self.points = points
+    self.loss = loss
+    self.r = r
+    self.r_significant = r_significant
+    self.corr_coeff = corr_coeff
+    self.a = a
+    self.b = b
+    self.c = c
+    self.mean = mean
+    self.stddev = stddev
+
 ## Gauge-Radar Analysis class
 class gra:
   ## Initializer

@@ -57,6 +57,8 @@ import rave_pgf_quality_registry
 import logging
 import rave_pgf_logger
 from gadjust import gra, obsmatcher
+from gadjust.gra import gra_coefficient
+import odim_source
 import rave_dom_db
 
 from rave_defines import CENTER_ID, GAIN, OFFSET, LOG_ID
@@ -193,6 +195,11 @@ def generate(files, arguments):
   else:
     significant, npoints, loss, r, sig, corr_coeff, a, b, c, m, dev = gra.generate(points, edate, etime)
 
-  # We might store these values in the database as well but for now, let it just be the adjustment file
-
+  # Also store the coefficients in the database so that we can search for them when applying the coefficients
+  NOD = odim_source.NODfromSource(acrrproduct)
+  if not NOD:
+    NOD = ""
+  grac = gra_coefficient(NOD, acrrproduct.date, acrrproduct.time, significant, npoins, loss, r, sig, corr_coeff, a, b, c, m, dev)
+  db.add(grac)
+  
   return None

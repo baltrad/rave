@@ -26,6 +26,7 @@ from sqlalchemy import engine, event, exc as sqlexc, sql
 from sqlalchemy.orm import mapper, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.exc import IntegrityError
+from gadjust.gra import gra_coefficient
 
 Base = declarative_base()
 
@@ -375,4 +376,43 @@ class rave_dom_db_test(unittest.TestCase):
     self.assertEquals("Nisse", result.stationname)
     self.assertAlmostEquals(30.10, result.longitude, 4)
     self.assertAlmostEquals(40.20, result.latitude, 4)
+    
+  def test_get_gra_coefficient(self):
+    #def __init__(self, area, date, time, significant, points, loss, r, r_significant, corr_coeff, a, b, c, mean, stddev):
+    gc1 = gra_coefficient("A1", "20140301", "100000", "True", 10, 5, 1.0, "True", 2.0, 3.0, 4.0, 5.0, 6.0, 7.0)
+    gc2 = gra_coefficient("A1", "20140301", "103000", "True", 11, 6, 8.0, "True", 9.0, 10.0, 11.0, 12.0, 13.0, 14.0)
+    
+    testdb().add(gc1)
+    testdb().add(gc2)
+    
+    result = self.classUnderTest.get_gra_coefficient(datetime.datetime(2014,3,1,10,30,0))
+    self.assertEquals("20140301", result.date.strftime("%Y%m%d"))
+    self.assertEquals("103000", result.time.strftime("%H%M%S"))
+    self.assertEquals("True", result.significant)
+    self.assertEquals(11, result.points)
+    self.assertEquals(6, result.loss)
+    self.assertAlmostEquals(8.0, result.r, 4)
+    self.assertEquals("True", result.r_significant)
+    self.assertAlmostEquals(9.0, result.corr_coeff, 4)
+    self.assertAlmostEquals(10.0, result.a, 4)
+    self.assertAlmostEquals(11.0, result.b, 4)
+    self.assertAlmostEquals(12.0, result.c, 4)
+    self.assertAlmostEquals(13.0, result.mean, 4)
+    self.assertAlmostEquals(14.0, result.stddev, 4)
+    
+    result = self.classUnderTest.get_gra_coefficient(datetime.datetime(2014,3,1,10,00,0))
+    self.assertEquals("20140301", result.date.strftime("%Y%m%d"))
+    self.assertEquals("100000", result.time.strftime("%H%M%S"))
+    self.assertEquals("True", result.significant)
+    self.assertEquals(10, result.points)
+    self.assertEquals(5, result.loss)
+    self.assertAlmostEquals(1.0, result.r, 4)
+    self.assertEquals("True", result.r_significant)
+    self.assertAlmostEquals(2.0, result.corr_coeff, 4)
+    self.assertAlmostEquals(3.0, result.a, 4)
+    self.assertAlmostEquals(4.0, result.b, 4)
+    self.assertAlmostEquals(5.0, result.c, 4)
+    self.assertAlmostEquals(6.0, result.mean, 4)
+    self.assertAlmostEquals(7.0, result.stddev, 4)
+    
       
