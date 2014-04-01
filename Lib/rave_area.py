@@ -269,16 +269,15 @@ def MakeCornersFromExtent(id):
 # @param yscale float Horizontal Y-dimension resolution in projection-specific units (commonly meters)  
 # @returns Don't know
 def MakeAreaFromPolarFiles(files, proj_id='llwgs84', xscale=2000.0, yscale=2000.0):
-    import _raveio
+    import _rave, _raveio
     
     areas = []
     for fstr in files:
         io = _raveio.open(fstr)
-        if io.objectType == 0:  # PVOL
-            # Assert ascending volume, assuming the scan with the longest range will be the lowest one
-            if not io.object.isAscendingScans(): io.object.sortByElevation(1)
-            scan = io.object.getScan(0)
-        elif io.objectType == 2:  # SCAN
+        if io.objectType == _rave.Rave_ObjecType_PVOL:
+        # Assert ascending volume, assuming the scan with the longest range will be the one with the longest surface distance
+            scan = io.object.getScanWithMaxDistance()
+        elif io.objectType == _rave.Rave_ObjectType_SCAN:
             scan = io.object
         else:
             raise IOError, "Input file %s is not a polar volume or scan" % fstr

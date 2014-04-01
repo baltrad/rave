@@ -118,12 +118,12 @@ if __name__ == "__main__":
 
     parser.add_option("-Q", "--qc", dest="qc",
                       default="",
-                      help="Which quality-controls to apply. Current choices are 'ropo', 'beamb', and 'rave-overshooting'. Default=None")
+                      help="Which quality-controls to apply. Comma-separated, no white spaces. Default=None")
 
     parser.add_option("-G", "--gap-fill", action="store_true", dest="gf",
                       help="Gap-fill small holes in output composite. Default=False")
 
-    parser.add_option("-c", "--ctfilter", action="store_true", dest="ctfilter",
+    parser.add_option("-C", "--ctfilter", action="store_true", dest="ctfilter",
                       help="Filter residual non-precipitation echoes using SAF-NWC cloud-type product. Default=False")
 
     (options, args) = parser.parse_args()

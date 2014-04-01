@@ -1,0 +1,114 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2013- Swedish Meteorological and Hydrological Institute (SMHI)
+
+This file is part of RAVE.
+
+RAVE is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+RAVE is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+See the GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
+'''
+## Command-line site-specific 2-D Cartesian product generation
+
+## @file
+## @author Daniel Michelson, SMHI
+## @date 2011-11-25
+
+import sys
+import _raveio
+import rave_site2D
+
+
+if __name__ == "__main__":
+    from optparse import OptionParser
+
+    description = "Command-line site-specific 2-D Cartesian product generation. Derives the Cartesian area on-the-fly or looks one up."
+
+    usage = "usage: %prog -i <infile> -o <outfile> [args] [h]"
+    parser = OptionParser(usage=usage, description=description)
+
+    parser.add_option("-i", "--input", dest="ifile", help="Input file name")
+
+    parser.add_option("-o", "--output", dest="ofile", help="Output file name.")
+
+    parser.add_option("-a", "--area", dest="area",
+                      help="Output area identifier.")
+
+    parser.add_option("-c", "--projection", dest="pcsid",
+                      help="Output projection identifier.")
+
+    parser.add_option("-s", "--scale", dest="scale", type="float",
+                      help="Output resolution in projection-specific units (commonly in meters).")
+
+    parser.add_option("-q", "--quantity", dest="quantity",
+                      default="DBZH",
+                      help="The radar parameter to composite. Default=DBZH.")
+
+    parser.add_option("-p", "--product", dest="product",
+                      default="PCAPPI",
+                      help="The type of Cartesian product to generate [PPI, CAPPI, PCAPPI, PMAX, MAX]. Default=PCAPPI.")
+
+    parser.add_option("-P", "--prodpar", dest="prodpar",
+                      type="float", default=1000.0,
+                      help="Product parameter. For (P)CAPPIs it is the height of the desired layer. For PPIs, it is the elevation angle. Default=1000.0 (meters).")
+    parser.add_option("-r", "--range", dest="range",
+                      type="float", default=200000.0,
+                      help="Maximum range to apply PMAX algorithm. Applies only to PMAX algorithm. Defaults to 200 km.")
+
+    parser.add_option("-Q", "--qc", dest="qc",
+                      default="",
+                      help="Which quality controls to apply. Comma-separated, no white spaces. Default=None")
+
+    parser.add_option("-G", "--gap-fill", action="store_true", dest="gf", default=False,
+                      help="Gap-fill small holes in output composite. Default=False")
+
+    parser.add_option("-C", "--ctfilter", action="store_true", dest="ctfilter", default=False,
+                      help="Filter residual non-precipitation echoes using SAF-NWC cloud-type product. Default=False")
+
+    (options, args) = parser.parse_args()
+
+    if not options.ifile or not options.ofile:
+        print "No input or output file name given. Exiting."
+        parser.print_help()
+        sys.exit()
+
+    if not options.area and not options.pcsid:
+        print "Neither area nor projection identifiers given. Exiting."
+        parser.print_help()
+        sys.exit()
+
+    if not options.area and not options.scale:
+        print "Dynamic area determination requires horizontal scale. Please try again."
+        parser.print_help()
+        sys.exit()
+
+    if options.product is "PMAX" and not options.range:
+        print "PMAX product requires a range argument. Please try again."
+        parser.print_help()
+        sys.exit()
+
+    kwargs = {}
+    kwargs["ifile"] = options.ifile
+    kwargs["ofile"] = options.ofile
+    if options.area: kwargs["area"] = options.area
+    if options.pcsid: kwargs["pcsid"] = options.pcsid
+    if options.scale: kwargs["scale"] = options.scale
+    if options.quantity: kwargs["quantity"] = options.quantity
+    if options.product: kwargs["product"] = options.product
+    if options.prodpar: kwargs["prodpar"] = options.prodpar
+    if options.range: kwargs["range"] = options.range
+    if options.qc: kwargs["qc"] = options.qc
+    if options.gf: kwargs["gf"] = options.gf
+    if options.ctfilter: kwargs["ctfilter"] = options.ctfilter
+
+    rio = rave_site2D.site2D(_raveio.open(options.ifile), **kwargs)
+    rio.save(options.ofile)

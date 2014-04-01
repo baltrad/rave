@@ -93,9 +93,9 @@ static PyObject* _radvolatt_func(PyObject* self, PyObject* args) {
   }
 
   if (ret) {
-    Py_RETURN_TRUE;
+    return PyBool_FromLong(1);
   } else {
-    Py_RETURN_FALSE;
+    return PyBool_FromLong(0);
   }
 }
 
@@ -130,9 +130,9 @@ static PyObject* _radvolbroad_func(PyObject* self, PyObject* args) {
   }
 
   if (ret) {
-    Py_RETURN_TRUE;
+    return PyBool_FromLong(1);
   } else {
-    Py_RETURN_FALSE;
+    return PyBool_FromLong(0);
   }
 }
 
@@ -166,9 +166,9 @@ static PyObject* _radvolnmet_func(PyObject* self, PyObject* args) {
   }
 
   if (ret) {
-    Py_RETURN_TRUE;
+    return PyBool_FromLong(1);
   } else {
-    Py_RETURN_FALSE;
+    return PyBool_FromLong(0);
   }
 }
 
@@ -202,9 +202,9 @@ static PyObject* _radvolspeck_func(PyObject* self, PyObject* args) {
   }
 
   if (ret) {
-    Py_RETURN_TRUE;
+    return PyBool_FromLong(1);
   } else {
-    Py_RETURN_FALSE;
+    return PyBool_FromLong(0);
   }
 }
 
@@ -239,9 +239,9 @@ static PyObject* _radvolspike_func(PyObject* self, PyObject* args) {
   }
 
   if (ret) {
-    Py_RETURN_TRUE;
+    return PyBool_FromLong(1);
   } else {
-    Py_RETURN_FALSE;
+    return PyBool_FromLong(0);
   }
 }
 
