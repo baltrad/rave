@@ -214,7 +214,8 @@ def generate(files, arguments):
   result = generator.nearest(pyarea, qfields)
   
   # Optional cloud-type residual non-precip filter
-  if eval(args["ctfilter"]):
+  if args.has_key("ctfilter"):
+    if eval(args["ctfilter"]):
       ret = rave_ctfilter.ctFilter(result, quantity)
 
   # Fix so that we get a valid place for /what/source and /how/nodes 
