@@ -23,28 +23,30 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @author Daniel Michelson, SMHI
 ## @date 2010-07-09
 
-import sys, os, traceback, string
+import sys, os, traceback, string, types
 from copy import deepcopy as copy
 import logging
-import Queue
+import xmlrpclib
 import multiprocessing
 import rave_pgf_logger
 import rave_pgf_registry
 import rave_pgf_qtools
 import BaltradFrame
 import _pyhl
-from rave_defines import DEX_SPOE, LOG_ID, REGFILE, PGFs, LOGLEVEL
+from rave_defines import DEX_SPOE, LOG_ID, REGFILE, PGFs, LOGLEVEL, PGF_HOST, PGF_PORT
 
 
-METHODS = {'generate' : '("algorithm",[files],[arguments])',
-           'execute' : '("shell command")',
-           'register': '("name", "module", "function", Help="", strings=",", ints=",", floats=",", seqs=",")',
+METHODS = {'generate' :  '("algorithm",[files],[arguments])',
+           'execute' :   '("shell command")',
+           'register':   '("name", "module", "function", Help="", strings=",", ints=",", floats=",", seqs=",")',
            'deregister': '("name")',
-           'flush': '("stupid_password")',
+           'flush':      '("stupid_password")',
+           'job_done':   '("jobid")',
            'Help': ''
            }
 
-initialized = 0
+PGF_REGISTRY = rave_pgf_registry.PGF_Registry(filename=REGFILE)
+
 
 ## The product generation framework class containing the product generation
 # functionality.
@@ -52,27 +54,27 @@ class RavePGF():
 
   ## Constructor
   def __init__(self):
-    self._jobid = 0
-    self.logger = None  # logging.getLogger(LOG_ID)
-    #self._init_logger()
-    self._algorithm_registry = None  # rave_pgf_registry.PGF_Registry(filename=REGFILE)
-    self.queue = None  # Queue.PriorityQueue()
-    #self._load_queue()
-    self._queue_dumped = False
+    self.name = multiprocessing.current_process().name
+    self._pid = os.getpid()
+    self._job_counter = 0
+    self._jobid = "%i-0" % self._pid
+    self.logger = rave_pgf_logger.rave_pgf_logger_client()
+    self._algorithm_registry = None
+    self.queue = None
     self.pool = None
-    #self._run_all_jobs()
+    self._client = None
 
 
   ## This method must exist for system.listMethods to work.
   def _listMethods(self):
-    self.log("info", "Someone called _listMethods.")
+    self.logger.info("%s: Someone called _listMethods" % self.name)
     return METHODS.keys()
 
 
   ## This method must exist for system.listMethods to work.
   # @param method string name of method for which to get help.
   def _methodHelp(self, method):
-    self.log("info", "Someone called _methodHelp.")
+    self.logger.info("%s: Someone called _methodHelp" % self.name)
     return "%s %s" % (method, METHODS[method])
 
 
@@ -81,20 +83,8 @@ class RavePGF():
   # @return string a help text comprising the names of each registered
   # algorithm and its descriptive text.
   def Help(self, name=None):
-    self.log("info", "Someone needs help.")
+    self.logger.info("%s: Someone needs help." % self.name)
     return self._algorithm_registry.Help(name)
-
-
-  ## Initializes the logger.
-  def _init_logger(self, level=LOGLEVEL):
-    rave_pgf_logger.init_logger(self.logger, level=level)
-
-
-  ## Convenience method for managing log messages
-  # @param level string log level, any of those in \ref rave_pgf_logger.LOGLEVELS
-  # @param msg string log message
-  def log(self, level, msg):
-    rave_pgf_logger.log(self.logger, level, msg)
 
 
   ## Registers a new item in the registry. Re-registering an item
@@ -110,7 +100,7 @@ class RavePGF():
   # @return string
   def register(self, name, module, function, Help="",
                strings="", ints="", floats="", seqs=""):
-    self.log("info", "Registering algorithm: %s" % name)
+    self.logger.info("%s: Registering algorithm: %s" % (self.name, name))
     self.deregister(name)
     self._algorithm_registry.register(name, module, function, Help=Help,
                                       strings=strings, ints=ints,
@@ -128,7 +118,7 @@ class RavePGF():
   # @param name string name of the registry entry to de-register.
   # @return string
   def deregister(self, name):
-    self.log("info", "De-registering algorithm: %s" % name)
+    self.logger.info("%s: De-registering algorithm: %s" % (self.name, name))
     self._algorithm_registry.deregister(name)
     return "De-registered %s" % name
 
@@ -139,9 +129,11 @@ class RavePGF():
   def flush(self, stupid_password):
     if stupid_password == "Killing me softly":
       self._dump_queue()
+      if self.pool:
+        self.pool.terminate()
       return "Killed softly"
     else:
-      self.log("warning", "Security breach? Did some scoundrel just try to shut us down?")
+      self.logger.warning("%s: Security breach? Did some scoundrel just try to shut us down?" % self.name)
       return ""
 
 
@@ -150,71 +142,42 @@ class RavePGF():
   # required to run a job.
   # @param files, a list of input file strings.
   # @param arguments, a list of argument key-value pairs.
-  # @param jobid int unique ID of that job.
-  # @param priority, int the priority of the job, should be 0, 1, or 2, where 0
-  # is the highest and 2 is the lowest.
-  # @return nothing
-  def _queue_job(self, algorithm, files, arguments, jobid, priority=0):
+  # @param jobid string unique ID of that job.
+  def _queue_job(self, algorithm, files, arguments, jobid):
     # Once the merge files and arguments have been merged with the algorithm,
     # the result is referred to as a 'job'.
-    rave_pgf_qtools.merge(algorithm, files, arguments, jobid, priority)
-    self.queue.put((priority, algorithm))
+    self.queue.queue_job(algorithm, files, arguments, jobid)
     mod_name, func_name = algorithm.get('module'), algorithm.get('function')
-    self.log("info", "ID=%i Queued %s.%s" % (jobid, mod_name, func_name))
-    self._jobid += 1
+    self.logger.info("%s: ID=%s Queued %s.%s" % (self.name, jobid, mod_name, func_name))
+    self._job_counter += 1
+    self._jobid = "%i-%i" % (self._pid, self._job_counter)
 
 
   ## Dumps the job queue to XML file. Called automatically when the server
   # is stopped.
-  def _dump_queue(self):
-      if not self._queue_dumped:
-          self.log("info", "Dumping job queue containing %i jobs." % self.queue.qsize())
-          rave_pgf_qtools.dump_queue(self.queue)
-          self.log("info", "Shutting down.\n")
-          self._queue_dumped = True
+  # @param filename string file name to white to dump the queue
+  def _dump_queue(self, filename=rave_pgf_qtools.QFILE):
+    self.logger.info("%s: Dumping job queue", self.name)
+    self.queue.dump()
 
 
   ## Loads the job queue from XML file. Called automatically when the server
   # is started, even if the queue is empty.
   def _load_queue(self):
-    self.log("info", "Loading job queue.")
-    rave_pgf_qtools.load_queue(self.queue)
+    self.logger.info("%s: Loading job queue", self.name)
+    self.queue.load()
     if self.queue.qsize() > 0:
-      self.log("warning", "Running jobs from dumped queue on file.")
-
-
-  ## Internal executor of one product generation algorithm, according to how
-  # they are queued. Check the job queue, get a job from it according to
-  # how they are prioritized, then run it. Assume no exceptions will be raised
-  # and declare that task done before running it.
-  # TODO: Thread this.
-  # @return outfile string, assuming it is returned from the algorithm.
-  def _run_one_job(self):
-    if self.queue.qsize() > 0:
-      priority, job = self.queue.get()
-      algorithm, files, args = rave_pgf_qtools.split(job)
-      outfile = self._run(algorithm, files, args)
-      self.queue.task_done()  # Count down queue even if job fails. !! Moved !!
-      return outfile  
+      self.logger.warning("%s: Running %i jobs from dumped queue on file.", (self.name, self.queue.qsize()))
 
 
   ## Internal executor of the product generation algorithm queue, according to
-  # how they are queued. Check the job queue, get jobs from it according to
-  # how they are prioritized, then run them. Assuming no exceptions are raised,
-  # declare each task as done after running it.
-  # @return outfile string, assuming it is the last item in the arguments list.
+  # how they are queued. Runs only once at startup, if there are dumped jobs in
+  # the queue.
   def _run_all_jobs(self):
-    while self.queue.qsize() > 0:
-      outfile = self._run_one_job()
-      if outfile != None:
-        try:
-          BaltradFrame.inject_file(outfile, DEX_SPOE)
-          self.log("info", "ID=%s Injected %s" % (algorithm_entry.get("jobid"),
-                                                  outfile))
-        except Exception, e:
-          pass
-        
-        if os.path.isfile(outfile): os.remove(outfile)
+    if self.queue.qsize() > 0:
+      for jobid, job in self.queue.items():
+        algorithm, files, arguments = rave_pgf_qtools.split(job) 
+        result = self.pool.apply_async(generate, (jobid, algorithm.tag, files, arguments))
 
 
   ## Internal direct executor of the product generation algorithms. This will
@@ -228,9 +191,8 @@ class RavePGF():
   def _run(self, algorithm, files, arguments):
     import imp
     mod_name, func_name = algorithm.get('module'), algorithm.get('function')
-    jobid = algorithm.get('jobid')
 
-    self.log("info", "ID=%s Running %s.%s" % (jobid, mod_name, func_name))
+    self.logger.info("%s: ID=%s Running %s.%s" % (self.name, self._jobid, mod_name, func_name))
 
     fd, pathname, description = imp.find_module(mod_name)
     module = imp.load_module(mod_name, fd, pathname, description)
@@ -238,12 +200,15 @@ class RavePGF():
     func = getattr(module, func_name)
     outfile = func(files, arguments)
 
-    self.log("info", "ID=%s Finished %s.%s" % (jobid, mod_name, func_name))
+    self.logger.info("%s: ID=%s Finished %s.%s" % (self.name, self._jobid, mod_name, func_name))
 
     return outfile
 
 
-  ## Wrapper method around \ref _wrapper
+  ## Dispatcher method. Calls the \ref generate function that in turn creates 
+  # a provisional instance of a \ref PGF object to invoke the \ref _generate 
+  # method that does the job. The algorithm's presence in the registry is checked
+  # first. 
   # @param algorithm string to the desired product generation call
   # @param files list of file strings
   # @param arguments list of strings, ordered as 'key-value' pairs, so that
@@ -251,15 +216,33 @@ class RavePGF():
   # be parsed into their corrects formats, ie. int, float, list, etc.
   # @return string "OK" always, which is ignored because the real work is deferred.
   def generate(self, algorithm, files, arguments):
-    self.log("info", "ID=%i Dispatching request for %s" % (self._jobid, algorithm))
-    result = self.pool.apply_async(generate, (self._jobid, algorithm, files, arguments))
-    self._jobid += 1
+    err_msg = None
+    jobid = self._jobid
+    try:
+      # Verify algorithm is registered
+      algorithm_entry = copy(self._algorithm_registry.find(algorithm))
+      if not algorithm_entry:
+        raise LookupError('Algorithm "%s" not in registry' % algorithm)
+          
+      # Format job. This queue will only ever have one entry; it is thus used
+      # for conveniently formatting the job, not for actually queueing.
+      self._queue_job(algorithm_entry, files, arguments, jobid)
+      # Write job to resilient queue on disk.
+      #self._dump_queue()  # Really necessary each time?
+
+      self.logger.info("%s: ID=%s Dispatching request for %s" % (self.name, jobid, algorithm))
+      result = self.pool.apply_async(generate, (jobid, algorithm, files, arguments))
+    except Exception, err:
+      err_msg = traceback.format_exc()
+      self.logger.error("%s: ID=%s failed. Check this out:\n%s" % (self.name, jobid, err_msg))
+
+    if err_msg: return err_msg        
     return "OK"
 
 
   ## The mother method that coordinates the product generation calls.
-  # This method verifies the integrity of the call and its arguments,
-  # then adds an element to the job queue for execution.
+  # This method verifies the integrity of the arguments, then runs the job.
+  # If the result gets injected to the DEX, then this is also done.
   # @param algorithm string to the desired product generation call
   # @param files list of file strings
   # @param arguments list of strings, ordered as 'key-value' pairs, so that
@@ -268,10 +251,10 @@ class RavePGF():
   # @return string either "OK" or an error with a corresponding Traceback
   def _generate(self, algorithm, files, arguments):
     import rave_pgf_verify, rave_pgf_protocol
-    jobid = err_msg = None
+    err_msg = None
 
     algorithm = algorithm.lower()
-    self.log("debug", "Request for generate algorithm: %s" % algorithm)
+    self.logger.debug("%s: Request for generate algorithm: %s" % (self.name, algorithm))
 
     outfile = None
     
@@ -280,55 +263,54 @@ class RavePGF():
       if len(files) == 0:
         raise IndexError("No input files given.")
 
-      # Verify algorithm is registered
       algorithm_entry = copy(self._algorithm_registry.find(algorithm))
-      if not algorithm_entry:
-        raise LookupError('Algorithm "%s" not in registry' % algorithm)
 
       # Convert arguments from one protocol type into rave protocol
       arguments = rave_pgf_protocol.convert_arguments(algorithm, algorithm_entry, arguments)
       
-      # Verify that the arguments check out. An IndexError will be raised if
+      # Verify arguments. An IndexError will be raised if
       # the number of items in the argument list is odd.
       verified = rave_pgf_verify.verify_generate_args(arguments,
                                                       algorithm_entry)
       if not verified:
         raise TypeError('Erroneous arguments given to algorithm "%s"' % algorithm)
 
-      # Queue this job and then run a job from the queue. If the job queue runs
-      # assymetrically, then the outfile string could be different. Therefore,
-      # \ref _run_one_job returns it.
-      self._queue_job(algorithm_entry, files, arguments, self._jobid)
-      mod_name = algorithm_entry.get('module')
-      func_name = algorithm_entry.get('function')
-      jobid = algorithm_entry.get('jobid')
-
-      outfile = self._run_one_job()
+      outfile = self._run(algorithm_entry, files, arguments)  # Don't queue, just do it! 
 
       if outfile != None:
-        self.log("info", "ID=%s one job run, outfile=%s" % (jobid, outfile))
+        self.logger.info("%s: ID=%s one job run, outfile=%s" % (self.name, self._jobid, outfile))
       else:
-        self.log("info", "ID=%s one job run, no output file" % (jobid))
+        self.logger.info("%s: ID=%s one job run, no output file" % (self.name, self._jobid))
       
-      # Inject the result.
+      # Inject the result if it is a file
       if outfile != None:
         BaltradFrame.inject_file(outfile, DEX_SPOE)
         # Log the result
-        self.log("info", "ID=%s Injected %s" % (jobid, outfile))
-
+        self.logger.info("%s: ID=%s Injected %s" % (self.name, self._jobid, outfile))
+        
     except Exception, err:
       # the 'err' itself is pretty useless
       err_msg = traceback.format_exc()
-      self.log("error", "ID=%s failed. Check this out:\n%s" % (jobid, err_msg))
+      self.logger.error("%s: ID=%s failed. Check this out:\n%s" % (self.name, self._jobid, err_msg))
 
     if outfile != None:
       if os.path.isfile(outfile): os.remove(outfile)
     
     if err_msg != None:
-      self.log("info", "ID=%s Returning: %s " % (jobid, err_msg))
+      self.logger.info("%s: ID=%s Returning: %s" % (self.name, self._jobid, err_msg))
       return err_msg
-    self.log("info", "ID=%s Returning: OK " % jobid)
+    self.logger.info("%s: ID=%s Returning: OK" % (self.name, self._jobid))
     return "OK"
+
+
+  # Removes a job from the queue
+  # @param jobid string containing the job identifier
+  def job_done(self, jobid):
+    msg = self.queue.task_done(jobid)
+    if msg != "OK":
+      self.logger.error("%s: %s" % (self.name, msg))
+    else:
+      self.logger.info("%s: ID=%s Dequeued job" % (self.name, jobid))
 
 
   ##
@@ -347,16 +329,16 @@ class RavePGF():
         raise Exception, "Failure when executing %s" % command
     except Exception:
       err_msg = traceback.format_exc()
-      self.log("error", "Failed to execute command %s, msg: %s" % (command, err_msg))
+      self.logger.error("%s: Failed to execute command %s, msg: %s" % (self.name, command, err_msg))
     
-    self.log("info", "Returning: OK")
+    self.logger.info("%s: Returning OK" % self.name)
     return "OK"
     
 
   ## Pretty useless method used to check argument types.
   # @param arguments sequence of ints, floats, strings in arbitrary order.
+  # @return string of arguments
   def echo_args(self, arguments):
-    import types
     ret = ''
     for a in arguments:
       t = type(a)
@@ -369,22 +351,23 @@ class RavePGF():
 
 ## Convenience function for running several jobs asynchronously with
 # \multiprocessing.apply_async
-# @param jobid int job ID, used to keep track of jobs
+# @param jobid string job ID, used to keep track of jobs
 # @param algorithm string to the desired product generation call
 # @param files list of file strings
 # @param arguments list of strings, ordered as 'key-value' pairs, so that
 # even items are argument names and odd ones are their values. These must
 # be parsed into their corrects formats, ie. int, float, list, etc.
+# @param host string URI of the RAVE PGF server to which to connect
+# @param port int port of the RAVE PGF server to which to connect
 # @return string either "OK" or an error with a corresponding Traceback
-def generate(jobid, algorithm, files, arguments):
+def generate(jobid, algorithm, files, arguments, host=PGF_HOST, port=PGF_PORT):
     pgf = RavePGF()
     pgf._jobid = jobid
-    pgf.logger = logging.getLogger(LOG_ID)
-    pgf._init_logger()
-    pgf._algorithm_registry = rave_pgf_registry.PGF_Registry(filename=REGFILE) 
-    pgf.queue = Queue.PriorityQueue()
-    #pgf._load_queue()
-    pgf._generate(algorithm, files, arguments)
+    pgf._algorithm_registry = copy(PGF_REGISTRY)  # Less flexible than reading it each time
+    ret = pgf._generate(algorithm, files, arguments)
+    if ret == "OK":
+      pgf._client = xmlrpclib.ServerProxy("http://%s:%i/RAVE" % (host, port), verbose=False)
+      pgf._client.job_done(jobid)
 
 
 if __name__ == "__main__":

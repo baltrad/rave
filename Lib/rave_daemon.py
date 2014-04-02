@@ -139,8 +139,8 @@ class Daemon(object):
 		# registered to atexit. This is a soft exit, and may require
 		# toughening up in the future.
 		try:
-			ctr = 0   # We don't want to hang indefenetly trying to kill a process..
-			sys.stderr.write("Waiting for server to shutdown ")
+			ctr = 0   # We don't want to hang indefinitely trying to kill a process..
+			sys.stderr.write("Waiting for server to shut down ")
 			sys.stderr.flush()
 			while ctr <= 30:
 				os.kill(pid, SIGTERM)

@@ -46,6 +46,7 @@ install:
 	@cp -v -f wmo_station "${prefix}/bin/"
 	@cp -v -f ctfilter "${prefix}/bin/"
 	@cp -v -f site2D "${prefix}/bin/"
+	@cp -v -f rave_pgf_logger "${prefix}/bin/"
 
 
 .PHONY:clean

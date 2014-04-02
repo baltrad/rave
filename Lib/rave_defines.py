@@ -73,21 +73,6 @@ ARRAYTYPES = {'b':'char', 'B':'uchar', 'I':'int', 'h':'short',
 GAIN = 0.4
 OFFSET = -30.0
 
-# Default Z-R coefficients, legacy from BALTEX Working Group on Radar
-ZR_A = 200.0
-ZR_b = 1.5
-
-# Gauge adjustment - migrated from NORDRAD2
-GADJUST_STATFILE = RAVEETC + '/gadjust.stat'
-DEFAULTA = 0.323868068019
-DEFAULTB = -0.00107776407064
-DEFAULTC = 1.77500903316e-05
-MERGETERMS = 20  # how many 12-hour SYNOP terms to merge: 10 days.
-
-# Statistics
-TFILE = RAVECONFIG + "/t-critical.pickle"
-TFILE_TEMPLATE = RAVECONFIG + "/t-critical.txt"
-
 # Projection and area registries
 PROJECTION_REGISTRY = os.path.join(RAVECONFIG, 'projection_registry.xml')
 AREA_REGISTRY = os.path.join(RAVECONFIG, 'area_registry.xml')
@@ -118,7 +103,7 @@ QFILE = os.path.join(RAVEETC, 'rave_pgf_queue.xml')  # queue file
 PGF_TAG = 'bltgenerate'  # used for sending files to the DEX
 
 LOG_ID = "PGF"  # identifier of the logger instance
-LOGPORT = 8090  # Could conceivably conflict with Radan HTTP
+LOGPORT = 8089
 LOGFILE     = os.path.join(RAVEETC, "rave_pgf.log")
 LOGFILESIZE = 5000000  # 5 Mb each
 LOGFILES    = 5
