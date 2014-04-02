@@ -100,6 +100,7 @@ class fm12_importer(object):
     wmost = dbinstance.get_station(fm12obs.station)
     if wmost == None:
       self._logger.info("No station named %s"%fm12obs.station)
+      return None
     else:
       self._logger.debug("Reading station information %s"%fm12obs.station)
     result = observation(wmost.stationnumber, wmost.country, fm12obs.type, fm12obs.date, fm12obs.time, wmost.longitude, wmost.latitude)
@@ -123,7 +124,8 @@ class fm12_importer(object):
     result=[]
     for fm12obs in fm12list:
       nobs = self.convert_fm12_to_obs(fm12obs, dbinstance)
-      result.append(nobs)
+      if nobs != None:
+        result.append(nobs)
       
     return result
 

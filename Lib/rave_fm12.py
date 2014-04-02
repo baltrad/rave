@@ -189,6 +189,12 @@ class fm12_parser(object):
     datestr = datetimestr[:8]
     timestr = datetimestr[8:]
 
+    if not re.match("^[0-9]{8}$", datestr) or not re.match("^[0-9]{6}$", timestr):
+      if re.match(".*_[0-9]{8}.txt$", filename):
+        datetimestr = filename[-27:-13]
+        datestr = datetimestr[:8]
+        timestr = datetimestr[8:]
+
     # If this filename does not contain datetime as last part, we will have to figure out the date from the actual synop data
     # FYI: this is very unsafe way since it does not take into account year shifts and month shifts. Where is year and month info in a synop?
     if not re.match("^[0-9]{8}$", datestr) or not re.match("^[0-9]{6}$", timestr):

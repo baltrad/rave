@@ -37,9 +37,11 @@ import _projection
 import _raveio
 import _polarvolume
 import _polarscan
+import _gra
 import area_registry
 import area
 import string
+import datetime
 import rave_tempfile
 import odim_source
 import math
@@ -47,6 +49,10 @@ import rave_pgf_quality_registry
 import logging
 import rave_pgf_logger
 import rave_ctfilter
+import rave_dom_db
+
+from gadjust.gra import gra_coefficient
+
 
 from rave_defines import CENTER_ID, GAIN, OFFSET, LOG_ID
 
@@ -218,6 +224,40 @@ def generate(files, arguments):
     if eval(args["ctfilter"]):
       ret = rave_ctfilter.ctFilter(result, quantity)
 
+  logger.info("Trying the gra correction")
+  # Apply gra correction coefficients
+  if True: #args.has_key("applygra"):
+    try:
+      t = args["time"]
+      d = args["date"]
+      zrA = 200.0
+      zrb = 1.6
+      if args.has_key("zrA"):
+        zrA = strToNumber(args["zrA"])
+      if args.has_key("zrb"):
+        zrb = strToNumber(args["zrb"])
+      db = rave_dom_db.create_db_from_conf()
+      dt = datetime.datetime(int(d[:4]), int(d[4:6]), int(d[6:]), int(t[:2]), int(t[2:4]), 0)
+      dt = dt - datetime.timedelta(seconds=3600*12) # 12 hours back in time for now..
+      grac = db.get_gra_coefficient(dt)
+      #def __init__(self, area, date, time, significant, points, loss, r, r_significant, corr_coeff, a, b, c, mean, stddev):
+      #grac = gra_coefficient("A","20140301","100000","True", 10, 0, 1.0, "True", 0.0, 1.0, 2.0, 3.0, 4.0, 5.0)
+      if grac != None:
+        gra = _gra.new()
+        gra.A = grac.a
+        gra.B = grac.b
+        gra.C = grac.c
+        gra.zrA = zrA
+        gra.zrb = zrb
+        dfield = result.findQualityFieldByHowTask("se.smhi.composite.distance.radar")
+        param = result.getParameter(quantity)
+        gra_field = gra.apply(dfield, param)
+        gra_field.quantity = quantity + "_CORR"
+        result.addParameter(gra_field)
+    except Exception, e:
+      logger.error("Failed to apply gra coefficients", exc_info=1)
+        
+    
   # Fix so that we get a valid place for /what/source and /how/nodes 
   plc = result.source
   result.source = "%s,CMT:%s"%(CENTER_ID,plc)

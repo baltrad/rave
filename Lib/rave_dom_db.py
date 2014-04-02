@@ -124,6 +124,8 @@ mapper(wmo_station, rave_wmo_station)
 mapper(observation, rave_observation)
 mapper(gra_coefficient, rave_gra_coefficient)
 
+dburipool = {}
+
 ##
 # Class for connecting with the database
 class rave_db(object):
@@ -162,9 +164,15 @@ class rave_db(object):
     xlist = obj
     if not isinstance(obj, list):
       xlist = [obj]
-    for x in xlist:
-      session.add(x)
-    session.commit()
+    try:
+      for x in xlist:
+        session.add(x)
+      session.commit()
+    except:
+      session.rollback()
+      raise
+    finally:
+      session.close()
     session = None    
 
   def merge(self, obj):
@@ -173,10 +181,16 @@ class rave_db(object):
     xlist = obj
     if not isinstance(obj, list):
       xlist = [obj]
-    for x in xlist:
-      nx = session.merge(x)
-      session.add(nx)
-    session.commit()
+    try:
+      for x in xlist:
+        nx = session.merge(x)
+        session.add(nx)
+      session.commit()
+    except:
+      session.rollback()
+      raise
+    finally:
+      session.close()
     session = None    
     
 
@@ -228,14 +242,17 @@ class rave_db(object):
       return q.first()
   
 ##
-# Creates a rave db instance
+# Creates a rave db instance. This instance will be remembered for the same url which means
+# that the same db-instance will be used for the same url.
 # If create_schema = True (default) then the tables will be created
 #
 def create_db(url, create_schema=True):
-  db = rave_db(url)
-  if create_schema:
-    db.create()
-  return db
+  if not dburipool.has_key(url):
+    db = rave_db(url)
+    if create_schema:
+      db.create()
+    dburipool[url] = db
+  return dburipool[url]
 
 ##
 # Creates a rave_db instance.
