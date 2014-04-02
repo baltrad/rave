@@ -1,0 +1,86 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2014- Swedish Meteorological and Hydrological Institute (SMHI)
+
+This file is part of RAVE.
+
+RAVE is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+RAVE is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+See the GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
+'''
+## RAVE Product Generation Framework XMLRPC server.
+
+## @file
+## @author Daniel Michelson, SMHI
+## @date 2014-03-14
+
+import sys
+import rave_pgf_logger
+from rave_defines import PGF_HOST, LOGPORT, LOGLEVEL, LOGFILE, LOGPIDFILE
+
+
+if __name__ == "__main__":
+    from optparse import OptionParser
+
+    description = "RAVE TCP Logger server"
+
+    usage = "usage: %prog -a start|stop|status|restart|fg [-H <host> -p <port> -l <level> -P <pidfile> -L <logfile> -f <foreground>] [h]"
+    parser = OptionParser(usage=usage, description=description)
+
+    parser.add_option("-a", "--argument", dest="arg", help="start|stop|status|restart|fg, where fg instructs to run in the foreground instead of daemonizing.")
+
+    parser.add_option("-H", "--host", dest="host", default=PGF_HOST, help="Host, defaults to the PGF host.")
+
+    parser.add_option("-p", "--port", dest="port", type="int", default=LOGPORT, help="Port, defaults to 8090.")
+
+    parser.add_option("-P", "--pidfile", dest="pidfile", default=LOGPIDFILE, help="Log PID file. Change only for testing.")
+
+    parser.add_option("-l", "--level", dest="level", default=LOGLEVEL, help="Log level, defaults to INFO.")
+
+    parser.add_option("-L", "--logfile", dest="logfile", help="Log file name. Change only for testing.")
+
+    (options, args) = parser.parse_args()
+
+    if not options.arg:
+        parser.print_help()
+        sys.exit(1)
+
+    ARG = options.arg.lower()
+    if ARG not in ('start', 'stop', 'status', 'restart', 'fg'):
+        parser.print_help()
+        sys.exit(1)
+
+    if options.logfile:
+        LOGFILE = rave_pgf_logger.LOGFILE = options.logfile
+    this = rave_pgf_logger.rave_pgf_logger_server(pidfile=options.pidfile)
+
+    if ARG == 'stop':
+        myLogger = rave_pgf_logger.rave_pgf_logger_client(port=options.port)
+        myLogger.info("Shutting down log TCP server on %s:%i" % (options.host, options.port))
+        this.stop()
+
+    if ARG == 'start':
+        if this.status() == "not running":
+            if options.port: this.port = options.port
+            print "Starting log TCP server on %s:%i" % (options.host, options.port)
+            this.start()
+        else:
+            print "Log TCP server already running on %s:%i" % (options.host, options.port) 
+
+    if ARG == 'restart':
+        this.restart()
+
+    if ARG == 'status':
+        print "%s is %s" % (sys.argv[0], this.status())
+
+    if ARG == 'fg':
+        this.run()
