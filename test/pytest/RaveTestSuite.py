@@ -60,6 +60,8 @@ from area_registry_test import *
 from PyDealiasTest import *
 from PyRadvolTest import *
 from PyCtfilterTest import *
+from PyPgfQtoolsTest import *
+from PyPgfLoggerTest import *
 
 #
 # Unless RAVE_TESTDB_URI has been set we don't want to run the dom db tests

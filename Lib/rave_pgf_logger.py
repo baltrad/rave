@@ -30,6 +30,7 @@ import logging
 import logging.handlers
 import SocketServer
 import multiprocessing
+import tempfile
 from types import StringType, UnicodeType
 from rave_defines import PGF_HOST, LOGFILE, LOGFILESIZE, LOGFILES, LOGPORT, LOGPIDFILE, LOGLEVEL, STDOE
 from rave_daemon import Daemon
@@ -42,6 +43,8 @@ LOGLEVELS = {"notset"   : logging.NOTSET,
              "error"    : logging.ERROR,
              "critical" : logging.CRITICAL,
              "fatal"    : logging.FATAL}
+
+tempfile.tempdir = ''
 
 
 ## Initializes the system logger.
@@ -60,10 +63,7 @@ def init_logger(logger, level=LOGLEVEL):
         formatter = logging.Formatter('%(asctime)-15s %(levelname)-8s %(message)s')
         handler.setFormatter(formatter)
         handler.lock = multiprocessing.RLock()
-        #handler.createLock()
         logger.addHandler(handler)
-        #logger.info("Logging system initialized. Starting...")
-        #log(logger, "info", "Logging system initialized. Starting...")
 
 
 ## Locks, logs, and unlocks, with rudimentary level filtering.
@@ -72,14 +72,13 @@ def init_logger(logger, level=LOGLEVEL):
 # @param msg string log message
 def log(logger, level, msg):
     if LOGLEVELS[level] >= logger.level:
-        #logger.handlers[0].lock.acquire(block=True, timeout=None)
         logger.handlers[0].acquire()
         name = multiprocessing.current_process().name
         logger.log(LOGLEVELS[level], "%s: %s" % (name, msg))
         logger.handlers[0].release()
 
 
-# Stuff below is for creating a logger server, currently unused.
+# Stuff below is for creating a logger server and simple client.
 
 ## Handler for a streaming logging request.
 #  This basically logs the record using whatever logging policy is
@@ -164,13 +163,14 @@ class rave_pgf_logger_server(Daemon):
   ## Constructor
   # @param host URI to the host for this server.
   # @param port int port number to the host for this server.
+  # @param pidfile string file name to which to write the server's PID
   # @param stdin string path to where to direct stdin
   # @param stdout string path to where to direct stdout
   # @param stderr string path to where to direct stderr
-  def __init__(self, host=PGF_HOST, port=LOGPORT,
+  def __init__(self, host=PGF_HOST, port=LOGPORT, pidfile=LOGPIDFILE,
 #               stdin='/dev/null', stdout=STDOE, stderr=STDOE):
                stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
-    self.pidfile = LOGPIDFILE
+    self.pidfile = pidfile
     self.stdin = stdin
     self.stderr = stdout
     self.stdout = stderr
@@ -199,15 +199,32 @@ class rave_pgf_logger_server(Daemon):
   # \ref Daemon , but you can call fg() to run the server in the
   # foreground, ie. not daemonize, which is useful for debugging.
   def run(self):
-    #import atexit
     logging.basicConfig(format='%(asctime)-15s %(levelname)-8s %(message)s')
     self.server = LogRecordSocketReceiver(host=self.host, port=self.port)
-    #atexit.register(self.server.instance._dump_queue)
     self.server.serve_until_stopped()
 
-        
+
+## Client logger.
+# Clients can be created even when the server isn't running. They will succeed in connecting
+# and logging when the server starts, even though messages will be lost before this is done.
+# The only time this could happen is when the PGF and logger servers are initializing, and the 
+# client loggers in the PGF server send messages before the logger server is ready, which is
+# highly unlikely. 
+# @param host URI to the host for this server.
+# @param port int port number to the host for this server.
+# @param level string log level
+# @returns logging.getLogger client
+def rave_pgf_logger_client(host=PGF_HOST, port=LOGPORT, level=LOGLEVEL):
+  myName = 'PGF-' + tempfile.mktemp()  # Needs a unique name to avoid confusion causing replicate log entries
+  myLogger = logging.getLogger(myName)
+  myLogger.setLevel(LOGLEVELS[level])
+  socketHandler = logging.handlers.SocketHandler(host, port)
+  myLogger.addHandler(socketHandler)
+  return myLogger
+
 
 if __name__ == "__main__":
+  # Functionality below for testing. Otherwise use command-line binary.
   prog = "rave_pgf_logger_server"
   usage = "usage: %s start|stop|status|restart|fg" % prog
 
@@ -224,10 +241,16 @@ if __name__ == "__main__":
   this = rave_pgf_logger_server()
 
   if ARG == 'stop':
+    myLogger = rave_pgf_logger_client()
+    myLogger.info("Shutting down log TCP server on %s:%i" % (this.host, this.port))
     this.stop()
 
   if ARG == 'start':
-    this.start()
+    if this.status() == "not running":
+      print "Starting log TCP server on %s:%i" % (this.host, this.port)
+      this.start()
+    else:
+      print "Log TCP server already running on %s:%i" % (this.host, this.port) 
 
   if ARG == 'restart':
     this.restart()
@@ -237,4 +260,3 @@ if __name__ == "__main__":
 
   if ARG == 'fg':
     this.run()
-

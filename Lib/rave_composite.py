@@ -161,13 +161,13 @@ def generate(in_objects, **args):
   result = generator.nearest(pyarea, qfields)  # Might want to rename this method...
 
   # Optional gap filling
-  if eval(args["gf"]):
+  if "gf" in args.keys():
       t = _transform.new()
       gap_filled = t.fillGap(result)
       result.setData(gap_filled.getData())      
 
   # Optional cloud-type residual non-precip filter
-  if eval(args["ctfilter"]):
+  if "ctfilter" in args.keys():
       ret = rave_ctfilter.ctFilter(result, quantity)
   
   # Fix so that we get a valid place for /what/source and /how/nodes 

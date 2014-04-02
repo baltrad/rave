@@ -28,23 +28,93 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
 import xmlrpclib
+import Queue
 from xml.etree import ElementTree as ET
 from rave_defines import QFILE
+
+
+## Job queue Exception
+class PGF_JobQueue_isFull_Error(Exception):
+    pass
+
+
+## Queue object based on a dictionary
+class PGF_JobQueue(dict):
+
+    # Initializer
+    # @parameter maxsize int maximum number of jobs allowed in the queue, defaults to 0
+    # which means unlimited. 
+    def __init__(self, maxsize=0):
+        self.maxsize = maxsize
+
+
+    ## Queue a job for processing. All jobs are calls to the \ref generate method.
+    # @param algorithm_entry, an Element object that contains all the information
+    # required to run a job.
+    # @param files, a list of input file strings.
+    # @param arguments, a list of argument key-value pairs.
+    # @param jobid string unique ID of that job.
+    def queue_job(self, algorithm_entry, files, arguments, jobid):
+        if self.maxsize == 0 or 0 < self.qsize() < self.maxsize:
+            merge(algorithm_entry, files, arguments, jobid)
+            self[jobid] = algorithm_entry
+        else:
+            raise PGF_JobQueue_isFull_Error 
+
+
+    # @returns the number of jobs in the queue 
+    def qsize(self):
+        return self.__len__()
+
+
+    # Removes a job from the queue
+    # @param jobid string containing the job identifier
+    # @returns string either OK or that the job can't be found
+    def task_done(self, jobid):
+        if self.has_key(jobid):
+            job = self.pop(jobid)
+            #self.dump()  # Really necessary
+            return "OK"
+        else:
+            return "Job queue does not have job ID=%s" % jobid
+
+
+    # Dumps the queue to XML file
+    # @param filename string of the file to which to dump the queue
+    def dump(self, filename=QFILE):
+        q = """<?xml version="1.0" encoding="UTF-8"?>\n"""
+        root = ET.Element("generate-queue")
+        for jobid, job in self.items():
+            root.append(job)
+        fd = open(filename, 'w')
+        fd.write(q + ET.tostring(root))
+        fd.close()
+
+
+    # Loads the queue from XML file
+    # @param filename string of the file from which to load the queue
+    def load(self, filename=QFILE):
+        from xml.parsers.expat import ExpatError
+        if os.path.isfile(filename):
+            try:
+                elems =  ET.parse(filename).getroot()
+            except ExpatError:
+                return  # queue is probably empty, just ignore
+            for elem in elems.getchildren():
+                self[elem.get('jobid')] = elem
 
 
 ## Adds Elements containing files and arguments to the message.
 # @param algorithm Element in a \ref rave_pgf_registry.PGF_Registry instance.
 # @param files list of input files
 # @param arguments list of arguments
-# @param jobid int unique ID of that job.
-# @param priority int, where lower values denote higher priority. If there are
+# @param jobid string unique ID of that job.
 # several Elements in the queue with the same priority, they will be retrieved
 # in alphabetical order, according to the tag (algorithm) names.
-def merge(algorithm, files, arguments, jobid, priority):
+def merge(algorithm, files, arguments, jobid):
     algorithm.append(List2Element(files, "files"))
     algorithm.append(List2Element(arguments, "args"))
-    algorithm.set("priority", str(priority))
-    algorithm.set("jobid", str(jobid))
+    algorithm.set("jobid", jobid)
 
 
 ## Convenience function for accessing files and arguments from a message.
@@ -54,7 +124,6 @@ def merge(algorithm, files, arguments, jobid, priority):
 def split(elem):
     files = Element2List(elem, "files")
     args = Element2List(elem, "args")
-    del elem.attrib["priority"]  # Don't need this any more...
     return elem, files, args
 
 
@@ -74,42 +143,11 @@ def List2Element(inlist, tagname):
 # @return list
 def Element2List(elem, tagname):
     e = elem.find(tagname)
-    e.tag = 'params'  # xmlrpc.loads won't accept any other tagname.
-    return list(xmlrpclib.loads(ET.tostring(e))[0])
-    
-
-## Dumps the queue to default XML file. This function should be called by atexit
-# for saving the server's queue to file in case the server's shut down before
-# the queue is emptied.
-# @param queue \ref Queue.PriorityQueue used by \ref rave_pgf.RavePGF
-# @return nothing
-def dump_queue(queue):
-    q = """<?xml version="1.0" encoding="UTF-8"?>\n"""
-    root = ET.Element("generate-queue")
-    while queue.qsize() > 0:
-        prio, job = queue.get()
-        root.append(job)
-        queue.task_done()
-    fd = open(QFILE, 'w')
-    fd.write(q + ET.tostring(root))
-    fd.close()
-
-
-## Loads the queue that's been saved to file.
-# @param queue \ref Queue.PriorityQueue used by \ref rave_pgf.RavePGF
-# @param filename string of the dumped job queue.
-# @param priority int, defaults to 0. This priority overrides that in the queue
-# read from file.
-# @return nothing
-def load_queue(queue, filename=QFILE, priority=0):
-    from xml.parsers.expat import ExpatError
-    if os.path.isfile(filename):
-        try:
-            elems =  ET.parse(filename).getroot()
-        except ExpatError:
-            return  # queue is probably empty, just ignore
-        for elem in elems.getchildren():
-            queue.put((priority, elem))
+    tag = e.tag
+    e.tag = 'params'  # xmlrpc.loads won't accept any other tagname. Hack...
+    l = list(xmlrpclib.loads(ET.tostring(e))[0])
+    e.tag = tag       # put back original tag
+    return l 
 
 
 if __name__ == "__main__":
