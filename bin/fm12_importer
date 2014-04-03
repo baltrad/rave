@@ -28,7 +28,8 @@ from rave_dom import observation
 import fm12_importer
 import pyinotify
 
-MASK = pyinotify.IN_CLOSE_WRITE
+MASK = pyinotify.IN_CLOSE_WRITE | pyinotify.IN_MOVED_TO
+
 sys.path.append(os.path.abspath(__file__))
 
 def Usage(brief=True,doexit=False):
@@ -81,16 +82,23 @@ def init_logger(logger, logfile, loglevel, daemon):
 class NotifierListener(pyinotify.ProcessEvent):
   ## Initializer
   # @param options variable options list
-  def __init__(self, importer):
-    print "CONSTRUCTOR"
+  def __init__(self, importer, logger=None):
     self.importer = importer
+    self.logger = logger
 
-  ## Inherited from pyinotify
+  ## Inherited from pyinotify. Reacts on when file is created and written
   # @param event object containing a path, probably ...
   def process_IN_CLOSE_WRITE(self, event):
+    if self.logger != None:
+      self.logger.debug("process_IN_CLOSE_WRITE")
     self.importer.import_file(event.pathname)
 
-
+  ## Inherited from pyinotify. Reacts on renaming.
+  # @param event object containg path
+  def process_IN_MOVED_TO(self, event):
+    if self.logger != None:
+      self.logger.debug("process_IN_MOVED_TO")
+    self.importer.import_file(event.pathname)
 
 if __name__ == "__main__":
   optlist = []
@@ -188,10 +196,15 @@ if __name__ == "__main__":
     importer.catchup()
 
     wm = pyinotify.WatchManager()
-    notifier = pyinotify.Notifier(wm, NotifierListener(importer))
+    notifier = pyinotify.Notifier(wm, NotifierListener(importer, logger))
     # Only act on closed files, or whatever's been moved into in_dir
     wm.add_watch(importer.monitored_dir, MASK)
-    notifier.loop(daemonize=True, pid_file=importer.pidfile)
+    try:
+      notifier.loop(daemonize=True, pid_file=importer.pidfile)
+    except Exception,e:
+      logger.exception("Caught exception when running notifier loop %s"%`e.__str__()`)
+    except SystemExit,e:
+      logger.exception("Caught SystemExit when running notifier loop %s"%`e.__str__()`)
   elif len(args) > 0 and args[0] == "kill":
     importer.killme()
     sys.exit()

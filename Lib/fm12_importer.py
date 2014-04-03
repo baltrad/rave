@@ -90,7 +90,8 @@ class fm12_importer(object):
               self.import_file(fstr)
               if self.janitor:
                 try:
-                  os.unlink(fstr)
+                  if os.path.exists(fstr):
+                    os.unlink(fstr)
                 except:
                   self._logger.exception("Failed to remove '%s'")
         if not self.janitor:
