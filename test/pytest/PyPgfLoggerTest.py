@@ -47,7 +47,7 @@ class PyPgfLoggerTest(unittest.TestCase):
                                                                   self.PORT, self.LFILE))
         client = rave_pgf_logger.rave_pgf_logger_client(port=self.PORT)
         client.info(self.MSG)
-        time.sleep(0.1)
+        time.sleep(2.0)
 
     def testLoggerB(self):
         fd = open(self.LFILE)
