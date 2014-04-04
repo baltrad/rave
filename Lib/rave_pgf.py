@@ -220,6 +220,7 @@ class RavePGF():
     jobid = self._jobid
     try:
       # Verify algorithm is registered
+      algorithm = algorithm.lower()
       algorithm_entry = copy(self._algorithm_registry.find(algorithm))
       if not algorithm_entry:
         raise LookupError('Algorithm "%s" not in registry' % algorithm)
