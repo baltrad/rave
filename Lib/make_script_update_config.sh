@@ -41,6 +41,11 @@ if [ -n "$PGF_PORT" ]; then
   sed -i "s/^PGF_PORT.*/PGF_PORT = $PGF_PORT/g" "$1"
 fi
 
+if [ -n "$LOGPORT" ]; then
+  sed -i "s/^LOGPORT.*/LOGPORT = $LOGPORT/g" "$1"
+fi
+
+
 if [ -n "$DEX_SPOE" ]; then
   sed -i "s/^DEX_SPOE.*/DEX_SPOE = \"http:\/\/$DEX_SPOE\/BaltradDex\"/g" "$1"
 fi
