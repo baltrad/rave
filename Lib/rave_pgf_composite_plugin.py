@@ -224,9 +224,8 @@ def generate(files, arguments):
     if eval(args["ctfilter"]):
       ret = rave_ctfilter.ctFilter(result, quantity)
 
-  logger.info("Trying the gra correction")
   # Apply gra correction coefficients
-  if True: #args.has_key("applygra"):
+  if args.has_key("applygra"):
     try:
       t = args["time"]
       d = args["date"]
