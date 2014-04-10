@@ -40,6 +40,11 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #define RAVE_ODIM_VERSION_2_1_STR "ODIM_H5/V2_1"
 
 /**
+ * ODIM Version string 2.2
+ */
+#define RAVE_ODIM_VERSION_2_2_STR "ODIM_H5/V2_2"
+
+/**
  * ODIM H5 rad version string 2.0
  */
 #define RAVE_ODIM_H5RAD_VERSION_2_0_STR "H5rad 2.0"
@@ -48,6 +53,12 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * ODIM H5 rad version string 2.1
  */
 #define RAVE_ODIM_H5RAD_VERSION_2_1_STR "H5rad 2.1"
+
+/**
+ * ODIM H5 rad version string 2.2
+ */
+#define RAVE_ODIM_H5RAD_VERSION_2_2_STR "H5rad 2.2"
+
 
 /**
  * Attribute function called when an attribute is found.

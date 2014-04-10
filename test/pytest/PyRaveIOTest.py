@@ -295,13 +295,13 @@ class PyRaveIOTest(unittest.TestCase):
     nodelist.selectAll()
     nodelist.fetch()
     
-    self.assertEquals("ODIM_H5/V2_1", nodelist.getNode("/Conventions").data())
+    self.assertEquals("ODIM_H5/V2_2", nodelist.getNode("/Conventions").data())
     # What
     self.assertEquals("100000", nodelist.getNode("/what/time").data())
     self.assertEquals("20100101", nodelist.getNode("/what/date").data())
     self.assertEquals("PLC:123", nodelist.getNode("/what/source").data())
     self.assertEquals("IMAGE", nodelist.getNode("/what/object").data())
-    self.assertEquals("H5rad 2.1", nodelist.getNode("/what/version").data())
+    self.assertEquals("H5rad 2.2", nodelist.getNode("/what/version").data())
     
     #Where
     self.assertEquals("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", nodelist.getNode("/where/projdef").data())
@@ -445,13 +445,13 @@ class PyRaveIOTest(unittest.TestCase):
     nodelist.selectAll()
     nodelist.fetch()
     
-    self.assertEquals("ODIM_H5/V2_1", nodelist.getNode("/Conventions").data())
+    self.assertEquals("ODIM_H5/V2_2", nodelist.getNode("/Conventions").data())
     # What
     self.assertEquals("100000", nodelist.getNode("/what/time").data())
     self.assertEquals("20100101", nodelist.getNode("/what/date").data())
     self.assertEquals("PLC:123", nodelist.getNode("/what/source").data())
     self.assertEquals("IMAGE", nodelist.getNode("/what/object").data())
-    self.assertEquals("H5rad 2.1", nodelist.getNode("/what/version").data())
+    self.assertEquals("H5rad 2.2", nodelist.getNode("/what/version").data())
     
     #Where
     self.assertEquals("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", nodelist.getNode("/where/projdef").data())
@@ -596,13 +596,13 @@ class PyRaveIOTest(unittest.TestCase):
     nodelist.selectAll()
     nodelist.fetch()
     
-    self.assertEquals("ODIM_H5/V2_1", nodelist.getNode("/Conventions").data())
+    self.assertEquals("ODIM_H5/V2_2", nodelist.getNode("/Conventions").data())
     # What
     self.assertEquals("100000", nodelist.getNode("/what/time").data())
     self.assertEquals("20091010", nodelist.getNode("/what/date").data())
     self.assertEquals("PLC:123", nodelist.getNode("/what/source").data())
     self.assertEquals("CVOL", nodelist.getNode("/what/object").data())
-    self.assertEquals("H5rad 2.1", nodelist.getNode("/what/version").data())
+    self.assertEquals("H5rad 2.2", nodelist.getNode("/what/version").data())
     
     #Where
     self.assertEquals("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", nodelist.getNode("/where/projdef").data())
@@ -713,14 +713,14 @@ class PyRaveIOTest(unittest.TestCase):
     nodelist.selectAll()
     nodelist.fetch()
     
-    self.assertEquals("ODIM_H5/V2_1", nodelist.getNode("/Conventions").data())
+    self.assertEquals("ODIM_H5/V2_2", nodelist.getNode("/Conventions").data())
 
     # What
     self.assertEquals("100000", nodelist.getNode("/what/time").data())
     self.assertEquals("20091010", nodelist.getNode("/what/date").data())
     self.assertEquals("PLC:123", nodelist.getNode("/what/source").data())
     self.assertEquals("IMAGE", nodelist.getNode("/what/object").data())
-    self.assertEquals("H5rad 2.1", nodelist.getNode("/what/version").data())
+    self.assertEquals("H5rad 2.2", nodelist.getNode("/what/version").data())
     
     #Where
     self.assertEquals("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", nodelist.getNode("/where/projdef").data())
@@ -933,13 +933,13 @@ class PyRaveIOTest(unittest.TestCase):
     nodelist.selectAll()
     nodelist.fetch()
     
-    self.assertEquals("ODIM_H5/V2_1", nodelist.getNode("/Conventions").data())
+    self.assertEquals("ODIM_H5/V2_2", nodelist.getNode("/Conventions").data())
     # What
     self.assertEquals("100000", nodelist.getNode("/what/time").data())
     self.assertEquals("20091010", nodelist.getNode("/what/date").data())
     self.assertEquals("PLC:123", nodelist.getNode("/what/source").data())
     self.assertEquals("PVOL", nodelist.getNode("/what/object").data())
-    self.assertEquals("H5rad 2.1", nodelist.getNode("/what/version").data())
+    self.assertEquals("H5rad 2.2", nodelist.getNode("/what/version").data())
     
     #Where
     self.assertAlmostEquals(12.0, nodelist.getNode("/where/lon").data(), 4)
@@ -1140,7 +1140,7 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEquals("20090501", nodelist.getNode("/what/date").data())
     self.assertEquals("WMO:02606,RAD:SE50", nodelist.getNode("/what/source").data())
     self.assertEquals("SCAN", nodelist.getNode("/what/object").data())
-    self.assertEquals("H5rad 2.1", nodelist.getNode("/what/version").data())
+    self.assertEquals("H5rad 2.2", nodelist.getNode("/what/version").data())
     self.assertAlmostEquals(209.0, nodelist.getNode("/where/height").data(), 4)
     self.assertAlmostEquals(12.8544, nodelist.getNode("/where/lon").data(), 4)
     self.assertAlmostEquals(56.3675, nodelist.getNode("/where/lat").data(), 4)
@@ -1320,7 +1320,7 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEquals("SCAN", nodelist.getNode("/what/object").data())
     self.assertEquals("WMO:02606,RAD:SE50", nodelist.getNode("/what/source").data())
     self.assertEquals("120000", nodelist.getNode("/what/time").data())
-    self.assertEquals("H5rad 2.1", nodelist.getNode("/what/version").data())
+    self.assertEquals("H5rad 2.2", nodelist.getNode("/what/version").data())
     self.assertAlmostEquals(209, nodelist.getNode("/where/height").data(), 4)
     self.assertAlmostEquals(56.3675, nodelist.getNode("/where/lat").data(), 4)
     self.assertAlmostEquals(12.8544, nodelist.getNode("/where/lon").data(), 4)
@@ -1711,7 +1711,7 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEquals("VP", nodelist.getNode("/what/object").data())
     self.assertEquals("PLC:1234", nodelist.getNode("/what/source").data())
     self.assertEquals("120000", nodelist.getNode("/what/time").data())
-    self.assertEquals("H5rad 2.1", nodelist.getNode("/what/version").data())
+    self.assertEquals("H5rad 2.2", nodelist.getNode("/what/version").data())
     
     self.assertAlmostEquals(100.0, nodelist.getNode("/where/height").data(), 4)
     self.assertAlmostEquals(15.0, nodelist.getNode("/where/lat").data(), 4)

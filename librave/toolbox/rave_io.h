@@ -36,7 +36,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 typedef enum RaveIO_ODIM_Version {
   RaveIO_ODIM_Version_UNDEFINED = -1, /**< Undefined */
   RaveIO_ODIM_Version_2_0 = 0,        /**< Previous ODIM version */
-  RaveIO_ODIM_Version_2_1 = 1         /**< The default version */
+  RaveIO_ODIM_Version_2_1 = 1,        /**< Previous ODIM version */
+  RaveIO_ODIM_Version_2_2 = 2         /**< The default version */
 } RaveIO_ODIM_Version;
 
 /**
@@ -45,7 +46,8 @@ typedef enum RaveIO_ODIM_Version {
 typedef enum RaveIO_ODIM_H5rad_Version {
   RaveIO_ODIM_H5rad_Version_UNDEFINED = -1, /**< undefined */
   RaveIO_ODIM_H5rad_Version_2_0 = 0,  /**< Previous ODIM version */
-  RaveIO_ODIM_H5rad_Version_2_1 = 1   /**< The default version */
+  RaveIO_ODIM_H5rad_Version_2_1 = 1,  /**< Previous ODIM version */
+  RaveIO_ODIM_H5rad_Version_2_2 = 2   /**< The default version */
 } RaveIO_ODIM_H5rad_Version;
 
 /**

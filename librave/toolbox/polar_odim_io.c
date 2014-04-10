@@ -867,7 +867,7 @@ int PolarOdimIO_fillScan(PolarOdimIO_t* self, PolarScan_t* scan, HL_NodeList* no
   RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
 
   if (!RaveHL_hasNodeByName(nodelist, "/Conventions")) {
-    if (!RaveHL_createStringValue(nodelist, RAVE_ODIM_VERSION_2_1_STR, "/Conventions")) {
+    if (!RaveHL_createStringValue(nodelist, RAVE_ODIM_VERSION_2_2_STR, "/Conventions")) {
       goto done;
     }
   }
@@ -876,7 +876,7 @@ int PolarOdimIO_fillScan(PolarOdimIO_t* self, PolarScan_t* scan, HL_NodeList* no
   if (attributes != NULL) {
     const char* objectType = RaveTypes_getStringFromObjectType(Rave_ObjectType_SCAN);
     if (!RaveUtilities_addStringAttributeToList(attributes, "what/object", objectType) ||
-        !RaveUtilities_replaceStringAttributeInList(attributes, "what/version", RAVE_ODIM_H5RAD_VERSION_2_1_STR)) {
+        !RaveUtilities_replaceStringAttributeInList(attributes, "what/version", RAVE_ODIM_H5RAD_VERSION_2_2_STR)) {
       RAVE_ERROR0("Failed to add what/object or what/version to attributes");
       goto done;
     }
@@ -953,7 +953,7 @@ int PolarOdimIO_fillVolume(PolarOdimIO_t* self, PolarVolume_t* volume, HL_NodeLi
   RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
 
   if (!RaveHL_hasNodeByName(nodelist, "/Conventions")) {
-    if (!RaveHL_createStringValue(nodelist, RAVE_ODIM_VERSION_2_1_STR, "/Conventions")) {
+    if (!RaveHL_createStringValue(nodelist, RAVE_ODIM_VERSION_2_2_STR, "/Conventions")) {
       goto done;
     }
   }
@@ -962,7 +962,7 @@ int PolarOdimIO_fillVolume(PolarOdimIO_t* self, PolarVolume_t* volume, HL_NodeLi
   if (attributes != NULL) {
     const char* objectType = RaveTypes_getStringFromObjectType(Rave_ObjectType_PVOL);
     if (!RaveUtilities_addStringAttributeToList(attributes, "what/object", objectType) ||
-        !RaveUtilities_replaceStringAttributeInList(attributes, "what/version", RAVE_ODIM_H5RAD_VERSION_2_1_STR)) {
+        !RaveUtilities_replaceStringAttributeInList(attributes, "what/version", RAVE_ODIM_H5RAD_VERSION_2_2_STR)) {
       RAVE_ERROR0("Failed to add what/object or what/version to attributes");
       goto done;
     }
