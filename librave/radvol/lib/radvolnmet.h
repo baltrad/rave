@@ -28,6 +28,7 @@ along with Radvol-QC.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_object.h"
 #include "polarvolume.h"
 #include "polarscan.h"
+#include "radvol.h"
 
 /**
  * Defines a RadvolNmet
@@ -42,18 +43,20 @@ extern RaveCoreObjectType RadvolNmet_TYPE;
 /**
  * Runs algorithm for non-meteorological echoes removal and quality characterization with parameters from XML file
  * @param scan - input polar scan
+ * @param params - struct containing algorithm-specific parameter settings
  * @param paramFileName - name of XML file with parameters (otherwise default values are applied)
  * @returns 1 upon success, otherwise 0
  */
-int RadvolNmet_nmetRemoval_scan(PolarScan_t* scan, char* paramFileName);
+int RadvolNmet_nmetRemoval_scan(PolarScan_t* scan, Radvol_params_t* params, char* paramFileName);
 
 /**
  * Runs algorithm for non-meteorological echoes removal and quality characterization with parameters from XML file
  * @param pvol - input polar volume
+ * @param params - struct containing algorithm-specific parameter settings
  * @param paramFileName - name of XML file with parameters (otherwise default values are applied)
  * @returns 1 upon success, otherwise 0
  */
-int RadvolNmet_nmetRemoval_pvol(PolarVolume_t* pvol, char* paramFileName);
+int RadvolNmet_nmetRemoval_pvol(PolarVolume_t* pvol, Radvol_params_t* params, char* paramFileName);
 
 #endif	/* RADVOLNMET_H */
 

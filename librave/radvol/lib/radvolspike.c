@@ -128,16 +128,34 @@ static void RadvolSpike_destructor(RaveCoreObject* obj)
 /**
  * Reads algorithm parameters if xml file exists
  * @param self - self
+ * @param params - struct containing algorithm-specific parameter settings
  * @param paramFileName - name of xml file with parameters
  * @returns 1 if all parameters were read, otherwise 0
  */
-static int RadvolSpikeInternal_readParams(RadvolSpike_t* self, char* paramFileName)
+static int RadvolSpikeInternal_readParams(RadvolSpike_t* self, Radvol_params_t* params, char* paramFileName)
 {
   int result = 0;
   int IsDefaultChild;
   SimpleXmlNode_t* node = NULL;
 
-  if ((paramFileName != NULL) && ((node = Radvol_getFactorChild(self->radvol, paramFileName, "SPIKE_QIOn", &IsDefaultChild)) != NULL)) {
+  if (paramFileName == NULL) {
+    self->radvol->QCOn =     params->ATT_QCOn;
+    self->radvol->QIOn =     params->ATT_QIOn;
+    self->radvol->DBZHtoTH = params->DBZHtoTH;
+    self->SPIKE_QI =         params->SPIKE_QI;
+    self->SPIKE_QIUn =       params->SPIKE_QIUn;
+    self->SPIKE_ACovFrac =   params->SPIKE_ACovFrac;
+    self->SPIKE_AAzim =      params->SPIKE_AAzim;
+    self->SPIKE_AVarAzim =   params->SPIKE_AVarAzim;
+    self->SPIKE_ABeam =      params->SPIKE_ABeam;
+    self->SPIKE_AVarBeam =   params->SPIKE_AVarBeam;
+    self->SPIKE_AFrac =      params->SPIKE_AFrac;
+    self->SPIKE_BDiff =      params->SPIKE_BDiff;
+    self->SPIKE_BAzim =      params->SPIKE_BAzim;
+    self->SPIKE_BFrac =      params->SPIKE_BFrac;
+    result = 1;
+  }
+  else if ((paramFileName != NULL) && ((node = Radvol_getFactorChild(self->radvol, paramFileName, "SPIKE_QIOn", &IsDefaultChild)) != NULL)) {
     result = 1;
     result = RAVEMIN(result, Radvol_getParValueInt(node,    "SPIKE_QIOn", &self->radvol->QIOn));
     result = RAVEMIN(result, Radvol_getParValueInt(node,    "SPIKE_QCOn", &self->radvol->QCOn));
@@ -416,7 +434,7 @@ error:
 
 /*@{ Interface functions */
 
-int RadvolSpike_spikeRemoval_scan(PolarScan_t* scan, char* paramFileName)
+int RadvolSpike_spikeRemoval_scan(PolarScan_t* scan, Radvol_params_t* params, char* paramFileName)
 {
   RadvolSpike_t* self = RAVE_OBJECT_NEW(&RadvolSpike_TYPE);
   int retval = 0;
@@ -427,7 +445,7 @@ int RadvolSpike_spikeRemoval_scan(PolarScan_t* scan, char* paramFileName)
     return retval;
   }
   Radvol_getName(self->radvol, PolarScan_getSource(scan));
-  if (paramFileName == NULL || !RadvolSpikeInternal_readParams(self, paramFileName)) {
+  if (paramFileName == NULL || !RadvolSpikeInternal_readParams(self, params, paramFileName)) {
     RAVE_WARNING0("Default parameter values");
   }
   if (self->radvol->QCOn || self->radvol->QIOn) {
@@ -462,7 +480,7 @@ done:
   return retval;
 }
 
-int RadvolSpike_spikeRemoval_pvol(PolarVolume_t* pvol, char* paramFileName)
+int RadvolSpike_spikeRemoval_pvol(PolarVolume_t* pvol, Radvol_params_t* params, char* paramFileName)
 {
   RadvolSpike_t* self = RAVE_OBJECT_NEW(&RadvolSpike_TYPE);
   int retval = 0;
@@ -473,7 +491,7 @@ int RadvolSpike_spikeRemoval_pvol(PolarVolume_t* pvol, char* paramFileName)
     return retval;
   }
   Radvol_getName(self->radvol, PolarVolume_getSource(pvol));
-  if (paramFileName == NULL || !RadvolSpikeInternal_readParams(self, paramFileName)) {
+  if (paramFileName == NULL || !RadvolSpikeInternal_readParams(self, params, paramFileName)) {
     RAVE_WARNING0("Default parameter values");
   }
   if (self->radvol->QCOn || self->radvol->QIOn) {

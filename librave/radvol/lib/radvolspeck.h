@@ -28,6 +28,7 @@ along with Radvol-QC.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_object.h"
 #include "polarvolume.h"
 #include "polarscan.h"
+#include "radvol.h"
 
 /**
  * Defines a RadvolSpeck
@@ -42,17 +43,19 @@ extern RaveCoreObjectType RadvolSpeck_TYPE;
 /**
  * Runs algorithm for speck removal and quality characterization with parameters from XML file
  * @param scan - input polar scan
+ * @param params - struct containing algorithm-specific parameter settings
  * @param paramFileName - name of XML file with parameters (otherwise default values are applied)
  * @returns 1 upon success, otherwise 0
  */
-int RadvolSpeck_speckRemoval_scan(PolarScan_t* scan, char* paramFileName);
+int RadvolSpeck_speckRemoval_scan(PolarScan_t* scan, Radvol_params_t* params, char* paramFileName);
 
 /**
  * Runs algorithm for speck removal and quality characterization with parameters from XML file
  * @param pvol - input polar volume
+ * @param params - struct containing algorithm-specific parameter settings
  * @param paramFileName - name of XML file with parameters (otherwise default values are applied)
  * @returns 1 upon success, otherwise 0
  */
-int RadvolSpeck_speckRemoval_pvol(PolarVolume_t* pvol, char* paramFileName);
+int RadvolSpeck_speckRemoval_pvol(PolarVolume_t* pvol, Radvol_params_t* params, char* paramFileName);
 
 #endif

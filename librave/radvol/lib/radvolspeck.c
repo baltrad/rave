@@ -108,16 +108,31 @@ static void RadvolSpeck_destructor(RaveCoreObject* obj)
 /**
  * Reads algorithm parameters if xml file exists
  * @param self - self
+ * @param params - struct containing algorithm-specific parameter settings
  * @param paramFileName - name of xml file with parameters
  * @returns 1 if all parameters were read, otherwise 0
  */
-static int RadvolSpeckInternal_readParams(RadvolSpeck_t* self, char* paramFileName)
+static int RadvolSpeckInternal_readParams(RadvolSpeck_t* self, Radvol_params_t* params, char* paramFileName)
 {
   int result = 0;
   int IsDefaultChild;
   SimpleXmlNode_t* node = NULL;
-  
-  if ((paramFileName != NULL) && ((node = Radvol_getFactorChild(self->radvol, paramFileName, "SPECK_QIOn", &IsDefaultChild)) != NULL)) {
+
+  if (paramFileName == NULL) {
+    self->radvol->QCOn =     params->ATT_QCOn;
+    self->radvol->QIOn =     params->ATT_QIOn;
+    self->radvol->DBZHtoTH = params->DBZHtoTH;
+    self->SPECK_QI =         params->SPECK_QI;
+    self->SPECK_QIUn =       params->SPECK_QIUn;
+    self->SPECK_AGrid =      params->SPECK_AGrid;
+    self->SPECK_ANum =       params->SPECK_ANum;
+    self->SPECK_AStep =      params->SPECK_AStep;
+    self->SPECK_BGrid =      params->SPECK_BGrid;
+    self->SPECK_BNum =       params->SPECK_BNum;
+    self->SPECK_BStep =      params->SPECK_BStep;
+    result = 1;
+  }
+  else if ((paramFileName != NULL) && ((node = Radvol_getFactorChild(self->radvol, paramFileName, "SPECK_QIOn", &IsDefaultChild)) != NULL)) {
     result = 1;
     result = RAVEMIN(result, Radvol_getParValueInt(node,    "SPECK_QIOn", &self->radvol->QIOn));
     result = RAVEMIN(result, Radvol_getParValueInt(node,    "SPECK_QCOn", &self->radvol->QCOn));
@@ -339,7 +354,7 @@ error:
 
 /*@{ Interface functions */
 
-int RadvolSpeck_speckRemoval_scan(PolarScan_t* scan, char* paramFileName)
+int RadvolSpeck_speckRemoval_scan(PolarScan_t* scan, Radvol_params_t* params, char* paramFileName)
 {
   RadvolSpeck_t* self = RAVE_OBJECT_NEW(&RadvolSpeck_TYPE);
   int retval = 0;
@@ -350,7 +365,7 @@ int RadvolSpeck_speckRemoval_scan(PolarScan_t* scan, char* paramFileName)
     return retval;
   }
   Radvol_getName(self->radvol, PolarScan_getSource(scan));
-  if (paramFileName == NULL || !RadvolSpeckInternal_readParams(self, paramFileName)) {
+  if (paramFileName == NULL || !RadvolSpeckInternal_readParams(self, params, paramFileName)) {
     RAVE_WARNING0("Default parameter values");
   }
   if (self->radvol->QCOn || self->radvol->QIOn) {
@@ -384,7 +399,7 @@ done:
   return retval;
 }
 
-int RadvolSpeck_speckRemoval_pvol(PolarVolume_t* pvol, char* paramFileName)
+int RadvolSpeck_speckRemoval_pvol(PolarVolume_t* pvol, Radvol_params_t* params, char* paramFileName)
 {
   RadvolSpeck_t* self = RAVE_OBJECT_NEW(&RadvolSpeck_TYPE);
   int retval = 0;
@@ -395,7 +410,7 @@ int RadvolSpeck_speckRemoval_pvol(PolarVolume_t* pvol, char* paramFileName)
     return retval;
   }
   Radvol_getName(self->radvol, PolarVolume_getSource(pvol));
-  if (paramFileName == NULL || !RadvolSpeckInternal_readParams(self, paramFileName)) {
+  if (paramFileName == NULL || !RadvolSpeckInternal_readParams(self, params, paramFileName)) {
     RAVE_WARNING0("Default parameter values");
   }
   if (self->radvol->QCOn || self->radvol->QIOn) {

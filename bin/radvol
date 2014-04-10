@@ -27,6 +27,7 @@ import sys
 import _raveio
 import _radvol
 import _polarvolume, _polarscan
+import rave_radvol_realtime
 
 
 if __name__ == "__main__":
@@ -84,21 +85,23 @@ if __name__ == "__main__":
         print "Input data not SCAN or PVOL. Exiting ..."
         sys.exit(-1)
 
-    if options.att:
-        _radvol.attCorrection(obj)
-        
-    if options.broad:
-        _radvol.broadAssessment(obj)
-    
-    if options.speck:
-        _radvol.speckRemoval(obj)
-        
+    rpars = rave_radvol_realtime.get_options(rio.object) 
+
     if options.spike:
-        _radvol.spikeRemoval(obj)
+        _radvol.spikeRemoval(obj, rpars)
 
     if options.nmet:
-        _radvol.nmetRemoval(obj)
+        _radvol.nmetRemoval(obj, rpars)
 
+    if options.speck:
+        _radvol.speckRemoval(obj, rpars)
+
+    if options.att:
+        _radvol.attCorrection(obj, rpars)
+        
+    if options.broad:
+        _radvol.broadAssessment(obj, rpars)
+    
     if isScan:
         rio.object = obj.getScan(0)
     else:

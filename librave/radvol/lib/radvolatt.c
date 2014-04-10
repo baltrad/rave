@@ -52,8 +52,10 @@ struct _RadvolAtt_t {
 #define ValuesFromWavelength 0
 /** parameter values read from xml file */
 #define ValuesFromXml 1
+/** parameter values from memory, passed from RAVE */
+#define ValuesFromRave 2
 /** no parameter values - error */
-#define NoValues 2
+#define NoValues 3
 
 /*@{ Private functions */
 /**
@@ -121,17 +123,35 @@ static void RadvolAtt_destructor(RaveCoreObject* obj)
 /**
  * Reads algorithm parameters if xml file exists
  * @param self - self
+ * @param params - struct containing algorithm-specific parameter settings
  * @param paramFileName - name of xml file with parameters
  * @returns 1 if all parameters were read, 0 if ATT_a and ATT_b were deduced from wavelength, 2 if ATT_a and ATT_b unknown
  */
-static int RadvolAttInternal_readParams(RadvolAtt_t* self, char* paramFileName)
+static int RadvolAttInternal_readParams(RadvolAtt_t* self, Radvol_params_t* params, char* paramFileName)
 {
-  int result = ValuesFromXml;
+  int result = ValuesFromRave;
   int IsDefaultChild = 1;
   int result_att = 0;
   SimpleXmlNode_t* node = NULL;
   
-  if ((paramFileName != NULL) &&  ((node = Radvol_getFactorChild(self->radvol, paramFileName, "ATT_QIOn", &IsDefaultChild)) != NULL)) {
+  if (paramFileName == NULL) {
+    self->radvol->QCOn =     params->ATT_QCOn;
+    self->radvol->QIOn =     params->ATT_QIOn;
+    self->radvol->DBZHtoTH = params->DBZHtoTH;
+    self->ATT_QI1 =          params->ATT_QI1;
+    self->ATT_QI0 =          params->ATT_QI0;
+    self->ATT_QIUn =         params->ATT_QIUn;
+    self->ATT_ZRa =          params->ATT_ZRa;
+    self->ATT_ZRb =          params->ATT_ZRb;
+    self->ATT_Refl =         params->ATT_Refl;
+    self->ATT_Last =         params->ATT_Last;
+    self->ATT_Sum =          params->ATT_Sum;
+    self->ATT_a =            params->ATT_a;
+    self->ATT_b =            params->ATT_b;
+    result_att = 1;
+  }
+  else if ((paramFileName != NULL) &&  ((node = Radvol_getFactorChild(self->radvol, paramFileName, "ATT_QIOn", &IsDefaultChild)) != NULL)) {
+    result = ValuesFromXml;
     result = RAVEMIN(result, Radvol_getParValueInt(node,    "ATT_QIOn", &self->radvol->QIOn));
     result = RAVEMIN(result, Radvol_getParValueInt(node,    "ATT_QCOn", &self->radvol->QCOn));
     result = RAVEMIN(result, Radvol_getParValueInt(node,    "DBZHtoTH", &self->radvol->DBZHtoTH));
@@ -258,7 +278,7 @@ static int RadvolAttInternal_attCorrection(RadvolAtt_t* self)
 
 /*@{ Interface functions */
 
-int RadvolAtt_attCorrection_scan(PolarScan_t* scan, char* paramFileName)
+int RadvolAtt_attCorrection_scan(PolarScan_t* scan, Radvol_params_t* params, char* paramFileName)
 {
   RadvolAtt_t* self = RAVE_OBJECT_NEW(&RadvolAtt_TYPE);
   int retval = 0;
@@ -271,11 +291,11 @@ int RadvolAtt_attCorrection_scan(PolarScan_t* scan, char* paramFileName)
   }
   Radvol_getName(self->radvol, PolarScan_getSource(scan));
   Radvol_getAttrDouble_scan(scan, "how/wavelength", &self->radvol->wavelength);
-  paramsAtt = RadvolAttInternal_readParams(self, paramFileName);
+  paramsAtt = RadvolAttInternal_readParams(self, params, paramFileName);
   if (paramsAtt == ValuesFromWavelength) {
     RAVE_WARNING0("Default parameter values for wavelength");
   } else if (paramsAtt == NoValues) {
-    RAVE_ERROR0("Processing stopped beacuse of lack of correct params in xml file and how/wavelength in input file");
+    RAVE_ERROR0("Processing stopped because of lack of correct params in xml file and how/wavelength in input file");
     goto done;
   }
   if (self->radvol->QCOn || self->radvol->QIOn) {
@@ -309,7 +329,7 @@ done:
   return retval;
 }
 
-int RadvolAtt_attCorrection_pvol(PolarVolume_t* pvol, char* paramFileName)
+int RadvolAtt_attCorrection_pvol(PolarVolume_t* pvol, Radvol_params_t* params, char* paramFileName)
 {
   RadvolAtt_t* self = RAVE_OBJECT_NEW(&RadvolAtt_TYPE);
   int retval = 0;
@@ -322,11 +342,11 @@ int RadvolAtt_attCorrection_pvol(PolarVolume_t* pvol, char* paramFileName)
   }
   Radvol_getName(self->radvol, PolarVolume_getSource(pvol));
   Radvol_getAttrDouble_pvol(pvol, "how/wavelength", &self->radvol->wavelength);
-  paramsAtt = RadvolAttInternal_readParams(self, paramFileName);
+  paramsAtt = RadvolAttInternal_readParams(self, params, paramFileName);
   if (paramsAtt == ValuesFromWavelength) {
     RAVE_WARNING0("Default parameter values for wavelength");
   } else if (paramsAtt == NoValues) {
-    RAVE_ERROR0("Processing stopped beacuse of lack of correct params in xml file and how/wavelength in input file");
+    RAVE_ERROR0("Processing stopped because of lack of correct params in xml file and how/wavelength in input file");
     goto done;
   }
   if (self->radvol->QCOn || self->radvol->QIOn) {
