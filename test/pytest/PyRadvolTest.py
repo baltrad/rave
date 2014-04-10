@@ -47,9 +47,10 @@ class PyRadvolTest(unittest.TestCase):
     def testRadvolAttCorrection(self):
         if not _rave.isXmlSupported():
             return
-        import _radvol      
+        import _radvol, rave_radvol_realtime
         pvol = _raveio.open(self.FIXATT).object
-        status = _radvol.attCorrection(pvol)
+        rpars = rave_radvol_realtime.get_options(pvol)
+        status = _radvol.attCorrection(pvol, rpars)
         self.assertTrue(status)
         ref = _raveio.open(self.FIXATTC).object
         myscan = pvol.getScan(0)
@@ -67,9 +68,10 @@ class PyRadvolTest(unittest.TestCase):
     def testRadvolBroadAssessment(self):
         if not _rave.isXmlSupported():
             return
-        import _radvol        
+        import _radvol, rave_radvol_realtime
         pvol = _raveio.open(self.FIXBROAD).object
-        status = _radvol.broadAssessment(pvol)
+        rpars = rave_radvol_realtime.get_options(pvol)
+        status = _radvol.broadAssessment(pvol, rpars)
         self.assertTrue(status)
         ref = _raveio.open(self.FIXBROADC).object
         myscan = pvol.getScan(0)
@@ -87,9 +89,10 @@ class PyRadvolTest(unittest.TestCase):
     def testRadvolNmetRemoval(self):
         if not _rave.isXmlSupported():
             return
-        import _radvol        
+        import _radvol, rave_radvol_realtime
         pvol = _raveio.open(self.FIXNMET).object
-        status = _radvol.nmetRemoval(pvol)
+        rpars = rave_radvol_realtime.get_options(pvol)
+        status = _radvol.nmetRemoval(pvol, rpars)
         self.assertTrue(status)
         ref = _raveio.open(self.FIXNMETC).object
         myscan = pvol.getScan(0)
@@ -107,9 +110,10 @@ class PyRadvolTest(unittest.TestCase):
     def testRadvolSpeckRemoval(self):
         if not _rave.isXmlSupported():
             return
-        import _radvol        
+        import _radvol, rave_radvol_realtime
         pvol = _raveio.open(self.FIXSPECK).object
-        status = _radvol.speckRemoval(pvol)
+        rpars = rave_radvol_realtime.get_options(pvol)
+        status = _radvol.speckRemoval(pvol, rpars)
         self.assertTrue(status)
         ref = _raveio.open(self.FIXSPECKC).object
         myscan = pvol.getScan(0)
@@ -127,9 +131,10 @@ class PyRadvolTest(unittest.TestCase):
     def testRadvolSpikeRemoval(self):
         if not _rave.isXmlSupported():
             return
-        import _radvol        
+        import _radvol, rave_radvol_realtime
         pvol = _raveio.open(self.FIXSPIKE).object
-        status = _radvol.spikeRemoval(pvol)
+        rpars = rave_radvol_realtime.get_options(pvol)
+        status = _radvol.spikeRemoval(pvol, rpars)
         self.assertTrue(status)
         ref = _raveio.open(self.FIXSPIKEC).object
         myscan = pvol.getScan(0)
@@ -147,10 +152,11 @@ class PyRadvolTest(unittest.TestCase):
     def testWrongAttInput(self):
         if not _rave.isXmlSupported():
             return
-        import _radvol        
+        import _radvol, rave_radvol_realtime
         vertical_profile = _raveio.open(self.BADINPUT).object
+        rpars = rave_radvol_realtime.get_options(vertical_profile)
         try:
-            status = _radvol.attCorrection(vertical_profile)
+            status = _radvol.attCorrection(vertical_profile, rpars)
         except AttributeError:
             self.assertTrue(True)
 

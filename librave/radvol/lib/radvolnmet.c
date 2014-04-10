@@ -109,16 +109,31 @@ static void RadvolNmet_destructor(RaveCoreObject* obj)
 /**
  * Reads algorithm parameters if xml file exists
  * @param self - self
+ * @param params - struct containing algorithm-specific parameter settings
  * @param paramFileName - name of xml file with parameters
  * @returns 1 if all parameters were read, otherwise 0
  */
-static int RadvolNmetInternal_readParams(RadvolNmet_t* self, char* paramFileName)
+static int RadvolNmetInternal_readParams(RadvolNmet_t* self, Radvol_params_t* params, char* paramFileName)
 {
   int result = 0;
   int IsDefaultChild;
   SimpleXmlNode_t* node = NULL;
 
-  if ((paramFileName != NULL) && ((node = Radvol_getFactorChild(self->radvol, paramFileName, "NMET_QIOn", &IsDefaultChild)) != NULL)) {
+  if (paramFileName == NULL) {
+      self->radvol->QCOn =     params->ATT_QCOn;
+      self->radvol->QIOn =     params->ATT_QIOn;
+      self->radvol->DBZHtoTH = params->DBZHtoTH;
+      self->NMET_QI =          params->NMET_QI;
+      self->NMET_QIUn =        params->NMET_QIUn;
+      self->NMET_AReflMin =    params->NMET_AReflMin;
+      self->NMET_AReflMax =    params->NMET_AReflMax;
+      self->NMET_AAltMin =     params->NMET_AAltMin;
+      self->NMET_AAltMax =     params->NMET_AAltMax;
+      self->NMET_ADet =        params->NMET_ADet;
+      self->NMET_BAlt =        params->NMET_BAlt;
+      result = 1;
+  }
+  else if ((paramFileName != NULL) && ((node = Radvol_getFactorChild(self->radvol, paramFileName, "NMET_QIOn", &IsDefaultChild)) != NULL)) {
     result = 1;
     result = RAVEMIN(result, Radvol_getParValueInt(node,    "NMET_QIOn", &self->radvol->QIOn));
     result = RAVEMIN(result, Radvol_getParValueInt(node,    "NMET_QCOn", &self->radvol->QCOn));
@@ -220,7 +235,7 @@ static void RadvolNmetInternal_nmetRemoval(RadvolNmet_t* self) {
 
 /*@{ Interface functions */
 
-int RadvolNmet_nmetRemoval_scan(PolarScan_t* scan, char* paramFileName)
+int RadvolNmet_nmetRemoval_scan(PolarScan_t* scan, Radvol_params_t* params, char* paramFileName)
 {
   RadvolNmet_t* self = RAVE_OBJECT_NEW(&RadvolNmet_TYPE);
   int retval = 0;
@@ -231,7 +246,7 @@ int RadvolNmet_nmetRemoval_scan(PolarScan_t* scan, char* paramFileName)
     return retval;
   }
   Radvol_getName(self->radvol, PolarScan_getSource(scan));
-  if (paramFileName == NULL || !RadvolNmetInternal_readParams(self, paramFileName)) {
+  if (paramFileName == NULL || !RadvolNmetInternal_readParams(self, params, paramFileName)) {
     RAVE_WARNING0("Default parameter values");
   }
   if (self->radvol->QCOn || self->radvol->QIOn) {
@@ -263,7 +278,7 @@ done:
   return retval;
 }
 
-int RadvolNmet_nmetRemoval_pvol(PolarVolume_t* pvol, char* paramFileName)
+int RadvolNmet_nmetRemoval_pvol(PolarVolume_t* pvol, Radvol_params_t* params, char* paramFileName)
 {
   RadvolNmet_t* self = RAVE_OBJECT_NEW(&RadvolNmet_TYPE);
   int retval = 0;
@@ -274,7 +289,7 @@ int RadvolNmet_nmetRemoval_pvol(PolarVolume_t* pvol, char* paramFileName)
     return retval;
   }
   Radvol_getName(self->radvol, PolarVolume_getSource(pvol));
-  if (paramFileName == NULL || !RadvolNmetInternal_readParams(self, paramFileName)) {
+  if (paramFileName == NULL || !RadvolNmetInternal_readParams(self, params, paramFileName)) {
     RAVE_WARNING0("Default parameter values");
   }
   if (self->radvol->QCOn || self->radvol->QIOn) {

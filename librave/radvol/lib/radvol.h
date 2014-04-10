@@ -35,7 +35,7 @@ along with Radvol-QC.  If not, see <http://www.gnu.org/licenses/>.
 #define QI_GOOD 1.0
 /** the worst QI value */
 #define QI_BAD 0.0
-/** value for no data */
+/** value for double no data */
 #define cNull 9999.0
 /** equivalent earth's radius [km] */
 #define cEer 8493
@@ -80,7 +80,77 @@ struct _Radvol_t {
   int DBZHtoTH;         /**< 1 if to copy unprocessed DBZH into TH if TH does not exist, 0 otherwise */
 };
 
+/**
+ * Represents argument parameters for Radvol's algorithms.
+ * See each algorithm's documentation.
+ */
+struct _Radvol_params_t {
+  int    DBZHtoTH;
+  int    BROAD_QIOn;
+  int    BROAD_QCOn;
+  double BROAD_LhQI1;
+  double BROAD_LhQI0;
+  double BROAD_LvQI1;
+  double BROAD_LvQI0;
+  double BROAD_Pulse;
+  int    SPIKE_QIOn;
+  int    SPIKE_QCOn;
+  double SPIKE_QI;
+  double SPIKE_QIUn;
+  double SPIKE_ACovFrac;
+  int    SPIKE_AAzim;
+  int    SPIKE_AVarAzim;
+  int    SPIKE_ABeam;
+  int    SPIKE_AVarBeam;
+  double SPIKE_AFrac;
+  double SPIKE_BDiff;
+  int    SPIKE_BAzim;
+  double SPIKE_BFrac;
+  int    NMET_QIOn;
+  int    NMET_QCOn;
+  double NMET_QI;
+  double NMET_QIUn;
+  double NMET_AReflMin;
+  double NMET_AReflMax;
+  double NMET_AAltMin;
+  double NMET_AAltMax;
+  double NMET_ADet;
+  double NMET_BAlt;
+  int    SPECK_QIOn;
+  int    SPECK_QCOn;
+  double SPECK_QI;
+  double SPECK_QIUn;
+  double SPECK_AGrid;
+  double SPECK_ANum;
+  double SPECK_AStep;
+  double SPECK_BGrid;
+  double SPECK_BNum;
+  double SPECK_BStep;
+  int    BLOCK_QIOn;
+  int    BLOCK_QCOn;
+  double BLOCK_MaxElev;
+  double BLOCK_dBLim;
+  double BLOCK_GCQI;
+  double BLOCK_GCQIUn;
+  double BLOCK_GCMinPbb;
+  double BLOCK_PBBQIUn;
+  double BLOCK_PBBMax;
+  double ATT_a;
+  double ATT_b;
+  int    ATT_QIOn;
+  int    ATT_QCOn;
+  double ATT_ZRa;
+  double ATT_ZRb;
+  double ATT_QIUn;
+  double ATT_QI1;
+  double ATT_QI0;
+  double ATT_Refl;
+  double ATT_Last;
+  double ATT_Sum;
+};
+
 typedef struct _Radvol_t Radvol_t;
+typedef struct _Radvol_params_t Radvol_params_t;
 
 /**
  * Type definition to use when creating a rave object.

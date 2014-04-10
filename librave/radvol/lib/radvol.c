@@ -695,6 +695,7 @@ double Radvol_getLinearQuality(double x, double a, double b)
     return (b - x) / (b - a);
   }
 }
+
 /*@} End of Interface functions */
 
 RaveCoreObjectType Radvol_TYPE = {
