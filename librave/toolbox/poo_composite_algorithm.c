@@ -135,6 +135,7 @@ static RaveObjectHashTable_t* PooCompositeAlgorithmInternal_getPooScanFields(Com
     goto done;
   }
   nrobjs = Composite_getNumberOfObjects(composite);
+
   for (i = 0; status == 1 && i < nrobjs; i++) {
     RaveCoreObject* obj = Composite_get(composite, i);
     if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarScan_TYPE)) {
@@ -253,12 +254,14 @@ int PooCompositeAlgorithm_fillQualityInformation(CompositeAlgorithm_t* self, Rav
     }
     if (pooscan != NULL) {
       double v = 0.0;
-      RaveValueType t = PolarScan_getNearestParameterValue(pooscan, quantity, navinfo->lon, navinfo->lat, &v);
+      RaveValueType t = PolarScan_getNearest(pooscan, navinfo->lon, navinfo->lat, &v);
+
       if (t == RaveValueType_DATA) {
         RaveField_setValue(field, x, y, v);
       } else {
         RaveField_setValue(field, x, y, 0.0);
       }
+
       result = 1;
     }
   }

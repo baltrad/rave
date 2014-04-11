@@ -710,6 +710,10 @@ RaveField_t* PolarScan_findAnyQualityFieldByHowTask(PolarScan_t* scan, const cha
     }
   }
 
+  if (result == NULL) {
+    result = PolarScan_getQualityFieldByHowTask(scan, value);
+  }
+
   RAVE_OBJECT_RELEASE(params);
   return result;
 }
@@ -1277,15 +1281,18 @@ PolarScan_t* PolarScan_createFromScanAndField(PolarScan_t* self, RaveField_t* fi
   if (param == NULL) {
     goto done;
   }
-  if (PolarScanParam_getQuantity(param) != NULL) {
+
+  if (PolarScanParam_getQuantity(param) == NULL) {
     if (!PolarScanParam_setQuantity(param, "UNKNOWN")) {
       goto done;
     }
   }
-  if (!PolarScan_setDefaultParameter(scan, PolarScanParam_getQuantity(param))) {
+
+  if (!PolarScan_addParameter(scan, param)) {
     goto done;
   }
-  if (!PolarScan_addParameter(scan, param)) {
+
+  if (!PolarScan_setDefaultParameter(scan, PolarScanParam_getQuantity(param))) {
     goto done;
   }
 
