@@ -193,6 +193,7 @@ def generate(files, arguments):
     logger.warn("Could not find any matching observations")
     return None
   
+  logger.info("Matched %d points between acrr product and observation db"%len(points))
   db.add(points)
 
   tlimit = datetime.datetime(int(d[:4]), int(d[4:6]), int(d[6:8]), int(t[0:2]), int(t[2:4]), int(t[4:6]))
@@ -203,6 +204,7 @@ def generate(files, arguments):
   db.delete_grapoints(dlimit) # We don't want any points older than 12 hour * MERGETERMS back in time
   
   points = db.get_grapoints(tlimit); # Get all gra points newer than interval*MERGETERMS hours back in time
+  logger.info("Using %d number of points for calculating the gra coefficients"%len(points))
   
   if adjustmentfile != None:
     significant, npoints, loss, r, sig, corr_coeff, a, b, c, m, dev = gra.generate(points, edate, etime, adjustmentfile)
