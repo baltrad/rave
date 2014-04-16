@@ -44,7 +44,7 @@ class grapoint(object):
     self.accumulation_period = accumulation_period
     self.gr = -1
     if self.radarvaluetype == _rave.RaveValueType_DATA and self.radarvalue >= 0.1:
-      self.gr = 10 * log10(self.observation / self.radarvalue)
+      self.gr = float(10 * log10(self.observation / self.radarvalue))
       
 
   ## Creates a gra point from the radar information and a observation instance.

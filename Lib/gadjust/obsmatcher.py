@@ -53,6 +53,7 @@ class obsmatcher(object):
     ul,lr=image.getExtremeLonLatBoundaries()
     d = image.date
     t = image.time
+    image.defaultParameter=quantity
     
     sdt = datetime.datetime(int(d[:4]), int(d[4:6]), int(d[6:8]), int(t[0:2]), int(t[2:4]), int(t[4:6]))
     sdt = sdt - datetime.timedelta(hours=offset)
@@ -64,6 +65,7 @@ class obsmatcher(object):
       if t in [_rave.RaveValueType_DATA, _rave.RaveValueType_UNDETECT]:
         d = image.getQualityValueAtLonLat((obs.longitude*math.pi/180.0, obs.latitude*math.pi/180.0), how_task)
         if d != None:
-          result.append(grapoint.grapoint.from_observation(t, v, d, obs))
+          if obs.liquid_precipitation > 0.0 and v > 0.0:
+            result.append(grapoint.grapoint.from_observation(t, v, d, obs))
 
     return result 

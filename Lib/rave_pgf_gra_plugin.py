@@ -52,7 +52,7 @@ import _raveio
 import string
 import rave_tempfile
 import odim_source
-import math
+import math, datetime
 import rave_pgf_quality_registry
 import logging
 import rave_pgf_logger
@@ -61,7 +61,7 @@ from gadjust.gra import gra_coefficient
 import odim_source
 import rave_dom_db
 
-from rave_defines import CENTER_ID, GAIN, OFFSET, LOG_ID
+from rave_defines import CENTER_ID, GAIN, OFFSET, LOG_ID, MERGETERMS
 
 logger = logging.getLogger(LOG_ID)
   
@@ -192,7 +192,18 @@ def generate(files, arguments):
   if len(points) == 0:
     logger.warn("Could not find any matching observations")
     return None
+  
+  db.add(points)
 
+  tlimit = datetime.datetime(int(d[:4]), int(d[4:6]), int(d[6:8]), int(t[0:2]), int(t[2:4]), int(t[4:6]))
+  tlimit = tlimit - datetime.timedelta(hours=interval*MERGETERMS)
+  dlimit = datetime.datetime(int(d[:4]), int(d[4:6]), int(d[6:8]), int(t[0:2]), int(t[2:4]), int(t[4:6]))
+  dlimit = dlimit - datetime.timedelta(hours=12*MERGETERMS)
+  
+  db.delete_grapoints(dlimit) # We don't want any points older than 12 hour * MERGETERMS back in time
+  
+  points = db.get_grapoints(tlimit); # Get all gra points newer than interval*MERGETERMS hours back in time
+  
   if adjustmentfile != None:
     significant, npoints, loss, r, sig, corr_coeff, a, b, c, m, dev = gra.generate(points, edate, etime, adjustmentfile)
   else:
@@ -202,7 +213,7 @@ def generate(files, arguments):
   NOD = odim_source.NODfromSource(acrrproduct)
   if not NOD:
     NOD = ""
-  grac = gra_coefficient(NOD, acrrproduct.date, acrrproduct.time, significant, npoins, loss, r, sig, corr_coeff, a, b, c, m, dev)
+  grac = gra_coefficient(NOD, acrrproduct.date, acrrproduct.time, significant, npoins, loss, r, sig, corr_coeff, a, b, c, float(m), float(dev))
   db.add(grac)
   
   return None

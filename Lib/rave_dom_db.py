@@ -55,6 +55,7 @@ from sqlalchemy import asc,desc
 
 from rave_dom import wmo_station, observation
 from gadjust.gra import gra_coefficient
+from gadjust.grapoint import grapoint
 from rave_defines import BDB_CONFIG_FILE
 
 def psql_set_extra_float_digits(dbapi_con, con_record):
@@ -103,6 +104,7 @@ rave_observation=Table("rave_observation", meta,
                        Column("accumulation_period", Integer, nullable=True),
                        PrimaryKeyConstraint("station", "date", "time"))
 
+# The coefficients used for gra
 rave_gra_coefficient=Table("rave_gra_coefficient", meta,
                            Column("area", Text, nullable=False),
                            Column("date", Date, nullable=False),
@@ -119,10 +121,36 @@ rave_gra_coefficient=Table("rave_gra_coefficient", meta,
                            Column("mean", Float, nullable=False),
                            Column("stddev", Float, nullable=False),
                            PrimaryKeyConstraint("area","date","time"))
+    
+#                           self.radarvaluetype = rt
+#    self.radarvalue = rv
+#    self.radardistance = rd
+#    self.longitude = longitude
+#    self.latitude = latitude
+#    self.date = date
+#    self.time = time
+#    self.observation = liquid_precipitation
+#    self.accumulation_period = accumulation_period
+#    self.gr = -1
+#    if self.radarvaluetype == _rave.RaveValueType_DATA and self.radarvalue >= 0.1:
+#      self.gr = 10 * log10(self.observation / self.radarvalue)
+rave_grapoint=Table("rave_grapoint", meta,
+                    Column("date", Date, nullable=False),
+                    Column("time", Time, nullable=False),
+                    Column("radarvaluetype", Integer, nullable=False),
+                    Column("radarvalue", Float, nullable=False),
+                    Column("radardistance", Float, nullable=False),
+                    Column("longitude", Float, nullable=False),
+                    Column("latitude", Float, nullable=False),
+                    Column("observation", Float, nullable=False),
+                    Column("accumulation_period", Integer, nullable=False),
+                    Column("gr", Float, nullable=False),
+                    PrimaryKeyConstraint("date","time"))
                        
 mapper(wmo_station, rave_wmo_station)
 mapper(observation, rave_observation)
 mapper(gra_coefficient, rave_gra_coefficient)
+mapper(grapoint, rave_grapoint)
 
 dburipool = {}
 
@@ -240,6 +268,18 @@ class rave_db(object):
       q = s.query(gra_coefficient).filter(gra_coefficient.date>=dt.date()).filter(gra_coefficient.time>=dt.time())
       q = q.order_by(asc(gra_coefficient.date)).order_by(asc(gra_coefficient.time))
       return q.first()
+  
+  def get_grapoints(self, dt):
+    with self.get_session() as s:
+      q = s.query(grapoint).filter(grapoint.date>=dt.date()).filter(grapoint.time>=dt.time())
+      q = q.order_by(asc(grapoint.date)).order_by(asc(grapoint.time))
+      return q.all()
+    
+  def delete_grapoints(self, dt):
+    with self.get_session() as s:
+      q = s.query(grapoint).filter(grapoint.date>=dt.date()).filter(grapoint.time>=dt.time())
+      q = q.order_by(asc(grapoint.date)).order_by(asc(grapoint.time))
+      return q.delete()
   
 ##
 # Creates a rave db instance. This instance will be remembered for the same url which means
