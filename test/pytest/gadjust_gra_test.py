@@ -72,6 +72,37 @@ class gadjust_gra_test(unittest.TestCase):
     self.assertAlmostEquals(1.0, float(tokens[10]), 4)
     self.assertAlmostEquals(0.6667, float(tokens[11]), 4)
     self.assertAlmostEquals(0.4714, float(tokens[12]), 4)
+  
+  def test_generate_2(self):
+    points = [grapoint(_rave.RaveValueType_DATA, 1.0, 0.0, 10.0, 20.0, "20131010", "101500", 10**0.1, 12),
+              grapoint(_rave.RaveValueType_DATA, 1.0, 1.0, 10.0, 20.0, "20131010", "101500", 1.0, 12),
+              grapoint(_rave.RaveValueType_DATA, 1.0, 2.0, 10.0, 20.0, "20131010", "101500", 10**0.1, 12)]
+    
+    significant, npoints, loss, r, sig, corr_coeff, a, b, c, m, dev = gra.generate(points, "20131010","101500", self.TEMP_STAT_FILE)
+    
+    self.assertEquals('False', significant)
+    self.assertEquals(3, npoints)
+    self.assertEquals(0, loss)
+    self.assertFalse(`type(r)`.find("numpy")>=0)
+    self.assertTrue(math.isnan(r))
+    
+    self.assertFalse(`type(corr_coeff)`.find("numpy")>=0)
+    self.assertAlmostEquals(0.0, corr_coeff)
+    
+    self.assertFalse(`type(a)`.find("numpy")>=0)
+    self.assertAlmostEquals(1.0, a)
+    
+    self.assertFalse(`type(b)`.find("numpy")>=0)
+    self.assertAlmostEquals(-2.0, b)
+    
+    self.assertFalse(`type(c)`.find("numpy")>=0)
+    self.assertAlmostEquals(1.0, c)
+    
+    self.assertFalse(`type(m)`.find("numpy")>=0)
+    self.assertAlmostEquals(0.6667, m, 4)
+    
+    self.assertFalse(`type(dev)`.find("numpy")>=0)
+    self.assertAlmostEquals(0.4714, dev, 4)
     
   def test_get_2nd_order_adjustment(self):
     points = [grapoint(_rave.RaveValueType_DATA, 1.0, 0.0, 10.0, 20.0, "20131010", "101500", 10**0.1, 12),

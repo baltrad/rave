@@ -30,7 +30,7 @@ from __future__ import absolute_import
 import contextlib
 import jprops
 from sqlalchemy import engine, event, exc as sqlexc, sql
-from sqlalchemy.orm import mapper, sessionmaker
+from sqlalchemy.orm import mapper, sessionmaker, column_property
 
 from sqlalchemy import (
     Column,
@@ -50,6 +50,7 @@ from sqlalchemy.types import (
     LargeBinary,
     Text,
     Time,
+    DateTime
 )
 from sqlalchemy import asc,desc
 
@@ -145,10 +146,11 @@ rave_grapoint=Table("rave_grapoint", meta,
                     Column("observation", Float, nullable=False),
                     Column("accumulation_period", Integer, nullable=False),
                     Column("gr", Float, nullable=False),
-                    PrimaryKeyConstraint("date","time"))
+                    PrimaryKeyConstraint("date","time","longitude","latitude"))
                        
 mapper(wmo_station, rave_wmo_station)
-mapper(observation, rave_observation)
+mapper(observation, rave_observation)#,
+       #properties={"datetime" : column_property(sql.functions.concat(rave_observation.c.date,rave_observation.c.time))})
 mapper(gra_coefficient, rave_gra_coefficient)
 mapper(grapoint, rave_grapoint)
 
@@ -234,9 +236,9 @@ class rave_db(object):
                                  .filter(observation.latitude<=ullat) \
                                  .filter(observation.latitude>=lrlat)
       if startdt != None:
-        q = q.filter(observation.time>=startdt.time()).filter(observation.date>=startdt.date())
+        q=q.filter(observation.date + observation.time >= startdt)
       if enddt != None:
-        q = q.filter(observation.time<=enddt.time()).filter(observation.date<=enddt.date())
+        q = q.filter(observation.date + observation.time <= enddt)
       
       return q.order_by(asc(observation.station)) \
               .order_by(desc(observation.date)) \
@@ -247,10 +249,10 @@ class rave_db(object):
     with self.get_session() as s:
       q = s.query(observation)
       if startdt != None:
-        q = q.filter(observation.time>=startdt.time()).filter(observation.date>=startdt.date())
+        q = q.filter(observation.date + observation.time >= startdt)
 
       if enddt != None:
-        q = q.filter(observation.time<=enddt.time()).filter(observation.date<=enddt.date())
+        q = q.filter(observation.date + observation.time <= enddt)
 
       if stations != None and len(stations) > 0:
         q = q.filter(observation.station.in_(stations))
@@ -278,7 +280,6 @@ class rave_db(object):
   def delete_grapoints(self, dt):
     with self.get_session() as s:
       q = s.query(grapoint).filter(grapoint.date>=dt.date()).filter(grapoint.time>=dt.time())
-      q = q.order_by(asc(grapoint.date)).order_by(asc(grapoint.time))
       return q.delete()
   
 ##

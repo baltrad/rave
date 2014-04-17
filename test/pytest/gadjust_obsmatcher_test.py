@@ -41,9 +41,9 @@ class gadjust_obsmatcher_test(unittest.TestCase):
     acrrmock = mock.Mock(date="20101010",time="121500")
     acrrmock.getExtremeLonLatBoundaries.return_value = ((0.1,0.2),(0.3,0.4))
     
-    self.dbmock.get_observations_in_bbox.return_value = [observation("01234","S",observation.SYNOP, "20101010", "001500", 13.0, 60.0),
-                                                         observation("01235","S",observation.SYNOP, "20101010", "001500", 13.5, 60.0),
-                                                         observation("01236","S",observation.SYNOP, "20101010", "001500", 13.5, 60.5)]
+    self.dbmock.get_observations_in_bbox.return_value = [observation("01234","S",observation.SYNOP, "20101010", "001500", 13.0, 60.0, liquid_precipitation=1.0),
+                                                         observation("01235","S",observation.SYNOP, "20101010", "001500", 13.5, 60.0, liquid_precipitation=1.0),
+                                                         observation("01236","S",observation.SYNOP, "20101010", "001500", 13.5, 60.5, liquid_precipitation=1.0)]
     acrrmock.getConvertedValueAtLonLat.return_value = (2,48.0)
     acrrmock.getQualityValueAtLonLat.return_value = 200.0
     acrrmock.getConvertedValueAtLonLat.return_value = (2,49.0)
@@ -68,7 +68,7 @@ class gadjust_obsmatcher_test(unittest.TestCase):
     acrrmock = mock.Mock(date="20101010",time="121500")
     acrrmock.getExtremeLonLatBoundaries.return_value = ((0.1,0.2),(0.3,0.4))
     
-    self.dbmock.get_observations_in_bbox.return_value = [observation("01234","S",observation.SYNOP, "20101010", "001500", 13.0, 60.0)]
+    self.dbmock.get_observations_in_bbox.return_value = [observation("01234","S",observation.SYNOP, "20101010", "001500", 13.0, 60.0, liquid_precipitation=1.0)]
     acrrmock.getConvertedValueAtLonLat.return_value = (2,48.0)
     acrrmock.getQualityValueAtLonLat.return_value = 200.0
     

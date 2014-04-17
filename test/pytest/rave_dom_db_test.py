@@ -75,8 +75,8 @@ class rave_dom_db_test(unittest.TestCase):
     self.classUnderTest.create() 
 
   def tearDown(self):
-    self.classUnderTest.drop()
-    #pass
+    #self.classUnderTest.drop()
+    pass
 
   def test_add(self):
     #station, country, type, date, time, longitude, latitude
@@ -231,7 +231,25 @@ class rave_dom_db_test(unittest.TestCase):
     self.assertEquals("54325", result[1].station)   
     self.assertEquals("2010-10-10", result[1].date.strftime("%Y-%m-%d"))
     self.assertEquals("11:30:00", result[1].time.strftime("%H:%M:%S"))
-  
+
+  def test_get_observations_in_bbox_4(self):
+    # Another test to verify that date interval is working with mixed dates
+    db = testdb()
+    db.add(observation("54321", "SWEDEN", 0, "20101010", "180000", 13.031, 60.123))
+    db.add(observation("54322", "SWEDEN", 0, "20101011", "060000", 13.031, 60.123))
+    
+    # Test
+    result = self.classUnderTest.get_observations_in_bbox(13.0,61.5,15.0,60.1,
+                                                          datetime.datetime(2010,10,10,18,00))#,
+                                                          #datetime.datetime(2010,10,11,06,00))
+    result2 = self.classUnderTest.get_observations_in_bbox(13.0,61.5,15.0,60.1,
+                                                           datetime.datetime(2010,10,10,18,00),
+                                                           datetime.datetime(2010,10,11,06,00))
+
+    # Verify result
+    self.assertEquals(2, len(result))
+    self.assertEquals(2, len(result2))
+    
   def test_get_observations_in_interval(self):
     db = testdb()
     db.add(observation("54321", "SWEDEN", 0, "20101010", "113000", 13.031, 60.123))
@@ -296,7 +314,34 @@ class rave_dom_db_test(unittest.TestCase):
     self.assertEquals("11:45:00", result[1].time.strftime("%H:%M:%S"))
     self.assertEquals("54323", result[2].station)
     self.assertEquals("12:00:00", result[2].time.strftime("%H:%M:%S"))
+ 
+  def test_get_observations_in_interval_4(self):
+    db = testdb()
+    db.add(observation("54320", "SWEDEN", 0, "20101010", "060000", 13.031, 60.123))
+    db.add(observation("54321", "SWEDEN", 0, "20101010", "180000", 13.031, 60.123))
+    db.add(observation("54322", "SWEDEN", 0, "20101011", "060000", 13.031, 60.123))
+    db.add(observation("54323", "SWEDEN", 0, "20101011", "180000", 13.031, 60.123))
     
+    # Test
+    result = self.classUnderTest.get_observations_in_interval(None, None)
+    self.assertEquals(4, len(result))
+    self.assertEquals("54320", result[0].station)
+    self.assertEquals("54321", result[1].station)
+    self.assertEquals("54322", result[2].station)
+    self.assertEquals("54323", result[3].station)
+
+    # Test
+    result = self.classUnderTest.get_observations_in_interval(datetime.datetime(2010,10,10,18,00), None)
+    self.assertEquals(3, len(result))
+    self.assertEquals("54321", result[0].station)
+    self.assertEquals("54322", result[1].station)
+    self.assertEquals("54323", result[2].station)
+
+    result = self.classUnderTest.get_observations_in_interval(datetime.datetime(2010,10,10,18,00),
+                                                              datetime.datetime(2010,10,11,06,00),
+                                                              ["54322"])
+    self.assertEquals(1, len(result))
+    self.assertEquals("54322", result[0].station)
   
   def test_add_duplicate_observation(self):
     db = testdb()

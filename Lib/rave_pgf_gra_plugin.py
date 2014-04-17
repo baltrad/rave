@@ -63,7 +63,7 @@ import rave_dom_db
 
 from rave_defines import CENTER_ID, GAIN, OFFSET, LOG_ID, MERGETERMS
 
-logger = logging.getLogger(LOG_ID)
+logger = rave_pgf_logger.rave_pgf_logger_client()
   
 ravebdb = None
 try:
@@ -194,7 +194,10 @@ def generate(files, arguments):
     return None
   
   logger.info("Matched %d points between acrr product and observation db"%len(points))
-  db.add(points)
+  db.merge(points)
+
+  d = acrrproduct.date
+  t = acrrproduct.time
 
   tlimit = datetime.datetime(int(d[:4]), int(d[4:6]), int(d[6:8]), int(t[0:2]), int(t[2:4]), int(t[4:6]))
   tlimit = tlimit - datetime.timedelta(hours=interval*MERGETERMS)
@@ -215,7 +218,7 @@ def generate(files, arguments):
   NOD = odim_source.NODfromSource(acrrproduct)
   if not NOD:
     NOD = ""
-  grac = gra_coefficient(NOD, acrrproduct.date, acrrproduct.time, significant, npoins, loss, r, sig, corr_coeff, a, b, c, float(m), float(dev))
-  db.add(grac)
+  grac = gra_coefficient(NOD, acrrproduct.date, acrrproduct.time, significant, npoints, loss, r, sig, corr_coeff, a, b, c, float(m), float(dev))
+  db.merge(grac)
   
   return None

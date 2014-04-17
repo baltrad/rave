@@ -49,7 +49,7 @@ def generate(points, DATE, TIME, LOGFILE=GADJUST_STATFILE):
   fd.write(sformat % (DATE, TIME, g.significant, len(g.points), loss, r, sig, g.corr_coeff, a, b, c, m, dev))
   fd.close()
   
-  return g.significant, len(g.points), loss, r, sig, g.corr_coeff, a, b, c, m, dev
+  return g.significant, len(g.points), loss, float(r), sig, float(g.corr_coeff), a, b, c, float(m), float(dev)
 
 
 ## Computes the correlation coefficient between gauge and radar (dBR)
