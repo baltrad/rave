@@ -26,8 +26,6 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 # @author Anders Henja, SMHI
 # @date 2013-11-06
 
-from sqlalchemy.sql import functions
-
 ##
 # Defining a wmo station.
 #
