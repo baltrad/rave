@@ -367,7 +367,7 @@ def generate(jobid, algorithm, files, arguments, host=PGF_HOST, port=PGF_PORT):
     pgf._algorithm_registry = copy(PGF_REGISTRY)  # Less flexible than reading it each time
     ret = pgf._generate(algorithm, files, arguments)
     pgf._client = xmlrpclib.ServerProxy("http://%s:%i/RAVE" % (host, port), verbose=False)
-    pgf.job_done(jobid)
+    pgf._client.job_done(jobid)
 
 
 if __name__ == "__main__":
