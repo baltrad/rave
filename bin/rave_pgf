@@ -31,7 +31,7 @@ import logging
 import multiprocessing
 import rave_pgf_registry, rave_pgf_logger, rave_pgf_qtools
 from rave_daemon import Daemon
-from rave_defines import PIDFILE, PGF_HOST, PGF_PORT, STDOE, LOG_ID, REGFILE, PGFs, LOGLEVEL
+from rave_defines import PIDFILE, PGF_HOST, PGF_PORT, STDOE, REGFILE, PGFs, LOGLEVEL
 
 
 ## Stub class for allowing server POSTs only to one place, providing

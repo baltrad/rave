@@ -65,7 +65,7 @@ if __name__ == "__main__":
             rave_ctfilter.CTPATH = options.path
 
     if options.template:
-        rave_ctfilter.FTEMPLATE = options.template
+        rave_ctfilter.CT_FTEMPLATE = options.template
 
     rio = _raveio.open(options.ifile)
 

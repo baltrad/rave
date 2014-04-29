@@ -54,9 +54,9 @@ import rave_dom_db
 from gadjust.gra import gra_coefficient
 
 
-from rave_defines import CENTER_ID, GAIN, OFFSET, LOG_ID
+from rave_defines import CENTER_ID, GAIN, OFFSET
 
-logger = logging.getLogger(LOG_ID)
+logger = rave_pgf_logger.rave_pgf_logger_client()
 
 ravebdb = None
 try:
@@ -268,6 +268,7 @@ def generate(files, arguments):
   ios.object = result
   ios.filename = outfile
   ios.save()
+  logger.handlers[0].close()
 
   return outfile
   

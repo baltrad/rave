@@ -33,7 +33,7 @@ import rave_pgf_registry
 import rave_pgf_qtools
 import BaltradFrame
 import _pyhl
-from rave_defines import DEX_SPOE, LOG_ID, REGFILE, PGFs, LOGLEVEL, PGF_HOST, PGF_PORT
+from rave_defines import DEX_SPOE, REGFILE, PGFs, LOGLEVEL, PGF_HOST, PGF_PORT
 
 
 METHODS = {'generate' :  '("algorithm",[files],[arguments])',
@@ -148,7 +148,7 @@ class RavePGF():
     # the result is referred to as a 'job'.
     self.queue.queue_job(algorithm, files, arguments, jobid)
     mod_name, func_name = algorithm.get('module'), algorithm.get('function')
-    self.logger.info("%s: ID=%s Queued %s.%s" % (self.name, jobid, mod_name, func_name))
+    self.logger.debug("%s: ID=%s Queued %s.%s" % (self.name, jobid, mod_name, func_name))
     self._job_counter += 1
     self._jobid = "%i-%i" % (self._pid, self._job_counter)
 
@@ -231,7 +231,7 @@ class RavePGF():
       # Write job to resilient queue on disk.
       #self._dump_queue()  # Really necessary each time?
 
-      self.logger.info("%s: ID=%s Dispatching request for %s" % (self.name, jobid, algorithm))
+      self.logger.debug("%s: ID=%s Dispatching request for %s" % (self.name, jobid, algorithm))
       result = self.pool.apply_async(generate, (jobid, algorithm, files, arguments))
     except Exception, err:
       err_msg = traceback.format_exc()
@@ -279,15 +279,15 @@ class RavePGF():
       outfile = self._run(algorithm_entry, files, arguments)  # Don't queue, just do it! 
 
       if outfile != None:
-        self.logger.info("%s: ID=%s one job run, outfile=%s" % (self.name, self._jobid, outfile))
+        self.logger.debug("%s: ID=%s one job run, outfile=%s" % (self.name, self._jobid, outfile))
       else:
-        self.logger.info("%s: ID=%s one job run, no output file" % (self.name, self._jobid))
+        self.logger.debug("%s: ID=%s one job run, no output file" % (self.name, self._jobid))
       
       # Inject the result if it is a file
       if outfile != None:
         BaltradFrame.inject_file(outfile, DEX_SPOE)
         # Log the result
-        self.logger.info("%s: ID=%s Injected %s" % (self.name, self._jobid, outfile))
+        self.logger.debug("%s: ID=%s Injected %s" % (self.name, self._jobid, outfile))
         
     except Exception, err:
       # the 'err' itself is pretty useless
@@ -311,7 +311,7 @@ class RavePGF():
     if msg != "OK":
       self.logger.error("%s: %s" % (self.name, msg))
     else:
-      self.logger.info("%s: ID=%s Dequeued job" % (self.name, jobid))
+      self.logger.debug("%s: ID=%s Dequeued job" % (self.name, jobid))
 
 
   ##
@@ -360,7 +360,6 @@ class RavePGF():
 # be parsed into their corrects formats, ie. int, float, list, etc.
 # @param host string URI of the RAVE PGF server to which to connect
 # @param port int port of the RAVE PGF server to which to connect
-# @return string either "OK" or an error with a corresponding Traceback
 def generate(jobid, algorithm, files, arguments, host=PGF_HOST, port=PGF_PORT):
     pgf = RavePGF()
     pgf._jobid = jobid
@@ -368,6 +367,7 @@ def generate(jobid, algorithm, files, arguments, host=PGF_HOST, port=PGF_PORT):
     ret = pgf._generate(algorithm, files, arguments)
     pgf._client = xmlrpclib.ServerProxy("http://%s:%i/RAVE" % (host, port), verbose=False)
     pgf._client.job_done(jobid)
+    pgf.logger.handlers[0].close()
 
 
 if __name__ == "__main__":
