@@ -267,19 +267,19 @@ class rave_db(object):
   
   def get_gra_coefficient(self, dt):
     with self.get_session() as s:
-      q = s.query(gra_coefficient).filter(gra_coefficient.date>=dt.date()).filter(gra_coefficient.time>=dt.time())
+      q = s.query(gra_coefficient).filter(gra_coefficient.date + gra_coefficient.time >= dt)
       q = q.order_by(asc(gra_coefficient.date)).order_by(asc(gra_coefficient.time))
       return q.first()
   
   def get_grapoints(self, dt):
     with self.get_session() as s:
-      q = s.query(grapoint).filter(grapoint.date>=dt.date()).filter(grapoint.time>=dt.time())
+      q = s.query(grapoint).filter(grapoint.date + grapoint.time >= dt)
       q = q.order_by(asc(grapoint.date)).order_by(asc(grapoint.time))
       return q.all()
     
   def delete_grapoints(self, dt):
     with self.get_session() as s:
-      q = s.query(grapoint).filter(grapoint.date>=dt.date()).filter(grapoint.time>=dt.time())
+      q = s.query(grapoint).filter(grapoint.date + grapoint.time >= dt)
       return q.delete()
   
 ##
