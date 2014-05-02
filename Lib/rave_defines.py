@@ -23,7 +23,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @author Daniel Michelson, SMHI
 ## @date 2011-06-27
 
-import os
+import os, datetime
 import rave_defines
 
 ## PATHS
@@ -84,6 +84,12 @@ DEFAULTB = -0.00107776407064
 DEFAULTC = 1.77500903316e-05
 MERGETERMS = 20  # how many 12-hour SYNOP terms to merge: 10 days.
 
+# SAF-NWC MSG CT filter
+CT_FTEMPLATE = "SAFNWC_MSG?_CT___%s_FES_________.h5"
+CTPATH = "/opt/baltrad/MSG_CT"
+CTDELTA = datetime.timedelta(minutes=15)
+CT_MAX_DELTAS = 3  # look backwards in time for ct_max_deltas * ctdelta
+
 # Statistics
 TFILE = RAVECONFIG + "/t-critical.pickle"
 TFILE_TEMPLATE = RAVECONFIG + "/t-critical.txt"
@@ -117,7 +123,6 @@ REGFILE = os.path.join(RAVEETC, 'rave_pgf_registry.xml')  # registry file
 QFILE = os.path.join(RAVEETC, 'rave_pgf_queue.xml')  # queue file
 PGF_TAG = 'bltgenerate'  # used for sending files to the DEX
 
-LOG_ID = "PGF"  # identifier of the logger instance
 LOGPORT = 8089
 LOGFILE     = os.path.join(RAVEETC, "rave_pgf.log")
 LOGFILESIZE = 5000000  # 5 Mb each

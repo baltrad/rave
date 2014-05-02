@@ -57,9 +57,9 @@ import rave_pgf_quality_registry
 import logging
 import rave_pgf_logger
 
-from rave_defines import CENTER_ID, GAIN, OFFSET, LOG_ID
+from rave_defines import CENTER_ID, GAIN, OFFSET
 
-logger = logging.getLogger(LOG_ID)
+logger = rave_pgf_logger.rave_pgf_logger_client()
 
 ravebdb = None
 try:
@@ -168,7 +168,7 @@ def generate(files, arguments):
 
     par = obj.getParameter(quantity)
     if par == None:
-      logger.info("Could not find parameter (%s) for %s %s"%(quantity, obj.date, obj.time))
+      logger.warn("Could not find parameter (%s) for %s %s"%(quantity, obj.date, obj.time))
     else:
       if par.getQualityFieldByHowTask(distancefield) != None:
         acrr.sum(par, zr_a, zr_b)
@@ -183,5 +183,6 @@ def generate(files, arguments):
   ios.object = img
   ios.filename = outfile
   ios.save()
+  logger.handlers[0].close()
 
   return outfile

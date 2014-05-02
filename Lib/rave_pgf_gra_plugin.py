@@ -61,7 +61,7 @@ from gadjust.gra import gra_coefficient
 import odim_source
 import rave_dom_db
 
-from rave_defines import CENTER_ID, GAIN, OFFSET, LOG_ID, MERGETERMS
+from rave_defines import CENTER_ID, GAIN, OFFSET, MERGETERMS
 
 logger = rave_pgf_logger.rave_pgf_logger_client()
   
@@ -175,7 +175,7 @@ def generate(files, arguments):
 
     par = obj.getParameter(quantity)
     if par == None:
-      logger.info("Could not find parameter (%s) for %s %s"%(quantity, obj.date, obj.time))
+      logger.warn("Could not find parameter (%s) for %s %s"%(quantity, obj.date, obj.time))
     else:
       if par.getQualityFieldByHowTask(distancefield) != None:
         acrr.sum(par, zr_a, zr_b)
@@ -220,5 +220,6 @@ def generate(files, arguments):
     NOD = ""
   grac = gra_coefficient(NOD, acrrproduct.date, acrrproduct.time, significant, npoints, loss, r, sig, corr_coeff, a, b, c, float(m), float(dev))
   db.merge(grac)
-  
+  logger.handlers[0].close()
+
   return None

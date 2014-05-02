@@ -66,6 +66,7 @@ if __name__ == "__main__":
     if ARG == 'stop':
         myLogger = rave_pgf_logger.rave_pgf_logger_client(port=options.port)
         myLogger.info("Shutting down log TCP server on %s:%i" % (options.host, options.port))
+        myLogger.handlers[0].close()
         this.stop()
 
     if ARG == 'start':

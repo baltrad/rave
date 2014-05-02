@@ -32,11 +32,8 @@ import _rave, _raveio
 import _cartesian, _cartesianparam
 import _projection
 import _ctfilter
+from rave_defines import CT_FTEMPLATE, CTPATH, CTDELTA, CT_MAX_DELTAS
 
-FTEMPLATE = "SAFNWC_MSG?_CT___%s_FES_________.h5"
-CTPATH = "/opt/baltrad/MSG_CT"
-TDELTA = datetime.timedelta(minutes=15)
-MAX_DELTAS = 2  # look backwards in time for max_deltas * tdelta
 
 NODENAMES = ["/XGEO_UP_LEFT",
              "/YGEO_UP_LEFT",
@@ -101,9 +98,9 @@ def getMatchingCT(prod):
     elif 30 < prodt.minute < 45: prodt -= datetime.timedelta(minutes=prodt.minute-30) 
     elif 45 < prodt.minute <= 59: prodt -= datetime.timedelta(minutes=prodt.minute-45) 
 
-    for dt in range(MAX_DELTAS):
-        mydt = prodt - (dt * TDELTA)
-        globstr = os.path.join(CTPATH, FTEMPLATE % mydt.strftime("%Y%m%d%H%M"))
+    for dt in range(CT_MAX_DELTAS):
+        mydt = prodt - (dt * CTDELTA)
+        globstr = os.path.join(CTPATH, CT_FTEMPLATE % mydt.strftime("%Y%m%d%H%M"))
         fstrs = glob.glob(globstr)
 
         if len(fstrs) == 1:
@@ -124,8 +121,14 @@ def ctFilter(prod, quantity="DBZH"):
     if ct_filename:
         ct = readCT(ct_filename)
         ct.defaultParameter = "CT"
+        ct.addAttribute("how/task_args", os.path.split(ct_filename)[1])
 
-        return _ctfilter.ctFilter(prod, ct)
+        ret = _ctfilter.ctFilter(prod, ct)
+        if ret is True:
+            ct_qfield = prod.getParameter(quantity).getQualityFieldByHowTask("se.smhi.quality.ctfilter")
+            ct_qfield.addAttribute("how/task_args", os.path.split(ct_filename)[1])
+
+        return ret
     
 
 if __name__ == "__main__":

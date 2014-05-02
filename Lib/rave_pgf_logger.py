@@ -215,12 +215,12 @@ class rave_pgf_logger_server(Daemon):
 # @param level string log level
 # @returns logging.getLogger client
 def rave_pgf_logger_client(host=PGF_HOST, port=LOGPORT, level=LOGLEVEL):
-  myName = 'PGF-' + tempfile.mktemp()  # Needs a unique name to avoid confusion causing replicate log entries
-  myLogger = logging.getLogger(myName)
-  myLogger.setLevel(LOGLEVELS[level])
-  socketHandler = logging.handlers.SocketHandler(host, port)
-  myLogger.addHandler(socketHandler)
-  return myLogger
+    myName = 'PGF-' + tempfile.mktemp()  # Needs a unique name to avoid confusion causing replicate log entries
+    myLogger = logging.getLogger(myName)
+    myLogger.setLevel(LOGLEVELS[level])
+    socketHandler = logging.handlers.SocketHandler(host, port)
+    myLogger.addHandler(socketHandler)
+    return myLogger
 
 
 if __name__ == "__main__":
@@ -243,6 +243,7 @@ if __name__ == "__main__":
   if ARG == 'stop':
     myLogger = rave_pgf_logger_client()
     myLogger.info("Shutting down log TCP server on %s:%i" % (this.host, this.port))
+    myLogger.handlers[0].close()
     this.stop()
 
   if ARG == 'start':
