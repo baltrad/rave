@@ -31,10 +31,19 @@ import os
 from rave_defines import RAVEETC
 import odim_source
 import _scansun
+import rave_pgf_logger
+
+ravebdb = None
+try:
+  import rave_bdb
+  ravebdb = rave_bdb.rave_bdb()
+except:
+  pass
 
 HEADER = "#Date    Time   Elevatn Azimuth ElevSun AzimSun dBmMHzSun dBmStdd RelevSun\n"
 FORMAT = "%08i %06i %7.2f %7.2f %7.2f %7.2f %9.2f %7.4f  %7.2f\n" 
 
+logger = rave_pgf_logger.rave_pgf_logger_client()
 
 ## Convenience function. Gets the NOD identifier from /what/source string.
 # Assumes that the NOD is there or can be looked up based on the WMO identifier.
@@ -70,20 +79,32 @@ def Source2File(isource):
 # @return nothing
 def generate(files, arguments):
     for ifstr in files:
+      fname = None
+      removeme = None
+      if os.path.exists(ifstr):
+        fname = ifstr
+      else:
+        fname = ravebdb.get_file(ifstr)
+        removeme = fname
+
+      try:      
+        source, hits = _scansun.scansun(fname)
+      except:
+        if removeme != None and os.path.exists(removeme):
+          os.unlink(removeme)
+        raise
+
+      if len(hits) > 0:
+        ofstr = Source2File(source)
+        fd = open(ofstr, 'a')
+
+        if os.path.getsize(ofstr) == 0:
+          fd.write(HEADER)
         
-        source, hits = _scansun.scansun(ifstr)
+        for hit in hits:
+          fd.write(FORMAT % hit)
 
-        if len(hits) > 0:
-            ofstr = Source2File(source)
-            fd = open(ofstr, 'a')
-
-            if os.path.getsize(ofstr) == 0:
-                fd.write(HEADER)
-        
-            for hit in hits:
-                fd.write(FORMAT % hit)
-
-            fd.close()
+        fd.close()
 
     return None
 

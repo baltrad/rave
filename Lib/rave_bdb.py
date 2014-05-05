@@ -27,7 +27,11 @@ from rave_defines import BDB_CONFIG_FILE, DEX_NODENAME
 import string, os, traceback, tempfile, shutil, contextlib
 import jprops
 import _raveio
+import rave_pgf_logger
+import rave_tempfile
 from baltrad.bdbclient import rest
+
+logger = rave_pgf_logger.rave_pgf_logger_client()
 
 class rave_bdb(object):
   config = {}
@@ -144,10 +148,12 @@ class rave_bdb(object):
     '''
     content = self.get_database().get_file_content(uuid)
     if content:
-      fpd, tmppath = tempfile.mkstemp(suffix='.h5', prefix='ravetmp')
+      fpd, tmppath = rave_tempfile.mktemp(suffix='.h5', close="True")
+      #fpd, tmppath = tempfile.mkstemp(suffix='.h5', prefix='ravetmp')
       try:
         with contextlib.closing(content):
-          with os.fdopen(fpd, "w") as outf:
+          #with os.fdopen(fpd, "w") as outf:
+          with open(tmppath, "w") as outf:
             shutil.copyfileobj(content, outf)
             outf.close()
         return tmppath
