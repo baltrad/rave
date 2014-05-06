@@ -243,6 +243,21 @@ class PyPolarVolumeTest(unittest.TestCase):
     self.assertTrue (scan1 == scanresult1)
     self.assertTrue (scan2 == scanresult2)
 
+  def test_removeScan(self):
+    obj = _polarvolume.new()
+    scan1 = _polarscan.new()
+    scan2 = _polarscan.new()
+    scan3 = _polarscan.new()
+    
+    obj.addScan(scan1)
+    obj.addScan(scan2)
+    obj.addScan(scan3)
+    
+    obj.removeScan(1)
+    self.assertEquals(2, obj.getNumberOfScans())
+    self.assertTrue(scan1 == obj.getScan(0))
+    self.assertTrue(scan3 == obj.getScan(1))
+
   def test_getScanWithMaxDistance(self):
     obj = _polarvolume.new()
     s1 = _polarscan.new()

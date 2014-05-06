@@ -25,7 +25,9 @@ Test suite for rave
 '''
 import unittest, os
 
+A="""
 from RaveTest import *
+"""
 from PyPolarVolumeTest import *
 from PyPolarScanTest import *
 from PyPolarScanParamTest import *
@@ -62,6 +64,7 @@ from PyRadvolTest import *
 from PyCtfilterTest import *
 from PyPgfQtoolsTest import *
 from PyPgfLoggerTest import *
+from rave_util_test import *
 
 #
 # Unless RAVE_TESTDB_URI has been set we don't want to run the dom db tests

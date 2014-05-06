@@ -236,6 +236,18 @@ static PyObject* _pypolarvolume_getNumberOfScans(PyPolarVolume* self, PyObject* 
   return PyInt_FromLong(PolarVolume_getNumberOfScans(self->pvol));
 }
 
+static PyObject* _pypolarvolume_removeScan(PyPolarVolume* self, PyObject* args)
+{
+  int index = -1;
+  if (!PyArg_ParseTuple(args, "i", &index)) {
+    return NULL;
+  }
+  if (!PolarVolume_removeScan(self->pvol, index)) {
+    raiseException_returnNULL(PyExc_IndexError, "Failed to remove scan");
+  }
+  Py_RETURN_NONE;
+}
+
 /**
  * Locates the scan that covers the longest distance
  * @param[in] self - self
@@ -574,6 +586,22 @@ fail:
   return NULL;
 }
 
+static PyObject* _pypolarvolume_hasAttribute(PyPolarVolume* self, PyObject* args)
+{
+  RaveAttribute_t* attribute = NULL;
+  char* name = NULL;
+  long result = 0;
+  if (!PyArg_ParseTuple(args, "s", &name)) {
+    return NULL;
+  }
+  attribute = PolarVolume_getAttribute(self->pvol, name);
+  if (attribute != NULL) {
+    result = 1;
+  }
+  RAVE_OBJECT_RELEASE(attribute);
+  return PyBool_FromLong(result);
+}
+
 static PyObject* _pypolarvolume_isValid(PyPolarVolume* self, PyObject* args)
 {
   return PyBool_FromLong(PolarVolume_isValid(self->pvol));
@@ -634,6 +662,7 @@ static struct PyMethodDef _pypolarvolume_methods[] =
   {"addScan", (PyCFunction) _pypolarvolume_addScan, 1},
   {"getScan", (PyCFunction) _pypolarvolume_getScan, 1},
   {"getNumberOfScans", (PyCFunction) _pypolarvolume_getNumberOfScans, 1},
+  {"removeScan", (PyCFunction) _pypolarvolume_removeScan, 1},
   {"getScanWithMaxDistance", (PyCFunction) _pypolarvolume_getScanWithMaxDistance, 1},
   {"isAscendingScans", (PyCFunction) _pypolarvolume_isAscendingScans, 1},
   {"isTransformable", (PyCFunction) _pypolarvolume_isTransformable, 1},
@@ -646,6 +675,7 @@ static struct PyMethodDef _pypolarvolume_methods[] =
   {"addAttribute", (PyCFunction) _pypolarvolume_addAttribute, 1},
   {"getAttribute", (PyCFunction) _pypolarvolume_getAttribute, 1},
   {"getAttributeNames", (PyCFunction) _pypolarvolume_getAttributeNames, 1},
+  {"hasAttribute", (PyCFunction) _pypolarvolume_hasAttribute, 1},
   {"isValid", (PyCFunction) _pypolarvolume_isValid, 1},
   {"getDistanceField", (PyCFunction) _pypolarvolume_getDistanceField, 1},
   {"getHeightField", (PyCFunction) _pypolarvolume_getHeightField, 1},

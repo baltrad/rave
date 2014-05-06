@@ -442,6 +442,19 @@ int PolarVolume_getNumberOfScans(PolarVolume_t* pvol)
   return RaveObjectList_size(pvol->scans);
 }
 
+int PolarVolume_removeScan(PolarVolume_t* pvol, int index)
+{
+  PolarScan_t* scan = NULL;
+  int result = 0;
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
+  scan = (PolarScan_t*)RaveObjectList_remove(pvol->scans, index);
+  if (scan != NULL) {
+    result = 1;
+  }
+  RAVE_OBJECT_RELEASE(scan);
+  return result;
+}
+
 PolarScan_t* PolarVolume_getScanClosestToElevation(PolarVolume_t* pvol, double e, int inside)
 {
   double se = 0.0L, eld = 0.0L;

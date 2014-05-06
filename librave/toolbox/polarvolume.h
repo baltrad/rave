@@ -208,6 +208,14 @@ PolarScan_t* PolarVolume_getScan(PolarVolume_t* pvol, int index);
 int PolarVolume_getNumberOfScans(PolarVolume_t* pvol);
 
 /**
+ * Removes the scan at specified index
+ * @param[in] pvol - the volume
+ * @param[in] index - the index of the scan
+ * @returns 1 on sucess otherwise 0
+ */
+int PolarVolume_removeScan(PolarVolume_t* pvol, int index);
+
+/**
  * Returns the scan with elevation closest to the specified elevation. This function
  * requires that the scans are ordered in ascending order, otherwise the behaviour
  * will be undefined.

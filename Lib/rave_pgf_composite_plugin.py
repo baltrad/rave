@@ -119,9 +119,16 @@ def generate(files, arguments):
   #
 
   if "anomaly-qc" in args.keys():
-      detectors = string.split(args["anomaly-qc"], ",")
+    detectors = string.split(args["anomaly-qc"], ",")
   else:
-      detectors = []
+    detectors = []
+
+  ignoreMalfunc = False
+  if "ignore-malfunc" in args.keys():
+    try:
+      ignoreMalfunc = eval(args["ignore-malfunc"])
+    except:
+      pass
 
   nodes = ""
   qfields = []  # The quality fields we want to get as a result in the composite
@@ -138,6 +145,11 @@ def generate(files, arguments):
     else:
       rio = _raveio.open(fname)
       obj = rio.object
+
+    if ignoreMalfunc:
+      obj = rave_util.remove_malfunc(obj)
+      if obj is None:
+        continue
 
     if len(nodes):
       nodes += ",'%s'" % odim_source.NODfromSource(obj)

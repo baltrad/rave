@@ -1047,6 +1047,14 @@ class PyPolarScanTest(unittest.TestCase):
     self.assertAlmostEquals(3.0, result[3], 2)
     self.assertAlmostEquals(5.0, result[5], 2)
     self.assertAlmostEquals(9.0, result[9], 2)
+  
+  def test_hasAttribute(self):
+    obj = _polarscan.new()
+    obj.addAttribute("how/something", 1.0)
+    obj.addAttribute("how/something2", "jupp")
+    self.assertEquals(True, obj.hasAttribute("how/something"))
+    self.assertEquals(True, obj.hasAttribute("how/something2"))
+    self.assertEquals(False, obj.hasAttribute("how/something3"))
     
   def test_getQualityFieldByHowTask(self):
     obj = _polarscan.new()
