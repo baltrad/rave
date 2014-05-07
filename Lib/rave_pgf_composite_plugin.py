@@ -128,7 +128,8 @@ def generate(files, arguments):
   ignoreMalfunc = False
   if "ignore-malfunc" in args.keys():
     try:
-      ignoreMalfunc = eval(args["ignore-malfunc"])
+      if args["ignore-malfunc"].lower() in ["true", "yes", "y", "1"]:
+        ignoreMalfunc = True
     except:
       pass
 
