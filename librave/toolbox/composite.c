@@ -1226,7 +1226,7 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t*
 
   RAVE_ASSERT((composite != NULL), "composite == NULL");
 
-  if (composite->ptype == Rave_ProductType_MAX) { // Special handling of the max algorithm.
+  if (composite->ptype == Rave_ProductType_MAX && composite->qiFieldName == NULL) { // Special handling of the max algorithm.
     return Composite_nearest_max(composite, area, qualityflags);
   }
 

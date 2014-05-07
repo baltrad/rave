@@ -642,11 +642,11 @@ class PyCompositeTest(unittest.TestCase):
          scan.setValue((x,y), 200)
     f2 = _ravefield.new()
     d = numpy.zeros((scan.nrays, scan.nbins), numpy.float64)
-    f2.setData(d)
     for x in range(scan.nbins):
       for y in range(scan.nrays):
         d[y][x] = 0.10
     f2.addAttribute("how/task", "a.test.field")
+    f2.setData(d)
     scan.addQualityField(f2)
          
     generator.add(scan)
@@ -656,7 +656,7 @@ class PyCompositeTest(unittest.TestCase):
     generator.elangle = 0.0
     generator.time = "120000"
     generator.date = "20090501"
-    #generator.quality_indicator_field_name = "a.test.field"
+    generator.quality_indicator_field_name = "a.test.field"
     
     result = generator.nearest(a)
     
