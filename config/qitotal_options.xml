@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<qitotal-options>
+  <qitotal nod="default" weight="1.0">
+    <field name="se.smhi.detector.poo" weight="1.0"/>
+    <field name="fi.fmi.ropo.detector.classification" weight="1.0"/>
+    <field name="se.smhi.detector.beamblockage" weight="1.0"/>
+    <field name="pl.imgw.radvolqc.att" weight="1.0"/>
+    <field name="pl.imgw.radvolqc.broad" weight="1.0"/>
+  </qitotal>
+  <searl nod="default" weight="1.0">
+    <field name="se.smhi.detector.poo" weight="1.0"/>
+    <field name="fi.fmi.ropo.detector.classification" weight="1.0"/>
+    <field name="se.smhi.detector.beamblockage" weight="1.0"/>
+    <field name="pl.imgw.radvolqc.att" weight="1.0"/>
+    <field name="pl.imgw.radvolqc.broad" weight="1.0"/>
+  </searl>
+</qitotal-options>

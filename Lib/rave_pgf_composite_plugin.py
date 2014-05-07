@@ -50,13 +50,15 @@ import logging
 import rave_pgf_logger
 import rave_ctfilter
 import rave_dom_db
+import rave_util
+import qitotal_options
 
 from gadjust.gra import gra_coefficient
 
 
 from rave_defines import CENTER_ID, GAIN, OFFSET
 
-logger = rave_pgf_logger.rave_pgf_logger_client()
+logger = rave_pgf_logger.rave_pgf_syslog_client()
 
 ravebdb = None
 try:
@@ -67,9 +69,9 @@ except:
 
 QITOTAL_INFO = {}
 try:
-  QITOTAL_INFO = get_qitotal_site_information
+  QITOTAL_INFO = qitotal_options.get_qitotal_site_information()
 except Exception, e:
-  logger.error("Failed to load qitotal site information", e)
+  logger.error("Failed to load qitotal site information")
   
 ##
 # The area registry to be used by this composite generator.
@@ -119,9 +121,9 @@ def generate(files, arguments):
   #
 
   if "anomaly-qc" in args.keys():
-    detectors = string.split(args["anomaly-qc"], ",")
+      detectors = string.split(args["anomaly-qc"], ",")
   else:
-    detectors = []
+      detectors = []
 
   ignoreMalfunc = False
   if "ignore-malfunc" in args.keys():
@@ -280,7 +282,6 @@ def generate(files, arguments):
   ios.object = result
   ios.filename = outfile
   ios.save()
-  logger.handlers[0].close()
 
   return outfile
   

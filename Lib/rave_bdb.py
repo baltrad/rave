@@ -95,11 +95,11 @@ class rave_bdb(object):
     ''' returns the database that provides connection to the bdb server
     '''
     if self.initialized == False:
-      self.initialized = True
       try:
         if self.config.has_key('baltrad.bdb.server.uri'):
           uri = self.config['baltrad.bdb.server.uri']
           self.database = rest.RestfulDatabase(uri, self.load_auth_provider())
+          self.initialized = True
       except Exception, e:
         traceback.print_exc(e)
   

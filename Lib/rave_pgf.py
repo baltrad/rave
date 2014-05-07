@@ -33,7 +33,7 @@ import rave_pgf_registry
 import rave_pgf_qtools
 import BaltradFrame
 import _pyhl
-from rave_defines import DEX_SPOE, REGFILE, PGFs, LOGLEVEL, PGF_HOST, PGF_PORT
+from rave_defines import DEX_SPOE, REGFILE, PGFs, LOGID, LOGLEVEL, PGF_HOST, PGF_PORT
 
 
 METHODS = {'generate' :  '("algorithm",[files],[arguments])',
@@ -54,11 +54,11 @@ class RavePGF():
 
   ## Constructor
   def __init__(self):
-    self.name = multiprocessing.current_process().name
+    self.name = multiprocessing.current_process().name  # "%s %s" % (LOGID, multiprocessing.current_process().name)
     self._pid = os.getpid()
     self._job_counter = 0
     self._jobid = "%i-0" % self._pid
-    self.logger = rave_pgf_logger.rave_pgf_logger_client()
+    self.logger = rave_pgf_logger.rave_pgf_syslog_client()
     self._algorithm_registry = None
     self.queue = None
     self.pool = None
@@ -157,7 +157,7 @@ class RavePGF():
   # is stopped.
   # @param filename string file name to white to dump the queue
   def _dump_queue(self, filename=rave_pgf_qtools.QFILE):
-    self.logger.info("%s: Dumping job queue", self.name)
+    self.logger.info("%s: Dumping job queue containing %i jobs" % (self.name, self.queue.qsize()))
     self.queue.dump()
 
 
@@ -167,7 +167,7 @@ class RavePGF():
     self.logger.info("%s: Loading job queue", self.name)
     self.queue.load()
     if self.queue.qsize() > 0:
-      self.logger.warning("%s: Running %i jobs from dumped queue on file.", (self.name, self.queue.qsize()))
+      self.logger.warning("%s: Running %i jobs from dumped queue on file." % (self.name, self.queue.qsize()))
 
 
   ## Internal executor of the product generation algorithm queue, according to
@@ -192,7 +192,7 @@ class RavePGF():
     import imp
     mod_name, func_name = algorithm.get('module'), algorithm.get('function')
 
-    self.logger.info("%s: ID=%s Running %s.%s" % (self.name, self._jobid, mod_name, func_name))
+    self.logger.debug("%s: ID=%s Running %s.%s" % (self.name, self._jobid, mod_name, func_name))
 
     fd, pathname, description = imp.find_module(mod_name)
     module = imp.load_module(mod_name, fd, pathname, description)
@@ -231,11 +231,12 @@ class RavePGF():
       # Write job to resilient queue on disk.
       #self._dump_queue()  # Really necessary each time?
 
-      self.logger.debug("%s: ID=%s Dispatching request for %s" % (self.name, jobid, algorithm))
+      self.logger.info("%s: ID=%s Dispatching request for %s" % (self.name, jobid, algorithm))
       result = self.pool.apply_async(generate, (jobid, algorithm, files, arguments))
     except Exception, err:
-      err_msg = traceback.format_exc()
-      self.logger.error("%s: ID=%s failed. Check this out:\n%s" % (self.name, jobid, err_msg))
+      #err_msg = traceback.format_exc()
+      #self.logger.error("%s: ID=%s failed. Check this out:\n%s" % (self.name, jobid, err_msg))
+      self.logger.exception("%s: ID=%s failed. Check this out:" % (self.name, jobid))
 
     if err_msg: return err_msg        
     return "OK"
@@ -291,16 +292,17 @@ class RavePGF():
         
     except Exception, err:
       # the 'err' itself is pretty useless
-      err_msg = traceback.format_exc()
-      self.logger.error("%s: ID=%s failed. Check this out:\n%s" % (self.name, self._jobid, err_msg))
+      #err_msg = traceback.format_exc()
+      #self.logger.error("%s: ID=%s failed. Check this out:\n%s" % (self.name, self._jobid, err_msg))
+      self.logger.exception("%s: ID=%s failed. Check this out:" % (self.name, self._jobid))
 
     if outfile != None:
       if os.path.isfile(outfile): os.remove(outfile)
     
     if err_msg != None:
-      self.logger.info("%s: ID=%s Returning: %s" % (self.name, self._jobid, err_msg))
+      self.logger.debug("%s: ID=%s Returning: %s" % (self.name, self._jobid, err_msg))
       return err_msg
-    self.logger.info("%s: ID=%s Returning: OK" % (self.name, self._jobid))
+    self.logger.debug("%s: ID=%s Returning: OK" % (self.name, self._jobid))
     return "OK"
 
 
@@ -328,11 +330,12 @@ class RavePGF():
       code = subprocess.call(cmd, shell=True)
       if code != 0:
         raise Exception, "Failure when executing %s" % command
-    except Exception:
-      err_msg = traceback.format_exc()
-      self.logger.error("%s: Failed to execute command %s, msg: %s" % (self.name, command, err_msg))
+    except Exception, err:
+      #err_msg = traceback.format_exc()
+      #self.logger.error("%s: Failed to execute command %s, msg: %s" % (self.name, command, err_msg))
+      self.logger.exception("%s: Failed to execute command %s, msg:" % (self.name, command))
     
-    self.logger.info("%s: Returning OK" % self.name)
+    self.logger.debug("%s: Returning OK" % self.name)
     return "OK"
     
 
@@ -367,7 +370,6 @@ def generate(jobid, algorithm, files, arguments, host=PGF_HOST, port=PGF_PORT):
     ret = pgf._generate(algorithm, files, arguments)
     pgf._client = xmlrpclib.ServerProxy("http://%s:%i/RAVE" % (host, port), verbose=False)
     pgf._client.job_done(jobid)
-    pgf.logger.handlers[0].close()
 
 
 if __name__ == "__main__":

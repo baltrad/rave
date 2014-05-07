@@ -36,6 +36,11 @@ import _polarscan, _polarvolume, _qitotal, _rave
 from rave_quality_plugin import rave_quality_plugin
 ## Contains site-specific argument settings 
 
+QITOTAL_DTYPE  = _rave.RaveDataType_UCHAR
+QITOTAL_GAIN   = 1.0/255.0
+QITOTAL_OFFSET = 0.0
+QITOTAL_METHOD = "minimum"
+
 class rave_qitotal_quality_plugin(rave_quality_plugin):
   ##
   # Default constructor
@@ -65,6 +70,9 @@ class rave_qitotal_quality_plugin(rave_quality_plugin):
   # @param scan: the actual scan to process
   def processScan(self, objinfo, scan):
     qitotal = _qitotal.new()
+    qitotal.datatype = QITOTAL_DTYPE
+    qitotal.gain = QITOTAL_GAIN
+    qitotal.offset = QITOTAL_OFFSET
     qitotalfields = []
     for f in objinfo.qifields():
       qf = scan.findQualityFieldByHowTask(f.name())
@@ -72,8 +80,10 @@ class rave_qitotal_quality_plugin(rave_quality_plugin):
         qitotal.setWeight(f.name(), f.weight())
         qitotalfields.append(qf)
     if len(qitotalfields) > 0:
-      result = qitotal.additive(qitotalfields)
-      scan.addQualityField(result)
+      if hasattr(qitotal, QITOTAL_METHOD):
+        method = getattr(qitotal, QITOTAL_METHOD)
+        result = method(qitotalfields)
+        scan.addQualityField(result)
     
 
   ##

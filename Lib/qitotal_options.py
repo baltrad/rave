@@ -32,7 +32,7 @@ import xml.etree.ElementTree as ET
 import os, copy
 
 CONFIG_FILE = os.path.join(os.path.join(os.path.split(os.path.split(os.path.abspath(__file__))[0])[0], 
-                                        'etc'), 'qitotal_options.xml')
+                                        'config'), 'qitotal_options.xml')
 
 initialized = 0
 
@@ -148,7 +148,7 @@ def parse_qitotal_site_information(cfile):
   
 
 def get_global_qitotal_site_information():
-  global initialized
+  global initialized, QITOTAL_REGISTRY
   if initialized: return QITOTAL_REGISTRY
 
   QITOTAL_REGISTRY = parse_qitotal_site_information(CONFIG_FILE)

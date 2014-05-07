@@ -82,11 +82,11 @@ class rave_pgf_server(Daemon):
                                                         allow_none=True)
     
     self.server.register_instance(RavePGF())
-    self.server.instance.logger = rave_pgf_logger.rave_pgf_logger_client()
+    self.server.instance.logger = rave_pgf_logger.rave_pgf_syslog_client()  # Shouldn't be necessary
     self.server.instance.logger.info("%s: Starting PGF server..." % self.server.instance.name)
     self.server.instance._algorithm_registry = rave_pgf_registry.PGF_Registry(filename=REGFILE)
     self.server.instance.queue = rave_pgf_qtools.PGF_JobQueue()
-    self.server.instance.queue.load()
+    self.server.instance._load_queue()
     self.server.instance.pool = multiprocessing.Pool(PGFs)
     
     self.server.register_introspection_functions()

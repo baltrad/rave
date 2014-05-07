@@ -63,7 +63,7 @@ import rave_dom_db
 
 from rave_defines import CENTER_ID, GAIN, OFFSET, MERGETERMS
 
-logger = rave_pgf_logger.rave_pgf_logger_client()
+logger = rave_pgf_logger.rave_pgf_syslog_client()
   
 ravebdb = None
 try:
@@ -220,6 +220,5 @@ def generate(files, arguments):
     NOD = ""
   grac = gra_coefficient(NOD, acrrproduct.date, acrrproduct.time, significant, npoints, loss, r, sig, corr_coeff, a, b, c, float(m), float(dev))
   db.merge(grac)
-  logger.handlers[0].close()
 
   return None

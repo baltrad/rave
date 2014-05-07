@@ -59,7 +59,7 @@ import rave_pgf_logger
 
 from rave_defines import CENTER_ID, GAIN, OFFSET
 
-logger = rave_pgf_logger.rave_pgf_logger_client()
+logger = rave_pgf_logger.rave_pgf_syslog_client()
 
 ravebdb = None
 try:
@@ -183,6 +183,5 @@ def generate(files, arguments):
   ios.object = img
   ios.filename = outfile
   ios.save()
-  logger.handlers[0].close()
 
   return outfile

@@ -32,7 +32,7 @@ import SocketServer
 import multiprocessing
 import tempfile
 from types import StringType, UnicodeType
-from rave_defines import PGF_HOST, LOGFILE, LOGFILESIZE, LOGFILES, LOGPORT, LOGPIDFILE, LOGLEVEL, STDOE
+from rave_defines import PGF_HOST, LOGID, SYSLOG, LOGFACILITY, LOGFILE, LOGFILESIZE, LOGFILES, LOGPORT, LOGPIDFILE, LOGLEVEL, STDOE
 from rave_daemon import Daemon
 
 LOGLEVELS = {"notset"   : logging.NOTSET,
@@ -223,6 +223,28 @@ def rave_pgf_logger_client(host=PGF_HOST, port=LOGPORT, level=LOGLEVEL):
     return myLogger
 
 
+## SysLog client.
+# It is up to the user to figure out how to sort/filter syslog messages.
+# The level of the messages actually appearing in syslog will be determined by the level set
+# by your host, and changing this may require root access.
+# @param name string logger identifier. This will look up a logger that is already initialized
+# after it has been initialized the first time, normally when the PGF server starts.
+# @param address tuple containing (string, int) for (host, port) or the device file containing
+# the socket used for syslog.
+# @param facility string representing the syslog facility
+# @param level string log level
+# @returns logging.getLogger client that your application will use to send messages to syslog 
+def rave_pgf_syslog_client(name=LOGID, address=SYSLOG, facility=LOGFACILITY, level=LOGLEVEL):
+    myLogger = logging.getLogger(name)
+    if not len(myLogger.handlers):
+        myLogger.setLevel(LOGLEVELS[level])
+        handler = logging.handlers.SysLogHandler(address, facility)
+        formatter = logging.Formatter('%(name)s %(levelname)-8s %(message)s')
+        handler.setFormatter(formatter)
+        myLogger.addHandler(handler)
+    return myLogger
+
+
 if __name__ == "__main__":
   # Functionality below for testing. Otherwise use command-line binary.
   prog = "rave_pgf_logger_server"
@@ -241,9 +263,8 @@ if __name__ == "__main__":
   this = rave_pgf_logger_server()
 
   if ARG == 'stop':
-    myLogger = rave_pgf_logger_client()
+    myLogger = rave_pgf_syslog_client()
     myLogger.info("Shutting down log TCP server on %s:%i" % (this.host, this.port))
-    myLogger.handlers[0].close()
     this.stop()
 
   if ARG == 'start':

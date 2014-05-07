@@ -43,8 +43,9 @@ class radvol_att_plugin(rave_quality_plugin):
   # to the object.
   def process(self, obj):
     try:
-      import _radvol
-      _radvol.attCorrection(obj)
+      import _radvol, rave_radvol_realtime
+      rpars = rave_radvol_realtime.get_options(obj)
+      _radvol.attCorrection(obj, rpars)
     except:
       pass
     return obj
@@ -67,8 +68,9 @@ class radvol_broad_plugin(rave_quality_plugin):
   # to the object.
   def process(self, obj):
     try:
-      import _radvol
-      _radvol.broadAssessment(obj)
+      import _radvol, rave_radvol_realtime
+      rpars = rave_radvol_realtime.get_options(obj)
+      _radvol.broadAssessment(obj, rpars)
     except:
       pass
     return obj
@@ -91,8 +93,9 @@ class radvol_nmet_plugin(rave_quality_plugin):
   # to the object.
   def process(self, obj):
     try:
-      import _radvol
-      _radvol.nmetRemoval(obj)
+      import _radvol, rave_radvol_realtime
+      rpars = rave_radvol_realtime.get_options(obj)
+      _radvol.nmetRemoval(obj, rpars)
     except:
       pass
     return obj
@@ -115,8 +118,9 @@ class radvol_speck_plugin(rave_quality_plugin):
   # to the object.
   def process(self, obj):
     try:
-      import _radvol
-      _radvol.speckRemoval(obj)
+      import _radvol, rave_radvol_realtime
+      rpars = rave_radvol_realtime.get_options(obj)
+      _radvol.speckRemoval(obj, rpars)
     except:
       pass
     return obj
@@ -139,8 +143,9 @@ class radvol_spike_plugin(rave_quality_plugin):
   # to the object.
   def process(self, obj):
     try:
-      import _radvol
-      _radvol.spikeRemoval(obj)
+      import _radvol, rave_radvol_realtime
+      rpars = rave_radvol_realtime.get_options(obj)
+      _radvol.spikeRemoval(obj, rpars)
     except:
       pass
     return obj

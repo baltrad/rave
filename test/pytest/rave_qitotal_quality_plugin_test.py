@@ -29,7 +29,13 @@ import math
 import string
 import numpy
 import rave_qitotal_quality_plugin
-import _raveio, _ravefield
+import _raveio, _ravefield, _rave
+
+rave_qitotal_quality_plugin.QITOTAL_DTYPE = _rave.RaveDataType_DOUBLE
+rave_qitotal_quality_plugin.QITOTAL_GAIN = 1.0
+rave_qitotal_quality_plugin.QITOTAL_OFFSET = 0.0 
+rave_qitotal_quality_plugin.QITOTAL_METHOD = "additive"
+
 
 class rave_qitotal_quality_plugin_test(unittest.TestCase):
   VOLUME_FIXTURE = "fixtures/pvol_sekir_20090501T120000Z.h5"

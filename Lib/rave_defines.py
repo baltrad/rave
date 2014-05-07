@@ -23,7 +23,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @author Daniel Michelson, SMHI
 ## @date 2011-06-27
 
-import os, datetime
+import sys, os, datetime
 import rave_defines
 
 ## PATHS
@@ -48,11 +48,11 @@ RAVE_VERSIONS = ('2.0')
 
 # HDF5 Information model version
 H5RAD_VERSION = 'H5rad 2.0'
-H5RAD_VERSIONS = ('H5rad 1.2', 'H5rad 2.0', 'H5rad 2.1')
+H5RAD_VERSIONS = ('H5rad 1.2', 'H5rad 2.0', 'H5rad 2.1', 'H5rad 2.2')
 
 # ODIM_H5 version
 ODIM_VERSION = 'ODIM_H5/V2_0'
-ODIM_VERSIONS = ('ODIM_H5/V2_0', 'ODIM_H5/V2_1')
+ODIM_VERSIONS = ('ODIM_H5/V2_0', 'ODIM_H5/V2_1', 'ODIM_H5/V2.2')
 
 # Default text encoding
 ENCODING = 'iso-8859-1'
@@ -123,12 +123,19 @@ REGFILE = os.path.join(RAVEETC, 'rave_pgf_registry.xml')  # registry file
 QFILE = os.path.join(RAVEETC, 'rave_pgf_queue.xml')  # queue file
 PGF_TAG = 'bltgenerate'  # used for sending files to the DEX
 
+# Logging - little of this is relevant if SysLog is used or the OS rotates the logs.
+LOGID = 'PGF[rave.baltrad.eu]'
 LOGPORT = 8089
-LOGFILE     = os.path.join(RAVEETC, "rave_pgf.log")
+LOGFILE     = os.path.join(RAVEETC, "rave_pgf.log") # Default logger is to syslog.
 LOGFILESIZE = 5000000  # 5 Mb each
 LOGFILES    = 5
+LOGFACILITY = "local3"
 LOGLEVEL = "info"
 LOGPIDFILE = os.path.join(RAVEETC, 'rave_pgf_log_server.pid')
+if sys.platform == "darwin":
+    SYSLOG = "/var/run/syslog"
+else:
+    SYSLOG = "/dev/log"
 
 ODIM_SOURCE_FILE = os.path.join(RAVECONFIG, 'odim_source.xml')
 
