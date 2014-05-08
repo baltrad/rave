@@ -32,6 +32,7 @@ import _area
 import _projection
 import _raveio
 import _ravefield
+import _polarscan, _polarvolume, _polarscanparam, _poocompositealgorithm
 import numpy
 import math
 import string
@@ -380,6 +381,78 @@ class PyCompositeTest(unittest.TestCase):
     ios.filename = "swemaxcomposite.h5"
     ios.save()
 
+  def create_simple_scan(self, sizes, quantity, v, qis, elangle, lon, lat, height, src):
+    s = _polarscan.new()
+    s.longitude = lon
+    s.latitude = lat
+    s.height = height
+    s.elangle = elangle
+    s.rstart = 0.0
+    s.rscale = 10000.0
+    s.source = src
+    p = _polarscanparam.new()
+    p.quantity = "DBZH"
+    p.nodata = 255.0
+    p.undetect = 0.0
+    p.offset = 0.0
+    p.gain = 1.0
+    data = numpy.zeros(sizes, numpy.uint8)
+    data = data + v
+    p.setData(data)
+    
+    for k in qis.keys():
+      data = numpy.zeros(sizes, numpy.float64)
+      data = data + qis[k]
+      qf = _ravefield.new()
+      qf.addAttribute("how/task", k)
+      qf.setData(data)
+      p.addQualityField(qf)
+    
+    s.addParameter(p)
+    return s
+
+  def test_nearest_max_slim(self):
+    a = _area.new()
+    a.id = "test10km"
+    a.xsize = 23
+    a.ysize = 19
+    a.xscale = 10000.0
+    a.yscale = 10000.0
+    a.extent = (1229430.993379, 8300379.564361, 1459430.993379, 8490379.564361)
+    a.projection = _projection.new("x", "y", "+proj=merc +lat_ts=0 +lon_0=0 +k=1.0 +R=6378137.0 +nadgrids=@null +no_defs")
+
+    s1 = self.create_simple_scan((4,4), "DBZH", 5, {"se.smhi.detector.poo": 0.1, "qf":0.5}, 0.1 * math.pi / 180.0, 12.0*math.pi/180.0, 60.0*math.pi/180.0, 0.0, "NOD:se1")
+    s2 = self.create_simple_scan((4,4), "DBZH", 10, {"qf":0.6}, 0.2 * math.pi / 180.0, 12.0*math.pi/180.0, 60.0*math.pi/180.0, 0.0, "NOD:se1")
+    v1 = _polarvolume.new()
+    v1.longitude = 12.0*math.pi/180.0
+    v1.latitude = 60.0*math.pi/180.0
+    v1.height = 0.0
+    v1.source = "NOD:se1"
+    v1.addScan(s1)
+    v1.addScan(s2)
+
+    s1 = self.create_simple_scan((4,4), "DBZH", 5, {"se.smhi.detector.poo": 0.2, "qf":0.5}, 0.1 * math.pi / 180.0, 12.1*math.pi/180.0, 60.0*math.pi/180.0, 0.0, "NOD:sek")
+    s2 = self.create_simple_scan((4,4), "DBZH", 10, {"qf":0.7}, 0.2 * math.pi / 180.0, 12.1*math.pi/180.0, 60.0*math.pi/180.0, 0.0, "NOD:sek")
+    v2 = _polarvolume.new()
+    v2.longitude = 12.1*math.pi/180.0
+    v2.latitude = 60.0*math.pi/180.0
+    v2.height = 0.0
+    v2.source = "NOD:sek"
+    v2.addScan(s1)
+    v2.addScan(s2)
+
+    generator = _pycomposite.new()
+    generator.add(v1)
+    generator.add(v2)
+    generator.addParameter("DBZH", 1.0, 0.0)
+    generator.product = _rave.Rave_ProductType_MAX
+    generator.height = 0.0
+    generator.range = 0.0
+    generator.time = "120000"
+    generator.date = "20090501"
+    generator.quality_indicator_field_name="qf"
+    generator.algorithm = _poocompositealgorithm.new()
+    result = generator.nearest(a, ["se.smhi.detector.poo", "qf"])
 
   def test_nearest_pseudomax(self):
     generator = _pycomposite.new()

@@ -330,6 +330,7 @@ static void CompositeInternal_resetCompositeValues(Composite_t* composite, int n
     p[i].navinfo.ri = -1;
     p[i].vtype = RaveValueType_NODATA;
     p[i].name = (const char*)((CompositingParameter_t*)RaveList_get(composite->parameters, i))->name;
+    p[i].qivalue = 0.0;
   }
 }
 
@@ -656,6 +657,10 @@ static void CompositeInternal_fillQualityInformation(
           }
         } else {
           if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
+            /*
+            if (navinfo->ei >= 0 && navinfo->ri >= 0 && navinfo->ai >= 0) {
+              fprintf(stderr, "(%d,%d) => ei=%d, ri=%d, ai=%d\n", x, y, navinfo->ei, navinfo->ri, navinfo->ai);
+            }*/
             if (navinfo->ei >= 0 && navinfo->ri >= 0 && navinfo->ai >= 0 &&
                 PolarVolume_getQualityValueAt((PolarVolume_t*)obj, quantity, navinfo->ei, navinfo->ri, navinfo->ai, name, &v)) {
               RaveField_setValue(field, x, y, v);
@@ -873,15 +878,17 @@ static Cartesian_t* Composite_nearest_max(Composite_t* composite, Area_t* area, 
       double herex = Cartesian_getLocationX(result, x);
       double olon = 0.0, olat = 0.0;
 
+      /*int dodebug = (x==14&&y==16)?1:0;*/
+
       CompositeInternal_resetCompositeValues(composite, nparam, cvalues);
       if (composite->algorithm != NULL) {
         CompositeAlgorithm_reset(composite->algorithm, x, y);
       }
+      /*int olap = 0;*/
 
       for (i = 0; i < nradars; i++) {
         RaveCoreObject* obj = NULL;
         Projection_t* objproj = NULL;
-
         obj = RaveObjectList_get(composite->list, i);
         if (obj != NULL) {
           objproj = CompositeInternal_getProjection(obj);
@@ -902,11 +909,19 @@ static Cartesian_t* Composite_nearest_max(Composite_t* composite, Area_t* area, 
                 RaveValueType otype = RaveValueType_NODATA;
                 double ovalue = 0.0, qivalue = 0.0;
                 CompositeInternal_getVerticalMaxValue(composite, i, cvalues[cindex].name, olon, olat, &otype, &ovalue, &navinfo, &qivalue);
+                /*if (dodebug) fprintf(stderr, "(%d,%d): qivalue = %f for i = %d, otype = %d\n", x,y,qivalue, i, otype);*/
                 if (otype == RaveValueType_DATA || otype == RaveValueType_UNDETECT) {
+                  /*olap++;
+                  if (olap > 1) {
+                    fprintf(stderr, "Overlap at %d,%d\n",x,y);
+                  }*/
                   if ((cvalues[cindex].vtype != RaveValueType_DATA && cvalues[cindex].vtype != RaveValueType_UNDETECT) ||
                       (cvalues[cindex].vtype == RaveValueType_UNDETECT && otype == RaveValueType_DATA) ||
                       (cvalues[cindex].vtype == RaveValueType_DATA && otype == RaveValueType_DATA && ovalue > cvalues[cindex].value) ||
                       (composite->qiFieldName != NULL && (qivalue > cvalues[cindex].qivalue))) {
+                    /*if (dodebug) {
+                      fprintf(stderr, "Setting (%d,%d): qivalue = %f, oqivalue = %f\n", x,y,qivalue, cvalues[cindex].qivalue);
+                    }*/
                     cvalues[cindex].vtype = otype;
                     cvalues[cindex].value = ovalue;
                     cvalues[cindex].mindist = dist;
