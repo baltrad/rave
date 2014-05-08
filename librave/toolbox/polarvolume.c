@@ -600,6 +600,9 @@ RaveValueType PolarVolume_getConvertedVerticalMaxValue(PolarVolume_t* self, cons
             *navinfo = info;
           }
         }
+      } else if (result == RaveValueType_UNDETECT && type == RaveValueType_UNDETECT) {
+        RAVE_OBJECT_RELEASE(scan);
+        continue; /* We always want to use the first UNDETECT if it only exists UNDETECT */
       } else if (result != RaveValueType_DATA) {
         double dummydistance = 0.0;
         *v = value;

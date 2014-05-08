@@ -72,18 +72,6 @@ typedef struct CompositeValues_t {
   double qivalue;     /**< quality index value */
 } CompositeValues_t;
 
-/**
- * Struct for helping out with performance when it comes to digging out quality based values.
- * It basically maps a quality field with an object+quality+elevation index so that it does not have
- * to look the quality field up all the time.
- */
-typedef struct PolarAndQuality_t {
-  RaveField_t* qualityField;
-  RaveCoreObject* object;
-  char* quality;
-  long ei;
-} PolarAndQuality_t;
-
 /** The resolution to use for scaling the distance from pixel to used radar */
 #define DISTANCE_TO_RADAR_RESOLUTION 2000.0
 
@@ -325,37 +313,6 @@ static CompositeValues_t* CompositeInternal_createCompositeValues(int nparam)
   return result;
 }
 
-/* PAQ
-static PolarAndQuality_t* CompositeInternal_createPolarAndQuality(Composite_t* composite)
-{
-  int i = 0;
-  int len = RaveObjectList_size(composite->list);
-  PolarAndQuality_t* result = RAVE_MALLOC(sizeof(PolarAndQuality_t)*len);
-  if (result == NULL) {
-    RAVE_CRITICAL0("Failed to allocate memory for paq array");
-  } else {
-    for (i = 0; i < len; i++) {
-      result[i].object = RaveObjectList_get(composite->list, index);
-      result[i].qualityField = NULL;
-    }
-  }
-
-  return result;
-}
-
-static void CompositeInternal_releasePolarAndQuality(PolarAndQuality_t** paqarr, int nitems)
-{
-  int i = 0;
-  if (paqarr != NULL && (*paqarr) != NULL) {
-    for (i = 0; i < nitems; i++) {
-      RAVE_OBJECT_RELEASE((*paqarr)[i].object);
-    }
-    RAVE_FREE(*paqarr);
-    *paqarr = NULL;
-  }
-}
-*/
-
 /**
  * Resets the array of composite values except the CartesianParam parameter
  * and the dToRadar field.
@@ -448,7 +405,6 @@ done:
 static int CompositeInternal_getValueAtPosition(
   Composite_t* composite,
   RaveCoreObject* obj,
-  /*PAQ  PolarAndQuality_t* paq, */
   const char* quantity,
   PolarNavigationInfo* nav,
   RaveValueType* type,
@@ -456,12 +412,10 @@ static int CompositeInternal_getValueAtPosition(
   double* qiv)
 {
   int result = 0;
-  static int bval = 0;
   RAVE_ASSERT((composite != NULL), "composite == NULL");
   RAVE_ASSERT((nav != NULL), "nav == NULL");
   RAVE_ASSERT((type != NULL), "type == NULL");
   RAVE_ASSERT((value != NULL), "value == NULL");
-  /*RAVE_ASSERT((paq != NULL), "paq == NULL");*/
   *qiv = 0.0;
 
   if (obj != NULL) {
@@ -469,15 +423,16 @@ static int CompositeInternal_getValueAtPosition(
       *type = PolarScan_getConvertedParameterValue((PolarScan_t*)obj, quantity, nav->ri, nav->ai, value);
       if (composite->qiFieldName != NULL) {
         if (!PolarScan_getQualityValueAt((PolarScan_t*)obj, quantity, nav->ri, nav->ai, (const char*)composite->qiFieldName, qiv)) {
-          if (bval == 0) {
-            fprintf(stderr, "Failed to locate quality field value\n");
-            bval = 1;
-          }
           *qiv = 0.0;
         }
       }
     } else if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
       *type = PolarVolume_getConvertedParameterValueAt((PolarVolume_t*)obj, quantity, nav->ei, nav->ri, nav->ai, value);
+      if (composite->qiFieldName != NULL) {
+        if (!PolarVolume_getQualityValueAt((PolarVolume_t*)obj, quantity, nav->ei, nav->ri, nav->ai, (const char*)composite->qiFieldName, qiv)) {
+          *qiv = 0.0;
+        }
+      }
     } else {
       RAVE_WARNING0("Unsupported object type");
       goto done;
@@ -511,7 +466,8 @@ static int CompositeInternal_getVerticalMaxValue(
   double lat,
   RaveValueType* vtype,
   double* vvalue,
-  PolarNavigationInfo* navinfo)
+  PolarNavigationInfo* navinfo,
+  double* qiv)
 {
   int result = 0;
   RaveCoreObject* obj = NULL;
@@ -528,8 +484,18 @@ static int CompositeInternal_getVerticalMaxValue(
 
   if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarScan_TYPE)) {
     *vtype = PolarScan_getNearestConvertedParameterValue((PolarScan_t*)obj, quantity, lon, lat, vvalue, &info);
+    if (self->qiFieldName != NULL && (qiv != NULL)) {
+      if (!PolarScan_getQualityValueAt((PolarScan_t*)obj, quantity, info.ri, info.ai, (const char*)self->qiFieldName, qiv)) {
+        *qiv = 0.0;
+      }
+    }
   } else {
     *vtype = PolarVolume_getConvertedVerticalMaxValue((PolarVolume_t*)obj, quantity, lon, lat, vvalue, &info);
+    if (self->qiFieldName != NULL && (qiv != NULL)) {
+      if (!PolarVolume_getQualityValueAt((PolarVolume_t*)obj, quantity, info.ei, info.ri, info.ai, (const char*)self->qiFieldName, qiv)) {
+        *qiv = 0.0;
+      }
+    }
   }
 
   if (navinfo != NULL) {
@@ -934,18 +900,20 @@ static Cartesian_t* Composite_nearest_max(Composite_t* composite, Area_t* area, 
             if (CompositeInternal_getDistances(obj, olon, olat, &dist, &maxdist) && dist <= maxdist) {
               for (cindex = 0; cindex < nparam; cindex++) {
                 RaveValueType otype = RaveValueType_NODATA;
-                double ovalue = 0.0;
-                CompositeInternal_getVerticalMaxValue(composite, i, cvalues[cindex].name, olon, olat, &otype, &ovalue, &navinfo);
+                double ovalue = 0.0, qivalue = 0.0;
+                CompositeInternal_getVerticalMaxValue(composite, i, cvalues[cindex].name, olon, olat, &otype, &ovalue, &navinfo, &qivalue);
                 if (otype == RaveValueType_DATA || otype == RaveValueType_UNDETECT) {
                   if ((cvalues[cindex].vtype != RaveValueType_DATA && cvalues[cindex].vtype != RaveValueType_UNDETECT) ||
                       (cvalues[cindex].vtype == RaveValueType_UNDETECT && otype == RaveValueType_DATA) ||
-                      (cvalues[cindex].vtype == RaveValueType_DATA && otype == RaveValueType_DATA && ovalue > cvalues[cindex].value)) {
+                      (cvalues[cindex].vtype == RaveValueType_DATA && otype == RaveValueType_DATA && ovalue > cvalues[cindex].value) ||
+                      (composite->qiFieldName != NULL && (qivalue > cvalues[cindex].qivalue))) {
                     cvalues[cindex].vtype = otype;
                     cvalues[cindex].value = ovalue;
                     cvalues[cindex].mindist = dist;
                     cvalues[cindex].radardist = dist;
                     cvalues[cindex].radarindex = i;
                     cvalues[cindex].navinfo = navinfo;
+                    cvalues[cindex].qivalue = qivalue;
                   }
                 }
               }
@@ -1219,14 +1187,13 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t*
   Projection_t* projection = NULL;
   PolarNavigationInfo navinfo;
   CompositeValues_t* cvalues = NULL;
-  /*PAQ PolarAndQuality_t* paqarr = NULL; */
   int x = 0, y = 0, i = 0, xsize = 0, ysize = 0, nradars = 0;
   int nqualityflags = 0;
   int nparam = 0;
 
   RAVE_ASSERT((composite != NULL), "composite == NULL");
 
-  if (composite->ptype == Rave_ProductType_MAX && composite->qiFieldName == NULL) { // Special handling of the max algorithm.
+  if (composite->ptype == Rave_ProductType_MAX) { // Special handling of the max algorithm.
     return Composite_nearest_max(composite, area, qualityflags);
   }
 
@@ -1249,12 +1216,6 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t*
   if ((cvalues = CompositeInternal_createCompositeValues(nparam)) == NULL) {
     goto fail;
   }
-
-  /* PAQ
-  if ((paqarr = CompositeInternal_createPolarAndQuality(composite)) == NULL) {
-    goto fail;
-  }
-  */
 
   for (i = 0; i < nparam; i++) {
     const char* name = Composite_getParameter(composite, i, NULL, NULL);
@@ -1335,7 +1296,6 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t*
                 for (cindex = 0; cindex < nparam; cindex++) {
                   RaveValueType otype = RaveValueType_NODATA;
                   double ovalue = 0.0, qivalue = 0.0;
-                  /* PAQ CompositeInternal_getValueAtPosition(composite, &(paqarr[i]), cvalues[cindex].name, &navinfo, &otype, &ovalue); */
                   CompositeInternal_getValueAtPosition(composite, obj, cvalues[cindex].name, &navinfo, &otype, &ovalue, &qivalue);
 
                   if (composite->algorithm != NULL && CompositeAlgorithm_supportsProcess(composite->algorithm)) {
@@ -1379,18 +1339,6 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t*
                         cvalues[cindex].navinfo = navinfo;
                         cvalues[cindex].qivalue = qivalue;
                       }
-
-                      /* PAQ
-                      if ((cvalues[cindex].vtype != RaveValueType_DATA && cvalues[cindex].vtype != RaveValueType_UNDETECT) ||
-                          dist < cvalues[cindex].mindist) {
-                        cvalues[cindex].vtype = otype;
-                        cvalues[cindex].value = ovalue;
-                        cvalues[cindex].mindist = dist;
-                        cvalues[cindex].radardist = rdist;
-                        cvalues[cindex].radarindex = i;
-                        cvalues[cindex].navinfo = navinfo;
-                      }
-                      */
                     }
                   }
                 }
@@ -1415,9 +1363,9 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t*
             double nvalue = 0.0;
             if (vtype == RaveValueType_UNDETECT) {
               /* Undetect should not affect navigation information */
-              CompositeInternal_getVerticalMaxValue(composite, cvalues[cindex].radarindex, cvalues[cindex].name, olon, olat, &ntype, &nvalue, NULL);
+              CompositeInternal_getVerticalMaxValue(composite, cvalues[cindex].radarindex, cvalues[cindex].name, olon, olat, &ntype, &nvalue, NULL, NULL);
             } else {
-              CompositeInternal_getVerticalMaxValue(composite, cvalues[cindex].radarindex, cvalues[cindex].name, olon, olat, &ntype, &nvalue, &info);
+              CompositeInternal_getVerticalMaxValue(composite, cvalues[cindex].radarindex, cvalues[cindex].name, olon, olat, &ntype, &nvalue, &info, NULL);
             }
             if (ntype != RaveValueType_NODATA) {
               vtype = ntype;
@@ -1452,7 +1400,6 @@ fail:
   for (i = 0; cvalues != NULL && i < nparam; i++) {
     RAVE_OBJECT_RELEASE(cvalues[i].parameter);
   }
-  /* CompositeInternal_releasePolarAndQuality(paqarr); */
   RAVE_FREE(cvalues);
   RAVE_OBJECT_RELEASE(projection);
   RAVE_OBJECT_RELEASE(result);
