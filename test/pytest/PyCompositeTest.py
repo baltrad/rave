@@ -421,8 +421,8 @@ class PyCompositeTest(unittest.TestCase):
     a.extent = (1229430.993379, 8300379.564361, 1459430.993379, 8490379.564361)
     a.projection = _projection.new("x", "y", "+proj=merc +lat_ts=0 +lon_0=0 +k=1.0 +R=6378137.0 +nadgrids=@null +no_defs")
 
-    s1 = self.create_simple_scan((4,4), "DBZH", 5, {"se.smhi.detector.poo": 0.1, "qf":0.5}, 0.1 * math.pi / 180.0, 12.0*math.pi/180.0, 60.0*math.pi/180.0, 0.0, "NOD:se1")
-    s2 = self.create_simple_scan((4,4), "DBZH", 10, {"qf":0.6}, 0.2 * math.pi / 180.0, 12.0*math.pi/180.0, 60.0*math.pi/180.0, 0.0, "NOD:se1")
+    s1 = self.create_simple_scan((4,4), "DBZH", 5, {"se.smhi.detector.poo": 0.1, "qf":0.6}, 0.1 * math.pi / 180.0, 12.0*math.pi/180.0, 60.0*math.pi/180.0, 0.0, "NOD:se1")
+    s2 = self.create_simple_scan((4,4), "DBZH", 10, {"qf":0.5}, 0.2 * math.pi / 180.0, 12.0*math.pi/180.0, 60.0*math.pi/180.0, 0.0, "NOD:se1")
     v1 = _polarvolume.new()
     v1.longitude = 12.0*math.pi/180.0
     v1.latitude = 60.0*math.pi/180.0
@@ -431,8 +431,8 @@ class PyCompositeTest(unittest.TestCase):
     v1.addScan(s1)
     v1.addScan(s2)
 
-    s1 = self.create_simple_scan((4,4), "DBZH", 5, {"se.smhi.detector.poo": 0.2, "qf":0.5}, 0.1 * math.pi / 180.0, 12.1*math.pi/180.0, 60.0*math.pi/180.0, 0.0, "NOD:sek")
-    s2 = self.create_simple_scan((4,4), "DBZH", 10, {"qf":0.7}, 0.2 * math.pi / 180.0, 12.1*math.pi/180.0, 60.0*math.pi/180.0, 0.0, "NOD:sek")
+    s1 = self.create_simple_scan((4,4), "DBZH", 5, {"se.smhi.detector.poo": 0.2, "qf":0.4}, 0.1 * math.pi / 180.0, 12.1*math.pi/180.0, 60.0*math.pi/180.0, 0.0, "NOD:sek")
+    s2 = self.create_simple_scan((4,4), "DBZH", 10, {"qf":0.3}, 0.2 * math.pi / 180.0, 12.1*math.pi/180.0, 60.0*math.pi/180.0, 0.0, "NOD:sek")
     v2 = _polarvolume.new()
     v2.longitude = 12.1*math.pi/180.0
     v2.latitude = 60.0*math.pi/180.0
@@ -453,6 +453,47 @@ class PyCompositeTest(unittest.TestCase):
     generator.quality_indicator_field_name="qf"
     generator.algorithm = _poocompositealgorithm.new()
     result = generator.nearest(a, ["se.smhi.detector.poo", "qf"])
+
+  def test_nearest_max_polgmaps(self):
+    a = _area.new()
+    a.id = "polgmaps_2000"
+    a.xsize = 754
+    a.ysize = 810
+    a.xscale = 2000.0
+    a.yscale = 2000.0
+    a.extent = (1335807.096179,6065547.928434,2843807.096179,7685547.928434)
+    a.projection = _projection.new("x", "y", "+proj=merc +lat_ts=0 +lon_0=0 +k=1.0 +R=6378137.0 +nadgrids=@null +no_defs")
+
+    PLVOLUMES=["fixtures/plbrz_pvol_20120205T0430Z.h5",
+               "fixtures/plgda_pvol_20120205T0430Z.h5",
+               "fixtures/plleg_pvol_20120205T0430Z.h5",
+               "fixtures/plpas_pvol_20120205T0430Z.h5",
+               "fixtures/plpoz_pvol_20120205T0430Z.h5",
+               "fixtures/plram_pvol_20120205T0430Z.h5",
+               "fixtures/plrze_pvol_20120205T0430Z.h5"]
+
+    generator = _pycomposite.new()
+    #_rave.setDebugLevel(_rave.Debug_RAVE_DEBUG)
+    for fname in PLVOLUMES:
+      rio = _raveio.open(fname)
+      generator.add(rio.object)
+    #GAIN = 0.4
+    #OFFSET = -30.0
+
+    generator.addParameter("DBZH", 0.4, -30.0)
+    generator.product = _rave.Rave_ProductType_MAX
+    generator.height = 0.0
+    generator.range = 0.0
+    generator.time = "043000"
+    generator.date = "20120205"
+    generator.quality_indicator_field_name="pl.imgw.quality.qi_total"
+    generator.algorithm = _poocompositealgorithm.new()
+    result = generator.nearest(a, ["se.smhi.detector.poo", "pl.imgw.quality.qi_total"])
+
+    ios = _raveio.new()
+    ios.object = result
+    ios.filename = "polgmaps_max_qitotal.h5"
+    ios.save()
 
   def test_nearest_pseudomax(self):
     generator = _pycomposite.new()
