@@ -20,16 +20,13 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ##
 # Matcher for extracting observations that matches the provided acrr composite product
 #
+# @file
+# @author Anders Henja, SMHI
+# @date 2013-12-11
 import datetime, math
 import _rave
 from gadjust import grapoint
 from Proj import dr, rd
-import rave_pgf_logger
-## 
-# @file
-# @author Anders Henja, SMHI
-# @date 2013-12-11
-logger = rave_pgf_logger.rave_pgf_logger_client()
 
 ##
 # Class for extracting relevant observations that are covered by the provided area
@@ -58,18 +55,21 @@ class obsmatcher(object):
     image.defaultParameter=quantity
     
     sdt = datetime.datetime(int(d[:4]), int(d[4:6]), int(d[6:8]), int(t[0:2]), int(t[2:4]), int(t[4:6]))
-    edt = sdt
-    sdt = sdt - datetime.timedelta(hours=offset)
+    edt = datetime.datetime.now()
+    # We want all observations reported from nominaltime (sdt) until now
+    #edt = sdt
+    #sdt = sdt - datetime.timedelta(hours=offset)
 
     obses = self.db.get_observations_in_bbox(ul[0]*rd, ul[1]*rd, lr[0]*rd, lr[1]*rd, sdt, edt)
     
     result = []
     for obs in obses:
-      t, v = image.getConvertedValueAtLonLat((obs.longitude*dr, obs.latitude*dr))
-      if t in [_rave.RaveValueType_DATA, _rave.RaveValueType_UNDETECT]:
-        d = image.getQualityValueAtLonLat((obs.longitude*dr, obs.latitude*dr), how_task)
-        if d != None:
-          if obs.liquid_precipitation > 0.0 and v > 0.0:
-            result.append(grapoint.grapoint.from_observation(t, v, d, obs))
+      if obs.accumulation_period == offset:
+        t, v = image.getConvertedValueAtLonLat((obs.longitude*dr, obs.latitude*dr))
+        if t in [_rave.RaveValueType_DATA, _rave.RaveValueType_UNDETECT]:
+          d = image.getQualityValueAtLonLat((obs.longitude*dr, obs.latitude*dr), how_task)
+          if d != None:
+            if obs.liquid_precipitation >= grapoint.MIN_GMM and v >= grapoint.MIN_RMM:
+              result.append(grapoint.grapoint.from_observation(t, v, d, obs))
 
     return result 

@@ -74,7 +74,7 @@ class observation(object):
   UPDATED_TYPES= {DELAYED: "Delayed",
                   CORRECTED: "Corrected"}
   
-  def __init__(self, station, country, type, date, time, longitude, latitude, liquid_precipitation=0.0):
+  def __init__(self, station, country, type, date, time, longitude, latitude, liquid_precipitation=0.0, accumulation_period=0):
     self.station = station
     self.country = country
     self.type = type
@@ -95,7 +95,7 @@ class observation(object):
     self.sea_lvl_pressure = 0.0
     self.pressure_change = 0.0
     self.liquid_precipitation = liquid_precipitation
-    self.accumulation_period = 0
+    self.accumulation_period = accumulation_period
     super(observation, self).__init__()
 
 

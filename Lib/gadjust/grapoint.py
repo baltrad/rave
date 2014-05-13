@@ -19,6 +19,10 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 '''
 import _rave
 from numpy import log10
+
+MIN_GMM = 0.1  # Minimum gauge precip allowed when deriving coefficients
+MIN_RMM = 0.1  # Minimum radar precip allowed when deriving coefficients
+
 ##
 # Represents one point to be used in the gra adjustment. Contains both information related to
 # the radar and the observation
@@ -43,7 +47,7 @@ class grapoint(object):
     self.observation = liquid_precipitation
     self.accumulation_period = accumulation_period
     self.gr = -1
-    if self.radarvaluetype == _rave.RaveValueType_DATA and self.radarvalue >= 0.1:
+    if self.radarvaluetype == _rave.RaveValueType_DATA and self.radarvalue >= MIN_RMM:
       self.gr = float(10 * log10(self.observation / self.radarvalue))
       
 
