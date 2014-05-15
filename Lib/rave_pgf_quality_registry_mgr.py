@@ -40,7 +40,7 @@ class rave_pgf_quality_registry_mgr(ET._ElementInterface):
   def __init__(self, filename = QUALITY_REGISTRY, encoding=UTF8):
     self.tail='\n  '
     self.text='\n  '
-    self.tag = "rave-pgf-composite-quality-registry"
+    self.tag = "rave-pgf-quality-registry"
     self.attrib = {}  # This is needed even if it's empty
     self._children = []
     self.encoding = encoding
