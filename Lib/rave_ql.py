@@ -44,19 +44,19 @@ import sys
 try:
     import pygtk
 except ImportError:
-    print "This module requires PyGTK."
-    sys.exit(1)
+    raise ImportError, "This module requires PyGTK."
 pygtk.require('2.0')
+
 try:
     import gtk
 except ImportError:
-    print "This module requires GTK."
-    sys.exit(1)
+    raise ImportError, "This module requires GTK."
+
 try:
     import threading
 except ImportError:
-    print "You need Python compiled with threading support for this module."
-    sys.exit()
+    raise ImportError, "You need Python compiled with threading support for the QuickLook module."
+
 import os, StringIO
 import numpy
 import Image
