@@ -44,20 +44,20 @@ class rave_pgf_quality_registry_mgr_test(unittest.TestCase):
   def test_constructor_1(self):
     classUnderTest = rave_pgf_quality_registry_mgr(self.FIXTURE_1)
     expected = """<?xml version="1.0" encoding="UTF-8"?>
-<rave-pgf-composite-quality-registry>
+<rave-pgf-quality-registry>
   <quality-plugin class="rave_overshooting_quality_plugin" module="rave_overshooting_quality_plugin" name="rave-overshooting" />
   <quality-plugin class="rave_distance_quality_plugin" module="rave_distance_quality_plugin" name="distance" />
-</rave-pgf-composite-quality-registry>
+</rave-pgf-quality-registry>
 """
     self.assertEquals(expected, classUnderTest.tostring())    
   
   def test_constructor_2(self):
     classUnderTest = rave_pgf_quality_registry_mgr(self.FIXTURE_1, "ISO-8859-1")
     expected = """<?xml version="1.0" encoding="ISO-8859-1"?>
-<rave-pgf-composite-quality-registry>
+<rave-pgf-quality-registry>
   <quality-plugin class="rave_overshooting_quality_plugin" module="rave_overshooting_quality_plugin" name="rave-overshooting" />
   <quality-plugin class="rave_distance_quality_plugin" module="rave_distance_quality_plugin" name="distance" />
-</rave-pgf-composite-quality-registry>
+</rave-pgf-quality-registry>
 """
     self.assertEquals(expected, classUnderTest.tostring())    
     
@@ -65,11 +65,11 @@ class rave_pgf_quality_registry_mgr_test(unittest.TestCase):
     classUnderTest = rave_pgf_quality_registry_mgr(self.FIXTURE_1)
     classUnderTest.add_plugin("nisse", "nisses_module", "nisses_plugin")
     expected = """<?xml version="1.0" encoding="UTF-8"?>
-<rave-pgf-composite-quality-registry>
+<rave-pgf-quality-registry>
   <quality-plugin class="rave_overshooting_quality_plugin" module="rave_overshooting_quality_plugin" name="rave-overshooting" />
   <quality-plugin class="rave_distance_quality_plugin" module="rave_distance_quality_plugin" name="distance" />
   <quality-plugin class="nisses_plugin" module="nisses_module" name="nisse" />
-</rave-pgf-composite-quality-registry>
+</rave-pgf-quality-registry>
 """
     self.assertEquals(expected, classUnderTest.tostring())    
 
@@ -77,9 +77,9 @@ class rave_pgf_quality_registry_mgr_test(unittest.TestCase):
     classUnderTest = rave_pgf_quality_registry_mgr(self.FIXTURE_1)
     classUnderTest.remove_plugin("rave-overshooting")
     expected = """<?xml version="1.0" encoding="UTF-8"?>
-<rave-pgf-composite-quality-registry>
+<rave-pgf-quality-registry>
   <quality-plugin class="rave_distance_quality_plugin" module="rave_distance_quality_plugin" name="distance" />
-</rave-pgf-composite-quality-registry>
+</rave-pgf-quality-registry>
 """
     self.assertEquals(expected, classUnderTest.tostring())    
 
@@ -93,10 +93,10 @@ class rave_pgf_quality_registry_mgr_test(unittest.TestCase):
     classUnderTest = rave_pgf_quality_registry_mgr(self.FIXTURE_1)
     classUnderTest.save(self.TEMPORARY_FILE)
     expected = """<?xml version="1.0" encoding="UTF-8"?>
-<rave-pgf-composite-quality-registry>
+<rave-pgf-quality-registry>
   <quality-plugin class="rave_overshooting_quality_plugin" module="rave_overshooting_quality_plugin" name="rave-overshooting" />
   <quality-plugin class="rave_distance_quality_plugin" module="rave_distance_quality_plugin" name="distance" />
-</rave-pgf-composite-quality-registry>
+</rave-pgf-quality-registry>
 """
     self.assertEquals(expected, open(self.TEMPORARY_FILE).read())
 
@@ -105,11 +105,11 @@ class rave_pgf_quality_registry_mgr_test(unittest.TestCase):
     classUnderTest.add_plugin("nisse", "nisses_module", "nisses_plugin")
     classUnderTest.save(self.TEMPORARY_FILE)
     expected = """<?xml version="1.0" encoding="UTF-8"?>
-<rave-pgf-composite-quality-registry>
+<rave-pgf-quality-registry>
   <quality-plugin class="rave_overshooting_quality_plugin" module="rave_overshooting_quality_plugin" name="rave-overshooting" />
   <quality-plugin class="rave_distance_quality_plugin" module="rave_distance_quality_plugin" name="distance" />
   <quality-plugin class="nisses_plugin" module="nisses_module" name="nisse" />
-</rave-pgf-composite-quality-registry>
+</rave-pgf-quality-registry>
 """
     self.assertEquals(expected, open(self.TEMPORARY_FILE).read())
     
@@ -118,9 +118,9 @@ class rave_pgf_quality_registry_mgr_test(unittest.TestCase):
     classUnderTest.remove_plugin("rave-overshooting")
     classUnderTest.save(self.TEMPORARY_FILE)
     expected = """<?xml version="1.0" encoding="UTF-8"?>
-<rave-pgf-composite-quality-registry>
+<rave-pgf-quality-registry>
   <quality-plugin class="rave_distance_quality_plugin" module="rave_distance_quality_plugin" name="distance" />
-</rave-pgf-composite-quality-registry>
+</rave-pgf-quality-registry>
 """
     self.assertEquals(expected, open(self.TEMPORARY_FILE).read())
     
