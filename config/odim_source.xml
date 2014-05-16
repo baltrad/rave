@@ -202,16 +202,17 @@
     <rsfru plc="Fruška gora" rad="RS41" wmo="13169"></rsfru>
     <rsbaj plc="Bajša" rad="RS42" wmo="13164"></rsbaj>
     <rssam plc="Samoš" rad="RS43" wmo="13176"></rssam>
-    <rsval plc="Valjevo" rad="RS44" wmo="00000"></rsval>
-    <rsbuk plc="Bukulja" rad="RS45" wmo="00000"></rsbuk>
-    <rspet plc="Petrovac" rad="RS46" wmo="00000"></rspet>
-    <rscrn plc="Crni vrh" rad="RS47" wmo="00000"></rscrn>
-    <rsuzi plc="Užice" rad="RS48" wmo="00000"></rsuzi>
-    <rsbes plc="Besnjaja" rad="RS49" wmo="00000"></rsbes>
-    <rssje plc="Sjenica" rad="RS50" wmo="00000"></rssje>
-    <rskru plc="Kruševac" rad="RS51" wmo="00000"></rskru>
-    <rsnis plc="Niš" rad="RS52" wmo="00000"></rsnis>
-    <rskuk plc="Kukavica" rad="RS53" wmo="00000"></rskuk>
+    <rsval plc="Valjevo" rad="RS44" wmo="13270"></rsval>
+    <rsbuk plc="Bukulja" rad="RS45" wmo="13276"></rsbuk>
+    <rspet plc="Petrovac" rad="RS46" wmo="13283"></rspet>
+    <rscrn plc="Crni vrh" rad="RS47" wmo="13289"></rscrn>
+    <rsuzi plc="Užice" rad="RS48" wmo="13368"></rsuzi>
+    <rsbes plc="Besnjaja" rad="RS49" wmo="13372"></rsbes>
+    <rssje plc="Sjenica" rad="RS50" wmo="13385"></rssje>
+    <rskru plc="Kruševac" rad="RS51" wmo="13390"></rskru>
+    <rsnis plc="Niš" rad="RS52" wmo="13490"></rsnis>
+    <rskuk plc="Kukavica" rad="RS53" wmo="13270"></rskuk>
+    <rsjas plc="Jastrebac" rad="RS54" wmo="13386"></rsjas>
   </rs>
   <sk CCCC="LZIB" org="217">
     <skjav plc="Maly Javornik" rad="SQ41" wmo="11812"></skjav>
