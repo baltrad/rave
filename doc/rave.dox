@@ -1,9 +1,9 @@
 /** \mainpage Radar Analysis and Visualization Environment (RAVE)
-\date 26 July 2010
+\date 20 May 2014
 \author Daniel Michelson and Anders Henja
-\version 2.0
+\version jenkins-Rave-381
 \par Copyright 
-&copy; 2010 by the Swedish Meteorological and Hydrological Institute
+&copy; 2014 by the Swedish Meteorological and Hydrological Institute
 (SMHI), Norrk&ouml;ping, Sweden
 
 \par Legals
@@ -28,14 +28,15 @@ with the following terms and conditions:
 \section introduction Introduction
 
 RAVE was conceived in 1996 by H&aring;kan Bolin who built it as his MSc at
-Ume&aring; University, doing his work at SMHI. It was used for a short time
-as an R&D tool until 1998 when Anders Henja and Daniel Michelson re-wrote
-it as part of an EU Framework IV project called PEP in BALTEX. This version
-was used to establish the BALTEX Radar Data Centre at SMHI in 1999. It was
-also integrated into the second generation operational NORDRAD system,
-where it was (is still) used in real time for several years. A second
-rewrite was started in 2006, focussed on facilitating management of data,
-but it was frozen due to lack of available resources.
+Ume&aring; University, doing his work at SMHI for Daniel Michelson. It was 
+used for a short time as an R&D tool until 1998 when Anders Henja and 
+Daniel Michelson re-wrote it as part of an EU Framework IV project called 
+PEP in BALTEX. This version was used to establish the BALTEX Radar Data 
+Centre at SMHI in 1999. It was also integrated into the second generation 
+operational NORDRAD system, where it was (is still) used in real time for 
+several years. A second rewrite was started in 2006, focussed on 
+facilitating management of data, but it was frozen due to lack of available 
+resources.
 
 So much for history. The BALTRAD project, part-funded by the Baltic Sea
 Region, has given us the ability to perform a much-needed overhaul. The
