@@ -882,7 +882,6 @@ static Cartesian_t* Composite_nearest_max(Composite_t* composite, Area_t* area, 
       if (composite->algorithm != NULL) {
         CompositeAlgorithm_reset(composite->algorithm, x, y);
       }
-      int olap = 0;
 
       for (i = 0; i < nradars; i++) {
         RaveCoreObject* obj = NULL;

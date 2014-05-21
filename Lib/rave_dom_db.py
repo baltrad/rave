@@ -242,8 +242,7 @@ class rave_db(object):
       
       return q.order_by(asc(observation.station)) \
               .order_by(desc(observation.date)) \
-              .order_by(desc(observation.time)) \
-              .distinct(observation.station).all()
+              .order_by(desc(observation.time)).all()
   
   def get_observations_in_interval(self, startdt, enddt, stations=[]):
     with self.get_session() as s:

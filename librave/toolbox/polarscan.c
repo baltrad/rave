@@ -761,7 +761,6 @@ done:
   return result;
 }
 
-
 int PolarScan_getAzimuthIndex(PolarScan_t* scan, double a)
 {
   int result = -1;

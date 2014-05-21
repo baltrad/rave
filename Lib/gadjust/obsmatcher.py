@@ -27,6 +27,9 @@ import datetime, math
 import _rave
 from gadjust import grapoint
 from Proj import dr, rd
+import rave_pgf_logger
+
+logger = rave_pgf_logger.rave_pgf_syslog_client()
 
 ##
 # Class for extracting relevant observations that are covered by the provided area
@@ -62,14 +65,25 @@ class obsmatcher(object):
 
     obses = self.db.get_observations_in_bbox(ul[0]*rd, ul[1]*rd, lr[0]*rd, lr[1]*rd, sdt, edt)
     
+    xpts = 0
+    xptst = 0
+    xptsq = 0
+    xptsv = 0
+
     result = []
     for obs in obses:
       if obs.accumulation_period == offset:
+        xpts = xpts + 1
         t, v = image.getConvertedValueAtLonLat((obs.longitude*dr, obs.latitude*dr))
         if t in [_rave.RaveValueType_DATA, _rave.RaveValueType_UNDETECT]:
+          xptst = xptst + 1
           d = image.getQualityValueAtLonLat((obs.longitude*dr, obs.latitude*dr), how_task)
           if d != None:
+            xptsq = xptsq + 1
             if obs.liquid_precipitation >= grapoint.MIN_GMM and v >= grapoint.MIN_RMM:
+              xptsv = xptsv + 1
               result.append(grapoint.grapoint.from_observation(t, v, d, obs))
 
+    logger.info("obses = %d, xpts=%d, xptst = %d, xptsq = %d, xptsv = %d"%(len(obses), xpts, xptst, xptsq, xptsv))
+    
     return result 

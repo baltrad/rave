@@ -198,12 +198,11 @@ class rave_dom_db_test(unittest.TestCase):
     result = self.classUnderTest.get_observations_in_bbox(13.0,61.5,15.0,60.2)
 
     # Verify result
-    self.assertEquals(3, len(result))
+    self.assertEquals(4, len(result))
     self.assertEquals("54322", result[0].station)
     self.assertEquals("54323", result[1].station)   
     self.assertEquals("54325", result[2].station)   
-    self.assertEquals("2010-10-10", result[2].date.strftime("%Y-%m-%d"))
-    self.assertEquals("11:45:00", result[2].time.strftime("%H:%M:%S"))
+    self.assertEquals("54325", result[3].station)   
 
   def test_get_observations_in_bbox_3(self):
     # Tests that date interval is working
@@ -249,6 +248,22 @@ class rave_dom_db_test(unittest.TestCase):
     # Verify result
     self.assertEquals(2, len(result))
     self.assertEquals(2, len(result2))
+ 
+  def test_get_observations_in_bbox_5(self):
+    # Another test to verify that date interval is working with mixed dates
+    db = testdb()
+    db.add(observation("54321", "SWEDEN", 0, "20101010", "180000", 13.031, 60.123,accumulation_period=0))
+    db.add(observation("54322", "SWEDEN", 0, "20101011", "060000", 13.031, 60.123,accumulation_period=0))
+    db.add(observation("54321", "SWEDEN", 0, "20101010", "180001", 13.031, 60.123,accumulation_period=12))
+    db.add(observation("54322", "SWEDEN", 0, "20101011", "060001", 13.031, 60.123,accumulation_period=12))
+    
+    # Test
+    result = self.classUnderTest.get_observations_in_bbox(13.0,61.5,15.0,60.1,
+                                                          datetime.datetime(2010,10,10,18,00),
+                                                          datetime.datetime(2010,10,11,06,00))
+
+    # Verify result
+    self.assertEquals(3, len(result))
     
   def test_get_observations_in_interval(self):
     db = testdb()

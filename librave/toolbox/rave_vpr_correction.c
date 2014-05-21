@@ -120,8 +120,115 @@ double RaveVprCorrection_getSCDistanceLimit(RaveVprCorrection_t* self)
   return self->scDistanceLimit;
 }
 
+#ifdef KALLE
+RaveField_t* RaveVprCorrectionInternal_createIndices(RaveVprCorrection_t* self, PolarVolume_t* pvol)
+{
+  long nscans = 0, i = 0, j = 0, k = 0, lnbins = 0;
+  RaveField_t* indices = NULL;
+  RaveField_t* result = NULL;
+
+  PolarVolume_sortByElevations(pvol, 1); /* Ascending order */
+
+  nscans = PolarVolume_getNumberOfScans(pvol);
+
+  /* We assume that the lowest scan has the dimension/scale that is wanted in the result */
+  indices = RAVE_OBJECT_NEW(&RaveField_TYPE);
+  if (indices == NULL || !RaveField_createData(indices, lnbins, nscans, RaveDataType_INT)) {
+    RAVE_ERROR0("Failed to allocate indices");
+    goto done;
+  }
+
+  result = RAVE_OBJECT_COPY(indices);
+done:
+  RAVE_OBJECT_RELEASE(indices);
+  return result;
+}
+#endif
+
 PolarVolume_t* RaveVprCorrection_separateSC(RaveVprCorrection_t* self, PolarVolume_t* pvol)
 {
+#ifdef KALLE
+  long nscans = 0, i = 0, j = 0, k = 0, lnbins = 0;
+  double aa = 0.0;
+  double lscanrange = 0.0;
+  PolarScan_t* scan = NULL;
+  PolarScan_t* lowestscan = NULL;
+  RaveField_t* indices = NULL;
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
+
+  PolarVolume_sortByElevations(pvol, 1); /* Ascending order */
+  nscans = PolarVolume_getNumberOfScans(pvol);
+  lowestscan = PolarVolume_getScan(pvol, 0);
+  if (lowestscan == NULL) {
+    RAVE_ERROR0("Failed to get the lowest scan");
+    goto done;
+  }
+  lnbins = PolarScan_getNbins(lowestscan);
+
+  /* We assume that the lowest scan has the dimension/scale that is wanted in the result */
+  indices = RAVE_OBJECT_NEW(&RaveField_TYPE);
+  if (indices == NULL || !RaveField_createData(indices, lnbins, nscans, RaveDataType_INT)) {
+    RAVE_ERROR0("Failed to allocate indices");
+    goto done;
+  }
+#endif
+#ifdef KALLE
+  for (k = 0; k < nscans; k++) {
+    long nbins = 0;
+    scan = PolarVolume_getScan(pvol, k);
+    if (scan == NULL) {
+      RAVE_ERROR1("No scan found at position %d", k);
+      goto done;
+    }
+    nbins = PolarScan_getNbins(scan);
+    for (i = 0; i < nbins; i++) {
+      for (j = 0; j < lnbins; j++) {
+        if (j == 0) {
+          aa = fabs(PolarScan_getGroundRange(lowestscan, j) - PolarScan_getGroundRange(scan, i));
+          if (aa < 1e3) {
+            RaveField_setValue(indices, j, k, i);
+          }
+        } else if (fabs(PolarScan_getGroundRange(lowestscan, j) - PolarScan_getGroundRange(scan, i)) < aa) {
+          if (aa < 1e3) {
+            RaveField_setValue(indices, j, k, i);
+          }
+        }
+      }
+    }
+    RAVE_OBJECT_RELEASE(scan);
+  }
+#endif
+#ifdef KALLE
+done:
+  RAVE_OBJECT_RELEASE(lowestscan);
+  RAVE_OBJECT_RELEASE(indices);
+#endif
+  return NULL;
+#ifdef KALLE
+  // Find indices of bins in higher tilts closest in ground range to bins in lowest tilt
+  for (i=0;i<nbins;i++)
+  {
+      for (k=0;k<ntilts;k++)
+      {
+          for (j=0;j<nbins;j++)
+          {
+              if (j==0)
+              {
+                  aa = fabs(ground_range[j][0]-ground_range[i][k]);
+                  if (aa<1e3)
+                      ind[i][k] = j;
+              }
+              else if (fabs(ground_range[j][0]-ground_range[i][k]) < aa)
+              {
+                  aa = fabs(ground_range[j][0]-ground_range[i][k]);
+                  if (aa<1e3)
+                      ind[i][k] = j;
+              }
+          }
+      }
+  }
+#endif
 #ifdef KALLE
   int i = 0, j = 0, k = 0;
   int nbins = 0, nscans = 0;
@@ -180,7 +287,6 @@ PolarVolume_t* RaveVprCorrection_separateSC(RaveVprCorrection_t* self, PolarVolu
 //      }
 //  }
 #endif
-  return 0;
 }
 
 /*@} End of Interface functions */
