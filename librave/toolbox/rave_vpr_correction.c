@@ -120,7 +120,6 @@ double RaveVprCorrection_getSCDistanceLimit(RaveVprCorrection_t* self)
   return self->scDistanceLimit;
 }
 
-#ifdef KALLE
 RaveField_t* RaveVprCorrectionInternal_createIndices(RaveVprCorrection_t* self, PolarVolume_t* pvol)
 {
   long nscans = 0, i = 0, j = 0, k = 0, lnbins = 0;
@@ -143,11 +142,27 @@ done:
   RAVE_OBJECT_RELEASE(indices);
   return result;
 }
-#endif
 
 PolarVolume_t* RaveVprCorrection_separateSC(RaveVprCorrection_t* self, PolarVolume_t* pvol)
 {
 #ifdef KALLE
+  PolarScan_t* lowestscan = NULL;
+  long nscans = 0, lnbins = 0, lnrange = 0, i = 0;
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
+
+  PolarVolume_sortByElevations(pvol, 1); /* Ascending order */
+  nscans = PolarVolume_getNumberOfScans(pvol);
+  lowestscan = PolarVolume_getScan(pvol, 0);
+  if (lowestscan == NULL) {
+    RAVE_ERROR0("Failed to get the lowest scan");
+    goto done;
+  }
+  lnbins = PolarScan_getNbins(lowestscan);
+  lnrange = PolarScan_getRange(lowestscan);
+
+done:
+  return NULL;
   long nscans = 0, i = 0, j = 0, k = 0, lnbins = 0;
   double aa = 0.0;
   double lscanrange = 0.0;

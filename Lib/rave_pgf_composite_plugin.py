@@ -232,6 +232,14 @@ def generate(files, arguments):
   generator.time = args["time"]
   generator.date = args["date"]
 
+  qitotal_field=None
+  if "qitotal_field" in args.keys():
+    qitotal_field = args["qitotal_field"]
+    if qitotal_field == "":
+      qitotal_field = None
+  if qitotal_field != None:
+    generator.quality_indicator_field_name = qitotal_field
+
   result = generator.nearest(pyarea, qfields)
   
   # Optional cloud-type residual non-precip filter
