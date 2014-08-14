@@ -35,6 +35,7 @@ import _raveio
 import logging
 import string
 import datetime
+import math
 import rave_pgf_logger
 import rave_pgf_quality_registry
 import rave_ctfilter
@@ -94,6 +95,7 @@ class compositing(object):
     self.gain = GAIN
     self.offset = OFFSET
     self.verbose = False
+    self.logger = logger
 
   ## Generates the cartesian image.
   #
@@ -102,26 +104,26 @@ class compositing(object):
   # @param area: the area to use for the cartesian image. If none is specified, a best fit will be atempted.  
   def generate(self, dd, dt, area=None):
     if self.verbose:
-      print "Generating cartesian image from %d files"%len(self.filenames)
-      print "Detectors = %s"%`self.detectors`
-      print "Product = %s"%self._product_repr()
-      print "Quantity = %s"%self.quantity
-      print "Range = %f"%self.range
-      print "Gain = %f, Offset = %f"%(self.gain, self.offset)
-      print "Prodpar = %s"%self.prodpar
-      print "Selection method = %s"%self._selection_method_repr()
-      print "Gap filling = %s"%`self.applygapfilling`
-      print "Ct filtering = %s"%`self.applyctfilter`
-      print "Gra filtering = %s"%`self.applygra`
-      print "Ignoring malfunc = %s"%`self.ignore_malfunc`
-      print "QI-total field = %s"%self.qitotal_field
+      self.logger.info("Generating cartesian image from %d files"%len(self.filenames))
+      self.logger.debug("Detectors = %s"%`self.detectors`)
+      self.logger.debug("Product = %s"%self._product_repr())
+      self.logger.debug("Quantity = %s"%self.quantity)
+      self.logger.debug("Range = %f"%self.range)
+      self.logger.debug("Gain = %f, Offset = %f"%(self.gain, self.offset))
+      self.logger.debug("Prodpar = %s"%self.prodpar)
+      self.logger.debug("Selection method = %s"%self._selection_method_repr())
+      self.logger.debug("Gap filling = %s"%`self.applygapfilling`)
+      self.logger.debug("Ct filtering = %s"%`self.applyctfilter`)
+      self.logger.debug("Gra filtering = %s"%`self.applygra`)
+      self.logger.debug("Ignoring malfunc = %s"%`self.ignore_malfunc`)
+      self.logger.debug("QI-total field = %s"%self.qitotal_field)
       
       if area is not None:
-        print "Area = %s"%area
+        self.logger.debug("Area = %s"%area)
       else:
-        print "Area = best fit"
-        print "  pcsid = %s"%self.pcsid
-        print "  xscale = %f, yscale = %f"%(self.xscale, self.yscale)
+        self.logger.debug("Area = best fit")
+        self.logger.debug("  pcsid = %s"%self.pcsid)
+        self.logger.debug("  xscale = %f, yscale = %f"%(self.xscale, self.yscale))
   
     qfields = []
     for d in self.detectors:
@@ -130,7 +132,7 @@ class compositing(object):
         qfields.extend(p.getQualityFields())
  
     if self.verbose:
-      print "Fetching objects and applying quality plugins"
+      self.logger.info("Fetching objects and applying quality plugins")
     objects, nodes, algorithm = self._create_objects()
     
     generator = _pycomposite.new()
@@ -138,7 +140,7 @@ class compositing(object):
       pyarea = my_area_registry.getarea(area)
     else:
       if self.verbose:
-        print "Determining best fit for area"
+        self.logger.info("Determining best fit for area")
       A = rave_area.MakeAreaFromPolarObjects(objects, self.pcsid, self.xscale, self.yscale)
 
       pyarea = _area.new()
@@ -174,30 +176,29 @@ class compositing(object):
       self._update_generator_with_prodpar(generator)
     
     if self.verbose:
-      print "Generating cartesian composite"
+      self.logger.info("Generating cartesian composite")
     result = generator.nearest(pyarea, qfields)
     
     if self.applyctfilter:
       if self.verbose:
-        print "Applying ct filter"
+        self.logger.debug("Applying ct filter")
       ret = rave_ctfilter.ctFilter(result, self.quantity)
     
     if self.applygra:
       if not "se.smhi.composite.distance.radar" in qfields:
-        print "Trying to apply GRA analysis without specifying a quality plugin specifying the se.smhi.composite.distance.radar q-field, disabling..."
+        self.logger.info("Trying to apply GRA analysis without specifying a quality plugin specifying the se.smhi.composite.distance.radar q-field, disabling...")
       else:
         if self.verbose:
-          print "Applying GRA analysis (ZR A = %f, ZR b = %f)"%(self.zr_A, self.zr_b)
+          self.logger.info("Applying GRA analysis (ZR A = %f, ZR b = %f)"%(self.zr_A, self.zr_b))
         grafield = self._apply_gra(result, dd, dt)
         if grafield:
           result.addParameter(grafield)
         else:
-          if self.verbose:
-            print "Failed to generate gra field...."
+          self.logger.warn("Failed to generate gra field....")
     
     if self.applygapfilling:
       if self.verbose:
-        print "Applying gap filling"
+        self.logger.debug("Applying gap filling")
       t = _transform.new()
       gap_filled = t.fillGap(result)
       result.getParameter(self.quantity).setData(gap_filled.getParameter(self.quantity).getData())
@@ -208,7 +209,7 @@ class compositing(object):
     result.addAttribute('how/nodes', nodes)
     
     if self.verbose:
-      print "Returning resulting composite image"
+      self.logger.debug("Returning resulting composite image")
     return result
   
   def set_product_from_string(self, prodstr):
@@ -251,7 +252,7 @@ class compositing(object):
         obj = _raveio.open(fname).object
       
       if not _polarscan.isPolarScan(obj) and not _polarvolume.isPolarVolume(obj):
-        print "Input file %s is neither polar scan or volume, ignoring." % fname
+        self.logger.info("Input file %s is neither polar scan or volume, ignoring." % fname)
         continue
       
       if self.ignore_malfunc:
@@ -292,7 +293,7 @@ class compositing(object):
       grac = db.get_gra_coefficient(dt)
       if grac != None:
         if self.verbose:
-          print "Applying gra coefficients"
+          self.logger.debug("Applying gra coefficients")
         gra = _gra.new()
         gra.A = grac.a
         gra.B = grac.b
@@ -305,13 +306,12 @@ class compositing(object):
         gra_field.quantity = quantity + "_CORR"
         return gra_field
       else:
-        if self.verbose:
-          print "No gra coefficients found for given date/time, ignoring gra adjustment"
+        self.logger.info("No gra coefficients found for given date/time, ignoring gra adjustment")
         return None
     except Exception, e:
       import traceback
       traceback.print_exc()
-      logger.error("Failed to apply gra coefficients", exc_info=1)
+      self.logger.error("Failed to apply gra coefficients", exc_info=1)
     return None    
   
   ##
@@ -422,7 +422,7 @@ def main(options):
   rio.filename = options.outfile
   
   if comp.verbose:
-    print "Saving %s"%rio.filename
+    self.logger.info("Saving %s"%rio.filename)
   rio.save()
 
 if __name__ == "__main__":

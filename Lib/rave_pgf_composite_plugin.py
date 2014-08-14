@@ -35,8 +35,9 @@ import logging
 import rave_pgf_logger
 import rave_dom_db
 import rave_util
+import _raveio
 
-import compositing
+from compositing import compositing
 
 from rave_defines import CENTER_ID, GAIN, OFFSET
 
