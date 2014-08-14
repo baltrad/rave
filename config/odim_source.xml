@@ -214,6 +214,17 @@
     <rskuk plc="Kukavica" rad="RS53" wmo="13270"></rskuk>
     <rsjas plc="Jastrebac" rad="RS54" wmo="13386"></rsjas>
   </rs>
+  <ru CCCC="RUDE" org="76">
+    <ruudx plc="Архангельск" rad="RUDX" wmo="39501"></ruudx>
+    <ruudb plc="Брянск" rad="RUDB" wmo="39561"></ruudb>
+    <ruudi plc="Ижевск" rad="RUDI" wmo="39441"></ruudi>
+    <ruudk plc="Кострома" rad="RUDK" wmo="39424"></ruudk>
+    <ruudp plc="Петрозаводск" rad="RUDP" wmo="39462"></ruudp>
+    <ruudl plc="Смоленск" rad="RUDL" wmo="39423"></ruudl>
+    <ruuwj plc="Валдай" rad="RUWJ" wmo="39461"></ruuwj>
+    <ruavn plc="Внуково" rad="RAVN" wmo="39420"></ruavn>
+    <ruudv plc="Вологда" rad="RUDV" wmo="39502"></ruudv>
+  </ru>
   <sk CCCC="LZIB" org="217">
     <skjav plc="Maly Javornik" rad="SQ41" wmo="11812"></skjav>
     <skkoj plc="Kojsovska hola" rad="SQ51" wmo="11958"></skkoj>
