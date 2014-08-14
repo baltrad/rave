@@ -23,114 +23,254 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @file
 ## @author Daniel Michelson, SMHI
 ## @date 2012-01-22
+from compositing import compositing
 
-
-## Main function. 
-# @param options a set of parsed options from the command line 
 def main(options):
-    import _raveio
-    import rave_composite
+  comp = compositing()
 
-    infiles = options.infiles.split(",")
-
-    objects = []
-    for filename in infiles:
-        rio = _raveio.open(filename)
-        if rio.objectType is _raveio.Rave_ObjectType_SCAN or rio.objectType is _raveio.Rave_ObjectType_PVOL:
-            objects.append(rio.object)
-        else:
-            print "Input file %s is neither polar scan or volume, ignoring." % filename
-
-    comp = rave_composite.generate(objects, area = options.area,
-                                   quantity = options.quantity,
-                                   product = options.product,
-                                   prodpar = options.prodpar,
-                                   range = options.range, 
-                                   gain = options.gain,
-                                   offset = options.offset,
-                                   date = options.date,
-                                   time = options.time,
-                                   method = options.method,
-                                   qc = options.qc,
-                                   gf = options.gf,
-                                   ctfilter = options.ctfilter)
+  comp.filenames = options.infiles.split(",")
+  comp.detectors = options.qc.split(",")
+  comp.quantity = options.quantity
+  comp.set_product_from_string(options.product)
+  comp.range = options.range
+  comp.gain = options.gain
+  comp.offset = options.offset
+  comp.prodpar = options.prodpar
+  comp.set_method_from_string(options.method)
+  comp.qitotal_field = options.qitotal_field
+  comp.pcsid = options.pcsid
+  comp.xscale = options.scale
+  comp.yscale = options.scale
+  
+  comp.zr_A = options.zr_A
+  comp.zr_b = options.zr_b
+  
+  if options.gf:
+    comp.applygapfilling = True
+  if options.ctfilter:
+    comp.applyctfilter = True
+  if options.grafilter:
+    comp.applygra = True
+  if options.ignore_malfunc:
+    comp.ignore_malfunc = True
+  if options.verbose:
+    comp.verbose = True
     
-    rio = _raveio.new()
-    rio.object = comp
-    rio.filename = options.outfile
-    rio.save()
-
-
+  result = comp.generate(options.date, options.time, options.area)
+    
+  rio = _raveio.new()
+  rio.object = result
+  rio.filename = options.outfile
+  
+  if comp.verbose:
+    print "Saving %s"%rio.filename
+  rio.save()
+  
 if __name__ == "__main__":
-    import sys
-    from optparse import OptionParser
+  import sys
+  from optparse import OptionParser
 
-    from rave_defines import GAIN, OFFSET
+  usage = "usage: %prog -i <infile(s)> -o <outfile> [-a <area>] [args] [h]"
+  usage += "\nGenerates weather radar composites directly from polar scans and volumes. If area is omitted, a best fit will be performed."
+  usage += "\nIn that case, specify pcs, xscale and yscale to get an appropriate image."
+  parser = OptionParser(usage=usage)
 
-    usage = "usage: %prog -i <infile(s)> -o <outfile> -a <area> [args] [h]"
-    usage += "\nGenerates weather radar composites directly from polar scans and volumes."
-    parser = OptionParser(usage=usage)
+  parser.add_option("-i", "--input", dest="infiles",
+                    help="Name of input file(s) to composite, comma-separated in quotations.")
 
-    parser.add_option("-i", "--input", dest="infiles",
-                      help="Name of input file(s) to composite, comma-separated in quotations.")
+  parser.add_option("-o", "--output", dest="outfile",
+                    help="Name of output file to write.")
 
-    parser.add_option("-o", "--output", dest="outfile",
-                      help="Name of output file to write.")
+  parser.add_option("-a", "--area", dest="area",
+                    help="Name of Cartesian area to which to generate the composite. If not specified, a best fit composite will be created.")
 
-    parser.add_option("-a", "--area", dest="area",
-                      help="Name of Cartesian area to which to generate the composite.")
+  parser.add_option("-c", "--pcsid", dest="pcsid",
+                    default="gmaps",
+                    help="Name of the pcsid to use if the area should be automatically generated from a best fit. Default is 'gmaps'.")
 
-    parser.add_option("-q", "--quantity", dest="quantity",
-                      default="DBZH",
-                      help="The radar parameter to composite. Default=DBZH.")
+  parser.add_option("-s", "--scale", dest="scale",
+                    type="float", default=2000.0,
+                    help="The x/y-scale to use if the area should be automatically generated from a best fit. Default is 2000.0.")
 
-    parser.add_option("-p", "--product", dest="product",
-                      default="PCAPPI",
-                      help="The type of Cartesian product to generate [PPI, CAPPI, PCAPPI, PMAX]. Default=PCAPPI.")
+  parser.add_option("-q", "--quantity", dest="quantity",
+                    default="DBZH",
+                    help="The radar parameter to composite. Default=DBZH.")
 
-    parser.add_option("-P", "--prodpar", dest="prodpar",
-                      type="float", default=1000.0,
-                      help="Product parameter. For (P)CAPPIs it is the height of the desired layer. For PPIs, it is the elevation angle. Default=1000.0 (meters).")
+  parser.add_option("-p", "--product", dest="product",
+                    default="PCAPPI",
+                    help="The type of Cartesian product to generate [PPI, CAPPI, PCAPPI, PMAX]. Default=PCAPPI.")
 
-    parser.add_option("-r", "--range", dest="range",
-                      type="float", default=200000.0,
-                      help="Maximum range to apply PMAX algorithm. Applies only to PMAX algorithm. Defaults to 200 km.")
+  parser.add_option("-P", "--prodpar", dest="prodpar",
+                    type="float", default=1000.0,
+                    help="Product parameter. For (P)CAPPIs it is the height of the desired layer. For PPIs, it is the elevation angle. Default=1000.0 (meters).")
 
-    parser.add_option("-g", "--gain", dest="gain",
-                      type="float", default=GAIN,
-                      help="Linear gain applied to output data. Default=as defined in rave_defines.py.")
+  parser.add_option("-r", "--range", dest="range",
+                    type="float", default=200000.0,
+                    help="Maximum range to apply PMAX algorithm. Applies only to PMAX algorithm. Defaults to 200 km.")
 
-    parser.add_option("-O", "--offset", dest="offset",
-                      type="float", default=OFFSET,
-                      help="Linear offset applied to output data. Default=as defined in rave_defines.py.")
+  parser.add_option("-g", "--gain", dest="gain",
+                    type="float", default=GAIN,
+                    help="Linear gain applied to output data. Default=as defined in rave_defines.py.")
 
-    parser.add_option("-d", "--date", dest="date",
-                      default=None,
-                      help="Nominal date of the composite to be written. Defaults to the nominal date of the last input file.")
+  parser.add_option("-O", "--offset", dest="offset",
+                    type="float", default=OFFSET,
+                    help="Linear offset applied to output data. Default=as defined in rave_defines.py.")
 
-    parser.add_option("-t", "--time", dest="time",
-                      default=None,
-                      help="Nominal time of the composite to be written. Defaults to the nominal time of the last input file.")
+  parser.add_option("-d", "--date", dest="date",
+                    default=None,
+                    help="Nominal date of the composite to be written. Defaults to the nominal date of the last input file.")
 
-    parser.add_option("-m", "--method", dest="method",
-                      default="NEAREST_RADAR",
-                      help="Compositing algorithm to apply. Current choices are NEAREST_RADAR or HEIGHT_ABOVE_SEALEVEL. Default=NEAREST_RADAR.")
+  parser.add_option("-t", "--time", dest="time",
+                    default=None,
+                    help="Nominal time of the composite to be written. Defaults to the nominal time of the last input file.")
 
-    parser.add_option("-Q", "--qc", dest="qc",
-                      default="",
-                      help="Which quality-controls to apply. Comma-separated, no white spaces. Default=None")
+  parser.add_option("-m", "--method", dest="method",
+                    default="NEAREST_RADAR",
+                    help="Compositing algorithm to apply. Current choices are NEAREST_RADAR or HEIGHT_ABOVE_SEALEVEL. Default=NEAREST_RADAR.")
 
-    parser.add_option("-G", "--gap-fill", action="store_true", dest="gf",
-                      help="Gap-fill small holes in output composite. Default=False")
+  parser.add_option("-Q", "--qc", dest="qc",
+                    default="",
+                    help="Which quality-controls to apply. Comma-separated, no white spaces. Default=None")
 
-    parser.add_option("-C", "--ctfilter", action="store_true", dest="ctfilter",
-                      help="Filter residual non-precipitation echoes using SAF-NWC cloud-type product. Default=False")
+  parser.add_option("-G", "--gap-fill", action="store_true", dest="gf",
+                    help="Gap-fill small holes in output composite. Default=False")
 
-    (options, args) = parser.parse_args()
+  parser.add_option("-C", "--ctfilter", action="store_true", dest="ctfilter",
+                    help="Filter residual non-precipitation echoes using SAF-NWC cloud-type product. Default=False")
 
-    if options.infiles != None and options.outfile != None and options.area != None:
+  parser.add_option("-A", "--applygra", action="store_true", dest="grafilter",
+                    help="Applies the GRA correction coefficients. Default=False")
 
-        main(options)
+  parser.add_option("-y", "--zr_A", dest="zr_A",
+                    type="float", default="200.0",
+                    help="The ZR A attribute to use for the gra correction. Default=200.0")
 
-    else:
-        parser.print_help()
+  parser.add_option("-z", "--zr_b", dest="zr_b",
+                    type="float", default="1.6",
+                    help="The ZR b attribute to use for the gra correction. Default=200.0")
+
+  parser.add_option("-F", "--qitotal_field", dest="qitotal_field",
+                    default=None, help="The QI-total field to use when creating the composite from the qi-total Default=Not used.")
+
+  parser.add_option("-I", "--ignore-malfunc", action="store_true", dest="ignore_malfunc",
+                    help="If scans/volumes contain malfunc information. Don't use them in the composite. Default is to always use everything.")
+  
+  parser.add_option("-V", "--verbose", action="store_true", dest="verbose",
+                    help="If the different steps should be displayed. I.e. verbose information.")
+  
+  (options, args) = parser.parse_args()
+
+  if options.infiles != None and options.outfile != None:
+    main(options)
+  else:
+    parser.print_help()
+
+### Main function. 
+## @param options a set of parsed options from the command line 
+#def main(options):
+#    import _raveio
+#    import rave_composite
+#
+#    infiles = options.infiles.split(",")
+#
+#    objects = []
+#    for filename in infiles:
+#        rio = _raveio.open(filename)
+#        if rio.objectType is _raveio.Rave_ObjectType_SCAN or rio.objectType is _raveio.Rave_ObjectType_PVOL:
+#            objects.append(rio.object)
+#        else:
+#            print "Input file %s is neither polar scan or volume, ignoring." % filename
+#
+#    comp = rave_composite.generate(objects, area = options.area,
+#                                   quantity = options.quantity,
+#                                   product = options.product,
+#                                   prodpar = options.prodpar,
+#                                   range = options.range, 
+#                                   gain = options.gain,
+#                                   offset = options.offset,
+#                                   date = options.date,
+#                                   time = options.time,
+#                                   method = options.method,
+#                                   qc = options.qc,
+#                                   gf = options.gf,
+#                                   ctfilter = options.ctfilter)
+#    
+#    rio = _raveio.new()
+#    rio.object = comp
+#    rio.filename = options.outfile
+#    rio.save()
+#
+#
+#if __name__ == "__main__":
+#    import sys
+#    from optparse import OptionParser
+#
+#    from rave_defines import GAIN, OFFSET
+#
+#    usage = "usage: %prog -i <infile(s)> -o <outfile> -a <area> [args] [h]"
+#    usage += "\nGenerates weather radar composites directly from polar scans and volumes."
+#    parser = OptionParser(usage=usage)
+#
+#    parser.add_option("-i", "--input", dest="infiles",
+#                      help="Name of input file(s) to composite, comma-separated in quotations.")
+#
+#    parser.add_option("-o", "--output", dest="outfile",
+#                      help="Name of output file to write.")
+#
+#    parser.add_option("-a", "--area", dest="area",
+#                      help="Name of Cartesian area to which to generate the composite.")
+#
+#    parser.add_option("-q", "--quantity", dest="quantity",
+#                      default="DBZH",
+#                      help="The radar parameter to composite. Default=DBZH.")
+#
+#    parser.add_option("-p", "--product", dest="product",
+#                      default="PCAPPI",
+#                      help="The type of Cartesian product to generate [PPI, CAPPI, PCAPPI, PMAX]. Default=PCAPPI.")
+#
+#    parser.add_option("-P", "--prodpar", dest="prodpar",
+#                      type="float", default=1000.0,
+#                      help="Product parameter. For (P)CAPPIs it is the height of the desired layer. For PPIs, it is the elevation angle. Default=1000.0 (meters).")
+#
+#    parser.add_option("-r", "--range", dest="range",
+#                      type="float", default=200000.0,
+#                      help="Maximum range to apply PMAX algorithm. Applies only to PMAX algorithm. Defaults to 200 km.")
+#
+#    parser.add_option("-g", "--gain", dest="gain",
+#                      type="float", default=GAIN,
+#                      help="Linear gain applied to output data. Default=as defined in rave_defines.py.")
+#
+#    parser.add_option("-O", "--offset", dest="offset",
+#                      type="float", default=OFFSET,
+#                      help="Linear offset applied to output data. Default=as defined in rave_defines.py.")
+#
+#    parser.add_option("-d", "--date", dest="date",
+#                      default=None,
+#                      help="Nominal date of the composite to be written. Defaults to the nominal date of the last input file.")
+#
+#    parser.add_option("-t", "--time", dest="time",
+#                      default=None,
+#                      help="Nominal time of the composite to be written. Defaults to the nominal time of the last input file.")
+#
+#    parser.add_option("-m", "--method", dest="method",
+#                      default="NEAREST_RADAR",
+#                      help="Compositing algorithm to apply. Current choices are NEAREST_RADAR or HEIGHT_ABOVE_SEALEVEL. Default=NEAREST_RADAR.")
+#
+#    parser.add_option("-Q", "--qc", dest="qc",
+#                      default="",
+#                      help="Which quality-controls to apply. Comma-separated, no white spaces. Default=None")
+#
+#    parser.add_option("-G", "--gap-fill", action="store_true", dest="gf",
+#                      help="Gap-fill small holes in output composite. Default=False")
+#
+#    parser.add_option("-C", "--ctfilter", action="store_true", dest="ctfilter",
+#                      help="Filter residual non-precipitation echoes using SAF-NWC cloud-type product. Default=False")
+#
+#    (options, args) = parser.parse_args()
+#
+#    if options.infiles != None and options.outfile != None and options.area != None:
+#
+#        main(options)
+#
+#    else:
+#        parser.print_help()

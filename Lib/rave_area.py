@@ -32,6 +32,7 @@ from types import StringType
 import rave_projection, _arearegistry, _area, _projection, Proj
 import rave_xml
 from rave_defines import RAVECONFIG, UTF8, AREA_REGISTRY
+import _polarscan, _polarvolume
 
 ## There's only one official area registry, but this module allows 
 # greater flexibility as long as files use the same naming convention.
@@ -274,7 +275,7 @@ def MakeAreaFromPolarFiles(files, proj_id='llwgs84', xscale=2000.0, yscale=2000.
     areas = []
     for fstr in files:
         io = _raveio.open(fstr)
-        if io.objectType == _rave.Rave_ObjecType_PVOL:
+        if io.objectType == _rave.Rave_ObjectType_PVOL:
         # Assert ascending volume, assuming the scan with the longest range will be the one with the longest surface distance
             scan = io.object.getScanWithMaxDistance()
         elif io.objectType == _rave.Rave_ObjectType_SCAN:
@@ -285,6 +286,62 @@ def MakeAreaFromPolarFiles(files, proj_id='llwgs84', xscale=2000.0, yscale=2000.
         
         io.close()
         areas.append(MakeSingleAreaFromSCAN(scan, proj_id, xscale, yscale))
+    
+    minx =  10e100
+    maxx = -10e100
+    miny =  10e100
+    maxy = -10e100
+
+    for a in areas:
+        if a.extent[0] < minx: minx = a.extent[0]
+        if a.extent[1] < miny: miny = a.extent[1]
+        if a.extent[2] > maxx: maxx = a.extent[2]
+        if a.extent[3] > maxy: maxy = a.extent[3]
+
+    # Expand to nearest pixel - buffering by one pixel was done in MakeSingleAreaFromSCAN
+    dx = (maxx-minx) / xscale
+    dx = (1.0-(dx-int(dx))) * xscale
+    if dx < xscale:
+        minx -= dx
+    dy = (maxy-miny) / yscale
+    dy = (1.0-(dy-int(dy))) * yscale
+    if dy < yscale:
+        miny -= dy
+
+    xsize = int(round((maxx-minx)/xscale, 0))
+    ysize = int(round((maxy-miny)/yscale, 0))
+
+    A = AREA()
+    A.xsize, A.ysize, A.xscale, A.yscale = xsize, ysize, xscale, yscale
+    A.extent = minx, miny, maxx, maxy
+    A.pcs = proj_id
+
+    return A
+
+## Convenience function that automatically derives a new area from several input 
+# ODIM_H5 polar volume or scan objects. Mandatory single input object will give an area
+# for that single site. If more objects are given, the derived area will represent 
+# the coverage of all these radars. Depending on the characteristics of the given
+# projection, different radars will determine the north, south, east, and west
+# edges of the derived area.
+# @param files List of polar objects
+# @param proj_id identifier string of the projection to use for this area
+# @param xscale float Horizontal X-dimension resolution in projection-specific units (commonly meters)  
+# @param yscale float Horizontal Y-dimension resolution in projection-specific units (commonly meters)  
+# @returns Don't know
+def MakeAreaFromPolarObjects(objects, proj_id='llwgs84', xscale=2000.0, yscale=2000.0):
+    import _rave, _raveio
+    
+    areas = []
+    for o in objects:
+      if _polarvolume.isPolarVolume(o):
+        scan = o.getScanWithMaxDistance()
+      elif _polarscan.isPolarScan(o):
+        scan = o
+      else:
+        raise IOError, "Input object is not a polar scan or volume"
+      
+      areas.append(MakeSingleAreaFromSCAN(scan, proj_id, xscale, yscale))
     
     minx =  10e100
     maxx = -10e100
