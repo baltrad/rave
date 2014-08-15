@@ -39,7 +39,7 @@ import math
 import rave_pgf_logger
 import rave_pgf_quality_registry
 import rave_ctfilter
-#import rave_dom_db
+import rave_dom_db
 import rave_util
 import qitotal_options
 import area_registry
@@ -55,7 +55,7 @@ logger = rave_pgf_logger.rave_pgf_syslog_client()
 
 ravebdb = None
 try:
-  import rave_bdb, rave_dom_db
+  import rave_bdb
   ravebdb = rave_bdb.rave_bdb()
 except:
   pass
