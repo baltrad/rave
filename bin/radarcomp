@@ -32,7 +32,6 @@ logger = rave_pgf_logger.rave_pgf_syslog_client()
 
 def main(options):
   comp = compositing()
-
   comp.filenames = options.infiles.split(",")
   comp.detectors = options.qc.split(",")
   comp.quantity = options.quantity
@@ -60,7 +59,13 @@ def main(options):
     comp.ignore_malfunc = True
   if options.verbose:
     comp.verbose = True
-    
+  
+  if comp.verbose:
+    comp.logger = rave_pgf_logger.rave_pgf_stdout_client("debug")
+  else:
+    comp.logger = rave_pgf_logger.rave_pgf_stdout_client("info")
+
+  
   result = comp.generate(options.date, options.time, options.area)
     
   rio = _raveio.new()

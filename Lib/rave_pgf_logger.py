@@ -244,6 +244,19 @@ def rave_pgf_syslog_client(name=LOGID, address=SYSLOG, facility=LOGFACILITY, lev
         myLogger.addHandler(handler)
     return myLogger
 
+## stdout client.
+# @param level string log level
+# @returns logging.getLogger client that your application will use to send messages to stdout 
+def rave_pgf_stdout_client(level=LOGLEVEL):
+    myLogger = logging.getLogger("RAVE-STDOUT")
+    if not len(myLogger.handlers):
+        myLogger.setLevel(LOGLEVELS[level])
+        handler = logging.StreamHandler(sys.stdout)
+        handler.setLevel(LOGLEVELS[level])
+        formatter = logging.Formatter('%(name)s %(levelname)-8s %(message)s')
+        handler.setFormatter(formatter)
+        myLogger.addHandler(handler)
+    return myLogger
 
 if __name__ == "__main__":
   # Functionality below for testing. Otherwise use command-line binary.
