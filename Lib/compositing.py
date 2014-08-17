@@ -54,11 +54,18 @@ from rave_defines import CENTER_ID, GAIN, OFFSET
 logger = rave_pgf_logger.rave_pgf_syslog_client()
 
 ravebdb = None
+
 try:
-  import rave_bdb, rave_dom_db
+  import rave_bdb
   ravebdb = rave_bdb.rave_bdb()
 except:
   pass
+
+nodomdb=False
+try:
+  import rave_dom_db
+except:
+  nodomdb=True
 
 ##
 # The area registry to be used by this composite generator.
@@ -276,7 +283,7 @@ class compositing(object):
       objects.append(obj)
       
     return objects, nodes, algorithm
-  
+    
   ##
   # Apply gra coefficient adjustment.
   # @param result: The cartesian product to be adjusted
@@ -284,6 +291,10 @@ class compositing(object):
   # @param t: the time string representing now (HHMMSS)
   # @return the gra field with the applied corrections
   def _apply_gra(self, result, d, t):
+    if nodomdb:
+      self.logger.info("Could not load rave_dom_db, probably due to missing dependencies like jprops or sqlalchemy, ignoring gra correction")
+      return
+    
     try:
       zrA = self.zr_A#200.0
       zrb = self.zr_b#1.6
