@@ -10,4 +10,5 @@
   <quality-plugin name="hac-increment" module="odc_hac_quality_plugin" class="odc_hac_increment_plugin"/>
   <quality-plugin name="hac-filter" module="odc_hac_quality_plugin" class="odc_hac_filter_plugin"/>
   <quality-plugin name="qi-total" module="rave_qitotal_quality_plugin" class="rave_qitotal_quality_plugin"/>
+  <quality-plugin class="dealias_plugin" module="rave_dealias_quality_plugin" name="dealias" />
 </rave-pgf-quality-registry>
