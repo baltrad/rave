@@ -7,5 +7,5 @@
 <se.smhi.rave.creategmapimage function="generate" help="Google Map Plugin" module="googlemap_pgf_plugin"><arguments strings="outfile" /></se.smhi.rave.creategmapimage>
 <eu.baltrad.beast.generateacrr function="generate" help="Generate ACRR plugin" module="rave_pgf_acrr_plugin"><arguments floats="zra,zrb" strings="date,time,quantity,distancefield" ints="hours,N,accept"/></eu.baltrad.beast.generateacrr>
 <eu.baltrad.beast.creategracoefficient function="generate" help="Generate GRA coefficient plugin" module="rave_pgf_gra_plugin"><arguments floats="zra,zrb" strings="date,time,quantity,distancefield,adjustmentfile" ints="interval,N,accept"/></eu.baltrad.beast.creategracoefficient>
-
+<eu.baltrad.beast.generatesite2d function="generate" help="Generate Site2D plugin" module="rave_pgf_site2D_plugin"><arguments floats="height,range,zrA,zrb" strings="area,quantity,method,date,time,anomaly-qc,prodpar,applygra,ignore-malfunc,ctfilter" /></eu.baltrad.beast.generatesite2d>
 </generate-registry>

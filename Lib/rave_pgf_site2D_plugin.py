@@ -24,42 +24,143 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @file
 ## @author Daniel Michelson, SMHI
 ## @date 2014-04-01
-
-import os
-import _raveio
+import string
+import datetime
 import rave_tempfile
-import rave_site2D
+import logging
+import rave_pgf_logger
+import rave_dom_db
+import rave_util
+import _raveio, _rave
 
+from compositing import compositing
 
-## Creates a dictionary from a RAVE argument list
-# @param arglist the argument list
-# @return a dictionary
+from rave_defines import CENTER_ID, GAIN, OFFSET
+
+logger = rave_pgf_logger.rave_pgf_syslog_client()
+
+ravebdb = None
+try:
+  import rave_bdb
+  ravebdb = rave_bdb.rave_bdb()
+except:
+  pass
+
+## Creates a dictionary from a rave argument list
+#@param arglist the argument list
+#@return a dictionary
 def arglist2dict(arglist):
   result={}
   for i in range(0, len(arglist), 2):
     result[arglist[i]] = arglist[i+1]
   return result
 
+##
+# Converts a string into a number, either int or float
+# @param sval the string to translate
+# @return the translated value
+# @throws ValueError if value not could be translated
+#
+def strToNumber(sval):
+  try:
+    return int(sval)
+  except ValueError, e:
+    return float(sval)
+
+
 
 ## Performs
 # @param files list containing a single file string.
 # @arguments list containing arguments for the generator
 # @return temporary H5 file containing the generated product
+## Creates a composite
+#@param files the list of files to be used for generating the composite
+#@param arguments the arguments defining the composite
+#@return a temporary h5 file with the composite
 def generate(files, arguments):
-    if len(files) == 1:
-        kwargs = arglist2dict(arguments)
-
-        rio = _raveio.open(files[0])
-
-        rio = rave_site2D.site2D(rio, **kwargs)
-        
-        fileno, outfile = rave_tempfile.mktemp(suffix='.h5', close="True")
-
-        rio.save(outfile)
-        rio.save("/Users/baltrad/Documents/ERAD-2014/OSS/Py-ART/odim_h5_reader/bobbe.h5")
-
-        return outfile
+  args = arglist2dict(arguments)
+  
+  comp = compositing(ravebdb)
+  if len(files) != 1:
     raise AttributeError, "Input files list must contain only one file string"
+
+  comp.filenames = files
+  
+  if "anomaly-qc" in args.keys():
+    comp.detectors = string.split(args["anomaly-qc"], ",")
+
+  if "ignore-malfunc" in args.keys():
+    try:
+      if args["ignore-malfunc"].lower() in ["true", "yes", "y", "1"]:
+        comp.ignore_malfunc = True
+    except:
+      pass
+
+  comp.quantity = "DBZH"
+  if "quantity" in args.keys():
+    comp.quantity = args["quantity"]
+  comp.gain = GAIN
+  comp.offset = OFFSET
+
+  comp.set_product_from_string("pcappi")
+  if "method" in args.keys():
+    comp.set_product_from_string(args["method"].lower())
+
+  comp.height = 1000.0
+  comp.elangle = 0.0
+  comp.range = 200000.0
+
+  if "prodpar" in args.keys():
+    comp.prodpar = args["prodpar"]
+
+  if "range" in args.keys() and comp.product == _rave.Rave_ProductType_PMAX:
+    comp.range = strToNumber(args["range"])
+  
+  if "pcsid" in args.keys():
+    comp.pcsid = args["pcsid"]
+  
+  if "xscale" in args.keys():
+    comp.xscale = strToNumber(args["xscale"])
+    
+  if "yscale" in args.keys():
+    comp.yscale = strToNumber(args["yscale"])
+  
+  #if options.gf: Activate gap filling for rule
+  #  comp.applygapfilling = True
+  
+  # Optional cloud-type residual non-precip filter
+  if args.has_key("ctfilter"):
+    if eval(args["ctfilter"]):
+      comp.applyctfilter = True
+  
+  if args.has_key("applygra"):
+    comp.applygra = True
+  if args.has_key("zrA"):
+    comp.zr_A = strToNumber(args["zrA"])
+  if args.has_key("zrb"):
+    comp.zr_b = strToNumber(args["zrb"])
+  
+  if args.has_key("pcsid"):
+    comp.pcsid = args["pcsid"]
+    comp.xscale = strToNumber(args["xscale"])
+    comp.yscale = strToNumber(args["yscale"])
+  
+  areaid = None
+  if args.has_key("area"):
+    areaid = args["area"]
+  
+  result = comp.generate(None, None, areaid)
+
+  result.objectType = _rave.Rave_ObjectType_IMAGE 
+  
+  fileno, outfile = rave_tempfile.mktemp(suffix='.h5', close="True")
+  
+  rio = _raveio.new()
+  rio.object = result
+  rio.filename = outfile
+  rio.save()
+
+  return outfile
 
 
 if __name__ == '__main__':
