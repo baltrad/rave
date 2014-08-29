@@ -89,10 +89,9 @@ def generate(files, arguments):
 
       try:      
         source, hits = _scansun.scansun(fname)
-      except:
+      finally:
         if removeme != None and os.path.exists(removeme):
           os.unlink(removeme)
-        raise
 
       if len(hits) > 0:
         ofstr = Source2File(source)
