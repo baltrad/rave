@@ -260,6 +260,64 @@ class PyPolarScanTest(unittest.TestCase):
       pass
     self.assertAlmostEquals(1.0*math.pi/180.0, obj.beamwidth, 4)
 
+  def test_clone(self):
+    obj = _polarscan.new()
+    obj.elangle = 1.0
+    obj.rscale = 1000.0
+    obj.rstart = 2.0
+    obj.a1gate = 3
+    obj.beamwidth = 4.0
+    obj.longitude = 5.0
+    obj.latitude = 6.0
+    obj.height = 7.0
+    obj.time = "100000"
+    obj.date = "20130101"
+    obj.starttime = "110000"
+    obj.startdate = "20130102"
+    obj.endtime = "120000"
+    obj.enddate = "20130103"
+    obj.source = "CMT:123"
+    
+    param1 = _polarscanparam.new()
+    param1.quantity="DBZH"
+    param1.setData(numpy.zeros((3,3), numpy.int8))
+    
+    obj.addParameter(param1)
+    
+    cpy = obj.clone()
+
+    obj.elangle = 10.0
+    obj.rscale = 1100.0
+    obj.rstart = 9.0
+    obj.a1gate = 8
+    obj.beamwidth = 7.0
+    obj.longitude = 6.0
+    obj.latitude = 5.0
+    obj.height = 4.0
+    obj.time = "100001"
+    obj.date = "20130201"
+    obj.starttime = "110001"
+    obj.startdate = "20130202"
+    obj.endtime = "120001"
+    obj.enddate = "20130203"
+    obj.source = "CMT:124"
+
+    self.assertAlmostEquals(1.0, cpy.elangle, 4)
+    self.assertAlmostEquals(1000.0, cpy.rscale, 4)
+    self.assertAlmostEquals(2.0, cpy.rstart, 4)
+    self.assertEquals(3, cpy.a1gate)
+    self.assertAlmostEquals(4.0, cpy.beamwidth, 4)
+    self.assertAlmostEquals(5.0, cpy.longitude, 4)
+    self.assertAlmostEquals(6.0, cpy.latitude, 4)
+    self.assertAlmostEquals(7.0, cpy.height, 4)
+    self.assertEquals("100000", cpy.time)
+    self.assertEquals("20130101", cpy.date)
+    self.assertEquals("110000", cpy.starttime)
+    self.assertEquals("20130102", cpy.startdate)
+    self.assertEquals("120000", cpy.endtime)
+    self.assertEquals("20130103", cpy.enddate)
+    self.assertEquals("CMT:123", cpy.source)
+
   def test_defaultparameter(self):
     obj = _polarscan.new()
     self.assertEquals("DBZH", obj.defaultparameter)

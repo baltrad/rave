@@ -134,6 +134,24 @@ static void _pypolarvolume_dealloc(PyPolarVolume* obj)
   PyObject_Del(obj);
 }
 
+static PyObject* _pypolarvolume_clone(PyPolarVolume* obj, PyObject* args)
+{
+  PolarVolume_t* cpy = NULL;
+  PyObject* result = NULL;
+  if (!PyArg_ParseTuple(args, "")) {
+    return NULL;
+  }
+  cpy = RAVE_OBJECT_CLONE(obj->pvol);
+  if (cpy == NULL) {
+    raiseException_returnNULL(PyExc_RuntimeError, "Failed to clone volume");
+  }
+  result = (PyObject*)PyPolarVolume_New(cpy);
+
+  RAVE_OBJECT_RELEASE(cpy);
+
+  return result;
+}
+
 /**
  * Creates a new instance of the polar volume.
  * @param[in] self this instance.
@@ -679,6 +697,7 @@ static struct PyMethodDef _pypolarvolume_methods[] =
   {"isValid", (PyCFunction) _pypolarvolume_isValid, 1},
   {"getDistanceField", (PyCFunction) _pypolarvolume_getDistanceField, 1},
   {"getHeightField", (PyCFunction) _pypolarvolume_getHeightField, 1},
+  {"clone", (PyCFunction) _pypolarvolume_clone, 1},
   {NULL, NULL} /* sentinel */
 };
 

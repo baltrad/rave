@@ -682,7 +682,41 @@ class PyPolarVolumeTest(unittest.TestCase):
     vol.beamwidth = 4.0*math.pi/180.0
     self.assertAlmostEquals(4.0*math.pi/180.0, scan1.beamwidth, 4)
     self.assertAlmostEquals(4.0*math.pi/180.0, scan2.beamwidth, 4)
+  
+  def test_clone(self):
+    vol = _polarvolume.new()
+    vol.longitude = 1.0
+    vol.latitude = 2.0
+    vol.height = 3.0
+    vol.time = "200000"
+    vol.date= "20110101"
+    vol.source = "CMT:123"
+    vol.beamwidth = 4.0
+    scan1 = _polarscan.new()
+    scan1.elangle = 2.0
+    vol.addScan(scan1)
+        
+    cpy = vol.clone()
+
+    # Modify the source volume before we test the clone to verify that they aren't bound to each other
+    vol.longitude = 4.0
+    vol.latitude = 3.0
+    vol.height = 2.0
+    vol.time = "210000"
+    vol.date= "20120101"
+    vol.source = "CMT:124"
+    vol.beamwidth = 1.0
+    vol.getScan(0).elangle = 3.0
     
+    self.assertAlmostEquals(1.0, cpy.longitude, 4)
+    self.assertAlmostEquals(2.0, cpy.latitude, 4)
+    self.assertAlmostEquals(3.0, cpy.height, 4)
+    self.assertEquals("200000", cpy.time)
+    self.assertEquals("20110101", cpy.date)
+    self.assertAlmostEquals(4.0, cpy.beamwidth, 4)
+    self.assertEquals(1, cpy.getNumberOfScans())
+    self.assertAlmostEquals(2.0, cpy.getScan(0).elangle, 4)
+  
   def test_getConvertedVerticalMaxValue(self):
     import _raveio
     vol = _raveio.open("fixtures/pvol_seang_20090501T120000Z.h5").object

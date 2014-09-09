@@ -146,6 +146,24 @@ static PyObject* _pypolarscan_new(PyObject* self, PyObject* args)
   return (PyObject*)result;
 }
 
+static PyObject* _pypolarscan_clone(PyPolarScan* self, PyObject* args)
+{
+  PolarScan_t* cpy = NULL;
+  PyObject* result = NULL;
+  if (!PyArg_ParseTuple(args, "")) {
+    return NULL;
+  }
+  cpy = RAVE_OBJECT_CLONE(self->scan);
+  if (cpy == NULL) {
+    raiseException_returnNULL(PyExc_RuntimeError, "Failed to clone scan");
+  }
+  result = (PyObject*)PyPolarScan_New(cpy);
+
+  RAVE_OBJECT_RELEASE(cpy);
+
+  return result;
+}
+
 static PyObject* _pypolarscan_addParameter(PyPolarScan* self, PyObject* args)
 {
   PyObject* inptr = NULL;
@@ -1102,6 +1120,7 @@ static struct PyMethodDef _pypolarscan_methods[] =
   {"findQualityFieldByHowTask", (PyCFunction) _pypolarscan_findQualityFieldByHowTask, 1},
   {"getDistanceField", (PyCFunction) _pypolarscan_getDistanceField, 1},
   {"getHeightField", (PyCFunction) _pypolarscan_getHeightField, 1},
+  {"clone", (PyCFunction) _pypolarscan_clone, 1},
   {NULL, NULL } /* sentinel */
 };
 

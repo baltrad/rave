@@ -25,9 +25,8 @@ Test suite for rave
 '''
 import unittest, os
 
-A="""
+
 from RaveTest import *
-"""
 from PyPolarVolumeTest import *
 from PyPolarScanTest import *
 from PyPolarScanParamTest import *
