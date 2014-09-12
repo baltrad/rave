@@ -1058,6 +1058,23 @@ static PyObject* _pypolarscan_getHeightField(PyPolarScan* self, PyObject* args)
   return result;
 }
 
+static PyObject* _pypolarscan_getMaxDistance(PyPolarScan* self, PyObject* args)
+{
+  if (!PyArg_ParseTuple(args, "")) {
+    return NULL;
+  }
+  return PyFloat_FromDouble(PolarScan_getMaxDistance(self->scan));
+}
+
+static PyObject* _pypolarscan_getDistance(PyPolarScan* self, PyObject* args)
+{
+  double lon = 0.0, lat = 0.0;
+  if (!PyArg_ParseTuple(args, "(dd)", &lon, &lat)) {
+    return NULL;
+  }
+  return PyFloat_FromDouble(PolarScan_getDistance(self->scan, lon, lat));
+}
+
 /**
  * All methods a polar scan can have
  */
@@ -1120,6 +1137,8 @@ static struct PyMethodDef _pypolarscan_methods[] =
   {"findQualityFieldByHowTask", (PyCFunction) _pypolarscan_findQualityFieldByHowTask, 1},
   {"getDistanceField", (PyCFunction) _pypolarscan_getDistanceField, 1},
   {"getHeightField", (PyCFunction) _pypolarscan_getHeightField, 1},
+  {"getMaxDistance", (PyCFunction) _pypolarscan_getMaxDistance, 1},
+  {"getDistance", (PyCFunction) _pypolarscan_getDistance, 1},
   {"clone", (PyCFunction) _pypolarscan_clone, 1},
   {NULL, NULL } /* sentinel */
 };

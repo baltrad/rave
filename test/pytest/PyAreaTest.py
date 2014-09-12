@@ -44,6 +44,17 @@ class PyAreaTest(unittest.TestCase):
     isarea = string.find(`type(obj)`, "AreaCore")
     self.assertNotEqual(-1, isarea)
 
+  def test_isArea(self):
+    obj = _area.new()
+    self.assertEquals(True, _area.isArea(obj))
+    
+    self.assertEquals(False, _area.isArea(_projection.new("x", "y", "+proj=latlong +ellps=WGS84 +datum=WGS84")))
+
+    self.assertEquals(False, _area.isArea("abc"))
+    
+    self.assertEquals(False, _area.isArea(None))
+    
+
   def test_attribute_visibility(self):
     attrs = ['extent', 'id', 'projection', 'xscale', 'xsize', 'yscale', 'ysize']
     area = _area.new()

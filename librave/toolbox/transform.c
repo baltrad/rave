@@ -121,6 +121,66 @@ done:
   RAVE_OBJECT_RELEASE(targetpj);
   return result;
 }
+
+int TransformInternal_verifySameParameterNames(RaveList_t* expected, RaveList_t* actual)
+{
+  int nexpected = 0, nactual = 0, ie = 0, ia = 0;
+  nexpected = RaveList_size(expected);
+  nactual = RaveList_size(actual);
+  if (nexpected != nactual) {
+    return 0;
+  }
+  for (ie = 0; ie < nexpected; ie++) {
+    char* se = RaveList_get(expected, ie);
+    int contains = 0;
+    for (ia = 0; !contains && ia < nactual; ia++) {
+      char* sa = RaveList_get(actual, ia);
+      if ((se == NULL && sa == NULL) ||
+          (se != NULL && sa != NULL && strcmp(se,sa) == 0)) {
+        contains = 1;
+      }
+    }
+    if (!contains) {
+      return 0;
+    }
+  }
+  return 1;
+}
+
+int TransformInternal_verifyCombineTilesObjects(RaveObjectList_t* tiles)
+{
+  int ntiles, i;
+  RaveCoreObject* o = NULL;
+  int result = 0;
+  RaveList_t* parameterNames = NULL;
+
+  ntiles = RaveObjectList_size(tiles);
+  for (i = 0; i < ntiles; i++) {
+    o = RaveObjectList_get(tiles, i);
+    if (!RAVE_OBJECT_CHECK_TYPE(o, &Cartesian_TYPE)) {
+      goto done;
+    }
+    if (parameterNames == NULL) {
+      parameterNames = Cartesian_getParameterNames((Cartesian_t*)o);
+    } else {
+      RaveList_t* oNames = Cartesian_getParameterNames((Cartesian_t*)o);
+      if (!TransformInternal_verifySameParameterNames(parameterNames, oNames)) {
+        RAVE_ERROR0("Cartesian objects does not contain same parameters");
+        RaveList_freeAndDestroy(&oNames);
+        goto done;
+      }
+      RaveList_freeAndDestroy(&oNames);
+    }
+    RAVE_OBJECT_RELEASE(o);
+  }
+
+  result = 1; /* If we get here, all checks has passed */
+done:
+  RaveList_freeAndDestroy(&parameterNames);
+  RAVE_OBJECT_RELEASE(o);
+  return result;
+}
+
 /*@} End of Private functions */
 
 /*@{ Interface functions */
@@ -500,6 +560,39 @@ done:
   RAVE_OBJECT_RELEASE(dd);
   RAVE_OBJECT_RELEASE(cd);
   RAVE_OBJECT_RELEASE(sd);
+  return result;
+}
+
+Cartesian_t* Transform_combine_tiles(Transform_t* self, Area_t* area, RaveObjectList_t* tiles)
+{
+  Cartesian_t* result = NULL;
+  Cartesian_t* combined = NULL;
+  int ntiles = 0, i = 0;
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  if (area == NULL || tiles == NULL) {
+    RAVE_ERROR0("No area definition or tiles");
+    return NULL;
+  }
+  if (!TransformInternal_verifyCombineTilesObjects(tiles)) {
+    RAVE_ERROR0("Not properly defined tiles. Do they contain same number of parameters?");
+    return NULL;
+  }
+  combined = RAVE_OBJECT_NEW(&Cartesian_TYPE);
+  if (combined == NULL) {
+    goto done;
+  }
+  Cartesian_init(combined, area);
+
+  ntiles = RaveObjectList_size(tiles);
+  for (i = 0; i < ntiles; i++) {
+    Cartesian_t* ci = (Cartesian_t*)RaveObjectList_get(tiles, i);
+
+    RAVE_OBJECT_RELEASE(ci);
+  }
+
+  result = RAVE_OBJECT_COPY(combined);
+done:
+  RAVE_OBJECT_RELEASE(combined);
   return result;
 }
 

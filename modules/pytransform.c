@@ -31,6 +31,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #define PYTRANSFORM_MODULE /**< include correct part of pytransform.h */
 #include "pytransform.h"
 
+#include "pyarea.h"
 #include "pypolarscan.h"
 #include "pypolarvolume.h"
 #include "pycartesian.h"
@@ -360,6 +361,59 @@ static PyObject* _pytransform_fillGap(PyTransform* self, PyObject* args)
 }
 
 /**
+ * Combines a number of cartesian areas into the one specified by the area definition. This should not be confused with the
+ * cartesian composite generation. This function instead works like a area-combiner where the individual tiles will result
+ * in a full area.
+ */
+static PyObject* _pytransform_combine_tiles(PyTransform* self, PyObject* args)
+{
+  PyObject* pyarea = NULL;
+  PyObject* pytiles = NULL;
+  Cartesian_t* result = NULL;
+  PyObject* pyresult = NULL;
+  RaveObjectList_t* tiles = NULL;
+  Py_ssize_t n = 0, i = 0;
+
+  if (!PyArg_ParseTuple(args, "OO", &pyarea, &pytiles)) {
+    return NULL;
+  }
+
+  if (!PyArea_Check(pyarea)) {
+    raiseException_returnNULL(PyExc_AttributeError, "combine_tiles requires a AreaCore instance as first argument");
+  }
+  if (!PySequence_Check(pytiles)) {
+    raiseException_returnNULL(PyExc_AttributeError, "combine_tiles requires a list of cartesian products as second argument");
+  }
+  tiles = RAVE_OBJECT_NEW(&RaveObjectList_TYPE);
+  if (!tiles) {
+    raiseException_returnNULL(PyExc_MemoryError, "Failed to allocate memory for tiles");
+  }
+  n = PySequence_Size(pytiles);
+  for (i = 0; i < n; i++) {
+    PyObject* v = PySequence_GetItem(pytiles, i);
+    if (!PyCartesian_Check(v)) {
+      Py_XDECREF(v);
+      raiseException_gotoTag(done, PyExc_AttributeError, "Input should be a list of cartesian tiles");
+    }
+    if (!RaveObjectList_add(tiles, (RaveCoreObject*)((PyCartesian*)v)->cartesian)) {
+      Py_XDECREF(v);
+      raiseException_gotoTag(done, PyExc_MemoryError, "Failed to add item to list");
+    }
+    Py_XDECREF(v);
+  }
+  result = Transform_combine_tiles(self->transform, ((PyArea*)pyarea)->area, tiles);
+  if (result == NULL) {
+    raiseException_gotoTag(done, PyExc_AttributeError, "Failed to combine tiles");
+  }
+  pyresult = (PyObject*)PyCartesian_New(result);
+
+done:
+  RAVE_OBJECT_RELEASE(tiles);
+  RAVE_OBJECT_RELEASE(result);
+  return pyresult;
+}
+
+/**
  * All methods a transformator can have
  */
 static struct PyMethodDef _pytransform_methods[] =
@@ -371,6 +425,7 @@ static struct PyMethodDef _pytransform_methods[] =
   {"ctoscan", (PyCFunction) _pytransform_ctoscan, 1},
   {"ctop", (PyCFunction) _pytransform_ctop, 1},
   {"fillGap", (PyCFunction) _pytransform_fillGap, 1},
+  {"combine_areas", (PyCFunction) _pytransform_combine_tiles, 1},
   {NULL, NULL } /* sentinel */
 };
 
@@ -481,6 +536,7 @@ init_transform(void)
   import_pycartesian();
   import_pycartesianparam();
   import_pyradardefinition();
+  import_pyarea();
   PYRAVE_DEBUG_INITIALIZE;
 }
 /*@} End of Module setup */

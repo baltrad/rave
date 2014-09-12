@@ -862,6 +862,37 @@ class PyPolarVolumeTest(unittest.TestCase):
       for i in range(12):
         self.assertAlmostEquals(expected[j][i], f.getValue(i, j)[1], 2)
 
+  def test_getMaxDistance(self):
+    s1 = _polarscan.new()
+    s1.longitude = 60.0 * math.pi / 180.0
+    s1.latitude = 12.0 * math.pi / 180.0
+    s1.height = 0.0
+    s1.rscale = 1000.0
+    s1.elangle = (math.pi / 180.0)*0.5
+    param = _polarscanparam.new()
+    param.quantity="DBZH"    
+    data = numpy.zeros((10, 10), numpy.int8)
+    param.setData(data)
+    s1.addParameter(param)
+
+    s2 = _polarscan.new()
+    s2.longitude = 60.0 * math.pi / 180.0
+    s2.latitude = 12.0 * math.pi / 180.0
+    s2.height = 0.0
+    s2.rscale = 1000.0
+    s2.elangle = (math.pi / 180.0)*1.5
+    param = _polarscanparam.new()
+    param.quantity="DBZH"    
+    data = numpy.zeros((10, 10), numpy.int8)
+    param.setData(data)
+    s2.addParameter(param)
+
+    vol = _polarvolume.new()
+    vol.addScan(s1)
+    vol.addScan(s2)
+    
+    self.assertAlmostEquals(10999.45, vol.getMaxDistance(), 2)
+
 if __name__ == "__main__":
   #import sys;sys.argv = ['', 'Test.testName']
   unittest.main()

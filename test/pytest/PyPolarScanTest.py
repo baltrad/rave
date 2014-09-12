@@ -1293,6 +1293,34 @@ class PyPolarScanTest(unittest.TestCase):
     for i in range(10):
       self.assertAlmostEquals(expected[i], f.getValue(i, 0)[1], 4)
     
+  def test_getMaxDistance(self):
+    obj = _polarscan.new()
+    obj.longitude = 60.0 * math.pi / 180.0
+    obj.latitude = 12.0 * math.pi / 180.0
+    obj.height = 0.0
+    obj.rscale = 1000.0
+    obj.elangle = (math.pi / 180.0)*0.5
+    param = _polarscanparam.new()
+    param.quantity="DBZH"    
+    data = numpy.zeros((10, 10), numpy.int8)
+    param.setData(data)
+    obj.addParameter(param)
+    self.assertAlmostEquals(10999.45, obj.getMaxDistance(), 2)
+    
+  def test_getDistance(self):
+    obj = _polarscan.new()
+    obj.longitude = 12.0 * math.pi / 180.0
+    obj.latitude = 60.0 * math.pi / 180.0
+    obj.height = 0.0
+    obj.rscale = 1000.0
+    obj.elangle = (math.pi / 180.0)*0.5
+    param = _polarscanparam.new()
+    param.quantity="DBZH"    
+    data = numpy.zeros((10, 10), numpy.int8)
+    param.setData(data)
+    obj.addParameter(param)
+    self.assertAlmostEquals(222080.29, obj.getDistance((12.0 * math.pi / 180.0, 62.0 * math.pi / 180.0)), 2)
+    
 if __name__ == "__main__":
   #import sys;sys.argv = ['', 'Test.testName']
   unittest.main()

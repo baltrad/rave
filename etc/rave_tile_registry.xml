@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<rave-tile-registry>
+  <!-- NOTE, the extents are defined as LL (lower/left) and UR (upper/right) which means that -->
+  <!-- lowest values are at bottom left -->
+  <area id="swegmaps_2000"> <!-- maps to an area definition in area_registry.xml -->
+    <tile id="ul" extent="971337.728807,9112461.1790100001,1993337.7288084999,11028461.179" />
+    <tile id="ur" extent="1993337.7288084999,9112461.1790100001,3015337.72881,11028461.179" />
+    <tile id="ll" extent="971337.728807,7196461.17902,1993337.7288084999,9112461.1790100001" />
+    <tile id="lr" extent="1993337.7288084999,7196461.17902,3015337.72881,9112461.1790100001" />
+  </area>
+</rave-tile-registry>
+

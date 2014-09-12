@@ -39,7 +39,6 @@ import math
 import rave_pgf_logger
 import rave_pgf_quality_registry
 import rave_ctfilter
-#import rave_dom_db
 import rave_util
 import qitotal_options
 import area_registry
@@ -104,12 +103,10 @@ class compositing(object):
     self.verbose = False
     self.logger = logger
 
-  ## Generates the cartesian image.
-  #
-  # @param dd: date in format YYYYmmdd
-  # @param dt: time in format HHMMSS
-  # @param area: the area to use for the cartesian image. If none is specified, a best fit will be atempted.  
   def generate(self, dd, dt, area=None):
+    return self._generate(dd, dt, area)
+
+  def _debug_generate_info(self, area):
     if self.verbose:
       self.logger.info("Generating cartesian image from %d files"%len(self.filenames))
       self.logger.debug("Detectors = %s"%`self.detectors`)
@@ -130,21 +127,27 @@ class compositing(object):
       else:
         self.logger.debug("Area = best fit")
         self.logger.debug("  pcsid = %s"%self.pcsid)
-        self.logger.debug("  xscale = %f, yscale = %f"%(self.xscale, self.yscale))
-  
-    qfields = []
-    for d in self.detectors:
-      p = rave_pgf_quality_registry.get_plugin(d)
-      if p != None:
-        qfields.extend(p.getQualityFields())
+        self.logger.debug("  xscale = %f, yscale = %f"%(self.xscale, self.yscale))    
+
+  ## Generates the cartesian image.
+  #
+  # @param dd: date in format YYYYmmdd
+  # @param dt: time in format HHMMSS
+  # @param area: the area to use for the cartesian image. If none is specified, a best fit will be atempted.  
+  def _generate(self, dd, dt, area=None):
+    self._debug_generate_info(area)
  
     if self.verbose:
       self.logger.info("Fetching objects and applying quality plugins")
+    
     objects, nodes, algorithm = self._create_objects()
     
     generator = _pycomposite.new()
     if area is not None:
-      pyarea = my_area_registry.getarea(area)
+      if _area.isArea(area):
+        pyarea = area
+      else:
+        pyarea = my_area_registry.getarea(area)
     else:
       if self.verbose:
         self.logger.info("Determining best fit for area")
@@ -158,8 +161,13 @@ class compositing(object):
       pyarea.yscale = A.yscale
       pyarea.extent = A.extent
       pcs = rave_projection.pcs(A.pcs)
-      
       pyarea.projection = _projection.new(pcs.id, pcs.name, string.join(pcs.definition, ' '))
+  
+    qfields = []
+    for d in self.detectors:
+      p = rave_pgf_quality_registry.get_plugin(d)
+      if p != None:
+        qfields.extend(p.getQualityFields())
     
     generator.addParameter(self.quantity, self.gain, self.offset)
     generator.product = self.product
@@ -217,8 +225,9 @@ class compositing(object):
     
     if self.verbose:
       self.logger.debug("Returning resulting composite image")
+
     return result
-  
+
   def set_product_from_string(self, prodstr):
     prodstr = prodstr.lower()
 
@@ -296,8 +305,8 @@ class compositing(object):
       return
     
     try:
-      zrA = self.zr_A#200.0
-      zrb = self.zr_b#1.6
+      zrA = self.zr_A
+      zrb = self.zr_b
       db = rave_dom_db.create_db_from_conf()
       dt = datetime.datetime(int(d[:4]), int(d[4:6]), int(d[6:]), int(t[:2]), int(t[2:4]), 0)
       dt = dt - datetime.timedelta(seconds=3600*12) # 12 hours back in time for now..
@@ -392,6 +401,10 @@ class compositing(object):
       return int(sval)
     except ValueError, e:
       return float(sval)
+
+  def test_func(self, a):
+    print "Called with area %s"%a
+
 
 ## Main function. 
 # @param options a set of parsed options from the command line 

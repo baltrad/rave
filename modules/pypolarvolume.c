@@ -663,6 +663,14 @@ static PyObject* _pypolarvolume_getHeightField(PyPolarVolume* self, PyObject* ar
   return result;
 }
 
+static PyObject* _pypolarvolume_getMaxDistance(PyPolarVolume* self, PyObject* args)
+{
+  if (!PyArg_ParseTuple(args, "")) {
+    return NULL;
+  }
+  return PyFloat_FromDouble(PolarVolume_getMaxDistance(self->pvol));
+}
+
 /**
  * All methods a polar volume can have
  */
@@ -677,6 +685,7 @@ static struct PyMethodDef _pypolarvolume_methods[] =
   {"paramname", NULL},
   {"beamwidth", NULL},
   {"getDistance", (PyCFunction) _pypolarvolume_getDistance, 1},
+  {"getMaxDistance", (PyCFunction) _pypolarvolume_getMaxDistance, 1},
   {"addScan", (PyCFunction) _pypolarvolume_addScan, 1},
   {"getScan", (PyCFunction) _pypolarvolume_getScan, 1},
   {"getNumberOfScans", (PyCFunction) _pypolarvolume_getNumberOfScans, 1},

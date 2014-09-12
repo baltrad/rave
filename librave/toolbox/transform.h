@@ -30,6 +30,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "polarvolume.h"
 #include "cartesian.h"
 #include "radardefinition.h"
+#include "area.h"
 
 /**
  * Defines a transformer
@@ -128,5 +129,17 @@ CartesianParam_t* Transform_fillGapOnParameter(Transform_t* transform, Cartesian
  * @param[in] param - the cartesian parameter. Should contain
  */
 CartesianParam_t* Transform_accumulate(Transform_t* self, CartesianParam_t* param, double zr_a, double zr_b);
+
+/**
+ * Combines a number of tiles into the area defined by area. This function should not be mixed up with
+ * functionality in cartesian composite. Instead this function will in a way concatenate the individual
+ * tiles into a big one. There is no overlapping functionallity or other clever ways to combine the different
+ * tiles.
+ * @param[in] self - self
+ * @param[in] area - the resulting area
+ * @param[in] tiles - the list of tiles
+ * @return the complete cartesian product
+ */
+Cartesian_t* Transform_combine_tiles(Transform_t* self, Area_t* area, RaveObjectList_t* tiles);
 
 #endif

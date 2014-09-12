@@ -294,6 +294,17 @@ done:
   return result;
 }
 
+static PyObject* _pyarea_isArea(PyObject* self, PyObject* args)
+{
+  PyObject* inobj = NULL;
+  if (!PyArg_ParseTuple(args,"O", &inobj)) {
+    return NULL;
+  }
+  if (PyArea_Check(inobj)) {
+    return PyBool_FromLong(1);
+  }
+  return PyBool_FromLong(0);
+}
 /*@} End of Area */
 
 /*@{ Type definitions */
@@ -320,6 +331,7 @@ PyTypeObject PyArea_Type =
 /*@{ Module setup */
 static PyMethodDef functions[] = {
   {"new", (PyCFunction)_pyarea_new, 1},
+  {"isArea", (PyCFunction)_pyarea_isArea, 1},
   {NULL,NULL} /*Sentinel*/
 };
 
