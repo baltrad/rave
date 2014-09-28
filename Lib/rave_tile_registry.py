@@ -41,13 +41,16 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 import xml.etree.ElementTree as ET
 import _area
 import rave_pgf_logger
+import area_registry
+
+from rave_defines import RAVE_TILE_REGISTRY
 
 logger = rave_pgf_logger.rave_pgf_syslog_client()
 
-TILE_REGISTRY="slask.xml"
-
 _initialized = False
 _registry = {}
+
+my_area_registry = area_registry.area_registry()
 
 class tiledef(object):
   def __init__(self, id, extent):
@@ -55,7 +58,7 @@ class tiledef(object):
     self.extent = tuple(extent)
 
   def __repr__(self):
-    return "<tildef id='%s', extent=%s>"%(self.id, `self.extent`)
+    return "<tile id=\"%s\", extent=\"%f,%f,%f,%f\">"%(self.id, self.extent[0],self.extent[1],self.extent[2],self.extent[3])
 
 ##
 # Get all the tiled areas belonging to the specified area. The area has to reside in the area_registry in order
@@ -85,6 +88,47 @@ def get_tiled_areas(a):
   return tiledareas    
 
 ##
+# Creates the tiles for the specified area with the specified number of tiles. The tiles should be a 
+# tuple containing (nr of x-tiles, nr of y-tiles).
+# @param a: the name of the area as defined in the area registry
+# @param tiles: a tuple defining the tile definition (nr of x-tiles, nr of y-tiles)
+# @return the tile definition
+def generate_tiles_for_area(aid, tiles):
+  if len(tiles) != 2 or tiles[0] == 0 or tiles[1] == 0:
+    raise ValueError, "tiles should be a tuple (nr of x-tiles, nr of y-tiles)"
+  a = my_area_registry.getarea(aid)
+  xdistance = a.extent[2]-a.extent[0]
+  ydistance = a.extent[3]-a.extent[1]
+  xtilesize = xdistance / float(tiles[0])
+  ytilesize = ydistance / float(tiles[1])
+  
+  ulY = a.extent[3]
+  
+  result=[]
+  for y in range(tiles[1]):
+    ulY_end = ulY - ytilesize
+    ulX = a.extent[0]
+    for x in range(tiles[0]):
+      ulX_end = ulX + xtilesize
+      result.append(tiledef("%d_%d"%(y,x), (ulX,ulY_end,ulX_end,ulY)))
+      ulX = ulX_end
+    ulY = ulY_end
+  return result
+
+##
+# Creates an appropriate tile registry definition for the specified area with the
+# specified number of tiles. The tiles should be a tuple containing (nr of x-tiles, nr of y-tiles).
+# @param a: the name of the area as defined in the area registry
+# @param tiles: a tuple defining the tile definition (nr of x-tiles, nr of y-tiles)
+# @return the tile definition
+def create_tile_definition_for_area(aid, tiles):
+  tiledefs = generate_tiles_for_area(aid, tiles)
+  print "<area id=\"%s\"><!-- maps to an area definition in area_registry.xml -->"%aid
+  for t in tiledefs:
+    print "  %s"%t
+  print "</area>"
+
+##
 # Initializes the registry by reading the xml file with the plugin
 # definitions.
 #
@@ -93,7 +137,7 @@ def init():
   if _initialized: return
   import imp
     
-  O = ET.parse(TILE_REGISTRY)
+  O = ET.parse(RAVE_TILE_REGISTRY)
   registry = O.getroot()
   for adef in list(registry):
     aid = adef.attrib["id"]
@@ -110,3 +154,5 @@ def init():
 # Load the registry
 init()
 
+if __name__=="__main__":
+  create_tile_definition_for_area("swegmaps_2000", (2,2))

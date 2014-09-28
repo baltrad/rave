@@ -425,7 +425,7 @@ static struct PyMethodDef _pytransform_methods[] =
   {"ctoscan", (PyCFunction) _pytransform_ctoscan, 1},
   {"ctop", (PyCFunction) _pytransform_ctop, 1},
   {"fillGap", (PyCFunction) _pytransform_fillGap, 1},
-  {"combine_areas", (PyCFunction) _pytransform_combine_tiles, 1},
+  {"combine_tiles", (PyCFunction) _pytransform_combine_tiles, 1},
   {NULL, NULL } /* sentinel */
 };
 

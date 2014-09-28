@@ -47,6 +47,7 @@ install:
 	@cp -v -f ctfilter "${prefix}/bin/"
 	@cp -v -f site2D "${prefix}/bin/"
 	@cp -v -f rave_pgf_logger "${prefix}/bin/"
+	@cp -v -f create_tile_definition "${prefix}/bin/"
 
 
 .PHONY:clean

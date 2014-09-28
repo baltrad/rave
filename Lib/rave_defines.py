@@ -141,5 +141,13 @@ ODIM_SOURCE_FILE = os.path.join(RAVECONFIG, 'odim_source.xml')
 
 QUALITY_REGISTRY=os.path.join(RAVEETC, 'rave_pgf_quality_registry.xml')
 
+RAVE_TILE_REGISTRY=os.path.join(RAVEETC, 'rave_tile_registry.xml')
+
+# Max number of processes to use when performing the composite tiling. If None, then
+# the number of processes will be set to number of tiles or less depending on how many
+# cores that are available. If number of cores > 1, then there will always be one core
+# left for handling the result.
+RAVE_TILE_COMPOSITING_PROCESSES=None
+
 if __name__ == "__main__":
     print __doc__

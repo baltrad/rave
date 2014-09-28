@@ -24,7 +24,7 @@
 ###########################################################################
 -include ../def.mk
 
-CONFIG_FILES=rave_pgf_quality_registry.xml rave_pgf_queue.xml rave_pgf_registry.xml
+CONFIG_FILES=rave_pgf_quality_registry.xml rave_pgf_queue.xml rave_pgf_registry.xml rave_tile_registry.xml
 
 .PHONY=install
 install:

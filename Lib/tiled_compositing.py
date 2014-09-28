@@ -29,12 +29,13 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 import rave_tile_registry
 import compositing
 import multiprocessing
-import math
+import math, os
 import rave_pgf_logger
 import area_registry
 import numpy
-import _rave, _area, _pycomposite, _projection, _raveio, _polarscan, _polarvolume, _transform
+import _rave, _area, _pycomposite, _projection, _raveio, _polarscan, _polarvolume, _transform, _cartesianvolume
 from rave_defines import CENTER_ID, GAIN, OFFSET
+from rave_defines import RAVE_TILE_COMPOSITING_PROCESSES
 import rave_tempfile
 
 logger = rave_pgf_logger.rave_pgf_syslog_client()
@@ -196,7 +197,7 @@ class tiled_compositing(object):
     a.offset = self.compositing.offset
     a.area_definition = adef
     
-    apj=_projection.new("x", "y", adef.pcsdef)#cartesian->urY - cartesian->yscale * (double)y
+    apj=_projection.new("x", "y", adef.pcsdef)
     
     for k in self.file_objects.keys():
       v = self.file_objects[k]
@@ -246,7 +247,20 @@ class tiled_compositing(object):
     
     results = []
     
-    pool = multiprocessing.Pool(None)
+    ntiles = len(args)
+    ncpucores = multiprocessing.cpu_count()
+
+    nrprocesses = ntiles
+    if not RAVE_TILE_COMPOSITING_PROCESSES is None:
+       if nrprocesses > RAVE_TILE_COMPOSITING_PROCESSES:
+         nrprocesses = RAVE_TILE_COMPOSITING_PROCESSES
+
+    if nrprocesses > ncpucores:
+      nrprocesses = ncpucores
+    if nrprocesses == ncpucores and ncpucores > 1:
+      nrprocesses = nrprocesses - 1 # We always want to leave at least one core for something else
+    
+    pool = multiprocessing.Pool(nrprocesses)
     
     r = pool.map_async(comp_generate, args, callback=results.append)
     
@@ -254,13 +268,15 @@ class tiled_compositing(object):
     
     objects = []
     try:
-      for v in results:
+      for v in results[0]:
         o = _raveio.open(v[1]).object
+        if _cartesianvolume.isCartesianVolume(o):
+          o = o.getImage(0)        
         objects.append(o)
         
       t = _transform.new()
-      
-      result = t.combine_areas(pyarea, objects)
+
+      result = t.combine_tiles(pyarea, objects)
       
       fileno, outfile = rave_tempfile.mktemp(suffix='.h5', close="True")
   
@@ -272,7 +288,7 @@ class tiled_compositing(object):
       return outfile
     finally:
       if results != None:
-        for v in results:
+        for v in results[0]:
           if v != None and v[1] != None and os.path.exists(v[1]):
             try:
               os.unlink(v[1])
@@ -317,5 +333,6 @@ if __name__=="__main__":
                   "/projects/baltrad/baltrad-test/fixtures4/sevil_pvol_20140220T1300Z.h5"]
   
   tc = tiled_compositing(comp)
-  tc.generate("20090501","120000", "swegmaps_2000")
+  #tc.generate("20090501","120000", "swegmaps_2000")
+  tc.generate("20090501","120000", "bltgmaps_4000")
   #execute_tiled_compositing(comp, my_area_registry.getarea("swegmaps_2000"))

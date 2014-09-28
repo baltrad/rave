@@ -1,0 +1,56 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2014 - Swedish Meteorological and Hydrological Institute (SMHI)
+
+This file is part of RAVE.
+
+RAVE is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+RAVE is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+See the GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
+'''
+## Command-line tool for creating tile registry definitions.
+
+## @file
+## @author Anders Henja, SMHI
+## @date 2014-09-28
+
+if __name__ == "__main__":
+  import sys
+  from optparse import OptionParser
+  import rave_tile_registry
+  
+  description = "Creates a xml-entry that can be added to the rave_tile_registry.xml."
+ 
+  usage = 'usage: %prog -c --area <areaid> --xsize <int> --ysize <int> [h]'
+  parser = OptionParser(usage=usage, description=description)
+
+  parser.add_option("--area", dest="areaid",
+					help="The area id that these tiles should be used for.")
+
+  parser.add_option("--xsize", dest="xsize", 
+					help="Number of tiles in x-direction. Must be > 0")
+
+  parser.add_option("--ysize", dest="ysize", 
+					help="Number of tiles in y-direction. Must be > 0")
+
+  (options, args) = parser.parse_args()
+  
+  if not options.areaid or not options.xsize or not options.ysize:
+  	parser.print_help()
+  	sys.exit()
+  
+  if int(options.xsize) <= 0 or int(options.ysize) <= 0:
+    print "xsize or ysize <= 0"
+    sys.exit()
+
+  rave_tile_registry.create_tile_definition_for_area(options.areaid, (int(options.xsize),int(options.ysize)))
+  

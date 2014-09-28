@@ -563,11 +563,59 @@ done:
   return result;
 }
 
+static int TransformInternal_addTileToParameter(Transform_t* self, Cartesian_t* target, Cartesian_t* source, const char* quantity)
+{
+  CartesianParam_t* targetParameter = NULL;
+  CartesianParam_t* sourceParameter = NULL;
+  double tllX, tllY, turX, turY, sllX, sllY, surX, surY, xscale, yscale;
+  long txsize = 0, tysize = 0, sxsize = 0, sysize = 0;
+  int result = 0;
+  long x = 0, y = 0, xoffset = 0, yoffset = 0;
+  targetParameter = Cartesian_getParameter(target, quantity);
+  sourceParameter = Cartesian_getParameter(source, quantity);
+  if (targetParameter == NULL || sourceParameter == NULL) {
+    RAVE_ERROR1("Could not find target or source parameter for %s", quantity);
+    goto done;
+  }
+  Cartesian_getAreaExtent(target, &tllX, &tllY, &turX, &turY);
+  Cartesian_getAreaExtent(source, &sllX, &sllY, &surX, &surY);
+  xscale = Cartesian_getXScale(target);
+  yscale = Cartesian_getYScale(target);
+  txsize = Cartesian_getXSize(target);
+  tysize = Cartesian_getYSize(target);
+  sxsize = Cartesian_getXSize(source);
+  sysize = Cartesian_getYSize(source);
+
+  /* A tile should have some sort of offset in relation to the target */
+  xoffset = (long)rint((sllX - tllX) / xscale);
+  yoffset = (long)rint((turY - surY) / yscale);
+
+  for (x = 0; x < sxsize; x++) {
+    for (y = 0; y < sysize; y++) {
+      double v = 0.0;
+      CartesianParam_getValue(sourceParameter, x, y, &v);
+      if (x+xoffset < 0 || x+xoffset >= txsize || y+yoffset < 0 || y + yoffset >= tysize) {
+        RAVE_WARNING0("Offset error when moving tile source into the target parameter");
+      } else {
+        CartesianParam_setValue(targetParameter, x+xoffset, y+yoffset, v);
+      }
+    }
+  }
+
+  result = 1;
+done:
+  RAVE_OBJECT_RELEASE(targetParameter);
+  RAVE_OBJECT_RELEASE(sourceParameter);
+  return result;
+}
+
 Cartesian_t* Transform_combine_tiles(Transform_t* self, Area_t* area, RaveObjectList_t* tiles)
 {
   Cartesian_t* result = NULL;
   Cartesian_t* combined = NULL;
   int ntiles = 0, i = 0;
+  RaveList_t* pNames = NULL;
+
   RAVE_ASSERT((self != NULL), "self == NULL");
   if (area == NULL || tiles == NULL) {
     RAVE_ERROR0("No area definition or tiles");
@@ -584,14 +632,52 @@ Cartesian_t* Transform_combine_tiles(Transform_t* self, Area_t* area, RaveObject
   Cartesian_init(combined, area);
 
   ntiles = RaveObjectList_size(tiles);
-  for (i = 0; i < ntiles; i++) {
-    Cartesian_t* ci = (Cartesian_t*)RaveObjectList_get(tiles, i);
+  if (ntiles > 0) {
+    Cartesian_t* ci = (Cartesian_t*)RaveObjectList_get(tiles, 0);
+    double llX, llY, urX, urY;
+    Cartesian_getAreaExtent(ci, &llX, &llY, &urX, &urY);
+    int nnames = 0, j = 0;
+    pNames = Cartesian_getParameterNames(ci);
+    Cartesian_setDate(combined, Cartesian_getDate(ci));
+    Cartesian_setTime(combined, Cartesian_getTime(ci));
+    Cartesian_setStartDate(combined, Cartesian_getStartDate(ci));
+    Cartesian_setStartTime(combined, Cartesian_getStartTime(ci));
+    Cartesian_setEndDate(combined, Cartesian_getEndDate(ci));
+    Cartesian_setEndTime(combined, Cartesian_getEndTime(ci));
+    Cartesian_setProduct(combined, Cartesian_getProduct(ci));
+    Cartesian_setObjectType(combined, Cartesian_getObjectType(ci));
 
+    nnames = RaveList_size(pNames);
+    for (j = 0; j < nnames; j++) {
+      const char* pname = (const char*)RaveList_get(pNames,j);
+      CartesianParam_t* p = Cartesian_getParameter(ci, pname);
+      if (p != NULL) {
+        CartesianParam_t* cp = Cartesian_createParameter(combined,  pname, CartesianParam_getDataType(p));
+        if (cp == NULL) {
+          RAVE_ERROR1("Failed to create parameter %s in the combined area", pname);
+        } else {
+          int k = 0;
+          for (k = 0; k < ntiles; k++) {
+            Cartesian_t* tile = (Cartesian_t*)RaveObjectList_get(tiles, k);
+            if (!TransformInternal_addTileToParameter(self, combined, tile, pname)) {
+              RAVE_ERROR1("Failed to add tile information for parameter %s", pname);
+            }
+            RAVE_OBJECT_RELEASE(tile);
+          }
+        }
+
+        RAVE_OBJECT_RELEASE(cp);
+      } else {
+        RAVE_ERROR1("Failed to extract parameter %s from first tile.", pname);
+      }
+      RAVE_OBJECT_RELEASE(p);
+    }
     RAVE_OBJECT_RELEASE(ci);
   }
 
   result = RAVE_OBJECT_COPY(combined);
 done:
+  RaveList_freeAndDestroy(&pNames);
   RAVE_OBJECT_RELEASE(combined);
   return result;
 }
