@@ -148,6 +148,8 @@ class tiled_compositing(object):
   # @param c: the compositing instance
   def __init__(self, c):
     self.compositing = c
+    self.verbose = c.verbose
+    self.logger = logger
     self.file_objects = self._fetch_file_objects(c)
 
   def _fetch_file_objects(self, comp):
@@ -265,7 +267,7 @@ class tiled_compositing(object):
     r = pool.map_async(comp_generate, args, callback=results.append)
     
     r.wait()
-    
+
     objects = []
     try:
       for v in results[0]:
@@ -278,14 +280,7 @@ class tiled_compositing(object):
 
       result = t.combine_tiles(pyarea, objects)
       
-      fileno, outfile = rave_tempfile.mktemp(suffix='.h5', close="True")
-  
-      rio = _raveio.new()
-      rio.object = result
-      rio.filename = outfile
-      rio.save()
-      
-      return outfile
+      return result
     finally:
       if results != None:
         for v in results[0]:

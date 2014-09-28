@@ -24,9 +24,11 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @author Daniel Michelson, SMHI
 ## @date 2012-01-22
 from compositing import compositing
+from tiled_compositing import tiled_compositing
 from rave_defines import CENTER_ID, GAIN, OFFSET
 import rave_pgf_logger
 import _raveio, _rave
+import rave_tile_registry
 
 logger = rave_pgf_logger.rave_pgf_syslog_client()
 
@@ -65,6 +67,9 @@ def main(options):
   else:
     comp.logger = rave_pgf_logger.rave_pgf_stdout_client("info")
 
+  if not options.area is None and options.noMultiprocessing is None:
+    if rave_tile_registry.has_tiled_area(options.area):
+      comp = tiled_compositing(comp)
   
   result = comp.generate(options.date, options.time, options.area)
   if options.imageType:
@@ -172,6 +177,9 @@ if __name__ == "__main__":
   
   parser.add_option("-T", "--imageType", action="store_true", dest="imageType",
                     help="If the stored file should be saved as an IMAGE instead of a COMP (osite).")
+  
+  parser.add_option("-M", "--no-multiprocessing", action="store_true", dest="noMultiprocessing",
+                    help="Disable multiprocessing even if an entry exists in the tile_registry")
   
   (options, args) = parser.parse_args()
 
