@@ -61,6 +61,13 @@ class tiledef(object):
     return "<tile id=\"%s\", extent=\"%f,%f,%f,%f\">"%(self.id, self.extent[0],self.extent[1],self.extent[2],self.extent[3])
 
 ##
+# Returns if the area id is registered in the tile registry or not
+# @param aid: the area identifier (e.g. swegmaps_2000)
+# @return if the area id has got a tile definition or not
+def has_tiled_area(aid):
+  return _registry.has_key(aid)
+
+##
 # Get all the tiled areas belonging to the specified area. The area has to reside in the area_registry in order
 # for this area to be registered.
 # @param a the AreaCore (_area) instance
