@@ -58,7 +58,7 @@ class tiledef(object):
     self.extent = tuple(extent)
 
   def __repr__(self):
-    return "<tile id=\"%s\", extent=\"%f,%f,%f,%f\">"%(self.id, self.extent[0],self.extent[1],self.extent[2],self.extent[3])
+    return "<tile id=\"%s\" extent=\"%f,%f,%f,%f\" />"%(self.id, self.extent[0],self.extent[1],self.extent[2],self.extent[3])
 
 ##
 # Returns if the area id is registered in the tile registry or not
