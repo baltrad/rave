@@ -27,6 +27,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @date 2010-07-23
 
 import os
+import traceback
 import xmlrpclib
 import Queue
 from xml.etree import ElementTree as ET
@@ -98,7 +99,9 @@ class PGF_JobQueue(dict):
         if os.path.isfile(filename):
             try:
                 elems =  ET.parse(filename).getroot()
-            except ExpatError:
+            except Exception, err:
+                err_msg = traceback.format_exc()
+                print "Error trying to read PGF job queue: %sIgnoring, using empty job queue." % err_msg
                 return  # queue is probably empty, just ignore
             for elem in elems.getchildren():
                 self[elem.get('jobid')] = elem
