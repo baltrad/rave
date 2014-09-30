@@ -25,7 +25,12 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 import os, tempfile
 import rave, rave_defines
 
-tempfile.tempdir = os.path.split(rave.__file__)[0] + '/../tmp'
+## Use shared memory space if available, Linux only. 
+if os.path.isdir("/dev/shm") and os.access('/dev/shm', os.W_OK):
+    tempfile.tempdir = "/dev/shm/rave"
+else:
+    tempfile.tempdir = os.path.split(rave.__file__)[0] + '/../tmp'
+# Create the direcory if not already there.
 if os.path.isdir(tempfile.tempdir) is False:
     os.makedirs(tempfile.tempdir)
 
