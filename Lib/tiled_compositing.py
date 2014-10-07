@@ -129,8 +129,10 @@ class multi_composite_arguments(object):
     pyarea.extent = self.area_definition.extent
     pyarea.projection = _projection.new("dynamic pcsid", "dynamic pcs name", self.area_definition.pcsdef)    
     
+    logger.info("Generating composite for tile %s"%self.area_definition.id)
     result = comp.generate(dd, dt, pyarea)
-  
+    logger.info("Finished generating composite for tile %s"%self.area_definition.id)
+      
     fileno, outfile = rave_tempfile.mktemp(suffix='.h5', close="True")
   
     rio = _raveio.new()
@@ -154,24 +156,16 @@ class tiled_compositing(object):
 
   def _fetch_file_objects(self, comp):
     result = {}
+    self.logger.info("Fetching %d files for tiled compositing"%len(comp.filenames))
     for fname in comp.filenames:
       if comp.ravebdb != None:
         obj = comp.ravebdb.get_rave_object(fname)
       else:
         obj = _raveio.open(fname).object
       result[fname] = obj
+    self.logger.info("Finished fetching %d files"%len(comp.filenames))
     return result
 
-  def _is_scan_inside_extent(self, scan, pj, extent, xscale, yscale):
-    bi = scan.nbins - 1
-    lllon,lllat = pj.inv((extent[0], extent[1]))
-    urlon,urlat = pj.inv((extent[2], extent[3]))
-    for ai in range(scan.nrays):
-      lon,lat = scan.getLonLatFromIndex(bi, ai)
-      if lon >= lllon and lon <= urlon and lat >= lllat and lat <= urlat:
-        return True
-    return False
-    
   ##
   # Creates the composite arguments that should be sent to one tiler.
   # @param adef: the area definition
@@ -199,18 +193,6 @@ class tiled_compositing(object):
     a.offset = self.compositing.offset
     a.area_definition = adef
     
-    apj=_projection.new("x", "y", adef.pcsdef)
-    
-    for k in self.file_objects.keys():
-      v = self.file_objects[k]
-      if not _polarscan.isPolarScan(v) and not _polarvolume.isPolarVolume(v):
-        continue
-      if _polarvolume.isPolarVolume(v):
-        v = v.getScanWithMaxDistance()
-        
-      if self._is_scan_inside_extent(v, apj, adef.extent, adef.xscale, adef.yscale):
-        a.filenames.append(k)        
-    
     return a
   
   ##
@@ -235,8 +217,53 @@ class tiled_compositing(object):
       mcomp = self._create_multi_composite_argument(self._create_tiled_area_definition(t))
       args.append([mcomp, dd, dt, t.id])
     
+    # Now, make sure we have the correct files in the various areas
+    self._add_files_to_argument_list(args, tiled_areas)
+    
     return args
   
+  def _add_files_to_argument_list(self, args, tiled_areas):
+    self.logger.info("Distributing polar objects among %d tiles"%len(args))
+
+    # Loop through tile areas
+    for i in range(len(tiled_areas)):
+        #a = ar.getarea(args[i][3])  # t.id
+        #a = my_area_registry.getarea(args[i][3])  # t.id
+        p = tiled_areas[i].projection
+        llx, lly, urx, ury = tiled_areas[i].extent
+
+        # Loop through radars
+        for k in self.file_objects.keys():
+            v = self.file_objects[k]
+            if not _polarscan.isPolarScan(v) and not _polarvolume.isPolarVolume(v):
+                continue
+            if _polarvolume.isPolarVolume(v):
+                v = v.getScanWithMaxDistance()
+            scan = v
+            bi = scan.nbins - 1
+            
+            # Loop around the scan
+            for ai in range(scan.nrays):
+                lon, lat = scan.getLonLatFromIndex(bi, ai)
+                x, y = p.fwd((lon, lat))
+                
+                # If this position is inside the tile, then add the radar's file string to the list and then bail
+                if x >= llx and x <= urx and y >= lly and y <= ury:
+                    if not k in args[i][0].filenames:
+                        args[i][0].filenames.append(k)
+                        break # No need to continue
+
+    for idx in range(len(args)):
+      self.logger.info("Tile %s contains %d files and dimensions %i x %i"%(args[idx][0].area_definition.id, len(args[idx][0].filenames), args[idx][0].area_definition.xsize, args[idx][0].area_definition.ysize))
+      
+    self.logger.info("Finished splitting polar object")
+       
+  def _create_lon_lat_extent(self, carg):
+    pj = _projection.new("x", "y", carg.area_definition.pcsdef)
+    lllon,lllat = pj.inv((carg.area_definition.extent[0], carg.area_definition.extent[1]))
+    urlon,urlat = pj.inv((carg.area_definition.extent[2], carg.area_definition.extent[3]))
+    return (lllon,lllat,urlon,urlat)
+
   ##
   # Same as compositing generate but this is supposed to forward requests to a tiling mechanism
   # @param dd: date
@@ -268,6 +295,7 @@ class tiled_compositing(object):
     
     r.wait()
 
+    self.logger.info("Finished processing tiles, combining tiles")
     objects = []
     try:
       for v in results[0]:
@@ -280,6 +308,8 @@ class tiled_compositing(object):
 
       result = t.combine_tiles(pyarea, objects)
       
+      self.logger.info("Tiles combined")
+            
       return result
     finally:
       if results != None:
@@ -293,7 +323,6 @@ class tiled_compositing(object):
 
 def comp_generate(args):
   try:
-    logger.info("Running comp_generate(%s)"%args[3])
     return args[0].generate(args[1], args[2], args[3])
   except Exception, e:
     logger.exception("Failed to call composite generator in tiler")
