@@ -28,7 +28,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #
 import rave_tile_registry
 import compositing
-import multiprocessing
+import multiprocessing, rave_mppool
 import math, os
 import rave_pgf_logger
 import area_registry
@@ -227,8 +227,6 @@ class tiled_compositing(object):
 
     # Loop through tile areas
     for i in range(len(tiled_areas)):
-        #a = ar.getarea(args[i][3])  # t.id
-        #a = my_area_registry.getarea(args[i][3])  # t.id
         p = tiled_areas[i].projection
         llx, lly, urx, ury = tiled_areas[i].extent
 
@@ -240,6 +238,11 @@ class tiled_compositing(object):
             if _polarvolume.isPolarVolume(v):
                 v = v.getScanWithMaxDistance()
             scan = v
+            
+            if self.compositing.quantity not in scan.getParameterNames():
+                self.logger.info("Quantity %s not in data from %s" % (self.compositing.quantity, scan.source))
+                continue
+
             bi = scan.nbins - 1
             
             # Loop around the scan
@@ -289,7 +292,7 @@ class tiled_compositing(object):
     if nrprocesses == ncpucores and ncpucores > 1:
       nrprocesses = nrprocesses - 1 # We always want to leave at least one core for something else
     
-    pool = multiprocessing.Pool(nrprocesses)
+    pool = rave_mppool.RavePool(nrprocesses)
     
     r = pool.map_async(comp_generate, args, callback=results.append)
     
