@@ -571,6 +571,7 @@ static int TransformInternal_addTileToParameter(Transform_t* self, Cartesian_t* 
   long txsize = 0, tysize = 0, sxsize = 0, sysize = 0;
   int result = 0;
   long x = 0, y = 0, xoffset = 0, yoffset = 0;
+  long nqfields = 0, j = 0;
   targetParameter = Cartesian_getParameter(target, quantity);
   sourceParameter = Cartesian_getParameter(source, quantity);
   if (targetParameter == NULL || sourceParameter == NULL) {
@@ -602,6 +603,33 @@ static int TransformInternal_addTileToParameter(Transform_t* self, Cartesian_t* 
     }
   }
 
+  // And copy quality fields
+  nqfields = CartesianParam_getNumberOfQualityFields(targetParameter);
+  for (j = 0; j < nqfields; j++) {
+    char* howTaskValue = NULL;
+    RaveField_t* targetField = CartesianParam_getQualityField(targetParameter, j);
+    RaveAttribute_t* attr = RaveField_getAttribute(targetField, "how/task");
+    if (attr != NULL && RaveAttribute_getString(attr, &howTaskValue)) {
+      RaveField_t* sourceField = CartesianParam_getQualityFieldByHowTask(sourceParameter, howTaskValue);
+      if (sourceField != NULL) {
+        for (x = 0; x < sxsize; x++) {
+          for (y = 0; y < sysize; y++) {
+            double v = 0.0;
+            RaveField_getValue(sourceField, x, y, &v);
+            if (x+xoffset < 0 || x+xoffset >= txsize || y+yoffset < 0 || y + yoffset >= tysize) {
+              RAVE_WARNING0("Offset error when moving tile source into the target quality field");
+            } else {
+              RaveField_setValue(targetField, x+xoffset, y+yoffset, v);
+            }
+          }
+        }
+      }
+      RAVE_OBJECT_RELEASE(sourceField);
+    }
+    RAVE_OBJECT_RELEASE(targetField);
+    RAVE_OBJECT_RELEASE(attr);
+  }
+
   result = 1;
 done:
   RAVE_OBJECT_RELEASE(targetParameter);
@@ -609,11 +637,160 @@ done:
   return result;
 }
 
+static int TransformInternal_copyAttributes(RaveField_t* target, RaveField_t* source)
+{
+  RaveList_t* attrnames = NULL;
+  int sz = 0, i = 0;
+  int result = 0;
+  RaveAttribute_t *attr = NULL, *cattr = NULL;
+
+  attrnames = RaveField_getAttributeNames(source);
+  if (attrnames == NULL) {
+    RAVE_ERROR0("Failed to get attribute names");
+    goto done;
+  }
+
+  sz = RaveList_size(attrnames);
+  for (i = 0; i < sz; i++) {
+    attr = RaveField_getAttribute(source, (const char*)RaveList_get(attrnames, i));
+    if (attr != NULL) {
+      cattr = RAVE_OBJECT_CLONE(attr);
+      if (cattr == NULL ||
+          !RaveField_addAttribute(target, cattr)) {
+        RAVE_ERROR0("Failed to add cloned attribute to target field");
+        goto done;
+      }
+      RAVE_OBJECT_RELEASE(cattr);
+    }
+    RAVE_OBJECT_RELEASE(attr);
+  }
+  result = 1;
+done:
+  RAVE_OBJECT_RELEASE(cattr);
+  RAVE_OBJECT_RELEASE(attr);
+  RaveList_freeAndDestroy(&attrnames);
+  return result;
+}
+
+static int TransformInternal_createQualityFieldsFromTile(Transform_t* self, Cartesian_t* target, Cartesian_t* tile)
+{
+  int i = 0;
+  int result = 0;
+  RaveField_t *field = NULL, *targetfield = NULL;
+  int nrFields = Cartesian_getNumberOfQualityFields(tile);
+  for (i = 0; i < nrFields; i++) {
+    field = Cartesian_getQualityField(tile, i);
+    targetfield = RAVE_OBJECT_NEW(&RaveField_TYPE);
+    if (targetfield == NULL ||
+        !RaveField_createData(targetfield, Cartesian_getXSize(target), Cartesian_getYSize(target), RaveField_getDataType(field)) ||
+        !TransformInternal_copyAttributes(targetfield, field)) {
+      RAVE_ERROR0("Could not create quality field for cartesian object");
+      goto done;
+    }
+    if (!Cartesian_addQualityField(target, targetfield)) {
+      RAVE_ERROR0("Failed to add quality field to cartesian product");
+      goto done;
+    }
+    RAVE_OBJECT_RELEASE(targetfield);
+    RAVE_OBJECT_RELEASE(field);
+  }
+  result = 1;
+done:
+  RAVE_OBJECT_RELEASE(field);
+  RAVE_OBJECT_RELEASE(targetfield);
+  return result;
+}
+
+static int TransformInternal_createParameterQualtiyFieldFromTile(Transform_t* self, CartesianParam_t* target, CartesianParam_t* tile)
+{
+  int i = 0;
+  int result = 0;
+  RaveField_t *field = NULL, *targetfield = NULL;
+  int nrFields = CartesianParam_getNumberOfQualityFields(tile);
+  for (i = 0; i < nrFields; i++) {
+    field = CartesianParam_getQualityField(tile, i);
+    targetfield = RAVE_OBJECT_NEW(&RaveField_TYPE);
+    if (targetfield == NULL ||
+        !RaveField_createData(targetfield, CartesianParam_getXSize(target), CartesianParam_getYSize(target), RaveField_getDataType(field)) ||
+        !TransformInternal_copyAttributes(targetfield, field)) {
+      RAVE_ERROR0("Could not create quality field for cartesian param object");
+      goto done;
+    }
+    if (!CartesianParam_addQualityField(target, targetfield)) {
+      RAVE_ERROR0("Failed to add quality field to cartesian parameter");
+      goto done;
+    }
+    RAVE_OBJECT_RELEASE(targetfield);
+    RAVE_OBJECT_RELEASE(field);
+  }
+  result = 1;
+done:
+  RAVE_OBJECT_RELEASE(field);
+  RAVE_OBJECT_RELEASE(targetfield);
+  return result;
+}
+
+static int TransformInternal_addQualityFieldDataFromTileToCartesian(Transform_t* self, Cartesian_t* target, Cartesian_t* source)
+{
+  RaveField_t *targetField = NULL, *sourceField = NULL;
+  RaveAttribute_t* attr = NULL;
+  double tllX, tllY, turX, turY, sllX, sllY, surX, surY, xscale, yscale;
+  long txsize = 0, tysize = 0, sxsize = 0, sysize = 0;
+  int result = 0;
+  long x = 0, y = 0, xoffset = 0, yoffset = 0;
+  int nqfields = Cartesian_getNumberOfQualityFields(target);
+  int i = 0;
+
+  Cartesian_getAreaExtent(target, &tllX, &tllY, &turX, &turY);
+  Cartesian_getAreaExtent(source, &sllX, &sllY, &surX, &surY);
+  xscale = Cartesian_getXScale(target);
+  yscale = Cartesian_getYScale(target);
+  txsize = Cartesian_getXSize(target);
+  tysize = Cartesian_getYSize(target);
+  sxsize = Cartesian_getXSize(source);
+  sysize = Cartesian_getYSize(source);
+
+  /* A tile should have some sort of offset in relation to the target */
+  xoffset = (long)rint((sllX - tllX) / xscale);
+  yoffset = (long)rint((turY - surY) / yscale);
+
+  for (i = 0; i < nqfields; i++) {
+    char* howTaskValue = NULL;
+    targetField = Cartesian_getQualityField(target, i);
+    attr = RaveField_getAttribute(targetField, "how/task");
+    if (attr != NULL && RaveAttribute_getString(attr, &howTaskValue)) {
+      sourceField = Cartesian_getQualityFieldByHowTask(source, howTaskValue);
+      if (sourceField != NULL) {
+        for (x = 0; x < sxsize; x++) {
+          for (y = 0; y < sysize; y++) {
+            double v = 0.0;
+            RaveField_getValue(sourceField, x, y, &v);
+            if (x+xoffset < 0 || x+xoffset >= txsize || y+yoffset < 0 || y + yoffset >= tysize) {
+              RAVE_WARNING0("Offset error when moving tile source into the target quality field");
+            } else {
+              RaveField_setValue(targetField, x+xoffset, y+yoffset, v);
+            }
+          }
+        }
+      }
+      RAVE_OBJECT_RELEASE(sourceField);
+    }
+    RAVE_OBJECT_RELEASE(targetField);
+    RAVE_OBJECT_RELEASE(attr);
+  }
+
+  result = 1;
+/*done:*/
+  RAVE_OBJECT_RELEASE(targetField);
+  RAVE_OBJECT_RELEASE(sourceField);
+  return result;
+}
+
 Cartesian_t* Transform_combine_tiles(Transform_t* self, Area_t* area, RaveObjectList_t* tiles)
 {
   Cartesian_t* result = NULL;
   Cartesian_t* combined = NULL;
-  int ntiles = 0, i = 0;
+  int ntiles = 0;
   RaveList_t* pNames = NULL;
 
   RAVE_ASSERT((self != NULL), "self == NULL");
@@ -653,7 +830,8 @@ Cartesian_t* Transform_combine_tiles(Transform_t* self, Area_t* area, RaveObject
       CartesianParam_t* p = Cartesian_getParameter(ci, pname);
       if (p != NULL) {
         CartesianParam_t* cp = Cartesian_createParameter(combined,  pname, CartesianParam_getDataType(p));
-        if (cp == NULL) {
+        if (cp == NULL ||
+            !TransformInternal_createParameterQualtiyFieldFromTile(self, cp, p)) {
           RAVE_ERROR1("Failed to create parameter %s in the combined area", pname);
         } else {
           int k = 0;
@@ -665,13 +843,26 @@ Cartesian_t* Transform_combine_tiles(Transform_t* self, Area_t* area, RaveObject
             RAVE_OBJECT_RELEASE(tile);
           }
         }
-
         RAVE_OBJECT_RELEASE(cp);
       } else {
         RAVE_ERROR1("Failed to extract parameter %s from first tile.", pname);
       }
       RAVE_OBJECT_RELEASE(p);
     }
+
+    if (!TransformInternal_createQualityFieldsFromTile(self, combined, ci)) {
+      RAVE_OBJECT_RELEASE(ci);
+      goto done;
+    }
+
+    for (j = 0; j < ntiles; j++) {
+      Cartesian_t* tile = (Cartesian_t*)RaveObjectList_get(tiles, j);
+      if (!TransformInternal_addQualityFieldDataFromTileToCartesian(self, combined, tile)) {
+        RAVE_ERROR1("Failed to add quality field for %d tile", j);
+      }
+      RAVE_OBJECT_RELEASE(tile);
+    }
+
     RAVE_OBJECT_RELEASE(ci);
   }
 

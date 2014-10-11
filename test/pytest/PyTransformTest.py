@@ -32,6 +32,7 @@ import _radardef
 import _raveio
 import _cartesian
 import _cartesianparam
+import _ravefield
 import string
 import numpy
 
@@ -233,6 +234,14 @@ class PyTransformTest(unittest.TestCase):
     
     return obj
   
+  def create_quality_field(self, xsize, ysize, dtype, value, howtask):
+    obj = _ravefield.new()
+    data = numpy.zeros((ysize, xsize), dtype)
+    data = data + value
+    obj.setData(data)
+    obj.addAttribute("how/task", howtask)
+    return obj
+  
   def test_combine_tiles(self):
     pyarea = _area.new()
     pyarea.extent = (971337.728807, 7196461.17902, 3015337.72881, 11028461.179)
@@ -246,25 +255,46 @@ class PyTransformTest(unittest.TestCase):
                                               (971337.728807,9112461.1790100001,1993337.7288084999,11028461.179),
                                               pyarea.projection.definition,
                                               numpy.uint8, [2], ["DBZH"])
+    ul.addQualityField(self.create_quality_field(2,2,numpy.uint8, 15, "se.some.how.task.1"))
+    ul.addQualityField(self.create_quality_field(2,2,numpy.uint8, 19, "se.some.how.task.2"))
+    ul.getParameter("DBZH").addQualityField(self.create_quality_field(2,2,numpy.uint8, 23, "se.some.how.task.1"))
+    ul.getParameter("DBZH").addQualityField(self.create_quality_field(2,2,numpy.uint8, 24, "se.some.how.task.2"))
     
     ur = self.create_cartesian_with_parameter(2, 2, pyarea.xscale, pyarea.yscale, 
                                               (1993337.7288084999,9112461.1790100001,3015337.72881,11028461.179),
                                               pyarea.projection.definition,
                                               numpy.uint8, [3], ["DBZH"])
+    ur.addQualityField(self.create_quality_field(2,2,numpy.uint8, 16, "se.some.how.task.1"))
+    ur.addQualityField(self.create_quality_field(2,2,numpy.uint8, 20, "se.some.how.task.2"))
+    ur.getParameter("DBZH").addQualityField(self.create_quality_field(2,2,numpy.uint8, 25, "se.some.how.task.1"))
+    ur.getParameter("DBZH").addQualityField(self.create_quality_field(2,2,numpy.uint8, 26, "se.some.how.task.2"))
     
     ll = self.create_cartesian_with_parameter(2, 2, pyarea.xscale, pyarea.yscale, 
                                               (971337.728807,7196461.17902,1993337.7288084999,9112461.1790100001),
                                               pyarea.projection.definition,
                                               numpy.uint8, [4], ["DBZH"])
+    ll.addQualityField(self.create_quality_field(2,2,numpy.uint8, 17, "se.some.how.task.1"))
+    ll.addQualityField(self.create_quality_field(2,2,numpy.uint8, 21, "se.some.how.task.2"))
+    ll.getParameter("DBZH").addQualityField(self.create_quality_field(2,2,numpy.uint8, 27, "se.some.how.task.1"))
+    ll.getParameter("DBZH").addQualityField(self.create_quality_field(2,2,numpy.uint8, 28, "se.some.how.task.2"))
     
     lr = self.create_cartesian_with_parameter(2, 2, pyarea.xscale, pyarea.yscale, 
                                               (1993337.7288084999,7196461.17902,3015337.72881,9112461.1790100001),
                                               pyarea.projection.definition,
                                               numpy.uint8, [5], ["DBZH"])
+    lr.addQualityField(self.create_quality_field(2,2,numpy.uint8, 18, "se.some.how.task.1"))
+    lr.addQualityField(self.create_quality_field(2,2,numpy.uint8, 22, "se.some.how.task.2"))
+    lr.getParameter("DBZH").addQualityField(self.create_quality_field(2,2,numpy.uint8, 29, "se.some.how.task.1"))
+    lr.getParameter("DBZH").addQualityField(self.create_quality_field(2,2,numpy.uint8, 30, "se.some.how.task.2"))
     
     t = _transform.new()
     result = t.combine_tiles(pyarea, [ul,ur,ll,lr])
     param = result.getParameter("DBZH")
+    qf1 = result.getQualityFieldByHowTask("se.some.how.task.1")
+    qf2 = result.getQualityFieldByHowTask("se.some.how.task.2")
+    pqf1 = param.getQualityFieldByHowTask("se.some.how.task.1")
+    pqf2 = param.getQualityFieldByHowTask("se.some.how.task.2")
+    
     self.assertEquals(4, result.xsize)
     self.assertEquals(4, result.ysize)
     self.assertEquals(511000.0, result.xscale, 4)
@@ -284,6 +314,10 @@ class PyTransformTest(unittest.TestCase):
     self.assertEquals(ul.objectType, result.objectType)
     
     self.assertEquals([[2,2,3,3],[2,2,3,3],[4,4,5,5],[4,4,5,5]], param.getData().tolist())
+    self.assertEquals([[15,15,16,16],[15,15,16,16],[17,17,18,18],[17,17,18,18]], qf1.getData().tolist())
+    self.assertEquals([[19,19,20,20],[19,19,20,20],[21,21,22,22],[21,21,22,22]], qf2.getData().tolist())
+    self.assertEquals([[23,23,25,25],[23,23,25,25],[27,27,29,29],[27,27,29,29]], pqf1.getData().tolist())
+    self.assertEquals([[24,24,26,26],[24,24,26,26],[28,28,30,30],[28,28,30,30]], pqf2.getData().tolist())
     
   def test_combine_tiles_with_two_parameters(self):
     pyarea = _area.new()
@@ -298,21 +332,29 @@ class PyTransformTest(unittest.TestCase):
                                               (971337.728807,9112461.1790100001,1993337.7288084999,11028461.179),
                                               pyarea.projection.definition,
                                               numpy.uint8, [2,12], ["DBZH", "TH"])
+    ul.getParameter("DBZH").addQualityField(self.create_quality_field(2,2,numpy.uint8, 22, "se.some.how.task.1"))
+    ul.getParameter("TH").addQualityField(self.create_quality_field(2,2,numpy.uint8, 32, "se.some.how.task.1"))
     
     ur = self.create_cartesian_with_parameter(2, 2, pyarea.xscale, pyarea.yscale, 
                                               (1993337.7288084999,9112461.1790100001,3015337.72881,11028461.179),
                                               pyarea.projection.definition,
                                               numpy.uint8, [3,13], ["DBZH", "TH"])
+    ur.getParameter("DBZH").addQualityField(self.create_quality_field(2,2,numpy.uint8, 23, "se.some.how.task.1"))
+    ur.getParameter("TH").addQualityField(self.create_quality_field(2,2,numpy.uint8, 33, "se.some.how.task.1"))
     
     ll = self.create_cartesian_with_parameter(2, 2, pyarea.xscale, pyarea.yscale, 
                                               (971337.728807,7196461.17902,1993337.7288084999,9112461.1790100001),
                                               pyarea.projection.definition,
                                               numpy.uint8, [4,14], ["DBZH", "TH"])
+    ll.getParameter("DBZH").addQualityField(self.create_quality_field(2,2,numpy.uint8, 24, "se.some.how.task.1"))
+    ll.getParameter("TH").addQualityField(self.create_quality_field(2,2,numpy.uint8, 34, "se.some.how.task.1"))
     
     lr = self.create_cartesian_with_parameter(2, 2, pyarea.xscale, pyarea.yscale, 
                                               (1993337.7288084999,7196461.17902,3015337.72881,9112461.1790100001),
                                               pyarea.projection.definition,
                                               numpy.uint8, [5,15], ["DBZH", "TH"])
+    lr.getParameter("DBZH").addQualityField(self.create_quality_field(2,2,numpy.uint8, 25, "se.some.how.task.1"))
+    lr.getParameter("TH").addQualityField(self.create_quality_field(2,2,numpy.uint8, 35, "se.some.how.task.1"))
     
     t = _transform.new()
     result = t.combine_tiles(pyarea, [ul,ur,ll,lr])
@@ -336,7 +378,9 @@ class PyTransformTest(unittest.TestCase):
     
     param = result.getParameter("DBZH")
     self.assertEquals([[2,2,3,3],[2,2,3,3],[4,4,5,5],[4,4,5,5]], param.getData().tolist())
+    self.assertEquals([[22,22,23,23],[22,22,23,23],[24,24,25,25],[24,24,25,25]], param.getQualityFieldByHowTask("se.some.how.task.1").getData().tolist())
 
     param = result.getParameter("TH")
     self.assertEquals([[12,12,13,13],[12,12,13,13],[14,14,15,15],[14,14,15,15]], param.getData().tolist())
+    self.assertEquals([[32,32,33,33],[32,32,33,33],[34,34,35,35],[34,34,35,35]], param.getQualityFieldByHowTask("se.some.how.task.1").getData().tolist())
     
