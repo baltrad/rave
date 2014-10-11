@@ -36,7 +36,9 @@ import rave_pgf_logger
 import rave_dom_db
 import rave_util
 import _raveio
+import rave_tile_registry
 
+from tiled_compositing import tiled_compositing
 from compositing import compositing
 
 from rave_defines import CENTER_ID, GAIN, OFFSET
@@ -138,6 +140,9 @@ def generate(files, arguments):
   if args.has_key("zrb"):
     comp.zr_b = strToNumber(args["zrb"])
   
+  if rave_tile_registry.has_tiled_area("swegmaps_2000"):
+    comp = tiled_compositing(comp)
+  
   result = comp.generate(args["date"], args["time"], args["area"])
   
   fileno, outfile = rave_tempfile.mktemp(suffix='.h5', close="True")
@@ -146,7 +151,7 @@ def generate(files, arguments):
   rio.object = result
   rio.filename = outfile
   rio.save()
-
+  
   return outfile
   
   

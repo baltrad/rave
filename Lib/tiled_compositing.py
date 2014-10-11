@@ -37,6 +37,7 @@ import _rave, _area, _pycomposite, _projection, _raveio, _polarscan, _polarvolum
 from rave_defines import CENTER_ID, GAIN, OFFSET
 from rave_defines import RAVE_TILE_COMPOSITING_PROCESSES
 import rave_tempfile
+import odim_source
 
 logger = rave_pgf_logger.rave_pgf_syslog_client()
 
@@ -152,10 +153,11 @@ class tiled_compositing(object):
     self.compositing = c
     self.verbose = c.verbose
     self.logger = logger
-    self.file_objects = self._fetch_file_objects(c)
+    self.file_objects, self.nodes = self._fetch_file_objects(c)
 
   def _fetch_file_objects(self, comp):
     result = {}
+    nodes = ""
     self.logger.info("Fetching %d files for tiled compositing"%len(comp.filenames))
     for fname in comp.filenames:
       if comp.ravebdb != None:
@@ -163,8 +165,13 @@ class tiled_compositing(object):
       else:
         obj = _raveio.open(fname).object
       result[fname] = obj
+      if len(nodes):
+        nodes += ",'%s'" % odim_source.NODfromSource(obj)
+      else:
+        nodes += "'%s'" % odim_source.NODfromSource(obj)
+        
     self.logger.info("Finished fetching %d files"%len(comp.filenames))
-    return result
+    return (result, nodes)
 
   ##
   # Creates the composite arguments that should be sent to one tiler.
@@ -292,7 +299,7 @@ class tiled_compositing(object):
     if nrprocesses == ncpucores and ncpucores > 1:
       nrprocesses = nrprocesses - 1 # We always want to leave at least one core for something else
     
-    pool = rave_mppool.RavePool(nrprocesses)
+    pool = multiprocessing.Pool(nrprocesses)
     
     r = pool.map_async(comp_generate, args, callback=results.append)
     
@@ -311,6 +318,10 @@ class tiled_compositing(object):
 
       result = t.combine_tiles(pyarea, objects)
       
+      # Fix so that we get a valid place for /what/source and /how/nodes 
+      result.source = "%s,CMT:%s"%(CENTER_ID,area)
+      result.addAttribute('how/nodes', self.nodes)
+          
       self.logger.info("Tiles combined")
             
       return result
