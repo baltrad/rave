@@ -304,6 +304,8 @@ class tiled_compositing(object):
     r = pool.map_async(comp_generate, args, callback=results.append)
     
     r.wait()
+    pool.terminate()
+    pool.join()
 
     self.logger.info("Finished processing tiles, combining tiles")
     objects = []

@@ -140,7 +140,7 @@ def generate(files, arguments):
   if args.has_key("zrb"):
     comp.zr_b = strToNumber(args["zrb"])
   
-  if rave_tile_registry.has_tiled_area("swegmaps_2000"):
+  if rave_tile_registry.has_tiled_area(args["area"]):
     comp = tiled_compositing(comp)
   
   result = comp.generate(args["date"], args["time"], args["area"])
