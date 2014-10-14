@@ -366,7 +366,7 @@ int RadvolSpeck_speckRemoval_scan(PolarScan_t* scan, Radvol_params_t* params, ch
   }
   Radvol_getName(self->radvol, PolarScan_getSource(scan));
   if (paramFileName == NULL || !RadvolSpeckInternal_readParams(self, params, paramFileName)) {
-    RAVE_WARNING0("Default parameter values");
+    /* RAVE_WARNING0("Default parameter values"); */
   }
   if (self->radvol->QCOn || self->radvol->QIOn) {
     if (!Radvol_setTaskName(self->radvol,"pl.imgw.radvolqc.speck")) {

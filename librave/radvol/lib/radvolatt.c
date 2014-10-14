@@ -344,7 +344,7 @@ int RadvolAtt_attCorrection_pvol(PolarVolume_t* pvol, Radvol_params_t* params, c
   Radvol_getAttrDouble_pvol(pvol, "how/wavelength", &self->radvol->wavelength);
   paramsAtt = RadvolAttInternal_readParams(self, params, paramFileName);
   if (paramsAtt == ValuesFromWavelength) {
-    RAVE_WARNING0("Default parameter values for wavelength");
+    /* RAVE_WARNING0("Default parameter values for wavelength"); */
   } else if (paramsAtt == NoValues) {
     RAVE_ERROR0("Processing stopped because of lack of correct params in xml file and how/wavelength in input file");
     goto done;

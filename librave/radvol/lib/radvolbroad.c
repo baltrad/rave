@@ -218,7 +218,7 @@ int RadvolBroad_broadAssessment_scan(PolarScan_t* scan, Radvol_params_t* params,
   Radvol_getName(self->radvol, PolarScan_getSource(scan));
   Radvol_getAttrDouble_scan(scan, "how/pulsewidth", &self->radvol->pulselength);
   if (paramFileName == NULL || !RadvolBroadInternal_readParams(self, params, paramFileName)) {
-    RAVE_WARNING0("Default parameter values");
+    /* RAVE_WARNING0("Default parameter values"); */
   }
   if (self->radvol->QIOn) {
     if (!Radvol_setTaskName(self->radvol,"pl.imgw.radvolqc.broad")) {
