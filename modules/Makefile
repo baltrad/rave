@@ -207,8 +207,8 @@ TARGET_37= _ctfilter.so
 TARGETS=$(TARGET_1) $(TARGET_2) $(TARGET_3) $(TARGET_4) $(TARGET_5) $(TARGET_6) \
 		$(TARGET_7) $(TARGET_8) $(TARGET_9) $(TARGET_10) $(TARGET_11) $(TARGET_12) \
 		$(TARGET_13) $(TARGET_14) $(TARGET_15) $(TARGET_16) $(TARGET_17) $(TARGET_18) \
-		$(TARGET_19) $(TARGET_20) $(TARGET_21) $(TARGET_24) $(TARGET_25) $(TARGET_26) \
-		$(TARGET_27) $(TARGET_28) $(TARGET_29) $(TARGET_30) $(TARGET_31) $(TARGET_33) $(TARGET_34) $(TARGET_35) \
+		$(TARGET_19) $(TARGET_20) $(TARGET_21) $(TARGET_22) $(TARGET_23) $(TARGET_24) $(TARGET_25) $(TARGET_26) \
+		$(TARGET_27) $(TARGET_28) $(TARGET_29) $(TARGET_30) $(TARGET_31) $(TARGET_32) $(TARGET_33) $(TARGET_34) $(TARGET_35) \
 		$(TARGET_36) $(TARGET_37)
 
 INSTALL_HEADERS= pyarea.h \
@@ -256,22 +256,22 @@ all:		$(TARGETS)
 
 $(TARGET_1): $(DEPDIR) $(OBJECTS_1) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_1) $(LDFLAGS) $(LIBRARIES)
-	
+
 $(TARGET_2): $(DEPDIR) $(OBJECTS_2) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_2) $(LDFLAGS) $(LIBRARIES)
-	
+
 $(TARGET_3): $(DEPDIR) $(OBJECTS_3) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_3) $(LDFLAGS) $(LIBRARIES)
-	
+
 $(TARGET_4): $(DEPDIR) $(OBJECTS_4) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_4) $(LDFLAGS) $(LIBRARIES)
-	
+
 $(TARGET_5): $(DEPDIR) $(OBJECTS_5) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_5) $(LDFLAGS) $(LIBRARIES)
-	
+
 $(TARGET_6): $(DEPDIR) $(OBJECTS_6) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_6) $(LDFLAGS) $(LIBRARIES)
-	
+
 $(TARGET_7): $(DEPDIR) $(OBJECTS_7) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_7) $(LDFLAGS) $(LIBRARIES)
 
@@ -377,7 +377,7 @@ install:
 	do \
 		"$(HLHDF_INSTALL_BIN)" -f -o -m644 -C $$i "$(prefix)/include/python/$$i"; \
 	done
-	
+
 .PHONY=clean
 clean:
 	@\rm -f *.o core *~
