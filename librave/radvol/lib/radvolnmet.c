@@ -290,7 +290,7 @@ int RadvolNmet_nmetRemoval_pvol(PolarVolume_t* pvol, Radvol_params_t* params, ch
   }
   Radvol_getName(self->radvol, PolarVolume_getSource(pvol));
   if (paramFileName == NULL || !RadvolNmetInternal_readParams(self, params, paramFileName)) {
-    RAVE_WARNING0("Default parameter values");
+     /* RAVE_WARNING0("Default parameter values"); */
   }
   if (self->radvol->QCOn || self->radvol->QIOn) {
     if (!Radvol_setTaskName(self->radvol,"pl.imgw.radvolqc.nmet")) {
