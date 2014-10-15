@@ -16,6 +16,7 @@ along with HLHDF.  If not, see <http://www.gnu.org/licenses/>.
 ------------------------------------------------------------------------*/
 
 /** Functionality for performing hit-accumulation clutter filtering.
+ *  Added Z-diff operation too.
  * @file
  * @author Daniel Michelson, SMHI
  * @date 2013-01-23
@@ -94,20 +95,64 @@ int hacIncrement(PolarScan_t* scan, RaveField_t* hac, char* quant) {
      RaveAttribute_setLong(attr, N);
      
      for (ir=0; ir<nrays; ir++) {
-	for (ib=0; ib<nbins; ib++) {
-	   rvt = PolarScanParam_getValue(param, ib, ir, &val);
+       for (ib=0; ib<nbins; ib++) {
+         rvt = PolarScanParam_getValue(param, ib, ir, &val);
 
-	   if (rvt==RaveValueType_DATA) {
-	      RaveField_getValue(hac, ib, ir, &ni);
-	      ni+=1;
-	      RaveField_setValue(hac, ib, ir, ni);
-	   }
-	}
+         if (rvt==RaveValueType_DATA) {
+           RaveField_getValue(hac, ib, ir, &ni);
+           ni+=1;
+           RaveField_setValue(hac, ib, ir, ni);
+         }
+       }
      }
 
      retval = 1;
   }
   RAVE_OBJECT_RELEASE(param);
   RAVE_OBJECT_RELEASE(attr);
+  return retval;
+}
+
+
+int zdiff(PolarScan_t* scan, double thresh) {
+  PolarScanParam_t* dbzu = NULL;
+  PolarScanParam_t* dbzc = NULL;
+  RaveField_t* field = NULL;
+  RaveValueType rvtu, rvtc;
+  int retval = 0;
+  int ir, ib;
+  long nrays, nbins;
+  double uval, cval, diff, quality;
+  double gain = 1/255.0;
+
+  nbins = PolarScan_getNbins(scan);
+  nrays = PolarScan_getNrays(scan);
+
+  if ( (PolarScan_hasParameter(scan, "TH")) && (PolarScan_hasParameter(scan, "DBZH")) ) {
+    dbzu = PolarScan_getParameter(scan, "TH");
+    dbzc = PolarScan_getParameter(scan, "DBZH");
+    field = PolarScan_getQualityFieldByHowTask(scan, "eu.opera.odc.zdiff");
+
+    for (ir=0; ir<nrays; ir++) {
+      for (ib=0; ib<nbins; ib++) {
+        rvtu = PolarScanParam_getConvertedValue(dbzu, ib, ir, &uval);
+        rvtc = PolarScanParam_getConvertedValue(dbzc, ib, ir, &cval);
+
+        if ( (rvtu==RaveValueType_DATA) && (rvtc==RaveValueType_DATA) ) {
+          diff = uval - cval;
+        } else if ( (rvtu==RaveValueType_DATA) && (rvtc==RaveValueType_UNDETECT) ) {
+          diff = uval;
+        }
+        if (diff > thresh) diff = thresh;
+        quality = (1.0 - (diff / thresh)) / gain;  /* scale directly to 8 bit */
+        RaveField_setValue(field, (long)ir, (long)ib, quality);
+      }
+    }
+    retval = 1;
+  }
+
+  RAVE_OBJECT_RELEASE(field);
+  RAVE_OBJECT_RELEASE(dbzu);
+  RAVE_OBJECT_RELEASE(dbzc);
   return retval;
 }

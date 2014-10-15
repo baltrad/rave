@@ -20,6 +20,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 
 ## Performs hit-accumulation clutter filtering using hit-accumulation
 #  monthly "climatologies" or "counter files".
+#  Added also Z-diff quality indicator.
 
 ## @file
 ## @author Daniel Michelson, SMHI
@@ -293,6 +294,37 @@ def multi_increment(fstrs, procs=None):
     results = []
     r = pool.map_async(hacIncrement, fstrs, chunksize=1)
     r.wait()
+
+
+## Odds and ends below
+
+## Z-diff quality indicator. Takes the difference between uncorrected and corrected reflectivities
+#  and derives a quality indicator out of it. The threshold is the maximum difference in dBZ
+#  giving the equivalent of zero quality.
+# @param scan Polar scan 
+# @param thresh float maximum Z-diff allowed 
+def zdiffScan(scan, thresh=40.0):
+    if _polarscan.isPolarScan(scan):
+        qind = _ravefield.new()
+        qind.setData(zeros((scan.nrays,scan.nbins), uint8))
+        qind.addAttribute("how/task", "eu.opera.odc.zdiff")
+        qind.addAttribute("how/task_args", thresh)
+        qind.addAttribute("what/gain", 1/255.0)
+        qind.addAttribute("what/offset", 0.0)
+        scan.addQualityField(qind)
+
+        ret = _odc_hac.zdiff(scan)
+    else:
+        raise TypeError, "Input is expected to be a polar scan. Got something else."
+
+    
+def zdiffPvol(pvol, thresh=40.0):
+    if _polarvolume.isPolarVolume(obj):
+        for i in range(pvol.getNumberOfScans()):
+            scan = pvol.getScan(i, thresh)
+            zdiffScan(scan)
+    else:
+        raise TypeError, "Input is expected to be a polar volume. Got something else."
 
 
 ## Initialize

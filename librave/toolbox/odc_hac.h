@@ -51,4 +51,11 @@ int hacFilter(PolarScan_t* scan, RaveField_t* hac, char* quant);
  */
 int hacIncrement(PolarScan_t* scan, RaveField_t* hac, char* quant);
 
+/**
+ * Derives Z-diff quality indicator.
+ * @param[in] scan - input scan
+ * @returns int 1 if successful, otherwise 0
+ */
+int zdiff(PolarScan_t* scan, double thresh);
+
 #endif /* ODCHAC_H */
