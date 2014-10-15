@@ -90,6 +90,8 @@ class multi_composite_arguments(object):
     self.gain = GAIN
     self.offset = OFFSET
     self.area_definition = None
+    self.opath = None  # Provisional, until compositing can handle prefab QC
+    self.dump = False  # Provisional, until compositing can handle prefab QC
   
   ##
   # Generate function. Basically same as calling compositing.generate but the pyarea is created from the
@@ -120,6 +122,9 @@ class multi_composite_arguments(object):
     comp.gain = self.gain
     comp.offset = self.offset    
     comp.filenames = self.filenames
+    if self.dump:  # Provisional, until compositing can handle prefab QC
+        comp.dump = True
+        comp.opath = self.opath
     
     pyarea = _area.new()
     pyarea.id = "tiled area subset %s"%tid
@@ -199,6 +204,10 @@ class tiled_compositing(object):
     a.gain = self.compositing.gain
     a.offset = self.compositing.offset
     a.area_definition = adef
+    
+    if self.compositing.dump:  # Provisional, until compositing can handle prefab QC
+        a.dump = self.compositing.dump
+        a.opath = self.compositing.opath
     
     return a
   

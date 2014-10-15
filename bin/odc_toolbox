@@ -43,24 +43,29 @@ if __name__ == "__main__":
                       help="Output path for writing data.")
 
     parser.add_option("-q", "--qc", dest="qc",
-                      help="Comma-separated list of which QC algorithms to run, e.g. 'ropo,beamb'. No white spaces between these names.")
+                      help="Comma-separated list of which QC algorithms to run, e.g. 'ropo,beamb'. No white spaces between these names. For compositing, this executable hard-wires a quality-based composite algorithm where the last QC algorithm in the chain should be qi-total.")
 
-    parser.add_option("-d", "--delete", dest="delete", default=False,
-                      help="Deletes input files following their processing. Default=False")
+    parser.add_option("-d", "--delete", action="store_false", dest="delete",
+                      help="Deletes input files following their processing.")
 
-    parser.add_option("-c", "--check", dest="check", default=True,
-                      help="Checks for the presence of output files. If an output file already exists, do nothing and move on to the next. Default=True")
+    parser.add_option("-c", "--check", action="store_true", dest="check",
+                      help="Checks for the presence of output files. If an output file already exists, do nothing and move on to the next.")
 
     parser.add_option("-p", "--procs", dest="procs", type="int", default=0,
                       help="Number of concurrent worker processes to run. Defaults to the maximum number of logical CPUs supported on your hardware, but can be constrained or raised as you wish. Use off-line for benchmarking.")
 
+    parser.add_option("-D", "--write-pvols", action="store_true", dest="dump",
+                      help="Write quality-controlled PVOLs to output path.")
+
+    parser.add_option("-a", "--composite-area", dest="areaid", default="odc_area",
+                      help="The area identifier (string) of the output composite area to generate.")
+
+    parser.add_option("-O", "--composite-file", dest="ofile", default="composite.h5",
+                      help="The file name of the output composite that will be written to --opath. Default=composite.h5")
+
     (options, args) = parser.parse_args()
 
     if options.procs == 0: options.procs=None
-    if type(options.delete) is types.StringType:
-        options.delete = eval(options.delete)
-    if type(options.check) is types.StringType:
-        options.check = eval(options.check)
 
     if not options.ipath or not options.opath or not options.qc:
         parser.print_help()

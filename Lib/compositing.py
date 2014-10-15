@@ -22,6 +22,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @file
 ## @author Anders Henja and Daniel Michelson, SMHI
 ## @date 2014-08-12
+import os  # Provisional, until compositing can handle prefab QC
 import _rave
 import _polarscan
 import _polarvolume
@@ -102,6 +103,8 @@ class compositing(object):
     self.offset = OFFSET
     self.verbose = False
     self.logger = logger
+    self.opath = None  # Provisional, until compositing can handle prefab QC
+    self.dump = False  # Provisional, until compositing can handle prefab QC
 
   def generate(self, dd, dt, area=None):
     return self._generate(dd, dt, area)
@@ -290,6 +293,20 @@ class compositing(object):
             algorithm = na
 
       objects.append(obj)
+
+      # Provisional, until compositing can handle prefab QC, hard-wired FCPs
+      if self.dump:
+          ipath, fstr = os.path.split(fname)
+          rio = _raveio.new()
+          rio.object = obj
+          rio.compression_level = 0
+          rio.fcp_istorek = 1
+          rio.fcp_metablocksize = 0
+          rio.fcp_sizes = (4,4)
+          rio.fcp_symk = (1,1)
+          rio.fcp_userblock = 0
+          ofstr = os.path.join(self.opath, fstr)
+          rio.save(ofstr) 
       
     return objects, nodes, algorithm
     

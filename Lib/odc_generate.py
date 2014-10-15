@@ -28,6 +28,9 @@ import sys, os, glob, time, logging
 import multiprocessing
 import odc_polarQC
 import rave_pgf_logger
+import _rave, _raveio
+import _pycomposite
+import compositing, tiled_compositing
 
 
 ## Coordinates all data processing
@@ -50,50 +53,74 @@ def generate(options):
     elif not os.access(options.opath, os.W_OK):
         raise IOError, "Output directory exists but you lack write permission."
 
-    odc_polarQC.opath = options.opath
-    odc_polarQC.algorithm_ids = options.qc.split(',')
-    odc_polarQC.delete = options.delete
-    odc_polarQC.check = options.check
-
     fstrs = glob.glob(options.ipath + '/*')
     if not len(fstrs):
         raise IOError, "Empty input directory? Exiting."
 
-    results = odc_polarQC.multi_generate(fstrs, options.procs)
-
-    # Log benchmarking results.
+    # Initialize logger
     logger = logging.getLogger("ODC")
     rave_pgf_logger.init_logger(logger)
 
-    allreads, allvalids, allqcs, allwrites = 0.0, 0.0, 0.0, 0.0
-    n = 0  # counter for number of succesfully processed files
-    exists = 0  # counter for files ignored, already processed
-    for result in results:
-        if len(result) == 3:
-            ifstr, msg, (readt, validt, qct, writet) = result
-            allreads += readt
-            allvalids += validt
-            allqcs += qct
-            allwrites += writet
-            n += 1
-        if result[1] == "EXISTS": exists += 1
+    # Compositing includes QC. Therefore do not do QC separately. This composite config is hard wired.
+    if options.areaid:
+        comp = compositing.compositing()
+        comp.igore_malfunc = True
+        comp.product = _rave.Rave_ProductType_MAX
+        comp.selection_method = _pycomposite.SelectionMethod_HEIGHT
+        comp.detectors = options.qc.split(',')  # E.g. ["ropo","beamb","radvol-broad","qi-total"]
+        comp.qitotal_field = "pl.imgw.quality.qi_total"  # qi-total must be in comp.detectors !!
+        comp.gain = 0.5
+        comp.offset = -32.0
+        comp.filenames = fstrs
+        tc = tiled_compositing.tiled_compositing(comp)
+        if options.dump:  # Provisional, until compositing can handle prefab QC
+            tc.compositing.opath = options.opath
+            tc.compositing.dump = True
+        t = tc.generate(None, None, options.areaid)
+        rio = _raveio.new()
+        rio.object = t
+        rio.save(os.path.join(options.opath, options.ofile))
+        after = time.time()
+        logger.info("odc_area tiled composite: %3.1f sec using %i PVOLs" % ((after-start), len(fstrs)))
 
-    if not options.procs:
-        options.procs = multiprocessing.cpu_count()        
-
-    totalt = allreads + allvalids + allqcs + allwrites
-    if totalt > 0.0:
-        readt = allreads / totalt * 100
-        validt = allvalids / totalt * 100
-        qct = allqcs / totalt * 100
-        writet = allwrites / totalt * 100
-        runt = time.time() - start
-
-        logger.info("Processed %i of %i files in %2.1f (%2.1f) s using %i workers. Breakdown: %2.1f%% read, %2.1f%% validation, %2.1f%% QC, %2.1f%% write. Ignored %i files already processed." % (n, len(fstrs), runt, totalt, options.procs, readt, validt, qct, writet, exists))
-    elif exists:
-        logger.info("Ignored %i files already processed." % exists)
     else:
-        logger.info("No statistics")
+        odc_polarQC.opath = options.opath
+        odc_polarQC.algorithm_ids = options.qc.split(',')
+        odc_polarQC.delete = options.delete
+        odc_polarQC.check = options.check
+    
+        results = odc_polarQC.multi_generate(fstrs, options.procs)
+    
+        # Log benchmarking results.
+        allreads, allvalids, allqcs, allwrites = 0.0, 0.0, 0.0, 0.0
+        n = 0  # counter for number of successfully processed files
+        exists = 0  # counter for files ignored, already processed
+        for result in results:
+            if len(result) == 3:
+                ifstr, msg, (readt, validt, qct, writet) = result
+                allreads += readt
+                allvalids += validt
+                allqcs += qct
+                allwrites += writet
+                n += 1
+            if result[1] == "EXISTS": exists += 1
+    
+        if not options.procs:
+            options.procs = multiprocessing.cpu_count()        
+    
+        totalt = allreads + allvalids + allqcs + allwrites
+        if totalt > 0.0:
+            readt = allreads / totalt * 100
+            validt = allvalids / totalt * 100
+            qct = allqcs / totalt * 100
+            writet = allwrites / totalt * 100
+            runt = time.time() - start
+    
+            logger.info("Processed %i of %i files in %2.1f (%2.1f) s using %i workers. Breakdown: %2.1f%% read, %2.1f%% validation, %2.1f%% QC, %2.1f%% write. Ignored %i files already processed." % (n, len(fstrs), runt, totalt, options.procs, readt, validt, qct, writet, exists))
+        elif exists:
+            logger.info("Ignored %i files already processed." % exists)
+        else:
+            logger.info("No statistics")
 
 
 if __name__ == "__main__":
