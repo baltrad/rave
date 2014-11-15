@@ -620,6 +620,40 @@ int PolarScan_addQualityField(PolarScan_t* scan, RaveField_t* field)
   return RaveObjectList_add(scan->qualityfields, (RaveCoreObject*)field);
 }
 
+int PolarScan_addOrReplaceQualityField(PolarScan_t* scan, RaveField_t* field)
+{
+  RaveAttribute_t* attr = NULL;
+  char *fieldstr = NULL;
+  int result = 0;
+  int found = 0;
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+  attr = RaveField_getAttribute(field, "how/task");
+  if (attr != NULL && RaveAttribute_getString(attr, &fieldstr) && fieldstr != NULL) {
+    int i;
+    int nQualityFields = PolarScan_getNumberOfQualityFields(scan);
+    for (i = 0; found == 0 && i < nQualityFields; i++) {
+      RaveField_t* qfield = PolarScan_getQualityField(scan, i);
+      if (qfield != NULL) {
+        char *qfieldstr = NULL;
+        RaveAttribute_t* qfieldattr = RaveField_getAttribute(qfield, "how/task");
+        if (qfieldattr != NULL && RaveAttribute_getString(qfieldattr, &qfieldstr) && qfieldstr != NULL) {
+          if (strcmp(fieldstr, qfieldstr) == 0) {
+            PolarScan_removeQualityField(scan, i);
+            found = 1;
+          }
+        }
+        RAVE_OBJECT_RELEASE(qfieldattr);
+      }
+      RAVE_OBJECT_RELEASE(qfield);
+    }
+  }
+
+  result = PolarScan_addQualityField(scan, field);
+  RAVE_OBJECT_RELEASE(attr);
+  return result;
+}
+
+
 RaveField_t* PolarScan_getQualityField(PolarScan_t* scan, int index)
 {
   RAVE_ASSERT((scan != NULL), "scan == NULL");

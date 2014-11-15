@@ -39,9 +39,10 @@ class rave_quality_plugin(object):
   
   ##
   # @param obj: A rave object that should be processed.
+  # @param reprocess_quality_flag: Specifies if the quality flag should be reprocessed or not. If False, then if possible the plugin should avoid generating the quality field again.  
   # @return: The modified object if this quality plugin has performed changes 
   # to the object.
-  def process(self, obj):
+  def process(self, obj, reprocess_quality_flag=True):
     return obj
   
   ##

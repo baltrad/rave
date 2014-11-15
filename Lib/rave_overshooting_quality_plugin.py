@@ -51,22 +51,24 @@ class rave_overshooting_quality_plugin(rave_quality_plugin):
   
   ##
   # @param obj: A rave object that should be processed.
+  # @param reprocess_quality_flag: Specifies if the quality flag should be reprocessed or not. If False, then if possible the plugin should avoid generating the quality field again.  
   # @return: The modified object if this quality plugin has performed changes 
   # to the object.
-  def process(self, obj):
+  def process(self, obj, reprocess_quality_flag=True):
     if obj != None and _polarvolume.isPolarVolume(obj):
       import _detectionrange
       ascending = obj.isAscendingScans()
       drgenerator = _detectionrange.new()
       maxscan = obj.getScanWithMaxDistance()
-      # We want to have same resolution as maxdistance scan since we are going to add the poo-field to it
-      # The second argument is dbz threshold, modify it accordingly
-      topfield = drgenerator.top(obj, maxscan.rscale, -40.0)       # Topfield is a scan
-      filterfield = drgenerator.filter(topfield)                   # filterfield is a scan
-      poofield = drgenerator.analyze(filterfield, 60, 0.1, 0.35)   # poofield is a quality field, add it to maxscan
-      maxscan.addQualityField(poofield)
-      if ascending:
-        obj.sortByElevations(1)
+      if reprocess_quality_flag or not maxscan.findQualityFieldByHowTask("se.smhi.detector.poo"):
+        # We want to have same resolution as maxdistance scan since we are going to add the poo-field to it
+        # The second argument is dbz threshold, modify it accordingly
+        topfield = drgenerator.top(obj, maxscan.rscale, -40.0)       # Topfield is a scan
+        filterfield = drgenerator.filter(topfield)                   # filterfield is a scan
+        poofield = drgenerator.analyze(filterfield, 60, 0.1, 0.35)   # poofield is a quality field, add it to maxscan
+        maxscan.addOrReplaceQualityField(poofield)
+        if ascending:
+          obj.sortByElevations(1)
     return obj
 
   ##

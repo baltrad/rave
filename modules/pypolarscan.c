@@ -905,6 +905,34 @@ static PyObject* _pypolarscan_addQualityField(PyPolarScan* self, PyObject* args)
 }
 
 /**
+ * Adds or replace quality field to the scan
+ * @param[in] self - this instance
+ * @param[in] args - object, of type RaveFieldCore
+ * @returns None
+ */
+static PyObject* _pypolarscan_addOrReplaceQualityField(PyPolarScan* self, PyObject* args)
+{
+  PyObject* inptr = NULL;
+  PyRaveField* ravefield = NULL;
+
+  if (!PyArg_ParseTuple(args, "O", &inptr)) {
+    return NULL;
+  }
+
+  if (!PyRaveField_Check(inptr)) {
+    raiseException_returnNULL(PyExc_TypeError,"Added object must be of type RaveFieldCore");
+  }
+
+  ravefield = (PyRaveField*)inptr;
+
+  if (!PolarScan_addOrReplaceQualityField(self->scan, ravefield->field)) {
+    raiseException_returnNULL(PyExc_AttributeError, "Failed to add quality field to scan");
+  }
+
+  Py_RETURN_NONE;
+}
+
+/**
  * Returns the number of quality fields
  * @param[in] self - this instance
  * @param[in] args - N/A
@@ -1130,6 +1158,7 @@ static struct PyMethodDef _pypolarscan_methods[] =
   {"hasAttribute", (PyCFunction) _pypolarscan_hasAttribute, 1},
   {"isValid", (PyCFunction) _pypolarscan_isValid, 1},
   {"addQualityField", (PyCFunction) _pypolarscan_addQualityField, 1},
+  {"addOrReplaceQualityField", (PyCFunction) _pypolarscan_addOrReplaceQualityField, 1},
   {"getNumberOfQualityFields", (PyCFunction) _pypolarscan_getNumberOfQualityFields, 1},
   {"getQualityField", (PyCFunction) _pypolarscan_getQualityField, 1},
   {"removeQualityField", (PyCFunction) _pypolarscan_removeQualityField, 1},

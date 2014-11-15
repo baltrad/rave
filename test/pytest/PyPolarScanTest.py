@@ -1083,7 +1083,43 @@ class PyPolarScanTest(unittest.TestCase):
     obj.removeQualityField(0)
     self.assertEquals(1, obj.getNumberOfQualityFields())
     self.assertEquals("field2", obj.getQualityField(0).getAttribute("what/name"))
-  
+
+  def test_addOrReplaceQualityField(self):
+    obj = _polarscan.new()
+    field1 = _ravefield.new()
+    field2 = _ravefield.new()
+    field1.addAttribute("how/task", "field1")
+    field2.addAttribute("how/task", "field2")
+
+    obj.addQualityField(field1)
+    obj.addQualityField(field2)
+    
+    self.assertEquals(2, obj.getNumberOfQualityFields())
+    self.assertEquals("field1", obj.getQualityField(0).getAttribute("what/name"))
+    obj.removeQualityField(0)
+    self.assertEquals(1, obj.getNumberOfQualityFields())
+    self.assertEquals("field2", obj.getQualityField(0).getAttribute("what/name"))
+
+  def test_addOrReplaceQualityField(self):
+    obj = _polarscan.new()
+    field1 = _ravefield.new()
+    field2 = _ravefield.new()
+    field2_1 = _ravefield.new()
+    field1.addAttribute("how/task", "field1")
+    field2.addAttribute("how/task", "field2")
+    field2_1.addAttribute("how/task", "field2")
+
+    obj.addOrReplaceQualityField(field1)
+    obj.addOrReplaceQualityField(field2)
+    self.assertEquals(2, obj.getNumberOfQualityFields())
+    self.assertTrue(field1 == obj.getQualityField(0))
+    self.assertTrue(field2 == obj.getQualityField(1))
+
+    obj.addOrReplaceQualityField(field2_1)
+    self.assertEquals(2, obj.getNumberOfQualityFields())
+    self.assertTrue(field1 == obj.getQualityField(0))
+    self.assertTrue(field2_1 == obj.getQualityField(1))
+    
   def test_add_how_array_attribute_long(self):
     obj = _polarscan.new()
     obj.addAttribute("how/something", numpy.arange(10).astype(numpy.int32))

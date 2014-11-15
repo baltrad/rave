@@ -418,6 +418,15 @@ RaveList_t* PolarScan_getParameterNames(PolarScan_t* scan);
 int PolarScan_addQualityField(PolarScan_t* scan, RaveField_t* field);
 
 /**
+ * Adds or replaces a quality field. The field is replaced if the field contains a how/task attribute
+ * and it already exists another quality field with the same how/task name.
+ * @param[in] scan - self
+ * @param[in] field - the field to add or replace
+ * @returns 1 on success otherwise 0
+ */
+int PolarScan_addOrReplaceQualityField(PolarScan_t* scan, RaveField_t* field);
+
+/**
  * Returns the quality field at the specified location.
  * @param[in] scan - self
  * @param[in] index - the index
