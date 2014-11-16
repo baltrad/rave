@@ -83,13 +83,14 @@ class rave_qitotal_quality_plugin(rave_quality_plugin):
       if hasattr(qitotal, QITOTAL_METHOD):
         method = getattr(qitotal, QITOTAL_METHOD)
         result = method(qitotalfields)
-        scan.addQualityField(result)
+        scan.addOrReplaceQualityField(result)
     
 
   ##
   # @param obj: A rave object that should be processed, bogus in this case.
+  # @param reprocess_quality_flag: Not used, we always want to reprocess qi-total
   # @return: obj - without doing anything to it
-  def process(self, obj):
+  def process(self, obj, reprocess_quality_flag=True):
     _rave.setDebugLevel(_rave.Debug_RAVE_DEBUG)
     objinfo = self.get_object_information(obj)
     
