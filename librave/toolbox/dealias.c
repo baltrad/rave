@@ -88,7 +88,9 @@ int dealias_pvol(PolarVolume_t* inobj) {
 int dealias_scan(PolarScan_t* scan) {
   PolarScanParam_t* vrad = NULL;
   RaveAttribute_t* attr = NULL;
-  RaveAttribute_t* dattr = RAVE_OBJECT_NEW(&RaveAttribute_TYPE);;
+  RaveAttribute_t* dattr = RAVE_OBJECT_NEW(&RaveAttribute_TYPE);
+  RaveAttribute_t* htattr = NULL;
+
   int nbins, nrays, i, j, n, m, ib, ir, eind;
   int retval = 0;
   double elangle, gain, offset, nodata, undetect, NI, val, vm, min1, esum, u1, v1, min2, dmy, vmin, vmax;
@@ -242,6 +244,12 @@ int dealias_scan(PolarScan_t* scan) {
       RaveAttribute_setString(dattr, "True");
       PolarScanParam_addAttribute(vrad, dattr);
 
+      // We don't report if we get any kind of memory error etc...
+      htattr = RaveAttributeHelp_createString("how/task", "se.smhi.detector.dealias");
+      if (htattr != NULL) {
+        PolarScanParam_addAttribute(vrad, htattr);
+      }
+
       RAVE_FREE(vrad_nodata);
       RAVE_FREE(vrad_undetect);
       RAVE_FREE(x);
@@ -264,6 +272,7 @@ int dealias_scan(PolarScan_t* scan) {
   } else {
     retval = 0;  /* No VRAD or already dealiased */
   }
+  RAVE_OBJECT_RELEASE(htattr);
   RAVE_OBJECT_RELEASE(dattr);
   return retval;
 }
