@@ -44,6 +44,7 @@ class rave_distance_quality_plugin(rave_quality_plugin):
   
   ##
   # @param obj: A rave object that should be processed, bogus in this case.
+  # @param reprocess_quality_flag: Not used
   # @return: obj - without doing anything to it
   def process(self, obj, reprocess_quality_flag=True):
     return obj

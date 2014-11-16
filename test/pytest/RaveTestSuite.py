@@ -54,6 +54,7 @@ from PyPooCompositeAlgorithmTest import *
 from rave_pgf_volume_plugin_test import *
 from rave_overshooting_quality_plugin_test import *
 from rave_distance_quality_plugin_test import *
+from rave_dealias_quality_plugin_test import *
 from qitotal_options_test import *
 from rave_qitotal_quality_plugin_test import *
 from rave_pgf_quality_registry_mgr_test import *
