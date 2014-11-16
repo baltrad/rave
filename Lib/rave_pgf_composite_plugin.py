@@ -41,7 +41,7 @@ import rave_tile_registry
 from tiled_compositing import tiled_compositing
 from compositing import compositing
 
-from rave_defines import CENTER_ID, GAIN, OFFSET
+from rave_defines import CENTER_ID, GAIN, OFFSET, RAVE_PGF_QUALITY_FIELD_REPROCESSING
 
 logger = rave_pgf_logger.rave_pgf_syslog_client()
 
@@ -139,6 +139,8 @@ def generate(files, arguments):
     comp.zr_A = strToNumber(args["zrA"])
   if args.has_key("zrb"):
     comp.zr_b = strToNumber(args["zrb"])
+  
+  comp.reprocess_quality_field = RAVE_PGF_QUALITY_FIELD_REPROCESSING
   
   if rave_tile_registry.has_tiled_area(args["area"]):
     comp = tiled_compositing(comp)

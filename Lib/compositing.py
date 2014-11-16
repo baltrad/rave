@@ -101,11 +101,12 @@ class compositing(object):
     self.quantity = "DBZH"
     self.gain = GAIN
     self.offset = OFFSET
+    self.reprocess_quality_field=False
     self.verbose = False
     self.logger = logger
     self.opath = None  # Provisional, until compositing can handle prefab QC
     self.dump = False  # Provisional, until compositing can handle prefab QC
-
+    
   def generate(self, dd, dt, area=None):
     return self._generate(dd, dt, area)
 
@@ -124,6 +125,7 @@ class compositing(object):
       self.logger.debug("Gra filtering = %s"%`self.applygra`)
       self.logger.debug("Ignoring malfunc = %s"%`self.ignore_malfunc`)
       self.logger.debug("QI-total field = %s"%self.qitotal_field)
+      self.logger.debug("Reprocess quality fields = %s"%`self.reprocess_quality_field`)
       
       if area is not None:
         self.logger.debug("Area = %s"%area)
@@ -287,7 +289,7 @@ class compositing(object):
       for d in self.detectors:
         p = rave_pgf_quality_registry.get_plugin(d)
         if p != None:
-          obj = p.process(obj)
+          obj = p.process(obj, self.reprocess_quality_field)
           na = p.algorithm()
           if algorithm == None and na != None: # Try to get the generator algorithm != None 
             algorithm = na
