@@ -39,9 +39,10 @@ class odc_hac_increment_plugin(rave_quality_plugin):
   
   ##
   # @param obj: A RAVE object that should be processed.
+  # @param reprocess_quality_flag: Not used
   # @return: The modified object if this quality plugin has performed changes 
   # to the object. In this case, no changes will be made.
-  def process(self, obj):
+  def process(self, obj, reprocess_quality_flag=True):
     try:
       import odc_hac
       odc_hac.hacIncrement(obj)
@@ -63,9 +64,10 @@ class odc_hac_filter_plugin(rave_quality_plugin):
   
   ##
   # @param obj: A RAVE object that should be processed.
+  # @param reprocess_quality_flag: Not used  
   # @return: The modified object if this quality plugin has performed changes 
   # to the object.
-  def process(self, obj):
+  def process(self, obj, reprocess_quality_flag=True):
     try:
       import odc_hac
       odc_hac.hacFilter(obj)

@@ -25,7 +25,24 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 # @date 2012-11-26
 
 from rave_quality_plugin import rave_quality_plugin
+import _polarscan, _polarvolume
 
+def should_perform_qc_process(reprocess, obj, how_task):
+  if reprocess:
+    return True
+  
+  if _polarscan.isPolarScan(obj) and obj.getQualityFieldByHowTask(how_task):
+    return False
+  
+  if _polarvolume.isPolarVolume(obj):
+    for i in range(obj.getNumberOfScans()):
+      scan = obj.getScan(i)
+      if not scan.getQualityFieldByHowTask(how_task):
+        return True
+    return False
+  
+  return True
+    
 class radvol_att_plugin(rave_quality_plugin):
   ##
   # Default constructor
@@ -41,13 +58,15 @@ class radvol_att_plugin(rave_quality_plugin):
   # @param obj: A RAVE object that should be processed.
   # @return: The modified object if this quality plugin has performed changes 
   # to the object.
-  def process(self, obj):
+  def process(self, obj, reprocess_quality_flag=True):
     try:
       import _radvol, rave_radvol_realtime
       rpars = rave_radvol_realtime.get_options(obj)
-      _radvol.attCorrection(obj, rpars)
+      if should_perform_qc_process(reprocess_quality_flag, obj, "pl.imgw.radvolqc.att"):
+        _radvol.attCorrection(obj, rpars)
     except:
-      pass
+      import traceback
+      traceback.print_exc()
     return obj
 
 
@@ -66,11 +85,12 @@ class radvol_broad_plugin(rave_quality_plugin):
   # @param obj: A RAVE object that should be processed.
   # @return: The modified object if this quality plugin has performed changes 
   # to the object.
-  def process(self, obj):
+  def process(self, obj, reprocess_quality_flag=True):
     try:
       import _radvol, rave_radvol_realtime
       rpars = rave_radvol_realtime.get_options(obj)
-      _radvol.broadAssessment(obj, rpars)
+      if should_perform_qc_process(reprocess_quality_flag, obj, "pl.imgw.radvolqc.broad"):
+        _radvol.broadAssessment(obj, rpars)
     except:
       pass
     return obj
@@ -91,11 +111,12 @@ class radvol_nmet_plugin(rave_quality_plugin):
   # @param obj: A RAVE object that should be processed.
   # @return: The modified object if this quality plugin has performed changes 
   # to the object.
-  def process(self, obj):
+  def process(self, obj, reprocess_quality_flag=True):
     try:
       import _radvol, rave_radvol_realtime
       rpars = rave_radvol_realtime.get_options(obj)
-      _radvol.nmetRemoval(obj, rpars)
+      if should_perform_qc_process(reprocess_quality_flag, obj, "pl.imgw.radvolqc.nmet"):
+        _radvol.nmetRemoval(obj, rpars)
     except:
       pass
     return obj
@@ -116,11 +137,12 @@ class radvol_speck_plugin(rave_quality_plugin):
   # @param obj: A RAVE object that should be processed.
   # @return: The modified object if this quality plugin has performed changes 
   # to the object.
-  def process(self, obj):
+  def process(self, obj, reprocess_quality_flag=True):
     try:
       import _radvol, rave_radvol_realtime
       rpars = rave_radvol_realtime.get_options(obj)
-      _radvol.speckRemoval(obj, rpars)
+      if should_perform_qc_process(reprocess_quality_flag, obj, "pl.imgw.radvolqc.speck"):      
+        _radvol.speckRemoval(obj, rpars)
     except:
       pass
     return obj
@@ -141,11 +163,12 @@ class radvol_spike_plugin(rave_quality_plugin):
   # @param obj: A RAVE object that should be processed.
   # @return: The modified object if this quality plugin has performed changes 
   # to the object.
-  def process(self, obj):
+  def process(self, obj, reprocess_quality_flag=True):
     try:
       import _radvol, rave_radvol_realtime
       rpars = rave_radvol_realtime.get_options(obj)
-      _radvol.spikeRemoval(obj, rpars)
+      if should_perform_qc_process(reprocess_quality_flag, obj, "pl.imgw.radvolqc.spike"):      
+        _radvol.spikeRemoval(obj, rpars)
     except:
       pass
     return obj

@@ -212,6 +212,7 @@ static int RadvolInternal_updateAttribute(PolarScanParam_t* param, const char* n
     attribute = RaveAttributeHelp_createString(name, new_value);
   } else {
     RaveAttribute_getString(attribute, &value);
+    RAVE_OBJECT_RELEASE(attribute);
     if (value == NULL) {
       attribute = RaveAttributeHelp_createString(name, new_value);
     } else {  
@@ -396,7 +397,7 @@ static int RadvolInternal_saveScanData(Radvol_t* self, PolarScan_t* scan, int aE
         RaveField_setValue(field, bi, ri, (self->TabElev[aEle].QIElev[ri * self->TabElev[aEle].nbin + bi] + 1 / 254.0) * 254.0);
       }
     }
-    if ((attribute == NULL) || !RaveField_addAttribute(field, attribute) || !PolarScan_addQualityField(scan, field)) {
+    if ((attribute == NULL) || !RaveField_addAttribute(field, attribute) || !PolarScan_addOrReplaceQualityField(scan, field)) {
       RAVE_ERROR0("Failed to add quality field to the cartesian product");
       goto error;
     }
