@@ -26,6 +26,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 
 from rave_quality_plugin import rave_quality_plugin
 import _polarscan, _polarvolume
+import rave_pgf_logger
+logger = rave_pgf_logger.rave_pgf_syslog_client()
 
 def should_perform_qc_process(reprocess, obj, how_task):
   if reprocess:
@@ -65,8 +67,7 @@ class radvol_att_plugin(rave_quality_plugin):
       if should_perform_qc_process(reprocess_quality_flag, obj, "pl.imgw.radvolqc.att"):
         _radvol.attCorrection(obj, rpars)
     except:
-      import traceback
-      traceback.print_exc()
+      logger.exception("Failure during radvol processing")
     return obj
 
 
@@ -92,7 +93,7 @@ class radvol_broad_plugin(rave_quality_plugin):
       if should_perform_qc_process(reprocess_quality_flag, obj, "pl.imgw.radvolqc.broad"):
         _radvol.broadAssessment(obj, rpars)
     except:
-      pass
+      logger.exception("Failure during radvol processing")
     return obj
 
     
@@ -118,7 +119,7 @@ class radvol_nmet_plugin(rave_quality_plugin):
       if should_perform_qc_process(reprocess_quality_flag, obj, "pl.imgw.radvolqc.nmet"):
         _radvol.nmetRemoval(obj, rpars)
     except:
-      pass
+      logger.exception("Failure during radvol processing")
     return obj
     
 
@@ -144,7 +145,7 @@ class radvol_speck_plugin(rave_quality_plugin):
       if should_perform_qc_process(reprocess_quality_flag, obj, "pl.imgw.radvolqc.speck"):      
         _radvol.speckRemoval(obj, rpars)
     except:
-      pass
+      logger.exception("Failure during radvol processing")
     return obj
 
 
@@ -170,5 +171,5 @@ class radvol_spike_plugin(rave_quality_plugin):
       if should_perform_qc_process(reprocess_quality_flag, obj, "pl.imgw.radvolqc.spike"):      
         _radvol.spikeRemoval(obj, rpars)
     except:
-      pass
+      logger.exception("Failure during radvol processing")
     return obj

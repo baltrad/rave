@@ -89,9 +89,8 @@ class multi_composite_arguments(object):
     self.quantity = "DBZH"
     self.gain = GAIN
     self.offset = OFFSET
+    self.reprocess_quality_field = False 
     self.area_definition = None
-    self.opath = None  # Provisional, until compositing can handle prefab QC
-    self.dump = False  # Provisional, until compositing can handle prefab QC
   
   ##
   # Generate function. Basically same as calling compositing.generate but the pyarea is created from the
@@ -122,9 +121,7 @@ class multi_composite_arguments(object):
     comp.gain = self.gain
     comp.offset = self.offset    
     comp.filenames = self.filenames
-    if self.dump:  # Provisional, until compositing can handle prefab QC
-        comp.dump = True
-        comp.opath = self.opath
+    comp.reprocess_quality_field = self.reprocess_quality_field
     
     pyarea = _area.new()
     pyarea.id = "tiled area subset %s"%tid
@@ -156,26 +153,50 @@ class tiled_compositing(object):
   # @param c: the compositing instance
   def __init__(self, c):
     self.compositing = c
+    # If preprocess_qc = False, then the tile generators will take care of the preprocessing of the tiles
+    # otherwise, the files will be qc-processed, written to disk and these filepaths will be sent to the
+    # tile generators instead. Might or might not improve performance depending on file I/O etc..
+    self.preprocess_qc = False     
     self.verbose = c.verbose
     self.logger = logger
-    self.file_objects, self.nodes = self._fetch_file_objects(c)
+    self.file_objects, self.nodes = self._fetch_file_objects()
 
-  def _fetch_file_objects(self, comp):
-    result = {}
-    nodes = ""
-    self.logger.info("Fetching %d files for tiled compositing"%len(comp.filenames))
-    for fname in comp.filenames:
-      if comp.ravebdb != None:
-        obj = comp.ravebdb.get_rave_object(fname)
-      else:
-        obj = _raveio.open(fname).object
-      result[fname] = obj
-      if len(nodes):
-        nodes += ",'%s'" % odim_source.NODfromSource(obj)
-      else:
-        nodes += "'%s'" % odim_source.NODfromSource(obj)
-        
-    self.logger.info("Finished fetching %d files"%len(comp.filenames))
+  def _fetch_file_objects(self):
+    self.logger.info("Fetching (and processing) %d files for tiled compositing"%len(self.compositing.filenames))
+    result, nodes, algorithm = self.compositing.fetch_objects(self.preprocess_qc)
+    
+    ##
+    # If we have got preprocessing of quality controls, then save the resulting objects to disc
+    # and let the compositing use the new file names
+    if self.preprocess_qc:
+      newresult={}
+      try:
+        for k in result.keys():
+          rio = _raveio.new()
+          rio.object = result[k]
+          rio.compression_level = 0
+          rio.fcp_istorek = 1
+          rio.fcp_metablocksize = 0
+          rio.fcp_sizes = (4,4)
+          rio.fcp_symk = (1,1)
+          rio.fcp_userblock = 0
+          fileno, rio.filename = rave_tempfile.mktemp(suffix='.h5', close="True")
+          newresult[rio.filename] = result[k]
+          rio.save()
+        self.compositing.filenames = newresult.keys()
+        result = newresult
+      except Exception, e:
+        # Since we might run out of disc space or something, remove everything we have done and hope that
+        # the different tile generators will have more luck
+        for tmpfile in newresult.keys():
+          try:
+            os.unlink(tmpfile)
+          except:
+            pass
+        raise e
+
+    self.logger.info("Finished fetching (and processing) %d files for tiled compositing"%len(self.compositing.filenames))
+
     return (result, nodes)
 
   ##
@@ -203,11 +224,8 @@ class tiled_compositing(object):
     a.quantity = self.compositing.quantity
     a.gain = self.compositing.gain
     a.offset = self.compositing.offset
+    a.reprocess_quality_field = self.compositing.reprocess_quality_field
     a.area_definition = adef
-    
-    if self.compositing.dump:  # Provisional, until compositing can handle prefab QC
-        a.dump = self.compositing.dump
-        a.opath = self.compositing.opath
     
     return a
   
@@ -334,9 +352,16 @@ class tiled_compositing(object):
       result.addAttribute('how/nodes', self.nodes)
           
       self.logger.info("Tiles combined")
-            
+      
       return result
     finally:
+      if self.preprocess_qc:
+        for fname in self.compositing.filenames:
+          try:
+            os.unlink(fname)
+          except:
+            logger.info("Failed to remove temporary file: %s"%fname)
+      
       if results != None:
         for v in results[0]:
           if v != None and v[1] != None and os.path.exists(v[1]):

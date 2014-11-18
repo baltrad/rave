@@ -67,9 +67,15 @@ def main(options):
   else:
     comp.logger = rave_pgf_logger.rave_pgf_stdout_client("info")
 
+  comp.reprocess_quality_fields = False
+  if options.reprocess_quality_fields:
+    comp.reprocess_quality_fields = True
+
   if not options.area is None and options.noMultiprocessing is None:
     if rave_tile_registry.has_tiled_area(options.area):
       comp = tiled_compositing(comp)
+      if options.preprocess_qc:
+        comp.preprocess_qc = True
   
   result = comp.generate(options.date, options.time, options.area)
   if options.imageType:
@@ -180,6 +186,12 @@ if __name__ == "__main__":
   
   parser.add_option("-M", "--no-multiprocessing", action="store_true", dest="noMultiprocessing",
                     help="Disable multiprocessing even if an entry exists in the tile_registry")
+  
+  parser.add_option("--preprocess_qc", action="store_true", dest="preprocess_qc",
+                    help="Preprocesses the quality fields and stores these as temporary files. This is really only useful when performing tiled processing.")
+  
+  parser.add_option("--reprocess_quality_fields", action="store_true", dest="reprocess_quality_fields",
+                    help="Reprocessed the quality fields even if they already exist in the object.")
   
   (options, args) = parser.parse_args()
 

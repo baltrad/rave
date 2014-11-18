@@ -104,8 +104,6 @@ class compositing(object):
     self.reprocess_quality_field=False
     self.verbose = False
     self.logger = logger
-    self.opath = None  # Provisional, until compositing can handle prefab QC
-    self.dump = False  # Provisional, until compositing can handle prefab QC
     
   def generate(self, dd, dt, area=None):
     return self._generate(dd, dt, area)
@@ -145,8 +143,10 @@ class compositing(object):
     if self.verbose:
       self.logger.info("Fetching objects and applying quality plugins")
     
-    objects, nodes, algorithm = self._create_objects()
-    
+    objects, nodes, algorithm = self.fetch_objects()
+
+    objects=objects.values()
+
     generator = _pycomposite.new()
     if area is not None:
       if _area.isArea(area):
@@ -261,10 +261,10 @@ class compositing(object):
   # Generates the objects that should be used in the compositing.
   # returns a triplet with [objects], nodes (as comma separated string), algorithm (a rave compositing algorithm)
   #
-  def _create_objects(self):
+  def fetch_objects(self, run_qc=True):
     nodes = ""
     algorithm = None
-    objects=[]
+    objects={}
     for fname in self.filenames:
       obj = None
       if self.ravebdb != None:
@@ -272,46 +272,32 @@ class compositing(object):
       else:
         obj = _raveio.open(fname).object
       
-      if not _polarscan.isPolarScan(obj) and not _polarvolume.isPolarVolume(obj):
-        self.logger.info("Input file %s is neither polar scan or volume, ignoring." % fname)
-        continue
-      
-      if self.ignore_malfunc:
-        obj = rave_util.remove_malfunc(obj)
-        if obj is None:
+      if run_qc:
+        if not _polarscan.isPolarScan(obj) and not _polarvolume.isPolarVolume(obj):
+          self.logger.info("Input file %s is neither polar scan or volume, ignoring." % fname)
           continue
+      
+        if self.ignore_malfunc:
+          obj = rave_util.remove_malfunc(obj)
+          if obj is None:
+            continue
+
+        for d in self.detectors:
+          p = rave_pgf_quality_registry.get_plugin(d)
+          if p != None:
+            obj = p.process(obj, self.reprocess_quality_field)
+            na = p.algorithm()
+            if algorithm == None and na != None: # Try to get the generator algorithm != None 
+              algorithm = na
       
       if len(nodes):
         nodes += ",'%s'" % odim_source.NODfromSource(obj)
       else:
         nodes += "'%s'" % odim_source.NODfromSource(obj)
-        
-      for d in self.detectors:
-        p = rave_pgf_quality_registry.get_plugin(d)
-        if p != None:
-          obj = p.process(obj, self.reprocess_quality_field)
-          na = p.algorithm()
-          if algorithm == None and na != None: # Try to get the generator algorithm != None 
-            algorithm = na
-
-      objects.append(obj)
-
-      # Provisional, until compositing can handle prefab QC, hard-wired FCPs
-      if self.dump:
-          ipath, fstr = os.path.split(fname)
-          rio = _raveio.new()
-          rio.object = obj
-          rio.compression_level = 0
-          rio.fcp_istorek = 1
-          rio.fcp_metablocksize = 0
-          rio.fcp_sizes = (4,4)
-          rio.fcp_symk = (1,1)
-          rio.fcp_userblock = 0
-          ofstr = os.path.join(self.opath, fstr)
-          rio.save(ofstr) 
+      objects[fname] = obj
       
     return objects, nodes, algorithm
-    
+  
   ##
   # Apply gra coefficient adjustment.
   # @param result: The cartesian product to be adjusted
