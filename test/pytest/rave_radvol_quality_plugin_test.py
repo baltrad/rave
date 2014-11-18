@@ -55,6 +55,13 @@ class radvol_tests(object):
     field = result.getQualityField(0)
     self.assertEquals(self.get_quality_flag(), field.getAttribute("how/task"))
 
+  def test_process_scan_false(self):
+    obj = _raveio.open(self.SCAN_FIXTURE).object
+    result = self.get_quality_plugin().process(obj, False)
+    self.assertEquals(1, result.getNumberOfQualityFields())
+    field = result.getQualityField(0)
+    self.assertEquals(self.get_quality_flag(), field.getAttribute("how/task"))
+
   def test_process_scan_reprocess_true(self):
     obj = _raveio.open(self.SCAN_FIXTURE).object
     result = self.get_quality_plugin().process(obj)
@@ -90,6 +97,17 @@ class radvol_tests(object):
       self.assertEquals(1, scan.getNumberOfQualityFields())
       field = scan.getQualityField(0)
       self.assertEquals(self.get_quality_flag(), field.getAttribute("how/task"))
+
+  def test_process_pvol_false(self):
+    obj = _raveio.open(self.VOLUME_FIXTURE).object
+    result = self.get_quality_plugin().process(obj, False)
+    
+    for i in range(result.getNumberOfScans()):
+      scan = result.getScan(i)
+      self.assertEquals(1, scan.getNumberOfQualityFields())
+      field = scan.getQualityField(0)
+      self.assertEquals(self.get_quality_flag(), field.getAttribute("how/task"))
+
 
   def test_process_pvol_reprocess_true(self):
     obj = _raveio.open(self.VOLUME_FIXTURE).object

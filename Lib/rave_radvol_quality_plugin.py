@@ -31,13 +31,13 @@ def should_perform_qc_process(reprocess, obj, how_task):
   if reprocess:
     return True
   
-  if _polarscan.isPolarScan(obj) and obj.getQualityFieldByHowTask(how_task):
+  if _polarscan.isPolarScan(obj) and obj.findQualityFieldByHowTask(how_task):
     return False
   
   if _polarvolume.isPolarVolume(obj):
     for i in range(obj.getNumberOfScans()):
       scan = obj.getScan(i)
-      if not scan.getQualityFieldByHowTask(how_task):
+      if not scan.findQualityFieldByHowTask(how_task):
         return True
     return False
   
