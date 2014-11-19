@@ -73,9 +73,10 @@ def main(options):
 
   if not options.area is None and options.noMultiprocessing is None:
     if rave_tile_registry.has_tiled_area(options.area):
-      comp = tiled_compositing(comp)
+      preprocess_qc = False
       if options.preprocess_qc:
-        comp.preprocess_qc = True
+        preprocess_qc = True
+      comp = tiled_compositing(comp, preprocess_qc)
   
   result = comp.generate(options.date, options.time, options.area)
   if options.imageType:

@@ -151,53 +151,66 @@ class tiled_compositing(object):
   ##
   # Constructor
   # @param c: the compositing instance
-  def __init__(self, c):
+  def __init__(self, c, preprocess_qc=False):
     self.compositing = c
     # If preprocess_qc = False, then the tile generators will take care of the preprocessing of the tiles
     # otherwise, the files will be qc-processed, written to disk and these filepaths will be sent to the
     # tile generators instead. Might or might not improve performance depending on file I/O etc..
-    self.preprocess_qc = False     
+    self.preprocess_qc = preprocess_qc     
     self.verbose = c.verbose
     self.logger = logger
-    self.file_objects, self.nodes = self._fetch_file_objects()
+    self.file_objects = {}
+    self.nodes = ""
+    self._do_remove_temporary_files=False
 
+  ##
+  # Fetches the file objects
+  #
   def _fetch_file_objects(self):
     self.logger.info("Fetching (and processing) %d files for tiled compositing"%len(self.compositing.filenames))
-    result, nodes, algorithm = self.compositing.fetch_objects(self.preprocess_qc)
-    
-    ##
-    # If we have got preprocessing of quality controls, then save the resulting objects to disc
-    # and let the compositing use the new file names
+
+    result, nodes = self.compositing.fetch_objects()
     if self.preprocess_qc:
-      newresult={}
+      result, algorithm = self.compositing.quality_control_objects(result)
       try:
-        for k in result.keys():
-          rio = _raveio.new()
-          rio.object = result[k]
-          rio.compression_level = 0
-          rio.fcp_istorek = 1
-          rio.fcp_metablocksize = 0
-          rio.fcp_sizes = (4,4)
-          rio.fcp_symk = (1,1)
-          rio.fcp_userblock = 0
-          fileno, rio.filename = rave_tempfile.mktemp(suffix='.h5', close="True")
-          newresult[rio.filename] = result[k]
-          rio.save()
-        self.compositing.filenames = newresult.keys()
-        result = newresult
-      except Exception, e:
-        # Since we might run out of disc space or something, remove everything we have done and hope that
-        # the different tile generators will have more luck
-        for tmpfile in newresult.keys():
-          try:
-            os.unlink(tmpfile)
-          except:
-            pass
-        raise e
+        result = self._store_temporary_files(result)
+        self.compositing.filenames = result.keys()
+        self._do_remove_temporary_files=True
+      except Exception:
+        self.logger.exception("Failed to create temporary files. will not preprocess qc.")
 
     self.logger.info("Finished fetching (and processing) %d files for tiled compositing"%len(self.compositing.filenames))
 
     return (result, nodes)
+
+  ##
+  # Stores the objects as uncompressed temporary files on disc
+  # @param objects: a disctionary with filenames as keys and polar objects as values
+  # @return a dictionary with temporary filenames as keys and polar objects as values
+  # @throws Exception on error, for example if we run out of disc space
+  def _store_temporary_files(self, objects):
+    tempobjects={}
+    try:
+      for k in objects.keys():
+        rio = _raveio.new()
+        rio.object = objects[k]
+        rio.compression_level = 0
+        rio.fcp_istorek = 1
+        rio.fcp_metablocksize = 0
+        rio.fcp_sizes = (4,4)
+        rio.fcp_symk = (1,1)
+        rio.fcp_userblock = 0
+        fileno, rio.filename = rave_tempfile.mktemp(suffix='.h5', close="True")
+        tempobjects[rio.filename] = rio.object
+        rio.save()
+    except Exception, e:
+      for tmpfile in tempobjects.keys():
+        try:
+          os.unlink(tmpfile)
+        except:
+          pass
+      raise e
+    return tempobjects
 
   ##
   # Creates the composite arguments that should be sent to one tiler.
@@ -309,6 +322,8 @@ class tiled_compositing(object):
   def generate(self, dd, dt, area=None):
     pyarea = my_area_registry.getarea(area)
 
+    self.file_objects, self.nodes = self._fetch_file_objects()
+
     args = self._create_arguments(dd, dt, pyarea)
     
     results = []
@@ -355,7 +370,7 @@ class tiled_compositing(object):
       
       return result
     finally:
-      if self.preprocess_qc:
+      if self._do_remove_temporary_files:
         for fname in self.compositing.filenames:
           try:
             os.unlink(fname)

@@ -143,7 +143,9 @@ class compositing(object):
     if self.verbose:
       self.logger.info("Fetching objects and applying quality plugins")
     
-    objects, nodes, algorithm = self.fetch_objects()
+    objects, nodes = self.fetch_objects()
+    
+    objects, algorithm = self.quality_control_objects(objects)
 
     objects=objects.values()
 
@@ -257,13 +259,28 @@ class compositing(object):
     else:
       raise ValueError, "Only supported selection methods are NEAREST_RADAR or HEIGHT_ABOVE_SEALEVEL"
   
+  def quality_control_objects(self, objects):
+    algorithm = None
+    result = {}
+    for k in objects.keys():
+      obj = objects[k]
+      for d in self.detectors:
+        p = rave_pgf_quality_registry.get_plugin(d)
+        if p != None:
+          obj = p.process(obj, self.reprocess_quality_field)
+          na = p.algorithm()
+          if algorithm == None and na != None: # Try to get the generator algorithm != None 
+            algorithm = na
+      result[k] = obj
+
+    return result, algorithm
+  
   ##
   # Generates the objects that should be used in the compositing.
   # returns a triplet with [objects], nodes (as comma separated string), algorithm (a rave compositing algorithm)
   #
-  def fetch_objects(self, run_qc=True):
+  def fetch_objects(self):
     nodes = ""
-    algorithm = None
     objects={}
     for fname in self.filenames:
       obj = None
@@ -272,31 +289,23 @@ class compositing(object):
       else:
         obj = _raveio.open(fname).object
       
-      if run_qc:
-        if not _polarscan.isPolarScan(obj) and not _polarvolume.isPolarVolume(obj):
-          self.logger.info("Input file %s is neither polar scan or volume, ignoring." % fname)
-          continue
-      
-        if self.ignore_malfunc:
-          obj = rave_util.remove_malfunc(obj)
-          if obj is None:
-            continue
+      if not _polarscan.isPolarScan(obj) and not _polarvolume.isPolarVolume(obj):
+        self.logger.info("Input file %s is neither polar scan or volume, ignoring." % fname)
+        continue
 
-        for d in self.detectors:
-          p = rave_pgf_quality_registry.get_plugin(d)
-          if p != None:
-            obj = p.process(obj, self.reprocess_quality_field)
-            na = p.algorithm()
-            if algorithm == None and na != None: # Try to get the generator algorithm != None 
-              algorithm = na
+      if self.ignore_malfunc:
+        obj = rave_util.remove_malfunc(obj)
+        if obj is None:
+          continue
       
       if len(nodes):
         nodes += ",'%s'" % odim_source.NODfromSource(obj)
       else:
         nodes += "'%s'" % odim_source.NODfromSource(obj)
+        
       objects[fname] = obj
       
-    return objects, nodes, algorithm
+    return objects, nodes
   
   ##
   # Apply gra coefficient adjustment.
