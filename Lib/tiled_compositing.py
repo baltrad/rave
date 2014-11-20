@@ -35,7 +35,7 @@ import area_registry
 import numpy
 import _rave, _area, _pycomposite, _projection, _raveio, _polarscan, _polarvolume, _transform, _cartesianvolume
 from rave_defines import CENTER_ID, GAIN, OFFSET
-from rave_defines import RAVE_TILE_COMPOSITING_PROCESSES
+from rave_defines import RAVE_TILE_COMPOSITING_PROCESSES, RAVE_QUALITY_CONTROL_PROCESSES
 import rave_tempfile
 import odim_source
 
@@ -61,6 +61,36 @@ class tiled_area_definition(object):
   
   def __repr__(self):
     return "<%s, scale=%f * %f, size=%d * %d, extent=%s />"%(self.pcsdef, self.xscale, self.yscale, self.xsize, self.ysize, `self.extent`)
+
+
+##
+# Stores the objects as uncompressed temporary files on disc
+# @param objects: a disctionary with filenames as keys and polar objects as values
+# @return a dictionary with temporary filenames as keys and polar objects as values
+# @throws Exception on error, for example if we run out of disc space
+def store_temporary_files(objects):
+  tempobjects={}
+  try:
+    for k in objects.keys():
+      rio = _raveio.new()
+      rio.object = objects[k]
+      rio.compression_level = 0
+      rio.fcp_istorek = 1
+      rio.fcp_metablocksize = 0
+      rio.fcp_sizes = (4,4)
+      rio.fcp_symk = (1,1)
+      rio.fcp_userblock = 0
+      fileno, rio.filename = rave_tempfile.mktemp(suffix='.h5', close="True")
+      tempobjects[rio.filename] = rio.object
+      rio.save()
+  except Exception, e:
+    for tmpfile in tempobjects.keys():
+      try:
+        os.unlink(tmpfile)
+      except:
+        pass
+    raise e
+  return tempobjects
 
 ##
 # The argument wrapper so that the arguments can be transfered to the composite generator taking care of the tile.
@@ -161,19 +191,24 @@ class tiled_compositing(object):
     self.logger = logger
     self.file_objects = {}
     self.nodes = ""
+    self.number_of_quality_control_processes = RAVE_QUALITY_CONTROL_PROCESSES
     self._do_remove_temporary_files=False
 
   ##
-  # Fetches the file objects
+  # Fetches the file objects and if self.preprocess_qc is True performs the quality controls.
+  # If quality control processing is performed successfully, then temporary files are created
+  # and their removal is required if self._do_remove_temporary_files = True 
+  # @return (a dictionary with filenames as keys and objects as values, and a string with all included nodes names) 
   #
   def _fetch_file_objects(self):
     self.logger.info("Fetching (and processing) %d files for tiled compositing"%len(self.compositing.filenames))
 
     result, nodes = self.compositing.fetch_objects()
     if self.preprocess_qc:
+      self._do_remove_temporary_files=False
       result, algorithm = self.compositing.quality_control_objects(result)
       try:
-        result = self._store_temporary_files(result)
+        result = store_temporary_files(result)
         self.compositing.filenames = result.keys()
         self._do_remove_temporary_files=True
       except Exception:
@@ -184,33 +219,53 @@ class tiled_compositing(object):
     return (result, nodes)
 
   ##
-  # Stores the objects as uncompressed temporary files on disc
-  # @param objects: a disctionary with filenames as keys and polar objects as values
-  # @return a dictionary with temporary filenames as keys and polar objects as values
-  # @throws Exception on error, for example if we run out of disc space
-  def _store_temporary_files(self, objects):
-    tempobjects={}
-    try:
-      for k in objects.keys():
-        rio = _raveio.new()
-        rio.object = objects[k]
-        rio.compression_level = 0
-        rio.fcp_istorek = 1
-        rio.fcp_metablocksize = 0
-        rio.fcp_sizes = (4,4)
-        rio.fcp_symk = (1,1)
-        rio.fcp_userblock = 0
-        fileno, rio.filename = rave_tempfile.mktemp(suffix='.h5', close="True")
-        tempobjects[rio.filename] = rio.object
-        rio.save()
-    except Exception, e:
-      for tmpfile in tempobjects.keys():
-        try:
-          os.unlink(tmpfile)
-        except:
-          pass
-      raise e
-    return tempobjects
+  # Fetches the file objects including the quality control by utilizing the multiprocessing
+  # capabilities. I.e. instead of performing the fetching and quality controls within this
+  # process. This job is spawned of to separate processors that manages the qc.
+  # This will generate a number of temporary files that should be removed if self._do_remove_temporary_files=True
+  # @return (a dictionary with filenames as keys and objects as values, and a string with all included nodes names)
+  # 
+  def _fetch_file_objects_mp(self):
+    self.logger.info("MP Fetching (and processing) %d files for tiled compositing"%len(self.compositing.filenames))
+    args = []
+    self._do_remove_temporary_files=False
+    for fname in self.compositing.filenames:
+      args.append(([fname], self.compositing.detectors, self.compositing.reprocess_quality_field, self.compositing.ignore_malfunc))
+
+    nobjects = len(args)    
+    ncpucores = multiprocessing.cpu_count()
+
+    nrprocesses = nobjects
+    if nrprocesses > self.number_of_quality_control_processes:
+      nrprocesses = self.number_of_quality_control_processes
+    if nrprocesses > ncpucores:
+      nrprocesses = ncpucores
+    if nrprocesses == ncpucores and ncpucores > 1:
+      nrprocesses = nrprocesses - 1 # We always want to leave at least one core for something else
+    
+    pool = multiprocessing.Pool(nrprocesses)
+    
+    results = [] # Storage for the result from the mp processes
+    r = pool.map_async(execute_quality_control, args, callback=results.append)
+    
+    r.wait()
+    pool.terminate()
+    pool.join()
+    
+    filenames=[]
+    for r in results[0]:
+      filenames.extend(r[0])
+      if r[1] == False:
+        self.logger.info("MP quality control processing of %s failed."%`r[2]`)
+    
+    self.compositing.filenames = filenames
+    self._do_remove_temporary_files=True
+    
+    result, nodes = self.compositing.fetch_objects()
+    
+    self.logger.info("MP Fetching (and processing) %d files for tiled compositing"%len(self.compositing.filenames))
+    
+    return (result, nodes)
 
   ##
   # Creates the composite arguments that should be sent to one tiler.
@@ -323,6 +378,7 @@ class tiled_compositing(object):
     pyarea = my_area_registry.getarea(area)
 
     self.file_objects, self.nodes = self._fetch_file_objects()
+    #self.file_objects, self.nodes = self._fetch_file_objects_mp()
 
     args = self._create_arguments(dd, dt, pyarea)
     
@@ -386,13 +442,46 @@ class tiled_compositing(object):
               logger.exception("Failed to unlink %s"%v[1])
     return None
 
+##
+# Function that handles the multiprocessing call for the multiprocessing
+# @param args: tuple of 4 args (multi_composite_arguments, date, time, area identifier)
+# @return result of multi_composite_arguments.generate
+#
 def comp_generate(args):
   try:
     return args[0].generate(args[1], args[2], args[3])
   except Exception, e:
     logger.exception("Failed to call composite generator in tiler")
   return None
+
+##
+# Handles the multiprocessing call for the quality control section
+# @param args: tuple of 4 args, ([filenames],[detectors], reprocess_quality_field, ignore_malfunc)
+# @return a tuple of ([filenames], <execution status as boolean>, "filenames or source names")
+def execute_quality_control(args):
+  filenames,detectors,reprocess_quality_field,ignore_malfunc = args
+  result = ([], False, "%s"%`filenames`)
+  try:
+    comp = compositing.compositing()
+    comp.filenames.extend(filenames)
+    comp.detectors.extend(detectors)
+    comp.reprocess_quality_field = reprocess_quality_field
+    comp.ignore_malfunc = ignore_malfunc
     
+    objects, nodes = comp.fetch_objects()
+    
+    objects, algorithm = comp.quality_control_objects(objects)
+
+    status = True
+    try:
+      objects = store_temporary_files(objects)
+    except Exception, e:
+      status = False
+    result = (objects.keys(), status, nodes)
+  except Exception, e:
+    logger.exception("Failed to run quality control")
+  return result
+
 if __name__=="__main__":
   comp = compositing.compositing()
   comp.filenames=["/projects/baltrad/rave/test/pytest/fixtures/pvol_seang_20090501T120000Z.h5",

@@ -149,6 +149,11 @@ RAVE_TILE_REGISTRY=os.path.join(RAVEETC, 'rave_tile_registry.xml')
 # left for handling the result.
 RAVE_TILE_COMPOSITING_PROCESSES=None
 
+# Max number of process to use when executing the quality controls. Default is 4 but this
+# should probably be tuned depending on how many files that needs to be quality controled
+# and number of available cores. 
+RAVE_QUALITY_CONTROL_PROCESSES=4
+
 # If the quality fields should be reprocessed or not if the input already contains a relevant how/task
 # quality field. 
 RAVE_PGF_QUALITY_FIELD_REPROCESSING=False
