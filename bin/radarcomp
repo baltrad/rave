@@ -74,10 +74,17 @@ def main(options):
   if not options.area is None and options.noMultiprocessing is None:
     if rave_tile_registry.has_tiled_area(options.area):
       preprocess_qc = False
+      mp_process_qc = False
+      mp_process_qc_split_evenly = False
       if options.preprocess_qc:
         preprocess_qc = True
-      comp = tiled_compositing(comp, preprocess_qc)
-  
+      if options.preprocess_qc_mp:
+        preprocess_qc = True
+        mp_process_qc = True
+      if options.mp_process_qc_split_evenly:
+        mp_process_qc_split_evenly = True
+      comp = tiled_compositing(comp, preprocess_qc, mp_process_qc, mp_process_qc_split_evenly)
+      comp.number_of_quality_control_processes = options.number_of_quality_control_processes
   result = comp.generate(options.date, options.time, options.area)
   if options.imageType:
     result.objectType = _rave.Rave_ObjectType_IMAGE 
@@ -190,6 +197,15 @@ if __name__ == "__main__":
   
   parser.add_option("--preprocess_qc", action="store_true", dest="preprocess_qc",
                     help="Preprocesses the quality fields and stores these as temporary files. This is really only useful when performing tiled processing.")
+  
+  parser.add_option("--preprocess_qc_mp", action="store_true", dest="preprocess_qc_mp",
+                    help="Preprocesses the quality fields in the provided files and uses multiprocessing to do this.")
+  
+  parser.add_option("--number_of_quality_control_processes", dest="number_of_quality_control_processes", default="4", type="int",
+                    help="Number of processes that should be used for performing the quality control. Default 4. Requires that --preprocess_qc_mp is used.")
+  
+  parser.add_option("--mp_process_qc_split_evenly", action="store_true", dest="mp_process_qc_split_evenly",
+                    help="Splits the incomming files evenly among the quality control processes. Requires that --preprocess_qc_mp is used.")
   
   parser.add_option("--reprocess_quality_fields", action="store_true", dest="reprocess_quality_fields",
                     help="Reprocessed the quality fields even if they already exist in the object.")

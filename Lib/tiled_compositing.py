@@ -181,12 +181,22 @@ class tiled_compositing(object):
   ##
   # Constructor
   # @param c: the compositing instance
-  def __init__(self, c, preprocess_qc=False):
+  # @param preprocess_qc: If the ingoing files should be preprocessed or not before
+  # they are sent to the tile generators (might improve performance in some cases)
+  # @param mp_process_qc: If preprocess_qc is True, then this flag will send the
+  # files to separate processes for quality control execution
+  # @param mp_process_qc_split_evenly: Of mp_process_qc is True, then this flag will
+  # indicate if the incomming files should be splitted evenly between the
+  # processes. If false, then one file at a time are handled.
+  #
+  def __init__(self, c, preprocess_qc=False, mp_process_qc=False, mp_process_qc_split_evenly=False):
     self.compositing = c
     # If preprocess_qc = False, then the tile generators will take care of the preprocessing of the tiles
     # otherwise, the files will be qc-processed, written to disk and these filepaths will be sent to the
     # tile generators instead. Might or might not improve performance depending on file I/O etc..
-    self.preprocess_qc = preprocess_qc     
+    self.preprocess_qc = preprocess_qc
+    self.mp_process_qc = mp_process_qc
+    self.mp_process_qc_split_evenly = mp_process_qc_split_evenly
     self.verbose = c.verbose
     self.logger = logger
     self.file_objects = {}
@@ -228,13 +238,28 @@ class tiled_compositing(object):
   def _fetch_file_objects_mp(self):
     self.logger.info("MP Fetching (and processing) %d files for tiled compositing"%len(self.compositing.filenames))
     args = []
-    self._do_remove_temporary_files=False
-    for fname in self.compositing.filenames:
-      args.append(([fname], self.compositing.detectors, self.compositing.reprocess_quality_field, self.compositing.ignore_malfunc))
-
-    nobjects = len(args)    
     ncpucores = multiprocessing.cpu_count()
 
+    self._do_remove_temporary_files=False
+    # We want to determine how many processes we are going to get prior
+    # splitting the files
+    #
+    if self.mp_process_qc_split_evenly and self.number_of_quality_control_processes > 0:
+      nobjects = len(self.compositing.filenames)
+      nrfiles = len(self.compositing.filenames)
+      nrprocesses = self.number_of_quality_control_processes
+      if nrprocesses > ncpucores:
+        nrprocesses = ncpucores
+      if nrprocesses == ncpucores and ncpucores > 1:
+        nrprocesses = nrprocesses - 1
+      nrslices = nrfiles / nrprocesses
+      for x in range(0, nrfiles, nrslices):
+        args.append((self.compositing.filenames[x:x+nrslices], self.compositing.detectors, self.compositing.reprocess_quality_field, self.compositing.ignore_malfunc))
+    else:
+      for fname in self.compositing.filenames:
+        args.append(([fname], self.compositing.detectors, self.compositing.reprocess_quality_field, self.compositing.ignore_malfunc))
+      
+    nobjects = len(args)
     nrprocesses = nobjects
     if nrprocesses > self.number_of_quality_control_processes:
       nrprocesses = self.number_of_quality_control_processes
@@ -266,6 +291,7 @@ class tiled_compositing(object):
     self.logger.info("MP Fetching (and processing) %d files for tiled compositing"%len(self.compositing.filenames))
     
     return (result, nodes)
+
 
   ##
   # Creates the composite arguments that should be sent to one tiler.
@@ -377,11 +403,13 @@ class tiled_compositing(object):
   def generate(self, dd, dt, area=None):
     pyarea = my_area_registry.getarea(area)
 
-    self.file_objects, self.nodes = self._fetch_file_objects()
-    #self.file_objects, self.nodes = self._fetch_file_objects_mp()
+    if self.preprocess_qc and self.mp_process_qc and self.number_of_quality_control_processes > 1:
+      self.file_objects, self.nodes = self._fetch_file_objects_mp()
+    else:
+      self.file_objects, self.nodes = self._fetch_file_objects()
 
     args = self._create_arguments(dd, dt, pyarea)
-    
+
     results = []
     
     ntiles = len(args)
@@ -510,7 +538,8 @@ if __name__=="__main__":
                   "/projects/baltrad/baltrad-test/fixtures4/sevar_pvol_20140220T1300Z.h5",
                   "/projects/baltrad/baltrad-test/fixtures4/sevil_pvol_20140220T1300Z.h5"]
   
-  tc = tiled_compositing(comp)
+  #, preprocess_qc=False, mp_process_qc=False, mp_process_qc_split_evenly=False
+  tc = tiled_compositing(comp,True, True, True)
   #tc.generate("20090501","120000", "swegmaps_2000")
   tc.generate("20090501","120000", "bltgmaps_4000")
   #execute_tiled_compositing(comp, my_area_registry.getarea("swegmaps_2000"))
