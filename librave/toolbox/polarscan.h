@@ -755,6 +755,14 @@ int PolarScan_addAttribute(PolarScan_t* scan, RaveAttribute_t* attribute);
 RaveAttribute_t* PolarScan_getAttribute(PolarScan_t* scan, const char* name);
 
 /**
+ * Returns if the specified attribute exists.
+ * @param[in] scan - self
+ * @param[in] name - the name of the attribute
+ * @returns 1 if attribute exists, otherwise 0
+ */
+int PolarScan_hasAttribute(PolarScan_t* scan, const char* name);
+
+/**
  * Returns a list of attribute names. Release with \@ref #RaveList_freeAndDestroy.
  * @param[in] scan - self
  * @returns a list of attribute names

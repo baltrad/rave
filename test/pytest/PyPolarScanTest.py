@@ -1149,6 +1149,11 @@ class PyPolarScanTest(unittest.TestCase):
     self.assertEquals(True, obj.hasAttribute("how/something"))
     self.assertEquals(True, obj.hasAttribute("how/something2"))
     self.assertEquals(False, obj.hasAttribute("how/something3"))
+    try:
+      obj.hasAttribute(None)
+      self.fail("Expected TypeError")
+    except TypeError, e:
+      pass
     
   def test_getQualityFieldByHowTask(self):
     obj = _polarscan.new()

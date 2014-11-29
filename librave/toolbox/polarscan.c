@@ -1211,6 +1211,12 @@ RaveAttribute_t* PolarScan_getAttribute(PolarScan_t* scan, const char* name)
   return (RaveAttribute_t*)RaveObjectHashTable_get(scan->attrs, name);
 }
 
+int PolarScan_hasAttribute(PolarScan_t* scan, const char* name)
+{
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+  return RaveObjectHashTable_exists(scan->attrs, name);
+}
+
 RaveList_t* PolarScan_getAttributeNames(PolarScan_t* scan)
 {
   RAVE_ASSERT((scan != NULL), "scan == NULL");

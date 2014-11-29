@@ -797,6 +797,22 @@ done:
 }
 
 /**
+ * Returns if there exists an attribute with the specified name
+ * @param[in] self - this instance
+ * @param[in] args - name
+ * @returns True if attribute exists otherwise False
+ */
+static PyObject* _pypolarscan_hasAttribute(PyPolarScan* self, PyObject* args)
+{
+  char* name = NULL;
+  PyObject* result = NULL;
+  if (!PyArg_ParseTuple(args, "s", &name)) {
+    return NULL;
+  }
+  return PyBool_FromLong((long)PolarScan_hasAttribute(self->scan, name));
+}
+
+/**
  * Returns a list of attribute names
  * @param[in] self - this instance
  * @param[in] args - N/A
@@ -835,28 +851,6 @@ fail:
   RaveList_freeAndDestroy(&list);
   Py_XDECREF(result);
   return NULL;
-}
-
-/**
- * Returns if the attribute exists in the scan or not
- * @param[in] self - this instance
- * @param[in] args - N/A
- * @returns a list of attribute names
- */
-static PyObject* _pypolarscan_hasAttribute(PyPolarScan* self, PyObject* args)
-{
-  RaveAttribute_t* attribute = NULL;
-  char* name = NULL;
-  long result = 0;
-  if (!PyArg_ParseTuple(args, "s", &name)) {
-    return NULL;
-  }
-  attribute = PolarScan_getAttribute(self->scan, name);
-  if (attribute != NULL) {
-    result = 1;
-  }
-  RAVE_OBJECT_RELEASE(attribute);
-  return PyBool_FromLong(result);
 }
 
 /**
@@ -1154,6 +1148,7 @@ static struct PyMethodDef _pypolarscan_methods[] =
   {"getLonLatFromIndex", (PyCFunction) _pypolarscan_getLonLatFromIndex, 1},
   {"addAttribute", (PyCFunction) _pypolarscan_addAttribute, 1},
   {"getAttribute", (PyCFunction) _pypolarscan_getAttribute, 1},
+  {"hasAttribute", (PyCFunction) _pypolarscan_hasAttribute, 1},
   {"getAttributeNames", (PyCFunction) _pypolarscan_getAttributeNames, 1},
   {"hasAttribute", (PyCFunction) _pypolarscan_hasAttribute, 1},
   {"isValid", (PyCFunction) _pypolarscan_isValid, 1},

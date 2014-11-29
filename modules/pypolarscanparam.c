@@ -428,6 +428,22 @@ done:
   return result;
 }
 
+/**
+ * Returns if there exists an attribute with the specified name
+ * @param[in] self - this instance
+ * @param[in] args - name
+ * @returns True if attribute exists otherwise False
+ */
+static PyObject* _pypolarscanparam_hasAttribute(PyPolarScanParam* self, PyObject* args)
+{
+  char* name = NULL;
+  PyObject* result = NULL;
+  if (!PyArg_ParseTuple(args, "s", &name)) {
+    return NULL;
+  }
+  return PyBool_FromLong((long)PolarScanParam_hasAttribute(self->scanparam, name));
+}
+
 static PyObject* _pypolarscanparam_getAttributeNames(PyPolarScanParam* self, PyObject* args)
 {
   RaveList_t* list = NULL;
@@ -613,6 +629,7 @@ static struct PyMethodDef _pypolarscanparam_methods[] =
   {"setValue", (PyCFunction) _pypolarscanparam_setValue, 1},
   {"addAttribute", (PyCFunction) _pypolarscanparam_addAttribute, 1},
   {"getAttribute", (PyCFunction) _pypolarscanparam_getAttribute, 1},
+  {"hasAttribute", (PyCFunction) _pypolarscanparam_hasAttribute, 1},
   {"getAttributeNames", (PyCFunction) _pypolarscanparam_getAttributeNames, 1},
   {"addQualityField", (PyCFunction) _pypolarscanparam_addQualityField, 1},
   {"getNumberOfQualityFields", (PyCFunction) _pypolarscanparam_getNumberOfQualityFields, 1},

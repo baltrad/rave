@@ -213,6 +213,14 @@ RaveAttribute_t* PolarScanParam_getAttribute(PolarScanParam_t* scanparam,
   const char* name);
 
 /**
+ * Returns if the specified attribute exists.
+ * @param[in] scan - self
+ * @param[in] name - the name of the attribute
+ * @returns 1 if attribute exists, otherwise 0
+ */
+int PolarScanParam_hasAttribute(PolarScanParam_t* scanparam, const char* name);
+
+/**
  * Returns a list of attribute names. Release with \@ref #RaveList_freeAndDestroy.
  * @param[in] scanparam - self
  * @returns a list of attribute names

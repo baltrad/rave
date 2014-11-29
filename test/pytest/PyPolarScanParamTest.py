@@ -345,6 +345,24 @@ class PyPolarScanParamTest(unittest.TestCase):
     self.assertEquals(2, obj.getAttribute("what/value"))
     self.assertEquals("1.0, 2.0, 3.0", obj.getAttribute("where/value"))
 
+  def test_hasAttribute(self):
+    obj = _polarscanparam.new()
+    obj.addAttribute("how/this", "ABC")
+    obj.addAttribute("how/that", 1.0)
+    obj.addAttribute("what/value", 2)
+    obj.addAttribute("where/value", "1.0, 2.0, 3.0")
+
+    self.assertTrue(obj.hasAttribute("how/this"))
+    self.assertTrue(obj.hasAttribute("how/that"))
+    self.assertTrue(obj.hasAttribute("what/value"))
+    self.assertTrue(obj.hasAttribute("where/value"))
+    self.assertFalse(obj.hasAttribute("how/thisandthat"))
+    try:
+      obj.hasAttribute(None)
+      self.fail("Expected TypeError")
+    except TypeError,e:
+      pass
+
   def test_attributes_nonexisting(self):
     obj = _polarscanparam.new()
     obj.addAttribute("how/this", "ABC")
