@@ -69,9 +69,9 @@ MASK = pyinotify.IN_CLOSE_WRITE
 
 ## Determines whether the daemon is running, based on the PID in the PIDFILE.
 # @return True if the daemon is running, otherwise False
-def alive():
-    if os.path.isfile(PIDFILE):
-        fd = open(PIDFILE)
+def alive(pidfile):
+    if os.path.isfile(pidfile):
+        fd = open(pidfile)
         c = fd.read()
         fd.close()
         try:
@@ -84,17 +84,17 @@ def alive():
 
 
 ## Kills the daemon, first softly, then hard if necessary.
-def killme():
+def killme(pidfile):
     import signal
     try:
-        fd = open(PIDFILE)
+        fd = open(options.pid_file)
         c = fd.read()
         fd.close()
         try:
             os.kill(int(c), signal.SIGHUP)
         except:
             os.kill(int(c), signal.SIGKILL)
-        os.remove(PIDFILE)
+        os.remove(options.pid_file)
     except:
         print "Could not kill daemon. Check pid."
 
@@ -244,22 +244,22 @@ if __name__ == "__main__":
                       help="Remove files that arrive in the input directory.")
 
     parser.add_option("-k", "--kill",  action="store_true", dest="kill",
-                      help="Attempt to kill a running daemon. Will only work with a PID file in the default location.")
+                      help="Attempt to kill a running daemon.")
 
     (options, args) = parser.parse_args()
 
     if not options.kill:
-        ALIVE = alive()
-        if not ALIVE and os.path.isfile(PIDFILE):
-            print "n2b is not alive but PIDFILE exists, removing."
-            os.remove(PIFDILE)
+        ALIVE = alive(options.pid_file)
+        if not ALIVE and os.path.isfile(options.pid_file):
+            print "n2b is not alive but pid file %s exists, removing." % options.pid_file
+            os.remove(options.pid_file)
         elif ALIVE:
             print "n2b is already running."
             sys.exit()
 
     # Shut down a previous incarnation of this daemon.
     if options.kill:
-        killme()
+        killme(options.pid_file)
         sys.exit()
 
     # Start the logging system
