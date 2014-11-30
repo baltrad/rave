@@ -146,13 +146,14 @@ def MAIN(in_file, janitor=False, uri=DEX_SPOE):
     Assume that in_file contains an absolute path.
     """
     import _pyhl
-
+    
     if os.path.isfile(in_file):
         if os.path.getsize(in_file) != 0:
             if _pyhl.is_file_hdf5(in_file):
 
                 if janitor:
                     pyinotify.log.info("Janitor: %s" % in_file)
+                    os.remove(in_file)
                 else:
                     try:
                         import BaltradFrame, odim_source
