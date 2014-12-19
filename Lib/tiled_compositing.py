@@ -439,7 +439,8 @@ class tiled_compositing(object):
       for v in results[0]:
         o = _raveio.open(v[1]).object
         if _cartesianvolume.isCartesianVolume(o):
-          o = o.getImage(0)        
+          o = o.getImage(0)
+          o.objectType = _rave.Rave_ObjectType_COMP
         objects.append(o)
         
       t = _transform.new()
