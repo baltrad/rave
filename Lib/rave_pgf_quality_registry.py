@@ -72,7 +72,16 @@ def init():
 #
 def add_plugin(name, plug):
   _registry[name] = plug
-   
+
+##
+# Removes a plugin from the registry. Used for debugging
+# and testing purposes
+#
+def remove_plugin(name):
+  try:
+    del _registry[name]
+  except:
+    pass   
 
 ##
 # Load the registry

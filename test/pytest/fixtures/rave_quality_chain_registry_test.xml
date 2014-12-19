@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<rave-quality-chain-registry>
+	<chain source="sekkr" category="insect_detection">
+		<link ref="rave-overshooting">
+			<arguments>
+				<argument name="something">some sort of value</argument>
+			</arguments>
+		</link>
+		<link ref="radvol-spike" />
+	</chain>
+	<chain source="sekkr" category="qpe">
+		<link ref="rave-overshooting" />
+	</chain>
+	<chain source="selek" category="insect_detection">
+		<link ref="rave-overshooting" />
+		<link ref="radvol-att" />
+	</chain>
+</rave-quality-chain-registry>

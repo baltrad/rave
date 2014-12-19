@@ -40,9 +40,10 @@ class dealias_plugin(rave_quality_plugin):
   ##
   # @param obj: A RAVE object that should be processed.
   # @param reprocess_quality_flag: Not used
+  # @param arguments: Not used
   # @return: The modified object if this quality plugin has performed changes 
   # to the object.
-  def process(self, obj, reprocess_quality_flag=True):
+  def process(self, obj, reprocess_quality_flag=True, arguments=None):
     try:
       import _dealias
       _dealias.dealias(obj)

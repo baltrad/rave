@@ -89,8 +89,9 @@ class rave_qitotal_quality_plugin(rave_quality_plugin):
   ##
   # @param obj: A rave object that should be processed, bogus in this case.
   # @param reprocess_quality_flag: Not used, we always want to reprocess qi-total
+  # @param arguments: Not used
   # @return: obj - without doing anything to it
-  def process(self, obj, reprocess_quality_flag=True):
+  def process(self, obj, reprocess_quality_flag=True, arguments=None):
     _rave.setDebugLevel(_rave.Debug_RAVE_DEBUG)
     objinfo = self.get_object_information(obj)
     

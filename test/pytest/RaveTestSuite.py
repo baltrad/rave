@@ -24,6 +24,7 @@ Test suite for rave
 @date 2009-10-12
 '''
 import unittest, os
+
 from RaveTest import *
 from PyPolarVolumeTest import *
 from PyPolarScanTest import *
@@ -58,6 +59,13 @@ from rave_radvol_quality_plugin_test import *
 from qitotal_options_test import *
 from rave_qitotal_quality_plugin_test import *
 from rave_pgf_quality_registry_mgr_test import *
+from rave_quality_chain_registry_test import *
+try:
+  import mock
+  if mock.__version__ == '1.0.1':
+    from rave_quality_chain_plugin_test import *
+except:
+  pass
 from area_registry_test import *
 from PyDealiasTest import *
 from PyRadvolTest import *

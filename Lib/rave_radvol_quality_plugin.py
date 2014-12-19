@@ -58,9 +58,11 @@ class radvol_att_plugin(rave_quality_plugin):
   
   ##
   # @param obj: A RAVE object that should be processed.
+  # @param reprocess_quality_flag: If quality flag should be reprocessed or not
+  # @param arguments: Not used
   # @return: The modified object if this quality plugin has performed changes 
   # to the object.
-  def process(self, obj, reprocess_quality_flag=True):
+  def process(self, obj, reprocess_quality_flag=True, arguments=None):
     try:
       import _radvol, rave_radvol_realtime
       rpars = rave_radvol_realtime.get_options(obj)
@@ -84,9 +86,11 @@ class radvol_broad_plugin(rave_quality_plugin):
   
   ##
   # @param obj: A RAVE object that should be processed.
+  # @param reprocess_quality_flag: If quality flag should be reprocessed or not
+  # @param arguments: Not used
   # @return: The modified object if this quality plugin has performed changes 
   # to the object.
-  def process(self, obj, reprocess_quality_flag=True):
+  def process(self, obj, reprocess_quality_flag=True, arguments=None):
     try:
       import _radvol, rave_radvol_realtime
       rpars = rave_radvol_realtime.get_options(obj)
@@ -110,9 +114,11 @@ class radvol_nmet_plugin(rave_quality_plugin):
   
   ##
   # @param obj: A RAVE object that should be processed.
+  # @param reprocess_quality_flag: If quality flag should be reprocessed or not
+  # @param arguments: Not used
   # @return: The modified object if this quality plugin has performed changes 
   # to the object.
-  def process(self, obj, reprocess_quality_flag=True):
+  def process(self, obj, reprocess_quality_flag=True, arguments=None):
     try:
       import _radvol, rave_radvol_realtime
       rpars = rave_radvol_realtime.get_options(obj)
@@ -136,9 +142,11 @@ class radvol_speck_plugin(rave_quality_plugin):
   
   ##
   # @param obj: A RAVE object that should be processed.
+  # @param reprocess_quality_flag: If quality flag should be reprocessed or not
+  # @param arguments: Not used
   # @return: The modified object if this quality plugin has performed changes 
   # to the object.
-  def process(self, obj, reprocess_quality_flag=True):
+  def process(self, obj, reprocess_quality_flag=True, arguments=None):
     try:
       import _radvol, rave_radvol_realtime
       rpars = rave_radvol_realtime.get_options(obj)
@@ -162,9 +170,11 @@ class radvol_spike_plugin(rave_quality_plugin):
   
   ##
   # @param obj: A RAVE object that should be processed.
+  # @param reprocess_quality_flag: If quality flag should be reprocessed or not
+  # @param arguments: Not used
   # @return: The modified object if this quality plugin has performed changes 
   # to the object.
-  def process(self, obj, reprocess_quality_flag=True):
+  def process(self, obj, reprocess_quality_flag=True, arguments=None):
     try:
       import _radvol, rave_radvol_realtime
       rpars = rave_radvol_realtime.get_options(obj)
