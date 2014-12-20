@@ -51,7 +51,6 @@ from PyDetectionRangeTest import *
 from PyRaveTest import *
 from PyQITotalTest import *
 from PyPooCompositeAlgorithmTest import *
-from rave_pgf_volume_plugin_test import *
 from rave_overshooting_quality_plugin_test import *
 from rave_distance_quality_plugin_test import *
 from rave_dealias_quality_plugin_test import *
@@ -60,12 +59,16 @@ from qitotal_options_test import *
 from rave_qitotal_quality_plugin_test import *
 from rave_pgf_quality_registry_mgr_test import *
 from rave_quality_chain_registry_test import *
+
 try:
   import mock
   if mock.__version__ == '1.0.1':
     from rave_quality_chain_plugin_test import *
+    from compositing_test import *
+    from rave_pgf_volume_plugin_test import *
 except:
   pass
+
 from area_registry_test import *
 from PyDealiasTest import *
 from PyRadvolTest import *
@@ -73,7 +76,6 @@ from PyCtfilterTest import *
 from PyPgfQtoolsTest import *
 from PyPgfLoggerTest import *
 from rave_util_test import *
-from compositing_test import *
 
 #
 # Unless RAVE_TESTDB_URI has been set we don't want to run the dom db tests

@@ -91,6 +91,20 @@ def generateVolume(files, args):
   odim_source.CheckSource(volume)    # ... so check it!
   return volume
 
+##
+# Performs a quality control sequence on a volume
+# @param volume: the volume to perform the quality controls on
+# @param detectors: the detectors that should be run on the volume
+#
+def perform_quality_control(volume, detectors):
+  for d in detectors:
+    p = rave_pgf_quality_registry.get_plugin(d)
+    if p != None:
+      volume = p.process(volume)
+      if isinstance(volume,tuple):
+        volume, algorithm = volume[0],volume[1]
+  return volume
+      
 ## Creates a volume
 #@param files the list of files to be used for generating the volume
 #@param arguments the arguments defining the volume
@@ -107,10 +121,7 @@ def generate(files, arguments):
   else:
       detectors = []
 
-  for d in detectors:
-    p = rave_pgf_quality_registry.get_plugin(d)
-    if p != None:
-      volume = p.process(volume)
+  volume = perform_quality_control(volume, detectors)
 
   ios = _raveio.new()
   ios.object = volume

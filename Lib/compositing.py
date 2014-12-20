@@ -268,7 +268,11 @@ class compositing(object):
         p = rave_pgf_quality_registry.get_plugin(d)
         if p != None:
           obj = p.process(obj, self.reprocess_quality_field)
-          na = p.algorithm()
+          na = None
+          if isinstance(obj, tuple):
+            obj,na = obj[0],obj[1]
+          if na is None:
+            na = p.algorithm()
           if algorithm == None and na != None: # Try to get the generator algorithm != None 
             algorithm = na
       result[k] = obj

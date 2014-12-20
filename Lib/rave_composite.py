@@ -90,7 +90,11 @@ def generate(in_objects, **args):
       p = rave_pgf_quality_registry.get_plugin(d)
       if p != None:
         obj = p.process(obj)
-        na = p.algorithm()
+        na = None
+        if isinstance(obj, tuple):
+          obj,na = obj[0],obj[1]
+        if na is None:
+          na = p.algorithm()
         if generator.algorithm == None and na != None: # Try to get the generator algorithm != None 
           generator.algorithm = na
 
