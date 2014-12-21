@@ -91,14 +91,18 @@ class NotifierListener(pyinotify.ProcessEvent):
   def process_IN_CLOSE_WRITE(self, event):
     if self.logger != None:
       self.logger.debug("process_IN_CLOSE_WRITE")
-    self.importer.import_file(event.pathname)
+    if event.pathname != None and not os.path.basename(event.pathname).startswith("."):
+      self.logger.info("IN_CLOSE_WRITE: Importing file %s"%event.pathname)
+      self.importer.import_file(event.pathname)
 
   ## Inherited from pyinotify. Reacts on renaming.
   # @param event object containg path
   def process_IN_MOVED_TO(self, event):
     if self.logger != None:
       self.logger.debug("process_IN_MOVED_TO")
-    self.importer.import_file(event.pathname)
+    if event.pathname != None and not os.path.basename(event.pathname).startswith("."):
+      self.logger.info("IN_MOVED_TO: Importing file %s"%event.pathname)
+      self.importer.import_file(event.pathname)
 
 if __name__ == "__main__":
   optlist = []

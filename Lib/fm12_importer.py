@@ -151,8 +151,14 @@ class fm12_importer(object):
 
   def import_file(self, fname):
     if os.path.isfile(fname):
-      self._logger.info("Trying to import file with size %d"%os.path.getsize(fname))
-      if os.path.getsize(fname) != 0:
+      fsize=0
+      try:
+        fsize = os.path.getsize(fname)
+      except:
+        pass
+      
+      self._logger.info("Trying to import file with size %d"%fsize)
+      if fsize != 0:
         self._import_file_internal(fname)
       try:
         if self.janitor:
