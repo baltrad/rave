@@ -122,7 +122,7 @@ double RaveVprCorrection_getSCDistanceLimit(RaveVprCorrection_t* self)
 
 RaveField_t* RaveVprCorrectionInternal_createIndices(RaveVprCorrection_t* self, PolarVolume_t* pvol)
 {
-  long nscans = 0, i = 0, j = 0, k = 0, lnbins = 0;
+  long nscans = 0, /*i = 0, j = 0, k = 0, */lnbins = 0;
   RaveField_t* indices = NULL;
   RaveField_t* result = NULL;
 

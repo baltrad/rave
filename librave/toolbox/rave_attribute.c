@@ -31,6 +31,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_transform.h"
 #include "raveobject_hashtable.h"
 #include "rave_data2d.h"
+#include <errno.h>
 
 /**
  * This is the default parameter value that should be used when working
@@ -475,6 +476,22 @@ RaveAttribute_t* RaveAttributeHelp_createDouble(const char* name, double value)
   RaveAttribute_t* result = RaveAttributeHelp_createNamedAttribute(name);
   if (result != NULL) {
     RaveAttribute_setDouble(result, value);
+  }
+  return result;
+}
+
+RaveAttribute_t* RaveAttributeHelp_createDoubleFromString(const char* name, const char* value)
+{
+  double d = 0.0;
+  RaveAttribute_t* result = NULL;
+  d = strtod(value, NULL);
+  if (d == 0.0 && errno == ERANGE) {
+    RAVE_WARNING1("Value %s could not be parsed into double\n", value);
+    return NULL;
+  }
+  result = RaveAttributeHelp_createNamedAttribute(name);
+  if (result != NULL) {
+    RaveAttribute_setDouble(result, d);
   }
   return result;
 }

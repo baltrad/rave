@@ -198,6 +198,14 @@ RaveAttribute_t* RaveAttributeHelp_createLong(const char* name, long value);
 RaveAttribute_t* RaveAttributeHelp_createDouble(const char* name, double value);
 
 /**
+ * Creates a double rave attribute from a string representation of the double value
+ * @param[in] name - the name of the attribute
+ * @param[in] value - the double
+ * @returns the attribute on success otherwise NULL
+ */
+RaveAttribute_t* RaveAttributeHelp_createDoubleFromString(const char* name, const char* value);
+
+/**
  * Creates a string rave attribute.
  * @param[in] name - the name of the attribute
  * @param[in] value - the string

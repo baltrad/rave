@@ -24,7 +24,6 @@ Test suite for rave
 @date 2009-10-12
 '''
 import unittest, os
-
 from RaveTest import *
 from PyPolarVolumeTest import *
 from PyPolarScanTest import *

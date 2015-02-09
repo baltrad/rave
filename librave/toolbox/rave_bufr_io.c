@@ -44,6 +44,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include <time.h>
 #include <zlib.h>
 #include <float.h>
+#include <ctype.h>
 #include "rave_config.h"
 
 /* In order to allow concurrent use we can use pthread if we are able to.
@@ -116,6 +117,7 @@ static int RaveBufrInternal_hasDescriptor(dd* dds, int ndescs, int f, int x, int
   int result = 0;
   int i = 0;
 
+
   if (dds == NULL || ndescs <= 0) {
     goto done;
   }
@@ -144,7 +146,8 @@ static RaveCoreObject* RaveBufrIOInternal_createRaveObject(dd* dds, int ndescs)
 
   if (RaveBufrInternal_hasDescriptor(dds, ndescs, 3,21,204) &&
       RaveBufrInternal_hasDescriptor(dds, ndescs, 3,1,31) &&
-      RaveBufrInternal_hasDescriptor(dds, ndescs, 3,21,203)) {
+      (RaveBufrInternal_hasDescriptor(dds, ndescs, 3,21,203) ||
+       RaveBufrInternal_hasDescriptor(dds, ndescs, 3,21,207))) {
     obj = RAVE_OBJECT_NEW(&PolarVolume_TYPE);
   } else {
     RAVE_ERROR0("Does not reckognize BUFR descriptor combination");
@@ -209,6 +212,172 @@ done:
   return (varfl*)result;
 }
 
+static int RaveBufrIOInternal_addHowToObject(varfl* vv, int* ii, void* kvalue,
+  int (*RaveBufrIOInternal_addAttributeCB)(void*, RaveAttribute_t*)) {
+  int k, n, m, i = *ii;
+  int result = 0;
+  RaveAttribute_t* attr = NULL;
+  n = vv[i++];
+  for (m = 0; m < n && result == 0; ++m) {
+    char* s1 = calloc(20, sizeof(char));
+    char* s2 = calloc(16, sizeof(char));
+    char* ts1 = NULL;
+    strcpy(s1,"how/");
+    for (k = 4; k < 20; ++k) {
+      s1[k] = vv[i++];
+    }
+    ts1 = &s1[19];
+    while (isspace(*ts1)) {
+      *ts1 = '\0';
+      ts1--;
+    }
+    for (k = 0; k < 16; ++k) {
+      s2[k] = vv[i++];
+    }
+    attr = RaveAttributeHelp_createString(s1, s2);
+    if (attr == NULL || !RaveBufrIOInternal_addAttributeCB(kvalue, attr)) {
+      result = 1;
+    }
+    RAVE_OBJECT_RELEASE(attr);
+    free(s1);
+    free(s2);
+  }
+  n = vv[i++];
+  for (m = 0; m < n && result == 0; ++m) {
+    char * s1 = calloc(20, sizeof(char));
+    char * s2 = calloc(16, sizeof(char));
+    char* ts1 = NULL;
+    strcpy(s1,"how/");
+    for (k = 4; k < 20; ++k) {
+      s1[k] = vv[i++];
+    }
+    ts1 = &s1[19];
+    while (isspace(*ts1)) {
+      *ts1 = '\0';
+      ts1--;
+    }
+
+    for (k = 0; k < 8; ++k) {
+      s2[k] = vv[i++];
+    }
+    attr = RaveAttributeHelp_createDoubleFromString(s1,s2);
+    if (attr == NULL || !RaveBufrIOInternal_addAttributeCB(kvalue, attr)) {
+      result = 1;
+    }
+    RAVE_OBJECT_RELEASE(attr);
+    free(s1);
+    free(s2);
+  }
+  *ii = i;
+  return result;
+}
+
+static int RaveBufrIOInternal_addAttributeToPolarVolume(void* kvalue, RaveAttribute_t* raveattr)
+{
+  return PolarVolume_addAttribute((PolarVolume_t*)kvalue, raveattr);
+}
+
+static int RaveBufrIOInternal_addAttributeToPolarScan(void* kvalue, RaveAttribute_t* raveattr)
+{
+  return PolarScan_addAttribute((PolarScan_t*)kvalue, raveattr);
+}
+
+static int RaveBufrIOInternal_addAttributeToPolarScanParam(void* kvalue, RaveAttribute_t* raveattr)
+{
+  return PolarScanParam_addAttribute((PolarScanParam_t*)kvalue, raveattr);
+}
+
+static void RaveBufrIOInternal_getDateTimeStrings(varfl* vv, int* ii, char* datestr, char* timestr) {
+  int year, month, day, hour, minute, second;
+  int i = *ii;
+  year = (int)vv[i++]; month = (int)vv[i++]; day = (int)vv[i++];
+  hour = (int)vv[i++]; minute = (int)vv[i++]; second = (int)vv[i++];
+  sprintf(datestr, "%04d%02d%02d", year, month, day);
+  sprintf(timestr, "%02d%02d%02d", hour, minute, second);
+  *ii = i;
+}
+
+static void RaveBufrIOInternal_getString(varfl* vv, int* ii, char* buff, int bufflen, int trimRight)
+{
+  int k = 0, i = *ii;
+  for (k = 0; k < bufflen; k++) {
+    buff[k] = vv[i++];
+  }
+  if (trimRight) {
+    k = bufflen - 1;
+    while (k >= 0 && isspace(buff[k])) {
+      buff[k] = '\0';
+      k--;
+    }
+  }
+  *ii = i;
+}
+
+static PolarScanParam_t* RaveBufrIOInternal_getOdim22Parameter(varfl* vv, int* ii, long nbins, long nrays)
+{
+  PolarScanParam_t* param = NULL;
+  PolarScanParam_t* result = NULL;
+  int i = *ii;
+  char quantity[6];
+  int compression = 0;
+
+  param = RAVE_OBJECT_NEW(&PolarScanParam_TYPE);
+  if (param == NULL) {
+    goto done;
+  }
+  RaveBufrIOInternal_addHowToObject(vv, &i, param, RaveBufrIOInternal_addAttributeToPolarScanParam);
+  RaveBufrIOInternal_getString(vv, &i, quantity, 6, 1);
+  if (!PolarScanParam_setQuantity(param, quantity)) {
+    goto done;
+  }
+  RAVE_DEBUG1("Quantity is: %s\n",quantity);
+  PolarScanParam_setGain(param, 1.0);
+  PolarScanParam_setOffset(param, 0.0);
+  PolarScanParam_setNodata(param, DBL_MAX);
+  PolarScanParam_setUndetect(param, -DBL_MAX);
+  compression = (int)vv[i++];
+  if (compression != 0) {
+    RAVE_ERROR0("BUFR file has not been stored with zlib compression");
+    goto done;
+  } else {
+    int k = 0, n = 0, j = 0, niter = 0;
+    unsigned char* tempo = NULL;
+    unsigned long ndata = 0;
+    varfl* data = NULL;
+    niter = vv[i++];
+    tempo = RAVE_MALLOC(niter * 65534 * sizeof(unsigned char));
+    if (tempo == NULL) {
+      goto done;
+    }
+    memset(tempo, 0, niter*65534*sizeof(unsigned char));
+    for (n = 0; n < niter; ++n) {
+      int ncomp = vv[i++];
+      for (k = 0; k < ncomp; ++k) {
+        tempo[j++] = (vv[i+k] == MISSVAL ? 255 : vv[i+k]);
+      }
+      i += ncomp;
+    }
+    data = RaveBufrIOInternal_decompress(tempo, j, nbins * nrays, &ndata);
+    RAVE_FREE(tempo);
+
+    if (data == NULL) {
+      goto done;
+    }
+
+    if (!PolarScanParam_setData(param, nbins, nrays, data, RaveDataType_DOUBLE)) {
+      RAVE_FREE(data);
+      goto done;
+    }
+
+    result = RAVE_OBJECT_COPY(param);
+    RAVE_FREE(data);
+  }
+done:
+  RAVE_OBJECT_RELEASE(param);
+  *ii = i;
+  return result;
+}
+
 /**
  * Callback function that handles polar volumes.
  * @param[in] val - val
@@ -244,6 +413,7 @@ static int RaveBufrIOInternal_polarVolumeCallback(varfl val, int ind)
       goto done;
     }
     vv = v->vals;
+
     if (bufr_check_fxy(d, 3, 1, 31)) {
       /* WMO block and station number */
       int i = 0;
@@ -396,10 +566,63 @@ static int RaveBufrIOInternal_polarVolumeCallback(varfl val, int ind)
         }
         RAVE_OBJECT_RELEASE(scan);
       }
+    } else if (bufr_check_fxy (d, 3, 21, 207)) {
+      int i = 0, nscans = 0;
+      int si = 0; /*scan index */
+      RaveBufrIOInternal_addHowToObject(vv, &i, raveObject, RaveBufrIOInternal_addAttributeToPolarVolume);
+
+      nscans = (int)vv[i++];
+      for (si = 0; si < nscans; si++) {
+        char datestr[16];
+        char timestr[16];
+        char product[6];
+        long nbins = 0, nrays = 0;
+        int nparams = 0;
+        int pi = 0; /* parameter index */
+
+        scan = RAVE_OBJECT_NEW(&PolarScan_TYPE);
+        if (scan == NULL) {
+          goto done;
+        }
+        RaveBufrIOInternal_addHowToObject(vv, &i, scan, RaveBufrIOInternal_addAttributeToPolarScan);
+        RaveBufrIOInternal_getDateTimeStrings(vv, &i, datestr, timestr);
+        if (!PolarScan_setStartDate(scan, datestr) ||
+            !PolarScan_setStartTime(scan, timestr)) {
+          goto done;
+        }
+        RaveBufrIOInternal_getDateTimeStrings(vv, &i, datestr, timestr);
+        if (!PolarScan_setEndDate(scan, datestr) ||
+            !PolarScan_setEndTime(scan, timestr)) {
+          goto done;
+        }
+        RaveBufrIOInternal_getString(vv, &i, product, 6, 1);
+        RAVE_DEBUG1("Product is: %s\n",product);
+        PolarScan_setElangle(scan, (double)vv[i++] * M_PI / 180.0);
+        nbins = (long)vv[i++];
+        PolarScan_setRscale(scan, (double)vv[i++]);
+        PolarScan_setRstart(scan, (double)vv[i++]);
+        nrays = (long)vv[i++];
+        PolarScan_setA1gate(scan, (long)vv[i++]);
+        nparams = (int)vv[i++];
+        for (pi = 0; pi < nparams; pi++) {
+          param = RaveBufrIOInternal_getOdim22Parameter(vv, &i, nbins, nrays);
+          if (param != NULL) {
+            if (!PolarScan_addParameter(scan, param)) {
+              goto done;
+            }
+          }
+          RAVE_OBJECT_RELEASE(param);
+        }
+        if (!PolarVolume_addScan((PolarVolume_t*)raveObject, scan)) {
+          goto done;
+        }
+        RAVE_OBJECT_RELEASE(scan);
+      }
     } else if (bufr_check_fxy (d, 3, 21, 204)) {
       int i = 0, j = 0;
       int nstations = (int)vv[i++] + 1;
       char* sources = NULL;
+
       if (nstations > 0) {
         sources = RAVE_MALLOC(sizeof(char) * nstations * 25);
         if (sources == NULL) {

@@ -52,6 +52,7 @@ class PyRaveIOTest(unittest.TestCase):
   FIXTURE_VP="fixtures/vp_fixture.h5"
   FIXTURE_BUFR_PVOL="fixtures/odim_polar_ref.bfr"
   FIXTURE_BUFR_COMPO="fixtures/odim_compo_ref.bfr"
+  FIXTURE_BUFR_2_2="fixtures/odim_2_2_ref.bfr"
   
   TEMPORARY_FILE="ravemodule_iotest.h5"
   TEMPORARY_FILE2="ravemodule_iotest2.h5"
@@ -1738,7 +1739,7 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEquals(1, numpy.shape(f2data)[1])
 
     
-  def XtestBufrTableDir(self):
+  def testBufrTableDir(self):
     obj = _raveio.new()
     self.assertEquals(None, obj.bufr_table_dir)
     obj.bufr_table_dir = "/tmp"
@@ -1746,7 +1747,7 @@ class PyRaveIOTest(unittest.TestCase):
     obj.bufr_table_dir = None
     self.assertEquals(None, obj.bufr_table_dir)
   
-  def XtestReadBufr(self):
+  def testReadBufr(self):
     if not _raveio.supports(_raveio.RaveIO_ODIM_FileFormat_BUFR):
       return
     result = _raveio.open(self.FIXTURE_BUFR_PVOL)
@@ -1788,7 +1789,40 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertTrue(param.undetect < -1e30)
     self.assertEquals(_rave.RaveDataType_DOUBLE, param.datatype)
 
-  def XtestReadBufrComposite(self):
+    
+  def testReadBufrOdim22(self):
+    import _rave
+    if not _raveio.supports(_raveio.RaveIO_ODIM_FileFormat_BUFR):
+      return
+
+    result = _raveio.open(self.FIXTURE_BUFR_2_2)
+    
+    self.assertEquals(_raveio.RaveIO_ODIM_FileFormat_BUFR, result.file_format);
+    self.assertAlmostEquals(-4.43, result.object.longitude * 180.0 / math.pi, 6)
+    self.assertAlmostEquals(48.460830, result.object.latitude * 180.0 / math.pi, 6)
+    self.assertAlmostEquals(100.0, result.object.height, 4)
+    self.assertEquals("WMO:07108", result.object.source)
+    self.assertEquals("20140630", result.object.date)
+    self.assertEquals("115801", result.object.time)
+    self.assertAlmostEqual(-71.0, result.object.getAttribute("how/radconstH"), 4)
+    self.assertAlmostEqual(-115.0, result.object.getAttribute("how/mindetect"), 4)
+    self.assertAlmostEqual(-60.2, result.object.getAttribute("how/NI"), 4)
+    self.assertAlmostEqual(-4.43, result.object.longitude * 180.0/math.pi, 4)
+    self.assertEquals(1, result.object.getNumberOfScans())
+    scan = result.object.getScan(0)
+    self.assertAlmostEquals(1.8, scan.elangle*180.0/math.pi,4)
+    self.assertAlmostEquals(1000.0, scan.rscale, 4)
+    self.assertAlmostEquals(500.0, scan.rstart, 4)
+    self.assertEquals(0, scan.a1gate)
+    self.assertEquals(3, len(scan.getParameterNames()))
+    dbzh = scan.getParameter("DBZH")
+    th = scan.getParameter("TH")
+    vrad = scan.getParameter("VRAD")
+    self.assertTrue(dbzh is not None)
+    self.assertTrue(th is not None)
+    self.assertTrue(vrad is not None)
+        
+  def testReadBufrComposite(self):
     if not _raveio.supports(_raveio.RaveIO_ODIM_FileFormat_BUFR):
       return
     try:
@@ -1796,8 +1830,7 @@ class PyRaveIOTest(unittest.TestCase):
       self.fail("Expected IOError")
     except IOError,e:
       pass
-
-    
+      
   def addGroupNode(self, nodelist, name):
     node = _pyhl.node(_pyhl.GROUP_ID, name)
     nodelist.addNode(node)

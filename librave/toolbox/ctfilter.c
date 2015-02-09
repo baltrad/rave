@@ -31,7 +31,7 @@ int ctFilter(Cartesian_t* product, Cartesian_t* ct) {
    RaveField_t* qfield = RAVE_OBJECT_NEW(&RaveField_TYPE);
    RaveAttribute_t* attr = NULL;
    RaveValueType rvt_p = RaveValueType_NODATA;
-   RaveValueType rvt_c = RaveValueType_NODATA;
+   /*RaveValueType rvt_c = RaveValueType_NODATA;*/
    Projection_t* pproj = NULL;
    Projection_t* cproj = NULL;
    const char* quantity;
@@ -82,7 +82,7 @@ int ctFilter(Cartesian_t* product, Cartesian_t* ct) {
 
          /* Out of bounds check */
          if ( (0<xc && xc<xsizec) && (0<yc && yc<ysizec) ) {
-           rvt_c = Cartesian_getValue(ct, xc, yc, &cval);
+           /*rvt_c = */Cartesian_getValue(ct, xc, yc, &cval);
 
            /* Same code as used in NORDRAD2.
 		          Probabilities of rain from Dybbroe et al. 2005 for AVHRR,
