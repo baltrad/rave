@@ -503,7 +503,7 @@ class rave_dom_db_test(unittest.TestCase):
     self.assertAlmostEquals(23.0, result[0].observation, 4)
     self.assertEquals(5, result[0].accumulation_period)
 
-  def delete_grapoints(self):
+  def test_delete_grapoints(self):
     gp1 = grapoint(_rave.RaveValueType_DATA, 1.0, 234, 10.0, 60.0, "20140416", "110000", 20.0, 2)
     gp2 = grapoint(_rave.RaveValueType_DATA, 2.0, 235, 11.0, 61.0, "20140416", "010000", 21.0, 3)
     gp3 = grapoint(_rave.RaveValueType_DATA, 3.0, 236, 12.0, 62.0, "20140415", "110000", 22.0, 4)

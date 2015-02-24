@@ -270,16 +270,21 @@ class rave_db(object):
       q = q.order_by(asc(gra_coefficient.date)).order_by(asc(gra_coefficient.time))
       return q.first()
   
-  def get_grapoints(self, dt):
+  def get_grapoints(self, dt, edt=None):
     with self.get_session() as s:
       q = s.query(grapoint).filter(grapoint.date + grapoint.time >= dt)
+      if edt is not None:
+        q = q.filter(grapoint.date + grapoint.time <= edt)
       q = q.order_by(asc(grapoint.date)).order_by(asc(grapoint.time))
       return q.all()
     
   def delete_grapoints(self, dt):
     with self.get_session() as s:
-      q = s.query(grapoint).filter(grapoint.date + grapoint.time >= dt)
-      return q.delete()
+      q = s.query(grapoint).filter(grapoint.date + grapoint.time <= dt)
+      pts = q.delete()
+      s.commit()
+      return pts
+      
   
 ##
 # Creates a rave db instance. This instance will be remembered for the same url which means

@@ -288,10 +288,13 @@ class compositing(object):
     objects={}
     for fname in self.filenames:
       obj = None
-      if self.ravebdb != None:
-        obj = self.ravebdb.get_rave_object(fname)
-      else:
-        obj = _raveio.open(fname).object
+      try:
+        if self.ravebdb != None:
+          obj = self.ravebdb.get_rave_object(fname)
+        else:
+          obj = _raveio.open(fname).object
+      except IOError, e:
+        self.logger.exception("Failed to open %s"%fname)
       
       if not _polarscan.isPolarScan(obj) and not _polarvolume.isPolarVolume(obj):
         self.logger.info("Input file %s is neither polar scan or volume, ignoring." % fname)
