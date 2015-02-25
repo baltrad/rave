@@ -188,7 +188,7 @@ def generate(files, arguments):
   
   matcher = obsmatcher.obsmatcher(db)
   
-  points = matcher.match(acrrproduct, offset=interval, quantity="ACRR", how_task=distancefield)
+  points = matcher.match(acrrproduct, acc_period=interval, quantity="ACRR", how_task=distancefield)
   if len(points) == 0:
     logger.warn("Could not find any matching observations")
     return None

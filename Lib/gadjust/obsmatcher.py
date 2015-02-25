@@ -48,10 +48,12 @@ class obsmatcher(object):
   ## Extract observations that are covered by the provided image. The image must have a distance quality field
   # and a relevant quantity (for example ACRR).
   # @param image - the cartesian image.
-  # @param offset - the hours back in time we are interested of
+  # @param acc_period - the hours back in time we are interested of
   # @param quantity - the quantity we want to use, default is ACRR
   # @param how_task - the name of the distance field. Default is se.smhi.composite.distance.radar
-  def match(self, image, offset=12, quantity="ACRR", how_task="se.smhi.composite.distance.radar"):
+  # @param offset_hours - as default matching is performed from nominal time until now, if offset_hours > 0 then matching is performed
+  # between nominal time and nominal time + offset_hours
+  def match(self, image, acc_period=12, quantity="ACRR", how_task="se.smhi.composite.distance.radar", offset_hours=0):
     ul,lr=image.getExtremeLonLatBoundaries()
     d = image.date
     t = image.time
@@ -59,6 +61,8 @@ class obsmatcher(object):
     
     sdt = datetime.datetime(int(d[:4]), int(d[4:6]), int(d[6:8]), int(t[0:2]), int(t[2:4]), int(t[4:6]))
     edt = datetime.datetime.now()
+    if offset_hours > 0:
+      edt = sdt + datetime.timedelta(hours=offset_hours)
     # We want all observations reported from nominaltime (sdt) until now
     #edt = sdt
     #sdt = sdt - datetime.timedelta(hours=offset)
@@ -72,7 +76,7 @@ class obsmatcher(object):
 
     result = []
     for obs in obses:
-      if obs.accumulation_period == offset:
+      if obs.accumulation_period == acc_period:
         xpts = xpts + 1
         t, v = image.getConvertedValueAtLonLat((obs.longitude*dr, obs.latitude*dr))
         if t in [_rave.RaveValueType_DATA, _rave.RaveValueType_UNDETECT]:
