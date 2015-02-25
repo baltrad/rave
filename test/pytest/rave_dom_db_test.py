@@ -503,6 +503,32 @@ class rave_dom_db_test(unittest.TestCase):
     self.assertAlmostEquals(23.0, result[0].observation, 4)
     self.assertEquals(5, result[0].accumulation_period)
 
+  def test_get_grapoints_startend(self):
+    gp1 = grapoint(_rave.RaveValueType_DATA, 1.0, 234, 10.0, 60.0, "20140416", "110000", 20.0, 2)
+    gp2 = grapoint(_rave.RaveValueType_DATA, 2.0, 235, 11.0, 61.0, "20140416", "010000", 21.0, 3)
+    gp3 = grapoint(_rave.RaveValueType_DATA, 3.0, 236, 12.0, 62.0, "20140415", "110000", 22.0, 4)
+    gp4 = grapoint(_rave.RaveValueType_DATA, 4.0, 237, 13.0, 63.0, "20140415", "010000", 23.0, 5)
+    gp5 = grapoint(_rave.RaveValueType_DATA, 5.0, 238, 14.0, 64.0, "20140414", "110000", 24.0, 6)
+    gp6 = grapoint(_rave.RaveValueType_DATA, 6.0, 239, 15.0, 65.0, "20140414", "010000", 25.0, 7)
+    
+    testdb().add(gp1)
+    testdb().add(gp2)
+    testdb().add(gp3)
+    testdb().add(gp4)
+    testdb().add(gp5)
+    testdb().add(gp6)
+    
+    result = self.classUnderTest.get_grapoints(datetime.datetime(2014,4,14,11,0,0), datetime.datetime(2014,4,16,1,0,0))
+    self.assertEquals(4, len(result))
+    self.assertEquals("20140414", result[0].date.strftime("%Y%m%d"))
+    self.assertEquals("110000", result[0].time.strftime("%H%M%S"))
+    self.assertEquals("20140415", result[1].date.strftime("%Y%m%d"))
+    self.assertEquals("010000", result[1].time.strftime("%H%M%S"))
+    self.assertEquals("20140415", result[2].date.strftime("%Y%m%d"))
+    self.assertEquals("110000", result[2].time.strftime("%H%M%S"))
+    self.assertEquals("20140416", result[3].date.strftime("%Y%m%d"))
+    self.assertEquals("010000", result[3].time.strftime("%H%M%S"))
+
   def test_delete_grapoints(self):
     gp1 = grapoint(_rave.RaveValueType_DATA, 1.0, 234, 10.0, 60.0, "20140416", "110000", 20.0, 2)
     gp2 = grapoint(_rave.RaveValueType_DATA, 2.0, 235, 11.0, 61.0, "20140416", "010000", 21.0, 3)
@@ -530,4 +556,28 @@ class rave_dom_db_test(unittest.TestCase):
     self.assertEquals(4, len(result))
     self.assertEquals("20140415", result[0].date.strftime("%Y%m%d"))
     self.assertEquals("010000", result[0].time.strftime("%H%M%S"))
-      
+
+  def test_delete_grapoints_startend(self):
+    gp1 = grapoint(_rave.RaveValueType_DATA, 1.0, 234, 10.0, 60.0, "20140416", "110000", 20.0, 2)
+    gp2 = grapoint(_rave.RaveValueType_DATA, 2.0, 235, 11.0, 61.0, "20140416", "010000", 21.0, 3)
+    gp3 = grapoint(_rave.RaveValueType_DATA, 3.0, 236, 12.0, 62.0, "20140415", "110000", 22.0, 4)
+    gp4 = grapoint(_rave.RaveValueType_DATA, 4.0, 237, 13.0, 63.0, "20140415", "010000", 23.0, 5)
+    gp5 = grapoint(_rave.RaveValueType_DATA, 5.0, 238, 14.0, 64.0, "20140414", "110000", 24.0, 6)
+    gp6 = grapoint(_rave.RaveValueType_DATA, 6.0, 239, 15.0, 65.0, "20140414", "010000", 25.0, 7)
+    
+    testdb().add(gp1)
+    testdb().add(gp2)
+    testdb().add(gp3)
+    testdb().add(gp4)
+    testdb().add(gp5)
+    testdb().add(gp6)
+
+    # Execute delete
+    self.classUnderTest.delete_grapoints(datetime.datetime(2014,4,14,11,0,0), datetime.datetime(2014,4,16,1,0,0))
+    result = self.classUnderTest.get_grapoints(datetime.datetime(2014,4,14,0,1,0))
+    self.assertEquals(2, len(result))
+    self.assertEquals("20140414", result[0].date.strftime("%Y%m%d"))
+    self.assertEquals("010000", result[0].time.strftime("%H%M%S"))
+    self.assertEquals("20140416", result[1].date.strftime("%Y%m%d"))
+    self.assertEquals("110000", result[1].time.strftime("%H%M%S"))
+    

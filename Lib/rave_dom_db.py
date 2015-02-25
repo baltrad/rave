@@ -278,9 +278,14 @@ class rave_db(object):
       q = q.order_by(asc(grapoint.date)).order_by(asc(grapoint.time))
       return q.all()
     
-  def delete_grapoints(self, dt):
+  def delete_grapoints(self, dt, edt=None):
     with self.get_session() as s:
       q = s.query(grapoint).filter(grapoint.date + grapoint.time <= dt)
+      if edt is not None:
+        # If edt is specified, we want to delete within specified range
+        q = s.query(grapoint).filter(grapoint.date + grapoint.time >= dt)
+        q = q.filter(grapoint.date + grapoint.time <= edt)
+         
       pts = q.delete()
       s.commit()
       return pts
