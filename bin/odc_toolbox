@@ -63,6 +63,9 @@ if __name__ == "__main__":
     parser.add_option("-O", "--composite-file", dest="ofile", default="composite.h5",
                       help="The file name of the output composite that will be written to --opath. Default=composite.h5")
 
+    parser.add_option("-v", "--verbose", action="store_true", dest="verbose",
+                      help="If the different steps should be displayed. I.e. verbose information.")
+
     (options, args) = parser.parse_args()
 
     if options.procs == 0: options.procs=None

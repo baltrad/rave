@@ -37,6 +37,7 @@ import logging
 import string
 import datetime
 import math
+import tempfile
 import rave_pgf_logger
 import rave_pgf_quality_registry
 import rave_ctfilter
@@ -104,6 +105,8 @@ class compositing(object):
     self.reprocess_quality_field=False
     self.verbose = False
     self.logger = logger
+    self.dumppath = None
+    self.dump = False
     
   def generate(self, dd, dt, area=None):
     return self._generate(dd, dt, area)
@@ -124,6 +127,8 @@ class compositing(object):
       self.logger.debug("Ignoring malfunc = %s"%`self.ignore_malfunc`)
       self.logger.debug("QI-total field = %s"%self.qitotal_field)
       self.logger.debug("Reprocess quality fields = %s"%`self.reprocess_quality_field`)
+      self.logger.debug("Dumping path = %s"%`self.dumppath`)
+      self.logger.debug("Dumping output = %s"%`self.dump`)
       
       if area is not None:
         self.logger.debug("Area = %s"%area)
@@ -148,6 +153,9 @@ class compositing(object):
     objects, algorithm = self.quality_control_objects(objects)
 
     objects=objects.values()
+
+    if self.dump:
+      self._dump_objects(objects)
 
     generator = _pycomposite.new()
     if area is not None:
@@ -313,6 +321,41 @@ class compositing(object):
       objects[fname] = obj
       
     return objects, nodes
+  
+  def create_filename(self, pobj):
+    #_polarscan.isPolarScan(obj) and not _polarvolume.isPolarVolume(obj):
+    if _polarvolume.isPolarVolume(pobj):
+      ptype = "pvol"
+    elif _polarscan.isPolarScan(pobj):
+      ptype = "scan"
+    else:
+      try:
+        ptype = pobj.getAttribute("what/object").tolower()
+      except:
+        ptype = "unknowntype"
+    src = odim_source.NODfromSource(pobj)
+    dstr = "19700101"
+    tstr = "000000"
+    try:
+      dstr = pobj.date
+      tstr = pobj.time
+    except:
+      pass
+    
+    t = tempfile.mkstemp(prefix="%s_%s_%s_%s_"%(ptype, src, dstr, tstr), suffix=".h5", dir=self.dumppath)
+    os.close(t[0])
+    return t[1]
+  
+  ##
+  # Dumps the objects on the ingoing polar objects onto the file system. The names will contain a unique identifier
+  # to allow for duplicate versions of the same object.
+  # @param objects the objects to write to disk
+  def _dump_objects(self, objects):
+    for o in objects:
+      filename = self.create_filename(o)
+      rio = _raveio.new()
+      rio.object = o
+      rio.save(filename)
   
   ##
   # Apply gra coefficient adjustment.

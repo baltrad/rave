@@ -121,6 +121,9 @@ class multi_composite_arguments(object):
     self.offset = OFFSET
     self.reprocess_quality_field = False 
     self.area_definition = None
+    self.verbose = False
+    self.dump = False
+    self.dumppath = None
   
   ##
   # Generate function. Basically same as calling compositing.generate but the pyarea is created from the
@@ -151,7 +154,10 @@ class multi_composite_arguments(object):
     comp.gain = self.gain
     comp.offset = self.offset    
     comp.filenames = self.filenames
+    comp.verbose = self.verbose
     comp.reprocess_quality_field = self.reprocess_quality_field
+    comp.dump = self.dump
+    comp.dumppath = self.dumppath
     
     pyarea = _area.new()
     pyarea.id = "tiled area subset %s"%tid
@@ -318,6 +324,9 @@ class tiled_compositing(object):
     a.quantity = self.compositing.quantity
     a.gain = self.compositing.gain
     a.offset = self.compositing.offset
+    a.verbose = self.verbose
+    a.dump = self.compositing.dump
+    a.dumppath = self.compositing.dumppath
     a.reprocess_quality_field = self.compositing.reprocess_quality_field
     a.area_definition = adef
     
