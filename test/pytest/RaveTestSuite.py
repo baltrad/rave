@@ -95,5 +95,11 @@ try:
 except:
   pass
 
+try:
+  import pygrib
+  from grib_reader_test import *
+except:
+  pass
+
 if __name__ == '__main__':
   unittest.main()
