@@ -77,6 +77,30 @@ class grib_reader_test(unittest.TestCase):
     except IOError, e:
       pass
   
+  def test_get_fields(self):
+    fields = self.classUnderTest.get_fields(grib_reader.grib_reader.TEMPERATURE)
+    self.assertEquals(2, len(fields))
+    self.assertEquals("20150303", fields[0].getAttribute("what/date"))
+    self.assertEquals("000000", fields[0].getAttribute("what/time"))
+    self.assertEquals(grib_reader.grib_reader.TEMPERATURE, fields[0].getAttribute("what/name"))
+    self.assertEquals(850, fields[0].getAttribute("what/level"))
+    self.assertEquals("20150303", fields[1].getAttribute("what/date"))
+    self.assertEquals("000000", fields[1].getAttribute("what/time"))
+    self.assertEquals(grib_reader.grib_reader.TEMPERATURE, fields[1].getAttribute("what/name"))
+    self.assertEquals(925, fields[1].getAttribute("what/level"))
+    
+  def test_get_fields_bylevel(self):
+    fields = self.classUnderTest.get_fields(grib_reader.grib_reader.TEMPERATURE, level=925)
+    self.assertEquals(1, len(fields))
+    self.assertEquals("20150303", fields[0].getAttribute("what/date"))
+    self.assertEquals("000000", fields[0].getAttribute("what/time"))
+    self.assertEquals(grib_reader.grib_reader.TEMPERATURE, fields[0].getAttribute("what/name"))
+    self.assertEquals(925, fields[0].getAttribute("what/level"))
+      
+  def test_get_fields_nomatch(self):
+    fields = self.classUnderTest.get_fields(grib_reader.grib_reader.TEMPERATURE, level=999)
+    self.assertEquals(0, len(fields))
+      
   def test_iterator(self):
     DEFS=[("Skin temperature",0),
           ("High cloud cover",0),
@@ -119,4 +143,32 @@ class grib_reader_test(unittest.TestCase):
       self.assertEquals(DEFS[didx][0], c.getAttribute("what/name"))
       self.assertEquals(DEFS[didx][1], c.getAttribute("what/level"))
       didx = didx + 1
-    
+  
+  def test_lonlats(self):
+    lonlats = self.classUnderTest.lonlats()
+    self.assertAlmostEqual(-20.073, lonlats[0].getData()[0][0], 4)
+    self.assertAlmostEqual(40.13, lonlats[0].getData()[0][-1], 4)
+    self.assertAlmostEqual(75.007, lonlats[1].getData()[0][0], 4)
+    self.assertAlmostEqual(49.909, lonlats[1].getData()[-1][0], 4)
+
+  def test_lonlats_for_temp(self):
+    lonlats = self.classUnderTest.lonlats(grib_reader.grib_reader.TEMPERATURE)
+    self.assertAlmostEqual(-20.073, lonlats[0].getData()[0][0], 4)
+    self.assertAlmostEqual(40.13, lonlats[0].getData()[0][-1], 4)
+    self.assertAlmostEqual(75.007, lonlats[1].getData()[0][0], 4)
+    self.assertAlmostEqual(49.909, lonlats[1].getData()[-1][0], 4)
+
+  def test_lonlats_for_temp_and_level(self):
+    lonlats = self.classUnderTest.lonlats(grib_reader.grib_reader.TEMPERATURE, level=925)
+    self.assertAlmostEqual(-20.073, lonlats[0].getData()[0][0], 4)
+    self.assertAlmostEqual(40.13, lonlats[0].getData()[0][-1], 4)
+    self.assertAlmostEqual(75.007, lonlats[1].getData()[0][0], 4)
+    self.assertAlmostEqual(49.909, lonlats[1].getData()[-1][0], 4)
+
+  def test_lonlats_no_such_field(self):
+    try:
+      self.classUnderTest.lonlats(grib_reader.grib_reader.TEMPERATURE, level=999)
+      self.fail("Expected IOError")
+    except IOError, e:
+      pass
+  
