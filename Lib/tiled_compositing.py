@@ -356,7 +356,11 @@ class tiled_compositing(object):
     
     # Now, make sure we have the correct files in the various areas
     self._add_files_to_argument_list(args, tiled_areas)
-    
+
+    # We also must ensure that if any arg contains 0 files, there must be a date/time set
+    if not self._ensure_date_and_time_on_args(args):
+      raise Exception, "Could not ensure existing date and time for composite"
+        
     return args
   
   def _add_files_to_argument_list(self, args, tiled_areas):
@@ -397,7 +401,29 @@ class tiled_compositing(object):
       self.logger.info("Tile %s contains %d files and dimensions %i x %i"%(args[idx][0].area_definition.id, len(args[idx][0].filenames), args[idx][0].area_definition.xsize, args[idx][0].area_definition.ysize))
       
     self.logger.info("Finished splitting polar object")
-       
+  
+  def _ensure_date_and_time_on_args(self, args):
+    dtstr = None
+    ddstr = None
+    for k in self.file_objects.keys():
+      v = self.file_objects[k]
+      if not _polarscan.isPolarScan(v) and not _polarvolume.isPolarVolume(v):
+        continue
+      dtstr = v.time
+      ddstr = v.date
+      break
+    
+    if dtstr is None or ddstr is None:
+      self.logger.info("Could not determine any date and time string")
+      return False
+    
+    for arg in args:
+      if len(arg[0].filenames) == 0 and (arg[1] is None or arg[2] is None):
+        arg[1] = ddstr
+        arg[2] = dtstr
+    
+    return True
+  
   def _create_lon_lat_extent(self, carg):
     pj = _projection.new("x", "y", carg.area_definition.pcsdef)
     lllon,lllat = pj.inv((carg.area_definition.extent[0], carg.area_definition.extent[1]))

@@ -188,7 +188,13 @@ class compositing(object):
     generator.product = self.product
     if algorithm is not None:
       generator.algorithm = algorithm
-    
+      
+    if len(objects) == 0:
+      self.logger.info("No objects provided to the composite generator.")
+      if dd is None or dt is None:
+        self.logger.error("Can not create a composite without specifying a valid date / time when no objects are provided.")
+        raise Exception, "Can not create a composite without specifying a valid date / time when no objects are provided."
+      
     for o in objects:
       generator.add(o)
     
