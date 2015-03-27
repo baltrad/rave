@@ -57,7 +57,7 @@ if __name__ == "__main__":
     parser.add_option("-D", "--write-pvols", action="store_true", dest="dump",
                       help="Write quality-controlled PVOLs to output path.")
 
-    parser.add_option("-a", "--composite-area", dest="areaid", default="odc_area",
+    parser.add_option("-a", "--composite-area", dest="areaid",
                       help="The area identifier (string) of the output composite area to generate.")
 
     parser.add_option("-O", "--composite-file", dest="ofile", default="composite.h5",

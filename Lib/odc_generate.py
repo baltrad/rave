@@ -61,7 +61,6 @@ def generate(options):
     logger = logging.getLogger("ODC")
     rave_pgf_logger.init_logger(logger)
 
-    print "Options.areaid = %s"%options.areaid
     # Compositing includes QC. Therefore do not do QC separately. This composite config is hard wired.
     if options.areaid:
         comp = compositing.compositing()
@@ -73,12 +72,9 @@ def generate(options):
         comp.gain = 0.5
         comp.offset = -32.0
         comp.filenames = fstrs
-        if options.verbose:
-          comp.verbose = True
-        print "Options.verbose = %s, comp.verbose = %s"%(`options.verbose`, `comp.verbose`)
         tc = tiled_compositing.tiled_compositing(comp)
         if options.dump:  # Provisional, until compositing can handle prefab QC
-            tc.compositing.dumppath = options.opath
+            tc.compositing.opath = options.opath
             tc.compositing.dump = True
         t = tc.generate(None, None, options.areaid)
         rio = _raveio.new()
