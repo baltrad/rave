@@ -35,8 +35,12 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 struct _RaveVprCorrection_t {
   RAVE_OBJECT_HEAD /** Always on top */
   double minZLimitStratiformCloud;
-  double scHeightLimit;
-  double scDistanceLimit;
+  double minReflectivity;
+  double heightLimit;
+  double profileHeight;
+  double minDistance;
+  double maxDistance;
+  int minNumberOfObservations;
 };
 
 /*@{ Private functions */
@@ -47,8 +51,12 @@ static int RaveVprCorrection_constructor(RaveCoreObject* obj)
 {
   RaveVprCorrection_t* self = (RaveVprCorrection_t*)obj;
   self->minZLimitStratiformCloud = -20.0;
-  self->scHeightLimit = 1.3e3;
-  self->scDistanceLimit = 25e3;
+  self->minReflectivity = 10.0;
+  self->heightLimit = 1300.0;
+  self->profileHeight = 200.0;
+  self->minDistance = 1000.0;
+  self->maxDistance = 25000.0;
+  self->minNumberOfObservations = 10;
   return 1;
 }
 
@@ -60,8 +68,12 @@ static int RaveVprCorrection_copyconstructor(RaveCoreObject* obj, RaveCoreObject
   RaveVprCorrection_t* self = (RaveVprCorrection_t*)obj;
   RaveVprCorrection_t* src = (RaveVprCorrection_t*)srcobj;
   self->minZLimitStratiformCloud = src->minZLimitStratiformCloud;
-  self->scHeightLimit = src->scHeightLimit;
-  self->scDistanceLimit = src->scDistanceLimit;
+  self->minReflectivity = src->minReflectivity;
+  self->heightLimit = src->heightLimit;
+  self->profileHeight = src->profileHeight;
+  self->minDistance = src->minDistance;
+  self->maxDistance = src->maxDistance;
+  self->minNumberOfObservations = src->minNumberOfObservations;
   return 1;
 }
 
@@ -96,28 +108,68 @@ double RaveVprCorrection_getMinZLimitStratiformCloud(RaveVprCorrection_t* self)
   return self->minZLimitStratiformCloud;
 }
 
-void RaveVprCorrection_setSCHeightLimit(RaveVprCorrection_t* self, double limit)
+void RaveVprCorrection_setMinReflectivity(RaveVprCorrection_t* self, double limit)
 {
   RAVE_ASSERT((self != NULL), "self == NULL");
-  self->scHeightLimit = limit;
+  self->minReflectivity = limit;
 }
 
-double RaveVprCorrection_getSCHeightLimit(RaveVprCorrection_t* self)
+double RaveVprCorrection_getMinReflectivity(RaveVprCorrection_t* self)
 {
   RAVE_ASSERT((self != NULL), "self == NULL");
-  return self->scHeightLimit;
+  return self->minReflectivity;
 }
 
-void RaveVprCorrection_setSCDistanceLimit(RaveVprCorrection_t* self, double limit)
+void RaveVprCorrection_setHeightLimit(RaveVprCorrection_t* self, double limit)
 {
   RAVE_ASSERT((self != NULL), "self == NULL");
-  self->scDistanceLimit = limit;
+  self->heightLimit = limit;
 }
 
-double RaveVprCorrection_getSCDistanceLimit(RaveVprCorrection_t* self)
+double RaveVprCorrection_getHeightLimit(RaveVprCorrection_t* self)
 {
   RAVE_ASSERT((self != NULL), "self == NULL");
-  return self->scDistanceLimit;
+  return self->heightLimit;
+}
+
+int RaveVprCorrection_setProfileHeight(RaveVprCorrection_t* self, double height)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  if (height == 0.0) {
+    return 0;
+  }
+  self->profileHeight = height;
+  return 1;
+}
+
+double RaveVprCorrection_getProfileHeight(RaveVprCorrection_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return self->profileHeight;
+}
+
+void RaveVprCorrection_setMinDistance(RaveVprCorrection_t* self, double limit)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  self->minDistance = limit;
+}
+
+double RaveVprCorrection_getMinDistance(RaveVprCorrection_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return self->minDistance;
+}
+
+void RaveVprCorrection_setMaxDistance(RaveVprCorrection_t* self, double limit)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  self->maxDistance = limit;
+}
+
+double RaveVprCorrection_getMaxDistance(RaveVprCorrection_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return self->maxDistance;
 }
 
 RaveField_t* RaveVprCorrectionInternal_createIndices(RaveVprCorrection_t* self, PolarVolume_t* pvol)
@@ -145,6 +197,9 @@ done:
 
 PolarVolume_t* RaveVprCorrection_separateSC(RaveVprCorrection_t* self, PolarVolume_t* pvol)
 {
+  double* reflectivityProfile = RAVE_MALLOC(sizeof(double) * self->heightLimit / self->profileHeight);
+  RAVE_FREE(reflectivityProfile);
+  return NULL;
 #ifdef KALLE
   PolarScan_t* lowestscan = NULL;
   long nscans = 0, lnbins = 0, lnrange = 0, i = 0;
@@ -302,6 +357,70 @@ done:
 //      }
 //  }
 #endif
+}
+
+static PolarObservation* RaveVprCorrectionInternal_filterObservations(RaveVprCorrection_t* self, PolarObservation* obses, int nobses, int* nFilteredObses)
+{
+  int ndataobservations = 0;
+  int nfiltered = 0;
+  int i = 0;
+  PolarObservation* dataobservations = NULL;
+  PolarObservation* result = NULL;
+
+  *nFilteredObses = 0;
+  dataobservations = RaveTypes_FilterPolarObservationDataValues(obses, nobses, &ndataobservations);
+  if (dataobservations != NULL && ndataobservations > 0) {
+    result = RAVE_MALLOC(sizeof(PolarObservation) * ndataobservations);
+    if (result == NULL) {
+      RAVE_ERROR0("Failed to allocate memory for filtered observations");
+      goto done;
+    }
+    for (i = 0; i < ndataobservations; i++) {
+      if (dataobservations[i].distance >= self->minDistance &&
+          dataobservations[i].distance <= self->maxDistance &&
+          dataobservations[i].v > self->minReflectivity) {
+        result[nfiltered++] = dataobservations[i];
+      }
+    }
+    *nFilteredObses = nfiltered;
+  }
+done:
+  RAVE_FREE(dataobservations);
+  return result;
+}
+
+double* RaveVprCorrection_getReflectivityArray(RaveVprCorrection_t* self, PolarVolume_t* pvol, int* nElements)
+{
+  double* result = NULL;
+  int nelem = 0, i = 0;
+  double nextHeight = 0.0;
+
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  nelem = (int)(self->heightLimit / self->profileHeight);
+  result = RAVE_MALLOC(sizeof(double) * nelem);
+  nextHeight = self->profileHeight / 2.0;
+  for (i = 0; i < nelem; i++) {
+    int nobservations = 0;
+    PolarObservation* observations = PolarVolume_getCorrectedValuesAtHeight(pvol, nextHeight, self->profileHeight, &nobservations);
+    result[i] = -9999.0;
+    if (observations != NULL) {
+      int ndataobservations = 0;
+      PolarObservation* dataobservations = RaveVprCorrectionInternal_filterObservations(self, observations, nobservations, &ndataobservations);
+      if (dataobservations != NULL && ndataobservations > self->minNumberOfObservations) {
+        RaveTypes_SortPolarObservations(dataobservations, ndataobservations);
+        if (ndataobservations % 2 == 0 && ndataobservations > 0) {
+          result[i] = (dataobservations[ndataobservations/2].v + dataobservations[ndataobservations/2 - 1].v)/2.0;
+        } else {
+          result[i] = dataobservations[ndataobservations/2].v;
+        }
+      }
+      RAVE_FREE(dataobservations);
+    }
+    RAVE_FREE(observations);
+    nextHeight = nextHeight + self->profileHeight;
+  }
+  *nElements = nelem;
+  return result;
 }
 
 /*@} End of Interface functions */

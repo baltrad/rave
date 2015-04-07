@@ -437,7 +437,6 @@ done:
 static PyObject* _pypolarscanparam_hasAttribute(PyPolarScanParam* self, PyObject* args)
 {
   char* name = NULL;
-  PyObject* result = NULL;
   if (!PyArg_ParseTuple(args, "s", &name)) {
     return NULL;
   }

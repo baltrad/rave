@@ -128,6 +128,23 @@ typedef struct PolarNavigationInfo {
   int ai;         /**< azimuth index (-1 meaning no azimuth index found/calculated or out of bounds) */
 } PolarNavigationInfo;
 
+typedef struct PolarObservation {
+  RaveValueType vt; /**< the value type */
+  double v; /**< the corrected value */
+  double distance; /**< the distance along ground to the radar */
+  double height; /**< height above ground (center position) */
+  double range; /**< range the range along the ray until we come to this bin */
+  double elangle; /**< the elevation angle */
+} PolarObservation;
+
+/**
+ * Linked list version of the PolarObservation.
+ */
+typedef struct PolarObservationLinkedList {
+  PolarObservation obs;
+  struct PolarObservationLinkedList* next; /**< the next observation in this set */
+} PolarObservationLinkedList;
+
 /**
  * Returns the size of the datatype.
  * @param[in] type - the rave data type
@@ -164,5 +181,35 @@ Rave_ObjectType RaveTypes_getObjectTypeFromString(const char* name);
  * @returns the string representation or NULL if nothing could be found.
  */
 const char* RaveTypes_getStringFromObjectType(Rave_ObjectType type);
+
+/**
+ * Deallocates this linked list and all its children.
+ * @param[in] obs - the observation to release
+ */
+void RaveTypes_FreePolarObservationLinkedList(PolarObservationLinkedList* obs);
+
+/**
+ * Creates an array of PolarObservations from a PolarObservationLinkedList
+ * @param[in] obs - the linked list to be transformed into an array
+ * @param[out] nritems - the number of items in the array
+ * @return the array
+ */
+PolarObservation* RaveTypes_PolarObservationLinkedListToArray(PolarObservationLinkedList* obs, int* nritems);
+
+/**
+ * Removes all items that are not data-values in the observation array.
+ * @param[in] observations - the array to be filtered
+ * @param[in] nobservations - number of observations
+ * @param[out] ndataobservations - the number of returned observations containing data values
+ * @return the data observations
+ */
+PolarObservation* RaveTypes_FilterPolarObservationDataValues(PolarObservation* observations, int nobservations, int* ndataobservations);
+
+/**
+ * Sorts the array of observations. All observations that are not data will be places furthest down in the array.
+ * @param[in] observations - the observations to be sorted
+ * @param[in] nobservations - number of observations to be sorted
+ */
+void RaveTypes_SortPolarObservations(PolarObservation* observations, int nobservations);
 
 #endif /* RAVE_TYPES_H */

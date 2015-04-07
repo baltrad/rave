@@ -55,34 +55,78 @@ void RaveVprCorrection_setMinZLimitStratiformCloud(RaveVprCorrection_t* self, do
 double RaveVprCorrection_getMinZLimitStratiformCloud(RaveVprCorrection_t* self);
 
 /**
+ * Sets the min reflectivity to be used when generating the vpr profile
+ * @param[in] self - self
+ * @param[in] limit - the min reflectivity
+ */
+void RaveVprCorrection_setMinReflectivity(RaveVprCorrection_t* self, double limit);
+
+/**
+ * Returns the min reflectivity to be used when generating the vpr profile
+ * @param[in] self - self
+ * @return the min reflectivity
+ */
+double RaveVprCorrection_getMinReflectivity(RaveVprCorrection_t* self);
+
+/**
  * Sets the height limit for what reflectivities should be used
  * @param[in] self - self
  * @param[in] limit - the max height for when reflectivities should be used in the identification
  * of stratiform and convective rain
  */
-void RaveVprCorrection_setSCHeightLimit(RaveVprCorrection_t* self, double limit);
+void RaveVprCorrection_setHeightLimit(RaveVprCorrection_t* self, double limit);
 
 /**
  * Returns the height limit for what reflectivities should be used in the identification of stratiform and convective rain
  * @param[in] self - self
  * @returns the height limit
  */
-double RaveVprCorrection_getSCHeightLimit(RaveVprCorrection_t* self);
+double RaveVprCorrection_getHeightLimit(RaveVprCorrection_t* self);
 
 /**
- * Sets the distance limit for what reflectivities should be used
+ * Sets the height of the individual profile bins. The resolution of the reflectivity profile will be heightLimit / profileHeight.
+ * @param[in] self - self
+ * @param[in] height - the bin height
+ * @return 0 if trying to set a height = 0.0. Otherwise 1
+ */
+int RaveVprCorrection_setProfileHeight(RaveVprCorrection_t* self, double height);
+
+/**
+ * Gets the height of the individual profile bins.
+ * @param[in] self - self
+ * @return the bin height
+ */
+double RaveVprCorrection_getProfileHeight(RaveVprCorrection_t* self);
+
+/**
+ * Sets the min distance limit for what reflectivities should be used
+ * @param[in] self - self
+ * @param[in] limit - the min distance for when reflectivities should be used in the identification
+ * of stratiform and convective rain
+ */
+void RaveVprCorrection_setMinDistance(RaveVprCorrection_t* self, double limit);
+
+/**
+ * Returns the min distance limit for what reflectivities should be used in the identification of stratiform and convective rain
+ * @param[in] self - self
+ * @returns the min distance limit
+ */
+double RaveVprCorrection_getMinDistance(RaveVprCorrection_t* self);
+
+/**
+ * Sets the max distance limit for what reflectivities should be used
  * @param[in] self - self
  * @param[in] limit - the max distance for when reflectivities should be used in the identification
  * of stratiform and convective rain
  */
-void RaveVprCorrection_setSCDistanceLimit(RaveVprCorrection_t* self, double limit);
+void RaveVprCorrection_setMaxDistance(RaveVprCorrection_t* self, double limit);
 
 /**
- * Returns the distance limit for what reflectivities should be used in the identification of stratiform and convective rain
+ * Returns the max distance limit for what reflectivities should be used in the identification of stratiform and convective rain
  * @param[in] self - self
- * @returns the distance limit
+ * @returns the max distance limit
  */
-double RaveVprCorrection_getSCDistanceLimit(RaveVprCorrection_t* self);
+double RaveVprCorrection_getMaxDistance(RaveVprCorrection_t* self);
 
 /**
  * Separates stratiform and convective rain
@@ -92,5 +136,13 @@ double RaveVprCorrection_getSCDistanceLimit(RaveVprCorrection_t* self);
  */
 PolarVolume_t* RaveVprCorrection_separateSC(RaveVprCorrection_t* self, PolarVolume_t* pvol);
 
+/**
+ * Returns the mean reflectivity array from the sc settings.
+ * @param[in] self - self
+ * @param[in] pvol - the polar volume from where the reflectivity array should be extracted
+ * @param[in,out] nElements - the size of the returned array
+ * @return an array containing the mean reflectivities for each profile height bin
+ */
+double* RaveVprCorrection_getReflectivityArray(RaveVprCorrection_t* self, PolarVolume_t* pvol, int* nElements);
 
 #endif /* RAVE_VPR_CORRECTION_H */

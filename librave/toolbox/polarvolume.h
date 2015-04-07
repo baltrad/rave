@@ -466,4 +466,14 @@ RaveField_t* PolarVolume_getDistanceField(PolarVolume_t* self);
  */
 RaveField_t* PolarVolume_getHeightField(PolarVolume_t* self);
 
+/**
+ * Returns all observations at the specified height inside the specified gap. I.e. height +/- gap/2.
+ * @param[in] self - self
+ * @param[in] height - the height
+ * @param[in] gap - the gap, i.e. +/- gap/2
+ * @param[out] nobservations - number of returned observations in the array
+ * @returns the polar observations
+ */
+PolarObservation* PolarVolume_getCorrectedValuesAtHeight(PolarVolume_t* self, double height, double gap, int* nobservations);
+
 #endif

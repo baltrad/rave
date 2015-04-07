@@ -1002,6 +1002,64 @@ RaveField_t* PolarVolume_getHeightField(PolarVolume_t* self)
   return PolarVolumeInternal_getHeightOrDistanceField(self, 1);
 }
 
+PolarObservation* PolarVolume_getCorrectedValuesAtHeight(PolarVolume_t* self, double height, double gap, int* nobservations)
+{
+  int scanIndex = 0, nScans = 0;
+  PolarObservation* result = NULL;
+  PolarObservationLinkedList* polist = NULL;
+  PolarObservationLinkedList* pbitptr = NULL;
+
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  nScans = RaveObjectList_size(self->scans);
+  for (scanIndex = 0; scanIndex < nScans; scanIndex++) {
+    PolarScan_t* scan = (PolarScan_t*)RaveObjectList_get(self->scans, scanIndex);
+    double rscale = PolarScan_getRscale(scan);
+    double elangle = PolarScan_getElangle(scan);
+    double rl = 0.0, ru = 0.0, dl = 0.0, du = 0.0;
+    int bi = 0, bEnd = 0, ri = 0, rEnd = 0;
+    PolarNavigator_ehToRd(self->navigator, elangle, height-gap/2.0, &rl, &dl);
+    PolarNavigator_ehToRd(self->navigator, elangle, height+gap/2.0, &ru, &du);
+    rEnd = PolarScan_getNrays(scan);
+    bEnd = (int) ru / rscale;
+
+    for (ri = 0; ri < rEnd; ri++) {
+      for (bi = (int) rl / rscale; bi < bEnd; bi++) {
+        PolarObservationLinkedList* pbit = RAVE_MALLOC(sizeof(PolarObservationLinkedList));
+        if (pbit == NULL) {
+          RAVE_CRITICAL0("Failed to allocate memory for polar observation information");
+          RaveTypes_FreePolarObservationLinkedList(polist);
+          polist = NULL;
+          goto done;
+        }
+        pbit->next = NULL;
+        pbit->obs.vt = PolarScan_getConvertedParameterValue(scan, self->paramname, bi, ri, &pbit->obs.v);
+        pbit->obs.elangle = elangle;
+        pbit->obs.range = bi * rscale;
+        pbit->obs.range = bi * rscale;
+        PolarNavigator_reToDh(self->navigator, pbit->obs.range, pbit->obs.elangle, &pbit->obs.distance, &pbit->obs.height);
+        if (polist == NULL) {
+          polist = pbit;
+          pbitptr = polist;
+        } else {
+          pbitptr->next = pbit;
+          pbitptr = pbit;
+        }
+      }
+    }
+    RAVE_OBJECT_RELEASE(scan);
+  }
+
+done:
+  if (polist != NULL) {
+    *nobservations = 0;
+    result = RaveTypes_PolarObservationLinkedListToArray(polist, nobservations);
+    RaveTypes_FreePolarObservationLinkedList(polist);
+  }
+  return result;
+}
+
+
+
 /*@} End of Interface functions */
 RaveCoreObjectType PolarVolume_TYPE = {
     "PolarVolume",

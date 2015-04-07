@@ -23,8 +23,11 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @date 2009-12-17
  */
 #include "rave_types.h"
+#include "rave_alloc.h"
+#include "rave_debug.h"
 #include "string.h"
 #include "stdlib.h"
+#include <stdio.h>
 
 /**
  * Product Type constants
@@ -212,4 +215,91 @@ const char* RaveTypes_getStringFromObjectType(Rave_ObjectType type)
   return NULL;
 }
 
+void RaveTypes_FreePolarObservationLinkedList(PolarObservationLinkedList* obs)
+{
+  if (obs != NULL) {
+    RaveTypes_FreePolarObservationLinkedList(obs->next);
+    RAVE_FREE(obs);
+  }
+}
+
+PolarObservation* RaveTypes_PolarObservationLinkedListToArray(PolarObservationLinkedList* llobs, int* nritems)
+{
+  PolarObservation* result = NULL;
+  if (llobs != NULL) {
+    int nlen = 0, index = 0;
+    PolarObservationLinkedList* pobs = llobs;
+    while (pobs != NULL) {
+      nlen++;
+      pobs = pobs->next;
+    }
+    result = RAVE_MALLOC(sizeof(PolarObservation) * nlen);
+    if (result == NULL) {
+      RAVE_ERROR0("Failed to allocate memory for polar observations");
+      goto done;
+    }
+    pobs = llobs;
+    while (pobs != NULL) {
+      result[index++] = pobs->obs;
+      pobs = pobs->next;
+    }
+    *nritems = nlen;
+  }
+
+done:
+  return result;
+}
+
+PolarObservation* RaveTypes_FilterPolarObservationDataValues(PolarObservation* observations, int nobservations, int* ndataobservations)
+{
+  PolarObservation* result = NULL;
+  if (observations != NULL) {
+    int nlen = 0, index = 0, i = 0;
+    for (index = 0; index < nobservations; index++) {
+      if (observations[index].vt == RaveValueType_DATA) {
+        nlen++;
+      }
+    }
+    result = RAVE_MALLOC(sizeof(PolarObservation) * nlen);
+    if (result == NULL) {
+      RAVE_ERROR0("Failed to allocate memory for polar observations");
+      goto done;
+    }
+    index = 0;
+    for (i = 0; i < nobservations; i++) {
+      if (observations[i].vt == RaveValueType_DATA) {
+        if (observations[i].v == 0.0 || observations[i].v == 255.0) {
+          fprintf(stderr, "Value counted as data even though value was either 0 or 255\n");
+        }
+        result[index++] = observations[i];
+      }
+    }
+    *ndataobservations = nlen;
+  }
+done:
+  return result;
+}
+
+static int RaveTypesInternal_sort_polar_observation_ascending(const void* a, const void* b)
+{
+  PolarObservation* poa = (PolarObservation*)a;
+  PolarObservation* pob = (PolarObservation*)b;
+  if (poa->vt == RaveValueType_DATA && pob->vt != RaveValueType_DATA) {
+    return -1;
+  } else if (poa->vt != RaveValueType_DATA && pob->vt == RaveValueType_DATA) {
+    return 1;
+  } else if (poa->vt == RaveValueType_DATA && pob->vt == RaveValueType_DATA) {
+    if (poa->v < pob->v) {
+      return -1;
+    } else if (poa->v > pob->v) {
+      return 1;
+    }
+  }
+  return 0;
+}
+
+void RaveTypes_SortPolarObservations(PolarObservation* observations, int nobservations)
+{
+  qsort(observations, nobservations, sizeof(PolarObservation), RaveTypesInternal_sort_polar_observation_ascending);
+}
 /*@} End of Interface functions */

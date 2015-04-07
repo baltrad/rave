@@ -204,12 +204,16 @@ SOURCE_37= pyctfilter.c
 OBJECTS_37= $(SOURCE_37:.c=.o)
 TARGET_37= _ctfilter.so
 
+SOURCE_38= pyvprcorrection.c
+OBJECTS_38= $(SOURCE_38:.c=.o)
+TARGET_38= _vprcorrection.so
+
 TARGETS=$(TARGET_1) $(TARGET_2) $(TARGET_3) $(TARGET_4) $(TARGET_5) $(TARGET_6) \
 		$(TARGET_7) $(TARGET_8) $(TARGET_9) $(TARGET_10) $(TARGET_11) $(TARGET_12) \
 		$(TARGET_13) $(TARGET_14) $(TARGET_15) $(TARGET_16) $(TARGET_17) $(TARGET_18) \
 		$(TARGET_19) $(TARGET_20) $(TARGET_21) $(TARGET_22) $(TARGET_23) $(TARGET_24) $(TARGET_25) $(TARGET_26) \
 		$(TARGET_27) $(TARGET_28) $(TARGET_29) $(TARGET_30) $(TARGET_31) $(TARGET_32) $(TARGET_33) $(TARGET_34) $(TARGET_35) \
-		$(TARGET_36) $(TARGET_37)
+		$(TARGET_36) $(TARGET_37) $(TARGET_38)
 
 INSTALL_HEADERS= pyarea.h \
 				 pycartesian.h \
@@ -232,7 +236,8 @@ INSTALL_HEADERS= pyarea.h \
 				 pyverticalprofile.h \
 				 pycartesiancomposite.h \
 				 pyqitotal.h \
-				 pygra.h
+				 pygra.h \
+				 pyvprcorrection.h
 
 ifeq ($(EXPAT_SUPPRESSED), no)
 TARGETS += $(TARGET_22) $(TARGET_23) $(TARGET_32)
@@ -365,6 +370,9 @@ $(TARGET_36): $(DEPDIR) $(OBJECTS_36) ../librave/toolbox/libravetoolbox.so ../li
 $(TARGET_37): $(DEPDIR) $(OBJECTS_37) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_37) $(LDFLAGS) $(LIBRARIES)
 
+$(TARGET_38): $(DEPDIR) $(OBJECTS_38) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
+	$(LDSHARED) -o $@ $(OBJECTS_38) $(LDFLAGS) $(LIBRARIES)
+
 .PHONY=install
 install:
 	@mkdir -p ${prefix}/Lib
@@ -442,3 +450,4 @@ endif
 -include $(SOURCE_35:%.c=$(DEPDIR)/%.P)
 -include $(SOURCE_36:%.c=$(DEPDIR)/%.P)
 -include $(SOURCE_37:%.c=$(DEPDIR)/%.P)
+-include $(SOURCE_38:%.c=$(DEPDIR)/%.P)
