@@ -137,7 +137,7 @@ int zdiff(PolarScan_t* scan, double thresh) {
       for (ib=0; ib<nbins; ib++) {
         rvtu = PolarScanParam_getConvertedValue(dbzu, ib, ir, &uval);
         rvtc = PolarScanParam_getConvertedValue(dbzc, ib, ir, &cval);
-
+        diff = 0.0;
         if ( (rvtu==RaveValueType_DATA) && (rvtc==RaveValueType_DATA) ) {
           diff = uval - cval;
         } else if ( (rvtu==RaveValueType_DATA) && (rvtc==RaveValueType_UNDETECT) ) {

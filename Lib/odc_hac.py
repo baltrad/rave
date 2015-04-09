@@ -305,6 +305,8 @@ def multi_increment(fstrs, procs=None):
 # @param thresh float maximum Z-diff allowed 
 def zdiffScan(scan, thresh=40.0):
     if _polarscan.isPolarScan(scan):
+        if not scan.hasParameter("DBZH") or not scan.hasParameter("TH"):
+          return 
         qind = _ravefield.new()
         qind.setData(zeros((scan.nrays,scan.nbins), uint8))
         qind.addAttribute("how/task", "eu.opera.odc.zdiff")
@@ -313,19 +315,26 @@ def zdiffScan(scan, thresh=40.0):
         qind.addAttribute("what/offset", 0.0)
         scan.addQualityField(qind)
 
-        ret = _odc_hac.zdiff(scan)
+        ret = _odc_hac.zdiff(scan, thresh)
     else:
         raise TypeError, "Input is expected to be a polar scan. Got something else."
 
     
 def zdiffPvol(pvol, thresh=40.0):
-    if _polarvolume.isPolarVolume(obj):
+    if _polarvolume.isPolarVolume(pvol):
         for i in range(pvol.getNumberOfScans()):
-            scan = pvol.getScan(i, thresh)
-            zdiffScan(scan)
+            scan = pvol.getScan(i)
+            zdiffScan(scan, thresh)
     else:
         raise TypeError, "Input is expected to be a polar volume. Got something else."
 
+def zdiff(obj, thresh=40.0):
+  if _polarscan.isPolarScan(obj):
+    zdiffScan(obj, thresh)
+  elif _polarvolume.isPolarVolume(obj):
+    zdiffPvol(obj, thresh)
+  else:
+    raise TypeError, "Input is expected to be a polar volume or scan" 
 
 ## Initialize
 init()

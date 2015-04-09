@@ -129,11 +129,30 @@ static PyObject* _hacIncrement_func(PyObject* self, PyObject* args) {
   return PyBool_FromLong(0); /* Instead of Py_RETURN_FALSE since compiler screams about dereferencing */
 }
 
+static PyObject* _zdiff_func(PyObject* self, PyObject* args)
+{
+  PyObject* scanobj = NULL;
+  double thresh = 40.0;
+
+  if (!PyArg_ParseTuple(args, "Od", &scanobj, &thresh)) {
+    return NULL;
+  }
+  if (!PyPolarScan_Check(scanobj)) {
+    raiseException_returnNULL(PyExc_AttributeError, "ZDIFF requires scan as input");
+  } else {
+    PyPolarScan* pyscan = (PyPolarScan*)scanobj;
+    if (!zdiff(pyscan->scan, thresh)) {
+      raiseException_returnNULL(PyExc_RuntimeError, "Failed to run zdiff");
+    }
+  }
+  Py_RETURN_NONE;
+}
 
 static struct PyMethodDef _hac_functions[] =
 {
   { "hacFilter", (PyCFunction) _hacFilter_func, METH_VARARGS },
   { "hacIncrement", (PyCFunction) _hacIncrement_func, METH_VARARGS },
+  { "zdiff", (PyCFunction) _zdiff_func, METH_VARARGS },
   { NULL, NULL }
 };
 
