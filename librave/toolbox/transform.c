@@ -580,6 +580,11 @@ static int TransformInternal_addTileToParameter(Transform_t* self, Cartesian_t* 
   }
   Cartesian_getAreaExtent(target, &tllX, &tllY, &turX, &turY);
   Cartesian_getAreaExtent(source, &sllX, &sllY, &surX, &surY);
+  CartesianParam_setNodata(targetParameter, CartesianParam_getNodata(sourceParameter));
+  CartesianParam_setUndetect(targetParameter, CartesianParam_getUndetect(sourceParameter));
+  CartesianParam_setGain(targetParameter, CartesianParam_getGain(sourceParameter));
+  CartesianParam_setOffset(targetParameter, CartesianParam_getOffset(sourceParameter));
+
   xscale = Cartesian_getXScale(target);
   yscale = Cartesian_getYScale(target);
   txsize = Cartesian_getXSize(target);
