@@ -91,7 +91,7 @@ def generate_comp(filepath, pattern, fdate, ftime, areaid="allbltgmaps_4000", op
   
   return filename
 
-def generate_acrr(files, opath, areaid, etime, edate, zr_a=200.0, zr_b=1.6, 
+def generate_acrr(files, opath, areaid, etime, edate, startdt, enddt, zr_a=200.0, zr_b=1.6, 
                   quantity="DBZH", accept=0.0, distancefield="se.smhi.composite.distance.radar", 
                   interval=12, N=13, adjustmentfile=None):
   acrrproduct = None
@@ -130,7 +130,11 @@ def generate_acrr(files, opath, areaid, etime, edate, zr_a=200.0, zr_b=1.6,
       acrrproduct.source = obj.source
       acrrproduct.time = etime
       acrrproduct.date = edate
-
+      acrrproduct.startdate = startdt.strftime("%Y%m%d")
+      acrrproduct.starttime = startdt.strftime("%H%M00")
+      acrrproduct.enddate = enddt.strftime("%Y%m%d")
+      acrrproduct.endtime = enddt.strftime("%H%M00")
+      
     if obj.xscale != acrrproduct.xscale or obj.yscale != acrrproduct.yscale or \
        obj.projection.definition != acrrproduct.projection.definition:
       raise AttributeError, "Scale or projdef inconsistancy for used area"
@@ -164,6 +168,7 @@ def run_acrr_composite_generation(vpath, cpath, opath, areaid, interval, filesPe
   filePeriod = 60/filesPerHour
   N = interval * filesPerHour + 1
   currdt = startdate
+  startaccdate = currdt
   files = []
   while currdt <= enddate:
     volumepath = "%s/%s"%(vpath,currdt.strftime("%m/%d/%H/%M"))
@@ -175,9 +180,10 @@ def run_acrr_composite_generation(vpath, cpath, opath, areaid, interval, filesPe
     
     if len(files) == N:
       print "Generating ACRR product for %s"%currdt.strftime("%Y%m%d%H%M")
-      generate_acrr(files, opath, areaid, currdt.strftime("%H%M00"), currdt.strftime("%Y%m%d"), zr_a, zr_b, "DBZH", 
+      generate_acrr(files, opath, areaid, currdt.strftime("%H%M00"), currdt.strftime("%Y%m%d"), startaccdate, currdt, zr_a, zr_b, "DBZH", 
                     acceptableLoss, distancefield, interval, N)
       files=[filename]
+      startaccdate = currdt
 
         
     currdt = currdt + datetime.timedelta(seconds=filePeriod*60)
