@@ -28,7 +28,9 @@ import odim_source
 import rave_dom_db
 import rave_pgf_logger
 import rave_tile_registry
-import _raveio, _acrr, _cartesianvolume, _cartesian, _rave
+import _raveio, _acrr, _cartesianvolume, _cartesian, _rave, _gra
+from gadjust import gra, obsmatcher
+from gadjust.gra import gra_coefficient
 from compositing import compositing
 from tiled_compositing import tiled_compositing
 
@@ -43,7 +45,12 @@ try:
 except:
   pass
 
-
+nodomdb=False
+try:
+  import rave_dom_db
+except:
+  nodomdb=True
+  
 def generate_comp(filepath, pattern, fdate, ftime, areaid="allbltgmaps_4000", opath="/tmp", 
                   detectors="ropo,beamb,overshooting,distance", ignore_malfunc=True, 
                   quantity="DBZH", product="pcappi", selectionMethod="NEAREST_RADAR", 
@@ -91,15 +98,57 @@ def generate_comp(filepath, pattern, fdate, ftime, areaid="allbltgmaps_4000", op
   
   return filename
 
+def apply_gra_correction(gra_corrected_composite_path, comp, areaid, quantity, distancefield="se.smhi.composite.distance.radar", zr_a=200.0, zr_b=1.6):
+  try:
+    d = comp.date
+    t = comp.time
+    db = rave_dom_db.create_db_from_conf()
+    dt = datetime.datetime(int(d[:4]), int(d[4:6]), int(d[6:]), int(t[:2]), int(t[2:4]), 0)
+    dt = dt - datetime.timedelta(seconds=3600*12) # 12 hours back in time for now..
+    grac = db.get_gra_coefficient(dt)
+    if not os.path.exists(gra_corrected_composite_path):
+      logger.info("Creating path for storing corrected composites: %s"%gra_corrected_composite_path)
+      os.makedirs(gra_corrected_composite_path)
+
+    if grac != None:
+      logger.debug("Applying gra coefficients")
+      gra = _gra.new()
+      gra.A = grac.a
+      gra.B = grac.b
+      gra.C = grac.c
+      gra.zrA = zr_a
+      gra.zrb = zr_b
+      dfield = comp.findQualityFieldByHowTask(distancefield)
+      param = comp.getParameter(quantity)
+      gra_field = gra.apply(dfield, param)
+      gra_field.quantity = quantity + "_CORR"
+      comp.addParameter(gra_field)
+      
+      rio = _raveio.new()
+      rio.object = comp
+      filename = "%s/%s_gra_corrected_comp_%s%s.h5"%(gra_corrected_composite_path,areaid,comp.date,comp.time)
+      rio.save(filename)
+      logger.debug("Created gra corrected composite %s"%filename)
+      return comp, gra_field.quantity
+    else:
+      logger.info("No gra coefficients found for given date/time, ignoring gra adjustment")
+  except Exception, e:
+    import traceback
+    traceback.print_exc()
+    logger.error("Failed to apply gra coefficients", exc_info=1)
+  return comp, quantity
+
 def generate_acrr(files, opath, areaid, etime, edate, startdt, enddt, zr_a=200.0, zr_b=1.6, 
                   quantity="DBZH", accept=0.0, distancefield="se.smhi.composite.distance.radar", 
-                  interval=12, N=13, adjustmentfile=None):
+                  interval=12, N=13, applygra=False):
   acrrproduct = None
   
   acrr = _acrr.new()
   acrr.nodata = -1.0
   acrr.undetect = 0.0
   acrr.quality_field_name = distancefield
+
+  acrr_quantity = quantity
 
   filename = "%s/acrr_%dH_%s_%s%s.h5"%(opath, interval, areaid, edate, etime[:4])
   if os.path.exists(filename):
@@ -116,7 +165,11 @@ def generate_acrr(files, opath, areaid, etime, edate, startdt, enddt, zr_a=200.0
     if _cartesianvolume.isCartesianVolume(obj):
       obj = obj.getImage(0)
     
-    obj.getParameter("DBZH").nodata = 255.0
+    if applygra:
+      obj, acrr_quantity = apply_gra_correction(opath+"/gra_corrected_composites", obj, areaid, quantity, distancefield, zr_a, zr_b)
+    
+    obj.getParameter(acrr_quantity).nodata = 255.0
+    
     if not _cartesian.isCartesian(obj):
       raise AttributeError, "Must call plugin with cartesian products"
 
@@ -139,9 +192,9 @@ def generate_acrr(files, opath, areaid, etime, edate, startdt, enddt, zr_a=200.0
        obj.projection.definition != acrrproduct.projection.definition:
       raise AttributeError, "Scale or projdef inconsistancy for used area"
 
-    par = obj.getParameter(quantity)
+    par = obj.getParameter(acrr_quantity)
     if par == None:
-      logger.warn("Could not find parameter (%s) for %s %s"%(quantity, obj.date, obj.time))
+      logger.warn("Could not find parameter (%s) for %s %s"%(acrr_quantity, obj.date, obj.time))
     else:
       if par.getQualityFieldByHowTask(distancefield) != None:
         acrr.sum(par, zr_a, zr_b)
@@ -160,7 +213,7 @@ def generate_acrr(files, opath, areaid, etime, edate, startdt, enddt, zr_a=200.0
   rio.save()
 
 def run_acrr_composite_generation(vpath, cpath, opath, areaid, interval, filesPerHour, 
-                                  acceptableLoss, startdate, enddate, pattern, 
+                                  acceptableLoss, startdate, enddate, pattern, applygra=False,
                                   distancefield="se.smhi.composite.distance.radar", 
                                   detectors="ropo,beamb,overshooting,distance", ignore_malfunc=True, 
                                   product="pcappi", selectionMethod="NEAREST_RADAR", height=1000.0, range=200000.0, elangle=0.0,
@@ -179,13 +232,132 @@ def run_acrr_composite_generation(vpath, cpath, opath, areaid, interval, filesPe
     files.append(filename)
     
     if len(files) == N:
-      print "Generating ACRR product for %s"%currdt.strftime("%Y%m%d%H%M")
+      logger.info("Generating ACRR product for %s"%currdt.strftime("%Y%m%d%H%M"))
       generate_acrr(files, opath, areaid, currdt.strftime("%H%M00"), currdt.strftime("%Y%m%d"), startaccdate, currdt, zr_a, zr_b, "DBZH", 
-                    acceptableLoss, distancefield, interval, N)
+                    acceptableLoss, distancefield, interval, N, applygra)
       files=[filename]
       startaccdate = currdt
 
         
+    currdt = currdt + datetime.timedelta(seconds=filePeriod*60)
+
+def generate_gra(files, opath, areaid, etime, edate, startdt, enddt, zr_a=200.0, zr_b=1.6, 
+                 quantity="DBZH", accept=0.0, distancefield="se.smhi.composite.distance.radar", 
+                 interval=12, N=13, adjustmentfile=None):
+  
+  acrrproduct = None
+  acrr = _acrr.new()
+  acrr.nodata = -1.0
+  acrr.undetect = 0.0
+  acrr.quality_field_name = distancefield
+
+  for fname in files:
+    obj = None
+    try:
+      rio = _raveio.open(fname)
+      obj = rio.object
+    except Exception,e:
+      continue
+
+    if _cartesianvolume.isCartesianVolume(obj):
+      obj = obj.getImage(0)
+
+    if not _cartesian.isCartesian(obj):
+      raise AttributeError, "Must call plugin with cartesian products"
+
+    if acrrproduct == None:
+      acrrproduct = _cartesian.new()
+      acrrproduct.xscale = obj.xscale
+      acrrproduct.yscale = obj.yscale
+      acrrproduct.areaextent = obj.areaextent
+      acrrproduct.projection = obj.projection
+      acrrproduct.product = obj.product
+      acrrproduct.source = obj.source
+      acrrproduct.time = etime
+      acrrproduct.date = edate
+
+    if obj.xscale != acrrproduct.xscale or obj.yscale != acrrproduct.yscale or \
+       obj.projection.definition != acrrproduct.projection.definition:
+      raise AttributeError, "Scale or projdef inconsistancy for used area"
+
+    par = obj.getParameter(quantity)
+    if par == None:
+      logger.warn("Could not find parameter (%s) for %s %s"%(quantity, obj.date, obj.time))
+    else:
+      if par.getQualityFieldByHowTask(distancefield) != None:
+        acrr.sum(par, zr_a, zr_b)
+
+  # accept, N, hours
+  acrrparam = acrr.accumulate(accept, N, interval)
+  acrrproduct.addParameter(acrrparam)
+    
+  db = rave_dom_db.create_db_from_conf()
+  
+  matcher = obsmatcher.obsmatcher(db)
+  
+  points = matcher.match(acrrproduct, acc_period=interval, quantity="ACRR", how_task=distancefield, offset_hours=interval)
+  if len(points) == 0:
+    logger.warn("Could not find any matching observations")
+    return None
+  
+  logger.info("Matched %d points between acrr product and observation db"%len(points))
+  db.merge(points)
+
+  d = acrrproduct.date
+  t = acrrproduct.time
+
+  tlimit = datetime.datetime(int(d[:4]), int(d[4:6]), int(d[6:8]), int(t[0:2]), int(t[2:4]), int(t[4:6]))
+  tlimit = tlimit - datetime.timedelta(hours=interval*MERGETERMS)
+  dlimit = datetime.datetime(int(d[:4]), int(d[4:6]), int(d[6:8]), int(t[0:2]), int(t[2:4]), int(t[4:6]))
+  dlimit = dlimit - datetime.timedelta(hours=12*MERGETERMS)
+  
+  db.delete_grapoints(dlimit) # We don't want any points older than 12 hour * MERGETERMS back in time
+  
+  points = db.get_grapoints(tlimit); # Get all gra points newer than interval*MERGETERMS hours back in time
+  logger.info("Using %d number of points for calculating the gra coefficients"%len(points))
+  
+  if adjustmentfile != None:
+    significant, npoints, loss, r, sig, corr_coeff, a, b, c, m, dev = gra.generate(points, edate, etime, adjustmentfile)
+  else:
+    significant, npoints, loss, r, sig, corr_coeff, a, b, c, m, dev = gra.generate(points, edate, etime)
+
+  # Also store the coefficients in the database so that we can search for them when applying the coefficients
+  NOD = odim_source.NODfromSource(acrrproduct)
+  if not NOD:
+    NOD = ""
+  grac = gra_coefficient(NOD, acrrproduct.date, acrrproduct.time, significant, npoints, loss, r, sig, corr_coeff, a, b, c, float(m), float(dev))
+  db.merge(grac)
+
+def create_gra_coefficients(vpath, cpath, opath, areaid, interval, filesPerHour,
+                            acceptableLoss, startdate, enddate, pattern,
+                            distancefield="se.smhi.composite.distance.radar",
+                            detectors="ropo,beamb,overshooting,distance", ignore_malfunc=True, 
+                            product="pcappi", selectionMethod="NEAREST_RADAR", height=1000.0, range=200000.0, elangle=0.0,
+                            ctfilter=True, qitotal_field=None, prodpar=None, zr_a=200.0, zr_b=1.6, adjustmentfile=None):
+  filePeriod = 60/filesPerHour
+  N = interval * filesPerHour + 1
+  currdt = startdate
+  startaccdate = currdt
+  files = []
+  
+  db = rave_dom_db.create_db_from_conf()
+  db.purge_grapoints()
+  while currdt <= enddate:
+    volumepath = "%s/%s"%(vpath,currdt.strftime("%m/%d/%H/%M"))
+    filename = generate_comp(volumepath, pattern, currdt.strftime("%Y%m%d"), currdt.strftime("%H%M00"), 
+                             areaid, cpath, detectors, ignore_malfunc, "DBZH", product,
+                             selectionMethod, height, range, elangle, ctfilter, qitotal_field, prodpar,
+                             zr_a, zr_b)
+    files.append(filename)
+    
+    if len(files) == N:
+      logger.info("Generating gra coefficient for %s"%currdt.strftime("%Y%m%d%H%M"))
+      
+      generate_gra(files, opath, areaid, currdt.strftime("%H%M00"), currdt.strftime("%Y%m%d"), startaccdate, currdt, zr_a, zr_b, "DBZH", 
+                   acceptableLoss, distancefield, interval, N, adjustmentfile)
+      files=[filename]
+      startaccdate = currdt
+      
     currdt = currdt + datetime.timedelta(seconds=filePeriod*60)
 
 if __name__=="__main__":
@@ -209,8 +381,10 @@ if __name__=="__main__":
   currdt = startdt
   minuteinterval = 60 / FILES_PER_HOUR
  
-  usage = "usage: %prog --input=<input path> --startdt=<start datetime> --enddt=<end datetime> --pattern=<pattern> [--area=<area>] [--hours=hours] "
+  usage = "usage: %prog --input=<input path> --startdt=<start datetime> --enddt=<end datetime> --pattern=<pattern> [--area=<area>] [--hours=hours] [--create-gra-coefficients]"
   usage += "\nGenerates acrr composites directly from polar scans and volumes."
+  usage += "\nIf specifying --create-gra-coefficients, then a run will be performed that produces gra coefficients that can be used in the gra adjustment."
+  
   parser = OptionParser(usage=usage)
 
   parser.add_option("-i", "--input", dest="inputpath", default=VOLUME_PATH,
@@ -237,6 +411,15 @@ if __name__=="__main__":
   parser.add_option("-H", "--hours", dest="hours", type="int", default=12,
                     help="Number of hours that should be included in each accumulation period, either 1,2,3,4,6,8,12 or 24. Default is 12")
 
+  parser.add_option("--create-gra-coefficients", dest="create_gra_coefficients", action="store_true", default=False,
+                    help="If gra coefficients should be created.")
+  
+  parser.add_option("--adjustmentfile", dest="adjustmentfile", default=None,
+                    help="The adjustmentfile that gra coefficients should be written to. Default: None")
+
+  parser.add_option("--apply-gra-correction", dest="applygra", action="store_true", default=False,
+                    help="If gra coefficients should be applied to the acrr product.")
+
   (options, args) = parser.parse_args()
   
   print "Running with:"
@@ -246,21 +429,22 @@ if __name__=="__main__":
   print "Datetime: %s -> %s"%(options.startdt, options.enddt)
   print "Pattern: %s"%options.pattern
   print "Area: %s"%options.area
-  print "Hours: %d"%options.hours 
-  
-  #run_acrr_composite_generation(vpath, cpath, areaid, interval, filesPerHour, 
-  #                                acceptableLoss, startdate, enddate, distancefield="se.smhi.composite.distance.radar", 
-  #                                detectors="ropo,beamb,overshooting,distance", ignore_malfunc=True, 
-  #                                product="pcappi", selectionMethod="NEAREST_RADAR", height=1000.0, range=200000.0, elangle=0.0,
-  #                                ctfilter=True, qitotal_field=None, prodpar=None, zr_a=200.0, zr_b=1.6):
-  run_acrr_composite_generation(options.inputpath, options.compositepath, options.outputpath, options.area, options.hours, 
-                                FILES_PER_HOUR, ACCEPTABLE_LOSS,
-                                datetime.datetime.strptime(options.startdt, "%Y%m%d%H%M"), 
-                                datetime.datetime.strptime(options.enddt, "%Y%m%d%H%M"), 
-                                options.pattern)
-  #def run_composite_generation(fpath, areaid, interval, filesPerHour, distanceField, acceptableLoss, startdate, enddate, zr_a=200.0, zr_b=1.6):
-    #  startdt = datetime.datetime.strptime(startdate, "%Y%m%d%H%M") - datetime.timedelta(seconds=interval*3600)
-#  enddt = datetime.datetime.strptime(enddate, "%Y%m%d%H%M")
+  print "Hours: %d"%options.hours
+  print "Create gra coefficients: %s"%`options.create_gra_coefficients` 
+  print "Adjustmentfile: %s"%options.adjustmentfile
+  print "Apply gra correction: %s"%`options.applygra`
+  if options.create_gra_coefficients:
+    create_gra_coefficients(options.inputpath, options.compositepath, options.outputpath, options.area, options.hours, 
+                            FILES_PER_HOUR, ACCEPTABLE_LOSS,
+                            datetime.datetime.strptime(options.startdt, "%Y%m%d%H%M"), 
+                            datetime.datetime.strptime(options.enddt, "%Y%m%d%H%M"), 
+                            options.pattern,adjustmentfile=options.adjustmentfile)    
+  else:
+    run_acrr_composite_generation(options.inputpath, options.compositepath, options.outputpath, options.area, options.hours, 
+                                  FILES_PER_HOUR, ACCEPTABLE_LOSS,
+                                  datetime.datetime.strptime(options.startdt, "%Y%m%d%H%M"), 
+                                  datetime.datetime.strptime(options.enddt, "%Y%m%d%H%M"), 
+                                  options.pattern, options.applygra)
 
     
   
