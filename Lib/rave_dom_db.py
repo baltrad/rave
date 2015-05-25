@@ -289,6 +289,13 @@ class rave_db(object):
       pts = q.delete()
       s.commit()
       return pts
+    
+  def purge_grapoints(self):
+    with self.get_session() as s:
+      q = s.query(grapoint)
+      pts = q.delete()
+      s.commit()
+      return pts
       
   
 ##
