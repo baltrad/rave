@@ -19,7 +19,7 @@ along with HLHDF.  If not, see <http://www.gnu.org/licenses/>.
 /** Header file for KNMI's sun scanning functionality
  * @file
  * @author Original algorithm and code: Iwan Holleman, KNMI, and Integration: Daniel Michelson, SMHI
- * @date 2010-10-29
+ * @date 2015-05-11
  */
 #ifndef SCANSUN_H
 #define SCANSUN_H
@@ -41,19 +41,31 @@ along with HLHDF.  If not, see <http://www.gnu.org/licenses/>.
 /*Definition of analysis parameters.                                          */
 /******************************************************************************/
 
-#define HEIGMIN   (6.0)           /*Minimum height for analyses in km.*/
-#define RANGMIN   (50.0)          /*Minimum range for analyses in km.*/
-#define FRACDATA  (0.90)          /*Fraction of data above threshold in ray.*/
-#define ANGLEDIF  (2.0)           /*Maximum dev. from calculated sun in deg.*/ 
-#define GASATTN   (0.016)         /*Two-way gaseous attenuation in dB/km.*/
-#define CWIDTH    (1.2)           /*Factor between bandwidth and 1/pulselength.*/
+#define HEIGMIN   (6.0) /* DEPRECATED *//*Minimum height for analyses in km.*/
+#define RANGMIN  (50.0) /* DEPRECATED *//*Minimum range for analyses in km.*/
+
+#define HEIGMIN1   (8.0)          /*Minimum height for first analyses in km.*/
+#define HEIGMIN2   (4.0)          /*Minimum height for second analyses in km.*/
+#define RAYMIN     (20.0)         /*Minimum length of rays for analyses in km.*/
+#define FRACDATA   (0.70)         /*Fraction of rangebins passing the analyses.*/
+#define DBDIFX     (2.0)          /*Maximum dev. of power from 1st fit in dB.*/
+#define ANGLEDIF   (5.0)          /*Maximum dev. from calculated sun in deg.*/
+#define GASATTN    (0.016)        /*Two-way gaseous attenuation in dB/km.*/
+#define CWIDTH     (1.2)          /*Factor between bandwidth and 1/pulselength.*/
+
+/******************************************************************************/
+/*Definition of radar parameters for solar analysis:                          */
+/******************************************************************************/
+
+#define ONEPOL     (3.01)         /*Losses due to one-pol RX only in dB.*/
+#define AVGATTN    (1.39)         /*Averaging and overlap losses in dB for 1deg.*/
 
 /******************************************************************************/
 /*Definition of standard parameters.                                          */
 /******************************************************************************/
 
-#define DEG2RAD    DEG_TO_RAD     /*Degrees to radians. From PROJ.4*/
-#define RAD2DEG    RAD_TO_DEG     /*Radians to degrees. From PROJ.4*/
+#define DEG2RAD    (0.017453293)  /*Degrees to radians.*/
+#define RAD2DEG    (57.29578)     /*Radians to degrees.*/
 #define LSTR       (128)          /*Length of all strings used.*/
 #define NELEVX     (64)           /*Maximum number of elevations.*/
 #define RADIUS43   (8495.0)       /*Earth radius used for height calculations.*/
@@ -87,6 +99,10 @@ struct scanmeta {
 	double radcnst;        /*Radar constant in dB.*/
 	double txnom;          /*Nominal maximum TX power in kW.*/
 	double antvel;         /*Antenna velocity in deg/s.*/
+  double lon;            /*Longitude of radar in deg.*/
+  double lat;            /*Latitude of radar in deg.*/
+  double RXLoss;         /*Total losses between reference and feed (dB).*/
+  double AntGain;        /*Antenna gain (dB)*/
 };
 typedef struct scanmeta SCANMETA;
 
@@ -94,15 +110,17 @@ typedef struct scanmeta SCANMETA;
  * Structure for containing output values:
  */
 struct rvals {
-	long date;				/* Date of scan data in YYYYMMDD */
-	long time;				/* Time of scan data in HHMMSS */
-	double Elev;			/* Elevation of scan in deg. */
-	double Azimuth;			/* Azimuth of scan in deg. */
-	double ElevSun;			/* Elevation angle of the sun in deg. */
-	double AzimSun;         /* Azimuth angle of the sun in deg. */
-	double dBmSun;          /* Sun's reflectivity in dBm */
-	double dBmStdd;         /* Standard deviation of the sun's reflectivity in dBm */
-	double RelevSun;		/* Refraction-corrected (perceived) elevation angle of the sun in deg. */
+	long date;        /* Date of scan data in YYYYMMDD */
+	long time;        /* Time of scan data in HHMMSS */
+	double Elev;      /* Elevation of scan in deg. */
+	double Azimuth;   /* Azimuth of scan in deg. */
+	double ElevSun;   /* Elevation angle of the sun in deg. */
+	double AzimSun;   /* Azimuth angle of the sun in deg. */
+	double SunMean;   /* Sun's reflectivity in dBm */
+	double SunStdd;   /* Standard deviation of the sun's reflectivity in dBm */
+	double dBSunFlux; /* Sun flux in dB */
+	char* quant;      /* what/quantity for the given scan's parameter */
+	double RelevSun;  /* Refraction-corrected (perceived) elevation angle of the sun in deg. */
 };
 typedef struct rvals RVALS;
 
@@ -118,6 +136,15 @@ typedef struct rvals RVALS;
  * @returns 1 on success or 0 if the attribute doesn't exist
  */
 int getDoubleAttribute(RaveCoreObject* obj, const char* aname, double* tmpd);
+
+/**
+ * Returns a double attribute array from a polar scan object.
+ * @param[in] obj - a polar scan
+ * @param[in] aname - a string of the attribute to retrieve
+ * @param[in] array - the double array to retrieve
+ * @returns 1 on success or 0 if the attribute doesn't exist
+ */
+int getDoubleArrayAttribute(PolarScan_t* scan, const char* aname, double** array);
 
 /**
  * Reads metadata into the SCANMETA structure from volume, scan, param.
@@ -201,6 +228,25 @@ long date2julday(long yyyymmdd);
 long julday2date(long julian);
 
 /**
+ * Finds sun hits in reflectivity data.
+ * @param[in] scan - polar scan object
+ * @param[in] meta - internal metadata structure
+ * @param[in] list - RAVE list object containing hits
+ * @param[in] quant - string specifying the ODOM quantity to process
+ */
+void processData(PolarScan_t* scan, SCANMETA* meta, RaveList_t* list, const char* quant);
+
+/**
+ * Helper function that calls @ref processReflectivity for each of a number of
+ * given parameters/quantities. Called internally by @ref scansun.
+ * @param[in] scan - polar scan object
+ * @param[in] meta - internal metadata structure
+ * @param[in] list - RAVE list object containing hits
+  */
+void processScan(PolarScan_t* scan, SCANMETA* meta, RaveList_t* list);
+
+/**
+ * Masterminds the scanning of polar data and determination of sun hits.
  * @param[in] filename - string containing the name (and path if somewhere else) of the file to process
  * @param[out] list - RaveList_t object for holding one or more sets of return values
  * @param[out] source - string containing the value of /what/source

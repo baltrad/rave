@@ -40,8 +40,8 @@ try:
 except:
   pass
 
-HEADER = "#Date    Time   Elevatn Azimuth ElevSun AzimSun dBmMHzSun dBmStdd RelevSun\n"
-FORMAT = "%08i %06i %7.2f %7.2f %7.2f %7.2f %9.2f %7.4f  %7.2f\n" 
+HEADER = "#Date    Time   Elevatn Azimuth ElevSun RelevSun  AzimSun dBSunFlux   SunMean SunStdd Quant\n"
+FORMAT = "%08i %06i %7.2f %7.2f %7.2f  %7.2f  %7.2f %9.2f %9.2f  %6.3f %s\n"
 
 logger = rave_pgf_logger.rave_pgf_logger_client()
 

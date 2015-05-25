@@ -107,15 +107,17 @@ static PyObject* _scansun_func(PyObject* self, PyObject* args)
 	rlist = PyList_New(0);
   if (RaveList_size(list) > 0) {
     while ((ret = RaveList_removeLast(list)) != NULL) {
-      PyObject* rtuple = Py_BuildValue("llddddddd", ret->date,
-		                                                ret->time,
-		                                                ret->Elev,
-		                                                ret->Azimuth,
-		                                                ret->ElevSun,
-		                                                ret->AzimSun,
-		                                                ret->dBmSun,
-		                                                ret->dBmStdd,
-		                                                ret->RelevSun);
+      PyObject* rtuple = Py_BuildValue("lldddddddds", ret->date,
+		                                                  ret->time,
+		                                                  ret->Elev,
+		                                                  ret->Azimuth,
+		                                                  ret->ElevSun,
+		                                                  ret->RelevSun,
+		                                                  ret->AzimSun,
+		                                                  ret->dBSunFlux,
+		                                                  ret->SunMean,
+		                                                  ret->SunStdd,
+		                                                  ret->quant);
       PyList_Append(rlist, rtuple);
       Py_DECREF(rtuple);
       RAVE_FREE(ret);

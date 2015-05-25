@@ -22,19 +22,24 @@ class RaveScansun(unittest.TestCase):
         # Same metadata as in the lowest sweep of the KNMI volume
         lon, lat, yyyymmdd, hhmmss = 4.78997, 52.9533, 20110111, 75022
         valid = (-0.7758360955258381, 126.84009818438497, -0.18747813915648781)
-        self.assertEquals(valid, _scansun.solar_elev_azim(lon, lat, yyyymmdd, hhmmss))
+        result = _scansun.solar_elev_azim(lon, lat, yyyymmdd, hhmmss)
+        self.assertAlmostEquals(valid[0], result[0], 5)
+        self.assertAlmostEquals(valid[1], result[1], 5)
+        self.assertAlmostEquals(valid[2], result[2], 5)
 
 
     def testRefraction(self):
-        self.assertEquals(-0.19, round(_scansun.refraction(-0.78), 2))
+#        self.assertEquals(-0.19, round(_scansun.refraction(-0.78), 2))
+        self.assertAlmostEquals(-0.19, _scansun.refraction(-0.78), 2)
 
 
     def testScansun(self):
         # The following validation values are:
         # Date    Time   Elevatn Azimuth ElevSun AzimSun dBmMHzSun dBmStdd RelevSun
-        valid = ('RAD:NL51;PLC:nldhl', [(20110111, 75022, 0.30000001192092901, 126.5, 
-                  -0.77585925328048244, 126.84009776579752, -113.30817548053685, 
-                  0.67217618344963492, -0.1874983807707411)])
+        valid = ('RAD:NL51;PLC:nldhl', [(20110111, 75022, 0.30000001447042407, 126.5, 
+                                         -0.77586040298515435, -0.18749940189096537, 
+                                         126.84009882306225, -68.880164913902306, 
+                                         -113.28016491390231, 0.78867323519300037, 'DBZH')])
         result = _scansun.scansun(self.KNMI_TESTFILE)
         self.assertEquals(valid[0][0], result[0][0])
         self.assertEquals(valid[1][0][0], result[1][0][0])
@@ -46,6 +51,8 @@ class RaveScansun(unittest.TestCase):
         self.assertAlmostEquals(valid[1][0][6], result[1][0][6], 5)
         self.assertAlmostEquals(valid[1][0][7], result[1][0][7], 5)
         self.assertAlmostEquals(valid[1][0][8], result[1][0][8], 5)
+        self.assertAlmostEquals(valid[1][0][9], result[1][0][9], 5)
+        self.assertEquals(valid[1][0][10], result[1][0][10])
 	#self.assertEquals(valid, _scansun.scansun(self.KNMI_TESTFILE))
 
 

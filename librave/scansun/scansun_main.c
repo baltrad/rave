@@ -38,25 +38,26 @@ int main(int argc,char *argv[]) {
 		RAVE_OBJECT_RELEASE(list);
 		exit(1);
 	}
-
 	if (RaveList_size(list) > 0) {
-		printf("#Date    Time   Elevatn Azimuth ElevSun AzimSun dBmMHzSun dBmStdd RelevSun Source\n");
+		printf("#Date    Time   Elevatn Azimuth ElevSun RelevSun  AzimSun dBSunFlux   SunMean SunStdd Quant Source\n");
 		while ((ret = RaveList_removeLast(list)) != NULL) {
-			printf("%08ld %06ld %7.2f %7.2f %7.2f %7.2f %9.2f %7.4f  %7.2f %s\n", ret->date,
-			                                                                      ret->time,
-			                                                                      ret->Elev,
-			                                                                      ret->Azimuth,
-			                                                                      ret->ElevSun,
-			                                                                      ret->AzimSun,
-			                                                                      ret->dBmSun,
-			                                                                      ret->dBmStdd,
-			                                                                      ret->RelevSun,
-			                                                                      source);
-			RAVE_FREE(ret);
+			printf("%08ld %06ld %7.2f %7.2f %7.2f  %7.2f  %7.2f %9.2f %9.2f  %6.3f  %s %s\n", ret->date,
+			                                                                                  ret->time,
+			                                                                                  ret->Elev,
+			                                                                                  ret->Azimuth,
+			                                                                                  ret->ElevSun,
+			                                                                                  ret->RelevSun,
+			                                                                                  ret->AzimSun,
+			                                                                                  ret->dBSunFlux,
+			                                                                                  ret->SunMean,
+			                                                                                  ret->SunStdd,
+			                                                                                  ret->quant,
+			                                                                                  source);
+			// RAVE_FREE(ret);  /* No longer frees! */
 		}
 	}
 	RAVE_OBJECT_RELEASE(list);
-	RAVE_FREE(source);
+	// RAVE_FREE(source);  /* No longer frees! */
 
 	exit(0);
 }
