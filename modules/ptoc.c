@@ -186,6 +186,12 @@ static double getarritem3d(int e,int x, int y, TrafoWrapper3D *tw)
     break;
   }
 
+  case 'H': /* PyArray_USHORT */  {
+    unsigned short *a = (unsigned short *)tw->src[e]->data;
+    ret = a[y*tw->inxsize+x];
+    break;
+  }
+
   case 'i': /* PyArray_INT */ {
     int *a = (int *)tw->src[e]->data;
     ret = a[y*tw->inxsize+x];
@@ -262,6 +268,17 @@ static void setarritem3d(int x, int y, double v, TrafoWrapper3D *tw)
       c=-32768;
     if (c>32767)
       c=32767;
+    a[y*tw->outxsize+x]=c;
+    break;
+  }
+
+  case 'H': /* PyArray_USHORT */  {
+    unsigned short *a = (unsigned short *)tw->desta;
+    int c = mytrunc(v);
+    if (c<0)  /* Oops: Not allowed!*/
+      c=0;
+    if (c>USHRT_MAX)
+      c=USHRT_MAX;
     a[y*tw->outxsize+x]=c;
     break;
   }
@@ -349,6 +366,17 @@ static void settopoitem(int x, int y, double v, TrafoWrapper3D* tw)
       c=-32768;
     if (c>32767)
       c=32767;
+    a[y*tw->topooutxsize+x]=c;
+    break;
+  }
+
+  case 'H': /* PyArray_USHORT */  {
+    unsigned short *a = (unsigned short *)tw->topodata;
+    int c = mytrunc(v);
+    if (c<0)  /* Oops: Not allowed!*/
+      c=0;
+    if (c>USHRT_MAX)
+      c=USHRT_MAX;
     a[y*tw->topooutxsize+x]=c;
     break;
   }

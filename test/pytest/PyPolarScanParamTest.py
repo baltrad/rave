@@ -305,7 +305,7 @@ class PyPolarScanParamTest(unittest.TestCase):
     
     obj.setData(a)
     
-    self.assertEqual(_rave.RaveDataType_SHORT, obj.datatype)
+    self.assertEqual(_rave.RaveDataType_USHORT, obj.datatype)
     self.assertEqual(10, obj.nbins)
     self.assertEqual(12, obj.nrays)
 

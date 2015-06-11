@@ -237,6 +237,7 @@ static PyObject* _pypolarscanparam_getData(PyPolarScanParam* self, PyObject* arg
     raiseException_returnNULL(PyExc_IOError, "Could not translate data type");
   }
   result = PyArray_SimpleNew(2, dims, arrtype);
+
   if (result == NULL) {
     raiseException_returnNULL(PyExc_MemoryError, "Could not create resulting array");
   }

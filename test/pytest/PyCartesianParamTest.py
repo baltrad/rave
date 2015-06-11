@@ -359,7 +359,7 @@ class PyCartesianParamTest(unittest.TestCase):
     
     obj.setData(a)
     
-    self.assertEqual(_rave.RaveDataType_SHORT, obj.datatype)
+    self.assertEqual(_rave.RaveDataType_USHORT, obj.datatype)
     self.assertEqual(10, obj.xsize)
     self.assertEqual(12, obj.ysize)
 

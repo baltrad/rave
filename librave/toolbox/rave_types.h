@@ -90,6 +90,7 @@ typedef enum RaveDataType {
   RaveDataType_CHAR = 0, /**< char */
   RaveDataType_UCHAR,    /**< unsigned char */
   RaveDataType_SHORT,    /**< short */
+  RaveDataType_USHORT,   /**< unsigned short */
   RaveDataType_INT,      /**< int */
   RaveDataType_LONG,     /**< long */
   RaveDataType_FLOAT,    /**< float */

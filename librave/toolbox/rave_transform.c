@@ -74,6 +74,11 @@ double get_array_item_2d(
     ret = a[y * stride_xsize + x];
     break;
   }
+  case RaveDataType_USHORT: {
+    unsigned short *a = (unsigned short *) in_a;
+    ret = a[y * stride_xsize + x];
+    break;
+  }
   case RaveDataType_INT: {
     int *a = (int *) in_a;
     ret = a[y * stride_xsize + x];
@@ -136,6 +141,15 @@ void set_array_item_2d(
     if (c > SHRT_MAX)
       c = SHRT_MAX;
     a[y * stride_xsize + x] = c;
+    break;
+  }
+  case RaveDataType_USHORT: {
+    unsigned short *a = (unsigned short *) out_a;
+    if (v < 0) /* Oops: Not allowed!*/
+      v = 0;
+    if (v > USHRT_MAX)
+      v = USHRT_MAX;
+    a[y * stride_xsize + x] = (unsigned short)v;
     break;
   }
   case RaveDataType_INT: {

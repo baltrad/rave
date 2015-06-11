@@ -273,6 +273,7 @@ void init_rave(void)
   add_long_constant(dictionary, "RaveDataType_CHAR", RaveDataType_CHAR);
   add_long_constant(dictionary, "RaveDataType_UCHAR", RaveDataType_UCHAR);
   add_long_constant(dictionary, "RaveDataType_SHORT", RaveDataType_SHORT);
+  add_long_constant(dictionary, "RaveDataType_USHORT", RaveDataType_USHORT);
   add_long_constant(dictionary, "RaveDataType_INT", RaveDataType_INT);
   add_long_constant(dictionary, "RaveDataType_LONG", RaveDataType_LONG);
   add_long_constant(dictionary, "RaveDataType_FLOAT", RaveDataType_FLOAT);
