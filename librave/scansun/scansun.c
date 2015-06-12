@@ -95,6 +95,8 @@ int fill_meta(PolarScan_t* scan, PolarScanParam_t* param, SCANMETA *meta)
    time = PolarScan_getStartTime(scan);
    sscanf(date,"%ld",&meta->date);
    sscanf(time,"%ld",&meta->time);
+   meta->lon = PolarScan_getLongitude(scan)*RAD2DEG;
+   meta->lat = PolarScan_getLatitude(scan)*RAD2DEG;
    meta->elev = PolarScan_getElangle(scan)*RAD2DEG; /* RAVE quirk */
    meta->nrang = PolarScan_getNbins(scan);
    meta->nazim = PolarScan_getNrays(scan);
@@ -102,53 +104,65 @@ int fill_meta(PolarScan_t* scan, PolarScanParam_t* param, SCANMETA *meta)
    meta->rscale = PolarScan_getRscale(scan)/1000.0; /* Scale back to km */
    meta->ascale = 360.0 / meta->nazim;              /* First guess. FIXME?? */
 
-   /* Default values are pretty arbitrary but typical */
-   if (!getDoubleAttribute((RaveCoreObject*)scan, "how/rpm", &tmpd)) meta->antvel = 18.;
+   if (!getDoubleAttribute((RaveCoreObject*)scan, "how/rpm", &tmpd)) {
+     RAVE_WARNING2("Scan elevation %2.1f: No how/rpm attribute. Using default %2.1f deg/s.\n", meta->elev, ANTVEL);
+     meta->antvel = ANTVEL;
+   }
    else meta->antvel = tmpd * 6.0;  /* 360degrees/60sec */
 
-   if (!getDoubleAttribute((RaveCoreObject*)scan, "how/pulsewidth", &tmpd)) meta->pulse = 2.0;
+   if (!getDoubleAttribute((RaveCoreObject*)scan, "how/astart", &tmpd)) {
+     RAVE_WARNING2("Scan elevation %2.1f: No how/astart attribute. Using default %1.1f deg.\n", meta->elev, ASTART);
+     meta->astart = ASTART;
+   }
+   else meta->astart = tmpd;
+
+   if (!getDoubleAttribute((RaveCoreObject*)scan, "how/pulsewidth", &tmpd)) {
+     RAVE_WARNING2("Scan elevation %2.1f: No how/pulsewidth attribute. Using default %1.2f microseconds.\n", meta->elev, PULSEWIDTH);
+     meta->pulse = PULSEWIDTH;
+   }
    else meta->pulse = tmpd;
 
    /* Would be possible that radar constants are found in individual quantity how,
-    * but this implies unnecessarily replicated information, so we will only look at the scan level.
-    * Assume default value from Den Helder (late 2010), valid for long pulse
-    * if no radar constant is available. Also, values for ZDR are taken from H. */
+    * but this implies unnecessarily replicated information, so we will only look at the scan level. */
    if ( (!strcmp(quant, "TH")) || (!strcmp(quant, "DBZH")) || (!strcmp(quant, "ZDR")) ) {
      if (!getDoubleAttribute((RaveCoreObject*)scan, "how/radconstH", &tmpd)) {
-       meta->radcnst = 64.08;
+       RAVE_ERROR2("Scan elevation %2.1f: No how/radconstH attribute. Using default %2.1f dB.\n", meta->elev, RADCNST);
+       meta->radcnst = RADCNST;
      } else {
        meta->radcnst = tmpd;
      }
      if (!getDoubleAttribute((RaveCoreObject*)scan, "how/RXlossH", &tmpd)) {
-       meta->RXLoss = 0.0;
+       RAVE_WARNING2("Scan elevation %2.1f: No how/RXlossH attribute. Using default %2.1f dB.\n", meta->elev, RXLOSS);
+       meta->RXLoss = RXLOSS;
      } else {
        meta->RXLoss = tmpd;
      }
      if (!getDoubleAttribute((RaveCoreObject*)scan, "how/antgainH", &tmpd)) {
-       meta->AntGain = 9.0;
+       RAVE_WARNING2("Scan elevation %2.1f: No how/antgainH attribute. Using default %2.1f dB.\n", meta->elev, ANTGAIN);
+       meta->AntGain = ANTGAIN;
      } else {
        meta->AntGain = tmpd;
      }
    } else if ( (!strcmp(quant, "TV")) || (!strcmp(quant, "DBZV")) ) {
      if (!getDoubleAttribute((RaveCoreObject*)scan, "how/radconstV", &tmpd)) {
-       meta->radcnst = 64.08;
+       RAVE_ERROR2("Scan elevation %2.1f: No how/radconstV attribute. Using default %2.1f dB.\n", meta->elev, RADCNST);
+       meta->radcnst = RADCNST;
      } else {
        meta->radcnst = tmpd;
      }
      if (!getDoubleAttribute((RaveCoreObject*)scan, "how/RXlossV", &tmpd)) {
-       meta->RXLoss = 0.0;
+       RAVE_WARNING2("Scan elevation %2.1f: No how/RXlossV attribute. Using default %2.1f dB.\n", meta->elev, RXLOSS);
+       meta->RXLoss = RXLOSS;
      } else {
        meta->RXLoss = tmpd;
      }
      if (!getDoubleAttribute((RaveCoreObject*)scan, "how/antgainV", &tmpd)) {
-       meta->AntGain = 9.0;
+       RAVE_WARNING2("Scan elevation %2.1f: No how/antgainV attribute. Using default %2.1f dB.\n", meta->elev, ANTGAIN);
+       meta->AntGain = ANTGAIN;
      } else {
        meta->AntGain = tmpd;
      }
    }
-   meta->zscale = PolarScanParam_getGain(param);
-   meta->zoffset = PolarScanParam_getOffset(param);
-   meta->nodata = PolarScanParam_getNodata(param);
 
 return 1;
 }
@@ -289,25 +303,43 @@ return dd+100*(mm+100*yyyy);
 #undef IGREG 
 
 
-void processData(PolarScan_t* scan, SCANMETA* meta, RaveList_t* list, const char* quant) {
+void processData(PolarScan_t* scan, SCANMETA* meta, RaveList_t* list) {
   int ia, ir, irn1, irn2, n;
   long date,time,addtime;
   double HeigMin1=HEIGMIN1,HeigMin2=HEIGMIN2,FracData=FRACDATA,dBdifX=DBDIFX,AngleDif=ANGLEDIF;
-  double RayMin=RAYMIN,GasAttn=GASATTN,lonlat[2],Azimuth,Range,SunFirst;
-  double SunMean,SunStdd,dBSunFlux,Signal;
-  //double** startazA = NULL;
-  //double** stopazA = NULL;
-  //double** startelA = NULL;
-  //double** stopelA = NULL;
-  PolarScanParam_t* param = NULL;
+  double RayMin=RAYMIN,GasAttn=GASATTN,lonlat[2],Elevation,Azimuth,Range,SunFirst;
+  double SunMean,SunStdd,dBSunFlux,ZdrMean,ZdrStdd,Signal,DSignal;
+  double* startazA = NULL;
+  double* stopazA = NULL;
+  double* startelA = NULL;
+  double* stopelA = NULL;
+  PolarScanParam_t* Zparam = NULL;
+  PolarScanParam_t* Dparam = NULL;
   RaveValueType t;
 
   /* Note that RAVE reads coordinates directly into radians. */
   lonlat[0] = PolarScan_getLongitude(scan)*RAD2DEG;
   lonlat[1] = PolarScan_getLatitude(scan)*RAD2DEG;
 
-  param = PolarScan_getParameter(scan, quant);  /* Extract this parameter */
-  if (!fill_meta(scan,param,meta)) goto fail_scan;
+  Zparam = PolarScan_getParameter(scan, meta->quant1);  /* Extract reflectivity */
+  if (meta->Zdr) Dparam = PolarScan_getParameter(scan, meta->quant2);  /* Extract quant for ZDR */
+  if (!fill_meta(scan,Zparam,meta)) goto fail_scan;
+
+  /* Additional metadata angular arrays read locally for convenience */
+  if (!getDoubleArrayAttribute(scan, "how/startazA", &startazA)) {
+    RAVE_WARNING1("Scan elevation %2.1f: No how/startazA array attribute. Estimating azimuth angle from polar geometry.\n", meta->elev);
+  } else {
+    if (!getDoubleArrayAttribute(scan, "how/stopazA", &stopazA)) {
+      RAVE_WARNING1("Scan elevation %2.1f: how/startazA found but not how/stopazA array attribute.\n", meta->elev);
+    }
+  }
+  if (!getDoubleArrayAttribute(scan, "how/startelA", &startelA)) {
+    RAVE_WARNING1("Scan elevation %2.1f: No how/startelA array attribute. Using commanded elevation angle.\n", meta->elev);
+  } else {
+    if (!getDoubleArrayAttribute(scan, "how/stopelA", &stopelA)) {
+      RAVE_WARNING1("Scan elevation %2.1f: how/startazA found but not how/stopelA array attribute.\n", meta->elev);
+    }
+  }
 
   if (meta->nrang*meta->rscale<RayMin) goto fail_scan;
   irn1=(int)(ElevHeig2Rang(meta->elev,HeigMin1)/meta->rscale);
@@ -317,46 +349,70 @@ void processData(PolarScan_t* scan, SCANMETA* meta, RaveList_t* list, const char
 
   for (ia=0 ; ia<meta->nazim ; ia++) {
     RVALS* ret = RAVE_MALLOC(sizeof(RVALS));
-    Azimuth=(ia+0.5)*meta->ascale;
+
+    /* Use exact azimuth and elevation angles if available */
+    if (startazA) {
+      double startaz = startazA[ia];
+      double stopaz = stopazA[ia];
+      /* Most radars scan clockwise, but negative antvel indicates otherwise */
+      if (meta->antvel > 0.0) {
+        if (startaz > stopaz) startaz = -(360.0-startaz);
+      } else {
+        if (stopaz > startaz) stopaz = -(360.0-stopaz);
+      }
+      Azimuth = (startaz + stopaz) / 2.0;
+    }
+    else Azimuth=(ia+0.5)*meta->ascale+meta->astart;
+
+    if (startelA) Elevation = (startelA[ia] + stopelA[ia]) / 2.0;
+    else Elevation = meta->elev;
 
     /*First analysis to estimate sun power at higher altitudes (less rain contamination).*/
-    /* This applies only to non-ZDR */
 
     n=0;
     SunFirst=0.0;
-    if (strcmp(quant, "ZDR")) {
-      for (ir=irn1 ; ir<meta->nrang ; ir++) {
-        /* Reads out the scaled value directly. If 't' isn't
-           RaveValueType_NODATA or RaveValueType_UNDETECT, then process. */
-        t = PolarScanParam_getConvertedValue(param,ir,ia,&Signal);
-        if (t == RaveValueType_DATA) {
-          Range=(ir+0.5)*meta->rscale;
-          Signal-=meta->radcnst+20*log10(Range)+GasAttn*Range;
-          SunFirst+=Signal;
-          n++;
-        }
+    for (ir=irn1 ; ir<meta->nrang ; ir++) {
+      /* Reads out the scaled value directly. If 't' isn't
+         RaveValueType_NODATA or RaveValueType_UNDETECT, then process. */
+      t = PolarScanParam_getConvertedValue(Zparam,ir,ia,&Signal);
+      if (t == RaveValueType_DATA) {
+        Range=(ir+0.5)*meta->rscale;
+        Signal-=meta->radcnst+20*log10(Range)+GasAttn*Range;
+        SunFirst+=Signal;
+        n++;
       }
-      if (!n||n<FracData*(meta->nrang-irn1)) {
-        RAVE_FREE(ret);
-        continue;
-      }
-      SunFirst/=n;
     }
+    if (!n||n<FracData*(meta->nrang-irn1)) {
+      RAVE_FREE(ret);
+      continue;
+    }
+    SunFirst/=n;
 
-    /*Second analysis with removal of outliers, or ZDR analysis.*/
+    /*Second analysis with removal of outliers, if available also ZDR analysis.*/
 
     n=0;
     SunMean=SunStdd=dBSunFlux=0.0;
+    ZdrMean=ZdrStdd=0.0;
     for (ir=irn2 ; ir<meta->nrang ; ir++) {
-      t = PolarScanParam_getConvertedValue(param,ir,ia,&Signal);
+      t = PolarScanParam_getConvertedValue(Zparam,ir,ia,&Signal);
       if (t == RaveValueType_DATA) {
-        if (strcmp(quant, "ZDR")) {
-          Range=(ir+0.5)*meta->rscale;
-          Signal-=meta->radcnst+20*log10(Range)+GasAttn*Range;
-          if (fabs(Signal-SunFirst)>dBdifX) continue;
-        }
+        Range=(ir+0.5)*meta->rscale;
+        Signal-=meta->radcnst+20*log10(Range)+GasAttn*Range;
+        if (fabs(Signal-SunFirst)>dBdifX) continue;
         SunMean+=Signal;
         SunStdd+=Signal*Signal;
+        if (meta->Zdr) {
+          t = PolarScanParam_getConvertedValue(Dparam,ir,ia,&DSignal);
+          if (t == RaveValueType_DATA) {  /* This condition can affect the validity of n, but it will also guarantee no zero-division errors. */
+            if (meta->Zdr == ZdrType_CALCULATE) {
+              double H = pow(10.0,(Signal/10.0));
+              double V = pow(10.0,(DSignal/10.0));
+              DSignal = 10*log10(H/V);
+            }
+            ZdrMean+=DSignal;
+            ZdrStdd+=DSignal*DSignal;
+          }
+        }
         n++;
       }
     }
@@ -366,46 +422,105 @@ void processData(PolarScan_t* scan, SCANMETA* meta, RaveList_t* list, const char
     }
     SunMean/=n;
     SunStdd=sqrt(SunStdd/n-SunMean*SunMean+1e-8);
-    if (strcmp(quant, "ZDR")) {
-      SunMean-=10*log10(CWIDTH/meta->pulse);
-      /*Conversion to SunFlux for non-ZDR*/
-      dBSunFlux=130+SunMean+meta->RXLoss-10*meta->AntGain+AVGATTN+ONEPOL;
+    SunMean-=10*log10(CWIDTH/meta->pulse);
+    if (meta->Zdr) {
+       ZdrMean/=n;
+       ZdrStdd=sqrt(ZdrStdd/n-ZdrMean*ZdrMean+1e-8);
     }
+
+    /*Conversion to SunFlux*/
+    meta->AntGain = pow(10.0,meta->AntGain/10.0);
+    meta->AntArea = (pow(meta->wavelength,2.0) * meta->AntGain) / (4*M_PI);
+    dBSunFlux=130+SunMean+meta->RXLoss-10*log10(meta->AntArea)+AVGATTN+ONEPOL;
 
     /*Appending of results to return list.*/
 
-    addtime=((ia-meta->azim0+meta->nazim)%meta->nazim)*meta->ascale/meta->antvel;
+    addtime=((ia-meta->azim0+meta->nazim)%meta->nazim)*meta->ascale/fabs(meta->antvel);
     datetime(meta->date,meta->time,addtime,&date,&time);
     solar_elev_azim(lonlat[0],lonlat[1],date,time,&ret->ElevSun,&ret->AzimSun,&ret->RelevSun);
-    if (fabs(meta->elev-ret->ElevSun)>AngleDif||fabs(Azimuth-ret->AzimSun)>AngleDif) {
+    if (fabs(Elevation-ret->ElevSun)>AngleDif||fabs(Azimuth-ret->AzimSun)>AngleDif) {
       RAVE_FREE(ret);
       continue;
     }
     ret->date = date;
     ret->time = time;
-    ret->Elev = meta->elev;
+    ret->Elev = Elevation;
     ret->Azimuth = Azimuth;
     ret->dBSunFlux = dBSunFlux;
     ret->SunMean = SunMean;
     ret->SunStdd = SunStdd;
-    ret->quant = (char*)quant;
+    ret->quant1 = (char*)meta->quant1;
+    if (meta->Zdr) {
+      ret->ZdrMean = ZdrMean;
+      ret->ZdrStdd = ZdrStdd;
+      ret->quant2 = (char*)meta->quant2;
+    } else {
+      ret->ZdrMean = nan("NaN");
+      ret->ZdrStdd = nan("NaN");
+      ret->quant2 = (char*)"NA";
+    }
+    //outputMeta(meta);
     RaveList_add(list, ret);  /* No checking */
   }
   fail_scan:
-    RAVE_OBJECT_RELEASE(param);
+    RAVE_OBJECT_RELEASE(Zparam);
+    RAVE_OBJECT_RELEASE(Dparam);
 
-  RAVE_OBJECT_RELEASE(param);
+  RAVE_OBJECT_RELEASE(Zparam);
+  RAVE_OBJECT_RELEASE(Dparam);
+}
+
+
+void outputMeta(SCANMETA* meta) {
+  FILE *fd;
+  fd=fopen("meta.txt", "w");
+  fprintf(fd, "Date = %ld\n", meta->date);
+  fprintf(fd, "Time = %ld\n", meta->time);
+  fprintf(fd, "Tilt = %f\n", meta->elev);
+  fprintf(fd, "Quant1 = %s\n", meta->quant1);
+  fprintf(fd, "Quant2 = %s\n", meta->quant2);
+  fprintf(fd, "nrays = %ld\n", meta->nazim);
+  fprintf(fd, "nbins = %ld\n", meta->nrang);
+  fprintf(fd, "rscale = %f\n", meta->rscale);
+  fprintf(fd, "ascale = %f\n", meta->ascale);
+  fprintf(fd, "azim0 = %ld\n", meta->azim0);
+  fprintf(fd, "Pulse width = %f\n", meta->pulse);
+  fprintf(fd, "Radar constant = %f\n", meta->radcnst);
+  fprintf(fd, "Antvel = %f\n", meta->antvel);
+  fprintf(fd, "Longitude = %f\n", meta->lon);
+  fprintf(fd, "Latitude = %f\n", meta->lat);
+  fprintf(fd, "RXLoss = %f\n", meta->RXLoss);
+  fprintf(fd, "Antenna gain = %f\n", meta->AntGain);
+  fprintf(fd, "Antenna area = %f\n", meta->AntArea);
+  fprintf(fd, "Wavelength = %f\n", meta->wavelength);
+  fprintf(fd, "Zdr type = %d\n", meta->Zdr);
+  fclose(fd);
 }
 
 
 void processScan(PolarScan_t* scan, SCANMETA* meta, RaveList_t* list) {
 
-  if (PolarScan_hasParameter(scan, "TH")) processData(scan, meta, list, "TH");
-  if (PolarScan_hasParameter(scan, "TV")) processData(scan, meta, list, "TV");
-  if (PolarScan_hasParameter(scan, "DBZH")) processData(scan, meta, list, "DBZH");
-  if (PolarScan_hasParameter(scan, "DBZV")) processData(scan, meta, list, "DBZV");
-  if (PolarScan_hasParameter(scan, "ZDR")) processData(scan, meta, list, "ZDR");
+  /* Quantities are queried in order of priority */
 
+  if (PolarScan_hasParameter(scan, "TH")) meta->quant1 = "TH";
+  else if (PolarScan_hasParameter(scan, "DBZH")) meta->quant1 = "DBZH";
+  else if (PolarScan_hasParameter(scan, "TV")) meta->quant1 = "TV";
+  else if (PolarScan_hasParameter(scan, "DBZV")) meta->quant1 = "DBZV";
+
+  if (PolarScan_hasParameter(scan, "ZDR")) {
+    meta->quant2 = "ZDR";
+    meta->Zdr = ZdrType_READ;
+  }
+  else if ( (PolarScan_hasParameter(scan, "TV")) && (!strncmp(meta->quant1, "TH", 2)) ) {
+    meta->quant2 = "TV";
+    meta->Zdr = ZdrType_CALCULATE;
+  }
+  else if ( (PolarScan_hasParameter(scan, "DBZV")) && (!strncmp(meta->quant1, "DBZH", 4)) ) {
+    meta->quant2 = "DBZV";
+    meta->Zdr = ZdrType_CALCULATE;
+  }
+  else meta->Zdr = ZdrType_None;
+  processData(scan, meta, list);
 }
 
 
@@ -435,9 +550,14 @@ int scansun(const char* filename, RaveList_t* list, char** source) {
    * Will probably be superceded by dataset-specific metadata later. */
   if (!getDoubleAttribute(object, "how/radconstH", &tmpd)) {
     if (!getDoubleAttribute(object, "how/radconstV", &tmpd)) {
-      meta.radcnst = -1.0; /* 64.08 */
+      meta.radcnst = -1.0;
     } else meta.radcnst = tmpd;
   } else meta.radcnst = tmpd;
+  /* Only look for the wavelength in top-level "how". */
+  if (!getDoubleAttribute(object, "how/wavelength", &tmpd)) {
+    RAVE_WARNING1("No /how/wavelength attribute. Using default %1.3f m.\n", WAVELENGTH);
+    meta.wavelength = WAVELENGTH;
+  } else meta.wavelength = tmpd/100.0;  /* cm to m */
 
   /* Individual scan */
 	if (ot == Rave_ObjectType_SCAN) {

@@ -5,6 +5,7 @@ Created on 20 January 2011
 '''
 import unittest
 import _scansun
+from numpy import nan
 
 class RaveScansun(unittest.TestCase):
     # KNMI PVOL from Den Helder with a nice sun hit
@@ -35,11 +36,12 @@ class RaveScansun(unittest.TestCase):
 
     def testScansun(self):
         # The following validation values are:
-        # Date    Time   Elevatn Azimuth ElevSun AzimSun dBmMHzSun dBmStdd RelevSun
+        # Date    Time   Elevatn Azimuth ElevSun RelevSun  AzimSun dBSunFlux   SunMean SunStdd   ZdrMean ZdrStdd Refl  ZDR
         valid = ('RAD:NL51;PLC:nldhl', [(20110111, 75022, 0.30000001447042407, 126.5, 
                                          -0.77586040298515435, -0.18749940189096537, 
-                                         126.84009882306225, -68.880164913902306, 
-                                         -113.28016491390231, 0.78867323519300037, 'DBZH')])
+                                         126.84009882306225, 12.706416334302883, 
+                                         -113.2001649139023, 0.78867323519645993, 
+                                         nan, nan, 'DBZH', 'NA')])
         result = _scansun.scansun(self.KNMI_TESTFILE)
         self.assertEquals(valid[0][0], result[0][0])
         self.assertEquals(valid[1][0][0], result[1][0][0])
@@ -52,7 +54,10 @@ class RaveScansun(unittest.TestCase):
         self.assertAlmostEquals(valid[1][0][7], result[1][0][7], 5)
         self.assertAlmostEquals(valid[1][0][8], result[1][0][8], 5)
         self.assertAlmostEquals(valid[1][0][9], result[1][0][9], 5)
-        self.assertEquals(valid[1][0][10], result[1][0][10])
+        self.assertEquals(str(valid[1][0][10]), str(result[1][0][10]))
+        self.assertEquals(str(valid[1][0][11]), str(result[1][0][11]))
+        self.assertEquals(valid[1][0][12], result[1][0][12])
+        self.assertEquals(valid[1][0][13], result[1][0][13])
 	#self.assertEquals(valid, _scansun.scansun(self.KNMI_TESTFILE))
 
 

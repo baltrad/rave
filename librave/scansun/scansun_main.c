@@ -16,6 +16,7 @@ You should have received a copy of the GNU Lesser General Public License
 along with HLHDF.  If not, see <http://www.gnu.org/licenses/>.
 ------------------------------------------------------------------------*/
 #include "scansun.h"
+#include "rave_debug.h"
 
 /** Main function for a binary for running KNMI's sun scanning functionality
  * @file
@@ -27,6 +28,10 @@ int main(int argc,char *argv[]) {
   char* source = NULL;
 	RaveList_t* list = RAVE_OBJECT_NEW(&RaveList_TYPE);
 	RVALS* ret = NULL;
+	const char* FORMAT = "%08ld %06ld %7.2f %7.2f %7.2f  %7.2f  %7.2f %9.2f %9.2f  %6.3f %9.2f  %6.3f %s %s %s\n";
+
+	Rave_initializeDebugger();
+	Rave_setDebugLevel(RAVE_WARNING);
 
 	if (argc<2) {
 	   printf("Usage: %s <ODIM_H5-volume>\n",argv[0]);
@@ -39,20 +44,23 @@ int main(int argc,char *argv[]) {
 		exit(1);
 	}
 	if (RaveList_size(list) > 0) {
-		printf("#Date    Time   Elevatn Azimuth ElevSun RelevSun  AzimSun dBSunFlux   SunMean SunStdd Quant Source\n");
+		printf("#Date    Time   Elevatn Azimuth ElevSun RelevSun  AzimSun dBSunFlux   SunMean SunStdd   ZdrMean ZdrStdd Refl  ZDR Source\n");
 		while ((ret = RaveList_removeLast(list)) != NULL) {
-			printf("%08ld %06ld %7.2f %7.2f %7.2f  %7.2f  %7.2f %9.2f %9.2f  %6.3f  %s %s\n", ret->date,
-			                                                                                  ret->time,
-			                                                                                  ret->Elev,
-			                                                                                  ret->Azimuth,
-			                                                                                  ret->ElevSun,
-			                                                                                  ret->RelevSun,
-			                                                                                  ret->AzimSun,
-			                                                                                  ret->dBSunFlux,
-			                                                                                  ret->SunMean,
-			                                                                                  ret->SunStdd,
-			                                                                                  ret->quant,
-			                                                                                  source);
+			printf(FORMAT, ret->date,
+            			   ret->time,
+            			   ret->Elev,
+            			   ret->Azimuth,
+            			   ret->ElevSun,
+            			   ret->RelevSun,
+            			   ret->AzimSun,
+            			   ret->dBSunFlux,
+                     ret->SunMean,
+                     ret->SunStdd,
+                     ret->ZdrMean,
+                     ret->ZdrStdd,
+                     ret->quant1,
+                     ret->quant2,
+            			   source);
 			// RAVE_FREE(ret);  /* No longer frees! */
 		}
 	}

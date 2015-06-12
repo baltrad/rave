@@ -28,6 +28,7 @@ along with HLHDF.  If not, see <http://www.gnu.org/licenses/>.
 #include <stdlib.h>
 #include <math.h>
 
+#include "rave_debug.h"
 #include "rave_io.h"
 #include "polarscan.h"
 #include "polarvolume.h"
@@ -41,9 +42,6 @@ along with HLHDF.  If not, see <http://www.gnu.org/licenses/>.
 /*Definition of analysis parameters.                                          */
 /******************************************************************************/
 
-#define HEIGMIN   (6.0) /* DEPRECATED *//*Minimum height for analyses in km.*/
-#define RANGMIN  (50.0) /* DEPRECATED *//*Minimum range for analyses in km.*/
-
 #define HEIGMIN1   (8.0)          /*Minimum height for first analyses in km.*/
 #define HEIGMIN2   (4.0)          /*Minimum height for second analyses in km.*/
 #define RAYMIN     (20.0)         /*Minimum length of rays for analyses in km.*/
@@ -56,6 +54,14 @@ along with HLHDF.  If not, see <http://www.gnu.org/licenses/>.
 /******************************************************************************/
 /*Definition of radar parameters for solar analysis:                          */
 /******************************************************************************/
+
+#define WAVELENGTH (0.053)        /*Default wavelength in meters*/
+#define ANTVEL     (18.0)         /*Default antenna velocity in deg/s*/
+#define ANTGAIN    (45.0)         /*Default antenna gain in dB*/
+#define ASTART     (0.0)          /*Default azimuthal offset from 0 in degrees*/
+#define PULSEWIDTH (2.0)          /*Default pulse width in microseconds*/
+#define RXLOSS     (0.0)          /*Default receiver chain loss in dB*/
+#define RADCNST    (64.0)         /*Super-arbitrary default radar constant*/
 
 #define ONEPOL     (3.01)         /*Losses due to one-pol RX only in dB.*/
 #define AVGATTN    (1.39)         /*Averaging and overlap losses in dB for 1deg.*/
@@ -77,6 +83,15 @@ along with HLHDF.  If not, see <http://www.gnu.org/licenses/>.
 #define REFPRES    (1013.0)       /*Pressure for refraction correction in hPa.*/
 #define REFTEMP    (288.15)       /*Temperature for refraction correction in K.*/
 
+/**
+ * Different value types for whether ZDR is its own quantity or must be calculated.
+ */
+typedef enum ZdrType {
+  ZdrType_None = 0,      /**< Non-existant */
+  ZdrType_READ = 1,      /**< ZDR is in its own quantity and can be read as such */
+  ZdrType_CALCULATE = 2  /**< Vertical reflectivity is read and ZDR needs to be calculated */
+} ZdrType;
+
 /******************************************************************************/
 /*Structure for containing SCAN metadata:                                     */
 /******************************************************************************/
@@ -90,19 +105,19 @@ struct scanmeta {
 	double rscale;         /*Size of range bins in scan in km.*/
 	double ascale;         /*Size of azimuth steps in scan in deg.*/
 	long azim0;            /*Ray number with which radar scan started.*/
-	double zoffset;        /*Offset value of quantity contained by scan.*/
-	double zscale;         /*Scale of value of quantity contained by scan.*/
-	double nodata;         /*Nodata value of quantity contained by scan.*/
-	double PRFh;           /*High PRF used for scan in Hz.*/
-	double PRFl;           /*Low PRF used for scan in Hz.*/
+	double astart;         /*Azimuthal offset in degrees from 0*/
 	double pulse;          /*Pulse length in microsec.*/
 	double radcnst;        /*Radar constant in dB.*/
-	double txnom;          /*Nominal maximum TX power in kW.*/
 	double antvel;         /*Antenna velocity in deg/s.*/
   double lon;            /*Longitude of radar in deg.*/
   double lat;            /*Latitude of radar in deg.*/
   double RXLoss;         /*Total losses between reference and feed (dB).*/
-  double AntGain;        /*Antenna gain (dB)*/
+  double AntGain;        /*Antenna gain (dB), will end up being linearized*/
+  double AntArea;        /*Effective antenna area (m2)*/
+  double wavelength;     /*Wavelength in meters*/
+  const char* quant1;    /*what/quantity for the given scan's parameter, either TH or DBZH*/
+  const char* quant2;    /*ZDR or either TV or DBZV*/
+  ZdrType Zdr;           /*Flag used to note presence of ZDR, either read or calculated*/
 };
 typedef struct scanmeta SCANMETA;
 
@@ -119,7 +134,10 @@ struct rvals {
 	double SunMean;   /* Sun's reflectivity in dBm */
 	double SunStdd;   /* Standard deviation of the sun's reflectivity in dBm */
 	double dBSunFlux; /* Sun flux in dB */
-	char* quant;      /* what/quantity for the given scan's parameter */
+	double ZdrMean;   /* Zdr mean */
+	double ZdrStdd;   /* Zdr standard deviation */
+  char* quant1;     /* what/quantity for the given scan's parameter: TH, DBZH, TV, or DBZV */
+  char* quant2;     /* ZDR or either TV or DBZV */
 	double RelevSun;  /* Refraction-corrected (perceived) elevation angle of the sun in deg. */
 };
 typedef struct rvals RVALS;
@@ -232,9 +250,8 @@ long julday2date(long julian);
  * @param[in] scan - polar scan object
  * @param[in] meta - internal metadata structure
  * @param[in] list - RAVE list object containing hits
- * @param[in] quant - string specifying the ODOM quantity to process
  */
-void processData(PolarScan_t* scan, SCANMETA* meta, RaveList_t* list, const char* quant);
+void processData(PolarScan_t* scan, SCANMETA* meta, RaveList_t* list);
 
 /**
  * Helper function that calls @ref processReflectivity for each of a number of
@@ -244,6 +261,12 @@ void processData(PolarScan_t* scan, SCANMETA* meta, RaveList_t* list, const char
  * @param[in] list - RAVE list object containing hits
   */
 void processScan(PolarScan_t* scan, SCANMETA* meta, RaveList_t* list);
+
+/**
+ * Debug function that writes metadata to file.
+ * @param[in] meta - internal metadata structure
+ */
+void outputMeta(SCANMETA* meta);
 
 /**
  * Masterminds the scanning of polar data and determination of sun hits.
