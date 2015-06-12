@@ -45,7 +45,6 @@ install:
 	@cp -v -f fm12_importer "${prefix}/bin/"
 	@cp -v -f wmo_station "${prefix}/bin/"
 	@cp -v -f ctfilter "${prefix}/bin/"
-	@cp -v -f site2D "${prefix}/bin/"
 	@cp -v -f rave_pgf_logger "${prefix}/bin/"
 	@cp -v -f create_tile_definition "${prefix}/bin/"
 	@cp -v -f create_acrr_composites "${prefix}/bin/"
