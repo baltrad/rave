@@ -22,7 +22,7 @@ class RaveScansun(unittest.TestCase):
     def testSolarElevAzim(self):
         # Same metadata as in the lowest sweep of the KNMI volume
         lon, lat, yyyymmdd, hhmmss = 4.78997, 52.9533, 20110111, 75022
-        valid = (-0.7758360955258381, 126.84009818438497, -0.18747813915648781)
+        valid = (-0.7758360955258381, 126.84009818438497, -0.047247576587858942)
         result = _scansun.solar_elev_azim(lon, lat, yyyymmdd, hhmmss)
         self.assertAlmostEquals(valid[0], result[0], 5)
         self.assertAlmostEquals(valid[1], result[1], 5)
@@ -30,16 +30,15 @@ class RaveScansun(unittest.TestCase):
 
 
     def testRefraction(self):
-#        self.assertEquals(-0.19, round(_scansun.refraction(-0.78), 2))
-        self.assertAlmostEquals(-0.19, _scansun.refraction(-0.78), 2)
+        self.assertAlmostEquals(-0.05, _scansun.refraction(-0.78), 2)
 
 
     def testScansun(self):
         # The following validation values are:
-        # Date    Time   Elevatn Azimuth ElevSun RelevSun  AzimSun dBSunFlux   SunMean SunStdd   ZdrMean ZdrStdd Refl  ZDR
+        # Date    Time   Elevatn Azimuth ElevSun AzimSun   N  dBSunFlux   SunMean SunStdd   ZdrMean ZdrStdd Refl  ZDR
         valid = ('RAD:NL51;PLC:nldhl', [(20110111, 75022, 0.30000001447042407, 126.5, 
-                                         -0.77586040298515435, -0.18749940189096537, 
-                                         126.84009882306225, 12.706416334302883, 
+                                         -0.77586040298515435, 126.84009882306225, 
+                                         98, 12.706416334302883, 
                                          -113.2001649139023, 0.78867323519645993, 
                                          nan, nan, 'DBZH', 'NA')])
         result = _scansun.scansun(self.KNMI_TESTFILE)
@@ -50,7 +49,7 @@ class RaveScansun(unittest.TestCase):
         self.assertAlmostEquals(valid[1][0][3], result[1][0][3], 5)
         self.assertAlmostEquals(valid[1][0][4], result[1][0][4], 5)
         self.assertAlmostEquals(valid[1][0][5], result[1][0][5], 5)
-        self.assertAlmostEquals(valid[1][0][6], result[1][0][6], 5)
+        self.assertEquals(valid[1][0][6], result[1][0][6])
         self.assertAlmostEquals(valid[1][0][7], result[1][0][7], 5)
         self.assertAlmostEquals(valid[1][0][8], result[1][0][8], 5)
         self.assertAlmostEquals(valid[1][0][9], result[1][0][9], 5)
