@@ -113,7 +113,7 @@ class PyGraTest(unittest.TestCase):
     distance.setValue(0,1,0.2)
     distance.setValue(1,0,0.3)
     distance.setValue(1,1,0.4)
-    distance.addAttribute("what/gain", 1000.0)
+    distance.addAttribute("what/gain", 10.0)
     distance.addAttribute("what/offset", 0.0)
     
     param = _cartesianparam.new()
@@ -132,9 +132,8 @@ class PyGraTest(unittest.TestCase):
     gra.C = 3.0
     
     result = gra.apply(distance, param)
-    
-    self.assertAlmostEquals(1200.0, result.getConvertedValue((0,0))[1], 4)
-    self.assertAlmostEquals(2200.0, result.getConvertedValue((0,1))[1], 4)
+    self.assertAlmostEquals(47.77, result.getConvertedValue((0,0))[1], 2)
+    self.assertAlmostEquals(1102.61, result.getConvertedValue((0,1))[1], 2)
     self.assertAlmostEquals(3200.0, result.getConvertedValue((1,0))[1], 4)
     self.assertAlmostEquals(4200.0, result.getConvertedValue((1,1))[1], 4)
 
@@ -145,7 +144,7 @@ class PyGraTest(unittest.TestCase):
     distance.setValue(0,1,0.2)
     distance.setValue(1,0,0.3)
     distance.setValue(1,1,0.4)
-    distance.addAttribute("what/gain", 1000.0)
+    distance.addAttribute("what/gain", 10.0)
     distance.addAttribute("what/offset", 0.0)
     
     param = _cartesianparam.new()
@@ -167,8 +166,8 @@ class PyGraTest(unittest.TestCase):
     
     result = gra.apply(distance, param)
     
-    self.assertAlmostEquals(34.0, result.getConvertedValue((0,0))[1], 4)
-    self.assertAlmostEquals(44.0, result.getConvertedValue((0,1))[1], 4)
+    self.assertAlmostEquals(18.60, result.getConvertedValue((0,0))[1], 2)
+    self.assertAlmostEquals(40.7, result.getConvertedValue((0,1))[1], 2)
     self.assertAlmostEquals(54.0, result.getConvertedValue((1,0))[1], 4)
     self.assertAlmostEquals(64.0, result.getConvertedValue((1,1))[1], 4)
 

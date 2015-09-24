@@ -54,7 +54,7 @@ struct _RaveAcrr_t {
  * @param[in] quantity - the quantity (or NULL to reset)
  * @return 1 on success otherwise 0
  */
-int RaveAcrrInternal_setQuantity(RaveAcrr_t* self, const char* quantity);
+static int RaveAcrrInternal_setQuantity(RaveAcrr_t* self, const char* quantity);
 
 /**
  * Constructor
@@ -130,7 +130,7 @@ static void RaveAcrr_destructor(RaveCoreObject* obj)
   RAVE_FREE(self->howtaskfieldname);
 }
 
-int RaveAcrrInternal_setQuantity(RaveAcrr_t* self, const char* quantity)
+static int RaveAcrrInternal_setQuantity(RaveAcrr_t* self, const char* quantity)
 {
   int result = 0;
   RAVE_ASSERT((self != NULL), "self == NULL");
@@ -149,7 +149,7 @@ int RaveAcrrInternal_setQuantity(RaveAcrr_t* self, const char* quantity)
 }
 
 
-int RaveAcrrInternal_initialize(RaveAcrr_t* self, CartesianParam_t* param)
+static int RaveAcrrInternal_initialize(RaveAcrr_t* self, CartesianParam_t* param)
 {
   long xsize = CartesianParam_getXSize(param);
   long ysize = CartesianParam_getYSize(param);
@@ -182,7 +182,7 @@ fail:
   return 0;
 }
 
-int RaveAcrrInternal_verify(RaveAcrr_t* self, CartesianParam_t* param)
+static int RaveAcrrInternal_verify(RaveAcrr_t* self, CartesianParam_t* param)
 {
   const char* pquantity = CartesianParam_getQuantity(param);
   long xsize = CartesianParam_getXSize(param);
@@ -202,7 +202,7 @@ fail:
   return 0;
 }
 
-int RaveAcrrInternal_getDoubleAttributeValueFromField(RaveField_t* field, const char* name, double* v)
+static int RaveAcrrInternal_getDoubleAttributeValueFromField(RaveField_t* field, const char* name, double* v)
 {
   RaveAttribute_t* attr = NULL;
   int result = 0;
@@ -216,7 +216,22 @@ int RaveAcrrInternal_getDoubleAttributeValueFromField(RaveField_t* field, const 
   return result;
 }
 
-int RaveAcrrInternal_addStringAttributeToField(RaveField_t* field, const char* name, const char* value)
+static int RaveAcrrInternal_addDoubleAttributeToField(RaveField_t* field, const char* name, double value)
+{
+  RaveAttribute_t* attr = NULL;
+  int result = 0;
+
+  RAVE_ASSERT((field != NULL), "field == NULL");
+
+  attr = RaveAttributeHelp_createDouble(name, value);
+  if (attr != NULL) {
+    result = RaveField_addAttribute(field, attr);
+  }
+  RAVE_OBJECT_RELEASE(attr);
+  return result;
+}
+
+static int RaveAcrrInternal_addStringAttributeToField(RaveField_t* field, const char* name, const char* value)
 {
   RaveAttribute_t* attr = NULL;
   int result = 0;
@@ -231,7 +246,7 @@ int RaveAcrrInternal_addStringAttributeToField(RaveField_t* field, const char* n
   return result;
 }
 
-int RaveAcrrInternal_addDoubleAttributeToParam(CartesianParam_t* param, const char* name, double value)
+static int RaveAcrrInternal_addDoubleAttributeToParam(CartesianParam_t* param, const char* name, double value)
 {
   RaveAttribute_t* attr = NULL;
   int result = 0;
@@ -255,7 +270,7 @@ int RaveAcrr_sum(RaveAcrr_t* self, CartesianParam_t* param, double zr_a, double 
   long xsize = 0, ysize = 0;
   long x = 0, y = 0;
   RaveField_t* dfield = NULL;
-  double dgain = 1.0;
+  double dgain = 1.0, doffset = 0.0;
   RAVE_ASSERT((self != NULL), "self == NULL");
 
   dfield = CartesianParam_getQualityFieldByHowTask(param, RaveAcrr_getQualityFieldName(self));
@@ -272,6 +287,11 @@ int RaveAcrr_sum(RaveAcrr_t* self, CartesianParam_t* param, double zr_a, double 
     if (!RaveAcrrInternal_verify(self, param)) {
       goto done;
     }
+  }
+
+  if (!RaveAcrrInternal_getDoubleAttributeValueFromField(dfield, "what/offset", &doffset)) {
+    RAVE_INFO0("Could not find what/offset in quality field, defaulting to 0.0");
+    doffset = 0.0;
   }
 
   if (!RaveAcrrInternal_getDoubleAttributeValueFromField(dfield, "what/gain", &dgain)) {
@@ -293,7 +313,7 @@ int RaveAcrr_sum(RaveAcrr_t* self, CartesianParam_t* param, double zr_a, double 
 
         RaveField_getValue(dfield, x, y, &dist);
         RaveField_getValue(self->dd, x, y, &avgdist);
-        avgdist += ((dist*dgain) / 1000.0);  /* km */
+        avgdist += ((dist*dgain + doffset) / 1000.0);  /* km */
         RaveField_setValue(self->dd, x, y, avgdist);
         RaveField_getValue(self->cd, x, y, &ndist);
         ndist += 1;
@@ -346,6 +366,8 @@ CartesianParam_t* RaveAcrr_accumulate(RaveAcrr_t* self, double acpt, long N, dou
       !RaveField_createData(qfield, xsize, ysize, RaveDataType_DOUBLE) ||
       !CartesianParam_setQuantity(param, "ACRR") ||
       !RaveAcrrInternal_addStringAttributeToField(qfield, "how/task", "se.smhi.composite.distance.radar") ||
+      !RaveAcrrInternal_addDoubleAttributeToField(qfield, "what/gain", 1.0) ||
+      !RaveAcrrInternal_addDoubleAttributeToField(qfield, "what/offset", 1.0) ||
       !RaveAcrrInternal_addDoubleAttributeToParam(param, "what/prodpar", hours)) {
     RAVE_ERROR0("Failed to create cartesian parameter");
     goto done;

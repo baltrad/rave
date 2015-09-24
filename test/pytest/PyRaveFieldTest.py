@@ -64,6 +64,32 @@ class PyRaveFieldTest(unittest.TestCase):
       except AttributeError, e:
         pass
 
+  def test_getConvertedValue_with_default_values(self):
+    obj = _ravefield.new()
+    obj.setData(numpy.zeros((10,10), numpy.uint8))
+    obj.setValue(0,1,1.0)
+    obj.setValue(0,2,2.0)
+    obj.setValue(0,3,3.0)
+    obj.setValue(0,4,4.0)
+    self.assertAlmostEquals(1.0, obj.getConvertedValue(0,1)[1], 4)
+    self.assertAlmostEquals(2.0, obj.getConvertedValue(0,2)[1], 4)
+    self.assertAlmostEquals(3.0, obj.getConvertedValue(0,3)[1], 4)
+    self.assertAlmostEquals(4.0, obj.getConvertedValue(0,4)[1], 4)
+
+  def test_getConvertedValue_with_offset_and_gain(self):
+    obj = _ravefield.new()
+    obj.setData(numpy.zeros((10,10), numpy.uint8))
+    obj.setValue(0,1,1.0)
+    obj.setValue(0,2,2.0)
+    obj.setValue(0,3,3.0)
+    obj.setValue(0,4,4.0)
+    obj.addAttribute("what/offset", 5.0)
+    obj.addAttribute("what/gain", 10.0)
+    self.assertAlmostEquals(5 + 1.0 * 10.0, obj.getConvertedValue(0,1)[1], 4)
+    self.assertAlmostEquals(5 + 2.0 * 10.0, obj.getConvertedValue(0,2)[1], 4)
+    self.assertAlmostEquals(5 + 3.0 * 10.0, obj.getConvertedValue(0,3)[1], 4)
+    self.assertAlmostEquals(5 + 4.0 * 10.0, obj.getConvertedValue(0,4)[1], 4)
+
   def test_data(self):
     obj = _ravefield.new()
     obj.setData(numpy.zeros((10,10), numpy.uint8))

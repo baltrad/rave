@@ -60,8 +60,8 @@ def general_correlation(points):
   xarr, yarr = [], []
 
   for point in points:
-    xarr.append(10*log10(point.observation))
-    yarr.append(10*log10(point.radarvalue))
+    xarr.append(log10(point.observation))
+    yarr.append(log10(point.radarvalue))
 
   xarr = array(xarr, float64)
   yarr = array(yarr, float64)

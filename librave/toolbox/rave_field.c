@@ -151,6 +151,32 @@ int RaveField_setValue(RaveField_t* field, long x, long y, double value)
   return RaveData2D_setValue(field->data, x, y, value);
 }
 
+int RaveField_getConvertedValue(RaveField_t* field, long x, long y, double* v)
+{
+  double offset = 0.0, gain = 1.0;
+  RaveAttribute_t* attr = NULL;
+  int result = 0;
+
+  RAVE_ASSERT((field != NULL), "field == NULL");
+
+  attr = RaveField_getAttribute(field, "what/gain");
+  if (attr != NULL) {
+    RaveAttribute_getDouble(attr, &gain);
+  }
+  RAVE_OBJECT_RELEASE(attr);
+  attr = RaveField_getAttribute(field, "what/offset");
+  if (attr != NULL) {
+    RaveAttribute_getDouble(attr, &offset);
+  }
+  RAVE_OBJECT_RELEASE(attr);
+
+  result = RaveData2D_getValue(field->data, x, y, v);
+  if (result) {
+    *v = offset + (*v) * gain;
+  }
+  return result;
+}
+
 long RaveField_getXsize(RaveField_t* field)
 {
   RAVE_ASSERT((field != NULL), "field == NULL");

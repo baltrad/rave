@@ -426,6 +426,31 @@ static PyObject* _pycartesian_getQualityValueAtLocation(PyCartesian* self, PyObj
 }
 
 /**
+ * returns the scaled quality value at the specified location as defined by the area definition
+ * @param[in] self this instance.
+ * @param[in] args - tuple (lx, ly) and fieldname
+ * @return the quality value if found otherwise None
+ */
+static PyObject* _pycartesian_getConvertedQualityValueAtLocation(PyCartesian* self, PyObject* args)
+{
+  double lx = 0, ly = 0;
+  double v = 0.0L;
+  char* fieldname = NULL;
+  RaveValueType result = RaveValueType_NODATA;
+  if (!PyArg_ParseTuple(args, "(dd)s", &lx, &ly,&fieldname)) {
+    return NULL;
+  }
+
+  result = Cartesian_getConvertedQualityValueAtLocation(self->cartesian, lx, ly, fieldname, &v);
+
+  if (result == 0) {
+    Py_RETURN_NONE;
+  } else {
+    return PyFloat_FromDouble(v);
+  }
+}
+
+/**
  * returns the quality value at the specified lon/lat position as defined by the area definition
  * @param[in] self this instance.
  * @param[in] args - tuple (lon, lat) and fieldname
@@ -450,10 +475,30 @@ static PyObject* _pycartesian_getQualityValueAtLonLat(PyCartesian* self, PyObjec
   }
 }
 
-/*
-{"getQualityValueAtLocation", (PyCFunction) _pycartesian_getQualityValueAtLocation, 1},
-{"getQualityValueAtLonLat", (PyCFunction) _pycartesian_getQualityValueAtLonLat, 1},
-*/
+/**
+ * returns the scaled quality value at the specified lon/lat position as defined by the area definition
+ * @param[in] self this instance.
+ * @param[in] args - tuple (lon, lat) and fieldname
+ * @return the quality value if found otherwise None
+ */
+static PyObject* _pycartesian_getConvertedQualityValueAtLonLat(PyCartesian* self, PyObject* args)
+{
+  double lon = 0, lat = 0;
+  double v = 0.0L;
+  char* fieldname = NULL;
+  RaveValueType result = RaveValueType_NODATA;
+  if (!PyArg_ParseTuple(args, "(dd)s", &lon, &lat,&fieldname)) {
+    return NULL;
+  }
+
+  result = Cartesian_getConvertedQualityValueAtLonLat(self->cartesian, lon, lat, fieldname, &v);
+
+  if (result == 0) {
+    Py_RETURN_NONE;
+  } else {
+    return PyFloat_FromDouble(v);
+  }
+}
 
 static PyObject* _pycartesian_isTransformable(PyCartesian* self, PyObject* args)
 {
@@ -1009,7 +1054,9 @@ static struct PyMethodDef _pycartesian_methods[] =
   {"getConvertedValueAtLocation", (PyCFunction) _pycartesian_getConvertedValueAtLocation, 1},
   {"getConvertedValueAtLonLat", (PyCFunction) _pycartesian_getConvertedValueAtLonLat, 1},
   {"getQualityValueAtLocation", (PyCFunction) _pycartesian_getQualityValueAtLocation, 1},
+  {"getConvertedQualityValueAtLocation", (PyCFunction) _pycartesian_getConvertedQualityValueAtLocation, 1},
   {"getQualityValueAtLonLat", (PyCFunction) _pycartesian_getQualityValueAtLonLat, 1},
+  {"getConvertedQualityValueAtLonLat", (PyCFunction) _pycartesian_getConvertedQualityValueAtLonLat, 1},
   {"isTransformable", (PyCFunction) _pycartesian_isTransformable, 1},
   {"getMean", (PyCFunction) _pycartesian_getMean, 1},
   {"addAttribute", (PyCFunction) _pycartesian_addAttribute, 1},

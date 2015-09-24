@@ -442,6 +442,19 @@ RaveValueType Cartesian_getConvertedValueAtLonLat(Cartesian_t* cartesian, double
 int Cartesian_getQualityValueAtLocation(Cartesian_t* cartesian, double lx, double ly, const char* name, double *v);
 
 /**
+ * Returns the scaled quality value at the specified location from the specified quality field. First the code
+ * tests if the quality field exist in the default param. If not, it will check for the quality field
+ * in self.
+ * @param[in] cartesian - self
+ * @param[in] lx - the position as defined in the area definition
+ * @param[in] ly - the position as defined in the area definition
+ * @param[in] name - the name of the quality field (how/task)
+ * @param[out] v - the data at the specified position
+ * @return 1 if value could be returned otherwise 0
+ */
+int Cartesian_getConvertedQualityValueAtLocation(Cartesian_t* cartesian, double lx, double ly, const char* name, double *v);
+
+/**
  * Returns the quality value at the specified lon/lat from the specified quality field. First the code
  * tests if the quality field exist in the default param. If not, it will check for the quality field
  * in self.
@@ -453,6 +466,20 @@ int Cartesian_getQualityValueAtLocation(Cartesian_t* cartesian, double lx, doubl
  * @return 1 if value could be returned otherwise 0
  */
 int Cartesian_getQualityValueAtLonLat(Cartesian_t* cartesian, double lon, double lat, const char* name, double *v);
+
+/**
+ * Returns the scaled quality value at the specified lon/lat from the specified quality field. That is the value
+ * got when applying gain and offset.
+ * First the code tests if the quality field exist in the default param. If not, it will check for the quality field
+ * in self.
+ * @param[in] cartesian - self
+ * @param[in] lon - the longitude in radians
+ * @param[in] lat - the latitude in radians
+ * @param[in] name - the name of the quality field (how/task)
+ * @param[out] v - the data at the specified position
+ * @return 1 if value could be returned otherwise 0
+ */
+int Cartesian_getConvertedQualityValueAtLonLat(Cartesian_t* cartesian, double lon, double lat, const char* name, double *v);
 
 /**
  * Initializes this cartesian product with basic information. No parameter is created but

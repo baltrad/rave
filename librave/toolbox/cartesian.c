@@ -712,6 +712,25 @@ int Cartesian_getQualityValueAtLocation(Cartesian_t* cartesian, double lx, doubl
   return result;
 }
 
+int Cartesian_getConvertedQualityValueAtLocation(Cartesian_t* cartesian, double lx, double ly, const char* name, double *v)
+{
+  RaveField_t* field = NULL;
+  int result = 0;
+  RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
+
+  field = Cartesian_findQualityFieldByHowTask(cartesian, name);
+
+  if (field != NULL) {
+    int x = 0, y = 0;
+    x = Cartesian_getIndexX(cartesian, lx);
+    y = Cartesian_getIndexY(cartesian, ly);
+    result = RaveField_getConvertedValue(field, x, y, v);
+  }
+  RAVE_OBJECT_RELEASE(field);
+
+  return result;
+}
+
 int Cartesian_getQualityValueAtLonLat(Cartesian_t* cartesian, double lon, double lat, const char* name, double *v)
 {
   RaveField_t* field = NULL;
@@ -724,6 +743,24 @@ int Cartesian_getQualityValueAtLonLat(Cartesian_t* cartesian, double lon, double
     int x = 0, y = 0;
     CartesianInternal_getXYFromLonLat(cartesian, lon, lat, &x, &y);
     result = RaveField_getValue(field, x, y, v);
+  }
+  RAVE_OBJECT_RELEASE(field);
+
+  return result;
+}
+
+int Cartesian_getConvertedQualityValueAtLonLat(Cartesian_t* cartesian, double lon, double lat, const char* name, double *v)
+{
+  RaveField_t* field = NULL;
+  int result = 0;
+  RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
+
+  field = Cartesian_findQualityFieldByHowTask(cartesian, name);
+
+  if (field != NULL) {
+    int x = 0, y = 0;
+    CartesianInternal_getXYFromLonLat(cartesian, lon, lat, &x, &y);
+    result = RaveField_getConvertedValue(field, x, y, v);
   }
   RAVE_OBJECT_RELEASE(field);
 

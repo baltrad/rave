@@ -433,6 +433,55 @@ class PyCartesianTest(unittest.TestCase):
     result = obj.getQualityValueAtLonLat(deg2rad((12.8544, 56.3675)), "se.task.2")
     self.assertAlmostEquals(199.0, result, 4)
 
+  def test_getConvertedQualityValueAtLonLat(self):
+    obj = _cartesian.new()
+    obj.projection = _rave.projection("gnom","gnom","+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544")
+    obj.xscale = 100.0
+    obj.yscale = 100.0
+
+    xy = obj.projection.fwd(deg2rad((12.8544, 56.3675)))
+    obj.areaextent = (xy[0] - 4*100.0, xy[1] - 5*100.0, xy[0] + 6*100.0, xy[1] + 5*100.0)
+    param = _cartesianparam.new()
+    param.quantity = "DBZH"
+    param.nodata = 255.0
+    param.undetect = 0.0
+
+    a=numpy.zeros((11,9))
+    a=numpy.array(a.astype(numpy.float64),numpy.float64)
+    a=numpy.reshape(a,(11,9)).astype(numpy.float64)    
+
+    param.setData(a)
+
+    qf = numpy.arange(99)
+    qf = numpy.array(qf.astype(numpy.float64),numpy.float64)
+    qf = numpy.reshape(qf,(11,9)).astype(numpy.float64)
+
+    qf2 = numpy.arange(99)
+    qf2 = numpy.array(qf.astype(numpy.float64),numpy.float64)
+    qf2 = numpy.reshape(qf,(11,9)).astype(numpy.float64)
+    qf2[5][4]=199.0
+
+    field1 = _ravefield.new()
+    field1.addAttribute("how/task", "se.task.1")
+    field1.addAttribute("what/offset", 10.0)
+    field1.addAttribute("what/gain", 2.0)
+    field1.setData(qf)
+    param.addQualityField(field1)
+
+    field2 = _ravefield.new()
+    field2.addAttribute("how/task", "se.task.2")
+    field2.addAttribute("what/gain", 3.0)
+    field2.setData(qf2)
+    param.addQualityField(field2)
+
+    obj.addParameter(param)
+    obj.defaultParameter = "DBZH"
+    
+    #expected = obj.getConvertedValue((4,5))
+    result = obj.getConvertedQualityValueAtLonLat(deg2rad((12.8544, 56.3675)), "se.task.1")
+    self.assertAlmostEquals(10.0 + 2.0 * 49.0, result, 4)
+    result = obj.getConvertedQualityValueAtLonLat(deg2rad((12.8544, 56.3675)), "se.task.2")
+    self.assertAlmostEquals(3.0 * 199.0, result, 4)
 
   def test_getMean(self):
     obj = _cartesian.new()

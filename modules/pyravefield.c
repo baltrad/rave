@@ -254,6 +254,22 @@ static PyObject* _pyravefield_getValue(PyRaveField* self, PyObject* args)
   return Py_BuildValue("(id)", result, value);
 }
 
+static PyObject* _pyravefield_getConvertedValue(PyRaveField* self, PyObject* args)
+{
+  double value = 0.0L;
+  long x = 0, y = 0;
+  int result = 0;
+
+  if (!PyArg_ParseTuple(args, "ll", &x, &y)) {
+    return NULL;
+  }
+
+  result = RaveField_getConvertedValue(self->field, x, y, &value);
+
+  return Py_BuildValue("(id)", result, value);
+}
+
+
 /**
  * Adds an attribute to the rave field. Name of the attribute should be in format
  * ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis etc.
@@ -425,6 +441,7 @@ static struct PyMethodDef _pyravefield_methods[] =
   {"getData", (PyCFunction) _pyravefield_getData, 1},
   {"setValue", (PyCFunction) _pyravefield_setValue, 1},
   {"getValue", (PyCFunction) _pyravefield_getValue, 1},
+  {"getConvertedValue", (PyCFunction) _pyravefield_getConvertedValue, 1},
   {"addAttribute", (PyCFunction) _pyravefield_addAttribute, 1},
   {"getAttribute", (PyCFunction) _pyravefield_getAttribute, 1},
   {"getAttributeNames", (PyCFunction) _pyravefield_getAttributeNames, 1},

@@ -213,7 +213,7 @@ static double applyAcrr(RaveGra_t* self, double distance, double value, RaveValu
   double result = value;
 
   if (dtype == RaveValueType_DATA) {
-    double F = self->A + self->B * distance + self->C * distance * distance;
+    double F = (self->A + self->B * distance + self->C * distance * distance) / 10.0;
     F = RAVEMIN(F, self->upperThreshold);
     F = RAVEMAX(F, self->lowerThreshold);
     result = value * pow(10.0, F);
@@ -237,7 +237,7 @@ static double applyReflectivity(RaveGra_t* self, double distance, double value, 
   double result = value;
 
   if (dtype == RaveValueType_DATA) {
-    double F = self->A + self->B * distance + self->C * distance * distance;
+    double F = (self->A + self->B * distance + self->C * distance * distance) / 10.0;
     F = RAVEMIN(F, self->upperThreshold);
     F = RAVEMAX(F, self->lowerThreshold);
     result = dBZ2R(value, self->zrA, self->zrb) * pow(10.0, F);

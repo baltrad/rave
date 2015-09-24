@@ -81,7 +81,7 @@ class obsmatcher(object):
         t, v = image.getConvertedValueAtLonLat((obs.longitude*dr, obs.latitude*dr))
         if t in [_rave.RaveValueType_DATA, _rave.RaveValueType_UNDETECT]:
           xptst = xptst + 1
-          d = image.getQualityValueAtLonLat((obs.longitude*dr, obs.latitude*dr), how_task)
+          d = image.getConvertedQualityValueAtLonLat((obs.longitude*dr, obs.latitude*dr), how_task)
           if d != None:
             xptsq = xptsq + 1
             if obs.liquid_precipitation >= grapoint.MIN_GMM and v >= grapoint.MIN_RMM:

@@ -107,6 +107,16 @@ int RaveField_getValue(RaveField_t* field, long x, long y, double* v);
 int RaveField_setValue(RaveField_t* field, long x, long y, double value);
 
 /**
+ * Returns the converted value at the specified index. Corresponds to getAttribute("what/offset") + getAttribute("what/gain") * getValue(x,y).
+ * @param[in] field - self
+ * @param[in] x - the x-pos / bin index
+ * @param[in] y - the y-pos / ray index
+ * @param[out] v - the data at the specified index
+ * @return 1 on success, 0 otherwise
+ */
+int RaveField_getConvertedValue(RaveField_t* field, long x, long y, double* v);
+
+/**
  * Returns the xsize / number of bins
  * @param[in] field - self
  * @return the xsize / number of bins
