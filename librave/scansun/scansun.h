@@ -80,8 +80,9 @@ along with HLHDF.  If not, see <http://www.gnu.org/licenses/>.
 /*Definition of parameters for refraction correction.                         */
 /******************************************************************************/
 
-#define REFPRES    (1013.0)       /*Pressure for refraction correction in hPa.*/
-#define REFTEMP    (288.15)       /*Temperature for refraction correction in K.*/
+#define EARTHRAD   (6371.0)       /*Radius of spherical earth in km.*/
+#define KFACT      (1.25)         /*K-factor in Equivalent Earth Model.*/
+#define N0         (313.0)        /*Atmospherc refractivity at the surface.*/
 
 /**
  * Different value types for whether ZDR is its own quantity or must be calculated.
@@ -112,11 +113,16 @@ struct scanmeta {
   double lon;            /*Longitude of radar in deg.*/
   double lat;            /*Latitude of radar in deg.*/
   double RXLoss;         /*Total losses between reference and feed (dB).*/
-  double AntGain;        /*Antenna gain (dB), will end up being linearized*/
+  double AntGain;        /*Antenna gain (dB)*/
+  double LAntGain;       /*Linear antenna gain*/
   double AntArea;        /*Effective antenna area (m2)*/
   double wavelength;     /*Wavelength in meters*/
   const char* quant1;    /*what/quantity for the given scan's parameter, either TH or DBZH*/
   const char* quant2;    /*ZDR or either TV or DBZV*/
+  double* startazA;      /*Simple array of starting azimuth angles in degrees*/
+  double* stopazA;       /*Simple array of ending azimuth angles in degrees*/
+  double* startelA;      /*Simple array of starting elevation angles in degrees*/
+  double* stopelA;       /*Simple array of ending elevation angles in degrees*/
   ZdrType Zdr;           /*Flag used to note presence of ZDR, either read or calculated*/
 };
 typedef struct scanmeta SCANMETA;
@@ -139,6 +145,7 @@ struct rvals {
   char* quant1;     /* what/quantity for the given scan's parameter: TH, DBZH, TV, or DBZV */
   char* quant2;     /* ZDR or either TV or DBZV */
 	double RelevSun;  /* Refraction-corrected (perceived) elevation angle of the sun in deg. */
+	int n;            /* Sample size along the ray comprising a hit */
 };
 typedef struct rvals RVALS;
 
@@ -165,13 +172,21 @@ int getDoubleAttribute(RaveCoreObject* obj, const char* aname, double* tmpd);
 int getDoubleArrayAttribute(PolarScan_t* scan, const char* aname, double** array);
 
 /**
+ * Reads metadata into the SCANMETA structure from top-level object,
+ * whether it be volume or scan, where required metadata are located in
+ * top-level 'how'.
+ * @param[in] object - RaveCoreObject containing either volume or scan
+ * @param[in] meta - SCANMETA struct that will be filled with metadata
+ */
+void fill_toplevelmeta(RaveCoreObject* object, SCANMETA *meta);
+
+/**
  * Reads metadata into the SCANMETA structure from volume, scan, param.
  * @param[in] scan - PolarScan_t object containing the sweep
  * @param[in] dbzh - PolarScanParam_t object containing the sweep's parameter
  * @param[in] meta - SCANMETA struct that will be filled with metadata
- * @returns 1 on success, otherwise 0
  */
-int fill_meta(PolarScan_t* scan, PolarScanParam_t* dbzh, SCANMETA *meta);
+void fill_meta(PolarScan_t* scan, PolarScanParam_t* dbzh, SCANMETA *meta);
 
 /**
  * This function calculates the height and range from the Radar corresponding
@@ -199,12 +214,12 @@ void datetime(long date1, long time1, long ss, long *date2, long *time2);
  * This function calculates the refraction correction of the solar position.
  * The function uses the true elevation, i.e., the calculated elevation of the
  * sun in degrees.
- * Reference: D. Sonntag, 1989, Abh. des Met. Dienstes der DDR Nr 143: Formeln
- * verschiedenen Genauigkeitsgrades zur Berechnung der Sonnenkoordinaten.
- * @param[in] elev - The sun's real elevation angle.
- * @returns a double containing the value of the refracted (perceived) elevation angle.
+ * Formulas derived from the Equivalent Earth Model are used to calculated the
+ * refraction in degrees. (Holleman & Huuskonen, 2013, Rad. Sci.)
+ * @returns a double containing the value of the refracted (perceived) elevation angle
+ * in degrees.
  */
-double refraction(double* elev);
+double refraction(double *elev);
 
 /**
  * This function calculates the solar elevation and azimuth using the
