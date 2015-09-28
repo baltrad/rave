@@ -253,10 +253,13 @@ CartesianParam_t* RaveGra_apply(RaveGra_t* self, RaveField_t* distance, Cartesia
 {
   CartesianParam_t* result = NULL;
   CartesianParam_t* grafield = NULL;
+  RaveAttribute_t* howTaskArgs = NULL;
+
   long x = 0, y = 0, xsize = 0, ysize = 0;
   const char* quantity;
   double dgain = 0.0, doffset = 0.0;
   double (*applyGra)(RaveGra_t*, double, double, RaveValueType) = applyReflectivity; /* FP using applyAcrr or applyReflectivity */
+  char coeffs[256];
 
   RAVE_ASSERT((self != NULL), "self == NULL");
 
@@ -290,10 +293,16 @@ CartesianParam_t* RaveGra_apply(RaveGra_t* self, RaveField_t* distance, Cartesia
       CartesianParam_setConvertedValue(grafield, x, y, applyGra(self, doffset + dgain*dist, v, dt));
     }
   }
+  sprintf(coeffs, "GRA: A=%f, B=%f, C=%f, low_db=%f, high_db=%f",self->A, self->B, self->C, self->lowerThreshold, self->upperThreshold);
+  howTaskArgs = RaveAttributeHelp_createString("how/task_args", coeffs);
+  if (howTaskArgs == NULL || !CartesianParam_addAttribute(grafield, howTaskArgs)) {
+    RAVE_ERROR0("Could not add how/task_args to gra field");
+  }
 
   result = RAVE_OBJECT_COPY(grafield);
 fail:
   RAVE_OBJECT_RELEASE(grafield);
+  RAVE_OBJECT_RELEASE(howTaskArgs);
   return result;
 }
 

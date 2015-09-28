@@ -170,4 +170,4 @@ class PyGraTest(unittest.TestCase):
     self.assertAlmostEquals(40.7, result.getConvertedValue((0,1))[1], 2)
     self.assertAlmostEquals(54.0, result.getConvertedValue((1,0))[1], 4)
     self.assertAlmostEquals(64.0, result.getConvertedValue((1,1))[1], 4)
-
+    self.assertEquals("GRA: A=1.000000, B=2.000000, C=3.000000, low_db=-0.250000, high_db=2.000000", result.getAttribute("how/task_args"))

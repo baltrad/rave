@@ -68,6 +68,8 @@ try:
 except:
   pass
 
+import rave_dom_db
+
 ## Creates a dictionary from a rave argument list
 #@param arglist the argument list
 #@return a dictionary
@@ -103,6 +105,7 @@ def generate(files, arguments):
   distancefield = "se.smhi.composite.distance.radar"
   hours = 1
   N = 5
+  applygra = False
   
   #Accept is the required limit for how many nodata-pixels that are allowed in order for the
   #data to be accumulated
@@ -128,6 +131,8 @@ def generate(files, arguments):
     hours = int(args["hours"])
   if "N" in args.keys():
     N = int(args["N"])
+  if args.has_key("applygra"):
+    applygra = True
   
   if distancefield == "eu.baltrad.composite.quality.distance.radar":
     distancefield = "se.smhi.composite.distance.radar"
@@ -175,6 +180,25 @@ def generate(files, arguments):
 
   # accept, N, hours
   result = acrr.accumulate(accept, N, hours)
+  if applygra:
+    db = rave_dom_db.create_db_from_conf()
+    dt = datetime.datetime(int(edate[:4]), int(edate[4:6]), int(edate[6:]), int(etime[:2]), int(etime[2:4]), 0)
+    dt = dt - datetime.timedelta(seconds=3600 * 12) # 12 hours back in time for now..
+    grac = db.get_gra_coefficient(dt)
+    if grac != None:
+      logger.debug("Applying gra coefficients, quantity: %s"%quantity)
+      gra = _gra.new()
+      gra.A = grac.a
+      gra.B = grac.b
+      gra.C = grac.c
+      gra.zrA = zr_a
+      gra.zrb = zr_b
+      param = comp.getParameter(quantity)
+      dfield = param.getQualityFieldByHowTask(distancefield)
+      gra_field = gra.apply(dfield, param)
+      gra_field.quantity = quantity + "_CORR"
+      comp.addParameter(gra_field)
+  
   fileno, outfile = rave_tempfile.mktemp(suffix='.h5', close="True")
 
   img.addParameter(result)  
