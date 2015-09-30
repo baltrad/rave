@@ -49,7 +49,9 @@ import _cartesianvolume
 import _acrr
 import _rave
 import _raveio
+import _gra
 import string
+import datetime
 import rave_tempfile
 import odim_source
 import math
@@ -180,11 +182,18 @@ def generate(files, arguments):
 
   # accept, N, hours
   result = acrr.accumulate(accept, N, hours)
+
+  fileno, outfile = rave_tempfile.mktemp(suffix='.h5', close="True")
+
+  img.addParameter(result)  
+  
+  #logger.info("Apply gra: %s"%`applygra`)
   if applygra:
     db = rave_dom_db.create_db_from_conf()
     dt = datetime.datetime(int(edate[:4]), int(edate[4:6]), int(edate[6:]), int(etime[:2]), int(etime[2:4]), 0)
     dt = dt - datetime.timedelta(seconds=3600 * 12) # 12 hours back in time for now..
     grac = db.get_gra_coefficient(dt)
+    #logger.info("Got GRAC: %s"%`grac`)
     if grac != None:
       logger.debug("Applying gra coefficients, quantity: %s"%quantity)
       gra = _gra.new()
@@ -193,16 +202,12 @@ def generate(files, arguments):
       gra.C = grac.c
       gra.zrA = zr_a
       gra.zrb = zr_b
-      param = comp.getParameter(quantity)
-      dfield = param.getQualityFieldByHowTask(distancefield)
-      gra_field = gra.apply(dfield, param)
-      gra_field.quantity = quantity + "_CORR"
-      comp.addParameter(gra_field)
-  
-  fileno, outfile = rave_tempfile.mktemp(suffix='.h5', close="True")
+      #param = comp.getParameter(quantity)
+      dfield = result.getQualityFieldByHowTask(distancefield)
+      gra_field = gra.apply(dfield, result)
+      gra_field.quantity = result.quantity + "_CORR"
+      img.addParameter(gra_field)
 
-  img.addParameter(result)  
-  
   ios = _raveio.new()
   ios.object = img
   ios.filename = outfile
