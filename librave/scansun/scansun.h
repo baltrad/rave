@@ -23,6 +23,7 @@ along with HLHDF.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef SCANSUN_H
 #define SCANSUN_H
+#include <time.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -123,6 +124,8 @@ struct scanmeta {
   double* stopazA;       /*Simple array of ending azimuth angles in degrees*/
   double* startelA;      /*Simple array of starting elevation angles in degrees*/
   double* stopelA;       /*Simple array of ending elevation angles in degrees*/
+  double* startazT;      /*Simple array of starting ray acquisition times in epoch seconds*/
+  double* stopazT;       /*Simple array of ending ray acquisition times in epoch seconds*/
   ZdrType Zdr;           /*Flag used to note presence of ZDR, either read or calculated*/
 };
 typedef struct scanmeta SCANMETA;
@@ -133,6 +136,7 @@ typedef struct scanmeta SCANMETA;
 struct rvals {
 	long date;        /* Date of scan data in YYYYMMDD */
 	long time;        /* Time of scan data in HHMMSS */
+	double timer;     /* Time of scan data in HHMMSS.DCm */
 	double Elev;      /* Elevation of scan in deg. */
 	double Azimuth;   /* Azimuth of scan in deg. */
 	double ElevSun;   /* Elevation angle of the sun in deg. */
@@ -259,6 +263,16 @@ long date2julday(long yyyymmdd);
  * @returns the day of the year in YYYYMMDD (year-month-day) format, as a long
 */
 long julday2date(long julian);
+
+/**
+ * Determines the exact observation times based on acquired readout times for each ray
+ * @param[in] meta - internal metadata structure
+ * @param[in] the index of the ray (azimuth), as an int
+ * @param[in] date in the form YYYYMMDD as a long
+ * @param[in] time in the form HHMMSS as a long
+ * @param[in] sub-second time (r="remainder") as a double
+  */
+void readoutTiming(SCANMETA* meta, int ia, long* date, long* time, double* timer);
 
 /**
  * Finds sun hits in reflectivity data.

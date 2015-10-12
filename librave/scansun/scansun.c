@@ -223,7 +223,7 @@ void fill_meta(PolarScan_t* scan, PolarScanParam_t* param, SCANMETA *meta)
      } else meta->AntGain = tmpd;
    }
 
-   /* Additional metadata angular arrays */
+   /* Additional metadata arrays containing read-out angles and times */
    if (!getDoubleArrayAttribute(scan, "how/startazA", &meta->startazA)) {
      RAVE_WARNING1("Scan elevation %2.1f: No how/startazA array attribute. Estimating azimuth angle from polar geometry.\n", meta->elev);
    } else {
@@ -237,6 +237,12 @@ void fill_meta(PolarScan_t* scan, PolarScanParam_t* param, SCANMETA *meta)
      if (!getDoubleArrayAttribute(scan, "how/stopelA", &meta->stopelA)) {
        RAVE_WARNING1("Scan elevation %2.1f: how/startazA found but not how/stopelA array attribute.\n", meta->elev);
      }
+   }
+   if (!getDoubleArrayAttribute(scan, "how/startazT", &meta->startazT)) {
+     RAVE_WARNING1("Scan elevation %2.1f: No how/startazT array attribute.\n", meta->elev);
+   }
+   if (!getDoubleArrayAttribute(scan, "how/stopazT", &meta->stopazT)) {
+     RAVE_WARNING1("Scan elevation %2.1f: No how/stopazT array attribute.\n", meta->elev);
    }
 
 return;
@@ -387,12 +393,34 @@ return dd+100*(mm+100*yyyy);
 #undef IGREG 
 
 
+void readoutTiming(SCANMETA* meta, int ia, long* date, long* time, double* timer) {
+  double timed, timef;
+  char datebuf[8];  /* YYYYMMDD */
+  char timebuf[6];  /* HHMMSS */
+  char *ptr;
+
+  if ( (!meta->stopazT) && (meta->startazT) ) timed = meta->startazT[ia];
+  else if ( (!meta->startazT) && (meta->stopazT) ) timed = meta->stopazT[ia];
+  timed = (meta->startazT[ia] + meta->stopazT[ia]) / 2.0;
+  *timer = modf(timed, &timef);
+
+  const time_t timet = (time_t)timef;
+  const struct tm *timetm = localtime(&timet);
+  struct tm buf;
+  timetm = localtime_r(&timet, &buf);
+  strftime(datebuf, sizeof datebuf, "%Y%m%d", timetm);
+  strftime(timebuf, sizeof timebuf, "%H%M%S", timetm);
+  *date = strtol(datebuf, &ptr, 10);
+  *time = strtol(timebuf, &ptr, 10);
+}
+
+
 void processData(PolarScan_t* scan, SCANMETA* meta, RaveList_t* list) {
   int ia, ir, irn1, irn2, n;
   long date,time,addtime;
   double HeigMin1=HEIGMIN1,HeigMin2=HEIGMIN2,FracData=FRACDATA,dBdifX=DBDIFX,AngleDif=ANGLEDIF;
   double RayMin=RAYMIN,GasAttn=GASATTN,lonlat[2],Elevation,Azimuth,Range,SunFirst;
-  double SunMean,SunStdd,dBSunFlux,ZdrMean,ZdrStdd,Signal,DSignal;
+  double SunMean,SunStdd,dBSunFlux,ZdrMean,ZdrStdd,Signal,DSignal,timer;
   PolarScanParam_t* Zparam = NULL;
   PolarScanParam_t* Dparam = NULL;
   RaveValueType t;
@@ -414,9 +442,10 @@ void processData(PolarScan_t* scan, SCANMETA* meta, RaveList_t* list) {
 
   for (ia=0 ; ia<meta->nazim ; ia++) {
     RVALS* ret = RAVE_MALLOC(sizeof(RVALS));
+    timer = 0.0;
 
     /* Use exact azimuth and elevation angles if available */
-    if (meta->startazA) {
+    if ( (meta->startazA) && (meta->stopazA) ) {
       double startaz = meta->startazA[ia];
       double stopaz = meta->stopazA[ia];
       /* Most radars scan clockwise, but negative antvel indicates otherwise */
@@ -500,8 +529,15 @@ void processData(PolarScan_t* scan, SCANMETA* meta, RaveList_t* list) {
 
     /*Appending of results to return list.*/
 
+    /* First timing approximation */
     addtime=((ia-meta->azim0+meta->nazim)%meta->nazim)*meta->ascale/fabs(meta->antvel);
     datetime(meta->date,meta->time,addtime,&date,&time);
+
+    /* Replace with exact timing if available */
+    if ( (meta->startazT) || (meta->stopazT) ) {
+      readoutTiming(meta, ia, &date, &time, &timer);
+    }
+
     solar_elev_azim(lonlat[0],lonlat[1],date,time,&ret->ElevSun,&ret->AzimSun,&ret->RelevSun);
     if (fabs(Elevation-ret->ElevSun)>AngleDif||fabs(Azimuth-ret->AzimSun)>AngleDif) {
       RAVE_FREE(ret);
@@ -509,6 +545,7 @@ void processData(PolarScan_t* scan, SCANMETA* meta, RaveList_t* list) {
     }
     ret->date = date;
     ret->time = time;
+    ret->timer = time + timer;
     ret->Elev = Elevation;
     ret->Azimuth = Azimuth;
     ret->dBSunFlux = dBSunFlux;

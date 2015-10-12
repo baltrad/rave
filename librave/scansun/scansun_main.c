@@ -28,7 +28,7 @@ int main(int argc,char *argv[]) {
   char* source = NULL;
 	RaveList_t* list = RAVE_OBJECT_NEW(&RaveList_TYPE);
 	RVALS* ret = NULL;
-	const char* FORMAT = "%08ld %06ld  %7.3f %7.2f   %7.4f  %7.4f  %4d  %9.2f %9.2f  %6.3f %9.2f  %6.3f  %s   %s  %s\n";
+	const char* FORMAT = "%08ld %010.3f  %7.3f %7.2f   %7.4f  %7.4f  %4d  %9.2f %9.2f  %6.3f %9.2f  %6.3f  %s   %s  %s\n";
 
 	Rave_initializeDebugger();
   Rave_setDebugLevel(RAVE_WARNING);
@@ -45,10 +45,10 @@ int main(int argc,char *argv[]) {
 		exit(1);
 	}
 	if (RaveList_size(list) > 0) {
-		printf("#Date    Time    Elevatn Azimuth   ElevSun   AzimSun    N  dBSunFlux   SunMean SunStdd   ZdrMean ZdrStdd  Refl  ZDR  Source\n");
+		printf("#Date    Time        Elevatn Azimuth   ElevSun   AzimSun    N  dBSunFlux   SunMean SunStdd   ZdrMean ZdrStdd  Refl ZDR  Source\n");
 		while ((ret = RaveList_removeLast(list)) != NULL) {
 			printf(FORMAT, ret->date,
-            			   ret->time,
+            			   ret->timer,
             			   ret->Elev,
             			   ret->Azimuth,
             			   ret->ElevSun,
