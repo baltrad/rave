@@ -456,7 +456,7 @@ void processData(PolarScan_t* scan, SCANMETA* meta, RaveList_t* list) {
       }
       Azimuth = (startaz + stopaz) / 2.0;
     }
-    else Azimuth=(ia+0.5)*meta->ascale+meta->astart;
+    else Azimuth = ia * meta->ascale + meta->astart;
 
     if (meta->startelA) Elevation = (meta->startelA[ia] + meta->stopelA[ia]) / 2.0;
     else Elevation = meta->elev;
