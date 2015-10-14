@@ -321,6 +321,29 @@ class PyVerticalProfileTest(unittest.TestCase):
       pass
     self.assertEquals(None, obj.getField("ff"))
 
+  def test_addField_dev_bird(self):
+    obj = _verticalprofile.new()
+    f = _ravefield.new()
+    f.setData(numpy.zeros((10,1), numpy.uint8))
+    f.addAttribute("how/this", 1.0)
+    f.addAttribute("what/quantity", "dev_bird")
+    obj.addField(f)
+    result = obj.getField("dev_bird")
+    self.assertAlmostEquals(1.0, result.getAttribute("how/this"), 4)
+    self.assertEquals("dev_bird", result.getAttribute("what/quantity"))
+    self.assertEquals(10, obj.getLevels())
+    
+  def test_addField_no_quantity(self):
+    obj = _verticalprofile.new()
+    f = _ravefield.new()
+    f.setData(numpy.zeros((10,1), numpy.uint8))
+    f.addAttribute("how/this", 1.0)
+    try:
+      obj.addField(f)
+      self.fail("Expected AttributeError")
+    except AttributeError, e:
+      pass
+
   def test_getFields(self):
     obj = _verticalprofile.new()
     f = _ravefield.new()

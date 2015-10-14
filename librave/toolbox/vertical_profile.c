@@ -553,26 +553,9 @@ int VerticalProfile_addField(VerticalProfile_t* self, RaveField_t* field)
       goto done;
     }
   }
-  if (strcmp("ff", str) == 0 ||
-      strcmp("ff_dev", str) == 0 ||
-      strcmp("w", str) == 0 ||
-      strcmp("w_dev", str) == 0 ||
-      strcmp("dd", str) == 0 ||
-      strcmp("dd_dev", str) == 0 ||
-      strcmp("div", str) == 0 ||
-      strcmp("div_dev", str) == 0 ||
-      strcmp("def", str) == 0 ||
-      strcmp("def_dev", str) == 0 ||
-      strcmp("ad", str) == 0 ||
-      strcmp("ad_dev", str) == 0 ||
-      strcmp("dbz", str) == 0 ||
-      strcmp("dbz_dev", str) == 0) {
-    result = RaveObjectHashTable_put(self->fields, str, (RaveCoreObject*)field);
-    if (result) {
-      self->levels = RaveField_getYsize(field);
-    }
-  } else {
-    RAVE_ERROR1("Fields what/quantity is of unknown value: %s", str);
+  result = RaveObjectHashTable_put(self->fields, str, (RaveCoreObject*)field);
+  if (result) {
+    self->levels = RaveField_getYsize(field);
   }
 
 done:

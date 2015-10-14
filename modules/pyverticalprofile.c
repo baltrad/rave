@@ -491,6 +491,7 @@ static PyObject* _pyverticalprofile_addField(PyVerticalProfile* self, PyObject* 
 {
   PyObject* inptr = NULL;
   PyRaveField* ravefield = NULL;
+  RaveAttribute_t* attr = NULL;
 
   if (!PyArg_ParseTuple(args, "O", &inptr)) {
     return NULL;
@@ -501,6 +502,12 @@ static PyObject* _pyverticalprofile_addField(PyVerticalProfile* self, PyObject* 
   }
 
   ravefield = (PyRaveField*)inptr;
+  attr = RaveField_getAttribute(ravefield->field, "what/quantity");
+  if (attr == NULL) {
+    raiseException_returnNULL(PyExc_AttributeError, "Field must contain quantity");
+  }
+  RAVE_OBJECT_RELEASE(attr);
+
   if (!VerticalProfile_addField(self->vp, ravefield->field)) {
       raiseException_returnNULL(PyExc_AttributeError, "Failed to add field");
   }
