@@ -36,7 +36,7 @@ class RaveScansun(unittest.TestCase):
     def testScansun(self):
         # The following validation values are:
         # Date    Time   Elevatn Azimuth ElevSun AzimSun   N  dBSunFlux   SunMean SunStdd   ZdrMean ZdrStdd Refl  ZDR
-        valid = ('RAD:NL51;PLC:nldhl', [(20110111, 75022.0, 0.30000001447042407, 126.5, 
+        valid = ('RAD:NL51;PLC:nldhl', [(20110111, 75022.0, 0.30000001447042407, 126.0, 
                                          -0.77586040298515435, 126.84009882306225, 
                                          98, 12.706416334302883, 
                                          -113.2001649139023, 0.78867323519645993, 
