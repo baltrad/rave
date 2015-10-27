@@ -673,6 +673,16 @@ fail:
   return NULL;
 }
 
+static PyObject* _pycartesian_hasAttribute(PyCartesian* self, PyObject* args)
+{
+  char* name = NULL;
+  PyObject* result = NULL;
+  if (!PyArg_ParseTuple(args, "s", &name)) {
+    return NULL;
+  }
+  return PyBool_FromLong(Cartesian_hasAttribute(self->cartesian, name));
+}
+
 static PyObject* _pycartesian_isValid(PyCartesian* self, PyObject* args)
 {
   Rave_ObjectType otype = Rave_ObjectType_UNDEFINED;
@@ -1062,6 +1072,7 @@ static struct PyMethodDef _pycartesian_methods[] =
   {"addAttribute", (PyCFunction) _pycartesian_addAttribute, 1},
   {"getAttribute", (PyCFunction) _pycartesian_getAttribute, 1},
   {"getAttributeNames", (PyCFunction) _pycartesian_getAttributeNames, 1},
+  {"hasAttribute", (PyCFunction) _pycartesian_hasAttribute, 1},
   {"isValid", (PyCFunction) _pycartesian_isValid, 1},
   {"addQualityField", (PyCFunction) _pycartesian_addQualityField, 1},
   {"getNumberOfQualityFields", (PyCFunction) _pycartesian_getNumberOfQualityFields, 1},

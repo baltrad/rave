@@ -144,6 +144,8 @@ def generate(files, arguments):
   acrr.undetect = 0.0
   acrr.quality_field_name = distancefield
 
+  nodes = None
+
   for fname in files:
     obj = None
     if ravebdb != None:
@@ -169,6 +171,9 @@ def generate(files, arguments):
       img.time = etime
       img.date = edate
 
+    if obj.hasAttribute("how/nodes") and nodes == None:
+      nodes = obj.getAttribute("how/nodes")
+
     if obj.xscale != img.xscale or obj.yscale != img.yscale or \
        obj.projection.definition != img.projection.definition:
       raise AttributeError, "Scale or projdef inconsistancy for used area"
@@ -184,6 +189,8 @@ def generate(files, arguments):
   result = acrr.accumulate(accept, N, hours)
 
   fileno, outfile = rave_tempfile.mktemp(suffix='.h5', close="True")
+  if nodes != None:
+    img.addAttribute("how/nodes", nodes)
 
   img.addParameter(result)  
   
