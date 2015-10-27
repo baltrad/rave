@@ -1738,6 +1738,66 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEquals(10, numpy.shape(f2data)[0])
     self.assertEquals(1, numpy.shape(f2data)[1])
 
+  def test_write_vp_dev_bird(self):
+    vp = _verticalprofile.new()
+    vp.date="20100101"
+    vp.time="120000"
+    vp.source="PLC:1234"
+    vp.longitude = 10.0 * math.pi / 180.0
+    vp.latitude = 15.0 * math.pi / 180.0
+    vp.setLevels(10)
+    vp.height = 100.0
+    vp.interval = 5.0
+    vp.minheight = 10.0
+    vp.maxheight = 20.0
+    f1 = _ravefield.new()
+    f1.setData(numpy.zeros((10,1), numpy.uint8))
+    f1.addAttribute("what/quantity", "dev_bird")
+    vp.addField(f1)
+    f2 = _ravefield.new()
+    f2.setData(numpy.zeros((10,1), numpy.uint8))
+    f2.addAttribute("what/quantity", "ff_dev")
+    vp.addField(f2)
+
+    obj = _raveio.new()
+    obj.object = vp
+    obj.filename = self.TEMPORARY_FILE2
+    obj.save()
+    
+    # Verify written data
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE2)
+    nodelist.selectAll()
+    nodelist.fetch()
+    
+    self.assertEquals("20100101", nodelist.getNode("/what/date").data())
+    self.assertEquals("VP", nodelist.getNode("/what/object").data())
+    self.assertEquals("PLC:1234", nodelist.getNode("/what/source").data())
+    self.assertEquals("120000", nodelist.getNode("/what/time").data())
+    self.assertEquals("H5rad 2.2", nodelist.getNode("/what/version").data())
+    
+    self.assertAlmostEquals(100.0, nodelist.getNode("/where/height").data(), 4)
+    self.assertAlmostEquals(15.0, nodelist.getNode("/where/lat").data(), 4)
+    self.assertAlmostEquals(10.0, nodelist.getNode("/where/lon").data(), 4)
+
+    self.assertEquals(10, nodelist.getNode("/where/levels").data())
+    self.assertAlmostEquals(5.0, nodelist.getNode("/where/interval").data(), 4)
+    self.assertAlmostEquals(10.0, nodelist.getNode("/where/minheight").data(), 4)
+    self.assertAlmostEquals(20.0, nodelist.getNode("/where/maxheight").data(), 4)
+    
+    f1 = nodelist.getNode("/dataset1/data1/what/quantity").data()
+    f1data = nodelist.getNode("/dataset1/data1/data").data()
+    f2 = nodelist.getNode("/dataset1/data2/what/quantity").data()
+    f2data = nodelist.getNode("/dataset1/data2/data").data() 
+
+    if f1 == "dev_bird":
+      self.assertEquals("ff_dev", f2)
+    elif f1 == "ff_dev":
+      self.assertEquals("dev_bird", f2)
+  
+    self.assertEquals(10, numpy.shape(f1data)[0])
+    self.assertEquals(1, numpy.shape(f1data)[1])
+    self.assertEquals(10, numpy.shape(f2data)[0])
+    self.assertEquals(1, numpy.shape(f2data)[1])
     
   def testBufrTableDir(self):
     obj = _raveio.new()
