@@ -612,6 +612,7 @@ void processScan(PolarScan_t* scan, SCANMETA* meta, RaveList_t* list) {
   else if (PolarScan_hasParameter(scan, "DBZH")) meta->quant1 = "DBZH";
   else if (PolarScan_hasParameter(scan, "TV")) meta->quant1 = "TV";
   else if (PolarScan_hasParameter(scan, "DBZV")) meta->quant1 = "DBZV";
+  else meta->quant1 = NULL;
 
   if (PolarScan_hasParameter(scan, "ZDR")) {
     meta->quant2 = "ZDR";
@@ -626,7 +627,8 @@ void processScan(PolarScan_t* scan, SCANMETA* meta, RaveList_t* list) {
     meta->Zdr = ZdrType_CALCULATE;
   }
   else meta->Zdr = ZdrType_None;
-  processData(scan, meta, list);
+
+  if (meta->quant1) processData(scan, meta, list);
 }
 
 
