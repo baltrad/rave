@@ -166,7 +166,7 @@ def generate(files, arguments):
       img.yscale = obj.yscale
       img.areaextent = obj.areaextent
       img.projection = obj.projection
-      img.product = obj.product
+      img.product = _rave.Rave_ProductType_RR
       img.source = obj.source
       img.time = etime
       img.date = edate
