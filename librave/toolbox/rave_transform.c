@@ -84,6 +84,11 @@ double get_array_item_2d(
     ret = a[y * stride_xsize + x];
     break;
   }
+  case RaveDataType_UINT: {
+    unsigned int *a = (unsigned int *) in_a;
+    ret = a[y * stride_xsize + x];
+    break;
+  }
   case RaveDataType_LONG: {
     long *a = (long *) in_a;
     ret = a[y * stride_xsize + x];
@@ -161,6 +166,15 @@ void set_array_item_2d(
       v = INT_MIN;
     c = mytrunc(v);
     a[y * stride_xsize + x] = c;
+    break;
+  }
+  case RaveDataType_UINT: {
+    unsigned int *a = (unsigned int *) out_a;
+    if (v < 0)
+      v = 0;
+    if (v > UINT_MAX)
+      v = UINT_MAX;
+    a[y * stride_xsize + x] = (unsigned int)v;
     break;
   }
   case RaveDataType_LONG: {

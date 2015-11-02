@@ -66,6 +66,9 @@ RaveDataType translate_pytype_to_ravetype(char type)
   case 'i':
     result = RaveDataType_INT;
     break;
+  case 'I':
+    result = RaveDataType_UINT;
+    break;
   case 'l':
     result = RaveDataType_LONG;
     break;
@@ -100,8 +103,10 @@ RaveDataType translate_pyarraytype_to_ravetype(int type)
     result = RaveDataType_USHORT;
     break;
   case PyArray_INT:
-  case PyArray_UINT:
     result = RaveDataType_INT;
+    break;
+  case PyArray_UINT:
+    result = RaveDataType_UINT;
     break;
   case PyArray_LONG:
   case PyArray_ULONG:
@@ -138,6 +143,9 @@ int translate_ravetype_to_pyarraytype(RaveDataType type)
     break;
   case RaveDataType_INT:
     result = PyArray_INT;
+    break;
+  case RaveDataType_UINT:
+    result = PyArray_UINT;
     break;
   case RaveDataType_LONG:
     result = PyArray_LONG;
@@ -179,6 +187,9 @@ int pyarraytype_from_type(char type)
     break;
   case 'i': /* PyArray_INT */
     return PyArray_INT;
+    break;
+  case 'I': /* PyArray_UINT */
+    return PyArray_UINT;
     break;
   case 'l': /* PyArray_LONG */
     return PyArray_LONG;

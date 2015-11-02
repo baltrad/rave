@@ -92,6 +92,7 @@ typedef enum RaveDataType {
   RaveDataType_SHORT,    /**< short */
   RaveDataType_USHORT,   /**< unsigned short */
   RaveDataType_INT,      /**< int */
+  RaveDataType_UINT,     /**< unisgned int */
   RaveDataType_LONG,     /**< long */
   RaveDataType_FLOAT,    /**< float */
   RaveDataType_DOUBLE,   /**< double */

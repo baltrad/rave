@@ -50,7 +50,7 @@ static const struct RaveToHlhdfTypeMap RAVE_TO_HLHDF_MAP[] = {
   {HLHDF_SHORT, RaveDataType_SHORT},
   {HLHDF_USHORT, RaveDataType_USHORT},
   {HLHDF_INT, RaveDataType_INT},
-  {HLHDF_UINT, RaveDataType_INT},
+  {HLHDF_UINT, RaveDataType_UINT},
   {HLHDF_LONG, RaveDataType_LONG},
   {HLHDF_ULONG, RaveDataType_LONG},
   {HLHDF_LLONG, RaveDataType_UNDEFINED},

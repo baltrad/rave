@@ -309,6 +309,19 @@ class PyPolarScanParamTest(unittest.TestCase):
     self.assertEqual(10, obj.nbins)
     self.assertEqual(12, obj.nrays)
 
+  def test_setData_uint32(self):
+    obj = _polarscanparam.new()
+    a=numpy.arange(120)
+    a=numpy.array(a.astype(numpy.uint32),numpy.uint32)
+    a=numpy.reshape(a,(12,10)).astype(numpy.uint32)    
+    
+    obj.setData(a)
+    
+    self.assertEqual(_rave.RaveDataType_UINT, obj.datatype)
+    self.assertEqual(10, obj.nbins)
+    self.assertEqual(12, obj.nrays)
+    
+
   def test_addAttribute_goodNames(self):
     obj = _polarscanparam.new()
     GOODNAMES = ["how/this", "HOW/this", "HoW/this", "What/that",
