@@ -23,8 +23,9 @@ class RaveModuleConstantsTest(unittest.TestCase):
     self.assertEqual(4, _rave.RaveDataType_INT)
     self.assertEqual(5, _rave.RaveDataType_UINT)
     self.assertEqual(6, _rave.RaveDataType_LONG)
-    self.assertEqual(7, _rave.RaveDataType_FLOAT)
-    self.assertEqual(8, _rave.RaveDataType_DOUBLE)
+    self.assertEqual(7, _rave.RaveDataType_ULONG)
+    self.assertEqual(8, _rave.RaveDataType_FLOAT)
+    self.assertEqual(9, _rave.RaveDataType_DOUBLE)
 
   def testRaveTransformMethods(self):
     self.assertEqual(1, _rave.NEAREST)

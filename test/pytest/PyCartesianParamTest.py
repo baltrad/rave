@@ -375,6 +375,18 @@ class PyCartesianParamTest(unittest.TestCase):
     self.assertEqual(10, obj.xsize)
     self.assertEqual(12, obj.ysize)
 
+  def test_setData_uint64(self):
+    obj = _cartesianparam.new()
+    a=numpy.arange(120)
+    a=numpy.array(a.astype(numpy.uint64),numpy.uint64)
+    a=numpy.reshape(a,(12,10)).astype(numpy.uint64)    
+    
+    obj.setData(a)
+    
+    self.assertEqual(_rave.RaveDataType_ULONG, obj.datatype)
+    self.assertEqual(10, obj.xsize)
+    self.assertEqual(12, obj.ysize)
+
   def test_getData_int8(self):
     obj = _cartesianparam.new()
     a=numpy.arange(120)

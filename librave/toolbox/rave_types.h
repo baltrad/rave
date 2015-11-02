@@ -94,6 +94,7 @@ typedef enum RaveDataType {
   RaveDataType_INT,      /**< int */
   RaveDataType_UINT,     /**< unisgned int */
   RaveDataType_LONG,     /**< long */
+  RaveDataType_ULONG,    /**< unsigned long */
   RaveDataType_FLOAT,    /**< float */
   RaveDataType_DOUBLE,   /**< double */
   RaveDataType_LAST      /**< Always has to be at end and is not a real datatype */

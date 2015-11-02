@@ -94,6 +94,11 @@ double get_array_item_2d(
     ret = a[y * stride_xsize + x];
     break;
   }
+  case RaveDataType_ULONG: {
+    unsigned long *a = (unsigned long *) in_a;
+    ret = a[y * stride_xsize + x];
+    break;
+  }
   case RaveDataType_FLOAT: {
     float *a = (float *) in_a;
     ret = a[y * stride_xsize + x];
@@ -188,7 +193,15 @@ void set_array_item_2d(
     a[y * stride_xsize + x] = c;
     break;
   }
-
+  case RaveDataType_ULONG: {
+    unsigned long *a = (unsigned long *) out_a;
+    if (v < 0)
+      v = 0;
+    if (v > ULONG_MAX)
+      v = ULONG_MAX;
+    a[y * stride_xsize + x] = (unsigned long)v;
+    break;
+  }
   case RaveDataType_FLOAT: {
     float *a = (float *) out_a;
     if (v > FLT_MAX)

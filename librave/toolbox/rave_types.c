@@ -152,6 +152,8 @@ int get_ravetype_size(RaveDataType type)
     return sizeof(unsigned int);
   case RaveDataType_LONG:
     return sizeof(long);
+  case RaveDataType_ULONG:
+    return sizeof(unsigned long);
   case RaveDataType_FLOAT:
     return sizeof(float);
   case RaveDataType_DOUBLE:

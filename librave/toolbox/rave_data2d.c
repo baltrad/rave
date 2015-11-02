@@ -246,7 +246,6 @@ int RaveData2D_setValueUnchecked(RaveData2D_t* self, long x, long y, double v)
       v = UINT_MAX;
     a[y * self->xsize + x] = (unsigned int)v;
     break;
-    break;
   }
   case RaveDataType_LONG: {
     long *a = (long *) self->data;
@@ -259,7 +258,15 @@ int RaveData2D_setValueUnchecked(RaveData2D_t* self, long x, long y, double v)
     a[y * self->xsize + x] = c;
     break;
   }
-
+  case RaveDataType_ULONG: {
+    unsigned long *a = (unsigned long *) self->data;
+    if (v < 0)
+      v = 0;
+    if (v > ULONG_MAX)
+      v = ULONG_MAX;
+    a[y * self->xsize + x] = (unsigned long)v;
+    break;
+  }
   case RaveDataType_FLOAT: {
     float *a = (float *) self->data;
     if (v > FLT_MAX)
@@ -350,6 +357,11 @@ int RaveData2D_getValueUnchecked(RaveData2D_t* self, long x, long y, double* v)
   }
   case RaveDataType_LONG: {
     long *a = (long *) self->data;
+    *v = a[y * self->xsize + x];
+    break;
+  }
+  case RaveDataType_ULONG: {
+    unsigned long *a = (unsigned long *) self->data;
     *v = a[y * self->xsize + x];
     break;
   }
