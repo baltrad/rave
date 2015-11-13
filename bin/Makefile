@@ -28,8 +28,8 @@
 install:
 	@mkdir -p "${prefix}/bin"
 	@cp -v -f area_registry "${prefix}/bin/"
-	@cp -v -f n2b "${prefix}/bin/"
-	@cp -v -f n2b.sh "${prefix}/bin/"
+	@cp -v -f odim_injector "${prefix}/bin/"
+	@cp -v -f odim_injector.sh "${prefix}/bin/"
 	@cp -v -f pgf_help "${prefix}/bin/"
 	@cp -v -f pgf_registry "${prefix}/bin/"
 	@cp -v -f projection_registry "${prefix}/bin/"
@@ -48,7 +48,6 @@ install:
 	@cp -v -f rave_pgf_logger "${prefix}/bin/"
 	@cp -v -f create_tile_definition "${prefix}/bin/"
 	@cp -v -f create_acrr_composites "${prefix}/bin/"
-
 
 .PHONY:clean
 clean: ;

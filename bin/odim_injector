@@ -46,19 +46,19 @@ import math
 from rave_defines import DEX_SPOE  # Files are injected to this URI
 
 BLTROOT = '/opt/baltrad'  # CHANGE if necessary
-N2BROOT = BLTROOT + '/n2b'  # CHANGE if necessary
-DEFAULTIN = N2BROOT + '/data'  # CHANGE if necessary
-PIDFILE = N2BROOT + '/n2b.pid'
-LOGFILE = N2BROOT + '/n2b.log'
+ODIM_INJECTOR_ROOT = BLTROOT + '/odim_injector'  # CHANGE if necessary
+DEFAULTIN = ODIM_INJECTOR_ROOT + '/data'  # CHANGE if necessary
+PIDFILE = ODIM_INJECTOR_ROOT + '/odim_injector.pid'
+LOGFILE = ODIM_INJECTOR_ROOT + '/odim_injector.log'
 LOGFILESIZE = 5000000  # 5 Mb each
 LOGFILES = 5
 
-if not os.path.isdir(N2BROOT):
+if not os.path.isdir(ODIM_INJECTOR_ROOT):
   try:
-    os.makedirs(N2BROOT)
-    print "Created directory %s" % N2BROOT
+    os.makedirs(ODIM_INJECTOR_ROOT)
+    print "Created directory %s" % ODIM_INJECTOR_ROOT
   except OSError:
-    print "Directory %s does not exist. Failed to create it. Exiting." % N2BROOT
+    print "Directory %s does not exist. Failed to create it. Exiting." % ODIM_INJECTOR_ROOT
     sys.exit(1)
 
 if not os.path.isdir(DEFAULTIN):
@@ -69,7 +69,7 @@ if not os.path.isdir(DEFAULTIN):
     print "Directory %s does not exist. Failed to create it. Exiting." % DEFAULTIN
     sys.exit(1)
 
-sys.path.append(N2BROOT)
+sys.path.append(ODIM_INJECTOR_ROOT)
 
 MASK = pyinotify.IN_CLOSE_WRITE
 
@@ -217,7 +217,7 @@ def MAIN(in_file, janitor=False, uri=DEX_SPOE):
 
 # This class, and especially its method, overrides the default process
 # in (py)inotify
-class N2B(pyinotify.ProcessEvent):
+class OdimInjector(pyinotify.ProcessEvent):
   # # Initializer
   # @param options variable options list
   def __init__(self, options):
@@ -234,7 +234,7 @@ if __name__ == "__main__":
   from optparse import OptionParser
   import logging, logging.handlers
 
-  usage = "usage: n2b -i <input dir> -p <pidfile> -l <logfile> [hkcj]"
+  usage = "usage: odim_injector -i <input dir> -p <pidfile> -l <logfile> [hkcj]"
   usage += ""
   parser = OptionParser(usage=usage)
 
@@ -294,7 +294,7 @@ if __name__ == "__main__":
     catchup(options.in_dir, options.janitor, options.dex_uri)
 
   wm = pyinotify.WatchManager()
-  notifier = pyinotify.Notifier(wm, N2B(options))
+  notifier = pyinotify.Notifier(wm, OdimInjector(options))
 
   # Only act on closed files, or whatever's been moved into in_dir
   wm.add_watch(options.in_dir, MASK)
