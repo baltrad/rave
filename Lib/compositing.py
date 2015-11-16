@@ -178,6 +178,13 @@ class compositing(object):
       pcs = rave_projection.pcs(A.pcs)
       pyarea.projection = _projection.new(pcs.id, pcs.name, string.join(pcs.definition, ' '))
   
+      if len(objects) == 1:
+        try:
+          tmpid = odim_source.NODfromSource(objects[0])
+          pyarea.id = "auto_%s_%s"%(A.pcs, tmpid)
+        except:
+          pass
+  
     qfields = []
     for d in self.detectors:
       p = rave_pgf_quality_registry.get_plugin(d)
