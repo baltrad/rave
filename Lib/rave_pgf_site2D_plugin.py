@@ -120,10 +120,10 @@ def generate(files, arguments):
     comp.pcsid = args["pcsid"]
   
   if "xscale" in args.keys():
-    comp.xscale = strToNumber(args["xscale"])
+    comp.xscale = float(strToNumber(args["xscale"]))
     
   if "yscale" in args.keys():
-    comp.yscale = strToNumber(args["yscale"])
+    comp.yscale = float(strToNumber(args["yscale"]))
   
   #if options.gf: Activate gap filling for rule
   #  comp.applygapfilling = True
@@ -142,8 +142,8 @@ def generate(files, arguments):
   
   if args.has_key("pcsid"):
     comp.pcsid = args["pcsid"]
-    comp.xscale = strToNumber(args["xscale"])
-    comp.yscale = strToNumber(args["yscale"])
+    comp.xscale = float(strToNumber(args["xscale"]))
+    comp.yscale = float(strToNumber(args["yscale"]))
   
   areaid = None
   if args.has_key("area"):

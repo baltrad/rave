@@ -256,12 +256,20 @@ static int _pyarea_setattr(PyArea* self, char* name, PyObject* val)
   } else if (strcmp("xscale", name)==0) {
     if (PyFloat_Check(val)) {
       Area_setXScale(self->area, PyFloat_AsDouble(val));
+    } else if (PyLong_Check(val)) {
+      Area_setXScale(self->area, PyLong_AsDouble(val));
+    } else if (PyInt_Check(val)) {
+      Area_setXScale(self->area, (double)PyInt_AsLong(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError,"xscale must be of type float");
     }
   } else if (strcmp("yscale", name)==0) {
     if (PyFloat_Check(val)) {
       Area_setYScale(self->area, PyFloat_AsDouble(val));
+    } else if (PyLong_Check(val)) {
+      Area_setYScale(self->area, PyLong_AsDouble(val));
+    } else if (PyInt_Check(val)) {
+      Area_setYScale(self->area, (double)PyInt_AsLong(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError,"yscale must be of type float");
     }

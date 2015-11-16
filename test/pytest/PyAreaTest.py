@@ -119,11 +119,17 @@ class PyAreaTest(unittest.TestCase):
     obj.xscale = 10.0
     self.assertAlmostEquals(10.0, obj.xscale, 4)
 
+  def test_xscale_int(self):
+    obj = _area.new()
+    self.assertAlmostEquals(0.0, obj.xscale, 4)
+    obj.xscale = 10
+    self.assertAlmostEquals(10.0, obj.xscale, 4)
+
   def test_xscale_typeError(self):
     obj = _area.new()
     self.assertAlmostEquals(0.0, obj.xscale, 4)
     try:
-      obj.xscale = 10
+      obj.xscale = "abc"
       self.fail("Expected TypeError")
     except TypeError,e:
       pass
@@ -135,11 +141,17 @@ class PyAreaTest(unittest.TestCase):
     obj.yscale = 10.0
     self.assertAlmostEquals(10.0, obj.yscale, 4)
 
+  def test_yscale_int(self):
+    obj = _area.new()
+    self.assertAlmostEquals(0.0, obj.yscale, 4)
+    obj.yscale = 10
+    self.assertAlmostEquals(10.0, obj.yscale, 4)
+
   def test_yscale_typeError(self):
     obj = _area.new()
     self.assertAlmostEquals(0.0, obj.yscale, 4)
     try:
-      obj.yscale = 10
+      obj.yscale = "abc"
       self.fail("Expected TypeError")
     except TypeError,e:
       pass
