@@ -200,6 +200,14 @@ int VerticalProfile_addAttribute(VerticalProfile_t* self, RaveAttribute_t* attri
 RaveAttribute_t* VerticalProfile_getAttribute(VerticalProfile_t* self, const char* name);
 
 /**
+ * Returns if the specified attribute exists or not
+ * @param[in] self - self
+ * @param[in] name - the name of the attribute
+ * @returns 1 if the attribute exists otherwise 0
+ */
+int VerticalProfile_hasAttribute(VerticalProfile_t* self, const char* name);
+
+/**
  * Returns a list of attribute names. Release with \@ref #RaveList_freeAndDestroy.
  * @param[in] self - self
  * @returns a list of attribute names

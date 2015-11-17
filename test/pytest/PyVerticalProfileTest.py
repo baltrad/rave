@@ -367,6 +367,46 @@ class PyVerticalProfileTest(unittest.TestCase):
     else:
       self.fail("Unexpected combination of quantities")
 
+  def test_addAttribute(self):
+    obj = _verticalprofile.new()
+    obj.addAttribute("how/astr", "astr")
+    obj.addAttribute("how/int", 10)
+    obj.addAttribute("how/double", 10.2)
+    self.assertEquals("astr", obj.getAttribute("how/astr"))
+    self.assertEquals(10, obj.getAttribute("how/int"))
+    self.assertAlmostEqual(10.2, obj.getAttribute("how/double"), 4)
+    
+  def test_add_how_array_attribute_double(self):
+    obj = _verticalprofile.new()
+    obj.addAttribute("how/something", numpy.arange(10).astype(numpy.float32))
+    result = obj.getAttribute("how/something")
+    self.assertTrue(isinstance(result, numpy.ndarray))
+    self.assertEquals(10, len(result))
+    self.assertAlmostEquals(0.0, result[0], 2)
+    self.assertAlmostEquals(3.0, result[3], 2)
+    self.assertAlmostEquals(5.0, result[5], 2)
+    self.assertAlmostEquals(9.0, result[9], 2)
+  
+  def test_hasAttribute(self):
+    obj = _verticalprofile.new()
+    obj.addAttribute("how/something", 1.0)
+    obj.addAttribute("how/something2", "jupp")
+    self.assertEquals(True, obj.hasAttribute("how/something"))
+    self.assertEquals(True, obj.hasAttribute("how/something2"))
+    self.assertEquals(False, obj.hasAttribute("how/something3"))
+    try:
+      obj.hasAttribute(None)
+      self.fail("Expected TypeError")
+    except TypeError, e:
+      pass
+
+  def test_getAttributeNames(self):
+    obj = _verticalprofile.new()
+    obj.addAttribute("how/something", 1.0)
+    obj.addAttribute("how/something2", "jupp")
+    result = obj.getAttributeNames()
+    self.assertTrue(set(result) == set(["how/something", "how/something2"]))
+
 if __name__ == "__main__":
   #import sys;sys.argv = ['', 'Test.testName']
   unittest.main()

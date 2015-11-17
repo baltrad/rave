@@ -323,6 +323,12 @@ RaveAttribute_t* VerticalProfile_getAttribute(VerticalProfile_t* self, const cha
   return (RaveAttribute_t*)RaveObjectHashTable_get(self->attrs, name);
 }
 
+int VerticalProfile_hasAttribute(VerticalProfile_t* self, const char* name)
+{
+  RAVE_ASSERT((self != NULL), "scan == NULL");
+  return RaveObjectHashTable_exists(self->attrs, name);
+}
+
 RaveList_t* VerticalProfile_getAttributeNames(VerticalProfile_t* self)
 {
   RAVE_ASSERT((self != NULL), "self == NULL");
