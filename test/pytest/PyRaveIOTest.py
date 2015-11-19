@@ -1798,6 +1798,52 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEquals(1, numpy.shape(f1data)[1])
     self.assertEquals(10, numpy.shape(f2data)[0])
     self.assertEquals(1, numpy.shape(f2data)[1])
+  
+  def testReadBadlyFormattedODIM(self):
+    nodelist = _pyhl.nodelist()
+    self.addGroupNode(nodelist, "/what")
+    self.addGroupNode(nodelist, "/where")
+    self.addGroupNode(nodelist, "/dataset1")
+    self.addGroupNode(nodelist, "/dataset1/what")
+    self.addGroupNode(nodelist, "/dataset1/data1")
+    self.addGroupNode(nodelist, "/dataset1/data1/what")
+    
+    self.addAttributeNode(nodelist, "/Conventions", "string", "ODIM_H5/V2_2")
+    self.addAttributeNode(nodelist, "/what/date", "string", "20100101")
+    self.addAttributeNode(nodelist, "/what/time", "string", "101500")
+    self.addAttributeNode(nodelist, "/what/source", "string", "PLC:123")
+    self.addAttributeNode(nodelist, "/what/object", "string", "SCAN")
+    self.addAttributeNode(nodelist, "/what/version", "string", "H5rad 2.2")
+    
+    self.addAttributeNode(nodelist, "/where/height", "double", 100.0)
+    self.addAttributeNode(nodelist, "/where/lon", "double", 13.5)
+    self.addAttributeNode(nodelist, "/where/lat", "double", 61.0)
+    
+    self.addAttributeNode(nodelist, "/dataset1/what/startdate", "string", "20100101")
+    self.addAttributeNode(nodelist, "/dataset1/what/starttime", "string", "-") #BAD FORMAT
+    self.addAttributeNode(nodelist, "/dataset1/what/enddate", "string", "20100101")
+    self.addAttributeNode(nodelist, "/dataset1/what/endtime", "string", "-") #BAD FORMAT
+    self.addAttributeNode(nodelist, "/dataset1/what/product", "string", "SCAN")
+    
+    self.addAttributeNode(nodelist, "/dataset1/data1/what/gain", "double", 1.0)
+    self.addAttributeNode(nodelist, "/dataset1/data1/what/offset", "double", 0.0)
+    self.addAttributeNode(nodelist, "/dataset1/data1/what/nodata", "double", 255.0)
+    self.addAttributeNode(nodelist, "/dataset1/data1/what/undetect", "double", 255.0)
+    self.addAttributeNode(nodelist, "/dataset1/data1/what/quantity", "string", "DBZH")
+
+    dset = numpy.arange(100)
+    dset=numpy.array(dset.astype(numpy.uint8),numpy.uint8)
+    dset=numpy.reshape(dset,(10,10)).astype(numpy.uint8)
+    
+    self.addDatasetNode(nodelist, "/dataset1/data1/data", "uchar", (10,10), dset)
+    
+    nodelist.write(self.TEMPORARY_FILE, 6)
+
+    try:
+      obj = _raveio.open(self.TEMPORARY_FILE)
+      self.fail("Expected IOError")
+    except IOError, e:
+      pass
     
   def testBufrTableDir(self):
     obj = _raveio.new()

@@ -451,6 +451,8 @@ static int RaveIOInternal_loadHDF5(RaveIO_t* raveio)
     raveio->version = version;
     raveio->h5radversion = h5radversion;
     raveio->fileFormat = RaveIO_ODIM_FileFormat_HDF5;
+  } else {
+    goto done;
   }
 
   result = 1;

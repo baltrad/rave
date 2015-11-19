@@ -83,21 +83,27 @@ static int PolarOdimIOInternal_loadRootScanAttribute(void* object, RaveAttribute
       RAVE_ERROR0("Failed to extract what/date as a string");
       goto done;
     }
-    result = PolarScan_setDate(scan, value);
+    if(!(result = PolarScan_setDate(scan, value))) {
+      RAVE_ERROR1("Failed to set date to %s",value);
+    }
   } else if (strcasecmp("what/time", name)==0) {
     char* value = NULL;
     if (!RaveAttribute_getString(attribute, &value)) {
       RAVE_ERROR0("Failed to extract what/time as a string");
       goto done;
     }
-    result = PolarScan_setTime(scan, value);
+    if(!(result = PolarScan_setTime(scan, value))) {
+      RAVE_ERROR1("Failed to set time to %s",value);
+    }
   } else if (strcasecmp("what/source", name)==0) {
     char* value = NULL;
     if (!RaveAttribute_getString(attribute, &value)) {
       RAVE_ERROR0("Failed to extract what/source as a string");
       goto done;
     }
-    result = PolarScan_setSource(scan, value);
+    if(!(result = PolarScan_setSource(scan, value))) {
+      RAVE_ERROR1("Failed to set source to %s",value);
+    }
   } else if (strcasecmp("how/beamwidth", name)==0) {
     double value = 0.0;
     if (!(result = RaveAttribute_getDouble(attribute, &value))) {
@@ -159,21 +165,27 @@ static int PolarOdimIOInternal_loadRootVolumeAttribute(void* object, RaveAttribu
       RAVE_ERROR0("Failed to extract what/date as a string");
       goto done;
     }
-    result = PolarVolume_setDate(volume, value);
+    if (!(result = PolarVolume_setDate(volume, value))) {
+      RAVE_ERROR1("Failed to set date to %s",value);
+    }
   } else if (strcasecmp("what/time", name)==0) {
     char* value = NULL;
     if (!RaveAttribute_getString(attribute, &value)) {
       RAVE_ERROR0("Failed to extract what/time as a string");
       goto done;
     }
-    result = PolarVolume_setTime(volume, value);
+    if(!(result = PolarVolume_setTime(volume, value))) {
+      RAVE_ERROR1("Failed to set time to %s",value);
+    }
   } else if (strcasecmp("what/source", name)==0) {
     char* value = NULL;
     if (!RaveAttribute_getString(attribute, &value)) {
       RAVE_ERROR0("Failed to extract what/source as a string");
       goto done;
     }
-    result = PolarVolume_setSource(volume, value);
+    if(!(result = PolarVolume_setSource(volume, value))) {
+      RAVE_ERROR1("Failed to set source %s",value);
+    }
   } else if (strcasecmp("how/beamwidth", name)==0) {
     double value = 0.0;
     if (!(result = RaveAttribute_getDouble(attribute, &value))) {
@@ -260,28 +272,36 @@ static int PolarOdimIOInternal_loadDsScanAttribute(void* object, RaveAttribute_t
         RAVE_ERROR0("Failed to extract what/startdate as a string");
         goto done;
       }
-      result = PolarScan_setStartDate(scan, value);
+      if(!(result = PolarScan_setStartDate(scan, value))) {
+        RAVE_ERROR1("Failed to set startdate with value = %s",value);
+      }
     } else if (strcasecmp("what/starttime", name)==0) {
       char* value = NULL;
       if (!RaveAttribute_getString(attribute, &value)) {
         RAVE_ERROR0("Failed to extract what/starttime as a string");
         goto done;
       }
-      result = PolarScan_setStartTime(scan, value);
+      if(!(result = PolarScan_setStartTime(scan, value))) {
+        RAVE_ERROR1("Failed to set what/starttime with value = %s", value);
+      }
     } else if (strcasecmp("what/enddate", name)==0) {
       char* value = NULL;
       if (!RaveAttribute_getString(attribute, &value)) {
         RAVE_ERROR0("Failed to extract what/enddate as a string");
         goto done;
       }
-      result = PolarScan_setEndDate(scan, value);
+      if(!(result = PolarScan_setEndDate(scan, value))) {
+        RAVE_ERROR1("Failed to set what/enddate with value = %s", value);
+      }
     } else if (strcasecmp("what/endtime", name)==0) {
       char* value = NULL;
       if (!RaveAttribute_getString(attribute, &value)) {
         RAVE_ERROR0("Failed to extract what/endtime as a string");
         goto done;
       }
-      result = PolarScan_setEndTime(scan, value);
+      if(!(result = PolarScan_setEndTime(scan, value))) {
+        RAVE_ERROR1("Failed to set what/endtime with value = %s", value);
+      }
     } else if (strcasecmp("what/product", name) == 0) {
       char* value = NULL;
       if (!RaveAttribute_getString(attribute, &value)) {
