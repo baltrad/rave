@@ -168,6 +168,7 @@ class fm12_importer(object):
           
 
 def get_dburi_from_conf(configfile, propname = "rave.db.uri"):
+    import jprops
     properties = {}
     try:
       with open(configfile) as fp:
