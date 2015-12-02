@@ -45,7 +45,7 @@ if __name__ == "__main__":
     optlist, args = getopt.getopt(sys.argv[1:], '', 
                                   ['uri=','flatfile=','station=','help'])
   except getopt.GetoptError, e:
-    usage(True, e.__str__())
+    Usage(True, e.__str__())
     sys.exit(127)
   
   dburi="postgresql://baltrad:baltrad@127.0.0.1/baltrad"

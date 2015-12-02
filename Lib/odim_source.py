@@ -52,18 +52,33 @@ def init():
         cccc, org = country.attrib["CCCC"], country.attrib["org"]
         for radar in list(country):
             nod = radar.tag
-            wmo, rad, plc = radar.attrib['wmo'], radar.attrib['rad'], radar.attrib['plc']
-            WMO[nod] = wmo
-            RAD[nod] = rad
-            PLC[nod] = plc
             CCCC[nod] = cccc
-            if wmo != "00000": 
-                NOD[wmo] = nod
-                SOURCE[nod] = u"WMO:%s,NOD:%s,RAD:%s,PLC:%s" % (wmo, nod, rad, plc)
-                #SOURCE[nod] = u"WMO:%s,NOD:%s,RAD:%s,ORG:%s,PLC:%s" % (wmo, nod, rad, org, plc)
+            if radar.attrib.has_key("wmo"): 
+                wmo = radar.attrib["wmo"]
+                WMO[nod] = wmo
             else:
-                SOURCE[nod] = u"NOD:%s,RAD:%s,PLC:%s" % (nod, rad, plc)
-                #SOURCE[nod] = u"NOD:%s,RAD:%s,ORG:%s,PLC:%s" % (nod, rad, org, plc)
+                wmo = None
+            if radar.attrib.has_key("rad"): 
+                rad = radar.attrib["rad"]
+                RAD[nod] = rad
+            else:
+                rad = None
+            if radar.attrib.has_key("plc"): 
+                plc = radar.attrib["plc"]
+                PLC[nod] = plc
+            else:
+                plc = None
+            if wmo not in ("00000", None): 
+                NOD[wmo] = nod
+                SOURCE[nod] = u"NOD:%s" % nod
+                if wmo: SOURCE[nod] += ",WMO:%s" % wmo
+                if rad: SOURCE[nod] += ",RAD:%s" % rad
+                if plc: SOURCE[nod] += ",PLC:%s" % plc
+            else:
+                SOURCE[nod] = u"NOD:%s" % nod
+                if rad: SOURCE[nod] += ",RAD:%s" % rad
+                if org and wmo!=None: SOURCE[nod] += ",ORG:%s" % org
+                if plc: SOURCE[nod] += ",PLC:%s" % plc
     initialized = 1
 
 
