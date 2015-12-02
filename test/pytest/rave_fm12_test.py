@@ -34,7 +34,8 @@ class rave_fm12_parser_test(unittest.TestCase):
   FIXTURE_2="fixtures/A_SMSN86ESWI310600_C_ESWI_20131031061530.txt"
   FIXTURE_3="fixtures/A_SMUR11UKMS300600RRA_C_UKMS_20131030061900.txt"
   FIXTURE_4="fixtures/A_SMUR11UKMS300600RRB_C_UKMS_20131030061900.txt"
-  
+  FIXTURE_5="fixtures/SNDN54_EKMI_201511260800.txt"
+
   def setUp(self):
     self.classUnderTest = fm12_parser()
 
@@ -92,6 +93,88 @@ class rave_fm12_parser_test(unittest.TestCase):
     
     r2 = self.get_station_from_list(result, "02462") # Got a NIL
     self.assertEquals(None, r2)
+
+  def test_parse_3(self):
+    result = self.classUnderTest.parse(self.FIXTURE_3)
+
+    self.assertEquals(1, len(result))
+    
+    r1 = self.get_station_from_list(result, "33466")
+    self.assertEquals("33466", r1.station)
+    self.assertEquals(fm12_obs.SYNOP, r1.type)
+    self.assertEquals("20131030", r1.date)
+    self.assertEquals("061900", r1.time)
+    self.assertAlmostEquals(8.0, r1.visibility,4)
+    self.assertEquals(6, r1.cloudbase)
+    self.assertEquals(4, r1.cloudcover)
+    self.assertEquals(0, r1.winddirection)
+    self.assertEquals(0, r1.windspeed)
+    self.assertAlmostEquals(9.5, r1.temperature, 4)
+    self.assertAlmostEquals(8.5, r1.dewpoint, 4)
+    self.assertAlmostEquals(999.9, r1.pressure, 4)
+    self.assertAlmostEquals(1018.5, r1.sea_lvl_pressure, 4)
+    self.assertAlmostEquals(1.2, r1.pressure_change, 4)
+    self.assertAlmostEquals(0.0, r1.liquid_precipitation, 4)
+    self.assertEquals(0, r1.accumulation_period)
+    self.assertEquals(None, r1.max_24hr_temperature)
+    self.assertAlmostEquals(8.5, r1.min_24hr_temperature, 4)
+    self.assertEquals(fm12_obs.DELAYED, r1.updated)
+    
+    r2 = self.get_station_from_list(result, "02462") # Got a NIL
+    self.assertEquals(None, r2)
+
+  def test_parse_5(self):
+    result = self.classUnderTest.parse(self.FIXTURE_5)
+
+    self.assertEquals(58, len(result))
+    
+    # 3 different sections so we probably should check that each section has been handled
+    
+    r1 = self.get_station_from_list(result, "06019")
+    self.assertEquals("06019", r1.station)
+    self.assertEquals(fm12_obs.SYNOP, r1.type)
+    self.assertEquals("20151126", r1.date)
+    self.assertEquals("080000", r1.time)
+    self.assertEquals(None, r1.visibility)
+    self.assertEquals(None, r1.cloudbase)
+    self.assertEquals(None, r1.cloudcover)
+    self.assertEquals(260, r1.winddirection)
+    self.assertEquals(1, r1.windspeed)
+    self.assertAlmostEquals(2.8, r1.temperature, 4)
+    self.assertAlmostEquals(-0.5, r1.dewpoint, 4)
+    self.assertAlmostEquals(0.0, r1.pressure, 4)
+    self.assertAlmostEquals(0.0, r1.sea_lvl_pressure, 4)
+    self.assertAlmostEquals(0.0, r1.pressure_change, 4)
+    self.assertAlmostEquals(0.0, r1.liquid_precipitation, 4)
+    self.assertEquals(0, r1.accumulation_period)
+    self.assertEquals(None, r1.max_24hr_temperature)
+    self.assertAlmostEquals(3.6, r1.min_24hr_temperature, 4)
+    self.assertEquals(fm12_obs.ORIGINAL, r1.updated)
+    
+    r2 = self.get_station_from_list(result, "06165") # Got a NIL
+    self.assertEquals(None, r2)
+
+    r3 = self.get_station_from_list(result, "26144")
+    self.assertEquals("26144", r3.station)
+    self.assertEquals(fm12_obs.SYNOP, r3.type)
+    self.assertEquals("20151126", r3.date)
+    self.assertEquals("080000", r3.time)
+    self.assertAlmostEquals(24.0, r3.visibility, 4)
+    self.assertEquals(None, r3.cloudbase)
+    self.assertEquals(None, r3.cloudcover)
+    self.assertEquals(180, r3.winddirection)
+    self.assertEquals(4, r3.windspeed)
+    self.assertAlmostEquals(-3.1, r3.temperature, 4)
+    self.assertAlmostEquals(-6.4, r3.dewpoint, 4)
+    self.assertAlmostEquals(1004.9, r3.pressure, 4)
+    self.assertAlmostEquals(1013.8, r3.sea_lvl_pressure, 4)
+    self.assertAlmostEquals(1.0, r3.pressure_change, 4)
+    self.assertAlmostEquals(0.0, r3.liquid_precipitation, 4)
+    self.assertEquals(0, r3.accumulation_period)
+    self.assertAlmostEquals(-1.2, r3.max_24hr_temperature, 4)
+    self.assertAlmostEquals(-3.9, r3.min_24hr_temperature, 4)
+    self.assertEquals(fm12_obs.ORIGINAL, r3.updated)
+
     
   def get_station_from_list(self, slist, stationnumber):
     for s in slist:

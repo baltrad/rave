@@ -135,10 +135,44 @@ class fm12_parser(object):
       data = data[1:]
     data = data.lstrip().rstrip()
     groups = re.split(r"[~\r\n]+", data)
-    if len(groups) < 3:
-      raise ValueError, "Synop must at least contain Identifier, type and observation group"
+    ngroups = []
+    for g in groups:
+      if g.rstrip().lstrip() != "":
+        ngroups.append(g)
+    groups = ngroups
+    blocks = self._extract_blocks(groups)
     
-    return self._parse_data(groups, filename)
+    result = []
+    for groups in blocks:
+      if len(groups) < 3:
+        raise ValueError, "Synop must at least contain Identifier, type and observation group"
+
+      startpos = 0
+      for x in range(len(groups)):
+        if groups[x].lstrip().rstrip()[0:4] in ["AAXX", "BBXX", "OOXX"]:
+          startpos = x - 1
+          break
+        if startpos < 0:
+          raise ValueError, "Can not handle this file. AAXX/BBXX/OOXX block starts too early"
+
+      groups = groups[startpos:]
+      result.extend(self._parse_data(groups, filename))
+
+    #return self._parse_data(groups, filename)
+    return result
+  
+  def _extract_blocks(self, groups):
+    blocks = []
+    grp = []
+    for g in groups:
+      if g[0]=='\x03':
+        blocks.append(grp)
+        grp = []
+      else:
+        grp.append(g)
+    if len(grp) > 0:
+      blocks.append(grp)
+    return blocks
   
   ##
   # First step of the parsing.
@@ -171,7 +205,6 @@ class fm12_parser(object):
       result.extend(self._parse_block(baseinfo, block))
 
     return result
-  
   
   ##
   # Extracts the base information about this file
