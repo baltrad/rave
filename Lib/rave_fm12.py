@@ -227,6 +227,10 @@ class fm12_parser(object):
         datetimestr = filename[-27:-13]
         datestr = datetimestr[:8]
         timestr = datetimestr[8:]
+      elif re.match(".*_[0-9]{12}.txt$", filename):
+        datetimestr = filename[-16:-4]
+        datestr = datetimestr[:8]
+        timestr = datetimestr[8:] + "00"
 
     # If this filename does not contain datetime as last part, we will have to figure out the date from the actual synop data
     # FYI: this is very unsafe way since it does not take into account year shifts and month shifts. Where is year and month info in a synop?
