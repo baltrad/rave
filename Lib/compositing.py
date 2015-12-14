@@ -398,9 +398,9 @@ class compositing(object):
         gra.zrA = zrA
         gra.zrb = zrb
         dfield = result.findQualityFieldByHowTask("se.smhi.composite.distance.radar")
-        param = result.getParameter(quantity)
+        param = result.getParameter(self.quantity)
         gra_field = gra.apply(dfield, param)
-        gra_field.quantity = quantity + "_CORR"
+        gra_field.quantity = self.quantity + "_CORR"
         return gra_field
       else:
         self.logger.info("No gra coefficients found for given date/time, ignoring gra adjustment")
