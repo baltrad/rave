@@ -138,6 +138,10 @@ def generate(files, arguments):
   
   if distancefield == "eu.baltrad.composite.quality.distance.radar":
     distancefield = "se.smhi.composite.distance.radar"
+
+  pdatetime = datetime.datetime.strptime(edate+etime, "%Y%m%d%H%M%S") - datetime.timedelta(minutes=60 * hours)
+  sdate = pdatetime.strftime("%Y%m%d")
+  stime = pdatetime.strftime("%H%M00")
   
   acrr = _acrr.new()
   acrr.nodata = -1.0
@@ -170,6 +174,10 @@ def generate(files, arguments):
       img.source = obj.source
       img.time = etime
       img.date = edate
+      img.startdate = sdate
+      img.starttime = stime
+      img.enddate = edate
+      img.endtime = etime
 
     if obj.hasAttribute("how/nodes") and nodes == None:
       nodes = obj.getAttribute("how/nodes")
