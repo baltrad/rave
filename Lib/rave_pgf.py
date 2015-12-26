@@ -37,6 +37,7 @@ from rave_defines import DEX_SPOE, REGFILE, PGFs, LOGID, LOGLEVEL, PGF_HOST, PGF
 
 
 METHODS = {'generate' :  '("algorithm",[files],[arguments])',
+           'get_quality_controls' : '',
            'execute' :   '("shell command")',
            'register':   '("name", "module", "function", Help="", strings=",", ints=",", floats=",", seqs=",")',
            'deregister': '("name")',
@@ -241,6 +242,19 @@ class RavePGF():
     if err_msg: return err_msg        
     return "OK"
 
+  ##
+  # Returns the registered controls
+  #
+  def get_quality_controls(self):
+    result = []
+    try:
+      import rave_pgf_quality_registry
+      names = rave_pgf_quality_registry.get_plugins()
+      for n in names:
+        result.append((n, "%s quality control"%n))
+    except Exception, e:
+      self.logger.exception("Failed to get quality controls")
+    return result
 
   ## The mother method that coordinates the product generation calls.
   # This method verifies the integrity of the arguments, then runs the job.

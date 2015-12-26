@@ -96,5 +96,10 @@ def get_plugin(name):
     return _registry[name]
   return None
 
+##
+# Return all registered plugin names
+def get_plugins():
+  return _registry.keys()
+    
 
     
