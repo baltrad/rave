@@ -271,7 +271,7 @@ long julday2date(long julian);
  * @param[in] date in the form YYYYMMDD as a long
  * @param[in] time in the form HHMMSS as a long
  * @param[in] sub-second time (r="remainder") as a double
-  */
+ */
 void readoutTiming(SCANMETA* meta, int ia, long* date, long* time, double* timer);
 
 /**
@@ -279,8 +279,9 @@ void readoutTiming(SCANMETA* meta, int ia, long* date, long* time, double* timer
  * @param[in] scan - polar scan object
  * @param[in] meta - internal metadata structure
  * @param[in] list - RAVE list object containing hits
+ * @returns 1 upon success, otherwise 0
  */
-void processData(PolarScan_t* scan, SCANMETA* meta, RaveList_t* list);
+int processData(PolarScan_t* scan, SCANMETA* meta, RaveList_t* list);
 
 /**
  * Helper function that calls @ref processReflectivity for each of a number of
@@ -288,14 +289,25 @@ void processData(PolarScan_t* scan, SCANMETA* meta, RaveList_t* list);
  * @param[in] scan - polar scan object
  * @param[in] meta - internal metadata structure
  * @param[in] list - RAVE list object containing hits
-  */
-void processScan(PolarScan_t* scan, SCANMETA* meta, RaveList_t* list);
+ * @returns 1 upon success, otherwise 0
+ */
+int processScan(PolarScan_t* scan, SCANMETA* meta, RaveList_t* list);
 
 /**
  * Debug function that writes metadata to file.
  * @param[in] meta - internal metadata structure
  */
 void outputMeta(SCANMETA* meta);
+
+/**
+ * Masterminds the scanning of polar data and determination of sun hits, from object in memory.
+ * @param[in] object - Polar scan or volume object in memory
+ * @param[in] ot - Object type identifier enum, preferably Rave_ObjectType_SCAN or Rave_ObjectType_PVOL
+ * @param[out] list - RaveList_t object for holding one or more sets of return values
+ * @param[out] source - string containing the value of /what/source
+ * @returns 1 upon success, otherwise 0
+ */
+int scansunFromObject(RaveCoreObject* object, Rave_ObjectType ot, RaveList_t* list, char** source);
 
 /**
  * Masterminds the scanning of polar data and determination of sun hits.

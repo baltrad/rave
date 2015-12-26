@@ -23,14 +23,33 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @date 2011-01-19
  */
 #include <Python.h>
+#include "rave.h"
+#include "rave_debug.h"
+#include "pypolarvolume.h"
+#include "pypolarscan.h"
+#include "pyrave_debug.h"
 #include "scansun.h"
 
-static PyObject *ErrorObject;
+/**
+ * Debug this module
+ */
+PYRAVE_DEBUG_MODULE("_scansun");
 
 /**
  * Sets a Python exception.
  */
 #define Raise(type,msg) {PyErr_SetString(type,msg);}
+
+/**
+ * Sets a Python exception and return NULL
+ */
+#define raiseException_returnNULL(type, msg) \
+{PyErr_SetString(type, msg); return NULL;}
+
+/**
+ * Error object for reporting errors to the Python interpreter
+ */
+static PyObject *ErrorObject;
 
 /**
  * This function calculates the solar elevation and azimuth using the
@@ -81,13 +100,84 @@ static PyObject* _refraction_func(PyObject* self, PyObject* args)
 }
 
 /**
- * Performs full sun scan on a polar volume of data.
+ * Performs full sun scan on polar data, either scan or volume, from object in memory.
+ * @param[in] Polar data object, either a scan or a volume.
+ * @returns a Python list containing tuples, one for each sun hit, or None if no hits.
+ */
+static PyObject* _scansunFromObject_func(PyObject* self, PyObject* args)
+{
+	char* source = NULL;
+	RaveList_t* list = RAVE_OBJECT_NEW(&RaveList_TYPE);
+	RVALS* ret = NULL;
+	PyObject* rlist;
+	PyObject* reto;
+	PyObject* pyobject = NULL;
+	PyPolarVolume* pyvolume = NULL;
+	PyPolarScan* pyscan = NULL;
+	RaveCoreObject* object = NULL;
+	Rave_ObjectType ot = Rave_ObjectType_UNDEFINED;
+
+	if (!PyArg_ParseTuple(args, "O", &pyobject)) {
+		RAVE_OBJECT_RELEASE(list);
+		return NULL;
+	}
+
+	if (PyPolarVolume_Check(pyobject)) {
+		pyvolume = (PyPolarVolume*)pyobject;
+		object = (RaveCoreObject*)pyvolume->pvol;
+		ot = Rave_ObjectType_PVOL;
+	} else if (PyPolarScan_Check(pyobject)) {
+		pyscan = (PyPolarScan*)pyobject;
+		object = (RaveCoreObject*)pyscan->scan;
+		ot = Rave_ObjectType_SCAN;
+	} else {
+		RAVE_OBJECT_RELEASE(list);
+		raiseException_returnNULL(PyExc_AttributeError, "scansunFromObject requires PVOL or SCAN as input");
+	}
+
+	if (!scansunFromObject(object, ot, list, &source)) {
+		RAVE_OBJECT_RELEASE(list);
+		return NULL;
+	}
+
+	rlist = PyList_New(0);
+	if (RaveList_size(list) > 0) {
+		while ((ret = RaveList_removeLast(list)) != NULL) {
+			PyObject* rtuple = Py_BuildValue("ldddddidddddss", ret->date,
+                                                         	   ret->timer,
+															   ret->Elev,
+															   ret->Azimuth,
+															   ret->ElevSun,
+															   ret->AzimSun,
+															   ret->n,
+															   ret->dBSunFlux,
+															   ret->SunMean,
+															   ret->SunStdd,
+															   ret->ZdrMean,
+															   ret->ZdrStdd,
+															   ret->quant1,
+															   ret->quant2);
+			PyList_Append(rlist, rtuple);
+			Py_DECREF(rtuple);
+			RAVE_FREE(ret);
+		}
+	}
+
+	RAVE_OBJECT_RELEASE(list);
+	reto = Py_BuildValue("sO", source, rlist);
+	Py_DECREF(rlist);
+	RAVE_FREE(source);
+	return reto;
+}
+
+/**
+ * Performs full sun scan on polar data, either scan or volume.
  * @param[in] filename - const char* containing the filename to process
  * @returns a Python list containing tuples, one for each sun hit, or None if no hits.
  */
 static PyObject* _scansun_func(PyObject* self, PyObject* args)
 {
-  char* source = NULL;
+	char* source = NULL;
 	RaveList_t* list = RAVE_OBJECT_NEW(&RaveList_TYPE);
 	RVALS* ret = NULL;
 	const char* filename;
@@ -105,27 +195,27 @@ static PyObject* _scansun_func(PyObject* self, PyObject* args)
 	}
 
 	rlist = PyList_New(0);
-  if (RaveList_size(list) > 0) {
-    while ((ret = RaveList_removeLast(list)) != NULL) {
-      PyObject* rtuple = Py_BuildValue("ldddddidddddss", ret->date,
-                                                         ret->timer,
-                                                         ret->Elev,
-                                                         ret->Azimuth,
-                                                         ret->ElevSun,
-                                                         ret->AzimSun,
-                                                         ret->n,
-                                                         ret->dBSunFlux,
-                                                         ret->SunMean,
-                                                         ret->SunStdd,
-                                                         ret->ZdrMean,
-                                                         ret->ZdrStdd,
-                                                         ret->quant1,
-                                                         ret->quant2);
-      PyList_Append(rlist, rtuple);
-      Py_DECREF(rtuple);
-      RAVE_FREE(ret);
-    }
-  }
+	if (RaveList_size(list) > 0) {
+		while ((ret = RaveList_removeLast(list)) != NULL) {
+			PyObject* rtuple = Py_BuildValue("ldddddidddddss", ret->date,
+                                                         	   ret->timer,
+															   ret->Elev,
+															   ret->Azimuth,
+															   ret->ElevSun,
+															   ret->AzimSun,
+															   ret->n,
+															   ret->dBSunFlux,
+															   ret->SunMean,
+															   ret->SunStdd,
+															   ret->ZdrMean,
+															   ret->ZdrStdd,
+															   ret->quant1,
+															   ret->quant2);
+			PyList_Append(rlist, rtuple);
+			Py_DECREF(rtuple);
+			RAVE_FREE(ret);
+		}
+	}
 	RAVE_OBJECT_RELEASE(list);
 	reto = Py_BuildValue("sO", source, rlist);
 	Py_DECREF(rlist);
@@ -137,6 +227,7 @@ static struct PyMethodDef _scansun_functions[] =
 {
   { "solar_elev_azim", (PyCFunction) _solar_elev_azim_func, METH_VARARGS },
   { "refraction", (PyCFunction) _refraction_func, METH_VARARGS },
+  { "scansunFromObject", (PyCFunction) _scansunFromObject_func, METH_VARARGS },
   { "scansun", (PyCFunction) _scansun_func, METH_VARARGS },
   { NULL, NULL }
 };
@@ -154,4 +245,10 @@ PyMODINIT_FUNC init_scansun(void)
                                                   "error", ErrorObject) != 0) {
     Py_FatalError("Can't define _scansun.error");
   }
+  import_pypolarvolume();
+  import_pypolarscan();
+  import_array();
+  PYRAVE_DEBUG_INITIALIZE;
 }
+
+/*@} End of Module setup */

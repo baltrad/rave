@@ -73,6 +73,22 @@ def Source2File(isource):
     return os.path.join(path, source + '.scansun')
 
 
+## Writes hits to file
+# @param source string containing the full value of /what/source
+# @param list containing sun hits
+def writeHits(source, hits):
+    ofstr = Source2File(source)
+    fd = open(ofstr, 'a')
+
+    if os.path.getsize(ofstr) == 0:
+        fd.write(HEADER)
+        
+    for hit in hits:
+        fd.write(FORMAT % hit)
+
+    fd.close()
+
+
 ## Performs the sun scan.
 # @param files list of files to scan. Keep in mind that each file can be
 # from a different radar.
@@ -94,16 +110,7 @@ def generate(files, arguments):
           os.unlink(removeme)
 
       if len(hits) > 0:
-        ofstr = Source2File(source)
-        fd = open(ofstr, 'a')
-
-        if os.path.getsize(ofstr) == 0:
-          fd.write(HEADER)
-        
-        for hit in hits:
-          fd.write(FORMAT % hit)
-
-        fd.close()
+          writeHits(source, hits)
 
     return None
 

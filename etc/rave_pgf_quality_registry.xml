@@ -12,4 +12,5 @@
   <quality-plugin name="qi-total" module="rave_qitotal_quality_plugin" class="rave_qitotal_quality_plugin"/>
   <quality-plugin class="dealias_plugin" module="rave_dealias_quality_plugin" name="dealias" />
   <quality-plugin name="zdiff" class="rave_zdiff_quality_plugin" module="rave_zdiff_quality_plugin" />
+  <quality-plugin name="scansun" class="scansun_quality_plugin" module="rave_scansun_quality_plugin" />
 </rave-pgf-quality-registry>
