@@ -38,6 +38,7 @@ from rave_defines import DEX_SPOE, REGFILE, PGFs, LOGID, LOGLEVEL, PGF_HOST, PGF
 
 METHODS = {'generate' :  '("algorithm",[files],[arguments])',
            'get_quality_controls' : '',
+           'get_areas' : '',
            'execute' :   '("shell command")',
            'register':   '("name", "module", "function", Help="", strings=",", ints=",", floats=",", seqs=",")',
            'deregister': '("name")',
@@ -254,6 +255,23 @@ class RavePGF():
         result.append((n, "%s quality control"%n))
     except Exception, e:
       self.logger.exception("Failed to get quality controls")
+    return result
+
+  ##
+  # Returns the areas available to the composite generator
+  #
+  def get_areas(self):
+    result = {}
+    try:
+      import area_registry
+      reg = area_registry.area_registry()
+      keys = reg.get_area_names()
+      for k in keys:
+        a = reg.getarea(k)
+        result[k] = {"id":a.id, "xsize":a.xsize, "ysize":a.ysize, "xscale":a.xscale, "yscale":a.yscale, "extent":a.extent, "pcs":a.projection.definition}
+    except Exception, e:
+      self.logger.exception("Failed to get areas")
+
     return result
 
   ## The mother method that coordinates the product generation calls.

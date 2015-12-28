@@ -95,3 +95,10 @@ class area_registry(object):
       result = pyarea
       
     return result
+
+  ##
+  # Returns all registered area ids
+  #
+  def get_area_names(self):
+    return self._registry.keys()
+  
