@@ -39,6 +39,7 @@ from rave_defines import DEX_SPOE, REGFILE, PGFs, LOGID, LOGLEVEL, PGF_HOST, PGF
 METHODS = {'generate' :  '("algorithm",[files],[arguments])',
            'get_quality_controls' : '',
            'get_areas' : '',
+           'get_pcs_definitions' : '',
            'execute' :   '("shell command")',
            'register':   '("name", "module", "function", Help="", strings=",", ints=",", floats=",", seqs=",")',
            'deregister': '("name")',
@@ -273,6 +274,20 @@ class RavePGF():
       self.logger.exception("Failed to get areas")
 
     return result
+
+  ##
+  # Return the pcs definitions
+  def get_pcs_definitions(self):
+    result = {}
+    try:
+      import rave_projection
+      items = rave_projection.items()
+      for item in items:
+        result[item[0]] = {"id":item[0], "description":item[1].name, "definition":string.join(item[1].definition, " ")}
+    except Exception, e:
+      self.logger.exception("Failed to get pcs definitions")
+
+    return result 
 
   ## The mother method that coordinates the product generation calls.
   # This method verifies the integrity of the arguments, then runs the job.
