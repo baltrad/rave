@@ -233,12 +233,8 @@ void fill_meta(PolarScan_t* scan, PolarScanParam_t* param, SCANMETA *meta)
        RAVE_WARNING1("Scan elevation %2.1f: how/startazA found but not how/stopazA array attribute.\n", meta->elev);
      }
    }
-   if (!getDoubleArrayAttribute(scan, "how/startelA", &meta->startelA)) {
-     RAVE_WARNING1("Scan elevation %2.1f: No how/startelA array attribute. Using commanded elevation angle.\n", meta->elev);
-   } else {
-     if (!getDoubleArrayAttribute(scan, "how/stopelA", &meta->stopelA)) {
-       RAVE_WARNING1("Scan elevation %2.1f: how/startazA found but not how/stopelA array attribute.\n", meta->elev);
-     }
+   if (!getDoubleArrayAttribute(scan, "how/elangles", &meta->elangles)) {
+     RAVE_WARNING1("Scan elevation %2.1f: No how/elangles array attribute. Using commanded elevation angle.\n", meta->elev);
    }
    if (!getDoubleArrayAttribute(scan, "how/startazT", &meta->startazT)) {
      RAVE_WARNING1("Scan elevation %2.1f: No how/startazT array attribute.\n", meta->elev);
@@ -464,7 +460,8 @@ int processData(PolarScan_t* scan, SCANMETA* meta, RaveList_t* list) {
     }
     else Azimuth = ia * meta->ascale + meta->astart;
 
-    if (meta->startelA) Elevation = (meta->startelA[ia] + meta->stopelA[ia]) / 2.0;
+//    if (meta->startelA) Elevation = (meta->startelA[ia] + meta->stopelA[ia]) / 2.0;
+    if (meta->elangles) Elevation = meta->elangles[ia];
     else Elevation = meta->elev;
 
     /*First analysis to estimate sun power at higher altitudes (less rain contamination).*/

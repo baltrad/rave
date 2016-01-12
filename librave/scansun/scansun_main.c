@@ -31,7 +31,7 @@ int main(int argc,char *argv[]) {
 	const char* FORMAT = "%08ld %010.3f  %7.3f %7.2f   %7.4f  %7.4f  %4d  %9.2f %9.2f  %6.3f %9.2f  %6.3f  %s   %s  %s\n";
 
 	Rave_initializeDebugger();
-  Rave_setDebugLevel(RAVE_WARNING);
+	Rave_setDebugLevel(RAVE_WARNING);
 
 	if (argc<2) {
 	   printf("Usage: %s <ODIM_H5-file>\n",argv[0]);
@@ -54,13 +54,13 @@ int main(int argc,char *argv[]) {
             			   ret->ElevSun,
             			   ret->AzimSun,
             			   ret->dBSunFlux,
-                     ret->SunMean,
-                     ret->SunStdd,
-                     ret->ZdrMean,
-                     ret->ZdrStdd,
-                     ret->n,
-                     ret->quant1,
-                     ret->quant2,
+						   ret->SunMean,
+						   ret->SunStdd,
+						   ret->ZdrMean,
+						   ret->ZdrStdd,
+						   ret->n,
+						   ret->quant1,
+						   ret->quant2,
             			   source);
 			// RAVE_FREE(ret);  /* No longer frees! */
 		}

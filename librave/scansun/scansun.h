@@ -111,22 +111,21 @@ struct scanmeta {
 	double pulse;          /*Pulse length in microsec.*/
 	double radcnst;        /*Radar constant in dB.*/
 	double antvel;         /*Antenna velocity in deg/s.*/
-  double lon;            /*Longitude of radar in deg.*/
-  double lat;            /*Latitude of radar in deg.*/
-  double RXLoss;         /*Total losses between reference and feed (dB).*/
-  double AntGain;        /*Antenna gain (dB)*/
-  double LAntGain;       /*Linear antenna gain*/
-  double AntArea;        /*Effective antenna area (m2)*/
-  double wavelength;     /*Wavelength in meters*/
-  const char* quant1;    /*what/quantity for the given scan's parameter, either TH or DBZH*/
-  const char* quant2;    /*ZDR or either TV or DBZV*/
-  double* startazA;      /*Simple array of starting azimuth angles in degrees*/
-  double* stopazA;       /*Simple array of ending azimuth angles in degrees*/
-  double* startelA;      /*Simple array of starting elevation angles in degrees*/
-  double* stopelA;       /*Simple array of ending elevation angles in degrees*/
-  double* startazT;      /*Simple array of starting ray acquisition times in epoch seconds*/
-  double* stopazT;       /*Simple array of ending ray acquisition times in epoch seconds*/
-  ZdrType Zdr;           /*Flag used to note presence of ZDR, either read or calculated*/
+	double lon;            /*Longitude of radar in deg.*/
+	double lat;            /*Latitude of radar in deg.*/
+	double RXLoss;         /*Total losses between reference and feed (dB).*/
+	double AntGain;        /*Antenna gain (dB)*/
+	double LAntGain;       /*Linear antenna gain*/
+	double AntArea;        /*Effective antenna area (m2)*/
+	double wavelength;     /*Wavelength in meters*/
+	const char* quant1;    /*what/quantity for the given scan's parameter, either TH or DBZH*/
+	const char* quant2;    /*ZDR or either TV or DBZV*/
+	double* startazA;      /*Simple array of starting azimuth angles in degrees*/
+	double* stopazA;       /*Simple array of ending azimuth angles in degrees*/
+	double* elangles;      /*Simple array of elevation angles (mid-point) in degrees*/
+	double* startazT;      /*Simple array of starting ray acquisition times in epoch seconds*/
+	double* stopazT;       /*Simple array of ending ray acquisition times in epoch seconds*/
+	ZdrType Zdr;           /*Flag used to note presence of ZDR, either read or calculated*/
 };
 typedef struct scanmeta SCANMETA;
 
@@ -146,8 +145,8 @@ struct rvals {
 	double dBSunFlux; /* Sun flux in dB */
 	double ZdrMean;   /* Zdr mean */
 	double ZdrStdd;   /* Zdr standard deviation */
-  char* quant1;     /* what/quantity for the given scan's parameter: TH, DBZH, TV, or DBZV */
-  char* quant2;     /* ZDR or either TV or DBZV */
+	char* quant1;     /* what/quantity for the given scan's parameter: TH, DBZH, TV, or DBZV */
+	char* quant2;     /* ZDR or either TV or DBZV */
 	double RelevSun;  /* Refraction-corrected (perceived) elevation angle of the sun in deg. */
 	int n;            /* Sample size along the ray comprising a hit */
 };
