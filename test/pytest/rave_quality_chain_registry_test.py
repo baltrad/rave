@@ -27,11 +27,12 @@ import os
 import rave_quality_chain_registry
 
 class rave_quality_chain_registry_test(unittest.TestCase):
-  FIXTURE = "fixtures/rave_quality_chain_registry_test.xml"
+  FIXTURE_XML = "fixtures/rave_quality_chain_registry_test.xml"
+  REAL_XML = "../../config/rave_quality_chain_registry.xml"
   classUnderTest = None
   
   def setUp(self):
-    self.classUnderTest = rave_quality_chain_registry.rave_quality_chain_registry(self.FIXTURE)
+    self.classUnderTest = rave_quality_chain_registry.rave_quality_chain_registry(self.FIXTURE_XML)
     
   def tearDown(self):
     self.classUnderTest = None
@@ -114,4 +115,21 @@ class rave_quality_chain_registry_test(unittest.TestCase):
   def test_find_chains_bySourceAndCategory_nothing_found(self):
     chains = self.classUnderTest.find_chains("sesss", "qpe")
     self.assertEquals(0, len(chains))
+    
+  def test_real_qualityChainRegistryXml(self):
+    realXmlClass = rave_quality_chain_registry.rave_quality_chain_registry(self.REAL_XML)
+    
+    chains = realXmlClass.find_chains("sekkr", "insect_detection")
+    self.assertEquals(1, len(chains))
+    self.assertEquals("sekkr", chains[0].source())
+    self.assertEquals("insect_detection", chains[0].category())
+    
+    links = chains[0].links()
+    self.assertEquals(2, len(links))
+    link1 = links[0]
+    self.assertEquals("rave-overshooting", link1.refname())
+    arguments = link1.arguments()
+    self.assertEquals("some sort of value", arguments["something"])
+    link2 = links[1]
+    self.assertEquals("radvol-spike", link2.refname())
     
