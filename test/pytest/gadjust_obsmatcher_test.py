@@ -45,22 +45,23 @@ class gadjust_obsmatcher_test(unittest.TestCase):
                                                          observation("01235","S",observation.SYNOP, "20101010", "001500", 13.5, 60.0, liquid_precipitation=1.0, accumulation_period=12),
                                                          observation("01236","S",observation.SYNOP, "20101010", "001500", 13.5, 60.5, liquid_precipitation=1.0, accumulation_period=12)]
     acrrmock.getConvertedValueAtLonLat.return_value = (2,48.0)
-    acrrmock.getQualityValueAtLonLat.return_value = 200.0
+    acrrmock.getConvertedQualityValueAtLonLat.return_value = 200.0
     acrrmock.getConvertedValueAtLonLat.return_value = (2,49.0)
-    acrrmock.getQualityValueAtLonLat.return_value = 25.5
+    acrrmock.getConvertedQualityValueAtLonLat.return_value = 25.5
     acrrmock.getConvertedValueAtLonLat.return_value = (2,30.0)
-    acrrmock.getQualityValueAtLonLat.return_value = 123456.0
+    acrrmock.getConvertedQualityValueAtLonLat.return_value = 123456.0
     
     result = self.classUnderTest.match(acrrmock, 12)
     
     # Expects
     expected_acrrmock_calls=[mock.call.getExtremeLonLatBoundaries(), 
                              mock.call.getConvertedValueAtLonLat((13.0*math.pi/180.0, 60.0*math.pi/180.0)),
-                             mock.call.getQualityValueAtLonLat((13.0*math.pi/180.0, 60.0*math.pi/180.0), 'se.smhi.composite.distance.radar'),
+                             mock.call.getConvertedQualityValueAtLonLat((13.0*math.pi/180.0, 60.0*math.pi/180.0), 'se.smhi.composite.distance.radar'),
                              mock.call.getConvertedValueAtLonLat((13.5*math.pi/180.0, 60.0*math.pi/180.0)),
-                             mock.call.getQualityValueAtLonLat((13.5*math.pi/180.0, 60.0*math.pi/180.0), 'se.smhi.composite.distance.radar'),
+                             mock.call.getConvertedQualityValueAtLonLat((13.5*math.pi/180.0, 60.0*math.pi/180.0), 'se.smhi.composite.distance.radar'),
                              mock.call.getConvertedValueAtLonLat((13.5*math.pi/180.0, 60.5*math.pi/180.0)),
-                             mock.call.getQualityValueAtLonLat((13.5*math.pi/180.0, 60.5*math.pi/180.0), 'se.smhi.composite.distance.radar')]
+                             mock.call.getConvertedQualityValueAtLonLat((13.5*math.pi/180.0, 60.5*math.pi/180.0), 'se.smhi.composite.distance.radar')]
+
     self.assertTrue(expected_acrrmock_calls == acrrmock.mock_calls)
     self.assertEquals(3, len(result))
 
@@ -70,14 +71,14 @@ class gadjust_obsmatcher_test(unittest.TestCase):
     
     self.dbmock.get_observations_in_bbox.return_value = [observation("01234","S",observation.SYNOP, "20101010", "001500", 13.0, 60.0, liquid_precipitation=1.0, accumulation_period=12)]
     acrrmock.getConvertedValueAtLonLat.return_value = (2,48.0)
-    acrrmock.getQualityValueAtLonLat.return_value = 200.0
+    acrrmock.getConvertedQualityValueAtLonLat.return_value = 200.0
     
     result = self.classUnderTest.match(acrrmock, 12)
     
     # Expects
     expected_acrrmock_calls=[mock.call.getExtremeLonLatBoundaries(), 
                              mock.call.getConvertedValueAtLonLat((13.0*math.pi/180.0, 60.0*math.pi/180.0)),
-                             mock.call.getQualityValueAtLonLat((13.0*math.pi/180.0, 60.0*math.pi/180.0), 'se.smhi.composite.distance.radar')]
+                             mock.call.getConvertedQualityValueAtLonLat((13.0*math.pi/180.0, 60.0*math.pi/180.0), 'se.smhi.composite.distance.radar')]
     self.assertTrue(expected_acrrmock_calls == acrrmock.mock_calls)
     self.assertEquals(1, len(result))
     self.assertEquals(result[0].radarvaluetype, _rave.RaveValueType_DATA)

@@ -58,4 +58,4 @@ class scansun_quality_plugin(rave_quality_plugin):
           writeHits(source, hits)
     except:
       logger.exception("Failure during scansun processing")
-    return obj
+    return obj, self.getQualityFields()

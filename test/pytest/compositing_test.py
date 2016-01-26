@@ -50,15 +50,18 @@ class compositing_test(unittest.TestCase):
   def test_quality_control_objects(self):
     o1 = object()
     o2 = object()
-    self.classUnderTest.detectors=["qc.check.1","qc.check.2"] 
+    detectors = ["qc.check.1","qc.check.2"]
+    self.classUnderTest.detectors=detectors
     self.classUnderTest.reprocess_quality_field = True
     
-    self.qc_check_1_mock.process.side_effect = lambda x,y: {o1:o1,o2:o2}[x]
+    expected_qfield1 = ["qc.check.1"]
+    expected_qfield2 = ["qc.check.2"]
+    self.qc_check_1_mock.process.side_effect = lambda x,y: ({o1:o1,o2:o2}[x], [detectors[0]])
     self.qc_check_1_mock.algorithm.return_value = None
-    self.qc_check_2_mock.process.side_effect = lambda x,y: {o1:o1,o2:o2}[x]
+    self.qc_check_2_mock.process.side_effect = lambda x,y: ({o1:o1,o2:o2}[x], [detectors[1]])
     self.qc_check_2_mock.algorithm.return_value = None
     
-    result, algorithm = self.classUnderTest.quality_control_objects({"s1.h5":o1,"s2.h5":o2})
+    result, algorithm, qfields = self.classUnderTest.quality_control_objects({"s1.h5":o1,"s2.h5":o2})
     
     expected_qc_check_1_calls = [mock.call.process(o1,True), mock.call.algorithm(),mock.call.process(o2,True), mock.call.algorithm()]
     expected_qc_check_2_calls = [mock.call.process(o1,True), mock.call.algorithm(),mock.call.process(o2,True), mock.call.algorithm()]
@@ -71,20 +74,23 @@ class compositing_test(unittest.TestCase):
     self.assertTrue(result["s1.h5"] == o1)
     self.assertTrue(result["s2.h5"] == o2)
     self.assertTrue(algorithm == None)
+    self.assertEquals(detectors, qfields, "Wrong qfields returned from quality_control_objects")
+    
 
   def test_quality_control_objects_algorithm_on_first(self):
     o1 = object()
     o2 = object()
     a1 = object()
-    self.classUnderTest.detectors=["qc.check.1","qc.check.2"] 
+    detectors = ["qc.check.1","qc.check.2"]
+    self.classUnderTest.detectors=detectors
     self.classUnderTest.reprocess_quality_field = True
-    
-    self.qc_check_1_mock.process.side_effect = lambda x,y: {o1:o1,o2:o2}[x]
+
+    self.qc_check_1_mock.process.side_effect = lambda x,y: ({o1:o1,o2:o2}[x], [detectors[0]])
     self.qc_check_1_mock.algorithm.return_value = a1
-    self.qc_check_2_mock.process.side_effect = lambda x,y: {o1:o1,o2:o2}[x]
+    self.qc_check_2_mock.process.side_effect = lambda x,y: ({o1:o1,o2:o2}[x], [detectors[1]])
     self.qc_check_2_mock.algorithm.return_value = None
     
-    result, algorithm = self.classUnderTest.quality_control_objects({"s1.h5":o1,"s2.h5":o2})
+    result, algorithm, qfields = self.classUnderTest.quality_control_objects({"s1.h5":o1,"s2.h5":o2})
     
     expected_qc_check_1_calls = [mock.call.process(o1,True), mock.call.algorithm(),mock.call.process(o2,True), mock.call.algorithm()]
     expected_qc_check_2_calls = [mock.call.process(o1,True), mock.call.algorithm(),mock.call.process(o2,True), mock.call.algorithm()]
@@ -97,21 +103,23 @@ class compositing_test(unittest.TestCase):
     self.assertTrue(result["s1.h5"] == o1)
     self.assertTrue(result["s2.h5"] == o2)
     self.assertTrue(algorithm == a1)
+    self.assertEquals(detectors, qfields, "Wrong qfields returned from quality_control_objects")
 
 
   def test_quality_control_objects_processor_returns_both_object_and_algorithm(self):
     o1 = object()
     o2 = object()
     a2 = object()
-    self.classUnderTest.detectors=["qc.check.1","qc.check.2"] 
+    detectors = ["qc.check.1","qc.check.2"]
+    self.classUnderTest.detectors=detectors 
     self.classUnderTest.reprocess_quality_field = True
     
-    self.qc_check_1_mock.process.side_effect = lambda x,y: {o1:o1,o2:o2}[x]
+    self.qc_check_1_mock.process.side_effect = lambda x,y: ({o1:o1,o2:o2}[x], [detectors[0]])
     self.qc_check_1_mock.algorithm.return_value = None
-    self.qc_check_2_mock.process.side_effect = lambda x,y: {o1:o1,o2:(o2,a2)}[x]
+    self.qc_check_2_mock.process.side_effect = lambda x,y: ({o1:o1,o2:(o2,a2)}[x], [detectors[1]])
     self.qc_check_2_mock.algorithm.return_value = None
     
-    result, algorithm = self.classUnderTest.quality_control_objects({"s1.h5":o1,"s2.h5":o2})
+    result, algorithm, qfields = self.classUnderTest.quality_control_objects({"s1.h5":o1,"s2.h5":o2})
     
     expected_qc_check_1_calls = [mock.call.process(o1,True), mock.call.algorithm(),mock.call.process(o2,True), mock.call.algorithm()]
     expected_qc_check_2_calls = [mock.call.process(o1,True), mock.call.algorithm(),mock.call.process(o2,True)]
@@ -124,6 +132,37 @@ class compositing_test(unittest.TestCase):
     self.assertTrue(result["s1.h5"] == o1)
     self.assertTrue(result["s2.h5"] == o2)
     self.assertTrue(algorithm == a2)
+    self.assertEquals(detectors, qfields, "Wrong qfields returned from quality_control_objects")
+    
+  def test_quality_control_objects_plugin_returns_only_obj(self):
+    o1 = object()
+    o2 = object()
+    detectors = ["qc.check.1","qc.check.2"]
+    self.classUnderTest.detectors=detectors
+    self.classUnderTest.reprocess_quality_field = True
+    
+    expected_qfield1 = ["qc.check.1"]
+    expected_qfield2 = ["qc.check.2"]
+    self.qc_check_1_mock.process.side_effect = lambda x,y: ({o1:o1,o2:o2}[x])
+    self.qc_check_1_mock.algorithm.return_value = None
+    self.qc_check_1_mock.getQualityFields.return_value = expected_qfield1
+    self.qc_check_2_mock.process.side_effect = lambda x,y: ({o1:o1,o2:o2}[x], [detectors[1]])
+    self.qc_check_2_mock.algorithm.return_value = None
+    
+    result, algorithm, qfields = self.classUnderTest.quality_control_objects({"s1.h5":o1,"s2.h5":o2})
+    
+    expected_qc_check_1_calls = [mock.call.process(o1,True), mock.call.getQualityFields(), mock.call.algorithm(), mock.call.process(o2,True), mock.call.getQualityFields(), mock.call.algorithm()]
+    expected_qc_check_2_calls = [mock.call.process(o1,True), mock.call.algorithm(), mock.call.process(o2,True), mock.call.algorithm()]
+    
+    self.assertTrue(expected_qc_check_1_calls == self.qc_check_1_mock.mock_calls)
+    self.assertTrue(expected_qc_check_2_calls == self.qc_check_2_mock.mock_calls)
+    
+    self.assertTrue(isinstance(result,dict))
+    self.assertTrue(2 == len(result))
+    self.assertTrue(result["s1.h5"] == o1)
+    self.assertTrue(result["s2.h5"] == o2)
+    self.assertTrue(algorithm == None)
+    self.assertEquals(detectors, qfields, "Wrong qfields returned from quality_control_objects")
     
     
   def test_set_product_from_string(self):

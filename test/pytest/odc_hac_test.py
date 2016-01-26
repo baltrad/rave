@@ -126,7 +126,9 @@ class odc_hac_test(unittest.TestCase):
     scan = self.create_scan(3.0, 4.0, 53.0, 40.0)
     
     qp = rave_zdiff_quality_plugin.rave_zdiff_quality_plugin()
-    processed = qp.process(scan)
+    processed, qfield = qp.process(scan)
+    
+    self.assertEquals(qfield, ["eu.opera.odc.zdiff"], "Wrong qfield returned from process")
     
     qfield = processed.getQualityFieldByHowTask("eu.opera.odc.zdiff")
     self.assertTrue(numpy.amax(qfield.getData()) == 255)
@@ -143,7 +145,9 @@ class odc_hac_test(unittest.TestCase):
     pvol.addScan(scan2)
         
     qp = rave_zdiff_quality_plugin.rave_zdiff_quality_plugin()
-    processed = qp.process(pvol)
+    processed, qfield = qp.process(pvol)
+    
+    self.assertEquals(qfield, ["eu.opera.odc.zdiff"], "Wrong qfield returned from process")
     
     qfield1 = processed.getScan(0).getQualityFieldByHowTask("eu.opera.odc.zdiff")
     qfield2 = processed.getScan(1).getQualityFieldByHowTask("eu.opera.odc.zdiff")

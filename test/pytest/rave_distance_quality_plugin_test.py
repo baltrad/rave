@@ -48,17 +48,18 @@ class rave_distance_quality_plugin_test(unittest.TestCase):
 
   def test_process(self):
     vol = _raveio.open(self.VOLUME_FIXTURE).object
-    result = self.classUnderTest.process(vol)
+    result, qfield = self.classUnderTest.process(vol)
     self.assertTrue(vol == result)
+    self.assertEquals(qfield, ["se.smhi.composite.distance.radar"], "Wrong qfield returned from process")
     
   def test_process_reprocess_true(self):
     vol = _raveio.open(self.VOLUME_FIXTURE).object
-    result = self.classUnderTest.process(vol, reprocess_quality_flag=True)
+    result, _ = self.classUnderTest.process(vol, reprocess_quality_flag=True)
     self.assertTrue(vol == result)
 
   def test_process_reprocess_false(self):
     vol = _raveio.open(self.VOLUME_FIXTURE).object
-    result = self.classUnderTest.process(vol, reprocess_quality_flag=False)
+    result, _ = self.classUnderTest.process(vol, reprocess_quality_flag=False)
     self.assertTrue(vol == result)
 
   def test_algorithm(self):

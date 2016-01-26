@@ -48,7 +48,7 @@ class rave_distance_quality_plugin(rave_quality_plugin):
   # @param arguments: Not used
   # @return: obj - without doing anything to it
   def process(self, obj, reprocess_quality_flag=True, arguments=None):
-    return obj
+    return obj, self.getQualityFields()
 
   ##
   # @return: The distance information - dummy

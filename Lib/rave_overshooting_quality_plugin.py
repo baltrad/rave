@@ -70,7 +70,7 @@ class rave_overshooting_quality_plugin(rave_quality_plugin):
         maxscan.addOrReplaceQualityField(poofield)
         if ascending:
           obj.sortByElevations(1)
-    return obj
+    return obj, self.getQualityFields()
 
   ##
   # @return: The poo composite algorithm

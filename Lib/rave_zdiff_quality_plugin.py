@@ -55,4 +55,4 @@ class rave_zdiff_quality_plugin(rave_quality_plugin):
     except:
       logger.exception("Failure during zdiff processing")
       
-    return obj
+    return obj, self.getQualityFields()

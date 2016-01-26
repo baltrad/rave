@@ -61,7 +61,7 @@ class RavePGF():
     self._pid = os.getpid()
     self._job_counter = 0
     self._jobid = "%i-0" % self._pid
-    self.logger = rave_pgf_logger.rave_pgf_syslog_client()
+    self.logger = rave_pgf_logger.rave_pgf_stdout_client()
     self._algorithm_registry = None
     self.queue = None
     self.pool = None
@@ -250,9 +250,11 @@ class RavePGF():
   def get_quality_controls(self):
     result = []
     try:
+      self.logger.info("PLUGINS")
       import rave_pgf_quality_registry
       names = rave_pgf_quality_registry.get_plugins()
       for n in names:
+        self.logger.info("NAME = %s"%n)
         result.append((n, "%s quality control"%n))
     except Exception, e:
       self.logger.exception("Failed to get quality controls")

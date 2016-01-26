@@ -102,7 +102,7 @@ class rave_qitotal_quality_plugin(rave_quality_plugin):
       for i in range(nscans):
         self.processScan(objinfo, obj.getScan(i))
     
-    return obj
+    return obj, self.getQualityFields()
 
   ##
   # @return: The distance information - dummy

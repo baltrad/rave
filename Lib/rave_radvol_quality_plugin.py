@@ -70,7 +70,7 @@ class radvol_att_plugin(rave_quality_plugin):
         _radvol.attCorrection(obj, rpars)
     except:
       logger.exception("Failure during radvol processing")
-    return obj
+    return obj, self.getQualityFields()
 
 
 class radvol_broad_plugin(rave_quality_plugin):
@@ -98,7 +98,7 @@ class radvol_broad_plugin(rave_quality_plugin):
         _radvol.broadAssessment(obj, rpars)
     except:
       logger.exception("Failure during radvol processing")
-    return obj
+    return obj, self.getQualityFields()
 
     
 class radvol_nmet_plugin(rave_quality_plugin):
@@ -126,7 +126,7 @@ class radvol_nmet_plugin(rave_quality_plugin):
         _radvol.nmetRemoval(obj, rpars)
     except:
       logger.exception("Failure during radvol processing")
-    return obj
+    return obj, self.getQualityFields()
     
 
 class radvol_speck_plugin(rave_quality_plugin):
@@ -154,7 +154,7 @@ class radvol_speck_plugin(rave_quality_plugin):
         _radvol.speckRemoval(obj, rpars)
     except:
       logger.exception("Failure during radvol processing")
-    return obj
+    return obj, self.getQualityFields()
 
 
 class radvol_spike_plugin(rave_quality_plugin):
@@ -182,4 +182,4 @@ class radvol_spike_plugin(rave_quality_plugin):
         _radvol.spikeRemoval(obj, rpars)
     except:
       logger.exception("Failure during radvol processing")
-    return obj
+    return obj, self.getQualityFields()

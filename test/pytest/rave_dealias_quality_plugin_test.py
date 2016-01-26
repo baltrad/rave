@@ -52,9 +52,10 @@ class rave_dealias_quality_plugin_test(unittest.TestCase):
     p1.quantity="VRAD"
     scan.addParameter(p1)
 
-    result = self.classUnderTest.process(scan)
+    result, qfield = self.classUnderTest.process(scan)
     
     self.assertEquals("True", result.getParameter("VRAD").getAttribute("how/dealiased"))
+    self.assertEquals(qfield, ["se.smhi.detector.dealias"], "Wrong qfield returned from process")
 
   def test_process_reprocess(self):
     scan = _raveio.open(self.SCAN_FIXTURE).object
@@ -64,7 +65,8 @@ class rave_dealias_quality_plugin_test(unittest.TestCase):
 
     # Dealiasing always checks if this has been done before processing so reprocess is not relevant but we want to verify that
     # the API can handle the flag.
-    result = self.classUnderTest.process(scan, reprocess_quality_flag=True)
+    result, qfield = self.classUnderTest.process(scan, reprocess_quality_flag=True)
     
     self.assertEquals("True", result.getParameter("VRAD").getAttribute("how/dealiased"))
+    self.assertEquals(qfield, ["se.smhi.detector.dealias"], "Wrong qfield returned from process")
     

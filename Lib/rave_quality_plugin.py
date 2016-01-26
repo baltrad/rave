@@ -44,7 +44,7 @@ class rave_quality_plugin(object):
   # @return: The modified object if this quality plugin has performed changes 
   # to the object.
   def process(self, obj, reprocess_quality_flag=True, arguments=None):
-    return obj
+    return obj, self.getQualityFields()
   
   ##
   # @return: The algorithm to use or None if no specifiec algorithm wanted

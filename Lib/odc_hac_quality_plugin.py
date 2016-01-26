@@ -49,7 +49,7 @@ class odc_hac_increment_plugin(rave_quality_plugin):
       odc_hac.hacIncrement(obj)
     except:
       pass
-    return obj
+    return obj, self.getQualityFields()
 
 
 class odc_hac_filter_plugin(rave_quality_plugin):
@@ -74,4 +74,4 @@ class odc_hac_filter_plugin(rave_quality_plugin):
       odc_hac.hacFilter(obj)
     except:
       pass
-    return obj
+    return obj, self.getQualityFields()

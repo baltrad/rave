@@ -50,26 +50,26 @@ class radvol_tests(object):
   
   def test_process_scan(self):
     obj = _raveio.open(self.SCAN_FIXTURE).object
-    result = self.get_quality_plugin().process(obj)
+    result, _ = self.get_quality_plugin().process(obj)
     self.assertEquals(1, result.getNumberOfQualityFields())
     field = result.getQualityField(0)
     self.assertEquals(self.get_quality_flag(), field.getAttribute("how/task"))
 
   def test_process_scan_false(self):
     obj = _raveio.open(self.SCAN_FIXTURE).object
-    result = self.get_quality_plugin().process(obj, False)
+    result, _ = self.get_quality_plugin().process(obj, False)
     self.assertEquals(1, result.getNumberOfQualityFields())
     field = result.getQualityField(0)
     self.assertEquals(self.get_quality_flag(), field.getAttribute("how/task"))
 
   def test_process_scan_reprocess_true(self):
     obj = _raveio.open(self.SCAN_FIXTURE).object
-    result = self.get_quality_plugin().process(obj)
+    result, _ = self.get_quality_plugin().process(obj)
     self.assertEquals(1, result.getNumberOfQualityFields())
     field = result.getQualityField(0)
     self.assertEquals(self.get_quality_flag(), field.getAttribute("how/task"))
     
-    result = self.classUnderTest.process(obj, reprocess_quality_flag=True)
+    result, _ = self.classUnderTest.process(obj, reprocess_quality_flag=True)
     self.assertEquals(1, result.getNumberOfQualityFields())
     field2 = result.getQualityField(0)
     self.assertEquals(self.get_quality_flag(), field2.getAttribute("how/task"))
@@ -77,12 +77,12 @@ class radvol_tests(object):
     
   def test_process_scan_reprocess_false(self):
     obj = _raveio.open(self.SCAN_FIXTURE).object
-    result = self.get_quality_plugin().process(obj)
+    result, _ = self.get_quality_plugin().process(obj)
     self.assertEquals(1, result.getNumberOfQualityFields())
     field = result.getQualityField(0)
     self.assertEquals(self.get_quality_flag(), field.getAttribute("how/task"))
     
-    result = self.get_quality_plugin().process(obj, reprocess_quality_flag=False)
+    result, _ = self.get_quality_plugin().process(obj, reprocess_quality_flag=False)
     self.assertEquals(1, result.getNumberOfQualityFields())
     field2 = result.getQualityField(0)
     self.assertEquals(self.get_quality_flag(), field2.getAttribute("how/task"))
@@ -90,7 +90,7 @@ class radvol_tests(object):
 
   def test_process_pvol(self):
     obj = _raveio.open(self.VOLUME_FIXTURE).object
-    result = self.get_quality_plugin().process(obj)
+    result, _ = self.get_quality_plugin().process(obj)
     
     for i in range(result.getNumberOfScans()):
       scan = result.getScan(i)
@@ -100,7 +100,7 @@ class radvol_tests(object):
 
   def test_process_pvol_false(self):
     obj = _raveio.open(self.VOLUME_FIXTURE).object
-    result = self.get_quality_plugin().process(obj, False)
+    result, _ = self.get_quality_plugin().process(obj, False)
     
     for i in range(result.getNumberOfScans()):
       scan = result.getScan(i)
@@ -111,7 +111,7 @@ class radvol_tests(object):
 
   def test_process_pvol_reprocess_true(self):
     obj = _raveio.open(self.VOLUME_FIXTURE).object
-    result = self.get_quality_plugin().process(obj)
+    result, _ = self.get_quality_plugin().process(obj)
     
     fields = []
     for i in range(result.getNumberOfScans()):
@@ -122,7 +122,7 @@ class radvol_tests(object):
       fields.append(field)
     
     fields2 = []
-    result = self.get_quality_plugin().process(obj, reprocess_quality_flag = True)
+    result, _ = self.get_quality_plugin().process(obj, reprocess_quality_flag = True)
     for i in range(result.getNumberOfScans()):
       scan = result.getScan(i)
       self.assertEquals(1, scan.getNumberOfQualityFields())
@@ -137,7 +137,7 @@ class radvol_tests(object):
     
   def test_process_pvol_reprocess_false(self):
     obj = _raveio.open(self.VOLUME_FIXTURE).object
-    result = self.get_quality_plugin().process(obj)
+    result, _ = self.get_quality_plugin().process(obj)
     
     fields = []
     for i in range(result.getNumberOfScans()):
@@ -148,7 +148,7 @@ class radvol_tests(object):
       fields.append(field)
     
     fields2 = []
-    result = self.get_quality_plugin().process(obj, reprocess_quality_flag = False)
+    result, _ = self.get_quality_plugin().process(obj, reprocess_quality_flag = False)
     for i in range(result.getNumberOfScans()):
       scan = result.getScan(i)
       self.assertEquals(1, scan.getNumberOfQualityFields())

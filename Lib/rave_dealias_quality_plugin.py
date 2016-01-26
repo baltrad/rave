@@ -49,4 +49,4 @@ class dealias_plugin(rave_quality_plugin):
       _dealias.dealias(obj)
     except:
       pass
-    return obj
+    return obj, self.getQualityFields()

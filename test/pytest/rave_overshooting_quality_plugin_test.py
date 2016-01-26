@@ -48,20 +48,21 @@ class rave_overshooting_quality_plugin_test(unittest.TestCase):
 
   def test_process(self):
     vol = _raveio.open(self.VOLUME_FIXTURE).object
-    result = self.classUnderTest.process(vol)
+    result, qfield = self.classUnderTest.process(vol)
+    self.assertEquals(qfield, ["se.smhi.detector.poo"], "Wrong qfield returned from process")
     maxscan = result.getScanWithMaxDistance()
     field = maxscan.getQualityFieldByHowTask("se.smhi.detector.poo")
     self.assertTrue(field != None)
 
   def test_process_already_processed(self):
     vol = _raveio.open(self.VOLUME_FIXTURE).object
-    result = self.classUnderTest.process(vol, reprocess_quality_flag=False)
+    result, _ = self.classUnderTest.process(vol, reprocess_quality_flag=False)
     maxscan = result.getScanWithMaxDistance()
     field = maxscan.getQualityFieldByHowTask("se.smhi.detector.poo")
     self.assertEquals(1, maxscan.getNumberOfQualityFields())
     self.assertTrue(field != None)
 
-    result = self.classUnderTest.process(vol, reprocess_quality_flag=False)
+    result, _ = self.classUnderTest.process(vol, reprocess_quality_flag=False)
     maxscan = result.getScanWithMaxDistance()
     field2 = maxscan.getQualityFieldByHowTask("se.smhi.detector.poo")
     self.assertEquals(1, maxscan.getNumberOfQualityFields())
@@ -70,13 +71,13 @@ class rave_overshooting_quality_plugin_test(unittest.TestCase):
 
   def test_process_already_processed_reprocess(self):
     vol = _raveio.open(self.VOLUME_FIXTURE).object
-    result = self.classUnderTest.process(vol, reprocess_quality_flag=True)
+    result, _ = self.classUnderTest.process(vol, reprocess_quality_flag=True)
     maxscan = result.getScanWithMaxDistance()
     field = maxscan.getQualityFieldByHowTask("se.smhi.detector.poo")
     self.assertEquals(1, maxscan.getNumberOfQualityFields())
     self.assertTrue(field != None)
 
-    result = self.classUnderTest.process(vol, reprocess_quality_flag=True)
+    result, _ = self.classUnderTest.process(vol, reprocess_quality_flag=True)
     maxscan = result.getScanWithMaxDistance()
     field2 = maxscan.getQualityFieldByHowTask("se.smhi.detector.poo")
     self.assertEquals(1, maxscan.getNumberOfQualityFields())
@@ -85,7 +86,7 @@ class rave_overshooting_quality_plugin_test(unittest.TestCase):
 
   def test_process_scan(self):
     scan = _raveio.open(self.SCAN_FIXTURE).object
-    result = self.classUnderTest.process(scan)
+    result, _ = self.classUnderTest.process(scan)
     self.assertTrue(scan == result)
 
   def test_algorithm(self):

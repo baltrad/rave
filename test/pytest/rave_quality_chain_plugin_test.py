@@ -51,16 +51,17 @@ class rave_quality_chain_plugin_test(unittest.TestCase):
     
   def test_process(self):
     pvol = _raveio.open(self.PVOL_SELEK_FIXTURE).object
-    link_1 = rave_quality_chain_registry.link("qc.check.1")
-    link_2 = rave_quality_chain_registry.link("qc.check.2")
+    qfields = ["qc.check.1", "qc.check.2"]
+    link_1 = rave_quality_chain_registry.link(qfields[0])
+    link_2 = rave_quality_chain_registry.link(qfields[1])
     a_chain = rave_quality_chain_registry.chain("selek", "default", [link_1, link_2])
     self.quality_chain_registry_mock.get_chain.return_value = a_chain
-    self.qc_check_1_mock.process.return_value = pvol
+    self.qc_check_1_mock.process.return_value = pvol, [qfields[0]]
     self.qc_check_1_mock.algorithm.return_value = None
-    self.qc_check_2_mock.process.return_value = pvol
+    self.qc_check_2_mock.process.return_value = pvol, [qfields[1]]
     self.qc_check_2_mock.algorithm.return_value = None
     
-    obj = self.classUnderTest.process(pvol)
+    obj, returned_qfields = self.classUnderTest.process(pvol)
     
     expected_chain_registry_calls = [mock.call.get_chain("selek")]
     expected_qc_check_1_calls = [mock.call.process(pvol,True), mock.call.algorithm()]
@@ -69,19 +70,21 @@ class rave_quality_chain_plugin_test(unittest.TestCase):
     self.assertTrue(expected_chain_registry_calls == self.quality_chain_registry_mock.mock_calls)
     self.assertTrue(expected_qc_check_1_calls == self.qc_check_1_mock.mock_calls)
     self.assertTrue(expected_qc_check_2_calls == self. qc_check_2_mock.mock_calls)
+    self.assertEqual(returned_qfields, qfields, "Wrong qfields returned from process-function")
 
   def test_process_false(self):
     pvol = _raveio.open(self.PVOL_SELEK_FIXTURE).object
-    link_1 = rave_quality_chain_registry.link("qc.check.1")
-    link_2 = rave_quality_chain_registry.link("qc.check.2")
+    qfields = ["qc.check.1", "qc.check.2"]
+    link_1 = rave_quality_chain_registry.link(qfields[0])
+    link_2 = rave_quality_chain_registry.link(qfields[1])
     a_chain = rave_quality_chain_registry.chain("selek", "default", [link_1, link_2])
     self.quality_chain_registry_mock.get_chain.return_value = a_chain
-    self.qc_check_1_mock.process.return_value = pvol
+    self.qc_check_1_mock.process.return_value = pvol, [qfields[0]]
     self.qc_check_1_mock.algorithm.return_value = None
-    self.qc_check_2_mock.process.return_value = pvol
+    self.qc_check_2_mock.process.return_value = pvol, [qfields[1]]
     self.qc_check_2_mock.algorithm.return_value = None
     
-    obj = self.classUnderTest.process(pvol, False)
+    obj, returned_qfields = self.classUnderTest.process(pvol, False)
     
     expected_chain_registry_calls = [mock.call.get_chain("selek")]
     expected_qc_check_1_calls = [mock.call.process(pvol,False), mock.call.algorithm()]
@@ -90,18 +93,20 @@ class rave_quality_chain_plugin_test(unittest.TestCase):
     self.assertTrue(expected_chain_registry_calls == self.quality_chain_registry_mock.mock_calls)
     self.assertTrue(expected_qc_check_1_calls == self.qc_check_1_mock.mock_calls)
     self.assertTrue(expected_qc_check_2_calls == self. qc_check_2_mock.mock_calls)
-
+    self.assertEqual(returned_qfields, qfields, "Wrong qfields returned from process-function")
   
   def test_process_missing_link_processor(self):
     pvol = _raveio.open(self.PVOL_SELEK_FIXTURE).object
-    link_1 = rave_quality_chain_registry.link("qc.check.1")
-    link_3 = rave_quality_chain_registry.link("qc.check.3")
+    qfield1 = "qc.check.1"
+    qfield3 = "qc.check.3"
+    link_1 = rave_quality_chain_registry.link(qfield1)
+    link_3 = rave_quality_chain_registry.link(qfield3)
     a_chain = rave_quality_chain_registry.chain("selek", "default", [link_1, link_3])
     self.quality_chain_registry_mock.get_chain.return_value = a_chain
-    self.qc_check_1_mock.process.return_value = pvol
+    self.qc_check_1_mock.process.return_value = pvol, [qfield1]
     self.qc_check_1_mock.algorithm.return_value = None
     
-    obj = self.classUnderTest.process(pvol)
+    obj, returned_qfields = self.classUnderTest.process(pvol)
     
     expected_chain_registry_calls = [mock.call.get_chain("selek")]
     expected_qc_check_1_calls = [mock.call.process(pvol,True), mock.call.algorithm()]
@@ -110,30 +115,33 @@ class rave_quality_chain_plugin_test(unittest.TestCase):
     self.assertTrue(expected_qc_check_1_calls == self.qc_check_1_mock.mock_calls)
     
     self.assertTrue(pvol == obj)
+    self.assertEqual(returned_qfields, [qfield1], "Wrong qfields returned from process-function")
     
   def test_process_no_such_chain(self):
     pvol = _raveio.open(self.PVOL_SEKKR_FIXTURE).object
     self.quality_chain_registry_mock.get_chain.side_effect = LookupError("appp")
 
-    obj = self.classUnderTest.process(pvol)
+    obj, returned_qfields = self.classUnderTest.process(pvol)
 
     expected_chain_registry_calls = [mock.call.get_chain("sekkr")]
 
     self.assertTrue(expected_chain_registry_calls == self.quality_chain_registry_mock.mock_calls)
     
     self.assertTrue(pvol == obj)
+    self.assertTrue(returned_qfields == [])
     
   def test_process_bad_link_processor(self):
     pvol = _raveio.open(self.PVOL_SELEK_FIXTURE).object
-    link_1 = rave_quality_chain_registry.link("qc.check.1")
-    link_2 = rave_quality_chain_registry.link("qc.check.2")
+    qfields = ["qc.check.1", "qc.check.2"]
+    link_1 = rave_quality_chain_registry.link(qfields[0])
+    link_2 = rave_quality_chain_registry.link(qfields[1])
     a_chain = rave_quality_chain_registry.chain("selek", "default", [link_1, link_2])
     self.quality_chain_registry_mock.get_chain.return_value = a_chain
     self.qc_check_1_mock.process.side_effect = AttributeError("appp")
-    self.qc_check_2_mock.process.return_value = pvol
+    self.qc_check_2_mock.process.return_value = pvol, qfields[1]
     self.qc_check_2_mock.algorithm.return_value = None
     
-    obj = self.classUnderTest.process(pvol)
+    obj, _ = self.classUnderTest.process(pvol)
 
     expected_chain_registry_calls = [mock.call.get_chain("selek")]
     expected_qc_check_1_calls = [mock.call.process(pvol,True)]
@@ -148,14 +156,15 @@ class rave_quality_chain_plugin_test(unittest.TestCase):
   def test_process_link_with_args(self):
     pvol = _raveio.open(self.PVOL_SELEK_FIXTURE).object
     link_args={"abc":10,"def":"something"}
-    link_1 = rave_quality_chain_registry.link("qc.check.1", link_args)
+    qfield1 = "qc.check.1"
+    link_1 = rave_quality_chain_registry.link(qfield1, link_args)
     
     a_chain = rave_quality_chain_registry.chain("selek", "default", [link_1])
     self.quality_chain_registry_mock.get_chain.return_value = a_chain
-    self.qc_check_1_mock.process.return_value = pvol
+    self.qc_check_1_mock.process.return_value = pvol, qfield1
     self.qc_check_1_mock.algorithm.return_value = None
     
-    obj = self.classUnderTest.process(pvol)
+    obj, _ = self.classUnderTest.process(pvol)
 
     expected_chain_registry_calls = [mock.call.get_chain("selek")]
     expected_qc_check_1_calls = [mock.call.process(pvol,True,link_args), mock.call.algorithm()]

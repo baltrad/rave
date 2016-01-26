@@ -53,21 +53,23 @@ class rave_quality_chain_plugin(rave_quality_plugin):
     try:
       chain = self.chain_registry.get_chain(src)
     except LookupError,e:
-      return obj
+      return obj, []
     
     algorithm = None
+    qfields = []
     for link in chain.links():
       p = rave_pgf_quality_registry.get_plugin(link.refname())
       if p != None:
         try:
           if link.arguments() is not None:
-            obj = p.process(obj, reprocess_quality_flag, link.arguments())
+            obj, plugin_qfield = p.process(obj, reprocess_quality_flag, link.arguments())
           else:
-            obj = p.process(obj, reprocess_quality_flag)
+            obj, plugin_qfield = p.process(obj, reprocess_quality_flag)
           na = p.algorithm()
+          qfields += plugin_qfield
           if algorithm == None and na != None: # Try to get the generator algorithm != None 
             algorithm = na
         except Exception,e:
           logger.exception("Caught exception when processing object")
     
-    return obj
+    return obj, qfields

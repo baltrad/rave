@@ -150,7 +150,7 @@ class compositing(object):
     
     objects, nodes = self.fetch_objects()
     
-    objects, algorithm = self.quality_control_objects(objects)
+    objects, algorithm, qfields = self.quality_control_objects(objects)
 
     objects=objects.values()
 
@@ -184,12 +184,6 @@ class compositing(object):
           pyarea.id = "auto_%s_%s"%(A.pcs, tmpid)
         except:
           pass
-  
-    qfields = []
-    for d in self.detectors:
-      p = rave_pgf_quality_registry.get_plugin(d)
-      if p != None:
-        qfields.extend(p.getQualityFields())
     
     generator.addParameter(self.quantity, self.gain, self.offset)
     generator.product = self.product
@@ -283,12 +277,22 @@ class compositing(object):
   def quality_control_objects(self, objects):
     algorithm = None
     result = {}
+    qfields = []
     for k in objects.keys():
       obj = objects[k]
       for d in self.detectors:
         p = rave_pgf_quality_registry.get_plugin(d)
         if p != None:
-          obj = p.process(obj, self.reprocess_quality_field)
+          process_result = p.process(obj, self.reprocess_quality_field)
+          if isinstance(process_result, tuple):
+            obj = process_result[0]
+            detector_qfields = process_result[1]
+          else:
+            obj = process_result
+            detector_qfields = p.getQualityFields()
+          for qfield in detector_qfields:
+            if qfield not in qfields:
+              qfields.append(qfield)
           na = None
           if isinstance(obj, tuple):
             obj,na = obj[0],obj[1]
@@ -296,9 +300,10 @@ class compositing(object):
             na = p.algorithm()
           if algorithm == None and na != None: # Try to get the generator algorithm != None 
             algorithm = na
+
       result[k] = obj
 
-    return result, algorithm
+    return result, algorithm, qfields
   
   ##
   # Generates the objects that should be used in the compositing.

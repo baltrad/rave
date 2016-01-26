@@ -73,7 +73,9 @@ class rave_qitotal_quality_plugin_test(unittest.TestCase):
     scan.addQualityField(qf1)
     scan.addQualityField(qf2)
     
-    result = self.classUnderTest.process(scan)
+    result, qfield = self.classUnderTest.process(scan)
+    self.assertEquals(qfield, ["pl.imgw.quality.qi_total"], "Wrong qfield returned from process")
+    
     field = result.getQualityFieldByHowTask("pl.imgw.quality.qi_total")
     self.assertTrue(field != None)
     self.assertAlmostEqual(1.7, field.getValue(0,0)[1], 4)
@@ -96,9 +98,9 @@ class rave_qitotal_quality_plugin_test(unittest.TestCase):
     scan.addQualityField(qf1)
     scan.addQualityField(qf2)
     
-    result = self.classUnderTest.process(scan)
+    result, _ = self.classUnderTest.process(scan)
     qfield = result.getQualityFieldByHowTask("pl.imgw.quality.qi_total")
-    result = self.classUnderTest.process(scan, reprocess_quality_flag=False)
+    result, _ = self.classUnderTest.process(scan, reprocess_quality_flag=False)
     qfield2 = result.getQualityFieldByHowTask("pl.imgw.quality.qi_total")
     self.assertTrue(qfield != qfield2)
 
@@ -124,7 +126,7 @@ class rave_qitotal_quality_plugin_test(unittest.TestCase):
     
     nscans = volume.getNumberOfScans()
     
-    result = self.classUnderTest.process(volume)
+    result, _ = self.classUnderTest.process(volume)
     
     field = result.getScan(0).getQualityFieldByHowTask("pl.imgw.quality.qi_total")
     self.assertTrue(field != None)
