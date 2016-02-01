@@ -89,9 +89,9 @@ def arglist2dict(arglist):
 #
 def strToNumber(sval):
   try:
-    return int(sval)
-  except ValueError, e:
     return float(sval)
+  except ValueError, e:
+    return int(sval)
 
 ## Creates a composite
 #@param files the list of files to be used for generating the composite
@@ -120,19 +120,19 @@ def generate(files, arguments):
   acrrproduct = None
   
   if "zra" in args.keys():
-    zr_a = strToNumber(args["zra"])
+    zr_a = float(args["zra"])
   if "zrb" in args.keys():
-    zr_b = strToNumber(args["zrb"])
+    zr_b = float(args["zrb"])
   if "quantity" in args.keys():
     quantity = args["quantity"]
   if "accept" in args.keys():
-    accept = strToNumber(args["accept"]) / 100.0 
+    accept = float(args["accept"]) / 100.0 
   if "distancefield" in args.keys():
     distancefield = args["distancefield"]
   if "interval" in args.keys():
-    interval = strToNumber(args["interval"])
+    interval = int(args["interval"])
   if "N" in args.keys():
-    N = strToNumber(args["N"])
+    N = int(args["N"])
   if "adjustmentfile" in args.keys():
     adjustmentfile = args["adjustmentfile"]
     

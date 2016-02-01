@@ -69,9 +69,9 @@ def arglist2dict(arglist):
 #
 def strToNumber(sval):
   try:
-    return int(sval)
-  except ValueError, e:
     return float(sval)
+  except ValueError, e:
+    return int(sval)
 
 
 ## Creates a composite
@@ -112,7 +112,7 @@ def generate(files, arguments):
     comp.prodpar = args["prodpar"]
 
   if "range" in args.keys() and comp.product == _rave.Rave_ProductType_PMAX:
-    comp.range = strToNumber(args["range"])
+    comp.range = float(args["range"])
   
   if "selection" in args.keys():
     comp.set_method_from_string(args["selection"])
@@ -136,9 +136,9 @@ def generate(files, arguments):
   if args.has_key("applygra"):
     comp.applygra = True
   if args.has_key("zrA"):
-    comp.zr_A = strToNumber(args["zrA"])
+    comp.zr_A = float(args["zrA"])
   if args.has_key("zrb"):
-    comp.zr_b = strToNumber(args["zrb"])
+    comp.zr_b = float(args["zrb"])
   
   comp.reprocess_quality_field = RAVE_PGF_QUALITY_FIELD_REPROCESSING
   

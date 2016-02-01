@@ -63,10 +63,9 @@ def arglist2dict(arglist):
 #
 def strToNumber(sval):
   try:
-    return int(sval)
-  except ValueError, e:
     return float(sval)
-
+  except ValueError, e:
+    return int(sval)
 
 
 ## Performs
@@ -114,16 +113,16 @@ def generate(files, arguments):
     comp.prodpar = args["prodpar"]
 
   if "range" in args.keys() and comp.product == _rave.Rave_ProductType_PMAX:
-    comp.range = strToNumber(args["range"])
+    comp.range = float(args["range"])
   
   if "pcsid" in args.keys():
     comp.pcsid = args["pcsid"]
   
   if "xscale" in args.keys():
-    comp.xscale = float(strToNumber(args["xscale"]))
+    comp.xscale = float(args["xscale"])
     
   if "yscale" in args.keys():
-    comp.yscale = float(strToNumber(args["yscale"]))
+    comp.yscale = float(args["yscale"])
   
   #if options.gf: Activate gap filling for rule
   #  comp.applygapfilling = True
@@ -136,14 +135,14 @@ def generate(files, arguments):
   if args.has_key("applygra"):
     comp.applygra = True
   if args.has_key("zrA"):
-    comp.zr_A = strToNumber(args["zrA"])
+    comp.zr_A = float(args["zrA"])
   if args.has_key("zrb"):
-    comp.zr_b = strToNumber(args["zrb"])
+    comp.zr_b = float(args["zrb"])
   
   if args.has_key("pcsid"):
     comp.pcsid = args["pcsid"]
-    comp.xscale = float(strToNumber(args["xscale"]))
-    comp.yscale = float(strToNumber(args["yscale"]))
+    comp.xscale = float(args["xscale"])
+    comp.yscale = float(args["yscale"])
   
   areaid = None
   if args.has_key("area"):
