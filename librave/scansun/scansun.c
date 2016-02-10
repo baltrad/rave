@@ -443,7 +443,7 @@ int processData(PolarScan_t* scan, SCANMETA* meta, RaveList_t* list) {
   if ((meta->nrang-irn2)*meta->rscale<RayMin) irn2=meta->nrang-RayMin/meta->rscale;
 
   for (ia=0 ; ia<meta->nazim ; ia++) {
-    RVALS* ret = RAVE_MALLOC(sizeof(RVALS));
+    RVALS* rvals = RAVE_MALLOC(sizeof(RVALS));
     timer = 0.0;
 
     /* Use exact azimuth and elevation angles if available */
@@ -480,7 +480,7 @@ int processData(PolarScan_t* scan, SCANMETA* meta, RaveList_t* list) {
       }
     }
     if (!n||n<FracData*(meta->nrang-irn1)) {
-      RAVE_FREE(ret);
+      RAVE_FREE(rvals);
       continue;
     }
     SunFirst/=n;
@@ -514,7 +514,7 @@ int processData(PolarScan_t* scan, SCANMETA* meta, RaveList_t* list) {
       }
     }
     if (!n||n<FracData*(meta->nrang-irn2)) {
-      RAVE_FREE(ret);
+      RAVE_FREE(rvals);
       continue;
     }
     SunMean/=n;
@@ -541,38 +541,34 @@ int processData(PolarScan_t* scan, SCANMETA* meta, RaveList_t* list) {
       readoutTiming(meta, ia, &date, &time, &timer);
     }
 
-    solar_elev_azim(lonlat[0],lonlat[1],date,time,&ret->ElevSun,&ret->AzimSun,&ret->RelevSun);
-    if (fabs(Elevation-ret->ElevSun)>AngleDif||fabs(Azimuth-ret->AzimSun)>AngleDif) {
-      RAVE_FREE(ret);
+    solar_elev_azim(lonlat[0],lonlat[1],date,time,&rvals->ElevSun,&rvals->AzimSun,&rvals->RelevSun);
+    if (fabs(Elevation-rvals->ElevSun)>AngleDif||fabs(Azimuth-rvals->AzimSun)>AngleDif) {
+      RAVE_FREE(rvals);
       continue;
     }
-    ret->date = date;
-    ret->time = time;
-    ret->timer = time + timer;
-    ret->Elev = Elevation;
-    ret->Azimuth = Azimuth;
-    ret->dBSunFlux = dBSunFlux;
-    ret->SunMean = SunMean;
-    ret->SunStdd = SunStdd;
-    ret->n = n;
-    ret->quant1 = (char*)meta->quant1;
+    rvals->date = date;
+    rvals->time = time;
+    rvals->timer = time + timer;
+    rvals->Elev = Elevation;
+    rvals->Azimuth = Azimuth;
+    rvals->dBSunFlux = dBSunFlux;
+    rvals->SunMean = SunMean;
+    rvals->SunStdd = SunStdd;
+    rvals->n = n;
+    rvals->quant1 = (char*)meta->quant1;
     if (meta->Zdr) {
-      ret->ZdrMean = ZdrMean;
-      ret->ZdrStdd = ZdrStdd;
-      ret->quant2 = (char*)meta->quant2;
+      rvals->ZdrMean = ZdrMean;
+      rvals->ZdrStdd = ZdrStdd;
+      rvals->quant2 = (char*)meta->quant2;
     } else {
-      ret->ZdrMean = nan("NaN");
-      ret->ZdrStdd = nan("NaN");
-      ret->quant2 = (char*)"NA";
+      rvals->ZdrMean = nan("NaN");
+      rvals->ZdrStdd = nan("NaN");
+      rvals->quant2 = (char*)"NA";
     }
-    RaveList_add(list, ret);  /* No checking */
+    RaveList_add(list, rvals);  /* No checking */
     if (Rave_getDebugLevel() <= RAVE_DEBUG) outputMeta(meta);
   }
-  fail_scan:
-    RAVE_OBJECT_RELEASE(Zparam);
-    RAVE_OBJECT_RELEASE(Dparam);
-    return ret;
-
+fail_scan:
   RAVE_OBJECT_RELEASE(Zparam);
   RAVE_OBJECT_RELEASE(Dparam);
   return ret;
@@ -583,28 +579,30 @@ int processData(PolarScan_t* scan, SCANMETA* meta, RaveList_t* list) {
 void outputMeta(SCANMETA* meta) {
   FILE *fd;
   fd=fopen("meta.txt", "w");
-  fprintf(fd, "Date = %ld\n", meta->date);
-  fprintf(fd, "Time = %ld\n", meta->time);
-  fprintf(fd, "Tilt = %f\n", meta->elev);
-  fprintf(fd, "Quant1 = %s\n", meta->quant1);
-  fprintf(fd, "Quant2 = %s\n", meta->quant2);
-  fprintf(fd, "nrays = %ld\n", meta->nazim);
-  fprintf(fd, "nbins = %ld\n", meta->nrang);
-  fprintf(fd, "rscale = %f\n", meta->rscale);
-  fprintf(fd, "ascale = %f\n", meta->ascale);
-  fprintf(fd, "astart = %f\n", meta->astart);
-  fprintf(fd, "azim0 = %ld\n", meta->azim0);
-  fprintf(fd, "Pulse width = %f\n", meta->pulse);
-  fprintf(fd, "Radar constant = %f\n", meta->radcnst);
-  fprintf(fd, "Antvel = %f\n", meta->antvel);
-  fprintf(fd, "Longitude = %f\n", meta->lon);
-  fprintf(fd, "Latitude = %f\n", meta->lat);
-  fprintf(fd, "RXLoss = %f\n", meta->RXLoss);
-  fprintf(fd, "Antenna gain = %f\n", meta->AntGain);
-  fprintf(fd, "Linear antenna gain = %f\n", meta->LAntGain);
-  fprintf(fd, "Antenna area = %f\n", meta->AntArea);
-  fprintf(fd, "Wavelength = %f\n", meta->wavelength);
-  fprintf(fd, "Zdr type = %d\n", meta->Zdr);
+  if (fd != NULL) {
+    fprintf(fd, "Date = %ld\n", meta->date);
+    fprintf(fd, "Time = %ld\n", meta->time);
+    fprintf(fd, "Tilt = %f\n", meta->elev);
+    fprintf(fd, "Quant1 = %s\n", (meta->quant1==NULL?"NULL":meta->quant1));
+    fprintf(fd, "Quant2 = %s\n", (meta->quant2==NULL?"NULL":meta->quant2));
+    fprintf(fd, "nrays = %ld\n", meta->nazim);
+    fprintf(fd, "nbins = %ld\n", meta->nrang);
+    fprintf(fd, "rscale = %f\n", meta->rscale);
+    fprintf(fd, "ascale = %f\n", meta->ascale);
+    fprintf(fd, "astart = %f\n", meta->astart);
+    fprintf(fd, "azim0 = %ld\n", meta->azim0);
+    fprintf(fd, "Pulse width = %f\n", meta->pulse);
+    fprintf(fd, "Radar constant = %f\n", meta->radcnst);
+    fprintf(fd, "Antvel = %f\n", meta->antvel);
+    fprintf(fd, "Longitude = %f\n", meta->lon);
+    fprintf(fd, "Latitude = %f\n", meta->lat);
+    fprintf(fd, "RXLoss = %f\n", meta->RXLoss);
+    fprintf(fd, "Antenna gain = %f\n", meta->AntGain);
+    fprintf(fd, "Linear antenna gain = %f\n", meta->LAntGain);
+    fprintf(fd, "Antenna area = %f\n", meta->AntArea);
+    fprintf(fd, "Wavelength = %f\n", meta->wavelength);
+    fprintf(fd, "Zdr type = %d\n", meta->Zdr);
+  }
   fclose(fd);
 }
 
@@ -647,7 +645,7 @@ int scansunFromObject(RaveCoreObject* object, Rave_ObjectType ot, RaveList_t* li
 	SCANMETA meta;
 	PolarVolume_t* volume = NULL;
 	PolarScan_t* scan = NULL;
-
+	memset(&meta, 0, sizeof(SCANMETA));
 	fill_toplevelmeta(object, &meta);
 
 	/* Individual scan */
@@ -692,10 +690,10 @@ int scansun(const char* filename, RaveList_t* list, char** source) {
 
 	ret = scansunFromObject(object, ot, list, source);
 
-	if (ot == Rave_ObjectType_PVOL) {
-		RaveIO_close(raveio);
-		RAVE_OBJECT_RELEASE(raveio);
-	}
+	//if (ot == Rave_ObjectType_PVOL) {
+	//	RaveIO_close(raveio);
+	//}
+  RAVE_OBJECT_RELEASE(raveio);
 
 	RAVE_OBJECT_RELEASE(object);
 	return ret;

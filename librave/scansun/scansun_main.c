@@ -35,15 +35,19 @@ int main(int argc,char *argv[]) {
 
 	if (argc<2) {
 	   printf("Usage: %s <ODIM_H5-file>\n",argv[0]);
-	   RAVE_OBJECT_RELEASE(list);
+	   RaveList_freeAndDestroy(&list);
 	   exit(1);
 	}
 
 	if (!scansun(argv[1], list, &source)) {
 		printf("Could not process %s, exiting ...\n", argv[1]);
-		RAVE_OBJECT_RELEASE(list);
+		if (source != NULL) {
+		  RAVE_FREE(source);
+		}
+		RaveList_freeAndDestroy(&list);
 		exit(1);
 	}
+
 	if (RaveList_size(list) > 0) {
 		printf("#Date    Time        Elevatn Azimuth   ElevSun   AzimSun    N  dBSunFlux   SunMean SunStdd   ZdrMean ZdrStdd  Refl ZDR  Source\n");
 		while ((ret = RaveList_removeLast(list)) != NULL) {
@@ -62,11 +66,9 @@ int main(int argc,char *argv[]) {
 						   ret->quant1,
 						   ret->quant2,
             			   source);
-			// RAVE_FREE(ret);  /* No longer frees! */
 		}
 	}
-	RAVE_OBJECT_RELEASE(list);
-	// RAVE_FREE(source);  /* No longer frees! */
-
+  RAVE_FREE(source);
+	RaveList_freeAndDestroy(&list);
 	exit(0);
 }
