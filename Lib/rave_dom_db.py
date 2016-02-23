@@ -29,28 +29,26 @@ from __future__ import absolute_import
 
 import contextlib
 import jprops
-from sqlalchemy import engine, event, exc as sqlexc, sql
-from sqlalchemy.orm import mapper, sessionmaker, column_property
+from sqlalchemy import engine, event
+from sqlalchemy.orm import mapper, sessionmaker
+
+import migrate.versioning.api
+import migrate.versioning.repository
+from migrate import exceptions as migrateexc
 
 from sqlalchemy import (
     Column,
-    ForeignKey,
     MetaData,
     PrimaryKeyConstraint,
     Table,
-    UniqueConstraint,
 )
 
 from sqlalchemy.types import (
-    BigInteger,
-    Boolean,
     Date,
     Float,
     Integer,
-    LargeBinary,
     Text,
     Time,
-    DateTime
 )
 from sqlalchemy import asc,desc
 
@@ -58,6 +56,10 @@ from rave_dom import wmo_station, observation
 from gadjust.gra import gra_coefficient
 from gadjust.grapoint import grapoint
 from rave_defines import BDB_CONFIG_FILE
+
+import os
+
+MIGRATION_REPO_PATH = os.path.join(os.path.dirname(__file__), "migrate")
 
 def psql_set_extra_float_digits(dbapi_con, con_record):
     cursor = dbapi_con.cursor()
@@ -103,7 +105,8 @@ rave_observation=Table("rave_observation", meta,
                        Column("pressure_change", Float, nullable=True),
                        Column("liquid_precipitation", Float, nullable=True),
                        Column("accumulation_period", Integer, nullable=True),
-                       PrimaryKeyConstraint("station", "date", "time"))
+                       Column("valid_fields_bitmask", Integer, nullable=True),
+                       PrimaryKeyConstraint("station", "date", "time", "accumulation_period", "type"))
 
 # The coefficients used for gra
 rave_gra_coefficient=Table("rave_gra_coefficient", meta,
@@ -150,7 +153,7 @@ rave_grapoint=Table("rave_grapoint", meta,
                        
 mapper(wmo_station, rave_wmo_station)
 mapper(observation, rave_observation)#,
-       #properties={"datetime" : column_property(sql.functions.concat(rave_observation.c.date,rave_observation.c.time))})
+#        properties={"datetime" : column_property(sql.functions.concat(rave_observation.c.date,rave_observation.c.time))})
 mapper(gra_coefficient, rave_gra_coefficient)
 mapper(grapoint, rave_grapoint)
 
@@ -178,12 +181,26 @@ class rave_db(object):
   ##
   # Creates the tables if they don't exist
   def create(self):
-    meta.create_all()
+    repo = migrate.versioning.repository.Repository(MIGRATION_REPO_PATH)
+
+    # try setting up version control for the databases created before
+    # we started using sqlalchemy-migrate
+    try:
+      migrate.versioning.api.version_control(self._engine, repo, version=0)
+    except migrateexc.DatabaseAlreadyControlledError:
+      pass
+
+    migrate.versioning.api.upgrade(self._engine, repo)  
     
   ##
   # Drops the database tables if they exist
   def drop(self):
-    meta.drop_all()
+    repo = migrate.versioning.repository.Repository(MIGRATION_REPO_PATH)
+    try:
+      migrate.versioning.api.downgrade(self._engine, repo, 0)
+      migrate.versioning.api.drop_version_control(self._engine, repo)
+    except migrateexc.DatabaseNotControlledError:
+      pass
     
   ##
   # Adds an object to the associated table
@@ -223,7 +240,6 @@ class rave_db(object):
       session.close()
     session = None    
     
-
   def get_session(self):
     Session = sessionmaker(bind=self._engine)
     session = Session()
@@ -263,6 +279,15 @@ class rave_db(object):
   def get_station(self, stationid):
     with self.get_session() as s:
       return s.query(wmo_station).filter(wmo_station.stationnumber==stationid).first()
+    
+  def get_stations_in_bbox(self, ullon, ullat, lrlon, lrlat):
+    with self.get_session() as s:
+      q = s.query(wmo_station).filter(wmo_station.longitude>=ullon) \
+                                 .filter(wmo_station.longitude<=lrlon) \
+                                 .filter(wmo_station.latitude<=ullat) \
+                                 .filter(wmo_station.latitude>=lrlat)
+      
+      return q.all()
   
   def get_gra_coefficient(self, dt):
     with self.get_session() as s:
@@ -297,7 +322,6 @@ class rave_db(object):
       s.commit()
       return pts
       
-  
 ##
 # Creates a rave db instance. This instance will be remembered for the same url which means
 # that the same db-instance will be used for the same url.
