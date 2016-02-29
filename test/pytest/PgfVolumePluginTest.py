@@ -78,7 +78,20 @@ class PgfVolumePluginTest(unittest.TestCase):
     ios.save()
 
     ios = None
-
+    
+  def testGenerate(self):
+    args = ["source", "selul","date","20101023","time","180000"]
+    outfile = rave_pgf_volume_plugin.generate(self.FIXTURES, args)
+    
+    expected_outfile_beginning = "rave%d-" % os.getpid()
+    expected_outfile_end = ".h5"
+     
+    outfile_base = os.path.basename(outfile)
+    
+    self.assertTrue(outfile_base.startswith(expected_outfile_beginning))
+    self.assertTrue(outfile_base.endswith(expected_outfile_end))
+    
+    os.remove(outfile)
 
 if __name__ == "__main__":
     unittest.main()
