@@ -121,7 +121,7 @@ def generate(files, arguments):
   else:
       detectors = []
 
-  volume, _ = perform_quality_control(volume, detectors)
+  volume = perform_quality_control(volume, detectors)
 
   ios = _raveio.new()
   ios.object = volume

@@ -74,6 +74,19 @@ class observation(object):
   UPDATED_TYPES= {DELAYED: "Delayed",
                   CORRECTED: "Corrected"}
   
+  PARAM_VISIBILITY = 0
+  PARAM_WINDTYPE = 1
+  PARAM_CLOUDCOVER = 2
+  PARAM_WINDDIRECTION = 3
+  PARAM_WINDSPEED = 4
+  PARAM_TEMPERATURE = 5
+  PARAM_DEWPOINT = 6
+  PARAM_RELATIVEHUMIDITY = 7
+  PARAM_PRESSURE = 8
+  PARAM_SEA_LVL_PRESSURE = 9
+  PARAM_PRESSURE_CHANGE = 10
+  PARAM_LIQUID_PRECIPTATION = 11
+  
   def __init__(self, station, country, type, date, time, longitude, latitude, liquid_precipitation=0.0, accumulation_period=0):
     self.station = station
     self.country = country
@@ -96,6 +109,41 @@ class observation(object):
     self.pressure_change = 0.0
     self.liquid_precipitation = liquid_precipitation
     self.accumulation_period = accumulation_period
+    self.valid_fields_bitmask = 0x0000
     super(observation, self).__init__()
+    
+  def set_valid_fieldsbitmask(self, visibility=False, windtype=False, cloudcover=False, winddirection=False, windspeed=False, \
+                              temperature=False, dewpoint=False, relativehumidity=False, pressure=False, sea_lvl_pressure=False, \
+                              pressure_change=False, liquid_precipitation=False):
+    
+    if visibility:
+      self.set_valid_field(self.PARAM_VISIBILITY)
+    if windtype:
+      self.set_valid_field(self.PARAM_WINDTYPE)
+    if cloudcover:
+      self.set_valid_field(self.PARAM_CLOUDCOVER)
+    if winddirection:
+      self.set_valid_field(self.PARAM_WINDDIRECTION)
+    if windspeed:
+      self.set_valid_field(self.PARAM_WINDSPEED)
+    if temperature:
+      self.set_valid_field(self.PARAM_TEMPERATURE)
+    if dewpoint:
+      self.set_valid_field(self.PARAM_DEWPOINT)
+    if relativehumidity:
+      self.set_valid_field(self.PARAM_RELATIVEHUMIDITY)
+    if pressure:
+      self.set_valid_field(self.PARAM_PRESSURE)
+    if sea_lvl_pressure:
+      self.set_valid_field(self.PARAM_SEA_LVL_PRESSURE)
+    if pressure_change:
+      self.set_valid_field(self.PARAM_PRESSURE_CHANGE)
+    if liquid_precipitation:
+      self.set_valid_field(self.PARAM_LIQUID_PRECIPTATION)
+    
+  def set_valid_field(self, parameter_field, is_valid=True):
+    bit_value = 1 if is_valid else 0
+    self.valid_fields_bitmask = self.valid_fields_bitmask | (bit_value << parameter_field)
 
-
+    
+    
