@@ -32,7 +32,7 @@ import xmlrpclib
 import Queue
 from xml.etree import ElementTree as ET
 from rave_defines import QFILE
-
+import threading
 
 ## Job queue Exception
 class PGF_JobQueue_isFull_Error(Exception):
@@ -47,7 +47,7 @@ class PGF_JobQueue(dict):
     # which means unlimited. 
     def __init__(self, maxsize=0):
         self.maxsize = maxsize
-
+        self.lock = threading.Lock()
 
     ## Queue a job for processing. All jobs are calls to the \ref generate method.
     # @param algorithm_entry, an Element object that contains all the information
@@ -56,11 +56,15 @@ class PGF_JobQueue(dict):
     # @param arguments, a list of argument key-value pairs.
     # @param jobid string unique ID of that job.
     def queue_job(self, algorithm_entry, files, arguments, jobid):
-        if self.maxsize == 0 or 0 < self.qsize() < self.maxsize:
-            merge(algorithm_entry, files, arguments, jobid)
-            self[jobid] = algorithm_entry
-        else:
-            raise PGF_JobQueue_isFull_Error 
+        self.lock.acquire()
+        try:
+            if self.maxsize == 0 or 0 < self.qsize() < self.maxsize:
+                merge(algorithm_entry, files, arguments, jobid)
+                self[jobid] = algorithm_entry
+            else:
+                raise PGF_JobQueue_isFull_Error
+        finally:
+          self.lock.release() 
 
 
     # @returns the number of jobs in the queue 
@@ -72,24 +76,31 @@ class PGF_JobQueue(dict):
     # @param jobid string containing the job identifier
     # @returns string either OK or that the job can't be found
     def task_done(self, jobid):
-        if self.has_key(jobid):
-            job = self.pop(jobid)
-            #self.dump()  # Really necessary
-            return "OK"
-        else:
-            return "Job queue does not have job ID=%s" % jobid
+        self.lock.acquire()
+        try:
+            if self.has_key(jobid):
+                job = self.pop(jobid)
+                return "OK"
+            else:
+                return "Job queue does not have job ID=%s" % jobid
+        finally:
+          self.lock.release()
 
 
     # Dumps the queue to XML file
     # @param filename string of the file to which to dump the queue
     def dump(self, filename=QFILE):
-        q = """<?xml version="1.0" encoding="UTF-8"?>\n"""
-        root = ET.Element("generate-queue")
-        for jobid, job in self.items():
-            root.append(job)
-        fd = open(filename, 'w')
-        fd.write(q + ET.tostring(root))
-        fd.close()
+        self.lock.acquire()
+        try:
+            q = """<?xml version="1.0" encoding="UTF-8"?>\n"""
+            root = ET.Element("generate-queue")
+            for jobid, job in self.items():
+                root.append(job)
+            fd = open(filename, 'w')
+            fd.write(q + ET.tostring(root))
+            fd.close()
+        finally:
+          self.lock.release()
 
 
     # Loads the queue from XML file

@@ -35,7 +35,6 @@ import BaltradFrame
 import _pyhl
 from rave_defines import DEX_SPOE, REGFILE, PGFs, LOGID, LOGLEVEL, PGF_HOST, PGF_PORT
 
-
 METHODS = {'generate' :  '("algorithm",[files],[arguments])',
            'get_quality_controls' : '',
            'get_areas' : '',
@@ -61,8 +60,9 @@ class RavePGF():
     self._pid = os.getpid()
     self._job_counter = 0
     self._jobid = "%i-0" % self._pid
-    self.logger = rave_pgf_logger.rave_pgf_stdout_client()
+    self.logger = rave_pgf_logger.rave_pgf_syslog_client()
     self._algorithm_registry = None
+    self.runner = None
     self.queue = None
     self.pool = None
     self._client = None
@@ -134,6 +134,8 @@ class RavePGF():
       self._dump_queue()
       if self.pool:
         self.pool.terminate()
+      if self.runner:
+        self.runner.terminate()
       return "Killed softly"
     else:
       self.logger.warning("%s: Security breach? Did some scoundrel just try to shut us down?" % self.name)
@@ -180,7 +182,8 @@ class RavePGF():
     if self.queue.qsize() > 0:
       for jobid, job in self.queue.items():
         algorithm, files, arguments = rave_pgf_qtools.split(job) 
-        result = self.pool.apply_async(generate, (jobid, algorithm.tag, files, arguments))
+        #result = self.pool.apply_async(generate, (jobid, algorithm.tag, files, arguments))
+        self.runner.add(generate, jobid, algorithm.tag, files, arguments)
 
 
   ## Internal direct executor of the product generation algorithms. This will
@@ -235,7 +238,8 @@ class RavePGF():
       #self._dump_queue()  # Really necessary each time?
 
       self.logger.info("%s: ID=%s Dispatching request for %s" % (self.name, jobid, algorithm))
-      result = self.pool.apply_async(generate, (jobid, algorithm, files, arguments))
+      self.runner.add(generate, jobid, algorithm, files, arguments)
+      #result = self.pool.apply_async(generate, (jobid, algorithm, files, arguments))
     except Exception, err:
       #err_msg = traceback.format_exc()
       #self.logger.error("%s: ID=%s failed. Check this out:\n%s" % (self.name, jobid, err_msg))
@@ -250,11 +254,9 @@ class RavePGF():
   def get_quality_controls(self):
     result = []
     try:
-      self.logger.info("PLUGINS")
       import rave_pgf_quality_registry
       names = rave_pgf_quality_registry.get_plugins()
       for n in names:
-        self.logger.info("NAME = %s"%n)
         result.append((n, "%s quality control"%n))
     except Exception, e:
       self.logger.exception("Failed to get quality controls")
@@ -416,9 +418,13 @@ def generate(jobid, algorithm, files, arguments, host=PGF_HOST, port=PGF_PORT):
     pgf = RavePGF()
     pgf._jobid = jobid
     pgf._algorithm_registry = copy(PGF_REGISTRY)  # Less flexible than reading it each time
-    ret = pgf._generate(algorithm, files, arguments)
+    try:
+      ret = pgf._generate(algorithm, files, arguments)
+    except:
+      pgf.logger.exception("Failure during product generation")
     pgf._client = xmlrpclib.ServerProxy("http://%s:%i/RAVE" % (host, port), verbose=False)
     pgf._client.job_done(jobid)
+    return jobid
 
 
 if __name__ == "__main__":

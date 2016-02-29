@@ -32,6 +32,7 @@ import multiprocessing, rave_mppool
 import rave_pgf_registry, rave_pgf_logger, rave_pgf_qtools
 from rave_daemon import Daemon
 from rave_defines import PIDFILE, PGF_HOST, PGF_PORT, STDOE, REGFILE, PGFs, LOGLEVEL
+from algorithm_runner import algorithm_runner
 
 
 ## Stub class for allowing server POSTs only to one place, providing
@@ -87,7 +88,8 @@ class rave_pgf_server(Daemon):
     self.server.instance._algorithm_registry = rave_pgf_registry.PGF_Registry(filename=REGFILE)
     self.server.instance.queue = rave_pgf_qtools.PGF_JobQueue()
     self.server.instance._load_queue()
-    self.server.instance.pool = rave_mppool.RavePool(PGFs)
+    self.server.instance.runner = algorithm_runner(PGFs)
+    #self.server.instance.pool = rave_mppool.RavePool(PGFs)
     
     self.server.register_introspection_functions()
     atexit.register(self.server.instance._dump_queue)

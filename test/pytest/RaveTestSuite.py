@@ -24,6 +24,7 @@ Test suite for rave
 @date 2009-10-12
 '''
 import unittest, os
+
 from RaveTest import *
 from PyPolarVolumeTest import *
 from PyPolarScanTest import *
@@ -60,6 +61,8 @@ from rave_qitotal_quality_plugin_test import *
 from rave_pgf_quality_registry_mgr_test import *
 from rave_quality_chain_registry_test import *
 from odc_hac_test import *
+
+from algorithm_runner_test import *
 
 try:
   import mock
