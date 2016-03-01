@@ -50,7 +50,7 @@ class AlgorithmRunnerTest(unittest.TestCase):
     self.assertTrue(set(["a.h5","b.h5"]) == set(job.files()))
     self.assertTrue(set(["--date=20150101","--time=101112","--algorithm_id=123"]) == set(job.arguments()))
     self.assertEquals(0, job.priority())
-    self.assertEquals(123, job.algorithmid())
+    self.assertEquals("123", job.algorithmid())
     self.assertEquals("20150101", job.date())
     self.assertEquals("101112", job.time())
     
@@ -65,6 +65,11 @@ class AlgorithmRunnerTest(unittest.TestCase):
     self.assertEquals(job, job3)
     self.assertNotEquals(job, job4)
     self.assertNotEquals(job, job5)
+
+  def test_algorithm_job_eq_with_str_as_algorithm_id(self):
+    job = algorithm_runner.algorithm_job(os.path, "123-432", "an.algorithm",["a.h5","b.h5"], ["--date=20150101","--time=101112","--algorithm_id=abc-123"])
+    job2 = algorithm_runner.algorithm_job(os.path, "123", "an.algorithm",["b.h5"], ["--date=20150101","--time=101112","--algorithm_id=abc-123"])
+    self.assertEquals(job, job2)
 
   def test_algorithm_job_priority_algorithm(self):
     job = algorithm_runner.algorithm_job(os.path, "123-432", "an.algorithm",["a.h5","b.h5"], ["--date=20150101","--time=101112"])
