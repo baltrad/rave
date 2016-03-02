@@ -16,7 +16,7 @@ logger = rave_pgf_logger.rave_pgf_syslog_client()
 # get higher priority that old files.
 # 
 class algorithm_job(object):
-  def __init__(self, func, jobid, algorithm, files, arguments):
+  def __init__(self, func, jobid, algorithm, files, arguments, jobdone=None):
     self._func = func
     self._jobid = jobid
     self._algorithm = algorithm
@@ -24,6 +24,7 @@ class algorithm_job(object):
     self._arguments = arguments
     self._priority = 1
     self._algorithmid = -1
+    self._jobdone=jobdone
     algorithm_id = self.get_string_from_arguments(arguments, "--algorithm_id", None)
     if algorithm_id != None:
       self._priority = 0
@@ -83,7 +84,11 @@ class algorithm_job(object):
   
   def mergeable(self):
     return self._mergeable
-          
+  
+  def jobdone(self):
+    if self._jobdone != None:
+      self._jobdone(self._jobid)
+
   def __eq__(self, other):
     if other == None:
       return False
@@ -146,15 +151,16 @@ class algorithm_runner(object):
   # If queue already contains an algorithm that is matching a previously added algorithm,
   # its contant will be replaced (files and arguments).
   #
-  def add(self, func, jobid, algorithm, files, arguments):
+  def add(self, func, jobid, algorithm, files, arguments, jobdone=None):
     self.lock.acquire()
     try:
-      a = algorithm_job(func, jobid, algorithm, files, arguments)
+      a = algorithm_job(func, jobid, algorithm, files, arguments, jobdone)
       ##
       # To avoid duplicate jobs
       if a.mergeable():
         for qi in self.queue.queue:
           if qi.date() != None and qi.time() != None and qi == a:
+            qi.jobdone() # We must let invoker know that this job is done
             qi.setJobid(jobid)
             qi.setArguments(arguments)
             qi.setFiles(files)

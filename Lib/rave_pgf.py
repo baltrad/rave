@@ -183,7 +183,7 @@ class RavePGF():
       for jobid, job in self.queue.items():
         algorithm, files, arguments = rave_pgf_qtools.split(job) 
         #result = self.pool.apply_async(generate, (jobid, algorithm.tag, files, arguments))
-        self.runner.add(generate, jobid, algorithm.tag, files, arguments)
+        self.runner.add(generate, jobid, algorithm.tag, files, arguments, self.job_done)
 
 
   ## Internal direct executor of the product generation algorithms. This will
@@ -238,7 +238,7 @@ class RavePGF():
       #self._dump_queue()  # Really necessary each time?
 
       self.logger.info("%s: ID=%s Dispatching request for %s" % (self.name, jobid, algorithm))
-      self.runner.add(generate, jobid, algorithm, files, arguments)
+      self.runner.add(generate, jobid, algorithm, files, arguments, self.job_done)
       #result = self.pool.apply_async(generate, (jobid, algorithm, files, arguments))
     except Exception, err:
       #err_msg = traceback.format_exc()
