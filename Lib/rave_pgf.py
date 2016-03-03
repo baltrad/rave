@@ -60,7 +60,7 @@ class RavePGF():
     self._pid = os.getpid()
     self._job_counter = 0
     self._jobid = "%i-0" % self._pid
-    self.logger = rave_pgf_logger.rave_pgf_syslog_client()
+    self.logger = rave_pgf_logger.create_logger()
     self._algorithm_registry = None
     self.runner = None
     self.queue = None

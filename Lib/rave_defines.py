@@ -136,6 +136,8 @@ if sys.platform == "darwin":
     SYSLOG = "/var/run/syslog"
 else:
     SYSLOG = "/dev/log"
+    
+LOGGER_TYPE="syslog" # Can be stdout or logfile but logfile might result in unordered log entries since there will be more than one process writing to same file
 
 ODIM_SOURCE_FILE = os.path.join(RAVECONFIG, 'odim_source.xml')
 

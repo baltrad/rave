@@ -28,7 +28,7 @@ import odim_source
 import rave_pgf_quality_registry
 import rave_pgf_logger
 
-logger = rave_pgf_logger.rave_pgf_syslog_client()
+logger = rave_pgf_logger.create_logger()
 
 class rave_quality_chain_plugin(rave_quality_plugin):
   ##

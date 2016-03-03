@@ -39,7 +39,7 @@ from rave_defines import RAVE_TILE_COMPOSITING_PROCESSES, RAVE_QUALITY_CONTROL_P
 import rave_tempfile
 import odim_source
 
-logger = rave_pgf_logger.rave_pgf_syslog_client()
+logger = rave_pgf_logger.create_logger()
 
 ##
 # The area registry to be used by this composite generator.

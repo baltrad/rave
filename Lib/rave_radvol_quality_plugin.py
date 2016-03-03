@@ -27,7 +27,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 from rave_quality_plugin import rave_quality_plugin
 import _polarscan, _polarvolume
 import rave_pgf_logger
-logger = rave_pgf_logger.rave_pgf_syslog_client()
+logger = rave_pgf_logger.create_logger()
 
 def should_perform_qc_process(reprocess, obj, how_task):
   if reprocess:

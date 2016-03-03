@@ -104,7 +104,7 @@ class AlgorithmRunnerTest(unittest.TestCase):
   def test_invoke_jobdone_with_no_cb(self):
     job = algorithm_runner.algorithm_job(os.path, "123-432", "an.algorithm",["a.h5","b.h5"], ["--date=20150101","--time=101112","--algorithm_id=123"])
     job.jobdone() # No exception should be called
-  
+
 if __name__ == "__main__":
     unittest.main()
 

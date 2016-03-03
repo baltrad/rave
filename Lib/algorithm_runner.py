@@ -7,7 +7,7 @@ import threading
 from rave_mppool import *
 import rave_pgf_logger
 
-logger = rave_pgf_logger.rave_pgf_syslog_client()
+logger = rave_pgf_logger.create_logger()
 
 ##
 # Job that supports the wanted priority handling that we want from the PriorityQueue
@@ -160,6 +160,7 @@ class algorithm_runner(object):
       if a.mergeable():
         for qi in self.queue.queue:
           if qi.date() != None and qi.time() != None and qi == a:
+            logger.debug("[algorithm_runner] Merging %s with %s"%(a.jobid(), qi.jobid()))
             qi.jobdone() # We must let invoker know that this job is done
             qi.setJobid(jobid)
             qi.setArguments(arguments)
@@ -169,7 +170,7 @@ class algorithm_runner(object):
 
       if a != None:
         self.queue.put(a)
-        logger.info("[algorithm_runner] Added job: Current queue size: %d"%self.queue.qsize())
+        logger.debug("[algorithm_runner] Added job (%s) - %s to queue, queue size = %d"%(a.jobid(), a.algorithm(), self.queue.qsize()))
       self._handle_queue()
     finally:
       self.lock.release()
@@ -182,7 +183,7 @@ class algorithm_runner(object):
     try:
       self.queue.task_done()
       self.running_jobs = self.running_jobs - 1
-      logger.info("[algorithm_runner] Finished with job %s"%(`arg`))
+      logger.debug("[algorithm_runner] Finished with job %s"%(`arg`))
       self._handle_queue()
     finally:
       self.lock.release()
@@ -198,11 +199,13 @@ class algorithm_runner(object):
         job = self.queue.get(False)
       except queue.Empty:
         pass
-      logger.info("[algorithm_runner] Number of jobs in queue: %d"%self.queue.qsize())
       if job:
         self.pool.apply_async(run_algorithm, (job.func(), job.jobid(), job.algorithm(), job.files(), job.arguments()), callback=self.async_callback)
         self.running_jobs = self.running_jobs + 1
-        logger.info("[algorithm_runner] Applied job %s, currently %d jobs running"%(`job.jobid()`, self.running_jobs))
+        logger.info("[algorithm_runner] Applied job %s, currently %d jobs running and %d in queue"%(`job.jobid()`, self.running_jobs, self.queue.qsize()))
+      else:
+        logger.debug("[algorithm_runner] Queue empty")
+
   ##
   # Shutsdown and waits for pool to terminate
   def join(self):

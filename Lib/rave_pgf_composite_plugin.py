@@ -43,7 +43,7 @@ from compositing import compositing
 
 from rave_defines import CENTER_ID, GAIN, OFFSET, RAVE_PGF_QUALITY_FIELD_REPROCESSING
 
-logger = rave_pgf_logger.rave_pgf_syslog_client()
+logger = rave_pgf_logger.create_logger()
 
 ravebdb = None
 try:

@@ -247,8 +247,8 @@ def rave_pgf_syslog_client(name=LOGID, address=SYSLOG, facility=LOGFACILITY, lev
 ## stdout client.
 # @param level string log level
 # @returns logging.getLogger client that your application will use to send messages to stdout 
-def rave_pgf_stdout_client(level=LOGLEVEL):
-    myLogger = logging.getLogger("RAVE-STDOUT")
+def rave_pgf_stdout_client(name="RAVE-STDOUT", level=LOGLEVEL):
+    myLogger = logging.getLogger(name)
     if not len(myLogger.handlers):
         myLogger.setLevel(LOGLEVELS[level])
         handler = logging.StreamHandler(sys.stdout)
@@ -257,6 +257,38 @@ def rave_pgf_stdout_client(level=LOGLEVEL):
         handler.setFormatter(formatter)
         myLogger.addHandler(handler)
     return myLogger
+
+def rave_pgf_logfile_client(name="RAVE-LOGFILE", level=LOGLEVEL, logfile=LOGFILE, logfilesize=LOGFILESIZE, nrlogfiles=LOGFILES):
+    myLogger = logging.getLogger(name)
+    if not len(myLogger.handlers):
+        myLogger.setLevel(LOGLEVELS[level])
+        handler = logging.handlers.RotatingFileHandler(logfile,
+                                                       maxBytes = logfilesize,
+                                                       backupCount = nrlogfiles)
+        # The default formatter contains fractions of a second in the time.
+        formatter = logging.Formatter('%(asctime)-15s %(levelname)-8s %(message)s')
+        handler.setFormatter(formatter)
+        handler.lock = multiprocessing.RLock()
+        myLogger.addHandler(handler)
+    return myLogger  
+
+def create_logger(level=LOGLEVEL, name=None):
+  from rave_defines import LOGGER_TYPE
+  if LOGGER_TYPE == "stdout":
+    if name != None:
+      return rave_pgf_stdout_client(name, level)
+    else:
+      return rave_pgf_stdout_client(level)
+  elif LOGGER_TYPE == "logfile":
+    if name != None:
+      return rave_pgf_logfile_client(name=name, level=level)
+    else:
+      return rave_pgf_logfile_client(level=level)
+  else:
+    if name != None:
+      return rave_pgf_syslog_client(name=name, level=level)
+    else:
+      return rave_pgf_syslog_client(level=level)
 
 if __name__ == "__main__":
   # Functionality below for testing. Otherwise use command-line binary.

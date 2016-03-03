@@ -63,7 +63,7 @@ import rave_dom_db
 
 from rave_defines import CENTER_ID, GAIN, OFFSET, MERGETERMS
 
-logger = rave_pgf_logger.rave_pgf_syslog_client()
+logger = rave_pgf_logger.create_logger()
   
 ravebdb = None
 try:

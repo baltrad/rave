@@ -29,7 +29,7 @@ import odc_hac
 import rave_pgf_logger
 import _polarvolume, _polarscan
 
-logger = rave_pgf_logger.rave_pgf_syslog_client()
+logger = rave_pgf_logger.create_logger()
 
 class rave_zdiff_quality_plugin(rave_quality_plugin):
   ##

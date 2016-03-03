@@ -45,7 +45,7 @@ import area_registry
 
 from rave_defines import RAVE_TILE_REGISTRY
 
-logger = rave_pgf_logger.rave_pgf_syslog_client()
+logger = rave_pgf_logger.create_logger()
 
 _initialized = False
 _registry = {}

@@ -28,7 +28,7 @@ from rave_quality_plugin import rave_quality_plugin
 import _polarscan, _polarvolume
 import rave_pgf_logger
 from rave_pgf_scansun_plugin import writeHits
-logger = rave_pgf_logger.rave_pgf_syslog_client()
+logger = rave_pgf_logger.create_logger()
 
     
 class scansun_quality_plugin(rave_quality_plugin):

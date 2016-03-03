@@ -31,7 +31,7 @@ import rave_pgf_logger
 import rave_tempfile
 from baltrad.bdbclient import rest
 
-logger = rave_pgf_logger.rave_pgf_logger_client()
+logger = rave_pgf_logger.create_logger()
 
 class rave_bdb(object):
   config = {}

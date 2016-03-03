@@ -43,7 +43,7 @@ except:
 HEADER = "#Date    Time        Elevatn Azimuth   ElevSun   AzimSun    N  dBSunFlux   SunMean SunStdd   ZdrMean ZdrStdd  Refl  ZDR\n"
 FORMAT = "%08i %010.3f  %7.3f %7.2f   %7.4f  %7.4f    %4i  %9.2f %9.2f  %6.3f %9.2f  %6.3f  %s   %s\n"
 
-logger = rave_pgf_logger.rave_pgf_logger_client()
+logger = rave_pgf_logger.create_logger()
 
 ## Convenience function. Gets the NOD identifier from /what/source string.
 # Assumes that the NOD is there or can be looked up based on the WMO identifier.
