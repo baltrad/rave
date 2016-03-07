@@ -449,7 +449,7 @@ class fm12_parser(object):
         obs.pressure = float(int(token[1:4]))
       else:
         obs.pressure = int(token[1:5]) * 0.1
-      if obs.pressure < 800.0:
+      if obs.pressure < 90.0:
         obs.pressure = 1000.0 + obs.pressure
         
     except:
@@ -466,7 +466,7 @@ class fm12_parser(object):
         obs.sea_lvl_pressure = float(int(token[1:4]))
       else:
         obs.sea_lvl_pressure = int(token[1:5]) * 0.1
-      if obs.sea_lvl_pressure < 800.0:
+      if obs.sea_lvl_pressure < 90.0:
         obs.sea_lvl_pressure = 1000.0 + obs.sea_lvl_pressure
     except:
       pass
