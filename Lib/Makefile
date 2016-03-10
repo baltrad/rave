@@ -30,6 +30,9 @@ install:
 	@cp -v -f *.py "${prefix}/Lib/"
 	@mkdir -p "${prefix}/Lib/gadjust"
 	@cp -v -f gadjust/*.py "${prefix}/Lib/gadjust/"
+	@mkdir -p "${prefix}/Lib/migrate/versions"
+	@cp -v -f migrate/*.py "${prefix}/Lib/migrate/"
+	@cp -v -f migrate/versions/*.py "${prefix}/Lib/migrate/versions/"
 	@./make_script_update_config.sh "${prefix}/Lib/rave_defines.py"
 	@-echo "$(prefix)/Lib" > "$(SITEPACK_PYTHON)/rave.pth"
 	
