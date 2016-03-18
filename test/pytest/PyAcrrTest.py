@@ -191,7 +191,10 @@ class PyAcrrTest(unittest.TestCase):
     refAcrr = [-1.0, 1.0, 0.5, 0.5]
     refDist = [0.0, 100.0, 50.0, 100.0]
     Acrr = result.getData().flatten()
-    Dist = result.getQualityFieldByHowTask("se.smhi.composite.distance.radar").getData().flatten()
+    qfield = result.getQualityFieldByHowTask("se.smhi.composite.distance.radar")
+    self.assertAlmostEqual(0.0, qfield.getAttribute("what/offset"), 4)
+    self.assertAlmostEqual(1.0, qfield.getAttribute("what/gain"), 4)
+    Dist = qfield.getData().flatten()
     for i in range(len(refAcrr)):
       self.assertAlmostEquals(Acrr[i], refAcrr[i], 2)
       self.assertAlmostEquals(Dist[i], refDist[i], 2)

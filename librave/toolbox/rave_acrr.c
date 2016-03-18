@@ -367,7 +367,7 @@ CartesianParam_t* RaveAcrr_accumulate(RaveAcrr_t* self, double acpt, long N, dou
       !CartesianParam_setQuantity(param, "ACRR") ||
       !RaveAcrrInternal_addStringAttributeToField(qfield, "how/task", "se.smhi.composite.distance.radar") ||
       !RaveAcrrInternal_addDoubleAttributeToField(qfield, "what/gain", 1.0) ||
-      !RaveAcrrInternal_addDoubleAttributeToField(qfield, "what/offset", 1.0) ||
+      !RaveAcrrInternal_addDoubleAttributeToField(qfield, "what/offset", 0.0) ||
       !RaveAcrrInternal_addDoubleAttributeToParam(param, "what/prodpar", hours)) {
     RAVE_ERROR0("Failed to create cartesian parameter");
     goto done;
