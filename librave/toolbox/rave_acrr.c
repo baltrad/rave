@@ -43,6 +43,7 @@ struct _RaveAcrr_t {
   RaveField_t* dd; /**< Distances */
   RaveField_t* cd; /**< Distance counts */
   RaveField_t* sd; /**< Accumulations */
+  int nracc; /**< number of accumulations */
 };
 
 /*@{ Private functions */
@@ -71,6 +72,7 @@ static int RaveAcrr_constructor(RaveCoreObject* obj)
   self->dd = NULL;
   self->cd = NULL;
   self->sd = NULL;
+  self->nracc = 0;
   self->howtaskfieldname = RAVE_STRDUP("se.smhi.composite.distance.radar");
   if (self->howtaskfieldname == NULL) {
     RAVE_ERROR0("Could not intialized howtaskfieldname");
@@ -98,6 +100,7 @@ static int RaveAcrr_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj)
   self->dd = RAVE_OBJECT_CLONE(src->dd);
   self->cd = RAVE_OBJECT_CLONE(src->cd);
   self->sd = RAVE_OBJECT_CLONE(src->sd);
+  self->nracc = src->nracc;
   if (self->nd == NULL || self->dd == NULL ||
       self->cd == NULL || self->sd == NULL ||
       !RaveAcrrInternal_setQuantity(self, src->quantity) ||
@@ -157,6 +160,7 @@ static int RaveAcrrInternal_initialize(RaveAcrr_t* self, CartesianParam_t* param
   self->dd = RAVE_OBJECT_NEW(&RaveField_TYPE);
   self->cd = RAVE_OBJECT_NEW(&RaveField_TYPE);
   self->sd = RAVE_OBJECT_NEW(&RaveField_TYPE);
+  self->nracc = 0;
 
   if (self->nd == NULL || self->dd == NULL || self->cd == NULL || self->sd == NULL ||
       !RaveField_createData(self->nd, xsize, ysize, RaveDataType_SHORT) ||
@@ -302,11 +306,14 @@ int RaveAcrr_sum(RaveAcrr_t* self, CartesianParam_t* param, double zr_a, double 
   xsize = CartesianParam_getXSize(param);
   ysize = CartesianParam_getYSize(param);
 
+  self->nracc += 1;
+
   for (y = 0; y < ysize; y++) {
     for (x = 0; x < xsize; x++) {
-      double v = 0.0, acrr = 0.0;
+      double v = 0.0, acrr = 0.0, nracc = 0.0;
       RaveValueType rvt = CartesianParam_getConvertedValue(param, x, y, &v);
       RaveField_getValue(self->sd, x, y, &acrr);
+
       if (rvt == RaveValueType_DATA) {
         double dist = 0.0, avgdist = 0.0, ndist = 0.0;
         double rr = dBZ2R(v, zr_a, zr_b);
@@ -377,9 +384,15 @@ CartesianParam_t* RaveAcrr_accumulate(RaveAcrr_t* self, double acpt, long N, dou
 
   for (y = 0; y < ysize; y++) {
     for (x = 0; x < xsize; x++) {
-      double nval = 0.0, acrr = 0.0;
-      RaveField_getValue(self->nd, x, y, &nval);
+      double dnval = 0.0, acrr = 0.0;
+      long nval = 0;
+      RaveField_getValue(self->nd, x, y, &dnval);
       CartesianParam_setValue(param, x, y, self->nodata);
+      nval = (long)dnval;
+
+      if ((long)self->nracc < N) {
+        nval = nval + (N - self->nracc);
+      }
       if ((long)nval <= acceptN) {
         RaveField_getValue(self->sd, x, y, &acrr);
         if (acrr > 0.0) {

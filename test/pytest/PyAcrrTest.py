@@ -198,4 +198,46 @@ class PyAcrrTest(unittest.TestCase):
     for i in range(len(refAcrr)):
       self.assertAlmostEquals(Acrr[i], refAcrr[i], 2)
       self.assertAlmostEquals(Dist[i], refDist[i], 2)
+      
+  def test_accumulate_tofewfiles(self):
+    p1 = _cartesianparam.new()
+    p1.quantity = "DBZH"
+    p1.setData(reshape(array((255,0,0,0), uint8), (2,2)))
+    p1.nodata, p1.undetect, p1.gain, p1.offset = 255.0, 0.0, 0.5, -32.5
+    
+    d1 = _ravefield.new()
+    d1.addAttribute("what/gain", 2000.0)
+    d1.setData(reshape(array((0,100,75,50), uint8), (2,2)))
+    d1.addAttribute("how/task", "se.smhi.composite.distance.radar")
+
+    p1.addQualityField(d1)
+    
+    p2 = _cartesianparam.new()
+    p2.quantity = "DBZH"
+    p2.setData(reshape(array((0,255,0,0), uint8), (2,2)))
+    p2.nodata, p2.undetect, p2.gain, p2.offset = 255.0, 0.0, 0.5, -32.5
+
+    d2 = _ravefield.new()
+    d2.addAttribute("what/gain", 2000.0)
+    d2.setData(reshape(array((10,20,25,50), uint8), (2,2)))
+    d2.addAttribute("how/task", "se.smhi.composite.distance.radar")
+    p2.addQualityField(d2)
+
+    obj = _acrr.new()
+    obj.nodata = -1.0
+    obj.undetect = 0.0
+    obj.sum(p1, 200.0, 1.6)
+    obj.sum(p2, 200.0, 1.6)
+    
+    result = obj.accumulate(0.0, 3, 1.0)
+
+    self.assertAlmostEquals(1.0, result.getAttribute("what/prodpar"), 4)
+    self.assertEquals("ACRR", result.quantity)
+    self.assertAlmostEquals(-1.0, result.nodata, 4)
+    self.assertAlmostEquals(0.0, result.undetect, 4)
+    
+    refAcrr = [-1.0, -1.0, -1.0, -1.0]
+    Acrr = result.getData().flatten()
+    for i in range(len(refAcrr)):
+      self.assertAlmostEquals(Acrr[i], refAcrr[i], 2)
     
