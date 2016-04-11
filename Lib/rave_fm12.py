@@ -131,6 +131,7 @@ class fm12_parser(object):
   def parse(self, filename):
     fp = open(filename)
     data = fp.read()
+    fp.close()
     if data[:1] == '\x01':
       data = data[1:]
     data = data.lstrip().rstrip()

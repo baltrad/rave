@@ -53,7 +53,7 @@ class fm12_importer(object):
       c = fd.read()
       fd.close()
       try:
-        s.getpgid(int(c))
+        os.getpgid(int(c))
         return True
       except:
         return False
