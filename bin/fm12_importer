@@ -189,11 +189,13 @@ if __name__ == "__main__":
     logger.info("Activating catchup")
     importer.docatchup = catchup
     
-  if importer.isalive():
+  if len(args) > 0 and args[0] == "kill":
+    importer.killme()
+    sys.exit()
+  elif importer.isalive():
     logger.info("fm12_importer is already running")
     sys.exit()
-  
-  if len(args) > 0 and args[0] == "import":
+  elif len(args) > 0 and args[0] == "import":
     importer.import_file(fname)
     sys.exit()
   elif len(args) > 0 and args[0] == "daemon":
@@ -209,9 +211,7 @@ if __name__ == "__main__":
       logger.exception("Caught exception when running notifier loop %s"%`e.__str__()`)
     except SystemExit,e:
       logger.exception("Caught SystemExit when running notifier loop %s"%`e.__str__()`)
-  elif len(args) > 0 and args[0] == "kill":
-    importer.killme()
-    sys.exit()
+
   else:
     Usage(True,True)
     sys.exit()
