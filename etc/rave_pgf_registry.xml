@@ -8,4 +8,5 @@
 <eu.baltrad.beast.generateacrr function="generate" help="Generate ACRR plugin" module="rave_pgf_acrr_plugin"><arguments floats="zra,zrb" strings="date,time,quantity,distancefield,applygra" ints="hours,N,accept"/></eu.baltrad.beast.generateacrr>
 <eu.baltrad.beast.creategracoefficient function="generate" help="Generate GRA coefficient plugin" module="rave_pgf_gra_plugin"><arguments floats="zra,zrb" strings="date,time,quantity,distancefield,adjustmentfile" ints="interval,N,accept"/></eu.baltrad.beast.creategracoefficient>
 <eu.baltrad.beast.generatesite2d function="generate" help="Generate Site2D plugin" module="rave_pgf_site2D_plugin"><arguments floats="height,range,zrA,zrb,xscale,yscale" strings="area,quantity,method,date,time,anomaly-qc,prodpar,applygra,ignore-malfunc,ctfilter,pcsid,algorithm_id" /></eu.baltrad.beast.generatesite2d>
+<eu.baltrad.beast.applyqc function="generate" help="Apply quality controls on a polar volume" module="rave_pgf_apply_qc_plugin"><arguments strings="date,time,anomaly-qc,algorithm_id" /></eu.baltrad.beast.applyqc>
 </generate-registry>

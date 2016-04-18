@@ -172,6 +172,7 @@ class rave_db(object):
       event.listen(self._engine, "connect", psql_set_extra_float_digits)
   
     meta.bind = self._engine
+    self.Session = sessionmaker(bind=self._engine)
     
   def get_connection(self):
     """get a context managed connection to the database
@@ -206,8 +207,7 @@ class rave_db(object):
   # Adds an object to the associated table
   #
   def add(self, obj):
-    Session = sessionmaker(bind=self._engine)
-    session = Session()
+    session = self.Session()
     xlist = obj
     if not isinstance(obj, list):
       xlist = [obj]
@@ -223,8 +223,7 @@ class rave_db(object):
     session = None    
 
   def merge(self, obj):
-    Session = sessionmaker(bind=self._engine)
-    session = Session()
+    session = self.Session()
     xlist = obj
     if not isinstance(obj, list):
       xlist = [obj]
@@ -241,8 +240,7 @@ class rave_db(object):
     session = None    
     
   def get_session(self):
-    Session = sessionmaker(bind=self._engine)
-    session = Session()
+    session = self.Session()
     return contextlib.closing(session)
   
   def get_observations_in_bbox(self, ullon, ullat, lrlon, lrlat, startdt=None, enddt=None):

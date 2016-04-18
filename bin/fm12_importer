@@ -50,6 +50,8 @@ def Usage(brief=True,doexit=False):
     print "  --logfile=<log file> The file that log messages should be written to"
     print "  --verbose Print a more verbose debug information"
     print "  --pidfile=<pidfile> The process id file. Default [./fm12_importer.pid]"
+    print "  --suffix=<suffix> Specifies a synop file-suffix for the files to handle at the monitored path. Files that does not have this suffix will be ignored."
+    print "        If no suffix is provided, files with any type of suffix in the monitored directory will be handled."
     print "  --monitored=<path> a path to be monitored for synop files. [Default: None]"
     print "  --janitor Remove files that arrive in the input directory."
     print "  --catchup Process all files that have collected in the input directory. Otherwise only act on new files arriving."
@@ -82,9 +84,12 @@ def init_logger(logger, logfile, loglevel, daemon):
 class NotifierListener(pyinotify.ProcessEvent):
   ## Initializer
   # @param options variable options list
-  def __init__(self, importer, logger=None):
+  def __init__(self, importer, logger=None, suffix=None):
     self.importer = importer
     self.logger = logger
+    self.suffix = suffix
+    if self.suffix:
+      self.suffix = self.suffix.lstrip('.')
 
   ## Inherited from pyinotify. Reacts on when file is created and written
   # @param event object containing a path, probably ...
@@ -92,8 +97,9 @@ class NotifierListener(pyinotify.ProcessEvent):
     if self.logger != None:
       self.logger.debug("process_IN_CLOSE_WRITE")
     if event.pathname != None and not os.path.basename(event.pathname).startswith("."):
-      self.logger.info("IN_CLOSE_WRITE: Importing file %s"%event.pathname)
-      self.importer.import_file(event.pathname)
+      if not suffix or event.pathname.endswith("." + self.suffix):
+        self.logger.info("IN_CLOSE_WRITE: Importing file %s"%event.pathname)
+        self.importer.import_file(event.pathname)
 
   ## Inherited from pyinotify. Reacts on renaming.
   # @param event object containg path
@@ -101,8 +107,9 @@ class NotifierListener(pyinotify.ProcessEvent):
     if self.logger != None:
       self.logger.debug("process_IN_MOVED_TO")
     if event.pathname != None and not os.path.basename(event.pathname).startswith("."):
-      self.logger.info("IN_MOVED_TO: Importing file %s"%event.pathname)
-      self.importer.import_file(event.pathname)
+      if not suffix or event.pathname.endswith("." + self.suffix):
+        self.logger.info("IN_MOVED_TO: Importing file %s"%event.pathname)
+        self.importer.import_file(event.pathname)
 
 if __name__ == "__main__":
   optlist = []
@@ -113,7 +120,8 @@ if __name__ == "__main__":
                                    'conf=','uriproperty=',
                                    'file=', 
                                    'logfile=','verbose',
-                                   'pidfile=','monitored=',
+                                   'pidfile=', 'suffix=', 
+                                   'monitored=',
                                    'janitor','catchup', 
                                    'help'])
   except getopt.GetoptError, e:
@@ -126,6 +134,7 @@ if __name__ == "__main__":
   fname=None
   logfile=None
   pidfile="/tmp/fm12_importer.pid"
+  suffix=None
   monitored_dir=None
   runasdaemon=False
   janitor=False
@@ -155,6 +164,8 @@ if __name__ == "__main__":
       catchup = True
     elif o == "--pidfile":
       pidfile = a
+    elif o == "--suffix":
+      suffix = a
     elif o == "--help":
       Usage(False,True)
     else:
@@ -189,18 +200,20 @@ if __name__ == "__main__":
     logger.info("Activating catchup")
     importer.docatchup = catchup
     
-  if importer.isalive():
+  if len(args) > 0 and args[0] == "kill":
+    importer.killme()
+    sys.exit()
+  elif importer.isalive():
     logger.info("fm12_importer is already running")
     sys.exit()
-  
-  if len(args) > 0 and args[0] == "import":
+  elif len(args) > 0 and args[0] == "import":
     importer.import_file(fname)
     sys.exit()
   elif len(args) > 0 and args[0] == "daemon":
     importer.catchup()
 
     wm = pyinotify.WatchManager()
-    notifier = pyinotify.Notifier(wm, NotifierListener(importer, logger))
+    notifier = pyinotify.Notifier(wm, NotifierListener(importer, logger, suffix=suffix))
     # Only act on closed files, or whatever's been moved into in_dir
     wm.add_watch(importer.monitored_dir, MASK)
     try:
@@ -209,9 +222,7 @@ if __name__ == "__main__":
       logger.exception("Caught exception when running notifier loop %s"%`e.__str__()`)
     except SystemExit,e:
       logger.exception("Caught SystemExit when running notifier loop %s"%`e.__str__()`)
-  elif len(args) > 0 and args[0] == "kill":
-    importer.killme()
-    sys.exit()
+
   else:
     Usage(True,True)
     sys.exit()
