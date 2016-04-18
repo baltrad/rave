@@ -29,6 +29,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "raveutil.h"
 #include <string.h>
 #include "tnc.h"
+#include <math.h>
 
 #define TMINUS -5.0
 #define TPLUS 4.0
