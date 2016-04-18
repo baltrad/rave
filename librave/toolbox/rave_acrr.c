@@ -310,7 +310,7 @@ int RaveAcrr_sum(RaveAcrr_t* self, CartesianParam_t* param, double zr_a, double 
 
   for (y = 0; y < ysize; y++) {
     for (x = 0; x < xsize; x++) {
-      double v = 0.0, acrr = 0.0, nracc = 0.0;
+      double v = 0.0, acrr = 0.0;
       RaveValueType rvt = CartesianParam_getConvertedValue(param, x, y, &v);
       RaveField_getValue(self->sd, x, y, &acrr);
 

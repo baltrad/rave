@@ -24,14 +24,14 @@
 ###########################################################################
 -include ../def.mk
 
-CFLAGS= $(CCSHARED) $(OPTS) $(DEFS) -I../librave/toolbox -I../librave/pyapi \
+CFLAGS= $(CCSHARED) $(OPTS) $(DEFS) -I../librave/toolbox -I../librave/pyapi -I../librave/tnc \
 			-I../librave/scansun -I. $(INCLUDE_PYTHON) \
 			-I$(HLHDF_INCLUDE_DIR) $(NUMPY_INCLUDE_DIR) \
 			$(ZLIB_INCDIR) $(HDF5_INCDIR) $(PROJ_INCLUDE_DIR)
 
 # Linker flags
 #
-LDFLAGS= -L../librave/toolbox -L../librave/pyapi -L../librave/scansun -L. \
+LDFLAGS= -L../librave/toolbox -L../librave/pyapi -L../librave/tnc -L../librave/scansun -L. \
 			-L$(HLHDF_LIB_DIR) $(ZLIB_LIBDIR) $(HDF5_LIBDIR) $(PROJ_LIB_DIR)
 
 ifeq ($(EXPAT_SUPPRESSED), no)
@@ -51,7 +51,7 @@ CFLAGS+= -DPTHREAD_SUPPORTED
 PTHREAD_LIBRARY=-lpthread
 endif
 
-LIBRARIES= -lravetoolbox -lravepyapi -lhlhdf -lproj  $(EXPAT_LIBRARY) $(BUFR_LIBRARY) $(PTHREAD_LIBRARY)
+LIBRARIES= -lravetoolbox -lravepyapi -lhlhdf -lproj -lravetnc  $(EXPAT_LIBRARY) $(BUFR_LIBRARY) $(PTHREAD_LIBRARY)
 
 # --------------------------------------------------------------------
 # Fixed definitions

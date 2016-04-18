@@ -2,9 +2,9 @@
 
 SCANSUNINC= -I. $(NUMPY_INCLUDE_DIR) $(INCLUDE_PYTHON) -I$(HLHDF_INCLUDE_DIR) \
 	$(ZLIB_INCDIR) $(HDF5_INCDIR) $(PROJ_INCLUDE_DIR) \
-	-I../toolbox
+	-I../toolbox -I../tnc
 
-LDFLAGS+= -L. -L$(HLHDF_LIB_DIR) $(ZLIB_LIBDIR) $(HDF5_LIBDIR) $(PROJ_LIB_DIR) -L../toolbox
+LDFLAGS+= -L. -L$(HLHDF_LIB_DIR) $(ZLIB_LIBDIR) $(HDF5_LIBDIR) $(PROJ_LIB_DIR) -L../toolbox -L../tnc
 
 ifeq ($(EXPAT_SUPPRESSED), no)
 SCANSUNINC+= $(EXPAT_INCLUDE_DIR)
@@ -27,7 +27,7 @@ SCANSUNOBJS=	$(SCANSUNSOURCES:.c=.o)
 LIBRAVESCANSUN=	libravescansun.so
 SCANSUNMAIN= scansun_main.c
 SCANSUNBIN= scansun
-SCANSUNLIBS= -lravescansun -lravetoolbox -lhlhdf -lproj 
+SCANSUNLIBS= -lravescansun -lravetoolbox -lhlhdf -lproj  -lravetnc
 ifeq ($(BUFR_SUPPRESSED), no)
 SCANSUNLIBS+= -lOperaBufr
 endif 

@@ -39,6 +39,19 @@ typedef struct _RaveVprCorrection_t RaveVprCorrection_t;
 extern RaveCoreObjectType RaveVprCorrection_TYPE;
 
 /**
+ * Contains the value (usually the median reflectivity) and the number of observations used.
+ */
+typedef struct RaveVprValue_t {
+  double value; /**< the value */
+  int nrpoints; /**< the number of points */
+} RaveVprValue_t;
+
+typedef struct RaveHeightTemperature_t {
+  double height;
+  double temperature;
+} RaveHeightTemperature_t;
+
+/**
  * Sets the min limit for when the reflectivity should be seen as stratiform. All values
  * about this limit will be defined to be stratiform
  * @param[in] self - self
@@ -129,6 +142,61 @@ void RaveVprCorrection_setMaxDistance(RaveVprCorrection_t* self, double limit);
 double RaveVprCorrection_getMaxDistance(RaveVprCorrection_t* self);
 
 /**
+ * Sets the minus temperature used for ensuring that the temperatures are in a suitable range.
+ * Selection is based on that at least one of the temperatures must be lower than the minus temp and one above the plus temperature.
+ */
+void RaveVprCorrection_setMinusTemperature(RaveVprCorrection_t* self, double temp);
+
+/**
+ * Returns the minus temperature used for ensuring that the temperatures are in a suitable range.
+ * Selection is based on that at least one of the temperatures must be lower than the minus temp and one above the plus temperature.
+ */
+double RaveVprCorrection_getMinusTemperature(RaveVprCorrection_t* self);
+
+/**
+ * Sets the plus temperature used for ensuring that the temperatures are in a suitable range.
+ * Selection is based on that at least one of the temperatures must be lower than the minus temp and one above the plus temperature.
+ */
+void RaveVprCorrection_setPlusTemperature(RaveVprCorrection_t* self, double temp);
+
+/**
+ * Returns the plus temperature used for ensuring that the temperatures are in a suitable range.
+ * Selection is based on that at least one of the temperatures must be lower than the minus temp and one above the plus temperature.
+ */
+double RaveVprCorrection_getPlusTemperature(RaveVprCorrection_t* self);
+
+/**
+ * Sets the lowest dzdh slope that should be allowed above the bright band.
+ * The slope also has to be negative. This means that the allowed slope should be dzdh < slope < 0.
+ * @param[in] self - self
+ * @param[in] dzdh - the minimum dzdh slope
+ * @return 1 on success otherwise 0
+ */
+int RaveVprCorrection_setDzdh(RaveVprCorrection_t* self, double dzdh);
+
+/**
+ * Returns the lowest dzdh slope that should be allowed above the bright band.
+ * @param[in] self - self
+ * @return the minimum slope
+ */
+double RaveVprCorrection_getDzdh(RaveVprCorrection_t* self);
+
+/**
+ * Calculates the number of height intervals that will be used. This is essential for knowing the number
+ * of temperatures to provide when calling \ref RaveVprCorrection_getIdealVpr.
+ */
+int RaveVprCorrection_getNumberOfHeightIntervals(RaveVprCorrection_t* self);
+
+/**
+ * This should be called in order to get the appropriate temperatures. The returned array will
+ * contain the heights at which the evaluations will be performed.
+ * @param[in] self - self
+ * @param[out] nrHeights - the number of heights in the returned array
+ * @return the array on success otherwise NULL
+ */
+double* RaveVprCorrection_getHeights(RaveVprCorrection_t* self, int* nrHeights);
+
+/**
  * Separates stratiform and convective rain
  * @param[in] self - self
  * @param[in] pvol - the polar volume
@@ -141,8 +209,38 @@ PolarVolume_t* RaveVprCorrection_separateSC(RaveVprCorrection_t* self, PolarVolu
  * @param[in] self - self
  * @param[in] pvol - the polar volume from where the reflectivity array should be extracted
  * @param[in,out] nElements - the size of the returned array
- * @return an array containing the mean reflectivities for each profile height bin
+ * @return an array containing the median reflectivities for each profile height bin
  */
-double* RaveVprCorrection_getReflectivityArray(RaveVprCorrection_t* self, PolarVolume_t* pvol, int* nElements);
+RaveVprValue_t* RaveVprCorrection_getReflectivityArray(RaveVprCorrection_t* self, PolarVolume_t* pvol, int* nElements);
+
+/**
+ * Returns the ideal vpr.
+ *
+ * @param[in] self - self
+ * @param[in] pvol - the polar volume from where the reflectivity array should be extracted
+ * @param[in,out] nElements - the size of the returned array
+ * @return an array containing the median reflectivities for each profile height bin
+ */
+double* RaveVprCorrection_getIdealVpr(RaveVprCorrection_t* self, PolarVolume_t* pvol, int htsize, RaveHeightTemperature_t* htarray, int* nElements);
+
+/** BELOW HERE ARE SOME HELPERS */
+
+/**
+ * Least square fit of a first degree polynomal.
+ * @param[in] nelem - number of x & y elements
+ * @param[in] x - the x array
+ * @param[in] y - the y array
+ * @param[out] a - the constant a in ax + b
+ * @param[out] b - the constant b in ax + b
+ * @return 1 on success otherwise 0
+ */
+int RaveVprCorrectionHelper_lsqFirstOrder(int nelem, double* x, double* y, double* a, double* b);
+
+/**
+ * Reads a H1D file to get temperatures and heights
+ * @param[in] filename - the name of the h1d file
+ * @param[out] nitems - the number of the temperatures
+ */
+RaveHeightTemperature_t* RaveVprCorrectionHelper_readH1D(const char* filename, int* ntemps);
 
 #endif /* RAVE_VPR_CORRECTION_H */

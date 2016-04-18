@@ -123,6 +123,9 @@ Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_DEBUG,msg,arg1,arg2,arg3)
 #define RAVE_DEBUG4(msg,arg1,arg2,arg3,arg4) \
 Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_DEBUG,msg,arg1,arg2,arg3,arg4)
 
+#define RAVE_DEBUG7(msg,arg1,arg2,arg3,arg4,arg5,arg6,arg7) \
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_DEBUG,msg,arg1,arg2,arg3,arg4,arg5,arg6,arg7)
+
 #define RAVE_DEPRECATED0(msg) \
 Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_DEPRECATED,msg)
 
@@ -152,6 +155,9 @@ Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_INFO,msg,arg1,arg2,arg3)
 
 #define RAVE_INFO4(msg,arg1,arg2,arg3,arg4) \
 Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_INFO,msg,arg1,arg2,arg3,arg4)
+
+#define RAVE_INFO7(msg,arg1,arg2,arg3,arg4,arg5,arg6,arg7) \
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_INFO,msg,arg1,arg2,arg3,arg4,arg5,arg6,arg7)
 
 #define RAVE_WARNING0(msg) \
 Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_WARNING,msg)
@@ -236,6 +242,9 @@ abort(); \
 /** Debug macro taking one text string and four arguments.*/
 #define RAVE_DEBUG4(msg,arg1,arg2,arg3,arg4)
 
+/** Debug macro taking one text string and seven arguments.*/
+#define RAVE_DEBUG7(msg,arg1,arg2,arg3,arg4,arg5,arg6,arg7)
+
 /** Deprecated macro taking one text string.*/
 #define RAVE_DEPRECATED0(msg)
 
@@ -270,6 +279,10 @@ Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_INFO,msg,arg1,arg2,arg3)
 /** Info macro taking one text string and four arguments.*/
 #define RAVE_INFO4(msg,arg1,arg2,arg3,arg4) \
 Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_INFO,msg,arg1,arg2,arg3,arg4)
+
+/** Info macro taking one text string and seven arguments.*/
+#define RAVE_INFO7(msg,arg1,arg2,arg3,arg4,arg5,arg6,arg7) \
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_INFO,msg,arg1,arg2,arg3,arg4,arg5,arg6,arg7)
 
 /** Warning macro taking one text string.*/
 #define RAVE_WARNING0(msg) \

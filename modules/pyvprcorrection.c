@@ -142,11 +142,49 @@ static PyObject* _pyvprcorrection_new(PyObject* self, PyObject* args)
   return (PyObject*)result;
 }
 
+/**
+ * Returns the number of height intervals that the current heightLimit / profileHeight setting gives.
+ * @param[in] self this instance.
+ * @param[in] args arguments for creation (NOT USED).
+ * @return the number of height intervals
+ */
+static PyObject* _pyvprcorrection_getNumberOfHeightIntervals(PyVprCorrection* self, PyObject* val)
+{
+  return PyInt_FromLong(RaveVprCorrection_getNumberOfHeightIntervals(self->vpr));
+}
+
+/**
+ * Returns an height array with all actual heights for the current heightLimit / profileHeight setting.
+ * @param[in] self this instance.
+ * @param[in] args arguments for creation (NOT USED).
+ * @return the height array
+ */
+static PyObject* _pyvprcorrection_getHeights(PyVprCorrection* self, PyObject* val)
+{
+  int nElem = 0;
+  double* elems = NULL;
+  PyObject* pylist = NULL;
+
+  elems = RaveVprCorrection_getHeights(self->vpr, &nElem);
+  if (elems != NULL && nElem > 0) {
+    int i = 0;
+    pylist = PyList_New(nElem);
+    for (i = 0; i < nElem; i++) {
+      PyList_SetItem(pylist, i, PyFloat_FromDouble(elems[i]));
+    }
+  } else {
+    raiseException_gotoTag(done, PyExc_RuntimeError, "Could not generate height array");
+  }
+done:
+  RAVE_FREE(elems);
+  return pylist;
+}
+
 static PyObject* _pyvprcorrection_getReflectivityArray(PyVprCorrection* self, PyObject* val)
 {
   PyObject* pyo = NULL;
   int nElem = 0;
-  double* elems = NULL;
+  RaveVprValue_t* elems = NULL;
   PyObject* pylist = NULL;
   if (!PyArg_ParseTuple(val, "O", &pyo)) {
     return NULL;
@@ -159,7 +197,7 @@ static PyObject* _pyvprcorrection_getReflectivityArray(PyVprCorrection* self, Py
     int i = 0;
     pylist = PyList_New(nElem);
     for (i = 0; i < nElem; i++) {
-      PyList_SetItem(pylist, i, PyFloat_FromDouble(elems[i]));
+      PyList_SetItem(pylist, i, PyFloat_FromDouble(elems[i].value));
     }
   } else {
     raiseException_gotoTag(done, PyExc_RuntimeError, "Could not generate reflectivity array");
@@ -167,6 +205,140 @@ static PyObject* _pyvprcorrection_getReflectivityArray(PyVprCorrection* self, Py
 done:
   RAVE_FREE(elems);
   return pylist;
+}
+
+static PyObject* _pyvprcorrection_getIdealVpr(PyVprCorrection* self, PyObject* val)
+{
+  PyObject *pyo = NULL, *pyhto = NULL;
+  int nElem = 0, i = 0;
+  double* elems = NULL;
+  RaveHeightTemperature_t* htarray = NULL;
+  int htsize = 0;
+
+  PyObject* pylist = NULL;
+
+  if (!PyArg_ParseTuple(val, "OO", &pyo, &pyhto)) {
+    return NULL;
+  }
+  if (!PyPolarVolume_Check(pyo)) {
+    raiseException_returnNULL(PyExc_TypeError, "Must provide a polar volume to get a relevant reflectivity array");
+  }
+  if (!PyList_Check(pyhto)) {
+    raiseException_returnNULL(PyExc_TypeError, "Must provide a list with height temperature tuples");
+  }
+  htsize = PyList_Size(pyhto);
+  htarray = RAVE_MALLOC(sizeof(RaveHeightTemperature_t) * htsize);
+  if (htarray == NULL) {
+    raiseException_gotoTag(done, PyExc_RuntimeError, "Failed to allocate memory");
+  }
+
+  for (i = 0; i < htsize; i++) {
+    PyObject* pyval = PyList_GetItem(pyhto, (Py_ssize_t)i); /* Borrows reference */
+    double height = 0.0, temperature = 0.0;
+
+    if (!PyArg_ParseTuple(pyval, "dd", &height, &temperature)) {
+      raiseException_gotoTag(done, PyExc_TypeError, "Height temperature list must contain tuples with height temperature");
+    }
+    htarray[i].height = height;
+    htarray[i].temperature = temperature;
+  }
+
+  elems = RaveVprCorrection_getIdealVpr(self->vpr, ((PyPolarVolume*)pyo)->pvol, htsize, htarray, &nElem);
+  if (elems != NULL && nElem > 0) {
+    int i = 0;
+    pylist = PyList_New(nElem);
+    for (i = 0; i < nElem; i++) {
+      PyList_SetItem(pylist, i, PyFloat_FromDouble(elems[i]));
+    }
+  } else {
+    raiseException_gotoTag(done, PyExc_RuntimeError, "Could not generate Ideal VPR array");
+  }
+
+done:
+  RAVE_FREE(htarray);
+  RAVE_FREE(elems);
+  return pylist;
+}
+
+PyObject* _pyvprcorrectionhelper_lsqFirstOrder(PyObject* self, PyObject* args)
+{
+  PyObject* pyobj = NULL;
+  PyObject* result = NULL;
+  double *x = NULL, *y = NULL, a = 0.0, b = 0.0;
+  int nelem = 0.0;
+  int i = 0;
+
+  if(!PyArg_ParseTuple(args, "O", &pyobj)) {
+    return NULL;
+  }
+  if (!PyList_Check(pyobj)) {
+    raiseException_returnNULL(PyExc_TypeError, "A list of tuples with (x,y) pairs required");
+  }
+  nelem = PyList_Size(pyobj);
+  x = RAVE_MALLOC(sizeof(double) * nelem);
+  y = RAVE_MALLOC(sizeof(double) * nelem);
+  if (x == NULL || y == NULL) {
+    raiseException_gotoTag(done, PyExc_RuntimeError, "Failed to allocate memory");
+  }
+  for (i = 0; i < nelem; i++) {
+    double xval, yval;
+    PyObject* pyval = PyList_GetItem(pyobj, (Py_ssize_t)i); /* Borrows reference */
+    if (!PyArg_ParseTuple(pyval, "dd", &xval, &yval)) {
+      Py_XDECREF(pyval);
+      goto done;
+    }
+    x[i] = xval;
+    y[i] = yval;
+  }
+  if (!RaveVprCorrectionHelper_lsqFirstOrder(nelem, x, y, &a, &b)) {
+    raiseException_gotoTag(done, PyExc_FloatingPointError, "Failed to calculate a & b coefficients");
+  }
+
+  result = Py_BuildValue("(dd)", a, b);
+done:
+  RAVE_FREE(x);
+  RAVE_FREE(y);
+  return result;
+}
+
+PyObject* _pyvprcorrectionhelper_readH1D(PyObject* self, PyObject* args)
+{
+  char* filename;
+  int nitems = 0, i = 0;
+  RaveHeightTemperature_t* profile = NULL;
+  PyObject *pylist = NULL, *result = 0;
+  PyObject *pyheight = NULL, *pytemp = NULL;
+
+  if(!PyArg_ParseTuple(args, "s", &filename)) {
+    return NULL;
+  }
+  profile = RaveVprCorrectionHelper_readH1D(filename, &nitems);
+  if (profile != NULL) {
+    pylist = PyList_New(nitems);
+    if (pylist != NULL) {
+      for (i = 0; i < nitems; i++) {
+        pyheight = PyFloat_FromDouble(profile[i].height);
+        pytemp = PyFloat_FromDouble(profile[i].temperature);
+        if (pyheight != NULL && pytemp != NULL) {
+          PyList_SetItem(pylist, i, Py_BuildValue("(OO)", pyheight, pytemp)); /* SET ITEM STEAL REFERENCE */
+        } else {
+          raiseException_gotoTag(done, PyExc_RuntimeError, "Failed to create height or temperature objects");
+        }
+        Py_XDECREF(pyheight);
+        Py_XDECREF(pytemp);
+      }
+      result = pylist;
+      pylist = NULL;
+    } else {
+      raiseException_gotoTag(done, PyExc_RuntimeError, "Failed to create list");
+    }
+  } else {
+    raiseException_gotoTag(done, PyExc_RuntimeError, "Failed to read profile");
+  }
+
+done:
+  Py_XDECREF(pylist);
+  return result;
 }
 
 /**
@@ -179,7 +351,13 @@ static struct PyMethodDef _pyvprcorrection_methods[] =
   {"profileHeight", NULL},
   {"minDistance", NULL},
   {"maxDistance", NULL},
+  {"plusTemperature", NULL},
+  {"minusTemperature", NULL},
+  {"dzdh", NULL},
   {"getReflectivityArray", (PyCFunction) _pyvprcorrection_getReflectivityArray, 1},
+  {"getIdealVpr", (PyCFunction) _pyvprcorrection_getIdealVpr, 1},
+  {"getNumberOfHeightIntervals", (PyCFunction) _pyvprcorrection_getNumberOfHeightIntervals, 1},
+  {"getHeights", (PyCFunction) _pyvprcorrection_getHeights, 1},
   {NULL, NULL } /* sentinel */
 };
 
@@ -200,6 +378,12 @@ static PyObject* _pyvprcorrection_getattr(PyVprCorrection* self, char* name)
     return PyFloat_FromDouble(RaveVprCorrection_getMinDistance(self->vpr));
   } else if (strcmp("maxDistance", name) == 0) {
     return PyFloat_FromDouble(RaveVprCorrection_getMaxDistance(self->vpr));
+  } else if (strcmp("plusTemperature", name) == 0) {
+    return PyFloat_FromDouble(RaveVprCorrection_getPlusTemperature(self->vpr));
+  } else if (strcmp("minusTemperature", name) == 0) {
+    return PyFloat_FromDouble(RaveVprCorrection_getMinusTemperature(self->vpr));
+  } else if (strcmp("dzdh", name) == 0) {
+    return PyFloat_FromDouble(RaveVprCorrection_getDzdh(self->vpr));
   }
 
   res = Py_FindMethod(_pyvprcorrection_methods, (PyObject*) self, name);
@@ -261,6 +445,30 @@ static int _pyvprcorrection_setattr(PyVprCorrection* self, char* name, PyObject*
     } else {
       raiseException_gotoTag(done, PyExc_TypeError,"Max Distance must be a valid float");
     }
+  } else if (strcmp("plusTemperature", name) == 0) {
+    if (PyInt_Check(val)) {
+      RaveVprCorrection_setPlusTemperature(self->vpr, (double)PyInt_AsLong(val));
+    } else if (PyFloat_Check(val)) {
+      RaveVprCorrection_setPlusTemperature(self->vpr, (double)PyFloat_AsDouble(val));
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError,"Plus temperature must be a valid float");
+    }
+  } else if (strcmp("minusTemperature", name) == 0) {
+    if (PyInt_Check(val)) {
+      RaveVprCorrection_setMinusTemperature(self->vpr, (double)PyInt_AsLong(val));
+    } else if (PyFloat_Check(val)) {
+      RaveVprCorrection_setMinusTemperature(self->vpr, (double)PyFloat_AsDouble(val));
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError,"Minus temperature must be a valid float");
+    }
+  } else if (strcmp("dzdh", name) == 0) {
+    if (PyInt_Check(val)) {
+      RaveVprCorrection_setDzdh(self->vpr, (double)PyInt_AsLong(val));
+    } else if (PyFloat_Check(val)) {
+      RaveVprCorrection_setDzdh(self->vpr, (double)PyFloat_AsDouble(val));
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError,"Dzdh must be a valid float");
+    }
   } else {
     raiseException_gotoTag(done, PyExc_AttributeError, name);
   }
@@ -296,6 +504,8 @@ PyTypeObject PyVprCorrection_Type =
 /*@{ Module setup */
 static PyMethodDef functions[] = {
   {"new", (PyCFunction)_pyvprcorrection_new, 1},
+  {"readH1D", (PyCFunction) _pyvprcorrectionhelper_readH1D, 1},
+  {"lsqFirstOrder", (PyCFunction) _pyvprcorrectionhelper_lsqFirstOrder, 1},
   {NULL,NULL} /*Sentinel*/
 };
 

@@ -33,7 +33,7 @@ HLHDF_LDPATH=`fgrep HLHDF_LIB_DIR "${DEF_MK_FILE}" | sed -e"s/\(HLHDF_LIB_DIR=[ 
 BNAME=`python -c 'from distutils import util; import sys; print "lib.%s-%s" % (util.get_platform(), sys.version[0:3])'`
 
 RBPATH="${SCRIPTPATH}/../Lib:${SCRIPTPATH}/../modules"
-RAVE_LDPATH="${SCRIPTPATH}/../librave/toolbox:${SCRIPTPATH}/../librave/pyapi:${SCRIPTPATH}/../librave/scansun:${SCRIPTPATH}/../librave/radvol/lib"
+RAVE_LDPATH="${SCRIPTPATH}/../librave/tnc:${SCRIPTPATH}/../librave/toolbox:${SCRIPTPATH}/../librave/pyapi:${SCRIPTPATH}/../librave/scansun:${SCRIPTPATH}/../librave/radvol/lib"
 XRUNNERPATH="${SCRIPTPATH}/../test/lib"
 
 # Special hack for mac osx.
