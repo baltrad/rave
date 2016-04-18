@@ -877,7 +877,7 @@ double* RaveVprCorrection_getIdealVpr(RaveVprCorrection_t* self, PolarVolume_t* 
       } else {
         /* No profile is generated if slope is to low*/
         for (i = i2; i < nrHeights; i++) {
-          tresult[i] = NAN;
+          tresult[i] = -9999.0;
         }
       }
 
