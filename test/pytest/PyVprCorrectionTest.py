@@ -32,11 +32,7 @@ import string
 import numpy
 
 class PyVprCorrectionTest(unittest.TestCase):
-  FIXTURE_VOLUME = "fixture_ODIM_H5_pvol_ang_20090501T1200Z.h5"
   FIXTURE_SELUL = "fixtures/selul_pvol_201503300845.h5"
-  FIXTURE_NRD_SELUL = "fixtures/vpr-pvol-dbz.lul.20110701T120100Z.h5"
-  FIXTURE_NRD_SELUL_TEMP_PROFILE = "fixtures/LUL_H1D_201107011200+001H00M.bpm"
-  FIXTURE_NRD_SEKIR = "fixtures/vpr-pvol-dbz.kir.20110701T120100Z.h5"
   FIXTURE_NRD_SEKIR_TEMP_PROFILE = "fixtures/KIR_H1D_201107010100+001H00M.bpm"
   FIXTURE_TEMP_PROFILE = "fixtures/LUL_H1D_201106300000+001H00M.bpm"
   
