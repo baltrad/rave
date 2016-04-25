@@ -45,7 +45,7 @@ $(LIBTNC): $(DEPDIR) $(OBJECTS)
 
 .PHONY=install
 install:
-	@"$(HLHDF_INSTALL_BIN)" -f -o -C $(OBJECTS) "$(prefix)/lib/$(LIBTNC)"
+	@"$(HLHDF_INSTALL_BIN)" -f -o -C $(LIBTNC) "$(prefix)/lib/$(LIBTNC)"
 	@for i in $(INSTALL_HEADERS) ; \
 	do \
 		"$(HLHDF_INSTALL_BIN)" -f -o -m644 -C $$i "$(prefix)/include/$$i"; \
