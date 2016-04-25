@@ -148,6 +148,8 @@ class compositing(object):
     if self.verbose:
       self.logger.info("Fetching objects and applying quality plugins")
     
+    self.logger.debug("Generating composite with date and time %sT%s for area %s", dd, dt, area)
+    
     objects, nodes = self.fetch_objects()
     
     objects, algorithm, qfields = self.quality_control_objects(objects)
@@ -331,12 +333,16 @@ class compositing(object):
         if obj is None:
           continue
       
+      node = odim_source.NODfromSource(obj)
+      
       if len(nodes):
-        nodes += ",'%s'" % odim_source.NODfromSource(obj)
+        nodes += ",'%s'" % node
       else:
-        nodes += "'%s'" % odim_source.NODfromSource(obj)
+        nodes += "'%s'" % node
         
       objects[fname] = obj
+      
+      self.logger.debug("File used in composite generation - UUID: %s, Node: %s, Nominal date and time: %sT%s", fname, node, obj.date, obj.time)
       
     return objects, nodes
   
