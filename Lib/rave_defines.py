@@ -83,6 +83,7 @@ DEFAULTA = 0.323868068019
 DEFAULTB = -0.00107776407064
 DEFAULTC = 1.77500903316e-05
 MERGETERMS = 20  # how many 12-hour SYNOP terms to merge: 10 days.
+TIMELIMIT_CLIMATOLOGIC_COEFF = 48 # how many hours back in time we can use generated gra coefficients before using the climatologic variant
 
 # SAF-NWC MSG CT filter
 CT_FTEMPLATE = "SAFNWC_MSG?_CT___%s_FES_________.h5"

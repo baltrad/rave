@@ -62,6 +62,7 @@ import odim_source
 import rave_dom_db
 
 from rave_defines import CENTER_ID, GAIN, OFFSET, MERGETERMS
+from rave_defines import DEFAULTA, DEFAULTB, DEFAULTC, TIMELIMIT_CLIMATOLOGIC_COEFF
 
 logger = rave_pgf_logger.create_logger()
   
@@ -92,7 +93,19 @@ def strToNumber(sval):
     return float(sval)
   except ValueError, e:
     return int(sval)
+    
+def get_backup_gra_coefficient(db, maxage):
+  try:
+    coeff = db.get_newest_gra_coefficient(maxage)
+    if coeff and not math.isnan(coeff.a) and not math.isnan(coeff.b) and not math.isnan(coeff.c):
+      logger.info("Reusing gra coefficients from %s %s"%(coeff.date, coeff.time))
+      return coeff.significant, coeff.points, coeff.loss, coeff.r, coeff.r_significant, coeff.corr_coeff, coeff.a, coeff.b, coeff.c, coeff.mean, coeff.stddev
+  except Exception, e:
+    logger.exception("Failed to aquire coefficients")
 
+  logger.warn("Could not aquire coefficients newer than %s, defaulting to climatologic"%maxage.strftime("%Y%m%d %H:%M:%S"))
+  return "False", 0, 0, 0.0, "False", 0.0, DEFAULTA, DEFAULTB, DEFAULTC, 0.0, 0.0
+  
 ## Creates a composite
 #@param files the list of files to be used for generating the composite
 #@param arguments the arguments defining the composite
@@ -191,10 +204,9 @@ def generate(files, arguments):
   points = matcher.match(acrrproduct, acc_period=interval, quantity="ACRR", how_task=distancefield)
   if len(points) == 0:
     logger.warn("Could not find any matching observations")
-    return None
-  
-  logger.info("Matched %d points between acrr product and observation db"%len(points))
-  db.merge(points)
+  else:  
+    logger.info("Matched %d points between acrr product and observation db"%len(points))
+    db.merge(points)
 
   d = acrrproduct.date
   t = acrrproduct.time
@@ -207,13 +219,31 @@ def generate(files, arguments):
   db.delete_grapoints(dlimit) # We don't want any points older than 12 hour * MERGETERMS back in time
   
   points = db.get_grapoints(tlimit); # Get all gra points newer than interval*MERGETERMS hours back in time
-  logger.info("Using %d number of points for calculating the gra coefficients"%len(points))
   
-  if adjustmentfile != None:
-    significant, npoints, loss, r, sig, corr_coeff, a, b, c, m, dev = gra.generate(points, edate, etime, adjustmentfile)
-  else:
-    significant, npoints, loss, r, sig, corr_coeff, a, b, c, m, dev = gra.generate(points, edate, etime)
+  logger.info("Using %d number of points for calculating the gra coefficients"%len(points))
+  generate_backup_coeff = False
+  if len(points) > 2:
+    try:  
+      if adjustmentfile != None:
+        significant, npoints, loss, r, sig, corr_coeff, a, b, c, m, dev = gra.generate(points, edate, etime, adjustmentfile)
+      else:
+        significant, npoints, loss, r, sig, corr_coeff, a, b, c, m, dev = gra.generate(points, edate, etime)
 
+      if math.isnan(a) or math.isnan(b) or math.isnan(c):
+        logger.error("A/B or C for %s %s is not a number"%(acrrproduct.date, acrrproduct.time))
+        generate_backup_coeff = True
+    except Exception:
+      logger.exception("Failed during gra coefficients generation")
+      generate_backup_coeff = True
+  else:
+    generate_backup_coeff = True
+  
+  if generate_backup_coeff:
+    logger.info("Failed to generate gra coefficients. Trying to fallback to usable coefficients.")
+    maxage = datetime.datetime(int(d[:4]), int(d[4:6]), int(d[6:8]), int(t[0:2]), int(t[2:4]), int(t[4:6]))
+    maxage = maxage - datetime.timedelta(hours=TIMELIMIT_CLIMATOLOGIC_COEFF) # Use coefficients that are newer than 48 hours. Otherwise fallback to the climatologic ones.
+    significant, npoints, loss, r, sig, corr_coeff, a, b, c, m, dev = get_backup_gra_coefficient(db, maxage)
+    
   # Also store the coefficients in the database so that we can search for them when applying the coefficients
   NOD = odim_source.NODfromSource(acrrproduct)
   if not NOD:
