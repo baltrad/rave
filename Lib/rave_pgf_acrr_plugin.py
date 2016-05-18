@@ -60,6 +60,7 @@ import logging
 import rave_pgf_logger
 
 from rave_defines import CENTER_ID, GAIN, OFFSET
+from rave_defines import DEFAULTA, DEFAULTB, DEFAULTC
 
 logger = rave_pgf_logger.create_logger()
 
@@ -195,21 +196,27 @@ def generate(files, arguments):
     db = rave_dom_db.create_db_from_conf()
     dt = datetime.datetime(int(edate[:4]), int(edate[4:6]), int(edate[6:]), int(etime[:2]), int(etime[2:4]), 0)
     dt = dt - datetime.timedelta(seconds=3600 * 12) # 12 hours back in time for now..
+    
+    gra = _gra.new()
+    gra.A = DEFAULTA
+    gra.B = DEFAULTB
+    gra.C = DEFAULTC
+    gra.zrA = zr_a
+    gra.zrb = zr_b
+    
     grac = db.get_gra_coefficient(dt)
-    #logger.info("Got GRAC: %s"%`grac`)
-    if grac != None:
-      logger.debug("Applying gra coefficients, quantity: %s"%quantity)
-      gra = _gra.new()
+    if grac != None and not math.isnan(grac.a) and not math.isnan(grac.b) and not math.isnan(grac.c):
+      logger.debug("Using gra coefficients from database, quantity: %s"%quantity)
       gra.A = grac.a
       gra.B = grac.b
       gra.C = grac.c
-      gra.zrA = zr_a
-      gra.zrb = zr_b
-      #param = comp.getParameter(quantity)
-      dfield = result.getQualityFieldByHowTask(distancefield)
-      gra_field = gra.apply(dfield, result)
-      gra_field.quantity = result.quantity + "_CORR"
-      img.addParameter(gra_field)
+    else:
+      logger.info("Could not find coefficients for given time, using default climatological coefficients, quantity: %s"%quantity)
+      
+    dfield = result.getQualityFieldByHowTask(distancefield)
+    gra_field = gra.apply(dfield, result)
+    gra_field.quantity = result.quantity + "_CORR"
+    img.addParameter(gra_field)
 
   ios = _raveio.new()
   ios.object = img

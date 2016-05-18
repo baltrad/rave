@@ -51,6 +51,7 @@ import rave_projection
 
 from gadjust.gra import gra_coefficient
 from rave_defines import CENTER_ID, GAIN, OFFSET
+from rave_defines import DEFAULTA, DEFAULTB, DEFAULTC
 
 logger = rave_pgf_logger.create_logger()
 
@@ -398,24 +399,29 @@ class compositing(object):
       db = rave_dom_db.create_db_from_conf()
       dt = datetime.datetime(int(d[:4]), int(d[4:6]), int(d[6:]), int(t[:2]), int(t[2:4]), 0)
       dt = dt - datetime.timedelta(seconds=3600*12) # 12 hours back in time for now..
+      
+      gra = _gra.new()
+      gra.A = DEFAULTA
+      gra.B = DEFAULTB
+      gra.C = DEFAULTC
+      gra.zrA = zrA
+      gra.zrb = zrb
+    
       grac = db.get_gra_coefficient(dt)
-      if grac != None:
+      if grac != None and not math.isnan(grac.a) and not math.isnan(grac.b) and not math.isnan(grac.c):
         if self.verbose:
-          self.logger.debug("Applying gra coefficients")
-        gra = _gra.new()
+          self.logger.debug("Applying gra coefficients from database")
         gra.A = grac.a
         gra.B = grac.b
         gra.C = grac.c
-        gra.zrA = zrA
-        gra.zrb = zrb
-        dfield = result.findQualityFieldByHowTask("se.smhi.composite.distance.radar")
-        param = result.getParameter(self.quantity)
-        gra_field = gra.apply(dfield, param)
-        gra_field.quantity = self.quantity + "_CORR"
-        return gra_field
       else:
-        self.logger.info("No gra coefficients found for given date/time, ignoring gra adjustment")
-        return None
+        self.logger.info("No gra coefficients found for given date/time, using climatological coefficients")
+        
+      dfield = result.findQualityFieldByHowTask("se.smhi.composite.distance.radar")
+      param = result.getParameter(self.quantity)
+      gra_field = gra.apply(dfield, param)
+      gra_field.quantity = self.quantity + "_CORR"
+      return gra_field
     except Exception, e:
       import traceback
       traceback.print_exc()
