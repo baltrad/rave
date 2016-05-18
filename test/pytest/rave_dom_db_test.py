@@ -476,7 +476,24 @@ class rave_dom_db_test(unittest.TestCase):
     self.assertAlmostEquals(5.0, result.c, 4)
     self.assertAlmostEquals(6.0, result.mean, 4)
     self.assertAlmostEquals(7.0, result.stddev, 4)
+  
+  def test_get_newest_gra_coefficient(self):
+    gc1 = gra_coefficient("A1", "20140301", "100000", "True", 10, 5, 1.0, "True", 2.0, 3.0, 4.0, 5.0, 6.0, 7.0)
+    gc2 = gra_coefficient("A1", "20140301", "103000", "True", 11, 6, 8.0, "True", 9.0, 10.0, 11.0, 12.0, 13.0, 14.0)
+    gc3 = gra_coefficient("A1", "20140301", "110000", "True", 12, 7, 9.0, "True", 10.0, 11.0, 12.0, 13.0, 14.0, 15.0)
     
+    testdb().add(gc1)
+    testdb().add(gc2)
+    testdb().add(gc3)
+    
+    result = self.classUnderTest.get_newest_gra_coefficient(datetime.datetime(2014,3,1,10,30,0))
+    self.assertEquals("20140301", result.date.strftime("%Y%m%d"))
+    self.assertEquals("110000", result.time.strftime("%H%M%S"))
+    
+    result = self.classUnderTest.get_newest_gra_coefficient(datetime.datetime(2014,3,1,10,00,0))
+    self.assertEquals("20140301", result.date.strftime("%Y%m%d"))
+    self.assertEquals("110000", result.time.strftime("%H%M%S"))
+  
   def test_get_grapoints(self):
     gp1 = grapoint(_rave.RaveValueType_DATA, 1.0, 234, 10.0, 60.0, "20140416", "110000", 20.0, 2)
     gp2 = grapoint(_rave.RaveValueType_DATA, 2.0, 235, 11.0, 61.0, "20140416", "010000", 21.0, 3)

@@ -30,10 +30,11 @@ install:
 	@cp -v -f *.py "${prefix}/Lib/"
 	@mkdir -p "${prefix}/Lib/gadjust"
 	@cp -v -f gadjust/*.py "${prefix}/Lib/gadjust/"
-	@mkdir -p "${prefix}/Lib/migrate/versions"
-	@cp -v -f migrate/*.py "${prefix}/Lib/migrate/"
-	@cp -v -f migrate/migrate.cfg "${prefix}/Lib/migrate/"
-	@cp -v -f migrate/versions/*.py "${prefix}/Lib/migrate/versions/"
+	@mkdir -p "${prefix}/Lib/ravemigrate/versions"
+	@cp -v -f ravemigrate/*.py "${prefix}/Lib/ravemigrate/"
+	@cp -v -f ravemigrate/migrate.cfg "${prefix}/Lib/ravemigrate/"
+	@cp -v -f ravemigrate/versions/*.py "${prefix}/Lib/ravemigrate/versions/"
+	@\rm -fr "${prefix}/Lib/migrate" # We can't have directory "migrate" since it conflicts with sqlalchemy migrate. If rave would have been separate package then there wouldn't have been any problems
 	@./make_script_update_config.sh "${prefix}/Lib/rave_defines.py"
 	@-echo "$(prefix)/Lib" > "$(SITEPACK_PYTHON)/rave.pth"
 	

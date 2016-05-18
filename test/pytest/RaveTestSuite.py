@@ -71,6 +71,7 @@ try:
     from rave_quality_chain_plugin_test import *
     from compositing_test import *
     from rave_pgf_volume_plugin_test import *
+    from rave_pgf_gra_plugin_test import *
 except:
   pass
 
@@ -106,6 +107,7 @@ try:
   from grib_reader_test import *
 except:
   pass
+
 
 if __name__ == '__main__':
   unittest.main()

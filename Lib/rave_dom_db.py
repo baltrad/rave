@@ -59,7 +59,7 @@ from rave_defines import BDB_CONFIG_FILE
 
 import os
 
-MIGRATION_REPO_PATH = os.path.join(os.path.dirname(__file__), "migrate")
+MIGRATION_REPO_PATH = os.path.join(os.path.dirname(__file__), "ravemigrate")
 
 def psql_set_extra_float_digits(dbapi_con, con_record):
     cursor = dbapi_con.cursor()
@@ -291,6 +291,14 @@ class rave_db(object):
     with self.get_session() as s:
       q = s.query(gra_coefficient).filter(gra_coefficient.date + gra_coefficient.time >= dt)
       q = q.order_by(asc(gra_coefficient.date)).order_by(asc(gra_coefficient.time))
+      return q.first()
+
+  ## Return the most recent gra coefficient since dt
+  # @param dt: From time when to search for coefficients
+  def get_newest_gra_coefficient(self, dt):
+    with self.get_session() as s:
+      q = s.query(gra_coefficient).filter(gra_coefficient.date + gra_coefficient.time >= dt)
+      q = q.order_by(desc(gra_coefficient.date + gra_coefficient.time))
       return q.first()
   
   def get_grapoints(self, dt, edt=None):
