@@ -204,8 +204,8 @@ def add_H5IM_attributes(a, IDA):
 
 
 def traverse_save(e, a, ID, datadict):
-    for i in e.getchildren():
-        if i.getchildren():
+    for i in list(e):
+        if list(i):
             IDA = ID + "/"+ i.tag
             b =_pyhl.node(_pyhl.GROUP_ID, IDA)
             a.addNode(b)

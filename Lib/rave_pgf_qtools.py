@@ -114,7 +114,7 @@ class PGF_JobQueue(dict):
                 err_msg = traceback.format_exc()
                 print "Error trying to read PGF job queue: %sIgnoring, using empty job queue." % err_msg
                 return  # queue is probably empty, just ignore
-            for elem in elems.getchildren():
+            for elem in list(elems):
                 self[elem.get('jobid')] = elem
 
 

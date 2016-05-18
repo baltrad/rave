@@ -56,7 +56,7 @@ def init():
 
     default = OPTIONS.find("default")
     default_opts = options()
-    for e in default.getchildren():
+    for e in list(default):
         if    e.tag in INTS: default_opts.__setattr__(e.tag, int(e.text))
         else: default_opts.__setattr__(e.tag, float(e.text))
     ARGS["default"] = default_opts
@@ -65,7 +65,7 @@ def init():
         if site.tag != "default":
             opts = copy.deepcopy(default_opts)
         
-            for e in site.getchildren():
+            for e in list(site):
                 if    e.tag in INTS: opts.__setattr__(e.tag, int(e.text))
                 else: opts.__setattr__(e.tag, float(e.text))
 

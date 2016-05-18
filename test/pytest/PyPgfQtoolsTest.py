@@ -64,7 +64,7 @@ class PyPgfQtoolsTest(unittest.TestCase):
         e = rave_pgf_qtools.List2Element(l, "files")
         elem.append(e)
         self.assertEquals(e.tag, "files")
-        self.assertEquals(len(e.getchildren()), 2)
+        self.assertEquals(len(list(e)), 2)
         L = rave_pgf_qtools.Element2List(elem, "files")
         self.assertEquals(l, L)
 
