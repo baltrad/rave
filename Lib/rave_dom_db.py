@@ -31,6 +31,7 @@ import contextlib
 import jprops
 from sqlalchemy import engine, event
 from sqlalchemy.orm import mapper, sessionmaker
+import rave_pgf_logger
 
 import migrate.versioning.api
 import migrate.versioning.repository
@@ -51,6 +52,7 @@ from sqlalchemy.types import (
     Time,
 )
 from sqlalchemy import asc,desc
+from sqlalchemy.exc import OperationalError
 
 from rave_dom import wmo_station, observation
 from gadjust.gra import gra_coefficient
@@ -58,6 +60,10 @@ from gadjust.grapoint import grapoint
 from rave_defines import BDB_CONFIG_FILE
 
 import os
+from sqlalchemy.exc import OperationalError
+import psycopg2
+
+logger = rave_pgf_logger.create_logger()
 
 MIGRATION_REPO_PATH = os.path.join(os.path.dirname(__file__), "ravemigrate")
 
@@ -66,6 +72,15 @@ def psql_set_extra_float_digits(dbapi_con, con_record):
     cursor.execute("SET extra_float_digits=2")
     dbapi_con.commit()
 
+#def psql_checkout(dbapi_conn, connection_rec, connection_proxy):
+#    logger.info("CHECKOUT")
+
+#def psql_checkin(dbapi_conn, connection_rec):
+#    logger.info("CHECKIN")
+
+#def psql_reset(dbapi_conn, connection_rec):
+#    logger.info("RESETING")
+    
 # We use sqlalchemy for creating the tables. If we need to upgrade
 # later on, migrate the code to sqlalchemy-migrate.
 meta = MetaData()
@@ -170,6 +185,7 @@ class rave_db(object):
     
     if self._engine.name == "postgresql":
       event.listen(self._engine, "connect", psql_set_extra_float_digits)
+      event.listen(self._engine, 'invalidate', self.psql_invalidate)
   
     meta.bind = self._engine
     self.Session = sessionmaker(bind=self._engine)
@@ -178,6 +194,17 @@ class rave_db(object):
     """get a context managed connection to the database
     """
     return contextlib.closing(self._engine.connect())
+
+  def psql_invalidate(self, dbapi_conn, connection_rec, exception):
+    if exception != None and isinstance(exception, OperationalError):
+      if "server closed the connection unexpectedly" in exception.message:
+        logger.warn("Got invalidation message indicating that there has been connection problems. Recreating pool.")
+        self._engine.dispose()
+    elif exception != None and isinstance(exception,  psycopg2.OperationalError):
+      logger.warn("psycopg2,OperationalError will be tested")
+      if "server closed the connection unexpectedly" in exception.message:
+        logger.warn("Got invalidation message indicating that there has been connection problems. Recreating pool.")
+        self._engine.dispose()
 
   ##
   # Creates the tables if they don't exist

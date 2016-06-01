@@ -63,6 +63,8 @@ import rave_dom_db
 
 from rave_defines import CENTER_ID, GAIN, OFFSET, MERGETERMS
 from rave_defines import DEFAULTA, DEFAULTB, DEFAULTC, TIMELIMIT_CLIMATOLOGIC_COEFF
+from sqlalchemy.exc import OperationalError
+import psycopg2
 
 logger = rave_pgf_logger.create_logger()
   
@@ -110,6 +112,51 @@ def get_backup_gra_coefficient(db, maxage):
 #@param files the list of files to be used for generating the composite
 #@param arguments the arguments defining the composite
 #@return a temporary h5 file with the composite
+
+def calculate_gra_coefficient(distancefield, interval, adjustmentfile, etime, edate, acrrproduct, db):
+  matcher = obsmatcher.obsmatcher(db)
+  points = matcher.match(acrrproduct, acc_period=interval, quantity="ACRR", how_task=distancefield)
+  if len(points) == 0:
+    logger.warn("Could not find any matching observations")
+  else:
+    logger.info("Matched %d points between acrr product and observation db" % len(points))
+    db.merge(points)
+  d = acrrproduct.date
+  t = acrrproduct.time
+  tlimit = datetime.datetime(int(d[:4]), int(d[4:6]), int(d[6:8]), int(t[0:2]), int(t[2:4]), int(t[4:6]))
+  tlimit = tlimit - datetime.timedelta(hours=interval * MERGETERMS)
+  dlimit = datetime.datetime(int(d[:4]), int(d[4:6]), int(d[6:8]), int(t[0:2]), int(t[2:4]), int(t[4:6]))
+  dlimit = dlimit - datetime.timedelta(hours=12 * MERGETERMS)
+  db.delete_grapoints(dlimit) # We don't want any points older than 12 hour * MERGETERMS back in time
+  points = db.get_grapoints(tlimit) # Get all gra points newer than interval*MERGETERMS hours back in time
+  logger.info("Using %d number of points for calculating the gra coefficients" % len(points))
+  generate_backup_coeff = False
+  if len(points) > 2:
+    try:
+      if adjustmentfile != None:
+        significant, npoints, loss, r, sig, corr_coeff, a, b, c, m, dev = gra.generate(points, edate, etime, adjustmentfile)
+      else:
+        significant, npoints, loss, r, sig, corr_coeff, a, b, c, m, dev = gra.generate(points, edate, etime)
+      if math.isnan(a) or math.isnan(b) or math.isnan(c):
+        logger.error("A/B or C for %s %s is not a number" % (acrrproduct.date, acrrproduct.time))
+        generate_backup_coeff = True
+    except Exception:
+      logger.exception("Failed during gra coefficients generation")
+      generate_backup_coeff = True
+  else:
+    generate_backup_coeff = True
+  if generate_backup_coeff:
+    logger.info("Failed to generate gra coefficients. Trying to fallback to usable coefficients.")
+    maxage = datetime.datetime(int(d[:4]), int(d[4:6]), int(d[6:8]), int(t[0:2]), int(t[2:4]), int(t[4:6]))
+    maxage = maxage - datetime.timedelta(hours=TIMELIMIT_CLIMATOLOGIC_COEFF) # Use coefficients that are newer than 48 hours. Otherwise fallback to the climatologic ones.
+    significant, npoints, loss, r, sig, corr_coeff, a, b, c, m, dev = get_backup_gra_coefficient(db, maxage)
+# Also store the coefficients in the database so that we can search for them when applying the coefficients
+  NOD = odim_source.NODfromSource(acrrproduct)
+  if not NOD:
+    NOD = ""
+  grac = gra_coefficient(NOD, acrrproduct.date, acrrproduct.time, significant, npoints, loss, r, sig, corr_coeff, a, b, c, float(m), float(dev))
+  db.merge(grac)
+
 def generate(files, arguments):
   args = arglist2dict(arguments)
   
@@ -199,56 +246,11 @@ def generate(files, arguments):
   
   db = rave_dom_db.create_db_from_conf()
   
-  matcher = obsmatcher.obsmatcher(db)
-  
-  points = matcher.match(acrrproduct, acc_period=interval, quantity="ACRR", how_task=distancefield)
-  if len(points) == 0:
-    logger.warn("Could not find any matching observations")
-  else:  
-    logger.info("Matched %d points between acrr product and observation db"%len(points))
-    db.merge(points)
-
-  d = acrrproduct.date
-  t = acrrproduct.time
-
-  tlimit = datetime.datetime(int(d[:4]), int(d[4:6]), int(d[6:8]), int(t[0:2]), int(t[2:4]), int(t[4:6]))
-  tlimit = tlimit - datetime.timedelta(hours=interval*MERGETERMS)
-  dlimit = datetime.datetime(int(d[:4]), int(d[4:6]), int(d[6:8]), int(t[0:2]), int(t[2:4]), int(t[4:6]))
-  dlimit = dlimit - datetime.timedelta(hours=12*MERGETERMS)
-  
-  db.delete_grapoints(dlimit) # We don't want any points older than 12 hour * MERGETERMS back in time
-  
-  points = db.get_grapoints(tlimit); # Get all gra points newer than interval*MERGETERMS hours back in time
-  
-  logger.info("Using %d number of points for calculating the gra coefficients"%len(points))
-  generate_backup_coeff = False
-  if len(points) > 2:
-    try:  
-      if adjustmentfile != None:
-        significant, npoints, loss, r, sig, corr_coeff, a, b, c, m, dev = gra.generate(points, edate, etime, adjustmentfile)
-      else:
-        significant, npoints, loss, r, sig, corr_coeff, a, b, c, m, dev = gra.generate(points, edate, etime)
-
-      if math.isnan(a) or math.isnan(b) or math.isnan(c):
-        logger.error("A/B or C for %s %s is not a number"%(acrrproduct.date, acrrproduct.time))
-        generate_backup_coeff = True
-    except Exception:
-      logger.exception("Failed during gra coefficients generation")
-      generate_backup_coeff = True
-  else:
-    generate_backup_coeff = True
-  
-  if generate_backup_coeff:
-    logger.info("Failed to generate gra coefficients. Trying to fallback to usable coefficients.")
-    maxage = datetime.datetime(int(d[:4]), int(d[4:6]), int(d[6:8]), int(t[0:2]), int(t[2:4]), int(t[4:6]))
-    maxage = maxage - datetime.timedelta(hours=TIMELIMIT_CLIMATOLOGIC_COEFF) # Use coefficients that are newer than 48 hours. Otherwise fallback to the climatologic ones.
-    significant, npoints, loss, r, sig, corr_coeff, a, b, c, m, dev = get_backup_gra_coefficient(db, maxage)
-    
-  # Also store the coefficients in the database so that we can search for them when applying the coefficients
-  NOD = odim_source.NODfromSource(acrrproduct)
-  if not NOD:
-    NOD = ""
-  grac = gra_coefficient(NOD, acrrproduct.date, acrrproduct.time, significant, npoints, loss, r, sig, corr_coeff, a, b, c, float(m), float(dev))
-  db.merge(grac)
+  try:
+    calculate_gra_coefficient(distancefield, interval, adjustmentfile, etime, edate, acrrproduct, db)
+  except OperationalError, e:
+    if "server closed the connection unexpectedly" in e.message:
+      logger.warn("Got indication that connection reseted at server side, retrying gra coefficient generation")
+      calculate_gra_coefficient(distancefield, interval, adjustmentfile, etime, edate, acrrproduct, db)
 
   return None
