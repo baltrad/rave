@@ -105,7 +105,7 @@
     <deflg plc="Feldberg" rad="DL81" wmo="10908"></deflg>
     <demuc plc="Munchen" rad="DL82" wmo="10871"></demuc>
     <desna plc="Schnaupping" rad="DL82" wmo="10873"></desna>
-    <demem plc="Memminggen" rad="DL84" wmo="10950"></demem>
+    <demem plc="Memmingen" rad="DL84" wmo="10950"></demem>
   </de>
   <gr CCCC="LGAT" org="96">
     <grimi plc="Imittos" rad="GR41" wmo="16821"></grimi>
