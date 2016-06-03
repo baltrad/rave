@@ -1,10 +1,9 @@
-include ../librave/def.mk
+include ../def.mk
 
 CFLAGS=	$(OPTS) $(CCSHARED) $(DEFS) $(CREATE_ITRUNC) \
-	-I. -I../librave/transform $(NUMPY_INCLUDE_DIR) $(INCLUDE_PYTHON) -I$(HLHDF_INCLUDE_DIR) \
-	$(ZLIB_INCDIR) $(HDF5_INCDIR) $(PROJ_INCLUDE_DIR) $(EXPAT_INCLUDE_DIR)
+	-I. -I../librave/tnc -I../librave/toolbox $(RAVE_MODULE_CFLAGS)
 
-LDFLAGS= -L$(HLHDF_LIB_DIR) $(PROJ_LIB_DIR) $(EXPAT_LIB_DIR)
+LDFLAGS= $(RAVE_MODULE_LDFLAGS)
 # --------------------------------------------------------------------
 # Fixed definitions
 
@@ -38,8 +37,8 @@ $(DEPDIR):
 .PHONY=all
 all:		$(AREAREGISTRY_BIN)
 
-$(AREAREGISTRY_BIN): $(DEPDIR) $(AREAREGISTRY_OBJECTS) ../librave/transform/libravetransform.so
-	$(CC) $(LDFLAGS) -o $@ $(AREAREGISTRY_OBJECTS) -L../librave/transform -lravetransform -lhlhdf -lhdf5 -lexpat -lproj 
+$(AREAREGISTRY_BIN): $(DEPDIR) $(AREAREGISTRY_OBJECTS) ../librave/toolbox/libravetoolbox.so
+	$(CC) $(LDFLAGS) -o $@ $(AREAREGISTRY_OBJECTS) -L../librave/tnc -L../librave/toolbox $(RAVE_MODULE_LIBRARIES) -lm
 
 .PHONY=install
 install: ;
@@ -55,3 +54,4 @@ distclean:	clean
 
 # NOTE! This ensures that the dependencies are setup at the right time so this should not be moved
 -include $(AREAREGISTRY_SOURCES:%.c=$(DEPDIR)/%.P)
+

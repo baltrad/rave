@@ -63,7 +63,7 @@ int main(int argc, char** argv)
   }
 
   if (argc == 3) {
-    pRegistry = ProjectionRegistry_loadRegistry(argv[2]);
+    pRegistry = ProjectionRegistry_load(argv[2]);
     if (pRegistry == NULL) {
       RAVE_ERROR0("Failed to read projection registry");
       goto done;
