@@ -357,7 +357,128 @@ class rave_dom_db_test(unittest.TestCase):
                                                               ["54322"])
     self.assertEquals(1, len(result))
     self.assertEquals("54322", result[0].station)
-  
+    
+  def test_delete_observations_in_interval_with_age_minlimit(self):
+    db = testdb()
+    db.add(observation("64320", "SWEDEN", 0, "20160610", "060000", 13.031, 60.123))
+    db.add(observation("64321", "SWEDEN", 0, "20160610", "180000", 13.031, 60.123))
+    db.add(observation("64322", "SWEDEN", 0, "20160611", "060000", 13.031, 60.123))
+    db.add(observation("64323", "SWEDEN", 0, "20160611", "180000", 13.031, 60.123))
+
+    result = self.classUnderTest.get_observations_in_interval(None, None)
+    self.assertEquals(4, len(result))
+    self.assertEquals("64320", result[0].station)
+    self.assertEquals("64321", result[1].station)
+    self.assertEquals("64322", result[2].station)
+    self.assertEquals("64323", result[3].station)
+    
+    # Function under test
+    no_of_deleted_observations = self.classUnderTest.delete_observations_in_interval(datetime.datetime(2016,06,11,00,00), None)
+    self.assertEquals(2, no_of_deleted_observations)
+    
+    result = self.classUnderTest.get_observations_in_interval(None, None)
+    self.assertEquals(2, len(result))
+    self.assertEquals("64320", result[0].station)
+    self.assertEquals("64321", result[1].station)
+    
+    # Function under test
+    no_of_deleted_observations = self.classUnderTest.delete_observations_in_interval(datetime.datetime(2016,06,10,18,00), None)
+    self.assertEquals(1, no_of_deleted_observations)
+    
+    result = self.classUnderTest.get_observations_in_interval(None, None)
+    self.assertEquals(1, len(result))
+    self.assertEquals("64320", result[0].station)
+
+    # Function under test
+    no_of_deleted_observations = self.classUnderTest.delete_observations_in_interval(datetime.datetime(2010,01,01,00,00), None)
+    self.assertEquals(1, no_of_deleted_observations)
+    
+    result = self.classUnderTest.get_observations_in_interval(None, None)
+    self.assertEquals(0, len(result))
+    
+  def test_delete_observations_in_interval_with_age_maxlimit(self):
+    db = testdb()
+    db.add(observation("64320", "SWEDEN", 0, "20160531", "060000", 13.031, 60.123))
+    db.add(observation("64321", "SWEDEN", 0, "20160531", "180000", 13.031, 60.123))
+    db.add(observation("64322", "SWEDEN", 0, "20160601", "060000", 13.031, 60.123))
+    db.add(observation("64323", "SWEDEN", 0, "20160601", "180000", 13.031, 60.123))
+
+    result = self.classUnderTest.get_observations_in_interval(None, None)
+    self.assertEquals(4, len(result))
+    self.assertEquals("64320", result[0].station)
+    self.assertEquals("64321", result[1].station)
+    self.assertEquals("64322", result[2].station)
+    self.assertEquals("64323", result[3].station)
+    
+    # Function under test
+    no_of_deleted_observations = self.classUnderTest.delete_observations_in_interval(None, datetime.datetime(2016,06,01,00,00))
+    self.assertEquals(2, no_of_deleted_observations)
+    
+    result = self.classUnderTest.get_observations_in_interval(None, None)
+    self.assertEquals(2, len(result))
+    self.assertEquals("64322", result[0].station)
+    self.assertEquals("64323", result[1].station)
+    
+    # Function under test
+    no_of_deleted_observations = self.classUnderTest.delete_observations_in_interval(None, datetime.datetime(2016,06,01,06,00))
+    self.assertEquals(1, no_of_deleted_observations)
+    
+    result = self.classUnderTest.get_observations_in_interval(None, None)
+    self.assertEquals(1, len(result))
+    self.assertEquals("64323", result[0].station)
+
+    # Function under test
+    no_of_deleted_observations = self.classUnderTest.delete_observations_in_interval(None, datetime.datetime(2020,01,01,00,00))
+    self.assertEquals(1, no_of_deleted_observations)
+    
+    result = self.classUnderTest.get_observations_in_interval(None, None)
+    self.assertEquals(0, len(result))
+    
+  def test_delete_observations_in_interval_with_intervallimit(self):
+    db = testdb()
+    db.add(observation("64309", "SWEDEN", 0, "20160520", "050000", 13.031, 60.123))
+    db.add(observation("64310", "SWEDEN", 0, "20160520", "060000", 13.031, 60.123))
+    db.add(observation("64311", "SWEDEN", 0, "20160520", "061000", 13.031, 60.123))
+    db.add(observation("64312", "SWEDEN", 0, "20160520", "061005", 13.031, 60.123))
+    db.add(observation("64313", "SWEDEN", 0, "20160520", "063100", 13.031, 60.123))
+
+    result = self.classUnderTest.get_observations_in_interval(None, None)
+    self.assertEquals(5, len(result))
+    self.assertEquals("64309", result[0].station)
+    self.assertEquals("64310", result[1].station)
+    self.assertEquals("64311", result[2].station)
+    self.assertEquals("64312", result[3].station)
+    self.assertEquals("64313", result[4].station)
+    
+    # Function under test
+    no_of_deleted_observations = self.classUnderTest.delete_observations_in_interval(datetime.datetime(2016,05,20,06,00), 
+                                                                                     datetime.datetime(2016,05,20,06,10))
+    self.assertEquals(2, no_of_deleted_observations)
+    
+    result = self.classUnderTest.get_observations_in_interval(None, None)
+    self.assertEquals(3, len(result))
+    self.assertEquals("64309", result[0].station)
+    self.assertEquals("64312", result[1].station)
+    self.assertEquals("64313", result[2].station)
+    
+    # Function under test
+    no_of_deleted_observations = self.classUnderTest.delete_observations_in_interval(datetime.datetime(2016,05,20,05,05), 
+                                                                                     datetime.datetime(2016,05,20,06,30))
+    self.assertEquals(1, no_of_deleted_observations)
+    
+    result = self.classUnderTest.get_observations_in_interval(None, None)
+    self.assertEquals(2, len(result))
+    self.assertEquals("64309", result[0].station)
+    self.assertEquals("64313", result[1].station)
+    
+    # Function under test
+    no_of_deleted_observations = self.classUnderTest.delete_observations_in_interval(datetime.datetime(2016,05,20,00,00), 
+                                                                                     datetime.datetime(2016,05,20,07,00))
+    self.assertEquals(2, no_of_deleted_observations)
+    
+    result = self.classUnderTest.get_observations_in_interval(None, None)
+    self.assertEquals(0, len(result))
+
   def test_add_duplicate_observation(self):
     db = testdb()
     obs = observation("54321", "SWEDEN", 0, "20101010", "113000", 13.031, 60.123)
@@ -597,4 +718,22 @@ class rave_dom_db_test(unittest.TestCase):
     self.assertEquals("010000", result[0].time.strftime("%H%M%S"))
     self.assertEquals("20140416", result[1].date.strftime("%Y%m%d"))
     self.assertEquals("110000", result[1].time.strftime("%H%M%S"))
+    
+  def test_delete_stations(self):
+    station1 = wmo_station("SWEDEN", "0123", "12345", "0", "Pelle", 10.10, 20.20)
+    station2 = wmo_station("SWEDEN", "0123", "12346", "0", "Nisse", 30.10, 40.20)
+    
+    testdb().add(station1)
+    testdb().add(station2)
+    
+    result = self.classUnderTest.get_stations_in_bbox(0.0, 100.0, 50.0, 0.0)
+    self.assertEquals(2, len(result))
+    
+    # Execute delete
+    deleted_stations = self.classUnderTest.delete_all_stations()
+    self.assertEquals(2, deleted_stations)
+    
+    # check that all (both) stations are no longer in db
+    result = self.classUnderTest.get_stations_in_bbox(0.0, 100.0, 50.0, 0.0)
+    self.assertEquals(0, len(result))
     

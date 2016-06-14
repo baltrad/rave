@@ -325,7 +325,13 @@ class compositing(object):
       except IOError, e:
         self.logger.exception("Failed to open %s"%fname)
       
-      if not _polarscan.isPolarScan(obj) and not _polarvolume.isPolarVolume(obj):
+      is_scan = _polarscan.isPolarScan(obj)
+      if is_scan:
+        is_pvol = False
+      else:
+        is_pvol = _polarvolume.isPolarVolume(obj)
+        
+      if not is_scan and not is_pvol:
         self.logger.info("Input file %s is neither polar scan or volume, ignoring." % fname)
         continue
 
@@ -343,7 +349,10 @@ class compositing(object):
         
       objects[fname] = obj
       
-      self.logger.debug("File used in composite generation - UUID: %s, Node: %s, Nominal date and time: %sT%s", fname, node, obj.date, obj.time)
+      if is_scan:
+        self.logger.debug("Scan used in composite generation - UUID: %s, Node: %s, Nominal date and time: %sT%s", fname, node, obj.date, obj.time)
+      elif is_pvol:
+        self.logger.debug("PVOL used in composite generation - UUID: %s, Node: %s, Nominal date and time: %sT%s", fname, node, obj.date, obj.time)
       
     return objects, nodes
   

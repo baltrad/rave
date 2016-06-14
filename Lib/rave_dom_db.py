@@ -37,6 +37,7 @@ import migrate.versioning.api
 import migrate.versioning.repository
 from migrate import exceptions as migrateexc
 
+
 from sqlalchemy import (
     Column,
     MetaData,
@@ -300,6 +301,20 @@ class rave_db(object):
       return q.order_by(asc(observation.station)) \
               .order_by(asc(observation.date)) \
               .order_by(asc(observation.time)).all()
+              
+  def delete_observations_in_interval(self, startdt, enddt):
+    with self.get_session() as s:
+      q = s.query(observation)
+      if startdt != None:
+        q = q.filter(observation.date + observation.time >= startdt)
+
+      if enddt != None:
+        q = q.filter(observation.date + observation.time <= enddt)
+        
+      no_of_observations = q.delete()
+      s.commit()
+      
+      return no_of_observations
   
   def get_station(self, stationid):
     with self.get_session() as s:
@@ -313,6 +328,13 @@ class rave_db(object):
                                  .filter(wmo_station.latitude>=lrlat)
       
       return q.all()
+    
+  def delete_all_stations(self):
+    with self.get_session() as s:
+      q = s.query(wmo_station)
+      no_of_stations = q.delete()
+      s.commit()
+      return no_of_stations
   
   def get_gra_coefficient(self, dt):
     with self.get_session() as s:
