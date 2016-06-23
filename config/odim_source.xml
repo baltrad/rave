@@ -102,7 +102,7 @@
     <detur plc="Tuerkheim" rad="DL72" wmo="10832"></detur>
     <deeis plc="Eisberg" rad="DL73" wmo="10780"></deeis>
     <deisn plc="Isen" rad="DL75" wmo="10873"></deisn>
-    <deflg plc="Feldberg" rad="DL81" wmo="10908"></deflg>
+    <defbg plc="Feldberg" rad="DL81" wmo="10908"></defbg>
     <demuc plc="Munchen" rad="DL82" wmo="10871"></demuc>
     <desna plc="Schnaupping" rad="DL82" wmo="10873"></desna>
     <demem plc="Memmingen" rad="DL84" wmo="10950"></demem>
