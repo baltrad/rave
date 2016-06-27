@@ -344,12 +344,14 @@ class rave_db(object):
 
   ## Return the most recent gra coefficient since dt
   # @param dt: From time when to search for coefficients
-  def get_newest_gra_coefficient(self, dt):
+  def get_newest_gra_coefficient(self, dt, dtmax=None):
     with self.get_session() as s:
       q = s.query(gra_coefficient).filter(gra_coefficient.date + gra_coefficient.time >= dt)
+      if dtmax != None:
+        q = q.filter(gra_coefficient.date + gra_coefficient.time <= dtmax)
       q = q.order_by(desc(gra_coefficient.date + gra_coefficient.time))
       return q.first()
-  
+
   def get_grapoints(self, dt, edt=None):
     with self.get_session() as s:
       q = s.query(grapoint).filter(grapoint.date + grapoint.time >= dt)

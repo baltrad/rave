@@ -82,6 +82,24 @@ def arglist2dict(arglist):
     result[arglist[i]] = arglist[i+1]
   return result
 
+
+##
+# Returns the backup coefficients to use. First the newest coefficient between
+# dt - maxage <= found <= dt is located. If none is found, then the climatologic
+# coefficients are used instead.
+#
+def get_backup_gra_coefficient(db, agedt, nowdt):
+  try:
+    coeff = db.get_newest_gra_coefficient(agedt, nowdt)
+    if coeff and not math.isnan(coeff.a) and not math.isnan(coeff.b) and not math.isnan(coeff.c):
+      logger.info("Reusing gra coefficients from %s %s"%(coeff.date, coeff.time))
+      return coeff.significant, coeff.points, coeff.loss, coeff.r, coeff.r_significant, coeff.corr_coeff, coeff.a, coeff.b, coeff.c, coeff.mean, coeff.stddev
+  except Exception, e:
+    logger.exception("Failed to aquire coefficients")
+
+  logger.warn("Could not aquire coefficients newer than %s, defaulting to climatologic"%agedt.strftime("%Y%m%d %H:%M:%S"))
+  return "False", 0, 0, 0.0, "False", 0.0, DEFAULTA, DEFAULTB, DEFAULTC, 0.0, 0.0
+
 ## Creates a composite
 #@param files the list of files to be used for generating the composite
 #@param arguments the arguments defining the composite
@@ -211,7 +229,10 @@ def generate(files, arguments):
       gra.B = grac.b
       gra.C = grac.c
     else:
-      logger.info("Could not find coefficients for given time, using default climatological coefficients, quantity: %s"%quantity)
+      logger.info("Could not find coefficients for given time, trying to get aged or climatologic coefficients")
+      nowdt = datetime.datetime(int(edate[:4]), int(edate[4:6]), int(edate[6:]), int(etime[:2]), int(etime[2:4]), 0)
+      agedt = nowdt - datetime.timedelta(seconds=3600 * 48) # 2 days back
+      sig,pts,loss,r,rsig,corr,gra.A,gra.B,gra.C,mean,dev = get_backup_gra_coefficient(db, agedt, nowdt)
       
     dfield = result.getQualityFieldByHowTask(distancefield)
     gra_field = gra.apply(dfield, result)

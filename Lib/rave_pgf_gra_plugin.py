@@ -138,19 +138,15 @@ def calculate_gra_coefficient(distancefield, interval, adjustmentfile, etime, ed
       else:
         significant, npoints, loss, r, sig, corr_coeff, a, b, c, m, dev = gra.generate(points, edate, etime)
       if math.isnan(a) or math.isnan(b) or math.isnan(c):
-        logger.error("A/B or C for %s %s is not a number" % (acrrproduct.date, acrrproduct.time))
-        generate_backup_coeff = True
+        logger.error("A/B or C for %s %s is not a number: %f,%f,%f" % (acrrproduct.date, acrrproduct.time, a, b, c))
+        return
     except Exception:
       logger.exception("Failed during gra coefficients generation")
-      generate_backup_coeff = True
+      return
   else:
-    generate_backup_coeff = True
-  if generate_backup_coeff:
-    logger.info("Failed to generate gra coefficients. Trying to fallback to usable coefficients.")
-    maxage = datetime.datetime(int(d[:4]), int(d[4:6]), int(d[6:8]), int(t[0:2]), int(t[2:4]), int(t[4:6]))
-    maxage = maxage - datetime.timedelta(hours=TIMELIMIT_CLIMATOLOGIC_COEFF) # Use coefficients that are newer than 48 hours. Otherwise fallback to the climatologic ones.
-    significant, npoints, loss, r, sig, corr_coeff, a, b, c, m, dev = get_backup_gra_coefficient(db, maxage)
-# Also store the coefficients in the database so that we can search for them when applying the coefficients
+    return
+
+  # If we come here, store the coefficients in the database so that we can search for them when applying the coefficients
   NOD = odim_source.NODfromSource(acrrproduct)
   if not NOD:
     NOD = ""
