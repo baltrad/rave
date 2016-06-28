@@ -122,7 +122,7 @@ rave_observation=Table("rave_observation", meta,
                        Column("liquid_precipitation", Float, nullable=True),
                        Column("accumulation_period", Integer, nullable=True),
                        Column("valid_fields_bitmask", Integer, nullable=True),
-                       PrimaryKeyConstraint("station", "date", "time", "accumulation_period", "type"))
+                       PrimaryKeyConstraint("station", "date", "time", "accumulation_period"))
 
 # The coefficients used for gra
 rave_gra_coefficient=Table("rave_gra_coefficient", meta,

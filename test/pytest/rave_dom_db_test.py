@@ -75,7 +75,6 @@ class rave_dom_db_test(unittest.TestCase):
     self.classUnderTest.create() 
 
   def tearDown(self):
-    #self.classUnderTest.drop()
     pass
 
   def test_add(self):
@@ -755,4 +754,3 @@ class rave_dom_db_test(unittest.TestCase):
     # check that all (both) stations are no longer in db
     result = self.classUnderTest.get_stations_in_bbox(0.0, 100.0, 50.0, 0.0)
     self.assertEquals(0, len(result))
-    
