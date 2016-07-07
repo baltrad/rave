@@ -396,7 +396,7 @@ class compositing(object):
   # dt - maxage <= found <= dt is located. If none is found, then the climatologic
   # coefficients are used instead.
   #
-  def get_backup_gra_coefficient(db, agedt, nowdt):
+  def get_backup_gra_coefficient(self, db, agedt, nowdt):
     try:
       coeff = db.get_newest_gra_coefficient(agedt, nowdt)
       if coeff and not math.isnan(coeff.a) and not math.isnan(coeff.b) and not math.isnan(coeff.c):
@@ -442,7 +442,7 @@ class compositing(object):
         gra.C = grac.c
       else:
         self.logger.info("Could not find coefficients for given time, trying to get aged or climatologic coefficients")
-        nowdt = datetime.datetime(int(edate[:4]), int(edate[4:6]), int(edate[6:]), int(etime[:2]), int(etime[2:4]), 0)
+        nowdt = datetime.datetime(int(d[:4]), int(d[4:6]), int(d[6:]), int(t[:2]), int(t[2:4]), 0)
         agedt = nowdt - datetime.timedelta(seconds=3600 * 48) # 2 days back
         sig,pts,loss,r,rsig,corr,gra.A,gra.B,gra.C,mean,dev = self.get_backup_gra_coefficient(db, agedt, nowdt)
         
