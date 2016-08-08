@@ -97,8 +97,9 @@ def qFromFstr(fstr):
 def q2hex(quants):
     b = copy(bitl)
     for q in quants:
-        i = QUANTITIES.index(q)
-        b[i] = 1
+        if q in QUANTITIES:
+          i = QUANTITIES.index(q)
+          b[i] = 1
     return hex(bitl2long(b))[:-1]
 
 

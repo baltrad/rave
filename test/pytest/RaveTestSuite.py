@@ -62,6 +62,7 @@ from rave_qitotal_quality_plugin_test import *
 from rave_pgf_quality_registry_mgr_test import *
 from rave_quality_chain_registry_test import *
 from odc_hac_test import *
+from rave_hexquant_test import *
 
 from algorithm_runner_test import *
 
