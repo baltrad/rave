@@ -49,6 +49,14 @@ class PyDealiasTest(unittest.TestCase):
         scan.addParameter(vrad)
         self.assertFalse(_dealias.dealiased(scan)) 
 
+    def test_notDealiased_notVRAD(self):
+        scan = _polarscan.new()
+        vrad = _polarscanparam.new()
+        vrad.quantity = "VRADH"
+        vrad.addAttribute("how/dealiased", "True")
+        scan.addParameter(vrad)
+        self.assertFalse(_dealias.dealiased(scan)) 
+
     def testDealiased(self):
         scan = _polarscan.new()
         vrad = _polarscanparam.new()
@@ -70,6 +78,39 @@ class PyDealiasTest(unittest.TestCase):
         self.assertFalse(different(scan, dscan))
         self.assertEquals("se.smhi.detector.dealias", scan.getParameter("VRAD").getAttribute("how/task"))
 
+    def testDealiasScan_VRAD(self):
+        # Really not relevant but we don't force what parameter to use
+        scan = _raveio.open(self.FIXTURE).object.getScan(0)
+        dscan = _raveio.open(self.DEALIASED).object
+        scan.addParameter(copyParam(scan.getParameter("VRAD"), "VRADH"))
+        dscan.addParameter(copyParam(dscan.getParameter("VRAD"), "VRADH"))
+
+        self.assertTrue(different(scan, dscan))
+        self.assertTrue(different(scan, dscan, "VRADH"))
+        
+        status = _dealias.dealias(scan, "VRAD")
+        self.assertFalse(different(scan, dscan, "VRAD"))
+        self.assertTrue(different(scan, dscan, "VRADH"))
+        self.assertFalse(scan.getParameter("VRADH").hasAttribute("how/task"))
+        self.assertEquals("se.smhi.detector.dealias", scan.getParameter("VRAD").getAttribute("how/task"))
+
+    def testDealiasScan_VRADH(self):
+        # Really not relevant but we don't force what parameter to use
+        scan = _raveio.open(self.FIXTURE).object.getScan(0)
+        dscan = _raveio.open(self.DEALIASED).object
+        scan.addParameter(copyParam(scan.getParameter("VRAD"), "VRADH"))
+        dscan.addParameter(copyParam(dscan.getParameter("VRAD"), "VRADH"))
+
+        self.assertTrue(different(scan, dscan))
+        self.assertTrue(different(scan, dscan, "VRADH"))
+        
+        status = _dealias.dealias(scan, "VRADH")
+        self.assertTrue(different(scan, dscan, "VRAD"))
+        self.assertFalse(different(scan, dscan, "VRADH"))
+        self.assertFalse(scan.getParameter("VRAD").hasAttribute("how/task"))
+        self.assertEquals("se.smhi.detector.dealias", scan.getParameter("VRADH").getAttribute("how/task"))
+
+
     # Only checks the first scan in the volume.
     def testDealiasPvol(self):
         pvol = _raveio.open(self.FIXTURE).object
@@ -90,6 +131,15 @@ class PyDealiasTest(unittest.TestCase):
         status = _dealias.dealias(scan)
         self.assertFalse(status)
 
+    def testAlreadyDealiased_VRADH(self):
+        scan = _raveio.open(self.FIXTURE).object.getScan(0)
+        scan.addParameter(copyParam(scan.getParameter("VRAD"), "VRADH"))
+        self.assertTrue(_dealias.dealias(scan, "VRADH"))
+        self.assertFalse(_dealias.dealias(scan, "VRADH"))
+        self.assertTrue(_dealias.dealias(scan, "VRAD"))
+        self.assertFalse(_dealias.dealias(scan, "VRAD"))
+        self.assertFalse(_dealias.dealias(scan))
+
     def testWrongInput(self):
         vertical_profile = _raveio.open(self.BADINPUT).object
         try:
@@ -97,10 +147,24 @@ class PyDealiasTest(unittest.TestCase):
         except AttributeError:
             self.assertTrue(True)
 
-    
-def different(scan1, scan2):
-    a = scan1.getParameter("VRAD").getData()
-    b = scan2.getParameter("VRAD").getData()
+
+def copyParam(param, newquantity):
+    newparam = _polarscanparam.new()
+    newparam.setData(param.getData())
+    newparam.quantity=newquantity
+    newparam.gain = param.gain
+    newparam.offset = param.offset
+    newparam.undetect = param.undetect
+    newparam.nodata = param.nodata
+    if param.hasAttribute("how/task"):
+        newparam.addAttribute("how/task", param.getAttribute("how/task"))
+    if param.hasAttribute("how/dealiased"):
+        newparam.addAttribute("how/dealiased", param.getAttribute("how/dealiased"))
+    return newparam
+
+def different(scan1, scan2, quantity="VRAD"):
+    a = scan1.getParameter(quantity).getData()
+    b = scan2.getParameter(quantity).getData()
     c = a == b
     d = sum(where(equal(c, False), 1, 0).flat)
     if d > 0:

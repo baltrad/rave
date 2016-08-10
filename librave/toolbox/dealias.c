@@ -24,35 +24,34 @@ along with HLHDF.  If not, see <http://www.gnu.org/licenses/>.
 #include "dealias.h"
 
 double max_vector (double *a, int n) {
-	int i;
-	double max = -32000;
-	for (i=0; i<n; i++) {
-		if (*(a+i) > max) max = *(a+i);
-	}
-	return max;
+  int i;
+  double max = -32000;
+  for (i=0; i<n; i++) {
+    if (*(a+i) > max) max = *(a+i);
+  }
+  return max;
 }
 
 
 double min_vector (double *a, int n) {
-	int i;
-	double min = 32000;
-	for (i=0; i<n; i++) {
-		if (*(a+i) < min) min = *(a+i);
-	}
-	return min;
+  int i;
+  double min = 32000;
+  for (i=0; i<n; i++) {
+    if (*(a+i) < min) min = *(a+i);
+  }
+  return min;
 }
 
-
-int dealiased(PolarScan_t* scan) {
-  PolarScanParam_t* vrad = NULL;
+int dealiased_by_quantity(PolarScan_t* scan, const char* quantity) {
+  PolarScanParam_t* param = NULL;
   RaveAttribute_t* attr = NULL;
   int ret = 0;
   int retda = 0;
   char* da;
 
-  if (PolarScan_hasParameter(scan, "VRAD")) {
-    vrad = PolarScan_getParameter(scan, "VRAD");
-    attr = PolarScanParam_getAttribute(vrad, "how/dealiased");
+  if (PolarScan_hasParameter(scan, quantity)) {
+    param = PolarScan_getParameter(scan, quantity);
+    attr = PolarScanParam_getAttribute(param, "how/dealiased");
     if (attr != NULL) {
       retda = RaveAttribute_getString(attr, &da);
       if (retda) {
@@ -63,30 +62,17 @@ int dealiased(PolarScan_t* scan) {
     }
   }
   RAVE_OBJECT_RELEASE(attr);
-  RAVE_OBJECT_RELEASE(vrad);
+  RAVE_OBJECT_RELEASE(param);
   return ret;
 }
 
-
-int dealias_pvol(PolarVolume_t* inobj) {
-  PolarScan_t* scan = NULL;
-  int is, nscans;
-  int retval = 0;  /* Using this feels a bit artificial */
-
-  nscans = PolarVolume_getNumberOfScans(inobj);
-
-  for (is=0; is<nscans; is++) {
-    scan = PolarVolume_getScan(inobj, is);
-    retval = dealias_scan(scan);
-    RAVE_OBJECT_RELEASE(scan);
-  }
-
-  return retval;
+int dealiased(PolarScan_t* scan) {
+  return dealiased_by_quantity(scan, "VRAD");
 }
 
-
-int dealias_scan(PolarScan_t* scan) {
-  PolarScanParam_t* vrad = NULL;
+int dealias_scan_by_quantity(PolarScan_t* scan, const char* quantity)
+{
+  PolarScanParam_t* param = NULL;
   RaveAttribute_t* attr = NULL;
   RaveAttribute_t* dattr = RAVE_OBJECT_NEW(&RaveAttribute_TYPE);
   RaveAttribute_t* htattr = NULL;
@@ -99,13 +85,13 @@ int dealias_scan(PolarScan_t* scan) {
   nrays = PolarScan_getNrays(scan);
   elangle = PolarScan_getElangle(scan);
 
-  if ( (PolarScan_hasParameter(scan, "VRAD")) && (!dealiased(scan)) ) {
+  if ( (PolarScan_hasParameter(scan, quantity)) && (!dealiased_by_quantity(scan, quantity)) ) {
     if (elangle*RAD2DEG<=EMAX) {
-      vrad = PolarScan_getParameter(scan, "VRAD");
-      gain = PolarScanParam_getGain(vrad);
-      offset = PolarScanParam_getOffset(vrad);
-      nodata = PolarScanParam_getNodata(vrad);
-      undetect = PolarScanParam_getUndetect(vrad);
+      param = PolarScan_getParameter(scan, quantity);
+      gain = PolarScanParam_getGain(param);
+      offset = PolarScanParam_getOffset(param);
+      nodata = PolarScanParam_getNodata(param);
+      undetect = PolarScanParam_getUndetect(param);
       attr = PolarScan_getAttribute(scan, "how/NI");  /* only location? */
       if (attr != NULL) {
         RaveAttribute_getDouble(attr, &NI);
@@ -135,7 +121,7 @@ int dealias_scan(PolarScan_t* scan) {
       // read and re-arrange data (ray -> bin)
       for (ir=0; ir<nrays; ir++) {
         for (ib=0; ib<nbins; ib++) {
-          PolarScanParam_getValue(vrad, ib, ir, &val);
+          PolarScanParam_getValue(param, ib, ir, &val);
           if (val==nodata) *(vrad_nodata+ir+ib*nrays) = 1;
           if (val==undetect) *(vrad_undetect+ir+ib*nrays) = 1;
           if ((val!=nodata) && (val!=undetect)) *(vo+ir+ib*nrays) = offset+gain*val;
@@ -227,8 +213,8 @@ int dealias_scan(PolarScan_t* scan) {
           gain = (vmax-vmin)/253;
           offset = vmin-gain-EPSILON;
       }
-      PolarScanParam_setOffset (vrad, offset);
-      PolarScanParam_setGain (vrad, gain);
+      PolarScanParam_setOffset (param, offset);
+      PolarScanParam_setGain (param, gain);
 
       for (ir=0 ; ir<nrays ; ir++) {
         for (ib=0; ib<nbins; ib++) {
@@ -236,18 +222,18 @@ int dealias_scan(PolarScan_t* scan) {
           if (*(vrad_nodata+ir+ib*nrays)) *(vd+ir+ib*nrays) = nodata;
           if (*(vrad_undetect+ir+ib*nrays)) *(vd+ir+ib*nrays) = undetect;
 
-          PolarScanParam_setValue (vrad, ib, ir, *(vd+ir+ib*nrays));
+          PolarScanParam_setValue (param, ib, ir, *(vd+ir+ib*nrays));
         }
       }
 
       RaveAttribute_setName(dattr, "how/dealiased");
       RaveAttribute_setString(dattr, "True");
-      PolarScanParam_addAttribute(vrad, dattr);
+      PolarScanParam_addAttribute(param, dattr);
 
       // We don't report if we get any kind of memory error etc...
       htattr = RaveAttributeHelp_createString("how/task", "se.smhi.detector.dealias");
       if (htattr != NULL) {
-        PolarScanParam_addAttribute(vrad, htattr);
+        PolarScanParam_addAttribute(param, htattr);
       }
 
       RAVE_FREE(vrad_nodata);
@@ -264,16 +250,41 @@ int dealias_scan(PolarScan_t* scan) {
       RAVE_FREE(vt1);
       RAVE_FREE(dv);
       RAVE_FREE(v);
-      RAVE_OBJECT_RELEASE(vrad);
+      RAVE_OBJECT_RELEASE(param);
       RAVE_OBJECT_RELEASE(attr);
     }
     retval = 1;
 
   } else {
-    retval = 0;  /* No VRAD or already dealiased */
+    retval = 0;  /* No quantity or already dealiased */
   }
   RAVE_OBJECT_RELEASE(htattr);
   RAVE_OBJECT_RELEASE(dattr);
   return retval;
 }
 
+int dealias_scan(PolarScan_t* scan) {
+  return dealias_scan_by_quantity(scan, "VRAD");
+}
+
+int dealias_pvol_by_quantity(PolarVolume_t* inobj, const char* quantity)
+{
+  PolarScan_t* scan = NULL;
+  int is, nscans;
+  int retval = 0;  /* Using this feels a bit artificial */
+
+  nscans = PolarVolume_getNumberOfScans(inobj);
+
+  for (is=0; is < nscans; is++) {
+    scan = PolarVolume_getScan(inobj, is);
+    retval = dealias_scan_by_quantity(scan, quantity);
+    RAVE_OBJECT_RELEASE(scan);
+  }
+
+  return retval;
+
+}
+
+int dealias_pvol(PolarVolume_t* inobj) {
+  return dealias_pvol_by_quantity(inobj, "VRAD");
+}

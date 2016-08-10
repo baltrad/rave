@@ -74,19 +74,45 @@ double min_vector (double *a, int n);
 /**
  * Determines whether a scan is dealiased or not
  * @param[in] scan - input scan
+ * @param[in] quantity - the quantity to be dealiased
+ * @returns int 1 if scan is dealiased, otherwise 0
+ */
+int dealiased_by_quantity(PolarScan_t* scan, const char* quantity);
+
+/**
+ * Determines whether a scan is dealiased or not and performs dealiasing of the VRAD parameter. Same as calling
+ * dealiased_by_quantity(scan, "VRAD").
+ *
+ * @param[in] scan - input scan
  * @returns int 1 if scan is dealiased, otherwise 0
  */
 int dealiased(PolarScan_t* scan);
 
 /**
- * Function for dealiasing polar volume data
+ * Function for dealiasing polar volume data for the specified parameter.
+ * @param[in] source - input volume
+ * @param[in] quantity - the quantity
+ * @returns int 1 upon success, otherwise 0
+ */
+int dealias_pvol_by_quantity(PolarVolume_t* inobj, const char* quantity);
+
+/**
+ * Function for dealiasing polar volume data for the VRAD parameter. Same as invoking dealias_pvol_by_quantity(vol, "VRAD").
  * @param[in] source - input volume
  * @returns int 1 upon success, otherwise 0
  */
 int dealias_pvol(PolarVolume_t* inobj);
 
 /**
- * Function for dealiasing polar scan data
+ * Function for dealiasing polar scan data for the specified parameter
+ * @param[in] source - input scan
+ * @param[in] quantity - the quantity
+ * @returns int 1 upon success, otherwise 0
+ */
+int dealias_scan_by_quantity(PolarScan_t* inobj, const char* quantity);
+
+/**
+ * Function for dealiasing polar scan data for the VRAD parameter. Same as calling dealias_scan_by_quantity(scan, "VRAD").
  * @param[in] source - input scan
  * @returns int 1 upon success, otherwise 0
  */

@@ -68,8 +68,9 @@ static PyObject *ErrorObject;
 static PyObject* _dealiased_func(PyObject* self, PyObject* args) {
   PyObject* object = NULL;
   PyPolarScan* pyscan = NULL;
+  char* parameter = "VRAD";
 
-  if (!PyArg_ParseTuple(args, "O", &object)) {
+  if (!PyArg_ParseTuple(args, "O|s", &object, &parameter)) {
     return NULL;
   }
 
@@ -79,7 +80,7 @@ static PyObject* _dealiased_func(PyObject* self, PyObject* args) {
     raiseException_returnNULL(PyExc_AttributeError, "Dealiased check requires scan as input");
   }
 
-  if (dealiased(pyscan->scan)) {
+  if (dealiased_by_quantity(pyscan->scan, (const char*)parameter)) {
     return PyBool_FromLong(1); /* Instead of Py_RETURN_TRUE since compiler screams about dereferencing */
   }
   return PyBool_FromLong(0); /* Instead of Py_RETURN_FALSE since compiler screams about dereferencing */
@@ -97,8 +98,9 @@ static PyObject* _dealias_func(PyObject* self, PyObject* args)
   PyPolarScan* scan = NULL;
   PyPolarVolume* volume = NULL;
   int ret = 0;
+  char* parameter = "VRAD";
 
-  if (!PyArg_ParseTuple(args, "O", &object)) {
+  if (!PyArg_ParseTuple(args, "O|s", &object, &parameter)) {
     return NULL;
   }
 
@@ -111,9 +113,9 @@ static PyObject* _dealias_func(PyObject* self, PyObject* args)
   }
 
   if (PyPolarVolume_Check(object)) {
-    ret = dealias_pvol(volume->pvol);
+    ret = dealias_pvol_by_quantity(volume->pvol, (const char*)parameter);
   } else {
-    ret = dealias_scan(scan->scan);
+    ret = dealias_scan_by_quantity(scan->scan, (const char*)parameter);
   }
 
   if (ret) {
