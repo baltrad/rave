@@ -99,8 +99,9 @@ static PyObject* _dealias_func(PyObject* self, PyObject* args)
   PyPolarVolume* volume = NULL;
   int ret = 0;
   char* parameter = "VRAD";
+  double emax = EMAX;
 
-  if (!PyArg_ParseTuple(args, "O|s", &object, &parameter)) {
+  if (!PyArg_ParseTuple(args, "O|sd", &object, &parameter, &emax)) {
     return NULL;
   }
 
@@ -113,9 +114,9 @@ static PyObject* _dealias_func(PyObject* self, PyObject* args)
   }
 
   if (PyPolarVolume_Check(object)) {
-    ret = dealias_pvol_by_quantity(volume->pvol, (const char*)parameter);
+    ret = dealias_pvol_by_quantity(volume->pvol, (const char*)parameter, emax);
   } else {
-    ret = dealias_scan_by_quantity(scan->scan, (const char*)parameter);
+    ret = dealias_scan_by_quantity(scan->scan, (const char*)parameter, emax);
   }
 
   if (ret) {

@@ -77,7 +77,9 @@ except:
   pass
 
 from area_registry_test import *
+
 from PyDealiasTest import *
+
 from PyRadvolTest import *
 from PyCtfilterTest import *
 from PyPgfQtoolsTest import *

@@ -92,9 +92,10 @@ int dealiased(PolarScan_t* scan);
  * Function for dealiasing polar volume data for the specified parameter.
  * @param[in] source - input volume
  * @param[in] quantity - the quantity
+ * @param[in] emax - the maximum elevation angle
  * @returns int 1 upon success, otherwise 0
  */
-int dealias_pvol_by_quantity(PolarVolume_t* inobj, const char* quantity);
+int dealias_pvol_by_quantity(PolarVolume_t* inobj, const char* quantity, double emax);
 
 /**
  * Function for dealiasing polar volume data for the VRAD parameter. Same as invoking dealias_pvol_by_quantity(vol, "VRAD").
@@ -107,9 +108,10 @@ int dealias_pvol(PolarVolume_t* inobj);
  * Function for dealiasing polar scan data for the specified parameter
  * @param[in] source - input scan
  * @param[in] quantity - the quantity
+ * @param[in] emax - the maximum elevation angle
  * @returns int 1 upon success, otherwise 0
  */
-int dealias_scan_by_quantity(PolarScan_t* inobj, const char* quantity);
+int dealias_scan_by_quantity(PolarScan_t* inobj, const char* quantity, double emax);
 
 /**
  * Function for dealiasing polar scan data for the VRAD parameter. Same as calling dealias_scan_by_quantity(scan, "VRAD").

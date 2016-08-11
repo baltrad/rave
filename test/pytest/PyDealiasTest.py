@@ -124,6 +124,37 @@ class PyDealiasTest(unittest.TestCase):
 
         self.assertFalse(different(pvol.getScan(0), dscan))
 
+    # Only checks the first scan in the volume.
+    def testDealiasPvol_byEMAX_default(self):
+        pvol = _raveio.open(self.FIXTURE).object
+        dscan = _raveio.open(self.DEALIASED).object
+        self.assertTrue(different(pvol.getScan(0), dscan))        
+        status = _dealias.dealias(pvol, "VRAD")
+        for i in range(pvol.getNumberOfScans()):
+          scan = pvol.getScan(i)
+          if scan.hasParameter("VRAD"):
+            if scan.elangle <= 2.0*math.pi/180.0:
+              self.assertEquals("se.smhi.detector.dealias", scan.getParameter("VRAD").getAttribute("how/task"))
+            else:
+              self.assertFalse(scan.getParameter("VRAD").hasAttribute("how/task"))
+
+        self.assertFalse(different(pvol.getScan(0), dscan))
+
+    def testDealiasPvol_byEMAX_higher(self):
+        pvol = _raveio.open(self.FIXTURE).object
+        dscan = _raveio.open(self.DEALIASED).object
+        self.assertTrue(different(pvol.getScan(0), dscan))        
+        status = _dealias.dealias(pvol, "VRAD", 30.0)
+        for i in range(pvol.getNumberOfScans()):
+          scan = pvol.getScan(i)
+          if scan.hasParameter("VRAD"):
+            if scan.elangle <= 30.0*math.pi/180.0:
+              self.assertEquals("se.smhi.detector.dealias", scan.getParameter("VRAD").getAttribute("how/task"))
+            else:
+              self.assertFalse(scan.getParameter("VRAD").hasAttribute("how/task"))
+
+        self.assertFalse(different(pvol.getScan(0), dscan))
+
     def testAlreadyDealiased(self):
         scan = _raveio.open(self.FIXTURE).object.getScan(0)
         status = _dealias.dealias(scan)
@@ -146,7 +177,6 @@ class PyDealiasTest(unittest.TestCase):
             status = _dealias.dealias(vertical_profile)
         except AttributeError:
             self.assertTrue(True)
-
 
 def copyParam(param, newquantity):
     newparam = _polarscanparam.new()

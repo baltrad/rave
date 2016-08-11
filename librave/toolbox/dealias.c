@@ -70,7 +70,7 @@ int dealiased(PolarScan_t* scan) {
   return dealiased_by_quantity(scan, "VRAD");
 }
 
-int dealias_scan_by_quantity(PolarScan_t* scan, const char* quantity)
+int dealias_scan_by_quantity(PolarScan_t* scan, const char* quantity, double emax)
 {
   PolarScanParam_t* param = NULL;
   RaveAttribute_t* attr = NULL;
@@ -86,7 +86,7 @@ int dealias_scan_by_quantity(PolarScan_t* scan, const char* quantity)
   elangle = PolarScan_getElangle(scan);
 
   if ( (PolarScan_hasParameter(scan, quantity)) && (!dealiased_by_quantity(scan, quantity)) ) {
-    if (elangle*RAD2DEG<=EMAX) {
+    if (elangle*RAD2DEG<=emax) {
       param = PolarScan_getParameter(scan, quantity);
       gain = PolarScanParam_getGain(param);
       offset = PolarScanParam_getOffset(param);
@@ -264,10 +264,10 @@ int dealias_scan_by_quantity(PolarScan_t* scan, const char* quantity)
 }
 
 int dealias_scan(PolarScan_t* scan) {
-  return dealias_scan_by_quantity(scan, "VRAD");
+  return dealias_scan_by_quantity(scan, "VRAD", EMAX);
 }
 
-int dealias_pvol_by_quantity(PolarVolume_t* inobj, const char* quantity)
+int dealias_pvol_by_quantity(PolarVolume_t* inobj, const char* quantity, double emax)
 {
   PolarScan_t* scan = NULL;
   int is, nscans;
@@ -277,7 +277,7 @@ int dealias_pvol_by_quantity(PolarVolume_t* inobj, const char* quantity)
 
   for (is=0; is < nscans; is++) {
     scan = PolarVolume_getScan(inobj, is);
-    retval = dealias_scan_by_quantity(scan, quantity);
+    retval = dealias_scan_by_quantity(scan, quantity, emax);
     RAVE_OBJECT_RELEASE(scan);
   }
 
@@ -286,5 +286,5 @@ int dealias_pvol_by_quantity(PolarVolume_t* inobj, const char* quantity)
 }
 
 int dealias_pvol(PolarVolume_t* inobj) {
-  return dealias_pvol_by_quantity(inobj, "VRAD");
+  return dealias_pvol_by_quantity(inobj, "VRAD", EMAX);
 }
