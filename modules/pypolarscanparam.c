@@ -610,6 +610,35 @@ static PyObject* _pypolarscanparam_convertDataDoubleToUchar(PyPolarScanParam* se
 }
 
 /**
+ * Clones a parameter.
+ * @param[in] self - this instance
+ * @param[in] args - N/A
+ * @returns a clone on success otherwise NULL
+ */
+static PyObject* _pypolarscanparam_clone(PyPolarScanParam* self, PyObject* args)
+{
+  PolarScanParam_t* c = NULL;
+  PyObject* result = NULL;
+
+  if (!PyArg_ParseTuple(args, "")) {
+      return NULL;
+  }
+
+  c = RAVE_OBJECT_CLONE(self->scanparam);
+  if (c == NULL) {
+    raiseException_returnNULL(PyExc_RuntimeError, "Failed to clone parameter");
+  }
+
+  result = (PyObject*)PyPolarScanParam_New(c);
+  if (result == NULL) {
+    PyErr_SetString(PyExc_RuntimeError, "Could not create clone");
+  }
+
+  RAVE_OBJECT_RELEASE(c);
+  return result;
+}
+
+/**
  * All methods a polar scan can have
  */
 static struct PyMethodDef _pypolarscanparam_methods[] =
@@ -637,6 +666,7 @@ static struct PyMethodDef _pypolarscanparam_methods[] =
   {"removeQualityField", (PyCFunction) _pypolarscanparam_removeQualityField, 1},
   {"toField", (PyCFunction)_pypolarscanparam_toField, 1},
   {"convertDataDoubleToUchar", (PyCFunction)_pypolarscanparam_convertDataDoubleToUchar, 1},
+  {"clone", (PyCFunction)_pypolarscanparam_clone, 1},
   {NULL, NULL } /* sentinel */
 };
 

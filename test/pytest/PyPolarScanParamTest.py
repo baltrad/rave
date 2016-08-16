@@ -498,6 +498,31 @@ class PyPolarScanParamTest(unittest.TestCase):
     except TypeError:
         pass
     
+  def test_clone(self):
+    obj = _polarscanparam.new()
+    obj.nodata = 255.0
+    obj.undetect = 0.0
+    obj.gain = 0.5
+    obj.offset = 10.0
+    a=numpy.arange(30)
+    a=numpy.array(a.astype(numpy.float64),numpy.float64)
+    a=numpy.reshape(a,(5,6)).astype(numpy.float64)      
+    a[0][0] = obj.undetect
+    a[2][1] = obj.nodata
+    a[4][5] = obj.undetect
+
+    obj.addAttribute("how/nisse", 123.0)
+
+    obj.setData(a)
+
+    c = obj.clone()
+    self.assertEqual(obj.nodata, c.nodata)
+    self.assertEqual(obj.undetect, c.undetect)
+    self.assertEqual(obj.gain, c.gain)
+    self.assertEqual(obj.offset, c.offset)
+    self.assertEqual(obj.nodata, c.nodata)
+    self.assertAlmostEqual(123.0, c.getAttribute("how/nisse"), 4)
+    
 if __name__ == "__main__":
   #import sys;sys.argv = ['', 'Test.testName']
   unittest.main()
