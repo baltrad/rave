@@ -514,12 +514,15 @@ class compositing(object):
           pass
 
   ##
-  # Converts a string into a number, either int or float
+  # Converts a string into a number, either int or float. If value already is an int or float, that value is returned.
   # @param sval the string to translate
   # @return the translated value
   # @throws ValueError if value not could be translated
   #
   def _strToNumber(self, sval):
+    if isinstance(sval, float) or isinstance(sval, int):
+      return sval
+
     try:
       return int(sval)
     except ValueError, e:

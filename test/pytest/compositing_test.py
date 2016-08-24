@@ -196,3 +196,13 @@ class compositing_test(unittest.TestCase):
       self.fail("Expected ValueError")
     except ValueError, e:
       pass
+
+  def test_strToNumber(self):
+    self.assertEquals(1.5, self.classUnderTest._strToNumber("1.5"), 4)
+    self.assertEquals(1, self.classUnderTest._strToNumber("1"))
+    self.assertEquals(1.0, self.classUnderTest._strToNumber("1.0"), 4)
+
+  def test_strToNumber_preserveValue(self):
+    self.assertEquals(1.5, self.classUnderTest._strToNumber(1.5), 4)
+    self.assertEquals(1, self.classUnderTest._strToNumber(1))
+

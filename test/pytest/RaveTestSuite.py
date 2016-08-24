@@ -68,7 +68,7 @@ from algorithm_runner_test import *
 
 try:
   import mock
-  if mock.__version__ == '1.0.1':
+  if int(mock.__version__[0]) >= 1:
     from rave_quality_chain_plugin_test import *
     from compositing_test import *
     from rave_pgf_volume_plugin_test import *
@@ -99,7 +99,7 @@ from rave_fm12_test import *
 # Gra adjustment tests requires mock version 1.0.1 or higher.
 try:
   import mock
-  if mock.__version__ == '1.0.1':
+  if int(mock.__version__[0]) >= 1:
     from gadjust_obsmatcher_test import *
     from gadjust_gra_test import *
 except:
