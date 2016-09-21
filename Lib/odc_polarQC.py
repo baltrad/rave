@@ -49,7 +49,7 @@ def QC(pload):
         p = rave_pgf_quality_registry.get_plugin(a)
         if not p:
             raise AttributeError, "Could not find %s plugin." % a
-        pload, _ = p.process(pload)
+        pload = p.process(pload)
         if isinstance(pload, tuple):
           pload, algorithm = pload[0],pload[1]
     return pload
