@@ -148,6 +148,8 @@ def generate(files, arguments):
   if args.has_key("area"):
     areaid = args["area"]
   
+  comp.use_site_source = True
+  
   result = comp.generate(None, None, areaid)
 
   result.objectType = _rave.Rave_ObjectType_IMAGE 

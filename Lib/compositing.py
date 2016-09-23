@@ -108,6 +108,7 @@ class compositing(object):
     self.logger = logger
     self.dumppath = None
     self.dump = False
+    self.use_site_source = False
     
   def generate(self, dd, dt, area=None):
     return self._generate(dd, dt, area)
@@ -130,6 +131,7 @@ class compositing(object):
       self.logger.debug("Reprocess quality fields = %s"%`self.reprocess_quality_field`)
       self.logger.debug("Dumping path = %s"%`self.dumppath`)
       self.logger.debug("Dumping output = %s"%`self.dump`)
+      self.logger.debug("Use site source = %s"%`self.use_site_source`)
       
       if area is not None:
         self.logger.debug("Area = %s"%area)
@@ -247,7 +249,15 @@ class compositing(object):
     plc = result.source
     result.source = "%s,CMT:%s"%(CENTER_ID,plc)
     result.addAttribute('how/nodes', nodes)
-    
+    if self.use_site_source and len(objects) == 1:
+      try:
+        result.source = objects[0].source
+        if result.source.find("NOD:") == -1:
+          tmpid = odim_source.NODfromSource(objects[0])
+          result.source="%s,NOD:%s"%(result.source, tmpid)
+      except:
+        self.logger.exception("Failed to get source from object")
+
     if self.verbose:
       self.logger.debug("Returning resulting composite image")
 
