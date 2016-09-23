@@ -131,10 +131,26 @@ static PyObject* _trigger_memory_status(PyObject* self, PyObject* args)
   return Py_None;
 }
 
+/**
+ * RAVE memory status is printed to stdout.
+ */
+static PyObject* _print_memory_status(PyObject* self, PyObject* args)
+{
+#ifdef RAVE_MEMORY_DEBUG
+
+  rave_alloc_print_statistics();
+
+#endif
+
+  Py_INCREF(Py_None);
+  return Py_None;
+}
+
 static struct PyMethodDef _helpers_functions[] =
 {
 { "CommonGainOffset", (PyCFunction) _common_gain_offset, METH_VARARGS },
 { "triggerMemoryStatus", (PyCFunction)_trigger_memory_status, METH_VARARGS },
+{ "printMemoryStatus", (PyCFunction)_print_memory_status, METH_VARARGS },
 { NULL, NULL }
 };
 

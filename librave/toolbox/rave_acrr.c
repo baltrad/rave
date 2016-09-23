@@ -314,19 +314,23 @@ int RaveAcrr_sum(RaveAcrr_t* self, CartesianParam_t* param, double zr_a, double 
       RaveValueType rvt = CartesianParam_getConvertedValue(param, x, y, &v);
       RaveField_getValue(self->sd, x, y, &acrr);
 
-      if (rvt == RaveValueType_DATA) {
-        double dist = 0.0, avgdist = 0.0, ndist = 0.0;
-        double rr = dBZ2R(v, zr_a, zr_b);
+      if (rvt == RaveValueType_DATA || rvt == RaveValueType_UNDETECT) {
+        double dist = 0.0, dist_sum = 0.0, ndist = 0.0;
 
         RaveField_getValue(dfield, x, y, &dist);
-        RaveField_getValue(self->dd, x, y, &avgdist);
-        avgdist += ((dist*dgain + doffset) / 1000.0);  /* km */
-        RaveField_setValue(self->dd, x, y, avgdist);
+        RaveField_getValue(self->dd, x, y, &dist_sum);
+        dist_sum += ((dist*dgain + doffset) / 1000.0);  /* km */
+        RaveField_setValue(self->dd, x, y, dist_sum);
         RaveField_getValue(self->cd, x, y, &ndist);
         ndist += 1;
         RaveField_setValue(self->cd, x, y, ndist);
-        acrr += rr;
-        RaveField_setValue(self->sd, x, y, acrr);
+
+        if (rvt == RaveValueType_DATA) {
+          double rr = dBZ2R(v, zr_a, zr_b);
+          acrr += rr;
+          RaveField_setValue(self->sd, x, y, acrr);
+        }
+
       } else if (rvt == RaveValueType_NODATA) {
         double nval = 0.0;
         RaveField_getValue(self->nd, x, y, &nval);
@@ -388,34 +392,37 @@ CartesianParam_t* RaveAcrr_accumulate(RaveAcrr_t* self, double acpt, long N, dou
       long nval = 0;
       RaveField_getValue(self->nd, x, y, &dnval);
       CartesianParam_setValue(param, x, y, self->nodata);
+      RaveField_setValue(qfield, x, y, self->nodata);
       nval = (long)dnval;
 
       if ((long)self->nracc < N) {
         nval = nval + (N - self->nracc);
       }
       if ((long)nval <= acceptN) {
-        RaveField_getValue(self->sd, x, y, &acrr);
-        if (acrr > 0.0) {
-          double avgdist = 0.0, ndist = 0.0;
-          RaveField_getValue(self->dd, x, y, &avgdist);
-          RaveField_getValue(self->cd, x, y, &ndist);
-          if (ndist != 0.0) {
-            RaveField_setValue(qfield, x, y, avgdist/ndist);
-          } else {
-            RAVE_INFO0("ndist == 0.0 => Division by zero");
-            RaveField_setValue(qfield, x, y, 0.0);
-          }
-          if (N != nval) {
-            acrr /= (double)((double)N-nval);
-            acrr *= hours;
-            CartesianParam_setValue(param, x, y, acrr);
-          } else {
-            RAVE_INFO0("N == nval => Division by zero");
-            CartesianParam_setValue(param, x, y, self->nodata);
-          }
+
+        double dist_sum = 0.0, ndist = 0.0;
+        RaveField_getValue(self->dd, x, y, &dist_sum);
+        RaveField_getValue(self->cd, x, y, &ndist);
+        if (ndist != 0.0) {
+          RaveField_setValue(qfield, x, y, dist_sum/ndist);
         } else {
-          CartesianParam_setValue(param, x, y, self->undetect);
+          RAVE_INFO0("ndist == 0.0 => Division by zero");
+          RaveField_setValue(qfield, x, y, 0.0);
         }
+
+        RaveField_getValue(self->sd, x, y, &acrr);
+        if (acrr <= 0.0) {
+          CartesianParam_setValue(param, x, y, self->undetect);
+        } else if (N != nval) {
+          acrr /= (double)((double)N-nval);
+          acrr *= hours;
+          CartesianParam_setValue(param, x, y, acrr);
+        } else {
+          RAVE_INFO0("N == nval => Division by zero");
+          CartesianParam_setValue(param, x, y, self->nodata);
+          RaveField_setValue(qfield, x, y, self->nodata);
+        }
+
       }
     }
   }
