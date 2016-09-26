@@ -155,6 +155,17 @@ class PyDealiasTest(unittest.TestCase):
 
         self.assertFalse(different(pvol.getScan(0), dscan))
 
+    # Only checks the first scan in the volume.
+    def test_create_dealiased_parameter(self):
+        pvol = _raveio.open(self.FIXTURE).object
+        dscan = _raveio.open(self.DEALIASED).object
+        self.assertTrue(different(pvol.getScan(0), dscan))
+        param = _dealias.create_dealiased_parameter(pvol.getScan(0), "VRAD")
+        self.assertFalse(different_param(dscan.getParameter("VRAD"), param))
+        dscan.getParameter("VRAD").addAttribute("how/something", "jupp")
+        # verify that created param is copy and not reference
+        self.assertFalse(param.hasAttribute("how/something"))
+
     def testAlreadyDealiased(self):
         scan = _raveio.open(self.FIXTURE).object.getScan(0)
         status = _dealias.dealias(scan)
@@ -201,3 +212,14 @@ def different(scan1, scan2, quantity="VRAD"):
         return True
     else:
         return False 
+    
+def different_param(p1, p2):
+    a = p1.getData()
+    b = p2.getData()
+    c = a == b
+    d = sum(where(equal(c, False), 1, 0).flat)
+    if d > 0:
+        return True
+    else:
+        return False 
+    

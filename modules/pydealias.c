@@ -29,6 +29,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "dealias.h"
 #include "pypolarvolume.h"
 #include "pypolarscan.h"
+#include "pypolarscanparam.h"
 #include "pyrave_debug.h"
 
 /**
@@ -126,11 +127,39 @@ static PyObject* _dealias_func(PyObject* self, PyObject* args)
   }
 }
 
+static PyObject* _create_dealiased_parameter(PyObject* self, PyObject* args)
+{
+  PyObject* object = NULL;
+  PyPolarScan* scan = NULL;
+  PolarScanParam_t* param = NULL;
+  PyObject* result = NULL;
+
+  char* parameter = NULL;
+
+  if (!PyArg_ParseTuple(args, "Os", &object, &parameter)) {
+    return NULL;
+  }
+
+  if (PyPolarScan_Check(object)) {
+    scan = (PyPolarScan*)object;
+  } else {
+    raiseException_returnNULL(PyExc_AttributeError, "create_dealiased_parameter requires scan as input");
+  }
+  param = create_dealiased_parameter(scan->scan, parameter);
+  if (param != NULL) {
+    result = (PyObject*)PyPolarScanParam_New(param);
+  } else {
+    PyErr_SetString(PyExc_RuntimeWarning, "Could not create dealiased parameter");
+  }
+  RAVE_OBJECT_RELEASE(param);
+  return result;
+}
 
 static struct PyMethodDef _dealias_functions[] =
 {
   { "dealiased", (PyCFunction) _dealiased_func, METH_VARARGS },
   { "dealias", (PyCFunction) _dealias_func, METH_VARARGS },
+  { "create_dealiased_parameter", (PyCFunction) _create_dealiased_parameter, METH_VARARGS },
   { NULL, NULL }
 };
 
@@ -149,6 +178,7 @@ PyMODINIT_FUNC init_dealias(void)
   }
   import_pypolarvolume();
   import_pypolarscan();
+  import_pypolarscanparam();
   import_array(); /*To make sure I get access to Numeric*/
   PYRAVE_DEBUG_INITIALIZE;
 }
