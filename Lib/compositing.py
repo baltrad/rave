@@ -23,6 +23,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @author Anders Henja and Daniel Michelson, SMHI
 ## @date 2014-08-12
 import os  # Provisional, until compositing can handle prefab QC
+import re
+
 import _rave
 import _polarscan
 import _polarvolume
@@ -140,6 +142,19 @@ class compositing(object):
         self.logger.debug("  pcsid = %s"%self.pcsid)
         self.logger.debug("  xscale = %f, yscale = %f"%(self.xscale, self.yscale))    
 
+  ## Removes CMT:<...> from the string
+  # @param[in] str - the string from which CMT should be removed
+  # @return the source with CMT removed
+  #
+  def remove_CMT_from_source(self, str):
+    v=re.sub("CMT:[^,]+", "", str)
+    v=re.sub(",,",",",v)
+    if v.endswith(","):
+      v=v[0:-1]
+    if v.startswith(","):
+      v=v[1:]
+    return v
+
   ## Generates the cartesian image.
   #
   # @param dd: date in format YYYYmmdd
@@ -254,7 +269,7 @@ class compositing(object):
         result.source = objects[0].source
         if result.source.find("NOD:") == -1:
           tmpid = odim_source.NODfromSource(objects[0])
-          result.source="%s,NOD:%s"%(result.source, tmpid)
+          result.source="%s,NOD:%s,CMT:%s"%(self.remove_CMT_from_source(result.source), tmpid, plc)
       except:
         self.logger.exception("Failed to get source from object")
 
