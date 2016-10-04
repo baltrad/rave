@@ -270,6 +270,8 @@ class compositing(object):
         if result.source.find("NOD:") == -1:
           tmpid = odim_source.NODfromSource(objects[0])
           result.source="%s,NOD:%s,CMT:%s"%(self.remove_CMT_from_source(result.source), tmpid, plc)
+        else:
+          result.source="%s,CMT:%s"%(self.remove_CMT_from_source(result.source), plc)
       except:
         self.logger.exception("Failed to get source from object")
 
