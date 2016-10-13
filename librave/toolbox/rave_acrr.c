@@ -29,6 +29,10 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "raveutil.h"
 #include <string.h>
 
+/** The resolution to use for scaling the distance from pixel to used radar. */
+/** By multiplying the values in the distance field by 1000, we get the value in unit meters. */
+#define ACRR_DISTANCE_TO_RADAR_RESOLUTION 1000.0
+
 /**
  * Represents the acrr generator
  */
@@ -274,7 +278,8 @@ int RaveAcrr_sum(RaveAcrr_t* self, CartesianParam_t* param, double zr_a, double 
   long xsize = 0, ysize = 0;
   long x = 0, y = 0;
   RaveField_t* dfield = NULL;
-  double dgain = 1.0, doffset = 0.0;
+  double dgain = 1.0;
+  double doffset = 0.0;
   RAVE_ASSERT((self != NULL), "self == NULL");
 
   dfield = CartesianParam_getQualityFieldByHowTask(param, RaveAcrr_getQualityFieldName(self));
@@ -377,7 +382,7 @@ CartesianParam_t* RaveAcrr_accumulate(RaveAcrr_t* self, double acpt, long N, dou
       !RaveField_createData(qfield, xsize, ysize, RaveDataType_DOUBLE) ||
       !CartesianParam_setQuantity(param, "ACRR") ||
       !RaveAcrrInternal_addStringAttributeToField(qfield, "how/task", "se.smhi.composite.distance.radar") ||
-      !RaveAcrrInternal_addDoubleAttributeToField(qfield, "what/gain", 1.0) ||
+      !RaveAcrrInternal_addDoubleAttributeToField(qfield, "what/gain", ACRR_DISTANCE_TO_RADAR_RESOLUTION) ||
       !RaveAcrrInternal_addDoubleAttributeToField(qfield, "what/offset", 0.0) ||
       !RaveAcrrInternal_addDoubleAttributeToParam(param, "what/prodpar", hours)) {
     RAVE_ERROR0("Failed to create cartesian parameter");
@@ -401,9 +406,10 @@ CartesianParam_t* RaveAcrr_accumulate(RaveAcrr_t* self, double acpt, long N, dou
       if ((long)nval <= acceptN) {
 
         double dist_sum = 0.0, ndist = 0.0;
-        RaveField_getValue(self->dd, x, y, &dist_sum);
+        RaveField_getValue(self->dd, x, y, &dist_sum); // dist_sum is in km.
         RaveField_getValue(self->cd, x, y, &ndist);
         if (ndist != 0.0) {
+          // store value in unit km. Multiplied with the gain value of 1000.0 it will give unit meters.
           RaveField_setValue(qfield, x, y, dist_sum/ndist);
         } else {
           RAVE_INFO0("ndist == 0.0 => Division by zero");

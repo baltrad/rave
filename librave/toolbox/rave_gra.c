@@ -203,7 +203,7 @@ double RaveGra_getZRB(RaveGra_t* self)
 /**
  * Applies the gra coefficient on MM/H.
  * @param[in] self - self
- * @param[in] distance - the distance to the radar for this value
+ * @param[in] distance - the distance to the radar for this value. in unit km.
  * @param[in] value - the MM/H
  * @param[in] dtype - the data type
  * @returns the corrected value
@@ -227,7 +227,7 @@ static double applyAcrr(RaveGra_t* self, double distance, double value, RaveValu
 /**
  * Applies the gra coefficient on reflectivity by converting the dbz to mm/h using zrA and zrb.
  * @param[in] self - self
- * @param[in] distance - the distance to the radar for this value
+ * @param[in] distance - the distance to the radar for this value. in unit km.
  * @param[in] value - the MM/H
  * @param[in] dtype - the data type
  * @returns the corrected value
@@ -290,7 +290,8 @@ CartesianParam_t* RaveGra_apply(RaveGra_t* self, RaveField_t* distance, Cartesia
       double v = 0.0, dist = 0.0;
       dt = CartesianParam_getConvertedValue(grafield, x, y, &v);
       RaveField_getValue(distance, x, y, &dist);
-      CartesianParam_setConvertedValue(grafield, x, y, applyGra(self, doffset + dgain*dist, v, dt));
+      double distanceInMeters = doffset + dgain*dist;
+      CartesianParam_setConvertedValue(grafield, x, y, applyGra(self, distanceInMeters/1000.0, v, dt));
     }
   }
   sprintf(coeffs, "GRA: A=%f, B=%f, C=%f, low_db=%f, high_db=%f",self->A, self->B, self->C, self->lowerThreshold, self->upperThreshold);

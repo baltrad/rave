@@ -219,7 +219,7 @@ class PyAcrrTest(unittest.TestCase):
     Acrr = result.getData().flatten()
     qfield = result.getQualityFieldByHowTask("se.smhi.composite.distance.radar")
     self.assertAlmostEqual(0.0, qfield.getAttribute("what/offset"), 4)
-    self.assertAlmostEqual(1.0, qfield.getAttribute("what/gain"), 4)
+    self.assertAlmostEqual(1000.0, qfield.getAttribute("what/gain"), 4)
     Dist = qfield.getData().flatten()
     for i in range(len(refAcrr)):
       self.assertAlmostEquals(Acrr[i], refAcrr[i], 2)
@@ -272,7 +272,7 @@ class PyAcrrTest(unittest.TestCase):
     Acrr = result.getData().flatten()
     qfield = result.getQualityFieldByHowTask("se.smhi.composite.distance.radar")
     self.assertAlmostEqual(0.0, qfield.getAttribute("what/offset"), 4)
-    self.assertAlmostEqual(1.0, qfield.getAttribute("what/gain"), 4)
+    self.assertAlmostEqual(1000.0, qfield.getAttribute("what/gain"), 4)
     Dist = qfield.getData().flatten()
     for i in range(len(refAcrr)):
       self.assertAlmostEquals(Acrr[i], refAcrr[i], 2)

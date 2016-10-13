@@ -190,7 +190,7 @@ def generate(files, arguments):
       nodes = obj.getAttribute("how/nodes")
 
     if obj.xscale != img.xscale or obj.yscale != img.yscale or \
-       obj.projection.definition != img.projection.definition:
+      obj.projection.definition != img.projection.definition:
       raise AttributeError, "Scale or projdef inconsistancy for used area"
 
     par = obj.getParameter(quantity)
@@ -235,7 +235,9 @@ def generate(files, arguments):
       sig,pts,loss,r,rsig,corr,gra.A,gra.B,gra.C,mean,dev = get_backup_gra_coefficient(db, agedt, nowdt)
       
     dfield = result.getQualityFieldByHowTask(distancefield)
+    
     gra_field = gra.apply(dfield, result)
+      
     gra_field.quantity = result.quantity + "_CORR"
     img.addParameter(gra_field)
 

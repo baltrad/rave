@@ -72,7 +72,8 @@ typedef struct CompositeValues_t {
   double qivalue;     /**< quality index value */
 } CompositeValues_t;
 
-/** The resolution to use for scaling the distance from pixel to used radar */
+/** The resolution to use for scaling the distance from pixel to used radar. */
+/** By multiplying the values in the distance field by 2000, we get the value in unit meters. */
 #define DISTANCE_TO_RADAR_RESOLUTION 2000.0
 
 /** The name of the task for specifying distance to radar */
