@@ -207,6 +207,7 @@ class gra:
   # @param c float coefficient c
   def quality_control_2nd_order(self, a, b, c):
     for point in self.points:
+      # grapoint.radardistance is in unit km
       fr = a + point.radardistance*b + c*(point.radardistance**2)
       point.Fq = point.gr - fr
 
