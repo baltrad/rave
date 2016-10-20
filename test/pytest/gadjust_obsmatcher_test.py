@@ -83,7 +83,7 @@ class gadjust_obsmatcher_test(unittest.TestCase):
     self.assertEquals(1, len(result))
     self.assertEquals(result[0].radarvaluetype, _rave.RaveValueType_DATA)
     self.assertAlmostEquals(result[0].radarvalue, 48.0, 4)
-    self.assertAlmostEquals(200.0, result[0].radardistance, 4)
+    self.assertAlmostEquals(0.2, result[0].radardistance, 4)
     self.assertAlmostEquals(13.0, result[0].longitude, 4)
     self.assertAlmostEquals(60.0, result[0].latitude, 4)
     self.assertEquals("20101010", result[0].date)

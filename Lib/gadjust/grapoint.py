@@ -31,7 +31,7 @@ class grapoint(object):
   ## The constructor
   # @param rt the radar values data type
   # @param rv the radar value
-  # @param rd the distance from the radar to this point
+  # @param rd the distance from the radar to this point. in unit kilometers (km)
   # @param date the date of the observation
   # @param time the time of the observation
   # @param liquid_prcipitation the amount of rain
@@ -54,7 +54,7 @@ class grapoint(object):
   ## Creates a gra point from the radar information and a observation instance.
   # @param rt the radar values data type
   # @param rv the radar value
-  # @param rd the distance from the radar to this point
+  # @param rd the distance from the radar to this point. in unit kilometers (km)
   # @param obs the rave_dom observation object
   #
   @classmethod
