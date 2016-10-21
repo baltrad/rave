@@ -22,7 +22,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 # @date 2016-10-17
 #
 import _raveio, _polarvolume, _polarscan, _rave
-import datetime
+import datetime, math
 
 ##
 # Helps with merging scans or volumes containing different parameters but where date/time & source matches. The
