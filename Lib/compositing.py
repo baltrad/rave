@@ -168,7 +168,7 @@ class compositing(object):
     
     self.logger.debug("Generating composite with date and time %sT%s for area %s", dd, dt, area)
     
-    objects, nodes = self.fetch_objects()
+    objects, nodes, how_tasks = self.fetch_objects()
     
     objects, algorithm, qfields = self.quality_control_objects(objects)
 
@@ -274,6 +274,9 @@ class compositing(object):
           result.source="%s,CMT:%s"%(self.remove_CMT_from_source(result.source), plc)
       except:
         self.logger.exception("Failed to get source from object")
+        
+    if how_tasks != "":
+      result.addAttribute('how/task', how_tasks)
 
     if self.verbose:
       self.logger.debug("Returning resulting composite image")
@@ -337,11 +340,12 @@ class compositing(object):
   
   ##
   # Generates the objects that should be used in the compositing.
-  # returns a triplet with [objects], nodes (as comma separated string), algorithm (a rave compositing algorithm)
+  # returns a triplet with [objects], nodes (as comma separated string), 'how/tasks' (as comma separated string)
   #
   def fetch_objects(self):
     nodes = ""
     objects={}
+    tasks = []
     for fname in self.filenames:
       obj = None
       try:
@@ -349,7 +353,7 @@ class compositing(object):
           obj = self.ravebdb.get_rave_object(fname)
         else:
           obj = _raveio.open(fname).object
-      except IOError, e:
+      except IOError:
         self.logger.exception("Failed to open %s"%fname)
       
       is_scan = _polarscan.isPolarScan(obj)
@@ -375,13 +379,25 @@ class compositing(object):
         nodes += "'%s'" % node
         
       objects[fname] = obj
-      
+          
       if is_scan:
         self.logger.debug("Scan used in composite generation - UUID: %s, Node: %s, Nominal date and time: %sT%s", fname, node, obj.date, obj.time)
+        self.add_how_task_from_scan(obj, tasks)
       elif is_pvol:
         self.logger.debug("PVOL used in composite generation - UUID: %s, Node: %s, Nominal date and time: %sT%s", fname, node, obj.date, obj.time)
+        for i in range(obj.getNumberOfScans()):
+          scan = obj.getScan(i)
+          self.add_how_task_from_scan(scan, tasks)
       
-    return objects, nodes
+    how_tasks = ",".join(tasks)
+    
+    return objects, nodes, how_tasks
+  
+  def add_how_task_from_scan(self, scan, tasks):
+    if scan.hasAttribute('how/task'):
+      how_task_string = scan.getAttribute('how/task')
+      if how_task_string not in tasks:
+        tasks.append(how_task_string)
   
   def create_filename(self, pobj):
     #_polarscan.isPolarScan(obj) and not _polarvolume.isPolarVolume(obj):

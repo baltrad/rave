@@ -207,6 +207,7 @@ class tiled_compositing(object):
     self.logger = logger
     self.file_objects = {}
     self.nodes = ""
+    self.how_tasks = ""
     self.number_of_quality_control_processes = RAVE_QUALITY_CONTROL_PROCESSES
     self._do_remove_temporary_files=False
 
@@ -219,7 +220,7 @@ class tiled_compositing(object):
   def _fetch_file_objects(self):
     self.logger.info("Fetching (and processing) %d files for tiled compositing"%len(self.compositing.filenames))
 
-    result, nodes = self.compositing.fetch_objects()
+    result, nodes, how_tasks = self.compositing.fetch_objects()
     if self.preprocess_qc:
       self._do_remove_temporary_files=False
       result, algorithm = self.compositing.quality_control_objects(result)
@@ -232,7 +233,7 @@ class tiled_compositing(object):
 
     self.logger.info("Finished fetching (and processing) %d files for tiled compositing"%len(self.compositing.filenames))
 
-    return (result, nodes)
+    return (result, nodes, how_tasks)
 
   ##
   # Fetches the file objects including the quality control by utilizing the multiprocessing
@@ -292,11 +293,11 @@ class tiled_compositing(object):
     self.compositing.filenames = filenames
     self._do_remove_temporary_files=True
     
-    result, nodes = self.compositing.fetch_objects()
+    result, nodes, how_tasks = self.compositing.fetch_objects()
     
     self.logger.info("MP Fetching (and processing) %d files for tiled compositing"%len(self.compositing.filenames))
     
-    return (result, nodes)
+    return (result, nodes, how_tasks)
 
 
   ##
@@ -439,9 +440,9 @@ class tiled_compositing(object):
     pyarea = my_area_registry.getarea(area)
 
     if self.preprocess_qc and self.mp_process_qc and self.number_of_quality_control_processes > 1:
-      self.file_objects, self.nodes = self._fetch_file_objects_mp()
+      self.file_objects, self.nodes, self.how_tasks = self._fetch_file_objects_mp()
     else:
-      self.file_objects, self.nodes = self._fetch_file_objects()
+      self.file_objects, self.nodes, self.how_tasks = self._fetch_file_objects()
 
     args = self._create_arguments(dd, dt, pyarea)
 
@@ -485,6 +486,9 @@ class tiled_compositing(object):
       # Fix so that we get a valid place for /what/source and /how/nodes 
       result.source = "%s,CMT:%s"%(CENTER_ID,area)
       result.addAttribute('how/nodes', self.nodes)
+      
+      if self.how_tasks != "":
+        result.addAttribute('how/task', self.how_tasks)
           
       self.logger.info("Tiles combined")
       
