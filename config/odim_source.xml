@@ -254,14 +254,14 @@
   <se CCCC="ESWI" org="82">
     <sekir plc="Kiruna" rad="SE40" wmo="02032"></sekir>
     <selul plc="Luleå" rad="SE41" wmo="02092"></selul>
-    <seosu plc="Östersund" rad="SE42" wmo="02200"></seosu>
+    <seosd plc="Östersund" rad="SE42" wmo="02200"></seosd>
     <seovi plc="Örnsköldsvik" rad="SE43" wmo="02262"></seovi>
     <sehud plc="Hudiksvall" rad="SE44" wmo="02334"></sehud>
     <selek plc="Leksand" rad="SE45" wmo="02430"></selek>
     <searl plc="Arlanda" rad="SE46" wmo="02451"></searl>
     <sease plc="Ase" rad="SE47" wmo="02588"></sease>
     <sevil plc="Vilebo" rad="SE48" wmo="02570"></sevil>
-    <sevar plc="Vara" rad="SE49" wmo="02600"></sevar>
+    <sevax plc="Vara" rad="SE49" wmo="02600"></sevax>
     <seang plc="Ängelholm" rad="SE50" wmo="02606"></seang>
     <sekkr plc="Karlskrona" rad="SE51" wmo="02666"></sekkr>
   </se>
