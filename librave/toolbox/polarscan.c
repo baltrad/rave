@@ -884,6 +884,7 @@ RaveValueType PolarScan_getConvertedValue(PolarScan_t* scan, int bin, int ray, d
       *v = PolarScanParam_getOffset(scan->param) + (*v) * PolarScanParam_getGain(scan->param);
     }
   }
+
   return result;
 }
 
@@ -931,7 +932,7 @@ int PolarScan_getAzimuthAndRangeFromIndex(PolarScan_t* scan, int bin, int ray, d
   return 1;
 }
 
-RaveValueType PolarScan_getValueAtAzimuthAndRange(PolarScan_t* scan, double a, double r, double* v)
+RaveValueType PolarScan_getValueAtAzimuthAndRange(PolarScan_t* scan, double a, double r, int convert, double* v)
 {
   RaveValueType result = RaveValueType_NODATA;
   int ai = 0, ri = 0;
@@ -947,7 +948,11 @@ RaveValueType PolarScan_getValueAtAzimuthAndRange(PolarScan_t* scan, double a, d
     goto done;
   }
 
-  result = PolarScan_getValue(scan, ri, ai, v);
+  if (convert) {
+    result = PolarScan_getConvertedValue(scan, ri, ai, v);
+  } else {
+    result = PolarScan_getValue(scan, ri, ai, v);
+  }
 done:
   return result;
 }
@@ -1035,7 +1040,7 @@ int PolarScan_fillNavigationIndexFromAzimuthAndRange(
   return result;
 }
 
-RaveValueType PolarScan_getNearest(PolarScan_t* scan, double lon, double lat, double* v)
+RaveValueType PolarScan_getNearest(PolarScan_t* scan, double lon, double lat, int convert, double* v)
 {
   RaveValueType result = RaveValueType_NODATA;
   PolarNavigationInfo info;
@@ -1046,7 +1051,7 @@ RaveValueType PolarScan_getNearest(PolarScan_t* scan, double lon, double lat, do
   }
   PolarScan_getLonLatNavigationInfo(scan, lon, lat, &info);
 
-  result = PolarScan_getValueAtAzimuthAndRange(scan, info.azimuth, info.range, v);
+  result = PolarScan_getValueAtAzimuthAndRange(scan, info.azimuth, info.range, convert, v);
 
   return result;
 }
@@ -1127,7 +1132,7 @@ done:
   return result;
 }
 
-int PolarScan_getQualityValueAt(PolarScan_t* scan, const char* quantity, int ri, int ai, const char* name, double* v)
+int PolarScan_getQualityValueAt(PolarScan_t* scan, const char* quantity, int ri, int ai, const char* name, int convert, double* v)
 {
   PolarScanParam_t* param = NULL;
   RaveField_t* quality = NULL;
@@ -1152,7 +1157,11 @@ int PolarScan_getQualityValueAt(PolarScan_t* scan, const char* quantity, int ri,
     RAVE_WARNING1("Failed to locate a quality field with how/task = %s", name);
     goto done;
   }
-  result = RaveField_getValue(quality, ri, ai, v);
+  if (convert) {
+    result = RaveField_getConvertedValue(quality, ri, ai, v);
+  } else {
+    result = RaveField_getValue(quality, ri, ai, v);
+  }
 
 done:
   RAVE_OBJECT_RELEASE(param);

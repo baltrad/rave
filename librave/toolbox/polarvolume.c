@@ -537,7 +537,7 @@ RaveValueType PolarVolume_getNearest(PolarVolume_t* pvol, double lon, double lat
   if (scan != NULL) {
     //@todo: Eventually use the actual elevation and calculate proper range instead.
     // Now we have the elevation angle, fetch value by providing azimuth and range.
-    result = PolarScan_getValueAtAzimuthAndRange(scan, a, r, v);
+    result = PolarScan_getValueAtAzimuthAndRange(scan, a, r, 0, v);
   }
 
   RAVE_OBJECT_RELEASE(scan);
@@ -694,14 +694,14 @@ RaveValueType PolarVolume_getNearestConvertedParameterValue(PolarVolume_t* pvol,
   return result;
 }
 
-int PolarVolume_getQualityValueAt(PolarVolume_t* pvol, const char* quantity, int ei, int ri, int ai, const char* name, double* v)
+int PolarVolume_getQualityValueAt(PolarVolume_t* pvol, const char* quantity, int ei, int ri, int ai, const char* name, int convert, double* v)
 {
   int result = 0;
   PolarScan_t* scan = NULL;
   RAVE_ASSERT((pvol != NULL), "pvol == NULL");
   scan = PolarVolume_getScan(pvol, ei);
   if (scan != NULL) {
-    result = PolarScan_getQualityValueAt(scan, quantity, ri, ai, name, v);
+    result = PolarScan_getQualityValueAt(scan, quantity, ri, ai, name, convert, v);
   }
   RAVE_OBJECT_RELEASE(scan);
   return result;

@@ -229,7 +229,16 @@ int PooCompositeAlgorithm_supportsFillQualityInformation(CompositeAlgorithm_t* s
   return 0;
 }
 
-int PooCompositeAlgorithm_fillQualityInformation(CompositeAlgorithm_t* self, RaveCoreObject* obj, const char* howtask, const char* quantity, RaveField_t* field,long x, long y, PolarNavigationInfo* navinfo)
+int PooCompositeAlgorithm_fillQualityInformation(CompositeAlgorithm_t* self,
+                                                 RaveCoreObject* obj,
+                                                 const char* howtask,
+                                                 const char* quantity,
+                                                 RaveField_t* field,
+                                                 long x,
+                                                 long y,
+                                                 PolarNavigationInfo* navinfo,
+                                                 double gain,
+                                                 double offset)
 {
   int result = 0;
   PolarScan_t* pooscan = NULL;
@@ -239,6 +248,7 @@ int PooCompositeAlgorithm_fillQualityInformation(CompositeAlgorithm_t* self, Rav
   RAVE_ASSERT((obj != NULL), "obj == NULL");
   RAVE_ASSERT((field != NULL), "field == NULL");
   RAVE_ASSERT((navinfo != NULL), "navinfo == NULL");
+  RAVE_ASSERT((gain != 0.0), "gain == 0.0");
 
   if (strcmp("se.smhi.detector.poo", howtask) == 0) {
     if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE) && navinfo->ei >= 0 && navinfo->ri >= 0 && navinfo->ai >= 0) {
@@ -254,12 +264,15 @@ int PooCompositeAlgorithm_fillQualityInformation(CompositeAlgorithm_t* self, Rav
     }
     if (pooscan != NULL) {
       double v = 0.0;
-      RaveValueType t = PolarScan_getNearest(pooscan, navinfo->lon, navinfo->lat, &v);
-      if (t == RaveValueType_DATA) {
-        RaveField_setValue(field, x, y, v);
-      } else {
-        RaveField_setValue(field, x, y, 0.0);
+      double convertedval = 0.0;
+      RaveValueType t = PolarScan_getNearest(pooscan, navinfo->lon, navinfo->lat, 1, &v);
+
+      if (t != RaveValueType_DATA) {
+        v = 0.0;
       }
+      convertedval = (v - offset) / gain;
+      RaveField_setValue(field, x, y, convertedval);
+
       result = 1;
     }
   }

@@ -328,10 +328,11 @@ RaveValueType PolarVolume_getNearestConvertedParameterValue(PolarVolume_t* pvol,
  * @param[in] ri - the range index (bin)
  * @param[in] ai - the azimuth index (ray)
  * @param[in] name - the value of the how/task attribute
+ * @param[in] convert - indicates if value should be converted with gain and offset or not. 0 for false, true otherwise
  * @param[out] v - the found value
  * @return 1 if value found otherwise 0
  */
-int PolarVolume_getQualityValueAt(PolarVolume_t* pvol, const char* quantity, int ei, int ri, int ai, const char* name, double* v);
+int PolarVolume_getQualityValueAt(PolarVolume_t* pvol, const char* quantity, int ei, int ri, int ai, const char* name, int convert, double* v);
 
 /**
  * Sets the default parameter that should be used when operating on this

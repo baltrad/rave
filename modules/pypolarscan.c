@@ -522,7 +522,7 @@ static PyObject* _pypolarscan_getValueAtAzimuthAndRange(PyPolarScan* self, PyObj
     return NULL;
   }
 
-  type = PolarScan_getValueAtAzimuthAndRange(self->scan, a, r, &value);
+  type = PolarScan_getValueAtAzimuthAndRange(self->scan, a, r, 0, &value);
 
   return Py_BuildValue("(id)", type, value);
 }
@@ -583,7 +583,7 @@ static PyObject* _pypolarscan_getNearest(PyPolarScan* self, PyObject* args)
     return NULL;
   }
 
-  type = PolarScan_getNearest(self->scan, lon, lat, &value);
+  type = PolarScan_getNearest(self->scan, lon, lat, 0, &value);
 
   return Py_BuildValue("(id)", type, value);
 }

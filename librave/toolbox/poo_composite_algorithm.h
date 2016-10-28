@@ -103,6 +103,6 @@ int PooCompositeAlgorithm_supportsFillQualityInformation(CompositeAlgorithm_t* s
  * @param[in] navinfo - the navigation information that was used for the provided obj
  * @return 1 on success otherwise 0
  */
-int PooCompositeAlgorithm_fillQualityInformation(CompositeAlgorithm_t* self, RaveCoreObject* obj,const char* howtask,const char* quantity,RaveField_t* field,long x, long y, PolarNavigationInfo* navinfo);
+int PooCompositeAlgorithm_fillQualityInformation(CompositeAlgorithm_t* self, RaveCoreObject* obj,const char* howtask,const char* quantity,RaveField_t* field,long x, long y, PolarNavigationInfo* navinfo, double gain, double offset);
 
 #endif /* POO_COMPOSITE_ALGORITHM_H */

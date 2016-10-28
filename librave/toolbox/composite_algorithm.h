@@ -106,7 +106,7 @@ typedef int(*composite_algorithm_supportsFillQualityInformation_fun)(struct _Com
  * @param[in] navinfo - the navigation information that was used within the rave object
  * @return 1 on success otherwise 0
  */
-typedef int(*composite_algorithm_fillQualityInformation_fun)(struct _CompositeAlgorithm_t* self, RaveCoreObject* obj, const char* howtask, const char* quantity, RaveField_t* field, long x, long y, PolarNavigationInfo* navinfo);
+typedef int(*composite_algorithm_fillQualityInformation_fun)(struct _CompositeAlgorithm_t* self, RaveCoreObject* obj, const char* howtask, const char* quantity, RaveField_t* field, long x, long y, PolarNavigationInfo* navinfo, double gain, double offset);
 
 /**
  * The head part for a CompositeAlgorithm subclass. Should be placed directly under
@@ -185,7 +185,7 @@ typedef struct _CompositeAlgorithm_t {
 /**
  * Macro expansion if this algorithm supports process or not
  */
-#define CompositeAlgorithm_fillQualityInformation(self,obj,howtask,quantity,field,x,y,navinfo) \
-    ((CompositeAlgorithm_t*)self)->fillQualityInformation((CompositeAlgorithm_t*)self,obj,howtask,quantity,field,x,y,navinfo)
+#define CompositeAlgorithm_fillQualityInformation(self,obj,howtask,quantity,field,x,y,navinfo,gain,offset) \
+    ((CompositeAlgorithm_t*)self)->fillQualityInformation((CompositeAlgorithm_t*)self,obj,howtask,quantity,field,x,y,navinfo,gain,offset)
 
 #endif /* COMPOSITE_ALGORITHM_H */

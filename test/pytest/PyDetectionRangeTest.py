@@ -107,7 +107,8 @@ class PyDetectionRangeTest(unittest.TestCase):
     self.assertEquals("se.smhi.detector.poo", result.getAttribute("how/task"))
     self.assertAlmostEquals(1.0, result.getAttribute("what/offset"), 4)
     self.assertAlmostEquals(-1.0/255.0, result.getAttribute("what/gain"), 4)
-    self.assertAlmostEquals(0.0, result.getAttribute("what/nodata"), 4)
+    self.assertAlmostEquals(255.0, result.getAttribute("what/nodata"), 4)
+    self.assertAlmostEquals(255.0, result.getAttribute("what/undetect"), 4)
     self.assertEquals("DR", result.getAttribute("what/quantity"))
     
 

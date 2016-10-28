@@ -30,6 +30,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_datetime.h"
 #include <string.h>
 #include "raveobject_hashtable.h"
+#include "rave_field.h"
 
 /**
  * Represents the cartesian product.
@@ -205,6 +206,73 @@ static CompositingParameter_t* CompositeInternal_getParameterByName(Composite_t*
     }
   }
   return NULL;
+}
+
+static int CompositeInternal_addGainAndOffsetToField(RaveField_t* field, double gain, double offset) {
+  RaveAttribute_t* gainattribute = NULL;
+  int result = 0;
+
+  RAVE_ASSERT((field != NULL), "field == NULL");
+
+  gainattribute = RaveAttributeHelp_createDouble("what/gain", gain);
+  if (gainattribute == NULL ||
+      !RaveField_addAttribute(field, gainattribute)) {
+    RAVE_ERROR0("Failed to create gain attribute for quality field");
+    goto done;
+  }
+  RAVE_OBJECT_RELEASE(gainattribute);
+
+  gainattribute = RaveAttributeHelp_createDouble("what/offset", offset);
+  if (gainattribute == NULL ||
+      !RaveField_addAttribute(field, gainattribute)) {
+    RAVE_ERROR0("Failed to create offset attribute for quality field");
+    goto done;
+  }
+
+  result = 1;
+done:
+  RAVE_OBJECT_RELEASE(gainattribute);
+  return result;
+
+}
+
+static RaveField_t* CompositeInternal_createQualityField(char* howtaskstr, int xsize, int ysize, double gain, double offset) {
+  RaveField_t* qfield = RAVE_OBJECT_NEW(&RaveField_TYPE);
+  RaveAttribute_t* howtaskattribute = NULL;
+
+  if (qfield == NULL) {
+    RAVE_ERROR0("Failed to create quality field");
+    goto error;
+  }
+
+  howtaskattribute = RaveAttributeHelp_createString("how/task", howtaskstr);
+  if (howtaskattribute == NULL) {
+    RAVE_ERROR0("Failed to create quality field (how/task attribute could not be created)");
+    goto error;
+  }
+
+  if (!RaveField_addAttribute(qfield, howtaskattribute)) {
+    RAVE_ERROR0("Failed to create how/task attribute for distance quality field");
+    goto error;
+  }
+  RAVE_OBJECT_RELEASE(howtaskattribute);
+
+  if (!CompositeInternal_addGainAndOffsetToField(qfield, gain, offset)) {
+    RAVE_ERROR0("Failed to add gain and offset attribute to quality field");
+    goto error;
+  }
+
+  if(!RaveField_createData(qfield, xsize, ysize, RaveDataType_UCHAR)) {
+    RAVE_ERROR0("Failed to create quality field");
+    goto error;
+  }
+
+  return qfield;
+error:
+  RAVE_OBJECT_RELEASE(qfield);
+  RAVE_OBJECT_RELEASE(howtaskattribute);
+  return NULL;
+
 }
 
 /**
@@ -424,14 +492,14 @@ static int CompositeInternal_getValueAtPosition(
     if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarScan_TYPE)) {
       *type = PolarScan_getConvertedParameterValue((PolarScan_t*)obj, quantity, nav->ri, nav->ai, value);
       if (composite->qiFieldName != NULL) {
-        if (!PolarScan_getQualityValueAt((PolarScan_t*)obj, quantity, nav->ri, nav->ai, (const char*)composite->qiFieldName, qiv)) {
+        if (!PolarScan_getQualityValueAt((PolarScan_t*)obj, quantity, nav->ri, nav->ai, (const char*)composite->qiFieldName, 0, qiv)) {
           *qiv = 0.0;
         }
       }
     } else if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
       *type = PolarVolume_getConvertedParameterValueAt((PolarVolume_t*)obj, quantity, nav->ei, nav->ri, nav->ai, value);
       if (composite->qiFieldName != NULL) {
-        if (!PolarVolume_getQualityValueAt((PolarVolume_t*)obj, quantity, nav->ei, nav->ri, nav->ai, (const char*)composite->qiFieldName, qiv)) {
+        if (!PolarVolume_getQualityValueAt((PolarVolume_t*)obj, quantity, nav->ei, nav->ri, nav->ai, (const char*)composite->qiFieldName, 0, qiv)) {
           *qiv = 0.0;
         }
       }
@@ -487,14 +555,14 @@ static int CompositeInternal_getVerticalMaxValue(
   if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarScan_TYPE)) {
     *vtype = PolarScan_getNearestConvertedParameterValue((PolarScan_t*)obj, quantity, lon, lat, vvalue, &info);
     if (self->qiFieldName != NULL && (qiv != NULL)) {
-      if (!PolarScan_getQualityValueAt((PolarScan_t*)obj, quantity, info.ri, info.ai, (const char*)self->qiFieldName, qiv)) {
+      if (!PolarScan_getQualityValueAt((PolarScan_t*)obj, quantity, info.ri, info.ai, (const char*)self->qiFieldName, 0, qiv)) {
         *qiv = 0.0;
       }
     }
   } else {
     *vtype = PolarVolume_getConvertedVerticalMaxValue((PolarVolume_t*)obj, quantity, lon, lat, vvalue, &info);
     if (self->qiFieldName != NULL && (qiv != NULL)) {
-      if (!PolarVolume_getQualityValueAt((PolarVolume_t*)obj, quantity, info.ei, info.ri, info.ai, (const char*)self->qiFieldName, qiv)) {
+      if (!PolarVolume_getQualityValueAt((PolarVolume_t*)obj, quantity, info.ei, info.ri, info.ai, (const char*)self->qiFieldName, 0, qiv)) {
         *qiv = 0.0;
       }
     }
@@ -522,8 +590,6 @@ static int CompositeInternal_addQualityFlags(Composite_t* self, Cartesian_t* ima
   int result = 0;
   int nqualityflags = 0;
   RaveField_t* field = NULL;
-  RaveAttribute_t* howtaskattribute = NULL;
-  RaveAttribute_t* gainattribute = NULL;
   CartesianParam_t* param = NULL;
   RaveList_t* paramNames = NULL;
 
@@ -550,56 +616,44 @@ static int CompositeInternal_addQualityFlags(Composite_t* self, Cartesian_t* ima
 
   for (i = 0; i < nqualityflags; i++) {
     char* howtaskvaluestr = (char*)RaveList_get(qualityflags, i);
-    field = RAVE_OBJECT_NEW(&RaveField_TYPE);
-    howtaskattribute = RaveAttributeHelp_createString("how/task", howtaskvaluestr);
-    if (field == NULL ||
-        howtaskattribute == NULL ||
-        !RaveField_createData(field, xsize, ysize, RaveDataType_UCHAR) ||
-        !RaveField_addAttribute(field, howtaskattribute)) {
-      RAVE_ERROR0("Failed to create quality field");
-      goto done;
-    }
+    double gain = 1.0, offset = 0.0;
+
     if (strcmp(DISTANCE_TO_RADAR_HOW_TASK, howtaskvaluestr) == 0) {
-      gainattribute = RaveAttributeHelp_createDouble("what/gain", DISTANCE_TO_RADAR_RESOLUTION);
-      if (gainattribute == NULL ||
-          !RaveField_addAttribute(field, gainattribute)) {
-        RAVE_ERROR0("Failed to create gain attribute for quality field");
-        goto done;
-      }
-      RAVE_OBJECT_RELEASE(gainattribute);
-      gainattribute = RaveAttributeHelp_createDouble("what/offset", 0.0);
-      if (gainattribute == NULL ||
-          !RaveField_addAttribute(field, gainattribute)) {
-        RAVE_ERROR0("Failed to create offset attribute for quality field");
-        goto done;
-      }
-      RAVE_OBJECT_RELEASE(gainattribute);
+      gain = DISTANCE_TO_RADAR_RESOLUTION;
+      offset = 0.0;
+    } else {
+      // set the same, fixed gain and offset that is used for all quality fields (except distance) in the composite
+      gain = COMPOSITE_QUALITY_FIELDS_GAIN;
+      offset = COMPOSITE_QUALITY_FIELDS_OFFSET;
     }
 
-    for (j = 0; j < nparam; j++) {
-      param = Cartesian_getParameter(image, (const char*)RaveList_get(paramNames, j));
-      if (param != NULL) {
-        RaveField_t* cfield = RAVE_OBJECT_CLONE(field);
-        if (cfield == NULL ||
-            !CartesianParam_addQualityField(param, cfield)) {
+    field = CompositeInternal_createQualityField(howtaskvaluestr, xsize, ysize, gain, offset);
+
+    if (field != NULL) {
+      for (j = 0; j < nparam; j++) {
+        param = Cartesian_getParameter(image, (const char*)RaveList_get(paramNames, j));
+        if (param != NULL) {
+          RaveField_t* cfield = RAVE_OBJECT_CLONE(field);
+          if (cfield == NULL ||
+              !CartesianParam_addQualityField(param, cfield)) {
+            RAVE_OBJECT_RELEASE(cfield);
+            RAVE_ERROR0("Failed to add quality field");
+            goto done;
+          }
           RAVE_OBJECT_RELEASE(cfield);
-          RAVE_ERROR0("Failed to add quality field");
-          goto done;
         }
-        RAVE_OBJECT_RELEASE(cfield);
+        RAVE_OBJECT_RELEASE(param);
       }
-      RAVE_OBJECT_RELEASE(param);
+    } else {
+      RAVE_WARNING1("Could not create quality field for: %s", howtaskvaluestr);
     }
 
     RAVE_OBJECT_RELEASE(field);
-    RAVE_OBJECT_RELEASE(howtaskattribute);
   }
 
   result = 1;
 done:
   RAVE_OBJECT_RELEASE(field);
-  RAVE_OBJECT_RELEASE(howtaskattribute);
-  RAVE_OBJECT_RELEASE(gainattribute);
   RAVE_OBJECT_RELEASE(param);
   RaveList_freeAndDestroy(&paramNames);
   return result;
@@ -638,6 +692,7 @@ static void CompositeInternal_fillQualityInformation(
     RaveAttribute_t* attribute = NULL;
     char* name = NULL;
     double v = 0.0;
+    int valuefetched = 0;
 
     field = CartesianParam_getQualityField(param, i);
     if (field != NULL) {
@@ -654,7 +709,8 @@ static void CompositeInternal_fillQualityInformation(
           RaveField_setValue(field, x, y, radardist/DISTANCE_TO_RADAR_RESOLUTION);
         } else if (composite->algorithm != NULL && CompositeAlgorithm_supportsFillQualityInformation(composite->algorithm, name)) {
           // If the algorithm indicates that it is able to support the provided how/task field, then do so
-          if (!CompositeAlgorithm_fillQualityInformation(composite->algorithm, obj, name, quantity, field, x, y, navinfo)) {
+          if (!CompositeAlgorithm_fillQualityInformation(composite->algorithm, obj, name, quantity, field, x, y, navinfo,
+                                                         COMPOSITE_QUALITY_FIELDS_GAIN, COMPOSITE_QUALITY_FIELDS_OFFSET)) {
             RaveField_setValue(field, x, y, 0.0);
           }
         } else {
@@ -663,24 +719,25 @@ static void CompositeInternal_fillQualityInformation(
             if (navinfo->ei >= 0 && navinfo->ri >= 0 && navinfo->ai >= 0) {
               fprintf(stderr, "(%d,%d) => ei=%d, ri=%d, ai=%d\n", x, y, navinfo->ei, navinfo->ri, navinfo->ai);
             }*/
-            if (navinfo->ei >= 0 && navinfo->ri >= 0 && navinfo->ai >= 0 &&
-                PolarVolume_getQualityValueAt((PolarVolume_t*)obj, quantity, navinfo->ei, navinfo->ri, navinfo->ai, name, &v)) {
-              RaveField_setValue(field, x, y, v);
-            } else {
-              RaveField_setValue(field, x, y, 0.0); // No data found
+            if (navinfo->ei >= 0 && navinfo->ri >= 0 && navinfo->ai >= 0 ) {
+              valuefetched = PolarVolume_getQualityValueAt((PolarVolume_t*)obj, quantity, navinfo->ei, navinfo->ri, navinfo->ai, name, 1, &v);
             }
           } else if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarScan_TYPE)) {
-            if (navinfo->ri >= 0 && navinfo->ai >= 0 &&
-                PolarScan_getQualityValueAt((PolarScan_t*)obj, quantity, navinfo->ri, navinfo->ai, name, &v)) {
-              RaveField_setValue(field, x, y , v);
-            } else {
-              RaveField_setValue(field, x, y, 0.0); // No data found
+            if (navinfo->ri >= 0 && navinfo->ai >= 0) {
+              valuefetched = PolarScan_getQualityValueAt((PolarScan_t*)obj, quantity, navinfo->ri, navinfo->ai, name, 1, &v);
             }
           }
+
+          if (valuefetched) {
+            v = (v - COMPOSITE_QUALITY_FIELDS_OFFSET) / COMPOSITE_QUALITY_FIELDS_GAIN;
+          }
+
+          RaveField_setValue(field, x, y, v);
         }
       }
       RAVE_OBJECT_RELEASE(obj);
     }
+
     RAVE_OBJECT_RELEASE(field);
     RAVE_OBJECT_RELEASE(attribute);
   }

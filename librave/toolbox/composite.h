@@ -30,6 +30,10 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "cartesian.h"
 #include "area.h"
 #include "composite_algorithm.h"
+#include "limits.h"
+
+#define COMPOSITE_QUALITY_FIELDS_GAIN   (1.0/UCHAR_MAX)
+#define COMPOSITE_QUALITY_FIELDS_OFFSET 0.0
 
 /**
  * What type of selection variant to use

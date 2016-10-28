@@ -601,10 +601,11 @@ int PolarScan_getAzimuthAndRangeFromIndex(PolarScan_t* scan, int bin, int ray, d
  * @param[in] scan - the scan
  * @param[in] a - the azimuth (in radians)
  * @param[in] r - the range (in meters)
+ * @param[in] convert - indicates if value should be converted with gain and offset or not. 0 for false, true otherwise
  * @param[out] v - the value
  * @return a rave value type
  */
-RaveValueType PolarScan_getValueAtAzimuthAndRange(PolarScan_t* scan, double a, double r, double* v);
+RaveValueType PolarScan_getValueAtAzimuthAndRange(PolarScan_t* scan, double a, double r, int convert, double* v);
 
 /**
  * Returns the parameter value at the specified azimuth and range
@@ -653,10 +654,11 @@ int PolarScan_fillNavigationIndexFromAzimuthAndRange(
  * @param[in] scan - the scan
  * @param[in] lon  - the longitude (in radians)
  * @param[in] lat  - the latitude  (in radians)
+ * @param[in] convert - indicates if value should be converted with gain and offset or not. 0 for false, true otherwise
  * @param[out] v - the found value
  * @returns a rave value type
  */
-RaveValueType PolarScan_getNearest(PolarScan_t* scan, double lon, double lat, double* v);
+RaveValueType PolarScan_getNearest(PolarScan_t* scan, double lon, double lat, int convert, double* v);
 
 /**
  * Returns the nearest parameter value to the specified longitude, latitude.
@@ -725,10 +727,11 @@ int PolarScan_getLonLatFromIndex(PolarScan_t* scan, int bin, int ray, double* lo
  * @param[in] ri - the range index (bin)
  * @param[in] ai - the azimuth index (ray)
  * @param[in] name - the value of the how/task attribute
+ * @param[in] convert - indicates if value should be converted with gain and offset or not. 0 for false, true otherwise
  * @param[out] v - the found value
  * @return 1 if value found otherwise 0
  */
-int PolarScan_getQualityValueAt(PolarScan_t* scan, const char* quantity, int ri, int ai, const char* name, double* v);
+int PolarScan_getQualityValueAt(PolarScan_t* scan, const char* quantity, int ri, int ai, const char* name, int convert, double* v);
 
 /**
  * Verifies that all preconditions are met in order to perform

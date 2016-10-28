@@ -238,7 +238,7 @@ int Transform_ppi(Transform_t* transform, PolarScan_t* scan, Cartesian_t* cartes
         RAVE_ERROR0("Transform failed");
         goto done;
       }
-      valid = PolarScan_getNearest(scan, herex, herey, &v);
+      valid = PolarScan_getNearest(scan, herex, herey, 0, &v);
 
       if (valid == RaveValueType_NODATA) {
         v = cnodata;
