@@ -142,7 +142,7 @@ class compositing_test(unittest.TestCase):
     for file_name in file_map.keys():
       get_rave_object_calls.append(mock.call(file_name))
       
-      self.assertIn(file_name, objects)
+      self.assertTrue(file_name in objects)
       self.assertEqual(objects[file_name], file_map[file_name])
     
     self.classUnderTest.ravebdb.get_rave_object.assert_has_calls(get_rave_object_calls)
@@ -221,7 +221,7 @@ class compositing_test(unittest.TestCase):
     get_rave_object_calls = [] 
     for file_name in file_map.keys():
       get_rave_object_calls.append(mock.call(file_name))
-      self.assertIn(file_name, objects)
+      self.assertTrue(file_name in objects)
       self.assertEqual(objects[file_name], file_map[file_name])
     
     self.classUnderTest.ravebdb.get_rave_object.assert_has_calls(get_rave_object_calls)
@@ -266,7 +266,7 @@ class compositing_test(unittest.TestCase):
     for file_name in file_map.keys():
       get_rave_object_calls.append(mock.call(file_name))
       
-      self.assertIn(file_name, objects)
+      self.assertTrue(file_name in objects)
       self.assertEqual(objects[file_name], file_map[file_name])
     
     self.classUnderTest.ravebdb.get_rave_object.assert_has_calls(get_rave_object_calls)
@@ -283,7 +283,7 @@ class compositing_test(unittest.TestCase):
                           scan3.getAttribute("how/task")]
     self.assertEqual(set(how_task_list), set(expected_how_tasks))
     
-    self.assertNotIn(scan2, file_obj2.scans)
+    self.assertFalse(scan2 in file_obj2.scans)
     
   @mock.patch('_polarvolume.isPolarVolume')
   @mock.patch('_polarscan.isPolarScan')
@@ -327,8 +327,8 @@ class compositing_test(unittest.TestCase):
     expected_how_tasks = [scan1.getAttribute("how/task")]
     self.assertEqual(set(how_task_list), set(expected_how_tasks))
     
-    self.assertNotIn(scan2, file_obj2.scans)
-    self.assertNotIn(scan3, file_obj2.scans)
+    self.assertFalse(scan2 in file_obj2.scans)
+    self.assertFalse(scan3 in file_obj2.scans)
     
   @mock.patch('_polarvolume.isPolarVolume')
   @mock.patch('_polarscan.isPolarScan')
@@ -367,9 +367,9 @@ class compositing_test(unittest.TestCase):
     
     self.assertEqual(how_tasks, "")
 
-    self.assertNotIn(scan1, file_obj1.scans)
-    self.assertNotIn(scan2, file_obj2.scans)
-    self.assertNotIn(scan3, file_obj2.scans)
+    self.assertFalse(scan1 in file_obj1.scans)
+    self.assertFalse(scan2 in file_obj2.scans)
+    self.assertFalse(scan3 in file_obj2.scans)
 
   def test_quality_control_objects(self):
     o1 = object()
