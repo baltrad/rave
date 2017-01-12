@@ -222,4 +222,4 @@ class rave_util_test(unittest.TestCase):
     pv.addScan(ps3)
     
     result = rave_util.remove_malfunc(pv)
-    self.assertIsNone(result)
+    self.assertTrue(result == None)
