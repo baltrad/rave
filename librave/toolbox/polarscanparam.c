@@ -202,7 +202,7 @@ int PolarScanParam_setData(PolarScanParam_t* scanparam, long nbins, long nrays, 
 int PolarScanParam_createData(PolarScanParam_t* scanparam, long nbins, long nrays, RaveDataType type)
 {
   RAVE_ASSERT((scanparam != NULL), "scanparam == NULL");
-  return RaveData2D_createData(scanparam->data, nbins, nrays, type);
+  return RaveData2D_createData(scanparam->data, nbins, nrays, type, 0);
 }
 
 void* PolarScanParam_getData(PolarScanParam_t* scanparam)

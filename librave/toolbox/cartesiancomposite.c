@@ -169,7 +169,7 @@ static Cartesian_t* CartesianComposite_createCompositeImage(CartesianComposite_t
     goto done;
   }
 
-  cp = Cartesian_createParameter(cartesian, self->quantity, RaveDataType_UCHAR);
+  cp = Cartesian_createParameter(cartesian, self->quantity, RaveDataType_UCHAR, 0);
   if (cp == NULL) {
     goto done;
   }

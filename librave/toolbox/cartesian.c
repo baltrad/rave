@@ -1061,14 +1061,14 @@ RaveList_t* Cartesian_getParameterNames(Cartesian_t* self)
   return RaveObjectHashTable_keys(self->parameters);
 }
 
-CartesianParam_t* Cartesian_createParameter(Cartesian_t* self, const char* quantity, RaveDataType type)
+CartesianParam_t* Cartesian_createParameter(Cartesian_t* self, const char* quantity, RaveDataType type, double datavalue)
 {
   CartesianParam_t* result = NULL;
   RAVE_ASSERT((self != NULL), "self == NULL");
   if (self->xsize > 0 && self->ysize > 0 && quantity != NULL && type != RaveDataType_UNDEFINED) {
     result = RAVE_OBJECT_NEW(&CartesianParam_TYPE);
     if (result == NULL ||
-        !CartesianParam_createData(result, self->xsize, self->ysize, type) ||
+        !CartesianParam_createData(result, self->xsize, self->ysize, type, datavalue) ||
         !CartesianParam_setQuantity(result, quantity) ||
         !Cartesian_addParameter(self, result)) {
       RAVE_OBJECT_RELEASE(result);

@@ -378,7 +378,7 @@ CartesianParam_t* RaveAcrr_accumulate(RaveAcrr_t* self, double acpt, long N, dou
   qfield = RAVE_OBJECT_NEW(&RaveField_TYPE);
   if (param == NULL ||
       qfield == NULL ||
-      !CartesianParam_createData(param, xsize, ysize, RaveDataType_DOUBLE) ||
+      !CartesianParam_createData(param, xsize, ysize, RaveDataType_DOUBLE, 0) ||
       !RaveField_createData(qfield, xsize, ysize, RaveDataType_DOUBLE) ||
       !CartesianParam_setQuantity(param, "ACRR") ||
       !RaveAcrrInternal_addStringAttributeToField(qfield, "how/task", "se.smhi.composite.distance.radar") ||

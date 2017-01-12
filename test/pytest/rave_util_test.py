@@ -145,6 +145,25 @@ class rave_util_test(unittest.TestCase):
     self.assertEquals(2, result.getNumberOfScans())
     self.assertTrue(ps1 == pv.getScan(0))
     self.assertTrue(ps3 == pv.getScan(1))
+    
+  def test_remove_malfunc_from_volume__all_malfunc(self):
+    pv = _polarvolume.new()
+    pv.addAttribute("how/malfunc", 'False')
+    ps1 = _polarscan.new()
+    ps1.addAttribute("how/malfunc", 'True')
+    ps1.elangle = 1.0
+    ps2 = _polarscan.new()
+    ps2.addAttribute("how/malfunc", 'True')
+    ps2.elangle = 2.0
+    ps3 = _polarscan.new()
+    ps3.addAttribute("how/malfunc", 'True')
+    ps3.elangle = 3.0
+    pv.addScan(ps1)
+    pv.addScan(ps2)
+    pv.addScan(ps3)
+    
+    result = rave_util.remove_malfunc_from_volume(pv)
+    self.assertEquals(0, result.getNumberOfScans())
   
   def test_remove_malfunc(self):
     pv = _polarvolume.new()
@@ -186,3 +205,21 @@ class rave_util_test(unittest.TestCase):
     result = rave_util.remove_malfunc(c)
     self.assertTrue(result == c)
     
+  def test_remove_malfunc__all_malfunc(self):
+    pv = _polarvolume.new()
+    pv.addAttribute("how/malfunc", 'False')
+    ps1 = _polarscan.new()
+    ps1.addAttribute("how/malfunc", 'True')
+    ps1.elangle = 1.0
+    ps2 = _polarscan.new()
+    ps2.addAttribute("how/malfunc", 'True')
+    ps2.elangle = 2.0
+    ps3 = _polarscan.new()
+    ps3.addAttribute("how/malfunc", 'True')
+    ps3.elangle = 3.0
+    pv.addScan(ps1)
+    pv.addScan(ps2)
+    pv.addScan(ps3)
+    
+    result = rave_util.remove_malfunc(pv)
+    self.assertIsNone(result)

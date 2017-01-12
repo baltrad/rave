@@ -168,9 +168,19 @@ class compositing(object):
     
     self.logger.debug("Generating composite with date and time %sT%s for area %s", dd, dt, area)
     
-    objects, nodes, how_tasks = self.fetch_objects()
+    objects, nodes, how_tasks, all_files_malfunc = self.fetch_objects()
+    
+    if all_files_malfunc:
+      self.logger.info("Content of all provided files were marked as 'malfunc'. Since option 'ignore_malfunc' is set, no composite is generated!")
+      return None
     
     objects, algorithm, qfields = self.quality_control_objects(objects)
+    
+    self.logger.debug("Quality controls for composite generation: %s", (",".join(qfields)))
+    
+    if len(objects) == 0:
+      self.logger.info("No objects provided to the composite generator. No composite will be generated!")
+      return None
 
     objects=objects.values()
 
@@ -209,12 +219,6 @@ class compositing(object):
     generator.product = self.product
     if algorithm is not None:
       generator.algorithm = algorithm
-      
-    if len(objects) == 0:
-      self.logger.info("No objects provided to the composite generator.")
-      if dd is None or dt is None:
-        self.logger.error("Can not create a composite without specifying a valid date / time when no objects are provided.")
-        raise Exception, "Can not create a composite without specifying a valid date / time when no objects are provided."
       
     for o in objects:
       generator.add(o)
@@ -346,6 +350,7 @@ class compositing(object):
     nodes = ""
     objects={}
     tasks = []
+    malfunc_files = 0
     for fname in self.filenames:
       obj = None
       try:
@@ -354,7 +359,7 @@ class compositing(object):
         else:
           obj = _raveio.open(fname).object
       except IOError:
-        self.logger.exception("Failed to open %s"%fname)
+        self.logger.exception("Failed to open %s", fname)
       
       is_scan = _polarscan.isPolarScan(obj)
       if is_scan:
@@ -363,12 +368,14 @@ class compositing(object):
         is_pvol = _polarvolume.isPolarVolume(obj)
         
       if not is_scan and not is_pvol:
-        self.logger.info("Input file %s is neither polar scan or volume, ignoring." % fname)
+        self.logger.warn("Input file %s is neither polar scan or volume, ignoring.", fname)
         continue
 
       if self.ignore_malfunc:
         obj = rave_util.remove_malfunc(obj)
         if obj is None:
+          self.logger.info("Input file %s detected as 'malfunc', ignoring.", fname)
+          malfunc_files += 1
           continue
       
       node = odim_source.NODfromSource(obj)
@@ -391,7 +398,9 @@ class compositing(object):
       
     how_tasks = ",".join(tasks)
     
-    return objects, nodes, how_tasks
+    all_files_malfunc = (len(self.filenames) > 0 and malfunc_files == len(self.filenames))
+    
+    return objects, nodes, how_tasks, all_files_malfunc
   
   def add_how_task_from_scan(self, scan, tasks):
     if scan.hasAttribute('how/task'):

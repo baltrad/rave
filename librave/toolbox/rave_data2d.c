@@ -115,7 +115,7 @@ int RaveData2D_setData(RaveData2D_t* self, long xsize, long ysize, void* data, R
 
   RAVE_ASSERT((self != NULL), "self == NULL");
 
-  result = RaveData2D_createData(self, xsize, ysize, type);
+  result = RaveData2D_createData(self, xsize, ysize, type, 0);
   if (result == 1 && data != NULL) {
     long sz = 0;
     long nbytes = 0;
@@ -127,7 +127,7 @@ int RaveData2D_setData(RaveData2D_t* self, long xsize, long ysize, void* data, R
   return result;
 }
 
-int RaveData2D_createData(RaveData2D_t* self, long xsize, long ysize, RaveDataType type)
+int RaveData2D_createData(RaveData2D_t* self, long xsize, long ysize, RaveDataType type, double value)
 {
   long sz = 0;
   long nbytes = 0;
@@ -149,7 +149,7 @@ int RaveData2D_createData(RaveData2D_t* self, long xsize, long ysize, RaveDataTy
     RAVE_CRITICAL1("Failed to allocate memory (%d bytes)", (int)nbytes);
     goto fail;
   }
-  memset(ptr, 0, nbytes);
+  memset(ptr, value, nbytes);
   RAVE_FREE(self->data);
   self->data = ptr;
   self->xsize = xsize;
@@ -416,7 +416,7 @@ RaveData2D_t* RaveData2D_concatX(RaveData2D_t* field, RaveData2D_t* other)
   xsize = field->xsize + other->xsize;
   ysize = field->ysize;
 
-  if (!RaveData2D_createData(newfield, xsize, ysize, field->type)) {
+  if (!RaveData2D_createData(newfield, xsize, ysize, field->type, 0)) {
     RAVE_ERROR0("Failed to create field data");
     goto done;
   }
@@ -459,7 +459,7 @@ RaveData2D_t* RaveData2D_concatY(RaveData2D_t* field, RaveData2D_t* other)
   xsize = field->xsize;
   ysize = field->ysize + other->ysize;
 
-  if (!RaveData2D_createData(newfield, xsize, ysize, field->type)) {
+  if (!RaveData2D_createData(newfield, xsize, ysize, field->type, 0)) {
     RAVE_ERROR0("Failed to create field data");
     goto done;
   }
@@ -483,7 +483,7 @@ RaveData2D_t* RaveData2D_createObject(long xsize, long ysize, RaveDataType type)
   RaveData2D_t* result = NULL;
   result = RAVE_OBJECT_NEW(&RaveData2D_TYPE);
   if (result != NULL) {
-    if (!RaveData2D_createData(result, xsize, ysize, type)) {
+    if (!RaveData2D_createData(result, xsize, ysize, type, 0)) {
       RAVE_OBJECT_RELEASE(result);
     }
   }

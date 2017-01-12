@@ -147,6 +147,10 @@ def generate(files, arguments):
   
   result = comp.generate(args["date"], args["time"], args["area"])
   
+  if result == None:
+    logger.info("No composite could be generated.")
+    return None
+  
   fileno, outfile = rave_tempfile.mktemp(suffix='.h5', close="True")
   
   rio = _raveio.new()

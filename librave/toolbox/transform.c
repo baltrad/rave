@@ -834,7 +834,7 @@ Cartesian_t* Transform_combine_tiles(Transform_t* self, Area_t* area, RaveObject
       const char* pname = (const char*)RaveList_get(pNames,j);
       CartesianParam_t* p = Cartesian_getParameter(ci, pname);
       if (p != NULL) {
-        CartesianParam_t* cp = Cartesian_createParameter(combined,  pname, CartesianParam_getDataType(p));
+        CartesianParam_t* cp = Cartesian_createParameter(combined,  pname, CartesianParam_getDataType(p), CartesianParam_getNodata(p));
         if (cp == NULL ||
             !TransformInternal_createParameterQualtiyFieldFromTile(self, cp, p)) {
           RAVE_ERROR1("Failed to create parameter %s in the combined area", pname);

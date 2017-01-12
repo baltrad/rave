@@ -805,7 +805,7 @@ static Cartesian_t* CompositeInternal_createCompositeImage(Composite_t* self, Ar
   for (i = 0; i < nparam; i++) {
     double gain = 0.0, offset = 0.0;
     const char* name = Composite_getParameter(self, i, &gain, &offset);
-    CartesianParam_t* cp = Cartesian_createParameter(cartesian, name, RaveDataType_UCHAR);
+    CartesianParam_t* cp = Cartesian_createParameter(cartesian, name, RaveDataType_UCHAR, 0);
     if (cp == NULL) {
       goto done;
     }
