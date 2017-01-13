@@ -151,6 +151,10 @@ def generate(files, arguments):
   comp.use_site_source = True
   
   result = comp.generate(None, None, areaid)
+  
+  if result == None:
+    logger.info("No site2D-composite could be generated.")
+    return None
 
   result.objectType = _rave.Rave_ObjectType_IMAGE 
   

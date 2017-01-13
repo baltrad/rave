@@ -234,10 +234,10 @@ int CartesianParam_setData(CartesianParam_t* self, long xsize, long ysize, void*
   return RaveData2D_setData(self->data, xsize, ysize, data, type);
 }
 
-int CartesianParam_createData(CartesianParam_t* self, long xsize, long ysize, RaveDataType type)
+int CartesianParam_createData(CartesianParam_t* self, long xsize, long ysize, RaveDataType type, double value)
 {
   RAVE_ASSERT((self != NULL), "self == NULL");
-  return RaveData2D_createData(self->data, xsize, ysize, type);
+  return RaveData2D_createData(self->data, xsize, ysize, type, value);
 }
 
 void* CartesianParam_getData(CartesianParam_t* self)

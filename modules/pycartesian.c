@@ -895,7 +895,7 @@ static PyObject* _pycartesian_createParameter(PyCartesian* self, PyObject* args)
     return NULL;
   }
 
-  param = Cartesian_createParameter(self->cartesian, quantity, type);
+  param = Cartesian_createParameter(self->cartesian, quantity, type, 0);
   if (param != NULL) {
     result = (PyObject*)PyCartesianParam_New(param);
   } else {

@@ -83,9 +83,10 @@ int RaveData2D_setData(RaveData2D_t* self, long xsize, long ysize, void* data, R
  * @param[in] xsize - x-size
  * @param[in] ysize - y-size
  * @param[in] type  - the data type
+ * @param[in] value - initial value to set for all positions in the data field
  * @returns 1 on success, otherwise 0
  */
-int RaveData2D_createData(RaveData2D_t* self, long xsize, long ysize, RaveDataType type);
+int RaveData2D_createData(RaveData2D_t* self, long xsize, long ysize, RaveDataType type, double value);
 
 /**
  * Sets the value at the specified coordinates.

@@ -660,7 +660,8 @@ RaveList_t* Cartesian_getParameterNames(Cartesian_t* self);
  * @param[in] self - self
  * @param[in] quantity - the quantity of the created parameter
  * @param[in] type - the data type
+ * @param[in] datavalue - value to initialise the data field with
  * @return the created parameter
  */
-CartesianParam_t* Cartesian_createParameter(Cartesian_t* self, const char* quantity, RaveDataType type);
+CartesianParam_t* Cartesian_createParameter(Cartesian_t* self, const char* quantity, RaveDataType type, double datavalue);
 #endif
