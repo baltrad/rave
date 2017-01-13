@@ -27,6 +27,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "projection.h"
 #include "rave_debug.h"
 #include "rave_alloc.h"
+#include "rave_utilities.h"
 #include <string.h>
 
 /**
@@ -563,6 +564,50 @@ done:
   return result;
 }
 
+static RaveAttribute_t* TransformInternal_mergeRadarIndexTaskArgs(const char* tgtHowTaskArgValue, const char* srcHowTaskArgValue)
+{
+  RaveAttribute_t* result = NULL;
+  RaveList_t* srcTokens = NULL;
+  int buffLength = 0;
+  char* buff = NULL;
+
+  if (tgtHowTaskArgValue == NULL && srcHowTaskArgValue == NULL) {
+    return NULL;
+  }
+  if (tgtHowTaskArgValue == NULL && srcHowTaskArgValue != NULL) {
+    return RaveAttributeHelp_createString("how/task_args", srcHowTaskArgValue);
+  }
+  if (tgtHowTaskArgValue != NULL && srcHowTaskArgValue == NULL) {
+    return RaveAttributeHelp_createString("how/task_args", tgtHowTaskArgValue);
+  }
+  buffLength = strlen(tgtHowTaskArgValue) + strlen(srcHowTaskArgValue) + 2; /* One for ending new line and one for ',' between. */
+  buff = RAVE_MALLOC(sizeof(char)*buffLength);
+  if (buff != NULL) {
+    strcpy(buff, tgtHowTaskArgValue);
+
+    srcTokens = RaveUtilities_getTrimmedTokens(srcHowTaskArgValue, (int)',');
+    if (srcTokens != NULL) {
+      int i = 0;
+      int nTokens = RaveList_size(srcTokens);
+      for (i = 0; i < nTokens; i++) {
+        char* tok = RaveList_get(srcTokens, i);
+        if (tok != NULL && !strstr(buff, tok)) {
+          strcat(buff, ",");
+          strcat(buff, tok);
+        }
+      }
+    }
+
+    result = RaveAttributeHelp_createString("how/task_args", buff);
+  }
+
+  RAVE_FREE(buff);
+  if (srcTokens != NULL) {
+    RaveList_freeAndDestroy(&srcTokens);
+  }
+  return result;
+}
+
 static int TransformInternal_addTileToParameter(Transform_t* self, Cartesian_t* target, Cartesian_t* source, const char* quantity)
 {
   CartesianParam_t* targetParameter = NULL;
@@ -627,6 +672,26 @@ static int TransformInternal_addTileToParameter(Transform_t* self, Cartesian_t* 
               RaveField_setValue(targetField, x+xoffset, y+yoffset, v);
             }
           }
+        }
+
+        if (strcmp("se.smhi.composite.index.radar", howTaskValue) == 0) { /* We want to concatenate all parts into one long string and ensure that there only is one / each */
+          RaveAttribute_t* tgtHowTaskArgAttr = RaveField_getAttribute(targetField, "how/task_args");
+          RaveAttribute_t* srcHowTaskArgAttr = RaveField_getAttribute(sourceField, "how/task_args");
+          RaveAttribute_t* mergedHowTaskArgAttr = NULL;
+          char *tgtHowTaskArgValue = NULL, *srcHowTaskArgValue = NULL;
+          if (tgtHowTaskArgAttr != NULL) {
+            RaveAttribute_getString(tgtHowTaskArgAttr, &tgtHowTaskArgValue);
+          }
+          if (srcHowTaskArgAttr != NULL) {
+            RaveAttribute_getString(srcHowTaskArgAttr, &srcHowTaskArgValue);
+          }
+          mergedHowTaskArgAttr = TransformInternal_mergeRadarIndexTaskArgs(tgtHowTaskArgValue, srcHowTaskArgValue);
+          if (mergedHowTaskArgAttr) {
+            RaveField_addAttribute(targetField, mergedHowTaskArgAttr);
+          }
+          RAVE_OBJECT_RELEASE(tgtHowTaskArgAttr);
+          RAVE_OBJECT_RELEASE(srcHowTaskArgAttr);
+          RAVE_OBJECT_RELEASE(mergedHowTaskArgAttr);
         }
       }
       RAVE_OBJECT_RELEASE(sourceField);

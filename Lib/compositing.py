@@ -34,6 +34,7 @@ import _area
 import _projection
 import _gra
 import _raveio
+import _bitmapgenerator
 
 import logging
 import string
@@ -111,6 +112,7 @@ class compositing(object):
     self.dumppath = None
     self.dump = False
     self.use_site_source = False
+    self.radar_index_mapping = {}
     
   def generate(self, dd, dt, area=None):
     return self._generate(dd, dt, area)
@@ -154,6 +156,20 @@ class compositing(object):
     if v.startswith(","):
       v=v[1:]
     return v
+
+  ##
+  # Returns the next available radar
+  def get_next_radar_index(self):
+    if len(self.radar_index_mapping)==0:
+      return 1
+    v = self.radar_index_mapping.values()
+    v.sort()
+    idx = 1
+    for i in v:
+      if idx != i:
+        return idx
+      idx = idx + 1
+    return idx
 
   ## Generates the cartesian image.
   #
@@ -215,9 +231,24 @@ class compositing(object):
       if dd is None or dt is None:
         self.logger.error("Can not create a composite without specifying a valid date / time when no objects are provided.")
         raise Exception, "Can not create a composite without specifying a valid date / time when no objects are provided."
-      
+    
     for o in objects:
       generator.add(o)
+      # We want to ensure that we get a proper indexing of included radar
+      sourceid = o.source
+      try:
+        osource = odim_source.ODIM_Source(o.source)
+        if osource.wmo:
+          sourceid = "WMO:%s"%osource.wmo
+        elif osource.rad:
+          sourceid = "RAD:%s"%osource.rad
+        elif osource.nod:
+          sourceid = "NOD:%s"%osource.nod
+      except:
+        pass
+      
+      if not sourceid in self.radar_index_mapping.keys():
+        self.radar_index_mapping[sourceid] = self.get_next_radar_index()
     
     generator.selection_method = self.selection_method
     generator.date=o.date if dd is None else dd 
@@ -234,6 +265,9 @@ class compositing(object):
     
     if self.verbose:
       self.logger.info("Generating cartesian composite")
+    
+    generator.applyRadarIndexMapping(self.radar_index_mapping)
+    
     result = generator.nearest(pyarea, qfields)
     
     if self.applyctfilter:
@@ -253,6 +287,13 @@ class compositing(object):
         else:
           self.logger.warn("Failed to generate gra field....")
     
+    # Hack to create a BRDR field if the qfields contains se.smhi.composite.index.radar
+    if "se.smhi.composite.index.radar" in qfields:
+      bitmapgen = _bitmapgenerator.new()
+      brdr_field = bitmapgen.create_intersect(result.getParameter(self.quantity), "se.smhi.composite.index.radar")
+      brdr_param = result.createParameter("BRDR", _rave.RaveDataType_UCHAR)
+      brdr_param.setData(brdr_field.getData())
+      
     if self.applygapfilling:
       if self.verbose:
         self.logger.debug("Applying gap filling")

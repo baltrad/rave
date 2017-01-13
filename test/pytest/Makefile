@@ -47,6 +47,10 @@ distclean:
 	@\rm -fr swecomposite_quality_field.h5
 	@\rm -fr rixeecomposite.h5
 	@\rm -fr swecomposite_ppi_distancequality.h5
+	@\rm -fr bitmapgenerator_radarindex_test.h5
+	@\rm -fr bitmapgenerator_surrounding_test.h5
+	@\rm -fr swecomposite_with_index.h5
+	@\rm -fr swecomposite_with_reversedindex.h5
 	@\rm -fr polgmaps_max_qitotal.h5
 	@\rm -fr transform_filledGap.h5
 	@\rm -fr cart_composite_first.h5 cart_composite_avg.h5 cart_composite_max.h5 cart_composite_min.h5 cart_composite_distance.h5

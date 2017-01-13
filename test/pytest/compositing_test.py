@@ -206,3 +206,19 @@ class compositing_test(unittest.TestCase):
     self.assertEquals(1.5, self.classUnderTest._strToNumber(1.5), 4)
     self.assertEquals(1, self.classUnderTest._strToNumber(1))
 
+
+  def test_get_next_radar_index(self):
+    self.classUnderTest.radar_index_mapping={}
+    self.assertEquals(1, self.classUnderTest.get_next_radar_index())
+    self.classUnderTest.radar_index_mapping={"a":1,"b":2,"c":4,"d":7,"e":8,"f":10}
+    self.assertEquals(3, self.classUnderTest.get_next_radar_index())
+    self.assertEquals(3, self.classUnderTest.get_next_radar_index())
+    self.classUnderTest.radar_index_mapping["g"]=3
+    self.assertEquals(5, self.classUnderTest.get_next_radar_index())
+    self.classUnderTest.radar_index_mapping["h"]=5
+    self.assertEquals(6, self.classUnderTest.get_next_radar_index())
+    self.classUnderTest.radar_index_mapping["i"]=6
+    self.assertEquals(9, self.classUnderTest.get_next_radar_index())
+    self.classUnderTest.radar_index_mapping["j"]=9
+    self.assertEquals(11, self.classUnderTest.get_next_radar_index())
+    

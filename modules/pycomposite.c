@@ -249,6 +249,68 @@ static PyObject* _pycomposite_add(PyComposite* self, PyObject* args)
   Py_RETURN_NONE;
 }
 
+static PyObject* _pycomposite_applyRadarIndexMapping(PyComposite* self, PyObject* args)
+{
+  PyObject* obj = NULL;
+  PyObject* keys = NULL;
+  PyObject* ko = NULL;
+  PyObject* val = NULL;
+  RaveObjectHashTable_t* mapping = NULL;
+  RaveAttribute_t* attr = NULL;
+  Py_ssize_t len = 0, i = 0;
+
+  if (!PyArg_ParseTuple(args, "O", &obj)) {
+    raiseException_returnNULL(PyExc_AttributeError, "Takes a mapping between source (string) and a radar index value");
+  }
+
+  if (!PyMapping_Check(obj)) {
+    raiseException_returnNULL(PyExc_AttributeError, "Takes a mapping between source (string) and a radar index value");
+  }
+  keys = PyMapping_Keys(obj);
+  if (keys == NULL) {
+    raiseException_returnNULL(PyExc_AttributeError, "Could not get keys from mapping");
+  }
+
+  mapping = RAVE_OBJECT_NEW(&RaveObjectHashTable_TYPE);
+  if (mapping == NULL) {
+    raiseException_gotoTag(done, PyExc_MemoryError, "Failed to create native mapping");
+  }
+
+  len = PyList_Size(keys);
+  for (i = 0; i < len; i++) {
+    char* key;
+    ko = PyList_GetItem(keys, i); /* borrowed */
+    key = PyString_AsString(ko);
+    if (key != NULL) {
+      val = PyMapping_GetItemString(obj, key);
+      if (val != NULL && PyInt_Check(val)) {
+        attr = RaveAttributeHelp_createLong(key, PyInt_AsLong(val));
+        if (attr == NULL || !RaveObjectHashTable_put(mapping, key, (RaveCoreObject*)attr)) {
+          raiseException_gotoTag(done, PyExc_MemoryError, "Failed to add native map value to mapping");
+        }
+        RAVE_OBJECT_RELEASE(attr);
+      } else {
+        raiseException_gotoTag(done, PyExc_AttributeError, "Takes a mapping between source (string) and a radar index value");
+      }
+      Py_DECREF(val);
+    }
+  }
+
+  if (!Composite_applyRadarIndexMapping(self->composite, mapping)) {
+    raiseException_gotoTag(done, PyExc_RuntimeError, "Failed to apply radar index mapping");
+  }
+
+  Py_DECREF(keys);
+  RAVE_OBJECT_RELEASE(mapping);
+  Py_RETURN_NONE;
+done:
+  Py_DECREF(keys);
+  Py_DECREF(val);
+  RAVE_OBJECT_RELEASE(attr);
+  RAVE_OBJECT_RELEASE(mapping);
+  return NULL;
+}
+
 /**
  * Generates a composite according to nearest principle.
  * @param[in] self - self
@@ -328,6 +390,7 @@ static struct PyMethodDef _pycomposite_methods[] =
   {"getParameterCount", (PyCFunction)_pycomposite_getParameterCount, 1},
   {"getParameter", (PyCFunction)_pycomposite_getParameter, 1},
   {"add", (PyCFunction) _pycomposite_add, 1},
+  {"applyRadarIndexMapping", (PyCFunction)_pycomposite_applyRadarIndexMapping, 1},
   {"nearest", (PyCFunction) _pycomposite_nearest, 1},
   {NULL, NULL } /* sentinel */
 };

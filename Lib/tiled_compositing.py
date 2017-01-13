@@ -124,6 +124,7 @@ class multi_composite_arguments(object):
     self.verbose = False
     self.dump = False
     self.dumppath = None
+    self.radar_index_mapping = {}
   
   ##
   # Generate function. Basically same as calling compositing.generate but the pyarea is created from the
@@ -158,6 +159,7 @@ class multi_composite_arguments(object):
     comp.reprocess_quality_field = self.reprocess_quality_field
     comp.dump = self.dump
     comp.dumppath = self.dumppath
+    comp.radar_index_mapping = self.radar_index_mapping
     
     pyarea = _area.new()
     pyarea.id = "tiled area subset %s"%tid
@@ -358,6 +360,10 @@ class tiled_compositing(object):
     # Now, make sure we have the correct files in the various areas
     self._add_files_to_argument_list(args, tiled_areas)
 
+    # And add the radar index value to be used for each radar source so that each tile
+    # have same information
+    self._add_radar_index_value_to_argument_list(args)
+
     # We also must ensure that if any arg contains 0 files, there must be a date/time set
     if not self._ensure_date_and_time_on_args(args):
       raise Exception, "Could not ensure existing date and time for composite"
@@ -403,6 +409,28 @@ class tiled_compositing(object):
       
     self.logger.info("Finished splitting polar object")
   
+  def _add_radar_index_value_to_argument_list(self, args):
+    ctr = 1
+    for k in self.file_objects.keys():
+      v = self.file_objects[k]
+      if not _polarscan.isPolarScan(v) and not _polarvolume.isPolarVolume(v):
+        continue
+      sourceid = v.source
+      try:
+        osource = odim_source.ODIM_Source(v.source)
+        if osource.wmo:
+          sourceid = "WMO:%s"%osource.wmo
+        elif osource.rad:
+          sourceid = "RAD:%s"%osource.rad
+        elif osource.nod:
+          sourceid = "NOD:%s"%osource.nod
+      except:
+        pass
+            
+      for arg in args:
+        arg[0].radar_index_mapping[sourceid] = ctr
+      ctr = ctr + 1        
+
   def _ensure_date_and_time_on_args(self, args):
     dtstr = None
     ddstr = None
@@ -480,7 +508,7 @@ class tiled_compositing(object):
         objects.append(o)
         
       t = _transform.new()
-
+        
       result = t.combine_tiles(pyarea, objects)
       
       # Fix so that we get a valid place for /what/source and /how/nodes 
