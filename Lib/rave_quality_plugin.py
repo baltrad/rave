@@ -20,6 +20,15 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ##
 # Base class for all quality plugins
 
+##
+# Some quality plugins might be able to handle a directive on what to do with the
+# quality control. In some cases, only an analyze should be performed. In other cases
+# the actual analyzed field should be modified with the analyzed field
+#
+QUALITY_CONTROL_MODE_ANALYZE = "analyze"
+QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY = "analyze_and_apply"
+  
+
 ## 
 # @file
 # @author Anders Henja, SMHI
@@ -43,7 +52,7 @@ class rave_quality_plugin(object):
   # @param arguments: If there are any arguments that should be passed to the processor  
   # @return: The modified object if this quality plugin has performed changes 
   # to the object.
-  def process(self, obj, reprocess_quality_flag=True, arguments=None):
+  def process(self, obj, reprocess_quality_flag=True, quality_control_mode=QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY, arguments=None):
     return obj, self.getQualityFields()
   
   ##

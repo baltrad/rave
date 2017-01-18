@@ -34,6 +34,8 @@ import qitotal_options
 import _polarscan, _polarvolume, _qitotal, _rave
 
 from rave_quality_plugin import rave_quality_plugin
+from rave_quality_plugin import QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY
+
 ## Contains site-specific argument settings 
 
 QITOTAL_DTYPE  = _rave.RaveDataType_UCHAR
@@ -91,7 +93,7 @@ class rave_qitotal_quality_plugin(rave_quality_plugin):
   # @param reprocess_quality_flag: Not used, we always want to reprocess qi-total
   # @param arguments: Not used
   # @return: obj - without doing anything to it
-  def process(self, obj, reprocess_quality_flag=True, arguments=None):
+  def process(self, obj, reprocess_quality_flag=True, quality_control_mode=QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY, arguments=None):
     objinfo = self.get_object_information(obj)
     
     if _polarscan.isPolarScan(obj):

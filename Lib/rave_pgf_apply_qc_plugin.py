@@ -58,11 +58,11 @@ def arglist2dict(arglist):
 # @param volume: the volume to perform the quality controls on
 # @param detectors: the detectors that should be run on the volume
 #
-def perform_quality_control(volume, detectors):
+def perform_quality_control(volume, detectors, qc_mode=QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY):
   for d in detectors:
     p = rave_pgf_quality_registry.get_plugin(d)
     if p != None:
-      volume = p.process(volume)
+      volume = p.process(volume, True, qc_mode)
       if isinstance(volume,tuple):
         volume, _ = volume[0],volume[1]
   return volume

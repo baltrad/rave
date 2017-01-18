@@ -29,6 +29,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 # @date 2016-12-21
 
 from rave_quality_plugin import rave_quality_plugin
+from rave_quality_plugin import QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY
 
 class rave_radarindex_quality_plugin(rave_quality_plugin):
   ##
@@ -46,7 +47,7 @@ class rave_radarindex_quality_plugin(rave_quality_plugin):
   # @param reprocess_quality_flag: Not used
   # @param arguments: Not used
   # @return: obj - without doing anything to it
-  def process(self, obj, reprocess_quality_flag=True, arguments=None):
+  def process(self, obj, reprocess_quality_flag=True, quality_control_mode=QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY, arguments=None):
     return obj, self.getQualityFields()
 
   ##

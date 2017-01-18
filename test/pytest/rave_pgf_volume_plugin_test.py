@@ -50,8 +50,8 @@ class rave_pgf_volume_plugin_test(unittest.TestCase):
 
     result = rave_pgf_volume_plugin.perform_quality_control(vol, ["qc.check.1","qc.check.2"])
     
-    expected_qc_check_1_calls = [mock.call.process(vol)]
-    expected_qc_check_2_calls = [mock.call.process(vol)]
+    expected_qc_check_1_calls = [mock.call.process(vol, True, "analyze_and_apply")]
+    expected_qc_check_2_calls = [mock.call.process(vol, True, "analyze_and_apply")]
     
     self.assertTrue(expected_qc_check_1_calls == self.qc_check_1_mock.mock_calls)
     self.assertTrue(expected_qc_check_2_calls == self.qc_check_2_mock.mock_calls)
@@ -66,8 +66,40 @@ class rave_pgf_volume_plugin_test(unittest.TestCase):
 
     result = rave_pgf_volume_plugin.perform_quality_control(vol, ["qc.check.1","qc.check.2"])
     
-    expected_qc_check_1_calls = [mock.call.process(vol)]
-    expected_qc_check_2_calls = [mock.call.process(vol)]
+    expected_qc_check_1_calls = [mock.call.process(vol, True, "analyze_and_apply")]
+    expected_qc_check_2_calls = [mock.call.process(vol, True, "analyze_and_apply")]
+    
+    self.assertTrue(expected_qc_check_1_calls == self.qc_check_1_mock.mock_calls)
+    self.assertTrue(expected_qc_check_2_calls == self.qc_check_2_mock.mock_calls)
+    self.assertTrue(vol == result)
+
+  def test_perform_quality_control_quality_control_mode(self):
+    vol = object()
+    a1 = object()
+    
+    self.qc_check_1_mock.process.return_value = vol
+    self.qc_check_2_mock.process.return_value = (vol,a1)
+
+    result = rave_pgf_volume_plugin.perform_quality_control(vol, ["qc.check.1","qc.check.2"])
+    
+    expected_qc_check_1_calls = [mock.call.process(vol, True, "analyze_and_apply")]
+    expected_qc_check_2_calls = [mock.call.process(vol, True, "analyze_and_apply")]
+    
+    self.assertTrue(expected_qc_check_1_calls == self.qc_check_1_mock.mock_calls)
+    self.assertTrue(expected_qc_check_2_calls == self.qc_check_2_mock.mock_calls)
+    self.assertTrue(vol == result)
+
+  def test_perform_quality_control_quality_control_mode_2(self):
+    vol = object()
+    a1 = object()
+    
+    self.qc_check_1_mock.process.return_value = vol
+    self.qc_check_2_mock.process.return_value = (vol,a1)
+
+    result = rave_pgf_volume_plugin.perform_quality_control(vol, ["qc.check.1","qc.check.2"], "analyze")
+    
+    expected_qc_check_1_calls = [mock.call.process(vol, True, "analyze")]
+    expected_qc_check_2_calls = [mock.call.process(vol, True, "analyze")]
     
     self.assertTrue(expected_qc_check_1_calls == self.qc_check_1_mock.mock_calls)
     self.assertTrue(expected_qc_check_2_calls == self.qc_check_2_mock.mock_calls)
@@ -82,8 +114,8 @@ class rave_pgf_volume_plugin_test(unittest.TestCase):
 
     result = rave_pgf_volume_plugin.perform_quality_control(vol, ["qc.check.1","qc.check.2"])
     
-    expected_qc_check_1_calls = [mock.call.process(vol)]
-    expected_qc_check_2_calls = [mock.call.process(vol)]
+    expected_qc_check_1_calls = [mock.call.process(vol, True, "analyze_and_apply")]
+    expected_qc_check_2_calls = [mock.call.process(vol, True, "analyze_and_apply")]
     
     self.assertTrue(expected_qc_check_1_calls == self.qc_check_1_mock.mock_calls)
     self.assertTrue(expected_qc_check_2_calls == self.qc_check_2_mock.mock_calls)

@@ -25,6 +25,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 # @date 2015-04-09
 
 from rave_quality_plugin import rave_quality_plugin
+from rave_quality_plugin import QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY
+
 import odc_hac
 import rave_pgf_logger
 import _polarvolume, _polarscan
@@ -48,7 +50,7 @@ class rave_zdiff_quality_plugin(rave_quality_plugin):
   # @param arguments: Not used
   # @return: The modified object if this quality plugin has performed changes 
   # to the object.
-  def process(self, obj, reprocess_quality_flag=True, arguments=None):
+  def process(self, obj, reprocess_quality_flag=True, quality_control_mode=QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY, arguments=None):
     try:
       if _polarscan.isPolarScan(obj) or _polarvolume.isPolarVolume(obj):
         odc_hac.zdiff(obj)

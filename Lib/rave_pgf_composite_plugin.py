@@ -87,6 +87,9 @@ def generate(files, arguments):
   if "anomaly-qc" in args.keys():
     comp.detectors = string.split(args["anomaly-qc"], ",")
 
+  if "qc-mode" in args.keys():
+    comp.set_quality_control_mode_from_string(args["qc-mode"])
+
   if "ignore-malfunc" in args.keys():
     try:
       if args["ignore-malfunc"].lower() in ["true", "yes", "y", "1"]:

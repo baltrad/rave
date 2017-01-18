@@ -89,6 +89,11 @@ class rave_overshooting_quality_plugin_test(unittest.TestCase):
     result, _ = self.classUnderTest.process(scan)
     self.assertTrue(scan == result)
 
+  def test_process_with_quality_control_mode(self):
+    scan = _raveio.open(self.SCAN_FIXTURE).object
+    result, _ = self.classUnderTest.process(scan,True,quality_control_mode="analyze")
+    self.assertTrue(scan == result)
+
   def test_algorithm(self):
     result = self.classUnderTest.algorithm()
     self.assertNotEqual(-1, string.find(`type(result)`, "CompositeAlgorithmCore"))

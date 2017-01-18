@@ -62,6 +62,11 @@ class rave_distance_quality_plugin_test(unittest.TestCase):
     result, _ = self.classUnderTest.process(vol, reprocess_quality_flag=False)
     self.assertTrue(vol == result)
 
+  def test_process_quality_control_mode(self):
+    vol = _raveio.open(self.VOLUME_FIXTURE).object
+    result, _ = self.classUnderTest.process(vol, reprocess_quality_flag=True, quality_control_mode="analyze")
+    self.assertTrue(vol == result)
+
   def test_algorithm(self):
     result = self.classUnderTest.algorithm()
     self.assertTrue(result == None)

@@ -51,6 +51,7 @@ import area
 import rave_area
 import odim_source
 import rave_projection
+import rave_quality_plugin
 
 from gadjust.gra import gra_coefficient
 from rave_defines import CENTER_ID, GAIN, OFFSET
@@ -97,6 +98,7 @@ class compositing(object):
     self.elangle = 0.0
     self.range = 200000.0
     self.selection_method = _pycomposite.SelectionMethod_NEAREST 
+    self.quality_control_mode = rave_quality_plugin.QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY
     self.qitotal_field = None
     self.applygra = False
     self.zr_A = 200.0
@@ -121,6 +123,7 @@ class compositing(object):
     if self.verbose:
       self.logger.info("Generating cartesian image from %d files"%len(self.filenames))
       self.logger.debug("Detectors = %s"%`self.detectors`)
+      self.logger.debug("Quality control mode = %s"%`self.quality_control_mode`)
       self.logger.debug("Product = %s"%self._product_repr())
       self.logger.debug("Quantity = %s"%self.quantity)
       self.logger.debug("Range = %f"%self.range)
@@ -352,6 +355,11 @@ class compositing(object):
     else:
       raise ValueError, "Only supported selection methods are NEAREST_RADAR or HEIGHT_ABOVE_SEALEVEL"
   
+  def set_quality_control_mode_from_string(self, modestr):
+    if modestr.upper() not in [rave_quality_plugin.ANALYZE_AND_APPLY, rave_quality_plugin.ANALYZE]:
+      raise ValueError, "Only supported modes are ANALYZE_AND_APPLY or ANALYZE"
+    self.quality_control_mode = modestr
+  
   def quality_control_objects(self, objects):
     algorithm = None
     result = {}
@@ -361,7 +369,7 @@ class compositing(object):
       for d in self.detectors:
         p = rave_pgf_quality_registry.get_plugin(d)
         if p != None:
-          process_result = p.process(obj, self.reprocess_quality_field)
+          process_result = p.process(obj, self.reprocess_quality_field, self.quality_control_mode)
           if isinstance(process_result, tuple):
             obj = process_result[0]
             detector_qfields = process_result[1]

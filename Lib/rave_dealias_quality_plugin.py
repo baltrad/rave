@@ -25,6 +25,9 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 # @date 2013-10-07
 
 from rave_quality_plugin import rave_quality_plugin
+from rave_quality_plugin import QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY
+import rave_pgf_logger
+logger = rave_pgf_logger.create_logger()
 
 class dealias_plugin(rave_quality_plugin):
   ##
@@ -43,10 +46,10 @@ class dealias_plugin(rave_quality_plugin):
   # @param arguments: Not used
   # @return: The modified object if this quality plugin has performed changes 
   # to the object.
-  def process(self, obj, reprocess_quality_flag=True, arguments=None):
+  def process(self, obj, reprocess_quality_flag=True, quality_control_mode=QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY, arguments=None):
     try:
       import _dealias
       _dealias.dealias(obj)
     except:
-      pass
+      logger.exception("Failure during dealias processing")
     return obj, self.getQualityFields()

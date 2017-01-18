@@ -104,6 +104,28 @@ class rave_qitotal_quality_plugin_test(unittest.TestCase):
     qfield2 = result.getQualityFieldByHowTask("pl.imgw.quality.qi_total")
     self.assertTrue(qfield != qfield2)
 
+  def test_process_scan_quality_control_mode(self):
+    scan = _raveio.open(self.SCAN_FIXTURE).object
+    qf1data = numpy.zeros((scan.nrays, scan.nbins), numpy.int8)
+    qf1data = qf1data + 1
+    qf1 = _ravefield.new()
+    qf1.setData(qf1data)
+    qf1.addAttribute("how/task", "se.smhi.test.1")
+    
+    qf2data = numpy.zeros((scan.nrays, scan.nbins), numpy.int8)
+    qf2data = qf2data + 2
+    qf2 = _ravefield.new()
+    qf2.setData(qf2data)
+    qf2.addAttribute("how/task", "se.smhi.test.2")
+    
+    scan.addQualityField(qf1)
+    scan.addQualityField(qf2)
+    
+    result, _ = self.classUnderTest.process(scan, True, quality_control_mode="analyze")
+    qfield = result.getQualityFieldByHowTask("pl.imgw.quality.qi_total")
+    result, _ = self.classUnderTest.process(scan, reprocess_quality_flag=False)
+    qfield2 = result.getQualityFieldByHowTask("pl.imgw.quality.qi_total")
+    self.assertTrue(qfield != qfield2)
 
   def test_process_volume(self):
     volume = _raveio.open(self.VOLUME_FIXTURE).object

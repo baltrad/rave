@@ -377,16 +377,17 @@ class compositing_test(unittest.TestCase):
     detectors = ["qc.check.1","qc.check.2"]
     self.classUnderTest.detectors=detectors
     self.classUnderTest.reprocess_quality_field = True
-
-    self.qc_check_1_mock.process.side_effect = lambda x,y: ({o1:o1,o2:o2}[x], [detectors[0]])
+    self.classUnderTest.quality_control_mode = "analyze"
+    
+    self.qc_check_1_mock.process.side_effect = lambda x,y,z: ({o1:o1,o2:o2}[x], [detectors[0]])
     self.qc_check_1_mock.algorithm.return_value = None
-    self.qc_check_2_mock.process.side_effect = lambda x,y: ({o1:o1,o2:o2}[x], [detectors[1]])
+    self.qc_check_2_mock.process.side_effect = lambda x,y,z: ({o1:o1,o2:o2}[x], [detectors[1]])
     self.qc_check_2_mock.algorithm.return_value = None
     
     result, algorithm, qfields = self.classUnderTest.quality_control_objects({"s1.h5":o1,"s2.h5":o2})
     
-    expected_qc_check_1_calls = [mock.call.process(o1,True), mock.call.algorithm(),mock.call.process(o2,True), mock.call.algorithm()]
-    expected_qc_check_2_calls = [mock.call.process(o1,True), mock.call.algorithm(),mock.call.process(o2,True), mock.call.algorithm()]
+    expected_qc_check_1_calls = [mock.call.process(o1,True,"analyze"), mock.call.algorithm(),mock.call.process(o2,True,"analyze"), mock.call.algorithm()]
+    expected_qc_check_2_calls = [mock.call.process(o1,True,"analyze"), mock.call.algorithm(),mock.call.process(o2,True,"analyze"), mock.call.algorithm()]
     
     self.assertTrue(expected_qc_check_1_calls == self.qc_check_1_mock.mock_calls)
     self.assertTrue(expected_qc_check_2_calls == self.qc_check_2_mock.mock_calls)
@@ -406,16 +407,17 @@ class compositing_test(unittest.TestCase):
     detectors = ["qc.check.1","qc.check.2"]
     self.classUnderTest.detectors=detectors
     self.classUnderTest.reprocess_quality_field = True
+    self.classUnderTest.quality_control_mode = "analyze"
 
-    self.qc_check_1_mock.process.side_effect = lambda x,y: ({o1:o1,o2:o2}[x], [detectors[0]])
+    self.qc_check_1_mock.process.side_effect = lambda x,y,z: ({o1:o1,o2:o2}[x], [detectors[0]])
     self.qc_check_1_mock.algorithm.return_value = a1
-    self.qc_check_2_mock.process.side_effect = lambda x,y: ({o1:o1,o2:o2}[x], [detectors[1]])
+    self.qc_check_2_mock.process.side_effect = lambda x,y,z: ({o1:o1,o2:o2}[x], [detectors[1]])
     self.qc_check_2_mock.algorithm.return_value = None
     
     result, algorithm, qfields = self.classUnderTest.quality_control_objects({"s1.h5":o1,"s2.h5":o2})
     
-    expected_qc_check_1_calls = [mock.call.process(o1,True), mock.call.algorithm(),mock.call.process(o2,True), mock.call.algorithm()]
-    expected_qc_check_2_calls = [mock.call.process(o1,True), mock.call.algorithm(),mock.call.process(o2,True), mock.call.algorithm()]
+    expected_qc_check_1_calls = [mock.call.process(o1,True,"analyze"), mock.call.algorithm(),mock.call.process(o2,True,"analyze"), mock.call.algorithm()]
+    expected_qc_check_2_calls = [mock.call.process(o1,True,"analyze"), mock.call.algorithm(),mock.call.process(o2,True,"analyze"), mock.call.algorithm()]
     
     self.assertTrue(expected_qc_check_1_calls == self.qc_check_1_mock.mock_calls)
     self.assertTrue(expected_qc_check_2_calls == self. qc_check_2_mock.mock_calls)
@@ -435,16 +437,17 @@ class compositing_test(unittest.TestCase):
     detectors = ["qc.check.1","qc.check.2"]
     self.classUnderTest.detectors=detectors 
     self.classUnderTest.reprocess_quality_field = True
+    self.classUnderTest.quality_control_mode = "analyze"
     
-    self.qc_check_1_mock.process.side_effect = lambda x,y: ({o1:o1,o2:o2}[x], [detectors[0]])
+    self.qc_check_1_mock.process.side_effect = lambda x,y,z: ({o1:o1,o2:o2}[x], [detectors[0]])
     self.qc_check_1_mock.algorithm.return_value = None
-    self.qc_check_2_mock.process.side_effect = lambda x,y: ({o1:o1,o2:(o2,a2)}[x], [detectors[1]])
+    self.qc_check_2_mock.process.side_effect = lambda x,y,z: ({o1:o1,o2:(o2,a2)}[x], [detectors[1]])
     self.qc_check_2_mock.algorithm.return_value = None
     
     result, algorithm, qfields = self.classUnderTest.quality_control_objects({"s1.h5":o1,"s2.h5":o2})
     
-    expected_qc_check_1_calls = [mock.call.process(o1,True), mock.call.algorithm(),mock.call.process(o2,True), mock.call.algorithm()]
-    expected_qc_check_2_calls = [mock.call.process(o1,True), mock.call.algorithm(),mock.call.process(o2,True)]
+    expected_qc_check_1_calls = [mock.call.process(o1,True,"analyze"), mock.call.algorithm(),mock.call.process(o2,True,"analyze"), mock.call.algorithm()]
+    expected_qc_check_2_calls = [mock.call.process(o1,True,"analyze"), mock.call.algorithm(),mock.call.process(o2,True,"analyze")]
     
     self.assertTrue(expected_qc_check_1_calls == self.qc_check_1_mock.mock_calls)
     self.assertTrue(expected_qc_check_2_calls == self. qc_check_2_mock.mock_calls)
@@ -462,17 +465,18 @@ class compositing_test(unittest.TestCase):
     detectors = ["qc.check.1","qc.check.2"]
     self.classUnderTest.detectors=detectors
     self.classUnderTest.reprocess_quality_field = True
+    self.classUnderTest.quality_control_mode = "analyze"
 
-    self.qc_check_1_mock.process.side_effect = lambda x,y: ({o1:o1,o2:o2}[x])
+    self.qc_check_1_mock.process.side_effect = lambda x,y,z: ({o1:o1,o2:o2}[x])
     self.qc_check_1_mock.algorithm.return_value = None
     self.qc_check_1_mock.getQualityFields.return_value = [detectors[0]]
-    self.qc_check_2_mock.process.side_effect = lambda x,y: ({o1:o1,o2:o2}[x], [detectors[1]])
+    self.qc_check_2_mock.process.side_effect = lambda x,y,z: ({o1:o1,o2:o2}[x], [detectors[1]])
     self.qc_check_2_mock.algorithm.return_value = None
     
     result, algorithm, qfields = self.classUnderTest.quality_control_objects({"s1.h5":o1,"s2.h5":o2})
     
-    expected_qc_check_1_calls = [mock.call.process(o1,True), mock.call.getQualityFields(), mock.call.algorithm(), mock.call.process(o2,True), mock.call.getQualityFields(), mock.call.algorithm()]
-    expected_qc_check_2_calls = [mock.call.process(o1,True), mock.call.algorithm(), mock.call.process(o2,True), mock.call.algorithm()]
+    expected_qc_check_1_calls = [mock.call.process(o1,True,"analyze"), mock.call.getQualityFields(), mock.call.algorithm(), mock.call.process(o2,True,"analyze"), mock.call.getQualityFields(), mock.call.algorithm()]
+    expected_qc_check_2_calls = [mock.call.process(o1,True,"analyze"), mock.call.algorithm(), mock.call.process(o2,True,"analyze"), mock.call.algorithm()]
     
     self.assertTrue(expected_qc_check_1_calls == self.qc_check_1_mock.mock_calls)
     self.assertTrue(expected_qc_check_2_calls == self.qc_check_2_mock.mock_calls)
