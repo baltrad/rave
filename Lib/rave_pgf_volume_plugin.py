@@ -127,7 +127,7 @@ def generate(files, arguments):
   if "qc-mode" in args.keys():
     quality_control_mode = args["qc-mode"]
 
-  volume = perform_quality_control(volume, detectors, quality_control_mode)
+  volume = perform_quality_control(volume, detectors, quality_control_mode.lower())
 
   ios = _raveio.new()
   ios.object = volume

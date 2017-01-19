@@ -52,6 +52,7 @@ import rave_area
 import odim_source
 import rave_projection
 import rave_quality_plugin
+from rave_quality_plugin import QUALITY_CONTROL_MODE_ANALYZE, QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY   
 
 from gadjust.gra import gra_coefficient
 from rave_defines import CENTER_ID, GAIN, OFFSET
@@ -356,9 +357,9 @@ class compositing(object):
       raise ValueError, "Only supported selection methods are NEAREST_RADAR or HEIGHT_ABOVE_SEALEVEL"
   
   def set_quality_control_mode_from_string(self, modestr):
-    if modestr.upper() not in [rave_quality_plugin.ANALYZE_AND_APPLY, rave_quality_plugin.ANALYZE]:
-      raise ValueError, "Only supported modes are ANALYZE_AND_APPLY or ANALYZE"
-    self.quality_control_mode = modestr
+    if modestr.lower() not in [QUALITY_CONTROL_MODE_ANALYZE, QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY]:
+      raise ValueError, "Invalid quality control mode (%s), only supported modes are analyze_and_apply or analyze"%modestr.lower()
+    self.quality_control_mode = modestr.lower()
   
   def quality_control_objects(self, objects):
     algorithm = None
