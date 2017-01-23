@@ -14,5 +14,4 @@
   <quality-plugin name="zdiff" class="rave_zdiff_quality_plugin" module="rave_zdiff_quality_plugin" />
   <quality-plugin name="scansun" class="scansun_quality_plugin" module="rave_scansun_quality_plugin" />
   <quality-plugin class="rave_radarindex_quality_plugin" module="rave_radarindex_quality_plugin" name="radar-index"/>
-  <quality-plugin class="beamb_quality_plugin" module="beamb_quality_plugin" name="beamb" />
 </rave-pgf-quality-registry>
