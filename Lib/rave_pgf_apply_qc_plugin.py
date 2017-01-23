@@ -34,6 +34,7 @@ import rave_tempfile
 import rave_pgf_quality_registry
 import rave_pgf_logger
 import rave_util
+from rave_quality_plugin import QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY
 
 logger = rave_pgf_logger.create_logger()
 
@@ -58,10 +59,11 @@ def arglist2dict(arglist):
 # @param volume: the volume to perform the quality controls on
 # @param detectors: the detectors that should be run on the volume
 #
-def perform_quality_control(volume, detectors, qc_mode=QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY):
+def perform_quality_control(volume, detectors, qc_mode):
   for d in detectors:
     p = rave_pgf_quality_registry.get_plugin(d)
     if p != None:
+      logger.debug("Processing volume with quality plugin %s. QC-mode: %s", d, qc_mode)
       volume = p.process(volume, True, qc_mode)
       if isinstance(volume,tuple):
         volume, _ = volume[0],volume[1]
@@ -90,8 +92,12 @@ def generate_new_volume_with_qc(original_file, args):
     detectors = string.split(args["anomaly-qc"], ",")
   else:
     detectors = []
+    
+  quality_control_mode = QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY
+  if "qc-mode" in args.keys():
+    quality_control_mode = args["qc-mode"]
 
-  volume = perform_quality_control(volume, detectors)
+  volume = perform_quality_control(volume, detectors, quality_control_mode)
   
   logger.debug("Quality controls applied on new volume: %s", (",".join(detectors)))
 
