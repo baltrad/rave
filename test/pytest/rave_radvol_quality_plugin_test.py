@@ -35,7 +35,7 @@ import _raveio
 # these tests will be run without any quality handler.
 class radvol_tests(object):
   VOLUME_FIXTURE = "fixtures/pvol_sehud_20090501T120000Z.h5"
-  SCAN_FIXTURE = "fixtures/scan_sehud_0.5_20110126T184500Z.h5"
+  SCAN_FIXTURE = "fixtures/scan_sehuv_0.5_20110126T184500Z.h5"
 
   def get_quality_flag(self):
     raise Exception, "Must return quality flag"

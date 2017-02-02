@@ -43,8 +43,8 @@ class qitotal_options_test(unittest.TestCase):
   def test_parse_qitotal_site_information(self):
     result = qitotal_options.parse_qitotal_site_information(self.OPTIONS_FIXTURE)
     self.assertTrue(result.has_key("default"))
-    self.assertTrue(result.has_key("sehud"))
-    v = result["sehud"]
+    self.assertTrue(result.has_key("sehuv"))
+    v = result["sehuv"]
     self.assertEquals(2, len(v.qifields()))
     self.assertEquals("se.smhi.test.1", v.qifields()[0].name())
     self.assertAlmostEquals(0.3, v.qifields()[0].weight(), 4)

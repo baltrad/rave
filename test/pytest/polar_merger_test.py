@@ -31,9 +31,9 @@ import numpy
 from numpy import array, reshape, uint8
 
 class polar_merger_test(unittest.TestCase):
-  FIXTURE_1="fixtures/scan_sehud_0.5_20110126T184500Z.h5"  
-  FIXTURE_2="fixtures/scan_sehud_1.0_20110126T184600Z.h5"
-  FIXTURE_3="fixtures/scan_sehud_1.5_20110126T184600Z.h5"
+  FIXTURE_1="fixtures/scan_sehuv_0.5_20110126T184500Z.h5"  
+  FIXTURE_2="fixtures/scan_sehuv_1.0_20110126T184600Z.h5"
+  FIXTURE_3="fixtures/scan_sehuv_1.5_20110126T184600Z.h5"
   FIXTURE_PVOL="fixtures/selul_pvol_201503300845.h5"
   def setUp(self):
     pass

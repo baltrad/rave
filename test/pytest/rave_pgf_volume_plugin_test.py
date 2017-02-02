@@ -127,9 +127,9 @@ class rave_pgf_volume_plugin_test(unittest.TestCase):
     args["date"] = "20110101"
     args["time"] = "100000"
     
-    files=["fixtures/scan_sehud_0.5_20110126T184500Z.h5",
-           "fixtures/scan_sehud_1.0_20110126T184600Z.h5",
-           "fixtures/scan_sehud_1.5_20110126T184600Z.h5"]
+    files=["fixtures/scan_sehuv_0.5_20110126T184500Z.h5",
+           "fixtures/scan_sehuv_1.0_20110126T184600Z.h5",
+           "fixtures/scan_sehuv_1.5_20110126T184600Z.h5"]
     
     
     result = rave_pgf_volume_plugin.generateVolume(files, args)

@@ -39,7 +39,7 @@ rave_qitotal_quality_plugin.QITOTAL_METHOD = "additive"
 
 class rave_qitotal_quality_plugin_test(unittest.TestCase):
   VOLUME_FIXTURE = "fixtures/pvol_sekir_20090501T120000Z.h5"
-  SCAN_FIXTURE = "fixtures/scan_sehud_0.5_20110126T184500Z.h5"
+  SCAN_FIXTURE = "fixtures/scan_sehuv_0.5_20110126T184500Z.h5"
   OPTIONS_FIXTURE = "fixtures/test_qitotal_options.xml"
   
   classUnderTest = None

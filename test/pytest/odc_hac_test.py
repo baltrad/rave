@@ -34,7 +34,7 @@ import numpy
 
 class odc_hac_test(unittest.TestCase):
   VOLUME_FIXTURE = "fixtures/pvol_seang_20090501T120000Z.h5"
-  SCAN_FIXTURE = "fixtures/scan_sehud_0.5_20110126T184500Z.h5"
+  SCAN_FIXTURE = "fixtures/scan_sehuv_0.5_20110126T184500Z.h5"
   classUnderTest = None
     
   def setUp(self):
