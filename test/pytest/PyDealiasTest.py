@@ -160,12 +160,13 @@ class PyDealiasTest(unittest.TestCase):
         pvol = _raveio.open(self.FIXTURE).object
         dscan = _raveio.open(self.DEALIASED).object
         self.assertTrue(different(pvol.getScan(0), dscan))
-        param = _dealias.create_dealiased_parameter(pvol.getScan(0), "VRAD")
+        param = _dealias.create_dealiased_parameter(pvol.getScan(0), "VRAD", "VRADDH")
         self.assertFalse(different_param(dscan.getParameter("VRAD"), param))
         dscan.getParameter("VRAD").addAttribute("how/something", "jupp")
         # verify that created param is copy and not reference
         self.assertFalse(param.hasAttribute("how/something"))
-
+        self.assertTrue(param.hasAttribute("how/dealiased"))
+        self.assertTrue(param.quantity == "VRADDH")
     def testAlreadyDealiased(self):
         scan = _raveio.open(self.FIXTURE).object.getScan(0)
         status = _dealias.dealias(scan)

@@ -54,7 +54,38 @@ class rave_dealias_quality_plugin_test(unittest.TestCase):
 
     result, qfield = self.classUnderTest.process(scan)
     
-    self.assertEquals("True", result.getParameter("VRAD").getAttribute("how/dealiased"))
+    self.assertTrue(result.hasParameter("VRAD"))
+    self.assertTrue(result.hasParameter("VRADDH"))
+    self.assertFalse(result.getParameter("VRAD").hasAttribute("how/dealiased"))
+    self.assertEquals("True", result.getParameter("VRADDH").getAttribute("how/dealiased"))
+    self.assertEquals(qfield, ["se.smhi.detector.dealias"], "Wrong qfield returned from process")
+    
+  def test_process_vradh(self):
+    scan = _raveio.open(self.SCAN_FIXTURE).object
+    p1 = scan.removeParameter("DBZH")
+    p1.quantity="VRADH"
+    scan.addParameter(p1)
+
+    result, qfield = self.classUnderTest.process(scan)
+    
+    self.assertTrue(result.hasParameter("VRADH"))
+    self.assertTrue(result.hasParameter("VRADDH"))
+    self.assertFalse(result.getParameter("VRADH").hasAttribute("how/dealiased"))
+    self.assertEquals("True", result.getParameter("VRADDH").getAttribute("how/dealiased"))
+    self.assertEquals(qfield, ["se.smhi.detector.dealias"], "Wrong qfield returned from process")
+    
+  def test_process_vradv(self):
+    scan = _raveio.open(self.SCAN_FIXTURE).object
+    p1 = scan.removeParameter("DBZH")
+    p1.quantity="VRADV"
+    scan.addParameter(p1)
+
+    result, qfield = self.classUnderTest.process(scan)
+    
+    self.assertTrue(result.hasParameter("VRADV"))
+    self.assertTrue(result.hasParameter("VRADDV"))
+    self.assertFalse(result.getParameter("VRADV").hasAttribute("how/dealiased"))
+    self.assertEquals("True", result.getParameter("VRADDV").getAttribute("how/dealiased"))
     self.assertEquals(qfield, ["se.smhi.detector.dealias"], "Wrong qfield returned from process")
 
   def test_process_reprocess(self):
@@ -67,7 +98,10 @@ class rave_dealias_quality_plugin_test(unittest.TestCase):
     # the API can handle the flag.
     result, qfield = self.classUnderTest.process(scan, reprocess_quality_flag=True)
     
-    self.assertEquals("True", result.getParameter("VRAD").getAttribute("how/dealiased"))
+    self.assertTrue(result.hasParameter("VRAD"))
+    self.assertTrue(result.hasParameter("VRADDH"))
+    self.assertFalse(result.getParameter("VRAD").hasAttribute("how/dealiased"))
+    self.assertEquals("True", result.getParameter("VRADDH").getAttribute("how/dealiased"))
     self.assertEquals(qfield, ["se.smhi.detector.dealias"], "Wrong qfield returned from process")
     
   def test_process_reprocess_with_quality_control_mode(self):
@@ -80,6 +114,9 @@ class rave_dealias_quality_plugin_test(unittest.TestCase):
     # the API can handle the flag.
     result, qfield = self.classUnderTest.process(scan, reprocess_quality_flag=True, quality_control_mode="analyze")
     
-    self.assertEquals("True", result.getParameter("VRAD").getAttribute("how/dealiased"))
+    self.assertTrue(result.hasParameter("VRAD"))
+    self.assertTrue(result.hasParameter("VRADDH"))
+    self.assertFalse(result.getParameter("VRAD").hasAttribute("how/dealiased"))
+    self.assertEquals("True", result.getParameter("VRADDH").getAttribute("how/dealiased"))
     self.assertEquals(qfield, ["se.smhi.detector.dealias"], "Wrong qfield returned from process")
     
