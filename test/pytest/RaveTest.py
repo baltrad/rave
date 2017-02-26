@@ -26,7 +26,7 @@ class RaveTest(unittest.TestCase):
             os.unlink(self.TESTFILE)
 
 
-    def testReadOldNordradPcappi(self):
+    def XtestReadOldNordradPcappi(self):
         obj = rave.open(self.OLD_NRD_FORMAT_TESTFILE)
         
         # Verify
@@ -79,7 +79,7 @@ class RaveTest(unittest.TestCase):
         self.assertAlmostEqual(16.9802, obj.get("/where/UR_lon"), 4)
         self.assertAlmostEqual(58.4596, obj.get("/where/UR_lat"), 4)
 
-    def testVerifyImageAttributesWritten(self):
+    def XtestVerifyImageAttributesWritten(self):
         obj = rave.open(self.OLD_NRD_FORMAT_TESTFILE)
         self.assertEquals(None, obj.get("/image1/data/CLASS"))
         self.assertEquals(None, obj.get("/image1/data/IMAGE_VERSION"))
