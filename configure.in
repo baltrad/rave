@@ -318,7 +318,7 @@ case $withval in
       if test $? -ne 0; then
         AC_MSG_ERROR("Could not find hlhdf please specify --with-hlhdf=<hlhdfroot>")
       else
-        hlhdf_root=`echo $TESTHLDIR | sed -e"s/\/lib\/_pyhlmodule.so//"`
+        hlhdf_root=`echo $TESTHLDIR | sed -e"s/\/lib\/_pyhl.so//"`
       fi
     fi
     if [[ -f $hlhdf_root/mkf/hldef.mk ]]; then
