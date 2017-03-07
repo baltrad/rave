@@ -22,7 +22,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2009-12-08
  */
-#include "Python.h"
+#include "pyravecompat.h"
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>
@@ -673,51 +673,44 @@ static struct PyMethodDef _pypolarscanparam_methods[] =
 /**
  * Returns the specified attribute in the polar scan
  */
-static PyObject* _pypolarscanparam_getattr(PyPolarScanParam* self, char* name)
+static PyObject* _pypolarscanparam_getattro(PyPolarScanParam* self, PyObject* name)
 {
-  PyObject* res;
-  if (strcmp("nbins", name) == 0) {
+  if (PY_COMPARE_STRING_WITH_ATTRO_NAME("nbins", name) == 0) {
     return PyInt_FromLong(PolarScanParam_getNbins(self->scanparam));
-  } else if (strcmp("nrays", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("nrays", name) == 0) {
     return PyInt_FromLong(PolarScanParam_getNrays(self->scanparam));
-  } else if (strcmp("quantity", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("quantity", name) == 0) {
     const char* str = PolarScanParam_getQuantity(self->scanparam);
     if (str != NULL) {
       return PyString_FromString(str);
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("gain", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("gain", name) == 0) {
     return PyFloat_FromDouble(PolarScanParam_getGain(self->scanparam));
-  } else if (strcmp("offset", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("offset", name) == 0) {
     return PyFloat_FromDouble(PolarScanParam_getOffset(self->scanparam));
-  } else if (strcmp("nodata", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("nodata", name) == 0) {
     return PyFloat_FromDouble(PolarScanParam_getNodata(self->scanparam));
-  } else if (strcmp("undetect", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("undetect", name) == 0) {
     return PyFloat_FromDouble(PolarScanParam_getUndetect(self->scanparam));
-  } else if (strcmp("datatype", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("datatype", name) == 0) {
     return PyInt_FromLong(PolarScanParam_getDataType(self->scanparam));
   }
 
-  res = Py_FindMethod(_pypolarscanparam_methods, (PyObject*) self, name);
-  if (res)
-    return res;
-
-  PyErr_Clear();
-  PyErr_SetString(PyExc_AttributeError, name);
-  return NULL;
+  return PyObject_GenericGetAttr((PyObject*)self, name);
 }
 
 /**
  * Returns the specified attribute in the polar volume
  */
-static int _pypolarscanparam_setattr(PyPolarScanParam* self, char* name, PyObject* val)
+static int _pypolarscanparam_setattro(PyPolarScanParam* self, PyObject* name, PyObject* val)
 {
   int result = -1;
   if (name == NULL) {
     goto done;
   }
-  if (strcmp("quantity", name) == 0) {
+  if (PY_COMPARE_STRING_WITH_ATTRO_NAME("quantity", name) == 0) {
     if (PyString_Check(val)) {
       if (!PolarScanParam_setQuantity(self->scanparam, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "quantity must be a string");
@@ -727,32 +720,32 @@ static int _pypolarscanparam_setattr(PyPolarScanParam* self, char* name, PyObjec
     } else {
       raiseException_gotoTag(done, PyExc_ValueError, "quantity must be a string");
     }
-  } else if (strcmp("gain", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("gain", name) == 0) {
     if (PyFloat_Check(val)) {
       PolarScanParam_setGain(self->scanparam, PyFloat_AsDouble(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "gain must be of type float");
     }
-  } else if (strcmp("offset", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("offset", name) == 0) {
     if (PyFloat_Check(val)) {
       PolarScanParam_setOffset(self->scanparam, PyFloat_AsDouble(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "offset must be of type float");
     }
-  } else if (strcmp("nodata", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("nodata", name) == 0) {
     if (PyFloat_Check(val)) {
       PolarScanParam_setNodata(self->scanparam, PyFloat_AsDouble(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "nodata must be of type float");
     }
-  } else if (strcmp("undetect", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("undetect", name) == 0) {
     if (PyFloat_Check(val)) {
       PolarScanParam_setUndetect(self->scanparam, PyFloat_AsDouble(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "undetect must be of type float");
     }
   } else {
-    raiseException_gotoTag(done, PyExc_AttributeError, name);
+    raiseException_gotoTag(done, PyExc_AttributeError, PY_RAVE_ATTRO_NAME_TO_STRING(name));
   }
 
   result = 0;
@@ -767,21 +760,47 @@ done:
 /*@{ Type definition */
 PyTypeObject PyPolarScanParam_Type =
 {
-  PyObject_HEAD_INIT(NULL)0, /*ob_size*/
+  PyVarObject_HEAD_INIT(NULL, 0) /*ob_size*/
   "PolarScanParamCore", /*tp_name*/
   sizeof(PyPolarScanParam), /*tp_size*/
   0, /*tp_itemsize*/
   /* methods */
   (destructor)_pypolarscanparam_dealloc, /*tp_dealloc*/
   0, /*tp_print*/
-  (getattrfunc)_pypolarscanparam_getattr, /*tp_getattr*/
-  (setattrfunc)_pypolarscanparam_setattr, /*tp_setattr*/
-  0, /*tp_compare*/
-  0, /*tp_repr*/
-  0, /*tp_as_number */
+  (getattrfunc)0,               /*tp_getattr*/
+  (setattrfunc)0,               /*tp_setattr*/
+  0,                            /*tp_compare*/
+  0,                            /*tp_repr*/
+  0,                            /*tp_as_number */
   0,
-  0, /*tp_as_mapping */
-  0 /*tp_hash*/
+  0,                            /*tp_as_mapping */
+  0,                            /*tp_hash*/
+  (ternaryfunc)0,               /*tp_call*/
+  (reprfunc)0,                  /*tp_str*/
+  (getattrofunc)_pypolarscanparam_getattro, /*tp_getattro*/
+  (setattrofunc)_pypolarscanparam_setattro, /*tp_setattro*/
+  0,                            /*tp_as_buffer*/
+  Py_TPFLAGS_DEFAULT, /*tp_flags*/
+  0,                            /*tp_doc*/
+  (traverseproc)0,              /*tp_traverse*/
+  (inquiry)0,                   /*tp_clear*/
+  0,                            /*tp_richcompare*/
+  0,                            /*tp_weaklistoffset*/
+  0,                            /*tp_iter*/
+  0,                            /*tp_iternext*/
+  _pypolarscanparam_methods,    /*tp_methods*/
+  0,                            /*tp_members*/
+  0,                            /*tp_getset*/
+  0,                            /*tp_base*/
+  0,                            /*tp_dict*/
+  0,                            /*tp_descr_get*/
+  0,                            /*tp_descr_set*/
+  0,                            /*tp_dictoffset*/
+  0,                            /*tp_init*/
+  0,                            /*tp_alloc*/
+  0,                            /*tp_new*/
+  0,                            /*tp_free*/
+  0,                            /*tp_is_gc*/
 };
 /*@} End of Type definition */
 
@@ -792,36 +811,38 @@ static PyMethodDef functions[] = {
   {NULL,NULL} /*Sentinel*/
 };
 
-PyMODINIT_FUNC
-init_polarscanparam(void)
+MOD_INIT(_polarscanparam)
 {
   PyObject *module=NULL,*dictionary=NULL;
   static void *PyPolarScanParam_API[PyPolarScanParam_API_pointers];
   PyObject *c_api_object = NULL;
-  PyPolarScanParam_Type.ob_type = &PyType_Type;
 
-  module = Py_InitModule("_polarscanparam", functions);
+  MOD_INIT_SETUP_TYPE(PyPolarScanParam_Type, &PyType_Type);
+
+  MOD_INIT_VERIFY_TYPE_READY(&PyPolarScanParam_Type);
+
+  MOD_INIT_DEF(module, "_polarscanparam", NULL/*doc*/, functions);
   if (module == NULL) {
-    return;
+    return MOD_INIT_ERROR;
   }
+
   PyPolarScanParam_API[PyPolarScanParam_Type_NUM] = (void*)&PyPolarScanParam_Type;
   PyPolarScanParam_API[PyPolarScanParam_GetNative_NUM] = (void *)PyPolarScanParam_GetNative;
   PyPolarScanParam_API[PyPolarScanParam_New_NUM] = (void*)PyPolarScanParam_New;
 
-  c_api_object = PyCObject_FromVoidPtr((void *)PyPolarScanParam_API, NULL);
-
-  if (c_api_object != NULL) {
-    PyModule_AddObject(module, "_C_API", c_api_object);
-  }
-
+  c_api_object = PyCapsule_New(PyPolarScanParam_API, PyPolarScanParam_CAPSULE_NAME, NULL);
   dictionary = PyModule_GetDict(module);
-  ErrorObject = PyString_FromString("_polarscanparam.error");
+  PyDict_SetItemString(dictionary, "_C_API", c_api_object);
+
+  ErrorObject = PyErr_NewException("_polarscanparam.error", NULL, NULL);
   if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
     Py_FatalError("Can't define _polarscanparam.error");
+    return MOD_INIT_ERROR;
   }
 
   import_array(); /*To make sure I get access to Numeric*/
   import_pyravefield();
   PYRAVE_DEBUG_INITIALIZE;
+  return MOD_INIT_SUCCESS(module);
 }
 /*@} End of Module setup */

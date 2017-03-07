@@ -22,7 +22,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2009-10-14
  */
-#include <Python.h>
+#include <pyravecompat.h>
 #include <arrayobject.h>
 #include <limits.h>
 #include <math.h>
@@ -30,13 +30,17 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include <string.h>
 #include "raveutil.h"
 #include "rave.h"
-#include "pypolarscan.h"
+#include "rave_types.h"
+#include "rave_io.h"
+#ifdef KALLE
 #include "pypolarvolume.h"
+#include "pytransform.h"
+#endif
+#include "pyraveio.h"
+#include "pypolarscan.h"
 #include "pycartesian.h"
 #include "pycartesianparam.h"
-#include "pytransform.h"
 #include "pyprojection.h"
-#include "pyraveio.h"
 #include "rave_debug.h"
 #include "rave_alloc.h"
 #include "rave_utilities.h"
@@ -87,8 +91,11 @@ static PyObject* _polarscan_new(PyObject* self, PyObject* args)
  */
 static PyObject* _polarvolume_new(PyObject* self, PyObject* args)
 {
+#ifdef KALLE
   PyPolarVolume* result = PyPolarVolume_New(NULL);
   return (PyObject*)result;
+#endif
+  return NULL;
 }
 /*@} End of Polar Volumes */
 
@@ -127,8 +134,11 @@ static PyObject* _cartesianparam_new(PyObject* self, PyObject* args)
  */
 static PyObject* _transform_new(PyObject* self, PyObject* args)
 {
+#ifdef KALLE
   PyTransform* result = PyTransform_New(NULL);
   return (PyObject*)result;
+#endif
+  return NULL;
 }
 
 /*@{ End of Transform */
@@ -248,17 +258,22 @@ static void add_long_constant(PyObject* dictionary, const char* name, long value
 }
 
 /**
- * Initializes polar volume.
+ * Initializes _rave.
  */
-void init_rave(void)
+MOD_INIT(_rave)
 {
   PyObject *module=NULL,*dictionary=NULL;
-  module = Py_InitModule("_rave", functions);
+  MOD_INIT_DEF(module, "_rave", NULL/*doc*/, functions);
+  if (module == NULL) {
+    return MOD_INIT_ERROR;
+  }
   dictionary = PyModule_GetDict(module);
-  ErrorObject = PyString_FromString("_rave.error");
+  ErrorObject = PyErr_NewException("_rave.error", NULL, NULL);
   if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
     Py_FatalError("Can't define _rave.error");
+    return MOD_INIT_ERROR;
   }
+
 
   if (atexit(rave_alloc_print_statistics) != 0) {
     fprintf(stderr, "Could not set atexit function");
@@ -347,12 +362,15 @@ void init_rave(void)
 
   import_array(); /*To make sure I get access to Numeric*/
   import_pyprojection();
-  import_pypolarscan();
-  import_pypolarvolume();
   import_pycartesian();
   import_pycartesianparam();
+  import_pypolarscan();
   import_pyraveio();
+#ifdef KALLE
+  import_pypolarvolume();
   import_pytransform();
+#endif
   PYRAVE_DEBUG_INITIALIZE;
+  return MOD_INIT_SUCCESS(module);
 }
 /*@} End of Module setup */

@@ -23,8 +23,15 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Anders Henja
  * @date 2009-12-17
  */
-#include <Python.h>
+#include <pyravecompat.h>
 #include "pycartesian.h"
+#include "pyrave_debug.h"
+
+/**
+ * This modules name
+ */
+PYRAVE_DEBUG_MODULE("_mean");
+
 
 static PyObject *ErrorObject;
 
@@ -78,24 +85,36 @@ done:
   return result;
 }
 
+static PyMethodDef _mean_functions[] = {
+    { "average", (PyCFunction) _average_func, METH_VARARGS },
+    { NULL, NULL }
+};
+
+/*
 static struct PyMethodDef _mean_functions[] =
 {
   { "average", (PyCFunction) _average_func, METH_VARARGS },
   { NULL, NULL }
 };
-
+*/
 /**
  * Initialize the _mean module
  */
-void init_mean(void)
+MOD_INIT(_mean)
 {
-  PyObject* m;
-  m = Py_InitModule("_mean", _mean_functions);
-  ErrorObject = PyString_FromString("_mean.error");
-  if (ErrorObject == NULL || PyDict_SetItemString(PyModule_GetDict(m),
-                                                  "error", ErrorObject) != 0) {
+  PyObject *module=NULL,*dictionary=NULL;
+  MOD_INIT_DEF(module, "_mean", NULL/*doc*/, _mean_functions);
+  if (module == NULL) {
+    return MOD_INIT_ERROR;
+  }
+  dictionary = PyModule_GetDict(module);
+  ErrorObject = PyErr_NewException("_mean.error", NULL, NULL);
+  if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
     Py_FatalError("Can't define _mean.error");
+    return MOD_INIT_ERROR;
   }
 
   import_pycartesian();
+  PYRAVE_DEBUG_INITIALIZE;
+  return MOD_INIT_SUCCESS(module);
 }

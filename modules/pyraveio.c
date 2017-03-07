@@ -22,7 +22,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2009-12-10
  */
-#include "Python.h"
+#include "pyravecompat.h"
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>
@@ -31,8 +31,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #define PYRAVEIO_MODULE   /**< include correct part of pyraveio.h */
 #include "pyraveio.h"
 
-#include "pypolarvolume.h"
 #include "pycartesian.h"
+#include "pypolarvolume.h"
 #include "pypolarscan.h"
 #include "pycartesianvolume.h"
 #include "pyverticalprofile.h"
@@ -284,22 +284,22 @@ static struct PyMethodDef _pyraveio_methods[] =
  * Returns the specified attribute in the PyRaveIO
  * @param[in] self - the RaveIO instance
  */
-static PyObject* _pyraveio_getattr(PyRaveIO* self, char* name)
+static PyObject* _pyraveio_getattro(PyRaveIO* self, PyObject* name)
 {
   PyObject* res = NULL;
-  if (strcmp("version", name) == 0) {
+  if (PY_COMPARE_STRING_WITH_ATTRO_NAME("version", name) == 0) {
     return PyInt_FromLong(RaveIO_getOdimVersion(self->raveio));
-  } else if (strcmp("h5radversion", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("h5radversion", name) == 0) {
     return PyInt_FromLong(RaveIO_getH5radVersion(self->raveio));
-  } else if (strcmp("objectType", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("objectType", name) == 0) {
     return PyInt_FromLong(RaveIO_getObjectType(self->raveio));
-  } else if (strcmp("filename", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("filename", name) == 0) {
     if (RaveIO_getFilename(self->raveio) != NULL) {
       return PyString_FromString(RaveIO_getFilename(self->raveio));
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("object", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("object", name) == 0) {
     RaveCoreObject* object = RaveIO_getObject(self->raveio);
     if (object != NULL) {
       if (RAVE_OBJECT_CHECK_TYPE(object, &Cartesian_TYPE)) {
@@ -320,50 +320,44 @@ static PyObject* _pyraveio_getattr(PyRaveIO* self, char* name)
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("compression_level", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("compression_level", name) == 0) {
     return PyInt_FromLong(RaveIO_getCompressionLevel(self->raveio));
-  } else if (strcmp("fcp_userblock", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("fcp_userblock", name) == 0) {
     return PyInt_FromLong(RaveIO_getUserBlock(self->raveio));
-  } else if (strcmp("fcp_sizes", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("fcp_sizes", name) == 0) {
     size_t sz = 0, addr = 0;
     RaveIO_getSizes(self->raveio, &sz, &addr);
     return Py_BuildValue("(ii)", sz, addr);
-  } else if (strcmp("fcp_symk", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("fcp_symk", name) == 0) {
     int ik = 0, lk = 0;
     RaveIO_getSymk(self->raveio, &ik, &lk);
     return Py_BuildValue("(ii)", ik, lk);
-  } else if (strcmp("fcp_istorek", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("fcp_istorek", name) == 0) {
     return PyInt_FromLong(RaveIO_getIStoreK(self->raveio));
-  } else if (strcmp("fcp_metablocksize", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("fcp_metablocksize", name) == 0) {
     return PyInt_FromLong(RaveIO_getMetaBlockSize(self->raveio));
-  } else if (strcmp("file_format", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("file_format", name) == 0) {
     return PyInt_FromLong(RaveIO_getFileFormat(self->raveio));
-  } else if (strcmp("bufr_table_dir", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("bufr_table_dir", name) == 0) {
     if (RaveIO_getBufrTableDir(self->raveio) != NULL) {
       return PyString_FromString(RaveIO_getBufrTableDir(self->raveio));
     } else {
       Py_RETURN_NONE;
     }
   }
-  res = Py_FindMethod(_pyraveio_methods, (PyObject*) self, name);
-  if (res != NULL)
-    return res;
-
-  PyErr_Clear();
-  PyErr_SetString(PyExc_AttributeError, name);
-  return NULL;
+  return PyObject_GenericGetAttr((PyObject*)self, name);
 }
 
 /**
  * Sets the specified attribute in the raveio
  */
-static int _pyraveio_setattr(PyRaveIO* self, char* name, PyObject* val)
+static int _pyraveio_setattro(PyRaveIO* self, PyObject* name, PyObject* val)
 {
   int result = -1;
   if (name == NULL) {
     goto done;
   }
-  if (strcmp("version", name)==0) {
+  if (PY_COMPARE_STRING_WITH_ATTRO_NAME("version", name)==0) {
     if (PyInt_Check(val)) {
       if (!RaveIO_setOdimVersion(self->raveio, PyInt_AsLong(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "illegal version number");
@@ -371,7 +365,7 @@ static int _pyraveio_setattr(PyRaveIO* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_TypeError,"version must be a valid odim version");
     }
-  } else if (strcmp("h5radversion", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("h5radversion", name) == 0) {
     if (PyInt_Check(val)) {
       if (!RaveIO_setH5radVersion(self->raveio, PyInt_AsLong(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "illegal h5rad version number");
@@ -379,7 +373,7 @@ static int _pyraveio_setattr(PyRaveIO* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_TypeError,"version must be a valid h5rad version");
     }
-  } else if (strcmp("filename", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("filename", name) == 0) {
     if (PyString_Check(val)) {
       if (!RaveIO_setFilename(self->raveio, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_MemoryError, "failed to set file name");
@@ -389,10 +383,11 @@ static int _pyraveio_setattr(PyRaveIO* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_TypeError,"filename must be of type string");
     }
-  } else if (strcmp("object", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("object", name) == 0) {
     if (PyCartesian_Check(val)) {
       RaveIO_setObject(self->raveio, (RaveCoreObject*)((PyCartesian*)val)->cartesian);
-    } else if (PyPolarScan_Check(val)) {
+    }
+    else if (PyPolarScan_Check(val)) {
       RaveIO_setObject(self->raveio, (RaveCoreObject*)((PyPolarScan*)val)->scan);
     } else if (PyPolarVolume_Check(val)) {
       RaveIO_setObject(self->raveio, (RaveCoreObject*)((PyPolarVolume*)val)->pvol);
@@ -403,45 +398,45 @@ static int _pyraveio_setattr(PyRaveIO* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "Can only save objects of type : cartesian, polarscan, polarvolume or verticalprofile");
     }
-  } else if (strcmp("compression_level", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("compression_level", name) == 0) {
     if (PyInt_Check(val)) {
       RaveIO_setCompressionLevel(self->raveio, PyInt_AsLong(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "Compression level should be integer value between 0..9");
     }
-  } else if (strcmp("fcp_userblock", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("fcp_userblock", name) == 0) {
     if (PyInt_Check(val)) {
       RaveIO_setUserBlock(self->raveio, PyInt_AsLong(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "User block should be integer value");
     }
-  } else if (strcmp("fcp_sizes", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("fcp_sizes", name) == 0) {
     int sz = 0, addr = 0;
     if (!PyArg_ParseTuple(val, "ii", &sz, &addr)) {
       raiseException_gotoTag(done, PyExc_TypeError ,"sizes must be a tuple containing 2 integers representing (size, addr)");
     }
     RaveIO_setSizes(self->raveio, sz, addr);
-  } else if (strcmp("fcp_symk", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("fcp_symk", name) == 0) {
     int ik = 0, lk = 0;
     if (!PyArg_ParseTuple(val, "ii", &ik, &lk)) {
       raiseException_gotoTag(done, PyExc_TypeError ,"symk must be a tuple containing 2 integers representing (ik, lk)");
     }
     RaveIO_setSymk(self->raveio, ik, lk);
-  } else if (strcmp("fcp_istorek", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("fcp_istorek", name) == 0) {
     if (PyInt_Check(val)) {
       RaveIO_setIStoreK(self->raveio, PyInt_AsLong(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError ,"istorek must be a integer");
     }
-  } else if (strcmp("fcp_metablocksize", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("fcp_metablocksize", name) == 0) {
     if (PyInt_Check(val)) {
       RaveIO_setMetaBlockSize(self->raveio, PyInt_AsLong(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError ,"meta block size must be a integer");
     }
-  } else if (strcmp("file_format", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("file_format", name) == 0) {
     raiseException_gotoTag(done, PyExc_AttributeError, "file_format can only be read");
-  } else if (strcmp("bufr_table_dir", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("bufr_table_dir", name) == 0) {
     if (PyString_Check(val)) {
       if (!RaveIO_setBufrTableDir(self->raveio, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_MemoryError, "failed to set bufr table dir");
@@ -452,7 +447,7 @@ static int _pyraveio_setattr(PyRaveIO* self, char* name, PyObject* val)
       raiseException_gotoTag(done, PyExc_TypeError,"bufr table dir must be of type string");
     }
   } else {
-    raiseException_gotoTag(done, PyExc_AttributeError, name);
+    raiseException_gotoTag(done, PyExc_AttributeError, PY_RAVE_ATTRO_NAME_TO_STRING(name));
   }
 
   result = 0;
@@ -465,21 +460,47 @@ done:
 /*@{ Type definitions */
 PyTypeObject PyRaveIO_Type =
 {
-  PyObject_HEAD_INIT(NULL)0, /*ob_size*/
+  PyVarObject_HEAD_INIT(NULL, 0) /*ob_size*/
   "RaveIOCore", /*tp_name*/
   sizeof(PyRaveIO), /*tp_size*/
   0, /*tp_itemsize*/
   /* methods */
   (destructor)_pyraveio_dealloc, /*tp_dealloc*/
   0, /*tp_print*/
-  (getattrfunc)_pyraveio_getattr, /*tp_getattr*/
-  (setattrfunc)_pyraveio_setattr, /*tp_setattr*/
-  0, /*tp_compare*/
-  0, /*tp_repr*/
-  0, /*tp_as_number */
+  (getattrfunc)0,               /*tp_getattr*/
+  (setattrfunc)0,               /*tp_setattr*/
+  0,                            /*tp_compare*/
+  0,                            /*tp_repr*/
+  0,                            /*tp_as_number */
   0,
-  0, /*tp_as_mapping */
-  0 /*tp_hash*/
+  0,                            /*tp_as_mapping */
+  0,                            /*tp_hash*/
+  (ternaryfunc)0,               /*tp_call*/
+  (reprfunc)0,                  /*tp_str*/
+  (getattrofunc)_pyraveio_getattro, /*tp_getattro*/
+  (setattrofunc)_pyraveio_setattro, /*tp_setattro*/
+  0,                            /*tp_as_buffer*/
+  Py_TPFLAGS_DEFAULT, /*tp_flags*/
+  0,                            /*tp_doc*/
+  (traverseproc)0,              /*tp_traverse*/
+  (inquiry)0,                   /*tp_clear*/
+  0,                            /*tp_richcompare*/
+  0,                            /*tp_weaklistoffset*/
+  0,                            /*tp_iter*/
+  0,                            /*tp_iternext*/
+  _pyraveio_methods,              /*tp_methods*/
+  0,                            /*tp_members*/
+  0,                            /*tp_getset*/
+  0,                            /*tp_base*/
+  0,                            /*tp_dict*/
+  0,                            /*tp_descr_get*/
+  0,                            /*tp_descr_set*/
+  0,                            /*tp_dictoffset*/
+  0,                            /*tp_init*/
+  0,                            /*tp_alloc*/
+  0,                            /*tp_new*/
+  0,                            /*tp_free*/
+  0,                            /*tp_is_gc*/
 };
 /*@} End of Type definitions */
 
@@ -507,34 +528,35 @@ static void add_long_constant(PyObject* dictionary, const char* name, long value
   Py_XDECREF(tmp);
 }
 
-PyMODINIT_FUNC
-init_raveio(void)
+MOD_INIT(_raveio)
 {
   PyObject *module=NULL,*dictionary=NULL;
   static void *PyRaveIO_API[PyRaveIO_API_pointers];
   PyObject *c_api_object = NULL;
-  PyRaveIO_Type.ob_type = &PyType_Type;
 
-  module = Py_InitModule("_raveio", functions);
+  MOD_INIT_SETUP_TYPE(PyRaveIO_Type, &PyType_Type);
+
+  MOD_INIT_VERIFY_TYPE_READY(&PyRaveIO_Type);
+
+  MOD_INIT_DEF(module, "_raveio", NULL/*doc*/, functions);
   if (module == NULL) {
-    return;
+    return MOD_INIT_ERROR;
   }
+
   PyRaveIO_API[PyRaveIO_Type_NUM] = (void*)&PyRaveIO_Type;
   PyRaveIO_API[PyRaveIO_GetNative_NUM] = (void *)PyRaveIO_GetNative;
   PyRaveIO_API[PyRaveIO_New_NUM] = (void*)PyRaveIO_New;
-  PyRaveIO_API[PyRaveIO_Open_NUM] = (void*)PyRaveIO_Open;
 
-  c_api_object = PyCObject_FromVoidPtr((void *)PyRaveIO_API, NULL);
-
-  if (c_api_object != NULL) {
-    PyModule_AddObject(module, "_C_API", c_api_object);
-  }
-
+  c_api_object = PyCapsule_New(PyRaveIO_API, PyRaveIO_CAPSULE_NAME, NULL);
   dictionary = PyModule_GetDict(module);
-  ErrorObject = PyString_FromString("_raveio.error");
+  PyDict_SetItemString(dictionary, "_C_API", c_api_object);
+
+  ErrorObject = PyErr_NewException("_raveio.error", NULL, NULL);
   if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
     Py_FatalError("Can't define _raveio.error");
+    return MOD_INIT_ERROR;
   }
+
 
   add_long_constant(dictionary, "RaveIO_ODIM_Version_UNDEFINED", RaveIO_ODIM_Version_UNDEFINED);
   add_long_constant(dictionary, "RaveIO_ODIM_Version_2_0", RaveIO_ODIM_Version_2_0);
@@ -564,12 +586,12 @@ init_raveio(void)
   HL_disableErrorReporting();
   HL_disableHdf5ErrorReporting();
   HL_setDebugLevel(HLHDF_SILENT);
-
   import_pypolarvolume();
   import_pypolarscan();
-  import_pycartesian();
-  import_pycartesianvolume();
   import_pyverticalprofile();
+  import_pycartesianvolume();
+  import_pycartesian();
   PYRAVE_DEBUG_INITIALIZE;
+  return MOD_INIT_SUCCESS(module);
 }
 /*@} End of Module setup */

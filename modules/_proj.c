@@ -23,7 +23,7 @@
  FIXME: should proj/invproj raise exceptions on HUGE_VAL?
  -----------------------------------------------------------------------------*/
 
-#include "Python.h"
+#include "pyravecompat.h"
 #include "projects.h"
 
 #ifdef PJ_VERSION
@@ -35,7 +35,7 @@ typedef struct {
   PJ* pj;
 } ProjObject;
 
-staticforward PyTypeObject Proj_Type;
+static PyTypeObject Proj_Type;
 
 static PyObject *PyProj_Error;
 
@@ -224,6 +224,7 @@ static struct PyMethodDef _proj_methods[] =
 { NULL, NULL } /* sentinel */
 };
 
+#ifdef KALLE
 static PyObject*
 _proj_getattr(ProjObject* s, char *name)
 {
@@ -240,22 +241,55 @@ _proj_getattr(ProjObject* s, char *name)
   PyErr_SetString(PyExc_AttributeError, name);
   return NULL;
 }
+#endif
 
-statichere PyTypeObject Proj_Type
-= {
-  PyObject_HEAD_INIT(0)
-  0, /*ob_size*/
+static PyObject* _proj_getattro(ProjObject* s, PyObject* name)
+{
+  return PyObject_GenericGetAttr((PyObject*)s, name);
+}
+
+static PyTypeObject Proj_Type = {
+  PyVarObject_HEAD_INIT(NULL, 0) /*ob_size*/
   "Proj", /*tp_name*/
   sizeof(ProjObject), /*tp_size*/
   0, /*tp_itemsize*/
   /* methods */
   (destructor)_proj_dealloc, /*tp_dealloc*/
   0, /*tp_print*/
-  (getattrfunc)_proj_getattr, /*tp_getattr*/
+  (getattrfunc)0 /*_proj_getattr*/, /*tp_getattr*/
   0, /*tp_setattr*/
   0, /*tp_compare*/
   0, /*tp_repr*/
+  0,                            /*tp_as_number */
+  0,
+  0,                            /*tp_as_mapping */
   0, /*tp_hash*/
+  (ternaryfunc)0,               /*tp_call*/
+  (reprfunc)0,                  /*tp_str*/
+  (getattrofunc)_proj_getattro, /*tp_getattro*/
+  (setattrofunc)0,              /*tp_setattro*/
+  0,                            /*tp_as_buffer*/
+  Py_TPFLAGS_DEFAULT, /*tp_flags*/
+  0,                            /*tp_doc*/
+  (traverseproc)0,              /*tp_traverse*/
+  (inquiry)0,                   /*tp_clear*/
+  0,                            /*tp_richcompare*/
+  0,                            /*tp_weaklistoffset*/
+  0,                            /*tp_iter*/
+  0,                            /*tp_iternext*/
+  _proj_methods,                /*tp_methods*/
+  0,                            /*tp_members*/
+  0,                            /*tp_getset*/
+  0,                            /*tp_base*/
+  0,                            /*tp_dict*/
+  0,                            /*tp_descr_get*/
+  0,                            /*tp_descr_set*/
+  0,                            /*tp_dictoffset*/
+  0,                            /*tp_init*/
+  0,                            /*tp_alloc*/
+  0,                            /*tp_new*/
+  0,                            /*tp_free*/
+  0,                            /*tp_is_gc*/
 };
 
 /* -------------------------------------------------------------------- */
@@ -282,19 +316,24 @@ static PyMethodDef functions[] =
 
 };
 
-PyMODINIT_FUNC init_proj(void)
+MOD_INIT(_proj)
 {
-  PyObject* m;
+  PyObject* module = NULL;
 
-  /* Patch object type */
-  Proj_Type.ob_type = &PyType_Type;
+  MOD_INIT_SETUP_TYPE(Proj_Type, &PyType_Type);
 
   /* Initialize module object */
-  m = Py_InitModule("_proj", functions);
+  MOD_INIT_DEF(module, "_proj", NULL/*doc*/, functions);
+  if (module == NULL) {
+    return MOD_INIT_ERROR;
+  }
 
   /* Create error object */
-  PyProj_Error = PyString_FromString("proj.error");
-  if (PyProj_Error == NULL || PyDict_SetItemString(PyModule_GetDict(m),
-                                                   "error", PyProj_Error) != 0)
-    Py_FatalError("can't define proj.error");
+  PyProj_Error = PyErr_NewException("proj.error", NULL, NULL);
+  if (PyProj_Error == NULL || PyDict_SetItemString(PyModule_GetDict(module), "error", PyProj_Error) != 0) {
+    Py_FatalError("Can't define _proj.error");
+    return MOD_INIT_ERROR;
+  }
+
+  return MOD_INIT_SUCCESS(module);
 }

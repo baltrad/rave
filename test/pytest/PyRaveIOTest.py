@@ -72,7 +72,7 @@ class PyRaveIOTest(unittest.TestCase):
 
   def test_new(self):
     obj = _raveio.new()
-    israveio = string.find(`type(obj)`, "RaveIOCore")
+    israveio = str(type(obj)).find("RaveIOCore")
     self.assertNotEqual(-1, israveio)
 
   def test_attribute_visibility(self):
@@ -81,7 +81,7 @@ class PyRaveIOTest(unittest.TestCase):
     obj = _raveio.new()
     alist = dir(obj)
     for a in attrs:
-      self.assertEquals(True, a in alist)
+      self.assertEqual(True, a in alist)
 
   def test_no_filename(self):
     obj = _raveio.new()
@@ -100,145 +100,144 @@ class PyRaveIOTest(unittest.TestCase):
     try:
       _raveio.open("No_Such_File_Fixture.h5")
       self.fail("Expected IOError")
-    except IOError, e:
+    except IOError:
       pass
   
   def test_objectType(self):
     obj = _raveio.open(self.FIXTURE_VOLUME)
-    self.assertEquals(_raveio.Rave_ObjectType_PVOL, obj.objectType)
+    self.assertEqual(_raveio.Rave_ObjectType_PVOL, obj.objectType)
 
   def test_objectType_notSettable(self):
     obj = _raveio.new()
-    self.assertEquals(_raveio.Rave_ObjectType_UNDEFINED, obj.objectType)
+    self.assertEqual(_raveio.Rave_ObjectType_UNDEFINED, obj.objectType)
     try:
       obj.objectType = _raveio.Rave_ObjectType_PVOL
       self.fail("Expected AttributeError")
-    except AttributeError, e:
+    except AttributeError:
       pass
-    self.assertEquals(_raveio.Rave_ObjectType_UNDEFINED, obj.objectType)
+    self.assertEqual(_raveio.Rave_ObjectType_UNDEFINED, obj.objectType)
   
   def test_compression_level(self):
     obj = _raveio.new()
-    self.assertEquals(6, obj.compression_level)
+    self.assertEqual(6, obj.compression_level)
     obj.compression_level = 9
-    self.assertEquals(9, obj.compression_level)
+    self.assertEqual(9, obj.compression_level)
     obj.compression_level = 0
-    self.assertEquals(0, obj.compression_level)
+    self.assertEqual(0, obj.compression_level)
     obj.compression_level = 10
-    self.assertEquals(0, obj.compression_level)
+    self.assertEqual(0, obj.compression_level)
     obj.compression_level = -1
-    self.assertEquals(0, obj.compression_level)
+    self.assertEqual(0, obj.compression_level)
     
   def test_fcp_userblock(self):
     obj = _raveio.new()
-    self.assertEquals(0, obj.fcp_userblock)
+    self.assertEqual(0, obj.fcp_userblock)
     obj.fcp_userblock = 2
-    self.assertEquals(2, obj.fcp_userblock)
+    self.assertEqual(2, obj.fcp_userblock)
     
   def test_fcp_sizes(self):
     obj = _raveio.new()
-    self.assertEquals(4, obj.fcp_sizes[0])
-    self.assertEquals(4, obj.fcp_sizes[1])
+    self.assertEqual(4, obj.fcp_sizes[0])
+    self.assertEqual(4, obj.fcp_sizes[1])
     obj.fcp_sizes = (8, 2)
-    self.assertEquals(8, obj.fcp_sizes[0])
-    self.assertEquals(2, obj.fcp_sizes[1])
+    self.assertEqual(8, obj.fcp_sizes[0])
+    self.assertEqual(2, obj.fcp_sizes[1])
     
   def test_fcp_symk(self):
     obj = _raveio.new()
-    self.assertEquals(1, obj.fcp_symk[0])
-    self.assertEquals(1, obj.fcp_symk[1])
+    self.assertEqual(1, obj.fcp_symk[0])
+    self.assertEqual(1, obj.fcp_symk[1])
     obj.fcp_symk = (2, 4)
-    self.assertEquals(2, obj.fcp_symk[0])
-    self.assertEquals(4, obj.fcp_symk[1])
+    self.assertEqual(2, obj.fcp_symk[0])
+    self.assertEqual(4, obj.fcp_symk[1])
     
   def test_fcp_istorek(self):
     obj = _raveio.new()
-    self.assertEquals(1, obj.fcp_istorek)
+    self.assertEqual(1, obj.fcp_istorek)
     obj.fcp_istorek = 2
-    self.assertEquals(2, obj.fcp_istorek)
+    self.assertEqual(2, obj.fcp_istorek)
     
   def test_fcp_metablocksize(self):
     obj = _raveio.new()
-    self.assertEquals(0, obj.fcp_metablocksize)
+    self.assertEqual(0, obj.fcp_metablocksize)
     obj.fcp_metablocksize = 1
-    self.assertEquals(1, obj.fcp_metablocksize)
+    self.assertEqual(1, obj.fcp_metablocksize)
     
   def test_load_volume(self):
     obj = _raveio.open(self.FIXTURE_VOLUME)
     vol = obj.object
-    result = string.find(`type(vol)`, "PolarVolumeCore")
-    self.assertNotEqual(-1, result)     
+    self.assertNotEqual(-1, str(type(vol)).find("PolarVolumeCore"))     
 
   def test_load_volume_checkData(self):
     obj = _raveio.open(self.FIXTURE_VOLUME)
     vol = obj.object
-    self.assertEquals(10, vol.getNumberOfScans())
-    self.assertAlmostEquals(56.3675, vol.latitude*180.0/math.pi, 4)
-    self.assertAlmostEquals(12.8544, vol.longitude*180.0/math.pi, 4)
-    self.assertAlmostEquals(209, vol.height, 4)
+    self.assertEqual(10, vol.getNumberOfScans())
+    self.assertAlmostEqual(56.3675, vol.latitude*180.0/math.pi, 4)
+    self.assertAlmostEqual(12.8544, vol.longitude*180.0/math.pi, 4)
+    self.assertAlmostEqual(209, vol.height, 4)
 
     # Verify the scan
     scan = vol.getScan(0)
-    self.assertEquals(0, scan.a1gate)
-    self.assertAlmostEquals(0.5, scan.elangle*180.0/math.pi, 4)
-    self.assertEquals(120, scan.nbins)
-    self.assertEquals(420, scan.nrays)
-    self.assertAlmostEquals(2000.0, scan.rscale, 4)
-    self.assertAlmostEquals(0.0, scan.rstart, 4)
+    self.assertEqual(0, scan.a1gate)
+    self.assertAlmostEqual(0.5, scan.elangle*180.0/math.pi, 4)
+    self.assertEqual(120, scan.nbins)
+    self.assertEqual(420, scan.nrays)
+    self.assertAlmostEqual(2000.0, scan.rscale, 4)
+    self.assertAlmostEqual(0.0, scan.rstart, 4)
 
     #Inherited volume position
-    self.assertAlmostEquals(56.3675, scan.latitude*180.0/math.pi, 4)
-    self.assertAlmostEquals(12.8544, scan.longitude*180.0/math.pi, 4)
-    self.assertAlmostEquals(209, scan.height, 4)
+    self.assertAlmostEqual(56.3675, scan.latitude*180.0/math.pi, 4)
+    self.assertAlmostEqual(12.8544, scan.longitude*180.0/math.pi, 4)
+    self.assertAlmostEqual(209, scan.height, 4)
 
     # Verify the DBZH
     dbzhParam = scan.getParameter("DBZH")
-    self.assertAlmostEquals(0.4, dbzhParam.gain, 4)
-    self.assertAlmostEquals(-30.0, dbzhParam.offset, 4)
-    self.assertAlmostEquals(255.0, dbzhParam.nodata, 4)
-    self.assertAlmostEquals(0.0, dbzhParam.undetect, 4)
-    self.assertEquals(120, dbzhParam.nbins, 4)
-    self.assertEquals(420, dbzhParam.nrays, 4)
-    self.assertEquals("DBZH", dbzhParam.quantity)
+    self.assertAlmostEqual(0.4, dbzhParam.gain, 4)
+    self.assertAlmostEqual(-30.0, dbzhParam.offset, 4)
+    self.assertAlmostEqual(255.0, dbzhParam.nodata, 4)
+    self.assertAlmostEqual(0.0, dbzhParam.undetect, 4)
+    self.assertEqual(120, dbzhParam.nbins, 4)
+    self.assertEqual(420, dbzhParam.nrays, 4)
+    self.assertEqual("DBZH", dbzhParam.quantity)
 
     # And verify the VRAD
     vradParam = scan.getParameter("VRAD")
-    self.assertAlmostEquals(0.1875, vradParam.gain, 4)
-    self.assertAlmostEquals(-24.0, vradParam.offset, 4)
-    self.assertAlmostEquals(255.0, vradParam.nodata, 4)
-    self.assertAlmostEquals(0.0, vradParam.undetect, 4)
-    self.assertEquals("VRAD", vradParam.quantity)
+    self.assertAlmostEqual(0.1875, vradParam.gain, 4)
+    self.assertAlmostEqual(-24.0, vradParam.offset, 4)
+    self.assertAlmostEqual(255.0, vradParam.nodata, 4)
+    self.assertAlmostEqual(0.0, vradParam.undetect, 4)
+    self.assertEqual("VRAD", vradParam.quantity)
 
     # Verify last scan
     scan = vol.getScan(9)
-    self.assertEquals(0, scan.a1gate)
-    self.assertAlmostEquals(40.0, scan.elangle*180.0/math.pi, 4)
-    self.assertEquals(120, scan.nbins)
-    self.assertEquals(420, scan.nrays)
-    self.assertAlmostEquals(1000.0, scan.rscale, 4)
-    self.assertAlmostEquals(0.0, scan.rstart, 4)
+    self.assertEqual(0, scan.a1gate)
+    self.assertAlmostEqual(40.0, scan.elangle*180.0/math.pi, 4)
+    self.assertEqual(120, scan.nbins)
+    self.assertEqual(420, scan.nrays)
+    self.assertAlmostEqual(1000.0, scan.rscale, 4)
+    self.assertAlmostEqual(0.0, scan.rstart, 4)
     #Inherited volume position
-    self.assertAlmostEquals(56.3675, scan.latitude*180.0/math.pi, 4)
-    self.assertAlmostEquals(12.8544, scan.longitude*180.0/math.pi, 4)
-    self.assertAlmostEquals(209, scan.height, 4)  
+    self.assertAlmostEqual(56.3675, scan.latitude*180.0/math.pi, 4)
+    self.assertAlmostEqual(12.8544, scan.longitude*180.0/math.pi, 4)
+    self.assertAlmostEqual(209, scan.height, 4)  
 
     # Verify last scans DBZH parameter
     dbzhParam = scan.getParameter("DBZH")
-    self.assertAlmostEquals(0.4, dbzhParam.gain, 4)
-    self.assertAlmostEquals(-30.0, dbzhParam.offset, 4)
-    self.assertAlmostEquals(255.0, dbzhParam.nodata, 4)
-    self.assertAlmostEquals(0.0, dbzhParam.undetect, 4)
-    self.assertEquals("DBZH", dbzhParam.quantity)
-    self.assertEquals(120, dbzhParam.nbins)
-    self.assertEquals(420, dbzhParam.nrays)
+    self.assertAlmostEqual(0.4, dbzhParam.gain, 4)
+    self.assertAlmostEqual(-30.0, dbzhParam.offset, 4)
+    self.assertAlmostEqual(255.0, dbzhParam.nodata, 4)
+    self.assertAlmostEqual(0.0, dbzhParam.undetect, 4)
+    self.assertEqual("DBZH", dbzhParam.quantity)
+    self.assertEqual(120, dbzhParam.nbins)
+    self.assertEqual(420, dbzhParam.nrays)
 
     # Verify last scans VRAD parameter
     vradParam = scan.getParameter("VRAD")
-    self.assertAlmostEquals(0.375, vradParam.gain, 4)
-    self.assertAlmostEquals(-48.0, vradParam.offset, 4)
-    self.assertAlmostEquals(255.0, vradParam.nodata, 4)
-    self.assertAlmostEquals(0.0, vradParam.undetect, 4)
-    self.assertEquals("VRAD", vradParam.quantity)
+    self.assertAlmostEqual(0.375, vradParam.gain, 4)
+    self.assertAlmostEqual(-48.0, vradParam.offset, 4)
+    self.assertAlmostEqual(255.0, vradParam.nodata, 4)
+    self.assertAlmostEqual(0.0, vradParam.undetect, 4)
+    self.assertEqual("VRAD", vradParam.quantity)
 
   def test_save_cartesian(self):
     image = _cartesian.new()
@@ -296,35 +295,35 @@ class PyRaveIOTest(unittest.TestCase):
     nodelist.selectAll()
     nodelist.fetch()
     
-    self.assertEquals("ODIM_H5/V2_2", nodelist.getNode("/Conventions").data())
+    self.assertEqual("ODIM_H5/V2_2", nodelist.getNode("/Conventions").data())
     # What
-    self.assertEquals("100000", nodelist.getNode("/what/time").data())
-    self.assertEquals("20100101", nodelist.getNode("/what/date").data())
-    self.assertEquals("PLC:123", nodelist.getNode("/what/source").data())
-    self.assertEquals("IMAGE", nodelist.getNode("/what/object").data())
-    self.assertEquals("H5rad 2.2", nodelist.getNode("/what/version").data())
+    self.assertEqual("100000", nodelist.getNode("/what/time").data())
+    self.assertEqual("20100101", nodelist.getNode("/what/date").data())
+    self.assertEqual("PLC:123", nodelist.getNode("/what/source").data())
+    self.assertEqual("IMAGE", nodelist.getNode("/what/object").data())
+    self.assertEqual("H5rad 2.2", nodelist.getNode("/what/version").data())
     
     #Where
-    self.assertEquals("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", nodelist.getNode("/where/projdef").data())
-    self.assertEquals(240, nodelist.getNode("/where/xsize").data())
-    self.assertEquals(240, nodelist.getNode("/where/ysize").data())
-    self.assertAlmostEquals(2000.0, nodelist.getNode("/where/xscale").data(), 4)
-    self.assertAlmostEquals(2000.0, nodelist.getNode("/where/yscale").data(), 4)
+    self.assertEqual("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", nodelist.getNode("/where/projdef").data())
+    self.assertEqual(240, nodelist.getNode("/where/xsize").data())
+    self.assertEqual(240, nodelist.getNode("/where/ysize").data())
+    self.assertAlmostEqual(2000.0, nodelist.getNode("/where/xscale").data(), 4)
+    self.assertAlmostEqual(2000.0, nodelist.getNode("/where/yscale").data(), 4)
 
-    self.assertAlmostEquals(9.1714, nodelist.getNode("/where/LL_lon").data(), 4)
-    self.assertAlmostEquals(54.1539, nodelist.getNode("/where/LL_lat").data(), 4)
-    self.assertAlmostEquals(8.73067, nodelist.getNode("/where/UL_lon").data(), 4)
-    self.assertAlmostEquals(58.45867, nodelist.getNode("/where/UL_lat").data(), 4)
-    self.assertAlmostEquals(16.9781, nodelist.getNode("/where/UR_lon").data(), 4)
-    self.assertAlmostEquals(58.45867, nodelist.getNode("/where/UR_lat").data(), 4)
-    self.assertAlmostEquals(16.5374, nodelist.getNode("/where/LR_lon").data(), 4)
-    self.assertAlmostEquals(54.1539, nodelist.getNode("/where/LR_lat").data(), 4)
+    self.assertAlmostEqual(9.1714, nodelist.getNode("/where/LL_lon").data(), 4)
+    self.assertAlmostEqual(54.1539, nodelist.getNode("/where/LL_lat").data(), 4)
+    self.assertAlmostEqual(8.73067, nodelist.getNode("/where/UL_lon").data(), 4)
+    self.assertAlmostEqual(58.45867, nodelist.getNode("/where/UL_lat").data(), 4)
+    self.assertAlmostEqual(16.9781, nodelist.getNode("/where/UR_lon").data(), 4)
+    self.assertAlmostEqual(58.45867, nodelist.getNode("/where/UR_lat").data(), 4)
+    self.assertAlmostEqual(16.5374, nodelist.getNode("/where/LR_lon").data(), 4)
+    self.assertAlmostEqual(54.1539, nodelist.getNode("/where/LR_lat").data(), 4)
 
     #dataset1
-    self.assertEquals("100000", nodelist.getNode("/dataset1/what/starttime").data())
-    self.assertEquals("20100101", nodelist.getNode("/dataset1/what/startdate").data())
-    self.assertEquals("100000", nodelist.getNode("/dataset1/what/endtime").data())
-    self.assertEquals("20100101", nodelist.getNode("/dataset1/what/enddate").data())
+    self.assertEqual("100000", nodelist.getNode("/dataset1/what/starttime").data())
+    self.assertEqual("20100101", nodelist.getNode("/dataset1/what/startdate").data())
+    self.assertEqual("100000", nodelist.getNode("/dataset1/what/endtime").data())
+    self.assertEqual("20100101", nodelist.getNode("/dataset1/what/enddate").data())
 
     dbzhdata = 1
     mmhdata = 2
@@ -332,38 +331,38 @@ class PyRaveIOTest(unittest.TestCase):
       dbzhdata = 2
       mmhdata = 1
     
-    self.assertEquals("DBZH", nodelist.getNode("/dataset1/data%d/what/quantity"%dbzhdata).data())
-    self.assertAlmostEquals(1.0, nodelist.getNode("/dataset1/data%d/what/gain"%dbzhdata).data(), 4)
-    self.assertAlmostEquals(0.0, nodelist.getNode("/dataset1/data%d/what/offset"%dbzhdata).data(), 4)
-    self.assertAlmostEquals(255.0, nodelist.getNode("/dataset1/data%d/what/nodata"%dbzhdata).data(), 4)
-    self.assertAlmostEquals(0.0, nodelist.getNode("/dataset1/data%d/what/undetect"%dbzhdata).data(), 4)
-    self.assertEquals("a quality field", nodelist.getNode("/dataset1/data%d/quality1/what/dbzhqfield"%dbzhdata).data())
+    self.assertEqual("DBZH", nodelist.getNode("/dataset1/data%d/what/quantity"%dbzhdata).data())
+    self.assertAlmostEqual(1.0, nodelist.getNode("/dataset1/data%d/what/gain"%dbzhdata).data(), 4)
+    self.assertAlmostEqual(0.0, nodelist.getNode("/dataset1/data%d/what/offset"%dbzhdata).data(), 4)
+    self.assertAlmostEqual(255.0, nodelist.getNode("/dataset1/data%d/what/nodata"%dbzhdata).data(), 4)
+    self.assertAlmostEqual(0.0, nodelist.getNode("/dataset1/data%d/what/undetect"%dbzhdata).data(), 4)
+    self.assertEqual("a quality field", nodelist.getNode("/dataset1/data%d/quality1/what/dbzhqfield"%dbzhdata).data())
     d = nodelist.getNode("/dataset1/data%d/quality1/data"%dbzhdata).data()
     self.assertTrue(240, numpy.shape(d)[0])
     self.assertTrue(240, numpy.shape(d)[0])
 
-    self.assertEquals("MMH", nodelist.getNode("/dataset1/data%d/what/quantity"%mmhdata).data())
-    self.assertAlmostEquals(2.0, nodelist.getNode("/dataset1/data%d/what/gain"%mmhdata).data(), 4)
-    self.assertAlmostEquals(1.0, nodelist.getNode("/dataset1/data%d/what/offset"%mmhdata).data(), 4)
-    self.assertAlmostEquals(254.0, nodelist.getNode("/dataset1/data%d/what/nodata"%mmhdata).data(), 4)
-    self.assertAlmostEquals(3.0, nodelist.getNode("/dataset1/data%d/what/undetect"%mmhdata).data(), 4)
+    self.assertEqual("MMH", nodelist.getNode("/dataset1/data%d/what/quantity"%mmhdata).data())
+    self.assertAlmostEqual(2.0, nodelist.getNode("/dataset1/data%d/what/gain"%mmhdata).data(), 4)
+    self.assertAlmostEqual(1.0, nodelist.getNode("/dataset1/data%d/what/offset"%mmhdata).data(), 4)
+    self.assertAlmostEqual(254.0, nodelist.getNode("/dataset1/data%d/what/nodata"%mmhdata).data(), 4)
+    self.assertAlmostEqual(3.0, nodelist.getNode("/dataset1/data%d/what/undetect"%mmhdata).data(), 4)
     
-    self.assertEquals(numpy.uint8, nodelist.getNode("/dataset1/data1/data").data().dtype)
-    self.assertEquals("IMAGE", nodelist.getNode("/dataset1/data1/data/CLASS").data())
-    self.assertEquals("1.2", nodelist.getNode("/dataset1/data1/data/IMAGE_VERSION").data())
+    self.assertEqual(numpy.uint8, nodelist.getNode("/dataset1/data1/data").data().dtype)
+    self.assertEqual("IMAGE", nodelist.getNode("/dataset1/data1/data/CLASS").data())
+    self.assertEqual("1.2", nodelist.getNode("/dataset1/data1/data/IMAGE_VERSION").data())
 
     #quality information
-    self.assertEquals("a quality field", nodelist.getNode("/dataset1/quality1/what/sthis").data())
+    self.assertEqual("a quality field", nodelist.getNode("/dataset1/quality1/what/sthis").data())
     d = nodelist.getNode("/dataset1/quality1/data").data()
-    self.assertTrue(d != None)
-    self.assertEquals(240, numpy.shape(d)[0])
-    self.assertEquals(240, numpy.shape(d)[1])
+    self.assertTrue(d is not None)
+    self.assertEqual(240, numpy.shape(d)[0])
+    self.assertEqual(240, numpy.shape(d)[1])
 
-    self.assertEquals("another quality field", nodelist.getNode("/dataset1/quality2/what/sthat").data())
+    self.assertEqual("another quality field", nodelist.getNode("/dataset1/quality2/what/sthat").data())
     d = nodelist.getNode("/dataset1/quality2/data").data()
-    self.assertTrue(d != None)
-    self.assertEquals(240, numpy.shape(d)[0])
-    self.assertEquals(240, numpy.shape(d)[1])
+    self.assertTrue(d is not None)
+    self.assertEqual(240, numpy.shape(d)[0])
+    self.assertEqual(240, numpy.shape(d)[1])
 
   def test_save_cartesian_SURF(self):
     image = _cartesian.new()
@@ -403,11 +402,11 @@ class PyRaveIOTest(unittest.TestCase):
     
     # Assume that rest is working as expected according to full cartesian test, now we only want to know that
     # SURF can be written and read
-    self.assertEquals("SURF", nodelist.getNode("/dataset1/what/product").data())
+    self.assertEqual("SURF", nodelist.getNode("/dataset1/what/product").data())
 
     robj = _raveio.open(self.TEMPORARY_FILE).object
-    self.assertEquals(True, _cartesian.isCartesian(robj))
-    self.assertEquals(_rave.Rave_ProductType_SURF, robj.product)
+    self.assertEqual(True, _cartesian.isCartesian(robj))
+    self.assertEqual(_rave.Rave_ProductType_SURF, robj.product)
     
 
   def test_save_cartesian_startandstoptime(self):
@@ -446,44 +445,44 @@ class PyRaveIOTest(unittest.TestCase):
     nodelist.selectAll()
     nodelist.fetch()
     
-    self.assertEquals("ODIM_H5/V2_2", nodelist.getNode("/Conventions").data())
+    self.assertEqual("ODIM_H5/V2_2", nodelist.getNode("/Conventions").data())
     # What
-    self.assertEquals("100000", nodelist.getNode("/what/time").data())
-    self.assertEquals("20100101", nodelist.getNode("/what/date").data())
-    self.assertEquals("PLC:123", nodelist.getNode("/what/source").data())
-    self.assertEquals("IMAGE", nodelist.getNode("/what/object").data())
-    self.assertEquals("H5rad 2.2", nodelist.getNode("/what/version").data())
+    self.assertEqual("100000", nodelist.getNode("/what/time").data())
+    self.assertEqual("20100101", nodelist.getNode("/what/date").data())
+    self.assertEqual("PLC:123", nodelist.getNode("/what/source").data())
+    self.assertEqual("IMAGE", nodelist.getNode("/what/object").data())
+    self.assertEqual("H5rad 2.2", nodelist.getNode("/what/version").data())
     
     #Where
-    self.assertEquals("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", nodelist.getNode("/where/projdef").data())
-    self.assertEquals(240, nodelist.getNode("/where/xsize").data())
-    self.assertEquals(240, nodelist.getNode("/where/ysize").data())
-    self.assertAlmostEquals(2000.0, nodelist.getNode("/where/xscale").data(), 4)
-    self.assertAlmostEquals(2000.0, nodelist.getNode("/where/yscale").data(), 4)
+    self.assertEqual("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", nodelist.getNode("/where/projdef").data())
+    self.assertEqual(240, nodelist.getNode("/where/xsize").data())
+    self.assertEqual(240, nodelist.getNode("/where/ysize").data())
+    self.assertAlmostEqual(2000.0, nodelist.getNode("/where/xscale").data(), 4)
+    self.assertAlmostEqual(2000.0, nodelist.getNode("/where/yscale").data(), 4)
 
-    self.assertAlmostEquals(9.1714, nodelist.getNode("/where/LL_lon").data(), 4)
-    self.assertAlmostEquals(54.1539, nodelist.getNode("/where/LL_lat").data(), 4)
-    self.assertAlmostEquals(8.73067, nodelist.getNode("/where/UL_lon").data(), 4)
-    self.assertAlmostEquals(58.45867, nodelist.getNode("/where/UL_lat").data(), 4)
-    self.assertAlmostEquals(16.9781, nodelist.getNode("/where/UR_lon").data(), 4)
-    self.assertAlmostEquals(58.45867, nodelist.getNode("/where/UR_lat").data(), 4)
-    self.assertAlmostEquals(16.5374, nodelist.getNode("/where/LR_lon").data(), 4)
-    self.assertAlmostEquals(54.1539, nodelist.getNode("/where/LR_lat").data(), 4)
+    self.assertAlmostEqual(9.1714, nodelist.getNode("/where/LL_lon").data(), 4)
+    self.assertAlmostEqual(54.1539, nodelist.getNode("/where/LL_lat").data(), 4)
+    self.assertAlmostEqual(8.73067, nodelist.getNode("/where/UL_lon").data(), 4)
+    self.assertAlmostEqual(58.45867, nodelist.getNode("/where/UL_lat").data(), 4)
+    self.assertAlmostEqual(16.9781, nodelist.getNode("/where/UR_lon").data(), 4)
+    self.assertAlmostEqual(58.45867, nodelist.getNode("/where/UR_lat").data(), 4)
+    self.assertAlmostEqual(16.5374, nodelist.getNode("/where/LR_lon").data(), 4)
+    self.assertAlmostEqual(54.1539, nodelist.getNode("/where/LR_lat").data(), 4)
 
     #dataset1
-    self.assertEquals("DBZH", nodelist.getNode("/dataset1/data1/what/quantity").data())
-    self.assertEquals("110000", nodelist.getNode("/dataset1/what/starttime").data())
-    self.assertEquals("20110101", nodelist.getNode("/dataset1/what/startdate").data())
-    self.assertEquals("110005", nodelist.getNode("/dataset1/what/endtime").data())
-    self.assertEquals("20110101", nodelist.getNode("/dataset1/what/enddate").data())
-    self.assertAlmostEquals(1.0, nodelist.getNode("/dataset1/data1/what/gain").data(), 4)
-    self.assertAlmostEquals(0.0, nodelist.getNode("/dataset1/data1/what/offset").data(), 4)
-    self.assertAlmostEquals(255.0, nodelist.getNode("/dataset1/data1/what/nodata").data(), 4)
-    self.assertAlmostEquals(0.0, nodelist.getNode("/dataset1/data1/what/undetect").data(), 4)
+    self.assertEqual("DBZH", nodelist.getNode("/dataset1/data1/what/quantity").data())
+    self.assertEqual("110000", nodelist.getNode("/dataset1/what/starttime").data())
+    self.assertEqual("20110101", nodelist.getNode("/dataset1/what/startdate").data())
+    self.assertEqual("110005", nodelist.getNode("/dataset1/what/endtime").data())
+    self.assertEqual("20110101", nodelist.getNode("/dataset1/what/enddate").data())
+    self.assertAlmostEqual(1.0, nodelist.getNode("/dataset1/data1/what/gain").data(), 4)
+    self.assertAlmostEqual(0.0, nodelist.getNode("/dataset1/data1/what/offset").data(), 4)
+    self.assertAlmostEqual(255.0, nodelist.getNode("/dataset1/data1/what/nodata").data(), 4)
+    self.assertAlmostEqual(0.0, nodelist.getNode("/dataset1/data1/what/undetect").data(), 4)
     
-    self.assertEquals(numpy.uint8, nodelist.getNode("/dataset1/data1/data").data().dtype)
-    self.assertEquals("IMAGE", nodelist.getNode("/dataset1/data1/data/CLASS").data())
-    self.assertEquals("1.2", nodelist.getNode("/dataset1/data1/data/IMAGE_VERSION").data())
+    self.assertEqual(numpy.uint8, nodelist.getNode("/dataset1/data1/data").data().dtype)
+    self.assertEqual("IMAGE", nodelist.getNode("/dataset1/data1/data/CLASS").data())
+    self.assertEqual("1.2", nodelist.getNode("/dataset1/data1/data/IMAGE_VERSION").data())
 
   def test_save_cartesian_attribute_visibility(self):
     image = _cartesian.new()
@@ -524,9 +523,9 @@ class PyRaveIOTest(unittest.TestCase):
     nodelist.selectAll()
     nodelist.fetch()
     
-    self.assertAlmostEquals(1.0, nodelist.getNode("/dataset1/data1/how/something").data(), 4)
+    self.assertAlmostEqual(1.0, nodelist.getNode("/dataset1/data1/how/something").data(), 4)
     self.assertTrue("/how/something" not in nodelist.getNodeNames())
-    self.assertAlmostEquals(2.0, nodelist.getNode("/how/else").data(), 4)
+    self.assertAlmostEqual(2.0, nodelist.getNode("/how/else").data(), 4)
     self.assertTrue("/dataset1/data1/how/else" not in nodelist.getNodeNames())
 
 
@@ -597,110 +596,110 @@ class PyRaveIOTest(unittest.TestCase):
     nodelist.selectAll()
     nodelist.fetch()
     
-    self.assertEquals("ODIM_H5/V2_2", nodelist.getNode("/Conventions").data())
+    self.assertEqual("ODIM_H5/V2_2", nodelist.getNode("/Conventions").data())
     # What
-    self.assertEquals("100000", nodelist.getNode("/what/time").data())
-    self.assertEquals("20091010", nodelist.getNode("/what/date").data())
-    self.assertEquals("PLC:123", nodelist.getNode("/what/source").data())
-    self.assertEquals("CVOL", nodelist.getNode("/what/object").data())
-    self.assertEquals("H5rad 2.2", nodelist.getNode("/what/version").data())
+    self.assertEqual("100000", nodelist.getNode("/what/time").data())
+    self.assertEqual("20091010", nodelist.getNode("/what/date").data())
+    self.assertEqual("PLC:123", nodelist.getNode("/what/source").data())
+    self.assertEqual("CVOL", nodelist.getNode("/what/object").data())
+    self.assertEqual("H5rad 2.2", nodelist.getNode("/what/version").data())
     
     #Where
-    self.assertEquals("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", nodelist.getNode("/where/projdef").data())
-    self.assertEquals(240, nodelist.getNode("/where/xsize").data())
-    self.assertEquals(240, nodelist.getNode("/where/ysize").data())
-    self.assertAlmostEquals(2000.0, nodelist.getNode("/where/xscale").data(), 4)
-    self.assertAlmostEquals(2000.0, nodelist.getNode("/where/yscale").data(), 4)
+    self.assertEqual("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", nodelist.getNode("/where/projdef").data())
+    self.assertEqual(240, nodelist.getNode("/where/xsize").data())
+    self.assertEqual(240, nodelist.getNode("/where/ysize").data())
+    self.assertAlmostEqual(2000.0, nodelist.getNode("/where/xscale").data(), 4)
+    self.assertAlmostEqual(2000.0, nodelist.getNode("/where/yscale").data(), 4)
 
-    self.assertAlmostEquals(9.1714, nodelist.getNode("/where/LL_lon").data(), 4)
-    self.assertAlmostEquals(54.1539, nodelist.getNode("/where/LL_lat").data(), 4)
-    self.assertAlmostEquals(8.73067, nodelist.getNode("/where/UL_lon").data(), 4)
-    self.assertAlmostEquals(58.45867, nodelist.getNode("/where/UL_lat").data(), 4)
-    self.assertAlmostEquals(16.9781, nodelist.getNode("/where/UR_lon").data(), 4)
-    self.assertAlmostEquals(58.45867, nodelist.getNode("/where/UR_lat").data(), 4)
-    self.assertAlmostEquals(16.5374, nodelist.getNode("/where/LR_lon").data(), 4)
-    self.assertAlmostEquals(54.1539, nodelist.getNode("/where/LR_lat").data(), 4)
+    self.assertAlmostEqual(9.1714, nodelist.getNode("/where/LL_lon").data(), 4)
+    self.assertAlmostEqual(54.1539, nodelist.getNode("/where/LL_lat").data(), 4)
+    self.assertAlmostEqual(8.73067, nodelist.getNode("/where/UL_lon").data(), 4)
+    self.assertAlmostEqual(58.45867, nodelist.getNode("/where/UL_lat").data(), 4)
+    self.assertAlmostEqual(16.9781, nodelist.getNode("/where/UR_lon").data(), 4)
+    self.assertAlmostEqual(58.45867, nodelist.getNode("/where/UR_lat").data(), 4)
+    self.assertAlmostEqual(16.5374, nodelist.getNode("/where/LR_lon").data(), 4)
+    self.assertAlmostEqual(54.1539, nodelist.getNode("/where/LR_lat").data(), 4)
 
     #dataset1
-    self.assertEquals("100000", nodelist.getNode("/dataset1/what/starttime").data())
-    self.assertEquals("20091010", nodelist.getNode("/dataset1/what/startdate").data())
-    self.assertEquals("100000", nodelist.getNode("/dataset1/what/endtime").data())
-    self.assertEquals("20091010", nodelist.getNode("/dataset1/what/enddate").data())
+    self.assertEqual("100000", nodelist.getNode("/dataset1/what/starttime").data())
+    self.assertEqual("20091010", nodelist.getNode("/dataset1/what/startdate").data())
+    self.assertEqual("100000", nodelist.getNode("/dataset1/what/endtime").data())
+    self.assertEqual("20091010", nodelist.getNode("/dataset1/what/enddate").data())
 
-    self.assertEquals("DBZH", nodelist.getNode("/dataset1/data1/what/quantity").data())
-    self.assertAlmostEquals(1.0, nodelist.getNode("/dataset1/data1/what/gain").data(), 4)
-    self.assertAlmostEquals(0.0, nodelist.getNode("/dataset1/data1/what/offset").data(), 4)
-    self.assertAlmostEquals(255.0, nodelist.getNode("/dataset1/data1/what/nodata").data(), 4)
-    self.assertAlmostEquals(0.0, nodelist.getNode("/dataset1/data1/what/undetect").data(), 4)
+    self.assertEqual("DBZH", nodelist.getNode("/dataset1/data1/what/quantity").data())
+    self.assertAlmostEqual(1.0, nodelist.getNode("/dataset1/data1/what/gain").data(), 4)
+    self.assertAlmostEqual(0.0, nodelist.getNode("/dataset1/data1/what/offset").data(), 4)
+    self.assertAlmostEqual(255.0, nodelist.getNode("/dataset1/data1/what/nodata").data(), 4)
+    self.assertAlmostEqual(0.0, nodelist.getNode("/dataset1/data1/what/undetect").data(), 4)
     
-    self.assertEquals(numpy.uint8, nodelist.getNode("/dataset1/data1/data").data().dtype)
-    self.assertEquals("IMAGE", nodelist.getNode("/dataset1/data1/data/CLASS").data())
-    self.assertEquals("1.2", nodelist.getNode("/dataset1/data1/data/IMAGE_VERSION").data())
+    self.assertEqual(numpy.uint8, nodelist.getNode("/dataset1/data1/data").data().dtype)
+    self.assertEqual("IMAGE", nodelist.getNode("/dataset1/data1/data/CLASS").data())
+    self.assertEqual("1.2", nodelist.getNode("/dataset1/data1/data/IMAGE_VERSION").data())
 
     #dataset2
-    self.assertEquals("110000", nodelist.getNode("/dataset2/what/starttime").data())
-    self.assertEquals("20110101", nodelist.getNode("/dataset2/what/startdate").data())
-    self.assertEquals("110005", nodelist.getNode("/dataset2/what/endtime").data())
-    self.assertEquals("20110101", nodelist.getNode("/dataset2/what/enddate").data())
+    self.assertEqual("110000", nodelist.getNode("/dataset2/what/starttime").data())
+    self.assertEqual("20110101", nodelist.getNode("/dataset2/what/startdate").data())
+    self.assertEqual("110005", nodelist.getNode("/dataset2/what/endtime").data())
+    self.assertEqual("20110101", nodelist.getNode("/dataset2/what/enddate").data())
 
-    self.assertEquals("MMH", nodelist.getNode("/dataset2/data1/what/quantity").data())
-    self.assertAlmostEquals(1.0, nodelist.getNode("/dataset2/data1/what/gain").data(), 4)
-    self.assertAlmostEquals(0.0, nodelist.getNode("/dataset2/data1/what/offset").data(), 4)
-    self.assertAlmostEquals(255.0, nodelist.getNode("/dataset2/data1/what/nodata").data(), 4)
-    self.assertAlmostEquals(0.0, nodelist.getNode("/dataset2/data1/what/undetect").data(), 4)
+    self.assertEqual("MMH", nodelist.getNode("/dataset2/data1/what/quantity").data())
+    self.assertAlmostEqual(1.0, nodelist.getNode("/dataset2/data1/what/gain").data(), 4)
+    self.assertAlmostEqual(0.0, nodelist.getNode("/dataset2/data1/what/offset").data(), 4)
+    self.assertAlmostEqual(255.0, nodelist.getNode("/dataset2/data1/what/nodata").data(), 4)
+    self.assertAlmostEqual(0.0, nodelist.getNode("/dataset2/data1/what/undetect").data(), 4)
     
-    self.assertEquals(numpy.uint8, nodelist.getNode("/dataset2/data1/data").data().dtype)
-    self.assertEquals("IMAGE", nodelist.getNode("/dataset2/data1/data/CLASS").data())
-    self.assertEquals("1.2", nodelist.getNode("/dataset2/data1/data/IMAGE_VERSION").data())
+    self.assertEqual(numpy.uint8, nodelist.getNode("/dataset2/data1/data").data().dtype)
+    self.assertEqual("IMAGE", nodelist.getNode("/dataset2/data1/data/CLASS").data())
+    self.assertEqual("1.2", nodelist.getNode("/dataset2/data1/data/IMAGE_VERSION").data())
 
     #quality information
-    self.assertEquals("a quality field", nodelist.getNode("/dataset2/quality1/what/sthis").data())
+    self.assertEqual("a quality field", nodelist.getNode("/dataset2/quality1/what/sthis").data())
     d = nodelist.getNode("/dataset2/quality1/data").data()
-    self.assertTrue(d != None)
-    self.assertEquals(240, numpy.shape(d)[0])
-    self.assertEquals(240, numpy.shape(d)[1])
+    self.assertTrue(d is not None)
+    self.assertEqual(240, numpy.shape(d)[0])
+    self.assertEqual(240, numpy.shape(d)[1])
 
-    self.assertEquals("another quality field", nodelist.getNode("/dataset2/quality2/what/sthat").data())
+    self.assertEqual("another quality field", nodelist.getNode("/dataset2/quality2/what/sthat").data())
     d = nodelist.getNode("/dataset2/quality2/data").data()
-    self.assertTrue(d != None)
-    self.assertEquals(240, numpy.shape(d)[0])
-    self.assertEquals(240, numpy.shape(d)[1])
+    self.assertTrue(d is not None)
+    self.assertEqual(240, numpy.shape(d)[0])
+    self.assertEqual(240, numpy.shape(d)[1])
   
   def test_load_cartesian_volume(self):
     obj = _raveio.open(self.FIXTURE_CVOL_CAPPI)
-    self.assertEquals(_raveio.RaveIO_ODIM_Version_2_0, obj.version)
-    self.assertEquals(_raveio.RaveIO_ODIM_H5rad_Version_2_0, obj.h5radversion)
-    self.assertEquals(_rave.Rave_ObjectType_CVOL, obj.objectType)
+    self.assertEqual(_raveio.RaveIO_ODIM_Version_2_0, obj.version)
+    self.assertEqual(_raveio.RaveIO_ODIM_H5rad_Version_2_0, obj.h5radversion)
+    self.assertEqual(_rave.Rave_ObjectType_CVOL, obj.objectType)
     
     cvol = obj.object
-    self.assertEquals(_rave.Rave_ObjectType_CVOL, cvol.objectType)
-    self.assertEquals("100000", cvol.time)
-    self.assertEquals("20091010", cvol.date)
-    self.assertEquals("PLC:123", cvol.source)
-    self.assertEquals("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", cvol.projection.definition)
-    self.assertAlmostEquals(-240000.0, cvol.areaextent[0], 4)
-    self.assertAlmostEquals(-240000.0, cvol.areaextent[1], 4)
-    self.assertAlmostEquals(236000.0, cvol.areaextent[2], 4)  # Since AE should be projected(UR) - xscale
-    self.assertAlmostEquals(236000.0, cvol.areaextent[3], 4)  # Since AE should be projected(UR) - yscale
-    self.assertAlmostEquals(2000.0, cvol.xscale, 4)
-    self.assertAlmostEquals(2000.0, cvol.yscale, 4)
+    self.assertEqual(_rave.Rave_ObjectType_CVOL, cvol.objectType)
+    self.assertEqual("100000", cvol.time)
+    self.assertEqual("20091010", cvol.date)
+    self.assertEqual("PLC:123", cvol.source)
+    self.assertEqual("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", cvol.projection.definition)
+    self.assertAlmostEqual(-240000.0, cvol.areaextent[0], 4)
+    self.assertAlmostEqual(-240000.0, cvol.areaextent[1], 4)
+    self.assertAlmostEqual(236000.0, cvol.areaextent[2], 4)  # Since AE should be projected(UR) - xscale
+    self.assertAlmostEqual(236000.0, cvol.areaextent[3], 4)  # Since AE should be projected(UR) - yscale
+    self.assertAlmostEqual(2000.0, cvol.xscale, 4)
+    self.assertAlmostEqual(2000.0, cvol.yscale, 4)
 
-    self.assertEquals(1, cvol.getNumberOfImages())
+    self.assertEqual(1, cvol.getNumberOfImages())
 
     image = cvol.getImage(0)
-    self.assertEquals(_rave.Rave_ProductType_CAPPI, image.product)
-    self.assertEquals(240, image.xsize)
-    self.assertEquals(240, image.ysize)
+    self.assertEqual(_rave.Rave_ProductType_CAPPI, image.product)
+    self.assertEqual(240, image.xsize)
+    self.assertEqual(240, image.ysize)
 
     param = image.getParameter("DBZH")
-    self.assertEquals(numpy.uint8, param.getData().dtype)
-    self.assertEquals("DBZH", param.quantity)
-    self.assertAlmostEquals(1.0, param.gain, 4)
-    self.assertAlmostEquals(0.0, param.offset, 4)
-    self.assertAlmostEquals(255.0, param.nodata, 4)
-    self.assertAlmostEquals(0.0, param.undetect, 4)
-    self.assertEquals(240, param.xsize)
-    self.assertEquals(240, param.ysize)
+    self.assertEqual(numpy.uint8, param.getData().dtype)
+    self.assertEqual("DBZH", param.quantity)
+    self.assertAlmostEqual(1.0, param.gain, 4)
+    self.assertAlmostEqual(0.0, param.offset, 4)
+    self.assertAlmostEqual(255.0, param.nodata, 4)
+    self.assertAlmostEqual(0.0, param.undetect, 4)
+    self.assertEqual(240, param.xsize)
+    self.assertEqual(240, param.ysize)
 
   def test_load_cartesian_volume_save_cartesian_image(self):
     obj = _raveio.open(self.FIXTURE_CVOL_CAPPI)
@@ -714,152 +713,152 @@ class PyRaveIOTest(unittest.TestCase):
     nodelist.selectAll()
     nodelist.fetch()
     
-    self.assertEquals("ODIM_H5/V2_2", nodelist.getNode("/Conventions").data())
+    self.assertEqual("ODIM_H5/V2_2", nodelist.getNode("/Conventions").data())
 
     # What
-    self.assertEquals("100000", nodelist.getNode("/what/time").data())
-    self.assertEquals("20091010", nodelist.getNode("/what/date").data())
-    self.assertEquals("PLC:123", nodelist.getNode("/what/source").data())
-    self.assertEquals("IMAGE", nodelist.getNode("/what/object").data())
-    self.assertEquals("H5rad 2.2", nodelist.getNode("/what/version").data())
+    self.assertEqual("100000", nodelist.getNode("/what/time").data())
+    self.assertEqual("20091010", nodelist.getNode("/what/date").data())
+    self.assertEqual("PLC:123", nodelist.getNode("/what/source").data())
+    self.assertEqual("IMAGE", nodelist.getNode("/what/object").data())
+    self.assertEqual("H5rad 2.2", nodelist.getNode("/what/version").data())
     
     #Where
-    self.assertEquals("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", nodelist.getNode("/where/projdef").data())
-    self.assertEquals(240, nodelist.getNode("/where/xsize").data())
-    self.assertEquals(240, nodelist.getNode("/where/ysize").data())
-    self.assertAlmostEquals(2000.0, nodelist.getNode("/where/xscale").data(), 4)
-    self.assertAlmostEquals(2000.0, nodelist.getNode("/where/yscale").data(), 4)
+    self.assertEqual("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", nodelist.getNode("/where/projdef").data())
+    self.assertEqual(240, nodelist.getNode("/where/xsize").data())
+    self.assertEqual(240, nodelist.getNode("/where/ysize").data())
+    self.assertAlmostEqual(2000.0, nodelist.getNode("/where/xscale").data(), 4)
+    self.assertAlmostEqual(2000.0, nodelist.getNode("/where/yscale").data(), 4)
 
-    self.assertAlmostEquals(9.1714, nodelist.getNode("/where/LL_lon").data(), 4)
-    self.assertAlmostEquals(54.1539, nodelist.getNode("/where/LL_lat").data(), 4)
-    self.assertAlmostEquals(8.7327, nodelist.getNode("/where/UL_lon").data(), 4)
-    self.assertAlmostEquals(58.4408, nodelist.getNode("/where/UL_lat").data(), 4)
-    self.assertAlmostEquals(16.9418, nodelist.getNode("/where/UR_lon").data(), 4)
-    self.assertAlmostEquals(58.4419, nodelist.getNode("/where/UR_lat").data(), 4)
-    self.assertAlmostEquals(16.5068, nodelist.getNode("/where/LR_lon").data(), 4)
-    self.assertAlmostEquals(54.1549, nodelist.getNode("/where/LR_lat").data(), 4)
+    self.assertAlmostEqual(9.1714, nodelist.getNode("/where/LL_lon").data(), 4)
+    self.assertAlmostEqual(54.1539, nodelist.getNode("/where/LL_lat").data(), 4)
+    self.assertAlmostEqual(8.7327, nodelist.getNode("/where/UL_lon").data(), 4)
+    self.assertAlmostEqual(58.4408, nodelist.getNode("/where/UL_lat").data(), 4)
+    self.assertAlmostEqual(16.9418, nodelist.getNode("/where/UR_lon").data(), 4)
+    self.assertAlmostEqual(58.4419, nodelist.getNode("/where/UR_lat").data(), 4)
+    self.assertAlmostEqual(16.5068, nodelist.getNode("/where/LR_lon").data(), 4)
+    self.assertAlmostEqual(54.1549, nodelist.getNode("/where/LR_lat").data(), 4)
 
     #dataset1
-    self.assertEquals("DBZH", nodelist.getNode("/dataset1/data1/what/quantity").data())
-    self.assertEquals("100000", nodelist.getNode("/dataset1/what/starttime").data())
-    self.assertEquals("20091010", nodelist.getNode("/dataset1/what/startdate").data())
-    self.assertEquals("100000", nodelist.getNode("/dataset1/what/endtime").data())
-    self.assertEquals("20091010", nodelist.getNode("/dataset1/what/enddate").data())
-    self.assertAlmostEquals(1.0, nodelist.getNode("/dataset1/data1/what/gain").data(), 4)
-    self.assertAlmostEquals(0.0, nodelist.getNode("/dataset1/data1/what/offset").data(), 4)
-    self.assertAlmostEquals(255.0, nodelist.getNode("/dataset1/data1/what/nodata").data(), 4)
-    self.assertAlmostEquals(0.0, nodelist.getNode("/dataset1/data1/what/undetect").data(), 4)
+    self.assertEqual("DBZH", nodelist.getNode("/dataset1/data1/what/quantity").data())
+    self.assertEqual("100000", nodelist.getNode("/dataset1/what/starttime").data())
+    self.assertEqual("20091010", nodelist.getNode("/dataset1/what/startdate").data())
+    self.assertEqual("100000", nodelist.getNode("/dataset1/what/endtime").data())
+    self.assertEqual("20091010", nodelist.getNode("/dataset1/what/enddate").data())
+    self.assertAlmostEqual(1.0, nodelist.getNode("/dataset1/data1/what/gain").data(), 4)
+    self.assertAlmostEqual(0.0, nodelist.getNode("/dataset1/data1/what/offset").data(), 4)
+    self.assertAlmostEqual(255.0, nodelist.getNode("/dataset1/data1/what/nodata").data(), 4)
+    self.assertAlmostEqual(0.0, nodelist.getNode("/dataset1/data1/what/undetect").data(), 4)
     
-    self.assertEquals(numpy.uint8, nodelist.getNode("/dataset1/data1/data").data().dtype)
-    self.assertEquals("IMAGE", nodelist.getNode("/dataset1/data1/data/CLASS").data())
-    self.assertEquals("1.2", nodelist.getNode("/dataset1/data1/data/IMAGE_VERSION").data())
+    self.assertEqual(numpy.uint8, nodelist.getNode("/dataset1/data1/data").data().dtype)
+    self.assertEqual("IMAGE", nodelist.getNode("/dataset1/data1/data/CLASS").data())
+    self.assertEqual("1.2", nodelist.getNode("/dataset1/data1/data/IMAGE_VERSION").data())
 
   def test_load_cartesian_image2(self):
     obj = _raveio.open(self.FIXTURE_CARTESIAN_IMAGE)
-    self.assertEquals(_raveio.RaveIO_ODIM_Version_2_1, obj.version)
-    self.assertEquals(_raveio.RaveIO_ODIM_H5rad_Version_2_1, obj.h5radversion)
-    self.assertEquals(_rave.Rave_ObjectType_IMAGE, obj.objectType)
+    self.assertEqual(_raveio.RaveIO_ODIM_Version_2_1, obj.version)
+    self.assertEqual(_raveio.RaveIO_ODIM_H5rad_Version_2_1, obj.h5radversion)
+    self.assertEqual(_rave.Rave_ObjectType_IMAGE, obj.objectType)
     
     image = obj.object
-    self.assertEquals(_rave.Rave_ObjectType_IMAGE, image.objectType)
-    self.assertEquals(_rave.Rave_ProductType_CAPPI, image.product)
-    self.assertEquals("100000", image.time)
-    self.assertEquals("20100101", image.date)
-    self.assertEquals("PLC:123", image.source)
-    self.assertEquals("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", image.projection.definition)
-    self.assertAlmostEquals(-240000.0, image.areaextent[0], 4)
-    self.assertAlmostEquals(-240000.0, image.areaextent[1], 4)
-    self.assertAlmostEquals(238000.0, image.areaextent[2], 4)  # Since AE should be projected(UR) - xscale
-    self.assertAlmostEquals(238000.0, image.areaextent[3], 4)  # Since AE should be projected(UR) - yscale
-    self.assertAlmostEquals(2000.0, image.xscale, 4)
-    self.assertAlmostEquals(2000.0, image.yscale, 4)
-    self.assertEquals(240, image.xsize)
-    self.assertEquals(240, image.ysize)
+    self.assertEqual(_rave.Rave_ObjectType_IMAGE, image.objectType)
+    self.assertEqual(_rave.Rave_ProductType_CAPPI, image.product)
+    self.assertEqual("100000", image.time)
+    self.assertEqual("20100101", image.date)
+    self.assertEqual("PLC:123", image.source)
+    self.assertEqual("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", image.projection.definition)
+    self.assertAlmostEqual(-240000.0, image.areaextent[0], 4)
+    self.assertAlmostEqual(-240000.0, image.areaextent[1], 4)
+    self.assertAlmostEqual(238000.0, image.areaextent[2], 4)  # Since AE should be projected(UR) - xscale
+    self.assertAlmostEqual(238000.0, image.areaextent[3], 4)  # Since AE should be projected(UR) - yscale
+    self.assertAlmostEqual(2000.0, image.xscale, 4)
+    self.assertAlmostEqual(2000.0, image.yscale, 4)
+    self.assertEqual(240, image.xsize)
+    self.assertEqual(240, image.ysize)
 
     param = image.getParameter("DBZH")
-    self.assertEquals("DBZH", param.quantity)
-    self.assertAlmostEquals(1.0, param.gain, 4)
-    self.assertAlmostEquals(0.0, param.offset, 4)
-    self.assertAlmostEquals(255.0, param.nodata, 4)
-    self.assertAlmostEquals(0.0, param.undetect, 4)
-    self.assertEquals(numpy.uint8, param.getData().dtype)
+    self.assertEqual("DBZH", param.quantity)
+    self.assertAlmostEqual(1.0, param.gain, 4)
+    self.assertAlmostEqual(0.0, param.offset, 4)
+    self.assertAlmostEqual(255.0, param.nodata, 4)
+    self.assertAlmostEqual(0.0, param.undetect, 4)
+    self.assertEqual(numpy.uint8, param.getData().dtype)
 
-    self.assertEquals(2, image.getNumberOfQualityFields())
+    self.assertEqual(2, image.getNumberOfQualityFields())
     qf = image.getQualityField(0)
     qf2 = image.getQualityField(1)
-    self.assertEquals("a quality field", qf.getAttribute("what/sthis"))
+    self.assertEqual("a quality field", qf.getAttribute("what/sthis"))
     qfd = qf.getData()
-    self.assertEquals(240, numpy.shape(qfd)[0])
-    self.assertEquals(240, numpy.shape(qfd)[1])
-    self.assertEquals("another quality field", qf2.getAttribute("what/sthat"))
+    self.assertEqual(240, numpy.shape(qfd)[0])
+    self.assertEqual(240, numpy.shape(qfd)[1])
+    self.assertEqual("another quality field", qf2.getAttribute("what/sthat"))
     qf2d = qf2.getData()
-    self.assertEquals(240, numpy.shape(qf2d)[0])
-    self.assertEquals(240, numpy.shape(qf2d)[1])
+    self.assertEqual(240, numpy.shape(qf2d)[0])
+    self.assertEqual(240, numpy.shape(qf2d)[1])
  
   def test_load_cartesian_volume2(self):
     obj = _raveio.open(self.FIXTURE_CARTESIAN_VOLUME)
-    self.assertEquals(_raveio.RaveIO_ODIM_Version_2_1, obj.version)
-    self.assertEquals(_raveio.RaveIO_ODIM_H5rad_Version_2_1, obj.h5radversion)
-    self.assertEquals(_rave.Rave_ObjectType_CVOL, obj.objectType)
+    self.assertEqual(_raveio.RaveIO_ODIM_Version_2_1, obj.version)
+    self.assertEqual(_raveio.RaveIO_ODIM_H5rad_Version_2_1, obj.h5radversion)
+    self.assertEqual(_rave.Rave_ObjectType_CVOL, obj.objectType)
     
     cvol = obj.object
-    self.assertEquals("100000", cvol.time)
-    self.assertEquals("20091010", cvol.date)
-    self.assertEquals(_rave.Rave_ObjectType_CVOL, cvol.objectType)
-    self.assertEquals("PLC:123", cvol.source)
-    self.assertAlmostEquals(2000.0, cvol.xscale, 4)
-    self.assertAlmostEquals(2000.0, cvol.yscale, 4)
-    self.assertEquals("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", cvol.projection.definition)
-    self.assertAlmostEquals(-240000.0, cvol.areaextent[0], 4)
-    self.assertAlmostEquals(-240000.0, cvol.areaextent[1], 4)
-    self.assertAlmostEquals(238000.0, cvol.areaextent[2], 4)  # Since AE should be projected(UR) - xscale
-    self.assertAlmostEquals(238000.0, cvol.areaextent[3], 4)  # Since AE should be projected(UR) - yscale
+    self.assertEqual("100000", cvol.time)
+    self.assertEqual("20091010", cvol.date)
+    self.assertEqual(_rave.Rave_ObjectType_CVOL, cvol.objectType)
+    self.assertEqual("PLC:123", cvol.source)
+    self.assertAlmostEqual(2000.0, cvol.xscale, 4)
+    self.assertAlmostEqual(2000.0, cvol.yscale, 4)
+    self.assertEqual("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", cvol.projection.definition)
+    self.assertAlmostEqual(-240000.0, cvol.areaextent[0], 4)
+    self.assertAlmostEqual(-240000.0, cvol.areaextent[1], 4)
+    self.assertAlmostEqual(238000.0, cvol.areaextent[2], 4)  # Since AE should be projected(UR) - xscale
+    self.assertAlmostEqual(238000.0, cvol.areaextent[3], 4)  # Since AE should be projected(UR) - yscale
 
-    self.assertEquals(2, cvol.getNumberOfImages())
+    self.assertEqual(2, cvol.getNumberOfImages())
 
     image = cvol.getImage(0)
-    self.assertEquals(_rave.Rave_ProductType_CAPPI, image.product)
-    self.assertEquals(240, image.xsize)
-    self.assertEquals(240, image.ysize)
+    self.assertEqual(_rave.Rave_ProductType_CAPPI, image.product)
+    self.assertEqual(240, image.xsize)
+    self.assertEqual(240, image.ysize)
     
     param = image.getParameter("DBZH")
-    self.assertEquals(numpy.uint8, param.getData().dtype)
-    self.assertAlmostEquals(1.0, param.gain, 4)
-    self.assertAlmostEquals(0.0, param.offset, 4)
-    self.assertAlmostEquals(255.0, param.nodata, 4)
-    self.assertAlmostEquals(0.0, param.undetect, 4)
-    self.assertEquals(240, numpy.shape(param.getData())[0])
-    self.assertEquals(240, numpy.shape(param.getData())[1])
+    self.assertEqual(numpy.uint8, param.getData().dtype)
+    self.assertAlmostEqual(1.0, param.gain, 4)
+    self.assertAlmostEqual(0.0, param.offset, 4)
+    self.assertAlmostEqual(255.0, param.nodata, 4)
+    self.assertAlmostEqual(0.0, param.undetect, 4)
+    self.assertEqual(240, numpy.shape(param.getData())[0])
+    self.assertEqual(240, numpy.shape(param.getData())[1])
 
     image = cvol.getImage(1)
-    self.assertEquals(_rave.Rave_ProductType_CAPPI, image.product)
-    self.assertEquals(240, image.xsize)
-    self.assertEquals(240, image.ysize)
-    self.assertEquals("110000", image.starttime)
-    self.assertEquals("20110101", image.startdate)
-    self.assertEquals("110005", image.endtime)
-    self.assertEquals("20110101", image.enddate)
+    self.assertEqual(_rave.Rave_ProductType_CAPPI, image.product)
+    self.assertEqual(240, image.xsize)
+    self.assertEqual(240, image.ysize)
+    self.assertEqual("110000", image.starttime)
+    self.assertEqual("20110101", image.startdate)
+    self.assertEqual("110005", image.endtime)
+    self.assertEqual("20110101", image.enddate)
 
     param = image.getParameter("MMH")
-    self.assertAlmostEquals(1.0, param.gain, 4)
-    self.assertAlmostEquals(0.0, param.offset, 4)
-    self.assertAlmostEquals(255.0, param.nodata, 4)
-    self.assertAlmostEquals(0.0, param.undetect, 4)
-    self.assertEquals(numpy.uint8, param.getData().dtype)
-    self.assertEquals(240, numpy.shape(param.getData())[0])
-    self.assertEquals(240, numpy.shape(param.getData())[1])
+    self.assertAlmostEqual(1.0, param.gain, 4)
+    self.assertAlmostEqual(0.0, param.offset, 4)
+    self.assertAlmostEqual(255.0, param.nodata, 4)
+    self.assertAlmostEqual(0.0, param.undetect, 4)
+    self.assertEqual(numpy.uint8, param.getData().dtype)
+    self.assertEqual(240, numpy.shape(param.getData())[0])
+    self.assertEqual(240, numpy.shape(param.getData())[1])
     
-    self.assertEquals(2, image.getNumberOfQualityFields())
+    self.assertEqual(2, image.getNumberOfQualityFields())
     qf = image.getQualityField(0)
     qf2 = image.getQualityField(1)
-    self.assertEquals("a quality field", qf.getAttribute("what/sthis"))
+    self.assertEqual("a quality field", qf.getAttribute("what/sthis"))
     qfd = qf.getData()
-    self.assertEquals(240, numpy.shape(qfd)[0])
-    self.assertEquals(240, numpy.shape(qfd)[1])
-    self.assertEquals("another quality field", qf2.getAttribute("what/sthat"))
+    self.assertEqual(240, numpy.shape(qfd)[0])
+    self.assertEqual(240, numpy.shape(qfd)[1])
+    self.assertEqual("another quality field", qf2.getAttribute("what/sthat"))
     qf2d = qf2.getData()
-    self.assertEquals(240, numpy.shape(qf2d)[0])
-    self.assertEquals(240, numpy.shape(qf2d)[1])
+    self.assertEqual(240, numpy.shape(qf2d)[0])
+    self.assertEqual(240, numpy.shape(qf2d)[1])
 
 
   def test_save_polar_volume(self):
@@ -934,35 +933,35 @@ class PyRaveIOTest(unittest.TestCase):
     nodelist.selectAll()
     nodelist.fetch()
     
-    self.assertEquals("ODIM_H5/V2_2", nodelist.getNode("/Conventions").data())
+    self.assertEqual("ODIM_H5/V2_2", nodelist.getNode("/Conventions").data())
     # What
-    self.assertEquals("100000", nodelist.getNode("/what/time").data())
-    self.assertEquals("20091010", nodelist.getNode("/what/date").data())
-    self.assertEquals("PLC:123", nodelist.getNode("/what/source").data())
-    self.assertEquals("PVOL", nodelist.getNode("/what/object").data())
-    self.assertEquals("H5rad 2.2", nodelist.getNode("/what/version").data())
+    self.assertEqual("100000", nodelist.getNode("/what/time").data())
+    self.assertEqual("20091010", nodelist.getNode("/what/date").data())
+    self.assertEqual("PLC:123", nodelist.getNode("/what/source").data())
+    self.assertEqual("PVOL", nodelist.getNode("/what/object").data())
+    self.assertEqual("H5rad 2.2", nodelist.getNode("/what/version").data())
     
     #Where
-    self.assertAlmostEquals(12.0, nodelist.getNode("/where/lon").data(), 4)
-    self.assertAlmostEquals(60.0, nodelist.getNode("/where/lat").data(), 4)
-    self.assertAlmostEquals(0.0, nodelist.getNode("/where/height").data(), 4)
+    self.assertAlmostEqual(12.0, nodelist.getNode("/where/lon").data(), 4)
+    self.assertAlmostEqual(60.0, nodelist.getNode("/where/lat").data(), 4)
+    self.assertAlmostEqual(0.0, nodelist.getNode("/where/height").data(), 4)
 
     #
     # dataset1 (scan1)
     #
-    self.assertEquals("100001", nodelist.getNode("/dataset1/what/starttime").data())
-    self.assertEquals("20091010", nodelist.getNode("/dataset1/what/startdate").data())
-    self.assertEquals("100001", nodelist.getNode("/dataset1/what/endtime").data())
-    self.assertEquals("20091010", nodelist.getNode("/dataset1/what/enddate").data())
-    self.assertEquals("SCAN", nodelist.getNode("/dataset1/what/product").data())
+    self.assertEqual("100001", nodelist.getNode("/dataset1/what/starttime").data())
+    self.assertEqual("20091010", nodelist.getNode("/dataset1/what/startdate").data())
+    self.assertEqual("100001", nodelist.getNode("/dataset1/what/endtime").data())
+    self.assertEqual("20091010", nodelist.getNode("/dataset1/what/enddate").data())
+    self.assertEqual("SCAN", nodelist.getNode("/dataset1/what/product").data())
     
     # dataset1/where
-    self.assertAlmostEquals(0.1, nodelist.getNode("/dataset1/where/elangle").data(), 4)
-    self.assertEquals(2, nodelist.getNode("/dataset1/where/a1gate").data())
-    self.assertAlmostEquals(0.0, nodelist.getNode("/dataset1/where/rstart").data(), 4)
-    self.assertAlmostEquals(5000.0, nodelist.getNode("/dataset1/where/rscale").data(), 4)
-    self.assertEquals(120, nodelist.getNode("/dataset1/where/nbins").data())
-    self.assertEquals(100, nodelist.getNode("/dataset1/where/nrays").data())
+    self.assertAlmostEqual(0.1, nodelist.getNode("/dataset1/where/elangle").data(), 4)
+    self.assertEqual(2, nodelist.getNode("/dataset1/where/a1gate").data())
+    self.assertAlmostEqual(0.0, nodelist.getNode("/dataset1/where/rstart").data(), 4)
+    self.assertAlmostEqual(5000.0, nodelist.getNode("/dataset1/where/rscale").data(), 4)
+    self.assertEqual(120, nodelist.getNode("/dataset1/where/nbins").data())
+    self.assertEqual(100, nodelist.getNode("/dataset1/where/nrays").data())
     
     # Verify that both DBZH and MMH has been stored properly.
     d1field = nodelist.getNode("/dataset1/data1/what/quantity").data()
@@ -974,59 +973,59 @@ class PyRaveIOTest(unittest.TestCase):
       mmhname = "/dataset1/data1"
     
     # dbzh field
-    self.assertEquals("DBZH", nodelist.getNode(dbzhname + "/what/quantity").data())
-    self.assertAlmostEquals(1.0, nodelist.getNode(dbzhname + "/what/gain").data(), 4)
-    self.assertAlmostEquals(0.0, nodelist.getNode(dbzhname + "/what/offset").data(), 4)
-    self.assertAlmostEquals(10.0, nodelist.getNode(dbzhname + "/what/nodata").data(), 4)
-    self.assertAlmostEquals(11.0, nodelist.getNode(dbzhname + "/what/undetect").data(), 4)
+    self.assertEqual("DBZH", nodelist.getNode(dbzhname + "/what/quantity").data())
+    self.assertAlmostEqual(1.0, nodelist.getNode(dbzhname + "/what/gain").data(), 4)
+    self.assertAlmostEqual(0.0, nodelist.getNode(dbzhname + "/what/offset").data(), 4)
+    self.assertAlmostEqual(10.0, nodelist.getNode(dbzhname + "/what/nodata").data(), 4)
+    self.assertAlmostEqual(11.0, nodelist.getNode(dbzhname + "/what/undetect").data(), 4)
     
     # 
-    self.assertEquals(numpy.uint8, nodelist.getNode(dbzhname + "/data").data().dtype)
-    self.assertEquals("IMAGE", nodelist.getNode(dbzhname + "/data/CLASS").data())
-    self.assertEquals("1.2", nodelist.getNode(dbzhname + "/data/IMAGE_VERSION").data())
+    self.assertEqual(numpy.uint8, nodelist.getNode(dbzhname + "/data").data().dtype)
+    self.assertEqual("IMAGE", nodelist.getNode(dbzhname + "/data/CLASS").data())
+    self.assertEqual("1.2", nodelist.getNode(dbzhname + "/data/IMAGE_VERSION").data())
 
     # mmh field
-    self.assertEquals("MMH", nodelist.getNode(mmhname + "/what/quantity").data())
-    self.assertAlmostEquals(10.0, nodelist.getNode(mmhname + "/what/gain").data(), 4)
-    self.assertAlmostEquals(20.0, nodelist.getNode(mmhname + "/what/offset").data(), 4)
-    self.assertAlmostEquals(12.0, nodelist.getNode(mmhname + "/what/nodata").data(), 4)
-    self.assertAlmostEquals(13.0, nodelist.getNode(mmhname + "/what/undetect").data(), 4)
+    self.assertEqual("MMH", nodelist.getNode(mmhname + "/what/quantity").data())
+    self.assertAlmostEqual(10.0, nodelist.getNode(mmhname + "/what/gain").data(), 4)
+    self.assertAlmostEqual(20.0, nodelist.getNode(mmhname + "/what/offset").data(), 4)
+    self.assertAlmostEqual(12.0, nodelist.getNode(mmhname + "/what/nodata").data(), 4)
+    self.assertAlmostEqual(13.0, nodelist.getNode(mmhname + "/what/undetect").data(), 4)
     
     # dataset1/data2/data
-    self.assertEquals(numpy.int16, nodelist.getNode(mmhname + "/data").data().dtype)
+    self.assertEqual(numpy.int16, nodelist.getNode(mmhname + "/data").data().dtype)
 
     # quality field for mmh
-    self.assertEquals("a quality field", nodelist.getNode(mmhname + "/quality1/what/sthis").data())
-    self.assertTrue(nodelist.getNode(mmhname + "/quality1/data").data() != None)
+    self.assertEqual("a quality field", nodelist.getNode(mmhname + "/quality1/what/sthis").data())
+    self.assertTrue(nodelist.getNode(mmhname + "/quality1/data").data() is not None)
     
     #
     # dataset2 (scan2)
     #
-    self.assertEquals("100002", nodelist.getNode("/dataset2/what/starttime").data())
-    self.assertEquals("20091010", nodelist.getNode("/dataset2/what/startdate").data())
-    self.assertEquals("100002", nodelist.getNode("/dataset2/what/endtime").data())
-    self.assertEquals("20091010", nodelist.getNode("/dataset2/what/enddate").data())
-    self.assertEquals("SCAN", nodelist.getNode("/dataset2/what/product").data())
+    self.assertEqual("100002", nodelist.getNode("/dataset2/what/starttime").data())
+    self.assertEqual("20091010", nodelist.getNode("/dataset2/what/startdate").data())
+    self.assertEqual("100002", nodelist.getNode("/dataset2/what/endtime").data())
+    self.assertEqual("20091010", nodelist.getNode("/dataset2/what/enddate").data())
+    self.assertEqual("SCAN", nodelist.getNode("/dataset2/what/product").data())
     
     # dataset2/where
-    self.assertAlmostEquals(0.5, nodelist.getNode("/dataset2/where/elangle").data(), 4)
-    self.assertEquals(1, nodelist.getNode("/dataset2/where/a1gate").data())
-    self.assertAlmostEquals(1000.0, nodelist.getNode("/dataset2/where/rstart").data(), 4)
-    self.assertAlmostEquals(2000.0, nodelist.getNode("/dataset2/where/rscale").data(), 4)
-    self.assertEquals(120, nodelist.getNode("/dataset2/where/nbins").data())
-    self.assertEquals(100, nodelist.getNode("/dataset2/where/nrays").data())
+    self.assertAlmostEqual(0.5, nodelist.getNode("/dataset2/where/elangle").data(), 4)
+    self.assertEqual(1, nodelist.getNode("/dataset2/where/a1gate").data())
+    self.assertAlmostEqual(1000.0, nodelist.getNode("/dataset2/where/rstart").data(), 4)
+    self.assertAlmostEqual(2000.0, nodelist.getNode("/dataset2/where/rscale").data(), 4)
+    self.assertEqual(120, nodelist.getNode("/dataset2/where/nbins").data())
+    self.assertEqual(100, nodelist.getNode("/dataset2/where/nrays").data())
     
     # dataset2/data1/what
-    self.assertEquals("MMM", nodelist.getNode("/dataset2/data1/what/quantity").data())
-    self.assertAlmostEquals(1.0, nodelist.getNode("/dataset2/data1/what/gain").data(), 4)
-    self.assertAlmostEquals(0.0, nodelist.getNode("/dataset2/data1/what/offset").data(), 4)
-    self.assertAlmostEquals(255.0, nodelist.getNode("/dataset2/data1/what/nodata").data(), 4)
-    self.assertAlmostEquals(0.0, nodelist.getNode("/dataset2/data1/what/undetect").data(), 4)
+    self.assertEqual("MMM", nodelist.getNode("/dataset2/data1/what/quantity").data())
+    self.assertAlmostEqual(1.0, nodelist.getNode("/dataset2/data1/what/gain").data(), 4)
+    self.assertAlmostEqual(0.0, nodelist.getNode("/dataset2/data1/what/offset").data(), 4)
+    self.assertAlmostEqual(255.0, nodelist.getNode("/dataset2/data1/what/nodata").data(), 4)
+    self.assertAlmostEqual(0.0, nodelist.getNode("/dataset2/data1/what/undetect").data(), 4)
     
     # dataset2/data1/data
-    self.assertEquals(numpy.uint8, nodelist.getNode("/dataset2/data1/data").data().dtype)
-    self.assertEquals("IMAGE", nodelist.getNode("/dataset2/data1/data/CLASS").data())
-    self.assertEquals("1.2", nodelist.getNode("/dataset2/data1/data/IMAGE_VERSION").data())
+    self.assertEqual(numpy.uint8, nodelist.getNode("/dataset2/data1/data").data().dtype)
+    self.assertEqual("IMAGE", nodelist.getNode("/dataset2/data1/data/CLASS").data())
+    self.assertEqual("1.2", nodelist.getNode("/dataset2/data1/data/IMAGE_VERSION").data())
 
   def test_save_polar_volume_beamwidths(self):
     obj = _polarvolume.new()
@@ -1060,9 +1059,9 @@ class PyRaveIOTest(unittest.TestCase):
     nodelist.selectAll()
     nodelist.fetch()
     
-    self.assertAlmostEquals(2.0, nodelist.getNode("/how/beamwidth").data())
-    self.assertAlmostEquals(3.0, nodelist.getNode("/dataset1/how/beamwidth").data())
-    self.assertAlmostEquals(4.0, nodelist.getNode("/dataset2/how/beamwidth").data())
+    self.assertAlmostEqual(2.0, nodelist.getNode("/how/beamwidth").data())
+    self.assertAlmostEqual(3.0, nodelist.getNode("/dataset1/how/beamwidth").data())
+    self.assertAlmostEqual(4.0, nodelist.getNode("/dataset2/how/beamwidth").data())
 
     nodenames = nodelist.getNodeNames()
     self.assertTrue("/dataset3/how/beamwidth" not in nodenames)
@@ -1098,29 +1097,29 @@ class PyRaveIOTest(unittest.TestCase):
     ios.save()
 
     obj = _raveio.open(self.TEMPORARY_FILE)
-    self.assertEquals(_rave.Rave_ObjectType_IMAGE, obj.object.objectType);
+    self.assertEqual(_rave.Rave_ObjectType_IMAGE, obj.object.objectType);
   
   def test_load_scan(self):
     obj = _raveio.open(self.FIXTURE_SCAN)
-    self.assertNotEqual(-1, string.find(`type(obj.object)`, "PolarScanCore"))
+    self.assertNotEqual(-1, str(type(obj.object)).find("PolarScanCore"))
     scan = obj.object
 
-    self.assertAlmostEquals(40.0, scan.elangle*180.0/math.pi, 4)
+    self.assertAlmostEqual(40.0, scan.elangle*180.0/math.pi, 4)
 
-    self.assertEquals("20100702", scan.date)
-    self.assertEquals("113200", scan.time)
-    self.assertEquals("WMO:02570,RAD:SE48,PLC:Vilebo", scan.source)
-    self.assertAlmostEquals(222, scan.height, 4)
-    self.assertAlmostEquals(58.106, scan.latitude*180.0/math.pi, 4)
-    self.assertAlmostEquals(15.94, scan.longitude*180.0/math.pi, 4)
+    self.assertEqual("20100702", scan.date)
+    self.assertEqual("113200", scan.time)
+    self.assertEqual("WMO:02570,RAD:SE48,PLC:Vilebo", scan.source)
+    self.assertAlmostEqual(222, scan.height, 4)
+    self.assertAlmostEqual(58.106, scan.latitude*180.0/math.pi, 4)
+    self.assertAlmostEqual(15.94, scan.longitude*180.0/math.pi, 4)
     
     p1 = scan.getParameter("DBZH")
-    self.assertAlmostEquals(0.4, p1.gain, 4)
-    self.assertAlmostEquals(-30.0, p1.offset, 4)
+    self.assertAlmostEqual(0.4, p1.gain, 4)
+    self.assertAlmostEqual(-30.0, p1.offset, 4)
     
     p2 = scan.getParameter("VRAD")
-    self.assertAlmostEquals(0.375, p2.gain, 4)
-    self.assertAlmostEquals(-48.0, p2.offset, 4)
+    self.assertAlmostEqual(0.375, p2.gain, 4)
+    self.assertAlmostEqual(-48.0, p2.offset, 4)
   
   def test_write_scan(self):
     obj = _raveio.open(self.FIXTURE_VOLUME)
@@ -1137,27 +1136,27 @@ class PyRaveIOTest(unittest.TestCase):
     nodelist.selectAll()
     nodelist.fetch()
     
-    self.assertEquals("120000", nodelist.getNode("/what/time").data())
-    self.assertEquals("20090501", nodelist.getNode("/what/date").data())
-    self.assertEquals("WMO:02606,RAD:SE50", nodelist.getNode("/what/source").data())
-    self.assertEquals("SCAN", nodelist.getNode("/what/object").data())
-    self.assertEquals("H5rad 2.2", nodelist.getNode("/what/version").data())
-    self.assertAlmostEquals(209.0, nodelist.getNode("/where/height").data(), 4)
-    self.assertAlmostEquals(12.8544, nodelist.getNode("/where/lon").data(), 4)
-    self.assertAlmostEquals(56.3675, nodelist.getNode("/where/lat").data(), 4)
+    self.assertEqual("120000", nodelist.getNode("/what/time").data())
+    self.assertEqual("20090501", nodelist.getNode("/what/date").data())
+    self.assertEqual("WMO:02606,RAD:SE50", nodelist.getNode("/what/source").data())
+    self.assertEqual("SCAN", nodelist.getNode("/what/object").data())
+    self.assertEqual("H5rad 2.2", nodelist.getNode("/what/version").data())
+    self.assertAlmostEqual(209.0, nodelist.getNode("/where/height").data(), 4)
+    self.assertAlmostEqual(12.8544, nodelist.getNode("/where/lon").data(), 4)
+    self.assertAlmostEqual(56.3675, nodelist.getNode("/where/lat").data(), 4)
     
-    self.assertEquals("20090501", nodelist.getNode("/dataset1/what/startdate").data())
-    self.assertEquals("120021", nodelist.getNode("/dataset1/what/starttime").data())
-    self.assertEquals("20090501", nodelist.getNode("/dataset1/what/enddate").data())
-    self.assertEquals("120051", nodelist.getNode("/dataset1/what/endtime").data())
-    self.assertEquals("SCAN", nodelist.getNode("/dataset1/what/product").data())
+    self.assertEqual("20090501", nodelist.getNode("/dataset1/what/startdate").data())
+    self.assertEqual("120021", nodelist.getNode("/dataset1/what/starttime").data())
+    self.assertEqual("20090501", nodelist.getNode("/dataset1/what/enddate").data())
+    self.assertEqual("120051", nodelist.getNode("/dataset1/what/endtime").data())
+    self.assertEqual("SCAN", nodelist.getNode("/dataset1/what/product").data())
 
-    self.assertEquals(0, nodelist.getNode("/dataset1/where/a1gate").data())
-    self.assertAlmostEquals(0.5, nodelist.getNode("/dataset1/where/elangle").data())
-    self.assertEquals(120, nodelist.getNode("/dataset1/where/nbins").data())
-    self.assertEquals(420, nodelist.getNode("/dataset1/where/nrays").data())
-    self.assertAlmostEquals(2000.0, nodelist.getNode("/dataset1/where/rscale").data(), 4)
-    self.assertAlmostEquals(0.0, nodelist.getNode("/dataset1/where/rstart").data(), 4)
+    self.assertEqual(0, nodelist.getNode("/dataset1/where/a1gate").data())
+    self.assertAlmostEqual(0.5, nodelist.getNode("/dataset1/where/elangle").data())
+    self.assertEqual(120, nodelist.getNode("/dataset1/where/nbins").data())
+    self.assertEqual(420, nodelist.getNode("/dataset1/where/nrays").data())
+    self.assertAlmostEqual(2000.0, nodelist.getNode("/dataset1/where/rscale").data(), 4)
+    self.assertAlmostEqual(0.0, nodelist.getNode("/dataset1/where/rstart").data(), 4)
 
   def test_write_scan_with_quality(self):
     obj = _raveio.open(self.FIXTURE_VOLUME)
@@ -1189,21 +1188,21 @@ class PyRaveIOTest(unittest.TestCase):
     nodelist.selectAll()
     nodelist.fetch()
     
-    self.assertEquals("a string", nodelist.getNode("/dataset1/quality1/what/strvalue").data())
-    self.assertEquals(123, nodelist.getNode("/dataset1/quality1/where/lonvalue").data())
-    self.assertAlmostEquals(1.25, nodelist.getNode("/dataset1/quality1/how/flovalue").data(), 4)
+    self.assertEqual("a string", nodelist.getNode("/dataset1/quality1/what/strvalue").data())
+    self.assertEqual(123, nodelist.getNode("/dataset1/quality1/where/lonvalue").data())
+    self.assertAlmostEqual(1.25, nodelist.getNode("/dataset1/quality1/how/flovalue").data(), 4)
 
     data = nodelist.getNode("/dataset1/quality1/data").data()
-    self.assertEquals(data.shape[0], 10)
-    self.assertEquals(data.shape[1], 10)
+    self.assertEqual(data.shape[0], 10)
+    self.assertEqual(data.shape[1], 10)
 
-    self.assertEquals("str", nodelist.getNode("/dataset1/data1/quality1/what/pstrvalue").data())
-    self.assertEquals(321, nodelist.getNode("/dataset1/data1/quality1/where/plonvalue").data())
-    self.assertAlmostEquals(23.0, nodelist.getNode("/dataset1/data1/quality1/how/pflovalue").data(), 4)
+    self.assertEqual("str", nodelist.getNode("/dataset1/data1/quality1/what/pstrvalue").data())
+    self.assertEqual(321, nodelist.getNode("/dataset1/data1/quality1/where/plonvalue").data())
+    self.assertAlmostEqual(23.0, nodelist.getNode("/dataset1/data1/quality1/how/pflovalue").data(), 4)
 
     data = nodelist.getNode("/dataset1/data1/quality1/data").data()
-    self.assertEquals(data.shape[0], 10)
-    self.assertEquals(data.shape[1], 10)
+    self.assertEqual(data.shape[0], 10)
+    self.assertEqual(data.shape[1], 10)
 
   def test_read_write_cartesian_image(self):
     image = _cartesian.new()
@@ -1240,8 +1239,8 @@ class PyRaveIOTest(unittest.TestCase):
     nodelist.selectAll()
     nodelist.fetch()
     
-    self.assertEquals("DBZH", nodelist.getNode("/dataset1/data1/what/quantity").data())
-    self.assertEquals("IMAGE", nodelist.getNode("/what/object").data())
+    self.assertEqual("DBZH", nodelist.getNode("/dataset1/data1/what/quantity").data())
+    self.assertEqual("IMAGE", nodelist.getNode("/what/object").data())
   
   def test_read_write_scan(self):
     obj = _raveio.open(self.FIXTURE_SCAN)
@@ -1253,7 +1252,7 @@ class PyRaveIOTest(unittest.TestCase):
     nodelist.selectAll()
     nodelist.fetch()
     
-    self.assertEquals("SCAN", nodelist.getNode("/what/object").data())
+    self.assertEqual("SCAN", nodelist.getNode("/what/object").data())
 
   def test_save_filename_scan(self):
     obj = _raveio.open(self.FIXTURE_SCAN)
@@ -1268,7 +1267,7 @@ class PyRaveIOTest(unittest.TestCase):
     nodelist.selectAll()
     nodelist.fetch()
     
-    self.assertEquals("SCAN", nodelist.getNode("/what/object").data())
+    self.assertEqual("SCAN", nodelist.getNode("/what/object").data())
 
   def test_save_nofilename_scan(self):
     obj = _raveio.open(self.FIXTURE_SCAN)
@@ -1284,7 +1283,7 @@ class PyRaveIOTest(unittest.TestCase):
     nodelist.selectAll()
     nodelist.fetch()
     
-    self.assertEquals("SCAN", nodelist.getNode("/what/object").data())
+    self.assertEqual("SCAN", nodelist.getNode("/what/object").data())
   
   def test_save_scan_from_volume_check_metadata(self):
     obj = _raveio.open(self.FIXTURE_VOLUME)
@@ -1300,7 +1299,7 @@ class PyRaveIOTest(unittest.TestCase):
     nodelist.selectAll()
     nodelist.fetch()
     
-    nodenames = nodelist.getNodeNames().keys();
+    nodenames = list(nodelist.getNodeNames().keys());
     VALID_NAMES=["/Conventions", "/what","/what/date","/what/object","/what/source","/what/time",
                  "/what/version","/where","/where/height","/where/lat","/where/lon","/how","/how/beamwidth","/dataset1",
                  "/dataset1/data1","/dataset1/data1/data","/dataset1/data1/data/CLASS","/dataset1/data1/data/IMAGE_VERSION",
@@ -1317,40 +1316,40 @@ class PyRaveIOTest(unittest.TestCase):
       self.assertTrue(name in nodenames)
       nodenames.remove(name)
       
-    self.assertEquals("20090501", nodelist.getNode("/what/date").data())
-    self.assertEquals("SCAN", nodelist.getNode("/what/object").data())
-    self.assertEquals("WMO:02606,RAD:SE50", nodelist.getNode("/what/source").data())
-    self.assertEquals("120000", nodelist.getNode("/what/time").data())
-    self.assertEquals("H5rad 2.2", nodelist.getNode("/what/version").data())
-    self.assertAlmostEquals(209, nodelist.getNode("/where/height").data(), 4)
-    self.assertAlmostEquals(56.3675, nodelist.getNode("/where/lat").data(), 4)
-    self.assertAlmostEquals(12.8544, nodelist.getNode("/where/lon").data(), 4)
+    self.assertEqual("20090501", nodelist.getNode("/what/date").data())
+    self.assertEqual("SCAN", nodelist.getNode("/what/object").data())
+    self.assertEqual("WMO:02606,RAD:SE50", nodelist.getNode("/what/source").data())
+    self.assertEqual("120000", nodelist.getNode("/what/time").data())
+    self.assertEqual("H5rad 2.2", nodelist.getNode("/what/version").data())
+    self.assertAlmostEqual(209, nodelist.getNode("/where/height").data(), 4)
+    self.assertAlmostEqual(56.3675, nodelist.getNode("/where/lat").data(), 4)
+    self.assertAlmostEqual(12.8544, nodelist.getNode("/where/lon").data(), 4)
 
-    self.assertEquals("20090501", nodelist.getNode("/dataset1/what/startdate").data())
-    self.assertEquals("120021", nodelist.getNode("/dataset1/what/starttime").data())
-    self.assertEquals("SCAN", nodelist.getNode("/dataset1/what/product").data())
+    self.assertEqual("20090501", nodelist.getNode("/dataset1/what/startdate").data())
+    self.assertEqual("120021", nodelist.getNode("/dataset1/what/starttime").data())
+    self.assertEqual("SCAN", nodelist.getNode("/dataset1/what/product").data())
 
-    self.assertEquals("20090501", nodelist.getNode("/dataset1/what/enddate").data())
-    self.assertEquals("120051", nodelist.getNode("/dataset1/what/endtime").data())
+    self.assertEqual("20090501", nodelist.getNode("/dataset1/what/enddate").data())
+    self.assertEqual("120051", nodelist.getNode("/dataset1/what/endtime").data())
 
-    self.assertAlmostEquals(0, nodelist.getNode("/dataset1/where/a1gate").data(), 4)
-    self.assertAlmostEquals(0.5, nodelist.getNode("/dataset1/where/elangle").data(), 4)
-    self.assertEquals(120, nodelist.getNode("/dataset1/where/nbins").data())
-    self.assertEquals(420, nodelist.getNode("/dataset1/where/nrays").data())
-    self.assertAlmostEquals(2000, nodelist.getNode("/dataset1/where/rscale").data(), 4)
-    self.assertAlmostEquals(0.0, nodelist.getNode("/dataset1/where/rstart").data(), 4)
+    self.assertAlmostEqual(0, nodelist.getNode("/dataset1/where/a1gate").data(), 4)
+    self.assertAlmostEqual(0.5, nodelist.getNode("/dataset1/where/elangle").data(), 4)
+    self.assertEqual(120, nodelist.getNode("/dataset1/where/nbins").data())
+    self.assertEqual(420, nodelist.getNode("/dataset1/where/nrays").data())
+    self.assertAlmostEqual(2000, nodelist.getNode("/dataset1/where/rscale").data(), 4)
+    self.assertAlmostEqual(0.0, nodelist.getNode("/dataset1/where/rstart").data(), 4)
 
-    self.assertAlmostEquals(0.4, nodelist.getNode("/dataset1/data1/what/gain").data(), 4)
-    self.assertAlmostEquals(255, nodelist.getNode("/dataset1/data1/what/nodata").data(), 4)
-    self.assertAlmostEquals(-30, nodelist.getNode("/dataset1/data1/what/offset").data(), 4)
-    self.assertEquals("DBZH", nodelist.getNode("/dataset1/data1/what/quantity").data())
-    self.assertAlmostEquals(0, nodelist.getNode("/dataset1/data1/what/undetect").data(), 4)
+    self.assertAlmostEqual(0.4, nodelist.getNode("/dataset1/data1/what/gain").data(), 4)
+    self.assertAlmostEqual(255, nodelist.getNode("/dataset1/data1/what/nodata").data(), 4)
+    self.assertAlmostEqual(-30, nodelist.getNode("/dataset1/data1/what/offset").data(), 4)
+    self.assertEqual("DBZH", nodelist.getNode("/dataset1/data1/what/quantity").data())
+    self.assertAlmostEqual(0, nodelist.getNode("/dataset1/data1/what/undetect").data(), 4)
 
-    self.assertAlmostEquals(0.1875, nodelist.getNode("/dataset1/data2/what/gain").data(), 4)
-    self.assertAlmostEquals(255, nodelist.getNode("/dataset1/data2/what/nodata").data(), 4)
-    self.assertAlmostEquals(-24, nodelist.getNode("/dataset1/data2/what/offset").data(), 4)
-    self.assertEquals("VRAD", nodelist.getNode("/dataset1/data2/what/quantity").data())
-    self.assertAlmostEquals(0, nodelist.getNode("/dataset1/data2/what/undetect").data(), 4)
+    self.assertAlmostEqual(0.1875, nodelist.getNode("/dataset1/data2/what/gain").data(), 4)
+    self.assertAlmostEqual(255, nodelist.getNode("/dataset1/data2/what/nodata").data(), 4)
+    self.assertAlmostEqual(-24, nodelist.getNode("/dataset1/data2/what/offset").data(), 4)
+    self.assertEqual("VRAD", nodelist.getNode("/dataset1/data2/what/quantity").data())
+    self.assertAlmostEqual(0, nodelist.getNode("/dataset1/data2/what/undetect").data(), 4)
   
   def test_read_arrays_from_scan(self):
     expected = [0.0109863, 1.01624, 2.02148, 2.99927, 4.0155, 5.03174, 6.00403, \
@@ -1408,9 +1407,9 @@ class PyRaveIOTest(unittest.TestCase):
     scan = obj.object
     attr = scan.getAttribute("how/startazA")
     self.assertTrue(isinstance(attr, numpy.ndarray))
-    self.assertEquals(len(attr), len(expected))
+    self.assertEqual(len(attr), len(expected))
     for i in range(len(expected)):
-      self.assertAlmostEquals(attr[i], expected[i], 2)
+      self.assertAlmostEqual(attr[i], expected[i], 2)
   
   def test_write_scan_with_array(self):
     obj = _raveio.open(self.FIXTURE_VOLUME)
@@ -1433,10 +1432,10 @@ class PyRaveIOTest(unittest.TestCase):
     ldata = nodelist.getNode("/how/alongarray").data()
     ddata = nodelist.getNode("/how/adoublearray").data()
     
-    self.assertEquals(1, ldata[1])
-    self.assertEquals(5, ldata[5])
-    self.assertAlmostEquals(1.0, ddata[1], 2)
-    self.assertAlmostEquals(5.0, ddata[5], 2)
+    self.assertEqual(1, ldata[1])
+    self.assertEqual(5, ldata[5])
+    self.assertAlmostEqual(1.0, ddata[1], 2)
+    self.assertAlmostEqual(5.0, ddata[5], 2)
 
   def test_write_scanparam_with_array(self):
     obj = _raveio.open(self.FIXTURE_VOLUME)
@@ -1460,10 +1459,10 @@ class PyRaveIOTest(unittest.TestCase):
     ldata = nodelist.getNode("/dataset1/data1/how/alongarray").data()
     ddata = nodelist.getNode("/dataset1/data1/how/adoublearray").data()
     
-    self.assertEquals(1, ldata[1])
-    self.assertEquals(5, ldata[5])
-    self.assertAlmostEquals(1.0, ddata[1], 2)
-    self.assertAlmostEquals(5.0, ddata[5], 2)
+    self.assertEqual(1, ldata[1])
+    self.assertEqual(5, ldata[5])
+    self.assertAlmostEqual(1.0, ddata[1], 2)
+    self.assertAlmostEqual(5.0, ddata[5], 2)
 
   def test_read_scanparam_with_array(self):
     obj = _raveio.open(self.FIXTURE_VOLUME)
@@ -1487,14 +1486,14 @@ class PyRaveIOTest(unittest.TestCase):
     ldata = param.getAttribute("how/alongarray")
     ddata = param.getAttribute("how/adoublearray")
     
-    self.assertEquals(10, len(ldata))
+    self.assertEqual(10, len(ldata))
     self.assertTrue(isinstance(ldata, numpy.ndarray))
-    self.assertEquals(1, ldata[1])
-    self.assertEquals(5, ldata[5])
-    self.assertEquals(10, len(ddata))
+    self.assertEqual(1, ldata[1])
+    self.assertEqual(5, ldata[5])
+    self.assertEqual(10, len(ddata))
     self.assertTrue(isinstance(ddata, numpy.ndarray))
-    self.assertAlmostEquals(1.0, ddata[1], 2)
-    self.assertAlmostEquals(5.0, ddata[5], 2)
+    self.assertAlmostEqual(1.0, ddata[1], 2)
+    self.assertAlmostEqual(5.0, ddata[5], 2)
 
   def test_write_volume_with_array(self):
     obj = _raveio.open(self.FIXTURE_VOLUME)
@@ -1516,10 +1515,10 @@ class PyRaveIOTest(unittest.TestCase):
     ldata = nodelist.getNode("/how/alongarray").data()
     ddata = nodelist.getNode("/how/adoublearray").data()
     
-    self.assertEquals(1, ldata[1])
-    self.assertEquals(5, ldata[5])
-    self.assertAlmostEquals(1.0, ddata[1], 2)
-    self.assertAlmostEquals(5.0, ddata[5], 2)
+    self.assertEqual(1, ldata[1])
+    self.assertEqual(5, ldata[5])
+    self.assertAlmostEqual(1.0, ddata[1], 2)
+    self.assertAlmostEqual(5.0, ddata[5], 2)
 
   def test_read_volume_with_array(self):
     obj = _raveio.open(self.FIXTURE_VOLUME)
@@ -1540,14 +1539,14 @@ class PyRaveIOTest(unittest.TestCase):
     ldata = vol.getAttribute("how/alongarray")
     ddata = vol.getAttribute("how/adoublearray")
     
-    self.assertEquals(10, len(ldata))
+    self.assertEqual(10, len(ldata))
     self.assertTrue(isinstance(ldata, numpy.ndarray))
-    self.assertEquals(1, ldata[1])
-    self.assertEquals(5, ldata[5])
-    self.assertEquals(10, len(ddata))
+    self.assertEqual(1, ldata[1])
+    self.assertEqual(5, ldata[5])
+    self.assertEqual(10, len(ddata))
     self.assertTrue(isinstance(ddata, numpy.ndarray))
-    self.assertAlmostEquals(1.0, ddata[1], 2)
-    self.assertAlmostEquals(5.0, ddata[5], 2)
+    self.assertAlmostEqual(1.0, ddata[1], 2)
+    self.assertAlmostEqual(5.0, ddata[5], 2)
 
   def test_write_cartesian_with_array(self):
     obj = _raveio.open(self.FIXTURE_CVOL_CAPPI)
@@ -1570,10 +1569,10 @@ class PyRaveIOTest(unittest.TestCase):
     ldata = nodelist.getNode("/how/alongarray").data()
     ddata = nodelist.getNode("/how/adoublearray").data()
     
-    self.assertEquals(1, ldata[1])
-    self.assertEquals(5, ldata[5])
-    self.assertAlmostEquals(1.0, ddata[1], 2)
-    self.assertAlmostEquals(5.0, ddata[5], 2)
+    self.assertEqual(1, ldata[1])
+    self.assertEqual(5, ldata[5])
+    self.assertAlmostEqual(1.0, ddata[1], 2)
+    self.assertAlmostEqual(5.0, ddata[5], 2)
 
   def test_read_cartesian_with_array(self):
     obj = _raveio.open(self.FIXTURE_CVOL_CAPPI)
@@ -1595,14 +1594,14 @@ class PyRaveIOTest(unittest.TestCase):
     ldata = img.getAttribute("how/alongarray")
     ddata = img.getAttribute("how/adoublearray")
     
-    self.assertEquals(10, len(ldata))
+    self.assertEqual(10, len(ldata))
     self.assertTrue(isinstance(ldata, numpy.ndarray))
-    self.assertEquals(1, ldata[1])
-    self.assertEquals(5, ldata[5])
-    self.assertEquals(10, len(ddata))
+    self.assertEqual(1, ldata[1])
+    self.assertEqual(5, ldata[5])
+    self.assertEqual(10, len(ddata))
     self.assertTrue(isinstance(ddata, numpy.ndarray))
-    self.assertAlmostEquals(1.0, ddata[1], 2)
-    self.assertAlmostEquals(5.0, ddata[5], 2)
+    self.assertAlmostEqual(1.0, ddata[1], 2)
+    self.assertAlmostEqual(5.0, ddata[5], 2)
 
   def test_write_cartesianvolume_with_array(self):
     obj = _raveio.open(self.FIXTURE_CVOL_CAPPI)
@@ -1624,10 +1623,10 @@ class PyRaveIOTest(unittest.TestCase):
     ldata = nodelist.getNode("/how/alongarray").data()
     ddata = nodelist.getNode("/how/adoublearray").data()
     
-    self.assertEquals(1, ldata[1])
-    self.assertEquals(5, ldata[5])
-    self.assertAlmostEquals(1.0, ddata[1], 2)
-    self.assertAlmostEquals(5.0, ddata[5], 2)
+    self.assertEqual(1, ldata[1])
+    self.assertEqual(5, ldata[5])
+    self.assertAlmostEqual(1.0, ddata[1], 2)
+    self.assertAlmostEqual(5.0, ddata[5], 2)
    
   def test_read_cartesianvolume_with_array(self):
     obj = _raveio.open(self.FIXTURE_CVOL_CAPPI)
@@ -1648,34 +1647,34 @@ class PyRaveIOTest(unittest.TestCase):
     ldata = cvol.getAttribute("how/alongarray")
     ddata = cvol.getAttribute("how/adoublearray")
     
-    self.assertEquals(10, len(ldata))
+    self.assertEqual(10, len(ldata))
     self.assertTrue(isinstance(ldata, numpy.ndarray))
-    self.assertEquals(1, ldata[1])
-    self.assertEquals(5, ldata[5])
-    self.assertEquals(10, len(ddata))
+    self.assertEqual(1, ldata[1])
+    self.assertEqual(5, ldata[5])
+    self.assertEqual(10, len(ddata))
     self.assertTrue(isinstance(ddata, numpy.ndarray))
-    self.assertAlmostEquals(1.0, ddata[1], 2)
-    self.assertAlmostEquals(5.0, ddata[5], 2)
+    self.assertAlmostEqual(1.0, ddata[1], 2)
+    self.assertAlmostEqual(5.0, ddata[5], 2)
   
   def test_read_vp(self):
     # Read VP
     vp = _raveio.open(self.FIXTURE_VP).object
-    self.assertEquals("PLC:1234", vp.source)
-    self.assertEquals("20100101", vp.date)
-    self.assertEquals("111500", vp.time)
-    self.assertAlmostEquals(10.0, vp.longitude * 180.0 / math.pi, 4)
-    self.assertAlmostEquals(15.0, vp.latitude * 180.0 / math.pi, 4)
-    self.assertAlmostEquals(200.0, vp.height, 4)
-    self.assertEquals(10, vp.getLevels())
-    self.assertAlmostEquals(5.0, vp.interval, 4)
-    self.assertAlmostEquals(10.0, vp.minheight, 4)
-    self.assertAlmostEquals(20.0, vp.maxheight, 4)
+    self.assertEqual("PLC:1234", vp.source)
+    self.assertEqual("20100101", vp.date)
+    self.assertEqual("111500", vp.time)
+    self.assertAlmostEqual(10.0, vp.longitude * 180.0 / math.pi, 4)
+    self.assertAlmostEqual(15.0, vp.latitude * 180.0 / math.pi, 4)
+    self.assertAlmostEqual(200.0, vp.height, 4)
+    self.assertEqual(10, vp.getLevels())
+    self.assertAlmostEqual(5.0, vp.interval, 4)
+    self.assertAlmostEqual(10.0, vp.minheight, 4)
+    self.assertAlmostEqual(20.0, vp.maxheight, 4)
     
     field = vp.getField("ff")
-    self.assertEquals("ff", field.getAttribute("what/quantity"))
+    self.assertEqual("ff", field.getAttribute("what/quantity"))
     data = field.getData()
-    self.assertEquals(10, numpy.shape(data)[0])
-    self.assertEquals(1, numpy.shape(data)[1])
+    self.assertEqual(10, numpy.shape(data)[0])
+    self.assertEqual(1, numpy.shape(data)[1])
   
   def test_write_vp(self):
     vp = _verticalprofile.new()
@@ -1708,20 +1707,20 @@ class PyRaveIOTest(unittest.TestCase):
     nodelist.selectAll()
     nodelist.fetch()
     
-    self.assertEquals("20100101", nodelist.getNode("/what/date").data())
-    self.assertEquals("VP", nodelist.getNode("/what/object").data())
-    self.assertEquals("PLC:1234", nodelist.getNode("/what/source").data())
-    self.assertEquals("120000", nodelist.getNode("/what/time").data())
-    self.assertEquals("H5rad 2.2", nodelist.getNode("/what/version").data())
+    self.assertEqual("20100101", nodelist.getNode("/what/date").data())
+    self.assertEqual("VP", nodelist.getNode("/what/object").data())
+    self.assertEqual("PLC:1234", nodelist.getNode("/what/source").data())
+    self.assertEqual("120000", nodelist.getNode("/what/time").data())
+    self.assertEqual("H5rad 2.2", nodelist.getNode("/what/version").data())
     
-    self.assertAlmostEquals(100.0, nodelist.getNode("/where/height").data(), 4)
-    self.assertAlmostEquals(15.0, nodelist.getNode("/where/lat").data(), 4)
-    self.assertAlmostEquals(10.0, nodelist.getNode("/where/lon").data(), 4)
+    self.assertAlmostEqual(100.0, nodelist.getNode("/where/height").data(), 4)
+    self.assertAlmostEqual(15.0, nodelist.getNode("/where/lat").data(), 4)
+    self.assertAlmostEqual(10.0, nodelist.getNode("/where/lon").data(), 4)
 
-    self.assertEquals(10, nodelist.getNode("/where/levels").data())
-    self.assertAlmostEquals(5.0, nodelist.getNode("/where/interval").data(), 4)
-    self.assertAlmostEquals(10.0, nodelist.getNode("/where/minheight").data(), 4)
-    self.assertAlmostEquals(20.0, nodelist.getNode("/where/maxheight").data(), 4)
+    self.assertEqual(10, nodelist.getNode("/where/levels").data())
+    self.assertAlmostEqual(5.0, nodelist.getNode("/where/interval").data(), 4)
+    self.assertAlmostEqual(10.0, nodelist.getNode("/where/minheight").data(), 4)
+    self.assertAlmostEqual(20.0, nodelist.getNode("/where/maxheight").data(), 4)
     
     f1 = nodelist.getNode("/dataset1/data1/what/quantity").data()
     f1data = nodelist.getNode("/dataset1/data1/data").data()
@@ -1729,14 +1728,14 @@ class PyRaveIOTest(unittest.TestCase):
     f2data = nodelist.getNode("/dataset1/data2/data").data() 
 
     if f1 == "ff":
-      self.assertEquals("ff_dev", f2)
+      self.assertEqual("ff_dev", f2)
     elif f1 == "ff_dev":
-      self.assertEquals("ff", f2)
+      self.assertEqual("ff", f2)
   
-    self.assertEquals(10, numpy.shape(f1data)[0])
-    self.assertEquals(1, numpy.shape(f1data)[1])
-    self.assertEquals(10, numpy.shape(f2data)[0])
-    self.assertEquals(1, numpy.shape(f2data)[1])
+    self.assertEqual(10, numpy.shape(f1data)[0])
+    self.assertEqual(1, numpy.shape(f1data)[1])
+    self.assertEqual(10, numpy.shape(f2data)[0])
+    self.assertEqual(1, numpy.shape(f2data)[1])
 
   def test_write_vp_dev_bird(self):
     vp = _verticalprofile.new()
@@ -1769,20 +1768,20 @@ class PyRaveIOTest(unittest.TestCase):
     nodelist.selectAll()
     nodelist.fetch()
     
-    self.assertEquals("20100101", nodelist.getNode("/what/date").data())
-    self.assertEquals("VP", nodelist.getNode("/what/object").data())
-    self.assertEquals("PLC:1234", nodelist.getNode("/what/source").data())
-    self.assertEquals("120000", nodelist.getNode("/what/time").data())
-    self.assertEquals("H5rad 2.2", nodelist.getNode("/what/version").data())
+    self.assertEqual("20100101", nodelist.getNode("/what/date").data())
+    self.assertEqual("VP", nodelist.getNode("/what/object").data())
+    self.assertEqual("PLC:1234", nodelist.getNode("/what/source").data())
+    self.assertEqual("120000", nodelist.getNode("/what/time").data())
+    self.assertEqual("H5rad 2.2", nodelist.getNode("/what/version").data())
     
-    self.assertAlmostEquals(100.0, nodelist.getNode("/where/height").data(), 4)
-    self.assertAlmostEquals(15.0, nodelist.getNode("/where/lat").data(), 4)
-    self.assertAlmostEquals(10.0, nodelist.getNode("/where/lon").data(), 4)
+    self.assertAlmostEqual(100.0, nodelist.getNode("/where/height").data(), 4)
+    self.assertAlmostEqual(15.0, nodelist.getNode("/where/lat").data(), 4)
+    self.assertAlmostEqual(10.0, nodelist.getNode("/where/lon").data(), 4)
 
-    self.assertEquals(10, nodelist.getNode("/where/levels").data())
-    self.assertAlmostEquals(5.0, nodelist.getNode("/where/interval").data(), 4)
-    self.assertAlmostEquals(10.0, nodelist.getNode("/where/minheight").data(), 4)
-    self.assertAlmostEquals(20.0, nodelist.getNode("/where/maxheight").data(), 4)
+    self.assertEqual(10, nodelist.getNode("/where/levels").data())
+    self.assertAlmostEqual(5.0, nodelist.getNode("/where/interval").data(), 4)
+    self.assertAlmostEqual(10.0, nodelist.getNode("/where/minheight").data(), 4)
+    self.assertAlmostEqual(20.0, nodelist.getNode("/where/maxheight").data(), 4)
     
     f1 = nodelist.getNode("/dataset1/data1/what/quantity").data()
     f1data = nodelist.getNode("/dataset1/data1/data").data()
@@ -1790,14 +1789,14 @@ class PyRaveIOTest(unittest.TestCase):
     f2data = nodelist.getNode("/dataset1/data2/data").data() 
 
     if f1 == "dev_bird":
-      self.assertEquals("ff_dev", f2)
+      self.assertEqual("ff_dev", f2)
     elif f1 == "ff_dev":
-      self.assertEquals("dev_bird", f2)
+      self.assertEqual("dev_bird", f2)
   
-    self.assertEquals(10, numpy.shape(f1data)[0])
-    self.assertEquals(1, numpy.shape(f1data)[1])
-    self.assertEquals(10, numpy.shape(f2data)[0])
-    self.assertEquals(1, numpy.shape(f2data)[1])
+    self.assertEqual(10, numpy.shape(f1data)[0])
+    self.assertEqual(1, numpy.shape(f1data)[1])
+    self.assertEqual(10, numpy.shape(f2data)[0])
+    self.assertEqual(1, numpy.shape(f2data)[1])
   
   def testReadBadlyFormattedODIM(self):
     nodelist = _pyhl.nodelist()
@@ -1842,58 +1841,58 @@ class PyRaveIOTest(unittest.TestCase):
     try:
       obj = _raveio.open(self.TEMPORARY_FILE)
       self.fail("Expected IOError")
-    except IOError, e:
+    except IOError:
       pass
     
   def testBufrTableDir(self):
     obj = _raveio.new()
-    self.assertEquals(None, obj.bufr_table_dir)
+    self.assertEqual(None, obj.bufr_table_dir)
     obj.bufr_table_dir = "/tmp"
-    self.assertEquals("/tmp", obj.bufr_table_dir)
+    self.assertEqual("/tmp", obj.bufr_table_dir)
     obj.bufr_table_dir = None
-    self.assertEquals(None, obj.bufr_table_dir)
+    self.assertEqual(None, obj.bufr_table_dir)
   
   def testReadBufr(self):
     if not _raveio.supports(_raveio.RaveIO_ODIM_FileFormat_BUFR):
       return
     result = _raveio.open(self.FIXTURE_BUFR_PVOL)
     
-    self.assertEquals(_raveio.RaveIO_ODIM_FileFormat_BUFR, result.file_format);
+    self.assertEqual(_raveio.RaveIO_ODIM_FileFormat_BUFR, result.file_format);
     
     volume = result.object
-    self.assertAlmostEquals(1.8347, volume.longitude * 180.0 / math.pi, 4)
-    self.assertAlmostEquals(50.1358, volume.latitude * 180.0 / math.pi, 4)
-    self.assertAlmostEquals(70.0, volume.height, 4)
-    self.assertEquals("20090615", volume.date)
-    self.assertEquals("032142", volume.time)
-    self.assertEquals("WMO:07005", volume.source)
-    self.assertEquals(3, volume.getNumberOfScans())
+    self.assertAlmostEqual(1.8347, volume.longitude * 180.0 / math.pi, 4)
+    self.assertAlmostEqual(50.1358, volume.latitude * 180.0 / math.pi, 4)
+    self.assertAlmostEqual(70.0, volume.height, 4)
+    self.assertEqual("20090615", volume.date)
+    self.assertEqual("032142", volume.time)
+    self.assertEqual("WMO:07005", volume.source)
+    self.assertEqual(3, volume.getNumberOfScans())
     
     scan = volume.getScan(0)
-    self.assertAlmostEquals(0.4, scan.elangle * 180.0 / math.pi, 4)
-    self.assertEquals(256, scan.nbins)
-    self.assertEquals(720, scan.nrays)
-    self.assertAlmostEquals(900.0, scan.rscale, 4)
-    self.assertEquals(0, scan.a1gate)
+    self.assertAlmostEqual(0.4, scan.elangle * 180.0 / math.pi, 4)
+    self.assertEqual(256, scan.nbins)
+    self.assertEqual(720, scan.nrays)
+    self.assertAlmostEqual(900.0, scan.rscale, 4)
+    self.assertEqual(0, scan.a1gate)
     # beamwidth !? !?
-    self.assertAlmostEquals(1.8347, scan.longitude * 180.0 / math.pi, 4)
-    self.assertAlmostEquals(50.1358, scan.latitude * 180.0 / math.pi, 4)
-    self.assertAlmostEquals(70.0, scan.height, 4)
-    self.assertEquals("20090615", scan.startdate)
-    self.assertEquals("031642", scan.starttime)
-    self.assertEquals("20090615", scan.enddate)
-    self.assertEquals("032142", scan.endtime)
-    self.assertEquals("WMO:07005", scan.source)
+    self.assertAlmostEqual(1.8347, scan.longitude * 180.0 / math.pi, 4)
+    self.assertAlmostEqual(50.1358, scan.latitude * 180.0 / math.pi, 4)
+    self.assertAlmostEqual(70.0, scan.height, 4)
+    self.assertEqual("20090615", scan.startdate)
+    self.assertEqual("031642", scan.starttime)
+    self.assertEqual("20090615", scan.enddate)
+    self.assertEqual("032142", scan.endtime)
+    self.assertEqual("WMO:07005", scan.source)
     
     param = scan.getParameter("DBZH")
-    self.assertEquals(256, param.nbins)
-    self.assertEquals(720, param.nrays)
-    self.assertEquals("DBZH", param.quantity)
-    self.assertAlmostEquals(1.0, param.gain, 4)
-    self.assertAlmostEquals(0.0, param.offset, 4)
+    self.assertEqual(256, param.nbins)
+    self.assertEqual(720, param.nrays)
+    self.assertEqual("DBZH", param.quantity)
+    self.assertAlmostEqual(1.0, param.gain, 4)
+    self.assertAlmostEqual(0.0, param.offset, 4)
     self.assertTrue(param.nodata > 1e30)
     self.assertTrue(param.undetect < -1e30)
-    self.assertEquals(_rave.RaveDataType_DOUBLE, param.datatype)
+    self.assertEqual(_rave.RaveDataType_DOUBLE, param.datatype)
 
     
   def testReadBufrOdim22(self):
@@ -1903,24 +1902,24 @@ class PyRaveIOTest(unittest.TestCase):
 
     result = _raveio.open(self.FIXTURE_BUFR_2_2)
     
-    self.assertEquals(_raveio.RaveIO_ODIM_FileFormat_BUFR, result.file_format);
-    self.assertAlmostEquals(-4.43, result.object.longitude * 180.0 / math.pi, 6)
-    self.assertAlmostEquals(48.460830, result.object.latitude * 180.0 / math.pi, 6)
-    self.assertAlmostEquals(100.0, result.object.height, 4)
-    self.assertEquals("WMO:07108", result.object.source)
-    self.assertEquals("20140630", result.object.date)
-    self.assertEquals("115801", result.object.time)
+    self.assertEqual(_raveio.RaveIO_ODIM_FileFormat_BUFR, result.file_format);
+    self.assertAlmostEqual(-4.43, result.object.longitude * 180.0 / math.pi, 6)
+    self.assertAlmostEqual(48.460830, result.object.latitude * 180.0 / math.pi, 6)
+    self.assertAlmostEqual(100.0, result.object.height, 4)
+    self.assertEqual("WMO:07108", result.object.source)
+    self.assertEqual("20140630", result.object.date)
+    self.assertEqual("115801", result.object.time)
     self.assertAlmostEqual(-71.0, result.object.getAttribute("how/radconstH"), 4)
     self.assertAlmostEqual(-115.0, result.object.getAttribute("how/mindetect"), 4)
     self.assertAlmostEqual(-60.2, result.object.getAttribute("how/NI"), 4)
     self.assertAlmostEqual(-4.43, result.object.longitude * 180.0/math.pi, 4)
-    self.assertEquals(1, result.object.getNumberOfScans())
+    self.assertEqual(1, result.object.getNumberOfScans())
     scan = result.object.getScan(0)
-    self.assertAlmostEquals(1.8, scan.elangle*180.0/math.pi,4)
-    self.assertAlmostEquals(1000.0, scan.rscale, 4)
-    self.assertAlmostEquals(500.0, scan.rstart, 4)
-    self.assertEquals(0, scan.a1gate)
-    self.assertEquals(3, len(scan.getParameterNames()))
+    self.assertAlmostEqual(1.8, scan.elangle*180.0/math.pi,4)
+    self.assertAlmostEqual(1000.0, scan.rscale, 4)
+    self.assertAlmostEqual(500.0, scan.rstart, 4)
+    self.assertEqual(0, scan.a1gate)
+    self.assertEqual(3, len(scan.getParameterNames()))
     dbzh = scan.getParameter("DBZH")
     th = scan.getParameter("TH")
     vrad = scan.getParameter("VRAD")
@@ -1934,7 +1933,7 @@ class PyRaveIOTest(unittest.TestCase):
     try:
       _raveio.open(self.FIXTURE_BUFR_COMPO)
       self.fail("Expected IOError")
-    except IOError,e:
+    except IOError:
       pass
       
   def addGroupNode(self, nodelist, name):

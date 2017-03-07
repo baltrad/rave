@@ -5,6 +5,7 @@
  * @date 1998-
  */
 #include "getpy.h"
+#include "pyravecompat.h"
 #include "rave_alloc.h"
 
 PJ* initProjection(PyObject* pcs)

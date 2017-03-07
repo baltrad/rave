@@ -46,6 +46,8 @@ typedef struct {
 
 #define PyRadarDefinition_API_pointers 3               /**< number of API pointers */
 
+#define PyRadarDefinition_CAPSULE_NAME "_radardef._C_API"
+
 #ifdef PYRADARDEFINITION_MODULE
 /** Forward declaration of type */
 extern PyTypeObject PyRadarDefinition_Type;
@@ -84,34 +86,15 @@ static void **PyRadarDefinition_API;
  * Checks if the object is a python radar definition.
  */
 #define PyRadarDefinition_Check(op) \
-   ((op)->ob_type == (PyTypeObject *)PyRadarDefinition_API[PyRadarDefinition_Type_NUM])
+   (Py_TYPE(op) == &PyRadarDefinition_Type)
+
+#define PyRadarDefinition_Type (*(PyTypeObject*)PyRadarDefinition_API[PyRadarDefinition_Type_NUM])
 
 /**
  * Imports the PyRadarDefinition module (like import _radardef in python).
  */
-static int
-import_pyradardefinition(void)
-{
-  PyObject *module;
-  PyObject *c_api_object;
-
-  module = PyImport_ImportModule("_radardef");
-  if (module == NULL) {
-    return -1;
-  }
-
-  c_api_object = PyObject_GetAttrString(module, "_C_API");
-  if (c_api_object == NULL) {
-    Py_DECREF(module);
-    return -1;
-  }
-  if (PyCObject_Check(c_api_object)) {
-    PyRadarDefinition_API = (void **)PyCObject_AsVoidPtr(c_api_object);
-  }
-  Py_DECREF(c_api_object);
-  Py_DECREF(module);
-  return 0;
-}
+#define import_pyradardefinition() \
+    PyRadarDefinition_API = (void **)PyCapsule_Import(PyRadarDefinition_CAPSULE_NAME, 1);
 
 #endif
 

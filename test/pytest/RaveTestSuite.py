@@ -24,25 +24,30 @@ Test suite for rave
 @date 2009-10-12
 '''
 import unittest, os
-
+A="""
 from RaveTest import *
+"""
 from PyPolarVolumeTest import *
 from PyPolarScanTest import *
 from PyPolarScanParamTest import *
-from RaveModuleConstantsTest import *
+#from RaveModuleConstantsTest import *
+
 from PyCartesianTest import *
 from PyCartesianParamTest import *
 from PyCartesianVolumeTest import *
 from PyVerticalProfileTest import *
 from PyRaveFieldTest import *
+A="""
 from PyTransformTest import *
 
 from PyVprCorrectionTest import *
+"""
 from PyProjectionTest import *
 from PyRaveIOTest import *
 from PyPolarNavTest import *
 from PyAreaTest import *
 from PyRadarDefinitionTest import *
+A="""
 from PyProjectionRegistryTest import *
 from PyAcrrTest import *
 from PyGraTest import *
@@ -112,6 +117,6 @@ try:
   from grib_reader_test import *
 except:
   pass
-
+"""
 if __name__ == '__main__':
   unittest.main()

@@ -46,6 +46,8 @@ typedef struct {
 
 #define PyCartesianParam_API_pointers 3                   /**< number of api pointers */
 
+#define PyCartesianParam_CAPSULE_NAME "_cartesianparam._C_API"
+
 #ifdef PYCARTESIANPARAM_MODULE
 /** Forward declaration of type*/
 extern PyTypeObject PyCartesianParam_Type;
@@ -80,6 +82,22 @@ static void **PyCartesianParam_API;
 #define PyCartesianParam_New \
   (*(PyCartesianParam_New_RETURN (*)PyCartesianParam_New_PROTO) PyCartesianParam_API[PyCartesianParam_New_NUM])
 
+
+/**
+ * Checks if the object is a python cartesian param.
+ */
+#define PyCartesianParam_Check(op) \
+   (Py_TYPE(op) == &PyCartesianParam_Type)
+
+#define PyCartesianParam_Type (*(PyTypeObject*)PyCartesianParam_API[PyCartesianParam_Type_NUM])
+
+/**
+ * Imports the PyCartesianParam module (like import _area in python).
+ */
+#define import_pycartesianparam() \
+    PyCartesianParam_API = (void **)PyCapsule_Import(PyCartesianParam_CAPSULE_NAME, 1);
+
+#ifdef KALLE
 /**
  * Checks if the object is a python cartesian.
  */
@@ -112,6 +130,9 @@ import_pycartesianparam(void)
   Py_DECREF(module);
   return 0;
 }
+#endif
+
+
 
 #endif
 

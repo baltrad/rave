@@ -42,7 +42,7 @@ class PyPolarScanParamTest(unittest.TestCase):
   def test_new(self):
     obj = _polarscanparam.new()
     
-    isscan = string.find(`type(obj)`, "PolarScanParamCore")
+    isscan = str(type(obj)).find("PolarScanParamCore")
     self.assertNotEqual(-1, isscan) 
 
   def test_attribute_visibility(self):
@@ -51,47 +51,47 @@ class PyPolarScanParamTest(unittest.TestCase):
     obj = _polarscanparam.new()
     alist = dir(obj)
     for a in attrs:
-      self.assertEquals(True, a in alist)
+      self.assertEqual(True, a in alist)
 
   def test_invalid_attributes(self):
     obj = _polarscanparam.new()
     try:
       obj.lon = 1.0
       self.fail("Expected AttributeError")
-    except AttributeError, e:
+    except AttributeError:
       pass
 
   def test_nbins(self):
     obj = _polarscanparam.new()
-    self.assertEquals(0, obj.nbins)
+    self.assertEqual(0, obj.nbins)
     try:
       obj.nbins = 10
       self.fail("Expected AttributeError")
-    except AttributeError, e:
+    except AttributeError:
       pass
-    self.assertEquals(0, obj.nbins)
+    self.assertEqual(0, obj.nbins)
 
   def test_nbins_withData(self):
     obj = _polarscanparam.new()
     data = numpy.zeros((4,5), numpy.int8)
     obj.setData(data)
-    self.assertEquals(5, obj.nbins)
+    self.assertEqual(5, obj.nbins)
 
   def test_nrays(self):
     obj = _polarscanparam.new()
-    self.assertEquals(0, obj.nrays)
+    self.assertEqual(0, obj.nrays)
     try:
       obj.nrays = 10
       self.fail("Expected AttributeError")
-    except AttributeError, e:
+    except AttributeError:
       pass
-    self.assertEquals(0, obj.nrays)
+    self.assertEqual(0, obj.nrays)
 
   def test_nrays_withData(self):
     obj = _polarscanparam.new()
     data = numpy.zeros((5,4), numpy.int8)
     obj.setData(data)
-    self.assertEquals(5, obj.nrays)
+    self.assertEqual(5, obj.nrays)
 
   def test_datatype(self):
     obj = _polarscanparam.new()
@@ -99,95 +99,95 @@ class PyPolarScanParamTest(unittest.TestCase):
     try:
       obj.datatype = _rave.RaveDataType_INT
       self.fail("Expected AttributeError")
-    except AttributeError, e:
+    except AttributeError:
       pass
     self.assertEqual(_rave.RaveDataType_UNDEFINED, obj.datatype)
 
   def test_quantity(self):
     obj = _polarscanparam.new()
-    self.assertEquals(None, obj.quantity)
+    self.assertEqual(None, obj.quantity)
     obj.quantity = "DBZH"
-    self.assertEquals("DBZH", obj.quantity)
+    self.assertEqual("DBZH", obj.quantity)
 
   def test_quantity_None(self):
     obj = _polarscanparam.new()
     obj.quantity = "DBZH"
     obj.quantity = None
-    self.assertEquals(None, obj.quantity)
+    self.assertEqual(None, obj.quantity)
 
   def test_quantity_typeError(self):
     obj = _polarscanparam.new()
-    self.assertEquals(None, obj.quantity)
+    self.assertEqual(None, obj.quantity)
     try:
       obj.quantity = 10
       self.fail("Expected ValueError")
-    except ValueError,e:
+    except ValueError:
       pass
-    self.assertEquals(None, obj.quantity)
+    self.assertEqual(None, obj.quantity)
 
   def test_gain(self):
     obj = _polarscanparam.new()
-    self.assertAlmostEquals(0.0, obj.gain, 4)
+    self.assertAlmostEqual(0.0, obj.gain, 4)
     obj.gain = 10.0
-    self.assertAlmostEquals(10.0, obj.gain, 4)
+    self.assertAlmostEqual(10.0, obj.gain, 4)
 
   def test_gain_typeError(self):
     obj = _polarscanparam.new()
-    self.assertAlmostEquals(0.0, obj.gain, 4)
+    self.assertAlmostEqual(0.0, obj.gain, 4)
     try:
       obj.gain = 10
       self.fail("Expected TypeError")
-    except TypeError,e:
+    except TypeError:
       pass
-    self.assertAlmostEquals(0.0, obj.gain, 4)
+    self.assertAlmostEqual(0.0, obj.gain, 4)
 
   def test_offset(self):
     obj = _polarscanparam.new()
-    self.assertAlmostEquals(0.0, obj.offset, 4)
+    self.assertAlmostEqual(0.0, obj.offset, 4)
     obj.offset = 10.0
-    self.assertAlmostEquals(10.0, obj.offset, 4)
+    self.assertAlmostEqual(10.0, obj.offset, 4)
 
   def test_offset_typeError(self):
     obj = _polarscanparam.new()
-    self.assertAlmostEquals(0.0, obj.offset, 4)
+    self.assertAlmostEqual(0.0, obj.offset, 4)
     try:
       obj.offset = 10
       self.fail("Expected TypeError")
-    except TypeError,e:
+    except TypeError:
       pass
-    self.assertAlmostEquals(0.0, obj.offset, 4)
+    self.assertAlmostEqual(0.0, obj.offset, 4)
 
   def test_nodata(self):
     obj = _polarscanparam.new()
-    self.assertAlmostEquals(0.0, obj.nodata, 4)
+    self.assertAlmostEqual(0.0, obj.nodata, 4)
     obj.nodata = 10.0
-    self.assertAlmostEquals(10.0, obj.nodata, 4)
+    self.assertAlmostEqual(10.0, obj.nodata, 4)
 
   def test_nodata_typeError(self):
     obj = _polarscanparam.new()
-    self.assertAlmostEquals(0.0, obj.nodata, 4)
+    self.assertAlmostEqual(0.0, obj.nodata, 4)
     try:
       obj.nodata = 10
       self.fail("Expected TypeError")
-    except TypeError,e:
+    except TypeError:
       pass
-    self.assertAlmostEquals(0.0, obj.nodata, 4)
+    self.assertAlmostEqual(0.0, obj.nodata, 4)
 
   def test_undetect(self):
     obj = _polarscanparam.new()
-    self.assertAlmostEquals(0.0, obj.undetect, 4)
+    self.assertAlmostEqual(0.0, obj.undetect, 4)
     obj.undetect = 10.0
-    self.assertAlmostEquals(10.0, obj.undetect, 4)
+    self.assertAlmostEqual(10.0, obj.undetect, 4)
 
   def test_undetect_typeError(self):
     obj = _polarscanparam.new()
-    self.assertAlmostEquals(0.0, obj.undetect, 4)
+    self.assertAlmostEqual(0.0, obj.undetect, 4)
     try:
       obj.undetect = 10
       self.fail("Expected TypeError")
-    except TypeError,e:
+    except TypeError:
       pass
-    self.assertAlmostEquals(0.0, obj.undetect, 4)
+    self.assertAlmostEqual(0.0, obj.undetect, 4)
 
   def test_getValue(self):
     obj = _polarscanparam.new()
@@ -212,8 +212,8 @@ class PyPolarScanParamTest(unittest.TestCase):
     
     for tval in pts:
       result = obj.getValue(tval[0][0], tval[0][1])
-      self.assertEquals(tval[1][0], result[0])
-      self.assertAlmostEquals(tval[1][1], result[1], 4)
+      self.assertEqual(tval[1][0], result[0])
+      self.assertAlmostEqual(tval[1][1], result[1], 4)
 
   def test_getConvertedValue(self):
     obj = _polarscanparam.new()
@@ -240,15 +240,15 @@ class PyPolarScanParamTest(unittest.TestCase):
     
     for tval in pts:
       result = obj.getConvertedValue(tval[0][0], tval[0][1])
-      self.assertEquals(tval[1][0], result[0])
-      self.assertAlmostEquals(tval[1][1], result[1], 4)
+      self.assertEqual(tval[1][0], result[0])
+      self.assertAlmostEqual(tval[1][1], result[1], 4)
 
   def test_setValue(self):
     obj = _polarscanparam.new()
     a=numpy.zeros((12,10), numpy.int8)
     obj.setData(a)
     obj.setValue((4,5), 5)
-    self.assertAlmostEquals(5.0, obj.getData()[5,4], 4)
+    self.assertAlmostEqual(5.0, obj.getData()[5,4], 4)
 
   def test_setValue_outOfBounds(self):
     obj = _polarscanparam.new()
@@ -257,7 +257,7 @@ class PyPolarScanParamTest(unittest.TestCase):
     try:
       obj.setValue((15,5), 5)
       self.fail("Expected ValueError")
-    except ValueError,e:
+    except ValueError:
       pass
 
   def test_setData_int8(self):
@@ -347,7 +347,7 @@ class PyPolarScanParamTest(unittest.TestCase):
       try:
         obj.addAttribute(n, "XYZ")
         self.fail("Expected AttributeError")
-      except AttributeError,e:
+      except AttributeError:
         pass
   
   def test_attributes(self):
@@ -358,16 +358,16 @@ class PyPolarScanParamTest(unittest.TestCase):
     obj.addAttribute("where/value", "1.0, 2.0, 3.0")
     
     names = obj.getAttributeNames()
-    self.assertEquals(4, len(names))
+    self.assertEqual(4, len(names))
     self.assertTrue("how/this" in names)
     self.assertTrue("how/that" in names)
     self.assertTrue("what/value" in names)
     self.assertTrue("where/value" in names)
     
-    self.assertEquals("ABC", obj.getAttribute("how/this"))
-    self.assertAlmostEquals(1.0, obj.getAttribute("how/that"), 4)
-    self.assertEquals(2, obj.getAttribute("what/value"))
-    self.assertEquals("1.0, 2.0, 3.0", obj.getAttribute("where/value"))
+    self.assertEqual("ABC", obj.getAttribute("how/this"))
+    self.assertAlmostEqual(1.0, obj.getAttribute("how/that"), 4)
+    self.assertEqual(2, obj.getAttribute("what/value"))
+    self.assertEqual("1.0, 2.0, 3.0", obj.getAttribute("where/value"))
 
   def test_hasAttribute(self):
     obj = _polarscanparam.new()
@@ -384,7 +384,7 @@ class PyPolarScanParamTest(unittest.TestCase):
     try:
       obj.hasAttribute(None)
       self.fail("Expected TypeError")
-    except TypeError,e:
+    except TypeError:
       pass
 
   def test_attributes_nonexisting(self):
@@ -397,7 +397,7 @@ class PyPolarScanParamTest(unittest.TestCase):
     try:
       obj.getAttribute("how/miffo")
       self.fail("Expected AttributeError")
-    except AttributeError, e:
+    except AttributeError:
       pass
     
   def test_qualityfields(self):
@@ -410,11 +410,11 @@ class PyPolarScanParamTest(unittest.TestCase):
     obj.addQualityField(field1)
     obj.addQualityField(field2)
     
-    self.assertEquals(2, obj.getNumberOfQualityFields())
-    self.assertEquals("field1", obj.getQualityField(0).getAttribute("what/name"))
+    self.assertEqual(2, obj.getNumberOfQualityFields())
+    self.assertEqual("field1", obj.getQualityField(0).getAttribute("what/name"))
     obj.removeQualityField(0)
-    self.assertEquals(1, obj.getNumberOfQualityFields())
-    self.assertEquals("field2", obj.getQualityField(0).getAttribute("what/name"))    
+    self.assertEqual(1, obj.getNumberOfQualityFields())
+    self.assertEqual("field2", obj.getQualityField(0).getAttribute("what/name"))    
   
   def test_toField(self):
     obj = _polarscanparam.new()
@@ -435,13 +435,13 @@ class PyPolarScanParamTest(unittest.TestCase):
     obj.nodata = 5.0
     
     result = obj.toField()
-    self.assertEquals("ABC", result.getAttribute("how/this"))
-    self.assertAlmostEquals(1.0, result.getAttribute("how/that"), 4)
-    self.assertEquals(2, result.getAttribute("what/value"))
-    self.assertAlmostEquals(2.0, result.getAttribute("what/gain"), 4)
-    self.assertAlmostEquals(3.0, result.getAttribute("what/offset"), 4)
-    self.assertAlmostEquals(4.0, result.getAttribute("what/undetect"), 4)
-    self.assertAlmostEquals(5.0, result.getAttribute("what/nodata"), 4)
+    self.assertEqual("ABC", result.getAttribute("how/this"))
+    self.assertAlmostEqual(1.0, result.getAttribute("how/that"), 4)
+    self.assertEqual(2, result.getAttribute("what/value"))
+    self.assertAlmostEqual(2.0, result.getAttribute("what/gain"), 4)
+    self.assertAlmostEqual(3.0, result.getAttribute("what/offset"), 4)
+    self.assertAlmostEqual(4.0, result.getAttribute("what/undetect"), 4)
+    self.assertAlmostEqual(5.0, result.getAttribute("what/nodata"), 4)
     self.assertEqual(_rave.RaveDataType_UCHAR, result.datatype)
     self.assertEqual(10, result.xsize)
     self.assertEqual(12, result.ysize)
@@ -456,22 +456,22 @@ class PyPolarScanParamTest(unittest.TestCase):
     obj.addAttribute("what/quantity", "MMH")
     result = _polarscanparam.fromField(obj)
  
-    self.assertNotEqual(-1, string.find(`type(result)`, "PolarScanParamCore"))
+    self.assertNotEqual(-1, str(type(result)).find("PolarScanParamCore"))
     self.assertAlmostEqual(2.0, result.gain, 4)
     self.assertAlmostEqual(3.0, result.offset, 4)
     self.assertAlmostEqual(4.0, result.nodata, 4)
     self.assertAlmostEqual(5.0, result.undetect, 4)
-    self.assertEquals("MMH", result.quantity)
-    self.assertEquals(10, result.nbins)
-    self.assertEquals(12, result.nrays)
-    self.assertEquals(_rave.RaveDataType_UCHAR, result.datatype)
+    self.assertEqual("MMH", result.quantity)
+    self.assertEqual(10, result.nbins)
+    self.assertEqual(12, result.nrays)
+    self.assertEqual(_rave.RaveDataType_UCHAR, result.datatype)
 
   def test_convertDataDoubleToUchar(self):
     obj = _polarscanparam.new()
     obj.setData(numpy.array([[-32.0,-32.0,-32.0],
                              [ 31.5, 31.5, 31.5],
                              [ 95.5, 95.5, 95.5]]).astype(numpy.float64))      
-    self.assertEquals(_rave.RaveDataType_DOUBLE, obj.datatype)
+    self.assertEqual(_rave.RaveDataType_DOUBLE, obj.datatype)
 
     obj.gain =     0.5
     obj.offset = -32.0
@@ -479,8 +479,8 @@ class PyPolarScanParamTest(unittest.TestCase):
     obj.undetect = 0.0
 
     obj.convertDataDoubleToUchar()
-    self.assertEquals(_rave.RaveDataType_UCHAR, obj.datatype)
-    self.assertEquals([[  0,  0,  0],
+    self.assertEqual(_rave.RaveDataType_UCHAR, obj.datatype)
+    self.assertEqual([[  0,  0,  0],
                        [127,127,127],
                        [255,255,255]], obj.getData().tolist())
 

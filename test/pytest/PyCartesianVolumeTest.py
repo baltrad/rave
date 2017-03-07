@@ -43,16 +43,15 @@ class PyCartesianVolumeTest(unittest.TestCase):
   def test_new(self):
     obj = _cartesianvolume.new()
     
-    iscvol = string.find(`type(obj)`, "CartesianVolumeCore")
-    self.assertNotEqual(-1, iscvol)
+    self.assertNotEqual(-1, str(type(obj)).find("CartesianVolumeCore"))
 
   def test_isCartesianVolume(self):
     obj = _cartesianvolume.new()
-    self.assertEquals(True, _cartesianvolume.isCartesianVolume(obj))
+    self.assertEqual(True, _cartesianvolume.isCartesianVolume(obj))
     
   def test_isCartesianVolumeFalse(self):
     obj = _cartesian.new()
-    self.assertEquals(False, _cartesianvolume.isCartesianVolume(obj))
+    self.assertEqual(False, _cartesianvolume.isCartesianVolume(obj))
 
   def test_attribute_visibility(self):
     attrs = ['areaextent', 'date', 'objectType', 
@@ -61,7 +60,7 @@ class PyCartesianVolumeTest(unittest.TestCase):
     obj = _cartesianvolume.new()
     alist = dir(obj)
     for a in attrs:
-      self.assertEquals(True, a in alist)
+      self.assertEqual(True, a in alist)
 
   def test_attributes_from_image(self):
     obj = _cartesianvolume.new()
@@ -82,13 +81,13 @@ class PyCartesianVolumeTest(unittest.TestCase):
     image.source = "PLC:1234"
     image.product = _rave.Rave_ProductType_CAPPI
     
-    self.assertEquals(0, obj.xsize)
-    self.assertEquals(0, obj.ysize)
+    self.assertEqual(0, obj.xsize)
+    self.assertEqual(0, obj.ysize)
       
     obj.addImage(image)
-    self.assertEquals(10, obj.xsize)
-    self.assertEquals(10, obj.ysize)
-    self.assertEquals(1, obj.getNumberOfImages())
+    self.assertEqual(10, obj.xsize)
+    self.assertEqual(10, obj.ysize)
+    self.assertEqual(1, obj.getNumberOfImages())
 
   def test_attributes_to_image(self):
     obj = _cartesianvolume.new()
@@ -105,15 +104,15 @@ class PyCartesianVolumeTest(unittest.TestCase):
     
     obj.addImage(image)
     
-    self.assertAlmostEquals(200.0, image.xscale, 4)
-    self.assertAlmostEquals(200.0, image.yscale, 4)
-    self.assertEquals("20100101", image.date)
-    self.assertEquals("100000", image.time)
-    self.assertEquals("PLC:1234", image.source)
-    self.assertAlmostEquals(1.0, image.areaextent[0], 4)
-    self.assertAlmostEquals(2.0, image.areaextent[1], 4)
-    self.assertAlmostEquals(3.0, image.areaextent[2], 4)
-    self.assertAlmostEquals(4.0, image.areaextent[3], 4)
+    self.assertAlmostEqual(200.0, image.xscale, 4)
+    self.assertAlmostEqual(200.0, image.yscale, 4)
+    self.assertEqual("20100101", image.date)
+    self.assertEqual("100000", image.time)
+    self.assertEqual("PLC:1234", image.source)
+    self.assertAlmostEqual(1.0, image.areaextent[0], 4)
+    self.assertAlmostEqual(2.0, image.areaextent[1], 4)
+    self.assertAlmostEqual(3.0, image.areaextent[2], 4)
+    self.assertAlmostEqual(4.0, image.areaextent[3], 4)
     
     
 if __name__ == "__main__":

@@ -22,7 +22,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2009-12-08
  */
-#include "Python.h"
+#include "pyravecompat.h"
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>
@@ -1169,88 +1169,87 @@ static struct PyMethodDef _pypolarscan_methods[] =
 /**
  * Returns the specified attribute in the polar scan
  */
-static PyObject* _pypolarscan_getattr(PyPolarScan* self, char* name)
+static PyObject* _pypolarscan_getattro(PyPolarScan* self, PyObject* name)
 {
-  PyObject* res;
-  if (strcmp("elangle", name) == 0) {
+  if (PY_COMPARE_STRING_WITH_ATTRO_NAME("elangle", name) == 0) {
     return PyFloat_FromDouble(PolarScan_getElangle(self->scan));
-  } else if (strcmp("nbins", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("nbins", name) == 0) {
     return PyInt_FromLong(PolarScan_getNbins(self->scan));
-  } else if (strcmp("rscale", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("rscale", name) == 0) {
     return PyFloat_FromDouble(PolarScan_getRscale(self->scan));
-  } else if (strcmp("nrays", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("nrays", name) == 0) {
     return PyInt_FromLong(PolarScan_getNrays(self->scan));
-  } else if (strcmp("rstart", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("rstart", name) == 0) {
     return PyFloat_FromDouble(PolarScan_getRstart(self->scan));
-  } else if (strcmp("a1gate", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("a1gate", name) == 0) {
     return PyInt_FromLong(PolarScan_getA1gate(self->scan));
-  } else if (strcmp("datatype", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("datatype", name) == 0) {
     return PyInt_FromLong(PolarScan_getDataType(self->scan));
-  } else if (strcmp("beamwidth", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("beamwidth", name) == 0) {
     return PyFloat_FromDouble(PolarScan_getBeamwidth(self->scan));
-  } else if (strcmp("longitude", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("longitude", name) == 0) {
     return PyFloat_FromDouble(PolarScan_getLongitude(self->scan));
-  } else if (strcmp("latitude", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("latitude", name) == 0) {
     return PyFloat_FromDouble(PolarScan_getLatitude(self->scan));
-  } else if (strcmp("height", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("height", name) == 0) {
     return PyFloat_FromDouble(PolarScan_getHeight(self->scan));
-  } else if (strcmp("time", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("time", name) == 0) {
     const char* str = PolarScan_getTime(self->scan);
     if (str != NULL) {
       return PyString_FromString(str);
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("date", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("date", name) == 0) {
     const char* str = PolarScan_getDate(self->scan);
     if (str != NULL) {
       return PyString_FromString(str);
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("starttime", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("starttime", name) == 0) {
     const char* str = PolarScan_getStartTime(self->scan);
     if (str != NULL) {
       return PyString_FromString(str);
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("startdate", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("startdate", name) == 0) {
     const char* str = PolarScan_getStartDate(self->scan);
     if (str != NULL) {
       return PyString_FromString(str);
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("endtime", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("endtime", name) == 0) {
     const char* str = PolarScan_getEndTime(self->scan);
     if (str != NULL) {
       return PyString_FromString(str);
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("enddate", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("enddate", name) == 0) {
     const char* str = PolarScan_getEndDate(self->scan);
     if (str != NULL) {
       return PyString_FromString(str);
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("source", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("source", name) == 0) {
     const char* str = PolarScan_getSource(self->scan);
     if (str != NULL) {
       return PyString_FromString(str);
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("defaultparameter", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("defaultparameter", name) == 0) {
     const char* str = PolarScan_getDefaultParameter(self->scan);
     if (str != NULL) {
       return PyString_FromString(str);
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("projection", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("projection", name) == 0) {
     Projection_t* projection = PolarScan_getProjection(self->scan);
     if (projection != NULL) {
       PyProjection* result = PyProjection_New(projection);
@@ -1260,73 +1259,67 @@ static PyObject* _pypolarscan_getattr(PyPolarScan* self, char* name)
       Py_RETURN_NONE;
     }
   }
-  res = Py_FindMethod(_pypolarscan_methods, (PyObject*) self, name);
-  if (res)
-    return res;
-
-  PyErr_Clear();
-  PyErr_SetString(PyExc_AttributeError, name);
-  return NULL;
+  return PyObject_GenericGetAttr((PyObject*)self, name);
 }
 
 /**
  * Returns the specified attribute in the polar volume
  */
-static int _pypolarscan_setattr(PyPolarScan* self, char* name, PyObject* val)
+static int _pypolarscan_setattro(PyPolarScan* self, PyObject* name, PyObject* val)
 {
   int result = -1;
   if (name == NULL) {
     goto done;
   }
-  if (strcmp("elangle", name)==0) {
+  if (PY_COMPARE_STRING_WITH_ATTRO_NAME("elangle", name)==0) {
     if (PyFloat_Check(val)) {
       PolarScan_setElangle(self->scan, PyFloat_AsDouble(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError,"elangle must be of type float");
     }
-  } else if (strcmp("rscale", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("rscale", name) == 0) {
     if (PyFloat_Check(val)) {
       PolarScan_setRscale(self->scan, PyFloat_AsDouble(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "rscale must be of type float");
     }
-  } else if (strcmp("rstart", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("rstart", name) == 0) {
     if (PyFloat_Check(val)) {
       PolarScan_setRstart(self->scan, PyFloat_AsDouble(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "rstart must be of type float");
     }
-  } else if (strcmp("a1gate", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("a1gate", name) == 0) {
     if (PyInt_Check(val)) {
       PolarScan_setA1gate(self->scan, PyInt_AsLong(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError,"a1gate must be of type int");
     }
-  } else if (strcmp("beamwidth", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("beamwidth", name) == 0) {
     if (PyFloat_Check(val)) {
       PolarScan_setBeamwidth(self->scan, PyFloat_AsDouble(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "beamwidth must be of type float");
     }
-  } else if (strcmp("longitude", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("longitude", name) == 0) {
     if (PyFloat_Check(val)) {
       PolarScan_setLongitude(self->scan, PyFloat_AsDouble(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "longitude must be of type float");
     }
-  } else if (strcmp("latitude", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("latitude", name) == 0) {
     if (PyFloat_Check(val)) {
       PolarScan_setLatitude(self->scan, PyFloat_AsDouble(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "latitude must be of type float");
     }
-  } else if (strcmp("height", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("height", name) == 0) {
     if (PyFloat_Check(val)) {
       PolarScan_setHeight(self->scan, PyFloat_AsDouble(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "height must be of type float");
     }
-  } else if (strcmp("time", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("time", name) == 0) {
     if (PyString_Check(val)) {
       if (!PolarScan_setTime(self->scan, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "time must be a string (HHmmss)");
@@ -1336,7 +1329,7 @@ static int _pypolarscan_setattr(PyPolarScan* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_ValueError, "time must be a string (HHmmss)");
     }
-  } else if (strcmp("date", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("date", name) == 0) {
     if (PyString_Check(val)) {
       if (!PolarScan_setDate(self->scan, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "date must be a string (YYYYMMSS)");
@@ -1346,7 +1339,7 @@ static int _pypolarscan_setattr(PyPolarScan* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_ValueError, "date must be a string (YYYYMMSS)");
     }
-  } else if (strcmp("starttime", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("starttime", name) == 0) {
     if (PyString_Check(val)) {
       if (!PolarScan_setStartTime(self->scan, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "starttime must be a string (HHmmss)");
@@ -1356,7 +1349,7 @@ static int _pypolarscan_setattr(PyPolarScan* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_ValueError, "starttime must be a string (HHmmss)");
     }
-  } else if (strcmp("startdate", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("startdate", name) == 0) {
     if (PyString_Check(val)) {
       if (!PolarScan_setStartDate(self->scan, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "startdate must be a string (YYYYMMSS)");
@@ -1366,7 +1359,7 @@ static int _pypolarscan_setattr(PyPolarScan* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_ValueError, "startdate must be a string (YYYYMMSS)");
     }
-  } else if (strcmp("endtime", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("endtime", name) == 0) {
     if (PyString_Check(val)) {
       if (!PolarScan_setEndTime(self->scan, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "endtime must be a string (HHmmss)");
@@ -1376,7 +1369,7 @@ static int _pypolarscan_setattr(PyPolarScan* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_ValueError, "endtime must be a string (HHmmss)");
     }
-  } else if (strcmp("enddate", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("enddate", name) == 0) {
     if (PyString_Check(val)) {
       if (!PolarScan_setEndDate(self->scan, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "enddate must be a string (YYYYMMSS)");
@@ -1386,7 +1379,7 @@ static int _pypolarscan_setattr(PyPolarScan* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_ValueError, "enddate must be a string (YYYYMMSS)");
     }
-  } else if (strcmp("source", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("source", name) == 0) {
     if (PyString_Check(val)) {
       if (!PolarScan_setSource(self->scan, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "source must be a string");
@@ -1396,7 +1389,7 @@ static int _pypolarscan_setattr(PyPolarScan* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_ValueError, "source must be a string");
     }
-  } else if (strcmp("defaultparameter", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("defaultparameter", name) == 0) {
     if (PyString_Check(val)) {
       if (!PolarScan_setDefaultParameter(self->scan, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "source must be a string");
@@ -1404,14 +1397,14 @@ static int _pypolarscan_setattr(PyPolarScan* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_ValueError, "source must be a string");
     }
-  } else if (strcmp("projection", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("projection", name) == 0) {
     if (PyProjection_Check(val)) {
       PolarScan_setProjection(self->scan, ((PyProjection*)val)->projection);
     } else if (val == Py_None) {
       PolarScan_setProjection(self->scan, NULL);
     }
   } else {
-    raiseException_gotoTag(done, PyExc_AttributeError, name);
+    raiseException_gotoTag(done, PyExc_AttributeError, PY_RAVE_ATTRO_NAME_TO_STRING(name));
   }
 
   result = 0;
@@ -1439,21 +1432,47 @@ static PyObject* _pypolarscan_isPolarScan(PyObject* self, PyObject* args)
 /*@{ Type definition */
 PyTypeObject PyPolarScan_Type =
 {
-  PyObject_HEAD_INIT(NULL)0, /*ob_size*/
+  PyVarObject_HEAD_INIT(NULL, 0) /*ob_size*/
   "PolarScanCore", /*tp_name*/
   sizeof(PyPolarScan), /*tp_size*/
   0, /*tp_itemsize*/
   /* methods */
   (destructor)_pypolarscan_dealloc, /*tp_dealloc*/
   0, /*tp_print*/
-  (getattrfunc)_pypolarscan_getattr, /*tp_getattr*/
-  (setattrfunc)_pypolarscan_setattr, /*tp_setattr*/
-  0, /*tp_compare*/
-  0, /*tp_repr*/
-  0, /*tp_as_number */
+  (getattrfunc)0,               /*tp_getattr*/
+  (setattrfunc)0,               /*tp_setattr*/
+  0,                            /*tp_compare*/
+  0,                            /*tp_repr*/
+  0,                            /*tp_as_number */
   0,
-  0, /*tp_as_mapping */
-  0 /*tp_hash*/
+  0,                            /*tp_as_mapping */
+  0,                            /*tp_hash*/
+  (ternaryfunc)0,               /*tp_call*/
+  (reprfunc)0,                  /*tp_str*/
+  (getattrofunc)_pypolarscan_getattro, /*tp_getattro*/
+  (setattrofunc)_pypolarscan_setattro, /*tp_setattro*/
+  0,                            /*tp_as_buffer*/
+  Py_TPFLAGS_DEFAULT, /*tp_flags*/
+  0,                            /*tp_doc*/
+  (traverseproc)0,              /*tp_traverse*/
+  (inquiry)0,                   /*tp_clear*/
+  0,                            /*tp_richcompare*/
+  0,                            /*tp_weaklistoffset*/
+  0,                            /*tp_iter*/
+  0,                            /*tp_iternext*/
+  _pypolarscan_methods,         /*tp_methods*/
+  0,                            /*tp_members*/
+  0,                            /*tp_getset*/
+  0,                            /*tp_base*/
+  0,                            /*tp_dict*/
+  0,                            /*tp_descr_get*/
+  0,                            /*tp_descr_set*/
+  0,                            /*tp_dictoffset*/
+  0,                            /*tp_init*/
+  0,                            /*tp_alloc*/
+  0,                            /*tp_new*/
+  0,                            /*tp_free*/
+  0,                            /*tp_is_gc*/
 };
 /*@} End of Type definition */
 
@@ -1464,32 +1483,34 @@ static PyMethodDef functions[] = {
   {NULL,NULL} /*Sentinel*/
 };
 
-PyMODINIT_FUNC
-init_polarscan(void)
+
+MOD_INIT(_polarscan)
 {
   PyObject *module=NULL,*dictionary=NULL;
   static void *PyPolarScan_API[PyPolarScan_API_pointers];
   PyObject *c_api_object = NULL;
-  PyPolarScan_Type.ob_type = &PyType_Type;
 
-  module = Py_InitModule("_polarscan", functions);
+  MOD_INIT_SETUP_TYPE(PyPolarScan_Type, &PyType_Type);
+
+  MOD_INIT_VERIFY_TYPE_READY(&PyPolarScan_Type);
+
+  MOD_INIT_DEF(module, "_polarscan", NULL/*doc*/, functions);
   if (module == NULL) {
-    return;
+    return MOD_INIT_ERROR;
   }
+
   PyPolarScan_API[PyPolarScan_Type_NUM] = (void*)&PyPolarScan_Type;
   PyPolarScan_API[PyPolarScan_GetNative_NUM] = (void *)PyPolarScan_GetNative;
   PyPolarScan_API[PyPolarScan_New_NUM] = (void*)PyPolarScan_New;
 
-  c_api_object = PyCObject_FromVoidPtr((void *)PyPolarScan_API, NULL);
-
-  if (c_api_object != NULL) {
-    PyModule_AddObject(module, "_C_API", c_api_object);
-  }
-
+  c_api_object = PyCapsule_New(PyPolarScan_API, PyPolarScan_CAPSULE_NAME, NULL);
   dictionary = PyModule_GetDict(module);
-  ErrorObject = PyString_FromString("_polarscan.error");
+  PyDict_SetItemString(dictionary, "_C_API", c_api_object);
+
+  ErrorObject = PyErr_NewException("_polarscan.error", NULL, NULL);
   if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
     Py_FatalError("Can't define _polarscan.error");
+    return MOD_INIT_ERROR;
   }
 
   import_array(); /*To make sure I get access to Numeric*/
@@ -1497,5 +1518,7 @@ init_polarscan(void)
   import_pyprojection();
   import_pyravefield();
   PYRAVE_DEBUG_INITIALIZE;
+  return MOD_INIT_SUCCESS(module);
 }
+
 /*@} End of Module setup */

@@ -49,8 +49,8 @@ class PyCartesianTest(unittest.TestCase):
   def test_new(self):
     obj = _cartesian.new()
     
-    isscan = string.find(`type(obj)`, "CartesianCore")
-    self.assertNotEqual(-1, isscan)
+    iscartesian = str(type(obj)).find("CartesianCore")
+    self.assertNotEqual(-1, iscartesian)
   
   def test_isCartesian(self):
     obj = _cartesian.new()
@@ -65,7 +65,7 @@ class PyCartesianTest(unittest.TestCase):
     obj = _cartesian.new()
     alist = dir(obj)
     for a in attrs:
-      self.assertEquals(True, a in alist)
+      self.assertEqual(True, a in alist)
   
   def test_init(self):
     obj = _cartesian.new()
@@ -78,23 +78,23 @@ class PyCartesianTest(unittest.TestCase):
     a.projection = _projection.new("x", "y", "+proj=latlong +ellps=WGS84 +datum=WGS84")
 
     obj.init(a)
-    self.assertEquals(10, obj.xsize)
-    self.assertEquals(10, obj.ysize)
-    self.assertAlmostEquals(100.0, obj.xscale, 4)
-    self.assertAlmostEquals(100.0, obj.yscale, 4)
-    self.assertAlmostEquals(1.0, obj.areaextent[0], 4)
-    self.assertAlmostEquals(2.0, obj.areaextent[1], 4)
-    self.assertAlmostEquals(3.0, obj.areaextent[2], 4)
-    self.assertAlmostEquals(4.0, obj.areaextent[3], 4)
-    self.assertEquals("x", obj.projection.id)
+    self.assertEqual(10, obj.xsize)
+    self.assertEqual(10, obj.ysize)
+    self.assertAlmostEqual(100.0, obj.xscale, 4)
+    self.assertAlmostEqual(100.0, obj.yscale, 4)
+    self.assertAlmostEqual(1.0, obj.areaextent[0], 4)
+    self.assertAlmostEqual(2.0, obj.areaextent[1], 4)
+    self.assertAlmostEqual(3.0, obj.areaextent[2], 4)
+    self.assertAlmostEqual(4.0, obj.areaextent[3], 4)
+    self.assertEqual("x", obj.projection.id)
   
   def test_time(self):
     obj = _cartesian.new()
-    self.assertEquals(None, obj.time)
+    self.assertEqual(None, obj.time)
     obj.time = "200500"
-    self.assertEquals("200500", obj.time)
+    self.assertEqual("200500", obj.time)
     obj.time = None
-    self.assertEquals(None, obj.time)
+    self.assertEqual(None, obj.time)
 
   def test_time_badValues(self):
     obj = _cartesian.new()
@@ -103,16 +103,16 @@ class PyCartesianTest(unittest.TestCase):
       try:
         obj.time = val
         self.fail("Expected ValueError")
-      except ValueError, e:
+      except ValueError:
         pass
 
   def test_date(self):
     obj = _cartesian.new()
-    self.assertEquals(None, obj.date)
+    self.assertEqual(None, obj.date)
     obj.date = "20050101"
-    self.assertEquals("20050101", obj.date)
+    self.assertEqual("20050101", obj.date)
     obj.date = None
-    self.assertEquals(None, obj.date)
+    self.assertEqual(None, obj.date)
 
   def test_date_badValues(self):
     obj = _cartesian.new()
@@ -121,131 +121,131 @@ class PyCartesianTest(unittest.TestCase):
       try:
         obj.time = val
         self.fail("Expected ValueError")
-      except ValueError, e:
+      except ValueError:
         pass
 
   def test_startdate(self):
     obj = _cartesian.new()
-    self.assertEquals(None, obj.startdate)
+    self.assertEqual(None, obj.startdate)
     obj.date = "20050101"
-    self.assertEquals("20050101", obj.startdate)
+    self.assertEqual("20050101", obj.startdate)
     obj.startdate = "20060101"
-    self.assertEquals("20050101", obj.date)
-    self.assertEquals("20060101", obj.startdate)
+    self.assertEqual("20050101", obj.date)
+    self.assertEqual("20060101", obj.startdate)
 
   def test_starttime(self):
     obj = _cartesian.new()
-    self.assertEquals(None, obj.starttime)
+    self.assertEqual(None, obj.starttime)
     obj.time = "100000"
-    self.assertEquals("100000", obj.starttime)
+    self.assertEqual("100000", obj.starttime)
     obj.starttime = "110000"
-    self.assertEquals("100000", obj.time)
-    self.assertEquals("110000", obj.starttime)
+    self.assertEqual("100000", obj.time)
+    self.assertEqual("110000", obj.starttime)
 
   def test_source(self):
     obj = _cartesian.new()
-    self.assertEquals(None, obj.source)
+    self.assertEqual(None, obj.source)
     obj.source = "ABC:10, ABD:1"
-    self.assertEquals("ABC:10, ABD:1", obj.source)
+    self.assertEqual("ABC:10, ABD:1", obj.source)
     obj.source = None
-    self.assertEquals(None, obj.source)
+    self.assertEqual(None, obj.source)
   
   def test_objectType(self):
     obj = _cartesian.new()
     obj.objectType = _rave.Rave_ObjectType_COMP
-    self.assertEquals(_rave.Rave_ObjectType_COMP, obj.objectType)
+    self.assertEqual(_rave.Rave_ObjectType_COMP, obj.objectType)
     obj.objectType = _rave.Rave_ObjectType_IMAGE
-    self.assertEquals(_rave.Rave_ObjectType_IMAGE, obj.objectType)
+    self.assertEqual(_rave.Rave_ObjectType_IMAGE, obj.objectType)
   
   def test_objectType_invalid(self):
     obj = _cartesian.new()
     try:
       obj.objectType = _rave.Rave_ObjectType_CVOL
       fail("Expected ValueError")
-    except ValueError, e:
+    except ValueError:
       pass
   
   def test_xsize(self):
     obj = _cartesian.new()
-    self.assertEquals(0, obj.xsize)
+    self.assertEqual(0, obj.xsize)
     try:
       obj.xsize = 10
       self.fail("Expected AttributeError")
-    except AttributeError, e:
+    except AttributeError:
       pass
-    self.assertEquals(0, obj.xsize)
+    self.assertEqual(0, obj.xsize)
 
   def test_ysize(self):
     obj = _cartesian.new()
-    self.assertEquals(0, obj.ysize)
+    self.assertEqual(0, obj.ysize)
     try:
       obj.ysize = 10
       self.fail("Expected AttributeError")
-    except AttributeError, e:
+    except AttributeError:
       pass
-    self.assertEquals(0, obj.ysize)
+    self.assertEqual(0, obj.ysize)
 
   def test_xscale(self):
     obj = _cartesian.new()
-    self.assertAlmostEquals(0.0, obj.xscale, 4)
+    self.assertAlmostEqual(0.0, obj.xscale, 4)
     obj.xscale = 10.0
-    self.assertAlmostEquals(10.0, obj.xscale, 4)
+    self.assertAlmostEqual(10.0, obj.xscale, 4)
 
   def test_xscale_typeError(self):
     obj = _cartesian.new()
-    self.assertAlmostEquals(0.0, obj.xscale, 4)
+    self.assertAlmostEqual(0.0, obj.xscale, 4)
     try:
       obj.xscale = 10
       self.fail("Expected TypeError")
-    except TypeError,e:
+    except TypeError:
       pass
-    self.assertAlmostEquals(0.0, obj.xscale, 4)
+    self.assertAlmostEqual(0.0, obj.xscale, 4)
 
   def test_yscale(self):
     obj = _cartesian.new()
-    self.assertAlmostEquals(0.0, obj.yscale, 4)
+    self.assertAlmostEqual(0.0, obj.yscale, 4)
     obj.yscale = 10.0
-    self.assertAlmostEquals(10.0, obj.yscale, 4)
+    self.assertAlmostEqual(10.0, obj.yscale, 4)
 
   def test_yscale_typeError(self):
     obj = _cartesian.new()
-    self.assertAlmostEquals(0.0, obj.yscale, 4)
+    self.assertAlmostEqual(0.0, obj.yscale, 4)
     try:
       obj.yscale = 10
       self.fail("Expected TypeError")
-    except TypeError,e:
+    except TypeError:
       pass
-    self.assertAlmostEquals(0.0, obj.yscale, 4)
+    self.assertAlmostEqual(0.0, obj.yscale, 4)
 
   def test_areaextent(self):
     obj = _cartesian.new()
     tt = obj.areaextent
-    self.assertEquals(4, len(tt))
-    self.assertAlmostEquals(0.0, tt[0], 4)
-    self.assertAlmostEquals(0.0, tt[1], 4)
-    self.assertAlmostEquals(0.0, tt[2], 4)
-    self.assertAlmostEquals(0.0, tt[3], 4)
+    self.assertEqual(4, len(tt))
+    self.assertAlmostEqual(0.0, tt[0], 4)
+    self.assertAlmostEqual(0.0, tt[1], 4)
+    self.assertAlmostEqual(0.0, tt[2], 4)
+    self.assertAlmostEqual(0.0, tt[3], 4)
 
     obj.areaextent = (10.0, 11.0, 12.0, 13.0)
     tt = obj.areaextent
-    self.assertEquals(4, len(tt))
-    self.assertAlmostEquals(10.0, tt[0], 4)
-    self.assertAlmostEquals(11.0, tt[1], 4)
-    self.assertAlmostEquals(12.0, tt[2], 4)
-    self.assertAlmostEquals(13.0, tt[3], 4)
+    self.assertEqual(4, len(tt))
+    self.assertAlmostEqual(10.0, tt[0], 4)
+    self.assertAlmostEqual(11.0, tt[1], 4)
+    self.assertAlmostEqual(12.0, tt[2], 4)
+    self.assertAlmostEqual(13.0, tt[3], 4)
 
   def test_areaextent_badTupleSize(self):
     obj = _cartesian.new()
     try:
       obj.areaextent = (10.0, 20.0, 30.0)
       self.fail("Expected type error")
-    except TypeError, e:
+    except TypeError:
       pass
 
     try:
       obj.areaextent = (10.0, 20.0, 30.0, 40.0, 50.0)
       self.fail("Expected type error")
-    except TypeError, e:
+    except TypeError:
       pass
 
   def test_areaextent_illegalData(self):
@@ -253,7 +253,7 @@ class PyCartesianTest(unittest.TestCase):
     try:
       obj.areaextent = (10.0, "a", 30.0, 40.0)
       self.fail("Expected type error")
-    except TypeError, e:
+    except TypeError:
       pass
 
   def test_getLocationX(self):
@@ -290,7 +290,7 @@ class PyCartesianTest(unittest.TestCase):
     for x in xpos:
       value = 100.0 + x*10.0
       result = obj.getIndexX(value)
-      self.assertEquals(x, result)
+      self.assertEqual(x, result)
 
   def test_getIndexY(self):
     obj = _cartesian.new();
@@ -302,15 +302,15 @@ class PyCartesianTest(unittest.TestCase):
     for y in ypos:
       value = 400.0 - y*10.0
       result = obj.getIndexY(value)
-      self.assertEquals(y, result)
+      self.assertEqual(y, result)
 
   def test_getExtremeLonLatBoundaries(self):
     obj = _raveio.open(self.CARTESIAN_FIXTURE).object
     ul,lr = obj.getExtremeLonLatBoundaries()
-    self.assertAlmostEquals(8.7327, ul[0]*180.0/math.pi, 4)
-    self.assertAlmostEquals(58.4419, ul[1]*180.0/math.pi, 4)
-    self.assertAlmostEquals(16.9418, lr[0]*180.0/math.pi, 4)
-    self.assertAlmostEquals(54.1539, lr[1]*180.0/math.pi, 4)
+    self.assertAlmostEqual(8.7327, ul[0]*180.0/math.pi, 4)
+    self.assertAlmostEqual(58.4419, ul[1]*180.0/math.pi, 4)
+    self.assertAlmostEqual(16.9418, lr[0]*180.0/math.pi, 4)
+    self.assertAlmostEqual(54.1539, lr[1]*180.0/math.pi, 4)
 
   def test_projection(self):
     obj = _cartesian.new()
@@ -356,8 +356,8 @@ class PyCartesianTest(unittest.TestCase):
 
     for cval in pairs:
       result = obj.getValue((cval[0],cval[1]))
-      self.assertAlmostEquals(cval[2], result[1], 4)
-      self.assertEquals(cval[3], result[0])
+      self.assertAlmostEqual(cval[2], result[1], 4)
+      self.assertEqual(cval[3], result[0])
 
   def test_getConvertedValueAtLonLat(self):
     obj = _cartesian.new()
@@ -383,8 +383,8 @@ class PyCartesianTest(unittest.TestCase):
     
     expected = obj.getConvertedValue((4,5))
     actual = obj.getConvertedValueAtLonLat(deg2rad((12.8544, 56.3675)))
-    self.assertEquals(expected[0], actual[0])
-    self.assertAlmostEquals(expected[1], actual[1], 4)
+    self.assertEqual(expected[0], actual[0])
+    self.assertAlmostEqual(expected[1], actual[1], 4)
 
   def test_getQualityValueAtLonLat(self):
     obj = _cartesian.new()
@@ -429,9 +429,9 @@ class PyCartesianTest(unittest.TestCase):
     
     #expected = obj.getConvertedValue((4,5))
     result = obj.getQualityValueAtLonLat(deg2rad((12.8544, 56.3675)), "se.task.1")
-    self.assertAlmostEquals(49.0, result, 4)
+    self.assertAlmostEqual(49.0, result, 4)
     result = obj.getQualityValueAtLonLat(deg2rad((12.8544, 56.3675)), "se.task.2")
-    self.assertAlmostEquals(199.0, result, 4)
+    self.assertAlmostEqual(199.0, result, 4)
 
   def test_getConvertedQualityValueAtLonLat(self):
     obj = _cartesian.new()
@@ -479,9 +479,9 @@ class PyCartesianTest(unittest.TestCase):
     
     #expected = obj.getConvertedValue((4,5))
     result = obj.getConvertedQualityValueAtLonLat(deg2rad((12.8544, 56.3675)), "se.task.1")
-    self.assertAlmostEquals(10.0 + 2.0 * 49.0, result, 4)
+    self.assertAlmostEqual(10.0 + 2.0 * 49.0, result, 4)
     result = obj.getConvertedQualityValueAtLonLat(deg2rad((12.8544, 56.3675)), "se.task.2")
-    self.assertAlmostEquals(3.0 * 199.0, result, 4)
+    self.assertAlmostEqual(3.0 * 199.0, result, 4)
 
   def test_getMean(self):
     obj = _cartesian.new()
@@ -512,23 +512,23 @@ class PyCartesianTest(unittest.TestCase):
     
     # Nodata
     (t,v) = obj.getMean((0,0), 2)
-    self.assertEquals(t, _rave.RaveValueType_NODATA)
+    self.assertEqual(t, _rave.RaveValueType_NODATA)
 
     # Undetect
     (t,v) = obj.getMean((3,1), 2)
-    self.assertEquals(t, _rave.RaveValueType_UNDETECT)
+    self.assertEqual(t, _rave.RaveValueType_UNDETECT)
     
     # Left side with one nodata
     expected = data[1][0]
     (t,v) = obj.getMean((0,1), 2) 
-    self.assertEquals(t, _rave.RaveValueType_DATA)
-    self.assertAlmostEquals(v, expected)
+    self.assertEqual(t, _rave.RaveValueType_DATA)
+    self.assertAlmostEqual(v, expected)
 
     # Both 1 nodata & 1 undetect
     expected = (data[2][2] + data[2][3])/2
     (t,v) = obj.getMean((3,2), 2) 
-    self.assertEquals(t, _rave.RaveValueType_DATA)
-    self.assertAlmostEquals(v, expected)
+    self.assertEqual(t, _rave.RaveValueType_DATA)
+    self.assertAlmostEqual(v, expected)
     
   def test_setGetValue(self):
     obj = _cartesian.new()
@@ -559,8 +559,8 @@ class PyCartesianTest(unittest.TestCase):
     # Verify
     for v in data:
       r = obj.getValue(v[0])
-      self.assertAlmostEquals(v[1], r[1], 4)
-      self.assertEquals(v[2], r[0])
+      self.assertAlmostEqual(v[1], r[1], 4)
+      self.assertEqual(v[2], r[0])
 
   def test_setGetConvertedValue(self):
     obj = _cartesian.new()
@@ -586,20 +586,20 @@ class PyCartesianTest(unittest.TestCase):
     obj.setConvertedValue((3,3), 15.0)
 
     r = obj.getConvertedValue((0,1))
-    self.assertEquals(_rave.RaveValueType_DATA, r[0])
-    self.assertAlmostEquals(21.0, r[1], 4)
+    self.assertEqual(_rave.RaveValueType_DATA, r[0])
+    self.assertAlmostEqual(21.0, r[1], 4)
 
     r = obj.getConvertedValue((1,1))
-    self.assertEquals(_rave.RaveValueType_DATA, r[0])
-    self.assertAlmostEquals(41.0, r[1], 4)
+    self.assertEqual(_rave.RaveValueType_DATA, r[0])
+    self.assertAlmostEqual(41.0, r[1], 4)
     
     r = obj.getConvertedValue((2,2))
-    self.assertEquals(_rave.RaveValueType_DATA, r[0])
-    self.assertAlmostEquals(14.5, r[1], 4)
+    self.assertEqual(_rave.RaveValueType_DATA, r[0])
+    self.assertAlmostEqual(14.5, r[1], 4)
 
     r = obj.getConvertedValue((3,3))
-    self.assertEquals(_rave.RaveValueType_DATA, r[0])
-    self.assertAlmostEquals(15.0, r[1], 4)
+    self.assertEqual(_rave.RaveValueType_DATA, r[0])
+    self.assertAlmostEqual(15.0, r[1], 4)
 
   def test_isTransformable(self):
     proj = _rave.projection("x", "y", "+proj=stere +ellps=bessel +lat_0=90 +lon_0=14 +lat_ts=60 +datum=WGS84")
@@ -616,7 +616,7 @@ class PyCartesianTest(unittest.TestCase):
     obj.projection = proj
     obj.addParameter(param);
 
-    self.assertEquals(True, obj.isTransformable())
+    self.assertEqual(True, obj.isTransformable())
     
   def test_isTransformable_noscale(self):
     proj = _rave.projection("x", "y", "+proj=stere +ellps=bessel +lat_0=90 +lon_0=14 +lat_ts=60 +datum=WGS84")
@@ -633,13 +633,13 @@ class PyCartesianTest(unittest.TestCase):
     obj.projection = proj
     obj.addParameter(param)
 
-    self.assertEquals(True, obj.isTransformable())
+    self.assertEqual(True, obj.isTransformable())
     obj.xscale = 1000.0
     obj.yscale = 0.0
-    self.assertEquals(False, obj.isTransformable())
+    self.assertEqual(False, obj.isTransformable())
     obj.xscale = 0.0
     obj.yscale = 1000.0
-    self.assertEquals(False, obj.isTransformable())
+    self.assertEqual(False, obj.isTransformable())
 
   def test_isTransformable_nodata(self):
     proj = _rave.projection("x", "y", "+proj=stere +ellps=bessel +lat_0=90 +lon_0=14 +lat_ts=60 +datum=WGS84")
@@ -650,7 +650,7 @@ class PyCartesianTest(unittest.TestCase):
     
     obj.projection = proj
 
-    self.assertEquals(False, obj.isTransformable())
+    self.assertEqual(False, obj.isTransformable())
 
   def test_isTransformable_noproj(self):
     data = numpy.zeros((10,10), numpy.float64)
@@ -665,7 +665,7 @@ class PyCartesianTest(unittest.TestCase):
     
     obj.addParameter(param)
 
-    self.assertEquals(False, obj.isTransformable())
+    self.assertEqual(False, obj.isTransformable())
 
   def test_attributes_visibility(self):
     obj = _cartesian.new()
@@ -683,8 +683,8 @@ class PyCartesianTest(unittest.TestCase):
     self.assertTrue("how/else" in param.getAttributeNames())
     
     param.addAttribute("how/something", 2.0)
-    self.assertAlmostEquals(1.0, obj.getAttribute("how/something"))
-    self.assertAlmostEquals(2.0, param.getAttribute("how/something"))
+    self.assertAlmostEqual(1.0, obj.getAttribute("how/something"))
+    self.assertAlmostEqual(2.0, param.getAttribute("how/something"))
 
   def test_product_type(self):
     obj = _cartesian.new()
@@ -708,10 +708,10 @@ class PyCartesianTest(unittest.TestCase):
                   _rave.Rave_ProductType_QUAL,
                   _rave.Rave_ProductType_PMAX,
                   _rave.Rave_ProductType_SURF]
-    self.assertEquals(obj.product, _rave.Rave_ProductType_UNDEFINED)
+    self.assertEqual(obj.product, _rave.Rave_ProductType_UNDEFINED)
     for pt in producttypes:
       obj.product = pt
-      self.assertEquals(obj.product, pt)
+      self.assertEqual(obj.product, pt)
 
   def test_isValid_asImage(self):
     obj = _cartesian.new()
@@ -733,7 +733,7 @@ class PyCartesianTest(unittest.TestCase):
     obj.product = _rave.Rave_ProductType_CAPPI
     obj.addParameter(param)
     
-    self.assertEquals(True, obj.isValid(_rave.Rave_ObjectType_IMAGE))
+    self.assertEqual(True, obj.isValid(_rave.Rave_ObjectType_IMAGE))
     
   def test_isValid_asImage_no_date(self):
     obj = _cartesian.new()
@@ -754,7 +754,7 @@ class PyCartesianTest(unittest.TestCase):
     obj.product = _rave.Rave_ProductType_CAPPI
     obj.addParameter(param)
     
-    self.assertEquals(False, obj.isValid(_rave.Rave_ObjectType_IMAGE))
+    self.assertEqual(False, obj.isValid(_rave.Rave_ObjectType_IMAGE))
 
   def test_addParameter_no_quantity(self):
     obj = _cartesian.new()
@@ -784,7 +784,7 @@ class PyCartesianTest(unittest.TestCase):
     obj.yscale = 100.0
     obj.addParameter(param)
     
-    self.assertEquals(True, obj.isValid(_rave.Rave_ObjectType_CVOL))
+    self.assertEqual(True, obj.isValid(_rave.Rave_ObjectType_CVOL))
   
   def test_qualityfields(self):
     obj = _cartesian.new()
@@ -796,11 +796,11 @@ class PyCartesianTest(unittest.TestCase):
     obj.addQualityField(field1)
     obj.addQualityField(field2)
     
-    self.assertEquals(2, obj.getNumberOfQualityFields())
-    self.assertEquals("field1", obj.getQualityField(0).getAttribute("what/name"))
+    self.assertEqual(2, obj.getNumberOfQualityFields())
+    self.assertEqual("field1", obj.getQualityField(0).getAttribute("what/name"))
     obj.removeQualityField(0)
-    self.assertEquals(1, obj.getNumberOfQualityFields())
-    self.assertEquals("field2", obj.getQualityField(0).getAttribute("what/name"))
+    self.assertEqual(1, obj.getNumberOfQualityFields())
+    self.assertEqual("field2", obj.getQualityField(0).getAttribute("what/name"))
   
   def test_getQualityFieldByHowTask(self):
     obj = _cartesian.new()
@@ -815,9 +815,9 @@ class PyCartesianTest(unittest.TestCase):
     obj.addQualityField(field2)
     obj.addQualityField(field3)
 
-    self.assertEquals("se.task.1", obj.getQualityFieldByHowTask("se.task.1").getAttribute("how/task"))
-    self.assertEquals("se.task.2", obj.getQualityFieldByHowTask("se.task.2").getAttribute("how/task"))
-    self.assertEquals(None, obj.getQualityFieldByHowTask("abc"))
+    self.assertEqual("se.task.1", obj.getQualityFieldByHowTask("se.task.1").getAttribute("how/task"))
+    self.assertEqual("se.task.2", obj.getQualityFieldByHowTask("se.task.2").getAttribute("how/task"))
+    self.assertEqual(None, obj.getQualityFieldByHowTask("abc"))
 
   def test_findQualityFieldByHowTask(self):
     obj = _cartesian.new()
@@ -849,10 +849,10 @@ class PyCartesianTest(unittest.TestCase):
     param.setData(numpy.zeros((240,240),numpy.uint8))
     obj.addParameter(param)
 
-    self.assertEquals("should be found", obj.findQualityFieldByHowTask("se.task.1").getAttribute("how/some"))
-    self.assertEquals("se.task.2", obj.findQualityFieldByHowTask("se.task.2").getAttribute("how/task"))
-    self.assertEquals("se.task.3", obj.findQualityFieldByHowTask("se.task.3").getAttribute("how/task"))
-    self.assertEquals(None, obj.findQualityFieldByHowTask("abc"))
+    self.assertEqual("should be found", obj.findQualityFieldByHowTask("se.task.1").getAttribute("how/some"))
+    self.assertEqual("se.task.2", obj.findQualityFieldByHowTask("se.task.2").getAttribute("how/task"))
+    self.assertEqual("se.task.3", obj.findQualityFieldByHowTask("se.task.3").getAttribute("how/task"))
+    self.assertEqual(None, obj.findQualityFieldByHowTask("abc"))
 
   
   def test_addParameter(self):
@@ -902,14 +902,14 @@ class PyCartesianTest(unittest.TestCase):
     obj.init(a)
     
     param = obj.createParameter("DBZH", _rave.RaveDataType_UCHAR)
-    self.assertEquals(10, param.xsize)
-    self.assertEquals(10, param.ysize)
-    self.assertEquals("DBZH", param.quantity)
+    self.assertEqual(10, param.xsize)
+    self.assertEqual(10, param.ysize)
+    self.assertEqual("DBZH", param.quantity)
 
     param = obj.createParameter("MMH", _rave.RaveDataType_UCHAR)
-    self.assertEquals(10, param.xsize)
-    self.assertEquals(10, param.ysize)
-    self.assertEquals("MMH", param.quantity)
+    self.assertEqual(10, param.xsize)
+    self.assertEqual(10, param.ysize)
+    self.assertEqual("MMH", param.quantity)
 
     self.assertTrue(obj.hasParameter("DBZH"))
     self.assertTrue(obj.hasParameter("MMH"))
@@ -980,13 +980,13 @@ class PyCartesianTest(unittest.TestCase):
     param3.quantity="MMH"
     param3.setData(numpy.zeros((240,240),numpy.uint8))
 
-    self.assertEquals(0, obj.getParameterCount())
+    self.assertEqual(0, obj.getParameterCount())
     obj.addParameter(param)
-    self.assertEquals(1, obj.getParameterCount())
+    self.assertEqual(1, obj.getParameterCount())
     obj.addParameter(param2)
-    self.assertEquals(2, obj.getParameterCount())
+    self.assertEqual(2, obj.getParameterCount())
     obj.addParameter(param3)
-    self.assertEquals(2, obj.getParameterCount())
+    self.assertEqual(2, obj.getParameterCount())
 
   def test_getParameterNames(self):
     obj = _cartesian.new()
@@ -998,15 +998,15 @@ class PyCartesianTest(unittest.TestCase):
     param2.setData(numpy.zeros((240,240),numpy.uint8))
 
     result = obj.getParameterNames()
-    self.assertEquals(0, len(result))
+    self.assertEqual(0, len(result))
     
     obj.addParameter(param)
     result = obj.getParameterNames()
-    self.assertEquals(1, len(result))
+    self.assertEqual(1, len(result))
     self.assertTrue("DBZH" in result)
 
     obj.addParameter(param2)
     result = obj.getParameterNames()
-    self.assertEquals(2, len(result))
+    self.assertEqual(2, len(result))
     self.assertTrue("DBZH" in result)
     self.assertTrue("MMH" in result)

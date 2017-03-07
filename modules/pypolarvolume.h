@@ -46,6 +46,8 @@ typedef struct {
 
 #define PyPolarVolume_API_pointers 3                          /**< number of type and function pointers */
 
+#define PyPolarVolume_CAPSULE_NAME "_polarvolume._C_API"
+
 #ifdef PYPOLARVOLUME_MODULE
 /** Forward declaration of type */
 extern PyTypeObject PyPolarVolume_Type;
@@ -84,34 +86,15 @@ static void **PyPolarVolume_API;
  * Checks if the object is a python polar volume.
  */
 #define PyPolarVolume_Check(op) \
-   ((op)->ob_type == (PyTypeObject *)PyPolarVolume_API[PyPolarVolume_Type_NUM])
+   (Py_TYPE(op) == &PyPolarVolume_Type)
+
+#define PyPolarVolume_Type (*(PyTypeObject*)PyPolarVolume_API[PyPolarVolume_Type_NUM])
 
 /**
- * Imports the PyPolarVolume module (like import _polarscan in python).
+ * Imports the PyPolarVolume module (like import _polarvolume in python).
  */
-static int
-import_pypolarvolume(void)
-{
-  PyObject *module;
-  PyObject *c_api_object;
-
-  module = PyImport_ImportModule("_polarvolume");
-  if (module == NULL) {
-    return -1;
-  }
-
-  c_api_object = PyObject_GetAttrString(module, "_C_API");
-  if (c_api_object == NULL) {
-    Py_DECREF(module);
-    return -1;
-  }
-  if (PyCObject_Check(c_api_object)) {
-    PyPolarVolume_API = (void **)PyCObject_AsVoidPtr(c_api_object);
-  }
-  Py_DECREF(c_api_object);
-  Py_DECREF(module);
-  return 0;
-}
+#define import_pypolarvolume() \
+    PyPolarVolume_API = (void **)PyCapsule_Import(PyPolarVolume_CAPSULE_NAME, 1);
 
 #endif
 

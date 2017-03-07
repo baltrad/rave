@@ -22,7 +22,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2009-12-07
  */
-#include "Python.h"
+#include "pyravecompat.h"
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
@@ -32,6 +32,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "pyrave_debug.h"
 #include "rave_alloc.h"
+#include "pyravecompat.h"
 
 /**
  * Debug this module.
@@ -344,6 +345,8 @@ static PyObject* _pyprojection_fwd(PyProjection* self, PyObject* args)
   return Py_BuildValue("(dd)", x, y);
 }
 
+MOD_DIR_FORWARD_DECLARE(PyProjection);
+
 /**
  * All methods a projection can have
  */
@@ -356,42 +359,44 @@ static struct PyMethodDef _pyprojection_methods[] =
   {"transformx", (PyCFunction) _pyprojection_transformx, 1},
   {"inv", (PyCFunction) _pyprojection_inv, 1},
   {"fwd", (PyCFunction) _pyprojection_fwd, 1},
+  {"__dir__", (PyCFunction) MOD_DIR_REFERENCE(PyProjection), METH_NOARGS},
   {NULL, NULL } /* sentinel */
 };
 
-/**
- * Returns the specified attribute in the transformator
- * @param[in] self - the cartesian product
- */
-static PyObject* _pyprojection_getattr(PyProjection* self, char* name)
-{
-  PyObject* res = NULL;
+MOD_DIR_FUNCTION(PyProjection, _pyprojection_methods)
 
-  if (strcmp("id", name) == 0) {
+/**
+ * Returns the specified attribute in the rave field
+ * @param[in] self - the rave field
+ */
+static PyObject* _pyprojection_getattro(PyProjection* self, PyObject* name)
+{
+  if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "id") == 0) {
     return PyString_FromString(Projection_getID(self->projection));
-  } else if (strcmp("description", name) == 0) {
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "description") == 0) {
     return PyString_FromString(Projection_getDescription(self->projection));
-  } else if (strcmp("definition", name) == 0) {
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "definition") == 0) {
     return PyString_FromString(Projection_getDefinition(self->projection));
   }
-
-  res = Py_FindMethod(_pyprojection_methods, (PyObject*) self, name);
-  if (res)
-    return res;
-
-  PyErr_Clear();
-  PyErr_SetString(PyExc_AttributeError, name);
-  return NULL;
+  return PyObject_GenericGetAttr((PyObject*)self, name);
 }
 
 /**
- * Sets the specified attribute in the projection
+ * Sets the attribute value
  */
-static int _pyprojection_setattr(PyProjection* self, char* name, PyObject* val)
+static int _pyprojection_setattro(PyProjection *self, PyObject *name, PyObject *value)
 {
-  return -1;
-}
+  int result = -1;
+  if (name == NULL) {
+    goto done;
+  }
 
+  raiseException_gotoTag(done, PyExc_AttributeError, PY_RAVE_ATTRO_NAME_TO_STRING(name));
+
+  result = 0;
+done:
+  return result;
+}
 /*@} End of Projection */
 
 /// --------------------------------------------------------------------
@@ -405,52 +410,80 @@ static PyMethodDef functions[] = {
 
 PyTypeObject PyProjection_Type =
 {
-  PyObject_HEAD_INIT(NULL)0, /*ob_size*/
+   PyVarObject_HEAD_INIT(NULL, 0) /*ob_size*/
   "ProjectionCore", /*tp_name*/
   sizeof(PyProjection), /*tp_size*/
   0, /*tp_itemsize*/
   /* methods */
   (destructor)_pyprojection_dealloc, /*tp_dealloc*/
   0, /*tp_print*/
-  (getattrfunc)_pyprojection_getattr, /*tp_getattr*/
-  (setattrfunc)_pyprojection_setattr, /*tp_setattr*/
+  (getattrfunc)0/*_pyprojection_getattr*/, /*tp_getattr*/
+  (setattrfunc)0/*_pyprojection_setattr*/, /*tp_setattr*/
   0, /*tp_compare*/
   0, /*tp_repr*/
   0, /*tp_as_number */
   0,
   0, /*tp_as_mapping */
-  0 /*tp_hash*/
+  0, /*tp_hash*/
+  (ternaryfunc)0, /*tp_call*/
+  (reprfunc)0, /*tp_str*/
+  (getattrofunc)_pyprojection_getattro, /*tp_getattro*/
+  (setattrofunc)_pyprojection_setattro, /*tp_setattro*/
+  0, /*tp_as_buffer*/
+  Py_TPFLAGS_DEFAULT, /*tp_flags*/
+  0, /*tp_doc*/
+  (traverseproc)0, /*tp_traverse*/
+  (inquiry)0, /*tp_clear*/
+  0, /*tp_richcompare*/
+  0, /*tp_weaklistoffset*/
+  0, /*tp_iter*/
+  0, /*tp_iternext*/
+  _pyprojection_methods, /*tp_methods*/
+  0,                    /*tp_members*/
+  0,                      /*tp_getset*/
+  0,                      /*tp_base*/
+  0,                      /*tp_dict*/
+  0,                      /*tp_descr_get*/
+  0,                      /*tp_descr_set*/
+  0,                      /*tp_dictoffset*/
+  0,                      /*tp_init*/
+  0,                      /*tp_alloc*/
+  0,                      /*tp_new*/
+  0,                      /*tp_free*/
+  0,                      /*tp_is_gc*/
 };
 
-PyMODINIT_FUNC
-init_projection(void)
+MOD_INIT(_projection)
 {
   PyObject *module=NULL,*dictionary=NULL;
   static void *PyProjection_API[PyProjection_API_pointers];
   PyObject *c_api_object = NULL;
-  PyProjection_Type.ob_type = &PyType_Type;
 
-  module = Py_InitModule("_projection", functions);
+  MOD_INIT_SETUP_TYPE(PyProjection_Type, &PyType_Type);
+
+  MOD_INIT_VERIFY_TYPE_READY(&PyProjection_Type);
+
+  MOD_INIT_DEF(module, "_projection", NULL/*doc*/, functions);
   if (module == NULL) {
-    return;
+    return MOD_INIT_ERROR;
   }
+
   PyProjection_API[PyProjection_Type_NUM] = (void*)&PyProjection_Type;
   PyProjection_API[PyProjection_GetNative_NUM] = (void *)PyProjection_GetNative;
   PyProjection_API[PyProjection_New_NUM] = (void*)PyProjection_New;
   PyProjection_API[PyProjection_NewFromDef_NUM] = (void*)PyProjection_NewFromDef;
 
-  c_api_object = PyCObject_FromVoidPtr((void *)PyProjection_API, NULL);
-
-  if (c_api_object != NULL) {
-    PyModule_AddObject(module, "_C_API", c_api_object);
-  }
-
+  c_api_object = PyCapsule_New(PyProjection_API, PyProjection_CAPSULE_NAME, NULL);
   dictionary = PyModule_GetDict(module);
-  ErrorObject = PyString_FromString("_projection.error");
+  PyDict_SetItemString(dictionary, "_C_API", c_api_object);
+
+  ErrorObject = PyErr_NewException("_projection.error", NULL, NULL); //PyString_FromString("_projection.error");
   if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
     Py_FatalError("Can't define _projection.error");
+    return MOD_INIT_ERROR;
   }
 
   PYRAVE_DEBUG_INITIALIZE;
+  return MOD_INIT_SUCCESS(module);
 }
 /*@} End of Module setup */

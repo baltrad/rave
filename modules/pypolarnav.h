@@ -46,6 +46,8 @@ typedef struct {
 
 #define PyPolarNavigator_API_pointers 3                         /**< number of API pointers */
 
+#define PyPolarNavigator_CAPSULE_NAME  "_polarnav._C_API"
+
 #ifdef PYPOLARNAV_MODULE
 /** Forward declaration of type */
 extern PyTypeObject PyPolarNavigator_Type;
@@ -80,38 +82,20 @@ static void **PyPolarNavigator_API;
 #define PyPolarNavigator_New \
   (*(PyPolarNavigator_New_RETURN (*)PyPolarNavigator_New_PROTO) PyPolarNavigator_API[PyPolarNavigator_New_NUM])
 
+
 /**
  * Checks if the object is a python polar navigator.
  */
 #define PyPolarNavigator_Check(op) \
-   ((op)->ob_type == (PyTypeObject *)PyPolarNavigator_API[PyPolarNavigator_Type_NUM])
+   (Py_TYPE(op) == &PyPolarNavigator_Type)
+
+#define PyPolarNavigator_Type (*(PyTypeObject*)PyPolarNavigator_API[PyPolarNavigator_Type_NUM])
 
 /**
- * Imports the PyPolarNavigator module (like import _polarscan in python).
+ * Imports the PyArea module (like import _area in python).
  */
-static int
-import_pypolarnav(void)
-{
-  PyObject *module;
-  PyObject *c_api_object;
-
-  module = PyImport_ImportModule("_polarnav");
-  if (module == NULL) {
-    return -1;
-  }
-
-  c_api_object = PyObject_GetAttrString(module, "_C_API");
-  if (c_api_object == NULL) {
-    Py_DECREF(module);
-    return -1;
-  }
-  if (PyCObject_Check(c_api_object)) {
-    PyPolarNavigator_API = (void **)PyCObject_AsVoidPtr(c_api_object);
-  }
-  Py_DECREF(c_api_object);
-  Py_DECREF(module);
-  return 0;
-}
+#define import_pypolarnav() \
+    PyPolarNavigator_API = (void **)PyCapsule_Import(PyPolarNavigator_CAPSULE_NAME, 1);
 
 #endif
 

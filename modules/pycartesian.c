@@ -22,7 +22,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2009-12-10
  */
-#include "Python.h"
+#include "pyravecompat.h"
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>
@@ -1093,45 +1093,43 @@ static struct PyMethodDef _pycartesian_methods[] =
  * Returns the specified attribute in the cartesian
  * @param[in] self - the cartesian product
  */
-static PyObject* _pycartesian_getattr(PyCartesian* self, char* name)
+static PyObject* _pycartesian_getattro(PyCartesian* self, PyObject* name)
 {
-  PyObject* res = NULL;
-
-  if (strcmp("time", name) == 0) {
+  if (PY_COMPARE_STRING_WITH_ATTRO_NAME("time", name) == 0) {
     if (Cartesian_getTime(self->cartesian) != NULL) {
       return PyString_FromString(Cartesian_getTime(self->cartesian));
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("date", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("date", name) == 0) {
     if (Cartesian_getDate(self->cartesian) != NULL) {
       return PyString_FromString(Cartesian_getDate(self->cartesian));
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("objectType", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("objectType", name) == 0) {
     return PyInt_FromLong(Cartesian_getObjectType(self->cartesian));
-  } else if (strcmp("product", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("product", name) == 0) {
     return PyInt_FromLong(Cartesian_getProduct(self->cartesian));
-  } else if (strcmp("source", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("source", name) == 0) {
     if (Cartesian_getSource(self->cartesian) != NULL) {
       return PyString_FromString(Cartesian_getSource(self->cartesian));
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("xsize", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("xsize", name) == 0) {
     return PyInt_FromLong(Cartesian_getXSize(self->cartesian));
-  } else if (strcmp("ysize", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("ysize", name) == 0) {
     return PyInt_FromLong(Cartesian_getYSize(self->cartesian));
-  } else if (strcmp("xscale", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("xscale", name) == 0) {
     return PyFloat_FromDouble(Cartesian_getXScale(self->cartesian));
-  } else if (strcmp("yscale", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("yscale", name) == 0) {
     return PyFloat_FromDouble(Cartesian_getYScale(self->cartesian));
-  } else if (strcmp("areaextent", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("areaextent", name) == 0) {
     double llX = 0.0, llY = 0.0, urX = 0.0, urY = 0.0;
     Cartesian_getAreaExtent(self->cartesian, &llX, &llY, &urX, &urY);
     return Py_BuildValue("(dddd)", llX, llY, urX, urY);
-  } else if (strcmp("projection", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("projection", name) == 0) {
     Projection_t* projection = Cartesian_getProjection(self->cartesian);
     if (projection != NULL) {
       PyProjection* result = PyProjection_New(projection);
@@ -1140,31 +1138,31 @@ static PyObject* _pycartesian_getattr(PyCartesian* self, char* name)
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("starttime", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("starttime", name) == 0) {
     if (Cartesian_getStartTime(self->cartesian) != NULL) {
       return PyString_FromString(Cartesian_getStartTime(self->cartesian));
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("startdate", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("startdate", name) == 0) {
     if (Cartesian_getStartDate(self->cartesian) != NULL) {
       return PyString_FromString(Cartesian_getStartDate(self->cartesian));
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("endtime", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("endtime", name) == 0) {
     if (Cartesian_getEndTime(self->cartesian) != NULL) {
       return PyString_FromString(Cartesian_getEndTime(self->cartesian));
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("enddate", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("enddate", name) == 0) {
     if (Cartesian_getEndDate(self->cartesian) != NULL) {
       return PyString_FromString(Cartesian_getEndDate(self->cartesian));
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("defaultParameter", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("defaultParameter", name) == 0) {
     if (Cartesian_getDefaultParameter(self->cartesian) != NULL) {
       return PyString_FromString(Cartesian_getDefaultParameter(self->cartesian));
     } else {
@@ -1172,25 +1170,19 @@ static PyObject* _pycartesian_getattr(PyCartesian* self, char* name)
     }
   }
 
-  res = Py_FindMethod(_pycartesian_methods, (PyObject*) self, name);
-  if (res)
-    return res;
-
-  PyErr_Clear();
-  PyErr_SetString(PyExc_AttributeError, name);
-  return NULL;
+  return PyObject_GenericGetAttr((PyObject*)self, name);
 }
 
 /**
  * Returns the specified attribute in the polar volume
  */
-static int _pycartesian_setattr(PyCartesian* self, char* name, PyObject* val)
+static int _pycartesian_setattro(PyCartesian* self, PyObject* name, PyObject* val)
 {
   int result = -1;
   if (name == NULL) {
     goto done;
   }
-  if (strcmp("time", name) == 0) {
+  if (PY_COMPARE_STRING_WITH_ATTRO_NAME("time", name) == 0) {
     if (PyString_Check(val)) {
       if (!Cartesian_setTime(self->cartesian, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "time must be in the format HHmmss");
@@ -1200,7 +1192,7 @@ static int _pycartesian_setattr(PyCartesian* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_ValueError,"time must be of type string");
     }
-  } else if (strcmp("date", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("date", name) == 0) {
     if (PyString_Check(val)) {
       if (!Cartesian_setDate(self->cartesian, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "date must be in the format YYYYMMSS");
@@ -1210,7 +1202,7 @@ static int _pycartesian_setattr(PyCartesian* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_ValueError,"date must be of type string");
     }
-  } else if (strcmp("objectType", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("objectType", name) == 0) {
     if (PyInt_Check(val)) {
       if (!Cartesian_setObjectType(self->cartesian, PyInt_AsLong(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "objectType not supported");
@@ -1218,7 +1210,7 @@ static int _pycartesian_setattr(PyCartesian* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "objectType must be a valid object type")
     }
-  } else if (strcmp("product", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("product", name) == 0) {
     if (PyInt_Check(val)) {
       if (!Cartesian_setProduct(self->cartesian, PyInt_AsLong(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "product not supported");
@@ -1226,7 +1218,7 @@ static int _pycartesian_setattr(PyCartesian* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "product must be a valid product type")
     }
-  } else if (strcmp("source", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("source", name) == 0) {
     if (PyString_Check(val)) {
       if (!Cartesian_setSource(self->cartesian, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "Failed to set source");
@@ -1236,31 +1228,31 @@ static int _pycartesian_setattr(PyCartesian* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_ValueError,"source must be of type string");
     }
-  } else if (strcmp("xscale", name)==0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("xscale", name)==0) {
     if (PyFloat_Check(val)) {
       Cartesian_setXScale(self->cartesian, PyFloat_AsDouble(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError,"xscale must be of type float");
     }
-  } else if (strcmp("yscale", name)==0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("yscale", name)==0) {
     if (PyFloat_Check(val)) {
       Cartesian_setYScale(self->cartesian, PyFloat_AsDouble(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError,"yscale must be of type float");
     }
-  } else if (strcmp("areaextent", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("areaextent", name) == 0) {
     double llX = 0.0, llY = 0.0, urX = 0.0, urY = 0.0;
     if (!PyArg_ParseTuple(val, "dddd", &llX, &llY, &urX, &urY)) {
       goto done;
     }
     Cartesian_setAreaExtent(self->cartesian, llX, llY, urX, urY);
-  } else if (strcmp("projection", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("projection", name) == 0) {
     if (PyProjection_Check(val)) {
       Cartesian_setProjection(self->cartesian, ((PyProjection*)val)->projection);
     } else if (val == Py_None) {
       Cartesian_setProjection(self->cartesian, NULL);
     }
-  } else if (strcmp("starttime", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("starttime", name) == 0) {
     if (PyString_Check(val)) {
       if (!Cartesian_setStartTime(self->cartesian, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "starttime must be in the format HHmmss");
@@ -1270,7 +1262,7 @@ static int _pycartesian_setattr(PyCartesian* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_ValueError,"time must be of type string");
     }
-  } else if (strcmp("startdate", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("startdate", name) == 0) {
     if (PyString_Check(val)) {
       if (!Cartesian_setStartDate(self->cartesian, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "startdate must be in the format YYYYMMSS");
@@ -1280,7 +1272,7 @@ static int _pycartesian_setattr(PyCartesian* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_ValueError,"date must be of type string");
     }
-  } else if (strcmp("endtime", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("endtime", name) == 0) {
     if (PyString_Check(val)) {
       if (!Cartesian_setEndTime(self->cartesian, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "endtime must be in the format HHmmss");
@@ -1290,7 +1282,7 @@ static int _pycartesian_setattr(PyCartesian* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_ValueError,"endtime must be of type string");
     }
-  } else if (strcmp("enddate", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("enddate", name) == 0) {
     if (PyString_Check(val)) {
       if (!Cartesian_setEndDate(self->cartesian, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "enddate must be in the format YYYYMMSS");
@@ -1300,7 +1292,7 @@ static int _pycartesian_setattr(PyCartesian* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_ValueError,"enddate must be of type string");
     }
-  } else if (strcmp("defaultParameter", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("defaultParameter", name) == 0) {
     if (PyString_Check(val)) {
       if (!Cartesian_setDefaultParameter(self->cartesian, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "could not set defaultParameter");
@@ -1309,7 +1301,7 @@ static int _pycartesian_setattr(PyCartesian* self, char* name, PyObject* val)
       raiseException_gotoTag(done, PyExc_ValueError,"defaultParameter must be of type string");
     }
   } else {
-    raiseException_gotoTag(done, PyExc_AttributeError, name);
+    raiseException_gotoTag(done, PyExc_AttributeError, PY_RAVE_ATTRO_NAME_TO_STRING(name));
   }
 
   result = 0;
@@ -1334,21 +1326,47 @@ static PyObject* _pycartesian_isCartesian(PyObject* self, PyObject* args)
 /*@{ Type definitions */
 PyTypeObject PyCartesian_Type =
 {
-  PyObject_HEAD_INIT(NULL)0, /*ob_size*/
+  PyVarObject_HEAD_INIT(NULL, 0) /*ob_size*/
   "CartesianCore", /*tp_name*/
   sizeof(PyCartesian), /*tp_size*/
   0, /*tp_itemsize*/
   /* methods */
   (destructor)_pycartesian_dealloc, /*tp_dealloc*/
   0, /*tp_print*/
-  (getattrfunc)_pycartesian_getattr, /*tp_getattr*/
-  (setattrfunc)_pycartesian_setattr, /*tp_setattr*/
-  0, /*tp_compare*/
-  0, /*tp_repr*/
-  0, /*tp_as_number */
+  (getattrfunc)0,               /*tp_getattr*/
+  (setattrfunc)0,               /*tp_setattr*/
+  0,                            /*tp_compare*/
+  0,                            /*tp_repr*/
+  0,                            /*tp_as_number */
   0,
-  0, /*tp_as_mapping */
-  0 /*tp_hash*/
+  0,                            /*tp_as_mapping */
+  0,                            /*tp_hash*/
+  (ternaryfunc)0,               /*tp_call*/
+  (reprfunc)0,                  /*tp_str*/
+  (getattrofunc)_pycartesian_getattro, /*tp_getattro*/
+  (setattrofunc)_pycartesian_setattro, /*tp_setattro*/
+  0,                            /*tp_as_buffer*/
+  Py_TPFLAGS_DEFAULT, /*tp_flags*/
+  0,                            /*tp_doc*/
+  (traverseproc)0,              /*tp_traverse*/
+  (inquiry)0,                   /*tp_clear*/
+  0,                            /*tp_richcompare*/
+  0,                            /*tp_weaklistoffset*/
+  0,                            /*tp_iter*/
+  0,                            /*tp_iternext*/
+  _pycartesian_methods,         /*tp_methods*/
+  0,                            /*tp_members*/
+  0,                            /*tp_getset*/
+  0,                            /*tp_base*/
+  0,                            /*tp_dict*/
+  0,                            /*tp_descr_get*/
+  0,                            /*tp_descr_set*/
+  0,                            /*tp_dictoffset*/
+  0,                            /*tp_init*/
+  0,                            /*tp_alloc*/
+  0,                            /*tp_new*/
+  0,                            /*tp_free*/
+  0,                            /*tp_is_gc*/
 };
 /*@} End of Type definitions */
 
@@ -1359,9 +1377,46 @@ static PyMethodDef functions[] = {
   {NULL,NULL} /*Sentinel*/
 };
 
-PyMODINIT_FUNC
-init_cartesian(void)
+MOD_INIT(_cartesian)
 {
+  PyObject *module=NULL,*dictionary=NULL;
+  static void *PyCartesian_API[PyCartesian_API_pointers];
+  PyObject *c_api_object = NULL;
+
+  MOD_INIT_SETUP_TYPE(PyCartesian_Type, &PyType_Type);
+
+  MOD_INIT_VERIFY_TYPE_READY(&PyCartesian_Type);
+
+  MOD_INIT_DEF(module, "_cartesian", NULL/*doc*/, functions);
+  if (module == NULL) {
+    return MOD_INIT_ERROR;
+  }
+
+  PyCartesian_API[PyCartesian_Type_NUM] = (void*)&PyCartesian_Type;
+  PyCartesian_API[PyCartesian_GetNative_NUM] = (void *)PyCartesian_GetNative;
+  PyCartesian_API[PyCartesian_New_NUM] = (void*)PyCartesian_New;
+
+  c_api_object = PyCapsule_New(PyCartesian_API, PyCartesian_CAPSULE_NAME, NULL);
+  dictionary = PyModule_GetDict(module);
+  PyDict_SetItemString(dictionary, "_C_API", c_api_object);
+
+  ErrorObject = PyErr_NewException("_cartesian.error", NULL, NULL);
+  if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
+    Py_FatalError("Can't define _cartesian.error");
+    return MOD_INIT_ERROR;
+  }
+
+  import_array(); /*To make sure I get access to Numeric*/
+  import_pyprojection();
+  import_pyarea();
+  import_pyravefield();
+  import_pycartesianparam();
+  PYRAVE_DEBUG_INITIALIZE;
+  return MOD_INIT_SUCCESS(module);
+
+
+
+#ifdef KALLE
   PyObject *module=NULL,*dictionary=NULL;
   static void *PyCartesian_API[PyCartesian_API_pointers];
   PyObject *c_api_object = NULL;
@@ -1393,5 +1448,6 @@ init_cartesian(void)
   import_pyravefield();
   import_pycartesianparam();
   PYRAVE_DEBUG_INITIALIZE;
+#endif
 }
 /*@} End of Module setup */

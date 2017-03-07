@@ -22,7 +22,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2009-10-21
  */
-#include "Python.h"
+#include "pyravecompat.h"
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
@@ -313,6 +313,7 @@ static struct PyMethodDef _pypolarnavigator_methods[] =
   { NULL, NULL } /* sentinel */
 };
 
+#ifdef KALLE
 /**
  * Returns the specified attribute in the polar navigator
  */
@@ -341,7 +342,30 @@ static PyObject* _pypolarnavigator_getattr(PyPolarNavigator* self, char* name)
   PyErr_SetString(PyExc_AttributeError, name);
   return NULL;
 }
+#endif
+/**
+ * Returns the specified attribute in the polar navigator
+ */
 
+static PyObject* _pypolarnavigator_getattro(PyPolarNavigator* self, PyObject* name)
+{
+  if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "poleradius") == 0) {
+    return PyFloat_FromDouble(PolarNavigator_getPoleRadius(self->navigator));
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "equatorradius") == 0) {
+    return PyFloat_FromDouble(PolarNavigator_getEquatorRadius(self->navigator));
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "lon0") == 0) {
+    return PyFloat_FromDouble(PolarNavigator_getLon0(self->navigator));
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "lat0") == 0) {
+    return PyFloat_FromDouble(PolarNavigator_getLat0(self->navigator));
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "alt0") == 0) {
+    return PyFloat_FromDouble(PolarNavigator_getAlt0(self->navigator));
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "dndh") == 0) {
+    return PyFloat_FromDouble(PolarNavigator_getDndh(self->navigator));
+  }
+  return PyObject_GenericGetAttr((PyObject*)self, name);
+}
+
+#ifdef KALLE
 /**
  * Returns the specified attribute in the polar navigator
  */
@@ -393,6 +417,68 @@ static int _pypolarnavigator_setattr(PyPolarNavigator* self, char* name, PyObjec
 done:
   return result;
 }
+#endif
+
+/**
+ * Sets the attribute value
+ */
+static int _pypolarnavigator_setattro(PyPolarNavigator *self, PyObject *name, PyObject *val)
+{
+  int result = -1;
+  if (name == NULL) {
+    goto done;
+  }
+  if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "poleradius") == 0) {
+    if (PyFloat_Check(val)) {
+      PolarNavigator_setPoleRadius(self->navigator, PyFloat_AsDouble(val));
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError,
+          "poleradius must be of type float");
+    }
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "equatorradius") == 0) {
+    if (PyFloat_Check(val)) {
+      PolarNavigator_setEquatorRadius(self->navigator, PyFloat_AsDouble(val));
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError,
+          "equatorradius must be of type float");
+    }
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "lon0") == 0) {
+    if (PyFloat_Check(val)) {
+      PolarNavigator_setLon0(self->navigator, PyFloat_AsDouble(val));
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError,
+          "lon0 must be of type float");
+    }
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "lat0") == 0) {
+    if (PyFloat_Check(val)) {
+      PolarNavigator_setLat0(self->navigator, PyFloat_AsDouble(val));
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError,
+          "lat0 must be of type float");
+    }
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "alt0") == 0) {
+    if (PyFloat_Check(val)) {
+      PolarNavigator_setAlt0(self->navigator, PyFloat_AsDouble(val));
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError,
+          "alt0 must be of type float");
+    }
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "dndh") == 0) {
+    if (PyFloat_Check(val)) {
+      PolarNavigator_setDndh(self->navigator, PyFloat_AsDouble(val));
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError,
+          "dndh must be of type float");
+    }
+  } else {
+    raiseException_gotoTag(done, PyExc_AttributeError,
+        PY_RAVE_ATTRO_NAME_TO_STRING(name));
+  }
+  result = 0;
+done:
+  return result;
+
+}
 /*@} End of Polar Scans */
 
 /// --------------------------------------------------------------------
@@ -401,21 +487,47 @@ done:
 /*@{ Type definitions */
 PyTypeObject PyPolarNavigator_Type =
 {
-  PyObject_HEAD_INIT(NULL)0, /*ob_size*/
+  PyVarObject_HEAD_INIT(NULL, 0) /*ob_size*/
   "PolarNavigatorCore", /*tp_name*/
   sizeof(PyPolarNavigator), /*tp_size*/
   0, /*tp_itemsize*/
   /* methods */
   (destructor)_pypolarnavigator_dealloc, /*tp_dealloc*/
   0, /*tp_print*/
-  (getattrfunc)_pypolarnavigator_getattr, /*tp_getattr*/
-  (setattrfunc)_pypolarnavigator_setattr, /*tp_setattr*/
+  (getattrfunc)0, /*tp_getattr*/
+  (setattrfunc)0, /*tp_setattr*/
   0, /*tp_compare*/
   0, /*tp_repr*/
   0, /*tp_as_number */
   0,
   0, /*tp_as_mapping */
-  0 /*tp_hash*/
+  0,                            /*tp_hash*/
+  (ternaryfunc)0,               /*tp_call*/
+  (reprfunc)0,                  /*tp_str*/
+  (getattrofunc)_pypolarnavigator_getattro, /*tp_getattro*/
+  (setattrofunc)_pypolarnavigator_setattro, /*tp_setattro*/
+  0,                            /*tp_as_buffer*/
+  Py_TPFLAGS_DEFAULT, /*tp_flags*/
+  0,                            /*tp_doc*/
+  (traverseproc)0,              /*tp_traverse*/
+  (inquiry)0,                   /*tp_clear*/
+  0,                            /*tp_richcompare*/
+  0,                            /*tp_weaklistoffset*/
+  0,                            /*tp_iter*/
+  0,                            /*tp_iternext*/
+  _pypolarnavigator_methods,    /*tp_methods*/
+  0,                            /*tp_members*/
+  0,                            /*tp_getset*/
+  0,                            /*tp_base*/
+  0,                            /*tp_dict*/
+  0,                            /*tp_descr_get*/
+  0,                            /*tp_descr_set*/
+  0,                            /*tp_dictoffset*/
+  0,                            /*tp_init*/
+  0,                            /*tp_alloc*/
+  0,                            /*tp_new*/
+  0,                            /*tp_free*/
+  0,                            /*tp_is_gc*/
 };
 /*@} End of Type definitions */
 
@@ -431,33 +543,34 @@ static PyMethodDef functions[] = {
 /**
  * Initializes polar navigator.
  */
-void init_polarnav(void)
+MOD_INIT(_polarnav)
 {
   PyObject *module=NULL,*dictionary=NULL;
   static void *PyPolarNavigator_API[PyPolarNavigator_API_pointers];
   PyObject *c_api_object = NULL;
-  PyPolarNavigator_Type.ob_type = &PyType_Type;
+  MOD_INIT_SETUP_TYPE(PyPolarNavigator_Type, &PyType_Type);
 
-  module = Py_InitModule("_polarnav", functions);
+  MOD_INIT_VERIFY_TYPE_READY(&PyPolarNavigator_Type);
+
+  MOD_INIT_DEF(module, "_polarnav", NULL/*doc*/, functions);
   if (module == NULL) {
-    return;
+    return MOD_INIT_ERROR;
   }
+
   PyPolarNavigator_API[PyPolarNavigator_Type_NUM] = (void*)&PyPolarNavigator_Type;
   PyPolarNavigator_API[PyPolarNavigator_GetNative_NUM] = (void *)PyPolarNavigator_GetNative;
   PyPolarNavigator_API[PyPolarNavigator_New_NUM] = (void*)PyPolarNavigator_New;
 
-  c_api_object = PyCObject_FromVoidPtr((void *)PyPolarNavigator_API, NULL);
-
-  if (c_api_object != NULL) {
-    PyModule_AddObject(module, "_C_API", c_api_object);
-  }
-
+  c_api_object = PyCapsule_New(PyPolarNavigator_API, PyPolarNavigator_CAPSULE_NAME, NULL);
   dictionary = PyModule_GetDict(module);
-  ErrorObject = PyString_FromString("_polarnav.error");
+  PyDict_SetItemString(dictionary, "_C_API", c_api_object);
+
+  ErrorObject = PyErr_NewException("_polarnav.error", NULL, NULL);
   if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
     Py_FatalError("Can't define _polarnav.error");
   }
 
   PYRAVE_DEBUG_INITIALIZE;
+  return MOD_INIT_SUCCESS(module);
 }
 /*@} End of Module setup */

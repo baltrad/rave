@@ -46,6 +46,8 @@ typedef struct {
 
 #define PyArea_API_pointers 3               /**< number of API pointers */
 
+#define PyArea_CAPSULE_NAME "_area._C_API"
+
 #ifdef PYAREA_MODULE
 /** Forward declaration of type */
 extern PyTypeObject PyArea_Type;
@@ -84,34 +86,15 @@ static void **PyArea_API;
  * Checks if the object is a python area.
  */
 #define PyArea_Check(op) \
-   ((op)->ob_type == (PyTypeObject *)PyArea_API[PyArea_Type_NUM])
+   (Py_TYPE(op) == &PyArea_Type)
+
+#define PyArea_Type (*(PyTypeObject*)PyArea_API[PyArea_Type_NUM])
 
 /**
  * Imports the PyArea module (like import _area in python).
  */
-static int
-import_pyarea(void)
-{
-  PyObject *module;
-  PyObject *c_api_object;
-
-  module = PyImport_ImportModule("_area");
-  if (module == NULL) {
-    return -1;
-  }
-
-  c_api_object = PyObject_GetAttrString(module, "_C_API");
-  if (c_api_object == NULL) {
-    Py_DECREF(module);
-    return -1;
-  }
-  if (PyCObject_Check(c_api_object)) {
-    PyArea_API = (void **)PyCObject_AsVoidPtr(c_api_object);
-  }
-  Py_DECREF(c_api_object);
-  Py_DECREF(module);
-  return 0;
-}
+#define import_pyarea() \
+    PyArea_API = (void **)PyCapsule_Import(PyArea_CAPSULE_NAME, 1);
 
 #endif
 

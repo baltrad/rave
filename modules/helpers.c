@@ -4,7 +4,7 @@
  * @author Daniel Michelson (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2006-
  */
-#include <Python.h>
+#include <pyravecompat.h>
 #include <arrayobject.h>
 #include "rave.h"
 #include "raveutil.h"
@@ -157,14 +157,20 @@ static struct PyMethodDef _helpers_functions[] =
 /**
  * Initializes the python module _helpers.
  */
-PyMODINIT_FUNC init_helpers(void)
+MOD_INIT(_helpers)
 {
-  PyObject* m;
-  m = Py_InitModule("_helpers", _helpers_functions);
-  ErrorObject = PyString_FromString("_helpers.error");
-  if (ErrorObject == NULL || PyDict_SetItemString(PyModule_GetDict(m), "error",
-                                                  ErrorObject) != 0)
+  PyObject *module=NULL,*dictionary=NULL;
+  MOD_INIT_DEF(module, "_helpers", NULL/*doc*/, _helpers_functions);
+  if (module == NULL) {
+    return MOD_INIT_ERROR;
+  }
+  dictionary = PyModule_GetDict(module);
+  ErrorObject = PyErr_NewException("_helpers.error", NULL, NULL);
+  if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
     Py_FatalError("Can't define _helpers.error");
+    return MOD_INIT_ERROR;
+  }
 
-  import_array(); /*To make sure I get access to the Numeric PyArray functions*/
+  import_array();
+  return MOD_INIT_SUCCESS(module);
 }

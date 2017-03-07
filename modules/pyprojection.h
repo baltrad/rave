@@ -50,6 +50,8 @@ typedef struct {
 
 #define PyProjection_API_pointers 4                    /**< number of function and variable pointers */
 
+#define PyProjection_CAPSULE_NAME "_projection._C_API"
+
 #ifdef PYPROJECTION_MODULE
 /** To be used within the PyProjection-Module */
 extern PyTypeObject PyProjection_Type;
@@ -106,34 +108,15 @@ static void **PyProjection_API;
  * Checks if the object is a python projection.
  */
 #define PyProjection_Check(op) \
-   ((op)->ob_type == (PyTypeObject *)PyProjection_API[PyProjection_Type_NUM])
+    (Py_TYPE(op) == &PyProjection_Type)
+
+#define PyProjection_Type (*(PyTypeObject *)PyProjection_API[PyProjection_Type_NUM])
 
 /**
  * Imports the pyprojection module (like import _projection in python).
  */
-static int
-import_pyprojection(void)
-{
-  PyObject *module;
-  PyObject *c_api_object;
-
-  module = PyImport_ImportModule("_projection");
-  if (module == NULL) {
-    return -1;
-  }
-
-  c_api_object = PyObject_GetAttrString(module, "_C_API");
-  if (c_api_object == NULL) {
-    Py_DECREF(module);
-    return -1;
-  }
-  if (PyCObject_Check(c_api_object)) {
-    PyProjection_API = (void **)PyCObject_AsVoidPtr(c_api_object);
-  }
-  Py_DECREF(c_api_object);
-  Py_DECREF(module);
-  return 0;
-}
+#define import_pyprojection() \
+    PyProjection_API = (void **)PyCapsule_Import(PyProjection_CAPSULE_NAME, 1);
 
 #endif
 

@@ -5,7 +5,7 @@
  * @date 2005-
  */
 #include "h5rad.h"
-
+#include "pyravecompat.h"
 
 int GetIntFromINFO(PyObject* inobj, char* key, int* val)
 {

@@ -22,7 +22,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2010-07-05
  */
-#include "Python.h"
+#include "pyravecompat.h"
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>
@@ -429,6 +429,8 @@ done:
   return result;
 }
 
+MOD_DIR_FORWARD_DECLARE(PyRaveField);
+
 /**
  * All methods a cartesian product can have
  */
@@ -447,44 +449,39 @@ static struct PyMethodDef _pyravefield_methods[] =
   {"getAttributeNames", (PyCFunction) _pyravefield_getAttributeNames, 1},
   {"removeAttributes", (PyCFunction) _pyravefield_removeAttributes, 1},
   {"concatx", (PyCFunction) _pyravefield_concatx, 1},
+  {"__dir__", (PyCFunction) MOD_DIR_REFERENCE(PyRaveField), METH_NOARGS},
   {NULL, NULL } /* sentinel */
 };
+
+MOD_DIR_FUNCTION(PyRaveField, _pyravefield_methods)
 
 /**
  * Returns the specified attribute in the rave field
  * @param[in] self - the rave field
  */
-static PyObject* _pyravefield_getattr(PyRaveField* self, char* name)
+static PyObject* _pyravefield_getattro(PyRaveField* self, PyObject* name)
 {
-  PyObject* res = NULL;
-  if (strcmp("xsize", name) == 0) {
+  if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "xsize") == 0) {
     return PyInt_FromLong(RaveField_getXsize(self->field));
-  } else if (strcmp("ysize", name) == 0) {
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "ysize") == 0) {
     return PyInt_FromLong(RaveField_getYsize(self->field));
-  } else if (strcmp("datatype", name) == 0) {
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "datatype") == 0) {
     return PyInt_FromLong(RaveField_getDataType(self->field));
   }
 
-  res = Py_FindMethod(_pyravefield_methods, (PyObject*) self, name);
-  if (res)
-    return res;
-
-  PyErr_Clear();
-  PyErr_SetString(PyExc_AttributeError, name);
-  return NULL;
+  return PyObject_GenericGetAttr((PyObject*)self, name);
 }
 
 /**
- * Returns the specified attribute in the polar volume
+ * Sets the attribute value
  */
-static int _pyravefield_setattr(PyRaveField* self, char* name, PyObject* val)
+static int _pyravefield_setattro(PyObject *self, PyObject *name, PyObject *value)
 {
   int result = -1;
   if (name == NULL) {
     goto done;
   }
-
-  raiseException_gotoTag(done, PyExc_AttributeError, name);
+  raiseException_gotoTag(done, PyExc_AttributeError, PY_RAVE_ATTRO_NAME_TO_STRING(name));
 
   result = 0;
 done:
@@ -496,21 +493,47 @@ done:
 /*@{ Type definitions */
 PyTypeObject PyRaveField_Type =
 {
-  PyObject_HEAD_INIT(NULL)0, /*ob_size*/
-  "RaveFieldCore", /*tp_name*/
-  sizeof(PyRaveField), /*tp_size*/
-  0, /*tp_itemsize*/
+  PyVarObject_HEAD_INIT(NULL, 0)
+  "RaveFieldCore",                  /*tp_name*/
+  sizeof(PyRaveField),              /*tp_size*/
+  0,                                /*tp_itemsize*/
   /* methods */
   (destructor)_pyravefield_dealloc, /*tp_dealloc*/
   0, /*tp_print*/
-  (getattrfunc)_pyravefield_getattr, /*tp_getattr*/
-  (setattrfunc)_pyravefield_setattr, /*tp_setattr*/
+  (getattrfunc)0,                   /*tp_getattr*/
+  (setattrfunc)0,                   /*tp_setattr*/
   0, /*tp_compare*/
   0, /*tp_repr*/
   0, /*tp_as_number */
-  0,
+  0, /*tp_as_sequence */
   0, /*tp_as_mapping */
-  0 /*tp_hash*/
+  (hashfunc)0, /*tp_hash*/
+  (ternaryfunc)0, /*tp_call*/
+  (reprfunc)0, /*tp_str*/
+  (getattrofunc)_pyravefield_getattro, /*tp_getattro*/
+  (setattrofunc)_pyravefield_setattro, /*tp_setattro*/
+  0, /*tp_as_buffer*/
+  Py_TPFLAGS_DEFAULT, /*tp_flags*/
+  0, /*tp_doc*/
+  (traverseproc)0, /*tp_traverse*/
+  (inquiry)0, /*tp_clear*/
+  0, /*tp_richcompare*/
+  0, /*tp_weaklistoffset*/
+  0, /*tp_iter*/
+  0, /*tp_iternext*/
+  _pyravefield_methods, /*tp_methods*/
+  0,                    /*tp_members*/
+  0,                      /*tp_getset*/
+  0,                      /*tp_base*/
+  0,                      /*tp_dict*/
+  0,                      /*tp_descr_get*/
+  0,                      /*tp_descr_set*/
+  0,                      /*tp_dictoffset*/
+  0,                      /*tp_init*/
+  0,                      /*tp_alloc*/
+  0,                      /*tp_new*/
+  0,                      /*tp_free*/
+  0,                      /*tp_is_gc*/
 };
 /*@} End of Type definitions */
 
@@ -520,36 +543,38 @@ static PyMethodDef functions[] = {
   {NULL,NULL} /*Sentinel*/
 };
 
-PyMODINIT_FUNC
-init_ravefield(void)
+MOD_INIT(_ravefield)
 {
   PyObject *module=NULL,*dictionary=NULL;
   static void *PyRaveField_API[PyRaveField_API_pointers];
   PyObject *c_api_object = NULL;
-  PyRaveField_Type.ob_type = &PyType_Type;
 
-  module = Py_InitModule("_ravefield", functions);
+  MOD_INIT_SETUP_TYPE(PyRaveField_Type, &PyType_Type);
+
+  MOD_INIT_VERIFY_TYPE_READY(&PyRaveField_Type);
+
+  MOD_INIT_DEF(module, "_ravefield", NULL/*doc*/, functions);
   if (module == NULL) {
-    return;
+    return MOD_INIT_ERROR;
   }
+
   PyRaveField_API[PyRaveField_Type_NUM] = (void*)&PyRaveField_Type;
   PyRaveField_API[PyRaveField_GetNative_NUM] = (void *)PyRaveField_GetNative;
   PyRaveField_API[PyRaveField_New_NUM] = (void*)PyRaveField_New;
 
-  c_api_object = PyCObject_FromVoidPtr((void *)PyRaveField_API, NULL);
-
-  if (c_api_object != NULL) {
-    PyModule_AddObject(module, "_C_API", c_api_object);
-  }
-
+  c_api_object = PyCapsule_New(PyRaveField_API, PyRaveField_CAPSULE_NAME, NULL);
   dictionary = PyModule_GetDict(module);
-  ErrorObject = PyString_FromString("_ravefield.error");
+  PyDict_SetItemString(dictionary, "_C_API", c_api_object);
+
+  ErrorObject = PyErr_NewException("_ravefield.error", NULL, NULL);
   if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
-    Py_FatalError("Can't define _ravefield.error");
+    Py_FatalError("Can't define _area.error");
+    return MOD_INIT_ERROR;
   }
 
   import_array(); /*To make sure I get access to Numeric*/
   PYRAVE_DEBUG_INITIALIZE;
+  return MOD_INIT_SUCCESS(module);
 }
 /*@} End of Module setup */
 

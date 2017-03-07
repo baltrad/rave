@@ -22,7 +22,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2009-12-10
  */
-#include "Python.h"
+#include "pyravecompat.h"
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>
@@ -159,38 +159,36 @@ static struct PyMethodDef _pyarea_methods[] =
 };
 
 /**
- * Returns the specified attribute in the area
- * @param[in] self - the area
+ * Returns the specified attribute in the rave field
+ * @param[in] self - the rave field
  */
-static PyObject* _pyarea_getattr(PyArea* self, char* name)
+static PyObject* _pyarea_getattro(PyArea* self, PyObject* name)
 {
-  PyObject* res = NULL;
-
-  if (strcmp("id", name) == 0) {
+  if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "id") == 0) {
     if (Area_getID(self->area) == NULL) {
       Py_RETURN_NONE;
     } else {
       return PyString_FromString(Area_getID(self->area));
     }
-  } else if (strcmp("description", name) == 0) {
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "description") == 0) {
     if (Area_getDescription(self->area) == NULL) {
       Py_RETURN_NONE;
     } else {
       return PyString_FromString(Area_getDescription(self->area));
     }
-  } else if (strcmp("xsize", name) == 0) {
-    return PyInt_FromLong(Area_getXSize(self->area));
-  } else if (strcmp("ysize", name) == 0) {
-    return PyInt_FromLong(Area_getYSize(self->area));
-  } else if (strcmp("xscale", name) == 0) {
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "xsize") == 0) {
+    return PyLong_FromLong(Area_getXSize(self->area));
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "ysize") == 0) {
+    return PyLong_FromLong(Area_getYSize(self->area));
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "xscale") == 0) {
     return PyFloat_FromDouble(Area_getXScale(self->area));
-  } else if (strcmp("yscale", name) == 0) {
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "yscale") == 0) {
     return PyFloat_FromDouble(Area_getYScale(self->area));
-  } else if (strcmp("extent", name) == 0) {
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "extent") == 0) {
     double llX, llY, urX, urY;
     Area_getExtent(self->area, &llX, &llY, &urX, &urY);
     return Py_BuildValue("(dddd)", llX, llY, urX, urY);
-  } else if (strcmp("projection", name) == 0) {
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "projection") == 0) {
     Projection_t* projection = Area_getProjection(self->area);
     if (projection != NULL) {
       PyProjection* result = PyProjection_New(projection);
@@ -199,33 +197,26 @@ static PyObject* _pyarea_getattr(PyArea* self, char* name)
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("pcsid", name) == 0) {
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "pcsid") == 0) {
     if (Area_getPcsid(self->area) == NULL) {
       Py_RETURN_NONE;
     } else {
       return PyString_FromString(Area_getPcsid(self->area));
     }
   }
-
-  res = Py_FindMethod(_pyarea_methods, (PyObject*) self, name);
-  if (res)
-    return res;
-
-  PyErr_Clear();
-  PyErr_SetString(PyExc_AttributeError, name);
-  return NULL;
+  return PyObject_GenericGetAttr((PyObject*)self, name);
 }
 
 /**
- * Returns the specified attribute in the area
+ * Sets the attribute value
  */
-static int _pyarea_setattr(PyArea* self, char* name, PyObject* val)
+static int _pyarea_setattro(PyArea *self, PyObject *name, PyObject *val)
 {
   int result = -1;
   if (name == NULL) {
     goto done;
   }
-  if (strcmp("id", name) == 0) {
+  if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "id") == 0) {
     if (PyString_Check(val)) {
       Area_setID(self->area, PyString_AsString(val));
     } else if (val == Py_None) {
@@ -233,61 +224,66 @@ static int _pyarea_setattr(PyArea* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "id must be a string");
     }
-  } else if (strcmp("description", name) == 0) {
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "description") == 0) {
     if (PyString_Check(val)) {
       Area_setDescription(self->area, PyString_AsString(val));
     } else if (val == Py_None) {
       Area_setDescription(self->area, NULL);
     } else {
-      raiseException_gotoTag(done, PyExc_TypeError, "description must be a string");
+      raiseException_gotoTag(done, PyExc_TypeError,
+          "description must be a string");
     }
-  } else if (strcmp("xsize", name)==0) {
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "xsize")==0) {
     if (PyInt_Check(val)) {
       Area_setXSize(self->area, PyInt_AsLong(val));
     } else {
-      raiseException_gotoTag(done, PyExc_TypeError,"xsize must be of type int");
+      raiseException_gotoTag(done, PyExc_TypeError, "xsize must be of type int");
     }
-  } else if (strcmp("ysize", name)==0) {
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "ysize")==0) {
     if (PyInt_Check(val)) {
       Area_setYSize(self->area, PyInt_AsLong(val));
     } else {
-      raiseException_gotoTag(done, PyExc_TypeError,"ysize must be of type int");
+      raiseException_gotoTag(done, PyExc_TypeError, "ysize must be of type int");
     }
-  } else if (strcmp("xscale", name)==0) {
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "xscale")==0) {
     if (PyFloat_Check(val)) {
       Area_setXScale(self->area, PyFloat_AsDouble(val));
     } else if (PyLong_Check(val)) {
       Area_setXScale(self->area, PyLong_AsDouble(val));
     } else if (PyInt_Check(val)) {
-      Area_setXScale(self->area, (double)PyInt_AsLong(val));
+      Area_setXScale(self->area, (double) PyInt_AsLong(val));
     } else {
-      raiseException_gotoTag(done, PyExc_TypeError,"xscale must be of type float");
+      raiseException_gotoTag(done, PyExc_TypeError,
+          "xscale must be of type float");
     }
-  } else if (strcmp("yscale", name)==0) {
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "yscale")==0) {
     if (PyFloat_Check(val)) {
       Area_setYScale(self->area, PyFloat_AsDouble(val));
     } else if (PyLong_Check(val)) {
       Area_setYScale(self->area, PyLong_AsDouble(val));
     } else if (PyInt_Check(val)) {
-      Area_setYScale(self->area, (double)PyInt_AsLong(val));
+      Area_setYScale(self->area, (double) PyInt_AsLong(val));
     } else {
-      raiseException_gotoTag(done, PyExc_TypeError,"yscale must be of type float");
+      raiseException_gotoTag(done, PyExc_TypeError,
+          "yscale must be of type float");
     }
-  } else if (strcmp("extent", name)==0) {
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "extent")==0) {
     double llX = 0.0L, llY = 0.0L, urX = 0.0L, urY = 0.0L;
     if (!PyArg_ParseTuple(val, "dddd", &llX, &llY, &urX, &urY)) {
-      raiseException_gotoTag(done, PyExc_TypeError,"extent must be a tuple containing 4 doubles representing llX,llY,urX,urY");
+      raiseException_gotoTag(done, PyExc_TypeError,
+          "extent must be a tuple containing 4 doubles representing llX,llY,urX,urY");
     }
     Area_setExtent(self->area, llX, llY, urX, urY);
-  } else if (strcmp("projection", name)==0) {
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "projection")==0) {
     if (PyProjection_Check(val)) {
-      Area_setProjection(self->area, ((PyProjection*)val)->projection);
+      Area_setProjection(self->area, ((PyProjection*) val)->projection);
     } else if (val == Py_None) {
       Area_setProjection(self->area, NULL);
     } else {
-      raiseException_gotoTag(done, PyExc_TypeError,"projection must be of ProjectionCore type");
+      raiseException_gotoTag(done, PyExc_TypeError,
+          "projection must be of ProjectionCore type");
     }
-  } else if (strcmp("pcsid", name) == 0) {
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "pcsid") == 0) {
     if (PyString_Check(val)) {
       Area_setPcsid(self->area, PyString_AsString(val));
     } else if (val == Py_None) {
@@ -295,11 +291,14 @@ static int _pyarea_setattr(PyArea* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "pcsid must be a string");
     }
+  } else {
+    raiseException_gotoTag(done, PyExc_AttributeError,
+        PY_RAVE_ATTRO_NAME_TO_STRING(name));
   }
-
   result = 0;
 done:
   return result;
+
 }
 
 static PyObject* _pyarea_isArea(PyObject* self, PyObject* args)
@@ -318,21 +317,47 @@ static PyObject* _pyarea_isArea(PyObject* self, PyObject* args)
 /*@{ Type definitions */
 PyTypeObject PyArea_Type =
 {
-  PyObject_HEAD_INIT(NULL)0, /*ob_size*/
+  PyVarObject_HEAD_INIT(NULL, 0) /*ob_size*/
   "AreaCore", /*tp_name*/
   sizeof(PyArea), /*tp_size*/
   0, /*tp_itemsize*/
   /* methods */
-  (destructor)_pyarea_dealloc, /*tp_dealloc*/
-  0, /*tp_print*/
-  (getattrfunc)_pyarea_getattr, /*tp_getattr*/
-  (setattrfunc)_pyarea_setattr, /*tp_setattr*/
-  0, /*tp_compare*/
-  0, /*tp_repr*/
-  0, /*tp_as_number */
+  (destructor)_pyarea_dealloc,  /*tp_dealloc*/
+  0,                            /*tp_print*/
+  (getattrfunc)0,               /*tp_getattr*/
+  (setattrfunc)0,               /*tp_setattr*/
+  0,                            /*tp_compare*/
+  0,                            /*tp_repr*/
+  0,                            /*tp_as_number */
   0,
-  0, /*tp_as_mapping */
-  0 /*tp_hash*/
+  0,                            /*tp_as_mapping */
+  0,                            /*tp_hash*/
+  (ternaryfunc)0,               /*tp_call*/
+  (reprfunc)0,                  /*tp_str*/
+  (getattrofunc)_pyarea_getattro, /*tp_getattro*/
+  (setattrofunc)_pyarea_setattro, /*tp_setattro*/
+  0,                            /*tp_as_buffer*/
+  Py_TPFLAGS_DEFAULT, /*tp_flags*/
+  0,                            /*tp_doc*/
+  (traverseproc)0,              /*tp_traverse*/
+  (inquiry)0,                   /*tp_clear*/
+  0,                            /*tp_richcompare*/
+  0,                            /*tp_weaklistoffset*/
+  0,                            /*tp_iter*/
+  0,                            /*tp_iternext*/
+  _pyarea_methods,              /*tp_methods*/
+  0,                            /*tp_members*/
+  0,                            /*tp_getset*/
+  0,                            /*tp_base*/
+  0,                            /*tp_dict*/
+  0,                            /*tp_descr_get*/
+  0,                            /*tp_descr_set*/
+  0,                            /*tp_dictoffset*/
+  0,                            /*tp_init*/
+  0,                            /*tp_alloc*/
+  0,                            /*tp_new*/
+  0,                            /*tp_free*/
+  0,                            /*tp_is_gc*/
 };
 /*@} End of Type definitions */
 
@@ -343,35 +368,37 @@ static PyMethodDef functions[] = {
   {NULL,NULL} /*Sentinel*/
 };
 
-PyMODINIT_FUNC
-init_area(void)
+MOD_INIT(_area)
 {
   PyObject *module=NULL,*dictionary=NULL;
   static void *PyArea_API[PyArea_API_pointers];
   PyObject *c_api_object = NULL;
-  PyArea_Type.ob_type = &PyType_Type;
 
-  module = Py_InitModule("_area", functions);
+  MOD_INIT_SETUP_TYPE(PyArea_Type, &PyType_Type);
+
+  MOD_INIT_VERIFY_TYPE_READY(&PyArea_Type);
+
+  MOD_INIT_DEF(module, "_area", NULL/*doc*/, functions);
   if (module == NULL) {
-    return;
+    return MOD_INIT_ERROR;
   }
+
   PyArea_API[PyArea_Type_NUM] = (void*)&PyArea_Type;
   PyArea_API[PyArea_GetNative_NUM] = (void *)PyArea_GetNative;
   PyArea_API[PyArea_New_NUM] = (void*)PyArea_New;
 
-  c_api_object = PyCObject_FromVoidPtr((void *)PyArea_API, NULL);
-
-  if (c_api_object != NULL) {
-    PyModule_AddObject(module, "_C_API", c_api_object);
-  }
-
+  c_api_object = PyCapsule_New(PyArea_API, PyArea_CAPSULE_NAME, NULL);
   dictionary = PyModule_GetDict(module);
-  ErrorObject = PyString_FromString("_area.error");
+  PyDict_SetItemString(dictionary, "_C_API", c_api_object);
+
+  ErrorObject = PyErr_NewException("_area.error", NULL, NULL);
   if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
     Py_FatalError("Can't define _area.error");
+    return MOD_INIT_ERROR;
   }
 
   import_pyprojection();
   PYRAVE_DEBUG_INITIALIZE;
+  return MOD_INIT_SUCCESS(module);
 }
 /*@} End of Module setup */

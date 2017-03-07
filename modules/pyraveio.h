@@ -51,6 +51,8 @@ typedef struct {
 
 #define PyRaveIO_API_pointers 4                 /**< Total number of C API pointers */
 
+#define PyRaveIO_CAPSULE_NAME "_raveio._C_API"
+
 #ifdef PYRAVEIO_MODULE
 /** declared in pyraveio module */
 extern PyTypeObject PyRaveIO_Type;
@@ -100,6 +102,22 @@ static void **PyRaveIO_API;
  * Checks if the object is a python rave io.
  */
 #define PyRaveIO_Check(op) \
+   (Py_TYPE(op) == &PyRaveIO_Type)
+
+#define PyRaveIO_Type (*(PyTypeObject*)PyRaveIO_API[PyRaveIO_Type_NUM])
+
+/**
+ * Imports the PyRaveIO module (like import _raveio in python).
+ */
+#define import_pyraveio() \
+    PyRaveIO_API = (void **)PyCapsule_Import(PyRaveIO_CAPSULE_NAME, 1);
+
+
+#ifdef KALLE
+/**
+ * Checks if the object is a python rave io.
+ */
+#define PyRaveIO_Check(op) \
    ((op)->ob_type == (PyTypeObject *)PyRaveIO_API[PyRaveIO_Type_NUM])
 
 /**
@@ -128,6 +146,7 @@ import_pyraveio(void)
   Py_DECREF(module);
   return 0;
 }
+#endif
 
 #endif
 

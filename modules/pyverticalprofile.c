@@ -22,7 +22,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2012-08-24
  */
-#include "Python.h"
+#include "pyravecompat.h"
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>
@@ -773,63 +773,56 @@ static struct PyMethodDef _pyverticalprofile_methods[] =
 /**
  * Returns the specified attribute in the vertical profile
  */
-static PyObject* _pyverticalprofile_getattr(PyVerticalProfile* self, char* name)
+static PyObject* _pyverticalprofile_getattro(PyVerticalProfile* self, PyObject* name)
 {
-  PyObject* res;
-  if (strcmp("time", name) == 0) {
+  if (PY_COMPARE_STRING_WITH_ATTRO_NAME("time", name) == 0) {
     const char* str = VerticalProfile_getTime(self->vp);
     if (str != NULL) {
       return PyString_FromString(str);
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("date", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("date", name) == 0) {
     const char* str = VerticalProfile_getDate(self->vp);
     if (str != NULL) {
       return PyString_FromString(str);
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("source", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("source", name) == 0) {
     const char* str = VerticalProfile_getSource(self->vp);
     if (str != NULL) {
       return PyString_FromString(str);
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("longitude", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("longitude", name) == 0) {
     return PyFloat_FromDouble(VerticalProfile_getLongitude(self->vp));
-  } else if (strcmp("latitude", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("latitude", name) == 0) {
     return PyFloat_FromDouble(VerticalProfile_getLatitude(self->vp));
-  } else if (strcmp("height", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("height", name) == 0) {
     return PyFloat_FromDouble(VerticalProfile_getHeight(self->vp));
-  } else if (strcmp("interval", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("interval", name) == 0) {
     return PyFloat_FromDouble(VerticalProfile_getInterval(self->vp));
-  } else if (strcmp("minheight", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("minheight", name) == 0) {
     return PyFloat_FromDouble(VerticalProfile_getMinheight(self->vp));
-  } else if (strcmp("maxheight", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("maxheight", name) == 0) {
     return PyFloat_FromDouble(VerticalProfile_getMaxheight(self->vp));
   }
 
-  res = Py_FindMethod(_pyverticalprofile_methods, (PyObject*) self, name);
-  if (res)
-    return res;
-
-  PyErr_Clear();
-  PyErr_SetString(PyExc_AttributeError, name);
-  return NULL;
+  return PyObject_GenericGetAttr((PyObject*)self, name);
 }
 
 /**
  * Returns the specified attribute in the vertical profile
  */
-static int _pyverticalprofile_setattr(PyVerticalProfile* self, char* name, PyObject* val)
+static int _pyverticalprofile_setattro(PyVerticalProfile* self, PyObject* name, PyObject* val)
 {
   int result = -1;
   if (name == NULL) {
     goto done;
   }
-  if (strcmp("time", name) == 0) {
+  if (PY_COMPARE_STRING_WITH_ATTRO_NAME("time", name) == 0) {
     if (PyString_Check(val)) {
       if (!VerticalProfile_setTime(self->vp, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "time must be a string (HHmmss)");
@@ -839,7 +832,7 @@ static int _pyverticalprofile_setattr(PyVerticalProfile* self, char* name, PyObj
     } else {
       raiseException_gotoTag(done, PyExc_ValueError, "time must be a string (HHmmss)");
     }
-  } else if (strcmp("date", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("date", name) == 0) {
     if (PyString_Check(val)) {
       if (!VerticalProfile_setDate(self->vp, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "date must be a string (YYYYMMSS)");
@@ -849,7 +842,7 @@ static int _pyverticalprofile_setattr(PyVerticalProfile* self, char* name, PyObj
     } else {
       raiseException_gotoTag(done, PyExc_ValueError, "date must be a string (YYYYMMSS)");
     }
-  } else if (strcmp("source", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("source", name) == 0) {
     if (PyString_Check(val)) {
       if (!VerticalProfile_setSource(self->vp, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "source must be a string");
@@ -859,44 +852,44 @@ static int _pyverticalprofile_setattr(PyVerticalProfile* self, char* name, PyObj
     } else {
       raiseException_gotoTag(done, PyExc_ValueError, "source must be a string");
     }
-  } else if (strcmp("longitude", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("longitude", name) == 0) {
     if (PyFloat_Check(val)) {
       VerticalProfile_setLongitude(self->vp, PyFloat_AsDouble(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "longitude must be of type float");
     }
-  } else if (strcmp("latitude", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("latitude", name) == 0) {
     if (PyFloat_Check(val)) {
       VerticalProfile_setLatitude(self->vp, PyFloat_AsDouble(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "latitude must be of type float");
     }
-  } else if (strcmp("height", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("height", name) == 0) {
     if (PyFloat_Check(val)) {
       VerticalProfile_setHeight(self->vp, PyFloat_AsDouble(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "height must be of type float");
     }
-  } else if (strcmp("interval", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("interval", name) == 0) {
     if (PyFloat_Check(val)) {
       VerticalProfile_setInterval(self->vp, PyFloat_AsDouble(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "interval must be of type float");
     }
-  } else if (strcmp("minheight", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("minheight", name) == 0) {
     if (PyFloat_Check(val)) {
       VerticalProfile_setMinheight(self->vp, PyFloat_AsDouble(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "minheight must be of type float");
     }
-  } else if (strcmp("maxheight", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("maxheight", name) == 0) {
     if (PyFloat_Check(val)) {
       VerticalProfile_setMaxheight(self->vp, PyFloat_AsDouble(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "maxheight must be of type float");
     }
   } else {
-    raiseException_gotoTag(done, PyExc_AttributeError, name);
+    raiseException_gotoTag(done, PyExc_AttributeError, PY_RAVE_ATTRO_NAME_TO_STRING(name));
   }
 
   result = 0;
@@ -923,21 +916,47 @@ static PyObject* _pyverticalprofile_isVerticalProfile(PyObject* self, PyObject* 
 /*@{ Type definition */
 PyTypeObject PyVerticalProfile_Type =
 {
-  PyObject_HEAD_INIT(NULL)0, /*ob_size*/
+  PyVarObject_HEAD_INIT(NULL, 0) /*ob_size*/
   "VerticalProfileCore", /*tp_name*/
   sizeof(PyVerticalProfile), /*tp_size*/
   0, /*tp_itemsize*/
   /* methods */
   (destructor)_pyverticalprofile_dealloc, /*tp_dealloc*/
   0, /*tp_print*/
-  (getattrfunc)_pyverticalprofile_getattr, /*tp_getattr*/
-  (setattrfunc)_pyverticalprofile_setattr, /*tp_setattr*/
-  0, /*tp_compare*/
-  0, /*tp_repr*/
-  0, /*tp_as_number */
+  (getattrfunc)0,               /*tp_getattr*/
+  (setattrfunc)0,               /*tp_setattr*/
+  0,                            /*tp_compare*/
+  0,                            /*tp_repr*/
+  0,                            /*tp_as_number */
   0,
-  0, /*tp_as_mapping */
-  0 /*tp_hash*/
+  0,                            /*tp_as_mapping */
+  0,                            /*tp_hash*/
+  (ternaryfunc)0,               /*tp_call*/
+  (reprfunc)0,                  /*tp_str*/
+  (getattrofunc)_pyverticalprofile_getattro, /*tp_getattro*/
+  (setattrofunc)_pyverticalprofile_setattro, /*tp_setattro*/
+  0,                            /*tp_as_buffer*/
+  Py_TPFLAGS_DEFAULT, /*tp_flags*/
+  0,                            /*tp_doc*/
+  (traverseproc)0,              /*tp_traverse*/
+  (inquiry)0,                   /*tp_clear*/
+  0,                            /*tp_richcompare*/
+  0,                            /*tp_weaklistoffset*/
+  0,                            /*tp_iter*/
+  0,                            /*tp_iternext*/
+  _pyverticalprofile_methods,   /*tp_methods*/
+  0,                            /*tp_members*/
+  0,                            /*tp_getset*/
+  0,                            /*tp_base*/
+  0,                            /*tp_dict*/
+  0,                            /*tp_descr_get*/
+  0,                            /*tp_descr_set*/
+  0,                            /*tp_dictoffset*/
+  0,                            /*tp_init*/
+  0,                            /*tp_alloc*/
+  0,                            /*tp_new*/
+  0,                            /*tp_free*/
+  0,                            /*tp_is_gc*/
 };
 /*@} End of Type definition */
 
@@ -948,36 +967,38 @@ static PyMethodDef functions[] = {
   {NULL,NULL} /*Sentinel*/
 };
 
-PyMODINIT_FUNC
-init_verticalprofile(void)
+MOD_INIT(_verticalprofile)
 {
   PyObject *module=NULL,*dictionary=NULL;
   static void *PyVerticalProfile_API[PyVerticalProfile_API_pointers];
   PyObject *c_api_object = NULL;
-  PyVerticalProfile_Type.ob_type = &PyType_Type;
 
-  module = Py_InitModule("_verticalprofile", functions);
+  MOD_INIT_SETUP_TYPE(PyVerticalProfile_Type, &PyType_Type);
+
+  MOD_INIT_VERIFY_TYPE_READY(&PyVerticalProfile_Type);
+
+  MOD_INIT_DEF(module, "_verticalprofile", NULL/*doc*/, functions);
   if (module == NULL) {
-    return;
+    return MOD_INIT_ERROR;
   }
+
   PyVerticalProfile_API[PyVerticalProfile_Type_NUM] = (void*)&PyVerticalProfile_Type;
   PyVerticalProfile_API[PyVerticalProfile_GetNative_NUM] = (void *)PyVerticalProfile_GetNative;
   PyVerticalProfile_API[PyVerticalProfile_New_NUM] = (void*)PyVerticalProfile_New;
 
-  c_api_object = PyCObject_FromVoidPtr((void *)PyVerticalProfile_API, NULL);
-
-  if (c_api_object != NULL) {
-    PyModule_AddObject(module, "_C_API", c_api_object);
-  }
-
+  c_api_object = PyCapsule_New(PyVerticalProfile_API, PyVerticalProfile_CAPSULE_NAME, NULL);
   dictionary = PyModule_GetDict(module);
-  ErrorObject = PyString_FromString("_verticalprofile.error");
+  PyDict_SetItemString(dictionary, "_C_API", c_api_object);
+
+  ErrorObject = PyErr_NewException("_verticalprofile.error", NULL, NULL);
   if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
     Py_FatalError("Can't define _verticalprofile.error");
+    return MOD_INIT_ERROR;
   }
 
   import_array(); /*To make sure I get access to Numeric*/
   import_pyravefield();
   PYRAVE_DEBUG_INITIALIZE;
+  return MOD_INIT_SUCCESS(module);
 }
 /*@} End of Module setup */
