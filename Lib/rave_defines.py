@@ -162,4 +162,4 @@ RAVE_QUALITY_CONTROL_PROCESSES=4
 RAVE_PGF_QUALITY_FIELD_REPROCESSING=False
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)
