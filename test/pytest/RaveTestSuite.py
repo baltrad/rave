@@ -30,7 +30,7 @@ from RaveTest import *
 from PyPolarVolumeTest import *
 from PyPolarScanTest import *
 from PyPolarScanParamTest import *
-#from RaveModuleConstantsTest import *
+from RaveModuleConstantsTest import *
 
 from PyCartesianTest import *
 from PyCartesianParamTest import *
