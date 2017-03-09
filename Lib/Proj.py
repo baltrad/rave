@@ -81,7 +81,7 @@ def c2s(indata, pcs_id):
     p = rave_projection.pcs(pcs_id) # pcs_id = "ps60n", for example
     outdata = []
     for ll in indata:
-	outdata.append(p.proj(d2r(ll)))
+        outdata.append(p.proj(d2r(ll)))
     return outdata
 
 
@@ -94,7 +94,7 @@ def s2c(indata, pcs_id):
     p = rave_projection.pcs(pcs_id)
     outdata = []
     for ll in indata:
-	outdata.append(r2d(p.invproj(ll)))
+        outdata.append(r2d(p.invproj(ll)))
     return outdata
 
 

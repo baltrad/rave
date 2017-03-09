@@ -399,8 +399,8 @@ def create_db_from_conf(configfile=BDB_CONFIG_FILE, create_schema=True):
     try:
       with open(configfile) as fp:
         properties = jprops.load_properties(fp)
-    except Exception,e:
-      print e.__str__()
+    except Exception as e:
+      print(e.__str__())
 
     propname = "rave.db.uri"
     if not properties.has_key(propname):

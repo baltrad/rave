@@ -32,7 +32,7 @@ from numpy import *
 # @return array
 def least_square_nth_degree(order,xl,yl):
   if len(xl)!=len(yl):
-    raise AttributeError,"Inconsistant number of points"
+    raise AttributeError("Inconsistant number of points")
 
   n=len(xl)
 
@@ -69,5 +69,5 @@ def get_std_deviation(fgs):
   return meanvalue,deviation
 
 if __name__=="__main__":
-  print `least_square_nth_degree(1,[0.,1.,2.],[0.,1.,2.])`
-  print `least_square_nth_degree(2,[0.,1.,2.],[1.,0.,1.])`
+  print(str(least_square_nth_degree(1,[0.,1.,2.],[0.,1.,2.])))
+  print(str(least_square_nth_degree(2,[0.,1.,2.],[1.,0.,1.])))
