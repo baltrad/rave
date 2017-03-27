@@ -51,7 +51,9 @@ from PyProjectionRegistryTest import *
 A="""
 from PyAcrrTest import *
 from PyGraTest import *
+"""
 from PyAreaRegistryTest import *
+A="""
 from PgfVolumePluginTest import *
 """
 from RaveScansun import *

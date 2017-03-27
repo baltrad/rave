@@ -50,9 +50,7 @@ class PyAreaRegistryTest(unittest.TestCase):
       return
     import _arearegistry
     obj = _arearegistry.new()
-    
-    isok = string.find(`type(obj)`, "AreaRegistryCore")
-    self.assertNotEqual(-1, isok)
+    self.assertNotEqual(-1, str(type(obj)).find("AreaRegistryCore"))
 
   def test_load(self):
     if not _rave.isXmlSupported():
@@ -61,9 +59,9 @@ class PyAreaRegistryTest(unittest.TestCase):
     registry = _arearegistry.load(self.AREA_FIXTURE)
     self.assertTrue(registry != None)
     
-    self.assertEquals(2, registry.size())
-    self.assertEquals("nrd2km", registry.get(0).id)
-    self.assertEquals("nrd2km_laea20e60n", registry.get(1).id)
+    self.assertEqual(2, registry.size())
+    self.assertEqual("nrd2km", registry.get(0).id)
+    self.assertEqual("nrd2km_laea20e60n", registry.get(1).id)
 
   def test_load_laea(self):
     if not _rave.isXmlSupported():
@@ -73,16 +71,16 @@ class PyAreaRegistryTest(unittest.TestCase):
     self.assertTrue(registry != None)
     
     area = registry.get(1)
-    self.assertEquals("laea20e60n", area.pcsid)
-    self.assertEquals(None, area.projection)
-    self.assertEquals(987, area.xsize)
-    self.assertEquals(543, area.ysize)
-    self.assertAlmostEquals(2000.0, area.xscale, 4)
-    self.assertAlmostEquals(1000.0, area.yscale, 4)
-    self.assertAlmostEquals(-738816.513333, area.extent[0], 4)
-    self.assertAlmostEquals(-3995515.596160, area.extent[1], 4)
-    self.assertAlmostEquals(955183.48666699999, area.extent[2], 4)
-    self.assertAlmostEquals(-1787515.59616, area.extent[3], 4)
+    self.assertEqual("laea20e60n", area.pcsid)
+    self.assertEqual(None, area.projection)
+    self.assertEqual(987, area.xsize)
+    self.assertEqual(543, area.ysize)
+    self.assertAlmostEqual(2000.0, area.xscale, 4)
+    self.assertAlmostEqual(1000.0, area.yscale, 4)
+    self.assertAlmostEqual(-738816.513333, area.extent[0], 4)
+    self.assertAlmostEqual(-3995515.596160, area.extent[1], 4)
+    self.assertAlmostEqual(955183.48666699999, area.extent[2], 4)
+    self.assertAlmostEqual(-1787515.59616, area.extent[3], 4)
     
   def test_load_laea_withprojregistry(self):
     if not _rave.isXmlSupported():
@@ -94,17 +92,17 @@ class PyAreaRegistryTest(unittest.TestCase):
     self.assertTrue(registry != None)
     
     area = registry.get(1)
-    self.assertEquals("laea20e60n", area.pcsid)
+    self.assertEqual("laea20e60n", area.pcsid)
     self.assertTrue(area.projection != None)
-    self.assertEquals("Nordic, all radars, 2 km, laea", area.description)
-    self.assertEquals(987, area.xsize)
-    self.assertEquals(543, area.ysize)
-    self.assertAlmostEquals(2000.0, area.xscale, 4)
-    self.assertAlmostEquals(1000.0, area.yscale, 4)
-    self.assertAlmostEquals(-738816.513333, area.extent[0], 4)
-    self.assertAlmostEquals(-3995515.596160, area.extent[1], 4)
-    self.assertAlmostEquals(955183.48666699999, area.extent[2], 4)
-    self.assertAlmostEquals(-1787515.59616, area.extent[3], 4)
+    self.assertEqual("Nordic, all radars, 2 km, laea", area.description)
+    self.assertEqual(987, area.xsize)
+    self.assertEqual(543, area.ysize)
+    self.assertAlmostEqual(2000.0, area.xscale, 4)
+    self.assertAlmostEqual(1000.0, area.yscale, 4)
+    self.assertAlmostEqual(-738816.513333, area.extent[0], 4)
+    self.assertAlmostEqual(-3995515.596160, area.extent[1], 4)
+    self.assertAlmostEqual(955183.48666699999, area.extent[2], 4)
+    self.assertAlmostEqual(-1787515.59616, area.extent[3], 4)
     
     
   def test_getByName(self):
@@ -114,8 +112,8 @@ class PyAreaRegistryTest(unittest.TestCase):
     registry = _arearegistry.load(self.AREA_FIXTURE)
     self.assertTrue(registry != None)
 
-    self.assertEquals("nrd2km", registry.getByName("nrd2km").id)
-    self.assertEquals("nrd2km_laea20e60n", registry.getByName("nrd2km_laea20e60n").id)
+    self.assertEqual("nrd2km", registry.getByName("nrd2km").id)
+    self.assertEqual("nrd2km_laea20e60n", registry.getByName("nrd2km_laea20e60n").id)
 
   def test_add(self):
     if not _rave.isXmlSupported():
@@ -131,8 +129,8 @@ class PyAreaRegistryTest(unittest.TestCase):
     a.extent = (-738816.513333,-3995515.596160,955183.48666699999,-1787515.59616)
     a.pcsid = "laea20e60n"
     registry.add(a)
-    self.assertEquals(3, registry.size())
-    self.assertEquals("nisse", registry.getByName("nisse").id)
+    self.assertEqual(3, registry.size())
+    self.assertEqual("nisse", registry.getByName("nisse").id)
 
   def test_remove(self):
     if not _rave.isXmlSupported():
@@ -140,8 +138,8 @@ class PyAreaRegistryTest(unittest.TestCase):
     import _arearegistry    
     registry = _arearegistry.load(self.AREA_FIXTURE)
     registry.remove(0)
-    self.assertEquals(1, registry.size())
-    self.assertEquals("nrd2km_laea20e60n", registry.get(0).id)
+    self.assertEqual(1, registry.size())
+    self.assertEqual("nrd2km_laea20e60n", registry.get(0).id)
 
   def test_removeByName(self):
     if not _rave.isXmlSupported():
@@ -149,8 +147,8 @@ class PyAreaRegistryTest(unittest.TestCase):
     import _arearegistry    
     registry = _arearegistry.load(self.AREA_FIXTURE)
     registry.removeByName("nrd2km_laea20e60n")
-    self.assertEquals(1, registry.size())
-    self.assertEquals("nrd2km", registry.get(0).id)
+    self.assertEqual(1, registry.size())
+    self.assertEqual("nrd2km", registry.get(0).id)
 
   def test_write(self):
     if not _rave.isXmlSupported():
@@ -172,19 +170,19 @@ class PyAreaRegistryTest(unittest.TestCase):
     
     tree = ElementTree.parse(self.TEMPORARY_FILE)
     areas = tree.findall("area")
-    self.assertEquals(3, len(areas))
-    self.assertEquals("nisse", areas[2].get('id'))
+    self.assertEqual(3, len(areas))
+    self.assertEqual("nisse", areas[2].get('id'))
     args = areas[2].findall("areadef/arg")
-    self.assertEquals("laea20e60n", string.strip(self.findArgElements(args, "id", "pcs").text))
-    self.assertEquals("111", string.strip(self.findArgElements(args, "id", "xsize").text))
-    self.assertEquals("222", string.strip(self.findArgElements(args, "id", "ysize").text))
-    self.assertEquals("1000.0", string.strip(self.findArgElements(args, "id", "xscale").text)[:6])
-    self.assertEquals("2000.0", string.strip(self.findArgElements(args, "id", "yscale").text)[:6])
-    extent = string.strip(self.findArgElements(args, "id", "extent").text).split(",")
-    self.assertEquals("-738816.5", string.strip(extent[0])[:9])
-    self.assertEquals("-3995515.5", string.strip(extent[1])[:10])
-    self.assertEquals("955183.4", string.strip(extent[2])[:8])
-    self.assertEquals("-1787515.5", string.strip(extent[3])[:10])
+    self.assertEqual("laea20e60n", self.findArgElements(args, "id", "pcs").text.strip())
+    self.assertEqual("111", self.findArgElements(args, "id", "xsize").text.strip())
+    self.assertEqual("222", self.findArgElements(args, "id", "ysize").text.strip())
+    self.assertEqual("1000.0", self.findArgElements(args, "id", "xscale").text.strip()[:6])
+    self.assertEqual("2000.0", self.findArgElements(args, "id", "yscale").text.strip()[:6])
+    extent = self.findArgElements(args, "id", "extent").text.strip().split(",")
+    self.assertEqual("-738816.5", extent[0].strip()[:9])
+    self.assertEqual("-3995515.5", extent[1].strip()[:10])
+    self.assertEqual("955183.4", extent[2].strip()[:8])
+    self.assertEqual("-1787515.5", extent[3].strip()[:10])
 
   def test_write_2(self):
     if not _rave.isXmlSupported():
@@ -205,10 +203,10 @@ class PyAreaRegistryTest(unittest.TestCase):
     registry.write(self.TEMPORARY_FILE)
 
     newreg = _arearegistry.load(self.TEMPORARY_FILE)
-    self.assertEquals(3, newreg.size())
-    self.assertEquals("nrd2km",newreg.get(0).id)
-    self.assertEquals("nrd2km_laea20e60n",newreg.get(1).id)
-    self.assertEquals("nisse",newreg.get(2).id)
+    self.assertEqual(3, newreg.size())
+    self.assertEqual("nrd2km",newreg.get(0).id)
+    self.assertEqual("nrd2km_laea20e60n",newreg.get(1).id)
+    self.assertEqual("nisse",newreg.get(2).id)
     
 
   def findArgElements(self, args, aname, avalue):
