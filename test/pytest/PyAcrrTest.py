@@ -47,7 +47,7 @@ class PyAcrrTest(unittest.TestCase):
     
     sum_dist_field = None
     for dist_field in distance_fields:
-      if sum_dist_field == None:
+      if sum_dist_field is None:
         sum_dist_field = array(dist_field)*gain_multiplier
       else:
         sum_dist_field += array(dist_field)*gain_multiplier
@@ -59,38 +59,37 @@ class PyAcrrTest(unittest.TestCase):
   
   def test_new(self):
     obj = _acrr.new()
-    isacrr = string.find(`type(obj)`, "AcrrCore")
-    self.assertNotEqual(-1, isacrr)
+    self.assertNotEqual(-1, str(type(obj)).find("AcrrCore"))
  
   def test_attribute_visibility(self):
     attrs = ['nodata', 'undetect', 'quality_field_name']
     acrr = _acrr.new()
     alist = dir(acrr)
     for a in attrs:
-      self.assertEquals(True, a in alist)
+      self.assertEqual(True, a in alist)
  
   def test_nodata(self):
     obj = _acrr.new()
-    self.assertAlmostEquals(ACRR_NO_DATA, obj.nodata, 4)
+    self.assertAlmostEqual(ACRR_NO_DATA, obj.nodata, 4)
     obj.nodata = 10.0
-    self.assertAlmostEquals(10.0, obj.nodata, 4)
+    self.assertAlmostEqual(10.0, obj.nodata, 4)
  
   def test_undetect(self):
     obj = _acrr.new()
-    self.assertAlmostEquals(UNDETECT, obj.undetect, 4)
+    self.assertAlmostEqual(UNDETECT, obj.undetect, 4)
     obj.undetect = 11.0
-    self.assertAlmostEquals(11.0, obj.undetect, 4)
+    self.assertAlmostEqual(11.0, obj.undetect, 4)
  
   def test_quality_field_name(self):
     obj = _acrr.new()
-    self.assertEquals("se.smhi.composite.distance.radar", obj.quality_field_name)
+    self.assertEqual("se.smhi.composite.distance.radar", obj.quality_field_name)
     obj.quality_field_name = "se.smhi.composite.distance.radar2"
-    self.assertEquals("se.smhi.composite.distance.radar2", obj.quality_field_name)
+    self.assertEqual("se.smhi.composite.distance.radar2", obj.quality_field_name)
  
   def test_before_initalization(self):
     obj = _acrr.new()
-    self.assertEquals(False, obj.isInitialized())
-    self.assertEquals(None, obj.getQuantity())
+    self.assertEqual(False, obj.isInitialized())
+    self.assertEqual(None, obj.getQuantity())
  
   def test_after_initialization(self):
     p1 = _cartesianparam.new()
@@ -108,8 +107,8 @@ class PyAcrrTest(unittest.TestCase):
     obj = _acrr.new()
     obj.sum(p1, 200.0, 1.6)
      
-    self.assertEquals(True, obj.isInitialized())
-    self.assertEquals("DBZH", obj.getQuantity())
+    self.assertEqual(True, obj.isInitialized())
+    self.assertEqual("DBZH", obj.getQuantity())
  
   def test_initialize_without_qualityfield(self):
     p1 = _cartesianparam.new()
@@ -124,8 +123,8 @@ class PyAcrrTest(unittest.TestCase):
     except IOError:
       pass
      
-    self.assertEquals(False, obj.isInitialized())
-    self.assertEquals(None, obj.getQuantity())
+    self.assertEqual(False, obj.isInitialized())
+    self.assertEqual(None, obj.getQuantity())
  
   def test_sum_different_quantity(self):
     p1 = _cartesianparam.new()
@@ -160,8 +159,8 @@ class PyAcrrTest(unittest.TestCase):
     except IOError:
       pass
      
-    self.assertEquals(True, obj.isInitialized())
-    self.assertEquals("DBZH", obj.getQuantity())
+    self.assertEqual(True, obj.isInitialized())
+    self.assertEqual("DBZH", obj.getQuantity())
 
   def test_accumulate(self):
     
@@ -206,10 +205,10 @@ class PyAcrrTest(unittest.TestCase):
     
     result = obj.accumulate(0.0, 2, 1.0)
 
-    self.assertAlmostEquals(1.0, result.getAttribute("what/prodpar"), 4)
-    self.assertEquals("ACRR", result.quantity)
-    self.assertAlmostEquals(ACRR_NO_DATA, result.nodata, 4)
-    self.assertAlmostEquals(UNDETECT, result.undetect, 4)
+    self.assertAlmostEqual(1.0, result.getAttribute("what/prodpar"), 4)
+    self.assertEqual("ACRR", result.quantity)
+    self.assertAlmostEqual(ACRR_NO_DATA, result.nodata, 4)
+    self.assertAlmostEqual(UNDETECT, result.undetect, 4)
     
     refAcrr = [ACRR_NO_DATA, 1.0, 0.5, 0.5]
     refDist = self.calculateAvgDistanceField([distance_field1, distance_field2], DEFAULT_DISTANCE_GAIN)
@@ -222,8 +221,8 @@ class PyAcrrTest(unittest.TestCase):
     self.assertAlmostEqual(1000.0, qfield.getAttribute("what/gain"), 4)
     Dist = qfield.getData().flatten()
     for i in range(len(refAcrr)):
-      self.assertAlmostEquals(Acrr[i], refAcrr[i], 2)
-      self.assertAlmostEquals(Dist[i], refDist[i], 2)
+      self.assertAlmostEqual(Acrr[i], refAcrr[i], 2)
+      self.assertAlmostEqual(Dist[i], refDist[i], 2)
       
   def test_accumulate_distfield_nodata(self):
     
@@ -262,10 +261,10 @@ class PyAcrrTest(unittest.TestCase):
     
     result = obj.accumulate(0.0, 2, 1.0)
 
-    self.assertAlmostEquals(1.0, result.getAttribute("what/prodpar"), 4)
-    self.assertEquals("ACRR", result.quantity)
-    self.assertAlmostEquals(ACRR_NO_DATA, result.nodata, 4)
-    self.assertAlmostEquals(UNDETECT, result.undetect, 4)
+    self.assertAlmostEqual(1.0, result.getAttribute("what/prodpar"), 4)
+    self.assertEqual("ACRR", result.quantity)
+    self.assertAlmostEqual(ACRR_NO_DATA, result.nodata, 4)
+    self.assertAlmostEqual(UNDETECT, result.undetect, 4)
     
     refAcrr = [1.0, 1.0, 0.5, ACRR_NO_DATA]
     refDist = self.calculateAvgDistanceField([distance_field1, distance_field2], DEFAULT_DISTANCE_GAIN)
@@ -275,8 +274,8 @@ class PyAcrrTest(unittest.TestCase):
     self.assertAlmostEqual(1000.0, qfield.getAttribute("what/gain"), 4)
     Dist = qfield.getData().flatten()
     for i in range(len(refAcrr)):
-      self.assertAlmostEquals(Acrr[i], refAcrr[i], 2)
-      self.assertAlmostEquals(Dist[i], refDist[i], 2)
+      self.assertAlmostEqual(Acrr[i], refAcrr[i], 2)
+      self.assertAlmostEqual(Dist[i], refDist[i], 2)
       
   def test_accumulate_tofewfiles(self):
     p1 = _cartesianparam.new()
@@ -310,13 +309,13 @@ class PyAcrrTest(unittest.TestCase):
      
     result = obj.accumulate(0.0, 3, 1.0)
  
-    self.assertAlmostEquals(1.0, result.getAttribute("what/prodpar"), 4)
-    self.assertEquals("ACRR", result.quantity)
-    self.assertAlmostEquals(ACRR_NO_DATA, result.nodata, 4)
-    self.assertAlmostEquals(UNDETECT, result.undetect, 4)
+    self.assertAlmostEqual(1.0, result.getAttribute("what/prodpar"), 4)
+    self.assertEqual("ACRR", result.quantity)
+    self.assertAlmostEqual(ACRR_NO_DATA, result.nodata, 4)
+    self.assertAlmostEqual(UNDETECT, result.undetect, 4)
      
     refAcrr = [ACRR_NO_DATA, ACRR_NO_DATA, ACRR_NO_DATA, ACRR_NO_DATA]
     Acrr = result.getData().flatten()
     for i in range(len(refAcrr)):
-      self.assertAlmostEquals(Acrr[i], refAcrr[i], 2)
+      self.assertAlmostEqual(Acrr[i], refAcrr[i], 2)
     

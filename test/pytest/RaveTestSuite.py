@@ -48,8 +48,8 @@ from PyPolarNavTest import *
 from PyAreaTest import *
 from PyRadarDefinitionTest import *
 from PyProjectionRegistryTest import *
-A="""
 from PyAcrrTest import *
+A="""
 from PyGraTest import *
 """
 from PyAreaRegistryTest import *

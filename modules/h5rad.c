@@ -4,7 +4,7 @@
  * @author Daniel Michelson (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2006-
  */
-#include <Python.h>
+#include <pyravecompat.h>
 #include <arrayobject.h>
 #include "rave.h"
 
@@ -358,14 +358,23 @@ static struct PyMethodDef _h5rad_functions[] =
 /**
  * Initializes the python module _h5rad.
  */
-PyMODINIT_FUNC init_h5rad(void)
+MOD_INIT(_h5rad)
 {
-  PyObject* m;
-  m = Py_InitModule("_h5rad", _h5rad_functions);
-  ErrorObject = PyString_FromString("_h5rad.error");
-  if (ErrorObject == NULL || PyDict_SetItemString(PyModule_GetDict(m), "error",
-                                                  ErrorObject) != 0)
+  PyObject* module = NULL;
+  PyObject* dictionary = NULL;
+
+  MOD_INIT_DEF(module, "_h5rad", NULL/*doc*/, _h5rad_functions);
+  if (module == NULL) {
+    return MOD_INIT_ERROR;
+  }
+
+  dictionary = PyModule_GetDict(module);
+  ErrorObject = PyErr_NewException("_h5rad.error", NULL, NULL);
+  if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
     Py_FatalError("Can't define _h5rad.error");
+    return MOD_INIT_ERROR;
+  }
 
   import_array(); /*Access to the Numeric PyArray functions*/
+  return MOD_INIT_SUCCESS(module);
 }

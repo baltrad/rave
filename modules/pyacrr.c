@@ -22,7 +22,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2012-06-01
  */
-#include "Python.h"
+#include "pyravecompat.h"
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>
@@ -239,37 +239,28 @@ static struct PyMethodDef _pyacrr_methods[] =
  * Returns the specified attribute in the acrr
  * @param[in] self - the acrr
  */
-static PyObject* _pyacrr_getattr(PyAcrr* self, char* name)
+static PyObject* _pyacrr_getattro(PyAcrr* self, PyObject* name)
 {
-  PyObject* res = NULL;
-
-  if (strcmp("nodata", name) == 0) {
+  if (PY_COMPARE_STRING_WITH_ATTRO_NAME("nodata", name) == 0) {
     return PyFloat_FromDouble(RaveAcrr_getNodata(self->acrr));
-  } else if (strcmp("undetect", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("undetect", name) == 0) {
     return PyFloat_FromDouble(RaveAcrr_getUndetect(self->acrr));
-  } else if (strcmp("quality_field_name", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("quality_field_name", name) == 0) {
     return PyString_FromString(RaveAcrr_getQualityFieldName(self->acrr));
   }
-
-  res = Py_FindMethod(_pyacrr_methods, (PyObject*) self, name);
-  if (res)
-    return res;
-
-  PyErr_Clear();
-  PyErr_SetString(PyExc_AttributeError, name);
-  return NULL;
+  return PyObject_GenericGetAttr((PyObject*)self, name);
 }
 
 /**
  * Returns the specified attribute in the acrr
  */
-static int _pyacrr_setattr(PyAcrr* self, char* name, PyObject* val)
+static int _pyacrr_setattro(PyAcrr* self, PyObject* name, PyObject* val)
 {
   int result = -1;
   if (name == NULL) {
     goto done;
   }
-  if (strcmp("nodata", name) == 0) {
+  if (PY_COMPARE_STRING_WITH_ATTRO_NAME("nodata", name) == 0) {
     if (PyInt_Check(val)) {
       RaveAcrr_setNodata(self->acrr, (double)PyInt_AsLong(val));
     } else if (PyLong_Check(val)) {
@@ -279,7 +270,7 @@ static int _pyacrr_setattr(PyAcrr* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "nodata must be a number");
     }
-  } else if (strcmp("undetect", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("undetect", name) == 0) {
     if (PyInt_Check(val)) {
       RaveAcrr_setUndetect(self->acrr, (double)PyInt_AsLong(val));
     } else if (PyLong_Check(val)) {
@@ -289,7 +280,7 @@ static int _pyacrr_setattr(PyAcrr* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "undetect must be a number");
     }
-  } else if (strcmp("quality_field_name", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("quality_field_name", name) == 0) {
     if (PyString_Check(val)) {
       if (!RaveAcrr_setQualityFieldName(self->acrr, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_MemoryError, "failure to set quality field name");
@@ -297,6 +288,9 @@ static int _pyacrr_setattr(PyAcrr* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "quality_field_name must be a string");
     }
+  } else {
+    raiseException_gotoTag(done, PyExc_AttributeError,
+        PY_RAVE_ATTRO_NAME_TO_STRING(name));
   }
 
   result = 0;
@@ -309,21 +303,47 @@ done:
 /*@{ Type definitions */
 PyTypeObject PyAcrr_Type =
 {
-  PyObject_HEAD_INIT(NULL)0, /*ob_size*/
+  PyVarObject_HEAD_INIT(NULL, 0) /*ob_size*/
   "AcrrCore", /*tp_name*/
   sizeof(PyAcrr), /*tp_size*/
   0, /*tp_itemsize*/
   /* methods */
   (destructor)_pyacrr_dealloc, /*tp_dealloc*/
   0, /*tp_print*/
-  (getattrfunc)_pyacrr_getattr, /*tp_getattr*/
-  (setattrfunc)_pyacrr_setattr, /*tp_setattr*/
-  0, /*tp_compare*/
-  0, /*tp_repr*/
-  0, /*tp_as_number */
+  (getattrfunc)0,               /*tp_getattr*/
+  (setattrfunc)0,               /*tp_setattr*/
+  0,                            /*tp_compare*/
+  0,                            /*tp_repr*/
+  0,                            /*tp_as_number */
   0,
-  0, /*tp_as_mapping */
-  0 /*tp_hash*/
+  0,                            /*tp_as_mapping */
+  0,                            /*tp_hash*/
+  (ternaryfunc)0,               /*tp_call*/
+  (reprfunc)0,                  /*tp_str*/
+  (getattrofunc)_pyacrr_getattro, /*tp_getattro*/
+  (setattrofunc)_pyacrr_setattro, /*tp_setattro*/
+  0,                            /*tp_as_buffer*/
+  Py_TPFLAGS_DEFAULT, /*tp_flags*/
+  0,                            /*tp_doc*/
+  (traverseproc)0,              /*tp_traverse*/
+  (inquiry)0,                   /*tp_clear*/
+  0,                            /*tp_richcompare*/
+  0,                            /*tp_weaklistoffset*/
+  0,                            /*tp_iter*/
+  0,                            /*tp_iternext*/
+  _pyacrr_methods,              /*tp_methods*/
+  0,                            /*tp_members*/
+  0,                            /*tp_getset*/
+  0,                            /*tp_base*/
+  0,                            /*tp_dict*/
+  0,                            /*tp_descr_get*/
+  0,                            /*tp_descr_set*/
+  0,                            /*tp_dictoffset*/
+  0,                            /*tp_init*/
+  0,                            /*tp_alloc*/
+  0,                            /*tp_new*/
+  0,                            /*tp_free*/
+  0,                            /*tp_is_gc*/
 };
 /*@} End of Type definitions */
 
@@ -333,35 +353,37 @@ static PyMethodDef functions[] = {
   {NULL,NULL} /*Sentinel*/
 };
 
-PyMODINIT_FUNC
-init_acrr(void)
+MOD_INIT(_acrr)
 {
   PyObject *module=NULL,*dictionary=NULL;
   static void *PyAcrr_API[PyAcrr_API_pointers];
   PyObject *c_api_object = NULL;
-  PyAcrr_Type.ob_type = &PyType_Type;
 
-  module = Py_InitModule("_acrr", functions);
+  MOD_INIT_SETUP_TYPE(PyAcrr_Type, &PyType_Type);
+
+  MOD_INIT_VERIFY_TYPE_READY(&PyAcrr_Type);
+
+  MOD_INIT_DEF(module, "_acrr", NULL/*doc*/, functions);
   if (module == NULL) {
-    return;
+    return MOD_INIT_ERROR;
   }
+
   PyAcrr_API[PyAcrr_Type_NUM] = (void*)&PyAcrr_Type;
   PyAcrr_API[PyAcrr_GetNative_NUM] = (void *)PyAcrr_GetNative;
   PyAcrr_API[PyAcrr_New_NUM] = (void*)PyAcrr_New;
 
-  c_api_object = PyCObject_FromVoidPtr((void *)PyAcrr_API, NULL);
-
-  if (c_api_object != NULL) {
-    PyModule_AddObject(module, "_C_API", c_api_object);
-  }
-
+  c_api_object = PyCapsule_New(PyAcrr_API, PyAcrr_CAPSULE_NAME, NULL);
   dictionary = PyModule_GetDict(module);
-  ErrorObject = PyString_FromString("_acrr.error");
+  PyDict_SetItemString(dictionary, "_C_API", c_api_object);
+
+  ErrorObject = PyErr_NewException("_acrr.error", NULL, NULL);
   if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
     Py_FatalError("Can't define _acrr.error");
+    return MOD_INIT_ERROR;
   }
 
   import_pycartesianparam();
   PYRAVE_DEBUG_INITIALIZE;
+  return MOD_INIT_SUCCESS(module);
 }
 /*@} End of Module setup */
