@@ -47,8 +47,8 @@ from PyRaveIOTest import *
 from PyPolarNavTest import *
 from PyAreaTest import *
 from PyRadarDefinitionTest import *
-A="""
 from PyProjectionRegistryTest import *
+A="""
 from PyAcrrTest import *
 from PyGraTest import *
 from PyAreaRegistryTest import *
