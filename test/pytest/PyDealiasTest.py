@@ -76,7 +76,7 @@ class PyDealiasTest(unittest.TestCase):
         self.assertTrue(different(scan, dscan))        
         status = _dealias.dealias(scan)
         self.assertFalse(different(scan, dscan))
-        self.assertEquals("se.smhi.detector.dealias", scan.getParameter("VRAD").getAttribute("how/task"))
+        self.assertEqual("se.smhi.detector.dealias", scan.getParameter("VRAD").getAttribute("how/task"))
 
     def testDealiasScan_VRAD(self):
         # Really not relevant but we don't force what parameter to use
@@ -92,7 +92,7 @@ class PyDealiasTest(unittest.TestCase):
         self.assertFalse(different(scan, dscan, "VRAD"))
         self.assertTrue(different(scan, dscan, "VRADH"))
         self.assertFalse(scan.getParameter("VRADH").hasAttribute("how/task"))
-        self.assertEquals("se.smhi.detector.dealias", scan.getParameter("VRAD").getAttribute("how/task"))
+        self.assertEqual("se.smhi.detector.dealias", scan.getParameter("VRAD").getAttribute("how/task"))
 
     def testDealiasScan_VRADH(self):
         # Really not relevant but we don't force what parameter to use
@@ -108,7 +108,7 @@ class PyDealiasTest(unittest.TestCase):
         self.assertTrue(different(scan, dscan, "VRAD"))
         self.assertFalse(different(scan, dscan, "VRADH"))
         self.assertFalse(scan.getParameter("VRAD").hasAttribute("how/task"))
-        self.assertEquals("se.smhi.detector.dealias", scan.getParameter("VRADH").getAttribute("how/task"))
+        self.assertEqual("se.smhi.detector.dealias", scan.getParameter("VRADH").getAttribute("how/task"))
 
 
     # Only checks the first scan in the volume.
@@ -120,7 +120,7 @@ class PyDealiasTest(unittest.TestCase):
         for i in range(pvol.getNumberOfScans()):
           scan = pvol.getScan(i)
           if scan.hasParameter("VRAD") and scan.elangle < 2.0*math.pi/180.0: # Currently, max elev angle is 2.0
-            self.assertEquals("se.smhi.detector.dealias", scan.getParameter("VRAD").getAttribute("how/task"))
+            self.assertEqual("se.smhi.detector.dealias", scan.getParameter("VRAD").getAttribute("how/task"))
 
         self.assertFalse(different(pvol.getScan(0), dscan))
 
@@ -134,7 +134,7 @@ class PyDealiasTest(unittest.TestCase):
           scan = pvol.getScan(i)
           if scan.hasParameter("VRAD"):
             if scan.elangle <= 2.0*math.pi/180.0:
-              self.assertEquals("se.smhi.detector.dealias", scan.getParameter("VRAD").getAttribute("how/task"))
+              self.assertEqual("se.smhi.detector.dealias", scan.getParameter("VRAD").getAttribute("how/task"))
             else:
               self.assertFalse(scan.getParameter("VRAD").hasAttribute("how/task"))
 
@@ -149,7 +149,7 @@ class PyDealiasTest(unittest.TestCase):
           scan = pvol.getScan(i)
           if scan.hasParameter("VRAD"):
             if scan.elangle <= 30.0*math.pi/180.0:
-              self.assertEquals("se.smhi.detector.dealias", scan.getParameter("VRAD").getAttribute("how/task"))
+              self.assertEqual("se.smhi.detector.dealias", scan.getParameter("VRAD").getAttribute("how/task"))
             else:
               self.assertFalse(scan.getParameter("VRAD").hasAttribute("how/task"))
 

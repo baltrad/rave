@@ -37,9 +37,9 @@ from PyCartesianParamTest import *
 from PyCartesianVolumeTest import *
 from PyVerticalProfileTest import *
 from PyRaveFieldTest import *
-A="""
 from PyTransformTest import *
 
+A="""
 from PyVprCorrectionTest import *
 """
 from PyProjectionTest import *
@@ -61,7 +61,9 @@ from PyDetectionRangeTest import *
 A="""
 from PyRaveTest import *
 from PyQITotalTest import *
+"""
 from PyPooCompositeAlgorithmTest import *
+A="""
 from rave_overshooting_quality_plugin_test import *
 from rave_distance_quality_plugin_test import *
 from rave_dealias_quality_plugin_test import *
@@ -89,10 +91,10 @@ except:
   pass
 
 from area_registry_test import *
-
+"""
 from PyDealiasTest import *
-
 from PyRadvolTest import *
+A="""
 from PyCtfilterTest import *
 from PyPgfQtoolsTest import *
 from PyPgfLoggerTest import *

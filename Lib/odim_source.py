@@ -133,6 +133,8 @@ class ODIM_Source:
     # @param src string containing a '/what/source' attribute
     def __init__(self, src=None):
         self.source = src
+        if not isinstance(self.source,bytes):
+          self.source = bytes(self.source, UTF8)
         self.wmo = self.nod = self.rad = self.plc = self.org = self.cty = self.cmt = None
         if self.source: self.split_source()
 

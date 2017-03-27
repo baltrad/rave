@@ -22,7 +22,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Daniel Michelson (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2012-11-23
  */
-#include "Python.h"
+#include "pyravecompat.h"
 #include "arrayobject.h"
 #include "rave.h"
 #include "rave_debug.h"
@@ -385,20 +385,28 @@ static struct PyMethodDef _radvol_functions[] =
 /**
  * Initialize the _radvol module
  */
-PyMODINIT_FUNC init_radvol(void)
+MOD_INIT(_radvol)
 {
-  PyObject* m;
-  m = Py_InitModule("_radvol", _radvol_functions);
-  ErrorObject = PyString_FromString("_radvol.error");
+  PyObject* module = NULL;
+  PyObject* dictionary = NULL;
 
-  if (ErrorObject == NULL || PyDict_SetItemString(PyModule_GetDict(m),
-                                                  "error", ErrorObject) != 0) {
-    Py_FatalError("Can't define _radvol.error");
+  MOD_INIT_DEF(module, "_radvol", NULL/*doc*/, _radvol_functions);
+  if (module == NULL) {
+    return MOD_INIT_ERROR;
   }
+
+  dictionary = PyModule_GetDict(module);
+  ErrorObject = PyErr_NewException("_radvol.error", NULL, NULL);
+  if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
+    Py_FatalError("Can't define _radvol.error");
+    return MOD_INIT_ERROR;
+  }
+
   import_pypolarvolume();
   import_pypolarscan();
   import_array(); /*To make sure I get access to Numeric*/
   PYRAVE_DEBUG_INITIALIZE;
+  return MOD_INIT_SUCCESS(module);
 }
 
 /*@} End of Module setup */

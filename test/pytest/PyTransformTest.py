@@ -52,16 +52,14 @@ class PyTransformTest(unittest.TestCase):
 
   def test_new(self):
     obj = _transform.new()
-    
-    istransform = string.find(`type(obj)`, "TransformCore")
-    self.assertNotEqual(-1, istransform) 
+    self.assertNotEqual(-1, str(type(obj)).find("TransformCore")) 
 
   def test_attribute_visibility(self):
     attrs = ['method']
     obj = _transform.new()
     alist = dir(obj)
     for a in attrs:
-      self.assertEquals(True, a in alist)
+      self.assertEqual(True, a in alist)
 
   def testMethod(self):
     obj = _transform.new()
@@ -83,7 +81,7 @@ class PyTransformTest(unittest.TestCase):
       try:
         obj.method = method
         self.fail("Expected ValueError")
-      except ValueError, e:
+      except ValueError:
         pass
       self.assertEqual(_rave.NEAREST, obj.method)
 
@@ -176,7 +174,7 @@ class PyTransformTest(unittest.TestCase):
     result = t.fillGap(param)
     
     data = result.getData() 
-    self.assertEquals(1, data[2][2])
+    self.assertEqual(1, data[2][2])
 
   def testFillGap_onCartesianParameters(self):
     data = numpy.zeros((6, 6), numpy.uint8)
@@ -207,9 +205,9 @@ class PyTransformTest(unittest.TestCase):
     result = t.fillGap(obj)
     
     data = result.getParameter("DBZH").getData() 
-    self.assertEquals(1, data[2][2])
+    self.assertEqual(1, data[2][2])
     data = result.getParameter("TH").getData() 
-    self.assertEquals(2, data[2][2])
+    self.assertEqual(2, data[2][2])
   
   def create_cartesian_with_parameter(self, xsize, ysize, xscale, yscale, extent, projstr, dtype, value, quantity):
     obj = _cartesian.new()
@@ -295,29 +293,29 @@ class PyTransformTest(unittest.TestCase):
     pqf1 = param.getQualityFieldByHowTask("se.some.how.task.1")
     pqf2 = param.getQualityFieldByHowTask("se.some.how.task.2")
     
-    self.assertEquals(4, result.xsize)
-    self.assertEquals(4, result.ysize)
-    self.assertEquals(511000.0, result.xscale, 4)
-    self.assertEquals(958000.0, result.yscale, 4)
-    self.assertEquals(971337.728807, result.areaextent[0], 4)
-    self.assertEquals(7196461.17902, result.areaextent[1], 4)
-    self.assertEquals(3015337.72881, result.areaextent[2], 4)
-    self.assertEquals(11028461.179, result.areaextent[3], 4)
-    self.assertEquals("+proj=merc +lat_ts=0 +lon_0=0 +k=1.0 +R=6378137.0 +nadgrids=@null +no_defs", result.projection.definition)
-    self.assertEquals(ul.date, result.date)
-    self.assertEquals(ul.time, result.time)
-    self.assertEquals(ul.startdate, result.startdate)
-    self.assertEquals(ul.starttime, result.starttime)
-    self.assertEquals(ul.enddate, result.enddate)
-    self.assertEquals(ul.endtime, result.endtime)
-    self.assertEquals(ul.product, result.product)
-    self.assertEquals(ul.objectType, result.objectType)
+    self.assertEqual(4, result.xsize)
+    self.assertEqual(4, result.ysize)
+    self.assertEqual(511000.0, result.xscale, 4)
+    self.assertEqual(958000.0, result.yscale, 4)
+    self.assertEqual(971337.728807, result.areaextent[0], 4)
+    self.assertEqual(7196461.17902, result.areaextent[1], 4)
+    self.assertEqual(3015337.72881, result.areaextent[2], 4)
+    self.assertEqual(11028461.179, result.areaextent[3], 4)
+    self.assertEqual("+proj=merc +lat_ts=0 +lon_0=0 +k=1.0 +R=6378137.0 +nadgrids=@null +no_defs", result.projection.definition)
+    self.assertEqual(ul.date, result.date)
+    self.assertEqual(ul.time, result.time)
+    self.assertEqual(ul.startdate, result.startdate)
+    self.assertEqual(ul.starttime, result.starttime)
+    self.assertEqual(ul.enddate, result.enddate)
+    self.assertEqual(ul.endtime, result.endtime)
+    self.assertEqual(ul.product, result.product)
+    self.assertEqual(ul.objectType, result.objectType)
     
-    self.assertEquals([[2,2,3,3],[2,2,3,3],[4,4,5,5],[4,4,5,5]], param.getData().tolist())
-    self.assertEquals([[15,15,16,16],[15,15,16,16],[17,17,18,18],[17,17,18,18]], qf1.getData().tolist())
-    self.assertEquals([[19,19,20,20],[19,19,20,20],[21,21,22,22],[21,21,22,22]], qf2.getData().tolist())
-    self.assertEquals([[23,23,25,25],[23,23,25,25],[27,27,29,29],[27,27,29,29]], pqf1.getData().tolist())
-    self.assertEquals([[24,24,26,26],[24,24,26,26],[28,28,30,30],[28,28,30,30]], pqf2.getData().tolist())
+    self.assertEqual([[2,2,3,3],[2,2,3,3],[4,4,5,5],[4,4,5,5]], param.getData().tolist())
+    self.assertEqual([[15,15,16,16],[15,15,16,16],[17,17,18,18],[17,17,18,18]], qf1.getData().tolist())
+    self.assertEqual([[19,19,20,20],[19,19,20,20],[21,21,22,22],[21,21,22,22]], qf2.getData().tolist())
+    self.assertEqual([[23,23,25,25],[23,23,25,25],[27,27,29,29],[27,27,29,29]], pqf1.getData().tolist())
+    self.assertEqual([[24,24,26,26],[24,24,26,26],[28,28,30,30],[28,28,30,30]], pqf2.getData().tolist())
     
   def test_combine_tiles_with_two_parameters(self):
     pyarea = _area.new()
@@ -358,29 +356,29 @@ class PyTransformTest(unittest.TestCase):
     
     t = _transform.new()
     result = t.combine_tiles(pyarea, [ul,ur,ll,lr])
-    self.assertEquals(4, result.xsize)
-    self.assertEquals(4, result.ysize)
-    self.assertEquals(511000.0, result.xscale, 4)
-    self.assertEquals(958000.0, result.yscale, 4)
-    self.assertEquals(971337.728807, result.areaextent[0], 4)
-    self.assertEquals(7196461.17902, result.areaextent[1], 4)
-    self.assertEquals(3015337.72881, result.areaextent[2], 4)
-    self.assertEquals(11028461.179, result.areaextent[3], 4)
-    self.assertEquals("+proj=merc +lat_ts=0 +lon_0=0 +k=1.0 +R=6378137.0 +nadgrids=@null +no_defs", result.projection.definition)
-    self.assertEquals(ul.date, result.date)
-    self.assertEquals(ul.time, result.time)
-    self.assertEquals(ul.startdate, result.startdate)
-    self.assertEquals(ul.starttime, result.starttime)
-    self.assertEquals(ul.enddate, result.enddate)
-    self.assertEquals(ul.endtime, result.endtime)
-    self.assertEquals(ul.product, result.product)
-    self.assertEquals(ul.objectType, result.objectType)
+    self.assertEqual(4, result.xsize)
+    self.assertEqual(4, result.ysize)
+    self.assertEqual(511000.0, result.xscale, 4)
+    self.assertEqual(958000.0, result.yscale, 4)
+    self.assertEqual(971337.728807, result.areaextent[0], 4)
+    self.assertEqual(7196461.17902, result.areaextent[1], 4)
+    self.assertEqual(3015337.72881, result.areaextent[2], 4)
+    self.assertEqual(11028461.179, result.areaextent[3], 4)
+    self.assertEqual("+proj=merc +lat_ts=0 +lon_0=0 +k=1.0 +R=6378137.0 +nadgrids=@null +no_defs", result.projection.definition)
+    self.assertEqual(ul.date, result.date)
+    self.assertEqual(ul.time, result.time)
+    self.assertEqual(ul.startdate, result.startdate)
+    self.assertEqual(ul.starttime, result.starttime)
+    self.assertEqual(ul.enddate, result.enddate)
+    self.assertEqual(ul.endtime, result.endtime)
+    self.assertEqual(ul.product, result.product)
+    self.assertEqual(ul.objectType, result.objectType)
     
     param = result.getParameter("DBZH")
-    self.assertEquals([[2,2,3,3],[2,2,3,3],[4,4,5,5],[4,4,5,5]], param.getData().tolist())
-    self.assertEquals([[22,22,23,23],[22,22,23,23],[24,24,25,25],[24,24,25,25]], param.getQualityFieldByHowTask("se.some.how.task.1").getData().tolist())
+    self.assertEqual([[2,2,3,3],[2,2,3,3],[4,4,5,5],[4,4,5,5]], param.getData().tolist())
+    self.assertEqual([[22,22,23,23],[22,22,23,23],[24,24,25,25],[24,24,25,25]], param.getQualityFieldByHowTask("se.some.how.task.1").getData().tolist())
 
     param = result.getParameter("TH")
-    self.assertEquals([[12,12,13,13],[12,12,13,13],[14,14,15,15],[14,14,15,15]], param.getData().tolist())
-    self.assertEquals([[32,32,33,33],[32,32,33,33],[34,34,35,35],[34,34,35,35]], param.getQualityFieldByHowTask("se.some.how.task.1").getData().tolist())
+    self.assertEqual([[12,12,13,13],[12,12,13,13],[14,14,15,15],[14,14,15,15]], param.getData().tolist())
+    self.assertEqual([[32,32,33,33],[32,32,33,33],[34,34,35,35],[34,34,35,35]], param.getQualityFieldByHowTask("se.some.how.task.1").getData().tolist())
     

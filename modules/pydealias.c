@@ -22,7 +22,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Daniel Michelson (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2012-11-15
  */
-#include "Python.h"
+#include "pyravecompat.h"
 #include "arrayobject.h"
 #include "rave.h"
 #include "rave_debug.h"
@@ -166,21 +166,29 @@ static struct PyMethodDef _dealias_functions[] =
 /**
  * Initialize the _dealias module
  */
-PyMODINIT_FUNC init_dealias(void)
+MOD_INIT(_dealias)
 {
-  PyObject* m;
-  m = Py_InitModule("_dealias", _dealias_functions);
-  ErrorObject = PyString_FromString("_dealias.error");
+  PyObject* module = NULL;
+  PyObject* dictionary = NULL;
 
-  if (ErrorObject == NULL || PyDict_SetItemString(PyModule_GetDict(m),
-                                                  "error", ErrorObject) != 0) {
-    Py_FatalError("Can't define _dealias.error");
+  MOD_INIT_DEF(module, "_dealias", NULL/*doc*/, _dealias_functions);
+  if (module == NULL) {
+    return MOD_INIT_ERROR;
   }
+
+  dictionary = PyModule_GetDict(module);
+  ErrorObject = PyErr_NewException("_dealias.error", NULL, NULL);
+  if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
+    Py_FatalError("Can't define _dealias.error");
+    return MOD_INIT_ERROR;
+  }
+
   import_pypolarvolume();
   import_pypolarscan();
   import_pypolarscanparam();
   import_array(); /*To make sure I get access to Numeric*/
   PYRAVE_DEBUG_INITIALIZE;
+  return MOD_INIT_SUCCESS(module);
 }
 
 /*@} End of Module setup */
