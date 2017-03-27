@@ -22,7 +22,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2011-10-28
  */
-#include "Python.h"
+#include "pyravecompat.h"
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>
@@ -166,30 +166,17 @@ static struct PyMethodDef _pycompositealgorithm_methods[] =
  * Returns the specified attribute in the area
  * @param[in] self - the area
  */
-static PyObject* _pycompositealgorithm_getattr(PyCompositeAlgorithm* self, char* name)
+static PyObject* _pycompositealgorithm_getattro(PyCompositeAlgorithm* self, PyObject* name)
 {
-  PyObject* res = NULL;
-  res = Py_FindMethod(_pycompositealgorithm_methods, (PyObject*) self, name);
-  if (res)
-    return res;
-
-  PyErr_Clear();
-  PyErr_SetString(PyExc_AttributeError, name);
-  return NULL;
+  return PyObject_GenericGetAttr((PyObject*)self, name);
 }
 
 /**
  * Returns the specified attribute in the area
  */
-static int _pycompositealgorithm_setattr(PyCompositeAlgorithm* self, char* name, PyObject* val)
+static int _pycompositealgorithm_setattro(PyCompositeAlgorithm* self, PyObject* name, PyObject* val)
 {
-  int result = -1;
-  if (name == NULL) {
-    goto done;
-  }
-  //result = 0;
-done:
-  return result;
+  return -1;
 }
 
 /*@} End of PooCompositeAlgorithm */
@@ -197,22 +184,47 @@ done:
 /*@{ Type definitions */
 PyTypeObject PyCompositeAlgorithm_Type =
 {
-  PyObject_HEAD_INIT(NULL)0, /*ob_size*/
+  PyVarObject_HEAD_INIT(NULL, 0) /*ob_size*/
   "CompositeAlgorithmCore", /*tp_name*/
   sizeof(PyCompositeAlgorithm), /*tp_size*/
   0, /*tp_itemsize*/
   /* methods */
   (destructor)_pycompositealgorithm_dealloc, /*tp_dealloc*/
   0, /*tp_print*/
-  (getattrfunc)_pycompositealgorithm_getattr, /*tp_getattr*/
-  (setattrfunc)_pycompositealgorithm_setattr, /*tp_setattr*/
-  0, /*tp_compare*/
-  0, /*tp_repr*/
-  0, /*tp_as_number */
+  (getattrfunc)0,               /*tp_getattr*/
+  (setattrfunc)0,               /*tp_setattr*/
+  0,                            /*tp_compare*/
+  0,                            /*tp_repr*/
+  0,                            /*tp_as_number */
   0,
-  0, /*tp_as_mapping */
-  0 /*tp_hash*/
-};
+  0,                            /*tp_as_mapping */
+  0,                            /*tp_hash*/
+  (ternaryfunc)0,               /*tp_call*/
+  (reprfunc)0,                  /*tp_str*/
+  (getattrofunc)_pycompositealgorithm_getattro, /*tp_getattro*/
+  (setattrofunc)_pycompositealgorithm_setattro, /*tp_setattro*/
+  0,                            /*tp_as_buffer*/
+  Py_TPFLAGS_DEFAULT, /*tp_flags*/
+  0,                            /*tp_doc*/
+  (traverseproc)0,              /*tp_traverse*/
+  (inquiry)0,                   /*tp_clear*/
+  0,                            /*tp_richcompare*/
+  0,                            /*tp_weaklistoffset*/
+  0,                            /*tp_iter*/
+  0,                            /*tp_iternext*/
+  _pycompositealgorithm_methods,/*tp_methods*/
+  0,                            /*tp_members*/
+  0,                            /*tp_getset*/
+  0,                            /*tp_base*/
+  0,                            /*tp_dict*/
+  0,                            /*tp_descr_get*/
+  0,                            /*tp_descr_set*/
+  0,                            /*tp_dictoffset*/
+  0,                            /*tp_init*/
+  0,                            /*tp_alloc*/
+  0,                            /*tp_new*/
+  0,                            /*tp_free*/
+  0,                            /*tp_is_gc*/};
 /*@} End of Type definitions */
 
 /*@{ Module setup */
@@ -220,34 +232,37 @@ static PyMethodDef functions[] = {
   {NULL,NULL} /*Sentinel*/
 };
 
-PyMODINIT_FUNC
-init_compositealgorithm(void)
+MOD_INIT(_compositealgorithm)
 {
   PyObject *module=NULL,*dictionary=NULL;
   static void *PyCompositeAlgorithm_API[PyCompositeAlgorithm_API_pointers];
   PyObject *c_api_object = NULL;
 
-  PyCompositeAlgorithm_Type.ob_type = &PyType_Type;
+  MOD_INIT_SETUP_TYPE(PyCompositeAlgorithm_Type, &PyType_Type);
 
-  module = Py_InitModule("_compositealgorithm", functions);
+  MOD_INIT_VERIFY_TYPE_READY(&PyCompositeAlgorithm_Type);
+
+  MOD_INIT_DEF(module, "_compositealgorithm", NULL/*doc*/, functions);
   if (module == NULL) {
-    return;
+    return MOD_INIT_ERROR;
   }
+
   PyCompositeAlgorithm_API[PyCompositeAlgorithm_Type_NUM] = (void*)&PyCompositeAlgorithm_Type;
   PyCompositeAlgorithm_API[PyCompositeAlgorithm_GetNative_NUM] = (void *)PyCompositeAlgorithm_GetNative;
   PyCompositeAlgorithm_API[PyCompositeAlgorithm_New_NUM] = (void*)PyCompositeAlgorithm_New;
 
-  c_api_object = PyCObject_FromVoidPtr((void *)PyCompositeAlgorithm_API, NULL);
-
-  if (c_api_object != NULL) {
-    PyModule_AddObject(module, "_C_API", c_api_object);
-  }
-
+  c_api_object = PyCapsule_New(PyCompositeAlgorithm_API, PyCompositeAlgorithm_CAPSULE_NAME, NULL);
   dictionary = PyModule_GetDict(module);
-  ErrorObject = PyString_FromString("_compositealgorithm.error");
+  PyDict_SetItemString(dictionary, "_C_API", c_api_object);
+
+  ErrorObject = PyErr_NewException("_compositealgorithm.error", NULL, NULL);
   if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
     Py_FatalError("Can't define _compositealgorithm.error");
+    return MOD_INIT_ERROR;
   }
+
+
   PYRAVE_DEBUG_INITIALIZE;
+  return MOD_INIT_SUCCESS(module);
 }
 /*@} End of Module setup */

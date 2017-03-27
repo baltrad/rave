@@ -43,6 +43,10 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  */
 int PyRaveAPI_CompareWithASCIIString(PyObject* ptr, const char* name);
 
+/**
+ * Creates a string compatible with the current python interpreeter.
+ */
+PyObject* PyRaveAPI_StringOrUnicode_FromASCII(const char *buffer);
 
 #ifndef PyInt_Check
 #define PyInt_Check             PyLong_Check

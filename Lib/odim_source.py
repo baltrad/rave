@@ -53,17 +53,18 @@ def init():
         for radar in list(country):
             nod = radar.tag
             CCCC[nod] = cccc
-            if radar.attrib.has_key("wmo"): 
+            keys = radar.attrib.keys()
+            if "wmo" in keys: 
                 wmo = radar.attrib["wmo"]
                 WMO[nod] = wmo
             else:
                 wmo = None
-            if radar.attrib.has_key("rad"): 
+            if "rad" in keys: 
                 rad = radar.attrib["rad"]
                 RAD[nod] = rad
             else:
                 rad = None
-            if radar.attrib.has_key("plc"): 
+            if "plc" in keys: 
                 plc = radar.attrib["plc"]
                 PLC[nod] = plc
             else:
@@ -115,13 +116,13 @@ def text2Element(filename, xmlfile=ODIM_SOURCE_FILE):
                                  "plc":plc.decode('utf-8')})
             E.append(R)
         else:
-            print "FAILED to process %s" % l
+            print("FAILED to process %s" % l)
 
     ALL.append(E)
 
     fd = __builtin__.open(xmlfile, 'w')
     sys.stdout = fd
-    print "<?xml version='1.0' encoding='%s'?>" % UTF8
+    print("<?xml version='1.0' encoding='%s'?>" % UTF8)
     prettyprint(ALL)
     fd.close()
     sys.stdout = sys.__stdout__
@@ -137,17 +138,17 @@ class ODIM_Source:
 
     ## Splits the input string into identifier values        
     def split_source(self):
-        split = self.source.split(',')
+        split = self.source.split(b',')
         for s in split:
-            prefix, value = s.split(':')
+            prefix, value = s.split(b':')
             prefix = prefix.lower()  # safety precaution in case someone changes case in their files
-            if   prefix == 'wmo': self.wmo = value  # Keep this as a string!
-            elif prefix == 'rad': self.rad = value
-            elif prefix == 'plc': self.plc = value.decode(UTF8)
-            elif prefix == 'nod': self.nod = value
-            elif prefix == 'org': self.org = value
-            elif prefix == 'cty': self.cty = value
-            elif prefix == 'cmt': self.cmt = value 
+            if   prefix == b'wmo': self.wmo = value  # Keep this as a string!
+            elif prefix == b'rad': self.rad = value
+            elif prefix == b'plc': self.plc = value.decode(UTF8)
+            elif prefix == b'nod': self.nod = value
+            elif prefix == b'org': self.org = value
+            elif prefix == b'cty': self.cty = value
+            elif prefix == b'cmt': self.cmt = value 
 
 
 ## Convenience function. Gets the NOD identifier from /what/source .

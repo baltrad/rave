@@ -25,6 +25,7 @@ import mock
 import _raveio, _rave
 from gadjust.grapoint import grapoint
 from gadjust import gra
+import numpy
 
 ##
 # Tests that the gra works as expected.
@@ -38,6 +39,7 @@ class gadjust_gra_test(unittest.TestCase):
         os.unlink(self.TEMP_STAT_FILE)
     except:
       pass
+    self.old_settings=numpy.seterr(all='ignore')
 
   def tearDown(self):
     self.classUnderTest = None
@@ -45,7 +47,8 @@ class gadjust_gra_test(unittest.TestCase):
       if os.path.isfile(self.TEMP_STAT_FILE):
         os.unlink(self.TEMP_STAT_FILE)
     except:
-      pass    
+      pass
+    numpy.seterr(**self.old_settings)
 
   def test_generate(self):
     points = [grapoint(_rave.RaveValueType_DATA, 1.0, 0.0, 10.0, 20.0, "20131010", "101500", 10**0.1, 12),

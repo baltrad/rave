@@ -1113,7 +1113,7 @@ static PyObject* _pycartesian_getattro(PyCartesian* self, PyObject* name)
     return PyInt_FromLong(Cartesian_getProduct(self->cartesian));
   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("source", name) == 0) {
     if (Cartesian_getSource(self->cartesian) != NULL) {
-      return PyString_FromString(Cartesian_getSource(self->cartesian));
+      return PyRaveAPI_StringOrUnicode_FromASCII(Cartesian_getSource(self->cartesian));
     } else {
       Py_RETURN_NONE;
     }

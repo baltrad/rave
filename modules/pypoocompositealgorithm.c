@@ -22,7 +22,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2011-10-28
  */
-#include "Python.h"
+#include "pyravecompat.h"
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>
@@ -79,18 +79,22 @@ static PyMethodDef functions[] = {
   {NULL, NULL} /*Sentinel*/
 };
 
-PyMODINIT_FUNC
-init_poocompositealgorithm(void)
+MOD_INIT(_poocompositealgorithm)
 {
   PyObject *module=NULL,*dictionary=NULL;
-  module = Py_InitModule("_poocompositealgorithm", functions);
+  MOD_INIT_DEF(module, "_poocompositealgorithm", NULL/*doc*/, functions);
+  if (module == NULL) {
+    return MOD_INIT_ERROR;
+  }
   dictionary = PyModule_GetDict(module);
-  ErrorObject = PyString_FromString("_poocompositealgorithm.error");
+  ErrorObject = PyErr_NewException("_poocompositealgorithm.error", NULL, NULL);
   if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
     Py_FatalError("Can't define _poocompositealgorithm.error");
+    return MOD_INIT_ERROR;
   }
 
   import_compositealgorithm();
   PYRAVE_DEBUG_INITIALIZE;
+  return MOD_INIT_SUCCESS(module);
 }
 /*@} End of Module setup */

@@ -22,7 +22,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Daniel Michelson (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2011-01-19
  */
-#include <Python.h>
+#include <pyravecompat.h>
 #include "rave.h"
 #include "rave_debug.h"
 #include "pypolarvolume.h"
@@ -235,20 +235,27 @@ static struct PyMethodDef _scansun_functions[] =
 /**
  * Initialize the _scansun module
  */
-PyMODINIT_FUNC init_scansun(void)
+MOD_INIT(_scansun)
 {
-  PyObject* m;
-  m = Py_InitModule("_scansun", _scansun_functions);
-  ErrorObject = PyString_FromString("_scansun.error");
-
-  if (ErrorObject == NULL || PyDict_SetItemString(PyModule_GetDict(m),
-                                                  "error", ErrorObject) != 0) {
-    Py_FatalError("Can't define _scansun.error");
+  PyObject* module = NULL;
+  PyObject* dictionary = NULL;
+  MOD_INIT_DEF(module, "_scansun", NULL/*doc*/, _scansun_functions);
+  if (module == NULL) {
+    return MOD_INIT_ERROR;
   }
+
+  dictionary = PyModule_GetDict(module);
+  ErrorObject = PyErr_NewException("_scansun.error", NULL, NULL);
+  if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
+    Py_FatalError("Can't define _scansun.error");
+    return MOD_INIT_ERROR;
+  }
+
   import_pypolarvolume();
   import_pypolarscan();
   import_array();
   PYRAVE_DEBUG_INITIALIZE;
+  return MOD_INIT_SUCCESS(module);
 }
 
 /*@} End of Module setup */

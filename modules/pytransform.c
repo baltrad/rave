@@ -22,7 +22,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2009-12-10
  */
-#include "Python.h"
+#include "pyravecompat.h"
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>
@@ -433,39 +433,30 @@ static struct PyMethodDef _pytransform_methods[] =
  * Returns the specified attribute in the transformator
  * @param[in] self - the transform
  */
-static PyObject* _pytransform_getattr(PyTransform* self, char* name)
+static PyObject* _pytransform_getattro(PyTransform* self, PyObject* name)
 {
-  PyObject* res = NULL;
-
-  if (strcmp("method", name) == 0) {
+  if (PY_COMPARE_STRING_WITH_ATTRO_NAME("method", name) == 0) {
     return PyInt_FromLong(Transform_getMethod(self->transform));
   }
-
-  res = Py_FindMethod(_pytransform_methods, (PyObject*) self, name);
-  if (res)
-    return res;
-
-  PyErr_Clear();
-  PyErr_SetString(PyExc_AttributeError, name);
-  return NULL;
+  return PyObject_GenericGetAttr((PyObject*)self, name);
 }
 
 /**
  * Returns the specified attribute in the transformator
  */
-static int _pytransform_setattr(PyTransform* self, char* name, PyObject* val)
+static int _pytransform_setattro(PyTransform* self, PyObject* name, PyObject* val)
 {
   int result = -1;
   if (name == NULL) {
     goto done;
   }
-  if (strcmp("method", name)==0) {
+  if (PY_COMPARE_STRING_WITH_ATTRO_NAME("method", name)==0) {
     if (PyInt_Check(val)) {
       if (!Transform_setMethod(self->transform, PyInt_AsLong(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "method must be in valid range");
       }
     } else {
-      raiseException_gotoTag(done, PyExc_TypeError,"method must be a valid RaveTransformMethod");
+      raiseException_gotoTag(done, PyExc_TypeError, "method must be a valid RaveTransformMethod");
     }
   }
 
@@ -478,21 +469,47 @@ done:
 /*@{ Type definitions */
 PyTypeObject PyTransform_Type =
 {
-  PyObject_HEAD_INIT(NULL)0, /*ob_size*/
+  PyVarObject_HEAD_INIT(NULL, 0) /*ob_size*/
   "TransformCore", /*tp_name*/
   sizeof(PyTransform), /*tp_size*/
   0, /*tp_itemsize*/
   /* methods */
   (destructor)_pytransform_dealloc, /*tp_dealloc*/
   0, /*tp_print*/
-  (getattrfunc)_pytransform_getattr, /*tp_getattr*/
-  (setattrfunc)_pytransform_setattr, /*tp_setattr*/
-  0, /*tp_compare*/
-  0, /*tp_repr*/
-  0, /*tp_as_number */
+  (getattrfunc)0,               /*tp_getattr*/
+  (setattrfunc)0,               /*tp_setattr*/
+  0,                            /*tp_compare*/
+  0,                            /*tp_repr*/
+  0,                            /*tp_as_number */
   0,
-  0, /*tp_as_mapping */
-  0 /*tp_hash*/
+  0,                            /*tp_as_mapping */
+  0,                            /*tp_hash*/
+  (ternaryfunc)0,               /*tp_call*/
+  (reprfunc)0,                  /*tp_str*/
+  (getattrofunc)_pytransform_getattro, /*tp_getattro*/
+  (setattrofunc)_pytransform_setattro, /*tp_setattro*/
+  0,                            /*tp_as_buffer*/
+  Py_TPFLAGS_DEFAULT, /*tp_flags*/
+  0,                            /*tp_doc*/
+  (traverseproc)0,              /*tp_traverse*/
+  (inquiry)0,                   /*tp_clear*/
+  0,                            /*tp_richcompare*/
+  0,                            /*tp_weaklistoffset*/
+  0,                            /*tp_iter*/
+  0,                            /*tp_iternext*/
+  _pytransform_methods,         /*tp_methods*/
+  0,                            /*tp_members*/
+  0,                            /*tp_getset*/
+  0,                            /*tp_base*/
+  0,                            /*tp_dict*/
+  0,                            /*tp_descr_get*/
+  0,                            /*tp_descr_set*/
+  0,                            /*tp_dictoffset*/
+  0,                            /*tp_init*/
+  0,                            /*tp_alloc*/
+  0,                            /*tp_new*/
+  0,                            /*tp_free*/
+  0,                            /*tp_is_gc*/
 };
 
 /*@} End of Type definitions */
@@ -503,32 +520,33 @@ static PyMethodDef functions[] = {
   {NULL,NULL} /*Sentinel*/
 };
 
-PyMODINIT_FUNC
-init_transform(void)
+MOD_INIT(_transform)
 {
   PyObject *module=NULL,*dictionary=NULL;
   static void *PyTransform_API[PyTransform_API_pointers];
   PyObject *c_api_object = NULL;
-  PyTransform_Type.ob_type = &PyType_Type;
 
-  module = Py_InitModule("_transform", functions);
+  MOD_INIT_SETUP_TYPE(PyTransform_Type, &PyType_Type);
+
+  MOD_INIT_VERIFY_TYPE_READY(&PyTransform_Type);
+
+  MOD_INIT_DEF(module, "_transform", NULL/*doc*/, functions);
   if (module == NULL) {
-    return;
+    return MOD_INIT_ERROR;
   }
+
   PyTransform_API[PyTransform_Type_NUM] = (void*)&PyTransform_Type;
   PyTransform_API[PyTransform_GetNative_NUM] = (void *)PyTransform_GetNative;
   PyTransform_API[PyTransform_New_NUM] = (void*)PyTransform_New;
 
-  c_api_object = PyCObject_FromVoidPtr((void *)PyTransform_API, NULL);
-
-  if (c_api_object != NULL) {
-    PyModule_AddObject(module, "_C_API", c_api_object);
-  }
-
+  c_api_object = PyCapsule_New(PyTransform_API, PyTransform_CAPSULE_NAME, NULL);
   dictionary = PyModule_GetDict(module);
-  ErrorObject = PyString_FromString("_transform.error");
+  PyDict_SetItemString(dictionary, "_C_API", c_api_object);
+
+  ErrorObject = PyErr_NewException("_transform.error", NULL, NULL);
   if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
     Py_FatalError("Can't define _transform.error");
+    return MOD_INIT_ERROR;
   }
 
   import_pypolarvolume();
@@ -538,5 +556,6 @@ init_transform(void)
   import_pyradardefinition();
   import_pyarea();
   PYRAVE_DEBUG_INITIALIZE;
+  return MOD_INIT_SUCCESS(module);
 }
 /*@} End of Module setup */

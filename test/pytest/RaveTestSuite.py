@@ -53,8 +53,10 @@ from PyAcrrTest import *
 from PyGraTest import *
 from PyAreaRegistryTest import *
 from PgfVolumePluginTest import *
+"""
 from RaveScansun import *
 from PyDetectionRangeTest import *
+A="""
 from PyRaveTest import *
 from PyQITotalTest import *
 from PyPooCompositeAlgorithmTest import *

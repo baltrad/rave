@@ -46,6 +46,9 @@ typedef struct {
 
 #define PyComposite_API_pointers 3                   /**< number of api pointers */
 
+#define PyComposite_CAPSULE_NAME "_pycomposite._C_API"
+
+
 #ifdef PYCOMPOSITE_MODULE
 /** Forward declaration of type*/
 extern PyTypeObject PyComposite_Type;
@@ -81,37 +84,18 @@ static void **PyComposite_API;
   (*(PyComposite_New_RETURN (*)PyComposite_New_PROTO) PyComposite_API[PyComposite_New_NUM])
 
 /**
- * Checks if the object is a python cartesian.
+ * Checks if the object is a python composite.
  */
 #define PyComposite_Check(op) \
-   ((op)->ob_type == (PyTypeObject *)PyComposite_API[PyComposite_Type_NUM])
+   (Py_TYPE(op) == &PyComposite_Type)
+
+#define PyComposite_Type (*(PyTypeObject*)PyComposite_API[PyComposite_Type_NUM])
 
 /**
- * Imports the PyComposite module (like import _pycomposite in python).
+ * Imports the PyArea module (like import _area in python).
  */
-static int
-import_pycomposite(void)
-{
-  PyObject *module;
-  PyObject *c_api_object;
-
-  module = PyImport_ImportModule("_pycomposite");
-  if (module == NULL) {
-    return -1;
-  }
-
-  c_api_object = PyObject_GetAttrString(module, "_C_API");
-  if (c_api_object == NULL) {
-    Py_DECREF(module);
-    return -1;
-  }
-  if (PyCObject_Check(c_api_object)) {
-    PyComposite_API = (void **)PyCObject_AsVoidPtr(c_api_object);
-  }
-  Py_DECREF(c_api_object);
-  Py_DECREF(module);
-  return 0;
-}
+#define import_pycomposite() \
+    PyComposite_API = (void **)PyCapsule_Import(PyComposite_CAPSULE_NAME, 1);
 
 #endif
 

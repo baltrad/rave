@@ -22,7 +22,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2010-01-29
  */
-#include "Python.h"
+#include "pyravecompat.h"
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>
@@ -399,21 +399,21 @@ static struct PyMethodDef _pycomposite_methods[] =
  * Returns the specified attribute in the cartesian
  * @param[in] self - the cartesian product
  */
-static PyObject* _pycomposite_getattr(PyComposite* self, char* name)
+static PyObject* _pycomposite_getattro(PyComposite* self, PyObject* name)
 {
   PyObject* res = NULL;
 
-  if (strcmp("height", name) == 0) {
+  if (PY_COMPARE_STRING_WITH_ATTRO_NAME("height", name) == 0) {
     return PyFloat_FromDouble(Composite_getHeight(self->composite));
-  } else if (strcmp("elangle", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("elangle", name) == 0) {
     return PyFloat_FromDouble(Composite_getElevationAngle(self->composite));
-  } else if (strcmp("range", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("range", name) == 0) {
     return PyFloat_FromDouble(Composite_getRange(self->composite));
-  } else if (strcmp("product", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("product", name) == 0) {
     return PyInt_FromLong(Composite_getProduct(self->composite));
-  } else if (strcmp("selection_method", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("selection_method", name) == 0) {
     return PyInt_FromLong(Composite_getSelectionMethod(self->composite));
-  } else if (strcmp("algorithm", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("algorithm", name) == 0) {
     CompositeAlgorithm_t* algorithm = Composite_getAlgorithm(self->composite);
     if (algorithm != NULL) {
       res = (PyObject*)PyCompositeAlgorithm_New(algorithm);
@@ -422,45 +422,38 @@ static PyObject* _pycomposite_getattr(PyComposite* self, char* name)
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("date", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("date", name) == 0) {
     if (Composite_getDate(self->composite) != NULL) {
       return PyString_FromString(Composite_getDate(self->composite));
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("time", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("time", name) == 0) {
     if (Composite_getTime(self->composite) != NULL) {
       return PyString_FromString(Composite_getTime(self->composite));
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("quality_indicator_field_name", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("quality_indicator_field_name", name) == 0) {
     if (Composite_getQualityIndicatorFieldName(self->composite) != NULL) {
       return PyString_FromString(Composite_getQualityIndicatorFieldName(self->composite));
     } else {
       Py_RETURN_NONE;
     }
   }
-
-  res = Py_FindMethod(_pycomposite_methods, (PyObject*) self, name);
-  if (res)
-    return res;
-
-  PyErr_Clear();
-  PyErr_SetString(PyExc_AttributeError, name);
-  return NULL;
+  return PyObject_GenericGetAttr((PyObject*)self, name);
 }
 
 /**
  * Returns the specified attribute in the polar volume
  */
-static int _pycomposite_setattr(PyComposite* self, char* name, PyObject* val)
+static int _pycomposite_setattro(PyComposite* self, PyObject* name, PyObject* val)
 {
   int result = -1;
   if (name == NULL) {
     goto done;
   }
-  if (strcmp("height", name) == 0) {
+  if (PY_COMPARE_STRING_WITH_ATTRO_NAME("height", name) == 0) {
     if (PyFloat_Check(val)) {
       Composite_setHeight(self->composite, PyFloat_AsDouble(val));
     } else if (PyLong_Check(val)) {
@@ -470,7 +463,7 @@ static int _pycomposite_setattr(PyComposite* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_TypeError,"height must be of type float");
     }
-  } else if (strcmp("elangle", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("elangle", name) == 0) {
     if (PyFloat_Check(val)) {
       Composite_setElevationAngle(self->composite, PyFloat_AsDouble(val));
     } else if (PyLong_Check(val)) {
@@ -480,7 +473,7 @@ static int _pycomposite_setattr(PyComposite* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "elangle must be a float or decimal value")
     }
-  } else if (strcmp("range", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("range", name) == 0) {
     if (PyFloat_Check(val)) {
       Composite_setRange(self->composite, PyFloat_AsDouble(val));
     } else if (PyLong_Check(val)) {
@@ -490,17 +483,17 @@ static int _pycomposite_setattr(PyComposite* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "range must be a float or decimal value")
     }
-  } else if (strcmp("product", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("product", name) == 0) {
     if (PyInt_Check(val)) {
       Composite_setProduct(self->composite, PyInt_AsLong(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "product must be a valid product type")
     }
-  } else if (strcmp("selection_method", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("selection_method", name) == 0) {
     if (!PyInt_Check(val) || !Composite_setSelectionMethod(self->composite, PyInt_AsLong(val))) {
       raiseException_gotoTag(done, PyExc_ValueError, "not a valid selection method");
     }
-  } else if (strcmp("time", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("time", name) == 0) {
     if (PyString_Check(val)) {
       if (!Composite_setTime(self->composite, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "time must be in the format HHmmss");
@@ -510,7 +503,7 @@ static int _pycomposite_setattr(PyComposite* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_ValueError,"time must be of type string");
     }
-  } else if (strcmp("date", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("date", name) == 0) {
     if (PyString_Check(val)) {
       if (!Composite_setDate(self->composite, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "date must be in the format YYYYMMSS");
@@ -520,7 +513,7 @@ static int _pycomposite_setattr(PyComposite* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_ValueError,"date must be of type string");
     }
-  } else if (strcmp("quality_indicator_field_name", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("quality_indicator_field_name", name) == 0) {
     if (PyString_Check(val)) {
       if (!Composite_setQualityIndicatorFieldName(self->composite, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_MemoryError, "Failed to set quality indicator field name");
@@ -530,7 +523,7 @@ static int _pycomposite_setattr(PyComposite* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_ValueError, "quality_indicator_field_name must be a string");
     }
-  } else if (strcmp("algorithm", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("algorithm", name) == 0) {
     if (val == Py_None) {
       Composite_setAlgorithm(self->composite, NULL);
     } else if (PyCompositeAlgorithm_Check(val)) {
@@ -539,7 +532,7 @@ static int _pycomposite_setattr(PyComposite* self, char* name, PyObject* val)
       raiseException_gotoTag(done, PyExc_TypeError, "algorithm must either be None or a CompositeAlgorithm");
     }
   } else {
-    raiseException_gotoTag(done, PyExc_AttributeError, name);
+    raiseException_gotoTag(done, PyExc_AttributeError, PY_RAVE_ATTRO_NAME_TO_STRING(name));
   }
 
   result = 0;
@@ -552,21 +545,47 @@ done:
 /*@{ Type definitions */
 PyTypeObject PyComposite_Type =
 {
-  PyObject_HEAD_INIT(NULL)0, /*ob_size*/
+  PyVarObject_HEAD_INIT(NULL, 0) /*ob_size*/
   "CompositeCore", /*tp_name*/
   sizeof(PyComposite), /*tp_size*/
   0, /*tp_itemsize*/
   /* methods */
   (destructor)_pycomposite_dealloc, /*tp_dealloc*/
   0, /*tp_print*/
-  (getattrfunc)_pycomposite_getattr, /*tp_getattr*/
-  (setattrfunc)_pycomposite_setattr, /*tp_setattr*/
-  0, /*tp_compare*/
-  0, /*tp_repr*/
-  0, /*tp_as_number */
+  (getattrfunc)0,               /*tp_getattr*/
+  (setattrfunc)0,               /*tp_setattr*/
+  0,                            /*tp_compare*/
+  0,                            /*tp_repr*/
+  0,                            /*tp_as_number */
   0,
-  0, /*tp_as_mapping */
-  0 /*tp_hash*/
+  0,                            /*tp_as_mapping */
+  0,                            /*tp_hash*/
+  (ternaryfunc)0,               /*tp_call*/
+  (reprfunc)0,                  /*tp_str*/
+  (getattrofunc)_pycomposite_getattro, /*tp_getattro*/
+  (setattrofunc)_pycomposite_setattro, /*tp_setattro*/
+  0,                            /*tp_as_buffer*/
+  Py_TPFLAGS_DEFAULT, /*tp_flags*/
+  0,                            /*tp_doc*/
+  (traverseproc)0,              /*tp_traverse*/
+  (inquiry)0,                   /*tp_clear*/
+  0,                            /*tp_richcompare*/
+  0,                            /*tp_weaklistoffset*/
+  0,                            /*tp_iter*/
+  0,                            /*tp_iternext*/
+  _pycomposite_methods,              /*tp_methods*/
+  0,                            /*tp_members*/
+  0,                            /*tp_getset*/
+  0,                            /*tp_base*/
+  0,                            /*tp_dict*/
+  0,                            /*tp_descr_get*/
+  0,                            /*tp_descr_set*/
+  0,                            /*tp_dictoffset*/
+  0,                            /*tp_init*/
+  0,                            /*tp_alloc*/
+  0,                            /*tp_new*/
+  0,                            /*tp_free*/
+  0,                            /*tp_is_gc*/
 };
 /*@} End of Type definitions */
 
@@ -592,33 +611,35 @@ static void add_long_constant(PyObject* dictionary, const char* name, long value
   Py_XDECREF(tmp);
 }
 
-PyMODINIT_FUNC
-init_pycomposite(void)
+MOD_INIT(_pycomposite)
 {
   PyObject *module=NULL,*dictionary=NULL;
   static void *PyComposite_API[PyComposite_API_pointers];
   PyObject *c_api_object = NULL;
-  PyComposite_Type.ob_type = &PyType_Type;
 
-  module = Py_InitModule("_pycomposite", functions);
+  MOD_INIT_SETUP_TYPE(PyComposite_Type, &PyType_Type);
+
+  MOD_INIT_VERIFY_TYPE_READY(&PyComposite_Type);
+
+  MOD_INIT_DEF(module, "_pycomposite", NULL/*doc*/, functions);
   if (module == NULL) {
-    return;
+    return MOD_INIT_ERROR;
   }
+
   PyComposite_API[PyComposite_Type_NUM] = (void*)&PyComposite_Type;
   PyComposite_API[PyComposite_GetNative_NUM] = (void *)PyComposite_GetNative;
   PyComposite_API[PyComposite_New_NUM] = (void*)PyComposite_New;
 
-  c_api_object = PyCObject_FromVoidPtr((void *)PyComposite_API, NULL);
-
-  if (c_api_object != NULL) {
-    PyModule_AddObject(module, "_C_API", c_api_object);
-  }
-
+  c_api_object = PyCapsule_New(PyComposite_API, PyComposite_CAPSULE_NAME, NULL);
   dictionary = PyModule_GetDict(module);
-  ErrorObject = PyString_FromString("_pycomposite.error");
+  PyDict_SetItemString(dictionary, "_C_API", c_api_object);
+
+  ErrorObject = PyErr_NewException("_pycomposite.error", NULL, NULL);
   if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
     Py_FatalError("Can't define _pycomposite.error");
+    return MOD_INIT_ERROR;
   }
+
 
   add_long_constant(dictionary, "SelectionMethod_NEAREST", CompositeSelectionMethod_NEAREST);
   add_long_constant(dictionary, "SelectionMethod_HEIGHT", CompositeSelectionMethod_HEIGHT);
@@ -630,5 +651,6 @@ init_pycomposite(void)
   import_array(); /*To make sure I get access to Numeric*/
   import_compositealgorithm();
   PYRAVE_DEBUG_INITIALIZE;
+  return MOD_INIT_SUCCESS(module);
 }
 /*@} End of Module setup */

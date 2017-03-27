@@ -740,7 +740,7 @@ static PyObject* _pypolarvolume_getattro(PyPolarVolume* self, PyObject* name)
   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("source", name) == 0) {
     const char* str = PolarVolume_getSource(self->pvol);
     if (str != NULL) {
-      return PyString_FromString(str);
+      return PyRaveAPI_StringOrUnicode_FromASCII(str);
     } else {
       Py_RETURN_NONE;
     }

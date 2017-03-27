@@ -34,49 +34,49 @@ class RaveScansun(unittest.TestCase):
         lon, lat, yyyymmdd, hhmmss = 4.78997, 52.9533, 20110111, 75022
         valid = (-0.7758360955258381, 126.84009818438497, -0.047247576587858942)
         result = _scansun.solar_elev_azim(lon, lat, yyyymmdd, hhmmss)
-        self.assertAlmostEquals(valid[0], result[0], 5)
-        self.assertAlmostEquals(valid[1], result[1], 5)
-        self.assertAlmostEquals(valid[2], result[2], 5)
+        self.assertAlmostEqual(valid[0], result[0], 5)
+        self.assertAlmostEqual(valid[1], result[1], 5)
+        self.assertAlmostEqual(valid[2], result[2], 5)
 
 
     def testRefraction(self):
-        self.assertAlmostEquals(-0.05, _scansun.refraction(-0.78), 2)
+        self.assertAlmostEqual(-0.05, _scansun.refraction(-0.78), 2)
 
 
     def testScansun(self):
         result = _scansun.scansun(self.KNMI_TESTFILE)
-        self.assertEquals(self.VALID[0][0], result[0][0])
-        self.assertEquals(self.VALID[1][0][0], result[1][0][0])
-        self.assertEquals(self.VALID[1][0][1], result[1][0][1])
-        self.assertAlmostEquals(self.VALID[1][0][2], result[1][0][2], 5)
-        self.assertAlmostEquals(self.VALID[1][0][3], result[1][0][3], 5)
-        self.assertAlmostEquals(self.VALID[1][0][4], result[1][0][4], 5)
-        self.assertAlmostEquals(self.VALID[1][0][5], result[1][0][5], 5)
-        self.assertEquals(self.VALID[1][0][6], result[1][0][6])
-        self.assertAlmostEquals(self.VALID[1][0][7], result[1][0][7], 5)
-        self.assertAlmostEquals(self.VALID[1][0][8], result[1][0][8], 5)
-        self.assertAlmostEquals(self.VALID[1][0][9], result[1][0][9], 5)
-        self.assertEquals(self.VALID[1][0][12], result[1][0][12])
-        self.assertEquals(self.VALID[1][0][13], result[1][0][13])
+        self.assertEqual(self.VALID[0][0], result[0][0])
+        self.assertEqual(self.VALID[1][0][0], result[1][0][0])
+        self.assertEqual(self.VALID[1][0][1], result[1][0][1])
+        self.assertAlmostEqual(self.VALID[1][0][2], result[1][0][2], 5)
+        self.assertAlmostEqual(self.VALID[1][0][3], result[1][0][3], 5)
+        self.assertAlmostEqual(self.VALID[1][0][4], result[1][0][4], 5)
+        self.assertAlmostEqual(self.VALID[1][0][5], result[1][0][5], 5)
+        self.assertEqual(self.VALID[1][0][6], result[1][0][6])
+        self.assertAlmostEqual(self.VALID[1][0][7], result[1][0][7], 5)
+        self.assertAlmostEqual(self.VALID[1][0][8], result[1][0][8], 5)
+        self.assertAlmostEqual(self.VALID[1][0][9], result[1][0][9], 5)
+        self.assertEqual(self.VALID[1][0][12], result[1][0][12])
+        self.assertEqual(self.VALID[1][0][13], result[1][0][13])
 
 
     def testScansunFromObject(self):
         # Replicate the above test, but using in-memory processing.
         obj = _raveio.open(self.KNMI_TESTFILE).object
         result = _scansun.scansunFromObject(obj)
-        self.assertEquals(self.VALID[0][0], result[0][0])
-        self.assertEquals(self.VALID[1][0][0], result[1][0][0])
-        self.assertEquals(self.VALID[1][0][1], result[1][0][1])
-        self.assertAlmostEquals(self.VALID[1][0][2], result[1][0][2], 5)
-        self.assertAlmostEquals(self.VALID[1][0][3], result[1][0][3], 5)
-        self.assertAlmostEquals(self.VALID[1][0][4], result[1][0][4], 5)
-        self.assertAlmostEquals(self.VALID[1][0][5], result[1][0][5], 5)
-        self.assertEquals(self.VALID[1][0][6], result[1][0][6])
-        self.assertAlmostEquals(self.VALID[1][0][7], result[1][0][7], 5)
-        self.assertAlmostEquals(self.VALID[1][0][8], result[1][0][8], 5)
-        self.assertAlmostEquals(self.VALID[1][0][9], result[1][0][9], 5)
-        self.assertEquals(self.VALID[1][0][12], result[1][0][12])
-        self.assertEquals(self.VALID[1][0][13], result[1][0][13])
+        self.assertEqual(self.VALID[0][0], result[0][0])
+        self.assertEqual(self.VALID[1][0][0], result[1][0][0])
+        self.assertEqual(self.VALID[1][0][1], result[1][0][1])
+        self.assertAlmostEqual(self.VALID[1][0][2], result[1][0][2], 5)
+        self.assertAlmostEqual(self.VALID[1][0][3], result[1][0][3], 5)
+        self.assertAlmostEqual(self.VALID[1][0][4], result[1][0][4], 5)
+        self.assertAlmostEqual(self.VALID[1][0][5], result[1][0][5], 5)
+        self.assertEqual(self.VALID[1][0][6], result[1][0][6])
+        self.assertAlmostEqual(self.VALID[1][0][7], result[1][0][7], 5)
+        self.assertAlmostEqual(self.VALID[1][0][8], result[1][0][8], 5)
+        self.assertAlmostEqual(self.VALID[1][0][9], result[1][0][9], 5)
+        self.assertEqual(self.VALID[1][0][12], result[1][0][12])
+        self.assertEqual(self.VALID[1][0][13], result[1][0][13])
 
 
     def testWriteHits(self):

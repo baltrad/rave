@@ -44,3 +44,20 @@ int PyRaveAPI_CompareWithASCIIString(PyObject* ptr, const char* name)
   }
   return result;
 }
+
+PyObject* PyRaveAPI_StringOrUnicode_FromASCII(const char *buffer)
+{
+#if PY_MAJOR_VERSION >= 3
+  Py_ssize_t size = (Py_ssize_t)strlen(buffer);
+  const unsigned char *s = (const unsigned char *)buffer;
+  PyObject *unicode = NULL;
+  unicode = PyUnicode_New(size, 127);
+  if (!unicode) {
+    return NULL;
+  }
+  memcpy(PyUnicode_1BYTE_DATA(unicode), s, size);
+  return unicode;
+#else
+  return PyString_FromString(buffer);
+#endif
+}

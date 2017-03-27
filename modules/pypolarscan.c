@@ -1238,7 +1238,7 @@ static PyObject* _pypolarscan_getattro(PyPolarScan* self, PyObject* name)
   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("source", name) == 0) {
     const char* str = PolarScan_getSource(self->scan);
     if (str != NULL) {
-      return PyString_FromString(str);
+      return PyRaveAPI_StringOrUnicode_FromASCII(str);
     } else {
       Py_RETURN_NONE;
     }

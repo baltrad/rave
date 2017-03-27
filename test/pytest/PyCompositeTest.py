@@ -76,46 +76,44 @@ class PyCompositeTest(unittest.TestCase):
 
   def test_new(self):
     obj = _pycomposite.new()
-     
-    isscan = string.find(`type(obj)`, "CompositeCore")
-    self.assertNotEqual(-1, isscan)
+    self.assertNotEqual(-1, str(type(obj)).find("CompositeCore"))
  
   def test_attribute_visibility(self):
     attrs = ['height', 'range', 'elangle', 'product', 'date', 'time', 'selection_method', 'quality_indicator_field_name']
     obj = _pycomposite.new()
     alist = dir(obj)
     for a in attrs:
-      self.assertEquals(True, a in alist)
+      self.assertEqual(True, a in alist)
  
   def test_height(self):
     obj = _pycomposite.new()
-    self.assertAlmostEquals(1000.0, obj.height, 4)
+    self.assertAlmostEqual(1000.0, obj.height, 4)
     obj.height = 1.0
-    self.assertAlmostEquals(1.0, obj.height, 4)
+    self.assertAlmostEqual(1.0, obj.height, 4)
      
   def test_range(self):
     obj = _pycomposite.new()
-    self.assertAlmostEquals(500000.0, obj.range, 4)
+    self.assertAlmostEqual(500000.0, obj.range, 4)
     obj.range = 1.0
-    self.assertAlmostEquals(1.0, obj.range, 4)
+    self.assertAlmostEqual(1.0, obj.range, 4)
   
   def test_quality_indicator_field_name(self):
     obj = _pycomposite.new()
-    self.assertEquals(None, obj.quality_indicator_field_name)
+    self.assertEqual(None, obj.quality_indicator_field_name)
     obj.quality_indicator_field_name = "se.some.field"
-    self.assertEquals("se.some.field", obj.quality_indicator_field_name)
+    self.assertEqual("se.some.field", obj.quality_indicator_field_name)
     obj.quality_indicator_field_name = None
-    self.assertEquals(None, obj.quality_indicator_field_name)
+    self.assertEqual(None, obj.quality_indicator_field_name)
   
   def test_elangle(self):
     obj = _pycomposite.new()
-    self.assertAlmostEquals(0.0, obj.elangle, 4)
+    self.assertAlmostEqual(0.0, obj.elangle, 4)
     obj.elangle = 1.0
-    self.assertAlmostEquals(1.0, obj.elangle, 4)
+    self.assertAlmostEqual(1.0, obj.elangle, 4)
      
   def test_product(self):
     obj = _pycomposite.new()
-    self.assertEquals(_rave.Rave_ProductType_PCAPPI, obj.product)
+    self.assertEqual(_rave.Rave_ProductType_PCAPPI, obj.product)
  
   def test_product_valid(self):
     valid_products = [_rave.Rave_ProductType_PCAPPI, 
@@ -126,7 +124,7 @@ class PyCompositeTest(unittest.TestCase):
     obj = _pycomposite.new()
     for p in valid_products:
       obj.product = p
-      self.assertEquals(p, obj.product)
+      self.assertEqual(p, obj.product)
  
   def test_product_invalid(self):
     invalid_products = [_rave.Rave_ProductType_SCAN, 
@@ -147,84 +145,84 @@ class PyCompositeTest(unittest.TestCase):
     obj.product = _rave.Rave_ProductType_PCAPPI
     for p in invalid_products:
       obj.product = p
-      self.assertEquals(_rave.Rave_ProductType_PCAPPI, obj.product)
+      self.assertEqual(_rave.Rave_ProductType_PCAPPI, obj.product)
  
   def test_selection_method(self):
     obj = _pycomposite.new()
-    self.assertEquals(_pycomposite.SelectionMethod_NEAREST, obj.selection_method)
+    self.assertEqual(_pycomposite.SelectionMethod_NEAREST, obj.selection_method)
     obj.selection_method = _pycomposite.SelectionMethod_HEIGHT
-    self.assertEquals(_pycomposite.SelectionMethod_HEIGHT, obj.selection_method)
+    self.assertEqual(_pycomposite.SelectionMethod_HEIGHT, obj.selection_method)
  
   def test_date(self):
     obj = _pycomposite.new()
-    self.assertEquals(None, obj.date)
+    self.assertEqual(None, obj.date)
     obj.date = "20130101"
-    self.assertEquals("20130101", obj.date)
+    self.assertEqual("20130101", obj.date)
     obj.date = None
-    self.assertEquals(None, obj.date)
+    self.assertEqual(None, obj.date)
  
   def test_time(self):
     obj = _pycomposite.new()
-    self.assertEquals(None, obj.time)
+    self.assertEqual(None, obj.time)
     obj.time = "101010"
-    self.assertEquals("101010", obj.time)
+    self.assertEqual("101010", obj.time)
     obj.time = None
-    self.assertEquals(None, obj.time)
+    self.assertEqual(None, obj.time)
  
   def test_selection_method_invalid(self):
     obj = _pycomposite.new()
     try:
       obj.selection_method = 99
       self.fail("Expected ValueError")
-    except ValueError, e:
+    except ValueError:
       pass
-    self.assertEquals(_pycomposite.SelectionMethod_NEAREST, obj.selection_method)
+    self.assertEqual(_pycomposite.SelectionMethod_NEAREST, obj.selection_method)
    
   def test_addParameter(self):
     obj = _pycomposite.new()
     obj.addParameter("DBZH", 2.0, 3.0)
     result = obj.getParameter(0)
-    self.assertEquals("DBZH", result[0])
-    self.assertAlmostEquals(2.0, result[1], 4)
-    self.assertAlmostEquals(3.0, result[2], 4)
+    self.assertEqual("DBZH", result[0])
+    self.assertAlmostEqual(2.0, result[1], 4)
+    self.assertAlmostEqual(3.0, result[2], 4)
  
   def test_addParameter_duplicate(self):
     obj = _pycomposite.new()
     obj.addParameter("DBZH", 2.0, 3.0)
     obj.addParameter("DBZH", 3.0, 4.0)
-    self.assertEquals(1, obj.getParameterCount())
+    self.assertEqual(1, obj.getParameterCount())
     result = obj.getParameter(0)
-    self.assertEquals("DBZH", result[0])
-    self.assertAlmostEquals(3.0, result[1], 4)
-    self.assertAlmostEquals(4.0, result[2], 4)
+    self.assertEqual("DBZH", result[0])
+    self.assertAlmostEqual(3.0, result[1], 4)
+    self.assertAlmostEqual(4.0, result[2], 4)
  
   def test_addParameter_multiple(self):
     obj = _pycomposite.new()
     obj.addParameter("DBZH", 2.0, 3.0)
     obj.addParameter("MMH", 3.0, 4.0)
-    self.assertEquals(2, obj.getParameterCount())
+    self.assertEqual(2, obj.getParameterCount())
     result = obj.getParameter(0)
-    self.assertEquals("DBZH", result[0])
-    self.assertAlmostEquals(2.0, result[1], 4)
-    self.assertAlmostEquals(3.0, result[2], 4)
+    self.assertEqual("DBZH", result[0])
+    self.assertAlmostEqual(2.0, result[1], 4)
+    self.assertAlmostEqual(3.0, result[2], 4)
     result = obj.getParameter(1)
-    self.assertEquals("MMH", result[0])
-    self.assertAlmostEquals(3.0, result[1], 4)
-    self.assertAlmostEquals(4.0, result[2], 4)
+    self.assertEqual("MMH", result[0])
+    self.assertAlmostEqual(3.0, result[1], 4)
+    self.assertAlmostEqual(4.0, result[2], 4)
  
   def test_hasParameter(self):
     obj = _pycomposite.new()
-    self.assertEquals(False, obj.hasParameter("DBZH"))
+    self.assertEqual(False, obj.hasParameter("DBZH"))
     obj.addParameter("DBZH", 2.0, 3.0)
-    self.assertEquals(True, obj.hasParameter("DBZH"))
+    self.assertEqual(True, obj.hasParameter("DBZH"))
  
   def test_getParameterCount(self):
     obj = _pycomposite.new()
-    self.assertEquals(0, obj.getParameterCount())
+    self.assertEqual(0, obj.getParameterCount())
     obj.addParameter("DBZH", 2.0, 3.0)
-    self.assertEquals(1, obj.getParameterCount())
+    self.assertEqual(1, obj.getParameterCount())
     obj.addParameter("MMH", 1.0, 2.0)
-    self.assertEquals(2, obj.getParameterCount())
+    self.assertEqual(2, obj.getParameterCount())
  
   def test_rix_nearest(self):
     generator = _pycomposite.new()
@@ -250,16 +248,16 @@ class PyCompositeTest(unittest.TestCase):
     generator.date = "20090501"
     result = generator.nearest(a)
      
-    self.assertEquals("DBZH", result.getParameter("DBZH").quantity)
-    self.assertAlmostEquals(1.0, result.getParameter("DBZH").gain, 4)
-    self.assertAlmostEquals(0.0, result.getParameter("DBZH").offset, 4)
-    self.assertEquals("120000", result.time)
-    self.assertEquals("20090501", result.date)
+    self.assertEqual("DBZH", result.getParameter("DBZH").quantity)
+    self.assertAlmostEqual(1.0, result.getParameter("DBZH").gain, 4)
+    self.assertAlmostEqual(0.0, result.getParameter("DBZH").offset, 4)
+    self.assertEqual("120000", result.time)
+    self.assertEqual("20090501", result.date)
     prodpar = result.getAttribute("what/prodpar")
-    self.assertAlmostEquals(0.0, prodpar, 4)
-    self.assertEquals(_rave.Rave_ProductType_PPI, result.product)
-    self.assertEquals(_rave.Rave_ObjectType_COMP, result.objectType)
-    self.assertEquals("nrd2km", result.source);
+    self.assertAlmostEqual(0.0, prodpar, 4)
+    self.assertEqual(_rave.Rave_ProductType_PPI, result.product)
+    self.assertEqual(_rave.Rave_ObjectType_COMP, result.objectType)
+    self.assertEqual("nrd2km", result.source);
      
     ios = _raveio.new()
     ios.object = result
@@ -290,14 +288,14 @@ class PyCompositeTest(unittest.TestCase):
     generator.date = "20090501"
     result = generator.nearest(a)
      
-    self.assertEquals("DBZH", result.getParameter("DBZH").quantity)
-    self.assertEquals("120000", result.time)
-    self.assertEquals("20090501", result.date)
+    self.assertEqual("DBZH", result.getParameter("DBZH").quantity)
+    self.assertEqual("120000", result.time)
+    self.assertEqual("20090501", result.date)
     prodpar = result.getAttribute("what/prodpar")
-    self.assertAlmostEquals(1000.0, prodpar, 4)
-    self.assertEquals(_rave.Rave_ProductType_PCAPPI, result.product)
-    self.assertEquals(_rave.Rave_ObjectType_COMP, result.objectType)
-    self.assertEquals("nrd2km", result.source);
+    self.assertAlmostEqual(1000.0, prodpar, 4)
+    self.assertEqual(_rave.Rave_ProductType_PCAPPI, result.product)
+    self.assertEqual(_rave.Rave_ObjectType_COMP, result.objectType)
+    self.assertEqual("nrd2km", result.source);
      
     ios = _raveio.new()
     ios.object = result
@@ -334,17 +332,17 @@ class PyCompositeTest(unittest.TestCase):
     generator.date = "20090501"
     result = generator.nearest(a, ["se.smhi.composite.index.radar"])
      
-    self.assertEquals("DBZH", result.getParameter("DBZH").quantity)
-    self.assertEquals("120000", result.time)
-    self.assertEquals("20090501", result.date)
+    self.assertEqual("DBZH", result.getParameter("DBZH").quantity)
+    self.assertEqual("120000", result.time)
+    self.assertEqual("20090501", result.date)
     prodpar = result.getAttribute("what/prodpar")
-    self.assertAlmostEquals(1000.0, prodpar, 4)
-    self.assertEquals(_rave.Rave_ProductType_PCAPPI, result.product)
-    self.assertEquals(_rave.Rave_ObjectType_COMP, result.objectType)
-    self.assertEquals("nrd2km", result.source);
+    self.assertAlmostEqual(1000.0, prodpar, 4)
+    self.assertEqual(_rave.Rave_ProductType_PCAPPI, result.product)
+    self.assertEqual(_rave.Rave_ObjectType_COMP, result.objectType)
+    self.assertEqual("nrd2km", result.source);
     
     nodes = result.getParameter("DBZH").getQualityFieldByHowTask("se.smhi.composite.index.radar").getAttribute("how/task_args")
-    self.assertEquals(ids, nodes)
+    self.assertEqual(ids, nodes)
     
     import _transform
     t=_transform.new()
@@ -389,17 +387,17 @@ class PyCompositeTest(unittest.TestCase):
     generator.date = "20090501"
     result = generator.nearest(a, ["se.smhi.composite.index.radar"])
      
-    self.assertEquals("DBZH", result.getParameter("DBZH").quantity)
-    self.assertEquals("120000", result.time)
-    self.assertEquals("20090501", result.date)
+    self.assertEqual("DBZH", result.getParameter("DBZH").quantity)
+    self.assertEqual("120000", result.time)
+    self.assertEqual("20090501", result.date)
     prodpar = result.getAttribute("what/prodpar")
-    self.assertAlmostEquals(1000.0, prodpar, 4)
-    self.assertEquals(_rave.Rave_ProductType_PCAPPI, result.product)
-    self.assertEquals(_rave.Rave_ObjectType_COMP, result.objectType)
-    self.assertEquals("nrd2km", result.source);
+    self.assertAlmostEqual(1000.0, prodpar, 4)
+    self.assertEqual(_rave.Rave_ProductType_PCAPPI, result.product)
+    self.assertEqual(_rave.Rave_ObjectType_COMP, result.objectType)
+    self.assertEqual("nrd2km", result.source);
     
     nodes = result.getParameter("DBZH").getQualityFieldByHowTask("se.smhi.composite.index.radar").getAttribute("how/task_args")
-    self.assertEquals(ids, nodes)
+    self.assertEqual(ids, nodes)
     
     import _transform
     t=_transform.new()
@@ -435,19 +433,19 @@ class PyCompositeTest(unittest.TestCase):
     generator.date = "20120131"
     result = generator.nearest(a, ["fi.fmi.ropo.detector.classification", "se.smhi.detector.poo", "se.smhi.composite.distance.radar"])
      
-    self.assertEquals("DBZH", result.getParameter("DBZH").quantity)
-    self.assertEquals("000000", result.time)
-    self.assertEquals("20120131", result.date)
+    self.assertEqual("DBZH", result.getParameter("DBZH").quantity)
+    self.assertEqual("000000", result.time)
+    self.assertEqual("20120131", result.date)
      
-    self.assertEquals("TH", result.getParameter("TH").quantity)
-    self.assertEquals("000000", result.time)
-    self.assertEquals("20120131", result.date)
+    self.assertEqual("TH", result.getParameter("TH").quantity)
+    self.assertEqual("000000", result.time)
+    self.assertEqual("20120131", result.date)
      
     prodpar = result.getAttribute("what/prodpar")
-    self.assertAlmostEquals(0.0, prodpar, 4)
-    self.assertEquals(_rave.Rave_ProductType_PPI, result.product)
-    self.assertEquals(_rave.Rave_ObjectType_COMP, result.objectType)
-    self.assertEquals("nrd2km", result.source);
+    self.assertAlmostEqual(0.0, prodpar, 4)
+    self.assertEqual(_rave.Rave_ProductType_PPI, result.product)
+    self.assertEqual(_rave.Rave_ObjectType_COMP, result.objectType)
+    self.assertEqual("nrd2km", result.source);
      
     ios = _raveio.new()
     ios.object = result
@@ -478,15 +476,15 @@ class PyCompositeTest(unittest.TestCase):
     generator.date = "20090501"    
     result = generator.nearest(a, ["se.smhi.composite.distance.radar"])
      
-    self.assertEquals("DBZH", result.getParameter("DBZH").quantity)
-    self.assertEquals("120000", result.time)
-    self.assertEquals("20090501", result.date)
+    self.assertEqual("DBZH", result.getParameter("DBZH").quantity)
+    self.assertEqual("120000", result.time)
+    self.assertEqual("20090501", result.date)
      
     prodpar = result.getAttribute("what/prodpar")
-    self.assertAlmostEquals(0.0, prodpar, 4)
-    self.assertEquals(_rave.Rave_ProductType_MAX, result.product)
-    self.assertEquals(_rave.Rave_ObjectType_COMP, result.objectType)
-    self.assertEquals("nrd2km", result.source);
+    self.assertAlmostEqual(0.0, prodpar, 4)
+    self.assertEqual(_rave.Rave_ProductType_MAX, result.product)
+    self.assertEqual(_rave.Rave_ObjectType_COMP, result.objectType)
+    self.assertEqual("nrd2km", result.source);
      
     ios = _raveio.new()
     ios.object = result
@@ -631,20 +629,20 @@ class PyCompositeTest(unittest.TestCase):
     generator.date = "20090501"    
     result = generator.nearest(a, ["se.smhi.composite.distance.radar"])
      
-    self.assertEquals("DBZH", result.getParameter("DBZH").quantity)
-    self.assertEquals("120000", result.time)
-    self.assertEquals("20090501", result.date)
+    self.assertEqual("DBZH", result.getParameter("DBZH").quantity)
+    self.assertEqual("120000", result.time)
+    self.assertEqual("20090501", result.date)
      
     prodpar = result.getAttribute("what/prodpar")
     v = prodpar.split(",")
     vh = float(v[0])
     vr = float(v[1])
-    self.assertAlmostEquals(1000.0, vh, 4)
-    self.assertAlmostEquals(70000.0, vr, 4)
-    #self.assertAlmostEquals(70000.0, prodpar, 4)
-    self.assertEquals(_rave.Rave_ProductType_PMAX, result.product)
-    self.assertEquals(_rave.Rave_ObjectType_COMP, result.objectType)
-    self.assertEquals("nrd2km", result.source);
+    self.assertAlmostEqual(1000.0, vh, 4)
+    self.assertAlmostEqual(70000.0, vr, 4)
+    #self.assertAlmostEqual(70000.0, prodpar, 4)
+    self.assertEqual(_rave.Rave_ProductType_PMAX, result.product)
+    self.assertEqual(_rave.Rave_ObjectType_COMP, result.objectType)
+    self.assertEqual("nrd2km", result.source);
      
     ios = _raveio.new()
     ios.object = result
@@ -706,14 +704,14 @@ class PyCompositeTest(unittest.TestCase):
     generator.date = "20090501"
     result = generator.nearest(a)
      
-    self.assertEquals("DBZH", result.getParameter("DBZH").quantity)
-    self.assertEquals("120000", result.time)
-    self.assertEquals("20090501", result.date)
+    self.assertEqual("DBZH", result.getParameter("DBZH").quantity)
+    self.assertEqual("120000", result.time)
+    self.assertEqual("20090501", result.date)
     prodpar = result.getAttribute("what/prodpar")
-    self.assertAlmostEquals(0.0, prodpar, 4)
-    self.assertEquals(_rave.Rave_ProductType_PPI, result.product)
-    self.assertEquals(_rave.Rave_ObjectType_COMP, result.objectType)
-    self.assertEquals("nrd2km", result.source);
+    self.assertAlmostEqual(0.0, prodpar, 4)
+    self.assertEqual(_rave.Rave_ProductType_PPI, result.product)
+    self.assertEqual(_rave.Rave_ObjectType_COMP, result.objectType)
+    self.assertEqual("nrd2km", result.source);
      
     ios = _raveio.new()
     ios.object = result
@@ -744,14 +742,14 @@ class PyCompositeTest(unittest.TestCase):
     generator.date = "20090501"
     result = generator.nearest(a)
      
-    self.assertEquals("DBZH", result.getParameter("DBZH").quantity)
-    self.assertEquals("120000", result.time)
-    self.assertEquals("20090501", result.date)
+    self.assertEqual("DBZH", result.getParameter("DBZH").quantity)
+    self.assertEqual("120000", result.time)
+    self.assertEqual("20090501", result.date)
     prodpar = result.getAttribute("what/prodpar")
-    self.assertAlmostEquals(0.0, prodpar, 4)
-    self.assertEquals(_rave.Rave_ProductType_PPI, result.product)
-    self.assertEquals(_rave.Rave_ObjectType_COMP, result.objectType)
-    self.assertEquals("nrd2km", result.source);
+    self.assertAlmostEqual(0.0, prodpar, 4)
+    self.assertEqual(_rave.Rave_ProductType_PPI, result.product)
+    self.assertEqual(_rave.Rave_ObjectType_COMP, result.objectType)
+    self.assertEqual("nrd2km", result.source);
      
     ios = _raveio.new()
     ios.object = result
@@ -783,14 +781,14 @@ class PyCompositeTest(unittest.TestCase):
     generator.date = "20090501"
     result = generator.nearest(a)
      
-    self.assertEquals("DBZH", result.getParameter("DBZH").quantity)
-    self.assertEquals("120000", result.time)
-    self.assertEquals("20090501", result.date)
+    self.assertEqual("DBZH", result.getParameter("DBZH").quantity)
+    self.assertEqual("120000", result.time)
+    self.assertEqual("20090501", result.date)
     prodpar = result.getAttribute("what/prodpar")
-    self.assertAlmostEquals(0.0, prodpar, 4)
-    self.assertEquals(_rave.Rave_ProductType_PPI, result.product)
-    self.assertEquals(_rave.Rave_ObjectType_COMP, result.objectType)
-    self.assertEquals("nrd2km", result.source);
+    self.assertAlmostEqual(0.0, prodpar, 4)
+    self.assertEqual(_rave.Rave_ProductType_PPI, result.product)
+    self.assertEqual(_rave.Rave_ObjectType_COMP, result.objectType)
+    self.assertEqual("nrd2km", result.source);
      
     ios = _raveio.new()
     ios.object = result
@@ -915,9 +913,9 @@ class PyCompositeTest(unittest.TestCase):
     result = generator.nearest(a, ["se.smhi.composite.distance.radar"])
      
     field = result.getParameter("DBZH").getQualityField(0)
-    self.assertEquals("se.smhi.composite.distance.radar", field.getAttribute("how/task"))
-    self.assertEquals(2000, field.getAttribute("what/gain"), "Wrong setting of gain in distance quality field")
-    self.assertEquals(0, field.getAttribute("what/offset"), "Wrong setting of offset in distance quality field")
+    self.assertEqual("se.smhi.composite.distance.radar", field.getAttribute("how/task"))
+    self.assertEqual(2000, field.getAttribute("what/gain"), "Wrong setting of gain in distance quality field")
+    self.assertEqual(0, field.getAttribute("what/offset"), "Wrong setting of offset in distance quality field")
      
     ios = _raveio.new()
     ios.object = result
@@ -926,55 +924,55 @@ class PyCompositeTest(unittest.TestCase):
 
   def verify_qc_volumes_2016(self, result):
     dbzh_param = result.getParameter("DBZH")
-    self.assertEquals(dbzh_param.getNumberOfQualityFields(), 4, "Wrong number of quality fields")
+    self.assertEqual(dbzh_param.getNumberOfQualityFields(), 4, "Wrong number of quality fields")
     
     qfield_expected_gain = 1.0/255.0
     
     field = dbzh_param.getQualityField(0)
-    self.assertEquals("fi.fmi.ropo.detector.classification", field.getAttribute("how/task"))
+    self.assertEqual("fi.fmi.ropo.detector.classification", field.getAttribute("how/task"))
     self.assertAlmostEqual(qfield_expected_gain, field.getAttribute("what/gain"), 6, "Wrong setting of gain in ropo quality field")
-    self.assertEquals(0, field.getAttribute("what/offset"), "Wrong setting of offset in distance quality field")
+    self.assertEqual(0, field.getAttribute("what/offset"), "Wrong setting of offset in distance quality field")
     data = field.getData()
     # check one known point in quality field where the algorithm has detected an anomaly
-    self.assertEquals(data[911][541], 63, "Invalid quality value for ropo quality field")
+    self.assertEqual(data[911][541], 63, "Invalid quality value for ropo quality field")
     # check one point in quality field located outside radar range. here quality should be 0
-    self.assertEquals(data[709][359], 0, "Invalid quality value for ropo quality field")
+    self.assertEqual(data[709][359], 0, "Invalid quality value for ropo quality field")
     # check one point within radar range where no anomaly is detected. here quality should be the maximum of 255
-    self.assertEquals(data[780][487], 255, "Invalid quality value for ropo quality field")
+    self.assertEqual(data[780][487], 255, "Invalid quality value for ropo quality field")
  
     field = dbzh_param.getQualityField(1)
-    self.assertEquals("se.smhi.detector.poo", field.getAttribute("how/task"))
+    self.assertEqual("se.smhi.detector.poo", field.getAttribute("how/task"))
     self.assertAlmostEqual(qfield_expected_gain, field.getAttribute("what/gain"), 6, "Wrong setting of gain in poo quality field")
-    self.assertEquals(0, field.getAttribute("what/offset"), "Wrong setting of offset in distance quality field")
+    self.assertEqual(0, field.getAttribute("what/offset"), "Wrong setting of offset in distance quality field")
     data = field.getData()
     # check one known point in quality field where the algorithm has detected an anomaly
-    self.assertEquals(data[633][382], 191, "Invalid quality value for poo quality field")
+    self.assertEqual(data[633][382], 191, "Invalid quality value for poo quality field")
     # check one point in quality field located outside radar range. here quality should be 0
-    self.assertEquals(data[709][359], 0, "Invalid quality value for poo quality field")
+    self.assertEqual(data[709][359], 0, "Invalid quality value for poo quality field")
     # check one point within radar range where no anomaly is detected. here quality should be the maximum of 255
-    self.assertEquals(data[780][487], 255, "Invalid quality value for poo quality field")
+    self.assertEqual(data[780][487], 255, "Invalid quality value for poo quality field")
     
     field = dbzh_param.getQualityField(2)
-    self.assertEquals("se.smhi.detector.beamblockage", field.getAttribute("how/task"))
+    self.assertEqual("se.smhi.detector.beamblockage", field.getAttribute("how/task"))
     self.assertAlmostEqual(qfield_expected_gain, field.getAttribute("what/gain"), 6, "Wrong setting of gain in beamb quality field")
-    self.assertEquals(0, field.getAttribute("what/offset"), "Wrong setting of offset in distance quality field")
+    self.assertEqual(0, field.getAttribute("what/offset"), "Wrong setting of offset in distance quality field")
     data = field.getData()
     # check one known point in quality field where the algorithm has detected an anomaly
-    self.assertEquals(data[576][311], 122, "Invalid quality value for beamb quality field")
+    self.assertEqual(data[576][311], 122, "Invalid quality value for beamb quality field")
     # check one point in quality field located outside radar range. here quality should be 0
-    self.assertEquals(data[709][359], 0, "Invalid quality value for beamb quality field")
+    self.assertEqual(data[709][359], 0, "Invalid quality value for beamb quality field")
     # check one point within radar range where no anomaly is detected. here quality should be the maximum of 255
-    self.assertEquals(data[780][487], 255, "Invalid quality value for beamb quality field")
+    self.assertEqual(data[780][487], 255, "Invalid quality value for beamb quality field")
     
     field = dbzh_param.getQualityField(3)
-    self.assertEquals("se.smhi.composite.distance.radar", field.getAttribute("how/task"))
-    self.assertEquals(2000, field.getAttribute("what/gain"), "Wrong setting of gain in distance quality field")
-    self.assertEquals(0, field.getAttribute("what/offset"), "Wrong setting of offset in distance quality field")
+    self.assertEqual("se.smhi.composite.distance.radar", field.getAttribute("how/task"))
+    self.assertEqual(2000, field.getAttribute("what/gain"), "Wrong setting of gain in distance quality field")
+    self.assertEqual(0, field.getAttribute("what/offset"), "Wrong setting of offset in distance quality field")
     data = field.getData()
     # check one known point in quality field where the algorithm has detected an anomaly
-    self.assertEquals(data[425][366], 101, "Invalid quality value for distance quality field")
+    self.assertEqual(data[425][366], 101, "Invalid quality value for distance quality field")
     # check one point in quality field located outside radar range. here quality should be 0
-    self.assertEquals(data[709][359], 0, "Invalid quality value for distance quality field")
+    self.assertEqual(data[709][359], 0, "Invalid quality value for distance quality field")
     
   def test_quality_fields_for_scans(self):
     generator = _pycomposite.new()

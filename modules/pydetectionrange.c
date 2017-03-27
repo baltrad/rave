@@ -22,7 +22,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2011-02-18
  */
-#include "Python.h"
+#include "pyravecompat.h"
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>
@@ -259,37 +259,28 @@ static struct PyMethodDef _pydetectionrange_methods[] =
  * Returns the specified attribute in the detection range
  * @param[in] self - the detection range product
  */
-static PyObject* _pydetectionrange_getattr(PyDetectionRange* self, char* name)
+static PyObject* _pydetectionrange_getattro(PyDetectionRange* self, PyObject* name)
 {
-  PyObject* res = NULL;
-
-  if (strcmp("lookupPath", name) == 0) {
+  if (PY_COMPARE_STRING_WITH_ATTRO_NAME("lookupPath", name) == 0) {
     return PyString_FromString(DetectionRange_getLookupPath(self->dr));
-  } else if (strcmp("analysis_minrange", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("analysis_minrange", name) == 0) {
     return PyFloat_FromDouble(DetectionRange_getAnalysisMinRange(self->dr));
-  } else if (strcmp("analysis_maxrange", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("analysis_maxrange", name) == 0) {
     return PyFloat_FromDouble(DetectionRange_getAnalysisMaxRange(self->dr));
   }
-
-  res = Py_FindMethod(_pydetectionrange_methods, (PyObject*) self, name);
-  if (res)
-    return res;
-
-  PyErr_Clear();
-  PyErr_SetString(PyExc_AttributeError, name);
-  return NULL;
+  return PyObject_GenericGetAttr((PyObject*)self, name);
 }
 
 /**
  * Returns the specified attribute in the detection range
  */
-static int _pydetectionrange_setattr(PyDetectionRange* self, char* name, PyObject* val)
+static int _pydetectionrange_setattro(PyDetectionRange* self, PyObject* name, PyObject* val)
 {
   int result = -1;
   if (name == NULL) {
     goto done;
   }
-  if (strcmp("lookupPath", name) == 0) {
+  if (PY_COMPARE_STRING_WITH_ATTRO_NAME("lookupPath", name) == 0) {
     if (PyString_Check(val)) {
       if (!DetectionRange_setLookupPath(self->dr, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "lookupPath could not be set");
@@ -297,7 +288,7 @@ static int _pydetectionrange_setattr(PyDetectionRange* self, char* name, PyObjec
     } else {
       raiseException_gotoTag(done, PyExc_ValueError,"lookupPath must be of type string");
     }
-  } else if (strcmp("analysis_minrange", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("analysis_minrange", name) == 0) {
     if (PyFloat_Check(val)) {
       DetectionRange_setAnalysisMinRange(self->dr, PyFloat_AsDouble(val));
     } else if (PyLong_Check(val)) {
@@ -307,7 +298,7 @@ static int _pydetectionrange_setattr(PyDetectionRange* self, char* name, PyObjec
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "analysis_minrange must be a float or decimal value")
     }
-  } else if (strcmp("analysis_maxrange", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("analysis_maxrange", name) == 0) {
     if (PyFloat_Check(val)) {
       DetectionRange_setAnalysisMaxRange(self->dr, PyFloat_AsDouble(val));
     } else if (PyLong_Check(val)) {
@@ -318,7 +309,7 @@ static int _pydetectionrange_setattr(PyDetectionRange* self, char* name, PyObjec
       raiseException_gotoTag(done, PyExc_TypeError, "analysis_maxrange must be a float or decimal value")
     }
   } else {
-    raiseException_gotoTag(done, PyExc_AttributeError, name);
+    raiseException_gotoTag(done, PyExc_AttributeError, PY_RAVE_ATTRO_NAME_TO_STRING(name));
   }
 
   result = 0;
@@ -331,21 +322,47 @@ done:
 /*@{ Type definitions */
 PyTypeObject PyDetectionRange_Type =
 {
-  PyObject_HEAD_INIT(NULL)0, /*ob_size*/
+  PyVarObject_HEAD_INIT(NULL, 0) /*ob_size*/
   "DetectionRangeCore", /*tp_name*/
   sizeof(PyDetectionRange), /*tp_size*/
   0, /*tp_itemsize*/
   /* methods */
   (destructor)_pydetectionrange_dealloc, /*tp_dealloc*/
   0, /*tp_print*/
-  (getattrfunc)_pydetectionrange_getattr, /*tp_getattr*/
-  (setattrfunc)_pydetectionrange_setattr, /*tp_setattr*/
-  0, /*tp_compare*/
-  0, /*tp_repr*/
-  0, /*tp_as_number */
+  (getattrfunc)0,               /*tp_getattr*/
+  (setattrfunc)0,               /*tp_setattr*/
+  0,                            /*tp_compare*/
+  0,                            /*tp_repr*/
+  0,                            /*tp_as_number */
   0,
-  0, /*tp_as_mapping */
-  0 /*tp_hash*/
+  0,                            /*tp_as_mapping */
+  0,                            /*tp_hash*/
+  (ternaryfunc)0,               /*tp_call*/
+  (reprfunc)0,                  /*tp_str*/
+  (getattrofunc)_pydetectionrange_getattro, /*tp_getattro*/
+  (setattrofunc)_pydetectionrange_setattro, /*tp_setattro*/
+  0,                            /*tp_as_buffer*/
+  Py_TPFLAGS_DEFAULT, /*tp_flags*/
+  0,                            /*tp_doc*/
+  (traverseproc)0,              /*tp_traverse*/
+  (inquiry)0,                   /*tp_clear*/
+  0,                            /*tp_richcompare*/
+  0,                            /*tp_weaklistoffset*/
+  0,                            /*tp_iter*/
+  0,                            /*tp_iternext*/
+  _pydetectionrange_methods,              /*tp_methods*/
+  0,                            /*tp_members*/
+  0,                            /*tp_getset*/
+  0,                            /*tp_base*/
+  0,                            /*tp_dict*/
+  0,                            /*tp_descr_get*/
+  0,                            /*tp_descr_set*/
+  0,                            /*tp_dictoffset*/
+  0,                            /*tp_init*/
+  0,                            /*tp_alloc*/
+  0,                            /*tp_new*/
+  0,                            /*tp_free*/
+  0,                            /*tp_is_gc*/
 };
 /*@} End of Type definitions */
 
@@ -355,32 +372,32 @@ static PyMethodDef functions[] = {
   {NULL,NULL} /*Sentinel*/
 };
 
-PyMODINIT_FUNC
-init_detectionrange(void)
+MOD_INIT(_detectionrange)
 {
   PyObject *module=NULL,*dictionary=NULL;
   static void *PyDetectionRange_API[PyDetectionRange_API_pointers];
   PyObject *c_api_object = NULL;
-  PyDetectionRange_Type.ob_type = &PyType_Type;
+  MOD_INIT_SETUP_TYPE(PyDetectionRange_Type, &PyType_Type);
 
-  module = Py_InitModule("_detectionrange", functions);
+  MOD_INIT_VERIFY_TYPE_READY(&PyDetectionRange_Type);
+
+  MOD_INIT_DEF(module, "_detectionrange", NULL/*doc*/, functions);
   if (module == NULL) {
-    return;
+    return MOD_INIT_ERROR;
   }
+
   PyDetectionRange_API[PyDetectionRange_Type_NUM] = (void*)&PyDetectionRange_Type;
   PyDetectionRange_API[PyDetectionRange_GetNative_NUM] = (void *)PyDetectionRange_GetNative;
   PyDetectionRange_API[PyDetectionRange_New_NUM] = (void*)PyDetectionRange_New;
 
-  c_api_object = PyCObject_FromVoidPtr((void *)PyDetectionRange_API, NULL);
-
-  if (c_api_object != NULL) {
-    PyModule_AddObject(module, "_C_API", c_api_object);
-  }
-
+  c_api_object = PyCapsule_New(PyDetectionRange_API, PyDetectionRange_CAPSULE_NAME, NULL);
   dictionary = PyModule_GetDict(module);
-  ErrorObject = PyString_FromString("_pydetectionrange.error");
+  PyDict_SetItemString(dictionary, "_C_API", c_api_object);
+
+  ErrorObject = PyErr_NewException("_detectionrange.error", NULL, NULL);
   if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
-    Py_FatalError("Can't define _pydetectionrange.error");
+    Py_FatalError("Can't define _detectionrange.error");
+    return MOD_INIT_ERROR;
   }
 
   import_pypolarvolume();
@@ -388,5 +405,6 @@ init_detectionrange(void)
   import_pyravefield();
   import_array(); /*To make sure I get access to Numeric*/
   PYRAVE_DEBUG_INITIALIZE;
+  return MOD_INIT_SUCCESS(module);
 }
 /*@} End of Module setup */
