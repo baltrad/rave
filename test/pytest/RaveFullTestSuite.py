@@ -27,7 +27,7 @@ import unittest
 
 from RaveTestSuite import *
 from PyCompositeTest import *
-#from PyCartesianCompositeTest import *
+from PyCartesianCompositeTest import *
 #from PolarVolumeTransformTest import *
 from MeanTest import *
 

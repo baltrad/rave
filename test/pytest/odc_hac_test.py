@@ -77,7 +77,7 @@ class odc_hac_test(unittest.TestCase):
     try:
       qfield = scan.getQualityFieldByHowTask("eu.opera.odc.zdiff")
       self.fail("Expected NameError")
-    except NameError, e:
+    except NameError:
       pass
 
   def test_py_odc_zdiff_scan(self):
@@ -128,7 +128,7 @@ class odc_hac_test(unittest.TestCase):
     qp = rave_zdiff_quality_plugin.rave_zdiff_quality_plugin()
     processed, qfield = qp.process(scan, True, "analyze_and_apply")
     
-    self.assertEquals(qfield, ["eu.opera.odc.zdiff"], "Wrong qfield returned from process")
+    self.assertEqual(qfield, ["eu.opera.odc.zdiff"], "Wrong qfield returned from process")
     
     qfield = processed.getQualityFieldByHowTask("eu.opera.odc.zdiff")
     self.assertTrue(numpy.amax(qfield.getData()) == 255)
@@ -147,7 +147,7 @@ class odc_hac_test(unittest.TestCase):
     qp = rave_zdiff_quality_plugin.rave_zdiff_quality_plugin()
     processed, qfield = qp.process(pvol, True, "analyze_and_apply")
     
-    self.assertEquals(qfield, ["eu.opera.odc.zdiff"], "Wrong qfield returned from process")
+    self.assertEqual(qfield, ["eu.opera.odc.zdiff"], "Wrong qfield returned from process")
     
     qfield1 = processed.getScan(0).getQualityFieldByHowTask("eu.opera.odc.zdiff")
     qfield2 = processed.getScan(1).getQualityFieldByHowTask("eu.opera.odc.zdiff")
@@ -161,8 +161,8 @@ class odc_hac_test(unittest.TestCase):
   def test_rave_zdiff_quality_plugin_getQualityFields(self):
     qp = rave_zdiff_quality_plugin.rave_zdiff_quality_plugin()
     fields = qp.getQualityFields()
-    self.assertEquals(1, len(fields))
-    self.assertEquals("eu.opera.odc.zdiff", fields[0])
+    self.assertEqual(1, len(fields))
+    self.assertEqual("eu.opera.odc.zdiff", fields[0])
     
   def create_scan(self, dbzh0_0=3.0, dbzh0_1=4.0, th0_0=53.0, th0_1=40.0):
     scan = _raveio.open(self.SCAN_FIXTURE).object

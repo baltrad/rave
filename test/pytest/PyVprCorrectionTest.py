@@ -45,27 +45,27 @@ class PyVprCorrectionTest(unittest.TestCase):
   def test_new(self):
     obj = _vprcorrection.new()
     
-    self.assertNotEqual(-1, string.find(`type(obj)`, "VprCorrectionCore"))
+    self.assertNotEqual(-1, str(type(obj)).find("VprCorrectionCore"))
 
   def test_attribute_visibility(self):
     attrs = ['minReflectivity', 'heightLimit', 'profileHeight', 'minDistance', 'maxDistance']
     obj = _vprcorrection.new()
     alist = dir(obj)
     for a in attrs:
-      self.assertEquals(True, a in alist)
+      self.assertEqual(True, a in alist)
   
   def test_attribute_nonexisting(self):
     obj = _vprcorrection.new()
     try:
       obj.nonExistingAttribute = 10
       self.fail("Expected AttributeError")
-    except AttributeError, e:
+    except AttributeError:
       pass
     
     try:
       x = obj.nonExistingAttribute
       self.fail("Expected AttributeError")
-    except AttributeError, e:
+    except AttributeError:
       pass
   
   def test_minReflectivity(self):
@@ -140,7 +140,7 @@ class PyVprCorrectionTest(unittest.TestCase):
     obj = _vprcorrection.new()
     obj.profileHeight = 100.0
     obj.heightLimit = 1200.0
-    self.assertEquals(range(50,1200,100), obj.getHeights())
+    self.assertEqual(list(range(50,1200,100)), obj.getHeights())
 
   def Xtest_getReflectivityArray(self):
     pvol = _raveio.open(self.FIXTURE_SELUL).object
@@ -199,7 +199,7 @@ class PyVprCorrectionTest(unittest.TestCase):
 
   def Xtest_helper_readH1D(self):
     profile = _vprcorrection.readH1D(self.FIXTURE_TEMP_PROFILE)
-    print `profile`
+    print(str(profile))
   
   def test_helper_lsqFirstOrder(self):
     x=[(0.1,0.1), (1.0, 2.0), (2.0, 3.0), (3.0, 2.0), (4.1,4.1)]

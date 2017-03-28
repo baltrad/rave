@@ -70,54 +70,54 @@ class PyCartesianCompositeTest(unittest.TestCase):
 
   def test_new(self):
     obj = _cartesiancomposite.new()
-    self.assertNotEqual(-1, string.find(`type(obj)`, "CartesianCompositeCore"))
+    self.assertNotEqual(-1, str(type(obj)).find("CartesianCompositeCore"))
     
   def test_attribute_visibility(self):
     attrs = ['date', 'time', 'quantity', 'offset', 'gain']
     obj = _cartesiancomposite.new()
     alist = dir(obj)
     for a in attrs:
-      self.assertEquals(True, a in alist)
+      self.assertEqual(True, a in alist)
 
   def test_date(self):
     obj = _cartesiancomposite.new()
-    self.assertEquals(None, obj.date)
+    self.assertEqual(None, obj.date)
     obj.date = "20120101"
-    self.assertEquals("20120101", obj.date)
+    self.assertEqual("20120101", obj.date)
     obj.date = None
-    self.assertEquals(None, obj.date)
+    self.assertEqual(None, obj.date)
 
   def test_time(self):
     obj = _cartesiancomposite.new()
-    self.assertEquals(None, obj.time)
+    self.assertEqual(None, obj.time)
     obj.time = "100000"
-    self.assertEquals("100000", obj.time)
+    self.assertEqual("100000", obj.time)
     obj.time = None
-    self.assertEquals(None, obj.time)
+    self.assertEqual(None, obj.time)
     
   def test_quantity(self):
     obj = _cartesiancomposite.new()
-    self.assertEquals("DBZH", obj.quantity)
+    self.assertEqual("DBZH", obj.quantity)
     obj.quantity = "TH"
-    self.assertEquals("TH", obj.quantity)
+    self.assertEqual("TH", obj.quantity)
     try:
       obj.quantity = None
       self.fail("Expected ValueError")
-    except ValueError, e:
+    except ValueError:
       pass
-    self.assertEquals("TH", obj.quantity)
+    self.assertEqual("TH", obj.quantity)
 
   def test_offset(self):
     obj = _cartesiancomposite.new()
-    self.assertAlmostEquals(0.0, obj.offset, 4)
+    self.assertAlmostEqual(0.0, obj.offset, 4)
     obj.offset = 2.5
-    self.assertAlmostEquals(2.5, obj.offset, 4)
+    self.assertAlmostEqual(2.5, obj.offset, 4)
   
   def test_gain(self):
     obj = _cartesiancomposite.new()
-    self.assertAlmostEquals(1.0, obj.gain, 4)
+    self.assertAlmostEqual(1.0, obj.gain, 4)
     obj.gain = 2.0
-    self.assertAlmostEquals(2.0, obj.gain, 4)
+    self.assertAlmostEqual(2.0, obj.gain, 4)
     
   def test_method(self):
     values = [_cartesiancomposite.SelectionMethod_FIRST, 
@@ -126,43 +126,43 @@ class PyCartesianCompositeTest(unittest.TestCase):
               _cartesiancomposite.SelectionMethod_AVGVALUE,
               _cartesiancomposite.SelectionMethod_DISTANCE]
     obj = _cartesiancomposite.new()
-    self.assertEquals(_cartesiancomposite.SelectionMethod_FIRST, obj.method)
+    self.assertEqual(_cartesiancomposite.SelectionMethod_FIRST, obj.method)
     for v in values:
       obj.method = v
-      self.assertEquals(v, obj.method)
+      self.assertEqual(v, obj.method)
     
     try:
       obj.method = 99
       self.fail("Expected ValueError")
-    except ValueError, e:
+    except ValueError:
       pass
 
   def test_distance_field(self):
     obj = _cartesiancomposite.new()
-    self.assertEquals("se.smhi.composite.distance.radar", obj.distance_field)
+    self.assertEqual("se.smhi.composite.distance.radar", obj.distance_field)
     obj.distance_field = "eu.baltrad.something"
-    self.assertEquals("eu.baltrad.something", obj.distance_field)
+    self.assertEqual("eu.baltrad.something", obj.distance_field)
     try:
       obj.distance_field = None
       self.fail("Expected ValueError")
-    except ValueError, e:
+    except ValueError:
       pass
-    self.assertEquals("eu.baltrad.something", obj.distance_field)
+    self.assertEqual("eu.baltrad.something", obj.distance_field)
     
 
   def test_cartesian_objects(self):
     obj = _cartesiancomposite.new()
-    self.assertEquals(0, obj.getNumberOfObjects())
+    self.assertEqual(0, obj.getNumberOfObjects())
     c1 = _cartesian.new()
     c2 = _cartesian.new()
     c3 = _cartesian.new()
     c4 = _cartesian.new()
     obj.add(c1)
-    self.assertEquals(1, obj.getNumberOfObjects())
+    self.assertEqual(1, obj.getNumberOfObjects())
     obj.add(c2)
     obj.add(c3)
     obj.add(c4)
-    self.assertEquals(4, obj.getNumberOfObjects())
+    self.assertEqual(4, obj.getNumberOfObjects())
     rc1 = obj.get(0)
     rc2 = obj.get(1)
     rc3 = obj.get(2)

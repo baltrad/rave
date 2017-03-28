@@ -22,7 +22,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2009-12-10
  */
-#include "Python.h"
+#include "pyravecompat.h"
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>
@@ -227,47 +227,17 @@ static struct PyMethodDef _pybitmapgenerator_methods[] =
  * Returns the specified attribute in the bitmap generator
  * @param[in] self - the transform
  */
-static PyObject* _pybitmapgenerator_getattr(PyBitmapGenerator* self, char* name)
+static PyObject* _pybitmapgenerator_getattro(PyBitmapGenerator* self, PyObject* name)
 {
-  PyObject* res = NULL;
-/*
-  if (strcmp("method", name) == 0) {
-    return PyInt_FromLong(Transform_getMethod(self->transform));
-  }
-*/
-  res = Py_FindMethod(_pybitmapgenerator_methods, (PyObject*) self, name);
-  if (res)
-    return res;
-
-  PyErr_Clear();
-  PyErr_SetString(PyExc_AttributeError, name);
-  return NULL;
+  return PyObject_GenericGetAttr((PyObject*)self, name);
 }
 
 /**
  * Returns the specified attribute in the bitmap generator
  */
-static int _pybitmapgenerator_setattr(PyBitmapGenerator* self, char* name, PyObject* val)
+static int _pybitmapgenerator_setattro(PyBitmapGenerator* self, PyObject* name, PyObject* val)
 {
   int result = -1;
-  if (name == NULL) {
-    goto done;
-  }
-
-/*
-  if (strcmp("method", name)==0) {
-    if (PyInt_Check(val)) {
-      if (!Transform_setMethod(self->generator, PyInt_AsLong(val))) {
-        raiseException_gotoTag(done, PyExc_ValueError, "method must be in valid range");
-      }
-    } else {
-      raiseException_gotoTag(done, PyExc_TypeError,"method must be a valid RaveTransformMethod");
-    }
-  }
-
-  result = 0;
-*/
-done:
   return result;
 }
 /*@} End of Bitmap generator */
@@ -275,22 +245,47 @@ done:
 /*@{ Type definitions */
 PyTypeObject PyBitmapGenerator_Type =
 {
-  PyObject_HEAD_INIT(NULL)0, /*ob_size*/
+  PyVarObject_HEAD_INIT(NULL, 0) /*ob_size*/
   "BitmapGeneratorCore", /*tp_name*/
   sizeof(PyBitmapGenerator), /*tp_size*/
   0, /*tp_itemsize*/
   /* methods */
   (destructor)_pybitmapgenerator_dealloc, /*tp_dealloc*/
   0, /*tp_print*/
-  (getattrfunc)_pybitmapgenerator_getattr, /*tp_getattr*/
-  (setattrfunc)_pybitmapgenerator_setattr, /*tp_setattr*/
-  0, /*tp_compare*/
-  0, /*tp_repr*/
-  0, /*tp_as_number */
+  (getattrfunc)0,               /*tp_getattr*/
+  (setattrfunc)0,               /*tp_setattr*/
+  0,                            /*tp_compare*/
+  0,                            /*tp_repr*/
+  0,                            /*tp_as_number */
   0,
-  0, /*tp_as_mapping */
-  0 /*tp_hash*/
-};
+  0,                            /*tp_as_mapping */
+  0,                            /*tp_hash*/
+  (ternaryfunc)0,               /*tp_call*/
+  (reprfunc)0,                  /*tp_str*/
+  (getattrofunc)_pybitmapgenerator_getattro, /*tp_getattro*/
+  (setattrofunc)_pybitmapgenerator_setattro, /*tp_setattro*/
+  0,                            /*tp_as_buffer*/
+  Py_TPFLAGS_DEFAULT, /*tp_flags*/
+  0,                            /*tp_doc*/
+  (traverseproc)0,              /*tp_traverse*/
+  (inquiry)0,                   /*tp_clear*/
+  0,                            /*tp_richcompare*/
+  0,                            /*tp_weaklistoffset*/
+  0,                            /*tp_iter*/
+  0,                            /*tp_iternext*/
+  _pybitmapgenerator_methods,   /*tp_methods*/
+  0,                            /*tp_members*/
+  0,                            /*tp_getset*/
+  0,                            /*tp_base*/
+  0,                            /*tp_dict*/
+  0,                            /*tp_descr_get*/
+  0,                            /*tp_descr_set*/
+  0,                            /*tp_dictoffset*/
+  0,                            /*tp_init*/
+  0,                            /*tp_alloc*/
+  0,                            /*tp_new*/
+  0,                            /*tp_free*/
+  0,                            /*tp_is_gc*/};
 
 /*@} End of Type definitions */
 
@@ -300,37 +295,38 @@ static PyMethodDef functions[] = {
   {NULL,NULL} /*Sentinel*/
 };
 
-PyMODINIT_FUNC
-init_bitmapgenerator(void)
+MOD_INIT(_bitmapgenerator)
 {
   PyObject *module=NULL,*dictionary=NULL;
   static void *PyBitmapGenerator_API[PyBitmapGenerator_API_pointers];
   PyObject *c_api_object = NULL;
-  PyBitmapGenerator_Type.ob_type = &PyType_Type;
+  MOD_INIT_SETUP_TYPE(PyBitmapGenerator_Type, &PyType_Type);
 
-  module = Py_InitModule("_bitmapgenerator", functions);
+  MOD_INIT_VERIFY_TYPE_READY(&PyBitmapGenerator_Type);
+
+  MOD_INIT_DEF(module, "_bitmapgenerator", NULL/*doc*/, functions);
   if (module == NULL) {
-    return;
+    return MOD_INIT_ERROR;
   }
+
   PyBitmapGenerator_API[PyBitmapGenerator_Type_NUM] = (void*)&PyBitmapGenerator_Type;
   PyBitmapGenerator_API[PyBitmapGenerator_GetNative_NUM] = (void *)PyBitmapGenerator_GetNative;
   PyBitmapGenerator_API[PyBitmapGenerator_New_NUM] = (void*)PyBitmapGenerator_New;
 
-  c_api_object = PyCObject_FromVoidPtr((void *)PyBitmapGenerator_API, NULL);
-
-  if (c_api_object != NULL) {
-    PyModule_AddObject(module, "_C_API", c_api_object);
-  }
-
+  c_api_object = PyCapsule_New(PyBitmapGenerator_API, PyBitmapGenerator_CAPSULE_NAME, NULL);
   dictionary = PyModule_GetDict(module);
-  ErrorObject = PyString_FromString("_bitmapgenerator.error");
+  PyDict_SetItemString(dictionary, "_C_API", c_api_object);
+
+  ErrorObject = PyErr_NewException("_bitmapgenerator.error", NULL, NULL);
   if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
     Py_FatalError("Can't define _bitmapgenerator.error");
+    return MOD_INIT_ERROR;
   }
 
   import_pycartesian();
   import_pycartesianparam();
   import_pyravefield();
   PYRAVE_DEBUG_INITIALIZE;
+  return MOD_INIT_SUCCESS(module);
 }
 /*@} End of Module setup */

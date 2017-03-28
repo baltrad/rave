@@ -46,6 +46,8 @@ typedef struct {
 
 #define PyCartesianComposite_API_pointers 3                   /**< number of api pointers */
 
+#define PyCartesianComposite_CAPSULE_NAME "_cartesiancomposite._C_API"
+
 #ifdef PYCARTESIANCOMPOSITE_MODULE
 /** Forward declaration of type*/
 extern PyTypeObject PyCartesianComposite_Type;
@@ -81,37 +83,18 @@ static void **PyCartesianComposite_API;
   (*(PyCartesianComposite_New_RETURN (*)PyCartesianComposite_New_PROTO) PyCartesianComposite_API[PyCartesianComposite_New_NUM])
 
 /**
- * Checks if the object is a python cartesian.
+ * Checks if the object is a python cartesian composite generator.
  */
 #define PyCartesianComposite_Check(op) \
-   ((op)->ob_type == (PyTypeObject *)PyCartesianComposite_API[PyCartesianComposite_Type_NUM])
+   (Py_TYPE(op) == &PyCartesianComposite_Type)
+
+#define PyCartesianComposite_Type (*(PyTypeObject*)PyCartesianComposite_API[PyCartesianComposite_Type_NUM])
 
 /**
- * Imports the PyCartesianComposite module (like import _polarscan in python).
+ * Imports the PyArea module (like import _cartesiancomposite in python).
  */
-static int
-import_pycartesiancomposite(void)
-{
-  PyObject *module;
-  PyObject *c_api_object;
-
-  module = PyImport_ImportModule("_cartesiancomposite");
-  if (module == NULL) {
-    return -1;
-  }
-
-  c_api_object = PyObject_GetAttrString(module, "_C_API");
-  if (c_api_object == NULL) {
-    Py_DECREF(module);
-    return -1;
-  }
-  if (PyCObject_Check(c_api_object)) {
-    PyCartesianComposite_API = (void **)PyCObject_AsVoidPtr(c_api_object);
-  }
-  Py_DECREF(c_api_object);
-  Py_DECREF(module);
-  return 0;
-}
+#define import_pycartesiancomposite() \
+    PyCartesianComposite_API = (void **)PyCapsule_Import(PyCartesianComposite_CAPSULE_NAME, 1);
 
 #endif
 

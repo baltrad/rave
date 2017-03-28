@@ -22,7 +22,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2014-03-28
  */
-#include "Python.h"
+#include "pyravecompat.h"
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>
@@ -195,45 +195,36 @@ static struct PyMethodDef _pygra_methods[] =
  * Returns the specified attribute in the gra
  * @param[in] self - the gra
  */
-static PyObject* _pygra_getattr(PyGra* self, char* name)
+static PyObject* _pygra_getattro(PyGra* self, PyObject* name)
 {
-  PyObject* res = NULL;
-
-  if (strcmp("A", name) == 0) {
+  if (PY_COMPARE_STRING_WITH_ATTRO_NAME("A", name) == 0) {
     return PyFloat_FromDouble(RaveGra_getA(self->gra));
-  } else if (strcmp("B", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("B", name) == 0) {
     return PyFloat_FromDouble(RaveGra_getB(self->gra));
-  } else if (strcmp("C", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("C", name) == 0) {
     return PyFloat_FromDouble(RaveGra_getC(self->gra));
-  } else if (strcmp("upperThreshold", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("upperThreshold", name) == 0) {
     return PyFloat_FromDouble(RaveGra_getUpperThreshold(self->gra));
-  } else if (strcmp("lowerThreshold", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("lowerThreshold", name) == 0) {
     return PyFloat_FromDouble(RaveGra_getLowerThreshold(self->gra));
-  } else if (strcmp("zrA", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("zrA", name) == 0) {
     return PyFloat_FromDouble(RaveGra_getZRA(self->gra));
-  } else if (strcmp("zrb", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("zrb", name) == 0) {
     return PyFloat_FromDouble(RaveGra_getZRB(self->gra));
   }
-
-  res = Py_FindMethod(_pygra_methods, (PyObject*) self, name);
-  if (res)
-    return res;
-
-  PyErr_Clear();
-  PyErr_SetString(PyExc_AttributeError, name);
-  return NULL;
+  return PyObject_GenericGetAttr((PyObject*)self, name);
 }
 
 /**
  * Returns the specified attribute in the gra
  */
-static int _pygra_setattr(PyGra* self, char* name, PyObject* val)
+static int _pygra_setattro(PyGra* self, PyObject* name, PyObject* val)
 {
   int result = -1;
   if (name == NULL) {
     goto done;
   }
-  if (strcmp("A", name) == 0) {
+  if (PY_COMPARE_STRING_WITH_ATTRO_NAME("A", name) == 0) {
     if (PyInt_Check(val)) {
       RaveGra_setA(self->gra, (double)PyInt_AsLong(val));
     } else if (PyLong_Check(val)) {
@@ -243,7 +234,7 @@ static int _pygra_setattr(PyGra* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "A must be a number");
     }
-  } else if (strcmp("B", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("B", name) == 0) {
     if (PyInt_Check(val)) {
       RaveGra_setB(self->gra, (double)PyInt_AsLong(val));
     } else if (PyLong_Check(val)) {
@@ -253,7 +244,7 @@ static int _pygra_setattr(PyGra* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "B must be a number");
     }
-  } else if (strcmp("C", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("C", name) == 0) {
     if (PyInt_Check(val)) {
       RaveGra_setC(self->gra, (double)PyInt_AsLong(val));
     } else if (PyLong_Check(val)) {
@@ -263,7 +254,7 @@ static int _pygra_setattr(PyGra* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "C must be a number");
     }
-  } else if (strcmp("upperThreshold", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("upperThreshold", name) == 0) {
     if (PyInt_Check(val)) {
       RaveGra_setUpperThreshold(self->gra, (double)PyInt_AsLong(val));
     } else if (PyLong_Check(val)) {
@@ -273,7 +264,7 @@ static int _pygra_setattr(PyGra* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "upperThreshold must be a number");
     }
-  } else if (strcmp("lowerThreshold", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("lowerThreshold", name) == 0) {
     if (PyInt_Check(val)) {
       RaveGra_setLowerThreshold(self->gra, (double)PyInt_AsLong(val));
     } else if (PyLong_Check(val)) {
@@ -283,7 +274,7 @@ static int _pygra_setattr(PyGra* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "lowerThreshold must be a number");
     }
-  } else if (strcmp("zrA", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("zrA", name) == 0) {
     if (PyInt_Check(val)) {
       RaveGra_setZRA(self->gra, (double)PyInt_AsLong(val));
     } else if (PyLong_Check(val)) {
@@ -293,7 +284,7 @@ static int _pygra_setattr(PyGra* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "zrA must be a number");
     }
-  } else if (strcmp("zrb", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("zrb", name) == 0) {
     if (PyInt_Check(val)) {
       RaveGra_setZRB(self->gra, (double)PyInt_AsLong(val));
     } else if (PyLong_Check(val)) {
@@ -317,21 +308,47 @@ done:
 /*@{ Type definitions */
 PyTypeObject PyGra_Type =
 {
-  PyObject_HEAD_INIT(NULL)0, /*ob_size*/
+  PyVarObject_HEAD_INIT(NULL, 0) /*ob_size*/
   "GraCore", /*tp_name*/
   sizeof(PyGra), /*tp_size*/
   0, /*tp_itemsize*/
   /* methods */
   (destructor)_pygra_dealloc, /*tp_dealloc*/
   0, /*tp_print*/
-  (getattrfunc)_pygra_getattr, /*tp_getattr*/
-  (setattrfunc)_pygra_setattr, /*tp_setattr*/
-  0, /*tp_compare*/
-  0, /*tp_repr*/
-  0, /*tp_as_number */
+  (getattrfunc)0,               /*tp_getattr*/
+  (setattrfunc)0,               /*tp_setattr*/
+  0,                            /*tp_compare*/
+  0,                            /*tp_repr*/
+  0,                            /*tp_as_number */
   0,
-  0, /*tp_as_mapping */
-  0 /*tp_hash*/
+  0,                            /*tp_as_mapping */
+  0,                            /*tp_hash*/
+  (ternaryfunc)0,               /*tp_call*/
+  (reprfunc)0,                  /*tp_str*/
+  (getattrofunc)_pygra_getattro, /*tp_getattro*/
+  (setattrofunc)_pygra_setattro, /*tp_setattro*/
+  0,                            /*tp_as_buffer*/
+  Py_TPFLAGS_DEFAULT, /*tp_flags*/
+  0,                            /*tp_doc*/
+  (traverseproc)0,              /*tp_traverse*/
+  (inquiry)0,                   /*tp_clear*/
+  0,                            /*tp_richcompare*/
+  0,                            /*tp_weaklistoffset*/
+  0,                            /*tp_iter*/
+  0,                            /*tp_iternext*/
+  _pygra_methods,              /*tp_methods*/
+  0,                            /*tp_members*/
+  0,                            /*tp_getset*/
+  0,                            /*tp_base*/
+  0,                            /*tp_dict*/
+  0,                            /*tp_descr_get*/
+  0,                            /*tp_descr_set*/
+  0,                            /*tp_dictoffset*/
+  0,                            /*tp_init*/
+  0,                            /*tp_alloc*/
+  0,                            /*tp_new*/
+  0,                            /*tp_free*/
+  0,                            /*tp_is_gc*/
 };
 /*@} End of Type definitions */
 
@@ -341,36 +358,37 @@ static PyMethodDef functions[] = {
   {NULL,NULL} /*Sentinel*/
 };
 
-PyMODINIT_FUNC
-init_gra(void)
+MOD_INIT(_gra)
 {
   PyObject *module=NULL,*dictionary=NULL;
   static void *PyGra_API[PyGra_API_pointers];
   PyObject *c_api_object = NULL;
-  PyGra_Type.ob_type = &PyType_Type;
+  MOD_INIT_SETUP_TYPE(PyGra_Type, &PyType_Type);
 
-  module = Py_InitModule("_gra", functions);
+  MOD_INIT_VERIFY_TYPE_READY(&PyGra_Type);
+
+  MOD_INIT_DEF(module, "_gra", NULL/*doc*/, functions);
   if (module == NULL) {
-    return;
+    return MOD_INIT_ERROR;
   }
+
   PyGra_API[PyGra_Type_NUM] = (void*)&PyGra_Type;
   PyGra_API[PyGra_GetNative_NUM] = (void *)PyGra_GetNative;
   PyGra_API[PyGra_New_NUM] = (void*)PyGra_New;
 
-  c_api_object = PyCObject_FromVoidPtr((void *)PyGra_API, NULL);
-
-  if (c_api_object != NULL) {
-    PyModule_AddObject(module, "_C_API", c_api_object);
-  }
-
+  c_api_object = PyCapsule_New(PyGra_API, PyGra_CAPSULE_NAME, NULL);
   dictionary = PyModule_GetDict(module);
-  ErrorObject = PyString_FromString("_gra.error");
+  PyDict_SetItemString(dictionary, "_C_API", c_api_object);
+
+  ErrorObject = PyErr_NewException("_gra.error", NULL, NULL);
   if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
     Py_FatalError("Can't define _gra.error");
+    return MOD_INIT_ERROR;
   }
 
   import_pyravefield();
   import_pycartesianparam();
   PYRAVE_DEBUG_INITIALIZE;
+  return MOD_INIT_SUCCESS(module);
 }
 /*@} End of Module setup */

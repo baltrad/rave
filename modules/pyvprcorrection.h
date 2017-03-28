@@ -46,6 +46,8 @@ typedef struct {
 
 #define PyVprCorrection_API_pointers 3                 /**< total number of C API pointers */
 
+#define PyVprCorrection_CAPSULE_NAME "_vprcorrection._C_API"
+
 #ifdef PYVPRCORRECTION_MODULE
 /** declared in pyvprcorrection module */
 extern PyTypeObject PyVprCorrection_Type;
@@ -79,37 +81,19 @@ static void **PyVprCorrection_API;
   (*(PyVprCorrection_New_RETURN (*)PyVprCorrection_New_PROTO) PyVprCorrection_API[PyVprCorrection_New_NUM])
 
 /**
- * Checks if the object is a python polar scan.
+ * Checks if the object is a python vpr correction generator.
  */
 #define PyVprCorrection_Check(op) \
-   ((op)->ob_type == (PyTypeObject *)PyVprCorrection_API[PyVprCorrection_Type_NUM])
+   (Py_TYPE(op) == &PyVprCorrection_Type)
+
+#define PyVprCorrection_Type (*(PyTypeObject*)PyVprCorrection_API[PyVprCorrection_Type_NUM])
 
 /**
- * Imports the PyVprCorrection module (like import _polarscan in python).
+  * Imports the PyVprCorrection module (like import _vprcorrection in python).
  */
-static int
-import_pyvprcorrection(void)
-{
-  PyObject *module;
-  PyObject *c_api_object;
+#define import_pyvprcorrection() \
+    PyVprCorrection_API = (void **)PyCapsule_Import(PyQITotal_CAPSULE_NAME, 1);
 
-  module = PyImport_ImportModule("_vprcorrection");
-  if (module == NULL) {
-    return -1;
-  }
-
-  c_api_object = PyObject_GetAttrString(module, "_C_API");
-  if (c_api_object == NULL) {
-    Py_DECREF(module);
-    return -1;
-  }
-  if (PyCObject_Check(c_api_object)) {
-    PyVprCorrection_API = (void **)PyCObject_AsVoidPtr(c_api_object);
-  }
-  Py_DECREF(c_api_object);
-  Py_DECREF(module);
-  return 0;
-}
 
 #endif
 

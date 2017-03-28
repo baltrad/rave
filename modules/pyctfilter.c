@@ -22,7 +22,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Daniel Michelson (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2014-03-27
  */
-#include "Python.h"
+#include "pyravecompat.h"
 #include "arrayobject.h"
 #include "rave.h"
 #include "rave_debug.h"
@@ -103,19 +103,25 @@ static struct PyMethodDef _ctfilter_functions[] =
 /**
  * Initialize the _ctfilter module
  */
-PyMODINIT_FUNC init_ctfilter(void)
+MOD_INIT(_ctfilter)
 {
-  PyObject* m;
-  m = Py_InitModule("_ctfilter", _ctfilter_functions);
-  ErrorObject = PyString_FromString("_ctfilter.error");
+  PyObject* module = NULL;
+  PyObject* dictionary = NULL;
+  MOD_INIT_DEF(module, "_ctfilter", NULL/*doc*/, _ctfilter_functions);
+  if (module == NULL) {
+    return MOD_INIT_ERROR;
+  }
 
-  if (ErrorObject == NULL || PyDict_SetItemString(PyModule_GetDict(m),
-                                                  "error", ErrorObject) != 0) {
+  dictionary = PyModule_GetDict(module);
+  ErrorObject = PyErr_NewException("_ctfilter.error", NULL, NULL);
+  if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
     Py_FatalError("Can't define _ctfilter.error");
+    return MOD_INIT_ERROR;
   }
   import_pycartesian();
   import_array(); /*To make sure I get access to numpy*/
   PYRAVE_DEBUG_INITIALIZE;
+  return MOD_INIT_SUCCESS(module);
 }
 
 /*@} End of Module setup */

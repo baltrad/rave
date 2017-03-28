@@ -40,15 +40,14 @@ class PyGraTest(unittest.TestCase):
   
   def test_new(self):
     obj = _gra.new()
-    isgra = string.find(`type(obj)`, "GraCore")
-    self.assertNotEqual(-1, isgra)
+    self.assertNotEqual(-1, str(type(obj)).find("GraCore"))
 
   def test_attribute_visibility(self):
     attrs = ['A', 'B', 'C', 'upperThreshold', 'lowerThreshold', 'zrA', 'zrb']
     gra = _gra.new()
     alist = dir(gra)
     for a in attrs:
-      self.assertEquals(True, a in alist)
+      self.assertEqual(True, a in alist)
 
   def test_A(self):
     gra = _gra.new();
@@ -132,10 +131,10 @@ class PyGraTest(unittest.TestCase):
     gra.C = 3.0
       
     result = gra.apply(distance, param)
-    self.assertAlmostEquals(47.77, result.getConvertedValue((0,0))[1], 2)
-    self.assertAlmostEquals(1102.61, result.getConvertedValue((0,1))[1], 2)
-    self.assertAlmostEquals(3200.0, result.getConvertedValue((1,0))[1], 4)
-    self.assertAlmostEquals(4200.0, result.getConvertedValue((1,1))[1], 4)
+    self.assertAlmostEqual(47.77, result.getConvertedValue((0,0))[1], 2)
+    self.assertAlmostEqual(1102.61, result.getConvertedValue((0,1))[1], 2)
+    self.assertAlmostEqual(3200.0, result.getConvertedValue((1,0))[1], 4)
+    self.assertAlmostEqual(4200.0, result.getConvertedValue((1,1))[1], 4)
  
   def test_apply_DBZH(self):
     distance = _ravefield.new()
@@ -166,11 +165,11 @@ class PyGraTest(unittest.TestCase):
      
     result = gra.apply(distance, param)
      
-    self.assertAlmostEquals(18.60, result.getConvertedValue((0,0))[1], 2)
-    self.assertAlmostEquals(40.7, result.getConvertedValue((0,1))[1], 2)
-    self.assertAlmostEquals(54.0, result.getConvertedValue((1,0))[1], 4)
-    self.assertAlmostEquals(64.0, result.getConvertedValue((1,1))[1], 4)
-    self.assertEquals("GRA: A=1.000000, B=2.000000, C=3.000000, low_db=-0.250000, high_db=2.000000", result.getAttribute("how/task_args"))
+    self.assertAlmostEqual(18.60, result.getConvertedValue((0,0))[1], 2)
+    self.assertAlmostEqual(40.7, result.getConvertedValue((0,1))[1], 2)
+    self.assertAlmostEqual(54.0, result.getConvertedValue((1,0))[1], 4)
+    self.assertAlmostEqual(64.0, result.getConvertedValue((1,1))[1], 4)
+    self.assertEqual("GRA: A=1.000000, B=2.000000, C=3.000000, low_db=-0.250000, high_db=2.000000", result.getAttribute("how/task_args"))
     
   def test_apply_DBZH_gain2000(self):
     distance = _ravefield.new()
@@ -195,4 +194,4 @@ class PyGraTest(unittest.TestCase):
      
     result = gra.apply(distance, param)
      
-    self.assertAlmostEquals(79.23, result.getValue((0,0))[1], 2)
+    self.assertAlmostEqual(79.23, result.getValue((0,0))[1], 2)

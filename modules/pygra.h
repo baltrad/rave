@@ -47,6 +47,9 @@ typedef struct {
 
 #define PyGra_API_pointers 3               /**< number of API pointers */
 
+#define PyGra_CAPSULE_NAME "_gra._C_API"
+
+
 #ifdef PYGRA_MODULE
 /** Forward declaration of type */
 extern PyTypeObject PyGra_Type;
@@ -82,39 +85,19 @@ static void **PyGra_API;
   (*(PyGra_New_RETURN (*)PyGra_New_PROTO) PyGra_API[PyGra_New_NUM])
 
 /**
- * Checks if the object is a python acrr instance.
+ * Checks if the object is a python gra instance.
  */
 #define PyGra_Check(op) \
-   ((op)->ob_type == (PyTypeObject *)PyGra_API[PyGra_Type_NUM])
+   (Py_TYPE(op) == &PyGra_Type)
+
+#define PyGra_Type (*(PyTypeObject*)PyGra_API[PyGra_Type_NUM])
 
 /**
- * Imports the PyGra module (like import _acrr in python).
+ * Imports the PyGra module (like import _gra in python).
  */
-static int
-import_pyacrr(void)
-{
-  PyObject *module;
-  PyObject *c_api_object;
-
-  module = PyImport_ImportModule("_acrr");
-  if (module == NULL) {
-    return -1;
-  }
-
-  c_api_object = PyObject_GetAttrString(module, "_C_API");
-  if (c_api_object == NULL) {
-    Py_DECREF(module);
-    return -1;
-  }
-  if (PyCObject_Check(c_api_object)) {
-    PyGra_API = (void **)PyCObject_AsVoidPtr(c_api_object);
-  }
-  Py_DECREF(c_api_object);
-  Py_DECREF(module);
-  return 0;
-}
+#define import_gra() \
+    PyGra_API = (void **)PyCapsule_Import(PyGra_CAPSULE_NAME, 1);
 
 #endif
-
 
 #endif /* PYGRA_H */

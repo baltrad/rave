@@ -22,7 +22,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Daniel Michelson (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2013-02-23
  */
-#include "Python.h"
+#include "pyravecompat.h"
 #include "arrayobject.h"
 #include "rave.h"
 #include "rave_debug.h"
@@ -159,20 +159,28 @@ static struct PyMethodDef _hac_functions[] =
 /**
  * Initialize the _odc_hac module
  */
-PyMODINIT_FUNC init_odc_hac(void)
+MOD_INIT(_odc_hac)
 {
-  PyObject* m;
-  m = Py_InitModule("_odc_hac", _hac_functions);
-  ErrorObject = PyString_FromString("_odc_hac.error");
+  PyObject* module = NULL;
+  PyObject* dictionary = NULL;
 
-  if (ErrorObject == NULL || PyDict_SetItemString(PyModule_GetDict(m),
-                                                  "error", ErrorObject) != 0) {
-    Py_FatalError("Can't define _odc_hac.error");
+  MOD_INIT_DEF(module, "_odc_hac", NULL/*doc*/, _hac_functions);
+  if (module == NULL) {
+    return MOD_INIT_ERROR;
   }
+
+  dictionary = PyModule_GetDict(module);
+  ErrorObject = PyErr_NewException("_odc_hac.error", NULL, NULL);
+  if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
+    Py_FatalError("Can't define _odc_hac.error");
+    return MOD_INIT_ERROR;
+  }
+
   import_pypolarscan();
   import_pyravefield();
   import_array(); /*To make sure I get access to numpy*/
   PYRAVE_DEBUG_INITIALIZE;
+  return MOD_INIT_SUCCESS(module);
 }
 
 /*@} End of Module setup */

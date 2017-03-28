@@ -43,22 +43,21 @@ class PyQITotalTest(unittest.TestCase):
 
   def test_new(self):
     obj = _qitotal.new()
-    isqitotal = string.find(`type(obj)`, "QITotalCore")
-    self.assertNotEqual(-1, isqitotal)
+    self.assertNotEqual(-1, str(type(obj)).find("QITotalCore"))
 
   def test_attribute_visibility(self):
     attrs = ['gain', 'offset', 'datatype']
     obj = _qitotal.new()
     alist = dir(obj)
     for a in attrs:
-      self.assertEquals(True, a in alist)
+      self.assertEqual(True, a in alist)
 
   def test_undefined_attribute(self):
     obj = _qitotal.new()
     try:
       obj.no_such_attribute = 0
       self.fail("Expected AttributeError")
-    except AttributeError, e:
+    except AttributeError:
       pass
 
   def test_gain(self):
@@ -69,7 +68,7 @@ class PyQITotalTest(unittest.TestCase):
     try:
       obj.gain = 0.0
       self.fail("Expected AttributeError")
-    except AttributeError, e:
+    except AttributeError:
       pass
     self.assertAlmostEqual(2.0, obj.gain, 4)
 
@@ -130,8 +129,8 @@ class PyQITotalTest(unittest.TestCase):
     
     result = obj.multiplicative([f1,f2,f3])
 
-    self.assertEquals("pl.imgw.quality.qi_total", result.getAttribute("how/task"))
-    self.assertEquals("method:multiplicative", result.getAttribute("how/task_args"))
+    self.assertEqual("pl.imgw.quality.qi_total", result.getAttribute("how/task"))
+    self.assertEqual("method:multiplicative", result.getAttribute("how/task_args"))
 
     #0,0 = 0.1 * 0.1 * 0.3 = 0.003
     self.assertAlmostEqual(0.003, result.getValue(0,0)[1], 4)
@@ -178,8 +177,8 @@ class PyQITotalTest(unittest.TestCase):
     
     result = obj.multiplicative([f1,f2,f3])
 
-    self.assertEquals("pl.imgw.quality.qi_total", result.getAttribute("how/task"))
-    self.assertEquals("method:multiplicative", result.getAttribute("how/task_args"))
+    self.assertEqual("pl.imgw.quality.qi_total", result.getAttribute("how/task"))
+    self.assertEqual("method:multiplicative", result.getAttribute("how/task_args"))
 
     #0,0 = 0.1 * 0.1 * 0.3 = 0.003
     self.assertAlmostEqual(0.003, result.getValue(0,0)[1], 4)
@@ -207,7 +206,7 @@ class PyQITotalTest(unittest.TestCase):
     try:    
       obj.multiplicative([f1,f2,f3])
       self.fail("Expected AttributeError")
-    except AttributeError, e:
+    except AttributeError:
       pass
 
   def test_multiplicative_wGainOffsetAndDatatype(self):
@@ -241,7 +240,7 @@ class PyQITotalTest(unittest.TestCase):
     
     result = obj.multiplicative([f1,f2,f3])
     
-    self.assertEquals(_rave.RaveDataType_UCHAR, result.datatype)
+    self.assertEqual(_rave.RaveDataType_UCHAR, result.datatype)
     self.assertAlmostEqual(0.001, result.getAttribute("what/gain"))
     self.assertAlmostEqual(-0.01, result.getAttribute("what/offset"))
 
@@ -285,8 +284,8 @@ class PyQITotalTest(unittest.TestCase):
     
     result = obj.additive([f1,f2,f3])
     
-    self.assertEquals("pl.imgw.quality.qi_total", result.getAttribute("how/task"))
-    self.assertEquals("method:additive", result.getAttribute("how/task_args"))
+    self.assertEqual("pl.imgw.quality.qi_total", result.getAttribute("how/task"))
+    self.assertEqual("method:additive", result.getAttribute("how/task_args"))
 
     
     #0,0 = (0.1 + 0.1 + 0.3)/3 = 0.1667
@@ -335,8 +334,8 @@ class PyQITotalTest(unittest.TestCase):
     
     result = obj.additive([f1,f2,f3])
     
-    self.assertEquals("pl.imgw.quality.qi_total", result.getAttribute("how/task"))
-    self.assertEquals("method:additive", result.getAttribute("how/task_args"))
+    self.assertEqual("pl.imgw.quality.qi_total", result.getAttribute("how/task"))
+    self.assertEqual("method:additive", result.getAttribute("how/task_args"))
 
     
     #0,0 = (0.1*0.5 + 0.1*0.25 + 0.3*0.25) = 0.15
@@ -366,7 +365,7 @@ class PyQITotalTest(unittest.TestCase):
     try:    
       obj.additive([f1,f2,f3])
       self.fail("Expected AttributeError")
-    except AttributeError, e:
+    except AttributeError:
       pass    
 
   def test_minimum(self):
@@ -396,8 +395,8 @@ class PyQITotalTest(unittest.TestCase):
     
     result = obj.minimum([f1,f2,f3])
     
-    self.assertEquals("pl.imgw.quality.qi_total", result.getAttribute("how/task"))
-    self.assertEquals("method:minimum", result.getAttribute("how/task_args"))
+    self.assertEqual("pl.imgw.quality.qi_total", result.getAttribute("how/task"))
+    self.assertEqual("method:minimum", result.getAttribute("how/task_args"))
 
     #0,0 = min(0.1, 0.1, 0.3) = 0.1
     self.assertAlmostEqual(0.1, result.getValue(0,0)[1], 4)
@@ -445,8 +444,8 @@ class PyQITotalTest(unittest.TestCase):
 
     result = obj.minimum([f1,f2,f3])
     
-    self.assertEquals("pl.imgw.quality.qi_total", result.getAttribute("how/task"))
-    self.assertEquals("method:minimum", result.getAttribute("how/task_args"))
+    self.assertEqual("pl.imgw.quality.qi_total", result.getAttribute("how/task"))
+    self.assertEqual("method:minimum", result.getAttribute("how/task_args"))
 
     #0,0 = min(0.05, 0.075, 0.27) = 0.05 => 0.1
     self.assertAlmostEqual(0.1, result.getValue(0,0)[1], 4)
@@ -474,5 +473,5 @@ class PyQITotalTest(unittest.TestCase):
     try:    
       obj.minimum([f1,f2,f3])
       self.fail("Expected AttributeError")
-    except AttributeError, e:
+    except AttributeError:
       pass    

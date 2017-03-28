@@ -47,7 +47,7 @@ class PyCTTest(unittest.TestCase):
         rave_ctfilter.CTPATH = self.CTPATH
         ct = rave_ctfilter.readCT(self.CTFILE)
         for i in range(4):
-            self.assertAlmostEquals(ct.areaextent[i],
+            self.assertAlmostEqual(ct.areaextent[i],
                                     self.CT_AE[i], places=1)
 
     def testCT(self):

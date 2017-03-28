@@ -114,7 +114,7 @@ def getMatchingCT(prod):
 # @return True upon success, False upon failure, None if abandoned due to lack of CT
 def ctFilter(prod, quantity="DBZH"):
     if not prod.hasParameter(quantity):
-        raise AttributeError, "Input product has no quantity called %s" % quantity
+        raise AttributeError("Input product has no quantity called %s" % quantity)
     prod.defaultParameter = quantity
     ct_filename = getMatchingCT(prod)
 

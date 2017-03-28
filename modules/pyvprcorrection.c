@@ -22,7 +22,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2015-03-23
  */
-#include "Python.h"
+#include "pyravecompat.h"
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>
@@ -365,47 +365,39 @@ static struct PyMethodDef _pyvprcorrection_methods[] =
  * Returns the specified attribute in the vpr correction instance
  * @param[in] self - the vpr correction
  */
-static PyObject* _pyvprcorrection_getattr(PyVprCorrection* self, char* name)
+static PyObject* _pyvprcorrection_getattro(PyVprCorrection* self, PyObject* name)
 {
-  PyObject* res = NULL;
-  if (strcmp("minReflectivity", name) == 0) {
+  if (PY_COMPARE_STRING_WITH_ATTRO_NAME("minReflectivity", name) == 0) {
     return PyFloat_FromDouble(RaveVprCorrection_getMinReflectivity(self->vpr));
-  }else if (strcmp("heightLimit", name) == 0) {
+  }else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("heightLimit", name) == 0) {
     return PyFloat_FromDouble(RaveVprCorrection_getHeightLimit(self->vpr));
-  } else if (strcmp("profileHeight", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("profileHeight", name) == 0) {
     return PyFloat_FromDouble(RaveVprCorrection_getProfileHeight(self->vpr));
-  } else if (strcmp("minDistance", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("minDistance", name) == 0) {
     return PyFloat_FromDouble(RaveVprCorrection_getMinDistance(self->vpr));
-  } else if (strcmp("maxDistance", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("maxDistance", name) == 0) {
     return PyFloat_FromDouble(RaveVprCorrection_getMaxDistance(self->vpr));
-  } else if (strcmp("plusTemperature", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("plusTemperature", name) == 0) {
     return PyFloat_FromDouble(RaveVprCorrection_getPlusTemperature(self->vpr));
-  } else if (strcmp("minusTemperature", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("minusTemperature", name) == 0) {
     return PyFloat_FromDouble(RaveVprCorrection_getMinusTemperature(self->vpr));
-  } else if (strcmp("dzdh", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("dzdh", name) == 0) {
     return PyFloat_FromDouble(RaveVprCorrection_getDzdh(self->vpr));
   }
-
-  res = Py_FindMethod(_pyvprcorrection_methods, (PyObject*) self, name);
-  if (res)
-    return res;
-
-  PyErr_Clear();
-  PyErr_SetString(PyExc_AttributeError, name);
-  return NULL;
+  return PyObject_GenericGetAttr((PyObject*)self, name);
 }
 
 /**
  * Returns the specified attribute in the vpr correction
  */
-static int _pyvprcorrection_setattr(PyVprCorrection* self, char* name, PyObject* val)
+static int _pyvprcorrection_setattro(PyVprCorrection* self, PyObject* name, PyObject* val)
 {
   int result = -1;
   if (name == NULL) {
     goto done;
   }
 
-  if (strcmp("minReflectivity", name) == 0) {
+  if (PY_COMPARE_STRING_WITH_ATTRO_NAME("minReflectivity", name) == 0) {
     if (PyInt_Check(val)) {
       RaveVprCorrection_setMinReflectivity(self->vpr, (double)PyInt_AsLong(val));
     } else if (PyFloat_Check(val)) {
@@ -413,7 +405,7 @@ static int _pyvprcorrection_setattr(PyVprCorrection* self, char* name, PyObject*
     } else {
       raiseException_gotoTag(done, PyExc_TypeError,"Min reflectivity must be a valid float");
     }
-  } else if (strcmp("heightLimit", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("heightLimit", name) == 0) {
     if (PyInt_Check(val)) {
       RaveVprCorrection_setHeightLimit(self->vpr, (double)PyInt_AsLong(val));
     } else if (PyFloat_Check(val)) {
@@ -421,7 +413,7 @@ static int _pyvprcorrection_setattr(PyVprCorrection* self, char* name, PyObject*
     } else {
       raiseException_gotoTag(done, PyExc_TypeError,"Height must be a valid float");
     }
-  } else if (strcmp("profileHeight", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("profileHeight", name) == 0) {
     if (PyInt_Check(val)) {
       RaveVprCorrection_setProfileHeight(self->vpr, (double)PyInt_AsLong(val));
     } else if (PyFloat_Check(val)) {
@@ -429,7 +421,7 @@ static int _pyvprcorrection_setattr(PyVprCorrection* self, char* name, PyObject*
     } else {
       raiseException_gotoTag(done, PyExc_TypeError,"Profile Height must be a valid float");
     }
-  } else if (strcmp("minDistance", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("minDistance", name) == 0) {
     if (PyInt_Check(val)) {
       RaveVprCorrection_setMinDistance(self->vpr, (double)PyInt_AsLong(val));
     } else if (PyFloat_Check(val)) {
@@ -437,7 +429,7 @@ static int _pyvprcorrection_setattr(PyVprCorrection* self, char* name, PyObject*
     } else {
       raiseException_gotoTag(done, PyExc_TypeError,"Min Distance must be a valid float");
     }
-  } else if (strcmp("maxDistance", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("maxDistance", name) == 0) {
     if (PyInt_Check(val)) {
       RaveVprCorrection_setMaxDistance(self->vpr, (double)PyInt_AsLong(val));
     } else if (PyFloat_Check(val)) {
@@ -445,7 +437,7 @@ static int _pyvprcorrection_setattr(PyVprCorrection* self, char* name, PyObject*
     } else {
       raiseException_gotoTag(done, PyExc_TypeError,"Max Distance must be a valid float");
     }
-  } else if (strcmp("plusTemperature", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("plusTemperature", name) == 0) {
     if (PyInt_Check(val)) {
       RaveVprCorrection_setPlusTemperature(self->vpr, (double)PyInt_AsLong(val));
     } else if (PyFloat_Check(val)) {
@@ -453,7 +445,7 @@ static int _pyvprcorrection_setattr(PyVprCorrection* self, char* name, PyObject*
     } else {
       raiseException_gotoTag(done, PyExc_TypeError,"Plus temperature must be a valid float");
     }
-  } else if (strcmp("minusTemperature", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("minusTemperature", name) == 0) {
     if (PyInt_Check(val)) {
       RaveVprCorrection_setMinusTemperature(self->vpr, (double)PyInt_AsLong(val));
     } else if (PyFloat_Check(val)) {
@@ -461,7 +453,7 @@ static int _pyvprcorrection_setattr(PyVprCorrection* self, char* name, PyObject*
     } else {
       raiseException_gotoTag(done, PyExc_TypeError,"Minus temperature must be a valid float");
     }
-  } else if (strcmp("dzdh", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("dzdh", name) == 0) {
     if (PyInt_Check(val)) {
       RaveVprCorrection_setDzdh(self->vpr, (double)PyInt_AsLong(val));
     } else if (PyFloat_Check(val)) {
@@ -470,7 +462,7 @@ static int _pyvprcorrection_setattr(PyVprCorrection* self, char* name, PyObject*
       raiseException_gotoTag(done, PyExc_TypeError,"Dzdh must be a valid float");
     }
   } else {
-    raiseException_gotoTag(done, PyExc_AttributeError, name);
+    raiseException_gotoTag(done, PyExc_AttributeError, PY_RAVE_ATTRO_NAME_TO_STRING(name));
   }
 
   result = 0;
@@ -482,21 +474,47 @@ done:
 /*@{ Type definitions */
 PyTypeObject PyVprCorrection_Type =
 {
-  PyObject_HEAD_INIT(NULL)0, /*ob_size*/
+  PyVarObject_HEAD_INIT(NULL, 0) /*ob_size*/
   "VprCorrectionCore", /*tp_name*/
   sizeof(PyVprCorrection), /*tp_size*/
   0, /*tp_itemsize*/
   /* methods */
   (destructor)_pyvprcorrection_dealloc, /*tp_dealloc*/
   0, /*tp_print*/
-  (getattrfunc)_pyvprcorrection_getattr, /*tp_getattr*/
-  (setattrfunc)_pyvprcorrection_setattr, /*tp_setattr*/
-  0, /*tp_compare*/
-  0, /*tp_repr*/
-  0, /*tp_as_number */
+  (getattrfunc)0,               /*tp_getattr*/
+  (setattrfunc)0,               /*tp_setattr*/
+  0,                            /*tp_compare*/
+  0,                            /*tp_repr*/
+  0,                            /*tp_as_number */
   0,
-  0, /*tp_as_mapping */
-  0 /*tp_hash*/
+  0,                            /*tp_as_mapping */
+  0,                            /*tp_hash*/
+  (ternaryfunc)0,               /*tp_call*/
+  (reprfunc)0,                  /*tp_str*/
+  (getattrofunc)_pyvprcorrection_getattro, /*tp_getattro*/
+  (setattrofunc)_pyvprcorrection_setattro, /*tp_setattro*/
+  0,                            /*tp_as_buffer*/
+  Py_TPFLAGS_DEFAULT, /*tp_flags*/
+  0,                            /*tp_doc*/
+  (traverseproc)0,              /*tp_traverse*/
+  (inquiry)0,                   /*tp_clear*/
+  0,                            /*tp_richcompare*/
+  0,                            /*tp_weaklistoffset*/
+  0,                            /*tp_iter*/
+  0,                            /*tp_iternext*/
+  _pyvprcorrection_methods,     /*tp_methods*/
+  0,                            /*tp_members*/
+  0,                            /*tp_getset*/
+  0,                            /*tp_base*/
+  0,                            /*tp_dict*/
+  0,                            /*tp_descr_get*/
+  0,                            /*tp_descr_set*/
+  0,                            /*tp_dictoffset*/
+  0,                            /*tp_init*/
+  0,                            /*tp_alloc*/
+  0,                            /*tp_new*/
+  0,                            /*tp_free*/
+  0,                            /*tp_is_gc*/
 };
 
 /*@} End of Type definitions */
@@ -509,36 +527,37 @@ static PyMethodDef functions[] = {
   {NULL,NULL} /*Sentinel*/
 };
 
-PyMODINIT_FUNC
-init_vprcorrection(void)
+MOD_INIT(_vprcorrection)
 {
   PyObject *module=NULL,*dictionary=NULL;
   static void *PyVprCorrection_API[PyVprCorrection_API_pointers];
   PyObject *c_api_object = NULL;
-  PyVprCorrection_Type.ob_type = &PyType_Type;
+  MOD_INIT_SETUP_TYPE(PyVprCorrection_Type, &PyType_Type);
 
-  module = Py_InitModule("_vprcorrection", functions);
+  MOD_INIT_VERIFY_TYPE_READY(&PyVprCorrection_Type);
+
+  MOD_INIT_DEF(module, "_vprcorrection", NULL/*doc*/, functions);
   if (module == NULL) {
-    return;
+    return MOD_INIT_ERROR;
   }
+
   PyVprCorrection_API[PyVprCorrection_Type_NUM] = (void*)&PyVprCorrection_Type;
   PyVprCorrection_API[PyVprCorrection_GetNative_NUM] = (void *)PyVprCorrection_GetNative;
   PyVprCorrection_API[PyVprCorrection_New_NUM] = (void*)PyVprCorrection_New;
 
-  c_api_object = PyCObject_FromVoidPtr((void *)PyVprCorrection_API, NULL);
-
-  if (c_api_object != NULL) {
-    PyModule_AddObject(module, "_C_API", c_api_object);
-  }
-
+  c_api_object = PyCapsule_New(PyVprCorrection_API, PyVprCorrection_CAPSULE_NAME, NULL);
   dictionary = PyModule_GetDict(module);
-  ErrorObject = PyString_FromString("_vprcorrection.error");
+  PyDict_SetItemString(dictionary, "_C_API", c_api_object);
+
+  ErrorObject = PyErr_NewException("_vprcorrection.error", NULL, NULL);
   if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
     Py_FatalError("Can't define _vprcorrection.error");
+    return MOD_INIT_ERROR;
   }
 
   import_pypolarvolume();
   import_pypolarscan();
   PYRAVE_DEBUG_INITIALIZE;
+  return MOD_INIT_SUCCESS(module);
 }
 /*@} End of Module setup */

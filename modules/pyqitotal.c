@@ -22,7 +22,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2014-02-27
  */
-#include "Python.h"
+#include "pyravecompat.h"
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>
@@ -305,37 +305,28 @@ static struct PyMethodDef _pyqitotal_methods[] =
  * Returns the specified attribute in the qi total generator
  * @param[in] self - the acrr
  */
-static PyObject* _pyqitotal_getattr(PyQITotal* self, char* name)
+static PyObject* _pyqitotal_getattro(PyQITotal* self, PyObject* name)
 {
-  PyObject* res = NULL;
-
-  if (strcmp("gain", name) == 0) {
+  if (PY_COMPARE_STRING_WITH_ATTRO_NAME("gain", name) == 0) {
     return PyFloat_FromDouble(RaveQITotal_getGain(self->qitotal));
-  } else if (strcmp("offset", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("offset", name) == 0) {
     return PyFloat_FromDouble(RaveQITotal_getOffset(self->qitotal));
-  } else if (strcmp("datatype", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("datatype", name) == 0) {
     return PyInt_FromLong(RaveQITotal_getDatatype(self->qitotal));
   }
-
-  res = Py_FindMethod(_pyqitotal_methods, (PyObject*) self, name);
-  if (res)
-    return res;
-
-  PyErr_Clear();
-  PyErr_SetString(PyExc_AttributeError, name);
-  return NULL;
+  return PyObject_GenericGetAttr((PyObject*)self, name);
 }
 
 /**
  * Returns the specified attribute in the qi total generator
  */
-static int _pyqitotal_setattr(PyQITotal* self, char* name, PyObject* val)
+static int _pyqitotal_setattro(PyQITotal* self, PyObject* name, PyObject* val)
 {
   int result = -1;
   if (name == NULL) {
     goto done;
   }
-  if (strcmp("gain", name) == 0) {
+  if (PY_COMPARE_STRING_WITH_ATTRO_NAME("gain", name) == 0) {
     if (PyInt_Check(val)) {
       if (!RaveQITotal_setGain(self->qitotal, (double)PyInt_AsLong(val))) {
         raiseException_gotoTag(done, PyExc_AttributeError, "gain must not be 0.0");
@@ -351,7 +342,7 @@ static int _pyqitotal_setattr(PyQITotal* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_AttributeError, "gain must be a number");
     }
-  } else if (strcmp("offset", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("offset", name) == 0) {
     if (PyInt_Check(val)) {
       RaveQITotal_setOffset(self->qitotal, (double)PyInt_AsLong(val));
     } else if (PyLong_Check(val)) {
@@ -361,7 +352,7 @@ static int _pyqitotal_setattr(PyQITotal* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_AttributeError, "offset must be a number");
     }
-  } else if (strcmp("datatype", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("datatype", name) == 0) {
     if (PyInt_Check(val)) {
       RaveQITotal_setDatatype(self->qitotal, PyInt_AsLong(val));
     } else {
@@ -381,21 +372,47 @@ done:
 /*@{ Type definitions */
 PyTypeObject PyQITotal_Type =
 {
-  PyObject_HEAD_INIT(NULL)0, /*ob_size*/
+  PyVarObject_HEAD_INIT(NULL, 0) /*ob_size*/
   "QITotalCore", /*tp_name*/
   sizeof(PyQITotal), /*tp_size*/
   0, /*tp_itemsize*/
   /* methods */
   (destructor)_pyqitotal_dealloc, /*tp_dealloc*/
   0, /*tp_print*/
-  (getattrfunc)_pyqitotal_getattr, /*tp_getattr*/
-  (setattrfunc)_pyqitotal_setattr, /*tp_setattr*/
-  0, /*tp_compare*/
-  0, /*tp_repr*/
-  0, /*tp_as_number */
+  (getattrfunc)0,               /*tp_getattr*/
+  (setattrfunc)0,               /*tp_setattr*/
+  0,                            /*tp_compare*/
+  0,                            /*tp_repr*/
+  0,                            /*tp_as_number */
   0,
-  0, /*tp_as_mapping */
-  0 /*tp_hash*/
+  0,                            /*tp_as_mapping */
+  0,                            /*tp_hash*/
+  (ternaryfunc)0,               /*tp_call*/
+  (reprfunc)0,                  /*tp_str*/
+  (getattrofunc)_pyqitotal_getattro, /*tp_getattro*/
+  (setattrofunc)_pyqitotal_setattro, /*tp_setattro*/
+  0,                            /*tp_as_buffer*/
+  Py_TPFLAGS_DEFAULT, /*tp_flags*/
+  0,                            /*tp_doc*/
+  (traverseproc)0,              /*tp_traverse*/
+  (inquiry)0,                   /*tp_clear*/
+  0,                            /*tp_richcompare*/
+  0,                            /*tp_weaklistoffset*/
+  0,                            /*tp_iter*/
+  0,                            /*tp_iternext*/
+  _pyqitotal_methods,              /*tp_methods*/
+  0,                            /*tp_members*/
+  0,                            /*tp_getset*/
+  0,                            /*tp_base*/
+  0,                            /*tp_dict*/
+  0,                            /*tp_descr_get*/
+  0,                            /*tp_descr_set*/
+  0,                            /*tp_dictoffset*/
+  0,                            /*tp_init*/
+  0,                            /*tp_alloc*/
+  0,                            /*tp_new*/
+  0,                            /*tp_free*/
+  0,                            /*tp_is_gc*/
 };
 /*@} End of Type definitions */
 
@@ -405,35 +422,36 @@ static PyMethodDef functions[] = {
   {NULL,NULL} /*Sentinel*/
 };
 
-PyMODINIT_FUNC
-init_qitotal(void)
+MOD_INIT(_qitotal)
 {
   PyObject *module=NULL,*dictionary=NULL;
   static void *PyQITotal_API[PyQITotal_API_pointers];
   PyObject *c_api_object = NULL;
-  PyQITotal_Type.ob_type = &PyType_Type;
+  MOD_INIT_SETUP_TYPE(PyQITotal_Type, &PyType_Type);
 
-  module = Py_InitModule("_qitotal", functions);
+  MOD_INIT_VERIFY_TYPE_READY(&PyQITotal_Type);
+
+  MOD_INIT_DEF(module, "_qitotal", NULL/*doc*/, functions);
   if (module == NULL) {
-    return;
+    return MOD_INIT_ERROR;
   }
+
   PyQITotal_API[PyQITotal_Type_NUM] = (void*)&PyQITotal_Type;
   PyQITotal_API[PyQITotal_GetNative_NUM] = (void *)PyQITotal_GetNative;
   PyQITotal_API[PyQITotal_New_NUM] = (void*)PyQITotal_New;
 
-  c_api_object = PyCObject_FromVoidPtr((void *)PyQITotal_API, NULL);
-
-  if (c_api_object != NULL) {
-    PyModule_AddObject(module, "_C_API", c_api_object);
-  }
-
+  c_api_object = PyCapsule_New(PyQITotal_API, PyQITotal_CAPSULE_NAME, NULL);
   dictionary = PyModule_GetDict(module);
-  ErrorObject = PyString_FromString("_qitotal.error");
+  PyDict_SetItemString(dictionary, "_C_API", c_api_object);
+
+  ErrorObject = PyErr_NewException("_qitotal.error", NULL, NULL);
   if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
     Py_FatalError("Can't define _qitotal.error");
+    return MOD_INIT_ERROR;
   }
 
   import_pyravefield();
   PYRAVE_DEBUG_INITIALIZE;
+  return MOD_INIT_SUCCESS(module);
 }
 /*@} End of Module setup */

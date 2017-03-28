@@ -38,10 +38,7 @@ from PyCartesianVolumeTest import *
 from PyVerticalProfileTest import *
 from PyRaveFieldTest import *
 from PyTransformTest import *
-
-A="""
 from PyVprCorrectionTest import *
-"""
 from PyProjectionTest import *
 from PyRaveIOTest import *
 from PyPolarNavTest import *
@@ -49,9 +46,7 @@ from PyAreaTest import *
 from PyRadarDefinitionTest import *
 from PyProjectionRegistryTest import *
 from PyAcrrTest import *
-A="""
 from PyGraTest import *
-"""
 from PyAreaRegistryTest import *
 A="""
 from PgfVolumePluginTest import *
@@ -60,8 +55,8 @@ from RaveScansun import *
 from PyDetectionRangeTest import *
 A="""
 from PyRaveTest import *
-from PyQITotalTest import *
 """
+from PyQITotalTest import *
 from PyPooCompositeAlgorithmTest import *
 A="""
 from rave_overshooting_quality_plugin_test import *
@@ -72,8 +67,8 @@ from qitotal_options_test import *
 from rave_qitotal_quality_plugin_test import *
 from rave_pgf_quality_registry_mgr_test import *
 from rave_quality_chain_registry_test import *
-from odc_hac_test import *
 """
+from odc_hac_test import *
 from rave_hexquant_test import *
 A="""
 from polar_merger_test import *
@@ -94,14 +89,15 @@ from area_registry_test import *
 """
 from PyDealiasTest import *
 from PyRadvolTest import *
-A="""
 from PyCtfilterTest import *
+A="""
 from PyPgfQtoolsTest import *
 from PyPgfLoggerTest import *
 from rave_util_test import *
 from RaveOdimSourceTest import *
+"""
 from PyBitmapGeneratorTest import *
-
+A="""
 #
 # Unless RAVE_TESTDB_URI has been set we don't want to run the dom db tests
 #

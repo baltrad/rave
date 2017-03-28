@@ -22,7 +22,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2013-10-09
  */
-#include "Python.h"
+#include "pyravecompat.h"
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>
@@ -262,64 +262,56 @@ static struct PyMethodDef _pycartesiancomposite_methods[] =
  * Returns the specified attribute in the cartesian
  * @param[in] self - the cartesian product
  */
-static PyObject* _pycartesiancomposite_getattr(PyCartesianComposite* self, char* name)
+static PyObject* _pycartesiancomposite_getattro(PyCartesianComposite* self, PyObject* name)
 {
-  PyObject* res = NULL;
-  if (strcmp("time", name) == 0) {
+  if (PY_COMPARE_STRING_WITH_ATTRO_NAME("time", name) == 0) {
     if (CartesianComposite_getTime(self->generator) != NULL) {
       return PyString_FromString(CartesianComposite_getTime(self->generator));
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("date", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("date", name) == 0) {
     if (CartesianComposite_getDate(self->generator) != NULL) {
       return PyString_FromString(CartesianComposite_getDate(self->generator));
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("quantity", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("quantity", name) == 0) {
     if (CartesianComposite_getQuantity(self->generator) != NULL) {
       return PyString_FromString(CartesianComposite_getQuantity(self->generator));
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("offset", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("offset", name) == 0) {
     return PyFloat_FromDouble(CartesianComposite_getOffset(self->generator));
-  } else if (strcmp("gain", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("gain", name) == 0) {
     return PyFloat_FromDouble(CartesianComposite_getGain(self->generator));
-  } else if (strcmp("nodata", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("nodata", name) == 0) {
     return PyFloat_FromDouble(CartesianComposite_getNodata(self->generator));
-  } else if (strcmp("undetect", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("undetect", name) == 0) {
     return PyFloat_FromDouble(CartesianComposite_getUndetect(self->generator));
-  } else if (strcmp("method", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("method", name) == 0) {
     return PyInt_FromLong(CartesianComposite_getMethod(self->generator));
-  } else if (strcmp("distance_field", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("distance_field", name) == 0) {
     if (CartesianComposite_getDistanceField(self->generator) != NULL) {
       return PyString_FromString(CartesianComposite_getDistanceField(self->generator));
     } else {
       Py_RETURN_NONE;
     }
   }
-
-  res = Py_FindMethod(_pycartesiancomposite_methods, (PyObject*) self, name);
-  if (res)
-    return res;
-
-  PyErr_Clear();
-  PyErr_SetString(PyExc_AttributeError, name);
-  return NULL;
+  return PyObject_GenericGetAttr((PyObject*)self, name);
 }
 
 /**
  * Returns the specified attribute in the polar volume
  */
-static int _pycartesiancomposite_setattr(PyCartesianComposite* self, char* name, PyObject* val)
+static int _pycartesiancomposite_setattro(PyCartesianComposite* self, PyObject* name, PyObject* val)
 {
   int result = -1;
   if (name == NULL) {
     goto done;
   }
-  if (strcmp("time", name) == 0) {
+  if (PY_COMPARE_STRING_WITH_ATTRO_NAME("time", name) == 0) {
     if (PyString_Check(val)) {
       if (!CartesianComposite_setTime(self->generator, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "time must be in the format HHmmss");
@@ -329,7 +321,7 @@ static int _pycartesiancomposite_setattr(PyCartesianComposite* self, char* name,
     } else {
       raiseException_gotoTag(done, PyExc_ValueError,"time must be of type string");
     }
-  } else if (strcmp("date", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("date", name) == 0) {
     if (PyString_Check(val)) {
       if (!CartesianComposite_setDate(self->generator, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "date must be in the format YYYYMMSS");
@@ -339,7 +331,7 @@ static int _pycartesiancomposite_setattr(PyCartesianComposite* self, char* name,
     } else {
       raiseException_gotoTag(done, PyExc_ValueError,"date must be of type string");
     }
-  } else if (strcmp("quantity", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("quantity", name) == 0) {
     if (PyString_Check(val)) {
       if (!CartesianComposite_setQuantity(self->generator,
                                           PyString_AsString(val))) {
@@ -355,41 +347,41 @@ static int _pycartesiancomposite_setattr(PyCartesianComposite* self, char* name,
       raiseException_gotoTag(done, PyExc_ValueError,
                              "quantity must be of type string");
     }
-  } else if (strcmp("offset", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("offset", name) == 0) {
     if (PyFloat_Check(val)) {
       CartesianComposite_setOffset(self->generator, PyFloat_AsDouble(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError,
                              "offset must be of type float");
     }
-  } else if (strcmp("gain", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("gain", name) == 0) {
     if (PyFloat_Check(val)) {
       CartesianComposite_setGain(self->generator, PyFloat_AsDouble(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError,
                              "gain must be of type float");
     }
-  } else if (strcmp("nodata", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("nodata", name) == 0) {
     if (PyFloat_Check(val)) {
       CartesianComposite_setNodata(self->generator, PyFloat_AsDouble(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError,
                              "nodata must be of type float");
     }
-  } else if (strcmp("undetect", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("undetect", name) == 0) {
     if (PyFloat_Check(val)) {
       CartesianComposite_setUndetect(self->generator, PyFloat_AsDouble(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError,
                              "undetect must be of type float");
     }
-  } else if (strcmp("method", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("method", name) == 0) {
     if (!PyInt_Check(val)
         || !CartesianComposite_setMethod(self->generator, PyInt_AsLong(val))) {
       raiseException_gotoTag(done, PyExc_ValueError,
                              "not a valid selection method");
     }
-  } else if (strcmp("distance_field", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("distance_field", name) == 0) {
     if (PyString_Check(val)) {
       if (!CartesianComposite_setDistanceField(self->generator,
                                                PyString_AsString(val))) {
@@ -406,7 +398,7 @@ static int _pycartesiancomposite_setattr(PyCartesianComposite* self, char* name,
                              "distance_field must be of type string");
     }
   } else {
-    raiseException_gotoTag(done, PyExc_AttributeError, name);
+    raiseException_gotoTag(done, PyExc_AttributeError, PY_RAVE_ATTRO_NAME_TO_STRING(name));
   }
   result = 0;
 done:
@@ -418,22 +410,47 @@ done:
 /*@{ Type definitions */
 PyTypeObject PyCartesianComposite_Type =
 {
-  PyObject_HEAD_INIT(NULL)0, /*ob_size*/
+  PyVarObject_HEAD_INIT(NULL, 0) /*ob_size*/
   "CartesianCompositeCore", /*tp_name*/
   sizeof(PyCartesianComposite), /*tp_size*/
   0, /*tp_itemsize*/
   /* methods */
   (destructor)_pycartesiancomposite_dealloc, /*tp_dealloc*/
   0, /*tp_print*/
-  (getattrfunc)_pycartesiancomposite_getattr, /*tp_getattr*/
-  (setattrfunc)_pycartesiancomposite_setattr, /*tp_setattr*/
-  0, /*tp_compare*/
-  0, /*tp_repr*/
-  0, /*tp_as_number */
+  (getattrfunc)0,               /*tp_getattr*/
+  (setattrfunc)0,               /*tp_setattr*/
+  0,                            /*tp_compare*/
+  0,                            /*tp_repr*/
+  0,                            /*tp_as_number */
   0,
-  0, /*tp_as_mapping */
-  0 /*tp_hash*/
-};
+  0,                            /*tp_as_mapping */
+  0,                            /*tp_hash*/
+  (ternaryfunc)0,               /*tp_call*/
+  (reprfunc)0,                  /*tp_str*/
+  (getattrofunc)_pycartesiancomposite_getattro, /*tp_getattro*/
+  (setattrofunc)_pycartesiancomposite_setattro, /*tp_setattro*/
+  0,                            /*tp_as_buffer*/
+  Py_TPFLAGS_DEFAULT, /*tp_flags*/
+  0,                            /*tp_doc*/
+  (traverseproc)0,              /*tp_traverse*/
+  (inquiry)0,                   /*tp_clear*/
+  0,                            /*tp_richcompare*/
+  0,                            /*tp_weaklistoffset*/
+  0,                            /*tp_iter*/
+  0,                            /*tp_iternext*/
+  _pycartesiancomposite_methods,/*tp_methods*/
+  0,                            /*tp_members*/
+  0,                            /*tp_getset*/
+  0,                            /*tp_base*/
+  0,                            /*tp_dict*/
+  0,                            /*tp_descr_get*/
+  0,                            /*tp_descr_set*/
+  0,                            /*tp_dictoffset*/
+  0,                            /*tp_init*/
+  0,                            /*tp_alloc*/
+  0,                            /*tp_new*/
+  0,                            /*tp_free*/
+  0,                            /*tp_is_gc*/};
 /*@} End of Type definitions */
 
 /*@{ Module setup */
@@ -458,32 +475,32 @@ static void add_long_constant(PyObject* dictionary, const char* name, long value
   Py_XDECREF(tmp);
 }
 
-PyMODINIT_FUNC
-init_cartesiancomposite(void)
+MOD_INIT(_cartesiancomposite)
 {
   PyObject *module=NULL,*dictionary=NULL;
   static void *PyCartesianComposite_API[PyCartesianComposite_API_pointers];
   PyObject *c_api_object = NULL;
-  PyCartesianComposite_Type.ob_type = &PyType_Type;
+  MOD_INIT_SETUP_TYPE(PyCartesianComposite_Type, &PyType_Type);
 
-  module = Py_InitModule("_cartesiancomposite", functions);
+  MOD_INIT_VERIFY_TYPE_READY(&PyCartesianComposite_Type);
+
+  MOD_INIT_DEF(module, "_cartesiancomposite", NULL/*doc*/, functions);
   if (module == NULL) {
-    return;
+    return MOD_INIT_ERROR;
   }
+
   PyCartesianComposite_API[PyCartesianComposite_Type_NUM] = (void*)&PyCartesianComposite_Type;
   PyCartesianComposite_API[PyCartesianComposite_GetNative_NUM] = (void *)PyCartesianComposite_GetNative;
   PyCartesianComposite_API[PyCartesianComposite_New_NUM] = (void*)PyCartesianComposite_New;
 
-  c_api_object = PyCObject_FromVoidPtr((void *)PyCartesianComposite_API, NULL);
-
-  if (c_api_object != NULL) {
-    PyModule_AddObject(module, "_C_API", c_api_object);
-  }
-
+  c_api_object = PyCapsule_New(PyCartesianComposite_API, PyCartesianComposite_CAPSULE_NAME, NULL);
   dictionary = PyModule_GetDict(module);
-  ErrorObject = PyString_FromString("_cartesiancomposite.error");
+  PyDict_SetItemString(dictionary, "_C_API", c_api_object);
+
+  ErrorObject = PyErr_NewException("_cartesiancomposite.error", NULL, NULL);
   if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
     Py_FatalError("Can't define _cartesiancomposite.error");
+    return MOD_INIT_ERROR;
   }
 
   add_long_constant(dictionary, "SelectionMethod_FIRST", CartesianCompositeSelectionMethod_FIRST);
@@ -497,5 +514,6 @@ init_cartesiancomposite(void)
   import_pyarea();
   import_array(); /*To make sure I get access to Numeric*/
   PYRAVE_DEBUG_INITIALIZE;
+  return MOD_INIT_SUCCESS(module);
 }
 /*@} End of Module setup */
