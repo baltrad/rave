@@ -46,7 +46,7 @@ def strToFloat(sval):
   result = 0.0
   try:
     result = float(sval)
-  except ValueError, e:
+  except ValueError:
     result = float(int(sval))
   return result
 
@@ -127,8 +127,8 @@ def parse_qitotal_site_information(cfile):
     try:
       w = site.attrib["weight"]
       weight = float(strToFloat(w))
-    except Exception, e:
-      print e.__str__()
+    except Exception as e:
+      print(e.__str__())
     
     qfields = site.findall("field")
     for f in qfields:
@@ -137,8 +137,8 @@ def parse_qitotal_site_information(cfile):
       try:
         w = f.attrib["weight"]
         fweight = float(strToFloat(w))
-      except Exception, e:
-        print e.__str__()
+      except Exception as e:
+        print(e.__str__())
       
       fields.append(qifield_information(fname, fweight))
         
@@ -166,4 +166,4 @@ def get_qitotal_site_information(cfile=None):
   return parse_qitotal_site_information(cfile)
 
 if __name__=="__main__":
-  print get_qitotal_site_information().__repr__()
+  print(get_qitotal_site_information().__repr__())

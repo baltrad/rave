@@ -22,7 +22,7 @@
 
 """
 import sys, string
-from types import IntType, FloatType, StringType, ListType, TupleType, LongType
+#from types import IntType, FloatType, StringType, ListType, TupleType, LongType
 #from numpy import ArrayType
 from numpy import ndarray
 from rave_defines import ENCODING
@@ -122,7 +122,7 @@ def seth5attr(e, dict, h5typ, attribute, value):
     elif h5typ is "string":
         e.text = unicode(value, ENCODING)
     else:
-        raise ValueError, "Illegal type"
+        raise ValueError("Illegal type")
 
 def addelem(root, attribute):
     from xml.etree.ElementTree import SubElement
@@ -141,4 +141,4 @@ def addelem(root, attribute):
 
 
 if __name__ is "__main__":
-    print __doc__
+    print(__doc__)

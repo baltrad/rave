@@ -65,7 +65,7 @@ def arglist2dict(arglist):
 #@return the volume
 def generateVolume(files, args):
   if len(files) <=0:
-    raise AttributeError, "Volume must consist of at least 1 scan"
+    raise AttributeError("Volume must consist of at least 1 scan")
 
   firstscan=False  
   volume = _polarvolume.new()

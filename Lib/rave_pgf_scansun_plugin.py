@@ -66,7 +66,7 @@ def NODfromSourceString(source):
 # @param source string containing the full value of /what/source
 # @return string containing the complete path to a file
 def Source2File(isource):
-    source = str(NODfromSourceString(isource).decode('utf-8'))
+    source = NODfromSourceString(isource)
     if not source: source = isource.replace(';','_').replace(',','_').replace(':','-')
     path = os.path.join(RAVEETC, "scansun")
     if not os.path.isdir(path): os.makedirs(path)

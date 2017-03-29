@@ -20,20 +20,21 @@ rave_info.py - Metadata structures and ways to deal with them.
 import sys, os, types
 
 #import cElementTree as ElementTree
-from xml.etree.ElementTree import _ElementInterface, ElementTree
+from xml.etree.ElementTree import Element
+#from xml.etree.ElementTree import _ElementInterface, ElementTree
 import rave_IO, rave_h5rad
 import H5radHelper
 from rave_defines import *
 
 # Stupid constants
-TYPES = {types.TupleType : 'sequence',
-         types.ListType  : 'sequence',
-         types.StringType: 'string',
-         types.IntType   : 'int',
-         types.FloatType : 'float'}
+TYPES = {tuple : 'sequence',
+         list  : 'sequence',
+         str : 'string',
+         int   : 'int',
+         float : 'float'}
 
 
-class INFO(_ElementInterface):
+class INFO(Element):
     """
     Fundamental object for managing metadata.
     Based almost entirely on Fredrik Lundh's ElementTree project.
@@ -80,7 +81,7 @@ class INFO(_ElementInterface):
         path = CheckPath(path)
         this = self.find(path)
         if this is None:
-            raise AttributeError, "No such attribute: %s" % path
+            raise AttributeError("No such attribute: %s" % path)
         else:
             t = this.get('type')
             if t is 'int':
@@ -92,7 +93,7 @@ class INFO(_ElementInterface):
             elif t in ['dataset', None]:
                 return str(this.text).encode(ENCODING)
             else:
-                raise TypeError, 'Unknown type "%s"' % t
+                raise TypeError('Unknown type "%s"' % t)
 
 
     def parse(self, filename):
@@ -181,7 +182,7 @@ class INFO(_ElementInterface):
             import __builtin__
             fd = __builtin__.open(file, 'w')
             sys.stdout = fd
-            print "<?xml version='1.0' encoding='%s'?>" % encoding
+            print("<?xml version='1.0' encoding='%s'?>" % encoding)
             rave_IO.prettyprint(self)
             fd.close()
             sys.stdout = sys.__stdout__
@@ -210,7 +211,7 @@ class INFO(_ElementInterface):
         """
         prefix = CheckPath(prefix)
         if set is None:
-            raise AttributeError, "Need number for this dataset."
+            raise AttributeError("Need number for this dataset.")
 
         else:
             newset = rave_h5rad.DatasetGroup(prefix=prefix, set=set, **args)
@@ -259,11 +260,11 @@ def CheckPath(path):
     Returns: The relative path to the given infoset attribute.
     """
     if path is None:
-        raise IOError, "Given path is None."
+        raise IOError("Given path is None.")
     elif len(path) == 0:
-        raise IOError, "Zero-length path given."
+        raise IOError("Zero-length path given.")
     elif path[0] is not '/':
-        raise SyntaxError, "Non-absolute path to element: %s\nAdd leading slash." % path
+        raise SyntaxError("Non-absolute path to element: %s\nAdd leading slash." % path)
     else:
         return path[1:]
         
@@ -274,4 +275,4 @@ __all__ = ['INFO', 'CheckPath']
 
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)

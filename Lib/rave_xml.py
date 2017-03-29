@@ -20,7 +20,6 @@ rave_xml.py
 Helpers for parsing and managing XML tags and attributes.
 """
 import re
-from types import IntType, FloatType
 from rave_defines import ENCODING
 
 class xmlmap:
@@ -47,7 +46,7 @@ class xmlmap:
     def validate(self, attrs):
         for attr in attrs:
             if not hasattr(self, attr):
-                raise AttributeError, "object lacks mandatory attribute "+attr
+                raise AttributeError("object lacks mandatory attribute "+attr)
 
 
 def add(o, e):
@@ -70,9 +69,9 @@ def add(o, e):
     elif t == 'float':
         setattr(o, i, float(text))
     elif t == 'sequence':
-        text = re.sub(" ", "", text)  # weed out spacebars
+        text = re.sub(b" ", b"", text)  # weed out spacebars
         L = []
-        for item in text.split(','):
+        for item in text.split(b','):
             L.append(eval(item))
         setattr(o, i, tuple(L))
     else:
@@ -116,4 +115,4 @@ def traverse_map(E, info, ID=''):
 __all__ = ["xmlmap", "add", "append"]
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)

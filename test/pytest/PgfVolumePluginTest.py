@@ -54,17 +54,17 @@ class PgfVolumePluginTest(unittest.TestCase):
     args = {"source":"selul","date":"20101023","time":"180000"}
     volume = rave_pgf_volume_plugin.generateVolume(self.FIXTURES, args)
 
-    self.assertNotEqual(-1, string.find(`type(volume)`, "PolarVolumeCore"))
-    self.assertAlmostEquals(66, volume.height)
-    self.assertAlmostEquals(65.432, volume.latitude*180.0/math.pi,4)
-    self.assertAlmostEquals(21.87, volume.longitude*180.0/math.pi,4)
-    self.assertEquals(6, volume.getNumberOfScans())
-    self.assertAlmostEquals(2.5, volume.getScan(0).elangle * 180.0/math.pi, 4)
-    self.assertAlmostEquals(4.0, volume.getScan(1).elangle * 180.0/math.pi, 4)
-    self.assertAlmostEquals(8.0, volume.getScan(2).elangle * 180.0/math.pi, 4)
-    self.assertAlmostEquals(14.0, volume.getScan(3).elangle * 180.0/math.pi, 4)
-    self.assertAlmostEquals(24.0, volume.getScan(4).elangle * 180.0/math.pi, 4)
-    self.assertAlmostEquals(40.0, volume.getScan(5).elangle * 180.0/math.pi, 4)
+    self.assertNotEqual(-1, str(type(volume)).find("PolarVolumeCore"))
+    self.assertAlmostEqual(66, volume.height)
+    self.assertAlmostEqual(65.432, volume.latitude*180.0/math.pi,4)
+    self.assertAlmostEqual(21.87, volume.longitude*180.0/math.pi,4)
+    self.assertEqual(6, volume.getNumberOfScans())
+    self.assertAlmostEqual(2.5, volume.getScan(0).elangle * 180.0/math.pi, 4)
+    self.assertAlmostEqual(4.0, volume.getScan(1).elangle * 180.0/math.pi, 4)
+    self.assertAlmostEqual(8.0, volume.getScan(2).elangle * 180.0/math.pi, 4)
+    self.assertAlmostEqual(14.0, volume.getScan(3).elangle * 180.0/math.pi, 4)
+    self.assertAlmostEqual(24.0, volume.getScan(4).elangle * 180.0/math.pi, 4)
+    self.assertAlmostEqual(40.0, volume.getScan(5).elangle * 180.0/math.pi, 4)
     self.assertEqual("NOD:selul,WMO:02092,RAD:SE41,PLC:Lule\xc3\xa5", volume.source)
 
   # Where's the test?

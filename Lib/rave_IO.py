@@ -18,7 +18,6 @@
 rave_IO.py - 
 """
 import os, string
-from types import IntType, LongType, FloatType
 import _pyhl
 from xml.etree.ElementTree import SubElement, ElementTree
 import rave, rave_info, rave_defines
@@ -36,17 +35,17 @@ def open(filename):
                     info, data, _h5nodes = open_hdf5(filename)
                     #if info.find("what/version").text != H5RAD_VERSION:
                     if info.find("what/version").text not in H5RAD_VERSIONS:
-                        raise IOError, "Contents of file %s not organized according to %s or earlier." % (filename, H5RAD_VERSION)
+                        raise IOError("Contents of file %s not organized according to %s or earlier." % (filename, H5RAD_VERSION))
                     return info, data, _h5nodes
 
                 except:
-                    raise IOError, "Failed to read file %s" % filename
+                    raise IOError("Failed to read file %s" % filename)
             else:
-                raise IOError, "%s is not an HDF5 file" % filename
+                raise IOError("%s is not an HDF5 file" % filename)
         else:
-            raise IOError, "%s is zero-length" % filename
+            raise IOError("%s is zero-length" % filename)
     else:
-        raise IOError, "%s is not a regular file" % filename
+        raise IOError("%s is not a regular file" % filename)
 
 
 def open_hdf5(filename):
@@ -233,7 +232,7 @@ def traverse_save(e, a, ID, datadict):
                 b.setArrayValue(-1, list(value.shape), value, h5typ, -1)
             elif typ == "sequence":
                 b = _pyhl.node(_pyhl.ATTRIBUTE_ID, IDA)
-                if type(value[0]) in [IntType, FloatType, LongType]:
+                if type(value[0]) in [int, float]:
                     v = []
                     for val in value:
                         v.append(str(val))
@@ -292,16 +291,16 @@ def prettyprint(element, encoding=None, indent=""):
     end_tag = ("</%s>" % element.tag).encode(encoding, "replace")
     if element:
         subindent = indent + "  "
-        print indent + start_tag
+        print(indent + start_tag)
         for subelement in element:
             prettyprint(subelement, encoding, subindent)
-        print indent + end_tag
+        prin(indent + end_tag)
     else:
-        print indent + "%s%s%s" % (
+        print(indent + "%s%s%s" % (
             start_tag,
             (element.text or "").encode(encoding, "replace"),
             end_tag
-            )
+            ))
 
 
 def Array2Tempfile(value):
@@ -332,4 +331,4 @@ __all__ = ['prettyprint','MetadataAsXMLstring','traverse_save','get_metadata',
            'open_hdf5','Array2Tempfile']
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)

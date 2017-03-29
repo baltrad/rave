@@ -48,9 +48,7 @@ from PyProjectionRegistryTest import *
 from PyAcrrTest import *
 from PyGraTest import *
 from PyAreaRegistryTest import *
-A="""
 from PgfVolumePluginTest import *
-"""
 from RaveScansun import *
 from PyDetectionRangeTest import *
 A="""

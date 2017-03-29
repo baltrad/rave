@@ -27,7 +27,6 @@ by the PROJECTIONS variable.
 TODO: Restructure this module like the 'area' and 'radar' modules.
 """
 import os
-from types import StringType
 import Proj
 from rave_defines import RAVECONFIG, ENCODING
 
@@ -75,7 +74,7 @@ def register(id, pcs):
     # validate
     for attr in ["name", "proj", "invproj"]:
         if not hasattr(pcs, attr):
-            raise AttributeError, "object lacks required attribute " + attr
+            raise AttributeError("object lacks required attribute " + attr)
     pcs.id = id
     _registry[id] = pcs
 
@@ -90,8 +89,9 @@ def items():
 # Object factory
 
 def pcs(Id):
-    if type(Id) != StringType:
-        raise KeyError, "Argument 'Id' not a string"
+    if type(Id) != str:
+        print("TYPE=%s"%str(type(Id)))
+        raise KeyError("Argument 'Id' not a string")
     return _registry[Id]
 
 
@@ -103,8 +103,7 @@ class usgs:
         try:
             import Proj
         except ImportError:
-            raise ImportError, "Module Proj is missing: "\
-                  "check python configuration"
+            raise ImportError("Module Proj is missing: check python configuration")
         self.name = name
         self.definition = definition
         self.instance = Proj.Proj(definition)
@@ -140,4 +139,4 @@ if __name__ == "__main__":
     import pcs # cannot use myself, due to recursive import
     for id in pcs.keys():
         p = pcs.pcs(id)
-        print id, p.name, p
+        print("%s, %s, %s"%(id, p.name, str(p)))

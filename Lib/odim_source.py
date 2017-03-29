@@ -36,8 +36,14 @@ import xml.etree.ElementTree as ET
 NOD, WMO, RAD, PLC, CCCC = {None:None}, {None:None}, {None:None}, {None:None}, {None:None}
 SOURCE = {None:None}
 
-
 initialized = 0
+
+# Hack to come around string handling differences between py3 and py27.
+# We might consider go all-in on unicode handling but that will require some time.
+use_source_encoding=False
+if sys.version_info < (3,):
+    use_source_encoding=True
+    
 
 ## Initializer. Reads XML and puts the values into dictionaries.
 # Because all radars must have a NOD identifier, the other identifiers are looked up
@@ -133,7 +139,7 @@ class ODIM_Source:
     # @param src string containing a '/what/source' attribute
     def __init__(self, src=None):
         self.source = src
-        if not isinstance(self.source,bytes):
+        if not isinstance(self.source,bytes) and self.source is not None:
           self.source = bytes(self.source, UTF8)
         self.wmo = self.nod = self.rad = self.plc = self.org = self.cty = self.cmt = None
         if self.source: self.split_source()
@@ -144,13 +150,13 @@ class ODIM_Source:
         for s in split:
             prefix, value = s.split(b':')
             prefix = prefix.lower()  # safety precaution in case someone changes case in their files
-            if   prefix == b'wmo': self.wmo = value  # Keep this as a string!
-            elif prefix == b'rad': self.rad = value
+            if   prefix == b'wmo': self.wmo = value.decode(UTF8)  # Keep this as a string!
+            elif prefix == b'rad': self.rad = value.decode(UTF8)
             elif prefix == b'plc': self.plc = value.decode(UTF8)
-            elif prefix == b'nod': self.nod = value
-            elif prefix == b'org': self.org = value
-            elif prefix == b'cty': self.cty = value
-            elif prefix == b'cmt': self.cmt = value 
+            elif prefix == b'nod': self.nod = value.decode(UTF8)
+            elif prefix == b'org': self.org = value.decode(UTF8)
+            elif prefix == b'cty': self.cty = value.decode(UTF8)
+            elif prefix == b'cmt': self.cmt = value.decode(UTF8) 
 
 
 ## Convenience function. Gets the NOD identifier from /what/source .
@@ -176,9 +182,14 @@ def CheckSource(inobj):
     if not S.nod:
         try:
             S.nod = NOD[S.wmo]
-            inobj.source = SOURCE[S.nod].encode(UTF8)
-        except:
-            pass
+            if SOURCE[S.nod] is not None:
+              if use_source_encoding:
+                inobj.source = SOURCE[S.nod].encode(UTF8)
+              else:
+                inobj.source = SOURCE[S.nod]
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
 
 
 if __name__ == "__main__":
