@@ -636,7 +636,7 @@ double DetectionRange_getAnalysisMaxRange(DetectionRange_t* self)
   return self->analysis_maxrange;
 }
 
-PolarScan_t* DetectionRange_top(DetectionRange_t* self, PolarVolume_t* pvol, double scale, double threshold_dBZN)
+PolarScan_t* DetectionRange_top(DetectionRange_t* self, PolarVolume_t* pvol, double scale, double threshold_dBZN, char* paramname)
 {
   PolarScan_t* maxdistancescan = NULL;
   PolarScan_t* result = NULL;
@@ -708,6 +708,8 @@ PolarScan_t* DetectionRange_top(DetectionRange_t* self, PolarVolume_t* pvol, dou
         double elangle = 0.0, lower_elangle = 0.0, height = 0.0, lower_height = 0.0;
         double binh = 0.0, lower_binh = 0.0, Dh = 0.0, dBZN = 0.0, lower_dBZN = 0.0;
         RaveValueType dBZN_type = RaveValueType_UNDEFINED, lower_dBZN_type = RaveValueType_UNDEFINED;
+	PolarScan_setDefaultParameter(scan, paramname);
+	PolarScan_setDefaultParameter(lowscan, paramname);
 
         bi = PolarScan_getRangeIndex(scan, range);
         lower_bi = PolarScan_getRangeIndex(lowscan, range);
