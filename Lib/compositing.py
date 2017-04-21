@@ -34,6 +34,7 @@ import _area
 import _projection
 import _gra
 import _raveio
+import _bitmapgenerator
 
 import logging
 import string
@@ -50,6 +51,8 @@ import area
 import rave_area
 import odim_source
 import rave_projection
+import rave_quality_plugin
+from rave_quality_plugin import QUALITY_CONTROL_MODE_ANALYZE, QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY   
 
 from gadjust.gra import gra_coefficient
 from rave_defines import CENTER_ID, GAIN, OFFSET
@@ -96,6 +99,7 @@ class compositing(object):
     self.elangle = 0.0
     self.range = 200000.0
     self.selection_method = _pycomposite.SelectionMethod_NEAREST 
+    self.quality_control_mode = rave_quality_plugin.QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY
     self.qitotal_field = None
     self.applygra = False
     self.zr_A = 200.0
@@ -111,6 +115,7 @@ class compositing(object):
     self.dumppath = None
     self.dump = False
     self.use_site_source = False
+    self.radar_index_mapping = {}
     
   def generate(self, dd, dt, area=None):
     return self._generate(dd, dt, area)
@@ -119,6 +124,7 @@ class compositing(object):
     if self.verbose:
       self.logger.info("Generating cartesian image from %d files"%len(self.filenames))
       self.logger.debug("Detectors = %s"%`self.detectors`)
+      self.logger.debug("Quality control mode = %s"%`self.quality_control_mode`)
       self.logger.debug("Product = %s"%self._product_repr())
       self.logger.debug("Quantity = %s"%self.quantity)
       self.logger.debug("Range = %f"%self.range)
@@ -155,6 +161,20 @@ class compositing(object):
       v=v[1:]
     return v
 
+  ##
+  # Returns the next available radar
+  def get_next_radar_index(self):
+    if len(self.radar_index_mapping)==0:
+      return 1
+    v = self.radar_index_mapping.values()
+    v.sort()
+    idx = 1
+    for i in v:
+      if idx != i:
+        return idx
+      idx = idx + 1
+    return idx
+
   ## Generates the cartesian image.
   #
   # @param dd: date in format YYYYmmdd
@@ -168,9 +188,19 @@ class compositing(object):
     
     self.logger.debug("Generating composite with date and time %sT%s for area %s", dd, dt, area)
     
-    objects, nodes, how_tasks = self.fetch_objects()
+    objects, nodes, how_tasks, all_files_malfunc = self.fetch_objects()
+    
+    if all_files_malfunc:
+      self.logger.info("Content of all provided files were marked as 'malfunc'. Since option 'ignore_malfunc' is set, no composite is generated!")
+      return None
     
     objects, algorithm, qfields = self.quality_control_objects(objects)
+    
+    self.logger.debug("Quality controls for composite generation: %s", (",".join(qfields)))
+    
+    if len(objects) == 0:
+      self.logger.info("No objects provided to the composite generator. No composite will be generated!")
+      return None
 
     objects=objects.values()
 
@@ -210,14 +240,23 @@ class compositing(object):
     if algorithm is not None:
       generator.algorithm = algorithm
       
-    if len(objects) == 0:
-      self.logger.info("No objects provided to the composite generator.")
-      if dd is None or dt is None:
-        self.logger.error("Can not create a composite without specifying a valid date / time when no objects are provided.")
-        raise Exception, "Can not create a composite without specifying a valid date / time when no objects are provided."
-      
     for o in objects:
       generator.add(o)
+      # We want to ensure that we get a proper indexing of included radar
+      sourceid = o.source
+      try:
+        osource = odim_source.ODIM_Source(o.source)
+        if osource.wmo:
+          sourceid = "WMO:%s"%osource.wmo
+        elif osource.rad:
+          sourceid = "RAD:%s"%osource.rad
+        elif osource.nod:
+          sourceid = "NOD:%s"%osource.nod
+      except:
+        pass
+      
+      if not sourceid in self.radar_index_mapping.keys():
+        self.radar_index_mapping[sourceid] = self.get_next_radar_index()
     
     generator.selection_method = self.selection_method
     generator.date=o.date if dd is None else dd 
@@ -234,6 +273,9 @@ class compositing(object):
     
     if self.verbose:
       self.logger.info("Generating cartesian composite")
+    
+    generator.applyRadarIndexMapping(self.radar_index_mapping)
+    
     result = generator.nearest(pyarea, qfields)
     
     if self.applyctfilter:
@@ -253,6 +295,13 @@ class compositing(object):
         else:
           self.logger.warn("Failed to generate gra field....")
     
+    # Hack to create a BRDR field if the qfields contains se.smhi.composite.index.radar
+    if "se.smhi.composite.index.radar" in qfields:
+      bitmapgen = _bitmapgenerator.new()
+      brdr_field = bitmapgen.create_intersect(result.getParameter(self.quantity), "se.smhi.composite.index.radar")
+      brdr_param = result.createParameter("BRDR", _rave.RaveDataType_UCHAR)
+      brdr_param.setData(brdr_field.getData())
+      
     if self.applygapfilling:
       if self.verbose:
         self.logger.debug("Applying gap filling")
@@ -307,6 +356,11 @@ class compositing(object):
     else:
       raise ValueError, "Only supported selection methods are NEAREST_RADAR or HEIGHT_ABOVE_SEALEVEL"
   
+  def set_quality_control_mode_from_string(self, modestr):
+    if modestr.lower() not in [QUALITY_CONTROL_MODE_ANALYZE, QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY]:
+      raise ValueError, "Invalid quality control mode (%s), only supported modes are analyze_and_apply or analyze"%modestr.lower()
+    self.quality_control_mode = modestr.lower()
+  
   def quality_control_objects(self, objects):
     algorithm = None
     result = {}
@@ -316,7 +370,7 @@ class compositing(object):
       for d in self.detectors:
         p = rave_pgf_quality_registry.get_plugin(d)
         if p != None:
-          process_result = p.process(obj, self.reprocess_quality_field)
+          process_result = p.process(obj, self.reprocess_quality_field, self.quality_control_mode)
           if isinstance(process_result, tuple):
             obj = process_result[0]
             detector_qfields = process_result[1]
@@ -346,6 +400,7 @@ class compositing(object):
     nodes = ""
     objects={}
     tasks = []
+    malfunc_files = 0
     for fname in self.filenames:
       obj = None
       try:
@@ -354,7 +409,7 @@ class compositing(object):
         else:
           obj = _raveio.open(fname).object
       except IOError:
-        self.logger.exception("Failed to open %s"%fname)
+        self.logger.exception("Failed to open %s", fname)
       
       is_scan = _polarscan.isPolarScan(obj)
       if is_scan:
@@ -363,12 +418,14 @@ class compositing(object):
         is_pvol = _polarvolume.isPolarVolume(obj)
         
       if not is_scan and not is_pvol:
-        self.logger.info("Input file %s is neither polar scan or volume, ignoring." % fname)
+        self.logger.warn("Input file %s is neither polar scan or volume, ignoring.", fname)
         continue
 
       if self.ignore_malfunc:
         obj = rave_util.remove_malfunc(obj)
         if obj is None:
+          self.logger.info("Input file %s detected as 'malfunc', ignoring.", fname)
+          malfunc_files += 1
           continue
       
       node = odim_source.NODfromSource(obj)
@@ -391,7 +448,9 @@ class compositing(object):
       
     how_tasks = ",".join(tasks)
     
-    return objects, nodes, how_tasks
+    all_files_malfunc = (len(self.filenames) > 0 and malfunc_files == len(self.filenames))
+    
+    return objects, nodes, how_tasks, all_files_malfunc
   
   def add_how_task_from_scan(self, scan, tasks):
     if scan.hasAttribute('how/task'):

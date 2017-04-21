@@ -13,4 +13,5 @@
   <quality-plugin class="dealias_plugin" module="rave_dealias_quality_plugin" name="dealias" />
   <quality-plugin name="zdiff" class="rave_zdiff_quality_plugin" module="rave_zdiff_quality_plugin" />
   <quality-plugin name="scansun" class="scansun_quality_plugin" module="rave_scansun_quality_plugin" />
+  <quality-plugin class="rave_radarindex_quality_plugin" module="rave_radarindex_quality_plugin" name="radar-index"/>
 </rave-pgf-quality-registry>

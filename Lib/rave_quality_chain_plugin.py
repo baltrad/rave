@@ -24,6 +24,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @date 2014-12-06
 import rave_quality_chain_registry
 from rave_quality_plugin import rave_quality_plugin
+from rave_quality_plugin import QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY
+
 import odim_source
 import rave_pgf_quality_registry
 import rave_pgf_logger
@@ -48,7 +50,7 @@ class rave_quality_chain_plugin(rave_quality_plugin):
   # @param obj: A RAVE object that should be processed.
   # @return: The modified object if this quality plugin has performed changes 
   # to the object.
-  def process(self, obj, reprocess_quality_flag=True, arguments=None):
+  def process(self, obj, reprocess_quality_flag=True, quality_control_mode=QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY, arguments=None):
     src = odim_source.NODfromSource(obj)
     try:
       chain = self.chain_registry.get_chain(src)
@@ -62,9 +64,13 @@ class rave_quality_chain_plugin(rave_quality_plugin):
       if p != None:
         try:
           if link.arguments() is not None:
-            obj, plugin_qfield = p.process(obj, reprocess_quality_flag, link.arguments())
+            newargs = {}
+            if arguments != None:
+              newargs.update(arguments)
+            newargs.update(link.arguments())
+            obj, plugin_qfield = p.process(obj, reprocess_quality_flag, quality_control_mode, newargs)
           else:
-            obj, plugin_qfield = p.process(obj, reprocess_quality_flag)
+            obj, plugin_qfield = p.process(obj, reprocess_quality_flag, quality_control_mode, arguments)
           na = p.algorithm()
           qfields += plugin_qfield
           if algorithm == None and na != None: # Try to get the generator algorithm != None 

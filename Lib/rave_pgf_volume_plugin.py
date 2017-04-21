@@ -38,6 +38,7 @@ import rave_tempfile
 import odim_source
 import re
 import rave_pgf_quality_registry
+from rave_quality_plugin import QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY
 
 from rave_defines import CENTER_ID
 
@@ -96,11 +97,11 @@ def generateVolume(files, args):
 # @param volume: the volume to perform the quality controls on
 # @param detectors: the detectors that should be run on the volume
 #
-def perform_quality_control(volume, detectors):
+def perform_quality_control(volume, detectors, qc_mode=QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY):
   for d in detectors:
     p = rave_pgf_quality_registry.get_plugin(d)
     if p != None:
-      volume = p.process(volume)
+      volume = p.process(volume, True, qc_mode)
       if isinstance(volume,tuple):
         volume, algorithm = volume[0],volume[1]
   return volume
@@ -112,6 +113,8 @@ def perform_quality_control(volume, detectors):
 def generate(files, arguments):
   args = arglist2dict(arguments)
   
+  quality_control_mode = QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY
+  
   volume = generateVolume(files, args)
   
   fileno, outfile = rave_tempfile.mktemp(suffix='.h5', close="True")
@@ -121,7 +124,10 @@ def generate(files, arguments):
   else:
       detectors = []
 
-  volume = perform_quality_control(volume, detectors)
+  if "qc-mode" in args.keys():
+    quality_control_mode = args["qc-mode"]
+
+  volume = perform_quality_control(volume, detectors, quality_control_mode.lower())
 
   ios = _raveio.new()
   ios.object = volume

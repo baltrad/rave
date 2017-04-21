@@ -124,6 +124,7 @@ class multi_composite_arguments(object):
     self.verbose = False
     self.dump = False
     self.dumppath = None
+    self.radar_index_mapping = {}
   
   ##
   # Generate function. Basically same as calling compositing.generate but the pyarea is created from the
@@ -158,6 +159,7 @@ class multi_composite_arguments(object):
     comp.reprocess_quality_field = self.reprocess_quality_field
     comp.dump = self.dump
     comp.dumppath = self.dumppath
+    comp.radar_index_mapping = self.radar_index_mapping
     
     pyarea = _area.new()
     pyarea.id = "tiled area subset %s"%tid
@@ -170,7 +172,12 @@ class multi_composite_arguments(object):
     
     logger.info("Generating composite for tile %s"%self.area_definition.id)
     result = comp.generate(dd, dt, pyarea)
-    logger.info("Finished generating composite for tile %s"%self.area_definition.id)
+    
+    if result == None:
+      logger.info("No composite for tile %s could be generated.", self.area_definition.id)
+      return (tid, None)
+    else:
+      logger.info("Finished generating composite for tile %s", self.area_definition.id)      
       
     fileno, outfile = rave_tempfile.mktemp(suffix='.h5', close="True")
   
@@ -220,7 +227,7 @@ class tiled_compositing(object):
   def _fetch_file_objects(self):
     self.logger.info("Fetching (and processing) %d files for tiled compositing"%len(self.compositing.filenames))
 
-    result, nodes, how_tasks = self.compositing.fetch_objects()
+    result, nodes, how_tasks, all_files_malfunc = self.compositing.fetch_objects()
     if self.preprocess_qc:
       self._do_remove_temporary_files=False
       result, algorithm = self.compositing.quality_control_objects(result)
@@ -233,7 +240,7 @@ class tiled_compositing(object):
 
     self.logger.info("Finished fetching (and processing) %d files for tiled compositing"%len(self.compositing.filenames))
 
-    return (result, nodes, how_tasks)
+    return (result, nodes, how_tasks, all_files_malfunc)
 
   ##
   # Fetches the file objects including the quality control by utilizing the multiprocessing
@@ -293,11 +300,11 @@ class tiled_compositing(object):
     self.compositing.filenames = filenames
     self._do_remove_temporary_files=True
     
-    result, nodes, how_tasks = self.compositing.fetch_objects()
+    result, nodes, how_tasks, all_files_malfunc = self.compositing.fetch_objects()
     
     self.logger.info("MP Fetching (and processing) %d files for tiled compositing"%len(self.compositing.filenames))
     
-    return (result, nodes, how_tasks)
+    return (result, nodes, how_tasks, all_files_malfunc)
 
 
   ##
@@ -358,6 +365,10 @@ class tiled_compositing(object):
     # Now, make sure we have the correct files in the various areas
     self._add_files_to_argument_list(args, tiled_areas)
 
+    # And add the radar index value to be used for each radar source so that each tile
+    # have same information
+    self._add_radar_index_value_to_argument_list(args)
+
     # We also must ensure that if any arg contains 0 files, there must be a date/time set
     if not self._ensure_date_and_time_on_args(args):
       raise Exception, "Could not ensure existing date and time for composite"
@@ -403,6 +414,28 @@ class tiled_compositing(object):
       
     self.logger.info("Finished splitting polar object")
   
+  def _add_radar_index_value_to_argument_list(self, args):
+    ctr = 1
+    for k in self.file_objects.keys():
+      v = self.file_objects[k]
+      if not _polarscan.isPolarScan(v) and not _polarvolume.isPolarVolume(v):
+        continue
+      sourceid = v.source
+      try:
+        osource = odim_source.ODIM_Source(v.source)
+        if osource.wmo:
+          sourceid = "WMO:%s"%osource.wmo
+        elif osource.rad:
+          sourceid = "RAD:%s"%osource.rad
+        elif osource.nod:
+          sourceid = "NOD:%s"%osource.nod
+      except:
+        pass
+            
+      for arg in args:
+        arg[0].radar_index_mapping[sourceid] = ctr
+      ctr = ctr + 1        
+
   def _ensure_date_and_time_on_args(self, args):
     dtstr = None
     ddstr = None
@@ -440,9 +473,13 @@ class tiled_compositing(object):
     pyarea = my_area_registry.getarea(area)
 
     if self.preprocess_qc and self.mp_process_qc and self.number_of_quality_control_processes > 1:
-      self.file_objects, self.nodes, self.how_tasks = self._fetch_file_objects_mp()
+      self.file_objects, self.nodes, self.how_tasks, all_files_malfunc = self._fetch_file_objects_mp()
     else:
-      self.file_objects, self.nodes, self.how_tasks = self._fetch_file_objects()
+      self.file_objects, self.nodes, self.how_tasks, all_files_malfunc = self._fetch_file_objects()
+      
+    if all_files_malfunc:
+      self.logger.info("Content of all provided files were marked as 'malfunc'. Since option 'ignore_malfunc' is set, no composite is generated!")
+      return None
 
     args = self._create_arguments(dd, dt, pyarea)
 
@@ -473,13 +510,19 @@ class tiled_compositing(object):
     objects = []
     try:
       for v in results[0]:
-        o = _raveio.open(v[1]).object
-        if _cartesianvolume.isCartesianVolume(o):
-          o = o.getImage(0)
-          o.objectType = _rave.Rave_ObjectType_COMP
-        objects.append(o)
+        tile_file = v[1]
+        if tile_file == None:
+          self.logger.warn("No partial composite for tile area %s was created. This tile will therefore not be included in complete composite.", v[0])
+        else:
+          o = _raveio.open(tile_file).object
+          if _cartesianvolume.isCartesianVolume(o):
+            o = o.getImage(0)
+            o.objectType = _rave.Rave_ObjectType_COMP
+          objects.append(o)
         
       t = _transform.new()
+
+      self.logger.debug("Combining %d tiles into one composite for area %s.", len(objects), area)
 
       result = t.combine_tiles(pyarea, objects)
       
@@ -536,7 +579,7 @@ def execute_quality_control(args):
     comp.reprocess_quality_field = reprocess_quality_field
     comp.ignore_malfunc = ignore_malfunc
     
-    objects, nodes = comp.fetch_objects()
+    objects, nodes, how_tasks, all_files_malfunc = comp.fetch_objects()
     
     objects, algorithm = comp.quality_control_objects(objects)
 

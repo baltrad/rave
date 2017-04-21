@@ -87,6 +87,9 @@ def generate(files, arguments):
   if "anomaly-qc" in args.keys():
     comp.detectors = string.split(args["anomaly-qc"], ",")
 
+  if "qc-mode" in args.keys():
+    comp.set_quality_control_mode_from_string(args["qc-mode"])
+
   if "ignore-malfunc" in args.keys():
     try:
       if args["ignore-malfunc"].lower() in ["true", "yes", "y", "1"]:
@@ -146,6 +149,10 @@ def generate(files, arguments):
     comp = tiled_compositing(comp)
   
   result = comp.generate(args["date"], args["time"], args["area"])
+  
+  if result == None:
+    logger.info("No composite could be generated.")
+    return None
   
   fileno, outfile = rave_tempfile.mktemp(suffix='.h5', close="True")
   

@@ -32,7 +32,7 @@ import _raveio
 
 class rave_distance_quality_plugin_test(unittest.TestCase):
   VOLUME_FIXTURE = "fixtures/pvol_seang_20090501T120000Z.h5"
-  SCAN_FIXTURE = "fixtures/scan_sehud_0.5_20110126T184500Z.h5"
+  SCAN_FIXTURE = "fixtures/scan_sehuv_0.5_20110126T184500Z.h5"
   classUnderTest = None
     
   def setUp(self):
@@ -60,6 +60,11 @@ class rave_distance_quality_plugin_test(unittest.TestCase):
   def test_process_reprocess_false(self):
     vol = _raveio.open(self.VOLUME_FIXTURE).object
     result, _ = self.classUnderTest.process(vol, reprocess_quality_flag=False)
+    self.assertTrue(vol == result)
+
+  def test_process_quality_control_mode(self):
+    vol = _raveio.open(self.VOLUME_FIXTURE).object
+    result, _ = self.classUnderTest.process(vol, reprocess_quality_flag=True, quality_control_mode="analyze")
     self.assertTrue(vol == result)
 
   def test_algorithm(self):

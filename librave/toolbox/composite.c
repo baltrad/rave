@@ -29,7 +29,6 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_alloc.h"
 #include "rave_datetime.h"
 #include <string.h>
-#include "raveobject_hashtable.h"
 #include "rave_field.h"
 
 /**
@@ -44,10 +43,15 @@ struct _Composite_t {
   double range;  /*< the range when generating pmax, default = 500000 meters */
   RaveList_t* parameters; /**< the parameters to generate */
   RaveDateTime_t* datetime;  /**< the date and time */
-  RaveObjectList_t* list;
+  RaveList_t* objectList;
   CompositeAlgorithm_t* algorithm; /**< the specific algorithm */
   char* qiFieldName; /**< the Quality Indicator field name to use when determining the radar usage */
 };
+
+typedef struct CompositeRadarItem {
+  RaveCoreObject* object;
+  int radarIndexValue;
+} CompositeRadarItem_t;
 
 /**
  * Structure for keeping track on parameters that should be composited.
@@ -79,6 +83,9 @@ typedef struct CompositeValues_t {
 
 /** The name of the task for specifying distance to radar */
 #define DISTANCE_TO_RADAR_HOW_TASK "se.smhi.composite.distance.radar"
+
+/** The name of the task for indexing the radars used */
+#define RADAR_INDEX_HOW_TASK "se.smhi.composite.index.radar"
 
 /*@{ Private functions */
 /**
@@ -135,6 +142,90 @@ static void CompositeInternal_freeParameterList(RaveList_t** p)
 }
 
 /**
+ * Frees the radar item
+ * @param[in] p - the radar item to release
+ */
+static void CompositeInternal_freeRadarItem(CompositeRadarItem_t* p)
+{
+  if (p != NULL) {
+    RAVE_OBJECT_RELEASE(p->object);
+    RAVE_FREE(p);
+  }
+}
+
+/**
+ * Frees the list of radar items
+ * @param[in] p - the list to be released
+ */
+static void CompositeInternal_freeObjectList(RaveList_t** p)
+{
+  if (p != NULL && *p != NULL) {
+    CompositeRadarItem_t* ri = RaveList_removeLast(*p);
+    while (ri != NULL) {
+      CompositeInternal_freeRadarItem(ri);
+      ri = RaveList_removeLast(*p);
+    }
+    RAVE_OBJECT_RELEASE(*p);
+  }
+}
+
+
+/**
+ * Clones a radar item
+ * @param[in] p - item to clone
+ * @return the clone or NULL on failure
+ */
+static CompositeRadarItem_t* CompositeInternal_cloneRadarItem(CompositeRadarItem_t* p)
+{
+  CompositeRadarItem_t* result = NULL;
+  if (p != NULL) {
+    result = RAVE_MALLOC(sizeof(CompositeRadarItem_t));
+    if (result != NULL) {
+      result->object = RAVE_OBJECT_CLONE(p->object);
+      result->radarIndexValue = p->radarIndexValue;
+      if (result->object == NULL) {
+        RAVE_FREE(result);
+        result = NULL;
+      }
+    }
+  }
+  return result;
+}
+
+/**
+ * Clones a parameter list
+ * @param[in] p - the parameter list to clone
+ * @return the clone or NULL on failure
+ */
+static RaveList_t* CompositeInternal_cloneRadarItemList(RaveList_t* p)
+{
+  int len = 0, i = 0;
+  RaveList_t *result = NULL, *clone = NULL;;
+  if (p != NULL) {
+    clone = RAVE_OBJECT_NEW(&RaveList_TYPE);
+    if (clone != NULL) {
+      len = RaveList_size(p);
+      for (i = 0; i < len; i++) {
+        CompositeRadarItem_t* cp = RaveList_get(p, i);
+        CompositeRadarItem_t* cpclone = CompositeInternal_cloneRadarItem(cp);
+        if (cpclone == NULL || !RaveList_add(clone, cpclone)) {
+          if (cpclone != NULL) {
+            RAVE_OBJECT_RELEASE(cpclone->object);
+            RAVE_FREE(cpclone);
+          }
+          goto done;
+        }
+      }
+    }
+  }
+
+  result = RAVE_OBJECT_COPY(clone);
+done:
+  RAVE_OBJECT_RELEASE(clone);
+  return result;
+}
+
+/**
  * Clones a parameter
  * @param[in] p - parameter to clone
  * @return the clone or NULL on failure
@@ -154,6 +245,44 @@ static CompositingParameter_t* CompositeInternal_cloneParameter(CompositingParam
       }
     }
   }
+  return result;
+}
+
+/**
+ * Verifies that the radar index mapping contains a mapping between string - long rave atttribute
+ * @param[in] src - the mapping
+ * @return 1 if ok, otherwise 0
+ */
+static int CompositeInternal_verifyRadarIndexMapping(RaveObjectHashTable_t* src)
+{
+  RaveList_t* keys = NULL;
+  RaveAttribute_t* attr = NULL;
+  int result = 0;
+
+  if (src == NULL) {
+    goto done;
+  }
+
+  keys = RaveObjectHashTable_keys(src);
+  if (keys != NULL) {
+    int i;
+    int nattrs = RaveList_size(keys);
+    for (i = 0; i < nattrs; i++) {
+      const char* key = (const char*)RaveList_get(keys, i);
+      attr = (RaveAttribute_t*)RaveObjectHashTable_get(src, key);
+      if (attr == NULL || !RAVE_OBJECT_CHECK_TYPE(attr, &RaveAttribute_TYPE) || RaveAttribute_getFormat(attr) != RaveAttribute_Format_Long) {
+        RAVE_ERROR0("Could not handle radar index mapping, must be mapping between key - long attribute");
+        goto done;
+      }
+      RAVE_OBJECT_RELEASE(attr);
+    }
+  }
+
+  result = 1;
+done:
+
+  RaveList_freeAndDestroy(&keys);
+  RAVE_OBJECT_RELEASE(attr);
   return result;
 }
 
@@ -289,18 +418,18 @@ static int Composite_constructor(RaveCoreObject* obj)
   this->range = 500000.0;
   this->parameters = NULL;
   this->algorithm = NULL;
-  this->list = RAVE_OBJECT_NEW(&RaveObjectList_TYPE);
+  this->objectList = RAVE_OBJECT_NEW(&RaveList_TYPE);
   this->datetime = RAVE_OBJECT_NEW(&RaveDateTime_TYPE);
   this->parameters = RAVE_OBJECT_NEW(&RaveList_TYPE);
   this->qiFieldName = NULL;
 
-  if (this->list == NULL || this->parameters == NULL || this->datetime == NULL) {
+  if (this->objectList == NULL || this->parameters == NULL || this->datetime == NULL) {
     goto error;
   }
   return 1;
 error:
   CompositeInternal_freeParameterList(&this->parameters);
-  RAVE_OBJECT_RELEASE(this->list);
+  CompositeInternal_freeObjectList(&this->objectList);
   RAVE_OBJECT_RELEASE(this->datetime);
   return 0;
 }
@@ -321,13 +450,14 @@ static int Composite_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj
   this->range = src->range;
   this->algorithm = NULL;
   this->parameters = CompositeInternal_cloneParameterList(src->parameters);
-  this->list = RAVE_OBJECT_CLONE(src->list);
+  this->objectList = CompositeInternal_cloneRadarItemList(src->objectList);
   this->datetime = RAVE_OBJECT_CLONE(src->datetime);
   this->qiFieldName = NULL;
 
-  if (this->list == NULL || this->datetime == NULL || this->parameters == NULL) {
+  if (this->objectList == NULL || this->datetime == NULL || this->parameters == NULL) {
     goto error;
   }
+
   if (!Composite_setQualityIndicatorFieldName(this, src->qiFieldName)) {
     goto error;
   }
@@ -342,7 +472,7 @@ static int Composite_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj
   return 1;
 error:
   CompositeInternal_freeParameterList(&this->parameters);
-  RAVE_OBJECT_RELEASE(this->list);
+  CompositeInternal_freeObjectList(&this->objectList);
   RAVE_OBJECT_RELEASE(this->datetime);
   RAVE_OBJECT_RELEASE(this->algorithm);
   RAVE_FREE(this->qiFieldName);
@@ -356,7 +486,7 @@ error:
 static void Composite_destructor(RaveCoreObject* obj)
 {
   Composite_t* this = (Composite_t*)obj;
-  RAVE_OBJECT_RELEASE(this->list);
+  CompositeInternal_freeObjectList(&this->objectList);
   RAVE_OBJECT_RELEASE(this->datetime);
   CompositeInternal_freeParameterList(&this->parameters);
   RAVE_OBJECT_RELEASE(this->algorithm);
@@ -401,6 +531,225 @@ static void CompositeInternal_resetCompositeValues(Composite_t* composite, int n
     p[i].name = (const char*)((CompositingParameter_t*)RaveList_get(composite->parameters, i))->name;
     p[i].qivalue = 0.0;
   }
+}
+
+/**
+ * Tries to find the next available integer that is not filtered by indexes.
+ * @param[in] indexes - filter of already used integers
+ * @param[in] n_objs - number of indexes
+ * @param[in] available - the integer that should be tested for availability
+ * @return 1 if already exists, otherwise 0
+ */
+static int CompositeInternal_containsRadarIndex(int* indexes, int n_objs, int available)
+{
+  int i = 0;
+  for (i = 0; i < n_objs; i++) {
+    if (indexes[i] == available) {
+      return 1;
+    }
+  }
+  return 0;
+}
+
+static char* CompositeInternal_getTypeAndIdFromSource(const char* source, const char* id)
+{
+  char* result = NULL;
+  if (source != NULL && id != NULL) {
+    char* p = strstr(source, id);
+    if (p != NULL) {
+      int len = 0;
+      char* pbrk = NULL;
+      len = strlen(p);
+      pbrk = strpbrk((const char*)p, ",");
+
+      if (pbrk != NULL) {
+        len = pbrk - p;
+      }
+      result = RAVE_MALLOC(sizeof(char) * (len + 1));
+      if (result != NULL) {
+        strncpy(result, p, len);
+        result[len] = '\0';
+      }
+    }
+  }
+  return result;
+}
+
+static char* CompositeInternal_getIdFromSource(const char* source, const char* id)
+{
+  char* result = NULL;
+  if (source != NULL && id != NULL) {
+    char* p = strstr(source, id);
+    if (p != NULL) {
+      int len = 0;
+      char* pbrk = NULL;
+      p += strlen(id);
+      len = strlen(p);
+      pbrk = strpbrk((const char*)p, ",");
+
+      if (pbrk != NULL) {
+        len = pbrk - p;
+      }
+
+      result = RAVE_MALLOC(sizeof(char) * (len + 1));
+      if (result != NULL) {
+        strncpy(result, p, len);
+        result[len] = '\0';
+      }
+    }
+  }
+  return result;
+}
+
+static char* CompositeInternal_getAnyIdFromSource(const char* source)
+{
+  char* result = NULL;
+  result = CompositeInternal_getIdFromSource(source, "WMO:");
+  if (result == NULL) {
+    result = CompositeInternal_getIdFromSource(source, "RAD:");
+  }
+  if (result == NULL) {
+    result = CompositeInternal_getIdFromSource(source, "NOD:");
+  }
+  if (result == NULL) {
+    result = CompositeInternal_getIdFromSource(source, "CMT:");
+  }
+  return result;
+}
+
+static int CompositeInternal_concateStr(char** ids, int* len, const char* str)
+{
+  int result = 0;
+  char* p = *ids;
+  int n = *len;
+  int currStrLen = strlen(p);
+  if (currStrLen + strlen(str) + 1 > n) {
+    int newsize = n + strlen(str) + 1;
+    char* newp = RAVE_REALLOC(p, newsize * sizeof(char));
+    if (newp != NULL) {
+      p = newp;
+      n = newsize;
+    } else {
+      goto done;
+    }
+  }
+  strcat(p, str);
+
+  *ids = p;
+  *len = n;
+  result = 1;
+done:
+  return result;
+}
+
+static int CompositeInternal_concateInt(char** ids, int* len, int value)
+{
+  char buff[16];
+  memset(buff, 0, sizeof(char)*16);
+  sprintf(buff, "%d", value);
+  return CompositeInternal_concateStr(ids, len, buff);
+}
+/**
+ * Returns the next available integer with a filter of already aquired indexes.
+ * We assume that we always want to index radars from 1-gt;N. Which means that the first time
+ * you call this function you should specify lastIndex = 0, then the subsequent calls the
+ * index returned from this function should be passed in the next iteration.
+ *
+ * I.e.
+ * lastIndex = 0
+ * lastIndex = CompositeInternal_nextAvailableRadarIndexValue(indexes, n_objs, lastIndex);
+ * lastIndex = CompositeInternal_nextAvailableRadarIndexValue(indexes, n_objs, lastIndex);
+ * and so on.
+ *
+ */
+static int CompositeInternal_nextAvailableRadarIndexValue(int* indexes, int n_objs, int lastIndex)
+{
+  int ctr = lastIndex + 1;
+  while(CompositeInternal_containsRadarIndex(indexes, n_objs, ctr)) {
+    ctr++;
+  }
+  return ctr;
+}
+
+/**
+ * Makes sure that all objects used in the composite gets a unique value.
+ */
+static int CompositeInternal_updateRadarIndexes(Composite_t* composite, RaveObjectHashTable_t* mapping)
+{
+  int n_objs = 0, i = 0;
+  int result = 0;
+  int* indexes = NULL;
+  int lastIndex = 0;
+
+  if (!CompositeInternal_verifyRadarIndexMapping(mapping)) {
+    goto done;
+  }
+
+  /* First reset indexes */
+  n_objs = RaveList_size(composite->objectList);
+  indexes = RAVE_MALLOC(sizeof(int) * n_objs);
+  if (indexes == NULL) {
+    goto done;
+  }
+  memset(indexes, 0, sizeof(int)*n_objs);
+
+  for (i = 0; i < n_objs; i++) {
+    CompositeRadarItem_t* ri = (CompositeRadarItem_t*)RaveList_get(composite->objectList, i);
+    char* src = NULL;
+    ri->radarIndexValue = 0;
+
+    if (RAVE_OBJECT_CHECK_TYPE(ri->object, &PolarVolume_TYPE)) {
+      src = (char*)PolarVolume_getSource((PolarVolume_t*)ri->object);
+    } else if (RAVE_OBJECT_CHECK_TYPE(ri->object, &PolarScan_TYPE)) {
+      src = (char*)PolarScan_getSource((PolarScan_t*)ri->object);
+    }
+
+    if (src != NULL) {
+      char *str = NULL;
+      str = CompositeInternal_getTypeAndIdFromSource(src, "WMO:");
+      if (str == NULL || !RaveObjectHashTable_exists(mapping, str)) {
+        RAVE_FREE(str);
+        str = CompositeInternal_getTypeAndIdFromSource(src, "RAD:");
+      }
+      if (str == NULL || !RaveObjectHashTable_exists(mapping, str)) {
+        RAVE_FREE(str);
+        str = CompositeInternal_getTypeAndIdFromSource(src, "NOD:");
+      }
+
+      if (str != NULL && RaveObjectHashTable_exists(mapping, str)) {
+        RaveAttribute_t* attr = (RaveAttribute_t*)RaveObjectHashTable_get(mapping, str);
+        long v = 0;
+        if (RaveAttribute_getLong(attr, &v)) {
+          ri->radarIndexValue = (int)v;
+          indexes[i] = (int)v;
+        }
+        RAVE_OBJECT_RELEASE(attr);
+      } else if (RaveObjectHashTable_exists(mapping, src)) {
+        RaveAttribute_t* attr = (RaveAttribute_t*)RaveObjectHashTable_get(mapping, src);
+        long v = 0;
+        if (RaveAttribute_getLong(attr, &v)) {
+          ri->radarIndexValue = (int)v;
+          indexes[i] = (int)v;
+        }
+        RAVE_OBJECT_RELEASE(attr);
+      }
+
+      RAVE_FREE(str);
+    }
+  }
+
+  /* Any radarIndexValue = 0, needs to get a suitable value, take first available one */
+  for (i = 0; i < n_objs; i++) {
+    CompositeRadarItem_t* ri = (CompositeRadarItem_t*)RaveList_get(composite->objectList, i);
+    if (ri->radarIndexValue == 0) {
+      ri->radarIndexValue = lastIndex = CompositeInternal_nextAvailableRadarIndexValue(indexes, n_objs, lastIndex);
+    }
+  }
+
+  result = 1;
+done:
+  RAVE_FREE(indexes);
+  return result;
 }
 
 /**
@@ -547,7 +896,7 @@ static int CompositeInternal_getVerticalMaxValue(
   RAVE_ASSERT((vtype != NULL), "vtype == NULL");
   RAVE_ASSERT((vvalue != NULL), "vvalue == NULL");
 
-  obj = RaveObjectList_get(self->list, radarindex);
+  obj = Composite_get(self, radarindex);
   if (obj == NULL) {
     goto done;
   }
@@ -575,6 +924,79 @@ static int CompositeInternal_getVerticalMaxValue(
   result = 1;
 done:
   RAVE_OBJECT_RELEASE(obj);
+  return result;
+}
+
+
+static int CompositeInternal_addNodeIdsToFieldHowTaskArgs(Composite_t* self, RaveField_t* field)
+{
+  int i = 0, n = 0;
+  char* ids = NULL;
+  int idsLength = 0;
+  int result = 0;
+  RaveAttribute_t* howTaskArgs = NULL;
+  char* srcid = NULL;
+  RaveCoreObject* obj = NULL;
+  n = Composite_getNumberOfObjects(self);
+  /* We assume that length of ids is <nr radars> * 10 (WMO-number and a ':', followed by a 3-digit number and finally a ',') */
+  idsLength = n * 10 + 1;
+  ids = RAVE_MALLOC(sizeof(char) * idsLength);
+  if (ids == NULL) {
+    return 0;
+  }
+  memset(ids, 0, sizeof(char)*idsLength);
+
+  for (i = 0; i < n; i++) {
+    obj = Composite_get(self, i);
+    srcid = NULL;
+    if (obj != NULL) {
+      if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarScan_TYPE)) {
+        const char* source = PolarScan_getSource((PolarScan_t*)obj);
+        srcid = CompositeInternal_getAnyIdFromSource(source);
+      } else if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
+        const char* source = PolarVolume_getSource((PolarVolume_t*)obj);
+        srcid = CompositeInternal_getAnyIdFromSource(source);
+      }
+
+      if (srcid != NULL) {
+        if (!CompositeInternal_concateStr(&ids, &idsLength, srcid)) {
+          goto done;
+        }
+      } else {
+        if (!CompositeInternal_concateStr(&ids, &idsLength, "Unknown")) {
+          goto done;
+        }
+      }
+      if (!CompositeInternal_concateStr(&ids, &idsLength, ":")) {
+        goto done;
+      }
+      if (!CompositeInternal_concateInt(&ids, &idsLength, Composite_getRadarIndexValue(self, i))) {
+        goto done;
+      }
+      if (i < n-1) {
+        if (!CompositeInternal_concateStr(&ids, &idsLength,",")) {
+          goto done;
+        }
+      }
+    }
+    RAVE_FREE(srcid);
+    RAVE_OBJECT_RELEASE(obj);
+  }
+
+  howTaskArgs = RaveAttributeHelp_createString("how/task_args", ids);
+  if (howTaskArgs == NULL) {
+    goto done;
+  }
+  if (!RaveField_addAttribute(field, howTaskArgs)) {
+    goto done;
+  }
+
+  result = 1;
+done:
+  RAVE_FREE(srcid);
+  RAVE_OBJECT_RELEASE(obj);
+  RAVE_FREE(ids);
+  RAVE_OBJECT_RELEASE(howTaskArgs);
   return result;
 }
 
@@ -621,6 +1043,9 @@ static int CompositeInternal_addQualityFlags(Composite_t* self, Cartesian_t* ima
     if (strcmp(DISTANCE_TO_RADAR_HOW_TASK, howtaskvaluestr) == 0) {
       gain = DISTANCE_TO_RADAR_RESOLUTION;
       offset = 0.0;
+    } else if (strcmp(RADAR_INDEX_HOW_TASK, howtaskvaluestr) == 0) {
+      gain = 1.0;
+      offset = 0.0;
     } else {
       // set the same, fixed gain and offset that is used for all quality fields (except distance) in the composite
       gain = COMPOSITE_QUALITY_FIELDS_GAIN;
@@ -628,6 +1053,10 @@ static int CompositeInternal_addQualityFlags(Composite_t* self, Cartesian_t* ima
     }
 
     field = CompositeInternal_createQualityField(howtaskvaluestr, xsize, ysize, gain, offset);
+
+    if (strcmp(RADAR_INDEX_HOW_TASK, howtaskvaluestr)==0) {
+      CompositeInternal_addNodeIdsToFieldHowTaskArgs(self, field);
+    }
 
     if (field != NULL) {
       for (j = 0; j < nparam; j++) {
@@ -703,10 +1132,12 @@ static void CompositeInternal_fillQualityInformation(
     }
 
     if (name != NULL) {
-      RaveCoreObject* obj = RaveObjectList_get(composite->list, radarindex);
+      RaveCoreObject* obj = Composite_get(composite, radarindex);
       if (obj != NULL) {
         if (strcmp(DISTANCE_TO_RADAR_HOW_TASK, name) == 0) {
           RaveField_setValue(field, x, y, radardist/DISTANCE_TO_RADAR_RESOLUTION);
+        } else if (strcmp(RADAR_INDEX_HOW_TASK, name) == 0) {
+          RaveField_setValue(field, x, y, (double)Composite_getRadarIndexValue(composite, radarindex));
         } else if (composite->algorithm != NULL && CompositeAlgorithm_supportsFillQualityInformation(composite->algorithm, name)) {
           // If the algorithm indicates that it is able to support the provided how/task field, then do so
           if (!CompositeAlgorithm_fillQualityInformation(composite->algorithm, obj, name, quantity, field, x, y, navinfo,
@@ -715,10 +1146,6 @@ static void CompositeInternal_fillQualityInformation(
           }
         } else {
           if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
-            /*
-            if (navinfo->ei >= 0 && navinfo->ri >= 0 && navinfo->ai >= 0) {
-              fprintf(stderr, "(%d,%d) => ei=%d, ri=%d, ai=%d\n", x, y, navinfo->ei, navinfo->ri, navinfo->ai);
-            }*/
             if (navinfo->ei >= 0 && navinfo->ri >= 0 && navinfo->ai >= 0 ) {
               valuefetched = PolarVolume_getQualityValueAt((PolarVolume_t*)obj, quantity, navinfo->ei, navinfo->ri, navinfo->ai, name, 1, &v);
             }
@@ -805,7 +1232,7 @@ static Cartesian_t* CompositeInternal_createCompositeImage(Composite_t* self, Ar
   for (i = 0; i < nparam; i++) {
     double gain = 0.0, offset = 0.0;
     const char* name = Composite_getParameter(self, i, &gain, &offset);
-    CartesianParam_t* cp = Cartesian_createParameter(cartesian, name, RaveDataType_UCHAR);
+    CartesianParam_t* cp = Cartesian_createParameter(cartesian, name, RaveDataType_UCHAR, 0);
     if (cp == NULL) {
       goto done;
     }
@@ -915,7 +1342,7 @@ static Cartesian_t* Composite_nearest_max(Composite_t* composite, Area_t* area, 
   xsize = Cartesian_getXSize(result);
   ysize = Cartesian_getYSize(result);
   projection = Cartesian_getProjection(result);
-  nradars = RaveObjectList_size(composite->list);
+  nradars = Composite_getNumberOfObjects(composite);
 
   if (qualityflags != NULL) {
     nqualityflags = RaveList_size(qualityflags);
@@ -945,7 +1372,7 @@ static Cartesian_t* Composite_nearest_max(Composite_t* composite, Area_t* area, 
       for (i = 0; i < nradars; i++) {
         RaveCoreObject* obj = NULL;
         Projection_t* objproj = NULL;
-        obj = RaveObjectList_get(composite->list, i);
+        obj = Composite_get(composite, i);
         if (obj != NULL) {
           objproj = CompositeInternal_getProjection(obj);
         }
@@ -996,7 +1423,6 @@ static Cartesian_t* Composite_nearest_max(Composite_t* composite, Area_t* area, 
           if (vtype == RaveValueType_UNDETECT) {
             CartesianParam_setConvertedValue(cvalues[cindex].parameter, x, y, CartesianParam_getUndetect(cvalues[cindex].parameter));
           } else {
-            //fprintf(stderr, "Setting converted value = %f for %d,%d\n", vvalue, x, y);
             CartesianParam_setConvertedValue(cvalues[cindex].parameter, x, y, vvalue);
           }
         }
@@ -1033,6 +1459,8 @@ fail:
 /*@{ Interface functions */
 int Composite_add(Composite_t* composite, RaveCoreObject* object)
 {
+  CompositeRadarItem_t* item = NULL;
+  int result = 0;
   RAVE_ASSERT((composite != NULL), "composite == NULL");
   RAVE_ASSERT((object != NULL), "object == NULL");
 
@@ -1041,19 +1469,47 @@ int Composite_add(Composite_t* composite, RaveCoreObject* object)
     RAVE_ERROR0("Providing an object that not is a PolarVolume nor a PolarScan during composite generation");
     return 0;
   }
-  return RaveObjectList_add(composite->list, object);
+  item = RAVE_MALLOC(sizeof(CompositeRadarItem_t));
+  if (item != NULL) {
+    item->object = RAVE_OBJECT_COPY(object);
+    result = RaveList_add(composite->objectList, item);
+    if (result == 0) {
+      RAVE_OBJECT_RELEASE(item->object);
+      RAVE_FREE(item);
+    }
+    item->radarIndexValue = RaveList_size(composite->objectList);
+  }
+
+  return result;
 }
 
 int Composite_getNumberOfObjects(Composite_t* composite)
 {
   RAVE_ASSERT((composite != NULL), "composite == NULL");
-  return RaveObjectList_size(composite->list);
+  return RaveList_size(composite->objectList);
 }
 
 RaveCoreObject* Composite_get(Composite_t* composite, int index)
 {
+  CompositeRadarItem_t* item = NULL;
   RAVE_ASSERT((composite != NULL), "composite == NULL");
-  return RaveObjectList_get(composite->list, index);
+  item = (CompositeRadarItem_t*)RaveList_get(composite->objectList, index);
+  if (item != NULL) {
+    return RAVE_OBJECT_COPY(item->object);
+  }
+  return NULL;
+}
+
+int Composite_getRadarIndexValue(Composite_t* composite, int index)
+{
+  CompositeRadarItem_t* item = NULL;
+  RAVE_ASSERT((composite != NULL), "composite == NULL");
+  item = (CompositeRadarItem_t*)RaveList_get(composite->objectList, index);
+  if (item != NULL) {
+    return item->radarIndexValue;
+  }
+  return 0;
+
 }
 
 void Composite_setProduct(Composite_t* composite, Rave_ProductType type)
@@ -1245,6 +1701,13 @@ const char* Composite_getDate(Composite_t* composite)
   return RaveDateTime_getDate(composite->datetime);
 }
 
+int Composite_applyRadarIndexMapping(Composite_t* composite, RaveObjectHashTable_t* mapping)
+{
+  RAVE_ASSERT((composite != NULL), "composite == NULL");
+
+  return CompositeInternal_updateRadarIndexes(composite, mapping);
+}
+
 Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t* qualityflags)
 {
   Cartesian_t* result = NULL;
@@ -1293,7 +1756,7 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t*
   xsize = Cartesian_getXSize(result);
   ysize = Cartesian_getYSize(result);
   projection = Cartesian_getProjection(result);
-  nradars = RaveObjectList_size(composite->list);
+  nradars = Composite_getNumberOfObjects(composite);
 
   if (qualityflags != NULL) {
     nqualityflags = RaveList_size(qualityflags);
@@ -1323,8 +1786,7 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t*
       for (i = 0; i < nradars; i++) {
         RaveCoreObject* obj = NULL;
         Projection_t* objproj = NULL;
-
-        obj = RaveObjectList_get(composite->list, i);
+        obj = Composite_get(composite, i);
         if (obj != NULL) {
           if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
             objproj = PolarVolume_getProjection((PolarVolume_t*)obj);

@@ -156,7 +156,7 @@
   </it>
   <lt CCCC="EYHM" org="238">
     <ltlau plc="Laukuva" rad="LT40" wmo="26518"></ltlau>
-    <ltvln plc="Vilnius" rad="LT41" wmo="26730"></ltvln>
+    <ltvil plc="Vilnius" rad="LT41" wmo="26730"></ltvil>
   </lt>
   <lv CCCC="EVRR" org="236">
     <lvrix plc="Riga" rad="LV93" wmo="26422"></lvrix>
@@ -176,6 +176,8 @@
     <nohas plc="Hasvik" rad="NO93" wmo="01042"></nohas>
     <nosta plc="Stad" rad="NO38" wmo="01206"></nosta>
     <nohur plc="Hurum" rad="NO39" wmo="01498"></nohur>
+    <nosmn plc="Sømna" rad="NO44" wmo="001136"></nosmn>
+    <nofjl plc="Hafjell" rad="NO45" wmo="01377"></nofjl>
   </no>
   <pl CCCC="SOWR" org="220">
     <plleg plc="Legionowo" rad="PL41" wmo="12374"></plleg>
@@ -256,7 +258,7 @@
     <selul plc="Luleå" rad="SE41" wmo="02092"></selul>
     <seosd plc="Östersund" rad="SE42" wmo="02200"></seosd>
     <seovi plc="Örnsköldsvik" rad="SE43" wmo="02262"></seovi>
-    <sehud plc="Hudiksvall" rad="SE44" wmo="02334"></sehud>
+    <sehuv plc="Hudiksvall" rad="SE44" wmo="02334"></sehuv>
     <selek plc="Leksand" rad="SE45" wmo="02430"></selek>
     <searl plc="Arlanda" rad="SE46" wmo="02451"></searl>
     <sease plc="Ase" rad="SE47" wmo="02588"></sease>

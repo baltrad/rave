@@ -1,7 +1,7 @@
 '''
-Copyright (C) 2015- Swedish Meteorological and Hydrological Institute (SMHI)
+Copyright (C) 2016- Swedish Meteorological and Hydrological Institute (SMHI)
 
-This file is part of the bRopo extension to RAVE.
+This file is part of RAVE.
 
 RAVE is free software: you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
@@ -15,46 +15,44 @@ See the GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
+
 '''
 ##
-# A quality plugin for enabling zdiff qc support 
+# A composite quality plugin for producing the radar index field. Since it is handled during
+# compositing we only need to return the correct how/task string and the composite generator
+# will take care of it.
+#
 
 ## 
 # @file
 # @author Anders Henja, SMHI
-# @date 2015-04-09
+# @date 2016-12-21
 
 from rave_quality_plugin import rave_quality_plugin
 from rave_quality_plugin import QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY
 
-import odc_hac
-import rave_pgf_logger
-import _polarvolume, _polarscan
-
-logger = rave_pgf_logger.create_logger()
-
-class rave_zdiff_quality_plugin(rave_quality_plugin):
+class rave_radarindex_quality_plugin(rave_quality_plugin):
   ##
   # Default constructor
   def __init__(self):
-    super(rave_zdiff_quality_plugin, self).__init__()
+    super(rave_radarindex_quality_plugin, self).__init__()
   
   ##
-  # @return a list containing the string eu.opera.odc.zdiff
+  # @return a list containing the string se.smhi.composite.distance.radar
   def getQualityFields(self):
-    return ["eu.opera.odc.zdiff"]
+    return ["se.smhi.composite.index.radar"]
   
   ##
-  # @param obj: A RAVE object that should be processed.
-  # @param reprocess_quality_flag: If quality flag should be reprocessed or not
+  # @param obj: A rave object that should be processed, bogus in this case.
+  # @param reprocess_quality_flag: Not used
   # @param arguments: Not used
-  # @return: The modified object if this quality plugin has performed changes 
-  # to the object.
+  # @return: obj - without doing anything to it
   def process(self, obj, reprocess_quality_flag=True, quality_control_mode=QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY, arguments=None):
-    try:
-      if _polarscan.isPolarScan(obj) or _polarvolume.isPolarVolume(obj):
-        odc_hac.zdiff(obj)
-    except:
-      logger.exception("Failure during zdiff processing")
-      
     return obj, self.getQualityFields()
+
+  ##
+  # @return: The distance information - dummy
+  #
+  def algorithm(self):
+    return None
+  

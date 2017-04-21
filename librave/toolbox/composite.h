@@ -30,6 +30,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "cartesian.h"
 #include "area.h"
 #include "composite_algorithm.h"
+#include "raveobject_hashtable.h"
 #include "limits.h"
 
 #define COMPOSITE_QUALITY_FIELDS_GAIN   (1.0/UCHAR_MAX)
@@ -77,6 +78,14 @@ int Composite_getNumberOfObjects(Composite_t* composite);
  * @return the object or NULL if outside range
  */
 RaveCoreObject* Composite_get(Composite_t* composite, int index);
+
+/**
+ * Return the radar index value that has been assigned to the object as position index.
+ * @param[in] composite - self
+ * @param[in] index - the index, should be >= 0 and < getNumberOfObjects
+ * @return the radar index or 0 if no index has been assigned yet.
+ */
+int Composite_getRadarIndexValue(Composite_t* composite, int index);
 
 /**
  * Sets the product type that should be generated when generating the
@@ -239,6 +248,22 @@ int Composite_setDate(Composite_t* composite, const char* value);
  * @returns the nominal time (or NULL if there is none)
  */
 const char* Composite_getDate(Composite_t* composite);
+
+/**
+ * If you want the objects included in the composite to have a specific index value when generating the
+ * quality field se.smhi.composite.index.radar, then you can provide a hash table that maps source with
+ * a RaveAttribute_t containing a long value. The source should be the full source as defined in the
+ * added objects. The indexes must be unique values, preferrably starting from 1. If there is a mapping
+ * missing, the default behaviour is to take first available integer closest to 1.
+ *
+ * Note, that in order to the mapping to take, this call must be performed after all the objects has
+ * been added to the generator and before calling \ref Composite_nearest.
+ *
+ * @param[in] composite - self
+ * @param[in] mapping - the source - index mapping
+ * @return 1 on success, otherwise 0.
+ */
+int Composite_applyRadarIndexMapping(Composite_t* composite, RaveObjectHashTable_t* mapping);
 
 /**
  * Generates a composite according to the nearest radar principle.

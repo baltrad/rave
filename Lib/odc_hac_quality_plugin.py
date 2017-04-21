@@ -25,6 +25,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 # @date 2013-01-24
 
 from rave_quality_plugin import rave_quality_plugin
+from rave_quality_plugin import QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY
 
 class odc_hac_increment_plugin(rave_quality_plugin):
   ##
@@ -43,7 +44,7 @@ class odc_hac_increment_plugin(rave_quality_plugin):
   # @param arguments: Not used
   # @return: The modified object if this quality plugin has performed changes 
   # to the object. In this case, no changes will be made.
-  def process(self, obj, reprocess_quality_flag=True, arguments=None):
+  def process(self, obj, reprocess_quality_flag=True, quality_control_mode=QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY, arguments=None):
     try:
       import odc_hac
       odc_hac.hacIncrement(obj)
@@ -68,7 +69,7 @@ class odc_hac_filter_plugin(rave_quality_plugin):
   # @param reprocess_quality_flag: Not used  
   # @return: The modified object if this quality plugin has performed changes 
   # to the object.
-  def process(self, obj, reprocess_quality_flag=True):
+  def process(self, obj, reprocess_quality_flag=True, quality_control_mode=QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY, arguments=None):
     try:
       import odc_hac
       odc_hac.hacFilter(obj)

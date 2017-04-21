@@ -34,7 +34,7 @@ import numpy
 
 class odc_hac_test(unittest.TestCase):
   VOLUME_FIXTURE = "fixtures/pvol_seang_20090501T120000Z.h5"
-  SCAN_FIXTURE = "fixtures/scan_sehud_0.5_20110126T184500Z.h5"
+  SCAN_FIXTURE = "fixtures/scan_sehuv_0.5_20110126T184500Z.h5"
   classUnderTest = None
     
   def setUp(self):
@@ -126,7 +126,7 @@ class odc_hac_test(unittest.TestCase):
     scan = self.create_scan(3.0, 4.0, 53.0, 40.0)
     
     qp = rave_zdiff_quality_plugin.rave_zdiff_quality_plugin()
-    processed, qfield = qp.process(scan)
+    processed, qfield = qp.process(scan, True, "analyze_and_apply")
     
     self.assertEquals(qfield, ["eu.opera.odc.zdiff"], "Wrong qfield returned from process")
     
@@ -145,7 +145,7 @@ class odc_hac_test(unittest.TestCase):
     pvol.addScan(scan2)
         
     qp = rave_zdiff_quality_plugin.rave_zdiff_quality_plugin()
-    processed, qfield = qp.process(pvol)
+    processed, qfield = qp.process(pvol, True, "analyze_and_apply")
     
     self.assertEquals(qfield, ["eu.opera.odc.zdiff"], "Wrong qfield returned from process")
     

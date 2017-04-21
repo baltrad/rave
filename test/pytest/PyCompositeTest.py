@@ -303,6 +303,113 @@ class PyCompositeTest(unittest.TestCase):
     ios.object = result
     ios.filename = "swecomposite.h5"
     ios.save()
+
+  def test_nearest_with_radarindex(self):
+    generator = _pycomposite.new()
+     
+    a = _area.new()
+    a.id = "nrd2km"
+    a.xsize = 848
+    a.ysize = 1104
+    a.xscale = 2000.0
+    a.yscale = 2000.0
+    a.extent = (-738816.513333,-3995515.596160,955183.48666699999,-1787515.59616)
+    a.projection = _projection.new("x", "y", "+proj=stere +ellps=bessel +lat_0=90 +lon_0=14 +lat_ts=60 +datum=WGS84")
+    
+    ids = "" 
+    radarIndex = 1
+    for fname in self.SWEDISH_VOLUMES:
+      rio = _raveio.open(fname)
+      wmoIndex = rio.object.source.find("WMO:")
+      wmostr = rio.object.source[wmoIndex+4:wmoIndex+9]
+      generator.add(rio.object)
+      ids = "%s,%s:%d"%(ids,wmostr, radarIndex)
+      radarIndex = radarIndex + 1
+    ids = ids[1:]
+
+    generator.addParameter("DBZH", 1.0, 0.0)
+    generator.product = _rave.Rave_ProductType_PCAPPI
+    generator.height = 1000.0
+    generator.time = "120000"
+    generator.date = "20090501"
+    result = generator.nearest(a, ["se.smhi.composite.index.radar"])
+     
+    self.assertEquals("DBZH", result.getParameter("DBZH").quantity)
+    self.assertEquals("120000", result.time)
+    self.assertEquals("20090501", result.date)
+    prodpar = result.getAttribute("what/prodpar")
+    self.assertAlmostEquals(1000.0, prodpar, 4)
+    self.assertEquals(_rave.Rave_ProductType_PCAPPI, result.product)
+    self.assertEquals(_rave.Rave_ObjectType_COMP, result.objectType)
+    self.assertEquals("nrd2km", result.source);
+    
+    nodes = result.getParameter("DBZH").getQualityFieldByHowTask("se.smhi.composite.index.radar").getAttribute("how/task_args")
+    self.assertEquals(ids, nodes)
+    
+    import _transform
+    t=_transform.new()
+    
+    result = t.combine_tiles(a, [result])
+    
+    ios = _raveio.new()
+    ios.object = result
+    ios.filename = "swecomposite_with_index.h5"
+    ios.save()
+ 
+  def test_nearest_with_reversed_radarindex(self):
+    generator = _pycomposite.new()
+     
+    a = _area.new()
+    a.id = "nrd2km"
+    a.xsize = 848
+    a.ysize = 1104
+    a.xscale = 2000.0
+    a.yscale = 2000.0
+    a.extent = (-738816.513333,-3995515.596160,955183.48666699999,-1787515.59616)
+    a.projection = _projection.new("x", "y", "+proj=stere +ellps=bessel +lat_0=90 +lon_0=14 +lat_ts=60 +datum=WGS84")
+
+    ids = "" 
+    radarIndex = len(self.SWEDISH_VOLUMES)
+    radarIndexMapping={}
+    for fname in self.SWEDISH_VOLUMES:
+      rio = _raveio.open(fname)
+      wmoIndex = rio.object.source.find("WMO:")
+      wmostr = rio.object.source[wmoIndex+4:wmoIndex+9]
+      generator.add(rio.object)
+      ids = "%s,%s:%d"%(ids,wmostr, radarIndex)
+      radarIndexMapping["WMO:%s"%wmostr] = radarIndex
+      radarIndex = radarIndex - 1
+    ids = ids[1:]
+
+    generator.applyRadarIndexMapping(radarIndexMapping)
+    generator.addParameter("DBZH", 1.0, 0.0)
+    generator.product = _rave.Rave_ProductType_PCAPPI
+    generator.height = 1000.0
+    generator.time = "120000"
+    generator.date = "20090501"
+    result = generator.nearest(a, ["se.smhi.composite.index.radar"])
+     
+    self.assertEquals("DBZH", result.getParameter("DBZH").quantity)
+    self.assertEquals("120000", result.time)
+    self.assertEquals("20090501", result.date)
+    prodpar = result.getAttribute("what/prodpar")
+    self.assertAlmostEquals(1000.0, prodpar, 4)
+    self.assertEquals(_rave.Rave_ProductType_PCAPPI, result.product)
+    self.assertEquals(_rave.Rave_ObjectType_COMP, result.objectType)
+    self.assertEquals("nrd2km", result.source);
+    
+    nodes = result.getParameter("DBZH").getQualityFieldByHowTask("se.smhi.composite.index.radar").getAttribute("how/task_args")
+    self.assertEquals(ids, nodes)
+    
+    import _transform
+    t=_transform.new()
+    
+    result = t.combine_tiles(a, [result])
+    
+    ios = _raveio.new()
+    ios.object = result
+    ios.filename = "swecomposite_with_reversedindex.h5"
+    ios.save()
  
   def test_nearest_multicomposite(self):
     generator = _pycomposite.new()

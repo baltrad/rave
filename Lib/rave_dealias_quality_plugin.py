@@ -17,7 +17,10 @@ You should have received a copy of the GNU Lesser General Public License
 along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 '''
 ##
-# A quality plugin for enabling support for dealiasing
+# A quality plugin for enabling support for dealiasing.
+# The plugin will leave the original field unaffected and add a new 
+# field where the dealiasing has been applied. This is done for all 
+# quality control modes, i.e., both for "analyze" and "analyze & apply".
 
 ## 
 # @file
@@ -25,6 +28,15 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 # @date 2013-10-07
 
 from rave_quality_plugin import rave_quality_plugin
+from rave_quality_plugin import QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY
+import rave_pgf_logger
+import _polarscan
+logger = rave_pgf_logger.create_logger()
+
+# hardcoded here to True for now - make it controllable when/if needed
+CREATE_SEPARATE_DEALIAS_PARAM = True
+
+QUANTITY_CONVERSION_MAP = {"VRAD" : "VRADDH", "VRADH" : "VRADDH", "VRADV" : "VRADDV"} 
 
 class dealias_plugin(rave_quality_plugin):
   ##
@@ -43,10 +55,36 @@ class dealias_plugin(rave_quality_plugin):
   # @param arguments: Not used
   # @return: The modified object if this quality plugin has performed changes 
   # to the object.
-  def process(self, obj, reprocess_quality_flag=True, arguments=None):
+  def process(self, obj, reprocess_quality_flag=True, quality_control_mode=QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY, arguments=None):
     try:
       import _dealias
-      _dealias.dealias(obj)
+      if CREATE_SEPARATE_DEALIAS_PARAM:
+        add_dealiased_param(obj)
+      else:
+        _dealias.dealias(obj)
     except:
-      pass
+      logger.exception("Failure during dealias processing")
+      
     return obj, self.getQualityFields()
+  
+def add_dealiased_param(obj):
+  import _polarvolume
+  if obj != None and _polarvolume.isPolarVolume(obj):
+    for i in range(obj.getNumberOfScans()):
+      scan = obj.getScan(i)
+      add_dealiased_param_for_scan(scan)
+  elif obj != None and _polarscan.isPolarScan(obj):
+    add_dealiased_param_for_scan(obj)
+
+def add_dealiased_param_for_scan(scan):
+  try:
+    import _dealias
+    logger.debug("Adding dealiased parameter to scan.")
+    for original_quantity in QUANTITY_CONVERSION_MAP.keys():
+      if scan.hasParameter(original_quantity):
+        new_quantity = QUANTITY_CONVERSION_MAP.get(original_quantity)
+        param = _dealias.create_dealiased_parameter(scan, original_quantity, new_quantity)
+        scan.addParameter(param)
+  except:
+    logger.exception("Failure during process of adding dealiased parameter")
+

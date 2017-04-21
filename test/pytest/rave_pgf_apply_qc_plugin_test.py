@@ -28,6 +28,7 @@ import rave_pgf_apply_qc_plugin
 import rave_quality_plugin, rave_pgf_quality_registry
 import mock
 import rave_overshooting_quality_plugin
+from rave_quality_plugin import QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY
 
 class rave_pgf_apply_qc_plugin_test(unittest.TestCase):
   def setUp(self):
@@ -46,10 +47,10 @@ class rave_pgf_apply_qc_plugin_test(unittest.TestCase):
     self.qc_check_1_mock.process.return_value = vol
     self.qc_check_2_mock.process.return_value = vol
 
-    result = rave_pgf_apply_qc_plugin.perform_quality_control(vol, ["qc.check.1","qc.check.2"])
+    result = rave_pgf_apply_qc_plugin.perform_quality_control(vol, ["qc.check.1","qc.check.2"], QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY)
     
-    expected_qc_check_1_calls = [mock.call.process(vol)]
-    expected_qc_check_2_calls = [mock.call.process(vol)]
+    expected_qc_check_1_calls = [mock.call.process(vol, True, QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY)]
+    expected_qc_check_2_calls = [mock.call.process(vol, True, QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY)]
     
     self.assertTrue(expected_qc_check_1_calls == self.qc_check_1_mock.mock_calls)
     self.assertTrue(expected_qc_check_2_calls == self.qc_check_2_mock.mock_calls)
@@ -62,10 +63,10 @@ class rave_pgf_apply_qc_plugin_test(unittest.TestCase):
     self.qc_check_1_mock.process.return_value = vol
     self.qc_check_2_mock.process.return_value = (vol,a1)
 
-    result = rave_pgf_apply_qc_plugin.perform_quality_control(vol, ["qc.check.1","qc.check.2"])
+    result = rave_pgf_apply_qc_plugin.perform_quality_control(vol, ["qc.check.1","qc.check.2"], QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY)
     
-    expected_qc_check_1_calls = [mock.call.process(vol)]
-    expected_qc_check_2_calls = [mock.call.process(vol)]
+    expected_qc_check_1_calls = [mock.call.process(vol, True, QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY)]
+    expected_qc_check_2_calls = [mock.call.process(vol, True, QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY)]
     
     self.assertTrue(expected_qc_check_1_calls == self.qc_check_1_mock.mock_calls)
     self.assertTrue(expected_qc_check_2_calls == self.qc_check_2_mock.mock_calls)
@@ -78,10 +79,10 @@ class rave_pgf_apply_qc_plugin_test(unittest.TestCase):
     self.qc_check_1_mock.process.return_value = (vol,a1)
     self.qc_check_2_mock.process.return_value = vol
 
-    result = rave_pgf_apply_qc_plugin.perform_quality_control(vol, ["qc.check.1","qc.check.2"])
+    result = rave_pgf_apply_qc_plugin.perform_quality_control(vol, ["qc.check.1","qc.check.2"], QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY)
     
-    expected_qc_check_1_calls = [mock.call.process(vol)]
-    expected_qc_check_2_calls = [mock.call.process(vol)]
+    expected_qc_check_1_calls = [mock.call.process(vol, True, QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY)]
+    expected_qc_check_2_calls = [mock.call.process(vol, True, QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY)]
     
     self.assertTrue(expected_qc_check_1_calls == self.qc_check_1_mock.mock_calls)
     self.assertTrue(expected_qc_check_2_calls == self.qc_check_2_mock.mock_calls)
@@ -101,6 +102,7 @@ class rave_pgf_apply_qc_plugin_test(unittest.TestCase):
     args["date"] = DATE
     args["time"] = TIME
     args["anomaly-qc"] = QC_LIST
+    args["remove-malfunc"] = "false"
      
     result = rave_pgf_apply_qc_plugin.generate_new_volume_with_qc(filename, args)
     
@@ -110,3 +112,67 @@ class rave_pgf_apply_qc_plugin_test(unittest.TestCase):
     
     # Overshooting quality plugin will only add quality field to the first scan
     self.assertTrue(result.getScan(0).findQualityFieldByHowTask("se.smhi.detector.poo") != None, "Quality field not found")
+    
+  def test_generate_new_volume_with_qc__one_scan_malfunc(self):
+    rave_pgf_quality_registry.add_plugin("poo", rave_overshooting_quality_plugin.rave_overshooting_quality_plugin())
+    
+    expected_no_of_scans = 9
+    filename = "fixtures/pvol_selek_20170113T153000Z__one_scan_malfunc.h5"
+    
+    DATE = "20170113"
+    TIME = "153000"
+    QC_LIST = "poo"
+    
+    args={}
+    args["date"] = DATE
+    args["time"] = TIME
+    args["anomaly-qc"] = QC_LIST
+    args["remove-malfunc"] = "true"
+     
+    result = rave_pgf_apply_qc_plugin.generate_new_volume_with_qc(filename, args)
+    
+    self.assertEquals(expected_no_of_scans, result.getNumberOfScans())
+    self.assertEquals(DATE, result.date)
+    self.assertEquals(TIME, result.time)
+    
+    # Overshooting quality plugin will only add quality field to the first scan
+    self.assertTrue(result.getScan(0).findQualityFieldByHowTask("se.smhi.detector.poo") != None, "Quality field not found")
+
+  def test_generate_new_volume_with_qc__volume_malfunc(self):
+    rave_pgf_quality_registry.add_plugin("poo", rave_overshooting_quality_plugin.rave_overshooting_quality_plugin())
+
+    filename = "fixtures/pvol_seovi_20170113T150000Z__volume_malfunc.h5"
+    
+    DATE = "20170113"
+    TIME = "150000"
+    QC_LIST = "poo"
+    
+    args={}
+    args["date"] = DATE
+    args["time"] = TIME
+    args["anomaly-qc"] = QC_LIST
+    args["remove-malfunc"] = "true"
+     
+    result = rave_pgf_apply_qc_plugin.generate_new_volume_with_qc(filename, args)
+    
+    self.assertEquals(result, None)
+    
+  def test_generate_new_volume_with_qc__all_scans_malfunc(self):
+    rave_pgf_quality_registry.add_plugin("poo", rave_overshooting_quality_plugin.rave_overshooting_quality_plugin())
+    
+    filename = "fixtures/pvol_sevil_20170113T140000Z__all_scans_malfunc.h5"
+    
+    DATE = "20170113"
+    TIME = "140000"
+    QC_LIST = "poo"
+    
+    args={}
+    args["date"] = DATE
+    args["time"] = TIME
+    args["anomaly-qc"] = QC_LIST
+    args["remove-malfunc"] = "true"
+     
+    result = rave_pgf_apply_qc_plugin.generate_new_volume_with_qc(filename, args)
+    
+    self.assertEquals(result, None)
+

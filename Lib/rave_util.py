@@ -24,6 +24,10 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @author Anders Henja, SMHI
 ## @date 2014-05-06
 import _polarscan, _polarvolume
+import rave_pgf_logger
+import math
+
+logger = rave_pgf_logger.create_logger()
 
 def str_to_bool(s):
   if s != None:
@@ -55,19 +59,27 @@ def remove_malfunc_from_volume(obj):
   result = obj
   if _polarvolume.isPolarVolume(obj):
     if get_malfunc_from_obj(obj):
+      logger.debug("Malfunc volume found. Source: %s, Nominal date and time: %sT%s", obj.source, obj.date, obj.time)
       return None
     for i in range(obj.getNumberOfScans()-1,-1,-1):
-      if get_malfunc_from_obj(obj.getScan(i)):
+      scan = obj.getScan(i)
+      if get_malfunc_from_obj(scan):
+        logger.debug("Malfunc scan with elangle %f found. Removing from volume. Source: %s, Nominal date and time: %sT%s", (scan.elangle * 180.0/math.pi), obj.source, obj.date, obj.time)
         obj.removeScan(i)
+
   return result
 
 def remove_malfunc(obj):
   result = obj
   if _polarvolume.isPolarVolume(obj):
     result = remove_malfunc_from_volume(obj)
+    if result != None and result.getNumberOfScans() == 0:
+      logger.debug("All scans of the volume were detected as malfunc. Complete volume therefore considered as malfunc.")
+      result = None 
   elif _polarscan.isPolarScan(obj):
     if get_malfunc_from_obj(obj):
       result = None
+    
   return result
 
     

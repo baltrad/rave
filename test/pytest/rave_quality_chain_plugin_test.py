@@ -64,8 +64,8 @@ class rave_quality_chain_plugin_test(unittest.TestCase):
     obj, returned_qfields = self.classUnderTest.process(pvol)
     
     expected_chain_registry_calls = [mock.call.get_chain("selek")]
-    expected_qc_check_1_calls = [mock.call.process(pvol,True), mock.call.algorithm()]
-    expected_qc_check_2_calls = [mock.call.process(pvol,True), mock.call.algorithm()]
+    expected_qc_check_1_calls = [mock.call.process(pvol,True,"analyze_and_apply",None), mock.call.algorithm()]
+    expected_qc_check_2_calls = [mock.call.process(pvol,True,"analyze_and_apply",None), mock.call.algorithm()]
     
     self.assertTrue(expected_chain_registry_calls == self.quality_chain_registry_mock.mock_calls)
     self.assertTrue(expected_qc_check_1_calls == self.qc_check_1_mock.mock_calls)
@@ -87,8 +87,8 @@ class rave_quality_chain_plugin_test(unittest.TestCase):
     obj, returned_qfields = self.classUnderTest.process(pvol, False)
     
     expected_chain_registry_calls = [mock.call.get_chain("selek")]
-    expected_qc_check_1_calls = [mock.call.process(pvol,False), mock.call.algorithm()]
-    expected_qc_check_2_calls = [mock.call.process(pvol,False), mock.call.algorithm()]
+    expected_qc_check_1_calls = [mock.call.process(pvol,False,"analyze_and_apply",None), mock.call.algorithm()]
+    expected_qc_check_2_calls = [mock.call.process(pvol,False,"analyze_and_apply",None), mock.call.algorithm()]
     
     self.assertTrue(expected_chain_registry_calls == self.quality_chain_registry_mock.mock_calls)
     self.assertTrue(expected_qc_check_1_calls == self.qc_check_1_mock.mock_calls)
@@ -109,7 +109,7 @@ class rave_quality_chain_plugin_test(unittest.TestCase):
     obj, returned_qfields = self.classUnderTest.process(pvol)
     
     expected_chain_registry_calls = [mock.call.get_chain("selek")]
-    expected_qc_check_1_calls = [mock.call.process(pvol,True), mock.call.algorithm()]
+    expected_qc_check_1_calls = [mock.call.process(pvol,True,"analyze_and_apply", None), mock.call.algorithm()]
     
     self.assertTrue(expected_chain_registry_calls == self.quality_chain_registry_mock.mock_calls)
     self.assertTrue(expected_qc_check_1_calls == self.qc_check_1_mock.mock_calls)
@@ -144,8 +144,8 @@ class rave_quality_chain_plugin_test(unittest.TestCase):
     obj, _ = self.classUnderTest.process(pvol)
 
     expected_chain_registry_calls = [mock.call.get_chain("selek")]
-    expected_qc_check_1_calls = [mock.call.process(pvol,True)]
-    expected_qc_check_2_calls = [mock.call.process(pvol,True), mock.call.algorithm()]
+    expected_qc_check_1_calls = [mock.call.process(pvol,True,"analyze_and_apply", None)]
+    expected_qc_check_2_calls = [mock.call.process(pvol,True,"analyze_and_apply", None), mock.call.algorithm()]
     
     self.assertTrue(expected_chain_registry_calls == self.quality_chain_registry_mock.mock_calls)
     self.assertTrue(expected_qc_check_1_calls == self.qc_check_1_mock.mock_calls)
@@ -167,7 +167,7 @@ class rave_quality_chain_plugin_test(unittest.TestCase):
     obj, _ = self.classUnderTest.process(pvol)
 
     expected_chain_registry_calls = [mock.call.get_chain("selek")]
-    expected_qc_check_1_calls = [mock.call.process(pvol,True,link_args), mock.call.algorithm()]
+    expected_qc_check_1_calls = [mock.call.process(pvol,True,"analyze_and_apply",link_args), mock.call.algorithm()]
     
     self.assertTrue(expected_chain_registry_calls == self.quality_chain_registry_mock.mock_calls)
     self.assertTrue(expected_qc_check_1_calls == self.qc_check_1_mock.mock_calls)

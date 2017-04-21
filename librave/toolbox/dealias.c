@@ -70,7 +70,7 @@ int dealiased(PolarScan_t* scan) {
   return dealiased_by_quantity(scan, "VRAD");
 }
 
-PolarScanParam_t* create_dealiased_parameter(PolarScan_t* scan, const char* quantity)
+PolarScanParam_t* create_dealiased_parameter(PolarScan_t* scan, const char* quantity, const char* newquantity)
 {
   PolarScanParam_t *result = NULL, *clone = NULL, *param = NULL;
   RaveAttribute_t* attr = NULL;
@@ -101,6 +101,9 @@ PolarScanParam_t* create_dealiased_parameter(PolarScan_t* scan, const char* quan
     RAVE_INFO1("Scan has no suitable parameter %s", quantity);
     goto done;
   }
+
+  PolarScanParam_setQuantity(clone, newquantity);
+
   gain = PolarScanParam_getGain(clone);
   offset = PolarScanParam_getOffset(clone);
   nodata = PolarScanParam_getNodata(clone);

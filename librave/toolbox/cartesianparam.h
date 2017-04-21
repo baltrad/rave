@@ -169,9 +169,10 @@ int CartesianParam_setData(CartesianParam_t* self, long xsize, long ysize, void*
  * @param[in] xsize - x size
  * @param[in] ysize - y size
  * @param[in] type - the data type
+ * @param[in] value - initial value to set for all positions in the data field
  * @return 1 on success otherwise 0
  */
-int CartesianParam_createData(CartesianParam_t* self, long xsize, long ysize, RaveDataType type);
+int CartesianParam_createData(CartesianParam_t* self, long xsize, long ysize, RaveDataType type, double value);
 
 /**
  * Returns a pointer to the internal data storage.

@@ -32,7 +32,7 @@ import _raveio
 
 class rave_overshooting_quality_plugin_test(unittest.TestCase):
   VOLUME_FIXTURE = "fixtures/pvol_seang_20090501T120000Z.h5"
-  SCAN_FIXTURE = "fixtures/scan_sehud_0.5_20110126T184500Z.h5"
+  SCAN_FIXTURE = "fixtures/scan_sehuv_0.5_20110126T184500Z.h5"
   classUnderTest = None
   
   def setUp(self):
@@ -87,6 +87,11 @@ class rave_overshooting_quality_plugin_test(unittest.TestCase):
   def test_process_scan(self):
     scan = _raveio.open(self.SCAN_FIXTURE).object
     result, _ = self.classUnderTest.process(scan)
+    self.assertTrue(scan == result)
+
+  def test_process_with_quality_control_mode(self):
+    scan = _raveio.open(self.SCAN_FIXTURE).object
+    result, _ = self.classUnderTest.process(scan,True,quality_control_mode="analyze")
     self.assertTrue(scan == result)
 
   def test_algorithm(self):

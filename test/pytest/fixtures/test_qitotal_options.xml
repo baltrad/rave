@@ -5,7 +5,7 @@
     <field name="se.smhi.test.2" weight="0.5"/>
   </qitotal>
   
-  <qitotal nod="sehud" weight="1.0">
+  <qitotal nod="sehuv" weight="1.0">
     <field name="se.smhi.test.1" weight="0.3"/>
     <field name="se.smhi.test.2" weight="0.7"/>
   </qitotal>
