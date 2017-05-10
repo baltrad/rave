@@ -26,13 +26,22 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 import sys, os, traceback, string, types
 from copy import deepcopy as copy
 import logging
-import xmlrpclib
+#import xmlrpclib
 import multiprocessing
 import rave_pgf_logger
 import rave_pgf_registry
 import rave_pgf_qtools
 import BaltradFrame
 import _pyhl
+if sys.version_info < (3,):
+  import SimpleXMLRPCServer
+  from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
+  import xmlrpclib as xmlrpc
+else:
+  import xmlrpc
+  from xmlrpc.server import SimpleXMLRPCServer
+  from xmlrpc.server import SimpleXMLRPCRequestHandler
+  
 from rave_defines import DEX_SPOE, REGFILE, PGFs, LOGID, LOGLEVEL, PGF_HOST, PGF_PORT
 
 METHODS = {'generate' :  '("algorithm",[files],[arguments])',
@@ -240,7 +249,7 @@ class RavePGF():
       self.logger.info("%s: ID=%s Dispatching request for %s" % (self.name, jobid, algorithm))
       self.runner.add(generate, jobid, algorithm, files, arguments, self.job_done)
       #result = self.pool.apply_async(generate, (jobid, algorithm, files, arguments))
-    except Exception, err:
+    except Exception:
       #err_msg = traceback.format_exc()
       #self.logger.error("%s: ID=%s failed. Check this out:\n%s" % (self.name, jobid, err_msg))
       self.logger.exception("%s: ID=%s failed. Check this out:" % (self.name, jobid))
@@ -258,7 +267,7 @@ class RavePGF():
       names = rave_pgf_quality_registry.get_plugins()
       for n in names:
         result.append((n, "%s quality control"%n))
-    except Exception, e:
+    except Exception:
       self.logger.exception("Failed to get quality controls")
     return result
 
@@ -274,7 +283,7 @@ class RavePGF():
       for k in keys:
         a = reg.getarea(k)
         result[k] = {"id":a.id, "xsize":a.xsize, "ysize":a.ysize, "xscale":a.xscale, "yscale":a.yscale, "extent":a.extent, "pcs":a.projection.definition}
-    except Exception, e:
+    except Exception:
       self.logger.exception("Failed to get areas")
 
     return result
@@ -288,7 +297,7 @@ class RavePGF():
       items = rave_projection.items()
       for item in items:
         result[item[0]] = {"id":item[0], "description":item[1].name, "definition":string.join(item[1].definition, " ")}
-    except Exception, e:
+    except Exception:
       self.logger.exception("Failed to get pcs definitions")
 
     return result 
@@ -341,7 +350,7 @@ class RavePGF():
         # Log the result
         self.logger.debug("%s: ID=%s Injected %s" % (self.name, self._jobid, outfile))
         
-    except Exception, err:
+    except Exception:
       # the 'err' itself is pretty useless
       #err_msg = traceback.format_exc()
       #self.logger.error("%s: ID=%s failed. Check this out:\n%s" % (self.name, self._jobid, err_msg))
@@ -380,8 +389,8 @@ class RavePGF():
         cmd = "%s &" % cmd
       code = subprocess.call(cmd, shell=True)
       if code != 0:
-        raise Exception, "Failure when executing %s" % command
-    except Exception, err:
+        raise Exception("Failure when executing %s" % command)
+    except Exception:
       #err_msg = traceback.format_exc()
       #self.logger.error("%s: Failed to execute command %s, msg: %s" % (self.name, command, err_msg))
       self.logger.exception("%s: Failed to execute command %s, msg:" % (self.name, command))
@@ -422,10 +431,10 @@ def generate(jobid, algorithm, files, arguments, host=PGF_HOST, port=PGF_PORT):
       ret = pgf._generate(algorithm, files, arguments)
     except:
       pgf.logger.exception("Failure during product generation")
-    pgf._client = xmlrpclib.ServerProxy("http://%s:%i/RAVE" % (host, port), verbose=False)
+    pgf._client = xmlrpc.ServerProxy("http://%s:%i/RAVE" % (host, port), verbose=False)
     pgf._client.job_done(jobid)
     return jobid
 
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)

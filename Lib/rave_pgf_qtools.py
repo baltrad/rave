@@ -26,13 +26,19 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @author Daniel Michelson, SMHI
 ## @date 2010-07-23
 
-import os
+import os, sys
 import traceback
-import xmlrpclib
-import Queue
+#import xmlrpclib
 from xml.etree import ElementTree as ET
 from rave_defines import QFILE
 import threading
+if sys.version_info < (3,):
+  import xmlrpclib as xmlrpc
+  import Queue
+else:
+  import xmlrpc
+  import queue as Queue
+  
 
 ## Job queue Exception
 class PGF_JobQueue_isFull_Error(Exception):
@@ -110,9 +116,9 @@ class PGF_JobQueue(dict):
         if os.path.isfile(filename):
             try:
                 elems =  ET.parse(filename).getroot()
-            except Exception, err:
+            except Exception:
                 err_msg = traceback.format_exc()
-                print "Error trying to read PGF job queue: %sIgnoring, using empty job queue." % err_msg
+                print("Error trying to read PGF job queue: %sIgnoring, using empty job queue." % err_msg)
                 return  # queue is probably empty, just ignore
             for elem in list(elems):
                 self[elem.get('jobid')] = elem
@@ -165,4 +171,4 @@ def Element2List(elem, tagname):
 
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)

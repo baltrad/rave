@@ -22,7 +22,9 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @author Daniel Michelson, SMHI
 ## @date 2010-07-12
 
-import xml.etree.ElementTree as ET
+#import xml.etree.ElementTree as ET
+from xml.etree.ElementTree import Element
+
 from rave_defines import UTF8, PGF_TAG
 
 
@@ -30,7 +32,7 @@ from rave_defines import UTF8, PGF_TAG
 # of its own methods, the object's internal heirarchy can contain either
 # BltXML or Element objects, most conveniently the latter.
 # Based almost entirely on Fredrik Lundh's ElementTree.
-class BltXML(ET._ElementInterface):
+class BltXML(Element):
 
     ## Constructor
     # @param tag string, the root tag of this object.
@@ -126,4 +128,4 @@ def MakeBaltradFrameXML(sender, channel, name,
 
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)

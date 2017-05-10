@@ -39,97 +39,97 @@ class rave_quality_chain_registry_test(unittest.TestCase):
 
   def test_get_chain_bySource(self):
     chain = self.classUnderTest.get_chain("selek")
-    self.assertEquals("selek", chain.source())
-    self.assertEquals("insect_detection", chain.category())
+    self.assertEqual("selek", chain.source())
+    self.assertEqual("insect_detection", chain.category())
     links = chain.links()
-    self.assertEquals(2, len(links))
-    self.assertEquals("rave-overshooting", links[0].refname())
-    self.assertEquals("radvol-att", links[1].refname())
+    self.assertEqual(2, len(links))
+    self.assertEqual("rave-overshooting", links[0].refname())
+    self.assertEqual("radvol-att", links[1].refname())
 
   def test_get_chain_bySourceAndCategory(self):
     chain = self.classUnderTest.get_chain("sekkr","qpe")
-    self.assertEquals("sekkr", chain.source())
-    self.assertEquals("qpe", chain.category())
+    self.assertEqual("sekkr", chain.source())
+    self.assertEqual("qpe", chain.category())
     links = chain.links()
-    self.assertEquals(1, len(links))
-    self.assertEquals("rave-overshooting", links[0].refname())
+    self.assertEqual(1, len(links))
+    self.assertEqual("rave-overshooting", links[0].refname())
 
   def test_get_chain_haveArguments(self):
     chain = self.classUnderTest.get_chain("sekkr","insect_detection")
     arguments = chain.links()[0].arguments()
-    self.assertEquals(1, len(arguments))
-    self.assertEquals("some sort of value", arguments["something"])
+    self.assertEqual(1, len(arguments))
+    self.assertEqual("some sort of value", arguments["something"])
 
   def test_get_chain_not_found(self):
     try:
       chain = self.classUnderTest.get_chain("sesss")
       self.fail("Expected LookupError")
-    except LookupError,e:
+    except LookupError:
       pass
 
   def test_get_chain_to_many_found(self):
     try:
       chain = self.classUnderTest.get_chain("sekkr")
       self.fail("Expected LookupError")
-    except LookupError,e:
+    except LookupError:
       pass
 
   def test_get_chain_not_found_invalid_category(self):
     try:
       chain = self.classUnderTest.get_chain("sekkr","nisse")
       self.fail("Expected LookupError")
-    except LookupError,e:
+    except LookupError:
       pass
 
   def test_find_chains_bySource(self):
     chains = self.classUnderTest.find_chains("sekkr")
-    self.assertEquals(2, len(chains))
-    self.assertEquals("sekkr", chains[0].source())
-    self.assertEquals("insect_detection", chains[0].category())
+    self.assertEqual(2, len(chains))
+    self.assertEqual("sekkr", chains[0].source())
+    self.assertEqual("insect_detection", chains[0].category())
     links = chains[0].links()
-    self.assertEquals(2, len(links))
-    self.assertEquals("rave-overshooting", links[0].refname())
-    self.assertEquals(1, len(links[0].arguments()))
-    self.assertEquals("some sort of value", links[0].arguments()["something"])
-    self.assertEquals("radvol-spike", links[1].refname())
+    self.assertEqual(2, len(links))
+    self.assertEqual("rave-overshooting", links[0].refname())
+    self.assertEqual(1, len(links[0].arguments()))
+    self.assertEqual("some sort of value", links[0].arguments()["something"])
+    self.assertEqual("radvol-spike", links[1].refname())
     
-    self.assertEquals("sekkr", chains[1].source())
-    self.assertEquals("qpe", chains[1].category())
+    self.assertEqual("sekkr", chains[1].source())
+    self.assertEqual("qpe", chains[1].category())
     links = chains[1].links()
-    self.assertEquals(1, len(links))
-    self.assertEquals("rave-overshooting", links[0].refname())
+    self.assertEqual(1, len(links))
+    self.assertEqual("rave-overshooting", links[0].refname())
 
   def test_find_chains_bySource_nothing_found(self):
     chains = self.classUnderTest.find_chains("sesss")
-    self.assertEquals(0, len(chains))
+    self.assertEqual(0, len(chains))
 
   def test_find_chains_bySourceAndCategory(self):
     chains = self.classUnderTest.find_chains("sekkr", "qpe")
-    self.assertEquals(1, len(chains))
-    self.assertEquals("sekkr", chains[0].source())
-    self.assertEquals("qpe", chains[0].category())
+    self.assertEqual(1, len(chains))
+    self.assertEqual("sekkr", chains[0].source())
+    self.assertEqual("qpe", chains[0].category())
     links = chains[0].links()
-    self.assertEquals(1, len(links))
-    self.assertEquals("rave-overshooting", links[0].refname())
+    self.assertEqual(1, len(links))
+    self.assertEqual("rave-overshooting", links[0].refname())
 
   def test_find_chains_bySourceAndCategory_nothing_found(self):
     chains = self.classUnderTest.find_chains("sesss", "qpe")
-    self.assertEquals(0, len(chains))
+    self.assertEqual(0, len(chains))
     
   def test_real_qualityChainRegistryXml(self):
     realXmlClass = rave_quality_chain_registry.rave_quality_chain_registry(self.REAL_XML)
     
     chains = realXmlClass.find_chains("sekkr", "insect_detection")
-    self.assertEquals(1, len(chains))
-    self.assertEquals("sekkr", chains[0].source())
-    self.assertEquals("insect_detection", chains[0].category())
+    self.assertEqual(1, len(chains))
+    self.assertEqual("sekkr", chains[0].source())
+    self.assertEqual("insect_detection", chains[0].category())
     
     links = chains[0].links()
-    self.assertEquals(2, len(links))
+    self.assertEqual(2, len(links))
     link1 = links[0]
-    self.assertEquals("rave-overshooting", link1.refname())
+    self.assertEqual("rave-overshooting", link1.refname())
     arguments = link1.arguments()
-    self.assertEquals("some sort of value", arguments["something"])
+    self.assertEqual("some sort of value", arguments["something"])
     link2 = links[1]
-    self.assertEquals("radvol-spike", link2.refname())
+    self.assertEqual("radvol-spike", link2.refname())
     

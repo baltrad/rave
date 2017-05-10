@@ -1,13 +1,18 @@
-import httplib
-import mimetools
-import mimetypes
+#import httplib
+#import mimetools
+#import mimetypes
 import os
 import sys
 import time
 import datetime
-import urlparse
 import base64
-
+if sys.version_info < (3,):
+  import httplib
+  import urlparse
+else:
+  import http.client as httplib
+  import urllib.parse as urlparse
+  
 from keyczar import keyczar 
 
 from rave_defines import DEX_NODENAME, DEX_PRIVATEKEY, DEX_SPOE
@@ -85,13 +90,13 @@ if __name__ == "__main__":
     if len(sys.argv) > 3:
       dex_url = sys.argv[3]
   else:
-    print "Syntax is BaltradFrame.py <command> <file> [<url>}"
-    print "where command either is one of: 'file'"
-    print "  if file, then a hdf 5 file should be provided as <file>"
-    print ""
-    print "url is optional, if not specified, then it will default to DEX_SPOE in rave_defines"
-    print ""
+    print("Syntax is BaltradFrame.py <command> <file> [<url>}")
+    print("where command either is one of: 'file'")
+    print("  if file, then a hdf 5 file should be provided as <file>")
+    print("")
+    print("url is optional, if not specified, then it will default to DEX_SPOE in rave_defines")
+    print("")
     sys.exit(0)
   
   if sys.argv[1] == "file":
-    print inject_file(filename, dex_url)
+    print(inject_file(filename, dex_url))

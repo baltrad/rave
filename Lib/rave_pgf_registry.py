@@ -121,4 +121,4 @@ class PGF_Registry(BaltradMessageXML.BltXML):
 
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)
