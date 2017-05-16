@@ -313,6 +313,82 @@ class PyCartesianParamTest(unittest.TestCase):
     r = obj.getConvertedValue((3,3))
     self.assertEquals(_rave.RaveValueType_DATA, r[0])
     self.assertAlmostEquals(15.0, r[1], 4)
+    
+  def test_setConvertedValue_rawZero(self):
+    obj = _cartesianparam.new()
+    obj.nodata = 255.0
+    obj.undetect = 0.0
+    obj.gain = 0.4
+    obj.offset = -30.0
+    a=numpy.arange(120)
+    a=numpy.array(a.astype(numpy.float64),numpy.float64)
+    a=numpy.reshape(a,(12,10)).astype(numpy.float64)  
+    obj.setData(a)
+    
+    obj.setConvertedValue((0,1), 0.0)
+
+    r = obj.getConvertedValue((0,1))
+    self.assertEquals(_rave.RaveValueType_DATA, r[0])
+    self.assertAlmostEquals(0.0, r[1], 4)
+    
+    r = obj.getValue((0,1))
+    self.assertEquals(_rave.RaveValueType_DATA, r[0])
+    self.assertAlmostEquals(75.0, r[1], 4)
+    
+#   def test_setConvertedValue_roundOff(self):
+#     obj = _cartesianparam.new()
+#     obj.nodata = 255.0
+#     obj.undetect = 0.0
+#     obj.gain = 0.4
+#     obj.offset = -30.0
+#     
+#     # test uint8
+#     a=numpy.arange(120)
+#     a=numpy.array(a.astype(numpy.uint8),numpy.uint8)
+#     a=numpy.reshape(a,(12,10)).astype(numpy.uint8)  
+#     obj.setData(a)
+#     
+#     obj.setConvertedValue((0,1), -0.5)
+#     
+#     r = obj.getValue((0,1))
+#     self.assertEquals(_rave.RaveValueType_DATA, r[0])
+#     self.assertAlmostEquals(74.0, r[1], 4)
+#     
+#     #test int8
+#     a=numpy.arange(120)
+#     a=numpy.array(a.astype(numpy.int8),numpy.int8)
+#     a=numpy.reshape(a,(12,10)).astype(numpy.int8)  
+#     obj.setData(a)
+#     
+#     obj.setConvertedValue((0,1), 1.5)
+#     
+#     r = obj.getValue((0,1))
+#     self.assertEquals(_rave.RaveValueType_DATA, r[0])
+#     self.assertAlmostEquals(79.0, r[1], 4)
+#     
+#     #test uint
+#     a=numpy.arange(120)
+#     a=numpy.array(a.astype(numpy.uint),numpy.uint)
+#     a=numpy.reshape(a,(12,10)).astype(numpy.uint)  
+#     obj.setData(a)
+#     
+#     obj.setConvertedValue((0,1), 2.25)
+#     
+#     r = obj.getValue((0,1))
+#     self.assertEquals(_rave.RaveValueType_DATA, r[0])
+#     self.assertAlmostEquals(81.0, r[1], 4)
+#     
+#     #test int
+#     a=numpy.arange(120)
+#     a=numpy.array(a.astype(numpy.int),numpy.int)
+#     a=numpy.reshape(a,(12,10)).astype(numpy.int)  
+#     obj.setData(a)
+#     
+#     obj.setConvertedValue((0,1), -1.75)
+#     
+#     r = obj.getValue((0,1))
+#     self.assertEquals(_rave.RaveValueType_DATA, r[0])
+#     self.assertAlmostEquals(71.0, r[1], 4)
 
   def test_setData_int8(self):
     obj = _cartesianparam.new()
@@ -325,7 +401,6 @@ class PyCartesianParamTest(unittest.TestCase):
     self.assertEqual(_rave.RaveDataType_CHAR, obj.datatype)
     self.assertEqual(10, obj.xsize)
     self.assertEqual(12, obj.ysize)
-
 
   def test_setData_uint8(self):
     obj = _cartesianparam.new()

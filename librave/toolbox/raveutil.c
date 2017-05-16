@@ -134,3 +134,17 @@ int mytrunc(double d)
 
   return a;
 }
+
+int myround(double d)
+{
+  int a;/* = (int)d;*/
+
+  if (d > INT_MAX)
+    a = INT_MAX;
+  else if (d < INT_MIN)
+    a = INT_MIN;
+  else
+    a = (int) round(d);
+
+  return a;
+}

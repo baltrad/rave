@@ -291,7 +291,7 @@ CartesianParam_t* RaveGra_apply(RaveGra_t* self, RaveField_t* distance, Cartesia
       dt = CartesianParam_getConvertedValue(grafield, x, y, &v);
       RaveField_getValue(distance, x, y, &dist);
       double distanceInMeters = doffset + dgain*dist;
-      CartesianParam_setConvertedValue(grafield, x, y, applyGra(self, distanceInMeters/1000.0, v, dt));
+      CartesianParam_setConvertedValue(grafield, x, y, applyGra(self, distanceInMeters/1000.0, v, dt), dt);
     }
   }
   sprintf(coeffs, "GRA: A=%f, B=%f, C=%f, low_db=%f, high_db=%f",self->A, self->B, self->C, self->lowerThreshold, self->upperThreshold);
