@@ -185,56 +185,32 @@ int RaveData2D_setValueUnchecked(RaveData2D_t* self, long x, long y, double v)
 
   switch (self->type) {
   case RaveDataType_CHAR: {
+    int c = myround_int(v, -128, 127);
     char *a = (char *) self->data;
-    int c = mytrunc(v);
-
-    if (c < -128)
-      c = -128;
-    if (c > 127)
-      c = 127;
     a[y * self->xsize + x] = c;
     break;
   }
   case RaveDataType_UCHAR: {
+    unsigned char c = (unsigned char)myround_int(v, 0, 255);
     unsigned char *a = (unsigned char *) self->data;
-    unsigned char c;
-
-    if (v < 0) /* Oops: Not allowed!*/
-      v = 0;
-    if (v > 255)
-      v = 255;
-    c = mytrunc(v);
     a[y * self->xsize + x] = c;
     break;
   }
   case RaveDataType_SHORT: {
+    int c = myround_int(v, SHRT_MIN, SHRT_MAX);
     short *a = (short *) self->data;
-    int c = mytrunc(v);
-    if (c < SHRT_MIN) /* Oops: Not allowed!*/
-      c = SHRT_MIN;
-    if (c > SHRT_MAX)
-      c = SHRT_MAX;
     a[y * self->xsize + x] = c;
     break;
   }
   case RaveDataType_USHORT: {
+    int c = myround_int(v, 0, USHRT_MAX);
     unsigned short *a = (unsigned short *) self->data;
-    int c = mytrunc(v);
-    if (c < 0) /* Oops: Not allowed!*/
-      c = 0;
-    if (c > USHRT_MAX)
-      c = USHRT_MAX;
     a[y * self->xsize + x] = c;
     break;
   }
   case RaveDataType_INT: {
+    int c = myround_int(v, INT_MIN, INT_MAX);
     int *a = (int *) self->data;
-    int c;
-    if (v > INT_MAX)
-      v = INT_MAX;
-    if (v < INT_MIN)
-      v = INT_MIN;
-    c = mytrunc(v);
     a[y * self->xsize + x] = c;
     break;
   }
@@ -254,7 +230,7 @@ int RaveData2D_setValueUnchecked(RaveData2D_t* self, long x, long y, double v)
       v = LONG_MAX;
     if (v < LONG_MIN)
       v = LONG_MIN;
-    c = v; /* Should work on 64bit boxes after above preparations. */
+    c = round(v); /* Should work on 64bit boxes after above preparations. */
     a[y * self->xsize + x] = c;
     break;
   }
@@ -264,7 +240,7 @@ int RaveData2D_setValueUnchecked(RaveData2D_t* self, long x, long y, double v)
       v = 0;
     if (v > ULONG_MAX)
       v = ULONG_MAX;
-    a[y * self->xsize + x] = (unsigned long)v;
+    a[y * self->xsize + x] = (unsigned long)round(v);
     break;
   }
   case RaveDataType_FLOAT: {

@@ -135,16 +135,17 @@ int mytrunc(double d)
   return a;
 }
 
-int myround(double d)
+int myround_int(double d, double minlimit, double maxlimit)
 {
-  int a;/* = (int)d;*/
+  double rounded = round(d);
 
-  if (d > INT_MAX)
-    a = INT_MAX;
-  else if (d < INT_MIN)
-    a = INT_MIN;
+  int result;
+  if (rounded > maxlimit)
+    result = maxlimit;
+  else if (d < minlimit)
+    result = minlimit;
   else
-    a = (int) round(d);
+    result = (int)rounded;
 
-  return a;
+  return result;
 }
