@@ -39,10 +39,9 @@ from xml.etree.ElementTree import Element
 
 class rave_pgf_quality_registry_mgr_element(Element):
   def __init__(self):
+    super(rave_pgf_quality_registry_mgr_element, self).__init__("rave-pgf-quality-registry")
     self.tail="\n"
     self.text="\n  "
-    self.tag = "rave-pgf-quality-registry"
-    #self.clear()
 
   ## Adds a plugin to the registry. 
   # @param name - the presentation name of the plugin
