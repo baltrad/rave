@@ -95,14 +95,13 @@ from rave_util_test import *
 from RaveOdimSourceTest import *
 """
 from PyBitmapGeneratorTest import *
-A="""
+
 #
 # Unless RAVE_TESTDB_URI has been set we don't want to run the dom db tests
 #
 if os.environ.get("RAVE_TESTDB_URI", "") != "":
   from rave_dom_db_test import *
 
-"""
 from rave_wmo_flatfile_test import *
 
 from rave_fm12_test import *

@@ -179,7 +179,7 @@ dburipool = {}
 # Class for connecting with the database
 class rave_db(object):
   def __init__(self, engine_or_url):
-    if isinstance(engine_or_url, basestring):
+    if isinstance(engine_or_url, str):
       self._engine = engine.create_engine(engine_or_url, echo=False)
     else:
       self._engine = engine_or_url
@@ -385,7 +385,7 @@ class rave_db(object):
 # If create_schema = True (default) then the tables will be created
 #
 def create_db(url, create_schema=True):
-  if not dburipool.has_key(url):
+  if url not in dburipool:
     db = rave_db(url)
     if create_schema:
       db.create()
