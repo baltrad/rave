@@ -146,7 +146,7 @@ class fm12_parser(object):
     result = []
     for groups in blocks:
       if len(groups) < 3:
-        raise ValueError, "Synop must at least contain Identifier, type and observation group"
+        raise ValueError("Synop must at least contain Identifier, type and observation group")
 
       startpos = 0
       for x in range(len(groups)):
@@ -154,7 +154,7 @@ class fm12_parser(object):
           startpos = x - 1
           break
         if startpos < 0:
-          raise ValueError, "Can not handle this file. AAXX/BBXX/OOXX block starts too early"
+          raise ValueError("Can not handle this file. AAXX/BBXX/OOXX block starts too early")
 
       groups = groups[startpos:]
       result.extend(self._parse_data(groups, filename))
@@ -576,7 +576,7 @@ class fm12_parser(object):
     
     while idx < len(section1):
       secpart = section1[idx][0]
-      if self.SECTION1_PARTS.has_key(secpart):
+      if secpart in self.SECTION1_PARTS:
         self.SECTION1_PARTS[secpart](self, obs, section1[idx])
       idx = idx + 1
   
@@ -675,7 +675,7 @@ class fm12_parser(object):
     idx=0
     while idx < len(section3):
       secpart = section3[idx][0]
-      if self.SECTION3_PARTS.has_key(secpart):
+      if secpart in self.SECTION3_PARTS:
         self.SECTION3_PARTS[secpart](self, obs, section3[idx])
       idx = idx + 1    
     

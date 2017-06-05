@@ -32,13 +32,14 @@ class rave_wmo_flatfile(object):
   # @return a list of wmo_stations
   def parse(self, filename):
     result = []
-    a = open(filename).readlines()
-    #First line contains all identifiers (tab-separated)
-    IDS=a[0].lstrip().rstrip().split("\t")
-    for i in range(1,len(a)):
-      s = self._parse_row(IDS, a[i].lstrip().rstrip())
-      if s != None:
-        result.append(s)
+    with open(filename) as fp:
+      a = fp.readlines()
+      #First line contains all identifiers (tab-separated)
+      IDS=a[0].lstrip().rstrip().split("\t")
+      for i in range(1,len(a)):
+        s = self._parse_row(IDS, a[i].lstrip().rstrip())
+        if s != None:
+          result.append(s)
         
     return result
   
@@ -119,7 +120,7 @@ if __name__=="__main__":
   a=rave_wmo_flatfile()
   b=a.parse("wmo_flatfile.txt")
   for bi in b:
-    print bi
+    print(bi)
     #if bi.country.lower().find("SWEDEN") >= 0:
     #  print bi
   

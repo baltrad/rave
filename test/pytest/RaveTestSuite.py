@@ -102,9 +102,10 @@ A="""
 if os.environ.get("RAVE_TESTDB_URI", "") != "":
   from rave_dom_db_test import *
 
-from rave_wmo_flatfile_test import *
-from rave_fm12_test import *
 """
+from rave_wmo_flatfile_test import *
+
+from rave_fm12_test import *
 
 #Gra adjustment tests requires mock version 1.0.1 or higher.
 try:
