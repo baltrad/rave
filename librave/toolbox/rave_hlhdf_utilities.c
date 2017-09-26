@@ -68,6 +68,37 @@ static const struct RaveToHlhdfTypeMap RAVE_TO_HLHDF_MAP[] = {
   {HLHDF_END_OF_SPECIFIERS, RaveDataType_UNDEFINED}
 };
 
+
+/**
+ * Attribute names that has to be translated when jumping from 2.0/2.1 up to 2.2
+ */
+const char* ATTRIBUTE_NAMES_20_to_22[][2] = {
+    {"how/TXloss", "how/TXlossH"},
+    {"how/injectloss", "how/injectlossH"},
+    {"how/RXloss", "how/RXlossH"},
+    {"how/radomeloss", "how/radomelossH"},
+    {"how/antgain", "how/antgainH"},
+    {"how/beamw", "how/beamwH"},
+    {"how/radconst", "how/radconstH"},
+    {"how/NEZ", "how/NEZH"},
+    {"how/zcal", "how/zcalH"},
+    {"how/nsample", "how/nsampleH"},
+    {NULL, NULL}
+};
+
+/**
+ * Quantities that has to be translated when jumping from 2.0/2.1 to 2.2
+ */
+const char* QUANTITIES_20_to_22[][2] = {
+    {"DBZ", "DBZH"},
+    {"SQI", "SQIH"},
+    {"SNR", "SNRH"},
+    {"CCOR", "CCORH"},
+    {"VRAD", "VRADH"},
+    {"WRAD", "WRADH"},
+    {NULL, NULL}
+};
+
 /*@} End of Constants */
 
 /*@{ Defines */
@@ -111,6 +142,32 @@ static const struct RaveToHlhdfTypeMap RAVE_TO_HLHDF_MAP[] = {
 /*@} End of Defines */
 
 /*@{ Interface functions */
+
+const char* RaveHL_convertAttributeName(const char* name)
+{
+  int idx = 0;
+  const char** ptr = ATTRIBUTE_NAMES_20_to_22[0];
+  while (ptr[0] != NULL) {
+    if (strcasecmp(ptr[0], name) == 0) {
+      return ptr[1];
+    }
+    ptr = ATTRIBUTE_NAMES_20_to_22[++idx];
+  }
+  return name;
+}
+
+const char* RaveHL_convertQuantity(const char* name)
+{
+  int idx = 0;
+  const char** ptr = QUANTITIES_20_to_22[0];
+  while (ptr[0] != NULL) {
+    if (strcasecmp(ptr[0], name) == 0) {
+      return ptr[1];
+    }
+    ptr = QUANTITIES_20_to_22[++idx];
+  }
+  return name;
+}
 
 /**
  * Creates a rave attribute from a HLHDF node value.
@@ -737,7 +794,7 @@ int RaveHL_loadAttributesAndData(HL_NodeList* nodelist, void* object, RaveHL_att
              strncasecmp(tmpptr, "where/", 6)==0)) {
           RaveAttribute_t* attribute = RaveHL_createAttribute(node);
           if (attribute != NULL) {
-            result = RaveAttribute_setName(attribute, tmpptr);
+            result = RaveAttribute_setName(attribute, RaveHL_convertAttributeName(tmpptr));
             if (result == 1 && attrf != NULL) {
               result = attrf(object, attribute);
             }

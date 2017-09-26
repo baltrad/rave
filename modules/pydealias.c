@@ -69,7 +69,7 @@ static PyObject *ErrorObject;
 static PyObject* _dealiased_func(PyObject* self, PyObject* args) {
   PyObject* object = NULL;
   PyPolarScan* pyscan = NULL;
-  char* parameter = "VRAD";
+  char* parameter = "VRADH";
 
   if (!PyArg_ParseTuple(args, "O|s", &object, &parameter)) {
     return NULL;
@@ -99,7 +99,7 @@ static PyObject* _dealias_func(PyObject* self, PyObject* args)
   PyPolarScan* scan = NULL;
   PyPolarVolume* volume = NULL;
   int ret = 0;
-  char* parameter = "VRAD";
+  char* parameter = "VRADH";
   double emax = EMAX;
 
   if (!PyArg_ParseTuple(args, "O|sd", &object, &parameter, &emax)) {

@@ -202,12 +202,12 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEquals("DBZH", dbzhParam.quantity)
 
     # And verify the VRAD
-    vradParam = scan.getParameter("VRAD")
+    vradParam = scan.getParameter("VRADH")
     self.assertAlmostEquals(0.1875, vradParam.gain, 4)
     self.assertAlmostEquals(-24.0, vradParam.offset, 4)
     self.assertAlmostEquals(255.0, vradParam.nodata, 4)
     self.assertAlmostEquals(0.0, vradParam.undetect, 4)
-    self.assertEquals("VRAD", vradParam.quantity)
+    self.assertEquals("VRADH", vradParam.quantity)
 
     # Verify last scan
     scan = vol.getScan(9)
@@ -233,12 +233,12 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEquals(420, dbzhParam.nrays)
 
     # Verify last scans VRAD parameter
-    vradParam = scan.getParameter("VRAD")
+    vradParam = scan.getParameter("VRADH")
     self.assertAlmostEquals(0.375, vradParam.gain, 4)
     self.assertAlmostEquals(-48.0, vradParam.offset, 4)
     self.assertAlmostEquals(255.0, vradParam.nodata, 4)
     self.assertAlmostEquals(0.0, vradParam.undetect, 4)
-    self.assertEquals("VRAD", vradParam.quantity)
+    self.assertEquals("VRADH", vradParam.quantity)
 
   def test_save_cartesian(self):
     image = _cartesian.new()
@@ -1118,7 +1118,7 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertAlmostEquals(0.4, p1.gain, 4)
     self.assertAlmostEquals(-30.0, p1.offset, 4)
     
-    p2 = scan.getParameter("VRAD")
+    p2 = scan.getParameter("VRADH")
     self.assertAlmostEquals(0.375, p2.gain, 4)
     self.assertAlmostEquals(-48.0, p2.offset, 4)
   
@@ -1349,7 +1349,7 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertAlmostEquals(0.1875, nodelist.getNode("/dataset1/data2/what/gain").data(), 4)
     self.assertAlmostEquals(255, nodelist.getNode("/dataset1/data2/what/nodata").data(), 4)
     self.assertAlmostEquals(-24, nodelist.getNode("/dataset1/data2/what/offset").data(), 4)
-    self.assertEquals("VRAD", nodelist.getNode("/dataset1/data2/what/quantity").data())
+    self.assertEquals("VRADH", nodelist.getNode("/dataset1/data2/what/quantity").data())
     self.assertAlmostEquals(0, nodelist.getNode("/dataset1/data2/what/undetect").data(), 4)
   
   def test_read_arrays_from_scan(self):
@@ -1844,7 +1844,445 @@ class PyRaveIOTest(unittest.TestCase):
       self.fail("Expected IOError")
     except IOError, e:
       pass
+
+  def testReadAndConvertV21_SCAN(self):
+    nodelist = _pyhl.nodelist()
+    self.addGroupNode(nodelist, "/what")
+    self.addGroupNode(nodelist, "/where")
+    self.addGroupNode(nodelist, "/how")
     
+    self.addGroupNode(nodelist, "/dataset1")
+    self.addGroupNode(nodelist, "/dataset1/what")
+    self.addGroupNode(nodelist, "/dataset1/data1")
+    self.addGroupNode(nodelist, "/dataset1/data1/how")
+    self.addGroupNode(nodelist, "/dataset1/data1/what")
+    
+    self.addAttributeNode(nodelist, "/Conventions", "string", "ODIM_H5/V2_1")
+    self.addAttributeNode(nodelist, "/what/date", "string", "20100101")
+    self.addAttributeNode(nodelist, "/what/time", "string", "101500")
+    self.addAttributeNode(nodelist, "/what/source", "string", "PLC:123")
+    self.addAttributeNode(nodelist, "/what/object", "string", "SCAN")
+    self.addAttributeNode(nodelist, "/what/version", "string", "H5rad 2.1")
+    
+    self.addAttributeNode(nodelist, "/where/height", "double", 100.0)
+    self.addAttributeNode(nodelist, "/where/lon", "double", 13.5)
+    self.addAttributeNode(nodelist, "/where/lat", "double", 61.0)
+
+    self.addAttributeNode(nodelist, "/how/TXloss", "double", 1.1)
+    self.addAttributeNode(nodelist, "/how/injectloss", "double", 1.2)  # ??
+    self.addAttributeNode(nodelist, "/how/RXloss", "double", 1.3)
+    self.addAttributeNode(nodelist, "/how/radomeloss", "double", 1.4)
+    self.addAttributeNode(nodelist, "/how/antgain", "double", 1.5)
+    self.addAttributeNode(nodelist, "/how/beamw", "double", 1.6) #??
+    self.addAttributeNode(nodelist, "/how/radconst", "double", 1.7) #??
+    self.addAttributeNode(nodelist, "/how/NEZ", "double", 1.8)
+    self.addAttributeNode(nodelist, "/how/zcal", "double", 1.9)
+    self.addAttributeNode(nodelist, "/how/nsample", "double", 2.0) #??
+     
+    self.addAttributeNode(nodelist, "/dataset1/what/startdate", "string", "20100101")
+    self.addAttributeNode(nodelist, "/dataset1/what/starttime", "string", "101010")
+    self.addAttributeNode(nodelist, "/dataset1/what/enddate", "string", "20100101")
+    self.addAttributeNode(nodelist, "/dataset1/what/endtime", "string", "101011")
+    self.addAttributeNode(nodelist, "/dataset1/what/product", "string", "SCAN")
+
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/TXloss", "double", 3.1)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/injectloss", "double", 3.2)  # ??
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/RXloss", "double", 3.3)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/radomeloss", "double", 3.4)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/antgain", "double", 3.5)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/beamw", "double", 3.6) #??
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/radconst", "double", 3.7) #??
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/NEZ", "double", 3.8)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/zcal", "double", 3.9)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/nsample", "double", 4.0) #??
+
+    self.addAttributeNode(nodelist, "/dataset1/data1/what/gain", "double", 1.0)
+    self.addAttributeNode(nodelist, "/dataset1/data1/what/offset", "double", 0.0)
+    self.addAttributeNode(nodelist, "/dataset1/data1/what/nodata", "double", 255.0)
+    self.addAttributeNode(nodelist, "/dataset1/data1/what/undetect", "double", 255.0)
+    self.addAttributeNode(nodelist, "/dataset1/data1/what/quantity", "string", "DBZH")
+
+    dset = numpy.arange(100)
+    dset=numpy.array(dset.astype(numpy.uint8),numpy.uint8)
+    dset=numpy.reshape(dset,(10,10)).astype(numpy.uint8)
+    
+    self.addDatasetNode(nodelist, "/dataset1/data1/data", "uchar", (10,10), dset)
+    
+    nodelist.write(self.TEMPORARY_FILE, 6)
+
+    obj = _raveio.open(self.TEMPORARY_FILE)
+    self.assertAlmostEqual(1.1, obj.object.getAttribute("how/TXlossH"), 2)
+    self.assertAlmostEqual(1.2, obj.object.getAttribute("how/injectlossH"), 2)
+    self.assertAlmostEqual(1.3, obj.object.getAttribute("how/RXlossH"), 2)
+    self.assertAlmostEqual(1.4, obj.object.getAttribute("how/radomelossH"), 2)
+    self.assertAlmostEqual(1.5, obj.object.getAttribute("how/antgainH"), 2)
+    self.assertAlmostEqual(1.6, obj.object.getAttribute("how/beamwH"), 2)
+    self.assertAlmostEqual(1.7, obj.object.getAttribute("how/radconstH"), 2)
+    self.assertAlmostEqual(1.8, obj.object.getAttribute("how/NEZH"), 2)
+    self.assertAlmostEqual(1.9, obj.object.getAttribute("how/zcalH"), 2)
+    self.assertAlmostEqual(2.0, obj.object.getAttribute("how/nsampleH"), 2)
+    
+    self.assertAlmostEqual(3.1, obj.object.getParameter("DBZH").getAttribute("how/TXlossH"), 2)
+    self.assertAlmostEqual(3.2, obj.object.getParameter("DBZH").getAttribute("how/injectlossH"), 2)
+    self.assertAlmostEqual(3.3, obj.object.getParameter("DBZH").getAttribute("how/RXlossH"), 2)
+    self.assertAlmostEqual(3.4, obj.object.getParameter("DBZH").getAttribute("how/radomelossH"), 2)
+    self.assertAlmostEqual(3.5, obj.object.getParameter("DBZH").getAttribute("how/antgainH"), 2)
+    self.assertAlmostEqual(3.6, obj.object.getParameter("DBZH").getAttribute("how/beamwH"), 2)
+    self.assertAlmostEqual(3.7, obj.object.getParameter("DBZH").getAttribute("how/radconstH"), 2)
+    self.assertAlmostEqual(3.8, obj.object.getParameter("DBZH").getAttribute("how/NEZH"), 2)
+    self.assertAlmostEqual(3.9, obj.object.getParameter("DBZH").getAttribute("how/zcalH"), 2)
+    self.assertAlmostEqual(4.0, obj.object.getParameter("DBZH").getAttribute("how/nsampleH"), 2)
+
+  def testReadAndConvertV21_PVOL(self):
+    nodelist = _pyhl.nodelist()
+    self.addGroupNode(nodelist, "/what")
+    self.addGroupNode(nodelist, "/where")
+    self.addGroupNode(nodelist, "/how")
+    
+    self.addGroupNode(nodelist, "/dataset1")
+    self.addGroupNode(nodelist, "/dataset1/what")
+    self.addGroupNode(nodelist, "/dataset1/data1")
+    self.addGroupNode(nodelist, "/dataset1/data1/how")
+    self.addGroupNode(nodelist, "/dataset1/data1/what")
+    self.addGroupNode(nodelist, "/dataset1/data2")
+    self.addGroupNode(nodelist, "/dataset1/data2/how")
+    self.addGroupNode(nodelist, "/dataset1/data2/what")
+    self.addGroupNode(nodelist, "/dataset2")
+    self.addGroupNode(nodelist, "/dataset2/what")
+    self.addGroupNode(nodelist, "/dataset2/data1")
+    self.addGroupNode(nodelist, "/dataset2/data1/how")
+    self.addGroupNode(nodelist, "/dataset2/data1/what")
+    
+    self.addAttributeNode(nodelist, "/Conventions", "string", "ODIM_H5/V2_1")
+    self.addAttributeNode(nodelist, "/what/date", "string", "20100101")
+    self.addAttributeNode(nodelist, "/what/time", "string", "101500")
+    self.addAttributeNode(nodelist, "/what/source", "string", "PLC:123")
+    self.addAttributeNode(nodelist, "/what/object", "string", "PVOL")
+    self.addAttributeNode(nodelist, "/what/version", "string", "H5rad 2.1")
+    
+    self.addAttributeNode(nodelist, "/where/height", "double", 100.0)
+    self.addAttributeNode(nodelist, "/where/lon", "double", 13.5)
+    self.addAttributeNode(nodelist, "/where/lat", "double", 61.0)
+
+    self.addAttributeNode(nodelist, "/how/TXloss", "double", 1.1)
+    self.addAttributeNode(nodelist, "/how/injectloss", "double", 1.2)  # ??
+    self.addAttributeNode(nodelist, "/how/RXloss", "double", 1.3)
+    self.addAttributeNode(nodelist, "/how/radomeloss", "double", 1.4)
+    self.addAttributeNode(nodelist, "/how/antgain", "double", 1.5)
+    self.addAttributeNode(nodelist, "/how/beamw", "double", 1.6) #??
+    self.addAttributeNode(nodelist, "/how/radconst", "double", 1.7) #??
+    self.addAttributeNode(nodelist, "/how/NEZ", "double", 1.8)
+    self.addAttributeNode(nodelist, "/how/zcal", "double", 1.9)
+    self.addAttributeNode(nodelist, "/how/nsample", "double", 2.0) #??
+     
+    self.addAttributeNode(nodelist, "/dataset1/what/startdate", "string", "20100101")
+    self.addAttributeNode(nodelist, "/dataset1/what/starttime", "string", "101010")
+    self.addAttributeNode(nodelist, "/dataset1/what/enddate", "string", "20100101")
+    self.addAttributeNode(nodelist, "/dataset1/what/endtime", "string", "101011")
+    self.addAttributeNode(nodelist, "/dataset1/what/product", "string", "SCAN")
+
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/TXloss", "double", 3.1)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/injectloss", "double", 3.2)  # ??
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/RXloss", "double", 3.3)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/radomeloss", "double", 3.4)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/antgain", "double", 3.5)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/beamw", "double", 3.6) #??
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/radconst", "double", 3.7) #??
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/NEZ", "double", 3.8)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/zcal", "double", 3.9)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/nsample", "double", 4.0) #??
+
+    self.addAttributeNode(nodelist, "/dataset1/data1/what/gain", "double", 1.0)
+    self.addAttributeNode(nodelist, "/dataset1/data1/what/offset", "double", 0.0)
+    self.addAttributeNode(nodelist, "/dataset1/data1/what/nodata", "double", 255.0)
+    self.addAttributeNode(nodelist, "/dataset1/data1/what/undetect", "double", 255.0)
+    self.addAttributeNode(nodelist, "/dataset1/data1/what/quantity", "string", "DBZH")
+
+    dset = numpy.arange(100)
+    dset=numpy.array(dset.astype(numpy.uint8),numpy.uint8)
+    dset=numpy.reshape(dset,(10,10)).astype(numpy.uint8)
+    
+    self.addDatasetNode(nodelist, "/dataset1/data1/data", "uchar", (10,10), dset)
+
+    self.addAttributeNode(nodelist, "/dataset1/data2/how/TXloss", "double", 5.1)
+    self.addAttributeNode(nodelist, "/dataset1/data2/how/injectloss", "double", 5.2)  # ??
+    self.addAttributeNode(nodelist, "/dataset1/data2/how/RXloss", "double", 5.3)
+    self.addAttributeNode(nodelist, "/dataset1/data2/how/radomeloss", "double", 5.4)
+    self.addAttributeNode(nodelist, "/dataset1/data2/how/antgain", "double", 5.5)
+    self.addAttributeNode(nodelist, "/dataset1/data2/how/beamw", "double", 5.6) #??
+    self.addAttributeNode(nodelist, "/dataset1/data2/how/radconst", "double", 5.7) #??
+    self.addAttributeNode(nodelist, "/dataset1/data2/how/NEZ", "double", 5.8)
+    self.addAttributeNode(nodelist, "/dataset1/data2/how/zcal", "double", 5.9)
+    self.addAttributeNode(nodelist, "/dataset1/data2/how/nsample", "double", 6.0) #??
+
+    self.addAttributeNode(nodelist, "/dataset1/data2/what/gain", "double", 1.0)
+    self.addAttributeNode(nodelist, "/dataset1/data2/what/offset", "double", 0.0)
+    self.addAttributeNode(nodelist, "/dataset1/data2/what/nodata", "double", 255.0)
+    self.addAttributeNode(nodelist, "/dataset1/data2/what/undetect", "double", 255.0)
+    self.addAttributeNode(nodelist, "/dataset1/data2/what/quantity", "string", "VRAD")
+
+    dset = numpy.arange(100)
+    dset=numpy.array(dset.astype(numpy.uint8),numpy.uint8)
+    dset=numpy.reshape(dset,(10,10)).astype(numpy.uint8)
+    
+    self.addDatasetNode(nodelist, "/dataset1/data2/data", "uchar", (10,10), dset)
+    
+    self.addAttributeNode(nodelist, "/dataset2/what/startdate", "string", "20100101")
+    self.addAttributeNode(nodelist, "/dataset2/what/starttime", "string", "101010")
+    self.addAttributeNode(nodelist, "/dataset2/what/enddate", "string", "20100101")
+    self.addAttributeNode(nodelist, "/dataset2/what/endtime", "string", "101011")
+    self.addAttributeNode(nodelist, "/dataset2/what/product", "string", "SCAN")
+
+    self.addAttributeNode(nodelist, "/dataset2/data1/how/TXloss", "double", 7.1)
+    self.addAttributeNode(nodelist, "/dataset2/data1/how/injectloss", "double", 7.2)  # ??
+    self.addAttributeNode(nodelist, "/dataset2/data1/how/RXloss", "double", 7.3)
+    self.addAttributeNode(nodelist, "/dataset2/data1/how/radomeloss", "double", 7.4)
+    self.addAttributeNode(nodelist, "/dataset2/data1/how/antgain", "double", 7.5)
+    self.addAttributeNode(nodelist, "/dataset2/data1/how/beamw", "double", 7.6) #??
+    self.addAttributeNode(nodelist, "/dataset2/data1/how/radconst", "double", 7.7) #??
+    self.addAttributeNode(nodelist, "/dataset2/data1/how/NEZ", "double", 7.8)
+    self.addAttributeNode(nodelist, "/dataset2/data1/how/zcal", "double", 7.9)
+    self.addAttributeNode(nodelist, "/dataset2/data1/how/nsample", "double", 8.0) #??
+
+    self.addAttributeNode(nodelist, "/dataset2/data1/what/gain", "double", 1.0)
+    self.addAttributeNode(nodelist, "/dataset2/data1/what/offset", "double", 0.0)
+    self.addAttributeNode(nodelist, "/dataset2/data1/what/nodata", "double", 255.0)
+    self.addAttributeNode(nodelist, "/dataset2/data1/what/undetect", "double", 255.0)
+    self.addAttributeNode(nodelist, "/dataset2/data1/what/quantity", "string", "CCOR")
+
+    dset = numpy.arange(100)
+    dset=numpy.array(dset.astype(numpy.uint8),numpy.uint8)
+    dset=numpy.reshape(dset,(10,10)).astype(numpy.uint8)
+    
+    self.addDatasetNode(nodelist, "/dataset2/data1/data", "uchar", (10,10), dset)
+
+    nodelist.write(self.TEMPORARY_FILE, 6)
+
+    obj = _raveio.open(self.TEMPORARY_FILE)
+    self.assertAlmostEqual(1.1, obj.object.getAttribute("how/TXlossH"), 2)
+    self.assertAlmostEqual(1.2, obj.object.getAttribute("how/injectlossH"), 2)
+    self.assertAlmostEqual(1.3, obj.object.getAttribute("how/RXlossH"), 2)
+    self.assertAlmostEqual(1.4, obj.object.getAttribute("how/radomelossH"), 2)
+    self.assertAlmostEqual(1.5, obj.object.getAttribute("how/antgainH"), 2)
+    self.assertAlmostEqual(1.6, obj.object.getAttribute("how/beamwH"), 2)
+    self.assertAlmostEqual(1.7, obj.object.getAttribute("how/radconstH"), 2)
+    self.assertAlmostEqual(1.8, obj.object.getAttribute("how/NEZH"), 2)
+    self.assertAlmostEqual(1.9, obj.object.getAttribute("how/zcalH"), 2)
+    self.assertAlmostEqual(2.0, obj.object.getAttribute("how/nsampleH"), 2)
+    
+    self.assertAlmostEqual(3.1, obj.object.getScan(0).getParameter("DBZH").getAttribute("how/TXlossH"), 2)
+    self.assertAlmostEqual(3.2, obj.object.getScan(0).getParameter("DBZH").getAttribute("how/injectlossH"), 2)
+    self.assertAlmostEqual(3.3, obj.object.getScan(0).getParameter("DBZH").getAttribute("how/RXlossH"), 2)
+    self.assertAlmostEqual(3.4, obj.object.getScan(0).getParameter("DBZH").getAttribute("how/radomelossH"), 2)
+    self.assertAlmostEqual(3.5, obj.object.getScan(0).getParameter("DBZH").getAttribute("how/antgainH"), 2)
+    self.assertAlmostEqual(3.6, obj.object.getScan(0).getParameter("DBZH").getAttribute("how/beamwH"), 2)
+    self.assertAlmostEqual(3.7, obj.object.getScan(0).getParameter("DBZH").getAttribute("how/radconstH"), 2)
+    self.assertAlmostEqual(3.8, obj.object.getScan(0).getParameter("DBZH").getAttribute("how/NEZH"), 2)
+    self.assertAlmostEqual(3.9, obj.object.getScan(0).getParameter("DBZH").getAttribute("how/zcalH"), 2)
+    self.assertAlmostEqual(4.0, obj.object.getScan(0).getParameter("DBZH").getAttribute("how/nsampleH"), 2)
+
+    self.assertAlmostEqual(5.1, obj.object.getScan(0).getParameter("VRADH").getAttribute("how/TXlossH"), 2)
+    self.assertAlmostEqual(5.2, obj.object.getScan(0).getParameter("VRADH").getAttribute("how/injectlossH"), 2)
+    self.assertAlmostEqual(5.3, obj.object.getScan(0).getParameter("VRADH").getAttribute("how/RXlossH"), 2)
+    self.assertAlmostEqual(5.4, obj.object.getScan(0).getParameter("VRADH").getAttribute("how/radomelossH"), 2)
+    self.assertAlmostEqual(5.5, obj.object.getScan(0).getParameter("VRADH").getAttribute("how/antgainH"), 2)
+    self.assertAlmostEqual(5.6, obj.object.getScan(0).getParameter("VRADH").getAttribute("how/beamwH"), 2)
+    self.assertAlmostEqual(5.7, obj.object.getScan(0).getParameter("VRADH").getAttribute("how/radconstH"), 2)
+    self.assertAlmostEqual(5.8, obj.object.getScan(0).getParameter("VRADH").getAttribute("how/NEZH"), 2)
+    self.assertAlmostEqual(5.9, obj.object.getScan(0).getParameter("VRADH").getAttribute("how/zcalH"), 2)
+    self.assertAlmostEqual(6.0, obj.object.getScan(0).getParameter("VRADH").getAttribute("how/nsampleH"), 2)
+
+    self.assertAlmostEqual(7.1, obj.object.getScan(1).getParameter("CCORH").getAttribute("how/TXlossH"), 2)
+    self.assertAlmostEqual(7.2, obj.object.getScan(1).getParameter("CCORH").getAttribute("how/injectlossH"), 2)
+    self.assertAlmostEqual(7.3, obj.object.getScan(1).getParameter("CCORH").getAttribute("how/RXlossH"), 2)
+    self.assertAlmostEqual(7.4, obj.object.getScan(1).getParameter("CCORH").getAttribute("how/radomelossH"), 2)
+    self.assertAlmostEqual(7.5, obj.object.getScan(1).getParameter("CCORH").getAttribute("how/antgainH"), 2)
+    self.assertAlmostEqual(7.6, obj.object.getScan(1).getParameter("CCORH").getAttribute("how/beamwH"), 2)
+    self.assertAlmostEqual(7.7, obj.object.getScan(1).getParameter("CCORH").getAttribute("how/radconstH"), 2)
+    self.assertAlmostEqual(7.8, obj.object.getScan(1).getParameter("CCORH").getAttribute("how/NEZH"), 2)
+    self.assertAlmostEqual(7.9, obj.object.getScan(1).getParameter("CCORH").getAttribute("how/zcalH"), 2)
+    self.assertAlmostEqual(8.0, obj.object.getScan(1).getParameter("CCORH").getAttribute("how/nsampleH"), 2)
+
+  def testReadAndConvertV21_COMP(self):
+    nodelist = _pyhl.nodelist()
+    self.addGroupNode(nodelist, "/what")
+    self.addGroupNode(nodelist, "/where")
+    self.addGroupNode(nodelist, "/how")
+    
+    self.addGroupNode(nodelist, "/dataset1")
+    self.addGroupNode(nodelist, "/dataset1/what")
+    self.addGroupNode(nodelist, "/dataset1/data1")
+    self.addGroupNode(nodelist, "/dataset1/data1/how")
+    self.addGroupNode(nodelist, "/dataset1/data1/what")
+    self.addGroupNode(nodelist, "/dataset1/data2")
+    self.addGroupNode(nodelist, "/dataset1/data2/how")
+    self.addGroupNode(nodelist, "/dataset1/data2/what")
+    self.addGroupNode(nodelist, "/dataset2")
+    self.addGroupNode(nodelist, "/dataset2/what")
+    self.addGroupNode(nodelist, "/dataset2/data1")
+    self.addGroupNode(nodelist, "/dataset2/data1/how")
+    self.addGroupNode(nodelist, "/dataset2/data1/what")
+
+    self.addAttributeNode(nodelist, "/Conventions", "string", "ODIM_H5/V2_1")
+    self.addAttributeNode(nodelist, "/what/date", "string", "20100101")
+    self.addAttributeNode(nodelist, "/what/time", "string", "101500")
+    self.addAttributeNode(nodelist, "/what/source", "string", "PLC:123")
+    self.addAttributeNode(nodelist, "/what/object", "string", "CVOL")
+    self.addAttributeNode(nodelist, "/what/version", "string", "H5rad 2.1")
+
+    self.addAttributeNode(nodelist, "/where/LL_lat", "double", 54.1539)
+    self.addAttributeNode(nodelist, "/where/LL_lon", "double", 9.1714)
+    self.addAttributeNode(nodelist, "/where/LR_lat", "double", 54.1539)
+    self.addAttributeNode(nodelist, "/where/LR_lon", "double", 16.5374)
+    self.addAttributeNode(nodelist, "/where/UL_lat", "double", 58.4587)
+    self.addAttributeNode(nodelist, "/where/UL_lon", "double", 8.73067)
+    self.addAttributeNode(nodelist, "/where/UR_lat", "double", 58.4587)
+    self.addAttributeNode(nodelist, "/where/UR_lon", "double", 16.9781)
+    self.addAttributeNode(nodelist, "/where/projdef", "string", "+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84")
+    self.addAttributeNode(nodelist, "/where/xscale", "double", 2000.0)
+    self.addAttributeNode(nodelist, "/where/xsize", "int", 240)
+    self.addAttributeNode(nodelist, "/where/yscale", "double", 2000.0)
+    self.addAttributeNode(nodelist, "/where/ysize", "int", 240)
+
+    self.addAttributeNode(nodelist, "/how/TXloss", "double", 1.1)
+    self.addAttributeNode(nodelist, "/how/injectloss", "double", 1.2)  # ??
+    self.addAttributeNode(nodelist, "/how/RXloss", "double", 1.3)
+    self.addAttributeNode(nodelist, "/how/radomeloss", "double", 1.4)
+    self.addAttributeNode(nodelist, "/how/antgain", "double", 1.5)
+    self.addAttributeNode(nodelist, "/how/beamw", "double", 1.6) #??
+    self.addAttributeNode(nodelist, "/how/radconst", "double", 1.7) #??
+    self.addAttributeNode(nodelist, "/how/NEZ", "double", 1.8)
+    self.addAttributeNode(nodelist, "/how/zcal", "double", 1.9)
+    self.addAttributeNode(nodelist, "/how/nsample", "double", 2.0) #??
+     
+    self.addAttributeNode(nodelist, "/dataset1/what/startdate", "string", "20100101")
+    self.addAttributeNode(nodelist, "/dataset1/what/starttime", "string", "101010")
+    self.addAttributeNode(nodelist, "/dataset1/what/enddate", "string", "20100101")
+    self.addAttributeNode(nodelist, "/dataset1/what/endtime", "string", "101011")
+    self.addAttributeNode(nodelist, "/dataset1/what/product", "string", "CAPPI")
+
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/TXloss", "double", 3.1)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/injectloss", "double", 3.2)  # ??
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/RXloss", "double", 3.3)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/radomeloss", "double", 3.4)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/antgain", "double", 3.5)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/beamw", "double", 3.6) #??
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/radconst", "double", 3.7) #??
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/NEZ", "double", 3.8)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/zcal", "double", 3.9)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/nsample", "double", 4.0) #??
+
+    self.addAttributeNode(nodelist, "/dataset1/data1/what/gain", "double", 1.0)
+    self.addAttributeNode(nodelist, "/dataset1/data1/what/offset", "double", 0.0)
+    self.addAttributeNode(nodelist, "/dataset1/data1/what/nodata", "double", 255.0)
+    self.addAttributeNode(nodelist, "/dataset1/data1/what/undetect", "double", 255.0)
+    self.addAttributeNode(nodelist, "/dataset1/data1/what/quantity", "string", "DBZH")
+
+    dset = numpy.arange(100)
+    dset=numpy.array(dset.astype(numpy.uint8),numpy.uint8)
+    dset=numpy.reshape(dset,(10,10)).astype(numpy.uint8)
+    
+    self.addDatasetNode(nodelist, "/dataset1/data1/data", "uchar", (10,10), dset)
+
+    self.addAttributeNode(nodelist, "/dataset1/data2/how/TXloss", "double", 5.1)
+    self.addAttributeNode(nodelist, "/dataset1/data2/how/injectloss", "double", 5.2)  # ??
+    self.addAttributeNode(nodelist, "/dataset1/data2/how/RXloss", "double", 5.3)
+    self.addAttributeNode(nodelist, "/dataset1/data2/how/radomeloss", "double", 5.4)
+    self.addAttributeNode(nodelist, "/dataset1/data2/how/antgain", "double", 5.5)
+    self.addAttributeNode(nodelist, "/dataset1/data2/how/beamw", "double", 5.6) #??
+    self.addAttributeNode(nodelist, "/dataset1/data2/how/radconst", "double", 5.7) #??
+    self.addAttributeNode(nodelist, "/dataset1/data2/how/NEZ", "double", 5.8)
+    self.addAttributeNode(nodelist, "/dataset1/data2/how/zcal", "double", 5.9)
+    self.addAttributeNode(nodelist, "/dataset1/data2/how/nsample", "double", 6.0) #??
+
+    self.addAttributeNode(nodelist, "/dataset1/data2/what/gain", "double", 1.0)
+    self.addAttributeNode(nodelist, "/dataset1/data2/what/offset", "double", 0.0)
+    self.addAttributeNode(nodelist, "/dataset1/data2/what/nodata", "double", 255.0)
+    self.addAttributeNode(nodelist, "/dataset1/data2/what/undetect", "double", 255.0)
+    self.addAttributeNode(nodelist, "/dataset1/data2/what/quantity", "string", "SQI")
+
+    dset = numpy.arange(100)
+    dset=numpy.array(dset.astype(numpy.uint8),numpy.uint8)
+    dset=numpy.reshape(dset,(10,10)).astype(numpy.uint8)
+    
+    self.addDatasetNode(nodelist, "/dataset1/data2/data", "uchar", (10,10), dset)
+
+    self.addAttributeNode(nodelist, "/dataset2/what/startdate", "string", "20100101")
+    self.addAttributeNode(nodelist, "/dataset2/what/starttime", "string", "101010")
+    self.addAttributeNode(nodelist, "/dataset2/what/enddate", "string", "20100101")
+    self.addAttributeNode(nodelist, "/dataset2/what/endtime", "string", "101011")
+    self.addAttributeNode(nodelist, "/dataset2/what/product", "string", "SCAN")
+
+    self.addAttributeNode(nodelist, "/dataset2/data1/how/TXloss", "double", 7.1)
+    self.addAttributeNode(nodelist, "/dataset2/data1/how/injectloss", "double", 7.2)  # ??
+    self.addAttributeNode(nodelist, "/dataset2/data1/how/RXloss", "double", 7.3)
+    self.addAttributeNode(nodelist, "/dataset2/data1/how/radomeloss", "double", 7.4)
+    self.addAttributeNode(nodelist, "/dataset2/data1/how/antgain", "double", 7.5)
+    self.addAttributeNode(nodelist, "/dataset2/data1/how/beamw", "double", 7.6) #??
+    self.addAttributeNode(nodelist, "/dataset2/data1/how/radconst", "double", 7.7) #??
+    self.addAttributeNode(nodelist, "/dataset2/data1/how/NEZ", "double", 7.8)
+    self.addAttributeNode(nodelist, "/dataset2/data1/how/zcal", "double", 7.9)
+    self.addAttributeNode(nodelist, "/dataset2/data1/how/nsample", "double", 8.0) #??
+
+    self.addAttributeNode(nodelist, "/dataset2/data1/what/gain", "double", 1.0)
+    self.addAttributeNode(nodelist, "/dataset2/data1/what/offset", "double", 0.0)
+    self.addAttributeNode(nodelist, "/dataset2/data1/what/nodata", "double", 255.0)
+    self.addAttributeNode(nodelist, "/dataset2/data1/what/undetect", "double", 255.0)
+    self.addAttributeNode(nodelist, "/dataset2/data1/what/quantity", "string", "CCOR")
+
+    dset = numpy.arange(100)
+    dset=numpy.array(dset.astype(numpy.uint8),numpy.uint8)
+    dset=numpy.reshape(dset,(10,10)).astype(numpy.uint8)
+    
+    self.addDatasetNode(nodelist, "/dataset2/data1/data", "uchar", (10,10), dset)
+
+    nodelist.write(self.TEMPORARY_FILE, 6)
+
+    obj = _raveio.open(self.TEMPORARY_FILE)
+    self.assertAlmostEqual(1.1, obj.object.getAttribute("how/TXlossH"), 2)
+    self.assertAlmostEqual(1.2, obj.object.getAttribute("how/injectlossH"), 2)
+    self.assertAlmostEqual(1.3, obj.object.getAttribute("how/RXlossH"), 2)
+    self.assertAlmostEqual(1.4, obj.object.getAttribute("how/radomelossH"), 2)
+    self.assertAlmostEqual(1.5, obj.object.getAttribute("how/antgainH"), 2)
+    self.assertAlmostEqual(1.6, obj.object.getAttribute("how/beamwH"), 2)
+    self.assertAlmostEqual(1.7, obj.object.getAttribute("how/radconstH"), 2)
+    self.assertAlmostEqual(1.8, obj.object.getAttribute("how/NEZH"), 2)
+    self.assertAlmostEqual(1.9, obj.object.getAttribute("how/zcalH"), 2)
+    self.assertAlmostEqual(2.0, obj.object.getAttribute("how/nsampleH"), 2)
+    
+    self.assertAlmostEqual(3.1, obj.object.getImage(0).getParameter("DBZH").getAttribute("how/TXlossH"), 2)
+    self.assertAlmostEqual(3.2, obj.object.getImage(0).getParameter("DBZH").getAttribute("how/injectlossH"), 2)
+    self.assertAlmostEqual(3.3, obj.object.getImage(0).getParameter("DBZH").getAttribute("how/RXlossH"), 2)
+    self.assertAlmostEqual(3.4, obj.object.getImage(0).getParameter("DBZH").getAttribute("how/radomelossH"), 2)
+    self.assertAlmostEqual(3.5, obj.object.getImage(0).getParameter("DBZH").getAttribute("how/antgainH"), 2)
+    self.assertAlmostEqual(3.6, obj.object.getImage(0).getParameter("DBZH").getAttribute("how/beamwH"), 2)
+    self.assertAlmostEqual(3.7, obj.object.getImage(0).getParameter("DBZH").getAttribute("how/radconstH"), 2)
+    self.assertAlmostEqual(3.8, obj.object.getImage(0).getParameter("DBZH").getAttribute("how/NEZH"), 2)
+    self.assertAlmostEqual(3.9, obj.object.getImage(0).getParameter("DBZH").getAttribute("how/zcalH"), 2)
+    self.assertAlmostEqual(4.0, obj.object.getImage(0).getParameter("DBZH").getAttribute("how/nsampleH"), 2)
+
+    self.assertAlmostEqual(5.1, obj.object.getImage(0).getParameter("SQIH").getAttribute("how/TXlossH"), 2)
+    self.assertAlmostEqual(5.2, obj.object.getImage(0).getParameter("SQIH").getAttribute("how/injectlossH"), 2)
+    self.assertAlmostEqual(5.3, obj.object.getImage(0).getParameter("SQIH").getAttribute("how/RXlossH"), 2)
+    self.assertAlmostEqual(5.4, obj.object.getImage(0).getParameter("SQIH").getAttribute("how/radomelossH"), 2)
+    self.assertAlmostEqual(5.5, obj.object.getImage(0).getParameter("SQIH").getAttribute("how/antgainH"), 2)
+    self.assertAlmostEqual(5.6, obj.object.getImage(0).getParameter("SQIH").getAttribute("how/beamwH"), 2)
+    self.assertAlmostEqual(5.7, obj.object.getImage(0).getParameter("SQIH").getAttribute("how/radconstH"), 2)
+    self.assertAlmostEqual(5.8, obj.object.getImage(0).getParameter("SQIH").getAttribute("how/NEZH"), 2)
+    self.assertAlmostEqual(5.9, obj.object.getImage(0).getParameter("SQIH").getAttribute("how/zcalH"), 2)
+    self.assertAlmostEqual(6.0, obj.object.getImage(0).getParameter("SQIH").getAttribute("how/nsampleH"), 2)
+
+    self.assertAlmostEqual(7.1, obj.object.getImage(1).getParameter("CCORH").getAttribute("how/TXlossH"), 2)
+    self.assertAlmostEqual(7.2, obj.object.getImage(1).getParameter("CCORH").getAttribute("how/injectlossH"), 2)
+    self.assertAlmostEqual(7.3, obj.object.getImage(1).getParameter("CCORH").getAttribute("how/RXlossH"), 2)
+    self.assertAlmostEqual(7.4, obj.object.getImage(1).getParameter("CCORH").getAttribute("how/radomelossH"), 2)
+    self.assertAlmostEqual(7.5, obj.object.getImage(1).getParameter("CCORH").getAttribute("how/antgainH"), 2)
+    self.assertAlmostEqual(7.6, obj.object.getImage(1).getParameter("CCORH").getAttribute("how/beamwH"), 2)
+    self.assertAlmostEqual(7.7, obj.object.getImage(1).getParameter("CCORH").getAttribute("how/radconstH"), 2)
+    self.assertAlmostEqual(7.8, obj.object.getImage(1).getParameter("CCORH").getAttribute("how/NEZH"), 2)
+    self.assertAlmostEqual(7.9, obj.object.getImage(1).getParameter("CCORH").getAttribute("how/zcalH"), 2)
+    self.assertAlmostEqual(8.0, obj.object.getImage(1).getParameter("CCORH").getAttribute("how/nsampleH"), 2)
+
   def testBufrTableDir(self):
     obj = _raveio.new()
     self.assertEquals(None, obj.bufr_table_dir)
@@ -1936,7 +2374,7 @@ class PyRaveIOTest(unittest.TestCase):
       self.fail("Expected IOError")
     except IOError,e:
       pass
-      
+
   def addGroupNode(self, nodelist, name):
     node = _pyhl.node(_pyhl.GROUP_ID, name)
     nodelist.addNode(node)

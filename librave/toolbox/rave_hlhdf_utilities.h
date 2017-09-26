@@ -89,6 +89,20 @@ typedef int (*RaveHL_data_f)(void* object, hsize_t xsize, hsize_t ysize, void* d
 typedef int (*RaveHL_group_f)(void* object, const char* groupname, const char* name);
 
 /**
+ * Translates an attribute name from 2.0/2.1 ODIM into 2.2 ODIM. For example how/TXloss => how/TXlossH.
+ * @param[in] name - name of current attribute
+ * @returns the original name if no conversion can be done otherwise the translated name
+ */
+const char* RaveHL_convertAttributeName(const char* name);
+
+/**
+ * Translates a quantity from 2.0/2.1 ODIM into 2.2 ODIM. For example VRAD => VRADH.
+ * @param[in] name - name of current quantity
+ * @returns the original name if no conversion can be done otherwise the translated name
+ */
+const char* RaveHL_convertQuantity(const char* name);
+
+/**
  * Creates a rave attribute from a HLHDF node value.
  * Node must contain data that can be translated to long, double or strings otherwise
  * NULL will be returned. Note, the name will not be set on the attribute and has to

@@ -98,6 +98,15 @@ int dealiased(PolarScan_t* scan);
 PolarScanParam_t* dealias_create_parameter(PolarScan_t* scan, const char* quantity);
 
 /**
+ * Creates a dealiased parameter from the scan / quantity. The created dealiased parameter will get quantity newquantity
+ * @param[in] scan - the scan to be dealiased
+ * @param[in] quantity - the quantity to dealias
+ * @param[in] newquantity - the quantity of the dealiased parameter
+ * @returns the dealiased scan parameter
+ */
+PolarScanParam_t* create_dealiased_parameter(PolarScan_t* scan, const char* quantity, const char* newquantity);
+
+/**
  * Function for dealiasing polar volume data for the specified parameter.
  * @param[in] source - input volume
  * @param[in] quantity - the quantity

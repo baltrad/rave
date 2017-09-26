@@ -373,7 +373,7 @@ static int PolarOdimIOInternal_loadDsScanParamAttribute(void* object, RaveAttrib
         RAVE_ERROR0("Failed to extract what/quantity as a string");
         goto done;
       }
-      if (!(result = PolarScanParam_setQuantity(param, value))) {
+      if (!(result = PolarScanParam_setQuantity(param, RaveHL_convertQuantity(value)))) {
         RAVE_ERROR1("Failed to add %s attribute", name);
         goto done;
       }
