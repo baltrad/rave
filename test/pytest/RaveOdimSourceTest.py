@@ -1,3 +1,4 @@
+# coding=utf-8
 '''
 Copyright (C) 2015 The Crown (i.e. Her Majesty the Queen in Right of Canada)
 
@@ -28,7 +29,12 @@ import os, types
 import _raveio
 import odim_source
 from numpy import *
+import sys
 from sys import byteorder
+
+use_unicode_variant=True
+if sys.version_info < (3,):
+    use_unicode_variant=False
 
 class RaveOdimSourceTest(unittest.TestCase):
     FIXTURE = "fixtures/Z_SCAN_C_ESWI_20101023180200_selul_000000.h5"
@@ -61,18 +67,26 @@ class RaveOdimSourceTest(unittest.TestCase):
         self.assertEqual(n, 'selul')
 
     def testCheckSource(self):
-        variants = [b'WMO:02092,NOD:selul,RAD:SE41,PLC:Lule\xc3\xa5'.decode(),
-                    b'WMO:02092,CMT:searl,RAD:SE49,PLC:Luleaa'.decode(),
-                    b'WMO:02092'.decode()]
+        if use_unicode_variant:
+            variants = [b'WMO:02092,NOD:selul,RAD:SE41,PLC:Lule\xc3\xa5'.decode('utf-8'),
+                        b'WMO:02092,CMT:searl,RAD:SE49,PLC:Luleaa'.decode('utf-8'),
+                        b'WMO:02092'.decode('utf-8')]
+        else:
+            variants = ['WMO:02092,NOD:selul,RAD:SE41,PLC:Lule\xc3\xa5',
+                        'WMO:02092,CMT:searl,RAD:SE49,PLC:Luleaa',
+                        'WMO:02092']
+
         rio = _raveio.open(self.FIXTURE)
         for v in variants:
             rio.object.source = v
             odim_source.CheckSource(rio.object)
             split = rio.object.source.split(',')
-            [x.encode('utf-8').decode() for x in split]
+            if use_unicode_variant:
+                [x.encode('utf-8').decode() for x in split]
             self.assertEqual(len(split), 4)
             for s in split:
-                s=s.encode('utf-8').decode()
+                if use_unicode_variant:
+                    s=s.encode('utf-8').decode()
                 self.assertTrue(s in "WMO:02092,NOD:selul,RAD:SE41,PLC:Luleå")
 
 
