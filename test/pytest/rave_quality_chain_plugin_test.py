@@ -47,7 +47,7 @@ class rave_quality_chain_plugin_test(unittest.TestCase):
     rave_pgf_quality_registry.remove_plugin("qc.check.2")
 
   def test_getQualityFields(self):
-    self.assertEquals("se.smhi.quality.chain.qc", self.classUnderTest.getQualityFields()[0])
+    self.assertEqual("se.smhi.quality.chain.qc", self.classUnderTest.getQualityFields()[0])
     
   def test_process(self):
     pvol = _raveio.open(self.PVOL_SELEK_FIXTURE).object

@@ -52,7 +52,7 @@ class rave_util_test(unittest.TestCase):
     pv.addScan(ps1)
     pv.addScan(ps2)
     
-    self.assertEquals(True, rave_util.is_polar_malfunc(pv))
+    self.assertEqual(True, rave_util.is_polar_malfunc(pv))
     
   def test_is_polar_malfunc_pv2(self):
     pv = _polarvolume.new()
@@ -65,7 +65,7 @@ class rave_util_test(unittest.TestCase):
     pv.addScan(ps1)
     pv.addScan(ps2)
     
-    self.assertEquals(False, rave_util.is_polar_malfunc(pv))
+    self.assertEqual(False, rave_util.is_polar_malfunc(pv))
     
   def test_is_polar_malfunc_pv3(self):
     pv = _polarvolume.new()
@@ -78,21 +78,21 @@ class rave_util_test(unittest.TestCase):
     pv.addScan(ps1)
     pv.addScan(ps2)
     
-    self.assertEquals(True, rave_util.is_polar_malfunc(pv))
+    self.assertEqual(True, rave_util.is_polar_malfunc(pv))
     
   def test_is_polar_malfunc_ps(self):
     ps = _polarscan.new()
     ps.addAttribute("how/malfunc", 'False')
-    self.assertEquals(False, rave_util.is_polar_malfunc(ps))
+    self.assertEqual(False, rave_util.is_polar_malfunc(ps))
 
   def test_is_polar_malfunc_ps2(self):
     ps = _polarscan.new()
     ps.addAttribute("how/malfunc", 'yes')
-    self.assertEquals(True, rave_util.is_polar_malfunc(ps))
+    self.assertEqual(True, rave_util.is_polar_malfunc(ps))
 
   def test_is_polar_malfunc_ps3(self):
     ps = _polarscan.new()
-    self.assertEquals(False, rave_util.is_polar_malfunc(ps))
+    self.assertEqual(False, rave_util.is_polar_malfunc(ps))
     
   def test_remove_malfunc_from_volume(self):
     pv = _polarvolume.new()
@@ -142,7 +142,7 @@ class rave_util_test(unittest.TestCase):
     pv.addScan(ps3)
     
     result = rave_util.remove_malfunc_from_volume(pv)
-    self.assertEquals(2, result.getNumberOfScans())
+    self.assertEqual(2, result.getNumberOfScans())
     self.assertTrue(ps1 == pv.getScan(0))
     self.assertTrue(ps3 == pv.getScan(1))
     
@@ -163,7 +163,7 @@ class rave_util_test(unittest.TestCase):
     pv.addScan(ps3)
     
     result = rave_util.remove_malfunc_from_volume(pv)
-    self.assertEquals(0, result.getNumberOfScans())
+    self.assertEqual(0, result.getNumberOfScans())
   
   def test_remove_malfunc(self):
     pv = _polarvolume.new()
@@ -183,7 +183,7 @@ class rave_util_test(unittest.TestCase):
     
     result = rave_util.remove_malfunc(pv)
     self.assertTrue(result == pv)
-    self.assertEquals(2, result.getNumberOfScans())
+    self.assertEqual(2, result.getNumberOfScans())
     self.assertTrue(ps1 == pv.getScan(0))
     self.assertTrue(ps3 == pv.getScan(1))
 

@@ -123,23 +123,23 @@ class compositing(object):
   def _debug_generate_info(self, area):
     if self.verbose:
       self.logger.info("Generating cartesian image from %d files"%len(self.filenames))
-      self.logger.debug("Detectors = %s"%`self.detectors`)
-      self.logger.debug("Quality control mode = %s"%`self.quality_control_mode`)
+      self.logger.debug("Detectors = %s"%str(self.detectors))
+      self.logger.debug("Quality control mode = %s"%str(self.quality_control_mode))
       self.logger.debug("Product = %s"%self._product_repr())
       self.logger.debug("Quantity = %s"%self.quantity)
       self.logger.debug("Range = %f"%self.range)
       self.logger.debug("Gain = %f, Offset = %f"%(self.gain, self.offset))
       self.logger.debug("Prodpar = %s"%self.prodpar)
       self.logger.debug("Selection method = %s"%self._selection_method_repr())
-      self.logger.debug("Gap filling = %s"%`self.applygapfilling`)
-      self.logger.debug("Ct filtering = %s"%`self.applyctfilter`)
-      self.logger.debug("Gra filtering = %s"%`self.applygra`)
-      self.logger.debug("Ignoring malfunc = %s"%`self.ignore_malfunc`)
+      self.logger.debug("Gap filling = %s"%str(self.applygapfilling))
+      self.logger.debug("Ct filtering = %s"%str(self.applyctfilter))
+      self.logger.debug("Gra filtering = %s"%str(self.applygra))
+      self.logger.debug("Ignoring malfunc = %s"%str(self.ignore_malfunc))
       self.logger.debug("QI-total field = %s"%self.qitotal_field)
-      self.logger.debug("Reprocess quality fields = %s"%`self.reprocess_quality_field`)
-      self.logger.debug("Dumping path = %s"%`self.dumppath`)
-      self.logger.debug("Dumping output = %s"%`self.dump`)
-      self.logger.debug("Use site source = %s"%`self.use_site_source`)
+      self.logger.debug("Reprocess quality fields = %s"%str(self.reprocess_quality_field))
+      self.logger.debug("Dumping path = %s"%str(self.dumppath))
+      self.logger.debug("Dumping output = %s"%str(self.dump))
+      self.logger.debug("Use site source = %s"%str(self.use_site_source))
       
       if area is not None:
         self.logger.debug("Area = %s"%area)
@@ -166,7 +166,7 @@ class compositing(object):
   def get_next_radar_index(self):
     if len(self.radar_index_mapping)==0:
       return 1
-    v = self.radar_index_mapping.values()
+    v = list(self.radar_index_mapping.values())
     v.sort()
     idx = 1
     for i in v:
@@ -346,7 +346,7 @@ class compositing(object):
     elif prodstr == "max":
       self.product = _rave.Rave_ProductType_MAX
     else:
-      raise ValueError, "Only supported product types are ppi, cappi, pcappi, pmax and max"    
+      raise ValueError("Only supported product types are ppi, cappi, pcappi, pmax and max")    
   
   def set_method_from_string(self, methstr):
     if methstr.upper() == "NEAREST_RADAR":
@@ -354,11 +354,11 @@ class compositing(object):
     elif methstr.upper() == "HEIGHT_ABOVE_SEALEVEL":
       self.selection_method = _pycomposite.SelectionMethod_HEIGHT
     else:
-      raise ValueError, "Only supported selection methods are NEAREST_RADAR or HEIGHT_ABOVE_SEALEVEL"
+      raise ValueError("Only supported selection methods are NEAREST_RADAR or HEIGHT_ABOVE_SEALEVEL")
   
   def set_quality_control_mode_from_string(self, modestr):
     if modestr.lower() not in [QUALITY_CONTROL_MODE_ANALYZE, QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY]:
-      raise ValueError, "Invalid quality control mode (%s), only supported modes are analyze_and_apply or analyze"%modestr.lower()
+      raise ValueError("Invalid quality control mode (%s), only supported modes are analyze_and_apply or analyze"%modestr.lower())
     self.quality_control_mode = modestr.lower()
   
   def quality_control_objects(self, objects):
@@ -504,7 +504,7 @@ class compositing(object):
       if coeff and not math.isnan(coeff.a) and not math.isnan(coeff.b) and not math.isnan(coeff.c):
         logger.info("Reusing gra coefficients from %s %s"%(coeff.date, coeff.time))
         return coeff.significant, coeff.points, coeff.loss, coeff.r, coeff.r_significant, coeff.corr_coeff, coeff.a, coeff.b, coeff.c, coeff.mean, coeff.stddev
-    except Exception, e:
+    except Exception:
       logger.exception("Failed to aquire coefficients")
 
     logger.warn("Could not aquire coefficients newer than %s, defaulting to climatologic"%agedt.strftime("%Y%m%d %H:%M:%S"))
@@ -553,7 +553,7 @@ class compositing(object):
       gra_field = gra.apply(dfield, param)
       gra_field.quantity = self.quantity + "_CORR"
       return gra_field
-    except Exception, e:
+    except Exception:
       import traceback
       traceback.print_exc()
       self.logger.error("Failed to apply gra coefficients", exc_info=1)
@@ -592,7 +592,7 @@ class compositing(object):
       if self.product in [_rave.Rave_ProductType_CAPPI, _rave.Rave_ProductType_PCAPPI]:
         try:
           generator.height = self._strToNumber(self.prodpar)
-        except ValueError,e:
+        except ValueError:
           pass
       elif self.product in [_rave.Rave_ProductType_PMAX]:
         if isinstance(self.prodpar, basestring):
@@ -601,18 +601,18 @@ class compositing(object):
             try:
               generator.height = self._strToNumber(pp[0].strip())
               generator.range = self._strToNumber(pp[1].strip())
-            except ValueError,e:
+            except ValueError:
               pass
           elif len(pp) == 1:
             try:
               generator.height = self._strToNumber(pp[0].strip())
-            except ValueError,e:
+            except ValueError:
               pass
       elif generator.product in [_rave.Rave_ProductType_PPI]:
         try:
           v = self._strToNumber(self.prodpar)
           generator.elangle = v * math.pi / 180.0
-        except ValueError,e:
+        except ValueError:
           pass
 
   ##
@@ -627,11 +627,11 @@ class compositing(object):
 
     try:
       return int(sval)
-    except ValueError, e:
+    except ValueError:
       return float(sval)
 
   def test_func(self, a):
-    print "Called with area %s"%a
+    print("Called with area %s"%a)
 
 
 ## Main function. 

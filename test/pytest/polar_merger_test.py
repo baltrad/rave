@@ -66,13 +66,13 @@ class polar_merger_test(unittest.TestCase):
     try:
       result = classUnderTest.merge([scan_dbzh,scan_vrad])
       self.fail("Expected an exception")
-    except AttributeError,e:
+    except AttributeError:
       pass
     
   def test_merge_with_volume(self):
     pvol = _raveio.open(self.FIXTURE_PVOL).object
     scan = pvol.getScanClosestToElevation(0.5, 0).clone()
-    self.assertEquals(2, len(scan.getParameterNames()))
+    self.assertEqual(2, len(scan.getParameterNames()))
     self.assertTrue("DBZH" in scan.getParameterNames())
     self.assertTrue("VRAD" in scan.getParameterNames())
     p1 = scan.getParameter("DBZH").clone()
@@ -84,13 +84,13 @@ class polar_merger_test(unittest.TestCase):
     classUnderTest = polar_merger.polar_merger()
     result = classUnderTest.merge([pvol, scan])
     rs = pvol.getScanClosestToElevation(0.5, 0)
-    self.assertEquals(3, len(rs.getParameterNames()))
+    self.assertEqual(3, len(rs.getParameterNames()))
     self.assertTrue("DBZH" in rs.getParameterNames())
     self.assertTrue("VRAD" in rs.getParameterNames())
     self.assertTrue("TH" in rs.getParameterNames())
     
     rs = pvol.getScanClosestToElevation(1.0, 0)
-    self.assertEquals(2, len(rs.getParameterNames()))
+    self.assertEqual(2, len(rs.getParameterNames()))
     self.assertTrue("DBZH" in rs.getParameterNames())
     self.assertTrue("VRAD" in rs.getParameterNames())
     

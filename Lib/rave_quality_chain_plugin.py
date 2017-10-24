@@ -54,7 +54,7 @@ class rave_quality_chain_plugin(rave_quality_plugin):
     src = odim_source.NODfromSource(obj)
     try:
       chain = self.chain_registry.get_chain(src)
-    except LookupError,e:
+    except LookupError:
       return obj, []
     
     algorithm = None
@@ -75,7 +75,7 @@ class rave_quality_chain_plugin(rave_quality_plugin):
           qfields += plugin_qfield
           if algorithm == None and na != None: # Try to get the generator algorithm != None 
             algorithm = na
-        except Exception,e:
+        except Exception:
           logger.exception("Caught exception when processing object")
     
     return obj, qfields

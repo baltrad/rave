@@ -28,7 +28,6 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @date 2011-06-28
 
 import os, string
-from types import StringType
 import rave_projection, _arearegistry, _area, _projection, Proj
 import rave_xml
 from rave_defines import RAVECONFIG, UTF8, AREA_REGISTRY
@@ -100,8 +99,8 @@ def init():
 # @param Id String identifier of the desired area
 # @returns an AREA instance representing the desired area 
 def area(Id):
-    if type(Id) != StringType:
-        raise KeyError, "Argument 'Id' not a string"
+    if not isinstance(Id, str):
+        raise KeyError("Argument 'Id' not a string")
     return _registry[Id]
 
 
@@ -114,12 +113,18 @@ def register(A):
     # Ridiculous hack for trimming whacked XML strings from rave_simple_xml.c. Should be deprecated down the line.  
     if A.pcs[:9] == '\n        ' and A.pcs[-7:] == '\n      ': A.pcs = A.pcs[9:len(A.pcs)-7]
     if A.name[:7] == '\n      ' and A.name[-5:] == '\n    ': A.name = A.name[7:len(A.name)-5]
+    
+    # Switch to strings
+    if isinstance(A.pcs, bytes): A.pcs = A.pcs.decode()
+    if isinstance(A.name, bytes): A.name = A.name.decode()
+    if isinstance(A.Id, bytes): A.Id = A.Id.decode()
+    
     # Likewise, rave_simplexml.c doesn't write argument types, so we must enforce them here.
-    if type(A.xsize) == StringType: A.xsize = int(A.xsize)
-    if type(A.ysize) == StringType: A.ysize = int(A.ysize)
-    if type(A.xscale) == StringType: A.xscale = float(A.xscale)
-    if type(A.yscale) == StringType: A.yscale = float(A.yscale)
-    if type(A.extent) == StringType: A.extent = make_tuple(A.extent)
+    if isinstance(A.xsize, str): A.xsize = int(A.xsize)
+    if isinstance(A.ysize, str): A.ysize = int(A.ysize)
+    if isinstance(A.xscale, str): A.xscale = float(A.xscale)
+    if isinstance(A.yscale, str): A.yscale = float(A.yscale)
+    if isinstance(A.extent, str): A.extent = make_tuple(A.extent)
 
     A.pcs = rave_projection.pcs(A.pcs)
     _registry[A.Id] = A
@@ -217,7 +222,7 @@ def write(filename=AREA_REGISTRY):
 
             check.append(k)
         else:
-            print "Duplicate entry for id %s. Ignored." % k
+            print("Duplicate entry for id %s. Ignored." % k)
     new_registry.write(filename)
 
 
@@ -226,15 +231,15 @@ def write(filename=AREA_REGISTRY):
 def describe(id):
     a = _registry[id]
     (LL_lon, LL_lat), (UR_lon, UR_lat), (UL_lon, UL_lat), (LR_lon, LR_lat) = MakeCornersFromExtent(id)
-    print "%s -\t%s" % (id, a.name)
-    print "\tprojection identifier = %s" % a.pcs.id
-    print "\textent = %f, %f, %f, %f" % a.extent
-    print "\txsize = %i, ysize = %i" % (a.xsize, a.ysize)
-    print "\txscale = %f, yscale = %f" % (a.xscale, a.yscale)
-    print "\tSouth-west corner lon/lat: %f, %f" % (LL_lon, LL_lat)
-    print "\tNorth-west corner lon/lat: %f, %f" % (UL_lon, UL_lat)
-    print "\tNorth-east corner lon/lat: %f, %f" % (UR_lon, UR_lat)
-    print "\tSouth-east corner lon/lat: %f, %f" % (LR_lon, LR_lat)
+    print("%s -\t%s" % (id, a.name))
+    print("\tprojection identifier = %s" % a.pcs.id)
+    print("\textent = %f, %f, %f, %f" % a.extent)
+    print("\txsize = %i, ysize = %i" % (a.xsize, a.ysize))
+    print("\txscale = %f, yscale = %f" % (a.xscale, a.yscale))
+    print("\tSouth-west corner lon/lat: %f, %f" % (LL_lon, LL_lat))
+    print("\tNorth-west corner lon/lat: %f, %f" % (UL_lon, UL_lat))
+    print("\tNorth-east corner lon/lat: %f, %f" % (UR_lon, UR_lat))
+    print("\tSouth-east corner lon/lat: %f, %f" % (LR_lon, LR_lat))
 
 
 ## Calculates the corner coordinates in lon/lat based on an area's extent.
@@ -281,7 +286,7 @@ def MakeAreaFromPolarFiles(files, proj_id='llwgs84', xscale=2000.0, yscale=2000.
         elif io.objectType == _rave.Rave_ObjectType_SCAN:
             scan = io.object
         else:
-            raise IOError, "Input file %s is not a polar volume or scan" % fstr
+            raise IOError("Input file %s is not a polar volume or scan" % fstr)
 
         
         io.close()
@@ -339,7 +344,7 @@ def MakeAreaFromPolarObjects(objects, proj_id='llwgs84', xscale=2000.0, yscale=2
       elif _polarscan.isPolarScan(o):
         scan = o
       else:
-        raise IOError, "Input object is not a polar scan or volume"
+        raise IOError("Input object is not a polar scan or volume")
       
       areas.append(MakeSingleAreaFromSCAN(scan, proj_id, xscale, yscale))
     

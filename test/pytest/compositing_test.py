@@ -29,6 +29,7 @@ import compositing
 import _pycomposite
 import rave_quality_plugin, rave_pgf_quality_registry
 import mock
+import math
 
 class scan_mock(mock.MagicMock):
 
@@ -38,6 +39,7 @@ class scan_mock(mock.MagicMock):
     self.attribute_map = {}
     self.date = ""
     self.time = ""
+    self.elangle=0.5*math.pi/180.0
 
   def _get_child_mock(self, **kwargs):
     return mock.MagicMock(**kwargs)
@@ -105,14 +107,14 @@ class compositing_test(unittest.TestCase):
     
   def setup_default_scan_mock(self, index, malfunc=False):
     scan = scan_mock()
-    scan.set_source(self.sources.keys()[index%len(self.sources)])
+    scan.set_source(list(self.sources)[index%len(self.sources)])
     scan.set_attribute("how/task", "how_task" + str(index))
     scan.set_attribute("how/malfunc", str(malfunc))
     return scan
   
   def setup_default_volume_mock(self, index):
     vol = volume_mock()
-    vol.set_source(self.sources.keys()[index])
+    vol.set_source(list(self.sources)[index])
     return vol
   
   def add_default_scan_to_volume_mock(self, vol_mock, index, malfunc=False):
@@ -386,18 +388,18 @@ class compositing_test(unittest.TestCase):
     
     result, algorithm, qfields = self.classUnderTest.quality_control_objects({"s1.h5":o1,"s2.h5":o2})
     
-    expected_qc_check_1_calls = [mock.call.process(o1,True,"analyze"), mock.call.algorithm(),mock.call.process(o2,True,"analyze"), mock.call.algorithm()]
-    expected_qc_check_2_calls = [mock.call.process(o1,True,"analyze"), mock.call.algorithm(),mock.call.process(o2,True,"analyze"), mock.call.algorithm()]
+    expected_qc_check_calls = [mock.call.process(o1,True,"analyze"), mock.call.algorithm(),mock.call.process(o2,True,"analyze"), mock.call.algorithm()]
+    expected_qc_check_calls_other_order = [mock.call.process(o2,True,"analyze"), mock.call.algorithm(),mock.call.process(o1,True,"analyze"), mock.call.algorithm()]
     
-    self.assertTrue(expected_qc_check_1_calls == self.qc_check_1_mock.mock_calls)
-    self.assertTrue(expected_qc_check_2_calls == self.qc_check_2_mock.mock_calls)
+    self.assertTrue(expected_qc_check_calls == self.qc_check_1_mock.mock_calls or expected_qc_check_calls_other_order == self.qc_check_1_mock.mock_calls)
+    self.assertTrue(expected_qc_check_calls == self.qc_check_2_mock.mock_calls or expected_qc_check_calls_other_order == self.qc_check_2_mock.mock_calls)
     
     self.assertTrue(isinstance(result,dict))
     self.assertTrue(2 == len(result))
     self.assertTrue(result["s1.h5"] == o1)
     self.assertTrue(result["s2.h5"] == o2)
     self.assertTrue(algorithm == None)
-    self.assertEquals(detectors, qfields, "Wrong qfields returned from quality_control_objects")
+    self.assertEqual(detectors, qfields, "Wrong qfields returned from quality_control_objects")
     
 
   def test_quality_control_objects_algorithm_on_first(self):
@@ -416,18 +418,18 @@ class compositing_test(unittest.TestCase):
     
     result, algorithm, qfields = self.classUnderTest.quality_control_objects({"s1.h5":o1,"s2.h5":o2})
     
-    expected_qc_check_1_calls = [mock.call.process(o1,True,"analyze"), mock.call.algorithm(),mock.call.process(o2,True,"analyze"), mock.call.algorithm()]
-    expected_qc_check_2_calls = [mock.call.process(o1,True,"analyze"), mock.call.algorithm(),mock.call.process(o2,True,"analyze"), mock.call.algorithm()]
+    expected_qc_check_calls = [mock.call.process(o1,True,"analyze"), mock.call.algorithm(),mock.call.process(o2,True,"analyze"), mock.call.algorithm()]
+    expected_qc_check_calls_other_order = [mock.call.process(o2,True,"analyze"), mock.call.algorithm(),mock.call.process(o1,True,"analyze"), mock.call.algorithm()]
     
-    self.assertTrue(expected_qc_check_1_calls == self.qc_check_1_mock.mock_calls)
-    self.assertTrue(expected_qc_check_2_calls == self. qc_check_2_mock.mock_calls)
+    self.assertTrue(expected_qc_check_calls == self.qc_check_1_mock.mock_calls or expected_qc_check_calls_other_order == self.qc_check_1_mock.mock_calls)
+    self.assertTrue(expected_qc_check_calls == self.qc_check_2_mock.mock_calls or expected_qc_check_calls_other_order == self.qc_check_2_mock.mock_calls)
     
     self.assertTrue(isinstance(result,dict))
     self.assertTrue(2 == len(result))
     self.assertTrue(result["s1.h5"] == o1)
     self.assertTrue(result["s2.h5"] == o2)
     self.assertTrue(algorithm == a1)
-    self.assertEquals(detectors, qfields, "Wrong qfields returned from quality_control_objects")
+    self.assertEqual(detectors, qfields, "Wrong qfields returned from quality_control_objects")
 
 
   def test_quality_control_objects_processor_returns_both_object_and_algorithm(self):
@@ -447,17 +449,19 @@ class compositing_test(unittest.TestCase):
     result, algorithm, qfields = self.classUnderTest.quality_control_objects({"s1.h5":o1,"s2.h5":o2})
     
     expected_qc_check_1_calls = [mock.call.process(o1,True,"analyze"), mock.call.algorithm(),mock.call.process(o2,True,"analyze"), mock.call.algorithm()]
+    expected_qc_check_1_calls_other_order = [mock.call.process(o2,True,"analyze"), mock.call.algorithm(),mock.call.process(o1,True,"analyze"), mock.call.algorithm()]
     expected_qc_check_2_calls = [mock.call.process(o1,True,"analyze"), mock.call.algorithm(),mock.call.process(o2,True,"analyze")]
+    expected_qc_check_2_calls_other_order = [mock.call.process(o2,True,"analyze"),mock.call.process(o1,True,"analyze"), mock.call.algorithm()]
     
-    self.assertTrue(expected_qc_check_1_calls == self.qc_check_1_mock.mock_calls)
-    self.assertTrue(expected_qc_check_2_calls == self. qc_check_2_mock.mock_calls)
+    self.assertTrue(expected_qc_check_1_calls == self.qc_check_1_mock.mock_calls or expected_qc_check_1_calls_other_order == self.qc_check_1_mock.mock_calls)
+    self.assertTrue(expected_qc_check_2_calls == self.qc_check_2_mock.mock_calls or expected_qc_check_2_calls_other_order == self.qc_check_2_mock.mock_calls)
     
     self.assertTrue(isinstance(result,dict))
     self.assertTrue(2 == len(result))
     self.assertTrue(result["s1.h5"] == o1)
     self.assertTrue(result["s2.h5"] == o2)
     self.assertTrue(algorithm == a2)
-    self.assertEquals(detectors, qfields, "Wrong qfields returned from quality_control_objects")
+    self.assertEqual(detectors, qfields, "Wrong qfields returned from quality_control_objects")
     
   def test_quality_control_objects_plugin_returns_only_obj(self):
     o1 = object()
@@ -476,17 +480,19 @@ class compositing_test(unittest.TestCase):
     result, algorithm, qfields = self.classUnderTest.quality_control_objects({"s1.h5":o1,"s2.h5":o2})
     
     expected_qc_check_1_calls = [mock.call.process(o1,True,"analyze"), mock.call.getQualityFields(), mock.call.algorithm(), mock.call.process(o2,True,"analyze"), mock.call.getQualityFields(), mock.call.algorithm()]
+    expected_qc_check_1_calls_other_order = [mock.call.process(o2,True,"analyze"), mock.call.getQualityFields(), mock.call.algorithm(), mock.call.process(o1,True,"analyze"), mock.call.getQualityFields(), mock.call.algorithm()]
     expected_qc_check_2_calls = [mock.call.process(o1,True,"analyze"), mock.call.algorithm(), mock.call.process(o2,True,"analyze"), mock.call.algorithm()]
+    expected_qc_check_2_calls_other_order = [mock.call.process(o2,True,"analyze"), mock.call.algorithm(), mock.call.process(o1,True,"analyze"), mock.call.algorithm()]
     
-    self.assertTrue(expected_qc_check_1_calls == self.qc_check_1_mock.mock_calls)
-    self.assertTrue(expected_qc_check_2_calls == self.qc_check_2_mock.mock_calls)
+    self.assertTrue(expected_qc_check_1_calls == self.qc_check_1_mock.mock_calls or expected_qc_check_1_calls_other_order == self.qc_check_1_mock.mock_calls)
+    self.assertTrue(expected_qc_check_2_calls == self.qc_check_2_mock.mock_calls or expected_qc_check_2_calls_other_order == self.qc_check_2_mock.mock_calls)
     
     self.assertTrue(isinstance(result,dict))
     self.assertTrue(2 == len(result))
     self.assertTrue(result["s1.h5"] == o1)
     self.assertTrue(result["s2.h5"] == o2)
     self.assertTrue(algorithm == None)
-    self.assertEquals(detectors, qfields, "Wrong qfields returned from quality_control_objects")
+    self.assertEqual(detectors, qfields, "Wrong qfields returned from quality_control_objects")
     
     
   def test_set_product_from_string(self):
@@ -498,7 +504,7 @@ class compositing_test(unittest.TestCase):
 
     for p in prods:
       self.classUnderTest.set_product_from_string(p[0])
-      self.assertEquals(p[1], self.classUnderTest.product)
+      self.assertEqual(p[1], self.classUnderTest.product)
 
   def test_set_product_from_string_invalid(self):
     try:
@@ -512,7 +518,7 @@ class compositing_test(unittest.TestCase):
                ("HEIGHT_ABOVE_SEALEVEL", _pycomposite.SelectionMethod_HEIGHT)]
     for m in methods:
       self.classUnderTest.set_method_from_string(m[0])
-      self.assertEquals(m[1], self.classUnderTest.selection_method)
+      self.assertEqual(m[1], self.classUnderTest.selection_method)
   
   def test_set_method_from_string_invalid(self):
     try:
@@ -522,26 +528,26 @@ class compositing_test(unittest.TestCase):
       pass
 
   def test_strToNumber(self):
-    self.assertEquals(1.5, self.classUnderTest._strToNumber("1.5"), 4)
-    self.assertEquals(1, self.classUnderTest._strToNumber("1"))
-    self.assertEquals(1.0, self.classUnderTest._strToNumber("1.0"), 4)
+    self.assertEqual(1.5, self.classUnderTest._strToNumber("1.5"), 4)
+    self.assertEqual(1, self.classUnderTest._strToNumber("1"))
+    self.assertEqual(1.0, self.classUnderTest._strToNumber("1.0"), 4)
 
   def test_strToNumber_preserveValue(self):
-    self.assertEquals(1.5, self.classUnderTest._strToNumber(1.5), 4)
-    self.assertEquals(1, self.classUnderTest._strToNumber(1))
+    self.assertEqual(1.5, self.classUnderTest._strToNumber(1.5), 4)
+    self.assertEqual(1, self.classUnderTest._strToNumber(1))
 
   def test_get_next_radar_index(self):
     self.classUnderTest.radar_index_mapping={}
-    self.assertEquals(1, self.classUnderTest.get_next_radar_index())
+    self.assertEqual(1, self.classUnderTest.get_next_radar_index())
     self.classUnderTest.radar_index_mapping={"a":1,"b":2,"c":4,"d":7,"e":8,"f":10}
-    self.assertEquals(3, self.classUnderTest.get_next_radar_index())
-    self.assertEquals(3, self.classUnderTest.get_next_radar_index())
+    self.assertEqual(3, self.classUnderTest.get_next_radar_index())
+    self.assertEqual(3, self.classUnderTest.get_next_radar_index())
     self.classUnderTest.radar_index_mapping["g"]=3
-    self.assertEquals(5, self.classUnderTest.get_next_radar_index())
+    self.assertEqual(5, self.classUnderTest.get_next_radar_index())
     self.classUnderTest.radar_index_mapping["h"]=5
-    self.assertEquals(6, self.classUnderTest.get_next_radar_index())
+    self.assertEqual(6, self.classUnderTest.get_next_radar_index())
     self.classUnderTest.radar_index_mapping["i"]=6
-    self.assertEquals(9, self.classUnderTest.get_next_radar_index())
+    self.assertEqual(9, self.classUnderTest.get_next_radar_index())
     self.classUnderTest.radar_index_mapping["j"]=9
-    self.assertEquals(11, self.classUnderTest.get_next_radar_index())
+    self.assertEqual(11, self.classUnderTest.get_next_radar_index())
 

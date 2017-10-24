@@ -43,8 +43,8 @@ class rave_dealias_quality_plugin_test(unittest.TestCase):
 
   def test_getQualityFields(self):
     result = self.classUnderTest.getQualityFields()
-    self.assertEquals(1, len(result))
-    self.assertEquals("se.smhi.detector.dealias", result[0])
+    self.assertEqual(1, len(result))
+    self.assertEqual("se.smhi.detector.dealias", result[0])
     
   def test_process(self):
     scan = _raveio.open(self.SCAN_FIXTURE).object
@@ -54,8 +54,8 @@ class rave_dealias_quality_plugin_test(unittest.TestCase):
 
     result, qfield = self.classUnderTest.process(scan)
     
-    self.assertEquals("True", result.getParameter("VRAD").getAttribute("how/dealiased"))
-    self.assertEquals(qfield, ["se.smhi.detector.dealias"], "Wrong qfield returned from process")
+    self.assertEqual("True", result.getParameter("VRAD").getAttribute("how/dealiased"))
+    self.assertEqual(qfield, ["se.smhi.detector.dealias"], "Wrong qfield returned from process")
 
   def test_process_reprocess(self):
     scan = _raveio.open(self.SCAN_FIXTURE).object
@@ -67,8 +67,8 @@ class rave_dealias_quality_plugin_test(unittest.TestCase):
     # the API can handle the flag.
     result, qfield = self.classUnderTest.process(scan, reprocess_quality_flag=True)
     
-    self.assertEquals("True", result.getParameter("VRAD").getAttribute("how/dealiased"))
-    self.assertEquals(qfield, ["se.smhi.detector.dealias"], "Wrong qfield returned from process")
+    self.assertEqual("True", result.getParameter("VRAD").getAttribute("how/dealiased"))
+    self.assertEqual(qfield, ["se.smhi.detector.dealias"], "Wrong qfield returned from process")
     
   def test_process_reprocess_with_quality_control_mode(self):
     scan = _raveio.open(self.SCAN_FIXTURE).object
@@ -80,6 +80,6 @@ class rave_dealias_quality_plugin_test(unittest.TestCase):
     # the API can handle the flag.
     result, qfield = self.classUnderTest.process(scan, reprocess_quality_flag=True, quality_control_mode="analyze")
     
-    self.assertEquals("True", result.getParameter("VRAD").getAttribute("how/dealiased"))
-    self.assertEquals(qfield, ["se.smhi.detector.dealias"], "Wrong qfield returned from process")
+    self.assertEqual("True", result.getParameter("VRAD").getAttribute("how/dealiased"))
+    self.assertEqual(qfield, ["se.smhi.detector.dealias"], "Wrong qfield returned from process")
     
