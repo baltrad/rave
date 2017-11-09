@@ -91,31 +91,31 @@ class PyVerticalProfileTest(unittest.TestCase):
     obj = _verticalprofile.new()
     self.assertTrue(None == obj.starttime)
     obj.starttime = "000000"
-    self.assertAlmostEquals("000000", obj.starttime, 4)
+    self.assertEquals("000000", obj.starttime, 4)
     
   def test_setGetendTime(self):
     obj = _verticalprofile.new()
     self.assertTrue(None == obj.endtime)
     obj.endtime = "000000"
-    self.assertAlmostEquals("000000", obj.endtime, 4)
+    self.assertEquals("000000", obj.endtime, 4)
     
   def test_setGetstartDate(self):
     obj = _verticalprofile.new()
     self.assertTrue(None == obj.startdate)
     obj.startdate = "20171103"
-    self.assertAlmostEquals("20171103", obj.startdate, 4)
+    self.assertEquals("20171103", obj.startdate, 4)
     
   def test_setGetendDate(self):
     obj = _verticalprofile.new()
     self.assertTrue(None == obj.enddate)
     obj.enddate = "20171103"
-    self.assertAlmostEquals("20171103", obj.enddate, 4)
+    self.assertEquals("20171103", obj.enddate, 4)
     
   def test_setGetProduct(self):
     obj = _verticalprofile.new()
     self.assertTrue(None == obj.product)
     obj.product = "VP"
-    self.assertAlmostEquals("VP", obj.product, 4)
+    self.assertEquals("VP", obj.product, 4)
 
   def test_setGetLevels(self):
     obj = _verticalprofile.new()
