@@ -21,6 +21,10 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @file
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2012-08-24
+ *
+ * @author Ulf E. Nordh (Swedish Meteorological and Hydrological Institute, SMHI)
+ * @date 2017-02-23 Added functionality to yield an extended set of fields e.g.
+ * HGHT, n (sample size), UWND and VWND
  */
 #include "vertical_profile.h"
 #include "rave_debug.h"
@@ -32,14 +36,20 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_transform.h"
 #include "rave_utilities.h"
 #include "raveobject_hashtable.h"
+#include "rave_attribute.h"
 
 /**
  * Represents one vertical profile
  */
 struct _VerticalProfile_t {
   RAVE_OBJECT_HEAD /** Always on top */
-  // Date/Time
-  RaveDateTime_t* datetime;     /**< the date, time instance */
+  
+  // what/date, what/time and the times and date under /dataset1/what/
+  RaveDateTime_t* datetime; /**< the /what/date, /what/time instances */
+  RaveDateTime_t* startdatetime; /**< the instances of starttime and startdate under sublevel what */
+  RaveDateTime_t* enddatetime; /**< the instances of endtime and enddate under sublevel what  */
+  
+  char* product; /**< The product, in this case VP */
   char* source;    /**< the source string */
   RaveObjectHashTable_t* attrs; /**< attributes */
   RaveObjectHashTable_t* fields; /**< the fields */
@@ -49,7 +59,7 @@ struct _VerticalProfile_t {
   long levels; /**< the number of points in the profile */
   double interval; /**< Vertical distance (m) between height intervals, or 0.0 if variable */
   double minheight; /**< Minimum height in meters above mean sea level */
-  double maxheight; /**< Maximum height in meters above mean sea level */
+  double maxheight; /**< Maximum height in meters above mean sea level */ 
 };
 
 /*@{ Private functions */
@@ -69,15 +79,23 @@ static int VerticalProfile_constructor(RaveCoreObject* obj)
   self->datetime = NULL;
   self->fields = NULL;
   self->source = NULL;
+  self->startdatetime = NULL;
+  self->enddatetime = NULL;
+  self->product = NULL;
   self->attrs = RAVE_OBJECT_NEW(&RaveObjectHashTable_TYPE);
   self->datetime = RAVE_OBJECT_NEW(&RaveDateTime_TYPE);
+  self->startdatetime = RAVE_OBJECT_NEW(&RaveDateTime_TYPE);
+  self->enddatetime = RAVE_OBJECT_NEW(&RaveDateTime_TYPE);
   self->fields = RAVE_OBJECT_NEW(&RaveObjectHashTable_TYPE);
-  if (self->datetime == NULL || self->fields == NULL || self->attrs == NULL) {
+  if (self->datetime == NULL || self->fields == NULL || self->attrs == NULL ||
+      self->startdatetime == NULL || self->enddatetime == NULL) {
     goto error;
   }
   return 1;
 error:
   RAVE_OBJECT_RELEASE(self->datetime);
+  RAVE_OBJECT_RELEASE(self->startdatetime);
+  RAVE_OBJECT_RELEASE(self->enddatetime);
   RAVE_OBJECT_RELEASE(self->fields);
   RAVE_OBJECT_RELEASE(self->attrs);
   return 0;
@@ -96,22 +114,31 @@ static int VerticalProfile_copyconstructor(RaveCoreObject* obj, RaveCoreObject* 
   self->maxheight = src->maxheight;
   self->datetime = NULL;
   self->source = NULL;
+  self->startdatetime = NULL;
+  self->enddatetime = NULL;
+  self->product = NULL;
   self->attrs = RAVE_OBJECT_CLONE(src->attrs);
   self->datetime = RAVE_OBJECT_CLONE(src->datetime);
+  self->startdatetime = RAVE_OBJECT_CLONE(src->startdatetime);
+  self->enddatetime = RAVE_OBJECT_CLONE(src->enddatetime);
   self->fields = RAVE_OBJECT_CLONE(src->fields);
-  if (self->datetime == NULL || src->fields == NULL || src->attrs == NULL) {
+  if (self->datetime == NULL || self->fields == NULL || self->attrs == NULL ||
+      self->startdatetime == NULL || self->enddatetime == NULL) {
     goto error;
   }
-  if (!VerticalProfile_setSource(self, VerticalProfile_getSource(src))) {
+  if (!VerticalProfile_setSource(self, VerticalProfile_getSource(src)) ||
+      !VerticalProfile_setProduct(self, VerticalProfile_getProduct(src))) {
     goto error;
   }
-
   return 1;
 error:
   RAVE_OBJECT_RELEASE(self->datetime);
+  RAVE_OBJECT_RELEASE(self->startdatetime);
+  RAVE_OBJECT_RELEASE(self->enddatetime);
   RAVE_OBJECT_RELEASE(self->fields);
   RAVE_OBJECT_RELEASE(self->attrs);
   RAVE_FREE(self->source);
+  RAVE_FREE(self->product);
   return 0;
 }
 
@@ -122,9 +149,12 @@ static void VerticalProfile_destructor(RaveCoreObject* obj)
 {
   VerticalProfile_t* self = (VerticalProfile_t*)obj;
   RAVE_OBJECT_RELEASE(self->datetime);
+  RAVE_OBJECT_RELEASE(self->startdatetime);
+  RAVE_OBJECT_RELEASE(self->enddatetime);
   RAVE_OBJECT_RELEASE(self->fields);
   RAVE_OBJECT_RELEASE(self->attrs);
   RAVE_FREE(self->source);
+  RAVE_FREE(self->product);
 }
 
 static int VerticalProfileInternal_addField(VerticalProfile_t* self, RaveField_t* field, const char* quantity)
@@ -141,6 +171,7 @@ static int VerticalProfileInternal_addField(VerticalProfile_t* self, RaveField_t
 done:
   return result;
 }
+
 /*@} End of Private functions */
 
 /*@{ Interface functions */
@@ -168,6 +199,54 @@ const char* VerticalProfile_getTime(VerticalProfile_t* self)
   return RaveDateTime_getTime(self->datetime);
 }
 
+int VerticalProfile_setStartTime(VerticalProfile_t* self, const char* value)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return RaveDateTime_setTime(self->startdatetime, value);
+}
+
+const char* VerticalProfile_getStartTime(VerticalProfile_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return RaveDateTime_getTime(self->startdatetime);
+}
+
+int VerticalProfile_setEndTime(VerticalProfile_t* self, const char* value)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return RaveDateTime_setTime(self->enddatetime, value);
+}
+
+const char* VerticalProfile_getEndTime(VerticalProfile_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return RaveDateTime_getTime(self->enddatetime);
+}
+
+int VerticalProfile_setStartDate(VerticalProfile_t* self, const char* value)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return RaveDateTime_setDate(self->startdatetime, value);
+}
+
+const char* VerticalProfile_getStartDate(VerticalProfile_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return RaveDateTime_getDate(self->startdatetime);
+}
+
+int VerticalProfile_setEndDate(VerticalProfile_t* self, const char* value)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return RaveDateTime_setDate(self->enddatetime, value);
+}
+
+const char* VerticalProfile_getEndDate(VerticalProfile_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return RaveDateTime_getDate(self->enddatetime);
+}
+
 int VerticalProfile_setSource(VerticalProfile_t* self, const char* value)
 {
   char* tmp = NULL;
@@ -192,6 +271,32 @@ const char* VerticalProfile_getSource(VerticalProfile_t* self)
 {
   RAVE_ASSERT((self != NULL), "self == NULL");
   return (const char*)self->source;
+}
+
+int VerticalProfile_setProduct(VerticalProfile_t* self, const char* value)
+{
+  char* tmp = NULL;
+  int result = 0;
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  if (value != NULL) {
+    tmp = RAVE_STRDUP(value);
+    if (tmp != NULL) {
+      RAVE_FREE(self->product);
+      self->product = tmp;
+      tmp = NULL;
+      result = 1;
+    }
+  } else {
+    RAVE_FREE(self->product);
+    result = 1;
+  }
+  return result;
+}
+
+const char* VerticalProfile_getProduct(VerticalProfile_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return (const char*)self->product;
 }
 
 void VerticalProfile_setLongitude(VerticalProfile_t* self, double lon)
@@ -526,6 +631,53 @@ int VerticalProfile_setDBZDev(VerticalProfile_t* self, RaveField_t* ff)
   return VerticalProfileInternal_addField(self, ff, "dbz_dev");
 }
 
+RaveField_t* VerticalProfile_getNV(VerticalProfile_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return VerticalProfile_getField(self, "n"); /* Sample size for wind */
+}
+
+int VerticalProfile_setNV(VerticalProfile_t* self, RaveField_t* ff)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return VerticalProfileInternal_addField(self, ff, "n"); /* Sample size for wind */
+}
+
+RaveField_t* VerticalProfile_getHGHT(VerticalProfile_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return VerticalProfile_getField(self, "HGHT"); /* Height array */
+}
+
+int VerticalProfile_setHGHT(VerticalProfile_t* self, RaveField_t* ff)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return VerticalProfileInternal_addField(self, ff, "HGHT"); /* Height array */
+}
+
+RaveField_t* VerticalProfile_getUWND(VerticalProfile_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return VerticalProfile_getField(self, "UWND"); /* Wind component in x-direction */
+}
+
+int VerticalProfile_setUWND(VerticalProfile_t* self, RaveField_t* ff)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return VerticalProfileInternal_addField(self, ff, "UWND"); /* Wind component in x-direction */
+}
+
+RaveField_t* VerticalProfile_getVWND(VerticalProfile_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return VerticalProfile_getField(self, "VWND"); /* Wind component in y-direction */
+}
+
+int VerticalProfile_setVWND(VerticalProfile_t* self, RaveField_t* ff)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return VerticalProfileInternal_addField(self, ff, "VWND"); /* Wind component in y-direction */
+}
 
 RaveObjectList_t* VerticalProfile_getFields(VerticalProfile_t* self)
 {

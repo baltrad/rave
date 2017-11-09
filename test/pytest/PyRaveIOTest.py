@@ -22,6 +22,9 @@ Tests the PyRaveIO module.
 @file
 @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
 @date 2009-10-16
+
+@co-author Ulf Nordh (Swedish Meteorological and Hydrological Institute, SMHI)
+@date 2017-10-27. Updated code with more fields for vertical profiles
 '''
 import unittest
 import os
@@ -50,6 +53,7 @@ class PyRaveIOTest(unittest.TestCase):
   FIXTURE_CARTESIAN_IMAGE="fixtures/cartesian_image.h5"
   FIXTURE_CARTESIAN_VOLUME="fixtures/cartesian_volume.h5"
   FIXTURE_VP="fixtures/vp_fixture.h5"
+  FIXTURE_VP_NEW_VERSION="fixtures/selek_vp_20170901T000000Z.h5"
   FIXTURE_BUFR_PVOL="fixtures/odim_polar_ref.bfr"
   FIXTURE_BUFR_COMPO="fixtures/odim_compo_ref.bfr"
   FIXTURE_BUFR_2_2="fixtures/odim_2_2_ref.bfr"
@@ -1793,6 +1797,99 @@ class PyRaveIOTest(unittest.TestCase):
       self.assertEquals("ff_dev", f2)
     elif f1 == "ff_dev":
       self.assertEquals("dev_bird", f2)
+  
+    self.assertEquals(10, numpy.shape(f1data)[0])
+    self.assertEquals(1, numpy.shape(f1data)[1])
+    self.assertEquals(10, numpy.shape(f2data)[0])
+    self.assertEquals(1, numpy.shape(f2data)[1])
+    
+  def test_read_vp_new_version(self):
+    # Read the new version of VP
+    vp = _raveio.open(self.FIXTURE_VP_NEW_VERSION).object
+    self.assertEquals("NOD:selek,WMO:02430,RAD:SE45,PLC:Leksand", vp.source)
+    self.assertEquals("20170901", vp.date)
+    self.assertEquals("20170901", vp.startdate)
+    self.assertEquals("000000", vp.time)
+    self.assertEquals("000315", vp.starttime)
+    self.assertAlmostEquals(14.8775997162, vp.longitude * 180.0 / math.pi, 4)
+    self.assertAlmostEquals(60.7229995728, vp.latitude * 180.0 / math.pi, 4)
+    self.assertAlmostEquals(457.0, vp.height, 4)
+    self.assertEquals(60, vp.getLevels())
+    self.assertAlmostEquals(200.0, vp.interval, 4)
+    self.assertAlmostEquals(0.0, vp.minheight, 4)
+    self.assertAlmostEquals(12000.0, vp.maxheight, 4)
+    
+    field = vp.getField("HGHT")
+    self.assertEquals("HGHT", field.getAttribute("what/quantity"))
+    data = field.getData()
+    self.assertEquals(60, numpy.shape(data)[0])
+    self.assertEquals(1, numpy.shape(data)[1])
+    
+  def test_write_vp_new_version(self):
+    vp = _verticalprofile.new()
+    vp.date="20100101"
+    vp.startdate="20100101"
+    vp.enddate="20100101"
+    vp.time="120000"
+    vp.starttime="120202"
+    vp.endtime="120405"
+    vp.source="PLC:Leksand"
+    vp.product= "VP"
+    vp.longitude = 10.0 * math.pi / 180.0
+    vp.latitude = 15.0 * math.pi / 180.0
+    vp.setLevels(10)
+    vp.height = 100.0
+    vp.interval = 5.0
+    vp.minheight = 10.0
+    vp.maxheight = 20.0
+    f1 = _ravefield.new()
+    f1.setData(numpy.zeros((10,1), numpy.uint8))
+    f1.addAttribute("what/quantity", "UWND")
+    vp.addField(f1)
+    f2 = _ravefield.new()
+    f2.setData(numpy.zeros((10,1), numpy.uint8))
+    f2.addAttribute("what/quantity", "VWND")
+    vp.addField(f2)
+
+    obj = _raveio.new()
+    obj.object = vp
+    obj.filename = self.TEMPORARY_FILE2
+    obj.save()
+    
+    # Verify written data
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE2)
+    nodelist.selectAll()
+    nodelist.fetch()
+    
+    self.assertEquals("20100101", nodelist.getNode("/what/date").data())
+    self.assertEquals("20100101", nodelist.getNode("/dataset1/what/startdate").data())
+    self.assertEquals("20100101", nodelist.getNode("/dataset1/what/enddate").data())
+    self.assertEquals("120202", nodelist.getNode("/dataset1/what/starttime").data())
+    self.assertEquals("120405", nodelist.getNode("/dataset1/what/endtime").data())
+    self.assertEquals("VP", nodelist.getNode("/what/object").data())
+    self.assertEquals("VP", nodelist.getNode("/dataset1/what/product").data())
+    self.assertEquals("PLC:Leksand", nodelist.getNode("/what/source").data())
+    self.assertEquals("120000", nodelist.getNode("/what/time").data())
+    self.assertEquals("H5rad 2.2", nodelist.getNode("/what/version").data())
+    
+    self.assertAlmostEquals(100.0, nodelist.getNode("/where/height").data(), 4)
+    self.assertAlmostEquals(15.0, nodelist.getNode("/where/lat").data(), 4)
+    self.assertAlmostEquals(10.0, nodelist.getNode("/where/lon").data(), 4)
+
+    self.assertEquals(10, nodelist.getNode("/where/levels").data())
+    self.assertAlmostEquals(5.0, nodelist.getNode("/where/interval").data(), 4)
+    self.assertAlmostEquals(10.0, nodelist.getNode("/where/minheight").data(), 4)
+    self.assertAlmostEquals(20.0, nodelist.getNode("/where/maxheight").data(), 4)
+    
+    f1 = nodelist.getNode("/dataset1/data1/what/quantity").data()
+    f1data = nodelist.getNode("/dataset1/data1/data").data()
+    f2 = nodelist.getNode("/dataset1/data2/what/quantity").data()
+    f2data = nodelist.getNode("/dataset1/data2/data").data() 
+
+    if f1 == "UWND":
+      self.assertEquals("VWND", f2)
+    elif f1 == "VWND":
+      self.assertEquals("UWND", f2)
   
     self.assertEquals(10, numpy.shape(f1data)[0])
     self.assertEquals(1, numpy.shape(f1data)[1])

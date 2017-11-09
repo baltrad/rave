@@ -21,7 +21,13 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @file
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2012-08-24
+ *
+ * @co-author Ulf Nordh (Swedish Meteorological and Hydrological Institute, SMHI)
+ * @date 2017-10-27
+ * Uppdated code with new vertical profile field definitions (HGHT, n, UWND, VWND)
+ * and functions for accessing starttime, endtime, startdate, endate and product
  */
+ 
 #include "Python.h"
 #include <limits.h>
 #include <math.h>
@@ -164,6 +170,7 @@ static PyObject* _pyverticalprofile_getLevels(PyVerticalProfile* self, PyObject*
   return PyLong_FromLong(VerticalProfile_getLevels(self->vp));
 }
 
+
 /**
  * Special version of the setFF/setFFDev/.. that takes a third argument for passing on quantities
  * and using that as switch for making correct call.
@@ -243,6 +250,22 @@ static PyObject* _pyverticalprofile_internal_setfield(PyVerticalProfile* self, P
     if (!VerticalProfile_setDBZDev(self->vp, ravefield->field)) {
       raiseException_returnNULL(PyExc_AttributeError, "Failed to set dbz_dev");
     }
+  } else if (strcmp("HGHT", quantity) == 0) {
+    if (!VerticalProfile_setHGHT(self->vp, ravefield->field)) {
+      raiseException_returnNULL(PyExc_AttributeError, "Failed to set HGHT");
+    }
+  } else if (strcmp("n", quantity) == 0) {
+    if (!VerticalProfile_setNV(self->vp, ravefield->field)) {
+      raiseException_returnNULL(PyExc_AttributeError, "Failed to set n");
+    }
+  } else if (strcmp("UWND", quantity) == 0) {
+    if (!VerticalProfile_setUWND(self->vp, ravefield->field)) {
+      raiseException_returnNULL(PyExc_AttributeError, "Failed to set UWND");
+    }
+  } else if (strcmp("VWND", quantity) == 0) {
+    if (!VerticalProfile_setVWND(self->vp, ravefield->field)) {
+      raiseException_returnNULL(PyExc_AttributeError, "Failed to set VWND");
+    }
   } else {
     raiseException_returnNULL(PyExc_AssertionError, "Programming error");
   }
@@ -294,6 +317,14 @@ static PyObject* _pyverticalprofile_internal_getfield(PyVerticalProfile* self, P
     field = VerticalProfile_getDBZ(self->vp);
   } else if (strcmp("dbz_dev", quantity) == 0) {
     field = VerticalProfile_getDBZDev(self->vp);
+  } else if (strcmp("HGHT", quantity) == 0) {
+    field = VerticalProfile_getHGHT(self->vp);
+  } else if (strcmp("n", quantity) == 0) {
+    field = VerticalProfile_getNV(self->vp);
+  } else if (strcmp("UWND", quantity) == 0) {
+    field = VerticalProfile_getUWND(self->vp);
+  } else if (strcmp("VWND", quantity) == 0) {
+    field = VerticalProfile_getVWND(self->vp);
   } else {
     raiseException_gotoTag(done, PyExc_AssertionError, "Programming error");
   }
@@ -444,6 +475,46 @@ static PyObject* _pyverticalprofile_setDBZDev(PyVerticalProfile* self, PyObject*
 static PyObject* _pyverticalprofile_getDBZDev(PyVerticalProfile* self, PyObject* args)
 {
   return _pyverticalprofile_internal_getfield(self, args, "dbz_dev");
+}
+
+static PyObject* _pyverticalprofile_setHGHT(PyVerticalProfile* self, PyObject* args)
+{
+  return _pyverticalprofile_internal_setfield(self, args, "HGHT");
+}
+
+static PyObject* _pyverticalprofile_getHGHT(PyVerticalProfile* self, PyObject* args)
+{
+  return _pyverticalprofile_internal_getfield(self, args, "HGHT");
+}
+
+static PyObject* _pyverticalprofile_setNV(PyVerticalProfile* self, PyObject* args)
+{
+  return _pyverticalprofile_internal_setfield(self, args, "n");
+}
+
+static PyObject* _pyverticalprofile_getNV(PyVerticalProfile* self, PyObject* args)
+{
+  return _pyverticalprofile_internal_getfield(self, args, "n");
+}
+
+static PyObject* _pyverticalprofile_setUWND(PyVerticalProfile* self, PyObject* args)
+{
+  return _pyverticalprofile_internal_setfield(self, args, "UWND");
+}
+
+static PyObject* _pyverticalprofile_getUWND(PyVerticalProfile* self, PyObject* args)
+{
+  return _pyverticalprofile_internal_getfield(self, args, "UWND");
+}
+
+static PyObject* _pyverticalprofile_setVWND(PyVerticalProfile* self, PyObject* args)
+{
+  return _pyverticalprofile_internal_setfield(self, args, "VWND");
+}
+
+static PyObject* _pyverticalprofile_getVWND(PyVerticalProfile* self, PyObject* args)
+{
+  return _pyverticalprofile_internal_getfield(self, args, "VWND");
 }
 
 static PyObject* _pyverticalprofile_getFields(PyVerticalProfile* self, PyObject* args)
@@ -717,18 +788,22 @@ fail:
 }
 
 /**
- * All methods a polar scan can have
+ * All methods a vertical profile can have
  */
 static struct PyMethodDef _pyverticalprofile_methods[] =
 {
   {"time", NULL},
   {"date", NULL},
+  {"starttime", NULL},
+  {"endtime", NULL},
+  {"startdate", NULL},
+  {"enddate", NULL},
   {"source", NULL},
+  {"product", NULL},
   {"longitude", NULL},
   {"latitude", NULL},
   {"height", NULL},
   {"interval", NULL},
-  {"minheight", NULL},
   {"maxheight", NULL},
   {"setLevels", (PyCFunction) _pyverticalprofile_setLevels, 1},
   {"getLevels", (PyCFunction) _pyverticalprofile_getLevels, 1},
@@ -760,6 +835,14 @@ static struct PyMethodDef _pyverticalprofile_methods[] =
   {"setDBZ", (PyCFunction) _pyverticalprofile_setDBZ, 1},
   {"getDBZDev", (PyCFunction) _pyverticalprofile_getDBZDev, 1},
   {"setDBZDev", (PyCFunction) _pyverticalprofile_setDBZDev, 1},
+  {"getHGHT", (PyCFunction) _pyverticalprofile_getHGHT, 1},
+  {"setHGHT", (PyCFunction) _pyverticalprofile_setHGHT, 1},
+  {"getNV", (PyCFunction) _pyverticalprofile_getNV, 1},
+  {"setNV", (PyCFunction) _pyverticalprofile_setNV, 1},
+  {"getUWND", (PyCFunction) _pyverticalprofile_getUWND, 1},
+  {"setUWND", (PyCFunction) _pyverticalprofile_setUWND, 1},
+  {"getVWND", (PyCFunction) _pyverticalprofile_getVWND, 1},
+  {"setVWND", (PyCFunction) _pyverticalprofile_setVWND, 1},
   {"getFields", (PyCFunction) _pyverticalprofile_getFields, 1},
   {"addField", (PyCFunction) _pyverticalprofile_addField, 1},
   {"getField", (PyCFunction) _pyverticalprofile_getField, 1},
@@ -792,6 +875,41 @@ static PyObject* _pyverticalprofile_getattr(PyVerticalProfile* self, char* name)
     }
   } else if (strcmp("source", name) == 0) {
     const char* str = VerticalProfile_getSource(self->vp);
+    if (str != NULL) {
+      return PyString_FromString(str);
+    } else {
+      Py_RETURN_NONE;
+    }
+  } else if (strcmp("product", name) == 0) {
+    const char* str = VerticalProfile_getProduct(self->vp);
+    if (str != NULL) {
+      return PyString_FromString(str);
+    } else {
+      Py_RETURN_NONE;
+    }
+  } else if (strcmp("starttime", name) == 0) {
+    const char* str = VerticalProfile_getStartTime(self->vp);
+    if (str != NULL) {
+      return PyString_FromString(str);
+    } else {
+      Py_RETURN_NONE;
+    }
+  } else if (strcmp("endtime", name) == 0) {
+    const char* str = VerticalProfile_getEndTime(self->vp);
+    if (str != NULL) {
+      return PyString_FromString(str);
+    } else {
+      Py_RETURN_NONE;
+    }
+  } else if (strcmp("startdate", name) == 0) {
+    const char* str = VerticalProfile_getStartDate(self->vp);
+    if (str != NULL) {
+      return PyString_FromString(str);
+    } else {
+      Py_RETURN_NONE;
+    }
+  } else if (strcmp("enddate", name) == 0) {
+    const char* str = VerticalProfile_getEndDate(self->vp);
     if (str != NULL) {
       return PyString_FromString(str);
     } else {
@@ -859,7 +977,57 @@ static int _pyverticalprofile_setattr(PyVerticalProfile* self, char* name, PyObj
     } else {
       raiseException_gotoTag(done, PyExc_ValueError, "source must be a string");
     }
-  } else if (strcmp("longitude", name) == 0) {
+  } else if (strcmp("product", name) == 0) {
+    if (PyString_Check(val)) {
+      if (!VerticalProfile_setProduct(self->vp, PyString_AsString(val))) {
+        raiseException_gotoTag(done, PyExc_ValueError, "product must be a string");
+      }
+    } else if (val == Py_None) {
+      VerticalProfile_setProduct(self->vp, NULL);
+    } else {
+      raiseException_gotoTag(done, PyExc_ValueError, "product must be a string");
+    }
+  } else if (strcmp("starttime", name) == 0) {
+    if (PyString_Check(val)) {
+      if (!VerticalProfile_setStartTime(self->vp, PyString_AsString(val))) {
+        raiseException_gotoTag(done, PyExc_ValueError, "starttime must be a string (HHmmss)");
+      }
+    } else if (val == Py_None) {
+      VerticalProfile_setStartTime(self->vp, NULL);
+    } else {
+      raiseException_gotoTag(done, PyExc_ValueError, "starttime must be a string (HHmmss)");
+    }
+  } else if (strcmp("endtime", name) == 0) {
+    if (PyString_Check(val)) {
+      if (!VerticalProfile_setEndTime(self->vp, PyString_AsString(val))) {
+        raiseException_gotoTag(done, PyExc_ValueError, "endtime must be a string (HHmmss)");
+      }
+    } else if (val == Py_None) {
+      VerticalProfile_setEndTime(self->vp, NULL);
+    } else {
+      raiseException_gotoTag(done, PyExc_ValueError, "endtime must be a string (HHmmss)");
+    }
+  } else if (strcmp("startdate", name) == 0) {
+    if (PyString_Check(val)) {
+      if (!VerticalProfile_setStartDate(self->vp, PyString_AsString(val))) {
+        raiseException_gotoTag(done, PyExc_ValueError, "startdate must be a string (YYYYMMSS)");
+      }
+    } else if (val == Py_None) {
+      VerticalProfile_setStartDate(self->vp, NULL);
+    } else {
+      raiseException_gotoTag(done, PyExc_ValueError, "startdate must be a string (YYYYMMSS)");
+    } 
+  } else if (strcmp("enddate", name) == 0) {
+    if (PyString_Check(val)) {
+      if (!VerticalProfile_setEndDate(self->vp, PyString_AsString(val))) {
+        raiseException_gotoTag(done, PyExc_ValueError, "enddate must be a string (YYYYMMSS)");
+      }
+    } else if (val == Py_None) {
+      VerticalProfile_setEndDate(self->vp, NULL);
+    } else {
+      raiseException_gotoTag(done, PyExc_ValueError, "enddate must be a string (YYYYMMSS)");
+    } 
+  }  else if (strcmp("longitude", name) == 0) {
     if (PyFloat_Check(val)) {
       VerticalProfile_setLongitude(self->vp, PyFloat_AsDouble(val));
     } else {
