@@ -41,7 +41,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_alloc.h"
 #include "rave_utilities.h"
 #include "pyrave_debug.h"
-
+#include "rave_datetime.h"
 /**
  * This modules name
  */
@@ -211,6 +211,40 @@ static PyObject* _rave_setDebugLevel(PyObject* self, PyObject* args)
   Py_RETURN_NONE;
 }
 
+/**
+ * Simple helper to compare two rave date time pairs.
+ * @param[in] self - self
+ * @param[in] args - (d1,t1,d2,t2) where date is in format YYYYmmdd and time is in HHMMSS.
+ * @return negative if d1/t1 is before d2/t2. 0 if they are equal and a positive value otherwise
+ */
+static PyObject* _rave_compare_datetime(PyObject* self, PyObject* args)
+{
+  char *d1=NULL, *t1=NULL, *d2=NULL, *t2=NULL;
+  RaveDateTime_t* dt1 = NULL;
+  RaveDateTime_t* dt2 = NULL;
+  int result = -1;
+  if (!PyArg_ParseTuple(args, "ssss", &d1, &t1, &d2, &t2)) {
+    return NULL;
+  }
+  dt1 = RAVE_OBJECT_NEW(&RaveDateTime_TYPE);
+  dt2 = RAVE_OBJECT_NEW(&RaveDateTime_TYPE);
+  if (dt1 != NULL && dt2 != NULL) {
+    if (!RaveDateTime_setDate(dt1, d1) ||
+        !RaveDateTime_setTime(dt1, t1) ||
+        !RaveDateTime_setDate(dt2, d2) ||
+        !RaveDateTime_setTime(dt2, t2)) {
+      raiseException_gotoTag(done, PyExc_AttributeError, "Could not set date time strings");
+    }
+    result = RaveDateTime_compare(dt1, dt2);
+  }
+
+done:
+  RAVE_OBJECT_RELEASE(dt1);
+  RAVE_OBJECT_RELEASE(dt2);
+  return PyLong_FromLong(result);
+}
+
+
 /*@} End of Rave utilities */
 
 /// --------------------------------------------------------------------
@@ -228,6 +262,7 @@ static PyMethodDef functions[] = {
   {"open", (PyCFunction)_raveio_open, 1},
   {"isXmlSupported", (PyCFunction)_rave_isxmlsupported, 1},
   {"setDebugLevel", (PyCFunction)_rave_setDebugLevel, 1},
+  {"compare_datetime", (PyCFunction) _rave_compare_datetime, 1},
   {NULL,NULL} /*Sentinel*/
 };
 

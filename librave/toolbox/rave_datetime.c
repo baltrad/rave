@@ -26,6 +26,10 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_debug.h"
 #include "rave_alloc.h"
 #include <string.h>
+#define __USE_XOPEN
+#define _XOPEN_SOURCE
+#include <time.h>
+#include <stdio.h>
 
 /**
  * Represents a date time instance
@@ -141,6 +145,43 @@ const char* RaveDateTime_getDate(RaveDateTime_t* dt)
   return (const char*)dt->date;
 }
 
+int RaveDateTime_compare(RaveDateTime_t* self, RaveDateTime_t* other)
+{
+  RAVE_ASSERT((self != NULL), "self was NULL");
+  RAVE_ASSERT((other != NULL), "other was NULL");
+  int result = -1;
+  if (strlen(RaveDateTime_getDate(self)) == 8 &&
+      strlen(RaveDateTime_getTime(self)) == 6 &&
+      strlen(RaveDateTime_getDate(other)) == 8 &&
+      strlen(RaveDateTime_getTime(other)) == 6) {
+    char selfdatestr[32], otherdatestr[32];
+    struct tm selft, othert;
+    strcpy(selfdatestr, RaveDateTime_getDate(self));
+    strcat(selfdatestr, RaveDateTime_getTime(self));
+    strcpy(otherdatestr, RaveDateTime_getDate(other));
+    strcat(otherdatestr, RaveDateTime_getTime(other));
+    memset(&selft, 0, sizeof(struct tm));
+    memset(&othert, 0, sizeof(struct tm));
+
+    if (strptime(selfdatestr, "%Y%m%d%H%M%S", &selft) == NULL ||
+        strptime(otherdatestr, "%Y%m%d%H%M%S", &othert) == NULL) {
+      RAVE_WARNING2("Failed to convert either %s or %s into a time_t structure", selfdatestr, otherdatestr);
+    } else {
+      time_t ot = mktime(&othert);
+      time_t st = mktime(&selft);
+      double d = difftime(ot, st);
+      if (d > 0.0)
+        return -1;
+      else if (d < 0.0)
+        return 1;
+      else
+        return 0;
+    }
+  } else {
+    RAVE_WARNING0("When comparing datetime either self or other is not initialized with both date and time");
+  }
+  return result;
+}
 
 /*@} End of Interface functions */
 RaveCoreObjectType RaveDateTime_TYPE = {

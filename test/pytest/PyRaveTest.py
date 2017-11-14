@@ -38,6 +38,20 @@ class PyRaveTest(unittest.TestCase):
       pass
     self.assertEquals(modulebuilt, _rave.isXmlSupported())
 
+  def testCompareDateTime_1(self):
+    self.assertEqual(0, _rave.compare_datetime("20171030","013059", "20171030","013059")) 
+    self.assertEqual(0, _rave.compare_datetime("20171231","235959", "20171231","235959")) 
+    self.assertEqual(0, _rave.compare_datetime("20170101","000000", "20170101","000000")) 
+
+  def testCompareDateTime_2(self):
+    self.assertEqual(-1, _rave.compare_datetime("20171030","013059", "20181130","013059")) 
+    self.assertEqual(-1, _rave.compare_datetime("20171231","235959", "20180101","000000")) 
+    self.assertEqual(-1, _rave.compare_datetime("20170101","000000", "20180101","000000")) 
+    
+  def testCompareDateTime_3(self):
+    self.assertEqual(1, _rave.compare_datetime("20171030","013059", "20170930","013059")) 
+    self.assertEqual(1, _rave.compare_datetime("20180101","000000", "20171231","235959")) 
+    self.assertEqual(1, _rave.compare_datetime("20180101","000000", "20170101","000000")) 
 
 if __name__ == "__main__":
   unittest.main()
