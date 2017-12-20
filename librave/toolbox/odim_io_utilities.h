@@ -73,4 +73,24 @@ int OdimIoUtilities_addQualityFields(RaveObjectList_t* fields, HL_NodeList* node
  */
 RaveField_t* OdimIoUtilities_loadField(HL_NodeList* nodelist, const char* fmt, ...);
 
+/**
+ * Gets the specified id from the source string, for example. If source string contains CMT:abc,NOD:selek,RAD:se50 then if id = NOD: buf will be filled with selek
+ * @param[in] source - the what/source string
+ * @param[in] id - the id to search for ended with a :, for example NOD:
+ * @param[in,out] buf - the buffer filled with the found id
+ * @param[in] buflen - the length of buf
+ * @returns 1 if id was found and did fit into buf, otherwise 0
+ */
+int OdimIoUtilities_getIdFromSource(const char* source, const char* id, char* buf, size_t buflen);
+
+/**
+ * Like \ref OdimIoUtilities_getIdFromSource but will first check NOD: and then CMT:
+ * @param[in] source - the what/source string
+ * @param[in] id - the id to search for ended with a :, for example NOD:
+ * @param[in,out] buf - the buffer filled with the found id
+ * @param[in] buflen - the length of buf
+ * @returns 1 if id was found and did fit into buf, otherwise 0
+ */
+int OdimIoUtilities_getNodOrCmtFromSource(const char* source, char* buf, size_t buflen);
+
 #endif /* ODIM_IO_UTILITIES_H */

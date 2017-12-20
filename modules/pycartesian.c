@@ -1029,6 +1029,23 @@ fail:
 }
 
 /**
+ * Clones self
+ * @param[in] self - self
+ * @param[in] args - NA
+ * @return a clone of self
+ */
+static PyObject* _pycartesian_clone(PyCartesian* self, PyObject* args)
+{
+  PyObject* pyresult = NULL;
+  Cartesian_t* result = RAVE_OBJECT_CLONE(self->cartesian);
+  if (result != NULL) {
+    pyresult = (PyObject*)PyCartesian_New(result);
+  }
+  RAVE_OBJECT_RELEASE(result);
+  return pyresult;
+}
+
+/**
  * All methods a cartesian product can have
  */
 static struct PyMethodDef _pycartesian_methods[] =
@@ -1086,6 +1103,7 @@ static struct PyMethodDef _pycartesian_methods[] =
   {"removeParameter", (PyCFunction)_pycartesian_removeParameter, 1},
   {"getParameterCount", (PyCFunction)_pycartesian_getParameterCount, 1},
   {"getParameterNames", (PyCFunction)_pycartesian_getParameterNames, 1},
+  {"clone", (PyCFunction)_pycartesian_clone, 1},
   {NULL, NULL } /* sentinel */
 };
 

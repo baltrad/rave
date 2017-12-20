@@ -42,6 +42,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_utilities.h"
 #include "pyrave_debug.h"
 #include "rave_datetime.h"
+#include "proj_wkt_helper.h"
+
 /**
  * This modules name
  */
@@ -244,6 +246,67 @@ done:
   return PyLong_FromLong(result);
 }
 
+/**
+ * Translates a projection into a list of well known text attributes representing the projection
+ * @param[in] self - self
+ * @param[in] args - a ProjectionCore instance
+ */
+static PyObject* _rave_translate_from_projection_to_wkt(PyObject* self, PyObject* args)
+{
+  PyObject* obj = NULL;
+  RaveObjectList_t* attrList = NULL;
+  PyObject* result = NULL;
+  if (!PyArg_ParseTuple(args, "O", &obj))
+    return NULL;
+  if (!PyProjection_Check(obj)) {
+    raiseException_returnNULL(PyExc_AttributeError, "Must be of type ProjectionCore");
+  }
+  attrList = RaveWkt_translate_from_projection(((PyProjection*)obj)->projection);
+  if (attrList != NULL) {
+    int i = 0, n = 0;
+    result = PyList_New(0);
+    n = RaveObjectList_size(attrList);
+    for (i = 0; i < n; i++) {
+      RaveAttribute_t* attr = (RaveAttribute_t*)RaveObjectList_get(attrList, i);
+      if (RaveAttribute_getFormat(attr) == RaveAttribute_Format_String) {
+        char* v = NULL;
+        PyObject* o = NULL;
+        RaveAttribute_getString(attr, &v);
+        o = Py_BuildValue("(ss)", RaveAttribute_getName(attr), v);
+        PyList_Append(result, o);
+        Py_XDECREF(o);
+      } else if (RaveAttribute_getFormat(attr) == RaveAttribute_Format_Double) {
+        double v = 0.0;
+        PyObject* o=NULL;
+        RaveAttribute_getDouble(attr, &v);
+        o = Py_BuildValue("(sd)", RaveAttribute_getName(attr), v);
+        PyList_Append(result, o);
+        Py_XDECREF(o);
+      } else if (RaveAttribute_getFormat(attr) == RaveAttribute_Format_DoubleArray) {
+        double* v = NULL;
+        int vn = 0;
+        int vi = 0;
+        PyObject* o = NULL;
+        PyObject* own = NULL;
+        RaveAttribute_getDoubleArray(attr, &v, &vn);
+        o = PyList_New(0);
+        for (vi = 0; vi < vn; vi++) {
+          PyObject* ov = PyFloat_FromDouble(v[vi]);
+          PyList_Append(o, ov);
+          Py_XDECREF(ov);
+        }
+        own = Py_BuildValue("(sO)", RaveAttribute_getName(attr), o);
+        PyList_Append(result, own);
+        Py_XDECREF(o);
+        Py_XDECREF(own);
+      }
+      RAVE_OBJECT_RELEASE(attr);
+    }
+  }
+  RAVE_OBJECT_RELEASE(attrList);
+  return result;
+}
+
 
 /*@} End of Rave utilities */
 
@@ -263,6 +326,7 @@ static PyMethodDef functions[] = {
   {"isXmlSupported", (PyCFunction)_rave_isxmlsupported, 1},
   {"setDebugLevel", (PyCFunction)_rave_setDebugLevel, 1},
   {"compare_datetime", (PyCFunction) _rave_compare_datetime, 1},
+  {"translate_from_projection_to_wkt", (PyCFunction) _rave_translate_from_projection_to_wkt, 1},
   {NULL,NULL} /*Sentinel*/
 };
 

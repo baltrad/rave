@@ -63,6 +63,7 @@ class PyRaveIOTest(unittest.TestCase):
   
   
   def setUp(self):
+    #_rave.setDebugLevel(_rave.Debug_RAVE_SPEWDEBUG)
     if os.path.isfile(self.TEMPORARY_FILE):
       os.unlink(self.TEMPORARY_FILE)
     if os.path.isfile(self.TEMPORARY_FILE2):
@@ -1103,7 +1104,7 @@ class PyRaveIOTest(unittest.TestCase):
 
     obj = _raveio.open(self.TEMPORARY_FILE)
     self.assertEquals(_rave.Rave_ObjectType_IMAGE, obj.object.objectType);
-  
+
   def test_load_scan(self):
     obj = _raveio.open(self.FIXTURE_SCAN)
     self.assertNotEqual(-1, string.find(`type(obj.object)`, "PolarScanCore"))
@@ -2488,4 +2489,52 @@ class PyRaveIOTest(unittest.TestCase):
 
   def rad2deg(self, coord):
     return (coord[0]*180.0/math.pi, coord[1]*180.0/math.pi)
-  
+
+#  def testWriteCF_Cartesian(self):
+#    import _rave
+#    _rave.setDebugLevel(_rave.Debug_RAVE_SPEWDEBUG)
+#    obj = _raveio.open("swegmaps_2000_20171211_1300.h5").object.getImage(0)
+#    rio = _raveio.new()
+#    rio.object = obj
+#    rio.file_format=_raveio.RaveIO_FileFormat_CF;
+#    rio.save("test_slask_output.nc")
+#     
+#   def XtestWriteCF_Cartesian(self):
+#     import _rave
+#     _rave.setDebugLevel(_rave.Debug_RAVE_SPEWDEBUG)
+#     obj = _raveio.open("swegmaps_2000_20171211_1300.h5").object.getImage(0)
+#     #obj = _raveio.open("swecomposite_gmap.h5").object.getImage(0)
+#     rio = _raveio.new()
+#     rio.object = self.copy_image(obj, 100.0)
+#     #rio.object.source = "NOD:swegmaps_2000"
+#     rio.file_format=_raveio.RaveIO_FileFormat_CF;
+#     rio.save("test_swegmaps.nc")
+#     
+#   def XtestWriteCF_CompositeVolume(self):
+#     import _rave
+#     _rave.setDebugLevel(_rave.Debug_RAVE_SPEWDEBUG)
+#     vol = _raveio.open("swegmaps_2000_20171211_1300.h5").object
+#     obj = vol.getImage(0)
+#     obj.addAttribute("what/prodpar", 0)
+#     for i in range(20):
+#       vol.addImage(self.copy_image(obj, (i+1)*200))
+#     rio = _raveio.new()
+#     rio.object = vol
+#     rio.file_format=_raveio.RaveIO_FileFormat_CF;
+#     rio.save("test_swegmaps_vol.nc")
+# 
+#   def testWriteCF_LargeCompositeVolume(self):
+#     import _rave
+#     _rave.setDebugLevel(_rave.Debug_RAVE_SPEWDEBUG)
+#     vol = _raveio.open("swegmaps_2000_201712161600_0_12000.h5").object
+#     rio = _raveio.new()
+#     rio.object = vol
+#     rio.file_format=_raveio.RaveIO_FileFormat_CF;
+#     rio.save("test_swegmaps_large_vol.nc")
+# 
+#   def copy_image(self, obj, height):
+#     other = obj.clone()
+#     other.addAttribute("what/prodpar", height)
+#     return other
+    
+    

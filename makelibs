@@ -48,6 +48,10 @@ if [ -n "$BUFRARG" ]; then
   CONFARGS="$CONFARGS --with-bufr=$BUFRARG"
 fi
 
+if [ -n "$NETCDFARG" ]; then
+  CONFARGS="$CONFARGS --with-netcdf=$NETCDFARG"
+fi
+
 echo "Running: ./configure $CONFARGS"
 
 ./configure $CONFARGS

@@ -12,6 +12,13 @@ ifeq ($(BUFR_SUPPRESSED), no)
 CFLAGS+= $(BUFR_INCLUDE_DIR) -DRAVE_BUFR_SUPPORTED
 endif
 
+ifeq ($(NETCDF_SUPPRESSED),no)
+CFLAGS+= $(NETCDF_INCLUDE_DIR)
+ifeq ($(CF_SUPPRESSED), no)
+CFLAGS+= -DRAVE_CF_SUPPORTED
+endif
+endif
+
 ifeq ($(GOT_PTHREAD_SUPPORT), yes)
 CFLAGS+= -DPTHREAD_SUPPORTED
 endif
@@ -25,7 +32,8 @@ RAVESOURCES= polar.c raveutil.c rave_transform.c rave_alloc.c rave_debug.c polar
              rave_types.c rave_data2d.c composite.c rave_attribute.c cartesiancomposite.c \
              rave_utilities.c rave_field.c radardefinition.c rave_hlhdf_utilities.c cartesian_odim_io.c \
              polar_odim_io.c raveobject_hashtable.c detection_range.c odim_io_utilities.c poo_composite_algorithm.c rave_acrr.c \
-             vertical_profile.c vp_odim_io.c dealias.c odc_hac.c rave_vpr_correction.c rave_qitotal.c rave_gra.c ctfilter.c bitmap_generator.c
+             vertical_profile.c vp_odim_io.c dealias.c odc_hac.c rave_vpr_correction.c rave_qitotal.c rave_gra.c ctfilter.c bitmap_generator.c \
+             proj_wkt_helper.c
 
 ifeq ($(EXPAT_SUPPRESSED), no)
 RAVESOURCES += arearegistry.c projectionregistry.c rave_simplexml.c 
@@ -35,6 +43,10 @@ ifeq ($(BUFR_SUPPRESSED), no)
 RAVESOURCES += rave_bufr_io.c
 endif 
 
+ifeq ($(CF_SUPPRESSED),no)
+RAVESOURCES += cartesian_cf_io.c
+endif
+
 INSTALL_HEADERS= polar.h rave_transform.h raveutil.h rave_alloc.h polarvolume.h polarscan.h \
                  polarscanparam.h cartesian.h cartesianparam.h cartesianvolume.h transform.h projection.h polarnav.h rave_io.h \
                  rave_list.h rave_object.h raveobject_list.h area.h rave_datetime.h \
@@ -42,7 +54,8 @@ INSTALL_HEADERS= polar.h rave_transform.h raveutil.h rave_alloc.h polarvolume.h 
                  rave_utilities.h rave_field.h radardefinition.h rave_hlhdf_utilities.h \
                  cartesian_odim_io.h rave_debug.h polar_odim_io.h \
                  raveobject_hashtable.h detection_range.h odim_io_utilities.h composite_algorithm.h poo_composite_algorithm.h rave_acrr.h \
-                 vertical_profile.h vp_odim_io.h dealias.h odc_hac.h  rave_vpr_correction.h rave_qitotal.h rave_gra.h ctfilter.h  bitmap_generator.h
+                 vertical_profile.h vp_odim_io.h dealias.h odc_hac.h  rave_vpr_correction.h rave_qitotal.h rave_gra.h ctfilter.h  bitmap_generator.h \
+                 proj_wkt_helper.h
 
 ifeq ($(EXPAT_SUPPRESSED), no)
 INSTALL_HEADERS+= arearegistry.h projectionregistry.h rave_simplexml.h 
@@ -51,6 +64,10 @@ endif
 ifeq ($(BUFR_SUPPRESSED), no)
 INSTALL_HEADERS += rave_bufr_io.h
 endif 
+
+ifeq ($(CF_SUPPRESSED),no)
+INSTALL_HEADERS += cartesian_cf_io.h
+endif
 
 RAVEOBJS=	$(RAVESOURCES:.c=.o)
 LIBRAVETOOLBOX=	libravetoolbox.so

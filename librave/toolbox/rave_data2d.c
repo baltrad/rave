@@ -30,6 +30,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include <float.h>
 #include <string.h>
 #include <stdio.h>
+#include <math.h>
+
 /**
  * Represents a date time instance
  */

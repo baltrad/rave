@@ -59,7 +59,8 @@ typedef enum RaveIO_ODIM_H5rad_Version {
 typedef enum RaveIO_ODIM_FileFormat {
   RaveIO_ODIM_FileFormat_UNDEFINED = -1, /**< undefined */
   RaveIO_ODIM_FileFormat_HDF5 = 0,       /**< HDF 5 */
-  RaveIO_ODIM_FileFormat_BUFR = 1        /**< BUFR */
+  RaveIO_ODIM_FileFormat_BUFR = 1,       /**< BUFR */
+  RaveIO_FileFormat_CF = 2               /** CF Conventions / Radial */
 } RaveIO_ODIM_FileFormat;
 
 /**
@@ -181,6 +182,8 @@ RaveIO_ODIM_H5rad_Version RaveIO_getH5radVersion(RaveIO_t* raveio);
  * @return the file format.
  */
 RaveIO_ODIM_FileFormat RaveIO_getFileFormat(RaveIO_t* raveio);
+
+int RaveIO_setFileFormat(RaveIO_t* raveio, RaveIO_ODIM_FileFormat format);
 
 /**
  * Sets the compression level.
