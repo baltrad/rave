@@ -134,4 +134,10 @@ RaveList_t* RaveUtilities_getTrimmedTokens(const char* str, int c);
  */
 int RaveUtilities_isXmlSupported(void);
 
+/**
+ * Returns if CF convention IO support is activated or not.
+ * @returns 0 if CF convention IO isn't supported in the build, otherwise 1
+ */
+int RaveUtilities_isCFConventionSupported(void);
+
 #endif /* RAVE_UTILITIES_H */

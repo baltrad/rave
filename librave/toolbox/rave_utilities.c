@@ -307,3 +307,12 @@ int RaveUtilities_isXmlSupported(void)
   return 0;
 #endif
 }
+
+int RaveUtilities_isCFConventionSupported(void)
+{
+#ifdef RAVE_CF_SUPPORTED
+  return 1;
+#else
+  return 0;
+#endif
+}

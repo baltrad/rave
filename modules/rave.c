@@ -198,6 +198,17 @@ static PyObject* _rave_isxmlsupported(PyObject* self, PyObject* args)
 }
 
 /**
+ * Returns if CF conventions is supported or not in this build.
+ * @param[in] self - self
+ * @param[in] args - N/A
+ * @returns true if xml is supported otherwise false
+ */
+static PyObject* _rave_isCFConventionSupported(PyObject* self, PyObject* args)
+{
+  return PyBool_FromLong(RaveUtilities_isCFConventionSupported());
+}
+
+/**
  * Sets a specific debug level
  * @param[in] self - self
  * @param[in] args - the debug level as an integer
@@ -324,6 +335,7 @@ static PyMethodDef functions[] = {
   {"io", (PyCFunction)_raveio_new, 1},
   {"open", (PyCFunction)_raveio_open, 1},
   {"isXmlSupported", (PyCFunction)_rave_isxmlsupported, 1},
+  {"isCFConventionSupported", (PyCFunction)_rave_isCFConventionSupported, 1},
   {"setDebugLevel", (PyCFunction)_rave_setDebugLevel, 1},
   {"compare_datetime", (PyCFunction) _rave_compare_datetime, 1},
   {"translate_from_projection_to_wkt", (PyCFunction) _rave_translate_from_projection_to_wkt, 1},
