@@ -81,8 +81,14 @@ typedef struct CompositeValues_t {
 /** By multiplying the values in the distance field by 2000, we get the value in unit meters. */
 #define DISTANCE_TO_RADAR_RESOLUTION 2000.0
 
+/** Same for height, scaled to 100 m resolution up to 25.5 km */
+#define HEIGHT_RESOLUTION 100.0
+
 /** The name of the task for specifying distance to radar */
 #define DISTANCE_TO_RADAR_HOW_TASK "se.smhi.composite.distance.radar"
+
+/** The name of the task for specifying height above sea level */
+#define HEIGHT_ABOVE_SEA_HOW_TASK "se.smhi.composite.height.radar"
 
 /** The name of the task for indexing the radars used */
 #define RADAR_INDEX_HOW_TASK "se.smhi.composite.index.radar"
@@ -1043,6 +1049,9 @@ static int CompositeInternal_addQualityFlags(Composite_t* self, Cartesian_t* ima
     if (strcmp(DISTANCE_TO_RADAR_HOW_TASK, howtaskvaluestr) == 0) {
       gain = DISTANCE_TO_RADAR_RESOLUTION;
       offset = 0.0;
+    } else if (strcmp(HEIGHT_ABOVE_SEA_HOW_TASK, howtaskvaluestr) == 0) {
+      gain = HEIGHT_RESOLUTION;
+      offset = 0.0;
     } else if (strcmp(RADAR_INDEX_HOW_TASK, howtaskvaluestr) == 0) {
       gain = 1.0;
       offset = 0.0;
@@ -1103,7 +1112,7 @@ static void CompositeInternal_fillQualityInformation(
   int x,
   int y,
   CartesianParam_t* param,
-  double radardist,
+  double radardist, 
   int radarindex,
   PolarNavigationInfo* navinfo)
 {
@@ -1136,6 +1145,8 @@ static void CompositeInternal_fillQualityInformation(
       if (obj != NULL) {
         if (strcmp(DISTANCE_TO_RADAR_HOW_TASK, name) == 0) {
           RaveField_setValue(field, x, y, radardist/DISTANCE_TO_RADAR_RESOLUTION);
+        } else if (strcmp(HEIGHT_ABOVE_SEA_HOW_TASK, name) == 0) {
+          RaveField_setValue(field, x, y, navinfo->actual_height/HEIGHT_RESOLUTION);
         } else if (strcmp(RADAR_INDEX_HOW_TASK, name) == 0) {
           RaveField_setValue(field, x, y, (double)Composite_getRadarIndexValue(composite, radarindex));
         } else if (composite->algorithm != NULL && CompositeAlgorithm_supportsFillQualityInformation(composite->algorithm, name)) {
