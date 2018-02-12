@@ -11,6 +11,10 @@ import rave_pgf_scansun_plugin, odim_source
 from rave_defines import UTF8
 
 class RaveScansun(unittest.TestCase):
+
+    # sehem PVOL with a sunhit, code running using startazT and stopazT
+    SEHEM_TESTFILE = "fixtures/sehem_pvol_pn215_20171204T071500Z_0x81540b.h5"
+
     # KNMI PVOL from Den Helder with a nice sun hit
     KNMI_TESTFILE="fixtures/KNMI-PVOL-Den_Helder.h5"
     # The following validation values are:
@@ -92,7 +96,18 @@ class RaveScansun(unittest.TestCase):
         os.remove(fstr)
         os.rmdir(os.path.split(fstr)[0])
 
-
+    def testScansunAndWriteHits(self):
+        source,hits = _scansun.scansun(self.SEHEM_TESTFILE)
+        rave_pgf_scansun_plugin.RAVEETC = os.getcwd() + '/fixtures'
+        fstr = '%s/scansun/sehem.scansun' % rave_pgf_scansun_plugin.RAVEETC
+        rave_pgf_scansun_plugin.writeHits(source, hits)
+        fd = open(fstr)
+        content = fd.read()
+        fd.close()
+        self.assertEqual(content, '#Date    Time        Elevatn Azimuth   ElevSun   AzimSun    N  dBSunFlux   SunMean SunStdd   ZdrMean ZdrStdd  Refl  ZDR\n20171204 071512.881    0.500  134.62    0.0047  134.5597      68      14.66   -113.48   1.028       nan     nan  TH   NA\n')
+        os.remove(fstr)
+        os.rmdir(os.path.split(fstr)[0])
+      
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']
     unittest.main()

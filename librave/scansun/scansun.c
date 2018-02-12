@@ -403,9 +403,9 @@ void readoutTiming(SCANMETA* meta, int ia, long* date, long* time, double* timer
   *timer = modf(timed, &timef);
 
   const time_t timet = (time_t)timef;
-  const struct tm *timetm = localtime(&timet);
+  const struct tm *timetm = gmtime(&timet);
   struct tm buf;
-  timetm = localtime_r(&timet, &buf);
+  timetm = gmtime_r(&timet, &buf);
   strftime(datebuf, sizeof datebuf, "%Y%m%d", timetm);
   strftime(timebuf, sizeof timebuf, "%H%M%S", timetm);
   *date = strtol(datebuf, &ptr, 10);
