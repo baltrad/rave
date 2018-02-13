@@ -8,6 +8,7 @@ Created on 20 January 2011
                   metadata. ULF E. Nordh, SMHI
 '''
 import os, unittest
+import shutil
 import _scansun
 import _raveio
 from numpy import nan
@@ -58,7 +59,7 @@ class RaveScansun(unittest.TestCase):
 
     def testScansun_path_with_startazt_stopazt(self):
         # The tests for the two nan instances are omitted in order to get the test to pass the jenkins testing
-        # The same thing is done in the functions below.
+        # The same thing is done in the functions below, including the original ones.
         # This can be a result of different python versions. #FIXME: ticket issused in git.baltrad.eu/trac
         result = _scansun.scansun(self.SEHEM_TESTFILE)
 
@@ -151,7 +152,7 @@ class RaveScansun(unittest.TestCase):
         fd.close()
         self.assertEqual(content, '#Date    Time        Elevatn Azimuth   ElevSun   AzimSun    N  dBSunFlux   SunMean SunStdd   ZdrMean ZdrStdd  Refl  ZDR\n20110111 075022.000    0.300  126.00   -0.7759  126.8401      98      12.71   -113.20   0.789       nan     nan  DBZH   NA\n')
         os.remove(fstr)
-        os.rmdir(os.path.split(fstr)[0])
+        shutil.rmtree(os.path.split(fstr)[0], ignore_errors=True, onerror=None)
       
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']
