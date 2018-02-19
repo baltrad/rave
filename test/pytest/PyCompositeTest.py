@@ -68,6 +68,8 @@ class PyCompositeTest(unittest.TestCase):
                  "fixtures/prepared_max_fixture_osu.h5",
                  "fixtures/prepared_max_fixture_ovi.h5"]
   
+  DUMMY_DATA_FIXTURES = ["fixtures/sehem_qcvol_pn129_20180129T100000Z_0x73fc7b_dummydata.h5"]
+  
   def setUp(self):
     pass
 
@@ -1043,4 +1045,40 @@ class PyCompositeTest(unittest.TestCase):
     ios = _raveio.new()
     ios.object = result
     ios.filename = "swecomposite_pvols_qfields.h5"
-    ios.save() 
+    ios.save()
+
+  def test_cappi_for_unsorted_volume(self):
+    generator = _pycomposite.new()
+    a = _area.new()
+    a.id = "nrd2km"
+    a.xsize = 848
+    a.ysize = 1104
+    a.xscale = 2000.0
+    a.yscale = 2000.0
+    a.extent = (-738816.513333,-3995515.596160,955183.48666699999,-1787515.59616)
+    a.projection = _projection.new("x", "y", "+proj=stere +ellps=bessel +lat_0=90 +lon_0=14 +lat_ts=60 +datum=WGS84")
+    
+    for fname in self.DUMMY_DATA_FIXTURES:
+      rio = _raveio.open(fname)
+      generator.add(rio.object)
+
+    generator.addParameter("DBZH", 1.0, 0.0)
+    generator.product = _rave.Rave_ProductType_CAPPI
+    generator.elangle = 0.0
+    generator.time = "120000"
+    generator.date = "20090501"
+    generator.height = 5000
+    result = generator.nearest(a, ["fi.fmi.ropo.detector.classification", "se.smhi.detector.beamblockage", "se.smhi.composite.distance.radar"])
+
+    # check known positions, to ensure that correct values are set
+    dbzh_param = result.getParameter("DBZH")
+    data = dbzh_param.getData()
+    self.assertEquals(data[855][507], 80, "Invalid data value in CAPPI.")
+    self.assertEquals(data[869][468], 5, "Invalid data value in CAPPI.")
+    self.assertEquals(data[931][474], 1, "Invalid data value in CAPPI.")
+    self.assertEquals(data[849][505], 255, "Invalid data value in CAPPI.")
+
+    ios = _raveio.new()
+    ios.object = result
+    ios.filename = "swecomposite_cappi_unsorted_pvols.h5"
+    ios.save()

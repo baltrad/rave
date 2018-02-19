@@ -46,6 +46,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #define UNIT_SECONDS_SINCE_19700101 "seconds since 1970-01-01 00:00:00 +00:00"
 #define UNITS_DBZ "dBZ"
 
+#define HEIGHT_DESCRIPTION "height above sea level"
+
 #define TEXT_UP "up"
 #define TEXT_HEIGHT "height"
 #define TEXT_LONGITUDE "longitude"
@@ -633,7 +635,7 @@ static int CartesianCfIOInternal_defineHeight0(int ncid, int nheights, int* nhei
     goto done;
   if (!CartesianCfIOInternal_addText(ncid, *varid, UNITS, strlen(UNIT_METERS), UNIT_METERS))
     goto done;
-  if (!CartesianCfIOInternal_addText(ncid, *varid, DESCRIPTION, strlen("height above ground"), "height above ground"))
+  if (!CartesianCfIOInternal_addText(ncid, *varid, DESCRIPTION, strlen(HEIGHT_DESCRIPTION), HEIGHT_DESCRIPTION))
     goto done;
   if (!CartesianCfIOInternal_addText(ncid, *varid, POSITIVE, strlen(TEXT_UP), TEXT_UP))
     goto done;

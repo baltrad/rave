@@ -1810,6 +1810,7 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t*
             if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
               dist = PolarVolume_getDistance((PolarVolume_t*)obj, olon, olat);
               maxdist = PolarVolume_getMaxDistance((PolarVolume_t*)obj);
+              PolarVolume_sortByElevations((PolarVolume_t*)obj, 1);
             } else if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarScan_TYPE)) {
               dist = PolarScan_getDistance((PolarScan_t*)obj, olon, olat);
               maxdist = PolarScan_getMaxDistance((PolarScan_t*)obj);
