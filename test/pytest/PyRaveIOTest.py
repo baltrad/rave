@@ -2529,8 +2529,13 @@ class PyRaveIOTest(unittest.TestCase):
 #     vol = _raveio.open("swegmaps_2000_201712161600_0_12000.h5").object
 #     rio = _raveio.new()
 #     rio.object = vol
+#     rio.compression_level = 0
 #     rio.file_format=_raveio.RaveIO_FileFormat_CF;
 #     rio.save("test_swegmaps_large_vol.nc")
+# 
+#     rio.compression_level = 6
+#     rio.file_format=_raveio.RaveIO_FileFormat_CF;
+#     rio.save("test_swegmaps_large_vol_with_compression.nc")
 # 
 #   def copy_image(self, obj, height):
 #     other = obj.clone()

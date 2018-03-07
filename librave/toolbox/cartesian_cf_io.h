@@ -41,13 +41,29 @@ typedef struct _CartesianCfIO_t CartesianCfIO_t;
 extern RaveCoreObjectType CartesianCfIO_TYPE;
 
 /**
+ * Sets the level of compression. 0 which is default means no compression.
+ * 1-9 is the level of compression where 1 is lowest level and 9 is highest.
+ * @param[in] self - self
+ * @param[in] level - level of compression
+ * @returns 1 if level was within 0 - 9 otherwise false
+ */
+int CartesianCfIO_setDeflateLevel(CartesianCfIO_t* self, int level);
+
+/**
+ * Returns the level of compression
+ * @param[in] self - self
+ * @returns level of compression where 0 means no compression and 9 is highest compression
+ */
+int CartesianCfIO_getDeflateLevel(CartesianCfIO_t* self);
+
+/**
  * Reads a netcdf file store in CF convention and sets the data in the resulting
  * object.
  * @param[in] self - self
  * @param[in] const char* - the netcdf filename
  * @returns the read object on success otherwise NULL
  */
-RaveCoreObject* CartesianOdimIO_read(CartesianCfIO_t* self, const char* filename);
+RaveCoreObject* CartesianCfIO_read(CartesianCfIO_t* self, const char* filename);
 
 /**
  * Writes a netcdf file in CF convention format.

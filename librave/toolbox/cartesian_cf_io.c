@@ -73,6 +73,7 @@ QuantityNodataUndetectMapping qmapping[] = {
  */
 struct _CartesianCfIO_t {
   RAVE_OBJECT_HEAD /** Always on top */
+  int deflate_level; /**< Compression level 0=no compression, 1-9 means level of compression */
 };
 
 /*@{ Private functions */
@@ -81,6 +82,7 @@ struct _CartesianCfIO_t {
  */
 static int CartesianCfIO_constructor(RaveCoreObject* obj)
 {
+  ((CartesianCfIO_t*)obj)->deflate_level = 0;
   return 1;
 }
 
@@ -89,6 +91,7 @@ static int CartesianCfIO_constructor(RaveCoreObject* obj)
  */
 static int CartesianCfIO_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj)
 {
+  ((CartesianCfIO_t*)obj)->deflate_level = ((CartesianCfIO_t*)srcobj)->deflate_level;
   return 1;
 }
 
@@ -965,6 +968,15 @@ int CartesianCfIOInternal_writeCartesian(CartesianCfIO_t* self, int ncid, Cartes
     }
     varids[i] = varid;
 
+    if (self->deflate_level > 0) {
+      int shuffle = 1; /* ?? */
+      int deflate = 1; /* 1 turns compression on */
+      if (nc_def_var_deflate(ncid, varid, shuffle, deflate, self->deflate_level)) {
+        RAVE_ERROR1("Failed to set %s name for compression", name);
+        goto done;
+      }
+    }
+
     if (!CartesianCfIOInternal_addVariablesToParameter(ncid, varid, name))
       goto done;
 
@@ -984,7 +996,7 @@ int CartesianCfIOInternal_writeCartesian(CartesianCfIO_t* self, int ncid, Cartes
 
   if (nc_enddef(ncid))
   {
-    RAVE_ERROR0("Failed to finish metadata writing\n");
+    RAVE_ERROR0("Failed to finish metadata writing");
     goto done;
   }
 
@@ -1141,6 +1153,16 @@ static int CartesianCfIOInternal_writeCartesianVolume(CartesianCfIO_t* self, int
     }
     varids[i] = varid;
 
+    if (self->deflate_level > 0) {
+      int shuffle = 1; /* ?? */
+      int deflate = 1; /* 1 turns compression on */
+      int ccode = nc_def_var_deflate(ncid, varid, shuffle, deflate, self->deflate_level);
+      if (ccode) {
+        RAVE_ERROR2("Failed to set %s name for compression code=%d", name, ccode);
+        goto done;
+      }
+    }
+
     if (!CartesianCfIOInternal_addVariablesToParameter(ncid, varid, name))
       goto done;
 
@@ -1160,7 +1182,7 @@ static int CartesianCfIOInternal_writeCartesianVolume(CartesianCfIO_t* self, int
 
   if (nc_enddef(ncid))
   {
-    RAVE_ERROR0("Failed to finish metadata writing\n");
+    RAVE_ERROR0("Failed to finish metadata writing");
     goto done;
   }
 
@@ -1237,6 +1259,23 @@ done:
 
 /*@{ Interface functions */
 
+
+int CartesianCfIO_setDeflateLevel(CartesianCfIO_t* self, int level)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  if (level >= 0 && level <= 9) {
+    self->deflate_level = level;
+    return 1;
+  }
+  return 0;
+}
+
+int CartesianCfIO_getDeflateLevel(CartesianCfIO_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return self->deflate_level;
+}
+
 RaveCoreObject* CartesianOdimIO_read(CartesianCfIO_t* self, const char* filename)
 {
 	return NULL;
@@ -1247,6 +1286,8 @@ int CartesianCfIO_write(CartesianCfIO_t* self, const char* filename, RaveCoreObj
   int result = 0;
   int ncid = 0;
 	RAVE_ASSERT((self != NULL), "self == NULL");
+	int cmode = NC_CLOBBER;
+
 	if (obj == NULL)
 	{
 		RAVE_ERROR0("Trying to write a file without specifying the object to write");
@@ -1271,7 +1312,11 @@ int CartesianCfIO_write(CartesianCfIO_t* self, const char* filename, RaveCoreObj
 		return 0;
 	}
 
-	if(nc_create(filename, NC_CLOBBER, &ncid)) {
+	if (self->deflate_level > 0) {
+	  cmode |= NC_NETCDF4|NC_CLASSIC_MODEL;
+	}
+
+	if(nc_create(filename, cmode, &ncid)) {
 	  RAVE_ERROR0("Failed to create file");
 	  goto done;
 	}

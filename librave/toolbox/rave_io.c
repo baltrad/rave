@@ -504,6 +504,7 @@ static int RaveIOInternal_writeCF(RaveIO_t* rio)
 	CartesianCfIO_t* cio = RAVE_OBJECT_NEW(&CartesianCfIO_TYPE);
 	if (cio != NULL)
 	{
+	  CartesianCfIO_setDeflateLevel(cio, rio->compression->level); /* We know that level is between 0 - 9 so this ought to be ok */
 		result =  CartesianCfIO_write(cio, rio->filename, rio->object);
 	}
 	RAVE_OBJECT_RELEASE(cio);
