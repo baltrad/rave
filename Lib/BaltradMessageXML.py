@@ -23,109 +23,98 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @date 2010-07-12
 
 #import xml.etree.ElementTree as ET
-from xml.etree.ElementTree import Element
+#from xml.etree.ElementTree import Element
+import xml.etree.ElementTree as ET
 
 from rave_defines import UTF8, PGF_TAG
 
+##
+# Element
+class BltXMLElement(ET.Element):
+  def __init__(self, tag=None):
+    super(BltXMLElement, self).__init__(tag)
 
-## Main container object for manipulating XML. Although this object has a few
-# of its own methods, the object's internal heirarchy can contain either
-# BltXML or Element objects, most conveniently the latter.
-# Based almost entirely on Fredrik Lundh's ElementTree.
-class BltXML(Element):
+##
+# Base element
+class BltXML(object):
+  def __init__(self, tag=PGF_TAG, encoding=UTF8, filename=None, msg=None):
+    self.tag = tag
+    self.encoding=encoding
+    self.filename=filename
+    self.element = BltXMLElement(PGF_TAG)
+    self.header = """<?xml version="1.0" encoding="%s"?>""" % encoding
+    if self.filename:
+      self.read(self.filename)
+    elif msg:
+      self.fromstring(msg)
 
-    ## Constructor
-    # @param tag string, the root tag of this object.
-    # @param encoding string, the character encoding used,
-    # should probably be UTF-8.
-    # @param filename string, file from which to read message.
-    # @param msg string, message in memory to format to message.
-    def __init__(self, tag=PGF_TAG, encoding=UTF8, filename=None, msg=None):
-        self.tag = tag
-        self.attrib = {}  # This is needed even if it's empty
-        self._children = []
-        self.encoding = encoding
-        self.setheader(self.encoding)
-        if filename:
-            self.read(filename)
-        elif msg:
-            self.fromstring(msg)
+  ## Sets encoding attribute of this instance.
+  # @param encoding string, the character encoding used,
+  # should probably be UTF-8.
+  def setencoding(self, encoding):
+    self.encoding = encoding
 
+  ## Formats the object and its contents to an XML string.
+  # Suggestion: add line breaks and indentation.
+  # @return string XML representation of this message.
+  def tostring(self, doindent=True):
+    if doindent:
+      self.indent()
+    s = "%s\n%s" % (self.header, ET.tostring(self.element).decode(self.encoding))
+    return s
+        
+  ## Formats the object from an XML message string.
+  # @param msg string XML representation of the message.
+  def fromstring(self, msg):
+    self.element = ET.fromstring(msg)
+  
+  ## Indents self
+  #
+  def indent(self, elem=None, level=0):
+    i = "\n" + level*"  "
+    if elem == None:
+      elem = self.element
 
-    ## Sets encoding attribute of this instance.
-    # @param encoding string, the character encoding used,
-    # should probably be UTF-8.
-    def setencoding(self, encoding):
-        self.encoding = encoding
+    if len(elem):
+      if not elem.text or not elem.text.strip():
+        elem.text = i + "  "
+      if not elem.tail or not elem.tail.strip():
+        elem.tail = i
+        for elem in elem:
+          self.indent(elem, level+1)
+        if not elem.tail or not elem.tail.strip():
+          elem.tail = i
+    else:
+      if level and (not elem.tail or not elem.tail.strip()):
+        elem.tail = i
 
+  ## Writes an XML message to file.
+  # @param filename string of the file to write.
+  def save(self, filename, doindent=True):
+    fd = open(filename, "w")
+    fd.write(self.tostring(doindent))
+    fd.close()
 
-    ## Sets the standard XML header for this instance.
-    # @param encoding string, the character encoding used,
-    # should probably be UTF-8.
-    def setheader(self, encoding):
-        self.header = """<?xml version="1.0" encoding="%s"?>""" % encoding
+  ## Reads a message from XML file.
+  # @param filename string of the XML file to read.
+  def read(self, filename):
+    element = BltXMLElement()
+    efile = ET.parse(filename)
+    tag = efile.getroot().tag
+    element.tag = tag
+    element.extend(list(efile.getroot()))
+    # Don't modify self until everything is read
+    self.element = element
+    self.tag = tag
 
+  def append(self, el):
+    self.element.append(el)
 
-    ## Formats the object and its contents to an XML string.
-    # Suggestion: add line breaks and indentation.
-    # @return string XML representation of this message.
-    def tostring(self):
-        return "%s\n%s" % (self.header, ET.tostring(self))
-
-
-    ## Formats the object from an XML message string.
-    # @param msg string XML representation of the message.
-    def fromstring(self, msg):
-        e = ET.fromstring(msg)
-        self.attrib = e.attrib.copy()
-        self._children = e._children
-
-
-    ## Writes an XML message to file.
-    # @param filename string of the file to write.
-    def save(self, filename):
-        fd = open(filename, 'w')
-        fd.write(self.tostring())
-        fd.close()
-
-
-    ## Reads a message from XML file.
-    # @param filename string of the XML file to read.
-    def read(self, filename):
-        this = ET.parse(filename)
-        root = this.getroot()
-        self.attrib = root.attrib.copy()
-        self._children = root._children
-
-
-## Convenience function for reading XML files.
-# @param filename string of the input filename
-def read(filename):
-    pass
-
-
-## baltrad_frame message generator for passing data messages to the DEX.
-# This convenience function generates only the XML envelope for the message.
-# @param sender string, the identity of the sender
-# @param channel string, the channel identifier
-# @param name string, the file name
-# @param tag string, should always be 'baltrad_frame' for these messages
-# @param encoding string, should probably always be 'UTF-8'
-# @return string XML envelope
-def MakeBaltradFrameXML(sender, channel, name,
-                        tag='baltrad_frame',encoding=UTF8):
-    this = BltXML(tag=tag, encoding=encoding)
-    h, c = ET.Element("header"), ET.Element("content")
-    h.set("mimetype", "multipart/form-data")
-    h.set("sender_node_name", sender)
-    this.append(h)
-    c.set("channel", channel)
-    c.set("name", name)
-    c.set("type", "file")
-    this.append(c)
-    return this.tostring()
+  def find(self, name):
+    return self.element.find(name)
+  
+  def remove(self, element):
+    self.element.remove(element)
     
-
-
 if __name__ == "__main__":
     print(__doc__)

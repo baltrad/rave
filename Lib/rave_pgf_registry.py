@@ -40,16 +40,7 @@ class PGF_Registry(BaltradMessageXML.BltXML):
     # @param filename string, optional file name from which to read registry.
     # @param msg string, optional XML string containing registry to parse.
     def __init__(self, tag=GENREG, encoding=UTF8, filename=None, msg=None):
-        self.tag = tag
-        self.attrib = {}  # This is needed even if it's empty
-        self._children = []
-        self.encoding = encoding
-        self.setheader(self.encoding)
-        if filename:
-            self.read(filename)
-        if msg:
-            self.fromstring(msg)
-
+      super(PGF_Registry, self).__init__(tag, encoding, filename, msg)
 
     ## Creates a registry entry for a given algorithm.
     # @param name string algorithm's name.

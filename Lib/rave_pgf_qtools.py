@@ -124,6 +124,12 @@ class PGF_JobQueue(dict):
                 self[elem.get('jobid')] = elem
 
 
+def pgf_dumps(val):
+  if sys.version_info < (3,):
+    return xmlrpc.dumps(val)
+  else:
+    return xmlrpc.client.dumps(val)
+
 ## Adds Elements containing files and arguments to the message.
 # @param algorithm Element in a \ref rave_pgf_registry.PGF_Registry instance.
 # @param files list of input files
@@ -152,7 +158,7 @@ def split(elem):
 # @param tagname string the name of the tag to create.
 # @return Element
 def List2Element(inlist, tagname):
-    dumped = xmlrpclib.dumps(tuple(inlist))  # dumps takes a tuple, not a list
+    dumped = pgf_dumps(tuple(inlist))  # dumps takes a tuple, not a list
     e = ET.fromstring(dumped)
     e.tag = tagname  # xmlrpc.dumps creates tagname 'params' by default.
     return e
@@ -165,7 +171,7 @@ def Element2List(elem, tagname):
     e = elem.find(tagname)
     tag = e.tag
     e.tag = 'params'  # xmlrpc.loads won't accept any other tagname. Hack...
-    l = list(xmlrpclib.loads(ET.tostring(e))[0])
+    l = list(xmlrpc.loads(ET.tostring(e))[0])
     e.tag = tag       # put back original tag
     return l 
 

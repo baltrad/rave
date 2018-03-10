@@ -86,7 +86,7 @@ class rave_bdb(object):
       if 'noauth' not in providers and 'keyczar' in providers:
         if keyczar_ks_root != None and keyczar_key != None:
           auth = rest.KeyczarAuth("%s/%s"%(keyczar_ks_root, keyczar_key), DEX_NODENAME)
-    except Exception, e:
+    except Exception as e:
       traceback.print_exc(e)
   
     return auth
@@ -100,7 +100,7 @@ class rave_bdb(object):
           uri = self.config['baltrad.bdb.server.uri']
           self.database = rest.RestfulDatabase(uri, self.load_auth_provider())
           self.initialized = True
-      except Exception, e:
+      except Exception as e:
         traceback.print_exc(e)
   
     return self.database
@@ -128,7 +128,7 @@ class rave_bdb(object):
       finally:
         os.unlink(tmppath)
     else:
-      raise Exception, "No content for file %s"%fname
+      raise Exception("No content for file %s"%fname)
 
   def get_file(self, uuid):
     ''' returns a file name to a file that can be accessed. The uuid should be an
@@ -157,20 +157,14 @@ class rave_bdb(object):
             shutil.copyfileobj(content, outf)
             outf.close()
         return tmppath
-      except Exception, e:
+      except Exception as e:
         if os.path.exists(tmppath):
           os.unlink(tmppath)
         raise e
     else:
-      raise Exception, "No content for file %s"%uuid
+      raise Exception("No content for file %s"%uuid)
 
 if __name__=='__main__':
   dbapi = rave_bdb()
-  #print dbapi.get_rave_object('c3ba1289-59d8-498d-8894-414f552ca2a2').date
-  print dbapi.get_file('7ced67c2-a519-4d7d-9ad7-a7c239d6b784')
-  
-#  import math
-#  print `get_database().get_sources()`
-#  print get_rave_object('c3ba1289-59d8-498d-8894-414f552ca2a2').elangle * 180.0 / math.pi
-#  print get_rave_object('c3ba1289-59d8-498d-8894-414f552ca2a2').date
+  print(dbapi.get_file('7ced67c2-a519-4d7d-9ad7-a7c239d6b784'))
 

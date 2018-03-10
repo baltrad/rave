@@ -32,7 +32,7 @@ from rave_daemon import Daemon
 from rave_defines import PIDFILE, PGF_HOST, PGF_PORT, STDOE, REGFILE, PGFs, LOGLEVEL
 from algorithm_runner import algorithm_runner
 if sys.version_info < (3,):
-  import SimpleXMLRPCServer
+  from SimpleXMLRPCServer import SimpleXMLRPCServer
   from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
   import xmlrpclib as xmlrpc
 else:
@@ -85,9 +85,9 @@ class rave_pgf_server(Daemon):
   def run(self):
     import atexit
     from rave_pgf import RavePGF
-    self.server = SimpleXMLRPCServer.SimpleXMLRPCServer((self.host, self.port),
-                                                        requestHandler=RequestHandler,
-                                                        allow_none=True)
+    self.server = SimpleXMLRPCServer((self.host, self.port),
+                                     requestHandler=RequestHandler,
+                                     allow_none=True)
     
     self.server.register_instance(RavePGF())
     self.server.instance.logger = rave_pgf_logger.rave_pgf_syslog_client()  # Shouldn't be necessary
