@@ -35,7 +35,7 @@ from numpy import *
 def Validate(rio):
     # Zero check: do we have a payload?
     if not rio.object:
-        raise IOError, "Failed to read file."
+        raise IOError("Failed to read file.")
 
     # First ODIM violation fix: ODIM_BUFR cannot tell the difference between
     # a SCAN and a PVOL. ODIM_H5 can.
@@ -49,7 +49,7 @@ def Validate(rio):
     try:
         odim_source.CheckSource(rio.object)
         s = odim_source.ODIM_Source(rio.object.source)
-        if not s.nod: raise AttributeError
+        if not s.nod: raise AttributeError()
         if not s.wmo:
             rio.object.source = odim_source.SOURCE[s.nod].encode(UTF8)
     except:

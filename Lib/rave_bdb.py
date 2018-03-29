@@ -68,14 +68,14 @@ class rave_bdb(object):
     :param config: the java properties in a dictionary 
     '''
     providers=[]
-    if self.config.has_key('baltrad.bdb.server.auth.providers'):
-      providers = [string.strip(s) for s in string.split(self.config['baltrad.bdb.server.auth.providers'],',')]
+    if 'baltrad.bdb.server.auth.providers' in self.config:
+      providers = [s.strip() for s in self.config['baltrad.bdb.server.auth.providers'].split(',')]
   
     keyczar_ks_root = None
     keyczar_key = None
-    if self.config.has_key('baltrad.bdb.server.auth.keyczar.keystore_root'):
+    if 'baltrad.bdb.server.auth.keyczar.keystore_root' in self.config:
       keyczar_ks_root = self.config['baltrad.bdb.server.auth.keyczar.keystore_root']
-    if self.config.has_key("baltrad.bdb.server.auth.keyczar.keys.%s"%self.nodename):
+    if "baltrad.bdb.server.auth.keyczar.keys.%s"%self.nodename in self.config:
       keyczar_key = self.config["baltrad.bdb.server.auth.keyczar.keys.%s"%self.nodename]
 
     auth = None
@@ -94,13 +94,17 @@ class rave_bdb(object):
   def get_database(self):
     ''' returns the database that provides connection to the bdb server
     '''
+    print("GETTING DATABASE")
     if self.initialized == False:
       try:
-        if self.config.has_key('baltrad.bdb.server.uri'):
+        print("TRYING TO INITIALISE REST DATABASE FROM %s"%self.config)
+        if 'baltrad.bdb.server.uri' in self.config:
           uri = self.config['baltrad.bdb.server.uri']
+          print("CREATING REST")
           self.database = rest.RestfulDatabase(uri, self.load_auth_provider())
           self.initialized = True
       except Exception as e:
+        print("EXCEPTION: %s"%e.__str__())
         traceback.print_exc(e)
   
     return self.database
@@ -121,9 +125,12 @@ class rave_bdb(object):
       fpd, tmppath = tempfile.mkstemp(suffix='.h5', prefix='ravetmp')
       try:
         with contextlib.closing(content):
-          with os.fdopen(fpd, "w") as outf:
+          with os.fdopen(fpd, "wb") as outf:
             shutil.copyfileobj(content, outf)
+            outf.flush()
             outf.close()
+        print("COPYING %s to /tmp/slask.h5"%tmppath)
+        shutil.copy(tmppath, "/tmp/slask.h5")
         return _raveio.open(tmppath).object
       finally:
         os.unlink(tmppath)

@@ -61,7 +61,7 @@ def newSO(ipvol, opvol, aavg, ravg, maxelev):
     if (ravg % ipvol.get('/where/xscale') == 0.0):
         ravg = int(ravg / ipvol.get('/where/xscale'))
     else:
-        raise IOError, "Invalid radial integration length."
+        raise IOError("Invalid radial integration length.")
 
     if (ipvol.get('/where/ysize') % float(aavg) == 0.0) and \
        (ipvol.get('/where/xsize') % float(ravg) == 0.0):   
@@ -71,7 +71,7 @@ def newSO(ipvol, opvol, aavg, ravg, maxelev):
 	# Only select non-overlapping scans.
         iscan = ipvol.get('/how/scan')
         if ipvol.get('/scan%s/where/angle' % iscan[0]) > maxelev:
-			raise IOError, "Invalid elevation angles."
+			raise IOError("Invalid elevation angles.")
         for s in range(len(iscan)):
             if iscan[s] == iscan[0]:
                 oscan.append(iscan[s])
@@ -106,7 +106,7 @@ def newSO(ipvol, opvol, aavg, ravg, maxelev):
 
 	return ipvol, opvol
     else:
-	raise IOError, "Invalid integration lengths."
+	raise IOError("Invalid integration lengths.")
 
 
 # New version of ptop which can manage both volumes at once.

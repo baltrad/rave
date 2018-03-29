@@ -44,18 +44,18 @@ import sys
 try:
     import pygtk
 except ImportError:
-    raise ImportError, "This module requires PyGTK."
+    raise ImportError("This module requires PyGTK.")
 pygtk.require('2.0')
 
 try:
     import gtk
 except ImportError:
-    raise ImportError, "This module requires GTK."
+    raise ImportError("This module requires GTK.")
 
 try:
     import threading
 except ImportError:
-    raise ImportError, "You need Python compiled with threading support for the QuickLook module."
+    raise ImportError("You need Python compiled with threading support for the QuickLook module.")
 
 import os, StringIO
 import numpy
@@ -332,7 +332,7 @@ def save_pil(pilobj, filename=None):
     try:
         pilobj.save(filename)
     except:
-        raise IOError, "PIL couldn't write a file of that name."
+        raise IOError("PIL couldn't write a file of that name.")
 
 
 

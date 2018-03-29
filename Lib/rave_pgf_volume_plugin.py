@@ -121,7 +121,7 @@ def generate(files, arguments):
   fileno, outfile = rave_tempfile.mktemp(suffix='.h5', close="True")
   
   if "anomaly-qc" in args.keys():
-      detectors = string.split(args["anomaly-qc"], ",")
+      detectors = args["anomaly-qc"].split(",")
   else:
       detectors = []
 

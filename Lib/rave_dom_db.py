@@ -403,7 +403,7 @@ def create_db_from_conf(configfile=BDB_CONFIG_FILE, create_schema=True):
       print(e.__str__())
 
     propname = "rave.db.uri"
-    if not properties.has_key(propname):
+    if not propname in properties:
       propname = "baltrad.bdb.server.backend.sqla.uri"
 
     return create_db(properties[propname], create_schema)

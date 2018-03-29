@@ -89,7 +89,7 @@ def generate_new_volume_with_qc(original_file, args):
       pass
   
   if "anomaly-qc" in args.keys():
-    detectors = string.split(args["anomaly-qc"], ",")
+    detectors = args["anomaly-qc"].split(",")
   else:
     detectors = []
     

@@ -31,8 +31,8 @@ from rave_defines import UTF8, PGF_TAG
 ##
 # Element
 class BltXMLElement(ET.Element):
-  def __init__(self, tag=None):
-    super(BltXMLElement, self).__init__(tag)
+  def __init__(self, tag=None, attrib={}):
+    super(BltXMLElement, self).__init__(tag, attrib)
 
 ##
 # Base element

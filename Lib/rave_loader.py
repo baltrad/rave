@@ -20,7 +20,7 @@ class rave_loader:
     finished = False
 
     vol = None
-    if names.has_key("/Conventions"):
+    if "/Conventions" in names:
       conv = nodelist.fetchNode("/Conventions").data()
       if conv == "ODIM_H5/V2_0":
         vol = _rave.volume()
@@ -34,7 +34,7 @@ class rave_loader:
       
     while not finished:
       scanname = "/dataset%d"%index
-      if names.has_key(scanname):
+      if scanname in names:
         scan = self.load_scan_from_file(scanname, nodelist, names, quantity)
         if scan != None:
           vol.addScan(scan)
@@ -53,9 +53,9 @@ class rave_loader:
     
     while not finished:
       scanname = "%s/data%d"%(name, index)
-      if names.has_key(scanname):
+      if scanname in names:
         quantityname = "%s/what/quantity"%scanname
-        if names.has_key(quantityname):
+        if quantityname in names:
           q = nodelist.fetchNode(quantityname).data()
           if q == quantity:
             scan = _rave.scan()

@@ -31,8 +31,8 @@ class BaltradFrame(object):
   
   def _generate_headers(self, uri):
     datestr = datetime.datetime.now().strftime("%a, %e %B %Y %H:%M:%S")
-    contentMD5 = base64.b64encode(uri)
-    message = ("POST" + '\n' + uri + '\n' + "application/x-hdf5" + '\n' + contentMD5 + '\n' + datestr)
+    contentMD5 = base64.b64encode(uri.encode("utf-8"))
+    message = (b"POST" + b'\n' + uri.encode("utf-8") + b'\n' + b"application/x-hdf5" + b'\n' + contentMD5 + b'\n' + datestr.encode("utf-8"))
     signature = self._signer.Sign(message)
     headers = {"Node-Name": self._nodename, 
                "Content-Type": "application/x-hdf5",
@@ -63,7 +63,7 @@ class BaltradFrame(object):
     (host, query) = self._split_uri(uri)
     headers = self._generate_headers(uri)
  
-    fp = open(path, 'r')
+    fp = open(path, 'rb')
     
     try:
       return self._post(host, query, fp, headers)

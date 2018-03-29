@@ -160,7 +160,7 @@ def discrete_raw(GAIN, OFFSET):
 		for j in range(255-intervals[i]):
 		    p = p + PUREWHITE
 	    else:
-		raise ValueError, "palette level beyond 255"
+		raise ValueError("palette level beyond 255")
 	else:
 	    for j in range(intervals[i+1]-intervals[i]):
 		if i == 1: p = p + GREY2
@@ -193,7 +193,7 @@ def disc_dbz(GAIN, OFFSET):
 		for j in range(255-intervals[i]):
 		    p = p + PUREWHITE
 	    else:
-		raise ValueError, "palette level beyond 255"
+		raise ValueError("palette level beyond 255")
 	else:
 	    for j in range(intervals[i+1]-intervals[i]):
 		if i == 1: p = p + BLUE
@@ -248,7 +248,7 @@ def discrete_mm():
 class color_map:
     _color_maps={}
     def __init__(self,ltype,colors=None,descr=None):
-	if not self._color_maps.has_key(ltype):
+	if not ltype in self._color_maps:
 	    self.icolor=colors
 	    self.idescr=descr
 	    self._color_maps[ltype]=self
@@ -304,7 +304,7 @@ class slope_map(color_map):
 	return intervals
 
     def _get_interval(self,GAIN,OFFSET):
-	raise AttributeError,"Calling _get_interval in baseclass slope_map"
+	raise AttributeError("Calling _get_interval in baseclass slope_map")
 
 
 class discrete_raw_slope(slope_map):

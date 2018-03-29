@@ -64,7 +64,7 @@ def arglist2dict(arglist):
 def strToNumber(sval):
   try:
     return float(sval)
-  except ValueError, e:
+  except ValueError:
     return int(sval)
 
 
@@ -81,12 +81,12 @@ def generate(files, arguments):
   
   comp = compositing(ravebdb)
   if len(files) != 1:
-    raise AttributeError, "Input files list must contain only one file string"
+    raise AttributeError("Input files list must contain only one file string")
 
   comp.filenames = files
   
   if "anomaly-qc" in args.keys():
-    comp.detectors = string.split(args["anomaly-qc"], ",")
+    comp.detectors = args["anomaly-qc"].split(",")
 
   if "qc-mode" in args.keys():
     comp.set_quality_control_mode_from_string(args["qc-mode"])
@@ -131,24 +131,24 @@ def generate(files, arguments):
   #  comp.applygapfilling = True
   
   # Optional cloud-type residual non-precip filter
-  if args.has_key("ctfilter"):
+  if "ctfilter" in args:
     if eval(args["ctfilter"]):
       comp.applyctfilter = True
   
-  if args.has_key("applygra"):
+  if "applygra" in args:
     comp.applygra = True
-  if args.has_key("zrA"):
+  if "zrA" in args:
     comp.zr_A = float(args["zrA"])
-  if args.has_key("zrb"):
+  if "zrb" in args:
     comp.zr_b = float(args["zrb"])
   
-  if args.has_key("pcsid"):
+  if "pcsid" in args:
     comp.pcsid = args["pcsid"]
     comp.xscale = float(args["xscale"])
     comp.yscale = float(args["yscale"])
   
   areaid = None
-  if args.has_key("area"):
+  if "area" in args:
     areaid = args["area"]
   
   comp.use_site_source = True

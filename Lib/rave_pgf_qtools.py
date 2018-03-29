@@ -84,7 +84,7 @@ class PGF_JobQueue(dict):
     def task_done(self, jobid):
         self.lock.acquire()
         try:
-            if self.has_key(jobid):
+            if jobid in self:
                 job = self.pop(jobid)
                 return "OK"
             else:

@@ -93,7 +93,7 @@ def arglist2dict(arglist):
 def strToNumber(sval):
   try:
     return float(sval)
-  except ValueError, e:
+  except ValueError:
     return int(sval)
     
 def get_backup_gra_coefficient(db, maxage):
@@ -102,7 +102,7 @@ def get_backup_gra_coefficient(db, maxage):
     if coeff and not math.isnan(coeff.a) and not math.isnan(coeff.b) and not math.isnan(coeff.c):
       logger.info("Reusing gra coefficients from %s %s"%(coeff.date, coeff.time))
       return coeff.significant, coeff.points, coeff.loss, coeff.r, coeff.r_significant, coeff.corr_coeff, coeff.a, coeff.b, coeff.c, coeff.mean, coeff.stddev
-  except Exception, e:
+  except Exception:
     logger.exception("Failed to aquire coefficients")
 
   logger.warn("Could not aquire coefficients newer than %s, defaulting to climatologic"%maxage.strftime("%Y%m%d %H:%M:%S"))
@@ -212,7 +212,7 @@ def generate(files, arguments):
       obj = obj.getImage(0)
 
     if not _cartesian.isCartesian(obj):
-      raise AttributeError, "Must call plugin with cartesian products"
+      raise AttributeError("Must call plugin with cartesian products")
 
     if acrrproduct == None:
       acrrproduct = _cartesian.new()
@@ -227,7 +227,7 @@ def generate(files, arguments):
 
     if obj.xscale != acrrproduct.xscale or obj.yscale != acrrproduct.yscale or \
        obj.projection.definition != acrrproduct.projection.definition:
-      raise AttributeError, "Scale or projdef inconsistancy for used area"
+      raise AttributeError("Scale or projdef inconsistancy for used area")
 
     par = obj.getParameter(quantity)
     if par == None:
@@ -244,7 +244,7 @@ def generate(files, arguments):
   
   try:
     calculate_gra_coefficient(distancefield, interval, adjustmentfile, etime, edate, acrrproduct, db)
-  except OperationalError, e:
+  except OperationalError as e:
     if "server closed the connection unexpectedly" in e.message:
       logger.warn("Got indication that connection reseted at server side, retrying gra coefficient generation")
       calculate_gra_coefficient(distancefield, interval, adjustmentfile, etime, edate, acrrproduct, db)

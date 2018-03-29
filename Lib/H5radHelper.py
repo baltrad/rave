@@ -44,7 +44,7 @@ def typeconv(typ, val):
         return val.encode(ENCODING)
 
 def findelem(root, attr):
-    path = string.split(attr, "/")[1:]
+    path = attr.split("/")[1:]
     e = root
     result = None
     for i in path:
@@ -61,7 +61,7 @@ def geth5attr(e, dict):
     if typ == "dataset":
         return dict[val]
     elif typ == "sequence":
-        nodes = string.split(val, ",")
+        nodes = val.split(",")
         for n in range(len(nodes)):
             try:     # detects ints and floats but not strings
                 nodes[n] = eval(string.strip(nodes[n])[1:-1].encode(ENCODING))
@@ -127,7 +127,7 @@ def seth5attr(e, dict, h5typ, attribute, value):
 def addelem(root, attribute):
     from xml.etree.ElementTree import SubElement
 
-    path = string.split(attribute, "/")[1:]
+    path = attribute.split("/")[1:]
     e = root
 #    result = None
     for i in path:

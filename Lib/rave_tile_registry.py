@@ -65,7 +65,7 @@ class tiledef(object):
 # @param aid: the area identifier (e.g. swegmaps_2000)
 # @return if the area id has got a tile definition or not
 def has_tiled_area(aid):
-  return _registry.has_key(aid)
+  return aid in _registry
 
 ##
 # Get all the tiled areas belonging to the specified area. The area has to reside in the area_registry in order
@@ -73,8 +73,8 @@ def has_tiled_area(aid):
 # @param a the AreaCore (_area) instance
 # @return: a list of tiled area definitions
 def get_tiled_areas(a):
-  if not _registry.has_key(a.id):
-    raise KeyError, "No such area (%s) with tiles defined"%a.id
+  if not a.id in _registry:
+    raise KeyError("No such area (%s) with tiles defined"%a.id)
   tiledareas=[]
   
   totalx, totaly = 0, 0
@@ -102,7 +102,7 @@ def get_tiled_areas(a):
 # @return the tile definition
 def generate_tiles_for_area(aid, tiles):
   if len(tiles) != 2 or tiles[0] == 0 or tiles[1] == 0:
-    raise ValueError, "tiles should be a tuple (nr of x-tiles, nr of y-tiles)"
+    raise ValueError("tiles should be a tuple (nr of x-tiles, nr of y-tiles)")
   a = my_area_registry.getarea(aid)
   xdistance = a.extent[2]-a.extent[0]
   ydistance = a.extent[3]-a.extent[1]
@@ -130,10 +130,10 @@ def generate_tiles_for_area(aid, tiles):
 # @return the tile definition
 def create_tile_definition_for_area(aid, tiles):
   tiledefs = generate_tiles_for_area(aid, tiles)
-  print "<area id=\"%s\"><!-- maps to an area definition in area_registry.xml -->"%aid
+  print("<area id=\"%s\"><!-- maps to an area definition in area_registry.xml -->"%aid)
   for t in tiledefs:
-    print "  %s"%t
-  print "</area>"
+    print("  %s"%t)
+  print("</area>")
 
 ##
 # Initializes the registry by reading the xml file with the plugin
