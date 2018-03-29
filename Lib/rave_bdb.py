@@ -94,17 +94,13 @@ class rave_bdb(object):
   def get_database(self):
     ''' returns the database that provides connection to the bdb server
     '''
-    print("GETTING DATABASE")
     if self.initialized == False:
       try:
-        print("TRYING TO INITIALISE REST DATABASE FROM %s"%self.config)
         if 'baltrad.bdb.server.uri' in self.config:
           uri = self.config['baltrad.bdb.server.uri']
-          print("CREATING REST")
           self.database = rest.RestfulDatabase(uri, self.load_auth_provider())
           self.initialized = True
       except Exception as e:
-        print("EXCEPTION: %s"%e.__str__())
         traceback.print_exc(e)
   
     return self.database
@@ -129,8 +125,6 @@ class rave_bdb(object):
             shutil.copyfileobj(content, outf)
             outf.flush()
             outf.close()
-        print("COPYING %s to /tmp/slask.h5"%tmppath)
-        shutil.copy(tmppath, "/tmp/slask.h5")
         return _raveio.open(tmppath).object
       finally:
         os.unlink(tmppath)
