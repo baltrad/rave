@@ -874,7 +874,7 @@ static PyObject* _pyverticalprofile_getattro(PyVerticalProfile* self, PyObject* 
   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("source", name) == 0) {
     const char* str = VerticalProfile_getSource(self->vp);
     if (str != NULL) {
-      return PyString_FromString(str);
+      return PyRaveAPI_StringOrUnicode_FromASCII(str);
     } else {
       Py_RETURN_NONE;
     }

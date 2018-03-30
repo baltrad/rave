@@ -426,7 +426,7 @@ static PyObject* _pycartesianvolume_getattro(PyCartesianVolume* self, PyObject* 
   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("source", name) == 0) {
     const char* str = CartesianVolume_getSource(self->cvol);
     if (str != NULL) {
-      return PyString_FromString(str);
+      return PyRaveAPI_StringOrUnicode_FromASCII(str);
     } else {
       Py_RETURN_NONE;
     }
