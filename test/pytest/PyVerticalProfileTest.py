@@ -300,8 +300,8 @@ class PyVerticalProfileTest(unittest.TestCase):
     f.addAttribute("how/this", 1.0)
     obj.setHGHT(f)
     result = obj.getHGHT()
-    self.assertAlmostEquals(1.0, result.getAttribute("how/this"), 4)
-    self.assertEquals("HGHT", result.getAttribute("what/quantity"))
+    self.assertAlmostEqual(1.0, result.getAttribute("how/this"), 4)
+    self.assertEqual("HGHT", result.getAttribute("what/quantity"))
     
   def test_setGetUWND(self):
     obj = _verticalprofile.new()
@@ -311,8 +311,8 @@ class PyVerticalProfileTest(unittest.TestCase):
     f.addAttribute("how/this", 1.0)
     obj.setUWND(f)
     result = obj.getUWND()
-    self.assertAlmostEquals(1.0, result.getAttribute("how/this"), 4)
-    self.assertEquals("UWND", result.getAttribute("what/quantity"))
+    self.assertAlmostEqual(1.0, result.getAttribute("how/this"), 4)
+    self.assertEqual("UWND", result.getAttribute("what/quantity"))
     
   def test_setGetVWND(self):
     obj = _verticalprofile.new()
@@ -322,8 +322,8 @@ class PyVerticalProfileTest(unittest.TestCase):
     f.addAttribute("how/this", 1.0)
     obj.setVWND(f)
     result = obj.getVWND()
-    self.assertAlmostEquals(1.0, result.getAttribute("how/this"), 4)
-    self.assertEquals("VWND", result.getAttribute("what/quantity"))
+    self.assertAlmostEqual(1.0, result.getAttribute("how/this"), 4)
+    self.assertEqual("VWND", result.getAttribute("what/quantity"))
     
   def test_setGetNV(self):
     obj = _verticalprofile.new()
@@ -333,8 +333,8 @@ class PyVerticalProfileTest(unittest.TestCase):
     f.addAttribute("how/this", 1.0)
     obj.setNV(f)
     result = obj.getNV()
-    self.assertAlmostEquals(1.0, result.getAttribute("how/this"), 4)
-    self.assertEquals("n", result.getAttribute("what/quantity"))
+    self.assertAlmostEqual(1.0, result.getAttribute("how/this"), 4)
+    self.assertEqual("n", result.getAttribute("what/quantity"))
 
   def test_addField(self):
     obj = _verticalprofile.new()

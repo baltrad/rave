@@ -1071,10 +1071,10 @@ class PyCompositeTest(unittest.TestCase):
     # check known positions, to ensure that correct values are set
     dbzh_param = result.getParameter("DBZH")
     data = dbzh_param.getData()
-    self.assertEquals(data[855][507], 80, "Invalid data value in CAPPI.")
-    self.assertEquals(data[869][468], 5, "Invalid data value in CAPPI.")
-    self.assertEquals(data[931][474], 1, "Invalid data value in CAPPI.")
-    self.assertEquals(data[849][505], 255, "Invalid data value in CAPPI.")
+    self.assertEqual(data[855][507], 80, "Invalid data value in CAPPI.")
+    self.assertEqual(data[869][468], 5, "Invalid data value in CAPPI.")
+    self.assertEqual(data[931][474], 1, "Invalid data value in CAPPI.")
+    self.assertEqual(data[849][505], 255, "Invalid data value in CAPPI.")
 
     ios = _raveio.new()
     ios.object = result

@@ -42,14 +42,14 @@ class rave_height_quality_plugin_test(unittest.TestCase):
 
   def test_getQualityFields(self):
     result = self.classUnderTest.getQualityFields()
-    self.assertEquals(1, len(result))
-    self.assertEquals("se.smhi.composite.height.radar", result[0])
+    self.assertEqual(1, len(result))
+    self.assertEqual("se.smhi.composite.height.radar", result[0])
 
   def test_process(self):
     vol = _raveio.open(self.VOLUME_FIXTURE).object
     result, qfield = self.classUnderTest.process(vol)
     self.assertTrue(vol == result)
-    self.assertEquals(qfield, ["se.smhi.composite.height.radar"], "Wrong qfield returned from process")
+    self.assertEqual(qfield, ["se.smhi.composite.height.radar"], "Wrong qfield returned from process")
     
   def test_process_reprocess_true(self):
     vol = _raveio.open(self.VOLUME_FIXTURE).object

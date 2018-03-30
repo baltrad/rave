@@ -66,20 +66,20 @@ class RaveScansun(unittest.TestCase):
         radarSiteFromScansun = result[0][38] + result[0][39] + result[0][40] + result[0][41] + result[0][42]
         radarSiteFromVALID_SEHEM = self.VALID_SEHEM[0][38] + self.VALID_SEHEM[0][39] + self.VALID_SEHEM[0][40] + self.VALID_SEHEM[0][41] + self.VALID_SEHEM[0][42]
 
-        self.assertEquals(radarSiteFromVALID_SEHEM, radarSiteFromScansun)
+        self.assertEqual(radarSiteFromVALID_SEHEM, radarSiteFromScansun)
 
-        self.assertEquals(self.VALID_SEHEM[1][0][0], result[1][0][0])
-        self.assertEquals(self.VALID_SEHEM[1][0][1], result[1][0][1])
-        self.assertAlmostEquals(self.VALID_SEHEM[1][0][2], result[1][0][2], 5)
-        self.assertAlmostEquals(self.VALID_SEHEM[1][0][3], result[1][0][3], 5)
-        self.assertAlmostEquals(self.VALID_SEHEM[1][0][4], result[1][0][4], 5)
-        self.assertAlmostEquals(self.VALID_SEHEM[1][0][5], result[1][0][5], 5)
-        self.assertEquals(self.VALID_SEHEM[1][0][6], result[1][0][6])
-        self.assertAlmostEquals(self.VALID_SEHEM[1][0][7], result[1][0][7], 5)
-        self.assertAlmostEquals(self.VALID_SEHEM[1][0][8], result[1][0][8], 5)
-        self.assertAlmostEquals(self.VALID_SEHEM[1][0][9], result[1][0][9], 5)
-        self.assertEquals(self.VALID_SEHEM[1][0][12], result[1][0][12])
-        self.assertEquals(self.VALID_SEHEM[1][0][13], result[1][0][13])
+        self.assertEqual(self.VALID_SEHEM[1][0][0], result[1][0][0])
+        self.assertEqual(self.VALID_SEHEM[1][0][1], result[1][0][1])
+        self.assertAlmostEqual(self.VALID_SEHEM[1][0][2], result[1][0][2], 5)
+        self.assertAlmostEqual(self.VALID_SEHEM[1][0][3], result[1][0][3], 5)
+        self.assertAlmostEqual(self.VALID_SEHEM[1][0][4], result[1][0][4], 5)
+        self.assertAlmostEqual(self.VALID_SEHEM[1][0][5], result[1][0][5], 5)
+        self.assertEqual(self.VALID_SEHEM[1][0][6], result[1][0][6])
+        self.assertAlmostEqual(self.VALID_SEHEM[1][0][7], result[1][0][7], 5)
+        self.assertAlmostEqual(self.VALID_SEHEM[1][0][8], result[1][0][8], 5)
+        self.assertAlmostEqual(self.VALID_SEHEM[1][0][9], result[1][0][9], 5)
+        self.assertEqual(self.VALID_SEHEM[1][0][12], result[1][0][12])
+        self.assertEqual(self.VALID_SEHEM[1][0][13], result[1][0][13])
 
     def testScansunFromObject_path_with_startazt_stopazt(self):
         # Replicate the above test, but using in-memory processing.
@@ -89,20 +89,20 @@ class RaveScansun(unittest.TestCase):
         radarSiteFromScansun = result[0][38] + result[0][39] + result[0][40] + result[0][41] + result[0][42]
         radarSiteFromVALID_SEHEM = self.VALID_SEHEM[0][38] + self.VALID_SEHEM[0][39] + self.VALID_SEHEM[0][40] + self.VALID_SEHEM[0][41] + self.VALID_SEHEM[0][42]
 
-        self.assertEquals(radarSiteFromVALID_SEHEM, radarSiteFromScansun)
+        self.assertEqual(radarSiteFromVALID_SEHEM, radarSiteFromScansun)
 
-        self.assertEquals(self.VALID_SEHEM[1][0][0], result[1][0][0])
-        self.assertEquals(self.VALID_SEHEM[1][0][1], result[1][0][1])
-        self.assertAlmostEquals(self.VALID_SEHEM[1][0][2], result[1][0][2], 5)
-        self.assertAlmostEquals(self.VALID_SEHEM[1][0][3], result[1][0][3], 5)
-        self.assertAlmostEquals(self.VALID_SEHEM[1][0][4], result[1][0][4], 5)
-        self.assertAlmostEquals(self.VALID_SEHEM[1][0][5], result[1][0][5], 5)
-        self.assertEquals(self.VALID_SEHEM[1][0][6], result[1][0][6])
-        self.assertAlmostEquals(self.VALID_SEHEM[1][0][7], result[1][0][7], 5)
-        self.assertAlmostEquals(self.VALID_SEHEM[1][0][8], result[1][0][8], 5)
-        self.assertAlmostEquals(self.VALID_SEHEM[1][0][9], result[1][0][9], 5)
-        self.assertEquals(self.VALID_SEHEM[1][0][12], result[1][0][12])
-        self.assertEquals(self.VALID_SEHEM[1][0][13], result[1][0][13])
+        self.assertEqual(self.VALID_SEHEM[1][0][0], result[1][0][0])
+        self.assertEqual(self.VALID_SEHEM[1][0][1], result[1][0][1])
+        self.assertAlmostEqual(self.VALID_SEHEM[1][0][2], result[1][0][2], 5)
+        self.assertAlmostEqual(self.VALID_SEHEM[1][0][3], result[1][0][3], 5)
+        self.assertAlmostEqual(self.VALID_SEHEM[1][0][4], result[1][0][4], 5)
+        self.assertAlmostEqual(self.VALID_SEHEM[1][0][5], result[1][0][5], 5)
+        self.assertEqual(self.VALID_SEHEM[1][0][6], result[1][0][6])
+        self.assertAlmostEqual(self.VALID_SEHEM[1][0][7], result[1][0][7], 5)
+        self.assertAlmostEqual(self.VALID_SEHEM[1][0][8], result[1][0][8], 5)
+        self.assertAlmostEqual(self.VALID_SEHEM[1][0][9], result[1][0][9], 5)
+        self.assertEqual(self.VALID_SEHEM[1][0][12], result[1][0][12])
+        self.assertEqual(self.VALID_SEHEM[1][0][13], result[1][0][13])
 
     def testScansun(self):
         result = _scansun.scansun(self.KNMI_TESTFILE)
