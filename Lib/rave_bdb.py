@@ -154,7 +154,7 @@ class rave_bdb(object):
       try:
         with contextlib.closing(content):
           #with os.fdopen(fpd, "w") as outf:
-          with open(tmppath, "w") as outf:
+          with open(tmppath, "wb") as outf:
             shutil.copyfileobj(content, outf)
             outf.close()
         return tmppath
