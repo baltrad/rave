@@ -41,7 +41,7 @@ class BltXML(object):
     self.tag = tag
     self.encoding=encoding
     self.filename=filename
-    self.element = BltXMLElement(PGF_TAG)
+    self.element = BltXMLElement(tag)
     self.header = """<?xml version="1.0" encoding="%s"?>""" % encoding
     if self.filename:
       self.read(self.filename)
@@ -90,16 +90,26 @@ class BltXML(object):
 
   ## Writes an XML message to file.
   # @param filename string of the file to write.
-  def save(self, filename, doindent=True):
-    fd = open(filename, "w")
+  def save(self, filename=None, doindent=True):
+    outfile=self.filename
+    if filename is not None:
+      outfile=filename
+    if outfile is None:
+      raise Exception("Can not use None as filename")
+    fd = open(outfile, "w")
     fd.write(self.tostring(doindent))
     fd.close()
 
   ## Reads a message from XML file.
   # @param filename string of the XML file to read.
-  def read(self, filename):
+  def read(self, filename=None):
     element = BltXMLElement()
-    efile = ET.parse(filename)
+    infile = self.filename
+    if filename is not None:
+      infile = filename
+    if infile is None:
+      raise Exception("Can not read non-specified file")
+    efile = ET.parse(infile)
     tag = efile.getroot().tag
     element.tag = tag
     element.extend(list(efile.getroot()))
@@ -115,6 +125,15 @@ class BltXML(object):
   
   def remove(self, element):
     self.element.remove(element)
-    
+  
+  def set(self, key, value):
+    self.element.set(key, value)
+  
+  def subelement(self, key):
+    return ET.SubElement(self.element, key)
+
+  def getelement(self):
+    return self.element
+  
 if __name__ == "__main__":
     print(__doc__)

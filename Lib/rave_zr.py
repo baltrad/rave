@@ -71,4 +71,4 @@ __all__ = ["dBZ2Z","dBZ2R","Z2dBZ","Z2R", "R2dBZ",
            "raw2dbz","dbz2raw","raw2R","R2raw"]
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)

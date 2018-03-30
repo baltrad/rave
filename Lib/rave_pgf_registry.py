@@ -58,14 +58,14 @@ class PGF_Registry(BaltradMessageXML.BltXML):
         e.set("module", module)
         e.set("function", function)
         e.set("help", Help)
-        a = ET.SubElement(e, "arguments")
+        a = e.subelement("arguments")
         if len(strings) > 0: a.set("strings", strings)
         if len(ints) > 0: a.set("ints", ints)
         if len(floats) > 0: a.set("floats", floats)
         if len(seqs) > 0: a.set("seqs", seqs)
 
-        self.append(e)
-        self.save(REGFILE)
+        self.append(e.getelement())
+        self.save()
 
 
     ## Checks whether an algorithm is registered.
@@ -82,7 +82,7 @@ class PGF_Registry(BaltradMessageXML.BltXML):
         e = self.find(name)
         if e:
             self.remove(e)
-        self.save(REGFILE)
+        self.save()
 
 
     ## @return string a help text comprising the names of each registered

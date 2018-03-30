@@ -35,7 +35,7 @@ from PyPolarVolumeTest import *
 from PyPolarScanTest import *
 from PyPolarScanParamTest import *
 from RaveModuleConstantsTest import *
-     
+      
 from PyCartesianTest import *
 from PyCartesianParamTest import *
 from PyCartesianVolumeTest import *
@@ -71,9 +71,9 @@ from rave_quality_chain_registry_test import *
 from odc_hac_test import *
 from rave_hexquant_test import *
 from polar_merger_test import *
-    
+     
 from algorithm_runner_test import *
- 
+  
 mock_imported=False  
 try:
   import mock
@@ -85,9 +85,9 @@ if mock_imported:
   from rave_quality_chain_plugin_test import *
   from compositing_test import *
   from rave_pgf_volume_plugin_test import *
-   
+    
 from area_registry_test import *
-  
+   
 from PyDealiasTest import *
 from PyRadvolTest import *
 from PyCtfilterTest import *
@@ -98,17 +98,17 @@ from PyPgfLoggerTest import *
 from rave_util_test import *
 from RaveOdimSourceTest import *
 from PyBitmapGeneratorTest import *
-    
+     
 #
 # Unless RAVE_TESTDB_URI has been set we don't want to run the dom db tests
 #
 if os.environ.get("RAVE_TESTDB_URI", "") != "":
   from rave_dom_db_test import *
-    
+     
 from rave_wmo_flatfile_test import *
-    
+     
 from rave_fm12_test import *
-    
+     
 #Gra adjustment tests requires mock version 1.0.1 or higher.
 try:
   import mock
@@ -117,7 +117,7 @@ try:
     from gadjust_gra_test import *
 except:
   pass
-     
+      
 try:
   import pygrib
   from grib_reader_test import *

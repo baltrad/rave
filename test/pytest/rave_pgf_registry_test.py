@@ -74,6 +74,44 @@ class rave_pgf_registry_test(unittest.TestCase):
     self.assertEqual("az,bz,cz", el[0].attrib["ints"])
     self.assertEqual("strz", el[0].attrib["strings"])
     
+  def testRegister(self):
+    txt = """<?xml version="1.0" encoding="UTF-8"?>
+<generate-registry>
+  <se.somefunc.1 function="generate" help="help text" module="rave_plugin">
+    <arguments floats="zra,zrb" ints="a,b,c" strings="str" />
+  </se.somefunc.1>
+  <se.somefunc.2 function="generate2" help="help text2" module="rave_plugin2">
+    <arguments floats="zraz,zrbz" ints="az,bz,cz" strings="strz" />
+  </se.somefunc.2>
+</generate-registry>
+"""    
+
+    expected = """<?xml version="1.0" encoding="UTF-8"?>
+<generate-registry>
+  <se.somefunc.1 function="generate" help="help text" module="rave_plugin">
+    <arguments floats="zra,zrb" ints="a,b,c" strings="str" />
+  </se.somefunc.1>
+  <se.somefunc.2 function="generate2" help="help text2" module="rave_plugin2">
+    <arguments floats="zraz,zrbz" ints="az,bz,cz" strings="strz" />
+  </se.somefunc.2>
+  <se.somefunc.3 function="generate3" help="help text3" module="rave_plugin3">
+    <arguments floats="f1" ints="i1" strings="s1" />
+  </se.somefunc.3>
+</generate-registry>
+"""    
+
+
+    self.writeTempFile(txt)
+    
+    classUnderTest = rave_pgf_registry.PGF_Registry(filename=self.TEMPORARY_FILE)
+
+    classUnderTest.register("se.somefunc.3", "rave_plugin3", "generate3", "help text3", "s1", "i1", "f1", "")
+
+    with open(self.TEMPORARY_FILE) as fp:
+      result = fp.read()
+    
+    self.assertEqual(expected, result)
+
 
   def writeTempFile(self, txt):
     if os.path.isfile(self.TEMPORARY_FILE):
