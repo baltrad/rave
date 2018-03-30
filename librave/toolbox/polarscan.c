@@ -1154,7 +1154,7 @@ int PolarScan_getQualityValueAt(PolarScan_t* scan, const char* quantity, int ri,
   }
 
   if (quality == NULL) {
-    RAVE_WARNING1("Failed to locate a quality field with how/task = %s", name);
+    /*RAVE_WARNING1("Failed to locate a quality field with how/task = %s", name);*/
     goto done;
   }
   if (convert) {
