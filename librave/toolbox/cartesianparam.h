@@ -202,7 +202,7 @@ int CartesianParam_setValue(CartesianParam_t* self, long x, long y, double v);
  * Scales the value v according to gain and offset before setting it.
  * I.e. same as CartesianParam_setValue(cartesian, x, y, (v - offset)/gain)
  */
-int CartesianParam_setConvertedValue(CartesianParam_t* self, long x, long y, double v);
+int CartesianParam_setConvertedValue(CartesianParam_t* self, long x, long y, double v, RaveValueType vtype);
 
 /**
  * Returns the value at the specified x and y position.

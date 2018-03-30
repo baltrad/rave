@@ -95,7 +95,7 @@ double DetectionRange_getAnalysisMaxRange(DetectionRange_t* self);
  * @param[in] threshold_dBZN - threshold for dBZN values
  * @returns a PolarScan containing the echo tops
  */
-PolarScan_t* DetectionRange_top(DetectionRange_t* self, PolarVolume_t* pvol, double scale, double threshold_dBZN);
+PolarScan_t* DetectionRange_top(DetectionRange_t* self, PolarVolume_t* pvol, double scale, double threshold_dBZN, char* paramname);
 
 /**
  * Top field garbage should be filtered.

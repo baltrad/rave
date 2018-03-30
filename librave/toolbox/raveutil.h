@@ -107,3 +107,12 @@ double R2raw(double R, double gain, double offset, double A, double b);
  * @return the truncated int value
  */
 int mytrunc(double d);
+
+/**
+ * Rounds a double to an integer.
+ * @param[in] d the double v
+ * @param[in] minlimit the minumim allowed value. if the rounded value becomes lower than this, the minlimit is used.
+ * @param[in] maxlimit the maximum allowed value. if the rounded value becomes higher than this, the maxlimit is used.
+ * @return the rounded int value
+ */
+int myround_int(double d, double minlimit, double maxlimit);

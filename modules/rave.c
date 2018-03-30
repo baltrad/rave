@@ -45,6 +45,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_alloc.h"
 #include "rave_utilities.h"
 #include "pyrave_debug.h"
+#include "rave_datetime.h"
+#include "proj_wkt_helper.h"
 
 /**
  * This modules name
@@ -206,6 +208,17 @@ static PyObject* _rave_isxmlsupported(PyObject* self, PyObject* args)
 }
 
 /**
+ * Returns if CF conventions is supported or not in this build.
+ * @param[in] self - self
+ * @param[in] args - N/A
+ * @returns true if xml is supported otherwise false
+ */
+static PyObject* _rave_isCFConventionSupported(PyObject* self, PyObject* args)
+{
+  return PyBool_FromLong(RaveUtilities_isCFConventionSupported());
+}
+
+/**
  * Sets a specific debug level
  * @param[in] self - self
  * @param[in] args - the debug level as an integer
@@ -220,6 +233,101 @@ static PyObject* _rave_setDebugLevel(PyObject* self, PyObject* args)
   Rave_setDebugLevel(lvl);
   Py_RETURN_NONE;
 }
+
+/**
+ * Simple helper to compare two rave date time pairs.
+ * @param[in] self - self
+ * @param[in] args - (d1,t1,d2,t2) where date is in format YYYYmmdd and time is in HHMMSS.
+ * @return negative if d1/t1 is before d2/t2. 0 if they are equal and a positive value otherwise
+ */
+static PyObject* _rave_compare_datetime(PyObject* self, PyObject* args)
+{
+  char *d1=NULL, *t1=NULL, *d2=NULL, *t2=NULL;
+  RaveDateTime_t* dt1 = NULL;
+  RaveDateTime_t* dt2 = NULL;
+  int result = -1;
+  if (!PyArg_ParseTuple(args, "ssss", &d1, &t1, &d2, &t2)) {
+    return NULL;
+  }
+  dt1 = RAVE_OBJECT_NEW(&RaveDateTime_TYPE);
+  dt2 = RAVE_OBJECT_NEW(&RaveDateTime_TYPE);
+  if (dt1 != NULL && dt2 != NULL) {
+    if (!RaveDateTime_setDate(dt1, d1) ||
+        !RaveDateTime_setTime(dt1, t1) ||
+        !RaveDateTime_setDate(dt2, d2) ||
+        !RaveDateTime_setTime(dt2, t2)) {
+      raiseException_gotoTag(done, PyExc_AttributeError, "Could not set date time strings");
+    }
+    result = RaveDateTime_compare(dt1, dt2);
+  }
+
+done:
+  RAVE_OBJECT_RELEASE(dt1);
+  RAVE_OBJECT_RELEASE(dt2);
+  return PyLong_FromLong(result);
+}
+
+/**
+ * Translates a projection into a list of well known text attributes representing the projection
+ * @param[in] self - self
+ * @param[in] args - a ProjectionCore instance
+ */
+static PyObject* _rave_translate_from_projection_to_wkt(PyObject* self, PyObject* args)
+{
+  PyObject* obj = NULL;
+  RaveObjectList_t* attrList = NULL;
+  PyObject* result = NULL;
+  if (!PyArg_ParseTuple(args, "O", &obj))
+    return NULL;
+  if (!PyProjection_Check(obj)) {
+    raiseException_returnNULL(PyExc_AttributeError, "Must be of type ProjectionCore");
+  }
+  attrList = RaveWkt_translate_from_projection(((PyProjection*)obj)->projection);
+  if (attrList != NULL) {
+    int i = 0, n = 0;
+    result = PyList_New(0);
+    n = RaveObjectList_size(attrList);
+    for (i = 0; i < n; i++) {
+      RaveAttribute_t* attr = (RaveAttribute_t*)RaveObjectList_get(attrList, i);
+      if (RaveAttribute_getFormat(attr) == RaveAttribute_Format_String) {
+        char* v = NULL;
+        PyObject* o = NULL;
+        RaveAttribute_getString(attr, &v);
+        o = Py_BuildValue("(ss)", RaveAttribute_getName(attr), v);
+        PyList_Append(result, o);
+        Py_XDECREF(o);
+      } else if (RaveAttribute_getFormat(attr) == RaveAttribute_Format_Double) {
+        double v = 0.0;
+        PyObject* o=NULL;
+        RaveAttribute_getDouble(attr, &v);
+        o = Py_BuildValue("(sd)", RaveAttribute_getName(attr), v);
+        PyList_Append(result, o);
+        Py_XDECREF(o);
+      } else if (RaveAttribute_getFormat(attr) == RaveAttribute_Format_DoubleArray) {
+        double* v = NULL;
+        int vn = 0;
+        int vi = 0;
+        PyObject* o = NULL;
+        PyObject* own = NULL;
+        RaveAttribute_getDoubleArray(attr, &v, &vn);
+        o = PyList_New(0);
+        for (vi = 0; vi < vn; vi++) {
+          PyObject* ov = PyFloat_FromDouble(v[vi]);
+          PyList_Append(o, ov);
+          Py_XDECREF(ov);
+        }
+        own = Py_BuildValue("(sO)", RaveAttribute_getName(attr), o);
+        PyList_Append(result, own);
+        Py_XDECREF(o);
+        Py_XDECREF(own);
+      }
+      RAVE_OBJECT_RELEASE(attr);
+    }
+  }
+  RAVE_OBJECT_RELEASE(attrList);
+  return result;
+}
+
 
 /*@} End of Rave utilities */
 
@@ -237,7 +345,10 @@ static PyMethodDef functions[] = {
   {"io", (PyCFunction)_raveio_new, 1},
   {"open", (PyCFunction)_raveio_open, 1},
   {"isXmlSupported", (PyCFunction)_rave_isxmlsupported, 1},
+  {"isCFConventionSupported", (PyCFunction)_rave_isCFConventionSupported, 1},
   {"setDebugLevel", (PyCFunction)_rave_setDebugLevel, 1},
+  {"compare_datetime", (PyCFunction) _rave_compare_datetime, 1},
+  {"translate_from_projection_to_wkt", (PyCFunction) _rave_translate_from_projection_to_wkt, 1},
   {NULL,NULL} /*Sentinel*/
 };
 

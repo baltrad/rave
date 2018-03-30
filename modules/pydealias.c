@@ -69,7 +69,7 @@ static PyObject *ErrorObject;
 static PyObject* _dealiased_func(PyObject* self, PyObject* args) {
   PyObject* object = NULL;
   PyPolarScan* pyscan = NULL;
-  char* parameter = "VRAD";
+  char* parameter = "VRADH";
 
   if (!PyArg_ParseTuple(args, "O|s", &object, &parameter)) {
     return NULL;
@@ -99,7 +99,7 @@ static PyObject* _dealias_func(PyObject* self, PyObject* args)
   PyPolarScan* scan = NULL;
   PyPolarVolume* volume = NULL;
   int ret = 0;
-  char* parameter = "VRAD";
+  char* parameter = "VRADH";
   double emax = EMAX;
 
   if (!PyArg_ParseTuple(args, "O|sd", &object, &parameter, &emax)) {
@@ -135,8 +135,9 @@ static PyObject* _create_dealiased_parameter(PyObject* self, PyObject* args)
   PyObject* result = NULL;
 
   char* parameter = NULL;
+  char* newquantity = NULL;
 
-  if (!PyArg_ParseTuple(args, "Os", &object, &parameter)) {
+  if (!PyArg_ParseTuple(args, "Oss", &object, &parameter, &newquantity)) {
     return NULL;
   }
 
@@ -145,7 +146,7 @@ static PyObject* _create_dealiased_parameter(PyObject* self, PyObject* args)
   } else {
     raiseException_returnNULL(PyExc_AttributeError, "create_dealiased_parameter requires scan as input");
   }
-  param = create_dealiased_parameter(scan->scan, parameter);
+  param = create_dealiased_parameter(scan->scan, parameter, newquantity);
   if (param != NULL) {
     result = (PyObject*)PyPolarScanParam_New(param);
   } else {

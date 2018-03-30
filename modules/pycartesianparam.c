@@ -265,7 +265,7 @@ static PyObject* _pycartesianparam_setConvertedValue(PyCartesianParam* self, PyO
     return NULL;
   }
 
-  result = CartesianParam_setConvertedValue(self->param, x, y, v);
+  result = CartesianParam_setConvertedValue(self->param, x, y, v, RaveValueType_DATA);
 
   return PyInt_FromLong(result);
 }

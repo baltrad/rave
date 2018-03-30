@@ -42,6 +42,10 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "polar_odim_io.h"
 #include "vp_odim_io.h"
 
+#ifdef RAVE_CF_SUPPORTED
+#include "cartesian_cf_io.h"
+#endif
+
 #ifdef RAVE_BUFR_SUPPORTED
 #include "rave_bufr_io.h"
 #endif
@@ -493,6 +497,21 @@ done:
 }
 #endif
 
+static int RaveIOInternal_writeCF(RaveIO_t* rio)
+{
+  int result = 0;
+#ifdef RAVE_CF_SUPPORTED
+	CartesianCfIO_t* cio = RAVE_OBJECT_NEW(&CartesianCfIO_TYPE);
+	if (cio != NULL)
+	{
+	  CartesianCfIO_setDeflateLevel(cio, rio->compression->level); /* We know that level is between 0 - 9 so this ought to be ok */
+		result =  CartesianCfIO_write(cio, rio->filename, rio->object);
+	}
+	RAVE_OBJECT_RELEASE(cio);
+#endif
+	return result;
+}
+
 /*@} End of Private functions */
 void RaveIO_close(RaveIO_t* raveio)
 {
@@ -575,7 +594,12 @@ int RaveIO_save(RaveIO_t* raveio, const char* filename)
     RAVE_ERROR0("Atempting to save an object without a filename");
     return 0;
   }
-  if (raveio->object != NULL) {
+
+  if (raveio->fileFormat == RaveIO_ODIM_FileFormat_UNDEFINED) { /* Default is always to store as HDF5 */
+    raveio->fileFormat = RaveIO_ODIM_FileFormat_HDF5;
+  }
+
+  if (raveio->object != NULL && raveio->fileFormat == RaveIO_ODIM_FileFormat_HDF5) {
     if (RAVE_OBJECT_CHECK_TYPE(raveio->object, &Cartesian_TYPE) ||
         RAVE_OBJECT_CHECK_TYPE(raveio->object, &PolarVolume_TYPE) ||
         RAVE_OBJECT_CHECK_TYPE(raveio->object, &CartesianVolume_TYPE) ||
@@ -601,7 +625,6 @@ int RaveIO_save(RaveIO_t* raveio, const char* filename)
             result = 0;
           }
         }
-
         if (result == 1) {
           result = HLNodeList_setFileName(nodelist, raveio->filename);
         }
@@ -612,6 +635,8 @@ int RaveIO_save(RaveIO_t* raveio, const char* filename)
       }
       HLNodeList_free(nodelist);
     }
+  } else if (raveio->object != NULL && raveio->fileFormat == RaveIO_FileFormat_CF) {
+    result = RaveIOInternal_writeCF(raveio);
   }
 
   return result;
@@ -709,6 +734,17 @@ RaveIO_ODIM_FileFormat RaveIO_getFileFormat(RaveIO_t* raveio)
 {
   RAVE_ASSERT((raveio != NULL), "raveio == NULL");
   return raveio->fileFormat;
+}
+
+int RaveIO_setFileFormat(RaveIO_t* raveio, RaveIO_ODIM_FileFormat format)
+{
+  RAVE_ASSERT((raveio != NULL), "raveio == NULL");
+  if (format != RaveIO_ODIM_FileFormat_HDF5 && format != RaveIO_FileFormat_CF) {
+    RAVE_ERROR0("Only supported fileformats for writing is ODIM & CF");
+	  return 0;
+  }
+  raveio->fileFormat = format;
+  return 1;
 }
 
 void RaveIO_setCompressionLevel(RaveIO_t* raveio, int lvl)

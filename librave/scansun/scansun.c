@@ -393,19 +393,19 @@ return dd+100*(mm+100*yyyy);
 
 void readoutTiming(SCANMETA* meta, int ia, long* date, long* time, double* timer) {
   double timed, timef;
-  char datebuf[8];  /* YYYYMMDD */
-  char timebuf[6];  /* HHMMSS */
+  char datebuf[9];  /* YYYYMMDD\0 */
+  char timebuf[7];  /* HHMMSS\0 */
   char *ptr;
 
   if ( (!meta->stopazT) && (meta->startazT) ) timed = meta->startazT[ia];
   else if ( (!meta->startazT) && (meta->stopazT) ) timed = meta->stopazT[ia];
-  timed = (meta->startazT[ia] + meta->stopazT[ia]) / 2.0;
+  else timed = (meta->startazT[ia] + meta->stopazT[ia]) / 2.0;
   *timer = modf(timed, &timef);
 
   const time_t timet = (time_t)timef;
-  const struct tm *timetm = localtime(&timet);
+  const struct tm *timetm = gmtime(&timet);
   struct tm buf;
-  timetm = localtime_r(&timet, &buf);
+  timetm = gmtime_r(&timet, &buf);
   strftime(datebuf, sizeof datebuf, "%Y%m%d", timetm);
   strftime(timebuf, sizeof timebuf, "%H%M%S", timetm);
   *date = strtol(datebuf, &ptr, 10);
@@ -542,7 +542,7 @@ int processData(PolarScan_t* scan, SCANMETA* meta, RaveList_t* list) {
     }
 
     solar_elev_azim(lonlat[0],lonlat[1],date,time,&rvals->ElevSun,&rvals->AzimSun,&rvals->RelevSun);
-    if (fabs(Elevation-rvals->ElevSun)>AngleDif||fabs(Azimuth-rvals->AzimSun)>AngleDif) {
+    if (fabs(Elevation-rvals->RelevSun)>AngleDif||fabs(Azimuth-rvals->AzimSun)>AngleDif) {
       RAVE_FREE(rvals);
       continue;
     }

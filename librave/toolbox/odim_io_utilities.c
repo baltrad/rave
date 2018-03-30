@@ -26,6 +26,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_debug.h"
 #include "rave_alloc.h"
 #include "rave_hlhdf_utilities.h"
+#include <string.h>
 
 /*@{ Private functions */
 
@@ -215,5 +216,40 @@ RaveField_t* OdimIoUtilities_loadField(HL_NodeList* nodelist, const char* fmt, .
   result = RAVE_OBJECT_COPY(field);
 fail:
   RAVE_OBJECT_RELEASE(field);
+  return result;
+}
+
+
+int OdimIoUtilities_getIdFromSource(const char* source, const char* id, char* buf, size_t buflen)
+{
+  int result = 0;
+  if (source != NULL && id != NULL) {
+    char* p = strstr(source, id);
+    if (p != NULL) {
+      int len = 0;
+      char* pbrk = NULL;
+      p += strlen(id);
+      len = strlen(p);
+      pbrk = strpbrk((const char*)p, ",");
+
+      if (pbrk != NULL) {
+        len = pbrk - p;
+      }
+      if (len + 1 < buflen) {
+        strncpy(buf, p, len);
+        buf[len] = '\0';
+        result = 1;
+      }
+    }
+  }
+  return result;
+}
+
+int OdimIoUtilities_getNodOrCmtFromSource(const char* source, char* buf, size_t buflen)
+{
+  int result = 0;
+  result = OdimIoUtilities_getIdFromSource(source, "NOD:", buf, buflen);
+  if (!result)
+    result = OdimIoUtilities_getIdFromSource(source, "CMT:", buf, buflen);
   return result;
 }

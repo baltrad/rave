@@ -81,8 +81,14 @@ typedef struct CompositeValues_t {
 /** By multiplying the values in the distance field by 2000, we get the value in unit meters. */
 #define DISTANCE_TO_RADAR_RESOLUTION 2000.0
 
+/** Same for height, scaled to 100 m resolution up to 25.5 km */
+#define HEIGHT_RESOLUTION 100.0
+
 /** The name of the task for specifying distance to radar */
 #define DISTANCE_TO_RADAR_HOW_TASK "se.smhi.composite.distance.radar"
+
+/** The name of the task for specifying height above sea level */
+#define HEIGHT_ABOVE_SEA_HOW_TASK "se.smhi.composite.height.radar"
 
 /** The name of the task for indexing the radars used */
 #define RADAR_INDEX_HOW_TASK "se.smhi.composite.index.radar"
@@ -1043,6 +1049,9 @@ static int CompositeInternal_addQualityFlags(Composite_t* self, Cartesian_t* ima
     if (strcmp(DISTANCE_TO_RADAR_HOW_TASK, howtaskvaluestr) == 0) {
       gain = DISTANCE_TO_RADAR_RESOLUTION;
       offset = 0.0;
+    } else if (strcmp(HEIGHT_ABOVE_SEA_HOW_TASK, howtaskvaluestr) == 0) {
+      gain = HEIGHT_RESOLUTION;
+      offset = 0.0;
     } else if (strcmp(RADAR_INDEX_HOW_TASK, howtaskvaluestr) == 0) {
       gain = 1.0;
       offset = 0.0;
@@ -1103,7 +1112,7 @@ static void CompositeInternal_fillQualityInformation(
   int x,
   int y,
   CartesianParam_t* param,
-  double radardist,
+  double radardist, 
   int radarindex,
   PolarNavigationInfo* navinfo)
 {
@@ -1136,6 +1145,8 @@ static void CompositeInternal_fillQualityInformation(
       if (obj != NULL) {
         if (strcmp(DISTANCE_TO_RADAR_HOW_TASK, name) == 0) {
           RaveField_setValue(field, x, y, radardist/DISTANCE_TO_RADAR_RESOLUTION);
+        } else if (strcmp(HEIGHT_ABOVE_SEA_HOW_TASK, name) == 0) {
+          RaveField_setValue(field, x, y, navinfo->actual_height/HEIGHT_RESOLUTION);
         } else if (strcmp(RADAR_INDEX_HOW_TASK, name) == 0) {
           RaveField_setValue(field, x, y, (double)Composite_getRadarIndexValue(composite, radarindex));
         } else if (composite->algorithm != NULL && CompositeAlgorithm_supportsFillQualityInformation(composite->algorithm, name)) {
@@ -1417,15 +1428,8 @@ static Cartesian_t* Composite_nearest_max(Composite_t* composite, Area_t* area, 
       for (cindex = 0; cindex < nparam; cindex++) {
         double vvalue = cvalues[cindex].value;
         double vtype = cvalues[cindex].vtype;
-        if (vtype == RaveValueType_NODATA) {
-          CartesianParam_setConvertedValue(cvalues[cindex].parameter, x, y, CartesianParam_getNodata(cvalues[cindex].parameter));
-        } else {
-          if (vtype == RaveValueType_UNDETECT) {
-            CartesianParam_setConvertedValue(cvalues[cindex].parameter, x, y, CartesianParam_getUndetect(cvalues[cindex].parameter));
-          } else {
-            CartesianParam_setConvertedValue(cvalues[cindex].parameter, x, y, vvalue);
-          }
-        }
+        CartesianParam_setConvertedValue(cvalues[cindex].parameter, x, y, vvalue, vtype);
+
         if ((vtype == RaveValueType_DATA || vtype == RaveValueType_UNDETECT) &&
             cvalues[cindex].radarindex >= 0 && nqualityflags > 0) {
           PolarNavigationInfo info = cvalues[cindex].navinfo;
@@ -1806,6 +1810,7 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t*
             if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
               dist = PolarVolume_getDistance((PolarVolume_t*)obj, olon, olat);
               maxdist = PolarVolume_getMaxDistance((PolarVolume_t*)obj);
+              PolarVolume_sortByElevations((PolarVolume_t*)obj, 1);
             } else if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarScan_TYPE)) {
               dist = PolarScan_getDistance((PolarScan_t*)obj, olon, olat);
               maxdist = PolarScan_getMaxDistance((PolarScan_t*)obj);
@@ -1881,33 +1886,26 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t*
         double vtype = cvalues[cindex].vtype;
         PolarNavigationInfo info = cvalues[cindex].navinfo;
 
-        if (vtype == RaveValueType_NODATA) {
-          CartesianParam_setConvertedValue(cvalues[cindex].parameter, x, y, CartesianParam_getNodata(cvalues[cindex].parameter));
-        } else {
-          if (composite->ptype == Rave_ProductType_PMAX && cvalues[cindex].radardist < composite->range) {
-            RaveValueType ntype = RaveValueType_NODATA;
-            double nvalue = 0.0;
-            if (vtype == RaveValueType_UNDETECT) {
-              /* Undetect should not affect navigation information */
-              CompositeInternal_getVerticalMaxValue(composite, cvalues[cindex].radarindex, cvalues[cindex].name, olon, olat, &ntype, &nvalue, NULL, NULL);
-            } else {
-              CompositeInternal_getVerticalMaxValue(composite, cvalues[cindex].radarindex, cvalues[cindex].name, olon, olat, &ntype, &nvalue, &info, NULL);
-            }
-            if (ntype != RaveValueType_NODATA) {
-              vtype = ntype;
-              vvalue = nvalue;
-            } else {
-              /* If we find nodata then we really should use the original navigation information since there must be something wrong */
-              info = cvalues[cindex].navinfo;
-            }
-          }
-
+        if (vtype != RaveValueType_NODATA && composite->ptype == Rave_ProductType_PMAX && cvalues[cindex].radardist < composite->range) {
+          RaveValueType ntype = RaveValueType_NODATA;
+          double nvalue = 0.0;
           if (vtype == RaveValueType_UNDETECT) {
-            CartesianParam_setConvertedValue(cvalues[cindex].parameter, x, y, CartesianParam_getUndetect(cvalues[cindex].parameter));
+            /* Undetect should not affect navigation information */
+            CompositeInternal_getVerticalMaxValue(composite, cvalues[cindex].radarindex, cvalues[cindex].name, olon, olat, &ntype, &nvalue, NULL, NULL);
           } else {
-            CartesianParam_setConvertedValue(cvalues[cindex].parameter, x, y, vvalue);
+            CompositeInternal_getVerticalMaxValue(composite, cvalues[cindex].radarindex, cvalues[cindex].name, olon, olat, &ntype, &nvalue, &info, NULL);
+          }
+          if (ntype != RaveValueType_NODATA) {
+            vtype = ntype;
+            vvalue = nvalue;
+          } else {
+            /* If we find nodata then we really should use the original navigation information since there must be something wrong */
+            info = cvalues[cindex].navinfo;
           }
         }
+
+        CartesianParam_setConvertedValue(cvalues[cindex].parameter, x, y, vvalue, vtype);
+
         if ((vtype == RaveValueType_DATA || vtype == RaveValueType_UNDETECT) &&
             cvalues[cindex].radarindex >= 0 && nqualityflags > 0) {
           CompositeInternal_fillQualityInformation(composite, x, y, cvalues[cindex].parameter, cvalues[cindex].radardist, cvalues[cindex].radarindex, &info);

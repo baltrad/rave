@@ -21,6 +21,12 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @file
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2012-08-30
+ *
+ * @co-author Ulf E. Nordh, SMHI
+ * @date 2017-02-23, started overhaul of the code to achieve better
+ * resemblance with N2 and requirements from customer E-profile. Added code under
+ * the function VpOdimIOInternal_loadDsAttribute, the code makes it possible to
+ * read/write the attributes under /dataset1/what
  */
 #include "vp_odim_io.h"
 #include "rave_hlhdf_utilities.h"
@@ -85,6 +91,7 @@ static int VpOdimIOInternal_loadRootAttribute(void* object, RaveAttribute_t* att
       goto done;
     }
     result = VerticalProfile_setDate(vp, value);
+    
   } else if (strcasecmp("what/time", name)==0) {
     char* value = NULL;
     if (!RaveAttribute_getString(attribute, &value)) {
@@ -92,6 +99,8 @@ static int VpOdimIOInternal_loadRootAttribute(void* object, RaveAttribute_t* att
       goto done;
     }
     result = VerticalProfile_setTime(vp, value);
+    
+    
   } else if (strcasecmp("what/source", name)==0) {
     char* value = NULL;
     if (!RaveAttribute_getString(attribute, &value)) {
@@ -99,6 +108,8 @@ static int VpOdimIOInternal_loadRootAttribute(void* object, RaveAttribute_t* att
       goto done;
     }
     result = VerticalProfile_setSource(vp, value);
+    
+      
   } else if (strcasecmp("where/lon", name)==0) {
     double value = 0.0;
     if (!(result = RaveAttribute_getDouble(attribute, &value))) {
@@ -106,6 +117,8 @@ static int VpOdimIOInternal_loadRootAttribute(void* object, RaveAttribute_t* att
       goto done;
     }
     VerticalProfile_setLongitude(vp, value * M_PI/180.0);
+    
+    
   } else if (strcasecmp("where/lat", name)==0) {
     double value = 0.0;
     if (!(result = RaveAttribute_getDouble(attribute, &value))) {
@@ -113,6 +126,8 @@ static int VpOdimIOInternal_loadRootAttribute(void* object, RaveAttribute_t* att
       goto done;
     }
     VerticalProfile_setLatitude(vp, value * M_PI/180.0);
+    
+    
   } else if (strcasecmp("where/height", name)==0) {
     double value = 0.0;
     if (!(result = RaveAttribute_getDouble(attribute, &value))) {
@@ -120,6 +135,8 @@ static int VpOdimIOInternal_loadRootAttribute(void* object, RaveAttribute_t* att
       goto done;
     }
     VerticalProfile_setHeight(vp, value);
+    
+    
   } else if (strcasecmp("where/levels", name)==0) {
     long value = 0;
     if (!(result = RaveAttribute_getLong(attribute, &value))) {
@@ -127,6 +144,8 @@ static int VpOdimIOInternal_loadRootAttribute(void* object, RaveAttribute_t* att
       goto done;
     }
     VerticalProfile_setLevels(vp, value);
+    
+    
   } else if (strcasecmp("where/interval", name)==0) {
     double value = 0.0;
     if (!(result = RaveAttribute_getDouble(attribute, &value))) {
@@ -134,6 +153,7 @@ static int VpOdimIOInternal_loadRootAttribute(void* object, RaveAttribute_t* att
       goto done;
     }
     VerticalProfile_setInterval(vp, value);
+    
   } else if (strcasecmp("where/minheight", name)==0) {
     double value = 0.0;
     if (!(result = RaveAttribute_getDouble(attribute, &value))) {
@@ -141,6 +161,7 @@ static int VpOdimIOInternal_loadRootAttribute(void* object, RaveAttribute_t* att
       goto done;
     }
     VerticalProfile_setMinheight(vp, value);
+        
   } else if (strcasecmp("where/maxheight", name)==0) {
     double value = 0.0;
     if (!(result = RaveAttribute_getDouble(attribute, &value))) {
@@ -148,6 +169,7 @@ static int VpOdimIOInternal_loadRootAttribute(void* object, RaveAttribute_t* att
       goto done;
     }
     VerticalProfile_setMaxheight(vp, value);
+           
   } else if (strcasecmp("what/object", name) == 0) {
     result = 1;
   } else {
@@ -174,15 +196,68 @@ static int VpOdimIOInternal_loadDsAttribute(void* object, RaveAttribute_t* attri
 
   RAVE_ASSERT((object != NULL), "object == NULL");
   RAVE_ASSERT((attribute != NULL), "attribute == NULL");
-
+     
   vp = (VerticalProfile_t*)((OdimIoUtilityArg*)object)->object;
   name = RaveAttribute_getName(attribute);
-  if (name != NULL) {
-    VerticalProfile_addAttribute(vp, attribute);
-    result = 1;
-  }
+  
+  /* The following functions added by Ulf to be able to access the new
+     attributes starttime, endtime, startdate, enddate and product */
+  
+  if (name != NULL);
+    if (strcasecmp("what/starttime", name)==0) {
+      char* value = NULL;
+      if (!RaveAttribute_getString(attribute, &value)) {
+        RAVE_ERROR0("Failed to extract what/starttime as a string");
+        goto done;
+      }
+      if(!(result = VerticalProfile_setStartTime(vp, value))) {
+        RAVE_ERROR1("Failed to set what/starttime with value = %s", value);
+      }
+    } else if (strcasecmp("what/endtime", name)==0) {
+      char* value = NULL;
+      if (!RaveAttribute_getString(attribute, &value)) {
+        RAVE_ERROR0("Failed to extract what/endtime as a string");
+        goto done;
+      }
+      if(!(result = VerticalProfile_setEndTime(vp, value))) {
+        RAVE_ERROR1("Failed to set what/endtime with value = %s", value);
+      }
+    } else if (strcasecmp("what/startdate", name)==0) {
+      char* value = NULL;
+      if (!RaveAttribute_getString(attribute, &value)) {
+        RAVE_ERROR0("Failed to extract what/startdate as a string");
+        goto done;
+      }
+      if(!(result = VerticalProfile_setStartDate(vp, value))) {
+        RAVE_ERROR1("Failed to set what/startdate with value = %s", value);
+      }
+    } else if (strcasecmp("what/enddate", name)==0) {
+      char* value = NULL;
+      if (!RaveAttribute_getString(attribute, &value)) {
+        RAVE_ERROR0("Failed to extract what/enddate as a string");
+        goto done;
+      }
+      if(!(result = VerticalProfile_setEndDate(vp, value))) {
+        RAVE_ERROR1("Failed to set what/enddate with value = %s", value);
+      }
+    } else if (strcasecmp("what/product", name) == 0) {
+      char* value = NULL;
+      if (!RaveAttribute_getString(attribute, &value)) {
+        RAVE_ERROR0("Failed to extract what/product as a string");
+        goto done;
+      }
+      if (RaveTypes_getObjectTypeFromString(value) != Rave_ObjectType_VP) {
+        RAVE_WARNING0("what/product did not identify as a VP!");
+      }
+      result = 1;
+    } else {
+      VerticalProfile_addAttribute(vp, attribute);
+      result = 1;
+    }    
+done:
   return result;
-}
+}    
+    
 
 /**
  * Fills the scan with information from the dataset and below. I.e. root
@@ -441,7 +516,45 @@ int VpOdimIO_fill(VpOdimIO_t* self, VerticalProfile_t* vp, HL_NodeList* nodelist
   if (!RaveHL_createGroup(nodelist, "/dataset1")) {
     goto done;
   }
+  
+  if (!RaveHL_createGroup(nodelist, "/dataset1/what")) {
+    goto done;  
+  }
+ 
+    /* The following code added by Ulf to be able to access the new
+     attributes starttime, endtime, startdate, enddate and product */
+      
+  if (VerticalProfile_getStartTime(vp) != NULL) {
+    if (!RaveHL_createStringValue(nodelist, VerticalProfile_getStartTime(vp), "/dataset1/what/starttime")) {
+      goto done;
+    }
+  }
+  
+  if (VerticalProfile_getEndTime(vp) != NULL) {
+    if (!RaveHL_createStringValue(nodelist, VerticalProfile_getEndTime(vp), "/dataset1/what/endtime")) {
+      goto done;
+    }
+  }
+  
+  if (VerticalProfile_getStartDate(vp) != NULL) {
+    if (!RaveHL_createStringValue(nodelist, VerticalProfile_getStartDate(vp), "/dataset1/what/startdate")) {
+      goto done;
+    }
+  }
+  
+  if (VerticalProfile_getEndDate(vp) != NULL) {
+    if (!RaveHL_createStringValue(nodelist, VerticalProfile_getEndDate(vp), "/dataset1/what/enddate")) {
+      goto done;
+    }
+  }
+  
+  if (VerticalProfile_getProduct(vp) != NULL) {
+    if (!RaveHL_createStringValue(nodelist, VerticalProfile_getProduct(vp), "/dataset1/what/product")) {
+      goto done;
+    }
+  }
 
+  
   RAVE_OBJECT_RELEASE(attributes);
   attributes = RAVE_OBJECT_NEW(&RaveObjectList_TYPE);
   if (attributes == NULL) {
@@ -449,6 +562,7 @@ int VpOdimIO_fill(VpOdimIO_t* self, VerticalProfile_t* vp, HL_NodeList* nodelist
   }
 
   result = VpOdimIOInternal_addFields(vp, nodelist, "/dataset1");
+
 done:
   RAVE_OBJECT_RELEASE(attributes);
   RAVE_OBJECT_RELEASE(qualityfields);

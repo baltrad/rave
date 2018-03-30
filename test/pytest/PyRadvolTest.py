@@ -124,8 +124,8 @@ class PyRadvolTest(unittest.TestCase):
             task_args =  qf.getAttribute("how/task_args")
         except:
             pass        
-        self.assertNotEqual(qf, None)
-        self.assertEqual(task_args, "SPECK: SPECK_QI=0.9, SPECK_QIUn=0.5, SPECK_AGrid=1, SPECK_ANum=2, SPECK_AStep=1, SPECK_BGrid=1, SPECK_BNum=2, SPECK_BStep=2")
+        self.assertNotEquals(qf, None)
+        self.assertEqual(task_args, "SPECK: SPECK_QI=0.9, SPECK_QIUn=0.5, SPECK_AGrid=1, SPECK_ANum=2, SPECK_AStep=1, SPECK_BGrid=1, SPECK_BNum=2, SPECK_BStep=2")        
         self.assertFalse(different(myscan, refscan))
 
     def testRadvolSpikeRemoval(self):

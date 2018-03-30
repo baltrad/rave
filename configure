@@ -626,6 +626,10 @@ HLHDF_LIB_DIR
 HLHDF_INCLUDE_DIR
 HLHDF_ROOTDIR
 GOT_PTHREAD_SUPPORT
+CF_SUPPRESSED
+NETCDF_SUPPRESSED
+NETCDF_LIB_DIR
+NETCDF_INCLUDE_DIR
 BUFR_SUPPRESSED
 BUFR_TABLE_DIR
 BUFR_LIB_DIR
@@ -713,6 +717,7 @@ with_hlhdf
 with_jdk
 with_bufr
 with_bufr_tables
+with_netcdf
 enable_debug_memory
 '
       ac_precious_vars='build_alias
@@ -1357,6 +1362,7 @@ Optional Packages:
   --with-jdk=jdkhome    Compile with java support
   --with-bufr=ROOT       Use the bufr library
   --with-bufr-tables=DIR       Use the bufr tables in specified directory as default
+  --with-netcdf=ROOT or INC,LIB      Use the netcdf library
 
 Some influential environment variables:
   CC          C compiler command
@@ -4379,6 +4385,234 @@ esac
 
 
 
+GOT_NETCDF_INC=no
+GOT_NETCDF_LIB=no
+NETCDF_INCLUDE_DIR=
+NETCDF_LIB_DIR=
+NETCDF_SUPPRESSED=yes
+CF_SUPPRESSED=yes
+
+# Check whether --with-netcdf was given.
+if test "${with_netcdf+set}" = set; then :
+  withval=$with_netcdf;
+else
+  withval=no
+fi
+
+
+case $withval in
+  yes)
+    for ac_header in netcdf.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "netcdf.h" "ac_cv_header_netcdf_h" "$ac_includes_default"
+if test "x$ac_cv_header_netcdf_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_NETCDF_H 1
+_ACEOF
+ GOT_NETCDF_INC=yes
+fi
+
+done
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for nc_create in -lnetcdf" >&5
+$as_echo_n "checking for nc_create in -lnetcdf... " >&6; }
+if ${ac_cv_lib_netcdf_nc_create+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lnetcdf  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char nc_create ();
+int
+main ()
+{
+return nc_create ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_netcdf_nc_create=yes
+else
+  ac_cv_lib_netcdf_nc_create=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_netcdf_nc_create" >&5
+$as_echo "$ac_cv_lib_netcdf_nc_create" >&6; }
+if test "x$ac_cv_lib_netcdf_nc_create" = xyes; then :
+  GOT_NETCDF_LIB=yes
+fi
+
+    NETCDF_SUPPRESSED=no
+    ;;
+  no)
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for NETCDF lib" >&5
+$as_echo_n "checking for NETCDF lib... " >&6; }
+    { $as_echo "$as_me:${as_lineno-$LINENO}: result: suppressed" >&5
+$as_echo "suppressed" >&6; }
+    NETCDF_SUPPRESSED=yes
+    ;;
+  *)
+    NETCDF_SUPPRESSED=no
+    if [ "$withval" != "" ]; then
+      if [ "`echo $withval | grep ','`" = "" ]; then
+        netcdf_inc=$withval/include
+        netcdf_lib=$withval/lib
+      else
+        netcdf_inc="`echo $withval |cut -f1 -d,`"
+        netcdf_lib="`echo $withval |cut -f2 -d,`"
+      fi
+
+      if [ "$netcdf_inc" != "" ]; then
+        saved_CPPFLAGS="$CPPFLAGS"
+        CPPFLAGS="$CPPFLAGS -I$netcdf_inc"
+        for ac_header in netcdf.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "netcdf.h" "ac_cv_header_netcdf_h" "$ac_includes_default"
+if test "x$ac_cv_header_netcdf_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_NETCDF_H 1
+_ACEOF
+ GOT_NETCDF_INC=yes
+fi
+
+done
+
+        if [ "$GOT_NETCDF_INC" = "yes" ]; then
+          NETCDF_INCLUDE_DIR="-I$netcdf_inc"
+        else
+          CPPFLAGS="$saved_CPPFLAGS"
+        fi
+      else
+        for ac_header in netcdf.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "netcdf.h" "ac_cv_header_netcdf_h" "$ac_includes_default"
+if test "x$ac_cv_header_netcdf_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_NETCDF_H 1
+_ACEOF
+ GOT_EXPAT_INC=yes
+fi
+
+done
+
+      fi
+
+      if [ "$netcdf_lib" != "" ]; then
+        saved_LDFLAGS="$LDFLAGS"
+        LDFLAGS="$LDFLAGS -L$netcdf_lib"
+        { $as_echo "$as_me:${as_lineno-$LINENO}: checking for nc_create in -lnetcdf" >&5
+$as_echo_n "checking for nc_create in -lnetcdf... " >&6; }
+if ${ac_cv_lib_netcdf_nc_create+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lnetcdf  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char nc_create ();
+int
+main ()
+{
+return nc_create ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_netcdf_nc_create=yes
+else
+  ac_cv_lib_netcdf_nc_create=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_netcdf_nc_create" >&5
+$as_echo "$ac_cv_lib_netcdf_nc_create" >&6; }
+if test "x$ac_cv_lib_netcdf_nc_create" = xyes; then :
+  GOT_NETCDF_LIB=yes
+fi
+
+        if [ "$GOT_NETCDF_LIB" = "yes" ]; then
+          NETCDF_LIB_DIR="-L$netcdf_lib"
+        else
+          LDFLAGS="$saved_LDFLAGS"
+        fi
+      else
+        { $as_echo "$as_me:${as_lineno-$LINENO}: checking for nc_create in -lnetcdf" >&5
+$as_echo_n "checking for nc_create in -lnetcdf... " >&6; }
+if ${ac_cv_lib_netcdf_nc_create+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lnetcdf  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char nc_create ();
+int
+main ()
+{
+return nc_create ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_netcdf_nc_create=yes
+else
+  ac_cv_lib_netcdf_nc_create=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_netcdf_nc_create" >&5
+$as_echo "$ac_cv_lib_netcdf_nc_create" >&6; }
+if test "x$ac_cv_lib_netcdf_nc_create" = xyes; then :
+  GOT_NETCDF_LIB=yes
+fi
+
+      fi
+    else
+      as_fn_error $? "\"Odd argument passed for netcdf\"" "$LINENO" 5
+    fi
+    ;;
+esac
+
+if [ "$NETCDF_SUPPRESSED" = "no" ]; then
+  if [ "$GOT_NETCDF_INC" = "no" -o "$GOT_NETCDF_LIB" = "no" ]; then
+    as_fn_error $? "Could not find netcdf includes and/or libraries" "$LINENO" 5
+  fi
+  CF_SUPPRESSED=no
+fi
+
+
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking if pthread support is default" >&5
 $as_echo_n "checking if pthread support is default... " >&6; }
 if test "$cross_compiling" = yes; then :
@@ -4520,6 +4754,12 @@ fi
 
 
 # Substitute the bufr arguments
+
+
+
+
+
+# Substitute the netcdf arguments
 
 
 

@@ -134,3 +134,18 @@ int mytrunc(double d)
 
   return a;
 }
+
+int myround_int(double d, double minlimit, double maxlimit)
+{
+  double rounded = round(d);
+
+  int result;
+  if (rounded > maxlimit)
+    result = maxlimit;
+  else if (d < minlimit)
+    result = minlimit;
+  else
+    result = (int)rounded;
+
+  return result;
+}

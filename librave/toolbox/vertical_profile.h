@@ -22,12 +22,18 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @file
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2012-08-24
+ *
+ * @author Ulf E. Nordh (Swedish Meteorological and Hydrological Institute, SMHI)
+ * @date 2017-02-23 Added functionality to yield an extended set of fields for 
+ * vertical profiles e.g. HGHT, n (sample size), UWND and VWND
  */
+ 
 #ifndef VERTICALPROFILE_H
 #define VERTICALPROFILE_H
 #include "rave_object.h"
 #include "rave_types.h"
 #include "rave_field.h"
+#include "rave_attribute.h"
 
 /**
  * Defines a Vertical Profile
@@ -142,6 +148,81 @@ int VerticalProfile_setLevels(VerticalProfile_t* self, long l);
 long VerticalProfile_getLevels(VerticalProfile_t* self);
 
 /**
+ * Sets the starttime of the lowest accepted scan
+ * @param[in] self - self
+ * @param[in] starttime - the starttime
+ * @return 1 on success or 0 on failure
+ */
+int VerticalProfile_setStartTime(VerticalProfile_t* self, const char* s);
+
+/**
+ * Returns the starttime for the lowest accepted scan
+ * @param[in] self - self
+ * @return the starttime
+ */
+const char* VerticalProfile_getStartTime(VerticalProfile_t* self);
+
+/**
+ * Sets the endtime of the highest scan
+ * @param[in] self - self
+ * @param[in] endtime - the endtime
+ * @return 1 on success or 0 on failure
+ */
+int VerticalProfile_setEndTime(VerticalProfile_t* self, const char* s);
+
+/**
+ * Returns the endtime for the highest scan
+ * @param[in] self - self
+ * @return the endtime
+ */
+const char* VerticalProfile_getEndTime(VerticalProfile_t* self);
+
+/**
+ * Sets the startdate for the VP
+ * @param[in] self - self
+ * @param[in] startdate - the startdate
+ * @return 1 on success or 0 on failure
+ */
+int VerticalProfile_setStartDate(VerticalProfile_t* self, const char* s);
+
+/**
+ * Returns the startdate for the VP
+ * @param[in] self - self
+ * @return the startdate
+ */
+const char* VerticalProfile_getStartDate(VerticalProfile_t* self);
+
+/**
+ * Sets the enddate of the VP
+ * @param[in] self - self
+ * @param[in] enddate - the enddate
+ * @return 1 on success or 0 on failure
+ */
+int VerticalProfile_setEndDate(VerticalProfile_t* self, const char* s);
+
+/**
+ * Returns the enddate for the VP
+ * @param[in] self - self
+ * @return the enddate
+ */
+const char* VerticalProfile_getEndDate(VerticalProfile_t* self);
+
+/**
+ * Sets the product for the VP
+ * @param[in] self - self
+ * @param[in] product - the product
+ * @return 1 on success or 0 on failure
+ */
+int VerticalProfile_setProduct(VerticalProfile_t* self, const char* s);
+
+/**
+ * Returns the product for the VP
+ * @param[in] self - self
+ * @return the starttime
+ */
+const char* VerticalProfile_getProduct(VerticalProfile_t* self);
+
+/**
  * Sets the vertical distance (m) between height intervals, or 0.0 if variable
  * @param[in] self - self
  * @param[in] i - the interval (in meters)
@@ -188,7 +269,7 @@ double VerticalProfile_getMaxheight(VerticalProfile_t* self);
  * @param[in] self - self
  * @param[in] attribute - the attribute
  * @return 1 on success otherwise 0
- */
+ */ 
 int VerticalProfile_addAttribute(VerticalProfile_t* self, RaveAttribute_t* attribute);
 
 /**
@@ -446,6 +527,74 @@ RaveField_t* VerticalProfile_getDBZDev(VerticalProfile_t* self);
 int VerticalProfile_setDBZDev(VerticalProfile_t* self, RaveField_t* ff);
 
 /**
+ * Returns the number of sample points for mean horizontal wind velocity
+ * @param[in] self - self
+ * @return the field
+ */
+RaveField_t* VerticalProfile_getNV(VerticalProfile_t* self);
+
+/**
+ * Sets the number of sampled points for horizontal wind
+ * This function will modify ff and add the attribute what/quantity = n.
+ * @param[in] self - self
+ * @param[in] n - n (must be a 1 dimensional field with same dim as the other members).
+ * @return 1 on success otherwise 0
+ */
+int VerticalProfile_setNV(VerticalProfile_t* self, RaveField_t* ff);
+
+/**
+ * Returns the different height levels. Each level is the center of the height bin
+ * @param[in] self - self
+ * @return the field
+ */
+RaveField_t* VerticalProfile_getHGHT(VerticalProfile_t* self);
+
+/**
+ * Sets the different height levels. Each level is the center of the height bin
+ * This function will modify ff and add the attribute what/quantity = HGHT.
+ * @param[in] self - self
+ * @param[in] HGHT - HGHT (must be a 1 dimensional field with same dim as the other members).
+ * @return 1 on success otherwise 0
+ */
+int VerticalProfile_setHGHT(VerticalProfile_t* self, RaveField_t* ff);
+
+/**
+ * Returns the vind field UWND i.e. the wind component in the x-direction.
+ * This field is calculated using the fields ff and dd
+ * @param[in] self - self
+ * @return the field
+ */
+RaveField_t* VerticalProfile_getUWND(VerticalProfile_t* self);
+
+/**
+ * Sets the vind field UWND i.e. the wind component in the x-direction.
+ * This field is calculated using the fields ff and dd
+ * This function will modify ff and add the attribute what/quantity = UWND.
+ * @param[in] self - self
+ * @param[in] UWND - UWND (must be a 1 dimensional field with same dim as the other members).
+ * @return 1 on success otherwise 0
+ */
+int VerticalProfile_setUWND(VerticalProfile_t* self, RaveField_t* ff);
+
+/**
+ * Returns the vind field VWND i.e. the wind component in the y-direction.
+ * This field is calculated using the fields ff and dd
+ * @param[in] self - self
+ * @return the field
+ */
+RaveField_t* VerticalProfile_getVWND(VerticalProfile_t* self);
+
+/**
+ * Sets the vind field VWND i.e. the wind component in the y-direction.
+ * This field is calculated using the fields ff and dd
+ * This function will modify ff and add the attribute what/quantity = VWND.
+ * @param[in] self - self
+ * @param[in] VWND - VWND (must be a 1 dimensional field with same dim as the other members).
+ * @return 1 on success otherwise 0
+ */
+int VerticalProfile_setVWND(VerticalProfile_t* self, RaveField_t* ff);
+
+/**
  * Returns a list of all existing fields in the vertical profile. Each field will contain
  * a what/quantity attribute for identification purposes.
  * @param[in] self - self
@@ -458,7 +607,7 @@ RaveObjectList_t* VerticalProfile_getFields(VerticalProfile_t* self);
  * identify the type. This basically means that if addField is called with a field having
  * what/quantity = ff, it would be the same as calling \ref VerticalProfile_setFF.
  * Allowed quantities are: ff, ff_dev, w, w_dev, dd, dd_dev
- *   div, div_dev, def, def_dev. ad, ad_dev, dbz, dbz_dev
+ *   div, div_dev, def, def_dev. ad, ad_dev, dbz, dbz_dev, n, HGHT, UWND and VWND
  * @param[in] self - self
  * @param[in] field - the field
  * @return 1 on success or 0 on failure, either inconsistency or missing/bad what/quantity.

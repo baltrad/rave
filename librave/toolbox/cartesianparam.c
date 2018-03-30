@@ -30,6 +30,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_data2d.h"
 #include "raveobject_hashtable.h"
 #include "rave_utilities.h"
+#include "rave_types.h"
 #include <string.h>
 
 /**
@@ -258,11 +259,16 @@ int CartesianParam_setValue(CartesianParam_t* self, long x, long y, double v)
   return RaveData2D_setValue(self->data, x, y, v);
 }
 
-int CartesianParam_setConvertedValue(CartesianParam_t* self, long x, long y, double v)
+int CartesianParam_setConvertedValue(CartesianParam_t* self, long x, long y, double v, RaveValueType vtype)
 {
   double value = v;
   RAVE_ASSERT((self != NULL), "self == NULL");
-  if (value != self->undetect && value != self->nodata) {
+
+  if (vtype == RaveValueType_NODATA) {
+    value = self->nodata;
+  } else if (vtype == RaveValueType_UNDETECT) {
+    value = self->undetect;
+  } else {
     if (self->gain != 0.0) {
       value = (v - self->offset)/self->gain;
     } else {
@@ -270,6 +276,7 @@ int CartesianParam_setConvertedValue(CartesianParam_t* self, long x, long y, dou
       return 0;
     }
   }
+
   return RaveData2D_setValue(self->data, x, y, value);
 }
 

@@ -435,7 +435,13 @@ static int _pyraveio_setattro(PyRaveIO* self, PyObject* name, PyObject* val)
       raiseException_gotoTag(done, PyExc_TypeError ,"meta block size must be a integer");
     }
   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("file_format", name) == 0) {
-    raiseException_gotoTag(done, PyExc_AttributeError, "file_format can only be read");
+    if (PyInt_Check(val)) {
+      if (!RaveIO_setFileFormat(self->raveio, PyInt_AsLong(val))) {
+        raiseException_gotoTag(done, PyExc_AttributeError, "Only valid writable formats are ODIM HDF5 and CF");
+      }
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError ,"meta block size must be a integer");
+    }
   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("bufr_table_dir", name) == 0) {
     if (PyString_Check(val)) {
       if (!RaveIO_setBufrTableDir(self->raveio, PyString_AsString(val))) {
@@ -569,6 +575,7 @@ MOD_INIT(_raveio)
   add_long_constant(dictionary, "RaveIO_ODIM_FileFormat_UNDEFINED", RaveIO_ODIM_FileFormat_UNDEFINED);
   add_long_constant(dictionary, "RaveIO_ODIM_FileFormat_HDF5", RaveIO_ODIM_FileFormat_HDF5);
   add_long_constant(dictionary, "RaveIO_ODIM_FileFormat_BUFR", RaveIO_ODIM_FileFormat_BUFR);
+  add_long_constant(dictionary, "RaveIO_FileFormat_CF", RaveIO_FileFormat_CF);
 
   add_long_constant(dictionary, "Rave_ObjectType_UNDEFINED", Rave_ObjectType_UNDEFINED);
   add_long_constant(dictionary, "Rave_ObjectType_PVOL", Rave_ObjectType_PVOL);

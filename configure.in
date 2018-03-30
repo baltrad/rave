@@ -489,6 +489,77 @@ dnl     AC_MSG_ERROR("Could not successfully find the Opera Bufr library")
 dnl   fi
 dnl fi
 
+dnl Do we want to have NETCDF (CF) support, default is NO
+GOT_NETCDF_INC=no
+GOT_NETCDF_LIB=no
+NETCDF_INCLUDE_DIR=
+NETCDF_LIB_DIR=
+NETCDF_SUPPRESSED=yes
+CF_SUPPRESSED=yes
+AC_ARG_WITH(netcdf,[  --with-netcdf=ROOT or INC,LIB      Use the netcdf library],
+  ,withval=no)
+		
+case $withval in
+  yes)
+    AC_CHECK_HEADERS(netcdf.h,GOT_NETCDF_INC=yes)
+    AC_CHECK_LIB(netcdf,nc_create,GOT_NETCDF_LIB=yes)
+    NETCDF_SUPPRESSED=no
+    ;;
+  no)
+    AC_MSG_CHECKING(for NETCDF lib)
+    AC_MSG_RESULT(suppressed)
+    NETCDF_SUPPRESSED=yes
+    ;;
+  *)
+    NETCDF_SUPPRESSED=no	
+    if [[ "$withval" != "" ]]; then
+      if [[ "`echo $withval | grep ','`" = "" ]]; then
+        netcdf_inc=$withval/include
+        netcdf_lib=$withval/lib
+      else
+        netcdf_inc="`echo $withval |cut -f1 -d,`"
+        netcdf_lib="`echo $withval |cut -f2 -d,`"
+      fi
+
+      if [[ "$netcdf_inc" != "" ]]; then
+        saved_CPPFLAGS="$CPPFLAGS"
+        CPPFLAGS="$CPPFLAGS -I$netcdf_inc"
+        AC_CHECK_HEADERS(netcdf.h,GOT_NETCDF_INC=yes)
+        if [[ "$GOT_NETCDF_INC" = "yes" ]]; then
+          NETCDF_INCLUDE_DIR="-I$netcdf_inc"
+        else
+          CPPFLAGS="$saved_CPPFLAGS"
+        fi
+      else
+        AC_CHECK_HEADERS(netcdf.h,GOT_EXPAT_INC=yes)
+      fi
+
+      if [[ "$netcdf_lib" != "" ]]; then
+        saved_LDFLAGS="$LDFLAGS"
+        LDFLAGS="$LDFLAGS -L$netcdf_lib"
+        AC_CHECK_LIB(netcdf,nc_create,GOT_NETCDF_LIB=yes)
+        if [[ "$GOT_NETCDF_LIB" = "yes" ]]; then
+          NETCDF_LIB_DIR="-L$netcdf_lib"
+        else
+          LDFLAGS="$saved_LDFLAGS"
+        fi
+      else
+        AC_CHECK_LIB(netcdf,nc_create,GOT_NETCDF_LIB=yes)
+      fi
+    else
+      AC_MSG_ERROR("Odd argument passed for netcdf")
+    fi
+    ;;
+esac
+
+if [[ "$NETCDF_SUPPRESSED" = "no" ]]; then
+  if [[ "$GOT_NETCDF_INC" = "no" -o "$GOT_NETCDF_LIB" = "no" ]]; then
+    AC_MSG_ERROR(Could not find netcdf includes and/or libraries)
+  fi
+  CF_SUPPRESSED=no
+fi
+
+
 AC_MSG_CHECKING(if pthread support is default)
 AC_TRY_RUN([
 #include <pthread.h>
@@ -602,6 +673,12 @@ AC_SUBST(BUFR_INCLUDE_DIR)
 AC_SUBST(BUFR_LIB_DIR)
 AC_SUBST(BUFR_TABLE_DIR)
 AC_SUBST(BUFR_SUPPRESSED)
+
+# Substitute the netcdf arguments
+AC_SUBST(NETCDF_INCLUDE_DIR)
+AC_SUBST(NETCDF_LIB_DIR)
+AC_SUBST(NETCDF_SUPPRESSED)
+AC_SUBST(CF_SUPPRESSED)
 
 # Substitute the pthread arguments
 AC_SUBST(GOT_PTHREAD_SUPPORT)

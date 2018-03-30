@@ -635,7 +635,7 @@ int Cartesian_setConvertedValue(Cartesian_t* cartesian, long x, long y, double v
 {
   RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
   if (cartesian->currentParameter != NULL) {
-    return CartesianParam_setConvertedValue(cartesian->currentParameter, x, y, v);
+    return CartesianParam_setConvertedValue(cartesian->currentParameter, x, y, v, RaveValueType_DATA);
   }
   return 0;
 }

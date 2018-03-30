@@ -444,7 +444,7 @@ static int CartesianOdimIOInternal_loadDatasetDataAttribute(void* object, RaveAt
       RAVE_ERROR1("Failed to extract %s as a string", name);
       goto done;
     }
-    if (!CartesianParam_setQuantity(param, value)) {
+    if (!CartesianParam_setQuantity(param, RaveHL_convertQuantity(value))) {
       goto done;
     }
     result = 1;
@@ -788,7 +788,7 @@ static int CartesianOdimIOInternal_fillCartesianDataset(HL_NodeList* nodelist, C
         RAVE_ERROR0("Quantity not a string valuefor cartesian parameter");
         goto done;
       }
-      if (!CartesianParam_setQuantity(param, value)) {
+      if (!CartesianParam_setQuantity(param, RaveHL_convertQuantity(value))) {
         RAVE_ERROR0("Could not set quantity in parameter");
         goto done;
       }

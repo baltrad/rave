@@ -68,4 +68,10 @@ int RaveDateTime_setDate(RaveDateTime_t* dt, const char* value);
  */
 const char* RaveDateTime_getDate(RaveDateTime_t* dt);
 
+/**
+ * Compares self with another datetime object. If the datetime is equal, 0 is returned, if self is before other a negative
+ * value is returned and if self is after other a positive number is returned.
+ */
+int RaveDateTime_compare(RaveDateTime_t* self, RaveDateTime_t* other);
+
 #endif /* RAVE_DATETIME_H */

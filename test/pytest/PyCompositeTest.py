@@ -68,6 +68,8 @@ class PyCompositeTest(unittest.TestCase):
                  "fixtures/prepared_max_fixture_osu.h5",
                  "fixtures/prepared_max_fixture_ovi.h5"]
   
+  DUMMY_DATA_FIXTURES = ["fixtures/sehem_qcvol_pn129_20180129T100000Z_0x73fc7b_dummydata.h5"]
+  
   def setUp(self):
     pass
 
@@ -924,14 +926,14 @@ class PyCompositeTest(unittest.TestCase):
 
   def verify_qc_volumes_2016(self, result):
     dbzh_param = result.getParameter("DBZH")
-    self.assertEqual(dbzh_param.getNumberOfQualityFields(), 4, "Wrong number of quality fields")
+    self.assertEqual(dbzh_param.getNumberOfQualityFields(), 5, "Wrong number of quality fields")
     
     qfield_expected_gain = 1.0/255.0
     
     field = dbzh_param.getQualityField(0)
     self.assertEqual("fi.fmi.ropo.detector.classification", field.getAttribute("how/task"))
     self.assertAlmostEqual(qfield_expected_gain, field.getAttribute("what/gain"), 6, "Wrong setting of gain in ropo quality field")
-    self.assertEqual(0, field.getAttribute("what/offset"), "Wrong setting of offset in distance quality field")
+    self.assertEqual(0, field.getAttribute("what/offset"), "Wrong setting of offset in ropo quality field")
     data = field.getData()
     # check one known point in quality field where the algorithm has detected an anomaly
     self.assertEqual(data[911][541], 63, "Invalid quality value for ropo quality field")
@@ -943,7 +945,7 @@ class PyCompositeTest(unittest.TestCase):
     field = dbzh_param.getQualityField(1)
     self.assertEqual("se.smhi.detector.poo", field.getAttribute("how/task"))
     self.assertAlmostEqual(qfield_expected_gain, field.getAttribute("what/gain"), 6, "Wrong setting of gain in poo quality field")
-    self.assertEqual(0, field.getAttribute("what/offset"), "Wrong setting of offset in distance quality field")
+    self.assertEqual(0, field.getAttribute("what/offset"), "Wrong setting of offset in poo quality field")
     data = field.getData()
     # check one known point in quality field where the algorithm has detected an anomaly
     self.assertEqual(data[633][382], 191, "Invalid quality value for poo quality field")
@@ -955,7 +957,7 @@ class PyCompositeTest(unittest.TestCase):
     field = dbzh_param.getQualityField(2)
     self.assertEqual("se.smhi.detector.beamblockage", field.getAttribute("how/task"))
     self.assertAlmostEqual(qfield_expected_gain, field.getAttribute("what/gain"), 6, "Wrong setting of gain in beamb quality field")
-    self.assertEqual(0, field.getAttribute("what/offset"), "Wrong setting of offset in distance quality field")
+    self.assertEqual(0, field.getAttribute("what/offset"), "Wrong setting of offset in beamb quality field")
     data = field.getData()
     # check one known point in quality field where the algorithm has detected an anomaly
     self.assertEqual(data[576][311], 122, "Invalid quality value for beamb quality field")
@@ -973,6 +975,16 @@ class PyCompositeTest(unittest.TestCase):
     self.assertEqual(data[425][366], 101, "Invalid quality value for distance quality field")
     # check one point in quality field located outside radar range. here quality should be 0
     self.assertEqual(data[709][359], 0, "Invalid quality value for distance quality field")
+
+    field = dbzh_param.getQualityField(4)
+    self.assertEqual("se.smhi.composite.height.radar", field.getAttribute("how/task"))
+    self.assertEqual(100, field.getAttribute("what/gain"), "Wrong setting of gain in height quality field")
+    self.assertEqual(0, field.getAttribute("what/offset"), "Wrong setting of offset in height quality field")
+    data = field.getData()
+    # check one known point in quality field where the algorithm has detected an anomaly
+    self.assertEqual(data[425][366], 47, "Invalid quality value for height quality field")
+    # check one point in quality field located outside radar range. here quality should be 0
+    self.assertEqual(data[709][359], 0, "Invalid quality value for height quality field")
     
   def test_quality_fields_for_scans(self):
     generator = _pycomposite.new()
@@ -995,7 +1007,7 @@ class PyCompositeTest(unittest.TestCase):
     generator.elangle = 0.0
     generator.time = "120000"
     generator.date = "20090501"
-    result = generator.nearest(a, ["fi.fmi.ropo.detector.classification", "se.smhi.detector.poo", "se.smhi.detector.beamblockage", "se.smhi.composite.distance.radar"])
+    result = generator.nearest(a, ["fi.fmi.ropo.detector.classification", "se.smhi.detector.poo", "se.smhi.detector.beamblockage", "se.smhi.composite.distance.radar", "se.smhi.composite.height.radar"])
     
     self.verify_qc_volumes_2016(result)
     
@@ -1024,11 +1036,47 @@ class PyCompositeTest(unittest.TestCase):
     generator.elangle = 0.0
     generator.time = "120000"
     generator.date = "20090501"
-    result = generator.nearest(a, ["fi.fmi.ropo.detector.classification", "se.smhi.detector.poo", "se.smhi.detector.beamblockage", "se.smhi.composite.distance.radar"])
+    result = generator.nearest(a, ["fi.fmi.ropo.detector.classification", "se.smhi.detector.poo", "se.smhi.detector.beamblockage", "se.smhi.composite.distance.radar", "se.smhi.composite.height.radar"])
     
     self.verify_qc_volumes_2016(result)
     
     ios = _raveio.new()
     ios.object = result
     ios.filename = "swecomposite_pvols_qfields.h5"
-    ios.save() 
+    ios.save()
+
+  def test_cappi_for_unsorted_volume(self):
+    generator = _pycomposite.new()
+    a = _area.new()
+    a.id = "nrd2km"
+    a.xsize = 848
+    a.ysize = 1104
+    a.xscale = 2000.0
+    a.yscale = 2000.0
+    a.extent = (-738816.513333,-3995515.596160,955183.48666699999,-1787515.59616)
+    a.projection = _projection.new("x", "y", "+proj=stere +ellps=bessel +lat_0=90 +lon_0=14 +lat_ts=60 +datum=WGS84")
+    
+    for fname in self.DUMMY_DATA_FIXTURES:
+      rio = _raveio.open(fname)
+      generator.add(rio.object)
+
+    generator.addParameter("DBZH", 1.0, 0.0)
+    generator.product = _rave.Rave_ProductType_CAPPI
+    generator.elangle = 0.0
+    generator.time = "120000"
+    generator.date = "20090501"
+    generator.height = 5000
+    result = generator.nearest(a, ["fi.fmi.ropo.detector.classification", "se.smhi.detector.beamblockage", "se.smhi.composite.distance.radar"])
+
+    # check known positions, to ensure that correct values are set
+    dbzh_param = result.getParameter("DBZH")
+    data = dbzh_param.getData()
+    self.assertEquals(data[855][507], 80, "Invalid data value in CAPPI.")
+    self.assertEquals(data[869][468], 5, "Invalid data value in CAPPI.")
+    self.assertEquals(data[931][474], 1, "Invalid data value in CAPPI.")
+    self.assertEquals(data[849][505], 255, "Invalid data value in CAPPI.")
+
+    ios = _raveio.new()
+    ios.object = result
+    ios.filename = "swecomposite_cappi_unsorted_pvols.h5"
+    ios.save()

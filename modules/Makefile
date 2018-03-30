@@ -46,12 +46,21 @@ LDFLAGS+= $(BUFR_LIB_DIR)
 BUFR_LIBRARY=-lOperaBufr
 endif
 
+ifeq ($(NETCDF_SUPPRESSED), no)
+CFLAGS+= $(NETCDF_INCLUDE_DIR)
+LDFLAGS+= $(NETCDF_LIB_DIR)
+NETCDF_LIBRARY=-lnetcdf
+ifeq ($(CF_SUPPRESSED), no)
+CFLAGS+= -DRAVE_CF_SUPPORTED
+endif
+endif
+
 ifeq ($(GOT_PTHREAD_SUPPORT), yes)
 CFLAGS+= -DPTHREAD_SUPPORTED
 PTHREAD_LIBRARY=-lpthread
 endif
 
-LIBRARIES= -lravetoolbox -lravepyapi -lhlhdf -lproj -lravetnc  $(EXPAT_LIBRARY) $(BUFR_LIBRARY) $(PTHREAD_LIBRARY)
+LIBRARIES= -lravetoolbox -lravepyapi -lhlhdf -lproj -lravetnc  $(EXPAT_LIBRARY) $(BUFR_LIBRARY) $(NETCDF_LIBRARY) $(PTHREAD_LIBRARY)
 
 # --------------------------------------------------------------------
 # Fixed definitions

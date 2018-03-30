@@ -159,7 +159,8 @@ static PyObject* _pydetectionrange_top(PyDetectionRange* self, PyObject* args)
   PyPolarVolume* volume = NULL;
   PolarScan_t* scan = NULL;
   double scale = 0.0, threshold = 0.0;
-  if (!PyArg_ParseTuple(args, "Odd", &object, &scale, &threshold)) {
+  char* paramname = "DBZH";
+  if (!PyArg_ParseTuple(args, "Odd|s", &object, &scale, &threshold, &paramname)) {
     return NULL;
   }
   if (PyPolarVolume_Check(object)) {
@@ -168,7 +169,7 @@ static PyObject* _pydetectionrange_top(PyDetectionRange* self, PyObject* args)
     raiseException_returnNULL(PyExc_AttributeError, "Top requires volume");
   }
 
-  scan = DetectionRange_top(self->dr, volume->pvol, scale, threshold);
+  scan = DetectionRange_top(self->dr, volume->pvol, scale, threshold, paramname);
   if (scan == NULL) {
     raiseException_returnNULL(PyExc_Exception, "Failed to create top");
   }

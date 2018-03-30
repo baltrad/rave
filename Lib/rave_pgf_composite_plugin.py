@@ -122,6 +122,11 @@ def generate(files, arguments):
   
   if "qitotal_field" in args.keys():
     comp.qitotal_field = args["qitotal_field"]
+    
+  if "reprocess_qfields" in args.keys():
+    comp.reprocess_quality_field = args["reprocess_qfields"]
+  else:
+    comp.reprocess_quality_field = RAVE_PGF_QUALITY_FIELD_REPROCESSING
   
   # We do not support best fit compositing right now
   #comp.pcsid = options.pcsid
@@ -143,7 +148,6 @@ def generate(files, arguments):
   if "zrb" in args:
     comp.zr_b = float(args["zrb"])
   
-  comp.reprocess_quality_field = RAVE_PGF_QUALITY_FIELD_REPROCESSING
   
   if rave_tile_registry.has_tiled_area(args["area"]):
     comp = tiled_compositing(comp)

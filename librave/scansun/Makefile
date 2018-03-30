@@ -16,6 +16,11 @@ SCANSUNINC+= $(BUFR_INCLUDE_DIR)
 LDFLAGS+= $(BUFR_LIB_DIR)
 endif
 
+ifeq ($(NETCDF_SUPPRESSED), no)
+SCANSUNINC+= $(NETCDF_INCLUDE_DIR)
+LDFLAGS+= $(NETCDF_LIB_DIR)
+endif
+
 CFLAGS=	$(OPTS) $(CCSHARED) $(DEFS) $(CREATE_ITRUNC) $(SCANSUNINC)
 
 # --------------------------------------------------------------------
@@ -30,6 +35,9 @@ SCANSUNBIN= scansun
 SCANSUNLIBS= -lravescansun -lravetoolbox -lhlhdf -lproj  -lravetnc
 ifeq ($(BUFR_SUPPRESSED), no)
 SCANSUNLIBS+= -lOperaBufr
+endif 
+ifeq ($(NETCDF_SUPPRESSED), no)
+SCANSUNLIBS+= -lnetcdf
 endif 
 ifeq ($(EXPAT_SUPPRESSED), no)
 SCANSUNLIBS+= -lexpat
