@@ -87,7 +87,7 @@ AC_MSG_RESULT("$PY_INCLUDES")
 PY_INCLUDES="-I$PY_INCLUDES"
 if [[ "x$py3support" = "xyes" ]]; then
   PY_INCLUDES=`python3-config --includes`
-else:
+else
   PY_INCLUDES=`python-config --includes`
 fi
 
