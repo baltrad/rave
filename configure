@@ -3232,6 +3232,8 @@ $as_echo "\"$PY_INCLUDES\"" >&6; }
 PY_INCLUDES="-I$PY_INCLUDES"
 if [ "x$py3support" = "xyes" ]; then
   PY_INCLUDES=`python3-config --includes`
+else:
+  PY_INCLUDES=`python-config --includes`
 fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking \"for python lib site-packages\"" >&5
