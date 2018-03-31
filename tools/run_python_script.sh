@@ -21,6 +21,13 @@ fi
 
 RESULT=0
 
+# Identify python version
+PYTHON_BIN=`fgrep PYTHON_BIN "${DEF_MK_FILE}" | sed -e "s/\(PYTHON_BIN=[ \t]*\)//"`
+if [ "$PYTHON_BIN" = "" ]; then
+  PYTHON_BIN=python
+fi
+
+
 # RUN THE PYTHON TESTS
 HLHDF_MKFFILE=`fgrep HLHDF_HLDEF_MK_FILE "${DEF_MK_FILE}" | sed -e"s/\(HLHDF_HLDEF_MK_FILE=[ \t]*\)//"`
 
@@ -30,9 +37,7 @@ HDF5_LDPATH=`fgrep HDF5_LIBDIR "${HLHDF_MKFFILE}" | sed -e"s/\(HDF5_LIBDIR=[ \t]
 # Get HLHDFs libpath from raves mkf file
 HLHDF_LDPATH=`fgrep HLHDF_LIB_DIR "${DEF_MK_FILE}" | sed -e"s/\(HLHDF_LIB_DIR=[ \t]*\)//"`
 
-BNAME=`python -c 'from distutils import util; import sys; print "lib.%s-%s" % (util.get_platform(), sys.version[0:3])'`
-
-PYTHON_BIN=`fgrep PYTHON_BIN "${DEF_MK_FILE}" | sed -e "s/\(PYTHON_BIN=[ \t]*\)//"`
+BNAME=`$PYTHON_BIN -c 'from distutils import util; import sys; print("lib.%s-%s" % (util.get_platform(), sys.version[0:3]))'`
 
 RBPATH="${SCRIPTPATH}/../Lib:${SCRIPTPATH}/../modules"
 RAVE_LDPATH="${SCRIPTPATH}/../librave/tnc:${SCRIPTPATH}/../librave/toolbox:${SCRIPTPATH}/../librave/pyapi:${SCRIPTPATH}/../librave/scansun:${SCRIPTPATH}/../librave/radvol/lib"
