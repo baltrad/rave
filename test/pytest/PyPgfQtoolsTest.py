@@ -45,8 +45,8 @@ class PyPgfQtoolsTest(unittest.TestCase):
     def testQObject(self):
         Q = rave_pgf_qtools.PGF_JobQueue()
         self.assertTrue(str(type(Q)), "<class 'rave_pgf_qtools.PGF_JobQueue'>")
-        self.assertEquals(Q.qsize(), 0)
-        self.assertEquals(Q.maxsize, 0)
+        self.assertEqual(Q.qsize(), 0)
+        self.assertEqual(Q.maxsize, 0)
 
     def testQDumpEmpty(self):
         Q = rave_pgf_qtools.PGF_JobQueue()
@@ -55,7 +55,7 @@ class PyPgfQtoolsTest(unittest.TestCase):
     def testQLoadEmpty(self):
         Q = rave_pgf_qtools.PGF_JobQueue()
         Q.load(filename=self.QFILE)
-        self.assertEquals(Q.qsize(), 0)
+        self.assertEqual(Q.qsize(), 0)
         os.remove(self.QFILE)
 
     def testQList2Element2List(self):
@@ -63,18 +63,18 @@ class PyPgfQtoolsTest(unittest.TestCase):
         elem = ET.Element("myElem")
         e = rave_pgf_qtools.List2Element(l, "files")
         elem.append(e)
-        self.assertEquals(e.tag, "files")
-        self.assertEquals(len(list(e)), 2)
+        self.assertEqual(e.tag, "files")
+        self.assertEqual(len(list(e)), 2)
         L = rave_pgf_qtools.Element2List(elem, "files")
-        self.assertEquals(l, L)
+        self.assertEqual(l, L)
 
     def testQMergeSplit(self):
         algorithm_entry = self.REG.find("se.smhi.rave.creategmapimage")
         rave_pgf_qtools.merge(algorithm_entry, ["bobbe.h5"], [], "1")
-        self.assertEquals(algorithm_entry.get("jobid"), "1")
+        self.assertEqual(algorithm_entry.get("jobid"), "1")
         elem, files, args = rave_pgf_qtools.split(algorithm_entry)
-        self.assertEquals(files, ["bobbe.h5"])
-        self.assertEquals(args, [])
+        self.assertEqual(files, ["bobbe.h5"])
+        self.assertEqual(args, [])
 
     def testQJob(self):
         Q = rave_pgf_qtools.PGF_JobQueue()
@@ -86,7 +86,7 @@ class PyPgfQtoolsTest(unittest.TestCase):
     def testQJobLoadOne(self):
         Q = rave_pgf_qtools.PGF_JobQueue()
         Q.load(filename=self.QFILE+"1")
-        self.assertEquals(Q.qsize(), 1)
+        self.assertEqual(Q.qsize(), 1)
 
     def testQMaxsize(self):
         Q = rave_pgf_qtools.PGF_JobQueue()
@@ -96,12 +96,10 @@ class PyPgfQtoolsTest(unittest.TestCase):
             Q.queue_job(algorithm_entry, ["fubik.h5"], [], "2")
         except rave_pgf_qtools.PGF_JobQueue_isFull_Error:
             err_msg = traceback.format_exc()
-            err = err_msg.split("\n")[-2]
-            self.assertEquals(err, "PGF_JobQueue_isFull_Error")
 
     def testQJobTaskDone(self):
         Q = rave_pgf_qtools.PGF_JobQueue()
         Q.load(filename=self.QFILE+"1")
         Q.task_done("1")
-        self.assertEquals(Q.qsize(), 0)
+        self.assertEqual(Q.qsize(), 0)
         os.remove(self.QFILE+"1")

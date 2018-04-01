@@ -33,10 +33,12 @@ from xml.etree import ElementTree as ET
 from rave_defines import QFILE
 import threading
 if sys.version_info < (3,):
-  import xmlrpclib as xmlrpc
+  from xmlrpclib import dumps as xmldumps
+  from xmlrpclib import loads as xmlloads
   import Queue
 else:
-  import xmlrpc
+  from xmlrpc.client import dumps as xmldumps
+  from xmlrpc.client  import loads as xmlloads
   import queue as Queue
   
 
@@ -103,7 +105,7 @@ class PGF_JobQueue(dict):
             for jobid, job in self.items():
                 root.append(job)
             fd = open(filename, 'w')
-            fd.write(q + ET.tostring(root))
+            fd.write(q + ET.tostring(root).decode('utf-8'))
             fd.close()
         finally:
           self.lock.release()
@@ -125,10 +127,7 @@ class PGF_JobQueue(dict):
 
 
 def pgf_dumps(val):
-  if sys.version_info < (3,):
-    return xmlrpc.dumps(val)
-  else:
-    return xmlrpc.client.dumps(val)
+  return xmldumps(val)
 
 ## Adds Elements containing files and arguments to the message.
 # @param algorithm Element in a \ref rave_pgf_registry.PGF_Registry instance.
@@ -171,7 +170,7 @@ def Element2List(elem, tagname):
     e = elem.find(tagname)
     tag = e.tag
     e.tag = 'params'  # xmlrpc.loads won't accept any other tagname. Hack...
-    l = list(xmlrpc.loads(ET.tostring(e))[0])
+    l = list(xmlloads(ET.tostring(e))[0])
     e.tag = tag       # put back original tag
     return l 
 
