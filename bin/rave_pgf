@@ -34,12 +34,13 @@ from algorithm_runner import algorithm_runner
 if sys.version_info < (3,):
   from SimpleXMLRPCServer import SimpleXMLRPCServer
   from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
+  from xmlrpclib import ServerProxy
   import xmlrpclib as xmlrpc
 else:
   import xmlrpc
   from xmlrpc.server import SimpleXMLRPCServer
   from xmlrpc.server import SimpleXMLRPCRequestHandler
-  
+  from xmlrpc.client import ServerProxy
 
 
 ## Stub class for allowing server POSTs only to one place, providing
@@ -126,7 +127,7 @@ if __name__ == "__main__":
     if os.path.isfile(PIDFILE):
       # Then, dump the job queue via client connection, then stop
       try:
-        server = xmlrpclib.ServerProxy("http://%s:%i/RAVE" % (PGF_HOST, PGF_PORT), verbose=False)
+        server = ServerProxy("http://%s:%i/RAVE" % (PGF_HOST, PGF_PORT), verbose=False)
         response = server.flush("Killing me softly")
       except Exception:
         err_msg = traceback.format_exc()
