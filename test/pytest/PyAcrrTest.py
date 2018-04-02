@@ -47,7 +47,7 @@ class PyAcrrTest(unittest.TestCase):
     
     sum_dist_field = None
     for dist_field in distance_fields:
-      if sum_dist_field == None:
+      if sum_dist_field is None:
         sum_dist_field = array(dist_field)*gain_multiplier
       else:
         sum_dist_field += array(dist_field)*gain_multiplier

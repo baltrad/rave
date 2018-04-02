@@ -360,13 +360,13 @@ class PyRaveIOTest(unittest.TestCase):
     #quality information
     self.assertEquals("a quality field", nodelist.getNode("/dataset1/quality1/what/sthis").data())
     d = nodelist.getNode("/dataset1/quality1/data").data()
-    self.assertTrue(d != None)
+    self.assertTrue(d is not None)
     self.assertEquals(240, numpy.shape(d)[0])
     self.assertEquals(240, numpy.shape(d)[1])
 
     self.assertEquals("another quality field", nodelist.getNode("/dataset1/quality2/what/sthat").data())
     d = nodelist.getNode("/dataset1/quality2/data").data()
-    self.assertTrue(d != None)
+    self.assertTrue(d is not None)
     self.assertEquals(240, numpy.shape(d)[0])
     self.assertEquals(240, numpy.shape(d)[1])
 
@@ -661,13 +661,13 @@ class PyRaveIOTest(unittest.TestCase):
     #quality information
     self.assertEquals("a quality field", nodelist.getNode("/dataset2/quality1/what/sthis").data())
     d = nodelist.getNode("/dataset2/quality1/data").data()
-    self.assertTrue(d != None)
+    self.assertTrue(d is not None)
     self.assertEquals(240, numpy.shape(d)[0])
     self.assertEquals(240, numpy.shape(d)[1])
 
     self.assertEquals("another quality field", nodelist.getNode("/dataset2/quality2/what/sthat").data())
     d = nodelist.getNode("/dataset2/quality2/data").data()
-    self.assertTrue(d != None)
+    self.assertTrue(d is not None)
     self.assertEquals(240, numpy.shape(d)[0])
     self.assertEquals(240, numpy.shape(d)[1])
   
@@ -1002,7 +1002,7 @@ class PyRaveIOTest(unittest.TestCase):
 
     # quality field for mmh
     self.assertEquals("a quality field", nodelist.getNode(mmhname + "/quality1/what/sthis").data())
-    self.assertTrue(nodelist.getNode(mmhname + "/quality1/data").data() != None)
+    self.assertTrue(nodelist.getNode(mmhname + "/quality1/data").data() is not None)
     
     #
     # dataset2 (scan2)
