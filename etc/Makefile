@@ -28,11 +28,11 @@ CONFIG_FILES=rave_pgf_quality_registry.xml rave_pgf_queue.xml rave_pgf_registry.
 
 .PHONY=install
 install:
-	@mkdir -p "${prefix}/etc"
-	@cp -v -f rave_pgf "${prefix}/etc/"
+	@mkdir -p "${DESTDIR}${prefix}/etc"
+	@cp -v -f rave_pgf "${DESTDIR}${prefix}/etc/"
 	@for i in $(CONFIG_FILES) ; do \
-	    if [ ! -f ${prefix}/etc/$$i ]; then \
-	      cp -v -f $$i ${prefix}/etc/; \
+	    if [ ! -f ${DESTDIR}${prefix}/etc/$$i ]; then \
+	      cp -v -f $$i ${DESTDIR}${prefix}/etc/; \
 	    fi; \
 	done
 

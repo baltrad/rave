@@ -29,11 +29,11 @@ def.mk:
 	+[ -f $@ ] || $(error You need to run ./configure)
 
 install: def.mk
-	@mkdir -p "${prefix}"
-	@cp -v -f rave.xbm "${prefix}/"
-	@cp -v -f COPYING "${prefix}/"
-	@cp -v -f COPYING.LESSER "${prefix}/"
-	@cp -v -f LICENSE "${prefix}/"
-	@mkdir -p "${prefix}/mkf"
-	@cp -v -f def.mk "${prefix}/mkf/"
+	@mkdir -p "${DESTDIR}${prefix}"
+	@cp -v -f rave.xbm "${DESTDIR}${prefix}/"
+	@cp -v -f COPYING "${DESTDIR}${prefix}/"
+	@cp -v -f COPYING.LESSER "${DESTDIR}${prefix}/"
+	@cp -v -f LICENSE "${DESTDIR}${prefix}/"
+	@mkdir -p "${DESTDIR}${prefix}/mkf"
+	@cp -v -f def.mk "${DESTDIR}${prefix}/mkf/"
 		

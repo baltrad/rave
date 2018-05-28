@@ -28,10 +28,10 @@ CONFIG_FILES=`ls -1 *.xml`
 
 .PHONY=install
 install:
-	@mkdir -p "${prefix}/config"
+	@mkdir -p "${DESTDIR}${prefix}/config"
 	@for i in $(CONFIG_FILES) ; do \
-	    if [ ! -f ${prefix}/config/$$i ]; then \
-	      cp -v -f $$i ${prefix}/config/; \
+	    if [ ! -f ${DESTDIR}${prefix}/config/$$i ]; then \
+	      cp -v -f $$i ${DESTDIR}${prefix}/config/; \
 	    fi; \
 	done
 

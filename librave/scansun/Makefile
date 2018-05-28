@@ -82,12 +82,12 @@ bin:
 
 .PHONY=install
 install:
-	@"$(HLHDF_INSTALL_BIN)" -f -o -C $(LIBRAVESCANSUN) "$(prefix)/lib/$(LIBRAVESCANSUN)"
+	@"$(HLHDF_INSTALL_BIN)" -f -o -C $(LIBRAVESCANSUN) "${DESTDIR}$(prefix)/lib/$(LIBRAVESCANSUN)"
 	@for i in $(INSTALL_HEADERS) ; \
 	do \
-		"$(HLHDF_INSTALL_BIN)" -f -o -m644 -C $$i "$(prefix)/include/$$i"; \
+		"$(HLHDF_INSTALL_BIN)" -f -o -m644 -C $$i "${DESTDIR}$(prefix)/include/$$i"; \
 	done
-	"$(HLHDF_INSTALL_BIN)" -f -o -C $(SCANSUNBIN) "$(prefix)/bin/$(SCANSUNBIN)";
+	"$(HLHDF_INSTALL_BIN)" -f -o -C $(SCANSUNBIN) "${DESTDIR}$(prefix)/bin/$(SCANSUNBIN)";
 
 .PHONY=clean
 clean:

@@ -101,10 +101,10 @@ $(LIBRAVETOOLBOX): $(DEPDIR) $(RAVEOBJS)
 
 .PHONY=install
 install:
-	@"$(HLHDF_INSTALL_BIN)" -f -o -C $(LIBRAVETOOLBOX) "$(prefix)/lib/$(LIBRAVETOOLBOX)"
+	@"$(HLHDF_INSTALL_BIN)" -f -o -C $(LIBRAVETOOLBOX) "${DESTDIR}$(prefix)/lib/$(LIBRAVETOOLBOX)"
 	@for i in $(INSTALL_HEADERS) ; \
 	do \
-		"$(HLHDF_INSTALL_BIN)" -f -o -m644 -C $$i "$(prefix)/include/$$i"; \
+		"$(HLHDF_INSTALL_BIN)" -f -o -m644 -C $$i "${DESTDIR}$(prefix)/include/$$i"; \
 	done
 
 .PHONY=clean

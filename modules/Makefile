@@ -392,15 +392,15 @@ $(TARGET_39): $(DEPDIR) $(OBJECTS_39) ../librave/toolbox/libravetoolbox.so ../li
 
 .PHONY=install
 install:
-	@mkdir -p ${prefix}/Lib
-	@mkdir -p ${prefix}/include/python
+	@mkdir -p ${DESTDIR}${prefix}/Lib
+	@mkdir -p ${DESTDIR}${prefix}/include/python
 	@for i in $(TARGETS) ; \
 	do \
-		"$(HLHDF_INSTALL_BIN)" -f -o -m755 -C $$i "$(prefix)/Lib/$$i"; \
+		"$(HLHDF_INSTALL_BIN)" -f -o -m755 -C $$i "${DESTDIR}$(prefix)/Lib/$$i"; \
 	done
 	@for i in $(INSTALL_HEADERS) ; \
 	do \
-		"$(HLHDF_INSTALL_BIN)" -f -o -m644 -C $$i "$(prefix)/include/python/$$i"; \
+		"$(HLHDF_INSTALL_BIN)" -f -o -m644 -C $$i "${DESTDIR}$(prefix)/include/python/$$i"; \
 	done
 
 .PHONY=clean
