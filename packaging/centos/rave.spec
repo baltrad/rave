@@ -3,7 +3,7 @@
 
 Name: rave
 Version: %{version}
-Release: 1%{?dist}
+Release: %{snapshot}%{?dist}
 Summary: RAVE - Product generation framework and toolbox. Injector using ODIM_H5 files
 License: GPL-3 and LGPL-3
 URL: http://www.baltrad.eu/
