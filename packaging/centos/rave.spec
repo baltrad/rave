@@ -46,7 +46,7 @@ RAVE development headers and libraries.
 
 %build
 
-%configure --with-hlhdf=/opt/baltrad/hlhdf/default --with-expat
+%configure --with-hlhdf=/opt/baltrad/hlhdf --with-expat
 # --with-bufr=/opt/baltrad/bbufr
 # --with-netcdf=yes
 make
