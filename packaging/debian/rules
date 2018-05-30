@@ -14,8 +14,7 @@ BUILDROOT=/tmp/baltrad-builds
 %:
 	dh $@ --with python2
 override_dh_auto_configure:
-	./configure --prefix=/opt/baltrad/rave --with-hlhdf=/opt/baltrad/hlhdf --with-expat
-# --with-bufr=/opt/baltrad/bbufr
+	./configure --prefix=/opt/baltrad/rave --with-hlhdf=/opt/baltrad/hlhdf --with-expat --with-bufr=/opt/baltrad/bbufr
 # -with-netcdf=yes
 override_dh_auto_build:
 	make

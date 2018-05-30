@@ -37,6 +37,8 @@ Requires: proj-devel
 Requires: numpy
 # Workaround for centos6
 Requires: atlas
+#
+Requires: bbufr
 
 %description devel
 RAVE development headers and libraries.
@@ -46,8 +48,7 @@ RAVE development headers and libraries.
 
 %build
 
-%configure --with-hlhdf=/opt/baltrad/hlhdf --with-expat
-# --with-bufr=/opt/baltrad/bbufr
+%configure --with-hlhdf=/opt/baltrad/hlhdf --with-expat --with-bufr=/opt/baltrad/bbufr
 # --with-netcdf=yes
 make
 
@@ -75,18 +76,7 @@ install -p -D -m 0644 %{SOURCE1} %{buildroot}%{_sysconfdir}/ld.so.conf.d/rave.co
 %{_prefix}/Lib/*.pyo
 %{_prefix}/Lib/_*.so
 %{_prefix}/Lib/gadjust
-#%{_prefix}/Lib/gadjust/*.py
-#%{_prefix}/Lib/gadjust/*.pyc
-#%{_prefix}/Lib/gadjust/*.pyo
 %{_prefix}/Lib/ravemigrate
-#%{_prefix}/Lib/ravemigrate/*.py
-#%{_prefix}/Lib/ravemigrate/*.pyc
-#%{_prefix}/Lib/ravemigrate/*.pyo
-#%{_prefix}/Lib/ravemigrate/*.cfg
-#%{_prefix}/Lib/ravemigrate/versions
-#%{_prefix}/Lib/ravemigrate/versions/*.py
-#%{_prefix}/Lib/ravemigrate/versions/*.pyc
-#%{_prefix}/Lib/ravemigrate/versions/*.pyo
 %{_prefix}/lib/*.so
 %{_prefix}/bin/*
 %{_prefix}/config/*.xml
