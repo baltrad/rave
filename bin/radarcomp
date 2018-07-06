@@ -41,12 +41,14 @@ def main(options):
   comp.range = options.range
   comp.gain = options.gain
   comp.offset = options.offset
+  comp.minvalue = options.minvalue
   comp.prodpar = options.prodpar
   comp.set_method_from_string(options.method)
   comp.qitotal_field = options.qitotal_field
   comp.pcsid = options.pcsid
   comp.xscale = options.scale
   comp.yscale = options.scale
+  comp.set_interpolation_method_from_string(options.interpolation_method)
   
   comp.zr_A = options.zr_A
   comp.zr_b = options.zr_b
@@ -146,6 +148,14 @@ if __name__ == "__main__":
   parser.add_option("-O", "--offset", dest="offset",
                     type="float", default=OFFSET,
                     help="Linear offset applied to output data. Default=as defined in rave_defines.py.")
+  
+  parser.add_option("--minvalue", dest="minvalue",
+                    type="float", default=-30.0,
+                    help="Minimum value that can be represented in composite. Relevant when interpolation is performed. Default=-30.0")
+  
+  parser.add_option("--interpolation_method", dest="interpolation_method",
+                    type="choice", choices=["NEAREST_VALUE", "LINEAR_HEIGHT", "LINEAR_RANGE", "LINEAR_AZIMUTH", "LINEAR_RANGE_AND_AZIMUTH", "LINEAR_3D", "QUADRATIC_HEIGHT", "QUADRATIC_3D"], default="NEAREST_VALUE",
+                    help="Interpolation method to use in composite generation. Default=NEAREST_VALUE")
 
   parser.add_option("-d", "--date", dest="date",
                     default=None,

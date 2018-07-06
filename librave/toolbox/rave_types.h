@@ -122,7 +122,9 @@ typedef struct PolarNavigationInfo {
   double actual_height; /**< actual height above sea surface in meters */
   double distance; /**< surface distance in meters*/
   double range;    /**< rays range */
+  double actual_range; /**< actual rays range */
   double azimuth; /**< azimutal offset in radians */
+  double actual_azimuth; /**< actual azimutal offset in radians */
   double elevation; /**< elevation angle in radians */
 
   Rave_ObjectType otype; /**< specifies if the data is from a scan or volume (default Rave_ObjectType_UNDEFINED) */

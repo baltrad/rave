@@ -520,6 +520,26 @@ class compositing_test(unittest.TestCase):
       self.fail("Expected ValueError")
     except ValueError:
       pass
+    
+  def test_set_interpolation_method_from_string(self):
+    methods = [("NEAREST_VALUE", _pycomposite.InterpolationMethod_NEAREST),
+               ("LINEAR_HEIGHT", _pycomposite.InterpolationMethod_LINEAR_HEIGHT),
+               ("LINEAR_RANGE", _pycomposite.InterpolationMethod_LINEAR_RANGE),
+               ("LINEAR_AZIMUTH", _pycomposite.InterpolationMethod_LINEAR_AZIMUTH),
+               ("LINEAR_RANGE_AND_AZIMUTH", _pycomposite.InterpolationMethod_LINEAR_RANGE_AND_AZIMUTH),
+               ("LINEAR_3D", _pycomposite.InterpolationMethod_LINEAR_3D),
+               ("QUADRATIC_HEIGHT", _pycomposite.InterpolationMethod_QUADRATIC_HEIGHT),
+               ("QUADRATIC_3D", _pycomposite.InterpolationMethod_QUADRATIC_3D)]
+    for m in methods:
+      self.classUnderTest.set_interpolation_method_from_string(m[0])
+      self.assertEquals(m[1], self.classUnderTest.interpolation_method)
+  
+  def test_set_interpolation_method_from_string_invalid(self):
+    try:
+      self.classUnderTest.set_interpolation_method_from_string("nisse_hult")
+      self.fail("Expected ValueError")
+    except ValueError:
+      pass
 
   def test_strToNumber(self):
     self.assertEquals(1.5, self.classUnderTest._strToNumber("1.5"), 4)

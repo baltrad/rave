@@ -109,7 +109,8 @@ class multi_composite_arguments(object):
     self.height = 1000.0
     self.elangle = 0.0
     self.range = 200000.0
-    self.selection_method = _pycomposite.SelectionMethod_NEAREST 
+    self.selection_method = _pycomposite.SelectionMethod_NEAREST
+    self.interpolation_method = _pycomposite.InterpolationMethod_NEAREST
     self.qitotal_field = None
     self.applygra = False
     self.zr_A = 200.0
@@ -119,6 +120,7 @@ class multi_composite_arguments(object):
     self.quantity = "DBZH"
     self.gain = GAIN
     self.offset = OFFSET
+    self.minvalue = -30.0
     self.reprocess_quality_field = False 
     self.area_definition = None
     self.verbose = False
@@ -145,6 +147,7 @@ class multi_composite_arguments(object):
     comp.elangle = self.elangle
     comp.range = self.range
     comp.selection_method = self.selection_method
+    comp.interpolation_method = self.interpolation_method
     comp.qitotal_field = self.qitotal_field
     comp.applygra = self.applygra
     comp.zr_A = self.zr_A
@@ -154,6 +157,7 @@ class multi_composite_arguments(object):
     comp.quantity = self.quantity
     comp.gain = self.gain
     comp.offset = self.offset    
+    comp.minvalue = self.minvalue
     comp.filenames = self.filenames
     comp.verbose = self.verbose
     comp.reprocess_quality_field = self.reprocess_quality_field
@@ -323,6 +327,7 @@ class tiled_compositing(object):
     a.elangle = self.compositing.elangle
     a.range = self.compositing.range
     a.selection_method = self.compositing.selection_method
+    a.interpolation_method = self.compositing.interpolation_method
     a.qitotal_field = self.compositing.qitotal_field
     a.applygra = self.compositing.applygra
     a.zr_A = self.compositing.zr_A
@@ -332,6 +337,7 @@ class tiled_compositing(object):
     a.quantity = self.compositing.quantity
     a.gain = self.compositing.gain
     a.offset = self.compositing.offset
+    a.minvalue = self.minvalue
     a.verbose = self.verbose
     a.dump = self.compositing.dump
     a.dumppath = self.compositing.dumppath

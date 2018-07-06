@@ -45,6 +45,38 @@ typedef enum CompositeSelectionMethod_t {
 } CompositeSelectionMethod_t;
 
 /**
+ * What type of interpolation method that is used to set values in the composite between the
+ * discrete value positions of the input data
+ */
+typedef enum CompositeInterpolationMethod_t {
+  /**< Nearest value is used */
+  CompositeInterpolationMethod_NEAREST = 0,
+  /**< Value calculated by performing a linear interpolation between the closest positions
+   * above and below  */
+  CompositeInterpolationMethod_LINEAR_HEIGHT,
+  /**< Value calculated by performing a linear interpolation between the closest positions
+   * before and beyond in the range dimension of the ray  */
+  CompositeInterpolationMethod_LINEAR_RANGE,
+  /**< Value calculated by performing a linear interpolation between the closest positions
+   * on each side of the position, i.e., interpolation between consecutive rays  */
+  CompositeInterpolationMethod_LINEAR_AZIMUTH,
+  /**< Value calculated by performing a linear interpolation in azimuth and range
+   * directions  */
+  CompositeInterpolationMethod_LINEAR_RANGE_AND_AZIMUTH,
+  /**< Value calculated by performing a linear interpolation in height, azimuth and range
+   * directions  */
+  CompositeInterpolationMethod_LINEAR_3D,
+  /**< Value calculated by performing a quadratic interpolation between the closest positions
+   * before and beyond in the range dimension of the ray. Quadratic interpolation means that
+   * inverse distance weights raised to the power of 2 are used in value interpolation. */
+  CompositeInterpolationMethod_QUADRATIC_HEIGHT,
+  /**< Value calculated by performing a quadratic interpolation in height, azimuth and range
+   * directions. Quadratic interpolation means that inverse distance weights raised to the
+   * power of 2 are used in value interpolation. */
+  CompositeInterpolationMethod_QUADRATIC_3D
+} CompositeInterpolationMethod_t;
+
+/**
  * Defines a Composite generator
  */
 typedef struct _Composite_t Composite_t;
@@ -122,6 +154,21 @@ int Composite_setSelectionMethod(Composite_t* self, CompositeSelectionMethod_t m
 CompositeSelectionMethod_t Composite_getSelectionMethod(Composite_t* self);
 
 /**
+ * Sets the interpolation method to use. @see \ref #CompositeInterpolationMethod_t.
+ * @param[in] self - self
+ * @param[in] interpolationMethod - the interpolation method to use
+ * @return 1 on success otherwise 0
+ */
+int Composite_setInterpolationMethod(Composite_t* self, CompositeInterpolationMethod_t interpolationMethod);
+
+/**
+ * Returns the interpolation method. @see \ref #CompositeInterpolationMethod_t
+ * @param[in] self - self
+ * @return the interpolation method
+ */
+CompositeInterpolationMethod_t Composite_getInterpolationMethod(Composite_t* self);
+
+/**
  * Sets the height that should be used when generating a
  * composite as CAPPI, PCAPPI or PMAX.
  * @param[in] composite - self
@@ -190,9 +237,11 @@ const char* Composite_getQualityIndicatorFieldName(Composite_t* self);
  * @param[in] quantity - the parameter quantity
  * @param[in] gain - the gain to be used for the parameter
  * @param[in] offset - the offset to be used for the parameter
+ * @param[in] minvalue - the minimum value that can be represented for this
+ *                       quantity in the composite
  * @return 1 on success
  */
-int Composite_addParameter(Composite_t* composite, const char* quantity, double gain, double offset);
+int Composite_addParameter(Composite_t* composite, const char* quantity, double gain, double offset, double minvalue);
 
 /**
  * Returns if this composite generator is going to process specified parameter
@@ -257,7 +306,7 @@ const char* Composite_getDate(Composite_t* composite);
  * missing, the default behaviour is to take first available integer closest to 1.
  *
  * Note, that in order to the mapping to take, this call must be performed after all the objects has
- * been added to the generator and before calling \ref Composite_nearest.
+ * been added to the generator and before calling \ref Composite_generate.
  *
  * @param[in] composite - self
  * @param[in] mapping - the source - index mapping
@@ -266,7 +315,7 @@ const char* Composite_getDate(Composite_t* composite);
 int Composite_applyRadarIndexMapping(Composite_t* composite, RaveObjectHashTable_t* mapping);
 
 /**
- * Generates a composite according to the nearest radar principle.
+ * Generates a composite according to the configured parameters in the composite structure.
  * @param[in] composite - self
  * @param[in] area - the area that should be used for defining the composite.
  * @param[in] qualityflags - A list of char pointers identifying how/task values in the quality fields of the polar data.
@@ -274,7 +323,7 @@ int Composite_applyRadarIndexMapping(Composite_t* composite, RaveObjectHashTable
  *            in the resulting cartesian product. (MAY BE NULL)
  * @returns the generated composite.
  */
-Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t* qualityflags);
+Cartesian_t* Composite_generate(Composite_t* composite, Area_t* area, RaveList_t* qualityflags);
 
 /**
  * Sets the algorithm to use when generating the composite.

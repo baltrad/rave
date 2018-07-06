@@ -306,6 +306,56 @@ RaveValueType PolarVolume_getConvertedParameterValueAt(PolarVolume_t* pvol, cons
 int PolarVolume_getNearestNavigationInfo(PolarVolume_t* pvol, double lon, double lat, double height, int insidee, PolarNavigationInfo* navinfo);
 
 /**
+ * Returns the navigation info structures representing positions closest surrounding the specfied lon/lat/height.
+ * With the input parameters it is possible to state whether surrounding or just nearest position should be returned
+ * in each dimension. The navinfos-array must be allocated by calling function to accommodate the number of expected
+ * navigation infos to be returned.
+ *
+ * @param[in] pvol - self (MAY NOT BE NULL)
+ * @param[in] lon  - the longitude (in radians)
+ * @param[in] lat  - the latitude (in radians)
+ * @param[in] height - the height
+ * @param[in] insidee - if the estimated elevation must be within the min-max elevation or not to be valid
+ * @param[in] surroundingScans - 1 if surrounding positions in the height dimension shall be collected. 0 if
+ *                               only nearest position shall be collected
+ * @param[in] surroundingRangeBins - 1 if surrounding positions in the range dimension shall be collected. 0 if
+ *                                   only nearest position shall be collected
+ * @param[in] surroundingRays - 1 if surrounding positions in the azimuth dimension shall be collected. 0 if
+ *                              only nearest position shall be collected
+ * @param[out] navinfos - array of returned navigation informations.
+ * @return the number of returned navigation infos
+ */
+int PolarVolume_getSurroundingNavigationInfos(
+    PolarVolume_t* pvol,
+    double lon,
+    double lat,
+    double height,
+    int insidee,
+    int surroundingScans,
+    int surroundingRangeBins,
+    int surroundingRays,
+    PolarNavigationInfo navinfos[]);
+
+/**
+ * Adds elevation angle index information to a list of navigation info structures,
+ * based on an input scan.
+ *
+ * @param[in] pvol - self (MAY NOT BE NULL)
+ * @param[in] scan - the target scan within the the pvol. this is the scan for which the set ei
+ *                   will be valid.
+ * @param[in,out] navinfos - array of navigation informations to update with ei information.
+ * @param[in] noofNavinfos - the length of the navinfos array
+ * @param[in] startNavInfoIndex - position in the navinfos array at which to start the update.
+ *                                positions located before this index will not be updated.
+ */
+void PolarVolume_addEiForNavInfos(
+    PolarVolume_t* pvol,
+    PolarScan_t* scan,
+    PolarNavigationInfo navinfos[],
+    int noofNavinfos,
+    int startNavInfoIndex);
+
+/**
  * Fetches the nearest converted parameter value for the specified position.
  * @param[in] pvol - self (MAY NOT BE NULL)
  * @param[in] quantity - the parameter (MAY NOT BE NULL)

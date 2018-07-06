@@ -225,6 +225,62 @@ static void PolarScan_destructor(RaveCoreObject* obj)
   RAVE_OBJECT_RELEASE(scan->qualityfields);
 }
 
+static int PolarScanInternal_roundBySelectionMethod(
+    double value, 
+    PolarScanSelectionMethod_t selectionMethod, 
+    int* result)
+{
+  RAVE_ASSERT((result != NULL), "result == NULL");
+
+  if (selectionMethod == PolarScanSelectionMethod_ROUND) {
+    *result = (int)rint(value);
+  } else if (selectionMethod == PolarScanSelectionMethod_FLOOR) {
+    *result = (int)floor(value);
+  } else if (selectionMethod == PolarScanSelectionMethod_CEIL) {
+    *result = (int)ceil(value);
+  } else {
+    RAVE_WARNING1("Invalid selection method: %i", selectionMethod);
+    return 0;
+  }
+
+  return 1;
+}
+
+static PolarNavigationInfo* PolarScan_getNavigationInfo(
+    PolarScan_t* scan,
+    PolarNavigationInfo* sourceNavinfo,
+    PolarScanSelectionMethod_t rangeSelectionMethod,
+    PolarScanSelectionMethod_t azimuthSelectionMethod,
+    int rangeMidpoint)
+{
+  RAVE_ASSERT((sourceNavinfo != NULL), "sourceNavinfo == NULL");
+  
+  if (scan == NULL) {
+    return NULL;
+  }
+
+  PolarNavigationInfo* navinfo = RAVE_MALLOC(sizeof(PolarNavigationInfo));
+
+  memcpy(navinfo, sourceNavinfo, sizeof(PolarNavigationInfo));
+
+  navinfo->elevation = PolarScan_getElangle(scan); // So that we get exact scan elevation angle instead
+
+  double dummydistance = 0.0;
+  // To get the actual height
+  PolarNavigator_reToDh(scan->navigator, navinfo->range, navinfo->elevation, &dummydistance, &navinfo->actual_height);
+  if (!PolarScan_fillNavigationIndexFromAzimuthAndRange(scan, azimuthSelectionMethod, rangeSelectionMethod, rangeMidpoint, navinfo)) {
+    RAVE_FREE(navinfo);
+    return NULL;
+  }
+
+  if (navinfo->ai < 0 && navinfo->ri < 0 && navinfo->ei < 0) {
+    RAVE_FREE(navinfo);
+    return NULL;
+  }
+
+  return navinfo;
+}
+
 /*@} End of Private functions */
 
 /*@{ Interface functions */
@@ -414,7 +470,6 @@ double PolarScan_getDistance(PolarScan_t* scan, double lon, double lat)
   RAVE_ASSERT((scan != NULL), "scan == NULL");
   return PolarNavigator_getDistance(scan->navigator, lat, lon);
 }
-
 
 double PolarScan_getMaxDistance(PolarScan_t* scan)
 {
@@ -752,7 +807,11 @@ RaveField_t* PolarScan_findAnyQualityFieldByHowTask(PolarScan_t* scan, const cha
   return result;
 }
 
-int PolarScan_getRangeIndex(PolarScan_t* scan, double r)
+int PolarScan_getRangeIndex(
+    PolarScan_t* scan,
+    double r, 
+    PolarScanSelectionMethod_t selectionMethod, 
+    int rangeMidpoint)
 {
   int result = -1;
   double range = 0.0L;
@@ -766,8 +825,14 @@ int PolarScan_getRangeIndex(PolarScan_t* scan, double r)
 
   range = r - scan->rstart*1000.0;
 
+  if (rangeMidpoint) {
+    range -= scan->rscale / 2.0;
+  }
+
   if (range >= 0.0) {
-    result = (int)floor(range/scan->rscale);
+    if (!PolarScanInternal_roundBySelectionMethod(range/scan->rscale, selectionMethod, &result)) {
+      return -1;
+    }
   }
 
   if (result >= scan->nbins || result < 0) {
@@ -777,7 +842,7 @@ int PolarScan_getRangeIndex(PolarScan_t* scan, double r)
   return result;
 }
 
-double PolarScan_getRange(PolarScan_t* scan, int ri)
+double PolarScan_getRange(PolarScan_t* scan, int ri, int rangeMidpoint)
 {
   double result = -1.0L;
   RAVE_ASSERT((scan != NULL), "scan == NULL");
@@ -791,11 +856,17 @@ double PolarScan_getRange(PolarScan_t* scan, int ri)
     goto done;
   }
   result = ((double)ri) * scan->rscale;
+
+  result += scan->rstart*1000.0;
+
+  if (rangeMidpoint) {
+    result += scan->rscale / 2.0;
+  }
 done:
   return result;
 }
 
-int PolarScan_getAzimuthIndex(PolarScan_t* scan, double a)
+int PolarScan_getAzimuthIndex(PolarScan_t* scan, double a, PolarScanSelectionMethod_t selectionMethod)
 {
   int result = -1;
   double azOffset = 0.0L;
@@ -807,12 +878,33 @@ int PolarScan_getAzimuthIndex(PolarScan_t* scan, double a)
   }
 
   azOffset = 2*M_PI/scan->nrays;
-  result = (int)rint(a/azOffset);
+  if (!PolarScanInternal_roundBySelectionMethod(a/azOffset, selectionMethod, &result)) {
+    return -1;
+  }
+
   if (result >= scan->nrays) {
     result -= scan->nrays;
   } else if (result < 0) {
     result += scan->nrays;
   }
+  return result;
+}
+
+double PolarScan_getAzimuth(PolarScan_t* scan, int ai)
+{
+  double result = -1.0L;
+  double azOffset = 0.0L;
+  RAVE_ASSERT((scan != NULL), "scan was NULL");
+
+  if (scan->nrays <= 0) {
+    RAVE_WARNING0("Can not calculate azimuth index");
+    return -1;
+  }
+
+  azOffset = 2*M_PI/scan->nrays;
+
+  result = (double)ai * azOffset;
+
   return result;
 }
 
@@ -903,17 +995,25 @@ RaveValueType PolarScan_getConvertedParameterValue(PolarScan_t* scan, const char
   return result;
 }
 
-int PolarScan_getIndexFromAzimuthAndRange(PolarScan_t* scan, double a, double r, int* ray, int* bin)
+int PolarScan_getIndexFromAzimuthAndRange(
+    PolarScan_t* scan,
+    double a,
+    double r,
+    PolarScanSelectionMethod_t azimuthSelectionMethod,
+    PolarScanSelectionMethod_t rangeSelectionMethod,
+    int rangeMidpoint,
+    int* ray,
+    int* bin)
 {
   int result = 0;
   RAVE_ASSERT((scan != NULL), "scan == NULL");
   RAVE_ASSERT((bin != NULL), "bin == NULL");
   RAVE_ASSERT((ray != NULL), "ray == NULL");
-  *ray = PolarScan_getAzimuthIndex(scan, a);
+  *ray = PolarScan_getAzimuthIndex(scan, a, azimuthSelectionMethod);
   if (*ray < 0) {
     goto done;
   }
-  *bin = PolarScan_getRangeIndex(scan, r);
+  *bin = PolarScan_getRangeIndex(scan, r, rangeSelectionMethod, rangeMidpoint);
   if (*bin < 0) {
     goto done;
   }
@@ -944,7 +1044,7 @@ RaveValueType PolarScan_getValueAtAzimuthAndRange(PolarScan_t* scan, double a, d
   if (v != NULL) {
     *v = PolarScanParam_getNodata(scan->param);
   }
-  if (!PolarScan_getIndexFromAzimuthAndRange(scan, a, r, &ai, &ri)) {
+  if (!PolarScan_getIndexFromAzimuthAndRange(scan, a, r, PolarScanSelectionMethod_ROUND, PolarScanSelectionMethod_FLOOR, 0, &ai, &ri)) {
     goto done;
   }
 
@@ -969,7 +1069,7 @@ RaveValueType PolarScan_getParameterValueAtAzimuthAndRange(PolarScan_t* scan, co
   if (param != NULL) {
     result = RaveValueType_NODATA;
     *v = PolarScanParam_getNodata(param);
-    if (!PolarScan_getIndexFromAzimuthAndRange(scan, a, r, &ai, &ri)) {
+    if (!PolarScan_getIndexFromAzimuthAndRange(scan, a, r, PolarScanSelectionMethod_ROUND, PolarScanSelectionMethod_FLOOR, 0, &ai, &ri)) {
       goto done;
     }
     result = PolarScanParam_getValue(param, ri, ai, v);
@@ -991,7 +1091,7 @@ RaveValueType PolarScan_getConvertedParameterValueAtAzimuthAndRange(PolarScan_t*
   if (param != NULL) {
     result = RaveValueType_NODATA;
     *v = PolarScanParam_getNodata(param);
-    if (!PolarScan_getIndexFromAzimuthAndRange(scan, a, r, &ai, &ri)) {
+    if (!PolarScan_getIndexFromAzimuthAndRange(scan, a, r, PolarScanSelectionMethod_ROUND, PolarScanSelectionMethod_FLOOR, 0, &ai, &ri)) {
       goto done;
     }
     result = PolarScanParam_getConvertedValue(param, ri, ai, v);
@@ -1025,17 +1125,23 @@ void PolarScan_getLonLatNavigationInfo(PolarScan_t* scan, double lon, double lat
 }
 
 int PolarScan_fillNavigationIndexFromAzimuthAndRange(
-  PolarScan_t* scan, PolarNavigationInfo* info)
+  PolarScan_t* scan,
+  PolarScanSelectionMethod_t azimuthSelectionMethod,
+  PolarScanSelectionMethod_t rangeSelectionMethod,
+  int rangeMidpoint,
+  PolarNavigationInfo* info)
 {
   int ai = -1, ri = -1, result = 0;
   RAVE_ASSERT((scan != NULL), "scan == NULL");
   RAVE_ASSERT((info != NULL), "info == NULL");
   info->ai = -1;
   info->ri = -1;
-  result = PolarScan_getIndexFromAzimuthAndRange(scan, info->azimuth, info->range, &ai, &ri);
+  result = PolarScan_getIndexFromAzimuthAndRange(scan, info->azimuth, info->range, azimuthSelectionMethod, rangeSelectionMethod, rangeMidpoint, &ai, &ri);
   if (result) {
     info->ai = ai;
     info->ri = ri;
+    info->actual_range = PolarScan_getRange(scan, ri, rangeMidpoint);
+    info->actual_azimuth = PolarScan_getAzimuth(scan, ai);
   }
   return result;
 }
@@ -1070,13 +1176,72 @@ RaveValueType PolarScan_getNearestParameterValue(PolarScan_t* scan, const char* 
   return result;
 }
 
+int PolarScan_addSurroundingNavigationInfosForTarget(
+    PolarScan_t* scan,
+    PolarNavigationInfo* targetNavInfo,
+    int surroundingRangeBins,
+    int surroundingRays,
+    int noofNavinfos,
+    PolarNavigationInfo navinfos[])
+{
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+  RAVE_ASSERT((targetNavInfo != NULL), "targetNavInfo == NULL");
+  RAVE_ASSERT((navinfos != NULL), "navinfos == NULL");
+
+  int ceilRange = 0;
+  int ceilAzimuth = 0;
+  for (ceilRange = 0; ceilRange <= surroundingRangeBins; ceilRange++) {
+    for (ceilAzimuth = 0; ceilAzimuth <= surroundingRays; ceilAzimuth++) {
+      PolarScanSelectionMethod_t azimuthSelectionMethod = PolarScanSelectionMethod_ROUND;
+      if (surroundingRays) {
+        if (ceilAzimuth) {
+          azimuthSelectionMethod = PolarScanSelectionMethod_CEIL;
+        } else {
+          azimuthSelectionMethod = PolarScanSelectionMethod_FLOOR;
+        }
+      }
+
+      PolarScanSelectionMethod_t rangeSelectionMethod = PolarScanSelectionMethod_FLOOR;
+      if (ceilRange) {
+        rangeSelectionMethod = PolarScanSelectionMethod_CEIL;
+      }
+
+      PolarNavigationInfo* navinfo = PolarScan_getNavigationInfo(scan, targetNavInfo, rangeSelectionMethod, azimuthSelectionMethod, surroundingRangeBins);
+
+      if (navinfo != NULL) {
+        navinfos[noofNavinfos] = *navinfo;
+        noofNavinfos++;
+      }
+    }
+  }
+
+  return noofNavinfos;
+}
+
+int PolarScan_getSurroundingNavigationInfos(
+    PolarScan_t* scan,
+    double lon,
+    double lat,
+    int surroundingRangeBins,
+    int surroundingRays,
+    PolarNavigationInfo navinfos[])
+{
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+  RAVE_ASSERT((navinfos != NULL), "navinfos == NULL");
+
+  PolarNavigationInfo targetNavInfo;
+  PolarScan_getLonLatNavigationInfo(scan, lon, lat, &targetNavInfo);
+
+  return PolarScan_addSurroundingNavigationInfosForTarget(scan, &targetNavInfo, surroundingRangeBins, surroundingRays, 0, navinfos);
+}
+
 int PolarScan_getNearestNavigationInfo(PolarScan_t* scan, double lon, double lat, PolarNavigationInfo* navinfo)
 {
   int result = 0;
   RAVE_ASSERT((scan != NULL), "scan == NULL");
   RAVE_ASSERT((navinfo != NULL), "navinfo == NULL");
   PolarScan_getLonLatNavigationInfo(scan, lon, lat, navinfo);
-  PolarScan_fillNavigationIndexFromAzimuthAndRange(scan, navinfo);
+  PolarScan_fillNavigationIndexFromAzimuthAndRange(scan, PolarScanSelectionMethod_ROUND, PolarScanSelectionMethod_FLOOR, 0, navinfo);
   if (navinfo->ai >= 0 && navinfo->ri >= 0) {
     result = 1;
   }
@@ -1111,7 +1276,7 @@ int PolarScan_getNearestIndex(PolarScan_t* scan, double lon, double lat, int* bi
 
   PolarScan_getLonLatNavigationInfo(scan, lon, lat, &info);
 
-  result = PolarScan_getIndexFromAzimuthAndRange(scan, info.azimuth, info.range, ray, bin);
+  result = PolarScan_getIndexFromAzimuthAndRange(scan, info.azimuth, info.range, PolarScanSelectionMethod_ROUND, PolarScanSelectionMethod_FLOOR, 0, ray, bin);
 
   return result;
 }

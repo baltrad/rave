@@ -151,18 +151,18 @@ static PyObject* _pycomposite_new(PyObject* self, PyObject* args)
 /**
  * Adds a parameter to the composite generator
  * @param[in] self - self
- * @param[in] args - <quantity as a string>, <gain as double>, <offset as double>
+ * @param[in] args - <quantity as a string>, <gain as double>, <offset as double>, <minvalue as double>
  * @return None on success otherwise NULL
  */
 static PyObject* _pycomposite_addParameter(PyComposite* self, PyObject* args)
 {
   char* quantity = NULL;
-  double gain = 1.0, offset = 0.0;
+  double gain = 1.0, offset = 0.0, minvalue = 0.0;
 
-  if (!PyArg_ParseTuple(args, "sdd", &quantity, &gain, &offset)) {
+  if (!PyArg_ParseTuple(args, "sddd", &quantity, &gain, &offset, &minvalue)) {
     return NULL;
   }
-  if (!Composite_addParameter(self->composite, quantity, gain, offset)) {
+  if (!Composite_addParameter(self->composite, quantity, gain, offset, minvalue)) {
     raiseException_returnNULL(PyExc_AttributeError, "Could not add parameter");
   }
 
@@ -312,12 +312,12 @@ done:
 }
 
 /**
- * Generates a composite according to nearest principle.
+ * Generates a composite according to the principles defined in the PyComposite object.
  * @param[in] self - self
  * @param[in] args - an area object followed by a height
  * @returns a cartesian product on success, otherwise NULL
  */
-static PyObject* _pycomposite_nearest(PyComposite* self, PyObject* args)
+static PyObject* _pycomposite_generate(PyComposite* self, PyObject* args)
 {
   PyObject* obj = NULL;
   Cartesian_t* result = NULL;
@@ -360,7 +360,7 @@ static PyObject* _pycomposite_nearest(PyComposite* self, PyObject* args)
     }
   }
 
-  result = Composite_nearest(self->composite, ((PyArea*)obj)->area, qualitynames);
+  result = Composite_generate(self->composite, ((PyArea*)obj)->area, qualitynames);
   if (result == NULL) {
     raiseException_gotoTag(done, PyExc_AttributeError, "failed to generate composite");
   }
@@ -382,6 +382,7 @@ static struct PyMethodDef _pycomposite_methods[] =
   {"range", NULL},
   {"product", NULL},
   {"selection_method", NULL},
+  {"interpolation_method", NULL},
   {"date", NULL},
   {"time", NULL},
   {"quality_indicator_field_name", NULL},
@@ -391,7 +392,7 @@ static struct PyMethodDef _pycomposite_methods[] =
   {"getParameter", (PyCFunction)_pycomposite_getParameter, 1},
   {"add", (PyCFunction) _pycomposite_add, 1},
   {"applyRadarIndexMapping", (PyCFunction)_pycomposite_applyRadarIndexMapping, 1},
-  {"nearest", (PyCFunction) _pycomposite_nearest, 1},
+  {"generate", (PyCFunction) _pycomposite_generate, 1},
   {NULL, NULL } /* sentinel */
 };
 
@@ -413,6 +414,8 @@ static PyObject* _pycomposite_getattr(PyComposite* self, char* name)
     return PyInt_FromLong(Composite_getProduct(self->composite));
   } else if (strcmp("selection_method", name) == 0) {
     return PyInt_FromLong(Composite_getSelectionMethod(self->composite));
+  } else if (strcmp("interpolation_method", name) == 0) {
+    return PyInt_FromLong(Composite_getInterpolationMethod(self->composite));
   } else if (strcmp("algorithm", name) == 0) {
     CompositeAlgorithm_t* algorithm = Composite_getAlgorithm(self->composite);
     if (algorithm != NULL) {
@@ -499,6 +502,10 @@ static int _pycomposite_setattr(PyComposite* self, char* name, PyObject* val)
   } else if (strcmp("selection_method", name) == 0) {
     if (!PyInt_Check(val) || !Composite_setSelectionMethod(self->composite, PyInt_AsLong(val))) {
       raiseException_gotoTag(done, PyExc_ValueError, "not a valid selection method");
+    }
+  } else if (strcmp("interpolation_method", name) == 0) {
+    if (!PyInt_Check(val) || !Composite_setInterpolationMethod(self->composite, PyInt_AsLong(val))) {
+      raiseException_gotoTag(done, PyExc_ValueError, "not a valid interpolation method");
     }
   } else if (strcmp("time", name) == 0) {
     if (PyString_Check(val)) {
@@ -622,6 +629,15 @@ init_pycomposite(void)
 
   add_long_constant(dictionary, "SelectionMethod_NEAREST", CompositeSelectionMethod_NEAREST);
   add_long_constant(dictionary, "SelectionMethod_HEIGHT", CompositeSelectionMethod_HEIGHT);
+
+  add_long_constant(dictionary, "InterpolationMethod_NEAREST", CompositeInterpolationMethod_NEAREST);
+  add_long_constant(dictionary, "InterpolationMethod_LINEAR_HEIGHT", CompositeInterpolationMethod_LINEAR_HEIGHT);
+  add_long_constant(dictionary, "InterpolationMethod_LINEAR_RANGE", CompositeInterpolationMethod_LINEAR_RANGE);
+  add_long_constant(dictionary, "InterpolationMethod_LINEAR_AZIMUTH", CompositeInterpolationMethod_LINEAR_AZIMUTH);
+  add_long_constant(dictionary, "InterpolationMethod_LINEAR_RANGE_AND_AZIMUTH", CompositeInterpolationMethod_LINEAR_RANGE_AND_AZIMUTH);
+  add_long_constant(dictionary, "InterpolationMethod_LINEAR_3D", CompositeInterpolationMethod_LINEAR_3D);
+  add_long_constant(dictionary, "InterpolationMethod_QUADRATIC_HEIGHT", CompositeInterpolationMethod_QUADRATIC_HEIGHT);
+  add_long_constant(dictionary, "InterpolationMethod_QUADRATIC_3D", CompositeInterpolationMethod_QUADRATIC_3D);
 
   import_pypolarvolume();
   import_pypolarscan();

@@ -36,7 +36,6 @@ import _gra
 import _raveio
 import _bitmapgenerator
 
-import logging
 import string
 import datetime
 import math
@@ -45,16 +44,13 @@ import rave_pgf_logger
 import rave_pgf_quality_registry
 import rave_ctfilter
 import rave_util
-import qitotal_options
 import area_registry
-import area
 import rave_area
 import odim_source
 import rave_projection
 import rave_quality_plugin
 from rave_quality_plugin import QUALITY_CONTROL_MODE_ANALYZE, QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY   
 
-from gadjust.gra import gra_coefficient
 from rave_defines import CENTER_ID, GAIN, OFFSET
 from rave_defines import DEFAULTA, DEFAULTB, DEFAULTC
 
@@ -98,7 +94,8 @@ class compositing(object):
     self.height = 1000.0
     self.elangle = 0.0
     self.range = 200000.0
-    self.selection_method = _pycomposite.SelectionMethod_NEAREST 
+    self.selection_method = _pycomposite.SelectionMethod_NEAREST
+    self.interpolation_method = _pycomposite.InterpolationMethod_NEAREST
     self.quality_control_mode = rave_quality_plugin.QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY
     self.qitotal_field = None
     self.applygra = False
@@ -109,6 +106,7 @@ class compositing(object):
     self.quantity = "DBZH"
     self.gain = GAIN
     self.offset = OFFSET
+    self.minvalue = -30.0
     self.reprocess_quality_field=False
     self.verbose = False
     self.logger = logger
@@ -128,9 +126,10 @@ class compositing(object):
       self.logger.debug("Product = %s"%self._product_repr())
       self.logger.debug("Quantity = %s"%self.quantity)
       self.logger.debug("Range = %f"%self.range)
-      self.logger.debug("Gain = %f, Offset = %f"%(self.gain, self.offset))
+      self.logger.debug("Gain = %f, Offset = %f, Minvalue = %f"%(self.gain, self.offset, self.minvalue))
       self.logger.debug("Prodpar = %s"%self.prodpar)
       self.logger.debug("Selection method = %s"%self._selection_method_repr())
+      self.logger.debug("Interpolation method = %s"%self._interpolation_method_repr())
       self.logger.debug("Gap filling = %s"%`self.applygapfilling`)
       self.logger.debug("Ct filtering = %s"%`self.applyctfilter`)
       self.logger.debug("Gra filtering = %s"%`self.applygra`)
@@ -235,7 +234,7 @@ class compositing(object):
         except:
           pass
     
-    generator.addParameter(self.quantity, self.gain, self.offset)
+    generator.addParameter(self.quantity, self.gain, self.offset, self.minvalue)
     generator.product = self.product
     if algorithm is not None:
       generator.algorithm = algorithm
@@ -259,6 +258,7 @@ class compositing(object):
         self.radar_index_mapping[sourceid] = self.get_next_radar_index()
     
     generator.selection_method = self.selection_method
+    generator.interpolation_method = self.interpolation_method
     generator.date=o.date if dd is None else dd 
     generator.time=o.time if dt is None else dt
     generator.height = self.height
@@ -276,12 +276,12 @@ class compositing(object):
     
     generator.applyRadarIndexMapping(self.radar_index_mapping)
     
-    result = generator.nearest(pyarea, qfields)
+    result = generator.generate(pyarea, qfields)
     
     if self.applyctfilter:
       if self.verbose:
         self.logger.debug("Applying ct filter")
-      ret = rave_ctfilter.ctFilter(result, self.quantity)
+      rave_ctfilter.ctFilter(result, self.quantity)
     
     if self.applygra:
       if not "se.smhi.composite.distance.radar" in qfields:
@@ -355,6 +355,26 @@ class compositing(object):
       self.selection_method = _pycomposite.SelectionMethod_HEIGHT
     else:
       raise ValueError, "Only supported selection methods are NEAREST_RADAR or HEIGHT_ABOVE_SEALEVEL"
+    
+  def set_interpolation_method_from_string(self, methstr):
+    if methstr.upper() == "NEAREST_VALUE":
+      self.interpolation_method = _pycomposite.InterpolationMethod_NEAREST
+    elif methstr.upper() == "LINEAR_HEIGHT":
+      self.interpolation_method = _pycomposite.InterpolationMethod_LINEAR_HEIGHT
+    elif methstr.upper() == "LINEAR_RANGE":
+      self.interpolation_method = _pycomposite.InterpolationMethod_LINEAR_RANGE
+    elif methstr.upper() == "LINEAR_AZIMUTH":
+      self.interpolation_method = _pycomposite.InterpolationMethod_LINEAR_AZIMUTH
+    elif methstr.upper() == "LINEAR_RANGE_AND_AZIMUTH":
+      self.interpolation_method = _pycomposite.InterpolationMethod_LINEAR_RANGE_AND_AZIMUTH
+    elif methstr.upper() == "LINEAR_3D":
+      self.interpolation_method = _pycomposite.InterpolationMethod_LINEAR_3D
+    elif methstr.upper() == "QUADRATIC_HEIGHT":
+      self.interpolation_method = _pycomposite.InterpolationMethod_QUADRATIC_HEIGHT
+    elif methstr.upper() == "QUADRATIC_3D":
+      self.interpolation_method = _pycomposite.InterpolationMethod_QUADRATIC_3D
+    else:
+      raise ValueError, "Only supported interpolation methods are NEAREST_VALUE, LINEAR_HEIGHT, LINEAR_RANGE, LINEAR_AZIMUTH, LINEAR_RANGE_AND_AZIMUTH, LINEAR_3D, QUADRATIC_HEIGHT or QUADRATIC_3D"
   
   def set_quality_control_mode_from_string(self, modestr):
     if modestr.lower() not in [QUALITY_CONTROL_MODE_ANALYZE, QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY]:
@@ -566,6 +586,26 @@ class compositing(object):
       return "NEAREST_RADAR"
     elif self.selection_method == _pycomposite.SelectionMethod_HEIGHT:
       return "HEIGHT_ABOVE_SEALEVEL"
+    
+  ##
+  # @return the string representation of the interpolation method
+  def _interpolation_method_repr(self):
+    if self.interpolation_method == _pycomposite.InterpolationMethod_NEAREST:
+      return "NEAREST_VALUE"
+    elif self.selection_method == _pycomposite.InterpolationMethod_LINEAR_HEIGHT:
+      return "LINEAR_HEIGHT"
+    elif self.selection_method == _pycomposite.InterpolationMethod_LINEAR_RANGE:
+      return "LINEAR_RANGE"
+    elif self.selection_method == _pycomposite.InterpolationMethod_LINEAR_AZIMUTH:
+      return "LINEAR_AZIMUTH"
+    elif self.selection_method == _pycomposite.InterpolationMethod_LINEAR_RANGE_AND_AZIMUTH:
+      return "LINEAR_RANGE_AND_AZIMUTH"
+    elif self.selection_method == _pycomposite.InterpolationMethod_LINEAR_3D:
+      return "LINEAR_3D"
+    elif self.selection_method == _pycomposite.InterpolationMethod_QUADRATIC_HEIGHT:
+      return "QUADRATIC_HEIGHT"
+    elif self.selection_method == _pycomposite.InterpolationMethod_QUADRATIC_3D:
+      return "QUADRATIC_3D"
 
   ##
   # @return the string representation of the product type  
@@ -647,6 +687,7 @@ def main(options):
   comp.gain = options.gain
   comp.offset = options.offset
   comp.prodpar = options.prodpar
+  comp.minvalue = options.minvalue
   comp.set_method_from_string(options.method)
   comp.qitotal_field = options.qitotal_field
   comp.pcsid = options.pcsid
@@ -674,11 +715,10 @@ def main(options):
   rio.filename = options.outfile
   
   if comp.verbose:
-    self.logger.info("Saving %s"%rio.filename)
+    logger.info("Saving %s"%rio.filename)
   rio.save()
 
 if __name__ == "__main__":
-  import sys
   from optparse import OptionParser
 
   usage = "usage: %prog -i <infile(s)> -o <outfile> [-a <area>] [args] [h]"
@@ -725,6 +765,10 @@ if __name__ == "__main__":
   parser.add_option("-O", "--offset", dest="offset",
                     type="float", default=OFFSET,
                     help="Linear offset applied to output data. Default=as defined in rave_defines.py.")
+  
+  parser.add_option("-M", "--minvalue", dest="minvalue",
+                    type="float", default=-30.0,
+                    help="Minimum value that can be represented in composite. Relevant when interpolation is performed. Default=-30.0")
 
   parser.add_option("-d", "--date", dest="date",
                     default=None,
@@ -737,6 +781,10 @@ if __name__ == "__main__":
   parser.add_option("-m", "--method", dest="method",
                     default="NEAREST_RADAR",
                     help="Compositing algorithm to apply. Current choices are NEAREST_RADAR or HEIGHT_ABOVE_SEALEVEL. Default=NEAREST_RADAR.")
+  
+  parser.add_option("-I", "--interpolation_method", dest="interpolation_method",
+                    type="choice", choices=["NEAREST_VALUE", "LINEAR_HEIGHT", "LINEAR_RANGE", "LINEAR_AZIMUTH", "LINEAR_RANGE_AND_AZIMUTH", "LINEAR_3D", "QUADRATIC_HEIGHT", "QUADRATIC_3D"], default="NEAREST_VALUE",
+                    help="Interpolation method to use in composite generation. Default=NEAREST_VALUE")
 
   parser.add_option("-Q", "--qc", dest="qc",
                     default="",

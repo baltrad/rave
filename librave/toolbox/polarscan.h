@@ -40,6 +40,16 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 typedef struct _PolarScan_t PolarScan_t;
 
 /**
+ * Enum defining how a an integer value should be selected from a 
+ * float type-value.
+ */
+typedef enum PolarScanSelectionMethod_t {
+  PolarScanSelectionMethod_ROUND = 0,
+  PolarScanSelectionMethod_FLOOR,
+  PolarScanSelectionMethod_CEIL
+} PolarScanSelectionMethod_t;
+
+/**
  * Type definition to use when creating a rave object.
  */
 extern RaveCoreObjectType PolarScan_TYPE;
@@ -488,9 +498,12 @@ RaveField_t* PolarScan_findAnyQualityFieldByHowTask(PolarScan_t* scan, const cha
  * Returns the range index for the specified range (in meters).
  * @param[in] scan - the scan
  * @param[in] r - the range
+ * @param[in] selectionMethod - defines how range index shall be selected. 'ceiled', 'floored' or 'rounded'
+ * @param[in] rangeMidpoint - defines whether range indices should be calculated from range midpoints or from
+ *                            their starting points. 0 for using starting points and other values for midpoints.
  * @return -1 on failure, otherwise a index between 0 and nbins
  */
-int PolarScan_getRangeIndex(PolarScan_t* scan, double r);
+int PolarScan_getRangeIndex(PolarScan_t* scan, double r, PolarScanSelectionMethod_t selectionMethod, int rangeMidpoint);
 
 /**
  * Returns the range for the specified range index.
@@ -498,17 +511,29 @@ int PolarScan_getRangeIndex(PolarScan_t* scan, double r);
  * value will be returned.
  * @param[in] scan - self
  * @param[in] ri - range index
+ * @param[in] rangeMidpoint - defines whether range should be calculated from range midpoints or from
+ *                            their starting points. 0 for using starting points and other values for midpoints.
  * @return the range in meters or a negative value upon bad input
  */
-double PolarScan_getRange(PolarScan_t* scan, int ri);
+double PolarScan_getRange(PolarScan_t* scan, int ri, int rangeMidpoint);
 
 /**
  * Returns the azimuth index for the specified azimuth.
  * @param[in] scan - the scan
  * @param[in] a - the azimuth (in radians)
+ * @param[in] selectionMethod - defines how azimuth index shall be selected. 'ceiled', 'floored' or 'rounded'
  * @return -1 on failure, otherwise a index between 0 and nrays.
  */
-int PolarScan_getAzimuthIndex(PolarScan_t* scan, double a);
+int PolarScan_getAzimuthIndex(PolarScan_t* scan, double a, PolarScanSelectionMethod_t selectionMethod);
+
+/**
+ * Returns the azimuth for the specified azimuth index.
+ * If something goes wrong a negative value will be returned.
+ * @param[in] scan - self
+ * @param[in] ai - azimuth index
+ * @return the azimuth or a negative value upon bad input
+ */
+double PolarScan_getAzimuth(PolarScan_t* scan, int ai);
 
 /**
  * Sets the value at the specified position
@@ -579,11 +604,23 @@ RaveValueType PolarScan_getConvertedParameterValue(PolarScan_t* scan, const char
  * @param[in] scan - self (MAY NOT BE NULL)
  * @param[in] a - the azimuth (in radians)
  * @param[in] r - the range (in meters)
+ * @param[in] azimuthSelectionMethod - defines how azimuth index shall be selected. 'ceiled', 'floored' or 'rounded'
+ * @param[in] rangeSelectionMethod - defines how range index shall be selected. 'ceiled', 'floored' or 'rounded'
+ * @param[in] rangeMidpoint - defines whether range should be calculated from range midpoints or from
+ *                            their starting points. 0 for using starting points and other values for midpoints.
  * @param[out] ray - the ray index (MAY NOT BE NULL)
  * @param[out] bin - the bin index (MAY NOT BE NULL)
  * @returns 1 on success, otherwise 0 and in that case, bin and ray can not be relied on.
  */
-int PolarScan_getIndexFromAzimuthAndRange(PolarScan_t* scan, double a, double r, int* ray, int* bin);
+int PolarScan_getIndexFromAzimuthAndRange(
+    PolarScan_t* scan,
+    double a,
+    double r,
+    PolarScanSelectionMethod_t azimuthSelectionMethod,
+    PolarScanSelectionMethod_t rangeSelectionMethod,
+    int rangeMidpoint,
+    int* ray,
+    int* bin);
 
 /**
  * Calculates the azimuth and range from bin and ray index.
@@ -643,11 +680,19 @@ void PolarScan_getLonLatNavigationInfo(PolarScan_t* scan, double lon, double lat
  * Calculates range and elevation index from the azimuth and range
  * in the info object.
  * @param[in] scan - self
+ * @param[in] azimuthSelectionMethod - defines how azimuth index shall be selected. 'ceiled', 'floored' or 'rounded'
+ * @param[in] rangeSelectionMethod - defines how range index shall be selected. 'ceiled', 'floored' or 'rounded'
+ * @param[in] rangeMidpoint - defines whether range should be calculated from range midpoints or from
+ *                            their starting points. 0 for using starting points and other values for midpoints.
  * @param[in,out] info - Will use info.azimuth and info.range to calculate info.ai and info.ri
  * @return 1 if indexes are in range, otherwise 0
  */
 int PolarScan_fillNavigationIndexFromAzimuthAndRange(
-  PolarScan_t* scan, PolarNavigationInfo* info);
+  PolarScan_t* scan,
+  PolarScanSelectionMethod_t azimuthSelectionMethod,
+  PolarScanSelectionMethod_t rangeSelectionMethod,
+  int rangeMidpoint,
+  PolarNavigationInfo* info);
 
 /**
  * Returns the nearest value to the specified longitude, latitude.
@@ -670,6 +715,56 @@ RaveValueType PolarScan_getNearest(PolarScan_t* scan, double lon, double lat, in
  * @returns a rave value type
  */
 RaveValueType PolarScan_getNearestParameterValue(PolarScan_t* scan, const char* quantity, double lon, double lat, double* v);
+
+/**
+ * Appends navigation info structs to array, based on a target navigation info struct and
+ * input parameters. The added navigation infos will represent positions surrounding the position
+ * of the target navigation info in range and azimuth dimensions. The parameters surroundingRangeBins
+ * and surroundingRays controls whether positions on both sides of the target shall be added, or 
+ * only the closest.
+ * @param[in] scan - the scan
+ * @param[in] targetNavInfo - the target navigation info
+ * @param[in] surroundingRangeBins - boolean indicating whether surrounding or only closest range bin 
+ *                                   shall be added. 0 for closest, surrounding otherwise.
+ * @param[in] surroundingRays - boolean indicating whether surrounding or only closest rays/azimuths 
+ *                              shall be added. 0 for closest, surrounding otherwise.
+ * @param[in] noofNavinfos - no of valid elements in the navinfos array at function call
+ * @param[in,out] navinfos - array of navigation infos. will be updated with surrounding navigation 
+ *                           infos
+ * @returns no of valid elements in navinfos array after additions
+ */
+int PolarScan_addSurroundingNavigationInfosForTarget(
+    PolarScan_t* scan,
+    PolarNavigationInfo* targetNavInfo,
+    int surroundingRangeBins,
+    int surroundingRays,
+    int noofNavinfos,
+    PolarNavigationInfo navinfos[]);
+
+/**
+ * Returns an array of surrounding navigation info structs for the specified lon/lat. The returned 
+ * navigation infos will represent positions surrounding the lon/lat in range and azimuth dimensions. 
+ * The parameters surroundingRangeBins and surroundingRays controls whether positions on both sides 
+ * of the lon/lat target shall be added, or only the closest.
+ * @param[in] scan - the scan
+ * @param[in] lon  - the longitude (in radians)
+ * @param[in] lat  - the latitude  (in radians)
+ * @param[in] surroundingRangeBins - boolean indicating whether surrounding or only closest range bin 
+ *                                   shall be added. 0 for closest, surrounding otherwise.
+ * @param[in] surroundingRays - boolean indicating whether surrounding or only closest rays/azimuths 
+ *                              shall be added. 0 for closest, surrounding otherwise.
+ * @param[out] navinfos - array of navigation infos. is assumed to be empty at function call. must be 
+ *                        allocated by calling function to admit expected no of surrounding navigation 
+ *                        infos
+ * @returns no of valid elements in navinfos array after additions
+ */
+int PolarScan_getSurroundingNavigationInfos(
+    PolarScan_t* scan,
+    double lon,
+    double lat,
+    int surroundingRangeBins,
+    int surroundingRays,
+    PolarNavigationInfo navinfos[]);
 
 /**
  * Returns the navigation information for the specified lon/lat.

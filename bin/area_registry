@@ -24,7 +24,6 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @date 2011-06-28
 
 import sys
-import rave_defines
 import rave_area
 
 
@@ -39,8 +38,8 @@ import rave_area
 # @param ysize int number of pixels in the Y dimension
 # @param xscale float X scale in PCS space (commonly expressed in meters)
 # @param yscale float Y scale in PCS space (commonly expressed in meters)
-def add(id, description, projection_id, extent, xsize, ysize, xscale, yscale):
-	rave_area.add(id, description, projection_id, extent, xsize, ysize, xscale, yscale)
+def add_area(identifier, description, projection_id, extent, xsize, ysize, xscale, yscale):
+  rave_area.add(identifier, description, projection_id, extent, xsize, ysize, xscale, yscale)
 
 
 ## Creates a new AREA definition based on one or more ODIM_H5 PVOL and/or SCAN files.
@@ -49,35 +48,43 @@ def add(id, description, projection_id, extent, xsize, ysize, xscale, yscale):
 # @param xscale float X scale in PCS space (commonly expressed in meters)
 # @param yscale float Y scale in PCS space (commonly expressed in meters)
 # @returns AREA object with geometry but without 'id' and 'name' information
-def make(files, projection_id, xscale, yscale, add=False, area_id=None, description=None):
-	import glob, re
+def make_area(files, projection_id, xscale, yscale, add=False, area_id=None, description=None):
+  import glob, re
 
-	if re.search("\*", files):  # If there's a wildcard, glob for files
-		files = glob.glob(files)
-	else:
-		files = files.split()
-	A = rave_area.MakeAreaFromPolarFiles(files, projection_id, xscale, yscale)
-	if area_id and description:
-		A.Id, A.name = area_id, description
-	if not area_id:
-		A.Id, A.name = "__PROVISIONAL__", 'Area using projection with identifier "%s"' % projection_id
-	rave_area.register(A)
-	rave_area.describe(A.Id)
-	if not add:
-		del rave_area._registry[A.Id]
-		print 'Run again with -a -i <identifier> -d <"description"> to add this area to the registry.'
+  if re.search("\*", files):  # If there's a wildcard, glob for files
+    files = glob.glob(files)
+  else:
+    files = files.split()
+  A = rave_area.MakeAreaFromPolarFiles(files, projection_id, xscale, yscale)
+  if area_id:
+    A.Id = area_id
+  else:
+    A.Id = "__PROVISIONAL__"
+    
+  if description:
+    A.name = description
+  else:
+    A.name = 'Area using projection with identifier "%s"' % projection_id
+
+  rave_area.register(A)
+  rave_area.describe(A.Id)
+  if add:
+    add_area(A.Id, description, projection_id, A.extent, A.xsize, A.ysize, xscale, yscale)
+  else:
+    del rave_area._registry[A.Id]
+    print 'Run again with -a -i <identifier> -d <"description"> to add this area to the registry.'
 
 
 ## Lists the entries in the registry.
 def List():
-    for id in rave_area.keys():
-        rave_area.describe(id)    
+    for identifier in rave_area.keys():
+        rave_area.describe(identifier)    
 
 
 ## Removes an area from the registry.
 # @param id string, the identifier of the area to remove.
-def remove(id):
-    rave_area.remove(id)
+def remove(identifier):
+    rave_area.remove(identifier)
 
 
 if __name__ == "__main__":
@@ -130,36 +137,38 @@ if __name__ == "__main__":
     (options, args) = parser.parse_args()
 
     if not (options.add or options.remove or options.list or options.make):
+        print "One of options --add, --remove, --list or --make must be provided!"
         parser.print_help()
         sys.exit()
-    if options.add:
+        
+    if options.add and not options.make:
         if not (options.id and options.desc and options.pcsid and options.extent and options.xsize and options.ysize and options.xscale and options.yscale):
+            print "If option --add is used without make, all of the following options must also be provided: --identifier, --description, --proj_id, --extent, --xsize, --ysize, --xscale and --yscale!"
             parser.print_help()
             sys.exit()
-	if options.make:
-		if not (options.make and options.files and options.pcsid and options.xscale and options.yscale):
-			parser.print_help()
-			sys.exit()
-    if options.remove:
-        if not options.id:
-            parser.print_help()
-            sys.exit()
+    
+    if options.make:
+      if not (options.files and options.pcsid and options.xscale and options.yscale):
+        print "If option --make is provided, all of the following options must also be provided: --files, --proj_id, --xscale and --yscale!"
+        parser.print_help()
+        sys.exit()
+        
+    if options.remove and not options.id:
+      print "If option --remove is provided, --identifier must also be provided!"
+      parser.print_help()
+      sys.exit()
 
     if options.remove:
         remove(options.id)
-
     elif options.list:
         List()
-
     elif options.add and not options.make:
-        add(options.id, options.desc, options.pcsid, rave_area.make_tuple(options.extent), 
+        add_area(options.id, options.desc, options.pcsid, rave_area.make_tuple(options.extent), 
             int(options.xsize), int(options.ysize), float(options.xscale), float(options.yscale))
-
     elif options.make:
-	    if options.add:
-		    make(options.files, options.pcsid, float(options.xscale), float(options.yscale), add=True, area_id=options.id, description=options.desc)
-	    else:
-		    make(options.files, options.pcsid, float(options.xscale), float(options.yscale))
-
+        if options.add:
+            make_area(options.files, options.pcsid, float(options.xscale), float(options.yscale), add=True, area_id=options.id, description=options.desc)
+        else:
+            make_area(options.files, options.pcsid, float(options.xscale), float(options.yscale))
     else:
         parser.print_help()

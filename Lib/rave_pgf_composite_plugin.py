@@ -29,19 +29,15 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @author Anders Henja, SMHI
 ## @date 2010-10-15
 import string
-import datetime
 import rave_tempfile
-import logging
 import rave_pgf_logger
-import rave_dom_db
-import rave_util
 import _raveio
 import rave_tile_registry
 
 from tiled_compositing import tiled_compositing
 from compositing import compositing
 
-from rave_defines import CENTER_ID, GAIN, OFFSET, RAVE_PGF_QUALITY_FIELD_REPROCESSING
+from rave_defines import GAIN, OFFSET, RAVE_PGF_QUALITY_FIELD_REPROCESSING
 
 logger = rave_pgf_logger.create_logger()
 
@@ -119,6 +115,18 @@ def generate(files, arguments):
   
   if "selection" in args.keys():
     comp.set_method_from_string(args["selection"])
+    
+  if "interpolation_method" in args.keys():
+    interpolation_method = args["interpolation_method"].upper()
+    comp.set_interpolation_method_from_string(interpolation_method)
+    if interpolation_method != "NEAREST_VALUE":
+      if comp.quantity == "DBZH":
+        comp.minvalue = -30.0 # use a minimum value of -30.0 for DBZH
+      else:
+        # interpolation for other quantities than DBZH has not been tested, therefore not yet considered 
+        # supported. Should in theory work, but the setting of minvalue must be adjusted for the quantity
+        logger.info("Interpolation method %s is currently only supported for quantity DBZH. Provided quantity: %s. No composite generated." % (interpolation_method, comp.quantity))
+        return None
   
   if "qitotal_field" in args.keys():
     comp.qitotal_field = args["qitotal_field"]
@@ -158,7 +166,7 @@ def generate(files, arguments):
     logger.info("No composite could be generated.")
     return None
   
-  fileno, outfile = rave_tempfile.mktemp(suffix='.h5', close="True")
+  _, outfile = rave_tempfile.mktemp(suffix='.h5', close="True")
   
   rio = _raveio.new()
   rio.object = result

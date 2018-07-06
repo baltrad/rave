@@ -24,8 +24,6 @@ Tests the composite module.
 @date 2010-01-29
 '''
 import unittest
-import os
-import _cartesian
 import _pycomposite
 import _rave
 import _area
@@ -36,8 +34,83 @@ import _polarscan, _polarvolume, _polarscanparam, _poocompositealgorithm
 import numpy
 import math
 import string
-import numpy
+from numpy import cos, sin
 
+EVEN_RANGE_DUMMY_VALUE = 10
+UNEVEN_RANGE_DUMMY_VALUE = 190
+EVEN_AZIMUTH_DUMMY_VALUE = 20
+UNEVEN_AZIMUTH_DUMMY_VALUE = 230
+
+def fill_pvol_with_dummy_data(pvol_object, get_dummy_data_value_func, quantities, gain):
+  i = 0
+  while i <  pvol_object.getNumberOfScans():
+    scan = pvol_object.getScan(i)
+    elangle_deg = math.degrees(scan.elangle)
+    
+    for parameterName in scan.getParameterNames():
+      if parameterName in quantities:
+        parameter = scan.getParameter(parameterName)
+        nbins = parameter.nbins
+        nrays = parameter.nrays
+        parameter.gain = 1.0
+        parameter.offset = 0.0
+        data = numpy.zeros((nrays, nbins), numpy.int16)
+        parameter.setData(data)
+        
+        height_field = scan.getHeightField()
+        distance_field = scan.getDistanceField()
+        for bin_no in range(nbins):
+          for ray_no in range(nrays):
+            dummy_value = get_dummy_data_value_func(elangle_deg, height_field, distance_field, bin_no, ray_no)
+            adjusted_value = min((dummy_value / gain), 254)
+            scan.setParameterValue(parameterName, (bin_no, ray_no), adjusted_value)
+      else:
+        scan.removeParameter(parameterName)          
+    
+    i += 1
+    
+def get_height_dummy_data(elangle_deg, height_field, distance_field, bin_no, ray_no):
+  return height_field.getValue(bin_no, 0)[1]
+
+def get_range_alternating_dummy_data(elangle_deg, height_field, distance_field, bin_no, ray_no):
+  if bin_no % 2 == 0:
+    return EVEN_RANGE_DUMMY_VALUE
+  else:
+    return UNEVEN_RANGE_DUMMY_VALUE
+  
+def get_azimuth_alternating_dummy_data(elangle_deg, height_field, distance_field, bin_no, ray_no):
+  if ray_no % 2 == 0:
+    return EVEN_AZIMUTH_DUMMY_VALUE
+  else:
+    return UNEVEN_AZIMUTH_DUMMY_VALUE
+  
+def get_range_and_azimuth_alternating_dummy_data(elangle_deg, height_field, distance_field, bin_no, ray_no):
+  range_val = 0
+  azimuth_val = 0
+  if bin_no % 2 == 0:
+    range_val = EVEN_RANGE_DUMMY_VALUE
+  else:
+    range_val = UNEVEN_RANGE_DUMMY_VALUE
+  if ray_no % 2 == 0:
+    azimuth_val = EVEN_AZIMUTH_DUMMY_VALUE
+  else:
+    azimuth_val = UNEVEN_AZIMUTH_DUMMY_VALUE
+  return (range_val + azimuth_val) / 2
+
+def get_3d_alternating_dummy_data(elangle_deg, height_field, distance_field, bin_no, ray_no):
+  height_val = height_field.getValue(bin_no, 0)[1]
+  value = height_val
+  if bin_no % 2 == 0:
+    value += 500
+  else:
+    value -= 500
+  if ray_no % 2 == 0:
+    value += 700
+  else:
+    value -= 700
+  return value
+  
+  
 class PyCompositeTest(unittest.TestCase):
   SWEDISH_VOLUMES = ["fixtures/pvol_seang_20090501T120000Z.h5",
                      "fixtures/pvol_searl_20090501T120000Z.h5",
@@ -184,7 +257,7 @@ class PyCompositeTest(unittest.TestCase):
    
   def test_addParameter(self):
     obj = _pycomposite.new()
-    obj.addParameter("DBZH", 2.0, 3.0)
+    obj.addParameter("DBZH", 2.0, 3.0, -30.0)
     result = obj.getParameter(0)
     self.assertEquals("DBZH", result[0])
     self.assertAlmostEquals(2.0, result[1], 4)
@@ -192,8 +265,8 @@ class PyCompositeTest(unittest.TestCase):
  
   def test_addParameter_duplicate(self):
     obj = _pycomposite.new()
-    obj.addParameter("DBZH", 2.0, 3.0)
-    obj.addParameter("DBZH", 3.0, 4.0)
+    obj.addParameter("DBZH", 2.0, 3.0, -30.0)
+    obj.addParameter("DBZH", 3.0, 4.0, -30.0)
     self.assertEquals(1, obj.getParameterCount())
     result = obj.getParameter(0)
     self.assertEquals("DBZH", result[0])
@@ -202,8 +275,8 @@ class PyCompositeTest(unittest.TestCase):
  
   def test_addParameter_multiple(self):
     obj = _pycomposite.new()
-    obj.addParameter("DBZH", 2.0, 3.0)
-    obj.addParameter("MMH", 3.0, 4.0)
+    obj.addParameter("DBZH", 2.0, 3.0, -30.0)
+    obj.addParameter("MMH", 3.0, 4.0, -30.0)
     self.assertEquals(2, obj.getParameterCount())
     result = obj.getParameter(0)
     self.assertEquals("DBZH", result[0])
@@ -217,15 +290,15 @@ class PyCompositeTest(unittest.TestCase):
   def test_hasParameter(self):
     obj = _pycomposite.new()
     self.assertEquals(False, obj.hasParameter("DBZH"))
-    obj.addParameter("DBZH", 2.0, 3.0)
+    obj.addParameter("DBZH", 2.0, 3.0, -30.0)
     self.assertEquals(True, obj.hasParameter("DBZH"))
  
   def test_getParameterCount(self):
     obj = _pycomposite.new()
     self.assertEquals(0, obj.getParameterCount())
-    obj.addParameter("DBZH", 2.0, 3.0)
+    obj.addParameter("DBZH", 2.0, 3.0, -30.0)
     self.assertEquals(1, obj.getParameterCount())
-    obj.addParameter("MMH", 1.0, 2.0)
+    obj.addParameter("MMH", 1.0, 2.0, -30.0)
     self.assertEquals(2, obj.getParameterCount())
  
   def test_rix_nearest(self):
@@ -244,13 +317,13 @@ class PyCompositeTest(unittest.TestCase):
       rio = _raveio.open(fname)
       generator.add(rio.object)
      
-    generator.addParameter("DBZH", 1.0, 0.0)
+    generator.addParameter("DBZH", 1.0, 0.0, -30.0)
      
     generator.product = _rave.Rave_ProductType_PPI
     generator.elangle = 0.0
     generator.time = "120000"
     generator.date = "20090501"
-    result = generator.nearest(a)
+    result = generator.generate(a)
      
     self.assertEquals("DBZH", result.getParameter("DBZH").quantity)
     self.assertAlmostEquals(1.0, result.getParameter("DBZH").gain, 4)
@@ -268,8 +341,23 @@ class PyCompositeTest(unittest.TestCase):
     ios.filename = "rixeecomposite.h5"
     ios.save()
  
- 
-  def test_nearest(self):
+  def verify_common_swe_pcappi_values(self, result):
+    dbzh_param = result.getParameter("DBZH")
+    self.assertNotEquals(255, dbzh_param.getData()[829][603], "PCAPPI should fill with data at position in composite.")
+    self.assertNotEquals(255, dbzh_param.getData()[979][243], "PCAPPI should fill with data at position in composite.")
+    self.assertNotEquals(255, dbzh_param.getData()[164][506], "PCAPPI should fill with data at position in composite.")
+    self.assertNotEquals(255, dbzh_param.getData()[548][281], "PCAPPI should fill with data at position in composite.")
+    
+    self.assertEquals(255, dbzh_param.getData()[561][261], "No data should be found at position in composite.")
+    self.assertEquals(255, dbzh_param.getData()[615][567], "No data should be found at position in composite.")
+    self.assertEquals(255, dbzh_param.getData()[371][427], "No data should be found at position in composite.")
+    
+    self.assertNotEquals(0, dbzh_param.getData()[829][603], "Precipitation should be detected at position in composite.")
+    self.assertNotEquals(0, dbzh_param.getData()[243][556], "Precipitation should be detected at position in composite.")
+    self.assertNotEquals(0, dbzh_param.getData()[870][458], "Precipitation should be detected at position in composite.")
+    self.assertNotEquals(0, dbzh_param.getData()[467][205], "Precipitation should be detected at position in composite.")
+  
+  def do_swe_pcappi_test(self, interpolation_method):  
     generator = _pycomposite.new()
      
     a = _area.new()
@@ -285,12 +373,13 @@ class PyCompositeTest(unittest.TestCase):
       rio = _raveio.open(fname)
       generator.add(rio.object)
      
-    generator.addParameter("DBZH", 1.0, 0.0)
+    generator.addParameter("DBZH", 1.0, 0.0, -30.0)
     generator.product = _rave.Rave_ProductType_PCAPPI
     generator.height = 1000.0
     generator.time = "120000"
     generator.date = "20090501"
-    result = generator.nearest(a)
+    generator.interpolation_method = interpolation_method
+    result = generator.generate(a)
      
     self.assertEquals("DBZH", result.getParameter("DBZH").quantity)
     self.assertEquals("120000", result.time)
@@ -305,6 +394,442 @@ class PyCompositeTest(unittest.TestCase):
     ios.object = result
     ios.filename = "swecomposite.h5"
     ios.save()
+    
+    self.verify_common_swe_pcappi_values(result)
+    
+    return result
+  
+  def test_nearest(self):
+    result = self.do_swe_pcappi_test(_pycomposite.InterpolationMethod_NEAREST)
+    
+    dbzh_param = result.getParameter("DBZH")
+    self.assertEquals(0, dbzh_param.getData()[402][524], "No precipitation should be detected at position in composite.")
+    self.assertEquals(2, dbzh_param.getData()[421][538], "Wrong value at position in composite.")
+    self.assertEquals(1, dbzh_param.getData()[246][564], "Wrong value at position in composite.")
+    self.assertEquals(29, dbzh_param.getData()[244][552], "Wrong value at position in composite.")
+    self.assertEquals(14, dbzh_param.getData()[862][608], "Wrong value at position in composite.")
+    self.assertEquals(31, dbzh_param.getData()[850][597], "Wrong value at position in composite.")
+    
+  def test_pcappi_linear_height_interpolation(self):
+    result = self.do_swe_pcappi_test(_pycomposite.InterpolationMethod_LINEAR_HEIGHT)
+    
+    dbzh_param = result.getParameter("DBZH")
+    self.assertEquals(2, dbzh_param.getData()[402][524], "Wrong value at position in composite.")
+    self.assertEquals(0, dbzh_param.getData()[421][538], "Wrong value at position in composite.")
+    self.assertEquals(1, dbzh_param.getData()[246][564], "Wrong value at position in composite.")
+    self.assertEquals(29, dbzh_param.getData()[244][552], "Wrong value at position in composite.")
+    self.assertEquals(14, dbzh_param.getData()[862][608], "Wrong value at position in composite.")
+    self.assertEquals(31, dbzh_param.getData()[850][597], "Wrong value at position in composite.")
+    
+  def test_pcappi_linear_range_and_azimuth_interpolation(self):
+    result = self.do_swe_pcappi_test(_pycomposite.InterpolationMethod_LINEAR_RANGE_AND_AZIMUTH)
+    
+    dbzh_param = result.getParameter("DBZH")
+    self.assertEquals(0, dbzh_param.getData()[402][524], "Wrong value at position in composite.")
+    self.assertEquals(0, dbzh_param.getData()[421][538], "Wrong value at position in composite.")
+    self.assertEquals(0, dbzh_param.getData()[246][564], "Wrong value at position in composite.")
+    self.assertEquals(28, dbzh_param.getData()[244][552], "Wrong value at position in composite.")
+    self.assertEquals(0, dbzh_param.getData()[862][608], "Wrong value at position in composite.")
+    self.assertEquals(25, dbzh_param.getData()[850][597], "Wrong value at position in composite.")
+    
+  def test_pcappi_quadratic_3d_interpolation(self):
+    result = self.do_swe_pcappi_test(_pycomposite.InterpolationMethod_QUADRATIC_3D)
+    
+    dbzh_param = result.getParameter("DBZH")
+    self.assertEquals(0, dbzh_param.getData()[402][524], "Wrong value at position in composite.")
+    self.assertEquals(0, dbzh_param.getData()[421][538], "Wrong value at position in composite.")
+    self.assertEquals(1, dbzh_param.getData()[246][564], "Wrong value at position in composite.")
+    self.assertEquals(29, dbzh_param.getData()[244][552], "Wrong value at position in composite.")
+    self.assertEquals(0, dbzh_param.getData()[862][608], "Wrong value at position in composite.")
+    self.assertEquals(25, dbzh_param.getData()[850][597], "Wrong value at position in composite.")
+      
+  def generate_sehem_test_comp(self, dummy_data_func, value_gain, height, interpolation_method):
+    generator = _pycomposite.new()
+    a = _area.new()
+    a.id = "hem_ps14e60n_500m"
+    a.xsize = 981
+    a.ysize = 978
+    a.xscale = 500.0
+    a.yscale = 500.0
+    a.extent = (23785.852938, -3734664.464654, 514285.852938, -3245664.464654) # sehem projection extent
+    a.projection = _projection.new("x", "y", "+proj=stere +ellps=bessel +lat_0=90 +lon_0=14 +lat_ts=60 +datum=WGS84")
+    
+    fname = self.DUMMY_DATA_FIXTURES[0]
+    pvol_object = _raveio.open(fname).object
+    fill_pvol_with_dummy_data(pvol_object, dummy_data_func, ["DBZH"], value_gain)
+    generator.add(pvol_object)
+
+    generator.addParameter("DBZH", 1.0, 0.0, -30.0)
+    generator.product = _rave.Rave_ProductType_CAPPI
+    generator.elangle = 0.0
+    generator.time = "120000"
+    generator.date = "20090501"
+    generator.height = height
+    generator.interpolation_method = interpolation_method
+    result = generator.generate(a, ["fi.fmi.ropo.detector.classification", "se.smhi.detector.beamblockage", "se.smhi.composite.distance.radar"])
+    
+    return result
+  
+  def validate_sehem_distance_field(self, param):
+    distance_field = param.getQualityFieldByHowTask("se.smhi.composite.distance.radar")
+    self.assertEquals(3, distance_field.getData()[494][500], "Wrong quality value at position in composite.")
+    self.assertEquals(59, distance_field.getData()[494][250], "Wrong quality value at position in composite.")
+    self.assertEquals(34, distance_field.getData()[494][350], "Wrong quality value at position in composite.")
+    self.assertEquals(52, distance_field.getData()[494][700], "Wrong quality value at position in composite.")
+    
+  def test_linear_height_interpolation_cappi(self):
+    height = 2600
+    height_gain = 100.0
+    allowed_height_diff = 1
+    
+    result = self.generate_sehem_test_comp(get_height_dummy_data, height_gain, height, _pycomposite.InterpolationMethod_LINEAR_HEIGHT)
+    
+    dbzh_param = result.getParameter("DBZH")
+    data = dbzh_param.getData()
+    for x in xrange(260, 470):
+      for y in xrange(340, 650):
+        height_diff = abs(data[y][x] - (height/height_gain))
+        self.assertTrue(height_diff <= allowed_height_diff)
+        
+    ropo_field = dbzh_param.getQualityFieldByHowTask("fi.fmi.ropo.detector.classification")
+    self.assertEquals(243, ropo_field.getData()[398][490], "Wrong quality value at position in composite.")
+    self.assertEquals(243, ropo_field.getData()[423][549], "Wrong quality value at position in composite.")
+    self.assertEquals(242, ropo_field.getData()[486][373], "Wrong quality value at position in composite.")
+    self.assertEquals(246, ropo_field.getData()[487][461], "Wrong quality value at position in composite.")
+    self.assertEquals(69, ropo_field.getData()[252][430], "Wrong quality value at position in composite.")
+    self.assertEquals(252, ropo_field.getData()[249][460], "Wrong quality value at position in composite.")
+    self.assertEquals(243, ropo_field.getData()[416][408], "Wrong quality value at position in composite.")
+    
+    beamb_field = dbzh_param.getQualityFieldByHowTask("se.smhi.detector.beamblockage")
+    self.assertEquals(255, beamb_field.getData()[398][490], "Wrong quality value at position in composite.")
+    self.assertEquals(254, beamb_field.getData()[425][336], "Wrong quality value at position in composite.")
+    self.assertEquals(255, beamb_field.getData()[387][475], "Wrong quality value at position in composite.")
+    self.assertEquals(252, beamb_field.getData()[390][621], "Wrong quality value at position in composite.")
+    self.assertEquals(255, beamb_field.getData()[446][531], "Wrong quality value at position in composite.")
+    self.assertEquals(251, beamb_field.getData()[312][394], "Wrong quality value at position in composite.")
+    self.assertEquals(252, beamb_field.getData()[194][490], "Wrong quality value at position in composite.")
+    
+    self.validate_sehem_distance_field(dbzh_param)
+        
+  def test_linear_range_interpolation_cappi(self):
+    height = 2600
+    range_gain = 1.0
+    
+    result = self.generate_sehem_test_comp(get_range_alternating_dummy_data, range_gain, height, _pycomposite.InterpolationMethod_LINEAR_RANGE)
+    
+    dbzh_param = result.getParameter("DBZH")
+    data = dbzh_param.getData()
+    value_sum = 0
+    no_of_values = 0
+    max_value = max(EVEN_RANGE_DUMMY_VALUE, UNEVEN_RANGE_DUMMY_VALUE)
+    min_value = min(EVEN_RANGE_DUMMY_VALUE, UNEVEN_RANGE_DUMMY_VALUE)
+    for x in xrange(260, 470):
+      for y in xrange(340, 650):
+        value = data[y][x]
+        self.assertTrue(value <= max_value)
+        self.assertTrue(value >= min_value)
+        value_sum += value
+        no_of_values += 1
+        
+    mean_value = value_sum / no_of_values
+    expected_mean = (max_value + min_value) / 2
+    self.assertEquals(expected_mean, mean_value, "Unexpected mean value of values in composite")
+    
+    # check some fixed known positions
+    self.assertEquals(106, dbzh_param.getData()[398][490], "Wrong value at position in composite.")
+    self.assertEquals(135, dbzh_param.getData()[423][549], "Wrong value at position in composite.")
+    self.assertEquals(11, dbzh_param.getData()[486][373], "Wrong value at position in composite.")
+    
+    ropo_field = dbzh_param.getQualityFieldByHowTask("fi.fmi.ropo.detector.classification")
+    self.assertEquals(243, ropo_field.getData()[398][490], "Wrong quality value at position in composite.")
+    self.assertEquals(243, ropo_field.getData()[423][549], "Wrong quality value at position in composite.")
+    self.assertEquals(243, ropo_field.getData()[486][373], "Wrong quality value at position in composite.")
+    self.assertEquals(243, ropo_field.getData()[487][461], "Wrong quality value at position in composite.")
+    self.assertEquals(52, ropo_field.getData()[252][430], "Wrong quality value at position in composite.")
+    self.assertEquals(159, ropo_field.getData()[249][460], "Wrong quality value at position in composite.")
+    self.assertEquals(243, ropo_field.getData()[416][408], "Wrong quality value at position in composite.")
+    
+    beamb_field = dbzh_param.getQualityFieldByHowTask("se.smhi.detector.beamblockage")
+    self.assertEquals(255, beamb_field.getData()[398][490], "Wrong quality value at position in composite.")
+    self.assertEquals(253, beamb_field.getData()[425][336], "Wrong quality value at position in composite.")
+    self.assertEquals(255, beamb_field.getData()[387][475], "Wrong quality value at position in composite.")
+    self.assertEquals(255, beamb_field.getData()[390][621], "Wrong quality value at position in composite.")
+    self.assertEquals(255, beamb_field.getData()[446][531], "Wrong quality value at position in composite.")
+    self.assertEquals(249, beamb_field.getData()[312][394], "Wrong quality value at position in composite.")
+    self.assertEquals(252, beamb_field.getData()[194][490], "Wrong quality value at position in composite.")
+    
+    self.validate_sehem_distance_field(dbzh_param)
+
+  def test_linear_azimuth_interpolation_cappi(self):
+    height = 2600
+    azimuth_gain = 1.0
+    histogram_bins = 10
+    
+    result = self.generate_sehem_test_comp(get_azimuth_alternating_dummy_data, azimuth_gain, height, _pycomposite.InterpolationMethod_LINEAR_AZIMUTH)
+    
+    dbzh_param = result.getParameter("DBZH")
+    data = dbzh_param.getData()
+    value_sum = 0
+    no_of_values = 0
+    max_value = max(EVEN_AZIMUTH_DUMMY_VALUE, UNEVEN_AZIMUTH_DUMMY_VALUE)
+    min_value = min(EVEN_AZIMUTH_DUMMY_VALUE, UNEVEN_AZIMUTH_DUMMY_VALUE)
+    values = []
+    for x in xrange(260, 710):
+      for y in xrange(340, 460):
+        value = data[y][x]
+        self.assertTrue(value <= max_value)
+        self.assertTrue(value >= min_value)
+        value_sum += value
+        no_of_values += 1
+        values.append(value)
+        
+    hist = numpy.histogram(values, histogram_bins, (min_value, max_value))
+    # check even distribution
+    expected_count = no_of_values/histogram_bins
+    allowed_diff = expected_count * 0.02 # allow 2% diff
+    for bin_count in hist[0]:
+      self.assertAlmostEquals(expected_count, bin_count, msg="Unexpected distribution of values in composite", delta=allowed_diff) 
+         
+    mean_value = value_sum / no_of_values
+    expected_mean = (max_value + min_value) / 2
+    self.assertAlmostEquals(expected_mean, mean_value, msg="Unexpected mean value of values in composite", delta=1)
+
+    # check some fixed known positions   
+    self.assertEquals(202, dbzh_param.getData()[398][490], "Wrong value at position in composite.")
+    self.assertEquals(34, dbzh_param.getData()[423][549], "Wrong value at position in composite.")
+    self.assertEquals(23, dbzh_param.getData()[486][373], "Wrong value at position in composite.")
+    self.assertEquals(52, dbzh_param.getData()[205][467], "Wrong value at position in composite.")
+    self.assertEquals(32, dbzh_param.getData()[205][468], "Wrong value at position in composite.")
+    
+    ropo_field = dbzh_param.getQualityFieldByHowTask("fi.fmi.ropo.detector.classification")
+    self.assertEquals(243, ropo_field.getData()[398][490], "Wrong quality value at position in composite.")
+    self.assertEquals(243, ropo_field.getData()[423][549], "Wrong quality value at position in composite.")
+    self.assertEquals(243, ropo_field.getData()[486][373], "Wrong quality value at position in composite.")
+    self.assertEquals(243, ropo_field.getData()[487][461], "Wrong quality value at position in composite.")
+    self.assertEquals(62, ropo_field.getData()[252][430], "Wrong quality value at position in composite.")
+    self.assertEquals(252, ropo_field.getData()[249][460], "Wrong quality value at position in composite.")
+    self.assertEquals(243, ropo_field.getData()[416][408], "Wrong quality value at position in composite.")
+    
+    beamb_field = dbzh_param.getQualityFieldByHowTask("se.smhi.detector.beamblockage")
+    self.assertEquals(255, beamb_field.getData()[398][490], "Wrong quality value at position in composite.")
+    self.assertEquals(253, beamb_field.getData()[425][336], "Wrong quality value at position in composite.")
+    self.assertEquals(255, beamb_field.getData()[387][475], "Wrong quality value at position in composite.")
+    self.assertEquals(255, beamb_field.getData()[390][621], "Wrong quality value at position in composite.")
+    self.assertEquals(255, beamb_field.getData()[446][531], "Wrong quality value at position in composite.")
+    self.assertEquals(249, beamb_field.getData()[312][394], "Wrong quality value at position in composite.")
+    self.assertEquals(252, beamb_field.getData()[194][490], "Wrong quality value at position in composite.")
+    
+    self.validate_sehem_distance_field(dbzh_param)
+    
+  def test_linear_rangeandazimuth_interpolation_cappi(self):
+    height = 2600
+    gain = 1.0
+    
+    result = self.generate_sehem_test_comp(get_range_and_azimuth_alternating_dummy_data, gain, height, _pycomposite.InterpolationMethod_LINEAR_RANGE_AND_AZIMUTH)
+    
+    dbzh_param = result.getParameter("DBZH")
+    data = dbzh_param.getData()
+    value_sum = 0
+    no_of_values = 0
+    max_value = max(EVEN_AZIMUTH_DUMMY_VALUE, UNEVEN_AZIMUTH_DUMMY_VALUE, EVEN_RANGE_DUMMY_VALUE, UNEVEN_RANGE_DUMMY_VALUE)
+    min_value = min(EVEN_AZIMUTH_DUMMY_VALUE, UNEVEN_AZIMUTH_DUMMY_VALUE, EVEN_RANGE_DUMMY_VALUE, UNEVEN_RANGE_DUMMY_VALUE)
+    for x in xrange(260, 710):
+      for y in xrange(340, 460):
+        value = data[y][x]
+        self.assertTrue(value <= max_value)
+        self.assertTrue(value >= min_value)
+        value_sum += value
+        no_of_values += 1
+         
+    mean_value = value_sum / no_of_values
+    expected_mean = sum([EVEN_AZIMUTH_DUMMY_VALUE, UNEVEN_AZIMUTH_DUMMY_VALUE, EVEN_RANGE_DUMMY_VALUE, UNEVEN_RANGE_DUMMY_VALUE]) / 4
+    self.assertAlmostEquals(expected_mean, mean_value, msg="Unexpected mean value of values in composite", delta=1)
+    
+    # check some fixed known positions
+    self.assertEquals(154, dbzh_param.getData()[398][490], "Wrong value at position in composite.")
+    self.assertEquals(84, dbzh_param.getData()[423][549], "Wrong value at position in composite.")
+    self.assertEquals(17, dbzh_param.getData()[486][373], "Wrong value at position in composite.")
+    self.assertEquals(36, dbzh_param.getData()[205][467], "Wrong value at position in composite.")
+    self.assertEquals(23, dbzh_param.getData()[205][468], "Wrong value at position in composite.")
+    
+    ropo_field = dbzh_param.getQualityFieldByHowTask("fi.fmi.ropo.detector.classification")
+    self.assertEquals(243, ropo_field.getData()[398][490], "Wrong quality value at position in composite.")
+    self.assertEquals(243, ropo_field.getData()[423][549], "Wrong quality value at position in composite.")
+    self.assertEquals(243, ropo_field.getData()[486][373], "Wrong quality value at position in composite.")
+    self.assertEquals(243, ropo_field.getData()[487][461], "Wrong quality value at position in composite.")
+    self.assertEquals(76, ropo_field.getData()[252][430], "Wrong quality value at position in composite.")
+    self.assertEquals(183, ropo_field.getData()[249][460], "Wrong quality value at position in composite.")
+    self.assertEquals(243, ropo_field.getData()[416][408], "Wrong quality value at position in composite.")
+    
+    beamb_field = dbzh_param.getQualityFieldByHowTask("se.smhi.detector.beamblockage")
+    self.assertEquals(255, beamb_field.getData()[398][490], "Wrong quality value at position in composite.")
+    self.assertEquals(253, beamb_field.getData()[425][336], "Wrong quality value at position in composite.")
+    self.assertEquals(255, beamb_field.getData()[387][475], "Wrong quality value at position in composite.")
+    self.assertEquals(255, beamb_field.getData()[390][621], "Wrong quality value at position in composite.")
+    self.assertEquals(255, beamb_field.getData()[446][531], "Wrong quality value at position in composite.")
+    self.assertEquals(249, beamb_field.getData()[312][394], "Wrong quality value at position in composite.")
+    self.assertEquals(252, beamb_field.getData()[194][490], "Wrong quality value at position in composite.")
+    
+    self.validate_sehem_distance_field(dbzh_param)
+    
+  def test_linear_3d_interpolation_cappi(self):
+    gain = 20.0
+    height = 2000.0
+    histogram_bins = 20
+    
+    result = self.generate_sehem_test_comp(get_3d_alternating_dummy_data, gain, height, _pycomposite.InterpolationMethod_LINEAR_3D)
+    
+    dbzh_param = result.getParameter("DBZH")
+    data = dbzh_param.getData()
+    value_sum = 0
+    no_of_values = 0
+    values = []
+    for x in xrange(310, 670):
+      for y in xrange(340, 460):
+        value = data[y][x]
+        value_sum += value
+        no_of_values += 1
+        values.append(value)
+         
+    height_val = height / gain
+    mean_value = value_sum / no_of_values
+    expected_mean = height_val
+    self.assertAlmostEquals(expected_mean, mean_value, msg="Unexpected mean value of values in composite", delta=4)
+    
+    # check distribution
+    hist = numpy.histogram(values, histogram_bins, (height_val - (height_val / 2), height_val + (height_val / 2)))
+    previous_bin_count = 0
+    for bin_no in xrange(len(hist[0])):
+      bin_count = hist[0][bin_no]     
+      if bin_no < len(hist[0]) / 2:
+        self.assertTrue(bin_count > previous_bin_count)
+      else:
+        self.assertTrue(bin_count < previous_bin_count)
+      if previous_bin_count > 0:
+        self.assertTrue(abs(bin_count - previous_bin_count) < 400)
+      previous_bin_count = bin_count
+    
+    # check some fixed known positions
+    self.assertEquals(75, dbzh_param.getData()[398][490], "Wrong value at position in composite.")
+    self.assertEquals(117, dbzh_param.getData()[423][549], "Wrong value at position in composite.")
+    self.assertEquals(156, dbzh_param.getData()[486][373], "Wrong value at position in composite.")
+    self.assertEquals(67, dbzh_param.getData()[487][461], "Wrong value at position in composite.")
+    
+    ropo_field = dbzh_param.getQualityFieldByHowTask("fi.fmi.ropo.detector.classification")
+    self.assertEquals(241, ropo_field.getData()[398][490], "Wrong quality value at position in composite.")
+    self.assertEquals(241, ropo_field.getData()[423][549], "Wrong quality value at position in composite.")
+    self.assertEquals(239, ropo_field.getData()[486][373], "Wrong quality value at position in composite.")
+    self.assertEquals(245, ropo_field.getData()[487][461], "Wrong quality value at position in composite.")
+    self.assertEquals(72, ropo_field.getData()[252][430], "Wrong quality value at position in composite.")
+    self.assertEquals(189, ropo_field.getData()[249][460], "Wrong quality value at position in composite.")
+    self.assertEquals(216, ropo_field.getData()[416][408], "Wrong quality value at position in composite.")
+    
+    beamb_field = dbzh_param.getQualityFieldByHowTask("se.smhi.detector.beamblockage")
+    self.assertEquals(255, beamb_field.getData()[398][490], "Wrong quality value at position in composite.")
+    self.assertEquals(254, beamb_field.getData()[425][336], "Wrong quality value at position in composite.")
+    self.assertEquals(253, beamb_field.getData()[387][475], "Wrong quality value at position in composite.")
+    self.assertEquals(251, beamb_field.getData()[390][621], "Wrong quality value at position in composite.")
+    self.assertEquals(255, beamb_field.getData()[446][531], "Wrong quality value at position in composite.")
+    self.assertEquals(0, beamb_field.getData()[194][490], "Wrong quality value at position in composite.")
+    
+    self.validate_sehem_distance_field(dbzh_param)
+    
+  def test_quad_height_interpolation_cappi(self):
+    height = 2600
+    height_gain = 100.0
+    allowed_height_diff = 15
+    allowed_margin_at_radius = 1
+    
+    result = self.generate_sehem_test_comp(get_height_dummy_data, height_gain, height, _pycomposite.InterpolationMethod_QUADRATIC_HEIGHT)
+    
+    # check known positions, to ensure that correct values are set
+    dbzh_param = result.getParameter("DBZH")
+    data = dbzh_param.getData()
+    for x in xrange(260, 470):
+      for y in xrange(340, 650):
+        height_diff = abs(data[y][x] - (height/height_gain))
+        self.assertTrue(height_diff <= allowed_height_diff)
+        
+    centre_x = 489
+    centre_y = 486
+    radii = [20, 50, 100, 200, 280]
+    for radius in radii:
+      first_value = None
+      for angle_deg in xrange(0, 360):
+        angle_rad = math.radians(angle_deg)
+        x = round(centre_x + (radius * cos(angle_rad)))
+        y = round(centre_y + (radius * sin(angle_rad)))
+        value = data[y][x]
+        if not first_value:
+          first_value = value
+        value_diff = abs(float(first_value) - float(value))
+        self.assertTrue(value_diff <= allowed_margin_at_radius, "Values circling the centre at the same radius should be the same")
+        
+    ropo_field = dbzh_param.getQualityFieldByHowTask("fi.fmi.ropo.detector.classification")
+    self.assertEquals(243, ropo_field.getData()[398][490], "Wrong quality value at position in composite.")
+    self.assertEquals(243, ropo_field.getData()[423][549], "Wrong quality value at position in composite.")
+    self.assertEquals(243, ropo_field.getData()[486][373], "Wrong quality value at position in composite.")
+    self.assertEquals(244, ropo_field.getData()[487][461], "Wrong quality value at position in composite.")
+    self.assertEquals(43, ropo_field.getData()[252][430], "Wrong quality value at position in composite.")
+    self.assertEquals(252, ropo_field.getData()[249][460], "Wrong quality value at position in composite.")
+    self.assertEquals(243, ropo_field.getData()[416][408], "Wrong quality value at position in composite.")
+    
+    beamb_field = dbzh_param.getQualityFieldByHowTask("se.smhi.detector.beamblockage")
+    self.assertEquals(255, beamb_field.getData()[398][490], "Wrong quality value at position in composite.")
+    self.assertEquals(254, beamb_field.getData()[425][336], "Wrong quality value at position in composite.")
+    self.assertEquals(255, beamb_field.getData()[387][475], "Wrong quality value at position in composite.")
+    self.assertEquals(252, beamb_field.getData()[390][621], "Wrong quality value at position in composite.")
+    self.assertEquals(255, beamb_field.getData()[446][531], "Wrong quality value at position in composite.")
+    
+    self.validate_sehem_distance_field(dbzh_param)
+    
+  def test_quad_3d_interpolation_cappi(self):
+    gain = 20.0
+    height = 2000.0
+    expected_bin_counts = [1483, 1566, 1719, 2065, 2014, 1944, 2106, 2351, 2337, 2162, 2123, 1911, 1799, 1760, 1716, 1446, 1492, 1251,  858,  863]
+    histogram_bins = len(expected_bin_counts)
+    
+    result = self.generate_sehem_test_comp(get_3d_alternating_dummy_data, gain, height, _pycomposite.InterpolationMethod_QUADRATIC_3D)
+    
+    dbzh_param = result.getParameter("DBZH")
+    data = dbzh_param.getData()
+    values = []
+    for x in xrange(310, 670):
+      for y in xrange(340, 460):
+        value = data[y][x]
+        values.append(value)
+         
+    height_val = height / gain
+    # check distribution
+    hist = numpy.histogram(values, histogram_bins, (height_val - (height_val / 2), height_val + (height_val / 2)))
+    
+    for bin_no in xrange(len(hist[0])):
+      bin_count = hist[0][bin_no]
+      self.assertEquals(expected_bin_counts[bin_no], bin_count, "Unexpected distribution of values in composite.")
+     
+    # check some fixed known positions
+    self.assertEquals(73, dbzh_param.getData()[398][490], "Wrong value at position in composite.")
+    self.assertEquals(116, dbzh_param.getData()[423][549], "Wrong value at position in composite.")
+    self.assertEquals(169, dbzh_param.getData()[486][373], "Wrong value at position in composite.")
+    self.assertEquals(38, dbzh_param.getData()[487][461], "Wrong value at position in composite.")
+    
+    ropo_field = dbzh_param.getQualityFieldByHowTask("fi.fmi.ropo.detector.classification")    
+    self.assertEquals(243, ropo_field.getData()[398][490], "Wrong quality value at position in composite.")
+    self.assertEquals(243, ropo_field.getData()[423][549], "Wrong quality value at position in composite.")
+    self.assertEquals(240, ropo_field.getData()[486][373], "Wrong quality value at position in composite.")
+    self.assertEquals(243, ropo_field.getData()[487][461], "Wrong quality value at position in composite.")
+    self.assertEquals(40, ropo_field.getData()[252][430], "Wrong quality value at position in composite.")
+    self.assertEquals(193, ropo_field.getData()[249][460], "Wrong quality value at position in composite.")
+    self.assertEquals(229, ropo_field.getData()[416][408], "Wrong quality value at position in composite.")
+    
+    beamb_field = dbzh_param.getQualityFieldByHowTask("se.smhi.detector.beamblockage")
+    self.assertEquals(255, beamb_field.getData()[398][490], "Wrong quality value at position in composite.")
+    self.assertEquals(253, beamb_field.getData()[425][336], "Wrong quality value at position in composite.")
+    self.assertEquals(254, beamb_field.getData()[387][475], "Wrong quality value at position in composite.")
+    self.assertEquals(250, beamb_field.getData()[390][621], "Wrong quality value at position in composite.")
+    self.assertEquals(255, beamb_field.getData()[446][531], "Wrong quality value at position in composite.")
+    
+    self.validate_sehem_distance_field(dbzh_param)
 
   def test_nearest_with_radarindex(self):
     generator = _pycomposite.new()
@@ -329,12 +854,12 @@ class PyCompositeTest(unittest.TestCase):
       radarIndex = radarIndex + 1
     ids = ids[1:]
 
-    generator.addParameter("DBZH", 1.0, 0.0)
+    generator.addParameter("DBZH", 1.0, 0.0, -30.0)
     generator.product = _rave.Rave_ProductType_PCAPPI
     generator.height = 1000.0
     generator.time = "120000"
     generator.date = "20090501"
-    result = generator.nearest(a, ["se.smhi.composite.index.radar"])
+    result = generator.generate(a, ["se.smhi.composite.index.radar"])
      
     self.assertEquals("DBZH", result.getParameter("DBZH").quantity)
     self.assertEquals("120000", result.time)
@@ -384,12 +909,12 @@ class PyCompositeTest(unittest.TestCase):
     ids = ids[1:]
 
     generator.applyRadarIndexMapping(radarIndexMapping)
-    generator.addParameter("DBZH", 1.0, 0.0)
+    generator.addParameter("DBZH", 1.0, 0.0, -30.0)
     generator.product = _rave.Rave_ProductType_PCAPPI
     generator.height = 1000.0
     generator.time = "120000"
     generator.date = "20090501"
-    result = generator.nearest(a, ["se.smhi.composite.index.radar"])
+    result = generator.generate(a, ["se.smhi.composite.index.radar"])
      
     self.assertEquals("DBZH", result.getParameter("DBZH").quantity)
     self.assertEquals("120000", result.time)
@@ -429,13 +954,13 @@ class PyCompositeTest(unittest.TestCase):
       rio = _raveio.open(fname)
       generator.add(rio.object)
      
-    generator.addParameter("DBZH", 1.0, 0.0)
-    generator.addParameter("TH", 1.0, 0.0)
+    generator.addParameter("DBZH", 1.0, 0.0, -30.0)
+    generator.addParameter("TH", 1.0, 0.0, -30.0)
     generator.product = _rave.Rave_ProductType_PPI
     generator.elangle = 0.0
     generator.time = "000000"
     generator.date = "20120131"
-    result = generator.nearest(a, ["fi.fmi.ropo.detector.classification", "se.smhi.detector.poo", "se.smhi.composite.distance.radar"])
+    result = generator.generate(a, ["fi.fmi.ropo.detector.classification", "se.smhi.detector.poo", "se.smhi.composite.distance.radar"])
      
     self.assertEquals("DBZH", result.getParameter("DBZH").quantity)
     self.assertEquals("000000", result.time)
@@ -472,13 +997,13 @@ class PyCompositeTest(unittest.TestCase):
       rio = _raveio.open(fname)
       generator.add(rio.object)
      
-    generator.addParameter("DBZH", 1.0, 0.0)
+    generator.addParameter("DBZH", 1.0, 0.0, -30.0)
     generator.product = _rave.Rave_ProductType_MAX
     generator.height = 0.0
     generator.range = 0.0
     generator.time = "120000"
     generator.date = "20090501"    
-    result = generator.nearest(a, ["se.smhi.composite.distance.radar"])
+    result = generator.generate(a, ["se.smhi.composite.distance.radar"])
      
     self.assertEquals("DBZH", result.getParameter("DBZH").quantity)
     self.assertEquals("120000", result.time)
@@ -558,7 +1083,7 @@ class PyCompositeTest(unittest.TestCase):
     generator = _pycomposite.new()
     generator.add(v1)
     generator.add(v2)
-    generator.addParameter("DBZH", 1.0, 0.0)
+    generator.addParameter("DBZH", 1.0, 0.0, -30.0)
     generator.product = _rave.Rave_ProductType_MAX
     generator.height = 0.0
     generator.range = 0.0
@@ -566,7 +1091,7 @@ class PyCompositeTest(unittest.TestCase):
     generator.date = "20090501"
     generator.quality_indicator_field_name="qf"
     generator.algorithm = _poocompositealgorithm.new()
-    result = generator.nearest(a, ["se.smhi.detector.poo", "qf"])
+    result = generator.generate(a, ["se.smhi.detector.poo", "qf"])
  
   def test_nearest_max_polgmaps(self):
     a = _area.new()
@@ -594,7 +1119,7 @@ class PyCompositeTest(unittest.TestCase):
     #GAIN = 0.4
     #OFFSET = -30.0
  
-    generator.addParameter("DBZH", 0.4, -30.0)
+    generator.addParameter("DBZH", 0.4, -30.0, -30.0)
     generator.product = _rave.Rave_ProductType_MAX
     generator.height = 0.0
     generator.range = 0.0
@@ -602,7 +1127,7 @@ class PyCompositeTest(unittest.TestCase):
     generator.date = "20120205"
     generator.quality_indicator_field_name="pl.imgw.quality.qi_total"
     generator.algorithm = _poocompositealgorithm.new()
-    result = generator.nearest(a, ["se.smhi.detector.poo", "pl.imgw.quality.qi_total"])
+    result = generator.generate(a, ["se.smhi.detector.poo", "pl.imgw.quality.qi_total"])
  
     ios = _raveio.new()
     ios.object = result
@@ -625,13 +1150,13 @@ class PyCompositeTest(unittest.TestCase):
       rio = _raveio.open(fname)
       generator.add(rio.object)
      
-    generator.addParameter("DBZH", 1.0, 0.0)
+    generator.addParameter("DBZH", 1.0, 0.0, -30.0)
     generator.product = _rave.Rave_ProductType_PMAX
     generator.height = 1000.0
     generator.range = 70000.0
     generator.time = "120000"
     generator.date = "20090501"    
-    result = generator.nearest(a, ["se.smhi.composite.distance.radar"])
+    result = generator.generate(a, ["se.smhi.composite.distance.radar"])
      
     self.assertEquals("DBZH", result.getParameter("DBZH").quantity)
     self.assertEquals("120000", result.time)
@@ -672,10 +1197,10 @@ class PyCompositeTest(unittest.TestCase):
       rio = _raveio.open(fname)
       generator.add(rio.object)
      
-    generator.addParameter("DBZH", 0.4, -30.0)
+    generator.addParameter("DBZH", 0.4, -30.0, -30.0)
     generator.product = _rave.Rave_ProductType_PCAPPI
     generator.height = 1000.0
-    result = generator.nearest(a)
+    result = generator.generate(a)
      
     result.time = "120000"
     result.date = "20090501"
@@ -701,12 +1226,12 @@ class PyCompositeTest(unittest.TestCase):
       rio = _raveio.open(fname)
       generator.add(rio.object)
      
-    generator.addParameter("DBZH", 1.0, 0.0)
+    generator.addParameter("DBZH", 1.0, 0.0, -30.0)
     generator.product = _rave.Rave_ProductType_PPI
     generator.elangle = 0.0
     generator.time = "120000"
     generator.date = "20090501"
-    result = generator.nearest(a)
+    result = generator.generate(a)
      
     self.assertEquals("DBZH", result.getParameter("DBZH").quantity)
     self.assertEquals("120000", result.time)
@@ -739,12 +1264,12 @@ class PyCompositeTest(unittest.TestCase):
       scan = rio.object.getScanClosestToElevation(0.0, 0)
       generator.add(scan)
      
-    generator.addParameter("DBZH", 1.0, 0.0)
+    generator.addParameter("DBZH", 1.0, 0.0, -30.0)
     generator.product = _rave.Rave_ProductType_PPI
     generator.elangle = 0.0
     generator.time = "120000"
     generator.date = "20090501"
-    result = generator.nearest(a)
+    result = generator.generate(a)
      
     self.assertEquals("DBZH", result.getParameter("DBZH").quantity)
     self.assertEquals("120000", result.time)
@@ -778,12 +1303,12 @@ class PyCompositeTest(unittest.TestCase):
       scan = rio.object.getScanClosestToElevation(0.0, 0)
       generator.add(scan)
      
-    generator.addParameter("DBZH", 1.0, 0.0)
+    generator.addParameter("DBZH", 1.0, 0.0, -30.0)
     generator.product = _rave.Rave_ProductType_PPI
     generator.elangle = 0.0
     generator.time = "120000"
     generator.date = "20090501"
-    result = generator.nearest(a)
+    result = generator.generate(a)
      
     self.assertEquals("DBZH", result.getParameter("DBZH").quantity)
     self.assertEquals("120000", result.time)
@@ -821,12 +1346,12 @@ class PyCompositeTest(unittest.TestCase):
     scan = rio.object.getScanClosestToElevation(0.0, 0) # Take lowest elevation from karlskrona
     generator.add(scan)
  
-    generator.addParameter("DBZH", 1.0, 0.0)
+    generator.addParameter("DBZH", 1.0, 0.0, -30.0)
     generator.product = _rave.Rave_ProductType_PPI
     generator.elangle = 0.0
     generator.time = "120000"
     generator.date = "20090501"
-    result = generator.nearest(a)
+    result = generator.generate(a)
      
     ios = _raveio.new()
     ios.object = result
@@ -879,14 +1404,14 @@ class PyCompositeTest(unittest.TestCase):
           
     generator.add(scan)
  
-    generator.addParameter("DBZH", 1.0, 0.0)
+    generator.addParameter("DBZH", 1.0, 0.0, -30.0)
     generator.product = _rave.Rave_ProductType_PPI
     generator.elangle = 0.0
     generator.time = "120000"
     generator.date = "20090501"
     generator.quality_indicator_field_name = "a.test.field"
      
-    result = generator.nearest(a)
+    result = generator.generate(a)
      
     ios = _raveio.new()
     ios.object = result
@@ -909,12 +1434,12 @@ class PyCompositeTest(unittest.TestCase):
       scan = rio.object.getScanClosestToElevation(0.0, 0)
       generator.add(scan)
      
-    generator.addParameter("DBZH", 1.0, 0.0)
+    generator.addParameter("DBZH", 1.0, 0.0, -30.0)
     generator.product = _rave.Rave_ProductType_PPI
     generator.elangle = 0.0
     generator.time = "120000"
     generator.date = "20090501"
-    result = generator.nearest(a, ["se.smhi.composite.distance.radar"])
+    result = generator.generate(a, ["se.smhi.composite.distance.radar"])
      
     field = result.getParameter("DBZH").getQualityField(0)
     self.assertEquals("se.smhi.composite.distance.radar", field.getAttribute("how/task"))
@@ -1004,12 +1529,12 @@ class PyCompositeTest(unittest.TestCase):
       scan = rio.object.getScanClosestToElevation(0.0, 0)
       generator.add(scan)
     
-    generator.addParameter("DBZH", 1.0, 0.0)
+    generator.addParameter("DBZH", 1.0, 0.0, -30.0)
     generator.product = _rave.Rave_ProductType_PPI
     generator.elangle = 0.0
     generator.time = "120000"
     generator.date = "20090501"
-    result = generator.nearest(a, ["fi.fmi.ropo.detector.classification", "se.smhi.detector.poo", "se.smhi.detector.beamblockage", "se.smhi.composite.distance.radar", "se.smhi.composite.height.radar"])
+    result = generator.generate(a, ["fi.fmi.ropo.detector.classification", "se.smhi.detector.poo", "se.smhi.detector.beamblockage", "se.smhi.composite.distance.radar", "se.smhi.composite.height.radar"])
     
     self.verify_qc_volumes_2016(result)
     
@@ -1033,12 +1558,12 @@ class PyCompositeTest(unittest.TestCase):
       rio = _raveio.open(fname)
       generator.add(rio.object)
     
-    generator.addParameter("DBZH", 1.0, 0.0)
+    generator.addParameter("DBZH", 1.0, 0.0, -30.0)
     generator.product = _rave.Rave_ProductType_PPI
     generator.elangle = 0.0
     generator.time = "120000"
     generator.date = "20090501"
-    result = generator.nearest(a, ["fi.fmi.ropo.detector.classification", "se.smhi.detector.poo", "se.smhi.detector.beamblockage", "se.smhi.composite.distance.radar", "se.smhi.composite.height.radar"])
+    result = generator.generate(a, ["fi.fmi.ropo.detector.classification", "se.smhi.detector.poo", "se.smhi.detector.beamblockage", "se.smhi.composite.distance.radar", "se.smhi.composite.height.radar"])
     
     self.verify_qc_volumes_2016(result)
     
@@ -1062,13 +1587,13 @@ class PyCompositeTest(unittest.TestCase):
       rio = _raveio.open(fname)
       generator.add(rio.object)
 
-    generator.addParameter("DBZH", 1.0, 0.0)
+    generator.addParameter("DBZH", 1.0, 0.0, -30.0)
     generator.product = _rave.Rave_ProductType_CAPPI
     generator.elangle = 0.0
     generator.time = "120000"
     generator.date = "20090501"
     generator.height = 5000
-    result = generator.nearest(a, ["fi.fmi.ropo.detector.classification", "se.smhi.detector.beamblockage", "se.smhi.composite.distance.radar"])
+    result = generator.generate(a, ["fi.fmi.ropo.detector.classification", "se.smhi.detector.beamblockage", "se.smhi.composite.distance.radar"])
 
     # check known positions, to ensure that correct values are set
     dbzh_param = result.getParameter("DBZH")
