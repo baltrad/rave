@@ -1,0 +1,109 @@
+#!/bin/sh
+#
+# /etc/init.d/raved - used to start and stop the rave_pgf daemon
+#
+### BEGIN INIT INFO
+# Provides:          raved
+# Required-Start:    $local_fs $remote_fs $network
+# Required-Stop:     $local_fs $remote_fs $network
+# Should-Start:      $named
+# Should-Stop:       $named
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Start rave pgf server.
+# Description:       Start rave pgf server.
+### END INIT INFO
+
+PATH=/bin:/usr/bin:/sbin:/usr/sbin
+NAME=raved
+DESC="Baltrad rave-pgf server"
+DEFAULT=/etc/default/$NAME
+BALTRAD_VAR_DIR=/var/run/baltrad
+RAVEPID=${BALTRAD_VAR_DIR}/rave_pgf_server.pid
+
+if [ `id -u` -ne 0 ]; then
+	echo "You need root privileges to run this script"
+	exit 1
+fi
+
+# Run as user
+BALTRAD_USER=baltrad
+BALTRAD_GROUP=baltrad
+
+# Checks status of the bdb pid
+get_rave_pid() {
+  local  __resultvar=$1
+  local  result=''
+
+  if [ -f "$BDBPID" ]; then
+    result=`cat $BDBPID`
+  fi
+
+  eval $__resultvar="'$result'"
+}
+
+# Checks if the process is running
+check_rave_status() {
+  RAVEPGFPROCESS=`/opt/baltrad/rave/bin/rave_pgf status`
+  if [ "$RAVEPGFPROCESS"="rave_pgf is not running" ]; then
+    return 1
+  else
+    return 0
+  fi
+}
+
+if [ ! -d "$BALTRAD_VAR_DIR" ]; then
+  echo "Creating dirname $BALTRAD_VAR_DIR"
+  mkdir "$BALTRAD_VAR_DIR"
+  if [ $? -ne 0 ]; then
+    echo "Failed to create pid file directory, defaulting to /tmp/rave_pgf_server.pid"
+    RAVEPID=/tmp/rave_pgf_server.pid
+  else
+    chown $BALTRAD_USER:$BALTRAD_GROUP "$BALTRAD_DB_PID_DIR"
+  fi
+fi
+
+case "$1" in
+  start)
+    echo -n "Starting Rave..."
+    check_rave_status
+    if [ $? -eq 0 ]; then
+      echo "already running"
+    else
+      su $BALTRAD_USER -s /bin/bash -c "/opt/baltrad/rave/bin/rave_pgf start"
+      #/opt/baltrad/rave/bin/rave_pgf start
+      if [ $? -ne 0 ]; then
+        echo "failed."
+      else
+        echo "done."
+      fi
+    fi
+    ;;
+  stop)
+    echo -n "Stopping Rave..."
+    su $BALTRAD_USER -s /bin/bash -c "/opt/baltrad/rave/bin/rave_pgf stop"
+      if [ $? -ne 0 ]; then
+        echo "failed."
+      else
+        echo "done."
+      fi
+    ;;    
+  status)
+    check_rave_status
+    if [ $? -eq 0 ]; then
+      echo "Running"
+    else
+      echo "Stopped"
+    fi
+    ;;
+  restart)
+    $0 stop
+    sleep 1
+    $0 start
+    ;;
+  *)
+    echo "Usage: $0 {start|stop|restart|status}"
+    ;;
+esac
+
+exit 0
