@@ -337,7 +337,6 @@ class tiled_compositing(object):
     a.quantity = self.compositing.quantity
     a.gain = self.compositing.gain
     a.offset = self.compositing.offset
-    a.minvalue = self.minvalue
     a.verbose = self.verbose
     a.dump = self.compositing.dump
     a.dumppath = self.compositing.dumppath
