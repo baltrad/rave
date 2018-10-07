@@ -15,9 +15,6 @@
 ### END INIT INFO
 
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
-NAME=raved
-DESC="Baltrad rave-pgf server"
-DEFAULT=/etc/default/$NAME
 BALTRAD_VAR_DIR=/var/run/baltrad
 RAVEPID=${BALTRAD_VAR_DIR}/rave_pgf_server.pid
 
@@ -44,8 +41,8 @@ get_rave_pid() {
 
 # Checks if the process is running
 check_rave_status() {
-  RAVEPGFPROCESS=`/opt/baltrad/rave/bin/rave_pgf status`
-  if [ "$RAVEPGFPROCESS"="rave_pgf is not running" ]; then
+  RAVEPGFPROCESS=`su $BALTRAD_USER -s /bin/bash -c "/opt/baltrad/rave/bin/rave_pgf status"`
+  if [ "$RAVEPGFPROCESS" = "rave_pgf is not running" ]; then
     return 1
   else
     return 0
