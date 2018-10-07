@@ -69,9 +69,9 @@ def main(options):
   else:
     comp.logger = rave_pgf_logger.rave_pgf_stdout_client("info")
 
-  comp.reprocess_quality_fields = False
+  comp.reprocess_quality_field = False
   if options.reprocess_quality_fields:
-    comp.reprocess_quality_fields = True
+    comp.reprocess_quality_field = True
 
   if not options.area is None and options.noMultiprocessing is None:
     if rave_tile_registry.has_tiled_area(options.area):
