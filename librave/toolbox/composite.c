@@ -1530,25 +1530,19 @@ static void CompositeInternal_prepareNavinfoForInterpolation(
   RAVE_ASSERT((navinfo != NULL), "navinfo == NULL");
   RAVE_ASSERT((interpolationDimensions != NULL), "interpolationDimensions == NULL");
 
-  int result = 0;
-
   if (!interpolationDimensions[CompositeInterpolationDimension_RANGE]) {
     // no range interpolation shall be done
     if (!CompositeInternal_setInterpolatedPosition(navinfo, CompositeInterpolationDimension_RANGE)) {
-      goto done;
+      return;
     }
   }
 
   if (!interpolationDimensions[CompositeInterpolationDimension_AZIMUTH]) {
     // no azimuth interpolation shall be done
     if (!CompositeInternal_setInterpolatedPosition(navinfo, CompositeInterpolationDimension_AZIMUTH)) {
-      goto done;
+      return;
     }
   }
-
-  result = 1;
-done:
-  return result;
 }
 
 /**
