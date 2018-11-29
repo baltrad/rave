@@ -32,8 +32,8 @@ get_rave_pid() {
   local  __resultvar=$1
   local  result=''
 
-  if [ -f "$BDBPID" ]; then
-    result=`cat $BDBPID`
+  if [ -f "$RAVEPID" ]; then
+    result=`cat $RAVEPID`
   fi
 
   eval $__resultvar="'$result'"
@@ -52,11 +52,12 @@ check_rave_status() {
 if [ ! -d "$BALTRAD_VAR_DIR" ]; then
   echo "Creating dirname $BALTRAD_VAR_DIR"
   mkdir "$BALTRAD_VAR_DIR"
+fi
+if [ -d "$BALTRAD_VAR_DIR" ]; then
+  chown $BALTRAD_USER:$BALTRAD_GROUP "$BALTRAD_VAR_DIR"
   if [ $? -ne 0 ]; then
     echo "Failed to create pid file directory, defaulting to /tmp/rave_pgf_server.pid"
     RAVEPID=/tmp/rave_pgf_server.pid
-  else
-    chown $BALTRAD_USER:$BALTRAD_GROUP "$BALTRAD_DB_PID_DIR"
   fi
 fi
 
@@ -68,7 +69,6 @@ case "$1" in
       echo "already running"
     else
       su $BALTRAD_USER -s /bin/bash -c "/opt/baltrad/rave/bin/rave_pgf start"
-      #/opt/baltrad/rave/bin/rave_pgf start
       if [ $? -ne 0 ]; then
         echo "failed."
       else
