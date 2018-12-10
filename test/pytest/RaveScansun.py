@@ -144,8 +144,8 @@ class RaveScansun(unittest.TestCase):
     def testWriteHits(self):
         source = odim_source.SOURCE['nldhl'].encode(UTF8)  # Non-compliant ODIM source in fixture...
         hits = self.VALID[1]
-        rave_pgf_scansun_plugin.RAVEETC = os.getcwd()+'/fixtures'
-        fstr = '%s/scansun/nldhl.scansun' % rave_pgf_scansun_plugin.RAVEETC
+        rave_pgf_scansun_plugin.scansun_outputpath = os.getcwd()+'/fixtures'
+        fstr = '%s/scansun/nldhl.scansun' % rave_pgf_scansun_plugin.scansun_outputpath
         rave_pgf_scansun_plugin.writeHits(source, hits)
         fd = open(fstr)
         content = fd.read()
