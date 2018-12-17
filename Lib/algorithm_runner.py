@@ -105,14 +105,18 @@ class algorithm_job(object):
     return not self == other
   
   def __gt__(self, other):
-    # Note that date and time has been switched between tuples
-    return (self._priority, other._date, other._time) > \
-      (other._priority, self._date, self._time)
+    if self._priority > other._priority:
+      return True
+    self_datetime = "%s%s" % (str(self._date), str(self._time))
+    other_datetime = "%s%s" % (str(other._date), str(other._time))
+    return other_datetime > self_datetime
   
   def __lt__(self, other):
-    # Note that date and time has been switched between tuples
-    return (self._priority, other._date, other._time) < \
-      (other._priority, self._date, self._time)
+    if self._priority < other._priority:
+      return True
+    self_datetime = "%s%s" % (str(self._date), str(self._time))
+    other_datetime = "%s%s" % (str(other._date), str(other._time))
+    return other_datetime < self_datetime
 
   def __ge__(self, other):
     return (self > other) or (self == other)

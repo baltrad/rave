@@ -202,7 +202,7 @@ class compositing(object):
       self.logger.info("No objects provided to the composite generator. No composite will be generated!")
       return None
 
-    objects=objects.values()
+    objects=list(objects.values())
 
     if self.dump:
       self._dump_objects(objects)

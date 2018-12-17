@@ -84,6 +84,13 @@ class AlgorithmRunnerTest(unittest.TestCase):
     
     self.assertTrue(job2 < job)
     self.assertTrue(job > job2)
+    
+  def test_algorithm_job_priority_no_datetime(self):
+    no_datetime_job = algorithm_runner.algorithm_job(os.path, "123-432", "an.algorithm",["a.h5","b.h5"], ["--algorithm_id=123"])
+    datetime_job = algorithm_runner.algorithm_job(os.path, "123", "an.algorithm",["b.h5"], ["--date=20150102","--time=101112","--algorithm_id=123"])
+    
+    self.assertTrue(no_datetime_job < datetime_job)
+    self.assertTrue(datetime_job > no_datetime_job)
 
   def test_algorithm_job_priority_algorithm_datetime(self):
     job = algorithm_runner.algorithm_job(os.path, "123-432", "an.algorithm",["a.h5","b.h5"], ["--date=20150101","--time=101112","--algorithm_id=123"])

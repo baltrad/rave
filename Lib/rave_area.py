@@ -109,10 +109,9 @@ def area(Id):
 def register(A):
     A.validate(["Id", "name", "pcs", "extent",
                 "xsize", "ysize", "xscale", "yscale"])
-
-    # Ridiculous hack for trimming whacked XML strings from rave_simple_xml.c. Should be deprecated down the line.  
-    if A.pcs[:9] == '\n        ' and A.pcs[-7:] == '\n      ': A.pcs = A.pcs[9:len(A.pcs)-7]
-    if A.name[:7] == '\n      ' and A.name[-5:] == '\n    ': A.name = A.name[7:len(A.name)-5]
+    
+    A.pcs = A.pcs.replace(b"\n", b"").lstrip(b" ").rstrip(b" ")
+    A.name = A.name.replace(b"\n", b"").lstrip(b" ").rstrip(b" ")
     
     # Switch to strings
     if isinstance(A.pcs, bytes): A.pcs = A.pcs.decode()
