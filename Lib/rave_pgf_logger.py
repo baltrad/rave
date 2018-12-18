@@ -29,7 +29,7 @@ import logging
 import logging.handlers
 import multiprocessing
 import tempfile
-from rave_defines import PGF_HOST, LOGID, SYSLOG, LOGFACILITY, LOGFILE, LOGFILESIZE, LOGFILES, LOGPORT, LOGPIDFILE, LOGLEVEL, STDOE
+from rave_defines import PGF_HOST, LOGID, SYSLOG, LOGFACILITY, LOGFILE, LOGFILESIZE, LOGFILES, LOGPORT, LOGPIDFILE, LOGLEVEL, SYSLOG_FORMAT, LOGFILE_FORMAT, STDOE
 from rave_daemon import Daemon
 
 if sys.version_info < (3,):
@@ -204,7 +204,7 @@ class rave_pgf_logger_server(Daemon):
   # \ref Daemon , but you can call fg() to run the server in the
   # foreground, ie. not daemonize, which is useful for debugging.
   def run(self):
-    logging.basicConfig(format='%(asctime)-15s %(levelname)-8s %(message)s')
+    logging.basicConfig(format=LOGFILE_FORMAT)
     self.server = LogRecordSocketReceiver(host=self.host, port=self.port)
     self.server.serve_until_stopped()
 
@@ -244,7 +244,7 @@ def rave_pgf_syslog_client(name=LOGID, address=SYSLOG, facility=LOGFACILITY, lev
     if not len(myLogger.handlers):
         myLogger.setLevel(LOGLEVELS[level])
         handler = logging.handlers.SysLogHandler(address, facility)
-        formatter = logging.Formatter('%(name)s %(levelname)-8s %(message)s')
+        formatter = logging.Formatter(SYSLOG_FORMAT)
         handler.setFormatter(formatter)
         myLogger.addHandler(handler)
     return myLogger
@@ -258,7 +258,7 @@ def rave_pgf_stdout_client(name="RAVE-STDOUT", level=LOGLEVEL):
         myLogger.setLevel(LOGLEVELS[level])
         handler = logging.StreamHandler(sys.stdout)
         handler.setLevel(LOGLEVELS[level])
-        formatter = logging.Formatter('%(name)s %(levelname)-8s %(message)s')
+        formatter = logging.Formatter(SYSLOG_FORMAT)
         handler.setFormatter(formatter)
         myLogger.addHandler(handler)
     return myLogger
@@ -271,7 +271,7 @@ def rave_pgf_logfile_client(name="RAVE-LOGFILE", level=LOGLEVEL, logfile=LOGFILE
                                                        maxBytes = logfilesize,
                                                        backupCount = nrlogfiles)
         # The default formatter contains fractions of a second in the time.
-        formatter = logging.Formatter('%(asctime)-15s %(levelname)-8s %(message)s')
+        formatter = logging.Formatter(LOGFILE_FORMAT)
         handler.setFormatter(formatter)
         handler.lock = multiprocessing.RLock()
         myLogger.addHandler(handler)
