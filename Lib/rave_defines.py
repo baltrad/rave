@@ -133,6 +133,8 @@ LOGFILES    = 5
 LOGFACILITY = "local3"
 LOGLEVEL = "info"
 LOGPIDFILE = os.path.join(RAVEETC, 'rave_pgf_log_server.pid')
+SYSLOG_FORMAT = "%(name)s: %(levelname)-8s %(message)s"
+LOGFILE_FORMAT = "%(asctime)-15s %(levelname)-8s %(message)s"
 if sys.platform == "darwin":
     SYSLOG = "/var/run/syslog"
 else:
