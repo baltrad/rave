@@ -44,10 +44,10 @@ $(LIBRAVEPYAPI): $(DEPDIR) $(RAVEOBJS)
 
 .PHONY=install
 install:
-	@"$(HLHDF_INSTALL_BIN)" -f -o -C $(LIBRAVEPYAPI) "$(prefix)/lib/$(LIBRAVEPYAPI)"
+	@"$(HLHDF_INSTALL_BIN)" -f -o -C $(LIBRAVEPYAPI) "${DESTDIR}$(prefix)/lib/$(LIBRAVEPYAPI)"
 	@for i in $(INSTALL_HEADERS) ; \
 	do \
-		"$(HLHDF_INSTALL_BIN)" -f -o -m644 -C $$i "$(prefix)/include/$$i"; \
+		"$(HLHDF_INSTALL_BIN)" -f -o -m644 -C $$i "${DESTDIR}$(prefix)/include/$$i"; \
 	done
 
 .PHONY=clean

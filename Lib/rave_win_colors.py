@@ -90,7 +90,7 @@ def torgb(r,g,b):
     return rgb
 
 def zero(interval, plus=None):
-    l = len(xrange(0,255,interval))
+    l = len(range(0,255,interval))
     if plus == None:
 	return numpy.zeros(l, 'B')
     else:

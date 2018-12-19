@@ -42,6 +42,7 @@ from PyCartesianVolumeTest import *
 from PyVerticalProfileTest import *
 from PyRaveFieldTest import *
 from PyTransformTest import *
+ 
 from PyVprCorrectionTest import *
 from PyProjectionTest import *
 from PyRaveIOTest import *
@@ -75,13 +76,14 @@ from polar_merger_test import *
       
 from algorithm_runner_test import *
    
-mock_imported=False  
+mock_imported=False
 try:
   import mock
   if int(mock.__version__[0]) >= 1:
     mock_imported=True
 except:
   pass
+
 if mock_imported:
   from rave_quality_chain_plugin_test import *
   from compositing_test import *
@@ -90,6 +92,7 @@ if mock_imported:
 from area_registry_test import *
     
 from PyDealiasTest import *
+
 from PyRadvolTest import *
 from PyCtfilterTest import *
 
@@ -99,13 +102,13 @@ from PyPgfLoggerTest import *
 from rave_util_test import *
 from RaveOdimSourceTest import *
 from PyBitmapGeneratorTest import *
-      
+
 #
 # Unless RAVE_TESTDB_URI has been set we don't want to run the dom db tests
 #
 if os.environ.get("RAVE_TESTDB_URI", "") != "":
   from rave_dom_db_test import *
-      
+
 from rave_wmo_flatfile_test import *
       
 from rave_fm12_test import *

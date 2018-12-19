@@ -30,6 +30,9 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_datetime.h"
 #include <string.h>
 #include "rave_field.h"
+#include <float.h>
+
+#define MAX_NO_OF_SURROUNDING_POSITIONS 8 // pow(2, NO_OF_COMPOSITE_INTERPOLATION_DIMENSIONS)
 
 /**
  * Represents the cartesian product.
@@ -38,6 +41,7 @@ struct _Composite_t {
   RAVE_OBJECT_HEAD /** Always on top */
   Rave_ProductType ptype; /**< the product type, default PCAPPI */
   CompositeSelectionMethod_t method; /**< selection method, default CompositeSelectionMethod_NEAREST */
+  CompositeInterpolationMethod_t interpolationMethod; /**< interpolation method, default CompositeInterpolationMethod_NEAREST */
   double height; /**< the height when generating pcapppi, cappi, pmax default 1000 */
   double elangle; /**< the elevation angle when generating ppi, default 0.0 */
   double range;  /*< the range when generating pmax, default = 500000 meters */
@@ -57,10 +61,23 @@ typedef struct CompositeRadarItem {
  * Structure for keeping track on parameters that should be composited.
  */
 typedef struct CompositingParameter_t {
-  char* name;    /**< quantity */
-  double gain;   /**< gain to be used in composite data*/
-  double offset; /**< offset to be used in composite data*/
+  char* name;      /**< quantity */
+  double gain;     /**< gain to be used in composite data*/
+  double offset;   /**< offset to be used in composite data*/
+  double minvalue; /**< minimum value that can be expressed for this quantity in the composite. Used for interpolation. */
 } CompositingParameter_t;
+
+/**
+ * Structure for holding information regarding a specific position and values 
+ * connected with it.
+ */
+typedef struct CompositeValuePosition_t {
+  PolarNavigationInfo navinfo;
+  double value;       /**< value */
+  double qivalue;     /**< quality index value */
+  RaveValueType type; /**< value type */
+  int valid;          /**< 1 if position valid, otherwise 0 */ 
+} CompositeValuePosition_t;
 
 /**
  * Structure for keeping track on values / parameter
@@ -71,11 +88,31 @@ typedef struct CompositeValues_t {
   double mindist;     /**< min distance */
   double radardist;   /**< distance to radar */
   int radarindex;     /**< radar index in list of radars */
-  PolarNavigationInfo navinfo; /**< navigation info for this parameter */
   const char* name;   /**< name of quantity */
   CartesianParam_t* parameter; /**< the cartesian parameter */
   double qivalue;     /**< quality index value */
+  int noOfValuePositions; /**< the number of valid positions in valuePositions-array below */
+  CompositeValuePosition_t valuePositions[MAX_NO_OF_SURROUNDING_POSITIONS]; /**< value positions array */
 } CompositeValues_t;
+
+/**
+ * Direction in which to perform interpolation.
+ * NOTE: order is of importance here. The order controls in which order
+ * interpolation is done, if done in several dimensions. Since height interpolation
+ * must the be done last, it should be last in this enum.
+ */
+typedef enum CompositeInterpolationDimension_t {
+  CompositeInterpolationDimension_AZIMUTH = 0,
+  CompositeInterpolationDimension_RANGE,
+  CompositeInterpolationDimension_HEIGHT,
+  NO_OF_COMPOSITE_INTERPOLATION_DIMENSIONS
+} CompositeInterpolationDimension_t;
+
+/** 
+ * Function pointer definition for functions where value positions are prepared with values prior to interpolation. 
+ * This type of function shall be provided to CompositeInternal_getInterpolatedValue() 
+ * */
+typedef int (*FUNC_PREPARE_VALUEPOS)(Composite_t*, RaveCoreObject*, const char*, const char*, CompositeValuePosition_t[], int, int[]);
 
 /** The resolution to use for scaling the distance from pixel to used radar. */
 /** By multiplying the values in the distance field by 2000, we get the value in unit meters. */
@@ -99,9 +136,10 @@ typedef struct CompositeValues_t {
  * @param[in] name - quantity
  * @param[in] gain - gain
  * @param[in] offset - offset
+ * @param[in] minvalue - minimum value
  * @return the parameter or NULL on failure
  */
-static CompositingParameter_t* CompositeInternal_createParameter(const char* name, double gain, double offset)
+static CompositingParameter_t* CompositeInternal_createParameter(const char* name, double gain, double offset, double minvalue)
 {
   CompositingParameter_t* result = NULL;
   if (name != NULL) {
@@ -114,6 +152,7 @@ static CompositingParameter_t* CompositeInternal_createParameter(const char* nam
         RAVE_FREE(result);
         result = NULL;
       }
+      result->minvalue = minvalue;
     }
   }
   return result;
@@ -249,6 +288,7 @@ static CompositingParameter_t* CompositeInternal_cloneParameter(CompositingParam
         RAVE_FREE(result);
         result = NULL;
       }
+      result->minvalue = p->minvalue;
     }
   }
   return result;
@@ -419,6 +459,7 @@ static int Composite_constructor(RaveCoreObject* obj)
   Composite_t* this = (Composite_t*)obj;
   this->ptype = Rave_ProductType_PCAPPI;
   this->method = CompositeSelectionMethod_NEAREST;
+  this->interpolationMethod = CompositeInterpolationMethod_NEAREST;
   this->height = 1000.0;
   this->elangle = 0.0;
   this->range = 500000.0;
@@ -500,6 +541,68 @@ static void Composite_destructor(RaveCoreObject* obj)
 }
 
 /**
+ * Returns the lowest height found among a group of value positions.
+ * @param[in] valuePositions - array with the value positions to check
+ * @param[in] noOfValuePositions - the length of the value positions array
+ * @returns the lowest height found among the value positions
+ */
+static double CompositeInternal_getValuePositionsLowestHeight(
+    CompositeValuePosition_t valuePositions[],
+    int noOfValuePositions)
+{
+  int i;
+  RAVE_ASSERT((valuePositions != NULL), "valuePositions == NULL");
+  double lowestHeight = DBL_MAX;
+
+  for (i = 0; i < noOfValuePositions; i++) {
+    CompositeValuePosition_t* valuePos = &valuePositions[i];
+    if (valuePos->navinfo.actual_height < lowestHeight) {
+      lowestHeight = valuePos->navinfo.actual_height;
+    }
+  }
+
+  return lowestHeight;
+}
+
+/**
+ * Sets up an array of booleans (0 or 1), indicating in which dimensions interpolation shall be 
+ * performed, based on the interpolation method set in the composite. Indices in the array match 
+ * CompositeInterpolationDimension_t enum values.
+ * @param[in] composite - self
+ * @param[in,out] interpolationDimArray - the array of booleans indicating in which dimensions
+ *                                        interpolation shall be performed
+ */
+static void CompositeInternal_setInterpolationDimensionsArray(
+    Composite_t* composite, 
+    int interpolationDimArray[]) 
+{
+  RAVE_ASSERT((composite != NULL), "composite == NULL");
+
+  int i = 0;
+  for (i = 0; i < NO_OF_COMPOSITE_INTERPOLATION_DIMENSIONS; i++) {
+    RAVE_ASSERT((interpolationDimArray[i] == 0), 
+                "All positions in interpolation dimensions array not initiated to 0");
+  }
+
+  if (composite->interpolationMethod == CompositeInterpolationMethod_LINEAR_HEIGHT ||
+      composite->interpolationMethod == CompositeInterpolationMethod_QUADRATIC_HEIGHT) {
+    interpolationDimArray[CompositeInterpolationDimension_HEIGHT] = 1;
+  } else if (composite->interpolationMethod == CompositeInterpolationMethod_LINEAR_RANGE) {
+    interpolationDimArray[CompositeInterpolationDimension_RANGE] = 1;
+  } else if (composite->interpolationMethod == CompositeInterpolationMethod_LINEAR_AZIMUTH) {
+    interpolationDimArray[CompositeInterpolationDimension_AZIMUTH] = 1;
+  } else if (composite->interpolationMethod == CompositeInterpolationMethod_LINEAR_RANGE_AND_AZIMUTH) {
+    interpolationDimArray[CompositeInterpolationDimension_RANGE] = 1;
+    interpolationDimArray[CompositeInterpolationDimension_AZIMUTH] = 1;
+  } else if (composite->interpolationMethod == CompositeInterpolationMethod_LINEAR_3D ||
+             composite->interpolationMethod == CompositeInterpolationMethod_QUADRATIC_3D) {
+    interpolationDimArray[CompositeInterpolationDimension_HEIGHT] = 1;
+    interpolationDimArray[CompositeInterpolationDimension_RANGE] = 1;
+    interpolationDimArray[CompositeInterpolationDimension_AZIMUTH] = 1;
+  }
+}
+
+/**
  * Creates an array of CompositeValues_t with length nparam.
  * @param[in] nparam - the number of items in the array
  * @returns the array on success or NULL on failure
@@ -530,13 +633,27 @@ static void CompositeInternal_resetCompositeValues(Composite_t* composite, int n
   for (i = 0; i < nparam; i++) {
     p[i].mindist = 1e10;
     p[i].radarindex = -1;
-    p[i].navinfo.ei = -1;
-    p[i].navinfo.ai = -1;
-    p[i].navinfo.ri = -1;
+    p[i].noOfValuePositions = 0;
     p[i].vtype = RaveValueType_NODATA;
     p[i].name = (const char*)((CompositingParameter_t*)RaveList_get(composite->parameters, i))->name;
     p[i].qivalue = 0.0;
   }
+}
+
+/**
+ * Returns 1 if the interpolation method of the composite indicates that weights should be
+ * raised to the power of 2 before applying them in value interpolation, otherwise 0.
+ *
+ * @param[in] composite - self
+ * @return 1 if interpolation method is quadratic, otherwise 0
+ */
+static int CompositeInternal_isQuadraticInterpolation(Composite_t* composite) {
+  int isQuadratic = 0;
+  if (composite->interpolationMethod == CompositeInterpolationMethod_QUADRATIC_HEIGHT ||
+      composite->interpolationMethod == CompositeInterpolationMethod_QUADRATIC_3D) {
+    isQuadratic = 1;;
+  }
+  return isQuadratic;
 }
 
 /**
@@ -759,6 +876,102 @@ done:
 }
 
 /**
+ * Returns a list of the closest positions surrounding the specified lon/lat according to
+ * the composites attributes like type/elevation/height/etc.
+ * @param[in] composite - self
+ * @param[in] object - the data object
+ * @param[in] plon - the longitude
+ * @param[in] plat - the latitude
+ * @param[in] surroundingScans - indicates whether surrounding or nearest positions in the
+ *                               height dimension should be collected. 0 indicates that 
+ *                               only the nearest scan will be used, while 1 indicates that 
+ *                               positions both on the closest scan above and the closest scan 
+ *                               below will be returned. 
+ * @param[in] surroundingRangeBins - indicates whether surrounding or nearest positions in the
+ *                               range dimension should be collected. 0 indicates that 
+ *                               only the nearest range bin will be used, while 1 indicates that 
+ *                               positions for both the range bin above and the range bin  
+ *                               below the target range will be returned.
+ * @param[in] surroundingRays - indicates whether surrounding or nearest positions in the
+ *                               azimuth dimension should be collected. 0 indicates that 
+ *                               only the positions on the nearest ray will be used, while 1 
+ *                               indicates that positions both on the ray to the 'left' and the 
+ *                               'right' of the target azimuth will be returned.
+ * @param[out] navinfos - array of navigation information structs for the surrounding 
+ *                        positions
+ * @return 1 if successful or 0 if not
+ */
+static int CompositeInternal_surroundingPositions(
+  Composite_t* composite,
+  RaveCoreObject* object,
+  double plon,
+  double plat,
+  int surroundingScans,
+  int surroundingRangeBins,
+  int surroundingRays,
+  PolarNavigationInfo navinfos[])
+{
+  int result = 0;
+
+  RAVE_ASSERT((composite != NULL), "composite == NULL");
+  RAVE_ASSERT((navinfos != NULL), "navinfos == NULL");
+  
+  if (object != NULL) {
+    if (RAVE_OBJECT_CHECK_TYPE(object, &PolarScan_TYPE)) {
+      if (composite->ptype == Rave_ProductType_PPI ||
+          composite->ptype == Rave_ProductType_PCAPPI ||
+          composite->ptype == Rave_ProductType_PMAX) {
+        result = PolarScan_getSurroundingNavigationInfos((PolarScan_t*)object,
+                                                         plon,
+                                                         plat,
+                                                         surroundingRangeBins,
+                                                         surroundingRays,
+                                                         navinfos);
+      }
+    } else if (RAVE_OBJECT_CHECK_TYPE(object, &PolarVolume_TYPE)) {
+      if (composite->ptype == Rave_ProductType_PCAPPI ||
+          composite->ptype == Rave_ProductType_CAPPI ||
+          composite->ptype == Rave_ProductType_PMAX) {
+
+        int insidee = (composite->ptype == Rave_ProductType_PCAPPI || composite->ptype == Rave_ProductType_PMAX)?0:1;
+        result = PolarVolume_getSurroundingNavigationInfos((PolarVolume_t*)object,
+                                                           plon,
+                                                           plat,
+                                                           Composite_getHeight(composite),
+                                                           insidee,
+                                                           surroundingScans,
+                                                           surroundingRangeBins,
+                                                           surroundingRays,
+                                                           navinfos);
+
+      } else if (composite->ptype == Rave_ProductType_PPI) {
+        PolarScan_t* scan = PolarVolume_getScanClosestToElevation((PolarVolume_t*)object,
+                                                                  Composite_getElevationAngle(composite),
+                                                                  0);
+        if (scan == NULL) {
+          RAVE_ERROR1("Failed to fetch scan nearest to elevation %g",
+                      Composite_getElevationAngle(composite));
+          goto done;
+        }
+        result = PolarScan_getSurroundingNavigationInfos(scan,
+                                                         plon,
+                                                         plat,
+                                                         surroundingRangeBins,
+                                                         surroundingRays,
+                                                         navinfos);
+
+        PolarVolume_addEiForNavInfos((PolarVolume_t*)object, scan, navinfos, result, 0);
+
+        RAVE_OBJECT_RELEASE(scan);
+      }
+    }
+  }
+
+done:
+  return result;
+}
+
+/**
  * Returns the position that is closest to the specified lon/lat according to
  * the composites attributes like type/elevation/height/etc.
  * @param[in] composite - self
@@ -779,6 +992,7 @@ static int CompositeInternal_nearestPosition(
 
   RAVE_ASSERT((composite != NULL), "composite == NULL");
   RAVE_ASSERT((nav != NULL), "nav == NULL");
+  
   if (object != NULL) {
     if (RAVE_OBJECT_CHECK_TYPE(object, &PolarScan_TYPE)) {
       if (composite->ptype == Rave_ProductType_PPI ||
@@ -813,6 +1027,177 @@ static int CompositeInternal_nearestPosition(
     }
   }
 
+done:
+  return result;
+}
+
+/**
+ * Returns a value position (CompositeValuePosition_t) that is closest to
+ * the specified lon/lat according to the composites attributes like
+ * type/elevation/height/etc.
+ * @param[in] composite - self
+ * @param[in] object - the data object
+ * @param[in] plon - the longitude
+ * @param[in] plat - the latitude
+ * @param[out] valuePositions - array of value positions. Only position
+ *                              0 used for this function
+ * @return 1 if hit or 0 if outside
+ */
+static int CompositeInternal_getValuePositions_nearest(
+  Composite_t* composite,
+  RaveCoreObject* object,
+  double plon,
+  double plat,
+  CompositeValuePosition_t valuePositions[])
+{
+  RAVE_ASSERT((composite != NULL), "composite == NULL");
+  RAVE_ASSERT((object != NULL), "object == NULL");
+  RAVE_ASSERT((valuePositions != NULL), "valuePositions == NULL");
+
+  int result = -1;
+
+  CompositeValuePosition_t* valuePosition = &valuePositions[0];
+  if (CompositeInternal_nearestPosition(composite, object, plon, plat, &valuePosition->navinfo)) {
+    valuePosition->valid = 1;
+    result = 1;
+  }
+
+  return result;
+}
+
+/**
+ * Returns a list of value position (CompositeValuePosition_t) that are
+ * closest to the specified lon/lat according to the composites attributes like
+ * type/elevation/height/etc. How many and which positions that are returned is
+ * depending on the interpolation dimensions provided.
+ * @param[in] composite - self
+ * @param[in] object - the data object
+ * @param[in] plon - the longitude
+ * @param[in] plat - the latitude
+ * @param[in] interpolationDimensions - array indicating in which dimensions
+ *                                      interpolation shall be performed. This
+ *                                      affects the number of value positions that
+ *                                      are returned.
+ * @param[out] valuePositions - array of value positions.
+ * @return the number of value positions contained in the valuePositions array
+ */
+static int CompositeInternal_getValuePositions_interpolated(
+  Composite_t* composite,
+  RaveCoreObject* object,
+  double plon,
+  double plat,
+  int interpolationDimensions[],
+  CompositeValuePosition_t valuePositions[])
+{
+  RAVE_ASSERT((composite != NULL), "composite == NULL");
+  RAVE_ASSERT((object != NULL), "object == NULL");
+  RAVE_ASSERT((interpolationDimensions != NULL), "interpolationDimensions == NULL");
+  RAVE_ASSERT((valuePositions != NULL), "valuePositions == NULL");
+
+  PolarNavigationInfo navinfos[MAX_NO_OF_SURROUNDING_POSITIONS];
+
+  int noofNavinfos = CompositeInternal_surroundingPositions(composite,
+                                                            object,
+                                                            plon,
+                                                            plat,
+                                                            interpolationDimensions[CompositeInterpolationDimension_HEIGHT],
+                                                            interpolationDimensions[CompositeInterpolationDimension_RANGE],
+                                                            interpolationDimensions[CompositeInterpolationDimension_AZIMUTH],
+                                                            navinfos);
+
+  int i;
+  for (i = 0; i < noofNavinfos; i++) {
+    valuePositions[i].navinfo = navinfos[i];
+    valuePositions[i].valid = 1;
+    valuePositions[i].value = 0;
+  }
+
+  return noofNavinfos;
+}
+
+/**
+ * Returns a list of value position (CompositeValuePosition_t) that are
+ * closest to the specified lon/lat according to the composites attributes like
+ * type/elevation/height/etc. How many and which positions that are returned is
+ * depending on the interpolation dimensions provided. If interpolation method
+ * 'nearest' is used, the interpolation dimensions are ignored and only one
+ * nearest value position is returned.
+ * @param[in] composite - self
+ * @param[in] object - the data object
+ * @param[in] plon - the longitude
+ * @param[in] plat - the latitude
+ * @param[in] interpolationDimensions - array indicating in which dimensions
+ *                                      interpolation shall be performed. This
+ *                                      affects the number of value positions that
+ *                                      are returned.
+ * @param[out] valuePositions - array of value positions.
+ * @return the number of value positions contained in the valuePositions array
+ */
+static int CompositeInternal_getValuePositions(
+  Composite_t* composite,
+  RaveCoreObject* object,
+  double plon,
+  double plat,
+  int interpolationDimensions[],
+  CompositeValuePosition_t valuePositions[])
+{
+  RAVE_ASSERT((composite != NULL), "composite == NULL");
+  RAVE_ASSERT((object != NULL), "object == NULL");
+  RAVE_ASSERT((interpolationDimensions != NULL), "interpolationDimensions == NULL");
+  RAVE_ASSERT((valuePositions != NULL), "valuePositions == NULL");
+
+  int noOfValuePositions = -1;
+
+  if (composite->interpolationMethod == CompositeInterpolationMethod_NEAREST) {
+    noOfValuePositions = CompositeInternal_getValuePositions_nearest(composite, object, plon, plat, valuePositions);
+  } else {
+    noOfValuePositions = CompositeInternal_getValuePositions_interpolated(composite, object, plon, plat, interpolationDimensions, valuePositions);
+  }
+
+  return noOfValuePositions;
+}
+
+/**
+ * Gets the quality value at the specified position for the specified quantity and quality field.
+ * @param[in] composite - self
+ * @param[in] obj - the object
+ * @param[in] quantity - the quantity
+ * @param[in] qualityField - the quality field
+ * @param[in] nav - the navigation information
+ * @param[out] value - the value
+ * @return 1 on success or 0 if value not could be retrieved
+ */
+static int CompositeInternal_getQualityValueAtPosition(
+  Composite_t* composite,
+  RaveCoreObject* obj,
+  const char* quantity,
+  const char* qualityField,
+  PolarNavigationInfo* nav,
+  double* value)
+{
+  int result = 0;
+  RAVE_ASSERT((composite != NULL), "composite == NULL");
+  RAVE_ASSERT((nav != NULL), "nav == NULL");
+  RAVE_ASSERT((value != NULL), "value == NULL");
+  RAVE_ASSERT((qualityField != NULL), "qualityField == NULL");
+  *value = 0.0;
+
+  if (obj != NULL) {
+    if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarScan_TYPE)) {
+      if (!PolarScan_getQualityValueAt((PolarScan_t*)obj, quantity, nav->ri, nav->ai, qualityField, 1, value)) {
+        *value = 0.0;
+      }
+    } else if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
+      if (!PolarVolume_getQualityValueAt((PolarVolume_t*)obj, quantity, nav->ei, nav->ri, nav->ai, qualityField, 1, value)) {
+        *value = 0.0;
+      }
+    } else {
+      RAVE_WARNING0("Unsupported object type");
+      goto done;
+    }
+  }
+
+  result = 1;
 done:
   return result;
 }
@@ -862,6 +1247,572 @@ static int CompositeInternal_getValueAtPosition(
       RAVE_WARNING0("Unsupported object type");
       goto done;
     }
+  }
+
+  result = 1;
+done:
+  return result;
+}
+
+/**
+ * Searches an array of value positions for a position that can be used in interpolation 
+ * together with an input position in a specific dimension. For a position to be considered 
+ * matching, its position attrubtes must be matching in all dimensions except the one in
+ * which interpolation is to be performed. An index is returned if a match is found, 
+ * otherwise -1. 
+ * 
+ * @param[in] valuePos - the source value position for which a match will be searched
+ * @param[in] valuePositions - the array of value positions to search
+ * @param[in] noOfValuePositions - the length of the value position array
+ * @param[in] dimension - the dimension in which interpolation is intended to be performed.
+ *                        which value positions is considered matching is based on the 
+ *                        dimension.
+ * @param[in] startPos - position in the value position array (valuePositions) where the 
+ *                       search will be started. Indices below this will not be checked.
+ * @return an index on success or -1 if no match was found
+ */
+static int CompositeInternal_getMatchingValuePosIndex(
+    CompositeValuePosition_t* valuePos,
+    CompositeValuePosition_t valuePositions[],
+    int noOfValuePositions,
+    CompositeInterpolationDimension_t dimension,
+    int startPos)
+{
+	RAVE_ASSERT((valuePos != NULL), "valuePos == NULL");
+	RAVE_ASSERT((valuePositions != NULL), "valuePositions == NULL");
+
+  PolarNavigationInfo* navinfo = &valuePos->navinfo;
+
+  int foundIndex = -1;
+
+  int i = 0;
+  for (i = startPos; i < noOfValuePositions; i++) {
+    CompositeValuePosition_t* compareValuePos = &valuePositions[i];
+    PolarNavigationInfo* compareNavinfo = &compareValuePos->navinfo;
+
+    int matchFound = 0;
+    if (dimension == CompositeInterpolationDimension_HEIGHT) {
+      matchFound = (compareNavinfo->actual_azimuth == navinfo->actual_azimuth) &&
+                   (compareNavinfo->actual_range   == navinfo->actual_range);
+    } else if (dimension == CompositeInterpolationDimension_RANGE) {
+      matchFound = (compareNavinfo->actual_azimuth == navinfo->actual_azimuth) &&
+                   (compareNavinfo->elevation      == navinfo->elevation);
+    } else if (dimension == CompositeInterpolationDimension_AZIMUTH) {
+      matchFound = (compareNavinfo->elevation      == navinfo->elevation) &&
+                   (compareNavinfo->actual_range   == navinfo->actual_range);
+    } else {
+      RAVE_ERROR1("Invalid interpolation dimension: %i", dimension);
+    }
+
+    if (matchFound) {
+      foundIndex = i;
+      break;
+    }
+  }
+
+  return foundIndex;
+}
+
+/**
+ * Calculates and returns the the absolute difference between actual and targeted position 
+ * of a navigation info structure (PolarNavigationInfo) in one dimension. The unit depends 
+ * on the dimension.
+ * 
+ * @param[in] navinfo - the navigation information
+ * @param[in] dimension - the dimension in which to collect the position difference
+ * 
+ * @return the absolute difference between target position and actual position
+ */
+static double CompositeInternal_getDimensionAbsoluteDiff(
+    PolarNavigationInfo* navinfo,
+    CompositeInterpolationDimension_t dimension)
+{
+  RAVE_ASSERT((navinfo != NULL), "navinfo == NULL");
+
+  double dimensionDiff = 0;
+  if (dimension == CompositeInterpolationDimension_HEIGHT) {
+    dimensionDiff = fabs(navinfo->actual_height - navinfo->height);
+  } else if (dimension == CompositeInterpolationDimension_RANGE) {
+    dimensionDiff = fabs(navinfo->actual_range - navinfo->range);
+  } else if (dimension == CompositeInterpolationDimension_AZIMUTH) {
+    dimensionDiff = fabs(navinfo->actual_azimuth - navinfo->azimuth);
+    while (dimensionDiff > (M_PI / 2)) {
+      dimensionDiff = fabs(dimensionDiff - M_PI);
+    }
+  } else {
+    RAVE_ERROR1("Invalid interpolation dimension: %i", dimension);
+  }
+
+  return dimensionDiff;
+}
+
+/**
+ * Alters a navigation info structure (PolarNavigationInfo) so that actual 
+ * position is set to the target position in one dimension. This is something 
+ * that can be done after an interpolation, with the interpolated navigation
+ * info, since the position can be seen as placed on the target.
+ * 
+ * @param[in] navinfo - the navigation information
+ * @param[in] dimension - the dimension in which to set interpolated position
+ * 
+ * @return 1 if succesfully updated navinfo, 0 if update failed
+ */
+static int CompositeInternal_setInterpolatedPosition(
+    PolarNavigationInfo* navinfo,
+    CompositeInterpolationDimension_t dimension)
+{
+	RAVE_ASSERT((navinfo != NULL), "navinfo == NULL");
+
+  if (dimension == CompositeInterpolationDimension_HEIGHT) {
+    navinfo->actual_height = navinfo->height;
+  } else if (dimension == CompositeInterpolationDimension_RANGE) {
+    navinfo->actual_range = navinfo->range;
+  } else if (dimension == CompositeInterpolationDimension_AZIMUTH) {
+    navinfo->actual_azimuth = navinfo->azimuth;
+  } else {
+    RAVE_ERROR1("Invalid interpolation dimension: %i", dimension);
+    return 0;
+  }
+
+  return 1;
+}
+
+/**
+ * Combines value positions by performing interpolation in one dimension. For each 
+ * value position in the provided array, the rest of the array is searched for value
+ * positions that are located equally, except in the interpolation dimension. When 
+ * such a matching value position is found, the two value positions are combined by 
+ * performing an interpolation. The two value positions are replaced by one result 
+ * value position, with an interpolated value and a position equal to the original 
+ * value positions, except in the interpolation dimension where the location is now
+ * at the target position (between the interpolated positions).
+ * 
+ * @param[in] composite - self
+ * @param[in] dimension - the dimension in which to combine value positions
+ * @param[in] valuePositions - value positions to combine
+ * @param[in] noOfValuePositions - the length of the value positions array (valuePositions)
+ * 
+ * @return the number of resulting value positions
+ */
+static int CompositeInternal_combineValuePosInDimension(
+    Composite_t* composite,
+    CompositeInterpolationDimension_t dimension,
+    CompositeValuePosition_t valuePositions[],
+    int noOfValuePositions)
+{
+  RAVE_ASSERT((composite != NULL), "composite == NULL");
+  RAVE_ASSERT((valuePositions != NULL), "valuePositions == NULL");
+
+  int noOfResultPositions = 0;
+
+  int i = 0;
+  for (i = 0; i < noOfValuePositions; i++) {
+    CompositeValuePosition_t* valuePos1 = &valuePositions[i];
+    if (valuePos1->valid == 1) {
+      int valuePos2Index = CompositeInternal_getMatchingValuePosIndex(valuePos1, valuePositions, noOfValuePositions, dimension, i+1);
+
+      if (valuePos2Index != -1) {
+        CompositeValuePosition_t* valuePos2 = &valuePositions[valuePos2Index];
+        valuePos2->valid = 0;
+
+        double dimensionDiff1 = CompositeInternal_getDimensionAbsoluteDiff(&valuePos1->navinfo, dimension);
+        double dimensionDiff2 = CompositeInternal_getDimensionAbsoluteDiff(&valuePos2->navinfo, dimension);
+        double weight1 = dimensionDiff1;
+        double weight2 = dimensionDiff2;
+        if (CompositeInternal_isQuadraticInterpolation(composite)) {
+          weight1 = pow(weight1, 2);
+          weight2 = pow(weight2, 2);
+        }
+        double totalWeight = weight1 + weight2;
+        weight1 = 1.0 - (weight1 / totalWeight); // inverted weight
+        weight2 = 1.0 - (weight2 / totalWeight); // inverted weight
+
+        // update value pos 1
+        valuePos1->value = (valuePos2->value * weight2) + (valuePos1->value * weight1);
+        valuePos1->qivalue = (valuePos2->qivalue * weight2) + (valuePos1->qivalue * weight1);
+
+        if (valuePos2->type == RaveValueType_DATA || valuePos1->type == RaveValueType_DATA) {
+          // if any of the positions has data, set the overall type to DATA
+          valuePos1->type = RaveValueType_DATA;
+        } else if (valuePos2->type == RaveValueType_UNDETECT || valuePos1->type == RaveValueType_UNDETECT) {
+          valuePos1->type = RaveValueType_UNDETECT;
+        } else {
+          valuePos1->type = RaveValueType_NODATA;
+        }
+      }
+
+      CompositeInternal_setInterpolatedPosition(&valuePos1->navinfo, dimension);
+      valuePositions[noOfResultPositions] = *valuePos1;
+      noOfResultPositions++;
+    }
+  }
+
+  return noOfResultPositions;
+}
+
+/**
+ * Performs interpolation between a number of input value positions in the dimensions
+ * defined by input parameter 'interpolationDimensions'. 
+ * 
+ * @param[in] composite - self
+ * @param[in] interpolationDimensions - the dimensions in which to perform interpolation
+ * @param[in] valuePositions - value positions to interpolate
+ * @param[in] noOfValuePositions - the length of the value positions array (valuePositions)
+ * @param[out] type - the resulting value type
+ * @param[out] value - the resulting value
+ * @param[out] qiv - the resulting quality indicator value
+ * 
+ * @return 1 if interpolation was successful, 0 otherwise
+ */
+static int CompositeInternal_interpolateValuePositions(
+    Composite_t* composite,
+    int interpolationDimensions[],
+    CompositeValuePosition_t valuePositions[],
+    int noOfValuePositions,
+    RaveValueType* type,
+    double* value,
+    double* qiv)
+{
+  RAVE_ASSERT((composite != NULL), "composite == NULL");
+  RAVE_ASSERT((interpolationDimensions != NULL), "interpolationDimensions == NULL");
+  RAVE_ASSERT((valuePositions != NULL), "valuePositions == NULL");
+  RAVE_ASSERT((type != NULL), "type == NULL");
+  RAVE_ASSERT((value != NULL), "value == NULL");
+  RAVE_ASSERT((qiv != NULL), "qiv == NULL");
+
+  int result = 0;
+  CompositeValuePosition_t interpolatedPositions[MAX_NO_OF_SURROUNDING_POSITIONS];
+
+  // copy value positions to array to not effect originals
+  memcpy(interpolatedPositions, valuePositions, sizeof(CompositeValuePosition_t)*MAX_NO_OF_SURROUNDING_POSITIONS);
+
+  int i;
+  for (i = 0; i < NO_OF_COMPOSITE_INTERPOLATION_DIMENSIONS; i++) {
+    if (interpolationDimensions[i]) {
+      noOfValuePositions = CompositeInternal_combineValuePosInDimension(composite, i, interpolatedPositions, noOfValuePositions);
+      if (noOfValuePositions == 1) {
+        break;
+      }
+    }
+  }
+
+  if (noOfValuePositions != 1) {
+    RAVE_ERROR1("Only one value position should remain after interpolation. Remaining value positions: %i", noOfValuePositions);
+    goto done;
+  }
+
+  CompositeValuePosition_t* valuePos = &interpolatedPositions[0];
+  *value = valuePos->value;
+  *qiv = valuePos->qivalue;
+  *type = valuePos->type;
+
+  result = 1;
+done:
+  return result;
+}
+
+/**
+ * Prepares a navigation info structure (PolarNavigationInfo) so that it can be
+ * used in interpolation. For the dimensions where no interpolation will be
+ * performed, the actual position is set to the target dimension. This is done
+ * to allow the interpolation method to correctly recognise which positions to
+ * interpolate between.
+ *
+ * @param[in] navinfo - the navigation information
+ * @param[in] dimension - the dimension in which to set interpolated position
+ *
+ * @return 1 if succesfully updated navinfo, 0 if update failed
+ */
+static void CompositeInternal_prepareNavinfoForInterpolation(
+    PolarNavigationInfo* navinfo,
+    int interpolationDimensions[])
+{
+  RAVE_ASSERT((navinfo != NULL), "navinfo == NULL");
+  RAVE_ASSERT((interpolationDimensions != NULL), "interpolationDimensions == NULL");
+
+  if (!interpolationDimensions[CompositeInterpolationDimension_RANGE]) {
+    // no range interpolation shall be done
+    if (!CompositeInternal_setInterpolatedPosition(navinfo, CompositeInterpolationDimension_RANGE)) {
+      return;
+    }
+  }
+
+  if (!interpolationDimensions[CompositeInterpolationDimension_AZIMUTH]) {
+    // no azimuth interpolation shall be done
+    if (!CompositeInternal_setInterpolatedPosition(navinfo, CompositeInterpolationDimension_AZIMUTH)) {
+      return;
+    }
+  }
+}
+
+/**
+ * Gets a quality value at a specific x-, y-coordinate for a quality 
+ * algorithm that supports filling quality information. The value will be
+ * interpolated, based on the input value position array anf the 
+ * interpolation dimensions.
+ * 
+ * @param[in] composite - self
+ * @param[in] obj - the rave core object instance
+ * @param[in] field - the quality field
+ * @param[in] name - the quality field name
+ * @param[in] quantity - the quantity
+ * @param[in] valuePositions - value positions to interpolate
+ * @param[in] noOfValuePositions - the length of the value positions array (valuePositions)
+ * @param[in] x - x-coordinate
+ * @param[in] y - y-coordinate
+ * @param[in] interpolationDimensions - the dimensions in which to interpolate
+ * 
+ * @return 1 if successful, 0 otherwise
+ */
+static int CompositeInternal_getInterpolatedAlgorithmQualityValue(
+    Composite_t* composite,
+    RaveCoreObject* obj,
+    RaveField_t* field,
+    const char* name,
+    const char* quantity,
+    CompositeValuePosition_t valuePositions[],
+    int noOfValuePositions,
+    int x,
+    int y,
+    int interpolationDimensions[],
+    double* resultValue)
+{
+	RAVE_ASSERT((composite != NULL), "composite == NULL");
+  RAVE_ASSERT((obj != NULL), "obj == NULL");
+  RAVE_ASSERT((field != NULL), "field == NULL");
+  RAVE_ASSERT((name != NULL), "name == NULL");
+  RAVE_ASSERT((quantity != NULL), "quantity == NULL");
+  RAVE_ASSERT((valuePositions != NULL), "valuePositions == NULL");
+  RAVE_ASSERT((interpolationDimensions != NULL), "interpolationDimensions == NULL");
+  RAVE_ASSERT((resultValue != NULL), "resultValue == NULL");
+  
+  int result = 0;
+
+  int i = 0;
+  for (i = 0; i < noOfValuePositions; i++) {
+    CompositeValuePosition_t* valuePos = &valuePositions[i];
+
+    double value = 0;
+    if (CompositeAlgorithm_fillQualityInformation(composite->algorithm, obj, name, quantity, field, x, y, &valuePos->navinfo,
+                                                  COMPOSITE_QUALITY_FIELDS_GAIN, COMPOSITE_QUALITY_FIELDS_OFFSET)) {
+      RaveField_getValue(field, x, y, &value);
+    }
+
+    valuePos->value = value;
+    valuePos->type = RaveValueType_DATA; // assume all positions has data
+
+    CompositeInternal_prepareNavinfoForInterpolation(&valuePos->navinfo, interpolationDimensions);
+  }
+
+  RaveValueType type;
+  double qiv;
+  if (!CompositeInternal_interpolateValuePositions(composite, interpolationDimensions, valuePositions, noOfValuePositions,
+                                                   &type, resultValue, &qiv)) {
+    goto done;
+  }
+
+  result = 1;
+done:
+  return result;
+}
+
+/**
+ * Prepares value positions for interpolation by setting height values as 'value' in 
+ * them, based on the position information.
+ * 
+ * @param[in] composite - self
+ * @param[in] obj - the rave core object instance
+ * @param[in] quantity - unused in this function. need to be present to comply 
+ *                       with function pointer pattern
+ * @param[in] qualityField - unused in this function. need to be present to comply 
+ *                           with function pointer pattern
+ * @param[in] valuePositions - value positions to prepare
+ * @param[in] noOfValuePositions - the length of the value positions array (valuePositions)
+ * @param[in] interpolationDimensions - the dimensions in which to interpolate
+ * 
+ * @return 1 if successful, 0 otherwise
+ */
+static int CompositeInternal_setHeightValuesInValuePos(
+    Composite_t* composite,
+    RaveCoreObject* obj,
+    const char* quantity,
+    const char* qualityField,
+    CompositeValuePosition_t valuePositions[],
+    int noOfValuePositions,
+    int interpolationDimensions[])
+{
+  RAVE_ASSERT((composite != NULL), "composite == NULL");
+  RAVE_ASSERT((obj != NULL), "obj == NULL");
+  RAVE_ASSERT((valuePositions != NULL), "valuePositions == NULL");
+  RAVE_ASSERT((interpolationDimensions != NULL), "interpolationDimensions == NULL");
+  
+  int i = 0;
+  for (i = 0; i < noOfValuePositions; i++) {
+    CompositeValuePosition_t* valuePos = &valuePositions[i];
+
+    valuePos->value = valuePos->navinfo.actual_height/HEIGHT_RESOLUTION;
+
+    CompositeInternal_prepareNavinfoForInterpolation(&valuePos->navinfo, interpolationDimensions);
+  }
+
+  return 1;
+}
+
+/**
+ * Prepares value positions for interpolation by setting quality values as 'value' in 
+ * them, based on the position information, quantity and quality field.
+ * 
+ * @param[in] composite - self
+ * @param[in] obj - the rave core object instance
+ * @param[in] quantity - the quantity
+ * @param[in] qualityField - the quality field to collect value for
+ * @param[in] valuePositions - value positions to prepare
+ * @param[in] noOfValuePositions - the length of the value positions array (valuePositions)
+ * @param[in] interpolationDimensions - the dimensions in which to interpolate
+ * 
+ * @return 1 if successful, 0 otherwise
+ */
+static int CompositeInternal_setQualityValuesInValuePos(
+    Composite_t* composite,
+    RaveCoreObject* obj,
+    const char* quantity,
+    const char* qualityField,
+    CompositeValuePosition_t valuePositions[],
+    int noOfValuePositions,
+    int interpolationDimensions[])
+{
+  RAVE_ASSERT((composite != NULL), "composite == NULL");
+  RAVE_ASSERT((obj != NULL), "obj == NULL");
+  RAVE_ASSERT((quantity != NULL), "quantity == NULL");
+  RAVE_ASSERT((qualityField != NULL), "qualityField == NULL");
+  RAVE_ASSERT((valuePositions != NULL), "valuePositions == NULL");
+  RAVE_ASSERT((interpolationDimensions != NULL), "interpolationDimensions == NULL");
+  
+  int i = 0;
+  for (i = 0; i < noOfValuePositions; i++) {
+    CompositeValuePosition_t* valuePos = &valuePositions[i];
+
+    if (!CompositeInternal_getQualityValueAtPosition(composite, obj, quantity, qualityField, &valuePos->navinfo, &valuePos->value)) {
+      return 0;
+    }
+
+    valuePos->type = RaveValueType_DATA;
+
+    CompositeInternal_prepareNavinfoForInterpolation(&valuePos->navinfo, interpolationDimensions);
+  }
+
+  return 1;
+}
+
+/**
+ * Prepares value positions for interpolation by quantity values as 'value' in 
+ * them, based on the position information.
+ * 
+ * @param[in] composite - self
+ * @param[in] obj - the rave core object instance
+ * @param[in] quantity - the quantity
+ * @param[in] qualityField - unused in this function. need to be present to comply 
+ *                           with function pointer pattern
+ * @param[in] valuePositions - value positions to prepare
+ * @param[in] noOfValuePositions - the length of the value positions array (valuePositions)
+ * @param[in] interpolationDimensions - the dimensions in which to interpolate
+ * 
+ * @return 1 if successful, 0 otherwise
+ */
+static int CompositeInternal_setValuesInValuePos(
+    Composite_t* composite,
+    RaveCoreObject* obj,
+    const char* quantity,
+    const char* qualityField,
+    CompositeValuePosition_t valuePositions[],
+    int noOfValuePositions,
+    int interpolationDimensions[])
+{
+  RAVE_ASSERT((composite != NULL), "composite == NULL");
+  RAVE_ASSERT((obj != NULL), "obj == NULL");
+  RAVE_ASSERT((quantity != NULL), "quantity == NULL");
+  RAVE_ASSERT((valuePositions != NULL), "valuePositions == NULL");
+  RAVE_ASSERT((interpolationDimensions != NULL), "interpolationDimensions == NULL");
+  
+  int i = 0;
+  for (i = 0; i < noOfValuePositions; i++) {
+    CompositeValuePosition_t* valuePos = &valuePositions[i];
+
+    if (!CompositeInternal_getValueAtPosition(composite, obj, quantity, &valuePos->navinfo, &valuePos->type, &valuePos->value, &valuePos->qivalue)) {
+      return 0;
+    }
+
+    if (valuePos->value == RaveValueType_UNDETECT) {
+      CompositingParameter_t* param = CompositeInternal_getParameterByName(composite, quantity);
+      valuePos->value = param->minvalue;
+    }
+
+    CompositeInternal_prepareNavinfoForInterpolation(&valuePos->navinfo, interpolationDimensions);
+  }
+
+  return 1;
+}
+
+/**
+ * 
+ * 
+ * @param[in] composite - self
+ * @param[in] obj - the rave core object instance
+ * @param[in] interpolationDimensions - the dimensions in which to interpolate
+ * @param[in] quantity - the quantity
+ * @param[in] qualityField - the quality field. only used in combination with 
+ *                           some prepare-value-functions
+ * @param[in] valuePositions - value positions to prepare
+ * @param[in] noOfValuePositions - the length of the value positions array (valuePositions)
+ * @param[in] prepareValuePosFunc - function pointer to function that will be used to
+ *                                  prepare the value positions with correct values, prior to
+ *                                  interpolation
+ * @param[out] type - the resulting value type
+ * @param[out] value - the resulting value
+ * @param[out] qiv - the resulting quality indicator value
+ * 
+ * @return 1 if successful, 0 otherwise
+ */
+static int CompositeInternal_getInterpolatedValue(
+    Composite_t* composite,
+    RaveCoreObject* obj,
+    int interpolationDimensions[],
+    const char* quantity,
+    const char* qualityField,
+    CompositeValuePosition_t valuePositions[],
+    int noOfValuePositions,
+    FUNC_PREPARE_VALUEPOS prepareValuePosFunc,
+    RaveValueType* type,
+    double* value,
+    double* qiv)
+{
+  int result = 0;
+  RAVE_ASSERT((composite != NULL), "composite == NULL");
+  RAVE_ASSERT((obj != NULL), "obj == NULL");
+  RAVE_ASSERT((interpolationDimensions != NULL), "interpolationDimensions == NULL");
+  RAVE_ASSERT((valuePositions != NULL), "valuePositions == NULL");
+  RAVE_ASSERT((type != NULL), "type == NULL");
+  RAVE_ASSERT((value != NULL), "value == NULL");
+  RAVE_ASSERT((qiv != NULL), "qiv == NULL");
+
+  *type = RaveValueType_NODATA;
+
+  if (noOfValuePositions == 0) {
+    goto done;
+  }
+
+  if (!prepareValuePosFunc(composite, obj, quantity, qualityField, valuePositions, noOfValuePositions, interpolationDimensions)) {
+    goto done;
+  }
+
+  if (!CompositeInternal_interpolateValuePositions(composite,
+                                                   interpolationDimensions,
+                                                   valuePositions,
+                                                   noOfValuePositions,
+                                                   type,
+                                                   value,
+                                                   qiv)) {
+    goto done;
   }
 
   result = 1;
@@ -1098,29 +2049,42 @@ done:
 }
 
 /**
- * Uses the navigation information and fills all associated cartesian quality
- * with the composite objects quality fields.
+ * Uses the navigation information of the value positions and fills all 
+ * associated cartesian quality with the composite objects quality fields. If
+ * there is more than one value position in the valuePositions-array, an 
+ * an interpolation of the quality value will be performed, along the dimensions
+ * defined in the interpolationDimensions-array.
+ * 
  * @param[in] composite - self
  * @param[in] x - x coordinate
  * @param[in] y - y coordinate
- * @param[in] radardist - distance to radar for this position
- * @param[in] radarindex - the object to use in the composite
- * @param[in] navinfo - the navigational information
+ * @param[in] cvalues - the composite values
+ * @param[in] interpolationDimensions - dimensions to perform interpolation in                      
  */
 static void CompositeInternal_fillQualityInformation(
   Composite_t* composite,
   int x,
   int y,
-  CartesianParam_t* param,
-  double radardist, 
-  int radarindex,
-  PolarNavigationInfo* navinfo)
+  CompositeValues_t* cvalues,
+  int interpolationDimensions[])
 {
   int nfields = 0, i = 0;
   const char* quantity;
+  CartesianParam_t* param = NULL;
+  double radardist = 0;
+  int radarindex = 0;
+  CompositeValuePosition_t* valuePositions = NULL;
+  int noOfValuePositions = 0;
+
   RAVE_ASSERT((composite != NULL), "composite == NULL");
-  RAVE_ASSERT((param != NULL), "param == NULL");
-  RAVE_ASSERT((navinfo != NULL), "navinfo == NULL");
+  RAVE_ASSERT((cvalues != NULL), "cvalues == NULL");
+  RAVE_ASSERT((interpolationDimensions != NULL), "interpolationDimensions == NULL");
+
+  param = cvalues->parameter;
+  radardist = cvalues->radardist;
+  radarindex = cvalues->radarindex;
+  valuePositions = cvalues->valuePositions;
+  noOfValuePositions = cvalues->noOfValuePositions;
 
   nfields = CartesianParam_getNumberOfQualityFields(param);
   quantity = CartesianParam_getQuantity(param);
@@ -1129,8 +2093,7 @@ static void CompositeInternal_fillQualityInformation(
     RaveField_t* field = NULL;
     RaveAttribute_t* attribute = NULL;
     char* name = NULL;
-    double v = 0.0;
-    int valuefetched = 0;
+    double value = 0.0;
 
     field = CartesianParam_getQualityField(param, i);
     if (field != NULL) {
@@ -1143,34 +2106,53 @@ static void CompositeInternal_fillQualityInformation(
     if (name != NULL) {
       RaveCoreObject* obj = Composite_get(composite, radarindex);
       if (obj != NULL) {
+        int setValue = 1;
+        double dummyValue;
+        RaveValueType type;
         if (strcmp(DISTANCE_TO_RADAR_HOW_TASK, name) == 0) {
-          RaveField_setValue(field, x, y, radardist/DISTANCE_TO_RADAR_RESOLUTION);
+          value = radardist/DISTANCE_TO_RADAR_RESOLUTION;
         } else if (strcmp(HEIGHT_ABOVE_SEA_HOW_TASK, name) == 0) {
-          RaveField_setValue(field, x, y, navinfo->actual_height/HEIGHT_RESOLUTION);
+          if (!CompositeInternal_getInterpolatedValue(composite, obj, interpolationDimensions,
+                                                      quantity, name, valuePositions,
+                                                      noOfValuePositions,
+                                                      CompositeInternal_setHeightValuesInValuePos,
+                                                      &type, &value, &dummyValue))
+          {
+            value = 0.0;
+          }
         } else if (strcmp(RADAR_INDEX_HOW_TASK, name) == 0) {
-          RaveField_setValue(field, x, y, (double)Composite_getRadarIndexValue(composite, radarindex));
+          value = (double)Composite_getRadarIndexValue(composite, radarindex);
         } else if (composite->algorithm != NULL && CompositeAlgorithm_supportsFillQualityInformation(composite->algorithm, name)) {
           // If the algorithm indicates that it is able to support the provided how/task field, then do so
-          if (!CompositeAlgorithm_fillQualityInformation(composite->algorithm, obj, name, quantity, field, x, y, navinfo,
-                                                         COMPOSITE_QUALITY_FIELDS_GAIN, COMPOSITE_QUALITY_FIELDS_OFFSET)) {
-            RaveField_setValue(field, x, y, 0.0);
+          if (noOfValuePositions == 1) {
+            PolarNavigationInfo navinfo = valuePositions[0].navinfo;
+            if (CompositeAlgorithm_fillQualityInformation(composite->algorithm, obj, name, quantity, field, x, y, &navinfo,
+                                                          COMPOSITE_QUALITY_FIELDS_GAIN, COMPOSITE_QUALITY_FIELDS_OFFSET)) {
+              setValue = 0;
+            } else {
+              value = 0.0;
+            }
+          } else {
+            if (!CompositeInternal_getInterpolatedAlgorithmQualityValue(composite, obj, field, name, quantity,
+                                                                        valuePositions, noOfValuePositions, x, y,
+                                                                        interpolationDimensions, &value))
+            {
+              value = 0.0;
+            }
           }
         } else {
-          if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
-            if (navinfo->ei >= 0 && navinfo->ri >= 0 && navinfo->ai >= 0 ) {
-              valuefetched = PolarVolume_getQualityValueAt((PolarVolume_t*)obj, quantity, navinfo->ei, navinfo->ri, navinfo->ai, name, 1, &v);
-            }
-          } else if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarScan_TYPE)) {
-            if (navinfo->ri >= 0 && navinfo->ai >= 0) {
-              valuefetched = PolarScan_getQualityValueAt((PolarScan_t*)obj, quantity, navinfo->ri, navinfo->ai, name, 1, &v);
-            }
+          int valueInterpolated = CompositeInternal_getInterpolatedValue(composite, obj, interpolationDimensions,
+                                                                         quantity, name, valuePositions,
+                                                                         noOfValuePositions,
+                                                                         CompositeInternal_setQualityValuesInValuePos,
+                                                                         &type, &value, &dummyValue);
+          if (valueInterpolated) {
+            value = (value - COMPOSITE_QUALITY_FIELDS_OFFSET) / COMPOSITE_QUALITY_FIELDS_GAIN;
           }
+        }
 
-          if (valuefetched) {
-            v = (v - COMPOSITE_QUALITY_FIELDS_OFFSET) / COMPOSITE_QUALITY_FIELDS_GAIN;
-          }
-
-          RaveField_setValue(field, x, y, v);
+        if (setValue) {
+          RaveField_setValue(field, x, y, value);
         }
       }
       RAVE_OBJECT_RELEASE(obj);
@@ -1319,6 +2301,7 @@ static Cartesian_t* Composite_nearest_max(Composite_t* composite, Area_t* area, 
   int x = 0, y = 0, i = 0, xsize = 0, ysize = 0, nradars = 0;
   int nqualityflags = 0;
   int nparam = 0;
+  int interpolationDimensions[NO_OF_COMPOSITE_INTERPOLATION_DIMENSIONS] = {0};
 
   RAVE_ASSERT((composite != NULL), "composite == NULL");
   if (area == NULL) {
@@ -1331,6 +2314,8 @@ static Cartesian_t* Composite_nearest_max(Composite_t* composite, Area_t* area, 
     RAVE_ERROR0("You can not generate a composite without specifying at least one parameter");
     goto fail;
   }
+
+  CompositeInternal_setInterpolationDimensionsArray(composite, interpolationDimensions);
 
   result = CompositeInternal_createCompositeImage(composite, area);
   if (result == NULL) {
@@ -1413,8 +2398,10 @@ static Cartesian_t* Composite_nearest_max(Composite_t* composite, Area_t* area, 
                     cvalues[cindex].mindist = dist;
                     cvalues[cindex].radardist = dist;
                     cvalues[cindex].radarindex = i;
-                    cvalues[cindex].navinfo = navinfo;
                     cvalues[cindex].qivalue = qivalue;
+                    cvalues[cindex].noOfValuePositions = 1;
+                    cvalues[cindex].valuePositions[0].navinfo = navinfo;
+                    cvalues[cindex].valuePositions[0].valid = 1;
                   }
                 }
               }
@@ -1432,9 +2419,7 @@ static Cartesian_t* Composite_nearest_max(Composite_t* composite, Area_t* area, 
 
         if ((vtype == RaveValueType_DATA || vtype == RaveValueType_UNDETECT) &&
             cvalues[cindex].radarindex >= 0 && nqualityflags > 0) {
-          PolarNavigationInfo info = cvalues[cindex].navinfo;
-          CompositeInternal_fillQualityInformation(composite, x, y, cvalues[cindex].parameter,
-                                                   cvalues[cindex].radardist, cvalues[cindex].radarindex, &info);
+          CompositeInternal_fillQualityInformation(composite, x, y, &cvalues[cindex], interpolationDimensions);
         }
       }
     }
@@ -1553,6 +2538,23 @@ CompositeSelectionMethod_t Composite_getSelectionMethod(Composite_t* self)
   return self->method;
 }
 
+int Composite_setInterpolationMethod(Composite_t* self, CompositeInterpolationMethod_t interpolationMethod)
+{
+  int result = 0;
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  if (interpolationMethod >= CompositeInterpolationMethod_NEAREST && interpolationMethod <= CompositeInterpolationMethod_QUADRATIC_3D) {
+    self->interpolationMethod = interpolationMethod;
+    result = 1;
+  }
+  return result;
+}
+
+CompositeInterpolationMethod_t Composite_getInterpolationMethod(Composite_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return self->interpolationMethod;
+}
+
 void Composite_setHeight(Composite_t* composite, double height)
 {
   RAVE_ASSERT((composite != NULL), "composite == NULL");
@@ -1617,7 +2619,7 @@ const char* Composite_getQualityIndicatorFieldName(Composite_t* self)
   return (const char*)self->qiFieldName;
 }
 
-int Composite_addParameter(Composite_t* composite, const char* quantity, double gain, double offset)
+int Composite_addParameter(Composite_t* composite, const char* quantity, double gain, double offset, double minvalue)
 {
   int result = 0;
   CompositingParameter_t* param = NULL;
@@ -1628,9 +2630,10 @@ int Composite_addParameter(Composite_t* composite, const char* quantity, double 
   if (param != NULL) {
     param->gain = gain;
     param->offset = offset;
+    param->minvalue = minvalue;
     result = 1;
   } else {
-    param = CompositeInternal_createParameter(quantity, gain, offset);
+    param = CompositeInternal_createParameter(quantity, gain, offset, minvalue);
     if (param != NULL) {
       result = RaveList_add(composite->parameters, param);
       if (!result) {
@@ -1712,17 +2715,26 @@ int Composite_applyRadarIndexMapping(Composite_t* composite, RaveObjectHashTable
   return CompositeInternal_updateRadarIndexes(composite, mapping);
 }
 
-Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t* qualityflags)
+Cartesian_t* Composite_generate(Composite_t* composite, Area_t* area, RaveList_t* qualityflags)
 {
   Cartesian_t* result = NULL;
   Projection_t* projection = NULL;
-  PolarNavigationInfo navinfo;
+  CompositeValuePosition_t valuePositions[MAX_NO_OF_SURROUNDING_POSITIONS];
   CompositeValues_t* cvalues = NULL;
+  int interpolationDimensions[NO_OF_COMPOSITE_INTERPOLATION_DIMENSIONS] = {0};
   int x = 0, y = 0, i = 0, xsize = 0, ysize = 0, nradars = 0;
   int nqualityflags = 0;
   int nparam = 0;
 
   RAVE_ASSERT((composite != NULL), "composite == NULL");
+  
+  CompositeInternal_setInterpolationDimensionsArray(composite, interpolationDimensions);
+
+  if (composite->ptype == Rave_ProductType_MAX && composite->interpolationMethod != CompositeInterpolationMethod_NEAREST) {
+    RAVE_ERROR0("Product type MAX can currently only be used with interpolation method 'nearest value'.");
+  } else if (composite->ptype == Rave_ProductType_PMAX && composite->interpolationMethod != CompositeInterpolationMethod_NEAREST) {
+    RAVE_ERROR0("Product type PMAX can currently only be used with interpolation method 'nearest value'.");
+  }
 
   if (composite->ptype == Rave_ProductType_MAX) { // Special handling of the max algorithm.
     return Composite_nearest_max(composite, area, qualityflags);
@@ -1816,28 +2828,42 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t*
               maxdist = PolarScan_getMaxDistance((PolarScan_t*)obj);
             }
             if (dist <= maxdist) {
-              if (CompositeInternal_nearestPosition(composite, obj, olon, olat, &navinfo)) {
-                double originaldist = dist;
+              int noOfValuePositions = CompositeInternal_getValuePositions(composite, obj, olon, olat,
+                                                                           interpolationDimensions,
+                                                                           valuePositions);
+              if (noOfValuePositions > 0) {
                 rdist = dist; /* Remember distance to radar */
 
                 if (composite->method == CompositeSelectionMethod_HEIGHT) {
-                  dist = navinfo.actual_height;
+                  dist = CompositeInternal_getValuePositionsLowestHeight(valuePositions, noOfValuePositions);
                 }
 
                 for (cindex = 0; cindex < nparam; cindex++) {
                   RaveValueType otype = RaveValueType_NODATA;
                   double ovalue = 0.0, qivalue = 0.0;
-                  CompositeInternal_getValueAtPosition(composite, obj, cvalues[cindex].name, &navinfo, &otype, &ovalue, &qivalue);
+
+                  if (!CompositeInternal_getInterpolatedValue(composite, obj, interpolationDimensions,
+                                                              cvalues[cindex].name, NULL, valuePositions,
+                                                              noOfValuePositions,
+                                                              CompositeInternal_setValuesInValuePos,
+                                                              &otype, &ovalue, &qivalue)) {
+                    RAVE_ERROR0("Interpolation failed.\n");
+                    goto fail;
+                  }
 
                   if (composite->algorithm != NULL && CompositeAlgorithm_supportsProcess(composite->algorithm)) {
-                    if (CompositeAlgorithm_process(composite->algorithm, obj, cvalues[cindex].name, olon, olat, originaldist, &otype, &ovalue, &cvalues[cindex].navinfo)) {
+                    // NOTE: The CompositeAlgorithm_process interface expects only one single navigation info. In the below call, we always provide
+                    // the navigation info for the first position. This will at least work for the 'nearest' interpolation method. For other interpolation methods,
+                    // where multiple positions have been collected, it depends on the composite algorithm how it handles the navigation info.
+                    if (CompositeAlgorithm_process(composite->algorithm, obj, cvalues[cindex].name, olon, olat, rdist, &otype, &ovalue, &valuePositions[0].navinfo)) {
                       cvalues[cindex].vtype = otype;
                       cvalues[cindex].value = ovalue;
-                      cvalues[cindex].mindist = originaldist;
+                      cvalues[cindex].mindist = dist;
                       cvalues[cindex].radardist = rdist;
                       cvalues[cindex].radarindex = i;
-                      cvalues[cindex].navinfo = navinfo;
                       cvalues[cindex].qivalue = qivalue;
+                      cvalues[cindex].noOfValuePositions = noOfValuePositions;
+                      memcpy(cvalues[cindex].valuePositions, valuePositions, sizeof(CompositeValuePosition_t)*MAX_NO_OF_SURROUNDING_POSITIONS);
                     }
                   } else {
                     if (otype == RaveValueType_DATA || otype == RaveValueType_UNDETECT) {
@@ -1848,8 +2874,9 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t*
                         cvalues[cindex].mindist = dist;
                         cvalues[cindex].radardist = rdist;
                         cvalues[cindex].radarindex = i;
-                        cvalues[cindex].navinfo = navinfo;
                         cvalues[cindex].qivalue = qivalue;
+                        cvalues[cindex].noOfValuePositions = noOfValuePositions;
+                        memcpy(cvalues[cindex].valuePositions, valuePositions, sizeof(CompositeValuePosition_t)*MAX_NO_OF_SURROUNDING_POSITIONS);
                       } else if (
                           composite->qiFieldName != NULL &&
                           ((qivalue > cvalues[cindex].qivalue) ||
@@ -1859,16 +2886,18 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t*
                         cvalues[cindex].mindist = dist;
                         cvalues[cindex].radardist = rdist;
                         cvalues[cindex].radarindex = i;
-                        cvalues[cindex].navinfo = navinfo;
                         cvalues[cindex].qivalue = qivalue;
+                        cvalues[cindex].noOfValuePositions = noOfValuePositions;
+                        memcpy(cvalues[cindex].valuePositions, valuePositions, sizeof(CompositeValuePosition_t)*MAX_NO_OF_SURROUNDING_POSITIONS);
                       } else if (composite->qiFieldName == NULL && dist < cvalues[cindex].mindist) {
                         cvalues[cindex].vtype = otype;
                         cvalues[cindex].value = ovalue;
                         cvalues[cindex].mindist = dist;
                         cvalues[cindex].radardist = rdist;
                         cvalues[cindex].radarindex = i;
-                        cvalues[cindex].navinfo = navinfo;
                         cvalues[cindex].qivalue = qivalue;
+                        cvalues[cindex].noOfValuePositions = noOfValuePositions;
+                        memcpy(cvalues[cindex].valuePositions, valuePositions, sizeof(CompositeValuePosition_t)*MAX_NO_OF_SURROUNDING_POSITIONS);
                       }
                     }
                   }
@@ -1884,9 +2913,11 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t*
       for (cindex = 0; cindex < nparam; cindex++) {
         double vvalue = cvalues[cindex].value;
         double vtype = cvalues[cindex].vtype;
-        PolarNavigationInfo info = cvalues[cindex].navinfo;
 
         if (vtype != RaveValueType_NODATA && composite->ptype == Rave_ProductType_PMAX && cvalues[cindex].radardist < composite->range) {
+          // only support for nearest value interpolation with PMAX, meaning that we only have one value position
+          PolarNavigationInfo info = cvalues[cindex].valuePositions[0].navinfo;
+
           RaveValueType ntype = RaveValueType_NODATA;
           double nvalue = 0.0;
           if (vtype == RaveValueType_UNDETECT) {
@@ -1898,17 +2929,15 @@ Cartesian_t* Composite_nearest(Composite_t* composite, Area_t* area, RaveList_t*
           if (ntype != RaveValueType_NODATA) {
             vtype = ntype;
             vvalue = nvalue;
-          } else {
-            /* If we find nodata then we really should use the original navigation information since there must be something wrong */
-            info = cvalues[cindex].navinfo;
-          }
+            cvalues[cindex].valuePositions[0].navinfo = info;
+          }          
         }
 
         CartesianParam_setConvertedValue(cvalues[cindex].parameter, x, y, vvalue, vtype);
 
         if ((vtype == RaveValueType_DATA || vtype == RaveValueType_UNDETECT) &&
             cvalues[cindex].radarindex >= 0 && nqualityflags > 0) {
-          CompositeInternal_fillQualityInformation(composite, x, y, cvalues[cindex].parameter, cvalues[cindex].radardist, cvalues[cindex].radarindex, &info);
+          CompositeInternal_fillQualityInformation(composite, x, y, &cvalues[cindex], interpolationDimensions);
         }
       }
     }

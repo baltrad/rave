@@ -27,6 +27,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
+#include <float.h>
 
 #define PYPOLARSCAN_MODULE   /**< to get correct part of pypolarscan,h */
 #include "pypolarscan.h"
@@ -315,7 +316,7 @@ static PyObject* _pypolarscan_getAzimuthIndex(PyPolarScan* self, PyObject* args)
     return NULL;
   }
 
-  index = PolarScan_getAzimuthIndex(self->scan, azimuth);
+  index = PolarScan_getAzimuthIndex(self->scan, azimuth, PolarScanSelectionMethod_ROUND);
   if (index < 0) {
     raiseException_returnNULL(PyExc_ValueError, "Invalid azimuth");
   }
@@ -338,7 +339,7 @@ static PyObject* _pypolarscan_getRangeIndex(PyPolarScan* self, PyObject* args)
     return NULL;
   }
 
-  index = PolarScan_getRangeIndex(self->scan, range);
+  index = PolarScan_getRangeIndex(self->scan, range, PolarScanSelectionMethod_FLOOR, 0);
 
   return PyInt_FromLong(index);
 }
@@ -356,7 +357,7 @@ static PyObject* _pypolarscan_getRange(PyPolarScan* self, PyObject* args)
   if (!PyArg_ParseTuple(args, "i", &index)) {
     return NULL;
   }
-  range = PolarScan_getRange(self->scan, index);
+  range = PolarScan_getRange(self->scan, index, 0);
 
   return PyFloat_FromDouble(range);
 }
@@ -500,7 +501,7 @@ static PyObject* _pypolarscan_getIndexFromAzimuthAndRange(PyPolarScan* self, PyO
     return NULL;
   }
 
-  if (PolarScan_getIndexFromAzimuthAndRange(self->scan, a, r, &ray, &bin)) {
+  if (PolarScan_getIndexFromAzimuthAndRange(self->scan, a, r, PolarScanSelectionMethod_ROUND, PolarScanSelectionMethod_FLOOR, 0, &ray, &bin)) {
     return Py_BuildValue("(ii)",ray,bin);
   }
 

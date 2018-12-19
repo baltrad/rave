@@ -41,6 +41,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 /*May 2015: New integration with RAVE for OPERA */
 /*December 2015: Minor refactor in order to enable the creation of a quality plugin for
  *chaining scansun in memory like other algorithms.*/
+/*October 2018: original code using Numerical Recipes has been replaced.*/
 /* Note that Iwan's code is largely left 'as is', except for the 'fill_meta' and
  * 'scansun' function which are restructured and modularized. Definitions and structures have been
  * placed in their own header file. */
@@ -258,13 +259,29 @@ return rang;
 
 void datetime(long date1, long time1, long ss, long *date2, long *time2)
 {
-int ss1,ss2,Nday;
-ss1=3600*(time1/10000)+60*((time1/100)%100)+time1%100;
-ss2=ss+ss1;
-Nday=(int)floor((float)ss2/86400);
-ss2-=Nday*86400;
-*date2=julday2date(Nday+date2julday(date1));
-*time2=10000*(ss2/3600)+100*((ss2/60)%60)+ss2%60;
+struct tm timestruct;
+
+/*Initializing of time structure.*/
+
+timestruct.tm_year=(date1/10000)-1900;
+timestruct.tm_mon=((date1/100)%100)-1;
+timestruct.tm_mday=(date1%100);
+timestruct.tm_hour=(int)(time1/10000);
+timestruct.tm_min=(int)((time1/100)%100);
+timestruct.tm_sec=(int)(time1%100)+ss;
+timegm(&timestruct);
+
+/*Calculation of new date.*/
+
+*date2=(timestruct.tm_year+1900)*10000+(timestruct.tm_mon+1)*100;
+(*date2)+=timestruct.tm_mday;
+
+/*Calculation of new time.*/
+
+*time2=10000*timestruct.tm_hour+100*timestruct.tm_min+timestruct.tm_sec;
+
+/*End*/
+
 return;
 }
 
@@ -291,26 +308,48 @@ void solar_elev_azim(double lon, double lat, long yyyymmdd, long hhmmss, double 
 {
 float MeanLon,MeanAnom,EclipLon,Obliquity,RightAsc,Declinat;
 float GMST,angleH;
-double julday,julday0,hour;
+double days,hour;
+struct tm timestruct;
+time_t time1, time0;
 
 /*Conversion of lon,lat.*/
 
 lon*=DEG2RAD;
 lat*=DEG2RAD;
 
-/*Calculation of fractional julian day, 2000 Jan 1 at noon is 2451545.*/
+/*Initializing of time structure with actual date and time.*/
 
-hour=(double)(hhmmss/10000)+((hhmmss/100)%100)/60.0+(hhmmss%100)/3600.0;
-julday=(double)date2julday(yyyymmdd)+(hour-12)/24.0;
-julday0=(double)date2julday(20000101);
+timestruct.tm_year=(yyyymmdd/10000)-1900;
+timestruct.tm_mon=((yyyymmdd/100)%100)-1;
+timestruct.tm_mday=(yyyymmdd%100);
+timestruct.tm_hour=(int)(hhmmss/10000);
+timestruct.tm_min=(int)((hhmmss/100)%100);
+timestruct.tm_sec=(int)(hhmmss%100);
+timestruct.tm_isdst=0;
+time1=mktime(&timestruct);
+
+/*Initializing of time structure with reference (noon 1 Jan 2000).*/
+
+timestruct.tm_year=100;
+timestruct.tm_mon=0;
+timestruct.tm_mday=1;
+timestruct.tm_hour=12;
+timestruct.tm_min=0;
+timestruct.tm_sec=0;
+timestruct.tm_isdst=0;
+time0=mktime(&timestruct);
+
+/*Calculation of fractional days.*/
+
+days=difftime(time1,time0)/(24*3600);
 
 /*Calculation of eclips coordinates.*/
 
-MeanLon=280.460+0.9856474*(julday-julday0);
-MeanAnom=357.528+0.9856003*(julday-julday0);
+MeanLon=280.460+0.9856474*days;
+MeanAnom=357.528+0.9856003*days;
 EclipLon=MeanLon+1.915*sin(MeanAnom*DEG2RAD)+0.020*sin(2*MeanAnom*DEG2RAD);
 EclipLon*=DEG2RAD;
-Obliquity=23.439-0.0000004*(julday-julday0);
+Obliquity=23.439-0.0000004*days;
 Obliquity*=DEG2RAD;
 
 /*Calculation of the celestial coordinates of the sun.*/
@@ -320,7 +359,8 @@ Declinat=asin(sin(Obliquity)*sin(EclipLon));
 
 /*Calculation of current, local hour angle.*/
 
-GMST=6.697375+0.0657098242*(julday-julday0)+hour;
+hour=(double)(hhmmss/10000)+((hhmmss/100)%100)/60.0+(hhmmss%100)/3600.0;
+GMST=hour+6.697375+0.0657098242*days;
 angleH=GMST*15*DEG2RAD+lon-RightAsc;
 
 /*Calculation of elevation and azimuth.*/
@@ -337,58 +377,6 @@ if ((*azim)<0) (*azim)+=360;
 /* Refraction */
 *relev = (*elev) + refraction(elev);
 }
-
-
-#define IGREG (15+31L*(10+12L*1582))
-long date2julday(long yyyymmdd)
-{
-long jul,dd,mm,yyyy,ja,jy,jm;
-dd=yyyymmdd%100;
-mm=(yyyymmdd/100)%100;
-yyyy=yyyymmdd/10000;
-jy=yyyy;
-
-if (jy == 0) printf("julday: there is no year zero!\n");
-if (jy < 0) ++jy;
-if (mm > 2) {
-   jm=mm+1;
-} 
-else {
-   --jy;
-   jm=mm+13;
-}
-jul = (int)(floor(365.25*jy)+floor(30.6001*jm)+dd+1720995);
-if (dd+31L*(mm+12L*yyyy) >= IGREG) {
-  ja=(int)(0.01*jy);
-  jul += 2-ja+(int) (0.25*ja);
-}
-return jul;
-}
-#undef IGREG 
-
-
-#define IGREG 2299161
-long julday2date(long julian)
-{
-long dd,mm,yyyy,ja,jalpha,jb,jc,jd,je;
-if (julian >= IGREG) {
-  jalpha=(int)(((float) (julian-1867216)-0.25)/36524.25);
-  ja=julian+1+jalpha-(int) (0.25*jalpha);
-} 
-else ja=julian;
-jb=ja+1524;
-jc=(int)(6680.0+((float) (jb-2439870)-122.1)/365.25);
-jd=(int)(365*jc+(0.25*jc));
-je=(int)((jb-jd)/30.6001);
-dd=jb-jd-(int) (30.6001*je);
-mm=je-1;
-if (mm > 12) mm -= 12;
-yyyy=jc-4715;
-if (mm > 2) --(yyyy);
-if (yyyy <= 0) --(yyyy);
-return dd+100*(mm+100*yyyy);
-}
-#undef IGREG 
 
 
 void readoutTiming(SCANMETA* meta, int ia, long* date, long* time, double* timer) {

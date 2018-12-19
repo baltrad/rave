@@ -64,12 +64,12 @@ bin:
 
 .PHONY=install
 install:
-	@"$(HLHDF_INSTALL_BIN)" -f -o -C $(LIBRAVEMYMODULE) "$(prefix)/lib/$(LIBRAVEMYMODULE)"
+	@"$(HLHDF_INSTALL_BIN)" -f -o -C $(LIBRAVEMYMODULE) "${DESTDIR}$(prefix)/lib/$(LIBRAVEMYMODULE)"
 	@for i in $(INSTALL_HEADERS) ; \
 	do \
-		"$(HLHDF_INSTALL_BIN)" -f -o -m644 -C $$i "$(prefix)/include/$$i"; \
+		"$(HLHDF_INSTALL_BIN)" -f -o -m644 -C $$i "${DESTDIR}$(prefix)/include/$$i"; \
 	done
-	"$(HLHDF_INSTALL_BIN)" -f -o -C $(MYMODULEBIN) "$(prefix)/bin/$(MYMODULEBIN)";
+	"$(HLHDF_INSTALL_BIN)" -f -o -C $(MYMODULEBIN) "${DESTDIR}$(prefix)/bin/$(MYMODULEBIN)";
 
 .PHONY=clean
 clean:

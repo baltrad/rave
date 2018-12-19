@@ -369,6 +369,7 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEqual(240, numpy.shape(d)[0])
     self.assertEqual(240, numpy.shape(d)[1])
 
+
   def test_save_cartesian_SURF(self):
     image = _cartesian.new()
     image.time = "100000"
@@ -663,6 +664,7 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertTrue(d is not None)
     self.assertEqual(240, numpy.shape(d)[0])
     self.assertEqual(240, numpy.shape(d)[1])
+
 
     self.assertEqual("another quality field", nodelist.getNode("/dataset2/quality2/what/sthat").data())
     d = nodelist.getNode("/dataset2/quality2/data").data()

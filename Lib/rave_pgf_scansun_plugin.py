@@ -26,12 +26,26 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @file
 ## @author Daniel Michelson, SMHI
 ## @date 2011-01-21
+##
+## @author Ulf E. Nordh, SMHI
+## @date 2018-12-06. Updated so that an alternative output path (RAVESCANSUN_OUT) can be used instead of RAVEETC.
+##                   The alternative path (RAVESCANSUN_OUT) must be defined in rave_defines.py
+##                   The plugin will use RAVESCANSUN_OUT if it is defined, otherwise it will use RAVEETC.  
 
 import os
 from rave_defines import RAVEETC
 import odim_source
 import _scansun
 import rave_pgf_logger
+
+# Determining where to write the scansun output files depending on input from rave_defines.py
+# If an alternative path, RAVESCANSUN_OUT, is defined in rave_defines.py it is used,
+# otherwise the default RAVEETC is used
+try:
+  from rave_defines import RAVESCANSUN_OUT
+  scansun_outputpath = RAVESCANSUN_OUT
+except:
+  scansun_outputpath = RAVEETC
 
 ravebdb = None
 try:
@@ -59,7 +73,6 @@ def NODfromSourceString(source):
     except KeyError:
       return None
 
-
 ## Creates a file name, preferably containing the NOD identifier for that radar. 
 # If it can't be found, converts the whole /what/source string to a file string. 
 # If its parent directory doesn't exist, it is created.
@@ -68,10 +81,9 @@ def NODfromSourceString(source):
 def Source2File(isource):
     source = NODfromSourceString(isource)
     if not source: source = isource.replace(';','_').replace(',','_').replace(':','-')
-    path = os.path.join(RAVEETC, "scansun")
+    path = os.path.join(scansun_outputpath, "scansun")
     if not os.path.isdir(path): os.makedirs(path)
     return os.path.join(str(path), str(source) + '.scansun')
-
 
 ## Writes hits to file
 # @param source string containing the full value of /what/source
@@ -87,7 +99,6 @@ def writeHits(source, hits):
         fd.write(FORMAT % hit)
 
     fd.close()
-
 
 ## Performs the sun scan.
 # @param files list of files to scan. Keep in mind that each file can be
@@ -113,7 +124,6 @@ def generate(files, arguments):
           writeHits(source, hits)
 
     return None
-
 
 if __name__ == '__main__':
     pass

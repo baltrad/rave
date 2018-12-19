@@ -318,4 +318,3 @@ class PyAcrrTest(unittest.TestCase):
     Acrr = result.getData().flatten()
     for i in range(len(refAcrr)):
       self.assertAlmostEqual(Acrr[i], refAcrr[i], 2)
-    

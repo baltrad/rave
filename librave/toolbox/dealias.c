@@ -19,6 +19,9 @@ along with HLHDF.  If not, see <http://www.gnu.org/licenses/>.
  * @file
  * @author Gunther Haase, SMHI
  * @date 2013-02-06
+ * @date 2018-04-11
+ * - If the number of valid velocity pixels on a circle with radius (range bin)*rscale is below a threshold, no dealiasing is performed.
+ * - Data representation of VRADH/V is no longer hard-coded.
  */
 
 #include "dealias.h"
@@ -77,8 +80,8 @@ PolarScanParam_t* create_dealiased_parameter(PolarScan_t* scan, const char* quan
   RaveAttribute_t* dattr = RAVE_OBJECT_NEW(&RaveAttribute_TYPE);
   RaveAttribute_t* htattr = NULL;
 
-  int nbins, nrays, i, j, n, m, ib, ir, eind;
-  double gain, offset, nodata, undetect, NI, val, vm, min1, esum, u1, v1, min2, dmy, vmin, vmax;
+  int nbins, nrays, i, j, n, m, ib, ir, eind, vo_valid;
+  double gain, offset, nodata, undetect, NI, val, vm, min1, esum, u1, v1, min2, dmy, vmin_vo, vmax_vo, vmin_vd, vmax_vd;
 
   int *vrad_nodata = NULL, *vrad_undetect = NULL;
   double *x = NULL, *y = NULL, *vo = NULL, *vd = NULL, *uh = NULL, *vh = NULL, *e = NULL, *xt = NULL, *yt = NULL, *vt1 = NULL, *dv = NULL, *v = NULL;
@@ -148,7 +151,10 @@ PolarScanParam_t* create_dealiased_parameter(PolarScan_t* scan, const char* quan
       if (val==nodata) *(vrad_nodata+ir+ib*nrays) = 1;
       if (val==undetect) *(vrad_undetect+ir+ib*nrays) = 1;
       if ((val!=nodata) && (val!=undetect)) *(vo+ir+ib*nrays) = offset+gain*val;
-      else *(vo+ir+ib*nrays) = NAN;
+      else {
+        *(vo+ir+ib*nrays) = NAN;
+        *(vd+ir+ib*nrays) = NAN;
+      }
 
       // map measured data to 3D
       *(x+ir+ib*nrays) = NI/M_PI * cos(*(vo+ir+ib*nrays)*M_PI/NI);
@@ -215,6 +221,7 @@ PolarScanParam_t* create_dealiased_parameter(PolarScan_t* scan, const char* quan
       }
     }
 
+    vo_valid=0;
     for (ir=0; ir<nrays; ir++) {
       min2 = 1e32;
       dmy = 0;
@@ -225,16 +232,32 @@ PolarScanParam_t* create_dealiased_parameter(PolarScan_t* scan, const char* quan
           min2 = dmy;
         }
       }
+      // Number of valid velocity pixels on a circle with radius ib*rscale
+      if (!isnan(*(vo+ir+ib*nrays))) {
+        vo_valid = vo_valid+1;
+      }
+    }
+    // If the number of valid velocity pixels on a circle with radius ib*rscale is below a threshold, no dealiasing is performed.
+    if (vo_valid<FRAY*nrays) {
+      for (ir=0; ir<nrays; ir++) {
+        *(vd+ir+ib*nrays) = *(vo+ir+ib*nrays);
+      }
     }
   }
 
-  //offset = 2*offset;
-  //gain = 2*gain;
-  vmax = max_vector(vd, nrays*nbins);
-  vmin = min_vector(vd, nrays*nbins);
-  if (vmin<offset+gain || vmax>=offset+255*gain) {
-      gain = (vmax-vmin)/253;
-      offset = vmin-gain-EPSILON;
+  // Data representation of VRADH/V
+  RaveDataType datatype = PolarScanParam_getDataType(param);
+  int typesize = get_ravetype_size(datatype);
+  int nbitval = pow(2,typesize*8);
+  // Maximum and minimum observed/dealiased velocities
+  vmax_vo = max_vector(vo, nrays*nbins);
+  vmin_vo = min_vector(vo, nrays*nbins);
+  vmax_vd = max_vector(vd, nrays*nbins);
+  vmin_vd = min_vector(vd, nrays*nbins);
+  // Rescale dealiased velocities if they are outside NI
+  if (vmin_vd<vmin_vo || vmax_vd>vmax_vo) {
+    gain = (vmax_vd-vmin_vd)/(nbitval-3);
+    offset = vmin_vd-gain-EPSILON;
   }
   PolarScanParam_setOffset (clone, offset);
   PolarScanParam_setGain (clone, gain);
@@ -290,9 +313,9 @@ int dealias_scan_by_quantity(PolarScan_t* scan, const char* quantity, double ema
   RaveAttribute_t* dattr = RAVE_OBJECT_NEW(&RaveAttribute_TYPE);
   RaveAttribute_t* htattr = NULL;
 
-  int nbins, nrays, i, j, n, m, ib, ir, eind;
+  int nbins, nrays, i, j, n, m, ib, ir, eind, vo_valid;
   int retval = 0;
-  double elangle, gain, offset, nodata, undetect, NI, val, vm, min1, esum, u1, v1, min2, dmy, vmin, vmax;
+  double elangle, gain, offset, nodata, undetect, NI, val, vm, min1, esum, u1, v1, min2, dmy, vmin_vo, vmax_vo, vmin_vd, vmax_vd;
 
   nbins = PolarScan_getNbins(scan);
   nrays = PolarScan_getNrays(scan);
@@ -338,7 +361,10 @@ int dealias_scan_by_quantity(PolarScan_t* scan, const char* quantity, double ema
           if (val==nodata) *(vrad_nodata+ir+ib*nrays) = 1;
           if (val==undetect) *(vrad_undetect+ir+ib*nrays) = 1;
           if ((val!=nodata) && (val!=undetect)) *(vo+ir+ib*nrays) = offset+gain*val;
-          else *(vo+ir+ib*nrays) = NAN;
+          else {
+            *(vo+ir+ib*nrays) = NAN;
+            *(vd+ir+ib*nrays) = NAN;
+          }
 
           // map measured data to 3D
           *(x+ir+ib*nrays) = NI/M_PI * cos(*(vo+ir+ib*nrays)*M_PI/NI);
@@ -405,6 +431,7 @@ int dealias_scan_by_quantity(PolarScan_t* scan, const char* quantity, double ema
           }
         }
 
+        vo_valid=0;
         for (ir=0; ir<nrays; ir++) {
           min2 = 1e32;
           dmy = 0;
@@ -415,16 +442,32 @@ int dealias_scan_by_quantity(PolarScan_t* scan, const char* quantity, double ema
               min2 = dmy;
             }
           }
+          // Number of valid velocity pixels on a circle with radius ib*rscale
+          if (!isnan(*(vo+ir+ib*nrays))) {
+            vo_valid = vo_valid+1;
+          }
+        }
+        // If the number of valid velocity pixels on a circle with radius ib*rscale is below a threshold, no dealiasing is performed.
+        if (vo_valid<FRAY*nrays) {
+          for (ir=0; ir<nrays; ir++) {
+            *(vd+ir+ib*nrays) = *(vo+ir+ib*nrays);
+          }
         }
       }
 
-      //offset = 2*offset;
-      //gain = 2*gain;
-      vmax = max_vector(vd, nrays*nbins);
-      vmin = min_vector(vd, nrays*nbins);
-      if (vmin<offset+gain || vmax>=offset+255*gain) {
-          gain = (vmax-vmin)/253;
-          offset = vmin-gain-EPSILON;
+      // Data representation of VRADH/V
+      RaveDataType datatype = PolarScanParam_getDataType(param);
+      int typesize = get_ravetype_size(datatype);
+      int nbitval = pow(2,typesize*8);
+      // Maximum and minimum observed/dealiased velocities
+      vmax_vo = max_vector(vo, nrays*nbins);
+      vmin_vo = min_vector(vo, nrays*nbins);
+      vmax_vd = max_vector(vd, nrays*nbins);
+      vmin_vd = min_vector(vd, nrays*nbins);
+      // Rescale dealiased velocities if they are outside NI
+      if (vmin_vd<vmin_vo || vmax_vd>vmax_vo) {
+        gain = (vmax_vd-vmin_vd)/(nbitval-3);
+        offset = vmin_vd-gain-EPSILON;
       }
       PolarScanParam_setOffset (param, offset);
       PolarScanParam_setGain (param, gain);

@@ -53,6 +53,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #define MVA        8               /*   */
 #define EPSILON    1E-10           /*   */
 #define EMAX       2.0             /* Maximum elevation angle [deg] */
+#define FRAY       0.25            /* Minimum fraction of rays */
 
 
 /**

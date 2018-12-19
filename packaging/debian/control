@@ -1,0 +1,18 @@
+Source: rave
+Section: science
+Priority: extra
+Maintainer: Povi Software LLC <laur@baltrad.eu>
+Build-Depends: debhelper (>= 8.0.0), hlhdf-dev, hlhdf-python, libhdf5-dev, zlib1g-dev, python2.7-dev, python-numpy, libatlas-base-dev, python, libproj-dev, libexpat1-dev, bbufr
+Standards-Version: 3.9.4
+X-Python-Version: >=2.7
+
+Package: rave
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ${python:Depends}, libexpat1, libhdf5-10, zlib1g
+Description: Product generation framework and toolbox. Injector using ODIM_H5 files.
+
+Package: rave-dev
+Section: devel
+Architecture: any
+Depends: ${misc:Depends}, rave
+Description: RAVE development files.

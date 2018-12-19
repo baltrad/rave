@@ -244,26 +244,6 @@ double refraction(double *elev);
 void solar_elev_azim(double lon, double lat, long yyyymmdd, long hhmmss, double *elev, double *azim, double *relev);
 
 /**
- * Gregorian Calender adopted on October 15. 1582.
- * In this routine date2julday returns the Julian Day Number that begins at
- * noon of the calendar date specified by month mm, day id, and year iyyy, all
- * integer variables. Positive year signifies A.D.; negative, B.C. Remember that
- * the year after 1 B.C. was 1 A.D.
- * @param[in] yyyymmdd - year-month-day as a long
- * @returns the Julian day (of the year) as a long
- */
-long date2julday(long yyyymmdd);
-
-/**
- * Inverse of the function date2julday given above. Here julian is input as a
- * Julian Day Number, and the routine outputs mm,id, and iyyy as the month,
- * day, and year on which the specified Julian Day started at noon.
- * @param[in] julian - the Julian day (of the year) as a long
- * @returns the day of the year in YYYYMMDD (year-month-day) format, as a long
-*/
-long julday2date(long julian);
-
-/**
  * Determines the exact observation times based on acquired readout times for each ray
  * @param[in] meta - internal metadata structure
  * @param[in] the index of the ray (azimuth), as an int

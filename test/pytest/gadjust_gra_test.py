@@ -39,7 +39,11 @@ class gadjust_gra_test(unittest.TestCase):
         os.unlink(self.TEMP_STAT_FILE)
     except:
       pass
-    self.old_settings=numpy.seterr(all='ignore')
+    self.old_settings=None
+    try:
+      self.old_settings=numpy.seterr(all='ignore')
+    except:
+      pass
 
   def tearDown(self):
     self.classUnderTest = None
@@ -48,7 +52,8 @@ class gadjust_gra_test(unittest.TestCase):
         os.unlink(self.TEMP_STAT_FILE)
     except:
       pass
-    numpy.seterr(**self.old_settings)
+    if self.old_settings is not None:
+      numpy.seterr(**self.old_settings)
 
   def test_generate(self):
     points = [grapoint(_rave.RaveValueType_DATA, 1.0, 0.0, 10.0, 20.0, "20131010", "101500", 10**0.1, 12),

@@ -1170,7 +1170,8 @@ static int CartesianCfIOInternal_writeCartesianVolume(CartesianCfIO_t* self, int
       goto done;
   }
 
-  data = RAVE_MALLOC(sizeof(float) * xsize * ysize * nheights);
+  int datasize = sizeof(float) * xsize * ysize * nheights;
+  data = RAVE_MALLOC(datasize);
   xarr = RAVE_MALLOC(sizeof(double) * xsize);
   yarr = RAVE_MALLOC(sizeof(double) * ysize);
   lonarr = RAVE_MALLOC(sizeof(double) * xsize * ysize);
@@ -1214,7 +1215,7 @@ static int CartesianCfIOInternal_writeCartesianVolume(CartesianCfIO_t* self, int
     const char* name = RaveList_get(names, i);
     float* datap = data;
     float nodata = CartesianCfIO_getNodata(name);
-    memset(data, nodata, sizeof(float)*xsize*ysize*nheights);
+    memset(data, nodata, datasize);
     for (j = 0; j < nheights; j++) {
       Cartesian_t* vcartesian = CartesianVolume_getImage(volume, j);
       if (vcartesian != NULL) {
@@ -1244,6 +1245,7 @@ static int CartesianCfIOInternal_writeCartesianVolume(CartesianCfIO_t* self, int
   result = 1;
 done:
   RAVE_FREE(varids);
+  RAVE_FREE(data);
   RAVE_FREE(xarr);
   RAVE_FREE(yarr);
   RAVE_FREE(lonarr);

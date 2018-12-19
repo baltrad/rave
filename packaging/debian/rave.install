@@ -1,0 +1,11 @@
+opt/baltrad/rave/Lib/*.py
+opt/baltrad/rave/Lib/_*.so
+opt/baltrad/rave/lib/*.so
+opt/baltrad/rave/bin/*
+opt/baltrad/rave/config/*.xml
+opt/baltrad/rave/mkf/def.mk
+opt/baltrad/rave/rave.xbm
+opt/baltrad/rave/etc/rave_pgf
+opt/baltrad/rave/etc/rave_pgf_*.xml
+opt/baltrad/rave/etc/rave.pth usr/lib/python2.7/dist-packages
+etc/ld.so.conf.d/rave.conf

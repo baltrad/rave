@@ -25,7 +25,6 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @date 2010-07-24
 
 import sys, os, struct
-import logging
 import logging.handlers
 import multiprocessing
 import tempfile

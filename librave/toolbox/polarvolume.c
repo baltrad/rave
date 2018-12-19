@@ -31,6 +31,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "raveobject_hashtable.h"
 #include "rave_utilities.h"
 #include <string.h>
+#include <float.h>
 
 /**
  * This is the default parameter value that should be used when working
@@ -178,12 +179,95 @@ static double PolarVolumeInternal_getElangle(PolarVolume_t* pvol, int index)
 }
 
 /**
+ * Returns the scans surrounding the target elevation, or just the one closest, if parameter
+ * onlyClosest set to 1.
+ * @param[in] pvol - self
+ * @param[in] targetElevation - the target elevation
+ * @param[in] insidee - if the estimated elevation must be within the min-max elevation or not to be valid
+ * @param[in] onlyClosest - if set to 1, only the closest scan will be returned. Otherwise, both scan above
+ *                          and below will be returned.
+ * @param[out] scanAbove - found scan above. Will be NULL if onlyClosest is set and the closest scan is located below.
+ * @param[out] scanBelow - found scan below. Will be NULL if onlyClosest is set and the closest scan is located above.
+ * @return 1 if successful and 0 otherwise
+ */
+static int PolarVolumeInternal_getSurroundingScans(PolarVolume_t* pvol, double targetElevation, int insidee, int onlyClosest, PolarScan_t** scanAbove, PolarScan_t** scanBelow)
+{
+  double closestElevation = 0.0L, closestElevationDiff = 0.0L;
+  int scanIndexBelow = 0;
+  int scanIndexAbove = 1;
+  int closestScanIndex = 0;
+  int i = 0;
+  int nrScans = 0;
+  int scanFound = 0;
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
+
+  *scanAbove = NULL;
+  *scanBelow = NULL;
+
+  nrScans = RaveObjectList_size(pvol->scans);
+
+  if (insidee) {
+    double max = PolarVolumeInternal_getElangle(pvol, nrScans-1);
+    double min = PolarVolumeInternal_getElangle(pvol, 0);
+    if (targetElevation < min || targetElevation > max) {
+      return 0;
+    }
+  }
+
+  closestElevation = PolarVolumeInternal_getElangle(pvol, 0);
+  scanIndexBelow = 0;
+  closestElevationDiff = fabs(targetElevation - closestElevation);
+  for (i = 0; i < nrScans; i++) {
+    double elev = PolarVolumeInternal_getElangle(pvol, i);
+
+    double elevDiff = fabs(targetElevation - elev);
+    if (scanFound == 0 || elevDiff < closestElevationDiff) {
+      closestElevation = elev;
+      closestElevationDiff = elevDiff;
+      closestScanIndex = i;
+      scanFound = 1;
+    } else {
+      break;
+    }
+  }
+
+  if (scanFound == 0) {
+    return 0;
+  }
+
+  if ((closestElevation - targetElevation) < 0) {
+    scanIndexBelow = closestScanIndex;
+    scanIndexAbove = closestScanIndex + 1;
+  } else {
+    scanIndexBelow = closestScanIndex - 1;
+    scanIndexAbove = closestScanIndex;
+  }
+
+  if (onlyClosest) {
+    if (closestScanIndex == scanIndexBelow) {
+      *scanBelow = (PolarScan_t*)RaveObjectList_get(pvol->scans, scanIndexBelow);
+    } else {
+      *scanAbove = (PolarScan_t*)RaveObjectList_get(pvol->scans, scanIndexAbove);
+    }
+  } else {
+    if (scanIndexBelow >= 0 && scanIndexBelow < nrScans) {
+      *scanBelow = (PolarScan_t*)RaveObjectList_get(pvol->scans, scanIndexBelow);
+    }
+    if (scanIndexAbove >= 0 && scanIndexAbove < nrScans) {
+      *scanAbove = (PolarScan_t*)RaveObjectList_get(pvol->scans, scanIndexAbove);
+    }
+  }
+
+  return 1;
+}
+
+/**
  * Used to sort the scans by elevation in ascending order
  * @param[in] a - scan a (will be casted to *(PolarScan_t**))
  * @param[in] b - scan b (will be casted to *(PolarScan_t**))
  * @return -1 if a.elangle < b.elangle, 1 if a.elangle > b.elangle and 0 otherwise
  */
-static int ascendingElevationSort(const void* a, const void* b)
+static int PolarVolumeInternal_ascendingElevationSort(const void* a, const void* b)
 {
   PolarScan_t* scanA = *(PolarScan_t**)a;
   PolarScan_t* scanB = *(PolarScan_t**)b;
@@ -203,7 +287,7 @@ static int ascendingElevationSort(const void* a, const void* b)
  * @param[in] b - scan b (will be casted to *(PolarScan_t**))
  * @return -1 if a.elangle > b.elangle, 1 if a.elangle < b.elangle and 0 otherwise
  */
-static int descendingElevationSort(const void* a, const void* b)
+static int PolarVolumeInternal_descendingElevationSort(const void* a, const void* b)
 {
   PolarScan_t* scanA = *(PolarScan_t**)a;
   PolarScan_t* scanB = *(PolarScan_t**)b;
@@ -656,7 +740,7 @@ int PolarVolume_getNearestNavigationInfo(PolarVolume_t* pvol, double lon, double
     // To get the actual height
     PolarNavigator_reToDh(pvol->navigator, navinfo->range, navinfo->elevation, &dummydistance, &navinfo->actual_height);
 
-    if (!PolarScan_fillNavigationIndexFromAzimuthAndRange(scan, navinfo)) {
+    if (!PolarScan_fillNavigationIndexFromAzimuthAndRange(scan, PolarScanSelectionMethod_ROUND, PolarScanSelectionMethod_FLOOR, 0, navinfo)) {
       goto done;
     }
   }
@@ -668,6 +752,83 @@ int PolarVolume_getNearestNavigationInfo(PolarVolume_t* pvol, double lon, double
 done:
   RAVE_OBJECT_RELEASE(scan);
   return result;
+}
+
+int PolarVolume_getSurroundingNavigationInfos(
+    PolarVolume_t* pvol,
+    double lon,
+    double lat,
+    double height,
+    int insidee,
+    int surroundingScans,
+    int surroundingRangeBins,
+    int surroundingRays,
+    PolarNavigationInfo navinfos[])
+{
+  int noofNavinfos = 0;
+  int noofNavinfosAbove = 0;
+  int noofNavinfosBelow = 0;
+
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
+  RAVE_ASSERT((navinfos != NULL), "navinfos == NULL");
+
+  PolarNavigationInfo targetNavInfo;
+
+  PolarVolume_getLonLatNavigationInfo(pvol, lon, lat, height, &targetNavInfo);
+
+  PolarScan_t* scanAbove = NULL;
+  PolarScan_t* scanBelow = NULL;
+  if (PolarVolumeInternal_getSurroundingScans(pvol, targetNavInfo.elevation, insidee, !surroundingScans, &scanAbove, &scanBelow)) {
+    if (scanAbove != NULL) {
+      noofNavinfos = PolarScan_addSurroundingNavigationInfosForTarget(scanAbove, &targetNavInfo, surroundingRangeBins, surroundingRays, noofNavinfos, navinfos);
+      noofNavinfosAbove = noofNavinfos;
+
+      PolarVolume_addEiForNavInfos(pvol, scanAbove, navinfos, noofNavinfos, 0);
+
+      if (noofNavinfosAbove == 0) {
+        noofNavinfos = 0;
+        goto done;
+      }
+    }
+
+    if (scanBelow != NULL) {
+      noofNavinfos = PolarScan_addSurroundingNavigationInfosForTarget(scanBelow, &targetNavInfo, surroundingRangeBins, surroundingRays, noofNavinfos, navinfos);
+      noofNavinfosBelow = noofNavinfos - noofNavinfosAbove;
+
+      PolarVolume_addEiForNavInfos(pvol, scanBelow, navinfos, noofNavinfos, noofNavinfosAbove);
+
+      if (noofNavinfosBelow == 0) {
+        noofNavinfos = 0;
+        goto done;
+      }
+    }
+  }
+
+
+done:
+  RAVE_OBJECT_RELEASE(scanAbove);
+  RAVE_OBJECT_RELEASE(scanBelow);
+
+  return noofNavinfos;
+}
+
+void PolarVolume_addEiForNavInfos(
+    PolarVolume_t* pvol,
+    PolarScan_t* scan,
+    PolarNavigationInfo navinfos[],
+    int noofNavinfos,
+    int startNavInfoIndex)
+{
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+  RAVE_ASSERT((navinfos != NULL), "navinfos == NULL");
+
+  int ei = RaveObjectList_indexOf(pvol->scans, (RaveCoreObject*)scan);
+
+  int i = 0;
+  for (i = startNavInfoIndex; i < noofNavinfos; i++) {
+    navinfos[i].ei = ei;
+  }
 }
 
 RaveValueType PolarVolume_getNearestConvertedParameterValue(PolarVolume_t* pvol, const char* quantity, double lon, double lat, double height, int insidee, double* v, PolarNavigationInfo* navinfo)
@@ -742,9 +903,9 @@ void PolarVolume_sortByElevations(PolarVolume_t* pvol, int ascending)
   RAVE_ASSERT((pvol != NULL), "pvol == NULL");
 
   if (ascending == 1) {
-    RaveObjectList_sort(pvol->scans, ascendingElevationSort);
+    RaveObjectList_sort(pvol->scans, PolarVolumeInternal_ascendingElevationSort);
   } else {
-    RaveObjectList_sort(pvol->scans, descendingElevationSort);
+    RaveObjectList_sort(pvol->scans, PolarVolumeInternal_descendingElevationSort);
   }
 }
 

@@ -697,7 +697,7 @@ PolarScan_t* DetectionRange_top(DetectionRange_t* self, PolarVolume_t* pvol, dou
       int topfound = 0;
       int overMaxelev = 0;
       int highest_ei = 0;
-      double range = PolarScan_getRange(result, bini);
+      double range = PolarScan_getRange(result, bini, 0);
       int bi = 0, lower_bi = 0;
       double toph = 0.0;
       int found = 0; /* Used to break elevation loop when value has been found */
@@ -708,11 +708,11 @@ PolarScan_t* DetectionRange_top(DetectionRange_t* self, PolarVolume_t* pvol, dou
         double elangle = 0.0, lower_elangle = 0.0, height = 0.0, lower_height = 0.0;
         double binh = 0.0, lower_binh = 0.0, Dh = 0.0, dBZN = 0.0, lower_dBZN = 0.0;
         RaveValueType dBZN_type = RaveValueType_UNDEFINED, lower_dBZN_type = RaveValueType_UNDEFINED;
-	PolarScan_setDefaultParameter(scan, paramname);
-	PolarScan_setDefaultParameter(lowscan, paramname);
+        PolarScan_setDefaultParameter(scan, paramname);
+        PolarScan_setDefaultParameter(lowscan, paramname);
 
-        bi = PolarScan_getRangeIndex(scan, range);
-        lower_bi = PolarScan_getRangeIndex(lowscan, range);
+        bi = PolarScan_getRangeIndex(scan, range, PolarScanSelectionMethod_FLOOR, 0);
+        lower_bi = PolarScan_getRangeIndex(lowscan, range, PolarScanSelectionMethod_FLOOR, 0);
 
         elangle = PolarScan_getElangle(scan);
         lower_elangle = PolarScan_getElangle(lowscan);
