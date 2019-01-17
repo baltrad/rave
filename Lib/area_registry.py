@@ -90,7 +90,7 @@ class area_registry(object):
       pyarea.xscale = a.xscale
       pyarea.yscale = a.yscale
       pyarea.extent = a.extent
-      pyarea.projection = _projection.new(p.id, p.name, string.join(p.definition, ' '))
+      pyarea.projection = _projection.new(p.id, str(p.name), ' '.join(p.definition))
       self._registry[pyarea.id] = pyarea
       result = pyarea
       
