@@ -35,9 +35,11 @@ import _pyhl
 if sys.version_info < (3,):
   import SimpleXMLRPCServer
   from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
+  from xmlrpclib import ServerProxy as XmlRpcServerProxy
   import xmlrpclib as xmlrpc
 else:
   import xmlrpc
+  from xmlrpc.client import ServerProxy as XmlRpcServerProxy
   from xmlrpc.server import SimpleXMLRPCServer
   from xmlrpc.server import SimpleXMLRPCRequestHandler
   
@@ -295,7 +297,7 @@ class RavePGF():
       import rave_projection
       items = rave_projection.items()
       for item in items:
-        result[item[0]] = {"id":item[0], "description":item[1].name, "definition":string.join(item[1].definition, " ")}
+        result[item[0]] = {"id":item[0], "description":item[1].name, "definition":" ".join(item[1].definition)}
     except Exception:
       self.logger.exception("Failed to get pcs definitions")
 
@@ -406,7 +408,7 @@ class RavePGF():
     for a in arguments:
       t = type(a)
       ret += 'Argument %s is a %s\n' % (a, t)
-      if t == types.ListType:
+      if t == list:
         for e in a:
           ret += 'Argument %s in sequence is a %s\n' % (e, type(e))
     return ret
@@ -430,7 +432,7 @@ def generate(jobid, algorithm, files, arguments, host=PGF_HOST, port=PGF_PORT):
       ret = pgf._generate(algorithm, files, arguments)
     except:
       pgf.logger.exception("Failure during product generation")
-    pgf._client = xmlrpc.ServerProxy("http://%s:%i/RAVE" % (host, port), verbose=False)
+    pgf._client = XmlRpcServerProxy("http://%s:%i/RAVE" % (host, port), verbose=False)
     pgf._client.job_done(jobid)
     return jobid
 
