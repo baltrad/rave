@@ -660,8 +660,11 @@ int scansunFromObject(RaveCoreObject* object, Rave_ObjectType ot, RaveList_t* li
 
 
 int scansun(const char* filename, RaveList_t* list, char** source) {
-	int ret;
+	int ret = 0;
 	RaveIO_t* raveio = RaveIO_open(filename);
+	if (raveio == NULL) {
+	  goto done;
+	}
 	RaveCoreObject* object = NULL;
 	Rave_ObjectType ot = Rave_ObjectType_UNDEFINED;
 
@@ -684,5 +687,7 @@ int scansun(const char* filename, RaveList_t* list, char** source) {
   RAVE_OBJECT_RELEASE(raveio);
 
 	RAVE_OBJECT_RELEASE(object);
+
+done:
 	return ret;
 }

@@ -757,8 +757,8 @@ class PyCompositeTest(unittest.TestCase):
       first_value = None
       for angle_deg in xrange(0, 360):
         angle_rad = math.radians(angle_deg)
-        x = round(centre_x + (radius * cos(angle_rad)))
-        y = round(centre_y + (radius * sin(angle_rad)))
+        x = int(round(centre_x + (radius * cos(angle_rad))))
+        y = int(round(centre_y + (radius * sin(angle_rad))))
         value = data[y][x]
         if not first_value:
           first_value = value

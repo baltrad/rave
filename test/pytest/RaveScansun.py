@@ -14,6 +14,7 @@ import _raveio
 from numpy import nan
 import rave_pgf_scansun_plugin, odim_source
 from rave_defines import UTF8
+from exceptions import SystemError
 
 class RaveScansun(unittest.TestCase):
 
@@ -28,6 +29,9 @@ class RaveScansun(unittest.TestCase):
 
     # KNMI PVOL from Den Helder with a nice sun hit
     KNMI_TESTFILE="fixtures/KNMI-PVOL-Den_Helder.h5"
+    
+    CORRUPT_SEKKR_TESTFILE = "fixtures/CORRUPT_sekkr_scan_0.5_pn282_20180405T102500Z_0x9.h5"
+    
     # The following validation values are:
     # Date    Time   Elevatn Azimuth ElevSun AzimSun   N  dBSunFlux   SunMean SunStdd   ZdrMean ZdrStdd Refl  ZDR
     VALID = ('RAD:NL51;PLC:nldhl', [(20110111, 75022.0, 0.30000001447042407, 126.0, 
@@ -153,6 +157,13 @@ class RaveScansun(unittest.TestCase):
         self.assertEqual(content, '#Date    Time        Elevatn Azimuth   ElevSun   AzimSun    N  dBSunFlux   SunMean SunStdd   ZdrMean ZdrStdd  Refl  ZDR\n20110111 075022.000    0.300  126.00   -0.7759  126.8401      98      12.71   -113.20   0.789       nan     nan  DBZH   NA\n')
         os.remove(fstr)
         shutil.rmtree(os.path.split(fstr)[0], ignore_errors=True, onerror=None)
+        
+    def testCorruptFile(self):
+        try:
+          _scansun.scansun(self.CORRUPT_SEKKR_TESTFILE)
+          self.assertTrue(False, "An exception should be thrown for corrupt file.")
+        except Exception as e:
+          self.assertTrue(type(e) == SystemError, "Exception caught should be of type SystemError.")
       
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']
