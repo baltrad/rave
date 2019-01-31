@@ -710,6 +710,7 @@ ac_subst_files=''
 ac_user_opts='
 enable_option_checking
 enable_py3support
+with_py3bin
 with_proj
 with_expat
 with_numpy
@@ -1355,6 +1356,7 @@ Optional Features:
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
+  --with-py3bin=python3  What python 3 binary to use
   --with-proj=ROOT or INC,LIB       Use the proj library
   --with-expat=ROOT or INC,LIB       Use the expat library
   --with-numpy=INC     Use the numpy include file
@@ -2114,6 +2116,24 @@ fi
 if [ "x$py3support" = "xyes" ]; then
   PYOPT="$PYOPT -DPY3_SUPPORT"
   PYBIN=python3
+fi
+
+
+# Check whether --with-py3bin was given.
+if test "${with_py3bin+set}" = set; then :
+  withval=$with_py3bin;
+else
+  withval=python3
+fi
+
+if [ "$PYBIN" = "python3" ]; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking what python3 binary to use" >&5
+$as_echo_n "checking what python3 binary to use... " >&6; }
+  if [ "$withval" != "python3" ]; then
+    PYBIN=$withval
+  fi
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $PYBIN" >&5
+$as_echo "$PYBIN" >&6; }
 fi
 
 PYVERSION=`$PYBIN -c "import sys; print(sys.version[:3])"`
