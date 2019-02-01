@@ -46,7 +46,18 @@ PY_EXEC_INSTALLDIR=`$PYBIN -c "import sys; print(sys.exec_prefix)"`
 
 PY_PYTHON_BIN="$PYBIN"
 
-PY_CONFIGDIR=`$PYBIN-config --configdir`
+PYCONFIG_BIN="python-config"
+AC_ARG_WITH(py3bin-config, [  --with-py3bin-config=python3-config  What python 3 config binary to use],
+		    ,withval=default)
+if [[ "$py3support" = "yes" ]]; then
+  if [[ "$withval" = "default" ]]; then
+    PYCONFIG_BIN="$PYBIN-config"
+  else
+    PYCONFIG_BIN="$withval"
+  fi
+fi
+
+PY_CONFIGDIR=`$PYCONFIG_BIN --configdir`
 
 if test $? -ne 0; then
   PY_CONFIG_MAKE="$PY_EXEC_INSTALLDIR/lib/python$PYVERSION/config/Makefile"
@@ -63,7 +74,7 @@ fi
 
 PYCC=`cat $PY_CONFIG_MAKE | sed -n "/^CC=/p" | sed -e "s/CC=//g" | awk '{print $1}'`
 AC_MSG_RESULT("$PYCC")
-CC=$PYCC
+#CC=$PYCC
 
 dnl Later on we are going to check for pthread support but since we know that
 dnl python might determine pthread flags we can at least see what python
@@ -78,10 +89,12 @@ fi
 AC_MSG_RESULT($PYGOTPTHREAD)
 
 AC_PROG_RANLIB
-AC_PROG_CC
+AC_PROG_CC($PYCC gcc cc)
 AC_PROG_CPP
 AC_SUBST(AR)
 AC_CHECK_PROGS(AR, ar aal, ar)
+
+PYCC=$CC
 
 PY_INCLUDES=
 PY_SITEPACK=
@@ -95,11 +108,7 @@ AC_MSG_CHECKING("for python includes")
 PY_INCLUDES="$PY_EXEC_INSTALLDIR/include/python$PYVERSION"
 AC_MSG_RESULT("$PY_INCLUDES")
 PY_INCLUDES="-I$PY_INCLUDES"
-if [[ "x$py3support" = "xyes" ]]; then
-  PY_INCLUDES=`python3-config --includes`
-else
-  PY_INCLUDES=`python-config --includes`
-fi
+PY_INCLUDES=`$PYCONFIG_BIN --includes`
 
 AC_MSG_CHECKING("for python lib site-packages")
 PY_SITEPACK="$PY_EXEC_INSTALLDIR/lib/python$PYVERSION/site-packages"
