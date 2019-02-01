@@ -2100,14 +2100,6 @@ fi
 
 LIBS=-lm
 
-#
-# Extract what compiler the python binary was compiled with
-#
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking \"for the compiler used for generating python\"" >&5
-$as_echo_n "checking \"for the compiler used for generating python\"... " >&6; }
-
-PYCC=
-
 PYBIN=python
 py3support=no
 # Check whether --enable-py3support was given.
@@ -2160,21 +2152,38 @@ if [ "$py3support" = "yes" ]; then
   fi
 fi
 
-PY_CONFIGDIR=`$PYCONFIG_BIN --configdir`
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for python Makefile" >&5
+$as_echo_n "checking for python Makefile... " >&6; }
 
-if test $? -ne 0; then
+PY_CONFIGDIR=`$PYCONFIG_BIN --configdir`
+PY_CONFIG_MAKE=
+
+if test $? -eq 0; then
+  if [ -f "$PY_CONFIGDIR/Makefile" ]; then
+    PY_CONFIG_MAKE="$PY_CONFIGDIR/Makefile"
+  fi
+fi
+
+if [ "x$PY_CONFIG_MAKE" = "x" ]; then
   PY_CONFIG_MAKE="$PY_EXEC_INSTALLDIR/lib/python$PYVERSION/config/Makefile"
   if [ ! -f "$PY_CONFIG_MAKE" ]; then
     PY_CONFIG_MAKE="$PY_EXEC_INSTALLDIR/lib64/python$PYVERSION/config/Makefile"
   fi
-else
-  PY_CONFIG_MAKE="$PY_CONFIGDIR/Makefile"
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $PY_CONFIG_MAKE" >&5
-$as_echo "$PY_CONFIG_MAKE" >&6; }
+
 if [ ! -f "$PY_CONFIG_MAKE" ]; then
   as_fn_error $? "Could not successfully find the python Makefile" "$LINENO" 5
 fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $PY_CONFIG_MAKE" >&5
+$as_echo "$PY_CONFIG_MAKE" >&6; }
+
+#
+# Extract what compiler the python binary was compiled with
+#
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking \"for the compiler used for generating python\"" >&5
+$as_echo_n "checking \"for the compiler used for generating python\"... " >&6; }
+
+PYCC=
 
 PYCC=`cat $PY_CONFIG_MAKE | sed -n "/^CC=/p" | sed -e "s/CC=//g" | awk '{print $1}'`
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: \"$PYCC\"" >&5
