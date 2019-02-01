@@ -52,12 +52,23 @@ fi
 
 AC_MSG_CHECKING(for python Makefile)
 
-PY_CONFIGDIR=`$PYCONFIG_BIN --configdir`
 PY_CONFIG_MAKE=
 
+AC_ARG_WITH(python-makefile, [  --with-python-makefile=Makefile  Where the makefile used for building python can be found],
+		    ,withval=no)
+if [[ "$withval" != "no" ]]; then
+  if [[ -f $withval ]]; then
+    PY_CONFIG_MAKE="$withval"
+  fi
+fi
+
+
+PY_CONFIGDIR=`$PYCONFIG_BIN --configdir`
 if test $? -eq 0; then
-  if [[ -f "$PY_CONFIGDIR/Makefile" ]]; then
-    PY_CONFIG_MAKE="$PY_CONFIGDIR/Makefile"
+  if [[ "x$PY_CONFIG_MAKE" = "x" ]]; then
+    if [[ -f "$PY_CONFIGDIR/Makefile" ]]; then
+      PY_CONFIG_MAKE="$PY_CONFIGDIR/Makefile"
+    fi
   fi
 fi
 

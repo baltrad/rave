@@ -712,6 +712,7 @@ enable_option_checking
 enable_py3support
 with_py3bin
 with_py3bin_config
+with_python_makefile
 with_proj
 with_expat
 with_numpy
@@ -1359,6 +1360,7 @@ Optional Packages:
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-py3bin=python3  What python 3 binary to use
   --with-py3bin-config=python3-config  What python 3 config binary to use
+  --with-python-makefile=Makefile  Where the makefile used for building python can be found
   --with-proj=ROOT or INC,LIB       Use the proj library
   --with-expat=ROOT or INC,LIB       Use the expat library
   --with-numpy=INC     Use the numpy include file
@@ -2155,12 +2157,29 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for python Makefile" >&5
 $as_echo_n "checking for python Makefile... " >&6; }
 
-PY_CONFIGDIR=`$PYCONFIG_BIN --configdir`
 PY_CONFIG_MAKE=
 
+
+# Check whether --with-python-makefile was given.
+if test "${with_python_makefile+set}" = set; then :
+  withval=$with_python_makefile;
+else
+  withval=no
+fi
+
+if [ "$withval" != "no" ]; then
+  if [ -f $withval ]; then
+    PY_CONFIG_MAKE="$withval"
+  fi
+fi
+
+
+PY_CONFIGDIR=`$PYCONFIG_BIN --configdir`
 if test $? -eq 0; then
-  if [ -f "$PY_CONFIGDIR/Makefile" ]; then
-    PY_CONFIG_MAKE="$PY_CONFIGDIR/Makefile"
+  if [ "x$PY_CONFIG_MAKE" = "x" ]; then
+    if [ -f "$PY_CONFIGDIR/Makefile" ]; then
+      PY_CONFIG_MAKE="$PY_CONFIGDIR/Makefile"
+    fi
   fi
 fi
 
