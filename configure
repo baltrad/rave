@@ -3111,7 +3111,12 @@ PY_INCLUDES=`$PYCONFIG_BIN --includes`
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking \"for python lib site-packages\"" >&5
 $as_echo_n "checking \"for python lib site-packages\"... " >&6; }
-PY_SITEPACK="$PY_EXEC_INSTALLDIR/lib/python$PYVERSION/site-packages"
+TMP_SITEPACK=`$PYBIN -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1))"`
+if [ "$TMP_SITEPACK" != "" ]; then
+  PY_SITEPACK="$TMP_SITEPACK"
+else
+  PY_SITEPACK="$PY_EXEC_INSTALLDIR/lib/python$PYVERSION/site-packages"
+fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: \"$PY_SITEPACK\"" >&5
 $as_echo "\"$PY_SITEPACK\"" >&6; }
 
