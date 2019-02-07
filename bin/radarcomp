@@ -96,7 +96,7 @@ def main(options):
   rio.filename = options.outfile
   
   if comp.verbose:
-    print "Saving %s"%rio.filename
+    print("Saving %s"%rio.filename)
   rio.save()
   
 if __name__ == "__main__":

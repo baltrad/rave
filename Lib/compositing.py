@@ -225,7 +225,7 @@ class compositing(object):
       pyarea.yscale = A.yscale
       pyarea.extent = A.extent
       pcs = rave_projection.pcs(A.pcs)
-      pyarea.projection = _projection.new(pcs.id, pcs.name, string.join(pcs.definition, ' '))
+      pyarea.projection = _projection.new(pcs.id, pcs.name, ' '.join(pcs.definition))
   
       if len(objects) == 1:
         try:
@@ -635,7 +635,7 @@ class compositing(object):
         except ValueError:
           pass
       elif self.product in [_rave.Rave_ProductType_PMAX]:
-        if isinstance(self.prodpar, basestring):
+        if isinstance(self.prodpar, str):
           pp = self.prodpar.split(",")
           if len(pp) == 2:
             try:
