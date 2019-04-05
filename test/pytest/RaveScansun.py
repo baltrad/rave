@@ -30,7 +30,7 @@ class RaveScansun(unittest.TestCase):
     KNMI_TESTFILE="fixtures/KNMI-PVOL-Den_Helder.h5"
     # The following validation values are:
     # Date    Time   Elevatn Azimuth ElevSun AzimSun   N  dBSunFlux   SunMean SunStdd   ZdrMean ZdrStdd Refl  ZDR
-    VALID = ('RAD:NL51;PLC:nldhl', [(20110111, 75022.0, 0.30000001447042407, 126.0, 
+    VALID = ('RAD:NL51;PLC:nldhl', [(20110111, 75022.0, 0.30000001447042407, 126.5, 
                                      -0.77586040298515435, 126.84009882306225, 
                                      98, 12.706416334302883, 
                                      -113.2001649139023, 0.78867323519645993, 
@@ -150,9 +150,9 @@ class RaveScansun(unittest.TestCase):
         fd = open(fstr)
         content = fd.read()
         fd.close()
-        self.assertEqual(content, '#Date    Time        Elevatn Azimuth   ElevSun   AzimSun    N  dBSunFlux   SunMean SunStdd   ZdrMean ZdrStdd  Refl  ZDR\n20110111 075022.000    0.300  126.00   -0.7759  126.8401      98      12.71   -113.20   0.789       nan     nan  DBZH   NA\n')
         os.remove(fstr)
         shutil.rmtree(os.path.split(fstr)[0], ignore_errors=True, onerror=None)
+        self.assertEqual(content, '#Date    Time        Elevatn Azimuth   ElevSun   AzimSun    N  dBSunFlux   SunMean SunStdd   ZdrMean ZdrStdd  Refl  ZDR\n20110111 075022.000    0.300  126.50   -0.7759  126.8401      98      12.71   -113.20   0.789       nan     nan  DBZH   NA\n')
       
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']
