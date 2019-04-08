@@ -34,6 +34,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "pypolarscan.h"
 #include "pyrave_debug.h"
 #include "pyravefield.h"
+#include "pyravedata2d.h"
 #include "rave_alloc.h"
 #include "rave.h"
 
@@ -920,7 +921,6 @@ MOD_INIT(_polarvolume)
   MOD_INIT_SETUP_TYPE(PyPolarVolume_Type, &PyType_Type);
 
   MOD_INIT_VERIFY_TYPE_READY(&PyPolarVolume_Type);
-
   MOD_INIT_DEF(module, "_polarvolume", NULL/*doc*/, functions);
   if (module == NULL) {
     return MOD_INIT_ERROR;
@@ -943,7 +943,6 @@ MOD_INIT(_polarvolume)
   import_array(); /*To make sure I get access to Numeric*/
   import_pypolarscan();
   import_pyravefield();
-
   PYRAVE_DEBUG_INITIALIZE;
   return MOD_INIT_SUCCESS(module);
 }

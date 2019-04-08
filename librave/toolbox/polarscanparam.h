@@ -122,8 +122,17 @@ double PolarScanParam_getUndetect(PolarScanParam_t* scanparam);
  * @param[in] nrays - number of rays
  * @param[in] data  - the data
  * @param[in] type  - the data type
+ * @return 1 on success otherwise 0
  */
 int PolarScanParam_setData(PolarScanParam_t* scanparam, long nbins, long nrays, void* data, RaveDataType type);
+
+/**
+ * Sets the data from a rave data 2d object
+ * @param[in] scanparam - self
+ * @param[in] data2d - the data 2d field
+ * @return 1 on success otherwise 0
+ */
+int PolarScanParam_setData2D(PolarScanParam_t* scanparam, RaveData2D_t* data2d);
 
 /**
  * Creates a data field with the specified dimensions and type. The data till be initialized to 0.
@@ -141,6 +150,13 @@ int PolarScanParam_createData(PolarScanParam_t* scanparam, long nbins, long nray
  * @return the internal data pointer (NOTE! Do not release this pointer)
  */
 void* PolarScanParam_getData(PolarScanParam_t* scanparam);
+
+/**
+ * Returns a copy of the internal 2d data field.
+ * @param[in] scanparam - self
+ * @return a copy of the internal 2d data field
+ */
+RaveData2D_t* PolarScanParam_getData2D(PolarScanParam_t* scanparam);
 
 /**
  * Returns the number of bins

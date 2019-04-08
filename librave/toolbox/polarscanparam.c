@@ -199,6 +199,23 @@ int PolarScanParam_setData(PolarScanParam_t* scanparam, long nbins, long nrays, 
   return RaveData2D_setData(scanparam->data, nbins, nrays, data, type);
 }
 
+int PolarScanParam_setData2D(PolarScanParam_t* scanparam, RaveData2D_t* data2d)
+{
+  RAVE_ASSERT((scanparam != NULL), "scanparam == NULL");
+  if (data2d != NULL) {
+    RaveData2D_t* tmp = RAVE_OBJECT_CLONE(data2d);
+    if (tmp != NULL) {
+      RAVE_OBJECT_RELEASE(scanparam->data);
+      scanparam->data = tmp;
+      scanparam->nodata = RaveData2D_getNodata(scanparam->data);
+      scanparam->gain = 1.0;
+      scanparam->offset = 0.0;
+      return 1;
+    }
+  }
+  return 0;
+}
+
 int PolarScanParam_createData(PolarScanParam_t* scanparam, long nbins, long nrays, RaveDataType type)
 {
   RAVE_ASSERT((scanparam != NULL), "scanparam == NULL");
@@ -209,6 +226,18 @@ void* PolarScanParam_getData(PolarScanParam_t* scanparam)
 {
   RAVE_ASSERT((scanparam != NULL), "scanparam == NULL");
   return RaveData2D_getData(scanparam->data);
+}
+
+RaveData2D_t* PolarScanParam_getData2D(PolarScanParam_t* scanparam)
+{
+  RaveData2D_t* result = NULL;
+  RAVE_ASSERT((scanparam != NULL), "scanparam == NULL");
+  result = RAVE_OBJECT_CLONE(scanparam->data);
+  if (result != NULL) {
+    RaveData2D_setNodata(result, scanparam->nodata);
+    RaveData2D_useNodata(result, 1);
+  }
+  return result;
 }
 
 long PolarScanParam_getNbins(PolarScanParam_t* scanparam)

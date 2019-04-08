@@ -203,7 +203,7 @@ static int VpOdimIOInternal_loadDsAttribute(void* object, RaveAttribute_t* attri
   /* The following functions added by Ulf to be able to access the new
      attributes starttime, endtime, startdate, enddate and product */
   
-  if (name != NULL);
+  if (name != NULL) {
     if (strcasecmp("what/starttime", name)==0) {
       char* value = NULL;
       if (!RaveAttribute_getString(attribute, &value)) {
@@ -253,7 +253,8 @@ static int VpOdimIOInternal_loadDsAttribute(void* object, RaveAttribute_t* attri
     } else {
       VerticalProfile_addAttribute(vp, attribute);
       result = 1;
-    }    
+    }
+  }
 done:
   return result;
 }    

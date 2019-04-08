@@ -37,6 +37,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "raveutil.h"
 #include "rave.h"
 #include "pyravefield.h"
+#include "pyravedata2d.h"
 
 /**
  * Debug this module
@@ -246,6 +247,18 @@ static PyObject* _pypolarscanparam_getData(PyPolarScanParam* self, PyObject* arg
     memcpy(((PyArrayObject*)result)->data, PolarScanParam_getData(self->scanparam), nbytes);
   }
 
+  return result;
+}
+
+static PyObject* _pypolarscanparam_getData2D(PyPolarScanParam* self, PyObject* args)
+{
+  RaveData2D_t* datafield = NULL;
+  PyObject* result = NULL;
+  datafield = PolarScanParam_getData2D(self->scanparam);
+  if (datafield != NULL) {
+    result = (PyObject*)PyRaveData2D_New(datafield);
+  }
+  RAVE_OBJECT_RELEASE(datafield);
   return result;
 }
 
@@ -653,6 +666,7 @@ static struct PyMethodDef _pypolarscanparam_methods[] =
   {"datatype", NULL},
   {"setData", (PyCFunction) _pypolarscanparam_setData, 1},
   {"getData", (PyCFunction) _pypolarscanparam_getData, 1},
+  {"getData2D", (PyCFunction) _pypolarscanparam_getData2D, 1},
   {"getValue", (PyCFunction) _pypolarscanparam_getValue, 1},
   {"getConvertedValue", (PyCFunction) _pypolarscanparam_getConvertedValue, 1},
   {"setValue", (PyCFunction) _pypolarscanparam_setValue, 1},
@@ -841,6 +855,7 @@ MOD_INIT(_polarscanparam)
   }
 
   import_array(); /*To make sure I get access to Numeric*/
+  import_ravedata2d();
   import_pyravefield();
   PYRAVE_DEBUG_INITIALIZE;
   return MOD_INIT_SUCCESS(module);
