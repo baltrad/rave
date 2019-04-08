@@ -621,6 +621,8 @@ static int _pyravedata2d_setattro(PyRaveData2D *self, PyObject *name, PyObject *
       RaveData2D_setNodata(self->field, PyFloat_AsDouble(value));
     } else if (PyLong_Check(value)) {
       RaveData2D_setNodata(self->field, (double)PyLong_AsLong(value));
+    } else if (PyInt_Check(value)) {
+      RaveData2D_setNodata(self->field, (double)PyInt_AsLong(value));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "nodata must be of type float");
     }
