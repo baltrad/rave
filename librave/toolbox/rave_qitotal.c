@@ -66,7 +66,7 @@ fail:
 static int RaveQITotal_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj)
 {
   RaveQITotal_t* self = (RaveQITotal_t*)obj;
-  RaveQITotal_t* src = (RaveQITotal_t*)obj;
+  RaveQITotal_t* src = (RaveQITotal_t*)srcobj;
   self->dtype = src->dtype;
   self->gain = src->gain;
   self->offset = src->offset;
@@ -583,8 +583,13 @@ RaveField_t* RaveQITotal_minimum(RaveQITotal_t* self, RaveObjectList_t* fields)
     for (y = 0; y < ysize; y++) {
       double v = 0.0;
       RaveField_getValue(field, x, y, &v);
-      RaveField_setValue(qifield, x, y, (v * gain + offset) * (1.0 - fweight[0]));
-      RaveField_setValue(wfield, x, y, (1.0 - fweight[0]));
+      if (nlen == 1) {
+        RaveField_setValue(qifield, x, y, (v * gain + offset));
+        RaveField_setValue(wfield, x, y, 1.0);
+      } else {
+        RaveField_setValue(qifield, x, y, (v * gain + offset) * (1.0 - fweight[0]));
+        RaveField_setValue(wfield, x, y, (1.0 - fweight[0]));
+      }
     }
   }
 
