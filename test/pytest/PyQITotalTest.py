@@ -410,7 +410,26 @@ class PyQITotalTest(unittest.TestCase):
     
     #1,1 = min(0.4, 1.0, 0.6) = 0.4
     self.assertAlmostEqual(0.4, result.getValue(1,1)[1], 4)
+
+  def test_minimum_only_1_field(self):
+    obj = _qitotal.new()
+    f1 = _ravefield.new()
+    f1.setData(numpy.zeros((2,2), numpy.float64))
+    f1.setValue(0,0,0.1)
+    f1.setValue(0,1,0.2)
+    f1.setValue(1,0,0.3)
+    f1.setValue(1,1,0.4)
+
+    result = obj.minimum([f1])
     
+    self.assertEqual("pl.imgw.quality.qi_total", result.getAttribute("how/task"))
+    self.assertEqual("method:minimum", result.getAttribute("how/task_args"))
+    
+    self.assertAlmostEqual(0.1, result.getValue(0,0)[1], 4)
+    self.assertAlmostEqual(0.2, result.getValue(0,1)[1], 4)
+    self.assertAlmostEqual(0.3, result.getValue(1,0)[1], 4)
+    self.assertAlmostEqual(0.4, result.getValue(1,1)[1], 4)
+
   def test_minimum_with_weights(self):
     obj = _qitotal.new()
     f1 = _ravefield.new()
