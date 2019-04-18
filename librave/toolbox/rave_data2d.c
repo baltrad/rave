@@ -121,12 +121,12 @@ static RaveData2D_t* RaveData2DInternal_eoperation(RaveData2D_t* field, RaveData
     return NULL;
   }
 
-  newfield = RAVE_OBJECT_CLONE(field);
+  newfield = RaveData2D_zeros(field->xsize, field->ysize, RaveDataType_DOUBLE);
   if (newfield == NULL) {
     return NULL;
   }
 
-  if (other->useNodata && !newfield->useNodata) {
+  if (other->useNodata || newfield->useNodata) {
     newfield->useNodata = 1;
     newfield->nodata = other->nodata;
   }
@@ -144,6 +144,7 @@ static RaveData2D_t* RaveData2DInternal_eoperation(RaveData2D_t* field, RaveData
       }
       RaveData2D_getValueUnchecked(field, x, y, &v);
       RaveData2D_getValueUnchecked(other, ox, oy, &ov);
+
       if ((field->useNodata && field->nodata == v) || (other->useNodata && other->nodata == ov)) {
         RaveData2D_setValueUnchecked(newfield, x, y, newfield->nodata);
       } else {
@@ -169,14 +170,16 @@ static RaveData2D_t* RaveData2D_eoperationNumber(RaveData2D_t* field, double v, 
   long x = 0, y = 0;
 
   RAVE_ASSERT((field != NULL), "field == NULL");
-  newfield = RAVE_OBJECT_CLONE(field);
+  newfield = RaveData2D_zeros(field->xsize, field->ysize, RaveDataType_DOUBLE);
+  newfield->useNodata = field->useNodata;
+  newfield->nodata = field->nodata;
   if (newfield == NULL) {
     return NULL;
   }
   for (x = 0; x < newfield->xsize; x++) {
     for (y = 0; y < newfield->ysize; y++) {
       double nfv = 0.0;
-      RaveData2D_getValueUnchecked(newfield, x, y, &nfv);
+      RaveData2D_getValueUnchecked(field, x, y, &nfv);
       if (field->useNodata && field->nodata == nfv) {
         RaveData2D_setValueUnchecked(newfield, x, y, field->nodata);
       } else {
@@ -965,10 +968,10 @@ RaveData2D_t* RaveData2D_movingstd(RaveData2D_t* field, long nx, long ny)
   for (i = -nx; i <= nx; i++) {
     for (j = -ny; j <= ny; j++) {
       if (i*i+j*j > 0) {
-        // Matlab code. Isn't there problem when creating std-dev when using circular shift? For example,
+        /* Matlab code. Isn't there problem when creating std-dev when using circular shift? For example,
         // what happens when comparing top left pixel with (-1,-1)? It will compare top left with lower right..
         // mstd=mstd+Weight.*circshift(Weight,[i j]).*((circshift(X,[i j])-X).^2);
-        // Sum_weight=Sum_weight+Weight.*circshift(Weight,[i j]);
+        // Sum_weight=Sum_weight+Weight.*circshift(Weight,[i j]); */
         cs1 = RaveData2D_circshift(weight, i, j);
         cs2 = RaveData2D_circshift(field, i, j);
         if (cs1 == NULL || cs2 == NULL) {
@@ -1004,7 +1007,6 @@ RaveData2D_t* RaveData2D_movingstd(RaveData2D_t* field, long nx, long ny)
           goto done;
         }
 
-        //fprintf(stderr, "add2=%s\n", RaveData2D_str(add2));
         RAVE_OBJECT_RELEASE(sumWeight);
         sumWeight = RAVE_OBJECT_COPY(add2);
 
@@ -1120,13 +1122,12 @@ long* RaveData2D_hist(RaveData2D_t* field, int bins, long* nnodata)
         }
       }
 
-      //fprintf(stderr, "min=%f, max = %f, v = %f, scale = %f:  (v - min) / scale => index = %d\n", min, max, v, scale, histidx);
       if (histidx < 0) {
         RAVE_CRITICAL0("Coding error in histogram coding");
         RAVE_FREE(result);
         return NULL;
       } else if (histidx >= bins) {
-        histidx = bins - 1; // Rand value might occur
+        histidx = bins - 1;
       }
       result[histidx] ++;
     }
@@ -1170,7 +1171,7 @@ int RaveData2D_entropy(RaveData2D_t* field, int bins, double* entropy)
       normCount[i] = histogram[i] / totalCount;
     }
     for (i = 0; i < bins; i++) {
-      if (normCount[i] > 0.0) { // No real chance for negative values here since it's a count
+      if (normCount[i] > 0.0) { /* No real chance for negative values here since it's a count */
         sumEntropy += normCount[i] * log2(normCount[i]);
       }
     }
