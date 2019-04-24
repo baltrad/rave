@@ -126,7 +126,10 @@ static RaveData2D_t* RaveData2DInternal_eoperation(RaveData2D_t* field, RaveData
     return NULL;
   }
 
-  if (other->useNodata || newfield->useNodata) {
+  if (field->useNodata) {
+    newfield->useNodata = 1;
+    newfield->nodata = field->nodata;
+  } else if (other->useNodata) {
     newfield->useNodata = 1;
     newfield->nodata = other->nodata;
   }
@@ -452,11 +455,7 @@ int RaveData2D_getValueUnchecked(RaveData2D_t* self, long x, long y, double* v)
     RAVE_ERROR0("Atempting to get value when there is no data array");
     return 0;
   }
-  if (getenv("DEBUG_RAVE2D_VALUE_UNCHECKED") != NULL) {
-    if (x < 0 || x >= self->xsize || y < 0 || y >= self->ysize) {
-      fprintf(stderr, "OUTSIDE OF BOUNDARIES (%ld, %ld) SIZE=%ld x %ld\n", x, y, self->xsize, self->ysize);
-    }
-  }
+
   if (v == NULL) {
     RAVE_ERROR0("Atempting to get a value without providing a value pointer");
     return 0;
@@ -936,11 +935,7 @@ RaveData2D_t* RaveData2D_movingstd(RaveData2D_t* field, long nx, long ny)
   long x = 0, y = 0;
   long i = 0, j = 0;
   RaveData2D_t *mstd = NULL, *result = NULL;
-  RaveData2D_t *weight = NULL, *sumWeight = NULL;
-  RaveData2D_t *cs1 = NULL, *cs2 = NULL;
-  RaveData2D_t *sub1 = NULL, *pow1 = NULL;
-  RaveData2D_t *mul1 = NULL, *mul2 = NULL;
-  RaveData2D_t *add1 = NULL, *add2 = NULL;
+  RaveData2D_t *weight = NULL;
   RAVE_ASSERT((field != NULL), "field == NULL");
   if (!field->useNodata) {
     RAVE_ERROR0("When creating movingstd nodata usage should be activated");
@@ -948,8 +943,7 @@ RaveData2D_t* RaveData2D_movingstd(RaveData2D_t* field, long nx, long ny)
   }
   mstd = RaveData2D_zeros(field->xsize, field->ysize, RaveDataType_DOUBLE);
   weight = RaveData2D_zeros(field->xsize, field->ysize, RaveDataType_DOUBLE);
-  sumWeight = RaveData2D_zeros(field->xsize, field->ysize, RaveDataType_DOUBLE);
-  if (weight == NULL || sumWeight == NULL || mstd == NULL) {
+  if (weight == NULL || mstd == NULL) {
     goto done;
   }
   field->useNodata = 0; /* Think it should be 1 but matlab, criteria says Weight(X>-900. | isnan(X)==0)=1.0 which basically says anything that is != nan is weight 1*/
@@ -965,92 +959,59 @@ RaveData2D_t* RaveData2D_movingstd(RaveData2D_t* field, long nx, long ny)
     }
   }
 
-  for (i = -nx; i <= nx; i++) {
-    for (j = -ny; j <= ny; j++) {
-      if (i*i+j*j > 0) {
-        /* Matlab code. Isn't there problem when creating std-dev when using circular shift? For example,
-        // what happens when comparing top left pixel with (-1,-1)? It will compare top left with lower right..
-        // mstd=mstd+Weight.*circshift(Weight,[i j]).*((circshift(X,[i j])-X).^2);
-        // Sum_weight=Sum_weight+Weight.*circshift(Weight,[i j]); */
-        cs1 = RaveData2D_circshift(weight, i, j);
-        cs2 = RaveData2D_circshift(field, i, j);
-        if (cs1 == NULL || cs2 == NULL) {
-          goto done;
-        }
-        sub1 = RaveData2D_sub(cs2, field);
-        if (sub1 == NULL) {
-          goto done;
-        }
-        pow1 = RaveData2D_powNumber(sub1, 2.0);
-        if (pow1 == NULL) {
-          goto done;
-        }
-        mul1 = RaveData2D_emul(weight, cs1);
-        if (mul1 == NULL) {
-          goto done;
-        }
-
-        mul2 = RaveData2D_emul(mul1, pow1);
-        if (mul2 == NULL) {
-          goto done;
-        }
-        add1 = RaveData2D_add(mstd, mul2);
-        if (add1 == NULL) {
-          goto done;
-        }
-
-        RAVE_OBJECT_RELEASE(mstd);
-        mstd = RAVE_OBJECT_COPY(add1);
-
-        add2 = RaveData2D_add(sumWeight, mul1);
-        if (add2 == NULL) {
-          goto done;
-        }
-
-        RAVE_OBJECT_RELEASE(sumWeight);
-        sumWeight = RAVE_OBJECT_COPY(add2);
-
-        RAVE_OBJECT_RELEASE(cs1);
-        RAVE_OBJECT_RELEASE(cs2);
-        RAVE_OBJECT_RELEASE(sub1);
-        RAVE_OBJECT_RELEASE(pow1);
-        RAVE_OBJECT_RELEASE(mul1);
-        RAVE_OBJECT_RELEASE(mul2);
-        RAVE_OBJECT_RELEASE(add1);
-        RAVE_OBJECT_RELEASE(add2);
-      }
-    }
-  }
-
   for (x = 0; x < field->xsize; x++) {
     for (y = 0; y < field->ysize; y++) {
-      double v = 0.0;
-      double res = 0.0;
-      RaveData2D_getValueUnchecked(sumWeight, x, y, &v);
-      if (v >= 3.0) {
-        double mv = 0.0;
-        RaveData2D_getValueUnchecked(mstd, x, y, &mv);
-        res = sqrt(mv) / v;
-      } else {
-        res = field->nodata;
+      double valueMstd = 0.0;
+      double valueSumWeight = 0.0;
+      double valueWeight = 0.0;
+      double valueX = 0.0;
+
+      RaveData2D_getValueUnchecked(weight, x, y, &valueWeight);
+      RaveData2D_getValueUnchecked(field, x, y, &valueX);
+
+      for (j = ny; j >= -ny; j--) {
+        for (i = nx; i >= -nx; i--) {
+          long xi = (x + i)%field->xsize;
+          long yj = (y + j)%field->ysize;
+          double valueCircshiftWeight = 0.0;
+          double valueCircshiftX = 0.0;
+
+          if (i==0 && j==0) continue;
+
+          while (xi < 0) {
+            xi += field->xsize;
+          }
+          while (yj < 0) {
+            yj += field->ysize;
+          }
+
+          RAVE_ASSERT((xi >= 0 && xi <field->xsize && yj >= 0 && yj < field->ysize), "BAD PROGRAMMING");
+
+          RaveData2D_getValueUnchecked(weight, xi, yj, &valueCircshiftWeight);
+          RaveData2D_getValueUnchecked(field, xi, yj, &valueCircshiftX);
+
+          valueMstd = valueMstd + valueWeight * valueCircshiftWeight * (valueCircshiftX - valueX)*(valueCircshiftX - valueX);
+          valueSumWeight = valueSumWeight + valueWeight * valueCircshiftWeight;
+        }
       }
-      RaveData2D_setValueUnchecked(mstd, x, y, res);
+
+      if (valueSumWeight >= 3.0) {
+        if (valueMstd >= 0) {
+          RaveData2D_setValueUnchecked(mstd, x, y, sqrt(valueMstd) / valueSumWeight);
+        } else {
+          RaveData2D_setValueUnchecked(mstd, x, y, mstd->nodata);
+        }
+      } else {
+        RaveData2D_setValueUnchecked(mstd, x, y, mstd->nodata);
+      }
     }
   }
+
   result = RAVE_OBJECT_COPY(mstd);
 
 done:
-  RAVE_OBJECT_RELEASE(cs1);
-  RAVE_OBJECT_RELEASE(cs2);
-  RAVE_OBJECT_RELEASE(sub1);
-  RAVE_OBJECT_RELEASE(pow1);
-  RAVE_OBJECT_RELEASE(mul1);
-  RAVE_OBJECT_RELEASE(mul2);
-  RAVE_OBJECT_RELEASE(add1);
-  RAVE_OBJECT_RELEASE(add2);
   RAVE_OBJECT_RELEASE(mstd);
   RAVE_OBJECT_RELEASE(weight);
-  RAVE_OBJECT_RELEASE(sumWeight);
   field->useNodata = 1;
   return result;
 }

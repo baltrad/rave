@@ -32,8 +32,6 @@ class PyRaveRaveData2DTest(unittest.TestCase):
    [9.000, 10.000, 11.000, 12.000, 13.000],
    [14.000, 15.000, 16.000, 17.000, 18.000]];""", obj.str())
   
-  A="""
-      
   def test_new_with_array(self):
     obj = _ravedata2d.new(numpy.array([[ 0,  1,  2,  3,  5],
                              [ 4,  5,  6,  7,  8],
@@ -309,6 +307,7 @@ class PyRaveRaveData2DTest(unittest.TestCase):
                                   [ 16.0, 14.0, 12.0, 10.0],
                                   [ 8.0, 6.0, 4.0, 1.0]], numpy.int64)
     result = obj.add(other);
+    #print(str(result.getData()))
     self.assertTrue((expected_array == result.getData()).all())
 
   def test_add_data2d_other_with_nodata(self):
@@ -684,8 +683,8 @@ class PyRaveRaveData2DTest(unittest.TestCase):
       [6.0,   13.0,  21.0, 30.0],
       [7.0,   15.0,  24.0, 34.0]], numpy.float64)
     self.assertTrue((expected_array == result.getData()).all())
-  """
-  def Xtest_movingstd_1(self):
+
+  def test_movingstd_1(self):
     obj = _ravedata2d.new(numpy.array([
       [-7,-5,-3,-2],
       [-2,-1,0,1],
@@ -694,7 +693,7 @@ class PyRaveRaveData2DTest(unittest.TestCase):
     obj.nodata = -999;
     obj.useNodata = True
     result = obj.movingstd(3, 3);
-    print(str(result.getData()))
+    #print(str(result.getData()))
     
     expected = numpy.array([
        [1.39847,   1.12384,   0.86653,   0.73775],
@@ -707,7 +706,7 @@ class PyRaveRaveData2DTest(unittest.TestCase):
         self.assertAlmostEqual(result.getData()[y][x], expected[y][x], 3)
 
 
-  def Xtest_movingstd_noNodata(self):
+  def test_movingstd_noNodata(self):
     obj = _ravedata2d.new(numpy.array([
       [-7,-5,-3,-2],
       [-2,-1,0,1],
