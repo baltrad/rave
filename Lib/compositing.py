@@ -70,6 +70,10 @@ try:
 except:
   nodomdb=True
 
+is_py27=False
+if sys.version_info < (3,):
+    is_py27=True
+
 ##
 # The area registry to be used by this composite generator.
 my_area_registry = area_registry.area_registry()
@@ -225,7 +229,10 @@ class compositing(object):
       pyarea.yscale = A.yscale
       pyarea.extent = A.extent
       pcs = rave_projection.pcs(A.pcs)
-      pyarea.projection = _projection.new(pcs.id, pcs.name, ' '.join(pcs.definition))
+      pcsname = pcs.name
+      if not is_py27:
+        pcsname = pcsname.decode()
+      pyarea.projection = _projection.new(pcs.id, pcsname, ' '.join(pcs.definition))
   
       if len(objects) == 1:
         try:
