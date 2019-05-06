@@ -24,6 +24,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @date 2014-08-12
 import os  # Provisional, until compositing can handle prefab QC
 import re
+import sys
 
 import _rave
 import _polarscan
