@@ -25,15 +25,13 @@ Tests functionality for managing ODIM /what/source identifiers.
 @date 2015-11-02
 '''
 import unittest
-import os, types
 import _raveio
 import odim_source
-from numpy import *
-import sys
-from sys import byteorder
+from numpy import unicode
+import sys as system
 
 use_unicode_variant=True
-if sys.version_info < (3,):
+if system.version_info < (3,):
     use_unicode_variant=False
 
 class RaveOdimSourceTest(unittest.TestCase):
@@ -64,15 +62,15 @@ class RaveOdimSourceTest(unittest.TestCase):
     def testNODfromSource(self):
         rio = _raveio.open(self.FIXTURE)
         n = odim_source.NODfromSource(rio.object)
-        self.assertEqual(n, 'selul')
+        self.assertEqual(n, 'sella')
 
     def testCheckSource(self):
         if use_unicode_variant:
-            variants = [b'WMO:02092,NOD:selul,RAD:SE41,PLC:Lule\xc3\xa5'.decode('utf-8'),
+            variants = [b'WMO:02092,NOD:sella,RAD:SE41,PLC:Lule\xc3\xa5'.decode('utf-8'),
                         b'WMO:02092,CMT:searl,RAD:SE49,PLC:Luleaa'.decode('utf-8'),
                         b'WMO:02092'.decode('utf-8')]
         else:
-            variants = ['WMO:02092,NOD:selul,RAD:SE41,PLC:Lule\xc3\xa5',
+            variants = ['WMO:02092,NOD:sella,RAD:SE41,PLC:Lule\xc3\xa5',
                         'WMO:02092,CMT:searl,RAD:SE49,PLC:Luleaa',
                         'WMO:02092']
 
@@ -87,7 +85,7 @@ class RaveOdimSourceTest(unittest.TestCase):
             for s in split:
                 if use_unicode_variant:
                     s=s.encode('utf-8').decode()
-                self.assertTrue(s in "WMO:02092,NOD:selul,RAD:SE41,PLC:Luleå")
+                self.assertTrue(s in "WMO:02092,NOD:sella,RAD:SE41,PLC:Luleå")
 
 
 if __name__ == "__main__":

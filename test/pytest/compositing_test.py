@@ -98,7 +98,7 @@ class compositing_test(unittest.TestCase):
     rave_pgf_quality_registry.add_plugin("qc.check.2", self.qc_check_2_mock)
     self.classUnderTest = compositing.compositing()
     
-    self.sources = {"WMO:02262,RAD:SE43,PLC:Ornskoldsvik,CMT:seovi" : "seovi",  "WMO:02600,RAD:SE49,PLC:Vara,CMT:sevar" : "sevax"}
+    self.sources = {"WMO:02262,RAD:SE43,PLC:Ornskoldsvik,CMT:seoer" : "seoer",  "WMO:02600,RAD:SE49,PLC:Vara,CMT:sevax" : "sevax"}
 
   def tearDown(self):
     self.classUnderTest = None

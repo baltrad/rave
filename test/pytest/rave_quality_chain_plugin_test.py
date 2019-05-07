@@ -23,7 +23,6 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @author Anders Henja, SMHI
 ## @date 2014-12-19
 import unittest
-import os
 import rave_quality_chain_plugin, rave_quality_chain_registry, rave_quality_plugin
 import rave_pgf_quality_registry
 import _raveio
@@ -61,7 +60,7 @@ class rave_quality_chain_plugin_test(unittest.TestCase):
     self.qc_check_2_mock.process.return_value = pvol, [qfields[1]]
     self.qc_check_2_mock.algorithm.return_value = None
     
-    obj, returned_qfields = self.classUnderTest.process(pvol)
+    _, returned_qfields = self.classUnderTest.process(pvol)
     
     expected_chain_registry_calls = [mock.call.get_chain("selek")]
     expected_qc_check_1_calls = [mock.call.process(pvol,True,"analyze_and_apply",None), mock.call.algorithm()]
@@ -84,7 +83,7 @@ class rave_quality_chain_plugin_test(unittest.TestCase):
     self.qc_check_2_mock.process.return_value = pvol, [qfields[1]]
     self.qc_check_2_mock.algorithm.return_value = None
     
-    obj, returned_qfields = self.classUnderTest.process(pvol, False)
+    _, returned_qfields = self.classUnderTest.process(pvol, False)
     
     expected_chain_registry_calls = [mock.call.get_chain("selek")]
     expected_qc_check_1_calls = [mock.call.process(pvol,False,"analyze_and_apply",None), mock.call.algorithm()]
@@ -123,7 +122,7 @@ class rave_quality_chain_plugin_test(unittest.TestCase):
 
     obj, returned_qfields = self.classUnderTest.process(pvol)
 
-    expected_chain_registry_calls = [mock.call.get_chain("sekkr")]
+    expected_chain_registry_calls = [mock.call.get_chain("sekaa")]
 
     self.assertTrue(expected_chain_registry_calls == self.quality_chain_registry_mock.mock_calls)
     

@@ -25,12 +25,10 @@ Tests the volume plugin
 @date 2011-01-19
 '''
 import unittest
-import string
 import math
 import _raveio
 import os
 import rave_pgf_volume_plugin
-import odim_source
 
 class PgfVolumePluginTest(unittest.TestCase):
   FIXTURES=["fixtures/Z_SCAN_C_ESWI_20101023180200_selul_000000.h5",
@@ -51,7 +49,7 @@ class PgfVolumePluginTest(unittest.TestCase):
       os.unlink(self.TEMPORARY_FILE)
 
   def testGenerateVolume(self):
-    args = {"source":"selul","date":"20101023","time":"180000"}
+    args = {"source":"sella","date":"20101023","time":"180000"}
     volume = rave_pgf_volume_plugin.generateVolume(self.FIXTURES, args)
 
     self.assertNotEqual(-1, str(type(volume)).find("PolarVolumeCore"))
@@ -65,11 +63,11 @@ class PgfVolumePluginTest(unittest.TestCase):
     self.assertAlmostEqual(14.0, volume.getScan(3).elangle * 180.0/math.pi, 4)
     self.assertAlmostEqual(24.0, volume.getScan(4).elangle * 180.0/math.pi, 4)
     self.assertAlmostEqual(40.0, volume.getScan(5).elangle * 180.0/math.pi, 4)
-    self.assertEqual("NOD:selul,WMO:02092,RAD:SE41,PLC:Lule\xc3\xa5", volume.source)
+    self.assertEqual("NOD:sella,WMO:02092,RAD:SE41,PLC:Lule\xc3\xa5", volume.source)
 
   # Where's the test?
   def testGenerateVolumeAndSave(self):
-    args = {"source":"selul","date":"20101023","time":"180000"}
+    args = {"source":"sella","date":"20101023","time":"180000"}
     volume = rave_pgf_volume_plugin.generateVolume(self.FIXTURES, args)
     
     ios = _raveio.new()
@@ -80,7 +78,7 @@ class PgfVolumePluginTest(unittest.TestCase):
     ios = None
     
   def testGenerate(self):
-    args = ["source", "selul","date","20101023","time","180000"]
+    args = ["source", "sella","date","20101023","time","180000"]
     outfile = rave_pgf_volume_plugin.generate(self.FIXTURES, args)
     
     expected_outfile_beginning = "rave%d-" % os.getpid()
