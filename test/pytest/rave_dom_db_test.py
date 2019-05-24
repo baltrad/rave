@@ -18,7 +18,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
 import unittest, os, datetime
-from rave_dom import wmo_station, observation
+from rave_dom import wmo_station, observation, melting_layer
 import rave_dom_db
 import _rave
 
@@ -754,3 +754,156 @@ class rave_dom_db_test(unittest.TestCase):
     # check that all (both) stations are no longer in db
     result = self.classUnderTest.get_stations_in_bbox(0.0, 100.0, 50.0, 0.0)
     self.assertEqual(0, len(result))
+
+  def test_add_melting_layer(self):
+    ml1 = melting_layer("sekkr", datetime.datetime(2019,5,24,1,0,0), 2.1, 3.2)
+    ml2 = melting_layer("sekkr", datetime.datetime(2019,5,24,6,0,0), 2.2, 3.3)
+    ml3 = melting_layer("selul", datetime.datetime(2019,5,24,6,0,0), 2.2, 3.3)
+
+    testdb().add(ml1)
+    testdb().add(ml2)
+    testdb().add(ml3)
+    
+    result = testdb().query("SELECT * FROM rave_melting_layer order by nod,datetime")
+    self.assertEqual(3, len(result))
+    self.assertEqual("sekkr", result[0]["nod"])
+    self.assertEqual("20190524010000", result[0]["datetime"].strftime("%Y%m%d%H%M%S"))
+    self.assertAlmostEqual(2.1, result[0]["bottom"], 4)
+    self.assertAlmostEqual(3.2, result[0]["top"], 4)
+
+    self.assertEqual("sekkr", result[1]["nod"])
+    self.assertEqual("20190524060000", result[1]["datetime"].strftime("%Y%m%d%H%M%S"))
+    self.assertAlmostEqual(2.2, result[1]["bottom"], 4)
+    self.assertAlmostEqual(3.3, result[1]["top"], 4)
+    
+    self.assertEqual("selul", result[2]["nod"])
+    self.assertEqual("20190524060000", result[2]["datetime"].strftime("%Y%m%d%H%M%S"))
+    self.assertAlmostEqual(2.2, result[2]["bottom"], 4)
+    self.assertAlmostEqual(3.3, result[2]["top"], 4)
+    
+  def test_add_melting_layer_none(self):
+    ml1 = melting_layer("sekkr", datetime.datetime(2019,5,24,1,0,0), 2.1, None)
+    ml2 = melting_layer("sekkr", datetime.datetime(2019,5,24,6,0,0), None, 3.3)
+    ml3 = melting_layer("selul", datetime.datetime(2019,5,24,6,0,0), None, None)
+
+    testdb().add(ml1)
+    testdb().add(ml2)
+    testdb().add(ml3)
+    
+    result = testdb().query("SELECT * FROM rave_melting_layer order by nod,datetime")
+    self.assertEqual(3, len(result))
+    self.assertEqual("sekkr", result[0]["nod"])
+    self.assertEqual("20190524010000", result[0]["datetime"].strftime("%Y%m%d%H%M%S"))
+    self.assertAlmostEqual(2.1, result[0]["bottom"], 4)
+    self.assertEqual(None, result[0]["top"])
+
+    self.assertEqual("sekkr", result[1]["nod"])
+    self.assertEqual("20190524060000", result[1]["datetime"].strftime("%Y%m%d%H%M%S"))
+    self.assertEqual(None, result[1]["bottom"])
+    self.assertAlmostEqual(3.3, result[1]["top"], 4)
+    
+    self.assertEqual("selul", result[2]["nod"])
+    self.assertEqual("20190524060000", result[2]["datetime"].strftime("%Y%m%d%H%M%S"))
+    self.assertEqual(None, result[2]["bottom"])
+    self.assertEqual(None, result[2]["top"])
+    
+  def test_get_latest_melting_layer(self):
+    ml1 = melting_layer("sekkr", datetime.datetime(2019,5,24,0,0,0), 2.1, 3.2)
+    ml2 = melting_layer("sekkr", datetime.datetime(2019,5,24,6,0,0), 2.2, 3.3)
+    ml3 = melting_layer("selul", datetime.datetime(2019,5,24,6,0,0), 2.2, 3.3)
+
+    testdb().add(ml1)
+    testdb().add(ml2)
+    testdb().add(ml3)
+
+    result = self.classUnderTest.get_latest_melting_layer("sekkr", 6, datetime.datetime(2019,5,24,6,1,0))
+
+    self.assertTrue(isinstance(result, melting_layer))
+    self.assertEqual("sekkr", result.nod)
+    self.assertEqual("20190524060000", result.datetime.strftime("%Y%m%d%H%M%S"))
+    self.assertAlmostEqual(2.2, result.bottom, 4)    
+    self.assertAlmostEqual(3.3, result.top, 4)    
+
+    result = self.classUnderTest.get_latest_melting_layer("sekkr", 6, datetime.datetime(2019,5,24,5,59,59))
+    self.assertTrue(isinstance(result, melting_layer))
+    self.assertEqual("sekkr", result.nod)
+    self.assertEqual("20190524000000", result.datetime.strftime("%Y%m%d%H%M%S"))
+    self.assertAlmostEqual(2.1, result.bottom, 4)    
+    self.assertAlmostEqual(3.2, result.top, 4)   
+    
+  def test_get_latest_melting_layer_not_in_range(self):
+    ml1 = melting_layer("sekkr", datetime.datetime(2019,5,24,0,0,0), 2.1, 3.2)
+    ml2 = melting_layer("sekkr", datetime.datetime(2019,5,24,6,0,0), 2.2, 3.3)
+    ml3 = melting_layer("selul", datetime.datetime(2019,5,24,6,0,0), 2.2, 3.3)
+
+    testdb().add(ml1)
+    testdb().add(ml2)
+    testdb().add(ml3)
+
+    result = self.classUnderTest.get_latest_melting_layer("sekkr", 6, datetime.datetime(2019,5,24,12,1,0))
+
+    self.assertEqual(None, result)
+
+  def test_get_latest_melting_layer_multiple_in_range(self):
+    ml1 = melting_layer("sekkr", datetime.datetime(2019,5,24,0,0,0), 2.1, 3.2)
+    ml2 = melting_layer("sekkr", datetime.datetime(2019,5,24,6,0,0), 2.2, 3.3)
+    ml3 = melting_layer("sekkr", datetime.datetime(2019,5,24,6,1,0), 2.2, 3.3)
+    ml4 = melting_layer("sekkr", datetime.datetime(2019,5,24,6,2,0), 2.2, 3.3)
+    ml5 = melting_layer("sekkr", datetime.datetime(2019,5,24,10,0,0), 2.2, 3.3)
+
+    testdb().add(ml1)
+    testdb().add(ml2)
+    testdb().add(ml3)
+    testdb().add(ml4)
+    testdb().add(ml5)
+
+    result = self.classUnderTest.get_latest_melting_layer("sekkr", 6, datetime.datetime(2019,5,24,11,0,0))
+    self.assertTrue(isinstance(result, melting_layer))
+    self.assertEqual("sekkr", result.nod)
+    self.assertEqual("20190524100000", result.datetime.strftime("%Y%m%d%H%M%S"))
+    self.assertAlmostEqual(2.2, result.bottom, 4)    
+    self.assertAlmostEqual(3.3, result.top, 4)
+
+  def test_remove_old_melting_layers_default_168_hours(self):
+    ml1 = melting_layer("sekkr", datetime.datetime.utcnow() - datetime.timedelta(hours=190), 2.1, 3.2)
+    ml2 = melting_layer("sekkr", datetime.datetime.utcnow() - datetime.timedelta(hours=167), 2.2, 3.2)
+    ml3 = melting_layer("sekkr", datetime.datetime.utcnow() - datetime.timedelta(hours=99), 2.3, 3.2)
+    ml4 = melting_layer("sekkr", datetime.datetime.utcnow() - datetime.timedelta(hours=88), 2.4, 3.2)
+    ml5 = melting_layer("sekkr", datetime.datetime.utcnow() - datetime.timedelta(hours=1), 2.5, 3.2)
+
+    testdb().add(ml1)
+    testdb().add(ml2)
+    testdb().add(ml3)
+    testdb().add(ml4)
+    testdb().add(ml5)
+
+    result = self.classUnderTest.remove_old_melting_layers()
+    self.assertEqual(1, result)
+
+    l = testdb().query("SELECT * FROM rave_melting_layer order by datetime")
+    self.assertEqual(4, len(l))
+    self.assertAlmostEqual(2.2, l[0]["bottom"], 4)
+    self.assertAlmostEqual(2.3, l[1]["bottom"], 4)
+    self.assertAlmostEqual(2.4, l[2]["bottom"], 4)
+    self.assertAlmostEqual(2.5, l[3]["bottom"], 4)
+
+  def test_remove_old_melting_layers_specified_time(self):
+    ml1 = melting_layer("sekkr", datetime.datetime.utcnow() - datetime.timedelta(hours=190), 2.1, 3.2)
+    ml2 = melting_layer("sekkr", datetime.datetime.utcnow() - datetime.timedelta(hours=167), 2.2, 3.2)
+    ml3 = melting_layer("sekkr", datetime.datetime.utcnow() - datetime.timedelta(hours=99), 2.3, 3.2)
+    ml4 = melting_layer("sekkr", datetime.datetime.utcnow() - datetime.timedelta(hours=88), 2.4, 3.2)
+    ml5 = melting_layer("sekkr", datetime.datetime.utcnow() - datetime.timedelta(hours=1), 2.5, 3.2)
+
+    testdb().add(ml1)
+    testdb().add(ml2)
+    testdb().add(ml3)
+    testdb().add(ml4)
+    testdb().add(ml5)
+
+    result = self.classUnderTest.remove_old_melting_layers(datetime.datetime.utcnow() - datetime.timedelta(hours=99))
+    self.assertEqual(3, result)
+
+    l = testdb().query("SELECT * FROM rave_melting_layer order by datetime")
+    self.assertEqual(2, len(l))
+    self.assertAlmostEqual(2.4, l[0]["bottom"], 4)
+    self.assertAlmostEqual(2.5, l[1]["bottom"], 4)

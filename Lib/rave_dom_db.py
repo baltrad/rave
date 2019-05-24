@@ -29,6 +29,7 @@ from __future__ import absolute_import
 
 import contextlib
 import jprops
+import datetime
 from sqlalchemy import engine, event
 from sqlalchemy.orm import mapper, sessionmaker
 import rave_pgf_logger
@@ -51,11 +52,12 @@ from sqlalchemy.types import (
     Integer,
     Text,
     Time,
+    DateTime
 )
 from sqlalchemy import asc,desc
 from sqlalchemy.exc import OperationalError
 
-from rave_dom import wmo_station, observation
+from rave_dom import wmo_station, observation, melting_layer
 from gadjust.gra import gra_coefficient
 from gadjust.grapoint import grapoint
 from rave_defines import BDB_CONFIG_FILE
@@ -166,9 +168,19 @@ rave_grapoint=Table("rave_grapoint", meta,
                     Column("accumulation_period", Integer, nullable=False),
                     Column("gr", Float, nullable=False),
                     PrimaryKeyConstraint("date","time","longitude","latitude"))
-                       
+
+rave_melting_layer=Table("rave_melting_layer", meta,
+                         Column("nod", Text, nullable=False),
+                         Column("datetime", DateTime, nullable=False),
+                         Column("top", Float, nullable=True),
+                         Column("bottom", Float, nullable=True),
+                         PrimaryKeyConstraint("datetime", "nod"))
+
 mapper(wmo_station, rave_wmo_station)
-mapper(observation, rave_observation)#,
+mapper(observation, rave_observation)
+mapper(melting_layer, rave_melting_layer)
+
+#,
 #        properties={"datetime" : column_property(sql.functions.concat(rave_observation.c.date,rave_observation.c.time))})
 mapper(gra_coefficient, rave_gra_coefficient)
 mapper(grapoint, rave_grapoint)
@@ -378,7 +390,23 @@ class rave_db(object):
       pts = q.delete()
       s.commit()
       return pts
-      
+  
+  def get_latest_melting_layer(self, nod, hours=None, ct=datetime.datetime.utcnow()):
+    with self.get_session() as s:
+      q = s.query(melting_layer).filter(melting_layer.nod == nod)
+      if hours is not None:
+        q = q.filter(melting_layer.datetime > ct - datetime.timedelta(hours=hours)).filter(melting_layer.datetime <= ct)
+      q = q.order_by(desc(melting_layer.datetime)).limit(1)
+      return q.first()
+  
+  def remove_old_melting_layers(self, ct=None):
+    with self.get_session() as s:
+      if ct is None:
+        ct = datetime.datetime.utcnow() - datetime.timedelta(hours=168)
+      q=s.query(melting_layer).filter(melting_layer.datetime < ct)
+      pts = q.delete()
+      s.commit()
+      return pts
 ##
 # Creates a rave db instance. This instance will be remembered for the same url which means
 # that the same db-instance will be used for the same url.
