@@ -434,6 +434,7 @@ int processData(PolarScan_t* scan, SCANMETA* meta, RaveList_t* list) {
 
   for (ia=0 ; ia<meta->nazim ; ia++) {
     RVALS* rvals = RAVE_MALLOC(sizeof(RVALS));
+    memset(rvals, 0, sizeof(RVALS));
     timer = 0.0;
 
     /* Use exact azimuth and elevation angles if available */
@@ -551,15 +552,15 @@ int processData(PolarScan_t* scan, SCANMETA* meta, RaveList_t* list) {
     rvals->SunMean = SunMean;
     rvals->SunStdd = SunStdd;
     rvals->n = n;
-    rvals->quant1 = (char*)meta->quant1;
+    strcpy(rvals->quant1, meta->quant1);
     if (meta->Zdr) {
       rvals->ZdrMean = ZdrMean;
       rvals->ZdrStdd = ZdrStdd;
-      rvals->quant2 = (char*)meta->quant2;
+      strcpy(rvals->quant2, meta->quant2);
     } else {
       rvals->ZdrMean = nan("NaN");
       rvals->ZdrStdd = nan("NaN");
-      rvals->quant2 = (char*)"NA";
+      strcpy(rvals->quant2, "NA");
     }
     RaveList_add(list, rvals);  /* No checking */
     if (Rave_getDebugLevel() <= RAVE_DEBUG) outputMeta(meta);
@@ -579,8 +580,8 @@ void outputMeta(SCANMETA* meta) {
     fprintf(fd, "Date = %ld\n", meta->date);
     fprintf(fd, "Time = %ld\n", meta->time);
     fprintf(fd, "Tilt = %f\n", meta->elev);
-    fprintf(fd, "Quant1 = %s\n", (meta->quant1==NULL?"NULL":meta->quant1));
-    fprintf(fd, "Quant2 = %s\n", (meta->quant2==NULL?"NULL":meta->quant2));
+    fprintf(fd, "Quant1 = %s\n", (strcmp(meta->quant1,"")==0?"NULL":meta->quant1));
+    fprintf(fd, "Quant2 = %s\n", (strcmp(meta->quant2,"")==0?"NULL":meta->quant2));
     fprintf(fd, "nrays = %ld\n", meta->nazim);
     fprintf(fd, "nbins = %ld\n", meta->nrang);
     fprintf(fd, "rscale = %f\n", meta->rscale);
@@ -608,27 +609,27 @@ int processScan(PolarScan_t* scan, SCANMETA* meta, RaveList_t* list) {
 
   /* Quantities are queried in order of priority */
 
-  if (PolarScan_hasParameter(scan, "TH")) meta->quant1 = "TH";
-  else if (PolarScan_hasParameter(scan, "DBZH")) meta->quant1 = "DBZH";
-  else if (PolarScan_hasParameter(scan, "TV")) meta->quant1 = "TV";
-  else if (PolarScan_hasParameter(scan, "DBZV")) meta->quant1 = "DBZV";
-  else meta->quant1 = NULL;
+  if (PolarScan_hasParameter(scan, "TH")) strcpy(meta->quant1, "TH");
+  else if (PolarScan_hasParameter(scan, "DBZH")) strcpy(meta->quant1, "DBZH");
+  else if (PolarScan_hasParameter(scan, "TV")) strcpy(meta->quant1, "TV");
+  else if (PolarScan_hasParameter(scan, "DBZV")) strcpy(meta->quant1, "DBZV");
+  else strcpy(meta->quant1,"");
 
   if (PolarScan_hasParameter(scan, "ZDR")) {
-    meta->quant2 = "ZDR";
+    strcpy(meta->quant2, "ZDR");
     meta->Zdr = ZdrType_READ;
   }
   else if ( (PolarScan_hasParameter(scan, "TV")) && (!strncmp(meta->quant1, "TH", 2)) ) {
-    meta->quant2 = "TV";
+    strcpy(meta->quant2, "TV");
     meta->Zdr = ZdrType_CALCULATE;
   }
   else if ( (PolarScan_hasParameter(scan, "DBZV")) && (!strncmp(meta->quant1, "DBZH", 4)) ) {
-    meta->quant2 = "DBZV";
+    strcpy(meta->quant2, "DBZV");
     meta->Zdr = ZdrType_CALCULATE;
   }
   else meta->Zdr = ZdrType_None;
 
-  if (meta->quant1) {
+  if (strcmp(meta->quant1, "") != 0) {
 	ret = processData(scan, meta, list);
   }
   return ret;
