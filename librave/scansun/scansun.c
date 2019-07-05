@@ -42,7 +42,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 /*December 2015: Minor refactor in order to enable the creation of a quality plugin for
  *chaining scansun in memory like other algorithms.*/
 /*October 2018: original code using Numerical Recipes has been replaced.*/
-/*June 2019: Now ODIM v2.1 files can be processed too. Additionally, the use of astart has been
+/*April 2019: Now ODIM v2.1 files can be processed too. Additionally, the use of astart has been
  *adjusted to be ODIM compliant, and stopaz is estimated in case stopazA is not available.*/
 /* Note that Iwan's code is largely left 'as is', except for the 'fill_meta' and
  * 'scansun' function which are restructured and modularized. Definitions and structures have been
@@ -56,21 +56,21 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 /******************************************************************************/
 
 int getDoubleAttribute(RaveCoreObject* obj, const char* aname, double* tmpd) {
-  RaveAttribute_t* attr = NULL;
-  int ret = 0;
+	RaveAttribute_t* attr = NULL;
+	int ret = 0;
 
-  if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
-    attr = PolarVolume_getAttribute((PolarVolume_t*)obj, aname);
-  } else if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarScan_TYPE)) {
-    attr = PolarScan_getAttribute((PolarScan_t*)obj, aname);
-  } else if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarScanParam_TYPE)) {
-    attr = PolarScanParam_getAttribute((PolarScanParam_t*)obj, aname);
-  }
-  if (attr != NULL) {
-    ret = RaveAttribute_getDouble(attr, tmpd);
-  }
-  RAVE_OBJECT_RELEASE(attr);
-  return ret;
+	if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
+		attr = PolarVolume_getAttribute((PolarVolume_t*)obj, aname);
+	} else if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarScan_TYPE)) {
+		attr = PolarScan_getAttribute((PolarScan_t*)obj, aname);
+	} else if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarScanParam_TYPE)) {
+		attr = PolarScanParam_getAttribute((PolarScanParam_t*)obj, aname);
+	}
+	if (attr != NULL) {
+		ret = RaveAttribute_getDouble(attr, tmpd);
+	}
+	RAVE_OBJECT_RELEASE(attr);
+	return ret;
 }
 
 
@@ -424,8 +424,8 @@ int processData(PolarScan_t* scan, SCANMETA* meta, RaveList_t* list) {
   fill_meta(scan,Zparam,meta);
 
   if (meta->nrang*meta->rscale<RayMin) {
-    ret = 0;
-    goto fail_scan;
+	  ret = 0;
+	  goto fail_scan;
   }
   irn1=(int)(ElevHeig2Rang(meta->elev,HeigMin1)/meta->rscale);
   if ((meta->nrang-irn1)*meta->rscale<RayMin) irn1=meta->nrang-RayMin/meta->rscale;
@@ -434,6 +434,7 @@ int processData(PolarScan_t* scan, SCANMETA* meta, RaveList_t* list) {
 
   for (ia=0 ; ia<meta->nazim ; ia++) {
     RVALS* rvals = RAVE_MALLOC(sizeof(RVALS));
+    memset(rvals, 0, sizeof(RVALS));
     timer = 0.0;
 
     /* Use exact azimuth and elevation angles if available */
@@ -551,15 +552,15 @@ int processData(PolarScan_t* scan, SCANMETA* meta, RaveList_t* list) {
     rvals->SunMean = SunMean;
     rvals->SunStdd = SunStdd;
     rvals->n = n;
-    rvals->quant1 = (char*)meta->quant1;
+    strcpy(rvals->quant1, meta->quant1);
     if (meta->Zdr) {
       rvals->ZdrMean = ZdrMean;
       rvals->ZdrStdd = ZdrStdd;
-      rvals->quant2 = (char*)meta->quant2;
+      strcpy(rvals->quant2, meta->quant2);
     } else {
       rvals->ZdrMean = nan("NaN");
       rvals->ZdrStdd = nan("NaN");
-      rvals->quant2 = (char*)"NA";
+      strcpy(rvals->quant2, "NA");
     }
     RaveList_add(list, rvals);  /* No checking */
     if (Rave_getDebugLevel() <= RAVE_DEBUG) outputMeta(meta);
@@ -579,8 +580,8 @@ void outputMeta(SCANMETA* meta) {
     fprintf(fd, "Date = %ld\n", meta->date);
     fprintf(fd, "Time = %ld\n", meta->time);
     fprintf(fd, "Tilt = %f\n", meta->elev);
-    fprintf(fd, "Quant1 = %s\n", (meta->quant1==NULL?"NULL":meta->quant1));
-    fprintf(fd, "Quant2 = %s\n", (meta->quant2==NULL?"NULL":meta->quant2));
+    fprintf(fd, "Quant1 = %s\n", (strcmp(meta->quant1,"")==0?"NULL":meta->quant1));
+    fprintf(fd, "Quant2 = %s\n", (strcmp(meta->quant2,"")==0?"NULL":meta->quant2));
     fprintf(fd, "nrays = %ld\n", meta->nazim);
     fprintf(fd, "nbins = %ld\n", meta->nrang);
     fprintf(fd, "rscale = %f\n", meta->rscale);
@@ -608,94 +609,94 @@ int processScan(PolarScan_t* scan, SCANMETA* meta, RaveList_t* list) {
 
   /* Quantities are queried in order of priority */
 
-  if (PolarScan_hasParameter(scan, "TH")) meta->quant1 = "TH";
-  else if (PolarScan_hasParameter(scan, "DBZH")) meta->quant1 = "DBZH";
-  else if (PolarScan_hasParameter(scan, "TV")) meta->quant1 = "TV";
-  else if (PolarScan_hasParameter(scan, "DBZV")) meta->quant1 = "DBZV";
-  else meta->quant1 = NULL;
+  if (PolarScan_hasParameter(scan, "TH")) strcpy(meta->quant1, "TH");
+  else if (PolarScan_hasParameter(scan, "DBZH")) strcpy(meta->quant1, "DBZH");
+  else if (PolarScan_hasParameter(scan, "TV")) strcpy(meta->quant1, "TV");
+  else if (PolarScan_hasParameter(scan, "DBZV")) strcpy(meta->quant1, "DBZV");
+  else strcpy(meta->quant1,"");
 
   if (PolarScan_hasParameter(scan, "ZDR")) {
-    meta->quant2 = "ZDR";
+    strcpy(meta->quant2, "ZDR");
     meta->Zdr = ZdrType_READ;
   }
   else if ( (PolarScan_hasParameter(scan, "TV")) && (!strncmp(meta->quant1, "TH", 2)) ) {
-    meta->quant2 = "TV";
+    strcpy(meta->quant2, "TV");
     meta->Zdr = ZdrType_CALCULATE;
   }
   else if ( (PolarScan_hasParameter(scan, "DBZV")) && (!strncmp(meta->quant1, "DBZH", 4)) ) {
-    meta->quant2 = "DBZV";
+    strcpy(meta->quant2, "DBZV");
     meta->Zdr = ZdrType_CALCULATE;
   }
   else meta->Zdr = ZdrType_None;
 
-  if (meta->quant1) {
-  ret = processData(scan, meta, list);
+  if (strcmp(meta->quant1, "") != 0) {
+	ret = processData(scan, meta, list);
   }
   return ret;
 }
 
 
 int scansunFromObject(RaveCoreObject* object, Rave_ObjectType ot, RaveList_t* list, char** source) {
-  int ret = 0;
-  int Nscan, id;
-  SCANMETA meta;
-  PolarVolume_t* volume = NULL;
-  PolarScan_t* scan = NULL;
-  memset(&meta, 0, sizeof(SCANMETA));
-  fill_toplevelmeta(object, &meta);
+	int ret = 0;
+	int Nscan, id;
+	SCANMETA meta;
+	PolarVolume_t* volume = NULL;
+	PolarScan_t* scan = NULL;
+	memset(&meta, 0, sizeof(SCANMETA));
+	fill_toplevelmeta(object, &meta);
 
-  /* Individual scan */
-  if (ot == Rave_ObjectType_SCAN) {
-    scan = (PolarScan_t*)object;
-    if (source != NULL) *source = RAVE_STRDUP(PolarScan_getSource(scan));
-    ret = processScan(scan, &meta, list);
+	/* Individual scan */
+	if (ot == Rave_ObjectType_SCAN) {
+	  scan = (PolarScan_t*)object;
+	  if (source != NULL) *source = RAVE_STRDUP(PolarScan_getSource(scan));
+	  ret = processScan(scan, &meta, list);
 
-  /* Polar volume */
-  } else if (ot == Rave_ObjectType_PVOL) {
-    volume = (PolarVolume_t*)object;
-    if (source != NULL) *source = RAVE_STRDUP(PolarVolume_getSource(volume));
-    Nscan = PolarVolume_getNumberOfScans(volume);
+	/* Polar volume */
+	} else if (ot == Rave_ObjectType_PVOL) {
+	  volume = (PolarVolume_t*)object;
+	  if (source != NULL) *source = RAVE_STRDUP(PolarVolume_getSource(volume));
+	  Nscan = PolarVolume_getNumberOfScans(volume);
 
-    for (id=0 ; id<Nscan ; id++) {
-      scan = PolarVolume_getScan(volume, id);
-      ret = processScan(scan, &meta, list);  /* can fail for some scans and succeed for others */
-      RAVE_OBJECT_RELEASE(scan);
-    }
-  }
+	  for (id=0 ; id<Nscan ; id++) {
+	    scan = PolarVolume_getScan(volume, id);
+	    ret = processScan(scan, &meta, list);  /* can fail for some scans and succeed for others */
+	    RAVE_OBJECT_RELEASE(scan);
+	  }
+	}
 
-  return ret;
+	return ret;
 }
 
 
 int scansun(const char* filename, RaveList_t* list, char** source) {
-  int ret = 0;
-  RaveIO_t* raveio = RaveIO_open(filename);
-  if (raveio == NULL) {
-    goto done;
-  }
-  RaveCoreObject* object = NULL;
-  Rave_ObjectType ot = Rave_ObjectType_UNDEFINED;
+	int ret = 0;
+	RaveIO_t* raveio = RaveIO_open(filename);
+	if (raveio == NULL) {
+	  goto done;
+	}
+	RaveCoreObject* object = NULL;
+	Rave_ObjectType ot = Rave_ObjectType_UNDEFINED;
 
-  /* Accessing contents of input file. */
-  ot = RaveIO_getObjectType(raveio);
-  if ( (ot == Rave_ObjectType_PVOL) || (ot == Rave_ObjectType_SCAN) ) {
-    object = (RaveCoreObject*)RaveIO_getObject(raveio);
-  }else{
-    printf("Input file is neither a polar volume nor a polar scan. Giving up ...\n");
-    RAVE_OBJECT_RELEASE(object);
-    RAVE_OBJECT_RELEASE(raveio);
-    return 0;
-  }
+	/* Accessing contents of input file. */
+	ot = RaveIO_getObjectType(raveio);
+	if ( (ot == Rave_ObjectType_PVOL) || (ot == Rave_ObjectType_SCAN) ) {
+		object = (RaveCoreObject*)RaveIO_getObject(raveio);
+	}else{
+		printf("Input file is neither a polar volume nor a polar scan. Giving up ...\n");
+		RAVE_OBJECT_RELEASE(object);
+		RAVE_OBJECT_RELEASE(raveio);
+		return 0;
+	}
 
-  ret = scansunFromObject(object, ot, list, source);
+	ret = scansunFromObject(object, ot, list, source);
 
-  //if (ot == Rave_ObjectType_PVOL) {
-  //  RaveIO_close(raveio);
-  //}
+	//if (ot == Rave_ObjectType_PVOL) {
+	//	RaveIO_close(raveio);
+	//}
   RAVE_OBJECT_RELEASE(raveio);
 
-  RAVE_OBJECT_RELEASE(object);
+	RAVE_OBJECT_RELEASE(object);
 
 done:
-  return ret;
+	return ret;
 }

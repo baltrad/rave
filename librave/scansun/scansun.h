@@ -118,8 +118,8 @@ struct scanmeta {
 	double LAntGain;       /*Linear antenna gain*/
 	double AntArea;        /*Effective antenna area (m2)*/
 	double wavelength;     /*Wavelength in meters*/
-	const char* quant1;    /*what/quantity for the given scan's parameter, either TH or DBZH*/
-	const char* quant2;    /*ZDR or either TV or DBZV*/
+	char quant1[1024];    /*what/quantity for the given scan's parameter, either TH or DBZH*/
+	char quant2[1024];    /*ZDR or either TV or DBZV*/
 	double* startazA;      /*Simple array of starting azimuth angles in degrees*/
 	double* stopazA;       /*Simple array of ending azimuth angles in degrees*/
 	double* elangles;      /*Simple array of elevation angles (mid-point) in degrees*/
@@ -145,8 +145,8 @@ struct rvals {
 	double dBSunFlux; /* Sun flux in dB */
 	double ZdrMean;   /* Zdr mean */
 	double ZdrStdd;   /* Zdr standard deviation */
-	char* quant1;     /* what/quantity for the given scan's parameter: TH, DBZH, TV, or DBZV */
-	char* quant2;     /* ZDR or either TV or DBZV */
+	char quant1[1024];     /* what/quantity for the given scan's parameter: TH, DBZH, TV, or DBZV */
+	char quant2[1024];     /* ZDR or either TV or DBZV */
 	double RelevSun;  /* Refraction-corrected (perceived) elevation angle of the sun in deg. */
 	int n;            /* Sample size along the ray comprising a hit */
 };
