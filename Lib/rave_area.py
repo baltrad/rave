@@ -110,13 +110,13 @@ def register(A):
     A.validate(["Id", "name", "pcs", "extent",
                 "xsize", "ysize", "xscale", "yscale"])
     
-    A.pcs = A.pcs.replace(b"\n", b"").lstrip(b" ").rstrip(b" ")
-    A.name = A.name.replace(b"\n", b"").lstrip(b" ").rstrip(b" ")
-    
     # Switch to strings
     if isinstance(A.pcs, bytes): A.pcs = A.pcs.decode()
     if isinstance(A.name, bytes): A.name = A.name.decode()
     if isinstance(A.Id, bytes): A.Id = A.Id.decode()
+
+    A.pcs = A.pcs.replace("\n", "").lstrip(" ").rstrip(" ")
+    A.name = A.name.replace("\n", "").lstrip(" ").rstrip(" ")
     
     # Likewise, rave_simplexml.c doesn't write argument types, so we must enforce them here.
     if isinstance(A.xsize, str): A.xsize = int(A.xsize)
@@ -187,7 +187,12 @@ def add(id, description, projection_id, extent, xsize, ysize, xscale, yscale, fi
     a.xsize, a.ysize = xsize, ysize
     a.xscale, a.yscale = xscale, yscale
     p = rave_projection.pcs(a.pcsid)
-    a.projection = _projection.new(p.id, p.name, string.join(p.definition))
+    pid=p.id
+    pname=p.name
+    if isinstance(pid, bytes): pid = pid.decode()
+    if isinstance(pname, bytes): pname = pname.decode()
+   
+    a.projection = _projection.new(pid, pname, " ".join(p.definition))
 
     reg.add(a)
     reg.write(filename)
