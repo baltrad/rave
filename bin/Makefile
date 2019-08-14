@@ -26,7 +26,7 @@
 
 .PHONY=install
 install:
-	@mkdir -p "${prefix}/bin"
+	@mkdir -p "${DESTDIR}${prefix}/bin"
 	@./fix_shebang.sh ${PYTHON_BIN} area_registry "${DESTDIR}${prefix}/bin"
 	@./fix_shebang.sh ${PYTHON_BIN} odim_injector "${DESTDIR}${prefix}/bin"
 	@./fix_shebang.sh ${PYTHON_BIN} odim_injector.sh "${DESTDIR}${prefix}/bin"
