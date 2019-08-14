@@ -73,7 +73,7 @@ class fm12_importer(object):
         os.kill(int(c), signal.SIGKILL)
     except:
       self._logger.warn("Failed to kill daemon. Check pid!")
-      print "Could not kill daemon. Check pid."
+      print("Could not kill daemon. Check pid.")
     finally:
       os.remove(self.pidfile)
     
@@ -174,7 +174,7 @@ def get_dburi_from_conf(configfile, propname = "rave.db.uri"):
       with open(configfile) as fp:
         properties = jprops.load_properties(fp)
     except Exception as e:
-      print e.__str__()
+      print(e.__str__())
 
     if propname in properties:
       return properties[propname]

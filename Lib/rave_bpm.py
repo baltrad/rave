@@ -45,7 +45,7 @@ def read_topo():
 		data = fid.read()
 		data = fromstring(data,short).byteswap()
 		data = data.reshape(nrows,ncols)
-		print "data type and shape: ",data.dtype,data.shape
+		print("data type and shape: ",data.dtype,data.shape)
 		fid.close()
 
 		# longitude of the lower-left corner of the lower-left pixel (decimal degrees)
@@ -67,9 +67,9 @@ def read_topo():
 		a.ysize = nrows
 		a.xscale = (urx-llx)/(ncols-1)
 		a.yscale = (ury-lly)/(nrows-1)
-		print (llxmap,llymap,urxmap,urymap)
-		print a.extent
-		print a.xscale,a.yscale
+		print("%f,%f,%f,%f"%(llxmap,llymap,urxmap,urymap))
+		print("%f,%f,%f,%f"%a.extent)
+		print("%f,%f"%(a.xscale,a.yscale))
 		
 		src = _cartesian.new()
 		src.init(a,_rave.RaveDataType_SHORT)
@@ -104,8 +104,8 @@ def concatenate_topo():
 	#data2 = numpy.zeros((6000,4800), numpy.int16)
 	a1 = array([[1,2,3],[4,5,6],[7,8,9]],numpy.int16)
 	data = concatenate((a1, a1), 1)
-	print concatenate((a1, a1), 1)
-	print data
+	print(concatenate((a1, a1), 1))
+	print(data)
 	
 	a = _area.new()
 	a.id = "BALTRAD"
@@ -115,11 +115,11 @@ def concatenate_topo():
 	a.ysize = src1.ysize
 	a.xscale = (a.extent[2]-a.extent[0])/(a.xsize-1)
 	a.yscale = (a.extent[3]-a.extent[1])/(a.ysize-1)
-	print a.id
-	print a.projection.definition	
-	print a.extent
-	print a.xsize,a.ysize
-	print a.xscale,a.yscale
+	print(a.id)
+	print(a.projection.definition)	
+	print(a.extent)
+	print(a.xsize,a.ysize)
+	print(a.xscale,a.yscale)
 
 	src = _cartesian.new()
 	src.init(a,_rave.RaveDataType_SHORT)

@@ -63,7 +63,7 @@ def arglist2dict(arglist):
 def strToNumber(sval):
   try:
     return float(sval)
-  except ValueError, e:
+  except ValueError as e:
     return int(sval)
 
 ##
@@ -90,7 +90,7 @@ def generate(files, arguments):
     obj = rio.object
 
   if not _cartesianvolume.isCartesianVolume(obj) and not _cartesian.isCartesian(obj):
-    raise AttributeError, "Must call plugin with cartesian products"
+    raise AttributeError("Must call plugin with cartesian products")
   
   filename = args["filename"]
 
