@@ -36,7 +36,7 @@ class merge_files(object):
     self.sources=sources
     self.ftype=ftype.lower()
     if self.ftype not in ["scan","pvol"]:
-      raise IOError, "Not a valid type"
+      raise IOError("Not a valid type")
     self.pattern = re.compile("[a-z0-9A-Z]+_[A-Za-z0-9]+_(([0-9\.]+)_)?[0-9]{8}T[0-9]{4}Z_0x[0-9]+.h5")
     self.bnamepattern = re.compile("([a-z0-9A-Z]+_[A-Za-z0-9]+_(([0-9\.]+)_)?[0-9]{8}T[0-9]{4}Z)_0x[0-9]+.h5")
     self.copy_ignored=copy_ignored
@@ -109,8 +109,8 @@ class merge_files(object):
       try:
         self.make_dir(outdir)
         shutil.copy(f, "%s/"%outdir)
-      except Exception, e:
-        print "Failed to copy %s to %s/"%(f,outdir)
+      except Exception as e:
+        print("Failed to copy %s to %s/"%(f,outdir))
         import traceback
         traceback.print_exc()
       
@@ -133,8 +133,8 @@ class merge_files(object):
       pm = polar_merger.polar_merger()
       rio.object = pm.merge_files(pvols)
       rio.save("%s/%s"%(outdir, bname))
-    except Exception,e:
-      print "Failed to merge %s"%`pvols`
+    except Exception as e:
+      print("Failed to merge %s"%str(pvols))
       if self.copy_ignored:
         self.copy_files(pvols, outdir)
 
@@ -156,8 +156,8 @@ class merge_files(object):
       pm = polar_merger.polar_merger()
       rio.object = pm.merge_files(scans)
       rio.save("%s/%s"%(outdir, bname))
-    except Exception,e:
-      print "Failed to merge %s"%`scans`
+    except Exception as e:
+      print("Failed to merge %s"%str(scans))
       if self.copy_ignored:
         self.copy_files(scans, outdir)
 
@@ -175,8 +175,8 @@ if __name__=="__main__":
   try:
     optlist, args = getopt.getopt(sys.argv[1:], '', 
                                   ['indir=', 'outdir=', 'sources=','type=','copy-ignored'])
-  except getopt.GetoptError, e:
-    print e.__str__()
+  except getopt.GetoptError as e:
+    print(e.__str__())
     sys.exit(127)
 
   for o, a in optlist:
@@ -190,12 +190,12 @@ if __name__=="__main__":
       if a.lower() in ["pvol", "scan"]:
         ftype = a
       else:
-        raise TypeError, "type must be pvol or scan"
+        raise TypeError("type must be pvol or scan")
     elif o == "--copy-ignored":
       copy_ignored=True
 
   if not os.path.exists(outdir):
-    raise IOError, "Outdir %s does not exist"%outdir
+    raise IOError("Outdir %s does not exist"%outdir)
  
   mf = merge_files(indir, outdir, sources, ftype, copy_ignored)
   mf.find_and_merge()

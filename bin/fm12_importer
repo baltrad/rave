@@ -33,32 +33,32 @@ MASK = pyinotify.IN_CLOSE_WRITE | pyinotify.IN_MOVED_TO
 sys.path.append(os.path.abspath(__file__))
 
 def Usage(brief=True,doexit=False):
-  print "Imports the fm12 synop observations into the rave observation database."
-  print "Usage: %s [--monitored=<path>] [--uri=<pgsqluri>] [--conf=<conffile> "
-  print "          [--uriproperty=<propname>]] [--file=<fm12 file>] "
-  print "          [--logfile=<logfile>] [--verbose] "
-  print "          [--janitor] [--catchup]"
-  print "          daemon | import | kill"
+  print("Imports the fm12 synop observations into the rave observation database.")
+  print("Usage: %s [--monitored=<path>] [--uri=<pgsqluri>] [--conf=<conffile> ")
+  print("          [--uriproperty=<propname>]] [--file=<fm12 file>] ")
+  print("          [--logfile=<logfile>] [--verbose] ")
+  print("          [--janitor] [--catchup]")
+  print("          daemon | import | kill")
   if brief == False:
-    print "  --uri=<pgsqluri> The postgresql uri to the dbhost. "
-    print "        Default value [postgresql://baltrad:baltrad@127.0.0.1/baltrad]"
-    print "  --conf=<conffile> The configuration file containing the pgsql uri in a property. Used together with --uriproperty."
-    print "        Default value [None]"
-    print "  --uriproperty=<propname>. If a configuration file has been specified, you can define what property that is containing the dburi."
-    print "        Default value [rave.db.uri]." 
-    print "  --file=<fm12 file> The fm12 defined synop file to import if not --monitored=<..> has been specified."
-    print "  --logfile=<log file> The file that log messages should be written to"
-    print "  --verbose Print a more verbose debug information"
-    print "  --pidfile=<pidfile> The process id file. Default [./fm12_importer.pid]"
-    print "  --suffix=<suffix> Specifies a synop file-suffix for the files to handle at the monitored path. Files that does not have this suffix will be ignored."
-    print "        If no suffix is provided, files with any type of suffix in the monitored directory will be handled."
-    print "  --monitored=<path> a path to be monitored for synop files. [Default: None]"
-    print "  --janitor Remove files that arrive in the input directory."
-    print "  --catchup Process all files that have collected in the input directory. Otherwise only act on new files arriving."
-    print ""
-    print "  import - Will import the specified file (Requires --file=<file name>)"
-    print "  daemon - If the program should be run as a daemon. (Requires --monitored=<path>)"
-    print "  kill - Tries to kill a running daemon."
+    print("  --uri=<pgsqluri> The postgresql uri to the dbhost. ")
+    print("        Default value [postgresql://baltrad:baltrad@127.0.0.1/baltrad]")
+    print("  --conf=<conffile> The configuration file containing the pgsql uri in a property. Used together with --uriproperty.")
+    print("        Default value [None]")
+    print("  --uriproperty=<propname>. If a configuration file has been specified, you can define what property that is containing the dburi.")
+    print("        Default value [rave.db.uri].")
+    print("  --file=<fm12 file> The fm12 defined synop file to import if not --monitored=<..> has been specified.")
+    print("  --logfile=<log file> The file that log messages should be written to")
+    print("  --verbose Print a more verbose debug information")
+    print("  --pidfile=<pidfile> The process id file. Default [./fm12_importer.pid]")
+    print("  --suffix=<suffix> Specifies a synop file-suffix for the files to handle at the monitored path. Files that does not have this suffix will be ignored.")
+    print("        If no suffix is provided, files with any type of suffix in the monitored directory will be handled.")
+    print("  --monitored=<path> a path to be monitored for synop files. [Default: None]")
+    print("  --janitor Remove files that arrive in the input directory.")
+    print("  --catchup Process all files that have collected in the input directory. Otherwise only act on new files arriving.")
+    print("")
+    print("  import - Will import the specified file (Requires --file=<file name>)")
+    print("  daemon - If the program should be run as a daemon. (Requires --monitored=<path>)")
+    print("  kill - Tries to kill a running daemon.")
     
   if doexit:
     import sys
@@ -124,7 +124,7 @@ if __name__ == "__main__":
                                    'monitored=',
                                    'janitor','catchup', 
                                    'help'])
-  except getopt.GetoptError, e:
+  except getopt.GetoptError as e:
     Usage(True, e.__str__())
     sys.exit(127)
   
@@ -175,7 +175,7 @@ if __name__ == "__main__":
     Usage(True, True)
 
   if not os.path.isabs(pidfile):
-    print "pidfile must be defined with an absolute path"
+    print("pidfile must be defined with an absolute path")
     sys.exit()
   
   if cfgfile != None:
@@ -218,10 +218,10 @@ if __name__ == "__main__":
     wm.add_watch(importer.monitored_dir, MASK)
     try:
       notifier.loop(daemonize=True, pid_file=importer.pidfile)
-    except Exception,e:
-      logger.exception("Caught exception when running notifier loop %s"%`e.__str__()`)
-    except SystemExit,e:
-      logger.exception("Caught SystemExit when running notifier loop %s"%`e.__str__()`)
+    except Exception as e:
+      logger.exception("Caught exception when running notifier loop %s"%e.__str__())
+    except SystemExit as e:
+      logger.exception("Caught SystemExit when running notifier loop %s"%e.__str__())
 
   else:
     Usage(True,True)

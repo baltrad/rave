@@ -69,7 +69,7 @@ if __name__ == "__main__":
     rio = _raveio.open(options.ifile)
 
     if not options.att and not options.broad and not options.speck and not options.spike:
-        print "No QC algorithm selected. Exiting ..."
+        print("No QC algorithm selected. Exiting ...")
         sys.exit(1)
 
     # Workaround for processing SCANs
@@ -82,7 +82,7 @@ if __name__ == "__main__":
         obj = rio.object
 
     if rio.objectType not in (_raveio.Rave_ObjectType_SCAN, _raveio.Rave_ObjectType_PVOL):
-        print "Input data not SCAN or PVOL. Exiting ..."
+        print("Input data not SCAN or PVOL. Exiting ...")
         sys.exit(-1)
 
     rpars = rave_radvol_realtime.get_options(rio.object) 

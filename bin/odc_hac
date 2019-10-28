@@ -63,12 +63,12 @@ if __name__ == "__main__":
 
     if not options.increment and not options.filter:
         parser.print_help()
-        print "No processing option given. Choose whether to increment or to filter."
+        print("No processing option given. Choose whether to increment or to filter.")
         sys.exit()
 
     if options.increment and options.filter and not options.force:
-        print "Not a good idea to increment the hit accumulation and filter data at the same time. Wimping out ..."
-        print "Override with the -F or --force option."
+        print("Not a good idea to increment the hit accumulation and filter data at the same time. Wimping out ...")
+        print("Override with the -F or --force option.")
         sys.exit()
 
     rio = _raveio.open(options.ifile)

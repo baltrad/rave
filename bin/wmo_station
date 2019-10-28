@@ -26,14 +26,14 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 import sys, getopt
 
 def Usage(brief=True,doexit=False):
-  print "Imports the wmo_stations from a wmo flatfile or prints information about a specific station."
-  print "Usage: %s --uri=<pgsqluri> [--flatfile=<flatfile>] [--station=<station1,station2,...>] import|print"
+  print("Imports the wmo_stations from a wmo flatfile or prints information about a specific station.")
+  print("Usage: %s --uri=<pgsqluri> [--flatfile=<flatfile>] [--station=<station1,station2,...>] import|print")
   if brief == False:
-    print "  --uri=<pgsqluri> The postgresql uri to the dbhost. "
-    print "        Default value [postgresql://baltrad:baltrad@127.0.0.1/baltrad]"
-    print "  --flatfile=<flatfile> The WMO flatfile containing the wmo stations, specified on import"
-    print "        Default value [wmo_flatfile.txt]"
-    print "  --station=<station1,station2,...> A list of stations that should be printed."
+    print("  --uri=<pgsqluri> The postgresql uri to the dbhost. ")
+    print("        Default value [postgresql://baltrad:baltrad@127.0.0.1/baltrad]")
+    print("  --flatfile=<flatfile> The WMO flatfile containing the wmo stations, specified on import")
+    print("        Default value [wmo_flatfile.txt]")
+    print("  --station=<station1,station2,...> A list of stations that should be printed.")
   if doexit:
     import sys
     sys.exit(0)
@@ -44,7 +44,7 @@ if __name__ == "__main__":
   try:
     optlist, args = getopt.getopt(sys.argv[1:], '', 
                                   ['uri=','flatfile=','station=','help'])
-  except getopt.GetoptError, e:
+  except getopt.GetoptError as e:
     Usage(True, e.__str__())
     sys.exit(127)
   
@@ -83,6 +83,6 @@ if __name__ == "__main__":
     
     for s in stationlist:
       ws = db.get_station(s)
-      print `ws`
+      print(str(ws))
   else:
     Usage(True,True)

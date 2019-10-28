@@ -52,7 +52,7 @@ if __name__ == "__main__":
     obj = rio.object
 
     if not _dealias.dealias(obj):
-        print "Input data are already dealiased. Exiting ..."
+        print("Input data are already dealiased. Exiting ...")
         sys.exit(1)
 
     rio.object = obj

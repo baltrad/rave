@@ -246,7 +246,8 @@ def discrete_ms():
 # continuous m/s palette, modelled after continuous_dbz. Not very pretty...
 def continuous_ms():
     p = continuous_dbz()
-    # p[126*3:130*3] = 4 * PUREWHITE
+    # p[126*3:130*3] = 4 * PUREWHITE      apply(color_map.__init__, (self, "accumulated_mm", discrete_mm()),)
+
     p[126:130] = 4 * PUREWHITE
     return p
 
@@ -262,7 +263,7 @@ def discrete_mm():
       20 * RED + 20 * MAGENTA + 35 * PUREWHITE
 
 
-class color_map:
+class color_map(object):
     _color_maps = {}
 
     def __init__(self, ltype, colors=None, descr=None):
@@ -305,7 +306,7 @@ class slope_map(color_map):
     _slope_ord_map = []
 
     def __init__(self, ltype):
-      apply(color_map.__init__, (self, ltype),)
+      super(slope_map, self).__init__(ltype)
 
     def color(self, **kw):
       intervals = []
@@ -329,7 +330,7 @@ class slope_map(color_map):
 
 class discrete_raw_slope(slope_map):
     def __init__(self):
-      apply(slope_map.__init__, (self, "discrete_raw"),)
+      super(discrete_raw_slope, self).__init__("discrete_raw")
 
     def _get_interval(self, GAIN, OFFSET):
       return discrete_raw(GAIN, OFFSET)
@@ -338,7 +339,7 @@ class discrete_raw_slope(slope_map):
 class discrete_dbz_slope(slope_map):
 
     def __init__(self):
-      apply(slope_map.__init__, (self, "discrete_dbz"),)
+      super(discrete_dbz_slope, self).__init__("discrete_dbz")
 
     def _get_interval(self, GAIN, OFFSET):
       return disc_dbz(GAIN, OFFSET)
@@ -347,7 +348,7 @@ class discrete_dbz_slope(slope_map):
 class wind_profile(color_map):
 
     def __init__(self):
-      apply(color_map.__init__, (self, "wind_profile", disc_ff_dev()),)
+      super(wind_profile, self).__init__("wind_profile", disc_ff_dev())
       self.init_description()
 
     def init_description(self):
@@ -373,7 +374,7 @@ class wind_profile(color_map):
 class radial_wind_velocity(color_map):
 
     def __init__(self):
-      apply(color_map.__init__, (self, "radial_wind_velocity", discrete_ms()),)
+      super(radial_wind_velocity, self).__init__("radial_wind_velocity", discrete_ms())
       self.init_description()
 
     def init_description(self):
@@ -402,7 +403,7 @@ class radial_wind_velocity(color_map):
 class accumulated_mm(color_map):
 
     def __init__(self):
-      apply(color_map.__init__, (self, "accumulated_mm", discrete_mm()),)
+      super(accumulated_mm, self).__init__("accumulated_mm", discrete_mm())
       self.init_description()
 
     def init_description(self):

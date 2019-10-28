@@ -49,7 +49,7 @@ if __name__ == "__main__":
   	sys.exit()
   
   if int(options.xsize) <= 0 or int(options.ysize) <= 0:
-    print "xsize or ysize <= 0"
+    print("xsize or ysize <= 0")
     sys.exit()
 
   rave_tile_registry.create_tile_definition_for_area(options.areaid, (int(options.xsize),int(options.ysize)))

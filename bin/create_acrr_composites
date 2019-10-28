@@ -56,7 +56,7 @@ except:
 def strToNumber(sval):
   try:
     return int(sval)
-  except ValueError, e:
+  except ValueError as e:
     return float(sval)
 
 class nrd_obsmatcher(obsmatcher.obsmatcher):
@@ -209,7 +209,7 @@ def apply_gra_correction(gra_corrected_composite_path, comp, areaid, quantity, d
       return comp, gra_field.quantity
     else:
       logger.info("No gra coefficients found for given date/time, ignoring gra adjustment")
-  except Exception, e:
+  except Exception as e:
     import traceback
     traceback.print_exc()
     logger.error("Failed to apply gra coefficients", exc_info=1)
@@ -238,14 +238,14 @@ def generate_acrr(files, opath, areaid, etime, edate, startdt, enddt, zr_a=200.0
     try:
       rio = _raveio.open(fname)
       obj = rio.object
-    except Exception,e:
+    except Exception as e:
       continue
 
     if _cartesianvolume.isCartesianVolume(obj):
       obj = obj.getImage(0)
     
     if not _cartesian.isCartesian(obj):
-      raise AttributeError, "Must call plugin with cartesian products"
+      raise AttributeError("Must call plugin with cartesian products")
 
     if acrrproduct == None:
       acrrproduct = _cartesian.new()
@@ -264,7 +264,7 @@ def generate_acrr(files, opath, areaid, etime, edate, startdt, enddt, zr_a=200.0
       
     if obj.xscale != acrrproduct.xscale or obj.yscale != acrrproduct.yscale or \
        obj.projection.definition != acrrproduct.projection.definition:
-      raise AttributeError, "Scale or projdef inconsistancy for used area"
+      raise AttributeError("Scale or projdef inconsistancy for used area")
     par = obj.getParameter(quantity)
     if par == None:
       logger.warn("Could not find parameter (%s) for %s %s"%(acrr_quantity, obj.date, obj.time))
@@ -337,14 +337,14 @@ def generate_gra(files, opath, areaid, etime, edate, startdt, enddt, zr_a=200.0,
     try:
       rio = _raveio.open(fname)
       obj = rio.object
-    except Exception,e:
+    except Exception as e:
       continue
 
     if _cartesianvolume.isCartesianVolume(obj):
       obj = obj.getImage(0)
 
     if not _cartesian.isCartesian(obj):
-      raise AttributeError, "Must call plugin with cartesian products"
+      raise AttributeError("Must call plugin with cartesian products")
 
     if acrrproduct == None:
       acrrproduct = _cartesian.new()
@@ -359,7 +359,7 @@ def generate_gra(files, opath, areaid, etime, edate, startdt, enddt, zr_a=200.0,
 
     if obj.xscale != acrrproduct.xscale or obj.yscale != acrrproduct.yscale or \
        obj.projection.definition != acrrproduct.projection.definition:
-      raise AttributeError, "Scale or projdef inconsistancy for used area"
+      raise AttributeError("Scale or projdef inconsistancy for used area")
 
     par = obj.getParameter(quantity)
     if par == None:
@@ -508,18 +508,18 @@ if __name__=="__main__":
 
   (options, args) = parser.parse_args()
   
-  print "Running with:"
-  print "Inputpath: %s"%options.inputpath
-  print "Composite path: %s"%options.compositepath
-  print "Acrr path: %s"%options.outputpath
-  print "Datetime: %s -> %s"%(options.startdt, options.enddt)
-  print "Pattern: %s"%options.pattern
-  print "Area: %s"%options.area
-  print "Hours: %d"%options.hours
-  print "Create gra coefficients: %s"%`options.create_gra_coefficients` 
-  print "Adjustmentfile: %s"%options.adjustmentfile
-  print "Apply gra correction: %s"%`options.applygra`
-  print "N2 synop file path: %s"%`options.nrd_synop_path`
+  print("Running with:")
+  print("Inputpath: %s"%options.inputpath)
+  print("Composite path: %s"%options.compositepath)
+  print("Acrr path: %s"%options.outputpath)
+  print("Datetime: %s -> %s"%(options.startdt, options.enddt))
+  print("Pattern: %s"%options.pattern)
+  print("Area: %s"%options.area)
+  print("Hours: %d"%options.hours)
+  print("Create gra coefficients: %s"%str(options.create_gra_coefficients)) 
+  print("Adjustmentfile: %s"%options.adjustmentfile)
+  print("Apply gra correction: %s"%str(options.applygra))
+  print("N2 synop file path: %s"%str(options.nrd_synop_path))
   
   if options.create_gra_coefficients:
     create_gra_coefficients(options.inputpath, options.compositepath, options.outputpath, options.area, options.hours, 
