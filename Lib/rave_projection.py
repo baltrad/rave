@@ -111,7 +111,6 @@ def items():
 # @returns Projection object corresponding with the input identifier
 def pcs(Id):
     if not isinstance(Id, str) and not isinstance(Id,unicode):
-        print("TYPE=%s"%str(type(Id)))
         raise KeyError("Argument 'Id' not a string")
     return _registry[Id]
 
@@ -199,7 +198,7 @@ def write(filename=PROJECTION_REGISTRY):
         if p not in check:
             tmp = pcs(p)
             new_registry.add(_projection.new(tmp.id, tmp.name, 
-                                             string.join(tmp.definition)))
+                                             " ".join(tmp.definition)))
             check.append(p)
         else:
             print("Duplicate entry for id %s. Ignored." % p)
@@ -210,8 +209,8 @@ def write(filename=PROJECTION_REGISTRY):
 # @param id The projection's string identifier 
 def describe(id):
     p = _registry[id]
-    print("%s -\t%s" % (id, p.name))
-    print("\t%s" % string.join(p.definition))
+    print("%s -\t%s" % (id, p.name.decode('utf-8')))
+    print("\t%s" % " ".join(p.definition))
 
 
 if __name__ == "__main__":
