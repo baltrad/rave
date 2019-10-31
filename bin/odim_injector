@@ -268,10 +268,10 @@ if __name__ == "__main__":
   if not options.kill:
     ALIVE = alive(options.pid_file)
     if not ALIVE and os.path.isfile(options.pid_file):
-      print("n2b is not alive but pid file %s exists, removing." % options.pid_file)
+      print("odim_injector is not alive but pid file %s exists, removing." % options.pid_file)
       os.remove(options.pid_file)
     elif ALIVE:
-      print("n2b is already running.")
+      print("odim_injector is already running.")
       sys.exit()
 
     # Shut down a previous incarnation of this daemon.

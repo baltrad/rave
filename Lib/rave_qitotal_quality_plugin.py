@@ -36,12 +36,13 @@ import _polarscan, _polarvolume, _qitotal, _rave
 from rave_quality_plugin import rave_quality_plugin
 from rave_quality_plugin import QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY
 
+from rave_defines import QITOTAL_METHOD
 ## Contains site-specific argument settings 
 
 QITOTAL_DTYPE  = _rave.RaveDataType_UCHAR
 QITOTAL_GAIN   = 1.0/255.0
 QITOTAL_OFFSET = 0.0
-QITOTAL_METHOD = "minimum"
+#QITOTAL_METHOD = "minimum"
 
 class rave_qitotal_quality_plugin(rave_quality_plugin):
   ##

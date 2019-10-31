@@ -163,5 +163,9 @@ RAVE_QUALITY_CONTROL_PROCESSES=4
 # quality field. 
 RAVE_PGF_QUALITY_FIELD_REPROCESSING=False
 
+# What algorithm that should be used when performing QI-total
+#
+QITOTAL_METHOD = "minimum"
+
 if __name__ == "__main__":
     print(__doc__)
