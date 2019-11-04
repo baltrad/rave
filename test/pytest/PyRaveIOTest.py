@@ -252,7 +252,7 @@ class PyRaveIOTest(unittest.TestCase):
     image.source = "PLC:123"
     image.xscale = 2000.0
     image.yscale = 2000.0
-    image.areaextent = (-240000.0, -240000.0, 238000.0, 238000.0)
+    image.areaextent = (-240000.0, -240000.0, 240000.0, 240000.0)
     image.projection = _projection.new("x","y","+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84")
     image.product = _rave.Rave_ProductType_CAPPI
 
@@ -423,7 +423,7 @@ class PyRaveIOTest(unittest.TestCase):
     image.source = "PLC:123"
     image.xscale = 2000.0
     image.yscale = 2000.0
-    image.areaextent = (-240000.0, -240000.0, 238000.0, 238000.0)
+    image.areaextent = (-240000.0, -240000.0, 240000.0, 240000.0)
     image.projection = _projection.new("x","y","+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84")
     image.product = _rave.Rave_ProductType_CAPPI
     image.starttime = "110000"
@@ -543,7 +543,7 @@ class PyRaveIOTest(unittest.TestCase):
     cvol.source = "PLC:123"
     cvol.xscale = 2000.0
     cvol.yscale = 2000.0
-    cvol.areaextent = (-240000.0, -240000.0, 238000.0, 238000.0)
+    cvol.areaextent = (-240000.0, -240000.0, 240000.0, 240000.0)
     projection = _projection.new("x","y","+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84")
     cvol.projection = projection
 
@@ -686,8 +686,8 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEqual("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", cvol.projection.definition)
     self.assertAlmostEqual(-240000.0, cvol.areaextent[0], 4)
     self.assertAlmostEqual(-240000.0, cvol.areaextent[1], 4)
-    self.assertAlmostEqual(236000.0, cvol.areaextent[2], 4)  # Since AE should be projected(UR) - xscale
-    self.assertAlmostEqual(236000.0, cvol.areaextent[3], 4)  # Since AE should be projected(UR) - yscale
+    self.assertAlmostEqual(238000.0, cvol.areaextent[2], 4)  # Since AE should be projected(UR) - xscale
+    self.assertAlmostEqual(238000.0, cvol.areaextent[3], 4)  # Since AE should be projected(UR) - yscale
     self.assertAlmostEqual(2000.0, cvol.xscale, 4)
     self.assertAlmostEqual(2000.0, cvol.yscale, 4)
 
@@ -775,8 +775,8 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEqual("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", image.projection.definition)
     self.assertAlmostEqual(-240000.0, image.areaextent[0], 4)
     self.assertAlmostEqual(-240000.0, image.areaextent[1], 4)
-    self.assertAlmostEqual(238000.0, image.areaextent[2], 4)  # Since AE should be projected(UR) - xscale
-    self.assertAlmostEqual(238000.0, image.areaextent[3], 4)  # Since AE should be projected(UR) - yscale
+    self.assertAlmostEqual(240000.0, image.areaextent[2], 4)  # Since AE should be projected(UR) - xscale
+    self.assertAlmostEqual(240000.0, image.areaextent[3], 4)  # Since AE should be projected(UR) - yscale
     self.assertAlmostEqual(2000.0, image.xscale, 4)
     self.assertAlmostEqual(2000.0, image.yscale, 4)
     self.assertEqual(240, image.xsize)
@@ -818,8 +818,8 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEqual("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", cvol.projection.definition)
     self.assertAlmostEqual(-240000.0, cvol.areaextent[0], 4)
     self.assertAlmostEqual(-240000.0, cvol.areaextent[1], 4)
-    self.assertAlmostEqual(238000.0, cvol.areaextent[2], 4)  # Since AE should be projected(UR) - xscale
-    self.assertAlmostEqual(238000.0, cvol.areaextent[3], 4)  # Since AE should be projected(UR) - yscale
+    self.assertAlmostEqual(240000.0, cvol.areaextent[2], 4)  # Since AE should be projected(UR) - xscale
+    self.assertAlmostEqual(240000.0, cvol.areaextent[3], 4)  # Since AE should be projected(UR) - yscale
 
     self.assertEqual(2, cvol.getNumberOfImages())
 

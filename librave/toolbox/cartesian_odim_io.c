@@ -900,13 +900,11 @@ int CartesianOdimIO_readCartesian(CartesianOdimIO_t* self, HL_NodeList* nodelist
 
   if ((proj = Cartesian_getProjection(cartesian)) != NULL) {
     double llX = 0.0, llY = 0.0, urX = 0.0, urY = 0.0;
-    double xscale = Cartesian_getXScale(cartesian);
-    double yscale = Cartesian_getYScale(cartesian);
 
     if (!CartesianOdimIOInternal_createExtent(arg.attrs, proj, &llX, &llY, &urX, &urY)) {
       goto done;
     }
-    Cartesian_setAreaExtent(cartesian, llX, llY, urX-xscale, urY-yscale);
+    Cartesian_setAreaExtent(cartesian, llX, llY, urX, urY);
   }
 
   RAVE_OBJECT_RELEASE(arg.attrs);
@@ -950,12 +948,11 @@ int CartesianOdimIO_readVolume(CartesianOdimIO_t* self, HL_NodeList* nodelist, C
   }
   if ((proj = CartesianVolume_getProjection(volume)) != NULL) {
     double llX = 0.0, llY = 0.0, urX = 0.0, urY = 0.0;
-    double xscale = CartesianVolume_getXScale(volume);
-    double yscale = CartesianVolume_getYScale(volume);
+
     if (!CartesianOdimIOInternal_createExtent(arg.attrs, proj, &llX, &llY, &urX, &urY)) {
       goto done;
     }
-    CartesianVolume_setAreaExtent(volume, llX, llY, urX-xscale, urY-yscale);
+    CartesianVolume_setAreaExtent(volume, llX, llY, urX, urY);
   }
 
   result = 1;
@@ -1027,13 +1024,12 @@ int CartesianOdimIO_fillImage(CartesianOdimIO_t* self, HL_NodeList* nodelist, Ca
 
   if (projection != NULL) {
     double llX = 0.0, llY = 0.0, urX = 0.0, urY = 0.0;
-    double xscale = Cartesian_getXScale(cartesian);
-    double yscale = Cartesian_getYScale(cartesian);
+
     if (!RaveUtilities_addStringAttributeToList(attributes, "where/projdef", Projection_getDefinition(projection))) {
       goto done;
     }
     Cartesian_getAreaExtent(cartesian, &llX, &llY, &urX, &urY);
-    if (!CartesianOdimIOInternal_addLonLatExtentToAttributeList(attributes, projection, llX, llY, urX + xscale, urY + yscale)) {
+    if (!CartesianOdimIOInternal_addLonLatExtentToAttributeList(attributes, projection, llX, llY, urX, urY)) {
       goto done;
     }
   }
@@ -1154,13 +1150,12 @@ int CartesianOdimIO_fillVolume(CartesianOdimIO_t* self, HL_NodeList* nodelist, C
   projection = CartesianVolume_getProjection(volume);
   if (projection != NULL) {
     double llX = 0.0, llY = 0.0, urX = 0.0, urY = 0.0;
-    double xscale = CartesianVolume_getXScale(volume);
-    double yscale = CartesianVolume_getYScale(volume);
+
     if (!RaveUtilities_addStringAttributeToList(attributes, "where/projdef", Projection_getDefinition(projection))) {
       goto done;
     }
     CartesianVolume_getAreaExtent(volume, &llX, &llY, &urX, &urY);
-    if (!CartesianOdimIOInternal_addLonLatExtentToAttributeList(attributes, projection, llX, llY, urX+xscale, urY+yscale)) {
+    if (!CartesianOdimIOInternal_addLonLatExtentToAttributeList(attributes, projection, llX, llY, urX, urY)) {
       goto done;
     }
   }

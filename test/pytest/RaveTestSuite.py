@@ -27,6 +27,7 @@ import unittest, os
 A="""
 from RaveTest import *
 """
+
 from BaltradMessageXMLTest import *
 from rave_pgf_registry_test import *
 from rave_pgf_protocol_test import *
@@ -37,6 +38,7 @@ from PyPolarScanParamTest import *
 from RaveModuleConstantsTest import *
          
 from PyCartesianTest import *
+
 from PyCartesianParamTest import *
 from PyCartesianVolumeTest import *
 from PyVerticalProfileTest import *

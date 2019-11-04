@@ -62,7 +62,6 @@ int ctFilter(Cartesian_t* product, Cartesian_t* ct) {
 
    /* Default parameter should have been selected already for both product
     and ct */
-
    for (yp=0; yp<ysizep; yp++) {
      for (xp=0; xp<xsizep; xp++) {
        rvt_p = Cartesian_getValue(product, xp, yp, &pval);

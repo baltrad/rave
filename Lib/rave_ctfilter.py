@@ -77,7 +77,6 @@ def readCT(filename):
     URy = ULy + yoffset
     ct.areaextent = (LLx, LLy, URx, URy)  # Differs ~5 cm from PPS and PyTROLL
     ct.xscale, ct.yscale = xscale, yscale
-
     cp.quantity = "CT"
     cp.gain, cp.offset = 1.0, 0.0
     cp.nodata, cp.undetect = -1.0, 0.0
