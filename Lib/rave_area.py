@@ -114,7 +114,12 @@ def register(A):
     if isinstance(A.pcs, bytes): A.pcs = A.pcs.decode()
     if isinstance(A.name, bytes): A.name = A.name.decode()
     if isinstance(A.Id, bytes): A.Id = A.Id.decode()
-
+    if isinstance(A.xsize, bytes): A.xsize = A.xsize.decode()
+    if isinstance(A.ysize, bytes): A.ysize = A.ysize.decode()
+    if isinstance(A.xscale, bytes): A.xscale = A.xscale.decode()
+    if isinstance(A.yscale, bytes): A.yscale = A.yscale.decode()
+    if isinstance(A.extent, bytes): A.extent = A.extent.decode()
+    
     A.pcs = A.pcs.replace("\n", "").lstrip(" ").rstrip(" ")
     A.name = A.name.replace("\n", "").lstrip(" ").rstrip(" ")
     

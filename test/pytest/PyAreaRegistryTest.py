@@ -174,15 +174,21 @@ class PyAreaRegistryTest(unittest.TestCase):
     self.assertEqual("nisse", areas[2].get('id'))
     args = areas[2].findall("areadef/arg")
     self.assertEqual("laea20e60n", self.findArgElements(args, "id", "pcs").text.strip())
+    self.assertEqual(None, self.findArgElements(args, "id", "pcs").get("type"))
     self.assertEqual("111", self.findArgElements(args, "id", "xsize").text.strip())
+    self.assertEqual("int", self.findArgElements(args, "id", "xsize").get("type"))
     self.assertEqual("222", self.findArgElements(args, "id", "ysize").text.strip())
+    self.assertEqual("int", self.findArgElements(args, "id", "ysize").get("type"))
     self.assertEqual("1000.0", self.findArgElements(args, "id", "xscale").text.strip()[:6])
+    self.assertEqual("float", self.findArgElements(args, "id", "xscale").get("type"))
     self.assertEqual("2000.0", self.findArgElements(args, "id", "yscale").text.strip()[:6])
+    self.assertEqual("float", self.findArgElements(args, "id", "yscale").get("type"))
     extent = self.findArgElements(args, "id", "extent").text.strip().split(",")
     self.assertEqual("-738816.5", extent[0].strip()[:9])
     self.assertEqual("-3995515.5", extent[1].strip()[:10])
     self.assertEqual("955183.4", extent[2].strip()[:8])
     self.assertEqual("-1787515.5", extent[3].strip()[:10])
+    self.assertEqual("sequence", self.findArgElements(args, "id", "extent").get("type"))
 
   def test_write_2(self):
     if not _rave.isXmlSupported():

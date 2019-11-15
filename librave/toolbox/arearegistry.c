@@ -382,6 +382,7 @@ static int AreaRegistryInternal_addArgsToNode(Area_t* area, SimpleXmlNode_t* are
     char xsize[32];
     sprintf(xsize, "%ld", Area_getXSize(area));
     if (!SimpleXmlNode_addAttribute(argNode, "id", "xsize") ||
+        !SimpleXmlNode_addAttribute(argNode, "type", "int") ||
         !SimpleXmlNode_setText(argNode, xsize, strlen(xsize))) {
       RAVE_ERROR0("Failed to add xsize to area");
       goto done;
@@ -397,6 +398,7 @@ static int AreaRegistryInternal_addArgsToNode(Area_t* area, SimpleXmlNode_t* are
     char ysize[32];
     sprintf(ysize, "%ld", Area_getYSize(area));
     if (!SimpleXmlNode_addAttribute(argNode, "id", "ysize") ||
+        !SimpleXmlNode_addAttribute(argNode, "type", "int") ||
         !SimpleXmlNode_setText(argNode, ysize, strlen(ysize))) {
       RAVE_ERROR0("Failed to add ysize to area");
       goto done;
@@ -412,6 +414,7 @@ static int AreaRegistryInternal_addArgsToNode(Area_t* area, SimpleXmlNode_t* are
     char xscale[32];
     sprintf(xscale, "%lf", Area_getXScale(area));
     if (!SimpleXmlNode_addAttribute(argNode, "id", "xscale") ||
+        !SimpleXmlNode_addAttribute(argNode, "type", "float") ||
         !SimpleXmlNode_setText(argNode, xscale, strlen(xscale))) {
       RAVE_ERROR0("Failed to add xscale to area");
       goto done;
@@ -426,7 +429,8 @@ static int AreaRegistryInternal_addArgsToNode(Area_t* area, SimpleXmlNode_t* are
   if (argNode != NULL) {
     char yscale[32];
     sprintf(yscale, "%lf", Area_getYScale(area));
-    if (!SimpleXmlNode_addAttribute(argNode, "id", "yscale") ||
+    if (!SimpleXmlNode_addAttribute(argNode, "type", "float") ||
+        !SimpleXmlNode_addAttribute(argNode, "id", "yscale") ||
         !SimpleXmlNode_setText(argNode, yscale, strlen(yscale))) {
       RAVE_ERROR0("Failed to add yscale to area");
       goto done;
@@ -447,6 +451,7 @@ static int AreaRegistryInternal_addArgsToNode(Area_t* area, SimpleXmlNode_t* are
       goto done;
     }
     if (!SimpleXmlNode_addAttribute(argNode, "id", "extent") ||
+        !SimpleXmlNode_addAttribute(argNode, "type", "sequence") ||
         !SimpleXmlNode_setText(argNode, extent, strlen(extent))) {
       RAVE_ERROR0("Failed to add extent to area");
       goto done;
