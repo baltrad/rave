@@ -25,7 +25,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Ulf E. Nordh (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2017-02-23 Added functionality to yield an extended set of fields e.g.
  * HGHT, n (sample size), UWND and VWND
- */
+*/
+
 #include "vertical_profile.h"
 #include "rave_debug.h"
 #include "rave_alloc.h"
@@ -610,25 +611,25 @@ int VerticalProfile_setADDev(VerticalProfile_t* self, RaveField_t* ff)
 RaveField_t* VerticalProfile_getDBZ(VerticalProfile_t* self)
 {
   RAVE_ASSERT((self != NULL), "self == NULL");
-  return VerticalProfile_getField(self, "dbz");
+  return VerticalProfile_getField(self, "DBZH");
 }
 
 int VerticalProfile_setDBZ(VerticalProfile_t* self, RaveField_t* ff)
 {
   RAVE_ASSERT((self != NULL), "self == NULL");
-  return VerticalProfileInternal_addField(self, ff, "dbz");
+  return VerticalProfileInternal_addField(self, ff, "DBZH");
 }
 
 RaveField_t* VerticalProfile_getDBZDev(VerticalProfile_t* self)
 {
   RAVE_ASSERT((self != NULL), "self == NULL");
-  return VerticalProfile_getField(self, "dbz_dev");
+  return VerticalProfile_getField(self, "DBZH_dev");
 }
 
 int VerticalProfile_setDBZDev(VerticalProfile_t* self, RaveField_t* ff)
 {
   RAVE_ASSERT((self != NULL), "self == NULL");
-  return VerticalProfileInternal_addField(self, ff, "dbz_dev");
+  return VerticalProfileInternal_addField(self, ff, "DBZH_dev");
 }
 
 RaveField_t* VerticalProfile_getNV(VerticalProfile_t* self)
@@ -641,6 +642,18 @@ int VerticalProfile_setNV(VerticalProfile_t* self, RaveField_t* ff)
 {
   RAVE_ASSERT((self != NULL), "self == NULL");
   return VerticalProfileInternal_addField(self, ff, "n"); /* Sample size for wind */
+}
+
+RaveField_t* VerticalProfile_getNZ(VerticalProfile_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return VerticalProfile_getField(self, "nz"); /* Sample size for wind */
+}
+
+int VerticalProfile_setNZ(VerticalProfile_t* self, RaveField_t* ff)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return VerticalProfileInternal_addField(self, ff, "nz"); /* Sample size for refl */
 }
 
 RaveField_t* VerticalProfile_getHGHT(VerticalProfile_t* self)

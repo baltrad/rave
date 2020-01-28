@@ -279,7 +279,7 @@ class PyVerticalProfileTest(unittest.TestCase):
     obj.setDBZ(f)
     result = obj.getDBZ()
     self.assertAlmostEqual(1.0, result.getAttribute("how/this"), 4)
-    self.assertEqual("dbz", result.getAttribute("what/quantity"))
+    self.assertEqual("DBZH", result.getAttribute("what/quantity"))
 
   def test_setGetDBZDev(self):
     obj = _verticalprofile.new()
@@ -290,7 +290,7 @@ class PyVerticalProfileTest(unittest.TestCase):
     obj.setDBZDev(f)
     result = obj.getDBZDev()
     self.assertAlmostEqual(1.0, result.getAttribute("how/this"), 4)
-    self.assertEqual("dbz_dev", result.getAttribute("what/quantity"))
+    self.assertEqual("DBZH_dev", result.getAttribute("what/quantity"))
 
   def test_setGetHGHT(self):
     obj = _verticalprofile.new()
@@ -335,6 +335,17 @@ class PyVerticalProfileTest(unittest.TestCase):
     result = obj.getNV()
     self.assertAlmostEqual(1.0, result.getAttribute("how/this"), 4)
     self.assertEqual("n", result.getAttribute("what/quantity"))
+
+  def test_setGetNZ(self):
+    obj = _verticalprofile.new()
+    self.assertTrue(None == obj.getNZ())
+    f = _ravefield.new()
+    f.setData(numpy.zeros((10,1), numpy.uint8))
+    f.addAttribute("how/this", 1.0)
+    obj.setNZ(f)
+    result = obj.getNZ()
+    self.assertAlmostEqual(1.0, result.getAttribute("how/this"), 4)
+    self.assertEqual("nz", result.getAttribute("what/quantity"))
 
   def test_addField(self):
     obj = _verticalprofile.new()

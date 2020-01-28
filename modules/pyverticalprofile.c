@@ -241,11 +241,11 @@ static PyObject* _pyverticalprofile_internal_setfield(PyVerticalProfile* self, P
     if (!VerticalProfile_setADDev(self->vp, ravefield->field)) {
       raiseException_returnNULL(PyExc_AttributeError, "Failed to set ad_dev");
     }
-  } else if (strcmp("dbz", quantity) == 0) {
+  } else if (strcmp("DBZH", quantity) == 0) {
     if (!VerticalProfile_setDBZ(self->vp, ravefield->field)) {
       raiseException_returnNULL(PyExc_AttributeError, "Failed to set dbz");
     }
-  } else if (strcmp("dbz_dev", quantity) == 0) {
+  } else if (strcmp("DBZH_dev", quantity) == 0) {
     if (!VerticalProfile_setDBZDev(self->vp, ravefield->field)) {
       raiseException_returnNULL(PyExc_AttributeError, "Failed to set dbz_dev");
     }
@@ -257,7 +257,11 @@ static PyObject* _pyverticalprofile_internal_setfield(PyVerticalProfile* self, P
     if (!VerticalProfile_setNV(self->vp, ravefield->field)) {
       raiseException_returnNULL(PyExc_AttributeError, "Failed to set n");
     }
-  } else if (strcmp("UWND", quantity) == 0) {
+  } else if (strcmp("nz", quantity) == 0) {
+    if (!VerticalProfile_setNZ(self->vp, ravefield->field)) {
+      raiseException_returnNULL(PyExc_AttributeError, "Failed to set nz");
+    }
+  }else if (strcmp("UWND", quantity) == 0) {
     if (!VerticalProfile_setUWND(self->vp, ravefield->field)) {
       raiseException_returnNULL(PyExc_AttributeError, "Failed to set UWND");
     }
@@ -312,14 +316,16 @@ static PyObject* _pyverticalprofile_internal_getfield(PyVerticalProfile* self, P
     field = VerticalProfile_getAD(self->vp);
   } else if (strcmp("ad_dev", quantity) == 0) {
     field = VerticalProfile_getADDev(self->vp);
-  } else if (strcmp("dbz", quantity) == 0) {
+  } else if (strcmp("DBZH", quantity) == 0) {
     field = VerticalProfile_getDBZ(self->vp);
-  } else if (strcmp("dbz_dev", quantity) == 0) {
+  } else if (strcmp("DBZH_dev", quantity) == 0) {
     field = VerticalProfile_getDBZDev(self->vp);
   } else if (strcmp("HGHT", quantity) == 0) {
     field = VerticalProfile_getHGHT(self->vp);
   } else if (strcmp("n", quantity) == 0) {
     field = VerticalProfile_getNV(self->vp);
+  } else if (strcmp("nz", quantity) == 0) {
+    field = VerticalProfile_getNZ(self->vp);
   } else if (strcmp("UWND", quantity) == 0) {
     field = VerticalProfile_getUWND(self->vp);
   } else if (strcmp("VWND", quantity) == 0) {
@@ -458,22 +464,22 @@ static PyObject* _pyverticalprofile_getADDev(PyVerticalProfile* self, PyObject* 
 
 static PyObject* _pyverticalprofile_setDBZ(PyVerticalProfile* self, PyObject* args)
 {
-  return _pyverticalprofile_internal_setfield(self, args, "dbz");
+  return _pyverticalprofile_internal_setfield(self, args, "DBZH");
 }
 
 static PyObject* _pyverticalprofile_getDBZ(PyVerticalProfile* self, PyObject* args)
 {
-  return _pyverticalprofile_internal_getfield(self, args, "dbz");
+  return _pyverticalprofile_internal_getfield(self, args, "DBZH");
 }
 
 static PyObject* _pyverticalprofile_setDBZDev(PyVerticalProfile* self, PyObject* args)
 {
-  return _pyverticalprofile_internal_setfield(self, args, "dbz_dev");
+  return _pyverticalprofile_internal_setfield(self, args, "DBZH_dev");
 }
 
 static PyObject* _pyverticalprofile_getDBZDev(PyVerticalProfile* self, PyObject* args)
 {
-  return _pyverticalprofile_internal_getfield(self, args, "dbz_dev");
+  return _pyverticalprofile_internal_getfield(self, args, "DBZH_dev");
 }
 
 static PyObject* _pyverticalprofile_setHGHT(PyVerticalProfile* self, PyObject* args)
@@ -494,6 +500,15 @@ static PyObject* _pyverticalprofile_setNV(PyVerticalProfile* self, PyObject* arg
 static PyObject* _pyverticalprofile_getNV(PyVerticalProfile* self, PyObject* args)
 {
   return _pyverticalprofile_internal_getfield(self, args, "n");
+}
+
+static PyObject* _pyverticalprofile_setNZ(PyVerticalProfile* self, PyObject* args)
+{
+  return _pyverticalprofile_internal_setfield(self, args, "nz");
+}
+static PyObject* _pyverticalprofile_getNZ(PyVerticalProfile* self, PyObject* args)
+{
+  return _pyverticalprofile_internal_getfield(self, args, "nz");
 }
 
 static PyObject* _pyverticalprofile_setUWND(PyVerticalProfile* self, PyObject* args)
@@ -838,6 +853,8 @@ static struct PyMethodDef _pyverticalprofile_methods[] =
   {"setHGHT", (PyCFunction) _pyverticalprofile_setHGHT, 1},
   {"getNV", (PyCFunction) _pyverticalprofile_getNV, 1},
   {"setNV", (PyCFunction) _pyverticalprofile_setNV, 1},
+  {"getNZ", (PyCFunction) _pyverticalprofile_getNZ, 1},
+  {"setNZ", (PyCFunction) _pyverticalprofile_setNZ, 1},
   {"getUWND", (PyCFunction) _pyverticalprofile_getUWND, 1},
   {"setUWND", (PyCFunction) _pyverticalprofile_setUWND, 1},
   {"getVWND", (PyCFunction) _pyverticalprofile_getVWND, 1},

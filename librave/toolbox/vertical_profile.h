@@ -535,12 +535,29 @@ RaveField_t* VerticalProfile_getNV(VerticalProfile_t* self);
 
 /**
  * Sets the number of sampled points for horizontal wind
- * This function will modify ff and add the attribute what/quantity = n.
+ * This function will add the attribute what/quantity = n.
  * @param[in] self - self
  * @param[in] n - n (must be a 1 dimensional field with same dim as the other members).
  * @return 1 on success otherwise 0
  */
 int VerticalProfile_setNV(VerticalProfile_t* self, RaveField_t* ff);
+
+/**
+ * Returns the number of sample points for reflectivity
+ * @param[in] self - self
+ * @return the field
+ */
+RaveField_t* VerticalProfile_getNZ(VerticalProfile_t* self);
+
+/**
+ * Sets the number of sampled points for reflectivity
+ * This function will modify add the attribute what/quantity = nz.
+ * @param[in] self - self
+ * @param[in] nz - nz (must be a 1 dimensional field with same dim as the other members).
+ * @return 1 on success otherwise 0
+ */
+
+int VerticalProfile_setNZ(VerticalProfile_t* self, RaveField_t* ff);
 
 /**
  * Returns the different height levels. Each level is the center of the height bin

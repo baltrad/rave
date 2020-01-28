@@ -54,6 +54,7 @@ class PyRaveIOTest(unittest.TestCase):
   FIXTURE_CARTESIAN_VOLUME="fixtures/cartesian_volume.h5"
   FIXTURE_VP="fixtures/vp_fixture.h5"
   FIXTURE_VP_NEW_VERSION="fixtures/selek_vp_20170901T000000Z.h5"
+  FIXTURE_VP_NEW_VERSION_EXTRA_HOW="fixtures/selek_vp_only_UWND_and_extra_how.h5"
   FIXTURE_BUFR_PVOL="fixtures/odim_polar_ref.bfr"
   FIXTURE_BUFR_COMPO="fixtures/odim_compo_ref.bfr"
   FIXTURE_BUFR_2_2="fixtures/odim_2_2_ref.bfr"
@@ -1897,6 +1898,38 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEqual(1, numpy.shape(f1data)[1])
     self.assertEqual(10, numpy.shape(f2data)[0])
     self.assertEqual(1, numpy.shape(f2data)[1])
+
+  def test_read_vp_new_version_with_extra_how_attribs(self):
+    # Read the new version of VP having 2 extra how attributes
+    vp = _raveio.open(self.FIXTURE_VP_NEW_VERSION_EXTRA_HOW).object
+    self.assertEqual("WMO:02430,RAD:SE45,PLC:Leksand,NOD:selek,ORG:82,CTY:643,CMT:Swedish radar", vp.source)
+    self.assertEqual("20191003", vp.date)
+    self.assertEqual("20191003", vp.startdate)
+    self.assertEqual("060500", vp.time)
+    self.assertEqual("060752", vp.starttime)
+    self.assertAlmostEqual(14.877571105957031, vp.longitude * 180.0 / math.pi, 4)
+    self.assertAlmostEqual(60.72304153442384, vp.latitude * 180.0 / math.pi, 4)
+    self.assertAlmostEqual(457.0, vp.height, 4)
+    self.assertEqual(60, vp.getLevels())
+    self.assertAlmostEqual(200.0, vp.interval, 4)
+    self.assertAlmostEqual(0.0, vp.minheight, 4)
+    self.assertAlmostEqual(12000.0, vp.maxheight, 4)
+
+    field = vp.getField("UWND")
+    self.assertEqual("UWND", field.getAttribute("what/quantity"))
+    data = field.getData()
+    self.assertEqual(60, numpy.shape(data)[0])
+    self.assertEqual(1, numpy.shape(data)[1])
+
+    # Verify the two extra attribs under /how
+    nodelist = _pyhl.read_nodelist(self.FIXTURE_VP_NEW_VERSION_EXTRA_HOW)
+    nodelist.selectAll()
+    nodelist.fetch()
+
+    angles = nodelist.getNode("/how/angles").data()
+    task = nodelist.getNode("/how/task").data()
+    self.assertEqual("4.0,8.0,14.0", angles)
+    self.assertEqual("lek_zdr", task)
   
   def testReadBadlyFormattedODIM(self):
     nodelist = _pyhl.nodelist()
