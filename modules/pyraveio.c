@@ -274,9 +274,12 @@ static struct PyMethodDef _pyraveio_methods[] =
   {"fcp_metablocksize", NULL},
   {"file_format", NULL},
   {"bufr_table_dir", NULL},
-  {"close", (PyCFunction) _pyraveio_close, 1},
-  {"load", (PyCFunction) _pyraveio_load, 1},
-  {"save", (PyCFunction) _pyraveio_save, 1},
+  {"close", (PyCFunction) _pyraveio_close, 1, "close()\n"
+                                              "  Resets this instance and closes the opened object.\n"},
+  {"load", (PyCFunction) _pyraveio_load, 1,   "load()\n"
+                                              " Atempts to load the file that is defined by filename\n"},
+  {"save", (PyCFunction) _pyraveio_save, 1,   "save([filename])\n"
+                                              " Saves the current object (with current settings). filename is optional. If not specified, the objects filename is used\n"},
   {NULL, NULL } /* sentinel */
 };
 
@@ -463,6 +466,69 @@ done:
 
 /*@} End of RaveIO */
 
+/*@{ Documentation about the type */
+PyDoc_STRVAR(_pyraveio_doc,
+    "This instance wraps the IO-routines used when writing and/or reading files through RAVE.\n"
+    "\n"
+    "The members of each object are:\n"
+    " * version          - showing the ODIM H5 version of the read file. Can be one of:\n"
+    "                      + RaveIO_ODIM_Version_UNDEFINED\n"
+    "                      + RaveIO_ODIM_Version_2_0\n"
+    "                      + RaveIO_ODIM_Version_2_1\n"
+    "\n"
+    " * h5radversion     - showing the H5 rad version of the read file. Can be one of:\n"
+    "                      + RaveIO_ODIM_H5rad_Version_UNDEFINED\n"
+    "                      + RaveIO_ODIM_H5rad_Version_2_0\n"
+    "                      + RaveIO_ODIM_H5rad_Version_2_1\n"
+    "                      + RaveIO_ODIM_H5rad_Version_2_2\n"
+    "\n"
+    " * objectType       - What type of object that has been read. Can be one of the following:\n"
+    "                      + Rave_ObjectType_PVOL\n"
+    "                      + Rave_ObjectType_CVOL\n"
+    "                      + Rave_ObjectType_SCAN\n"
+    "                      + Rave_ObjectType_RAY\n"
+    "                      + Rave_ObjectType_AZIM\n"
+    "                      + Rave_ObjectType_IMAGE\n"
+    "                      + Rave_ObjectType_COMP\n"
+    "                      + Rave_ObjectType_XSEC\n"
+    "                      + Rave_ObjectType_VP\n"
+    "                      + Rave_ObjectType_PIC\n"
+    "\n"
+    " * file_format      - The file format. Either read or the one to use when writing. Can be one of \n"
+    "                      + RaveIO_ODIM_FileFormat_UNDEFINED\n"
+    "                      + RaveIO_ODIM_FileFormat_HDF5\n"
+#ifdef RAVE_BUFR_SUPPORTED
+    "                      + RaveIO_ODIM_FileFormat_BUFR (only available for reading)\n"
+#endif
+#ifdef RAVE_CF_SUPPORTED
+    "                      + RaveIO_FileFormat_CF (only available for writing)\n"
+#endif
+    "\n"
+    " * object           - The actual object beeing written or read. Upon successful reading, this object will always be set and when writing\n"
+    "                      this object has to be set.\n"
+    "\n"
+    " * compression_level- The compression level beeing used. Range between 0 and 9 where 0 means no compression and 9 means highest compression.\n"
+    "                      Compression level 1 is lowest compression ratio but fastest and level 9 is highest compression ratio but slowest.\n "
+    "\n"
+    "The below fcp_<members> are all used for optimizing the file storage. Please refer to HDF5 documentation for more information.\n"
+    " * fcp_userblock    - Integer value."
+    "\n"
+    " * fcp_sizes        - Sizes must be a tuple containing 2 integers representing (size, addr).\n"
+    "\n"
+    " * fcp_symk         - Symk must be a tuple containing 2 integers representing (ik, lk).\n"
+    "\n"
+    " * fcp_istorek      - Integer value.\n"
+    "\n"
+    " * fcp_metablocksize- Integer value.\n"
+    "\n"
+    "Besides the above members, there are a few methods that also are of interest and further information about these can"
+    "be found by printing the doc about each invidivdual function.\n"
+    " * close()\n"
+    " * load()\n"
+    " * save()\n"
+    );
+/*@} End of Documentation about the instance */
+
 /*@{ Type definitions */
 PyTypeObject PyRaveIO_Type =
 {
@@ -487,7 +553,7 @@ PyTypeObject PyRaveIO_Type =
   (setattrofunc)_pyraveio_setattro, /*tp_setattro*/
   0,                            /*tp_as_buffer*/
   Py_TPFLAGS_DEFAULT, /*tp_flags*/
-  0,                            /*tp_doc*/
+  _pyraveio_doc,                /*tp_doc*/
   (traverseproc)0,              /*tp_traverse*/
   (inquiry)0,                   /*tp_clear*/
   0,                            /*tp_richcompare*/
@@ -512,12 +578,17 @@ PyTypeObject PyRaveIO_Type =
 
 /*@{ Module setup */
 static PyMethodDef functions[] = {
-  {"new", (PyCFunction)_pyraveio_new, 1},
-  {"open", (PyCFunction)_pyraveio_open, 1},
-  {"supports", (PyCFunction)_pyraveio_supports, 1},
+  {"new", (PyCFunction)_pyraveio_new, 1, "Creates a new instance of the RaveIOCore object\nUsage: a=_raveio.new()"},
+  {"open", (PyCFunction)_pyraveio_open, 1, "Opens a file that is supported by raveio.\nCurrently H5 ODIM and BUFR ODIM (if built) are supported.\nUsage: a=_raveio.open(<filename>)"},
+  {"supports", (PyCFunction)_pyraveio_supports, 1,
+      "Returns if the raveio supports the requested file format.\n"
+      "Currently supported formats are:\n"
+      "  raveio.RaveIO_ODIM_FileFormat_HDF5\n"
+      " _raveio.RaveIO_ODIM_FileFormat_BUFR - if built with support\n"
+      " _raveio.RaveIO_FileFormat_CF        - if built with support and currently only supports writing"
+      },
   {NULL,NULL} /*Sentinel*/
 };
-
 /**
  * Adds constants to the dictionary (probably the modules dictionary).
  * @param[in] dictionary - the dictionary the long should be added to
@@ -534,6 +605,47 @@ static void add_long_constant(PyObject* dictionary, const char* name, long value
   Py_XDECREF(tmp);
 }
 
+PyDoc_STRVAR(_pyraveio_module_doc,
+    "This class provides functionality for reading and writing files supported by RAVE.\n"
+    "\n"
+    "There are few different ways to handle files and also a couple of different protocols that are supported all depending on\n"
+    "how rave was configured and built.\n"
+    "Currently, there are 3 different formats supported. ODIM H5, BUFR H5 (reading) and CF Conventions (NetCDF) (writing). This build supports\n"
+    "ODIM H5 2.2\n"
+#ifdef RAVE_BUFR_SUPPORTED
+    "ODIM BUFR for reading\n"
+#endif
+#ifdef RAVE_CF_SUPPORTED
+    "CF Conventions (NetCDF) for writing\n"
+#endif
+    "\n"
+    "This documentation will only provide information about ODIM H5 since this is the format mostly used within rave.\n"
+    "\n"
+    "To read a hdf-file:\n"
+    ">>> import _raveio\n"
+    ">>> obj = _raveio.open(\"seang_202001100000.h5\")\n"
+    "\n"
+    "After you have opened the file, you maybe want to know what type of product you have read\n"
+    "Either you compare the objects format_type with _raveio:s list of constants:\n"
+    " * Rave_ObjectType_PVOL\n"
+    " * Rave_ObjectType_CVOL\n"
+    " * Rave_ObjectType_SCAN\n"
+    " * Rave_ObjectType_RAY\n"
+    " * Rave_ObjectType_AZIM\n"
+    " * Rave_ObjectType_IMAGE\n"
+    " * Rave_ObjectType_COMP\n"
+    " * Rave_ObjectType_XSEC\n"
+    " * Rave_ObjectType_VP\n"
+    " * Rave_ObjectType_PIC\n"
+    "\n"
+    "Like\n"
+    ">>> if obj.format_type == _raveio.Rave_ObjectType_PVOL:\n"
+    "and so on\n"
+    "\n"
+    "There are also the possibility to check odim version and file format and compare these against predefined constants and can be found by typing\n"
+    ">>> dir(_raveio)\n"
+    );
+
 MOD_INIT(_raveio)
 {
   PyObject *module=NULL,*dictionary=NULL;
@@ -544,7 +656,7 @@ MOD_INIT(_raveio)
 
   MOD_INIT_VERIFY_TYPE_READY(&PyRaveIO_Type);
 
-  MOD_INIT_DEF(module, "_raveio", NULL/*doc*/, functions);
+  MOD_INIT_DEF(module, "_raveio", _pyraveio_module_doc, functions);
   if (module == NULL) {
     return MOD_INIT_ERROR;
   }
@@ -567,10 +679,12 @@ MOD_INIT(_raveio)
   add_long_constant(dictionary, "RaveIO_ODIM_Version_UNDEFINED", RaveIO_ODIM_Version_UNDEFINED);
   add_long_constant(dictionary, "RaveIO_ODIM_Version_2_0", RaveIO_ODIM_Version_2_0);
   add_long_constant(dictionary, "RaveIO_ODIM_Version_2_1", RaveIO_ODIM_Version_2_1);
+  add_long_constant(dictionary, "RaveIO_ODIM_Version_2_2", RaveIO_ODIM_Version_2_2);
 
   add_long_constant(dictionary, "RaveIO_ODIM_H5rad_Version_UNDEFINED", RaveIO_ODIM_H5rad_Version_UNDEFINED);
   add_long_constant(dictionary, "RaveIO_ODIM_H5rad_Version_2_0", RaveIO_ODIM_H5rad_Version_2_0);
   add_long_constant(dictionary, "RaveIO_ODIM_H5rad_Version_2_1", RaveIO_ODIM_H5rad_Version_2_1);
+  add_long_constant(dictionary, "RaveIO_ODIM_H5rad_Version_2_2", RaveIO_ODIM_H5rad_Version_2_2);
 
   add_long_constant(dictionary, "RaveIO_ODIM_FileFormat_UNDEFINED", RaveIO_ODIM_FileFormat_UNDEFINED);
   add_long_constant(dictionary, "RaveIO_ODIM_FileFormat_HDF5", RaveIO_ODIM_FileFormat_HDF5);
