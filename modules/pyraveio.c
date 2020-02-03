@@ -274,12 +274,13 @@ static struct PyMethodDef _pyraveio_methods[] =
   {"fcp_metablocksize", NULL},
   {"file_format", NULL},
   {"bufr_table_dir", NULL},
-  {"close", (PyCFunction) _pyraveio_close, 1, "close()\n"
-                                              "  Resets this instance and closes the opened object.\n"},
-  {"load", (PyCFunction) _pyraveio_load, 1,   "load()\n"
-                                              " Atempts to load the file that is defined by filename\n"},
-  {"save", (PyCFunction) _pyraveio_save, 1,   "save([filename])\n"
-                                              " Saves the current object (with current settings). filename is optional. If not specified, the objects filename is used\n"},
+  {"close", (PyCFunction) _pyraveio_close, 1, "close()\n\n"
+                                              "Resets this instance and closes the opened object.\n"},
+  {"load", (PyCFunction) _pyraveio_load, 1,   "load()\n\n"
+                                              "Atempts to load the file that is defined by filename\n"},
+  {"save", (PyCFunction) _pyraveio_save, 1,   "save([filename)]\n\n"
+                                              "Saves the current object (with current settings).\n\n"
+                                              "filename - is optional. If not specified, the objects filename is used\n"},
   {NULL, NULL } /* sentinel */
 };
 
@@ -527,7 +528,7 @@ PyDoc_STRVAR(_pyraveio_doc,
     " * load()\n"
     " * save()\n"
     );
-/*@} End of Documentation about the instance */
+/*@} End of Documentation about the type */
 
 /*@{ Type definitions */
 PyTypeObject PyRaveIO_Type =
@@ -578,15 +579,20 @@ PyTypeObject PyRaveIO_Type =
 
 /*@{ Module setup */
 static PyMethodDef functions[] = {
-  {"new", (PyCFunction)_pyraveio_new, 1, "Creates a new instance of the RaveIOCore object\nUsage: a=_raveio.new()"},
-  {"open", (PyCFunction)_pyraveio_open, 1, "Opens a file that is supported by raveio.\nCurrently H5 ODIM and BUFR ODIM (if built) are supported.\nUsage: a=_raveio.open(<filename>)"},
+  {"new", (PyCFunction)_pyraveio_new, 1,
+      "new() -> new instance of the RaveIOCore object\n\n"
+      "Creates a new instance of the RaveIOCore object"},
+  {"open", (PyCFunction)_pyraveio_open, 1,
+      "open(filename) -> a RaveIOCore instance with a loaded object.\n\n"
+      "Opens a file that is supported by raveio and loads the structure.\n\n"
+      "filename - a filename pointing to a file supported by raveio."},
   {"supports", (PyCFunction)_pyraveio_supports, 1,
-      "Returns if the raveio supports the requested file format.\n"
-      "Currently supported formats are:\n"
+      "supports(format) -> True or False depending if format supported or not\n\n"
+      "Returns if the raveio supports the requested file format.\n\n"
+      "format - The requested format, can be one of:\n"
       "  raveio.RaveIO_ODIM_FileFormat_HDF5\n"
       " _raveio.RaveIO_ODIM_FileFormat_BUFR - if built with support\n"
-      " _raveio.RaveIO_FileFormat_CF        - if built with support and currently only supports writing"
-      },
+      " _raveio.RaveIO_FileFormat_CF        - if built with support and currently only supports writing"},
   {NULL,NULL} /*Sentinel*/
 };
 /**

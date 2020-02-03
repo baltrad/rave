@@ -228,10 +228,24 @@ static struct PyMethodDef _pyacrr_methods[] =
   {"nodata", NULL},
   {"undetect", NULL},
   {"quality_field_name", NULL},
-  {"isInitialized", (PyCFunction) _pyacrr_isInitialized, 1},
-  {"getQuantity", (PyCFunction) _pyacrr_getQuantity, 1},
-  {"sum", (PyCFunction) _pyacrr_sum, 1},
-  {"accumulate", (PyCFunction) _pyacrr_accumulate, 1},
+  {"isInitialized", (PyCFunction) _pyacrr_isInitialized, 1,
+    "isInitialized()\n\n"
+    "Checks if this instance has been initialized. Will occur at first call to sum(..)"},
+  {"getQuantity", (PyCFunction) _pyacrr_getQuantity, 1,
+    "getQuantity() -> quantity\n\n"
+    "Returns the quantity that was set to be used during initialization."},
+  {"sum", (PyCFunction) _pyacrr_sum, 1,
+    "sum(pyo, zr_a, zr_b)\n\n"
+    "Adds a cartesian parameter to the acrr accumulation.\n\n"
+    "pyo  - is the cartesian parameter. If acrr instance is initialized, quantity, xsize & ysize must be same as previous calls to sum.\n"
+    "zr_a - ZR A constant\n"
+    "zr_b - ZR b constant"},
+  {"accumulate", (PyCFunction) _pyacrr_accumulate, 1,
+    "accumulate(accept, N, hours) -> resulting cartesian parameter\n\n"
+    "Calculates the resulting product from previous calls to sum.\n\n"
+    "accept - the number of many nodata-pixels that are allowed in order for the pixel to be used\n"
+    "N      - Number of files that we expect to be used. Which might be greater or equal to number of calls to sum\n"
+    "hours  - Number of hours we are covering.\n"},
   {NULL, NULL } /* sentinel */
 };
 
@@ -300,6 +314,47 @@ done:
 
 /*@} End of Acrr */
 
+/*@{ Documentation about the type */
+PyDoc_STRVAR(_pyacrr_doc,
+    "This instance provides functionality for generating accumulated precipitation products.\n"
+    "\n"
+    "Usage is based on the user providing cartesian parameters that should be of same quantity and covered area.\n"
+    "There is no check verifying that extent is same, only checks are x&y-size and quantity.\n"
+    "Assuming that you have a number of catesian products, the usage is straight forward.\n"
+    ">>> import _acrr\n"
+    ">>> acrr = _acrr.new()\n"
+    ">>> acrr.nodata = -1.0\n"
+    ">>> acrr.undetect = 0.0\n"
+    ">>> zr_a = 200.0\n"
+    ">>> zr_b = 1.6\n"
+    ">>> accept = 0 #accept is the required limit for how many nodata-pixels that are allowed in order for the pixel to be used\n"
+    ">>> N = 5 # Note, we have 5 files when covering 1 hour with 15-minute intervals\n"
+    ">>> hours = 1 # One hour\n"
+    ">>> acrr.quality_field_name = \"se.smhi.composite.distance.radar\" # name of quality field\n"
+    ">>> for f in [\"gmap_202001010000.h5\", \"gmap_202001010015.h5\", \"gmap_202001010030.h5\", \"gmap_202001010045.h5\", \"gmap_202001010100.h5\"]:\n"
+    ">>>   acrr.sum(_raveio.open(f).object.getParameter(\"DBZH\"), zr_a, zr_b)\n"
+    ">>> result = acrr.accumulate(accept, N, hours)\n"
+    "\n"
+    "There is obviously more to the above example. For example, each parameter must contain required quality field as defined in acrr.quality_field_name\n"
+    "and you need to verify that the opened files are in fact compoisites so that you don't have to convert them first.\n"
+    "\n"
+    "As can seen in the example, there are 3 members used.\n"
+    " * nodata             - The nodata value that should be set in the resulting product. Default value is 1.0.\n"
+    " * undetect           - The undetect value that should be set in the resulting product. Default value is 0.0.\n"
+    " * quality_field_name - The distance (quality) field that should be used when processing the cartesian parameters.\n"
+    "\n"
+    "Then, there are a few methods that are provided. More information about these can be found by printing the doc about them.\n"
+    " * isInitialized      - When first call to sum(...) is performed, the acrr instance is initialized with basic information.\n"
+    "                        after that, it's not possible to invoke sum with a product with different x/y-size and quality field.\n"
+    "\n"
+    " * getQuantity        - Set during initialization.\n"
+    "\n"
+    " * sum                - Sums up the provided cartesian parameter. First call to sum in a sequence will initialize the acrr structure.\n"
+    "\n"
+    " * accumulate         - Calculates the resulting product from previous calls to sum.\n"
+    );
+/*@} End of Documentation about the type */
+
 /*@{ Type definitions */
 PyTypeObject PyAcrr_Type =
 {
@@ -324,7 +379,7 @@ PyTypeObject PyAcrr_Type =
   (setattrofunc)_pyacrr_setattro, /*tp_setattro*/
   0,                            /*tp_as_buffer*/
   Py_TPFLAGS_DEFAULT, /*tp_flags*/
-  0,                            /*tp_doc*/
+  _pyacrr_doc,                  /*tp_doc*/
   (traverseproc)0,              /*tp_traverse*/
   (inquiry)0,                   /*tp_clear*/
   0,                            /*tp_richcompare*/
@@ -349,7 +404,9 @@ PyTypeObject PyAcrr_Type =
 
 /*@{ Module setup */
 static PyMethodDef functions[] = {
-  {"new", (PyCFunction)_pyacrr_new, 1},
+  {"new", (PyCFunction)_pyacrr_new, 1,
+      "new() -> new instance of the AcrrCore object\n\n"
+      "Creates a new instance of the AcrrCore object"},
   {NULL,NULL} /*Sentinel*/
 };
 
@@ -363,7 +420,7 @@ MOD_INIT(_acrr)
 
   MOD_INIT_VERIFY_TYPE_READY(&PyAcrr_Type);
 
-  MOD_INIT_DEF(module, "_acrr", NULL/*doc*/, functions);
+  MOD_INIT_DEF(module, "_acrr", _pyacrr_doc, functions);
   if (module == NULL) {
     return MOD_INIT_ERROR;
   }
