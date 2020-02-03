@@ -358,13 +358,33 @@ static PyObject* _pyarearegistry_load(PyObject* self, PyObject* args)
 static struct PyMethodDef _pyarearegistry_methods[] =
 {
   {"pregistry", NULL},
-  {"add", (PyCFunction) _pyarearegistry_add, 1},
-  {"size", (PyCFunction) _pyarearegistry_size, 1},
-  {"get", (PyCFunction) _pyarearegistry_get, 1},
-  {"getByName", (PyCFunction) _pyarearegistry_getByName, 1},
-  {"remove", (PyCFunction) _pyarearegistry_remove, 1},
-  {"removeByName", (PyCFunction) _pyarearegistry_removeByName, 1},
-  {"write", (PyCFunction)_pyarearegistry_write, 1},
+  {"add", (PyCFunction) _pyarearegistry_add, 1,
+       "add(area)\n\n"
+       "Adds an area definition of type AreaCore to the registry\n\n"
+       "area  - The area definition of type AreaCore."},
+  {"size", (PyCFunction) _pyarearegistry_size, 1,
+       "size() -> integer with number of area definitions\n\n"
+       "Returns the number of area definitions within the area registry."},
+  {"get", (PyCFunction) _pyarearegistry_get, 1,
+       "get(i) -> AreaCore\n\n"
+       "Returns the area definition at position i in the registry.\n\n"
+       "i - index in the registry >= 0 and < size()."},
+  {"getByName", (PyCFunction) _pyarearegistry_getByName, 1,
+       "getByName(name) -> AreaCore\n\n"
+       "Returns the area definition with the specified name.\n\n"
+       "name - the name of the area definition"},
+  {"remove", (PyCFunction) _pyarearegistry_remove, 1,
+       "remove(i)\n\n"
+       "Removes the area definition at specified index.\n\n"
+       "i - index in the registry >= 0 and < size()."},
+  {"removeByName", (PyCFunction) _pyarearegistry_removeByName, 1,
+       "removeByName(name)\n\n"
+       "Removes the area definition with the specified name.\n\n"
+       "name - the name of the area definition to remove."},
+  {"write", (PyCFunction)_pyarearegistry_write, 1,
+       "write(filename)\n\n"
+       "Writes the area registry to the xml file as specified by filename.\n\n"
+       "filename - path to the place where the xml area registry file should be stored"},
   {NULL, NULL } /* sentinel */
 };
 
@@ -410,8 +430,21 @@ static int _pyarearegistry_setattro(PyAreaRegistry* self, PyObject* name, PyObje
 done:
   return result;
 }
-
 /*@} End of AreaRegistry */
+
+/*@{ Documentation about the type */
+PyDoc_STRVAR(_pyarearegistry_type_doc,
+    "The area registry provides the user with area definitions that are usable when for example creating cartesian products.\n"
+    "\n"
+    "After the registry has been created, you are able to add, remove and get area definitions as well as writing to the registry file.\n"
+    "You are also able to change the projection registry to use by changing the member variable:\n"
+    " * pregistry    - The projection registry of type ProjectionRegistryCore\n\n"
+    "A simple example on how this area registry can be used is:\n"
+    " import _arearegistry, _projectionregistry\n"
+    " reg = _arearegistry.load(\"area_regitry.xml\", _projectionregistry.load(\"projection_registry.xml\"))\n"
+    " area = reg.getByName(\"swegmaps_2000\")"
+    );
+/*@} End of Documentation about the type */
 
 /*@{ Type definitions */
 PyTypeObject PyAreaRegistry_Type =
@@ -437,7 +470,7 @@ PyTypeObject PyAreaRegistry_Type =
   (setattrofunc)_pyarearegistry_setattro, /*tp_setattro*/
   0,                            /*tp_as_buffer*/
   Py_TPFLAGS_DEFAULT, /*tp_flags*/
-  0,                            /*tp_doc*/
+  _pyarearegistry_type_doc,     /*tp_doc*/
   (traverseproc)0,              /*tp_traverse*/
   (inquiry)0,                   /*tp_clear*/
   0,                            /*tp_richcompare*/
@@ -462,10 +495,47 @@ PyTypeObject PyAreaRegistry_Type =
 
 /*@{ Module setup */
 static PyMethodDef functions[] = {
-  {"new", (PyCFunction)_pyarearegistry_new, 1},
-  {"load", (PyCFunction)_pyarearegistry_load, 1},
+  {"new", (PyCFunction)_pyarearegistry_new, 1,
+      "new() -> new instance of the AreaRegistryCore object\n\n"
+      "Creates a new instance of the AreaRegistryCore object"},
+  {"load", (PyCFunction)_pyarearegistry_load, 1,
+      "load(filename [,projregistry]) -> area registry\n\n"
+      "Loads an area registry xml file. \n\n"
+      "filename     - the path to the file containing the area registry xml definition\n"
+      "projregistry - the projection registry is optional but will be helpful if getting areas from the registry\n\n"
+      "The format of the area registry file should be in the format:\n"
+      "<?xml version='1.0' encoding='iso-8859-1'?>\n"
+      "<areas>\n"
+      "  <area id=\"nrd2km\">\n"
+      "    <description>Nordic, all radars, 2 km</description>\n"
+      "    <areadef>\n"
+      "      <arg id=\"pcs\">ps14e60n</arg>\n"
+      "      <arg id=\"xsize\" type=\"int\">848</arg>\n"
+      "      <arg id=\"ysize\" type=\"int\">1104</arg>\n"
+      "      <arg id=\"scale\" type=\"float\">2000</arg>\n"
+      "      <!-- can also be xscale / yscale -->\n"
+      "      <arg id=\"extent\" type=\"sequence\">-738816.513333,-3995515.596160,955183.48666699999,-1787515.59616</arg>\n"
+      "    </areadef>\n"
+      "  </area>\n"
+      "  ...\n"
+      "</areas>"
+  },
   {NULL,NULL} /*Sentinel*/
 };
+
+/*@{ Documentation about the module */
+PyDoc_STRVAR(_pyarearegistry_module_doc,
+    "This class provides functionality for managing an area registry. It can also read and write the registry.\n"
+    "\n"
+    "See the load function for information about format of the xml file.\n"
+    "\n"
+    "Usage:\n"
+    " import _arearegistry\n"
+    " reg = _arearegistry.load(\"/tmp/area_registry.xml\", proj_registry)\n"
+    " area = reg.getByName(\"swegmaps_2000\")\n"
+    );
+/*@} End of Documentation about the module */
+
 
 MOD_INIT(_arearegistry)
 {
@@ -476,7 +546,7 @@ MOD_INIT(_arearegistry)
 
   MOD_INIT_VERIFY_TYPE_READY(&PyAreaRegistry_Type);
 
-  MOD_INIT_DEF(module, "_arearegistry", NULL/*doc*/, functions);
+  MOD_INIT_DEF(module, "_arearegistry", _pyarearegistry_module_doc, functions);
   if (module == NULL) {
     return MOD_INIT_ERROR;
   }
