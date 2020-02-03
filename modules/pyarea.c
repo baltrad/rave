@@ -314,6 +314,39 @@ static PyObject* _pyarea_isArea(PyObject* self, PyObject* args)
 }
 /*@} End of Area */
 
+/*@{ Documentation about the type */
+PyDoc_STRVAR(_pyarea_doc,
+    "This class provides functionality for defining an area used in for example cartesian products.\n"
+    "\n"
+    "The area instance is used as a container for a number of attributes that are relevant when defining an area.\n"
+    "Since this instance is used for defining areas it doesn't contain any methods. Instead there are only a number\n"
+    "of members which are:\n\n"
+    " * id            - a string identifying this area definition.\n\n"
+    " * description   - a string description of this area.\n\n"
+    " * xsize         - a integer defining the xsize.\n\n"
+    " * ysize         - a integer defining the ysize.\n\n"
+    " * xscale        - a float defining the xscale in meters.\n\n"
+    " * yscale        - a float defining the yscale in meters.\n\n"
+    " * extent        - a tuple of four floats defining the extent of this area (lower left X, lower left Y, upper right X, upper right Y).\n\n"
+    " * projection    - the projection definition of type ProjectionCore. When setting this, the pcsid will be reset.\n\n"
+    " * pcsid         - the projection id string. When setting this, the projection will be reset.\n\n"
+    "\n"
+    "Usage us quite straight forward when using this class. However, usually, the area registry is used when creating areas.\n"
+    ">>> import _area, _projection, math\n"
+    ">>> a = _area.new()\n"
+    ">>> a.id = \"myid\"\n"
+    ">>> a.description = \"this is an area\"\n"
+    ">>> a.xsize = 100\n"
+    ">>> a.ysize = 100\n"
+    ">>> a.xscale = 1000.0\n"
+    ">>> a.yscale = 1000.0\n"
+    ">>> a.projection = _rave.projection(\"gnom\",\"gnom\",\"+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544\")\n"
+    ">>> xy = a.projection.fwd((12.8544*math.pi/180.0, 56.3675*math.pi/180.0)))\n"
+    ">>> a.extent = (xy[0] - 50*a.xscale, xy[1] - 50*a.yscale, xy[2] + 50*a.xscale, xy[3] + 50*a.yscale)\n"
+    );
+/*@} End of Documentation about the type */
+
+
 /*@{ Type definitions */
 PyTypeObject PyArea_Type =
 {
@@ -338,7 +371,7 @@ PyTypeObject PyArea_Type =
   (setattrofunc)_pyarea_setattro, /*tp_setattro*/
   0,                            /*tp_as_buffer*/
   Py_TPFLAGS_DEFAULT, /*tp_flags*/
-  0,                            /*tp_doc*/
+  _pyarea_doc,                  /*tp_doc*/
   (traverseproc)0,              /*tp_traverse*/
   (inquiry)0,                   /*tp_clear*/
   0,                            /*tp_richcompare*/
@@ -363,8 +396,13 @@ PyTypeObject PyArea_Type =
 
 /*@{ Module setup */
 static PyMethodDef functions[] = {
-  {"new", (PyCFunction)_pyarea_new, 1},
-  {"isArea", (PyCFunction)_pyarea_isArea, 1},
+  {"new", (PyCFunction)_pyarea_new, 1,
+      "new() -> new instance of the AcrrCore object\n\n"
+      "Creates a new instance of the AcrrCore object"},
+  {"isArea", (PyCFunction)_pyarea_isArea, 1,
+      "isArea(obj) -> True if object is an area, otherwise False\n\n"
+      "Checks if the provided object is a python area object or not.\n\n"
+      "obj - the object to check."},
   {NULL,NULL} /*Sentinel*/
 };
 
@@ -378,7 +416,7 @@ MOD_INIT(_area)
 
   MOD_INIT_VERIFY_TYPE_READY(&PyArea_Type);
 
-  MOD_INIT_DEF(module, "_area", NULL/*doc*/, functions);
+  MOD_INIT_DEF(module, "_area", _pyarea_doc, functions);
   if (module == NULL) {
     return MOD_INIT_ERROR;
   }
