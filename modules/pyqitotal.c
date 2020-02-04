@@ -292,12 +292,31 @@ static struct PyMethodDef _pyqitotal_methods[] =
   {"gain", NULL},
   {"offset", NULL},
   {"datatype", NULL},
-  {"setWeight", (PyCFunction) _pyqitotal_setWeight, 1},
-  {"getWeight", (PyCFunction) _pyqitotal_getWeight, 1},
-  {"removeWeight", (PyCFunction) _pyqitotal_removeWeight, 1},
-  {"multiplicative", (PyCFunction) _pyqitotal_multiplicative, 1},
-  {"additive", (PyCFunction) _pyqitotal_additive, 1},
-  {"minimum", (PyCFunction) _pyqitotal_minimum, 1},
+  {"setWeight", (PyCFunction) _pyqitotal_setWeight, 1,
+       "setWeight(howtask, weight)\n\n"
+       "Sets the weight for the specified how/task identifier.\n\n"
+       "howtask - a string identifier for the how/task, for example: se.smhi.detector.beamblockage\n"
+       "weight  - a weight for the above howtask"},
+  {"getWeight", (PyCFunction) _pyqitotal_getWeight, 1,
+       "getWeight(howtask) -> the weight for the how/task\n\n"
+       "Returns the weight for the specified how/task identifier.\n\n"
+       "howtask - a string identifier for the how/task, for example: se.smhi.detector.beamblockage"},
+  {"removeWeight", (PyCFunction) _pyqitotal_removeWeight, 1,
+       "removeWeight(howtask)\n\n"
+       "Removes the weight setting for the specified how/task identifier.\n\n"
+       "howtask - a string identifier for the how/task, for example: se.smhi.detector.beamblockage"},
+  {"multiplicative", (PyCFunction) _pyqitotal_multiplicative, 1,
+       "multiplicative(listOfFields) -> RaveFieldCore\n\n"
+       "Creates a QI total field according to the multiplicative approach.\n\n"
+       "listOfFields - a list of rave quality fields (RaveFieldCore) that should be used for processing."},
+  {"additive", (PyCFunction) _pyqitotal_additive, 1,
+      "additive(listOfFields) -> RaveFieldCore\n\n"
+      "Creates a QI total field according to the additive approach.\n\n"
+      "listOfFields - a list of rave quality fields (RaveFieldCore) that should be used for processing."},
+  {"minimum", (PyCFunction) _pyqitotal_minimum, 1,
+      "minimum(listOfFields) -> RaveFieldCore\n\n"
+      "Creates a QI total field according to the minimum approach.\n\n"
+      "listOfFields - a list of rave quality fields (RaveFieldCore) that should be used for processing."},
   {NULL, NULL } /* sentinel */
 };
 
@@ -369,6 +388,34 @@ done:
 
 /*@} End of QI total */
 
+/*@{ Documentation about the type */
+PyDoc_STRVAR(_pyqitotal_type_doc,
+    "Implementation of the QI total algorithms.\n"
+    "\n"
+    "This module is used for creating a quality index from a number of quality fields. Currently the 3 variants "
+    "additive, multiplicative and minimum is supported.\n"
+    "The calculations are performed in such a way that each quality field how/task name is assigned a weight and then "
+    "the fields are evaluated according to the variant used."
+    "\n"
+    "There member variables within an instance are:\n"
+    " * gain     - the gain that should be used in the resulting field.\n"
+    " * offset   - the offset that should be used in the resulting field.\n"
+    " * datatype - the datatype that should be used in the resulting field. See _rave for a list of available types.\n"
+    "\n"
+    "Assuming that you have 3 different quality fields you could create a QI total field like this:\n"
+    " import _raveio, _qitotal\n"
+    " qitotal = _qitotal.new()\n"
+    " qitotal.setWeight(\"fi.fmi.ropo.detector.classification\", 1.0)\n"
+    " qitotal.setWeight(\"se.smhi.detector.beamblockage\", 1.0)\n"
+    " qitotal.setWeight(\"pl.imgw.radvolqc.broad\", 1.0)\n"
+    "\n"
+    " obj = _raveio.open(\"testscan.h5\").object.\n"
+    " result = qitotal.minimum([obj.findQualityFieldByHowTask(\"fi.fmi.ropo.detector.classification\"),\n"
+    "                           obj.findQualityFieldByHowTask(\"se.smhi.detector.beamblockage\"),\n"
+    "                           obj.findQualityFieldByHowTask(\"pl.imgw.radvolqc.broad\")])\n"
+    );
+/*@} End of Documentation about the type */
+
 /*@{ Type definitions */
 PyTypeObject PyQITotal_Type =
 {
@@ -393,7 +440,7 @@ PyTypeObject PyQITotal_Type =
   (setattrofunc)_pyqitotal_setattro, /*tp_setattro*/
   0,                            /*tp_as_buffer*/
   Py_TPFLAGS_DEFAULT, /*tp_flags*/
-  0,                            /*tp_doc*/
+  _pyqitotal_type_doc,          /*tp_doc*/
   (traverseproc)0,              /*tp_traverse*/
   (inquiry)0,                   /*tp_clear*/
   0,                            /*tp_richcompare*/
@@ -418,7 +465,9 @@ PyTypeObject PyQITotal_Type =
 
 /*@{ Module setup */
 static PyMethodDef functions[] = {
-  {"new", (PyCFunction)_pyqitotal_new, 1},
+  {"new", (PyCFunction)_pyqitotal_new, 1,
+      "new() -> new instance of the QITotalCore object\n\n"
+      "Creates a new instance of the QITotalCore object"},
   {NULL,NULL} /*Sentinel*/
 };
 
@@ -431,7 +480,7 @@ MOD_INIT(_qitotal)
 
   MOD_INIT_VERIFY_TYPE_READY(&PyQITotal_Type);
 
-  MOD_INIT_DEF(module, "_qitotal", NULL/*doc*/, functions);
+  MOD_INIT_DEF(module, "_qitotal", _pyqitotal_type_doc, functions);
   if (module == NULL) {
     return MOD_INIT_ERROR;
   }
