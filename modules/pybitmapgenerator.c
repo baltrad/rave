@@ -218,8 +218,16 @@ done:
  */
 static struct PyMethodDef _pybitmapgenerator_methods[] =
 {
-  {"create_surrounding", (PyCFunction) _pybitmapgenerator_create_surrounding, 1},
-  {"create_intersect", (PyCFunction) _pybitmapgenerator_create_intersect, 1},
+  {"create_surrounding", (PyCFunction) _pybitmapgenerator_create_surrounding, 1,
+      "create_surrounding(cartesian_param) -> RaveFieldCore\n\n"
+      "Returns the surrounding boundaries for the included radars. Will base calculation on data/undetect & nodata.\n\n"
+      "cartesian_param - the cartesian parameter that should be used for generating the border."},
+  {"create_intersect", (PyCFunction) _pybitmapgenerator_create_intersect, 1,
+      "create_intersect(cartesian_param, howtask) -> RaveFieldCore\n\n"
+      "Returns the intersect between included radras. Requires a quality field with included radar indexes.\n"
+	  "NOTE: This algorithm will not work unless the composite has been created by height above sea or nearest radar.\n\n"
+      " cartesian_param - the cartesian parameter that should be used for generating the border.\n"
+      " howtask         - name of the how/task containing the radar index."},
   {NULL, NULL } /* sentinel */
 };
 
@@ -241,6 +249,24 @@ static int _pybitmapgenerator_setattro(PyBitmapGenerator* self, PyObject* name, 
   return result;
 }
 /*@} End of Bitmap generator */
+
+
+/*@{ Documentation about the module */
+PyDoc_STRVAR(_pybitmapgenerator_module_doc,
+    "This class provides creating a bitmap defining the outer border of the involved radars within a composite. It can also add intersections between radars "
+    "but in that case there must be a radar index quality field added to figure out where the included radar change are locateds. Note, in some "
+    "situations it might not be practical to create the interesect if the composite has been made with an algorithm that doesn't take into account height "
+    " or range.\n"
+    "\n"
+    "Usage:\n"
+    " import _bitmapgenerator\n"
+    " generator = _bitmapgenerator.new()\n"
+	" field = generator.create_intersect(cartesian.getParameter(\"DBZH\"), \"se.smhi.composite.index.radar\")\n"
+	" newparam = cartesian.createParameter(\"BRDR\", _rave.RaveDataType_UCHAR)\n"
+	" newparam.setData(field.getData())\n"
+    );
+/*@} End of Documentation about the module */
+
 
 /*@{ Type definitions */
 PyTypeObject PyBitmapGenerator_Type =
@@ -266,7 +292,7 @@ PyTypeObject PyBitmapGenerator_Type =
   (setattrofunc)_pybitmapgenerator_setattro, /*tp_setattro*/
   0,                            /*tp_as_buffer*/
   Py_TPFLAGS_DEFAULT, /*tp_flags*/
-  0,                            /*tp_doc*/
+  _pybitmapgenerator_module_doc,/*tp_doc*/
   (traverseproc)0,              /*tp_traverse*/
   (inquiry)0,                   /*tp_clear*/
   0,                            /*tp_richcompare*/
@@ -291,7 +317,9 @@ PyTypeObject PyBitmapGenerator_Type =
 
 /*@{ Module setup */
 static PyMethodDef functions[] = {
-  {"new", (PyCFunction)_pybitmapgenerator_new, 1},
+  {"new", (PyCFunction)_pybitmapgenerator_new, 1,
+	  "new() -> new instance of the BitmapGeneratorCore object\n\n"
+	  "Creates a new instance of the BitmapGeneratorCore object"},
   {NULL,NULL} /*Sentinel*/
 };
 
@@ -304,7 +332,7 @@ MOD_INIT(_bitmapgenerator)
 
   MOD_INIT_VERIFY_TYPE_READY(&PyBitmapGenerator_Type);
 
-  MOD_INIT_DEF(module, "_bitmapgenerator", NULL/*doc*/, functions);
+  MOD_INIT_DEF(module, "_bitmapgenerator", _pybitmapgenerator_module_doc, functions);
   if (module == NULL) {
     return MOD_INIT_ERROR;
   }
