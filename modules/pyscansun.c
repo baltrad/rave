@@ -137,7 +137,7 @@ static PyObject* _scansunFromObject_func(PyObject* self, PyObject* args)
 
 	if (!scansunFromObject(object, ot, list, &source)) {
 		RAVE_OBJECT_RELEASE(list);
-		return NULL;
+		raiseException_returnNULL(PyExc_RuntimeError, "scansunFromObject could not process file");
 	}
 
 	rlist = PyList_New(0);

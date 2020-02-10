@@ -615,7 +615,6 @@ int processScan(PolarScan_t* scan, SCANMETA* meta, RaveList_t* list) {
   int ret = 0;
 
   /* Quantities are queried in order of priority */
-
   if (PolarScan_hasParameter(scan, "TH")) strcpy(meta->quant1, "TH");
   else if (PolarScan_hasParameter(scan, "DBZH")) strcpy(meta->quant1, "DBZH");
   else if (PolarScan_hasParameter(scan, "TV")) strcpy(meta->quant1, "TV");
@@ -637,8 +636,9 @@ int processScan(PolarScan_t* scan, SCANMETA* meta, RaveList_t* list) {
   else meta->Zdr = ZdrType_None;
 
   if (strcmp(meta->quant1, "") != 0) {
-	ret = processData(scan, meta, list);
+	  ret = processData(scan, meta, list);
   }
+
   return ret;
 }
 
