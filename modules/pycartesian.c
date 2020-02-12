@@ -1502,6 +1502,48 @@ static PyObject* _pycartesian_isCartesian(PyObject* self, PyObject* args)
 
 /*@} End of Cartesian products */
 
+/*@{ Documentation about the type */
+PyDoc_STRVAR(_pycartesian_type_doc,
+    "The cartesian product represents a cartesian object in one or another way. There are several member attributes "
+    "associated with a cartesian product as well a number of child objects like parameters, quality fields and more.\n"
+    "Since a lot of RAVE has been developed with ODIM H5 in mind, it is also possible to add arbitrary attributes in "
+    "various groups, e.g. c.addAttribute(\"how/this\", 1.2) and so on.\n\n"
+    "A list of avilable member attributes are described below. For information about member functions, check each functions doc.\n"
+    "\n"
+    "time             - Time this cartesian product should represent as a string with format HHmmSS\n"
+    "date             - Date this cartesian product should represent as a string in the format YYYYMMDD\n"
+    "objectType       - The object type as defined in ODIM H5 this cartesian product should be defined as. Can be _rave.Rave_ObjectType_IMAGE or _raveRave_ObjectType_COMP\n"
+    "product          - The product this cartesian product should represent as defined in ODIM H5. Can be for example _rave.Rave_ProductType_PPI or _rave.Rave_ProductType_PCAPPI\n"
+    "source           - The source for this product. Defined as what/source in ODIM H5. I.e. a comma separated list of various identifiers. For example. NOD:seang,WMO:1234,....\n"
+    "xsize            - The xsize of the area represented. ReadOnly, initialization occurs with for example the init-function.\n"
+    "ysize            - The ysize of the area represented. ReadOnly, initialization occurs with for example the init-function.\n"
+    "xscale           - The scale in meters in x-direction.\n"
+    "yscale           - The scale in meters in y-direction.\n"
+    "areaextent       - A tuple of four representing the outer boundaries of this cartesian product. Defined as (lower left X, lower left Y, upper right X, upper right Y).\n"
+    "projection       - The projection object of type ProjectionCore that defines what projection that this cartesian product is defined with.\n"
+    "starttime        - Start time for this product as a string with format HHmmSS.\n"
+    "startdate        - Start date for this product as a string with format YYYYMMDD.\n"
+    "endtime          - End time for this product as a string with format HHmmSS.\n"
+    "enddate          - End date for this product as a string with format YYYYMMDD.\n"
+    "defaultParameter - Since a cartesian product doesn't contain data by itself and instead contains a number of parameters like TH, DBZH, .... This setting allows the user to work directly with a parameter through the cartesian API.\n"
+    "\n"
+    "Usage:\n"
+    " import _arearegistry, _projectionregistry\n"
+    " reg = _arearegistry.load(\"area_registry.xml\", \n"
+    "                         _projectionregistry.load(\"projection_registry.xml\"))\n"
+    " c.init(reg.getByName(\"swegmaps_2000\"))\n"
+    " th   = c.createParameter(\"TH\", _rave.RaveDataType_UCHAR)\n"
+    " dbzh = c.createParameter(\"DBZH\", _rave.RaveDataType_UCHAR)\n"
+    " c.defaultParameter = \"TH\"\n"
+    " c.setValue((2,2), 1.0) # Sets 1.0 in parameter TH\n"
+    " if th.getValue((2,2))[1] == c.getValue((2,2))[1]:\n"
+    "   print(\"TH is same as cartesian\") # Will be written \n"
+    " if th.getValue((2,2))[1] == c.getValue((2,2))[1]:\n"
+    "   print(\"DBZH is same as cartesian\")  # Will not be written \n"
+    );
+/*@} End of Documentation about the type */
+
+
 /*@{ Type definitions */
 PyTypeObject PyCartesian_Type =
 {
@@ -1526,7 +1568,7 @@ PyTypeObject PyCartesian_Type =
   (setattrofunc)_pycartesian_setattro, /*tp_setattro*/
   0,                            /*tp_as_buffer*/
   Py_TPFLAGS_DEFAULT, /*tp_flags*/
-  0,                            /*tp_doc*/
+  _pycartesian_type_doc,        /*tp_doc*/
   (traverseproc)0,              /*tp_traverse*/
   (inquiry)0,                   /*tp_clear*/
   0,                            /*tp_richcompare*/
@@ -1549,12 +1591,32 @@ PyTypeObject PyCartesian_Type =
 };
 /*@} End of Type definitions */
 
+
+
 /*@{ Module setup */
 static PyMethodDef functions[] = {
-  {"new", (PyCFunction)_pycartesian_new, 1},
-  {"isCartesian", (PyCFunction)_pycartesian_isCartesian, 1},
+  {"new", (PyCFunction)_pycartesian_new, 1,
+    "new() -> new instance of the CartesianCore object\n\n"
+    "Creates a new instance of the CartesianCore object"
+  },
+  {"isCartesian", (PyCFunction)_pycartesian_isCartesian, 1,
+    "isCartesian(object) -> boolean\n\n"
+    "Checks if provided object is of CartesianCore type or not.\n\n"
+    "object - the object to check"
+  },
   {NULL,NULL} /*Sentinel*/
 };
+
+/*@{ Documentation about the module */
+PyDoc_STRVAR(_pycartesian_module_doc,
+    "Represents a cartesian product\n"
+    "\n"
+    "Usage:\n"
+    " import _cartesian\n"
+    " c = _cartesian.new()\n"
+    " c.init(area) # If area exists, then use it to initialize the cartesian product\n"
+    );
+/*@} End of Documentation about the module */
 
 MOD_INIT(_cartesian)
 {
@@ -1566,7 +1628,7 @@ MOD_INIT(_cartesian)
 
   MOD_INIT_VERIFY_TYPE_READY(&PyCartesian_Type);
 
-  MOD_INIT_DEF(module, "_cartesian", NULL/*doc*/, functions);
+  MOD_INIT_DEF(module, "_cartesian", _pycartesian_module_doc, functions);
   if (module == NULL) {
     return MOD_INIT_ERROR;
   }
