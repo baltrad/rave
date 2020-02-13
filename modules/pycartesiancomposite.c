@@ -251,10 +251,25 @@ static struct PyMethodDef _pycartesiancomposite_methods[] =
   {"undetect", NULL},
   {"method", NULL},
   {"distance_field", NULL},
-  {"add", (PyCFunction)_pycartesiancomposite_add, 1},
-  {"getNumberOfObjects", (PyCFunction)_pycartesiancomposite_getNumberOfObjects, 1},
-  {"get", (PyCFunction)_pycartesiancomposite_get, 1},
-  {"nearest", (PyCFunction)_pycartesiancomposite_nearest, 1},
+  {"add", (PyCFunction)_pycartesiancomposite_add, 1,
+    "add(object)\n\n"
+    "Adds a CartesianCore object to this composite object.\n\n",
+    "object - an object of CartesianCore type."
+  },
+  {"getNumberOfObjects", (PyCFunction)_pycartesiancomposite_getNumberOfObjects, 1,
+    "getNumberOfObjects() -> number of cartesian objects that should be used when generating the composite.\n\n"
+    "Returns the number of cartesian objects that this composite contains."
+  },
+  {"get", (PyCFunction)_pycartesiancomposite_get, 1,
+    "get(i) -> cartesian object\n\n"
+    "Returns the CartesianCore object at position i in the list.\n\n"
+    "i - the index that should be >= 0 and < getNumberOfObjects()."
+  },
+  {"nearest", (PyCFunction)_pycartesiancomposite_nearest, 1,
+    "nearest(area) -> cartesian object of type CartesianCore.\n\n"
+    "Creates a composite as defined by area from the added cartesian objectrs. If method = SelectionMethod_DISTANCE, the distance_field will be required and all included objects must contain that field.\n\n"
+    "area - the area to which to transform the resulting cartesian object"
+  },
   {NULL, NULL } /* sentinel */
 };
 
@@ -407,6 +422,43 @@ done:
 
 /*@} End of Composite product generator */
 
+/*@{ Documentation about the type */
+PyDoc_STRVAR(_pycartesiancomposite_type_doc,
+    "The cartesian composite is a product generator that creates a cartesian object with a specified area from a number of other cartesian objects.\n"
+    "In order for this operation to be successful, a selection method has to be set and if SelectionMethod_DISTANCE, also the distance_field. Then when executing the "
+    "transform (nearest) method, the cartesian result will be created.\n"
+    "\n"
+    "The member attributes that can be set in the composite generator are:\n"
+    "time             - Time the cartesian product should represent as a string with format HHmmSS.\n"
+    "date             - Date the cartesian product should represent as a string in the format YYYYMMDD.\n"
+    "quantity         - The parameter (quantity) that the composite should be created for.\n"
+    "offset           - The offset to be used in the result.\n"
+    "gain             - The gain to be used in the result.\n"
+    "nodata           - Nodata value to be used in the result.\n"
+    "undetect         - Undetect value to be used in the result.\n"
+    "method           - How the selection should be done when comparing the cartesian objects.\n"
+    "                   Can be one of:\n"
+    "                   SelectionMethod_FIRST     - First found value for all overlapping radars.\n"
+    "                   SelectionMethod_MINVALUE  - Minimum value of all overlapping radars.\n"
+    "                   SelectionMethod_MAXVALUE  - Maximum value of all overlapping radars.\n"
+    "                   SelectionMethod_AVGVALUE  - Average value for all overlapping radars.\n"
+    "                   SelectionMethod_DISTANCE  - Min value according to the distance field. Requires a distance field.\n"
+    "\n"
+    "Usage:\n"
+    " import _cartesiancomposte, _raveio\n"
+    " generator = _cartesiancomposite.new()\n"
+    " generator.add(_raveio.open(\"cartesian_object_1.h5\").object)\n"
+    " generator.add(_raveio.open(\"cartesian_object_2.h5\").object)\n"
+    " ...\n"
+    " generator.method = _cartesiancomposite.SelectionMethod_DISTANCE\n"
+    " generator.distance_field = \"se.smhi.composite.distance.radar\"\n"
+    " generator.date = ....\n"
+    " ....\n"
+    " result = generator.nearest(area)\n"
+    );
+/*@} End of Documentation about the type */
+
+
 /*@{ Type definitions */
 PyTypeObject PyCartesianComposite_Type =
 {
@@ -455,7 +507,10 @@ PyTypeObject PyCartesianComposite_Type =
 
 /*@{ Module setup */
 static PyMethodDef functions[] = {
-  {"new", (PyCFunction)_pycartesiancomposite_new, 1},
+  {"new", (PyCFunction)_pycartesiancomposite_new, 1,
+    "new() -> new instance of the CartesianCompositeCore object\n\n"
+    "Creates a new instance of the CartesianCompositeCore object"
+  },
   {NULL,NULL} /*Sentinel*/
 };
 
@@ -484,7 +539,7 @@ MOD_INIT(_cartesiancomposite)
 
   MOD_INIT_VERIFY_TYPE_READY(&PyCartesianComposite_Type);
 
-  MOD_INIT_DEF(module, "_cartesiancomposite", NULL/*doc*/, functions);
+  MOD_INIT_DEF(module, "_cartesiancomposite", _pycartesiancomposite_type_doc, functions);
   if (module == NULL) {
     return MOD_INIT_ERROR;
   }
