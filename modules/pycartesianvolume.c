@@ -394,13 +394,39 @@ static struct PyMethodDef _pycartesianvolume_methods[] =
   {"ysize", NULL},
   {"projection", NULL},
   {"areaextent", NULL},
-  {"addImage", (PyCFunction) _pycartesianvolume_addImage, 1},
-  {"getImage", (PyCFunction) _pycartesianvolume_getImage, 1},
-  {"getNumberOfImages", (PyCFunction) _pycartesianvolume_getNumberOfImages, 1},
-  {"addAttribute", (PyCFunction) _pycartesianvolume_addAttribute, 1},
-  {"getAttribute", (PyCFunction) _pycartesianvolume_getAttribute, 1},
-  {"getAttributeNames", (PyCFunction) _pycartesianvolume_getAttributeNames, 1},
-  {"isValid", (PyCFunction) _pycartesianvolume_isValid, 1},
+  {"addImage", (PyCFunction) _pycartesianvolume_addImage, 1,
+    "addImage(cartesian)\n\n"
+    "Adds a cartesian object to the volume. When adding the first object, xsize/ysize will be set. Then the following objects that are added has to have same xsize & ysize"
+  },
+  {"getImage", (PyCFunction) _pycartesianvolume_getImage, 1,
+    "getImage(index) -> CartesianCore object\n\n"
+    "Returns the cartesian object at index.\n\n"
+    "index - the index that has to be >= 0 and < getNumberOfImages()."
+  },
+  {"getNumberOfImages", (PyCFunction) _pycartesianvolume_getNumberOfImages, 1,
+    "getNumberOfImages() -> the number of images\n\n"
+    "Returns the number of images in this volume."
+  },
+  {"addAttribute", (PyCFunction) _pycartesianvolume_addAttribute, 1,
+    "addAttribute(name, value) \n\n"
+    "Adds an attribute to the volume. Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis etc. \n"
+    "Currently, double, long, string and 1-dimensional arrays are supported.\n\n"
+    "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis\n"
+    "value - Value to be associated with the name. Currently, double, long, string and 1-dimensional arrays are supported."
+  },
+  {"getAttribute", (PyCFunction) _pycartesianvolume_getAttribute, 1,
+    "getAttribute(name) -> value \n\n"
+    "Returns the value associated with the specified name \n\n"
+    "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis\n"
+  },
+  {"getAttributeNames", (PyCFunction) _pycartesianvolume_getAttributeNames, 1,
+    "getAttributeNames() -> array of names \n\n"
+    "Returns the attribute names associated with this cartesian volume"
+  },
+  {"isValid", (PyCFunction) _pycartesianvolume_isValid, 1,
+    "isValid() -> boolean\n\n"
+    "Validates the volume to see if it contains necessary information like sizes & scales are set. That start and end date/times are set and so on."
+  },
   {NULL, NULL} /* sentinel */
 };
 
