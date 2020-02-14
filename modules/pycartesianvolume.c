@@ -577,6 +577,35 @@ static PyObject* _pycartesianvolume_isCartesianVolume(PyObject* self, PyObject* 
 
 /*@} End of Cartesian Volumes */
 
+/*@{ Documentation about the type */
+PyDoc_STRVAR(_pycartesianvolume_type_doc,
+    "The cartesian volume is a container for cartesian products.  The member attributes should reflect some basic features of the included "
+    "cartesian images as well as some basic information like object type.\n"
+    "Since the parameter probably should contain a lot of attributes as defined in the ODIM H5 specification, these can be "
+    "added within the attribute mapping (how/, what/, where/) groups. E.g. addAttribute(\"how/sthis\", 1.2).\n"
+    "A list of avilable member attributes are described below. For information about member functions, check each functions doc.\n"
+    "\n"
+    "time             - Time this cartesian product should represent as a string with format HHmmSS\n"
+    "date             - Date this cartesian product should represent as a string in the format YYYYMMDD\n"
+    "source           - The source for this product. Defined as what/source in ODIM H5. I.e. a comma separated list of various identifiers. For example. NOD:seang,WMO:1234,....\n"
+    "objectType       - The object type as defined in ODIM H5 this cartesian product should be defined as. Can be  _rave.Rave_ObjectType_CVOL or _rave.Rave_ObjectType_COMP\n"
+    "xscale           - The scale in meters in x-direction.\n"
+    "yscale           - The scale in meters in y-direction.\n"
+    "areaextent       - A tuple of four representing the outer boundaries of this cartesian product. Defined as (lower left X, lower left Y, upper right X, upper right Y).\n"
+    "projection       - The projection object of type ProjectionCore that defines what projection that this cartesian product is defined with.\n"
+    "xsize            - The xsize of the area represented. ReadOnly, initialization occurs when adding first image.\n"
+    "ysize            - The ysize of the area represented. ReadOnly, initialization occurs when adding first image.\n"
+    "\n"
+    "Usage:\n"
+    " import _cartesianvolume\n"
+    " vol = _cartesianvolume.new()\n"
+    " vol.addImage(cartesian1)\n"
+    " vol.addImage(cartesian2)\n"
+    " ..."
+    );
+/*@} End of Documentation about the type */
+
+
 /// --------------------------------------------------------------------
 /// Type definitions
 /// --------------------------------------------------------------------
@@ -604,7 +633,7 @@ PyTypeObject PyCartesianVolume_Type =
   (setattrofunc)_pycartesianvolume_setattro, /*tp_setattro*/
   0,                            /*tp_as_buffer*/
   Py_TPFLAGS_DEFAULT, /*tp_flags*/
-  0,                            /*tp_doc*/
+  _pycartesianvolume_type_doc,  /*tp_doc*/
   (traverseproc)0,              /*tp_traverse*/
   (inquiry)0,                   /*tp_clear*/
   0,                            /*tp_richcompare*/
@@ -631,8 +660,15 @@ PyTypeObject PyCartesianVolume_Type =
 /// --------------------------------------------------------------------
 /*@{ Module setup */
 static PyMethodDef functions[] = {
-  {"new", (PyCFunction)_pycartesianvolume_new, 1},
-  {"isCartesianVolume", (PyCFunction)_pycartesianvolume_isCartesianVolume, 1},
+  {"new", (PyCFunction)_pycartesianvolume_new, 1,
+    "new() -> new instance of the CartesianVolumeCore object\n\n"
+    "Creates a new instance of the CartesianVolumeCore object"
+  },
+  {"isCartesianVolume", (PyCFunction)_pycartesianvolume_isCartesianVolume, 1,
+    "isCartesianVolume(object) -> boolean\n\n"
+    "Tests if the provided object is a cartesian volume or not.\n\n"
+    "object - the object to be tested."
+  },
   {NULL,NULL} /*Sentinel*/
 };
 
@@ -649,7 +685,7 @@ MOD_INIT(_cartesianvolume)
 
   MOD_INIT_VERIFY_TYPE_READY(&PyCartesianVolume_Type);
 
-  MOD_INIT_DEF(module, "_cartesianvolume", NULL/*doc*/, functions);
+  MOD_INIT_DEF(module, "_cartesianvolume", _pycartesianvolume_type_doc, functions);
   if (module == NULL) {
     return MOD_INIT_ERROR;
   }

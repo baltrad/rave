@@ -780,7 +780,7 @@ done:
 
 /*@{ Documentation about the type */
 PyDoc_STRVAR(_pycartesianparam_type_doc,
-    "The cartesian parameter represents one cartesian parameter (quantity). The cartesian parameter is the data container "
+    "The cartesian parameter represents one cartesian parameter (quantity). The cartesian parameter is the data keeper "
     "for the cartesian object. The member attributes within the cartesian parameter represents the data content in some way. "
     "Since the parameter probably should contain a lot of attributes as defined in the ODIM H5 specification, these can be "
     "added within the attribute mapping (how/, what/, where/) groups. E.g. addAttribute(\"how/sthis\", 1.2).\n"
