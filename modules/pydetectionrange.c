@@ -250,9 +250,29 @@ static struct PyMethodDef _pydetectionrange_methods[] =
   {"lookupPath", NULL},
   {"analysis_minrange", NULL},
   {"analysis_maxrange", NULL},
-  {"top", (PyCFunction) _pydetectionrange_top, 1},
-  {"filter", (PyCFunction) _pydetectionrange_filter, 1},
-  {"analyze", (PyCFunction) _pydetectionrange_analyze, 1},
+  {"top", (PyCFunction) _pydetectionrange_top, 1,
+    "top(pvol, scale, threshold[, quantity]) -> polar scan" // Odd|s", &object, &scale, &threshold, &paramname
+    "Creates the echo top as a scan with the parameters quantity set to HGHT.\n\n"
+    "pvol      - the polar volume\n"
+    "scale     - the bin length\n"
+    "threshold - the threshold for the values\n"
+    "quantity  - Optional, the parameter quantity the calculation should be performed on. If not provided, default is DBZH."
+  },
+  {"filter", (PyCFunction) _pydetectionrange_filter, 1,
+    "filter(scan) -> scan\n\n"
+    "Filters out unwanted values. The provided scan should contain a HGHT parameter from the previous call to .top(). The returned value is a clone of provided scan with data filtered.\n\n"
+    "scan - the scan with HGHT parameter as generated in the call to .top()"
+  },
+  {"analyze", (PyCFunction) _pydetectionrange_analyze, 1,
+    "analyze(scan, avgsector, sortage, samplepoint) -> rave quality field\n\n"
+    "Analyzes the detection ranges and returns a rave quality field with how/task set to se.smhi.detector.poo\n\n"
+    "scan        - Scan that was retrieved from the call to filter()\n"
+    "avgsector   - Width of the floating average azimuthal sector.\n"
+    "sortage     - Defining the higher portion of sorted ray to be analysed, typically 0.05 - 0.2\n"
+    "samplepoint - Define the position to pick a representative TOP value from highest\n"
+    "              valid TOPs, typically near 0.5 (median) lower values (nearer to\n"
+    "              highest TOP, 0.15) used in noisier radars like KOR."
+  },
   {NULL, NULL } /* sentinel */
 };
 
@@ -320,6 +340,23 @@ done:
 
 /*@} End of detection range generator */
 
+/*@{ Documentation about the type */
+PyDoc_STRVAR(_pydetectionrange_module_doc,
+  "Provides an algorithm for calculating probability of overshooting. There are 3 member attributes that can be set:\n"
+  " lookupPath        - The lookup path where the cache files are stored.\n"
+  " analysis_minrange - Min radial range during the analysis stage in meters. Default is 10000.\n"
+  " analysis_maxrange - Max radial range during the analysis stage in meters. Default is 240000.\n"
+  "Usage:\n"
+  " import _detectionrange\n"
+  " generator = _detectionrange.new()\n"
+  " pvol = _raveio.open(\"somepvol.h5\").object\n"
+  " maxscan = pvol.getScanWithMaxDistance()\n"
+  " top = generator.top(pvol, maxscan.rscale, -40.0)\n"
+  " filtered = generator.filter(top)\n"
+  " poofield = generator.analyze(filtered, 60.0, 0.1, 0.35)"
+);
+/*@} End of Documentation about the type */
+
 /*@{ Type definitions */
 PyTypeObject PyDetectionRange_Type =
 {
@@ -344,7 +381,7 @@ PyTypeObject PyDetectionRange_Type =
   (setattrofunc)_pydetectionrange_setattro, /*tp_setattro*/
   0,                            /*tp_as_buffer*/
   Py_TPFLAGS_DEFAULT, /*tp_flags*/
-  0,                            /*tp_doc*/
+  _pydetectionrange_module_doc, /*tp_doc*/
   (traverseproc)0,              /*tp_traverse*/
   (inquiry)0,                   /*tp_clear*/
   0,                            /*tp_richcompare*/
@@ -369,7 +406,10 @@ PyTypeObject PyDetectionRange_Type =
 
 /*@{ Module setup */
 static PyMethodDef functions[] = {
-  {"new", (PyCFunction)_pydetectionrange_new, 1},
+  {"new", (PyCFunction)_pydetectionrange_new, 1,
+    "new() -> new instance of the DetectionRangeCore object\n\n"
+    "Creates a new instance of the DetectionRangeCore object"
+  },
   {NULL,NULL} /*Sentinel*/
 };
 
@@ -382,7 +422,7 @@ MOD_INIT(_detectionrange)
 
   MOD_INIT_VERIFY_TYPE_READY(&PyDetectionRange_Type);
 
-  MOD_INIT_DEF(module, "_detectionrange", NULL/*doc*/, functions);
+  MOD_INIT_DEF(module, "_detectionrange", _pydetectionrange_module_doc, functions);
   if (module == NULL) {
     return MOD_INIT_ERROR;
   }
