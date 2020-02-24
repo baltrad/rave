@@ -96,9 +96,27 @@ static PyObject* _ctFilter_func(PyObject* self, PyObject* args) {
 
 static struct PyMethodDef _ctfilter_functions[] =
 {
-  { "ctFilter", (PyCFunction) _ctFilter_func, METH_VARARGS },
+  {"ctFilter", (PyCFunction) _ctFilter_func, METH_VARARGS,
+    "ctFilter(prod, ct) -> boolean\n\n"
+    "Filter product prod with cloud top information ct. A quality field is added with how/task = se.smhi.quality.ctfilter.\n"
+    "The input product should be a cartesian object as well as the cloud top information.\n"
+    "The input product should have been set with a default parameter since the operations are performed directly on the "
+    "cartesian object\n\n"
+    "prod - the product that should be filtered. With default parameter quantity set.\n"
+    "ct   - the cloud top information"
+  },
   { NULL, NULL }
 };
+
+/*@{ Documentation about the type */
+PyDoc_STRVAR(_ctfilter_module_doc,
+  "Filters product with cloud-top information. A quality field is created and added to the input product, containing removed echoes.\n"
+  "Pixel values are from the CT product header. Probabilities of rain from:\n"
+  "Dybbroe et al. 2005: NWCSAF AVHRR Cloud Detection and Analysis Using Dynamic Thresholds and Radiative Transfer Modelling. Part II. Tuning and Validation. J. Appl. Meteor. 44. p. 55-71. Table 11, page 69.\n"
+  "Yes, we know the article addresses AVHRR and we are addressing MSG ..."
+);
+/*@} End of Documentation about the type */
+
 
 /**
  * Initialize the _ctfilter module
@@ -107,7 +125,7 @@ MOD_INIT(_ctfilter)
 {
   PyObject* module = NULL;
   PyObject* dictionary = NULL;
-  MOD_INIT_DEF(module, "_ctfilter", NULL/*doc*/, _ctfilter_functions);
+  MOD_INIT_DEF(module, "_ctfilter", _ctfilter_module_doc, _ctfilter_functions);
   if (module == NULL) {
     return MOD_INIT_ERROR;
   }
