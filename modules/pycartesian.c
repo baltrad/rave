@@ -1231,11 +1231,11 @@ static struct PyMethodDef _pycartesian_methods[] =
     "parameter  - The CartesianParamCore instance"
   },
   {"createParameter", (PyCFunction)_pycartesian_createParameter, 1,
-      "createParameter(quantity, type) -> parameter\n\n"
-      "Creates a parameter with specified quantity and value type with same geometry as self.\n"
-      "If a parameter with same quantity already exists in the cartesian product. The created cartesian parameter will be added to the internals of self.\n\n"
-      "quantity  - A string representing the quantity like TH, DBZH, ...\n"
-      "type      - The data type of the created field, e.g. _rave.RaveDataType_UCHAR, ...."
+    "createParameter(quantity, type) -> parameter\n\n"
+    "Creates a parameter with specified quantity and value type with same geometry as self.\n"
+    "If a parameter with same quantity already exists in the cartesian product. The created cartesian parameter will be added to the internals of self.\n\n"
+    "quantity  - A string representing the quantity like TH, DBZH, ...\n"
+    "type      - The data type of the created field, e.g. _rave.RaveDataType_UCHAR, ...."
   },
   {"getParameter", (PyCFunction)_pycartesian_getParameter, 1,
     "getParameter(quantity) -> CartesianParamCore\n\n"

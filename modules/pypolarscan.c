@@ -363,7 +363,7 @@ static PyObject* _pypolarscan_getRange(PyPolarScan* self, PyObject* args)
 }
 
 /**
- * Seturns the value at the specified ray and bin index.
+ * Sets the value at the specified ray and bin index.
  * @param[in] self - this instance
  * @param[in] args - bin index, ray index.
  * @returns None on success otherwise NULL
@@ -1122,48 +1122,232 @@ static struct PyMethodDef _pypolarscan_methods[] =
   {"source", NULL},
   {"defaultparameter", NULL},
   {"projection", NULL},
-  {"addParameter", (PyCFunction) _pypolarscan_addParameter, 1},
-  {"removeParameter", (PyCFunction) _pypolarscan_removeParameter, 1},
-  {"removeAllParameters", (PyCFunction) _pypolarscan_removeAllParameters, 1},
-  {"getParameter", (PyCFunction) _pypolarscan_getParameter, 1},
-  {"getParameterNames", (PyCFunction) _pypolarscan_getParameterNames, 1},
-  {"hasParameter", (PyCFunction) _pypolarscan_hasParameter, 1},
-  {"getAzimuthIndex", (PyCFunction) _pypolarscan_getAzimuthIndex, 1},
-  {"getRangeIndex", (PyCFunction) _pypolarscan_getRangeIndex, 1},
-  {"getRange", (PyCFunction) _pypolarscan_getRange, 1},
-  {"setValue", (PyCFunction) _pypolarscan_setValue, 1},
-  {"setParameterValue", (PyCFunction) _pypolarscan_setParameterValue, 1},
-  {"getValue", (PyCFunction) _pypolarscan_getValue, 1},
-  {"getParameterValue", (PyCFunction) _pypolarscan_getParameterValue, 1},
-  {"getConvertedValue", (PyCFunction) _pypolarscan_getConvertedValue, 1},
-  {"getConvertedParameterValue", (PyCFunction) _pypolarscan_getConvertedParameterValue, 1},
-  {"getIndexFromAzimuthAndRange", (PyCFunction) _pypolarscan_getIndexFromAzimuthAndRange, 1},
-  {"getValueAtAzimuthAndRange", (PyCFunction) _pypolarscan_getValueAtAzimuthAndRange, 1},
-  {"getParameterValueAtAzimuthAndRange", (PyCFunction) _pypolarscan_getParameterValueAtAzimuthAndRange, 1},
-  {"getConvertedParameterValueAtAzimuthAndRange", (PyCFunction) _pypolarscan_getConvertedParameterValueAtAzimuthAndRange, 1},
-  {"getNearest", (PyCFunction) _pypolarscan_getNearest, 1},
-  {"getNearestParameterValue", (PyCFunction) _pypolarscan_getNearestParameterValue, 1},
-  {"getNearestConvertedParameterValue", (PyCFunction) _pypolarscan_getNearestConvertedParameterValue, 1},
-  {"getNearestIndex", (PyCFunction) _pypolarscan_getNearestIndex, 1},
-  {"getLonLatFromIndex", (PyCFunction) _pypolarscan_getLonLatFromIndex, 1},
-  {"addAttribute", (PyCFunction) _pypolarscan_addAttribute, 1},
-  {"getAttribute", (PyCFunction) _pypolarscan_getAttribute, 1},
-  {"hasAttribute", (PyCFunction) _pypolarscan_hasAttribute, 1},
-  {"getAttributeNames", (PyCFunction) _pypolarscan_getAttributeNames, 1},
-  {"hasAttribute", (PyCFunction) _pypolarscan_hasAttribute, 1},
-  {"isValid", (PyCFunction) _pypolarscan_isValid, 1},
-  {"addQualityField", (PyCFunction) _pypolarscan_addQualityField, 1},
-  {"addOrReplaceQualityField", (PyCFunction) _pypolarscan_addOrReplaceQualityField, 1},
-  {"getNumberOfQualityFields", (PyCFunction) _pypolarscan_getNumberOfQualityFields, 1},
-  {"getQualityField", (PyCFunction) _pypolarscan_getQualityField, 1},
-  {"removeQualityField", (PyCFunction) _pypolarscan_removeQualityField, 1},
-  {"getQualityFieldByHowTask", (PyCFunction) _pypolarscan_getQualityFieldByHowTask, 1},
-  {"findQualityFieldByHowTask", (PyCFunction) _pypolarscan_findQualityFieldByHowTask, 1},
-  {"getDistanceField", (PyCFunction) _pypolarscan_getDistanceField, 1},
-  {"getHeightField", (PyCFunction) _pypolarscan_getHeightField, 1},
-  {"getMaxDistance", (PyCFunction) _pypolarscan_getMaxDistance, 1},
-  {"getDistance", (PyCFunction) _pypolarscan_getDistance, 1},
-  {"clone", (PyCFunction) _pypolarscan_clone, 1},
+  {"addParameter", (PyCFunction) _pypolarscan_addParameter, 1,
+    "addParameter(param)\n\n"
+    "Adds a parameter with it's quantity set to this scan. The first time a parameter is added to a scan, it will get some basic properties (nrays, nbins, ...) that all "
+    "subsequent parameters has to match.\n"
+    "param - the polar scan param of type PolarScanParamCore."
+  },
+  {"removeParameter", (PyCFunction) _pypolarscan_removeParameter, 1,
+    "removeParameter(quant)\n\n"
+    "Removes the parameter with the specified quantity.\n\n"
+    "quant - the quantity of the parameter to be removed."
+  },
+  {"removeAllParameters", (PyCFunction) _pypolarscan_removeAllParameters, 1,
+    "removeAllParameters()\n\n"
+    "Removes all parameters from this scan."
+  },
+  {"getParameter", (PyCFunction) _pypolarscan_getParameter, 1,
+    "getParameter(quant) -> polar scan parameter\n\n"
+    "Returns the parameter with specified quantity. If it doesn't exist, None will be returned.\n\n"
+    "quant - the quantity of the parameter to be returned"
+  },
+  {"getParameterNames", (PyCFunction) _pypolarscan_getParameterNames, 1,
+    "getParameterNames() -> list of strings\n\n"
+    "Return all parameters that has been set in this scan."
+  },
+  {"hasParameter", (PyCFunction) _pypolarscan_hasParameter, 1,
+    "hasParameter(quant) -> a boolean\n\n"
+    "Returns True or False depending if this scan has a parameter with specified quantity or not.\n\n"
+    "quant - the quantity to be queried for"
+  },
+  {"getAzimuthIndex", (PyCFunction) _pypolarscan_getAzimuthIndex, 1,
+    "getAzimuthIndex(aziumth) -> index\n\n"
+    "Calculates the azimuth index from an azimuth (in radians).\n\n"
+    "azimuth - azimuth in radians"
+  },
+  {"getRangeIndex", (PyCFunction) _pypolarscan_getRangeIndex, 1,
+    "getRangeIndex(range) -> index\n\n"
+    "Calculates the range index from a specified range.\n\n"
+    "range - the range in meter along the ray"
+  },
+  {"getRange", (PyCFunction) _pypolarscan_getRange, 1,
+    "getRange(index) -> range in meters\n\n"
+    "Calculates the range from a specific range index. Will return the range or a negative value if index is out of bounds.\n"
+    "index - the index in the ray"
+  },
+  {"setValue", (PyCFunction) _pypolarscan_setValue, 1,
+    "setValue(bin, ray, value)\n\n"
+    "Sets the value at the specified ray and bin index.\n\n"
+    "bin    - the bin index\n"
+    "ray    - the ray index\n"
+    "value  - the value to set"
+  },
+  {"setParameterValue", (PyCFunction) _pypolarscan_setParameterValue, 1,
+    "setValue(quantity, bin, ray, value)\n\n"
+    "Sets the value for the parameter with quantity at the specified ray and bin index.\n\n"
+    "quantity - the parameter quantity"
+    "bin      - the bin index\n"
+    "ray      - the ray index\n"
+    "value    - the value to set\n\n"
+    "Throws ValueError if there is no such quantity"
+  },
+  {"getValue", (PyCFunction) _pypolarscan_getValue, 1,
+    "getValue(bin,ray) -> tuple (type, value)\n\n"
+    "Returns the value at the specified ray and bin index for the default parameter. The value type can be one of the value types defined as _rave.RaveValueType_XXXX\n\n"
+    "bin - bin index\n"
+    "ray - ray index\n"
+  },
+  {"getParameterValue", (PyCFunction) _pypolarscan_getParameterValue, 1,
+    "getParameterValue(quantity, bin,ray) -> (type, value)\n\n"
+    "Returns the value for the specified parameter (quantity) at the specified ray and bin index. The value type can be one of the value types defined as _rave.RaveValueType_XXXX\n\n"
+    "quantity - the quantity for the parameter"
+    "bin      - bin index\n"
+    "ray      - ray index\n"
+  },
+  {"getConvertedValue", (PyCFunction) _pypolarscan_getConvertedValue, 1,
+    "getConvertedValue(bin,ray) -> (type, value)\n\n"
+    "Returns the converted value for the default parameter at the specified ray and bin index. The value is evaluated as offset + v*gain. The value type can be one of the value types defined as _rave.RaveValueType_XXXX\n\n"
+    "bin      - bin index\n"
+    "ray      - ray index\n"
+  },
+  {"getConvertedParameterValue", (PyCFunction) _pypolarscan_getConvertedParameterValue, 1,
+    "getConvertedParameterValue(quantity,bin,ray) -> (type, value)\n\n"
+    "Returns the converted value for the default parameter at the specified ray and bin index. The value is evaluated as offset + v*gain. The value type can be one of the value types defined as _rave.RaveValueType_XXXX\n\n"
+    "quantity - the parameter quantity"
+    "bin      - bin index\n"
+    "ray      - ray index\n"
+  },
+  {"getIndexFromAzimuthAndRange", (PyCFunction) _pypolarscan_getIndexFromAzimuthAndRange, 1,
+    "getIndexFromAzimuthAndRange(azimuth, range) -> (ray index, bin index)\n\n"
+    "Calculates the bin and ray index from a azimuth and range.\n\n"
+    "azimuth - azimuth in radians\n"
+    "range   - range in meters"
+  },
+  {"getValueAtAzimuthAndRange", (PyCFunction) _pypolarscan_getValueAtAzimuthAndRange, 1,
+    "getValueAtAzimuthAndRange(azimuth, range) -> (type, value)\n\n"
+    "Returns the value for the default parameter at the specified azimuth and range for this scan.\n\n"
+      "azimuth - azimuth in radians\n"
+      "range   - range in meters"
+  },
+  {"getParameterValueAtAzimuthAndRange", (PyCFunction) _pypolarscan_getParameterValueAtAzimuthAndRange, 1,
+    "getParameterValueAtAzimuthAndRange(quantity, azimuth, range) -> (type, value)\n\n"
+    "Returns the value for the parameter as defined by quantity at the specified azimuth and range for this scan.\n\n"
+      "azimuth - azimuth in radians\n"
+      "range   - range in meters"
+  },
+  {"getConvertedParameterValueAtAzimuthAndRange", (PyCFunction) _pypolarscan_getConvertedParameterValueAtAzimuthAndRange, 1,
+    "getConvertedParameterValueAtAzimuthAndRange(quantity, azimuth, range) -> (type, value)\n\n"
+    "Returns the converted value (offset+gain*value) for the parameter as defined by quantity at the specified azimuth and range for this scan.\n\n"
+    "quantity  - the parameter quantity\n"
+    "azimuth   - azimuth in radians\n"
+    "range     - range in meters"
+  },
+  {"getNearest", (PyCFunction) _pypolarscan_getNearest, 1,
+    "getNearest((lon, lat)) -> (type, value)\n\n"
+    "Returns the default parameters value that is nearest to the specified longitude/latitude.\n\n"
+    "lon - longitude in radians\n"
+    "lat - latitude in radians"
+  },
+  {"getNearestParameterValue", (PyCFunction) _pypolarscan_getNearestParameterValue, 1,
+    "getNearestParameterValue(quantity, (lon, lat)) -> (type, value)\n\n"
+    "Returns the specified parameters value that is nearest to the specified longitude/latitude.\n\n"
+    "quantity - the parameter quantity"
+    "lon      - longitude in radians\n"
+    "lat      - latitude in radians"
+  },
+  {"getNearestConvertedParameterValue", (PyCFunction) _pypolarscan_getNearestConvertedParameterValue, 1,
+    "getNearestConvertedParameterValue(quantity, (lon, lat)) -> (type, value)\n\n"
+    "Returns the converted value (offset+gain*value) for the specified parameters value that is nearest to the specified longitude/latitude.\n\n"
+    "quantity - the parameter quantity"
+    "lon      - longitude in radians\n"
+    "lat      - latitude in radians"
+  },
+  {"getNearestIndex", (PyCFunction) _pypolarscan_getNearestIndex, 1,
+    "getNearestIndex((lon, lat)) -> (bin, ray)\n\n"
+    "Returns the nearest index for the provided longitude, latitude.\n\n"
+    "lon      - longitude in radians\n"
+    "lat      - latitude in radians"
+  },
+  {"getLonLatFromIndex", (PyCFunction) _pypolarscan_getLonLatFromIndex, 1,
+    "getLonLatFromIndex(bin,ray)) -> (lon, lat)\n\n"
+    "Calculates the lon/lat from a specified ray/bin index.\n\n"
+    "bin      - The bin index\n"
+    "ray      - The ray index"
+  },
+  {"addAttribute", (PyCFunction) _pypolarscan_addAttribute, 1,
+    "addAttribute(name, value) \n\n"
+    "Adds an attribute to the scan. Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis etc. \n"
+    "Currently, double, long, string and 1-dimensional arrays are supported.\n\n"
+    "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis\n"
+    "value - Value to be associated with the name. Currently, double, long, string and 1-dimensional arrays are supported."
+  },
+  {"getAttribute", (PyCFunction) _pypolarscan_getAttribute, 1,
+    "getAttribute(name) -> value \n\n"
+    "Returns the value associated with the specified name \n\n"
+    "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis\n"
+  },
+  {"hasAttribute", (PyCFunction) _pypolarscan_hasAttribute, 1,
+    "hasAttribute(name) -> a boolean \n\n"
+    "Returns if the specified name is defined within this polar scan\n\n"
+    "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis"
+  },
+  {"getAttributeNames", (PyCFunction) _pypolarscan_getAttributeNames, 1,
+    "getAttributeNames() -> array of names \n\n"
+    "Returns the attribute names associated with this cartesian object"
+  },
+  {"isValid", (PyCFunction) _pypolarscan_isValid, 1,
+    "isValid(otype) -> a boolean \n\n"
+    "Validates this polar scan object to see if it is possible to write as specified type.\n\n"
+    "otype  - The type we want to save as, can be one of ObjectType_PVOL or ObjectType_SCAN."
+  },
+  {"addQualityField", (PyCFunction) _pypolarscan_addQualityField, 1,
+    "addQualityField(field) \n\n"
+    "Adds a quality field to this polar scan. Note, there is no check for valid size or similar. Also, there is no check if same how/task is specified or the likes. \n\n"
+    "field  - The RaveFieldCore field"
+  },
+  {"addOrReplaceQualityField", (PyCFunction) _pypolarscan_addOrReplaceQualityField, 1,
+    "addOrReplaceQualityField(field) \n\n"
+    "Adds or replaces the quality field in this polar scan. Note, there is no check for valid size or similar. Ensures that only one field with a specific how/task exists.\n\n"
+    "field  - The RaveFieldCore field"
+  },
+  {"getNumberOfQualityFields", (PyCFunction) _pypolarscan_getNumberOfQualityFields, 1,
+    "getNumberOfQualityFields() -> integer\n\n"
+    "Returns the number of quality fields in this scan"
+  },
+  {"getQualityField", (PyCFunction) _pypolarscan_getQualityField, 1,
+    "getQualityField(index) -> RaveFieldCore \n\n"
+    "Returns the rave field at specified index\n\n"
+    "index  - The rave field at specified position.\n\n"
+    "Throws IndexError if the rave field not could be found"
+  },
+  {"removeQualityField", (PyCFunction) _pypolarscan_removeQualityField, 1,
+    "removeQualityField(index) \n\n"
+    "Removes the quality field at specified index\n\n"
+    "index  - The rave field at specified position.\n\n"
+  },
+  {"getQualityFieldByHowTask", (PyCFunction) _pypolarscan_getQualityFieldByHowTask, 1,
+    "getQualityFieldByHowTask(name) -> RaveFieldCore or None \n\n"
+    "Returns the quality with the how/task attribute equal to name\n\n"
+    "name  - The rave field with how/task name equal to name\n\n"
+  },
+  {"findQualityFieldByHowTask", (PyCFunction) _pypolarscan_findQualityFieldByHowTask, 1,
+    "findQualityFieldByHowTask(name) -> RaveFieldCore or None \n\n"
+    "Tries to locate any quality field with  how/task attribute equal to name. First, the current parameters quality fields are checked and then self.\n\n"
+    "name  - The rave field with how/task name equal to name\n\n"
+  },
+  {"getDistanceField", (PyCFunction) _pypolarscan_getDistanceField, 1,
+    "getDistanceField() -> RaveFieldCore\n\n"
+    "Creates a distance field for this scan"
+  },
+  {"getHeightField", (PyCFunction) _pypolarscan_getHeightField, 1,
+    "getHeightField() -> RaveFieldCore\n\n"
+    "Creates a height field for this scan"
+  },
+  {"getMaxDistance", (PyCFunction) _pypolarscan_getMaxDistance, 1,
+    "getMaxDistance() -> max distance at ground level\n\n"
+    "Returns the maximum distance (at ground level) that this scan will cover."
+  },
+  {"getDistance", (PyCFunction) _pypolarscan_getDistance, 1,
+    "getDistance((lon,lat)) --> distance from origin of this scan to the specified lon/lat pair\n\n"
+    "Returns the distance in meters along the surface from the radar to the specified lon/lat coordinate pair.\n\n"
+    "lon - Longitude in radians\n"
+    "lat - Latitude in radians"
+  },
+  {"clone", (PyCFunction) _pypolarscan_clone, 1,
+    "clone() -> PolarScanCore\n\n"
+    "Creates a clone of self"
+  },
   {NULL, NULL } /* sentinel */
 };
 
@@ -1427,6 +1611,38 @@ static PyObject* _pypolarscan_isPolarScan(PyObject* self, PyObject* args)
 
 /*@} End of Polar Scans */
 
+/*@{ Documentation about the type */
+PyDoc_STRVAR(_pypolarscan_type_doc,
+    "The polar scan represents one polar scan. There are several member attributes "
+    "associated with a polar scan as well a number of child objects like parameters, quality fields and more.\n"
+    "Since a lot of RAVE has been developed with ODIM H5 in mind, it is also possible to add arbitrary attributes in "
+    "various groups, e.g. c.addAttribute(\"how/this\", 1.2) and so on.\n\n"
+    "A list of avilable member attributes are described below. For information about member functions, check each functions doc.\n"
+    "\n"
+    "elangle          - Elevation angle in radians.\n"
+    "nbins            - Number of bins in the data set.\n"
+    "nrays            - Number of rays in the data set.\n"
+    "rstart           - Range where the ray start for the scan.\n"
+    "a1gate           - the a1gate\n"
+    "datatype         - The data type for the selected default parameter. If no default parameter set, the UNDEFINED is returned.\n"
+    "beamwidth        - The beamwidth. Default is 1.0 * M_PI/360.0.\n"
+    "longitude        - The longitude for where this polar scan originates from (lon0) in radians\n"
+    "latitude         - The latitude for where this polar scan originates from (lat0) in radians\n"""
+    "height           - The height above sea level where this polar scan originates from (alt0) in meters\n"
+    "time             - Time this polar scan should represent as a string with format HHmmSS\n"
+    "date             - Date this polar scan should represent as a string in the format YYYYMMDD\n"
+    "starttime        - Time the collection of this polar scan started as a string with format HHmmSS\n"
+    "startdate        - Date the collection of this polar scan started as a string in the format YYYYMMDD\n"
+    "endtime          - Time the collection of this polar scan ended as a string with format HHmmSS\n"
+    "enddate          - Date the collection of this polar scan ended as a string in the format YYYYMMDD\n"
+    "source           - The source for this product. Defined as what/source in ODIM H5. I.e. a comma separated list of various identifiers. For example. NOD:seang,WMO:1234,....\n"
+    "defaultparameter - Since a polar scan is a container of a number of different parameters, this setting allows the user to define a default parameter that will allow for operations directly in the scan instead of getting the parameter.\n"
+    "\n"
+    "The most common usage of this class is probably to load a ODIM H5 scan and perform operations on this object. However, to create a new instance:\n"
+    "import _polarscan\n"
+    "scan = _polarscan.new()\n"
+    );
+/*@} End of Documentation about the type */
 /// --------------------------------------------------------------------
 /// Type definitions
 /// --------------------------------------------------------------------
@@ -1454,7 +1670,7 @@ PyTypeObject PyPolarScan_Type =
   (setattrofunc)_pypolarscan_setattro, /*tp_setattro*/
   0,                            /*tp_as_buffer*/
   Py_TPFLAGS_DEFAULT, /*tp_flags*/
-  0,                            /*tp_doc*/
+  _pypolarscan_type_doc,        /*tp_doc*/
   (traverseproc)0,              /*tp_traverse*/
   (inquiry)0,                   /*tp_clear*/
   0,                            /*tp_richcompare*/
@@ -1495,7 +1711,7 @@ MOD_INIT(_polarscan)
 
   MOD_INIT_VERIFY_TYPE_READY(&PyPolarScan_Type);
 
-  MOD_INIT_DEF(module, "_polarscan", NULL/*doc*/, functions);
+  MOD_INIT_DEF(module, "_polarscan", _pypolarscan_type_doc, functions);
   if (module == NULL) {
     return MOD_INIT_ERROR;
   }
