@@ -187,7 +187,15 @@ static struct PyMethodDef _pygra_methods[] =
   {"lowerThreshold", NULL},
   {"zrA", NULL},
   {"zrb", NULL},
-  {"apply", (PyCFunction) _pygra_apply, 1},
+  {"apply", (PyCFunction) _pygra_apply, 1,
+    "apply(distanceField, cartesian_parameter) -> cartesian parameter\n\n"
+    "Applies the coefficients on the parameter field. The distance field dimensions must match the parameter dimensions.\n"
+    "If the quantity is ACRR, then no conversion of the value is required. If the quantity is any of DBZH, DBZV, TH or TV, then "
+    "the values are converted to MM/H and then back again to reflectivity.\n\n"
+    "distanceField       - The distance field\n"
+    "cartesian_parameter - The cartesian parameter field that should be adjusted\n\n"
+    "Returns an adjusted cartesian parameter field"
+  },
   {NULL, NULL } /* sentinel */
 };
 
@@ -305,6 +313,51 @@ done:
 
 /*@} End of Gra */
 
+/*@{ Documentation about the type */
+PyDoc_STRVAR(_pygra_module_doc,
+    "Gauge radar adjustment (GRA). This class performs the actual gauge adjustment\n"
+    "using the derived coefficients. This can be done in two ways: one for ACRR products\n"
+    "(most common) and another for reflectivity (any of DBZH, DBZV, TH, TV).\n"
+    "In the case of ACRR, the parameter is already mm which is good.\n"
+    "In the case of reflectivity, the parameter needs to be converted to R (mm/hr), the correction applied, and\n"
+    "then the result converted back to reflectivity. This should be done in C. Functionality exists already in\n"
+    "raveutil.c/h: dBZ2R or raw2R and back.\n"
+    "Default Z-R coefficients are given in rave_defined.ZR_A and ZR_b. The C could look something like this (from N2):\n"
+    "  F = A + B*DIST + C*pow(DIST, 2.0);\n"
+    "  F = RAVEMIN(F, 2.0);    upper threshold 20 dBR\n"
+    "  F = RAVEMAX(F, -0.25);  lower threshold -2.5 dBR\n"
+    "  out = R*pow(10.0, F);\n"
+    "\n"
+    "final lower threhold on gauge-adjusted result\n"
+    "\n"
+    "if (out < lt) { out=0.0; }\n"
+    "\n"
+    "The member variables are:\n"
+    " A              - The A coefficient in the formula A + B*DIST + C*pow(DIST, 2.0);\n"
+    " B              - The B coefficient in the formula A + B*DIST + C*pow(DIST, 2.0);\n"
+    " C              - The C coefficient in the formula A + B*DIST + C*pow(DIST, 2.0);\n"
+    " upperThreshold - The upper threshold in 10ths of dBR. Default is 2.0 (20 dBR)\n"
+    " lowerThreshold - The lower threshold in 10ths of dBR. Default is -0.25 (-2.5 dBR)\n"
+    " zrA            - ZR A coefficient.\n"
+    " zrB            - ZR B coefficient when converting from reflectivity to MM/H\n\n"
+  "Usage:\n"
+  " import _gra\n"
+  " gra = _gra.new()\n"
+  " swecomp = _raveio.open(\"swecomposite_20200225.h5\").object\n"
+  " dt = create_datetime_from(swecomp)\n"
+  " dt = dt - datetime.timedelta(seconds=3600*12) # 12 hours back in time\n"
+  " (A,B,C) = db.get_gra_coefficient(dt)\n"
+  " gra.A = A\n"
+  " gra.B = B\n"
+  " gra.C = C\n"
+  " gra.zrA = ZR_A\n"
+  " gra.zrb = ZR_b\n"
+  " distanceField = swecomp.findQualityFieldByHowTask(\"se.smhi.composite.distance.radar\")\n"
+  " gra_field = gra.apply(distanceField, swecomp.getParameter(\"DBZH\"))\n"
+  " gra_field.quantity = \"DBZH_CORR\"\n"
+);
+/*@} End of Documentation about the type */
+
 /*@{ Type definitions */
 PyTypeObject PyGra_Type =
 {
@@ -329,7 +382,7 @@ PyTypeObject PyGra_Type =
   (setattrofunc)_pygra_setattro, /*tp_setattro*/
   0,                            /*tp_as_buffer*/
   Py_TPFLAGS_DEFAULT, /*tp_flags*/
-  0,                            /*tp_doc*/
+  _pygra_module_doc,            /*tp_doc*/
   (traverseproc)0,              /*tp_traverse*/
   (inquiry)0,                   /*tp_clear*/
   0,                            /*tp_richcompare*/
@@ -354,7 +407,11 @@ PyTypeObject PyGra_Type =
 
 /*@{ Module setup */
 static PyMethodDef functions[] = {
-  {"new", (PyCFunction)_pygra_new, 1},
+  {"new", (PyCFunction)_pygra_new, 1,
+    "new() -> new instance of the GraCore object\n\n"
+    "Creates a new instance of the GraCore object"
+
+  },
   {NULL,NULL} /*Sentinel*/
 };
 
@@ -367,7 +424,7 @@ MOD_INIT(_gra)
 
   MOD_INIT_VERIFY_TYPE_READY(&PyGra_Type);
 
-  MOD_INIT_DEF(module, "_gra", NULL/*doc*/, functions);
+  MOD_INIT_DEF(module, "_gra", _pygra_module_doc, functions);
   if (module == NULL) {
     return MOD_INIT_ERROR;
   }
