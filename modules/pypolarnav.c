@@ -302,47 +302,48 @@ static struct PyMethodDef _pypolarnavigator_methods[] =
   {"lat0", NULL},
   {"alt0", NULL},
   {"dndh", NULL},
-  {"getEarthRadius", (PyCFunction) _pypolarnavigator_getEarthRadius, 1},
-  {"getEarthRadiusOrigin", (PyCFunction) _pypolarnavigator_getEarthRadiusOrigin, 1},
-  {"getDistance", (PyCFunction) _pypolarnavigator_getDistance, 1},
-  {"llToDa", (PyCFunction) _pypolarnavigator_llToDa, 1},
-  {"daToLl", (PyCFunction) _pypolarnavigator_daToLl, 1},
-  {"dhToRe", (PyCFunction) _pypolarnavigator_dhToRe, 1},
-  {"deToRh", (PyCFunction) _pypolarnavigator_deToRh, 1},
-  {"reToDh", (PyCFunction) _pypolarnavigator_reToDh, 1},
+  {"getEarthRadius", (PyCFunction) _pypolarnavigator_getEarthRadius, 1,
+    "getEarthRadius(lat) -> earth radius in meters as float\n\n"
+    "Returns the earth radius at the specified latitude in meters\n\n"
+    "lat - latitude where earth radius should be calculated"
+  },
+  {"getEarthRadiusOrigin", (PyCFunction) _pypolarnavigator_getEarthRadiusOrigin, 1,
+    "getEarthRadiusOrigin() -> earth radius in meters as float at the origin of this navigator (lat0)\n\n"
+    "Returns the earth radius at the origin of this navigator in meters\n\n"
+  },
+  {"getDistance", (PyCFunction) _pypolarnavigator_getDistance, 1,
+    "getDistance((lat,lon)) -> distance between lat0/lon0 and lat/lon as float in meters\n\n"
+    "Calculates the distance from the lon0/lat0 to the provided lon/lat in meters.\n\n"
+    "lat,lon - a tuple latitude,longitude in radians to which distance should be calculated"
+  },
+  {"llToDa", (PyCFunction) _pypolarnavigator_llToDa, 1,
+    "llToDa((lat,lon)) -> a tuple (distance, azimuth)\n\n"
+    "Calculates the distance and azimuth from this navigators origin to the specified lon/lat.\n\n"
+    "lat,lon - a tuple latitude,longitude in radians"
+  },
+  {"daToLl", (PyCFunction) _pypolarnavigator_daToLl, 1,
+    "llToDa((distance,azimuth) -> a tuple (lat,lon) in radians\n\n"
+    "Calculates the longitude and latitude at the point that is distance meters and azimuth from the origin.\n\n"
+    "distance,azimuth - a tuple  where first value is distance in meters and second is the azimuth in radians"
+  },
+  {"dhToRe", (PyCFunction) _pypolarnavigator_dhToRe, 1,
+    "dhToRe((distance,height) -> a tuple (range in meters following the ray,elevation in radians)\n\n"
+    "Calculates the range and elevation that is reached from the origin to the distance and height. This calculation takes into account the refraction coefficient dndh.\n\n"
+    "distance,height - a tuple  where first value is distance in meters following the surface and second is the height above sea level."
+  },
+  {"deToRh", (PyCFunction) _pypolarnavigator_deToRh, 1,
+      "deToRh((distance,elevation) -> a tuple (range in meters following the ray, height above sea level)\n\n"
+      "Calculates the range and height above sea level that is reached from the origin to the distance and the elevation angle. This calculation takes into account the refraction coefficient dndh.\n\n"
+      "distance,elevation - a tuple  where first value is distance in meters following the surface and second is the elevation angle."
+  },
+  {"reToDh", (PyCFunction) _pypolarnavigator_reToDh, 1,
+    "reToDh((range,elevation) -> a tuple (distance along surface, elevation angle in radians)\n\n"
+    "Calculates the distance and height from origin to the specified range and elevation.\n\n"
+    "range,elevation - a tuple  where first value is range in meters following the ray and second is the elevation angle."
+  },
   { NULL, NULL } /* sentinel */
 };
 
-#ifdef KALLE
-/**
- * Returns the specified attribute in the polar navigator
- */
-static PyObject* _pypolarnavigator_getattr(PyPolarNavigator* self, char* name)
-{
-  PyObject* res;
-  if (strcmp("poleradius", name) == 0) {
-    return PyFloat_FromDouble(PolarNavigator_getPoleRadius(self->navigator));
-  } else if (strcmp("equatorradius", name) == 0) {
-    return PyFloat_FromDouble(PolarNavigator_getEquatorRadius(self->navigator));
-  } else if (strcmp("lon0", name) == 0) {
-    return PyFloat_FromDouble(PolarNavigator_getLon0(self->navigator));
-  } else if (strcmp("lat0", name) == 0) {
-    return PyFloat_FromDouble(PolarNavigator_getLat0(self->navigator));
-  } else if (strcmp("alt0", name) == 0) {
-    return PyFloat_FromDouble(PolarNavigator_getAlt0(self->navigator));
-  } else if (strcmp("dndh", name) == 0) {
-    return PyFloat_FromDouble(PolarNavigator_getDndh(self->navigator));
-  }
-
-  res = Py_FindMethod(_pypolarnavigator_methods, (PyObject*) self, name);
-  if (res)
-    return res;
-
-  PyErr_Clear();
-  PyErr_SetString(PyExc_AttributeError, name);
-  return NULL;
-}
-#endif
 /**
  * Returns the specified attribute in the polar navigator
  */
@@ -364,60 +365,6 @@ static PyObject* _pypolarnavigator_getattro(PyPolarNavigator* self, PyObject* na
   }
   return PyObject_GenericGetAttr((PyObject*)self, name);
 }
-
-#ifdef KALLE
-/**
- * Returns the specified attribute in the polar navigator
- */
-static int _pypolarnavigator_setattr(PyPolarNavigator* self, char* name, PyObject* val)
-{
-  int result = -1;
-  if (name == NULL) {
-    goto done;
-  }
-  if (strcmp("poleradius", name)==0) {
-    if (PyFloat_Check(val)) {
-      PolarNavigator_setPoleRadius(self->navigator, PyFloat_AsDouble(val));
-    } else {
-      raiseException_gotoTag(done, PyExc_TypeError,"poleradius must be of type float");
-    }
-  } else if (strcmp("equatorradius", name) == 0) {
-    if (PyFloat_Check(val)) {
-      PolarNavigator_setEquatorRadius(self->navigator, PyFloat_AsDouble(val));
-    } else {
-      raiseException_gotoTag(done, PyExc_TypeError, "equatorradius must be of type float");
-    }
-  } else if (strcmp("lon0", name) == 0) {
-    if (PyFloat_Check(val)) {
-      PolarNavigator_setLon0(self->navigator, PyFloat_AsDouble(val));
-    } else {
-      raiseException_gotoTag(done, PyExc_TypeError, "lon0 must be of type float");
-    }
-  } else if (strcmp("lat0", name) == 0) {
-    if (PyFloat_Check(val)) {
-      PolarNavigator_setLat0(self->navigator, PyFloat_AsDouble(val));
-    } else {
-      raiseException_gotoTag(done, PyExc_TypeError, "lat0 must be of type float");
-    }
-  } else if (strcmp("alt0", name) == 0) {
-    if (PyFloat_Check(val)) {
-      PolarNavigator_setAlt0(self->navigator, PyFloat_AsDouble(val));
-    } else {
-      raiseException_gotoTag(done, PyExc_TypeError, "alt0 must be of type float");
-    }
-  } else if (strcmp("dndh", name) == 0) {
-    if (PyFloat_Check(val)) {
-      PolarNavigator_setDndh(self->navigator, PyFloat_AsDouble(val));
-    } else {
-      raiseException_gotoTag(done, PyExc_TypeError, "dndh must be of type float");
-    }
-  }
-
-  result = 0;
-done:
-  return result;
-}
-#endif
 
 /**
  * Sets the attribute value
@@ -481,6 +428,31 @@ done:
 }
 /*@} End of Polar Scans */
 
+/*@{ Documentation about the type */
+PyDoc_STRVAR(_pypolarnavigator_module_doc,
+    "Routines for navigating in polar space taking into account, earths sphere, radar rays and longitude/latitude.\n"
+    "Another aspect is that it also takes into account the refraction, i.e. dndh.\n\n"
+    "One very commonly used approach is to calculate where on earth you are from a specific lon/lat position, following the radar ray x meters outward and determine height and position\n\n"
+    "The member attributes configurable are:\n"
+    " poleradius    - the radius to the poles (in meters).\n"
+    " equatorradius - the radius at the equator (in meters).\n"
+    " lon0          - the origin longitude (in radians)\n"
+    " lat0          - the origin latitude (in radians)\n"
+    " alt0          - the origin altitude (in meters)\n"
+    " dndh          - dndh (deflection)\n"
+    "Usage:\n"
+    "import _polarnav, math\n"
+    "nav = _polarnav.new()\n"
+    "nav.lon0 = 14.0*math.pi/180.0\n"
+    "nav.lat0 = 60.0*math.pi/180.0\n"
+    "nav.alt0 = 110.0\n"
+    "(lat,lon) = nav.daToLl(30000.0, 90.0*math.pi/180.0)\n"
+    "print(\"Longitude/latitude 30km east from origin is %f / %f\"%(lat*180.0/math.pi, lon*180.0/math.pi))\n"
+    "# Gives: Lon/lat 30km east of origin is 60.000000/14.540345"
+);
+/*@} End of Documentation about the type */
+
+
 /// --------------------------------------------------------------------
 /// Type definitions
 /// --------------------------------------------------------------------
@@ -508,7 +480,7 @@ PyTypeObject PyPolarNavigator_Type =
   (setattrofunc)_pypolarnavigator_setattro, /*tp_setattro*/
   0,                            /*tp_as_buffer*/
   Py_TPFLAGS_DEFAULT, /*tp_flags*/
-  0,                            /*tp_doc*/
+  _pypolarnavigator_module_doc, /*tp_doc*/
   (traverseproc)0,              /*tp_traverse*/
   (inquiry)0,                   /*tp_clear*/
   0,                            /*tp_richcompare*/
@@ -536,7 +508,10 @@ PyTypeObject PyPolarNavigator_Type =
 /// --------------------------------------------------------------------
 /*@{ Module setup */
 static PyMethodDef functions[] = {
-  {"new", (PyCFunction)_pypolarnavigator_new, 1},
+  {"new", (PyCFunction)_pypolarnavigator_new, 1,
+    "new() -> new instance of the GraCore object\n\n"
+    "Creates a new instance of the GraCore object"
+  },
   {NULL,NULL} /*Sentinel*/
 };
 
@@ -552,7 +527,7 @@ MOD_INIT(_polarnav)
 
   MOD_INIT_VERIFY_TYPE_READY(&PyPolarNavigator_Type);
 
-  MOD_INIT_DEF(module, "_polarnav", NULL/*doc*/, functions);
+  MOD_INIT_DEF(module, "_polarnav", _pypolarnavigator_module_doc, functions);
   if (module == NULL) {
     return MOD_INIT_ERROR;
   }
