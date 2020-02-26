@@ -664,23 +664,91 @@ static struct PyMethodDef _pypolarscanparam_methods[] =
   {"nodata", NULL},
   {"undetect", NULL},
   {"datatype", NULL},
-  {"setData", (PyCFunction) _pypolarscanparam_setData, 1},
-  {"getData", (PyCFunction) _pypolarscanparam_getData, 1},
-  {"getData2D", (PyCFunction) _pypolarscanparam_getData2D, 1},
-  {"getValue", (PyCFunction) _pypolarscanparam_getValue, 1},
-  {"getConvertedValue", (PyCFunction) _pypolarscanparam_getConvertedValue, 1},
-  {"setValue", (PyCFunction) _pypolarscanparam_setValue, 1},
-  {"addAttribute", (PyCFunction) _pypolarscanparam_addAttribute, 1},
-  {"getAttribute", (PyCFunction) _pypolarscanparam_getAttribute, 1},
-  {"hasAttribute", (PyCFunction) _pypolarscanparam_hasAttribute, 1},
-  {"getAttributeNames", (PyCFunction) _pypolarscanparam_getAttributeNames, 1},
-  {"addQualityField", (PyCFunction) _pypolarscanparam_addQualityField, 1},
-  {"getNumberOfQualityFields", (PyCFunction) _pypolarscanparam_getNumberOfQualityFields, 1},
-  {"getQualityField", (PyCFunction) _pypolarscanparam_getQualityField, 1},
-  {"removeQualityField", (PyCFunction) _pypolarscanparam_removeQualityField, 1},
-  {"toField", (PyCFunction)_pypolarscanparam_toField, 1},
-  {"convertDataDoubleToUchar", (PyCFunction)_pypolarscanparam_convertDataDoubleToUchar, 1},
-  {"clone", (PyCFunction)_pypolarscanparam_clone, 1},
+  {"setData", (PyCFunction) _pypolarscanparam_setData, 1,
+    "setData(array)\n\n"
+    "Initializes the parameter with a datafield as defined by a 2-dimensional numpy array and datatype.\n\n"
+    "array - The 2 dimensional numpy array."
+  },
+  {"getData", (PyCFunction) _pypolarscanparam_getData, 1,
+    "getData() -> a numpy array\n\n"
+    "Returns a 2 dimensional data array with the data set."
+  },
+  {"getData2D", (PyCFunction) _pypolarscanparam_getData2D, 1,
+      "getData2D() -> RaveData2DCore\n\n"
+      "Returns a RaveData2DCore instance with the data set."
+  },
+  {"getValue", (PyCFunction) _pypolarscanparam_getValue, 1,
+    "getValue(bin,ray) -> the value at the specified bin and ray index.\n\n"
+    "Returns the value at the specified bin and ray index. \n\n"
+    "bin - bin index\n"
+    "ray - ray index"
+  },
+  {"getConvertedValue", (PyCFunction) _pypolarscanparam_getConvertedValue, 1,
+    "getConvertedValue(bin,ray) -> the converted value at the specified bin and ray index.\n\n"
+    "Returns the converted value (offset+v*gain) at the specified bin and ray index. \n\n"
+    "bin - bin index\n"
+    "ray - ray index"
+  },
+  {"setValue", (PyCFunction) _pypolarscanparam_setValue, 1,
+    "setValue((bin,ray),value) -> 1 on success otherwise 0\n\n"
+    "Sets the value at the specified position. \n\n"
+    "bin   - bin index\n"
+    "ray   - ray index\n"
+    "value - the value that should be set at specified position."
+  },
+  {"addAttribute", (PyCFunction) _pypolarscanparam_addAttribute, 1,
+    "addAttribute(name, value) \n\n"
+    "Adds an attribute to the parameter. Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis etc. \n"
+    "Currently, double, long, string and 1-dimensional arrays are supported.\n\n"
+    "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis\n"
+    "value - Value to be associated with the name. Currently, double, long, string and 1-dimensional arrays are supported."
+  },
+  {"getAttribute", (PyCFunction) _pypolarscanparam_getAttribute, 1,
+    "getAttribute(name) -> value \n\n"
+    "Returns the value associated with the specified name \n\n"
+    "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis\n"
+  },
+  {"hasAttribute", (PyCFunction) _pypolarscanparam_hasAttribute, 1,
+    "hasAttribute(name) -> boolean \n\n"
+    "Returns True if attribute exists otherwise False \n\n"
+    "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis\n"
+  },
+  {"getAttributeNames", (PyCFunction) _pypolarscanparam_getAttributeNames, 1,
+    "getAttributeNames() -> array of names \n\n"
+    "Returns the attribute names associated with this polar scan parameter"
+  },
+  {"addQualityField", (PyCFunction) _pypolarscanparam_addQualityField, 1,
+    "addQualityField(field) \n\n"
+    "Adds a quality field to this polar parameter. Note, there is no check for valid size or similar. Also, there is no check if same how/task is specified or the likes. \n\n"
+    "field  - The RaveFieldCore field"
+  },
+  {"getNumberOfQualityFields", (PyCFunction) _pypolarscanparam_getNumberOfQualityFields, 1,
+    "getNumberOfQualityFields() -> integer\n\n"
+    "Returns the number of quality fields in this object"
+  },
+  {"getQualityField", (PyCFunction) _pypolarscanparam_getQualityField, 1,
+    "getQualityField(index) -> RaveFieldCore \n\n"
+    "Returns the rave field at specified index\n\n"
+    "index  - The rave field at specified position.\n\n"
+    "Throws IndexError if the rave field not could be found"
+  },
+  {"removeQualityField", (PyCFunction) _pypolarscanparam_removeQualityField, 1,
+    "removeQualityField(index) \n\n"
+    "Removes the quality field at specified index\n\n"
+    "index  - The rave field at specified position.\n\n"
+  },
+  {"toField", (PyCFunction)_pypolarscanparam_toField, 1,
+    "toField() -> RaveFieldCore\n\n"
+    "Creates a Rave Field from the parameter. Will also copy the attributes.\n\n"
+  },
+  {"convertDataDoubleToUchar", (PyCFunction)_pypolarscanparam_convertDataDoubleToUchar, 1,
+    "convertDataDoubleToUchar()\n\n"
+    "Utility function for converting 64-bit float (from BUFR) to 8-bit uint, primarily for reverting reflectivity data back to what they once were.\n\n"
+  },
+  {"clone", (PyCFunction)_pypolarscanparam_clone, 1,
+    "clone() -> PolarScanParamCore\n\n"
+    "Creates a clone of self"
+  },
   {NULL, NULL } /* sentinel */
 };
 
@@ -768,6 +836,26 @@ done:
 }
 /*@} End of Polar Scan Param */
 
+/*@{ Documentation about the type */
+PyDoc_STRVAR(_pypolarscanparam_type_doc,
+    "The polar scan parameter represents one quantity. Like for the polar scan, there are a number of members "
+    "associated with this object.\n"
+    "\n"
+    "nbins            - Number of bins in the data set.\n"
+    "nrays            - Number of rays in the data set.\n"
+    "quantity         - Quantity of this parameter.\n"
+    "gain             - Gain of the value in the formula offset + data*gain\n"
+    "offset           - Offset of the value in the formula offset + data*gain\n"
+    "nodata           - The value that represents a nodata (no coverage, ...)\n"
+    "undetect         - The value that represents undetect (coverage, but no hit)\n"
+    "datatype         - The data type. ReadOnly, initialization occurs when setting data using setData().\n"
+    "Usage:\n"
+    "import _polarscanparam\n"
+    "p = _polarscanparam.new()\n"
+    "p.setData(arr)\n"
+    "..."
+    );
+/*@} End of Documentation about the type */
 /// --------------------------------------------------------------------
 /// Type definitions
 /// --------------------------------------------------------------------
@@ -795,7 +883,7 @@ PyTypeObject PyPolarScanParam_Type =
   (setattrofunc)_pypolarscanparam_setattro, /*tp_setattro*/
   0,                            /*tp_as_buffer*/
   Py_TPFLAGS_DEFAULT, /*tp_flags*/
-  0,                            /*tp_doc*/
+  _pypolarscanparam_type_doc,   /*tp_doc*/
   (traverseproc)0,              /*tp_traverse*/
   (inquiry)0,                   /*tp_clear*/
   0,                            /*tp_richcompare*/
@@ -835,7 +923,7 @@ MOD_INIT(_polarscanparam)
 
   MOD_INIT_VERIFY_TYPE_READY(&PyPolarScanParam_Type);
 
-  MOD_INIT_DEF(module, "_polarscanparam", NULL/*doc*/, functions);
+  MOD_INIT_DEF(module, "_polarscanparam", _pypolarscanparam_type_doc, functions);
   if (module == NULL) {
     return MOD_INIT_ERROR;
   }
