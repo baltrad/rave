@@ -355,10 +355,35 @@ static struct PyMethodDef _pyprojection_methods[] =
   {"id", NULL},
   {"description", NULL},
   {"definition", NULL},
-  {"transform", (PyCFunction) _pyprojection_transform, 1},
-  {"transformx", (PyCFunction) _pyprojection_transformx, 1},
-  {"inv", (PyCFunction) _pyprojection_inv, 1},
-  {"fwd", (PyCFunction) _pyprojection_fwd, 1},
+  {"transform", (PyCFunction) _pyprojection_transform, 1,
+    "transform(tgtproj, (x,y[,z]) -> (x,y[,z])\n\n"
+    "Projects a coordinate pair into the new projection coordinate system. In some projections, z will also be needed and in those cases, the returned value will also contain a z (height)."
+    "tgtproj    - The target projection into which we want to navigate\n"
+    "x          - x coordinate (or lon)\n"
+    "y          - y coordinate (or lat)\n"
+    "z          - z coordinate (or height)"
+  },
+  {"transformx", (PyCFunction) _pyprojection_transformx, 1,
+    "transform(tgtproj, (x,y[,z]) -> (x,y[,z])\n\n"
+    "This is an alternate version of transform() . This function behaves similar to transform() and the user should be able\n"
+    "to use either of them. The c-version is different though.\n"
+    "tgtproj    - The target projection into which we want to navigate\n"
+    "x          - x coordinate (or lon)\n"
+    "y          - y coordinate (or lat)\n"
+    "z          - z coordinate (or height)"
+  },
+  {"inv", (PyCFunction) _pyprojection_inv, 1,
+    "inv((x,y)) -> lon/lat\n\n"
+    "Translates surface coordinate into lon/lat.\n\n"
+    "x - x coordinate\n"
+    "y - y coordinate"
+  },
+  {"fwd", (PyCFunction) _pyprojection_fwd, 1,
+    "fwd((lon,lat)) -> x/y\n\n"
+    "Translates lon/lat into surface coordinates.\n\n"
+    "lon - longitude in radians\n"
+    "lat - latitude in radians"
+  },
   {"__dir__", (PyCFunction) MOD_DIR_REFERENCE(PyProjection), METH_NOARGS},
   {NULL, NULL } /* sentinel */
 };
@@ -399,12 +424,33 @@ done:
 }
 /*@} End of Projection */
 
+/*@{ Documentation about the module */
+PyDoc_STRVAR(_pyprojection_type_doc,
+    "Wrapper around the USGS PROJ.4 library\n"
+    "There are 3 readonly attributes that are set when creating the actual instance:\n"
+    "id          - identifier of this projection, like ps14e60n\n"
+    "description - description of this projection\n"
+    "definition  - the USGS PROJ.4 definition string"
+    "\n"
+    "Usage:\n"
+    " import _projection\n"
+    " proj = _projection.new(\"merc_proj\", \"mercator projection\", \"+proj=merc +lat_ts=0 +lon_0=0 +k=1.0 +R=6378137.0 +nadgrids=@null +no_defs\")\n"
+    " xy = proj.fwd(deg2rad((12.8544, 56.3675)))\n"
+    );
+/*@} End of Documentation about the module */
+
 /// --------------------------------------------------------------------
 /// Module setup
 /// --------------------------------------------------------------------
 /*@{ Module setup */
 static PyMethodDef functions[] = {
-  {"new", (PyCFunction)_pyprojection_new, 1},
+  {"new", (PyCFunction)_pyprojection_new, 1,
+    "new(id, description, definition) -> ProjectionCore\n\n"
+    "Creates a new projection instance with identifier, description and the USGS PROJ.4 definition\n\n"
+    "id          - identifier of this projection, like ps14e60n\n"
+    "description - description of this projection\n"
+    "definition  - the USGS PROJ.4 definition string"
+  },
   {NULL,NULL} /*Sentinel*/
 };
 
@@ -431,7 +477,7 @@ PyTypeObject PyProjection_Type =
   (setattrofunc)_pyprojection_setattro, /*tp_setattro*/
   0, /*tp_as_buffer*/
   Py_TPFLAGS_DEFAULT, /*tp_flags*/
-  0, /*tp_doc*/
+  _pyprojection_type_doc, /*tp_doc*/
   (traverseproc)0, /*tp_traverse*/
   (inquiry)0, /*tp_clear*/
   0, /*tp_richcompare*/
@@ -463,7 +509,7 @@ MOD_INIT(_projection)
 
   MOD_INIT_VERIFY_TYPE_READY(&PyProjection_Type);
 
-  MOD_INIT_DEF(module, "_projection", NULL/*doc*/, functions);
+  MOD_INIT_DEF(module, "_projection", _pyprojection_type_doc, functions);
   if (module == NULL) {
     return MOD_INIT_ERROR;
   }
