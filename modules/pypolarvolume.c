@@ -685,29 +685,128 @@ static struct PyMethodDef _pypolarvolume_methods[] =
   {"source", NULL},
   {"paramname", NULL},
   {"beamwidth", NULL},
-  {"getDistance", (PyCFunction) _pypolarvolume_getDistance, 1},
-  {"getMaxDistance", (PyCFunction) _pypolarvolume_getMaxDistance, 1},
-  {"addScan", (PyCFunction) _pypolarvolume_addScan, 1},
-  {"getScan", (PyCFunction) _pypolarvolume_getScan, 1},
-  {"getNumberOfScans", (PyCFunction) _pypolarvolume_getNumberOfScans, 1},
-  {"removeScan", (PyCFunction) _pypolarvolume_removeScan, 1},
-  {"getScanWithMaxDistance", (PyCFunction) _pypolarvolume_getScanWithMaxDistance, 1},
-  {"isAscendingScans", (PyCFunction) _pypolarvolume_isAscendingScans, 1},
-  {"isTransformable", (PyCFunction) _pypolarvolume_isTransformable, 1},
-  {"sortByElevations", (PyCFunction) _pypolarvolume_sortByElevations, 1},
-  {"getScanClosestToElevation", (PyCFunction) _pypolarvolume_getScanClosestToElevation, 1},
-  {"getNearest", (PyCFunction) _pypolarvolume_getNearest, 1},
-  {"getNearestParameterValue", (PyCFunction) _pypolarvolume_getNearestParameterValue, 1},
-  {"getNearestConvertedParameterValue", (PyCFunction) _pypolarvolume_getNearestConvertedParameterValue, 1},
-  {"getConvertedVerticalMaxValue", (PyCFunction)_pypolarvolume_getConvertedVerticalMaxValue, 1},
-  {"addAttribute", (PyCFunction) _pypolarvolume_addAttribute, 1},
-  {"getAttribute", (PyCFunction) _pypolarvolume_getAttribute, 1},
-  {"getAttributeNames", (PyCFunction) _pypolarvolume_getAttributeNames, 1},
-  {"hasAttribute", (PyCFunction) _pypolarvolume_hasAttribute, 1},
-  {"isValid", (PyCFunction) _pypolarvolume_isValid, 1},
-  {"getDistanceField", (PyCFunction) _pypolarvolume_getDistanceField, 1},
-  {"getHeightField", (PyCFunction) _pypolarvolume_getHeightField, 1},
-  {"clone", (PyCFunction) _pypolarvolume_clone, 1},
+  {"getDistance", (PyCFunction) _pypolarvolume_getDistance, 1,
+    "getDistance((lon,lat)) --> distance from origin of this volume to the specified lon/lat pair\n\n"
+    "Returns the distance in meters along the surface from the radar to the specified lon/lat coordinate pair.\n\n"
+    "lon - Longitude in radians\n"
+    "lat - Latitude in radians"
+  },
+  {"getMaxDistance", (PyCFunction) _pypolarvolume_getMaxDistance, 1,
+    "getMaxDistance() -> max distance at ground level\n\n"
+    "Returns the maximum distance (at ground level) that this volume will cover."
+  },
+  {"addScan", (PyCFunction) _pypolarvolume_addScan, 1,
+    "addScan(scan)\n\n"
+    "Adds a scan to the volume\n\n"
+    "scan - a PolarScanCore"
+  },
+  {"getScan", (PyCFunction) _pypolarvolume_getScan, 1,
+    "getScan(index) -> scan\n\n"
+    "Returns the polar scan at specified index\n\n"
+    "index - the index"
+  },
+  {"getNumberOfScans", (PyCFunction) _pypolarvolume_getNumberOfScans, 1,
+    "getNumberOfScans() -> integer\n\n"
+    "Returns the number of scans that this volume contains."
+  },
+  {"removeScan", (PyCFunction) _pypolarvolume_removeScan, 1,
+    "removeScan(index)\n\n"
+    "Removes the scan at specified index\n\n"
+    "index - the index of the scan to remove"
+  },
+  {"getScanWithMaxDistance", (PyCFunction) _pypolarvolume_getScanWithMaxDistance, 1,
+    "getScanWithMaxDistance() -> a scan\n\n"
+    "Locates the scan that covers the longest distance."
+  },
+  {"isAscendingScans", (PyCFunction) _pypolarvolume_isAscendingScans, 1,
+    "isAscendingScans() -> boolean\n\n"
+    "Returns True if the scans in the volume are sorted in ascending order, otherwise False will be returned."
+  },
+  {"isTransformable", (PyCFunction) _pypolarvolume_isTransformable, 1,
+    "isTransformable() -> boolean\n\n"
+    "Returns True if is is possible to perform transform operations on this volume or False if it isn't."
+  },
+  {"sortByElevations", (PyCFunction) _pypolarvolume_sortByElevations, 1,
+    "sortByElevations(order)\n\n"
+    "Sorts the scans in the volume according to elevation angle.\n\n"
+    "order - 1 if soring should be done in ascending order, otherwise descending ordering will be performed."
+  },
+  {"getScanClosestToElevation", (PyCFunction) _pypolarvolume_getScanClosestToElevation, 1,
+    "getScanClosestToElevation(elevation, insidee) -> scan\n\n"
+    "Returns the scan with elevation closest to the specified elevation. This function requires that the scans are ordered in ascending order, otherwise the behaviour will be undefined.\n\n"
+    "elevation - the elevation angle in radians\n"
+    "insidee   - if 1, then elevations must be within the min - max elevations. If 0, then either min or max will always be returned if not within min-max."
+  },
+  {"getNearest", (PyCFunction) _pypolarvolume_getNearest, 1,
+    "getNearest((lon,lat), height, insidee) -> (type, value)\n\n"
+    "Gets the nearest value at the specified lon/lat/height.\n\n"
+    "lon    - longitude in radians\n"
+    "lat    - latitude in radians\n"
+    "height - height above sea level\n"
+    "inside - if elevation must be within min-max elevation or not"
+  },
+  {"getNearestParameterValue", (PyCFunction) _pypolarvolume_getNearestParameterValue, 1,
+    "getNearestParameterValue(quantity, (lon,lat), height, insidee) -> (type,value)\n\n"
+    "Gets the nearest value at the specified lon/lat/height for the specified quantity.\n\n"
+    "quantity - the parameter of interest\n"
+    "lon      - longitude in radians\n"
+    "lat      - latitude in radians\n"
+    "height   - height above sea level\n"
+    "inside   - if elevation must be within min-max elevation or not"
+  },
+  {"getNearestConvertedParameterValue", (PyCFunction) _pypolarvolume_getNearestConvertedParameterValue, 1,
+    "getNearestConvertedParameterValue(quantity, (lon,lat), height, insidee) -> (type,value)\n\n"
+    "Gets the nearest converted value (offset+v*gain) at the specified lon/lat/height for the specified quantity.\n\n"
+    "quantity - the parameter of interest\n"
+    "lon      - longitude in radians\n"
+    "lat      - latitude in radians\n"
+    "height   - height above sea level\n"
+    "inside   - if elevation must be within min-max elevation or not"
+  },
+  {"getConvertedVerticalMaxValue", (PyCFunction)_pypolarvolume_getConvertedVerticalMaxValue, 1,
+    "getConvertedVerticalMaxValue(quantity, (lon,lat)) -> (type,value)\n\n"
+    "Gets the vertical converted maximum value (offset+v*gain) at the specified lon/lat for the specified quantity.\n\n"
+    "quantity - the parameter of interest\n"
+    "lon      - longitude in radians\n"
+    "lat      - latitude in radians\n"
+  },
+  {"addAttribute", (PyCFunction) _pypolarvolume_addAttribute, 1,
+    "addAttribute(name, value) \n\n"
+    "Adds an attribute to the volume. Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis etc. \n"
+    "Currently, double, long, string and 1-dimensional arrays are supported.\n\n"
+    "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis\n"
+    "value - Value to be associated with the name. Currently, double, long, string and 1-dimensional arrays are supported."
+  },
+  {"getAttribute", (PyCFunction) _pypolarvolume_getAttribute, 1,
+    "getAttribute(name) -> value \n\n"
+    "Returns the value associated with the specified name \n\n"
+    "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis\n"
+  },
+  {"getAttributeNames", (PyCFunction) _pypolarvolume_getAttributeNames, 1,
+    "getAttributeNames() -> array of names \n\n"
+    "Returns the attribute names associated with this volume"
+  },
+  {"hasAttribute", (PyCFunction) _pypolarvolume_hasAttribute, 1,
+    "hasAttribute(name) -> a boolean \n\n"
+    "Returns if the specified name is defined within this polar volume\n\n"
+    "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis"
+  },
+  {"isValid", (PyCFunction) _pypolarvolume_isValid, 1,
+    "isValid() -> a boolean \n\n"
+    "Validates this polar volume to see if it is possible to write as a volume.\n\n"
+  },
+  {"getDistanceField", (PyCFunction) _pypolarvolume_getDistanceField, 1,
+    "getDistanceField() -> RaveFieldCore\n\n"
+    "Creates a distance field for this volume"
+  },
+  {"getHeightField", (PyCFunction) _pypolarvolume_getHeightField, 1,
+    "getHeightField() -> RaveFieldCore\n\n"
+    "Creates a height field for this volume"
+  },
+  {"clone", (PyCFunction) _pypolarvolume_clone, 1,
+    "clone() -> PolarVolumeCore\n\n"
+    "Creates a clone of self"
+  },
   {NULL, NULL} /* sentinel */
 };
 
@@ -849,6 +948,28 @@ static PyObject* _pypolarvolume_isPolarVolume(PyObject* self, PyObject* args)
 }
 /*@} End of Polar Volumes */
 
+/*@{ Documentation about the type */
+PyDoc_STRVAR(_pypolarvolume_type_doc,
+    "The polar volume is a container for polar scans. There are a few member attributes and like polar scans and other classes "
+    "it is possible to add arbitrary attributes in the 3 groups how, what and where. For example what/sthis.\n\n"
+    "\n"
+    "longitude        - The longitude for where this polar scan originates from (lon0) in radians\n"
+    "latitude         - The latitude for where this polar scan originates from (lat0) in radians\n"""
+    "height           - The height above sea level where this polar scan originates from (alt0) in meters\n"
+    "time             - Time this polar scan should represent as a string with format HHmmSS\n"
+    "date             - Date this polar scan should represent as a string in the format YYYYMMDD\n"
+    "source           - The source for this product. Defined as what/source in ODIM H5. I.e. a comma separated list of various identifiers. For example. NOD:seang,WMO:1234,....\n"
+    "paramname        - The default parameter. Default parameter is used when operating on this volume unless the parameter (quantity) explicitly has been specified in the function.\n"
+    "                 - All scans that currently are held by this volume and eventual new ones will all get the same default parameter.\n"
+    "beamwidth        - Beamwidth for the volume. All scans will get the specified beamwidth. If you only want to make the beamwidth affect an individual\n"
+    "                   scan, modify the scan directly.\n"
+    "\n"
+    "Usage:\n"
+    "import _polarvolume\n"
+    "vol = _polarvolume.new()\n"
+    );
+/*@} End of Documentation about the type */
+
 /// --------------------------------------------------------------------
 /// Type definitions
 /// --------------------------------------------------------------------
@@ -876,7 +997,7 @@ PyTypeObject PyPolarVolume_Type =
   (setattrofunc)_pypolarvolume_setattro, /*tp_setattro*/
   0,                            /*tp_as_buffer*/
   Py_TPFLAGS_DEFAULT, /*tp_flags*/
-  0,                            /*tp_doc*/
+  _pypolarvolume_type_doc,      /*tp_doc*/
   (traverseproc)0,              /*tp_traverse*/
   (inquiry)0,                   /*tp_clear*/
   0,                            /*tp_richcompare*/
@@ -904,8 +1025,15 @@ PyTypeObject PyPolarVolume_Type =
 /// --------------------------------------------------------------------
 /*@{ Module setup */
 static PyMethodDef functions[] = {
-  {"new", (PyCFunction)_pypolarvolume_new, 1},
-  {"isPolarVolume", (PyCFunction)_pypolarvolume_isPolarVolume, 1},
+  {"new", (PyCFunction)_pypolarvolume_new, 1,
+    "new() -> new instance of the PolarVolumeCore object\n\n"
+    "Creates a new instance of the PolarVolumeCore object"
+  },
+  {"isPolarVolume", (PyCFunction)_pypolarvolume_isPolarVolume, 1,
+    "isPolarVolume(object) -> boolean\n\n"
+    "Checks if provided object is of PolarVolumeCore type or not.\n\n"
+    "object - the object to check"
+  },
   {NULL,NULL} /*Sentinel*/
 };
 
@@ -921,7 +1049,7 @@ MOD_INIT(_polarvolume)
   MOD_INIT_SETUP_TYPE(PyPolarVolume_Type, &PyType_Type);
 
   MOD_INIT_VERIFY_TYPE_READY(&PyPolarVolume_Type);
-  MOD_INIT_DEF(module, "_polarvolume", NULL/*doc*/, functions);
+  MOD_INIT_DEF(module, "_polarvolume", _pypolarvolume_type_doc, functions);
   if (module == NULL) {
     return MOD_INIT_ERROR;
   }

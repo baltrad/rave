@@ -1284,7 +1284,7 @@ static struct PyMethodDef _pypolarscan_methods[] =
   },
   {"getAttributeNames", (PyCFunction) _pypolarscan_getAttributeNames, 1,
     "getAttributeNames() -> array of names \n\n"
-    "Returns the attribute names associated with this cartesian object"
+    "Returns the attribute names associated with this scan"
   },
   {"isValid", (PyCFunction) _pypolarscan_isValid, 1,
     "isValid(otype) -> a boolean \n\n"
@@ -1695,8 +1695,15 @@ PyTypeObject PyPolarScan_Type =
 
 /*@{ Module setup */
 static PyMethodDef functions[] = {
-  {"new", (PyCFunction)_pypolarscan_new, 1},
-  {"isPolarScan", (PyCFunction)_pypolarscan_isPolarScan, 1},
+  {"new", (PyCFunction)_pypolarscan_new, 1,
+    "new() -> new instance of the PolarScanCore object\n\n"
+    "Creates a new instance of the PolarScanCore object"
+  },
+  {"isPolarScan", (PyCFunction)_pypolarscan_isPolarScan, 1,
+    "isPolarScan(object) -> boolean\n\n"
+    "Checks if provided object is of PolarScanCore type or not.\n\n"
+    "object - the object to check"
+  },
   {NULL,NULL} /*Sentinel*/
 };
 

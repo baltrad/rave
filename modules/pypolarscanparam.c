@@ -908,8 +908,15 @@ PyTypeObject PyPolarScanParam_Type =
 
 /*@{ Module setup */
 static PyMethodDef functions[] = {
-  {"new", (PyCFunction)_pypolarscanparam_new, 1},
-  {"fromField", (PyCFunction)_pypolarscanparam_fromField, 1},
+  {"new", (PyCFunction)_pypolarscanparam_new, 1,
+    "new() -> new instance of the PolarScanParamCore object\n\n"
+    "Creates a new instance of the PolarScanParamCore object"
+  },
+  {"fromField", (PyCFunction)_pypolarscanparam_fromField, 1,
+    "fromField(field) -> PolarScanParamCore\n\n"
+    "Creates a polar scan parameter from a field.\n\n"
+    "field - the field to create a parameter fromk"
+  },
   {NULL,NULL} /*Sentinel*/
 };
 
