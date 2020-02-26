@@ -1654,41 +1654,5 @@ MOD_INIT(_cartesian)
   import_pycartesianparam();
   PYRAVE_DEBUG_INITIALIZE;
   return MOD_INIT_SUCCESS(module);
-
-
-
-#ifdef KALLE
-  PyObject *module=NULL,*dictionary=NULL;
-  static void *PyCartesian_API[PyCartesian_API_pointers];
-  PyObject *c_api_object = NULL;
-  PyCartesian_Type.ob_type = &PyType_Type;
-
-  module = Py_InitModule("_cartesian", functions);
-  if (module == NULL) {
-    return;
-  }
-  PyCartesian_API[PyCartesian_Type_NUM] = (void*)&PyCartesian_Type;
-  PyCartesian_API[PyCartesian_GetNative_NUM] = (void *)PyCartesian_GetNative;
-  PyCartesian_API[PyCartesian_New_NUM] = (void*)PyCartesian_New;
-
-  c_api_object = PyCObject_FromVoidPtr((void *)PyCartesian_API, NULL);
-
-  if (c_api_object != NULL) {
-    PyModule_AddObject(module, "_C_API", c_api_object);
-  }
-
-  dictionary = PyModule_GetDict(module);
-  ErrorObject = PyString_FromString("_cartesian.error");
-  if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
-    Py_FatalError("Can't define _cartesian.error");
-  }
-
-  import_array(); /*To make sure I get access to Numeric*/
-  import_pyprojection();
-  import_pyarea();
-  import_pyravefield();
-  import_pycartesianparam();
-  PYRAVE_DEBUG_INITIALIZE;
-#endif
 }
 /*@} End of Module setup */

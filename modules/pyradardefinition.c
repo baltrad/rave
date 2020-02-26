@@ -161,84 +161,6 @@ static struct PyMethodDef _pyradardefinition_methods[] =
   {NULL, NULL } /* sentinel */
 };
 
-#ifdef KALLE
-/**
- * Returns the specified attribute in the radar definition
- * @param[in] self - the radar definition
- */
-static PyObject* _pyradardefinition_getattr(PyRadarDefinition* self, char* name)
-{
-  PyObject* res = NULL;
-
-  if (strcmp("id", name) == 0) {
-    if (RadarDefinition_getID(self->def) == NULL) {
-      Py_RETURN_NONE;
-    } else {
-      return PyString_FromString(RadarDefinition_getID(self->def));
-    }
-  } else if (strcmp("description", name) == 0) {
-    if (RadarDefinition_getDescription(self->def) == NULL) {
-      Py_RETURN_NONE;
-    } else {
-      return PyString_FromString(RadarDefinition_getDescription(self->def));
-    }
-  } else if (strcmp("longitude", name) == 0) {
-    return PyFloat_FromDouble(RadarDefinition_getLongitude(self->def));
-  } else if (strcmp("latitude", name) == 0) {
-    return PyFloat_FromDouble(RadarDefinition_getLatitude(self->def));
-  } else if (strcmp("height", name) == 0) {
-    return PyFloat_FromDouble(RadarDefinition_getHeight(self->def));
-  } else if (strcmp("scale", name) == 0) {
-    return PyFloat_FromDouble(RadarDefinition_getScale(self->def));
-  } else if (strcmp("beamwidth", name) == 0) {
-    return PyFloat_FromDouble(RadarDefinition_getBeamwidth(self->def));
-  } else if (strcmp("wavelength", name) == 0) {
-    return PyFloat_FromDouble(RadarDefinition_getWavelength(self->def));
-  } else if (strcmp("nbins", name) == 0) {
-    return PyLong_FromLong(RadarDefinition_getNbins(self->def));
-  } else if (strcmp("nrays", name) == 0) {
-    return PyLong_FromLong(RadarDefinition_getNrays(self->def));
-  } else if (strcmp("elangles", name) == 0) {
-    double* angles = NULL;
-    unsigned int i = 0;
-    unsigned int n = 0;
-    PyObject* ret = PyList_New(0);
-    if (ret == NULL) {
-      return NULL;
-    }
-    if (!RadarDefinition_getElangles(self->def, &n, &angles)) {
-      Py_DECREF(ret);
-      return NULL;
-    }
-    for (i = 0; i < n; i++) {
-      if (PyList_Append(ret, PyFloat_FromDouble(angles[i])) < 0) {
-        Py_DECREF(ret);
-        RAVE_FREE(angles);
-        return NULL;
-      }
-    }
-    RAVE_FREE(angles);
-    return ret;
-  } else if (strcmp("projection", name) == 0) {
-    Projection_t* projection = RadarDefinition_getProjection(self->def);
-    if (projection != NULL) {
-      PyProjection* result = PyProjection_New(projection);
-      RAVE_OBJECT_RELEASE(projection);
-      return (PyObject*)result;
-    } else {
-      Py_RETURN_NONE;
-    }
-  }
-  res = Py_FindMethod(_pyradardefinition_methods, (PyObject*) self, name);
-  if (res)
-    return res;
-
-  PyErr_Clear();
-  PyErr_SetString(PyExc_AttributeError, name);
-  return NULL;
-}
-#endif
-
 static PyObject* _pyradardefinition_getattro(PyRadarDefinition* self, PyObject* name)
 {
   if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "id") == 0) {
@@ -303,156 +225,6 @@ static PyObject* _pyradardefinition_getattro(PyRadarDefinition* self, PyObject* 
 
   return PyObject_GenericGetAttr((PyObject*)self, name);
 }
-
-
-#ifdef KALLE
-/**
- * Returns the specified attribute in the radar definition
- */
-static int _pyradardefinition_setattr(PyRadarDefinition* self, char* name, PyObject* val)
-{
-  int result = -1;
-  if (name == NULL) {
-    goto done;
-  }
-  if (strcmp("id", name) == 0) {
-    if (PyString_Check(val)) {
-      RadarDefinition_setID(self->def, PyString_AsString(val));
-    } else if (val == Py_None) {
-      RadarDefinition_setID(self->def, NULL);
-    } else {
-      raiseException_gotoTag(done, PyExc_TypeError, "id must be a string");
-    }
-  } else if (strcmp("description", name) == 0) {
-    if (PyString_Check(val)) {
-      RadarDefinition_setDescription(self->def, PyString_AsString(val));
-    } else if (val == Py_None) {
-      RadarDefinition_setDescription(self->def, NULL);
-    } else {
-      raiseException_gotoTag(done, PyExc_TypeError, "description must be a string");
-    }
-  } else if (strcmp("longitude", name) == 0) {
-    if (PyFloat_Check(val)) {
-      RadarDefinition_setLongitude(self->def, PyFloat_AsDouble(val));
-    } else if (PyLong_Check(val)) {
-      RadarDefinition_setLongitude(self->def, PyLong_AsDouble(val));
-    } else if (PyInt_Check(val)) {
-      RadarDefinition_setLongitude(self->def, (double)PyInt_AsLong(val));
-    } else {
-      raiseException_gotoTag(done, PyExc_TypeError, "longitude must be a number");
-    }
-  } else if (strcmp("latitude", name) == 0) {
-    if (PyFloat_Check(val)) {
-      RadarDefinition_setLatitude(self->def, PyFloat_AsDouble(val));
-    } else if (PyLong_Check(val)) {
-      RadarDefinition_setLatitude(self->def, PyLong_AsDouble(val));
-    } else if (PyInt_Check(val)) {
-      RadarDefinition_setLatitude(self->def, (double)PyInt_AsLong(val));
-    } else {
-      raiseException_gotoTag(done, PyExc_TypeError, "longitude must be a number");
-    }
-  } else if (strcmp("height", name) == 0) {
-    if (PyFloat_Check(val)) {
-      RadarDefinition_setHeight(self->def, PyFloat_AsDouble(val));
-    } else if (PyLong_Check(val)) {
-      RadarDefinition_setHeight(self->def, PyLong_AsDouble(val));
-    } else if (PyInt_Check(val)) {
-      RadarDefinition_setHeight(self->def, (double)PyInt_AsLong(val));
-    } else {
-      raiseException_gotoTag(done, PyExc_TypeError, "height must be a number");
-    }
-  } else if (strcmp("scale", name) == 0) {
-    if (PyFloat_Check(val)) {
-      RadarDefinition_setScale(self->def, PyFloat_AsDouble(val));
-    } else if (PyLong_Check(val)) {
-      RadarDefinition_setScale(self->def, PyLong_AsDouble(val));
-    } else if (PyInt_Check(val)) {
-      RadarDefinition_setScale(self->def, (double)PyInt_AsLong(val));
-    } else {
-      raiseException_gotoTag(done, PyExc_TypeError, "scale must be a number");
-    }
-  } else if (strcmp("beamwidth", name) == 0) {
-    if (PyFloat_Check(val)) {
-      RadarDefinition_setBeamwidth(self->def, PyFloat_AsDouble(val));
-    } else if (PyLong_Check(val)) {
-      RadarDefinition_setBeamwidth(self->def, PyLong_AsDouble(val));
-    } else if (PyInt_Check(val)) {
-      RadarDefinition_setBeamwidth(self->def, (double)PyInt_AsLong(val));
-    } else {
-      raiseException_gotoTag(done, PyExc_TypeError, "beamwidth must be a number");
-    }
-  } else if (strcmp("wavelength", name) == 0) {
-    if (PyFloat_Check(val)) {
-      RadarDefinition_setWavelength(self->def, PyFloat_AsDouble(val));
-    } else if (PyLong_Check(val)) {
-      RadarDefinition_setWavelength(self->def, PyLong_AsDouble(val));
-    } else if (PyInt_Check(val)) {
-      RadarDefinition_setWavelength(self->def, (double)PyInt_AsLong(val));
-    } else {
-      raiseException_gotoTag(done, PyExc_TypeError, "wavelength must be a number");
-    }
-  } else if (strcmp("nrays", name) == 0) {
-    if (PyLong_Check(val)) {
-      RadarDefinition_setNrays(self->def, PyLong_AsLong(val));
-    } else if (PyInt_Check(val)) {
-      RadarDefinition_setNrays(self->def, PyInt_AsLong(val));
-    } else {
-      raiseException_gotoTag(done, PyExc_TypeError, "nrays must be a integer");
-    }
-  } else if (strcmp("nbins", name) == 0) {
-    if (PyLong_Check(val)) {
-      RadarDefinition_setNbins(self->def, PyLong_AsLong(val));
-    } else if (PyInt_Check(val)) {
-      RadarDefinition_setNbins(self->def, PyInt_AsLong(val));
-    } else {
-      raiseException_gotoTag(done, PyExc_TypeError, "nbins must be a integer");
-    }
-  } else if (strcmp("elangles", name) == 0) {
-    if (PySequence_Check(val)) {
-      PyObject* v = NULL;
-      Py_ssize_t n = PySequence_Size(val);
-      Py_ssize_t i = 0;
-      double* angles = RAVE_MALLOC(n * sizeof(double));
-      if (angles == NULL) {
-        raiseException_gotoTag(done, PyExc_MemoryError, "Could not allocate memory for angles");
-      }
-      for (i = 0; i < n; i++) {
-        v = PySequence_GetItem(val, i);
-        if (v != NULL) {
-          if (PyFloat_Check(v)) {
-            angles[i] = PyFloat_AsDouble(v);
-          } else if (PyLong_Check(v)) {
-            angles[i] = PyLong_AsDouble(v);
-          } else if (PyInt_Check(v)) {
-            angles[i] = (double)PyInt_AsLong(v);
-          } else {
-            Py_XDECREF(v);
-            raiseException_gotoTag(done, PyExc_TypeError, "height must be a number");
-          }
-        }
-        Py_XDECREF(v);
-      }
-      if (!RadarDefinition_setElangles(self->def, (unsigned int)n, angles)) {
-        raiseException_gotoTag(done, PyExc_MemoryError, "Could not set angles");
-      }
-      RAVE_FREE(angles);
-    } else {
-      raiseException_gotoTag(done, PyExc_TypeError, "elangles must be a sequence of numbers");
-    }
-  } else if (strcmp("projection", name)==0) {
-    if (PyProjection_Check(val)) {
-      RadarDefinition_setProjection(self->def, ((PyProjection*)val)->projection);
-    } else if (val == Py_None) {
-      RadarDefinition_setProjection(self->def, NULL);
-    } else {
-      raiseException_gotoTag(done, PyExc_TypeError,"projection must be of ProjectionCore type");
-    }
-  }
-  result = 0;
-done:
-  return result;
-}
-#endif
 
 /**
  * Returns the specified attribute in the radar definition
@@ -613,6 +385,35 @@ done:
 
 /*@} End of RadarDefinition */
 
+/*@{ Documentation about the type */
+PyDoc_STRVAR(_pyradardefinition_type_doc,
+    "Defines the characteristics of a radar\n"
+    "It keeps track of some relevant information for a radar:\n"
+    "id           - ID for this definition.\n"
+    "description  - Description for this definition.\n"
+    "longitude    - Longitude in radians\n"
+    "latitude     - Latitude in radians\n"
+    "height       - Height above sea level\n"
+    "elangles     - Array of elevation angles as float in radians\n"
+    "nrays        - Number of rays\n"
+    "nbins        - Number of bins\n"
+    "scale        - the length of the bins in meters\n"
+    "beamwidth    - the beam width in radians\n"
+    "wavelength   - the wavelength\n"
+    "projection   - the projection to use for this radar. Most likely a lon/lat projection\n"
+    "\n"
+    "Usage:\n"
+    " import _radardef, _projection\n"
+    " def = _radardef.new()\n"
+    " def.projection =  _projection.new(\"x\", \"y\", \"+proj=latlong +ellps=WGS84 +datum=WGS84\")\n"
+    " def.id = 'someid'\n"
+    " ....\n"
+    " def.elangles=[0.5*math.pi/180.0, 1.0*math.pi/180.0]\n"
+    " ..."
+    );
+/*@} End of Documentation about the module */
+
+
 /*@{ Type definitions */
 PyTypeObject PyRadarDefinition_Type =
 {
@@ -637,7 +438,7 @@ PyTypeObject PyRadarDefinition_Type =
   (setattrofunc)_pyradardefinition_setattro, /*tp_setattro*/
   0,                            /*tp_as_buffer*/
   Py_TPFLAGS_DEFAULT, /*tp_flags*/
-  0,                            /*tp_doc*/
+  _pyradardefinition_type_doc,  /*tp_doc*/
   (traverseproc)0,              /*tp_traverse*/
   (inquiry)0,                   /*tp_clear*/
   0,                            /*tp_richcompare*/
@@ -663,7 +464,10 @@ PyTypeObject PyRadarDefinition_Type =
 
 /*@{ Module setup */
 static PyMethodDef functions[] = {
-  {"new", (PyCFunction)_pyradardefinition_new, 1},
+  {"new", (PyCFunction)_pyradardefinition_new, 1,
+    "new() -> new instance of the RadarDefinitionCore object\n\n"
+    "Creates a new instance of the RadarDefinitionCore object"
+  },
   {NULL,NULL} /*Sentinel*/
 };
 
@@ -676,7 +480,7 @@ MOD_INIT(_radardef)
 
   MOD_INIT_VERIFY_TYPE_READY(&PyRadarDefinition_Type);
 
-  MOD_INIT_DEF(module, "_radardef", NULL/*doc*/, functions);
+  MOD_INIT_DEF(module, "_radardef", _pyradardefinition_type_doc, functions);
   if (module == NULL) {
     return MOD_INIT_ERROR;
   }
