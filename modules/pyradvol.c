@@ -374,13 +374,80 @@ static PyObject* _radvolspike_func(PyObject* self, PyObject* args) {
 
 static struct PyMethodDef _radvol_functions[] =
 {
-  { "attCorrection", (PyCFunction) _radvolatt_func, METH_VARARGS },
-  { "broadAssessment", (PyCFunction) _radvolbroad_func, METH_VARARGS },
-  { "nmetRemoval", (PyCFunction) _radvolnmet_func, METH_VARARGS },
-  { "speckRemoval", (PyCFunction) _radvolspeck_func, METH_VARARGS },
-  { "spikeRemoval", (PyCFunction) _radvolspike_func, METH_VARARGS },
+  { "attCorrection", (PyCFunction) _radvolatt_func, METH_VARARGS,
+    "attCorrection(object, params) -> boolean\n\n"
+    "Radvol-QC algorithms of correction for attenuation in rain.\n\n"
+    "object - a polar volume or scan\n"
+    "params - the radvol option class. Can be fetched using rave_radvol_realtime.get_options.\n\n"
+    "Usage:\n"
+    " import _radvol, rave_radvol_realtime, _raveio\n"
+    " vol = _raveio.open(\"somevolume.h5\").object\n"
+    " pars = rave_radvol_realtime.get_options(vol)\n"
+    " _radvol.attCorrection(vol, pars)"
+  },
+  { "broadAssessment", (PyCFunction) _radvolbroad_func, METH_VARARGS,
+    "broadAssessment(object, params) -> boolean\n\n"
+    "Radvol-QC algorithms for assessment of distance to radar related effects.\n\n"
+    "object - a polar volume or scan\n"
+    "params - the radvol option class. Can be fetched using rave_radvol_realtime.get_options.\n\n"
+    "Usage:\n"
+    " import _radvol, rave_radvol_realtime, _raveio\n"
+    " vol = _raveio.open(\"somevolume.h5\").object\n"
+    " pars = rave_radvol_realtime.get_options(vol)\n"
+    " _radvol.broadAssessment(vol, pars)"
+  },
+  { "nmetRemoval", (PyCFunction) _radvolnmet_func, METH_VARARGS,
+    "nmetRemoval(object, params) -> boolean\n\n"
+    "Radvol-QC algorithms for non-meteorological echoes removal.\n\n"
+    "object - a polar volume or scan\n"
+    "params - the radvol option class. Can be fetched using rave_radvol_realtime.get_options.\n\n"
+    "Usage:\n"
+    " import _radvol, rave_radvol_realtime, _raveio\n"
+    " vol = _raveio.open(\"somevolume.h5\").object\n"
+    " pars = rave_radvol_realtime.get_options(vol)\n"
+    " _radvol.nmetRemoval(vol, pars)"
+  },
+  { "speckRemoval", (PyCFunction) _radvolspeck_func, METH_VARARGS,
+    "speckRemoval(object, params) -> boolean\n\n"
+    "Radvol-QC algorithms for speck removal.\n\n"
+    "object - a polar volume or scan\n"
+    "params - the radvol option class. Can be fetched using rave_radvol_realtime.get_options.\n\n"
+    "Usage:\n"
+    " import _radvol, rave_radvol_realtime, _raveio\n"
+    " vol = _raveio.open(\"somevolume.h5\").object\n"
+    " pars = rave_radvol_realtime.get_options(vol)\n"
+    " _radvol.speckRemoval(vol, pars)"
+  },
+  { "spikeRemoval", (PyCFunction) _radvolspike_func, METH_VARARGS,
+    "spikeRemoval(object, params) -> boolean\n\n"
+    "Radvol-QC algorithms for spike removal.\n\n"
+    "object - a polar volume or scan\n"
+    "params - the radvol option class. Can be fetched using rave_radvol_realtime.get_options.\n\n"
+    "Usage:\n"
+    " import _radvol, rave_radvol_realtime, _raveio\n"
+    " vol = _raveio.open(\"somevolume.h5\").object\n"
+    " pars = rave_radvol_realtime.get_options(vol)\n"
+    " _radvol.spikeRemoval(vol, pars)"
+  },
   { NULL, NULL }
 };
+
+/*@{ Documentation about the module */
+PyDoc_STRVAR(_pyradvol_module_doc,
+    "Radvol-QC is software developed in IMGW-PIB (Poland) for corrections\n"
+    "and generation of quality information for volumes of weather radar\n"
+    "data. The work has been performed in the frame of the BALTRAD Project.\n"
+    "\n"
+    "At present the following algorithms are included in the Radvol-QC package:\n"
+    " - BROAD: Assessment of distance to radar related effects (for quality characterization),\n"
+    " - SPIKE: Removal of geometrically shaped non-meteorological echoes (from sun,emitters, etc.) (for data correction and quality characterization),\n"
+    " - NMET: Removal of non-meteorological echoes (for data correction and quality characterization),\n"
+    " - SPECK: Removal of measurement noise (specks) (for data correction and quality characterization),\n"
+    " - [ BLOCK: Beam blockage correction (for data correction and quality characterization) - included into beamb package ],\n"
+    " - ATT: Correction for attenuation in rain (for data correction and quality characterization).\n"
+    "\n"
+    );
+/*@} End of Documentation about the module */
 
 /**
  * Initialize the _radvol module
@@ -390,7 +457,7 @@ MOD_INIT(_radvol)
   PyObject* module = NULL;
   PyObject* dictionary = NULL;
 
-  MOD_INIT_DEF(module, "_radvol", NULL/*doc*/, _radvol_functions);
+  MOD_INIT_DEF(module, "_radvol", _pyradvol_module_doc, _radvol_functions);
   if (module == NULL) {
     return MOD_INIT_ERROR;
   }
