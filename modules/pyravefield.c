@@ -487,7 +487,11 @@ static struct PyMethodDef _pyravefield_methods[] =
     "removeAttributes()\n\n"
     "Removes all attributes associated with self."
   },
-  {"concatx", (PyCFunction) _pyravefield_concatx, 1},
+  {"concatx", (PyCFunction) _pyravefield_concatx, 1,
+    "concatx(other) -> rave field core\n\n"
+    "Concatenates self with other x-wise. This requires that the fields have same ysize and same datatype. Will \n\n"
+    "other - the other field that self should be concatenated with. Requires that other has same ysize and datatype as self."
+  },
   {"__dir__", (PyCFunction) MOD_DIR_REFERENCE(PyRaveField), METH_NOARGS},
   {NULL, NULL } /* sentinel */
 };
