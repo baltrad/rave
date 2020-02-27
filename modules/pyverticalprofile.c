@@ -818,54 +818,229 @@ static struct PyMethodDef _pyverticalprofile_methods[] =
   {"latitude", NULL},
   {"height", NULL},
   {"interval", NULL},
+  {"minheight", NULL},
   {"maxheight", NULL},
-  {"setLevels", (PyCFunction) _pyverticalprofile_setLevels, 1},
-  {"getLevels", (PyCFunction) _pyverticalprofile_getLevels, 1},
-  {"getFF", (PyCFunction) _pyverticalprofile_getFF, 1},
-  {"setFF", (PyCFunction) _pyverticalprofile_setFF, 1},
-  {"getFFDev", (PyCFunction) _pyverticalprofile_getFFDev, 1},
-  {"setFFDev", (PyCFunction) _pyverticalprofile_setFFDev, 1},
-  {"getW", (PyCFunction) _pyverticalprofile_getW, 1},
-  {"setW", (PyCFunction) _pyverticalprofile_setW, 1},
-  {"getWDev", (PyCFunction) _pyverticalprofile_getWDev, 1},
-  {"setWDev", (PyCFunction) _pyverticalprofile_setWDev, 1},
-  {"getDD", (PyCFunction) _pyverticalprofile_getDD, 1},
-  {"setDD", (PyCFunction) _pyverticalprofile_setDD, 1},
-  {"getDDDev", (PyCFunction) _pyverticalprofile_getDDDev, 1},
-  {"setDDDev", (PyCFunction) _pyverticalprofile_setDDDev, 1},
-  {"getDiv", (PyCFunction) _pyverticalprofile_getDiv, 1},
-  {"setDiv", (PyCFunction) _pyverticalprofile_setDiv, 1},
-  {"getDivDev", (PyCFunction) _pyverticalprofile_getDivDev, 1},
-  {"setDivDev", (PyCFunction) _pyverticalprofile_setDivDev, 1},
-  {"getDef", (PyCFunction) _pyverticalprofile_getDef, 1},
-  {"setDef", (PyCFunction) _pyverticalprofile_setDef, 1},
-  {"getDefDev", (PyCFunction) _pyverticalprofile_getDefDev, 1},
-  {"setDefDev", (PyCFunction) _pyverticalprofile_setDefDev, 1},
-  {"getAD", (PyCFunction) _pyverticalprofile_getAD, 1},
-  {"setAD", (PyCFunction) _pyverticalprofile_setAD, 1},
-  {"getADDev", (PyCFunction) _pyverticalprofile_getADDev, 1},
-  {"setADDev", (PyCFunction) _pyverticalprofile_setADDev, 1},
-  {"getDBZ", (PyCFunction) _pyverticalprofile_getDBZ, 1},
-  {"setDBZ", (PyCFunction) _pyverticalprofile_setDBZ, 1},
-  {"getDBZDev", (PyCFunction) _pyverticalprofile_getDBZDev, 1},
-  {"setDBZDev", (PyCFunction) _pyverticalprofile_setDBZDev, 1},
-  {"getHGHT", (PyCFunction) _pyverticalprofile_getHGHT, 1},
-  {"setHGHT", (PyCFunction) _pyverticalprofile_setHGHT, 1},
-  {"getNV", (PyCFunction) _pyverticalprofile_getNV, 1},
-  {"setNV", (PyCFunction) _pyverticalprofile_setNV, 1},
-  {"getNZ", (PyCFunction) _pyverticalprofile_getNZ, 1},
-  {"setNZ", (PyCFunction) _pyverticalprofile_setNZ, 1},
-  {"getUWND", (PyCFunction) _pyverticalprofile_getUWND, 1},
-  {"setUWND", (PyCFunction) _pyverticalprofile_setUWND, 1},
-  {"getVWND", (PyCFunction) _pyverticalprofile_getVWND, 1},
-  {"setVWND", (PyCFunction) _pyverticalprofile_setVWND, 1},
-  {"getFields", (PyCFunction) _pyverticalprofile_getFields, 1},
-  {"addField", (PyCFunction) _pyverticalprofile_addField, 1},
-  {"getField", (PyCFunction) _pyverticalprofile_getField, 1},
-  {"addAttribute", (PyCFunction) _pyverticalprofile_addAttribute, 1},
-  {"getAttribute", (PyCFunction) _pyverticalprofile_getAttribute, 1},
-  {"hasAttribute", (PyCFunction) _pyverticalprofile_hasAttribute, 1},
-  {"getAttributeNames", (PyCFunction) _pyverticalprofile_getAttributeNames, 1},
+  {"setLevels", (PyCFunction) _pyverticalprofile_setLevels, 1,
+    "setLevels(count)\n\n"
+    "Sets the number of levels in the profile.\n\n"
+    "count - number of levels"
+  },
+  {"getLevels", (PyCFunction) _pyverticalprofile_getLevels, 1,
+    "getLevels() -> count\n\n"
+    "Returns the number of levels in the profile"
+  },
+  {"getFF", (PyCFunction) _pyverticalprofile_getFF, 1,
+    "getFF() -> rave field\n\n"
+    "Returns the Mean horizontal wind velocity (m/s) as a rave field."
+  },
+  {"setFF", (PyCFunction) _pyverticalprofile_setFF, 1,
+    "setFF(ravefield)\n\n"
+    "Sets the Mean horizontal wind velocity (m/s). This function will modify the field and add the attribute what/quantity = ff.\n\n"
+    "ravefield - the RaveFieldCore"
+  },
+  {"getFFDev", (PyCFunction) _pyverticalprofile_getFFDev, 1,
+    "getFFDev() -> rave field\n\n"
+    "Returns the Standard deviation of the horizontal wind velocity as a rave field."
+  },
+  {"setFFDev", (PyCFunction) _pyverticalprofile_setFFDev, 1,
+    "setFFDev(ravefield)\n\n"
+    "Sets the Standard deviation of the horizontal wind velocity. This function will modify the field and add the attribute what/quantity = ff_dev.\n\n"
+    "ravefield - the RaveFieldCore"
+  },
+  {"getW", (PyCFunction) _pyverticalprofile_getW, 1,
+    "getW() -> rave field\n\n"
+    "Returns the Mean vertical wind velocity (positive upwards) as a rave field."
+  },
+  {"setW", (PyCFunction) _pyverticalprofile_setW, 1,
+    "setW(ravefield)\n\n"
+    "Sets the Mean vertical wind velocity (positive upwards). This function will modify the field and add the attribute what/quantity = w.\n\n"
+    "ravefield - the RaveFieldCore"
+  },
+  {"getWDev", (PyCFunction) _pyverticalprofile_getWDev, 1,
+    "getWDev() -> rave field\n\n"
+    "Returns the Standard deviation of the vertical wind velocity as a rave field."
+  },
+  {"setWDev", (PyCFunction) _pyverticalprofile_setWDev, 1,
+    "setWDev(ravefield)\n\n"
+    "Sets the Standard deviation of the vertical wind velocity. This function will modify the field and add the attribute what/quantity = w_dev.\n\n"
+    "ravefield - the RaveFieldCore"
+  },
+  {"getDD", (PyCFunction) _pyverticalprofile_getDD, 1,
+    "getDD() -> rave field\n\n"
+    "Returns the Mean horizontal wind direction as a rave field."
+  },
+  {"setDD", (PyCFunction) _pyverticalprofile_setDD, 1,
+    "setDD(ravefield)\n\n"
+    "Sets the Mean horizontal wind direction. This function will modify ff and add the attribute what/quantity = dd.\n\n"
+    "ravefield - the RaveFieldCore"
+  },
+  {"getDDDev", (PyCFunction) _pyverticalprofile_getDDDev, 1,
+    "getDDDev() -> rave field\n\n"
+    "Returns the Standard deviation of the horizontal wind direction as a rave field."
+  },
+  {"setDDDev", (PyCFunction) _pyverticalprofile_setDDDev, 1,
+    "setDDDev(ravefield)\n\n"
+    "Sets the Standard deviation of the horizontal wind direction. This function will modify the field and add the attribute what/quantity = dd_dev.\n\n"
+    "ravefield - the RaveFieldCore"
+  },
+  {"getDiv", (PyCFunction) _pyverticalprofile_getDiv, 1,
+    "getDiv() -> rave field\n\n"
+    "Returns the Divergence as a rave field."
+  },
+  {"setDiv", (PyCFunction) _pyverticalprofile_setDiv, 1,
+    "setDiv(ravefield)\n\n"
+    "Sets the Divergence. This function will modify div and add the attribute what/quantity = div.\n\n"
+    "ravefield - the RaveFieldCore"
+  },
+  {"getDivDev", (PyCFunction) _pyverticalprofile_getDivDev, 1,
+    "getDivDev() -> rave field\n\n"
+    "Returns the  Standard deviation of the divergence as a rave field."
+  },
+  {"setDivDev", (PyCFunction) _pyverticalprofile_setDivDev, 1,
+    "setDivDev(ravefield)\n\n"
+    "Sets the  Standard deviation of the divergence. This function will modify the field and add the attribute what/quantity = div_dev.\n\n"
+    "ravefield - the RaveFieldCore"
+  },
+  {"getDef", (PyCFunction) _pyverticalprofile_getDef, 1,
+    "getDef() -> rave field\n\n"
+    "Returns the Deformation as a rave field."
+  },
+  {"setDef", (PyCFunction) _pyverticalprofile_setDef, 1,
+    "setDef(ravefield)\n\n"
+    "Sets the Deformation. This function will modify def and add the attribute what/quantity = def.\n\n"
+    "ravefield - the RaveFieldCore"
+  },
+  {"getDefDev", (PyCFunction) _pyverticalprofile_getDefDev, 1,
+    "getDefDev() -> rave field\n\n"
+    "Returns the Standard deviation of the deformation as a rave field."
+  },
+  {"setDefDev", (PyCFunction) _pyverticalprofile_setDefDev, 1,
+    "setDefDev(ravefield)\n\n"
+    "Sets the Standard deviation of the deformation. This function will modify the field and add the attribute what/quantity = def_dev.\n\n"
+    "ravefield - the RaveFieldCore"
+  },
+  {"getAD", (PyCFunction) _pyverticalprofile_getAD, 1,
+    "getAD() -> rave field\n\n"
+    "Returns the Axis of dilation (0-360) as a rave field."
+  },
+  {"setAD", (PyCFunction) _pyverticalprofile_setAD, 1,
+    "setAD(ravefield)\n\n"
+    "Sets the Axis of dilation (0-360). This function will modify the field and add the attribute what/quantity = ad.\n\n"
+    "ravefield - the RaveFieldCore"
+  },
+  {"getADDev", (PyCFunction) _pyverticalprofile_getADDev, 1,
+    "getADDev() -> rave field\n\n"
+    "Returns the Standard deviation of the axis of dilation as a rave field."
+  },
+  {"setADDev", (PyCFunction) _pyverticalprofile_setADDev, 1,
+    "setADDev(ravefield)\n\n"
+    "Sets the Standard deviation of the axis of dilation. This function will modify the field and add the attribute what/quantity = ad_dev.\n\n"
+    "ravefield - the RaveFieldCore"
+  },
+  {"getDBZ", (PyCFunction) _pyverticalprofile_getDBZ, 1,
+    "getDBZ() -> rave field\n\n"
+    "Returns the Mean radar reflectivity factor as a rave field."
+  },
+  {"setDBZ", (PyCFunction) _pyverticalprofile_setDBZ, 1,
+    "setDBZ(ravefield)\n\n"
+    "Sets the Mean radar reflectivity factor. This function will modify the field and add the attribute what/quantity = dbz.\n\n"
+    "ravefield - the RaveFieldCore"
+  },
+  {"getDBZDev", (PyCFunction) _pyverticalprofile_getDBZDev, 1,
+    "getDBZDev() -> rave field\n\n"
+    "Returns the Standard deviation of the radar reflectivity factor as a rave field."
+  },
+  {"setDBZDev", (PyCFunction) _pyverticalprofile_setDBZDev, 1,
+    "setDBZDev(ravefield)\n\n"
+    "Sets the Standard deviation of the radar reflectivity factor. This function will modify the field and add the attribute what/quantity = dbz_dev.\n\n"
+    "ravefield - the RaveFieldCore"
+  },
+  {"getHGHT", (PyCFunction) _pyverticalprofile_getHGHT, 1,
+    "getHGHT() -> rave field\n\n"
+    "Returns the different height levels. Each level is the center of the height bin as a rave field."
+  },
+  {"setHGHT", (PyCFunction) _pyverticalprofile_setHGHT, 1,
+    "setHGHT(ravefield)\n\n"
+    "Sets the different height levels. Each level is the center of the height bin. This function will modify the field and add the attribute what/quantity = HGHT.\n\n"
+    "ravefield - the RaveFieldCore"
+  },
+  {"getNV", (PyCFunction) _pyverticalprofile_getNV, 1,
+    "getNV() -> rave field\n\n"
+    "Returns the number of sample points for mean horizontal wind velocity as a rave field."
+  },
+  {"setNV", (PyCFunction) _pyverticalprofile_setNV, 1,
+    "setNV(ravefield)\n\n"
+    "Sets the number of sampled points for horizontal wind. This function will modify the field and add the attribute what/quantity = n.\n\n"
+    "ravefield - the RaveFieldCore"
+  },
+  {"getNZ", (PyCFunction) _pyverticalprofile_getNZ, 1,
+    "getNZ() -> rave field\n\n"
+    "Returns the number of sample points for reflectivity as a rave field."
+  },
+  {"setNZ", (PyCFunction) _pyverticalprofile_setNZ, 1,
+    "setNZ(ravefield)\n\n"
+    "Sets the number of sampled points for reflectivity. This function will modify the field and add the attribute what/quantity = nz.\n\n"
+    "ravefield - the RaveFieldCore"
+  },
+  {"getUWND", (PyCFunction) _pyverticalprofile_getUWND, 1,
+    "getUWND() -> rave field\n\n"
+    "Returns the vind field UWND i.e. the wind component in the x-direction. This field is calculated using the fields ff and dd"
+  },
+  {"setUWND", (PyCFunction) _pyverticalprofile_setUWND, 1,
+    "setUWND(ravefield)\n\n"
+    "Sets the vind field UWND i.e. the wind component in the x-direction. This field is calculated using the fields ff and dd.\n"
+    "This function will modify the field and add the attribute what/quantity = UWND.\n\n"
+    "ravefield - the RaveFieldCore"
+  },
+  {"getVWND", (PyCFunction) _pyverticalprofile_getVWND, 1,
+    "getVWND() -> rave field\n\n"
+    "Returns the vind field VWND i.e. the wind component in the y-direction. This field is calculated using the fields ff and dd"
+  },
+  {"setVWND", (PyCFunction) _pyverticalprofile_setVWND, 1,
+    "setVWND(ravefield)\n\n"
+    "Sets the vind field VWND i.e. the wind component in the y-direction. This field is calculated using the fields ff and dd\n"
+    "This function will modify ff and add the attribute what/quantity = VWND.\n\n"
+    "ravefield - the RaveFieldCore"
+  },
+  {"getFields", (PyCFunction) _pyverticalprofile_getFields, 1,
+    "getFields() -> list of VerticalProfileCore objects\n\n"
+    "Returns a list of all existing fields in the vertical profile. Each field will contain a what/quantity attribute for identification purposes."
+  },
+  {"addField", (PyCFunction) _pyverticalprofile_addField, 1,
+    "addField(ravefield)\n\n"
+    "Adds a field to the vertical profile. The field must have what/quantity set in order to\n"
+    "identify the type. This basically means that if addField is called with a field having\n"
+    "what/quantity = ff, it would be the same as calling \ref VerticalProfile_setFF.\n"
+    "Allowed quantities are: ff, ff_dev, w, w_dev, dd, dd_dev\n"
+    "div, div_dev, def, def_dev. ad, ad_dev, dbz, dbz_dev, n, HGHT, UWND and VWND\n\n"
+    "ravefield - RaveFieldCore with the attribute what/quantity set"
+  },
+  {"getField", (PyCFunction) _pyverticalprofile_getField, 1,
+    "getField(quantity) -> RaveFieldCore\n\n"
+    "Another variant of getting the field, but use the quantity instead.\n\n"
+    "quantity - the quantity of the parameter field"
+  },
+  {"addAttribute", (PyCFunction) _pyverticalprofile_addAttribute, 1,
+    "addAttribute(name, value) \n\n"
+    "Adds an attribute to the vertical profile. Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis etc. \n"
+    "Currently, double, long, string and 1-dimensional arrays are supported.\n\n"
+    "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis\n"
+    "value - Value to be associated with the name. Currently, double, long, string and 1-dimensional arrays are supported."
+  },
+  {"getAttribute", (PyCFunction) _pyverticalprofile_getAttribute, 1,
+    "getAttribute(name) -> value \n\n"
+    "Returns the value associated with the specified name \n\n"
+    "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis\n"
+  },
+  {"hasAttribute", (PyCFunction) _pyverticalprofile_hasAttribute, 1,
+    "hasAttribute(name) -> a boolean \n\n"
+    "Returns if the specified name is defined within this vertical profile\n\n"
+    "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis"
+  },
+  {"getAttributeNames", (PyCFunction) _pyverticalprofile_getAttributeNames, 1,
+    "getAttributeNames() -> array of names \n\n"
+    "Returns the attribute names associated with this vertical profile"
+  },
   {NULL, NULL}
 };
 
@@ -1094,6 +1269,36 @@ static PyObject* _pyverticalprofile_isVerticalProfile(PyObject* self, PyObject* 
 }
 /*@} End of Vertical Profile */
 
+/*@{ Documentation about the type */
+PyDoc_STRVAR(_pyverticalprofile_type_doc,
+    "Defines the functions available when working with vertical profiles.\n"
+    "Like all other product types there are a number of member attributes that are relevant for this product besides the actual data\n"
+    "The member attributes are:\n"
+    "time             - Time this vertical profile product should represent as a string with format HHmmSS\n"
+    "date             - Date this vertical profile should represent as a string in the format YYYYMMDD\n"
+    "starttime        - Start time for this product as a string with format HHmmSS.\n"
+    "startdate        - Start date for this product as a string with format YYYYMMDD.\n"
+    "endtime          - End time for this product as a string with format HHmmSS.\n"
+    "enddate          - End date for this product as a string with format YYYYMMDD.\n"
+    "source           - The source for this product. Defined as what/source in ODIM H5. I.e. a comma separated list of various identifiers. For example. NOD:seang,WMO:1234,....\n"
+    "product          - The product this vertical profile should represent as defined in ODIM H5. Can basically be any string.\n"
+    "longitude        - Longitude (in radians)\n"
+    "latitude         - Latitude (in radians)\n"
+    "height           - Height of the centre of the antenna\n"
+    "interval         - The vertical distance (m) between height intervals, or 0.0 if variable\n"
+    "minheight        - Minimum height in meters above mean sea level\n"
+    "maxheight        - Maximum height in meters above mean sea level\n"
+    "Usage:\n"
+    " import _verticalprofile\n"
+    " vp = _verticalprofile.new()\n"
+    " vp.source = \"NOD:.....\"\n"
+    " vp.longitude = 14.0*math.pi/180.0\n"
+    " ...\n"
+    " vp.setDBZ(ravefield)\n"
+    " ..."
+    );
+/*@} End of Documentation about the type */
+
 /// --------------------------------------------------------------------
 /// Type definitions
 /// --------------------------------------------------------------------
@@ -1121,7 +1326,7 @@ PyTypeObject PyVerticalProfile_Type =
   (setattrofunc)_pyverticalprofile_setattro, /*tp_setattro*/
   0,                            /*tp_as_buffer*/
   Py_TPFLAGS_DEFAULT, /*tp_flags*/
-  0,                            /*tp_doc*/
+  _pyverticalprofile_type_doc,  /*tp_doc*/
   (traverseproc)0,              /*tp_traverse*/
   (inquiry)0,                   /*tp_clear*/
   0,                            /*tp_richcompare*/
@@ -1146,8 +1351,15 @@ PyTypeObject PyVerticalProfile_Type =
 
 /*@{ Module setup */
 static PyMethodDef functions[] = {
-  {"new", (PyCFunction)_pyverticalprofile_new, 1},
-  {"isVerticalProfile", (PyCFunction)_pyverticalprofile_isVerticalProfile, 1},
+  {"new", (PyCFunction)_pyverticalprofile_new, 1,
+    "new() -> new instance of the VerticalProfileCore object\n\n"
+    "Creates a new instance of the VerticalProfileCore object"
+  },
+  {"isVerticalProfile", (PyCFunction)_pyverticalprofile_isVerticalProfile, 1,
+    "isVerticalProfile(object) -> boolean\n\n"
+    "Checks if provided object is of VerticalProfileCore type or not.\n\n"
+    "object - the object to check"
+  },
   {NULL,NULL} /*Sentinel*/
 };
 
@@ -1161,7 +1373,7 @@ MOD_INIT(_verticalprofile)
 
   MOD_INIT_VERIFY_TYPE_READY(&PyVerticalProfile_Type);
 
-  MOD_INIT_DEF(module, "_verticalprofile", NULL/*doc*/, functions);
+  MOD_INIT_DEF(module, "_verticalprofile", _pyverticalprofile_type_doc, functions);
   if (module == NULL) {
     return MOD_INIT_ERROR;
   }
