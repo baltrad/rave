@@ -439,15 +439,54 @@ static struct PyMethodDef _pyravefield_methods[] =
   {"xsize", NULL},
   {"ysize", NULL},
   {"datatype", NULL},
-  {"setData", (PyCFunction) _pyravefield_setData, 1},
-  {"getData", (PyCFunction) _pyravefield_getData, 1},
-  {"setValue", (PyCFunction) _pyravefield_setValue, 1},
-  {"getValue", (PyCFunction) _pyravefield_getValue, 1},
-  {"getConvertedValue", (PyCFunction) _pyravefield_getConvertedValue, 1},
-  {"addAttribute", (PyCFunction) _pyravefield_addAttribute, 1},
-  {"getAttribute", (PyCFunction) _pyravefield_getAttribute, 1},
-  {"getAttributeNames", (PyCFunction) _pyravefield_getAttributeNames, 1},
-  {"removeAttributes", (PyCFunction) _pyravefield_removeAttributes, 1},
+  {"setData", (PyCFunction) _pyravefield_setData, 1,
+    "setData(array)\n\n"
+    "Initializes the parameter with a datafield as defined by a 2-dimensional numpy array and datatype.\n\n"
+    "array - The 2 dimensional numpy array."
+  },
+  {"getData", (PyCFunction) _pyravefield_getData, 1,
+    "getData() -> a numpy array\n\n"
+    "Returns a 2 dimensional data array with the data set."
+  },
+  {"setValue", (PyCFunction) _pyravefield_setValue, 1,
+    "setValue(x,y,value) -> 1 on success otherwise 0\n\n"
+    "Sets the value at the specified position. \n\n"
+    "x     - x position\n"
+    "y     - y position\n"
+    "value - the value that should be set at specified position."
+  },
+  {"getValue", (PyCFunction) _pyravefield_getValue, 1,
+    "getValue(x,y) -> the value at the specified x and y position.\n\n"
+    "Returns the value at the specified x and y position. \n\n"
+    "x - x position\n"
+    "y - y position\n"
+  },
+  {"getConvertedValue", (PyCFunction) _pyravefield_getConvertedValue, 1,
+    "getConvertedValue(x,y) -> the converted value at the specified x and y position.\n\n"
+    "Returns the converted value (what/offset + what/gain*v) at the specified x and y position. Since what/offset and what/gain are optional, they are assumed to have 0.0 and 1.0 respectively if they are missing.\n\n"
+    "x - x position\n"
+    "y - y position\n"
+  },
+  {"addAttribute", (PyCFunction) _pyravefield_addAttribute, 1,
+    "addAttribute(name, value) \n\n"
+    "Adds an attribute to the field. Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis etc. \n"
+    "Currently, double, long, string and 1-dimensional arrays are supported.\n\n"
+    "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis\n"
+    "value - Value to be associated with the name. Currently, double, long, string and 1-dimensional arrays are supported."
+  },
+  {"getAttribute", (PyCFunction) _pyravefield_getAttribute, 1,
+    "getAttribute(name) -> value \n\n"
+    "Returns the value associated with the specified name \n\n"
+    "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis\n"
+  },
+  {"getAttributeNames", (PyCFunction) _pyravefield_getAttributeNames, 1,
+    "getAttributeNames() -> array of names \n\n"
+    "Returns the attribute names associated with this field"
+  },
+  {"removeAttributes", (PyCFunction) _pyravefield_removeAttributes, 1,
+    "removeAttributes()\n\n"
+    "Removes all attributes associated with self."
+  },
   {"concatx", (PyCFunction) _pyravefield_concatx, 1},
   {"__dir__", (PyCFunction) MOD_DIR_REFERENCE(PyRaveField), METH_NOARGS},
   {NULL, NULL } /* sentinel */
@@ -490,6 +529,27 @@ done:
 
 /*@} End of rave field */
 
+/*@{ Documentation about the type */
+PyDoc_STRVAR(_pyravefield_type_doc,
+    "A data container that is used as for example quality fields or other similar constructs.\n\n"
+    "The only 3 member attributes that are accessible are:\n"
+    "xsize     - xsize of data field (read only)\n"
+    "ysize     - ysize of data field (read only)\n"
+    "datatype  - data type (read only)\n"
+    "\n"
+    "These attributes will be set when initializing the field with setData.\n"
+    "\n"
+    "Since a lot of RAVE has been developed with ODIM H5 in mind, it is also possible to add arbitrary attributes in "
+    "various groups, e.g. c.addAttribute(\"how/this\", 1.2) and so on.\n\n"
+    "\n"
+    "Usage:\n"
+    " import _ravefield, numpy\n"
+    " dfield = _ravefield.new()\n"
+    " dfield.setData(numpy.array([[1,2],[3,4]],numpy.uint8))"
+    );
+/*@} End of Documentation about the module */
+
+
 /*@{ Type definitions */
 PyTypeObject PyRaveField_Type =
 {
@@ -514,7 +574,7 @@ PyTypeObject PyRaveField_Type =
   (setattrofunc)_pyravefield_setattro, /*tp_setattro*/
   0, /*tp_as_buffer*/
   Py_TPFLAGS_DEFAULT, /*tp_flags*/
-  0, /*tp_doc*/
+  _pyravefield_type_doc, /*tp_doc*/
   (traverseproc)0, /*tp_traverse*/
   (inquiry)0, /*tp_clear*/
   0, /*tp_richcompare*/
@@ -539,7 +599,10 @@ PyTypeObject PyRaveField_Type =
 
 /*@{ Module setup */
 static PyMethodDef functions[] = {
-  {"new", (PyCFunction)_pyravefield_new, 1},
+  {"new", (PyCFunction)_pyravefield_new, 1,
+    "new() -> new instance of the RaveFieldCore object\n\n"
+    "Creates a new instance of the RaveFieldCore object"
+  },
   {NULL,NULL} /*Sentinel*/
 };
 
@@ -553,7 +616,7 @@ MOD_INIT(_ravefield)
 
   MOD_INIT_VERIFY_TYPE_READY(&PyRaveField_Type);
 
-  MOD_INIT_DEF(module, "_ravefield", NULL/*doc*/, functions);
+  MOD_INIT_DEF(module, "_ravefield", _pyravefield_type_doc, functions);
   if (module == NULL) {
     return MOD_INIT_ERROR;
   }
