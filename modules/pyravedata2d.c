@@ -561,25 +561,119 @@ static struct PyMethodDef _pyravedata2d_methods[] =
   {"datatype", NULL},
   {"nodata", NULL},
   {"useNodata", NULL},
-  {"setData", (PyCFunction) _pyravedata2d_setData, 1},
-  {"getData", (PyCFunction) _pyravedata2d_getData, 1},
-  {"setValue", (PyCFunction) _pyravedata2d_setValue, 1},
-  {"getValue", (PyCFunction) _pyravedata2d_getValue, 1},
-  {"concatx", (PyCFunction) _pyravedata2d_concatx, 1},
-  {"min", (PyCFunction) _pyravedata2d_min, 1},
-  {"max", (PyCFunction) _pyravedata2d_max, 1},
-  {"fill", (PyCFunction) _pyravedata2d_fill, 1},
-  {"circshift", (PyCFunction) _pyravedata2d_circshift, 1},
-  {"add", (PyCFunction) _pyravedata2d_add, 1},
-  {"sub", (PyCFunction) _pyravedata2d_sub, 1},
-  {"emul", (PyCFunction) _pyravedata2d_emul, 1},
-  {"epow", (PyCFunction) _pyravedata2d_epow, 1},
-  {"medfilt2", (PyCFunction) _pyravedata2d_medfilt2, 1},
-  {"cumsum", (PyCFunction) _pyravedata2d_cumsum, 1},
-  {"movingstd", (PyCFunction) _pyravedata2d_movingstd, 1},
-  {"hist", (PyCFunction) _pyravedata2d_hist, 1},
-  {"entropy", (PyCFunction) _pyravedata2d_entropy, 1},
-  {"str", (PyCFunction) _pyravedata2d_str, 1},
+  {"setData", (PyCFunction) _pyravedata2d_setData, 1,
+    "setData(numpyarray)\n\n"
+    "Initializes the data with the numpy array\n\n"
+    "numpyarray - a 2 dimensional numpy array"
+  },
+  {"getData", (PyCFunction) _pyravedata2d_getData, 1,
+    "getData() -> numpyarray\n\n"
+    "Returns the internal data as a 2 dimensional numpy array"
+  },
+  {"setValue", (PyCFunction) _pyravedata2d_setValue, 1,
+    "setValue(x,y,value)\n\n"
+    "Sets the value at x,y\n\n"
+    "x      - x coordinate\n"
+    "y      - y coordinate\n"
+    "value  - the value. Will be truncated if outside range of current type"
+  },
+  {"getValue", (PyCFunction) _pyravedata2d_getValue, 1,
+    "getValue(x,y) -> value\n\n"
+    "Returns the value at position x,y\n\n"
+    "x - x coordinate\n"
+    "y - y coordinate"
+  },
+  {"concatx", (PyCFunction) _pyravedata2d_concatx, 1,
+    "concatx(other) -> rave data 2d field\n\n"
+    "Concatenates self with other x-wise. This requires that the fields have same ysize and same datatype.\n\n"
+    "other - the other field that self should be concatenated with. Requires that other has same ysize and datatype as self."
+  },
+  {"min", (PyCFunction) _pyravedata2d_min, 1,
+    "min() -> min value in self\n\n"
+    "Returns the min value in self"
+  },
+  {"max", (PyCFunction) _pyravedata2d_max, 1,
+    "max() -> max value in self\n\n"
+    "Returns the max value in self"
+  },
+  {"fill", (PyCFunction) _pyravedata2d_fill, 1,
+    "fill(value)\n\n"
+    "Fills all cells in self with value\n\n"
+    "value - the value to use for filling"
+  },
+  {"circshift", (PyCFunction) _pyravedata2d_circshift, 1,
+    "circshift(x,y) -> rave data 2d\n\n"
+    "Performs a circular shift of self in both x & y dimension to produce a new rave data 2d.\n\n"
+    "x - the number of steps to be shifted in x-direction. Can be both positive and negative\n"
+    "y - the number of steps to be shifted in y-direction. Can be both positive and negative"
+  },
+  {"add", (PyCFunction) _pyravedata2d_add, 1,
+    "add(object) -> rave data 2d\n\n"
+    "Adds either another rave data 2d or else a number with this rave data 2d field and returns a new rave data 2d field.\n\n"
+    "object - Can be either a integer, float or another RaveData2DCore object with same dimensions"
+  },
+  {"sub", (PyCFunction) _pyravedata2d_sub, 1,
+    "sub(object) -> rave data 2d\n\n"
+    "Subtracts either another rave data 2d or else a number from this rave data 2d field and returns a new rave data 2d field.\n\n"
+    "object - Can be either a integer, float or another RaveData2DCore object with same dimensions"
+  },
+  {"emul", (PyCFunction) _pyravedata2d_emul, 1,
+    "emul(object) -> rave data 2d\n\n"
+    "Elementwise multiplication of another rave data 2d or else a number with this rave data 2d field and returns a new rave data 2d field.\n\n"
+    "object - Can be either a integer, float or another RaveData2DCore object with same dimensions"
+  },
+  {"epow", (PyCFunction) _pyravedata2d_epow, 1,
+    "epow(object) -> rave data 2d\n\n"
+    "Elementwise power of another rave data 2d or else a number with this rave data 2d field and returns a new rave data 2d field.\n\n"
+    "object - Can be either a integer, float or another RaveData2DCore object with same dimensions"
+  },
+  {"medfilt2", (PyCFunction) _pyravedata2d_medfilt2, 1,
+    "medfilt2(xwin, ywin) -> rave data 2d\n\n"
+    "Executes a median filtering in 2D. I.e. takes surrounding pixels in xwin, ywin and determines the median value\n"
+    "for each pixel in the field. I.e. box will be x +/- xwin/2, y +/- ywin/2.\n\n"
+    "xwin  - X window size\n"
+    "ywin  - Y window size"
+  },
+  {"cumsum", (PyCFunction) _pyravedata2d_cumsum, 1,
+    "cumsum([dir]) -> rave data 2d\n\n"
+    "Runs a cummulative sum of either columns or rows. If dir == 1, then it's columnwise sum. Else if dir == 2, then it's row based cummulative sum.\n\n"
+    "dir  - The direction of the cummalative sum. Default is 1, which means columnwise sum"
+  },
+  {"movingstd", (PyCFunction) _pyravedata2d_movingstd, 1,
+    "movingstd(nx,ny) -> rave data 2d\n\n"
+    "Computes the standard deviation over a given number of pixels (nx * ny). If nx or ny = 0, it will be row or col wise std.\n\n"
+    "nx  - number of pixels in x-dim\n"
+    "ny  - number of pixels in y-dim"
+  },
+  {"hist", (PyCFunction) _pyravedata2d_hist, 1,
+    "hist(nbins) -> list of counts\n\n"
+    "Creates a histogram of field with bins number of bins. The histogram will be determined as\n"
+    "Calculate bin ranges as scale = (max - min) / nbins\n"
+    "Bin1: max >= x <= max + scale\n"
+    "Bin2: max + scale > x <= max + 2*scale\n"
+    "Bin3: max + 2*scale > x <= max + 3*scale\n"
+    "and so on.....\n"
+    "\n"
+    "Example: y=[-7  -5  -3  -2  -2  -1   0   1   2   3   3   4   5   5   6   7]\n"
+    "         nbins = 4\n"
+    "\n"
+    "scale = (7 - (-7)) / 4 = 3.5\n"
+    "=>\n"
+    "b1 = -7 => -3.5\n"
+    "b2 = -3.49 => 0\n"
+    "b3 = 0.01 => 3.5\n"
+    "\n"
+    "nbins - Number of bins in the histogram"
+  },
+  {"entropy", (PyCFunction) _pyravedata2d_entropy, 1,
+    "entropy([nbins]) -> entropy value as float\n\n"
+    "Calculate the entropy value for the field. Entropy is a statistical measure of randomness.\n\n"
+    "nbins  - number of bins\n"
+  },
+  {"str", (PyCFunction) _pyravedata2d_str, 1,
+    "str() -> a string representation of self\n\n"
+    "Helper function that returns the matrix as a string. Note, this is not reentrant since it's using a static buffer.\n\n"
+  },
   {"__dir__", (PyCFunction) MOD_DIR_REFERENCE(PyRaveData2D), METH_NOARGS},
   {NULL, NULL } /* sentinel */
 };
@@ -646,6 +740,23 @@ done:
 
 /*@} End of rave field */
 
+/*@{ Documentation about the type */
+PyDoc_STRVAR(_pyravedata2d_type_doc,
+    "Defines a 2 dimensional data field that can be used within rave. Most classes uses this data field as underlying container\n"
+    "It requires a numpy array for initializing data field with proper x & ysize which are read only. The members are:\n"
+    "xsize     - xsize of data field (read only)\n"
+    "ysize     - ysize of data field (read only)\n"
+    "datatype  - data type (read only)\n"
+    "nodata    - nodata value to use (if useNodata has been set to True)\n"
+    "useNodata - If nodata value should be used in calculation or not. Like using NaN in for example matlab.\n"
+    "\n"
+    "Usage:\n"
+    " import _ravedata2d, numpy\n"
+    " dfield = _ravedata2d.new(numpy.array([[1,2],[3,4]],numpy.uint8))"
+    );
+/*@} End of Documentation about the module */
+
+
 /*@{ Type definitions */
 PyTypeObject PyRaveData2D_Type =
 {
@@ -670,7 +781,7 @@ PyTypeObject PyRaveData2D_Type =
   (setattrofunc)_pyravedata2d_setattro, /*tp_setattro*/
   0, /*tp_as_buffer*/
   Py_TPFLAGS_DEFAULT, /*tp_flags*/
-  0, /*tp_doc*/
+  _pyravedata2d_type_doc, /*tp_doc*/
   (traverseproc)0, /*tp_traverse*/
   (inquiry)0, /*tp_clear*/
   0, /*tp_richcompare*/
@@ -695,7 +806,13 @@ PyTypeObject PyRaveData2D_Type =
 
 /*@{ Module setup */
 static PyMethodDef functions[] = {
-  {"new", (PyCFunction)_pyravedata2d_new, 1},
+  {"new", (PyCFunction)_pyravedata2d_new, 1,
+    "new([array]) -> RaveData2DCore\n\n"
+    "Creates a new RaveData 2D core instance. Array is optional but if provided, it should be a numpy array\n"
+    "Will be same as calling:\n"
+    "a = _ravedata2d.new()\n"
+    "a.setData(numpyarray)"
+  },
   {NULL,NULL} /*Sentinel*/
 };
 
@@ -709,7 +826,7 @@ MOD_INIT(_ravedata2d)
 
   MOD_INIT_VERIFY_TYPE_READY(&PyRaveData2D_Type);
 
-  MOD_INIT_DEF(module, "_ravedata2d", NULL/*doc*/, functions);
+  MOD_INIT_DEF(module, "_ravedata2d", _pyravedata2d_type_doc, functions);
   if (module == NULL) {
     return MOD_INIT_ERROR;
   }
