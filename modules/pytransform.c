@@ -419,13 +419,48 @@ done:
 static struct PyMethodDef _pytransform_methods[] =
 {
   {"method", NULL},
-  {"ppi", (PyCFunction) _pytransform_ppi, 1},
-  {"cappi", (PyCFunction) _pytransform_cappi, 1},
-  {"pcappi", (PyCFunction) _pytransform_pcappi, 1},
-  {"ctoscan", (PyCFunction) _pytransform_ctoscan, 1},
-  {"ctop", (PyCFunction) _pytransform_ctop, 1},
-  {"fillGap", (PyCFunction) _pytransform_fillGap, 1},
-  {"combine_tiles", (PyCFunction) _pytransform_combine_tiles, 1},
+  {"ppi", (PyCFunction) _pytransform_ppi, 1,
+    "ppi(scan, cartesian)\n\n"
+    "DEPRECATED. Use _composite instead.\n"
+  },
+  {"cappi", (PyCFunction) _pytransform_cappi, 1,
+    "cappi(scan, cartesian, height)\n\n"
+    "DEPRECATED. Use _composite instead.\n"
+  },
+  {"pcappi", (PyCFunction) _pytransform_pcappi, 1,
+    "pcappi(scan, cartesian, height)\n\n"
+    "DEPRECATED. Use _composite instead.\n"
+  },
+  {"ctoscan", (PyCFunction) _pytransform_ctoscan, 1,
+    "ctoscan(cartesian, radardef, elangle, quantity) -> scan\n\n"
+    "Creates a scan from a cartesian parameter with specified quantity. Uses radardef to get correct radar information and the elevation angle should be in radians\n"
+    "cartesian - the cartesian object\n"
+    "radardef  - the radar definition with information about location, geometry, ...\n"
+    "elangle   - the elevation of the scan to be created\n"
+    "quantity  - the parameter in the cartesian object"
+  },
+  {"ctop", (PyCFunction) _pytransform_ctop, 1,
+    "ctop(cartesian, radardef, quantity) -> scan\n\n"
+    "Creates a polar volume from a cartesian parameter with specified quantity. Uses radardef to get correct radar information and the elevation angles.\n"
+    "cartesian - the cartesian object\n"
+    "radardef  - the radar definition with information about location, geometry, ...\n"
+    "quantity  - the parameter in the cartesian object"
+  },
+  {"fillGap", (PyCFunction) _pytransform_fillGap, 1,
+    "fillGap(object) -> cartesian or cartesian parameter\n\n"
+    "If a value is == UNDETECT and the surrounding 4 pixels == DATA, then the value set is the avg for the surrounding 4 pixels.\n"
+    "If provided object is a cartesian parameter, only that parameter will be modified and if the provided object is a cartesian product, all parameters will be modified.\n\n"
+    "object - either a cartesian object or a cartesian parameter\n\n"
+    "If object is a cartesian, then result will be a cartesian and if a cartesian parameter is used as input, then the result will be a cartesian parameter"
+  },
+  {"combine_tiles", (PyCFunction) _pytransform_combine_tiles, 1,
+    "combine_tiles(area, tiles) -> cartesian\n\n"
+    "Combines a number of cartesian areas into the one specified by the area definition. This should not be confused with the\n"
+    "cartesian composite generation. This function instead works like a area-combiner where the individual tiles will result\n"
+    "in a full area.\n\n"
+    "area - the area that should be created\n"
+    "tiles - a list of cartesian objects that will be used to build the resulting cartesian object"
+  },
   {NULL, NULL } /* sentinel */
 };
 
@@ -466,6 +501,18 @@ done:
 }
 /*@} End of Transform */
 
+/*@{ Documentation about the module */
+PyDoc_STRVAR(_transform_type_doc,
+    "Provides some useful functions when performing transformations.\n"
+    "Usage:\n"
+    " import _transform\n"
+    " t = _transform.new()\n"
+    " # One of provided functions, for example:"
+    " a = t.fillGap(_raveio.open(\"cartesian.h5\")"
+    );
+/*@} End of Documentation about the module */
+
+
 /*@{ Type definitions */
 PyTypeObject PyTransform_Type =
 {
@@ -490,7 +537,7 @@ PyTypeObject PyTransform_Type =
   (setattrofunc)_pytransform_setattro, /*tp_setattro*/
   0,                            /*tp_as_buffer*/
   Py_TPFLAGS_DEFAULT, /*tp_flags*/
-  0,                            /*tp_doc*/
+  _transform_type_doc,          /*tp_doc*/
   (traverseproc)0,              /*tp_traverse*/
   (inquiry)0,                   /*tp_clear*/
   0,                            /*tp_richcompare*/
@@ -516,7 +563,10 @@ PyTypeObject PyTransform_Type =
 
 /*@{ Module setup */
 static PyMethodDef functions[] = {
-  {"new", (PyCFunction)_pytransform_new, 1},
+  {"new", (PyCFunction)_pytransform_new, 1,
+    "new() -> new instance of the TransformCore object\n\n"
+    "Creates a new instance of the TransformCore object"
+  },
   {NULL,NULL} /*Sentinel*/
 };
 
@@ -530,7 +580,7 @@ MOD_INIT(_transform)
 
   MOD_INIT_VERIFY_TYPE_READY(&PyTransform_Type);
 
-  MOD_INIT_DEF(module, "_transform", NULL/*doc*/, functions);
+  MOD_INIT_DEF(module, "_transform", _transform_type_doc, functions);
   if (module == NULL) {
     return MOD_INIT_ERROR;
   }
