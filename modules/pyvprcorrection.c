@@ -354,10 +354,25 @@ static struct PyMethodDef _pyvprcorrection_methods[] =
   {"plusTemperature", NULL},
   {"minusTemperature", NULL},
   {"dzdh", NULL},
-  {"getReflectivityArray", (PyCFunction) _pyvprcorrection_getReflectivityArray, 1},
-  {"getIdealVpr", (PyCFunction) _pyvprcorrection_getIdealVpr, 1},
-  {"getNumberOfHeightIntervals", (PyCFunction) _pyvprcorrection_getNumberOfHeightIntervals, 1},
-  {"getHeights", (PyCFunction) _pyvprcorrection_getHeights, 1},
+  {"getReflectivityArray", (PyCFunction) _pyvprcorrection_getReflectivityArray, 1,
+    "getReflectivityArray(pvol) -> list of reflectivities\n\n"
+    "Creates a list of reflectivities containing the median reflectivities for each profile height bin.\n\n"
+    "pvol - the polar volume to be processed"
+  },
+  {"getIdealVpr", (PyCFunction) _pyvprcorrection_getIdealVpr, 1,
+    "getIdealVpr(pvol, hto) -> ideal vpr array\n\n"
+    "Creates the ideal VPR from the volume and height temperature array.\n\n"
+    "pvol - the polar volume to be processed\n"
+    "hto  - a list of height-temperature tuples"
+  },
+  {"getNumberOfHeightIntervals", (PyCFunction) _pyvprcorrection_getNumberOfHeightIntervals, 1,
+    "getNumberOfHeightIntervals() -> number of height intervals\n\n"
+    "Returns the number of height intervals that the current heightLimit / profileHeight setting gives."
+  },
+  {"getHeights", (PyCFunction) _pyvprcorrection_getHeights, 1,
+    "getHeights() -> number of height intervals\n\n"
+    "Returns an height array with all actual heights for the current heightLimit / profileHeight setting."
+  },
   {NULL, NULL } /* sentinel */
 };
 
@@ -471,6 +486,36 @@ done:
 }
 /*@} End of Transform */
 
+/*@{ Documentation about the type */
+PyDoc_STRVAR(_pyvprcorrection_type_doc,
+    "One type of implementation of the vpr correction functionality. NOTE: This module has not been tested or verified!\n"
+    "There are several settings required to generate the vpr profile as well as H1D files to get temperatures and heights for that radar.\n"
+    " minReflectivity   - the min reflectivity to be used when generating the vpr profile.\n"
+    " heightLimit       - the height limit for what reflectivities should be used in the identification of stratiform and convective rain.\n"
+    " profileHeight     - the height of the individual profile bins. The resolution of the reflectivity profile will be heightLimit / profileHeight.\n"
+    " minDistance       - the min distance limit for what reflectivities should be used in the identification of stratiform and convective rain.\n"
+    " maxDistance       - the max distance limit for what reflectivities should be used in the identification of stratiform and convective rain.\n"
+    " plusTemperature   - the plus temperature used for ensuring that the temperatures are in a suitable range.\n"
+    "                     Selection is based on that at least one of the temperatures must be lower than the minus temp and one above the plus temperature.\n"
+    " minusTemperature  - the minus temperature used for ensuring that the temperatures are in a suitable range.\n"
+    "                     Selection is based on that at least one of the temperatures must be lower than the minus temp and one above the plus temperature.\n"
+    " dzdh              - the lowest dzdh slope that should be allowed above the bright band.\n"
+    "                     The slope also has to be negative. This means that the allowed slope should be dzdh < slope < 0.\n"
+    "\n"
+    "Usage:\n"
+    " import _vprcorrection, _raveio\n"
+    " pvol = _raveio.open(\"polar_volume.h5\")\n"
+    " vpr = _vprcorrection.new()\n"
+    " vpr.minReflectivity = 0.0\n"
+    " vpr.minDistance = 1000.0\n"
+    " vpr.maxDistance = 25000.0\n"
+    " vpr.profileHeight = 100.0\n"
+    " vpr.heightLimit = 10000.0\n"
+    " htarr = _vprcorrection.readH1D(\"RAD_H1D_201107010100+001H00M.bpm\")\n"
+    " result = vpr.getIdealVpr(pvol, htarr)"
+    );
+/*@} End of Documentation about the type */
+
 /*@{ Type definitions */
 PyTypeObject PyVprCorrection_Type =
 {
@@ -495,7 +540,7 @@ PyTypeObject PyVprCorrection_Type =
   (setattrofunc)_pyvprcorrection_setattro, /*tp_setattro*/
   0,                            /*tp_as_buffer*/
   Py_TPFLAGS_DEFAULT, /*tp_flags*/
-  0,                            /*tp_doc*/
+  _pyvprcorrection_type_doc,    /*tp_doc*/
   (traverseproc)0,              /*tp_traverse*/
   (inquiry)0,                   /*tp_clear*/
   0,                            /*tp_richcompare*/
@@ -521,9 +566,21 @@ PyTypeObject PyVprCorrection_Type =
 
 /*@{ Module setup */
 static PyMethodDef functions[] = {
-  {"new", (PyCFunction)_pyvprcorrection_new, 1},
-  {"readH1D", (PyCFunction) _pyvprcorrectionhelper_readH1D, 1},
-  {"lsqFirstOrder", (PyCFunction) _pyvprcorrectionhelper_lsqFirstOrder, 1},
+  {"new", (PyCFunction)_pyvprcorrection_new, 1,
+    "new() -> new instance of the VprCorrectionCore object\n\n"
+    "Creates a new instance of the VprCorrectionCore object"
+  },
+  {"readH1D", (PyCFunction) _pyvprcorrectionhelper_readH1D, 1,
+    "readH1D(filename) -> list of tuples (height, temperature)\n\n"
+    "Reads a H1D file to get temperatures and heights in a list.\n\n"
+    "filename - The name of the H1D file"
+  },
+  {"lsqFirstOrder", (PyCFunction) _pyvprcorrectionhelper_lsqFirstOrder, 1,
+    "lsqFirstOrder([(x,y),(x1,x1),....]) -> tuple with the a & b coefficient\n\n"
+    "Least square fit of a first degree polynomal. Takes a list of tuples with (x, y) and executes a least square fitting.\n"
+    "Result will be a & b coefficients in the equation ax + b\n\n"
+    "[(x,y),(x1,y1),....] - a list of tuples with x as first value and y as second"
+  },
   {NULL,NULL} /*Sentinel*/
 };
 
@@ -536,7 +593,7 @@ MOD_INIT(_vprcorrection)
 
   MOD_INIT_VERIFY_TYPE_READY(&PyVprCorrection_Type);
 
-  MOD_INIT_DEF(module, "_vprcorrection", NULL/*doc*/, functions);
+  MOD_INIT_DEF(module, "_vprcorrection", _pyvprcorrection_type_doc, functions);
   if (module == NULL) {
     return MOD_INIT_ERROR;
   }
