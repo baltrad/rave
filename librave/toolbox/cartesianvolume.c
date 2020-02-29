@@ -396,8 +396,7 @@ int CartesianVolume_addAttribute(CartesianVolume_t* cvol, RaveAttribute_t* attri
       RAVE_ERROR1("Failed to extract group and name from %s", name);
       goto done;
     }
-    if (strcasecmp("how", gname)==0 &&
-      strchr(aname, '/') == NULL) {
+    if ((strcasecmp("how", gname)==0) &&RaveAttributeHelp_validateHowGroupAttributeName(gname, aname)) {
       result = RaveObjectHashTable_put(cvol->attrs, name, (RaveCoreObject*)attribute);
     } else if (strcasecmp("what/prodpar", name)==0) {
       result = RaveObjectHashTable_put(cvol->attrs, name, (RaveCoreObject*)attribute);

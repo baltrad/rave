@@ -686,6 +686,22 @@ class PyCartesianTest(unittest.TestCase):
     self.assertAlmostEqual(1.0, obj.getAttribute("how/something"))
     self.assertAlmostEqual(2.0, param.getAttribute("how/something"))
 
+  def test_howSubgroupAttribute(self):
+    obj = _cartesian.new()
+
+    obj.addAttribute("how/something", 1.0)
+    obj.addAttribute("how/grp/something", 2.0)
+    try:
+      obj.addAttribute("how/grp/else/", 2.0)
+      self.fail("Expected AttributeError")
+    except AttributeError:
+      pass
+
+    self.assertAlmostEqual(1.0, obj.getAttribute("how/something"), 2)
+    self.assertAlmostEqual(2.0, obj.getAttribute("how/grp/something"), 2)
+    self.assertTrue(obj.hasAttribute("how/something"))
+    self.assertTrue(obj.hasAttribute("how/grp/something"))
+
   def test_product_type(self):
     obj = _cartesian.new()
     producttypes=[_rave.Rave_ProductType_UNDEFINED,

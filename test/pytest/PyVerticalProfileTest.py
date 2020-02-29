@@ -359,6 +359,44 @@ class PyVerticalProfileTest(unittest.TestCase):
     self.assertEqual("ff", result.getAttribute("what/quantity"))
     self.assertEqual(10, obj.getLevels())
 
+  def test_howSubgroupAttributes(self):
+    obj = _verticalprofile.new()
+    f = _ravefield.new()
+    f.setData(numpy.zeros((10,1), numpy.uint8))
+    f.addAttribute("what/quantity", "ff")
+    f.addAttribute("how/something", 1.0)
+    f.addAttribute("how/grp/something", 2.0)
+    try:
+      obj.addAttribute("how/grp/else/", 2.0)
+      self.fail("Expected AttributeError")
+    except AttributeError:
+      pass
+    obj.addField(f)
+    obj.addAttribute("how/something", 3.0)
+    obj.addAttribute("how/grp/something", 4.0)
+    
+    ff_field = obj.getField("ff")
+    self.assertAlmostEqual(1.0, ff_field.getAttribute("how/something"), 4)
+    self.assertAlmostEqual(2.0, ff_field.getAttribute("how/grp/something"), 4)
+    self.assertAlmostEqual(3.0, obj.getAttribute("how/something"), 4)
+    self.assertAlmostEqual(4.0, obj.getAttribute("how/grp/something"), 4)
+    
+  def test_howSubgroupAttribute(self):
+    obj = _ravefield.new()
+
+    obj.addAttribute("how/something", 1.0)
+    obj.addAttribute("how/grp/something", 2.0)
+    try:
+      obj.addAttribute("how/grp/else/", 2.0)
+      self.fail("Expected AttributeError")
+    except AttributeError:
+      pass
+
+    self.assertAlmostEqual(1.0, obj.getAttribute("how/something"), 2)
+    self.assertAlmostEqual(2.0, obj.getAttribute("how/grp/something"), 2)
+    self.assertTrue(obj.hasAttribute("how/something"))
+    self.assertTrue(obj.hasAttribute("how/grp/something"))
+    
   def test_addField_withLevels_preset(self):
     obj = _verticalprofile.new()
     obj.setLevels(10)

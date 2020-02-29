@@ -114,7 +114,22 @@ class PyCartesianVolumeTest(unittest.TestCase):
     self.assertAlmostEqual(3.0, image.areaextent[2], 4)
     self.assertAlmostEqual(4.0, image.areaextent[3], 4)
     
-    
+  def test_howSubgroupAttribute(self):
+    obj = _cartesianvolume.new()
+
+    obj.addAttribute("how/something", 1.0)
+    obj.addAttribute("how/grp/something", 2.0)
+    try:
+      obj.addAttribute("how/grp/else/", 2.0)
+      self.fail("Expected AttributeError")
+    except AttributeError:
+      pass
+
+    self.assertAlmostEqual(1.0, obj.getAttribute("how/something"), 2)
+    self.assertAlmostEqual(2.0, obj.getAttribute("how/grp/something"), 2)
+    self.assertTrue(obj.hasAttribute("how/something"))
+    self.assertTrue(obj.hasAttribute("how/grp/something"))
+
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']
     unittest.main()

@@ -701,17 +701,20 @@ static struct PyMethodDef _pypolarscanparam_methods[] =
     "Adds an attribute to the parameter. Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis etc. \n"
     "Currently, double, long, string and 1-dimensional arrays are supported.\n\n"
     "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis\n"
+    "        In the case of how-groups, it is also possible to specify subgroups, like how/subgroup/attr or how/subgroup/subgroup/attr.\n"
     "value - Value to be associated with the name. Currently, double, long, string and 1-dimensional arrays are supported."
   },
   {"getAttribute", (PyCFunction) _pypolarscanparam_getAttribute, 1,
     "getAttribute(name) -> value \n\n"
     "Returns the value associated with the specified name \n\n"
     "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis\n"
+    "        In the case of how-groups, it is also possible to specify subgroups, like how/subgroup/attr or how/subgroup/subgroup/attr."
   },
   {"hasAttribute", (PyCFunction) _pypolarscanparam_hasAttribute, 1,
     "hasAttribute(name) -> boolean \n\n"
     "Returns True if attribute exists otherwise False \n\n"
     "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis\n"
+    "        In the case of how-groups, it is also possible to specify subgroups, like how/subgroup/attr or how/subgroup/subgroup/attr.\n"
   },
   {"getAttributeNames", (PyCFunction) _pypolarscanparam_getAttributeNames, 1,
     "getAttributeNames() -> array of names \n\n"

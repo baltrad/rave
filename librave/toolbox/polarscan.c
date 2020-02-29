@@ -1362,7 +1362,7 @@ int PolarScan_addAttribute(PolarScan_t* scan, RaveAttribute_t* attribute)
       goto done;
     }
     if ((strcasecmp("how", gname)==0) &&
-         strchr(aname, '/') == NULL) {
+        RaveAttributeHelp_validateHowGroupAttributeName(gname, aname)) {
       result = RaveObjectHashTable_put(scan->attrs, name, (RaveCoreObject*)attribute);
     } else {
       RAVE_DEBUG1("Trying to add attribute: %s but only valid attributes are how/...", name);

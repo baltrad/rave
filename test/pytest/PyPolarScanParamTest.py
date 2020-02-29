@@ -342,7 +342,7 @@ class PyPolarScanParamTest(unittest.TestCase):
     
   def test_addAttribute_badNames(self):
     obj = _polarscanparam.new()
-    BADNAMES = ["/how/this", "/HOW/this", "/how/this/that", "how/this/that"]
+    BADNAMES = ["/how/this", "/HOW/this"]
     for n in BADNAMES:
       try:
         obj.addAttribute(n, "XYZ")
@@ -386,6 +386,22 @@ class PyPolarScanParamTest(unittest.TestCase):
       self.fail("Expected TypeError")
     except TypeError:
       pass
+
+  def test_howSubgroupAttribute(self):
+    obj = _polarscanparam.new()
+
+    obj.addAttribute("how/something", 1.0)
+    obj.addAttribute("how/grp/something", 2.0)
+    try:
+      obj.addAttribute("how/grp/else/", 2.0)
+      self.fail("Expected AttributeError")
+    except AttributeError:
+      pass
+
+    self.assertAlmostEqual(1.0, obj.getAttribute("how/something"), 2)
+    self.assertAlmostEqual(2.0, obj.getAttribute("how/grp/something"), 2)
+    self.assertTrue(obj.hasAttribute("how/something"))
+    self.assertTrue(obj.hasAttribute("how/grp/something"))
 
   def test_attributes_nonexisting(self):
     obj = _polarscanparam.new()

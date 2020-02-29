@@ -483,6 +483,22 @@ class PyCartesianParamTest(unittest.TestCase):
     obj.setData(data)
     self.assertEqual(True, obj.isTransformable())
     
+  def test_howSubgroupAttribute(self):
+    obj = _cartesianparam.new()
+
+    obj.addAttribute("how/something", 1.0)
+    obj.addAttribute("how/grp/something", 2.0)
+    try:
+      obj.addAttribute("how/grp/else/", 2.0)
+      self.fail("Expected AttributeError")
+    except AttributeError:
+      pass
+
+    self.assertAlmostEqual(1.0, obj.getAttribute("how/something"), 2)
+    self.assertAlmostEqual(2.0, obj.getAttribute("how/grp/something"), 2)
+    self.assertTrue(obj.hasAttribute("how/something"))
+    self.assertTrue(obj.hasAttribute("how/grp/something"))
+
   def test_qualityfields(self):
     obj = _cartesianparam.new()
     field1 = _ravefield.new()

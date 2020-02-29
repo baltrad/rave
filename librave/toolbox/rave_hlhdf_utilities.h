@@ -152,6 +152,15 @@ int RaveHL_getStringValue(HL_NodeList* nodelist, char** value, const char* fmt, 
 int RaveHL_createGroup(HL_NodeList* nodelist, const char* fmt, ...);
 
 /**
+ * Creates a group node in the node list unless it already exists.
+ * @param[in] nodelist - the node list
+ * @param[in] fmt - the variable argument format
+ * @param[in] ... - the arguments.
+ */
+int RaveHL_createGroupUnlessExists(HL_NodeList* nodelist, const char* fmt, ...);
+
+
+/**
  * Adds a string value to a nodelist
  * @param[in] nodelist - the hlhdf node list
  * @param[in] value - the string value

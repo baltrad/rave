@@ -174,7 +174,23 @@ class PyPolarVolumeTest(unittest.TestCase):
     result = obj.getDistance((14.0 * math.pi/180.0, 61.0 * math.pi/180.0))
     self.assertAlmostEqual(111040.1, result, 1)
     #print "distance = %f"%result
-  
+
+  def test_howSubgroupAttribute(self):
+    obj = _polarvolume.new()
+
+    obj.addAttribute("how/something", 1.0)
+    obj.addAttribute("how/grp/something", 2.0)
+    try:
+      obj.addAttribute("how/grp/else/", 2.0)
+      self.fail("Expected AttributeError")
+    except AttributeError:
+      pass
+
+    self.assertAlmostEqual(1.0, obj.getAttribute("how/something"), 2)
+    self.assertAlmostEqual(2.0, obj.getAttribute("how/grp/something"), 2)
+    self.assertTrue(obj.hasAttribute("how/something"))
+    self.assertTrue(obj.hasAttribute("how/grp/something"))
+
   def test_addScan(self):
     obj = _polarvolume.new()
     scan = _polarscan.new()

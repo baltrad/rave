@@ -405,8 +405,7 @@ int VerticalProfile_addAttribute(VerticalProfile_t* self, RaveAttribute_t* attri
       RAVE_ERROR1("Failed to extract group and name from %s", name);
       goto done;
     }
-    if ((strcasecmp("how", gname)==0) &&
-         strchr(aname, '/') == NULL) {
+    if (strcasecmp("how", gname)==0 && RaveAttributeHelp_validateHowGroupAttributeName(gname, aname)) {
       result = RaveObjectHashTable_put(self->attrs, name, (RaveCoreObject*)attribute);
     } else {
       RAVE_DEBUG1("Trying to add attribute: %s but only valid attributes are how/...", name);

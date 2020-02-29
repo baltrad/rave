@@ -958,10 +958,8 @@ int PolarVolume_addAttribute(PolarVolume_t* pvol,
       RAVE_ERROR1("Failed to extract group and name from %s", name);
       goto done;
     }
-    if ((strcasecmp("how", gname)==0 ||
-         strcasecmp("what", gname)==0 ||
-         strcasecmp("where", gname)==0) &&
-         strchr(aname, '/') == NULL) {
+    if ((strcasecmp("how", gname)==0 && RaveAttributeHelp_validateHowGroupAttributeName(gname, aname)) ||
+        ((strcasecmp("what", gname)==0 || strcasecmp("where", gname)==0) && strchr(aname, '/') == NULL)) {
       result = RaveObjectHashTable_put(pvol->attrs, name, (RaveCoreObject*)attribute);
     }
   }

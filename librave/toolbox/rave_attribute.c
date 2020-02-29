@@ -448,6 +448,30 @@ done:
   return result;
 }
 
+int RaveAttributeHelp_validateHowGroupAttributeName(const char* gname, const char* aname)
+{
+  int result = 0;
+  char* tmpstr = NULL;
+  const char* acceptedCharacters="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_/.-";
+  if (gname != NULL && strcasecmp("how", gname) != 0) {
+    /* Group is not how, this is not valid */
+    goto done;
+  }
+
+  if (aname != NULL) {
+    if (strlen(aname) > 0 && aname[strlen(aname)-1] == '/') {
+      RAVE_INFO1("how attribute %s ends with /", aname);
+      goto done;
+    }
+    result = (strspn(aname, acceptedCharacters) == strlen(aname)) ? 1 : 0;
+  }
+
+  result = 1;
+done:
+  RAVE_FREE(tmpstr);
+  return result;
+}
+
 RaveAttribute_t* RaveAttributeHelp_createNamedAttribute(const char* name)
 {
   RaveAttribute_t* result = NULL;

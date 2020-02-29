@@ -862,8 +862,7 @@ int Cartesian_addAttribute(Cartesian_t* cartesian, RaveAttribute_t* attribute)
       RAVE_ERROR1("Failed to extract group and name from %s", name);
       goto done;
     }
-    if (strcasecmp("how", gname)==0 &&
-      strchr(aname, '/') == NULL) {
+    if ((strcasecmp("how", gname)==0) &&RaveAttributeHelp_validateHowGroupAttributeName(gname, aname)) {
       result = RaveObjectHashTable_put(cartesian->attrs, name, (RaveCoreObject*)attribute);
     } else if (strcasecmp("what/prodpar", name)==0) {
       result = RaveObjectHashTable_put(cartesian->attrs, name, (RaveCoreObject*)attribute);

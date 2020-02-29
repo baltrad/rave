@@ -210,10 +210,8 @@ int RaveField_addAttribute(RaveField_t* field,  RaveAttribute_t* attribute)
     goto done;
   }
 
-  if ((strcasecmp("how", gname)==0 ||
-       strcasecmp("what", gname)==0 ||
-       strcasecmp("where", gname)==0) &&
-    strchr(aname, '/') == NULL) {
+  if ((strcasecmp("how", gname)==0 && RaveAttributeHelp_validateHowGroupAttributeName(gname, aname)) ||
+      ((strcasecmp("what", gname)==0 || strcasecmp("where", gname)==0) && strchr(aname, '/') == NULL)) {
     result = RaveObjectHashTable_put(field->attrs, name, (RaveCoreObject*)attribute);
   }
 

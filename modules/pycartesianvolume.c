@@ -339,6 +339,22 @@ done:
   return result;
 }
 
+static PyObject* _pycartesianvolume_hasAttribute(PyCartesianVolume* self, PyObject* args)
+{
+  RaveAttribute_t* attribute = NULL;
+  char* name = NULL;
+  long result = 0;
+  if (!PyArg_ParseTuple(args, "s", &name)) {
+    return NULL;
+  }
+  attribute = CartesianVolume_getAttribute(self->cvol, name);
+  if (attribute != NULL) {
+    result = 1;
+  }
+  RAVE_OBJECT_RELEASE(attribute);
+  return PyBool_FromLong(result);
+}
+
 static PyObject* _pycartesianvolume_getAttributeNames(PyCartesianVolume* self, PyObject* args)
 {
   RaveList_t* list = NULL;
@@ -412,12 +428,20 @@ static struct PyMethodDef _pycartesianvolume_methods[] =
     "Adds an attribute to the volume. Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis etc. \n"
     "Currently, double, long, string and 1-dimensional arrays are supported.\n\n"
     "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis\n"
+    "        In the case of how-groups, it is also possible to specify subgroups, like how/subgroup/attr or how/subgroup/subgroup/attr.\n"
     "value - Value to be associated with the name. Currently, double, long, string and 1-dimensional arrays are supported."
   },
   {"getAttribute", (PyCFunction) _pycartesianvolume_getAttribute, 1,
     "getAttribute(name) -> value \n\n"
     "Returns the value associated with the specified name \n\n"
     "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis\n"
+    "        In the case of how-groups, it is also possible to specify subgroups, like how/subgroup/attr or how/subgroup/subgroup/attr."
+  },
+  {"hasAttribute", (PyCFunction) _pycartesianvolume_hasAttribute, 1,
+    "hasAttribute(name) -> a boolean \n\n"
+    "Returns if the specified name is defined within this cartesian volume\n\n"
+    "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis.\n"
+    "        In the case of how-groups, it is also possible to specify subgroups, like how/subgroup/attr or how/subgroup/subgroup/attr.\n"
   },
   {"getAttributeNames", (PyCFunction) _pycartesianvolume_getAttributeNames, 1,
     "getAttributeNames() -> array of names \n\n"

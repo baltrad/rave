@@ -359,6 +359,22 @@ done:
   return result;
 }
 
+static PyObject* _pyravefield_hasAttribute(PyRaveField* self, PyObject* args)
+{
+  RaveAttribute_t* attribute = NULL;
+  char* name = NULL;
+  long result = 0;
+  if (!PyArg_ParseTuple(args, "s", &name)) {
+    return NULL;
+  }
+  attribute = RaveField_getAttribute(self->field, name);
+  if (attribute != NULL) {
+    result = 1;
+  }
+  RAVE_OBJECT_RELEASE(attribute);
+  return PyBool_FromLong(result);
+}
+
 static PyObject* _pyravefield_getAttributeNames(PyRaveField* self, PyObject* args)
 {
   RaveList_t* list = NULL;
@@ -478,6 +494,11 @@ static struct PyMethodDef _pyravefield_methods[] =
     "getAttribute(name) -> value \n\n"
     "Returns the value associated with the specified name \n\n"
     "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis\n"
+  },
+  {"hasAttribute", (PyCFunction) _pyravefield_hasAttribute, 1,
+    "hasAttribute(name) -> a boolean \n\n"
+    "Returns if the specified name is defined within this rave field\n\n"
+    "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis"
   },
   {"getAttributeNames", (PyCFunction) _pyravefield_getAttributeNames, 1,
     "getAttributeNames() -> array of names \n\n"

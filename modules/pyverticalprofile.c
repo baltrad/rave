@@ -1025,17 +1025,20 @@ static struct PyMethodDef _pyverticalprofile_methods[] =
     "Adds an attribute to the vertical profile. Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis etc. \n"
     "Currently, double, long, string and 1-dimensional arrays are supported.\n\n"
     "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis\n"
+    "        In the case of how-groups, it is also possible to specify subgroups, like how/subgroup/attr or how/subgroup/subgroup/attr.\n"
     "value - Value to be associated with the name. Currently, double, long, string and 1-dimensional arrays are supported."
   },
   {"getAttribute", (PyCFunction) _pyverticalprofile_getAttribute, 1,
     "getAttribute(name) -> value \n\n"
     "Returns the value associated with the specified name \n\n"
     "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis\n"
+    "        In the case of how-groups, it is also possible to specify subgroups, like how/subgroup/attr or how/subgroup/subgroup/attr."
   },
   {"hasAttribute", (PyCFunction) _pyverticalprofile_hasAttribute, 1,
     "hasAttribute(name) -> a boolean \n\n"
     "Returns if the specified name is defined within this vertical profile\n\n"
-    "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis"
+    "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis.\n"
+    "        In the case of how-groups, it is also possible to specify subgroups, like how/subgroup/attr or how/subgroup/subgroup/attr."
   },
   {"getAttributeNames", (PyCFunction) _pyverticalprofile_getAttributeNames, 1,
     "getAttributeNames() -> array of names \n\n"

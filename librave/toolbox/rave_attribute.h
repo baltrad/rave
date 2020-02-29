@@ -175,6 +175,19 @@ int RaveAttributeHelp_extractGroupAndName(
   const char* attrname, char** group, char** name);
 
 /**
+ * Validates an attribute name that resides in a how-main group. This will validate
+ * that it may exists sub groups and that this name is valid. gname should be how, then aname is the trailing part For example:
+ * gname=how, aname=attribute
+ * gname=how, aname=subgroup1/attribute
+ * gname=how, aname=subgroup1/subgroup2/attribute
+ * are all valid names.
+ * @param[in] gname - should always be how
+ * @param[in] aname - the rest of the name as described above.
+ * @returns 1 on success otherwise 0
+ */
+int RaveAttributeHelp_validateHowGroupAttributeName(const char* gname, const char* aname);
+
+/**
  * Creates a named rave attribute.
  * @param[in] name - the name of the attribute
  * @returns the attribute on success otherwise NULL

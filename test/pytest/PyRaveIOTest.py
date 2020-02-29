@@ -491,6 +491,94 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEqual("IMAGE", nodelist.getNode("/dataset1/data1/data/CLASS").data())
     self.assertEqual("1.2", nodelist.getNode("/dataset1/data1/data/IMAGE_VERSION").data())
 
+  def test_write_read_cartesian_withHowSubgroups(self):
+    image = _cartesian.new()
+    image.time = "100000"
+    image.date = "20100101"
+    image.objectType = _rave.Rave_ObjectType_IMAGE
+    image.source = "PLC:123"
+    image.xscale = 2000.0
+    image.yscale = 2000.0
+    image.areaextent = (-240000.0, -240000.0, 240000.0, 240000.0)
+    image.projection = _projection.new("x","y","+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84")
+    image.product = _rave.Rave_ProductType_CAPPI
+    image.addAttribute("how/attrib", "value")
+    image.addAttribute("how/subgroup1/attrib", "value 1")
+    image.addAttribute("how/subgroup1/subgroup2/attrib", "value 1 2")
+
+    qfield1 = _ravefield.new()
+    qfield1.addAttribute("how/attrib", "qfield1 value")
+    qfield1.addAttribute("how/subgroup1/attrib", "qfield1 value 1")
+    qfield1.addAttribute("how/subgroup1/subgroup2/attrib", "qfield1 value 1 2")
+    qfield1.setData(numpy.zeros((240,240), numpy.uint8))
+    image.addQualityField(qfield1)
+
+    param = _cartesianparam.new()
+    param.quantity = "DBZH"
+    param.gain = 1.0
+    param.offset = 0.0
+    param.nodata = 255.0
+    param.undetect = 0.0
+    data = numpy.zeros((240,240),numpy.uint8)
+    param.setData(data)
+
+    param.addAttribute("how/attrib", "param value")
+    param.addAttribute("how/subgroup1/attrib", "param value 1")
+    param.addAttribute("how/subgroup1/subgroup2/attrib", "param value 1 2")
+    
+    qfield2 = _ravefield.new()
+    qfield2.addAttribute("how/attrib", "qfield2 value")
+    qfield2.addAttribute("how/subgroup1/attrib", "qfield2 value 1")
+    qfield2.addAttribute("how/subgroup1/subgroup2/attrib", "qfield2 value 1 2")
+    qfield2.setData(numpy.zeros((240,240), numpy.uint8))
+    
+    param.addQualityField(qfield2)
+    
+    image.addParameter(param)
+    
+    ios = _raveio.new()
+    ios.object = image
+    ios.filename = self.TEMPORARY_FILE
+    ios.save()
+
+    # Verify result
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+    
+    self.assertEqual("value", nodelist.getNode("/how/attrib").data())
+    self.assertEqual("value 1", nodelist.getNode("/how/subgroup1/attrib").data())
+    self.assertEqual("value 1 2", nodelist.getNode("/how/subgroup1/subgroup2/attrib").data())
+
+    self.assertEqual("qfield1 value", nodelist.getNode("/dataset1/quality1/how/attrib").data())
+    self.assertEqual("qfield1 value 1", nodelist.getNode("/dataset1/quality1/how/subgroup1/attrib").data())
+    self.assertEqual("qfield1 value 1 2", nodelist.getNode("/dataset1/quality1/how/subgroup1/subgroup2/attrib").data())
+
+    self.assertEqual("param value", nodelist.getNode("/dataset1/data1/how/attrib").data())
+    self.assertEqual("param value 1", nodelist.getNode("/dataset1/data1/how/subgroup1/attrib").data())
+    self.assertEqual("param value 1 2", nodelist.getNode("/dataset1/data1/how/subgroup1/subgroup2/attrib").data())
+
+    self.assertEqual("qfield2 value", nodelist.getNode("/dataset1/data1/quality1/how/attrib").data())
+    self.assertEqual("qfield2 value 1", nodelist.getNode("/dataset1/data1/quality1/how/subgroup1/attrib").data())
+    self.assertEqual("qfield2 value 1 2", nodelist.getNode("/dataset1/data1/quality1/how/subgroup1/subgroup2/attrib").data())
+
+    newcartesian = _raveio.open(self.TEMPORARY_FILE).object
+    self.assertEqual("value", newcartesian.getAttribute("how/attrib"))
+    self.assertEqual("value 1", newcartesian.getAttribute("how/subgroup1/attrib"))
+    self.assertEqual("value 1 2", newcartesian.getAttribute("how/subgroup1/subgroup2/attrib"))
+
+    self.assertEqual("qfield1 value", newcartesian.getQualityField(0).getAttribute("how/attrib"))
+    self.assertEqual("qfield1 value 1", newcartesian.getQualityField(0).getAttribute("how/subgroup1/attrib"))
+    self.assertEqual("qfield1 value 1 2", newcartesian.getQualityField(0).getAttribute("how/subgroup1/subgroup2/attrib"))
+
+    self.assertEqual("param value", newcartesian.getParameter("DBZH").getAttribute("how/attrib"))
+    self.assertEqual("param value 1", newcartesian.getParameter("DBZH").getAttribute("how/subgroup1/attrib"))
+    self.assertEqual("param value 1 2", newcartesian.getParameter("DBZH").getAttribute("how/subgroup1/subgroup2/attrib"))
+
+    self.assertEqual("qfield2 value", newcartesian.getParameter("DBZH").getQualityField(0).getAttribute("how/attrib"))
+    self.assertEqual("qfield2 value 1", newcartesian.getParameter("DBZH").getQualityField(0).getAttribute("how/subgroup1/attrib"))
+    self.assertEqual("qfield2 value 1 2", newcartesian.getParameter("DBZH").getQualityField(0).getAttribute("how/subgroup1/subgroup2/attrib"))
+
   def test_save_cartesian_attribute_visibility(self):
     image = _cartesian.new()
     image.time = "100000"
@@ -672,7 +760,109 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertTrue(d is not None)
     self.assertEqual(240, numpy.shape(d)[0])
     self.assertEqual(240, numpy.shape(d)[1])
-  
+
+  def test_write_read_cartesian_volume_howSubgroups(self):
+    cvol = _cartesianvolume.new()
+    cvol.time = "100000"
+    cvol.date = "20091010"
+    cvol.objectType = _rave.Rave_ObjectType_CVOL
+    cvol.source = "PLC:123"
+    cvol.xscale = 2000.0
+    cvol.yscale = 2000.0
+    cvol.areaextent = (-240000.0, -240000.0, 240000.0, 240000.0)
+    projection = _projection.new("x","y","+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84")
+    cvol.projection = projection
+    cvol.addAttribute("how/attr", "value")
+    cvol.addAttribute("how/subgroup1/attr", "value 1")
+    cvol.addAttribute("how/subgroup1/subgroup2/attr", "value 1 2")
+
+    image = _cartesian.new()
+    image.product = _rave.Rave_ProductType_CAPPI
+    image.addAttribute("how/attr", "image value")
+    image.addAttribute("how/subgroup1/attr", "image value 1")
+    image.addAttribute("how/subgroup1/subgroup2/attr", "image value 1 2")
+
+    qfield1 = _ravefield.new()
+    qfield1.addAttribute("how/attr", "qfield1 value")
+    qfield1.addAttribute("how/subgroup1/attr", "qfield1 value 1")
+    qfield1.addAttribute("how/subgroup1/subgroup2/attr", "qfield1 value 1 2")
+    qfield1.setData(numpy.zeros((240,240), numpy.uint8))
+    image.addQualityField(qfield1)
+
+    param = _cartesianparam.new()
+    param.quantity = "DBZH"
+    param.gain = 1.0
+    param.offset = 0.0
+    param.nodata = 255.0
+    param.undetect = 0.0
+    data = numpy.zeros((240,240),numpy.uint8)
+    param.setData(data)
+
+    param.addAttribute("how/attr", "param value")
+    param.addAttribute("how/subgroup1/attr", "param value 1")
+    param.addAttribute("how/subgroup1/subgroup2/attr", "param value 1 2")
+
+    qfield2 = _ravefield.new()
+    qfield2.addAttribute("how/attr", "qfield2 value")
+    qfield2.addAttribute("how/subgroup1/attr", "qfield2 value 1")
+    qfield2.addAttribute("how/subgroup1/subgroup2/attr", "qfield2 value 1 2")
+    qfield2.setData(numpy.zeros((240,240), numpy.uint8))
+    param.addQualityField(qfield2)
+
+    image.addParameter(param)
+    
+    cvol.addImage(image)
+
+    ios = _raveio.new()
+    ios.object = cvol
+    ios.filename = self.TEMPORARY_FILE
+    ios.save()
+
+    # Verify result
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+    self.assertEqual("value", nodelist.getNode("/how/attr").data())
+    self.assertEqual("value 1", nodelist.getNode("/how/subgroup1/attr").data())
+    self.assertEqual("value 1 2", nodelist.getNode("/how/subgroup1/subgroup2/attr").data())
+
+    self.assertEqual("image value", nodelist.getNode("/dataset1/how/attr").data())
+    self.assertEqual("image value 1", nodelist.getNode("/dataset1/how/subgroup1/attr").data())
+    self.assertEqual("image value 1 2", nodelist.getNode("/dataset1/how/subgroup1/subgroup2/attr").data())
+
+    self.assertEqual("qfield1 value", nodelist.getNode("/dataset1/quality1/how/attr").data())
+    self.assertEqual("qfield1 value 1", nodelist.getNode("/dataset1/quality1/how/subgroup1/attr").data())
+    self.assertEqual("qfield1 value 1 2", nodelist.getNode("/dataset1/quality1/how/subgroup1/subgroup2/attr").data())
+
+    self.assertEqual("param value", nodelist.getNode("/dataset1/data1/how/attr").data())
+    self.assertEqual("param value 1", nodelist.getNode("/dataset1/data1/how/subgroup1/attr").data())
+    self.assertEqual("param value 1 2", nodelist.getNode("/dataset1/data1/how/subgroup1/subgroup2/attr").data())
+
+    self.assertEqual("qfield2 value", nodelist.getNode("/dataset1/data1/quality1/how/attr").data())
+    self.assertEqual("qfield2 value 1", nodelist.getNode("/dataset1/data1/quality1/how/subgroup1/attr").data())
+    self.assertEqual("qfield2 value 1 2", nodelist.getNode("/dataset1/data1/quality1/how/subgroup1/subgroup2/attr").data())
+
+    newvol = _raveio.open(self.TEMPORARY_FILE).object
+    self.assertEqual("value", newvol.getAttribute("how/attr"))
+    self.assertEqual("value 1", newvol.getAttribute("how/subgroup1/attr"))
+    self.assertEqual("value 1 2", newvol.getAttribute("how/subgroup1/subgroup2/attr"))
+
+    self.assertEqual("image value", newvol.getImage(0).getAttribute("how/attr"))
+    self.assertEqual("image value 1", newvol.getImage(0).getAttribute("how/subgroup1/attr"))
+    self.assertEqual("image value 1 2", newvol.getImage(0).getAttribute("how/subgroup1/subgroup2/attr"))
+    
+    self.assertEqual("qfield1 value", newvol.getImage(0).getQualityField(0).getAttribute("how/attr"))
+    self.assertEqual("qfield1 value 1", newvol.getImage(0).getQualityField(0).getAttribute("how/subgroup1/attr"))
+    self.assertEqual("qfield1 value 1 2", newvol.getImage(0).getQualityField(0).getAttribute("how/subgroup1/subgroup2/attr"))
+
+    self.assertEqual("param value", newvol.getImage(0).getParameter("DBZH").getAttribute("how/attr"))
+    self.assertEqual("param value 1", newvol.getImage(0).getParameter("DBZH").getAttribute("how/subgroup1/attr"))
+    self.assertEqual("param value 1 2", newvol.getImage(0).getParameter("DBZH").getAttribute("how/subgroup1/subgroup2/attr"))
+
+    self.assertEqual("qfield2 value", newvol.getImage(0).getParameter("DBZH").getQualityField(0).getAttribute("how/attr"))
+    self.assertEqual("qfield2 value 1", newvol.getImage(0).getParameter("DBZH").getQualityField(0).getAttribute("how/subgroup1/attr"))
+    self.assertEqual("qfield2 value 1 2", newvol.getImage(0).getParameter("DBZH").getQualityField(0).getAttribute("how/subgroup1/subgroup2/attr"))
+
   def test_load_cartesian_volume(self):
     obj = _raveio.open(self.FIXTURE_CVOL_CAPPI)
     self.assertEqual(_raveio.RaveIO_ODIM_Version_2_0, obj.version)
@@ -1035,6 +1225,91 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEqual("IMAGE", nodelist.getNode("/dataset2/data1/data/CLASS").data())
     self.assertEqual("1.2", nodelist.getNode("/dataset2/data1/data/IMAGE_VERSION").data())
 
+  def test_save_read_polar_volume_with_howSubgroups(self):
+    obj = _polarvolume.new()
+    obj.time = "100000"
+    obj.date = "20091010"
+    obj.source = "PLC:123"
+    obj.longitude = 12.0 * math.pi/180.0
+    obj.latitude = 60.0 * math.pi/180.0
+    obj.height = 0.0
+    
+    obj.addAttribute("how/attrib", "value")
+    obj.addAttribute("how/grp1/attrib", "value 1")
+    obj.addAttribute("how/grp1/grp2/attrib", "value 1 2")
+    
+    scan1 = _polarscan.new()
+    scan1.elangle = 0.1 * math.pi / 180.0
+    scan1.a1gate = 2
+    scan1.rstart = 0.0
+    scan1.rscale = 5000.0
+    scan1.time = "100001"
+    scan1.date = "20091010"
+    scan1.addAttribute("how/attrib", "scan value")
+    scan1.addAttribute("how/grp1/attrib", "scan value 1")
+    scan1.addAttribute("how/grp1/grp2/attrib", "scan value 1 2")
+    
+    dbzhParam = _polarscanparam.new()
+    dbzhParam.nodata = 10.0
+    dbzhParam.undetect = 11.0
+    dbzhParam.quantity = "DBZH"
+    dbzhParam.gain = 1.0
+    dbzhParam.offset = 0.0
+    data = numpy.zeros((100, 120), numpy.uint8)
+    dbzhParam.setData(data)
+    dbzhParam.addAttribute("how/attrib", "param value")
+    dbzhParam.addAttribute("how/grp1/attrib", "param value 1")
+    dbzhParam.addAttribute("how/grp1/grp2/attrib", "param value 1 2")
+
+    scan1.addParameter(dbzhParam)
+
+    qfield = _ravefield.new()
+    qfield.addAttribute("what/sthis", "a quality field")
+    qfield.setData(numpy.zeros((100,120), numpy.uint8))
+    qfield.addAttribute("how/attrib", "field value")
+    qfield.addAttribute("how/grp1/attrib", "field value 1")
+    qfield.addAttribute("how/grp1/grp2/attrib", "field value 1 2")
+    
+    dbzhParam.addQualityField(qfield)
+
+    obj.addScan(scan1)
+    
+    ios = _raveio.new()
+    ios.object = obj
+    ios.filename = self.TEMPORARY_FILE
+    ios.save()
+    
+    # Verify result
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+    self.assertEqual("value", nodelist.getNode("/how/attrib").data())
+    self.assertEqual("value 1", nodelist.getNode("/how/grp1/attrib").data())
+    self.assertEqual("value 1 2", nodelist.getNode("/how/grp1/grp2/attrib").data())
+    self.assertEqual("scan value", nodelist.getNode("/dataset1/how/attrib").data())
+    self.assertEqual("scan value 1", nodelist.getNode("/dataset1/how/grp1/attrib").data())
+    self.assertEqual("scan value 1 2", nodelist.getNode("/dataset1/how/grp1/grp2/attrib").data())
+    self.assertEqual("param value", nodelist.getNode("/dataset1/data1/how/attrib").data())
+    self.assertEqual("param value 1", nodelist.getNode("/dataset1/data1/how/grp1/attrib").data())
+    self.assertEqual("param value 1 2", nodelist.getNode("/dataset1/data1/how/grp1/grp2/attrib").data())
+    self.assertEqual("field value", nodelist.getNode("/dataset1/data1/quality1/how/attrib").data())
+    self.assertEqual("field value 1", nodelist.getNode("/dataset1/data1/quality1/how/grp1/attrib").data())
+    self.assertEqual("field value 1 2", nodelist.getNode("/dataset1/data1/quality1/how/grp1/grp2/attrib").data())
+
+    savedvol = _raveio.open(self.TEMPORARY_FILE).object
+    self.assertEqual("value", savedvol.getAttribute("how/attrib"))
+    self.assertEqual("value 1", savedvol.getAttribute("how/grp1/attrib"))
+    self.assertEqual("value 1 2", savedvol.getAttribute("how/grp1/grp2/attrib"))
+    self.assertEqual("scan value", savedvol.getScan(0).getAttribute("how/attrib"))
+    self.assertEqual("scan value 1", savedvol.getScan(0).getAttribute("how/grp1/attrib"))
+    self.assertEqual("scan value 1 2", savedvol.getScan(0).getAttribute("how/grp1/grp2/attrib"))
+    self.assertEqual("param value", savedvol.getScan(0).getParameter("DBZH").getAttribute("how/attrib"))
+    self.assertEqual("param value 1", savedvol.getScan(0).getParameter("DBZH").getAttribute("how/grp1/attrib"))
+    self.assertEqual("param value 1 2", savedvol.getScan(0).getParameter("DBZH").getAttribute("how/grp1/grp2/attrib"))
+    self.assertEqual("field value", savedvol.getScan(0).getParameter("DBZH").getQualityField(0).getAttribute("how/attrib"))
+    self.assertEqual("field value 1", savedvol.getScan(0).getParameter("DBZH").getQualityField(0).getAttribute("how/grp1/attrib"))
+    self.assertEqual("field value 1 2", savedvol.getScan(0).getParameter("DBZH").getQualityField(0).getAttribute("how/grp1/grp2/attrib"))
+
   def test_save_polar_volume_beamwidths(self):
     obj = _polarvolume.new()
     obj.time = "100000"
@@ -1165,6 +1440,53 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEqual(420, nodelist.getNode("/dataset1/where/nrays").data())
     self.assertAlmostEqual(2000.0, nodelist.getNode("/dataset1/where/rscale").data(), 4)
     self.assertAlmostEqual(0.0, nodelist.getNode("/dataset1/where/rstart").data(), 4)
+
+  def test_write_read_scan_withHowSubgroups(self):
+    obj = _raveio.open(self.FIXTURE_VOLUME)
+    vol = obj.object
+    scan = vol.getScan(0)
+    
+    scan.addAttribute("how/attrib", "hello 0")
+    scan.addAttribute("how/group1/attrib", "hello 1")
+    scan.addAttribute("how/group1/group11/attrib", "hello 11")
+    scan.addAttribute("how/group1/group11/attrib2", "hello 112")
+
+    scan.getParameter("DBZH").addAttribute("how/attrib", "phello 0")
+    scan.getParameter("DBZH").addAttribute("how/group1/attrib", "phello 1")
+    scan.getParameter("DBZH").addAttribute("how/group1/group11/attrib", "phello 11")
+    scan.getParameter("DBZH").addAttribute("how/group1/group11/attrib2", "phello 112")
+    
+    obj = _raveio.new()
+    obj.object = scan
+    obj.filename = self.TEMPORARY_FILE
+    obj.save()
+
+    # Verify data
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+    
+    self.assertEqual("hello 0", nodelist.getNode("/how/attrib").data())
+    self.assertEqual("hello 1", nodelist.getNode("/how/group1/attrib").data())
+    self.assertEqual("hello 11", nodelist.getNode("/how/group1/group11/attrib").data())
+    self.assertEqual("hello 112", nodelist.getNode("/how/group1/group11/attrib2").data())
+    
+    self.assertEqual("phello 0", nodelist.getNode("/dataset1/data1/how/attrib").data())
+    self.assertEqual("phello 1", nodelist.getNode("/dataset1/data1/how/group1/attrib").data())
+    self.assertEqual("phello 11", nodelist.getNode("/dataset1/data1/how/group1/group11/attrib").data())
+    self.assertEqual("phello 112", nodelist.getNode("/dataset1/data1/how/group1/group11/attrib2").data())
+
+    nobj = _raveio.open(self.TEMPORARY_FILE).object
+    self.assertEqual("hello 0", nobj.getAttribute("how/attrib"))
+    self.assertEqual("hello 1", nobj.getAttribute("how/group1/attrib"))
+    self.assertEqual("hello 11", nobj.getAttribute("how/group1/group11/attrib"))
+    self.assertEqual("hello 112", nobj.getAttribute("how/group1/group11/attrib2"))
+    
+    self.assertEqual("phello 0", nobj.getParameter("DBZH").getAttribute("how/attrib"))
+    self.assertEqual("phello 1", nobj.getParameter("DBZH").getAttribute("how/group1/attrib"))
+    self.assertEqual("phello 11", nobj.getParameter("DBZH").getAttribute("how/group1/group11/attrib"))
+    self.assertEqual("phello 112", nobj.getParameter("DBZH").getAttribute("how/group1/group11/attrib2"))
+    
 
   def test_write_scan_with_quality(self):
     obj = _raveio.open(self.FIXTURE_VOLUME)
@@ -1744,6 +2066,57 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEqual(1, numpy.shape(f1data)[1])
     self.assertEqual(10, numpy.shape(f2data)[0])
     self.assertEqual(1, numpy.shape(f2data)[1])
+
+  def test_write_read_vp_with_howSubgroups(self):
+    vp = _verticalprofile.new()
+    vp.date="20100101"
+    vp.time="120000"
+    vp.source="PLC:1234"
+    vp.longitude = 10.0 * math.pi / 180.0
+    vp.latitude = 15.0 * math.pi / 180.0
+    vp.setLevels(10)
+    vp.height = 100.0
+    vp.interval = 5.0
+    vp.minheight = 10.0
+    vp.maxheight = 20.0
+    vp.addAttribute("how/attrib", "value")
+    vp.addAttribute("how/subgroup1/attrib", "value 1")
+    vp.addAttribute("how/subgroup1/subgroup2/attrib", "value 1 2")
+    
+    f1 = _ravefield.new()
+    f1.setData(numpy.zeros((10,1), numpy.uint8))
+    f1.addAttribute("what/quantity", "ff")
+    f1.addAttribute("how/attrib", "ff value")
+    f1.addAttribute("how/subgroup1/attrib", "ff value 1")
+    f1.addAttribute("how/subgroup1/subgroup2/attrib", "ff value 1 2")
+    
+    vp.addField(f1)
+
+    obj = _raveio.new()
+    obj.object = vp
+    obj.filename = self.TEMPORARY_FILE2
+    obj.save()
+    
+    # Verify written data
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE2)
+    nodelist.selectAll()
+    nodelist.fetch()
+
+    self.assertEqual("value", nodelist.getNode("/how/attrib").data())
+    self.assertEqual("value 1", nodelist.getNode("/how/subgroup1/attrib").data())
+    self.assertEqual("value 1 2", nodelist.getNode("/how/subgroup1/subgroup2/attrib").data())
+    self.assertEqual("ff value", nodelist.getNode("/dataset1/data1/how/attrib").data())
+    self.assertEqual("ff value 1", nodelist.getNode("/dataset1/data1/how/subgroup1/attrib").data())
+    self.assertEqual("ff value 1 2", nodelist.getNode("/dataset1/data1/how/subgroup1/subgroup2/attrib").data())
+
+    savedvp = _raveio.open(self.TEMPORARY_FILE2).object
+    self.assertEqual("value", savedvp.getAttribute("how/attrib"))
+    self.assertEqual("value 1", savedvp.getAttribute("how/subgroup1/attrib"))
+    self.assertEqual("value 1 2", savedvp.getAttribute("how/subgroup1/subgroup2/attrib"))
+
+    self.assertEqual("ff value", savedvp.getField("ff").getAttribute("how/attrib"))
+    self.assertEqual("ff value 1", savedvp.getField("ff").getAttribute("how/subgroup1/attrib"))
+    self.assertEqual("ff value 1 2", savedvp.getField("ff").getAttribute("how/subgroup1/subgroup2/attrib"))
 
   def test_write_vp_dev_bird(self):
     vp = _verticalprofile.new()
