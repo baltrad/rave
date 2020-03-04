@@ -61,7 +61,7 @@ class PyCartesianTest(unittest.TestCase):
   def test_attribute_visibility(self):
     attrs = ['areaextent', 'date', 'objectType', 
      'product', 'projection', 'source', 'time',
-     'xscale', 'xsize', 'yscale', 'ysize']
+     'xscale', 'xsize', 'yscale', 'ysize', 'prodname']
     obj = _cartesian.new()
     alist = dir(obj)
     for a in attrs:
@@ -149,7 +149,24 @@ class PyCartesianTest(unittest.TestCase):
     self.assertEqual("ABC:10, ABD:1", obj.source)
     obj.source = None
     self.assertEqual(None, obj.source)
-  
+
+  def test_prodname(self):
+    obj = _cartesian.new()
+    self.assertEqual(None, obj.prodname)
+    obj.prodname = "a product"
+    self.assertEqual("a product", obj.prodname)
+    obj.prodname = None
+    self.assertEqual(None, obj.prodname)
+
+  def test_prodname_typeError(self):
+    obj = _cartesian.new()
+    try:
+      obj.prodname = 10
+      self.fail("Expected TypeError")
+    except TypeError:
+      pass
+    self.assertEqual(None, obj.prodname)
+
   def test_objectType(self):
     obj = _cartesian.new()
     obj.objectType = _rave.Rave_ObjectType_COMP

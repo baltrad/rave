@@ -1055,6 +1055,7 @@ static struct PyMethodDef _pycartesian_methods[] =
   {"objectType", NULL},
   {"product", NULL},
   {"source", NULL},
+  {"prodname", NULL},
   {"xsize", NULL},
   {"ysize", NULL},
   {"xscale", NULL},
@@ -1299,6 +1300,12 @@ static PyObject* _pycartesian_getattro(PyCartesian* self, PyObject* name)
     } else {
       Py_RETURN_NONE;
     }
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "prodname") == 0) {
+    if (Cartesian_getProdname(self->cartesian) == NULL) {
+      Py_RETURN_NONE;
+    } else {
+      return PyRaveAPI_StringOrUnicode_FromASCII(Cartesian_getProdname(self->cartesian));
+    }
   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("xsize", name) == 0) {
     return PyInt_FromLong(Cartesian_getXSize(self->cartesian));
   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("ysize", name) == 0) {
@@ -1410,6 +1417,16 @@ static int _pycartesian_setattro(PyCartesian* self, PyObject* name, PyObject* va
     } else {
       raiseException_gotoTag(done, PyExc_ValueError,"source must be of type string");
     }
+  } else  if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "prodname") == 0) {
+      if (PyString_Check(val)) {
+        if (!Cartesian_setProdname(self->cartesian, PyString_AsString(val))) {
+          raiseException_gotoTag(done, PyExc_MemoryError, "Could not set prodname");
+        }
+      } else if (val == Py_None) {
+        Cartesian_setProdname(self->cartesian, NULL);
+      } else {
+        raiseException_gotoTag(done, PyExc_TypeError,"prodname must be of type string");
+      }
   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("xscale", name)==0) {
     if (PyFloat_Check(val)) {
       Cartesian_setXScale(self->cartesian, PyFloat_AsDouble(val));
@@ -1518,6 +1535,7 @@ PyDoc_STRVAR(_pycartesian_type_doc,
     "objectType       - The object type as defined in ODIM H5 this cartesian product should be defined as. Can be _rave.Rave_ObjectType_IMAGE or _raveRave_ObjectType_COMP\n"
     "product          - The product this cartesian product should represent as defined in ODIM H5. Can be for example _rave.Rave_ProductType_PPI or _rave.Rave_ProductType_PCAPPI\n"
     "source           - The source for this product. Defined as what/source in ODIM H5. I.e. a comma separated list of various identifiers. For example. NOD:seang,WMO:1234,....\n"
+    "prodname         - The product name\n"
     "xsize            - The xsize of the area represented. ReadOnly, initialization occurs with for example the init-function.\n"
     "ysize            - The ysize of the area represented. ReadOnly, initialization occurs with for example the init-function.\n"
     "xscale           - The scale in meters in x-direction.\n"

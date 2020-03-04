@@ -24,9 +24,6 @@ Test suite for rave
 @date 2009-10-12
 '''
 import unittest, os
-A="""
-from RaveTest import *
-"""
 
 from BaltradMessageXMLTest import *
 from rave_pgf_registry_test import *
@@ -38,7 +35,9 @@ from PyPolarScanParamTest import *
 from RaveModuleConstantsTest import *
           
 from PyCartesianTest import *
+
 from PyCartesianParamTest import *
+
 from PyCartesianVolumeTest import *
 from PyVerticalProfileTest import *
 from PyRaveFieldTest import *
@@ -58,9 +57,7 @@ from PyAreaRegistryTest import *
 from PgfVolumePluginTest import *
 from RaveScansun import *
 from PyDetectionRangeTest import *
-# A="""
-# from PyRaveTest import *
-# """
+
 from PyQITotalTest import *
 from PyPooCompositeAlgorithmTest import *
 from rave_overshooting_quality_plugin_test import *

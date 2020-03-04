@@ -91,6 +91,21 @@ int VerticalProfile_setSource(VerticalProfile_t* self, const char* value);
 const char* VerticalProfile_getSource(VerticalProfile_t* self);
 
 /**
+ * Sets the product name.
+ * @param[in] self - self
+ * @param[in] value - the product name
+ * @returns 1 on success, otherwise 0
+ */
+int VerticalProfile_setProdname(VerticalProfile_t* self, const char* value);
+
+/**
+ * Returns the product name.
+ * @param[in] self - self
+ * @returns the product name or NULL if there is none
+ */
+const char* VerticalProfile_getProdname(VerticalProfile_t* self);
+
+/**
  * Sets the longitude
  * @param[in] self - self
  * @param[in] lon - the longitude (in radians)

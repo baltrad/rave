@@ -814,6 +814,7 @@ static struct PyMethodDef _pyverticalprofile_methods[] =
   {"enddate", NULL},
   {"source", NULL},
   {"product", NULL},
+  {"prodname", NULL},
   {"longitude", NULL},
   {"latitude", NULL},
   {"height", NULL},
@@ -1080,6 +1081,13 @@ static PyObject* _pyverticalprofile_getattro(PyVerticalProfile* self, PyObject* 
     } else {
       Py_RETURN_NONE;
     }
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("prodname", name) == 0) {
+    const char* str = VerticalProfile_getProdname(self->vp);
+    if (str != NULL) {
+      return PyString_FromString(str);
+    } else {
+      Py_RETURN_NONE;
+    }
   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("starttime", name) == 0) {
     const char* str = VerticalProfile_getStartTime(self->vp);
     if (str != NULL) {
@@ -1173,6 +1181,16 @@ static int _pyverticalprofile_setattro(PyVerticalProfile* self, PyObject* name, 
       VerticalProfile_setProduct(self->vp, NULL);
     } else {
       raiseException_gotoTag(done, PyExc_ValueError, "product must be a string");
+    }
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("prodname", name) == 0) {
+    if (PyString_Check(val)) {
+      if (!VerticalProfile_setProdname(self->vp, PyString_AsString(val))) {
+        raiseException_gotoTag(done, PyExc_ValueError, "prodname must be a string");
+      }
+    } else if (val == Py_None) {
+      VerticalProfile_setProdname(self->vp, NULL);
+    } else {
+      raiseException_gotoTag(done, PyExc_ValueError, "prodname must be a string");
     }
   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("starttime", name) == 0) {
     if (PyString_Check(val)) {
@@ -1285,6 +1303,7 @@ PyDoc_STRVAR(_pyverticalprofile_type_doc,
     "enddate          - End date for this product as a string with format YYYYMMDD.\n"
     "source           - The source for this product. Defined as what/source in ODIM H5. I.e. a comma separated list of various identifiers. For example. NOD:seang,WMO:1234,....\n"
     "product          - The product this vertical profile should represent as defined in ODIM H5. Can basically be any string.\n"
+    "prodname         - The product name\n"
     "longitude        - Longitude (in radians)\n"
     "latitude         - Latitude (in radians)\n"
     "height           - Height of the centre of the antenna\n"

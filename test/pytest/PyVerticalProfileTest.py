@@ -117,6 +117,12 @@ class PyVerticalProfileTest(unittest.TestCase):
     obj.product = "VP"
     self.assertEqual("VP", obj.product, 4)
 
+  def test_setGetProdname(self):
+    obj = _verticalprofile.new()
+    self.assertTrue(None == obj.prodname)
+    obj.prodname = "Prod name"
+    self.assertEqual("Prod name", obj.prodname)
+
   def test_setGetLevels(self):
     obj = _verticalprofile.new()
     self.assertEqual(0, obj.getLevels())

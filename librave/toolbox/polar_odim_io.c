@@ -312,6 +312,14 @@ static int PolarOdimIOInternal_loadDsScanAttribute(void* object, RaveAttribute_t
         RAVE_WARNING0("what/product did not identify as a SCAN!");
       }
       result = 1;
+    } else if (strcasecmp("what/prodname", name) == 0) {
+      char* value = NULL;
+      RaveAttribute_getString(attribute, &value);
+      if (value != NULL) {
+        if (!(result = PolarScan_setProdname(scan, value))) {
+          RAVE_ERROR1("Failed to set what/prodname with value = %s", value);
+        }
+      }
     } else if (strcasecmp("where/nbins", name) == 0 ||
                strcasecmp("where/nrays", name) == 0) {
       result = 1;
@@ -941,6 +949,17 @@ int PolarOdimIO_fillScan(PolarOdimIO_t* self, PolarScan_t* scan, HL_NodeList* no
       !RaveUtilities_replaceStringAttributeInList(attributes, "what/endtime", PolarScan_getEndTime(scan))) {
     goto done;
   }
+
+  if (PolarScan_getProdname(scan) == NULL) {
+    if (!RaveUtilities_replaceStringAttributeInList(attributes, "what/prodname", "BALTRAD scan")) {
+      goto done;
+    }
+  } else {
+    if (!RaveUtilities_replaceStringAttributeInList(attributes, "what/prodname", PolarScan_getProdname(scan))) {
+      goto done;
+    }
+  }
+
   if (!RaveHL_addAttributes(nodelist, attributes, "/dataset1")) {
     goto done;
   }

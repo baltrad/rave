@@ -382,6 +382,7 @@ static int CartesianOdimIOInternal_loadDatasetAttribute(void* object, RaveAttrib
   */
   name = RaveAttribute_getName(attribute);
   if (strcasecmp("what/product", name)==0 ||
+      strcasecmp("what/prodname", name)==0 ||
       strcasecmp("what/startdate", name)==0 ||
       strcasecmp("what/starttime", name)==0 ||
       strcasecmp("what/enddate", name)==0 ||
@@ -394,6 +395,8 @@ static int CartesianOdimIOInternal_loadDatasetAttribute(void* object, RaveAttrib
     }
     if (strcasecmp("what/product", name)==0) {
       result = Cartesian_setProduct(cartesian, RaveTypes_getProductTypeFromString(value));
+    } else if (strcasecmp("what/prodname", name)==0) {
+      result = Cartesian_setProdname(cartesian, value);
     } else if (strcasecmp("what/startdate", name)==0) {
       result = Cartesian_setStartDate(cartesian, value);
     } else if (strcasecmp("what/starttime", name)==0) {
@@ -1062,6 +1065,16 @@ int CartesianOdimIO_fillImage(CartesianOdimIO_t* self, HL_NodeList* nodelist, Ca
       !RaveUtilities_replaceStringAttributeInList(attributes, "what/product",
                                                   RaveTypes_getStringFromProductType(Cartesian_getProduct(cartesian)))) {
     goto done;
+  }
+
+  if (Cartesian_getProdname(cartesian) == NULL) {
+    if (!RaveUtilities_addStringAttributeToList(attributes, "what/prodname", "BALTRAD cartesian")) {
+      goto done;
+    }
+  } else {
+    if (!RaveUtilities_addStringAttributeToList(attributes, "what/prodname", Cartesian_getProdname(cartesian))) {
+      goto done;
+    }
   }
 
   if (!RaveHL_createGroup(nodelist,"/dataset1")) {

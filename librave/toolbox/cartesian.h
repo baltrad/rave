@@ -153,6 +153,21 @@ int Cartesian_setSource(Cartesian_t* cartesian, const char* value);
 const char* Cartesian_getSource(Cartesian_t* cartesian);
 
 /**
+ * Sets the product name.
+ * @param[in] cartesian - self
+ * @param[in] value - the product name
+ * @returns 1 on success, otherwise 0
+ */
+int Cartesian_setProdname(Cartesian_t* cartesian, const char* value);
+
+/**
+ * Returns the product name.
+ * @param[in] cartesian - self
+ * @returns the product name or NULL if there is none
+ */
+const char* Cartesian_getProdname(Cartesian_t* cartesian);
+
+/**
  * Sets the object type this cartesian product should represent.
  * @param[in] self - self
  * @param[in] type - the object type

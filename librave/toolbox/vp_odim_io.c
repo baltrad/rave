@@ -521,40 +521,55 @@ int VpOdimIO_fill(VpOdimIO_t* self, VerticalProfile_t* vp, HL_NodeList* nodelist
   if (!RaveHL_createGroup(nodelist, "/dataset1/what")) {
     goto done;  
   }
- 
-    /* The following code added by Ulf to be able to access the new
-     attributes starttime, endtime, startdate, enddate and product */
-      
+
+  RaveObjectList_clear(attributes);
+
+  if (VerticalProfile_getProdname(vp) == NULL) {
+    if (!RaveUtilities_addStringAttributeToList(attributes, "what/prodname", "BALTRAD vp")) {
+      goto done;
+    }
+  } else {
+    if (!RaveUtilities_addStringAttributeToList(attributes, "what/prodname", VerticalProfile_getProdname(vp))) {
+      goto done;
+    }
+  }
+
+  if (!RaveHL_addAttributes(nodelist, attributes, "/dataset1")) {
+    goto done;
+  }
+
+  /* The following code added by Ulf to be able to access the new
+   attributes starttime, endtime, startdate, enddate and product */
   if (VerticalProfile_getStartTime(vp) != NULL) {
     if (!RaveHL_createStringValue(nodelist, VerticalProfile_getStartTime(vp), "/dataset1/what/starttime")) {
       goto done;
     }
   }
-  
+
   if (VerticalProfile_getEndTime(vp) != NULL) {
     if (!RaveHL_createStringValue(nodelist, VerticalProfile_getEndTime(vp), "/dataset1/what/endtime")) {
       goto done;
     }
   }
-  
+
   if (VerticalProfile_getStartDate(vp) != NULL) {
     if (!RaveHL_createStringValue(nodelist, VerticalProfile_getStartDate(vp), "/dataset1/what/startdate")) {
       goto done;
     }
   }
-  
+
   if (VerticalProfile_getEndDate(vp) != NULL) {
     if (!RaveHL_createStringValue(nodelist, VerticalProfile_getEndDate(vp), "/dataset1/what/enddate")) {
       goto done;
     }
   }
-  
+
   if (VerticalProfile_getProduct(vp) != NULL) {
     if (!RaveHL_createStringValue(nodelist, VerticalProfile_getProduct(vp), "/dataset1/what/product")) {
       goto done;
     }
   }
-
+  
   
   RAVE_OBJECT_RELEASE(attributes);
   attributes = RAVE_OBJECT_NEW(&RaveObjectList_TYPE);

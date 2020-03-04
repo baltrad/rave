@@ -52,6 +52,7 @@ struct _VerticalProfile_t {
   
   char* product; /**< The product, in this case VP */
   char* source;    /**< the source string */
+  char* prodname;  /**< the product name */
   RaveObjectHashTable_t* attrs; /**< attributes */
   RaveObjectHashTable_t* fields; /**< the fields */
   double lon; /**< the longitude in radians */
@@ -80,6 +81,7 @@ static int VerticalProfile_constructor(RaveCoreObject* obj)
   self->datetime = NULL;
   self->fields = NULL;
   self->source = NULL;
+  self->prodname = NULL;
   self->startdatetime = NULL;
   self->enddatetime = NULL;
   self->product = NULL;
@@ -115,6 +117,7 @@ static int VerticalProfile_copyconstructor(RaveCoreObject* obj, RaveCoreObject* 
   self->maxheight = src->maxheight;
   self->datetime = NULL;
   self->source = NULL;
+  self->prodname = NULL;
   self->startdatetime = NULL;
   self->enddatetime = NULL;
   self->product = NULL;
@@ -128,7 +131,8 @@ static int VerticalProfile_copyconstructor(RaveCoreObject* obj, RaveCoreObject* 
     goto error;
   }
   if (!VerticalProfile_setSource(self, VerticalProfile_getSource(src)) ||
-      !VerticalProfile_setProduct(self, VerticalProfile_getProduct(src))) {
+      !VerticalProfile_setProduct(self, VerticalProfile_getProduct(src)) ||
+      !VerticalProfile_setProdname(self, VerticalProfile_getProdname(src))) {
     goto error;
   }
   return 1;
@@ -140,6 +144,7 @@ error:
   RAVE_OBJECT_RELEASE(self->attrs);
   RAVE_FREE(self->source);
   RAVE_FREE(self->product);
+  RAVE_FREE(self->prodname);
   return 0;
 }
 
@@ -156,6 +161,7 @@ static void VerticalProfile_destructor(RaveCoreObject* obj)
   RAVE_OBJECT_RELEASE(self->attrs);
   RAVE_FREE(self->source);
   RAVE_FREE(self->product);
+  RAVE_FREE(self->prodname);
 }
 
 static int VerticalProfileInternal_addField(VerticalProfile_t* self, RaveField_t* field, const char* quantity)
@@ -272,6 +278,31 @@ const char* VerticalProfile_getSource(VerticalProfile_t* self)
 {
   RAVE_ASSERT((self != NULL), "self == NULL");
   return (const char*)self->source;
+}
+
+int VerticalProfile_setProdname(VerticalProfile_t* self, const char* value)
+{
+  char* tmp = NULL;
+  int result = 0;
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  if (value != NULL) {
+    tmp = RAVE_STRDUP(value);
+    if (tmp != NULL) {
+      RAVE_FREE(self->prodname);
+      self->prodname = tmp;
+      result = 1;
+    }
+  } else {
+    RAVE_FREE(self->prodname);
+    result = 1;
+  }
+  return result;
+}
+
+const char* VerticalProfile_getProdname(VerticalProfile_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return (const char*)self->prodname;
 }
 
 int VerticalProfile_setProduct(VerticalProfile_t* self, const char* value)

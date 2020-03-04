@@ -256,6 +256,7 @@ class PyRaveIOTest(unittest.TestCase):
     image.areaextent = (-240000.0, -240000.0, 240000.0, 240000.0)
     image.projection = _projection.new("x","y","+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84")
     image.product = _rave.Rave_ProductType_CAPPI
+    image.prodname = "BALTRAD"
 
     param = _cartesianparam.new()
     param.quantity = "DBZH"
@@ -330,6 +331,8 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEqual("20100101", nodelist.getNode("/dataset1/what/startdate").data())
     self.assertEqual("100000", nodelist.getNode("/dataset1/what/endtime").data())
     self.assertEqual("20100101", nodelist.getNode("/dataset1/what/enddate").data())
+    
+    self.assertEqual("BALTRAD" , nodelist.getNode("/dataset1/what/prodname").data())
 
     dbzhdata = 1
     mmhdata = 2
@@ -370,6 +373,46 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEqual(240, numpy.shape(d)[0])
     self.assertEqual(240, numpy.shape(d)[1])
 
+  def test_save_cartesian_with_default_prodname(self):
+    image = _cartesian.new()
+    image.time = "100000"
+    image.date = "20100101"
+    image.objectType = _rave.Rave_ObjectType_IMAGE
+    image.source = "PLC:123"
+    image.xscale = 2000.0
+    image.yscale = 2000.0
+    image.areaextent = (-240000.0, -240000.0, 240000.0, 240000.0)
+    image.projection = _projection.new("x","y","+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84")
+    image.product = _rave.Rave_ProductType_CAPPI
+    image.prodname = None
+    
+    param = _cartesianparam.new()
+    param.quantity = "DBZH"
+    param.gain = 1.0
+    param.offset = 0.0
+    param.nodata = 255.0
+    param.undetect = 0.0
+    data = numpy.zeros((240,240),numpy.uint8)
+    param.setData(data)
+
+    image.addParameter(param)
+    
+    ios = _raveio.new()
+    ios.object = image
+    ios.filename = self.TEMPORARY_FILE
+    ios.save()
+
+    # Verify result
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+    
+    self.assertEqual("ODIM_H5/V2_2", nodelist.getNode("/Conventions").data())
+    self.assertEqual("BALTRAD cartesian" , nodelist.getNode("/dataset1/what/prodname").data())
+
+    #Just verify that we can read it as well
+    obj = _raveio.open(self.TEMPORARY_FILE).object
+    self.assertEqual("BALTRAD cartesian", obj.prodname)
 
   def test_save_cartesian_SURF(self):
     image = _cartesian.new()
@@ -1794,6 +1837,51 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertAlmostEqual(1.0, ddata[1], 2)
     self.assertAlmostEqual(5.0, ddata[5], 2)
 
+  def test_write_scan_with_prodname(self):
+    obj = _raveio.open(self.FIXTURE_VOLUME)
+    vol = obj.object
+    scan = vol.getScan(0)
+    self.assertEqual(None, scan.prodname)
+    scan.prodname = "Nisses product"
+    
+    obj = _raveio.new()
+    obj.object = scan
+    obj.filename = self.TEMPORARY_FILE
+    obj.save()
+
+    # Verify data
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+    
+    self.assertEqual("Nisses product", nodelist.getNode("/dataset1/what/prodname").data())
+
+    # Just verify that we can read it as well.
+    obj = _raveio.open(self.TEMPORARY_FILE).object
+    self.assertEqual("Nisses product", obj.prodname)
+    
+  def test_write_scan_with_default_prodname(self):
+    obj = _raveio.open(self.FIXTURE_VOLUME)
+    vol = obj.object
+    scan = vol.getScan(0)
+    self.assertEqual(None, scan.prodname)
+    
+    obj = _raveio.new()
+    obj.object = scan
+    obj.filename = self.TEMPORARY_FILE
+    obj.save()
+
+    # Verify data
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+    
+    self.assertEqual("BALTRAD scan", nodelist.getNode("/dataset1/what/prodname").data())
+
+    # Just verify that we can read it as well.
+    obj = _raveio.open(self.TEMPORARY_FILE).object
+    self.assertEqual("BALTRAD scan", obj.prodname)
+
   def test_read_scanparam_with_array(self):
     obj = _raveio.open(self.FIXTURE_VOLUME)
     vol = obj.object
@@ -2031,6 +2119,7 @@ class PyRaveIOTest(unittest.TestCase):
     obj.object = vp
     obj.filename = self.TEMPORARY_FILE2
     obj.save()
+    obj.save("slask.h5")
     
     # Verify written data
     nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE2)
@@ -2046,6 +2135,8 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertAlmostEqual(100.0, nodelist.getNode("/where/height").data(), 4)
     self.assertAlmostEqual(15.0, nodelist.getNode("/where/lat").data(), 4)
     self.assertAlmostEqual(10.0, nodelist.getNode("/where/lon").data(), 4)
+
+    self.assertEqual("BALTRAD vp", nodelist.getNode("/dataset1/what/prodname").data())
 
     self.assertEqual(10, nodelist.getNode("/where/levels").data())
     self.assertAlmostEqual(5.0, nodelist.getNode("/where/interval").data(), 4)
@@ -2079,6 +2170,7 @@ class PyRaveIOTest(unittest.TestCase):
     vp.interval = 5.0
     vp.minheight = 10.0
     vp.maxheight = 20.0
+    vp.prodname = "With how subgroups"
     vp.addAttribute("how/attrib", "value")
     vp.addAttribute("how/subgroup1/attrib", "value 1")
     vp.addAttribute("how/subgroup1/subgroup2/attrib", "value 1 2")
@@ -2108,7 +2200,9 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEqual("ff value", nodelist.getNode("/dataset1/data1/how/attrib").data())
     self.assertEqual("ff value 1", nodelist.getNode("/dataset1/data1/how/subgroup1/attrib").data())
     self.assertEqual("ff value 1 2", nodelist.getNode("/dataset1/data1/how/subgroup1/subgroup2/attrib").data())
-
+    
+    self.assertEqual("With how subgroups", nodelist.getNode("/dataset1/what/prodname").data())
+    
     savedvp = _raveio.open(self.TEMPORARY_FILE2).object
     self.assertEqual("value", savedvp.getAttribute("how/attrib"))
     self.assertEqual("value 1", savedvp.getAttribute("how/subgroup1/attrib"))
