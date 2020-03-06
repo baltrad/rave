@@ -1297,9 +1297,9 @@ class PyCompositeTest(unittest.TestCase):
     a.extent = (-738816.513333,-3995515.596160,955183.48666699999,-1787515.59616)
     a.projection = _projection.new("x", "y", "+proj=stere +ellps=bessel +lat_0=90 +lon_0=14 +lat_ts=60 +datum=WGS84")
     
-    startazA = numpy.arange(-0.5,359.5,360/420)
+    startazA = numpy.arange(-0.5,359.5,360/420.0)
     startazA[0] = 359.5
-    stopazA = numpy.arange(0.5,360.5,360/420)
+    stopazA = numpy.arange(0.5,360.5,360/420.0)
 
     for fname in self.SWEDISH_VOLUMES:
       rio = _raveio.open(fname)
