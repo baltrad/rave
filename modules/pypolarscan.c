@@ -1121,6 +1121,7 @@ static struct PyMethodDef _pypolarscan_methods[] =
   {"enddate", NULL},
   {"source", NULL},
   {"prodname", NULL},
+  {"use_azimuthal_nav_information", NULL},
   {"defaultparameter", NULL},
   {"projection", NULL},
   {"addParameter", (PyCFunction) _pypolarscan_addParameter, 1,
@@ -1454,6 +1455,8 @@ static PyObject* _pypolarscan_getattro(PyPolarScan* self, PyObject* name)
     } else {
       Py_RETURN_NONE;
     }
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("use_azimuthal_nav_information", name) == 0) {
+    return PyBool_FromLong(PolarScan_useAzimuthalNavInformation(self->scan));
   }
   return PyObject_GenericGetAttr((PyObject*)self, name);
 }
@@ -1609,6 +1612,16 @@ static int _pypolarscan_setattro(PyPolarScan* self, PyObject* name, PyObject* va
     } else if (val == Py_None) {
       PolarScan_setProjection(self->scan, NULL);
     }
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("use_azimuthal_nav_information", name) == 0) {
+    if (PyBool_Check(val)) {
+      if (PyObject_IsTrue(val)) {
+        PolarScan_setUseAzimuthalNavInformation(self->scan, 1);
+      } else {
+        PolarScan_setUseAzimuthalNavInformation(self->scan, 0);
+      }
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError, "use_azimuthal_nav_information must be of type bool");
+    }
   } else {
     raiseException_gotoTag(done, PyExc_AttributeError, PY_RAVE_ATTRO_NAME_TO_STRING(name));
   }
@@ -1658,6 +1671,7 @@ PyDoc_STRVAR(_pypolarscan_type_doc,
     "enddate          - Date the collection of this polar scan ended as a string in the format YYYYMMDD\n"
     "source           - The source for this product. Defined as what/source in ODIM H5. I.e. a comma separated list of various identifiers. For example. NOD:seang,WMO:1234,....\n"
     "prodname         - Product name.\n"
+    "use_azimuthal_nav_information - If astart/startazA/stopazA should be used when calculating indexes\n"
     "defaultparameter - Since a polar scan is a container of a number of different parameters, this setting allows the user to define a default parameter that will allow for operations directly in the scan instead of getting the parameter.\n"
     "\n"
     "The most common usage of this class is probably to load a ODIM H5 scan and perform operations on this object. However, to create a new instance:\n"

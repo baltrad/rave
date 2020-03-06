@@ -533,6 +533,21 @@ int PolarScan_getRangeIndex(PolarScan_t* scan, double r, PolarScanSelectionMetho
 double PolarScan_getRange(PolarScan_t* scan, int ri, int rangeMidpoint);
 
 /**
+ * Sets if the azimuthal nav information (astart / startazA / stopazA) should
+ * be used when calculating azimuthal index.
+ * @param[in] self - self
+ * @param[in] v - 1 if nav information should be used, otherwise 0
+ */
+void PolarScan_setUseAzimuthalNavInformation(PolarScan_t* self, int v);
+
+/**
+ * Returns if the azimuthal nav information should be used or not
+ * @param[in] self - self
+ * @return 1 if nav information should be used, otherwise 0.
+ */
+int PolarScan_useAzimuthalNavInformation(PolarScan_t* self);
+
+/**
  * Returns the azimuth index for the specified azimuth.
  * @param[in] scan - the scan
  * @param[in] a - the azimuth (in radians)

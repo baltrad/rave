@@ -88,6 +88,20 @@ struct _PolarScan_t {
   // Keeps track of maximum distance. Should be reset each time
   // bins, scale or elangle changes.
   double maxdistance; /** maximum distance, cached value */
+
+  int useAzimuthalNavInformation; /**< Indicate if astart, startazA and stopazA should be used when navigating */
+  //
+  // Keeps track of astart & startazA to handle when it can be assumed that rays are not aligned according to specification rules.
+  // Should not be available outside this class and are set when addAttribute is called with how/astart and how/startazA respectively.
+  //
+  double astart;
+  int hasAstart;
+  double* startazA;
+  int nStartazA;
+  int hasStartazA;
+  double* stopazA;
+  int nStopazA;
+  int hasStopazA;
 };
 
 /*@{ Private functions */
@@ -121,6 +135,16 @@ static int PolarScan_constructor(RaveCoreObject* obj)
   scan->attrs = RAVE_OBJECT_NEW(&RaveObjectHashTable_TYPE);
   scan->qualityfields = RAVE_OBJECT_NEW(&RaveObjectList_TYPE);
   scan->maxdistance = -1.0;
+
+  scan->useAzimuthalNavInformation = 1;
+  scan->astart = 0.0;
+  scan->hasAstart = 0;
+  scan->startazA = NULL;
+  scan->nStartazA = 0;
+  scan->hasStartazA = 0;
+  scan->stopazA = NULL;
+  scan->nStopazA = 0;
+  scan->hasStopazA = 0;
 
   if (scan->projection != NULL) {
     if(!Projection_init(scan->projection, "lonlat", "lonlat", "+proj=latlong +ellps=WGS84 +datum=WGS84")) {
@@ -171,6 +195,16 @@ static int PolarScan_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj
   this->paramname = NULL;
   this->param = NULL;
 
+  this->useAzimuthalNavInformation = src->useAzimuthalNavInformation;
+  this->astart = src->astart;
+  this->hasAstart = src->hasAstart;
+  this->startazA = NULL;
+  this->nStartazA = src->nStartazA;
+  this->hasStartazA = src->hasStartazA;
+  this->stopazA = NULL;
+  this->nStopazA = src->nStopazA;
+  this->hasStopazA = src->hasStopazA;
+
   this->source = NULL;
   this->prodname = NULL;
   this->datetime = RAVE_OBJECT_CLONE(src->datetime);
@@ -196,6 +230,22 @@ static int PolarScan_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj
   if (!PolarScan_setProdname(this, PolarScan_getProdname(src))) {
     goto error;
   }
+  if (src->startazA != NULL && src->nStartazA > 0) {
+    this->startazA = RAVE_MALLOC(sizeof(double) * src->nStartazA);
+    if (this->startazA != NULL) {
+      memcpy(this->startazA, src->startazA, sizeof(double) * src->nStartazA);
+    } else  {
+      goto error;
+    }
+  }
+  if (src->stopazA != NULL && src->nStopazA > 0) {
+    this->stopazA = RAVE_MALLOC(sizeof(double) * src->nStopazA);
+    if (this->stopazA != NULL) {
+      memcpy(this->stopazA, src->stopazA, sizeof(double) * src->nStopazA);
+    } else  {
+      goto error;
+    }
+  }
 
   return 1;
 error:
@@ -208,6 +258,8 @@ error:
   RAVE_OBJECT_RELEASE(this->navigator);
   RAVE_OBJECT_RELEASE(this->parameters);
   RAVE_FREE(this->paramname);
+  RAVE_FREE(this->startazA);
+  RAVE_FREE(this->stopazA);
   RAVE_OBJECT_RELEASE(this->param);
   RAVE_OBJECT_RELEASE(this->attrs);
   RAVE_OBJECT_RELEASE(this->qualityfields);
@@ -230,6 +282,8 @@ static void PolarScan_destructor(RaveCoreObject* obj)
   RAVE_OBJECT_RELEASE(scan->parameters);
   RAVE_OBJECT_RELEASE(scan->param);
   RAVE_FREE(scan->paramname);
+  RAVE_FREE(scan->startazA)
+  RAVE_FREE(scan->stopazA)
   RAVE_OBJECT_RELEASE(scan->attrs);
   RAVE_OBJECT_RELEASE(scan->qualityfields);
 }
@@ -898,6 +952,22 @@ done:
   return result;
 }
 
+void PolarScan_setUseAzimuthalNavInformation(PolarScan_t* self, int v)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  if (v == 0) {
+    self->useAzimuthalNavInformation = 0;
+  } else {
+    self->useAzimuthalNavInformation = 1;
+  }
+}
+
+int PolarScan_useAzimuthalNavInformation(PolarScan_t* self)
+{
+  RAVE_ASSERT((self != NULL), "scan == NULL");
+  return self->useAzimuthalNavInformation;
+}
+
 int PolarScan_getAzimuthIndex(PolarScan_t* scan, double a, PolarScanSelectionMethod_t selectionMethod)
 {
   int result = -1;
@@ -908,10 +978,35 @@ int PolarScan_getAzimuthIndex(PolarScan_t* scan, double a, PolarScanSelectionMet
     RAVE_WARNING0("Can not calculate azimuth index");
     return -1;
   }
-
   azOffset = 2*M_PI/scan->nrays;
-  if (!PolarScanInternal_roundBySelectionMethod(a/azOffset, selectionMethod, &result)) {
-    return -1;
+  if (scan->useAzimuthalNavInformation) {
+    if (scan->hasStartazA && scan->hasStopazA && scan->nStartazA == scan->nrays && scan->nStopazA == scan->nrays) {
+      int i = 0;
+      while (a >= 2*M_PI) {
+        a -= 2*M_PI;
+      }
+      while (a <= 0.0) {
+        a += 2*M_PI;
+      }
+      for (i = 0; i < scan->nStartazA; i++) {
+        if ((a >= scan->startazA[i] && a <= scan->stopazA[i]) ||
+            (scan->startazA[i] > scan->stopazA[i] && (a >= scan->startazA[i] || a <= scan->stopazA[i]))) /*Wrap*/ {
+          result = i;
+          break;
+        }
+      }
+    } else {
+      if (scan->hasAstart) {
+        a = a - scan->astart;
+      }
+      if (!PolarScanInternal_roundBySelectionMethod(a/azOffset, selectionMethod, &result)) {
+        return -1;
+      }
+    }
+  } else  {
+    if (!PolarScanInternal_roundBySelectionMethod(a/azOffset, selectionMethod, &result)) {
+      return -1;
+    }
   }
 
   if (result >= scan->nrays) {
@@ -1396,6 +1491,50 @@ int PolarScan_addAttribute(PolarScan_t* scan, RaveAttribute_t* attribute)
     if ((strcasecmp("how", gname)==0) &&
         RaveAttributeHelp_validateHowGroupAttributeName(gname, aname)) {
       result = RaveObjectHashTable_put(scan->attrs, name, (RaveCoreObject*)attribute);
+      if (result) {
+        if (strcasecmp("astart", aname) == 0) {
+          scan->hasAstart = 0;
+          scan->astart = 0.0;
+          if (RaveAttribute_getDouble(attribute, &scan->astart)) {
+            scan->astart *= M_PI/180.0;
+            scan->hasAstart = 1;
+          }
+        } else if (strcasecmp("startazA", aname) == 0) {
+          double* tmparr = NULL;
+          int tmplen = 0, i = 0;
+          if (RaveAttribute_getDoubleArray(attribute, &tmparr, &tmplen)) {
+            RAVE_FREE(scan->startazA);
+            scan->hasStartazA = 0;
+            scan->nStartazA = 0;
+            scan->startazA = RAVE_MALLOC(sizeof(double) * tmplen);
+            if (scan->startazA != NULL) {
+              memcpy(scan->startazA, tmparr, sizeof(double)*tmplen);
+              scan->nStartazA = tmplen;
+              scan->hasStartazA = 1;
+              for (i = 0; i < scan->nStartazA; i++) {
+                scan->startazA[i] *= M_PI/180.0;
+              }
+            }
+          }
+        } else if (strcasecmp("stopazA", aname) == 0) {
+          double* tmparr = NULL;
+          int tmplen = 0, i = 0;
+          if (RaveAttribute_getDoubleArray(attribute, &tmparr, &tmplen)) {
+            RAVE_FREE(scan->stopazA);
+            scan->hasStopazA = 0;
+            scan->nStopazA = 0;
+            scan->stopazA = RAVE_MALLOC(sizeof(double) * tmplen);
+            if (scan->stopazA != NULL) {
+              memcpy(scan->stopazA, tmparr, sizeof(double)*tmplen);
+              scan->nStopazA = tmplen;
+              scan->hasStopazA = 1;
+              for (i = 0; i < scan->nStopazA; i++) {
+                scan->stopazA[i] *= M_PI/180.0;
+              }
+            }
+          }
+        }
+      }
     } else {
       RAVE_DEBUG1("Trying to add attribute: %s but only valid attributes are how/...", name);
     }
