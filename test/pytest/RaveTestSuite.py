@@ -25,6 +25,7 @@ Test suite for rave
 '''
 import unittest, os
 
+from PyRaveTest import *
 from BaltradMessageXMLTest import *
 from rave_pgf_registry_test import *
 from rave_pgf_protocol_test import *

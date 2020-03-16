@@ -78,6 +78,7 @@ typedef enum Rave_ProductType {
   Rave_ProductType_QUAL,     /**< Quality metric */
   Rave_ProductType_PMAX,     /**< Pseudo-MAX */
   Rave_ProductType_SURF,     /**< Surface type */
+  Rave_ProductType_EBASE,    /**< Echo base */
   Rave_ProductType_ENDOFTYPES /**< Last entry */
 } Rave_ProductType;
 
