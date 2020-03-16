@@ -30,9 +30,7 @@ from rave_pgf_registry_test import *
 from rave_pgf_protocol_test import *
 from rave_pgf_verify_test import *
 from PyPolarVolumeTest import *
-
 from PyPolarScanTest import *
-
 from PyPolarScanParamTest import *
 from RaveModuleConstantsTest import *
           

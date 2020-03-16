@@ -325,6 +325,29 @@ static PyObject* _pypolarscan_getAzimuthIndex(PyPolarScan* self, PyObject* args)
 }
 
 /**
+ * Calculates the azimuth (in radians) from an index.
+ * @param[in] self - this instance
+ * @param[in] args - the index
+ * @returns the azimuth in radians or a negative value if not possible to determine. Most likely because index is bad
+ */
+static PyObject* _pypolarscan_getAzimuth(PyPolarScan* self, PyObject* args)
+{
+  double azimuth = 0.0L;
+  int index = -1;
+
+  if (!PyArg_ParseTuple(args, "i", &index)) {
+    return NULL;
+  }
+
+  azimuth = PolarScan_getAzimuth(self->scan, index);
+  if (azimuth < -0.0) {
+    raiseException_returnNULL(PyExc_ValueError, "Could not evaluate azimuth");
+  }
+
+  return PyFloat_FromDouble(azimuth);
+}
+
+/**
  * Calculates the range index from a specified range
  * @param[in] self - this instance
  * @param[in] args - the range (in meters)
@@ -1157,6 +1180,11 @@ static struct PyMethodDef _pypolarscan_methods[] =
     "getAzimuthIndex(aziumth) -> index\n\n"
     "Calculates the azimuth index from an azimuth (in radians).\n\n"
     "azimuth - azimuth in radians"
+  },
+  {"getAzimuth", (PyCFunction) _pypolarscan_getAzimuth, 1,
+    "getAzimuth(index) -> azimuth\n\n"
+    "Calculates the azimuth (in radians) from the index.\n\n"
+    "azimuth - index"
   },
   {"getRangeIndex", (PyCFunction) _pypolarscan_getRangeIndex, 1,
     "getRangeIndex(range) -> index\n\n"

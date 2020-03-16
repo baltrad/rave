@@ -96,12 +96,10 @@ struct _PolarScan_t {
   //
   double astart;
   int hasAstart;
-  double* startazA;
-  int nStartazA;
-  int hasStartazA;
-  double* stopazA;
-  int nStopazA;
-  int hasStopazA;
+  double* azimuthArr;
+  int azimuthArrLen;
+  int hasAzimuthArr;
+  double rayWidth;
 };
 
 /*@{ Private functions */
@@ -139,12 +137,10 @@ static int PolarScan_constructor(RaveCoreObject* obj)
   scan->useAzimuthalNavInformation = 1;
   scan->astart = 0.0;
   scan->hasAstart = 0;
-  scan->startazA = NULL;
-  scan->nStartazA = 0;
-  scan->hasStartazA = 0;
-  scan->stopazA = NULL;
-  scan->nStopazA = 0;
-  scan->hasStopazA = 0;
+  scan->azimuthArr = NULL;
+  scan->azimuthArrLen = 0;
+  scan->hasAzimuthArr = 0;
+  scan->rayWidth = 0.0;
 
   if (scan->projection != NULL) {
     if(!Projection_init(scan->projection, "lonlat", "lonlat", "+proj=latlong +ellps=WGS84 +datum=WGS84")) {
@@ -198,12 +194,10 @@ static int PolarScan_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj
   this->useAzimuthalNavInformation = src->useAzimuthalNavInformation;
   this->astart = src->astart;
   this->hasAstart = src->hasAstart;
-  this->startazA = NULL;
-  this->nStartazA = src->nStartazA;
-  this->hasStartazA = src->hasStartazA;
-  this->stopazA = NULL;
-  this->nStopazA = src->nStopazA;
-  this->hasStopazA = src->hasStopazA;
+  this->azimuthArr = NULL;
+  this->azimuthArrLen = 0;
+  this->hasAzimuthArr = 0;
+  this->rayWidth = src->rayWidth;
 
   this->source = NULL;
   this->prodname = NULL;
@@ -230,21 +224,12 @@ static int PolarScan_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj
   if (!PolarScan_setProdname(this, PolarScan_getProdname(src))) {
     goto error;
   }
-  if (src->startazA != NULL && src->nStartazA > 0) {
-    this->startazA = RAVE_MALLOC(sizeof(double) * src->nStartazA);
-    if (this->startazA != NULL) {
-      memcpy(this->startazA, src->startazA, sizeof(double) * src->nStartazA);
-    } else  {
+  if (src->azimuthArr != NULL && src->azimuthArrLen > 0) {
+    this->azimuthArr = RAVE_MALLOC(sizeof(double) * src->azimuthArrLen);
+    if (this->azimuthArr == NULL) {
       goto error;
     }
-  }
-  if (src->stopazA != NULL && src->nStopazA > 0) {
-    this->stopazA = RAVE_MALLOC(sizeof(double) * src->nStopazA);
-    if (this->stopazA != NULL) {
-      memcpy(this->stopazA, src->stopazA, sizeof(double) * src->nStopazA);
-    } else  {
-      goto error;
-    }
+    memcpy(this->azimuthArr, src->azimuthArr, sizeof(double) * src->azimuthArrLen);
   }
 
   return 1;
@@ -258,8 +243,7 @@ error:
   RAVE_OBJECT_RELEASE(this->navigator);
   RAVE_OBJECT_RELEASE(this->parameters);
   RAVE_FREE(this->paramname);
-  RAVE_FREE(this->startazA);
-  RAVE_FREE(this->stopazA);
+  RAVE_FREE(this->azimuthArr);
   RAVE_OBJECT_RELEASE(this->param);
   RAVE_OBJECT_RELEASE(this->attrs);
   RAVE_OBJECT_RELEASE(this->qualityfields);
@@ -282,10 +266,82 @@ static void PolarScan_destructor(RaveCoreObject* obj)
   RAVE_OBJECT_RELEASE(scan->parameters);
   RAVE_OBJECT_RELEASE(scan->param);
   RAVE_FREE(scan->paramname);
-  RAVE_FREE(scan->startazA)
-  RAVE_FREE(scan->stopazA)
+  RAVE_FREE(scan->azimuthArr)
   RAVE_OBJECT_RELEASE(scan->attrs);
   RAVE_OBJECT_RELEASE(scan->qualityfields);
+}
+
+void PolarScanInternal_createAzimuthNavigationInfo(PolarScan_t* self, const char* aname)
+{
+  RaveAttribute_t *startAz = NULL, *stopAz = NULL, *astart = NULL;
+  double *tmpStartazArr = NULL, *tmpStopazArr = NULL, *mvAzArr = NULL;
+  int tmpStartazLen = 0, tmpStopazLen = 0, i = 0;
+  if (strcasecmp("startazA", aname) == 0 || strcasecmp("stopazA", aname) == 0) {
+    startAz = (RaveAttribute_t*)RaveObjectHashTable_get(self->attrs, "how/startazA");
+    stopAz = (RaveAttribute_t*)RaveObjectHashTable_get(self->attrs, "how/stopazA");
+    if (startAz != NULL && !RaveAttribute_getDoubleArray(startAz, &tmpStartazArr, &tmpStartazLen)) {
+      RAVE_ERROR0("Failed to extract startazA array");
+      goto done;
+    }
+
+    if (stopAz != NULL && !RaveAttribute_getDoubleArray(stopAz, &tmpStopazArr, &tmpStopazLen)) {
+      RAVE_ERROR0("Failed to extract stopazA array");
+      goto done;
+    }
+
+    if (startAz != NULL && tmpStartazLen > 0 && tmpStartazLen == self->nrays) {
+      mvAzArr = RAVE_MALLOC(sizeof(double) * tmpStartazLen);
+      if (mvAzArr == NULL) {
+        goto done;
+      }
+      memset(mvAzArr, 0, sizeof(double)*tmpStartazLen);
+      if (tmpStopazArr != NULL && tmpStopazLen == tmpStartazLen) {
+        for (i = 0; i < tmpStartazLen; i++) {
+          if (tmpStopazArr[i] - tmpStartazArr[i] < 0.0) {
+            mvAzArr[i] = tmpStartazArr[i] + (tmpStopazArr[i] + 360.0 - tmpStartazArr[i])/2.0;
+          } else {
+            mvAzArr[i] = tmpStartazArr[i] + (tmpStopazArr[i] - tmpStartazArr[i])/2.0;
+          }
+          mvAzArr[i] *= M_PI / 180.0;
+        }
+      } else {
+        for (i = 0; i < tmpStartazLen; i++) {
+          int starti = i, stopi = i+1;
+          if (stopi == tmpStartazLen)
+            stopi = 0;
+          if (tmpStartazArr[stopi] - tmpStartazArr[starti] < 0.0) {
+            mvAzArr[i] = tmpStartazArr[starti] + (tmpStartazArr[stopi] + 360.0 - tmpStartazArr[starti])/2.0;
+          } else {
+            mvAzArr[i] = tmpStartazArr[starti] + (tmpStartazArr[stopi] - tmpStartazArr[starti])/2.0;
+          }
+          mvAzArr[i] *= M_PI / 180.0;
+        }
+      }
+      RAVE_FREE(self->azimuthArr);
+      self->azimuthArr = mvAzArr;
+      self->azimuthArrLen = tmpStartazLen;
+      self->hasAzimuthArr = 1;
+      mvAzArr = NULL;
+    }
+  } else if (strcasecmp("astart", aname) == 0) {
+    astart = (RaveAttribute_t*)RaveObjectHashTable_get(self->attrs, "how/astart");
+    if (astart != NULL) {
+      double tmpv = 0.0;
+      self->astart=0.0;
+      if (!RaveAttribute_getDouble(astart, &tmpv)) {
+        RAVE_ERROR0("Failed to extract astart");
+        goto done;
+      }
+      self->astart=tmpv * M_PI / 180.0;
+      self->hasAstart = 1;
+    }
+  }
+
+done:
+  RAVE_OBJECT_RELEASE(startAz);
+  RAVE_OBJECT_RELEASE(stopAz);
+  RAVE_OBJECT_RELEASE(astart);
+  RAVE_FREE(mvAzArr);
 }
 
 static int PolarScanInternal_roundBySelectionMethod(
@@ -709,6 +765,10 @@ int PolarScan_addParameter(PolarScan_t* scan, PolarScanParam_t* parameter)
     }
   }
 
+  if (scan->nrays > 0) {
+    scan->rayWidth = (360.0 / scan->nrays)*M_PI/180.0;
+  }
+
   result = RaveObjectHashTable_put(scan->parameters, quantity, (RaveCoreObject*)parameter);
   if (result == 1 && strcmp(quantity, scan->paramname)==0) {
     RAVE_OBJECT_RELEASE(scan->param);
@@ -980,28 +1040,29 @@ int PolarScan_getAzimuthIndex(PolarScan_t* scan, double a, PolarScanSelectionMet
   }
   azOffset = 2*M_PI/scan->nrays;
   if (scan->useAzimuthalNavInformation) {
-    if (scan->hasStartazA && scan->hasStopazA && scan->nStartazA == scan->nrays && scan->nStopazA == scan->nrays) {
+    if (scan->hasAzimuthArr && scan->azimuthArrLen == scan->nrays) {
+      double dist = 360.0;
       int i = 0;
-      while (a >= 2*M_PI) {
-        a -= 2*M_PI;
-      }
-      while (a <= 0.0) {
-        a += 2*M_PI;
-      }
-      for (i = 0; i < scan->nStartazA; i++) {
-        if ((a >= scan->startazA[i] && a <= scan->stopazA[i]) ||
-            (scan->startazA[i] > scan->stopazA[i] && (a >= scan->startazA[i] || a <= scan->stopazA[i]))) /*Wrap*/ {
+      for (i = 0; i < scan->azimuthArrLen; i++) {
+        double tmpdist = fabs(M_PI - fabs(fabs(scan->azimuthArr[i] - a) - M_PI));
+        if (tmpdist < dist) {
+          dist = tmpdist;
           result = i;
-          break;
         }
       }
     } else {
+      /*double olda = a;*/
       if (scan->hasAstart) {
         a = a - scan->astart;
+        if (!PolarScanInternal_roundBySelectionMethod(a/azOffset, PolarScanSelectionMethod_FLOOR, &result)) {
+          return -1;
+        }
+      } else {
+        if (!PolarScanInternal_roundBySelectionMethod(a/azOffset, selectionMethod, &result)) {
+          return -1;
+        }
       }
-      if (!PolarScanInternal_roundBySelectionMethod(a/azOffset, selectionMethod, &result)) {
-        return -1;
-      }
+     /*fprintf(stderr, "a=%f, astart=%f, newa=%f, result=%d\n", olda*180.0/M_PI, scan->astart*180.0/M_PI, a*180.0/M_PI, result);*/
     }
   } else  {
     if (!PolarScanInternal_roundBySelectionMethod(a/azOffset, selectionMethod, &result)) {
@@ -1022,15 +1083,29 @@ double PolarScan_getAzimuth(PolarScan_t* scan, int ai)
   double result = -1.0L;
   double azOffset = 0.0L;
   RAVE_ASSERT((scan != NULL), "scan was NULL");
-
   if (scan->nrays <= 0) {
     RAVE_WARNING0("Can not calculate azimuth index");
     return -1;
   }
-
+  if (ai < 0 || ai >= scan->nrays) {
+    return -1.0;
+  }
   azOffset = 2*M_PI/scan->nrays;
-
-  result = (double)ai * azOffset;
+  if (scan->useAzimuthalNavInformation) {
+    if (scan->hasAzimuthArr && scan->azimuthArrLen == scan->nrays) {
+      result = scan->azimuthArr[ai];
+    } else {
+      result = (double)ai * azOffset;
+      if (scan->hasAstart) {
+        result += scan->astart;
+        while (result < 0) {
+          result += 2*M_PI;
+        }
+      }
+    }
+  } else {
+    result = (double)ai * azOffset;
+  }
 
   return result;
 }
@@ -1492,48 +1567,60 @@ int PolarScan_addAttribute(PolarScan_t* scan, RaveAttribute_t* attribute)
         RaveAttributeHelp_validateHowGroupAttributeName(gname, aname)) {
       result = RaveObjectHashTable_put(scan->attrs, name, (RaveCoreObject*)attribute);
       if (result) {
-        if (strcasecmp("astart", aname) == 0) {
-          scan->hasAstart = 0;
-          scan->astart = 0.0;
-          if (RaveAttribute_getDouble(attribute, &scan->astart)) {
-            scan->astart *= M_PI/180.0;
-            scan->hasAstart = 1;
-          }
-        } else if (strcasecmp("startazA", aname) == 0) {
-          double* tmparr = NULL;
-          int tmplen = 0, i = 0;
-          if (RaveAttribute_getDoubleArray(attribute, &tmparr, &tmplen)) {
-            RAVE_FREE(scan->startazA);
-            scan->hasStartazA = 0;
-            scan->nStartazA = 0;
-            scan->startazA = RAVE_MALLOC(sizeof(double) * tmplen);
-            if (scan->startazA != NULL) {
-              memcpy(scan->startazA, tmparr, sizeof(double)*tmplen);
-              scan->nStartazA = tmplen;
-              scan->hasStartazA = 1;
-              for (i = 0; i < scan->nStartazA; i++) {
-                scan->startazA[i] *= M_PI/180.0;
-              }
-            }
-          }
-        } else if (strcasecmp("stopazA", aname) == 0) {
-          double* tmparr = NULL;
-          int tmplen = 0, i = 0;
-          if (RaveAttribute_getDoubleArray(attribute, &tmparr, &tmplen)) {
-            RAVE_FREE(scan->stopazA);
-            scan->hasStopazA = 0;
-            scan->nStopazA = 0;
-            scan->stopazA = RAVE_MALLOC(sizeof(double) * tmplen);
-            if (scan->stopazA != NULL) {
-              memcpy(scan->stopazA, tmparr, sizeof(double)*tmplen);
-              scan->nStopazA = tmplen;
-              scan->hasStopazA = 1;
-              for (i = 0; i < scan->nStopazA; i++) {
-                scan->stopazA[i] *= M_PI/180.0;
-              }
-            }
-          }
+        if (strcasecmp("astart", aname) == 0 ||
+            strcasecmp("startazA", aname) == 0 ||
+            strcasecmp("stopazA", aname) == 0) {
+          PolarScanInternal_createAzimuthNavigationInfo(scan, (const char*)aname);
+          //int i;
+          //for(i = 0; i < scan->azimuthArrLen;i++) {
+            //  fprintf(stderr, "%d = %f\n", i, scan->azimuthArr[i] * 180.0/M_PI);
+            //}
         }
+//
+//        if (strcasecmp("astart", aname) == 0) {
+//          scan->hasAstart = 0;
+//          scan->astart = 0.0;
+//          if (RaveAttribute_getDouble(attribute, &scan->astart)) {
+//            scan->astart *= M_PI/180.0;
+//            scan->hasAstart = 1;
+//          }
+//        } else if (strcasecmp("startazA", aname) == 0) {
+//          double* tmparr = NULL;
+//          int tmplen = 0, i = 0;
+//          if (RaveAttribute_getDoubleArray(attribute, &tmparr, &tmplen)) {
+//            RAVE_FREE(scan->startazA);
+//            scan->hasStartazA = 0;
+//            scan->nStartazA = 0;
+//            scan->startazA = RAVE_MALLOC(sizeof(double) * tmplen);
+//            if (scan->startazA != NULL) {
+//              memcpy(scan->startazA, tmparr, sizeof(double)*tmplen);
+//              scan->nStartazA = tmplen;
+//              scan->hasStartazA = 1;
+//              for (i = 0; i < scan->nStartazA; i++) {
+//                scan->startazA[i] *= M_PI/180.0;
+//              }
+//            }
+//          }
+//          PolarScanInternal_calculateStartStopAzimuthAvg(scan);
+//        } else if (strcasecmp("stopazA", aname) == 0) {
+//          double* tmparr = NULL;
+//          int tmplen = 0, i = 0;
+//          if (RaveAttribute_getDoubleArray(attribute, &tmparr, &tmplen)) {
+//            RAVE_FREE(scan->stopazA);
+//            scan->hasStopazA = 0;
+//            scan->nStopazA = 0;
+//            scan->stopazA = RAVE_MALLOC(sizeof(double) * tmplen);
+//            if (scan->stopazA != NULL) {
+//              memcpy(scan->stopazA, tmparr, sizeof(double)*tmplen);
+//              scan->nStopazA = tmplen;
+//              scan->hasStopazA = 1;
+//              for (i = 0; i < scan->nStopazA; i++) {
+//                scan->stopazA[i] *= M_PI/180.0;
+//              }
+//            }
+//          }
+//          PolarScanInternal_calculateStartStopAzimuthAvg(scan);
+//        }
       }
     } else {
       RAVE_DEBUG1("Trying to add attribute: %s but only valid attributes are how/...", name);
