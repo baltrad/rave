@@ -234,7 +234,7 @@ class tiled_compositing(object):
     result, nodes, how_tasks, all_files_malfunc = self.compositing.fetch_objects()
     if self.preprocess_qc:
       self._do_remove_temporary_files=False
-      result, algorithm = self.compositing.quality_control_objects(result)
+      result, algorithm, qfields = self.compositing.quality_control_objects(result)
       try:
         result = store_temporary_files(result)
         self.compositing.filenames = result.keys()
