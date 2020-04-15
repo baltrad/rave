@@ -54,7 +54,7 @@ class PyPolarScanTest(unittest.TestCase):
     
   def test_attribute_visibility(self):
     attrs = ['elangle', 'nbins', 'rscale', 'nrays', 'rstart', 'a1gate',
-             'datatype', 'beamwidth', 'longitude', 'latitude', 'height',
+             'datatype', 'beamwidth', 'beamwH', 'beamwV', 'longitude', 'latitude', 'height',
              'time', 'date', 'source', 'defaultparameter']
     obj = _polarscan.new()
     alist = dir(obj)

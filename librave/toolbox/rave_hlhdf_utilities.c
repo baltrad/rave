@@ -79,6 +79,7 @@ const char* ATTRIBUTE_NAMES_20_to_22[][2] = {
     {"how/radomeloss", "how/radomelossH"},
     {"how/antgain", "how/antgainH"},
     {"how/beamw", "how/beamwH"},
+    {"how/beamwidth", "how/beamwH"},
     {"how/radconst", "how/radconstH"},
     {"how/NEZ", "how/NEZH"},
     {"how/zcal", "how/zcalH"},

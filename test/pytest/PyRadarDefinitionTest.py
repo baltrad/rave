@@ -47,7 +47,7 @@ class PyRadarDefinitionTest(unittest.TestCase):
   def test_attribute_visibility(self):
     attrs = ['id', 'description', 'longitude', 'latitude', 'height',
              'elangles', 'nrays', 'nbins', 'scale', 
-             'beamwidth', 'wavelength', 'projection']
+             'beamwidth', 'beamwH', 'beamwV','wavelength', 'projection']
     radar = _radardef.new()
     alist = dir(radar)
     for a in attrs:
@@ -107,6 +107,21 @@ class PyRadarDefinitionTest(unittest.TestCase):
     self.assertAlmostEqual(0.0, obj.beamwidth, 4)
     obj.beamwidth = 2.0
     self.assertAlmostEqual(2.0, obj.beamwidth, 4)
+    self.assertAlmostEqual(2.0, obj.beamwH, 4)
+
+  def test_beamwH(self):
+    obj = _radardef.new()
+    self.assertAlmostEqual(0.0, obj.beamwH, 4)
+    obj.beamwH = 2.0
+    self.assertAlmostEqual(2.0, obj.beamwH, 4)
+    self.assertAlmostEqual(2.0, obj.beamwidth, 4)
+
+  def test_beamwV(self):
+    obj = _radardef.new()
+    self.assertAlmostEqual(0.0, obj.beamwV, 4)
+    obj.beamwV = 2.0
+    self.assertAlmostEqual(2.0, obj.beamwV, 4)
+    self.assertAlmostEqual(0.0, obj.beamwidth, 4)
 
   def test_wavelength(self):
     obj = _radardef.new()

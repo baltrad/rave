@@ -58,6 +58,7 @@ class PyRaveIOTest(unittest.TestCase):
   FIXTURE_BUFR_PVOL="fixtures/odim_polar_ref.bfr"
   FIXTURE_BUFR_COMPO="fixtures/odim_compo_ref.bfr"
   FIXTURE_BUFR_2_2="fixtures/odim_2_2_ref.bfr"
+  FIXTURE_HUV_WITH_0_86_BW="fixtures/scan_sehuv_1.5_20110126T184600Z.h5"
   
   TEMPORARY_FILE="ravemodule_iotest.h5"
   TEMPORARY_FILE2="ravemodule_iotest2.h5"
@@ -1361,12 +1362,13 @@ class PyRaveIOTest(unittest.TestCase):
     obj.longitude = 12.0 * math.pi/180.0
     obj.latitude = 60.0 * math.pi/180.0
     obj.height = 0.0
-    obj.beamwidth = 2.0 * math.pi/180.0
+    obj.beamwH = 2.0 * math.pi/180.0
+    obj.beamwV = 3.0 * math.pi/180.0
     
     scan1 = _polarscan.new()
-    scan1.beamwidth = 3.0 * math.pi/180
+    scan1.beamwH = 4.0 * math.pi/180
     scan2 = _polarscan.new()
-    scan2.beamwidth = 4.0 * math.pi/180
+    scan2.beamwV = 5.0 * math.pi/180
     scan3 = _polarscan.new()
     scan4 = _polarscan.new()
 
@@ -1379,19 +1381,56 @@ class PyRaveIOTest(unittest.TestCase):
     ios.object = obj
     ios.filename = self.TEMPORARY_FILE
     ios.save()
-    
+
     # Verify result
     nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
     nodelist.selectAll()
     nodelist.fetch()
     
-    self.assertAlmostEqual(2.0, nodelist.getNode("/how/beamwidth").data())
-    self.assertAlmostEqual(3.0, nodelist.getNode("/dataset1/how/beamwidth").data())
-    self.assertAlmostEqual(4.0, nodelist.getNode("/dataset2/how/beamwidth").data())
+    self.assertAlmostEqual(2.0, nodelist.getNode("/how/beamwH").data())
+    self.assertAlmostEqual(3.0, nodelist.getNode("/how/beamwV").data())
+    self.assertAlmostEqual(4.0, nodelist.getNode("/dataset1/how/beamwH").data())
+    self.assertAlmostEqual(5.0, nodelist.getNode("/dataset2/how/beamwV").data())
 
     nodenames = nodelist.getNodeNames()
     self.assertTrue("/dataset3/how/beamwidth" not in nodenames)
     self.assertTrue("/dataset4/how/beamwidth" not in nodenames)
+    
+  def test_save_polar_scan_beamwH(self):
+    obj = _polarscan.new()
+    obj.time = "100000"
+    obj.date = "20091010"
+    obj.source = "PLC:123"
+    obj.longitude = 12.0 * math.pi/180.0
+    obj.latitude = 60.0 * math.pi/180.0
+    obj.height = 0.0
+    obj.beamwH = 1.0 * math.pi/180.0
+    obj.beamwV = 2.0 * math.pi/180.0
+    
+    ios = _raveio.new()
+    ios.object = obj
+    ios.filename = self.TEMPORARY_FILE
+    ios.save()
+    
+    ios = _raveio.new()
+    ios.object = obj
+    ios.filename = self.TEMPORARY_FILE
+    ios.save()
+
+    # Verify result
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+    
+    self.assertAlmostEqual(1.0, nodelist.getNode("/how/beamwH").data())
+    self.assertAlmostEqual(2.0, nodelist.getNode("/how/beamwV").data())
+
+  def test_loadScan_withBeamwidth(self):
+    obj = _raveio.open(self.FIXTURE_HUV_WITH_0_86_BW).object
+    
+    self.assertAlmostEqual(0.86, obj.beamwH*180.0/math.pi, 3)
+    self.assertAlmostEqual(1.0, obj.beamwV*180.0/math.pi, 3)
+    
 
   # (RT: Ticket 8)
   def test_loadCartesian_differentXYSize(self):
@@ -1674,7 +1713,7 @@ class PyRaveIOTest(unittest.TestCase):
     
     nodenames = list(nodelist.getNodeNames().keys());
     VALID_NAMES=["/Conventions", "/what","/what/date","/what/object","/what/source","/what/time",
-                 "/what/version","/where","/where/height","/where/lat","/where/lon","/how","/how/beamwidth","/dataset1",
+                 "/what/version","/where","/where/height","/where/lat","/where/lon","/how","/how/beamwH","/how/beamwV","/dataset1",
                  "/dataset1/data1","/dataset1/data1/data","/dataset1/data1/data/CLASS","/dataset1/data1/data/IMAGE_VERSION",
                  "/dataset1/data1/what","/dataset1/data1/what/gain","/dataset1/data1/what/nodata","/dataset1/data1/what/offset",
                  "/dataset1/data1/what/quantity","/dataset1/data1/what/undetect","/dataset1/data2","/dataset1/data2/data",
@@ -2119,7 +2158,6 @@ class PyRaveIOTest(unittest.TestCase):
     obj.object = vp
     obj.filename = self.TEMPORARY_FILE2
     obj.save()
-    obj.save("slask.h5")
     
     # Verify written data
     nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE2)
@@ -2515,7 +2553,8 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertAlmostEqual(1.3, obj.object.getAttribute("how/RXlossH"), 2)
     self.assertAlmostEqual(1.4, obj.object.getAttribute("how/radomelossH"), 2)
     self.assertAlmostEqual(1.5, obj.object.getAttribute("how/antgainH"), 2)
-    self.assertAlmostEqual(1.6, obj.object.getAttribute("how/beamwH"), 2)
+    self.assertAlmostEqual(1.6, obj.object.beamwH*180.0/math.pi, 2)
+    #self.assertAlmostEqual(1.6, obj.object.getAttribute("how/beamwH"), 2)
     self.assertAlmostEqual(1.7, obj.object.getAttribute("how/radconstH"), 2)
     self.assertAlmostEqual(1.8, obj.object.getAttribute("how/NEZH"), 2)
     self.assertAlmostEqual(1.9, obj.object.getAttribute("how/zcalH"), 2)
@@ -2658,12 +2697,14 @@ class PyRaveIOTest(unittest.TestCase):
     nodelist.write(self.TEMPORARY_FILE, 6)
 
     obj = _raveio.open(self.TEMPORARY_FILE)
+
     self.assertAlmostEqual(1.1, obj.object.getAttribute("how/TXlossH"), 2)
     self.assertAlmostEqual(1.2, obj.object.getAttribute("how/injectlossH"), 2)
     self.assertAlmostEqual(1.3, obj.object.getAttribute("how/RXlossH"), 2)
     self.assertAlmostEqual(1.4, obj.object.getAttribute("how/radomelossH"), 2)
     self.assertAlmostEqual(1.5, obj.object.getAttribute("how/antgainH"), 2)
-    self.assertAlmostEqual(1.6, obj.object.getAttribute("how/beamwH"), 2)
+    self.assertAlmostEqual(1.6, obj.object.beamwH*180.0/math.pi)
+    #self.assertAlmostEqual(1.6, obj.object.getAttribute("how/beamwH"), 2)
     self.assertAlmostEqual(1.7, obj.object.getAttribute("how/radconstH"), 2)
     self.assertAlmostEqual(1.8, obj.object.getAttribute("how/NEZH"), 2)
     self.assertAlmostEqual(1.9, obj.object.getAttribute("how/zcalH"), 2)

@@ -685,6 +685,8 @@ static struct PyMethodDef _pypolarvolume_methods[] =
   {"source", NULL},
   {"paramname", NULL},
   {"beamwidth", NULL},
+  {"beamwH", NULL},
+  {"beamwV", NULL},
   {"getDistance", (PyCFunction) _pypolarvolume_getDistance, 1,
     "getDistance((lon,lat)) --> distance from origin of this volume to the specified lon/lat pair\n\n"
     "Returns the distance in meters along the surface from the radar to the specified lon/lat coordinate pair.\n\n"
@@ -826,6 +828,10 @@ static PyObject* _pypolarvolume_getattro(PyPolarVolume* self, PyObject* name)
     return PyFloat_FromDouble(PolarVolume_getHeight(self->pvol));
   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("beamwidth", name) == 0) {
     return PyFloat_FromDouble(PolarVolume_getBeamwidth(self->pvol));
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("beamwH", name) == 0) {
+    return PyFloat_FromDouble(PolarVolume_getBeamwH(self->pvol));
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("beamwV", name) == 0) {
+    return PyFloat_FromDouble(PolarVolume_getBeamwV(self->pvol));
   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("time", name) == 0) {
     const char* str = PolarVolume_getTime(self->pvol);
     if (str != NULL) {
@@ -890,6 +896,18 @@ static int _pypolarvolume_setattro(PyPolarVolume* self, PyObject* name, PyObject
       PolarVolume_setBeamwidth(self->pvol, PyFloat_AsDouble(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "beamwidth must be of type float");
+    }
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("beamwH", name) == 0) {
+    if (PyFloat_Check(val)) {
+      PolarVolume_setBeamwH(self->pvol, PyFloat_AsDouble(val));
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError, "beamwH must be of type float");
+    }
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("beamwV", name) == 0) {
+    if (PyFloat_Check(val)) {
+      PolarVolume_setBeamwV(self->pvol, PyFloat_AsDouble(val));
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError, "beamwV must be of type float");
     }
   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("time", name) == 0) {
     if (PyString_Check(val)) {
@@ -964,7 +982,11 @@ PyDoc_STRVAR(_pypolarvolume_type_doc,
     "source           - The source for this product. Defined as what/source in ODIM H5. I.e. a comma separated list of various identifiers. For example. NOD:seang,WMO:1234,....\n"
     "paramname        - The default parameter. Default parameter is used when operating on this volume unless the parameter (quantity) explicitly has been specified in the function.\n"
     "                 - All scans that currently are held by this volume and eventual new ones will all get the same default parameter.\n"
-    "beamwidth        - Beamwidth for the volume. All scans will get the specified beamwidth. If you only want to make the beamwidth affect an individual\n"
+    "beamwidth        - DEPRECATED, Use beamwH! Beamwidth for the volume. All scans will get the specified beamwidth. If you only want to make the beamwidth affect an individual\n"
+    "                   scan, modify the scan directly.\n"
+    "beamwH           - Horizontal beamwidth for the volume. All scans will get the specified beamwidth. If you only want to make the beamwidth affect an individual\n"
+    "                   scan, modify the scan directly.\n"
+    "beamwV           - Vertical beamwidth for the volume. All scans will get the specified beamwidth. If you only want to make the beamwidth affect an individual\n"
     "                   scan, modify the scan directly.\n"
     "\n"
     "Usage:\n"

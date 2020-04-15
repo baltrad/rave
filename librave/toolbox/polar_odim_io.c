@@ -104,13 +104,20 @@ static int PolarOdimIOInternal_loadRootScanAttribute(void* object, RaveAttribute
     if(!(result = PolarScan_setSource(scan, value))) {
       RAVE_ERROR1("Failed to set source to %s",value);
     }
-  } else if (strcasecmp("how/beamwidth", name)==0) {
+  } else if (strcasecmp("how/beamwH", name)==0) {
     double value = 0.0;
     if (!(result = RaveAttribute_getDouble(attribute, &value))) {
-      RAVE_ERROR0("Failed to extract how/beamwidth as a double");
+      RAVE_ERROR0("Failed to extract how/beamwH as a double");
       goto done;
     }
-    PolarScan_setBeamwidth(scan, value * M_PI/180.0);
+    PolarScan_setBeamwH(scan, value * M_PI/180.0);
+  } else if (strcasecmp("how/beamwV", name)==0) {
+    double value = 0.0;
+    if (!(result = RaveAttribute_getDouble(attribute, &value))) {
+      RAVE_ERROR0("Failed to extract how/beamwV as a double");
+      goto done;
+    }
+    PolarScan_setBeamwV(scan, value * M_PI/180.0);
   } else if (strcasecmp("where/lon", name)==0) {
     double value = 0.0;
     if (!(result = RaveAttribute_getDouble(attribute, &value))) {
@@ -186,13 +193,20 @@ static int PolarOdimIOInternal_loadRootVolumeAttribute(void* object, RaveAttribu
     if(!(result = PolarVolume_setSource(volume, value))) {
       RAVE_ERROR1("Failed to set source %s",value);
     }
-  } else if (strcasecmp("how/beamwidth", name)==0) {
+  } else if (strcasecmp("how/beamwH", name)==0) {
     double value = 0.0;
     if (!(result = RaveAttribute_getDouble(attribute, &value))) {
-      RAVE_ERROR0("Failed to extract how/beamwidth as a double");
+      RAVE_ERROR0("Failed to extract how/beamwH as a double");
       goto done;
     }
-    PolarVolume_setBeamwidth(volume, value * M_PI/180.0);
+    PolarVolume_setBeamwH(volume, value * M_PI/180.0);
+  } else if (strcasecmp("how/beamwV", name)==0) {
+    double value = 0.0;
+    if (!(result = RaveAttribute_getDouble(attribute, &value))) {
+      RAVE_ERROR0("Failed to extract how/beamwV as a double");
+      goto done;
+    }
+    PolarVolume_setBeamwV(volume, value * M_PI/180.0);
   } else if (strcasecmp("where/lon", name)==0) {
     double value = 0.0;
     if (!(result = RaveAttribute_getDouble(attribute, &value))) {
@@ -756,12 +770,20 @@ static int PolarOdimIOInternal_addVolumeScan(PolarScan_t* scan, HL_NodeList* nod
 
   PolarOdimIOInternal_removeVolumeAttributesFromList(attributes, volume);
 
-  if (PolarScan_getBeamwidth(scan) != PolarVolume_getBeamwidth(volume)) {
-    if (!RaveUtilities_addDoubleAttributeToList(attributes, "how/beamwidth", PolarScan_getBeamwidth(scan)*180.0/M_PI)) {
-      RAVE_WARNING0("Failed to add how/beamwidth to scan");
+  if (PolarScan_getBeamwH(scan) != PolarVolume_getBeamwH(volume)) {
+    if (!RaveUtilities_addDoubleAttributeToList(attributes, "how/beamwH", PolarScan_getBeamwH(scan)*180.0/M_PI)) {
+      RAVE_WARNING0("Failed to add how/beamwH to scan");
       goto done;
     }
   }
+
+  if (PolarScan_getBeamwV(scan) != PolarVolume_getBeamwV(volume)) {
+    if (!RaveUtilities_addDoubleAttributeToList(attributes, "how/beamwV", PolarScan_getBeamwV(scan)*180.0/M_PI)) {
+      RAVE_WARNING0("Failed to add how/beamwV to scan");
+      goto done;
+    }
+  }
+
 
   if (!RaveUtilities_replaceStringAttributeInList(attributes, "what/product", "SCAN") ||
       !RaveUtilities_replaceLongAttributeInList(attributes, "where/a1gate", PolarScan_getA1gate(scan)) ||
@@ -913,7 +935,8 @@ int PolarOdimIO_fillScan(PolarOdimIO_t* self, PolarScan_t* scan, HL_NodeList* no
     goto done;
   }
 
-  if (!RaveUtilities_replaceDoubleAttributeInList(attributes, "how/beamwidth", PolarScan_getBeamwidth(scan)*180.0/M_PI) ||
+  if (!RaveUtilities_replaceDoubleAttributeInList(attributes, "how/beamwH", PolarScan_getBeamwH(scan)*180.0/M_PI) ||
+      !RaveUtilities_replaceDoubleAttributeInList(attributes, "how/beamwV", PolarScan_getBeamwV(scan)*180.0/M_PI) ||
       !RaveUtilities_replaceStringAttributeInList(attributes, "what/date", PolarScan_getDate(scan)) ||
       !RaveUtilities_replaceStringAttributeInList(attributes, "what/time", PolarScan_getTime(scan)) ||
       !RaveUtilities_replaceStringAttributeInList(attributes, "what/source", PolarScan_getSource(scan)) ||
@@ -1010,7 +1033,8 @@ int PolarOdimIO_fillVolume(PolarOdimIO_t* self, PolarVolume_t* volume, HL_NodeLi
     goto done;
   }
 
-  if (!RaveUtilities_replaceDoubleAttributeInList(attributes, "how/beamwidth", PolarVolume_getBeamwidth(volume)*180.0/M_PI) ||
+  if (!RaveUtilities_replaceDoubleAttributeInList(attributes, "how/beamwH", PolarVolume_getBeamwH(volume)*180.0/M_PI) ||
+      !RaveUtilities_replaceDoubleAttributeInList(attributes, "how/beamwV", PolarVolume_getBeamwV(volume)*180.0/M_PI) ||
       !RaveUtilities_replaceStringAttributeInList(attributes, "what/date", PolarVolume_getDate(volume)) ||
       !RaveUtilities_replaceStringAttributeInList(attributes, "what/time", PolarVolume_getTime(volume)) ||
       !RaveUtilities_replaceStringAttributeInList(attributes, "what/source", PolarVolume_getSource(volume)) ||

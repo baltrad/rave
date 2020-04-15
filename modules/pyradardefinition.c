@@ -156,6 +156,8 @@ static struct PyMethodDef _pyradardefinition_methods[] =
   {"nbins", NULL},
   {"scale", NULL},
   {"beamwidth", NULL},
+  {"beamwH", NULL},
+  {"beamwV", NULL},
   {"wavelength", NULL},
   {"projection", NULL},
   {NULL, NULL } /* sentinel */
@@ -185,6 +187,10 @@ static PyObject* _pyradardefinition_getattro(PyRadarDefinition* self, PyObject* 
     return PyFloat_FromDouble(RadarDefinition_getScale(self->def));
   } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "beamwidth") == 0) {
     return PyFloat_FromDouble(RadarDefinition_getBeamwidth(self->def));
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "beamwH") == 0) {
+    return PyFloat_FromDouble(RadarDefinition_getBeamwH(self->def));
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "beamwV") == 0) {
+    return PyFloat_FromDouble(RadarDefinition_getBeamwV(self->def));
   } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "wavelength") == 0) {
     return PyFloat_FromDouble(RadarDefinition_getWavelength(self->def));
   } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "nbins") == 0) {
@@ -305,6 +311,28 @@ static int _pyradardefinition_setattro(PyRadarDefinition* self, PyObject *name, 
       raiseException_gotoTag(done, PyExc_TypeError,
           "beamwidth must be a number");
     }
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "beamwH") == 0) {
+    if (PyFloat_Check(val)) {
+      RadarDefinition_setBeamwH(self->def, PyFloat_AsDouble(val));
+    } else if (PyLong_Check(val)) {
+      RadarDefinition_setBeamwH(self->def, PyLong_AsDouble(val));
+    } else if (PyInt_Check(val)) {
+      RadarDefinition_setBeamwH(self->def, (double) PyInt_AsLong(val));
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError,
+          "beamwH must be a number");
+    }
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "beamwV") == 0) {
+    if (PyFloat_Check(val)) {
+      RadarDefinition_setBeamwV(self->def, PyFloat_AsDouble(val));
+    } else if (PyLong_Check(val)) {
+      RadarDefinition_setBeamwV(self->def, PyLong_AsDouble(val));
+    } else if (PyInt_Check(val)) {
+      RadarDefinition_setBeamwV(self->def, (double) PyInt_AsLong(val));
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError,
+          "beamwV must be a number");
+    }
   } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "wavelength") == 0) {
     if (PyFloat_Check(val)) {
       RadarDefinition_setWavelength(self->def, PyFloat_AsDouble(val));
@@ -398,7 +426,9 @@ PyDoc_STRVAR(_pyradardefinition_type_doc,
     "nrays        - Number of rays\n"
     "nbins        - Number of bins\n"
     "scale        - the length of the bins in meters\n"
-    "beamwidth    - the beam width in radians\n"
+    "beamwidth    - the horizontal beam width in radians\n"
+    "beamwH       - the horizontal beam width in radians\n"
+    "beamwV       - the vertical beam width in radians\n"
     "wavelength   - the wavelength\n"
     "projection   - the projection to use for this radar. Most likely a lon/lat projection\n"
     "\n"

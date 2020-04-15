@@ -530,7 +530,6 @@ MOD_INIT(_rave)
     return MOD_INIT_ERROR;
   }
 
-
   if (atexit(rave_alloc_print_statistics) != 0) {
     fprintf(stderr, "Could not set atexit function");
   }
@@ -618,6 +617,7 @@ MOD_INIT(_rave)
   add_long_constant(dictionary, "Debug_RAVE_SILENT", RAVE_SILENT);
 
   import_array(); /*To make sure I get access to Numeric*/
+
   import_pyprojection();
   import_pycartesian();
   import_pycartesianparam();
@@ -625,7 +625,9 @@ MOD_INIT(_rave)
   import_pyraveio();
   import_pypolarvolume();
   import_pytransform();
+
   PYRAVE_DEBUG_INITIALIZE;
+
   return MOD_INIT_SUCCESS(module);
 }
 /*@} End of Module setup */

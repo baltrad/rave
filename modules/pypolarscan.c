@@ -1133,6 +1133,8 @@ static struct PyMethodDef _pypolarscan_methods[] =
   {"a1gate", NULL},
   {"datatype", NULL},
   {"beamwidth", NULL},
+  {"beamwV", NULL},
+  {"beamwH", NULL},
   {"longitude", NULL},
   {"latitude", NULL},
   {"height", NULL},
@@ -1405,6 +1407,10 @@ static PyObject* _pypolarscan_getattro(PyPolarScan* self, PyObject* name)
     return PyInt_FromLong(PolarScan_getDataType(self->scan));
   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("beamwidth", name) == 0) {
     return PyFloat_FromDouble(PolarScan_getBeamwidth(self->scan));
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("beamwH", name) == 0) {
+    return PyFloat_FromDouble(PolarScan_getBeamwH(self->scan));
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("beamwV", name) == 0) {
+    return PyFloat_FromDouble(PolarScan_getBeamwV(self->scan));
   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("longitude", name) == 0) {
     return PyFloat_FromDouble(PolarScan_getLongitude(self->scan));
   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("latitude", name) == 0) {
@@ -1527,6 +1533,18 @@ static int _pypolarscan_setattro(PyPolarScan* self, PyObject* name, PyObject* va
       PolarScan_setBeamwidth(self->scan, PyFloat_AsDouble(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "beamwidth must be of type float");
+    }
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("beamwH", name) == 0) {
+    if (PyFloat_Check(val)) {
+      PolarScan_setBeamwH(self->scan, PyFloat_AsDouble(val));
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError, "beamwH must be of type float");
+    }
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("beamwV", name) == 0) {
+    if (PyFloat_Check(val)) {
+      PolarScan_setBeamwV(self->scan, PyFloat_AsDouble(val));
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError, "beamwV must be of type float");
     }
   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("longitude", name) == 0) {
     if (PyFloat_Check(val)) {
@@ -1687,7 +1705,9 @@ PyDoc_STRVAR(_pypolarscan_type_doc,
     "rstart           - Range where the ray start for the scan.\n"
     "a1gate           - the a1gate\n"
     "datatype         - The data type for the selected default parameter. If no default parameter set, the UNDEFINED is returned.\n"
-    "beamwidth        - The beamwidth. Default is 1.0 * M_PI/360.0.\n"
+    "beamwidth        - DEPRECATED, Use beamwH! The beamwidth. Default is 1.0 * M_PI/360.0.\n"
+    "beamwV           - The vertical beamwidth. Default is 1.0 * M_PI/360.0.\n"
+    "beamwH           - The horizontal beamwidth. Default is 1.0 * M_PI/360.0.\n"
     "longitude        - The longitude for where this polar scan originates from (lon0) in radians\n"
     "latitude         - The latitude for where this polar scan originates from (lat0) in radians\n"""
     "height           - The height above sea level where this polar scan originates from (alt0) in meters\n"

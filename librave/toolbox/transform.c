@@ -311,7 +311,8 @@ PolarScan_t* Transform_ctoscan(Transform_t* transform, Cartesian_t* cartesian, R
   nodata = Cartesian_getNodata(cartesian);
   undetect = Cartesian_getUndetect(cartesian);
 
-  PolarScan_setBeamwidth(scan, RadarDefinition_getBeamwidth(def));
+  PolarScan_setBeamwH(scan, RadarDefinition_getBeamwH(def));
+  PolarScan_setBeamwV(scan, RadarDefinition_getBeamwV(def));
   PolarScan_setElangle(scan, angle);
   PolarScan_setHeight(scan, RadarDefinition_getHeight(def));
   PolarScan_setLatitude(scan, RadarDefinition_getLatitude(def));

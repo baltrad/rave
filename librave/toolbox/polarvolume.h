@@ -145,6 +145,34 @@ void PolarVolume_setBeamwidth(PolarVolume_t* pvol, double bw);
 double PolarVolume_getBeamwidth(PolarVolume_t* pvol);
 
 /**
+ * Sets the horizontal beamwidth. Default is 1.0 * M_PI/360.0
+ * @param[in] self - self
+ * @param[in] beamwidth - the beam width in radians
+ */
+void PolarVolume_setBeamwH(PolarVolume_t* self, double beamwidth);
+
+/**
+ * Returns the horizontal beamwidth. Default is 1.0 * M_PI/360.0.
+ * @param[in] self - self
+ * @return the beam width om radians
+ */
+double PolarVolume_getBeamwH(PolarVolume_t* self);
+
+/**
+ * Sets the vertical beamwidth. Default is 1.0 * M_PI/360.0
+ * @param[in] self - self
+ * @param[in] beamwidth - the beam width in radians
+ */
+void PolarVolume_setBeamwV(PolarVolume_t* self, double beamwidth);
+
+/**
+ * Returns the vertical beamwidth. Default is 1.0 * M_PI/360.0.
+ * @param[in] self - self
+ * @return the beam width om radians
+ */
+double PolarVolume_getBeamwV(PolarVolume_t* self);
+
+/**
  * Returns the distance from the radar to the specified lon/lat coordinate pair.
  * @param[in] pvol - self
  * @param[in] lon - the longitude

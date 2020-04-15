@@ -60,8 +60,10 @@ struct _PolarScan_t {
   long a1gate;       /**< something */
 
   // How
-  double beamwidth;  /**< beam width, default is 1.0 * M_PI/180.0 */
-  int bwpvol; /**< indicates if the beamwidth comes from a polar volume or not */
+  double beamwH;  /**< horizontal beam width, default is 1.0 * M_PI/180.0 */
+  double beamwV;  /**< vertical beam width, default is 1.0 * M_PI/180.0 */
+  int bwpvolH; /**< indicates if the beamwH comes from a polar volume or not */
+  int bwpvolV; /**< indicates if the beamwV comes from a polar volume or not */
 
   // Date/Time
   RaveDateTime_t* datetime;     /**< the date, time instance */
@@ -118,8 +120,10 @@ static int PolarScan_constructor(RaveCoreObject* obj)
   scan->rscale = 0.0;
   scan->rstart = 0.0;
   scan->a1gate = 0;
-  scan->beamwidth = 1.0 * M_PI/180.0;
-  scan->bwpvol = -1;
+  scan->beamwH = 1.0 * M_PI/180.0;
+  scan->beamwV = 1.0 * M_PI/180.0;
+  scan->bwpvolH = -1;
+  scan->bwpvolV = -1;
   scan->navigator = NULL;
   scan->projection = NULL;
   scan->parameters = NULL;
@@ -183,8 +187,10 @@ static int PolarScan_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj
   this->rscale = src->rscale;
   this->rstart = src->rstart;
   this->a1gate = src->a1gate;
-  this->beamwidth = src->beamwidth;
-  this->bwpvol = src->bwpvol;
+  this->beamwH = src->beamwH;
+  this->beamwV = src->beamwV;
+  this->bwpvolH = src->bwpvolH;
+  this->bwpvolV = src->bwpvolV;
   this->maxdistance = src->maxdistance;
   this->navigator = NULL;
   this->projection = NULL;
@@ -701,14 +707,39 @@ long PolarScan_getA1gate(PolarScan_t* scan)
 void PolarScan_setBeamwidth(PolarScan_t* scan, double beamwidth)
 {
   RAVE_ASSERT((scan != NULL), "scan == NULL");
-  scan->beamwidth = beamwidth;
-  scan->bwpvol = 0;
+  PolarScan_setBeamwH(scan, beamwidth);
 }
 
 double PolarScan_getBeamwidth(PolarScan_t* scan)
 {
   RAVE_ASSERT((scan != NULL), "scan == NULL");
-  return scan->beamwidth;
+  return PolarScan_getBeamwH(scan);
+}
+
+void PolarScan_setBeamwH(PolarScan_t* scan, double beamwidth)
+{
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+  scan->beamwH = beamwidth;
+  scan->bwpvolH = 0;
+}
+
+double PolarScan_getBeamwH(PolarScan_t* scan)
+{
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+  return scan->beamwH;
+}
+
+void PolarScan_setBeamwV(PolarScan_t* scan, double beamwidth)
+{
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+  scan->beamwV = beamwidth;
+  scan->bwpvolV = 0;
+}
+
+double PolarScan_getBeamwV(PolarScan_t* scan)
+{
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+  return scan->beamwV;
 }
 
 int PolarScan_setDefaultParameter(PolarScan_t* scan, const char* quantity)
@@ -1825,17 +1856,30 @@ RaveField_t* PolarScan_getHeightField(PolarScan_t* self)
   return PolarScanInternal_getHeightOrDistanceField(self, 1);
 }
 
-void PolarScanInternal_setPolarVolumeBeamwidth(PolarScan_t* scan, double bw)
+void PolarScanInternal_setPolarVolumeBeamwH(PolarScan_t* scan, double bwH)
 {
   RAVE_ASSERT((scan != NULL), "scan == NULL");
-  scan->beamwidth = bw;
-  scan->bwpvol = 1;
+  scan->beamwH = bwH;
+  scan->bwpvolH = 1;
 }
 
-int PolarScanInternal_isPolarVolumeBeamwidth(PolarScan_t* scan)
+void PolarScanInternal_setPolarVolumeBeamwV(PolarScan_t* scan, double bwV)
 {
   RAVE_ASSERT((scan != NULL), "scan == NULL");
-  return scan->bwpvol;
+  scan->beamwV = bwV;
+  scan->bwpvolV = 1;
+}
+
+int PolarScanInternal_isPolarVolumeBeamwH(PolarScan_t* scan)
+{
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+  return scan->bwpvolH;
+}
+
+int PolarScanInternal_isPolarVolumeBeamwV(PolarScan_t* scan)
+{
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+  return scan->bwpvolV;
 }
 
 /*@} End of Interface functions */
