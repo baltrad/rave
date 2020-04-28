@@ -907,6 +907,71 @@ class PyPolarVolumeTest(unittest.TestCase):
     
     self.assertAlmostEqual(10999.45, vol.getMaxDistance(), 2)
 
+  def test_use_azimuthal_nav_information(self):
+    obj = _polarvolume.new()
+    scan1 = _polarscan.new()
+    scan2 = _polarscan.new()
+
+    obj.addScan(scan1)
+    obj.addScan(scan2)
+
+    self.assertEqual(True, obj.use_azimuthal_nav_information)
+    self.assertEqual(True, scan1.use_azimuthal_nav_information)
+    self.assertEqual(True, scan2.use_azimuthal_nav_information)
+    
+    obj.use_azimuthal_nav_information = False
+    self.assertEqual(False, obj.use_azimuthal_nav_information)
+    self.assertEqual(False, scan1.use_azimuthal_nav_information)
+    self.assertEqual(False, scan2.use_azimuthal_nav_information)
+
+  def test_use_azimuthal_nav_information_2(self):
+    obj = _polarvolume.new()
+    scan1 = _polarscan.new()
+    scan2 = _polarscan.new()
+
+    obj.addScan(scan1)
+    obj.addScan(scan2)
+
+    scan1.use_azimuthal_nav_information = False
+    self.assertEqual(True, obj.use_azimuthal_nav_information)
+    self.assertEqual(False, scan1.use_azimuthal_nav_information)
+    self.assertEqual(True, scan2.use_azimuthal_nav_information)
+
+  def test_use_azimuthal_nav_information_3(self):
+    obj = _polarvolume.new()
+    scan1 = _polarscan.new()
+    scan2 = _polarscan.new()
+
+    obj.addScan(scan1)
+    obj.addScan(scan2)
+
+    scan1.use_azimuthal_nav_information = False
+    scan2.use_azimuthal_nav_information = False
+    self.assertEqual(False, obj.use_azimuthal_nav_information)
+    self.assertEqual(False, scan1.use_azimuthal_nav_information)
+    self.assertEqual(False, scan2.use_azimuthal_nav_information)
+
+  def test_use_azimuthal_nav_information_4(self):
+    obj = _polarvolume.new()
+    scan1 = _polarscan.new()
+    scan2 = _polarscan.new()
+    scan3 = _polarscan.new()
+
+    obj.addScan(scan1)
+    obj.addScan(scan2)
+
+    obj.use_azimuthal_nav_information = False
+    self.assertEqual(False, obj.use_azimuthal_nav_information)
+    self.assertEqual(False, scan1.use_azimuthal_nav_information)
+    self.assertEqual(False, scan2.use_azimuthal_nav_information)
+    
+    obj.addScan(scan3)
+    self.assertEqual(True, obj.use_azimuthal_nav_information)
+    self.assertEqual(True, scan3.use_azimuthal_nav_information)
+
+    scan3.use_azimuthal_nav_information = False
+    self.assertEqual(False, obj.use_azimuthal_nav_information)
+
 if __name__ == "__main__":
   #import sys;sys.argv = ['', 'Test.testName']
   unittest.main()

@@ -163,6 +163,10 @@ RAVE_QUALITY_CONTROL_PROCESSES=4
 # quality field. 
 RAVE_PGF_QUALITY_FIELD_REPROCESSING=False
 
+# If the compositing should utilize azimuthal navigation or not (how/astart, how/startazA)
+#
+RAVE_PGF_AZIMUTHAL_NAVIGATION=True
+
 # What algorithm that should be used when performing QI-total
 #
 QITOTAL_METHOD = "minimum"

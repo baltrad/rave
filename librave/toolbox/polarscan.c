@@ -294,7 +294,6 @@ void PolarScanInternal_createAzimuthNavigationInfo(PolarScan_t* self, const char
       RAVE_ERROR0("Failed to extract stopazA array");
       goto done;
     }
-
     if (startAz != NULL && tmpStartazLen > 0 && tmpStartazLen == self->nrays) {
       mvAzArr = RAVE_MALLOC(sizeof(double) * tmpStartazLen);
       if (mvAzArr == NULL) {
@@ -788,6 +787,12 @@ int PolarScan_addParameter(PolarScan_t* scan, PolarScanParam_t* parameter)
     scan->nrays = PolarScanParam_getNrays(parameter);
     scan->nbins = PolarScanParam_getNbins(parameter);
     scan->maxdistance = -1.0;
+    if (RaveObjectHashTable_exists(scan->attrs, "how/startazA")) {
+      PolarScanInternal_createAzimuthNavigationInfo(scan, "startazA");
+    }
+    if (RaveObjectHashTable_exists(scan->attrs, "how/astart")) {
+      PolarScanInternal_createAzimuthNavigationInfo(scan, "astart");
+    }
   } else {
     if (scan->nrays != PolarScanParam_getNrays(parameter) ||
         scan->nbins != PolarScanParam_getNbins(parameter)) {
@@ -1081,8 +1086,27 @@ int PolarScan_getAzimuthIndex(PolarScan_t* scan, double a, PolarScanSelectionMet
           result = i;
         }
       }
+/*
+      if (1) {
+        int wr = result;
+        int cwr = 0;
+        PolarScanInternal_roundBySelectionMethod(a/azOffset, selectionMethod, &cwr);
+        if (wr >= scan->nrays) {
+          wr -= scan->nrays;
+        } else if (wr < 0) {
+          wr += result;
+        }
+        if (cwr >= scan->nrays) {
+          cwr -= scan->nrays;
+        } else if (cwr < 0) {
+          cwr += result;
+        }
+        if (wr != cwr) {
+          fprintf(stderr, "Azimuth = %f gives different index when using rotation rot=%d, classic=%d\n", a*180.0/M_PI, wr, cwr);
+        }
+      }
+*/
     } else {
-      /*double olda = a;*/
       if (scan->hasAstart) {
         a = a - scan->astart;
         if (!PolarScanInternal_roundBySelectionMethod(a/azOffset, PolarScanSelectionMethod_FLOOR, &result)) {
@@ -1093,7 +1117,6 @@ int PolarScan_getAzimuthIndex(PolarScan_t* scan, double a, PolarScanSelectionMet
           return -1;
         }
       }
-     /*fprintf(stderr, "a=%f, astart=%f, newa=%f, result=%d\n", olda*180.0/M_PI, scan->astart*180.0/M_PI, a*180.0/M_PI, result);*/
     }
   } else  {
     if (!PolarScanInternal_roundBySelectionMethod(a/azOffset, selectionMethod, &result)) {
@@ -1602,56 +1625,7 @@ int PolarScan_addAttribute(PolarScan_t* scan, RaveAttribute_t* attribute)
             strcasecmp("startazA", aname) == 0 ||
             strcasecmp("stopazA", aname) == 0) {
           PolarScanInternal_createAzimuthNavigationInfo(scan, (const char*)aname);
-          //int i;
-          //for(i = 0; i < scan->azimuthArrLen;i++) {
-            //  fprintf(stderr, "%d = %f\n", i, scan->azimuthArr[i] * 180.0/M_PI);
-            //}
         }
-//
-//        if (strcasecmp("astart", aname) == 0) {
-//          scan->hasAstart = 0;
-//          scan->astart = 0.0;
-//          if (RaveAttribute_getDouble(attribute, &scan->astart)) {
-//            scan->astart *= M_PI/180.0;
-//            scan->hasAstart = 1;
-//          }
-//        } else if (strcasecmp("startazA", aname) == 0) {
-//          double* tmparr = NULL;
-//          int tmplen = 0, i = 0;
-//          if (RaveAttribute_getDoubleArray(attribute, &tmparr, &tmplen)) {
-//            RAVE_FREE(scan->startazA);
-//            scan->hasStartazA = 0;
-//            scan->nStartazA = 0;
-//            scan->startazA = RAVE_MALLOC(sizeof(double) * tmplen);
-//            if (scan->startazA != NULL) {
-//              memcpy(scan->startazA, tmparr, sizeof(double)*tmplen);
-//              scan->nStartazA = tmplen;
-//              scan->hasStartazA = 1;
-//              for (i = 0; i < scan->nStartazA; i++) {
-//                scan->startazA[i] *= M_PI/180.0;
-//              }
-//            }
-//          }
-//          PolarScanInternal_calculateStartStopAzimuthAvg(scan);
-//        } else if (strcasecmp("stopazA", aname) == 0) {
-//          double* tmparr = NULL;
-//          int tmplen = 0, i = 0;
-//          if (RaveAttribute_getDoubleArray(attribute, &tmparr, &tmplen)) {
-//            RAVE_FREE(scan->stopazA);
-//            scan->hasStopazA = 0;
-//            scan->nStopazA = 0;
-//            scan->stopazA = RAVE_MALLOC(sizeof(double) * tmplen);
-//            if (scan->stopazA != NULL) {
-//              memcpy(scan->stopazA, tmparr, sizeof(double)*tmplen);
-//              scan->nStopazA = tmplen;
-//              scan->hasStopazA = 1;
-//              for (i = 0; i < scan->nStopazA; i++) {
-//                scan->stopazA[i] *= M_PI/180.0;
-//              }
-//            }
-//          }
-//          PolarScanInternal_calculateStartStopAzimuthAvg(scan);
-//        }
       }
     } else {
       RAVE_DEBUG1("Trying to add attribute: %s but only valid attributes are how/...", name);

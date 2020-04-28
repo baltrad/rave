@@ -39,6 +39,13 @@ from compositing import compositing
 
 from rave_defines import GAIN, OFFSET, RAVE_PGF_QUALITY_FIELD_REPROCESSING
 
+USE_AZIMUTHAL_NAVIGATION=False
+try:
+  from rave_defines import RAVE_PGF_AZIMUTHAL_NAVIGATION
+  USE_AZIMUTHAL_NAVIGATION = RAVE_PGF_AZIMUTHAL_NAVIGATION
+except:
+  pass
+
 logger = rave_pgf_logger.create_logger()
 
 ravebdb = None
@@ -136,6 +143,8 @@ def generate(files, arguments):
   else:
     comp.reprocess_quality_field = RAVE_PGF_QUALITY_FIELD_REPROCESSING
   
+  comp.use_azimuthal_nav_information = USE_AZIMUTHAL_NAVIGATION
+
   # We do not support best fit compositing right now
   #comp.pcsid = options.pcsid
   #comp.xscale = options.scale

@@ -687,6 +687,7 @@ static struct PyMethodDef _pypolarvolume_methods[] =
   {"beamwidth", NULL},
   {"beamwH", NULL},
   {"beamwV", NULL},
+  {"use_azimuthal_nav_information", NULL},
   {"getDistance", (PyCFunction) _pypolarvolume_getDistance, 1,
     "getDistance((lon,lat)) --> distance from origin of this volume to the specified lon/lat pair\n\n"
     "Returns the distance in meters along the surface from the radar to the specified lon/lat coordinate pair.\n\n"
@@ -860,6 +861,8 @@ static PyObject* _pypolarvolume_getattro(PyPolarVolume* self, PyObject* name)
     } else {
       Py_RETURN_NONE;
     }
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("use_azimuthal_nav_information", name) == 0) {
+    return PyBool_FromLong(PolarVolume_useAzimuthalNavInformation(self->pvol));
   }
   return PyObject_GenericGetAttr((PyObject*)self, name);
 }
@@ -947,6 +950,16 @@ static int _pypolarvolume_setattro(PyPolarVolume* self, PyObject* name, PyObject
     } else {
       raiseException_gotoTag(done, PyExc_ValueError, "paramname should be specified as a string");
     }
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("use_azimuthal_nav_information", name) == 0) {
+    if (PyBool_Check(val)) {
+      if (PyObject_IsTrue(val)) {
+        PolarVolume_setUseAzimuthalNavInformation(self->pvol, 1);
+      } else {
+        PolarVolume_setUseAzimuthalNavInformation(self->pvol, 0);
+      }
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError, "use_azimuthal_nav_information must be of type bool");
+    }
   } else {
     raiseException_gotoTag(done, PyExc_AttributeError, PY_RAVE_ATTRO_NAME_TO_STRING(name));
   }
@@ -988,6 +1001,8 @@ PyDoc_STRVAR(_pypolarvolume_type_doc,
     "                   scan, modify the scan directly.\n"
     "beamwV           - Vertical beamwidth for the volume. All scans will get the specified beamwidth. If you only want to make the beamwidth affect an individual\n"
     "                   scan, modify the scan directly.\n"
+    "use_azimuthal_nav_information - If setting. Then all currently added scans will get this value. It will not affect scans added after. If reading this value\n"
+    "                   it will return True if at least one of the currently set scans returns True. Otherwise this attribute will be False.\n"
     "\n"
     "Usage:\n"
     "import _polarvolume\n"

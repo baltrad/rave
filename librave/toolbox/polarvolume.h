@@ -555,4 +555,21 @@ RaveField_t* PolarVolume_getHeightField(PolarVolume_t* self);
  */
 PolarObservation* PolarVolume_getCorrectedValuesAtHeight(PolarVolume_t* self, double height, double gap, int* nobservations);
 
+/**
+ * Utility function for setting all scans in this volume to use or not use azimuthal navigation. Note, this will only affect
+ * currently added scans and will not affect scans added after call to this function.
+ * @param[in] self - self
+ * @param[in] v - 0 if azimuthal nav information shouldn't be used, otherwise 1
+ */
+void PolarVolume_setUseAzimuthalNavInformation(PolarVolume_t* self, int v);
+
+/**
+ * Returns if the azimuthal nav information should be used or not. Since this information actually resides in the scans the
+ * returned value will be depending on currently contained scans. If all scans have got azimuthal nav information set to 0, then
+ * 0 will be returned. Otherwise 1. This means that if at least one scan is using azimuthal nav info, we want to know this when querying the volume.
+ * @param[in] self - self
+ * @return 1 if nav information is used, otherwise 0.
+ */
+int PolarVolume_useAzimuthalNavInformation(PolarVolume_t* self);
+
 #endif

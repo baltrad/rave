@@ -118,6 +118,7 @@ class compositing(object):
     self.dumppath = None
     self.dump = False
     self.use_site_source = False
+    self.use_azimuthal_nav_information = True
     self.radar_index_mapping = {}
     
   def generate(self, dd, dt, area=None):
@@ -448,7 +449,10 @@ class compositing(object):
       if not is_scan and not is_pvol:
         self.logger.warn("Input file %s is neither polar scan or volume, ignoring.", fname)
         continue
-
+      
+      # Force azimuthal nav information usage if requested
+      obj.use_azimuthal_nav_information = self.use_azimuthal_nav_information
+      
       if self.ignore_malfunc:
         obj = rave_util.remove_malfunc(obj)
         if obj is None:

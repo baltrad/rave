@@ -1261,7 +1261,40 @@ done:
   return result;
 }
 
+void PolarVolume_setUseAzimuthalNavInformation(PolarVolume_t* self, int v)
+{
+  int i = 0;
+  int numberOfScans = 0;
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  numberOfScans = PolarVolume_getNumberOfScans(self);
+  for (i = 0; i < numberOfScans; i++) {
+    PolarScan_t* s = PolarVolume_getScan(self, i);
+    if (s != NULL) {
+      PolarScan_setUseAzimuthalNavInformation(s, v);
+    }
+    RAVE_OBJECT_RELEASE(s);
+  }
+}
 
+int PolarVolume_useAzimuthalNavInformation(PolarVolume_t* self)
+{
+  int i = 0;
+  int numberOfScans = 0;
+  int result = 0;
+  RAVE_ASSERT((self != NULL), "scan == NULL");
+  numberOfScans = PolarVolume_getNumberOfScans(self);
+  for (i = 0; i < numberOfScans && result == 0; i++) {
+    PolarScan_t* s = PolarVolume_getScan(self, i);
+    if (s != NULL) {
+      result = PolarScan_useAzimuthalNavInformation(s);
+    }
+    RAVE_OBJECT_RELEASE(s);
+  }
+  if (numberOfScans == 0) {
+    result = 0;
+  }
+  return result;
+}
 
 /*@} End of Interface functions */
 RaveCoreObjectType PolarVolume_TYPE = {
