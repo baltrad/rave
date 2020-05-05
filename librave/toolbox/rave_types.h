@@ -25,6 +25,29 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef RAVE_TYPES_H
 #define RAVE_TYPES_H
 
+
+/**
+ * The /Conventions version in a ODIM HDF5 file.
+ */
+typedef enum RaveIO_ODIM_Version {
+  RaveIO_ODIM_Version_UNDEFINED = -1, /**< Undefined */
+  RaveIO_ODIM_Version_2_0 = 0,        /**< ODIM 2.0 */
+  RaveIO_ODIM_Version_2_1 = 1,        /**< ODIM 2.1 */
+  RaveIO_ODIM_Version_2_2 = 2,        /**< ODIM 2.2 */
+  RaveIO_ODIM_Version_2_3 = 3         /**< ODIM 2.3, The default version */
+} RaveIO_ODIM_Version;
+
+/**
+ * The /what/version in a ODIM HDF5 file
+ */
+typedef enum RaveIO_ODIM_H5rad_Version {
+  RaveIO_ODIM_H5rad_Version_UNDEFINED = -1, /**< undefined */
+  RaveIO_ODIM_H5rad_Version_2_0 = 0,  /**< ODIM 2.0 */
+  RaveIO_ODIM_H5rad_Version_2_1 = 1,  /**< ODIM 2.1 */
+  RaveIO_ODIM_H5rad_Version_2_2 = 2,  /**< ODIM 2.2 */
+  RaveIO_ODIM_H5rad_Version_2_3 = 3   /**< ODIM 2.3, The default version */
+} RaveIO_ODIM_H5rad_Version;
+
 /**
  * Different value types. When initializing a data field it is wise
  * to always initiallize to nodata instead of undetect.

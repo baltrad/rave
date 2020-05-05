@@ -41,6 +41,20 @@ typedef struct _PolarOdimIO_t PolarOdimIO_t;
 extern RaveCoreObjectType PolarOdimIO_TYPE;
 
 /**
+ * Sets the version that this io class should handle.
+ * @param[in] self - self
+ * @param[in] version - the odim version
+ */
+void PolarOdimIO_setVersion(PolarOdimIO_t* self, RaveIO_ODIM_Version version);
+
+/**
+ * Returns the version that this io class handles.
+ * @param[in] self - self
+ * @returns - the odim version
+ */
+RaveIO_ODIM_Version PolarOdimIO_getVersion(PolarOdimIO_t* self);
+
+/**
  * Reads a scan from the nodelist and sets the data in the scan.
  * @param[in] self - self
  * @param[in] nodelist - the hdf5 node list

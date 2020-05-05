@@ -34,6 +34,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  */
 struct _PolarOdimIO_t {
   RAVE_OBJECT_HEAD /** Always on top */
+  RaveIO_ODIM_Version version;
 };
 
 /*@{ Private functions */
@@ -42,6 +43,7 @@ struct _PolarOdimIO_t {
  */
 static int PolarOdimIO_constructor(RaveCoreObject* obj)
 {
+  ((PolarOdimIO_t*)obj)->version = RaveIO_ODIM_Version_2_3;
   return 1;
 }
 
@@ -50,6 +52,7 @@ static int PolarOdimIO_constructor(RaveCoreObject* obj)
  */
 static int PolarOdimIO_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj)
 {
+  ((PolarOdimIO_t*)obj)->version = ((PolarOdimIO_t*)srcobj)->version;
   return 1;
 }
 
@@ -70,6 +73,7 @@ static void PolarOdimIO_destructor(RaveCoreObject* obj)
 static int PolarOdimIOInternal_loadRootScanAttribute(void* object, RaveAttribute_t* attribute)
 {
   PolarScan_t* scan = (PolarScan_t*)((OdimIoUtilityArg*)object)->object;
+  //RaveIO_ODIM_Version version = ((OdimIoUtilityArg*)object)->version;
   const char* name;
   int result = 0;
 
@@ -825,9 +829,33 @@ done:
   return result;
 }
 
+static int PolarOdimIOInternal_translateScan(PolarOdimIO_t* self, PolarScan_t* scan)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  if (self->version < RaveIO_ODIM_Version_2_3) {
+    /* We are reading something older than 2.3 so we need to be prepared to convert attributes */
+
+
+  }
+  return 1;
+}
+
+
+
 /*@} End of Private functions */
 
 /*@{ Interface functions */
+void PolarOdimIO_setVersion(PolarOdimIO_t* self, RaveIO_ODIM_Version version)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  self->version = version;
+}
+
+RaveIO_ODIM_Version PolarOdimIO_getVersion(PolarOdimIO_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return self->version;
+}
 
 int PolarOdimIO_readScan(PolarOdimIO_t* self, HL_NodeList* nodelist, PolarScan_t* scan)
 {
@@ -840,6 +868,7 @@ int PolarOdimIO_readScan(PolarOdimIO_t* self, HL_NodeList* nodelist, PolarScan_t
 
   arg.nodelist = nodelist;
   arg.object = (RaveCoreObject*)scan;
+  arg.version = self->version;
 
   if (!RaveHL_hasNodeByName(nodelist, "/dataset1") ||
       !RaveHL_hasNodeByName(nodelist, "/dataset1/data1")) {
@@ -860,6 +889,11 @@ int PolarOdimIO_readScan(PolarOdimIO_t* self, HL_NodeList* nodelist, PolarScan_t
     goto done;
   }
 
+  if (!PolarOdimIOInternal_translateScan(self, scan)) {
+    RAVE_ERROR0("Failed to translate scan");
+    goto done;
+  }
+
   result = 1;
 done:
   return result;
@@ -877,6 +911,7 @@ int PolarOdimIO_readVolume(PolarOdimIO_t* self, HL_NodeList* nodelist, PolarVolu
 
   arg.nodelist = nodelist;
   arg.object = (RaveCoreObject*)volume;
+  arg.version = self->version;
 
   if (!RaveHL_loadAttributesAndData(nodelist, &arg,
                                     PolarOdimIOInternal_loadRootVolumeAttribute,
@@ -906,18 +941,62 @@ done:
   return result;
 }
 
+char* PolarOdimIOInternal_handleSourceVersion(const char* source, RaveIO_ODIM_Version version)
+{
+  char* result = NULL;
+  RaveList_t* sourceTokens = NULL;
+  if (source != NULL) {
+    result = RAVE_STRDUP(source);
+    if (result == NULL) {
+      goto done;
+    }
+    if (version < RaveIO_ODIM_Version_2_3) {
+      char* p = strstr(result, "WIGOS:");
+      if (p != NULL) {
+        sourceTokens = RaveUtilities_getTrimmedTokens(result, (int)',');
+        if (sourceTokens != NULL) {
+          int nlen = RaveList_size(sourceTokens);
+          int i = 0;
+          for (i = nlen - 1; i >= 0; i--) {
+            char* pToken = (char*)RaveList_get(sourceTokens, i);
+            if (pToken != NULL && strstr(pToken, "WIGOS")) {
+              pToken = (char*)RaveList_remove(sourceTokens, i);
+              RAVE_FREE(pToken);
+            }
+          }
+          nlen = RaveList_size(sourceTokens);
+          strcpy(result, "");
+          for (i = 0; i < nlen; i++) {
+            char* pToken = (char*)RaveList_get(sourceTokens, i);
+            if (i > 0) {
+              strcat(result, ",");
+            }
+            strcat(result, pToken);
+          }
+        }
+      }
+    }
+  }
+done:
+  if (sourceTokens != NULL) {
+    RaveList_freeAndDestroy(&sourceTokens);
+  }
+  return result;
+}
+
 int PolarOdimIO_fillScan(PolarOdimIO_t* self, PolarScan_t* scan, HL_NodeList* nodelist)
 {
   int result = 0;
   RaveObjectList_t* attributes = NULL;
   RaveObjectList_t* qualityfields = NULL;
+  char* source = NULL;
 
   RAVE_ASSERT((self != NULL), "self == NULL");
   RAVE_ASSERT((scan != NULL), "scan == NULL");
   RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
 
   if (!RaveHL_hasNodeByName(nodelist, "/Conventions")) {
-    if (!RaveHL_createStringValue(nodelist, RAVE_ODIM_VERSION_2_2_STR, "/Conventions")) {
+    if (!RaveHL_createStringValue(nodelist, RaveHL_getOdimVersionString(self->version), "/Conventions")) {
       goto done;
     }
   }
@@ -926,7 +1005,7 @@ int PolarOdimIO_fillScan(PolarOdimIO_t* self, PolarScan_t* scan, HL_NodeList* no
   if (attributes != NULL) {
     const char* objectType = RaveTypes_getStringFromObjectType(Rave_ObjectType_SCAN);
     if (!RaveUtilities_addStringAttributeToList(attributes, "what/object", objectType) ||
-        !RaveUtilities_replaceStringAttributeInList(attributes, "what/version", RAVE_ODIM_H5RAD_VERSION_2_2_STR)) {
+        !RaveUtilities_replaceStringAttributeInList(attributes, "what/version", RAVE_ODIM_H5RAD_VERSION_2_3_STR)) {
       RAVE_ERROR0("Failed to add what/object or what/version to attributes");
       goto done;
     }
@@ -935,15 +1014,23 @@ int PolarOdimIO_fillScan(PolarOdimIO_t* self, PolarScan_t* scan, HL_NodeList* no
     goto done;
   }
 
+  source = PolarOdimIOInternal_handleSourceVersion(PolarScan_getSource(scan), self->version);
+
   if (!RaveUtilities_replaceDoubleAttributeInList(attributes, "how/beamwH", PolarScan_getBeamwH(scan)*180.0/M_PI) ||
       !RaveUtilities_replaceDoubleAttributeInList(attributes, "how/beamwV", PolarScan_getBeamwV(scan)*180.0/M_PI) ||
       !RaveUtilities_replaceStringAttributeInList(attributes, "what/date", PolarScan_getDate(scan)) ||
       !RaveUtilities_replaceStringAttributeInList(attributes, "what/time", PolarScan_getTime(scan)) ||
-      !RaveUtilities_replaceStringAttributeInList(attributes, "what/source", PolarScan_getSource(scan)) ||
+      !RaveUtilities_replaceStringAttributeInList(attributes, "what/source", source) ||
       !RaveUtilities_replaceDoubleAttributeInList(attributes, "where/height", PolarScan_getHeight(scan)) ||
       !RaveUtilities_replaceDoubleAttributeInList(attributes, "where/lat", PolarScan_getLatitude(scan)*180.0/M_PI) ||
       !RaveUtilities_replaceDoubleAttributeInList(attributes, "where/lon", PolarScan_getLongitude(scan)*180.0/M_PI)) {
     goto done;
+  }
+
+  if (!PolarScan_hasAttribute(scan, "how/software")) {
+    if (!RaveUtilities_addStringAttributeToList(attributes, "how/software", "BALTRAD")) {
+      RAVE_ERROR0("Failed to add how/software to attributes");
+    }
   }
 
   if (attributes == NULL || !RaveHL_addAttributes(nodelist, attributes, "")) {
@@ -973,13 +1060,15 @@ int PolarOdimIO_fillScan(PolarOdimIO_t* self, PolarScan_t* scan, HL_NodeList* no
     goto done;
   }
 
-  if (PolarScan_getProdname(scan) == NULL) {
-    if (!RaveUtilities_replaceStringAttributeInList(attributes, "what/prodname", "BALTRAD scan")) {
-      goto done;
-    }
-  } else {
-    if (!RaveUtilities_replaceStringAttributeInList(attributes, "what/prodname", PolarScan_getProdname(scan))) {
-      goto done;
+  if (self->version >= RaveIO_ODIM_Version_2_3) {
+    if (PolarScan_getProdname(scan) == NULL) {
+      if (!RaveUtilities_replaceStringAttributeInList(attributes, "what/prodname", "BALTRAD scan")) {
+        goto done;
+      }
+    } else {
+      if (!RaveUtilities_replaceStringAttributeInList(attributes, "what/prodname", PolarScan_getProdname(scan))) {
+        goto done;
+      }
     }
   }
 
@@ -999,6 +1088,8 @@ int PolarOdimIO_fillScan(PolarOdimIO_t* self, PolarScan_t* scan, HL_NodeList* no
 done:
   RAVE_OBJECT_RELEASE(attributes);
   RAVE_OBJECT_RELEASE(qualityfields);
+  RAVE_FREE(source);
+
   return result;
 }
 
@@ -1015,7 +1106,7 @@ int PolarOdimIO_fillVolume(PolarOdimIO_t* self, PolarVolume_t* volume, HL_NodeLi
   RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
 
   if (!RaveHL_hasNodeByName(nodelist, "/Conventions")) {
-    if (!RaveHL_createStringValue(nodelist, RAVE_ODIM_VERSION_2_2_STR, "/Conventions")) {
+    if (!RaveHL_createStringValue(nodelist, RAVE_ODIM_VERSION_2_3_STR, "/Conventions")) {
       goto done;
     }
   }
@@ -1024,7 +1115,7 @@ int PolarOdimIO_fillVolume(PolarOdimIO_t* self, PolarVolume_t* volume, HL_NodeLi
   if (attributes != NULL) {
     const char* objectType = RaveTypes_getStringFromObjectType(Rave_ObjectType_PVOL);
     if (!RaveUtilities_addStringAttributeToList(attributes, "what/object", objectType) ||
-        !RaveUtilities_replaceStringAttributeInList(attributes, "what/version", RAVE_ODIM_H5RAD_VERSION_2_2_STR)) {
+        !RaveUtilities_replaceStringAttributeInList(attributes, "what/version", RAVE_ODIM_H5RAD_VERSION_2_3_STR)) {
       RAVE_ERROR0("Failed to add what/object or what/version to attributes");
       goto done;
     }

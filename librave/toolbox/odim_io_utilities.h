@@ -27,6 +27,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "rave_field.h"
 #include "rave_object.h"
+#include "rave_types.h"
 #include "raveobject_list.h"
 #include "hlhdf.h"
 #include <stdarg.h>
@@ -39,6 +40,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 typedef struct OdimIoUtilityArg {
   HL_NodeList* nodelist;  /**< the nodelist */
   RaveCoreObject* object; /**< the object */
+  RaveIO_ODIM_Version version; /**< the version */
 } OdimIoUtilityArg;
 
 /**

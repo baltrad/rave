@@ -45,6 +45,11 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #define RAVE_ODIM_VERSION_2_2_STR "ODIM_H5/V2_2"
 
 /**
+ * ODIM Version string 2.3
+ */
+#define RAVE_ODIM_VERSION_2_3_STR "ODIM_H5/V2_3"
+
+/**
  * ODIM H5 rad version string 2.0
  */
 #define RAVE_ODIM_H5RAD_VERSION_2_0_STR "H5rad 2.0"
@@ -59,6 +64,10 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  */
 #define RAVE_ODIM_H5RAD_VERSION_2_2_STR "H5rad 2.2"
 
+/**
+ * ODIM H5 rad version string 2.3
+ */
+#define RAVE_ODIM_H5RAD_VERSION_2_3_STR "H5rad 2.3"
 
 /**
  * Attribute function called when an attribute is found.
@@ -101,6 +110,20 @@ const char* RaveHL_convertAttributeName(const char* name);
  * @returns the original name if no conversion can be done otherwise the translated name
  */
 const char* RaveHL_convertQuantity(const char* name);
+
+/**
+ * Returns the string representation of the specified odim version
+ * @param[in] version - the ODIM version
+ * @returns the string representation or UNDEFINED if not found
+ */
+const char* RaveHL_getOdimVersionString(RaveIO_ODIM_Version version);
+
+/**
+ * Returns the odim version for the string representation of the ODIM version
+ * @param[in] str - the string representation
+ * @returns the odim version or undefined if not found
+ */
+RaveIO_ODIM_Version RaveHL_getOdimVersionFromString(const char* str);
 
 /**
  * Creates a rave attribute from a HLHDF node value.

@@ -262,6 +262,7 @@ static PyObject* _pyraveio_save(PyRaveIO* self, PyObject* args)
 static struct PyMethodDef _pyraveio_methods[] =
 {
   {"version", NULL},
+  {"read_version", NULL},
   {"h5radversion", NULL},
   {"objectType", NULL},
   {"filename", NULL},
@@ -293,6 +294,8 @@ static PyObject* _pyraveio_getattro(PyRaveIO* self, PyObject* name)
   PyObject* res = NULL;
   if (PY_COMPARE_STRING_WITH_ATTRO_NAME("version", name) == 0) {
     return PyInt_FromLong(RaveIO_getOdimVersion(self->raveio));
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("read_version", name) == 0) {
+    return PyInt_FromLong(RaveIO_getReadOdimVersion(self->raveio));
   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("h5radversion", name) == 0) {
     return PyInt_FromLong(RaveIO_getH5radVersion(self->raveio));
   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("objectType", name) == 0) {
@@ -369,6 +372,8 @@ static int _pyraveio_setattro(PyRaveIO* self, PyObject* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_TypeError,"version must be a valid odim version");
     }
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("read_version", name)==0) {
+    raiseException_gotoTag(done, PyExc_TypeError,"read_version can not be set");
   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("h5radversion", name) == 0) {
     if (PyInt_Check(val)) {
       if (!RaveIO_setH5radVersion(self->raveio, PyInt_AsLong(val))) {
@@ -472,16 +477,24 @@ PyDoc_STRVAR(_pyraveio_doc,
     "This instance wraps the IO-routines used when writing and/or reading files through RAVE.\n"
     "\n"
     "The members of each object are:\n"
-    " * version          - showing the ODIM H5 version of the read file. Can be one of:\n"
+    " * version          - ODIM version that will be used when writing this object. Can be one of:\n"
+    "                      + RaveIO_ODIM_Version_2_0\n"
+    "                      + RaveIO_ODIM_Version_2_1\n"
+    "                      + RaveIO_ODIM_Version_2_2\n"
+    "                      + RaveIO_ODIM_Version_2_3 (default)\n"
+    " * read_version     - ODIM version of the read file. Note, this is only reflecting actual read file and not if file is written with different version. Can be one of:\n"
     "                      + RaveIO_ODIM_Version_UNDEFINED\n"
     "                      + RaveIO_ODIM_Version_2_0\n"
     "                      + RaveIO_ODIM_Version_2_1\n"
+    "                      + RaveIO_ODIM_Version_2_2\n"
+    "                      + RaveIO_ODIM_Version_2_3 (default)\n"
     "\n"
     " * h5radversion     - showing the H5 rad version of the read file. Can be one of:\n"
     "                      + RaveIO_ODIM_H5rad_Version_UNDEFINED\n"
     "                      + RaveIO_ODIM_H5rad_Version_2_0\n"
     "                      + RaveIO_ODIM_H5rad_Version_2_1\n"
     "                      + RaveIO_ODIM_H5rad_Version_2_2\n"
+    "                      + RaveIO_ODIM_H5rad_Version_2_3\n"
     "\n"
     " * objectType       - What type of object that has been read. Can be one of the following:\n"
     "                      + Rave_ObjectType_PVOL\n"
@@ -686,6 +699,7 @@ MOD_INIT(_raveio)
   add_long_constant(dictionary, "RaveIO_ODIM_Version_2_0", RaveIO_ODIM_Version_2_0);
   add_long_constant(dictionary, "RaveIO_ODIM_Version_2_1", RaveIO_ODIM_Version_2_1);
   add_long_constant(dictionary, "RaveIO_ODIM_Version_2_2", RaveIO_ODIM_Version_2_2);
+  add_long_constant(dictionary, "RaveIO_ODIM_Version_2_3", RaveIO_ODIM_Version_2_3);
 
   add_long_constant(dictionary, "RaveIO_ODIM_H5rad_Version_UNDEFINED", RaveIO_ODIM_H5rad_Version_UNDEFINED);
   add_long_constant(dictionary, "RaveIO_ODIM_H5rad_Version_2_0", RaveIO_ODIM_H5rad_Version_2_0);

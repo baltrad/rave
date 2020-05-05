@@ -31,26 +31,6 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_types.h"
 
 /**
- * The /Conventions version in a ODIM HDF5 file.
- */
-typedef enum RaveIO_ODIM_Version {
-  RaveIO_ODIM_Version_UNDEFINED = -1, /**< Undefined */
-  RaveIO_ODIM_Version_2_0 = 0,        /**< Previous ODIM version */
-  RaveIO_ODIM_Version_2_1 = 1,        /**< Previous ODIM version */
-  RaveIO_ODIM_Version_2_2 = 2         /**< The default version */
-} RaveIO_ODIM_Version;
-
-/**
- * The /what/version in a ODIM HDF5 file
- */
-typedef enum RaveIO_ODIM_H5rad_Version {
-  RaveIO_ODIM_H5rad_Version_UNDEFINED = -1, /**< undefined */
-  RaveIO_ODIM_H5rad_Version_2_0 = 0,  /**< Previous ODIM version */
-  RaveIO_ODIM_H5rad_Version_2_1 = 1,  /**< Previous ODIM version */
-  RaveIO_ODIM_H5rad_Version_2_2 = 2   /**< The default version */
-} RaveIO_ODIM_H5rad_Version;
-
-/**
  * The file format of the data that has been read.
  * When reading a file through rave io, you might sometime
  * read exotic formats like BUFR. This type provides information
@@ -144,8 +124,7 @@ const char* RaveIO_getFilename(RaveIO_t* raveio);
 Rave_ObjectType RaveIO_getObjectType(RaveIO_t* raveio);
 
 /**
- * Sets the ODIM version to use when saving the file. Currently, the only
- * supported version is 2.0.
+ * Sets the ODIM version to use when saving the file.
  * @param[in] raveio - self
  * @param[in] version - the version to be used
  * @returns 1 if the specified version is supported, otherwise 0.
@@ -153,11 +132,18 @@ Rave_ObjectType RaveIO_getObjectType(RaveIO_t* raveio);
 int RaveIO_setOdimVersion(RaveIO_t* raveio, RaveIO_ODIM_Version version);
 
 /**
- * Returns the ODIM version.
+ * Returns the ODIM version that will be used to write the file.
  * @param[in] raveio - self
  * @returns the ODIM version
  */
 RaveIO_ODIM_Version RaveIO_getOdimVersion(RaveIO_t* raveio);
+
+/**
+ * Returns the ODIM version of the file that was read.
+ * @param[in] raveio - self
+ * @returns the ODIM version
+ */
+RaveIO_ODIM_Version RaveIO_getReadOdimVersion(RaveIO_t* raveio);
 
 /**
  * Sets the ODIM h5rad version to use when saving the file. Currently, the only

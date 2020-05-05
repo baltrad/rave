@@ -1638,6 +1638,32 @@ done:
   return result;
 }
 
+void PolarScan_removeAttribute(PolarScan_t* scan, const char* attrname)
+{
+  char* aname = NULL;
+  char* gname = NULL;
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+  if (attrname != NULL) {
+    if (!RaveAttributeHelp_extractGroupAndName(attrname, &gname, &aname)) {
+      RAVE_ERROR1("Failed to extract group and name from %s", attrname);
+      goto done;
+    }
+    if (strcasecmp("how", gname)==0) {
+      if (!RaveAttributeHelp_validateHowGroupAttributeName(gname, aname)) {
+        RAVE_ERROR1("Not possible to validate how/group attribute name %s", attrname);
+        goto done;
+      }
+      RaveCoreObject* attr = RaveObjectHashTable_remove(scan->attrs, attrname);
+      RAVE_OBJECT_RELEASE(attr);
+    }
+  }
+
+done:
+  RAVE_FREE(aname);
+  RAVE_FREE(gname);
+}
+
+
 RaveAttribute_t* PolarScan_getAttribute(PolarScan_t* scan, const char* name)
 {
   RAVE_ASSERT((scan != NULL), "scan == NULL");

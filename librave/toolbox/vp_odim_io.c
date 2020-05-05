@@ -479,7 +479,7 @@ int VpOdimIO_fill(VpOdimIO_t* self, VerticalProfile_t* vp, HL_NodeList* nodelist
   RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
 
   if (!RaveHL_hasNodeByName(nodelist, "/Conventions")) {
-    if (!RaveHL_createStringValue(nodelist, RAVE_ODIM_VERSION_2_2_STR, "/Conventions")) {
+    if (!RaveHL_createStringValue(nodelist, RAVE_ODIM_VERSION_2_3_STR, "/Conventions")) {
       goto done;
     }
   }
@@ -488,7 +488,7 @@ int VpOdimIO_fill(VpOdimIO_t* self, VerticalProfile_t* vp, HL_NodeList* nodelist
   if (attributes != NULL) {
     const char* objectType = RaveTypes_getStringFromObjectType(Rave_ObjectType_VP);
     if (!RaveUtilities_addStringAttributeToList(attributes, "what/object", objectType) ||
-        !RaveUtilities_replaceStringAttributeInList(attributes, "what/version", RAVE_ODIM_H5RAD_VERSION_2_2_STR)) {
+        !RaveUtilities_replaceStringAttributeInList(attributes, "what/version", RAVE_ODIM_H5RAD_VERSION_2_3_STR)) {
       RAVE_ERROR0("Failed to add what/object or what/version to attributes");
       goto done;
     }

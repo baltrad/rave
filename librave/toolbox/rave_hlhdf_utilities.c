@@ -68,6 +68,23 @@ static const struct RaveToHlhdfTypeMap RAVE_TO_HLHDF_MAP[] = {
   {HLHDF_END_OF_SPECIFIERS, RaveDataType_UNDEFINED}
 };
 
+/**
+ * Type for keeping mapping
+ */
+struct OdimVersionToStrTypeMap {
+  RaveIO_ODIM_Version version; /**< the odim version */
+  const char* str;          /**< the odim version str */
+};
+
+/** Mapping between version and str */
+static const struct OdimVersionToStrTypeMap ODIM_VERSION_STR_MAP[] = {
+    {RaveIO_ODIM_Version_UNDEFINED, "UNDEFINED"},
+    {RaveIO_ODIM_Version_2_0, RAVE_ODIM_VERSION_2_0_STR},
+    {RaveIO_ODIM_Version_2_1, RAVE_ODIM_VERSION_2_1_STR},
+    {RaveIO_ODIM_Version_2_2, RAVE_ODIM_VERSION_2_2_STR},
+    {RaveIO_ODIM_Version_2_3, RAVE_ODIM_VERSION_2_3_STR},
+    {-2, NULL}
+};
 
 /**
  * Attribute names that has to be translated when jumping from 2.0/2.1 up to 2.2
@@ -169,6 +186,36 @@ const char* RaveHL_convertQuantity(const char* name)
   }
   return name;
 }
+
+/**
+ *
+ */
+const char* RaveHL_getOdimVersionString(RaveIO_ODIM_Version version)
+{
+  int idx = 0;
+  while (ODIM_VERSION_STR_MAP[idx].str != NULL) {
+    if (ODIM_VERSION_STR_MAP[idx].version == version) {
+      return ODIM_VERSION_STR_MAP[idx].str;
+    }
+    idx++;
+  }
+  return ODIM_VERSION_STR_MAP[0].str; /*UNDEFINED*/
+}
+
+/**
+ *
+ */
+RaveIO_ODIM_Version RaveHL_getOdimVersionFromString(const char* str)
+{
+  int idx = 0;
+  while (ODIM_VERSION_STR_MAP[idx].str != NULL) {
+    if (strcmp(ODIM_VERSION_STR_MAP[idx].str, str) == 0) {
+      return ODIM_VERSION_STR_MAP[idx].version;
+    }
+  }
+  return RaveIO_ODIM_Version_UNDEFINED;
+}
+
 
 /**
  * Creates a rave attribute from a HLHDF node value.

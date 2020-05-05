@@ -826,6 +826,22 @@ done:
  * @param[in] args - name
  * @returns True if attribute exists otherwise False
  */
+static PyObject* _pypolarscan_removeAttribute(PyPolarScan* self, PyObject* args)
+{
+  char* name = NULL;
+  if (!PyArg_ParseTuple(args, "s", &name)) {
+    return NULL;
+  }
+  PolarScan_removeAttribute(self->scan, name);
+  Py_RETURN_NONE;
+}
+
+/**
+ * Returns if there exists an attribute with the specified name
+ * @param[in] self - this instance
+ * @param[in] args - name
+ * @returns True if attribute exists otherwise False
+ */
 static PyObject* _pypolarscan_hasAttribute(PyPolarScan* self, PyObject* args)
 {
   char* name = NULL;
@@ -1308,6 +1324,12 @@ static struct PyMethodDef _pypolarscan_methods[] =
   {"getAttribute", (PyCFunction) _pypolarscan_getAttribute, 1,
     "getAttribute(name) -> value \n\n"
     "Returns the value associated with the specified name \n\n"
+    "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis\n"
+    "        In the case of how-groups, it is also possible to specify subgroups, like how/subgroup/attr or how/subgroup/subgroup/attr."
+  },
+  {"removeAttribute", (PyCFunction) _pypolarscan_removeAttribute, 1,
+    "removeAttribute(name)\n\n"
+    "Removes the attribute with the specified name \n\n"
     "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis\n"
     "        In the case of how-groups, it is also possible to specify subgroups, like how/subgroup/attr or how/subgroup/subgroup/attr."
   },

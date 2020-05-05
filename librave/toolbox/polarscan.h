@@ -903,6 +903,13 @@ int PolarScan_isTransformable(PolarScan_t* scan);
 int PolarScan_addAttribute(PolarScan_t* scan, RaveAttribute_t* attribute);
 
 /**
+ * Removes a rave attribute from the scan.
+ * @param[in] scan - self
+ * @param[in] attrname - the name of the attribute to remove
+ */
+void PolarScan_removeAttribute(PolarScan_t* scan, const char* attrname);
+
+/**
  * Returns the rave attribute that is named accordingly.
  * @param[in] scan - self
  * @param[in] name - the name of the attribute

@@ -59,6 +59,7 @@ class PyRaveIOTest(unittest.TestCase):
   FIXTURE_BUFR_COMPO="fixtures/odim_compo_ref.bfr"
   FIXTURE_BUFR_2_2="fixtures/odim_2_2_ref.bfr"
   FIXTURE_HUV_WITH_0_86_BW="fixtures/scan_sehuv_1.5_20110126T184600Z.h5"
+  FIXTURE_SEHEM_SCAN_0_5="fixtures/sehem_scan_20200414T160000Z.h5"
   
   TEMPORARY_FILE="ravemodule_iotest.h5"
   TEMPORARY_FILE2="ravemodule_iotest2.h5"
@@ -303,13 +304,13 @@ class PyRaveIOTest(unittest.TestCase):
     nodelist.selectAll()
     nodelist.fetch()
     
-    self.assertEqual("ODIM_H5/V2_2", nodelist.getNode("/Conventions").data())
+    self.assertEqual("ODIM_H5/V2_3", nodelist.getNode("/Conventions").data())
     # What
     self.assertEqual("100000", nodelist.getNode("/what/time").data())
     self.assertEqual("20100101", nodelist.getNode("/what/date").data())
     self.assertEqual("PLC:123", nodelist.getNode("/what/source").data())
     self.assertEqual("IMAGE", nodelist.getNode("/what/object").data())
-    self.assertEqual("H5rad 2.2", nodelist.getNode("/what/version").data())
+    self.assertEqual("H5rad 2.3", nodelist.getNode("/what/version").data())
     
     #Where
     self.assertEqual("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", nodelist.getNode("/where/projdef").data())
@@ -408,7 +409,7 @@ class PyRaveIOTest(unittest.TestCase):
     nodelist.selectAll()
     nodelist.fetch()
     
-    self.assertEqual("ODIM_H5/V2_2", nodelist.getNode("/Conventions").data())
+    self.assertEqual("ODIM_H5/V2_3", nodelist.getNode("/Conventions").data())
     self.assertEqual("BALTRAD cartesian" , nodelist.getNode("/dataset1/what/prodname").data())
 
     #Just verify that we can read it as well
@@ -496,13 +497,13 @@ class PyRaveIOTest(unittest.TestCase):
     nodelist.selectAll()
     nodelist.fetch()
     
-    self.assertEqual("ODIM_H5/V2_2", nodelist.getNode("/Conventions").data())
+    self.assertEqual("ODIM_H5/V2_3", nodelist.getNode("/Conventions").data())
     # What
     self.assertEqual("100000", nodelist.getNode("/what/time").data())
     self.assertEqual("20100101", nodelist.getNode("/what/date").data())
     self.assertEqual("PLC:123", nodelist.getNode("/what/source").data())
     self.assertEqual("IMAGE", nodelist.getNode("/what/object").data())
-    self.assertEqual("H5rad 2.2", nodelist.getNode("/what/version").data())
+    self.assertEqual("H5rad 2.3", nodelist.getNode("/what/version").data())
     
     #Where
     self.assertEqual("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", nodelist.getNode("/where/projdef").data())
@@ -735,13 +736,13 @@ class PyRaveIOTest(unittest.TestCase):
     nodelist.selectAll()
     nodelist.fetch()
     
-    self.assertEqual("ODIM_H5/V2_2", nodelist.getNode("/Conventions").data())
+    self.assertEqual("ODIM_H5/V2_3", nodelist.getNode("/Conventions").data())
     # What
     self.assertEqual("100000", nodelist.getNode("/what/time").data())
     self.assertEqual("20091010", nodelist.getNode("/what/date").data())
     self.assertEqual("PLC:123", nodelist.getNode("/what/source").data())
     self.assertEqual("CVOL", nodelist.getNode("/what/object").data())
-    self.assertEqual("H5rad 2.2", nodelist.getNode("/what/version").data())
+    self.assertEqual("H5rad 2.3", nodelist.getNode("/what/version").data())
     
     #Where
     self.assertEqual("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", nodelist.getNode("/where/projdef").data())
@@ -909,7 +910,7 @@ class PyRaveIOTest(unittest.TestCase):
 
   def test_load_cartesian_volume(self):
     obj = _raveio.open(self.FIXTURE_CVOL_CAPPI)
-    self.assertEqual(_raveio.RaveIO_ODIM_Version_2_0, obj.version)
+    self.assertEqual(_raveio.RaveIO_ODIM_Version_2_0, obj.read_version)
     self.assertEqual(_raveio.RaveIO_ODIM_H5rad_Version_2_0, obj.h5radversion)
     self.assertEqual(_rave.Rave_ObjectType_CVOL, obj.objectType)
     
@@ -955,14 +956,14 @@ class PyRaveIOTest(unittest.TestCase):
     nodelist.selectAll()
     nodelist.fetch()
     
-    self.assertEqual("ODIM_H5/V2_2", nodelist.getNode("/Conventions").data())
+    self.assertEqual("ODIM_H5/V2_3", nodelist.getNode("/Conventions").data())
 
     # What
     self.assertEqual("100000", nodelist.getNode("/what/time").data())
     self.assertEqual("20091010", nodelist.getNode("/what/date").data())
     self.assertEqual("PLC:123", nodelist.getNode("/what/source").data())
     self.assertEqual("IMAGE", nodelist.getNode("/what/object").data())
-    self.assertEqual("H5rad 2.2", nodelist.getNode("/what/version").data())
+    self.assertEqual("H5rad 2.3", nodelist.getNode("/what/version").data())
     
     #Where
     self.assertEqual("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", nodelist.getNode("/where/projdef").data())
@@ -997,7 +998,7 @@ class PyRaveIOTest(unittest.TestCase):
 
   def test_load_cartesian_image2(self):
     obj = _raveio.open(self.FIXTURE_CARTESIAN_IMAGE)
-    self.assertEqual(_raveio.RaveIO_ODIM_Version_2_1, obj.version)
+    self.assertEqual(_raveio.RaveIO_ODIM_Version_2_1, obj.read_version)
     self.assertEqual(_raveio.RaveIO_ODIM_H5rad_Version_2_1, obj.h5radversion)
     self.assertEqual(_rave.Rave_ObjectType_IMAGE, obj.objectType)
     
@@ -1039,7 +1040,7 @@ class PyRaveIOTest(unittest.TestCase):
  
   def test_load_cartesian_volume2(self):
     obj = _raveio.open(self.FIXTURE_CARTESIAN_VOLUME)
-    self.assertEqual(_raveio.RaveIO_ODIM_Version_2_1, obj.version)
+    self.assertEqual(_raveio.RaveIO_ODIM_Version_2_1, obj.read_version)
     self.assertEqual(_raveio.RaveIO_ODIM_H5rad_Version_2_1, obj.h5radversion)
     self.assertEqual(_rave.Rave_ObjectType_CVOL, obj.objectType)
     
@@ -1175,13 +1176,13 @@ class PyRaveIOTest(unittest.TestCase):
     nodelist.selectAll()
     nodelist.fetch()
     
-    self.assertEqual("ODIM_H5/V2_2", nodelist.getNode("/Conventions").data())
+    self.assertEqual("ODIM_H5/V2_3", nodelist.getNode("/Conventions").data())
     # What
     self.assertEqual("100000", nodelist.getNode("/what/time").data())
     self.assertEqual("20091010", nodelist.getNode("/what/date").data())
     self.assertEqual("PLC:123", nodelist.getNode("/what/source").data())
     self.assertEqual("PVOL", nodelist.getNode("/what/object").data())
-    self.assertEqual("H5rad 2.2", nodelist.getNode("/what/version").data())
+    self.assertEqual("H5rad 2.3", nodelist.getNode("/what/version").data())
     
     #Where
     self.assertAlmostEqual(12.0, nodelist.getNode("/where/lon").data(), 4)
@@ -1501,11 +1502,12 @@ class PyRaveIOTest(unittest.TestCase):
     nodelist.selectAll()
     nodelist.fetch()
     
+    self.assertEqual("ODIM_H5/V2_3", nodelist.getNode("/Conventions").data())
     self.assertEqual("120000", nodelist.getNode("/what/time").data())
     self.assertEqual("20090501", nodelist.getNode("/what/date").data())
     self.assertEqual("WMO:02606,RAD:SE50", nodelist.getNode("/what/source").data())
     self.assertEqual("SCAN", nodelist.getNode("/what/object").data())
-    self.assertEqual("H5rad 2.2", nodelist.getNode("/what/version").data())
+    self.assertEqual("H5rad 2.3", nodelist.getNode("/what/version").data())
     self.assertAlmostEqual(209.0, nodelist.getNode("/where/height").data(), 4)
     self.assertAlmostEqual(12.8544, nodelist.getNode("/where/lon").data(), 4)
     self.assertAlmostEqual(56.3675, nodelist.getNode("/where/lat").data(), 4)
@@ -1728,11 +1730,12 @@ class PyRaveIOTest(unittest.TestCase):
       self.assertTrue(name in nodenames)
       nodenames.remove(name)
       
+    self.assertEqual("ODIM_H5/V2_3", nodelist.getNode("/Conventions").data())
     self.assertEqual("20090501", nodelist.getNode("/what/date").data())
     self.assertEqual("SCAN", nodelist.getNode("/what/object").data())
     self.assertEqual("WMO:02606,RAD:SE50", nodelist.getNode("/what/source").data())
     self.assertEqual("120000", nodelist.getNode("/what/time").data())
-    self.assertEqual("H5rad 2.2", nodelist.getNode("/what/version").data())
+    self.assertEqual("H5rad 2.3", nodelist.getNode("/what/version").data())
     self.assertAlmostEqual(209, nodelist.getNode("/where/height").data(), 4)
     self.assertAlmostEqual(56.3675, nodelist.getNode("/where/lat").data(), 4)
     self.assertAlmostEqual(12.8544, nodelist.getNode("/where/lon").data(), 4)
@@ -2168,7 +2171,7 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEqual("VP", nodelist.getNode("/what/object").data())
     self.assertEqual("PLC:1234", nodelist.getNode("/what/source").data())
     self.assertEqual("120000", nodelist.getNode("/what/time").data())
-    self.assertEqual("H5rad 2.2", nodelist.getNode("/what/version").data())
+    self.assertEqual("H5rad 2.3", nodelist.getNode("/what/version").data())
     
     self.assertAlmostEqual(100.0, nodelist.getNode("/where/height").data(), 4)
     self.assertAlmostEqual(15.0, nodelist.getNode("/where/lat").data(), 4)
@@ -2285,7 +2288,7 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEqual("VP", nodelist.getNode("/what/object").data())
     self.assertEqual("PLC:1234", nodelist.getNode("/what/source").data())
     self.assertEqual("120000", nodelist.getNode("/what/time").data())
-    self.assertEqual("H5rad 2.2", nodelist.getNode("/what/version").data())
+    self.assertEqual("H5rad 2.3", nodelist.getNode("/what/version").data())
     
     self.assertAlmostEqual(100.0, nodelist.getNode("/where/height").data(), 4)
     self.assertAlmostEqual(15.0, nodelist.getNode("/where/lat").data(), 4)
@@ -2378,7 +2381,7 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEqual("VP", nodelist.getNode("/dataset1/what/product").data())
     self.assertEqual("PLC:Leksand", nodelist.getNode("/what/source").data())
     self.assertEqual("120000", nodelist.getNode("/what/time").data())
-    self.assertEqual("H5rad 2.2", nodelist.getNode("/what/version").data())
+    self.assertEqual("H5rad 2.3", nodelist.getNode("/what/version").data())
     
     self.assertAlmostEqual(100.0, nodelist.getNode("/where/height").data(), 4)
     self.assertAlmostEqual(15.0, nodelist.getNode("/where/lat").data(), 4)
@@ -2922,6 +2925,80 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertAlmostEqual(7.8, obj.object.getImage(1).getParameter("CCORH").getAttribute("how/NEZH"), 2)
     self.assertAlmostEqual(7.9, obj.object.getImage(1).getParameter("CCORH").getAttribute("how/zcalH"), 2)
     self.assertAlmostEqual(8.0, obj.object.getImage(1).getParameter("CCORH").getAttribute("how/nsampleH"), 2)
+
+  def test_read_22_write_23_scan(self):
+    rio = _raveio.open(self.FIXTURE_SEHEM_SCAN_0_5)
+    self.assertEqual(_raveio.RaveIO_ODIM_Version_2_2, rio.read_version)
+    self.assertEqual(_raveio.RaveIO_ODIM_Version_2_3, rio.version)
+    rio.object.removeAttribute("how/software")
+    rio.object.source = "%s,WIGOS:0-123-1-123456"%rio.object.source
+    rio.save(self.TEMPORARY_FILE)
+
+    # Verify result
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+    #print(str(nodelist.getNodeNames()))
+    self.assertEqual("ODIM_H5/V2_3", nodelist.getNode("/Conventions").data())
+    self.assertTrue("/dataset1/what/prodname" in nodelist.getNodeNames())
+    self.assertTrue("BALTRAD", nodelist.getNode("/how/software").data())
+    self.assertEqual("BALTRAD scan", nodelist.getNode("/dataset1/what/prodname").data())
+    self.assertTrue("WIGOS:0-123-1-123456" in nodelist.getNode("/what/source").data())
+
+  def test_read_22_write_22_scan(self):
+    rio = _raveio.open(self.FIXTURE_SEHEM_SCAN_0_5)
+    self.assertEqual(_raveio.RaveIO_ODIM_Version_2_2, rio.read_version)
+    self.assertEqual(_raveio.RaveIO_ODIM_Version_2_3, rio.version)
+    rio.object.removeAttribute("how/software") #Exists in fixture. Remove to ensure that we get it added.
+    rio.object.source = "%s,WIGOS:0-123-1-123456"%rio.object.source
+    rio.version = _raveio.RaveIO_ODIM_Version_2_2
+    rio.save(self.TEMPORARY_FILE)
+
+    # Verify result
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+    #print(str(nodelist.getNodeNames()))
+    self.assertEqual("ODIM_H5/V2_2", nodelist.getNode("/Conventions").data())
+    self.assertFalse("/dataset1/what/prodname" in nodelist.getNodeNames())
+    self.assertTrue("BALTRAD", nodelist.getNode("/how/software").data())
+    self.assertFalse("WIGOS:0-123-1-123456" in nodelist.getNode("/what/source").data())
+
+  def test_read_22_write_22_source_wo_wigos_1_scan(self):
+    rio = _raveio.open(self.FIXTURE_SEHEM_SCAN_0_5)
+    rio.object.source = "WIGOS:0-123-1-123456,WMO:02588,RAD:SE47,PLC:Hemse(Ase),NOD:sehem,ORG:82,CTY:643,CMT:Swedish radar"
+    rio.version = _raveio.RaveIO_ODIM_Version_2_2
+    rio.save(self.TEMPORARY_FILE)
+
+    # Verify result
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+    self.assertEqual("WMO:02588,RAD:SE47,PLC:Hemse(Ase),NOD:sehem,ORG:82,CTY:643,CMT:Swedish radar", nodelist.getNode("/what/source").data())
+
+  def test_read_22_write_22_source_wo_wigos_2_scan(self):
+    rio = _raveio.open(self.FIXTURE_SEHEM_SCAN_0_5)
+    rio.object.source = "WMO:02588,WIGOS:0-123-1-123456,RAD:SE47,PLC:Hemse(Ase),NOD:sehem,ORG:82,CTY:643,CMT:Swedish radar"
+    rio.version = _raveio.RaveIO_ODIM_Version_2_2
+    rio.save(self.TEMPORARY_FILE)
+
+    # Verify result
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+    self.assertEqual("WMO:02588,RAD:SE47,PLC:Hemse(Ase),NOD:sehem,ORG:82,CTY:643,CMT:Swedish radar", nodelist.getNode("/what/source").data())
+
+  def test_read_22_write_22_source_wo_wigos_3_scan(self):
+    rio = _raveio.open(self.FIXTURE_SEHEM_SCAN_0_5)
+    rio.object.source = "WMO:02588,RAD:SE47,PLC:Hemse(Ase),NOD:sehem,ORG:82,CTY:643,CMT:Swedish radar,WIGOS:0-123-1-123456"
+    rio.version = _raveio.RaveIO_ODIM_Version_2_2
+    rio.save(self.TEMPORARY_FILE)
+
+    # Verify result
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+    self.assertEqual("WMO:02588,RAD:SE47,PLC:Hemse(Ase),NOD:sehem,ORG:82,CTY:643,CMT:Swedish radar", nodelist.getNode("/what/source").data())
 
   def testBufrTableDir(self):
     obj = _raveio.new()
