@@ -1161,7 +1161,6 @@ static struct PyMethodDef _pypolarscan_methods[] =
   {"endtime", NULL},
   {"enddate", NULL},
   {"source", NULL},
-  {"prodname", NULL},
   {"use_azimuthal_nav_information", NULL},
   {"defaultparameter", NULL},
   {"projection", NULL},
@@ -1488,13 +1487,6 @@ static PyObject* _pypolarscan_getattro(PyPolarScan* self, PyObject* name)
     } else {
       Py_RETURN_NONE;
     }
-  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("prodname", name) == 0) {
-    const char* str = PolarScan_getProdname(self->scan);
-    if (str != NULL) {
-      return PyRaveAPI_StringOrUnicode_FromASCII(str);
-    } else {
-      Py_RETURN_NONE;
-    }
   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("defaultparameter", name) == 0) {
     const char* str = PolarScan_getDefaultParameter(self->scan);
     if (str != NULL) {
@@ -1656,16 +1648,6 @@ static int _pypolarscan_setattro(PyPolarScan* self, PyObject* name, PyObject* va
     } else {
       raiseException_gotoTag(done, PyExc_ValueError, "source must be a string");
     }
-  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("prodname", name) == 0) {
-    if (PyString_Check(val)) {
-      if (!PolarScan_setProdname(self->scan, PyString_AsString(val))) {
-        raiseException_gotoTag(done, PyExc_ValueError, "prodname must be a string");
-      }
-    } else if (val == Py_None) {
-      PolarScan_setProdname(self->scan, NULL);
-    } else {
-      raiseException_gotoTag(done, PyExc_ValueError, "prodname must be a string");
-    }
   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("defaultparameter", name) == 0) {
     if (PyString_Check(val)) {
       if (!PolarScan_setDefaultParameter(self->scan, PyString_AsString(val))) {
@@ -1740,7 +1722,6 @@ PyDoc_STRVAR(_pypolarscan_type_doc,
     "endtime          - Time the collection of this polar scan ended as a string with format HHmmSS\n"
     "enddate          - Date the collection of this polar scan ended as a string in the format YYYYMMDD\n"
     "source           - The source for this product. Defined as what/source in ODIM H5. I.e. a comma separated list of various identifiers. For example. NOD:seang,WMO:1234,....\n"
-    "prodname         - Product name.\n"
     "use_azimuthal_nav_information - If astart/startazA/stopazA should be used when calculating indexes\n"
     "defaultparameter - Since a polar scan is a container of a number of different parameters, this setting allows the user to define a default parameter that will allow for operations directly in the scan instead of getting the parameter.\n"
     "\n"

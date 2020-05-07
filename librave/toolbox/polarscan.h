@@ -192,21 +192,6 @@ int PolarScan_setSource(PolarScan_t* scan, const char* value);
 const char* PolarScan_getSource(PolarScan_t* scan);
 
 /**
- * Sets the product name
- * @param[in] self - self
- * @param[in] prodname - the product name
- * @returns 1 on success, otherwise 0
- */
-int PolarScan_setProdname(PolarScan_t* self, const char* prodname);
-
-/**
- * Returns the product name
- * @param[in] self - self
- * @return the product name or NULL if not set
- */
-const char* PolarScan_getProdname(PolarScan_t* self);
-
-/**
  * Sets the longitude
  * @param[in] scan - self
  * @param[in] lon - the longitude

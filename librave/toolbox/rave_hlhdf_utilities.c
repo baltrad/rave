@@ -86,6 +86,16 @@ static const struct OdimVersionToStrTypeMap ODIM_VERSION_STR_MAP[] = {
     {-2, NULL}
 };
 
+/** Mapping between version and str */
+static const struct OdimVersionToStrTypeMap ODIM_VERSION_H5RAD_STR_MAP[] = {
+    {RaveIO_ODIM_Version_UNDEFINED, "UNDEFINED"},
+    {RaveIO_ODIM_Version_2_0, RAVE_ODIM_H5RAD_VERSION_2_0_STR},
+    {RaveIO_ODIM_Version_2_1, RAVE_ODIM_H5RAD_VERSION_2_1_STR},
+    {RaveIO_ODIM_Version_2_2, RAVE_ODIM_H5RAD_VERSION_2_2_STR},
+    {RaveIO_ODIM_Version_2_3, RAVE_ODIM_H5RAD_VERSION_2_3_STR},
+    {-2, NULL}
+};
+
 /**
  * Attribute names that has to be translated when jumping from 2.0/2.1 up to 2.2
  */
@@ -200,6 +210,22 @@ const char* RaveHL_getOdimVersionString(RaveIO_ODIM_Version version)
     idx++;
   }
   return ODIM_VERSION_STR_MAP[0].str; /*UNDEFINED*/
+}
+
+
+/**
+ *
+ */
+const char* RaveHL_getH5RadVersionStringFromOdimVersion(RaveIO_ODIM_Version version)
+{
+  int idx = 0;
+  while (ODIM_VERSION_H5RAD_STR_MAP[idx].str != NULL) {
+    if (ODIM_VERSION_H5RAD_STR_MAP[idx].version == version) {
+      return ODIM_VERSION_H5RAD_STR_MAP[idx].str;
+    }
+    idx++;
+  }
+  return ODIM_VERSION_H5RAD_STR_MAP[0].str; /*UNDEFINED*/
 }
 
 /**

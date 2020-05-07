@@ -605,6 +605,23 @@ fail:
   return NULL;
 }
 
+/**
+ * Removes the specified attribute if there is one
+ * @param[in] self - this instance
+ * @param[in] args - name
+ * @returns True if attribute exists otherwise False
+ */
+static PyObject* _pypolarvolume_removeAttribute(PyPolarVolume* self, PyObject* args)
+{
+  char* name = NULL;
+  if (!PyArg_ParseTuple(args, "s", &name)) {
+    return NULL;
+  }
+  PolarVolume_removeAttribute(self->pvol, name);
+  Py_RETURN_NONE;
+}
+
+
 static PyObject* _pypolarvolume_hasAttribute(PyPolarVolume* self, PyObject* args)
 {
   RaveAttribute_t* attribute = NULL;
@@ -790,6 +807,10 @@ static struct PyMethodDef _pypolarvolume_methods[] =
   {"getAttributeNames", (PyCFunction) _pypolarvolume_getAttributeNames, 1,
     "getAttributeNames() -> array of names \n\n"
     "Returns the attribute names associated with this volume"
+  },
+  {"removeAttribute", (PyCFunction) _pypolarvolume_removeAttribute, 1,
+     "removeAttribute() \n\n"
+     "Removes the specified attribute if there is one."
   },
   {"hasAttribute", (PyCFunction) _pypolarvolume_hasAttribute, 1,
     "hasAttribute(name) -> a boolean \n\n"

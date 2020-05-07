@@ -1025,6 +1025,31 @@ RaveAttribute_t* PolarVolume_getAttribute(PolarVolume_t* pvol,
   return (RaveAttribute_t*)RaveObjectHashTable_get(pvol->attrs, name);
 }
 
+void PolarVolume_removeAttribute(PolarVolume_t* pvol, const char* attrname)
+{
+  char* aname = NULL;
+  char* gname = NULL;
+  RAVE_ASSERT((pvol != NULL), "scan == NULL");
+  if (attrname != NULL) {
+    if (!RaveAttributeHelp_extractGroupAndName(attrname, &gname, &aname)) {
+      RAVE_ERROR1("Failed to extract group and name from %s", attrname);
+      goto done;
+    }
+    if (strcasecmp("how", gname)==0) {
+      if (!RaveAttributeHelp_validateHowGroupAttributeName(gname, aname)) {
+        RAVE_ERROR1("Not possible to validate how/group attribute name %s", attrname);
+        goto done;
+      }
+      RaveCoreObject* attr = RaveObjectHashTable_remove(pvol->attrs, attrname);
+      RAVE_OBJECT_RELEASE(attr);
+    }
+  }
+
+done:
+  RAVE_FREE(aname);
+  RAVE_FREE(gname);
+}
+
 RaveList_t* PolarVolume_getAttributeNames(PolarVolume_t* pvol)
 {
   RAVE_ASSERT((pvol != NULL), "pvol == NULL");

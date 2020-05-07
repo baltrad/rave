@@ -60,6 +60,7 @@ class PyRaveIOTest(unittest.TestCase):
   FIXTURE_BUFR_2_2="fixtures/odim_2_2_ref.bfr"
   FIXTURE_HUV_WITH_0_86_BW="fixtures/scan_sehuv_1.5_20110126T184600Z.h5"
   FIXTURE_SEHEM_SCAN_0_5="fixtures/sehem_scan_20200414T160000Z.h5"
+  FIXTURE_SEHEM_PVOL="fixtures/sehem_qcvol_20200507T064500Z.h5"
   
   TEMPORARY_FILE="ravemodule_iotest.h5"
   TEMPORARY_FILE2="ravemodule_iotest2.h5"
@@ -1879,50 +1880,6 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertAlmostEqual(1.0, ddata[1], 2)
     self.assertAlmostEqual(5.0, ddata[5], 2)
 
-  def test_write_scan_with_prodname(self):
-    obj = _raveio.open(self.FIXTURE_VOLUME)
-    vol = obj.object
-    scan = vol.getScan(0)
-    self.assertEqual(None, scan.prodname)
-    scan.prodname = "Nisses product"
-    
-    obj = _raveio.new()
-    obj.object = scan
-    obj.filename = self.TEMPORARY_FILE
-    obj.save()
-
-    # Verify data
-    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
-    nodelist.selectAll()
-    nodelist.fetch()
-    
-    self.assertEqual("Nisses product", nodelist.getNode("/dataset1/what/prodname").data())
-
-    # Just verify that we can read it as well.
-    obj = _raveio.open(self.TEMPORARY_FILE).object
-    self.assertEqual("Nisses product", obj.prodname)
-    
-  def test_write_scan_with_default_prodname(self):
-    obj = _raveio.open(self.FIXTURE_VOLUME)
-    vol = obj.object
-    scan = vol.getScan(0)
-    self.assertEqual(None, scan.prodname)
-    
-    obj = _raveio.new()
-    obj.object = scan
-    obj.filename = self.TEMPORARY_FILE
-    obj.save()
-
-    # Verify data
-    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
-    nodelist.selectAll()
-    nodelist.fetch()
-    
-    self.assertEqual("BALTRAD scan", nodelist.getNode("/dataset1/what/prodname").data())
-
-    # Just verify that we can read it as well.
-    obj = _raveio.open(self.TEMPORARY_FILE).object
-    self.assertEqual("BALTRAD scan", obj.prodname)
 
   def test_read_scanparam_with_array(self):
     obj = _raveio.open(self.FIXTURE_VOLUME)
@@ -2940,9 +2897,9 @@ class PyRaveIOTest(unittest.TestCase):
     nodelist.fetch()
     #print(str(nodelist.getNodeNames()))
     self.assertEqual("ODIM_H5/V2_3", nodelist.getNode("/Conventions").data())
-    self.assertTrue("/dataset1/what/prodname" in nodelist.getNodeNames())
+    self.assertEqual("H5rad 2.3", nodelist.getNode("/what/version").data())
+    
     self.assertTrue("BALTRAD", nodelist.getNode("/how/software").data())
-    self.assertEqual("BALTRAD scan", nodelist.getNode("/dataset1/what/prodname").data())
     self.assertTrue("WIGOS:0-123-1-123456" in nodelist.getNode("/what/source").data())
 
   def test_read_22_write_22_scan(self):
@@ -2960,7 +2917,7 @@ class PyRaveIOTest(unittest.TestCase):
     nodelist.fetch()
     #print(str(nodelist.getNodeNames()))
     self.assertEqual("ODIM_H5/V2_2", nodelist.getNode("/Conventions").data())
-    self.assertFalse("/dataset1/what/prodname" in nodelist.getNodeNames())
+    self.assertEqual("H5rad 2.2", nodelist.getNode("/what/version").data())
     self.assertTrue("BALTRAD", nodelist.getNode("/how/software").data())
     self.assertFalse("WIGOS:0-123-1-123456" in nodelist.getNode("/what/source").data())
 
@@ -2999,6 +2956,45 @@ class PyRaveIOTest(unittest.TestCase):
     nodelist.selectAll()
     nodelist.fetch()
     self.assertEqual("WMO:02588,RAD:SE47,PLC:Hemse(Ase),NOD:sehem,ORG:82,CTY:643,CMT:Swedish radar", nodelist.getNode("/what/source").data())
+
+  #
+  def test_read_22_write_23_volume(self):
+    rio = _raveio.open(self.FIXTURE_SEHEM_PVOL)
+    self.assertEqual(_raveio.RaveIO_ODIM_Version_2_2, rio.read_version)
+    self.assertEqual(_raveio.RaveIO_ODIM_Version_2_3, rio.version)
+    rio.object.removeAttribute("how/software")
+    rio.object.source = "%s,WIGOS:0-123-1-123456"%rio.object.source
+    rio.save(self.TEMPORARY_FILE)
+
+    # Verify result
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+    #print(str(nodelist.getNodeNames()))
+    self.assertEqual("ODIM_H5/V2_3", nodelist.getNode("/Conventions").data())
+    self.assertEqual("H5rad 2.3", nodelist.getNode("/what/version").data())
+    self.assertTrue("BALTRAD", nodelist.getNode("/how/software").data())
+    self.assertTrue("WIGOS:0-123-1-123456" in nodelist.getNode("/what/source").data())
+
+
+  def test_read_22_write_22_volume(self):
+    rio = _raveio.open(self.FIXTURE_SEHEM_PVOL)
+    self.assertEqual(_raveio.RaveIO_ODIM_Version_2_2, rio.read_version)
+    self.assertEqual(_raveio.RaveIO_ODIM_Version_2_3, rio.version)
+    rio.object.removeAttribute("how/software")
+    rio.object.source = "%s,WIGOS:0-123-1-123456"%rio.object.source
+    rio.version = _raveio.RaveIO_ODIM_Version_2_2
+    rio.save(self.TEMPORARY_FILE)
+
+    # Verify result
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+    #print(str(nodelist.getNodeNames()))
+    self.assertEqual("ODIM_H5/V2_2", nodelist.getNode("/Conventions").data())
+    self.assertEqual("H5rad 2.2", nodelist.getNode("/what/version").data())
+    self.assertTrue("BALTRAD", nodelist.getNode("/how/software").data())
+    self.assertFalse("WIGOS:0-123-1-123456" in nodelist.getNode("/what/source").data())
 
   def testBufrTableDir(self):
     obj = _raveio.new()

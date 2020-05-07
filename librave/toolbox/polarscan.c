@@ -48,8 +48,6 @@ struct _PolarScan_t {
 
   char* source;    /**< the source string */
 
-  char* prodname;  /**< Product name */
-
   long nbins;      /**< number of bins */
   long nrays;      /**< number of rays */
 
@@ -115,7 +113,6 @@ static int PolarScan_constructor(RaveCoreObject* obj)
   scan->nrays = 0;
   scan->datetime = NULL;
   scan->source = NULL;
-  scan->prodname = NULL;
   scan->elangle = 0.0;
   scan->rscale = 0.0;
   scan->rstart = 0.0;
@@ -206,7 +203,6 @@ static int PolarScan_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj
   this->rayWidth = src->rayWidth;
 
   this->source = NULL;
-  this->prodname = NULL;
   this->datetime = RAVE_OBJECT_CLONE(src->datetime);
   this->startdatetime = RAVE_OBJECT_CLONE(src->startdatetime);
   this->enddatetime = RAVE_OBJECT_CLONE(src->enddatetime);
@@ -227,9 +223,6 @@ static int PolarScan_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj
   if (!PolarScan_setDefaultParameter(this, PolarScan_getDefaultParameter(src))) {
     goto error;
   }
-  if (!PolarScan_setProdname(this, PolarScan_getProdname(src))) {
-    goto error;
-  }
   if (src->azimuthArr != NULL && src->azimuthArrLen > 0) {
     this->azimuthArr = RAVE_MALLOC(sizeof(double) * src->azimuthArrLen);
     if (this->azimuthArr == NULL) {
@@ -241,7 +234,6 @@ static int PolarScan_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj
   return 1;
 error:
   RAVE_FREE(this->source);
-  RAVE_FREE(this->prodname);
   RAVE_OBJECT_RELEASE(this->datetime);
   RAVE_OBJECT_RELEASE(this->startdatetime);
   RAVE_OBJECT_RELEASE(this->enddatetime);
@@ -263,7 +255,6 @@ static void PolarScan_destructor(RaveCoreObject* obj)
 {
   PolarScan_t* scan = (PolarScan_t*)obj;
   RAVE_FREE(scan->source);
-  RAVE_FREE(scan->prodname);
   RAVE_OBJECT_RELEASE(scan->datetime);
   RAVE_OBJECT_RELEASE(scan->startdatetime);
   RAVE_OBJECT_RELEASE(scan->enddatetime);
@@ -548,30 +539,6 @@ const char* PolarScan_getSource(PolarScan_t* scan)
 {
   RAVE_ASSERT((scan != NULL), "scan == NULL");
   return (const char*)scan->source;
-}
-
-int PolarScan_setProdname(PolarScan_t* self, const char* prodname)
-{
-  int result = 0;
-  RAVE_ASSERT((self != NULL), "self == NULL");
-  if (prodname != NULL) {
-    char* tmp = RAVE_STRDUP(prodname);
-    if (tmp != NULL) {
-      RAVE_FREE(self->prodname);
-      self->prodname = tmp;
-      result = 1;
-    }
-  } else {
-    RAVE_FREE(self->prodname);
-    result = 1;
-  }
-  return result;
-}
-
-const char* PolarScan_getProdname(PolarScan_t* self)
-{
-  RAVE_ASSERT((self != NULL), "self == NULL");
-  return (const char*)self->prodname;
 }
 
 void PolarScan_setLongitude(PolarScan_t* scan, double lon)

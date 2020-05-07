@@ -330,14 +330,6 @@ static int PolarOdimIOInternal_loadDsScanAttribute(void* object, RaveAttribute_t
         RAVE_WARNING0("what/product did not identify as a SCAN!");
       }
       result = 1;
-    } else if (strcasecmp("what/prodname", name) == 0) {
-      char* value = NULL;
-      RaveAttribute_getString(attribute, &value);
-      if (value != NULL) {
-        if (!(result = PolarScan_setProdname(scan, value))) {
-          RAVE_ERROR1("Failed to set what/prodname with value = %s", value);
-        }
-      }
     } else if (strcasecmp("where/nbins", name) == 0 ||
                strcasecmp("where/nrays", name) == 0) {
       result = 1;
@@ -1005,7 +997,7 @@ int PolarOdimIO_fillScan(PolarOdimIO_t* self, PolarScan_t* scan, HL_NodeList* no
   if (attributes != NULL) {
     const char* objectType = RaveTypes_getStringFromObjectType(Rave_ObjectType_SCAN);
     if (!RaveUtilities_addStringAttributeToList(attributes, "what/object", objectType) ||
-        !RaveUtilities_replaceStringAttributeInList(attributes, "what/version", RAVE_ODIM_H5RAD_VERSION_2_3_STR)) {
+        !RaveUtilities_replaceStringAttributeInList(attributes, "what/version", RaveHL_getH5RadVersionStringFromOdimVersion(self->version))) {
       RAVE_ERROR0("Failed to add what/object or what/version to attributes");
       goto done;
     }
@@ -1060,18 +1052,6 @@ int PolarOdimIO_fillScan(PolarOdimIO_t* self, PolarScan_t* scan, HL_NodeList* no
     goto done;
   }
 
-  if (self->version >= RaveIO_ODIM_Version_2_3) {
-    if (PolarScan_getProdname(scan) == NULL) {
-      if (!RaveUtilities_replaceStringAttributeInList(attributes, "what/prodname", "BALTRAD scan")) {
-        goto done;
-      }
-    } else {
-      if (!RaveUtilities_replaceStringAttributeInList(attributes, "what/prodname", PolarScan_getProdname(scan))) {
-        goto done;
-      }
-    }
-  }
-
   if (!RaveHL_addAttributes(nodelist, attributes, "/dataset1")) {
     goto done;
   }
@@ -1097,6 +1077,7 @@ int PolarOdimIO_fillVolume(PolarOdimIO_t* self, PolarVolume_t* volume, HL_NodeLi
 {
   int result = 0;
   RaveObjectList_t* attributes = NULL;
+  char* source = NULL;
 
   int nrscans = 0;
   int index = 0;
@@ -1106,7 +1087,7 @@ int PolarOdimIO_fillVolume(PolarOdimIO_t* self, PolarVolume_t* volume, HL_NodeLi
   RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
 
   if (!RaveHL_hasNodeByName(nodelist, "/Conventions")) {
-    if (!RaveHL_createStringValue(nodelist, RAVE_ODIM_VERSION_2_3_STR, "/Conventions")) {
+    if (!RaveHL_createStringValue(nodelist, RaveHL_getOdimVersionString(self->version), "/Conventions")) {
       goto done;
     }
   }
@@ -1115,7 +1096,7 @@ int PolarOdimIO_fillVolume(PolarOdimIO_t* self, PolarVolume_t* volume, HL_NodeLi
   if (attributes != NULL) {
     const char* objectType = RaveTypes_getStringFromObjectType(Rave_ObjectType_PVOL);
     if (!RaveUtilities_addStringAttributeToList(attributes, "what/object", objectType) ||
-        !RaveUtilities_replaceStringAttributeInList(attributes, "what/version", RAVE_ODIM_H5RAD_VERSION_2_3_STR)) {
+        !RaveUtilities_replaceStringAttributeInList(attributes, "what/version", RaveHL_getH5RadVersionStringFromOdimVersion(self->version))) {
       RAVE_ERROR0("Failed to add what/object or what/version to attributes");
       goto done;
     }
@@ -1124,15 +1105,23 @@ int PolarOdimIO_fillVolume(PolarOdimIO_t* self, PolarVolume_t* volume, HL_NodeLi
     goto done;
   }
 
+  source = PolarOdimIOInternal_handleSourceVersion(PolarVolume_getSource(volume), self->version);
+
   if (!RaveUtilities_replaceDoubleAttributeInList(attributes, "how/beamwH", PolarVolume_getBeamwH(volume)*180.0/M_PI) ||
       !RaveUtilities_replaceDoubleAttributeInList(attributes, "how/beamwV", PolarVolume_getBeamwV(volume)*180.0/M_PI) ||
       !RaveUtilities_replaceStringAttributeInList(attributes, "what/date", PolarVolume_getDate(volume)) ||
       !RaveUtilities_replaceStringAttributeInList(attributes, "what/time", PolarVolume_getTime(volume)) ||
-      !RaveUtilities_replaceStringAttributeInList(attributes, "what/source", PolarVolume_getSource(volume)) ||
+      !RaveUtilities_replaceStringAttributeInList(attributes, "what/source", source) ||
       !RaveUtilities_replaceDoubleAttributeInList(attributes, "where/height", PolarVolume_getHeight(volume)) ||
       !RaveUtilities_replaceDoubleAttributeInList(attributes, "where/lat", PolarVolume_getLatitude(volume)*180.0/M_PI) ||
       !RaveUtilities_replaceDoubleAttributeInList(attributes, "where/lon", PolarVolume_getLongitude(volume)*180.0/M_PI)) {
     goto done;
+  }
+
+  if (!PolarVolume_hasAttribute(volume, "how/software")) {
+    if (!RaveUtilities_addStringAttributeToList(attributes, "how/software", "BALTRAD")) {
+      RAVE_ERROR0("Failed to add how/software to attributes");
+    }
   }
 
   if (attributes == NULL || !RaveHL_addAttributes(nodelist, attributes, "")) {
@@ -1153,6 +1142,7 @@ int PolarOdimIO_fillVolume(PolarOdimIO_t* self, PolarVolume_t* volume, HL_NodeLi
 
 done:
   RAVE_OBJECT_RELEASE(attributes);
+  RAVE_FREE(source);
   return result;
 }
 /*@} End of Interface functions */

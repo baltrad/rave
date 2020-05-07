@@ -126,6 +126,14 @@ const char* RaveHL_getOdimVersionString(RaveIO_ODIM_Version version);
 RaveIO_ODIM_Version RaveHL_getOdimVersionFromString(const char* str);
 
 /**
+ * Returns the h5rad string representation of the specified odim version since we can assume that
+ * the h5rad and odim version will follow each other
+ * @param[in] version - the ODIM version
+ * @returns the string representation or UNDEFINED if not found
+ */
+const char* RaveHL_getH5RadVersionStringFromOdimVersion(RaveIO_ODIM_Version version);
+
+/**
  * Creates a rave attribute from a HLHDF node value.
  * Node must contain data that can be translated to long, double or strings otherwise
  * NULL will be returned. Note, the name will not be set on the attribute and has to

@@ -477,6 +477,13 @@ RaveAttribute_t* PolarVolume_getAttribute(PolarVolume_t* pvol,
   const char* name);
 
 /**
+ * Removes a rave attribute from the volume.
+ * @param[in] pvol - self
+ * @param[in] attrname - the name of the attribute to remove
+ */
+void PolarVolume_removeAttribute(PolarVolume_t* pvol, const char* attrname);
+
+/**
  * Returns a list of attribute names. Release with \@ref #RaveList_freeAndDestroy.
  * @param[in] pvol - self
  * @returns a list of attribute names

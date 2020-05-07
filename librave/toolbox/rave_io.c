@@ -268,11 +268,12 @@ static PolarVolume_t* RaveIOInternal_loadPolarVolume(HL_NodeList* nodelist)
  * @param[in] nodelist - the nodelist the nodes should be added to
  * @returns 1 on success otherwise 0
  */
-static int RaveIOInternal_addPolarVolumeToNodeList(PolarVolume_t* object, HL_NodeList* nodelist)
+static int RaveIOInternal_addPolarVolumeToNodeList(PolarVolume_t* object, HL_NodeList* nodelist, RaveIO_ODIM_Version version)
 {
   int result = 0;
   PolarOdimIO_t* odimio = RAVE_OBJECT_NEW(&PolarOdimIO_TYPE);
   if (odimio != NULL) {
+    PolarOdimIO_setVersion(odimio, version);
     result = PolarOdimIO_fillVolume(odimio, object, nodelist);
   }
   RAVE_OBJECT_RELEASE(odimio);
@@ -631,7 +632,7 @@ int RaveIO_save(RaveIO_t* raveio, const char* filename)
 
         if (result == 1) {
           if (RAVE_OBJECT_CHECK_TYPE(raveio->object, &PolarVolume_TYPE)) {
-            result = RaveIOInternal_addPolarVolumeToNodeList((PolarVolume_t*)raveio->object, nodelist);
+            result = RaveIOInternal_addPolarVolumeToNodeList((PolarVolume_t*)raveio->object, nodelist, raveio->version);
           } else if (RAVE_OBJECT_CHECK_TYPE(raveio->object, &CartesianVolume_TYPE)) {
             result = RaveIOInternal_addCartesianVolumeToNodeList((CartesianVolume_t*)raveio->object, nodelist);
           } else if (RAVE_OBJECT_CHECK_TYPE(raveio->object, &Cartesian_TYPE)) {

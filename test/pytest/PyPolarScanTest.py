@@ -105,28 +105,6 @@ class PyPolarScanTest(unittest.TestCase):
     obj.source = None
     self.assertEqual(None, obj.source)
   
-  def test_prodname(self):
-    obj = _polarscan.new()
-    self.assertEqual(None, obj.prodname)
-    obj.prodname = "product name"
-    self.assertEqual("product name", obj.prodname)
-  
-  def test_prodname_None(self):
-    obj = _polarscan.new()
-    obj.prodname = "product name"
-    obj.prodname = None
-    self.assertEqual(None, obj.prodname)
-  
-  def test_prodname_typeError(self):
-    obj = _polarscan.new()
-    self.assertEqual(None, obj.prodname)
-    try:
-      obj.prodname = 10
-      self.fail("Expected ValueError")
-    except ValueError:
-      pass
-    self.assertEqual(None, obj.prodname)
-  
   def test_longitude(self):
     obj = _polarscan.new()
     self.assertAlmostEqual(0.0, obj.longitude, 4)
