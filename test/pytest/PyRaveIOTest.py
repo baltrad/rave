@@ -2337,6 +2337,72 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEqual("ff value 1", savedvp.getField("ff").getAttribute("how/subgroup1/attrib"))
     self.assertEqual("ff value 1 2", savedvp.getField("ff").getAttribute("how/subgroup1/subgroup2/attrib"))
 
+  def test_write_read_vp_odim_23(self):
+    vp = _verticalprofile.new()
+    vp.date="20100101"
+    vp.time="120000"
+    vp.source="PLC:1234,WIGOS:0-123-1-123456"
+    vp.longitude = 10.0 * math.pi / 180.0
+    vp.latitude = 15.0 * math.pi / 180.0
+    vp.setLevels(10)
+    vp.prodname = "VP 23"
+
+    f1 = _ravefield.new()
+    f1.setData(numpy.zeros((10,1), numpy.uint8))
+    f1.addAttribute("what/quantity", "ff")
+
+    vp.addField(f1)
+
+    obj = _raveio.new()
+    obj.object = vp
+    obj.save(self.TEMPORARY_FILE2)
+
+    
+    # Verify written data
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE2)
+    nodelist.selectAll()
+    nodelist.fetch()
+
+    self.assertEqual("ODIM_H5/V2_3", nodelist.getNode("/Conventions").data())
+    self.assertEqual("H5rad 2.3", nodelist.getNode("/what/version").data())
+    
+    self.assertEqual("BALTRAD", nodelist.getNode("/how/software").data())
+    self.assertEqual("PLC:1234,WIGOS:0-123-1-123456", nodelist.getNode("/what/source").data())
+    self.assertEqual("VP 23", nodelist.getNode("/dataset1/what/prodname").data())
+
+  def test_write_read_vp_odim_22(self):
+    vp = _verticalprofile.new()
+    vp.date="20100101"
+    vp.time="120000"
+    vp.source="PLC:1234,WIGOS:0-123-1-123456"
+    vp.longitude = 10.0 * math.pi / 180.0
+    vp.latitude = 15.0 * math.pi / 180.0
+    vp.setLevels(10)
+    vp.prodname = "VP 23"
+
+    f1 = _ravefield.new()
+    f1.setData(numpy.zeros((10,1), numpy.uint8))
+    f1.addAttribute("what/quantity", "ff")
+
+    vp.addField(f1)
+
+    obj = _raveio.new()
+    obj.object = vp
+    obj.version = _raveio.RaveIO_ODIM_Version_2_2
+    obj.save(self.TEMPORARY_FILE2)
+    
+    # Verify written data
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE2)
+    nodelist.selectAll()
+    nodelist.fetch()
+
+    self.assertEqual("ODIM_H5/V2_2", nodelist.getNode("/Conventions").data())
+    self.assertEqual("H5rad 2.2", nodelist.getNode("/what/version").data())
+    
+    self.assertEqual("BALTRAD", nodelist.getNode("/how/software").data())
+    self.assertEqual("PLC:1234", nodelist.getNode("/what/source").data())
+    self.assertFalse("/dataset1/what/prodname" in nodelist.getNodeNames())
+
   def test_write_vp_dev_bird(self):
     vp = _verticalprofile.new()
     vp.date="20100101"

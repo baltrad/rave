@@ -40,6 +40,20 @@ typedef struct _VpOdimIO_t VpOdimIO_t;
 extern RaveCoreObjectType VpOdimIO_TYPE;
 
 /**
+ * Sets the version that this io class should handle.
+ * @param[in] self - self
+ * @param[in] version - the odim version
+ */
+void VpOdimIO_setVersion(VpOdimIO_t* self, RaveIO_ODIM_Version version);
+
+/**
+ * Returns the version that this io class handles.
+ * @param[in] self - self
+ * @returns - the odim version
+ */
+RaveIO_ODIM_Version VpOdimIO_getVersion(VpOdimIO_t* self);
+
+/**
  * Reads a vp from the nodelist and sets the data in the vp.
  * @param[in] self - self
  * @param[in] nodelist - the hdf5 node list

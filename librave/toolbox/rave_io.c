@@ -407,13 +407,14 @@ static RaveCoreObject* RaveIOInternal_loadVP(HL_NodeList* nodelist)
  * @param[in] nodelist - the nodelist the nodes should be added to
  * @returns 1 on success otherwise 0
  */
-static int RaveIOInternal_addVPToNodeList(VerticalProfile_t* vp, HL_NodeList* nodelist)
+static int RaveIOInternal_addVPToNodeList(VerticalProfile_t* vp, HL_NodeList* nodelist, RaveIO_ODIM_Version version)
 {
   int result = 0;
   VpOdimIO_t* odimio = NULL;
 
   odimio = RAVE_OBJECT_NEW(&VpOdimIO_TYPE);
   if (odimio != NULL) {
+    VpOdimIO_setVersion(odimio, version);
     result = VpOdimIO_fill(odimio, vp, nodelist);
   }
 
@@ -644,7 +645,7 @@ int RaveIO_save(RaveIO_t* raveio, const char* filename)
           } else if (RAVE_OBJECT_CHECK_TYPE(raveio->object, &PolarScan_TYPE)) {
             result = RaveIOInternal_addScanToNodeList((PolarScan_t*)raveio->object, nodelist, raveio->version);
           } else if (RAVE_OBJECT_CHECK_TYPE(raveio->object, &VerticalProfile_TYPE)) {
-            result = RaveIOInternal_addVPToNodeList((VerticalProfile_t*)raveio->object, nodelist);
+            result = RaveIOInternal_addVPToNodeList((VerticalProfile_t*)raveio->object, nodelist, raveio->version);
           } else {
             RAVE_ERROR0("No io support for provided object");
             result = 0;

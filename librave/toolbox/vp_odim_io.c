@@ -41,6 +41,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  */
 struct _VpOdimIO_t {
   RAVE_OBJECT_HEAD /** Always on top */
+  RaveIO_ODIM_Version version;
 };
 
 /*@{ Private functions */
@@ -49,6 +50,7 @@ struct _VpOdimIO_t {
  */
 static int VpOdimIO_constructor(RaveCoreObject* obj)
 {
+  ((VpOdimIO_t*)obj)->version = RaveIO_ODIM_Version_2_3;
   return 1;
 }
 
@@ -57,6 +59,7 @@ static int VpOdimIO_constructor(RaveCoreObject* obj)
  */
 static int VpOdimIO_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj)
 {
+  ((VpOdimIO_t*)obj)->version = ((VpOdimIO_t*)srcobj)->version;
   return 1;
 }
 
@@ -431,6 +434,17 @@ done:
 /*@} End of Private functions */
 
 /*@{ Interface functions */
+void VpOdimIO_setVersion(VpOdimIO_t* self, RaveIO_ODIM_Version version)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  self->version = version;
+}
+
+RaveIO_ODIM_Version VpOdimIO_getVersion(VpOdimIO_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return self->version;
+}
 
 int VpOdimIO_read(VpOdimIO_t* self, HL_NodeList* nodelist, VerticalProfile_t* vp)
 {
@@ -473,13 +487,14 @@ int VpOdimIO_fill(VpOdimIO_t* self, VerticalProfile_t* vp, HL_NodeList* nodelist
   int result = 0;
   RaveObjectList_t* attributes = NULL;
   RaveObjectList_t* qualityfields = NULL;
+  char* source = NULL;
 
   RAVE_ASSERT((self != NULL), "self == NULL");
   RAVE_ASSERT((vp != NULL), "vp == NULL");
   RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
 
   if (!RaveHL_hasNodeByName(nodelist, "/Conventions")) {
-    if (!RaveHL_createStringValue(nodelist, RAVE_ODIM_VERSION_2_3_STR, "/Conventions")) {
+    if (!RaveHL_createStringValue(nodelist, RaveHL_getOdimVersionString(self->version), "/Conventions")) {
       goto done;
     }
   }
@@ -488,7 +503,7 @@ int VpOdimIO_fill(VpOdimIO_t* self, VerticalProfile_t* vp, HL_NodeList* nodelist
   if (attributes != NULL) {
     const char* objectType = RaveTypes_getStringFromObjectType(Rave_ObjectType_VP);
     if (!RaveUtilities_addStringAttributeToList(attributes, "what/object", objectType) ||
-        !RaveUtilities_replaceStringAttributeInList(attributes, "what/version", RAVE_ODIM_H5RAD_VERSION_2_3_STR)) {
+        !RaveUtilities_replaceStringAttributeInList(attributes, "what/version", RaveHL_getH5RadVersionStringFromOdimVersion(self->version))) {
       RAVE_ERROR0("Failed to add what/object or what/version to attributes");
       goto done;
     }
@@ -497,9 +512,11 @@ int VpOdimIO_fill(VpOdimIO_t* self, VerticalProfile_t* vp, HL_NodeList* nodelist
     goto done;
   }
 
+  source = RaveUtilities_handleSourceVersion(VerticalProfile_getSource(vp), self->version);
+
   if (!RaveUtilities_replaceStringAttributeInList(attributes, "what/date", VerticalProfile_getDate(vp)) ||
       !RaveUtilities_replaceStringAttributeInList(attributes, "what/time", VerticalProfile_getTime(vp)) ||
-      !RaveUtilities_replaceStringAttributeInList(attributes, "what/source", VerticalProfile_getSource(vp)) ||
+      !RaveUtilities_replaceStringAttributeInList(attributes, "what/source", source) ||
       !RaveUtilities_replaceLongAttributeInList(attributes, "where/levels", VerticalProfile_getLevels(vp)) ||
       !RaveUtilities_replaceDoubleAttributeInList(attributes, "where/interval", VerticalProfile_getInterval(vp)) ||
       !RaveUtilities_replaceDoubleAttributeInList(attributes, "where/minheight", VerticalProfile_getMinheight(vp)) ||
@@ -508,6 +525,11 @@ int VpOdimIO_fill(VpOdimIO_t* self, VerticalProfile_t* vp, HL_NodeList* nodelist
       !RaveUtilities_replaceDoubleAttributeInList(attributes, "where/lat", VerticalProfile_getLatitude(vp)*180.0/M_PI) ||
       !RaveUtilities_replaceDoubleAttributeInList(attributes, "where/lon", VerticalProfile_getLongitude(vp)*180.0/M_PI)) {
     goto done;
+  }
+  if (!VerticalProfile_hasAttribute(vp, "how/software")) {
+    if (!RaveUtilities_addStringAttributeToList(attributes, "how/software", "BALTRAD")) {
+      RAVE_ERROR0("Failed to add how/software to attributes");
+    }
   }
 
   if (attributes == NULL || !RaveHL_addAttributes(nodelist, attributes, "")) {
@@ -524,13 +546,15 @@ int VpOdimIO_fill(VpOdimIO_t* self, VerticalProfile_t* vp, HL_NodeList* nodelist
 
   RaveObjectList_clear(attributes);
 
-  if (VerticalProfile_getProdname(vp) == NULL) {
-    if (!RaveUtilities_addStringAttributeToList(attributes, "what/prodname", "BALTRAD vp")) {
-      goto done;
-    }
-  } else {
-    if (!RaveUtilities_addStringAttributeToList(attributes, "what/prodname", VerticalProfile_getProdname(vp))) {
-      goto done;
+  if (self->version >= RaveIO_ODIM_Version_2_3) {
+    if (VerticalProfile_getProdname(vp) == NULL) {
+      if (!RaveUtilities_addStringAttributeToList(attributes, "what/prodname", "BALTRAD vp")) {
+        goto done;
+      }
+    } else {
+      if (!RaveUtilities_addStringAttributeToList(attributes, "what/prodname", VerticalProfile_getProdname(vp))) {
+        goto done;
+      }
     }
   }
 
@@ -582,6 +606,7 @@ int VpOdimIO_fill(VpOdimIO_t* self, VerticalProfile_t* vp, HL_NodeList* nodelist
 done:
   RAVE_OBJECT_RELEASE(attributes);
   RAVE_OBJECT_RELEASE(qualityfields);
+  RAVE_FREE(source);
   return result;
 }
 
