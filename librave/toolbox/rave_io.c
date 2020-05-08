@@ -342,15 +342,17 @@ static RaveCoreObject* RaveIOInternal_loadCartesianVolume(HL_NodeList* nodelist)
  * Adds a cartesian volume to a node list.
  * @param[in] cvol - the cartesian volume to be added to a node list
  * @param[in] nodelist - the nodelist the nodes should be added to
+ * @param[in] version - the version we want to write the ODIM file as
  * @returns 1 on success otherwise 0
  */
-static int RaveIOInternal_addCartesianVolumeToNodeList(CartesianVolume_t* cvol, HL_NodeList* nodelist)
+static int RaveIOInternal_addCartesianVolumeToNodeList(CartesianVolume_t* cvol, HL_NodeList* nodelist, RaveIO_ODIM_Version version)
 {
   int result = 0;
   CartesianOdimIO_t* odimio = NULL;
 
   odimio = RAVE_OBJECT_NEW(&CartesianOdimIO_TYPE);
   if (odimio != NULL) {
+    CartesianOdimIO_setVersion(odimio, version);
     result = CartesianOdimIO_fillVolume(odimio, nodelist, cvol);
   }
 
@@ -363,15 +365,17 @@ static int RaveIOInternal_addCartesianVolumeToNodeList(CartesianVolume_t* cvol, 
  * Adds a separate cartesian  to a node list.
  * @param[in] image - the cartesian image to be added to a node list
  * @param[in] nodelist - the nodelist the nodes should be added to
+ * @param[in] version - the version we want to write the ODIM file as
  * @returns 1 on success otherwise 0
  */
-static int RaveIOInternal_addCartesianToNodeList(Cartesian_t* image, HL_NodeList* nodelist)
+static int RaveIOInternal_addCartesianToNodeList(Cartesian_t* image, HL_NodeList* nodelist, RaveIO_ODIM_Version version)
 {
   int result = 0;
   CartesianOdimIO_t* odimio = NULL;
 
   odimio = RAVE_OBJECT_NEW(&CartesianOdimIO_TYPE);
   if (odimio != NULL) {
+    CartesianOdimIO_setVersion(odimio, version);
     result = CartesianOdimIO_fillImage(odimio, nodelist, image);
   }
 
@@ -634,9 +638,9 @@ int RaveIO_save(RaveIO_t* raveio, const char* filename)
           if (RAVE_OBJECT_CHECK_TYPE(raveio->object, &PolarVolume_TYPE)) {
             result = RaveIOInternal_addPolarVolumeToNodeList((PolarVolume_t*)raveio->object, nodelist, raveio->version);
           } else if (RAVE_OBJECT_CHECK_TYPE(raveio->object, &CartesianVolume_TYPE)) {
-            result = RaveIOInternal_addCartesianVolumeToNodeList((CartesianVolume_t*)raveio->object, nodelist);
+            result = RaveIOInternal_addCartesianVolumeToNodeList((CartesianVolume_t*)raveio->object, nodelist, raveio->version);
           } else if (RAVE_OBJECT_CHECK_TYPE(raveio->object, &Cartesian_TYPE)) {
-            result = RaveIOInternal_addCartesianToNodeList((Cartesian_t*)raveio->object, nodelist);
+            result = RaveIOInternal_addCartesianToNodeList((Cartesian_t*)raveio->object, nodelist, raveio->version);
           } else if (RAVE_OBJECT_CHECK_TYPE(raveio->object, &PolarScan_TYPE)) {
             result = RaveIOInternal_addScanToNodeList((PolarScan_t*)raveio->object, nodelist, raveio->version);
           } else if (RAVE_OBJECT_CHECK_TYPE(raveio->object, &VerticalProfile_TYPE)) {

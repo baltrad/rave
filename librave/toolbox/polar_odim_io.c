@@ -933,49 +933,6 @@ done:
   return result;
 }
 
-char* PolarOdimIOInternal_handleSourceVersion(const char* source, RaveIO_ODIM_Version version)
-{
-  char* result = NULL;
-  RaveList_t* sourceTokens = NULL;
-  if (source != NULL) {
-    result = RAVE_STRDUP(source);
-    if (result == NULL) {
-      goto done;
-    }
-    if (version < RaveIO_ODIM_Version_2_3) {
-      char* p = strstr(result, "WIGOS:");
-      if (p != NULL) {
-        sourceTokens = RaveUtilities_getTrimmedTokens(result, (int)',');
-        if (sourceTokens != NULL) {
-          int nlen = RaveList_size(sourceTokens);
-          int i = 0;
-          for (i = nlen - 1; i >= 0; i--) {
-            char* pToken = (char*)RaveList_get(sourceTokens, i);
-            if (pToken != NULL && strstr(pToken, "WIGOS")) {
-              pToken = (char*)RaveList_remove(sourceTokens, i);
-              RAVE_FREE(pToken);
-            }
-          }
-          nlen = RaveList_size(sourceTokens);
-          strcpy(result, "");
-          for (i = 0; i < nlen; i++) {
-            char* pToken = (char*)RaveList_get(sourceTokens, i);
-            if (i > 0) {
-              strcat(result, ",");
-            }
-            strcat(result, pToken);
-          }
-        }
-      }
-    }
-  }
-done:
-  if (sourceTokens != NULL) {
-    RaveList_freeAndDestroy(&sourceTokens);
-  }
-  return result;
-}
-
 int PolarOdimIO_fillScan(PolarOdimIO_t* self, PolarScan_t* scan, HL_NodeList* nodelist)
 {
   int result = 0;
@@ -1006,7 +963,7 @@ int PolarOdimIO_fillScan(PolarOdimIO_t* self, PolarScan_t* scan, HL_NodeList* no
     goto done;
   }
 
-  source = PolarOdimIOInternal_handleSourceVersion(PolarScan_getSource(scan), self->version);
+  source = RaveUtilities_handleSourceVersion(PolarScan_getSource(scan), self->version);
 
   if (!RaveUtilities_replaceDoubleAttributeInList(attributes, "how/beamwH", PolarScan_getBeamwH(scan)*180.0/M_PI) ||
       !RaveUtilities_replaceDoubleAttributeInList(attributes, "how/beamwV", PolarScan_getBeamwV(scan)*180.0/M_PI) ||
@@ -1105,7 +1062,7 @@ int PolarOdimIO_fillVolume(PolarOdimIO_t* self, PolarVolume_t* volume, HL_NodeLi
     goto done;
   }
 
-  source = PolarOdimIOInternal_handleSourceVersion(PolarVolume_getSource(volume), self->version);
+  source = RaveUtilities_handleSourceVersion(PolarVolume_getSource(volume), self->version);
 
   if (!RaveUtilities_replaceDoubleAttributeInList(attributes, "how/beamwH", PolarVolume_getBeamwH(volume)*180.0/M_PI) ||
       !RaveUtilities_replaceDoubleAttributeInList(attributes, "how/beamwV", PolarVolume_getBeamwV(volume)*180.0/M_PI) ||

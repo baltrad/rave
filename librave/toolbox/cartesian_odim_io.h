@@ -41,6 +41,20 @@ typedef struct _CartesianOdimIO_t CartesianOdimIO_t;
 extern RaveCoreObjectType CartesianOdimIO_TYPE;
 
 /**
+ * Sets the version that this io class should handle.
+ * @param[in] self - self
+ * @param[in] version - the odim version
+ */
+void CartesianOdimIO_setVersion(CartesianOdimIO_t* self, RaveIO_ODIM_Version version);
+
+/**
+ * Returns the version that this io class handles.
+ * @param[in] self - self
+ * @returns - the odim version
+ */
+RaveIO_ODIM_Version CartesianOdimIO_getVersion(CartesianOdimIO_t* self);
+
+/**
  * Reads a cartesian from the nodelist and sets the data in the cartesian.
  * @param[in] self - self
  * @param[in] nodelist - the hdf5 node list

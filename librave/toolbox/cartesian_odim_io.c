@@ -42,6 +42,7 @@ typedef struct CartesianOdimArg {
  */
 struct _CartesianOdimIO_t {
   RAVE_OBJECT_HEAD /** Always on top */
+  RaveIO_ODIM_Version version;
 };
 
 /*@{ Private functions */
@@ -50,6 +51,7 @@ struct _CartesianOdimIO_t {
  */
 static int CartesianOdimIO_constructor(RaveCoreObject* obj)
 {
+  ((CartesianOdimIO_t*)obj)->version = RaveIO_ODIM_Version_2_3;
   return 1;
 }
 
@@ -58,6 +60,7 @@ static int CartesianOdimIO_constructor(RaveCoreObject* obj)
  */
 static int CartesianOdimIO_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj)
 {
+  ((CartesianOdimIO_t*)obj)->version = ((CartesianOdimIO_t*)srcobj)->version;
   return 1;
 }
 
@@ -645,7 +648,7 @@ done:
  * @param[in] nodelist - the nodelist the nodes should be added to
  * @returns 1 on success otherwise 0
  */
-static int CartesianOdimIOInternal_addCartesianImageToNodeList(Cartesian_t* cartesian, HL_NodeList* nodelist, const char* fmt, ...)
+static int CartesianOdimIOInternal_addCartesianImageToNodeList(Cartesian_t* cartesian, RaveIO_ODIM_Version version, HL_NodeList* nodelist, const char* fmt, ...)
 {
   int result = 0;
   char nodeName[1024];
@@ -685,6 +688,18 @@ static int CartesianOdimIOInternal_addCartesianImageToNodeList(Cartesian_t* cart
       !RaveUtilities_addStringAttributeToList(attributes, "what/enddate", Cartesian_getEndDate(cartesian)) ||
       !RaveUtilities_addStringAttributeToList(attributes, "what/endtime", Cartesian_getEndTime(cartesian))) {
     goto done;
+  }
+
+  if (version >= RaveIO_ODIM_Version_2_3) {
+    if (Cartesian_getProdname(cartesian) == NULL) {
+      if (!RaveUtilities_addStringAttributeToList(attributes, "what/prodname", "BALTRAD cartesian")) {
+        goto done;
+      }
+    } else {
+      if (!RaveUtilities_addStringAttributeToList(attributes, "what/prodname", Cartesian_getProdname(cartesian))) {
+        goto done;
+      }
+    }
   }
 
   if (!RaveHL_addAttributes(nodelist, attributes, nodeName)) {
@@ -874,7 +889,17 @@ done:
 /*@} End of Private functions */
 
 /*@{ Interface functions */
+void CartesianOdimIO_setVersion(CartesianOdimIO_t* self, RaveIO_ODIM_Version version)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  self->version = version;
+}
 
+RaveIO_ODIM_Version CartesianOdimIO_getVersion(CartesianOdimIO_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return self->version;
+}
 int CartesianOdimIO_readCartesian(CartesianOdimIO_t* self, HL_NodeList* nodelist, Cartesian_t* cartesian)
 {
   int result = 0;
@@ -988,6 +1013,7 @@ int CartesianOdimIO_fillImage(CartesianOdimIO_t* self, HL_NodeList* nodelist, Ca
   Projection_t* projection = NULL;
   RaveObjectList_t* qualityfields = NULL;
   RaveList_t* params = NULL;
+  char* source = NULL;
 
   RAVE_ASSERT((self != NULL), "self == NULL");
   RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
@@ -1007,7 +1033,7 @@ int CartesianOdimIO_fillImage(CartesianOdimIO_t* self, HL_NodeList* nodelist, Ca
   }
 
   if (!RaveHL_hasNodeByName(nodelist, "/Conventions")) {
-    if (!RaveHL_createStringValue(nodelist, RAVE_ODIM_VERSION_2_3_STR, "/Conventions")) {
+    if (!RaveHL_createStringValue(nodelist, RaveHL_getOdimVersionString(self->version), "/Conventions")) {
       goto done;
     }
   }
@@ -1016,7 +1042,7 @@ int CartesianOdimIO_fillImage(CartesianOdimIO_t* self, HL_NodeList* nodelist, Ca
   if (attributes != NULL) {
     const char* objectType = RaveTypes_getStringFromObjectType(Cartesian_getObjectType(cartesian));
     if (!RaveUtilities_addStringAttributeToList(attributes, "what/object", objectType) ||
-        !RaveUtilities_replaceStringAttributeInList(attributes, "what/version", RAVE_ODIM_H5RAD_VERSION_2_3_STR)) {
+        !RaveUtilities_replaceStringAttributeInList(attributes, "what/version", RaveHL_getH5RadVersionStringFromOdimVersion(self->version))) {
       RAVE_ERROR0("Failed to add what/object or what/version to attributes");
       goto done;
     }
@@ -1037,9 +1063,11 @@ int CartesianOdimIO_fillImage(CartesianOdimIO_t* self, HL_NodeList* nodelist, Ca
     }
   }
 
+  source = RaveUtilities_handleSourceVersion(Cartesian_getSource(cartesian), self->version);
+
   if (!RaveUtilities_addStringAttributeToList(attributes, "what/date", Cartesian_getDate(cartesian)) ||
       !RaveUtilities_addStringAttributeToList(attributes, "what/time", Cartesian_getTime(cartesian)) ||
-      !RaveUtilities_addStringAttributeToList(attributes, "what/source", Cartesian_getSource(cartesian)) ||
+      !RaveUtilities_addStringAttributeToList(attributes, "what/source", source) ||
       !RaveUtilities_addDoubleAttributeToList(attributes, "where/xscale", Cartesian_getXScale(cartesian)) ||
       !RaveUtilities_addDoubleAttributeToList(attributes, "where/yscale", Cartesian_getYScale(cartesian)) ||
       !RaveUtilities_replaceLongAttributeInList(attributes, "where/xsize", Cartesian_getXSize(cartesian)) ||
@@ -1067,13 +1095,15 @@ int CartesianOdimIO_fillImage(CartesianOdimIO_t* self, HL_NodeList* nodelist, Ca
     goto done;
   }
 
-  if (Cartesian_getProdname(cartesian) == NULL) {
-    if (!RaveUtilities_addStringAttributeToList(attributes, "what/prodname", "BALTRAD cartesian")) {
-      goto done;
-    }
-  } else {
-    if (!RaveUtilities_addStringAttributeToList(attributes, "what/prodname", Cartesian_getProdname(cartesian))) {
-      goto done;
+  if (self->version >= RaveIO_ODIM_Version_2_3) {
+    if (Cartesian_getProdname(cartesian) == NULL) {
+      if (!RaveUtilities_addStringAttributeToList(attributes, "what/prodname", "BALTRAD cartesian")) {
+        goto done;
+      }
+    } else {
+      if (!RaveUtilities_addStringAttributeToList(attributes, "what/prodname", Cartesian_getProdname(cartesian))) {
+        goto done;
+      }
     }
   }
 
@@ -1111,6 +1141,7 @@ done:
   RAVE_OBJECT_RELEASE(attributes);
   RAVE_OBJECT_RELEASE(projection);
   RAVE_OBJECT_RELEASE(qualityfields);
+  RAVE_FREE(source);
   return result;
 }
 
@@ -1121,6 +1152,7 @@ int CartesianOdimIO_fillVolume(CartesianOdimIO_t* self, HL_NodeList* nodelist, C
   int i = 0;
   RaveObjectList_t* attributes = NULL;
   Projection_t* projection = NULL;
+  char* source = NULL;
 
   RAVE_ASSERT((self != NULL), "self == NULL");
   RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
@@ -1132,7 +1164,7 @@ int CartesianOdimIO_fillVolume(CartesianOdimIO_t* self, HL_NodeList* nodelist, C
   }
 
   if (!RaveHL_hasNodeByName(nodelist, "/Conventions")) {
-    if (!RaveHL_createStringValue(nodelist, RAVE_ODIM_VERSION_2_3_STR, "/Conventions")) {
+    if (!RaveHL_createStringValue(nodelist, RaveHL_getOdimVersionString(self->version), "/Conventions")) {
       goto done;
     }
   }
@@ -1141,7 +1173,7 @@ int CartesianOdimIO_fillVolume(CartesianOdimIO_t* self, HL_NodeList* nodelist, C
   if (attributes != NULL) {
     const char* objectType = RaveTypes_getStringFromObjectType(CartesianVolume_getObjectType(volume));
     if (!RaveUtilities_addStringAttributeToList(attributes, "what/object", objectType) ||
-        !RaveUtilities_replaceStringAttributeInList(attributes, "what/version", RAVE_ODIM_H5RAD_VERSION_2_3_STR)) {
+        !RaveUtilities_replaceStringAttributeInList(attributes, "what/version", RaveHL_getH5RadVersionStringFromOdimVersion(self->version))) {
       RAVE_ERROR0("Failed to add what/object or what/version to attributes");
       goto done;
     }
@@ -1149,9 +1181,11 @@ int CartesianOdimIO_fillVolume(CartesianOdimIO_t* self, HL_NodeList* nodelist, C
     goto done;
   }
 
+  source = RaveUtilities_handleSourceVersion(CartesianVolume_getSource(volume), self->version);
+
   if (!RaveUtilities_addStringAttributeToList(attributes, "what/date", CartesianVolume_getDate(volume)) ||
       !RaveUtilities_addStringAttributeToList(attributes, "what/time", CartesianVolume_getTime(volume)) ||
-      !RaveUtilities_addStringAttributeToList(attributes, "what/source", CartesianVolume_getSource(volume)) ||
+      !RaveUtilities_addStringAttributeToList(attributes, "what/source", source) ||
       !RaveUtilities_addDoubleAttributeToList(attributes, "where/xscale", CartesianVolume_getXScale(volume)) ||
       !RaveUtilities_addDoubleAttributeToList(attributes, "where/yscale", CartesianVolume_getYScale(volume)) ||
       !RaveUtilities_replaceLongAttributeInList(attributes, "where/xsize", CartesianVolume_getXSize(volume)) ||
@@ -1182,12 +1216,13 @@ int CartesianOdimIO_fillVolume(CartesianOdimIO_t* self, HL_NodeList* nodelist, C
   nrImages = CartesianVolume_getNumberOfImages(volume);
   for (i = 0; result == 1 && i < nrImages; i++) {
     Cartesian_t* image = CartesianVolume_getImage(volume, i);
-    result = CartesianOdimIOInternal_addCartesianImageToNodeList(image, nodelist, "/dataset%d", (i+1));
+    result = CartesianOdimIOInternal_addCartesianImageToNodeList(image, self->version, nodelist, "/dataset%d", (i+1));
     RAVE_OBJECT_RELEASE(image);
   }
 done:
   RAVE_OBJECT_RELEASE(attributes);
   RAVE_OBJECT_RELEASE(projection);
+  RAVE_FREE(source);
   return result;
 }
 
