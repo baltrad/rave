@@ -45,6 +45,8 @@ struct _CartesianVolume_t {
   Projection_t* projection;     /**< this volumes projection definition */
   double xscale;                /**< x scale */
   double yscale;                /**< y scale */
+  double zscale;                /**< z scale, introduced with ODIM 2.3 */
+  double zstart;                /**< Height in meters above mean sea level of the lowest pixel in the Z dimension, introduced with ODIM 2.3 */
   double llX;                   /**< lower left x-coordinate */
   double llY;                   /**< lower left y-coordinate */
   double urX;                   /**< upper right x-coordinate */
@@ -68,6 +70,8 @@ static int CartesianVolume_constructor(RaveCoreObject* obj)
   this->projection = NULL;
   this->xscale = 0.0;
   this->yscale = 0.0;
+  this->zscale = 0.0;
+  this->zstart = 0.0;
   this->xsize = 0;
   this->ysize = 0;
   this->llX = 0.0;
@@ -99,8 +103,10 @@ static int CartesianVolume_copyconstructor(RaveCoreObject* obj, RaveCoreObject* 
   this->attrs = RAVE_OBJECT_CLONE(src->attrs);
   this->xscale = src->xscale;
   this->yscale = src->yscale;
+  this->zscale = src->zscale;
   this->xsize = src->xsize;
   this->ysize = src->ysize;
+  this->zstart = src->zstart;
   this->llX = src->llX;
   this->llY = src->llY;
   this->urX = src->urX;
@@ -256,6 +262,18 @@ double CartesianVolume_getYScale(CartesianVolume_t* cvol)
   return cvol->yscale;
 }
 
+void CartesianVolume_setZScale(CartesianVolume_t* cvol, double zscale)
+{
+  RAVE_ASSERT((cvol != NULL), "cvol == NULL");
+  cvol->zscale = zscale;
+}
+
+double CartesianVolume_getZScale(CartesianVolume_t* cvol)
+{
+  RAVE_ASSERT((cvol != NULL), "cvol == NULL");
+  return cvol->zscale;
+}
+
 long CartesianVolume_getXSize(CartesianVolume_t* cvol)
 {
   RAVE_ASSERT((cvol != NULL), "cvol == NULL");
@@ -268,6 +286,23 @@ long CartesianVolume_getYSize(CartesianVolume_t* cvol)
   return cvol->ysize;
 }
 
+long CartesianVolume_getZSize(CartesianVolume_t* cvol)
+{
+  RAVE_ASSERT((cvol != NULL), "cvol == NULL");
+  return CartesianVolume_getNumberOfImages(cvol);;
+}
+
+void CartesianVolume_setZStart(CartesianVolume_t* cvol, double zstart)
+{
+  RAVE_ASSERT((cvol != NULL), "cvol == NULL");
+  cvol->zstart = zstart;
+}
+
+double CartesianVolume_getZStart(CartesianVolume_t* cvol)
+{
+  RAVE_ASSERT((cvol != NULL), "cvol == NULL");
+  return cvol->zstart;
+}
 void CartesianVolume_setAreaExtent(CartesianVolume_t* cvol, double llX, double llY, double urX, double urY)
 {
   RAVE_ASSERT((cvol != NULL), "cvol == NULL");

@@ -153,6 +153,34 @@ void CartesianVolume_setYScale(CartesianVolume_t* cvol, double yscale);
 double CartesianVolume_getYScale(CartesianVolume_t* cvol);
 
 /**
+ * Sets the zscale
+ * @param[in] cvol - self
+ * @param[in] zscale - the zscale
+ */
+void CartesianVolume_setZScale(CartesianVolume_t* cvol, double zscale);
+
+/**
+ * Returns the zscale
+ * @param[in] cvol - self
+ * @return the zscale
+ */
+double CartesianVolume_getZScale(CartesianVolume_t* cvol);
+
+/**
+ * Sets the zstart
+ * @param[in] cvol - self
+ * @param[in] zstart - the zstart
+ */
+void CartesianVolume_setZStart(CartesianVolume_t* cvol, double zstart);
+
+/**
+ * Returns the zstart
+ * @param[in] cvol - self
+ * @return the zstart
+ */
+double CartesianVolume_getZStart(CartesianVolume_t* cvol);
+
+/**
  * Returns the xsize
  * @param[in] cvol - self
  * @return the xsize
@@ -166,6 +194,12 @@ long CartesianVolume_getXSize(CartesianVolume_t* cvol);
  */
 long CartesianVolume_getYSize(CartesianVolume_t* cvol);
 
+/**
+ * Returns the zsize, should be same as number of images in volume
+ * @param[in] cvol - self
+ * @return the zsize
+ */
+long CartesianVolume_getZSize(CartesianVolume_t* cvol);
 
 /**
  * Sets the area extent for this cartesian product.

@@ -296,8 +296,23 @@ static int CartesianOdimIOInternal_loadVolumeRootAttribute(void* object, RaveAtt
       goto done;
     }
     CartesianVolume_setYScale(volume, value);
+  } else if (strcasecmp("where/zscale", name)==0) {
+    double value = 0.0;
+    if (!(result = RaveAttribute_getDouble(attribute, &value))) {
+      RAVE_ERROR0("where/zscale not a double");
+      goto done;
+    }
+    CartesianVolume_setZScale(volume, value);
+  } else if (strcasecmp("where/zstart", name)==0) {
+    double value = 0.0;
+    if (!(result = RaveAttribute_getDouble(attribute, &value))) {
+      RAVE_ERROR0("where/zstart not a double");
+      goto done;
+    }
+    CartesianVolume_setZStart(volume, value);
   } else if (strcasecmp("where/xsize", name)==0 ||
-             strcasecmp("where/ysize", name)==0 ) {
+             strcasecmp("where/ysize", name)==0 ||
+             strcasecmp("where/zsize", name)==0) {
     result = 1;
   } else if (strcasecmp("where/LL_lon", name)==0 ||
              strcasecmp("where/LL_lat", name)==0 ||
@@ -1191,6 +1206,14 @@ int CartesianOdimIO_fillVolume(CartesianOdimIO_t* self, HL_NodeList* nodelist, C
       !RaveUtilities_replaceLongAttributeInList(attributes, "where/xsize", CartesianVolume_getXSize(volume)) ||
       !RaveUtilities_replaceLongAttributeInList(attributes, "where/ysize", CartesianVolume_getYSize(volume))) {
     goto done;
+  }
+
+  if (self->version >= RaveIO_ODIM_Version_2_3) {
+    if (!RaveUtilities_addDoubleAttributeToList(attributes, "where/zscale", CartesianVolume_getZScale(volume)) ||
+        !RaveUtilities_addDoubleAttributeToList(attributes, "where/zstart", CartesianVolume_getZStart(volume)) ||
+        !RaveUtilities_addLongAttributeToList(attributes, "where/zsize", CartesianVolume_getZSize(volume))) {
+      goto done;
+    }
   }
 
   // Add projection + extent if possible

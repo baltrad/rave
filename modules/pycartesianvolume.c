@@ -406,8 +406,11 @@ static struct PyMethodDef _pycartesianvolume_methods[] =
   {"objectType", NULL},
   {"xscale", NULL},
   {"yscale", NULL},
+  {"zscale", NULL},
+  {"zstart", NULL},
   {"xsize", NULL},
   {"ysize", NULL},
+  {"zsize", NULL},
   {"projection", NULL},
   {"areaextent", NULL},
   {"addImage", (PyCFunction) _pycartesianvolume_addImage, 1,
@@ -495,10 +498,16 @@ static PyObject* _pycartesianvolume_getattro(PyCartesianVolume* self, PyObject* 
     return PyFloat_FromDouble(CartesianVolume_getXScale(self->cvol));
   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("yscale", name) == 0) {
     return PyFloat_FromDouble(CartesianVolume_getYScale(self->cvol));
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("zscale", name) == 0) {
+    return PyFloat_FromDouble(CartesianVolume_getZScale(self->cvol));
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("zstart", name) == 0) {
+    return PyFloat_FromDouble(CartesianVolume_getZStart(self->cvol));
   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("xsize", name) == 0) {
     return PyInt_FromLong(CartesianVolume_getXSize(self->cvol));
   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("ysize", name) == 0) {
     return PyInt_FromLong(CartesianVolume_getYSize(self->cvol));
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("zsize", name) == 0) {
+    return PyInt_FromLong(CartesianVolume_getZSize(self->cvol));
   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("areaextent", name) == 0) {
     double llX = 0.0, llY = 0.0, urX = 0.0, urY = 0.0;
     CartesianVolume_getAreaExtent(self->cvol, &llX, &llY, &urX, &urY);
@@ -557,6 +566,26 @@ static int _pycartesianvolume_setattro(PyCartesianVolume* self, PyObject* name, 
       CartesianVolume_setYScale(self->cvol, PyFloat_AsDouble(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError,"yscale must be of type float");
+    }
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("zscale", name)==0) {
+    if (PyFloat_Check(val)) {
+      CartesianVolume_setZScale(self->cvol, PyFloat_AsDouble(val));
+    } else if (PyLong_Check(val)) {
+      CartesianVolume_setZScale(self->cvol, (double)PyLong_AsLong(val));
+    } else if (PyInt_Check(val)) {
+      CartesianVolume_setZScale(self->cvol, (double)PyInt_AsLong(val));
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError,"zscale must be of type float");
+    }
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("zstart", name)==0) {
+    if (PyFloat_Check(val)) {
+      CartesianVolume_setZStart(self->cvol, PyFloat_AsDouble(val));
+    } else if (PyLong_Check(val)) {
+      CartesianVolume_setZStart(self->cvol, (double)PyLong_AsLong(val));
+    } else if (PyInt_Check(val)) {
+      CartesianVolume_setZStart(self->cvol, (double)PyInt_AsLong(val));
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError,"zstart must be of type float");
     }
   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("projection", name) == 0) {
     if (PyProjection_Check(val)) {

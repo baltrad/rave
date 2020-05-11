@@ -1039,16 +1039,27 @@ class PyRaveIOTest(unittest.TestCase):
 
     obj.object.source = "%s,WIGOS:0-123-1-123456"%obj.object.source
     obj.object.getImage(0).prodname="NISSE"
+    obj.object.zscale = 123.0
+    obj.object.zstart = 432.0
     rio = _raveio.new()
     rio.object = obj.object
     rio.save(self.TEMPORARY_FILE)
-    
+
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+    self.assertAlmostEqual(123.0, nodelist.getNode("/where/zscale").data(), 4)
+    self.assertAlmostEqual(432.0, nodelist.getNode("/where/zstart").data(), 4)
+    self.assertEqual(1, nodelist.getNode("/where/zsize").data())
+
     nrio = _raveio.open(self.TEMPORARY_FILE)
     self.assertEqual(_raveio.RaveIO_ODIM_Version_2_3, nrio.version)
     self.assertEqual(_raveio.RaveIO_ODIM_Version_2_3, nrio.read_version)
     self.assertEqual(_raveio.RaveIO_ODIM_H5rad_Version_2_3, nrio.h5radversion)
     self.assertEqual(obj.object.source, nrio.object.source)
     self.assertEqual("NISSE", nrio.object.getImage(0).prodname)
+    self.assertAlmostEqual(123.0, nrio.object.zscale, 4)
+    self.assertAlmostEqual(432.0, nrio.object.zstart, 4)
         
   def test_load_cartesian_volume_20_save_22(self):
     obj = _raveio.open(self.FIXTURE_CVOL_CAPPI)
@@ -1065,12 +1076,21 @@ class PyRaveIOTest(unittest.TestCase):
     rio.version = _raveio.RaveIO_ODIM_Version_2_2
     rio.save(self.TEMPORARY_FILE)
 
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+    self.assertFalse("/where/zscale" in nodelist.getNodeNames())
+    self.assertFalse("/where/zstart" in nodelist.getNodeNames())
+    self.assertFalse("/where/zsize" in nodelist.getNodeNames())
+    
     nrio = _raveio.open(self.TEMPORARY_FILE)
     self.assertEqual(_raveio.RaveIO_ODIM_Version_2_3, nrio.version)
     self.assertEqual(_raveio.RaveIO_ODIM_Version_2_2, nrio.read_version)
     self.assertEqual(_raveio.RaveIO_ODIM_H5rad_Version_2_2, nrio.h5radversion)
     self.assertEqual(originalstr, nrio.object.source)
     self.assertEqual(None, nrio.object.getImage(0).prodname)
+    self.assertAlmostEqual(0.0, nrio.object.zscale, 4)
+    self.assertAlmostEqual(0.0, nrio.object.zstart, 4)
 
   def test_load_cartesian_volume_save_cartesian_image(self):
     obj = _raveio.open(self.FIXTURE_CVOL_CAPPI)
