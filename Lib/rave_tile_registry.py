@@ -42,6 +42,7 @@ import xml.etree.ElementTree as ET
 import _area
 import rave_pgf_logger
 import area_registry
+import math
 
 from rave_defines import RAVE_TILE_REGISTRY
 
@@ -108,18 +109,31 @@ def generate_tiles_for_area(aid, tiles):
   ydistance = a.extent[3]-a.extent[1]
   xtilesize = xdistance / float(tiles[0])
   ytilesize = ydistance / float(tiles[1])
-  
+
+  # We need to adjust area extents so that they are evenly dividable with xscale so that we don't get gaps when rounding
+  modxtilesize = math.floor(xtilesize / a.xscale) * a.xscale
+  xoffset = xtilesize - modxtilesize
+  xtilesize=modxtilesize
+  modytilesize = math.floor(ytilesize / a.yscale) * a.yscale
+  yoffset = ytilesize - modytilesize
+  ytilesize = modytilesize
+
   ulY = a.extent[3]
   
   result=[]
   for y in range(tiles[1]):
     ulY_end = ulY - ytilesize
+    if y == tiles[1] - 1:
+      ulY_end = ulY_end - (y+1)*yoffset
     ulX = a.extent[0]
     for x in range(tiles[0]):
       ulX_end = ulX + xtilesize
+      if x == tiles[0] - 1:
+        ulX_end = ulX_end + (x+1)*xoffset
       result.append(tiledef("%d_%d"%(y,x), (ulX,ulY_end,ulX_end,ulY)))
       ulX = ulX_end
     ulY = ulY_end
+
   return result
 
 ##
