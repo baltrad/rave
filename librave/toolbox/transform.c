@@ -639,9 +639,8 @@ static int TransformInternal_addTileToParameter(Transform_t* self, Cartesian_t* 
   sysize = Cartesian_getYSize(source);
 
   /* A tile should have some sort of offset in relation to the target */
-  xoffset = (long)rint((sllX - tllX) / xscale);
-  yoffset = (long)rint((turY - surY) / yscale);
-
+  xoffset = (long)((sllX - tllX) / xscale); /*previously rint but that will ocassionally cause gaps between tiles*/
+  yoffset = (long)((turY - surY) / yscale); /*and it's better to always floor it*/
   for (x = 0; x < sxsize; x++) {
     for (y = 0; y < sysize; y++) {
       double v = 0.0;
