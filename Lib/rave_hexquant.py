@@ -35,7 +35,7 @@ import numpy as np
 QUANTFILE = os.path.join(RAVECONFIG, "odim_quantities.xml")
 QUANTITIES = []
 initialized = 0
-bitl = list(np.zeros((64,), np.uint8))  # A 64-element long list of unsigned bytes. Used as an intermediate information holder.
+bitl = list(np.zeros((128,), np.uint8))  # A 64-element long list of unsigned bytes. Used as an intermediate information holder.
 
 use_long_type=False
 if sys.version_info < (3,):
@@ -130,15 +130,15 @@ def bitl2long(bitl):
       out = long(0)
       
     for bit in bitl:
-        out = (out << 1) | bit
+        out = (out << 1) | int(bit)
     return out
 
 
 ## Long integer to bit string
 # @param long integer
-# @returns list of 8-bit bytes, each representing one bit in a 64-bit integer
+# @returns list of 8-bit bytes, each representing one bit in a 128-bit integer
 def long2bits(l):
-    return format(l, '064b')
+    return format(l, '128b')
 
 
 ## hex string to long integer
