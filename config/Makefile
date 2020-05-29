@@ -34,6 +34,11 @@ install:
 	      cp -v -f $$i ${DESTDIR}${prefix}/config/; \
 	    fi; \
 	done
+	if [ -f ${DESTDIR}${prefix}/config/odim_quantities.xml ]; then \
+	  \rm -f ${DESTDIR}${prefix}/config/odim_quantities.xml; \
+	fi
+	cp -v -f odim_quantities.xml ${DESTDIR}${prefix}/config/;
+	 
 
 .PHONY:clean
 clean: ;
