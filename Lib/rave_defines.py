@@ -48,11 +48,11 @@ RAVE_VERSIONS = ('2.0')
 
 # HDF5 Information model version
 H5RAD_VERSION = 'H5rad 2.0'
-H5RAD_VERSIONS = ('H5rad 1.2', 'H5rad 2.0', 'H5rad 2.1', 'H5rad 2.2')
+H5RAD_VERSIONS = ('H5rad 1.2', 'H5rad 2.0', 'H5rad 2.1', 'H5rad 2.2', 'H5rad 2.3')
 
 # ODIM_H5 version
 ODIM_VERSION = 'ODIM_H5/V2_0'
-ODIM_VERSIONS = ('ODIM_H5/V2_0', 'ODIM_H5/V2_1', 'ODIM_H5/V2_2')
+ODIM_VERSIONS = ('ODIM_H5/V2_0', 'ODIM_H5/V2_1', 'ODIM_H5/V2_2', 'ODIM_H5/V2_3')
 
 # Default text encoding
 ENCODING = 'iso-8859-1'
