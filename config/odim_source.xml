@@ -255,13 +255,12 @@
     <eslpa plc="Artenara" rad="SP60" wmo="60028"></eslpa>
   </es>
   <se CCCC="ESWI" org="82">
-    <sekir plc="Kiruna" rad="SE40" wmo="02032"></sekir>
+    <sekrn plc="Kiruna" rad="SE40" wmo="02032"></sekrn>
     <sella plc="Luleå" rad="SE41" wmo="02092"></sella>
     <seosd plc="Östersund" rad="SE42" wmo="02200"></seosd>
     <seoer plc="Örnsköldsvik" rad="SE43" wmo="02262"></seoer>
     <sehuv plc="Hudiksvall" rad="SE44" wmo="02334"></sehuv>
     <selek plc="Leksand" rad="SE45" wmo="02430"></selek>
-    <searl plc="Arlanda" rad="SE46" wmo="02451"></searl>
     <sehem plc="Hemse (Ase)" rad="SE47" wmo="02588"></sehem>
     <seatv plc="Åtvidaberg (Vilebo)" rad="SE48" wmo="02570"></seatv>
     <sevax plc="Vara" rad="SE49" wmo="02600"></sevax>
