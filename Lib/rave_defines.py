@@ -171,5 +171,8 @@ RAVE_PGF_AZIMUTHAL_NAVIGATION=True
 #
 QITOTAL_METHOD = "minimum"
 
+# Directory specifying the output scansun path
+RAVESCANSUN_OUT = None
+
 if __name__ == "__main__":
     print(__doc__)

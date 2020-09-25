@@ -41,10 +41,14 @@ import rave_pgf_logger
 # Determining where to write the scansun output files depending on input from rave_defines.py
 # If an alternative path, RAVESCANSUN_OUT, is defined in rave_defines.py it is used,
 # otherwise the default RAVEETC is used
+scansun_outputpath = None
 try:
   from rave_defines import RAVESCANSUN_OUT
   scansun_outputpath = RAVESCANSUN_OUT
 except:
+  pass
+
+if scansun_outputpath is None:
   scansun_outputpath = RAVEETC
 
 ravebdb = None
