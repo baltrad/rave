@@ -24,6 +24,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @date 2011-06-27
 
 import sys, os, datetime
+import rave_defines
 import _raveio
 
 ## PATHS
