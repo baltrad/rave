@@ -1537,14 +1537,16 @@ class PyRaveIOTest(unittest.TestCase):
     nodelist.fetch()
     
     self.assertAlmostEqual(2.0, nodelist.getNode("/how/beamwH").data())
+    self.assertAlmostEqual(2.0, nodelist.getNode("/how/beamwidth").data())
     self.assertAlmostEqual(3.0, nodelist.getNode("/how/beamwV").data())
     self.assertAlmostEqual(4.0, nodelist.getNode("/dataset1/how/beamwH").data())
+    self.assertAlmostEqual(4.0, nodelist.getNode("/dataset1/how/beamwidth").data())
     self.assertAlmostEqual(5.0, nodelist.getNode("/dataset2/how/beamwV").data())
 
     nodenames = nodelist.getNodeNames()
     self.assertTrue("/dataset3/how/beamwidth" not in nodenames)
     self.assertTrue("/dataset4/how/beamwidth" not in nodenames)
-    
+
   def test_save_polar_scan_beamwH(self):
     obj = _polarscan.new()
     obj.time = "100000"
@@ -1572,6 +1574,7 @@ class PyRaveIOTest(unittest.TestCase):
     nodelist.fetch()
     
     self.assertAlmostEqual(1.0, nodelist.getNode("/how/beamwH").data())
+    self.assertAlmostEqual(1.0, nodelist.getNode("/how/beamwidth").data())
     self.assertAlmostEqual(2.0, nodelist.getNode("/how/beamwV").data())
 
   def test_loadScan_withBeamwidth(self):
@@ -1863,7 +1866,7 @@ class PyRaveIOTest(unittest.TestCase):
     
     nodenames = list(nodelist.getNodeNames().keys());
     VALID_NAMES=["/Conventions", "/what","/what/date","/what/object","/what/source","/what/time",
-                 "/what/version","/where","/where/height","/where/lat","/where/lon","/how","/how/beamwH","/how/beamwV","/dataset1",
+                 "/what/version","/where","/where/height","/where/lat","/where/lon","/how","/how/beamwH","/how/beamwidth","/how/beamwV","/dataset1",
                  "/dataset1/data1","/dataset1/data1/data","/dataset1/data1/data/CLASS","/dataset1/data1/data/IMAGE_VERSION",
                  "/dataset1/data1/what","/dataset1/data1/what/gain","/dataset1/data1/what/nodata","/dataset1/data1/what/offset",
                  "/dataset1/data1/what/quantity","/dataset1/data1/what/undetect","/dataset1/data2","/dataset1/data2/data",
@@ -2728,6 +2731,7 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertAlmostEqual(1.5, obj.object.getAttribute("how/antgainH"), 2)
     self.assertAlmostEqual(1.6, obj.object.beamwH*180.0/math.pi, 2)
     #self.assertAlmostEqual(1.6, obj.object.getAttribute("how/beamwH"), 2)
+    #self.assertAlmostEqual(1.6, obj.object.getAttribute("how/beamwidth"), 2)
     self.assertAlmostEqual(1.7, obj.object.getAttribute("how/radconstH"), 2)
     self.assertAlmostEqual(1.8, obj.object.getAttribute("how/NEZH"), 2)
     self.assertAlmostEqual(1.9, obj.object.getAttribute("how/zcalH"), 2)
@@ -2739,6 +2743,7 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertAlmostEqual(3.4, obj.object.getParameter("DBZH").getAttribute("how/radomelossH"), 2)
     self.assertAlmostEqual(3.5, obj.object.getParameter("DBZH").getAttribute("how/antgainH"), 2)
     self.assertAlmostEqual(3.6, obj.object.getParameter("DBZH").getAttribute("how/beamwH"), 2)
+    self.assertAlmostEqual(3.6, obj.object.getParameter("DBZH").getAttribute("how/beamwidth"), 2)
     self.assertAlmostEqual(3.7, obj.object.getParameter("DBZH").getAttribute("how/radconstH"), 2)
     self.assertAlmostEqual(3.8, obj.object.getParameter("DBZH").getAttribute("how/NEZH"), 2)
     self.assertAlmostEqual(3.9, obj.object.getParameter("DBZH").getAttribute("how/zcalH"), 2)
@@ -2889,6 +2894,7 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertAlmostEqual(3.4, obj.object.getScan(0).getParameter("DBZH").getAttribute("how/radomelossH"), 2)
     self.assertAlmostEqual(3.5, obj.object.getScan(0).getParameter("DBZH").getAttribute("how/antgainH"), 2)
     self.assertAlmostEqual(3.6, obj.object.getScan(0).getParameter("DBZH").getAttribute("how/beamwH"), 2)
+    self.assertAlmostEqual(3.6, obj.object.getScan(0).getParameter("DBZH").getAttribute("how/beamwidth"), 2)
     self.assertAlmostEqual(3.7, obj.object.getScan(0).getParameter("DBZH").getAttribute("how/radconstH"), 2)
     self.assertAlmostEqual(3.8, obj.object.getScan(0).getParameter("DBZH").getAttribute("how/NEZH"), 2)
     self.assertAlmostEqual(3.9, obj.object.getScan(0).getParameter("DBZH").getAttribute("how/zcalH"), 2)
@@ -2900,6 +2906,7 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertAlmostEqual(5.4, obj.object.getScan(0).getParameter("VRADH").getAttribute("how/radomelossH"), 2)
     self.assertAlmostEqual(5.5, obj.object.getScan(0).getParameter("VRADH").getAttribute("how/antgainH"), 2)
     self.assertAlmostEqual(5.6, obj.object.getScan(0).getParameter("VRADH").getAttribute("how/beamwH"), 2)
+    self.assertAlmostEqual(5.6, obj.object.getScan(0).getParameter("VRADH").getAttribute("how/beamwidth"), 2)
     self.assertAlmostEqual(5.7, obj.object.getScan(0).getParameter("VRADH").getAttribute("how/radconstH"), 2)
     self.assertAlmostEqual(5.8, obj.object.getScan(0).getParameter("VRADH").getAttribute("how/NEZH"), 2)
     self.assertAlmostEqual(5.9, obj.object.getScan(0).getParameter("VRADH").getAttribute("how/zcalH"), 2)
@@ -2911,6 +2918,7 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertAlmostEqual(7.4, obj.object.getScan(1).getParameter("CCORH").getAttribute("how/radomelossH"), 2)
     self.assertAlmostEqual(7.5, obj.object.getScan(1).getParameter("CCORH").getAttribute("how/antgainH"), 2)
     self.assertAlmostEqual(7.6, obj.object.getScan(1).getParameter("CCORH").getAttribute("how/beamwH"), 2)
+    self.assertAlmostEqual(7.6, obj.object.getScan(1).getParameter("CCORH").getAttribute("how/beamwidth"), 2)
     self.assertAlmostEqual(7.7, obj.object.getScan(1).getParameter("CCORH").getAttribute("how/radconstH"), 2)
     self.assertAlmostEqual(7.8, obj.object.getScan(1).getParameter("CCORH").getAttribute("how/NEZH"), 2)
     self.assertAlmostEqual(7.9, obj.object.getScan(1).getParameter("CCORH").getAttribute("how/zcalH"), 2)

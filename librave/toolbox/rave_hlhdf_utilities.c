@@ -959,6 +959,16 @@ int RaveHL_loadAttributesAndData(HL_NodeList* nodelist, void* object, RaveHL_att
               result = attrf(object, attribute);
             }
           }
+          if (result && (strcasecmp(tmpptr, "how/beamwidth") == 0 || strcasecmp(tmpptr, "how/beamw") == 0)) { /* We convert this into how/beamwH but also need std */
+            RaveAttribute_t* beamwidthAttribute = RaveHL_createAttribute(node);
+            if (beamwidthAttribute != NULL) {
+              result = RaveAttribute_setName(beamwidthAttribute, "how/beamwidth");
+              if (result == 1 && attrf != NULL) {
+                result = attrf(object, beamwidthAttribute);
+              }
+              RAVE_OBJECT_RELEASE(beamwidthAttribute);
+            }
+          }
           RAVE_OBJECT_RELEASE(attribute);
         } else if (HLNode_getType(node) == DATASET_ID &&
             strcasecmp(tmpptr, "data")==0) {
