@@ -35,6 +35,7 @@ import rave_pgf_quality_registry
 import rave_pgf_logger
 import rave_util
 from rave_quality_plugin import QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY
+from rave_defines import RAVE_IO_DEFAULT_VERSION
 
 logger = rave_pgf_logger.create_logger()
 
@@ -134,6 +135,7 @@ def generate(files, arguments):
   ios = _raveio.new()
   ios.object = volume
   ios.filename = outfile
+  ios.version = RAVE_IO_DEFAULT_VERSION
   ios.save()
   
   logger.info("Generated new volume with QC applied.")

@@ -36,6 +36,7 @@ import _raveio, _rave
 from compositing import compositing
 
 from rave_defines import CENTER_ID, GAIN, OFFSET
+from rave_defines import RAVE_IO_DEFAULT_VERSION
 
 logger = rave_pgf_logger.create_logger()
 
@@ -166,6 +167,7 @@ def generate(files, arguments):
   rio = _raveio.new()
   rio.object = result
   rio.filename = outfile
+  rio.version = RAVE_IO_DEFAULT_VERSION
   rio.save()
 
   return outfile

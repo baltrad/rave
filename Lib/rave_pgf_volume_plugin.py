@@ -39,6 +39,7 @@ import odim_source
 import re
 import rave_pgf_quality_registry
 from rave_quality_plugin import QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY
+from rave_defines import RAVE_IO_DEFAULT_VERSION
 
 from rave_defines import CENTER_ID
 
@@ -133,6 +134,7 @@ def generate(files, arguments):
   ios = _raveio.new()
   ios.object = volume
   ios.filename = outfile
+  ios.version = RAVE_IO_DEFAULT_VERSION
   ios.save()
   
   return outfile

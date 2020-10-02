@@ -61,6 +61,7 @@ import rave_pgf_logger
 
 from rave_defines import CENTER_ID, GAIN, OFFSET
 from rave_defines import DEFAULTA, DEFAULTB, DEFAULTC
+from rave_defines import RAVE_IO_DEFAULT_VERSION
 
 logger = rave_pgf_logger.create_logger()
 
@@ -244,6 +245,7 @@ def generate(files, arguments):
   ios = _raveio.new()
   ios.object = img
   ios.filename = outfile
+  ios.version = RAVE_IO_DEFAULT_VERSION
   ios.save()
 
   return outfile

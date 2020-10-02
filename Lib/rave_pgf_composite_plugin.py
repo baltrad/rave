@@ -38,6 +38,7 @@ from tiled_compositing import tiled_compositing
 from compositing import compositing
 
 from rave_defines import GAIN, OFFSET, RAVE_PGF_QUALITY_FIELD_REPROCESSING
+from rave_defines import RAVE_IO_DEFAULT_VERSION
 
 USE_AZIMUTHAL_NAVIGATION=True
 try:
@@ -180,6 +181,7 @@ def generate(files, arguments):
   rio = _raveio.new()
   rio.object = result
   rio.filename = outfile
+  rio.version = RAVE_IO_DEFAULT_VERSION
   rio.save()
   
   return outfile
