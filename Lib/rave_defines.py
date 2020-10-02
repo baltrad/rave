@@ -24,7 +24,6 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @date 2011-06-27
 
 import sys, os, datetime
-import rave_defines
 import _raveio
 
 ## PATHS
@@ -176,7 +175,9 @@ QITOTAL_METHOD = "minimum"
 RAVESCANSUN_OUT = None
 
 # Rave IO default writing version
-RAVE_IO_DEFAULT_VERSION = _raveio.RaveIO_ODIM_Version_2_2
+#RaveIO_ODIM_Version_2_2 = 2,        /**< ODIM 2.2 */
+#RaveIO_ODIM_Version_2_3 = 3         /**< ODIM 2.3, The default version */
+RAVE_IO_DEFAULT_VERSION = 2
 
 if __name__ == "__main__":
     print(__doc__)
