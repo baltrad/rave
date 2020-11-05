@@ -1031,6 +1031,15 @@ int PolarScan_useAzimuthalNavInformation(PolarScan_t* self)
   return self->useAzimuthalNavInformation;
 }
 
+static int PolarScanInternal_handleAzimuthIndexWrap(int nrays, int index) {
+  int result = index;
+  if (result < 0 || result >= nrays) {
+    while (result >= nrays) result -= nrays;
+    while (result < 0) result += nrays;
+  }
+  return result;
+}
+
 int PolarScan_getAzimuthIndex(PolarScan_t* scan, double a, PolarScanSelectionMethod_t selectionMethod)
 {
   int result = -1;
@@ -1044,6 +1053,8 @@ int PolarScan_getAzimuthIndex(PolarScan_t* scan, double a, PolarScanSelectionMet
   azOffset = 2*M_PI/scan->nrays;
   if (scan->useAzimuthalNavInformation) {
     if (scan->hasAzimuthArr && scan->azimuthArrLen == scan->nrays) {
+      /* Old variant */
+      /*
       double dist = 360.0;
       int i = 0;
       for (i = 0; i < scan->azimuthArrLen; i++) {
@@ -1053,26 +1064,44 @@ int PolarScan_getAzimuthIndex(PolarScan_t* scan, double a, PolarScanSelectionMet
           result = i;
         }
       }
-/*
-      if (1) {
-        int wr = result;
-        int cwr = 0;
-        PolarScanInternal_roundBySelectionMethod(a/azOffset, selectionMethod, &cwr);
-        if (wr >= scan->nrays) {
-          wr -= scan->nrays;
-        } else if (wr < 0) {
-          wr += result;
+      */
+      int i = 0;
+      /** Best first guess where we try to find the index closest directly. Since the angles always will
+       * increasing / decreasing we can test index before and after to see if we have found best fit immediately.
+       * If not we either search backward or forward and break when we are starting to get increased angles again.
+       */
+      // Best first guess
+      int bestGuessIndex = PolarScanInternal_handleAzimuthIndexWrap(scan->nrays, (int)rint(a/azOffset));
+      int prevIndex = PolarScanInternal_handleAzimuthIndexWrap(scan->nrays, bestGuessIndex-1);
+      int nextIndex = PolarScanInternal_handleAzimuthIndexWrap(scan->nrays, bestGuessIndex+1);
+      double bestGuessDist = fabs(M_PI - fabs(fabs(scan->azimuthArr[bestGuessIndex] - a) - M_PI));
+      double nextGuessDist = fabs(M_PI - fabs(fabs(scan->azimuthArr[nextIndex] - a) - M_PI));
+      double prevGuessDist = fabs(M_PI - fabs(fabs(scan->azimuthArr[prevIndex] - a) - M_PI));
+
+      if (nextGuessDist < bestGuessDist) {
+        result = nextIndex;
+        for (i = 1; i < scan->azimuthArrLen; i++) {
+          int nxt = PolarScanInternal_handleAzimuthIndexWrap(scan->nrays, nextIndex+i);
+          double tmp = fabs(M_PI - fabs(fabs(scan->azimuthArr[nxt] - a) - M_PI));
+          if (tmp > nextGuessDist) { // If we start to get longer distances to original azimuth we have already reached close hit
+            break;
+          }
+          result = nxt;
         }
-        if (cwr >= scan->nrays) {
-          cwr -= scan->nrays;
-        } else if (cwr < 0) {
-          cwr += result;
+      } else if (prevGuessDist < bestGuessDist) {
+        result = prevIndex;
+        for (i = 1; i < scan->azimuthArrLen; i++) {
+          int prev = PolarScanInternal_handleAzimuthIndexWrap(scan->nrays, prevIndex-i);
+          double tmp = fabs(M_PI - fabs(fabs(scan->azimuthArr[prev] - a) - M_PI));
+          if (tmp > prevGuessDist) { // If we start to get longer distances to original azimuth we have already reached close hit
+            break;
+          }
+          result = prev;
+          prevGuessDist=tmp;
         }
-        if (wr != cwr) {
-          fprintf(stderr, "Azimuth = %f gives different index when using rotation rot=%d, classic=%d\n", a*180.0/M_PI, wr, cwr);
-        }
+      } else {
+        result = bestGuessIndex;
       }
-*/
     } else {
       if (scan->hasAstart) {
         a = a - scan->astart;
