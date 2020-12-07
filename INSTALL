@@ -24,7 +24,7 @@ and can be managed through package managers like yum, apt-get, and dpkg.
 
 You also need the following package that you probably won't find 
 bundled with your Linux. 
-- HLHDF/PyHL 0.8+
+- HLHDF/PyHL 0.9+
 
 We also have optional support for C-based handling 
 of cartographic projection and geographic area registries. 
