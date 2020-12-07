@@ -41,6 +41,7 @@ Red Hat Enterprise 6
 Mac OSX 10.5 (Leopard), 10.6 (Snow Leopard), 10.8 (Mountain Lion)
 
 
+
 ZLIB (optional)
 ---------------
 Most 64-bit  Linux distributions contain this library. It is required for HDF5 
