@@ -30,7 +30,7 @@ We also have optional support for C-based handling
 of cartographic projection and geographic area registries. 
 If you want these, you will need
 - expat 2.0.1
-which is also on most Linuces.
+which is also on most Linuces. 
 
 If you use pre-compiled packages that come along with your 64-bit Linux
 distribution, don't forget to install the respective "devel" 
