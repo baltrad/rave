@@ -20,7 +20,7 @@ installed.
 - PROJ.4 version 4.7.0 or higher
 - python-keyczar
 All of these packages are available on any credible 64-bit Linux distribution,
-and can be managed through package managers like yum, apt-get, and dpkg.
+and can be managed through package managers like yum, apt-get, and dpkg. 
 
 You also need the following package that you probably won't find 
 bundled with your Linux. 
