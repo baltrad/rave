@@ -164,6 +164,13 @@ int CartesianParam_isTransformable(CartesianParam_t* self);
 int CartesianParam_setData(CartesianParam_t* self, long xsize, long ysize, void* data, RaveDataType type);
 
 /**
+ * Sets a lazy dataset as data member. On any requests to receive data, the lazy dataset will be used to populate
+ * the internal data field.
+ * @param[in]
+ */
+int CartesianParam_setLazyDataset(CartesianParam_t* self, LazyDataset_t* lazyDataset);
+
+/**
  * Creates data with the provided specification
  * @param[in] self - self
  * @param[in] xsize - x size

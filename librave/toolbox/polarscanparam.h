@@ -33,6 +33,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_list.h"
 #include "raveobject_list.h"
 #include "rave_field.h"
+#include "lazy_dataset.h"
 
 /**
  * Defines a Polar Scan Parameter
@@ -125,6 +126,13 @@ double PolarScanParam_getUndetect(PolarScanParam_t* scanparam);
  * @return 1 on success otherwise 0
  */
 int PolarScanParam_setData(PolarScanParam_t* scanparam, long nbins, long nrays, void* data, RaveDataType type);
+
+/**
+ * Sets a lazy dataset as data member. On any requests to receive data, the lazy dataset will be used to populate
+ * the internal data field.
+ * @param[in]
+ */
+int PolarScanParam_setLazyDataset(PolarScanParam_t* scanparam, LazyDataset_t* lazyDataset);
 
 /**
  * Sets the data from a rave data 2d object

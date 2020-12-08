@@ -120,6 +120,8 @@ class compositing(object):
     self.use_site_source = False
     self.use_azimuthal_nav_information = True
     self.radar_index_mapping = {}
+    self.use_lazy_loading=True
+    self.use_lazy_loading_preloads=True
     
   def generate(self, dd, dt, area=None):
     return self._generate(dd, dt, area)
@@ -145,6 +147,8 @@ class compositing(object):
       self.logger.debug("Dumping path = %s"%str(self.dumppath))
       self.logger.debug("Dumping output = %s"%str(self.dump))
       self.logger.debug("Use site source = %s"%str(self.use_site_source))
+      self.logger.debug("Use lazy loading = %s"%str(self.use_lazy_loading))
+      self.logger.debug("Use lazy loading preload = %s"%str(self.use_lazy_loading_preloads))
       
       if area is not None:
         self.logger.debug("Area = %s"%area)
@@ -430,13 +434,18 @@ class compositing(object):
     objects={}
     tasks = []
     malfunc_files = 0
+    
+    preload_quantity=None
+    if self.use_lazy_loading and self.use_lazy_loading_preloads:
+      preload_quantity=self.quantity
+
     for fname in self.filenames:
       obj = None
       try:
         if self.ravebdb != None:
-          obj = self.ravebdb.get_rave_object(fname)
+          obj = self.ravebdb.get_rave_object(fname, self.use_lazy_loading, preload_quantity)
         else:
-          obj = _raveio.open(fname).object
+          obj = _raveio.open(fname, self.use_lazy_loading, preload_quantity).object #self.quantity
       except IOError:
         self.logger.exception("Failed to open %s", fname)
       

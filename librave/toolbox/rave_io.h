@@ -67,16 +67,20 @@ void RaveIO_close(RaveIO_t* raveio);
  * RaveIO_load(instance);
  *
  * @param[in] filename - the HDF5 file to open
+ * @param[in] lazyLoading - if file should be loaded in lazy mode or not
+ * @param[in] preloadQuantities - if lazy loading, then these quantities will be loaded immediately.
  * @returns The raveio instance on success, otherwise NULL.
  */
-RaveIO_t* RaveIO_open(const char* filename);
+RaveIO_t* RaveIO_open(const char* filename, int lazyLoading, const char* preloadQuantities);
 
 /**
  * Loads the HDF5 file into the raveio instance.
  * @param[in] raveio - self
+ * @param[in] lazyLoading - if file should be loaded in lazy mode or not
+ * @param[in] preloadQuantities - if lazy loading, then these quantities will be loaded immediately.*
  * @returns the opened object
  */
-int RaveIO_load(RaveIO_t* raveio);
+int RaveIO_load(RaveIO_t* raveio, int lazyLoading, const char* preloadQuantities);
 
 /**
  * Saves a rave object as specified according to ODIM HDF5 format specification.

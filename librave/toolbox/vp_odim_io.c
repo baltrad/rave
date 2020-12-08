@@ -266,13 +266,13 @@ done:
 /**
  * Fills the scan with information from the dataset and below. I.e. root
  * attributes are not read.
- * @param[in] nodelist - the hlhdf node list
+ * @param[in] lazyReader - the wrapper around a hlhdf node list
  * @param[in] scan - the scan
  * @param[in] fmt - the varargs format string
  * @param[in] ... - the varargs
  * @return 1 on success otherwise 0
  */
-static int VpOdimIOInternal_fillVpDataset(HL_NodeList* nodelist, VerticalProfile_t* vp, const char* fmt, ...)
+static int VpOdimIOInternal_fillVpDataset(LazyNodeListReader_t* lazyReader, VerticalProfile_t* vp, const char* fmt, ...)
 {
   int result = 0;
   OdimIoUtilityArg arg;
@@ -282,7 +282,7 @@ static int VpOdimIOInternal_fillVpDataset(HL_NodeList* nodelist, VerticalProfile
   int nName = 0;
   int pindex = 1;
 
-  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
+  RAVE_ASSERT((lazyReader != NULL), "lazyReader == NULL");
   RAVE_ASSERT((vp != NULL), "vp == NULL");
   RAVE_ASSERT((fmt != NULL), "fmt == NULL");
 
@@ -294,10 +294,11 @@ static int VpOdimIOInternal_fillVpDataset(HL_NodeList* nodelist, VerticalProfile
     goto done;
   }
 
-  arg.nodelist = nodelist;
+  arg.lazyReader = lazyReader;
+  arg.nodelist = LazyNodeListReader_getHLNodeList(lazyReader);
   arg.object = (RaveCoreObject*)vp;
 
-  if (!RaveHL_loadAttributesAndData(nodelist,
+  if (!RaveHL_loadAttributesAndData(arg.nodelist,
                                     &arg,
                                     VpOdimIOInternal_loadDsAttribute,
                                     NULL,
@@ -309,8 +310,8 @@ static int VpOdimIOInternal_fillVpDataset(HL_NodeList* nodelist, VerticalProfile
 
   result = 1;
   pindex = 1;
-  while (result == 1 && RaveHL_hasNodeByName(nodelist, "%s/data%d", name, pindex)) {
-    RaveField_t* field = OdimIoUtilities_loadField(nodelist, "%s/data%d", name, pindex);
+  while (result == 1 && RaveHL_hasNodeByName(arg.nodelist, "%s/data%d", name, pindex)) {
+    RaveField_t* field = OdimIoUtilities_loadField(lazyReader, "%s/data%d", name, pindex);
     if (field != NULL) {
       result = VerticalProfile_addField(vp, field);
     } else {
@@ -446,25 +447,26 @@ RaveIO_ODIM_Version VpOdimIO_getVersion(VpOdimIO_t* self)
   return self->version;
 }
 
-int VpOdimIO_read(VpOdimIO_t* self, HL_NodeList* nodelist, VerticalProfile_t* vp)
+int VpOdimIO_read(VpOdimIO_t* self, LazyNodeListReader_t* lazyReader, VerticalProfile_t* vp)
 {
   int result = 0;
   OdimIoUtilityArg arg;
 
   RAVE_ASSERT((self != NULL), "self == NULL");
-  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
+  RAVE_ASSERT((lazyReader != NULL), "lazyReader == NULL");
   RAVE_ASSERT((vp != NULL), "vp == NULL");
 
-  arg.nodelist = nodelist;
+  arg.lazyReader = lazyReader;
+  arg.nodelist = LazyNodeListReader_getHLNodeList(lazyReader);
   arg.object = (RaveCoreObject*)vp;
 
-  if (!RaveHL_hasNodeByName(nodelist, "/dataset1") ||
-      !RaveHL_hasNodeByName(nodelist, "/dataset1/data1")) {
+  if (!RaveHL_hasNodeByName(arg.nodelist, "/dataset1") ||
+      !RaveHL_hasNodeByName(arg.nodelist, "/dataset1/data1")) {
     RAVE_ERROR0("VP file does not contain vertical profile data...");
     goto done;
   }
 
-  if (!RaveHL_loadAttributesAndData(nodelist, &arg,
+  if (!RaveHL_loadAttributesAndData(arg.nodelist, &arg,
                                     VpOdimIOInternal_loadRootAttribute,
                                     NULL,
                                     "")) {
@@ -472,7 +474,7 @@ int VpOdimIO_read(VpOdimIO_t* self, HL_NodeList* nodelist, VerticalProfile_t* vp
     goto done;
   }
 
-  if (!VpOdimIOInternal_fillVpDataset(nodelist, vp, "/dataset1")) {
+  if (!VpOdimIOInternal_fillVpDataset(lazyReader, vp, "/dataset1")) {
     RAVE_ERROR0("Failed to fill vertical profile");
     goto done;
   }

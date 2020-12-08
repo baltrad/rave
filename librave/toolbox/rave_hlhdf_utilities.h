@@ -84,9 +84,10 @@ typedef int (*RaveHL_attr_f)(void* object, RaveAttribute_t* attr);
  * @param[in] ysize - the ysize
  * @param[in] data - the dataset data
  * @param[in] dtype - the data type
+ * @param[in] nodeName - the name of the data type
  * @return 1 on success or 0 at failure
  */
-typedef int (*RaveHL_data_f)(void* object, hsize_t xsize, hsize_t ysize, void* data, RaveDataType dtype);
+typedef int (*RaveHL_data_f)(void* object, hsize_t xsize, hsize_t ysize, void* data, RaveDataType dtype, const char* nodeName);
 
 /**
  * Group function called when a group is found

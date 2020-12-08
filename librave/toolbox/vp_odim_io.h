@@ -28,6 +28,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_object.h"
 #include "hlhdf.h"
 #include "vertical_profile.h"
+#include "lazy_nodelist_reader.h"
 
 /**
  * Defines the odim h5 adaptor for vp products
@@ -60,7 +61,7 @@ RaveIO_ODIM_Version VpOdimIO_getVersion(VpOdimIO_t* self);
  * @param[in] vp - the vertical profile that should get the attribute and data set
  * @returns 1 on success otherwise 0
  */
-int VpOdimIO_read(VpOdimIO_t* self, HL_NodeList* nodelist, VerticalProfile_t* vp);
+int VpOdimIO_read(VpOdimIO_t* self, LazyNodeListReader_t* lazyReader, VerticalProfile_t* vp);
 
 /**
  * Fills a nodelist with information about a vertical profile.

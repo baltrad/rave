@@ -25,10 +25,12 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef POLAR_ODIM_IO_H
 #define POLAR_ODIM_IO_H
+#include <lazy_nodelist_reader.h>
 #include "rave_object.h"
 #include "hlhdf.h"
 #include "polarscan.h"
 #include "polarvolume.h"
+#include "rave_list.h"
 
 /**
  * Defines the odim h5 adaptor for polar products
@@ -61,16 +63,16 @@ RaveIO_ODIM_Version PolarOdimIO_getVersion(PolarOdimIO_t* self);
  * @param[in] scan - the scan that should get the attribute and data set
  * @returns 1 on success otherwise 0
  */
-int PolarOdimIO_readScan(PolarOdimIO_t* self, HL_NodeList* nodelist, PolarScan_t* scan);
+int PolarOdimIO_readScan(PolarOdimIO_t* self, LazyNodeListReader_t* lazyReader, PolarScan_t* scan);
 
 /**
  * Reads a volume from the nodelist and sets the data in the volume.
  * @param[in] self - self
- * @param[in] nodelist - the hdf5 node list
+ * @param[in] nodelist - the lazy node list
  * @param[in] volume - the volume that should get the attribute and data set
  * @returns 1 on success otherwise 0
  */
-int PolarOdimIO_readVolume(PolarOdimIO_t* self, HL_NodeList* nodelist, PolarVolume_t* volume);
+int PolarOdimIO_readVolume(PolarOdimIO_t* self, LazyNodeListReader_t* lazyReader, PolarVolume_t* volume);
 
 /**
  * Fills a nodelist with information about a scan.

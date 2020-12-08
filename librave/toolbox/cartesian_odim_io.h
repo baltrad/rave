@@ -29,6 +29,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "hlhdf.h"
 #include "cartesian.h"
 #include "cartesianvolume.h"
+#include "lazy_nodelist_reader.h"
 
 /**
  * Defines the odim h5 adaptor for cartesian products
@@ -57,20 +58,20 @@ RaveIO_ODIM_Version CartesianOdimIO_getVersion(CartesianOdimIO_t* self);
 /**
  * Reads a cartesian from the nodelist and sets the data in the cartesian.
  * @param[in] self - self
- * @param[in] nodelist - the hdf5 node list
+ * @param[in] lazyReader - the wrapper around the hdf5 node list
  * @param[in] cartesian - the cartesian that should get the attribute and data set
  * @returns 1 on success otherwise 0
  */
-int CartesianOdimIO_readCartesian(CartesianOdimIO_t* self, HL_NodeList* nodelist, Cartesian_t* cartesian);
+int CartesianOdimIO_readCartesian(CartesianOdimIO_t* self, LazyNodeListReader_t* lazyReader, Cartesian_t* cartesian);
 
 /**
  * Reads a volume from the nodelist and sets the data in the volume.
  * @param[in] self - self
- * @param[in] nodelist - the hdf5 node list
+ * @param[in] lazyReader - the wrapper around the hdf5 node list
  * @param[in] volume - the volume that should get the attribute and data set
  * @returns 1 on success otherwise 0
  */
-int CartesianOdimIO_readVolume(CartesianOdimIO_t* self, HL_NodeList* nodelist, CartesianVolume_t* volume);
+int CartesianOdimIO_readVolume(CartesianOdimIO_t* self, LazyNodeListReader_t* lazyReader, CartesianVolume_t* volume);
 
 /**
  * Fills a HL nodelist with information from a cartesian product.

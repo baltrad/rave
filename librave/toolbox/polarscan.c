@@ -215,6 +215,7 @@ static int PolarScan_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj
       this->navigator == NULL || this->parameters == NULL ||
       this->attrs == NULL || this->qualityfields == NULL ||
       this->startdatetime == NULL || this->enddatetime == NULL) {
+    RAVE_ERROR0("Failed to clone base objects");
     goto error;
   }
   if (!PolarScan_setSource(this, PolarScan_getSource(src))) {
@@ -226,6 +227,7 @@ static int PolarScan_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj
   if (src->azimuthArr != NULL && src->azimuthArrLen > 0) {
     this->azimuthArr = RAVE_MALLOC(sizeof(double) * src->azimuthArrLen);
     if (this->azimuthArr == NULL) {
+      RAVE_ERROR0("Failed to duplicate azimuth array");
       goto error;
     }
     memcpy(this->azimuthArr, src->azimuthArr, sizeof(double) * src->azimuthArrLen);
@@ -233,6 +235,7 @@ static int PolarScan_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj
 
   return 1;
 error:
+  RAVE_ERROR0("Failed to clone polar scan");
   RAVE_FREE(this->source);
   RAVE_OBJECT_RELEASE(this->datetime);
   RAVE_OBJECT_RELEASE(this->startdatetime);
@@ -1463,6 +1466,7 @@ int PolarScan_addSurroundingNavigationInfosForTarget(
       if (navinfo != NULL) {
         navinfos[noofNavinfos] = *navinfo;
         noofNavinfos++;
+        RAVE_FREE(navinfo);
       }
     }
   }

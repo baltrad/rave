@@ -47,6 +47,7 @@ from PyTransformTest import *
 from PyVprCorrectionTest import *
 from PyProjectionTest import *
 from PyRaveIOTest import *
+from PyLazyNodeListReaderTest import *
 from PyPolarNavTest import *
 from PyAreaTest import *
 from PyRadarDefinitionTest import *

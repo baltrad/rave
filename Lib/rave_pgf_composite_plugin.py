@@ -47,6 +47,21 @@ try:
 except:
   pass
 
+USE_LAZY_LOADING=False
+USE_LAZY_LOADING_PRELOADS=False
+try:
+  from rave_defines import RAVE_PGF_COMPOSITING_USE_LAZY_LOADING
+  USE_LAZY_LOADING = RAVE_PGF_COMPOSITING_USE_LAZY_LOADING
+except:
+  pass
+
+try:
+  from rave_defines import RAVE_PGF_COMPOSITING_USE_LAZY_LOADING_PRELOADS
+  USE_LAZY_LOADING_PRELOADS = RAVE_PGF_COMPOSITING_USE_LAZY_LOADING_PRELOADS
+except:
+  pass
+
+
 logger = rave_pgf_logger.create_logger()
 
 ravebdb = None
@@ -145,6 +160,9 @@ def generate(files, arguments):
     comp.reprocess_quality_field = RAVE_PGF_QUALITY_FIELD_REPROCESSING
   
   comp.use_azimuthal_nav_information = USE_AZIMUTHAL_NAVIGATION
+
+  comp.use_lazy_loading = USE_LAZY_LOADING
+  comp.use_lazy_loading_preloads = USE_LAZY_LOADING_PRELOADS
 
   # We do not support best fit compositing right now
   #comp.pcsid = options.pcsid

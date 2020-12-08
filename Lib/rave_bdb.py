@@ -105,7 +105,7 @@ class rave_bdb(object):
   
     return self.database
 
-  def get_rave_object(self, fname):
+  def get_rave_object(self, fname, lazy_loading=False, preloadedQuantities=None):
     ''' returns the rave object as defined by the fname. If the fname is an existing file on the file system, then
     the file will be opened and returned as a rave object. If no fname can be found, an atempt to fetch the file from
     bdb is made. The fetched file will be returned as a rave object on success otherwise an exception will be raised.
@@ -114,7 +114,7 @@ class rave_bdb(object):
     :raises an exception if the rave object not can be returned
     '''
     if os.path.exists(fname):
-      return _raveio.open(fname).object
+      return _raveio.open(fname, lazy_loading, preloadedQuantities).object
 
     content = self.get_database().get_file_content(fname)
     if content:
@@ -125,7 +125,7 @@ class rave_bdb(object):
             shutil.copyfileobj(content, outf)
             outf.flush()
             outf.close()
-        return _raveio.open(tmppath).object
+        return _raveio.open(tmppath, lazy_loading, preloadedQuantities).object
       finally:
         os.unlink(tmppath)
     else:

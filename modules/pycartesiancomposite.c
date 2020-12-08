@@ -253,7 +253,7 @@ static struct PyMethodDef _pycartesiancomposite_methods[] =
   {"distance_field", NULL},
   {"add", (PyCFunction)_pycartesiancomposite_add, 1,
     "add(object)\n\n"
-    "Adds a CartesianCore object to this composite object.\n\n",
+    "Adds a CartesianCore object to this composite object.\n\n"
     "object - an object of CartesianCore type."
   },
   {"getNumberOfObjects", (PyCFunction)_pycartesiancomposite_getNumberOfObjects, 1,
