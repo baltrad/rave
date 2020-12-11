@@ -29,6 +29,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "pypolarscan.h"
 #include "pyrave_debug.h"
 #include "scansun.h"
+#include "pyraveio.h"
 
 /**
  * Debug this module
@@ -191,7 +192,7 @@ static PyObject* _scansun_func(PyObject* self, PyObject* args)
 
 	if (!scansun(filename, list, &source)) {
 		RAVE_OBJECT_RELEASE(list);
-		return NULL;
+		raiseException_returnNULL(PyExc_IOError, "Scansun could not process file");
 	}
 
 	rlist = PyList_New(0);
@@ -292,6 +293,7 @@ MOD_INIT(_scansun)
     return MOD_INIT_ERROR;
   }
 
+  import_pyraveio();
   import_pypolarvolume();
   import_pypolarscan();
   import_array();
