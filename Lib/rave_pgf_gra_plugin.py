@@ -115,6 +115,7 @@ def get_backup_gra_coefficient(db, maxage):
 
 def calculate_gra_coefficient(distancefield, interval, adjustmentfile, etime, edate, acrrproduct, db):
   matcher = obsmatcher.obsmatcher(db)
+  logger.info("rave_pgf_gra_plugin: Matching observations")
   points = matcher.match(acrrproduct, acc_period=interval, quantity="ACRR", how_task=distancefield)
   if len(points) == 0:
     logger.warn("Could not find any matching observations")
@@ -127,6 +128,7 @@ def calculate_gra_coefficient(distancefield, interval, adjustmentfile, etime, ed
   tlimit = tlimit - datetime.timedelta(hours=interval * MERGETERMS)
   dlimit = datetime.datetime(int(d[:4]), int(d[4:6]), int(d[6:8]), int(t[0:2]), int(t[2:4]), int(t[4:6]))
   dlimit = dlimit - datetime.timedelta(hours=12 * MERGETERMS)
+  logger.info("rave_pgf_gra_plugin: Deleting old observations")
   db.delete_grapoints(dlimit) # We don't want any points older than 12 hour * MERGETERMS back in time
   points = db.get_grapoints(tlimit) # Get all gra points newer than interval*MERGETERMS hours back in time
   logger.info("Using %d number of points for calculating the gra coefficients" % len(points))
@@ -150,8 +152,11 @@ def calculate_gra_coefficient(distancefield, interval, adjustmentfile, etime, ed
   NOD = odim_source.NODfromSource(acrrproduct)
   if not NOD:
     NOD = ""
+
+  logger.info("rave_pgf_gra_plugin: Merging gra coefficients")
   grac = gra_coefficient(NOD, acrrproduct.date, acrrproduct.time, significant, npoints, loss, r, sig, corr_coeff, a, b, c, float(m), float(dev))
   db.merge(grac)
+  logger.info("rave_pgf_gra_plugin: Coefficients merged")
 
 def generate(files, arguments):
   args = arglist2dict(arguments)
@@ -200,6 +205,8 @@ def generate(files, arguments):
   acrr.undetect = 0.0
   acrr.quality_field_name = distancefield
 
+  logger.info("rave_pgf_gra_plugin: Processing files")
+
   for fname in files:
     obj = None
     if ravebdb != None:
@@ -236,6 +243,8 @@ def generate(files, arguments):
       if par.getQualityFieldByHowTask(distancefield) != None:
         acrr.sum(par, zr_a, zr_b)
 
+  logger.info("rave_pgf_gra_plugin: Running acrr accumulation")
+
   # accept, N, hours
   acrrparam = acrr.accumulate(accept, N, interval)
   acrrproduct.addParameter(acrrparam)
@@ -243,7 +252,9 @@ def generate(files, arguments):
   db = rave_dom_db.create_db_from_conf()
   
   try:
+    logger.info("rave_pgf_gra_plugin: Calculating gra coefficients")
     calculate_gra_coefficient(distancefield, interval, adjustmentfile, etime, edate, acrrproduct, db)
+    logger.info("rave_pgf_gra_plugin: Coefficients calculated")
   except OperationalError as e:
     if "server closed the connection unexpectedly" in e.message:
       logger.warn("Got indication that connection reseted at server side, retrying gra coefficient generation")
