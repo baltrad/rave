@@ -32,6 +32,10 @@ from gadjust import ttest
 from numpy import *
 from rave_defines import GADJUST_STATFILE
 
+import rave_pgf_logger
+
+logger = rave_pgf_logger.create_logger()
+
 ## Generator of gauge-adjustment coefficients
 # @param points list of rave_synop.gra points
 # @param DATE string date in format YYYYMMDD
@@ -40,15 +44,19 @@ from rave_defines import GADJUST_STATFILE
 def generate(points, DATE, TIME, LOGFILE=GADJUST_STATFILE):
   g = gra(points)
 
+  logger.info("gra: calculating general_correlation")
   r, n, sig = general_correlation(points)
 
+  logger.info("gra: calculating 2nd order adjustment")
   a, b, c, m, dev, loss = g.get_2nd_order_adjustment()
 
+  logger.info("gra: Writing to logfile")
   fd = open(LOGFILE, 'a')
   sformat = "%s %s %s %i %i %f %s %f %f %f %f %f %f\n"
   fd.write(sformat % (DATE, TIME, g.significant, len(g.points), loss, r, sig, g.corr_coeff, a, b, c, m, dev))
   fd.close()
   
+  logger.info("gra: returning coefficients")
   return g.significant, len(g.points), loss, float(r), sig, float(g.corr_coeff), a, b, c, float(m), float(dev)
 
 

@@ -136,9 +136,12 @@ def calculate_gra_coefficient(distancefield, interval, adjustmentfile, etime, ed
   if len(points) > 2:
     try:
       if adjustmentfile != None:
+        logger.info("rave_pgf_gra_plugin: Performing gra coefficient generation with adjustmentfile and %d points"%len(points))
         significant, npoints, loss, r, sig, corr_coeff, a, b, c, m, dev = gra.generate(points, edate, etime, adjustmentfile)
       else:
+        logger.info("rave_pgf_gra_plugin: Performing gra coefficient generation with %d points"%len(points))
         significant, npoints, loss, r, sig, corr_coeff, a, b, c, m, dev = gra.generate(points, edate, etime)
+      logger.info("rave_pgf_gra_plugin: Finished performing gra coefficient generation")
       if math.isnan(a) or math.isnan(b) or math.isnan(c):
         logger.error("A/B or C for %s %s is not a number: %f,%f,%f" % (acrrproduct.date, acrrproduct.time, a, b, c))
         return
@@ -147,6 +150,8 @@ def calculate_gra_coefficient(distancefield, interval, adjustmentfile, etime, ed
       return
   else:
     return
+
+  logger.info("rave_pgf_gra_plugin: Getting NOD source for acrr product")
 
   # If we come here, store the coefficients in the database so that we can search for them when applying the coefficients
   NOD = odim_source.NODfromSource(acrrproduct)
