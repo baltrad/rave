@@ -445,6 +445,24 @@ done:
   return result;
 }
 
+static PyObject* _pyravefield_circshiftData(PyRaveField* self, PyObject* args)
+{
+  long x = 0, y = 0;
+  int result = 0;
+
+  if (!PyArg_ParseTuple(args, "ll", &x, &y)) {
+    return NULL;
+  }
+
+  result = RaveField_circshiftData(self->field, x, y);
+  if (!result) {
+    raiseException_returnNULL(PyExc_ValueError, "Failed to run circular shift on field");
+  }
+
+  Py_RETURN_NONE;
+}
+
+
 MOD_DIR_FORWARD_DECLARE(PyRaveField);
 
 /**
@@ -512,6 +530,12 @@ static struct PyMethodDef _pyravefield_methods[] =
     "concatx(other) -> rave field core\n\n"
     "Concatenates self with other x-wise. This requires that the fields have same ysize and same datatype. Will \n\n"
     "other - the other field that self should be concatenated with. Requires that other has same ysize and datatype as self."
+  },
+  {"circshiftData", (PyCFunction) _pyravefield_circshiftData, 1,
+    "circshiftData(x,y)\n\n"
+    "Performs a circular shift of self in both x & y dimension to modify the internal data field.\n\n"
+    "x - the number of steps to be shifted in x-direction. Can be both positive and negative\n"
+    "y - the number of steps to be shifted in y-direction. Can be both positive and negative"
   },
   {"__dir__", (PyCFunction) MOD_DIR_REFERENCE(PyRaveField), METH_NOARGS},
   {NULL, NULL } /* sentinel */

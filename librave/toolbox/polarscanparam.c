@@ -634,6 +634,23 @@ int PolarScanParam_convertDataDoubleToUchar(PolarScanParam_t* param) {
   return retval;
 }
 
+int PolarScanParam_shiftData(PolarScanParam_t* param, int nrays)
+{
+  int result = 0;
+  RAVE_ASSERT((param != NULL), "param == NULL");
+  result = RaveData2D_circshiftData(param->data, 0, nrays);
+  if (result) {
+    int i = 0;
+    int nrqualityfields = PolarScanParam_getNumberOfQualityFields(param);
+    for (i = 0; result && i < nrqualityfields; i++) {
+      RaveField_t* field = PolarScanParam_getQualityField(param, i);
+      result = RaveField_circshiftData(field, 0, nrays);
+      RAVE_OBJECT_RELEASE(field);
+    }
+  }
+  return result;
+}
+
 /*@} End of Interface functions */
 
 RaveCoreObjectType PolarScanParam_TYPE = {

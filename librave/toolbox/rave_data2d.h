@@ -217,6 +217,15 @@ RaveData2D_t* RaveData2D_concatY(RaveData2D_t* field, RaveData2D_t* other);
 RaveData2D_t* RaveData2D_circshift(RaveData2D_t* field, int nx, int ny);
 
 /**
+ * Circular shift of the internal field in x & y dimension.
+ * @param[in] field - the field to be shifted
+ * @param[in] nx - the number of steps to be shifted in x-direction. Can be both positive and negative
+ * @param[in] ny - the number of steps to be shifted in y-direction. Can be both positive and negative
+ * @returns 1 if shift was successful otherwise 0
+ */
+int RaveData2D_circshiftData(RaveData2D_t* field, int nx, int ny);
+
+/**
  * Adds the specified value to field and returns a new field
  * @param[in] field - self
  * @param[in] v - the value to add

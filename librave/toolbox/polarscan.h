@@ -561,6 +561,23 @@ void PolarScan_setUseAzimuthalNavInformation(PolarScan_t* self, int v);
 int PolarScan_useAzimuthalNavInformation(PolarScan_t* self);
 
 /**
+ * Returns the nothmost index by checking the occurance of startazA/stopazA and the index of the angle closest to north.
+ * If startazA/stopazA doesn't exist. This method will always return 0.
+ * @param[in] self - self
+ * @return the index of the northmost ray
+ */
+int PolarScan_getNorthmostIndex(PolarScan_t* self);
+
+/**
+ * Returns the rotation needed to to get the first ray in the scan to be the north most ray. If a negative  value is returned, the shift should
+ * be performed in a negative circular direction, if 0, no rotation required, if greater than 0, a positive circular shift is required.
+ * If startazA/stopazA doesn't exist. This method will always return 0.
+ * @param[in] self - self
+ * @return the rotation required to shift the scan so that first ray is the north most. If no rotation required, 0 is returned.
+ */
+int PolarScan_getRotationRequiredToNorthmost(PolarScan_t* self);
+
+/**
  * Returns the azimuth index for the specified azimuth.
  * @param[in] scan - the scan
  * @param[in] a - the azimuth (in radians)
@@ -925,6 +942,15 @@ RaveList_t* PolarScan_getAttributeNames(PolarScan_t* scan);
 RaveObjectList_t* PolarScan_getAttributeValues(PolarScan_t* scan);
 
 /**
+ * Performs a circular shift of an array attribute. if nx < 0, then shift is performed counter clockwise, if nx > 0, shift is performed clock wise, if 0, no shift is performed.
+ * @param[in] scan - self
+ * @param[in] name - attribute to shift
+ * @param[in] nx - number of positions to shift
+ * return 1 if successful, 0 if trying to shift an attribute that isn't an array or an error occurs during shift.
+ */
+int PolarScan_shiftAttribute(PolarScan_t* scan, const char* name, int nx);
+
+/**
  * Validates the scan can be seen to be valid regarding storage.
  * @param[in] scan - self
  * @param[in] otype - the object type this scan should be accounted for
@@ -958,6 +984,38 @@ RaveField_t* PolarScan_getDistanceField(PolarScan_t* self);
  * @returns the height field
  */
 RaveField_t* PolarScan_getHeightField(PolarScan_t* self);
+
+/**
+ * Performs a circular shift of the datasets that are associated with this scan. It can be negative for counter clock wise
+ * and positive for clock wise rotation.
+ * If for some reason a value != 1 is returned you should not use this scan since the internals might have been altered in such a way
+ * that there are inconsistancies.
+ * @param[in] self - self
+ * @param[in] nrays - the number of rays to shift
+ * @return 1 if successful otherwise 0
+ */
+int PolarScan_shiftData(PolarScan_t* self, int nrays);
+
+/**
+ * Performs a circular shift of the datsets that are associated with the scan and also all attributes that are associated with
+ * the rays. Currently these attributes are:
+ * - how/elangles
+ * - how/startazA
+ * - how/stopazA
+ * - how/startazT
+ * - how/stopazT
+ * - how/startelA
+ * - how/stopelA
+ * - how/startelT
+ * - how/stopelT
+ * - how/TXpower
+ * If for some reason a value != 1 is returned you should not use this scan since the internals might have been altered in such a way
+ * that there are inconsistancies.
+ * @param[in] self - self
+ * @param[in] nrays - number of rays the data & array values should be shifted. If negative, counter clockwise, if positive clockwise.
+ * @return 1 on success 0 on error
+ */
+int PolarScan_shiftDataAndAttributes(PolarScan_t* self, int nrays);
 
 /**
  * Framework internal function for setting the beamwidth in a scan,

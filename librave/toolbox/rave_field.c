@@ -312,6 +312,19 @@ RaveField_t* RaveField_concatX(RaveField_t* field, RaveField_t* other)
   return result;
 }
 
+/**
+ * Circular shift of the internal field in x & y dimension.
+ * @param[in] field - the field to be shifted
+ * @param[in] nx - the number of steps to be shifted in x-direction. Can be both positive and negative
+ * @param[in] ny - the number of steps to be shifted in y-direction. Can be both positive and negative
+ * @returns 1 if shift was successful otherwise 0
+ */
+int RaveField_circshiftData(RaveField_t* field, int nx, int ny)
+{
+  RAVE_ASSERT((field != NULL), "field == NULL");
+  return RaveData2D_circshiftData(field->data, nx, ny);
+}
+
 /*@} End of Interface functions */
 
 

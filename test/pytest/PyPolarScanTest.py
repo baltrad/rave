@@ -689,6 +689,206 @@ class PyPolarScanTest(unittest.TestCase):
       result = obj.getAzimuthIndex(azv[0]*math.pi/180.0)
       self.assertEqual(azv[1], result)
 
+  def test_getNorthmostIndex_0(self):
+    obj = _polarscan.new()
+    dbzhParam = _polarscanparam.new()
+    dbzhParam.quantity = "DBZH"
+    dbzhParam.setData(numpy.zeros((360,1),numpy.int8))
+    obj.addParameter(dbzhParam)
+    startazA = numpy.arange(0.0,360.0,1.0) - 0.4
+    startazA[0] = 359.6
+
+    obj.addAttribute("how/startazA", startazA)
+
+    # Index 0, has startaz=-0.4 which is closest to north 
+    self.assertEqual(0, obj.getNorthmostIndex())
+    
+    # Since index 0, no rotation required
+    self.assertEqual(0, obj.getRotationRequiredToNorthmost())
+
+  def test_getNorthmostIndex_1(self):
+    obj = _polarscan.new()
+    dbzhParam = _polarscanparam.new()
+    dbzhParam.quantity = "DBZH"
+    dbzhParam.setData(numpy.zeros((360,1),numpy.int8))
+    obj.addParameter(dbzhParam)
+    startazA = numpy.arange(0.0,360.0,1.0) - 0.9
+    startazA[0] = 359.1
+
+    obj.addAttribute("how/startazA", startazA)
+
+    # Index 1, has startaz=0.1 which is closest to north 
+    self.assertEqual(1, obj.getNorthmostIndex())
+    
+    # If getNorthmostIndex() returns a value > 0 && value <= nrays/2, we should rotate counter clockwise and result should be "- getNorthmostIndex()"
+    self.assertEqual(-1, obj.getRotationRequiredToNorthmost())
+
+  def test_getNorthmostIndex_2(self):
+    obj = _polarscan.new()
+    dbzhParam = _polarscanparam.new()
+    dbzhParam.quantity = "DBZH"
+    dbzhParam.setData(numpy.zeros((360,1),numpy.int8))
+    obj.addParameter(dbzhParam)
+    startazA = numpy.arange(0.0,360.0,1.0) - 1.9
+    startazA[0] = 358.1
+    startazA[1] = 359.1
+
+    obj.addAttribute("how/startazA", startazA)
+    
+    # Index 2, has startaz=0.1 which is closest to north
+    self.assertEqual(2, obj.getNorthmostIndex())
+
+    # If getNorthmostIndex() returns a value > 0 && value <= nrays/2, we should rotate counter clockwise and result should be "- getNorthmostIndex()"
+    self.assertEqual(-2, obj.getRotationRequiredToNorthmost())
+
+  def test_getNorthmostIndex_3(self):
+    obj = _polarscan.new()
+    dbzhParam = _polarscanparam.new()
+    dbzhParam.quantity = "DBZH"
+    dbzhParam.setData(numpy.zeros((360,1),numpy.int8))
+    obj.addParameter(dbzhParam)
+    startazA = numpy.arange(0.0,360.0,1.0) + 0.4
+    obj.addAttribute("how/startazA", startazA)
+
+    # Index 0, has startaz=-0.4 which is closest to north 
+    self.assertEqual(0, obj.getNorthmostIndex())
+    
+    # If index = 0, then no rotation
+    self.assertEqual(0, obj.getRotationRequiredToNorthmost())
+
+  def test_getNorthmostIndex_4(self):
+    obj = _polarscan.new()
+    dbzhParam = _polarscanparam.new()
+    dbzhParam.quantity = "DBZH"
+    dbzhParam.setData(numpy.zeros((360,1),numpy.int8))
+    obj.addParameter(dbzhParam)
+    startazA = numpy.arange(0.0,360.0,1.0) + 1.4
+    startazA[359]=0.4
+    
+    obj.addAttribute("how/startazA", startazA)
+
+    # Index 359, has startaz=0.4 which is closest to north 
+    self.assertEqual(359, obj.getNorthmostIndex())
+    
+    # If getNorthmostIndex() returns a value > 0 && value > nrays/2, we should rotate counter clockwise and result should be "nrays - getNorthmostIndex()"
+    self.assertEqual(1, obj.getRotationRequiredToNorthmost())
+
+  def test_getNorthmostIndex_5(self):
+    obj = _polarscan.new()
+    dbzhParam = _polarscanparam.new()
+    dbzhParam.quantity = "DBZH"
+    dbzhParam.setData(numpy.zeros((360,1),numpy.int8))
+    obj.addParameter(dbzhParam)
+    startazA = numpy.arange(0.0,360.0,1.0) + 2.4
+    startazA[359]=1.4
+    startazA[358]=0.4
+    
+    obj.addAttribute("how/startazA", startazA)
+
+    # Index 358, has startaz=0.4 which is closest to north 
+    self.assertEqual(358, obj.getNorthmostIndex())
+
+    # If getNorthmostIndex() returns a value > 0 && value > nrays/2, we should rotate counter clockwise and result should be "nrays - getNorthmostIndex()"
+    self.assertEqual(2, obj.getRotationRequiredToNorthmost())
+
+  def test_getNorthmostIndex_6(self):
+    obj = _polarscan.new()
+    dbzhParam = _polarscanparam.new()
+    dbzhParam.quantity = "DBZH"
+    dbzhParam.setData(numpy.zeros((450,1),numpy.int8))
+    obj.addParameter(dbzhParam)
+    startazA = numpy.arange(0.0,360.0,0.8) + 2.4
+    startazA[449]=1.6
+    startazA[448]=0.8
+    startazA[447]=0.0
+    
+    obj.addAttribute("how/startazA", startazA)
+
+    # Index 358, has startaz=0.4 which is closest to north 
+    self.assertEqual(447, obj.getNorthmostIndex())
+
+    # If getNorthmostIndex() returns a value > 0 && value > nrays/2, we should rotate counter clockwise and result should be "nrays - getNorthmostIndex()"
+    self.assertEqual(3, obj.getRotationRequiredToNorthmost())
+
+  def test_getNorthmostIndex_astart_0(self):
+    obj = _polarscan.new()
+    dbzhParam = _polarscanparam.new()
+    dbzhParam.quantity = "DBZH"
+    dbzhParam.setData(numpy.zeros((360,1),numpy.int8))
+    obj.addParameter(dbzhParam)
+    
+    obj.addAttribute("how/astart", -0.4999)
+
+    # astart=--0.4999 and ray width ~ 1.0 => index 0 is closest to north 
+    self.assertEqual(0, obj.getNorthmostIndex())
+
+    # If getNorthmostIndex() returns a value > 0 && value > nrays/2, we should rotate counter clockwise and result should be "nrays - getNorthmostIndex()"
+    self.assertEqual(0, obj.getRotationRequiredToNorthmost())
+
+  def test_getNorthmostIndex_astart_1(self):
+    obj = _polarscan.new()
+    dbzhParam = _polarscanparam.new()
+    dbzhParam.quantity = "DBZH"
+    dbzhParam.setData(numpy.zeros((360,1),numpy.int8))
+    obj.addParameter(dbzhParam)
+    
+    obj.addAttribute("how/astart", -0.5)
+
+    # astart=--0.5 and ray width ~ 1.0 => index 1 is closest to north 
+    self.assertEqual(1, obj.getNorthmostIndex())
+
+    # If getNorthmostIndex() returns a value > 0 && value > nrays/2, we should rotate counter clockwise and result should be "nrays - getNorthmostIndex()"
+    self.assertEqual(-1, obj.getRotationRequiredToNorthmost())
+
+  def test_getNorthmostIndex_astart_2(self):
+    obj = _polarscan.new()
+    dbzhParam = _polarscanparam.new()
+    dbzhParam.quantity = "DBZH"
+    dbzhParam.setData(numpy.zeros((360,1),numpy.int8))
+    obj.addParameter(dbzhParam)
+    
+    obj.addAttribute("how/astart", 0.5)
+
+    # astart=0.5 and ray width ~ 1.0 => index 0 is closest to north 
+    self.assertEqual(0, obj.getNorthmostIndex())
+
+    # If getNorthmostIndex() returns a value > 0 && value > nrays/2, we should rotate counter clockwise and result should be "nrays - getNorthmostIndex()"
+    self.assertEqual(0, obj.getRotationRequiredToNorthmost())
+
+  def test_getNorthmostIndex_astart_3(self):
+    obj = _polarscan.new()
+    dbzhParam = _polarscanparam.new()
+    dbzhParam.quantity = "DBZH"
+    dbzhParam.setData(numpy.zeros((360,1),numpy.int8))
+    obj.addParameter(dbzhParam)
+    
+    obj.addAttribute("how/astart", 0.51)
+
+    # astart=0.51 and ray width ~ 1.0 => index 359 is closest to north 
+    self.assertEqual(359, obj.getNorthmostIndex())
+
+    # If getNorthmostIndex() returns a value > 0 && value > nrays/2, we should rotate counter clockwise and result should be "nrays - getNorthmostIndex()"
+    self.assertEqual(1, obj.getRotationRequiredToNorthmost())
+    
+  def test_getNorthmostIndex_startazA_over_astart(self):
+    obj = _polarscan.new()
+    dbzhParam = _polarscanparam.new()
+    dbzhParam.quantity = "DBZH"
+    dbzhParam.setData(numpy.zeros((360,1),numpy.int8))
+    obj.addParameter(dbzhParam)
+    startazA = numpy.arange(0.0,360.0,1.0) - 0.9
+    startazA[0] = 359.1
+
+    obj.addAttribute("how/startazA", startazA)
+
+    obj.addAttribute("how/astart", 0.51)
+
+    # Index 0, has startaz=-0.4 which is closest to north 
+    self.assertEqual(1, obj.getNorthmostIndex())
+    
+    # Since index 0, no rotation required
+    self.assertEqual(-1, obj.getRotationRequiredToNorthmost())
+
   def test_getAzimuth(self):
     obj = _polarscan.new()
     obj.use_azimuthal_nav_information = False
@@ -1389,7 +1589,200 @@ class PyPolarScanTest(unittest.TestCase):
     self.assertEqual(3, result[3])
     self.assertEqual(5, result[5])
     self.assertEqual(9, result[9])
+
+  def test_shift_how_array_attribute_long_right(self):
+    obj = _polarscan.new()
+    obj.addAttribute("how/something", numpy.arange(10).astype(numpy.int32))
+    obj.shiftAttribute("how/something", 1)
+    result = obj.getAttribute("how/something")
+    self.assertTrue(isinstance(result, numpy.ndarray))
+    self.assertEqual(10, len(result))
+    self.assertEqual(9, result[0])
+    self.assertEqual(2, result[3])
+    self.assertEqual(4, result[5])
+    self.assertEqual(8, result[9])
+
+  def test_shift_how_array_attribute_long_0(self):
+    obj = _polarscan.new()
+    obj.addAttribute("how/something", numpy.arange(10).astype(numpy.int32))
+    obj.shiftAttribute("how/something", 0)
+    result = obj.getAttribute("how/something")
+    self.assertTrue(isinstance(result, numpy.ndarray))
+    self.assertEqual(10, len(result))
+    self.assertEqual(0, result[0])
+    self.assertEqual(3, result[3])
+    self.assertEqual(5, result[5])
+    self.assertEqual(9, result[9])
+
+  def test_shift_how_array_attribute_long_left(self):
+    obj = _polarscan.new()
+    obj.addAttribute("how/something", numpy.arange(10).astype(numpy.int32))
+    obj.shiftAttribute("how/something", -1)
+    result = obj.getAttribute("how/something")
+    self.assertTrue(isinstance(result, numpy.ndarray))
+    self.assertEqual(10, len(result))
+    self.assertEqual(1, result[0])
+    self.assertEqual(4, result[3])
+    self.assertEqual(6, result[5])
+    self.assertEqual(0, result[9])
+
+  def test_shift_how_array_attribute_float_right(self):
+    obj = _polarscan.new()
+    obj.addAttribute("how/something", numpy.arange(10).astype(numpy.float64))
+    obj.shiftAttribute("how/something", 1)
+    result = obj.getAttribute("how/something")
+    self.assertTrue(isinstance(result, numpy.ndarray))
+    self.assertEqual(10, len(result))
+    self.assertAlmostEqual(9, result[0], 4)
+    self.assertAlmostEqual(2, result[3], 4)
+    self.assertAlmostEqual(4, result[5], 4)
+    self.assertAlmostEqual(8, result[9], 4)
+
+  def test_shift_how_array_attribute_float_0(self):
+    obj = _polarscan.new()
+    obj.addAttribute("how/something", numpy.arange(10).astype(numpy.float64))
+    obj.shiftAttribute("how/something", 0)
+    result = obj.getAttribute("how/something")
+    self.assertTrue(isinstance(result, numpy.ndarray))
+    self.assertEqual(10, len(result))
+    self.assertAlmostEqual(0, result[0], 4)
+    self.assertAlmostEqual(3, result[3], 4)
+    self.assertAlmostEqual(5, result[5], 4)
+    self.assertAlmostEqual(9, result[9], 4)
+
+  def test_shift_how_array_attribute_float_left(self):
+    obj = _polarscan.new()
+    obj.addAttribute("how/something", numpy.arange(10).astype(numpy.float64))
+    obj.shiftAttribute("how/something", -1)
+    result = obj.getAttribute("how/something")
+    self.assertTrue(isinstance(result, numpy.ndarray))
+    self.assertEqual(10, len(result))
+    self.assertAlmostEqual(1, result[0], 4)
+    self.assertAlmostEqual(4, result[3], 4)
+    self.assertAlmostEqual(6, result[5], 4)
+    self.assertAlmostEqual(0, result[9], 4)
+
+  def test_shiftData(self):
+    obj = _polarscan.new()
+    p1 = _polarscanparam.new()
+    p1.quantity="DBZH"
+    p2 = _polarscanparam.new()
+    p2.quantity="TH"
+    f1 = _ravefield.new()
+    f2 = _ravefield.new()
+    f3 = _ravefield.new()
+    p1.setData(numpy.array([[0,1,2,3],[4,5,6,7],[8,9,10,11],[12,13,14,15]],numpy.uint8))
+    p2.setData(numpy.array([[0,1,2,3],[4,5,6,7],[8,9,10,11],[12,13,14,15]],numpy.uint8))
+    f1.setData(numpy.array([[0,1,2,3],[4,5,6,7],[8,9,10,11],[12,13,14,15]],numpy.uint8))
+    f2.setData(numpy.array([[0,1,2,3],[4,5,6,7],[8,9,10,11],[12,13,14,15]],numpy.uint8))
+    f3.setData(numpy.array([[0,1,2,3],[4,5,6,7],[8,9,10,11],[12,13,14,15]],numpy.uint8))
+    p1.addQualityField(f1)
+    p2.addQualityField(f2)
+    obj.addParameter(p1)
+    obj.addParameter(p2)
+    obj.addQualityField(f3)
     
+    obj.shiftData(1)
+    
+    self.assertTrue((numpy.array([[12,13,14,15],[0,1,2,3],[4,5,6,7],[8,9,10,11]],numpy.uint8)==obj.getParameter("DBZH").getData()).all())
+    self.assertTrue((numpy.array([[12,13,14,15],[0,1,2,3],[4,5,6,7],[8,9,10,11]],numpy.uint8)==obj.getParameter("DBZH").getQualityField(0).getData()).all())
+    self.assertTrue((numpy.array([[12,13,14,15],[0,1,2,3],[4,5,6,7],[8,9,10,11]],numpy.uint8)==obj.getParameter("TH").getData()).all())
+    self.assertTrue((numpy.array([[12,13,14,15],[0,1,2,3],[4,5,6,7],[8,9,10,11]],numpy.uint8)==obj.getParameter("TH").getQualityField(0).getData()).all())
+    self.assertTrue((numpy.array([[12,13,14,15],[0,1,2,3],[4,5,6,7],[8,9,10,11]],numpy.uint8)==obj.getQualityField(0).getData()).all())
+
+
+  def test_shiftData_neg(self):
+    obj = _polarscan.new()
+    p1 = _polarscanparam.new()
+    p1.quantity="DBZH"
+    p2 = _polarscanparam.new()
+    p2.quantity="TH"
+    f1 = _ravefield.new()
+    f2 = _ravefield.new()
+    f3 = _ravefield.new()
+    p1.setData(numpy.array([[0,1,2,3],[4,5,6,7],[8,9,10,11],[12,13,14,15]],numpy.uint8))
+    p2.setData(numpy.array([[0,1,2,3],[4,5,6,7],[8,9,10,11],[12,13,14,15]],numpy.uint8))
+    f1.setData(numpy.array([[0,1,2,3],[4,5,6,7],[8,9,10,11],[12,13,14,15]],numpy.uint8))
+    f2.setData(numpy.array([[0,1,2,3],[4,5,6,7],[8,9,10,11],[12,13,14,15]],numpy.uint8))
+    f3.setData(numpy.array([[0,1,2,3],[4,5,6,7],[8,9,10,11],[12,13,14,15]],numpy.uint8))
+    p1.addQualityField(f1)
+    p2.addQualityField(f2)
+    obj.addParameter(p1)
+    obj.addParameter(p2)
+    obj.addQualityField(f3)
+
+    obj.shiftData(-1)
+    
+    self.assertTrue((numpy.array([[4,5,6,7],[8,9,10,11],[12,13,14,15],[0,1,2,3]],numpy.uint8)==obj.getParameter("DBZH").getData()).all())
+    self.assertTrue((numpy.array([[4,5,6,7],[8,9,10,11],[12,13,14,15],[0,1,2,3]],numpy.uint8)==obj.getParameter("DBZH").getQualityField(0).getData()).all())
+    self.assertTrue((numpy.array([[4,5,6,7],[8,9,10,11],[12,13,14,15],[0,1,2,3]],numpy.uint8)==obj.getParameter("TH").getData()).all())
+    self.assertTrue((numpy.array([[4,5,6,7],[8,9,10,11],[12,13,14,15],[0,1,2,3]],numpy.uint8)==obj.getParameter("TH").getQualityField(0).getData()).all())
+    self.assertTrue((numpy.array([[4,5,6,7],[8,9,10,11],[12,13,14,15],[0,1,2,3]],numpy.uint8)==obj.getQualityField(0).getData()).all())
+
+  def test_shiftDataAndAttributes(self):
+    obj = _polarscan.new()
+    p1 = _polarscanparam.new()
+    p1.quantity="DBZH"
+    p1.setData(numpy.array([[0,1,2,3],[4,5,6,7],[8,9,10,11],[12,13,14,15]],numpy.uint8))
+    obj.addParameter(p1)
+    
+    obj.addAttribute("how/elangles", numpy.array([0,1,2,3], numpy.float64))
+    obj.addAttribute("how/startazA", numpy.array([0,1,2,3], numpy.float64))
+    obj.addAttribute("how/stopazA", numpy.array([0,1,2,3], numpy.float64))
+    obj.addAttribute("how/startazT", numpy.array([0,1,2,3], numpy.float64))
+    obj.addAttribute("how/stopazT", numpy.array([0,1,2,3], numpy.float64))
+    obj.addAttribute("how/startelA", numpy.array([0,1,2,3], numpy.float64))
+    obj.addAttribute("how/stopelA", numpy.array([0,1,2,3], numpy.float64))
+    obj.addAttribute("how/startelT", numpy.array([0,1,2,3], numpy.float64))
+    obj.addAttribute("how/stopelT", numpy.array([0,1,2,3], numpy.float64))
+    obj.addAttribute("how/TXpower", numpy.array([0,1,2,3], numpy.float64))
+    
+    obj.shiftDataAndAttributes(1)
+    
+    self.assertTrue((numpy.array([[12,13,14,15],[0,1,2,3],[4,5,6,7],[8,9,10,11]],numpy.uint8)==obj.getParameter("DBZH").getData()).all())
+    self.assertTrue((numpy.array([3,0,1,2],numpy.uint8)==obj.getAttribute("how/elangles")).all())
+    self.assertTrue((numpy.array([3,0,1,2],numpy.uint8)==obj.getAttribute("how/startazA")).all())
+    self.assertTrue((numpy.array([3,0,1,2],numpy.uint8)==obj.getAttribute("how/stopazA")).all())
+    self.assertTrue((numpy.array([3,0,1,2],numpy.uint8)==obj.getAttribute("how/startazT")).all())
+    self.assertTrue((numpy.array([3,0,1,2],numpy.uint8)==obj.getAttribute("how/stopazT")).all())
+    self.assertTrue((numpy.array([3,0,1,2],numpy.uint8)==obj.getAttribute("how/startelA")).all())
+    self.assertTrue((numpy.array([3,0,1,2],numpy.uint8)==obj.getAttribute("how/stopelA")).all())
+    self.assertTrue((numpy.array([3,0,1,2],numpy.uint8)==obj.getAttribute("how/startelT")).all())
+    self.assertTrue((numpy.array([3,0,1,2],numpy.uint8)==obj.getAttribute("how/stopelT")).all())
+    self.assertTrue((numpy.array([3,0,1,2],numpy.uint8)==obj.getAttribute("how/TXpower")).all())
+
+  def test_shiftDataAndAttributes_neg(self):
+    obj = _polarscan.new()
+    p1 = _polarscanparam.new()
+    p1.quantity="DBZH"
+    p1.setData(numpy.array([[0,1,2,3],[4,5,6,7],[8,9,10,11],[12,13,14,15]],numpy.uint8))
+    obj.addParameter(p1)
+    
+    obj.addAttribute("how/elangles", numpy.array([0,1,2,3], numpy.float64))
+    obj.addAttribute("how/startazA", numpy.array([0,1,2,3], numpy.float64))
+    obj.addAttribute("how/stopazA", numpy.array([0,1,2,3], numpy.float64))
+    obj.addAttribute("how/startazT", numpy.array([0,1,2,3], numpy.float64))
+    obj.addAttribute("how/stopazT", numpy.array([0,1,2,3], numpy.float64))
+    obj.addAttribute("how/startelA", numpy.array([0,1,2,3], numpy.float64))
+    obj.addAttribute("how/stopelA", numpy.array([0,1,2,3], numpy.float64))
+    obj.addAttribute("how/startelT", numpy.array([0,1,2,3], numpy.float64))
+    obj.addAttribute("how/stopelT", numpy.array([0,1,2,3], numpy.float64))
+    obj.addAttribute("how/TXpower", numpy.array([0,1,2,3], numpy.float64))
+    
+    obj.shiftDataAndAttributes(-1)
+    
+    self.assertTrue((numpy.array([[4,5,6,7],[8,9,10,11],[12,13,14,15],[0,1,2,3]],numpy.uint8)==obj.getParameter("DBZH").getData()).all())
+    self.assertTrue((numpy.array([1,2,3,0],numpy.uint8)==obj.getAttribute("how/elangles")).all())
+    self.assertTrue((numpy.array([1,2,3,0],numpy.uint8)==obj.getAttribute("how/startazA")).all())
+    self.assertTrue((numpy.array([1,2,3,0],numpy.uint8)==obj.getAttribute("how/stopazA")).all())
+    self.assertTrue((numpy.array([1,2,3,0],numpy.uint8)==obj.getAttribute("how/startazT")).all())
+    self.assertTrue((numpy.array([1,2,3,0],numpy.uint8)==obj.getAttribute("how/stopazT")).all())
+    self.assertTrue((numpy.array([1,2,3,0],numpy.uint8)==obj.getAttribute("how/startelA")).all())
+    self.assertTrue((numpy.array([1,2,3,0],numpy.uint8)==obj.getAttribute("how/stopelA")).all())
+    self.assertTrue((numpy.array([1,2,3,0],numpy.uint8)==obj.getAttribute("how/startelT")).all())
+    self.assertTrue((numpy.array([1,2,3,0],numpy.uint8)==obj.getAttribute("how/stopelT")).all())
+    self.assertTrue((numpy.array([1,2,3,0],numpy.uint8)==obj.getAttribute("how/TXpower")).all())
+
   def test_add_how_array_attribute_double(self):
     obj = _polarscan.new()
     obj.addAttribute("how/something", numpy.arange(10).astype(numpy.float32))
@@ -1655,7 +2048,7 @@ class PyPolarScanTest(unittest.TestCase):
     param.setData(data)
     obj.addParameter(param)
     self.assertAlmostEqual(222080.29, obj.getDistance((12.0 * math.pi / 180.0, 62.0 * math.pi / 180.0)), 2)
-     
+
 if __name__ == "__main__":
   #import sys;sys.argv = ['', 'Test.testName']
   unittest.main()

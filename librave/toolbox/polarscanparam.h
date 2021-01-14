@@ -325,4 +325,13 @@ PolarScanParam_t* PolarScanParam_fromField(RaveField_t* field);
  */
 int PolarScanParam_convertDataDoubleToUchar(PolarScanParam_t* param);
 
+/**
+ * Performs a circular shift of the dataset and the attributes that are associated with the rays. It can be negative for counter clock wise
+ * and positive for clock wise rotation.
+ * @param[in] param - the parameter
+ * @param[in] nrays - the number of rays to shift
+ * @return 1 if successful otherwise 0
+ */
+int PolarScanParam_shiftData(PolarScanParam_t* param, int nrays);
+
 #endif

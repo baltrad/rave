@@ -344,6 +344,23 @@ done:
   return result;
 }
 
+static PyObject* _pyravedata2d_circshiftData(PyRaveData2D* self, PyObject* args)
+{
+  long x = 0, y = 0;
+  int result = 0;
+
+  if (!PyArg_ParseTuple(args, "ll", &x, &y)) {
+    return NULL;
+  }
+
+  result = RaveData2D_circshiftData(self->field, x, y);
+  if (!result) {
+    raiseException_returnNULL(PyExc_ValueError, "Failed to run circular shift on field");
+  }
+
+  Py_RETURN_NONE;
+}
+
 static PyObject* _pyravedata2d_add(PyRaveData2D* self, PyObject* args)
 {
   PyObject* pyin = NULL;
@@ -604,6 +621,12 @@ static struct PyMethodDef _pyravedata2d_methods[] =
   {"circshift", (PyCFunction) _pyravedata2d_circshift, 1,
     "circshift(x,y) -> rave data 2d\n\n"
     "Performs a circular shift of self in both x & y dimension to produce a new rave data 2d.\n\n"
+    "x - the number of steps to be shifted in x-direction. Can be both positive and negative\n"
+    "y - the number of steps to be shifted in y-direction. Can be both positive and negative"
+  },
+  {"circshiftData", (PyCFunction) _pyravedata2d_circshiftData, 1,
+    "circshiftData(x,y)\n\n"
+    "Performs a circular shift of self in both x & y dimension to modify the internal data field.\n\n"
     "x - the number of steps to be shifted in x-direction. Can be both positive and negative\n"
     "y - the number of steps to be shifted in y-direction. Can be both positive and negative"
   },

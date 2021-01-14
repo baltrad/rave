@@ -482,6 +482,36 @@ class PyPolarScanParamTest(unittest.TestCase):
     self.assertEqual(12, result.nrays)
     self.assertEqual(_rave.RaveDataType_UCHAR, result.datatype)
 
+  def test_shiftData(self):
+    obj = _polarscanparam.new()
+    f1 = _ravefield.new()
+    f2 = _ravefield.new()
+    obj.setData(numpy.array([[0,1,2,3],[4,5,6,7],[8,9,10,11],[12,13,14,15]],numpy.uint8))
+    f1.setData(numpy.array([[0,1,2,3],[4,5,6,7],[8,9,10,11],[12,13,14,15]],numpy.uint8))
+    f2.setData(numpy.array([[0,1,2,3],[4,5,6,7],[8,9,10,11],[12,13,14,15]],numpy.uint8))
+    obj.addQualityField(f1)
+    obj.addQualityField(f2)
+    obj.shiftData(1)
+    
+    self.assertTrue((numpy.array([[12,13,14,15],[0,1,2,3],[4,5,6,7],[8,9,10,11]],numpy.uint8)==obj.getData()).all())
+    self.assertTrue((numpy.array([[12,13,14,15],[0,1,2,3],[4,5,6,7],[8,9,10,11]],numpy.uint8)==obj.getQualityField(0).getData()).all())
+    self.assertTrue((numpy.array([[12,13,14,15],[0,1,2,3],[4,5,6,7],[8,9,10,11]],numpy.uint8)==obj.getQualityField(1).getData()).all())
+
+  def test_shiftData_neg(self):
+    obj = _polarscanparam.new()
+    f1 = _ravefield.new()
+    f2 = _ravefield.new()
+    obj.setData(numpy.array([[0,1,2,3],[4,5,6,7],[8,9,10,11],[12,13,14,15]],numpy.uint8))
+    f1.setData(numpy.array([[0,1,2,3],[4,5,6,7],[8,9,10,11],[12,13,14,15]],numpy.uint8))
+    f2.setData(numpy.array([[0,1,2,3],[4,5,6,7],[8,9,10,11],[12,13,14,15]],numpy.uint8))
+    obj.addQualityField(f1)
+    obj.addQualityField(f2)
+    obj.shiftData(-1)
+    
+    self.assertTrue((numpy.array([[4,5,6,7],[8,9,10,11],[12,13,14,15],[0,1,2,3]],numpy.uint8)==obj.getData()).all())
+    self.assertTrue((numpy.array([[4,5,6,7],[8,9,10,11],[12,13,14,15],[0,1,2,3]],numpy.uint8)==obj.getQualityField(0).getData()).all())
+    self.assertTrue((numpy.array([[4,5,6,7],[8,9,10,11],[12,13,14,15],[0,1,2,3]],numpy.uint8)==obj.getQualityField(1).getData()).all())
+
   def test_convertDataDoubleToUchar(self):
     obj = _polarscanparam.new()
     obj.setData(numpy.array([[-32.0,-32.0,-32.0],
@@ -513,7 +543,7 @@ class PyPolarScanParamTest(unittest.TestCase):
         obj.convertDataDoubleToUchar()
     except TypeError:
         pass
-    
+  
   def test_clone(self):
     obj = _polarscanparam.new()
     obj.nodata = 255.0

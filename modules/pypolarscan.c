@@ -851,6 +851,19 @@ static PyObject* _pypolarscan_hasAttribute(PyPolarScan* self, PyObject* args)
   return PyBool_FromLong((long)PolarScan_hasAttribute(self->scan, name));
 }
 
+static PyObject* _pypolarscan_shiftAttribute(PyPolarScan* self, PyObject* args)
+{
+  char* name = NULL;
+  int i = 0;
+  if (!PyArg_ParseTuple(args, "si", &name, &i)) {
+    return NULL;
+  }
+  if (!PolarScan_shiftAttribute(self->scan, name, i)) {
+    raiseException_returnNULL(PyExc_RuntimeError, "Failed to shift attribute");
+  }
+  Py_RETURN_NONE;
+}
+
 /**
  * Returns a list of attribute names
  * @param[in] self - this instance
@@ -1136,6 +1149,48 @@ static PyObject* _pypolarscan_getDistance(PyPolarScan* self, PyObject* args)
   return PyFloat_FromDouble(PolarScan_getDistance(self->scan, lon, lat));
 }
 
+static PyObject* _pypolarscan_getNorthmostIndex(PyPolarScan* self, PyObject* args)
+{
+  if (!PyArg_ParseTuple(args, "")) {
+    return NULL;
+  }
+  return PyInt_FromLong(PolarScan_getNorthmostIndex(self->scan));
+}
+
+static PyObject* _pypolarscan_getRotationRequiredToNorthmost(PyPolarScan* self, PyObject* args)
+{
+  if (!PyArg_ParseTuple(args, "")) {
+    return NULL;
+  }
+  return PyInt_FromLong(PolarScan_getRotationRequiredToNorthmost(self->scan));
+}
+
+static PyObject* _pypolarscan_shiftData(PyPolarScan* self, PyObject* args)
+{
+  int i = 0;
+  if (!PyArg_ParseTuple(args, "i", &i)) {
+    return NULL;
+  }
+  if (!PolarScan_shiftData(self->scan, i)) {
+    raiseException_returnNULL(PyExc_RuntimeError, "Failed to shift data");
+  }
+
+  Py_RETURN_NONE;
+}
+
+static PyObject* _pypolarscan_shiftDataAndAttributes(PyPolarScan* self, PyObject* args)
+{
+  int i = 0;
+  if (!PyArg_ParseTuple(args, "i", &i)) {
+    return NULL;
+  }
+  if (!PolarScan_shiftDataAndAttributes(self->scan, i)) {
+    raiseException_returnNULL(PyExc_RuntimeError, "Failed to shift data and attributes");
+  }
+
+  Py_RETURN_NONE;
+}
+
 /**
  * All methods a polar scan can have
  */
@@ -1338,6 +1393,13 @@ static struct PyMethodDef _pypolarscan_methods[] =
     "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis.\n"
     "        In the case of how-groups, it is also possible to specify subgroups, like how/subgroup/attr or how/subgroup/subgroup/attr.\n"
   },
+  {"shiftAttribute", (PyCFunction) _pypolarscan_shiftAttribute, 1,
+    "shiftAttribute(name, nx) \n\n"
+    "Performs a circular shift of an array attribute. if nx < 0, then shift is performed counter clockwise, if nx > 0, shift is performed clock wise, if 0, no shift is performed.\n\n"
+    "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis.\n"
+    "        In the case of how-groups, it is also possible to specify subgroups, like how/subgroup/attr or how/subgroup/subgroup/attr.\n"
+    "nx    - Number of positions to shift\n"
+  },
   {"getAttributeNames", (PyCFunction) _pypolarscan_getAttributeNames, 1,
     "getAttributeNames() -> array of names \n\n"
     "Returns the attribute names associated with this scan"
@@ -1399,6 +1461,29 @@ static struct PyMethodDef _pypolarscan_methods[] =
     "Returns the distance in meters along the surface from the radar to the specified lon/lat coordinate pair.\n\n"
     "lon - Longitude in radians\n"
     "lat - Latitude in radians"
+  },
+  {"getNorthmostIndex", (PyCFunction) _pypolarscan_getNorthmostIndex, 1,
+     "getNorthmostIndex() --> index of the northmost ray\n\n"
+     "Will calculate and return the northmost ray index in the scan.  Requires the existance of startazA/stopazA otherwise 0 will always be returned\n\n"
+  },
+  {"getRotationRequiredToNorthmost", (PyCFunction) _pypolarscan_getRotationRequiredToNorthmost, 1,
+     "getNorthmostRotationIndex() --> rotation index of the northmost ray\n\n"
+     "Returns the rotation index needed to to get the first ray in the scan to be the north most ray. If a negative  value is returned, the shift should\n"
+     "be performed in a negative circular direction, if 0, no rotation required, if greater than 0, a positive circular shift is required.\n"
+     "If startazA/stopazA doesn't exist. This method will always return 0.\n\n"
+  },
+  {"shiftData", (PyCFunction) _pypolarscan_shiftData, 1,
+      "shiftData(nrays)\n\n"
+      "Performs a circular shift of the datasets that are associated with this scan. It can be negative for counter clock wise and positive\n"
+      "for clock wise rotation. If an exception is raised you should not use this object since there might be inconsistancies in the internals\n\n"
+      "nrays - Number of rays that the datasets should be shifted. Negative value means counter clockwise and positive means clockwise."
+  },
+  {"shiftDataAndAttributes", (PyCFunction) _pypolarscan_shiftDataAndAttributes, 1,
+      "shiftDataAndAttributes(nrays)\n\n"
+      "Performs a circular shift of the datsets that are associated with the scan and also all attributes that are associated with\n"
+      "the rays. Currently these attributes are:\n"
+      " how/elangles, how/startazA, how/stopazA, how/startazT, how/stopazT, how/startelA, how/stopelA, how/startelT, how/stopelT and how/TXpower\n\n"
+      "nrays - Number of rays that the datasets should be shifted. Negative value means counter clockwise and positive means clockwise."
   },
   {"clone", (PyCFunction) _pypolarscan_clone, 1,
     "clone() -> PolarScanCore\n\n"

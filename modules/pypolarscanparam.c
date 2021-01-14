@@ -580,6 +580,23 @@ static PyObject* _pypolarscanparam_removeQualityField(PyPolarScanParam* self, Py
   Py_RETURN_NONE;
 }
 
+static PyObject* _pypolarscanparam_shiftData(PyPolarScanParam* self, PyObject* args)
+{
+  long nrays = 0;
+  int result = 0;
+
+  if (!PyArg_ParseTuple(args, "l", &nrays)) {
+    return NULL;
+  }
+
+  result = PolarScanParam_shiftData(self->scanparam, nrays);
+  if (!result) {
+    raiseException_returnNULL(PyExc_ValueError, "Failed to shift rays on parameter");
+  }
+
+  Py_RETURN_NONE;
+}
+
 /**
  * Converts the data field portion and the corresponding attributes into
  * a rave field. I.e. no quality fields will be affected.
@@ -739,6 +756,11 @@ static struct PyMethodDef _pypolarscanparam_methods[] =
     "removeQualityField(index) \n\n"
     "Removes the quality field at specified index\n\n"
     "index  - The rave field at specified position.\n\n"
+  },
+  {"shiftData", (PyCFunction) _pypolarscanparam_shiftData, 1,
+    "shiftData(nrays)\n\n"
+    "Performs a circular shift of rays on both data and all quality fields added to this parameter .\n\n"
+    "nrays - the number of steps to be shifted in ray-direction. Can be both positive and negative\n"
   },
   {"toField", (PyCFunction)_pypolarscanparam_toField, 1,
     "toField() -> RaveFieldCore\n\n"

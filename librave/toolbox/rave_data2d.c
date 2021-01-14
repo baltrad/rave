@@ -721,6 +721,30 @@ done:
   return result;
 }
 
+int RaveData2D_circshiftData(RaveData2D_t* field, int nx, int ny)
+{
+  RaveData2D_t *newfield = NULL;
+  int result = 1;
+
+  RAVE_ASSERT((field != NULL), "field == NULL");
+  if (!RaveData2D_hasData(field)) {
+    RAVE_ERROR0("No data in field");
+    goto fail;
+  }
+
+  newfield = RaveData2D_circshift(field, nx, ny);
+  if (newfield != NULL) {
+    long sz = get_ravetype_size(field->type);
+    long nbytes = field->xsize*field->ysize*sz;
+    memcpy(field->data, newfield->data, nbytes);
+  }
+
+  result = 1;
+fail:
+  RAVE_OBJECT_RELEASE(newfield);
+  return result;
+}
+
 static double eoperation_add(double v1, double v2)
 {
   return v1 + v2;

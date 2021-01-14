@@ -405,6 +405,52 @@ int RaveAttribute_getDoubleArray(RaveAttribute_t* attr, double** value, int* len
   return result;
 }
 
+int RaveAttribute_shiftArray(RaveAttribute_t* attr, int nx)
+{
+  int result = 0;
+  int i = 0;
+  if (attr->format == RaveAttribute_Format_DoubleArray) {
+    double* tmp = RAVE_MALLOC(sizeof(double)*attr->arraylen);
+    if (tmp != NULL) {
+      for (i = 0; i < attr->arraylen; i++) {
+        int shiftindex = i + nx;
+        if (shiftindex < 0) {
+          shiftindex += attr->arraylen;
+        }
+        if (shiftindex >= attr->arraylen) {
+          shiftindex -= attr->arraylen;
+        }
+        tmp[shiftindex] = attr->ddataarray[i];
+      }
+      memcpy(attr->ddataarray, tmp, sizeof(double)*attr->arraylen);
+      RAVE_FREE(tmp);
+      result = 1;
+    } else {
+      RAVE_ERROR0("Failed to allocate memory during array shift");
+    }
+  } else if (attr->format == RaveAttribute_Format_LongArray) {
+    long* tmp = RAVE_MALLOC(sizeof(long)*attr->arraylen);
+    if (tmp != NULL) {
+      for (i = 0; i < attr->arraylen; i++) {
+        int shiftindex = i + nx;
+        if (shiftindex < 0) {
+          shiftindex += attr->arraylen;
+        }
+        if (shiftindex >= attr->arraylen) {
+          shiftindex -= attr->arraylen;
+        }
+        tmp[shiftindex] = attr->ldataarray[i];
+      }
+      memcpy(attr->ldataarray, tmp, sizeof(long)*attr->arraylen);
+      RAVE_FREE(tmp);
+      result = 1;
+    } else {
+      RAVE_ERROR0("Failed to allocate memory during array shift");
+    }
+  }
+  return result;
+}
+
 int RaveAttributeHelp_extractGroupAndName(
   const char* attrname, char** group, char** name)
 {

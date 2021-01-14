@@ -164,6 +164,14 @@ int RaveAttribute_getLongArray(RaveAttribute_t* attr, long** value, int* len);
 int RaveAttribute_getDoubleArray(RaveAttribute_t* attr, double** value, int* len);
 
 /**
+ * Performs a circular shift of the array. if nx < 0, then shift is performed counter clockwise, if nx > 0, shift is performed clock wise, if 0, no shift is performed.
+ * @param[in] attr - attribute to shift
+ * @param[in] nx - number of positions to shift
+ * return 1 if successful, 0 if trying to shift an attribute that isn't an array or an error occurs during shift.
+ */
+int RaveAttribute_shiftArray(RaveAttribute_t* attr, int nx);
+
+/**
  * Helper function for extracting the group and name part from a
  * string with the format <group>/<name>.
  * @param[in] attrname - the string that should get group and name extracted
@@ -254,6 +262,7 @@ RaveAttribute_t* RaveAttributeHelp_createDoubleArray(const char* name, double* v
  * @return a rave attribute on success otherwise NULL
  */
 RaveAttribute_t* RaveAttributeHelp_createArrayFromData(const char* name, void* value, int len, RaveDataType type);
+
 
 #endif /* RAVE_ATTRIBUTE_H */
 

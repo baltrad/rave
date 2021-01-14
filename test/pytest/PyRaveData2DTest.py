@@ -237,6 +237,36 @@ class PyRaveRaveData2DTest(unittest.TestCase):
     result = obj.circshift(1, 1);
     self.assertTrue((expected_array == result.getData()).all())
 
+  def test_circshiftData_00(self):
+    obj = _ravedata2d.new()
+    obj.setData(numpy.array([[0,1,2,3],[4,5,6,7],[8,9,10,11],[12,13,14,15]],numpy.uint8))
+    obj.circshiftData(0,0)
+    self.assertTrue((numpy.array([[0,1,2,3],[4,5,6,7],[8,9,10,11],[12,13,14,15]],numpy.uint8)==obj.getData()).all())
+
+  def test_circshiftData_y(self):
+    obj = _ravedata2d.new()
+    obj.setData(numpy.array([[0,1,2,3],[4,5,6,7],[8,9,10,11],[12,13,14,15]],numpy.uint8))
+    obj.circshiftData(0,1)
+    self.assertTrue((numpy.array([[12,13,14,15],[0,1,2,3],[4,5,6,7],[8,9,10,11]],numpy.uint8)==obj.getData()).all())
+
+  def test_circshiftData_neg_y(self):
+    obj = _ravedata2d.new()
+    obj.setData(numpy.array([[0,1,2,3],[4,5,6,7],[8,9,10,11],[12,13,14,15]],numpy.uint8))
+    obj.circshiftData(0,-1)
+    self.assertTrue((numpy.array([[4,5,6,7],[8,9,10,11],[12,13,14,15],[0,1,2,3]],numpy.uint8)==obj.getData()).all())
+
+  def test_circshiftData_x(self):
+    obj = _ravedata2d.new()
+    obj.setData(numpy.array([[0,1,2,3],[4,5,6,7],[8,9,10,11],[12,13,14,15]],numpy.uint8))
+    obj.circshiftData(1,0)
+    self.assertTrue((numpy.array([[3,0,1,2],[7,4,5,6],[11,8,9,10],[15,12,13,14]],numpy.uint8)==obj.getData()).all())
+
+  def test_circshiftData_neg_x(self):
+    obj = _ravedata2d.new()
+    obj.setData(numpy.array([[0,1,2,3],[4,5,6,7],[8,9,10,11],[12,13,14,15]],numpy.uint8))
+    obj.circshiftData(-1,0)
+    self.assertTrue((numpy.array([[1,2,3,0],[5,6,7,4],[9,10,11,8],[13,14,15,12]],numpy.uint8)==obj.getData()).all())
+
   def test_add_number(self):
     obj = _ravedata2d.new()
     obj.setData(numpy.array([[1.0, 2.0, 3.0, 4.0],
