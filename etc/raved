@@ -15,7 +15,7 @@
 ### END INIT INFO
 
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
-BALTRAD_VAR_DIR=/var/run/baltrad
+BALTRAD_VAR_DIR=/var/run
 RAVEPID=${BALTRAD_VAR_DIR}/rave_pgf_server.pid
 
 if [ `id -u` -ne 0 ]; then
@@ -49,17 +49,17 @@ check_rave_status() {
   fi
 }
 
-if [ ! -d "$BALTRAD_VAR_DIR" ]; then
-  echo "Creating dirname $BALTRAD_VAR_DIR"
-  mkdir "$BALTRAD_VAR_DIR"
-fi
-if [ -d "$BALTRAD_VAR_DIR" ]; then
-  chown $BALTRAD_USER:$BALTRAD_GROUP "$BALTRAD_VAR_DIR"
-  if [ $? -ne 0 ]; then
-    echo "Failed to create pid file directory, defaulting to /tmp/rave_pgf_server.pid"
-    RAVEPID=/tmp/rave_pgf_server.pid
-  fi
-fi
+#if [ ! -d "$BALTRAD_VAR_DIR" ]; then
+#  echo "Creating dirname $BALTRAD_VAR_DIR"
+#  mkdir "$BALTRAD_VAR_DIR"
+#fi
+#if [ -d "$BALTRAD_VAR_DIR" ]; then
+#  chown $BALTRAD_USER:$BALTRAD_GROUP "$BALTRAD_VAR_DIR"
+#  if [ $? -ne 0 ]; then
+#    echo "Failed to create pid file directory, defaulting to /tmp/rave_pgf_server.pid"
+#    RAVEPID=/tmp/rave_pgf_server.pid
+#  fi
+#fi
 
 case "$1" in
   start)
