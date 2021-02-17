@@ -45,6 +45,16 @@ class rave_bdb(object):
     self.nodename = nodename
     self.config = self._load_configuration(configfile)
     self.database = None
+    self.fs_path = None
+    self.fs_layers = 0
+    if "baltrad.bdb.server.backend.sqla.storage.type" in self.config and self.config["baltrad.bdb.server.backend.sqla.storage.type"] == "fs":
+      try:
+        self.fs_path = self.config["baltrad.bdb.server.backend.sqla.storage.fs.path"]
+        self.fs_layers = int(self.config["baltrad.bdb.server.backend.sqla.storage.fs.layers"])
+      except:
+        self.fs_path = None
+        self.fs_layers = 0
+      
     self.initialized = False
   
   def _load_configuration(self, configfile):
@@ -105,6 +115,14 @@ class rave_bdb(object):
   
     return self.database
 
+  def path_from_uuid(self, uuid):
+    uuid_str = str(uuid)
+    elements = [self.fs_path]
+    for i in range(0, self.fs_layers):
+      elements.append(uuid_str[i])
+    elements.append(uuid_str)
+    return os.path.join(*elements)
+
   def get_rave_object(self, fname):
     ''' returns the rave object as defined by the fname. If the fname is an existing file on the file system, then
     the file will be opened and returned as a rave object. If no fname can be found, an atempt to fetch the file from
@@ -115,6 +133,11 @@ class rave_bdb(object):
     '''
     if os.path.exists(fname):
       return _raveio.open(fname).object
+    
+    # Fix to avoid unessecary loading if rave is running on same server as bdb which is storing files in fs.
+    if self.fs_path is not None and os.path.exists("%s"%self.path_from_uuid(fname)):
+      logger.info("Using path directly from storage %s"%self.path_from_uuid(fname))
+      return _raveio.open("%s"%self.path_from_uuid(fname)).object
 
     content = self.get_database().get_file_content(fname)
     if content:
