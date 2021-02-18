@@ -35,6 +35,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 struct _RaveField_t {
   RAVE_OBJECT_HEAD /** Always on top */
   RaveData2D_t* data; /**< the data */
+  LazyDataset_t* lazyDataset; /**< the lazy dataset */
   RaveObjectHashTable_t* attrs; /**< attributes */
 };
 
@@ -47,6 +48,7 @@ static int RaveField_constructor(RaveCoreObject* obj)
   RaveField_t* this = (RaveField_t*)obj;
   this->attrs = RAVE_OBJECT_NEW(&RaveObjectHashTable_TYPE);
   this->data = RAVE_OBJECT_NEW(&RaveData2D_TYPE);
+  this->lazyDataset = NULL;
   if (this->attrs == NULL || this->data == NULL) {
     goto error;
   }
@@ -58,6 +60,27 @@ error:
 }
 
 /**
+ * Ensures that we have got a data 2d field to work with regardless
+ * if it already has been set or if it supposed to be lazy loaded.
+ * @param[in] field - the rave field
+ * @returns a loaded rave data 2D field
+ */
+static RaveData2D_t* RaveFieldInternal_ensureData2D(RaveField_t* field)
+{
+  if (field->lazyDataset != NULL) {
+    RaveData2D_t* loaded = LazyDataset_get(field->lazyDataset);
+    if (loaded != NULL) {
+      /*fprintf(stderr, "RaveFieldInternal_ensureData2D: LazyDataset fetched\n");*/
+      RAVE_OBJECT_RELEASE(field->data);
+      field->data = RAVE_OBJECT_COPY(loaded);
+      RAVE_OBJECT_RELEASE(field->lazyDataset);
+    }
+    RAVE_OBJECT_RELEASE(loaded);
+  }
+  return field->data;
+}
+
+/**
  * Copy constructor.
  */
 static int RaveField_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj)
@@ -65,8 +88,10 @@ static int RaveField_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj
   RaveField_t* this = (RaveField_t*)obj;
   RaveField_t* src = (RaveField_t*)srcobj;
   this->attrs = RAVE_OBJECT_CLONE(src->attrs);
-  this->data = RAVE_OBJECT_CLONE(src->data);
+  this->data = RAVE_OBJECT_CLONE(RaveFieldInternal_ensureData2D(src));
+  this->lazyDataset = NULL;
   if (this->data == NULL || this->attrs == NULL) {
+    RAVE_ERROR0("Failed to duplicate data or attributes");
     goto error;
   }
   return 1;
@@ -85,21 +110,45 @@ static void RaveField_destructor(RaveCoreObject* obj)
   RaveField_t* this = (RaveField_t*)obj;
   RAVE_OBJECT_RELEASE(this->attrs);
   RAVE_OBJECT_RELEASE(this->data);
+  RAVE_OBJECT_RELEASE(this->lazyDataset);
 }
+
 
 /*@} End of Private functions */
 
 /*@{ Interface functions */
 int RaveField_setData(RaveField_t* field, long xsize, long ysize, void* data, RaveDataType type)
 {
+  int result = 0;
   RAVE_ASSERT((field != NULL), "field == NULL");
-  return RaveData2D_setData(field->data, xsize, ysize, data, type);
+  result = RaveData2D_setData(field->data, xsize, ysize, data, type);
+  if (result) {
+    RAVE_OBJECT_RELEASE(field->lazyDataset);
+  }
+  return result;
+}
+
+int RaveField_setLazyDataset(RaveField_t* field, LazyDataset_t* lazyDataset)
+{
+  RAVE_ASSERT((field != NULL), "field == NULL");
+  if (RaveData2D_getData(field->data) == NULL) {
+    field->lazyDataset = RAVE_OBJECT_COPY(lazyDataset);
+    return 1;
+  } else {
+    RAVE_ERROR0("Trying to set lazy dataset loader when data exists");
+    return 0;
+  }
 }
 
 int RaveField_createData(RaveField_t* field, long xsize, long ysize, RaveDataType type)
 {
+  int result = 0;
   RAVE_ASSERT((field != NULL), "field == NULL");
-  return RaveData2D_createData(field->data, xsize, ysize, type, 0);
+  result = RaveData2D_createData(field->data, xsize, ysize, type, 0);
+  if (result) {
+    RAVE_OBJECT_RELEASE(field->lazyDataset);
+  }
+  return result;
 }
 
 int RaveField_setDatafield(RaveField_t* field, RaveData2D_t* datafield)
@@ -110,6 +159,7 @@ int RaveField_setDatafield(RaveField_t* field, RaveData2D_t* datafield)
     RaveData2D_t* d = RAVE_OBJECT_CLONE(datafield);
     if (d != NULL) {
       RAVE_OBJECT_RELEASE(field->data);
+      RAVE_OBJECT_RELEASE(field->lazyDataset);
       field->data = d;
       result = 1;
     } else {
@@ -122,7 +172,7 @@ int RaveField_setDatafield(RaveField_t* field, RaveData2D_t* datafield)
 void* RaveField_getData(RaveField_t* field)
 {
   RAVE_ASSERT((field != NULL), "field == NULL");
-  return RaveData2D_getData(field->data);
+  return RaveData2D_getData(RaveFieldInternal_ensureData2D(field));
 }
 
 RaveData2D_t* RaveField_getDatafield(RaveField_t* field)
@@ -131,7 +181,7 @@ RaveData2D_t* RaveField_getDatafield(RaveField_t* field)
 
   RAVE_ASSERT((field != NULL), "field == NULL");
 
-  result = RAVE_OBJECT_CLONE(field->data);
+  result = RAVE_OBJECT_CLONE(RaveFieldInternal_ensureData2D(field));
   if (result == NULL) {
     RAVE_ERROR0("Failed to clone data field");
   }
@@ -142,13 +192,13 @@ RaveData2D_t* RaveField_getDatafield(RaveField_t* field)
 int RaveField_getValue(RaveField_t* field, long x, long y, double* v)
 {
   RAVE_ASSERT((field != NULL), "field == NULL");
-  return RaveData2D_getValue(field->data, x, y, v);
+  return RaveData2D_getValue(RaveFieldInternal_ensureData2D(field), x, y, v);
 }
 
 int RaveField_setValue(RaveField_t* field, long x, long y, double value)
 {
   RAVE_ASSERT((field != NULL), "field == NULL");
-  return RaveData2D_setValue(field->data, x, y, value);
+  return RaveData2D_setValue(RaveFieldInternal_ensureData2D(field), x, y, value);
 }
 
 int RaveField_getConvertedValue(RaveField_t* field, long x, long y, double* v)
@@ -170,7 +220,7 @@ int RaveField_getConvertedValue(RaveField_t* field, long x, long y, double* v)
   }
   RAVE_OBJECT_RELEASE(attr);
 
-  result = RaveData2D_getValue(field->data, x, y, v);
+  result = RaveData2D_getValue(RaveFieldInternal_ensureData2D(field), x, y, v);
   if (result) {
     *v = offset + (*v) * gain;
   }
@@ -180,18 +230,27 @@ int RaveField_getConvertedValue(RaveField_t* field, long x, long y, double* v)
 long RaveField_getXsize(RaveField_t* field)
 {
   RAVE_ASSERT((field != NULL), "field == NULL");
+  if (field->lazyDataset != NULL) {
+    return LazyDataset_getXsize(field->lazyDataset);
+  }
   return RaveData2D_getXsize(field->data);
 }
 
 long RaveField_getYsize(RaveField_t* field)
 {
   RAVE_ASSERT((field != NULL), "field == NULL");
+  if (field->lazyDataset != NULL) {
+    return LazyDataset_getYsize(field->lazyDataset);
+  }
   return RaveData2D_getYsize(field->data);
 }
 
 RaveDataType RaveField_getDataType(RaveField_t* field)
 {
   RAVE_ASSERT((field != NULL), "field == NULL");
+  if (field->lazyDataset != NULL) {
+    return LazyDataset_getDataType(field->lazyDataset);
+  }
   return RaveData2D_getType(field->data);
 }
 
@@ -297,7 +356,7 @@ RaveField_t* RaveField_concatX(RaveField_t* field, RaveField_t* other)
     return NULL;
   }
 
-  dfield = RaveData2D_concatX(field->data, other->data);
+  dfield = RaveData2D_concatX(RaveFieldInternal_ensureData2D(field), RaveFieldInternal_ensureData2D(other));
   if (dfield != NULL) {
     result = RAVE_OBJECT_NEW(&RaveField_TYPE);
     if (result == NULL) {

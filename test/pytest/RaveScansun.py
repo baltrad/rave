@@ -163,7 +163,7 @@ class RaveScansun(unittest.TestCase):
         os.remove(fstr)
         shutil.rmtree(os.path.split(fstr)[0], ignore_errors=True, onerror=None)
         self.assertEqual(content, '#Date    Time        Elevatn Azimuth   ElevSun   AzimSun    N  dBSunFlux   SunMean SunStdd   ZdrMean ZdrStdd  Refl  ZDR\n20110111 075022.000    0.300  126.50   -0.7759  126.8401      98      12.71   -113.20   0.789       nan     nan  DBZH   NA\n')
-      
+
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']
     unittest.main()

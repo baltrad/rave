@@ -25,11 +25,17 @@ Test suite for rave
 '''
 import unittest
 
+import _rave
+#_rave.setDebugLevel(_rave.Debug_RAVE_SPEWDEBUG)
+#A="""
 from RaveTestSuite import *
 from PyCompositeTest import *
 from PyCartesianCompositeTest import *
 #from PolarVolumeTransformTest import *
 from MeanTest import *
+#"""
+#from PyRaveIOTest import *
+#from RaveScansun import *
 
 if __name__ == '__main__':
   unittest.main()

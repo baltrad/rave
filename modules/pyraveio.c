@@ -126,7 +126,7 @@ done:
  * @return the object on success, otherwise NULL
  */
 static PyRaveIO*
-PyRaveIO_Open(const char* filename)
+PyRaveIO_Open(const char* filename, int lazyLoading, const char* preloadQuantities)
 {
   RaveIO_t* raveio = NULL;
   PyRaveIO* result = NULL;
@@ -135,7 +135,7 @@ PyRaveIO_Open(const char* filename)
     raiseException_returnNULL(PyExc_ValueError, "providing a filename that is NULL");
   }
 
-  raveio = RaveIO_open(filename);
+  raveio = RaveIO_open(filename, lazyLoading, preloadQuantities);
   if (raveio == NULL) {
     raiseException_gotoTag(done, PyExc_IOError, "Failed to open file");
   }
@@ -185,10 +185,12 @@ static PyObject* _pyraveio_open(PyObject* self, PyObject* args)
   PyRaveIO* result = NULL;
 
   char* filename = NULL;
-  if (!PyArg_ParseTuple(args, "s", &filename)) {
+  int lazyLoading = 0;
+  char* preloadQuantities = NULL;
+  if (!PyArg_ParseTuple(args, "s|iz", &filename, &lazyLoading, &preloadQuantities)) {
     return NULL;
   }
-  result = PyRaveIO_Open(filename);
+  result = PyRaveIO_Open(filename, lazyLoading, preloadQuantities);
   return (PyObject*)result;
 }
 
@@ -230,7 +232,13 @@ static PyObject* _pyraveio_close(PyRaveIO* self, PyObject* args)
  */
 static PyObject* _pyraveio_load(PyRaveIO* self, PyObject* args)
 {
-  if (!RaveIO_load(self->raveio)) {
+  int lazyLoading = 0;
+  char* preloadQuantities = NULL;
+  if (!PyArg_ParseTuple(args, "|iz", &lazyLoading, &preloadQuantities)) {
+    return NULL;
+  }
+
+  if (!RaveIO_load(self->raveio, lazyLoading, preloadQuantities)) {
     raiseException_returnNULL(PyExc_IOError, "Failed to load file");
   }
   Py_RETURN_NONE;
@@ -725,6 +733,7 @@ MOD_INIT(_raveio)
   add_long_constant(dictionary, "Rave_ObjectType_PIC", Rave_ObjectType_PIC);
 
   HL_init();
+  //HL_InitializeDebugger();
   HL_disableErrorReporting();
   HL_disableHdf5ErrorReporting();
   HL_setDebugLevel(HLHDF_SILENT);

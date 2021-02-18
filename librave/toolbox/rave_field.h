@@ -31,7 +31,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_list.h"
 #include "raveobject_list.h"
 #include "rave_data2d.h"
-
+#include "lazy_dataset.h"
 /**
  * Defines a Rave field
  */
@@ -52,6 +52,13 @@ extern RaveCoreObjectType RaveField_TYPE;
  * @returns 1 on success otherwise 0
  */
 int RaveField_setData(RaveField_t* field, long xsize, long ysize, void* data, RaveDataType type);
+
+/**
+ * Sets a lazy dataset as data member. On any requests to receive data, the lazy dataset will be used to populate
+ * the internal data field.
+ * @param[in]
+ */
+int RaveField_setLazyDataset(RaveField_t* field, LazyDataset_t* lazyDataset);
 
 /**
  * Creates a empty data field

@@ -75,13 +75,17 @@ static int RaveData2D_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcob
 {
   RaveData2D_t* data = (RaveData2D_t*)obj;
   RaveData2D_t* srcdata = (RaveData2D_t*)srcobj;
-  data->xsize = 0;
-  data->ysize = 0;
+  int result = 1;
+  data->xsize = srcdata->xsize;
+  data->ysize = srcdata->ysize;
   data->useNodata = srcdata->useNodata;
   data->nodata = srcdata->nodata;
-  data->type = RaveDataType_UNDEFINED;
+  data->type = srcdata->type;
   data->data = NULL;
-  return RaveData2D_setData(data, srcdata->xsize, srcdata->ysize, srcdata->data, srcdata->type);
+  if (srcdata->data != NULL && srcdata->type > RaveDataType_UNDEFINED && srcdata->type < RaveDataType_LAST) {
+    result = RaveData2D_setData(data, srcdata->xsize, srcdata->ysize, srcdata->data, srcdata->type);
+  }
+  return result;
 }
 
 /**

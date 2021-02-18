@@ -28,6 +28,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_alloc.h"
 #include <string.h>
 #include "odim_io_utilities.h"
+#include "lazy_dataset.h"
 
 /**
  * The Polar ODIM IO adaptor
@@ -52,7 +53,11 @@ static int PolarOdimIO_constructor(RaveCoreObject* obj)
  */
 static int PolarOdimIO_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj)
 {
-  ((PolarOdimIO_t*)obj)->version = ((PolarOdimIO_t*)srcobj)->version;
+  PolarOdimIO_t* self = (PolarOdimIO_t*)obj;
+  PolarOdimIO_t* src = (PolarOdimIO_t*)srcobj;
+
+  self->version = src->version;
+
   return 1;
 }
 
@@ -427,13 +432,25 @@ done:
  * @param[in] dtype - the type of the data.
  * @return 1 on success otherwise 0
  */
-static int PolarOdimIOInternal_loadDsScanParamDataset(void* object, hsize_t nbins, hsize_t nrays, void* data, RaveDataType dtype)
+static int PolarOdimIOInternal_loadDsScanParamDataset(void* object, hsize_t nbins, hsize_t nrays, void* data, RaveDataType dtype, const char* nodeName)
 {
   PolarScanParam_t* param = NULL;
+  int result = 0;
 
   param = (PolarScanParam_t*)((OdimIoUtilityArg*)object)->object;
-
-  return PolarScanParam_setData(param, nbins, nrays, data, dtype);
+  if (data == NULL && ((OdimIoUtilityArg*)object)->lazyReader != NULL) {
+    LazyDataset_t* datasetReader = RAVE_OBJECT_NEW(&LazyDataset_TYPE);
+    if (datasetReader != NULL) {
+      result = LazyDataset_init(datasetReader, ((OdimIoUtilityArg*)object)->lazyReader, nodeName);
+    }
+    if (result) {
+      result = PolarScanParam_setLazyDataset(param, datasetReader);
+    }
+    RAVE_OBJECT_RELEASE(datasetReader);
+  } else {
+    result = PolarScanParam_setData(param, nbins, nrays, data, dtype);
+  }
+  return result;
 }
 
 /**
@@ -443,7 +460,7 @@ static int PolarOdimIOInternal_loadDsScanParamDataset(void* object, hsize_t nbin
  * @param[in] ... - the variable argument list
  * @return a scan parameter on success otherwise NULL
  */
-static PolarScanParam_t* PolarOdimIOInternal_loadScanParam(HL_NodeList* nodelist, const char* fmt, ...)
+static PolarScanParam_t* PolarOdimIOInternal_loadScanParam(LazyNodeListReader_t* lazyReader, const char* fmt, ...)
 {
   OdimIoUtilityArg arg;
   PolarScanParam_t* param = NULL;
@@ -454,7 +471,7 @@ static PolarScanParam_t* PolarOdimIOInternal_loadScanParam(HL_NodeList* nodelist
   int pindex = 1;
   int status = 0;
 
-  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
+  RAVE_ASSERT((lazyReader != NULL), "lazyReader == NULL");
   RAVE_ASSERT((fmt != NULL), "fmt == NULL");
 
   va_start(ap, fmt);
@@ -467,11 +484,12 @@ static PolarScanParam_t* PolarOdimIOInternal_loadScanParam(HL_NodeList* nodelist
 
   param = RAVE_OBJECT_NEW(&PolarScanParam_TYPE);
   if (param != NULL) {
-    arg.nodelist = nodelist;
+    arg.lazyReader = lazyReader;
+    arg.nodelist = LazyNodeListReader_getHLNodeList(lazyReader);
     arg.object = (RaveCoreObject*)param;
   }
 
-  if (!RaveHL_loadAttributesAndData(nodelist, &arg,
+  if (!RaveHL_loadAttributesAndData(arg.nodelist, &arg,
                                     PolarOdimIOInternal_loadDsScanParamAttribute,
                                     PolarOdimIOInternal_loadDsScanParamDataset,
                                     name)) {
@@ -480,8 +498,8 @@ static PolarScanParam_t* PolarOdimIOInternal_loadScanParam(HL_NodeList* nodelist
 
   pindex = 1;
   status = 1;
-  while (status == 1 && RaveHL_hasNodeByName(nodelist, "%s/quality%d", name, pindex)) {
-    RaveField_t* field = OdimIoUtilities_loadField(nodelist, "%s/quality%d", name, pindex);
+  while (status == 1 && RaveHL_hasNodeByName(arg.nodelist, "%s/quality%d", name, pindex)) {
+    RaveField_t* field = OdimIoUtilities_loadField(arg.lazyReader, "%s/quality%d", name, pindex);
     if (field != NULL) {
       status = PolarScanParam_addQualityField(param, field);
     } else {
@@ -507,7 +525,7 @@ fail:
  * @param[in] ... - the varargs
  * @return 1 on success otherwise 0
  */
-static int PolarOdimIOInternal_fillScanDataset(HL_NodeList* nodelist, PolarScan_t* scan, const char* fmt, ...)
+static int PolarOdimIOInternal_fillScanDataset(LazyNodeListReader_t* lazyReader, PolarScan_t* scan, const char* fmt, ...)
 {
   int result = 0;
   OdimIoUtilityArg arg;
@@ -517,7 +535,7 @@ static int PolarOdimIOInternal_fillScanDataset(HL_NodeList* nodelist, PolarScan_
   int nName = 0;
   int pindex = 1;
 
-  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
+  RAVE_ASSERT((lazyReader != NULL), "lazyReader == NULL");
   RAVE_ASSERT((scan != NULL), "scan == NULL");
   RAVE_ASSERT((fmt != NULL), "fmt == NULL");
 
@@ -529,10 +547,11 @@ static int PolarOdimIOInternal_fillScanDataset(HL_NodeList* nodelist, PolarScan_
     goto done;
   }
 
-  arg.nodelist = nodelist;
+  arg.lazyReader = lazyReader;
+  arg.nodelist = LazyNodeListReader_getHLNodeList(lazyReader);
   arg.object = (RaveCoreObject*)scan;
 
-  if (!RaveHL_loadAttributesAndData(nodelist,
+  if (!RaveHL_loadAttributesAndData(arg.nodelist,
                                     &arg,
                                     PolarOdimIOInternal_loadDsScanAttribute,
                                     NULL,
@@ -544,8 +563,8 @@ static int PolarOdimIOInternal_fillScanDataset(HL_NodeList* nodelist, PolarScan_
 
   result = 1;
   pindex = 1;
-  while (result == 1 && RaveHL_hasNodeByName(nodelist, "%s/data%d", name, pindex)) {
-    PolarScanParam_t* param = PolarOdimIOInternal_loadScanParam(nodelist, "%s/data%d", name, pindex);
+  while (result == 1 && RaveHL_hasNodeByName(arg.nodelist, "%s/data%d", name, pindex)) {
+    PolarScanParam_t* param = PolarOdimIOInternal_loadScanParam(lazyReader, "%s/data%d", name, pindex);
     if (param != NULL) {
       result = PolarScan_addParameter(scan, param);
     } else {
@@ -556,8 +575,8 @@ static int PolarOdimIOInternal_fillScanDataset(HL_NodeList* nodelist, PolarScan_
   }
 
   pindex = 1;
-  while (result == 1 && RaveHL_hasNodeByName(nodelist, "%s/quality%d", name, pindex)) {
-    RaveField_t* field = OdimIoUtilities_loadField(nodelist, "%s/quality%d", name, pindex);
+  while (result == 1 && RaveHL_hasNodeByName(arg.nodelist, "%s/quality%d", name, pindex)) {
+    RaveField_t* field = OdimIoUtilities_loadField(arg.lazyReader, "%s/quality%d", name, pindex);
     if (field != NULL) {
       result = PolarScan_addQualityField(scan, field);
     } else {
@@ -866,26 +885,28 @@ RaveIO_ODIM_Version PolarOdimIO_getVersion(PolarOdimIO_t* self)
   return self->version;
 }
 
-int PolarOdimIO_readScan(PolarOdimIO_t* self, HL_NodeList* nodelist, PolarScan_t* scan)
+
+int PolarOdimIO_readScan(PolarOdimIO_t* self, LazyNodeListReader_t* lazyReader, PolarScan_t* scan)
 {
   int result = 0;
   OdimIoUtilityArg arg;
 
   RAVE_ASSERT((self != NULL), "self == NULL");
-  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
+  RAVE_ASSERT((lazyReader != NULL), "lazyReader == NULL");
   RAVE_ASSERT((scan != NULL), "scan == NULL");
 
-  arg.nodelist = nodelist;
+  arg.lazyReader = lazyReader;
+  arg.nodelist = LazyNodeListReader_getHLNodeList(lazyReader);
   arg.object = (RaveCoreObject*)scan;
   arg.version = self->version;
 
-  if (!RaveHL_hasNodeByName(nodelist, "/dataset1") ||
-      !RaveHL_hasNodeByName(nodelist, "/dataset1/data1")) {
+  if (!RaveHL_hasNodeByName(arg.nodelist, "/dataset1") ||
+      !RaveHL_hasNodeByName(arg.nodelist, "/dataset1/data1")) {
     RAVE_ERROR0("Scan file does not contain scan...");
     goto done;
   }
 
-  if (!RaveHL_loadAttributesAndData(nodelist, &arg,
+  if (!RaveHL_loadAttributesAndData(arg.nodelist, &arg,
                                     PolarOdimIOInternal_loadRootScanAttribute,
                                     NULL,
                                     "")) {
@@ -893,7 +914,7 @@ int PolarOdimIO_readScan(PolarOdimIO_t* self, HL_NodeList* nodelist, PolarScan_t
     goto done;
   }
 
-  if (!PolarOdimIOInternal_fillScanDataset(nodelist, scan, "/dataset1")) {
+  if (!PolarOdimIOInternal_fillScanDataset(lazyReader, scan, "/dataset1")) {
     RAVE_ERROR0("Failed to fill scan");
     goto done;
   }
@@ -908,21 +929,22 @@ done:
   return result;
 }
 
-int PolarOdimIO_readVolume(PolarOdimIO_t* self, HL_NodeList* nodelist, PolarVolume_t* volume)
+int PolarOdimIO_readVolume(PolarOdimIO_t* self, LazyNodeListReader_t* lazyReader, PolarVolume_t* volume)
 {
   int result = 0;
   int pindex = 1;
   OdimIoUtilityArg arg;
 
   RAVE_ASSERT((self != NULL), "self == NULL");
-  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
+  RAVE_ASSERT((lazyReader != NULL), "lazyReader == NULL");
   RAVE_ASSERT((volume != NULL), "volume == NULL");
 
-  arg.nodelist = nodelist;
+  arg.lazyReader = lazyReader;
+  arg.nodelist = LazyNodeListReader_getHLNodeList(lazyReader);
   arg.object = (RaveCoreObject*)volume;
   arg.version = self->version;
 
-  if (!RaveHL_loadAttributesAndData(nodelist, &arg,
+  if (!RaveHL_loadAttributesAndData(arg.nodelist, &arg,
                                     PolarOdimIOInternal_loadRootVolumeAttribute,
                                     NULL,
                                     "")) {
@@ -932,10 +954,10 @@ int PolarOdimIO_readVolume(PolarOdimIO_t* self, HL_NodeList* nodelist, PolarVolu
 
   result = 1;
   pindex = 1;
-  while (result == 1 && RaveHL_hasNodeByName(nodelist, "/dataset%d", pindex)) {
+  while (result == 1 && RaveHL_hasNodeByName(arg.nodelist, "/dataset%d", pindex)) {
     PolarScan_t* scan = RAVE_OBJECT_NEW(&PolarScan_TYPE);
     if (scan != NULL) {
-      result = PolarOdimIOInternal_fillScanDataset(nodelist, scan, "/dataset%d", pindex);
+      result = PolarOdimIOInternal_fillScanDataset(lazyReader, scan, "/dataset%d", pindex);
       if (result == 1) {
         result = PolarVolume_addScan(volume, scan);
       }

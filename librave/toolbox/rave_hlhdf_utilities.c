@@ -971,12 +971,12 @@ int RaveHL_loadAttributesAndData(HL_NodeList* nodelist, void* object, RaveHL_att
           }
           RAVE_OBJECT_RELEASE(attribute);
         } else if (HLNode_getType(node) == DATASET_ID &&
-            strcasecmp(tmpptr, "data")==0) {
+            strcasecmp(tmpptr, "data")==0) { /* Hopefully they have at least selected all metadata before entering here. */
           hsize_t d0 = HLNode_getDimension(node, 0);
           hsize_t d1 = HLNode_getDimension(node, 1);
           RaveDataType dataType = RaveHL_hlhdfToRaveType(HLNode_getFormat(node));
           if (dataType != RaveDataType_UNDEFINED && dataf != NULL) {
-            result = dataf(object, d1, d0, HLNode_getData(node), dataType);
+            result = dataf(object, d1, d0, HLNode_getData(node), dataType, nodeName);
           } else {
             RAVE_ERROR0("Undefined datatype for dataset");
             result = 0;

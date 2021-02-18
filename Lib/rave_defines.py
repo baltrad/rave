@@ -167,6 +167,14 @@ RAVE_PGF_QUALITY_FIELD_REPROCESSING=False
 #
 RAVE_PGF_AZIMUTHAL_NAVIGATION=True
 
+# If the compositing should use lazy loading or not
+#
+RAVE_PGF_COMPOSITING_USE_LAZY_LOADING=False
+
+# If the compositing should use quantity preload when using lazy loading or not
+#
+RAVE_PGF_COMPOSITING_USE_LAZY_LOADING_PRELOADS=False
+
 # What algorithm that should be used when performing QI-total
 #
 QITOTAL_METHOD = "minimum"

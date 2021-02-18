@@ -396,6 +396,23 @@ static PyObject* _pycartesianvolume_isValid(PyCartesianVolume* self, PyObject* a
 }
 
 /**
+ * Clones self
+ * @param[in] self - self
+ * @param[in] args - NA
+ * @return a clone of self
+ */
+static PyObject* _pycartesianvolume_clone(PyCartesianVolume* self, PyObject* args)
+{
+  PyObject* pyresult = NULL;
+  CartesianVolume_t* result = RAVE_OBJECT_CLONE(self->cvol);
+  if (result != NULL) {
+    pyresult = (PyObject*)PyCartesianVolume_New(result);
+  }
+  RAVE_OBJECT_RELEASE(result);
+  return pyresult;
+}
+
+/**
  * All methods a polar volume can have
  */
 static struct PyMethodDef _pycartesianvolume_methods[] =
@@ -453,6 +470,10 @@ static struct PyMethodDef _pycartesianvolume_methods[] =
   {"isValid", (PyCFunction) _pycartesianvolume_isValid, 1,
     "isValid() -> boolean\n\n"
     "Validates the volume to see if it contains necessary information like sizes & scales are set. That start and end date/times are set and so on."
+  },
+  {"clone", (PyCFunction)_pycartesianvolume_clone, 1,
+    "clone() -> a clone of self (CartesianVolumeCore)\n\n"
+    "Creates a duplicate of self."
   },
   {NULL, NULL} /* sentinel */
 };

@@ -46,7 +46,7 @@ typedef struct {
 
 #define PyRaveIO_Open_NUM 3                     /**< index for Open */
 #define PyRaveIO_Open_RETURN PyRaveIO*          /**< return type for Open */
-#define PyRaveIO_Open_PROTO (const char* filename) /**< argument prototype for Open */
+#define PyRaveIO_Open_PROTO (const char* filename, int lazyLoading, const char* preloadQuantities) /**< argument prototype for Open */
 
 
 #define PyRaveIO_API_pointers 4                 /**< Total number of C API pointers */

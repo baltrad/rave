@@ -178,10 +178,12 @@ static PyObject* _raveio_open(PyObject* self, PyObject* args)
 {
   PyRaveIO* result = NULL;
   char* filename = NULL;
-  if (!PyArg_ParseTuple(args, "s", &filename)) {
+  int lazyLoading = 0;
+  char* preloadQuantities = NULL;
+  if (!PyArg_ParseTuple(args, "s|iz", &filename, &lazyLoading, &preloadQuantities)) {
     return NULL;
   }
-  result = PyRaveIO_Open(filename);
+  result = PyRaveIO_Open(filename, lazyLoading, preloadQuantities);
   return (PyObject*)result;
 }
 

@@ -802,6 +802,23 @@ fail:
 }
 
 /**
+ * Clones self
+ * @param[in] self - self
+ * @param[in] args - NA
+ * @return a clone of self
+ */
+static PyObject* _pyverticalprofile_clone(PyVerticalProfile* self, PyObject* args)
+{
+  PyObject* pyresult = NULL;
+  VerticalProfile_t* result = RAVE_OBJECT_CLONE(self->vp);
+  if (result != NULL) {
+    pyresult = (PyObject*)PyVerticalProfile_New(result);
+  }
+  RAVE_OBJECT_RELEASE(result);
+  return pyresult;
+}
+
+/**
  * All methods a vertical profile can have
  */
 static struct PyMethodDef _pyverticalprofile_methods[] =
@@ -1044,6 +1061,10 @@ static struct PyMethodDef _pyverticalprofile_methods[] =
   {"getAttributeNames", (PyCFunction) _pyverticalprofile_getAttributeNames, 1,
     "getAttributeNames() -> array of names \n\n"
     "Returns the attribute names associated with this vertical profile"
+  },
+  {"clone", (PyCFunction)_pyverticalprofile_clone, 1,
+    "clone() -> a clone of self (VerticalProfileCore)\n\n"
+    "Creates a duplicate of self."
   },
   {NULL, NULL}
 };
