@@ -48,11 +48,11 @@ RAVE_VERSIONS = ('2.0')
 
 # HDF5 Information model version
 H5RAD_VERSION = 'H5rad 2.0'
-H5RAD_VERSIONS = ('H5rad 1.2', 'H5rad 2.0', 'H5rad 2.1', 'H5rad 2.2')
+H5RAD_VERSIONS = ('H5rad 1.2', 'H5rad 2.0', 'H5rad 2.1', 'H5rad 2.2', 'H5rad 2.3')
 
 # ODIM_H5 version
 ODIM_VERSION = 'ODIM_H5/V2_0'
-ODIM_VERSIONS = ('ODIM_H5/V2_0', 'ODIM_H5/V2_1', 'ODIM_H5/V2_2')
+ODIM_VERSIONS = ('ODIM_H5/V2_0', 'ODIM_H5/V2_1', 'ODIM_H5/V2_2', 'ODIM_H5/V2_3')
 
 # Default text encoding
 ENCODING = 'iso-8859-1'
@@ -163,5 +163,29 @@ RAVE_QUALITY_CONTROL_PROCESSES=4
 # quality field. 
 RAVE_PGF_QUALITY_FIELD_REPROCESSING=False
 
+# If the compositing should utilize azimuthal navigation or not (how/astart, how/startazA)
+#
+RAVE_PGF_AZIMUTHAL_NAVIGATION=True
+
+# If the compositing should use lazy loading or not
+#
+RAVE_PGF_COMPOSITING_USE_LAZY_LOADING=False
+
+# If the compositing should use quantity preload when using lazy loading or not
+#
+RAVE_PGF_COMPOSITING_USE_LAZY_LOADING_PRELOADS=False
+
+# What algorithm that should be used when performing QI-total
+#
+QITOTAL_METHOD = "minimum"
+
+# Directory specifying the output scansun path
+RAVESCANSUN_OUT = None
+
+# Rave IO default writing version
+#RaveIO_ODIM_Version_2_2 = 2,        /**< ODIM 2.2 */
+#RaveIO_ODIM_Version_2_3 = 3         /**< ODIM 2.3, The default version */
+RAVE_IO_DEFAULT_VERSION = 2
+
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)

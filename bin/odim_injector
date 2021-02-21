@@ -56,17 +56,17 @@ LOGFILES = 5
 if not os.path.isdir(ODIM_INJECTOR_ROOT):
   try:
     os.makedirs(ODIM_INJECTOR_ROOT)
-    print "Created directory %s" % ODIM_INJECTOR_ROOT
+    print("Created directory %s" % ODIM_INJECTOR_ROOT)
   except OSError:
-    print "Directory %s does not exist. Failed to create it. Exiting." % ODIM_INJECTOR_ROOT
+    print("Directory %s does not exist. Failed to create it. Exiting." % ODIM_INJECTOR_ROOT)
     sys.exit(1)
 
 if not os.path.isdir(DEFAULTIN):
   try:
     os.makedirs(DEFAULTIN)
-    print "Created directory %s" % DEFAULTIN
+    print("Created directory %s" % DEFAULTIN)
   except OSError:
-    print "Directory %s does not exist. Failed to create it. Exiting." % DEFAULTIN
+    print("Directory %s does not exist. Failed to create it. Exiting." % DEFAULTIN)
     sys.exit(1)
 
 sys.path.append(ODIM_INJECTOR_ROOT)
@@ -103,7 +103,7 @@ def killme(pidfile):
       os.kill(int(c), signal.SIGKILL)
     os.remove(options.pid_file)
   except:
-    print "Could not kill daemon. Check pid."
+    print("Could not kill daemon. Check pid.")
 
 # # Processes all the files that have arrived in the input directory.
 # While catchup() is grinding through a long list of files, new ones can
@@ -143,7 +143,7 @@ def remove_file(fname):
   try:
     os.remove(fname)
     return True
-  except Exception, e:
+  except Exception as e:
     pyinotify.log.error("Failed to remove file '%s': %s" % (fname, e.__str__()))
   return False
 
@@ -193,14 +193,14 @@ def MAIN(in_file, janitor=False, uri=DEX_SPOE):
               # Send file to BALTRAD
               try:
                 BaltradFrame.inject_file(in_file, DEX_SPOE)
-              except Exception, e:
+              except Exception as e:
                 pyinotify.log.error("Failed to inject %s. Error message: %s" % (in_file, e))
               if os.path.isfile(in_file):
                 removed = remove_file(in_file)
             else:
               pyinotify.log.warn(in_file + " not ODIM_H5, removed.")
               removed = remove_file(in_file)
-          except Exception, e:
+          except Exception as e:
             pyinotify.log.error("%s" % e)
             removed = remove_file(in_file)
 
@@ -268,10 +268,10 @@ if __name__ == "__main__":
   if not options.kill:
     ALIVE = alive(options.pid_file)
     if not ALIVE and os.path.isfile(options.pid_file):
-      print "n2b is not alive but pid file %s exists, removing." % options.pid_file
+      print("odim_injector is not alive but pid file %s exists, removing." % options.pid_file)
       os.remove(options.pid_file)
     elif ALIVE:
-      print "n2b is already running."
+      print("odim_injector is already running.")
       sys.exit()
 
     # Shut down a previous incarnation of this daemon.

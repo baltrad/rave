@@ -77,7 +77,6 @@ def readCT(filename):
     URy = ULy + yoffset
     ct.areaextent = (LLx, LLy, URx, URy)  # Differs ~5 cm from PPS and PyTROLL
     ct.xscale, ct.yscale = xscale, yscale
-
     cp.quantity = "CT"
     cp.gain, cp.offset = 1.0, 0.0
     cp.nodata, cp.undetect = -1.0, 0.0
@@ -114,7 +113,7 @@ def getMatchingCT(prod):
 # @return True upon success, False upon failure, None if abandoned due to lack of CT
 def ctFilter(prod, quantity="DBZH"):
     if not prod.hasParameter(quantity):
-        raise AttributeError, "Input product has no quantity called %s" % quantity
+        raise AttributeError("Input product has no quantity called %s" % quantity)
     prod.defaultParameter = quantity
     ct_filename = getMatchingCT(prod)
 

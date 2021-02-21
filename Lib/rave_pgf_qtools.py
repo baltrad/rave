@@ -26,13 +26,21 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @author Daniel Michelson, SMHI
 ## @date 2010-07-23
 
-import os
+import os, sys
 import traceback
-import xmlrpclib
-import Queue
+#import xmlrpclib
 from xml.etree import ElementTree as ET
 from rave_defines import QFILE
 import threading
+if sys.version_info < (3,):
+  from xmlrpclib import dumps as xmldumps
+  from xmlrpclib import loads as xmlloads
+  import Queue
+else:
+  from xmlrpc.client import dumps as xmldumps
+  from xmlrpc.client  import loads as xmlloads
+  import queue as Queue
+  
 
 ## Job queue Exception
 class PGF_JobQueue_isFull_Error(Exception):
@@ -78,7 +86,7 @@ class PGF_JobQueue(dict):
     def task_done(self, jobid):
         self.lock.acquire()
         try:
-            if self.has_key(jobid):
+            if jobid in self:
                 job = self.pop(jobid)
                 return "OK"
             else:
@@ -97,7 +105,7 @@ class PGF_JobQueue(dict):
             for jobid, job in self.items():
                 root.append(job)
             fd = open(filename, 'w')
-            fd.write(q + ET.tostring(root))
+            fd.write(q + ET.tostring(root).decode('utf-8'))
             fd.close()
         finally:
           self.lock.release()
@@ -110,13 +118,16 @@ class PGF_JobQueue(dict):
         if os.path.isfile(filename):
             try:
                 elems =  ET.parse(filename).getroot()
-            except Exception, err:
+            except Exception:
                 err_msg = traceback.format_exc()
-                print "Error trying to read PGF job queue: %sIgnoring, using empty job queue." % err_msg
+                print("Error trying to read PGF job queue: %sIgnoring, using empty job queue." % err_msg)
                 return  # queue is probably empty, just ignore
             for elem in list(elems):
                 self[elem.get('jobid')] = elem
 
+
+def pgf_dumps(val):
+  return xmldumps(val)
 
 ## Adds Elements containing files and arguments to the message.
 # @param algorithm Element in a \ref rave_pgf_registry.PGF_Registry instance.
@@ -146,7 +157,7 @@ def split(elem):
 # @param tagname string the name of the tag to create.
 # @return Element
 def List2Element(inlist, tagname):
-    dumped = xmlrpclib.dumps(tuple(inlist))  # dumps takes a tuple, not a list
+    dumped = pgf_dumps(tuple(inlist))  # dumps takes a tuple, not a list
     e = ET.fromstring(dumped)
     e.tag = tagname  # xmlrpc.dumps creates tagname 'params' by default.
     return e
@@ -159,10 +170,10 @@ def Element2List(elem, tagname):
     e = elem.find(tagname)
     tag = e.tag
     e.tag = 'params'  # xmlrpc.loads won't accept any other tagname. Hack...
-    l = list(xmlrpclib.loads(ET.tostring(e))[0])
+    l = list(xmlloads(ET.tostring(e))[0])
     e.tag = tag       # put back original tag
     return l 
 
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)

@@ -48,6 +48,8 @@ typedef struct {
 
 #define PyVerticalProfile_API_pointers 3                  /**< number of pointers */
 
+#define PyVerticalProfile_CAPSULE_NAME "_verticalprofile._C_API"
+
 #ifdef PYVERTICALPROFILE_MODULE
 /** Forward declaration of the type */
 extern PyTypeObject PyVerticalProfile_Type;
@@ -83,37 +85,18 @@ static void **PyVerticalProfile_API;
   (*(PyVerticalProfile_New_RETURN (*)PyVerticalProfile_New_PROTO) PyVerticalProfile_API[PyVerticalProfile_New_NUM])
 
 /**
- * Checks if the object is a Python vertical profile.
+ * Checks if the object is a python polar scan .
  */
 #define PyVerticalProfile_Check(op) \
-   ((op)->ob_type == (PyTypeObject *)PyVerticalProfile_API[PyVerticalProfile_Type_NUM])
+   (Py_TYPE(op) == &PyVerticalProfile_Type)
+
+#define PyVerticalProfile_Type (*(PyTypeObject*)PyVerticalProfile_API[PyVerticalProfile_Type_NUM])
 
 /**
- * Imports the pyverticalprofile module (like import _verticalprofile in Python).
+ * Imports the PyVerticalProfile module (like import _verticalprofile in python).
  */
-static int
-import_pyverticalprofile(void)
-{
-  PyObject *module;
-  PyObject *c_api_object;
-
-  module = PyImport_ImportModule("_verticalprofile");
-  if (module == NULL) {
-    return -1;
-  }
-
-  c_api_object = PyObject_GetAttrString(module, "_C_API");
-  if (c_api_object == NULL) {
-    Py_DECREF(module);
-    return -1;
-  }
-  if (PyCObject_Check(c_api_object)) {
-    PyVerticalProfile_API = (void **)PyCObject_AsVoidPtr(c_api_object);
-  }
-  Py_DECREF(c_api_object);
-  Py_DECREF(module);
-  return 0;
-}
+#define import_pyverticalprofile() \
+    PyVerticalProfile_API = (void **)PyCapsule_Import(PyVerticalProfile_CAPSULE_NAME, 1);
 
 #endif
 

@@ -10,7 +10,7 @@
     <field name="se.smhi.test.2" weight="0.7"/>
   </qitotal>
 
-  <qitotal nod="sekir" weight="1.0">
+  <qitotal nod="sekrn" weight="1.0">
     <field name="se.smhi.test.1" weight="0.3"/>
     <field name="se.smhi.test.2" weight="0.2"/>
     <field name="se.smhi.test.3" weight="0.5"/>

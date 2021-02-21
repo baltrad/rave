@@ -25,8 +25,10 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef ODIM_IO_UTILITIES_H
 #define ODIM_IO_UTILITIES_H
 
+#include <lazy_nodelist_reader.h>
 #include "rave_field.h"
 #include "rave_object.h"
+#include "rave_types.h"
 #include "raveobject_list.h"
 #include "hlhdf.h"
 #include <stdarg.h>
@@ -37,8 +39,10 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
 typedef struct OdimIoUtilityArg {
+  LazyNodeListReader_t* lazyReader; /**< the lazy node list reader */
   HL_NodeList* nodelist;  /**< the nodelist */
   RaveCoreObject* object; /**< the object */
+  RaveIO_ODIM_Version version; /**< the version */
 } OdimIoUtilityArg;
 
 /**
@@ -66,12 +70,12 @@ int OdimIoUtilities_addQualityFields(RaveObjectList_t* fields, HL_NodeList* node
 /**
  * Loads a rave field. A rave field can be just about anything with a mapping
  * between attributes and a dataset.
- * @param[in] nodelist - the hlhdf node list
+ * @param[in] lazyReader - the wrapper around the hlhdf node list
  * @param[in] fmt - the variable argument list string format
  * @param[in] ... - the variable argument list
  * @return a rave field on success otherwise NULL
  */
-RaveField_t* OdimIoUtilities_loadField(HL_NodeList* nodelist, const char* fmt, ...);
+RaveField_t* OdimIoUtilities_loadField(LazyNodeListReader_t* lazyReader, const char* fmt, ...);
 
 /**
  * Gets the specified id from the source string, for example. If source string contains CMT:abc,NOD:selek,RAD:se50 then if id = NOD: buf will be filled with selek

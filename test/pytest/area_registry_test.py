@@ -52,8 +52,8 @@ class area_registry_test(unittest.TestCase):
     registry = area_registry.area_registry(self.AREA_FIXTURE, self.PROJ_FIXTURE)
 
     nrd2kmarea = registry.getarea("nrd2km")
-    self.assertNotEquals(-1, string.find(`type(nrd2kmarea)`, "AreaCore"))
-    self.assertEquals("nrd2km", nrd2kmarea.id)
-    self.assertEquals(848, nrd2kmarea.xsize)
+    self.assertNotEqual(-1, str(type(nrd2kmarea)).find("AreaCore"))
+    self.assertEqual("nrd2km", nrd2kmarea.id)
+    self.assertEqual(848, nrd2kmarea.xsize)
 
   

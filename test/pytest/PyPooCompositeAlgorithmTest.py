@@ -36,12 +36,11 @@ class PyPooCompositeAlgorithmTest(unittest.TestCase):
   
   def test_new(self):
     obj = _poocompositealgorithm.new()
-    isalgorithm = string.find(`type(obj)`, "CompositeAlgorithmCore")
-    self.assertNotEqual(-1, isalgorithm)
+    self.assertNotEqual(-1, str(type(obj)).find("CompositeAlgorithmCore"))
 
   def test_getName(self):
     obj = _poocompositealgorithm.new()
-    self.assertEquals("POO", obj.getName())
+    self.assertEqual("POO", obj.getName())
   
   def test_process(self):
     obj = _poocompositealgorithm.new()

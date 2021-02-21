@@ -47,6 +47,8 @@ typedef struct {
 
 #define PyAcrr_API_pointers 3               /**< number of API pointers */
 
+#define PyAcrr_CAPSULE_NAME "_acrr._C_API"
+
 #ifdef PYACRR_MODULE
 /** Forward declaration of type */
 extern PyTypeObject PyAcrr_Type;
@@ -85,34 +87,16 @@ static void **PyAcrr_API;
  * Checks if the object is a python acrr instance.
  */
 #define PyAcrr_Check(op) \
-   ((op)->ob_type == (PyTypeObject *)PyAcrr_API[PyAcrr_Type_NUM])
+   (Py_TYPE(op) == &PyAcrr_Type)
+
+#define PyAcrr_Type (*(PyTypeObject*)PyAcrr_API[PyAcrr_Type_NUM])
 
 /**
  * Imports the PyAcrr module (like import _acrr in python).
  */
-static int
-import_pyacrr(void)
-{
-  PyObject *module;
-  PyObject *c_api_object;
+#define import_pyacrr() \
+    PyAcrr_API = (void **)PyCapsule_Import(PyAcrr_CAPSULE_NAME, 1);
 
-  module = PyImport_ImportModule("_acrr");
-  if (module == NULL) {
-    return -1;
-  }
-
-  c_api_object = PyObject_GetAttrString(module, "_C_API");
-  if (c_api_object == NULL) {
-    Py_DECREF(module);
-    return -1;
-  }
-  if (PyCObject_Check(c_api_object)) {
-    PyAcrr_API = (void **)PyCObject_AsVoidPtr(c_api_object);
-  }
-  Py_DECREF(c_api_object);
-  Py_DECREF(module);
-  return 0;
-}
 
 #endif
 

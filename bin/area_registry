@@ -72,7 +72,7 @@ def make_area(files, projection_id, xscale, yscale, add=False, area_id=None, des
     add_area(A.Id, description, projection_id, A.extent, A.xsize, A.ysize, xscale, yscale)
   else:
     del rave_area._registry[A.Id]
-    print 'Run again with -a -i <identifier> -d <"description"> to add this area to the registry.'
+    print('Run again with -a -i <identifier> -d <"description"> to add this area to the registry.')
 
 
 ## Lists the entries in the registry.
@@ -137,24 +137,24 @@ if __name__ == "__main__":
     (options, args) = parser.parse_args()
 
     if not (options.add or options.remove or options.list or options.make):
-        print "One of options --add, --remove, --list or --make must be provided!"
+        print("One of options --add, --remove, --list or --make must be provided!")
         parser.print_help()
         sys.exit()
         
     if options.add and not options.make:
         if not (options.id and options.desc and options.pcsid and options.extent and options.xsize and options.ysize and options.xscale and options.yscale):
-            print "If option --add is used without make, all of the following options must also be provided: --identifier, --description, --proj_id, --extent, --xsize, --ysize, --xscale and --yscale!"
+            print("If option --add is used without make, all of the following options must also be provided: --identifier, --description, --proj_id, --extent, --xsize, --ysize, --xscale and --yscale!")
             parser.print_help()
             sys.exit()
     
     if options.make:
       if not (options.files and options.pcsid and options.xscale and options.yscale):
-        print "If option --make is provided, all of the following options must also be provided: --files, --proj_id, --xscale and --yscale!"
+        print("If option --make is provided, all of the following options must also be provided: --files, --proj_id, --xscale and --yscale!")
         parser.print_help()
         sys.exit()
         
     if options.remove and not options.id:
-      print "If option --remove is provided, --identifier must also be provided!"
+      print("If option --remove is provided, --identifier must also be provided!")
       parser.print_help()
       sys.exit()
 

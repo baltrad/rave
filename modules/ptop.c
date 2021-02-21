@@ -13,7 +13,7 @@
  * @author Daniel Michelson (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2006-
  */
-#include <Python.h>
+#include <pyravecompat.h>
 #include <arrayobject.h>
 #include <limits.h>
 #include <math.h>
@@ -1700,16 +1700,25 @@ static struct PyMethodDef _ptop_functions[] =
 /**
  * Initializes the python module _ptop
  */
-PyMODINIT_FUNC init_ptop(void)
+MOD_INIT(_ptop)
 {
-  PyObject* m;
-  m = Py_InitModule("_ptop", _ptop_functions);
-  ErrorObject = PyString_FromString("_ptop.error");
-  if (ErrorObject == NULL || PyDict_SetItemString(PyModule_GetDict(m), "error",
-                                                  ErrorObject) != 0)
+  PyObject* module = NULL;
+  PyObject* dictionary = NULL;
+
+  MOD_INIT_DEF(module, "_ptop", NULL/*doc*/, _ptop_functions);
+  if (module == NULL) {
+    return MOD_INIT_ERROR;
+  }
+  dictionary = PyModule_GetDict(module);
+
+  ErrorObject = PyErr_NewException("_ptop.error", NULL, NULL);
+  if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
     Py_FatalError("Can't define _ptop.error");
+    return MOD_INIT_ERROR;
+  }
 
   import_array(); /* Make sure I access to the Numeric PyArray functions */
+  return MOD_INIT_SUCCESS(module);
 }
 
 /*

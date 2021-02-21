@@ -68,6 +68,33 @@ static const struct RaveToHlhdfTypeMap RAVE_TO_HLHDF_MAP[] = {
   {HLHDF_END_OF_SPECIFIERS, RaveDataType_UNDEFINED}
 };
 
+/**
+ * Type for keeping mapping
+ */
+struct OdimVersionToStrTypeMap {
+  RaveIO_ODIM_Version version; /**< the odim version */
+  const char* str;          /**< the odim version str */
+};
+
+/** Mapping between version and str */
+static const struct OdimVersionToStrTypeMap ODIM_VERSION_STR_MAP[] = {
+    {RaveIO_ODIM_Version_UNDEFINED, "UNDEFINED"},
+    {RaveIO_ODIM_Version_2_0, RAVE_ODIM_VERSION_2_0_STR},
+    {RaveIO_ODIM_Version_2_1, RAVE_ODIM_VERSION_2_1_STR},
+    {RaveIO_ODIM_Version_2_2, RAVE_ODIM_VERSION_2_2_STR},
+    {RaveIO_ODIM_Version_2_3, RAVE_ODIM_VERSION_2_3_STR},
+    {-2, NULL}
+};
+
+/** Mapping between version and str */
+static const struct OdimVersionToStrTypeMap ODIM_VERSION_H5RAD_STR_MAP[] = {
+    {RaveIO_ODIM_Version_UNDEFINED, "UNDEFINED"},
+    {RaveIO_ODIM_Version_2_0, RAVE_ODIM_H5RAD_VERSION_2_0_STR},
+    {RaveIO_ODIM_Version_2_1, RAVE_ODIM_H5RAD_VERSION_2_1_STR},
+    {RaveIO_ODIM_Version_2_2, RAVE_ODIM_H5RAD_VERSION_2_2_STR},
+    {RaveIO_ODIM_Version_2_3, RAVE_ODIM_H5RAD_VERSION_2_3_STR},
+    {-2, NULL}
+};
 
 /**
  * Attribute names that has to be translated when jumping from 2.0/2.1 up to 2.2
@@ -79,6 +106,7 @@ const char* ATTRIBUTE_NAMES_20_to_22[][2] = {
     {"how/radomeloss", "how/radomelossH"},
     {"how/antgain", "how/antgainH"},
     {"how/beamw", "how/beamwH"},
+    {"how/beamwidth", "how/beamwH"},
     {"how/radconst", "how/radconstH"},
     {"how/NEZ", "how/NEZH"},
     {"how/zcal", "how/zcalH"},
@@ -168,6 +196,52 @@ const char* RaveHL_convertQuantity(const char* name)
   }
   return name;
 }
+
+/**
+ *
+ */
+const char* RaveHL_getOdimVersionString(RaveIO_ODIM_Version version)
+{
+  int idx = 0;
+  while (ODIM_VERSION_STR_MAP[idx].str != NULL) {
+    if (ODIM_VERSION_STR_MAP[idx].version == version) {
+      return ODIM_VERSION_STR_MAP[idx].str;
+    }
+    idx++;
+  }
+  return ODIM_VERSION_STR_MAP[0].str; /*UNDEFINED*/
+}
+
+
+/**
+ *
+ */
+const char* RaveHL_getH5RadVersionStringFromOdimVersion(RaveIO_ODIM_Version version)
+{
+  int idx = 0;
+  while (ODIM_VERSION_H5RAD_STR_MAP[idx].str != NULL) {
+    if (ODIM_VERSION_H5RAD_STR_MAP[idx].version == version) {
+      return ODIM_VERSION_H5RAD_STR_MAP[idx].str;
+    }
+    idx++;
+  }
+  return ODIM_VERSION_H5RAD_STR_MAP[0].str; /*UNDEFINED*/
+}
+
+/**
+ *
+ */
+RaveIO_ODIM_Version RaveHL_getOdimVersionFromString(const char* str)
+{
+  int idx = 0;
+  while (ODIM_VERSION_STR_MAP[idx].str != NULL) {
+    if (strcmp(ODIM_VERSION_STR_MAP[idx].str, str) == 0) {
+      return ODIM_VERSION_STR_MAP[idx].version;
+    }
+  }
+  return RaveIO_ODIM_Version_UNDEFINED;
+}
+
 
 /**
  * Creates a rave attribute from a HLHDF node value.
@@ -409,6 +483,41 @@ done:
   return result;
 }
 
+int RaveHL_createGroupUnlessExists(HL_NodeList* nodelist, const char* fmt, ...)
+{
+  va_list ap;
+  char nodeName[1024];
+  int n = 0;
+  int result = 0;
+  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
+
+  va_start(ap, fmt);
+  n = vsnprintf(nodeName, 1024, fmt, ap);
+  va_end(ap);
+  if (n >= 0 && n < 1024) {
+    if (!HLNodeList_hasNodeByName(nodelist, nodeName)) {
+      HL_Node* node = HLNode_newGroup(nodeName);
+      if (node == NULL) {
+        RAVE_CRITICAL1("Failed to create group with name %s", nodeName);
+        goto done;
+      }
+      if (!HLNodeList_addNode(nodelist, node)) {
+        RAVE_CRITICAL1("Failed to add group node with name %s", nodeName);
+        HLNode_free(node);
+        goto done;
+      }
+      result = 1;
+    } else {
+      result = 1;
+    }
+  }
+done:
+  if (result == 0) {
+    RAVE_CRITICAL0("Failed to add group node");
+  }
+  return result;
+}
+
 int RaveHL_createStringValue(HL_NodeList* nodelist, const char* value, const char* fmt, ...)
 {
   va_list ap;
@@ -481,7 +590,7 @@ int RaveHL_addAttribute(HL_NodeList* nodelist, RaveAttribute_t* attribute, const
 
   attrname = RaveAttribute_getName(attribute);
   if (attrname != NULL) {
-    char attrNodeName[1024];
+    char attrNodeName[2048];
     sprintf(attrNodeName, "%s/%s", nodeName, attrname);
     if (!HLNodeList_hasNodeByName(nodelist, attrNodeName)) {
       HL_Node* node = HLNode_newAttribute(attrNodeName);
@@ -555,6 +664,33 @@ done:
   return result;
 }
 
+RaveList_t* RaveHL_extractSubGroups(const char* attrname)
+{
+  char* dup = RAVE_STRDUP(attrname);
+  char* r = dup; /* To remember what to delete */
+  RaveList_t* result = RAVE_OBJECT_NEW(&RaveList_TYPE);
+  if (dup != NULL) {
+    char currentGroupName[1024];
+    memset(currentGroupName, 0, 1024);
+    char* tmp = strstr(dup, "/");
+    while (tmp != NULL && *tmp != '\0') {
+      *tmp = '\0';
+      tmp++;
+      if (strlen(currentGroupName) == 0) {
+        strcpy(currentGroupName, dup);
+      } else {
+        strcat(currentGroupName, "/");
+        strcat(currentGroupName, dup);
+      }
+      RAVE_INFO1("Adding group: %s\n", currentGroupName);
+      RaveList_add(result, (char*)RAVE_STRDUP(currentGroupName));
+      dup = tmp;
+      tmp = strstr(dup, "/");
+    }
+  }
+  RAVE_FREE(r);
+  return result;
+}
 
 int RaveHL_addAttributes(HL_NodeList* nodelist, RaveObjectList_t* attributes, const char* name)
 {
@@ -563,6 +699,8 @@ int RaveHL_addAttributes(HL_NodeList* nodelist, RaveObjectList_t* attributes, co
   int nattrs = 0;
   int i = 0;
   int hashow = 0, haswhat = 0, haswhere = 0;
+  RaveList_t* howSubgroups = NULL;
+
   RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
   RAVE_ASSERT((attributes != NULL), "attributes == NULL");
 
@@ -611,6 +749,25 @@ int RaveHL_addAttributes(HL_NodeList* nodelist, RaveObjectList_t* attributes, co
       }
     }
 
+    /** As of ODIM 2.3 we should support subgroups in how */
+    if (strncasecmp(attrname, "how/", 4) == 0) {
+      howSubgroups = RaveHL_extractSubGroups(attrname);
+      if (howSubgroups != NULL && RaveList_size(howSubgroups) > 1) {
+        int hsz = RaveList_size(howSubgroups);
+        int hsi = 0;
+        for (hsi = 0; hsi < hsz; hsi++) {
+          char* grp = (char*)RaveList_get(howSubgroups, hsi);
+          if (!RaveHL_createGroupUnlessExists(nodelist, "%s/%s",name, grp)) {
+            RAVE_ERROR2("Failed to create group %s/%s", name, grp);
+            goto done;
+          }
+        }
+      }
+      if (howSubgroups != NULL) {
+        RaveList_freeAndDestroy(&howSubgroups);
+      }
+    }
+
     if (!RaveHL_addAttribute(nodelist, attribute, name)) {
       RAVE_ERROR2("Failed to add attribute %s/%s to nodelist", name, attrname);
       goto done;
@@ -618,6 +775,9 @@ int RaveHL_addAttributes(HL_NodeList* nodelist, RaveObjectList_t* attributes, co
   }
   result = 1;
 done:
+  if (howSubgroups != NULL) {
+    RaveList_freeAndDestroy(&howSubgroups);
+  }
   RAVE_OBJECT_RELEASE(attribute);
   return result;
 }
@@ -799,14 +959,24 @@ int RaveHL_loadAttributesAndData(HL_NodeList* nodelist, void* object, RaveHL_att
               result = attrf(object, attribute);
             }
           }
+          if (result && (strcasecmp(tmpptr, "how/beamwidth") == 0 || strcasecmp(tmpptr, "how/beamw") == 0)) { /* We convert this into how/beamwH but also need std */
+            RaveAttribute_t* beamwidthAttribute = RaveHL_createAttribute(node);
+            if (beamwidthAttribute != NULL) {
+              result = RaveAttribute_setName(beamwidthAttribute, "how/beamwidth");
+              if (result == 1 && attrf != NULL) {
+                result = attrf(object, beamwidthAttribute);
+              }
+              RAVE_OBJECT_RELEASE(beamwidthAttribute);
+            }
+          }
           RAVE_OBJECT_RELEASE(attribute);
         } else if (HLNode_getType(node) == DATASET_ID &&
-            strcasecmp(tmpptr, "data")==0) {
+            strcasecmp(tmpptr, "data")==0) { /* Hopefully they have at least selected all metadata before entering here. */
           hsize_t d0 = HLNode_getDimension(node, 0);
           hsize_t d1 = HLNode_getDimension(node, 1);
           RaveDataType dataType = RaveHL_hlhdfToRaveType(HLNode_getFormat(node));
           if (dataType != RaveDataType_UNDEFINED && dataf != NULL) {
-            result = dataf(object, d1, d0, HLNode_getData(node), dataType);
+            result = dataf(object, d1, d0, HLNode_getData(node), dataType, nodeName);
           } else {
             RAVE_ERROR0("Undefined datatype for dataset");
             result = 0;

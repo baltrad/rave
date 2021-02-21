@@ -9,6 +9,7 @@
 #include "h5rad.h"
 #include "polar.h"
 #include "getpy.h"
+#include "pyravecompat.h"
 #include <limits.h>
 #include "rave_alloc.h"
 

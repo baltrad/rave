@@ -38,24 +38,24 @@ import compositing, tiled_compositing
 def generate(options):
     start = time.time()
     if options.ipath == options.opath:
-        raise NameError, "Input and output paths may not be the same."
+        raise NameError("Input and output paths may not be the same.")
     if not os.path.isdir(options.ipath):
-        raise IOError, "Input path does not exist."
+        raise IOError("Input path does not exist.")
     elif not (os.access(options.ipath, os.R_OK) and
               os.access(options.ipath, os.W_OK)):
-        raise IOError, "Input path exists but you lack read/write permission."
+        raise IOError("Input path exists but you lack read/write permission.")
 
     if not os.path.isdir(options.opath):
         try:
             os.makedirs(options.opath)
         except:
-            raise IOError, "Cannot create output directory."
+            raise IOError("Cannot create output directory.")
     elif not os.access(options.opath, os.W_OK):
-        raise IOError, "Output directory exists but you lack write permission."
+        raise IOError("Output directory exists but you lack write permission.")
 
     fstrs = glob.glob(options.ipath + '/*')
     if not len(fstrs):
-        raise IOError, "Empty input directory? Exiting."
+        raise IOError("Empty input directory? Exiting.")
 
     # Initialize logger
     logger = logging.getLogger("ODC")

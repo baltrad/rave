@@ -93,7 +93,7 @@ def arglist2dict(arglist):
 def strToNumber(sval):
   try:
     return float(sval)
-  except ValueError, e:
+  except ValueError:
     return int(sval)
     
 def get_backup_gra_coefficient(db, maxage):
@@ -102,7 +102,7 @@ def get_backup_gra_coefficient(db, maxage):
     if coeff and not math.isnan(coeff.a) and not math.isnan(coeff.b) and not math.isnan(coeff.c):
       logger.info("Reusing gra coefficients from %s %s"%(coeff.date, coeff.time))
       return coeff.significant, coeff.points, coeff.loss, coeff.r, coeff.r_significant, coeff.corr_coeff, coeff.a, coeff.b, coeff.c, coeff.mean, coeff.stddev
-  except Exception, e:
+  except Exception:
     logger.exception("Failed to aquire coefficients")
 
   logger.warn("Could not aquire coefficients newer than %s, defaulting to climatologic"%maxage.strftime("%Y%m%d %H:%M:%S"))
@@ -115,6 +115,7 @@ def get_backup_gra_coefficient(db, maxage):
 
 def calculate_gra_coefficient(distancefield, interval, adjustmentfile, etime, edate, acrrproduct, db):
   matcher = obsmatcher.obsmatcher(db)
+  logger.info("rave_pgf_gra_plugin: Matching observations")
   points = matcher.match(acrrproduct, acc_period=interval, quantity="ACRR", how_task=distancefield)
   if len(points) == 0:
     logger.warn("Could not find any matching observations")
@@ -127,6 +128,7 @@ def calculate_gra_coefficient(distancefield, interval, adjustmentfile, etime, ed
   tlimit = tlimit - datetime.timedelta(hours=interval * MERGETERMS)
   dlimit = datetime.datetime(int(d[:4]), int(d[4:6]), int(d[6:8]), int(t[0:2]), int(t[2:4]), int(t[4:6]))
   dlimit = dlimit - datetime.timedelta(hours=12 * MERGETERMS)
+  logger.info("rave_pgf_gra_plugin: Deleting old observations")
   db.delete_grapoints(dlimit) # We don't want any points older than 12 hour * MERGETERMS back in time
   points = db.get_grapoints(tlimit) # Get all gra points newer than interval*MERGETERMS hours back in time
   logger.info("Using %d number of points for calculating the gra coefficients" % len(points))
@@ -134,9 +136,12 @@ def calculate_gra_coefficient(distancefield, interval, adjustmentfile, etime, ed
   if len(points) > 2:
     try:
       if adjustmentfile != None:
+        logger.info("rave_pgf_gra_plugin: Performing gra coefficient generation with adjustmentfile and %d points"%len(points))
         significant, npoints, loss, r, sig, corr_coeff, a, b, c, m, dev = gra.generate(points, edate, etime, adjustmentfile)
       else:
+        logger.info("rave_pgf_gra_plugin: Performing gra coefficient generation with %d points"%len(points))
         significant, npoints, loss, r, sig, corr_coeff, a, b, c, m, dev = gra.generate(points, edate, etime)
+      logger.info("rave_pgf_gra_plugin: Finished performing gra coefficient generation")
       if math.isnan(a) or math.isnan(b) or math.isnan(c):
         logger.error("A/B or C for %s %s is not a number: %f,%f,%f" % (acrrproduct.date, acrrproduct.time, a, b, c))
         return
@@ -146,12 +151,17 @@ def calculate_gra_coefficient(distancefield, interval, adjustmentfile, etime, ed
   else:
     return
 
+  logger.info("rave_pgf_gra_plugin: Getting NOD source for acrr product")
+
   # If we come here, store the coefficients in the database so that we can search for them when applying the coefficients
   NOD = odim_source.NODfromSource(acrrproduct)
   if not NOD:
     NOD = ""
+
+  logger.info("rave_pgf_gra_plugin: Merging gra coefficients")
   grac = gra_coefficient(NOD, acrrproduct.date, acrrproduct.time, significant, npoints, loss, r, sig, corr_coeff, a, b, c, float(m), float(dev))
   db.merge(grac)
+  logger.info("rave_pgf_gra_plugin: Coefficients merged")
 
 def generate(files, arguments):
   args = arglist2dict(arguments)
@@ -200,6 +210,8 @@ def generate(files, arguments):
   acrr.undetect = 0.0
   acrr.quality_field_name = distancefield
 
+  logger.info("rave_pgf_gra_plugin: Processing files")
+
   for fname in files:
     obj = None
     if ravebdb != None:
@@ -212,7 +224,7 @@ def generate(files, arguments):
       obj = obj.getImage(0)
 
     if not _cartesian.isCartesian(obj):
-      raise AttributeError, "Must call plugin with cartesian products"
+      raise AttributeError("Must call plugin with cartesian products")
 
     if acrrproduct == None:
       acrrproduct = _cartesian.new()
@@ -227,7 +239,7 @@ def generate(files, arguments):
 
     if obj.xscale != acrrproduct.xscale or obj.yscale != acrrproduct.yscale or \
        obj.projection.definition != acrrproduct.projection.definition:
-      raise AttributeError, "Scale or projdef inconsistancy for used area"
+      raise AttributeError("Scale or projdef inconsistancy for used area")
 
     par = obj.getParameter(quantity)
     if par == None:
@@ -236,6 +248,8 @@ def generate(files, arguments):
       if par.getQualityFieldByHowTask(distancefield) != None:
         acrr.sum(par, zr_a, zr_b)
 
+  logger.info("rave_pgf_gra_plugin: Running acrr accumulation")
+
   # accept, N, hours
   acrrparam = acrr.accumulate(accept, N, interval)
   acrrproduct.addParameter(acrrparam)
@@ -243,8 +257,10 @@ def generate(files, arguments):
   db = rave_dom_db.create_db_from_conf()
   
   try:
+    logger.info("rave_pgf_gra_plugin: Calculating gra coefficients")
     calculate_gra_coefficient(distancefield, interval, adjustmentfile, etime, edate, acrrproduct, db)
-  except OperationalError, e:
+    logger.info("rave_pgf_gra_plugin: Coefficients calculated")
+  except OperationalError as e:
     if "server closed the connection unexpectedly" in e.message:
       logger.warn("Got indication that connection reseted at server side, retrying gra coefficient generation")
       calculate_gra_coefficient(distancefield, interval, adjustmentfile, etime, edate, acrrproduct, db)

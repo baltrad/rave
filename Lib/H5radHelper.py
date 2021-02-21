@@ -21,9 +21,7 @@
 """
 
 """
-import sys, string
-from types import IntType, FloatType, StringType, ListType, TupleType, LongType
-#from numpy import ArrayType
+import string
 from numpy import ndarray
 from rave_defines import ENCODING
 from struct import calcsize
@@ -37,36 +35,36 @@ else:
 
 def typeconv(typ, val):
     if typ in ["int", "long", "llong"]:
-        return string.atoi(val)
+        return int(val)
     elif typ in ["float", "double"]:
-        return string.atof(val)
-    if typ in ("string", "sequence", "dataset"):
-        return val.encode(ENCODING)
+        return float(val)
+    elif typ in ("string", "sequence", "dataset"):
+        return val
 
 def findelem(root, attr):
-    path = string.split(attr, "/")[1:]
+    path = attr.split("/")[1:]
     e = root
-    result = None
     for i in path:
         e = e.find(i)
         if e is None:
             break
-    else:
-        result = e
     return e
 
-def geth5attr(e, dict):
+def geth5attr(e, dictionary):
     typ, val = type_val(e)
 
     if typ == "dataset":
-        return dict[val]
+        dict_val = dictionary[val]
+        if type(dict_val) is bytes:
+          dict_val = dict_val.decode(ENCODING)
+        return dict_val
     elif typ == "sequence":
-        nodes = string.split(val, ",")
+        nodes = val.split(",")
         for n in range(len(nodes)):
             try:     # detects ints and floats but not strings
-                nodes[n] = eval(string.strip(nodes[n])[1:-1].encode(ENCODING))
+                nodes[n] = eval(nodes[n].strip()[1:-1])
             except:  # fallback to string
-                nodes[n] = string.strip(nodes[n])[1:-1].encode(ENCODING)
+                nodes[n] = nodes[n].strip()[1:-1]
         return nodes
     else:
         return typeconv(typ, val)
@@ -74,20 +72,20 @@ def geth5attr(e, dict):
 def type_val(e):
     typ = e.get("type", "string")
     val = e.text
+    if type(val) is bytes:
+      val = val.decode(ENCODING)
     return typ, val
 
 def h5type(value):
-    if type(value) is IntType:
-        return "int"
-    elif type(value) is LongType:
+    if type(value) is int:
         return LONG
-    elif type(value) is FloatType:
+    elif type(value) is float:
         return "double"
-    elif type(value) is StringType:
+    elif type(value) is str or type(value) is bytes:
         return "string"
-    elif type(value) in [ListType, TupleType]:
+    elif type(value) in [list, tuple]:
         for i in value:
-            if type(i) not in [StringType, IntType, FloatType, LongType]:
+            if type(i) not in [string, int, float, bytes]:
                 return None
         return "sequence"
     elif type(value) is ndarray:
@@ -96,7 +94,7 @@ def h5type(value):
         return None
 
 
-def seth5attr(e, dict, h5typ, attribute, value):
+def seth5attr(e, attr_to_val_dict, h5typ, attribute, value):
     if h5typ is not "string":
         e.attrib["type"] = h5typ
     else:
@@ -108,26 +106,25 @@ def seth5attr(e, dict, h5typ, attribute, value):
         # convert list to string
         nodes = []
         for n in value:
-            node = string.strip(str(n))
+            node = str(n).strip()
             nodes.append(("'"+node+"'"))
-        e.text = unicode(str(string.join(nodes, ", ")), ENCODING)
+        text = ", ".join(nodes)
     elif h5typ is "dataset":
-#        label = string.split(attribute, '/')[1]  # no heirarchy
-#        dict[label] = value                      # no heirarchy
-#        e.text = label                           # no heirarchy
-        dict[attribute] = value
-        e.text = unicode(attribute, ENCODING)
+        attr_to_val_dict[attribute] = value
+        text = attribute
     elif h5typ in ["int", "long", "llong", "float", "double"]:
-        e.text = unicode(str(value), ENCODING)
+        text = str(value)
     elif h5typ is "string":
-        e.text = unicode(value, ENCODING)
+        text = value
     else:
-        raise ValueError, "Illegal type"
+        raise ValueError("Illegal type")
+      
+    e.text = text.encode(ENCODING)
 
 def addelem(root, attribute):
     from xml.etree.ElementTree import SubElement
 
-    path = string.split(attribute, "/")[1:]
+    path = attribute.split("/")[1:]
     e = root
 #    result = None
     for i in path:
@@ -141,4 +138,4 @@ def addelem(root, attribute):
 
 
 if __name__ is "__main__":
-    print __doc__
+    print(__doc__)

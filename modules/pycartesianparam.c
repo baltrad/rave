@@ -22,7 +22,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2012-02-07
  */
-#include "Python.h"
+#include "pyravecompat.h"
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>
@@ -448,6 +448,22 @@ done:
   return result;
 }
 
+static PyObject* _pycartesianparam_hasAttribute(PyCartesianParam* self, PyObject* args)
+{
+  RaveAttribute_t* attribute = NULL;
+  char* name = NULL;
+  long result = 0;
+  if (!PyArg_ParseTuple(args, "s", &name)) {
+    return NULL;
+  }
+  attribute = CartesianParam_getAttribute(self->param, name);
+  if (attribute != NULL) {
+    result = 1;
+  }
+  RAVE_OBJECT_RELEASE(attribute);
+  return PyBool_FromLong(result);
+}
+
 static PyObject* _pycartesianparam_getAttributeNames(PyCartesianParam* self, PyObject* args)
 {
   RaveList_t* list = NULL;
@@ -609,22 +625,95 @@ static struct PyMethodDef _pycartesianparam_methods[] =
   {"nodata", NULL},
   {"undetect", NULL},
   {"datatype", NULL},
-  {"setData", (PyCFunction) _pycartesianparam_setData, 1},
-  {"getData", (PyCFunction) _pycartesianparam_getData, 1},
-  {"setValue", (PyCFunction) _pycartesianparam_setValue, 1},
-  {"setConvertedValue", (PyCFunction) _pycartesianparam_setConvertedValue, 1},
-  {"getValue", (PyCFunction) _pycartesianparam_getValue, 1},
-  {"getConvertedValue", (PyCFunction) _pycartesianparam_getConvertedValue, 1},
-  {"isTransformable", (PyCFunction) _pycartesianparam_isTransformable, 1},
-  {"getMean", (PyCFunction) _pycartesianparam_getMean, 1},
-  {"addAttribute", (PyCFunction) _pycartesianparam_addAttribute, 1},
-  {"getAttribute", (PyCFunction) _pycartesianparam_getAttribute, 1},
-  {"getAttributeNames", (PyCFunction) _pycartesianparam_getAttributeNames, 1},
-  {"addQualityField", (PyCFunction) _pycartesianparam_addQualityField, 1},
-  {"getNumberOfQualityFields", (PyCFunction) _pycartesianparam_getNumberOfQualityFields, 1},
-  {"getQualityField", (PyCFunction) _pycartesianparam_getQualityField, 1},
-  {"removeQualityField", (PyCFunction) _pycartesianparam_removeQualityField, 1},
-  {"getQualityFieldByHowTask", (PyCFunction) _pycartesianparam_getQualityFieldByHowTask, 1},
+  {"setData", (PyCFunction) _pycartesianparam_setData, 1,
+    "setData(array)\n\n"
+    "Initializes the parameter with a datafield as defined by a 2-dimensional numpy array and datatype.\n\n"
+    "array - The 2 dimensional numpy array."},
+  {"getData", (PyCFunction) _pycartesianparam_getData, 1,
+    "getData() -> a numpy array\n\n"
+    "Returns a 2 dimensional data array with the data set."
+  },
+  {"setValue", (PyCFunction) _pycartesianparam_setValue, 1,
+    "setValue((x,y),value) -> 1 on success otherwise 0\n\n"
+    "Sets the value at the specified position. \n\n"
+    "(x,y) - tuple with x & y position\n"
+    "value - the value that should be set at specified position."
+  },
+  {"setConvertedValue", (PyCFunction) _pycartesianparam_setConvertedValue, 1,
+    "setConvertedValue((x,y),value) -> 1 on success otherwise 0\n\n"
+    "Sets the value at the specified position with gain & offset applied. Would be same as setValue((x, y), (v - offset)/gain). \n\n"
+    "(x,y) - tuple with x & y position\n"
+    "value - the value with offset/gain applied that should be set at specified position."
+  },
+  {"getValue", (PyCFunction) _pycartesianparam_getValue, 1,
+    "getValue((x,y)) -> the value at the specified x and y position.\n\n"
+    "Returns the value at the specified x and y position. \n\n"
+    "(x,y) - tuple with x & y position\n"
+  },
+  {"getConvertedValue", (PyCFunction) _pycartesianparam_getConvertedValue, 1,
+    "getConvertedValue((x,y)) -> the value at the specified x and y position.\n\n"
+    "Returns the converted value at the specified x and y position. \n\n"
+    "(x,y) - tuple with x & y position\n"
+  },
+  {"isTransformable", (PyCFunction) _pycartesianparam_isTransformable, 1,
+    "isTransformable() -> a boolean.\n\n"
+    "Returns if all preconditions are met in order to perform a transformation. \n\n"
+  },
+  {"getMean", (PyCFunction) _pycartesianparam_getMean, 1,
+    "getMean((x,y), N) -> (datatype, the mean value) \n\n"
+    "Returns the mean value over a NxN square around the specified x and y position. \n\n"
+    "(x,y) - tuple with x/y position \n"
+    "N     - Number of pixels in horizontal and vertical (NxN) direction around x,y"
+  },
+  {"addAttribute", (PyCFunction) _pycartesianparam_addAttribute, 1,
+    "addAttribute(name, value) \n\n"
+    "Adds an attribute to the volume. Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis etc. \n"
+    "Currently, double, long, string and 1-dimensional arrays are supported.\n\n"
+    "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis.\n"
+    "        In the case of how-groups, it is also possible to specify subgroups, like how/subgroup/attr or how/subgroup/subgroup/attr.\n"
+    "value - Value to be associated with the name. Currently, double, long, string and 1-dimensional arrays are supported."
+  },
+  {"getAttribute", (PyCFunction) _pycartesianparam_getAttribute, 1,
+    "getAttribute(name) -> value \n\n"
+    "Returns the value associated with the specified name \n\n"
+    "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis\n"
+    "        In the case of how-groups, it is also possible to specify subgroups, like how/subgroup/attr or how/subgroup/subgroup/attr."
+  },
+  {"hasAttribute", (PyCFunction) _pycartesianparam_hasAttribute, 1,
+    "hasAttribute(name) -> a boolean \n\n"
+    "Returns if the specified name is defined within this cartesian parameter\n\n"
+    "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis.\n"
+    "        In the case of how-groups, it is also possible to specify subgroups, like how/subgroup/attr or how/subgroup/subgroup/attr.\n"
+  },
+  {"getAttributeNames", (PyCFunction) _pycartesianparam_getAttributeNames, 1,
+    "getAttributeNames() -> array of names \n\n"
+    "Returns the attribute names associated with this cartesian object"
+  },
+  {"addQualityField", (PyCFunction) _pycartesianparam_addQualityField, 1,
+    "addQualityField(field) \n\n"
+    "Adds a quality field to this cartesian product. Note, there is no check for valid size or similar. Also, there is no check if same how/task is specified or the likes. \n\n"
+    "field  - The RaveFieldCore field"
+  },
+  {"getNumberOfQualityFields", (PyCFunction) _pycartesianparam_getNumberOfQualityFields, 1,
+    "getNumberOfQualityFields() -> integer\n\n"
+    "Returns the number of quality fields in this cartesian product"
+  },
+  {"getQualityField", (PyCFunction) _pycartesianparam_getQualityField, 1,
+    "getQualityField(index) -> RaveFieldCore \n\n"
+    "Returns the rave field at specified index\n\n"
+    "index  - The rave field at specified position.\n\n"
+    "Throws IndexError if the rave field not could be found"
+  },
+  {"removeQualityField", (PyCFunction) _pycartesianparam_removeQualityField, 1,
+    "removeQualityField(index) \n\n"
+    "Removes the quality field at specified index\n\n"
+    "index  - The rave field at specified position.\n\n"
+  },
+  {"getQualityFieldByHowTask", (PyCFunction) _pycartesianparam_getQualityFieldByHowTask, 1,
+    "getQualityFieldByHowTask(name) -> RaveFieldCore or None \n\n"
+    "Returns the quality with the how/task attribute equal to name\n\n"
+    "name  - The rave field with how/task name equal to name\n\n"
+  },
   {NULL, NULL } /* sentinel */
 };
 
@@ -632,51 +721,43 @@ static struct PyMethodDef _pycartesianparam_methods[] =
  * Returns the specified attribute in the cartesian
  * @param[in] self - the cartesian product
  */
-static PyObject* _pycartesianparam_getattr(PyCartesianParam* self, char* name)
+static PyObject* _pycartesianparam_getattro(PyCartesianParam* self, PyObject* name)
 {
-  PyObject* res = NULL;
-
-  if (strcmp("xsize", name) == 0) {
+  if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "xsize") == 0) {
     return PyInt_FromLong(CartesianParam_getXSize(self->param));
-  } else if (strcmp("ysize", name) == 0) {
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "ysize") == 0) {
     return PyInt_FromLong(CartesianParam_getYSize(self->param));
-  } else if (strcmp("quantity", name) == 0) {
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "quantity") == 0) {
     if (CartesianParam_getQuantity(self->param) == NULL) {
       Py_RETURN_NONE;
     } else {
       return PyString_FromString(CartesianParam_getQuantity(self->param));
     }
-  } else if (strcmp("gain", name) == 0) {
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "gain") == 0) {
     return PyFloat_FromDouble(CartesianParam_getGain(self->param));
-  } else if (strcmp("offset", name) == 0) {
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "offset") == 0) {
     return PyFloat_FromDouble(CartesianParam_getOffset(self->param));
-  } else if (strcmp("nodata", name) == 0) {
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "nodata") == 0) {
     return PyFloat_FromDouble(CartesianParam_getNodata(self->param));
-  } else if (strcmp("undetect", name) == 0) {
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "undetect") == 0) {
     return PyFloat_FromDouble(CartesianParam_getUndetect(self->param));
-  } else if (strcmp("datatype", name) == 0) {
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "datatype") == 0) {
     return PyInt_FromLong(CartesianParam_getDataType(self->param));
   }
 
-  res = Py_FindMethod(_pycartesianparam_methods, (PyObject*) self, name);
-  if (res)
-    return res;
-
-  PyErr_Clear();
-  PyErr_SetString(PyExc_AttributeError, name);
-  return NULL;
+  return PyObject_GenericGetAttr((PyObject*)self, name);
 }
 
 /**
  * Returns the specified attribute in the polar volume
  */
-static int _pycartesianparam_setattr(PyCartesianParam* self, char* name, PyObject* val)
+static int _pycartesianparam_setattro(PyCartesianParam* self, PyObject *name, PyObject *val)
 {
   int result = -1;
   if (name == NULL) {
     goto done;
   }
-  if (strcmp("quantity", name) == 0) {
+  if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "quantity") == 0) {
     if (PyString_Check(val)) {
       if (!CartesianParam_setQuantity(self->param, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_MemoryError, "Could not set quantity");
@@ -686,32 +767,32 @@ static int _pycartesianparam_setattr(PyCartesianParam* self, char* name, PyObjec
     } else {
       raiseException_gotoTag(done, PyExc_TypeError,"quantity must be of type string");
     }
-  } else if (strcmp("gain", name) == 0) {
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "gain") == 0) {
     if (PyFloat_Check(val)) {
       CartesianParam_setGain(self->param, PyFloat_AsDouble(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "gain must be of type float");
     }
-  } else if (strcmp("offset", name) == 0) {
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "offset") == 0) {
     if (PyFloat_Check(val)) {
       CartesianParam_setOffset(self->param, PyFloat_AsDouble(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "offset must be of type float");
     }
-  } else if (strcmp("nodata", name) == 0) {
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "nodata") == 0) {
     if (PyFloat_Check(val)) {
       CartesianParam_setNodata(self->param, PyFloat_AsDouble(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "nodata must be of type float");
     }
-  } else if (strcmp("undetect", name) == 0) {
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "undetect") == 0) {
     if (PyFloat_Check(val)) {
       CartesianParam_setUndetect(self->param, PyFloat_AsDouble(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "undetect must be of type float");
     }
   } else {
-    raiseException_gotoTag(done, PyExc_AttributeError, name);
+    raiseException_gotoTag(done, PyExc_AttributeError, PY_RAVE_ATTRO_NAME_TO_STRING(name));
   }
 
   result = 0;
@@ -721,63 +802,123 @@ done:
 
 /*@} End of Cartesian products */
 
+/*@{ Documentation about the type */
+PyDoc_STRVAR(_pycartesianparam_type_doc,
+    "The cartesian parameter represents one cartesian parameter (quantity). The cartesian parameter is the data keeper "
+    "for the cartesian object. The member attributes within the cartesian parameter represents the data content in some way. "
+    "Since the parameter probably should contain a lot of attributes as defined in the ODIM H5 specification, these can be "
+    "added within the attribute mapping (how/, what/, where/) groups. E.g. addAttribute(\"how/sthis\", 1.2).\n"
+    "A list of avilable member attributes are described below. For information about member functions, check each functions doc.\n"
+    "\n"
+    "xsize            - The xsize of the area represented. ReadOnly, initialization occurs when setting data using setData().\n"
+    "ysize            - The ysize of the area represented. ReadOnly, initialization occurs when setting data using setData().\n"
+    "quantity         - The quantity that this parameter represents, like DBZH, TH, ...\n"
+    "gain             - The gain value to use when scaling the value.\n"
+    "offset           - The offset to use when scaling the value.\n"
+    "nodata           - The value that represents a nodata (no coverage, ...)\n"
+    "undetect         - The value that represents undetect (coverage, but no hit)\n"
+    "datatype         - The data type. ReadOnly, initialization occurs when setting data using setData().\n"
+    "\n"
+    "Usage:\n"
+    " import _cartesianparam, numpy\n"
+    " p = _cartesianparam.new()\n"
+    " p.setData(numpy.zeros((11,10), numpy.uint8))\n"
+    " p.nodata = 255\n"
+    " p.undetect = 0\n"
+    " p.quantity = \"DBZH\"\n"
+    " p.setValue((1,1), 10)"
+    );
+/*@} End of Documentation about the type */
+
+
 /*@{ Type definitions */
 PyTypeObject PyCartesianParam_Type =
 {
-  PyObject_HEAD_INIT(NULL)0, /*ob_size*/
+   PyVarObject_HEAD_INIT(NULL, 0) /*ob_size*/
   "CartesianParamCore", /*tp_name*/
   sizeof(PyCartesianParam), /*tp_size*/
   0, /*tp_itemsize*/
   /* methods */
   (destructor)_pycartesianparam_dealloc, /*tp_dealloc*/
   0, /*tp_print*/
-  (getattrfunc)_pycartesianparam_getattr, /*tp_getattr*/
-  (setattrfunc)_pycartesianparam_setattr, /*tp_setattr*/
-  0, /*tp_compare*/
-  0, /*tp_repr*/
-  0, /*tp_as_number */
+  (getattrfunc)0,               /*tp_getattr*/
+  (setattrfunc)0,               /*tp_setattr*/
+  0,                            /*tp_compare*/
+  0,                            /*tp_repr*/
+  0,                            /*tp_as_number */
   0,
-  0, /*tp_as_mapping */
-  0 /*tp_hash*/
-};
+  0,                            /*tp_as_mapping */
+  0,                            /*tp_hash*/
+  (ternaryfunc)0,               /*tp_call*/
+  (reprfunc)0,                  /*tp_str*/
+  (getattrofunc)_pycartesianparam_getattro, /*tp_getattro*/
+  (setattrofunc)_pycartesianparam_setattro, /*tp_setattro*/
+  0,                            /*tp_as_buffer*/
+  Py_TPFLAGS_DEFAULT, /*tp_flags*/
+  _pycartesianparam_type_doc,   /*tp_doc*/
+  (traverseproc)0,              /*tp_traverse*/
+  (inquiry)0,                   /*tp_clear*/
+  0,                            /*tp_richcompare*/
+  0,                            /*tp_weaklistoffset*/
+  0,                            /*tp_iter*/
+  0,                            /*tp_iternext*/
+  _pycartesianparam_methods,    /*tp_methods*/
+  0,                            /*tp_members*/
+  0,                            /*tp_getset*/
+  0,                            /*tp_base*/
+  0,                            /*tp_dict*/
+  0,                            /*tp_descr_get*/
+  0,                            /*tp_descr_set*/
+  0,                            /*tp_dictoffset*/
+  0,                            /*tp_init*/
+  0,                            /*tp_alloc*/
+  0,                            /*tp_new*/
+  0,                            /*tp_free*/
+  0,                            /*tp_is_gc*/};
 /*@} End of Type definitions */
 
 /*@{ Module setup */
 static PyMethodDef functions[] = {
-  {"new", (PyCFunction)_pycartesianparam_new, 1},
+  {"new", (PyCFunction)_pycartesianparam_new, 1,
+      "new() -> new instance of the CartesianParamCore object\n\n"
+      "Creates a new instance of the CartesianParamCore object"
+  },
   {NULL,NULL} /*Sentinel*/
 };
 
-PyMODINIT_FUNC
-init_cartesianparam(void)
+MOD_INIT(_cartesianparam)
 {
   PyObject *module=NULL,*dictionary=NULL;
   static void *PyCartesianParam_API[PyCartesianParam_API_pointers];
   PyObject *c_api_object = NULL;
-  PyCartesianParam_Type.ob_type = &PyType_Type;
 
-  module = Py_InitModule("_cartesianparam", functions);
+  MOD_INIT_SETUP_TYPE(PyCartesianParam_Type, &PyType_Type);
+
+  MOD_INIT_VERIFY_TYPE_READY(&PyCartesianParam_Type);
+
+  MOD_INIT_DEF(module, "_cartesianparam", _pycartesianparam_type_doc, functions);
   if (module == NULL) {
-    return;
+    return MOD_INIT_ERROR;
   }
+
   PyCartesianParam_API[PyCartesianParam_Type_NUM] = (void*)&PyCartesianParam_Type;
   PyCartesianParam_API[PyCartesianParam_GetNative_NUM] = (void *)PyCartesianParam_GetNative;
   PyCartesianParam_API[PyCartesianParam_New_NUM] = (void*)PyCartesianParam_New;
 
-  c_api_object = PyCObject_FromVoidPtr((void *)PyCartesianParam_API, NULL);
-
-  if (c_api_object != NULL) {
-    PyModule_AddObject(module, "_C_API", c_api_object);
-  }
-
+  c_api_object = PyCapsule_New(PyCartesianParam_API, PyCartesianParam_CAPSULE_NAME, NULL);
   dictionary = PyModule_GetDict(module);
-  ErrorObject = PyString_FromString("_cartesianparam.error");
+  PyDict_SetItemString(dictionary, "_C_API", c_api_object);
+
+  ErrorObject = PyErr_NewException("_cartesianparam.error", NULL, NULL);
   if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
     Py_FatalError("Can't define _cartesianparam.error");
+    return MOD_INIT_ERROR;
   }
 
   import_array(); /*To make sure I get access to Numeric*/
   import_pyravefield();
   PYRAVE_DEBUG_INITIALIZE;
+  return MOD_INIT_SUCCESS(module);
 }
+
 /*@} End of Module setup */

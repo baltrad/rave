@@ -68,17 +68,17 @@ class area_registry(object):
     try:
       foundarea = areareg.getByName(areaid)
       self._registry[foundarea.id] = foundarea
-    except IndexError, e:
+    except IndexError:
       pass     
 
   ##
   # Returns the wanted area if found, otherwise an exception will be thrown
   #
   def getarea(self, areaid):
-    if not self._registry.has_key(areaid):
+    if not areaid in self._registry.keys():
       self._loadarea(areaid)
 
-    if self._registry.has_key(areaid):
+    if areaid in self._registry.keys():
       result = self._registry[areaid]
     else:
       a = area.area(areaid)
@@ -90,7 +90,7 @@ class area_registry(object):
       pyarea.xscale = a.xscale
       pyarea.yscale = a.yscale
       pyarea.extent = a.extent
-      pyarea.projection = _projection.new(p.id, p.name, string.join(p.definition, ' '))
+      pyarea.projection = _projection.new(p.id, str(p.name), ' '.join(p.definition))
       self._registry[pyarea.id] = pyarea
       result = pyarea
       

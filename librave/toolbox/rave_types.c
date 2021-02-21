@@ -52,6 +52,7 @@ static const char RaveTypes_ProductType_AZIM_STR[] = "AZIM";
 static const char RaveTypes_ProductType_QUAL_STR[] = "QUAL";
 static const char RaveTypes_ProductType_PMAX_STR[] = "PMAX";
 static const char RaveTypes_ProductType_SURF_STR[] = "SURF";
+static const char RaveTypes_ProductType_EBASE_STR[] = "EBASE";
 
 /**
  * Object Type constants
@@ -110,6 +111,7 @@ static const struct RaveTypes_ProductMapping PRODUCT_MAPPING[] =
   {Rave_ProductType_QUAL,       RaveTypes_ProductType_QUAL_STR},
   {Rave_ProductType_PMAX,       RaveTypes_ProductType_PMAX_STR},
   {Rave_ProductType_SURF,       RaveTypes_ProductType_SURF_STR},
+  {Rave_ProductType_EBASE,      RaveTypes_ProductType_EBASE_STR},
   {Rave_ProductType_ENDOFTYPES, NULL},
 };
 

@@ -22,7 +22,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2009-12-08
  */
-#include "Python.h"
+#include "pyravecompat.h"
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
@@ -604,6 +604,23 @@ fail:
   return NULL;
 }
 
+/**
+ * Removes the specified attribute if there is one
+ * @param[in] self - this instance
+ * @param[in] args - name
+ * @returns True if attribute exists otherwise False
+ */
+static PyObject* _pypolarvolume_removeAttribute(PyPolarVolume* self, PyObject* args)
+{
+  char* name = NULL;
+  if (!PyArg_ParseTuple(args, "s", &name)) {
+    return NULL;
+  }
+  PolarVolume_removeAttribute(self->pvol, name);
+  Py_RETURN_NONE;
+}
+
+
 static PyObject* _pypolarvolume_hasAttribute(PyPolarVolume* self, PyObject* args)
 {
   RaveAttribute_t* attribute = NULL;
@@ -684,119 +701,238 @@ static struct PyMethodDef _pypolarvolume_methods[] =
   {"source", NULL},
   {"paramname", NULL},
   {"beamwidth", NULL},
-  {"getDistance", (PyCFunction) _pypolarvolume_getDistance, 1},
-  {"getMaxDistance", (PyCFunction) _pypolarvolume_getMaxDistance, 1},
-  {"addScan", (PyCFunction) _pypolarvolume_addScan, 1},
-  {"getScan", (PyCFunction) _pypolarvolume_getScan, 1},
-  {"getNumberOfScans", (PyCFunction) _pypolarvolume_getNumberOfScans, 1},
-  {"removeScan", (PyCFunction) _pypolarvolume_removeScan, 1},
-  {"getScanWithMaxDistance", (PyCFunction) _pypolarvolume_getScanWithMaxDistance, 1},
-  {"isAscendingScans", (PyCFunction) _pypolarvolume_isAscendingScans, 1},
-  {"isTransformable", (PyCFunction) _pypolarvolume_isTransformable, 1},
-  {"sortByElevations", (PyCFunction) _pypolarvolume_sortByElevations, 1},
-  {"getScanClosestToElevation", (PyCFunction) _pypolarvolume_getScanClosestToElevation, 1},
-  {"getNearest", (PyCFunction) _pypolarvolume_getNearest, 1},
-  {"getNearestParameterValue", (PyCFunction) _pypolarvolume_getNearestParameterValue, 1},
-  {"getNearestConvertedParameterValue", (PyCFunction) _pypolarvolume_getNearestConvertedParameterValue, 1},
-  {"getConvertedVerticalMaxValue", (PyCFunction)_pypolarvolume_getConvertedVerticalMaxValue, 1},
-  {"addAttribute", (PyCFunction) _pypolarvolume_addAttribute, 1},
-  {"getAttribute", (PyCFunction) _pypolarvolume_getAttribute, 1},
-  {"getAttributeNames", (PyCFunction) _pypolarvolume_getAttributeNames, 1},
-  {"hasAttribute", (PyCFunction) _pypolarvolume_hasAttribute, 1},
-  {"isValid", (PyCFunction) _pypolarvolume_isValid, 1},
-  {"getDistanceField", (PyCFunction) _pypolarvolume_getDistanceField, 1},
-  {"getHeightField", (PyCFunction) _pypolarvolume_getHeightField, 1},
-  {"clone", (PyCFunction) _pypolarvolume_clone, 1},
+  {"beamwH", NULL},
+  {"beamwV", NULL},
+  {"use_azimuthal_nav_information", NULL},
+  {"getDistance", (PyCFunction) _pypolarvolume_getDistance, 1,
+    "getDistance((lon,lat)) --> distance from origin of this volume to the specified lon/lat pair\n\n"
+    "Returns the distance in meters along the surface from the radar to the specified lon/lat coordinate pair.\n\n"
+    "lon - Longitude in radians\n"
+    "lat - Latitude in radians"
+  },
+  {"getMaxDistance", (PyCFunction) _pypolarvolume_getMaxDistance, 1,
+    "getMaxDistance() -> max distance at ground level\n\n"
+    "Returns the maximum distance (at ground level) that this volume will cover."
+  },
+  {"addScan", (PyCFunction) _pypolarvolume_addScan, 1,
+    "addScan(scan)\n\n"
+    "Adds a scan to the volume\n\n"
+    "scan - a PolarScanCore"
+  },
+  {"getScan", (PyCFunction) _pypolarvolume_getScan, 1,
+    "getScan(index) -> scan\n\n"
+    "Returns the polar scan at specified index\n\n"
+    "index - the index"
+  },
+  {"getNumberOfScans", (PyCFunction) _pypolarvolume_getNumberOfScans, 1,
+    "getNumberOfScans() -> integer\n\n"
+    "Returns the number of scans that this volume contains."
+  },
+  {"removeScan", (PyCFunction) _pypolarvolume_removeScan, 1,
+    "removeScan(index)\n\n"
+    "Removes the scan at specified index\n\n"
+    "index - the index of the scan to remove"
+  },
+  {"getScanWithMaxDistance", (PyCFunction) _pypolarvolume_getScanWithMaxDistance, 1,
+    "getScanWithMaxDistance() -> a scan\n\n"
+    "Locates the scan that covers the longest distance."
+  },
+  {"isAscendingScans", (PyCFunction) _pypolarvolume_isAscendingScans, 1,
+    "isAscendingScans() -> boolean\n\n"
+    "Returns True if the scans in the volume are sorted in ascending order, otherwise False will be returned."
+  },
+  {"isTransformable", (PyCFunction) _pypolarvolume_isTransformable, 1,
+    "isTransformable() -> boolean\n\n"
+    "Returns True if is is possible to perform transform operations on this volume or False if it isn't."
+  },
+  {"sortByElevations", (PyCFunction) _pypolarvolume_sortByElevations, 1,
+    "sortByElevations(order)\n\n"
+    "Sorts the scans in the volume according to elevation angle.\n\n"
+    "order - 1 if soring should be done in ascending order, otherwise descending ordering will be performed."
+  },
+  {"getScanClosestToElevation", (PyCFunction) _pypolarvolume_getScanClosestToElevation, 1,
+    "getScanClosestToElevation(elevation, insidee) -> scan\n\n"
+    "Returns the scan with elevation closest to the specified elevation. This function requires that the scans are ordered in ascending order, otherwise the behaviour will be undefined.\n\n"
+    "elevation - the elevation angle in radians\n"
+    "insidee   - if 1, then elevations must be within the min - max elevations. If 0, then either min or max will always be returned if not within min-max."
+  },
+  {"getNearest", (PyCFunction) _pypolarvolume_getNearest, 1,
+    "getNearest((lon,lat), height, insidee) -> (type, value)\n\n"
+    "Gets the nearest value at the specified lon/lat/height.\n\n"
+    "lon    - longitude in radians\n"
+    "lat    - latitude in radians\n"
+    "height - height above sea level\n"
+    "inside - if elevation must be within min-max elevation or not"
+  },
+  {"getNearestParameterValue", (PyCFunction) _pypolarvolume_getNearestParameterValue, 1,
+    "getNearestParameterValue(quantity, (lon,lat), height, insidee) -> (type,value)\n\n"
+    "Gets the nearest value at the specified lon/lat/height for the specified quantity.\n\n"
+    "quantity - the parameter of interest\n"
+    "lon      - longitude in radians\n"
+    "lat      - latitude in radians\n"
+    "height   - height above sea level\n"
+    "inside   - if elevation must be within min-max elevation or not"
+  },
+  {"getNearestConvertedParameterValue", (PyCFunction) _pypolarvolume_getNearestConvertedParameterValue, 1,
+    "getNearestConvertedParameterValue(quantity, (lon,lat), height, insidee) -> (type,value)\n\n"
+    "Gets the nearest converted value (offset+v*gain) at the specified lon/lat/height for the specified quantity.\n\n"
+    "quantity - the parameter of interest\n"
+    "lon      - longitude in radians\n"
+    "lat      - latitude in radians\n"
+    "height   - height above sea level\n"
+    "inside   - if elevation must be within min-max elevation or not"
+  },
+  {"getConvertedVerticalMaxValue", (PyCFunction)_pypolarvolume_getConvertedVerticalMaxValue, 1,
+    "getConvertedVerticalMaxValue(quantity, (lon,lat)) -> (type,value)\n\n"
+    "Gets the vertical converted maximum value (offset+v*gain) at the specified lon/lat for the specified quantity.\n\n"
+    "quantity - the parameter of interest\n"
+    "lon      - longitude in radians\n"
+    "lat      - latitude in radians\n"
+  },
+  {"addAttribute", (PyCFunction) _pypolarvolume_addAttribute, 1,
+    "addAttribute(name, value) \n\n"
+    "Adds an attribute to the volume. Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis etc. \n"
+    "Currently, double, long, string and 1-dimensional arrays are supported.\n\n"
+    "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis\n"
+    "        In the case of how-groups, it is also possible to specify subgroups, like how/subgroup/attr or how/subgroup/subgroup/attr.\n"
+    "value - Value to be associated with the name. Currently, double, long, string and 1-dimensional arrays are supported."
+  },
+  {"getAttribute", (PyCFunction) _pypolarvolume_getAttribute, 1,
+    "getAttribute(name) -> value \n\n"
+    "Returns the value associated with the specified name \n\n"
+    "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis\n"
+    "        In the case of how-groups, it is also possible to specify subgroups, like how/subgroup/attr or how/subgroup/subgroup/attr."
+  },
+  {"getAttributeNames", (PyCFunction) _pypolarvolume_getAttributeNames, 1,
+    "getAttributeNames() -> array of names \n\n"
+    "Returns the attribute names associated with this volume"
+  },
+  {"removeAttribute", (PyCFunction) _pypolarvolume_removeAttribute, 1,
+     "removeAttribute() \n\n"
+     "Removes the specified attribute if there is one."
+  },
+  {"hasAttribute", (PyCFunction) _pypolarvolume_hasAttribute, 1,
+    "hasAttribute(name) -> a boolean \n\n"
+    "Returns if the specified name is defined within this polar volume\n\n"
+    "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis.\n"
+    "        In the case of how-groups, it is also possible to specify subgroups, like how/subgroup/attr or how/subgroup/subgroup/attr."
+  },
+  {"isValid", (PyCFunction) _pypolarvolume_isValid, 1,
+    "isValid() -> a boolean \n\n"
+    "Validates this polar volume to see if it is possible to write as a volume.\n\n"
+  },
+  {"getDistanceField", (PyCFunction) _pypolarvolume_getDistanceField, 1,
+    "getDistanceField() -> RaveFieldCore\n\n"
+    "Creates a distance field for this volume"
+  },
+  {"getHeightField", (PyCFunction) _pypolarvolume_getHeightField, 1,
+    "getHeightField() -> RaveFieldCore\n\n"
+    "Creates a height field for this volume"
+  },
+  {"clone", (PyCFunction) _pypolarvolume_clone, 1,
+    "clone() -> PolarVolumeCore\n\n"
+    "Creates a clone of self"
+  },
   {NULL, NULL} /* sentinel */
 };
 
 /**
  * Returns the specified attribute in the polar volume
  */
-static PyObject* _pypolarvolume_getattr(PyPolarVolume* self, char* name)
+static PyObject* _pypolarvolume_getattro(PyPolarVolume* self, PyObject* name)
 {
-  PyObject* res = NULL;
-  if (strcmp("longitude", name) == 0) {
+  if (PY_COMPARE_STRING_WITH_ATTRO_NAME("longitude", name) == 0) {
     return PyFloat_FromDouble(PolarVolume_getLongitude(self->pvol));
-  } else if (strcmp("latitude", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("latitude", name) == 0) {
     return PyFloat_FromDouble(PolarVolume_getLatitude(self->pvol));
-  } else if (strcmp("height", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("height", name) == 0) {
     return PyFloat_FromDouble(PolarVolume_getHeight(self->pvol));
-  } else if (strcmp("beamwidth", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("beamwidth", name) == 0) {
     return PyFloat_FromDouble(PolarVolume_getBeamwidth(self->pvol));
-  } else if (strcmp("time", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("beamwH", name) == 0) {
+    return PyFloat_FromDouble(PolarVolume_getBeamwH(self->pvol));
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("beamwV", name) == 0) {
+    return PyFloat_FromDouble(PolarVolume_getBeamwV(self->pvol));
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("time", name) == 0) {
     const char* str = PolarVolume_getTime(self->pvol);
     if (str != NULL) {
       return PyString_FromString(str);
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("date", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("date", name) == 0) {
     const char* str = PolarVolume_getDate(self->pvol);
     if (str != NULL) {
       return PyString_FromString(str);
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("source", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("source", name) == 0) {
     const char* str = PolarVolume_getSource(self->pvol);
     if (str != NULL) {
-      return PyString_FromString(str);
+      return PyRaveAPI_StringOrUnicode_FromASCII(str);
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("paramname", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("paramname", name) == 0) {
     const char* str = PolarVolume_getDefaultParameter(self->pvol);
     if (str != NULL) {
       return PyString_FromString(str);
     } else {
       Py_RETURN_NONE;
     }
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("use_azimuthal_nav_information", name) == 0) {
+    return PyBool_FromLong(PolarVolume_useAzimuthalNavInformation(self->pvol));
   }
-
-  res = Py_FindMethod(_pypolarvolume_methods, (PyObject*) self, name);
-  if (res)
-    return res;
-
-  PyErr_Clear();
-  PyErr_SetString(PyExc_AttributeError, name);
-  return NULL;
+  return PyObject_GenericGetAttr((PyObject*)self, name);
 }
 
 /**
  * Returns the specified attribute in the polar volume
  */
-static int _pypolarvolume_setattr(PyPolarVolume* self, char* name, PyObject* val)
+static int _pypolarvolume_setattro(PyPolarVolume* self, PyObject* name, PyObject* val)
 {
   int result = -1;
   if (name == NULL) {
     goto done;
   }
-  if (strcmp("longitude", name)==0) {
+  if (PY_COMPARE_STRING_WITH_ATTRO_NAME("longitude", name)==0) {
     if (PyFloat_Check(val)) {
       PolarVolume_setLongitude(self->pvol, PyFloat_AsDouble(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError,"longitude must be of type float");
     }
-  } else if (strcmp("latitude", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("latitude", name) == 0) {
     if (PyFloat_Check(val)) {
       PolarVolume_setLatitude(self->pvol, PyFloat_AsDouble(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "latitude must be of type float");
     }
-  } else if (strcmp("height", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("height", name) == 0) {
     if (PyFloat_Check(val)) {
       PolarVolume_setHeight(self->pvol, PyFloat_AsDouble(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "height must be of type float");
     }
-  } else if (strcmp("beamwidth", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("beamwidth", name) == 0) {
     if (PyFloat_Check(val)) {
       PolarVolume_setBeamwidth(self->pvol, PyFloat_AsDouble(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "beamwidth must be of type float");
     }
-  } else if (strcmp("time", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("beamwH", name) == 0) {
+    if (PyFloat_Check(val)) {
+      PolarVolume_setBeamwH(self->pvol, PyFloat_AsDouble(val));
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError, "beamwH must be of type float");
+    }
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("beamwV", name) == 0) {
+    if (PyFloat_Check(val)) {
+      PolarVolume_setBeamwV(self->pvol, PyFloat_AsDouble(val));
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError, "beamwV must be of type float");
+    }
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("time", name) == 0) {
     if (PyString_Check(val)) {
       if (!PolarVolume_setTime(self->pvol, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "could not set time");
@@ -806,7 +942,7 @@ static int _pypolarvolume_setattr(PyPolarVolume* self, char* name, PyObject* val
     } else {
         raiseException_gotoTag(done, PyExc_ValueError, "time should be specified as a string (HHmmss)");
     }
-  } else if (strcmp("date", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("date", name) == 0) {
     if (PyString_Check(val)) {
       if (!PolarVolume_setDate(self->pvol, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "could not set date");
@@ -816,7 +952,7 @@ static int _pypolarvolume_setattr(PyPolarVolume* self, char* name, PyObject* val
     } else {
       raiseException_gotoTag(done, PyExc_ValueError, "date should be specified as a string (YYYYMMDD)");
     }
-  } else if (strcmp("source", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("source", name) == 0) {
     if (PyString_Check(val)) {
       if (!PolarVolume_setSource(self->pvol, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "could not set source");
@@ -826,7 +962,7 @@ static int _pypolarvolume_setattr(PyPolarVolume* self, char* name, PyObject* val
     } else {
       raiseException_gotoTag(done, PyExc_ValueError, "source should be specified as a string");
     }
-  } else if (strcmp("paramname", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("paramname", name) == 0) {
     if (PyString_Check(val)) {
       if (!PolarVolume_setDefaultParameter(self->pvol, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "could not set default parameter");
@@ -834,8 +970,18 @@ static int _pypolarvolume_setattr(PyPolarVolume* self, char* name, PyObject* val
     } else {
       raiseException_gotoTag(done, PyExc_ValueError, "paramname should be specified as a string");
     }
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("use_azimuthal_nav_information", name) == 0) {
+    if (PyBool_Check(val)) {
+      if (PyObject_IsTrue(val)) {
+        PolarVolume_setUseAzimuthalNavInformation(self->pvol, 1);
+      } else {
+        PolarVolume_setUseAzimuthalNavInformation(self->pvol, 0);
+      }
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError, "use_azimuthal_nav_information must be of type bool");
+    }
   } else {
-    raiseException_gotoTag(done, PyExc_AttributeError, name);
+    raiseException_gotoTag(done, PyExc_AttributeError, PY_RAVE_ATTRO_NAME_TO_STRING(name));
   }
 
   result = 0;
@@ -856,27 +1002,81 @@ static PyObject* _pypolarvolume_isPolarVolume(PyObject* self, PyObject* args)
 }
 /*@} End of Polar Volumes */
 
+/*@{ Documentation about the type */
+PyDoc_STRVAR(_pypolarvolume_type_doc,
+    "The polar volume is a container for polar scans. There are a few member attributes and like polar scans and other classes "
+    "it is possible to add arbitrary attributes in the 3 groups how, what and where. For example what/sthis.\n\n"
+    "\n"
+    "longitude        - The longitude for where this polar scan originates from (lon0) in radians\n"
+    "latitude         - The latitude for where this polar scan originates from (lat0) in radians\n"""
+    "height           - The height above sea level where this polar scan originates from (alt0) in meters\n"
+    "time             - Time this polar scan should represent as a string with format HHmmSS\n"
+    "date             - Date this polar scan should represent as a string in the format YYYYMMDD\n"
+    "source           - The source for this product. Defined as what/source in ODIM H5. I.e. a comma separated list of various identifiers. For example. NOD:seang,WMO:1234,....\n"
+    "paramname        - The default parameter. Default parameter is used when operating on this volume unless the parameter (quantity) explicitly has been specified in the function.\n"
+    "                 - All scans that currently are held by this volume and eventual new ones will all get the same default parameter.\n"
+    "beamwidth        - DEPRECATED, Use beamwH! Beamwidth for the volume. All scans will get the specified beamwidth. If you only want to make the beamwidth affect an individual\n"
+    "                   scan, modify the scan directly.\n"
+    "beamwH           - Horizontal beamwidth for the volume. All scans will get the specified beamwidth. If you only want to make the beamwidth affect an individual\n"
+    "                   scan, modify the scan directly.\n"
+    "beamwV           - Vertical beamwidth for the volume. All scans will get the specified beamwidth. If you only want to make the beamwidth affect an individual\n"
+    "                   scan, modify the scan directly.\n"
+    "use_azimuthal_nav_information - If setting. Then all currently added scans will get this value. It will not affect scans added after. If reading this value\n"
+    "                   it will return True if at least one of the currently set scans returns True. Otherwise this attribute will be False.\n"
+    "\n"
+    "Usage:\n"
+    "import _polarvolume\n"
+    "vol = _polarvolume.new()\n"
+    );
+/*@} End of Documentation about the type */
+
 /// --------------------------------------------------------------------
 /// Type definitions
 /// --------------------------------------------------------------------
 /*@{ Type definitions */
 PyTypeObject PyPolarVolume_Type =
 {
-  PyObject_HEAD_INIT(NULL)0, /*ob_size*/
+  PyVarObject_HEAD_INIT(NULL, 0) /*ob_size*/
   "PolarVolumeCore", /*tp_name*/
   sizeof(PyPolarVolume), /*tp_size*/
   0, /*tp_itemsize*/
   /* methods */
   (destructor)_pypolarvolume_dealloc, /*tp_dealloc*/
   0, /*tp_print*/
-  (getattrfunc)_pypolarvolume_getattr, /*tp_getattr*/
-  (setattrfunc)_pypolarvolume_setattr, /*tp_setattr*/
-  0, /*tp_compare*/
-  0, /*tp_repr*/
-  0, /*tp_as_number */
+  (getattrfunc)0,               /*tp_getattr*/
+  (setattrfunc)0,               /*tp_setattr*/
+  0,                            /*tp_compare*/
+  0,                            /*tp_repr*/
+  0,                            /*tp_as_number */
   0,
-  0, /*tp_as_mapping */
-  0 /*tp_hash*/
+  0,                            /*tp_as_mapping */
+  0,                            /*tp_hash*/
+  (ternaryfunc)0,               /*tp_call*/
+  (reprfunc)0,                  /*tp_str*/
+  (getattrofunc)_pypolarvolume_getattro, /*tp_getattro*/
+  (setattrofunc)_pypolarvolume_setattro, /*tp_setattro*/
+  0,                            /*tp_as_buffer*/
+  Py_TPFLAGS_DEFAULT, /*tp_flags*/
+  _pypolarvolume_type_doc,      /*tp_doc*/
+  (traverseproc)0,              /*tp_traverse*/
+  (inquiry)0,                   /*tp_clear*/
+  0,                            /*tp_richcompare*/
+  0,                            /*tp_weaklistoffset*/
+  0,                            /*tp_iter*/
+  0,                            /*tp_iternext*/
+  _pypolarvolume_methods,         /*tp_methods*/
+  0,                            /*tp_members*/
+  0,                            /*tp_getset*/
+  0,                            /*tp_base*/
+  0,                            /*tp_dict*/
+  0,                            /*tp_descr_get*/
+  0,                            /*tp_descr_set*/
+  0,                            /*tp_dictoffset*/
+  0,                            /*tp_init*/
+  0,                            /*tp_alloc*/
+  0,                            /*tp_new*/
+  0,                            /*tp_free*/
+  0,                            /*tp_is_gc*/
 };
 /*@} End of Type definitions */
 
@@ -885,45 +1085,53 @@ PyTypeObject PyPolarVolume_Type =
 /// --------------------------------------------------------------------
 /*@{ Module setup */
 static PyMethodDef functions[] = {
-  {"new", (PyCFunction)_pypolarvolume_new, 1},
-  {"isPolarVolume", (PyCFunction)_pypolarvolume_isPolarVolume, 1},
+  {"new", (PyCFunction)_pypolarvolume_new, 1,
+    "new() -> new instance of the PolarVolumeCore object\n\n"
+    "Creates a new instance of the PolarVolumeCore object"
+  },
+  {"isPolarVolume", (PyCFunction)_pypolarvolume_isPolarVolume, 1,
+    "isPolarVolume(object) -> boolean\n\n"
+    "Checks if provided object is of PolarVolumeCore type or not.\n\n"
+    "object - the object to check"
+  },
   {NULL,NULL} /*Sentinel*/
 };
 
 /**
  * Initializes polar volume.
  */
-void init_polarvolume(void)
+MOD_INIT(_polarvolume)
 {
   PyObject *module=NULL,*dictionary=NULL;
   static void *PyPolarVolume_API[PyPolarVolume_API_pointers];
   PyObject *c_api_object = NULL;
-  PyPolarVolume_Type.ob_type = &PyType_Type;
 
-  module = Py_InitModule("_polarvolume", functions);
+  MOD_INIT_SETUP_TYPE(PyPolarVolume_Type, &PyType_Type);
+
+  MOD_INIT_VERIFY_TYPE_READY(&PyPolarVolume_Type);
+  MOD_INIT_DEF(module, "_polarvolume", _pypolarvolume_type_doc, functions);
   if (module == NULL) {
-    return;
+    return MOD_INIT_ERROR;
   }
+
   PyPolarVolume_API[PyPolarVolume_Type_NUM] = (void*)&PyPolarVolume_Type;
   PyPolarVolume_API[PyPolarVolume_GetNative_NUM] = (void *)PyPolarVolume_GetNative;
   PyPolarVolume_API[PyPolarVolume_New_NUM] = (void*)PyPolarVolume_New;
 
-  c_api_object = PyCObject_FromVoidPtr((void *)PyPolarVolume_API, NULL);
-
-  if (c_api_object != NULL) {
-    PyModule_AddObject(module, "_C_API", c_api_object);
-  }
-
+  c_api_object = PyCapsule_New(PyPolarVolume_API, PyPolarVolume_CAPSULE_NAME, NULL);
   dictionary = PyModule_GetDict(module);
-  ErrorObject = PyString_FromString("_polarvolume.error");
+  PyDict_SetItemString(dictionary, "_C_API", c_api_object);
+
+  ErrorObject = PyErr_NewException("_polarvolume.error", NULL, NULL);
   if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
     Py_FatalError("Can't define _polarvolume.error");
+    return MOD_INIT_ERROR;
   }
 
   import_array(); /*To make sure I get access to Numeric*/
   import_pypolarscan();
   import_pyravefield();
-
   PYRAVE_DEBUG_INITIALIZE;
+  return MOD_INIT_SUCCESS(module);
 }
 /*@} End of Module setup */

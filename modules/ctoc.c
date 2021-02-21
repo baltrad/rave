@@ -4,7 +4,7 @@
  * @author Daniel Michelson (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2006-
  */
-#include <Python.h>
+#include <pyravecompat.h>
 #include <arrayobject.h>
 #include "rave.h"
 
@@ -173,14 +173,23 @@ static struct PyMethodDef _ctoc_functions[] =
 /**
  * Initializes the python module _ctoc.
  */
-PyMODINIT_FUNC init_ctoc(void)
+MOD_INIT(_ctoc)
 {
-  PyObject* m;
-  m = Py_InitModule("_ctoc", _ctoc_functions);
-  ErrorObject = PyString_FromString("_ctoc.error");
-  if (ErrorObject == NULL || PyDict_SetItemString(PyModule_GetDict(m), "error",
-                                                  ErrorObject) != 0)
+  PyObject* module = NULL;
+  PyObject* dictionary = NULL;
+
+  MOD_INIT_DEF(module, "_ctoc", NULL/*doc*/, _ctoc_functions);
+  if (module == NULL) {
+    return MOD_INIT_ERROR;
+  }
+
+  dictionary = PyModule_GetDict(module);
+  ErrorObject = PyErr_NewException("_ctoc.error", NULL, NULL);
+  if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
     Py_FatalError("Can't define _ctoc.error");
+    return MOD_INIT_ERROR;
+  }
 
   import_array(); /*To make sure I get access to the Numeric PyArray functions*/
+  return MOD_INIT_SUCCESS(module);
 }

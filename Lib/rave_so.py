@@ -61,33 +61,33 @@ def newSO(ipvol, opvol, aavg, ravg, maxelev):
     if (ravg % ipvol.get('/where/xscale') == 0.0):
         ravg = int(ravg / ipvol.get('/where/xscale'))
     else:
-        raise IOError, "Invalid radial integration length."
+        raise IOError("Invalid radial integration length.")
 
     if (ipvol.get('/where/ysize') % float(aavg) == 0.0) and \
        (ipvol.get('/where/xsize') % float(ravg) == 0.0):   
         beamwidth = ipvol.get('/how/beamwidth')
         oscan = []
         
-	# Only select non-overlapping scans.
+        # Only select non-overlapping scans.
         iscan = ipvol.get('/how/scan')
         if ipvol.get('/scan%s/where/angle' % iscan[0]) > maxelev:
-			raise IOError, "Invalid elevation angles."
+          raise IOError("Invalid elevation angles.")
         for s in range(len(iscan)):
-            if iscan[s] == iscan[0]:
-                oscan.append(iscan[s])
-            elif abs(ipvol.get('/scan%s/where/angle' % iscan[s])-
-                 ipvol.get('/scan%s/where/angle'%oscan[-1])) >= beamwidth/2.0 \
-                 and ipvol.get('/scan%s/where/angle' % iscan[s]) <= maxelev:
-                oscan.append(iscan[s])
+          if iscan[s] == iscan[0]:
+            oscan.append(iscan[s])
+          elif abs(ipvol.get('/scan%s/where/angle' % iscan[s])-
+                   ipvol.get('/scan%s/where/angle'%oscan[-1])) >= beamwidth/2.0 \
+                   and ipvol.get('/scan%s/where/angle' % iscan[s]) <= maxelev:
+            oscan.append(iscan[s])
         #oscan.sort()
         ipvol.set('/how/scan', oscan)
 
-	# Prepare output volume.
+        # Prepare output volume.
         opvol.set('/where/ysize', ipvol.get('/where/ysize') / aavg)
         opvol.set('/where/xsize', ipvol.get('/where/xsize') / ravg)
         opvol.set('/where/xscale', ipvol.get('/where/xscale') * ravg) # must be in m!    
 
-	# Add required info attributes
+        # Add required info attributes
         opvol.set('/how/transform_weighting', NO_ZERO_WEIGHTS)    
         opvol.set('/how/i_method', UNIFORM) # imethod
         opvol.set('/how/scan', oscan)
@@ -100,13 +100,13 @@ def newSO(ipvol, opvol, aavg, ravg, maxelev):
         for i in oscan:
             opvol.set('/scan%s/data' % str(i), A)
 
-	tmpfile = rave_tempfile.mktemp()
+        tmpfile = rave_tempfile.mktemp()
         os.close(tmpfile[0])  # tempfile.mkstemp() opens the file for us
         opvol.set('/how/tmpfile', tmpfile[1])
 
-	return ipvol, opvol
+        return ipvol, opvol
     else:
-	raise IOError, "Invalid integration lengths."
+        raise IOError("Invalid integration lengths.")
 
 
 # New version of ptop which can manage both volumes at once.
@@ -141,11 +141,12 @@ def transform(iw, ow, iz, oz, aavg, ravg, maxelev):
     iw, ow = newSO(iw, ow, aavg, ravg, maxelev)
     if iz != None:
         iz, oz = newSO(iz, oz, aavg, ravg, maxelev)
-	_ptop.transform(iw, ow, iz, oz)
-	return ow, oz
+        _ptop.transform(iw, ow, iz, oz)
+        return ow, oz
     else:
-	_ptop.transform(iw, ow, None, None)
-	return ow, None
+      _ptop.transform(iw, ow, None, None)
+
+    return ow, None
 
 
 # -----------------------------------------------------------------------------
@@ -205,14 +206,14 @@ def makeSO(fstr, ofstr, aavg, ravg, maxelev):
     iwangle.sort()
     izangle.sort()
     for a in range(len(iwangle)):
-		for s in range(len(iwscan)):
-			if iwangle[a]==this.get('/scan%s/where/angle' % iwscan[s]):
-				iwscans.append(iwscan[s])
-			if izangle[a]==this.get('/scan%s/where/angle' % izscan[s]):
-				izscans.append(izscan[s])
+      for s in range(len(iwscan)):
+        if iwangle[a]==this.get('/scan%s/where/angle' % iwscan[s]):
+          iwscans.append(iwscan[s])
+        if izangle[a]==this.get('/scan%s/where/angle' % izscan[s]):
+          izscans.append(izscan[s])
     iwscan = iwscans
     izscan = izscans
-	
+
     #iwscan.sort()
     #izscan.sort()
 
@@ -267,4 +268,4 @@ def makeSO(fstr, ofstr, aavg, ravg, maxelev):
 __all__ =  ['newSO', 'transform', 'makeSO']
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)

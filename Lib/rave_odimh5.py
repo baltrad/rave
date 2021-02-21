@@ -67,7 +67,7 @@ def Dataset(tag="data", attrib={"type":"dataset"}, prefix='image', set=1):
         E.text = prefix + str(set)
         return E
     else:
-        raise AttributeError, 'Invalid "prefix" argument: %s' % prefix
+        raise AttributeError('Invalid "prefix" argument: %s' % prefix)
 
 
 def DatasetGroup(prefix='image', set=1, **args):
@@ -124,8 +124,7 @@ def DatasetArray(xsize=None, ysize=None, typecode='B', initval=None):
     import numpy
 
     if xsize is None or ysize is None:
-        raise AttributeError, \
-              "Missing xsize or ysize when creating dataset array."
+        raise AttributeError("Missing xsize or ysize when creating dataset array.")
 
     else:
         if initval:
@@ -167,7 +166,7 @@ def TopLevelWhat(tag='what', **args):
                 SubElement(E, k, attrib={"type":"int"}).text = str(i)
                 INTS = []
             else:
-                raise KeyError, 'Illegal key: "%s" for top-level what.'%str(k)
+                raise KeyError('Illegal key: "%s" for top-level what.'%str(k))
 
     for k in STRINGS + INTS:
         SubElement(E, k, attrib={}).text = 'n/a'
@@ -215,7 +214,7 @@ def DatasetWhat(tag='what', **args):
                 SubElement(E, k, attrib={"type":"float"}).text = str(i)
                 del(FLOATS[FLOATS.index(k)])
             else:
-                raise KeyError, 'Illegal key: "%s" for dataset-specific what.'%str(k)
+                raise KeyError('Illegal key: "%s" for dataset-specific what.'%str(k))
 
     for k in STRINGS + FLOATS:
         SubElement(E, k, attrib={}).text = 'n/a'
@@ -306,7 +305,7 @@ def Where(tag='where', **args):
     E = Element(tag=tag)
 
     if len(args) == 0:
-        raise IOError, errmesg
+        raise IOError(errmesg)
 
     elif len(args) > 0:
         obj = args['obj'].lower()
@@ -322,7 +321,7 @@ def Where(tag='where', **args):
                     SubElement(E, k, attrib={"type":"int"}).text = str(i)
                     del(INTS[INTS.index(k)])
                 else:
-                    raise KeyError, 'Illegal key: "%s" for where' % str(k)
+                    raise KeyError('Illegal key: "%s" for where' % str(k))
 
         # Cartesian images, volumes, and composites (mosaics)
         elif obj in ['image','comp','cvol']:
@@ -337,7 +336,7 @@ def Where(tag='where', **args):
                     SubElement(E, k, attrib={"type":"int"}).text = str(i)
                     del(INTS[INTS.index(k)])
                 else:
-                    raise KeyError, 'Illegal key: "%s" for where' % str(k)
+                    raise KeyError('Illegal key: "%s" for where' % str(k))
 
         # Cross sections, including RHIs, and side panels
         elif obj is 'xsect':
@@ -369,7 +368,7 @@ def Where(tag='where', **args):
                     del(THVP_FLOATS[THVP_FLOATS.index(k)])
 
         else:
-            raise IOError, errmesg
+            raise IOError(errmesg)
 
         # Fill in the blanks
 
@@ -405,4 +404,4 @@ __all__ = ['Root', 'Dataset','DatasetGroup','TopLevelWhat','DatasetWhat',
 
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)

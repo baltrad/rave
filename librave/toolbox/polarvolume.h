@@ -145,6 +145,34 @@ void PolarVolume_setBeamwidth(PolarVolume_t* pvol, double bw);
 double PolarVolume_getBeamwidth(PolarVolume_t* pvol);
 
 /**
+ * Sets the horizontal beamwidth. Default is 1.0 * M_PI/360.0
+ * @param[in] self - self
+ * @param[in] beamwidth - the beam width in radians
+ */
+void PolarVolume_setBeamwH(PolarVolume_t* self, double beamwidth);
+
+/**
+ * Returns the horizontal beamwidth. Default is 1.0 * M_PI/360.0.
+ * @param[in] self - self
+ * @return the beam width om radians
+ */
+double PolarVolume_getBeamwH(PolarVolume_t* self);
+
+/**
+ * Sets the vertical beamwidth. Default is 1.0 * M_PI/360.0
+ * @param[in] self - self
+ * @param[in] beamwidth - the beam width in radians
+ */
+void PolarVolume_setBeamwV(PolarVolume_t* self, double beamwidth);
+
+/**
+ * Returns the vertical beamwidth. Default is 1.0 * M_PI/360.0.
+ * @param[in] self - self
+ * @return the beam width om radians
+ */
+double PolarVolume_getBeamwV(PolarVolume_t* self);
+
+/**
  * Returns the distance from the radar to the specified lon/lat coordinate pair.
  * @param[in] pvol - self
  * @param[in] lon - the longitude
@@ -449,6 +477,13 @@ RaveAttribute_t* PolarVolume_getAttribute(PolarVolume_t* pvol,
   const char* name);
 
 /**
+ * Removes a rave attribute from the volume.
+ * @param[in] pvol - self
+ * @param[in] attrname - the name of the attribute to remove
+ */
+void PolarVolume_removeAttribute(PolarVolume_t* pvol, const char* attrname);
+
+/**
  * Returns a list of attribute names. Release with \@ref #RaveList_freeAndDestroy.
  * @param[in] pvol - self
  * @returns a list of attribute names
@@ -526,5 +561,22 @@ RaveField_t* PolarVolume_getHeightField(PolarVolume_t* self);
  * @returns the polar observations
  */
 PolarObservation* PolarVolume_getCorrectedValuesAtHeight(PolarVolume_t* self, double height, double gap, int* nobservations);
+
+/**
+ * Utility function for setting all scans in this volume to use or not use azimuthal navigation. Note, this will only affect
+ * currently added scans and will not affect scans added after call to this function.
+ * @param[in] self - self
+ * @param[in] v - 0 if azimuthal nav information shouldn't be used, otherwise 1
+ */
+void PolarVolume_setUseAzimuthalNavInformation(PolarVolume_t* self, int v);
+
+/**
+ * Returns if the azimuthal nav information should be used or not. Since this information actually resides in the scans the
+ * returned value will be depending on currently contained scans. If all scans have got azimuthal nav information set to 0, then
+ * 0 will be returned. Otherwise 1. This means that if at least one scan is using azimuthal nav info, we want to know this when querying the volume.
+ * @param[in] self - self
+ * @return 1 if nav information is used, otherwise 0.
+ */
+int PolarVolume_useAzimuthalNavInformation(PolarVolume_t* self);
 
 #endif

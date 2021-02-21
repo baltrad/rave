@@ -36,8 +36,14 @@ import xml.etree.ElementTree as ET
 NOD, WMO, RAD, PLC, CCCC = {None:None}, {None:None}, {None:None}, {None:None}, {None:None}
 SOURCE = {None:None}
 
-
 initialized = 0
+
+# Hack to come around string handling differences between py3 and py27.
+# We might consider go all-in on unicode handling but that will require some time.
+use_source_encoding=False
+if sys.version_info < (3,):
+    use_source_encoding=True
+    
 
 ## Initializer. Reads XML and puts the values into dictionaries.
 # Because all radars must have a NOD identifier, the other identifiers are looked up
@@ -53,17 +59,18 @@ def init():
         for radar in list(country):
             nod = radar.tag
             CCCC[nod] = cccc
-            if radar.attrib.has_key("wmo"): 
+            keys = radar.attrib.keys()
+            if "wmo" in keys: 
                 wmo = radar.attrib["wmo"]
                 WMO[nod] = wmo
             else:
                 wmo = None
-            if radar.attrib.has_key("rad"): 
+            if "rad" in keys: 
                 rad = radar.attrib["rad"]
                 RAD[nod] = rad
             else:
                 rad = None
-            if radar.attrib.has_key("plc"): 
+            if "plc" in keys: 
                 plc = radar.attrib["plc"]
                 PLC[nod] = plc
             else:
@@ -115,13 +122,13 @@ def text2Element(filename, xmlfile=ODIM_SOURCE_FILE):
                                  "plc":plc.decode('utf-8')})
             E.append(R)
         else:
-            print "FAILED to process %s" % l
+            print("FAILED to process %s" % l)
 
     ALL.append(E)
 
     fd = __builtin__.open(xmlfile, 'w')
     sys.stdout = fd
-    print "<?xml version='1.0' encoding='%s'?>" % UTF8
+    print("<?xml version='1.0' encoding='%s'?>" % UTF8)
     prettyprint(ALL)
     fd.close()
     sys.stdout = sys.__stdout__
@@ -132,22 +139,24 @@ class ODIM_Source:
     # @param src string containing a '/what/source' attribute
     def __init__(self, src=None):
         self.source = src
+        if not isinstance(self.source,bytes) and self.source is not None:
+          self.source = bytes(self.source, UTF8)
         self.wmo = self.nod = self.rad = self.plc = self.org = self.cty = self.cmt = None
         if self.source: self.split_source()
 
     ## Splits the input string into identifier values        
     def split_source(self):
-        split = self.source.split(',')
+        split = self.source.split(b',')
         for s in split:
-            prefix, value = s.split(':')
+            prefix, value = s.split(b':')
             prefix = prefix.lower()  # safety precaution in case someone changes case in their files
-            if   prefix == 'wmo': self.wmo = value  # Keep this as a string!
-            elif prefix == 'rad': self.rad = value
-            elif prefix == 'plc': self.plc = value.decode(UTF8)
-            elif prefix == 'nod': self.nod = value
-            elif prefix == 'org': self.org = value
-            elif prefix == 'cty': self.cty = value
-            elif prefix == 'cmt': self.cmt = value 
+            if   prefix == b'wmo': self.wmo = value.decode(UTF8)  # Keep this as a string!
+            elif prefix == b'rad': self.rad = value.decode(UTF8)
+            elif prefix == b'plc': self.plc = value.decode(UTF8)
+            elif prefix == b'nod': self.nod = value.decode(UTF8)
+            elif prefix == b'org': self.org = value.decode(UTF8)
+            elif prefix == b'cty': self.cty = value.decode(UTF8)
+            elif prefix == b'cmt': self.cmt = value.decode(UTF8) 
 
 
 ## Convenience function. Gets the NOD identifier from /what/source .
@@ -173,9 +182,14 @@ def CheckSource(inobj):
     if not S.nod:
         try:
             S.nod = NOD[S.wmo]
-            inobj.source = SOURCE[S.nod].encode(UTF8)
-        except:
-            pass
+            if SOURCE[S.nod] is not None:
+              if use_source_encoding:
+                inobj.source = SOURCE[S.nod].encode(UTF8)
+              else:
+                inobj.source = SOURCE[S.nod]
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
 
 
 if __name__ == "__main__":

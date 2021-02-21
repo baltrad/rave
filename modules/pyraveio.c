@@ -22,7 +22,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2009-12-10
  */
-#include "Python.h"
+#include "pyravecompat.h"
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>
@@ -31,8 +31,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #define PYRAVEIO_MODULE   /**< include correct part of pyraveio.h */
 #include "pyraveio.h"
 
-#include "pypolarvolume.h"
 #include "pycartesian.h"
+#include "pypolarvolume.h"
 #include "pypolarscan.h"
 #include "pycartesianvolume.h"
 #include "pyverticalprofile.h"
@@ -126,7 +126,7 @@ done:
  * @return the object on success, otherwise NULL
  */
 static PyRaveIO*
-PyRaveIO_Open(const char* filename)
+PyRaveIO_Open(const char* filename, int lazyLoading, const char* preloadQuantities)
 {
   RaveIO_t* raveio = NULL;
   PyRaveIO* result = NULL;
@@ -135,7 +135,7 @@ PyRaveIO_Open(const char* filename)
     raiseException_returnNULL(PyExc_ValueError, "providing a filename that is NULL");
   }
 
-  raveio = RaveIO_open(filename);
+  raveio = RaveIO_open(filename, lazyLoading, preloadQuantities);
   if (raveio == NULL) {
     raiseException_gotoTag(done, PyExc_IOError, "Failed to open file");
   }
@@ -185,10 +185,12 @@ static PyObject* _pyraveio_open(PyObject* self, PyObject* args)
   PyRaveIO* result = NULL;
 
   char* filename = NULL;
-  if (!PyArg_ParseTuple(args, "s", &filename)) {
+  int lazyLoading = 0;
+  char* preloadQuantities = NULL;
+  if (!PyArg_ParseTuple(args, "s|iz", &filename, &lazyLoading, &preloadQuantities)) {
     return NULL;
   }
-  result = PyRaveIO_Open(filename);
+  result = PyRaveIO_Open(filename, lazyLoading, preloadQuantities);
   return (PyObject*)result;
 }
 
@@ -230,7 +232,13 @@ static PyObject* _pyraveio_close(PyRaveIO* self, PyObject* args)
  */
 static PyObject* _pyraveio_load(PyRaveIO* self, PyObject* args)
 {
-  if (!RaveIO_load(self->raveio)) {
+  int lazyLoading = 0;
+  char* preloadQuantities = NULL;
+  if (!PyArg_ParseTuple(args, "|iz", &lazyLoading, &preloadQuantities)) {
+    return NULL;
+  }
+
+  if (!RaveIO_load(self->raveio, lazyLoading, preloadQuantities)) {
     raiseException_returnNULL(PyExc_IOError, "Failed to load file");
   }
   Py_RETURN_NONE;
@@ -262,6 +270,7 @@ static PyObject* _pyraveio_save(PyRaveIO* self, PyObject* args)
 static struct PyMethodDef _pyraveio_methods[] =
 {
   {"version", NULL},
+  {"read_version", NULL},
   {"h5radversion", NULL},
   {"objectType", NULL},
   {"filename", NULL},
@@ -274,9 +283,13 @@ static struct PyMethodDef _pyraveio_methods[] =
   {"fcp_metablocksize", NULL},
   {"file_format", NULL},
   {"bufr_table_dir", NULL},
-  {"close", (PyCFunction) _pyraveio_close, 1},
-  {"load", (PyCFunction) _pyraveio_load, 1},
-  {"save", (PyCFunction) _pyraveio_save, 1},
+  {"close", (PyCFunction) _pyraveio_close, 1, "close()\n\n"
+                                              "Resets this instance and closes the opened object.\n"},
+  {"load", (PyCFunction) _pyraveio_load, 1,   "load()\n\n"
+                                              "Atempts to load the file that is defined by filename\n"},
+  {"save", (PyCFunction) _pyraveio_save, 1,   "save([filename)]\n\n"
+                                              "Saves the current object (with current settings).\n\n"
+                                              "filename - is optional. If not specified, the objects filename is used\n"},
   {NULL, NULL } /* sentinel */
 };
 
@@ -284,22 +297,24 @@ static struct PyMethodDef _pyraveio_methods[] =
  * Returns the specified attribute in the PyRaveIO
  * @param[in] self - the RaveIO instance
  */
-static PyObject* _pyraveio_getattr(PyRaveIO* self, char* name)
+static PyObject* _pyraveio_getattro(PyRaveIO* self, PyObject* name)
 {
   PyObject* res = NULL;
-  if (strcmp("version", name) == 0) {
+  if (PY_COMPARE_STRING_WITH_ATTRO_NAME("version", name) == 0) {
     return PyInt_FromLong(RaveIO_getOdimVersion(self->raveio));
-  } else if (strcmp("h5radversion", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("read_version", name) == 0) {
+    return PyInt_FromLong(RaveIO_getReadOdimVersion(self->raveio));
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("h5radversion", name) == 0) {
     return PyInt_FromLong(RaveIO_getH5radVersion(self->raveio));
-  } else if (strcmp("objectType", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("objectType", name) == 0) {
     return PyInt_FromLong(RaveIO_getObjectType(self->raveio));
-  } else if (strcmp("filename", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("filename", name) == 0) {
     if (RaveIO_getFilename(self->raveio) != NULL) {
       return PyString_FromString(RaveIO_getFilename(self->raveio));
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("object", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("object", name) == 0) {
     RaveCoreObject* object = RaveIO_getObject(self->raveio);
     if (object != NULL) {
       if (RAVE_OBJECT_CHECK_TYPE(object, &Cartesian_TYPE)) {
@@ -320,50 +335,44 @@ static PyObject* _pyraveio_getattr(PyRaveIO* self, char* name)
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("compression_level", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("compression_level", name) == 0) {
     return PyInt_FromLong(RaveIO_getCompressionLevel(self->raveio));
-  } else if (strcmp("fcp_userblock", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("fcp_userblock", name) == 0) {
     return PyInt_FromLong(RaveIO_getUserBlock(self->raveio));
-  } else if (strcmp("fcp_sizes", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("fcp_sizes", name) == 0) {
     size_t sz = 0, addr = 0;
     RaveIO_getSizes(self->raveio, &sz, &addr);
     return Py_BuildValue("(ii)", sz, addr);
-  } else if (strcmp("fcp_symk", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("fcp_symk", name) == 0) {
     int ik = 0, lk = 0;
     RaveIO_getSymk(self->raveio, &ik, &lk);
     return Py_BuildValue("(ii)", ik, lk);
-  } else if (strcmp("fcp_istorek", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("fcp_istorek", name) == 0) {
     return PyInt_FromLong(RaveIO_getIStoreK(self->raveio));
-  } else if (strcmp("fcp_metablocksize", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("fcp_metablocksize", name) == 0) {
     return PyInt_FromLong(RaveIO_getMetaBlockSize(self->raveio));
-  } else if (strcmp("file_format", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("file_format", name) == 0) {
     return PyInt_FromLong(RaveIO_getFileFormat(self->raveio));
-  } else if (strcmp("bufr_table_dir", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("bufr_table_dir", name) == 0) {
     if (RaveIO_getBufrTableDir(self->raveio) != NULL) {
       return PyString_FromString(RaveIO_getBufrTableDir(self->raveio));
     } else {
       Py_RETURN_NONE;
     }
   }
-  res = Py_FindMethod(_pyraveio_methods, (PyObject*) self, name);
-  if (res != NULL)
-    return res;
-
-  PyErr_Clear();
-  PyErr_SetString(PyExc_AttributeError, name);
-  return NULL;
+  return PyObject_GenericGetAttr((PyObject*)self, name);
 }
 
 /**
  * Sets the specified attribute in the raveio
  */
-static int _pyraveio_setattr(PyRaveIO* self, char* name, PyObject* val)
+static int _pyraveio_setattro(PyRaveIO* self, PyObject* name, PyObject* val)
 {
   int result = -1;
   if (name == NULL) {
     goto done;
   }
-  if (strcmp("version", name)==0) {
+  if (PY_COMPARE_STRING_WITH_ATTRO_NAME("version", name)==0) {
     if (PyInt_Check(val)) {
       if (!RaveIO_setOdimVersion(self->raveio, PyInt_AsLong(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "illegal version number");
@@ -371,7 +380,9 @@ static int _pyraveio_setattr(PyRaveIO* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_TypeError,"version must be a valid odim version");
     }
-  } else if (strcmp("h5radversion", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("read_version", name)==0) {
+    raiseException_gotoTag(done, PyExc_TypeError,"read_version can not be set");
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("h5radversion", name) == 0) {
     if (PyInt_Check(val)) {
       if (!RaveIO_setH5radVersion(self->raveio, PyInt_AsLong(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "illegal h5rad version number");
@@ -379,7 +390,7 @@ static int _pyraveio_setattr(PyRaveIO* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_TypeError,"version must be a valid h5rad version");
     }
-  } else if (strcmp("filename", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("filename", name) == 0) {
     if (PyString_Check(val)) {
       if (!RaveIO_setFilename(self->raveio, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_MemoryError, "failed to set file name");
@@ -389,10 +400,11 @@ static int _pyraveio_setattr(PyRaveIO* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_TypeError,"filename must be of type string");
     }
-  } else if (strcmp("object", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("object", name) == 0) {
     if (PyCartesian_Check(val)) {
       RaveIO_setObject(self->raveio, (RaveCoreObject*)((PyCartesian*)val)->cartesian);
-    } else if (PyPolarScan_Check(val)) {
+    }
+    else if (PyPolarScan_Check(val)) {
       RaveIO_setObject(self->raveio, (RaveCoreObject*)((PyPolarScan*)val)->scan);
     } else if (PyPolarVolume_Check(val)) {
       RaveIO_setObject(self->raveio, (RaveCoreObject*)((PyPolarVolume*)val)->pvol);
@@ -403,43 +415,43 @@ static int _pyraveio_setattr(PyRaveIO* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "Can only save objects of type : cartesian, polarscan, polarvolume or verticalprofile");
     }
-  } else if (strcmp("compression_level", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("compression_level", name) == 0) {
     if (PyInt_Check(val)) {
       RaveIO_setCompressionLevel(self->raveio, PyInt_AsLong(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "Compression level should be integer value between 0..9");
     }
-  } else if (strcmp("fcp_userblock", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("fcp_userblock", name) == 0) {
     if (PyInt_Check(val)) {
       RaveIO_setUserBlock(self->raveio, PyInt_AsLong(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "User block should be integer value");
     }
-  } else if (strcmp("fcp_sizes", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("fcp_sizes", name) == 0) {
     int sz = 0, addr = 0;
     if (!PyArg_ParseTuple(val, "ii", &sz, &addr)) {
       raiseException_gotoTag(done, PyExc_TypeError ,"sizes must be a tuple containing 2 integers representing (size, addr)");
     }
     RaveIO_setSizes(self->raveio, sz, addr);
-  } else if (strcmp("fcp_symk", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("fcp_symk", name) == 0) {
     int ik = 0, lk = 0;
     if (!PyArg_ParseTuple(val, "ii", &ik, &lk)) {
       raiseException_gotoTag(done, PyExc_TypeError ,"symk must be a tuple containing 2 integers representing (ik, lk)");
     }
     RaveIO_setSymk(self->raveio, ik, lk);
-  } else if (strcmp("fcp_istorek", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("fcp_istorek", name) == 0) {
     if (PyInt_Check(val)) {
       RaveIO_setIStoreK(self->raveio, PyInt_AsLong(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError ,"istorek must be a integer");
     }
-  } else if (strcmp("fcp_metablocksize", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("fcp_metablocksize", name) == 0) {
     if (PyInt_Check(val)) {
       RaveIO_setMetaBlockSize(self->raveio, PyInt_AsLong(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError ,"meta block size must be a integer");
     }
-  } else if (strcmp("file_format", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("file_format", name) == 0) {
     if (PyInt_Check(val)) {
       if (!RaveIO_setFileFormat(self->raveio, PyInt_AsLong(val))) {
         raiseException_gotoTag(done, PyExc_AttributeError, "Only valid writable formats are ODIM HDF5 and CF");
@@ -447,7 +459,7 @@ static int _pyraveio_setattr(PyRaveIO* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_TypeError ,"meta block size must be a integer");
     }
-  } else if (strcmp("bufr_table_dir", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("bufr_table_dir", name) == 0) {
     if (PyString_Check(val)) {
       if (!RaveIO_setBufrTableDir(self->raveio, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_MemoryError, "failed to set bufr table dir");
@@ -458,7 +470,7 @@ static int _pyraveio_setattr(PyRaveIO* self, char* name, PyObject* val)
       raiseException_gotoTag(done, PyExc_TypeError,"bufr table dir must be of type string");
     }
   } else {
-    raiseException_gotoTag(done, PyExc_AttributeError, name);
+    raiseException_gotoTag(done, PyExc_AttributeError, PY_RAVE_ATTRO_NAME_TO_STRING(name));
   }
 
   result = 0;
@@ -468,35 +480,142 @@ done:
 
 /*@} End of RaveIO */
 
+/*@{ Documentation about the type */
+PyDoc_STRVAR(_pyraveio_doc,
+    "This instance wraps the IO-routines used when writing and/or reading files through RAVE.\n"
+    "\n"
+    "The members of each object are:\n"
+    " * version          - ODIM version that will be used when writing this object. Can be one of:\n"
+    "                      + RaveIO_ODIM_Version_2_0\n"
+    "                      + RaveIO_ODIM_Version_2_1\n"
+    "                      + RaveIO_ODIM_Version_2_2\n"
+    "                      + RaveIO_ODIM_Version_2_3 (default)\n"
+    " * read_version     - ODIM version of the read file. Note, this is only reflecting actual read file and not if file is written with different version. Can be one of:\n"
+    "                      + RaveIO_ODIM_Version_UNDEFINED\n"
+    "                      + RaveIO_ODIM_Version_2_0\n"
+    "                      + RaveIO_ODIM_Version_2_1\n"
+    "                      + RaveIO_ODIM_Version_2_2\n"
+    "                      + RaveIO_ODIM_Version_2_3 (default)\n"
+    "\n"
+    " * h5radversion     - showing the H5 rad version of the read file. Can be one of:\n"
+    "                      + RaveIO_ODIM_H5rad_Version_UNDEFINED\n"
+    "                      + RaveIO_ODIM_H5rad_Version_2_0\n"
+    "                      + RaveIO_ODIM_H5rad_Version_2_1\n"
+    "                      + RaveIO_ODIM_H5rad_Version_2_2\n"
+    "                      + RaveIO_ODIM_H5rad_Version_2_3\n"
+    "\n"
+    " * objectType       - What type of object that has been read. Can be one of the following:\n"
+    "                      + Rave_ObjectType_PVOL\n"
+    "                      + Rave_ObjectType_CVOL\n"
+    "                      + Rave_ObjectType_SCAN\n"
+    "                      + Rave_ObjectType_RAY\n"
+    "                      + Rave_ObjectType_AZIM\n"
+    "                      + Rave_ObjectType_IMAGE\n"
+    "                      + Rave_ObjectType_COMP\n"
+    "                      + Rave_ObjectType_XSEC\n"
+    "                      + Rave_ObjectType_VP\n"
+    "                      + Rave_ObjectType_PIC\n"
+    "\n"
+    " * file_format      - The file format. Either read or the one to use when writing. Can be one of \n"
+    "                      + RaveIO_ODIM_FileFormat_UNDEFINED\n"
+    "                      + RaveIO_ODIM_FileFormat_HDF5\n"
+#ifdef RAVE_BUFR_SUPPORTED
+    "                      + RaveIO_ODIM_FileFormat_BUFR (only available for reading)\n"
+#endif
+#ifdef RAVE_CF_SUPPORTED
+    "                      + RaveIO_FileFormat_CF (only available for writing)\n"
+#endif
+    "\n"
+    " * object           - The actual object beeing written or read. Upon successful reading, this object will always be set and when writing\n"
+    "                      this object has to be set.\n"
+    "\n"
+    " * compression_level- The compression level beeing used. Range between 0 and 9 where 0 means no compression and 9 means highest compression.\n"
+    "                      Compression level 1 is lowest compression ratio but fastest and level 9 is highest compression ratio but slowest.\n "
+    "\n"
+    "The below fcp_<members> are all used for optimizing the file storage. Please refer to HDF5 documentation for more information.\n"
+    " * fcp_userblock    - Integer value."
+    "\n"
+    " * fcp_sizes        - Sizes must be a tuple containing 2 integers representing (size, addr).\n"
+    "\n"
+    " * fcp_symk         - Symk must be a tuple containing 2 integers representing (ik, lk).\n"
+    "\n"
+    " * fcp_istorek      - Integer value.\n"
+    "\n"
+    " * fcp_metablocksize- Integer value.\n"
+    "\n"
+    "Besides the above members, there are a few methods that also are of interest and further information about these can"
+    "be found by printing the doc about each invidivdual function.\n"
+    " * close()\n"
+    " * load()\n"
+    " * save()\n"
+    );
+/*@} End of Documentation about the type */
+
 /*@{ Type definitions */
 PyTypeObject PyRaveIO_Type =
 {
-  PyObject_HEAD_INIT(NULL)0, /*ob_size*/
+  PyVarObject_HEAD_INIT(NULL, 0) /*ob_size*/
   "RaveIOCore", /*tp_name*/
   sizeof(PyRaveIO), /*tp_size*/
   0, /*tp_itemsize*/
   /* methods */
   (destructor)_pyraveio_dealloc, /*tp_dealloc*/
   0, /*tp_print*/
-  (getattrfunc)_pyraveio_getattr, /*tp_getattr*/
-  (setattrfunc)_pyraveio_setattr, /*tp_setattr*/
-  0, /*tp_compare*/
-  0, /*tp_repr*/
-  0, /*tp_as_number */
+  (getattrfunc)0,               /*tp_getattr*/
+  (setattrfunc)0,               /*tp_setattr*/
+  0,                            /*tp_compare*/
+  0,                            /*tp_repr*/
+  0,                            /*tp_as_number */
   0,
-  0, /*tp_as_mapping */
-  0 /*tp_hash*/
+  0,                            /*tp_as_mapping */
+  0,                            /*tp_hash*/
+  (ternaryfunc)0,               /*tp_call*/
+  (reprfunc)0,                  /*tp_str*/
+  (getattrofunc)_pyraveio_getattro, /*tp_getattro*/
+  (setattrofunc)_pyraveio_setattro, /*tp_setattro*/
+  0,                            /*tp_as_buffer*/
+  Py_TPFLAGS_DEFAULT, /*tp_flags*/
+  _pyraveio_doc,                /*tp_doc*/
+  (traverseproc)0,              /*tp_traverse*/
+  (inquiry)0,                   /*tp_clear*/
+  0,                            /*tp_richcompare*/
+  0,                            /*tp_weaklistoffset*/
+  0,                            /*tp_iter*/
+  0,                            /*tp_iternext*/
+  _pyraveio_methods,              /*tp_methods*/
+  0,                            /*tp_members*/
+  0,                            /*tp_getset*/
+  0,                            /*tp_base*/
+  0,                            /*tp_dict*/
+  0,                            /*tp_descr_get*/
+  0,                            /*tp_descr_set*/
+  0,                            /*tp_dictoffset*/
+  0,                            /*tp_init*/
+  0,                            /*tp_alloc*/
+  0,                            /*tp_new*/
+  0,                            /*tp_free*/
+  0,                            /*tp_is_gc*/
 };
 /*@} End of Type definitions */
 
 /*@{ Module setup */
 static PyMethodDef functions[] = {
-  {"new", (PyCFunction)_pyraveio_new, 1},
-  {"open", (PyCFunction)_pyraveio_open, 1},
-  {"supports", (PyCFunction)_pyraveio_supports, 1},
+  {"new", (PyCFunction)_pyraveio_new, 1,
+      "new() -> new instance of the RaveIOCore object\n\n"
+      "Creates a new instance of the RaveIOCore object"},
+  {"open", (PyCFunction)_pyraveio_open, 1,
+      "open(filename) -> a RaveIOCore instance with a loaded object.\n\n"
+      "Opens a file that is supported by raveio and loads the structure.\n\n"
+      "filename - a filename pointing to a file supported by raveio."},
+  {"supports", (PyCFunction)_pyraveio_supports, 1,
+      "supports(format) -> True or False depending if format supported or not\n\n"
+      "Returns if the raveio supports the requested file format.\n\n"
+      "format - The requested format, can be one of:\n"
+      "  raveio.RaveIO_ODIM_FileFormat_HDF5\n"
+      " _raveio.RaveIO_ODIM_FileFormat_BUFR - if built with support\n"
+      " _raveio.RaveIO_FileFormat_CF        - if built with support and currently only supports writing"},
   {NULL,NULL} /*Sentinel*/
 };
-
 /**
  * Adds constants to the dictionary (probably the modules dictionary).
  * @param[in] dictionary - the dictionary the long should be added to
@@ -513,42 +632,88 @@ static void add_long_constant(PyObject* dictionary, const char* name, long value
   Py_XDECREF(tmp);
 }
 
-PyMODINIT_FUNC
-init_raveio(void)
+PyDoc_STRVAR(_pyraveio_module_doc,
+    "This class provides functionality for reading and writing files supported by RAVE.\n"
+    "\n"
+    "There are few different ways to handle files and also a couple of different protocols that are supported all depending on\n"
+    "how rave was configured and built.\n"
+    "Currently, there are 3 different formats supported. ODIM H5, BUFR H5 (reading) and CF Conventions (NetCDF) (writing). This build supports\n"
+    "ODIM H5 2.2\n"
+#ifdef RAVE_BUFR_SUPPORTED
+    "ODIM BUFR for reading\n"
+#endif
+#ifdef RAVE_CF_SUPPORTED
+    "CF Conventions (NetCDF) for writing\n"
+#endif
+    "\n"
+    "This documentation will only provide information about ODIM H5 since this is the format mostly used within rave.\n"
+    "\n"
+    "To read a hdf-file:\n"
+    ">>> import _raveio\n"
+    ">>> obj = _raveio.open(\"seang_202001100000.h5\")\n"
+    "\n"
+    "After you have opened the file, you maybe want to know what type of product you have read\n"
+    "Either you compare the objects format_type with _raveio:s list of constants:\n"
+    " * Rave_ObjectType_PVOL\n"
+    " * Rave_ObjectType_CVOL\n"
+    " * Rave_ObjectType_SCAN\n"
+    " * Rave_ObjectType_RAY\n"
+    " * Rave_ObjectType_AZIM\n"
+    " * Rave_ObjectType_IMAGE\n"
+    " * Rave_ObjectType_COMP\n"
+    " * Rave_ObjectType_XSEC\n"
+    " * Rave_ObjectType_VP\n"
+    " * Rave_ObjectType_PIC\n"
+    "\n"
+    "Like\n"
+    ">>> if obj.format_type == _raveio.Rave_ObjectType_PVOL:\n"
+    "and so on\n"
+    "\n"
+    "There are also the possibility to check odim version and file format and compare these against predefined constants and can be found by typing\n"
+    ">>> dir(_raveio)\n"
+    );
+
+MOD_INIT(_raveio)
 {
   PyObject *module=NULL,*dictionary=NULL;
   static void *PyRaveIO_API[PyRaveIO_API_pointers];
   PyObject *c_api_object = NULL;
-  PyRaveIO_Type.ob_type = &PyType_Type;
 
-  module = Py_InitModule("_raveio", functions);
+  MOD_INIT_SETUP_TYPE(PyRaveIO_Type, &PyType_Type);
+
+  MOD_INIT_VERIFY_TYPE_READY(&PyRaveIO_Type);
+
+  MOD_INIT_DEF(module, "_raveio", _pyraveio_module_doc, functions);
   if (module == NULL) {
-    return;
+    return MOD_INIT_ERROR;
   }
+
   PyRaveIO_API[PyRaveIO_Type_NUM] = (void*)&PyRaveIO_Type;
   PyRaveIO_API[PyRaveIO_GetNative_NUM] = (void *)PyRaveIO_GetNative;
   PyRaveIO_API[PyRaveIO_New_NUM] = (void*)PyRaveIO_New;
-  PyRaveIO_API[PyRaveIO_Open_NUM] = (void*)PyRaveIO_Open;
 
-  c_api_object = PyCObject_FromVoidPtr((void *)PyRaveIO_API, NULL);
-
-  if (c_api_object != NULL) {
-    PyModule_AddObject(module, "_C_API", c_api_object);
-  }
-
+  c_api_object = PyCapsule_New(PyRaveIO_API, PyRaveIO_CAPSULE_NAME, NULL);
   dictionary = PyModule_GetDict(module);
-  ErrorObject = PyString_FromString("_raveio.error");
+  PyDict_SetItemString(dictionary, "_C_API", c_api_object);
+
+  ErrorObject = PyErr_NewException("_raveio.error", NULL, NULL);
   if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
     Py_FatalError("Can't define _raveio.error");
+    return MOD_INIT_ERROR;
   }
+
 
   add_long_constant(dictionary, "RaveIO_ODIM_Version_UNDEFINED", RaveIO_ODIM_Version_UNDEFINED);
   add_long_constant(dictionary, "RaveIO_ODIM_Version_2_0", RaveIO_ODIM_Version_2_0);
   add_long_constant(dictionary, "RaveIO_ODIM_Version_2_1", RaveIO_ODIM_Version_2_1);
+  add_long_constant(dictionary, "RaveIO_ODIM_Version_2_2", RaveIO_ODIM_Version_2_2);
+  add_long_constant(dictionary, "RaveIO_ODIM_Version_2_3", RaveIO_ODIM_Version_2_3);
 
   add_long_constant(dictionary, "RaveIO_ODIM_H5rad_Version_UNDEFINED", RaveIO_ODIM_H5rad_Version_UNDEFINED);
   add_long_constant(dictionary, "RaveIO_ODIM_H5rad_Version_2_0", RaveIO_ODIM_H5rad_Version_2_0);
   add_long_constant(dictionary, "RaveIO_ODIM_H5rad_Version_2_1", RaveIO_ODIM_H5rad_Version_2_1);
+  add_long_constant(dictionary, "RaveIO_ODIM_H5rad_Version_2_2", RaveIO_ODIM_H5rad_Version_2_2);
+  add_long_constant(dictionary, "RaveIO_ODIM_H5rad_Version_2_3", RaveIO_ODIM_H5rad_Version_2_3);
 
   add_long_constant(dictionary, "RaveIO_ODIM_FileFormat_UNDEFINED", RaveIO_ODIM_FileFormat_UNDEFINED);
   add_long_constant(dictionary, "RaveIO_ODIM_FileFormat_HDF5", RaveIO_ODIM_FileFormat_HDF5);
@@ -568,15 +733,16 @@ init_raveio(void)
   add_long_constant(dictionary, "Rave_ObjectType_PIC", Rave_ObjectType_PIC);
 
   HL_init();
+  //HL_InitializeDebugger();
   HL_disableErrorReporting();
   HL_disableHdf5ErrorReporting();
   HL_setDebugLevel(HLHDF_SILENT);
-
   import_pypolarvolume();
   import_pypolarscan();
-  import_pycartesian();
-  import_pycartesianvolume();
   import_pyverticalprofile();
+  import_pycartesianvolume();
+  import_pycartesian();
   PYRAVE_DEBUG_INITIALIZE;
+  return MOD_INIT_SUCCESS(module);
 }
 /*@} End of Module setup */

@@ -90,15 +90,6 @@ int dealiased_by_quantity(PolarScan_t* scan, const char* quantity);
 int dealiased(PolarScan_t* scan);
 
 /**
- * Creates a new parameter that has been dealiased.
- *
- * @param[in] scan - input scan
- * @param[in] quantity - the quantity
- * @returns a dealiased parameter on success otherwise NULL is returned
- */
-PolarScanParam_t* dealias_create_parameter(PolarScan_t* scan, const char* quantity);
-
-/**
  * Creates a dealiased parameter from the scan / quantity. The created dealiased parameter will get quantity newquantity
  * @param[in] scan - the scan to be dealiased
  * @param[in] quantity - the quantity to dealias

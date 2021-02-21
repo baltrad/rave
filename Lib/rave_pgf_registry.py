@@ -40,16 +40,7 @@ class PGF_Registry(BaltradMessageXML.BltXML):
     # @param filename string, optional file name from which to read registry.
     # @param msg string, optional XML string containing registry to parse.
     def __init__(self, tag=GENREG, encoding=UTF8, filename=None, msg=None):
-        self.tag = tag
-        self.attrib = {}  # This is needed even if it's empty
-        self._children = []
-        self.encoding = encoding
-        self.setheader(self.encoding)
-        if filename:
-            self.read(filename)
-        if msg:
-            self.fromstring(msg)
-
+      super(PGF_Registry, self).__init__(tag, encoding, filename, msg)
 
     ## Creates a registry entry for a given algorithm.
     # @param name string algorithm's name.
@@ -67,14 +58,14 @@ class PGF_Registry(BaltradMessageXML.BltXML):
         e.set("module", module)
         e.set("function", function)
         e.set("help", Help)
-        a = ET.SubElement(e, "arguments")
+        a = e.subelement("arguments")
         if len(strings) > 0: a.set("strings", strings)
         if len(ints) > 0: a.set("ints", ints)
         if len(floats) > 0: a.set("floats", floats)
         if len(seqs) > 0: a.set("seqs", seqs)
 
-        self.append(e)
-        self.save(REGFILE)
+        self.append(e.getelement())
+        self.save()
 
 
     ## Checks whether an algorithm is registered.
@@ -91,7 +82,7 @@ class PGF_Registry(BaltradMessageXML.BltXML):
         e = self.find(name)
         if e:
             self.remove(e)
-        self.save(REGFILE)
+        self.save()
 
 
     ## @return string a help text comprising the names of each registered
@@ -121,4 +112,4 @@ class PGF_Registry(BaltradMessageXML.BltXML):
 
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)

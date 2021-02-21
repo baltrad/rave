@@ -25,19 +25,27 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys, os
 import traceback
-import xmlrpclib
-import SimpleXMLRPCServer
 import logging
 import multiprocessing, rave_mppool
 import rave_pgf_registry, rave_pgf_logger, rave_pgf_qtools
 from rave_daemon import Daemon
 from rave_defines import PIDFILE, PGF_HOST, PGF_PORT, STDOE, REGFILE, PGFs, LOGLEVEL
 from algorithm_runner import algorithm_runner
+if sys.version_info < (3,):
+  from SimpleXMLRPCServer import SimpleXMLRPCServer
+  from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
+  from xmlrpclib import ServerProxy
+  import xmlrpclib as xmlrpc
+else:
+  import xmlrpc
+  from xmlrpc.server import SimpleXMLRPCServer
+  from xmlrpc.server import SimpleXMLRPCRequestHandler
+  from xmlrpc.client import ServerProxy
 
 
 ## Stub class for allowing server POSTs only to one place, providing
 # rudimentary security.
-class RequestHandler(SimpleXMLRPCServer.SimpleXMLRPCRequestHandler):
+class RequestHandler(SimpleXMLRPCRequestHandler):
     rpc_paths = ('/RAVE',)
 
 
@@ -78,9 +86,9 @@ class rave_pgf_server(Daemon):
   def run(self):
     import atexit
     from rave_pgf import RavePGF
-    self.server = SimpleXMLRPCServer.SimpleXMLRPCServer((self.host, self.port),
-                                                        requestHandler=RequestHandler,
-                                                        allow_none=True)
+    self.server = SimpleXMLRPCServer((self.host, self.port),
+                                     requestHandler=RequestHandler,
+                                     allow_none=True)
     
     self.server.register_instance(RavePGF())
     self.server.instance.logger = rave_pgf_logger.rave_pgf_syslog_client()  # Shouldn't be necessary
@@ -104,13 +112,13 @@ if __name__ == "__main__":
   usage = "usage: %s start|stop|status|restart|fg" % prog
 
   if len(sys.argv) != 2:
-    print usage
+    print(usage)
     sys.exit()
 
   ARG = sys.argv[1].lower()
 
   if ARG not in ('start', 'stop', 'status', 'restart', 'fg'):
-    print usage
+    print(usage)
     sys.exit()
 
   this = rave_pgf_server()
@@ -119,11 +127,11 @@ if __name__ == "__main__":
     if os.path.isfile(PIDFILE):
       # Then, dump the job queue via client connection, then stop
       try:
-    	server = xmlrpclib.ServerProxy("http://%s:%i/RAVE" % (PGF_HOST, PGF_PORT), verbose=False)
-    	response = server.flush("Killing me softly")
-      except Exception, err:
+        server = ServerProxy("http://%s:%i/RAVE" % (PGF_HOST, PGF_PORT), verbose=False)
+        response = server.flush("Killing me softly")
+      except Exception:
         err_msg = traceback.format_exc()
-        print "Could not connect to server with error message: %s" % err_msg
+        print("Could not connect to server with error message: %s" % err_msg)
     this.stop()
 
   if ARG == 'start':
@@ -133,7 +141,7 @@ if __name__ == "__main__":
     this.restart()
 
   if ARG == 'status':
-    print "%s is %s" % (prog, this.status())
+    print("%s is %s" % (prog, this.status()))
 
   if ARG == 'fg':
     this.run()

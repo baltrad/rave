@@ -50,6 +50,8 @@ typedef struct {
 
 #define PyProjectionRegistry_API_pointers 4               /**< number of API pointers */
 
+#define PyProjectionRegistry_CAPSULE_NAME "_projectionregistry._C_API"
+
 #ifdef PYPROJECTIONREGISTRY_MODULE
 /** Forward declaration of type */
 extern PyTypeObject PyProjectionRegistry_Type;
@@ -99,34 +101,15 @@ static void **PyProjectionRegistry_API;
  * Checks if the object is a python projection registry.
  */
 #define PyProjectionRegistry_Check(op) \
-   ((op)->ob_type == (PyTypeObject *)PyProjectionRegistry_API[PyProjectionRegistry_Type_NUM])
+   (Py_TYPE(op) == &PyProjectionRegistry_Type)
+
+#define PyProjectionRegistry_Type (*(PyTypeObject*)PyProjectionRegistry_API[PyProjectionRegistry_Type_NUM])
 
 /**
  * Imports the PyProjectionRegistry module (like import _projectionregistry in python).
  */
-static int
-import_pyprojectionregistry(void)
-{
-  PyObject *module;
-  PyObject *c_api_object;
-
-  module = PyImport_ImportModule("_projectionregistry");
-  if (module == NULL) {
-    return -1;
-  }
-
-  c_api_object = PyObject_GetAttrString(module, "_C_API");
-  if (c_api_object == NULL) {
-    Py_DECREF(module);
-    return -1;
-  }
-  if (PyCObject_Check(c_api_object)) {
-    PyProjectionRegistry_API = (void **)PyCObject_AsVoidPtr(c_api_object);
-  }
-  Py_DECREF(c_api_object);
-  Py_DECREF(module);
-  return 0;
-}
+#define import_pyprojectionregistry() \
+    PyProjectionRegistry_API = (void **)PyCapsule_Import(PyProjectionRegistry_CAPSULE_NAME, 1);
 
 #endif
 

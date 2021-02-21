@@ -17,6 +17,7 @@ along with HLHDF.  If not, see <http://www.gnu.org/licenses/>.
 ------------------------------------------------------------------------*/
 #include "scansun.h"
 #include "rave_debug.h"
+#include "hlhdf.h"
 
 /** Main function for a binary for running KNMI's sun scanning functionality
  * @file
@@ -30,9 +31,9 @@ int main(int argc,char *argv[]) {
   RVALS* ret = NULL;
   const char* FORMAT = "%08ld %010.3f  %7.3f %7.2f   %7.4f  %7.4f  %4d  %9.2f %9.2f  %6.3f %9.2f  %6.3f  %s   %s  %s\n";
 
+  HL_init();
   Rave_initializeDebugger();
   Rave_setDebugLevel(RAVE_WARNING);
-
   if (argc<2) {
     printf("Usage: %s <ODIM_H5-file>\n",argv[0]);
     RaveList_freeAndDestroy(&list);
@@ -68,6 +69,7 @@ int main(int argc,char *argv[]) {
 	     source);
     }
   }
+
   RAVE_OBJECT_RELEASE(list);
   exit(0);
 }

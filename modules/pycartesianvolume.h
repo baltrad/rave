@@ -46,6 +46,8 @@ typedef struct {
 
 #define PyCartesianVolume_API_pointers 3                          /**< number of type and function pointers */
 
+#define PyCartesianVolume_CAPSULE_NAME "_cartesianvolume._C_API"
+
 #ifdef PYCARTESIANVOLUME_MODULE
 /** Forward declaration of type */
 extern PyTypeObject PyCartesianVolume_Type;
@@ -80,38 +82,20 @@ static void **PyCartesianVolume_API;
 #define PyCartesianVolume_New \
   (*(PyCartesianVolume_New_RETURN (*)PyCartesianVolume_New_PROTO) PyCartesianVolume_API[PyCartesianVolume_New_NUM])
 
+
 /**
- * Checks if the object is a python cartesian volume.
+ * Checks if the object is a python area.
  */
 #define PyCartesianVolume_Check(op) \
-   ((op)->ob_type == (PyTypeObject *)PyCartesianVolume_API[PyCartesianVolume_Type_NUM])
+   (Py_TYPE(op) == &PyCartesianVolume_Type)
+
+#define PyCartesianVolume_Type (*(PyTypeObject*)PyCartesianVolume_API[PyCartesianVolume_Type_NUM])
 
 /**
  * Imports the PyCartesianVolume module (like import _cartesianvolume in python).
  */
-static int
-import_pycartesianvolume(void)
-{
-  PyObject *module;
-  PyObject *c_api_object;
-
-  module = PyImport_ImportModule("_cartesianvolume");
-  if (module == NULL) {
-    return -1;
-  }
-
-  c_api_object = PyObject_GetAttrString(module, "_C_API");
-  if (c_api_object == NULL) {
-    Py_DECREF(module);
-    return -1;
-  }
-  if (PyCObject_Check(c_api_object)) {
-    PyCartesianVolume_API = (void **)PyCObject_AsVoidPtr(c_api_object);
-  }
-  Py_DECREF(c_api_object);
-  Py_DECREF(module);
-  return 0;
-}
+#define import_pycartesianvolume() \
+    PyCartesianVolume_API = (void **)PyCapsule_Import(PyCartesianVolume_CAPSULE_NAME, 1);
 
 #endif
 

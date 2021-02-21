@@ -651,6 +651,7 @@ PYLDFLAGS
 PYOPT
 RAVE_PATCH_LEVEL
 RAVE_VERSION
+PY_PYTHON_BIN
 PY_SITEPACK
 PY_INCLUDES
 PYCC
@@ -708,6 +709,10 @@ SHELL'
 ac_subst_files=''
 ac_user_opts='
 enable_option_checking
+enable_py3support
+with_py3bin
+with_py3bin_config
+with_python_makefile
 with_proj
 with_expat
 with_numpy
@@ -1347,11 +1352,15 @@ Optional Features:
   --disable-option-checking  ignore unrecognized --enable/--with options
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
+  --enable-py3support     Builds rave with support for python3.
   --enable-debug-memory     Turns on the rave memory debugging. This should usually not be activated.
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
+  --with-py3bin=python3  What python 3 binary to use
+  --with-py3bin-config=python3-config  What python 3 config binary to use
+  --with-python-makefile=Makefile  Where the makefile used for building python can be found
   --with-proj=ROOT or INC,LIB       Use the proj library
   --with-expat=ROOT or INC,LIB       Use the expat library
   --with-numpy=INC     Use the numpy include file
@@ -2093,6 +2102,100 @@ fi
 
 LIBS=-lm
 
+PYBIN=python
+py3support=no
+# Check whether --enable-py3support was given.
+if test "${enable_py3support+set}" = set; then :
+  enableval=$enable_py3support; py3support=$enableval
+fi
+
+if [ "x$py3support" = "xyes" ]; then
+  PYOPT="$PYOPT -DPY3_SUPPORT"
+  PYBIN=python3
+fi
+
+
+# Check whether --with-py3bin was given.
+if test "${with_py3bin+set}" = set; then :
+  withval=$with_py3bin;
+else
+  withval=python3
+fi
+
+if [ "$PYBIN" = "python3" ]; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking what python3 binary to use" >&5
+$as_echo_n "checking what python3 binary to use... " >&6; }
+  if [ "$withval" != "python3" ]; then
+    PYBIN=$withval
+  fi
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $PYBIN" >&5
+$as_echo "$PYBIN" >&6; }
+fi
+
+PYVERSION=`$PYBIN -c "import sys; print(sys.version[:3])"`
+PY_EXEC_INSTALLDIR=`$PYBIN -c "import sys; print(sys.exec_prefix)"`
+
+PY_PYTHON_BIN="$PYBIN"
+
+PYCONFIG_BIN="python-config"
+
+# Check whether --with-py3bin-config was given.
+if test "${with_py3bin_config+set}" = set; then :
+  withval=$with_py3bin_config;
+else
+  withval=default
+fi
+
+if [ "$py3support" = "yes" ]; then
+  if [ "$withval" = "default" ]; then
+    PYCONFIG_BIN="$PYBIN-config"
+  else
+    PYCONFIG_BIN="$withval"
+  fi
+fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for python Makefile" >&5
+$as_echo_n "checking for python Makefile... " >&6; }
+
+PY_CONFIG_MAKE=
+
+
+# Check whether --with-python-makefile was given.
+if test "${with_python_makefile+set}" = set; then :
+  withval=$with_python_makefile;
+else
+  withval=no
+fi
+
+if [ "$withval" != "no" ]; then
+  if [ -f $withval ]; then
+    PY_CONFIG_MAKE="$withval"
+  fi
+fi
+
+
+PY_CONFIGDIR=`$PYCONFIG_BIN --configdir`
+if test $? -eq 0; then
+  if [ "x$PY_CONFIG_MAKE" = "x" ]; then
+    if [ -f "$PY_CONFIGDIR/Makefile" ]; then
+      PY_CONFIG_MAKE="$PY_CONFIGDIR/Makefile"
+    fi
+  fi
+fi
+
+if [ "x$PY_CONFIG_MAKE" = "x" ]; then
+  PY_CONFIG_MAKE="$PY_EXEC_INSTALLDIR/lib/python$PYVERSION/config/Makefile"
+  if [ ! -f "$PY_CONFIG_MAKE" ]; then
+    PY_CONFIG_MAKE="$PY_EXEC_INSTALLDIR/lib64/python$PYVERSION/config/Makefile"
+  fi
+fi
+
+if [ ! -f "$PY_CONFIG_MAKE" ]; then
+  as_fn_error $? "Could not successfully find the python Makefile" "$LINENO" 5
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $PY_CONFIG_MAKE" >&5
+$as_echo "$PY_CONFIG_MAKE" >&6; }
+
 #
 # Extract what compiler the python binary was compiled with
 #
@@ -2101,27 +2204,10 @@ $as_echo_n "checking \"for the compiler used for generating python\"... " >&6; }
 
 PYCC=
 
-PYVERSION=`python -c "import sys; print sys.version[:3]"`
-PY_EXEC_INSTALLDIR=`python -c "import sys; print sys.exec_prefix"`
-
-PY_CONFIGDIR=`python-config --configdir`
-if test $? -ne 0; then
-  PY_CONFIG_MAKE="$PY_EXEC_INSTALLDIR/lib/python$PYVERSION/config/Makefile"
-  if [ ! -f "$PY_CONFIG_MAKE" ]; then
-    PY_CONFIG_MAKE="$PY_EXEC_INSTALLDIR/lib64/python$PYVERSION/config/Makefile"
-  fi
-else
-  PY_CONFIG_MAKE="$PY_CONFIGDIR/Makefile"
-fi
-
-if [ ! -f "$PY_CONFIG_MAKE" ]; then
-  as_fn_error $? "Could not successfully find the python Makefile" "$LINENO" 5
-fi
-
 PYCC=`cat $PY_CONFIG_MAKE | sed -n "/^CC=/p" | sed -e "s/CC=//g" | awk '{print $1}'`
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: \"$PYCC\"" >&5
 $as_echo "\"$PYCC\"" >&6; }
-CC=$PYCC
+#CC=$PYCC
 
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking if python CC defines pthread usage" >&5
@@ -2232,197 +2318,7 @@ ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 if test -n "$ac_tool_prefix"; then
-  # Extract the first word of "${ac_tool_prefix}gcc", so it can be a program name with args.
-set dummy ${ac_tool_prefix}gcc; ac_word=$2
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-$as_echo_n "checking for $ac_word... " >&6; }
-if ${ac_cv_prog_CC+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  if test -n "$CC"; then
-  ac_cv_prog_CC="$CC" # Let the user override the test.
-else
-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_prog_CC="${ac_tool_prefix}gcc"
-    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-fi
-fi
-CC=$ac_cv_prog_CC
-if test -n "$CC"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $CC" >&5
-$as_echo "$CC" >&6; }
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-fi
-
-
-fi
-if test -z "$ac_cv_prog_CC"; then
-  ac_ct_CC=$CC
-  # Extract the first word of "gcc", so it can be a program name with args.
-set dummy gcc; ac_word=$2
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-$as_echo_n "checking for $ac_word... " >&6; }
-if ${ac_cv_prog_ac_ct_CC+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  if test -n "$ac_ct_CC"; then
-  ac_cv_prog_ac_ct_CC="$ac_ct_CC" # Let the user override the test.
-else
-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_prog_ac_ct_CC="gcc"
-    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-fi
-fi
-ac_ct_CC=$ac_cv_prog_ac_ct_CC
-if test -n "$ac_ct_CC"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_ct_CC" >&5
-$as_echo "$ac_ct_CC" >&6; }
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-fi
-
-  if test "x$ac_ct_CC" = x; then
-    CC=""
-  else
-    case $cross_compiling:$ac_tool_warned in
-yes:)
-{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: using cross tools not prefixed with host triplet" >&5
-$as_echo "$as_me: WARNING: using cross tools not prefixed with host triplet" >&2;}
-ac_tool_warned=yes ;;
-esac
-    CC=$ac_ct_CC
-  fi
-else
-  CC="$ac_cv_prog_CC"
-fi
-
-if test -z "$CC"; then
-          if test -n "$ac_tool_prefix"; then
-    # Extract the first word of "${ac_tool_prefix}cc", so it can be a program name with args.
-set dummy ${ac_tool_prefix}cc; ac_word=$2
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-$as_echo_n "checking for $ac_word... " >&6; }
-if ${ac_cv_prog_CC+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  if test -n "$CC"; then
-  ac_cv_prog_CC="$CC" # Let the user override the test.
-else
-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_prog_CC="${ac_tool_prefix}cc"
-    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-fi
-fi
-CC=$ac_cv_prog_CC
-if test -n "$CC"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $CC" >&5
-$as_echo "$CC" >&6; }
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-fi
-
-
-  fi
-fi
-if test -z "$CC"; then
-  # Extract the first word of "cc", so it can be a program name with args.
-set dummy cc; ac_word=$2
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-$as_echo_n "checking for $ac_word... " >&6; }
-if ${ac_cv_prog_CC+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  if test -n "$CC"; then
-  ac_cv_prog_CC="$CC" # Let the user override the test.
-else
-  ac_prog_rejected=no
-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    if test "$as_dir/$ac_word$ac_exec_ext" = "/usr/ucb/cc"; then
-       ac_prog_rejected=yes
-       continue
-     fi
-    ac_cv_prog_CC="cc"
-    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-if test $ac_prog_rejected = yes; then
-  # We found a bogon in the path, so make sure we never use it.
-  set dummy $ac_cv_prog_CC
-  shift
-  if test $# != 0; then
-    # We chose a different compiler from the bogus one.
-    # However, it has the same basename, so the bogon will be chosen
-    # first if we set CC to just the basename; use the full file name.
-    shift
-    ac_cv_prog_CC="$as_dir/$ac_word${1+' '}$@"
-  fi
-fi
-fi
-fi
-CC=$ac_cv_prog_CC
-if test -n "$CC"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $CC" >&5
-$as_echo "$CC" >&6; }
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-fi
-
-
-fi
-if test -z "$CC"; then
-  if test -n "$ac_tool_prefix"; then
-  for ac_prog in cl.exe
+  for ac_prog in $PYCC gcc cc
   do
     # Extract the first word of "$ac_tool_prefix$ac_prog", so it can be a program name with args.
 set dummy $ac_tool_prefix$ac_prog; ac_word=$2
@@ -2466,7 +2362,7 @@ fi
 fi
 if test -z "$CC"; then
   ac_ct_CC=$CC
-  for ac_prog in cl.exe
+  for ac_prog in $PYCC gcc cc
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -2519,8 +2415,6 @@ ac_tool_warned=yes ;;
 esac
     CC=$ac_ct_CC
   fi
-fi
-
 fi
 
 
@@ -3197,6 +3091,8 @@ done
 test -n "$AR" || AR="ar"
 
 
+PYCC=$CC
+
 PY_INCLUDES=
 PY_SITEPACK=
 PYOPT=
@@ -3211,10 +3107,16 @@ PY_INCLUDES="$PY_EXEC_INSTALLDIR/include/python$PYVERSION"
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: \"$PY_INCLUDES\"" >&5
 $as_echo "\"$PY_INCLUDES\"" >&6; }
 PY_INCLUDES="-I$PY_INCLUDES"
+PY_INCLUDES=`$PYCONFIG_BIN --includes`
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking \"for python lib site-packages\"" >&5
 $as_echo_n "checking \"for python lib site-packages\"... " >&6; }
-PY_SITEPACK="$PY_EXEC_INSTALLDIR/lib/python$PYVERSION/site-packages"
+TMP_SITEPACK=`$PYBIN -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1))"`
+if [ "$TMP_SITEPACK" != "" ]; then
+  PY_SITEPACK="$TMP_SITEPACK"
+else
+  PY_SITEPACK="$PY_EXEC_INSTALLDIR/lib/python$PYVERSION/site-packages"
+fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: \"$PY_SITEPACK\"" >&5
 $as_echo "\"$PY_SITEPACK\"" >&6; }
 
@@ -4047,12 +3949,12 @@ case $withval in
 		numpy_inc_app=
 
 		if test "xyes" = "x$numpy_inc"; then
-		  TESTNUMPYDIR=`python -c "import numpy; print eval(\"numpy.__\"+\"file__\")"`
+		  TESTNUMPYDIR=`$PYBIN -c "import numpy; print(eval(\"numpy.__\"+\"file__\"))"`
 		  if test $? -ne 0; then
-			numpy_inc="$PY_EXEC_INSTALLDIR/include/python$PYVERSION"
-	      else
-			numpy_inc=`echo $TESTNUMPYDIR | sed -e"s/\/__init__.pyc//"`
-	      fi
+			  numpy_inc="$PY_EXEC_INSTALLDIR/include/python$PYVERSION"
+	    else
+			  numpy_inc=`echo $TESTNUMPYDIR | sed -e"s/\/__init__.pyc//" | sed -e"s/\/__init__.py//"`
+	    fi
 		fi
 		if [ -f $numpy_inc/arrayobject.h ]; then
 			numpy_inc_app=
@@ -4091,7 +3993,7 @@ case $withval in
   *)
     hlhdf_root="`echo $withval`"
     if test "xyes" = "x$hlhdf_root"; then
-      TESTHLDIR=`python -c "import _pyhl; print eval(\"_pyhl.__\"+\"file__\")"`
+      TESTHLDIR=`$PYBIN -c "import _pyhl; print(eval(\"_pyhl.__\"+\"file__\"))"`
       if test $? -ne 0; then
         as_fn_error $? "\"Could not find hlhdf please specify --with-hlhdf=<hlhdfroot>\"" "$LINENO" 5
       else
@@ -4700,6 +4602,7 @@ fi
 if [ ! -f $HLHDF_HLDEF_MK_FILE ]; then
   as_fn_error $? "\"There is no mkfile $HLHDF_HLDEF_MK_FILE\"" "$LINENO" 5
 fi
+
 
 
 

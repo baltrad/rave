@@ -61,6 +61,8 @@ struct _Cartesian_t {
 
   char* source;              /**< where does this data come from */
 
+  char* prodname;    /**< Product name */
+
   RaveDataType datatype;     /**< the datatype to use */
   Projection_t* projection; /**< the projection */
 
@@ -92,6 +94,7 @@ static int Cartesian_constructor(RaveCoreObject* obj)
   this->product = Rave_ProductType_UNDEFINED;
   this->objectType = Rave_ObjectType_IMAGE;
   this->source = NULL;
+  this->prodname = NULL;
   this->datatype = RaveDataType_UCHAR;
   this->projection = NULL;
   this->currentParameter = NULL;
@@ -139,6 +142,7 @@ static int Cartesian_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj
   this->objectType = src->objectType;
   this->datatype = src->datatype;
   this->source = NULL;
+  this->prodname = NULL;
   this->projection = NULL;
   this->datetime = NULL;
   this->startdatetime = NULL;
@@ -157,19 +161,13 @@ static int Cartesian_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj
   if (this->datetime == NULL || (src->currentParameter != NULL && this->currentParameter == NULL) || this->attrs == NULL ||
       this->startdatetime == NULL || this->enddatetime == NULL || this->qualityfields == NULL ||
       this->parameters == NULL || !Cartesian_setDefaultParameter(this, Cartesian_getDefaultParameter(src))) {
-    if (this->datetime == NULL) {
-      fprintf(stderr, "Failed datetime\n");
-    } else if (this->currentParameter == NULL) {
-      fprintf(stderr, "currentParameter\n");
-    } else if (this->attrs == NULL) {
-      fprintf(stderr, "attrs\n");
-    }
-    fprintf(stderr, "Failed to clone something\n");
     goto fail;
   }
 
   Cartesian_setSource(this, Cartesian_getSource(src));
-
+  if (!Cartesian_setProdname(this, Cartesian_getProdname(src))) {
+    goto fail;
+  }
   if (src->projection != NULL) {
     this->projection = RAVE_OBJECT_CLONE(src->projection);
     if (this->projection == NULL) {
@@ -180,6 +178,7 @@ static int Cartesian_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj
   return 1;
 fail:
   RAVE_FREE(this->source);
+  RAVE_FREE(this->prodname);
   RAVE_OBJECT_RELEASE(this->currentParameter);
   RAVE_OBJECT_RELEASE(this->datetime);
   RAVE_OBJECT_RELEASE(this->startdatetime);
@@ -205,6 +204,7 @@ static void Cartesian_destructor(RaveCoreObject* obj)
     RAVE_OBJECT_RELEASE(cartesian->startdatetime);
     RAVE_OBJECT_RELEASE(cartesian->enddatetime);
     RAVE_FREE(cartesian->source);
+    RAVE_FREE(cartesian->prodname);
     RAVE_OBJECT_RELEASE(cartesian->currentParameter);
     RAVE_OBJECT_RELEASE(cartesian->attrs);
     RAVE_OBJECT_RELEASE(cartesian->qualityfields);
@@ -339,6 +339,32 @@ const char* Cartesian_getSource(Cartesian_t* cartesian)
 {
   RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
   return (const char*)cartesian->source;
+}
+
+int Cartesian_setProdname(Cartesian_t* cartesian, const char* value)
+{
+  char* tmp = NULL;
+  int result = 0;
+  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
+  if (value != NULL) {
+    tmp = RAVE_STRDUP(value);
+    if (tmp != NULL) {
+      RAVE_FREE(cartesian->prodname);
+      cartesian->prodname = tmp;
+      tmp = NULL;
+      result = 1;
+    }
+  } else {
+    RAVE_FREE(cartesian->prodname);
+    result = 1;
+  }
+  return result;
+}
+
+const char* Cartesian_getProdname(Cartesian_t* cartesian)
+{
+  RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
+  return (const char*)cartesian->prodname;
 }
 
 int Cartesian_setObjectType(Cartesian_t* self, Rave_ObjectType type)
@@ -862,8 +888,7 @@ int Cartesian_addAttribute(Cartesian_t* cartesian, RaveAttribute_t* attribute)
       RAVE_ERROR1("Failed to extract group and name from %s", name);
       goto done;
     }
-    if (strcasecmp("how", gname)==0 &&
-      strchr(aname, '/') == NULL) {
+    if ((strcasecmp("how", gname)==0) &&RaveAttributeHelp_validateHowGroupAttributeName(gname, aname)) {
       result = RaveObjectHashTable_put(cartesian->attrs, name, (RaveCoreObject*)attribute);
     } else if (strcasecmp("what/prodpar", name)==0) {
       result = RaveObjectHashTable_put(cartesian->attrs, name, (RaveCoreObject*)attribute);

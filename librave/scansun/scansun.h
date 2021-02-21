@@ -170,9 +170,10 @@ int getDoubleAttribute(RaveCoreObject* obj, const char* aname, double* tmpd);
  * @param[in] obj - a polar scan
  * @param[in] aname - a string of the attribute to retrieve
  * @param[in] array - the double array to retrieve
+ * @param[in] param - if attribute not found in scan, try this parameter. May be NULL and in that case, only scan will be checked.
  * @returns 1 on success or 0 if the attribute doesn't exist
  */
-int getDoubleArrayAttribute(PolarScan_t* scan, const char* aname, double** array);
+int getDoubleArrayAttribute(PolarScan_t* scan, const char* aname, double** array, PolarScanParam_t* param);
 
 /**
  * Reads metadata into the SCANMETA structure from top-level object,

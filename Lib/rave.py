@@ -27,7 +27,6 @@ import area
 import _pyhl
 from rave_defines import *
 
-
 class RAVE:
     """
     Fundamental RAVE class
@@ -99,12 +98,12 @@ class RAVE:
 ##                elif k == 'offset':
 ##                    offset = i
                 else:
-                    raise KeyError, "Unrecognized argument: %s" % k
+                    raise KeyError("Unrecognized argument: %s" % k)
         else:
-            raise AttributeError, "No arguments to initialize new object"
+            raise AttributeError("No arguments to initialize new object")
 
         if areaid is None and radarid is None:
-            raise AttributeError, '"areaid" or "radarid" missing'
+            raise AttributeError('"areaid" or "radarid" missing')
 
         if areaid:
             import pcs
@@ -346,7 +345,7 @@ class RAVE:
         Returns: nothing, the dataset is read into self.
         """
         if index > self.eval('/what/sets'):
-            raise IndexError, "Don't have that many datasets."
+            raise IndexError("Don't have that many datasets.")
 
         a = _pyhl.read_nodelist(self.__file__)
         counter = 1
@@ -466,7 +465,7 @@ class RAVE:
         
         keys = self.data.keys()
         if len(keys) < index:
-            raise IndexError, "Don't have that many datasets."
+            raise IndexError("Don't have that many datasets.")
 
         keys.sort()
 #        prefix = keys[0][:-1]  # Determines 'image', 'scan', or 'profile'.
@@ -504,9 +503,9 @@ class RAVE:
         try:
             retcode = subprocess.call(command, shell=True)
             if retcode < 0:
-                print >>sys.stderr, "Child was terminated by signal", -retcode
-        except OSError, e:
-            print >>sys.stderr, "Could not show:", e
+                sys.stderr.write("Child was terminated by signal %d"%retcode)
+        except OSError as e:
+            sys.stderr.write("Could not show: %s"%e.__str__())
 
 
     def MakeExtentFromCorners(self):
@@ -528,7 +527,7 @@ class RAVE:
         p = Proj.Proj(projdef.split())
         LL = self.get('/where/LL_lon'), self.get('/where/LL_lat')
         if LL == ('n/a', 'n/a'):
-            raise AttributeError, "Lon/lat corner attributes must exist"
+            raise AttributeError("Lon/lat corner attributes must exist")
         UR = self.get('/where/UR_lon'), self.get('/where/UR_lat')
         LLs = p.proj(Proj.d2r(LL))
         URs = p.proj(Proj.d2r(UR))
@@ -547,7 +546,7 @@ class RAVE:
 
         extent = self.get('/how/extent')
         if not extent:
-            raise AttributeError, "/how/extent is missing"
+            raise AttributeError("/how/extent is missing")
 
         projdef = self.get('/where/projdef')
         p = Proj.Proj(projdef.split())
@@ -564,7 +563,7 @@ class RAVE:
 
     def MakeCornersFromArea(self, areaid=None):
         if not areaid:
-            raise AttributeError, "Missing areaid argument"
+            raise AttributeError("Missing areaid argument")
 
         import Proj, pcs
         from types import StringType
@@ -609,13 +608,13 @@ def open(filename=None):
     Returns:
     """
     if filename is None:
-        print "No file given"
+        print("No file given")
     elif os.path.isfile(filename):
         this = RAVE()
         this.open(filename)
         return this
     else:
-        print "%s is not a valid file" % str(filename)
+        print("%s is not a valid file" % str(filename))
 
 
 def get_metadata(filename=None):
@@ -631,11 +630,11 @@ def get_metadata(filename=None):
     Returns: an INFO object
     """
     if filename is None:
-        print "No file given"
+        print("No file given")
     elif os.path.isfile(filename):
         return rave_IO.get_metadata(filename)
     else:
-        print "%s is not a valid file" % str(filename)
+        print("%s is not a valid file" % str(filename))
 
 
 def get_metadataXML(filename=None):
@@ -650,12 +649,12 @@ def get_metadataXML(filename=None):
     Returns: a Python string containing a pure XML representation of metadata.
     """
     if filename is None:
-        print "No file given"
+        print("No file given")
     elif os.path.isfile(filename):
         element = rave_IO.get_metadata(filename)
         return rave_IO.MetadataAsXMLstring(element)
     else:
-        print "%s is not a valid file" % str(filename)
+        print("%s is not a valid file" % str(filename))
 
 
 def get_metadataRAVE(filename=None):
@@ -672,13 +671,13 @@ def get_metadataRAVE(filename=None):
     Returns: a RAVE object
     """
     if filename is None:
-        print "No file given"
+        print("No file given")
     elif os.path.isfile(filename):
         this = RAVE()
         this.read_metadata(filename)
         return this
     else:
-        print "%s is not a valid file" % str(filename)
+        print("%s is not a valid file" % str(filename))
 
 
 
@@ -686,4 +685,4 @@ __all__ = ['RAVE','open','get_metadata','get_metadataXML', 'get_metadataRAVE']
 
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)

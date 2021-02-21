@@ -47,6 +47,8 @@ typedef struct {
 
 #define PyCompositeAlgorithm_API_pointers 3                                 /**< number of type and function pointers */
 
+#define PyCompositeAlgorithm_CAPSULE_NAME "_compositealgorithm._C_API"
+
 #ifdef PYCOMPOSITEALGORITHM_MODULE
 /** Forward declaration of type */
 extern PyTypeObject PyCompositeAlgorithm_Type;
@@ -81,38 +83,20 @@ static void **PyCompositeAlgorithm_API;
 #define PyCompositeAlgorithm_New \
   (*(PyCompositeAlgorithm_New_RETURN (*)PyCompositeAlgorithm_New_PROTO) PyCompositeAlgorithm_API[PyCompositeAlgorithm_New_NUM])
 
+
 /**
  * Checks if the object is a python composite algorithm.
  */
 #define PyCompositeAlgorithm_Check(op) \
-   ((op)->ob_type == (PyTypeObject *)PyCompositeAlgorithm_API[PyCompositeAlgorithm_Type_NUM])
+   (Py_TYPE(op) == &PyCompositeAlgorithm_Type)
+
+#define PyCompositeAlgorithm_Type (*(PyTypeObject*)PyCompositeAlgorithm_API[PyCompositeAlgorithm_Type_NUM])
 
 /**
- * Imports the PyCompositeAlgorithm module (like import _poocompositealgorithm in python).
+ * Imports the PyCompositeAlgorithm module (like import _compositealgorithm in python).
  */
-static int
-import_compositealgorithm(void)
-{
-  PyObject *module;
-  PyObject *c_api_object;
-
-  module = PyImport_ImportModule("_compositealgorithm");
-  if (module == NULL) {
-    return -1;
-  }
-
-  c_api_object = PyObject_GetAttrString(module, "_C_API");
-  if (c_api_object == NULL) {
-    Py_DECREF(module);
-    return -1;
-  }
-  if (PyCObject_Check(c_api_object)) {
-    PyCompositeAlgorithm_API = (void **)PyCObject_AsVoidPtr(c_api_object);
-  }
-  Py_DECREF(c_api_object);
-  Py_DECREF(module);
-  return 0;
-}
+#define import_compositealgorithm() \
+    PyCompositeAlgorithm_API = (void **)PyCapsule_Import(PyCompositeAlgorithm_CAPSULE_NAME, 1);
 
 #endif
 

@@ -22,7 +22,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2009-12-08
  */
-#include "Python.h"
+#include "pyravecompat.h"
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>
@@ -37,6 +37,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "raveutil.h"
 #include "rave.h"
 #include "pyravefield.h"
+#include "pyravedata2d.h"
 
 /**
  * Debug this module
@@ -246,6 +247,18 @@ static PyObject* _pypolarscanparam_getData(PyPolarScanParam* self, PyObject* arg
     memcpy(((PyArrayObject*)result)->data, PolarScanParam_getData(self->scanparam), nbytes);
   }
 
+  return result;
+}
+
+static PyObject* _pypolarscanparam_getData2D(PyPolarScanParam* self, PyObject* args)
+{
+  RaveData2D_t* datafield = NULL;
+  PyObject* result = NULL;
+  datafield = PolarScanParam_getData2D(self->scanparam);
+  if (datafield != NULL) {
+    result = (PyObject*)PyRaveData2D_New(datafield);
+  }
+  RAVE_OBJECT_RELEASE(datafield);
   return result;
 }
 
@@ -567,6 +580,23 @@ static PyObject* _pypolarscanparam_removeQualityField(PyPolarScanParam* self, Py
   Py_RETURN_NONE;
 }
 
+static PyObject* _pypolarscanparam_shiftData(PyPolarScanParam* self, PyObject* args)
+{
+  long nrays = 0;
+  int result = 0;
+
+  if (!PyArg_ParseTuple(args, "l", &nrays)) {
+    return NULL;
+  }
+
+  result = PolarScanParam_shiftData(self->scanparam, nrays);
+  if (!result) {
+    raiseException_returnNULL(PyExc_ValueError, "Failed to shift rays on parameter");
+  }
+
+  Py_RETURN_NONE;
+}
+
 /**
  * Converts the data field portion and the corresponding attributes into
  * a rave field. I.e. no quality fields will be affected.
@@ -651,73 +681,143 @@ static struct PyMethodDef _pypolarscanparam_methods[] =
   {"nodata", NULL},
   {"undetect", NULL},
   {"datatype", NULL},
-  {"setData", (PyCFunction) _pypolarscanparam_setData, 1},
-  {"getData", (PyCFunction) _pypolarscanparam_getData, 1},
-  {"getValue", (PyCFunction) _pypolarscanparam_getValue, 1},
-  {"getConvertedValue", (PyCFunction) _pypolarscanparam_getConvertedValue, 1},
-  {"setValue", (PyCFunction) _pypolarscanparam_setValue, 1},
-  {"addAttribute", (PyCFunction) _pypolarscanparam_addAttribute, 1},
-  {"getAttribute", (PyCFunction) _pypolarscanparam_getAttribute, 1},
-  {"hasAttribute", (PyCFunction) _pypolarscanparam_hasAttribute, 1},
-  {"getAttributeNames", (PyCFunction) _pypolarscanparam_getAttributeNames, 1},
-  {"addQualityField", (PyCFunction) _pypolarscanparam_addQualityField, 1},
-  {"getNumberOfQualityFields", (PyCFunction) _pypolarscanparam_getNumberOfQualityFields, 1},
-  {"getQualityField", (PyCFunction) _pypolarscanparam_getQualityField, 1},
-  {"removeQualityField", (PyCFunction) _pypolarscanparam_removeQualityField, 1},
-  {"toField", (PyCFunction)_pypolarscanparam_toField, 1},
-  {"convertDataDoubleToUchar", (PyCFunction)_pypolarscanparam_convertDataDoubleToUchar, 1},
-  {"clone", (PyCFunction)_pypolarscanparam_clone, 1},
+  {"setData", (PyCFunction) _pypolarscanparam_setData, 1,
+    "setData(array)\n\n"
+    "Initializes the parameter with a datafield as defined by a 2-dimensional numpy array and datatype.\n\n"
+    "array - The 2 dimensional numpy array."
+  },
+  {"getData", (PyCFunction) _pypolarscanparam_getData, 1,
+    "getData() -> a numpy array\n\n"
+    "Returns a 2 dimensional data array with the data set."
+  },
+  {"getData2D", (PyCFunction) _pypolarscanparam_getData2D, 1,
+      "getData2D() -> RaveData2DCore\n\n"
+      "Returns a RaveData2DCore instance with the data set."
+  },
+  {"getValue", (PyCFunction) _pypolarscanparam_getValue, 1,
+    "getValue(bin,ray) -> the value at the specified bin and ray index.\n\n"
+    "Returns the value at the specified bin and ray index. \n\n"
+    "bin - bin index\n"
+    "ray - ray index"
+  },
+  {"getConvertedValue", (PyCFunction) _pypolarscanparam_getConvertedValue, 1,
+    "getConvertedValue(bin,ray) -> the converted value at the specified bin and ray index.\n\n"
+    "Returns the converted value (offset+v*gain) at the specified bin and ray index. \n\n"
+    "bin - bin index\n"
+    "ray - ray index"
+  },
+  {"setValue", (PyCFunction) _pypolarscanparam_setValue, 1,
+    "setValue((bin,ray),value) -> 1 on success otherwise 0\n\n"
+    "Sets the value at the specified position. \n\n"
+    "bin   - bin index\n"
+    "ray   - ray index\n"
+    "value - the value that should be set at specified position."
+  },
+  {"addAttribute", (PyCFunction) _pypolarscanparam_addAttribute, 1,
+    "addAttribute(name, value) \n\n"
+    "Adds an attribute to the parameter. Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis etc. \n"
+    "Currently, double, long, string and 1-dimensional arrays are supported.\n\n"
+    "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis\n"
+    "        In the case of how-groups, it is also possible to specify subgroups, like how/subgroup/attr or how/subgroup/subgroup/attr.\n"
+    "value - Value to be associated with the name. Currently, double, long, string and 1-dimensional arrays are supported."
+  },
+  {"getAttribute", (PyCFunction) _pypolarscanparam_getAttribute, 1,
+    "getAttribute(name) -> value \n\n"
+    "Returns the value associated with the specified name \n\n"
+    "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis\n"
+    "        In the case of how-groups, it is also possible to specify subgroups, like how/subgroup/attr or how/subgroup/subgroup/attr."
+  },
+  {"hasAttribute", (PyCFunction) _pypolarscanparam_hasAttribute, 1,
+    "hasAttribute(name) -> boolean \n\n"
+    "Returns True if attribute exists otherwise False \n\n"
+    "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis\n"
+    "        In the case of how-groups, it is also possible to specify subgroups, like how/subgroup/attr or how/subgroup/subgroup/attr.\n"
+  },
+  {"getAttributeNames", (PyCFunction) _pypolarscanparam_getAttributeNames, 1,
+    "getAttributeNames() -> array of names \n\n"
+    "Returns the attribute names associated with this polar scan parameter"
+  },
+  {"addQualityField", (PyCFunction) _pypolarscanparam_addQualityField, 1,
+    "addQualityField(field) \n\n"
+    "Adds a quality field to this polar parameter. Note, there is no check for valid size or similar. Also, there is no check if same how/task is specified or the likes. \n\n"
+    "field  - The RaveFieldCore field"
+  },
+  {"getNumberOfQualityFields", (PyCFunction) _pypolarscanparam_getNumberOfQualityFields, 1,
+    "getNumberOfQualityFields() -> integer\n\n"
+    "Returns the number of quality fields in this object"
+  },
+  {"getQualityField", (PyCFunction) _pypolarscanparam_getQualityField, 1,
+    "getQualityField(index) -> RaveFieldCore \n\n"
+    "Returns the rave field at specified index\n\n"
+    "index  - The rave field at specified position.\n\n"
+    "Throws IndexError if the rave field not could be found"
+  },
+  {"removeQualityField", (PyCFunction) _pypolarscanparam_removeQualityField, 1,
+    "removeQualityField(index) \n\n"
+    "Removes the quality field at specified index\n\n"
+    "index  - The rave field at specified position.\n\n"
+  },
+  {"shiftData", (PyCFunction) _pypolarscanparam_shiftData, 1,
+    "shiftData(nrays)\n\n"
+    "Performs a circular shift of rays on both data and all quality fields added to this parameter .\n\n"
+    "nrays - the number of steps to be shifted in ray-direction. Can be both positive and negative\n"
+  },
+  {"toField", (PyCFunction)_pypolarscanparam_toField, 1,
+    "toField() -> RaveFieldCore\n\n"
+    "Creates a Rave Field from the parameter. Will also copy the attributes.\n\n"
+  },
+  {"convertDataDoubleToUchar", (PyCFunction)_pypolarscanparam_convertDataDoubleToUchar, 1,
+    "convertDataDoubleToUchar()\n\n"
+    "Utility function for converting 64-bit float (from BUFR) to 8-bit uint, primarily for reverting reflectivity data back to what they once were.\n\n"
+  },
+  {"clone", (PyCFunction)_pypolarscanparam_clone, 1,
+    "clone() -> PolarScanParamCore\n\n"
+    "Creates a clone of self"
+  },
   {NULL, NULL } /* sentinel */
 };
 
 /**
  * Returns the specified attribute in the polar scan
  */
-static PyObject* _pypolarscanparam_getattr(PyPolarScanParam* self, char* name)
+static PyObject* _pypolarscanparam_getattro(PyPolarScanParam* self, PyObject* name)
 {
-  PyObject* res;
-  if (strcmp("nbins", name) == 0) {
+  if (PY_COMPARE_STRING_WITH_ATTRO_NAME("nbins", name) == 0) {
     return PyInt_FromLong(PolarScanParam_getNbins(self->scanparam));
-  } else if (strcmp("nrays", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("nrays", name) == 0) {
     return PyInt_FromLong(PolarScanParam_getNrays(self->scanparam));
-  } else if (strcmp("quantity", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("quantity", name) == 0) {
     const char* str = PolarScanParam_getQuantity(self->scanparam);
     if (str != NULL) {
       return PyString_FromString(str);
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("gain", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("gain", name) == 0) {
     return PyFloat_FromDouble(PolarScanParam_getGain(self->scanparam));
-  } else if (strcmp("offset", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("offset", name) == 0) {
     return PyFloat_FromDouble(PolarScanParam_getOffset(self->scanparam));
-  } else if (strcmp("nodata", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("nodata", name) == 0) {
     return PyFloat_FromDouble(PolarScanParam_getNodata(self->scanparam));
-  } else if (strcmp("undetect", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("undetect", name) == 0) {
     return PyFloat_FromDouble(PolarScanParam_getUndetect(self->scanparam));
-  } else if (strcmp("datatype", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("datatype", name) == 0) {
     return PyInt_FromLong(PolarScanParam_getDataType(self->scanparam));
   }
 
-  res = Py_FindMethod(_pypolarscanparam_methods, (PyObject*) self, name);
-  if (res)
-    return res;
-
-  PyErr_Clear();
-  PyErr_SetString(PyExc_AttributeError, name);
-  return NULL;
+  return PyObject_GenericGetAttr((PyObject*)self, name);
 }
 
 /**
  * Returns the specified attribute in the polar volume
  */
-static int _pypolarscanparam_setattr(PyPolarScanParam* self, char* name, PyObject* val)
+static int _pypolarscanparam_setattro(PyPolarScanParam* self, PyObject* name, PyObject* val)
 {
   int result = -1;
   if (name == NULL) {
     goto done;
   }
-  if (strcmp("quantity", name) == 0) {
+  if (PY_COMPARE_STRING_WITH_ATTRO_NAME("quantity", name) == 0) {
     if (PyString_Check(val)) {
       if (!PolarScanParam_setQuantity(self->scanparam, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "quantity must be a string");
@@ -727,32 +827,32 @@ static int _pypolarscanparam_setattr(PyPolarScanParam* self, char* name, PyObjec
     } else {
       raiseException_gotoTag(done, PyExc_ValueError, "quantity must be a string");
     }
-  } else if (strcmp("gain", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("gain", name) == 0) {
     if (PyFloat_Check(val)) {
       PolarScanParam_setGain(self->scanparam, PyFloat_AsDouble(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "gain must be of type float");
     }
-  } else if (strcmp("offset", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("offset", name) == 0) {
     if (PyFloat_Check(val)) {
       PolarScanParam_setOffset(self->scanparam, PyFloat_AsDouble(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "offset must be of type float");
     }
-  } else if (strcmp("nodata", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("nodata", name) == 0) {
     if (PyFloat_Check(val)) {
       PolarScanParam_setNodata(self->scanparam, PyFloat_AsDouble(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "nodata must be of type float");
     }
-  } else if (strcmp("undetect", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("undetect", name) == 0) {
     if (PyFloat_Check(val)) {
       PolarScanParam_setUndetect(self->scanparam, PyFloat_AsDouble(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "undetect must be of type float");
     }
   } else {
-    raiseException_gotoTag(done, PyExc_AttributeError, name);
+    raiseException_gotoTag(done, PyExc_AttributeError, PY_RAVE_ATTRO_NAME_TO_STRING(name));
   }
 
   result = 0;
@@ -761,67 +861,123 @@ done:
 }
 /*@} End of Polar Scan Param */
 
+/*@{ Documentation about the type */
+PyDoc_STRVAR(_pypolarscanparam_type_doc,
+    "The polar scan parameter represents one quantity. Like for the polar scan, there are a number of members "
+    "associated with this object.\n"
+    "\n"
+    "nbins            - Number of bins in the data set.\n"
+    "nrays            - Number of rays in the data set.\n"
+    "quantity         - Quantity of this parameter.\n"
+    "gain             - Gain of the value in the formula offset + data*gain\n"
+    "offset           - Offset of the value in the formula offset + data*gain\n"
+    "nodata           - The value that represents a nodata (no coverage, ...)\n"
+    "undetect         - The value that represents undetect (coverage, but no hit)\n"
+    "datatype         - The data type. ReadOnly, initialization occurs when setting data using setData().\n"
+    "Usage:\n"
+    "import _polarscanparam\n"
+    "p = _polarscanparam.new()\n"
+    "p.setData(arr)\n"
+    "..."
+    );
+/*@} End of Documentation about the type */
 /// --------------------------------------------------------------------
 /// Type definitions
 /// --------------------------------------------------------------------
 /*@{ Type definition */
 PyTypeObject PyPolarScanParam_Type =
 {
-  PyObject_HEAD_INIT(NULL)0, /*ob_size*/
+  PyVarObject_HEAD_INIT(NULL, 0) /*ob_size*/
   "PolarScanParamCore", /*tp_name*/
   sizeof(PyPolarScanParam), /*tp_size*/
   0, /*tp_itemsize*/
   /* methods */
   (destructor)_pypolarscanparam_dealloc, /*tp_dealloc*/
   0, /*tp_print*/
-  (getattrfunc)_pypolarscanparam_getattr, /*tp_getattr*/
-  (setattrfunc)_pypolarscanparam_setattr, /*tp_setattr*/
-  0, /*tp_compare*/
-  0, /*tp_repr*/
-  0, /*tp_as_number */
+  (getattrfunc)0,               /*tp_getattr*/
+  (setattrfunc)0,               /*tp_setattr*/
+  0,                            /*tp_compare*/
+  0,                            /*tp_repr*/
+  0,                            /*tp_as_number */
   0,
-  0, /*tp_as_mapping */
-  0 /*tp_hash*/
+  0,                            /*tp_as_mapping */
+  0,                            /*tp_hash*/
+  (ternaryfunc)0,               /*tp_call*/
+  (reprfunc)0,                  /*tp_str*/
+  (getattrofunc)_pypolarscanparam_getattro, /*tp_getattro*/
+  (setattrofunc)_pypolarscanparam_setattro, /*tp_setattro*/
+  0,                            /*tp_as_buffer*/
+  Py_TPFLAGS_DEFAULT, /*tp_flags*/
+  _pypolarscanparam_type_doc,   /*tp_doc*/
+  (traverseproc)0,              /*tp_traverse*/
+  (inquiry)0,                   /*tp_clear*/
+  0,                            /*tp_richcompare*/
+  0,                            /*tp_weaklistoffset*/
+  0,                            /*tp_iter*/
+  0,                            /*tp_iternext*/
+  _pypolarscanparam_methods,    /*tp_methods*/
+  0,                            /*tp_members*/
+  0,                            /*tp_getset*/
+  0,                            /*tp_base*/
+  0,                            /*tp_dict*/
+  0,                            /*tp_descr_get*/
+  0,                            /*tp_descr_set*/
+  0,                            /*tp_dictoffset*/
+  0,                            /*tp_init*/
+  0,                            /*tp_alloc*/
+  0,                            /*tp_new*/
+  0,                            /*tp_free*/
+  0,                            /*tp_is_gc*/
 };
 /*@} End of Type definition */
 
 /*@{ Module setup */
 static PyMethodDef functions[] = {
-  {"new", (PyCFunction)_pypolarscanparam_new, 1},
-  {"fromField", (PyCFunction)_pypolarscanparam_fromField, 1},
+  {"new", (PyCFunction)_pypolarscanparam_new, 1,
+    "new() -> new instance of the PolarScanParamCore object\n\n"
+    "Creates a new instance of the PolarScanParamCore object"
+  },
+  {"fromField", (PyCFunction)_pypolarscanparam_fromField, 1,
+    "fromField(field) -> PolarScanParamCore\n\n"
+    "Creates a polar scan parameter from a field.\n\n"
+    "field - the field to create a parameter fromk"
+  },
   {NULL,NULL} /*Sentinel*/
 };
 
-PyMODINIT_FUNC
-init_polarscanparam(void)
+MOD_INIT(_polarscanparam)
 {
   PyObject *module=NULL,*dictionary=NULL;
   static void *PyPolarScanParam_API[PyPolarScanParam_API_pointers];
   PyObject *c_api_object = NULL;
-  PyPolarScanParam_Type.ob_type = &PyType_Type;
 
-  module = Py_InitModule("_polarscanparam", functions);
+  MOD_INIT_SETUP_TYPE(PyPolarScanParam_Type, &PyType_Type);
+
+  MOD_INIT_VERIFY_TYPE_READY(&PyPolarScanParam_Type);
+
+  MOD_INIT_DEF(module, "_polarscanparam", _pypolarscanparam_type_doc, functions);
   if (module == NULL) {
-    return;
+    return MOD_INIT_ERROR;
   }
+
   PyPolarScanParam_API[PyPolarScanParam_Type_NUM] = (void*)&PyPolarScanParam_Type;
   PyPolarScanParam_API[PyPolarScanParam_GetNative_NUM] = (void *)PyPolarScanParam_GetNative;
   PyPolarScanParam_API[PyPolarScanParam_New_NUM] = (void*)PyPolarScanParam_New;
 
-  c_api_object = PyCObject_FromVoidPtr((void *)PyPolarScanParam_API, NULL);
-
-  if (c_api_object != NULL) {
-    PyModule_AddObject(module, "_C_API", c_api_object);
-  }
-
+  c_api_object = PyCapsule_New(PyPolarScanParam_API, PyPolarScanParam_CAPSULE_NAME, NULL);
   dictionary = PyModule_GetDict(module);
-  ErrorObject = PyString_FromString("_polarscanparam.error");
+  PyDict_SetItemString(dictionary, "_C_API", c_api_object);
+
+  ErrorObject = PyErr_NewException("_polarscanparam.error", NULL, NULL);
   if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
     Py_FatalError("Can't define _polarscanparam.error");
+    return MOD_INIT_ERROR;
   }
 
   import_array(); /*To make sure I get access to Numeric*/
+  import_ravedata2d();
   import_pyravefield();
   PYRAVE_DEBUG_INITIALIZE;
+  return MOD_INIT_SUCCESS(module);
 }
 /*@} End of Module setup */

@@ -327,18 +327,46 @@ void PolarScan_setA1gate(PolarScan_t* scan, long a1gate);
 long PolarScan_getA1gate(PolarScan_t* scan);
 
 /**
- * Sets the beamwidth. Default is 1.0 * M_PI/360.0
+ * Sets the horizontal beamwidth (same as PolarScan_setBeamwH). Default is 1.0 * M_PI/360.0
  * @param[in] scan - the polar scan
  * @param[in] beamwidth - the beam width in radians
  */
 void PolarScan_setBeamwidth(PolarScan_t* scan, double beamwidth);
 
 /**
- * Returns the beamwidth. Default is 1.0 * M_PI/360.0.
+ * Returns the horizontal beamwidth (same as PolarScan_getBeamwH). Default is 1.0 * M_PI/360.0.
  * @param[in] scan - the polar scan
  * @return the beam width om radians
  */
 double PolarScan_getBeamwidth(PolarScan_t* scan);
+
+/**
+ * Sets the horizontal beamwidth. Default is 1.0 * M_PI/360.0
+ * @param[in] scan - the polar scan
+ * @param[in] beamwidth - the beam width in radians
+ */
+void PolarScan_setBeamwH(PolarScan_t* scan, double beamwidth);
+
+/**
+ * Returns the horizontal beamwidth. Default is 1.0 * M_PI/360.0.
+ * @param[in] scan - the polar scan
+ * @return the beam width om radians
+ */
+double PolarScan_getBeamwH(PolarScan_t* scan);
+
+/**
+ * Sets the vertical beamwidth. Default is 1.0 * M_PI/360.0
+ * @param[in] scan - the polar scan
+ * @param[in] beamwidth - the beam width in radians
+ */
+void PolarScan_setBeamwV(PolarScan_t* scan, double beamwidth);
+
+/**
+ * Returns the vertical beamwidth. Default is 1.0 * M_PI/360.0.
+ * @param[in] scan - the polar scan
+ * @return the beam width om radians
+ */
+double PolarScan_getBeamwV(PolarScan_t* scan);
 
 /**
  * Sets the default parameter for this scan. I.e. all operations
@@ -516,6 +544,38 @@ int PolarScan_getRangeIndex(PolarScan_t* scan, double r, PolarScanSelectionMetho
  * @return the range in meters or a negative value upon bad input
  */
 double PolarScan_getRange(PolarScan_t* scan, int ri, int rangeMidpoint);
+
+/**
+ * Sets if the azimuthal nav information (astart / startazA / stopazA) should
+ * be used when calculating azimuthal index.
+ * @param[in] self - self
+ * @param[in] v - 1 if nav information should be used, otherwise 0
+ */
+void PolarScan_setUseAzimuthalNavInformation(PolarScan_t* self, int v);
+
+/**
+ * Returns if the azimuthal nav information should be used or not
+ * @param[in] self - self
+ * @return 1 if nav information should be used, otherwise 0.
+ */
+int PolarScan_useAzimuthalNavInformation(PolarScan_t* self);
+
+/**
+ * Returns the nothmost index by checking the occurance of startazA/stopazA and the index of the angle closest to north.
+ * If startazA/stopazA doesn't exist. This method will always return 0.
+ * @param[in] self - self
+ * @return the index of the northmost ray
+ */
+int PolarScan_getNorthmostIndex(PolarScan_t* self);
+
+/**
+ * Returns the rotation needed to to get the first ray in the scan to be the north most ray. If a negative  value is returned, the shift should
+ * be performed in a negative circular direction, if 0, no rotation required, if greater than 0, a positive circular shift is required.
+ * If startazA/stopazA doesn't exist. This method will always return 0.
+ * @param[in] self - self
+ * @return the rotation required to shift the scan so that first ray is the north most. If no rotation required, 0 is returned.
+ */
+int PolarScan_getRotationRequiredToNorthmost(PolarScan_t* self);
 
 /**
  * Returns the azimuth index for the specified azimuth.
@@ -845,6 +905,13 @@ int PolarScan_isTransformable(PolarScan_t* scan);
 int PolarScan_addAttribute(PolarScan_t* scan, RaveAttribute_t* attribute);
 
 /**
+ * Removes a rave attribute from the scan.
+ * @param[in] scan - self
+ * @param[in] attrname - the name of the attribute to remove
+ */
+void PolarScan_removeAttribute(PolarScan_t* scan, const char* attrname);
+
+/**
  * Returns the rave attribute that is named accordingly.
  * @param[in] scan - self
  * @param[in] name - the name of the attribute
@@ -873,6 +940,15 @@ RaveList_t* PolarScan_getAttributeNames(PolarScan_t* scan);
  * @returns a list of RaveAttributes.
  */
 RaveObjectList_t* PolarScan_getAttributeValues(PolarScan_t* scan);
+
+/**
+ * Performs a circular shift of an array attribute. if nx < 0, then shift is performed counter clockwise, if nx > 0, shift is performed clock wise, if 0, no shift is performed.
+ * @param[in] scan - self
+ * @param[in] name - attribute to shift
+ * @param[in] nx - number of positions to shift
+ * return 1 if successful, 0 if trying to shift an attribute that isn't an array or an error occurs during shift.
+ */
+int PolarScan_shiftAttribute(PolarScan_t* scan, const char* name, int nx);
 
 /**
  * Validates the scan can be seen to be valid regarding storage.
@@ -910,13 +986,54 @@ RaveField_t* PolarScan_getDistanceField(PolarScan_t* self);
 RaveField_t* PolarScan_getHeightField(PolarScan_t* self);
 
 /**
+ * Performs a circular shift of the datasets that are associated with this scan. It can be negative for counter clock wise
+ * and positive for clock wise rotation.
+ * If for some reason a value != 1 is returned you should not use this scan since the internals might have been altered in such a way
+ * that there are inconsistancies.
+ * @param[in] self - self
+ * @param[in] nrays - the number of rays to shift
+ * @return 1 if successful otherwise 0
+ */
+int PolarScan_shiftData(PolarScan_t* self, int nrays);
+
+/**
+ * Performs a circular shift of the datsets that are associated with the scan and also all attributes that are associated with
+ * the rays. Currently these attributes are:
+ * - how/elangles
+ * - how/startazA
+ * - how/stopazA
+ * - how/startazT
+ * - how/stopazT
+ * - how/startelA
+ * - how/stopelA
+ * - how/startelT
+ * - how/stopelT
+ * - how/TXpower
+ * If for some reason a value != 1 is returned you should not use this scan since the internals might have been altered in such a way
+ * that there are inconsistancies.
+ * @param[in] self - self
+ * @param[in] nrays - number of rays the data & array values should be shifted. If negative, counter clockwise, if positive clockwise.
+ * @return 1 on success 0 on error
+ */
+int PolarScan_shiftDataAndAttributes(PolarScan_t* self, int nrays);
+
+/**
  * Framework internal function for setting the beamwidth in a scan,
  * used to indicate that the beamwidth comes from the polar volume.
  * I.E. DO NOT USE UNLESS YOU KNOW WHY.
  * @param[in] scan - self
  * @param[in] bw - the beam width in radians
  */
-void PolarScanInternal_setPolarVolumeBeamwidth(PolarScan_t* scan, double bw);
+void PolarScanInternal_setPolarVolumeBeamwH(PolarScan_t* scan, double bw);
+
+/**
+ * Framework internal function for setting the beamwidth in a scan,
+ * used to indicate that the beamwidth comes from the polar volume.
+ * I.E. DO NOT USE UNLESS YOU KNOW WHY.
+ * @param[in] scan - self
+ * @param[in] bw - the beam width in radians
+ */
+void PolarScanInternal_setPolarVolumeBeamwV(PolarScan_t* scan, double bw);
 
 /**
  * Returns if the beamwidth comes from a volume or not.
@@ -924,6 +1041,14 @@ void PolarScanInternal_setPolarVolumeBeamwidth(PolarScan_t* scan, double bw);
  * @param[in] scan - self
  * @returns -1 if default setting, 1 if beamwidth comes from a polar volume otherwise 0
  */
-int PolarScanInternal_isPolarVolumeBeamwidth(PolarScan_t* scan);
+int PolarScanInternal_isPolarVolumeBeamwH(PolarScan_t* scan);
+
+/**
+ * Returns if the beamwidth comes from a volume or not.
+ * I.E. DO NOT USE UNLESS YOU KNOW WHY.
+ * @param[in] scan - self
+ * @returns -1 if default setting, 1 if beamwidth comes from a polar volume otherwise 0
+ */
+int PolarScanInternal_isPolarVolumeBeamwV(PolarScan_t* scan);
 
 #endif

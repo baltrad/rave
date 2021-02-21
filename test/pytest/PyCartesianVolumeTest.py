@@ -43,25 +43,24 @@ class PyCartesianVolumeTest(unittest.TestCase):
   def test_new(self):
     obj = _cartesianvolume.new()
     
-    iscvol = string.find(`type(obj)`, "CartesianVolumeCore")
-    self.assertNotEqual(-1, iscvol)
+    self.assertNotEqual(-1, str(type(obj)).find("CartesianVolumeCore"))
 
   def test_isCartesianVolume(self):
     obj = _cartesianvolume.new()
-    self.assertEquals(True, _cartesianvolume.isCartesianVolume(obj))
+    self.assertEqual(True, _cartesianvolume.isCartesianVolume(obj))
     
   def test_isCartesianVolumeFalse(self):
     obj = _cartesian.new()
-    self.assertEquals(False, _cartesianvolume.isCartesianVolume(obj))
+    self.assertEqual(False, _cartesianvolume.isCartesianVolume(obj))
 
   def test_attribute_visibility(self):
     attrs = ['areaextent', 'date', 'objectType', 
      'projection', 'source', 'time',
-     'xscale', 'xsize', 'yscale', 'ysize']
+     'xscale', 'xsize', 'yscale', 'ysize', 'zscale', 'zsize', 'zstart']
     obj = _cartesianvolume.new()
     alist = dir(obj)
     for a in attrs:
-      self.assertEquals(True, a in alist)
+      self.assertEqual(True, a in alist)
 
   def test_attributes_from_image(self):
     obj = _cartesianvolume.new()
@@ -82,13 +81,77 @@ class PyCartesianVolumeTest(unittest.TestCase):
     image.source = "PLC:1234"
     image.product = _rave.Rave_ProductType_CAPPI
     
-    self.assertEquals(0, obj.xsize)
-    self.assertEquals(0, obj.ysize)
+    self.assertEqual(0, obj.xsize)
+    self.assertEqual(0, obj.ysize)
       
     obj.addImage(image)
-    self.assertEquals(10, obj.xsize)
-    self.assertEquals(10, obj.ysize)
-    self.assertEquals(1, obj.getNumberOfImages())
+    self.assertEqual(10, obj.xsize)
+    self.assertEqual(10, obj.ysize)
+    self.assertEqual(1, obj.getNumberOfImages())
+
+  def test_zscale(self):
+    obj = _cartesianvolume.new()
+    self.assertAlmostEqual(0.0, obj.zscale, 4)
+    obj.zscale = 500.0
+    self.assertAlmostEqual(500.0, obj.zscale, 4)
+    try:
+      obj.zscale = "ABC"
+      fail("Expected TypeError")
+    except TypeError:
+      pass
+    self.assertAlmostEqual(500.0, obj.zscale, 4)
+
+  def test_zstart(self):
+    obj = _cartesianvolume.new()
+    self.assertAlmostEqual(0.0, obj.zstart, 4)
+    obj.zstart = 500.0
+    self.assertAlmostEqual(500.0, obj.zstart, 4)
+    try:
+      obj.zscale = "ABC"
+      fail("Expected TypeError")
+    except TypeError:
+      pass
+    self.assertAlmostEqual(500.0, obj.zstart, 4)
+
+  def test_zsize(self):
+    obj = _cartesianvolume.new()
+
+    a = _area.new()
+    a.xsize = 10
+    a.ysize = 10
+    a.xscale = 100.0
+    a.yscale = 100.0
+    a.extent = (1.0, 2.0, 3.0, 4.0)
+    a.projection = _projection.new("x", "y", "+proj=latlong +ellps=WGS84 +datum=WGS84")
+
+    try:
+      obj.zsize = 2
+      fail("Expected AttributeError")
+    except AttributeError:
+      pass
+    self.assertEqual(0, obj.zsize)
+
+    image1 = _cartesian.new()
+    image2 = _cartesian.new()
+
+    image1.init(a)
+    image2.init(a)
+    image1.date = "20100101"
+    image1.time = "100000"
+    image1.source = "PLC:1234"
+    image1.product = _rave.Rave_ProductType_CAPPI
+
+    image2.date = "20100101"
+    image2.time = "100000"
+    image2.source = "PLC:1234"
+    image2.product = _rave.Rave_ProductType_CAPPI
+    
+    obj.addImage(image1)
+    obj.addImage(image2)
+    
+    self.assertEqual(2, obj.getNumberOfImages())
+    self.assertEqual(2, obj.zsize)
+    
 
   def test_attributes_to_image(self):
     obj = _cartesianvolume.new()
@@ -105,17 +168,32 @@ class PyCartesianVolumeTest(unittest.TestCase):
     
     obj.addImage(image)
     
-    self.assertAlmostEquals(200.0, image.xscale, 4)
-    self.assertAlmostEquals(200.0, image.yscale, 4)
-    self.assertEquals("20100101", image.date)
-    self.assertEquals("100000", image.time)
-    self.assertEquals("PLC:1234", image.source)
-    self.assertAlmostEquals(1.0, image.areaextent[0], 4)
-    self.assertAlmostEquals(2.0, image.areaextent[1], 4)
-    self.assertAlmostEquals(3.0, image.areaextent[2], 4)
-    self.assertAlmostEquals(4.0, image.areaextent[3], 4)
+    self.assertAlmostEqual(200.0, image.xscale, 4)
+    self.assertAlmostEqual(200.0, image.yscale, 4)
+    self.assertEqual("20100101", image.date)
+    self.assertEqual("100000", image.time)
+    self.assertEqual("PLC:1234", image.source)
+    self.assertAlmostEqual(1.0, image.areaextent[0], 4)
+    self.assertAlmostEqual(2.0, image.areaextent[1], 4)
+    self.assertAlmostEqual(3.0, image.areaextent[2], 4)
+    self.assertAlmostEqual(4.0, image.areaextent[3], 4)
     
-    
+  def test_howSubgroupAttribute(self):
+    obj = _cartesianvolume.new()
+
+    obj.addAttribute("how/something", 1.0)
+    obj.addAttribute("how/grp/something", 2.0)
+    try:
+      obj.addAttribute("how/grp/else/", 2.0)
+      self.fail("Expected AttributeError")
+    except AttributeError:
+      pass
+
+    self.assertAlmostEqual(1.0, obj.getAttribute("how/something"), 2)
+    self.assertAlmostEqual(2.0, obj.getAttribute("how/grp/something"), 2)
+    self.assertTrue(obj.hasAttribute("how/something"))
+    self.assertTrue(obj.hasAttribute("how/grp/something"))
+
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']
     unittest.main()

@@ -22,7 +22,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2010-01-29
  */
-#include "Python.h"
+#include "pyravecompat.h"
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>
@@ -386,13 +386,54 @@ static struct PyMethodDef _pycomposite_methods[] =
   {"date", NULL},
   {"time", NULL},
   {"quality_indicator_field_name", NULL},
-  {"addParameter", (PyCFunction)_pycomposite_addParameter, 1},
-  {"hasParameter", (PyCFunction)_pycomposite_hasParameter, 1},
-  {"getParameterCount", (PyCFunction)_pycomposite_getParameterCount, 1},
-  {"getParameter", (PyCFunction)_pycomposite_getParameter, 1},
-  {"add", (PyCFunction) _pycomposite_add, 1},
-  {"applyRadarIndexMapping", (PyCFunction)_pycomposite_applyRadarIndexMapping, 1},
-  {"generate", (PyCFunction) _pycomposite_generate, 1},
+  {"addParameter", (PyCFunction)_pycomposite_addParameter, 1,
+    "addParameter(quantity, gain, offset, minvalue)\n\n" // "sddd", &
+    "Adds one parameter (quantity) that should be processed in the run.\n\n"
+    "quantity   - the parameter quantity\n"
+    "gain       - the gain to be used for the parameter\n"
+    "offset     - the offset to be used for the parameter\n"
+    "minvalue   - the minimum value that can be represented for this quantity in the composite"
+  },
+  {"hasParameter", (PyCFunction)_pycomposite_hasParameter, 1,
+    "hasParameter(quantity) -> boolean\n\n"
+    "Returns if this composite generator is going to process specified parameter\n\n"
+    "quantity   - the parameter quantity"
+  },
+  {"getParameterCount", (PyCFunction)_pycomposite_getParameterCount, 1,
+    "getParameterCount() -> integer\n\n"
+    "Returns the number of parameters that are going to be processed."
+  },
+  {"getParameter", (PyCFunction)_pycomposite_getParameter, 1,
+    "getParameter(index) -> (quantity, gain, offset)\n\n"
+    "Returns information about the parameter at index. Returned value will be a tuple of quantity, gain and offset."
+  },
+  {"add", (PyCFunction) _pycomposite_add, 1,
+    "add(object)\n\n"
+    "Adds a polar scan or polar volume to the generator.\n\n"
+    "object - A polar scan or a polar volume"
+  },
+  {"applyRadarIndexMapping", (PyCFunction)_pycomposite_applyRadarIndexMapping, 1,
+    "applyRadarIndexMapping(mapping)\n\n"
+    "If you want the objects included in the composite to have a specific index value when generating the quality\n"
+    "field se.smhi.composite.index.radar, then you can provide a hash table that maps source with a RaveAttribute_t\n"
+    "containing a long value. The source should be the full source as defined in the added objects. The indexes must\n"
+    "be unique values, preferrably starting from 1. If there is a mapping missing, the default behaviour is to take\n"
+    "first available integer closest to 1.\n"
+    "Note, that in order to the mapping to take, this call must be performed after all the objects has been added to\n"
+    "the generator and before calling \ref Composite_generate.\n\n"
+    "mapping - A mapping between a source identifier and a radar index. For example:\n"
+    "{\"WMO:1234\":1,\"NOD:sesome\":2}\n"
+  },
+  {"generate", (PyCFunction) _pycomposite_generate, 1,
+    "generate(area[,qualityfields]) -> CartesianCore\n\n"
+    "Generates a composite according to the configured parameters in the composite structure.\n\n"
+    "area          - The AreaCore defining the area to be generated.\n"
+    "qualityfields - An optional list of strings identifying how/task values in the quality fields of the polar data.\n"
+    "                Each entry in this list will result in the atempt to generate a corresponding quality field\n"
+    "                in the resulting cartesian product.\n"
+    "Example:\n"
+    " result = generator.generate(myarea, [\"se.smhi.composite.distance.radar\",\"pl.imgw.radvolqc.spike\"])"
+  },
   {NULL, NULL } /* sentinel */
 };
 
@@ -400,23 +441,23 @@ static struct PyMethodDef _pycomposite_methods[] =
  * Returns the specified attribute in the cartesian
  * @param[in] self - the cartesian product
  */
-static PyObject* _pycomposite_getattr(PyComposite* self, char* name)
+static PyObject* _pycomposite_getattro(PyComposite* self, PyObject* name)
 {
   PyObject* res = NULL;
 
-  if (strcmp("height", name) == 0) {
+  if (PY_COMPARE_STRING_WITH_ATTRO_NAME("height", name) == 0) {
     return PyFloat_FromDouble(Composite_getHeight(self->composite));
-  } else if (strcmp("elangle", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("elangle", name) == 0) {
     return PyFloat_FromDouble(Composite_getElevationAngle(self->composite));
-  } else if (strcmp("range", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("range", name) == 0) {
     return PyFloat_FromDouble(Composite_getRange(self->composite));
-  } else if (strcmp("product", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("product", name) == 0) {
     return PyInt_FromLong(Composite_getProduct(self->composite));
-  } else if (strcmp("selection_method", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("selection_method", name) == 0) {
     return PyInt_FromLong(Composite_getSelectionMethod(self->composite));
-  } else if (strcmp("interpolation_method", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("interpolation_method", name) == 0) {
     return PyInt_FromLong(Composite_getInterpolationMethod(self->composite));
-  } else if (strcmp("algorithm", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("algorithm", name) == 0) {
     CompositeAlgorithm_t* algorithm = Composite_getAlgorithm(self->composite);
     if (algorithm != NULL) {
       res = (PyObject*)PyCompositeAlgorithm_New(algorithm);
@@ -425,45 +466,38 @@ static PyObject* _pycomposite_getattr(PyComposite* self, char* name)
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("date", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("date", name) == 0) {
     if (Composite_getDate(self->composite) != NULL) {
       return PyString_FromString(Composite_getDate(self->composite));
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("time", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("time", name) == 0) {
     if (Composite_getTime(self->composite) != NULL) {
       return PyString_FromString(Composite_getTime(self->composite));
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("quality_indicator_field_name", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("quality_indicator_field_name", name) == 0) {
     if (Composite_getQualityIndicatorFieldName(self->composite) != NULL) {
       return PyString_FromString(Composite_getQualityIndicatorFieldName(self->composite));
     } else {
       Py_RETURN_NONE;
     }
   }
-
-  res = Py_FindMethod(_pycomposite_methods, (PyObject*) self, name);
-  if (res)
-    return res;
-
-  PyErr_Clear();
-  PyErr_SetString(PyExc_AttributeError, name);
-  return NULL;
+  return PyObject_GenericGetAttr((PyObject*)self, name);
 }
 
 /**
  * Returns the specified attribute in the polar volume
  */
-static int _pycomposite_setattr(PyComposite* self, char* name, PyObject* val)
+static int _pycomposite_setattro(PyComposite* self, PyObject* name, PyObject* val)
 {
   int result = -1;
   if (name == NULL) {
     goto done;
   }
-  if (strcmp("height", name) == 0) {
+  if (PY_COMPARE_STRING_WITH_ATTRO_NAME("height", name) == 0) {
     if (PyFloat_Check(val)) {
       Composite_setHeight(self->composite, PyFloat_AsDouble(val));
     } else if (PyLong_Check(val)) {
@@ -473,7 +507,7 @@ static int _pycomposite_setattr(PyComposite* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_TypeError,"height must be of type float");
     }
-  } else if (strcmp("elangle", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("elangle", name) == 0) {
     if (PyFloat_Check(val)) {
       Composite_setElevationAngle(self->composite, PyFloat_AsDouble(val));
     } else if (PyLong_Check(val)) {
@@ -483,7 +517,7 @@ static int _pycomposite_setattr(PyComposite* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "elangle must be a float or decimal value")
     }
-  } else if (strcmp("range", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("range", name) == 0) {
     if (PyFloat_Check(val)) {
       Composite_setRange(self->composite, PyFloat_AsDouble(val));
     } else if (PyLong_Check(val)) {
@@ -493,21 +527,21 @@ static int _pycomposite_setattr(PyComposite* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "range must be a float or decimal value")
     }
-  } else if (strcmp("product", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("product", name) == 0) {
     if (PyInt_Check(val)) {
       Composite_setProduct(self->composite, PyInt_AsLong(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "product must be a valid product type")
     }
-  } else if (strcmp("selection_method", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("selection_method", name) == 0) {
     if (!PyInt_Check(val) || !Composite_setSelectionMethod(self->composite, PyInt_AsLong(val))) {
       raiseException_gotoTag(done, PyExc_ValueError, "not a valid selection method");
     }
-  } else if (strcmp("interpolation_method", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("interpolation_method", name) == 0) {
     if (!PyInt_Check(val) || !Composite_setInterpolationMethod(self->composite, PyInt_AsLong(val))) {
       raiseException_gotoTag(done, PyExc_ValueError, "not a valid interpolation method");
     }
-  } else if (strcmp("time", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("time", name) == 0) {
     if (PyString_Check(val)) {
       if (!Composite_setTime(self->composite, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "time must be in the format HHmmss");
@@ -517,7 +551,7 @@ static int _pycomposite_setattr(PyComposite* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_ValueError,"time must be of type string");
     }
-  } else if (strcmp("date", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("date", name) == 0) {
     if (PyString_Check(val)) {
       if (!Composite_setDate(self->composite, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "date must be in the format YYYYMMSS");
@@ -527,7 +561,7 @@ static int _pycomposite_setattr(PyComposite* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_ValueError,"date must be of type string");
     }
-  } else if (strcmp("quality_indicator_field_name", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("quality_indicator_field_name", name) == 0) {
     if (PyString_Check(val)) {
       if (!Composite_setQualityIndicatorFieldName(self->composite, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_MemoryError, "Failed to set quality indicator field name");
@@ -537,7 +571,7 @@ static int _pycomposite_setattr(PyComposite* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_ValueError, "quality_indicator_field_name must be a string");
     }
-  } else if (strcmp("algorithm", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("algorithm", name) == 0) {
     if (val == Py_None) {
       Composite_setAlgorithm(self->composite, NULL);
     } else if (PyCompositeAlgorithm_Check(val)) {
@@ -546,7 +580,7 @@ static int _pycomposite_setattr(PyComposite* self, char* name, PyObject* val)
       raiseException_gotoTag(done, PyExc_TypeError, "algorithm must either be None or a CompositeAlgorithm");
     }
   } else {
-    raiseException_gotoTag(done, PyExc_AttributeError, name);
+    raiseException_gotoTag(done, PyExc_AttributeError, PY_RAVE_ATTRO_NAME_TO_STRING(name));
   }
 
   result = 0;
@@ -556,30 +590,113 @@ done:
 
 /*@} End of Composite product generator */
 
+/*@{ Documentation about the type */
+PyDoc_STRVAR(_pycomposite_type_doc,
+    "The composite type provides the possibility to create cartesian composites from a number of polar objects.\n"
+    "To generate the composite, one or many polar scans or polar volumes has to be added to the generator. Then generate should be called with the expected area and an optional list of how/task quality field names.\n"
+    "There are a few attributes that can be set besides the functions.\n"
+    " height                       - The height in meters that should be used when generating a composite like CAPPI, PCAPPI or PMAX.\n"
+    " elangle                      - The elevation angle in radians that should be used when generating a composite like PPI."
+    " range                        - The range that should be used when generating the Pseudo MAX. This range is the limit in meters\n"
+    "                                for when the vertical max should be used. When outside this range, the PCAPPI value is used instead.\n"
+    " product                      - The product type that should be generated when generating the composite.\n"
+    "                                Height/Elevation angle and range are used in combination with the products.\n"
+    "                                PPI requires elevation angle\n"
+    "                                CAPPI, PCAPPI and PMAX requires height above sea level\n"
+    "                                PMAX also requires range in meters\n"
+    " selection_method             - The selection method to use when there are more than one radar covering same point. I.e. if for example taking distance to radar or height above sea level. Currently the following methods are available\n"
+    "       _pycomposite.SelectionMethod_NEAREST - Value from the nearest radar is selected.\n"
+    "       _pycomposite.SelectionMethod_HEIGHT  - Value from radar which scan is closest to the sea level at current point.\n"
+    " interpolation_method         - Interpolation method is used to choose how to interpolate the surrounding values. The default behaviour is NEAREST.\n"
+    "       _pycomposite.InterpolationMethod_NEAREST                  - Nearest value is used\n"
+    "       _pycomposite.InterpolationMethod_LINEAR_HEIGHT            - Value calculated by performing a linear interpolation between the closest positions above and below\n"
+    "       _pycomposite.InterpolationMethod_LINEAR_RANGE             - Value calculated by performing a linear interpolation between the closest positions before\n"
+    "                                                                   and beyond in the range dimension of the ray\n"
+    "       _pycomposite.InterpolationMethod_LINEAR_AZIMUTH           - Value calculated by performing a linear interpolation between the closest positions on each\n"
+    "                                                                   side of the position, i.e., interpolation between consecutive rays\n"
+    "       _pycomposite.InterpolationMethod_LINEAR_RANGE_AND_AZIMUTH - Value calculated by performing a linear interpolation in azimuth and range directions.\n"
+    "       _pycomposite.InterpolationMethod_LINEAR_3D                - Value calculated by performing a linear interpolation in height, azimuth and range directions.\n"
+    "       _pycomposite.InterpolationMethod_QUADRATIC_HEIGHT         - Value calculated by performing a quadratic interpolation between the closest positions before and beyond in\n"
+    "                                                                   the range dimension of the ray. Quadratic interpolation means that inverse distance weights raised to the\n"
+    "                                                                   power of 2 are used in value interpolation.\n"
+    "       _pycomposite.InterpolationMethod_QUADRATIC_3D             - Value calculated by performing a quadratic interpolation in height, azimuth and range\n"
+    "                                                                   directions. Quadratic interpolation means that inverse distance weights raised to the\n"
+    "                                                                   power of 2 are used in value interpolation.\n"
+
+    " date                         - The nominal date as a string in format YYYYMMDD\n"
+    " time                         - The nominal time as a string in format HHmmss\n"
+    " quality_indicator_field_name - If this field name is set, then the composite will be generated by first using the quality indicator field for determining\n"
+    "                                radar usage. If the field name is None, then the selection method will be used instead.\n"
+    "\n"
+    "Usage:\n"
+    " import _pycomposite\n"
+    " generator = _pycomposite.new()\n"
+    " generator.selection_method = _pycomposite.SelectionMethod_HEIGHT\n"
+    " generator.product = \"PCAPPI\"\n"
+    " generator.height = 500.0\n"
+    " generator.date = \"20200201\"\n"
+    " generator.date = \"100000\"\n"
+    " generator.addParameter(\"DBZH\", 2.0, 3.0, -30.0)\n"
+    " generator.add(_rave.open(\"se1_pvol_20200201100000.h5\").object)\n"
+    " generator.add(_rave.open(\"se2_pvol_20200201100000.h5\").object)\n"
+    " generator.add(_rave.open(\"se3_pvol_20200201100000.h5\").object)\n"
+    " result = generator.generate(myarea, [\"se.smhi.composite.distance.radar\",\"pl.imgw.radvolqc.spike\"])\n"
+    );
+/*@} End of Documentation about the type */
+
 /*@{ Type definitions */
 PyTypeObject PyComposite_Type =
 {
-  PyObject_HEAD_INIT(NULL)0, /*ob_size*/
+  PyVarObject_HEAD_INIT(NULL, 0) /*ob_size*/
   "CompositeCore", /*tp_name*/
   sizeof(PyComposite), /*tp_size*/
   0, /*tp_itemsize*/
   /* methods */
   (destructor)_pycomposite_dealloc, /*tp_dealloc*/
   0, /*tp_print*/
-  (getattrfunc)_pycomposite_getattr, /*tp_getattr*/
-  (setattrfunc)_pycomposite_setattr, /*tp_setattr*/
-  0, /*tp_compare*/
-  0, /*tp_repr*/
-  0, /*tp_as_number */
+  (getattrfunc)0,               /*tp_getattr*/
+  (setattrfunc)0,               /*tp_setattr*/
+  0,                            /*tp_compare*/
+  0,                            /*tp_repr*/
+  0,                            /*tp_as_number */
   0,
-  0, /*tp_as_mapping */
-  0 /*tp_hash*/
+  0,                            /*tp_as_mapping */
+  0,                            /*tp_hash*/
+  (ternaryfunc)0,               /*tp_call*/
+  (reprfunc)0,                  /*tp_str*/
+  (getattrofunc)_pycomposite_getattro, /*tp_getattro*/
+  (setattrofunc)_pycomposite_setattro, /*tp_setattro*/
+  0,                            /*tp_as_buffer*/
+  Py_TPFLAGS_DEFAULT, /*tp_flags*/
+  _pycomposite_type_doc,        /*tp_doc*/
+  (traverseproc)0,              /*tp_traverse*/
+  (inquiry)0,                   /*tp_clear*/
+  0,                            /*tp_richcompare*/
+  0,                            /*tp_weaklistoffset*/
+  0,                            /*tp_iter*/
+  0,                            /*tp_iternext*/
+  _pycomposite_methods,              /*tp_methods*/
+  0,                            /*tp_members*/
+  0,                            /*tp_getset*/
+  0,                            /*tp_base*/
+  0,                            /*tp_dict*/
+  0,                            /*tp_descr_get*/
+  0,                            /*tp_descr_set*/
+  0,                            /*tp_dictoffset*/
+  0,                            /*tp_init*/
+  0,                            /*tp_alloc*/
+  0,                            /*tp_new*/
+  0,                            /*tp_free*/
+  0,                            /*tp_is_gc*/
 };
 /*@} End of Type definitions */
 
 /*@{ Module setup */
 static PyMethodDef functions[] = {
-  {"new", (PyCFunction)_pycomposite_new, 1},
+  {"new", (PyCFunction)_pycomposite_new, 1,
+    "new() -> new instance of the CompositeCore object\n\n"
+    "Creates a new instance of the CompositeCore object"
+  },
   {NULL,NULL} /*Sentinel*/
 };
 
@@ -599,33 +716,35 @@ static void add_long_constant(PyObject* dictionary, const char* name, long value
   Py_XDECREF(tmp);
 }
 
-PyMODINIT_FUNC
-init_pycomposite(void)
+MOD_INIT(_pycomposite)
 {
   PyObject *module=NULL,*dictionary=NULL;
   static void *PyComposite_API[PyComposite_API_pointers];
   PyObject *c_api_object = NULL;
-  PyComposite_Type.ob_type = &PyType_Type;
 
-  module = Py_InitModule("_pycomposite", functions);
+  MOD_INIT_SETUP_TYPE(PyComposite_Type, &PyType_Type);
+
+  MOD_INIT_VERIFY_TYPE_READY(&PyComposite_Type);
+
+  MOD_INIT_DEF(module, "_pycomposite", _pycomposite_type_doc, functions);
   if (module == NULL) {
-    return;
+    return MOD_INIT_ERROR;
   }
+
   PyComposite_API[PyComposite_Type_NUM] = (void*)&PyComposite_Type;
   PyComposite_API[PyComposite_GetNative_NUM] = (void *)PyComposite_GetNative;
   PyComposite_API[PyComposite_New_NUM] = (void*)PyComposite_New;
 
-  c_api_object = PyCObject_FromVoidPtr((void *)PyComposite_API, NULL);
-
-  if (c_api_object != NULL) {
-    PyModule_AddObject(module, "_C_API", c_api_object);
-  }
-
+  c_api_object = PyCapsule_New(PyComposite_API, PyComposite_CAPSULE_NAME, NULL);
   dictionary = PyModule_GetDict(module);
-  ErrorObject = PyString_FromString("_pycomposite.error");
+  PyDict_SetItemString(dictionary, "_C_API", c_api_object);
+
+  ErrorObject = PyErr_NewException("_pycomposite.error", NULL, NULL);
   if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
     Py_FatalError("Can't define _pycomposite.error");
+    return MOD_INIT_ERROR;
   }
+
 
   add_long_constant(dictionary, "SelectionMethod_NEAREST", CompositeSelectionMethod_NEAREST);
   add_long_constant(dictionary, "SelectionMethod_HEIGHT", CompositeSelectionMethod_HEIGHT);
@@ -646,5 +765,6 @@ init_pycomposite(void)
   import_array(); /*To make sure I get access to Numeric*/
   import_compositealgorithm();
   PYRAVE_DEBUG_INITIALIZE;
+  return MOD_INIT_SUCCESS(module);
 }
 /*@} End of Module setup */

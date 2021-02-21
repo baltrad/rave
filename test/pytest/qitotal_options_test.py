@@ -42,19 +42,19 @@ class qitotal_options_test(unittest.TestCase):
   
   def test_parse_qitotal_site_information(self):
     result = qitotal_options.parse_qitotal_site_information(self.OPTIONS_FIXTURE)
-    self.assertTrue(result.has_key("default"))
-    self.assertTrue(result.has_key("sehuv"))
+    self.assertTrue("default" in result.keys())
+    self.assertTrue("sehuv" in result.keys())
     v = result["sehuv"]
-    self.assertEquals(2, len(v.qifields()))
-    self.assertEquals("se.smhi.test.1", v.qifields()[0].name())
-    self.assertAlmostEquals(0.3, v.qifields()[0].weight(), 4)
-    self.assertEquals("se.smhi.test.2", v.qifields()[1].name())
-    self.assertAlmostEquals(0.7, v.qifields()[1].weight(), 4)
+    self.assertEqual(2, len(v.qifields()))
+    self.assertEqual("se.smhi.test.1", v.qifields()[0].name())
+    self.assertAlmostEqual(0.3, v.qifields()[0].weight(), 4)
+    self.assertEqual("se.smhi.test.2", v.qifields()[1].name())
+    self.assertAlmostEqual(0.7, v.qifields()[1].weight(), 4)
 
     v = result["default"]
-    self.assertEquals(2, len(v.qifields()))
-    self.assertEquals("se.smhi.test.1", v.qifields()[0].name())
-    self.assertAlmostEquals(0.5, v.qifields()[0].weight(), 4)
-    self.assertEquals("se.smhi.test.2", v.qifields()[1].name())
-    self.assertAlmostEquals(0.5, v.qifields()[1].weight(), 4)
+    self.assertEqual(2, len(v.qifields()))
+    self.assertEqual("se.smhi.test.1", v.qifields()[0].name())
+    self.assertAlmostEqual(0.5, v.qifields()[0].weight(), 4)
+    self.assertEqual("se.smhi.test.2", v.qifields()[1].name())
+    self.assertAlmostEqual(0.5, v.qifields()[1].weight(), 4)
     

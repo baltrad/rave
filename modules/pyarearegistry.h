@@ -51,6 +51,8 @@ typedef struct {
 
 #define PyAreaRegistry_API_pointers 4               /**< number of API pointers */
 
+#define PyAreaRegistry_CAPSULE_NAME "_area._C_API"
+
 #ifdef PYAREAREGISTRY_MODULE
 /** Forward declaration of type */
 extern PyTypeObject PyAreaRegistry_Type;
@@ -88,7 +90,6 @@ static void **PyAreaRegistry_API;
 #define PyAreaRegistry_New \
   (*(PyAreaRegistry_New_RETURN (*)PyAreaRegistry_New_PROTO) PyAreaRegistry_API[PyAreaRegistry_New_NUM])
 
-
 /**
  * Loads a area registry instance. Release this object with Py_DECREF.
  * @param[in] filename - the filename.
@@ -98,39 +99,19 @@ static void **PyAreaRegistry_API;
 #define PyAreaRegistry_Load \
   (*(PyAreaRegistry_Load_RETURN (*)PyAreaRegistry_Load_PROTO) PyAreaRegistry_API[PyAreaRegistry_Load_NUM])
 
-
 /**
  * Checks if the object is a python area registry.
  */
 #define PyAreaRegistry_Check(op) \
-   ((op)->ob_type == (PyTypeObject *)PyAreaRegistry_API[PyAreaRegistry_Type_NUM])
+   (Py_TYPE(op) == &PyAreaRegistry_Type)
+
+#define PyAreaRegistry_Type (*(PyTypeObject*)PyAreaRegistry_API[PyAreaRegistry_Type_NUM])
 
 /**
  * Imports the PyAreaRegistry module (like import _arearegistry in python).
  */
-static int
-import_pyarearegistry(void)
-{
-  PyObject *module;
-  PyObject *c_api_object;
-
-  module = PyImport_ImportModule("_arearegistry");
-  if (module == NULL) {
-    return -1;
-  }
-
-  c_api_object = PyObject_GetAttrString(module, "_C_API");
-  if (c_api_object == NULL) {
-    Py_DECREF(module);
-    return -1;
-  }
-  if (PyCObject_Check(c_api_object)) {
-    PyAreaRegistry_API = (void **)PyCObject_AsVoidPtr(c_api_object);
-  }
-  Py_DECREF(c_api_object);
-  Py_DECREF(module);
-  return 0;
-}
+#define import_pyarearegistry() \
+    PyAreaRegistry_API = (void **)PyCapsule_Import(PyAreaRegistry_CAPSULE_NAME, 1);
 
 #endif
 

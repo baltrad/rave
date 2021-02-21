@@ -48,6 +48,9 @@ struct _CartesianParam_t {
   double undetect;   /**< undetect */
 
   RaveData2D_t* data;   /**< 2 dimensional data array */
+
+  LazyDataset_t* lazyDataset; /**< the lazy dataset */
+
   RaveObjectHashTable_t* attrs; /**< attributes */
   RaveObjectList_t* qualityfields; /**< quality fields */
 };
@@ -64,6 +67,7 @@ static int CartesianParam_constructor(RaveCoreObject* obj)
   this->offset = 0.0;
   this->nodata = 0.0;
   this->undetect = 0.0;
+  this->lazyDataset = NULL;
   this->data = RAVE_OBJECT_NEW(&RaveData2D_TYPE);
   this->attrs = RAVE_OBJECT_NEW(&RaveObjectHashTable_TYPE);
   this->qualityfields = RAVE_OBJECT_NEW(&RaveObjectList_TYPE);
@@ -80,6 +84,27 @@ fail:
 }
 
 /**
+ * Ensures that we have got a data 2d field to work with regardless
+ * if it already has been set or if it supposed to be lazy loaded.
+ * @param[in] field - the rave field
+ * @returns a loaded rave data 2D field
+ */
+static RaveData2D_t* CartesianParamInternal_ensureData2D(CartesianParam_t* self)
+{
+  if (self->lazyDataset != NULL) {
+    RaveData2D_t* loaded = LazyDataset_get(self->lazyDataset);
+    if (loaded != NULL) {
+      /*fprintf(stderr, "CartesianParamInternal_ensureData2D: LazyDataset fetched\n");*/
+      RAVE_OBJECT_RELEASE(self->data);
+      self->data = RAVE_OBJECT_COPY(loaded);
+      RAVE_OBJECT_RELEASE(self->lazyDataset);
+    }
+    RAVE_OBJECT_RELEASE(loaded);
+  }
+  return self->data;
+}
+
+/**
  * Copy constructor.
  */
 static int CartesianParam_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj)
@@ -92,10 +117,11 @@ static int CartesianParam_copyconstructor(RaveCoreObject* obj, RaveCoreObject* s
   this->undetect = src->undetect;
   this->quantity = NULL;
   this->data = NULL;
+  this->lazyDataset = NULL;
 
   CartesianParam_setQuantity(this, CartesianParam_getQuantity(src));
 
-  this->data = RAVE_OBJECT_CLONE(src->data);
+  this->data = RAVE_OBJECT_CLONE(CartesianParamInternal_ensureData2D(src));
   this->attrs = RAVE_OBJECT_CLONE(src->attrs);
   this->qualityfields = RAVE_OBJECT_CLONE(src->qualityfields);
 
@@ -123,6 +149,7 @@ static void CartesianParam_destructor(RaveCoreObject* obj)
   if (cartesian != NULL) {
     RAVE_FREE(cartesian->quantity);
     RAVE_OBJECT_RELEASE(cartesian->data);
+    RAVE_OBJECT_RELEASE(cartesian->lazyDataset);
     RAVE_OBJECT_RELEASE(cartesian->attrs);
     RAVE_OBJECT_RELEASE(cartesian->qualityfields);
   }
@@ -134,18 +161,27 @@ static void CartesianParam_destructor(RaveCoreObject* obj)
 long CartesianParam_getXSize(CartesianParam_t* self)
 {
   RAVE_ASSERT((self != NULL), "self == NULL");
+  if (self->lazyDataset != NULL) {
+    return LazyDataset_getXsize(self->lazyDataset);
+  }
   return RaveData2D_getXsize(self->data);
 }
 
 long CartesianParam_getYSize(CartesianParam_t* self)
 {
   RAVE_ASSERT((self != NULL), "self == NULL");
+  if (self->lazyDataset != NULL) {
+    return LazyDataset_getYsize(self->lazyDataset);
+  }
   return RaveData2D_getYsize(self->data);
 }
 
 RaveDataType CartesianParam_getDataType(CartesianParam_t* self)
 {
   RAVE_ASSERT((self != NULL), "self == NULL");
+  if (self->lazyDataset != NULL) {
+    return LazyDataset_getDataType(self->lazyDataset);
+  }
   return RaveData2D_getType(self->data);
 }
 
@@ -226,37 +262,62 @@ double CartesianParam_getUndetect(CartesianParam_t* self)
 int CartesianParam_isTransformable(CartesianParam_t* self)
 {
   RAVE_ASSERT((self != NULL), "self == NULL");
-  return RaveData2D_hasData(self->data);
+  return RaveData2D_hasData(CartesianParamInternal_ensureData2D(self));
 }
 
 int CartesianParam_setData(CartesianParam_t* self, long xsize, long ysize, void* data, RaveDataType type)
 {
+  int result = 0;
   RAVE_ASSERT((self != NULL), "self == NULL");
-  return RaveData2D_setData(self->data, xsize, ysize, data, type);
+  result = RaveData2D_setData(self->data, xsize, ysize, data, type);
+  if (result) {
+    RAVE_OBJECT_RELEASE(self->lazyDataset);
+  }
+  return result;
+}
+
+int CartesianParam_setLazyDataset(CartesianParam_t* self, LazyDataset_t* lazyDataset)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  if (RaveData2D_getData(self->data) == NULL) {
+    self->lazyDataset = RAVE_OBJECT_COPY(lazyDataset);
+    return 1;
+  } else {
+    RAVE_ERROR0("Trying to set lazy dataset loader when data exists");
+    return 0;
+  }
 }
 
 int CartesianParam_createData(CartesianParam_t* self, long xsize, long ysize, RaveDataType type, double value)
 {
+  int result = 0;
   RAVE_ASSERT((self != NULL), "self == NULL");
-  return RaveData2D_createData(self->data, xsize, ysize, type, value);
+  result = RaveData2D_createData(self->data, xsize, ysize, type, value);
+  if (result) {
+    RAVE_OBJECT_RELEASE(self->lazyDataset);
+  }
+  return result;
 }
 
 void* CartesianParam_getData(CartesianParam_t* self)
 {
   RAVE_ASSERT((self != NULL), "self == NULL");
-  return RaveData2D_getData(self->data);
+  return RaveData2D_getData(CartesianParamInternal_ensureData2D(self));
 }
 
 RaveDataType CartesianParam_getType(CartesianParam_t* self)
 {
   RAVE_ASSERT((self != NULL), "self == NULL");
+  if (self->lazyDataset != NULL) {
+    return LazyDataset_getDataType(self->lazyDataset);
+  }
   return RaveData2D_getType(self->data);
 }
 
 int CartesianParam_setValue(CartesianParam_t* self, long x, long y, double v)
 {
   RAVE_ASSERT((self != NULL), "self == NULL");
-  return RaveData2D_setValue(self->data, x, y, v);
+  return RaveData2D_setValue(CartesianParamInternal_ensureData2D(self), x, y, v);
 }
 
 int CartesianParam_setConvertedValue(CartesianParam_t* self, long x, long y, double v, RaveValueType vtype)
@@ -277,7 +338,7 @@ int CartesianParam_setConvertedValue(CartesianParam_t* self, long x, long y, dou
     }
   }
 
-  return RaveData2D_setValue(self->data, x, y, value);
+  return RaveData2D_setValue(CartesianParamInternal_ensureData2D(self), x, y, value);
 }
 
 RaveValueType CartesianParam_getValue(CartesianParam_t* self, long x, long y, double* v)
@@ -288,7 +349,7 @@ RaveValueType CartesianParam_getValue(CartesianParam_t* self, long x, long y, do
 
   value = self->nodata;
 
-  if (RaveData2D_getValue(self->data, x, y, &value)) {
+  if (RaveData2D_getValue(CartesianParamInternal_ensureData2D(self), x, y, &value)) {
     result = RaveValueType_DATA;
     if (value == self->nodata) {
       result = RaveValueType_NODATA;
@@ -359,8 +420,7 @@ int CartesianParam_addAttribute(CartesianParam_t* self, RaveAttribute_t* attribu
       RAVE_ERROR1("Failed to extract group and name from %s", name);
       goto done;
     }
-    if (strcasecmp("how", gname)==0 &&
-      strchr(aname, '/') == NULL) {
+    if ((strcasecmp("how", gname)==0) &&RaveAttributeHelp_validateHowGroupAttributeName(gname, aname)) {
       result = RaveObjectHashTable_put(self->attrs, name, (RaveCoreObject*)attribute);
     } else if (strcasecmp("what/prodpar", name)==0) {
       result = RaveObjectHashTable_put(self->attrs, name, (RaveCoreObject*)attribute);

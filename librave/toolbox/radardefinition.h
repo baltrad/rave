@@ -187,6 +187,30 @@ double RadarDefinition_getBeamwidth(RadarDefinition_t* radar);
 
 /**
  * @param[in] radar - self
+ * @param[in] bw - the horizontal beam width to set
+ */
+void RadarDefinition_setBeamwH(RadarDefinition_t* radar, double bw);
+
+/**
+ * @param[in] radar - self
+ * @returns the horizontal beam width
+ */
+double RadarDefinition_getBeamwH(RadarDefinition_t* radar);
+
+/**
+ * @param[in] radar - self
+ * @param[in] bw - the vertical beam width to set
+ */
+void RadarDefinition_setBeamwV(RadarDefinition_t* radar, double bw);
+
+/**
+ * @param[in] radar - self
+ * @returns the vertical beam width
+ */
+double RadarDefinition_getBeamwV(RadarDefinition_t* radar);
+
+/**
+ * @param[in] radar - self
  * @param[in] l - the wave length to set
  */
 void RadarDefinition_setWavelength(RadarDefinition_t* radar, double l);

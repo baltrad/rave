@@ -60,7 +60,7 @@ if __name__ == "__main__":
 
     if options.path:
         if not os.path.isdir(options.path):
-            print "CT path %s does not exist. Giving up." % options.path
+            print("CT path %s does not exist. Giving up." % options.path)
         else:
             rave_ctfilter.CTPATH = options.path
 
@@ -74,7 +74,7 @@ if __name__ == "__main__":
     elif rio.objectType is _rave.Rave_ObjectType_IMAGE:
         prod = rio.object
     else:
-        raise TypeError, "Input file contains neither COMP nor IMAGE. Exiting ..."
+        raise TypeError("Input file contains neither COMP nor IMAGE. Exiting ...")
 
     ret = rave_ctfilter.ctFilter(prod, options.quantity)
     if ret:
@@ -83,4 +83,4 @@ if __name__ == "__main__":
         rio.object = prod
         rio.save(options.ofile)
     else:
-        print "No filtering performed"
+        print("No filtering performed")

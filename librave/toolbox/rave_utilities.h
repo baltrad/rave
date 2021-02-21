@@ -140,4 +140,12 @@ int RaveUtilities_isXmlSupported(void);
  */
 int RaveUtilities_isCFConventionSupported(void);
 
+/**
+ * Handles the source value according to version. For example, if version < 2.3, then WIGOS will be removed.
+ * @param[in] source - source to be verified
+ * @param[in] version - what version we want to validate against.
+ * @returns the modified version. Note, should be freed with RAVE_FREE.
+ */
+char* RaveUtilities_handleSourceVersion(const char* source, RaveIO_ODIM_Version version);
+
 #endif /* RAVE_UTILITIES_H */

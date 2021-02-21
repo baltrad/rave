@@ -405,6 +405,52 @@ int RaveAttribute_getDoubleArray(RaveAttribute_t* attr, double** value, int* len
   return result;
 }
 
+int RaveAttribute_shiftArray(RaveAttribute_t* attr, int nx)
+{
+  int result = 0;
+  int i = 0;
+  if (attr->format == RaveAttribute_Format_DoubleArray) {
+    double* tmp = RAVE_MALLOC(sizeof(double)*attr->arraylen);
+    if (tmp != NULL) {
+      for (i = 0; i < attr->arraylen; i++) {
+        int shiftindex = i + nx;
+        if (shiftindex < 0) {
+          shiftindex += attr->arraylen;
+        }
+        if (shiftindex >= attr->arraylen) {
+          shiftindex -= attr->arraylen;
+        }
+        tmp[shiftindex] = attr->ddataarray[i];
+      }
+      memcpy(attr->ddataarray, tmp, sizeof(double)*attr->arraylen);
+      RAVE_FREE(tmp);
+      result = 1;
+    } else {
+      RAVE_ERROR0("Failed to allocate memory during array shift");
+    }
+  } else if (attr->format == RaveAttribute_Format_LongArray) {
+    long* tmp = RAVE_MALLOC(sizeof(long)*attr->arraylen);
+    if (tmp != NULL) {
+      for (i = 0; i < attr->arraylen; i++) {
+        int shiftindex = i + nx;
+        if (shiftindex < 0) {
+          shiftindex += attr->arraylen;
+        }
+        if (shiftindex >= attr->arraylen) {
+          shiftindex -= attr->arraylen;
+        }
+        tmp[shiftindex] = attr->ldataarray[i];
+      }
+      memcpy(attr->ldataarray, tmp, sizeof(long)*attr->arraylen);
+      RAVE_FREE(tmp);
+      result = 1;
+    } else {
+      RAVE_ERROR0("Failed to allocate memory during array shift");
+    }
+  }
+  return result;
+}
+
 int RaveAttributeHelp_extractGroupAndName(
   const char* attrname, char** group, char** name)
 {
@@ -445,6 +491,30 @@ int RaveAttributeHelp_extractGroupAndName(
 done:
   RAVE_FREE(n1);
   RAVE_FREE(n2);
+  return result;
+}
+
+int RaveAttributeHelp_validateHowGroupAttributeName(const char* gname, const char* aname)
+{
+  int result = 0;
+  char* tmpstr = NULL;
+  const char* acceptedCharacters="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_/.-";
+  if (gname != NULL && strcasecmp("how", gname) != 0) {
+    /* Group is not how, this is not valid */
+    goto done;
+  }
+
+  if (aname != NULL) {
+    if (strlen(aname) > 0 && aname[strlen(aname)-1] == '/') {
+      RAVE_INFO1("how attribute %s ends with /", aname);
+      goto done;
+    }
+    result = (strspn(aname, acceptedCharacters) == strlen(aname)) ? 1 : 0;
+  }
+
+  result = 1;
+done:
+  RAVE_FREE(tmpstr);
   return result;
 }
 

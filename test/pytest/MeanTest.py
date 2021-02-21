@@ -79,5 +79,5 @@ class MeanTest(unittest.TestCase):
     # Unfortunately there is no numpy.compareAlmostEquals or similar (at least as I know).
     for y in range(5):
       for x in range(5):
-        self.assertAlmostEquals(expectedarr[y][x], actualarr[y][x], 2)
+        self.assertAlmostEqual(expectedarr[y][x], actualarr[y][x], 2)
     

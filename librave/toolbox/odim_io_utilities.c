@@ -65,13 +65,25 @@ static int OdimIoUtilitiesInternal_loadFieldAttribute(void* object, RaveAttribut
  * @param[in] dtype - the type of the data.
  * @return 1 on success otherwise 0
  */
-static int OdimIoUtilitiesInternal_loadFieldDataset(void* object, hsize_t xsize, hsize_t ysize, void* data, RaveDataType dtype)
+static int OdimIoUtilitiesInternal_loadFieldDataset(void* object, hsize_t xsize, hsize_t ysize, void* data, RaveDataType dtype, const char* nodeName)
 {
   RaveField_t* field = NULL;
+  int result = 0;
 
   field = (RaveField_t*)((OdimIoUtilityArg*)object)->object;
-
-  return RaveField_setData(field, xsize, ysize, data, dtype);
+  if (data == NULL && ((OdimIoUtilityArg*)object)->lazyReader != NULL) {
+    LazyDataset_t* datasetReader = RAVE_OBJECT_NEW(&LazyDataset_TYPE);
+    if (datasetReader != NULL) {
+      result = LazyDataset_init(datasetReader, ((OdimIoUtilityArg*)object)->lazyReader, nodeName);
+    }
+    if (result) {
+      result = RaveField_setLazyDataset(field, datasetReader);
+    }
+    RAVE_OBJECT_RELEASE(datasetReader);
+  } else {
+    result = RaveField_setData(field, xsize, ysize, data, dtype);
+  }
+  return result;
 }
 
 /*@} End of Private functions */
@@ -178,7 +190,7 @@ done:
  * @param[in] ... - the variable argument list
  * @return a rave field on success otherwise NULL
  */
-RaveField_t* OdimIoUtilities_loadField(HL_NodeList* nodelist, const char* fmt, ...)
+RaveField_t* OdimIoUtilities_loadField(LazyNodeListReader_t* lazyReader, const char* fmt, ...)
 {
   OdimIoUtilityArg arg;
   RaveField_t* field = NULL;
@@ -187,7 +199,7 @@ RaveField_t* OdimIoUtilities_loadField(HL_NodeList* nodelist, const char* fmt, .
   char name[1024];
   int nName = 0;
 
-  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
+  RAVE_ASSERT((lazyReader != NULL), "lazyReader == NULL");
   RAVE_ASSERT((fmt != NULL), "fmt == NULL");
 
   va_start(ap, fmt);
@@ -203,10 +215,11 @@ RaveField_t* OdimIoUtilities_loadField(HL_NodeList* nodelist, const char* fmt, .
     RAVE_CRITICAL0("Failed to allocate memory for field");
     goto fail;
   }
-  arg.nodelist = nodelist;
+  arg.lazyReader = lazyReader;
+  arg.nodelist = LazyNodeListReader_getHLNodeList(lazyReader);
   arg.object = (RaveCoreObject*)field;
 
-  if (!RaveHL_loadAttributesAndData(nodelist, &arg,
+  if (!RaveHL_loadAttributesAndData(arg.nodelist, &arg,
                                     OdimIoUtilitiesInternal_loadFieldAttribute,
                                     OdimIoUtilitiesInternal_loadFieldDataset,
                                     name)) {

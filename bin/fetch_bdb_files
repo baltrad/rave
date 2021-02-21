@@ -65,7 +65,7 @@ class rave_bdb_file_fetcher(object):
     r = self.bdb.execute_file_query(self.create_query())
     while r.next():
       uuid = r.get_uuid()
-      print `dir(r.get_file_entry().metadata)`
+      print(str(dir(r.get_file_entry().metadata)))
       filename = namer.create(r.get_file_entry().metadata)
       content = self.bdb.get_file_content(uuid)
       try:
@@ -73,17 +73,17 @@ class rave_bdb_file_fetcher(object):
           with open("%s/%s"%(self.outdir, filename), "w") as outf:
             shutil.copyfileobj(content, outf)
             outf.close()
-            print "Fetched %s/%s"%(self.outdir, filename)
-      except Exception, e:
+            print("Fetched %s/%s"%(self.outdir, filename))
+      except Exception as e:
         import traceback
         traceback.print_exc(e)
-    print "%d files fetched"%r.size()
+    print("%d files fetched"%r.size())
     
 class basenamer(object):
   def __init__(self):
     pass
   def create(self, meta):
-    raise Exception, "Namer must implement create(self, meta)"
+    raise Exception("Namer must implement create(self, meta)")
 
 class stdnamer(basenamer):
   def __init__(self):

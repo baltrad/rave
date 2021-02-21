@@ -20,17 +20,17 @@ installed.
 - PROJ.4 version 4.7.0 or higher
 - python-keyczar
 All of these packages are available on any credible 64-bit Linux distribution,
-and can be managed through package managers like yum, apt-get, and dpkg.
+and can be managed through package managers like yum, apt-get, and dpkg. 
 
 You also need the following package that you probably won't find 
 bundled with your Linux. 
-- HLHDF/PyHL 0.8+
+- HLHDF/PyHL 0.9+
 
 We also have optional support for C-based handling 
 of cartographic projection and geographic area registries. 
 If you want these, you will need
 - expat 2.0.1
-which is also on most Linuces.
+which is also on most Linuces. 
 
 If you use pre-compiled packages that come along with your 64-bit Linux
 distribution, don't forget to install the respective "devel" 

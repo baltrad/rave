@@ -49,10 +49,10 @@ def main(options):
   comp.xscale = options.scale
   comp.yscale = options.scale
   comp.set_interpolation_method_from_string(options.interpolation_method)
-  
+  comp.use_azimuthal_nav_information = not options.disable_azimuthal_navigation
   comp.zr_A = options.zr_A
   comp.zr_b = options.zr_b
-  
+
   if options.gf:
     comp.applygapfilling = True
   if options.ctfilter:
@@ -96,7 +96,7 @@ def main(options):
   rio.filename = options.outfile
   
   if comp.verbose:
-    print "Saving %s"%rio.filename
+    print("Saving %s"%rio.filename)
   rio.save()
   
 if __name__ == "__main__":
@@ -219,7 +219,10 @@ if __name__ == "__main__":
   
   parser.add_option("--reprocess_quality_fields", action="store_true", dest="reprocess_quality_fields",
                     help="Reprocessed the quality fields even if they already exist in the object.")
-  
+
+  parser.add_option("--disable_azimuthal_navigation", action="store_true", dest="disable_azimuthal_navigation",
+                    help="If this flag is set, then azimuthal navigation won't be used when creating the composite.")
+                    
   (options, args) = parser.parse_args()
 
   if options.infiles != None and options.outfile != None:

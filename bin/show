@@ -77,20 +77,20 @@ if __name__ == "__main__":
         import pygtk
     except ImportError:
         parser.print_help()
-        print "\nshow requires PyGTK. Exiting ..."
+        print("\nshow requires PyGTK. Exiting ...")
         sys.exit(1)
     pygtk.require('2.0')
     try:
         import gtk
     except ImportError:
         parser.print_help()
-        print "\nshow requires GTK. Exiting ..."
+        print("\nshow requires GTK. Exiting ...")
         sys.exit(1)
     try:
         import threading
     except ImportError:
         parser.print_help()
-        print "\nYou need Python compiled with threading support to run show.\nExiting ..."
+        print("\nYou need Python compiled with threading support to run show.\nExiting ...")
         sys.exit(1)
 
     if options.infile != None:

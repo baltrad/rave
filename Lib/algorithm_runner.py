@@ -1,6 +1,7 @@
+import sys
 import multiprocessing
 import multiprocessing.pool
-import Queue as queue
+#import Queue as queue
 import time
 import re
 import threading
@@ -8,7 +9,12 @@ from rave_mppool import *
 import rave_pgf_logger
 
 logger = rave_pgf_logger.create_logger()
-
+if sys.version_info < (3,):
+  import xmlrpclib as xmlrpc
+  import Queue as queue
+else:
+  import queue
+  
 ##
 # Job that supports the wanted priority handling that we want from the PriorityQueue
 # All jobs that has algorithm_id in the arguments will get priority = 0 instead of priority 1
@@ -99,14 +105,18 @@ class algorithm_job(object):
     return not self == other
   
   def __gt__(self, other):
-    # Note that date and time has been switched between tuples
-    return (self._priority, other._date, other._time) > \
-      (other._priority, self._date, self._time)
+    if self._priority > other._priority:
+      return True
+    self_datetime = "%s%s" % (str(self._date), str(self._time))
+    other_datetime = "%s%s" % (str(other._date), str(other._time))
+    return other_datetime > self_datetime
   
   def __lt__(self, other):
-    # Note that date and time has been switched between tuples
-    return (self._priority, other._date, other._time) < \
-      (other._priority, self._date, self._time)
+    if self._priority < other._priority:
+      return True
+    self_datetime = "%s%s" % (str(self._date), str(self._time))
+    other_datetime = "%s%s" % (str(other._date), str(other._time))
+    return other_datetime < self_datetime
 
   def __ge__(self, other):
     return (self > other) or (self == other)
@@ -123,7 +133,7 @@ class algorithm_job(object):
 def run_algorithm(func, jobid, algorithm, files, arguments):
   try:
     return func(jobid, algorithm, files, arguments)
-  except Exception, e:
+  except Exception:
     return None
 
 ##
@@ -183,7 +193,7 @@ class algorithm_runner(object):
     try:
       self.queue.task_done()
       self.running_jobs = self.running_jobs - 1
-      logger.debug("[algorithm_runner] Finished with job %s"%(`arg`))
+      logger.debug("[algorithm_runner] Finished with job %s"%(str(arg)))
       self._handle_queue()
     finally:
       self.lock.release()
@@ -202,7 +212,7 @@ class algorithm_runner(object):
       if job:
         self.pool.apply_async(run_algorithm, (job.func(), job.jobid(), job.algorithm(), job.files(), job.arguments()), callback=self.async_callback)
         self.running_jobs = self.running_jobs + 1
-        logger.info("[algorithm_runner] Applied job %s, currently %d jobs running and %d in queue"%(`job.jobid()`, self.running_jobs, self.queue.qsize()))
+        logger.info("[algorithm_runner] Applied job %s, currently %d jobs running and %d in queue"%(str(job.jobid()), self.running_jobs, self.queue.qsize()))
       else:
         logger.debug("[algorithm_runner] Queue empty")
 
@@ -220,16 +230,16 @@ class algorithm_runner(object):
 def kalle(jobid, algorithm, files, arguments):
   time.sleep(0.5)
   fp = open("/tmp/slask.txt", "a")
-  fp.write("ARGS: jobid=%d,algorithm=%s,files=%s,arguments=%s\n"%(jobid,algorithm, `files`, `arguments`))
+  fp.write("ARGS: jobid=%d,algorithm=%s,files=%s,arguments=%s\n"%(jobid,algorithm, str(files), str(arguments)))
   fp.close()
   
 
 if __name__ == "__main__":
   #self, func, jobid, algorithm, files, arguments
   job = algorithm_job(kalle, "1-123","se.sej",["a.h5","b.h5"],["--date=20150101","--time=101112","--algorithm_id=123"])
-  print job._date
-  print job._time
-  print job._algorithmid
+  print(job._date)
+  print(job._time)
+  print(job._algorithmid)
   
 #   runner = algorithm_runner(2)  
 #   

@@ -164,6 +164,14 @@ int RaveAttribute_getLongArray(RaveAttribute_t* attr, long** value, int* len);
 int RaveAttribute_getDoubleArray(RaveAttribute_t* attr, double** value, int* len);
 
 /**
+ * Performs a circular shift of the array. if nx < 0, then shift is performed counter clockwise, if nx > 0, shift is performed clock wise, if 0, no shift is performed.
+ * @param[in] attr - attribute to shift
+ * @param[in] nx - number of positions to shift
+ * return 1 if successful, 0 if trying to shift an attribute that isn't an array or an error occurs during shift.
+ */
+int RaveAttribute_shiftArray(RaveAttribute_t* attr, int nx);
+
+/**
  * Helper function for extracting the group and name part from a
  * string with the format <group>/<name>.
  * @param[in] attrname - the string that should get group and name extracted
@@ -173,6 +181,19 @@ int RaveAttribute_getDoubleArray(RaveAttribute_t* attr, double** value, int* len
  */
 int RaveAttributeHelp_extractGroupAndName(
   const char* attrname, char** group, char** name);
+
+/**
+ * Validates an attribute name that resides in a how-main group. This will validate
+ * that it may exists sub groups and that this name is valid. gname should be how, then aname is the trailing part For example:
+ * gname=how, aname=attribute
+ * gname=how, aname=subgroup1/attribute
+ * gname=how, aname=subgroup1/subgroup2/attribute
+ * are all valid names.
+ * @param[in] gname - should always be how
+ * @param[in] aname - the rest of the name as described above.
+ * @returns 1 on success otherwise 0
+ */
+int RaveAttributeHelp_validateHowGroupAttributeName(const char* gname, const char* aname);
 
 /**
  * Creates a named rave attribute.
@@ -241,6 +262,7 @@ RaveAttribute_t* RaveAttributeHelp_createDoubleArray(const char* name, double* v
  * @return a rave attribute on success otherwise NULL
  */
 RaveAttribute_t* RaveAttributeHelp_createArrayFromData(const char* name, void* value, int len, RaveDataType type);
+
 
 #endif /* RAVE_ATTRIBUTE_H */
 

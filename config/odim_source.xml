@@ -56,6 +56,7 @@
     <fivim plc="Vimpeli" rad="FI49" wmo="02925"></fivim>
     <fikes plc="Kesälahti" rad="FI50" wmo="02995"></fikes>
     <fipet plc="Petäjävesi" rad="FI51" wmo="02775"></fipet>
+    <finur plc="Nurmes" rad="FI52" wmo="00000"></finur>
   </fi>
   <fr CCCC="LFPW" org="84">
     <frabb plc="Abbeville" rad="FR40" wmo="07005"></frabb>
@@ -176,8 +177,8 @@
     <nohas plc="Hasvik" rad="NO93" wmo="01042"></nohas>
     <nosta plc="Stad" rad="NO38" wmo="01206"></nosta>
     <nohur plc="Hurum" rad="NO39" wmo="01498"></nohur>
-    <nosmn plc="Sømna" rad="NO44" wmo="001136"></nosmn>
-    <nofjl plc="Hafjell" rad="NO45" wmo="01377"></nofjl>
+    <nosmn plc="Sømna" rad="NO44" wmo="01136"></nosmn>
+    <nohfj plc="Hafjell" rad="NO45" wmo="01377"></nohfj>
   </no>
   <pl CCCC="SOWR" org="220">
     <plleg plc="Legionowo" rad="PL41" wmo="12374"></plleg>
@@ -254,18 +255,18 @@
     <eslpa plc="Artenara" rad="SP60" wmo="60028"></eslpa>
   </es>
   <se CCCC="ESWI" org="82">
-    <sekir plc="Kiruna" rad="SE40" wmo="02032"></sekir>
-    <selul plc="Luleå" rad="SE41" wmo="02092"></selul>
+    <sekrn plc="Kiruna" rad="SE40" wmo="02032"></sekrn>
+    <sella plc="Luleå" rad="SE41" wmo="02092"></sella>
     <seosd plc="Östersund" rad="SE42" wmo="02200"></seosd>
-    <seovi plc="Örnsköldsvik" rad="SE43" wmo="02262"></seovi>
+    <seoer plc="Örnsköldsvik" rad="SE43" wmo="02262"></seoer>
     <sehuv plc="Hudiksvall" rad="SE44" wmo="02334"></sehuv>
     <selek plc="Leksand" rad="SE45" wmo="02430"></selek>
-    <searl plc="Arlanda" rad="SE46" wmo="02451"></searl>
-    <sease plc="Ase" rad="SE47" wmo="02588"></sease>
-    <sevil plc="Vilebo" rad="SE48" wmo="02570"></sevil>
+    <sehem plc="Hemse (Ase)" rad="SE47" wmo="02588"></sehem>
+    <seatv plc="Åtvidaberg (Vilebo)" rad="SE48" wmo="02570"></seatv>
     <sevax plc="Vara" rad="SE49" wmo="02600"></sevax>
     <seang plc="Ängelholm" rad="SE50" wmo="02606"></seang>
-    <sekkr plc="Karlskrona" rad="SE51" wmo="02666"></sekkr>
+    <sekaa plc="Karlskrona" rad="SE51" wmo="02666"></sekaa>
+    <sebaa plc="Bålsta" rad="SE52" wmo="00000"></sebaa>
   </se>
   <ch CCCC="LSSW" org="215">
     <chalb plc="Albis" rad="SW41" wmo="06661"></chalb>

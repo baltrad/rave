@@ -46,6 +46,8 @@ typedef struct {
 
 #define PyCartesian_API_pointers 3                   /**< number of api pointers */
 
+#define PyCartesian_CAPSULE_NAME "_cartesian._C_API"
+
 #ifdef PYCARTESIAN_MODULE
 /** Forward declaration of type*/
 extern PyTypeObject PyCartesian_Type;
@@ -84,6 +86,22 @@ static void **PyCartesian_API;
  * Checks if the object is a python cartesian.
  */
 #define PyCartesian_Check(op) \
+   (Py_TYPE(op) == &PyCartesian_Type)
+
+#define PyCartesian_Type (*(PyTypeObject*)PyCartesian_API[PyCartesian_Type_NUM])
+
+/**
+ * Imports the PyArea module (like import _area in python).
+ */
+#define import_pycartesian() \
+    PyCartesian_API = (void **)PyCapsule_Import(PyCartesian_CAPSULE_NAME, 1);
+
+#ifdef KALLE
+
+/**
+ * Checks if the object is a python cartesian.
+ */
+#define PyCartesian_Check(op) \
    ((op)->ob_type == (PyTypeObject *)PyCartesian_API[PyCartesian_Type_NUM])
 
 /**
@@ -105,13 +123,22 @@ import_pycartesian(void)
     Py_DECREF(module);
     return -1;
   }
+#if PY_MAJOR_VERSION < 3
+  PyCartesian_API = (void **)PyCObject_AsVoidPtr(c_api_object);
+#else
+  PyCartesian_API = (void **)PyCapsule_New((void *)c_api_object, NULL, NULL);
+#endif
+/*
   if (PyCObject_Check(c_api_object)) {
     PyCartesian_API = (void **)PyCObject_AsVoidPtr(c_api_object);
   }
+*/
   Py_DECREF(c_api_object);
   Py_DECREF(module);
   return 0;
 }
+#endif
+
 
 #endif
 

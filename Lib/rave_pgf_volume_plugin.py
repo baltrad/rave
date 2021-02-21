@@ -39,6 +39,7 @@ import odim_source
 import re
 import rave_pgf_quality_registry
 from rave_quality_plugin import QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY
+from rave_defines import RAVE_IO_DEFAULT_VERSION
 
 from rave_defines import CENTER_ID
 
@@ -47,7 +48,8 @@ try:
   import rave_bdb
   ravebdb = rave_bdb.rave_bdb()
 except:
-  pass
+  import traceback
+  traceback.print_exc()
 
 ## Creates a dictionary from a rave argument list
 #@param arglist the argument list
@@ -65,7 +67,7 @@ def arglist2dict(arglist):
 #@return the volume
 def generateVolume(files, args):
   if len(files) <=0:
-    raise AttributeError, "Volume must consist of at least 1 scan"
+    raise AttributeError("Volume must consist of at least 1 scan")
 
   firstscan=False  
   volume = _polarvolume.new()
@@ -120,7 +122,7 @@ def generate(files, arguments):
   fileno, outfile = rave_tempfile.mktemp(suffix='.h5', close="True")
   
   if "anomaly-qc" in args.keys():
-      detectors = string.split(args["anomaly-qc"], ",")
+      detectors = args["anomaly-qc"].split(",")
   else:
       detectors = []
 
@@ -132,6 +134,7 @@ def generate(files, arguments):
   ios = _raveio.new()
   ios.object = volume
   ios.filename = outfile
+  ios.version = RAVE_IO_DEFAULT_VERSION
   ios.save()
   
   return outfile

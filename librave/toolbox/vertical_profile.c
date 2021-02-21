@@ -25,7 +25,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Ulf E. Nordh (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2017-02-23 Added functionality to yield an extended set of fields e.g.
  * HGHT, n (sample size), UWND and VWND
- */
+*/
+
 #include "vertical_profile.h"
 #include "rave_debug.h"
 #include "rave_alloc.h"
@@ -51,6 +52,7 @@ struct _VerticalProfile_t {
   
   char* product; /**< The product, in this case VP */
   char* source;    /**< the source string */
+  char* prodname;  /**< the product name */
   RaveObjectHashTable_t* attrs; /**< attributes */
   RaveObjectHashTable_t* fields; /**< the fields */
   double lon; /**< the longitude in radians */
@@ -79,6 +81,7 @@ static int VerticalProfile_constructor(RaveCoreObject* obj)
   self->datetime = NULL;
   self->fields = NULL;
   self->source = NULL;
+  self->prodname = NULL;
   self->startdatetime = NULL;
   self->enddatetime = NULL;
   self->product = NULL;
@@ -114,6 +117,7 @@ static int VerticalProfile_copyconstructor(RaveCoreObject* obj, RaveCoreObject* 
   self->maxheight = src->maxheight;
   self->datetime = NULL;
   self->source = NULL;
+  self->prodname = NULL;
   self->startdatetime = NULL;
   self->enddatetime = NULL;
   self->product = NULL;
@@ -127,7 +131,8 @@ static int VerticalProfile_copyconstructor(RaveCoreObject* obj, RaveCoreObject* 
     goto error;
   }
   if (!VerticalProfile_setSource(self, VerticalProfile_getSource(src)) ||
-      !VerticalProfile_setProduct(self, VerticalProfile_getProduct(src))) {
+      !VerticalProfile_setProduct(self, VerticalProfile_getProduct(src)) ||
+      !VerticalProfile_setProdname(self, VerticalProfile_getProdname(src))) {
     goto error;
   }
   return 1;
@@ -139,6 +144,7 @@ error:
   RAVE_OBJECT_RELEASE(self->attrs);
   RAVE_FREE(self->source);
   RAVE_FREE(self->product);
+  RAVE_FREE(self->prodname);
   return 0;
 }
 
@@ -155,6 +161,7 @@ static void VerticalProfile_destructor(RaveCoreObject* obj)
   RAVE_OBJECT_RELEASE(self->attrs);
   RAVE_FREE(self->source);
   RAVE_FREE(self->product);
+  RAVE_FREE(self->prodname);
 }
 
 static int VerticalProfileInternal_addField(VerticalProfile_t* self, RaveField_t* field, const char* quantity)
@@ -271,6 +278,31 @@ const char* VerticalProfile_getSource(VerticalProfile_t* self)
 {
   RAVE_ASSERT((self != NULL), "self == NULL");
   return (const char*)self->source;
+}
+
+int VerticalProfile_setProdname(VerticalProfile_t* self, const char* value)
+{
+  char* tmp = NULL;
+  int result = 0;
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  if (value != NULL) {
+    tmp = RAVE_STRDUP(value);
+    if (tmp != NULL) {
+      RAVE_FREE(self->prodname);
+      self->prodname = tmp;
+      result = 1;
+    }
+  } else {
+    RAVE_FREE(self->prodname);
+    result = 1;
+  }
+  return result;
+}
+
+const char* VerticalProfile_getProdname(VerticalProfile_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return (const char*)self->prodname;
 }
 
 int VerticalProfile_setProduct(VerticalProfile_t* self, const char* value)
@@ -404,8 +436,7 @@ int VerticalProfile_addAttribute(VerticalProfile_t* self, RaveAttribute_t* attri
       RAVE_ERROR1("Failed to extract group and name from %s", name);
       goto done;
     }
-    if ((strcasecmp("how", gname)==0) &&
-         strchr(aname, '/') == NULL) {
+    if (strcasecmp("how", gname)==0 && RaveAttributeHelp_validateHowGroupAttributeName(gname, aname)) {
       result = RaveObjectHashTable_put(self->attrs, name, (RaveCoreObject*)attribute);
     } else {
       RAVE_DEBUG1("Trying to add attribute: %s but only valid attributes are how/...", name);
@@ -610,25 +641,25 @@ int VerticalProfile_setADDev(VerticalProfile_t* self, RaveField_t* ff)
 RaveField_t* VerticalProfile_getDBZ(VerticalProfile_t* self)
 {
   RAVE_ASSERT((self != NULL), "self == NULL");
-  return VerticalProfile_getField(self, "dbz");
+  return VerticalProfile_getField(self, "DBZH");
 }
 
 int VerticalProfile_setDBZ(VerticalProfile_t* self, RaveField_t* ff)
 {
   RAVE_ASSERT((self != NULL), "self == NULL");
-  return VerticalProfileInternal_addField(self, ff, "dbz");
+  return VerticalProfileInternal_addField(self, ff, "DBZH");
 }
 
 RaveField_t* VerticalProfile_getDBZDev(VerticalProfile_t* self)
 {
   RAVE_ASSERT((self != NULL), "self == NULL");
-  return VerticalProfile_getField(self, "dbz_dev");
+  return VerticalProfile_getField(self, "DBZH_dev");
 }
 
 int VerticalProfile_setDBZDev(VerticalProfile_t* self, RaveField_t* ff)
 {
   RAVE_ASSERT((self != NULL), "self == NULL");
-  return VerticalProfileInternal_addField(self, ff, "dbz_dev");
+  return VerticalProfileInternal_addField(self, ff, "DBZH_dev");
 }
 
 RaveField_t* VerticalProfile_getNV(VerticalProfile_t* self)
@@ -641,6 +672,18 @@ int VerticalProfile_setNV(VerticalProfile_t* self, RaveField_t* ff)
 {
   RAVE_ASSERT((self != NULL), "self == NULL");
   return VerticalProfileInternal_addField(self, ff, "n"); /* Sample size for wind */
+}
+
+RaveField_t* VerticalProfile_getNZ(VerticalProfile_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return VerticalProfile_getField(self, "nz"); /* Sample size for wind */
+}
+
+int VerticalProfile_setNZ(VerticalProfile_t* self, RaveField_t* ff)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return VerticalProfileInternal_addField(self, ff, "nz"); /* Sample size for refl */
 }
 
 RaveField_t* VerticalProfile_getHGHT(VerticalProfile_t* self)

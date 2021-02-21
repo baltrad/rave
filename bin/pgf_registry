@@ -24,7 +24,10 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @date 2010-07-25
 
 import sys
-import xmlrpclib
+if sys.version_info < (3,):
+  from xmlrpclib import ServerProxy
+else:
+  from xmlrpc.client import ServerProxy
 
 
 ## Adds an algorithm to the registry. It will be replaced if it's already there.
@@ -39,15 +42,14 @@ import xmlrpclib
 # @param seqs string, optional comma-separated sequence argument names.
 # @return string
 def add(server, name, module, function, descr, strings, ints, floats, seqs):
-    print server.register(name.lower(), module, function, descr,
-                          strings, ints, floats, seqs)
+    print(server.register(name.lower(), module, function, descr, strings, ints, floats, seqs))
 
 
 ## Lists the entries in the registry.
 # @param server an \ref xmlrpclib.ServerProxy instance.
 # @param name string, optionally the name of the algorithm to query.
 def List(server, name=None):
-    print server.Help(name)
+    print(server.Help(name))
 
 
 ## Removes an algorithm from the registry. It will return successfully even if
@@ -56,7 +58,7 @@ def List(server, name=None):
 # @param name string, the name of the algorithm to de-register.
 # @return string
 def remove(server, name):
-    print server.deregister(name.lower())
+    print(server.deregister(name.lower()))
 
 
 if __name__ == "__main__":
@@ -129,7 +131,7 @@ if __name__ == "__main__":
             parser.print_help()
             sys.exit()
 
-    server = xmlrpclib.ServerProxy(options.host, allow_none=True)
+    server = ServerProxy(options.host, allow_none=True)
 
     if options.remove:
         remove(server, options.name)
@@ -141,7 +143,6 @@ if __name__ == "__main__":
         add(server, options.name, options.module, options.func,
             options.descr, options.strings, options.ints, options.floats,
             options.seqs)
-
     elif options.query:
         List(server, options.name)
 

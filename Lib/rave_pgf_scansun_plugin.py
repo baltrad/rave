@@ -41,10 +41,14 @@ import rave_pgf_logger
 # Determining where to write the scansun output files depending on input from rave_defines.py
 # If an alternative path, RAVESCANSUN_OUT, is defined in rave_defines.py it is used,
 # otherwise the default RAVEETC is used
+scansun_outputpath = None
 try:
   from rave_defines import RAVESCANSUN_OUT
   scansun_outputpath = RAVESCANSUN_OUT
 except:
+  pass
+
+if scansun_outputpath is None:
   scansun_outputpath = RAVEETC
 
 ravebdb = None
@@ -83,7 +87,7 @@ def Source2File(isource):
     if not source: source = isource.replace(';','_').replace(',','_').replace(':','-')
     path = os.path.join(scansun_outputpath, "scansun")
     if not os.path.isdir(path): os.makedirs(path)
-    return os.path.join(path, source + '.scansun')
+    return os.path.join(str(path), str(source) + '.scansun')
 
 ## Writes hits to file
 # @param source string containing the full value of /what/source

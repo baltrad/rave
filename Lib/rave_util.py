@@ -52,7 +52,7 @@ def is_polar_malfunc(obj):
   elif _polarscan.isPolarScan(obj):
     result = get_malfunc_from_obj(obj)
   else:
-    raise Exception, "Neither polar volume or polar scan"
+    raise Exception("Neither polar volume or polar scan")
   return result
 
 def remove_malfunc_from_volume(obj):
@@ -64,7 +64,7 @@ def remove_malfunc_from_volume(obj):
     for i in range(obj.getNumberOfScans()-1,-1,-1):
       scan = obj.getScan(i)
       if get_malfunc_from_obj(scan):
-        logger.debug("Malfunc scan with elangle %f found. Removing from volume. Source: %s, Nominal date and time: %sT%s", (scan.elangle * 180.0/math.pi), obj.source, obj.date, obj.time)
+        logger.debug("Malfunc scan with elangle %f found. Removing from volume. Source: %s, Nominal date and time: %sT%s"%((scan.elangle * 180.0/math.pi), obj.source, obj.date, obj.time))
         obj.removeScan(i)
 
   return result

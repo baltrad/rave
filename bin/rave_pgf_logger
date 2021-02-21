@@ -71,16 +71,16 @@ if __name__ == "__main__":
     if ARG == 'start':
         if this.status() == "not running":
             if options.port: this.port = options.port
-            print "Starting log TCP server on %s:%i" % (options.host, options.port)
+            print("Starting log TCP server on %s:%i" % (options.host, options.port))
             this.start()
         else:
-            print "Log TCP server already running on %s:%i" % (options.host, options.port) 
+            print("Log TCP server already running on %s:%i" % (options.host, options.port)) 
 
     if ARG == 'restart':
         this.restart()
 
     if ARG == 'status':
-        print "%s is %s" % (sys.argv[0], this.status())
+        print("%s is %s" % (sys.argv[0], this.status()))
 
     if ARG == 'fg':
         this.run()

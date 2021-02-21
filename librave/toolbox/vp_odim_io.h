@@ -28,6 +28,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_object.h"
 #include "hlhdf.h"
 #include "vertical_profile.h"
+#include "lazy_nodelist_reader.h"
 
 /**
  * Defines the odim h5 adaptor for vp products
@@ -40,13 +41,27 @@ typedef struct _VpOdimIO_t VpOdimIO_t;
 extern RaveCoreObjectType VpOdimIO_TYPE;
 
 /**
+ * Sets the version that this io class should handle.
+ * @param[in] self - self
+ * @param[in] version - the odim version
+ */
+void VpOdimIO_setVersion(VpOdimIO_t* self, RaveIO_ODIM_Version version);
+
+/**
+ * Returns the version that this io class handles.
+ * @param[in] self - self
+ * @returns - the odim version
+ */
+RaveIO_ODIM_Version VpOdimIO_getVersion(VpOdimIO_t* self);
+
+/**
  * Reads a vp from the nodelist and sets the data in the vp.
  * @param[in] self - self
  * @param[in] nodelist - the hdf5 node list
  * @param[in] vp - the vertical profile that should get the attribute and data set
  * @returns 1 on success otherwise 0
  */
-int VpOdimIO_read(VpOdimIO_t* self, HL_NodeList* nodelist, VerticalProfile_t* vp);
+int VpOdimIO_read(VpOdimIO_t* self, LazyNodeListReader_t* lazyReader, VerticalProfile_t* vp);
 
 /**
  * Fills a nodelist with information about a vertical profile.

@@ -38,6 +38,29 @@ from tiled_compositing import tiled_compositing
 from compositing import compositing
 
 from rave_defines import GAIN, OFFSET, RAVE_PGF_QUALITY_FIELD_REPROCESSING
+from rave_defines import RAVE_IO_DEFAULT_VERSION
+
+USE_AZIMUTHAL_NAVIGATION=True
+try:
+  from rave_defines import RAVE_PGF_AZIMUTHAL_NAVIGATION
+  USE_AZIMUTHAL_NAVIGATION = RAVE_PGF_AZIMUTHAL_NAVIGATION
+except:
+  pass
+
+USE_LAZY_LOADING=False
+USE_LAZY_LOADING_PRELOADS=False
+try:
+  from rave_defines import RAVE_PGF_COMPOSITING_USE_LAZY_LOADING
+  USE_LAZY_LOADING = RAVE_PGF_COMPOSITING_USE_LAZY_LOADING
+except:
+  pass
+
+try:
+  from rave_defines import RAVE_PGF_COMPOSITING_USE_LAZY_LOADING_PRELOADS
+  USE_LAZY_LOADING_PRELOADS = RAVE_PGF_COMPOSITING_USE_LAZY_LOADING_PRELOADS
+except:
+  pass
+
 
 logger = rave_pgf_logger.create_logger()
 
@@ -66,7 +89,7 @@ def arglist2dict(arglist):
 def strToNumber(sval):
   try:
     return float(sval)
-  except ValueError, e:
+  except ValueError:
     return int(sval)
 
 
@@ -81,7 +104,7 @@ def generate(files, arguments):
   comp.filenames = files
   
   if "anomaly-qc" in args.keys():
-    comp.detectors = string.split(args["anomaly-qc"], ",")
+    comp.detectors = args["anomaly-qc"].split(",")
 
   if "qc-mode" in args.keys():
     comp.set_quality_control_mode_from_string(args["qc-mode"])
@@ -136,6 +159,11 @@ def generate(files, arguments):
   else:
     comp.reprocess_quality_field = RAVE_PGF_QUALITY_FIELD_REPROCESSING
   
+  comp.use_azimuthal_nav_information = USE_AZIMUTHAL_NAVIGATION
+
+  comp.use_lazy_loading = USE_LAZY_LOADING
+  comp.use_lazy_loading_preloads = USE_LAZY_LOADING_PRELOADS
+
   # We do not support best fit compositing right now
   #comp.pcsid = options.pcsid
   #comp.xscale = options.scale
@@ -145,15 +173,15 @@ def generate(files, arguments):
   #  comp.applygapfilling = True
   
   # Optional cloud-type residual non-precip filter
-  if args.has_key("ctfilter"):
+  if "ctfilter" in args:
     if eval(args["ctfilter"]):
       comp.applyctfilter = True
   
-  if args.has_key("applygra"):
+  if "applygra" in args:
     comp.applygra = True
-  if args.has_key("zrA"):
+  if "zrA" in args:
     comp.zr_A = float(args["zrA"])
-  if args.has_key("zrb"):
+  if "zrb" in args:
     comp.zr_b = float(args["zrb"])
   
   
@@ -171,6 +199,7 @@ def generate(files, arguments):
   rio = _raveio.new()
   rio.object = result
   rio.filename = outfile
+  rio.version = RAVE_IO_DEFAULT_VERSION
   rio.save()
   
   return outfile

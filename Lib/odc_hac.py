@@ -78,7 +78,7 @@ class HAC:
             self.hac.addAttribute("how/count", 0)
             self.hac.setData(zeros((nrays, nbins), uint32))
         else:
-            raise IOError, "HAC file already exists: %s" % fstr
+            raise IOError("HAC file already exists: %s" % fstr)
 
 
     ## Reads a HAC HDF5 file and returns the dataset in it.
@@ -95,7 +95,7 @@ class HAC:
                                   nodelist.getNode("/accumulation_count").data())
             self.hac.setData(nodelist.getNode("/hit_accum").data())
         else:
-            raise IOError, "No such HAC file: %s" % fstr
+            raise IOError("No such HAC file: %s" % fstr)
 
 
     ## Writes a HAC to HDF5.
@@ -142,12 +142,12 @@ class HAC:
             self.readHac(hacFile(scan, lastmonth=True))
 
             if self.hac.getAttribute("how/count") < enough:
-                raise ValueError, "Not enough hits in climatology for %s" % NOD
+                raise ValueError("Not enough hits in climatology for %s" % NOD)
 
             hac_data = self.hac.getData()
             if hac_data.shape != (scan.nrays, scan.nbins):
-                print hac_data.shape, (scan.nrays, scan.nbins)
-                raise IOError, "Scan and HAC have different geometries for %s" % NOD
+                print(hac_data.shape, (scan.nrays, scan.nbins))
+                raise IOError("Scan and HAC have different geometries for %s" % NOD)
 
             ## Get site-specific threshold!
             try:
@@ -182,8 +182,8 @@ class HAC:
 
             hac_data = self.hac.getData()
             if hac_data.shape != (scan.nrays, scan.nbins):
-                print hac_data.shape, (scan.nrays, scan.nbins)
-                raise IOError, "Scan and HAC have different geometries for %s" % NOD
+                print(hac_data.shape, (scan.nrays, scan.nbins))
+                raise IOError("Scan and HAC have different geometries for %s" % NOD)
 
             _odc_hac.hacIncrement(scan, self.hac, quant)
 
@@ -237,9 +237,9 @@ def hacIncrement(obj, quant="DBZH"):
             obj = _raveio.open(obj).object
             hacIncrement(obj)
         else:
-            raise TypeError, "HAC incrementor received a string without a matching file, or file is empty"
+            raise TypeError("HAC incrementor received a string without a matching file, or file is empty")
     else:
-        raise TypeError, "HAC incrementor received neither SCAN nor PVOL as input object"
+        raise TypeError("HAC incrementor received neither SCAN nor PVOL as input object")
     
 
 ## Increments the HAC file for this scan. We will assume we only want to deal with DBZH.
@@ -265,7 +265,7 @@ def hacFilter(obj, quant="DBZH"):
     elif _polarscan.isPolarScan(obj):
         filterScan(obj, quant)
     else:
-        raise TypeError, "HAC filter received neither SCAN nor PVOL as input"
+        raise TypeError("HAC filter received neither SCAN nor PVOL as input")
 
 
 ## Filters this scan. We will assume we only want to deal with DBZH.
@@ -317,7 +317,7 @@ def zdiffScan(scan, thresh=40.0):
 
         ret = _odc_hac.zdiff(scan, thresh)
     else:
-        raise TypeError, "Input is expected to be a polar scan. Got something else."
+        raise TypeError("Input is expected to be a polar scan. Got something else.")
 
     
 def zdiffPvol(pvol, thresh=40.0):
@@ -326,7 +326,7 @@ def zdiffPvol(pvol, thresh=40.0):
             scan = pvol.getScan(i)
             zdiffScan(scan, thresh)
     else:
-        raise TypeError, "Input is expected to be a polar volume. Got something else."
+        raise TypeError("Input is expected to be a polar volume. Got something else.")
 
 def zdiff(obj, thresh=40.0):
   if _polarscan.isPolarScan(obj):
@@ -334,7 +334,7 @@ def zdiff(obj, thresh=40.0):
   elif _polarvolume.isPolarVolume(obj):
     zdiffPvol(obj, thresh)
   else:
-    raise TypeError, "Input is expected to be a polar volume or scan" 
+    raise TypeError("Input is expected to be a polar volume or scan") 
 
 ## Initialize
 init()

@@ -53,6 +53,8 @@ distclean:
 	@\rm -fr swecomposite_with_reversedindex.h5
 	@\rm -fr swecomposite_pvols_qfields.h5
 	@\rm -fr swecomposite_scans_qfields.h5
+	@\rm -fr swecomposite_cappi_unsorted_pvols.h5
+	@\rm -fr swecomposite_ppi_fromscan_with_startaza.h5
 	
 	@\rm -fr polgmaps_max_qitotal.h5
 	@\rm -fr transform_filledGap.h5

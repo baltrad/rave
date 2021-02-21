@@ -48,27 +48,25 @@ class PyDetectionRangeTest(unittest.TestCase):
 
   def test_new(self):
     obj = _detectionrange.new()
-    
-    isscan = string.find(`type(obj)`, "DetectionRangeCore")
-    self.assertNotEqual(-1, isscan)
+    self.assertNotEqual(-1, str(type(obj)).find("DetectionRangeCore"))
 
   def test_lookupPath(self):
     obj = _detectionrange.new()
-    self.assertEquals("/tmp", obj.lookupPath)
+    self.assertEqual("/tmp", obj.lookupPath)
     obj.lookupPath="/tmp/that"
-    self.assertEquals("/tmp/that", obj.lookupPath)
+    self.assertEqual("/tmp/that", obj.lookupPath)
 
   def test_analysis_minrange(self):
     obj = _detectionrange.new()
-    self.assertAlmostEquals(10000.0, obj.analysis_minrange, 4)
+    self.assertAlmostEqual(10000.0, obj.analysis_minrange, 4)
     obj.analysis_minrange = 12000.0
-    self.assertAlmostEquals(12000.0, obj.analysis_minrange, 4)
+    self.assertAlmostEqual(12000.0, obj.analysis_minrange, 4)
 
   def test_analysis_maxrange(self):
     obj = _detectionrange.new()
-    self.assertAlmostEquals(240000.0, obj.analysis_maxrange, 4)
+    self.assertAlmostEqual(240000.0, obj.analysis_maxrange, 4)
     obj.analysis_maxrange = 250000.0
-    self.assertAlmostEquals(250000.0, obj.analysis_maxrange, 4)
+    self.assertAlmostEqual(250000.0, obj.analysis_maxrange, 4)
 
   def test_top(self):
     dr = _detectionrange.new()
@@ -101,15 +99,15 @@ class PyDetectionRangeTest(unittest.TestCase):
     filterfield = dr.filter(topfield)
     result = dr.analyze(filterfield, 60, 0.1, 0.5)
 
-    self.assertNotEqual(-1, string.find(`type(result)`, "RaveFieldCore"))
-    self.assertEquals(120, result.xsize)
-    self.assertEquals(420, result.ysize)
-    self.assertEquals("se.smhi.detector.poo", result.getAttribute("how/task"))
-    self.assertAlmostEquals(1.0, result.getAttribute("what/offset"), 4)
-    self.assertAlmostEquals(-1.0/255.0, result.getAttribute("what/gain"), 4)
-    self.assertAlmostEquals(255.0, result.getAttribute("what/nodata"), 4)
-    self.assertAlmostEquals(255.0, result.getAttribute("what/undetect"), 4)
-    self.assertEquals("DR", result.getAttribute("what/quantity"))
+    self.assertNotEqual(-1, str(type(result)).find("RaveFieldCore"))
+    self.assertEqual(120, result.xsize)
+    self.assertEqual(420, result.ysize)
+    self.assertEqual("se.smhi.detector.poo", result.getAttribute("how/task"))
+    self.assertAlmostEqual(1.0, result.getAttribute("what/offset"), 4)
+    self.assertAlmostEqual(-1.0/255.0, result.getAttribute("what/gain"), 4)
+    self.assertAlmostEqual(255.0, result.getAttribute("what/nodata"), 4)
+    self.assertAlmostEqual(255.0, result.getAttribute("what/undetect"), 4)
+    self.assertEqual("DR", result.getAttribute("what/quantity"))
     
 
   def test_analyze_and_write(self):

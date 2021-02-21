@@ -63,7 +63,7 @@ class gadjust_obsmatcher_test(unittest.TestCase):
                              mock.call.getConvertedQualityValueAtLonLat((13.5*math.pi/180.0, 60.5*math.pi/180.0), 'se.smhi.composite.distance.radar')]
 
     self.assertTrue(expected_acrrmock_calls == acrrmock.mock_calls)
-    self.assertEquals(3, len(result))
+    self.assertEqual(3, len(result))
 
   def test_match_2(self):
     acrrmock = mock.Mock(date="20101010",time="121500")
@@ -80,14 +80,14 @@ class gadjust_obsmatcher_test(unittest.TestCase):
                              mock.call.getConvertedValueAtLonLat((13.0*math.pi/180.0, 60.0*math.pi/180.0)),
                              mock.call.getConvertedQualityValueAtLonLat((13.0*math.pi/180.0, 60.0*math.pi/180.0), 'se.smhi.composite.distance.radar')]
     self.assertTrue(expected_acrrmock_calls == acrrmock.mock_calls)
-    self.assertEquals(1, len(result))
-    self.assertEquals(result[0].radarvaluetype, _rave.RaveValueType_DATA)
-    self.assertAlmostEquals(result[0].radarvalue, 48.0, 4)
-    self.assertAlmostEquals(0.2, result[0].radardistance, 4)
-    self.assertAlmostEquals(13.0, result[0].longitude, 4)
-    self.assertAlmostEquals(60.0, result[0].latitude, 4)
-    self.assertEquals("20101010", result[0].date)
-    self.assertEquals("001500", result[0].time)
+    self.assertEqual(1, len(result))
+    self.assertEqual(result[0].radarvaluetype, _rave.RaveValueType_DATA)
+    self.assertAlmostEqual(result[0].radarvalue, 48.0, 4)
+    self.assertAlmostEqual(0.2, result[0].radardistance, 4)
+    self.assertAlmostEqual(13.0, result[0].longitude, 4)
+    self.assertAlmostEqual(60.0, result[0].latitude, 4)
+    self.assertEqual("20101010", result[0].date)
+    self.assertEqual("001500", result[0].time)
 
   def test_match_3(self):
     acrrmock = mock.Mock(date="20101010",time="121500")
@@ -103,7 +103,7 @@ class gadjust_obsmatcher_test(unittest.TestCase):
     expected_acrrmock_calls=[mock.call.getExtremeLonLatBoundaries(), 
                              mock.call.getConvertedValueAtLonLat((13.0*math.pi/180.0, 60.0*math.pi/180.0))]
     self.assertTrue(expected_acrrmock_calls == acrrmock.mock_calls)
-    self.assertEquals(0, len(result))
+    self.assertEqual(0, len(result))
     
 
   def Xtest_match_2(self):

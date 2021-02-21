@@ -145,5 +145,14 @@ class observation(object):
     bit_value = 1 if is_valid else 0
     self.valid_fields_bitmask = self.valid_fields_bitmask | (bit_value << parameter_field)
 
-    
-    
+class melting_layer(object):
+  ## The constructor
+  # @param nod the source nodename, e.g. sekkr
+  # @param datetime the datetime of the observation
+  # @param bottom bottom melting layer, in km, can be None
+  # @param top top melting layer, in km, can be None
+  def __init__(self, nod, datetime, bottom=None, top=None):
+    self.nod = nod
+    self.datetime = datetime
+    self.top = top
+    self.bottom = bottom

@@ -35,8 +35,11 @@ import numpy as np
 QUANTFILE = os.path.join(RAVECONFIG, "odim_quantities.xml")
 QUANTITIES = []
 initialized = 0
-bitl = list(np.zeros((64,), np.uint8))  # A 64-element long list of unsigned bytes. Used as an intermediate information holder.
+bitl = list(np.zeros((128,), np.uint8))  # A 64-element long list of unsigned bytes. Used as an intermediate information holder.
 
+use_long_type=False
+if sys.version_info < (3,):
+    use_long_type=True
 
 ## Initializes QUANTITIES by reading content from XML file.
 #  This is done once, after which the QUANTITIES are available in memory.
@@ -100,7 +103,10 @@ def q2hex(quants):
         if q in QUANTITIES:
           i = QUANTITIES.index(q)
           b[i] = 1
-    return hex(bitl2long(b))[:-1]
+    bstr = hex(bitl2long(b))
+    if bstr[-1] == "L":
+      bstr = bstr[:-1]
+    return bstr
 
 
 ## Converts a hex string to a list of quantities
@@ -119,25 +125,29 @@ def hex2q(h):
 # @param list of 8-bit bytes, each representing one bit in a 64-bit integer
 # @returns long integer
 def bitl2long(bitl):
-    out = 0L
+    out = 0
+    if use_long_type: #work around for python 2.7 / 3 difference
+      out = long(0)
+      
     for bit in bitl:
-        out = (out << 1) | bit
+        out = (out << 1) | int(bit)
     return out
 
 
 ## Long integer to bit string
 # @param long integer
-# @returns list of 8-bit bytes, each representing one bit in a 64-bit integer
+# @returns list of 8-bit bytes, each representing one bit in a 128-bit integer
 def long2bits(l):
-    return format(l, '064b')
+    return format(l, '128b')
 
 
 ## hex string to long integer
 # @param hex string
 # @returns long integer
 def hex2long(h):
-    return int(long(h+"L", 16))
-
+    if use_long_type: #work around for python 2.7 / 3 difference
+      return int(long(h+"L", 16))
+    return int(h, 16)
 
 if __name__ == "__main__":
     pass

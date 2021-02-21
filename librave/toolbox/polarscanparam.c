@@ -40,6 +40,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 struct _PolarScanParam_t {
   RAVE_OBJECT_HEAD /** Always on top */
   RaveData2D_t* data; /**< data ptr */
+  LazyDataset_t* lazyDataset; /**< the lazy dataset */
   char* quantity;    /**< what does this data represent */
   double gain;       /**< gain when scaling */
   double offset;     /**< offset when scaling */
@@ -65,6 +66,7 @@ static int PolarScanParam_constructor(RaveCoreObject* obj)
   this->offset = 0.0L;
   this->nodata = 0.0L;
   this->undetect = 0.0L;
+  this->lazyDataset = NULL;
   if (this->data == NULL || this->attrs == NULL || this->qualityfields == NULL) {
     goto error;
   }
@@ -77,19 +79,41 @@ error:
   return 0;
 }
 
+/**
+ * Ensures that we have got data in the data-table set
+ */
+static RaveData2D_t* PolarScanParamInternal_ensureData2D(PolarScanParam_t* scanparam)
+{
+  if (scanparam->lazyDataset != NULL) {
+    RaveData2D_t* loaded = LazyDataset_get(scanparam->lazyDataset);
+    if (loaded != NULL) {
+      RAVE_DEBUG0("PolarScanParamInternal_ensureData2D: LazyDataset fetched");
+      RAVE_OBJECT_RELEASE(scanparam->data);
+      scanparam->data = RAVE_OBJECT_COPY(loaded);
+      RAVE_OBJECT_RELEASE(scanparam->lazyDataset);
+    } else {
+      RAVE_ERROR0("Failed to load dataset");
+    }
+    RAVE_OBJECT_RELEASE(loaded);
+  }
+  return scanparam->data;
+}
+
 static int PolarScanParam_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj)
 {
   PolarScanParam_t* this = (PolarScanParam_t*)obj;
   PolarScanParam_t* src = (PolarScanParam_t*)srcobj;
-  this->data = RAVE_OBJECT_CLONE(src->data);
+  this->data = RAVE_OBJECT_CLONE(PolarScanParamInternal_ensureData2D(src));
   this->attrs = RAVE_OBJECT_CLONE(src->attrs);
   this->qualityfields = RAVE_OBJECT_CLONE(src->qualityfields);
   this->quantity = NULL;
-
+  this->lazyDataset = NULL;
   if (this->data == NULL || this->attrs == NULL || this->qualityfields == NULL) {
+    RAVE_ERROR0("data, attrs or qualityfields NULL");
     goto error;
   }
   if (!PolarScanParam_setQuantity(this, PolarScanParam_getQuantity(src))) {
+    RAVE_ERROR0("Failed to duplicate quantity");
     goto error;
   }
 
@@ -99,6 +123,7 @@ static int PolarScanParam_copyconstructor(RaveCoreObject* obj, RaveCoreObject* s
   this->undetect = src->undetect;
   return 1;
 error:
+  RAVE_ERROR0("Failed to clone polar scan parameter");
   RAVE_OBJECT_RELEASE(this->data);
   RAVE_OBJECT_RELEASE(this->attrs);
   RAVE_OBJECT_RELEASE(this->qualityfields);
@@ -115,6 +140,7 @@ static void PolarScanParam_destructor(RaveCoreObject* obj)
   RAVE_OBJECT_RELEASE(this->data);
   RAVE_OBJECT_RELEASE(this->attrs);
   RAVE_OBJECT_RELEASE(this->qualityfields);
+  RAVE_OBJECT_RELEASE(this->lazyDataset);
   RAVE_FREE(this->quantity);
 }
 
@@ -195,37 +221,98 @@ double PolarScanParam_getUndetect(PolarScanParam_t* scanparam)
 
 int PolarScanParam_setData(PolarScanParam_t* scanparam, long nbins, long nrays, void* data, RaveDataType type)
 {
+  int result = 0;
   RAVE_ASSERT((scanparam != NULL), "scanparam == NULL");
-  return RaveData2D_setData(scanparam->data, nbins, nrays, data, type);
+  result = RaveData2D_setData(scanparam->data, nbins, nrays, data, type);
+  if (result) {
+    RAVE_OBJECT_RELEASE(scanparam->lazyDataset);
+  }
+  return result;
+}
+
+int PolarScanParam_setLazyDataset(PolarScanParam_t* scanparam, LazyDataset_t* lazyDataset)
+{
+  RAVE_ASSERT((scanparam != NULL), "scanparam == NULL");
+  if (RaveData2D_getData(scanparam->data) == NULL) {
+    scanparam->lazyDataset = RAVE_OBJECT_COPY(lazyDataset);
+    return 1;
+  } else {
+    RAVE_ERROR0("Trying to set lazy dataset loader when data exists");
+    return 0;
+  }
+}
+
+int PolarScanParam_setData2D(PolarScanParam_t* scanparam, RaveData2D_t* data2d)
+{
+  RAVE_ASSERT((scanparam != NULL), "scanparam == NULL");
+  if (data2d != NULL) {
+    RaveData2D_t* tmp = RAVE_OBJECT_CLONE(data2d);
+    if (tmp != NULL) {
+      RAVE_OBJECT_RELEASE(scanparam->data);
+      scanparam->data = tmp;
+      scanparam->nodata = RaveData2D_getNodata(scanparam->data);
+      scanparam->gain = 1.0;
+      scanparam->offset = 0.0;
+      RAVE_OBJECT_RELEASE(scanparam->lazyDataset);
+      return 1;
+    }
+  }
+  return 0;
 }
 
 int PolarScanParam_createData(PolarScanParam_t* scanparam, long nbins, long nrays, RaveDataType type)
 {
+  int result = 0;
   RAVE_ASSERT((scanparam != NULL), "scanparam == NULL");
-  return RaveData2D_createData(scanparam->data, nbins, nrays, type, 0);
+  result = RaveData2D_createData(scanparam->data, nbins, nrays, type, 0);
+  if (result) {
+    RAVE_OBJECT_RELEASE(scanparam->lazyDataset);
+  }
+  return result;
 }
 
 void* PolarScanParam_getData(PolarScanParam_t* scanparam)
 {
   RAVE_ASSERT((scanparam != NULL), "scanparam == NULL");
-  return RaveData2D_getData(scanparam->data);
+  return RaveData2D_getData(PolarScanParamInternal_ensureData2D(scanparam));
+}
+
+RaveData2D_t* PolarScanParam_getData2D(PolarScanParam_t* scanparam)
+{
+  RaveData2D_t* result = NULL;
+  RAVE_ASSERT((scanparam != NULL), "scanparam == NULL");
+  result = RAVE_OBJECT_CLONE(PolarScanParamInternal_ensureData2D(scanparam));
+  if (result != NULL) {
+    RaveData2D_setNodata(result, scanparam->nodata);
+    RaveData2D_useNodata(result, 1);
+  }
+  return result;
 }
 
 long PolarScanParam_getNbins(PolarScanParam_t* scanparam)
 {
   RAVE_ASSERT((scanparam != NULL), "scanparam == NULL");
+  if (scanparam->lazyDataset != NULL) {
+    return LazyDataset_getXsize(scanparam->lazyDataset);
+  }
   return RaveData2D_getXsize(scanparam->data);
 }
 
 long PolarScanParam_getNrays(PolarScanParam_t* scanparam)
 {
   RAVE_ASSERT((scanparam != NULL), "scanparam == NULL");
+  if (scanparam->lazyDataset != NULL) {
+    return LazyDataset_getYsize(scanparam->lazyDataset);
+  }
   return RaveData2D_getYsize(scanparam->data);
 }
 
 RaveDataType PolarScanParam_getDataType(PolarScanParam_t* scanparam)
 {
   RAVE_ASSERT((scanparam != NULL), "scanparam == NULL");
+  if (scanparam->lazyDataset != NULL) {
+    return LazyDataset_getDataType(scanparam->lazyDataset);
+  }
   return RaveData2D_getType(scanparam->data);
 }
 
@@ -238,7 +325,7 @@ RaveValueType PolarScanParam_getValue(PolarScanParam_t* scanparam, int bin, int 
 
   value = scanparam->nodata;
 
-  if (RaveData2D_getValue(scanparam->data, bin, ray, &value)) {
+  if (RaveData2D_getValue(PolarScanParamInternal_ensureData2D(scanparam), bin, ray, &value)) {
     result = RaveValueType_DATA;
     if (value == scanparam->nodata) {
       result = RaveValueType_NODATA;
@@ -270,7 +357,7 @@ RaveValueType PolarScanParam_getConvertedValue(PolarScanParam_t* scanparam, int 
 int PolarScanParam_setValue(PolarScanParam_t* scanparam, int bin, int ray, double v)
 {
   RAVE_ASSERT((scanparam != NULL), "scanparam == NULL");
-  return RaveData2D_setValue(scanparam->data, bin, ray, v);
+  return RaveData2D_setValue(PolarScanParamInternal_ensureData2D(scanparam), bin, ray, v);
 }
 
 int PolarScanParam_addAttribute(PolarScanParam_t* scanparam,
@@ -289,10 +376,8 @@ int PolarScanParam_addAttribute(PolarScanParam_t* scanparam,
       RAVE_ERROR1("Failed to extract group and name from %s", name);
       goto done;
     }
-    if ((strcasecmp("how", gname)==0 ||
-        strcasecmp("what", gname)==0 ||
-        strcasecmp("where", gname)==0) &&
-      strchr(aname, '/') == NULL) {
+    if ((strcasecmp("how", gname)==0 && RaveAttributeHelp_validateHowGroupAttributeName(gname, aname)) ||
+        ((strcasecmp("what", gname)==0 || strcasecmp("where", gname)==0) && strchr(aname, '/') == NULL)) {
       result = RaveObjectHashTable_put(scanparam->attrs, name, (RaveCoreObject*)attribute);
     }
   }
@@ -420,7 +505,7 @@ RaveField_t* PolarScanParam_toField(PolarScanParam_t* param)
     goto done;
   }
 
-  datafield = RAVE_OBJECT_CLONE(param->data);
+  datafield = RAVE_OBJECT_CLONE(PolarScanParamInternal_ensureData2D(param));
   if (datafield == NULL) {
     goto done;
   }
@@ -605,6 +690,23 @@ int PolarScanParam_convertDataDoubleToUchar(PolarScanParam_t* param) {
   RAVE_OBJECT_RELEASE(field);
 
   return retval;
+}
+
+int PolarScanParam_shiftData(PolarScanParam_t* param, int nrays)
+{
+  int result = 0;
+  RAVE_ASSERT((param != NULL), "param == NULL");
+  result = RaveData2D_circshiftData(param->data, 0, nrays);
+  if (result) {
+    int i = 0;
+    int nrqualityfields = PolarScanParam_getNumberOfQualityFields(param);
+    for (i = 0; result && i < nrqualityfields; i++) {
+      RaveField_t* field = PolarScanParam_getQualityField(param, i);
+      result = RaveField_circshiftData(field, 0, nrays);
+      RAVE_OBJECT_RELEASE(field);
+    }
+  }
+  return result;
 }
 
 /*@} End of Interface functions */

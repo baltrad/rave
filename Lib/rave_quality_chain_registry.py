@@ -64,12 +64,12 @@ class rave_quality_chain_registry(object):
   def get_chain(self, source, category=None):
     result = self.find_chains(source, category)
     if len(result) != 1:
-      raise LookupError,"Number of found chains != 1"
+      raise LookupError("Number of found chains != 1")
     return result[0]
 
   def find_chains(self, source, category=None):
     result = []
-    if self.chains.has_key(source):
+    if source in self.chains:
       src_chains = self.chains[source]
       if category != None:
         for c in src_chains:
@@ -86,7 +86,7 @@ class rave_quality_chain_registry(object):
     for ce in chainelements:
       source = ce.attrib["source"]
       category = ce.attrib["category"]
-      if not chains.has_key(source):
+      if source not in chains:
         chains[source] = []
       chains[source].append(self.create_chain(source,category,ce))
     return chains

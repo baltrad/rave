@@ -24,7 +24,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @author Daniel Michelson, SMHI
 ## @date 2010-07-21
 
-import types
+#import types
 
 
 ## Convenience function for accessing arguments from an Element
@@ -56,16 +56,16 @@ def verify_generate_args(args, algorithm_entry):
         key, value = args[i], args[i+1]
         if key not in All:
             return False
-        if key in strings and type(value) != types.StringType:
+        if key in strings and type(value) not in (str,bytes):
             return False
-        if key in ints and type(value) != types.IntType:
+        if key in ints and type(value) != int:
             return False
-        if key in floats and type(value) != types.FloatType:
+        if key in floats and type(value) != float:
             return False
-        if key in seqs and type(value) not in (types.ListType, types.TupleType):
+        if key in seqs and type(value) not in (list, tuple):
             return False
     return True
 
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)

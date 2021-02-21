@@ -28,12 +28,14 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_alloc.h"
 #include <string.h>
 #include "odim_io_utilities.h"
+#include "lazy_dataset.h"
 
 /**
  * The Polar ODIM IO adaptor
  */
 struct _PolarOdimIO_t {
   RAVE_OBJECT_HEAD /** Always on top */
+  RaveIO_ODIM_Version version;
 };
 
 /*@{ Private functions */
@@ -42,6 +44,7 @@ struct _PolarOdimIO_t {
  */
 static int PolarOdimIO_constructor(RaveCoreObject* obj)
 {
+  ((PolarOdimIO_t*)obj)->version = RaveIO_ODIM_Version_2_3;
   return 1;
 }
 
@@ -50,6 +53,11 @@ static int PolarOdimIO_constructor(RaveCoreObject* obj)
  */
 static int PolarOdimIO_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj)
 {
+  PolarOdimIO_t* self = (PolarOdimIO_t*)obj;
+  PolarOdimIO_t* src = (PolarOdimIO_t*)srcobj;
+
+  self->version = src->version;
+
   return 1;
 }
 
@@ -70,6 +78,7 @@ static void PolarOdimIO_destructor(RaveCoreObject* obj)
 static int PolarOdimIOInternal_loadRootScanAttribute(void* object, RaveAttribute_t* attribute)
 {
   PolarScan_t* scan = (PolarScan_t*)((OdimIoUtilityArg*)object)->object;
+  //RaveIO_ODIM_Version version = ((OdimIoUtilityArg*)object)->version;
   const char* name;
   int result = 0;
 
@@ -104,13 +113,27 @@ static int PolarOdimIOInternal_loadRootScanAttribute(void* object, RaveAttribute
     if(!(result = PolarScan_setSource(scan, value))) {
       RAVE_ERROR1("Failed to set source to %s",value);
     }
+  } else if (strcasecmp("how/beamwH", name)==0) {
+    double value = 0.0;
+    if (!(result = RaveAttribute_getDouble(attribute, &value))) {
+      RAVE_ERROR0("Failed to extract how/beamwH as a double");
+      goto done;
+    }
+    PolarScan_setBeamwH(scan, value * M_PI/180.0);
   } else if (strcasecmp("how/beamwidth", name)==0) {
     double value = 0.0;
     if (!(result = RaveAttribute_getDouble(attribute, &value))) {
-      RAVE_ERROR0("Failed to extract how/beamwidth as a double");
+      RAVE_ERROR0("Failed to extract how/beamwídth as a double");
       goto done;
     }
-    PolarScan_setBeamwidth(scan, value * M_PI/180.0);
+    PolarScan_setBeamwH(scan, value * M_PI/180.0);
+  } else if (strcasecmp("how/beamwV", name)==0) {
+    double value = 0.0;
+    if (!(result = RaveAttribute_getDouble(attribute, &value))) {
+      RAVE_ERROR0("Failed to extract how/beamwV as a double");
+      goto done;
+    }
+    PolarScan_setBeamwV(scan, value * M_PI/180.0);
   } else if (strcasecmp("where/lon", name)==0) {
     double value = 0.0;
     if (!(result = RaveAttribute_getDouble(attribute, &value))) {
@@ -186,13 +209,27 @@ static int PolarOdimIOInternal_loadRootVolumeAttribute(void* object, RaveAttribu
     if(!(result = PolarVolume_setSource(volume, value))) {
       RAVE_ERROR1("Failed to set source %s",value);
     }
+  } else if (strcasecmp("how/beamwH", name)==0) {
+    double value = 0.0;
+    if (!(result = RaveAttribute_getDouble(attribute, &value))) {
+      RAVE_ERROR0("Failed to extract how/beamwH as a double");
+      goto done;
+    }
+    PolarVolume_setBeamwH(volume, value * M_PI/180.0);
   } else if (strcasecmp("how/beamwidth", name)==0) {
     double value = 0.0;
     if (!(result = RaveAttribute_getDouble(attribute, &value))) {
       RAVE_ERROR0("Failed to extract how/beamwidth as a double");
       goto done;
     }
-    PolarVolume_setBeamwidth(volume, value * M_PI/180.0);
+    PolarVolume_setBeamwH(volume, value * M_PI/180.0);
+  } else if (strcasecmp("how/beamwV", name)==0) {
+    double value = 0.0;
+    if (!(result = RaveAttribute_getDouble(attribute, &value))) {
+      RAVE_ERROR0("Failed to extract how/beamwV as a double");
+      goto done;
+    }
+    PolarVolume_setBeamwV(volume, value * M_PI/180.0);
   } else if (strcasecmp("where/lon", name)==0) {
     double value = 0.0;
     if (!(result = RaveAttribute_getDouble(attribute, &value))) {
@@ -395,13 +432,25 @@ done:
  * @param[in] dtype - the type of the data.
  * @return 1 on success otherwise 0
  */
-static int PolarOdimIOInternal_loadDsScanParamDataset(void* object, hsize_t nbins, hsize_t nrays, void* data, RaveDataType dtype)
+static int PolarOdimIOInternal_loadDsScanParamDataset(void* object, hsize_t nbins, hsize_t nrays, void* data, RaveDataType dtype, const char* nodeName)
 {
   PolarScanParam_t* param = NULL;
+  int result = 0;
 
   param = (PolarScanParam_t*)((OdimIoUtilityArg*)object)->object;
-
-  return PolarScanParam_setData(param, nbins, nrays, data, dtype);
+  if (data == NULL && ((OdimIoUtilityArg*)object)->lazyReader != NULL) {
+    LazyDataset_t* datasetReader = RAVE_OBJECT_NEW(&LazyDataset_TYPE);
+    if (datasetReader != NULL) {
+      result = LazyDataset_init(datasetReader, ((OdimIoUtilityArg*)object)->lazyReader, nodeName);
+    }
+    if (result) {
+      result = PolarScanParam_setLazyDataset(param, datasetReader);
+    }
+    RAVE_OBJECT_RELEASE(datasetReader);
+  } else {
+    result = PolarScanParam_setData(param, nbins, nrays, data, dtype);
+  }
+  return result;
 }
 
 /**
@@ -411,7 +460,7 @@ static int PolarOdimIOInternal_loadDsScanParamDataset(void* object, hsize_t nbin
  * @param[in] ... - the variable argument list
  * @return a scan parameter on success otherwise NULL
  */
-static PolarScanParam_t* PolarOdimIOInternal_loadScanParam(HL_NodeList* nodelist, const char* fmt, ...)
+static PolarScanParam_t* PolarOdimIOInternal_loadScanParam(LazyNodeListReader_t* lazyReader, const char* fmt, ...)
 {
   OdimIoUtilityArg arg;
   PolarScanParam_t* param = NULL;
@@ -422,7 +471,7 @@ static PolarScanParam_t* PolarOdimIOInternal_loadScanParam(HL_NodeList* nodelist
   int pindex = 1;
   int status = 0;
 
-  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
+  RAVE_ASSERT((lazyReader != NULL), "lazyReader == NULL");
   RAVE_ASSERT((fmt != NULL), "fmt == NULL");
 
   va_start(ap, fmt);
@@ -435,11 +484,12 @@ static PolarScanParam_t* PolarOdimIOInternal_loadScanParam(HL_NodeList* nodelist
 
   param = RAVE_OBJECT_NEW(&PolarScanParam_TYPE);
   if (param != NULL) {
-    arg.nodelist = nodelist;
+    arg.lazyReader = lazyReader;
+    arg.nodelist = LazyNodeListReader_getHLNodeList(lazyReader);
     arg.object = (RaveCoreObject*)param;
   }
 
-  if (!RaveHL_loadAttributesAndData(nodelist, &arg,
+  if (!RaveHL_loadAttributesAndData(arg.nodelist, &arg,
                                     PolarOdimIOInternal_loadDsScanParamAttribute,
                                     PolarOdimIOInternal_loadDsScanParamDataset,
                                     name)) {
@@ -448,8 +498,8 @@ static PolarScanParam_t* PolarOdimIOInternal_loadScanParam(HL_NodeList* nodelist
 
   pindex = 1;
   status = 1;
-  while (status == 1 && RaveHL_hasNodeByName(nodelist, "%s/quality%d", name, pindex)) {
-    RaveField_t* field = OdimIoUtilities_loadField(nodelist, "%s/quality%d", name, pindex);
+  while (status == 1 && RaveHL_hasNodeByName(arg.nodelist, "%s/quality%d", name, pindex)) {
+    RaveField_t* field = OdimIoUtilities_loadField(arg.lazyReader, "%s/quality%d", name, pindex);
     if (field != NULL) {
       status = PolarScanParam_addQualityField(param, field);
     } else {
@@ -475,7 +525,7 @@ fail:
  * @param[in] ... - the varargs
  * @return 1 on success otherwise 0
  */
-static int PolarOdimIOInternal_fillScanDataset(HL_NodeList* nodelist, PolarScan_t* scan, const char* fmt, ...)
+static int PolarOdimIOInternal_fillScanDataset(LazyNodeListReader_t* lazyReader, PolarScan_t* scan, const char* fmt, ...)
 {
   int result = 0;
   OdimIoUtilityArg arg;
@@ -485,7 +535,7 @@ static int PolarOdimIOInternal_fillScanDataset(HL_NodeList* nodelist, PolarScan_
   int nName = 0;
   int pindex = 1;
 
-  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
+  RAVE_ASSERT((lazyReader != NULL), "lazyReader == NULL");
   RAVE_ASSERT((scan != NULL), "scan == NULL");
   RAVE_ASSERT((fmt != NULL), "fmt == NULL");
 
@@ -497,10 +547,11 @@ static int PolarOdimIOInternal_fillScanDataset(HL_NodeList* nodelist, PolarScan_
     goto done;
   }
 
-  arg.nodelist = nodelist;
+  arg.lazyReader = lazyReader;
+  arg.nodelist = LazyNodeListReader_getHLNodeList(lazyReader);
   arg.object = (RaveCoreObject*)scan;
 
-  if (!RaveHL_loadAttributesAndData(nodelist,
+  if (!RaveHL_loadAttributesAndData(arg.nodelist,
                                     &arg,
                                     PolarOdimIOInternal_loadDsScanAttribute,
                                     NULL,
@@ -512,8 +563,8 @@ static int PolarOdimIOInternal_fillScanDataset(HL_NodeList* nodelist, PolarScan_
 
   result = 1;
   pindex = 1;
-  while (result == 1 && RaveHL_hasNodeByName(nodelist, "%s/data%d", name, pindex)) {
-    PolarScanParam_t* param = PolarOdimIOInternal_loadScanParam(nodelist, "%s/data%d", name, pindex);
+  while (result == 1 && RaveHL_hasNodeByName(arg.nodelist, "%s/data%d", name, pindex)) {
+    PolarScanParam_t* param = PolarOdimIOInternal_loadScanParam(lazyReader, "%s/data%d", name, pindex);
     if (param != NULL) {
       result = PolarScan_addParameter(scan, param);
     } else {
@@ -524,8 +575,8 @@ static int PolarOdimIOInternal_fillScanDataset(HL_NodeList* nodelist, PolarScan_
   }
 
   pindex = 1;
-  while (result == 1 && RaveHL_hasNodeByName(nodelist, "%s/quality%d", name, pindex)) {
-    RaveField_t* field = OdimIoUtilities_loadField(nodelist, "%s/quality%d", name, pindex);
+  while (result == 1 && RaveHL_hasNodeByName(arg.nodelist, "%s/quality%d", name, pindex)) {
+    RaveField_t* field = OdimIoUtilities_loadField(arg.lazyReader, "%s/quality%d", name, pindex);
     if (field != NULL) {
       result = PolarScan_addQualityField(scan, field);
     } else {
@@ -747,13 +798,24 @@ static int PolarOdimIOInternal_addVolumeScan(PolarScan_t* scan, HL_NodeList* nod
   }
 
   PolarOdimIOInternal_removeVolumeAttributesFromList(attributes, volume);
-
-  if (PolarScan_getBeamwidth(scan) != PolarVolume_getBeamwidth(volume)) {
-    if (!RaveUtilities_addDoubleAttributeToList(attributes, "how/beamwidth", PolarScan_getBeamwidth(scan)*180.0/M_PI)) {
+  if (PolarScan_getBeamwH(scan) != PolarVolume_getBeamwH(volume)) {
+    if (!RaveUtilities_addDoubleAttributeToList(attributes, "how/beamwH", PolarScan_getBeamwH(scan)*180.0/M_PI)) {
+      RAVE_WARNING0("Failed to add how/beamwH to scan");
+      goto done;
+    }
+    if (!RaveUtilities_addDoubleAttributeToList(attributes, "how/beamwidth", PolarScan_getBeamwH(scan)*180.0/M_PI)) {
       RAVE_WARNING0("Failed to add how/beamwidth to scan");
       goto done;
     }
   }
+
+  if (PolarScan_getBeamwV(scan) != PolarVolume_getBeamwV(volume)) {
+    if (!RaveUtilities_addDoubleAttributeToList(attributes, "how/beamwV", PolarScan_getBeamwV(scan)*180.0/M_PI)) {
+      RAVE_WARNING0("Failed to add how/beamwV to scan");
+      goto done;
+    }
+  }
+
 
   if (!RaveUtilities_replaceStringAttributeInList(attributes, "what/product", "SCAN") ||
       !RaveUtilities_replaceLongAttributeInList(attributes, "where/a1gate", PolarScan_getA1gate(scan)) ||
@@ -795,29 +857,56 @@ done:
   return result;
 }
 
+static int PolarOdimIOInternal_translateScan(PolarOdimIO_t* self, PolarScan_t* scan)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  if (self->version < RaveIO_ODIM_Version_2_3) {
+    /* We are reading something older than 2.3 so we need to be prepared to convert attributes */
+
+
+  }
+  return 1;
+}
+
+
+
 /*@} End of Private functions */
 
 /*@{ Interface functions */
+void PolarOdimIO_setVersion(PolarOdimIO_t* self, RaveIO_ODIM_Version version)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  self->version = version;
+}
 
-int PolarOdimIO_readScan(PolarOdimIO_t* self, HL_NodeList* nodelist, PolarScan_t* scan)
+RaveIO_ODIM_Version PolarOdimIO_getVersion(PolarOdimIO_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return self->version;
+}
+
+
+int PolarOdimIO_readScan(PolarOdimIO_t* self, LazyNodeListReader_t* lazyReader, PolarScan_t* scan)
 {
   int result = 0;
   OdimIoUtilityArg arg;
 
   RAVE_ASSERT((self != NULL), "self == NULL");
-  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
+  RAVE_ASSERT((lazyReader != NULL), "lazyReader == NULL");
   RAVE_ASSERT((scan != NULL), "scan == NULL");
 
-  arg.nodelist = nodelist;
+  arg.lazyReader = lazyReader;
+  arg.nodelist = LazyNodeListReader_getHLNodeList(lazyReader);
   arg.object = (RaveCoreObject*)scan;
+  arg.version = self->version;
 
-  if (!RaveHL_hasNodeByName(nodelist, "/dataset1") ||
-      !RaveHL_hasNodeByName(nodelist, "/dataset1/data1")) {
+  if (!RaveHL_hasNodeByName(arg.nodelist, "/dataset1") ||
+      !RaveHL_hasNodeByName(arg.nodelist, "/dataset1/data1")) {
     RAVE_ERROR0("Scan file does not contain scan...");
     goto done;
   }
 
-  if (!RaveHL_loadAttributesAndData(nodelist, &arg,
+  if (!RaveHL_loadAttributesAndData(arg.nodelist, &arg,
                                     PolarOdimIOInternal_loadRootScanAttribute,
                                     NULL,
                                     "")) {
@@ -825,8 +914,13 @@ int PolarOdimIO_readScan(PolarOdimIO_t* self, HL_NodeList* nodelist, PolarScan_t
     goto done;
   }
 
-  if (!PolarOdimIOInternal_fillScanDataset(nodelist, scan, "/dataset1")) {
+  if (!PolarOdimIOInternal_fillScanDataset(lazyReader, scan, "/dataset1")) {
     RAVE_ERROR0("Failed to fill scan");
+    goto done;
+  }
+
+  if (!PolarOdimIOInternal_translateScan(self, scan)) {
+    RAVE_ERROR0("Failed to translate scan");
     goto done;
   }
 
@@ -835,20 +929,22 @@ done:
   return result;
 }
 
-int PolarOdimIO_readVolume(PolarOdimIO_t* self, HL_NodeList* nodelist, PolarVolume_t* volume)
+int PolarOdimIO_readVolume(PolarOdimIO_t* self, LazyNodeListReader_t* lazyReader, PolarVolume_t* volume)
 {
   int result = 0;
   int pindex = 1;
   OdimIoUtilityArg arg;
 
   RAVE_ASSERT((self != NULL), "self == NULL");
-  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
+  RAVE_ASSERT((lazyReader != NULL), "lazyReader == NULL");
   RAVE_ASSERT((volume != NULL), "volume == NULL");
 
-  arg.nodelist = nodelist;
+  arg.lazyReader = lazyReader;
+  arg.nodelist = LazyNodeListReader_getHLNodeList(lazyReader);
   arg.object = (RaveCoreObject*)volume;
+  arg.version = self->version;
 
-  if (!RaveHL_loadAttributesAndData(nodelist, &arg,
+  if (!RaveHL_loadAttributesAndData(arg.nodelist, &arg,
                                     PolarOdimIOInternal_loadRootVolumeAttribute,
                                     NULL,
                                     "")) {
@@ -858,10 +954,10 @@ int PolarOdimIO_readVolume(PolarOdimIO_t* self, HL_NodeList* nodelist, PolarVolu
 
   result = 1;
   pindex = 1;
-  while (result == 1 && RaveHL_hasNodeByName(nodelist, "/dataset%d", pindex)) {
+  while (result == 1 && RaveHL_hasNodeByName(arg.nodelist, "/dataset%d", pindex)) {
     PolarScan_t* scan = RAVE_OBJECT_NEW(&PolarScan_TYPE);
     if (scan != NULL) {
-      result = PolarOdimIOInternal_fillScanDataset(nodelist, scan, "/dataset%d", pindex);
+      result = PolarOdimIOInternal_fillScanDataset(lazyReader, scan, "/dataset%d", pindex);
       if (result == 1) {
         result = PolarVolume_addScan(volume, scan);
       }
@@ -881,13 +977,14 @@ int PolarOdimIO_fillScan(PolarOdimIO_t* self, PolarScan_t* scan, HL_NodeList* no
   int result = 0;
   RaveObjectList_t* attributes = NULL;
   RaveObjectList_t* qualityfields = NULL;
+  char* source = NULL;
 
   RAVE_ASSERT((self != NULL), "self == NULL");
   RAVE_ASSERT((scan != NULL), "scan == NULL");
   RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
 
   if (!RaveHL_hasNodeByName(nodelist, "/Conventions")) {
-    if (!RaveHL_createStringValue(nodelist, RAVE_ODIM_VERSION_2_2_STR, "/Conventions")) {
+    if (!RaveHL_createStringValue(nodelist, RaveHL_getOdimVersionString(self->version), "/Conventions")) {
       goto done;
     }
   }
@@ -896,7 +993,7 @@ int PolarOdimIO_fillScan(PolarOdimIO_t* self, PolarScan_t* scan, HL_NodeList* no
   if (attributes != NULL) {
     const char* objectType = RaveTypes_getStringFromObjectType(Rave_ObjectType_SCAN);
     if (!RaveUtilities_addStringAttributeToList(attributes, "what/object", objectType) ||
-        !RaveUtilities_replaceStringAttributeInList(attributes, "what/version", RAVE_ODIM_H5RAD_VERSION_2_2_STR)) {
+        !RaveUtilities_replaceStringAttributeInList(attributes, "what/version", RaveHL_getH5RadVersionStringFromOdimVersion(self->version))) {
       RAVE_ERROR0("Failed to add what/object or what/version to attributes");
       goto done;
     }
@@ -905,14 +1002,24 @@ int PolarOdimIO_fillScan(PolarOdimIO_t* self, PolarScan_t* scan, HL_NodeList* no
     goto done;
   }
 
-  if (!RaveUtilities_replaceDoubleAttributeInList(attributes, "how/beamwidth", PolarScan_getBeamwidth(scan)*180.0/M_PI) ||
+  source = RaveUtilities_handleSourceVersion(PolarScan_getSource(scan), self->version);
+
+  if (!RaveUtilities_replaceDoubleAttributeInList(attributes, "how/beamwH", PolarScan_getBeamwH(scan)*180.0/M_PI) ||
+      !RaveUtilities_replaceDoubleAttributeInList(attributes, "how/beamwidth", PolarScan_getBeamwH(scan)*180.0/M_PI) ||
+      !RaveUtilities_replaceDoubleAttributeInList(attributes, "how/beamwV", PolarScan_getBeamwV(scan)*180.0/M_PI) ||
       !RaveUtilities_replaceStringAttributeInList(attributes, "what/date", PolarScan_getDate(scan)) ||
       !RaveUtilities_replaceStringAttributeInList(attributes, "what/time", PolarScan_getTime(scan)) ||
-      !RaveUtilities_replaceStringAttributeInList(attributes, "what/source", PolarScan_getSource(scan)) ||
+      !RaveUtilities_replaceStringAttributeInList(attributes, "what/source", source) ||
       !RaveUtilities_replaceDoubleAttributeInList(attributes, "where/height", PolarScan_getHeight(scan)) ||
       !RaveUtilities_replaceDoubleAttributeInList(attributes, "where/lat", PolarScan_getLatitude(scan)*180.0/M_PI) ||
       !RaveUtilities_replaceDoubleAttributeInList(attributes, "where/lon", PolarScan_getLongitude(scan)*180.0/M_PI)) {
     goto done;
+  }
+
+  if (!PolarScan_hasAttribute(scan, "how/software")) {
+    if (!RaveUtilities_addStringAttributeToList(attributes, "how/software", "BALTRAD")) {
+      RAVE_ERROR0("Failed to add how/software to attributes");
+    }
   }
 
   if (attributes == NULL || !RaveHL_addAttributes(nodelist, attributes, "")) {
@@ -941,6 +1048,7 @@ int PolarOdimIO_fillScan(PolarOdimIO_t* self, PolarScan_t* scan, HL_NodeList* no
       !RaveUtilities_replaceStringAttributeInList(attributes, "what/endtime", PolarScan_getEndTime(scan))) {
     goto done;
   }
+
   if (!RaveHL_addAttributes(nodelist, attributes, "/dataset1")) {
     goto done;
   }
@@ -957,6 +1065,8 @@ int PolarOdimIO_fillScan(PolarOdimIO_t* self, PolarScan_t* scan, HL_NodeList* no
 done:
   RAVE_OBJECT_RELEASE(attributes);
   RAVE_OBJECT_RELEASE(qualityfields);
+  RAVE_FREE(source);
+
   return result;
 }
 
@@ -964,6 +1074,7 @@ int PolarOdimIO_fillVolume(PolarOdimIO_t* self, PolarVolume_t* volume, HL_NodeLi
 {
   int result = 0;
   RaveObjectList_t* attributes = NULL;
+  char* source = NULL;
 
   int nrscans = 0;
   int index = 0;
@@ -973,7 +1084,7 @@ int PolarOdimIO_fillVolume(PolarOdimIO_t* self, PolarVolume_t* volume, HL_NodeLi
   RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
 
   if (!RaveHL_hasNodeByName(nodelist, "/Conventions")) {
-    if (!RaveHL_createStringValue(nodelist, RAVE_ODIM_VERSION_2_2_STR, "/Conventions")) {
+    if (!RaveHL_createStringValue(nodelist, RaveHL_getOdimVersionString(self->version), "/Conventions")) {
       goto done;
     }
   }
@@ -982,7 +1093,7 @@ int PolarOdimIO_fillVolume(PolarOdimIO_t* self, PolarVolume_t* volume, HL_NodeLi
   if (attributes != NULL) {
     const char* objectType = RaveTypes_getStringFromObjectType(Rave_ObjectType_PVOL);
     if (!RaveUtilities_addStringAttributeToList(attributes, "what/object", objectType) ||
-        !RaveUtilities_replaceStringAttributeInList(attributes, "what/version", RAVE_ODIM_H5RAD_VERSION_2_2_STR)) {
+        !RaveUtilities_replaceStringAttributeInList(attributes, "what/version", RaveHL_getH5RadVersionStringFromOdimVersion(self->version))) {
       RAVE_ERROR0("Failed to add what/object or what/version to attributes");
       goto done;
     }
@@ -991,14 +1102,24 @@ int PolarOdimIO_fillVolume(PolarOdimIO_t* self, PolarVolume_t* volume, HL_NodeLi
     goto done;
   }
 
-  if (!RaveUtilities_replaceDoubleAttributeInList(attributes, "how/beamwidth", PolarVolume_getBeamwidth(volume)*180.0/M_PI) ||
+  source = RaveUtilities_handleSourceVersion(PolarVolume_getSource(volume), self->version);
+
+  if (!RaveUtilities_replaceDoubleAttributeInList(attributes, "how/beamwH", PolarVolume_getBeamwH(volume)*180.0/M_PI) ||
+      !RaveUtilities_replaceDoubleAttributeInList(attributes, "how/beamwidth", PolarVolume_getBeamwH(volume)*180.0/M_PI) ||
+      !RaveUtilities_replaceDoubleAttributeInList(attributes, "how/beamwV", PolarVolume_getBeamwV(volume)*180.0/M_PI) ||
       !RaveUtilities_replaceStringAttributeInList(attributes, "what/date", PolarVolume_getDate(volume)) ||
       !RaveUtilities_replaceStringAttributeInList(attributes, "what/time", PolarVolume_getTime(volume)) ||
-      !RaveUtilities_replaceStringAttributeInList(attributes, "what/source", PolarVolume_getSource(volume)) ||
+      !RaveUtilities_replaceStringAttributeInList(attributes, "what/source", source) ||
       !RaveUtilities_replaceDoubleAttributeInList(attributes, "where/height", PolarVolume_getHeight(volume)) ||
       !RaveUtilities_replaceDoubleAttributeInList(attributes, "where/lat", PolarVolume_getLatitude(volume)*180.0/M_PI) ||
       !RaveUtilities_replaceDoubleAttributeInList(attributes, "where/lon", PolarVolume_getLongitude(volume)*180.0/M_PI)) {
     goto done;
+  }
+
+  if (!PolarVolume_hasAttribute(volume, "how/software")) {
+    if (!RaveUtilities_addStringAttributeToList(attributes, "how/software", "BALTRAD")) {
+      RAVE_ERROR0("Failed to add how/software to attributes");
+    }
   }
 
   if (attributes == NULL || !RaveHL_addAttributes(nodelist, attributes, "")) {
@@ -1019,6 +1140,7 @@ int PolarOdimIO_fillVolume(PolarOdimIO_t* self, PolarVolume_t* volume, HL_NodeLi
 
 done:
   RAVE_OBJECT_RELEASE(attributes);
+  RAVE_FREE(source);
   return result;
 }
 /*@} End of Interface functions */

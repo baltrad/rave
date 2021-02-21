@@ -33,6 +33,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_list.h"
 #include "raveobject_list.h"
 #include "rave_field.h"
+#include "lazy_dataset.h"
 
 /**
  * Defines a Polar Scan Parameter
@@ -122,8 +123,24 @@ double PolarScanParam_getUndetect(PolarScanParam_t* scanparam);
  * @param[in] nrays - number of rays
  * @param[in] data  - the data
  * @param[in] type  - the data type
+ * @return 1 on success otherwise 0
  */
 int PolarScanParam_setData(PolarScanParam_t* scanparam, long nbins, long nrays, void* data, RaveDataType type);
+
+/**
+ * Sets a lazy dataset as data member. On any requests to receive data, the lazy dataset will be used to populate
+ * the internal data field.
+ * @param[in]
+ */
+int PolarScanParam_setLazyDataset(PolarScanParam_t* scanparam, LazyDataset_t* lazyDataset);
+
+/**
+ * Sets the data from a rave data 2d object
+ * @param[in] scanparam - self
+ * @param[in] data2d - the data 2d field
+ * @return 1 on success otherwise 0
+ */
+int PolarScanParam_setData2D(PolarScanParam_t* scanparam, RaveData2D_t* data2d);
 
 /**
  * Creates a data field with the specified dimensions and type. The data till be initialized to 0.
@@ -141,6 +158,13 @@ int PolarScanParam_createData(PolarScanParam_t* scanparam, long nbins, long nray
  * @return the internal data pointer (NOTE! Do not release this pointer)
  */
 void* PolarScanParam_getData(PolarScanParam_t* scanparam);
+
+/**
+ * Returns a copy of the internal 2d data field.
+ * @param[in] scanparam - self
+ * @return a copy of the internal 2d data field
+ */
+RaveData2D_t* PolarScanParam_getData2D(PolarScanParam_t* scanparam);
 
 /**
  * Returns the number of bins
@@ -308,5 +332,14 @@ PolarScanParam_t* PolarScanParam_fromField(RaveField_t* field);
  * @return 1 on success otherwise 0
  */
 int PolarScanParam_convertDataDoubleToUchar(PolarScanParam_t* param);
+
+/**
+ * Performs a circular shift of the dataset and the attributes that are associated with the rays. It can be negative for counter clock wise
+ * and positive for clock wise rotation.
+ * @param[in] param - the parameter
+ * @param[in] nrays - the number of rays to shift
+ * @return 1 if successful otherwise 0
+ */
+int PolarScanParam_shiftData(PolarScanParam_t* param, int nrays);
 
 #endif

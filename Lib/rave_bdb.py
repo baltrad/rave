@@ -45,6 +45,16 @@ class rave_bdb(object):
     self.nodename = nodename
     self.config = self._load_configuration(configfile)
     self.database = None
+    self.fs_path = None
+    self.fs_layers = 0
+    if "baltrad.bdb.server.backend.sqla.storage.type" in self.config and self.config["baltrad.bdb.server.backend.sqla.storage.type"] == "fs":
+      try:
+        self.fs_path = self.config["baltrad.bdb.server.backend.sqla.storage.fs.path"]
+        self.fs_layers = int(self.config["baltrad.bdb.server.backend.sqla.storage.fs.layers"])
+      except:
+        self.fs_path = None
+        self.fs_layers = 0
+      
     self.initialized = False
   
   def _load_configuration(self, configfile):
@@ -68,14 +78,14 @@ class rave_bdb(object):
     :param config: the java properties in a dictionary 
     '''
     providers=[]
-    if self.config.has_key('baltrad.bdb.server.auth.providers'):
-      providers = [string.strip(s) for s in string.split(self.config['baltrad.bdb.server.auth.providers'],',')]
+    if 'baltrad.bdb.server.auth.providers' in self.config:
+      providers = [s.strip() for s in self.config['baltrad.bdb.server.auth.providers'].split(',')]
   
     keyczar_ks_root = None
     keyczar_key = None
-    if self.config.has_key('baltrad.bdb.server.auth.keyczar.keystore_root'):
+    if 'baltrad.bdb.server.auth.keyczar.keystore_root' in self.config:
       keyczar_ks_root = self.config['baltrad.bdb.server.auth.keyczar.keystore_root']
-    if self.config.has_key("baltrad.bdb.server.auth.keyczar.keys.%s"%self.nodename):
+    if "baltrad.bdb.server.auth.keyczar.keys.%s"%self.nodename in self.config:
       keyczar_key = self.config["baltrad.bdb.server.auth.keyczar.keys.%s"%self.nodename]
 
     auth = None
@@ -86,7 +96,7 @@ class rave_bdb(object):
       if 'noauth' not in providers and 'keyczar' in providers:
         if keyczar_ks_root != None and keyczar_key != None:
           auth = rest.KeyczarAuth("%s/%s"%(keyczar_ks_root, keyczar_key), DEX_NODENAME)
-    except Exception, e:
+    except Exception as e:
       traceback.print_exc(e)
   
     return auth
@@ -96,16 +106,24 @@ class rave_bdb(object):
     '''
     if self.initialized == False:
       try:
-        if self.config.has_key('baltrad.bdb.server.uri'):
+        if 'baltrad.bdb.server.uri' in self.config:
           uri = self.config['baltrad.bdb.server.uri']
           self.database = rest.RestfulDatabase(uri, self.load_auth_provider())
           self.initialized = True
-      except Exception, e:
+      except Exception as e:
         traceback.print_exc(e)
   
     return self.database
 
-  def get_rave_object(self, fname):
+  def path_from_uuid(self, uuid):
+    uuid_str = str(uuid)
+    elements = [self.fs_path]
+    for i in range(0, self.fs_layers):
+      elements.append(uuid_str[i])
+    elements.append(uuid_str)
+    return os.path.join(*elements)
+
+  def get_rave_object(self, fname, lazy_loading=False, preloadedQuantities=None):
     ''' returns the rave object as defined by the fname. If the fname is an existing file on the file system, then
     the file will be opened and returned as a rave object. If no fname can be found, an atempt to fetch the file from
     bdb is made. The fetched file will be returned as a rave object on success otherwise an exception will be raised.
@@ -114,21 +132,27 @@ class rave_bdb(object):
     :raises an exception if the rave object not can be returned
     '''
     if os.path.exists(fname):
-      return _raveio.open(fname).object
+      return _raveio.open(fname, lazy_loading, preloadedQuantities).object
+    
+    # Fix to avoid unessecary loading if rave is running on same server as bdb which is storing files in fs.
+    if self.fs_path is not None and os.path.exists("%s"%self.path_from_uuid(fname)):
+      logger.info("Using path directly from storage %s"%self.path_from_uuid(fname))
+      return _raveio.open("%s"%self.path_from_uuid(fname), lazy_loading, preloadedQuantities).object
 
     content = self.get_database().get_file_content(fname)
     if content:
       fpd, tmppath = tempfile.mkstemp(suffix='.h5', prefix='ravetmp')
       try:
         with contextlib.closing(content):
-          with os.fdopen(fpd, "w") as outf:
+          with os.fdopen(fpd, "wb") as outf:
             shutil.copyfileobj(content, outf)
+            outf.flush()
             outf.close()
-        return _raveio.open(tmppath).object
+        return _raveio.open(tmppath, lazy_loading, preloadedQuantities).object
       finally:
         os.unlink(tmppath)
     else:
-      raise Exception, "No content for file %s"%fname
+      raise Exception("No content for file %s"%fname)
 
   def get_file(self, uuid):
     ''' returns a file name to a file that can be accessed. The uuid should be an
@@ -153,24 +177,18 @@ class rave_bdb(object):
       try:
         with contextlib.closing(content):
           #with os.fdopen(fpd, "w") as outf:
-          with open(tmppath, "w") as outf:
+          with open(tmppath, "wb") as outf:
             shutil.copyfileobj(content, outf)
             outf.close()
         return tmppath
-      except Exception, e:
+      except Exception as e:
         if os.path.exists(tmppath):
           os.unlink(tmppath)
         raise e
     else:
-      raise Exception, "No content for file %s"%uuid
+      raise Exception("No content for file %s"%uuid)
 
 if __name__=='__main__':
   dbapi = rave_bdb()
-  #print dbapi.get_rave_object('c3ba1289-59d8-498d-8894-414f552ca2a2').date
-  print dbapi.get_file('7ced67c2-a519-4d7d-9ad7-a7c239d6b784')
-  
-#  import math
-#  print `get_database().get_sources()`
-#  print get_rave_object('c3ba1289-59d8-498d-8894-414f552ca2a2').elangle * 180.0 / math.pi
-#  print get_rave_object('c3ba1289-59d8-498d-8894-414f552ca2a2').date
+  print(dbapi.get_file('7ced67c2-a519-4d7d-9ad7-a7c239d6b784'))
 

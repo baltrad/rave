@@ -46,7 +46,7 @@ class PyBitmapGeneratorTest(unittest.TestCase):
 
   def test_new(self):
     obj = _bitmapgenerator.new()
-    self.assertNotEqual(-1, string.find(`type(obj)`, "BitmapGeneratorCore"))
+    self.assertNotEqual(-1, str(type(obj)).find("BitmapGeneratorCore"))
 
   def test_create_surrounding(self):
     obj = _bitmapgenerator.new()

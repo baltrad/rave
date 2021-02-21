@@ -22,7 +22,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2014-02-27
  */
-#include "Python.h"
+#include "pyravecompat.h"
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>
@@ -292,12 +292,31 @@ static struct PyMethodDef _pyqitotal_methods[] =
   {"gain", NULL},
   {"offset", NULL},
   {"datatype", NULL},
-  {"setWeight", (PyCFunction) _pyqitotal_setWeight, 1},
-  {"getWeight", (PyCFunction) _pyqitotal_getWeight, 1},
-  {"removeWeight", (PyCFunction) _pyqitotal_removeWeight, 1},
-  {"multiplicative", (PyCFunction) _pyqitotal_multiplicative, 1},
-  {"additive", (PyCFunction) _pyqitotal_additive, 1},
-  {"minimum", (PyCFunction) _pyqitotal_minimum, 1},
+  {"setWeight", (PyCFunction) _pyqitotal_setWeight, 1,
+       "setWeight(howtask, weight)\n\n"
+       "Sets the weight for the specified how/task identifier.\n\n"
+       "howtask - a string identifier for the how/task, for example: se.smhi.detector.beamblockage\n"
+       "weight  - a weight for the above howtask"},
+  {"getWeight", (PyCFunction) _pyqitotal_getWeight, 1,
+       "getWeight(howtask) -> the weight for the how/task\n\n"
+       "Returns the weight for the specified how/task identifier.\n\n"
+       "howtask - a string identifier for the how/task, for example: se.smhi.detector.beamblockage"},
+  {"removeWeight", (PyCFunction) _pyqitotal_removeWeight, 1,
+       "removeWeight(howtask)\n\n"
+       "Removes the weight setting for the specified how/task identifier.\n\n"
+       "howtask - a string identifier for the how/task, for example: se.smhi.detector.beamblockage"},
+  {"multiplicative", (PyCFunction) _pyqitotal_multiplicative, 1,
+       "multiplicative(listOfFields) -> RaveFieldCore\n\n"
+       "Creates a QI total field according to the multiplicative approach.\n\n"
+       "listOfFields - a list of rave quality fields (RaveFieldCore) that should be used for processing."},
+  {"additive", (PyCFunction) _pyqitotal_additive, 1,
+      "additive(listOfFields) -> RaveFieldCore\n\n"
+      "Creates a QI total field according to the additive approach.\n\n"
+      "listOfFields - a list of rave quality fields (RaveFieldCore) that should be used for processing."},
+  {"minimum", (PyCFunction) _pyqitotal_minimum, 1,
+      "minimum(listOfFields) -> RaveFieldCore\n\n"
+      "Creates a QI total field according to the minimum approach.\n\n"
+      "listOfFields - a list of rave quality fields (RaveFieldCore) that should be used for processing."},
   {NULL, NULL } /* sentinel */
 };
 
@@ -305,37 +324,28 @@ static struct PyMethodDef _pyqitotal_methods[] =
  * Returns the specified attribute in the qi total generator
  * @param[in] self - the acrr
  */
-static PyObject* _pyqitotal_getattr(PyQITotal* self, char* name)
+static PyObject* _pyqitotal_getattro(PyQITotal* self, PyObject* name)
 {
-  PyObject* res = NULL;
-
-  if (strcmp("gain", name) == 0) {
+  if (PY_COMPARE_STRING_WITH_ATTRO_NAME("gain", name) == 0) {
     return PyFloat_FromDouble(RaveQITotal_getGain(self->qitotal));
-  } else if (strcmp("offset", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("offset", name) == 0) {
     return PyFloat_FromDouble(RaveQITotal_getOffset(self->qitotal));
-  } else if (strcmp("datatype", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("datatype", name) == 0) {
     return PyInt_FromLong(RaveQITotal_getDatatype(self->qitotal));
   }
-
-  res = Py_FindMethod(_pyqitotal_methods, (PyObject*) self, name);
-  if (res)
-    return res;
-
-  PyErr_Clear();
-  PyErr_SetString(PyExc_AttributeError, name);
-  return NULL;
+  return PyObject_GenericGetAttr((PyObject*)self, name);
 }
 
 /**
  * Returns the specified attribute in the qi total generator
  */
-static int _pyqitotal_setattr(PyQITotal* self, char* name, PyObject* val)
+static int _pyqitotal_setattro(PyQITotal* self, PyObject* name, PyObject* val)
 {
   int result = -1;
   if (name == NULL) {
     goto done;
   }
-  if (strcmp("gain", name) == 0) {
+  if (PY_COMPARE_STRING_WITH_ATTRO_NAME("gain", name) == 0) {
     if (PyInt_Check(val)) {
       if (!RaveQITotal_setGain(self->qitotal, (double)PyInt_AsLong(val))) {
         raiseException_gotoTag(done, PyExc_AttributeError, "gain must not be 0.0");
@@ -351,7 +361,7 @@ static int _pyqitotal_setattr(PyQITotal* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_AttributeError, "gain must be a number");
     }
-  } else if (strcmp("offset", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("offset", name) == 0) {
     if (PyInt_Check(val)) {
       RaveQITotal_setOffset(self->qitotal, (double)PyInt_AsLong(val));
     } else if (PyLong_Check(val)) {
@@ -361,7 +371,7 @@ static int _pyqitotal_setattr(PyQITotal* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_AttributeError, "offset must be a number");
     }
-  } else if (strcmp("datatype", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("datatype", name) == 0) {
     if (PyInt_Check(val)) {
       RaveQITotal_setDatatype(self->qitotal, PyInt_AsLong(val));
     } else {
@@ -378,62 +388,119 @@ done:
 
 /*@} End of QI total */
 
+/*@{ Documentation about the type */
+PyDoc_STRVAR(_pyqitotal_type_doc,
+    "Implementation of the QI total algorithms.\n"
+    "\n"
+    "This module is used for creating a quality index from a number of quality fields. Currently the 3 variants "
+    "additive, multiplicative and minimum is supported.\n"
+    "The calculations are performed in such a way that each quality field how/task name is assigned a weight and then "
+    "the fields are evaluated according to the variant used."
+    "\n"
+    "There member variables within an instance are:\n"
+    " * gain     - the gain that should be used in the resulting field.\n"
+    " * offset   - the offset that should be used in the resulting field.\n"
+    " * datatype - the datatype that should be used in the resulting field. See _rave for a list of available types.\n"
+    "\n"
+    "Assuming that you have 3 different quality fields you could create a QI total field like this:\n"
+    " import _raveio, _qitotal\n"
+    " qitotal = _qitotal.new()\n"
+    " qitotal.setWeight(\"fi.fmi.ropo.detector.classification\", 1.0)\n"
+    " qitotal.setWeight(\"se.smhi.detector.beamblockage\", 1.0)\n"
+    " qitotal.setWeight(\"pl.imgw.radvolqc.broad\", 1.0)\n"
+    "\n"
+    " obj = _raveio.open(\"testscan.h5\").object.\n"
+    " result = qitotal.minimum([obj.findQualityFieldByHowTask(\"fi.fmi.ropo.detector.classification\"),\n"
+    "                           obj.findQualityFieldByHowTask(\"se.smhi.detector.beamblockage\"),\n"
+    "                           obj.findQualityFieldByHowTask(\"pl.imgw.radvolqc.broad\")])\n"
+    );
+/*@} End of Documentation about the type */
+
 /*@{ Type definitions */
 PyTypeObject PyQITotal_Type =
 {
-  PyObject_HEAD_INIT(NULL)0, /*ob_size*/
+  PyVarObject_HEAD_INIT(NULL, 0) /*ob_size*/
   "QITotalCore", /*tp_name*/
   sizeof(PyQITotal), /*tp_size*/
   0, /*tp_itemsize*/
   /* methods */
   (destructor)_pyqitotal_dealloc, /*tp_dealloc*/
   0, /*tp_print*/
-  (getattrfunc)_pyqitotal_getattr, /*tp_getattr*/
-  (setattrfunc)_pyqitotal_setattr, /*tp_setattr*/
-  0, /*tp_compare*/
-  0, /*tp_repr*/
-  0, /*tp_as_number */
+  (getattrfunc)0,               /*tp_getattr*/
+  (setattrfunc)0,               /*tp_setattr*/
+  0,                            /*tp_compare*/
+  0,                            /*tp_repr*/
+  0,                            /*tp_as_number */
   0,
-  0, /*tp_as_mapping */
-  0 /*tp_hash*/
+  0,                            /*tp_as_mapping */
+  0,                            /*tp_hash*/
+  (ternaryfunc)0,               /*tp_call*/
+  (reprfunc)0,                  /*tp_str*/
+  (getattrofunc)_pyqitotal_getattro, /*tp_getattro*/
+  (setattrofunc)_pyqitotal_setattro, /*tp_setattro*/
+  0,                            /*tp_as_buffer*/
+  Py_TPFLAGS_DEFAULT, /*tp_flags*/
+  _pyqitotal_type_doc,          /*tp_doc*/
+  (traverseproc)0,              /*tp_traverse*/
+  (inquiry)0,                   /*tp_clear*/
+  0,                            /*tp_richcompare*/
+  0,                            /*tp_weaklistoffset*/
+  0,                            /*tp_iter*/
+  0,                            /*tp_iternext*/
+  _pyqitotal_methods,              /*tp_methods*/
+  0,                            /*tp_members*/
+  0,                            /*tp_getset*/
+  0,                            /*tp_base*/
+  0,                            /*tp_dict*/
+  0,                            /*tp_descr_get*/
+  0,                            /*tp_descr_set*/
+  0,                            /*tp_dictoffset*/
+  0,                            /*tp_init*/
+  0,                            /*tp_alloc*/
+  0,                            /*tp_new*/
+  0,                            /*tp_free*/
+  0,                            /*tp_is_gc*/
 };
 /*@} End of Type definitions */
 
 /*@{ Module setup */
 static PyMethodDef functions[] = {
-  {"new", (PyCFunction)_pyqitotal_new, 1},
+  {"new", (PyCFunction)_pyqitotal_new, 1,
+      "new() -> new instance of the QITotalCore object\n\n"
+      "Creates a new instance of the QITotalCore object"},
   {NULL,NULL} /*Sentinel*/
 };
 
-PyMODINIT_FUNC
-init_qitotal(void)
+MOD_INIT(_qitotal)
 {
   PyObject *module=NULL,*dictionary=NULL;
   static void *PyQITotal_API[PyQITotal_API_pointers];
   PyObject *c_api_object = NULL;
-  PyQITotal_Type.ob_type = &PyType_Type;
+  MOD_INIT_SETUP_TYPE(PyQITotal_Type, &PyType_Type);
 
-  module = Py_InitModule("_qitotal", functions);
+  MOD_INIT_VERIFY_TYPE_READY(&PyQITotal_Type);
+
+  MOD_INIT_DEF(module, "_qitotal", _pyqitotal_type_doc, functions);
   if (module == NULL) {
-    return;
+    return MOD_INIT_ERROR;
   }
+
   PyQITotal_API[PyQITotal_Type_NUM] = (void*)&PyQITotal_Type;
   PyQITotal_API[PyQITotal_GetNative_NUM] = (void *)PyQITotal_GetNative;
   PyQITotal_API[PyQITotal_New_NUM] = (void*)PyQITotal_New;
 
-  c_api_object = PyCObject_FromVoidPtr((void *)PyQITotal_API, NULL);
-
-  if (c_api_object != NULL) {
-    PyModule_AddObject(module, "_C_API", c_api_object);
-  }
-
+  c_api_object = PyCapsule_New(PyQITotal_API, PyQITotal_CAPSULE_NAME, NULL);
   dictionary = PyModule_GetDict(module);
-  ErrorObject = PyString_FromString("_qitotal.error");
+  PyDict_SetItemString(dictionary, "_C_API", c_api_object);
+
+  ErrorObject = PyErr_NewException("_qitotal.error", NULL, NULL);
   if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
     Py_FatalError("Can't define _qitotal.error");
+    return MOD_INIT_ERROR;
   }
 
   import_pyravefield();
   PYRAVE_DEBUG_INITIALIZE;
+  return MOD_INIT_SUCCESS(module);
 }
 /*@} End of Module setup */

@@ -22,7 +22,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2010-12-15
  */
-#include "Python.h"
+#include "pyravecompat.h"
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>
@@ -333,13 +333,40 @@ static PyObject* _pyprojectionregistry_load(PyObject* self, PyObject* args)
  */
 static struct PyMethodDef _pyprojectionregistry_methods[] =
 {
-  {"add", (PyCFunction) _pyprojectionregistry_add, 1},
-  {"size", (PyCFunction) _pyprojectionregistry_size, 1},
-  {"get", (PyCFunction) _pyprojectionregistry_get, 1},
-  {"getByName", (PyCFunction) _pyprojectionregistry_getByName, 1},
-  {"remove", (PyCFunction) _pyprojectionregistry_remove, 1},
-  {"removeByName", (PyCFunction) _pyprojectionregistry_removeByName, 1},
-  {"write", (PyCFunction) _pyprojectionregistry_write, 1},
+  {"add", (PyCFunction) _pyprojectionregistry_add, 1,
+    "add(pj)\n\n"
+    "Adds a projection definition of type ProjectionCore to the registry\n\n"
+    "pj  - The projection definition of type ProjectionCore."
+  },
+  {"size", (PyCFunction) _pyprojectionregistry_size, 1,
+    "size() -> integer with number of projection definitions\n\n"
+    "Returns the number of projection definitions within the projection registry."
+  },
+  {"get", (PyCFunction) _pyprojectionregistry_get, 1,
+    "get(i) -> ProjectionCore\n\n"
+    "Returns the projection definition at position i in the registry.\n\n"
+    "i - index in the registry >= 0 and < size()."
+  },
+  {"getByName", (PyCFunction) _pyprojectionregistry_getByName, 1,
+    "getByName(name) -> ProjectionCore\n\n"
+    "Returns the projection definition with the specified name.\n\n"
+    "name - the name of the projection definition"
+  },
+  {"remove", (PyCFunction) _pyprojectionregistry_remove, 1,
+    "remove(i)\n\n"
+    "Removes the projection definition at specified index.\n\n"
+    "i - index in the registry >= 0 and < size()."
+  },
+  {"removeByName", (PyCFunction) _pyprojectionregistry_removeByName, 1,
+    "removeByName(name)\n\n"
+    "Removes the projection definition with the specified name.\n\n"
+    "name - the name of the projection definition to remove."
+  },
+  {"write", (PyCFunction) _pyprojectionregistry_write, 1,
+    "write(filename)\n\n"
+    "Writes the projection registry to the xml file as specified by filename.\n\n"
+    "filename - path to the place where the xml projection registry file should be stored"
+  },
   {NULL, NULL } /* sentinel */
 };
 
@@ -347,94 +374,140 @@ static struct PyMethodDef _pyprojectionregistry_methods[] =
  * Returns the specified attribute in the registry
  * @param[in] self - the registry
  */
-static PyObject* _pyprojectionregistry_getattr(PyProjectionRegistry* self, char* name)
+static PyObject* _pyprojectionregistry_getattro(PyProjectionRegistry* self, PyObject* name)
 {
-  PyObject* res = NULL;
-
-  res = Py_FindMethod(_pyprojectionregistry_methods, (PyObject*) self, name);
-  if (res)
-    return res;
-
-  PyErr_Clear();
-  PyErr_SetString(PyExc_AttributeError, name);
-  return NULL;
+  return PyObject_GenericGetAttr((PyObject*)self, name);
 }
 
 /**
  * Sets the specified attribute in the registry
  */
-static int _pyprojectionregistry_setattr(PyProjectionRegistry* self, char* name, PyObject* val)
+static int _pyprojectionregistry_setattro(PyProjectionRegistry* self, PyObject* name, PyObject* val)
 {
   int result = -1;
-  if (name == NULL) {
-    goto done;
-  }
-
-  result = 0;
-done:
   return result;
 }
 
 /*@} End of ProjectionRegistry */
 
+/*@{ Documentation about the module */
+PyDoc_STRVAR(_pyprojectionregistry_type_doc,
+    "This class provides functionality for managing a projection registry. It can also read and write the registry.\n"
+    "\n"
+    "See the load function for information about format of the xml file.\n"
+    "\n"
+    "Usage:\n"
+    " import _projectionregistry\n"
+    " reg = _projectionregistry.load(\"/tmp/projection_registry.xml\")\n"
+    " pj = reg.getByName(\"ps14e60n\")\n"
+    );
+/*@} End of Documentation about the module */
+
+
 /*@{ Type definitions */
 PyTypeObject PyProjectionRegistry_Type =
 {
-  PyObject_HEAD_INIT(NULL)0, /*ob_size*/
+    PyVarObject_HEAD_INIT(NULL, 0) /*ob_size*/
   "ProjectionRegistryCore", /*tp_name*/
   sizeof(PyProjectionRegistry), /*tp_size*/
   0, /*tp_itemsize*/
   /* methods */
   (destructor)_pyprojectionregistry_dealloc, /*tp_dealloc*/
   0, /*tp_print*/
-  (getattrfunc)_pyprojectionregistry_getattr, /*tp_getattr*/
-  (setattrfunc)_pyprojectionregistry_setattr, /*tp_setattr*/
-  0, /*tp_compare*/
-  0, /*tp_repr*/
-  0, /*tp_as_number */
+  (getattrfunc)0,               /*tp_getattr*/
+  (setattrfunc)0,               /*tp_setattr*/
+  0,                            /*tp_compare*/
+  0,                            /*tp_repr*/
+  0,                            /*tp_as_number */
   0,
-  0, /*tp_as_mapping */
-  0 /*tp_hash*/
-};
+  0,                            /*tp_as_mapping */
+  0,                            /*tp_hash*/
+  (ternaryfunc)0,               /*tp_call*/
+  (reprfunc)0,                  /*tp_str*/
+  (getattrofunc)_pyprojectionregistry_getattro, /*tp_getattro*/
+  (setattrofunc)_pyprojectionregistry_setattro, /*tp_setattro*/
+  0,                            /*tp_as_buffer*/
+  Py_TPFLAGS_DEFAULT, /*tp_flags*/
+  _pyprojectionregistry_type_doc,  /*tp_doc*/
+  (traverseproc)0,              /*tp_traverse*/
+  (inquiry)0,                   /*tp_clear*/
+  0,                            /*tp_richcompare*/
+  0,                            /*tp_weaklistoffset*/
+  0,                            /*tp_iter*/
+  0,                            /*tp_iternext*/
+  _pyprojectionregistry_methods,/*tp_methods*/
+  0,                            /*tp_members*/
+  0,                            /*tp_getset*/
+  0,                            /*tp_base*/
+  0,                            /*tp_dict*/
+  0,                            /*tp_descr_get*/
+  0,                            /*tp_descr_set*/
+  0,                            /*tp_dictoffset*/
+  0,                            /*tp_init*/
+  0,                            /*tp_alloc*/
+  0,                            /*tp_new*/
+  0,                            /*tp_free*/
+  0,                            /*tp_is_gc*/};
 /*@} End of Type definitions */
 
 /*@{ Module setup */
 static PyMethodDef functions[] = {
-  {"new", (PyCFunction)_pyprojectionregistry_new, 1},
-  {"load", (PyCFunction)_pyprojectionregistry_load, 1},
+  {"new", (PyCFunction)_pyprojectionregistry_new, 1,
+    "new() -> new instance of the ProjectionRegistryCore object\n\n"
+    "Creates a new instance of the ProjectionRegistryCore object"
+  },
+  {"load", (PyCFunction)_pyprojectionregistry_load, 1,
+      "load(filename) -> projection registry\n\n"
+      "Loads a projection registry xml file. \n\n"
+      "filename     - the path to the file containing the area registry xml definition\n"
+      "The format of the projection registry file should be in the format:\n"
+      "<?xml version='1.0' encoding='iso-8859-1'?>\n"
+      "<projections>\n"
+      " <projection id='llwgs84'>\n"
+      "  <description>http://spatialreference.org/ref/epsg/4326/</description>\n"
+      "  <projdef>+proj=latlong +ellps=WGS84 +datum=WGS84 +no_defs</projdef>\n"
+      " </projection>\n"
+      " <projection id='ps14e60n'>\n"
+      "  <description>Polar Stereographic 14E, 60N</description>\n"
+      "  <projdef>+proj=stere +ellps=bessel +lat_0=90 +lon_0=14 +lat_ts=60 +datum=WGS84</projdef>\n"
+      " </projection>\n"
+      "</projections>"
+  },
   {NULL,NULL} /*Sentinel*/
 };
 
-PyMODINIT_FUNC
-init_projectionregistry(void)
+MOD_INIT(_projectionregistry)
 {
   PyObject *module=NULL,*dictionary=NULL;
   static void *PyProjectionRegistry_API[PyProjectionRegistry_API_pointers];
   PyObject *c_api_object = NULL;
-  PyProjectionRegistry_Type.ob_type = &PyType_Type;
+  MOD_INIT_SETUP_TYPE(PyProjectionRegistry_Type, &PyType_Type);
 
-  module = Py_InitModule("_projectionregistry", functions);
+  MOD_INIT_VERIFY_TYPE_READY(&PyProjectionRegistry_Type);
+
+  MOD_INIT_DEF(module, "_projectionregistry", _pyprojectionregistry_type_doc, functions);
   if (module == NULL) {
-    return;
+    return MOD_INIT_ERROR;
   }
+
   PyProjectionRegistry_API[PyProjectionRegistry_Type_NUM] = (void*)&PyProjectionRegistry_Type;
   PyProjectionRegistry_API[PyProjectionRegistry_GetNative_NUM] = (void *)PyProjectionRegistry_GetNative;
   PyProjectionRegistry_API[PyProjectionRegistry_New_NUM] = (void*)PyProjectionRegistry_New;
   PyProjectionRegistry_API[PyProjectionRegistry_Load_NUM] = (void*)PyProjectionRegistry_Load;
 
-  c_api_object = PyCObject_FromVoidPtr((void *)PyProjectionRegistry_API, NULL);
-
-  if (c_api_object != NULL) {
-    PyModule_AddObject(module, "_C_API", c_api_object);
-  }
-
+  c_api_object = PyCapsule_New(PyProjectionRegistry_API, PyProjectionRegistry_CAPSULE_NAME, NULL);
   dictionary = PyModule_GetDict(module);
-  ErrorObject = PyString_FromString("_projectionregistry.error");
+  PyDict_SetItemString(dictionary, "_C_API", c_api_object);
+
+  ErrorObject = PyErr_NewException("_projectionregistry.error", NULL, NULL);
   if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
     Py_FatalError("Can't define _projectionregistry.error");
+    return MOD_INIT_ERROR;
   }
+
 
   import_pyprojection();
   PYRAVE_DEBUG_INITIALIZE;
+  return MOD_INIT_SUCCESS(module);
 }
 /*@} End of Module setup */

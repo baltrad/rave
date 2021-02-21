@@ -24,7 +24,6 @@ Module for defining polar areas and radar configurations based on the
 configuration information for specified radars.
 """
 import os, string
-from types import StringType
 import rave_xml
 from rave_defines import RAVECONFIG, ENCODING
 
@@ -103,8 +102,8 @@ def init():
 # Object factories
 
 def radar(Id):
-    if type(Id) != StringType:
-        raise KeyError, "Argument 'Id' not a string"
+    if type(Id) != str:
+        raise KeyError("Argument 'Id' not a string")
     return _registry[Id]
 
 
@@ -115,16 +114,15 @@ def register(P):
 
 
 def MakeCartesianArea(proj, rad):
-    from types import ListType
     from copy import deepcopy
     import pcs, area
 
     a = area.AREA()
-    a.name = rad.place + " specific projection"
+    a.name = rad.place.decode(ENCODING) + " specific projection"
 
     xsizes, max_ranges = deepcopy(rad.xsize), deepcopy(proj.max_range)
 
-    if type(rad.xsize) is ListType:
+    if type(rad.xsize) is list:
         # xsizes must be in the same order as max_ranges: must correspond
         for i in range(len(rad.xsize)):
             rad.xsize, proj.max_range = xsizes[i], max_ranges[i]
@@ -136,11 +134,11 @@ def MakeCartesianArea(proj, rad):
         ex = 1000 * proj.max_range
         a.extent = (-ex, -ex, ex-a.xscale, ex-a.yscale)
         a.Id = rad.Id + "_%i" % int(proj.max_range)
-        projtype = '+proj=' + proj.proj
+        projtype = '+proj=' + str(proj.proj.decode(ENCODING))
         radius = '+R=' + str(proj.R)
         lon = '+lon_0=' + str(rad.lon)
         lat = '+lat_0=' + str(rad.lat)
-        projid = rad.Id + "_" + proj.proj
+        projid = rad.Id + "_" + proj.proj.decode(ENCODING)
         definition = [projtype, radius, lat, lon]
         name = "%s %s" % (rad.place, proj.proj)
         pcs.define(projid, name, definition)
@@ -154,4 +152,4 @@ def MakeCartesianArea(proj, rad):
 init()
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)

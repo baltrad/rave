@@ -46,6 +46,8 @@ typedef struct {
 
 #define PyQITotal_API_pointers 3                     /**< number of function and variable pointers */
 
+#define PyQITotal_CAPSULE_NAME "_qitotal._C_API"
+
 #ifdef PYQITOTAL_MODULE
 /** To be used within the PyQITotal-Module */
 extern PyTypeObject PyQITotal_Type;
@@ -87,34 +89,16 @@ static void **PyQITotal_API;
  * Checks if the object is a python qi total instance.
  */
 #define PyQITotal_Check(op) \
-   ((op)->ob_type == (PyTypeObject *)PyQITotal_API[PyQITotal_Type_NUM])
+   (Py_TYPE(op) == &PyQITotal_Type)
+
+#define PyQITotal_Type (*(PyTypeObject*)PyQITotal_API[PyQITotal_Type_NUM])
 
 /**
- * Imports the qitotal module (like import _qitotal in python).
+ * Imports the PyArea module (like import _area in python).
  */
-static int
-import_qitotal(void)
-{
-  PyObject *module;
-  PyObject *c_api_object;
+#define import_qitotal() \
+    PyQITotal_API = (void **)PyCapsule_Import(PyQITotal_CAPSULE_NAME, 1);
 
-  module = PyImport_ImportModule("_qitotal");
-  if (module == NULL) {
-    return -1;
-  }
-
-  c_api_object = PyObject_GetAttrString(module, "_C_API");
-  if (c_api_object == NULL) {
-    Py_DECREF(module);
-    return -1;
-  }
-  if (PyCObject_Check(c_api_object)) {
-    PyQITotal_API = (void **)PyCObject_AsVoidPtr(c_api_object);
-  }
-  Py_DECREF(c_api_object);
-  Py_DECREF(module);
-  return 0;
-}
 
 #endif
 

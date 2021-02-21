@@ -25,15 +25,19 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @date 2010-07-24
 
 import sys, os, struct
-import cPickle
-import logging
 import logging.handlers
-import SocketServer
 import multiprocessing
 import tempfile
-from types import StringType, UnicodeType
 from rave_defines import PGF_HOST, LOGID, SYSLOG, LOGFACILITY, LOGFILE, LOGFILESIZE, LOGFILES, LOGPORT, LOGPIDFILE, LOGLEVEL, SYSLOG_FORMAT, LOGFILE_FORMAT, STDOE
 from rave_daemon import Daemon
+
+if sys.version_info < (3,):
+  import SocketServer as socketserver
+else:
+  import socketserver
+
+import pickle
+
 
 LOGLEVELS = {"notset"   : logging.NOTSET,
              "debug"    : logging.DEBUG,
@@ -83,7 +87,7 @@ def log(logger, level, msg):
 ## Handler for a streaming logging request.
 #  This basically logs the record using whatever logging policy is
 #  configured locally.
-class LogRecordStreamHandler(SocketServer.StreamRequestHandler):
+class LogRecordStreamHandler(socketserver.StreamRequestHandler):
 
     ## Handle multiple requests - each expected to be a 4-byte length,
     # followed by the LogRecord in pickle format. Logs the record
@@ -108,7 +112,7 @@ class LogRecordStreamHandler(SocketServer.StreamRequestHandler):
     # @param data payload in pickle format
     # @return unpacked payload in native Python format
     def unPickle(self, data):
-        return cPickle.loads(data)
+        return pickle.loads(data)
 
 
     ## Handles a log record
@@ -131,7 +135,7 @@ class LogRecordStreamHandler(SocketServer.StreamRequestHandler):
 
 
 ## Simple TCP socket-based logging receiver suitable for testing, and maybe a little more.
-class LogRecordSocketReceiver(SocketServer.ThreadingTCPServer):
+class LogRecordSocketReceiver(socketserver.ThreadingTCPServer):
     allow_reuse_address = 1
 
     ## Initializer
@@ -140,7 +144,7 @@ class LogRecordSocketReceiver(SocketServer.ThreadingTCPServer):
     # @param handler server instance 
     def __init__(self, host=PGF_HOST, port=LOGPORT,
                  handler=LogRecordStreamHandler):
-        SocketServer.ThreadingTCPServer.__init__(self, (host, port), handler)
+        socketserver.ThreadingTCPServer.__init__(self, (host, port), handler)
         self.abort = 0
         self.timeout = 1
         self.logname = None
@@ -296,13 +300,13 @@ if __name__ == "__main__":
   usage = "usage: %s start|stop|status|restart|fg" % prog
 
   if len(sys.argv) != 2:
-    print usage
+    print(usage)
     sys.exit()
 
   ARG = sys.argv[1].lower()
 
   if ARG not in ('start', 'stop', 'status', 'restart', 'fg'):
-    print usage
+    print(usage)
     sys.exit()
 
   this = rave_pgf_logger_server()
@@ -314,16 +318,16 @@ if __name__ == "__main__":
 
   if ARG == 'start':
     if this.status() == "not running":
-      print "Starting log TCP server on %s:%i" % (this.host, this.port)
+      print("Starting log TCP server on %s:%i" % (this.host, this.port))
       this.start()
     else:
-      print "Log TCP server already running on %s:%i" % (this.host, this.port) 
+      print("Log TCP server already running on %s:%i" % (this.host, this.port)) 
 
   if ARG == 'restart':
     this.restart()
 
   if ARG == 'status':
-    print "%s is %s" % (prog, this.status())
+    print("%s is %s" % (prog, this.status()))
 
   if ARG == 'fg':
     this.run()

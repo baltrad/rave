@@ -46,6 +46,8 @@ typedef struct {
 
 #define PyDetectionRange_API_pointers 3                   /**< number of api pointers */
 
+#define PyDetectionRange_CAPSULE_NAME "_detectionrange._C_API"
+
 #ifdef PYDETECTIONRANGE_MODULE
 /** Forward declaration of type*/
 extern PyTypeObject PyDetectionRange_Type;
@@ -84,34 +86,20 @@ static void **PyDetectionRange_API;
  * Checks if the object is a python detection range.
  */
 #define PyDetectionRange_Check(op) \
-   ((op)->ob_type == (PyTypeObject *)PyDetectionRange_API[PyDetectionRange_Type_NUM])
+   (Py_TYPE(op) == &PyDetectionRange_Type)
+
+#define PyDetectionRange_Type (*(PyTypeObject*)PyDetectionRange_API[PyDetectionRange_Type_NUM])
 
 /**
  * Imports the PyDetectionRange module (like import _pydetectionrange in python).
  */
-static int
-import_detectionrange(void)
-{
-  PyObject *module;
-  PyObject *c_api_object;
+#define import_detectionrange() \
+    PyArea_API = (void **)PyCapsule_Import(PyDetectionRange_CAPSULE_NAME, 1);
 
-  module = PyImport_ImportModule("_detectionrange");
-  if (module == NULL) {
-    return -1;
-  }
 
-  c_api_object = PyObject_GetAttrString(module, "_C_API");
-  if (c_api_object == NULL) {
-    Py_DECREF(module);
-    return -1;
-  }
-  if (PyCObject_Check(c_api_object)) {
-    PyDetectionRange_API = (void **)PyCObject_AsVoidPtr(c_api_object);
-  }
-  Py_DECREF(c_api_object);
-  Py_DECREF(module);
-  return 0;
-}
+#define PyDetectionRange_Check(op) \
+   ((op)->ob_type == (PyTypeObject *)PyDetectionRange_API[PyDetectionRange_Type_NUM])
+
 
 #endif
 

@@ -22,7 +22,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2009-12-10
  */
-#include "Python.h"
+#include "pyravecompat.h"
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>
@@ -1055,6 +1055,7 @@ static struct PyMethodDef _pycartesian_methods[] =
   {"objectType", NULL},
   {"product", NULL},
   {"source", NULL},
+  {"prodname", NULL},
   {"xsize", NULL},
   {"ysize", NULL},
   {"xscale", NULL},
@@ -1066,44 +1067,208 @@ static struct PyMethodDef _pycartesian_methods[] =
   {"endtime", NULL},
   {"enddate", NULL},
   {"defaultParameter", NULL},
-  {"init", (PyCFunction) _pycartesian_init, 1},
-  {"getLocationX", (PyCFunction) _pycartesian_getLocationX, 1},
-  {"getLocationY", (PyCFunction) _pycartesian_getLocationY, 1},
-  {"getIndexX", (PyCFunction) _pycartesian_getIndexX, 1},
-  {"getIndexY", (PyCFunction) _pycartesian_getIndexY, 1},
-  {"getExtremeLonLatBoundaries", (PyCFunction) _pycartesian_getExtremeLonLatBoundaries, 1},
-  {"setValue", (PyCFunction) _pycartesian_setValue, 1},
-  {"setConvertedValue", (PyCFunction) _pycartesian_setConvertedValue, 1},
-  {"getValue", (PyCFunction) _pycartesian_getValue, 1},
-  {"getConvertedValue", (PyCFunction) _pycartesian_getConvertedValue, 1},
-  {"getValueAtLocation", (PyCFunction) _pycartesian_getValueAtLocation, 1},
-  {"getConvertedValueAtLocation", (PyCFunction) _pycartesian_getConvertedValueAtLocation, 1},
-  {"getConvertedValueAtLonLat", (PyCFunction) _pycartesian_getConvertedValueAtLonLat, 1},
-  {"getQualityValueAtLocation", (PyCFunction) _pycartesian_getQualityValueAtLocation, 1},
-  {"getConvertedQualityValueAtLocation", (PyCFunction) _pycartesian_getConvertedQualityValueAtLocation, 1},
-  {"getQualityValueAtLonLat", (PyCFunction) _pycartesian_getQualityValueAtLonLat, 1},
-  {"getConvertedQualityValueAtLonLat", (PyCFunction) _pycartesian_getConvertedQualityValueAtLonLat, 1},
-  {"isTransformable", (PyCFunction) _pycartesian_isTransformable, 1},
-  {"getMean", (PyCFunction) _pycartesian_getMean, 1},
-  {"addAttribute", (PyCFunction) _pycartesian_addAttribute, 1},
-  {"getAttribute", (PyCFunction) _pycartesian_getAttribute, 1},
-  {"getAttributeNames", (PyCFunction) _pycartesian_getAttributeNames, 1},
-  {"hasAttribute", (PyCFunction) _pycartesian_hasAttribute, 1},
-  {"isValid", (PyCFunction) _pycartesian_isValid, 1},
-  {"addQualityField", (PyCFunction) _pycartesian_addQualityField, 1},
-  {"getNumberOfQualityFields", (PyCFunction) _pycartesian_getNumberOfQualityFields, 1},
-  {"getQualityField", (PyCFunction) _pycartesian_getQualityField, 1},
-  {"removeQualityField", (PyCFunction) _pycartesian_removeQualityField, 1},
-  {"getQualityFieldByHowTask", (PyCFunction) _pycartesian_getQualityFieldByHowTask, 1},
-  {"findQualityFieldByHowTask", (PyCFunction) _pycartesian_findQualityFieldByHowTask, 1},
-  {"addParameter", (PyCFunction)_pycartesian_addParameter, 1},
-  {"createParameter", (PyCFunction)_pycartesian_createParameter, 1},
-  {"getParameter", (PyCFunction)_pycartesian_getParameter, 1},
-  {"hasParameter", (PyCFunction)_pycartesian_hasParameter, 1},
-  {"removeParameter", (PyCFunction)_pycartesian_removeParameter, 1},
-  {"getParameterCount", (PyCFunction)_pycartesian_getParameterCount, 1},
-  {"getParameterNames", (PyCFunction)_pycartesian_getParameterNames, 1},
-  {"clone", (PyCFunction)_pycartesian_clone, 1},
+  {"init", (PyCFunction) _pycartesian_init, 1,
+      "init(inarea)\n\n"
+      "Initializes this cartesian product with the area \n\n"
+      "inarea - The area definition to be used for this cartesian product"
+  },
+  {"getLocationX", (PyCFunction) _pycartesian_getLocationX, 1,
+    "getLocationX(x) -> cartesian x coordinate\n\n"
+    "Returns the location within the area as identified by a x-position. Evaluated as: upperLeft.x + xscale * x \n\n"
+    "x - The x index in the area. I.e. x >= 0 and x < xsize."
+  },
+  {"getLocationY", (PyCFunction) _pycartesian_getLocationY, 1,
+    "getLocationY(y) -> cartesian y coordinate\n\n"
+    "Returns the location within the area as identified by a y-position. Evaluated as: upperLeft.y - yscale * y \n\n"
+    "y - The y index in the area. I.e. y >= 0 and y < ysize."
+  },
+  {"getIndexX", (PyCFunction) _pycartesian_getIndexX, 1,
+    "getIndexX(x) -> x index\n\n"
+    "Returns the index within the area as identified by a x-coordinate. Evaluated as: (x - lowerLeft.x)/xscale \n\n"
+    "x - The x coordinate in the area."
+  },
+  {"getIndexY", (PyCFunction) _pycartesian_getIndexY, 1,
+    "getIndexY(y) -> y index\n\n"
+    "Returns the index within the area as identified by a y-coordinate. Evaluated as: (upperRight.y - y)/yscale \n\n"
+    "y - The y coordinate in the area."
+  },
+  {"getExtremeLonLatBoundaries", (PyCFunction) _pycartesian_getExtremeLonLatBoundaries, 1,
+    "getExtremeLonLatBoundaries() -> (ullon, ullat),(lrlon,lrlat)\n\n"
+    "Determines the extreme lon lat boundaries for this area. I.e. the outer boundaries of this cartesian image "
+    "will be steped over until the absolute min/max lon/lat positions are found for this image.\n"
+    "Note, that the bounding box returned will be in a different setup than area extent"
+  },
+  {"setValue", (PyCFunction) _pycartesian_setValue, 1,
+    "setValue((x,y),value) -> 1 on success otherwise 0\n\n"
+    "Sets the value at the specified position. \n\n"
+    "(x,y) - tuple with x & y position\n"
+    "value - the value that should be set at specified position."
+  },
+  {"setConvertedValue", (PyCFunction) _pycartesian_setConvertedValue, 1,
+    "setConvertedValue((x,y),value) -> 1 on success otherwise 0\n\n"
+    "Sets the value at the specified position with gain & offset applied. Would be same as setValue((x, y), (v - offset)/gain). \n\n"
+    "(x,y) - tuple with x & y position\n"
+    "value - the value with offset/gain applied that should be set at specified position."
+  },
+  {"getValue", (PyCFunction) _pycartesian_getValue, 1,
+    "getValue((x,y)) -> the value at the specified x and y position.\n\n"
+    "Returns the value at the specified x and y position. \n\n"
+    "(x,y) - tuple with x & y position\n"
+  },
+  {"getConvertedValue", (PyCFunction) _pycartesian_getConvertedValue, 1,
+    "getConvertedValue((x,y)) -> the value at the specified x and y position.\n\n"
+    "Returns the converted value at the specified x and y position. \n\n"
+    "(x,y) - tuple with x & y position\n"
+  },
+  {"getValueAtLocation", (PyCFunction) _pycartesian_getValueAtLocation, 1,
+    "getValueAtLocation((x,y)) -> the value at the specified x and y coordinate.\n\n"
+    "Returns the value from the location as defined by the area definition. Same as calling c.getValue((c.getIndexX(),c.getIndexY())\n\n"
+    "(x,y) - tuple with x & y coordinate\n"
+  },
+  {"getConvertedValueAtLocation", (PyCFunction) _pycartesian_getConvertedValueAtLocation, 1,
+    "getConvertedValueAtLocation((x,y)) -> the converted value at the specified x and y position.\n\n"
+    "Returns the value from the location as defined by the area definition. Same as calling c.getConvertedValue(c.getIndexX(), c.getIndexY() \n\n"
+    "(x,y) - tuple with x & y coordinate\n"
+  },
+  {"getConvertedValueAtLonLat", (PyCFunction) _pycartesian_getConvertedValueAtLonLat, 1,
+    "getConvertedValueAtLonLat((lon,lat)) -> the converted value at the specified lon/lat (in radians) position.\n\n"
+    "Returns the value from the lon/lat coordinate. \n\n"
+    "(lon,lat) - tuple with lon/lat coordinate in radians\n"
+  },
+  {"getQualityValueAtLocation", (PyCFunction) _pycartesian_getQualityValueAtLocation, 1,
+    "getQualityValueAtLocation((x,y), fieldname) -> the quality value at the specified x/y coordinate.\n\n"
+    "Returns the quality value from the specified quality field and location \n\n"
+    "(x, y) - tuple with x/y coordinate \n"
+    "fieldname  - how/task name of the quality field"
+  },
+  {"getConvertedQualityValueAtLocation", (PyCFunction) _pycartesian_getConvertedQualityValueAtLocation, 1,
+    "getConvertedQualityValueAtLocation((x,y), fieldname) -> the converted quality value at the specified x/y coordinate.\n\n"
+    "Returns the quality value from the specified quality field and location. Since offset & gain is not mandatory in the quality field. If they are missing, gain will be 1.0 and offset 0.0. \n\n"
+    "(x, y) - tuple with x/y coordinate \n"
+    "fieldname  - how/task name of the quality field"
+  },
+  {"getQualityValueAtLonLat", (PyCFunction) _pycartesian_getQualityValueAtLonLat, 1,
+    "getQualityValueAtLonLat((lon,lat), fieldname) -> the quality value at the specified lon/lat coordinate.\n\n"
+    "Returns the quality value from the specified quality field and location. \n\n"
+    "(lon, lat) - tuple with lon/lat coordinate \n"
+    "fieldname  - how/task name of the quality field"
+  },
+  {"getConvertedQualityValueAtLonLat", (PyCFunction) _pycartesian_getConvertedQualityValueAtLonLat, 1,
+    "getConvertedQualityValueAtLonLat((lon,lat), fieldname) -> the converted quality value at the specified lon/lat coordinate.\n\n"
+    "Returns the quality value from the specified quality field and location.  Since offset & gain is not mandatory in the quality field. If they are missing, gain will be 1.0 and offset 0.0. \n\n"
+    "(lon, lat) - tuple with lon/lat coordinate \n"
+    "fieldname  - how/task name of the quality field"
+  },
+  {"isTransformable", (PyCFunction) _pycartesian_isTransformable, 1,
+    "isTransformable() -> a boolean.\n\n"
+    "Returns if all preconditions are met in order to perform a transformation. \n\n"
+  },
+  {"getMean", (PyCFunction) _pycartesian_getMean, 1,
+    "getMean((x,y), N) -> (datatype, the mean value) \n\n"
+    "Returns the mean value over a NxN square around the specified x and y position. \n\n"
+    "(x,y) - tuple with x/y position \n"
+    "N     - Number of pixels in horizontal and vertical (NxN) direction around x,y"
+  },
+  {"addAttribute", (PyCFunction) _pycartesian_addAttribute, 1,
+    "addAttribute(name, value) \n\n"
+    "Adds an attribute to the volume. Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis etc. \n"
+    "Currently, double, long, string and 1-dimensional arrays are supported.\n\n"
+    "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis\n"
+    "        In the case of how-groups, it is also possible to specify subgroups, like how/subgroup/attr or how/subgroup/subgroup/attr.\n"
+    "value - Value to be associated with the name. Currently, double, long, string and 1-dimensional arrays are supported."
+  },
+  {"getAttribute", (PyCFunction) _pycartesian_getAttribute, 1,
+    "getAttribute(name) -> value \n\n"
+    "Returns the value associated with the specified name \n\n"
+    "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis\n"
+    "        In the case of how-groups, it is also possible to specify subgroups, like how/subgroup/attr or how/subgroup/subgroup/attr.\n"
+  },
+  {"getAttributeNames", (PyCFunction) _pycartesian_getAttributeNames, 1,
+    "getAttributeNames() -> array of names \n\n"
+    "Returns the attribute names associated with this cartesian object"
+  },
+  {"hasAttribute", (PyCFunction) _pycartesian_hasAttribute, 1,
+    "hasAttribute(name) -> a boolean \n\n"
+    "Returns if the specified name is defined within this cartesian object\n\n"
+    "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis.\n"
+    "        In the case of how-groups, it is also possible to specify subgroups, like how/subgroup/attr or how/subgroup/subgroup/attr.\n"
+  },
+  {"isValid", (PyCFunction) _pycartesian_isValid, 1,
+    "isValid(otype) -> a boolean \n\n"
+    "Validates this cartesian object to see if it is possible to write as specified type.\n\n"
+    "otype  - The type we want to save as, can be one of ObjectType_IMAGE, ObjectType_COMP or ObjectType_CVOL. Any other and it is assumed that it should be written as an IMAGE"
+  },
+  {"addQualityField", (PyCFunction) _pycartesian_addQualityField, 1,
+    "addQualityField(field) \n\n"
+    "Adds a quality field to this cartesian product. Note, there is no check for valid size or similar. Also, there is no check if same how/task is specified or the likes. \n\n"
+    "field  - The RaveFieldCore field"
+  },
+  {"getNumberOfQualityFields", (PyCFunction) _pycartesian_getNumberOfQualityFields, 1,
+    "getNumberOfQualityFields() -> integer\n\n"
+    "Returns the number of quality fields in this cartesian product"
+  },
+  {"getQualityField", (PyCFunction) _pycartesian_getQualityField, 1,
+    "getQualityField(index) -> RaveFieldCore \n\n"
+    "Returns the rave field at specified index\n\n"
+    "index  - The rave field at specified position.\n\n"
+    "Throws IndexError if the rave field not could be found"
+  },
+  {"removeQualityField", (PyCFunction) _pycartesian_removeQualityField, 1,
+    "removeQualityField(index) \n\n"
+    "Removes the quality field at specified index\n\n"
+    "index  - The rave field at specified position.\n\n"
+  },
+  {"getQualityFieldByHowTask", (PyCFunction) _pycartesian_getQualityFieldByHowTask, 1,
+    "getQualityFieldByHowTask(name) -> RaveFieldCore or None \n\n"
+    "Returns the quality with the how/task attribute equal to name\n\n"
+    "name  - The rave field with how/task name equal to name\n\n"
+  },
+  {"findQualityFieldByHowTask", (PyCFunction) _pycartesian_findQualityFieldByHowTask, 1,
+    "findQualityFieldByHowTask(name) -> RaveFieldCore or None \n\n"
+    "Tries to locate any quality field with  how/task attribute equal to name. First, the current parameters quality fields are checked and then self.\n\n"
+    "name  - The rave field with how/task name equal to name\n\n"
+  },
+  {"addParameter", (PyCFunction)_pycartesian_addParameter, 1,
+    "addParameter(parameter) \n\n"
+    "Adds a parameter to this cartesian product. Note, the quantity is essential in the cartesian parameter since that will be identifying each parameter.\n"
+    "If a parameter with same quantity already exists in the cartesian product. That cartesian parameter will be replaced.\n\n"
+    "parameter  - The CartesianParamCore instance"
+  },
+  {"createParameter", (PyCFunction)_pycartesian_createParameter, 1,
+    "createParameter(quantity, type) -> parameter\n\n"
+    "Creates a parameter with specified quantity and value type with same geometry as self.\n"
+    "If a parameter with same quantity already exists in the cartesian product. The created cartesian parameter will be added to the internals of self.\n\n"
+    "quantity  - A string representing the quantity like TH, DBZH, ...\n"
+    "type      - The data type of the created field, e.g. _rave.RaveDataType_UCHAR, ...."
+  },
+  {"getParameter", (PyCFunction)_pycartesian_getParameter, 1,
+    "getParameter(quantity) -> CartesianParamCore\n\n"
+    "Returns the parameter with specified quantity if it exists\n\n"
+    "quantity  - The quantity of the requested parameter\n\n"
+    "Throws IndexError if no parameter exists with specified quantity"
+  },
+  {"hasParameter", (PyCFunction)_pycartesian_hasParameter, 1,
+    "hasParameter(quantity) -> boolean\n\n"
+    "Returns True or False depending if a parameter with specified quantity exists in this cartesian product. \n\n"
+    "quantity  - The quantity of the requested parameter\n\n"
+  },
+  {"removeParameter", (PyCFunction)_pycartesian_removeParameter, 1,
+    "hasParameter(quantity)\n\n"
+    "Removes the parameter with the specified quantity if it exists. \n\n"
+    "quantity  - The quantity of the parameter that should be removed\n\n"
+  },
+  {"getParameterCount", (PyCFunction)_pycartesian_getParameterCount, 1,
+    "getParameterCount() -> number of parameters\n\n"
+    "Returns the number of parameters that has been added to this cartesian product. \n\n"
+  },
+  {"getParameterNames", (PyCFunction)_pycartesian_getParameterNames, 1,
+    "getParameterNames() -> list of quantities for parameters existing in this product\n\n"
+    "Returns a list of quantities for the parameters that exists in this product"
+  },
+  {"clone", (PyCFunction)_pycartesian_clone, 1,
+    "clone() -> a clone of self (CartesianCore)\n\n"
+    "Creates a duplicate of self."
+  },
   {NULL, NULL } /* sentinel */
 };
 
@@ -1111,45 +1276,49 @@ static struct PyMethodDef _pycartesian_methods[] =
  * Returns the specified attribute in the cartesian
  * @param[in] self - the cartesian product
  */
-static PyObject* _pycartesian_getattr(PyCartesian* self, char* name)
+static PyObject* _pycartesian_getattro(PyCartesian* self, PyObject* name)
 {
-  PyObject* res = NULL;
-
-  if (strcmp("time", name) == 0) {
+  if (PY_COMPARE_STRING_WITH_ATTRO_NAME("time", name) == 0) {
     if (Cartesian_getTime(self->cartesian) != NULL) {
       return PyString_FromString(Cartesian_getTime(self->cartesian));
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("date", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("date", name) == 0) {
     if (Cartesian_getDate(self->cartesian) != NULL) {
       return PyString_FromString(Cartesian_getDate(self->cartesian));
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("objectType", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("objectType", name) == 0) {
     return PyInt_FromLong(Cartesian_getObjectType(self->cartesian));
-  } else if (strcmp("product", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("product", name) == 0) {
     return PyInt_FromLong(Cartesian_getProduct(self->cartesian));
-  } else if (strcmp("source", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("source", name) == 0) {
     if (Cartesian_getSource(self->cartesian) != NULL) {
-      return PyString_FromString(Cartesian_getSource(self->cartesian));
+      return PyRaveAPI_StringOrUnicode_FromASCII(Cartesian_getSource(self->cartesian));
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("xsize", name) == 0) {
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "prodname") == 0) {
+    if (Cartesian_getProdname(self->cartesian) == NULL) {
+      Py_RETURN_NONE;
+    } else {
+      return PyRaveAPI_StringOrUnicode_FromASCII(Cartesian_getProdname(self->cartesian));
+    }
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("xsize", name) == 0) {
     return PyInt_FromLong(Cartesian_getXSize(self->cartesian));
-  } else if (strcmp("ysize", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("ysize", name) == 0) {
     return PyInt_FromLong(Cartesian_getYSize(self->cartesian));
-  } else if (strcmp("xscale", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("xscale", name) == 0) {
     return PyFloat_FromDouble(Cartesian_getXScale(self->cartesian));
-  } else if (strcmp("yscale", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("yscale", name) == 0) {
     return PyFloat_FromDouble(Cartesian_getYScale(self->cartesian));
-  } else if (strcmp("areaextent", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("areaextent", name) == 0) {
     double llX = 0.0, llY = 0.0, urX = 0.0, urY = 0.0;
     Cartesian_getAreaExtent(self->cartesian, &llX, &llY, &urX, &urY);
     return Py_BuildValue("(dddd)", llX, llY, urX, urY);
-  } else if (strcmp("projection", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("projection", name) == 0) {
     Projection_t* projection = Cartesian_getProjection(self->cartesian);
     if (projection != NULL) {
       PyProjection* result = PyProjection_New(projection);
@@ -1158,31 +1327,31 @@ static PyObject* _pycartesian_getattr(PyCartesian* self, char* name)
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("starttime", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("starttime", name) == 0) {
     if (Cartesian_getStartTime(self->cartesian) != NULL) {
       return PyString_FromString(Cartesian_getStartTime(self->cartesian));
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("startdate", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("startdate", name) == 0) {
     if (Cartesian_getStartDate(self->cartesian) != NULL) {
       return PyString_FromString(Cartesian_getStartDate(self->cartesian));
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("endtime", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("endtime", name) == 0) {
     if (Cartesian_getEndTime(self->cartesian) != NULL) {
       return PyString_FromString(Cartesian_getEndTime(self->cartesian));
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("enddate", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("enddate", name) == 0) {
     if (Cartesian_getEndDate(self->cartesian) != NULL) {
       return PyString_FromString(Cartesian_getEndDate(self->cartesian));
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("defaultParameter", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("defaultParameter", name) == 0) {
     if (Cartesian_getDefaultParameter(self->cartesian) != NULL) {
       return PyString_FromString(Cartesian_getDefaultParameter(self->cartesian));
     } else {
@@ -1190,25 +1359,19 @@ static PyObject* _pycartesian_getattr(PyCartesian* self, char* name)
     }
   }
 
-  res = Py_FindMethod(_pycartesian_methods, (PyObject*) self, name);
-  if (res)
-    return res;
-
-  PyErr_Clear();
-  PyErr_SetString(PyExc_AttributeError, name);
-  return NULL;
+  return PyObject_GenericGetAttr((PyObject*)self, name);
 }
 
 /**
  * Returns the specified attribute in the polar volume
  */
-static int _pycartesian_setattr(PyCartesian* self, char* name, PyObject* val)
+static int _pycartesian_setattro(PyCartesian* self, PyObject* name, PyObject* val)
 {
   int result = -1;
   if (name == NULL) {
     goto done;
   }
-  if (strcmp("time", name) == 0) {
+  if (PY_COMPARE_STRING_WITH_ATTRO_NAME("time", name) == 0) {
     if (PyString_Check(val)) {
       if (!Cartesian_setTime(self->cartesian, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "time must be in the format HHmmss");
@@ -1218,7 +1381,7 @@ static int _pycartesian_setattr(PyCartesian* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_ValueError,"time must be of type string");
     }
-  } else if (strcmp("date", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("date", name) == 0) {
     if (PyString_Check(val)) {
       if (!Cartesian_setDate(self->cartesian, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "date must be in the format YYYYMMSS");
@@ -1228,7 +1391,7 @@ static int _pycartesian_setattr(PyCartesian* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_ValueError,"date must be of type string");
     }
-  } else if (strcmp("objectType", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("objectType", name) == 0) {
     if (PyInt_Check(val)) {
       if (!Cartesian_setObjectType(self->cartesian, PyInt_AsLong(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "objectType not supported");
@@ -1236,7 +1399,7 @@ static int _pycartesian_setattr(PyCartesian* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "objectType must be a valid object type")
     }
-  } else if (strcmp("product", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("product", name) == 0) {
     if (PyInt_Check(val)) {
       if (!Cartesian_setProduct(self->cartesian, PyInt_AsLong(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "product not supported");
@@ -1244,7 +1407,7 @@ static int _pycartesian_setattr(PyCartesian* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "product must be a valid product type")
     }
-  } else if (strcmp("source", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("source", name) == 0) {
     if (PyString_Check(val)) {
       if (!Cartesian_setSource(self->cartesian, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "Failed to set source");
@@ -1254,31 +1417,41 @@ static int _pycartesian_setattr(PyCartesian* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_ValueError,"source must be of type string");
     }
-  } else if (strcmp("xscale", name)==0) {
+  } else  if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "prodname") == 0) {
+      if (PyString_Check(val)) {
+        if (!Cartesian_setProdname(self->cartesian, PyString_AsString(val))) {
+          raiseException_gotoTag(done, PyExc_MemoryError, "Could not set prodname");
+        }
+      } else if (val == Py_None) {
+        Cartesian_setProdname(self->cartesian, NULL);
+      } else {
+        raiseException_gotoTag(done, PyExc_TypeError,"prodname must be of type string");
+      }
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("xscale", name)==0) {
     if (PyFloat_Check(val)) {
       Cartesian_setXScale(self->cartesian, PyFloat_AsDouble(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError,"xscale must be of type float");
     }
-  } else if (strcmp("yscale", name)==0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("yscale", name)==0) {
     if (PyFloat_Check(val)) {
       Cartesian_setYScale(self->cartesian, PyFloat_AsDouble(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError,"yscale must be of type float");
     }
-  } else if (strcmp("areaextent", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("areaextent", name) == 0) {
     double llX = 0.0, llY = 0.0, urX = 0.0, urY = 0.0;
     if (!PyArg_ParseTuple(val, "dddd", &llX, &llY, &urX, &urY)) {
       goto done;
     }
     Cartesian_setAreaExtent(self->cartesian, llX, llY, urX, urY);
-  } else if (strcmp("projection", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("projection", name) == 0) {
     if (PyProjection_Check(val)) {
       Cartesian_setProjection(self->cartesian, ((PyProjection*)val)->projection);
     } else if (val == Py_None) {
       Cartesian_setProjection(self->cartesian, NULL);
     }
-  } else if (strcmp("starttime", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("starttime", name) == 0) {
     if (PyString_Check(val)) {
       if (!Cartesian_setStartTime(self->cartesian, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "starttime must be in the format HHmmss");
@@ -1288,7 +1461,7 @@ static int _pycartesian_setattr(PyCartesian* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_ValueError,"time must be of type string");
     }
-  } else if (strcmp("startdate", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("startdate", name) == 0) {
     if (PyString_Check(val)) {
       if (!Cartesian_setStartDate(self->cartesian, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "startdate must be in the format YYYYMMSS");
@@ -1298,7 +1471,7 @@ static int _pycartesian_setattr(PyCartesian* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_ValueError,"date must be of type string");
     }
-  } else if (strcmp("endtime", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("endtime", name) == 0) {
     if (PyString_Check(val)) {
       if (!Cartesian_setEndTime(self->cartesian, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "endtime must be in the format HHmmss");
@@ -1308,7 +1481,7 @@ static int _pycartesian_setattr(PyCartesian* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_ValueError,"endtime must be of type string");
     }
-  } else if (strcmp("enddate", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("enddate", name) == 0) {
     if (PyString_Check(val)) {
       if (!Cartesian_setEndDate(self->cartesian, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "enddate must be in the format YYYYMMSS");
@@ -1318,7 +1491,7 @@ static int _pycartesian_setattr(PyCartesian* self, char* name, PyObject* val)
     } else {
       raiseException_gotoTag(done, PyExc_ValueError,"enddate must be of type string");
     }
-  } else if (strcmp("defaultParameter", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("defaultParameter", name) == 0) {
     if (PyString_Check(val)) {
       if (!Cartesian_setDefaultParameter(self->cartesian, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "could not set defaultParameter");
@@ -1327,7 +1500,7 @@ static int _pycartesian_setattr(PyCartesian* self, char* name, PyObject* val)
       raiseException_gotoTag(done, PyExc_ValueError,"defaultParameter must be of type string");
     }
   } else {
-    raiseException_gotoTag(done, PyExc_AttributeError, name);
+    raiseException_gotoTag(done, PyExc_AttributeError, PY_RAVE_ATTRO_NAME_TO_STRING(name));
   }
 
   result = 0;
@@ -1349,60 +1522,150 @@ static PyObject* _pycartesian_isCartesian(PyObject* self, PyObject* args)
 
 /*@} End of Cartesian products */
 
+/*@{ Documentation about the type */
+PyDoc_STRVAR(_pycartesian_type_doc,
+    "The cartesian product represents a cartesian object in one or another way. There are several member attributes "
+    "associated with a cartesian product as well a number of child objects like parameters, quality fields and more.\n"
+    "Since a lot of RAVE has been developed with ODIM H5 in mind, it is also possible to add arbitrary attributes in "
+    "various groups, e.g. c.addAttribute(\"how/this\", 1.2) and so on.\n\n"
+    "A list of avilable member attributes are described below. For information about member functions, check each functions doc.\n"
+    "\n"
+    "time             - Time this cartesian product should represent as a string with format HHmmSS\n"
+    "date             - Date this cartesian product should represent as a string in the format YYYYMMDD\n"
+    "objectType       - The object type as defined in ODIM H5 this cartesian product should be defined as. Can be _rave.Rave_ObjectType_IMAGE or _raveRave_ObjectType_COMP\n"
+    "product          - The product this cartesian product should represent as defined in ODIM H5. Can be for example _rave.Rave_ProductType_PPI or _rave.Rave_ProductType_PCAPPI\n"
+    "source           - The source for this product. Defined as what/source in ODIM H5. I.e. a comma separated list of various identifiers. For example. NOD:seang,WMO:1234,....\n"
+    "prodname         - The product name\n"
+    "xsize            - The xsize of the area represented. ReadOnly, initialization occurs with for example the init-function.\n"
+    "ysize            - The ysize of the area represented. ReadOnly, initialization occurs with for example the init-function.\n"
+    "xscale           - The scale in meters in x-direction.\n"
+    "yscale           - The scale in meters in y-direction.\n"
+    "areaextent       - A tuple of four representing the outer boundaries of this cartesian product. Defined as (lower left X, lower left Y, upper right X, upper right Y).\n"
+    "projection       - The projection object of type ProjectionCore that defines what projection that this cartesian product is defined with.\n"
+    "starttime        - Start time for this product as a string with format HHmmSS.\n"
+    "startdate        - Start date for this product as a string with format YYYYMMDD.\n"
+    "endtime          - End time for this product as a string with format HHmmSS.\n"
+    "enddate          - End date for this product as a string with format YYYYMMDD.\n"
+    "defaultParameter - Since a cartesian product doesn't contain data by itself and instead contains a number of parameters like TH, DBZH, .... This setting allows the user to work directly with a parameter through the cartesian API.\n"
+    "\n"
+    "Usage:\n"
+    " import _arearegistry, _projectionregistry\n"
+    " reg = _arearegistry.load(\"area_registry.xml\", \n"
+    "                         _projectionregistry.load(\"projection_registry.xml\"))\n"
+    " c.init(reg.getByName(\"swegmaps_2000\"))\n"
+    " th   = c.createParameter(\"TH\", _rave.RaveDataType_UCHAR)\n"
+    " dbzh = c.createParameter(\"DBZH\", _rave.RaveDataType_UCHAR)\n"
+    " c.defaultParameter = \"TH\"\n"
+    " c.setValue((2,2), 1.0) # Sets 1.0 in parameter TH\n"
+    " if th.getValue((2,2))[1] == c.getValue((2,2))[1]:\n"
+    "   print(\"TH is same as cartesian\") # Will be written \n"
+    " if th.getValue((2,2))[1] == c.getValue((2,2))[1]:\n"
+    "   print(\"DBZH is same as cartesian\")  # Will not be written \n"
+    );
+/*@} End of Documentation about the type */
+
+
 /*@{ Type definitions */
 PyTypeObject PyCartesian_Type =
 {
-  PyObject_HEAD_INIT(NULL)0, /*ob_size*/
+  PyVarObject_HEAD_INIT(NULL, 0) /*ob_size*/
   "CartesianCore", /*tp_name*/
   sizeof(PyCartesian), /*tp_size*/
   0, /*tp_itemsize*/
   /* methods */
   (destructor)_pycartesian_dealloc, /*tp_dealloc*/
   0, /*tp_print*/
-  (getattrfunc)_pycartesian_getattr, /*tp_getattr*/
-  (setattrfunc)_pycartesian_setattr, /*tp_setattr*/
-  0, /*tp_compare*/
-  0, /*tp_repr*/
-  0, /*tp_as_number */
+  (getattrfunc)0,               /*tp_getattr*/
+  (setattrfunc)0,               /*tp_setattr*/
+  0,                            /*tp_compare*/
+  0,                            /*tp_repr*/
+  0,                            /*tp_as_number */
   0,
-  0, /*tp_as_mapping */
-  0 /*tp_hash*/
+  0,                            /*tp_as_mapping */
+  0,                            /*tp_hash*/
+  (ternaryfunc)0,               /*tp_call*/
+  (reprfunc)0,                  /*tp_str*/
+  (getattrofunc)_pycartesian_getattro, /*tp_getattro*/
+  (setattrofunc)_pycartesian_setattro, /*tp_setattro*/
+  0,                            /*tp_as_buffer*/
+  Py_TPFLAGS_DEFAULT, /*tp_flags*/
+  _pycartesian_type_doc,        /*tp_doc*/
+  (traverseproc)0,              /*tp_traverse*/
+  (inquiry)0,                   /*tp_clear*/
+  0,                            /*tp_richcompare*/
+  0,                            /*tp_weaklistoffset*/
+  0,                            /*tp_iter*/
+  0,                            /*tp_iternext*/
+  _pycartesian_methods,         /*tp_methods*/
+  0,                            /*tp_members*/
+  0,                            /*tp_getset*/
+  0,                            /*tp_base*/
+  0,                            /*tp_dict*/
+  0,                            /*tp_descr_get*/
+  0,                            /*tp_descr_set*/
+  0,                            /*tp_dictoffset*/
+  0,                            /*tp_init*/
+  0,                            /*tp_alloc*/
+  0,                            /*tp_new*/
+  0,                            /*tp_free*/
+  0,                            /*tp_is_gc*/
 };
 /*@} End of Type definitions */
 
+
+
 /*@{ Module setup */
 static PyMethodDef functions[] = {
-  {"new", (PyCFunction)_pycartesian_new, 1},
-  {"isCartesian", (PyCFunction)_pycartesian_isCartesian, 1},
+  {"new", (PyCFunction)_pycartesian_new, 1,
+    "new() -> new instance of the CartesianCore object\n\n"
+    "Creates a new instance of the CartesianCore object"
+  },
+  {"isCartesian", (PyCFunction)_pycartesian_isCartesian, 1,
+    "isCartesian(object) -> boolean\n\n"
+    "Checks if provided object is of CartesianCore type or not.\n\n"
+    "object - the object to check"
+  },
   {NULL,NULL} /*Sentinel*/
 };
 
-PyMODINIT_FUNC
-init_cartesian(void)
+/*@{ Documentation about the module */
+PyDoc_STRVAR(_pycartesian_module_doc,
+    "Represents a cartesian product\n"
+    "\n"
+    "Usage:\n"
+    " import _cartesian\n"
+    " c = _cartesian.new()\n"
+    " c.init(area) # If area exists, then use it to initialize the cartesian product\n"
+    );
+/*@} End of Documentation about the module */
+
+MOD_INIT(_cartesian)
 {
   PyObject *module=NULL,*dictionary=NULL;
   static void *PyCartesian_API[PyCartesian_API_pointers];
   PyObject *c_api_object = NULL;
-  PyCartesian_Type.ob_type = &PyType_Type;
 
-  module = Py_InitModule("_cartesian", functions);
+  MOD_INIT_SETUP_TYPE(PyCartesian_Type, &PyType_Type);
+
+  MOD_INIT_VERIFY_TYPE_READY(&PyCartesian_Type);
+
+  MOD_INIT_DEF(module, "_cartesian", _pycartesian_module_doc, functions);
   if (module == NULL) {
-    return;
+    return MOD_INIT_ERROR;
   }
+
   PyCartesian_API[PyCartesian_Type_NUM] = (void*)&PyCartesian_Type;
   PyCartesian_API[PyCartesian_GetNative_NUM] = (void *)PyCartesian_GetNative;
   PyCartesian_API[PyCartesian_New_NUM] = (void*)PyCartesian_New;
 
-  c_api_object = PyCObject_FromVoidPtr((void *)PyCartesian_API, NULL);
-
-  if (c_api_object != NULL) {
-    PyModule_AddObject(module, "_C_API", c_api_object);
-  }
-
+  c_api_object = PyCapsule_New(PyCartesian_API, PyCartesian_CAPSULE_NAME, NULL);
   dictionary = PyModule_GetDict(module);
-  ErrorObject = PyString_FromString("_cartesian.error");
+  PyDict_SetItemString(dictionary, "_C_API", c_api_object);
+
+  ErrorObject = PyErr_NewException("_cartesian.error", NULL, NULL);
   if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
     Py_FatalError("Can't define _cartesian.error");
+    return MOD_INIT_ERROR;
   }
 
   import_array(); /*To make sure I get access to Numeric*/
@@ -1411,5 +1674,6 @@ init_cartesian(void)
   import_pyravefield();
   import_pycartesianparam();
   PYRAVE_DEBUG_INITIALIZE;
+  return MOD_INIT_SUCCESS(module);
 }
 /*@} End of Module setup */

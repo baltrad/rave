@@ -22,7 +22,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2009-10-14
  */
-#include <Python.h>
+#include <pyravecompat.h>
 #include <arrayobject.h>
 #include <limits.h>
 #include <math.h>
@@ -30,13 +30,15 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include <string.h>
 #include "raveutil.h"
 #include "rave.h"
-#include "pypolarscan.h"
+#include "rave_types.h"
+#include "rave_io.h"
 #include "pypolarvolume.h"
+#include "pytransform.h"
+#include "pyraveio.h"
+#include "pypolarscan.h"
 #include "pycartesian.h"
 #include "pycartesianparam.h"
-#include "pytransform.h"
 #include "pyprojection.h"
-#include "pyraveio.h"
 #include "rave_debug.h"
 #include "rave_alloc.h"
 #include "rave_utilities.h"
@@ -176,10 +178,12 @@ static PyObject* _raveio_open(PyObject* self, PyObject* args)
 {
   PyRaveIO* result = NULL;
   char* filename = NULL;
-  if (!PyArg_ParseTuple(args, "s", &filename)) {
+  int lazyLoading = 0;
+  char* preloadQuantities = NULL;
+  if (!PyArg_ParseTuple(args, "s|iz", &filename, &lazyLoading, &preloadQuantities)) {
     return NULL;
   }
-  result = PyRaveIO_Open(filename);
+  result = PyRaveIO_Open(filename, lazyLoading, preloadQuantities);
   return (PyObject*)result;
 }
 
@@ -326,21 +330,174 @@ static PyObject* _rave_translate_from_projection_to_wkt(PyObject* self, PyObject
 /// --------------------------------------------------------------------
 /*@{ Module setup */
 static PyMethodDef functions[] = {
-  {"volume", (PyCFunction)_polarvolume_new, 1},
-  {"scan", (PyCFunction)_polarscan_new, 1},
-  {"cartesian", (PyCFunction)_cartesian_new, 1},
-  {"cartesianparam", (PyCFunction)_cartesianparam_new, 1},
-  {"transform", (PyCFunction)_transform_new, 1},
-  {"projection", (PyCFunction)_projection_new, 1},
-  {"io", (PyCFunction)_raveio_new, 1},
-  {"open", (PyCFunction)_raveio_open, 1},
-  {"isXmlSupported", (PyCFunction)_rave_isxmlsupported, 1},
-  {"isCFConventionSupported", (PyCFunction)_rave_isCFConventionSupported, 1},
-  {"setDebugLevel", (PyCFunction)_rave_setDebugLevel, 1},
-  {"compare_datetime", (PyCFunction) _rave_compare_datetime, 1},
-  {"translate_from_projection_to_wkt", (PyCFunction) _rave_translate_from_projection_to_wkt, 1},
+  {"volume", (PyCFunction)_polarvolume_new, 1,
+    "volume() -> polar volume\n\n"
+    "Creates a new instance of PolarVolumeCore"
+  },
+  {"scan", (PyCFunction)_polarscan_new, 1,
+    "scan() -> polar scan\n\n"
+    "Creates a new instance of PolarScanCore"
+  },
+  {"cartesian", (PyCFunction)_cartesian_new, 1,
+    "cartesian() -> cartesian\n\n"
+    "Creates a new instance of CartesianCore"
+  },
+  {"cartesianparam", (PyCFunction)_cartesianparam_new, 1,
+    "cartesianparam() -> cartesian parameter\n\n"
+    "Creates a new instance of CartesianParamCore"
+  },
+  {"transform", (PyCFunction)_transform_new, 1,
+    "transform() -> transform instance\n\n"
+    "Creates a new instance of TransformCore"
+  },
+  {"projection", (PyCFunction)_projection_new, 1,
+    "projection(id, description, definition) -> projection\n\n"
+    "Creates a projection instance\n\n"
+    "id          - Id of this projection instance\n"
+    "description - Description of this projection instance\n"
+    "definition  - The PROJ.4 definition"
+  },
+  {"io", (PyCFunction)_raveio_new, 1,
+    "io() -> rave io instance\n\n"
+    "Creates a RaveIOCore instance"
+  },
+  {"open", (PyCFunction)_raveio_open, 1,
+    "open(filename) -> rave io core instance\n\n"
+    "Opens specified file and loads it into a rave io core instance\n\n"
+    "filename - the path to the file to be loaded"
+  },
+  {"isXmlSupported", (PyCFunction)_rave_isxmlsupported, 1,
+    "isXmlSupported() -> a boolean\n\n"
+    "Returns if this build of rave supports xml loading"
+  },
+  {"isCFConventionSupported", (PyCFunction)_rave_isCFConventionSupported, 1,
+    "isCFConventionSupported() -> a boolean\n\n"
+    "Returns if this build has been built with support for writing files in CF convention."
+  },
+  {"setDebugLevel", (PyCFunction)_rave_setDebugLevel, 1,
+    "setDebugLevel(level)\n\n"
+    "Sets the debug level to use when running the rave c modules. Can be one of:\n"
+    "  + Debug_RAVE_SPEWDEBUG    - This provides a lot of debuginformation, most which probably is not interesting\n"
+    "  + Debug_RAVE_DEBUG        - Basic debug information\n"
+    "  + Debug_RAVE_DEPRECATED   - Print information from deprecated functions\n"
+    "  + Debug_RAVE_INFO         - Information\n"
+    "  + Debug_RAVE_WARNING      - Warnings\n"
+    "  + Debug_RAVE_ERROR        - Errors\n"
+    "  + Debug_RAVE_CRITICAL     - Critical errors, typically if this occur, it probably ends with a crash\n"
+    "  + Debug_RAVE_SILENT       - Don't display anything (default)\n"
+  },
+  {"compare_datetime", (PyCFunction) _rave_compare_datetime, 1,
+    "compare_datetime(d1,t1,d2,t2) -> an integer\n\n"
+    "Since several date/times used in the rave objects are defined as date + time, this utility function will help comparing two different date+time pairs.\n"
+    "The returned value will be if negative if d1+t1 is before d2+t2. 0 if they are equal and a positive value otherwise\n\n"
+    "d1 - First date in format YYYYmmdd\n"
+    "t1 - First time in format HHMMSS\n"
+    "d2 - Second date in format YYYYmmdd\n"
+    "t2 - Second time in format HHMMSS\n"
+  },
+  {"translate_from_projection_to_wkt", (PyCFunction) _rave_translate_from_projection_to_wkt, 1,
+    "translate_from_projection_to_wkt(proj) -> list\n\n"
+    "Translates a projection into a list of well known text attributes representing the projection.\n"
+    "proj - the ProjectionCore instance.\n\n"
+    "Example:\n"
+    ">>>proj = _rave.projection(\"myid\", \"laea\", \"+proj=laea +lat_0=1 +lon_0=2 +x_0=14 +y_0=60 +R=6378137.0\")\n"
+    ">>>_rave.translate_from_projection_to_wkt(proj)\n"
+    "[('grid_mapping_name', 'lambert_azimuthal_equal_area'),\n"
+    " ('longitude_of_projection_origin', 2.0),\n"
+    " ('latitude_of_projection_origin', 1.0),\n"
+    " ('false_easting', 14.0),\n"
+    " ('false_northing', 60.0),\n"
+    " ('earth_radius', 6378137.0)]"
+  },
   {NULL,NULL} /*Sentinel*/
 };
+
+/*@{ Documentation about the type */
+PyDoc_STRVAR(_rave_module_doc,
+    "The _rave module provides some utility functions when running the rave software, like setting debug level, provide constants, creating objects and check if some features are enabled.\n"
+    "Since the actual functions describes their usage the various constants are first going to be described below:\n"
+    "Data types are used when creating data fields or querying data fields.\n"
+    "  + RaveDataType_UNDEFINED - If data has not been initialized yet\n"
+    "  + RaveDataType_CHAR      - If data is defined as char (8-bit)\n"
+    "  + RaveDataType_UCHAR     - If data is defined as unsigned char (8-bit)\n"
+    "  + RaveDataType_SHORT     - If data is defined as short integer (16-bit)\n"
+    "  + RaveDataType_USHORT    - If data is defined as unsigned short integer (16-bit)\n"
+    "  + RaveDataType_INT       - If data is defined as integer (32-bit)\n"
+    "  + RaveDataType_UINT      - If data is defined as unsigned integer (32-bit)\n"
+    "  + RaveDataType_LONG      - If data is defined as long integer (64-bit)\n"
+    "  + RaveDataType_ULONG     - If data is defined as unsigned long integer (64-bit)\n"
+    "  + RaveDataType_FLOAT     - If data is defined as float value (32-bit)\n"
+    "  + RaveDataType_DOUBLE    - If data is defined as double float value (64-bit)\n"
+    "\n"
+    "Most values used in rave can be of 3 different types:\n"
+    "  + RaveValueType_UNDEFINED - If value type haven't been defined yet or can't be determined.\n"
+    "  + RaveValueType_UNDETECT  - There is a value but it doesn't exist any data (like no rain, ...)\n"
+    "  + RaveValueType_NODATA    - There is no coverage at the location and hence no data found\n"
+    "  + RaveValueType_DATA      - We have data at the location\n"
+    "\n"
+    "Object type can be found in for example raveio for giving information on what type of object that has been read. More information about the various types can be found in the ODIM H5 specification.\n"
+    "  + Rave_ObjectType_UNDEFINED - Object read can not be defined (most likely because it couldn't be read).\n"
+    "  + Rave_ObjectType_PVOL      - Polar Volume\n"
+    "  + Rave_ObjectType_CVOL      - Cartesian volume\n"
+    "  + Rave_ObjectType_SCAN      - Polar scan\n"
+    "  + Rave_ObjectType_RAY       - Single polar ray\n"
+    "  + Rave_ObjectType_AZIM      - Azimuthal object\n"
+    "  + Rave_ObjectType_IMAGE     - 2-D cartesian image\n"
+    "  + Rave_ObjectType_COMP      - Cartesian composite image(s)\n"
+    "  + Rave_ObjectType_XSEC      - 2-D vertical cross section(s)\n"
+    "  + Rave_ObjectType_VP        - 1-D vertical profile\n"
+    "  + Rave_ObjectType_PIC       - Embedded graphical image\n"
+    "\n"
+    "Product types that defines the various products. Usually defined in what/product, More information about the various types can be found in the ODIM H5 specification.\n"
+    "  + Rave_ProductType_UNDEFINED - Undefined product type.\n"
+    "  + Rave_ProductType_SCAN      - A scan of polar data\n"
+    "  + Rave_ProductType_PPI       - Plan position indicator\n"
+    "  + Rave_ProductType_CAPPI     - Constant altitude PPI\n"
+    "  + Rave_ProductType_PCAPPI    - Pseudo-CAPPI\n"
+    "  + Rave_ProductType_ETOP      - Echo top\n"
+    "  + Rave_ProductType_MAX       - Maximum\n"
+    "  + Rave_ProductType_RR        - Accumulation\n"
+    "  + Rave_ProductType_VIL       - Vertically integrated liquid water\n"
+    "  + Rave_ProductType_COMP      - Composite\n"
+    "  + Rave_ProductType_VP        - Vertical profile\n"
+    "  + Rave_ProductType_RHI       - Range height indicator\n"
+    "  + Rave_ProductType_XSEC      - Arbitrary vertical slice\n"
+    "  + Rave_ProductType_VSP       - Vertical side panel\n"
+    "  + Rave_ProductType_HSP       - Horizontal side panel\n"
+    "  + Rave_ProductType_RAY       - Ray\n"
+    "  + Rave_ProductType_AZIM      - Azimuthal type product\n"
+    "  + Rave_ProductType_QUAL      - Quality metric\n"
+    "  + Rave_ProductType_PMAX      - Pseudo-MAX\n"
+    "  + Rave_ProductType_SURF      - Surface type\n"
+    "\n"
+    "There are also a number of different version strings that can occur in an ODIM H5 file.\n"
+    "  + RaveIO_ODIM_Version_UNDEFINED - Undefined ODIM version\n"
+    "  + RaveIO_ODIM_Version_2_0       - ODIM H5 2.0\n"
+    "  + RaveIO_ODIM_Version_2_1       - ODIM H5 2.1\n"
+    "  + RaveIO_ODIM_Version_2_2       - ODIM H5 2.2\n"
+    "and\n"
+    "  + RaveIO_ODIM_H5rad_Version_UNDEFINED - Undefined ODIM version\n"
+    "  + RaveIO_ODIM_H5rad_Version_2_0       - ODIM H5rad 2.0\n"
+    "  + RaveIO_ODIM_H5rad_Version_2_1       - ODIM H5rad 2.1\n"
+    "  + RaveIO_ODIM_H5rad_Version_2_2       - ODIM H5rad 2.2\n"
+    "\n"
+    "The logging within the rave c-modules are done to stderr and due to that, the logging is turned off as default behaviour.\n"
+    "In some cases it might be necessary to get some information on what happens and why errors occurs. In those cases it is possible\n"
+    "to turn on the debugging with setDebugLevel and specify one of the below levels:\n"
+    "  + Debug_RAVE_SPEWDEBUG    - This provides a lot of debuginformation, most which probably is not interesting\n"
+    "  + Debug_RAVE_DEBUG        - Basic debug information\n"
+    "  + Debug_RAVE_DEPRECATED   - Print information from deprecated functions\n"
+    "  + Debug_RAVE_INFO         - Information\n"
+    "  + Debug_RAVE_WARNING      - Warnings\n"
+    "  + Debug_RAVE_ERROR        - Errors\n"
+    "  + Debug_RAVE_CRITICAL     - Critical errors, typically if this occur, it probably ends with a crash\n"
+    "  + Debug_RAVE_SILENT       - Don't display anything\n"
+    " Logging can be turned on with:\n"
+    " import _rave\n"
+    " _rave.setDebugLevel(_rave.Debug_RAVE_DEBUG)\n"
+    "\n"
+    );
+/*@} End of Documentation about the type */
 
 /**
  * Adds constants to the dictionary (probably the modules dictionary).
@@ -359,16 +516,20 @@ static void add_long_constant(PyObject* dictionary, const char* name, long value
 }
 
 /**
- * Initializes polar volume.
+ * Initializes _rave.
  */
-void init_rave(void)
+MOD_INIT(_rave)
 {
   PyObject *module=NULL,*dictionary=NULL;
-  module = Py_InitModule("_rave", functions);
+  MOD_INIT_DEF(module, "_rave", _rave_module_doc, functions);
+  if (module == NULL) {
+    return MOD_INIT_ERROR;
+  }
   dictionary = PyModule_GetDict(module);
-  ErrorObject = PyString_FromString("_rave.error");
+  ErrorObject = PyErr_NewException("_rave.error", NULL, NULL);
   if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
     Py_FatalError("Can't define _rave.error");
+    return MOD_INIT_ERROR;
   }
 
   if (atexit(rave_alloc_print_statistics) != 0) {
@@ -446,6 +607,7 @@ void init_rave(void)
   add_long_constant(dictionary, "Rave_ProductType_QUAL", Rave_ProductType_QUAL);
   add_long_constant(dictionary, "Rave_ProductType_PMAX", Rave_ProductType_PMAX);
   add_long_constant(dictionary, "Rave_ProductType_SURF", Rave_ProductType_SURF);
+  add_long_constant(dictionary, "Rave_ProductType_EBASE", Rave_ProductType_EBASE);
 
   add_long_constant(dictionary, "Debug_RAVE_SPEWDEBUG", RAVE_SPEWDEBUG);
   add_long_constant(dictionary, "Debug_RAVE_DEBUG", RAVE_DEBUG);
@@ -457,13 +619,17 @@ void init_rave(void)
   add_long_constant(dictionary, "Debug_RAVE_SILENT", RAVE_SILENT);
 
   import_array(); /*To make sure I get access to Numeric*/
+
   import_pyprojection();
-  import_pypolarscan();
-  import_pypolarvolume();
   import_pycartesian();
   import_pycartesianparam();
+  import_pypolarscan();
   import_pyraveio();
+  import_pypolarvolume();
   import_pytransform();
+
   PYRAVE_DEBUG_INITIALIZE;
+
+  return MOD_INIT_SUCCESS(module);
 }
 /*@} End of Module setup */

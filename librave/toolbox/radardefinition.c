@@ -43,7 +43,8 @@ struct _RadarDefinition_t {
   long nrays;        /**< number of rays */
   long nbins;        /**< number of bins */
   double scale;      /**< the size of a bin */
-  double beamwidth;  /**< the beam width */
+  double beamwH;     /**< the horizontal beam width */
+  double beamwV;     /**< the vertical beam width */
   double wavelength; /**< the wave length */
   Projection_t* projection; /**< the projection that is used for this radar, usually just a plain lonlat projection */
 };
@@ -65,7 +66,8 @@ static int RadarDefinition_constructor(RaveCoreObject* obj)
   this->nbins = 0;
   this->nrays = 0;
   this->scale = 0.0;
-  this->beamwidth = 0.0;
+  this->beamwH = 0.0;
+  this->beamwV = 0.0;
   this->wavelength = 0.0;
   this->projection = NULL;
   return 1;
@@ -97,7 +99,8 @@ static int RadarDefinition_copyconstructor(RaveCoreObject* obj, RaveCoreObject* 
   this->nbins = src->nbins;
   this->nrays = src->nrays;
   this->scale = src->scale;
-  this->beamwidth = src->beamwidth;
+  this->beamwH = src->beamwH;
+  this->beamwV = src->beamwV;
   this->wavelength = src->wavelength;
   this->projection = RAVE_OBJECT_CLONE(src->projection);
   if (this->projection == NULL) {
@@ -296,13 +299,38 @@ double RadarDefinition_getScale(RadarDefinition_t* radar)
 void RadarDefinition_setBeamwidth(RadarDefinition_t* radar, double bw)
 {
   RAVE_ASSERT((radar != NULL), "radar == NULL");
-  radar->beamwidth = bw;
+  RadarDefinition_setBeamwH(radar, bw);
 }
 
 double RadarDefinition_getBeamwidth(RadarDefinition_t* radar)
 {
   RAVE_ASSERT((radar != NULL), "radar == NULL");
-  return radar->beamwidth;
+  return RadarDefinition_getBeamwH(radar);
+}
+
+void RadarDefinition_setBeamwH(RadarDefinition_t* radar, double bw)
+{
+  RAVE_ASSERT((radar != NULL), "radar == NULL");
+  radar->beamwH = bw;
+
+}
+
+double RadarDefinition_getBeamwH(RadarDefinition_t* radar)
+{
+  RAVE_ASSERT((radar != NULL), "radar == NULL");
+  return radar->beamwH;
+}
+
+void RadarDefinition_setBeamwV(RadarDefinition_t* radar, double bw)
+{
+  RAVE_ASSERT((radar != NULL), "radar == NULL");
+  radar->beamwV = bw;
+}
+
+double RadarDefinition_getBeamwV(RadarDefinition_t* radar)
+{
+  RAVE_ASSERT((radar != NULL), "radar == NULL");
+  return radar->beamwV;
 }
 
 void RadarDefinition_setWavelength(RadarDefinition_t* radar, double l)
@@ -317,7 +345,6 @@ double RadarDefinition_getWavelength(RadarDefinition_t* radar)
   return radar->wavelength;
 }
 
-
 void RadarDefinition_setProjection(RadarDefinition_t* radar, Projection_t* projection)
 {
   RAVE_ASSERT((radar != NULL), "radar == NULL");
@@ -330,6 +357,7 @@ Projection_t* RadarDefinition_getProjection(RadarDefinition_t* radar)
   RAVE_ASSERT((radar != NULL), "radar == NULL");
   return RAVE_OBJECT_COPY(radar->projection);
 }
+
 /*@} End of Interface functions */
 
 RaveCoreObjectType RadarDefinition_TYPE = {

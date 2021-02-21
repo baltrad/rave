@@ -60,7 +60,7 @@ class tiled_area_definition(object):
     self.extent = extent
   
   def __repr__(self):
-    return "<%s, scale=%f * %f, size=%d * %d, extent=%s />"%(self.pcsdef, self.xscale, self.yscale, self.xsize, self.ysize, `self.extent`)
+    return "<%s, scale=%f * %f, size=%d * %d, extent=%s />"%(self.pcsdef, self.xscale, self.yscale, self.xsize, self.ysize, str(self.extent))
 
 
 ##
@@ -83,7 +83,7 @@ def store_temporary_files(objects):
       fileno, rio.filename = rave_tempfile.mktemp(suffix='.h5', close="True")
       tempobjects[rio.filename] = rio.object
       rio.save()
-  except Exception, e:
+  except Exception as e:
     for tmpfile in tempobjects.keys():
       try:
         os.unlink(tmpfile)
@@ -234,7 +234,7 @@ class tiled_compositing(object):
     result, nodes, how_tasks, all_files_malfunc = self.compositing.fetch_objects()
     if self.preprocess_qc:
       self._do_remove_temporary_files=False
-      result, algorithm = self.compositing.quality_control_objects(result)
+      result, algorithm, qfields = self.compositing.quality_control_objects(result)
       try:
         result = store_temporary_files(result)
         self.compositing.filenames = result.keys()
@@ -299,7 +299,7 @@ class tiled_compositing(object):
     for r in results[0]:
       filenames.extend(r[0])
       if r[1] == False:
-        self.logger.info("MP quality control processing of %s failed."%`r[2]`)
+        self.logger.info("MP quality control processing of %s failed."%str(r[2]))
     
     self.compositing.filenames = filenames
     self._do_remove_temporary_files=True
@@ -376,7 +376,7 @@ class tiled_compositing(object):
 
     # We also must ensure that if any arg contains 0 files, there must be a date/time set
     if not self._ensure_date_and_time_on_args(args):
-      raise Exception, "Could not ensure existing date and time for composite"
+      raise Exception("Could not ensure existing date and time for composite")
         
     return args
   
@@ -554,7 +554,7 @@ class tiled_compositing(object):
           if v != None and v[1] != None and os.path.exists(v[1]):
             try:
               os.unlink(v[1])
-            except Exception, e:
+            except Exception:
               logger.exception("Failed to unlink %s"%v[1])
     return None
 
@@ -566,7 +566,7 @@ class tiled_compositing(object):
 def comp_generate(args):
   try:
     return args[0].generate(args[1], args[2], args[3])
-  except Exception, e:
+  except Exception:
     logger.exception("Failed to call composite generator in tiler")
   return None
 
@@ -576,7 +576,7 @@ def comp_generate(args):
 # @return a tuple of ([filenames], <execution status as boolean>, "filenames or source names")
 def execute_quality_control(args):
   filenames,detectors,reprocess_quality_field,ignore_malfunc = args
-  result = ([], False, "%s"%`filenames`)
+  result = ([], False, "%s"%str(filenames))
   try:
     comp = compositing.compositing()
     comp.filenames.extend(filenames)
@@ -591,10 +591,10 @@ def execute_quality_control(args):
     status = True
     try:
       objects = store_temporary_files(objects)
-    except Exception, e:
+    except Exception:
       status = False
     result = (objects.keys(), status, nodes)
-  except Exception, e:
+  except Exception:
     logger.exception("Failed to run quality control")
   return result
 

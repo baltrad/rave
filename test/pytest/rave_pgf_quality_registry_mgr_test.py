@@ -49,7 +49,7 @@ class rave_pgf_quality_registry_mgr_test(unittest.TestCase):
   <quality-plugin class="rave_distance_quality_plugin" module="rave_distance_quality_plugin" name="distance" />
 </rave-pgf-quality-registry>
 """
-    self.assertEquals(expected, classUnderTest.tostring())    
+    self.assertEqual(expected, classUnderTest.tostring())    
   
   def test_constructor_2(self):
     classUnderTest = rave_pgf_quality_registry_mgr(self.FIXTURE_1, "ISO-8859-1")
@@ -59,7 +59,7 @@ class rave_pgf_quality_registry_mgr_test(unittest.TestCase):
   <quality-plugin class="rave_distance_quality_plugin" module="rave_distance_quality_plugin" name="distance" />
 </rave-pgf-quality-registry>
 """
-    self.assertEquals(expected, classUnderTest.tostring())    
+    self.assertEqual(expected, classUnderTest.tostring())    
     
   def test_add_plugin(self):
     classUnderTest = rave_pgf_quality_registry_mgr(self.FIXTURE_1)
@@ -71,7 +71,7 @@ class rave_pgf_quality_registry_mgr_test(unittest.TestCase):
   <quality-plugin class="nisses_plugin" module="nisses_module" name="nisse" />
 </rave-pgf-quality-registry>
 """
-    self.assertEquals(expected, classUnderTest.tostring())    
+    self.assertEqual(expected, classUnderTest.tostring())    
 
   def test_remove_plugin(self):
     classUnderTest = rave_pgf_quality_registry_mgr(self.FIXTURE_1)
@@ -81,14 +81,20 @@ class rave_pgf_quality_registry_mgr_test(unittest.TestCase):
   <quality-plugin class="rave_distance_quality_plugin" module="rave_distance_quality_plugin" name="distance" />
 </rave-pgf-quality-registry>
 """
-    self.assertEquals(expected, classUnderTest.tostring())    
+    self.assertEqual(expected, classUnderTest.tostring())    
 
   def test_has_plugin(self):
     classUnderTest = rave_pgf_quality_registry_mgr(self.FIXTURE_1)
 
-    self.assertEquals(True, classUnderTest.has_plugin("distance"))
-    self.assertEquals(False, classUnderTest.has_plugin("nisses_plugin"))
+    self.assertEqual(True, classUnderTest.has_plugin("distance"))
+    self.assertEqual(False, classUnderTest.has_plugin("nisses_plugin"))
 
+  def read_data_from_file(self, filename):
+    fd = open(filename)
+    result = fd.read()
+    fd.close()
+    return result
+  
   def test_save_1(self):
     classUnderTest = rave_pgf_quality_registry_mgr(self.FIXTURE_1)
     classUnderTest.save(self.TEMPORARY_FILE)
@@ -98,7 +104,7 @@ class rave_pgf_quality_registry_mgr_test(unittest.TestCase):
   <quality-plugin class="rave_distance_quality_plugin" module="rave_distance_quality_plugin" name="distance" />
 </rave-pgf-quality-registry>
 """
-    self.assertEquals(expected, open(self.TEMPORARY_FILE).read())
+    self.assertEqual(expected, self.read_data_from_file(self.TEMPORARY_FILE))
 
   def test_save_2(self):
     classUnderTest = rave_pgf_quality_registry_mgr(self.FIXTURE_1)
@@ -111,7 +117,7 @@ class rave_pgf_quality_registry_mgr_test(unittest.TestCase):
   <quality-plugin class="nisses_plugin" module="nisses_module" name="nisse" />
 </rave-pgf-quality-registry>
 """
-    self.assertEquals(expected, open(self.TEMPORARY_FILE).read())
+    self.assertEqual(expected, self.read_data_from_file(self.TEMPORARY_FILE))
     
   def test_save_3(self):
     classUnderTest = rave_pgf_quality_registry_mgr(self.FIXTURE_1)
@@ -122,5 +128,5 @@ class rave_pgf_quality_registry_mgr_test(unittest.TestCase):
   <quality-plugin class="rave_distance_quality_plugin" module="rave_distance_quality_plugin" name="distance" />
 </rave-pgf-quality-registry>
 """
-    self.assertEquals(expected, open(self.TEMPORARY_FILE).read())
+    self.assertEqual(expected, self.read_data_from_file(self.TEMPORARY_FILE))
     

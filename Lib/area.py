@@ -27,7 +27,6 @@ The area definitions are loaded from configuration file(s) given
 by the AREAS variable.
 """
 import os, string
-from types import StringType
 import pcs
 import rave_xml
 from rave_defines import RAVECONFIG, ENCODING
@@ -94,15 +93,15 @@ def init():
 # Object factory
 
 def area(Id):
-    if type(Id) != StringType:
-        raise KeyError, "Argument 'Id' not a string"
+    if type(Id) != str:
+        raise KeyError("Argument 'Id' not a string")
     return _registry[Id]
 
 
 def register(A):
     A.validate(["Id", "name", "pcs", "extent",
                 "xsize", "ysize", "xscale", "yscale"])
-    A.pcs = pcs.pcs(A.pcs)
+    A.pcs = pcs.pcs(str(A.pcs.decode(ENCODING)))
     _registry[A.Id] = A
 
 
@@ -197,4 +196,4 @@ def makearg(parent, id, text, Type=None):
 
 
 if __name__ == "__main__":
-    print __doc__
+    print(__doc__)

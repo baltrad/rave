@@ -61,6 +61,7 @@ import rave_pgf_logger
 
 from rave_defines import CENTER_ID, GAIN, OFFSET
 from rave_defines import DEFAULTA, DEFAULTB, DEFAULTC
+from rave_defines import RAVE_IO_DEFAULT_VERSION
 
 logger = rave_pgf_logger.create_logger()
 
@@ -94,7 +95,7 @@ def get_backup_gra_coefficient(db, agedt, nowdt):
     if coeff and not math.isnan(coeff.a) and not math.isnan(coeff.b) and not math.isnan(coeff.c):
       logger.info("Reusing gra coefficients from %s %s"%(coeff.date, coeff.time))
       return coeff.significant, coeff.points, coeff.loss, coeff.r, coeff.r_significant, coeff.corr_coeff, coeff.a, coeff.b, coeff.c, coeff.mean, coeff.stddev
-  except Exception, e:
+  except Exception:
     logger.exception("Failed to aquire coefficients")
 
   logger.warn("Could not aquire coefficients newer than %s, defaulting to climatologic"%agedt.strftime("%Y%m%d %H:%M:%S"))
@@ -140,7 +141,7 @@ def generate(files, arguments):
     hours = int(args["hours"])
   if "N" in args.keys():
     N = int(args["N"])
-  if args.has_key("applygra"):
+  if "applygra" in args:
     applygra = True
   
   if distancefield == "eu.baltrad.composite.quality.distance.radar":
@@ -169,7 +170,7 @@ def generate(files, arguments):
       obj = obj.getImage(0)
 
     if not _cartesian.isCartesian(obj):
-      raise AttributeError, "Must call plugin with cartesian products"
+      raise AttributeError("Must call plugin with cartesian products")
 
     if img == None:
       img = _cartesian.new()
@@ -191,7 +192,7 @@ def generate(files, arguments):
 
     if obj.xscale != img.xscale or obj.yscale != img.yscale or \
       obj.projection.definition != img.projection.definition:
-      raise AttributeError, "Scale or projdef inconsistancy for used area"
+      raise AttributeError("Scale or projdef inconsistancy for used area")
 
     par = obj.getParameter(quantity)
     if par == None:
@@ -244,6 +245,7 @@ def generate(files, arguments):
   ios = _raveio.new()
   ios.object = img
   ios.filename = outfile
+  ios.version = RAVE_IO_DEFAULT_VERSION
   ios.save()
 
   return outfile

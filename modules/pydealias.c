@@ -22,7 +22,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Daniel Michelson (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2012-11-15
  */
-#include "Python.h"
+#include "pyravecompat.h"
 #include "arrayobject.h"
 #include "rave.h"
 #include "rave_debug.h"
@@ -158,30 +158,61 @@ static PyObject* _create_dealiased_parameter(PyObject* self, PyObject* args)
 
 static struct PyMethodDef _dealias_functions[] =
 {
-  { "dealiased", (PyCFunction) _dealiased_func, METH_VARARGS },
-  { "dealias", (PyCFunction) _dealias_func, METH_VARARGS },
-  { "create_dealiased_parameter", (PyCFunction) _create_dealiased_parameter, METH_VARARGS },
+  { "dealiased", (PyCFunction) _dealiased_func, METH_VARARGS,
+      "dealiased(scan[,quantity]) -> boolean\n\n"
+      "Checks whether a scan is dealiased by looking up its the specified quantities param/how/dealiased attribute.\n\n"
+      "scan      - the polar scan\n"
+      "quantity  - the quantity that should be queried. If not specified, it defaults to VRADH."
+  },
+  { "dealias", (PyCFunction) _dealias_func, METH_VARARGS,
+      "dealias(object, quantity, emax) -> boolean\n\n"
+      "Function for dealiasing polar volume or polar scan data for the specified quantity and max elevation angle\n\n"
+      "object   - the polar scan or volume\n"
+      "quantity - the parameter that should be dealiased\n"
+      "emax     - the max elevation angle in degrees"
+  },
+  { "create_dealiased_parameter", (PyCFunction) _create_dealiased_parameter, METH_VARARGS,
+      "create_dealiased_parameter(scan, quantity, newquantity) -> polar scan parameter\n\n"
+      "Creates a dealiased parameter from the scan / quantity. The created dealiased parameter will get quantity newquantity\n"
+      "scan        - the polar scan\n"
+      "quantity    - the quantity that should be processed\n"
+      "newquantity - the quantity that the returned parameter should get"
+  },
   { NULL, NULL }
 };
+
+/*@{ Documentation about the type */
+PyDoc_STRVAR(_dealias_module_doc,
+  "Provides functionality for dealiasing radial wind data."
+);
+/*@} End of Documentation about the type */
 
 /**
  * Initialize the _dealias module
  */
-PyMODINIT_FUNC init_dealias(void)
+MOD_INIT(_dealias)
 {
-  PyObject* m;
-  m = Py_InitModule("_dealias", _dealias_functions);
-  ErrorObject = PyString_FromString("_dealias.error");
+  PyObject* module = NULL;
+  PyObject* dictionary = NULL;
 
-  if (ErrorObject == NULL || PyDict_SetItemString(PyModule_GetDict(m),
-                                                  "error", ErrorObject) != 0) {
-    Py_FatalError("Can't define _dealias.error");
+  MOD_INIT_DEF(module, "_dealias", _dealias_module_doc, _dealias_functions);
+  if (module == NULL) {
+    return MOD_INIT_ERROR;
   }
+
+  dictionary = PyModule_GetDict(module);
+  ErrorObject = PyErr_NewException("_dealias.error", NULL, NULL);
+  if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
+    Py_FatalError("Can't define _dealias.error");
+    return MOD_INIT_ERROR;
+  }
+
   import_pypolarvolume();
   import_pypolarscan();
   import_pypolarscanparam();
   import_array(); /*To make sure I get access to Numeric*/
   PYRAVE_DEBUG_INITIALIZE;
+  return MOD_INIT_SUCCESS(module);
 }
 
 /*@} End of Module setup */

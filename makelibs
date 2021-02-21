@@ -44,6 +44,10 @@ if [ -n "$EXPATARG" ]; then
   CONFARGS="$CONFARGS --with-expat=$EXPATARG"
 fi
 
+if [ -n "$ENABLEPY3SUPPORT" ]; then
+  CONFARGS="$CONFARGS --enable-py3support"
+fi
+
 if [ -n "$BUFRARG" ]; then
   CONFARGS="$CONFARGS --with-bufr=$BUFRARG"
 fi

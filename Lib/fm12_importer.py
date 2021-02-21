@@ -73,7 +73,7 @@ class fm12_importer(object):
         os.kill(int(c), signal.SIGKILL)
     except:
       self._logger.warn("Failed to kill daemon. Check pid!")
-      print "Could not kill daemon. Check pid."
+      print("Could not kill daemon. Check pid.")
     finally:
       os.remove(self.pidfile)
     
@@ -146,7 +146,7 @@ class fm12_importer(object):
       db.merge(olist)
     
       self._logger.info("Imported %d observations"%len(olist))
-    except Exception, e:
+    except Exception:
       self._logger.exception("Failed to import %s"%fname)      
 
   def import_file(self, fname):
@@ -163,7 +163,7 @@ class fm12_importer(object):
       try:
         if self.janitor:
           os.unlink(fname)
-      except Exception, e:
+      except Exception:
         self._logger.exception("Janitor: Failed to remove file %s"%fname)
           
 
@@ -173,10 +173,10 @@ def get_dburi_from_conf(configfile, propname = "rave.db.uri"):
     try:
       with open(configfile) as fp:
         properties = jprops.load_properties(fp)
-    except Exception,e:
-      print e.__str__()
+    except Exception as e:
+      print(e.__str__())
 
-    if properties.has_key(propname):
+    if propname in properties:
       return properties[propname]
     return None
     

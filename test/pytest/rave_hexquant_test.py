@@ -46,3 +46,7 @@ class rave_hexquant_test(unittest.TestCase):
   def test_q2hex_UnknownQuantity(self):
     result = q2hex(["NONAME", "DBZH"])
     self.assertEqual("0x1", result)
+    
+  def test_q2hex_veryLarge(self):
+    result = q2hex(["DBZH", "TH", "UPSPV"])
+    self.assertEqual("0x100000000000000003", result)

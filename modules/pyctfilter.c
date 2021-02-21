@@ -22,7 +22,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Daniel Michelson (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2014-03-27
  */
-#include "Python.h"
+#include "pyravecompat.h"
 #include "arrayobject.h"
 #include "rave.h"
 #include "rave_debug.h"
@@ -96,26 +96,50 @@ static PyObject* _ctFilter_func(PyObject* self, PyObject* args) {
 
 static struct PyMethodDef _ctfilter_functions[] =
 {
-  { "ctFilter", (PyCFunction) _ctFilter_func, METH_VARARGS },
+  {"ctFilter", (PyCFunction) _ctFilter_func, METH_VARARGS,
+    "ctFilter(prod, ct) -> boolean\n\n"
+    "Filter product prod with cloud top information ct. A quality field is added with how/task = se.smhi.quality.ctfilter.\n"
+    "The input product should be a cartesian object as well as the cloud top information.\n"
+    "The input product should have been set with a default parameter since the operations are performed directly on the "
+    "cartesian object\n\n"
+    "prod - the product that should be filtered. With default parameter quantity set.\n"
+    "ct   - the cloud top information"
+  },
   { NULL, NULL }
 };
+
+/*@{ Documentation about the type */
+PyDoc_STRVAR(_ctfilter_module_doc,
+  "Filters product with cloud-top information. A quality field is created and added to the input product, containing removed echoes.\n"
+  "Pixel values are from the CT product header. Probabilities of rain from:\n"
+  "Dybbroe et al. 2005: NWCSAF AVHRR Cloud Detection and Analysis Using Dynamic Thresholds and Radiative Transfer Modelling. Part II. Tuning and Validation. J. Appl. Meteor. 44. p. 55-71. Table 11, page 69.\n"
+  "Yes, we know the article addresses AVHRR and we are addressing MSG ..."
+);
+/*@} End of Documentation about the type */
+
 
 /**
  * Initialize the _ctfilter module
  */
-PyMODINIT_FUNC init_ctfilter(void)
+MOD_INIT(_ctfilter)
 {
-  PyObject* m;
-  m = Py_InitModule("_ctfilter", _ctfilter_functions);
-  ErrorObject = PyString_FromString("_ctfilter.error");
+  PyObject* module = NULL;
+  PyObject* dictionary = NULL;
+  MOD_INIT_DEF(module, "_ctfilter", _ctfilter_module_doc, _ctfilter_functions);
+  if (module == NULL) {
+    return MOD_INIT_ERROR;
+  }
 
-  if (ErrorObject == NULL || PyDict_SetItemString(PyModule_GetDict(m),
-                                                  "error", ErrorObject) != 0) {
+  dictionary = PyModule_GetDict(module);
+  ErrorObject = PyErr_NewException("_ctfilter.error", NULL, NULL);
+  if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
     Py_FatalError("Can't define _ctfilter.error");
+    return MOD_INIT_ERROR;
   }
   import_pycartesian();
   import_array(); /*To make sure I get access to numpy*/
   PYRAVE_DEBUG_INITIALIZE;
+  return MOD_INIT_SUCCESS(module);
 }
 
 /*@} End of Module setup */

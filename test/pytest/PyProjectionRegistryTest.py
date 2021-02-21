@@ -50,8 +50,7 @@ class PyProjectionRegistryTest(unittest.TestCase):
     import _projectionregistry
     obj = _projectionregistry.new()
     
-    isok = string.find(`type(obj)`, "ProjectionRegistryCore")
-    self.assertNotEqual(-1, isok)
+    self.assertNotEqual(-1, str(type(obj)).find("ProjectionRegistryCore"))
 
   def test_load(self):
     if not _rave.isXmlSupported():
@@ -60,12 +59,12 @@ class PyProjectionRegistryTest(unittest.TestCase):
     registry = _projectionregistry.load(self.FIXTURE)
     self.assertTrue(registry != None)
     
-    self.assertEquals(5, registry.size())
-    self.assertEquals("llwgs84", registry.get(0).id)
-    self.assertEquals("rack", registry.get(1).id)
-    self.assertEquals("ps14e60n", registry.get(2).id)
-    self.assertEquals("laea20e60n", registry.get(3).id)
-    self.assertEquals("rot10w30s", registry.get(4).id)
+    self.assertEqual(5, registry.size())
+    self.assertEqual("llwgs84", registry.get(0).id)
+    self.assertEqual("rack", registry.get(1).id)
+    self.assertEqual("ps14e60n", registry.get(2).id)
+    self.assertEqual("laea20e60n", registry.get(3).id)
+    self.assertEqual("rot10w30s", registry.get(4).id)
 
   def test_getByName(self):
     if not _rave.isXmlSupported():
@@ -74,11 +73,11 @@ class PyProjectionRegistryTest(unittest.TestCase):
     registry = _projectionregistry.load(self.FIXTURE)
     self.assertTrue(registry != None)
 
-    self.assertEquals("llwgs84", registry.getByName("llwgs84").id)
-    self.assertEquals("rack", registry.getByName("rack").id)
-    self.assertEquals("ps14e60n", registry.getByName("ps14e60n").id)
-    self.assertEquals("laea20e60n", registry.getByName("laea20e60n").id)
-    self.assertEquals("rot10w30s", registry.getByName("rot10w30s").id)
+    self.assertEqual("llwgs84", registry.getByName("llwgs84").id)
+    self.assertEqual("rack", registry.getByName("rack").id)
+    self.assertEqual("ps14e60n", registry.getByName("ps14e60n").id)
+    self.assertEqual("laea20e60n", registry.getByName("laea20e60n").id)
+    self.assertEqual("rot10w30s", registry.getByName("rot10w30s").id)
 
   def test_add(self):
     if not _rave.isXmlSupported():
@@ -87,9 +86,9 @@ class PyProjectionRegistryTest(unittest.TestCase):
     registry = _projectionregistry.load(self.FIXTURE)
     newproj = _projection.new("testid", "something", "+proj=latlong +ellps=WGS84 +datum=WGS84")
     registry.add(newproj)
-    self.assertEquals(6, registry.size())
-    self.assertEquals("testid", registry.getByName("testid").id)
-    self.assertEquals("something", registry.getByName("testid").description)
+    self.assertEqual(6, registry.size())
+    self.assertEqual("testid", registry.getByName("testid").id)
+    self.assertEqual("something", registry.getByName("testid").description)
     
   def test_remove(self):
     if not _rave.isXmlSupported():
@@ -97,11 +96,11 @@ class PyProjectionRegistryTest(unittest.TestCase):
     import _projectionregistry    
     registry = _projectionregistry.load(self.FIXTURE)
     registry.remove(2)
-    self.assertEquals(4, registry.size())
+    self.assertEqual(4, registry.size())
     try:
       registry.getByName("ps14e60n")
       self.fail("Expected IndexError")
-    except IndexError,e:
+    except IndexError:
       pass
 
   def test_removeByName(self):
@@ -110,11 +109,11 @@ class PyProjectionRegistryTest(unittest.TestCase):
     import _projectionregistry    
     registry = _projectionregistry.load(self.FIXTURE)
     registry.removeByName("ps14e60n")
-    self.assertEquals(4, registry.size())
+    self.assertEqual(4, registry.size())
     try:
       registry.getByName("ps14e60n")
       self.fail("Expected IndexError")
-    except IndexError,e:
+    except IndexError:
       pass
 
   def test_write(self):
@@ -128,10 +127,10 @@ class PyProjectionRegistryTest(unittest.TestCase):
 
     tree = ElementTree.parse(self.TEMPORARY_FILE)
     projs = tree.findall("projection")
-    self.assertEquals(6, len(projs))
-    self.assertEquals("testid", projs[5].get('id'))
-    self.assertEquals("something", string.strip(projs[5].find("description").text))
-    self.assertEquals("+proj=latlong +ellps=WGS84 +datum=WGS84", string.strip(projs[5].find("projdef").text))
+    self.assertEqual(6, len(projs))
+    self.assertEqual("testid", projs[5].get('id'))
+    self.assertEqual("something", projs[5].find("description").text.strip())
+    self.assertEqual("+proj=latlong +ellps=WGS84 +datum=WGS84", projs[5].find("projdef").text.strip())
 
   def test_write_2(self):
     if not _rave.isXmlSupported():
@@ -144,10 +143,10 @@ class PyProjectionRegistryTest(unittest.TestCase):
 
     nreg = _projectionregistry.load(self.TEMPORARY_FILE);
     
-    self.assertEquals(6, nreg.size())
-    self.assertEquals("testid", nreg.get(5).id)
-    self.assertEquals("something", nreg.get(5).description)
-    self.assertEquals("+proj=latlong +ellps=WGS84 +datum=WGS84", nreg.get(5).definition)
+    self.assertEqual(6, nreg.size())
+    self.assertEqual("testid", nreg.get(5).id)
+    self.assertEqual("something", nreg.get(5).description)
+    self.assertEqual("+proj=latlong +ellps=WGS84 +datum=WGS84", nreg.get(5).definition)
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']

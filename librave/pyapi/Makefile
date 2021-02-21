@@ -7,7 +7,7 @@ CFLAGS=	$(OPTS) $(CCSHARED) $(DEFS) $(CREATE_ITRUNC) \
 # --------------------------------------------------------------------
 # Fixed definitions
 
-RAVESOURCES=getpy.c h5rad.c rave.c
+RAVESOURCES=getpy.c h5rad.c rave.c pyravecompat.c
 INSTALL_HEADERS= getpy.h h5rad.h rave.h
 RAVEOBJS=	$(RAVESOURCES:.c=.o)
 LIBRAVEPYAPI=	libravepyapi.so

@@ -51,7 +51,8 @@ struct _PolarVolume_t {
   RaveObjectHashTable_t* attrs; /**< the attributes */
   char* source;             /**< the source string */
   char* paramname;          /**< the default parameter */
-  double beamwidth;         /**< the beamwidth, default bw is 1.0 * M_PI/180.0 */
+  double beamwH;            /**< the horizontal beamwidth, default bw is 1.0 * M_PI/180.0 */
+  double beamwV;            /**< the vertical beamwidth, default bw is 1.0 * M_PI/180.0 */
 };
 
 /*@{ Private functions */
@@ -67,7 +68,8 @@ static int PolarVolume_constructor(RaveCoreObject* obj)
   this->datetime = NULL;
   this->source = NULL;
   this->paramname = NULL;
-  this->beamwidth = 1.0 * M_PI/180.0;
+  this->beamwH = 1.0 * M_PI/180.0;
+  this->beamwV = 1.0 * M_PI/180.0;
   this->attrs = RAVE_OBJECT_NEW(&RaveObjectHashTable_TYPE);
   this->datetime = RAVE_OBJECT_NEW(&RaveDateTime_TYPE);
 
@@ -117,7 +119,8 @@ static int PolarVolume_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srco
   this->attrs = RAVE_OBJECT_CLONE(src->attrs);
   this->source = NULL;
   this->paramname = NULL;
-  this->beamwidth = src->beamwidth;
+  this->beamwH = src->beamwH;
+  this->beamwV = src->beamwV;
 
   if (this->datetime == NULL || this->projection == NULL ||
       this->scans == NULL || this->navigator == NULL || this->attrs == NULL) {
@@ -394,12 +397,12 @@ void PolarVolume_setBeamwidth(PolarVolume_t* pvol, double bw)
 {
   int i = 0, nlen = 0;
   RAVE_ASSERT((pvol != NULL), "pvol == NULL");
-  pvol->beamwidth = bw;
+  pvol->beamwH = bw;
 
   nlen = RaveObjectList_size(pvol->scans);
   for (i = 0; i < nlen; i++) {
     PolarScan_t* scan = (PolarScan_t*)RaveObjectList_get(pvol->scans, i);
-    PolarScanInternal_setPolarVolumeBeamwidth(scan, bw);
+    PolarScanInternal_setPolarVolumeBeamwH(scan, bw);
     RAVE_OBJECT_RELEASE(scan);
   }
 }
@@ -407,7 +410,45 @@ void PolarVolume_setBeamwidth(PolarVolume_t* pvol, double bw)
 double PolarVolume_getBeamwidth(PolarVolume_t* pvol)
 {
   RAVE_ASSERT((pvol != NULL), "pvol == NULL");
-  return pvol->beamwidth;
+  return pvol->beamwH;
+}
+
+void PolarVolume_setBeamwH(PolarVolume_t* self, double beamwidth)
+{
+  int i = 0, nlen = 0;
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  self->beamwH = beamwidth;
+  nlen = RaveObjectList_size(self->scans);
+  for (i = 0; i < nlen; i++) {
+    PolarScan_t* scan = (PolarScan_t*)RaveObjectList_get(self->scans, i);
+    PolarScanInternal_setPolarVolumeBeamwH(scan, beamwidth);
+    RAVE_OBJECT_RELEASE(scan);
+  }
+}
+
+double PolarVolume_getBeamwH(PolarVolume_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return self->beamwH;
+}
+
+void PolarVolume_setBeamwV(PolarVolume_t* self, double beamwidth)
+{
+  int i = 0, nlen = 0;
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  self->beamwV = beamwidth;
+  nlen = RaveObjectList_size(self->scans);
+  for (i = 0; i < nlen; i++) {
+    PolarScan_t* scan = (PolarScan_t*)RaveObjectList_get(self->scans, i);
+    PolarScanInternal_setPolarVolumeBeamwV(scan, beamwidth);
+    RAVE_OBJECT_RELEASE(scan);
+  }
+}
+
+double PolarVolume_getBeamwV(PolarVolume_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return self->beamwV;
 }
 
 double PolarVolume_getDistance(PolarVolume_t* pvol, double lon, double lat)
@@ -497,8 +538,11 @@ int PolarVolume_addScan(PolarVolume_t* pvol, PolarScan_t* scan)
         goto done;
       }
     }
-    if (PolarScanInternal_isPolarVolumeBeamwidth(scan) == -1) { /* if default beamwidth */
-      PolarScanInternal_setPolarVolumeBeamwidth(scan, pvol->beamwidth);
+    if (PolarScanInternal_isPolarVolumeBeamwH(scan) == -1) { /* if default beamwidth */
+      PolarScanInternal_setPolarVolumeBeamwH(scan, pvol->beamwH);
+    }
+    if (PolarScanInternal_isPolarVolumeBeamwV(scan) == -1) { /* if default beamwidth */
+      PolarScanInternal_setPolarVolumeBeamwV(scan, pvol->beamwV);
     }
 
     if (PolarScan_getTime(scan) == NULL || PolarScan_getDate(scan) == NULL) {
@@ -958,10 +1002,8 @@ int PolarVolume_addAttribute(PolarVolume_t* pvol,
       RAVE_ERROR1("Failed to extract group and name from %s", name);
       goto done;
     }
-    if ((strcasecmp("how", gname)==0 ||
-         strcasecmp("what", gname)==0 ||
-         strcasecmp("where", gname)==0) &&
-         strchr(aname, '/') == NULL) {
+    if ((strcasecmp("how", gname)==0 && RaveAttributeHelp_validateHowGroupAttributeName(gname, aname)) ||
+        ((strcasecmp("what", gname)==0 || strcasecmp("where", gname)==0) && strchr(aname, '/') == NULL)) {
       result = RaveObjectHashTable_put(pvol->attrs, name, (RaveCoreObject*)attribute);
     }
   }
@@ -981,6 +1023,31 @@ RaveAttribute_t* PolarVolume_getAttribute(PolarVolume_t* pvol,
     return NULL;
   }
   return (RaveAttribute_t*)RaveObjectHashTable_get(pvol->attrs, name);
+}
+
+void PolarVolume_removeAttribute(PolarVolume_t* pvol, const char* attrname)
+{
+  char* aname = NULL;
+  char* gname = NULL;
+  RAVE_ASSERT((pvol != NULL), "scan == NULL");
+  if (attrname != NULL) {
+    if (!RaveAttributeHelp_extractGroupAndName(attrname, &gname, &aname)) {
+      RAVE_ERROR1("Failed to extract group and name from %s", attrname);
+      goto done;
+    }
+    if (strcasecmp("how", gname)==0) {
+      if (!RaveAttributeHelp_validateHowGroupAttributeName(gname, aname)) {
+        RAVE_ERROR1("Not possible to validate how/group attribute name %s", attrname);
+        goto done;
+      }
+      RaveCoreObject* attr = RaveObjectHashTable_remove(pvol->attrs, attrname);
+      RAVE_OBJECT_RELEASE(attr);
+    }
+  }
+
+done:
+  RAVE_FREE(aname);
+  RAVE_FREE(gname);
 }
 
 RaveList_t* PolarVolume_getAttributeNames(PolarVolume_t* pvol)
@@ -1219,7 +1286,40 @@ done:
   return result;
 }
 
+void PolarVolume_setUseAzimuthalNavInformation(PolarVolume_t* self, int v)
+{
+  int i = 0;
+  int numberOfScans = 0;
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  numberOfScans = PolarVolume_getNumberOfScans(self);
+  for (i = 0; i < numberOfScans; i++) {
+    PolarScan_t* s = PolarVolume_getScan(self, i);
+    if (s != NULL) {
+      PolarScan_setUseAzimuthalNavInformation(s, v);
+    }
+    RAVE_OBJECT_RELEASE(s);
+  }
+}
 
+int PolarVolume_useAzimuthalNavInformation(PolarVolume_t* self)
+{
+  int i = 0;
+  int numberOfScans = 0;
+  int result = 0;
+  RAVE_ASSERT((self != NULL), "scan == NULL");
+  numberOfScans = PolarVolume_getNumberOfScans(self);
+  for (i = 0; i < numberOfScans && result == 0; i++) {
+    PolarScan_t* s = PolarVolume_getScan(self, i);
+    if (s != NULL) {
+      result = PolarScan_useAzimuthalNavInformation(s);
+    }
+    RAVE_OBJECT_RELEASE(s);
+  }
+  if (numberOfScans == 0) {
+    result = 0;
+  }
+  return result;
+}
 
 /*@} End of Interface functions */
 RaveCoreObjectType PolarVolume_TYPE = {

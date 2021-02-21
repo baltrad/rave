@@ -22,7 +22,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2010-06-23
  */
-#include "Python.h"
+#include "pyravecompat.h"
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
@@ -339,6 +339,22 @@ done:
   return result;
 }
 
+static PyObject* _pycartesianvolume_hasAttribute(PyCartesianVolume* self, PyObject* args)
+{
+  RaveAttribute_t* attribute = NULL;
+  char* name = NULL;
+  long result = 0;
+  if (!PyArg_ParseTuple(args, "s", &name)) {
+    return NULL;
+  }
+  attribute = CartesianVolume_getAttribute(self->cvol, name);
+  if (attribute != NULL) {
+    result = 1;
+  }
+  RAVE_OBJECT_RELEASE(attribute);
+  return PyBool_FromLong(result);
+}
+
 static PyObject* _pycartesianvolume_getAttributeNames(PyCartesianVolume* self, PyObject* args)
 {
   RaveList_t* list = NULL;
@@ -380,6 +396,23 @@ static PyObject* _pycartesianvolume_isValid(PyCartesianVolume* self, PyObject* a
 }
 
 /**
+ * Clones self
+ * @param[in] self - self
+ * @param[in] args - NA
+ * @return a clone of self
+ */
+static PyObject* _pycartesianvolume_clone(PyCartesianVolume* self, PyObject* args)
+{
+  PyObject* pyresult = NULL;
+  CartesianVolume_t* result = RAVE_OBJECT_CLONE(self->cvol);
+  if (result != NULL) {
+    pyresult = (PyObject*)PyCartesianVolume_New(result);
+  }
+  RAVE_OBJECT_RELEASE(result);
+  return pyresult;
+}
+
+/**
  * All methods a polar volume can have
  */
 static struct PyMethodDef _pycartesianvolume_methods[] =
@@ -390,48 +423,88 @@ static struct PyMethodDef _pycartesianvolume_methods[] =
   {"objectType", NULL},
   {"xscale", NULL},
   {"yscale", NULL},
+  {"zscale", NULL},
+  {"zstart", NULL},
   {"xsize", NULL},
   {"ysize", NULL},
+  {"zsize", NULL},
   {"projection", NULL},
   {"areaextent", NULL},
-  {"addImage", (PyCFunction) _pycartesianvolume_addImage, 1},
-  {"getImage", (PyCFunction) _pycartesianvolume_getImage, 1},
-  {"getNumberOfImages", (PyCFunction) _pycartesianvolume_getNumberOfImages, 1},
-  {"addAttribute", (PyCFunction) _pycartesianvolume_addAttribute, 1},
-  {"getAttribute", (PyCFunction) _pycartesianvolume_getAttribute, 1},
-  {"getAttributeNames", (PyCFunction) _pycartesianvolume_getAttributeNames, 1},
-  {"isValid", (PyCFunction) _pycartesianvolume_isValid, 1},
+  {"addImage", (PyCFunction) _pycartesianvolume_addImage, 1,
+    "addImage(cartesian)\n\n"
+    "Adds a cartesian object to the volume. When adding the first object, xsize/ysize will be set. Then the following objects that are added has to have same xsize & ysize"
+  },
+  {"getImage", (PyCFunction) _pycartesianvolume_getImage, 1,
+    "getImage(index) -> CartesianCore object\n\n"
+    "Returns the cartesian object at index.\n\n"
+    "index - the index that has to be >= 0 and < getNumberOfImages()."
+  },
+  {"getNumberOfImages", (PyCFunction) _pycartesianvolume_getNumberOfImages, 1,
+    "getNumberOfImages() -> the number of images\n\n"
+    "Returns the number of images in this volume."
+  },
+  {"addAttribute", (PyCFunction) _pycartesianvolume_addAttribute, 1,
+    "addAttribute(name, value) \n\n"
+    "Adds an attribute to the volume. Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis etc. \n"
+    "Currently, double, long, string and 1-dimensional arrays are supported.\n\n"
+    "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis\n"
+    "        In the case of how-groups, it is also possible to specify subgroups, like how/subgroup/attr or how/subgroup/subgroup/attr.\n"
+    "value - Value to be associated with the name. Currently, double, long, string and 1-dimensional arrays are supported."
+  },
+  {"getAttribute", (PyCFunction) _pycartesianvolume_getAttribute, 1,
+    "getAttribute(name) -> value \n\n"
+    "Returns the value associated with the specified name \n\n"
+    "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis\n"
+    "        In the case of how-groups, it is also possible to specify subgroups, like how/subgroup/attr or how/subgroup/subgroup/attr."
+  },
+  {"hasAttribute", (PyCFunction) _pycartesianvolume_hasAttribute, 1,
+    "hasAttribute(name) -> a boolean \n\n"
+    "Returns if the specified name is defined within this cartesian volume\n\n"
+    "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis.\n"
+    "        In the case of how-groups, it is also possible to specify subgroups, like how/subgroup/attr or how/subgroup/subgroup/attr.\n"
+  },
+  {"getAttributeNames", (PyCFunction) _pycartesianvolume_getAttributeNames, 1,
+    "getAttributeNames() -> array of names \n\n"
+    "Returns the attribute names associated with this cartesian volume"
+  },
+  {"isValid", (PyCFunction) _pycartesianvolume_isValid, 1,
+    "isValid() -> boolean\n\n"
+    "Validates the volume to see if it contains necessary information like sizes & scales are set. That start and end date/times are set and so on."
+  },
+  {"clone", (PyCFunction)_pycartesianvolume_clone, 1,
+    "clone() -> a clone of self (CartesianVolumeCore)\n\n"
+    "Creates a duplicate of self."
+  },
   {NULL, NULL} /* sentinel */
 };
 
 /**
  * Returns the specified attribute in the polar volume
  */
-static PyObject* _pycartesianvolume_getattr(PyCartesianVolume* self, char* name)
+static PyObject* _pycartesianvolume_getattro(PyCartesianVolume* self, PyObject* name)
 {
-  PyObject* res = NULL;
-  if (strcmp("time", name) == 0) {
+  if (PY_COMPARE_STRING_WITH_ATTRO_NAME("time", name) == 0) {
     const char* str = CartesianVolume_getTime(self->cvol);
     if (str != NULL) {
       return PyString_FromString(str);
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("date", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("date", name) == 0) {
     const char* str = CartesianVolume_getDate(self->cvol);
     if (str != NULL) {
       return PyString_FromString(str);
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("source", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("source", name) == 0) {
     const char* str = CartesianVolume_getSource(self->cvol);
     if (str != NULL) {
-      return PyString_FromString(str);
+      return PyRaveAPI_StringOrUnicode_FromASCII(str);
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("projection", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("projection", name) == 0) {
     Projection_t* projection = CartesianVolume_getProjection(self->cvol);
     if (projection != NULL) {
       PyProjection* result = PyProjection_New(projection);
@@ -440,41 +513,40 @@ static PyObject* _pycartesianvolume_getattr(PyCartesianVolume* self, char* name)
     } else {
       Py_RETURN_NONE;
     }
-  } else if (strcmp("objectType", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("objectType", name) == 0) {
     return PyInt_FromLong(CartesianVolume_getObjectType(self->cvol));
-  } else if (strcmp("xscale", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("xscale", name) == 0) {
     return PyFloat_FromDouble(CartesianVolume_getXScale(self->cvol));
-  } else if (strcmp("yscale", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("yscale", name) == 0) {
     return PyFloat_FromDouble(CartesianVolume_getYScale(self->cvol));
-  } else if (strcmp("xsize", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("zscale", name) == 0) {
+    return PyFloat_FromDouble(CartesianVolume_getZScale(self->cvol));
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("zstart", name) == 0) {
+    return PyFloat_FromDouble(CartesianVolume_getZStart(self->cvol));
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("xsize", name) == 0) {
     return PyInt_FromLong(CartesianVolume_getXSize(self->cvol));
-  } else if (strcmp("ysize", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("ysize", name) == 0) {
     return PyInt_FromLong(CartesianVolume_getYSize(self->cvol));
-  } else if (strcmp("areaextent", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("zsize", name) == 0) {
+    return PyInt_FromLong(CartesianVolume_getZSize(self->cvol));
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("areaextent", name) == 0) {
     double llX = 0.0, llY = 0.0, urX = 0.0, urY = 0.0;
     CartesianVolume_getAreaExtent(self->cvol, &llX, &llY, &urX, &urY);
     return Py_BuildValue("(dddd)", llX, llY, urX, urY);
   }
-
-  res = Py_FindMethod(_pycartesianvolume_methods, (PyObject*) self, name);
-  if (res)
-    return res;
-
-  PyErr_Clear();
-  PyErr_SetString(PyExc_AttributeError, name);
-  return NULL;
+  return PyObject_GenericGetAttr((PyObject*)self, name);
 }
 
 /**
  * Returns the specified attribute in the polar volume
  */
-static int _pycartesianvolume_setattr(PyCartesianVolume* self, char* name, PyObject* val)
+static int _pycartesianvolume_setattro(PyCartesianVolume* self, PyObject* name, PyObject* val)
 {
   int result = -1;
   if (name == NULL) {
     goto done;
   }
-  if (strcmp("time", name) == 0) {
+  if (PY_COMPARE_STRING_WITH_ATTRO_NAME("time", name) == 0) {
     if (PyString_Check(val)) {
       if (!CartesianVolume_setTime(self->cvol, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "could not set time");
@@ -484,7 +556,7 @@ static int _pycartesianvolume_setattr(PyCartesianVolume* self, char* name, PyObj
     } else {
         raiseException_gotoTag(done, PyExc_ValueError, "time should be specified as a string (HHmmss)");
     }
-  } else if (strcmp("date", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("date", name) == 0) {
     if (PyString_Check(val)) {
       if (!CartesianVolume_setDate(self->cvol, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "could not set date");
@@ -494,7 +566,7 @@ static int _pycartesianvolume_setattr(PyCartesianVolume* self, char* name, PyObj
     } else {
       raiseException_gotoTag(done, PyExc_ValueError, "date should be specified as a string (YYYYMMDD)");
     }
-  } else if (strcmp("source", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("source", name) == 0) {
     if (PyString_Check(val)) {
       if (!CartesianVolume_setSource(self->cvol, PyString_AsString(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "could not set source");
@@ -504,25 +576,45 @@ static int _pycartesianvolume_setattr(PyCartesianVolume* self, char* name, PyObj
     } else {
       raiseException_gotoTag(done, PyExc_ValueError, "source should be specified as a string");
     }
-  } else if (strcmp("xscale", name)==0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("xscale", name)==0) {
     if (PyFloat_Check(val)) {
       CartesianVolume_setXScale(self->cvol, PyFloat_AsDouble(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError,"xscale must be of type float");
     }
-  } else if (strcmp("yscale", name)==0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("yscale", name)==0) {
     if (PyFloat_Check(val)) {
       CartesianVolume_setYScale(self->cvol, PyFloat_AsDouble(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError,"yscale must be of type float");
     }
-  } else if (strcmp("projection", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("zscale", name)==0) {
+    if (PyFloat_Check(val)) {
+      CartesianVolume_setZScale(self->cvol, PyFloat_AsDouble(val));
+    } else if (PyLong_Check(val)) {
+      CartesianVolume_setZScale(self->cvol, (double)PyLong_AsLong(val));
+    } else if (PyInt_Check(val)) {
+      CartesianVolume_setZScale(self->cvol, (double)PyInt_AsLong(val));
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError,"zscale must be of type float");
+    }
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("zstart", name)==0) {
+    if (PyFloat_Check(val)) {
+      CartesianVolume_setZStart(self->cvol, PyFloat_AsDouble(val));
+    } else if (PyLong_Check(val)) {
+      CartesianVolume_setZStart(self->cvol, (double)PyLong_AsLong(val));
+    } else if (PyInt_Check(val)) {
+      CartesianVolume_setZStart(self->cvol, (double)PyInt_AsLong(val));
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError,"zstart must be of type float");
+    }
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("projection", name) == 0) {
     if (PyProjection_Check(val)) {
       CartesianVolume_setProjection(self->cvol, ((PyProjection*)val)->projection);
     } else if (val == Py_None) {
       CartesianVolume_setProjection(self->cvol, NULL);
     }
-  } else if (strcmp("objectType", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("objectType", name) == 0) {
     if (PyInt_Check(val)) {
       if (!CartesianVolume_setObjectType(self->cvol, PyInt_AsLong(val))) {
         raiseException_gotoTag(done, PyExc_ValueError, "objectType not supported");
@@ -530,14 +622,14 @@ static int _pycartesianvolume_setattr(PyCartesianVolume* self, char* name, PyObj
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "objectType must be a valid object type")
     }
-  } else if (strcmp("areaextent", name) == 0) {
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("areaextent", name) == 0) {
     double llX = 0.0, llY = 0.0, urX = 0.0, urY = 0.0;
     if (!PyArg_ParseTuple(val, "dddd", &llX, &llY, &urX, &urY)) {
       goto done;
     }
     CartesianVolume_setAreaExtent(self->cvol, llX, llY, urX, urY);
   } else {
-    raiseException_gotoTag(done, PyExc_AttributeError, name);
+    raiseException_gotoTag(done, PyExc_AttributeError, PY_RAVE_ATTRO_NAME_TO_STRING(name));
   }
 
   result = 0;
@@ -559,28 +651,82 @@ static PyObject* _pycartesianvolume_isCartesianVolume(PyObject* self, PyObject* 
 
 /*@} End of Cartesian Volumes */
 
+/*@{ Documentation about the type */
+PyDoc_STRVAR(_pycartesianvolume_type_doc,
+    "The cartesian volume is a container for cartesian products.  The member attributes should reflect some basic features of the included "
+    "cartesian images as well as some basic information like object type.\n"
+    "Since the parameter probably should contain a lot of attributes as defined in the ODIM H5 specification, these can be "
+    "added within the attribute mapping (how/, what/, where/) groups. E.g. addAttribute(\"how/sthis\", 1.2).\n"
+    "A list of avilable member attributes are described below. For information about member functions, check each functions doc.\n"
+    "\n"
+    "time             - Time this cartesian product should represent as a string with format HHmmSS\n"
+    "date             - Date this cartesian product should represent as a string in the format YYYYMMDD\n"
+    "source           - The source for this product. Defined as what/source in ODIM H5. I.e. a comma separated list of various identifiers. For example. NOD:seang,WMO:1234,....\n"
+    "objectType       - The object type as defined in ODIM H5 this cartesian product should be defined as. Can be  _rave.Rave_ObjectType_CVOL or _rave.Rave_ObjectType_COMP\n"
+    "xscale           - The scale in meters in x-direction.\n"
+    "yscale           - The scale in meters in y-direction.\n"
+    "areaextent       - A tuple of four representing the outer boundaries of this cartesian product. Defined as (lower left X, lower left Y, upper right X, upper right Y).\n"
+    "projection       - The projection object of type ProjectionCore that defines what projection that this cartesian product is defined with.\n"
+    "xsize            - The xsize of the area represented. ReadOnly, initialization occurs when adding first image.\n"
+    "ysize            - The ysize of the area represented. ReadOnly, initialization occurs when adding first image.\n"
+    "\n"
+    "Usage:\n"
+    " import _cartesianvolume\n"
+    " vol = _cartesianvolume.new()\n"
+    " vol.addImage(cartesian1)\n"
+    " vol.addImage(cartesian2)\n"
+    " ..."
+    );
+/*@} End of Documentation about the type */
+
+
 /// --------------------------------------------------------------------
 /// Type definitions
 /// --------------------------------------------------------------------
 /*@{ Type definitions */
 PyTypeObject PyCartesianVolume_Type =
 {
-  PyObject_HEAD_INIT(NULL)0, /*ob_size*/
+  PyVarObject_HEAD_INIT(NULL, 0) /*ob_size*/
   "CartesianVolumeCore", /*tp_name*/
   sizeof(PyCartesianVolume), /*tp_size*/
   0, /*tp_itemsize*/
   /* methods */
   (destructor)_pycartesianvolume_dealloc, /*tp_dealloc*/
   0, /*tp_print*/
-  (getattrfunc)_pycartesianvolume_getattr, /*tp_getattr*/
-  (setattrfunc)_pycartesianvolume_setattr, /*tp_setattr*/
-  0, /*tp_compare*/
-  0, /*tp_repr*/
-  0, /*tp_as_number */
+  (getattrfunc)0,               /*tp_getattr*/
+  (setattrfunc)0,               /*tp_setattr*/
+  0,                            /*tp_compare*/
+  0,                            /*tp_repr*/
+  0,                            /*tp_as_number */
   0,
-  0, /*tp_as_mapping */
-  0 /*tp_hash*/
-};
+  0,                            /*tp_as_mapping */
+  0,                            /*tp_hash*/
+  (ternaryfunc)0,               /*tp_call*/
+  (reprfunc)0,                  /*tp_str*/
+  (getattrofunc)_pycartesianvolume_getattro, /*tp_getattro*/
+  (setattrofunc)_pycartesianvolume_setattro, /*tp_setattro*/
+  0,                            /*tp_as_buffer*/
+  Py_TPFLAGS_DEFAULT, /*tp_flags*/
+  _pycartesianvolume_type_doc,  /*tp_doc*/
+  (traverseproc)0,              /*tp_traverse*/
+  (inquiry)0,                   /*tp_clear*/
+  0,                            /*tp_richcompare*/
+  0,                            /*tp_weaklistoffset*/
+  0,                            /*tp_iter*/
+  0,                            /*tp_iternext*/
+  _pycartesianvolume_methods,   /*tp_methods*/
+  0,                            /*tp_members*/
+  0,                            /*tp_getset*/
+  0,                            /*tp_base*/
+  0,                            /*tp_dict*/
+  0,                            /*tp_descr_get*/
+  0,                            /*tp_descr_set*/
+  0,                            /*tp_dictoffset*/
+  0,                            /*tp_init*/
+  0,                            /*tp_alloc*/
+  0,                            /*tp_new*/
+  0,                            /*tp_free*/
+  0,                            /*tp_is_gc*/};
 /*@} End of Type definitions */
 
 /// --------------------------------------------------------------------
@@ -588,44 +734,54 @@ PyTypeObject PyCartesianVolume_Type =
 /// --------------------------------------------------------------------
 /*@{ Module setup */
 static PyMethodDef functions[] = {
-  {"new", (PyCFunction)_pycartesianvolume_new, 1},
-  {"isCartesianVolume", (PyCFunction)_pycartesianvolume_isCartesianVolume, 1},
+  {"new", (PyCFunction)_pycartesianvolume_new, 1,
+    "new() -> new instance of the CartesianVolumeCore object\n\n"
+    "Creates a new instance of the CartesianVolumeCore object"
+  },
+  {"isCartesianVolume", (PyCFunction)_pycartesianvolume_isCartesianVolume, 1,
+    "isCartesianVolume(object) -> boolean\n\n"
+    "Tests if the provided object is a cartesian volume or not.\n\n"
+    "object - the object to be tested."
+  },
   {NULL,NULL} /*Sentinel*/
 };
 
 /**
  * Initializes polar volume.
  */
-void init_cartesianvolume(void)
+MOD_INIT(_cartesianvolume)
 {
   PyObject *module=NULL,*dictionary=NULL;
   static void *PyCartesianVolume_API[PyCartesianVolume_API_pointers];
   PyObject *c_api_object = NULL;
-  PyCartesianVolume_Type.ob_type = &PyType_Type;
 
-  module = Py_InitModule("_cartesianvolume", functions);
+  MOD_INIT_SETUP_TYPE(PyCartesianVolume_Type, &PyType_Type);
+
+  MOD_INIT_VERIFY_TYPE_READY(&PyCartesianVolume_Type);
+
+  MOD_INIT_DEF(module, "_cartesianvolume", _pycartesianvolume_type_doc, functions);
   if (module == NULL) {
-    return;
+    return MOD_INIT_ERROR;
   }
+
   PyCartesianVolume_API[PyCartesianVolume_Type_NUM] = (void*)&PyCartesianVolume_Type;
   PyCartesianVolume_API[PyCartesianVolume_GetNative_NUM] = (void *)PyCartesianVolume_GetNative;
   PyCartesianVolume_API[PyCartesianVolume_New_NUM] = (void*)PyCartesianVolume_New;
 
-  c_api_object = PyCObject_FromVoidPtr((void *)PyCartesianVolume_API, NULL);
-
-  if (c_api_object != NULL) {
-    PyModule_AddObject(module, "_C_API", c_api_object);
-  }
-
+  c_api_object = PyCapsule_New(PyCartesianVolume_API, PyCartesianVolume_CAPSULE_NAME, NULL);
   dictionary = PyModule_GetDict(module);
-  ErrorObject = PyString_FromString("_cartesianvolume.error");
+  PyDict_SetItemString(dictionary, "_C_API", c_api_object);
+
+  ErrorObject = PyErr_NewException("_cartesianvolume.error", NULL, NULL);
   if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
     Py_FatalError("Can't define _cartesianvolume.error");
+    return MOD_INIT_ERROR;
   }
 
   import_array(); /*To make sure I get access to Numeric*/
   import_pyprojection();
   import_pycartesian();
   PYRAVE_DEBUG_INITIALIZE;
+  return MOD_INIT_SUCCESS(module);
 }
 /*@} End of Module setup */

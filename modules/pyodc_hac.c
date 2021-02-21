@@ -22,7 +22,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Daniel Michelson (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2013-02-23
  */
-#include "Python.h"
+#include "pyravecompat.h"
 #include "arrayobject.h"
 #include "rave.h"
 #include "rave_debug.h"
@@ -150,29 +150,61 @@ static PyObject* _zdiff_func(PyObject* self, PyObject* args)
 
 static struct PyMethodDef _hac_functions[] =
 {
-  { "hacFilter", (PyCFunction) _hacFilter_func, METH_VARARGS },
-  { "hacIncrement", (PyCFunction) _hacIncrement_func, METH_VARARGS },
-  { "zdiff", (PyCFunction) _zdiff_func, METH_VARARGS },
+  { "hacFilter", (PyCFunction) _hacFilter_func, METH_VARARGS,
+    "hacFilter(scan, hacobj, quant) - > boolean\n\n"
+    "Performs HAC filtering.\n\n"
+    "scan   - a polar scan\n"
+    "hacobj - a rave field containing hits\n"
+    "quant  - parameter in scan that should be processed"
+  },
+  { "hacIncrement", (PyCFunction) _hacIncrement_func, METH_VARARGS,
+     "hacIncrement(scan, hacobj, quant) -> boolean\n\n"
+     "Increments the HAC for that radar and elevation angle.\n\n"
+      "scan   - a polar scan\n"
+      "hacobj - a rave field containing hits\n"
+      "quant  - parameter in scan that should be processed"
+  },
+  { "zdiff", (PyCFunction) _zdiff_func, METH_VARARGS,
+    "zdiff(scanobj, thresh)\n\n"
+    "Derives Z-diff quality indicator.Scan must contain both DBZH and TH.\n\n"
+    "scanobj - a polar scan\n"
+    "thresh  - threshold. If difference between DBZH and TH is greater than thresh, then value is truncated to threshold."
+  },
   { NULL, NULL }
 };
+
+//
+/*@{ Documentation about the type */
+PyDoc_STRVAR(_hac_module_doc,
+    "Function for performing hit-accumulation clutter filtering.\n"
+);
+/*@} End of Documentation about the type */
 
 /**
  * Initialize the _odc_hac module
  */
-PyMODINIT_FUNC init_odc_hac(void)
+MOD_INIT(_odc_hac)
 {
-  PyObject* m;
-  m = Py_InitModule("_odc_hac", _hac_functions);
-  ErrorObject = PyString_FromString("_odc_hac.error");
+  PyObject* module = NULL;
+  PyObject* dictionary = NULL;
 
-  if (ErrorObject == NULL || PyDict_SetItemString(PyModule_GetDict(m),
-                                                  "error", ErrorObject) != 0) {
-    Py_FatalError("Can't define _odc_hac.error");
+  MOD_INIT_DEF(module, "_odc_hac", _hac_module_doc, _hac_functions);
+  if (module == NULL) {
+    return MOD_INIT_ERROR;
   }
+
+  dictionary = PyModule_GetDict(module);
+  ErrorObject = PyErr_NewException("_odc_hac.error", NULL, NULL);
+  if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
+    Py_FatalError("Can't define _odc_hac.error");
+    return MOD_INIT_ERROR;
+  }
+
   import_pypolarscan();
   import_pyravefield();
   import_array(); /*To make sure I get access to numpy*/
   PYRAVE_DEBUG_INITIALIZE;
+  return MOD_INIT_SUCCESS(module);
 }
 
 /*@} End of Module setup */

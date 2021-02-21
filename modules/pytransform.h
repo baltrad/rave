@@ -46,6 +46,8 @@ typedef struct {
 
 #define PyTransform_API_pointers 3                 /**< total number of C API pointers */
 
+#define PyTransform_CAPSULE_NAME "_transform._C_API"
+
 #ifdef PYTRANSFORM_MODULE
 /** declared in pytransform module */
 extern PyTypeObject PyTransform_Type;
@@ -79,37 +81,18 @@ static void **PyTransform_API;
   (*(PyTransform_New_RETURN (*)PyTransform_New_PROTO) PyTransform_API[PyTransform_New_NUM])
 
 /**
- * Checks if the object is a python polar scan.
+ * Checks if the object is a python transform instance.
  */
 #define PyTransform_Check(op) \
-   ((op)->ob_type == (PyTypeObject *)PyTransform_API[PyTransform_Type_NUM])
+   (Py_TYPE(op) == &PyTransform_Type)
+
+#define PyTransform_Type (*(PyTypeObject*)PyTransform_API[PyTransform_Type_NUM])
 
 /**
- * Imports the PyTransform module (like import _polarscan in python).
+ * Imports the PyArea module (like import _transform in python).
  */
-static int
-import_pytransform(void)
-{
-  PyObject *module;
-  PyObject *c_api_object;
-
-  module = PyImport_ImportModule("_transform");
-  if (module == NULL) {
-    return -1;
-  }
-
-  c_api_object = PyObject_GetAttrString(module, "_C_API");
-  if (c_api_object == NULL) {
-    Py_DECREF(module);
-    return -1;
-  }
-  if (PyCObject_Check(c_api_object)) {
-    PyTransform_API = (void **)PyCObject_AsVoidPtr(c_api_object);
-  }
-  Py_DECREF(c_api_object);
-  Py_DECREF(module);
-  return 0;
-}
+#define import_pytransform() \
+    PyTransform_API = (void **)PyCapsule_Import(PyTransform_CAPSULE_NAME, 1);
 
 #endif
 

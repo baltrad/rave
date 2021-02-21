@@ -53,8 +53,8 @@ class rave_qitotal_quality_plugin_test(unittest.TestCase):
     
   def test_getQualityFields(self):
     result = self.classUnderTest.getQualityFields()
-    self.assertEquals(1, len(result))
-    self.assertEquals("pl.imgw.quality.qi_total", result[0])
+    self.assertEqual(1, len(result))
+    self.assertEqual("pl.imgw.quality.qi_total", result[0])
 
   def test_process_scan(self):
     scan = _raveio.open(self.SCAN_FIXTURE).object
@@ -74,7 +74,7 @@ class rave_qitotal_quality_plugin_test(unittest.TestCase):
     scan.addQualityField(qf2)
     
     result, qfield = self.classUnderTest.process(scan)
-    self.assertEquals(qfield, ["pl.imgw.quality.qi_total"], "Wrong qfield returned from process")
+    self.assertEqual(qfield, ["pl.imgw.quality.qi_total"], "Wrong qfield returned from process")
     
     field = result.getQualityFieldByHowTask("pl.imgw.quality.qi_total")
     self.assertTrue(field != None)

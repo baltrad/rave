@@ -74,17 +74,24 @@ int getDoubleAttribute(RaveCoreObject* obj, const char* aname, double* tmpd) {
 }
 
 
-int getDoubleArrayAttribute(PolarScan_t* scan, const char* aname, double** array) {
+int getDoubleArrayAttribute(PolarScan_t* scan, const char* aname, double** array, PolarScanParam_t* param) {
   RaveAttribute_t* attr = NULL;
   int len = 0;
   int ret = 0;
 
   attr = PolarScan_getAttribute(scan, aname);
+  if (attr == NULL && param != NULL) {
+    if (PolarScanParam_hasAttribute(param, aname)) {
+      attr = PolarScanParam_getAttribute(param, aname);
+    }
+  }
 
   if (attr != NULL) {
     len = (int)PolarScan_getNbins(scan);
     ret = RaveAttribute_getDoubleArray(attr, array, &len);
-  } else *array = NULL;
+  } else {
+    *array = NULL;
+  }
   RAVE_OBJECT_RELEASE(attr);
   return ret;
 }
@@ -229,20 +236,20 @@ void fill_meta(PolarScan_t* scan, PolarScanParam_t* param, SCANMETA *meta)
    }
 
    /* Additional metadata arrays containing read-out angles and times */
-   if (!getDoubleArrayAttribute(scan, "how/startazA", &meta->startazA)) {
+   if (!getDoubleArrayAttribute(scan, "how/startazA", &meta->startazA, param)) {
      RAVE_WARNING1("Scan elevation %2.1f: No how/startazA array attribute. Estimating azimuth angle from polar geometry.\n", meta->elev);
    } else {
-     if (!getDoubleArrayAttribute(scan, "how/stopazA", &meta->stopazA)) {
+     if (!getDoubleArrayAttribute(scan, "how/stopazA", &meta->stopazA, param)) {
        RAVE_WARNING1("Scan elevation %2.1f: how/startazA found but not how/stopazA array attribute.\n", meta->elev);
      }
    }
-   if (!getDoubleArrayAttribute(scan, "how/elangles", &meta->elangles)) {
+   if (!getDoubleArrayAttribute(scan, "how/elangles", &meta->elangles, param)) {
      RAVE_WARNING1("Scan elevation %2.1f: No how/elangles array attribute. Using commanded elevation angle.\n", meta->elev);
    }
-   if (!getDoubleArrayAttribute(scan, "how/startazT", &meta->startazT)) {
+   if (!getDoubleArrayAttribute(scan, "how/startazT", &meta->startazT, param)) {
      RAVE_WARNING1("Scan elevation %2.1f: No how/startazT array attribute.\n", meta->elev);
    }
-   if (!getDoubleArrayAttribute(scan, "how/stopazT", &meta->stopazT)) {
+   if (!getDoubleArrayAttribute(scan, "how/stopazT", &meta->stopazT, param)) {
      RAVE_WARNING1("Scan elevation %2.1f: No how/stopazT array attribute.\n", meta->elev);
    }
 
@@ -630,8 +637,9 @@ int processScan(PolarScan_t* scan, SCANMETA* meta, RaveList_t* list) {
   else meta->Zdr = ZdrType_None;
 
   if (strcmp(meta->quant1, "") != 0) {
-	ret = processData(scan, meta, list);
+    ret = processData(scan, meta, list);
   }
+
   return ret;
 }
 
@@ -670,7 +678,7 @@ int scansunFromObject(RaveCoreObject* object, Rave_ObjectType ot, RaveList_t* li
 
 int scansun(const char* filename, RaveList_t* list, char** source) {
 	int ret = 0;
-	RaveIO_t* raveio = RaveIO_open(filename);
+	RaveIO_t* raveio = RaveIO_open(filename, 0, NULL);
 	if (raveio == NULL) {
 	  goto done;
 	}

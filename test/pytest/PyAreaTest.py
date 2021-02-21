@@ -37,22 +37,22 @@ class PyAreaTest(unittest.TestCase):
 
   def tearDown(self):
     pass
-  
+
   def test_new(self):
     obj = _area.new()
     
-    isarea = string.find(`type(obj)`, "AreaCore")
+    isarea = str(type(obj)).find("AreaCore")
     self.assertNotEqual(-1, isarea)
 
   def test_isArea(self):
     obj = _area.new()
-    self.assertEquals(True, _area.isArea(obj))
+    self.assertEqual(True, _area.isArea(obj))
     
-    self.assertEquals(False, _area.isArea(_projection.new("x", "y", "+proj=latlong +ellps=WGS84 +datum=WGS84")))
+    self.assertEqual(False, _area.isArea(_projection.new("x", "y", "+proj=latlong +ellps=WGS84 +datum=WGS84")))
 
-    self.assertEquals(False, _area.isArea("abc"))
+    self.assertEqual(False, _area.isArea("abc"))
     
-    self.assertEquals(False, _area.isArea(None))
+    self.assertEqual(False, _area.isArea(None))
     
 
   def test_attribute_visibility(self):
@@ -60,16 +60,16 @@ class PyAreaTest(unittest.TestCase):
     area = _area.new()
     alist = dir(area)
     for a in attrs:
-      self.assertEquals(True, a in alist)
+      self.assertEqual(True, a in alist)
 
   def test_id(self):
     obj = _area.new()
 
-    self.assertEquals(None, obj.id)
+    self.assertEqual(None, obj.id)
     obj.id = "something"
-    self.assertEquals("something", obj.id)
+    self.assertEqual("something", obj.id)
     obj.id = None
-    self.assertEquals(None, obj.id)
+    self.assertEqual(None, obj.id)
 
   def test_id_typeError(self):
     obj = _area.new()
@@ -77,143 +77,142 @@ class PyAreaTest(unittest.TestCase):
     try:
       obj.id = 1.2
       self.fail("Expected TypeError")
-    except TypeError, e:
+    except TypeError:
       pass
-    self.assertEquals(None, obj.id)
+    self.assertEqual(None, obj.id)
     
   def test_xsize(self):
     obj = _area.new()
-    self.assertEquals(0, obj.xsize)
+    self.assertEqual(0, obj.xsize)
     obj.xsize = 10
-    self.assertEquals(10, obj.xsize)
+    self.assertEqual(10, obj.xsize)
 
   def test_xsize_typeError(self):
     obj = _area.new()
-    self.assertEquals(0, obj.xsize)
+    self.assertEqual(0, obj.xsize)
     try:
       obj.xsize = 10.0
       self.fail("Expected TypeError")
-    except TypeError,e:
+    except TypeError:
       pass
-    self.assertEquals(0, obj.xsize)
+    self.assertEqual(0, obj.xsize)
 
   def test_ysize(self):
     obj = _area.new()
-    self.assertEquals(0, obj.ysize)
+    self.assertEqual(0, obj.ysize)
     obj.ysize = 10
-    self.assertEquals(10, obj.ysize)
+    self.assertEqual(10, obj.ysize)
 
   def test_ysize_typeError(self):
     obj = _area.new()
-    self.assertEquals(0, obj.ysize)
+    self.assertEqual(0, obj.ysize)
     try:
       obj.ysize = 10.0
       self.fail("Expected TypeError")
-    except TypeError,e:
+    except TypeError:
       pass
-    self.assertEquals(0, obj.ysize)
+    self.assertEqual(0, obj.ysize)
 
   def test_xscale(self):
     obj = _area.new()
-    self.assertAlmostEquals(0.0, obj.xscale, 4)
+    self.assertAlmostEqual(0.0, obj.xscale, 4)
     obj.xscale = 10.0
-    self.assertAlmostEquals(10.0, obj.xscale, 4)
+    self.assertAlmostEqual(10.0, obj.xscale, 4)
 
   def test_xscale_int(self):
     obj = _area.new()
-    self.assertAlmostEquals(0.0, obj.xscale, 4)
+    self.assertAlmostEqual(0.0, obj.xscale, 4)
     obj.xscale = 10
-    self.assertAlmostEquals(10.0, obj.xscale, 4)
+    self.assertAlmostEqual(10.0, obj.xscale, 4)
 
   def test_xscale_typeError(self):
     obj = _area.new()
-    self.assertAlmostEquals(0.0, obj.xscale, 4)
+    self.assertAlmostEqual(0.0, obj.xscale, 4)
     try:
       obj.xscale = "abc"
       self.fail("Expected TypeError")
-    except TypeError,e:
+    except TypeError:
       pass
-    self.assertAlmostEquals(0.0, obj.xscale, 4)
+    self.assertAlmostEqual(0.0, obj.xscale, 4)
 
   def test_yscale(self):
     obj = _area.new()
-    self.assertAlmostEquals(0.0, obj.yscale, 4)
+    self.assertAlmostEqual(0.0, obj.yscale, 4)
     obj.yscale = 10.0
-    self.assertAlmostEquals(10.0, obj.yscale, 4)
+    self.assertAlmostEqual(10.0, obj.yscale, 4)
 
   def test_yscale_int(self):
     obj = _area.new()
-    self.assertAlmostEquals(0.0, obj.yscale, 4)
+    self.assertAlmostEqual(0.0, obj.yscale, 4)
     obj.yscale = 10
-    self.assertAlmostEquals(10.0, obj.yscale, 4)
+    self.assertAlmostEqual(10.0, obj.yscale, 4)
 
   def test_yscale_typeError(self):
     obj = _area.new()
-    self.assertAlmostEquals(0.0, obj.yscale, 4)
+    self.assertAlmostEqual(0.0, obj.yscale, 4)
     try:
       obj.yscale = "abc"
       self.fail("Expected TypeError")
-    except TypeError,e:
+    except TypeError:
       pass
-    self.assertAlmostEquals(0.0, obj.yscale, 4)
+    self.assertAlmostEqual(0.0, obj.yscale, 4)
 
   def test_extent(self):
     obj = _area.new()
     extent = obj.extent
-    self.assertEquals(4, len(extent))
-    self.assertAlmostEquals(0.0, extent[0], 4)
-    self.assertAlmostEquals(0.0, extent[1], 4)
-    self.assertAlmostEquals(0.0, extent[2], 4)
-    self.assertAlmostEquals(0.0, extent[3], 4)
+    self.assertEqual(4, len(extent))
+    self.assertAlmostEqual(0.0, extent[0], 4)
+    self.assertAlmostEqual(0.0, extent[1], 4)
+    self.assertAlmostEqual(0.0, extent[2], 4)
+    self.assertAlmostEqual(0.0, extent[3], 4)
     
     obj.extent = (1.0, 2.0, 3.0, 4.0)
     extent = obj.extent
-    self.assertEquals(4, len(extent))
-    self.assertAlmostEquals(1.0, extent[0], 4)
-    self.assertAlmostEquals(2.0, extent[1], 4)
-    self.assertAlmostEquals(3.0, extent[2], 4)
-    self.assertAlmostEquals(4.0, extent[3], 4)
+    self.assertEqual(4, len(extent))
+    self.assertAlmostEqual(1.0, extent[0], 4)
+    self.assertAlmostEqual(2.0, extent[1], 4)
+    self.assertAlmostEqual(3.0, extent[2], 4)
+    self.assertAlmostEqual(4.0, extent[3], 4)
 
   def test_extent_typeError(self):
     obj = _area.new()
     try:
       obj.extent = (1.0, 2.0, 3.0)
       self.fail("Expected TypeError")
-    except TypeError, e:
+    except TypeError:
       pass
 
     try:
       obj.extent = (1.0, 2.0, 3.0, 4.0, 5.0)
       self.fail("Expected TypeError")
-    except TypeError, e:
+    except TypeError:
       pass
     
     try:
       obj.extent = (1.0, 2.0, "abc")
       self.fail("Expected TypeError")
-    except TypeError, e:
+    except TypeError:
       pass
 
   def test_projection(self):
     obj = _area.new()
-    self.assertEquals(None, obj.projection)
+    self.assertEqual(None, obj.projection)
     
     obj.projection = _projection.new("x", "y", "+proj=latlong +ellps=WGS84 +datum=WGS84")
     
-    self.assertEquals("x", obj.projection.id)
+    self.assertEqual("x", obj.projection.id)
     
     obj.projection = None
     
-    self.assertEquals(None, obj.projection)
+    self.assertEqual(None, obj.projection)
     
   def test_projection_typeError(self):
     obj = _area.new()
-
+    
     try:
       obj.projection = "+proj=latlong +ellps=WGS84 +datum=WGS84"
       self.fail("Expected TypeError")
-    except TypeError, e:
+    except TypeError:
       pass
     
-    self.assertEquals(None, obj.projection)
-    
+    self.assertEqual(None, obj.projection)

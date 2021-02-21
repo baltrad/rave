@@ -60,7 +60,7 @@ if __name__ == "__main__":
     rio = _raveio.open(options.ifile)
 
     if rio.objectType is not _raveio.Rave_ObjectType_PVOL:
-        print "Input data must be polar volume. Exiting ..."
+        print("Input data must be polar volume. Exiting ...")
         sys.exit(-1)
 
     obj = rio.object

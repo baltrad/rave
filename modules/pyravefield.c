@@ -22,7 +22,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2010-07-05
  */
-#include "Python.h"
+#include "pyravecompat.h"
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>
@@ -359,6 +359,22 @@ done:
   return result;
 }
 
+static PyObject* _pyravefield_hasAttribute(PyRaveField* self, PyObject* args)
+{
+  RaveAttribute_t* attribute = NULL;
+  char* name = NULL;
+  long result = 0;
+  if (!PyArg_ParseTuple(args, "s", &name)) {
+    return NULL;
+  }
+  attribute = RaveField_getAttribute(self->field, name);
+  if (attribute != NULL) {
+    result = 1;
+  }
+  RAVE_OBJECT_RELEASE(attribute);
+  return PyBool_FromLong(result);
+}
+
 static PyObject* _pyravefield_getAttributeNames(PyRaveField* self, PyObject* args)
 {
   RaveList_t* list = NULL;
@@ -429,6 +445,26 @@ done:
   return result;
 }
 
+static PyObject* _pyravefield_circshiftData(PyRaveField* self, PyObject* args)
+{
+  long x = 0, y = 0;
+  int result = 0;
+
+  if (!PyArg_ParseTuple(args, "ll", &x, &y)) {
+    return NULL;
+  }
+
+  result = RaveField_circshiftData(self->field, x, y);
+  if (!result) {
+    raiseException_returnNULL(PyExc_ValueError, "Failed to run circular shift on field");
+  }
+
+  Py_RETURN_NONE;
+}
+
+
+MOD_DIR_FORWARD_DECLARE(PyRaveField);
+
 /**
  * All methods a cartesian product can have
  */
@@ -437,54 +473,103 @@ static struct PyMethodDef _pyravefield_methods[] =
   {"xsize", NULL},
   {"ysize", NULL},
   {"datatype", NULL},
-  {"setData", (PyCFunction) _pyravefield_setData, 1},
-  {"getData", (PyCFunction) _pyravefield_getData, 1},
-  {"setValue", (PyCFunction) _pyravefield_setValue, 1},
-  {"getValue", (PyCFunction) _pyravefield_getValue, 1},
-  {"getConvertedValue", (PyCFunction) _pyravefield_getConvertedValue, 1},
-  {"addAttribute", (PyCFunction) _pyravefield_addAttribute, 1},
-  {"getAttribute", (PyCFunction) _pyravefield_getAttribute, 1},
-  {"getAttributeNames", (PyCFunction) _pyravefield_getAttributeNames, 1},
-  {"removeAttributes", (PyCFunction) _pyravefield_removeAttributes, 1},
-  {"concatx", (PyCFunction) _pyravefield_concatx, 1},
+  {"setData", (PyCFunction) _pyravefield_setData, 1,
+    "setData(array)\n\n"
+    "Initializes the parameter with a datafield as defined by a 2-dimensional numpy array and datatype.\n\n"
+    "array - The 2 dimensional numpy array."
+  },
+  {"getData", (PyCFunction) _pyravefield_getData, 1,
+    "getData() -> a numpy array\n\n"
+    "Returns a 2 dimensional data array with the data set."
+  },
+  {"setValue", (PyCFunction) _pyravefield_setValue, 1,
+    "setValue(x,y,value) -> 1 on success otherwise 0\n\n"
+    "Sets the value at the specified position. \n\n"
+    "x     - x position\n"
+    "y     - y position\n"
+    "value - the value that should be set at specified position."
+  },
+  {"getValue", (PyCFunction) _pyravefield_getValue, 1,
+    "getValue(x,y) -> the value at the specified x and y position.\n\n"
+    "Returns the value at the specified x and y position. \n\n"
+    "x - x position\n"
+    "y - y position\n"
+  },
+  {"getConvertedValue", (PyCFunction) _pyravefield_getConvertedValue, 1,
+    "getConvertedValue(x,y) -> the converted value at the specified x and y position.\n\n"
+    "Returns the converted value (what/offset + what/gain*v) at the specified x and y position. Since what/offset and what/gain are optional, they are assumed to have 0.0 and 1.0 respectively if they are missing.\n\n"
+    "x - x position\n"
+    "y - y position\n"
+  },
+  {"addAttribute", (PyCFunction) _pyravefield_addAttribute, 1,
+    "addAttribute(name, value) \n\n"
+    "Adds an attribute to the field. Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis etc. \n"
+    "Currently, double, long, string and 1-dimensional arrays are supported.\n\n"
+    "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis\n"
+    "value - Value to be associated with the name. Currently, double, long, string and 1-dimensional arrays are supported."
+  },
+  {"getAttribute", (PyCFunction) _pyravefield_getAttribute, 1,
+    "getAttribute(name) -> value \n\n"
+    "Returns the value associated with the specified name \n\n"
+    "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis\n"
+  },
+  {"hasAttribute", (PyCFunction) _pyravefield_hasAttribute, 1,
+    "hasAttribute(name) -> a boolean \n\n"
+    "Returns if the specified name is defined within this rave field\n\n"
+    "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis"
+  },
+  {"getAttributeNames", (PyCFunction) _pyravefield_getAttributeNames, 1,
+    "getAttributeNames() -> array of names \n\n"
+    "Returns the attribute names associated with this field"
+  },
+  {"removeAttributes", (PyCFunction) _pyravefield_removeAttributes, 1,
+    "removeAttributes()\n\n"
+    "Removes all attributes associated with self."
+  },
+  {"concatx", (PyCFunction) _pyravefield_concatx, 1,
+    "concatx(other) -> rave field core\n\n"
+    "Concatenates self with other x-wise. This requires that the fields have same ysize and same datatype. Will \n\n"
+    "other - the other field that self should be concatenated with. Requires that other has same ysize and datatype as self."
+  },
+  {"circshiftData", (PyCFunction) _pyravefield_circshiftData, 1,
+    "circshiftData(x,y)\n\n"
+    "Performs a circular shift of self in both x & y dimension to modify the internal data field.\n\n"
+    "x - the number of steps to be shifted in x-direction. Can be both positive and negative\n"
+    "y - the number of steps to be shifted in y-direction. Can be both positive and negative"
+  },
+  {"__dir__", (PyCFunction) MOD_DIR_REFERENCE(PyRaveField), METH_NOARGS},
   {NULL, NULL } /* sentinel */
 };
+
+MOD_DIR_FUNCTION(PyRaveField, _pyravefield_methods)
 
 /**
  * Returns the specified attribute in the rave field
  * @param[in] self - the rave field
  */
-static PyObject* _pyravefield_getattr(PyRaveField* self, char* name)
+static PyObject* _pyravefield_getattro(PyRaveField* self, PyObject* name)
 {
-  PyObject* res = NULL;
-  if (strcmp("xsize", name) == 0) {
+  if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "xsize") == 0) {
     return PyInt_FromLong(RaveField_getXsize(self->field));
-  } else if (strcmp("ysize", name) == 0) {
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "ysize") == 0) {
     return PyInt_FromLong(RaveField_getYsize(self->field));
-  } else if (strcmp("datatype", name) == 0) {
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "datatype") == 0) {
     return PyInt_FromLong(RaveField_getDataType(self->field));
   }
 
-  res = Py_FindMethod(_pyravefield_methods, (PyObject*) self, name);
-  if (res)
-    return res;
-
-  PyErr_Clear();
-  PyErr_SetString(PyExc_AttributeError, name);
-  return NULL;
+  return PyObject_GenericGetAttr((PyObject*)self, name);
 }
 
 /**
- * Returns the specified attribute in the polar volume
+ * Sets the attribute value
  */
-static int _pyravefield_setattr(PyRaveField* self, char* name, PyObject* val)
+static int _pyravefield_setattro(PyObject *self, PyObject *name, PyObject *value)
 {
   int result = -1;
   if (name == NULL) {
     goto done;
   }
-
-  raiseException_gotoTag(done, PyExc_AttributeError, name);
+  raiseException_gotoTag(done, PyExc_AttributeError, PY_RAVE_ATTRO_NAME_TO_STRING(name));
 
   result = 0;
 done:
@@ -493,63 +578,115 @@ done:
 
 /*@} End of rave field */
 
+/*@{ Documentation about the type */
+PyDoc_STRVAR(_pyravefield_type_doc,
+    "A data container that is used as for example quality fields or other similar constructs.\n\n"
+    "The only 3 member attributes that are accessible are:\n"
+    "xsize     - xsize of data field (read only)\n"
+    "ysize     - ysize of data field (read only)\n"
+    "datatype  - data type (read only)\n"
+    "\n"
+    "These attributes will be set when initializing the field with setData.\n"
+    "\n"
+    "Since a lot of RAVE has been developed with ODIM H5 in mind, it is also possible to add arbitrary attributes in "
+    "various groups, e.g. c.addAttribute(\"how/this\", 1.2) and so on.\n\n"
+    "\n"
+    "Usage:\n"
+    " import _ravefield, numpy\n"
+    " dfield = _ravefield.new()\n"
+    " dfield.setData(numpy.array([[1,2],[3,4]],numpy.uint8))"
+    );
+/*@} End of Documentation about the module */
+
+
 /*@{ Type definitions */
 PyTypeObject PyRaveField_Type =
 {
-  PyObject_HEAD_INIT(NULL)0, /*ob_size*/
-  "RaveFieldCore", /*tp_name*/
-  sizeof(PyRaveField), /*tp_size*/
-  0, /*tp_itemsize*/
+  PyVarObject_HEAD_INIT(NULL, 0)
+  "RaveFieldCore",                  /*tp_name*/
+  sizeof(PyRaveField),              /*tp_size*/
+  0,                                /*tp_itemsize*/
   /* methods */
   (destructor)_pyravefield_dealloc, /*tp_dealloc*/
   0, /*tp_print*/
-  (getattrfunc)_pyravefield_getattr, /*tp_getattr*/
-  (setattrfunc)_pyravefield_setattr, /*tp_setattr*/
+  (getattrfunc)0,                   /*tp_getattr*/
+  (setattrfunc)0,                   /*tp_setattr*/
   0, /*tp_compare*/
   0, /*tp_repr*/
   0, /*tp_as_number */
-  0,
+  0, /*tp_as_sequence */
   0, /*tp_as_mapping */
-  0 /*tp_hash*/
+  (hashfunc)0, /*tp_hash*/
+  (ternaryfunc)0, /*tp_call*/
+  (reprfunc)0, /*tp_str*/
+  (getattrofunc)_pyravefield_getattro, /*tp_getattro*/
+  (setattrofunc)_pyravefield_setattro, /*tp_setattro*/
+  0, /*tp_as_buffer*/
+  Py_TPFLAGS_DEFAULT, /*tp_flags*/
+  _pyravefield_type_doc, /*tp_doc*/
+  (traverseproc)0, /*tp_traverse*/
+  (inquiry)0, /*tp_clear*/
+  0, /*tp_richcompare*/
+  0, /*tp_weaklistoffset*/
+  0, /*tp_iter*/
+  0, /*tp_iternext*/
+  _pyravefield_methods, /*tp_methods*/
+  0,                    /*tp_members*/
+  0,                      /*tp_getset*/
+  0,                      /*tp_base*/
+  0,                      /*tp_dict*/
+  0,                      /*tp_descr_get*/
+  0,                      /*tp_descr_set*/
+  0,                      /*tp_dictoffset*/
+  0,                      /*tp_init*/
+  0,                      /*tp_alloc*/
+  0,                      /*tp_new*/
+  0,                      /*tp_free*/
+  0,                      /*tp_is_gc*/
 };
 /*@} End of Type definitions */
 
 /*@{ Module setup */
 static PyMethodDef functions[] = {
-  {"new", (PyCFunction)_pyravefield_new, 1},
+  {"new", (PyCFunction)_pyravefield_new, 1,
+    "new() -> new instance of the RaveFieldCore object\n\n"
+    "Creates a new instance of the RaveFieldCore object"
+  },
   {NULL,NULL} /*Sentinel*/
 };
 
-PyMODINIT_FUNC
-init_ravefield(void)
+MOD_INIT(_ravefield)
 {
   PyObject *module=NULL,*dictionary=NULL;
   static void *PyRaveField_API[PyRaveField_API_pointers];
   PyObject *c_api_object = NULL;
-  PyRaveField_Type.ob_type = &PyType_Type;
 
-  module = Py_InitModule("_ravefield", functions);
+  MOD_INIT_SETUP_TYPE(PyRaveField_Type, &PyType_Type);
+
+  MOD_INIT_VERIFY_TYPE_READY(&PyRaveField_Type);
+
+  MOD_INIT_DEF(module, "_ravefield", _pyravefield_type_doc, functions);
   if (module == NULL) {
-    return;
+    return MOD_INIT_ERROR;
   }
+
   PyRaveField_API[PyRaveField_Type_NUM] = (void*)&PyRaveField_Type;
   PyRaveField_API[PyRaveField_GetNative_NUM] = (void *)PyRaveField_GetNative;
   PyRaveField_API[PyRaveField_New_NUM] = (void*)PyRaveField_New;
 
-  c_api_object = PyCObject_FromVoidPtr((void *)PyRaveField_API, NULL);
-
-  if (c_api_object != NULL) {
-    PyModule_AddObject(module, "_C_API", c_api_object);
-  }
-
+  c_api_object = PyCapsule_New(PyRaveField_API, PyRaveField_CAPSULE_NAME, NULL);
   dictionary = PyModule_GetDict(module);
-  ErrorObject = PyString_FromString("_ravefield.error");
+  PyDict_SetItemString(dictionary, "_C_API", c_api_object);
+
+  ErrorObject = PyErr_NewException("_ravefield.error", NULL, NULL);
   if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
-    Py_FatalError("Can't define _ravefield.error");
+    Py_FatalError("Can't define _area.error");
+    return MOD_INIT_ERROR;
   }
 
   import_array(); /*To make sure I get access to Numeric*/
   PYRAVE_DEBUG_INITIALIZE;
+  return MOD_INIT_SUCCESS(module);
 }
 /*@} End of Module setup */
 

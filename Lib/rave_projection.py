@@ -27,7 +27,6 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @date 2011-06-27
 
 import os, string
-from types import StringType
 import Proj
 import _projection, _projectionregistry
 from rave_defines import RAVECONFIG, UTF8, PROJECTION_REGISTRY
@@ -91,7 +90,7 @@ def register(id, pcs):
     # validate
     for attr in ["name", "proj", "invproj"]:
         if not hasattr(pcs, attr):
-            raise AttributeError, "object lacks required attribute " + attr
+            raise AttributeError("object lacks required attribute " + attr)
     pcs.id = id
     # Ridiculous hack for trimming whacked XML strings from rave_simple_xml.c. Should be deprecated down the line.  
     if pcs.name[:7] == '\n      ' and pcs.name[-5:] == '\n    ': pcs.name = pcs.name[7:len(pcs.name)-5]
@@ -111,8 +110,8 @@ def items():
 # @param Id Projection identifier (string)
 # @returns Projection object corresponding with the input identifier
 def pcs(Id):
-    if type(Id) != StringType:
-        raise KeyError, "Argument 'Id' not a string"
+    if not isinstance(Id, str) and not isinstance(Id,unicode):
+        raise KeyError("Argument 'Id' not a string")
     return _registry[Id]
 
 
@@ -125,8 +124,7 @@ class usgs:
         try:
             import Proj
         except ImportError:
-            raise ImportError, "Module Proj is missing: "\
-                  "check Python configuration"
+            raise ImportError("Module Proj is missing: check Python configuration")
         self.name = description
         self.definition = definition
         self.instance = Proj.Proj(definition)
@@ -200,10 +198,10 @@ def write(filename=PROJECTION_REGISTRY):
         if p not in check:
             tmp = pcs(p)
             new_registry.add(_projection.new(tmp.id, tmp.name, 
-                                             string.join(tmp.definition)))
+                                             " ".join(tmp.definition)))
             check.append(p)
         else:
-            print "Duplicate entry for id %s. Ignored." % p
+            print("Duplicate entry for id %s. Ignored." % p)
     new_registry.write(filename)
 
 
@@ -211,8 +209,8 @@ def write(filename=PROJECTION_REGISTRY):
 # @param id The projection's string identifier 
 def describe(id):
     p = _registry[id]
-    print "%s -\t%s" % (id, p.name)
-    print "\t%s" % string.join(p.definition)
+    print("%s -\t%s" % (id, p.name.decode('utf-8')))
+    print("\t%s" % " ".join(p.definition))
 
 
 if __name__ == "__main__":

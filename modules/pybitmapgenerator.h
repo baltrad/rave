@@ -46,6 +46,8 @@ typedef struct {
 
 #define PyBitmapGenerator_API_pointers 3                 /**< total number of C API pointers */
 
+#define PyBitmapGenerator_CAPSULE_NAME "_bitmapgenerator._C_API"
+
 #ifdef PYBITMAP_GENERATOR_MODULE
 /** declared in pybitmapgenerator module */
 extern PyTypeObject PyBitmapGenerator_Type;
@@ -79,40 +81,19 @@ static void **PyBitmapGenerator_API;
   (*(PyBitmapGenerator_New_RETURN (*)PyBitmapGenerator_New_PROTO) PyBitmapGenerator_API[PyBitmapGenerator_New_NUM])
 
 /**
- * Checks if the object is a python polar scan.
+ * Checks if the object is a bitmap generator.
  */
 #define PyBitmapGenerator_Check(op) \
-   ((op)->ob_type == (PyTypeObject *)PyBitmapGenerator_API[PyBitmapGenerator_Type_NUM])
+   (Py_TYPE(op) == &PyBitmapGenerator_Type)
+
+#define PyBitmapGenerator_Type (*(PyTypeObject*)PyBitmapGenerator_API[PyBitmapGenerator_Type_NUM])
 
 /**
- * Imports the PyBitmapGenerator module (like import _polarscan in python).
+ * Imports the PyBitmapGenerator module (like import _bitmapgenerator in python).
  */
-static int
-import_pybitmapgenerator(void)
-{
-  PyObject *module;
-  PyObject *c_api_object;
-
-  module = PyImport_ImportModule("_bitmapgenerator");
-  if (module == NULL) {
-    return -1;
-  }
-
-  c_api_object = PyObject_GetAttrString(module, "_C_API");
-  if (c_api_object == NULL) {
-    Py_DECREF(module);
-    return -1;
-  }
-  if (PyCObject_Check(c_api_object)) {
-    PyBitmapGenerator_API = (void **)PyCObject_AsVoidPtr(c_api_object);
-  }
-  Py_DECREF(c_api_object);
-  Py_DECREF(module);
-  return 0;
-}
+#define import_pybitmapgenerator() \
+    PyBitmapGenerator_API = (void **)PyCapsule_Import(PyBitmapGenerator_CAPSULE_NAME, 1);
 
 #endif
-
-
 
 #endif /* PYBITMAP_GENERATOR_H */

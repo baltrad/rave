@@ -46,6 +46,8 @@ typedef struct {
 
 #define PyRaveField_API_pointers 3                          /**< number of type and function pointers */
 
+#define PyRaveField_CAPSULE_NAME "_ravefield._C_API"
+
 #ifdef PYRAVEFIELD_MODULE
 /** Forward declaration of type */
 extern PyTypeObject PyRaveField_Type;
@@ -84,34 +86,15 @@ static void **PyRaveField_API;
  * Checks if the object is a python rave field.
  */
 #define PyRaveField_Check(op) \
-   ((op)->ob_type == (PyTypeObject *)PyRaveField_API[PyRaveField_Type_NUM])
+   (Py_TYPE(op) == &PyRaveField_Type)
+
+#define PyRaveField_Type (*(PyTypeObject*)PyRaveField_API[PyRaveField_Type_NUM])
 
 /**
- * Imports the PyRaveField module (like import _ravefield in python).
+ * Imports the PyArea module (like import _area in python).
  */
-static int
-import_pyravefield(void)
-{
-  PyObject *module;
-  PyObject *c_api_object;
-
-  module = PyImport_ImportModule("_ravefield");
-  if (module == NULL) {
-    return -1;
-  }
-
-  c_api_object = PyObject_GetAttrString(module, "_C_API");
-  if (c_api_object == NULL) {
-    Py_DECREF(module);
-    return -1;
-  }
-  if (PyCObject_Check(c_api_object)) {
-    PyRaveField_API = (void **)PyCObject_AsVoidPtr(c_api_object);
-  }
-  Py_DECREF(c_api_object);
-  Py_DECREF(module);
-  return 0;
-}
+#define import_pyravefield() \
+    PyRaveField_API = (void **)PyCapsule_Import(PyRaveField_CAPSULE_NAME, 1);
 
 #endif
 

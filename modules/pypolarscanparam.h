@@ -46,6 +46,8 @@ typedef struct {
 
 #define PyPolarScanParam_API_pointers 3                  /**< number of pointers */
 
+#define PyPolarScanParam_CAPSULE_NAME "_polarscanparam._C_API"
+
 #ifdef PYPOLARSCANPARAM_MODULE
 /** Forward declaration of the type */
 extern PyTypeObject PyPolarScanParam_Type;
@@ -84,34 +86,15 @@ static void **PyPolarScanParam_API;
  * Checks if the object is a python polar scan param.
  */
 #define PyPolarScanParam_Check(op) \
-   ((op)->ob_type == (PyTypeObject *)PyPolarScanParam_API[PyPolarScanParam_Type_NUM])
+   (Py_TYPE(op) == &PyPolarScanParam_Type)
+
+#define PyPolarScanParam_Type (*(PyTypeObject*)PyPolarScanParam_API[PyPolarScanParam_Type_NUM])
 
 /**
- * Imports the pypolarscanparam module (like import _polarscanparam in python).
+ * Imports the PyPolarScanParam module (like import _polarscanparam in python).
  */
-static int
-import_pypolarscanparam(void)
-{
-  PyObject *module;
-  PyObject *c_api_object;
-
-  module = PyImport_ImportModule("_polarscanparam");
-  if (module == NULL) {
-    return -1;
-  }
-
-  c_api_object = PyObject_GetAttrString(module, "_C_API");
-  if (c_api_object == NULL) {
-    Py_DECREF(module);
-    return -1;
-  }
-  if (PyCObject_Check(c_api_object)) {
-    PyPolarScanParam_API = (void **)PyCObject_AsVoidPtr(c_api_object);
-  }
-  Py_DECREF(c_api_object);
-  Py_DECREF(module);
-  return 0;
-}
+#define import_pypolarscanparam() \
+    PyPolarScanParam_API = (void **)PyCapsule_Import(PyPolarScanParam_CAPSULE_NAME, 1);
 
 #endif
 

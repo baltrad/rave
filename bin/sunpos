@@ -33,7 +33,7 @@ def main(options):
 
     DATE, TIME = int(options.dt[:8]), int(options.dt[9:15])
     el, az, rel = _scansun.solar_elev_azim(float(options.lon), float(options.lat), DATE, TIME)
-    print u"Azimuth: %2.3f\u00B0, Elevation: %2.3f\u00B0, Refracted elevation: %2.3f\u00B0" % (az, el, rel) 
+    print("Azimuth: %2.3f\u00B0, Elevation: %2.3f\u00B0, Refracted elevation: %2.3f\u00B0" % (az, el, rel)) 
 
 
 if __name__ == "__main__":

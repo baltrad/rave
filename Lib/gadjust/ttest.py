@@ -74,7 +74,7 @@ def ttest(r, n):
   f = (n - 2)  # degrees of freedom
 
   # get the right t distribution for f
-  keys = t95.keys()
+  keys = list(t95.keys())
   keys.sort()
   if f in keys: 
     tp = t95[f]
@@ -117,7 +117,7 @@ def ttest_means(m1, m2, d1, d2, n1, n2, ci=0.05, tailed=2):
     ttheo = ttable["TWOTAIL"][df][str(ci)]
     #ttheo = TTABLE["TWOTAIL"][df][str(ci)]
   else:
-    raise AttributeError, "Tailed argument must be either 1 or 2."
+    raise AttributeError("Tailed argument must be either 1 or 2.")
 
   if texp > ttheo:
     return 'T'
@@ -127,4 +127,4 @@ def ttest_means(m1, m2, d1, d2, n1, n2, ci=0.05, tailed=2):
 if __name__ == "__main__":
   m1, m2, d1, d2, n1, n2 = 48.73, 50.43, 1.16, 1.21, 5., 5.
   sig = ttest_means(m1, m2, d1, d2, n1, n2)
-  print sig
+  print(sig)
