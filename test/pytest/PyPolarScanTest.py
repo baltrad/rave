@@ -1736,7 +1736,7 @@ class PyPolarScanTest(unittest.TestCase):
     obj.addAttribute("how/startelT", numpy.array([0,1,2,3], numpy.float64))
     obj.addAttribute("how/stopelT", numpy.array([0,1,2,3], numpy.float64))
     obj.addAttribute("how/TXpower", numpy.array([0,1,2,3], numpy.float64))
-    
+    obj.a1gate = 1
     obj.shiftDataAndAttributes(1)
     
     self.assertTrue((numpy.array([[12,13,14,15],[0,1,2,3],[4,5,6,7],[8,9,10,11]],numpy.uint8)==obj.getParameter("DBZH").getData()).all())
@@ -1750,6 +1750,63 @@ class PyPolarScanTest(unittest.TestCase):
     self.assertTrue((numpy.array([3,0,1,2],numpy.uint8)==obj.getAttribute("how/startelT")).all())
     self.assertTrue((numpy.array([3,0,1,2],numpy.uint8)==obj.getAttribute("how/stopelT")).all())
     self.assertTrue((numpy.array([3,0,1,2],numpy.uint8)==obj.getAttribute("how/TXpower")).all())
+    self.assertEqual(2, obj.a1gate)
+
+  def test_shiftDataAndAttributes_wrapAround(self):
+    obj = _polarscan.new()
+    p1 = _polarscanparam.new()
+    p1.quantity="DBZH"
+    p1.setData(numpy.array([[0,1,2,3],[4,5,6,7],[8,9,10,11],[12,13,14,15]],numpy.uint8))
+    obj.addParameter(p1)
+    
+    obj.addAttribute("how/startazA", numpy.array([0,1,2,3], numpy.float64))
+    obj.addAttribute("how/stopazA", numpy.array([0,1,2,3], numpy.float64))
+    obj.addAttribute("how/TXpower", numpy.array([0,1,2,3], numpy.float64))
+    obj.a1gate = 3
+    obj.shiftDataAndAttributes(1)
+    
+    self.assertTrue((numpy.array([[12,13,14,15],[0,1,2,3],[4,5,6,7],[8,9,10,11]],numpy.uint8)==obj.getParameter("DBZH").getData()).all())
+    self.assertTrue((numpy.array([3,0,1,2],numpy.uint8)==obj.getAttribute("how/startazA")).all())
+    self.assertTrue((numpy.array([3,0,1,2],numpy.uint8)==obj.getAttribute("how/stopazA")).all())
+    self.assertTrue((numpy.array([3,0,1,2],numpy.uint8)==obj.getAttribute("how/TXpower")).all())
+    self.assertEqual(0, obj.a1gate)
+
+  def test_shiftDataAndAttributes_update_astart_IfExists(self):
+    obj = _polarscan.new()
+    p1 = _polarscanparam.new()
+    p1.quantity="DBZH"
+    p1.setData(numpy.array([[0,1,2,3],[4,5,6,7],[8,9,10,11],[12,13,14,15]],numpy.uint8))
+    obj.addParameter(p1)
+    
+    obj.addAttribute("how/startazA", numpy.array([0,1,2,3], numpy.float64))
+    obj.addAttribute("how/stopazA", numpy.array([0,1,2,3], numpy.float64))
+    obj.addAttribute("how/TXpower", numpy.array([0,1,2,3], numpy.float64))
+    obj.addAttribute("how/astart", 1.5)
+    obj.shiftDataAndAttributes(1)
+    
+    self.assertTrue((numpy.array([[12,13,14,15],[0,1,2,3],[4,5,6,7],[8,9,10,11]],numpy.uint8)==obj.getParameter("DBZH").getData()).all())
+    self.assertTrue((numpy.array([3,0,1,2],numpy.uint8)==obj.getAttribute("how/startazA")).all())
+    self.assertTrue((numpy.array([3,0,1,2],numpy.uint8)==obj.getAttribute("how/stopazA")).all())
+    self.assertTrue((numpy.array([3,0,1,2],numpy.uint8)==obj.getAttribute("how/TXpower")).all())
+    self.assertAlmostEqual(3.0, obj.getAttribute("how/astart"), 4)
+
+  def test_shiftDataAndAttributes_update_noastart(self):
+    obj = _polarscan.new()
+    p1 = _polarscanparam.new()
+    p1.quantity="DBZH"
+    p1.setData(numpy.array([[0,1,2,3],[4,5,6,7],[8,9,10,11],[12,13,14,15]],numpy.uint8))
+    obj.addParameter(p1)
+    
+    obj.addAttribute("how/startazA", numpy.array([0,1,2,3], numpy.float64))
+    obj.addAttribute("how/stopazA", numpy.array([0,1,2,3], numpy.float64))
+    obj.addAttribute("how/TXpower", numpy.array([0,1,2,3], numpy.float64))
+    obj.shiftDataAndAttributes(1)
+    
+    self.assertTrue((numpy.array([[12,13,14,15],[0,1,2,3],[4,5,6,7],[8,9,10,11]],numpy.uint8)==obj.getParameter("DBZH").getData()).all())
+    self.assertTrue((numpy.array([3,0,1,2],numpy.uint8)==obj.getAttribute("how/startazA")).all())
+    self.assertTrue((numpy.array([3,0,1,2],numpy.uint8)==obj.getAttribute("how/stopazA")).all())
+    self.assertTrue((numpy.array([3,0,1,2],numpy.uint8)==obj.getAttribute("how/TXpower")).all())
+    self.assertFalse(obj.hasAttribute("how/astart"))
 
   def test_shiftDataAndAttributes_neg(self):
     obj = _polarscan.new()
@@ -1768,6 +1825,41 @@ class PyPolarScanTest(unittest.TestCase):
     obj.addAttribute("how/startelT", numpy.array([0,1,2,3], numpy.float64))
     obj.addAttribute("how/stopelT", numpy.array([0,1,2,3], numpy.float64))
     obj.addAttribute("how/TXpower", numpy.array([0,1,2,3], numpy.float64))
+    obj.a1gate = 1
+
+    obj.shiftDataAndAttributes(-1)
+    
+    self.assertTrue((numpy.array([[4,5,6,7],[8,9,10,11],[12,13,14,15],[0,1,2,3]],numpy.uint8)==obj.getParameter("DBZH").getData()).all())
+    self.assertTrue((numpy.array([1,2,3,0],numpy.uint8)==obj.getAttribute("how/elangles")).all())
+    self.assertTrue((numpy.array([1,2,3,0],numpy.uint8)==obj.getAttribute("how/startazA")).all())
+    self.assertTrue((numpy.array([1,2,3,0],numpy.uint8)==obj.getAttribute("how/stopazA")).all())
+    self.assertTrue((numpy.array([1,2,3,0],numpy.uint8)==obj.getAttribute("how/startazT")).all())
+    self.assertTrue((numpy.array([1,2,3,0],numpy.uint8)==obj.getAttribute("how/stopazT")).all())
+    self.assertTrue((numpy.array([1,2,3,0],numpy.uint8)==obj.getAttribute("how/startelA")).all())
+    self.assertTrue((numpy.array([1,2,3,0],numpy.uint8)==obj.getAttribute("how/stopelA")).all())
+    self.assertTrue((numpy.array([1,2,3,0],numpy.uint8)==obj.getAttribute("how/startelT")).all())
+    self.assertTrue((numpy.array([1,2,3,0],numpy.uint8)==obj.getAttribute("how/stopelT")).all())
+    self.assertTrue((numpy.array([1,2,3,0],numpy.uint8)==obj.getAttribute("how/TXpower")).all())
+    self.assertEqual(0, obj.a1gate)
+
+  def test_shiftDataAndAttributes_neg_wrapAround(self):
+    obj = _polarscan.new()
+    p1 = _polarscanparam.new()
+    p1.quantity="DBZH"
+    p1.setData(numpy.array([[0,1,2,3],[4,5,6,7],[8,9,10,11],[12,13,14,15]],numpy.uint8))
+    obj.addParameter(p1)
+    
+    obj.addAttribute("how/elangles", numpy.array([0,1,2,3], numpy.float64))
+    obj.addAttribute("how/startazA", numpy.array([0,1,2,3], numpy.float64))
+    obj.addAttribute("how/stopazA", numpy.array([0,1,2,3], numpy.float64))
+    obj.addAttribute("how/startazT", numpy.array([0,1,2,3], numpy.float64))
+    obj.addAttribute("how/stopazT", numpy.array([0,1,2,3], numpy.float64))
+    obj.addAttribute("how/startelA", numpy.array([0,1,2,3], numpy.float64))
+    obj.addAttribute("how/stopelA", numpy.array([0,1,2,3], numpy.float64))
+    obj.addAttribute("how/startelT", numpy.array([0,1,2,3], numpy.float64))
+    obj.addAttribute("how/stopelT", numpy.array([0,1,2,3], numpy.float64))
+    obj.addAttribute("how/TXpower", numpy.array([0,1,2,3], numpy.float64))
+    obj.a1gate = 0
     
     obj.shiftDataAndAttributes(-1)
     
@@ -1782,6 +1874,7 @@ class PyPolarScanTest(unittest.TestCase):
     self.assertTrue((numpy.array([1,2,3,0],numpy.uint8)==obj.getAttribute("how/startelT")).all())
     self.assertTrue((numpy.array([1,2,3,0],numpy.uint8)==obj.getAttribute("how/stopelT")).all())
     self.assertTrue((numpy.array([1,2,3,0],numpy.uint8)==obj.getAttribute("how/TXpower")).all())
+    self.assertEqual(3, obj.a1gate)
 
   def test_add_how_array_attribute_double(self):
     obj = _polarscan.new()

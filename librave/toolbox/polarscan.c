@@ -1994,6 +1994,7 @@ fail:
 
 int PolarScan_shiftDataAndAttributes(PolarScan_t* self, int nrays)
 {
+  long newa1gate = 0;
   if (!PolarScan_shiftData(self, nrays)) {
     return 0;
   }
@@ -2010,6 +2011,42 @@ int PolarScan_shiftDataAndAttributes(PolarScan_t* self, int nrays)
       !PolarScanInternal_shiftArrayIfExists(self, "how/TXpower", nrays)) {
     return 0;
   }
+
+  if (PolarScan_hasAttribute(self, "how/astart") && PolarScan_hasAttribute(self, "how/startazA")) {
+    double astart = 0.0;
+    double* startazA = NULL;
+    int nstartazA = 0;
+    int tmpresult = 1;
+    RaveAttribute_t* astartAttr = PolarScan_getAttribute(self, "how/astart");
+    RaveAttribute_t* startazAttr = PolarScan_getAttribute(self, "how/startazA");
+    if (astartAttr == NULL || !RaveAttribute_getDouble(astartAttr, &astart)) {
+      RAVE_ERROR0("Could not extract how/astart");
+      tmpresult = 0;
+    }
+    if (startazAttr == NULL || !RaveAttribute_getDoubleArray(startazAttr, &startazA, &nstartazA)) {
+      RAVE_ERROR0("Could not extract how/startazA");
+      tmpresult = 0;
+    }
+    if (tmpresult) {
+      if (fabs(astart - startazA[0]) > 0.0001) {
+        RaveAttribute_setDouble(astartAttr, startazA[0]);
+      }
+    }
+    RAVE_OBJECT_RELEASE(astartAttr);
+    RAVE_OBJECT_RELEASE(startazAttr);
+    if (!tmpresult) {
+      return 0;
+    }
+  }
+
+  newa1gate=self->a1gate + nrays;
+  if (newa1gate >= self->nrays) {
+    newa1gate %= self->nrays;
+  }
+  while (newa1gate < 0 && self->nrays > 0) {
+    newa1gate += self->nrays;
+  }
+  self->a1gate = newa1gate;
 
   return 1;
 }
