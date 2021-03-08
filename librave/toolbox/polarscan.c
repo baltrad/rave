@@ -2012,14 +2012,14 @@ int PolarScan_shiftDataAndAttributes(PolarScan_t* self, int nrays)
     return 0;
   }
 
-  if (PolarScan_hasAttribute(self, "how/astart") && PolarScan_hasAttribute(self, "how/startazA")) {
+  if (self->hasAstart && PolarScan_hasAttribute(self, "how/startazA")) {
     double astart = 0.0;
     double* startazA = NULL;
     int nstartazA = 0;
     int tmpresult = 1;
     RaveAttribute_t* astartAttr = PolarScan_getAttribute(self, "how/astart");
     RaveAttribute_t* startazAttr = PolarScan_getAttribute(self, "how/startazA");
-    if (astartAttr == NULL || !RaveAttribute_getDouble(astartAttr, &astart)) {
+    if (astartAttr == NULL) {
       RAVE_ERROR0("Could not extract how/astart");
       tmpresult = 0;
     }
@@ -2032,7 +2032,9 @@ int PolarScan_shiftDataAndAttributes(PolarScan_t* self, int nrays)
       if (sa > 180.0) {
         sa = sa - 360.0; /* Adjust if value is on other side of circle so that we get same sign as astart. */
       }
+      astart = self->astart * 180.0/M_PI;
       if (fabs(astart - sa) > 0.0001) {
+        self->astart = M_PI/180.0;
         RaveAttribute_setDouble(astartAttr, sa); /* But we want to use values between - raywidth / 2 */
       }
     }
@@ -2041,6 +2043,18 @@ int PolarScan_shiftDataAndAttributes(PolarScan_t* self, int nrays)
     if (!tmpresult) {
       return 0;
     }
+  } else if (self->hasAstart && self->nrays > 0) {
+    double astart = self->astart * 180.0/M_PI;
+    double azoffset = 360.0 / self->nrays;
+    RaveAttribute_t* astartAttr = PolarScan_getAttribute(self, "how/astart");
+    if (astartAttr == NULL) {
+      RAVE_ERROR0("Could not extract how/astart");
+    } else {
+      astart = astart - azoffset * nrays;
+      self->astart = astart * M_PI/180.0;
+      RaveAttribute_setDouble(astartAttr, astart);
+    }
+    RAVE_OBJECT_RELEASE(astartAttr);
   }
 
   newa1gate=self->a1gate + nrays;

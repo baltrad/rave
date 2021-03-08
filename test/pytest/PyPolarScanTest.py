@@ -1836,6 +1836,46 @@ class PyPolarScanTest(unittest.TestCase):
     self.assertTrue((numpy.array([0.5, 0.5, 1.5, 2.5],numpy.float64)==obj.getAttribute("how/startazA")).all())
     self.assertAlmostEqual(0.5, obj.getAttribute("how/astart"), 4)
 
+  def test_shiftDataAndAttributes_update_only_astart(self):
+    obj = _polarscan.new()
+    p1 = _polarscanparam.new()
+    p1.quantity="DBZH"
+    p1.setData(numpy.zeros((360,360),numpy.uint8))
+    obj.addParameter(p1)
+    obj.addAttribute("how/astart", 0.5)
+    obj.shiftDataAndAttributes(2)
+    
+    self.assertAlmostEqual(-1.5, obj.getAttribute("how/astart"), 4)
+
+  def test_shiftDataAndAttributes_update_only_astart_negative(self):
+    obj = _polarscan.new()
+    p1 = _polarscanparam.new()
+    p1.quantity="DBZH"
+    p1.setData(numpy.zeros((360,360),numpy.uint8))
+    obj.addParameter(p1)
+    
+    obj.addAttribute("how/astart", -0.5)
+    obj.shiftDataAndAttributes(-2)
+    
+    self.assertAlmostEqual(1.5, obj.getAttribute("how/astart"), 4)
+
+  def test_rotation_and_shiftDataAndAttributes_only_astart(self):
+    obj = _polarscan.new()
+    p1 = _polarscanparam.new()
+    p1.quantity="DBZH"
+    p1.setData(numpy.zeros((360,360),numpy.uint8))
+    obj.addParameter(p1)
+    obj.addAttribute("how/astart", 1.5)
+    
+    northmostindex = obj.getNorthmostIndex()
+    
+    rotation = obj.getRotationRequiredToNorthmost()
+    
+    obj.shiftDataAndAttributes(rotation)
+    
+    self.assertEqual(359, northmostindex)
+    self.assertEqual(1, rotation)
+    self.assertAlmostEqual(0.5, obj.getAttribute("how/astart"), 4)
 
   def test_shiftDataAndAttributes_neg(self):
     obj = _polarscan.new()
