@@ -1808,6 +1808,35 @@ class PyPolarScanTest(unittest.TestCase):
     self.assertTrue((numpy.array([3,0,1,2],numpy.uint8)==obj.getAttribute("how/TXpower")).all())
     self.assertFalse(obj.hasAttribute("how/astart"))
 
+  def test_shiftDataAndAttributes_update_astart_sign_difference(self):
+    obj = _polarscan.new()
+    p1 = _polarscanparam.new()
+    p1.quantity="DBZH"
+    p1.setData(numpy.array([[0,1,2,3],[4,5,6,7],[8,9,10,11],[12,13,14,15]],numpy.uint8))
+    obj.addParameter(p1)
+    
+    obj.addAttribute("how/startazA", numpy.array([359.5, 0.5, 1.5, 2.5], numpy.float64))
+    obj.addAttribute("how/astart", 0.5)
+    obj.shiftDataAndAttributes(0)
+    
+    self.assertTrue((numpy.array([359.5, 0.5, 1.5, 2.5],numpy.float64)==obj.getAttribute("how/startazA")).all())
+    self.assertAlmostEqual(-0.5, obj.getAttribute("how/astart"), 4)
+
+  def test_shiftDataAndAttributes_update_astart_sign_difference_2(self):
+    obj = _polarscan.new()
+    p1 = _polarscanparam.new()
+    p1.quantity="DBZH"
+    p1.setData(numpy.array([[0,1,2,3],[4,5,6,7],[8,9,10,11],[12,13,14,15]],numpy.uint8))
+    obj.addParameter(p1)
+    
+    obj.addAttribute("how/startazA", numpy.array([0.5, 0.5, 1.5, 2.5], numpy.float64))
+    obj.addAttribute("how/astart", -0.5)
+    obj.shiftDataAndAttributes(0)
+    
+    self.assertTrue((numpy.array([0.5, 0.5, 1.5, 2.5],numpy.float64)==obj.getAttribute("how/startazA")).all())
+    self.assertAlmostEqual(0.5, obj.getAttribute("how/astart"), 4)
+
+
   def test_shiftDataAndAttributes_neg(self):
     obj = _polarscan.new()
     p1 = _polarscanparam.new()

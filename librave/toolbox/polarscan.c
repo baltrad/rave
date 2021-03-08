@@ -2028,8 +2028,12 @@ int PolarScan_shiftDataAndAttributes(PolarScan_t* self, int nrays)
       tmpresult = 0;
     }
     if (tmpresult) {
-      if (fabs(astart - startazA[0]) > 0.0001) {
-        RaveAttribute_setDouble(astartAttr, startazA[0]);
+      double sa = startazA[0];
+      if (sa > 180.0) {
+        sa = sa - 360.0; /* Adjust if value is on other side of circle so that we get same sign as astart. */
+      }
+      if (fabs(astart - sa) > 0.0001) {
+        RaveAttribute_setDouble(astartAttr, sa); /* But we want to use values between - raywidth / 2 */
       }
     }
     RAVE_OBJECT_RELEASE(astartAttr);
