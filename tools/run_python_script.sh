@@ -9,8 +9,7 @@
 #
 # History:  2009-10-22 Created by Anders Henja
 ############################################################
-SCRFILE=`python -c "import os;print(os.path.abspath(\"$0\"))"`
-SCRIPTPATH=`dirname "$SCRFILE"`
+SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 
 DEF_MK_FILE="${SCRIPTPATH}/../def.mk"
 
