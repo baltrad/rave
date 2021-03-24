@@ -125,6 +125,11 @@ void fill_toplevelmeta(RaveCoreObject* object, SCANMETA *meta)
     meta->pulse = PULSEWIDTH;
   } else meta->pulse = tmpd;
 
+  if (!getDoubleAttribute(object, "how/RXbandwidth", &tmpd)) {
+    RAVE_WARNING1("No /how/RXbandwidth attribute. Using default %1.2f MHz.\n", CWIDTH/meta->pulse);
+    meta->bandwidth = CWIDTH/meta->pulse;
+  } else meta->bandwidth = tmpd;
+
   if (RAVE_OBJECT_CHECK_TYPE(object, &PolarVolume_TYPE)) {
     scan = PolarVolume_getScan((PolarVolume_t*)object, 0);  /* Assume first scan contains what we want */
   } else if (RAVE_OBJECT_CHECK_TYPE(object, &PolarScan_TYPE)) {
@@ -205,6 +210,10 @@ void fill_meta(PolarScan_t* scan, PolarScanParam_t* param, SCANMETA *meta)
    if (!getDoubleAttribute((RaveCoreObject*)scan, "how/pulsewidth", &tmpd)) {
      RAVE_WARNING2("Scan elevation %2.1f: No how/pulsewidth attribute. Using %2.2f microseconds.\n", meta->elev, meta->pulse);
    } else meta->pulse = tmpd;
+
+   if (!getDoubleAttribute((RaveCoreObject*)scan, "how/RXbandwidth", &tmpd)) {
+     RAVE_WARNING2("Scan elevation %2.1f: No how/RXbandwidth attribute. Using %1.2f MHz.\n", meta->elev, meta->bandwidth);
+   } else meta->bandwidth = tmpd;
 
    /* Would be possible that radar constants are found in individual quantity how,
     * but this implies unnecessarily replicated information, so we will only look at the scan level. */
@@ -523,7 +532,7 @@ int processData(PolarScan_t* scan, SCANMETA* meta, RaveList_t* list) {
     }
     SunMean/=n;
     SunStdd=sqrt(SunStdd/n-SunMean*SunMean+1e-8);
-    SunMean-=10*log10(CWIDTH/meta->pulse);
+    SunMean-=10*log10(meta->bandwidth);
     if (meta->Zdr) {
        ZdrMean/=n;
        ZdrStdd=sqrt(ZdrStdd/n-ZdrMean*ZdrMean+1e-8);
@@ -596,6 +605,7 @@ void outputMeta(SCANMETA* meta) {
     fprintf(fd, "astart = %f\n", meta->astart);
     fprintf(fd, "azim0 = %ld\n", meta->azim0);
     fprintf(fd, "Pulse width = %f\n", meta->pulse);
+    fprintf(fd, "Receiver bandwidth = %f\n", meta->bandwidth);
     fprintf(fd, "Radar constant = %f\n", meta->radcnst);
     fprintf(fd, "Antvel = %f\n", meta->antvel);
     fprintf(fd, "Longitude = %f\n", meta->lon);
