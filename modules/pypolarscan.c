@@ -730,7 +730,7 @@ static PyObject* _pypolarscan_addAttribute(PyPolarScan* self, PyObject* args)
     double value = PyFloat_AsDouble(obj);
     RaveAttribute_setDouble(attr, value);
   } else if (PyString_Check(obj)) {
-    char* value = PyString_AsString(obj);
+    char* value = (char*)PyString_AsString(obj);
     if (!RaveAttribute_setString(attr, value)) {
       raiseException_gotoTag(done, PyExc_AttributeError, "Failed to set string value");
     }
@@ -1191,6 +1191,73 @@ static PyObject* _pypolarscan_shiftDataAndAttributes(PyPolarScan* self, PyObject
   Py_RETURN_NONE;
 }
 
+static RaveList_t* PyPolarScanInternal_createRaveListFromList(PyObject* pylist)
+{
+  RaveList_t *result = NULL, *tmplist = NULL;
+
+  if (pylist != NULL && PyList_Check(pylist)) {
+    Py_ssize_t nnames = PyObject_Length(pylist);
+    Py_ssize_t i = 0;
+    tmplist = RAVE_OBJECT_NEW(&RaveList_TYPE);
+    if (tmplist == NULL) {
+      raiseException_gotoTag(done, PyExc_MemoryError, "Could not allocate memory");
+    }
+    for (i = 0; i < nnames; i++) {
+      PyObject* pystr = PyList_GetItem(pylist, i);
+      char* dupstr = NULL;
+      if (pystr == NULL || !PyString_Check(pystr)) {
+        raiseException_gotoTag(done, PyExc_AttributeError, "Could not extract string from list");
+      }
+      dupstr = RAVE_STRDUP(PyString_AsString(pystr));
+      if (dupstr != NULL) {
+        if (!RaveList_add(tmplist, dupstr)) {
+          raiseException_gotoTag(done, PyExc_MemoryError, "Could not allocate memory");
+          RAVE_FREE(dupstr);
+        }
+      } else {
+        raiseException_gotoTag(done, PyExc_MemoryError, "Could not allocate memory");
+      }
+      dupstr = NULL; // We have handed it over to the rave list.
+    }
+  } else {
+    raiseException_gotoTag(done, PyExc_RuntimeError, "Trying to create ravelist from object that is not a list");
+  }
+  result = RAVE_OBJECT_COPY(tmplist);
+done:
+  RAVE_OBJECT_RELEASE(tmplist);
+  return result;
+}
+
+
+static PyObject* _pypolarscan_removeParametersExcept(PyPolarScan* self, PyObject* args)
+{
+  PyObject* pyparameters = NULL;
+  RaveList_t* paramlist = NULL;
+  if (!PyArg_ParseTuple(args, "O", &pyparameters)) {
+    return NULL;
+  }
+  if (!PyList_Check(pyparameters)) {
+    raiseException_returnNULL(PyExc_AttributeError, "Must provide a list of strings");
+  }
+  paramlist = PyPolarScanInternal_createRaveListFromList(pyparameters);
+  if (paramlist == NULL) { /* Error has already been set here */
+    goto fail;
+  }
+  if (!PolarScan_removeParametersExcept(self->scan, paramlist)) {
+    raiseException_gotoTag(fail, PyExc_RuntimeError, "Failed to remove parameters");
+  }
+
+  if (paramlist != NULL) {
+    RaveList_freeAndDestroy(&paramlist);
+  }
+  Py_RETURN_NONE;
+fail:
+  if (paramlist != NULL) {
+    RaveList_freeAndDestroy(&paramlist);
+  }
+  return NULL;
+}
+
 /**
  * All methods a polar scan can have
  */
@@ -1484,6 +1551,10 @@ static struct PyMethodDef _pypolarscan_methods[] =
       "the rays. Currently these attributes are:\n"
       " how/elangles, how/startazA, how/stopazA, how/startazT, how/stopazT, how/startelA, how/stopelA, how/startelT, how/stopelT and how/TXpower\n\n"
       "nrays - Number of rays that the datasets should be shifted. Negative value means counter clockwise and positive means clockwise."
+  },
+  {"removeParametersExcept", (PyCFunction) _pypolarscan_removeParametersExcept, 1,
+      "removeParametersExcept(parameterlist)\n\n"
+      "Removes all parameters in the scan except the ones specified in the list.\n\n"
   },
   {"clone", (PyCFunction) _pypolarscan_clone, 1,
     "clone() -> PolarScanCore\n\n"

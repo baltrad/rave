@@ -972,6 +972,74 @@ class PyPolarVolumeTest(unittest.TestCase):
     scan3.use_azimuthal_nav_information = False
     self.assertEqual(False, obj.use_azimuthal_nav_information)
 
+  def create_simple_scan_with_param(self, elangle, dshape, quantities):
+    scan = _polarscan.new()
+    scan.elangle = elangle
+    for q in quantities:
+      param = _polarscanparam.new()
+      param.quantity=q
+      param.setData(numpy.zeros(dshape, numpy.int8))
+      scan.addParameter(param)
+    return scan
+
+  def verify_parameter_names_in_scan(self, scan, quantities):
+    names = scan.getParameterNames()
+    self.assertEqual(len(names), len(quantities))
+    for q in quantities:
+      self.assertTrue(q in names)
+
+  def test_removeParametersExcept_1(self):
+    obj = _polarvolume.new()
+    obj.addScan(self.create_simple_scan_with_param(0.5*math.pi/180.0, (3,3), ["AAA","BBB","CCC"]))
+    obj.addScan(self.create_simple_scan_with_param(1.0*math.pi/180.0, (3,3), ["AAA","BBB","CCC"]))
+    obj.addScan(self.create_simple_scan_with_param(1.5*math.pi/180.0, (3,3), ["AAA","BBB","CCC", "DDD"]))
+
+    obj.removeParametersExcept(["BBB", "CCC"])
+
+    self.verify_parameter_names_in_scan(obj.getScan(0), ["BBB", "CCC"])
+    self.verify_parameter_names_in_scan(obj.getScan(1), ["BBB", "CCC"])
+    self.verify_parameter_names_in_scan(obj.getScan(2), ["BBB", "CCC"])
+
+  def test_removeParametersExcept_2(self):
+    obj = _polarvolume.new()
+    obj.addScan(self.create_simple_scan_with_param(0.5*math.pi/180.0, (3,3), ["AAA","BBB"]))
+    obj.addScan(self.create_simple_scan_with_param(1.0*math.pi/180.0, (3,3), ["AAA","BBB","CCC"]))
+    obj.addScan(self.create_simple_scan_with_param(1.5*math.pi/180.0, (3,3), ["BBB","CCC", "DDD"]))
+
+    obj.removeParametersExcept(["BBB", "CCC"])
+
+    self.verify_parameter_names_in_scan(obj.getScan(0), ["BBB"])
+    self.verify_parameter_names_in_scan(obj.getScan(1), ["BBB", "CCC"])
+    self.verify_parameter_names_in_scan(obj.getScan(2), ["BBB", "CCC"])
+
+  def test_removeParametersExcept_3(self):
+    obj = _polarvolume.new()
+    obj.addScan(self.create_simple_scan_with_param(0.5*math.pi/180.0, (3,3), ["AAA","BBB"]))
+    obj.addScan(self.create_simple_scan_with_param(1.0*math.pi/180.0, (3,3), ["AAA","BBB","CCC"]))
+    obj.addScan(self.create_simple_scan_with_param(1.5*math.pi/180.0, (3,3), ["BBB","CCC", "DDD"]))
+
+    obj.removeParametersExcept(["DDD"])
+
+    self.verify_parameter_names_in_scan(obj.getScan(0), [])
+    self.verify_parameter_names_in_scan(obj.getScan(1), [])
+    self.verify_parameter_names_in_scan(obj.getScan(2), ["DDD"])
+
+  def test_removeParametersExcept_4(self):
+    obj = _polarvolume.new()
+    obj.addScan(self.create_simple_scan_with_param(0.5*math.pi/180.0, (3,3), ["AAA","BBB"]))
+    obj.addScan(self.create_simple_scan_with_param(1.0*math.pi/180.0, (3,3), ["AAA","BBB","CCC"]))
+    obj.addScan(self.create_simple_scan_with_param(1.5*math.pi/180.0, (3,3), ["BBB","CCC", "DDD"]))
+
+    try:
+      obj.removeParametersExcept(None)
+      self.fail("Expected AttributeError")
+    except AttributeError as e:
+      pass
+    self.verify_parameter_names_in_scan(obj.getScan(0), ["AAA","BBB"])
+    self.verify_parameter_names_in_scan(obj.getScan(1), ["AAA","BBB","CCC"])
+    self.verify_parameter_names_in_scan(obj.getScan(2), ["BBB","CCC", "DDD"])
+
+
 if __name__ == "__main__":
   #import sys;sys.argv = ['', 'Test.testName']
   unittest.main()

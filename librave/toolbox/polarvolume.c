@@ -1321,6 +1321,27 @@ int PolarVolume_useAzimuthalNavInformation(PolarVolume_t* self)
   return result;
 }
 
+int PolarVolume_removeParametersExcept(PolarVolume_t* self, RaveList_t* parameters)
+{
+  int i = 0;
+  int numberOfScans = 0;
+  int result = 1;
+
+  RAVE_ASSERT((self != NULL), "scan == NULL");
+
+  numberOfScans = PolarVolume_getNumberOfScans(self);
+  for (i = 0; i < numberOfScans && result == 1; i++) {
+    PolarScan_t* s = PolarVolume_getScan(self, i);
+    if (s != NULL) {
+      result = PolarScan_removeParametersExcept(s, parameters);
+    }
+    RAVE_OBJECT_RELEASE(s);
+  }
+
+  return result;
+}
+
+
 /*@} End of Interface functions */
 RaveCoreObjectType PolarVolume_TYPE = {
     "PolarVolume",

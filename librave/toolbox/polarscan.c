@@ -2069,6 +2069,54 @@ int PolarScan_shiftDataAndAttributes(PolarScan_t* self, int nrays)
   return 1;
 }
 
+static int PolarScanInternal_containsString(const char* name, RaveList_t* strlist)
+{
+  int nstrs = 0, i = 0;
+  nstrs = RaveList_size(strlist);
+  for (i = 0; i < nstrs; i++) {
+    char* str = (char*)RaveList_get(strlist, i);
+    if (strcmp(name, str) == 0) {
+      return 1;
+    }
+  }
+  return 0;
+}
+
+int PolarScan_removeParametersExcept(PolarScan_t* scan, RaveList_t* parameters)
+{
+  int nCurrentParameters = 0, i = 0;
+  int result = 0;
+
+  RaveList_t* currentParameters = NULL;
+
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+  if (parameters == NULL) {
+    goto done;
+  }
+
+  currentParameters = PolarScan_getParameterNames(scan);
+  if (currentParameters == NULL) {
+    goto done;
+  }
+
+  nCurrentParameters = RaveList_size(currentParameters);
+
+  for (i = 0; i < nCurrentParameters; i++) {
+    char* str = (char*)RaveList_get(currentParameters, i);
+    if (!PolarScanInternal_containsString(str, parameters)) {
+      PolarScanParam_t* param = PolarScan_removeParameter(scan, str);
+      RAVE_OBJECT_RELEASE(param);
+    }
+  }
+  result = 1;
+
+done:
+  if (currentParameters != NULL) {
+    RaveList_freeAndDestroy(&currentParameters);
+  }
+  return result;
+}
+
 void PolarScanInternal_setPolarVolumeBeamwH(PolarScan_t* scan, double bwH)
 {
   RAVE_ASSERT((scan != NULL), "scan == NULL");

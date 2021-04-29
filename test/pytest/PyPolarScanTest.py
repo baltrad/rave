@@ -466,7 +466,108 @@ class PyPolarScanTest(unittest.TestCase):
     obj.removeAllParameters()
     names = obj.getParameterNames()
     self.assertEqual(0, len(names))
-    
+
+  def test_removeParametersExcept_1(self):
+    obj = _polarscan.new()
+    param1 = _polarscanparam.new()
+    param1.quantity="DBZH"
+    param1.setData(numpy.zeros((3,3), numpy.int8))
+    param2 = _polarscanparam.new()
+    param2.quantity="MMM"
+    param2.setData(numpy.zeros((3,3), numpy.int8))
+    param3 = _polarscanparam.new()
+    param3.quantity="NNN"
+    param3.setData(numpy.zeros((3,3), numpy.int8))
+    param4 = _polarscanparam.new()
+    param4.quantity="OOO"
+    param4.setData(numpy.zeros((3,3), numpy.int8))
+    obj.addParameter(param1)
+    obj.addParameter(param2)
+    obj.addParameter(param3)
+    obj.addParameter(param4)
+
+    obj.removeParametersExcept(["MMM", "NNN"])
+    names = obj.getParameterNames()
+    self.assertEqual(2, len(names))
+    self.assertTrue("MMM" in names)
+    self.assertTrue("NNN" in names)
+
+  def test_removeParametersExcept_2(self):
+    obj = _polarscan.new()
+    param1 = _polarscanparam.new()
+    param1.quantity="DBZH"
+    param1.setData(numpy.zeros((3,3), numpy.int8))
+    param2 = _polarscanparam.new()
+    param2.quantity="MMM"
+    param2.setData(numpy.zeros((3,3), numpy.int8))
+    param3 = _polarscanparam.new()
+    param3.quantity="NNN"
+    param3.setData(numpy.zeros((3,3), numpy.int8))
+    param4 = _polarscanparam.new()
+    param4.quantity="OOO"
+    param4.setData(numpy.zeros((3,3), numpy.int8))
+    obj.addParameter(param1)
+    obj.addParameter(param2)
+    obj.addParameter(param3)
+    obj.addParameter(param4)
+
+    obj.removeParametersExcept([])
+    names = obj.getParameterNames()
+    self.assertEqual(0, len(names))
+
+  def test_removeParametersExcept_3(self):
+    obj = _polarscan.new()
+    param1 = _polarscanparam.new()
+    param1.quantity="DBZH"
+    param1.setData(numpy.zeros((3,3), numpy.int8))
+    param2 = _polarscanparam.new()
+    param2.quantity="MMM"
+    param2.setData(numpy.zeros((3,3), numpy.int8))
+    param3 = _polarscanparam.new()
+    param3.quantity="NNN"
+    param3.setData(numpy.zeros((3,3), numpy.int8))
+    param4 = _polarscanparam.new()
+    param4.quantity="OOO"
+    param4.setData(numpy.zeros((3,3), numpy.int8))
+    obj.addParameter(param1)
+    obj.addParameter(param2)
+    obj.addParameter(param3)
+    obj.addParameter(param4)
+
+    obj.removeParametersExcept(["DBZH", "XXX", "MMM", "YYY", "NNN"])
+    names = obj.getParameterNames()
+    self.assertEqual(3, len(names))
+    self.assertTrue("DBZH" in names)
+    self.assertTrue("MMM" in names)
+    self.assertTrue("NNN" in names)
+
+  def test_removeParametersExcept_4(self):
+    obj = _polarscan.new()
+    param1 = _polarscanparam.new()
+    param1.quantity="DBZH"
+    param1.setData(numpy.zeros((3,3), numpy.int8))
+    param2 = _polarscanparam.new()
+    param2.quantity="MMM"
+    param2.setData(numpy.zeros((3,3), numpy.int8))
+    param3 = _polarscanparam.new()
+    param3.quantity="NNN"
+    param3.setData(numpy.zeros((3,3), numpy.int8))
+    param4 = _polarscanparam.new()
+    param4.quantity="OOO"
+    param4.setData(numpy.zeros((3,3), numpy.int8))
+    obj.addParameter(param1)
+    obj.addParameter(param2)
+    obj.addParameter(param3)
+    obj.addParameter(param4)
+
+    try:
+      obj.removeParametersExcept(None)
+      self.fail("Expected AttributeError")
+    except AttributeError as e:
+      pass
+    names = obj.getParameterNames()
+    self.assertEqual(4, len(names))
+
   def test_getRangeIndex(self):
     obj = _polarscan.new()
     dbzhParam = _polarscanparam.new()

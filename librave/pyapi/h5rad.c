@@ -50,7 +50,7 @@ int GetStringFromINFO(PyObject* inobj, char* key, char** val)
    pyo = PyObject_CallMethod(inobj, "get", "s", key);
 
    if(PyString_Check(pyo)) {
-      *val = PyString_AsString(pyo);
+      *val = (char*)PyString_AsString(pyo);
 
       Py_XDECREF(pyo);
       return 1;
@@ -113,7 +113,7 @@ int GetDoubleFromSequence(PyObject* inobj, int i, double* val)
       item = PySequence_GetItem(inobj, i);
 
    if (PyString_Check(item)) {
-      tmps = PyString_AsString(item);
+      tmps = (char*)PyString_AsString(item);
 
       *val = atof(tmps);
 
@@ -140,7 +140,7 @@ int GetIntFromSequence(PyObject* inobj, int i, int* val)
       item = PySequence_GetItem(inobj, i);
 
    if (PyString_Check(item)) {
-      tmps = PyString_AsString(item);
+      tmps = (char*)PyString_AsString(item);
 
       *val = atoi(tmps);
 
