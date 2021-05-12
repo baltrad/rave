@@ -20,7 +20,7 @@ PJ* initProjection(PyObject* pcs)
   for(i=0;i<n;i++) {
     PyObject* op = PySequence_GetItem(pcs,i);
     PyObject* str = PyObject_Str(op);
-    argv[i] = PyString_AsString(str);
+    argv[i] = (char*)PyString_AsString(str);
     Py_DECREF(str);
     Py_DECREF(op);
   }

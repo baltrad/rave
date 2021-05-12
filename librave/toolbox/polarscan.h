@@ -1018,6 +1018,14 @@ int PolarScan_shiftData(PolarScan_t* self, int nrays);
 int PolarScan_shiftDataAndAttributes(PolarScan_t* self, int nrays);
 
 /**
+ * Removes all parameters from a scan except the ones specified in parameters (list of strings)
+ * @param[in] scan - self
+ * @param[in] parameters - a list of character arrays
+ * @return 1 on success otherwise 0
+ */
+int PolarScan_removeParametersExcept(PolarScan_t* scan, RaveList_t* parameters);
+
+/**
  * Framework internal function for setting the beamwidth in a scan,
  * used to indicate that the beamwidth comes from the polar volume.
  * I.E. DO NOT USE UNLESS YOU KNOW WHY.

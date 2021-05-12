@@ -28,8 +28,8 @@ class RaveScansun(unittest.TestCase):
     # Date    Time   Elevatn Azimuth ElevSun AzimSun   N  dBSunFlux   SunMean SunStdd   ZdrMean ZdrStdd Refl  ZDR
     VALID_SEHEM = ('WMO:02588,RAD:SE47,PLC:Hemse(Ase),NOD:sehem,ORG:82,CTY:643,CMT:Swedish radar',
                    [(20171204, 71512.88111114502, 0.4998779296875, 134.6209716796875,
-                     0.004663761840869546, 134.5596655914249, 68, 14.660277444210697,
-                     -113.47691893156195, 1.0282557125640615, nan, nan, 'TH', 'NA')])
+                     0.004663761840869546, 134.5596655914249, 68, 15.452089904686948,
+                     -112.6851064710857, 1.0282557125640615, nan, nan, 'TH', 'NA')])
 
     # KNMI PVOL from Den Helder with a nice sun hit
     KNMI_TESTFILE="fixtures/KNMI-PVOL-Den_Helder.h5"

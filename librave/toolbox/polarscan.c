@@ -1994,6 +1994,7 @@ fail:
 
 int PolarScan_shiftDataAndAttributes(PolarScan_t* self, int nrays)
 {
+  long newa1gate = 0;
   if (!PolarScan_shiftData(self, nrays)) {
     return 0;
   }
@@ -2011,7 +2012,109 @@ int PolarScan_shiftDataAndAttributes(PolarScan_t* self, int nrays)
     return 0;
   }
 
+  if (self->hasAstart && PolarScan_hasAttribute(self, "how/startazA")) {
+    double astart = 0.0;
+    double* startazA = NULL;
+    int nstartazA = 0;
+    int tmpresult = 1;
+    RaveAttribute_t* astartAttr = PolarScan_getAttribute(self, "how/astart");
+    RaveAttribute_t* startazAttr = PolarScan_getAttribute(self, "how/startazA");
+    if (astartAttr == NULL) {
+      RAVE_ERROR0("Could not extract how/astart");
+      tmpresult = 0;
+    }
+    if (startazAttr == NULL || !RaveAttribute_getDoubleArray(startazAttr, &startazA, &nstartazA)) {
+      RAVE_ERROR0("Could not extract how/startazA");
+      tmpresult = 0;
+    }
+    if (tmpresult) {
+      double sa = startazA[0];
+      if (sa > 180.0) {
+        sa = sa - 360.0; /* Adjust if value is on other side of circle so that we get same sign as astart. */
+      }
+      astart = self->astart * 180.0/M_PI;
+      if (fabs(astart - sa) > 0.0001) {
+        self->astart = M_PI/180.0;
+        RaveAttribute_setDouble(astartAttr, sa); /* But we want to use values between - raywidth / 2 */
+      }
+    }
+    RAVE_OBJECT_RELEASE(astartAttr);
+    RAVE_OBJECT_RELEASE(startazAttr);
+    if (!tmpresult) {
+      return 0;
+    }
+  } else if (self->hasAstart && self->nrays > 0) {
+    double astart = self->astart * 180.0/M_PI;
+    double azoffset = 360.0 / self->nrays;
+    RaveAttribute_t* astartAttr = PolarScan_getAttribute(self, "how/astart");
+    if (astartAttr == NULL) {
+      RAVE_ERROR0("Could not extract how/astart");
+    } else {
+      astart = astart - azoffset * nrays;
+      self->astart = astart * M_PI/180.0;
+      RaveAttribute_setDouble(astartAttr, astart);
+    }
+    RAVE_OBJECT_RELEASE(astartAttr);
+  }
+
+  newa1gate=self->a1gate + nrays;
+  if (newa1gate >= self->nrays) {
+    newa1gate %= self->nrays;
+  }
+  while (newa1gate < 0 && self->nrays > 0) {
+    newa1gate += self->nrays;
+  }
+  self->a1gate = newa1gate;
+
   return 1;
+}
+
+static int PolarScanInternal_containsString(const char* name, RaveList_t* strlist)
+{
+  int nstrs = 0, i = 0;
+  nstrs = RaveList_size(strlist);
+  for (i = 0; i < nstrs; i++) {
+    char* str = (char*)RaveList_get(strlist, i);
+    if (strcmp(name, str) == 0) {
+      return 1;
+    }
+  }
+  return 0;
+}
+
+int PolarScan_removeParametersExcept(PolarScan_t* scan, RaveList_t* parameters)
+{
+  int nCurrentParameters = 0, i = 0;
+  int result = 0;
+
+  RaveList_t* currentParameters = NULL;
+
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+  if (parameters == NULL) {
+    goto done;
+  }
+
+  currentParameters = PolarScan_getParameterNames(scan);
+  if (currentParameters == NULL) {
+    goto done;
+  }
+
+  nCurrentParameters = RaveList_size(currentParameters);
+
+  for (i = 0; i < nCurrentParameters; i++) {
+    char* str = (char*)RaveList_get(currentParameters, i);
+    if (!PolarScanInternal_containsString(str, parameters)) {
+      PolarScanParam_t* param = PolarScan_removeParameter(scan, str);
+      RAVE_OBJECT_RELEASE(param);
+    }
+  }
+  result = 1;
+
+done:
+  if (currentParameters != NULL) {
+    RaveList_freeAndDestroy(&currentParameters);
+  }
+  return result;
 }
 
 void PolarScanInternal_setPolarVolumeBeamwH(PolarScan_t* scan, double bwH)

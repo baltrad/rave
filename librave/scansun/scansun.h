@@ -109,6 +109,7 @@ struct scanmeta {
 	long azim0;            /*Ray number with which radar scan started.*/
 	double astart;         /*Azimuthal offset in degrees from 0*/
 	double pulse;          /*Pulse length in microsec.*/
+        double bandwidth;      /*Receiver bandwidth in MHz.*/
 	double radcnst;        /*Radar constant in dB.*/
 	double antvel;         /*Antenna velocity in deg/s.*/
 	double lon;            /*Longitude of radar in deg.*/

@@ -579,4 +579,13 @@ void PolarVolume_setUseAzimuthalNavInformation(PolarVolume_t* self, int v);
  */
 int PolarVolume_useAzimuthalNavInformation(PolarVolume_t* self);
 
+/**
+ * Removes all parameters from all scans belongning to this volume except the ones specified in parameters (list of strings)
+ * @param[in] self - self
+ * @param[in] parameters - a list of character arrays
+ * @return 1 on success otherwise 0
+ */
+int PolarVolume_removeParametersExcept(PolarVolume_t* self, RaveList_t* parameters);
+
+
 #endif

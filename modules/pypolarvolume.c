@@ -688,6 +688,73 @@ static PyObject* _pypolarvolume_getMaxDistance(PyPolarVolume* self, PyObject* ar
   return PyFloat_FromDouble(PolarVolume_getMaxDistance(self->pvol));
 }
 
+static RaveList_t* PyPolarVolumeInternal_createRaveListFromList(PyObject* pylist)
+{
+  RaveList_t *result = NULL, *tmplist = NULL;
+
+  if (pylist != NULL && PyList_Check(pylist)) {
+    Py_ssize_t nnames = PyObject_Length(pylist);
+    Py_ssize_t i = 0;
+    tmplist = RAVE_OBJECT_NEW(&RaveList_TYPE);
+    if (tmplist == NULL) {
+      raiseException_gotoTag(done, PyExc_MemoryError, "Could not allocate memory");
+    }
+    for (i = 0; i < nnames; i++) {
+      PyObject* pystr = PyList_GetItem(pylist, i);
+      char* dupstr = NULL;
+      if (pystr == NULL || !PyString_Check(pystr)) {
+        raiseException_gotoTag(done, PyExc_AttributeError, "Could not extract string from list");
+      }
+      dupstr = RAVE_STRDUP(PyString_AsString(pystr));
+      if (dupstr != NULL) {
+        if (!RaveList_add(tmplist, dupstr)) {
+          raiseException_gotoTag(done, PyExc_MemoryError, "Could not allocate memory");
+          RAVE_FREE(dupstr);
+        }
+      } else {
+        raiseException_gotoTag(done, PyExc_MemoryError, "Could not allocate memory");
+      }
+      dupstr = NULL; // We have handed it over to the rave list.
+    }
+  } else {
+    raiseException_gotoTag(done, PyExc_RuntimeError, "Trying to create ravelist from object that is not a list");
+  }
+  result = RAVE_OBJECT_COPY(tmplist);
+done:
+  RAVE_OBJECT_RELEASE(tmplist);
+  return result;
+}
+
+
+static PyObject* _pypolarvolume_removeParametersExcept(PyPolarVolume* self, PyObject* args)
+{
+  PyObject* pyparameters = NULL;
+  RaveList_t* paramlist = NULL;
+  if (!PyArg_ParseTuple(args, "O", &pyparameters)) {
+    return NULL;
+  }
+  if (!PyList_Check(pyparameters)) {
+    raiseException_returnNULL(PyExc_AttributeError, "Must provide a list of strings");
+  }
+  paramlist = PyPolarVolumeInternal_createRaveListFromList(pyparameters);
+  if (paramlist == NULL) { /* Error has already been set here */
+    goto fail;
+  }
+  if (!PolarVolume_removeParametersExcept(self->pvol, paramlist)) {
+    raiseException_gotoTag(fail, PyExc_RuntimeError, "Failed to remove parameters");
+  }
+
+  if (paramlist != NULL) {
+    RaveList_freeAndDestroy(&paramlist);
+  }
+  Py_RETURN_NONE;
+fail:
+  if (paramlist != NULL) {
+    RaveList_freeAndDestroy(&paramlist);
+  }
+  return NULL;
+}
+
 /**
  * All methods a polar volume can have
  */
@@ -828,6 +895,10 @@ static struct PyMethodDef _pypolarvolume_methods[] =
   {"getHeightField", (PyCFunction) _pypolarvolume_getHeightField, 1,
     "getHeightField() -> RaveFieldCore\n\n"
     "Creates a height field for this volume"
+  },
+  {"removeParametersExcept", (PyCFunction) _pypolarvolume_removeParametersExcept, 1,
+    "removeParametersExcept(parameterlist)\n\n"
+    "Removes all parameters in all scans belonging to this volume except the ones specified in the list.\n\n"
   },
   {"clone", (PyCFunction) _pypolarvolume_clone, 1,
     "clone() -> PolarVolumeCore\n\n"

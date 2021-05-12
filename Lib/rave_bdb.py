@@ -148,7 +148,7 @@ class rave_bdb(object):
             shutil.copyfileobj(content, outf)
             outf.flush()
             outf.close()
-        return _raveio.open(tmppath, lazy_loading, preloadedQuantities).object
+        return _raveio.open(tmppath).object # We cant perform lazy loading if we remove the file...
       finally:
         os.unlink(tmppath)
     else:
