@@ -24,14 +24,14 @@
 ###########################################################################
 -include ../def.mk
 
-CFLAGS= $(CCSHARED) $(OPTS) $(DEFS) -I../librave/toolbox -I../librave/pyapi -I../librave/tnc \
+CFLAGS= $(CCSHARED) $(OPTS) $(DEFS) -I../librave/toolbox -I../librave/pyapi \
 			-I../librave/scansun -I. $(INCLUDE_PYTHON) \
 			-I$(HLHDF_INCLUDE_DIR) $(NUMPY_INCLUDE_DIR) \
 			$(ZLIB_INCDIR) $(HDF5_INCDIR) $(PROJ_INCLUDE_DIR)
 
 # Linker flags
 #
-LDFLAGS= -L../librave/toolbox -L../librave/pyapi -L../librave/tnc -L../librave/scansun -L. \
+LDFLAGS= -L../librave/toolbox -L../librave/pyapi -L../librave/scansun -L. \
 			-L$(HLHDF_LIB_DIR) $(ZLIB_LIBDIR) $(HDF5_LIBDIR) $(PROJ_LIB_DIR)
 
 ifeq ($(EXPAT_SUPPRESSED), no)
@@ -60,7 +60,7 @@ CFLAGS+= -DPTHREAD_SUPPORTED
 PTHREAD_LIBRARY=-lpthread
 endif
 
-LIBRARIES= -lravetoolbox -lravepyapi -lhlhdf -lproj -lravetnc  $(EXPAT_LIBRARY) $(BUFR_LIBRARY) $(NETCDF_LIBRARY) $(PTHREAD_LIBRARY)
+LIBRARIES= -lravetoolbox -lravepyapi -lhlhdf -lproj  $(EXPAT_LIBRARY) $(BUFR_LIBRARY) $(NETCDF_LIBRARY) $(PTHREAD_LIBRARY)
 
 # --------------------------------------------------------------------
 # Fixed definitions
@@ -213,9 +213,9 @@ SOURCE_37= pyctfilter.c
 OBJECTS_37= $(SOURCE_37:.c=.o)
 TARGET_37= _ctfilter.so
 
-SOURCE_38= pyvprcorrection.c
-OBJECTS_38= $(SOURCE_38:.c=.o)
-TARGET_38= _vprcorrection.so
+#SOURCE_38= pyvprcorrection.c
+#OBJECTS_38= $(SOURCE_38:.c=.o)
+#TARGET_38= _vprcorrection.so
 
 SOURCE_39= pybitmapgenerator.c
 OBJECTS_39= $(SOURCE_39:.c=.o)
@@ -235,7 +235,7 @@ TARGETS=$(TARGET_1) $(TARGET_2) $(TARGET_3) $(TARGET_4) $(TARGET_5) $(TARGET_6) 
 		$(TARGET_20) $(TARGET_21) $(TARGET_22) $(TARGET_23) $(TARGET_24) $(TARGET_25) \
 		$(TARGET_26) $(TARGET_27) $(TARGET_28) $(TARGET_29) $(TARGET_30) $(TARGET_31) \
 		$(TARGET_32) $(TARGET_33) $(TARGET_34) $(TARGET_35) $(TARGET_36) $(TARGET_37) \
-		$(TARGET_38) $(TARGET_39) $(TARGET_40) $(TARGET_41)
+		$(TARGET_39) $(TARGET_40) $(TARGET_41)
 
 INSTALL_HEADERS= pyarea.h \
 				 pycartesian.h \
@@ -259,7 +259,6 @@ INSTALL_HEADERS= pyarea.h \
 				 pycartesiancomposite.h \
 				 pyqitotal.h \
 				 pygra.h \
-				 pyvprcorrection.h \
 				 pybitmapgenerator.h \
 				 pyravedata2d.h \
 				 pylazynodelistreader.h

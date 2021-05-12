@@ -5,7 +5,7 @@
 
 # --------------------------------------------------------------------
 # Rules
-TARGETS=libtnc libtoolbox libpyapi libscansun
+TARGETS=libtoolbox libpyapi libscansun
 
 ifeq ($(EXPAT_SUPPRESSED), no)
 TARGETS += libradvol
@@ -13,9 +13,6 @@ endif
 
 .PHONY=all
 all: $(TARGETS)
-
-libtnc:
-	$(MAKE) -C tnc
 
 libtoolbox:
 	$(MAKE) -C toolbox
@@ -31,7 +28,6 @@ libradvol:
 
 .PHONY=install
 install:
-	$(MAKE) -C tnc install
 	$(MAKE) -C toolbox install
 	$(MAKE) -C pyapi install
 	$(MAKE) -C scansun install
@@ -41,7 +37,6 @@ endif
 
 .PHONY=clean
 clean:
-	-$(MAKE) -C tnc clean
 	-$(MAKE) -C toolbox clean
 	-$(MAKE) -C pyapi clean
 	-$(MAKE) -C scansun clean
@@ -50,7 +45,6 @@ clean:
 
 .PHONY=distclean
 distclean:	clean
-	-$(MAKE) -C tnc distclean
 	-$(MAKE) -C toolbox distclean
 	-$(MAKE) -C pyapi distclean
 	-$(MAKE) -C scansun distclean

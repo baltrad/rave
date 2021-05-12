@@ -44,7 +44,6 @@ from PyRaveFieldTest import *
 from PyRaveData2DTest import *
 from PyTransformTest import *
     
-from PyVprCorrectionTest import *
 from PyProjectionTest import *
 from PyRaveIOTest import *
 from PyLazyNodeListReaderTest import *

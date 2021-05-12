@@ -1,7 +1,7 @@
 include ../def.mk
 
 CFLAGS=	$(OPTS) $(CCSHARED) $(DEFS) $(CREATE_ITRUNC) \
-	-I. -I../librave/tnc -I../librave/toolbox $(RAVE_MODULE_CFLAGS)
+	-I. -I../librave/toolbox $(RAVE_MODULE_CFLAGS)
 
 LDFLAGS= $(RAVE_MODULE_LDFLAGS)
 # --------------------------------------------------------------------
@@ -38,7 +38,7 @@ $(DEPDIR):
 all:		$(AREAREGISTRY_BIN)
 
 $(AREAREGISTRY_BIN): $(DEPDIR) $(AREAREGISTRY_OBJECTS) ../librave/toolbox/libravetoolbox.so
-	$(CC) $(LDFLAGS) -o $@ $(AREAREGISTRY_OBJECTS) -L../librave/tnc -L../librave/toolbox $(RAVE_MODULE_LIBRARIES) -lm
+	$(CC) $(LDFLAGS) -o $@ $(AREAREGISTRY_OBJECTS) -L../librave/toolbox $(RAVE_MODULE_LIBRARIES) -lm
 
 .PHONY=install
 install: ;
