@@ -71,7 +71,7 @@ class PyRaveTest(unittest.TestCase):
 
 
   def test_translate_from_projection_to_wkt_aea(self):
-    proj = _rave.projection("myid", "aea", "+proj=aea +lat_0=1 +lon_0=2 +x_0=14 +y_0=60 +lat_1=12 +lat_2=13")
+    proj = _rave.projection("myid", "aea", "+proj=aea +lat_0=1 +lon_0=2 +x_0=14 +y_0=60 +lat_1=12 +lat_2=13 +a=6378160 +b=6356775")
     result = _rave.translate_from_projection_to_wkt(proj)
     self.check_value_in_list(result, "grid_mapping_name", "albers_conical_equal_area")
     self.check_value_in_list(result, "latitude_of_projection_origin", 1.0)
@@ -101,7 +101,7 @@ class PyRaveTest(unittest.TestCase):
     self.check_value_in_list(result, "earth_radius", 6378137.0)
     
   def test_translate_from_projection_to_wkt_lcc(self):
-    proj = _rave.projection("myid", "lcc", "+proj=lcc +lat_0=1 +lon_0=2 +x_0=14 +y_0=60 +lat_1=12 +lat_2=13")
+    proj = _rave.projection("myid", "lcc", "+proj=lcc +lat_0=1 +lon_0=2 +x_0=14 +y_0=60 +lat_1=12 +lat_2=13 +a=6378160 +b=6356775")
     result = _rave.translate_from_projection_to_wkt(proj)
     self.check_value_in_list(result, "grid_mapping_name", "lambert_conformal_conic")
     self.check_value_in_list(result, "latitude_of_projection_origin", 1.0)
