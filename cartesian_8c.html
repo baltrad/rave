@@ -62,6 +62,8 @@ $(function() {
 <code>#include &quot;<a class="el" href="raveobject__hashtable_8h_source.html">raveobject_hashtable.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="rave__utilities_8h_source.html">rave_utilities.h</a>&quot;</code><br />
 <code>#include &lt;string.h&gt;</code><br />
+<code>#include &lt;stdio.h&gt;</code><br />
+<code>#include &quot;<a class="el" href="projection__pipeline_8h_source.html">projection_pipeline.h</a>&quot;</code><br />
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
@@ -188,9 +190,9 @@ Functions</h2></td></tr>
 <tr class="memitem:ae3f25bc98217aa58492b98a0b3e4084d"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cartesian_8c.html#ae3f25bc98217aa58492b98a0b3e4084d">Cartesian_getDefaultParameter</a> (<a class="el" href="cartesian_8h.html#ab5a79e35a1b35277a4ce2abba3acada0">Cartesian_t</a> *cartesian)</td></tr>
 <tr class="memdesc:ae3f25bc98217aa58492b98a0b3e4084d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the default parameter.  <a href="cartesian_8c.html#ae3f25bc98217aa58492b98a0b3e4084d">More...</a><br /></td></tr>
 <tr class="separator:ae3f25bc98217aa58492b98a0b3e4084d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a44c525b551bf4ad4b9d8998e1b42f7aa"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cartesian_8c.html#a44c525b551bf4ad4b9d8998e1b42f7aa">Cartesian_setProjection</a> (<a class="el" href="cartesian_8h.html#ab5a79e35a1b35277a4ce2abba3acada0">Cartesian_t</a> *cartesian, <a class="el" href="projection_8h.html#a377e7436c2aa8b08cf81603ee53bef26">Projection_t</a> *projection)</td></tr>
-<tr class="memdesc:a44c525b551bf4ad4b9d8998e1b42f7aa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the projection that defines this cartesian product.  <a href="cartesian_8c.html#a44c525b551bf4ad4b9d8998e1b42f7aa">More...</a><br /></td></tr>
-<tr class="separator:a44c525b551bf4ad4b9d8998e1b42f7aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9e532f6a8741cafe81f72fb8e2656d95"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cartesian_8c.html#a9e532f6a8741cafe81f72fb8e2656d95">Cartesian_setProjection</a> (<a class="el" href="cartesian_8h.html#ab5a79e35a1b35277a4ce2abba3acada0">Cartesian_t</a> *cartesian, <a class="el" href="projection_8h.html#a377e7436c2aa8b08cf81603ee53bef26">Projection_t</a> *projection)</td></tr>
+<tr class="memdesc:a9e532f6a8741cafe81f72fb8e2656d95"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the projection that defines this cartesian product.  <a href="cartesian_8c.html#a9e532f6a8741cafe81f72fb8e2656d95">More...</a><br /></td></tr>
+<tr class="separator:a9e532f6a8741cafe81f72fb8e2656d95"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a994b5a1e4244445036d226744c73c166"><td class="memItemLeft" align="right" valign="top"><a class="el" href="projection_8h.html#a377e7436c2aa8b08cf81603ee53bef26">Projection_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cartesian_8c.html#a994b5a1e4244445036d226744c73c166">Cartesian_getProjection</a> (<a class="el" href="cartesian_8h.html#ab5a79e35a1b35277a4ce2abba3acada0">Cartesian_t</a> *cartesian)</td></tr>
 <tr class="memdesc:a994b5a1e4244445036d226744c73c166"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a copy of the projection that is used for this cartesian product.  <a href="cartesian_8c.html#a994b5a1e4244445036d226744c73c166">More...</a><br /></td></tr>
 <tr class="separator:a994b5a1e4244445036d226744c73c166"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -2744,14 +2746,14 @@ Variables</h2></td></tr>
 
 </div>
 </div>
-<a id="a44c525b551bf4ad4b9d8998e1b42f7aa" name="a44c525b551bf4ad4b9d8998e1b42f7aa"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a44c525b551bf4ad4b9d8998e1b42f7aa">&#9670;&nbsp;</a></span>Cartesian_setProjection()</h2>
+<a id="a9e532f6a8741cafe81f72fb8e2656d95" name="a9e532f6a8741cafe81f72fb8e2656d95"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9e532f6a8741cafe81f72fb8e2656d95">&#9670;&nbsp;</a></span>Cartesian_setProjection()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void Cartesian_setProjection </td>
+          <td class="memname">int Cartesian_setProjection </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="cartesian_8h.html#ab5a79e35a1b35277a4ce2abba3acada0">Cartesian_t</a> *&#160;</td>
           <td class="paramname"><em>cartesian</em>, </td>
@@ -2771,13 +2773,14 @@ Variables</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Sets the projection that defines this cartesian product. </p>
-<dl class="params"><dt>Parameters</dt><dd>
+<p >Will also necessary pipelines internally </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">cartesian</td><td>- the cartesian product </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">projection</td><td>- the projection </td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>1 if operation successful, otherwise 0 </dd></dl>
 
 </div>
 </div>

@@ -45,6 +45,7 @@ $(function() {
 <div class="header">
   <div class="summary">
 <a href="#nested-classes">Classes</a> &#124;
+<a href="#define-members">Macros</a> &#124;
 <a href="#func-members">Functions</a> &#124;
 <a href="#var-members">Variables</a>  </div>
   <div class="headertitle"><div class="title">projection.c File Reference</div></div>
@@ -57,6 +58,9 @@ $(function() {
 <code>#include &quot;<a class="el" href="rave__debug_8h_source.html">rave_debug.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="rave__alloc_8h_source.html">rave_alloc.h</a>&quot;</code><br />
 <code>#include &lt;string.h&gt;</code><br />
+<code>#include &lt;stdio.h&gt;</code><br />
+<code>#include &lt;math.h&gt;</code><br />
+<code>#include &lt;proj.h&gt;</code><br />
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
@@ -64,11 +68,38 @@ Classes</h2></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Represents one projection.  <a href="struct__Projection__t.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="define-members" name="define-members"></a>
+Macros</h2></td></tr>
+<tr class="memitem:a98c13c051d56ec52eebf7732f621b146"><td class="memItemLeft" align="right" valign="top"><a id="a98c13c051d56ec52eebf7732f621b146" name="a98c13c051d56ec52eebf7732f621b146"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>UV</b>&#160;&#160;&#160;PJ_UV</td></tr>
+<tr class="separator:a98c13c051d56ec52eebf7732f621b146"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:ada8809026b77c0291c1c4c588eb843f9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="projection_8c.html#ada8809026b77c0291c1c4c588eb843f9">Projection_setDebugLevel</a> (int debugPj)</td></tr>
+<tr class="memdesc:ada8809026b77c0291c1c4c588eb843f9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the debug level when using proj API.  <a href="projection_8c.html#ada8809026b77c0291c1c4c588eb843f9">More...</a><br /></td></tr>
+<tr class="separator:ada8809026b77c0291c1c4c588eb843f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a688490ca7488431690a12851825bea16"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="projection_8c.html#a688490ca7488431690a12851825bea16">Projection_getDebugLevel</a> (void)</td></tr>
+<tr class="memdesc:a688490ca7488431690a12851825bea16"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the debug level when using proj API.  <a href="projection_8c.html#a688490ca7488431690a12851825bea16">More...</a><br /></td></tr>
+<tr class="separator:a688490ca7488431690a12851825bea16"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3033840dd8980164265f3e15267df33d"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="projection_8c.html#a3033840dd8980164265f3e15267df33d">Projection_getProjVersion</a> (void)</td></tr>
+<tr class="memdesc:a3033840dd8980164265f3e15267df33d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the currently used Proj version.  <a href="projection_8c.html#a3033840dd8980164265f3e15267df33d">More...</a><br /></td></tr>
+<tr class="separator:a3033840dd8980164265f3e15267df33d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0ff413fa4b534c51c640b60cb63639bf"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="projection_8c.html#a0ff413fa4b534c51c640b60cb63639bf">Projection_setDefaultLonLatPcsDef</a> (const char *pcsdef)</td></tr>
+<tr class="memdesc:a0ff413fa4b534c51c640b60cb63639bf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the default lon/lat pcs definition to use.  <a href="projection_8c.html#a0ff413fa4b534c51c640b60cb63639bf">More...</a><br /></td></tr>
+<tr class="separator:a0ff413fa4b534c51c640b60cb63639bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abca5fcab46da7bf3d272e130dff8a482"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="projection_8c.html#abca5fcab46da7bf3d272e130dff8a482">Projection_getDefaultLonLatPcsDef</a> (void)</td></tr>
+<tr class="memdesc:abca5fcab46da7bf3d272e130dff8a482"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the default lonlat pcs definition.  <a href="projection_8c.html#abca5fcab46da7bf3d272e130dff8a482">More...</a><br /></td></tr>
+<tr class="separator:abca5fcab46da7bf3d272e130dff8a482"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a03922906506b7d0c1b589f466cf720e5"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="projection_8c.html#a03922906506b7d0c1b589f466cf720e5">Projection_init</a> (<a class="el" href="projection_8h.html#a377e7436c2aa8b08cf81603ee53bef26">Projection_t</a> *projection, const char *id, const char *description, const char *definition)</td></tr>
 <tr class="memdesc:a03922906506b7d0c1b589f466cf720e5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initializes a projection with the projection.  <a href="projection_8c.html#a03922906506b7d0c1b589f466cf720e5">More...</a><br /></td></tr>
 <tr class="separator:a03922906506b7d0c1b589f466cf720e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab86b33dfba0be711353b7521aa1e5d9a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="projection_8h.html#a377e7436c2aa8b08cf81603ee53bef26">Projection_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="projection_8c.html#ab86b33dfba0be711353b7521aa1e5d9a">Projection_create</a> (const char *id, const char *description, const char *definition)</td></tr>
+<tr class="memdesc:ab86b33dfba0be711353b7521aa1e5d9a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a projection directly.  <a href="projection_8c.html#ab86b33dfba0be711353b7521aa1e5d9a">More...</a><br /></td></tr>
+<tr class="separator:ab86b33dfba0be711353b7521aa1e5d9a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a362f8f6d6da9cfbb64417f0743cf7070"><td class="memItemLeft" align="right" valign="top"><a class="el" href="projection_8h.html#a377e7436c2aa8b08cf81603ee53bef26">Projection_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="projection_8c.html#a362f8f6d6da9cfbb64417f0743cf7070">Projection_createDefaultLonLatProjection</a> (void)</td></tr>
+<tr class="memdesc:a362f8f6d6da9cfbb64417f0743cf7070"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a default lon lat projection by using the default lonlat pcs definition.  <a href="projection_8c.html#a362f8f6d6da9cfbb64417f0743cf7070">More...</a><br /></td></tr>
+<tr class="separator:a362f8f6d6da9cfbb64417f0743cf7070"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0343b3ba1a45cab49cfde3fc96ec83be"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="projection_8c.html#a0343b3ba1a45cab49cfde3fc96ec83be">Projection_getID</a> (<a class="el" href="projection_8h.html#a377e7436c2aa8b08cf81603ee53bef26">Projection_t</a> *projection)</td></tr>
 <tr class="memdesc:a0343b3ba1a45cab49cfde3fc96ec83be"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the ID for this projection.  <a href="projection_8c.html#a0343b3ba1a45cab49cfde3fc96ec83be">More...</a><br /></td></tr>
 <tr class="separator:a0343b3ba1a45cab49cfde3fc96ec83be"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -78,6 +109,9 @@ Functions</h2></td></tr>
 <tr class="memitem:a016db940a51e921768c58ef98503d4e7"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="projection_8c.html#a016db940a51e921768c58ef98503d4e7">Projection_getDefinition</a> (<a class="el" href="projection_8h.html#a377e7436c2aa8b08cf81603ee53bef26">Projection_t</a> *projection)</td></tr>
 <tr class="memdesc:a016db940a51e921768c58ef98503d4e7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the definition for this projection.  <a href="projection_8c.html#a016db940a51e921768c58ef98503d4e7">More...</a><br /></td></tr>
 <tr class="separator:a016db940a51e921768c58ef98503d4e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af5c26b3fc86e2ec1d596f1e05ee67b6a"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="projection_8c.html#af5c26b3fc86e2ec1d596f1e05ee67b6a">Projection_isLatLong</a> (<a class="el" href="projection_8h.html#a377e7436c2aa8b08cf81603ee53bef26">Projection_t</a> *projection)</td></tr>
+<tr class="memdesc:af5c26b3fc86e2ec1d596f1e05ee67b6a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns if this projection is a latlong or not.  <a href="projection_8c.html#af5c26b3fc86e2ec1d596f1e05ee67b6a">More...</a><br /></td></tr>
+<tr class="separator:af5c26b3fc86e2ec1d596f1e05ee67b6a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab4de41c03f8fc758a0e43f262a049e36"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="projection_8c.html#ab4de41c03f8fc758a0e43f262a049e36">Projection_transform</a> (<a class="el" href="projection_8h.html#a377e7436c2aa8b08cf81603ee53bef26">Projection_t</a> *projection, <a class="el" href="projection_8h.html#a377e7436c2aa8b08cf81603ee53bef26">Projection_t</a> *tgt, double *x, double *y, double *z)</td></tr>
 <tr class="memdesc:ab4de41c03f8fc758a0e43f262a049e36"><td class="mdescLeft">&#160;</td><td class="mdescRight">Transforms the coordinates in this projection into the target projection.  <a href="projection_8c.html#ab4de41c03f8fc758a0e43f262a049e36">More...</a><br /></td></tr>
 <tr class="separator:ab4de41c03f8fc758a0e43f262a049e36"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -102,6 +136,72 @@ Variables</h2></td></tr>
 <dl class="section author"><dt>Author</dt><dd>Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI) </dd></dl>
 <dl class="section date"><dt>Date</dt><dd>2009-10-20 </dd></dl>
 </div><h2 class="groupheader">Function Documentation</h2>
+<a id="ab86b33dfba0be711353b7521aa1e5d9a" name="ab86b33dfba0be711353b7521aa1e5d9a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab86b33dfba0be711353b7521aa1e5d9a">&#9670;&nbsp;</a></span>Projection_create()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="projection_8h.html#a377e7436c2aa8b08cf81603ee53bef26">Projection_t</a> * Projection_create </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>id</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>description</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>definition</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Creates a projection directly. </p>
+<p >Like writing: Projection_t* p = <a class="el" href="rave__object_8h.html#a00fd96dfc33dfd5e76f437e2d6f3dba2" title="Creates a new instance of a specified object type, should be implemented within the object itself unt...">RAVE_OBJECT_NEW(&amp;Projection_TYPE)</a>; if (p != NULL) { if (!Projection_init(p, id, description, definition)) { <a class="el" href="rave__object_8h.html#a22cac20a5c563f76f1b4eb2a8d473fca" title="Releases the provided object once (i.e.">RAVE_OBJECT_RELEASE(p)</a>; } } </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">id</td><td>- the id </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">description</td><td>- the description </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">definition</td><td>- the definition </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the created projection </dd></dl>
+
+</div>
+</div>
+<a id="a362f8f6d6da9cfbb64417f0743cf7070" name="a362f8f6d6da9cfbb64417f0743cf7070"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a362f8f6d6da9cfbb64417f0743cf7070">&#9670;&nbsp;</a></span>Projection_createDefaultLonLatProjection()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="projection_8h.html#a377e7436c2aa8b08cf81603ee53bef26">Projection_t</a> * Projection_createDefaultLonLatProjection </td>
+          <td>(</td>
+          <td class="paramtype">void&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Creates a default lon lat projection by using the default lonlat pcs definition. </p>
+<dl class="section return"><dt>Returns</dt><dd>the projection or NULL on failure </dd></dl>
+
+</div>
+</div>
 <a id="afc5fa19663ee6c795223f1fb50e138db" name="afc5fa19663ee6c795223f1fb50e138db"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#afc5fa19663ee6c795223f1fb50e138db">&#9670;&nbsp;</a></span>Projection_fwd()</h2>
 
@@ -158,6 +258,48 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>0 on failure otherwise success </dd></dl>
+
+</div>
+</div>
+<a id="a688490ca7488431690a12851825bea16" name="a688490ca7488431690a12851825bea16"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a688490ca7488431690a12851825bea16">&#9670;&nbsp;</a></span>Projection_getDebugLevel()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int Projection_getDebugLevel </td>
+          <td>(</td>
+          <td class="paramtype">void&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Returns the debug level when using proj API. </p>
+<dl class="section return"><dt>Returns</dt><dd>Value between 0 (NONE) to 3 (FULL) and 4 (TELL?) </dd></dl>
+
+</div>
+</div>
+<a id="abca5fcab46da7bf3d272e130dff8a482" name="abca5fcab46da7bf3d272e130dff8a482"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abca5fcab46da7bf3d272e130dff8a482">&#9670;&nbsp;</a></span>Projection_getDefaultLonLatPcsDef()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char * Projection_getDefaultLonLatPcsDef </td>
+          <td>(</td>
+          <td class="paramtype">void&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Returns the default lonlat pcs definition. </p>
+<dl class="section return"><dt>Returns</dt><dd>the default lonlat pcs definition </dd></dl>
 
 </div>
 </div>
@@ -239,6 +381,27 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the ID for this projection </dd></dl>
+
+</div>
+</div>
+<a id="a3033840dd8980164265f3e15267df33d" name="a3033840dd8980164265f3e15267df33d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3033840dd8980164265f3e15267df33d">&#9670;&nbsp;</a></span>Projection_getProjVersion()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char * Projection_getProjVersion </td>
+          <td>(</td>
+          <td class="paramtype">void&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Returns the currently used Proj version. </p>
+<dl class="section return"><dt>Returns</dt><dd>the proj version </dd></dl>
 
 </div>
 </div>
@@ -340,6 +503,85 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>0 on failure otherwise success </dd></dl>
+
+</div>
+</div>
+<a id="af5c26b3fc86e2ec1d596f1e05ee67b6a" name="af5c26b3fc86e2ec1d596f1e05ee67b6a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af5c26b3fc86e2ec1d596f1e05ee67b6a">&#9670;&nbsp;</a></span>Projection_isLatLong()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int Projection_isLatLong </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="projection_8h.html#a377e7436c2aa8b08cf81603ee53bef26">Projection_t</a> *&#160;</td>
+          <td class="paramname"><em>projection</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Returns if this projection is a latlong or not. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">projection</td><td>- self </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>if this is a latlong projection or not </dd></dl>
+
+</div>
+</div>
+<a id="ada8809026b77c0291c1c4c588eb843f9" name="ada8809026b77c0291c1c4c588eb843f9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ada8809026b77c0291c1c4c588eb843f9">&#9670;&nbsp;</a></span>Projection_setDebugLevel()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void Projection_setDebugLevel </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>debugPj</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Sets the debug level when using proj API. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">debugPj</td><td>- Value between 0 (NONE) to 3 (FULL) and 4 (TELL?) </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a0ff413fa4b534c51c640b60cb63639bf" name="a0ff413fa4b534c51c640b60cb63639bf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0ff413fa4b534c51c640b60cb63639bf">&#9670;&nbsp;</a></span>Projection_setDefaultLonLatPcsDef()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void Projection_setDefaultLonLatPcsDef </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>pcsdef</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Sets the default lon/lat pcs definition to use. </p>
+<p >Default is '+proj=longlat +ellps=WGS84' since PROJ.4 will be different from PROJ &gt;= 6 if specifying +datum=WGS84 as well. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">pcsdef</td><td>- A proj string, not longer than 1023 chars </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
