@@ -55,7 +55,7 @@ INSTALL_HEADERS= polar.h rave_transform.h raveutil.h rave_alloc.h polarvolume.h 
                  cartesian_odim_io.h rave_debug.h polar_odim_io.h \
                  raveobject_hashtable.h detection_range.h odim_io_utilities.h composite_algorithm.h poo_composite_algorithm.h rave_acrr.h \
                  vertical_profile.h vp_odim_io.h dealias.h odc_hac.h  rave_qitotal.h rave_gra.h ctfilter.h  bitmap_generator.h \
-                 proj_wkt_helper.h lazy_nodelist_reader.h lazy_dataset.h
+                 proj_wkt_helper.h lazy_nodelist_reader.h lazy_dataset.h rave_proj.h
 
 ifeq ($(EXPAT_SUPPRESSED), no)
 INSTALL_HEADERS+= arearegistry.h projectionregistry.h rave_simplexml.h 
