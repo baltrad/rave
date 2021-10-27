@@ -69,25 +69,25 @@ static PyObject* _common_gain_offset(PyObject* self, PyObject* args)
   instridex = array_stride_xsize_2d(inrave.data);
 
   pyo = PyString_FromFormat("/image%d/what/gain", set);
-  attrname = PyString_AsString(pyo);
+  attrname = (char*)PyString_AsString(pyo);
   if (!GetDoubleFromINFO(in, attrname, &setgain)) {
     Raise(PyExc_AttributeError,"No /what/gain for this dataset");
     return NULL;
   }
   pyo = PyString_FromFormat("/image%d/what/offset", set);
-  attrname = PyString_AsString(pyo);
+  attrname = (char*)PyString_AsString(pyo);
   if (!GetDoubleFromINFO(in, attrname, &setoffset)) {
     Raise(PyExc_AttributeError,"No /what/offset for this dataset");
     return NULL;
   }
   pyo = PyString_FromFormat("/image%d/what/nodata", set);
-  attrname = PyString_AsString(pyo);
+  attrname = (char*)PyString_AsString(pyo);
   if (!GetDoubleFromINFO(in, attrname, &nodata)) {
     Raise(PyExc_AttributeError,"No /what/nodata for this dataset");
     return NULL;
   }
   pyo = PyString_FromFormat("/image%d/what/undetect", set);
-  attrname = PyString_AsString(pyo);
+  attrname = (char*)PyString_AsString(pyo);
   if (!GetDoubleFromINFO(in, attrname, &undetect)) {
     Raise(PyExc_AttributeError,"No /what/undetect for this dataset");
     return NULL;

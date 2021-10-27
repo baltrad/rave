@@ -45,8 +45,9 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 /*Definition of standard parameters.                                          */
 /******************************************************************************/
 
-#define DEG2RAD    DEG_TO_RAD      /* Degrees to radians. From PROJ.4 */
-#define RAD2DEG    RAD_TO_DEG      /* Radians to degrees. From PROJ.4 */
+#define DEG2RAD    .017453292519943296  /* Degrees to radians. From PROJ.4 */
+#define RAD2DEG    57.295779513082321   /* Radians to degrees. From PROJ.4 */
+
 #define VMAX       48              /* Maximum velocity */
 #define VAF        4               /*   */
 #define NF         40              /*   */

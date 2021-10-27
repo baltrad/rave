@@ -24,21 +24,39 @@ if [ -n "$CFLAGS" ]; then
 fi
 
 if [ -n "$PROJ4ROOT" ]; then
-  CONFARGS="$CONFARGS --with-proj=$PROJ4ROOT/include,$PROJ4ROOT/lib"
+  CONFARGS="$CONFARGS --with-legacy-proj=$PROJ4ROOT/include,$PROJ4ROOT/lib"
 else
   PROJARG=
   if [ -n "$PROJ4INC" ]; then
-    PROJARG="--with-proj=$PROJ4INC"
+    PROJARG="--with-legacy-proj=$PROJ4INC"
   fi
   if [ -n "$PROJ4LIB" ]; then
     if [ -n "$PROJARG" ]; then
       PROJARG="$PROJARG,$PROJ4LIB"
     else
-      PROJARG="--with-proj=,$PROJ4LIB"
+      PROJARG="--with-legacy-proj=,$PROJ4LIB"
     fi
   fi
   CONFARGS="$CONFARGS $PROJARG"
 fi
+
+if [ -n "$PROJROOT" ]; then
+  CONFARGS="$CONFARGS --with-proj=$PROJROOT/include,$PROJROOT/lib"
+else
+  PROJARG=
+  if [ -n "$PROJINC" ]; then
+    PROJARG="--with-proj=$PROJINC"
+  fi
+  if [ -n "$PROJLIB" ]; then
+    if [ -n "$PROJARG" ]; then
+      PROJARG="$PROJARG,$PROJLIB"
+    else
+      PROJARG="--with-proj=,$PROJLIB"
+    fi
+  fi
+  CONFARGS="$CONFARGS $PROJARG"
+fi
+
 
 if [ -n "$EXPATARG" ]; then
   CONFARGS="$CONFARGS --with-expat=$EXPATARG"

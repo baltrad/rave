@@ -31,6 +31,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "raveobject_hashtable.h"
 #include "rave_utilities.h"
 #include <string.h>
+#include <stdio.h>
+#include "projection_pipeline.h"
 
 /**
  * Represents the cartesian product.
@@ -65,6 +67,7 @@ struct _Cartesian_t {
 
   RaveDataType datatype;     /**< the datatype to use */
   Projection_t* projection; /**< the projection */
+  ProjectionPipeline_t* pipeline; /**< Used for transforming between lon/lat and cartesian coordinate. First entry is lonlat, second is projection */
 
   RaveObjectHashTable_t* attrs; /**< attributes */
 
@@ -97,6 +100,8 @@ static int Cartesian_constructor(RaveCoreObject* obj)
   this->prodname = NULL;
   this->datatype = RaveDataType_UCHAR;
   this->projection = NULL;
+  this->pipeline = NULL;
+
   this->currentParameter = NULL;
   this->defaultParameter = RAVE_STRDUP("DBZH");
   this->datetime = RAVE_OBJECT_NEW(&RaveDateTime_TYPE);
@@ -144,6 +149,8 @@ static int Cartesian_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj
   this->source = NULL;
   this->prodname = NULL;
   this->projection = NULL;
+  this->pipeline = NULL;
+
   this->datetime = NULL;
   this->startdatetime = NULL;
   this->enddatetime = NULL;
@@ -174,6 +181,12 @@ static int Cartesian_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj
       goto fail;
     }
   }
+  if (src->pipeline != NULL) {
+    this->pipeline = RAVE_OBJECT_CLONE(src->pipeline);
+    if (this->pipeline == NULL) {
+      goto fail;
+    }
+  }
 
   return 1;
 fail:
@@ -185,6 +198,7 @@ fail:
   RAVE_OBJECT_RELEASE(this->enddatetime);
   RAVE_OBJECT_RELEASE(this->attrs);
   RAVE_OBJECT_RELEASE(this->projection);
+  RAVE_OBJECT_RELEASE(this->pipeline);
   RAVE_OBJECT_RELEASE(this->qualityfields);
   RAVE_OBJECT_RELEASE(this->parameters);
   RAVE_FREE(this->defaultParameter);
@@ -200,6 +214,8 @@ static void Cartesian_destructor(RaveCoreObject* obj)
   Cartesian_t* cartesian = (Cartesian_t*)obj;
   if (cartesian != NULL) {
     RAVE_OBJECT_RELEASE(cartesian->projection);
+    RAVE_OBJECT_RELEASE(cartesian->pipeline);
+
     RAVE_OBJECT_RELEASE(cartesian->datetime);
     RAVE_OBJECT_RELEASE(cartesian->startdatetime);
     RAVE_OBJECT_RELEASE(cartesian->enddatetime);
@@ -213,19 +229,29 @@ static void Cartesian_destructor(RaveCoreObject* obj)
   }
 }
 
-static void CartesianInternal_getLonLatFromXY(Cartesian_t* self, int x, int y, double* lon, double* lat)
+static int CartesianInternal_getLonLatFromXY(Cartesian_t* self, int x, int y, double* lon, double* lat)
 {
   double xpos=self->llX + self->xscale * (double)x;
   double ypos=self->urY - self->yscale * (double)y;
-  Projection_inv(self->projection, xpos, ypos, lon, lat);
+  if (self->pipeline == NULL) {
+    return 0;
+  }
+  return ProjectionPipeline_inv(self->pipeline, xpos, ypos, lon, lat);
 }
 
-static void CartesianInternal_getXYFromLonLat(Cartesian_t* self, double lon, double lat, int* x, int* y)
+static int CartesianInternal_getXYFromLonLat(Cartesian_t* self, double lon, double lat, int* x, int* y)
 {
   double xpos = 0.0, ypos = 0.0;
-  Projection_fwd(self->projection, lon, lat, &xpos, &ypos);
+  int result = 0;
+  if (self->pipeline == NULL) {
+    return 0;
+  }
+  result = ProjectionPipeline_fwd(self->pipeline, lon, lat, &xpos, &ypos);
+
   *x = (int)((xpos - self->llX) / self->xscale);
   *y = (int)((self->urY - ypos)/self->yscale);
+
+  return result;
 }
 
 /*@} End of Private functions */
@@ -441,12 +467,10 @@ int Cartesian_getExtremeLonLatBoundaries(Cartesian_t* self, double* ulLon, doubl
 
   RAVE_ASSERT((self != NULL), "self == NULL");
 
-  if (self->projection == NULL) {
+  if (!CartesianInternal_getLonLatFromXY(self, 0, 0, &ulX, &ulY) ||
+      !CartesianInternal_getLonLatFromXY(self, self->xsize-1, self->ysize-1, &lrX, &lrY)) {
     return 0;
   }
-
-  CartesianInternal_getLonLatFromXY(self, 0, 0, &ulX, &ulY);
-  CartesianInternal_getLonLatFromXY(self, self->xsize-1, self->ysize-1, &lrX, &lrY);
 
   /* First we travel along the upper and lower boundaries */
   for (x = 0; x < self->xsize; x++) {
@@ -621,13 +645,31 @@ const char* Cartesian_getDefaultParameter(Cartesian_t* cartesian)
   return (const char*)cartesian->defaultParameter;
 }
 
-void Cartesian_setProjection(Cartesian_t* cartesian, Projection_t* projection)
+int Cartesian_setProjection(Cartesian_t* cartesian, Projection_t* projection)
 {
+  int result = 0;
+  ProjectionPipeline_t *pipeline = NULL;
   RAVE_ASSERT((cartesian != NULL), "cartesian was NULL");
-  RAVE_OBJECT_RELEASE(cartesian->projection);
+
   if (projection != NULL) {
+    pipeline = ProjectionPipeline_createDefaultLonLatPipeline(projection);
+    if (pipeline == NULL) {
+      RAVE_ERROR0("Could not create default lon/lat pipeline");
+      goto done;
+    }
+
+    RAVE_OBJECT_RELEASE(cartesian->projection);
+    RAVE_OBJECT_RELEASE(cartesian->pipeline);
     cartesian->projection = RAVE_OBJECT_COPY(projection);
+    cartesian->pipeline = RAVE_OBJECT_COPY(pipeline);
+  } else {
+    RAVE_OBJECT_RELEASE(cartesian->projection);
+    RAVE_OBJECT_RELEASE(cartesian->pipeline);
   }
+  result = 1;
+done:
+  RAVE_OBJECT_RELEASE(pipeline);
+  return result;
 }
 
 Projection_t* Cartesian_getProjection(Cartesian_t* cartesian)
@@ -713,7 +755,9 @@ RaveValueType Cartesian_getConvertedValueAtLonLat(Cartesian_t* cartesian, double
   RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
   if (cartesian->currentParameter != NULL) {
     int x = 0, y = 0;
-    CartesianInternal_getXYFromLonLat(cartesian, lon, lat, &x, &y);
+    if (!CartesianInternal_getXYFromLonLat(cartesian, lon, lat, &x, &y)) {
+      return RaveValueType_UNDEFINED;
+    }
     return Cartesian_getConvertedValue(cartesian, x, y, v);
   }
   return RaveValueType_UNDEFINED;

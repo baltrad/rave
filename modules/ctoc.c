@@ -130,9 +130,9 @@ static PyObject* _ctoc_transform(PyObject* self, PyObject* args)
   result = Py_None; // On success, set result to Py_None
 fail:
   if (trafo.inpj)
-    pj_free(trafo.inpj);
+    freeProjection(trafo.inpj);
   if (trafo.outpj)
-    pj_free(trafo.outpj);
+    freeProjection(trafo.outpj);
   return result;
 }
 

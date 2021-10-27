@@ -5,26 +5,49 @@ Radar Analysis and Visualization Environment
 Anders Henja and Daniel Michelson
 Swedish Meteorological and Hydrological Institute
 
-January 2012
+October 2021
 
 Before installing RAVE, a number of modules/software packages have to be
 installed.
 - (Gnu) C and C++ compilers
 - ZLIB (optional)
 - Tcl and Tk 8.5.5
-- Python 2.6 final or 2.7.x, but not 3.x
-- Numeric Python (NumPy) 1.2.1 or higher
-- Python Imaging Library 1.1.6 or higher
-- HDF5 1.8.5-patch1 or higher
-- PycURL 7.19+ (and underlying cURL)
-- PROJ.4 version 4.7.0 or higher
-- python-keyczar
+- Python 3.6 or higher
+- Numeric Python (NumPy) 1.14.2 or higher
+- Pillow 5.0.0 or higher
+- HDF5 1.10.1  or higher
+- PycURL 7.43+ (and underlying cURL)
+- PROJ.4 version 4.7.0 or higher or PROJ >= 5.
+- python3-keyczar
 All of these packages are available on any credible 64-bit Linux distribution,
 and can be managed through package managers like yum, apt-get, and dpkg. 
 
 You also need the following package that you probably won't find 
 bundled with your Linux. 
 - HLHDF/PyHL 0.9+
+
+NOTE! PROJ.4 and PROJ >= 5
+We are currently supporting both legacy PROJ.4 and newer versions of PROJ >= 5 but
+the behaviour has unfortunatelly changed between those two versions. Especially
+when going from PROJ.4 to PROJ >= 6. One unfortunate side effect of this is that
+the proj definitions might need some attention. For example, if specifying the
+following definition: 
+
+inproj: +proj=longlat +ellps=WGS84 +datum=WGS84
+outproj: +proj=stere +ellps=bessel +lat_0=90 +lon_0=14 +lat_ts=60 +datum=WGS84
+
+and running:
+pj_transform(inproj,outproj....) vs proj_trans(pipe, PJ_FWD, ....) 
+
+The result will be different when using PROJ.4 and PROJ.6.
+
+The reason for this is that the +datum=WGS84 in the outproj results in different projections.
+In PROJ.4, the +datum=WGS84 results in +ellps=WGS84 and +towgs84=0,0,0 and then the +ellps=WGS84
+is ignored. In PROJ 6, the result is different and the projection ends up using ellps=WGS84.
+
+Due to this, we are providing a means to build against both variants but with the caveat that
+you as a user has to verify that your projection definitions are correct and if reading a cartesian
+product, verify that the extent is as expected.
 
 We also have optional support for C-based handling 
 of cartographic projection and geographic area registries. 
@@ -41,9 +64,51 @@ The README file contains more details about these packages.
 If these packages have been installed and set up correctly, 
 ensuring that numpy and _pyhl can be found when importing from Python,
 then you can perform the following.
-$ python
+$ python3
 >>> import numpy
 >>> import _pyhl
+
+There are two different ways to build the system. Either by settings environment before
+running make or using the classic configure, make, make install procedure.
+
+In both cases you might have to specify a number of pats so that the build can locate the proper
+dependencies. Typically you will need to specify prefix (which defaults to /usr/local/rave. You will also need to specify
+a hlhdf directory if it can't find it using python. There are a few optional things that might be interesting
+as well. Expat will enable xml configuration file reading for projections and area definitions, Radvol
+also depends on expat. You can specify both bbufr and a netcdf library.
+
+
+* CONFIGURE
+The configure script will create a mk file that will be used when running make. You can find
+information about all options by typing:
+$ ./configure --help
+
+But a typical usage when configuring the system is to specify where it can find the proj-include and lib as
+well as prefix and if expat should be used. It might also be interesting to enable both netcdf and bbufr.
+
+$ ./configure --prefix=/usr/lib/rave \
+              --with-hlhdf=/usr/lib/hlhdf \
+              --with-proj=/usr/lib/proj-6.1 \
+              --with-expat=yes \
+              --with-netcdf=yes
+....
+$ make
+....
+$ make install
+
+The PROJ library can be specified using 3 different options. First, and the preferred one is
+--with-proj=...          This option will try to identify a proper PROJ version. It first atempts to find a PROJ
+                         version >= 6. If that fails, it will try to find a PROJ <= 5 version.
+                         
+--with-legacy-proj=...   This option will force the configuration to try to find a PROJ <= 5 version. If it can't
+                         the configuration step will fail.
+                         
+--with-new-proj=...      This option will force the configuration to try to find a PROJ >= 6 version. If it can't
+                         the configuration step will fail.
+
+* Using makelibs (make)
+In the same way as configure is working, you can specify environment variables instead and just run
+the make file that way. In the background it will be doing the configure step. 
 
 Some minor configuration changes can be made.
 To activate memory debugging of RAVE: CFLAGS=-DRAVE_MEMORY_DEBUG
@@ -59,11 +124,17 @@ $ export NUMPYDIR=/usr/local/lib/python2.6/site-packages/numpy/core/include/nump
 3. HL-HDF installation, e.g. normal place for BALTRAD:
 $ export HLDIR=/opt/baltrad/hlhdf
 
-4. PROJ.4 projections library
+4a. Force usage of PROJ.4 and PROJ 5 projections library
 $ PROJ4ROOT=/my/path
   or specify include and lib directories separately
 $ export PROJ4INC=/my/path/include
 $ export PROJ4LIB=/my/path/lib
+
+4b Automatically detect PROJ version (First PROJ >= 6 and then PROJ <= 6) 
+$ PROJROOT=/my/path
+  or specify include and lib directories separately
+$ export PROJINC=/my/path/include
+$ export PROJLIB=/my/path/lib
 
 5. (OPTIONAL) expat
 The default behaviour is to build without expat support. However, management 

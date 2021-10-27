@@ -25,7 +25,7 @@ Tests the projection module.
 '''
 import unittest
 import os
-import _projection
+import _projection, _rave
 import string
 import numpy
 import math
@@ -141,6 +141,143 @@ class PyProjectionTest(unittest.TestCase):
     xy = cproj.fwd(deg2rad((12.8344, 56.3675)))
     self.assertTrue(xy[0] < 0.0)
 
+  def test_isLatLong_False(self):
+    proj = _projection.new("x", "x", "+proj=stere +ellps=bessel +lat_0=90 +lon_0=14 +lat_ts=60 +datum=WGS84")
+    self.assertFalse(proj.isLatLong())
+    llproj = _projection.new("lonlat", "lonlat", "+proj=longlat +ellps=WGS84 +datum=WGS84")
+
+  def test_isLatLong_True(self):
+    proj = _projection.new("x", "x", "+proj=lonlat +ellps=WGS84 +datum=WGS84")
+    self.assertTrue(proj.isLatLong())
+
+    proj = _projection.new("x", "x", "+proj=latlon +ellps=WGS84 +datum=WGS84")
+    self.assertTrue(proj.isLatLong())
+
+    proj = _projection.new("x", "x", "+proj=latlong +ellps=WGS84 +datum=WGS84")
+    self.assertTrue(proj.isLatLong())
+
+    proj = _projection.new("x", "x", "+proj=longlat +ellps=WGS84 +datum=WGS84")
+    self.assertTrue(proj.isLatLong())
+    
+
+  def test_gnom_with_nadgrids_null(self):
+    proj = _projection.new("x","y", "+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84 +nadgrids=@null");
+
+    xy = proj.fwd(deg2rad((12.8544, 56.3675)))
+    self.assertAlmostEqual(0.0, xy[0], 4)
+    self.assertAlmostEqual(0.0, xy[1], 4)
+
+  def test_gnom_without_nadgrids_null(self):
+    proj = _projection.new("x","y", "+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84");
+    
+    xy = proj.fwd(deg2rad((12.8544, 56.3675)))
+    self.assertAlmostEqual(0.0, xy[0], 4)
+    if _rave.isLegacyProjEnabled():
+      self.assertAlmostEqual(0.0, xy[1], 4)
+    else:
+      self.assertAlmostEqual(-19759.7461, xy[1], 4)
+        
+
+  def test_stere_with_nadgrids_null(self):
+    proj = _projection.new("x","y", "+proj=stere +R=6370997 +lat_0=90 +lon_0=0 +lat_ts=60 +nadgrids=@null");
+
+    xy = proj.fwd(deg2rad((14.0, 60.0)))
+    self.assertAlmostEqual(770641.8355, xy[0], 4)
+    self.assertAlmostEqual(-3090875.5806, xy[1], 4)
+
+  def test_stere_without_nadgrids_null(self):
+    proj = _projection.new("x","y", "+proj=stere +R=6370997 +lat_0=90 +lon_0=0 +lat_ts=60");
+
+    xy = proj.fwd(deg2rad((14.0, 60.0)))
+    self.assertAlmostEqual(770641.8355, xy[0], 4)
+    self.assertAlmostEqual(-3090875.5806, xy[1], 4)
+
+  def test_longlat_with_nadgrids_null(self):
+    proj = _projection.new("x","y", "+proj=latlong +ellps=WGS84 +datum=WGS84 +no_defs +nadgrids=@null");
+
+    xy = proj.fwd(deg2rad((14.0, 60.0)))
+    self.assertAlmostEqual(14.0, rad2deg(xy)[0], 4)
+    self.assertAlmostEqual(60.0, rad2deg(xy)[1], 4)
+
+  def test_longlat_without_nadgrids_null(self):
+    proj = _projection.new("x","y", "+proj=latlong +ellps=WGS84 +datum=WGS84 +no_defs");
+
+    xy = proj.fwd(deg2rad((14.0, 60.0)))
+    self.assertAlmostEqual(14.0, rad2deg(xy)[0], 4)
+    self.assertAlmostEqual(60.0, rad2deg(xy)[1], 4)
+      
+
+  def test_laea_with_nadgrids_null(self):
+    proj = _projection.new("x","y", "+proj=laea +R=6370997 +lat_0=60 +lon_0=15 +no_defs +nadgrids=@null");
+
+    xy = proj.fwd(deg2rad((14.0, 60.0)))
+    self.assertAlmostEqual(-55595.1437, xy[0], 4)
+    self.assertAlmostEqual(420.1708, xy[1], 4)
+
+  def test_laea_without_nadgrids_null(self):
+    proj = _projection.new("x","y", "+proj=laea +R=6370997 +lat_0=60 +lon_0=15 +no_defs");
+
+    xy = proj.fwd(deg2rad((14.0, 60.0)))
+    self.assertAlmostEqual(-55595.1437, xy[0], 4)
+    self.assertAlmostEqual(420.1708, xy[1], 4)
+
+  def test_tmerc_with_nadgrids_null(self):
+    proj = _projection.new("x","y", "+proj=tmerc +ellps=bessel +lon_0=15.808277777778 +x_0=1500000 +nadgrids=@null");
+
+    xy = proj.fwd(deg2rad((14.0, 60.0)))
+    self.assertAlmostEqual(1399118.9316, xy[0], 4)
+    self.assertAlmostEqual(6654754.9388, xy[1], 4)
+
+  def test_tmerc_without_nadgrids_null(self):
+    proj = _projection.new("x","y", "+proj=tmerc +ellps=bessel +lon_0=15.808277777778 +x_0=1500000");
+
+    xy = proj.fwd(deg2rad((14.0, 60.0)))
+    self.assertAlmostEqual(1399118.9316, xy[0], 4)
+    self.assertAlmostEqual(6654754.9388, xy[1], 4)
+
+  def test_merc_with_nadgrids_null(self):
+    proj = _projection.new("x","y", "+proj=merc +lat_ts=0 +lon_0=0 +k=1.0 +R=6378137.0 +no_defs +nadgrids=@null");
+
+    xy = proj.fwd(deg2rad((14.0, 60.0)))
+    self.assertAlmostEqual(1558472.8711, xy[0], 4)
+    self.assertAlmostEqual(8399737.8898, xy[1], 4)
+
+  def test_merc_without_nadgrids_null(self):
+    proj = _projection.new("x","y", "+proj=merc +lat_ts=0 +lon_0=0 +k=1.0 +R=6378137.0 +no_defs");
+
+    xy = proj.fwd(deg2rad((14.0, 60.0)))
+    self.assertAlmostEqual(1558472.8711, xy[0], 4)
+    self.assertAlmostEqual(8399737.8898, xy[1], 4)
+
+  def test_getProjVersion(self):
+    a = _projection.getProjVersion()
+    self.assertTrue(len(a) > 0)
+
+  def test_getDefaultLonLatPcsDef(self):
+    self.assertEqual("+proj=longlat +ellps=WGS84", _projection.getDefaultLonLatPcsDef())
+
+  def test_setDefaultLonLatPcsDef(self):
+    _projection.setDefaultLonLatPcsDef("+proj=longlat +ellps=WGS84 +datum=WGS84")
+    try:
+        self.assertEqual("+proj=longlat +ellps=WGS84 +datum=WGS84", _projection.getDefaultLonLatPcsDef())
+    finally:
+        _projection.setDefaultLonLatPcsDef("+proj=longlat +ellps=WGS84") # Reset to not cause problems with other test cases
+
+  def test_createDefaultLonLatProjection(self):
+    p = _projection.createDefaultLonLatProjection()
+    self.assertEqual("defaultLonLat", p.id)
+    self.assertEqual("default lon/lat projection", p.description)
+    self.assertEqual("+proj=longlat +ellps=WGS84", p.definition)
+
+  def test_proj_x(self):
+    p = _projection.new("x", "y", "+proj=stere +ellps=bessel +lat_0=90 +lon_0=14 +lat_ts=60 +towgs84=0,0,0")
+    lp = _projection.new("x","y", "+proj=longlat +ellps=WGS84 +datum=WGS84");
+    
+    result = rad2deg(p.transform(lp, (23785.9, -3.24566e+06)))
+    self.assertAlmostEqual(14.41989, result[0], 5)
+    self.assertAlmostEqual(59.56076, result[1], 5)
+
+      
 if __name__=="__main__":
   unittest.main()
   

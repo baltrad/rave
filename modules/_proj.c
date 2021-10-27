@@ -24,15 +24,23 @@
  -----------------------------------------------------------------------------*/
 
 #include "pyravecompat.h"
-#include "projects.h"
 
+#ifdef USE_PROJ4_API
+#include <projects.h>
 #ifdef PJ_VERSION
 #define UV projUV
+#endif
+#else
+#include <proj.h>
+#define UV PJ_UV
 #endif
 
 typedef struct {
   PyObject_HEAD
   PJ* pj;
+#ifndef USE_PROJ4_API
+  PJ_CONTEXT* context;
+#endif
 } ProjObject;
 
 static PyTypeObject Proj_Type;
@@ -42,18 +50,33 @@ static PyObject *PyProj_Error;
 /* -------------------------------------------------------------------- */
 /* Constructors                                                         */
 
-static void _proj_error(void)
+static void _proj_error(ProjObject* po)
 {
+#ifdef USE_PROJ4_API
   PyErr_SetString(PyProj_Error, pj_strerrno(pj_errno));
+#else
+  int e;
+  if (po != NULL && po->context != NULL) {
+    e = proj_context_errno(po->context);
+  } else {
+    e = proj_errno(0);
+  }
+  PyErr_SetString(PyProj_Error, proj_errno_string(e));
+#endif
 }
 
 static PyObject*
 _proj_new(PyObject* self, PyObject* args)
 {
-  ProjObject* op;
-  PyObject* in;
+  ProjObject* op = NULL;
+  PyObject* in = NULL;
   int n, i;
+#ifdef USE_PROJ4_API
   char** argv;
+#else
+  char pcsdef[1025];
+  memset(pcsdef, 0, sizeof(pcsdef));
+#endif
 
   if (!PyArg_ParseTuple(args, "O", &in))
     return NULL;
@@ -62,30 +85,52 @@ _proj_new(PyObject* self, PyObject* args)
     PyErr_SetString(PyExc_TypeError, "argument must be sequence");
     return NULL;
   }
-
   op = PyObject_NEW(ProjObject, &Proj_Type);
   if (op == NULL)
     return NULL;
+  ((ProjObject*)op)->pj = NULL;
+#ifndef USE_PROJ4_API
+  ((ProjObject*)op)->context = NULL;
+#endif
 
   n = PyObject_Length(in);
 
   /* fetch argument array */
+#ifdef USE_PROJ4_API
   argv = malloc(n * sizeof(char*));
-  for (i = 0; i < n; i++) {
-    PyObject* op = PySequence_GetItem(in, i);
-    PyObject* str = PyObject_Str(op);
-    argv[i] = PyString_AsString(str);
-    Py_DECREF(str);
+  if (argv == NULL) {
+    PyErr_SetString(PyExc_MemoryError, "Could not allocate memory for arguments");
     Py_DECREF(op);
+    return NULL;
+  }
+#endif
+  for (i = 0; i < n; i++) {
+    PyObject* pso = PySequence_GetItem(in, i);
+    PyObject* str = PyObject_Str(pso);
+#ifdef USE_PROJ4_API
+    argv[i] = PyString_AsString(str);
+#else
+    strcat(pcsdef, PyString_AsString(str));
+    strcat(pcsdef, " ");
+#endif
+    Py_DECREF(str);
+    Py_DECREF(pso);
   }
 
+#ifdef USE_PROJ4_API
   op->pj = pj_init(n, argv);
-
   free(argv);
+#else
+  op->context = proj_context_create();
+  if (op->context != NULL) {
+    proj_log_level(op->context, PJ_LOG_NONE);
+    op->pj = proj_create(op->context, pcsdef);
+  }
+#endif
 
   if (!op->pj) {
     PyObject_Free(op);
-    _proj_error();
+    _proj_error(op);
     return NULL;
   }
 
@@ -94,8 +139,19 @@ _proj_new(PyObject* self, PyObject* args)
 
 static void _proj_dealloc(ProjObject* op)
 {
-  if (op->pj)
+#ifdef USE_PROJ4_API
+  if (op->pj) {
     pj_free(op->pj);
+  }
+#else
+  if (op->pj != NULL) {
+    proj_destroy(op->pj);
+  }
+  if (op->context != NULL) {
+    proj_context_destroy(op->context);
+  }
+#endif
+
   PyObject_Free(op);
 }
 
@@ -110,12 +166,20 @@ _proj_proj(ProjObject* self, PyObject* args)
   int i, n;
   UV uv;
 
+#ifndef USE_PROJ4_API
+  PJ_COORD c, outc;
+#endif
+
   if (PyArg_ParseTuple(args, "(dd)", &uv.u, &uv.v)) {
-
     /* tuple */
+#ifdef USE_PROJ4_API
     uv = pj_fwd(uv, self->pj);
+#else
+    c.uv = uv;
+    outc = proj_trans(self->pj, PJ_FWD, c);
+    uv = outc.uv;
+#endif
     return Py_BuildValue("dd", uv.u, uv.v);
-
   }
 
   PyErr_Clear();
@@ -143,7 +207,13 @@ _proj_proj(ProjObject* self, PyObject* args)
     }
     Py_DECREF(op);
 
+#ifdef USE_PROJ4_API
     uv = pj_fwd(uv, self->pj);
+#else
+    c.uv = uv;
+    outc = proj_trans(self->pj, PJ_FWD, c);
+    uv = outc.uv;
+#endif
 
     /* store result */
     op = Py_BuildValue("dd", uv.u, uv.v);
@@ -166,11 +236,18 @@ _proj_invproj(ProjObject* self, PyObject* args)
   PyObject* out;
   int i, n;
   UV uv;
+#ifndef USE_PROJ4_API
+  PJ_COORD c, outc;
+#endif
 
   if (PyArg_ParseTuple(args, "(dd)", &uv.u, &uv.v)) {
-
-    /* tuple */
+#ifdef USE_PROJ4_API
     uv = pj_inv(uv, self->pj);
+#else
+    c.uv = uv;
+    outc = proj_trans(self->pj, PJ_INV, c);
+    uv = outc.uv;
+#endif
     return Py_BuildValue("dd", uv.u, uv.v);
 
   }
@@ -200,7 +277,13 @@ _proj_invproj(ProjObject* self, PyObject* args)
     }
     Py_DECREF(op);
 
+#ifdef USE_PROJ4_API
     uv = pj_inv(uv, self->pj);
+#else
+    c.uv = uv;
+    outc = proj_trans(self->pj, PJ_INV, c);
+    uv = outc.uv;
+#endif
 
     /* store result */
     op = Py_BuildValue("dd", uv.u, uv.v);
@@ -223,25 +306,6 @@ static struct PyMethodDef _proj_methods[] =
 { "invproj", (PyCFunction) _proj_invproj, 1 },
 { NULL, NULL } /* sentinel */
 };
-
-#ifdef KALLE
-static PyObject*
-_proj_getattr(ProjObject* s, char *name)
-{
-  PyObject* res;
-
-  res = Py_FindMethod(_proj_methods, (PyObject*) s, name);
-  if (res)
-    return res;
-
-  PyErr_Clear();
-
-  /* no attributes */
-
-  PyErr_SetString(PyExc_AttributeError, name);
-  return NULL;
-}
-#endif
 
 static PyObject* _proj_getattro(ProjObject* s, PyObject* name)
 {
@@ -302,7 +366,11 @@ _proj_dmstor(PyObject* self, PyObject* args)
   if (!PyArg_ParseTuple(args, "s", &s))
     return NULL;
 
+#ifdef USE_PROJ4_API
   return Py_BuildValue("d", dmstor(s, NULL));
+#else
+  return Py_BuildValue("d", proj_dmstor(s, NULL));
+#endif
 }
 
 /* -------------------------------------------------------------------- */

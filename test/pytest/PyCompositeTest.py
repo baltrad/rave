@@ -27,13 +27,14 @@ import unittest
 import _pycomposite
 import _rave
 import _area
-import _projection
+import _projection, _projectionpipeline
 import _raveio
 import _ravefield
 import _polarscan, _polarvolume, _polarscanparam, _poocompositealgorithm
 import numpy
 import math
 import string
+import sys
 from numpy import cos, sin
 
 EVEN_RANGE_DUMMY_VALUE = 10
@@ -298,7 +299,7 @@ class PyCompositeTest(unittest.TestCase):
     self.assertEqual(1, obj.getParameterCount())
     obj.addParameter("MMH", 1.0, 2.0, -30.0)
     self.assertEqual(2, obj.getParameterCount())
- 
+
   def test_rix_nearest(self):
     generator = _pycomposite.new()
       
@@ -365,7 +366,7 @@ class PyCompositeTest(unittest.TestCase):
     a.xscale = 2000.0
     a.yscale = 2000.0
     a.extent = (-738816.513333,-3995515.596160,955183.48666699999,-1787515.59616)
-    a.projection = _projection.new("x", "y", "+proj=stere +ellps=bessel +lat_0=90 +lon_0=14 +lat_ts=60 +datum=WGS84")
+    a.projection = _projection.new("x", "y", "+proj=stere +ellps=bessel +lat_0=90 +lon_0=14 +lat_ts=60 +towgs84=0,0,0")
       
     for fname in self.SWEDISH_VOLUMES:
       rio = _raveio.open(fname)
@@ -440,7 +441,13 @@ class PyCompositeTest(unittest.TestCase):
     self.assertEqual(29, dbzh_param.getData()[244][552], "Wrong value at position in composite.")
     self.assertEqual(0, dbzh_param.getData()[862][608], "Wrong value at position in composite.")
     self.assertEqual(25, dbzh_param.getData()[850][597], "Wrong value at position in composite.")
-       
+
+  def deg2rad(self, xy):
+    return (xy[0]*math.pi/180, xy[1]*math.pi/180.0)
+  
+  def rad2deg(self, xy):
+    return (xy[0]*180.0/math.pi, xy[1]*180.0/math.pi)
+  
   def generate_sehem_test_comp(self, dummy_data_func, value_gain, height, interpolation_method):
     generator = _pycomposite.new()
     a = _area.new()
@@ -450,8 +457,8 @@ class PyCompositeTest(unittest.TestCase):
     a.xscale = 500.0
     a.yscale = 500.0
     a.extent = (23785.852938, -3734664.464654, 514285.852938, -3245664.464654) # sehem projection extent
-    a.projection = _projection.new("x", "y", "+proj=stere +ellps=bessel +lat_0=90 +lon_0=14 +lat_ts=60 +datum=WGS84")
-     
+    a.projection = _projection.new("x", "y", "+proj=stere +ellps=bessel +lat_0=90 +lon_0=14 +lat_ts=60 +towgs84=0,0,0")
+    
     fname = self.DUMMY_DATA_FIXTURES[0]
     pvol_object = _raveio.open(fname).object
     fill_pvol_with_dummy_data(pvol_object, dummy_data_func, ["DBZH"], value_gain)
@@ -476,7 +483,8 @@ class PyCompositeTest(unittest.TestCase):
     self.assertEqual(59, distance_field.getData()[494][250], "Wrong quality value at position in composite.")
     self.assertEqual(34, distance_field.getData()[494][350], "Wrong quality value at position in composite.")
     self.assertEqual(52, distance_field.getData()[494][700], "Wrong quality value at position in composite.")
-     
+  
+
   def test_linear_height_interpolation_cappi(self):
     height = 2600
     height_gain = 100.0
@@ -490,7 +498,7 @@ class PyCompositeTest(unittest.TestCase):
       for y in range(340, 650):
         height_diff = abs(data[y, x] - (height/height_gain))
         self.assertTrue(height_diff <= allowed_height_diff)
-         
+    
     ropo_field = dbzh_param.getQualityFieldByHowTask("fi.fmi.ropo.detector.classification")
     self.assertEqual(243, ropo_field.getData()[398][490], "Wrong quality value at position in composite.")
     self.assertEqual(243, ropo_field.getData()[423][549], "Wrong quality value at position in composite.")
@@ -510,7 +518,7 @@ class PyCompositeTest(unittest.TestCase):
     self.assertEqual(252, beamb_field.getData()[194][490], "Wrong quality value at position in composite.")
      
     self.validate_sehem_distance_field(dbzh_param)
-         
+
   def test_linear_range_interpolation_cappi(self):
     height = 2600
     range_gain = 1.0
@@ -620,7 +628,7 @@ class PyCompositeTest(unittest.TestCase):
     self.assertEqual(252, beamb_field.getData()[194][490], "Wrong quality value at position in composite.")
      
     self.validate_sehem_distance_field(dbzh_param)
-     
+
   def test_linear_rangeandazimuth_interpolation_cappi(self):
     height = 2600
     gain = 1.0
@@ -671,7 +679,7 @@ class PyCompositeTest(unittest.TestCase):
     self.assertEqual(252, beamb_field.getData()[194][490], "Wrong quality value at position in composite.")
      
     self.validate_sehem_distance_field(dbzh_param)
-     
+
   def test_linear_3d_interpolation_cappi(self):
     gain = 20.0
     height = 2000.0
@@ -733,7 +741,7 @@ class PyCompositeTest(unittest.TestCase):
     self.assertEqual(0, beamb_field.getData()[194][490], "Wrong quality value at position in composite.")
      
     self.validate_sehem_distance_field(dbzh_param)
-     
+
   def test_quad_height_interpolation_cappi(self):
     height = 2600
     height_gain = 100.0
@@ -1209,7 +1217,7 @@ class PyCompositeTest(unittest.TestCase):
     ios = _raveio.new()
     ios.object = result
     ios.save("swecomposite_gmap.h5")
-  
+
   def test_nearest_ppi(self):
     generator = _pycomposite.new()
       

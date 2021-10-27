@@ -174,9 +174,9 @@ static PyObject* _read_h5rad_func(PyObject* self, PyObject* args)
     }
   }
   if (trafo.inpj)
-    pj_free(trafo.inpj);
+    freeProjection(trafo.inpj);
   if (trafo.outpj)
-    pj_free(trafo.outpj);
+    freeProjection(trafo.outpj);
   PyErr_Clear();
   Py_INCREF(Py_None);
   return Py_None;
@@ -280,18 +280,19 @@ static PyObject* _test_h5rad_func(PyObject* self, PyObject* args)
   }
 
   if (trafo.inpj)
-    pj_free(trafo.inpj);
+    freeProjection(trafo.inpj);
   if (trafo.outpj)
-    pj_free(trafo.outpj);
+    freeProjection(trafo.outpj);
   PyErr_Clear();
   Py_INCREF(Py_None);
   return Py_None;
-  fail: free_rave_object(&inrave);
+fail:
+  free_rave_object(&inrave);
   free_rave_object(&outrave);
   if (trafo.inpj)
-    pj_free(trafo.inpj);
+    freeProjection(trafo.inpj);
   if (trafo.outpj)
-    pj_free(trafo.outpj);
+    freeProjection(trafo.outpj);
   return NULL;
 }
 

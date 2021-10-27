@@ -9,6 +9,9 @@
 #include "limits.h"
 #include "float.h"
 #include "rave_alloc.h"
+#include <math.h>
+#include <stdio.h>
+#include "projection.h"
 
 /*@{ Private functions */
 /**
@@ -272,6 +275,45 @@ void free_tw(TransformWeight* v)
   }
 }
 
+static int internal_transform_proj(PJ* p1, PJ* p2, double* x, double* y)
+{
+#ifdef USE_PROJ4_API
+  double tx=*x;
+  double ty=*y;
+  pj_transform(p1, p2, 1, 1, &tx, &ty, NULL);
+  *x=tx;
+  *y=ty;
+  return 1;
+#else
+  PJ* pj = NULL;
+  PJ_CONTEXT* context = NULL;
+  PJ_COORD inc,outc;
+
+  inc.uv.u = *x;
+  inc.uv.v = *y;
+
+  context = proj_context_create();
+  if (context == NULL) {
+    fprintf(stderr, "Failed to create context");
+    return 0;
+  }
+  proj_log_level(context, Projection_getDebugLevel());
+  pj = proj_create_crs_to_crs(context, proj_pj_info(p1).definition, proj_pj_info(p2).definition, NULL);
+  if (pj == NULL) {
+    fprintf(stderr, "Failed to create crs pj");
+    proj_context_destroy(context);
+    return 0;
+  }
+
+  outc = proj_trans(pj, PJ_FWD, inc);
+  *x = outc.uv.u;
+  *y = outc.uv.v;
+  proj_destroy(pj);
+  proj_context_destroy(context);
+  return 1;
+#endif
+}
+
 TransformWeight* get_nearest_weights_2d(
   int x, int y, UV here_s, RaveTransform2D* tw)
 {
@@ -283,7 +325,9 @@ TransformWeight* get_nearest_weights_2d(
   double ty = here_s.v;
 
   /* transform between projections */
-  pj_transform(tw->outpj, tw->inpj, 1, 1, &tx, &ty, NULL);
+  if (!internal_transform_proj(tw->outpj, tw->inpj, &tx, &ty)) {
+    return NULL;
+  }
 
   /* trunc to nearest pixel */
   gx = mytrunc((tx - tw->inUL.u) / tw->inxscale);
@@ -322,7 +366,9 @@ TransformWeight* get_bilinear_weights_2d(
   retw->noecho = tw->noecho;
 
   /* transform between projections */
-  pj_transform(tw->outpj, tw->inpj, 1, 1, &cx, &cy, NULL);
+  if (!internal_transform_proj(tw->outpj, tw->inpj, &cx, &cy)) {
+    return NULL;
+  }
 
   /* trunc to nearest pixel */
   exactx = (cx - tw->inUL.u) / tw->inxscale;
@@ -388,7 +434,9 @@ TransformWeight* get_cubic_weights_2d(int x, int y, UV here_s,
   retw->noecho = tw->noecho;
 
   /* transform between projections */
-  pj_transform(tw->outpj, tw->inpj, 1, 1, &cx, &cy, NULL);
+  if (!internal_transform_proj(tw->outpj, tw->inpj, &cx, &cy)) {
+    return NULL;
+  }
 
   /* trunc to nearest pixel */
   exactx = (cx - tw->inUL.u) / tw->inxscale;
@@ -440,7 +488,7 @@ TransformWeight* get_cressman_weights_2d(int x, int y, UV here_s,
   RaveTransform2D *tw)
 {
   int ox, oy, offx, offy, minx, miny, maxx, maxy, nvals;
-  UV there_s, near_s, near, corner_s, cressmin, cressmax;
+  UV there_s, near_s, corner_s, cressmin, cressmax;
   int idx = 0;
   double item;
   TransformWeight* retw;
@@ -448,7 +496,9 @@ TransformWeight* get_cressman_weights_2d(int x, int y, UV here_s,
   there_s.v = here_s.v;
 
   /* transform between projections */
-  pj_transform(tw->outpj, tw->inpj, 1, 1, &there_s.u, &there_s.v, NULL);
+  if (!internal_transform_proj(tw->outpj, tw->inpj, &there_s.u, &there_s.v)) {
+    return NULL;
+  }
 
   /* Now identify "worst cases" for the area: */
   cressmin = cressmax = there_s;
@@ -456,8 +506,20 @@ TransformWeight* get_cressman_weights_2d(int x, int y, UV here_s,
     for (offy = -1; offy <= 1; offy += 2) {
       near_s.u = here_s.u + offx * tw->R;
       near_s.v = here_s.v + offy * tw->R;
-      near = pj_inv(near_s, tw->outpj);
-      corner_s = pj_fwd(near, tw->inpj);
+#ifdef USE_PROJ4_API
+      {
+        UV near = pj_inv(near_s, tw->outpj);
+        corner_s = pj_fwd(near, tw->inpj);
+      }
+#else
+      {
+        PJ_COORD inpc, outpc, outcorner;
+        inpc.uv = near_s;
+        outpc = proj_trans(tw->outpj, PJ_INV, inpc);
+        outcorner = proj_trans(tw->inpj, PJ_FWD, outpc);
+        corner_s = outcorner.uv;
+      }
+#endif
       if (corner_s.u < cressmin.u)
         cressmin.u = corner_s.u;
       if (corner_s.v < cressmin.v)

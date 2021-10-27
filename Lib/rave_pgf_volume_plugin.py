@@ -48,8 +48,7 @@ try:
   import rave_bdb
   ravebdb = rave_bdb.rave_bdb()
 except:
-  import traceback
-  traceback.print_exc()
+  pass
 
 ## Creates a dictionary from a rave argument list
 #@param arglist the argument list

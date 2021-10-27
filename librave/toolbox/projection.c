@@ -26,6 +26,28 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_debug.h"
 #include "rave_alloc.h"
 #include <string.h>
+#include <stdio.h>
+#include <math.h>
+
+#ifdef USE_PROJ4_API
+#include <projects.h>
+#ifdef PJ_VERSION
+#define UV projUV
+#endif
+#else
+#include <proj.h>
+#define UV PJ_UV
+#endif
+
+/**
+ * The debug level to use when using PROJ
+ */
+static int proj_debug_level = 0;
+
+/**
+ * The default pcsdef to be used when creating default lon lat projection
+ */
+static char lon_lat_pcsdef[1024];
 
 /**
  * Represents one projection
@@ -37,9 +59,21 @@ struct _Projection_t {
   char* description;   /**< the description */
   char* definition;    /**< the proj.4 definition string */
   PJ* pj;              /**< the proj.4 instance */
+#ifndef USE_PROJ4_API
+  PJ_CONTEXT* context; /**< the proj.4 context */
+#endif
 };
 
 /*@{ Private functions */
+static void ProjectionInternal_freePJ(PJ* pj)
+{
+#ifdef USE_PROJ4_API
+  pj_free(pj);
+#else
+  proj_destroy(pj);
+#endif
+}
+
 static int Projection_constructor(RaveCoreObject* obj)
 {
   Projection_t* projection = (Projection_t*)obj;
@@ -48,6 +82,9 @@ static int Projection_constructor(RaveCoreObject* obj)
   projection->description = NULL;
   projection->definition = NULL;
   projection->pj = NULL;
+#ifndef USE_PROJ4_API
+  projection->context = NULL;
+#endif
   return 1;
 }
 
@@ -65,6 +102,9 @@ static int Projection_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcob
   this->description = NULL;
   this->definition = NULL;
   this->pj = NULL;
+#ifndef USE_PROJ4_API
+  this->context = NULL;
+#endif
 
   result = Projection_init(this, src->id, src->description, src->definition);
 
@@ -83,13 +123,61 @@ static void Projection_destructor(RaveCoreObject* obj)
     RAVE_FREE(projection->description);
     RAVE_FREE(projection->definition);
     if (projection->pj != NULL) {
-      pj_free(projection->pj);
+      ProjectionInternal_freePJ(projection->pj);
     }
+#ifndef USE_PROJ4_API
+    if (projection->context != NULL) {
+      proj_context_destroy(projection->context);
+    }
+#endif
   }
 }
 /*@} End of Private functions */
 
 /*@{ Interface functions */
+void Projection_setDebugLevel(int debugPj) {
+  proj_debug_level = debugPj;
+}
+
+int Projection_getDebugLevel(void) {
+  return proj_debug_level;
+}
+
+const char* Projection_getProjVersion(void)
+{
+  static char result[100];
+  if (strcmp(result, "") != 0) {
+    return (const char*)result;
+  }
+#ifdef USE_PROJ4_API
+#ifdef PJ_VERSION
+strcpy(result, pj_release);
+#else
+strcpy(result, "unknown");
+#endif
+#else
+strcpy(result, pj_release);
+#endif
+  return (const char*)result;
+}
+
+
+void Projection_setDefaultLonLatPcsDef(const char* pcsdef)
+{
+  if (pcsdef != NULL && strlen(pcsdef) < 1023) {
+    strcpy(lon_lat_pcsdef, pcsdef);
+  }
+}
+
+const char* Projection_getDefaultLonLatPcsDef(void)
+{
+  if (strcmp(lon_lat_pcsdef, "")==0) {
+    strcpy(lon_lat_pcsdef, "+proj=longlat +ellps=WGS84"); /* Do not specify +datum=WGS84, then PROJ.4 will not work properly in pj_transform */
+  }
+  return (const char*)lon_lat_pcsdef;
+}
+
+
 int Projection_init(Projection_t* projection, const char* id, const char* description, const char* definition)
 {
   int result = 0;
@@ -99,10 +187,21 @@ int Projection_init(Projection_t* projection, const char* id, const char* descri
     RAVE_ERROR0("One of id, description or definition was NULL when initializing");
     return 0;
   }
+#ifdef USE_PROJ4_API
+  projection->pj = pj_init_plus(definition);
+#else
+  projection->context = proj_context_create();
+  if (projection->context == NULL) {
+    RAVE_ERROR0("Could not create projection context");
+    return 0;
+  }
+  proj_log_level(projection->context, Projection_getDebugLevel());
+  projection->pj = proj_create(projection->context, definition);
+#endif
   projection->id = RAVE_STRDUP(id);
   projection->description = RAVE_STRDUP(description);
   projection->definition = RAVE_STRDUP(definition);
-  projection->pj = pj_init_plus(definition);
+
   if (projection->id == NULL || projection->description == NULL ||
       projection->definition == NULL || projection->pj == NULL) {
     if (projection->id == NULL) {
@@ -121,11 +220,35 @@ int Projection_init(Projection_t* projection, const char* id, const char* descri
     RAVE_FREE(projection->description);
     RAVE_FREE(projection->definition);
     if (projection->pj != NULL) {
-      pj_free(projection->pj);
+      ProjectionInternal_freePJ(projection->pj);
     }
   } else {
     result = 1;
     projection->initialized = 1;
+  }
+  return result;
+}
+
+Projection_t* Projection_create(const char* id, const char* description, const char* definition)
+{
+  Projection_t* result = NULL;
+  result = RAVE_OBJECT_NEW(&Projection_TYPE);
+  if (result != NULL) {
+    if (!Projection_init(result, id, description, definition)) {
+      RAVE_OBJECT_RELEASE(result);
+    }
+  }
+  return result;
+}
+
+Projection_t* Projection_createDefaultLonLatProjection(void)
+{
+  Projection_t* result = NULL;
+  result = RAVE_OBJECT_NEW(&Projection_TYPE);
+  if (result != NULL) {
+    if (!Projection_init(result, "defaultLonLat", "default lon/lat projection", Projection_getDefaultLonLatPcsDef())) {
+      RAVE_OBJECT_RELEASE(result);
+    }
   }
   return result;
 }
@@ -148,19 +271,124 @@ const char* Projection_getDefinition(Projection_t* projection)
   return (const char*)projection->definition;
 }
 
+int Projection_isLatLong(Projection_t* projection)
+{
+  RAVE_ASSERT((projection != NULL), "projection was NULL");
+#ifdef USE_PROJ4_API
+  return pj_is_latlong(projection->pj);
+#else
+  PJ_PROJ_INFO info = proj_pj_info(projection->pj);
+  if (info.id != NULL) {
+    if (strcmp("lonlat", info.id) == 0 ||
+        strcmp("latlon", info.id) == 0 ||
+        strcmp("latlong", info.id) == 0 ||
+        strcmp("longlat", info.id) == 0) {
+      return 1;
+    }
+  }
+  return 0;
+#endif
+}
+
+#ifndef USE_PROJ4_API
+static Projection_t* ProjectionInternal_createCrsPipeline(Projection_t* projection, Projection_t* tgt)
+{
+  Projection_t *proj = NULL, *result = NULL;
+  PJ_CONTEXT* context = NULL;
+  PJ* pj = NULL;
+  proj = RAVE_OBJECT_NEW(&Projection_TYPE);
+  if (proj == NULL) {
+    goto done;
+  }
+  context = proj_context_create();
+  if (context == NULL) {
+    RAVE_ERROR0("Failed to create proj context");
+    goto done;
+  }
+  proj_log_level(context, Projection_getDebugLevel());
+  pj = proj_create_crs_to_crs(context, projection->definition, tgt->definition, NULL);
+  if (pj == NULL) {
+    RAVE_ERROR0("Failed to create crs to crs");
+    goto done;
+  }
+
+  /*
+  PJ_PROJ_INFO info = proj_pj_info(pj);
+  fprintf(stderr, "Id: %s\n", info.id);
+  fprintf(stderr, "Description: %s\n", info.description);
+  fprintf(stderr, "Definition: %s\n", info.definition);
+  */
+
+  proj->context = context;
+  proj->pj = pj;
+  proj->initialized = 1;
+  context = NULL;
+  pj = NULL;
+  result = RAVE_OBJECT_COPY(proj);
+done:
+  if (context != NULL) {
+    proj_context_destroy(context);
+  }
+  if (pj != NULL)  {
+    ProjectionInternal_freePJ(pj);
+  }
+  RAVE_OBJECT_RELEASE(proj);
+  return result;
+}
+#endif
+
 int Projection_transform(Projection_t* projection, Projection_t* tgt, double* x, double* y, double* z)
 {
-  int pjv = 0;
   int result = 1;
+
   RAVE_ASSERT((projection != NULL), "projection was NULL");
   RAVE_ASSERT((tgt != NULL), "target projection was NULL");
   RAVE_ASSERT((x != NULL), "x was NULL");
   RAVE_ASSERT((y != NULL), "y was NULL");
-  if ((pjv = pj_transform(projection->pj, tgt->pj, 1, 1, x, y, z)) != 0)
+#ifdef USE_PROJ4_API
   {
-    RAVE_ERROR1("Transform failed with pj_errno: %d\n", pjv);
-    result = 0;
+    int pjv = 0;
+    if ((pjv = pj_transform(projection->pj, tgt->pj, 1, 1, x, y, z)) != 0)
+    {
+      RAVE_ERROR1("Transform failed with pj_errno: %d\n", pjv);
+      result = 0;
+    }
   }
+#else
+  {
+    Projection_t* crsPipe = ProjectionInternal_createCrsPipeline(projection, tgt);
+    if (crsPipe == NULL) {
+      RAVE_ERROR0("Failed to create crs to crs\n");
+      result = 0;
+    } else {
+      PJ_COORD c, outc;
+      c.xyz.x = *x;
+      c.xyz.y = *y;
+      c.xyz.z = 0.0;
+      c.lpzt.t = HUGE_VAL;
+      if (z != NULL) {
+        c.xyz.z = *z;
+      }
+      if (Projection_isLatLong(projection)) {
+        c.xyz.x = c.xyz.x * 180.0 / M_PI;
+        c.xyz.y = c.xyz.y * 180.0 / M_PI;
+        c.xyz.z = c.xyz.z * 180.0 / M_PI;
+      }
+      outc = proj_trans(crsPipe->pj, PJ_FWD, c);
+      if (Projection_isLatLong(tgt)) {
+        outc.xyz.x = outc.xyz.x * M_PI / 180.0;
+        outc.xyz.y = outc.xyz.y * M_PI / 180.0;
+        outc.xyz.z = outc.xyz.z * M_PI / 180.0;
+      }
+      *x = outc.xyz.x;
+      *y = outc.xyz.y;
+      if (z != NULL) {
+        *z = outc.xyz.z;
+      }
+    }
+    RAVE_OBJECT_RELEASE(crsPipe);
+  }
+#endif
 
   return result;
 }
@@ -168,7 +396,6 @@ int Projection_transform(Projection_t* projection, Projection_t* tgt, double* x,
 int Projection_transformx(Projection_t* projection, Projection_t* tgt,
   double x, double y, double z, double* ox, double* oy, double* oz)
 {
-  int pjv = 0;
   int result = 1;
   double vx = 0.0, vy = 0.0, vz = 0.0;
   RAVE_ASSERT((projection != NULL), "projection == NULL");
@@ -179,17 +406,47 @@ int Projection_transformx(Projection_t* projection, Projection_t* tgt,
   vx = x;
   vy = y;
   vz = z;
+#ifdef USE_PROJ4_API
   if (oz == NULL) {
+    int pjv = 0;
     if ((pjv = pj_transform(projection->pj, tgt->pj, 1, 1, &vx, &vy, NULL)) != 0) {
       RAVE_ERROR1("Transform failed with pj_errno: %d\n", pjv);
       result = 0;
     }
   } else {
+    int pjv = 0;
     if ((pjv = pj_transform(projection->pj, tgt->pj, 1, 1, &vx, &vy, &vz)) != 0) {
       RAVE_ERROR1("Transform failed with pj_errno: %d\n", pjv);
       result = 0;
     }
   }
+#else
+  Projection_t* crsPipe = ProjectionInternal_createCrsPipeline(projection, tgt);
+  if (crsPipe == NULL) {
+    RAVE_ERROR0("Failed to create crs to crs\n");
+    result = 0;
+  } else {
+    PJ_COORD c, outc;
+    c.xyz.x = vx;
+    c.xyz.y = vy;
+    c.xyz.z = vz;
+    if (Projection_isLatLong(projection)) {
+      c.xyz.x = c.xyz.x * 180.0 / M_PI;
+      c.xyz.y = c.xyz.y * 180.0 / M_PI;
+      c.xyz.z = c.xyz.z * 180.0 / M_PI;
+    }
+    outc = proj_trans(crsPipe->pj, PJ_FWD, c);
+    if (Projection_isLatLong(tgt)) {
+      outc.xyz.x = outc.xyz.x * M_PI / 180.0;
+      outc.xyz.y = outc.xyz.y * M_PI / 180.0;
+      outc.xyz.z = outc.xyz.z * M_PI / 180.0;
+    }
+    vx = outc.xyz.x;
+    vy = outc.xyz.y;
+    vz = outc.xyz.z;
+  }
+  RAVE_OBJECT_RELEASE(crsPipe);
+#endif
   if (result == 1) {
     *ox = vx;
     *oy = vy;
@@ -203,30 +460,58 @@ int Projection_transformx(Projection_t* projection, Projection_t* tgt,
 int Projection_inv(Projection_t* projection, double x, double y, double* lon, double* lat)
 {
   int result = 1;
-  projUV in,out;
+
   RAVE_ASSERT((projection != NULL), "projection was NULL");
   RAVE_ASSERT((lon != NULL), "lon was NULL");
   RAVE_ASSERT((lat != NULL), "lat was NULL");
-  in.u = x;
-  in.v = y;
-  out = pj_inv(in, projection->pj);
-  *lon = out.u;
-  *lat = out.v;
+
+#ifdef USE_PROJ4_API
+  {
+    UV in,out;
+    in.u = x;
+    in.v = y;
+    out = pj_inv(in, projection->pj);
+    *lon = out.u;
+    *lat = out.v;
+  }
+#else
+  {
+    PJ_COORD in,out;
+    in.uv.u = x;
+    in.uv.v = y;
+    in.v[2]=0.0;
+    out = proj_trans(projection->pj, PJ_INV, in);
+    *lon = out.uv.u;
+    *lat = out.uv.v;
+  }
+#endif
   return result;
 }
 
 int Projection_fwd(Projection_t* projection, double lon, double lat, double* x, double* y)
 {
   int result = 1;
-  projUV in,out;
   RAVE_ASSERT((projection != NULL), "projection was NULL");
   RAVE_ASSERT((x != NULL), "x was NULL");
   RAVE_ASSERT((y != NULL), "y was NULL");
-  in.u = lon;
-  in.v = lat;
-  out = pj_fwd(in, projection->pj);
-  *x = out.u;
-  *y = out.v;
+
+#ifdef USE_PROJ4_API
+  {
+    UV in,out;
+    in.u = lon;
+    in.v = lat;
+    out = pj_fwd(in, projection->pj);
+    *x = out.u;
+    *y = out.v;
+  }
+#else
+  PJ_COORD in,out;
+  in.uv.u = lon;
+  in.uv.v = lat;
+  out = proj_trans(projection->pj, PJ_FWD, in);
+  *x = out.uv.u;
+  *y = out.uv.v;
+#endif
   return result;
 }
 

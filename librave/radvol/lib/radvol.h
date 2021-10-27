@@ -30,6 +30,7 @@ along with Radvol-QC.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_simplexml.h"
 #include "polarvolume.h"
 #include "polarscan.h"
+#include <math.h>
 
 /** the best QI value */
 #define QI_GOOD 1.0

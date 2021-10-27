@@ -32,7 +32,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_utilities.h"
 #include <string.h>
 #include <float.h>
-
+#include <math.h>
 /**
  * This is the default parameter value that should be used when working
  * with scans.
@@ -76,7 +76,7 @@ static int PolarVolume_constructor(RaveCoreObject* obj)
   // Always initialize to default projection for lon/lat calculations
   this->projection = RAVE_OBJECT_NEW(&Projection_TYPE);
   if (this->projection != NULL) {
-    if(!Projection_init(this->projection, "lonlat", "lonlat", "+proj=latlong +ellps=WGS84 +datum=WGS84")) {
+    if(!Projection_init(this->projection, "lonlat", "lonlat", "+proj=latlong +ellps=WGS84 +towgs84=0,0,0")) {
       goto error;
     }
   }

@@ -278,7 +278,7 @@ static PyObject* _pycomposite_applyRadarIndexMapping(PyComposite* self, PyObject
 
   len = PyList_Size(keys);
   for (i = 0; i < len; i++) {
-    char* key;
+    const char* key;
     ko = PyList_GetItem(keys, i); /* borrowed */
     key = PyString_AsString(ko);
     if (key != NULL) {

@@ -1000,6 +1000,7 @@ static PyObject* _pycartesian_getParameterNames(PyCartesian* self, PyObject* arg
   PyObject* result = NULL;
   int nparams = 0;
   int i = 0;
+
   paramnames = Cartesian_getParameterNames(self->cartesian);
   if (paramnames == NULL) {
     raiseException_returnNULL(PyExc_MemoryError, "Could not get names");

@@ -643,6 +643,7 @@ EXPAT_INCLUDE_DIR
 NUMPY_INCLUDE_DIR
 PROJ_LIB_DIR
 PROJ_INCLUDE_DIR
+USE_PROJ4_API
 GOT_ITRUNC
 PYDEFS
 PYCCSHARED
@@ -655,6 +656,7 @@ PY_PYTHON_BIN
 PY_SITEPACK
 PY_INCLUDES
 PYCC
+PROJ_VERSION
 EGREP
 GREP
 AR
@@ -714,6 +716,8 @@ with_py3bin
 with_py3bin_config
 with_python_makefile
 with_proj
+with_legacy_proj
+with_new_proj
 with_expat
 with_numpy
 with_hlhdf
@@ -1361,7 +1365,9 @@ Optional Packages:
   --with-py3bin=python3  What python 3 binary to use
   --with-py3bin-config=python3-config  What python 3 config binary to use
   --with-python-makefile=Makefile  Where the makefile used for building python can be found
-  --with-proj=ROOT or INC,LIB       Use the proj library
+  --with-proj=ROOT or INC,LIB       Use proj and try to identify version automatically. First tries proj >= 6 and then proj.4 or 5
+  --with-legacy-proj=ROOT or INC,LIB       Use the legacy proj library (default disabled)
+  --with-new-proj=ROOT or INC,LIB       Use the new proj library (default disabled)
   --with-expat=ROOT or INC,LIB       Use the expat library
   --with-numpy=INC     Use the numpy include file
   --with-hlhdf=ROOT    Use the hlhdf library
@@ -2103,7 +2109,7 @@ fi
 LIBS=-lm
 
 PYBIN=python
-py3support=no
+py3support=yes
 # Check whether --enable-py3support was given.
 if test "${enable_py3support+set}" = set; then :
   enableval=$enable_py3support; py3support=$enableval
@@ -3483,11 +3489,7 @@ fi
 done
 
 
-PROJ_INCLUDE_DIR=
-PROJ_LIB_DIR=
-GOT_PROJ_INC=no
-GOT_PROJ_LIB=no
-PROJ_SUPPRESSED=no
+
 
 # Check whether --with-proj was given.
 if test "${with_proj+set}" = set; then :
@@ -3496,214 +3498,517 @@ else
   withval=yes
 fi
 
-case $withval in
-	yes)
-		for ac_header in projects.h
-do :
-  ac_fn_c_check_header_mongrel "$LINENO" "projects.h" "ac_cv_header_projects_h" "$ac_includes_default"
-if test "x$ac_cv_header_projects_h" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_PROJECTS_H 1
-_ACEOF
- GOT_PROJ_INC=yes
+proj_withval=$withval
+
+
+# Check whether --with-legacy-proj was given.
+if test "${with_legacy_proj+set}" = set; then :
+  withval=$with_legacy_proj;
+else
+  withval=no
 fi
 
-done
+legacyproj_withval=$withval
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for pj_inv in -lproj" >&5
-$as_echo_n "checking for pj_inv in -lproj... " >&6; }
-if ${ac_cv_lib_proj_pj_inv+:} false; then :
-  $as_echo_n "(cached) " >&6
+
+# Check whether --with-new-proj was given.
+if test "${with_new_proj+set}" = set; then :
+  withval=$with_new_proj;
 else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lproj  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
+  withval=no
+fi
 
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char pj_inv ();
-int
-main ()
-{
-return pj_inv ();
-  ;
-  return 0;
+newproj_withval=$withval
+
+if [ "$proj_withval" = "" ]; then
+  proj_withval=no
+fi
+if [ "$legacyproj_withval" = "" ]; then
+  legacyproj_withval=no
+fi
+if [ "$newproj_withval" = "" ]; then
+  newproj_withval=no
+fi
+
+if [ "$legacyproj_withval" != "no" -a "$newproj_withval" != "no" ]; then
+  as_fn_error $? "\"Don't specify both --with-legacy-proj and --with-new-proj at the same time. Instead use --with-proj to automatically detect version to use.\"" "$LINENO" 5
+fi
+
+if [ "$legacyproj_withval" != "no" -o "$newproj_withval" != "no" ]; then
+  proj_withval=no
+fi
+
+if [ "$legacyproj_withval" = "no" -a "$newproj_withval" = "no" -a "$proj_withval" = "no" ]; then
+  as_fn_error $? "\"Can't build rave without proj\"" "$LINENO" 5
+fi
+
+# This is a utility for beeing able to extract the include/lib from the --with directive.
+extract_include_or_lib_from_with() {
+  if [ "`echo $2 | grep ','`" = "" ]; then
+    proj_inc=$2/include
+    proj_lib=$2/lib
+  else
+    proj_inc="`echo $2 |cut -f1 -d,`"
+    proj_lib="`echo $2 |cut -f2 -d,`"
+  fi
+  if [ "$1" = "include" ]; then
+    echo "$proj_inc"
+  else
+    echo "$proj_lib"
+  fi
 }
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_proj_pj_inv=yes
-else
-  ac_cv_lib_proj_pj_inv=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_proj_pj_inv" >&5
-$as_echo "$ac_cv_lib_proj_pj_inv" >&6; }
-if test "x$ac_cv_lib_proj_pj_inv" = xyes; then :
-  GOT_PROJ_LIB=yes
-fi
 
-		;;
-	no)
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for Proj lib" >&5
-$as_echo_n "checking for Proj lib... " >&6; }
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: suppressed" >&5
-$as_echo "suppressed" >&6; }
-		PROJ_SUPPRESSED=yes
-		;;
-	*)
-    if [ "$withval" != "" ]; then
-      if [ "`echo $withval | grep ','`" = "" ]; then
-        proj_inc=$withval/include
-        proj_lib=$withval/lib
-        echo "proj_inc=$proj_inc"
-      else
-        proj_inc="`echo $withval |cut -f1 -d,`"
-        proj_lib="`echo $withval |cut -f2 -d,`"
-      fi
-
-      if [ "$proj_inc" != "" ]; then
-        saved_CPPFLAGS="$CPPFLAGS"
-        CPPFLAGS="$CPPFLAGS -I$proj_inc"
-        for ac_header in projects.h
-do :
-  ac_fn_c_check_header_mongrel "$LINENO" "projects.h" "ac_cv_header_projects_h" "$ac_includes_default"
-if test "x$ac_cv_header_projects_h" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_PROJECTS_H 1
-_ACEOF
- GOT_PROJ_INC=yes
+proj_inc=
+proj_lib=
+# If we are running autodetection, we first try that
+# Order for us when figuring out what to do is
+# Auto
+# New proj >= 6
+# Old proj <= 5
+if [ "$proj_withval" != "no" -a "$proj_withval" != "yes" ]; then
+  proj_inc=`extract_include_or_lib_from_with include "$proj_withval"`
+  proj_lib=`extract_include_or_lib_from_with lib "$proj_withval"`
+elif [ "$newproj_withval" != "no" -a "$newproj_withval" != "yes" ]; then
+  proj_inc=`extract_include_or_lib_from_with include "$newproj_withval"`
+  proj_lib=`extract_include_or_lib_from_with lib "$newproj_withval"`
+elif [ "$legacyproj_withval" != "no" -a "$legacyproj_withval" != "yes" ]; then
+  proj_inc=`extract_include_or_lib_from_with include "$legacyproj_withval"`
+  proj_lib=`extract_include_or_lib_from_with lib "$legacyproj_withval"`
 fi
 
-done
+PROJ6_CHECK_FAILED=no
+PROJ4_CHECK_FAILED=no
+GOT_PROJ_INC=no
+PROJ_INCLUDE_DIR=
+PROJ_LIB_DIR=
+PROJ_VERSION=0
+if [ "$proj_withval" != "no" -o "$newproj_withval" != "no" ]; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: Trying to identify PROJ >= 6" >&5
+$as_echo "$as_me: Trying to identify PROJ >= 6" >&6;}
 
-        if [ "$GOT_PROJ_INC" = "yes" ]; then
-          PROJ_INCLUDE_DIR="-I$proj_inc"
-        else
-          CPPFLAGS="$saved_CPPFLAGS"
-        fi
-      else
-        for ac_header in projects.h
-do :
-  ac_fn_c_check_header_mongrel "$LINENO" "projects.h" "ac_cv_header_projects_h" "$ac_includes_default"
-if test "x$ac_cv_header_projects_h" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_PROJECTS_H 1
-_ACEOF
- GOT_PROJ_INC=yes
-fi
-
-done
-
-      fi
-
-      if [ "$proj_lib" != "" ]; then
-        saved_LDFLAGS="$LDFLAGS"
-        LDFLAGS="$LDFLAGS -L$proj_lib"
-        { $as_echo "$as_me:${as_lineno-$LINENO}: checking for pj_inv in -lproj" >&5
-$as_echo_n "checking for pj_inv in -lproj... " >&6; }
-if ${ac_cv_lib_proj_pj_inv+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lproj  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char pj_inv ();
-int
-main ()
-{
-return pj_inv ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_proj_pj_inv=yes
-else
-  ac_cv_lib_proj_pj_inv=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_proj_pj_inv" >&5
-$as_echo "$ac_cv_lib_proj_pj_inv" >&6; }
-if test "x$ac_cv_lib_proj_pj_inv" = xyes; then :
-  GOT_PROJ_LIB=yes
-fi
-
-        if [ "$GOT_PROJ_LIB" = "yes" ]; then
-          PROJ_LIB_DIR="-L$proj_lib"
-        else
-          LDFLAGS="$saved_LDFLAGS"
-        fi
-      else
-        { $as_echo "$as_me:${as_lineno-$LINENO}: checking for pj_inv in -lproj" >&5
-$as_echo_n "checking for pj_inv in -lproj... " >&6; }
-if ${ac_cv_lib_proj_pj_inv+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lproj  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char pj_inv ();
-int
-main ()
-{
-return pj_inv ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_proj_pj_inv=yes
-else
-  ac_cv_lib_proj_pj_inv=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_proj_pj_inv" >&5
-$as_echo "$ac_cv_lib_proj_pj_inv" >&6; }
-if test "x$ac_cv_lib_proj_pj_inv" = xyes; then :
-  GOT_PROJ_LIB=yes
-fi
-
-      fi
+  saved_CPPFLAGS="$CPPFLAGS"
+  saved_LDFLAGS="$LDFLAGS"
+  if [ "$proj_inc" != "" ]; then
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking if proj.h is accessible" >&5
+$as_echo_n "checking if proj.h is accessible... " >&6; }
+    if [ ! -f "$proj_inc/proj.h" ]; then
+      { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+      PROJ6_CHECK_FAILED=yes
     else
-      as_fn_error $? "\"Odd argument passed for proj\"" "$LINENO" 5
-    fi
-    ;;
-esac
+      { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+      CPPFLAGS="$CPPFLAGS -I$proj_inc"
+      for ac_header in proj.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "proj.h" "ac_cv_header_proj_h" "$ac_includes_default"
+if test "x$ac_cv_header_proj_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_PROJ_H 1
+_ACEOF
+ GOT_PROJ_INC=yes
+         PROJ_INCLUDE_DIR="-I$proj_inc"
+else
+  PROJ6_CHECK_FAILED=yes
 
-if [ "x$PROJ_SUPPRESSED" = "xno" ]; then
-	if [ "x$GOT_PROJ_INC" = "xno" -o "x$GOT_PROJ_LIB" = "xno" ]; then
-		as_fn_error $? "\"Could not successfully find the proj library\"" "$LINENO" 5
-	fi
+fi
+
+done
+
+    fi
+  else
+    for ac_header in proj.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "proj.h" "ac_cv_header_proj_h" "$ac_includes_default"
+if test "x$ac_cv_header_proj_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_PROJ_H 1
+_ACEOF
+ GOT_PROJ_INC=yes
+else
+  PROJ6_CHECK_FAILED=yes
+fi
+
+done
+
+  fi
+
+  if [ "$proj_lib" != "" ]; then
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking if libproj is accessible" >&5
+$as_echo_n "checking if libproj is accessible... " >&6; }
+    TMP=`ls -1 "$proj_lib"/libproj.* 2>/dev/null`
+    if [ "$TMP" = "" ]; then
+      { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+      PROJ6_CHECK_FAILED=yes
+    else
+      { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+      LDFLAGS="$LDFLAGS -L$proj_lib"
+      { $as_echo "$as_me:${as_lineno-$LINENO}: checking for proj_trans in -lproj" >&5
+$as_echo_n "checking for proj_trans in -lproj... " >&6; }
+if ${ac_cv_lib_proj_proj_trans+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lproj  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char proj_trans ();
+int
+main ()
+{
+return proj_trans ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_proj_proj_trans=yes
+else
+  ac_cv_lib_proj_proj_trans=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_proj_proj_trans" >&5
+$as_echo "$ac_cv_lib_proj_proj_trans" >&6; }
+if test "x$ac_cv_lib_proj_proj_trans" = xyes; then :
+  GOT_PROJ_LIB=yes
+         PROJ_LIB_DIR="-L$proj_lib"
+else
+  LDFLAGS="$saved_LDFLAGS"
+         PROJ6_CHECK_FAILED=yes
+
+fi
+
+    fi
+  else
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for proj_trans in -lproj" >&5
+$as_echo_n "checking for proj_trans in -lproj... " >&6; }
+if ${ac_cv_lib_proj_proj_trans+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lproj  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char proj_trans ();
+int
+main ()
+{
+return proj_trans ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_proj_proj_trans=yes
+else
+  ac_cv_lib_proj_proj_trans=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_proj_proj_trans" >&5
+$as_echo "$ac_cv_lib_proj_proj_trans" >&6; }
+if test "x$ac_cv_lib_proj_proj_trans" = xyes; then :
+  GOT_PROJ_LIB=yes
+else
+  PROJ6_CHECK_FAILED=yes
+fi
+
+  fi
+
+  if [ "$PROJ6_CHECK_FAILED" = "no" ]; then
+    if test "$cross_compiling" = yes; then :
+  { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
+$as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
+as_fn_error $? "cannot run test program while cross compiling
+See \`config.log' for more details" "$LINENO" 5; }
+else
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+#include <proj.h>
+          #include <stdio.h>
+          #include <stdlib.h>
+int
+main ()
+{
+printf("%d\n", PROJ_VERSION_MAJOR); exit(0);
+  ;
+  return 0;
+}
+
+_ACEOF
+if ac_fn_c_try_run "$LINENO"; then :
+  PROJ_VERSION=`./conftest$EXEEXT`
+
+else
+  PROJ6_CHECK_FAILED=yes
+
+fi
+rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
+  conftest.$ac_objext conftest.beam conftest.$ac_ext
+fi
+
+    if [ "$PROJ6_CHECK_FAILED" = "no" ]; then
+      PROJ_VERSION=`echo $PROJ_VERSION | egrep -e "^[0-9]+$"`
+      if [ "$PROJ_VERSION" = "" ]; then
+        PROJ6_CHECK_FAILED=yes
+        PROJ_VERSION=0
+      fi
+    fi
+  fi
+
+  if [ "$PROJ6_CHECK_FAILED" = "no" -a "$PROJ_VERSION" -ge 6 ]; then
+    { $as_echo "$as_me:${as_lineno-$LINENO}: result: identified proj version $PROJ_VERSION" >&5
+$as_echo "identified proj version $PROJ_VERSION" >&6; }
+  else
+    { $as_echo "$as_me:${as_lineno-$LINENO}: result: could not identify proj version >= 6" >&5
+$as_echo "could not identify proj version >= 6" >&6; }
+    CPPFLAGS="$saved_CPPFLAGS"
+    LDFLAGS="$saved_LDFLAGS"
+    PROJ6_CHECK_FAILED=yes
+  fi
+else
+  # If we don't atempt to identify proj.6 we can always assume that it has failed.
+  PROJ6_CHECK_FAILED=yes
+fi
+
+if [ "$PROJ6_CHECK_FAILED" = "yes" -a "$proj_withval" != "no" ] || [ "$legacyproj_withval" != "no" ]; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: Trying to identify PROJ <= 5" >&5
+$as_echo "$as_me: Trying to identify PROJ <= 5" >&6;}
+
+  saved_CPPFLAGS="$CPPFLAGS"
+  saved_LDFLAGS="$LDFLAGS"
+  if [ "$proj_inc" != "" ]; then
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking if projects.h is accessible" >&5
+$as_echo_n "checking if projects.h is accessible... " >&6; }
+    if [ ! -f "$proj_inc/projects.h" ]; then
+      { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+      PROJ4_CHECK_FAILED=yes
+    else
+      { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+      CPPFLAGS="$CPPFLAGS -I$proj_inc"
+      for ac_header in projects.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "projects.h" "ac_cv_header_projects_h" "$ac_includes_default"
+if test "x$ac_cv_header_projects_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_PROJECTS_H 1
+_ACEOF
+ GOT_PROJ_INC=yes
+         PROJ_INCLUDE_DIR="-I$proj_inc"
+else
+  PROJ4_CHECK_FAILED=yes
+
+fi
+
+done
+
+    fi
+  else
+    for ac_header in projects.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "projects.h" "ac_cv_header_projects_h" "$ac_includes_default"
+if test "x$ac_cv_header_projects_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_PROJECTS_H 1
+_ACEOF
+ GOT_PROJ_INC=yes
+else
+  PROJ4_CHECK_FAILED=yes
+fi
+
+done
+
+  fi
+
+  if [ "$proj_lib" != "" ]; then
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking if libproj is accessible" >&5
+$as_echo_n "checking if libproj is accessible... " >&6; }
+    TMP=`ls -1 "$proj_lib"/libproj.* 2>/dev/null`
+    if [ "$TMP" = "" ]; then
+      { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+      PROJ4_CHECK_FAILED=yes
+    else
+      { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+      LDFLAGS="$LDFLAGS -L$proj_lib"
+      { $as_echo "$as_me:${as_lineno-$LINENO}: checking for pj_transform in -lproj" >&5
+$as_echo_n "checking for pj_transform in -lproj... " >&6; }
+if ${ac_cv_lib_proj_pj_transform+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lproj  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char pj_transform ();
+int
+main ()
+{
+return pj_transform ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_proj_pj_transform=yes
+else
+  ac_cv_lib_proj_pj_transform=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_proj_pj_transform" >&5
+$as_echo "$ac_cv_lib_proj_pj_transform" >&6; }
+if test "x$ac_cv_lib_proj_pj_transform" = xyes; then :
+  GOT_PROJ_LIB=yes
+         PROJ_LIB_DIR="-L$proj_lib"
+else
+  LDFLAGS="$saved_LDFLAGS"
+         PROJ4_CHECK_FAILED=yes
+
+fi
+
+    fi
+  else
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for pj_transform in -lproj" >&5
+$as_echo_n "checking for pj_transform in -lproj... " >&6; }
+if ${ac_cv_lib_proj_pj_transform+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lproj  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char pj_transform ();
+int
+main ()
+{
+return pj_transform ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_proj_pj_transform=yes
+else
+  ac_cv_lib_proj_pj_transform=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_proj_pj_transform" >&5
+$as_echo "$ac_cv_lib_proj_pj_transform" >&6; }
+if test "x$ac_cv_lib_proj_pj_transform" = xyes; then :
+  GOT_PROJ_LIB=yes
+else
+  PROJ4_CHECK_FAILED=yes
+fi
+
+  fi
+
+  if [ "$PROJ4_CHECK_FAILED" = "no" ]; then
+    if test "$cross_compiling" = yes; then :
+  { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
+$as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
+as_fn_error $? "cannot run test program while cross compiling
+See \`config.log' for more details" "$LINENO" 5; }
+else
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+#include <projects.h>
+          #include <stdio.h>
+          #include <stdlib.h>
+int
+main ()
+{
+printf("%d\n", (int)PJ_VERSION/100); exit(0);
+  ;
+  return 0;
+}
+
+_ACEOF
+if ac_fn_c_try_run "$LINENO"; then :
+  PROJ_VERSION=`./conftest$EXEEXT`
+
+else
+  PROJ4_CHECK_FAILED=yes
+
+fi
+rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
+  conftest.$ac_objext conftest.beam conftest.$ac_ext
+fi
+
+    if [ "$PROJ4_CHECK_FAILED" = "no" ]; then
+      PROJ_VERSION=`echo $PROJ_VERSION | egrep -e "^[0-9]+$"`
+      if [ "$PROJ_VERSION" = "" ]; then
+        PROJ4_CHECK_FAILED=yes
+        PROJ_VERSION=0
+      fi
+    fi
+  fi
+
+  if [ "$PROJ4_CHECK_FAILED" = "no" -a "$PROJ_VERSION" -le 5 ]; then
+    { $as_echo "$as_me:${as_lineno-$LINENO}: result: identified proj version $PROJ_VERSION" >&5
+$as_echo "identified proj version $PROJ_VERSION" >&6; }
+  else
+    { $as_echo "$as_me:${as_lineno-$LINENO}: result: could not identify proj version <= 5" >&5
+$as_echo "could not identify proj version <= 5" >&6; }
+    CPPFLAGS="$saved_CPPFLAGS"
+    LDFLAGS="$saved_LDFLAGS"
+    PROJ4_CHECK_FAILED=yes
+  fi
+else
+  # If no proj.4 check is performed we can assume that it has failed.
+  PROJ4_CHECK_FAILED=yes
+fi
+
+USE_PROJ4_API=no
+if [ "$PROJ6_CHECK_FAILED" = "no" ]; then
+  USE_PROJ4_API=no
+elif [ "$PROJ4_CHECK_FAILED" = "no" ]; then
+  USE_PROJ4_API=yes
+else
+  as_fn_error $? "Could not identify any usable PROJ" "$LINENO" 5
 fi
 
 EXPAT_INCLUDE_DIR=
@@ -4617,6 +4922,7 @@ fi
 
 
 #Substitute the PROJ arguments
+
 
 
 

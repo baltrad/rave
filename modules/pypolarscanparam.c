@@ -358,7 +358,7 @@ static PyObject* _pypolarscanparam_addAttribute(PyPolarScanParam* self, PyObject
     double value = PyFloat_AsDouble(obj);
     RaveAttribute_setDouble(attr, value);
   } else if (PyString_Check(obj)) {
-    char* value = PyString_AsString(obj);
+    const char* value = PyString_AsString(obj);
     if (!RaveAttribute_setString(attr, value)) {
       raiseException_gotoTag(done, PyExc_AttributeError, "Failed to set string value");
     }

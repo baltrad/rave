@@ -28,9 +28,13 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_debug.h"
 #include "rave_alloc.h"
 #include "rave_datetime.h"
+#include "projection_pipeline.h"
 #include <string.h>
 #include "rave_field.h"
 #include <float.h>
+#include <stdio.h>
+#include <math.h>
+
 
 #define MAX_NO_OF_SURROUNDING_POSITIONS 8 // pow(2, NO_OF_COMPOSITE_INTERPOLATION_DIMENSIONS)
 
@@ -2296,6 +2300,7 @@ static Cartesian_t* Composite_nearest_max(Composite_t* composite, Area_t* area, 
 {
   Cartesian_t* result = NULL;
   Projection_t* projection = NULL;
+  RaveObjectList_t* pipelines = NULL;
   PolarNavigationInfo navinfo;
   CompositeValues_t* cvalues = NULL;
   int x = 0, y = 0, i = 0, xsize = 0, ysize = 0, nradars = 0;
@@ -2353,6 +2358,32 @@ static Cartesian_t* Composite_nearest_max(Composite_t* composite, Area_t* area, 
     }
   }
 
+  pipelines = RAVE_OBJECT_NEW(&RaveObjectList_TYPE);
+  if (pipelines == NULL) {
+    goto fail;
+  }
+  for (i = 0; i < nradars; i++) {
+    RaveCoreObject* obj = Composite_get(composite, i);
+    if (obj != NULL) {
+      Projection_t* objproj = CompositeInternal_getProjection(obj);
+      ProjectionPipeline_t* pipeline = NULL;
+      if (objproj == NULL) {
+        RAVE_OBJECT_RELEASE(obj);
+        RAVE_ERROR0("No projection for object");
+        goto fail;
+      }
+      pipeline = ProjectionPipeline_createPipeline(projection, objproj);
+      RAVE_OBJECT_RELEASE(objproj);
+      RAVE_OBJECT_RELEASE(obj);
+      if (pipeline == NULL || !RaveObjectList_add(pipelines, (RaveCoreObject*)pipeline)) {
+        RAVE_ERROR0("Failed to create pipeline");
+        RAVE_OBJECT_RELEASE(pipeline);
+        goto fail;
+      }
+      RAVE_OBJECT_RELEASE(pipeline);
+    }
+  }
+
   for (y = 0; y < ysize; y++) {
     double herey = Cartesian_getLocationY(result, y);
     for (x = 0; x < xsize; x++) {
@@ -2367,15 +2398,15 @@ static Cartesian_t* Composite_nearest_max(Composite_t* composite, Area_t* area, 
 
       for (i = 0; i < nradars; i++) {
         RaveCoreObject* obj = NULL;
-        Projection_t* objproj = NULL;
+        ProjectionPipeline_t* pipeline = NULL;
         obj = Composite_get(composite, i);
         if (obj != NULL) {
-          objproj = CompositeInternal_getProjection(obj);
+          pipeline = (ProjectionPipeline_t*)RaveObjectList_get(pipelines, i);
         }
 
-        if (objproj != NULL) {
+        if (pipeline != NULL) {
           /* We will go from surface coords into the lonlat projection assuming that a polar volume uses a lonlat projection*/
-          if (!Projection_transformx(projection, objproj, herex, herey, 0.0, &olon, &olat, NULL)) {
+          if (!ProjectionPipeline_fwd(pipeline, herex, herey, &olon, &olat)) {
             RAVE_WARNING0("Failed to transform from composite into polar coordinates");
           } else {
             double dist = 0.0;
@@ -2409,7 +2440,7 @@ static Cartesian_t* Composite_nearest_max(Composite_t* composite, Area_t* area, 
           }
         }
         RAVE_OBJECT_RELEASE(obj);
-        RAVE_OBJECT_RELEASE(objproj);
+        RAVE_OBJECT_RELEASE(pipeline);
       }
 
       for (cindex = 0; cindex < nparam; cindex++) {
@@ -2430,6 +2461,7 @@ static Cartesian_t* Composite_nearest_max(Composite_t* composite, Area_t* area, 
   }
   RAVE_FREE(cvalues);
   RAVE_OBJECT_RELEASE(projection);
+  RAVE_OBJECT_RELEASE(pipelines);
   return result;
 fail:
   for (i = 0; cvalues != NULL && i < nparam; i++) {
@@ -2437,6 +2469,7 @@ fail:
   }
   RAVE_FREE(cvalues);
   RAVE_OBJECT_RELEASE(projection);
+  RAVE_OBJECT_RELEASE(pipelines);
   RAVE_OBJECT_RELEASE(result);
   return result;
 
@@ -2721,6 +2754,7 @@ Cartesian_t* Composite_generate(Composite_t* composite, Area_t* area, RaveList_t
   Projection_t* projection = NULL;
   CompositeValuePosition_t valuePositions[MAX_NO_OF_SURROUNDING_POSITIONS];
   CompositeValues_t* cvalues = NULL;
+  RaveObjectList_t* pipelines = NULL;
   int interpolationDimensions[NO_OF_COMPOSITE_INTERPOLATION_DIMENSIONS] = {0};
   int x = 0, y = 0, i = 0, xsize = 0, ysize = 0, nradars = 0;
   int nqualityflags = 0;
@@ -2787,6 +2821,32 @@ Cartesian_t* Composite_generate(Composite_t* composite, Area_t* area, RaveList_t
     }
   }
 
+  pipelines = RAVE_OBJECT_NEW(&RaveObjectList_TYPE);
+  if (pipelines == NULL) {
+    goto fail;
+  }
+  for (i = 0; i < nradars; i++) {
+    RaveCoreObject* obj = Composite_get(composite, i);
+    if (obj != NULL) {
+      Projection_t* objproj = CompositeInternal_getProjection(obj);
+      ProjectionPipeline_t* pipeline = NULL;
+      if (objproj == NULL) {
+        RAVE_OBJECT_RELEASE(obj);
+        RAVE_ERROR0("No projection for object");
+        goto fail;
+      }
+      pipeline = ProjectionPipeline_createPipeline(projection, objproj);
+      RAVE_OBJECT_RELEASE(objproj);
+      RAVE_OBJECT_RELEASE(obj);
+      if (pipeline == NULL || !RaveObjectList_add(pipelines, (RaveCoreObject*)pipeline)) {
+        RAVE_ERROR0("Failed to create pipeline");
+        RAVE_OBJECT_RELEASE(pipeline);
+        goto fail;
+      }
+      RAVE_OBJECT_RELEASE(pipeline);
+    }
+  }
+
   for (y = 0; y < ysize; y++) {
     double herey = Cartesian_getLocationY(result, y);
     for (x = 0; x < xsize; x++) {
@@ -2801,24 +2861,21 @@ Cartesian_t* Composite_generate(Composite_t* composite, Area_t* area, RaveList_t
 
       for (i = 0; i < nradars; i++) {
         RaveCoreObject* obj = NULL;
-        Projection_t* objproj = NULL;
+        ProjectionPipeline_t* pipeline = NULL;
         obj = Composite_get(composite, i);
         if (obj != NULL) {
-          if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
-            objproj = PolarVolume_getProjection((PolarVolume_t*)obj);
-          } else if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarScan_TYPE)) {
-            objproj = PolarScan_getProjection((PolarScan_t*)obj);
-          }
+          pipeline = (ProjectionPipeline_t*)RaveObjectList_get(pipelines, i);
         }
 
-        if (objproj != NULL) {
+        if (pipeline != NULL) {
           /* We will go from surface coords into the lonlat projection assuming that a polar volume uses a lonlat projection*/
-          if (!Projection_transformx(projection, objproj, herex, herey, 0.0, &olon, &olat, NULL)) {
+          if (!ProjectionPipeline_fwd(pipeline, herex, herey, &olon, &olat)) {
             RAVE_WARNING0("Failed to transform from composite into polar coordinates");
           } else {
             double dist = 0.0;
             double maxdist = 0.0;
             double rdist = 0.0;
+            //fprintf(stderr, "%g, %g => %f, %f\n", herex, herey, olon*180.0/M_PI, olat*180.0/M_PI);
             if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
               dist = PolarVolume_getDistance((PolarVolume_t*)obj, olon, olat);
               maxdist = PolarVolume_getMaxDistance((PolarVolume_t*)obj);
@@ -2907,7 +2964,7 @@ Cartesian_t* Composite_generate(Composite_t* composite, Area_t* area, RaveList_t
           }
         }
         RAVE_OBJECT_RELEASE(obj);
-        RAVE_OBJECT_RELEASE(objproj);
+        RAVE_OBJECT_RELEASE(pipeline);
       }
 
       for (cindex = 0; cindex < nparam; cindex++) {
@@ -2948,6 +3005,7 @@ Cartesian_t* Composite_generate(Composite_t* composite, Area_t* area, RaveList_t
   }
   RAVE_FREE(cvalues);
   RAVE_OBJECT_RELEASE(projection);
+  RAVE_OBJECT_RELEASE(pipelines);
   return result;
 fail:
   for (i = 0; cvalues != NULL && i < nparam; i++) {
@@ -2955,6 +3013,7 @@ fail:
   }
   RAVE_FREE(cvalues);
   RAVE_OBJECT_RELEASE(projection);
+  RAVE_OBJECT_RELEASE(pipelines);
   RAVE_OBJECT_RELEASE(result);
   return result;
 }

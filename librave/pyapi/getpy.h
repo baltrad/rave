@@ -10,7 +10,12 @@
 #include <Python.h>
 #include <arrayobject.h>
 
+#ifdef USE_PROJ4_API
 #include <projects.h>
+#else
+#include <proj.h>
+#define UV PJ_UV
+#endif
 
 /**
  * Creates a PROJ.4 projection object from a python array of strings.
@@ -18,6 +23,12 @@
  * @return a PROJ.4 projection or NULL on failure
  */
 PJ* initProjection(PyObject* pcs);
+
+/**
+ * Destroys the projection
+ * @param[in] pj - the projection to destroy
+ */
+void freeProjection(PJ* pj);
 
 /**
  * Get a double from a python dictionary.

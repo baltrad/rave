@@ -621,9 +621,18 @@ static PyObject* _nearest_composite(PyObject* self, PyObject* args)
     }
     Py_DECREF(po);
 
+#ifdef USE_PROJ4_API
     here.u *= DEG_TO_RAD;
     here.v *= DEG_TO_RAD;
     here_c = pj_fwd(here, wrap.proj);
+#else
+    {
+      PJ_COORD pjhere, pjhere_c;
+      pjhere.uv = here;
+      pjhere_c = proj_trans(wrap.proj, PJ_FWD, pjhere);
+      here_c = pjhere_c.uv;
+    }
+#endif
     wrap.rad[i].cx = (int) ((here_c.u - wrap.ux) / wrap.xscale);
     wrap.rad[i].cy = (int) ((wrap.uy - here_c.v) / wrap.yscale);
   }
@@ -634,7 +643,7 @@ static PyObject* _nearest_composite(PyObject* self, PyObject* args)
     createSurroundingXBitmap(&wrap);
     createSurroundingYBitmap(&wrap);
   }
-  pj_free(wrap.proj);
+  freeProjection(wrap.proj);
   free(wrap.rad);
 
   PyErr_Clear();
@@ -764,9 +773,18 @@ static PyObject* _lowest_composite(PyObject* self, PyObject* args)
     }
     Py_DECREF(po);
 
+#ifdef USE_PROJ4_API
     here.u *= DEG_TO_RAD;
     here.v *= DEG_TO_RAD;
     here_c = pj_fwd(here, wrap.proj);
+#else
+    {
+      PJ_COORD pjhere, pjhere_c;
+      pjhere.uv = here;
+      pjhere_c = proj_trans(wrap.proj, PJ_FWD, pjhere);
+      here_c = pjhere_c.uv;
+    }
+#endif
     wrap.rad[i].cx = (int) ((here_c.u - wrap.ux) / wrap.xscale);
     wrap.rad[i].cy = (int) ((wrap.uy - here_c.v) / wrap.yscale);
   }
@@ -777,7 +795,7 @@ static PyObject* _lowest_composite(PyObject* self, PyObject* args)
     createSurroundingXBitmap(&wrap);
     createSurroundingYBitmap(&wrap);
   }
-  pj_free(wrap.proj);
+  freeProjection(wrap.proj);
   free(wrap.rad);
 
   PyErr_Clear();

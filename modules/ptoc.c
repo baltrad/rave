@@ -7,7 +7,6 @@
 #include "raveutil.h"
 #include "rave.h"
 #include "values.h"
-#include "projects.h"
 
 static PyObject *PyTransform_Error;
 
@@ -21,7 +20,6 @@ static PyObject *PyTransform_Error;
 #define raiseErrorWI(type,message)\
 {PyErr_SetString(type,message);return 0;}
 
-#define UV projUV
 
 /* -------------------------------------------------------------------- */
 /* Constructors                                                         */

@@ -1,6 +1,6 @@
 #include "proj_wkt_helper.h"
 #include <string.h>
-
+#include <stdio.h>
 
 /**
  * Mapping containing a wkt mapping function.

@@ -24,15 +24,15 @@
 ###########################################################################
 -include ../def.mk
 
-CFLAGS= $(CCSHARED) $(OPTS) $(DEFS) -I../librave/toolbox -I../librave/pyapi \
+CFLAGS= $(CCSHARED) $(OPTS) $(DEFS) -I../librave/toolbox -I../librave/pyapi  -I../librave/radvol/lib \
 			-I../librave/scansun -I. $(INCLUDE_PYTHON) \
-			-I$(HLHDF_INCLUDE_DIR) $(NUMPY_INCLUDE_DIR) \
-			$(ZLIB_INCDIR) $(HDF5_INCDIR) $(PROJ_INCLUDE_DIR)
+			-I$(HLHDF_INCLUDE_DIR) $(PROJ_INCLUDE_DIR) $(NUMPY_INCLUDE_DIR) \
+			$(ZLIB_INCDIR) $(HDF5_INCDIR)
 
 # Linker flags
 #
 LDFLAGS= -L../librave/toolbox -L../librave/pyapi -L../librave/scansun -L. \
-			-L$(HLHDF_LIB_DIR) $(ZLIB_LIBDIR) $(HDF5_LIBDIR) $(PROJ_LIB_DIR)
+			-L$(HLHDF_LIB_DIR) $(PROJ_LIB_DIR) $(ZLIB_LIBDIR) $(HDF5_LIBDIR)
 
 ifeq ($(EXPAT_SUPPRESSED), no)
 CFLAGS+= -I../librave/radvol/lib $(EXPAT_INCLUDE_DIR) -DRAVE_XML_SUPPORTED  
@@ -229,13 +229,17 @@ SOURCE_41= pylazynodelistreader.c
 OBJECTS_41= $(SOURCE_41:.c=.o)
 TARGET_41= _lazynodelistreader.so
 
+SOURCE_42= pyprojectionpipeline.c
+OBJECTS_42= $(SOURCE_42:.c=.o)
+TARGET_42= _projectionpipeline.so
+
 TARGETS=$(TARGET_1) $(TARGET_2) $(TARGET_3) $(TARGET_4) $(TARGET_5) $(TARGET_6) \
 		$(TARGET_7) $(TARGET_8) $(TARGET_9) $(TARGET_10) $(TARGET_11) $(TARGET_12) $(TARGET_13) \
 		$(TARGET_14) $(TARGET_15) $(TARGET_16) $(TARGET_17) $(TARGET_18) $(TARGET_19) \
-		$(TARGET_20) $(TARGET_21) $(TARGET_22) $(TARGET_23) $(TARGET_24) $(TARGET_25) \
+		$(TARGET_20) $(TARGET_21) $(TARGET_24) $(TARGET_25) \
 		$(TARGET_26) $(TARGET_27) $(TARGET_28) $(TARGET_29) $(TARGET_30) $(TARGET_31) \
-		$(TARGET_32) $(TARGET_33) $(TARGET_34) $(TARGET_35) $(TARGET_36) $(TARGET_37) \
-		$(TARGET_39) $(TARGET_40) $(TARGET_41)
+		$(TARGET_33) $(TARGET_34) $(TARGET_35) $(TARGET_36) $(TARGET_37) \
+		$(TARGET_39) $(TARGET_40) $(TARGET_41) $(TARGET_42)
 
 INSTALL_HEADERS= pyarea.h \
 				 pycartesian.h \
@@ -261,10 +265,11 @@ INSTALL_HEADERS= pyarea.h \
 				 pygra.h \
 				 pybitmapgenerator.h \
 				 pyravedata2d.h \
-				 pylazynodelistreader.h
+				 pylazynodelistreader.h \
+				 pyprojectionpipeline.h
 
 ifeq ($(EXPAT_SUPPRESSED), no)
-#TARGETS += $(TARGET_22) $(TARGET_23) $(TARGET_32)
+TARGETS += $(TARGET_22) $(TARGET_23) $(TARGET_32)
 INSTALL_HEADERS += pyprojectionregistry.h pyarearegistry.h
 endif
 
@@ -406,6 +411,9 @@ $(TARGET_40): $(DEPDIR) $(OBJECTS_40) ../librave/toolbox/libravetoolbox.so ../li
 $(TARGET_41): $(DEPDIR) $(OBJECTS_41) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_41) $(LDFLAGS) $(LIBRARIES)
 
+$(TARGET_42): $(DEPDIR) $(OBJECTS_42) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
+	$(LDSHARED) -o $@ $(OBJECTS_42) $(LDFLAGS) $(LIBRARIES)
+
 .PHONY=install
 install:
 	@mkdir -p ${DESTDIR}${prefix}/Lib
@@ -483,7 +491,8 @@ endif
 -include $(SOURCE_35:%.c=$(DEPDIR)/%.P)
 -include $(SOURCE_36:%.c=$(DEPDIR)/%.P)
 -include $(SOURCE_37:%.c=$(DEPDIR)/%.P)
--include $(SOURCE_38:%.c=$(DEPDIR)/%.P)
+#-include $(SOURCE_38:%.c=$(DEPDIR)/%.P)
 -include $(SOURCE_39:%.c=$(DEPDIR)/%.P)
 -include $(SOURCE_40:%.c=$(DEPDIR)/%.P)
 -include $(SOURCE_41:%.c=$(DEPDIR)/%.P)
+-include $(SOURCE_42:%.c=$(DEPDIR)/%.P)

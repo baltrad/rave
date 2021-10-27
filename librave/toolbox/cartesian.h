@@ -353,11 +353,13 @@ int Cartesian_setDefaultParameter(Cartesian_t* self, const char* name);
 const char* Cartesian_getDefaultParameter(Cartesian_t* self);
 
 /**
- * Sets the projection that defines this cartesian product.
+ * Sets the projection that defines this cartesian product. Will also necessary
+ * pipelines internally
  * @param[in] cartesian - the cartesian product
  * @param[in] projection - the projection
+ * @return 1 if operation successful, otherwise 0
  */
-void Cartesian_setProjection(Cartesian_t* cartesian, Projection_t* projection);
+int Cartesian_setProjection(Cartesian_t* cartesian, Projection_t* projection);
 
 /**
  * Returns a copy of the projection that is used for this cartesian product.

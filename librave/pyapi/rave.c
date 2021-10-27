@@ -18,6 +18,10 @@
  */
 #define RaiseException(type, message) {PyErr_SetString(type, message); goto fail; }
 
+#ifndef DEG_TO_RAD
+#define DEG_TO_RAD .017453292519943296
+#endif
+
 void initialize_RaveObject(RaveObject* v)
 {
   v->data = NULL;

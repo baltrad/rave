@@ -303,6 +303,7 @@ double CartesianVolume_getZStart(CartesianVolume_t* cvol)
   RAVE_ASSERT((cvol != NULL), "cvol == NULL");
   return cvol->zstart;
 }
+
 void CartesianVolume_setAreaExtent(CartesianVolume_t* cvol, double llX, double llY, double urX, double urY)
 {
   RAVE_ASSERT((cvol != NULL), "cvol == NULL");

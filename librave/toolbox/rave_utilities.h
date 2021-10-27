@@ -141,6 +141,12 @@ int RaveUtilities_isXmlSupported(void);
 int RaveUtilities_isCFConventionSupported(void);
 
 /**
+ * Returns if legacy PROJ (PROJ.4 and PROJ 5) is enabled or not
+ * @returns 0 if legacy PROJ isn't enabled in the build, otherwise 1
+ */
+int RaveUtilities_isLegacyProjEnabled(void);
+
+/**
  * Handles the source value according to version. For example, if version < 2.3, then WIGOS will be removed.
  * @param[in] source - source to be verified
  * @param[in] version - what version we want to validate against.

@@ -28,9 +28,9 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_alloc.h"
 #include "raveobject_hashtable.h"
 #include "odim_io_utilities.h"
-
+#include <math.h>
 #include <string.h>
-
+#include "projection_pipeline.h"
 typedef struct CartesianOdimArg {
   LazyNodeListReader_t* lazyReader; /**< the lazy node list reader */
   HL_NodeList* nodelist;
@@ -344,6 +344,8 @@ static int CartesianOdimIOInternal_createExtent(RaveObjectHashTable_t* attrs, Pr
 {
   int result = 0;
 
+  ProjectionPipeline_t* pipeline = NULL;
+
   RAVE_ASSERT((attrs != NULL), "attrs == NULL");
   RAVE_ASSERT((projection != NULL), "projection == NULL");
   RAVE_ASSERT((llX != NULL), "llX == NULL");
@@ -356,6 +358,12 @@ static int CartesianOdimIOInternal_createExtent(RaveObjectHashTable_t* attrs, Pr
   *urX = 0.0;
   *urY = 0.0;
 
+  pipeline = ProjectionPipeline_createDefaultLonLatPipeline(projection);
+  if (pipeline == NULL) {
+    RAVE_ERROR0("Could not create default lon/lat pipeline");
+    goto done;
+  }
+
   if (projection != NULL &&
       RaveObjectHashTable_exists(attrs, "where/LL_lon") &&
       RaveObjectHashTable_exists(attrs, "where/LL_lat") &&
@@ -366,12 +374,12 @@ static int CartesianOdimIOInternal_createExtent(RaveObjectHashTable_t* attrs, Pr
         RaveUtilities_getRaveAttributeDoubleFromHash(attrs, "where/LL_lat", &LL_lat) &&
         RaveUtilities_getRaveAttributeDoubleFromHash(attrs, "where/UR_lon", &UR_lon) &&
         RaveUtilities_getRaveAttributeDoubleFromHash(attrs, "where/UR_lat", &UR_lat)) {
-      if (!Projection_fwd(projection, LL_lon * M_PI/180.0, LL_lat * M_PI/180.0, llX, llY)) {
+      if (!ProjectionPipeline_fwd(pipeline, LL_lon * M_PI/180.0, LL_lat * M_PI/180.0, llX, llY)) {
         RAVE_ERROR0("Could not generate XY pair for LL");
         goto done;
       }
 
-      if (!Projection_fwd(projection, UR_lon * M_PI/180.0, UR_lat * M_PI/180.0, urX, urY)) {
+      if (!ProjectionPipeline_fwd(pipeline, UR_lon * M_PI/180.0, UR_lat * M_PI/180.0, urX, urY)) {
         RAVE_ERROR0("Could not generate XY pair for UR");
         goto done;
       }
@@ -379,6 +387,7 @@ static int CartesianOdimIOInternal_createExtent(RaveObjectHashTable_t* attrs, Pr
     }
   }
 done:
+  RAVE_OBJECT_RELEASE(pipeline);
   return result;
 }
 
@@ -886,16 +895,22 @@ int CartesianOdimIOInternal_addLonLatExtentToAttributeList(RaveObjectList_t* att
   int result = 0;
   double LL_lat = 0.0, LL_lon = 0.0, LR_lat = 0.0, LR_lon = 0.0;
   double UL_lat = 0.0, UL_lon = 0.0, UR_lat = 0.0, UR_lon = 0.0;
+  ProjectionPipeline_t* pipeline = NULL;
 
+  pipeline = ProjectionPipeline_createDefaultLonLatPipeline(projection);
+  if (pipeline == NULL) {
+    RAVE_ERROR0("Could not create default lon/lat pipeline");
+    goto done;
+  }
   RAVE_ASSERT((attrs != NULL), "attrs == NULL");
   RAVE_ASSERT((projection != NULL), "projection == NULL");
 
   // Generate the correct corner coordinates.
 
-  if (!Projection_inv(projection, llX, llY, &LL_lon, &LL_lat) ||
-      !Projection_inv(projection, llX, urY, &UL_lon, &UL_lat) ||
-      !Projection_inv(projection, urX, urY, &UR_lon, &UR_lat) ||
-      !Projection_inv(projection, urX, llY, &LR_lon, &LR_lat)) {
+  if (!ProjectionPipeline_inv(pipeline, llX, llY, &LL_lon, &LL_lat) ||
+      !ProjectionPipeline_inv(pipeline, llX, urY, &UL_lon, &UL_lat) ||
+      !ProjectionPipeline_inv(pipeline, urX, urY, &UR_lon, &UR_lat) ||
+      !ProjectionPipeline_inv(pipeline, urX, llY, &LR_lon, &LR_lat)) {
     RAVE_ERROR0("Failed to translate surface extent into lon/lat corner pairs\n");
     goto done;
   }
@@ -913,6 +928,7 @@ int CartesianOdimIOInternal_addLonLatExtentToAttributeList(RaveObjectList_t* att
 
   result = 1;
 done:
+  RAVE_OBJECT_RELEASE(pipeline);
   return result;
 }
 

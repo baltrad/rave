@@ -213,6 +213,17 @@ static PyObject* _rave_isCFConventionSupported(PyObject* self, PyObject* args)
 }
 
 /**
+ * Returns if legacy proj (PROJ.4 and PROJ 5) is supported or not in this build.
+ * @param[in] self - self
+ * @param[in] args - N/A
+ * @returns true if PROJ.4 is enabled otherwise false
+ */
+static PyObject* _rave_isLegacyProjEnabled(PyObject* self, PyObject* args)
+{
+  return PyBool_FromLong(RaveUtilities_isLegacyProjEnabled());
+}
+
+/**
  * Sets a specific debug level
  * @param[in] self - self
  * @param[in] args - the debug level as an integer
@@ -373,6 +384,10 @@ static PyMethodDef functions[] = {
   {"isCFConventionSupported", (PyCFunction)_rave_isCFConventionSupported, 1,
     "isCFConventionSupported() -> a boolean\n\n"
     "Returns if this build has been built with support for writing files in CF convention."
+  },
+  {"isLegacyProjEnabled", (PyCFunction)_rave_isLegacyProjEnabled, 1,
+    "isLegacyProjEnabled() -> a boolean\n\n"
+    "Returns if this build has been built with support for PROJ.4 & PROJ 5 (True) or if the PROJ version is >= 5 (False)."
   },
   {"setDebugLevel", (PyCFunction)_rave_setDebugLevel, 1,
     "setDebugLevel(level)\n\n"

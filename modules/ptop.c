@@ -102,6 +102,15 @@ static FILE* staticFD;
  */
 #define R_POL 6356780.0
 
+#ifndef RAD_TO_DEG
+#define RAD_TO_DEG 57.295779513082321
+#endif
+
+#ifndef DEG_TO_RAD
+#define DEG_TO_RAD .017453292519943296
+#endif
+
+
 /**
  * No quality control
  */

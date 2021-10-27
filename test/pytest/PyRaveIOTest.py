@@ -257,7 +257,7 @@ class PyRaveIOTest(unittest.TestCase):
     image.xscale = 2000.0
     image.yscale = 2000.0
     image.areaextent = (-240000.0, -240000.0, 240000.0, 240000.0)
-    image.projection = _projection.new("x","y","+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84")
+    image.projection = _projection.new("x","y","+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84 +nadgrids=@null")
     image.product = _rave.Rave_ProductType_CAPPI
     image.prodname = "BALTRAD"
 
@@ -314,7 +314,7 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEqual("H5rad 2.3", nodelist.getNode("/what/version").data())
 
     #Where
-    self.assertEqual("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", nodelist.getNode("/where/projdef").data())
+    self.assertEqual("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84 +nadgrids=@null", nodelist.getNode("/where/projdef").data())
     self.assertEqual(240, nodelist.getNode("/where/xsize").data())
     self.assertEqual(240, nodelist.getNode("/where/ysize").data())
     self.assertAlmostEqual(2000.0, nodelist.getNode("/where/xscale").data(), 4)
@@ -556,7 +556,7 @@ class PyRaveIOTest(unittest.TestCase):
     image.xscale = 2000.0
     image.yscale = 2000.0
     image.areaextent = (-240000.0, -240000.0, 240000.0, 240000.0)
-    image.projection = _projection.new("x","y","+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84")
+    image.projection = _projection.new("x","y","+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84 +nadgrids=@null")
     image.product = _rave.Rave_ProductType_CAPPI
     image.starttime = "110000"
     image.startdate = "20110101"
@@ -592,7 +592,7 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEqual("H5rad 2.3", nodelist.getNode("/what/version").data())
 
     #Where
-    self.assertEqual("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", nodelist.getNode("/where/projdef").data())
+    self.assertEqual("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84 +nadgrids=@null", nodelist.getNode("/where/projdef").data())
     self.assertEqual(240, nodelist.getNode("/where/xsize").data())
     self.assertEqual(240, nodelist.getNode("/where/ysize").data())
     self.assertAlmostEqual(2000.0, nodelist.getNode("/where/xscale").data(), 4)
@@ -764,7 +764,7 @@ class PyRaveIOTest(unittest.TestCase):
     cvol.xscale = 2000.0
     cvol.yscale = 2000.0
     cvol.areaextent = (-240000.0, -240000.0, 240000.0, 240000.0)
-    projection = _projection.new("x","y","+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84")
+    projection = _projection.new("x","y","+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84 +nadgrids=@null")
     cvol.projection = projection
 
     image = _cartesian.new()
@@ -831,7 +831,7 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEqual("H5rad 2.3", nodelist.getNode("/what/version").data())
 
     #Where
-    self.assertEqual("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", nodelist.getNode("/where/projdef").data())
+    self.assertEqual("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84 +nadgrids=@null", nodelist.getNode("/where/projdef").data())
     self.assertEqual(240, nodelist.getNode("/where/xsize").data())
     self.assertEqual(240, nodelist.getNode("/where/ysize").data())
     self.assertAlmostEqual(2000.0, nodelist.getNode("/where/xscale").data(), 4)

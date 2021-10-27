@@ -36,6 +36,8 @@ HDF5_LDPATH=`fgrep HDF5_LIBDIR "${HLHDF_MKFFILE}" | sed -e"s/\(HDF5_LIBDIR=[ \t]
 # Get HLHDFs libpath from raves mkf file
 HLHDF_LDPATH=`fgrep HLHDF_LIB_DIR "${DEF_MK_FILE}" | sed -e"s/\(HLHDF_LIB_DIR=[ \t]*\)//"`
 
+PROJ_LDPATH=`fgrep PROJ_LIB_DIR "${DEF_MK_FILE}" | sed -e"s/\(PROJ_LIB_DIR=[ \t]*\)//" | sed -e"s/-L//"`
+
 BNAME=`$PYTHON_BIN -c 'from distutils import util; import sys; print("lib.%s-%s" % (util.get_platform(), sys.version[0:3]))'`
 
 RBPATH="${SCRIPTPATH}/../Lib:${SCRIPTPATH}/../modules"
@@ -55,15 +57,15 @@ esac
 
 if [ "x$ISMACOS" = "xyes" ]; then
   if [ "$DYLD_LIBRARY_PATH" != "" ]; then
-    export DYLD_LIBRARY_PATH="${RAVE_LDPATH}:${HLHDF_LDPATH}:${HDF5_LDPATH}:${LD_LIBRARY_PATH}"
+    export DYLD_LIBRARY_PATH="${RAVE_LDPATH}:${PROJ_LDPATH}:${HLHDF_LDPATH}:${HDF5_LDPATH}:${LD_LIBRARY_PATH}"
   else
-    export DYLD_LIBRARY_PATH="${RAVE_LDPATH}:${HLHDF_LDPATH}:${HDF5_LDPATH}"
+    export DYLD_LIBRARY_PATH="${RAVE_LDPATH}:${PROJ_LDPATH}:${HLHDF_LDPATH}:${HDF5_LDPATH}"
   fi
 else
   if [ "$LD_LIBRARY_PATH" != "" ]; then
-    export LD_LIBRARY_PATH="${RAVE_LDPATH}:${HLHDF_LDPATH}:${HDF5_LDPATH}:${LD_LIBRARY_PATH}"
+    export LD_LIBRARY_PATH="${RAVE_LDPATH}:${PROJ_LDPATH}:${HLHDF_LDPATH}:${HDF5_LDPATH}:${LD_LIBRARY_PATH}"
   else
-    export LD_LIBRARY_PATH="${RAVE_LDPATH}:${HLHDF_LDPATH}:${HDF5_LDPATH}"
+    export LD_LIBRARY_PATH="${RAVE_LDPATH}:${PROJ_LDPATH}:${HLHDF_LDPATH}:${HDF5_LDPATH}"
   fi
 fi
 

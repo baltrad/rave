@@ -25,10 +25,13 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "transform.h"
 #include "projection.h"
+#include "projection_pipeline.h"
 #include "rave_debug.h"
 #include "rave_alloc.h"
 #include "rave_utilities.h"
 #include <string.h>
+#include <math.h>
+#include <stdio.h>
 
 /**
  * Represents one transformator
@@ -72,6 +75,7 @@ static int Transform_cappis_internal(Transform_t* transform, PolarVolume_t* pvol
   double cnodata = 0.0L, cundetect = 0.0L;
   Projection_t* sourcepj = NULL;
   Projection_t* targetpj = NULL;
+  ProjectionPipeline_t* pipeline = NULL;
 
   RAVE_ASSERT((transform != NULL), "transform was NULL");
   RAVE_ASSERT((pvol != NULL), "pvol was NULL");
@@ -88,10 +92,16 @@ static int Transform_cappis_internal(Transform_t* transform, PolarVolume_t* pvol
 
   sourcepj = Cartesian_getProjection(cartesian);
   targetpj = PolarVolume_getProjection(pvol);
+  pipeline = ProjectionPipeline_createPipeline(sourcepj, targetpj);
   cnodata = Cartesian_getNodata(cartesian);
   cundetect = Cartesian_getUndetect(cartesian);
   xsize = Cartesian_getXSize(cartesian);
   ysize = Cartesian_getYSize(cartesian);
+
+  if (pipeline == NULL) {
+    RAVE_ERROR0("Failed to create pipeline");
+    goto done;
+  }
 
   for (y = 0; y < ysize; y++) {
     double herey = Cartesian_getLocationY(cartesian, y);
@@ -101,7 +111,7 @@ static int Transform_cappis_internal(Transform_t* transform, PolarVolume_t* pvol
       herey = tmpy; // So that we can use herey over and over again
       RaveValueType valid = RaveValueType_NODATA;
       double v = 0.0L;
-      if (!Projection_transform(sourcepj, targetpj, &herex, &herey, NULL)) {
+      if (!ProjectionPipeline_fwd(pipeline, herex, herey, &herex, &herey)) {
         RAVE_ERROR0("Transform failed");
         goto done;
       }
@@ -120,6 +130,7 @@ static int Transform_cappis_internal(Transform_t* transform, PolarVolume_t* pvol
 done:
   RAVE_OBJECT_RELEASE(sourcepj);
   RAVE_OBJECT_RELEASE(targetpj);
+  RAVE_OBJECT_RELEASE(pipeline);
   return result;
 }
 
@@ -209,6 +220,7 @@ int Transform_ppi(Transform_t* transform, PolarScan_t* scan, Cartesian_t* cartes
   double cnodata = 0.0L, cundetect = 0.0L;
   Projection_t* sourcepj = NULL;
   Projection_t* targetpj = NULL;
+  ProjectionPipeline_t* pipeline = NULL;
 
   RAVE_ASSERT((transform != NULL), "transform was NULL");
   RAVE_ASSERT((scan != NULL), "scan was NULL");
@@ -227,6 +239,12 @@ int Transform_ppi(Transform_t* transform, PolarScan_t* scan, Cartesian_t* cartes
   xsize = Cartesian_getXSize(cartesian);
   ysize = Cartesian_getYSize(cartesian);
 
+  pipeline = ProjectionPipeline_createPipeline(sourcepj, targetpj);
+  if (pipeline == NULL) {
+    RAVE_ERROR0("Failed to create pipeline");
+    goto done;
+  }
+
   for (y = 0; y < ysize; y++) {
     double herey = Cartesian_getLocationY(cartesian, y);
     double tmpy = herey;
@@ -235,7 +253,7 @@ int Transform_ppi(Transform_t* transform, PolarScan_t* scan, Cartesian_t* cartes
       herey = tmpy; // So that we can use herey over and over again
       RaveValueType valid = RaveValueType_NODATA;
       double v = 0.0L;
-      if (!Projection_transform(sourcepj, targetpj, &herex, &herey, NULL)) {
+      if (!ProjectionPipeline_fwd(pipeline, herex, herey, &herex, &herey)) {
         RAVE_ERROR0("Transform failed");
         goto done;
       }
@@ -254,6 +272,7 @@ int Transform_ppi(Transform_t* transform, PolarScan_t* scan, Cartesian_t* cartes
 done:
   RAVE_OBJECT_RELEASE(sourcepj);
   RAVE_OBJECT_RELEASE(targetpj);
+  RAVE_OBJECT_RELEASE(pipeline);
   return result;
 }
 
@@ -271,6 +290,7 @@ PolarScan_t* Transform_ctoscan(Transform_t* transform, Cartesian_t* cartesian, R
 {
   Projection_t* sourcepj = NULL;
   Projection_t* targetpj = NULL;
+  ProjectionPipeline_t* pipeline = NULL;
   PolarScan_t* result = NULL;
   PolarScan_t* scan = NULL;
   PolarScanParam_t* parameter = NULL;
@@ -325,6 +345,11 @@ PolarScan_t* Transform_ctoscan(Transform_t* transform, Cartesian_t* cartesian, R
 
   sourcepj = PolarScan_getProjection(scan);
   targetpj = Cartesian_getProjection(cartesian);
+  pipeline = ProjectionPipeline_createPipeline(sourcepj, targetpj);
+  if (pipeline == NULL) {
+    RAVE_ERROR0("Failed to create pipeline");
+    goto error;
+  }
 
   if (!PolarScanParam_createData(parameter,
                                  RadarDefinition_getNbins(def),
@@ -348,7 +373,7 @@ PolarScan_t* Transform_ctoscan(Transform_t* transform, Cartesian_t* cartesian, R
       if (PolarScan_getLonLatFromIndex(scan, bin, ray, &lon, &lat)) {
         double x = 0.0, y = 0.0;
         long xi = 0, yi = 0;
-        if (!Projection_transformx(sourcepj, targetpj, lon, lat, 0.0, &x, &y, NULL)) {
+        if (!ProjectionPipeline_fwd(pipeline, lon, lat, &x, &y)) {
           goto error;
         }
         xi = Cartesian_getIndexX(cartesian, x);
@@ -363,6 +388,7 @@ PolarScan_t* Transform_ctoscan(Transform_t* transform, Cartesian_t* cartesian, R
 error:
   RAVE_OBJECT_RELEASE(sourcepj);
   RAVE_OBJECT_RELEASE(targetpj);
+  RAVE_OBJECT_RELEASE(pipeline);
   RAVE_OBJECT_RELEASE(parameter);
   RAVE_OBJECT_RELEASE(cparam);
   RAVE_OBJECT_RELEASE(scan);

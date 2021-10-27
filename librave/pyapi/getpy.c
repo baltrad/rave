@@ -8,6 +8,7 @@
 #include "pyravecompat.h"
 #include "rave_alloc.h"
 
+#ifdef USE_PROJ4_API
 PJ* initProjection(PyObject* pcs)
 {
   char** argv;
@@ -33,6 +34,45 @@ PJ* initProjection(PyObject* pcs)
 
   return pj;
 }
+
+void freeProjection(PJ* pj)
+{
+  if (pj != NULL)
+    pj_free(pj);
+}
+
+#else
+PJ* initProjection(PyObject* pcs)
+{
+  char pcsdef[1025];
+  int i,n;
+  PJ* pj;
+
+  n = PyObject_Length(pcs);
+  memset(pcsdef,0,sizeof(pcsdef));
+
+  for(i=0;i<n;i++) {
+    PyObject* op = PySequence_GetItem(pcs,i);
+    PyObject* str = PyObject_Str(op);
+    strcat(pcsdef, (char*)PyString_AsString(str));
+    strcat(pcsdef, " ");
+    Py_DECREF(str);
+    Py_DECREF(op);
+  }
+
+  PyErr_Clear();
+  pj = proj_create(PJ_DEFAULT_CTX, pcsdef);
+
+  return pj;
+}
+
+void freeProjection(PJ* pj)
+{
+  if (pj != NULL)
+    proj_destroy(pj);
+}
+
+#endif
 
 int getDoubleFromDictionary(char* name,double* val,PyObject* dictionary)
 {

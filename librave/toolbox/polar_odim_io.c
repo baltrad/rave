@@ -29,6 +29,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include <string.h>
 #include "odim_io_utilities.h"
 #include "lazy_dataset.h"
+#include <math.h>
 
 /**
  * The Polar ODIM IO adaptor

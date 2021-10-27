@@ -10,7 +10,7 @@
 </projection>
 <projection id='ps14e60n'>
   <description>Polar Stereographic 14E, 60N</description>
-  <projdef>+proj=stere +ellps=bessel +lat_0=90 +lon_0=14 +lat_ts=60 +datum=WGS84</projdef>
+  <projdef>+proj=stere +ellps=bessel +lat_0=90 +lon_0=14 +lat_ts=60 +towgs84=0,0,0</projdef>
 </projection>
 <projection id='laea15e60n'>
   <description>Lambert Azimuthal Equal Area 15E, 60N</description>

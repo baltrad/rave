@@ -185,6 +185,71 @@ static PyObject* _pyprojection_new(PyObject* self, PyObject* args)
   return (PyObject*)result;
 }
 
+static PyObject* _pyprojection_setDebugLevel(PyObject* self, PyObject* args)
+{
+  int debugPj = 0;
+  if (!PyArg_ParseTuple(args, "i", &debugPj)) {
+    return NULL;
+  }
+  Projection_setDebugLevel(debugPj);
+  Py_RETURN_NONE;
+}
+
+static PyObject* _pyprojection_getDebugLevel(PyObject* self, PyObject* args)
+{
+  if (!PyArg_ParseTuple(args, "")) {
+    return NULL;
+  }
+  return PyInt_FromLong(Projection_getDebugLevel());
+}
+
+static PyObject* _pyprojection_getProjVersion(PyObject* self, PyObject* args)
+{
+  if (!PyArg_ParseTuple(args, "")) {
+    return NULL;
+  }
+  return PyString_FromString(Projection_getProjVersion());
+}
+
+
+static PyObject* _pyprojection_setDefaultLonLatPcsDef(PyObject* self, PyObject* args)
+{
+  char* defaultPcsDef=NULL;
+  if (!PyArg_ParseTuple(args, "s", &defaultPcsDef)) {
+    return NULL;
+  }
+  if (defaultPcsDef == NULL || strlen(defaultPcsDef) >= 1024) {
+    raiseException_returnNULL(PyExc_AttributeError, "Pcsdef must be less than 1024 characters");
+  }
+  Projection_setDefaultLonLatPcsDef(defaultPcsDef);
+  Py_RETURN_NONE;
+}
+
+static PyObject* _pyprojection_getDefaultLonLatPcsDef(PyObject* self, PyObject* args)
+{
+  if (!PyArg_ParseTuple(args, "")) {
+    return NULL;
+  }
+  return PyString_FromString(Projection_getDefaultLonLatPcsDef());
+}
+
+static PyObject* _pyprojection_createDefaultLonLatProjection(PyObject* self, PyObject* args)
+{
+  Projection_t* proj = NULL;
+  PyObject* result = NULL;
+  if (!PyArg_ParseTuple(args, "")) {
+    return NULL;
+  }
+  proj = Projection_createDefaultLonLatProjection();
+  if (proj != NULL) {
+    result = (PyObject*)PyProjection_New(proj);
+  } else {
+    raiseException_returnNULL(PyExc_RuntimeError, "Could not create default lon/lat projection");
+  }
+  RAVE_OBJECT_RELEASE(proj);
+  return result;
+}
+
 /**
  * Projects a coordinate pair into the new projection coordinate system
  * @param[in] self - the source projection
@@ -345,6 +410,16 @@ static PyObject* _pyprojection_fwd(PyProjection* self, PyObject* args)
   return Py_BuildValue("(dd)", x, y);
 }
 
+static PyObject* _pyprojection_isLatLong(PyProjection* self, PyObject* args)
+{
+  int v = 0;
+  if (!PyArg_ParseTuple(args, "")) {
+    return NULL;
+  }
+  v = Projection_isLatLong(self->projection);
+  return PyBool_FromLong(v);
+}
+
 MOD_DIR_FORWARD_DECLARE(PyProjection);
 
 /**
@@ -384,6 +459,11 @@ static struct PyMethodDef _pyprojection_methods[] =
     "lon - longitude in radians\n"
     "lat - latitude in radians"
   },
+  {"isLatLong", (PyCFunction) _pyprojection_isLatLong, 1,
+    "isLatLong() -> boolean\n\n"
+    "Returns if this projection is defined as a lat long projection or not.\n\n"
+  },
+
   {"__dir__", (PyCFunction) MOD_DIR_REFERENCE(PyProjection), METH_NOARGS},
   {NULL, NULL } /* sentinel */
 };
@@ -450,6 +530,32 @@ static PyMethodDef functions[] = {
     "id          - identifier of this projection, like ps14e60n\n"
     "description - description of this projection\n"
     "definition  - the USGS PROJ.4 definition string"
+  },
+  {"setDebugLevel", (PyCFunction)_pyprojection_setDebugLevel, 1,
+    "setDebugLevel(debugPj)\n\n"
+    "Sets the debug level when using proj API\n\n"
+    "debugPj          - Value between 0 (NONE) to 3 (FULL) and 4 (TELL?)\n"
+  },
+  {"getDebugLevel", (PyCFunction)_pyprojection_getDebugLevel, 1,
+    "getDebugLevel() -> debug level\n\n"
+    "Returns the debug level when using proj API, value between 0 (NONE) to 3 (FULL) and 4 (TELL?)\n\n"
+  },
+  {"getProjVersion", (PyCFunction)_pyprojection_getProjVersion, 1,
+    "getProjVersion() -> proj version\n\n"
+    "Returns the Proj version or unknown if it couldn't be identified\n\n"
+  },
+  {"setDefaultLonLatPcsDef", (PyCFunction)_pyprojection_setDefaultLonLatPcsDef, 1,
+    "setDefaultLonLatPcsDef(str)\n\n"
+    "Sets the default lon/lat pcs definition to use when creating lon/lat projection internally\n\n"
+    "str - the pcs definition (max 1023 char long)"
+  },
+  {"getDefaultLonLatPcsDef", (PyCFunction)_pyprojection_getDefaultLonLatPcsDef, 1,
+    "getDefaultLonLatPcsDef(str) -> pcs definition str\n\n"
+    "Returns the default lon/lat pcs definition to use when creating lon/lat projection internally\n\n"
+  },
+  {"createDefaultLonLatProjection", (PyCFunction)_pyprojection_createDefaultLonLatProjection, 1,
+    "createDefaultLonLatProjection() -> default lon/lat projection\n\n"
+    "Returns the default lon/lat projection\n\n"
   },
   {NULL,NULL} /*Sentinel*/
 };

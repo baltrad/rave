@@ -25,7 +25,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef PROJECTION_H
 #define PROJECTION_H
-#include "projects.h"
+
 #include "rave_object.h"
 
 /**
@@ -39,9 +39,61 @@ typedef struct _Projection_t Projection_t;
 extern RaveCoreObjectType Projection_TYPE;
 
 /**
+ * Sets the debug level when using proj API
+ * @param[in] debugPj - Value between 0 (NONE) to 3 (FULL) and 4 (TELL?)
+ */
+void Projection_setDebugLevel(int debugPj);
+
+/**
+ * Returns the debug level when using proj API
+ * @return Value between 0 (NONE) to 3 (FULL) and 4 (TELL?)
+ */
+int Projection_getDebugLevel(void);
+
+/**
+ * Returns the currently used Proj version.
+ * @returns the proj version
+ */
+const char* Projection_getProjVersion(void);
+
+/**
+ * Sets the default lon/lat pcs definition to use. Default is '+proj=longlat +ellps=WGS84'
+ * since PROJ.4 will be different from PROJ >= 6 if specifying +datum=WGS84 as well.
+  * @param[in] pcsdef - A proj string, not longer than 1023 chars
+ */
+void Projection_setDefaultLonLatPcsDef(const char* pcsdef);
+
+/**
+ * Returns the default lonlat pcs definition
+ * @return the default lonlat pcs definition
+ */
+const char* Projection_getDefaultLonLatPcsDef(void);
+
+/**
  * Initializes a projection with the projection
  */
 int Projection_init(Projection_t* projection, const char* id, const char* description, const char* definition);
+
+/**
+ * Creates a projection directly. Like writing:
+ * Projection_t* p = RAVE_OBJECT_NEW(&Projection_TYPE);
+ * if (p != NULL) {
+ *   if (!Projection_init(p, id, description, definition)) {
+ *     RAVE_OBJECT_RELEASE(p);
+ *   }
+ * }
+ * @param[in] id - the id
+ * @param[in] description - the description
+ * @param[in] definition - the definition
+ * @return the created projection
+ */
+Projection_t* Projection_create(const char* id, const char* description, const char* definition);
+
+/**
+ * Creates a default lon lat projection by using the default lonlat pcs definition
+ * @returns the projection or NULL on failure
+ */
+Projection_t* Projection_createDefaultLonLatProjection(void);
 
 /**
  * Returns the ID for this projection.
@@ -63,6 +115,13 @@ const char* Projection_getDescription(Projection_t* projection);
  * @return the definition for this projection
  */
 const char* Projection_getDefinition(Projection_t* projection);
+
+/**
+ * Returns if this projection is a latlong or not
+ * @param[in] projection - self
+ * @return if this is a latlong projection or not
+ */
+int Projection_isLatLong(Projection_t* projection);
 
 /**
  * Transforms the coordinates in this projection into the target projection.

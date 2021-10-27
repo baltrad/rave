@@ -26,6 +26,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "cartesiancomposite.h"
 #include "cartesianparam.h"
 #include "cartesian.h"
+#include "projection_pipeline.h"
 #include "raveobject_list.h"
 #include "rave_debug.h"
 #include "rave_alloc.h"
@@ -381,12 +382,19 @@ Cartesian_t* CartesianComposite_nearest(CartesianComposite_t* self, Area_t* area
   int x = 0, y = 0, i = 0, xsize = 0, ysize = 0, nimages = 0;
   double ctnodata = 255.0, ctundetect = 0.0;
   Projection_t *tgtpj = NULL, *srcpj = NULL;
+  ProjectionPipeline_t* pipeline = NULL;
+  RaveObjectList_t* pipelines = NULL;
 
   if (self->method == CartesianCompositeSelectionMethod_DISTANCE) {
     if (!HasAllCartesianDistanceField(self)) {
       RAVE_WARNING0("All in-objects does not have the required distance field");
       goto done;
     }
+  }
+
+  pipelines = RAVE_OBJECT_NEW(&RaveObjectList_TYPE);
+  if (pipelines == NULL) {
+    goto done;
   }
 
   ct = CartesianComposite_createCompositeImage(self, area);
@@ -396,6 +404,34 @@ Cartesian_t* CartesianComposite_nearest(CartesianComposite_t* self, Area_t* area
   ysize = Cartesian_getYSize(ct);
   srcpj = Cartesian_getProjection(ct);
   nimages = CartesianComposite_getNumberOfObjects(self);
+
+  for (i = 0; i < nimages; i++) {
+    inobj = CartesianComposite_get(self, i);
+    if (inobj != NULL) {
+      Projection_t* p =  Cartesian_getProjection(inobj);
+      if (p != NULL) {
+        pipeline = ProjectionPipeline_createPipeline(srcpj, p);
+        if (pipeline == NULL || !RaveObjectList_add(pipelines, (RaveCoreObject*)pipeline)) {
+          RAVE_ERROR0("Could not create pipeline");
+          RAVE_OBJECT_RELEASE(p);
+          RAVE_OBJECT_RELEASE(inobj);
+          RAVE_OBJECT_RELEASE(pipeline);
+          goto done;
+        }
+        RAVE_OBJECT_RELEASE(pipeline);
+      } else {
+        RAVE_ERROR0("Cartesian product does not have a projection?");
+        RAVE_OBJECT_RELEASE(p);
+        RAVE_OBJECT_RELEASE(inobj);
+        goto done;
+      }
+      RAVE_OBJECT_RELEASE(p);
+    } else {
+      RAVE_ERROR1("No cartesian at %d in composite", i);
+      goto done;
+    }
+    RAVE_OBJECT_RELEASE(inobj);
+  }
 
   for (y = 0; y < ysize; y++) {
     double herey = Cartesian_getLocationY(ct, y);
@@ -415,12 +451,13 @@ Cartesian_t* CartesianComposite_nearest(CartesianComposite_t* self, Area_t* area
         double v = 0.0L;
         herey = tmpy; // So that we can use herey over and over again
         inobj = CartesianComposite_get(self, i);
-        tgtpj = Cartesian_getProjection(inobj);
+        pipeline = (ProjectionPipeline_t*)RaveObjectList_get(pipelines, i);
 
-        if (!Projection_transform(srcpj, tgtpj, &herex, &herey, NULL)) {
+        if (pipeline == NULL || !ProjectionPipeline_fwd(pipeline, herex, herey, &herex, &herey)) {
           RAVE_ERROR0("Composite generation failed");
           goto done;
         }
+        RAVE_OBJECT_RELEASE(pipeline);
 
         valid = Cartesian_getValueAtLocation(inobj, herex, herey, &v);
 
@@ -484,6 +521,8 @@ done:
   RAVE_OBJECT_RELEASE(srcpj);
   RAVE_OBJECT_RELEASE(inobj);
   RAVE_OBJECT_RELEASE(ct);
+  RAVE_OBJECT_RELEASE(pipeline);
+  RAVE_OBJECT_RELEASE(pipelines);
   return result;
 }
 

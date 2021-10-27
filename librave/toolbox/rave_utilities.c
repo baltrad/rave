@@ -317,6 +317,15 @@ int RaveUtilities_isCFConventionSupported(void)
 #endif
 }
 
+int RaveUtilities_isLegacyProjEnabled(void)
+{
+#ifdef USE_PROJ4_API
+  return 1;
+#else
+  return 0;
+#endif
+}
+
 char* RaveUtilities_handleSourceVersion(const char* source, RaveIO_ODIM_Version version)
 {
   char* result = NULL;

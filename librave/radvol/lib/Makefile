@@ -27,11 +27,11 @@
 # C flags, use RAVE suggested ones: overkill ... but it works
 #
 CFLAGS= -I. $(CCSHARED) $(OPTS) $(NUMPY_INCLUDE_DIR) $(INCLUDE_PYTHON) \
-	-I$(HLHDF_INCLUDE_DIR) $(ZLIB_INCDIR) $(HDF5_INCDIR) \
-	$(PROJ_INCLUDE_DIR) -I../../toolbox
+	-I$(HLHDF_INCLUDE_DIR) $(PROJ_INCLUDE_DIR) $(ZLIB_INCDIR) $(HDF5_INCDIR) \
+	-I../../toolbox
 
-LDFLAGS+= -L. -L$(HLHDF_LIB_DIR) $(ZLIB_LIBDIR) $(HDF5_LIBDIR) \
-	  $(PROJ_LIB_DIR) -L../../toolbox
+LDFLAGS+= -L. -L$(HLHDF_LIB_DIR) $(PROJ_LIB_DIR) $(ZLIB_LIBDIR) $(HDF5_LIBDIR) \
+	  -L../../toolbox
 
 # --------------------------------------------------------------------
 # Fixed definitions
