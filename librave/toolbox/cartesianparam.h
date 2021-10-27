@@ -26,7 +26,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef CARTESIANPARAM_H
 #define CARTESIANPARAM_H
-#include "rave_transform.h"
+#include "rave_proj.h"
 #include "projection.h"
 #include "area.h"
 #include "rave_object.h"

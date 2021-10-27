@@ -8,16 +8,7 @@
 #define RAVE_TRANSFORM_H
 
 #include "rave_types.h"
-
-#ifdef USE_PROJ4_API
-#include <projects.h>
-#ifdef PJ_VERSION
-#define UV projUV
-#endif
-#else
-#include <proj.h>
-#define UV PJ_UV
-#endif
+#include "rave_proj.h"
 
 /**
  * Data structure when working with 2D projections
