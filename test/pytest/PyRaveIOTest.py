@@ -995,40 +995,44 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEqual("qfield2 value 1 2", newvol.getImage(0).getParameter("DBZH").getQualityField(0).getAttribute("how/subgroup1/subgroup2/attr"))
 
   def test_load_cartesian_volume(self):
-    obj = _raveio.open(self.FIXTURE_CVOL_CAPPI)
-    self.assertEqual(_raveio.RaveIO_ODIM_Version_2_0, obj.read_version)
-    self.assertEqual(_raveio.RaveIO_ODIM_H5rad_Version_2_0, obj.h5radversion)
-    self.assertEqual(_rave.Rave_ObjectType_CVOL, obj.objectType)
+    try:
+        _projection.setDefaultLonLatPcsDef("+proj=longlat +ellps=WGS84")
+        obj = _raveio.open(self.FIXTURE_CVOL_CAPPI)
+        self.assertEqual(_raveio.RaveIO_ODIM_Version_2_0, obj.read_version)
+        self.assertEqual(_raveio.RaveIO_ODIM_H5rad_Version_2_0, obj.h5radversion)
+        self.assertEqual(_rave.Rave_ObjectType_CVOL, obj.objectType)
 
-    cvol = obj.object
-    self.assertEqual(_rave.Rave_ObjectType_CVOL, cvol.objectType)
-    self.assertEqual("100000", cvol.time)
-    self.assertEqual("20091010", cvol.date)
-    self.assertEqual("PLC:123", cvol.source)
-    self.assertEqual("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", cvol.projection.definition)
-    self.assertAlmostEqual(-240000.0, cvol.areaextent[0], 4)
-    self.assertAlmostEqual(-240000.0, cvol.areaextent[1], 4)
-    self.assertAlmostEqual(238000.0, cvol.areaextent[2], 4)  # Since AE should be projected(UR) - xscale
-    self.assertAlmostEqual(238000.0, cvol.areaextent[3], 4)  # Since AE should be projected(UR) - yscale
-    self.assertAlmostEqual(2000.0, cvol.xscale, 4)
-    self.assertAlmostEqual(2000.0, cvol.yscale, 4)
+        cvol = obj.object
+        self.assertEqual(_rave.Rave_ObjectType_CVOL, cvol.objectType)
+        self.assertEqual("100000", cvol.time)
+        self.assertEqual("20091010", cvol.date)
+        self.assertEqual("PLC:123", cvol.source)
+        self.assertEqual("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", cvol.projection.definition)
+        self.assertAlmostEqual(-240000.0, cvol.areaextent[0], 4)
+        self.assertAlmostEqual(-240000.0, cvol.areaextent[1], 4)
+        self.assertAlmostEqual(238000.0, cvol.areaextent[2], 4)  # Since AE should be projected(UR) - xscale
+        self.assertAlmostEqual(238000.0, cvol.areaextent[3], 4)  # Since AE should be projected(UR) - yscale
+        self.assertAlmostEqual(2000.0, cvol.xscale, 4)
+        self.assertAlmostEqual(2000.0, cvol.yscale, 4)
 
-    self.assertEqual(1, cvol.getNumberOfImages())
+        self.assertEqual(1, cvol.getNumberOfImages())
 
-    image = cvol.getImage(0)
-    self.assertEqual(_rave.Rave_ProductType_CAPPI, image.product)
-    self.assertEqual(240, image.xsize)
-    self.assertEqual(240, image.ysize)
+        image = cvol.getImage(0)
+        self.assertEqual(_rave.Rave_ProductType_CAPPI, image.product)
+        self.assertEqual(240, image.xsize)
+        self.assertEqual(240, image.ysize)
 
-    param = image.getParameter("DBZH")
-    self.assertEqual(numpy.uint8, param.getData().dtype)
-    self.assertEqual("DBZH", param.quantity)
-    self.assertAlmostEqual(1.0, param.gain, 4)
-    self.assertAlmostEqual(0.0, param.offset, 4)
-    self.assertAlmostEqual(255.0, param.nodata, 4)
-    self.assertAlmostEqual(0.0, param.undetect, 4)
-    self.assertEqual(240, param.xsize)
-    self.assertEqual(240, param.ysize)
+        param = image.getParameter("DBZH")
+        self.assertEqual(numpy.uint8, param.getData().dtype)
+        self.assertEqual("DBZH", param.quantity)
+        self.assertAlmostEqual(1.0, param.gain, 4)
+        self.assertAlmostEqual(0.0, param.offset, 4)
+        self.assertAlmostEqual(255.0, param.nodata, 4)
+        self.assertAlmostEqual(0.0, param.undetect, 4)
+        self.assertEqual(240, param.xsize)
+        self.assertEqual(240, param.ysize)
+    finally:
+        _projection.setDefaultLonLatPcsDef("+proj=longlat +ellps=WGS84 +datum=WGS84") # Reset to not cause problems with other test cases
 
   def test_load_cartesian_volume_20_save_23(self):
     obj = _raveio.open(self.FIXTURE_CVOL_CAPPI)
@@ -1093,78 +1097,86 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertAlmostEqual(0.0, nrio.object.zstart, 4)
 
   def test_load_cartesian_volume_save_cartesian_image(self):
-    obj = _raveio.open(self.FIXTURE_CVOL_CAPPI)
-    image = obj.object.getImage(0)
-    ios = _raveio.new()
-    ios.object = image
-    ios.filename = self.TEMPORARY_FILE
-    ios.save()    
+    try:
+        _projection.setDefaultLonLatPcsDef("+proj=longlat +ellps=WGS84")
+        obj = _raveio.open(self.FIXTURE_CVOL_CAPPI)
+        image = obj.object.getImage(0)
+        ios = _raveio.new()
+        ios.object = image
+        ios.filename = self.TEMPORARY_FILE
+        ios.save()    
 
-    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
-    nodelist.selectAll()
-    nodelist.fetch()
+        nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+        nodelist.selectAll()
+        nodelist.fetch()
 
-    self.assertEqual("ODIM_H5/V2_3", nodelist.getNode("/Conventions").data())
+        self.assertEqual("ODIM_H5/V2_3", nodelist.getNode("/Conventions").data())
 
-    # What
-    self.assertEqual("100000", nodelist.getNode("/what/time").data())
-    self.assertEqual("20091010", nodelist.getNode("/what/date").data())
-    self.assertEqual("PLC:123", nodelist.getNode("/what/source").data())
-    self.assertEqual("IMAGE", nodelist.getNode("/what/object").data())
-    self.assertEqual("H5rad 2.3", nodelist.getNode("/what/version").data())
+        # What
+        self.assertEqual("100000", nodelist.getNode("/what/time").data())
+        self.assertEqual("20091010", nodelist.getNode("/what/date").data())
+        self.assertEqual("PLC:123", nodelist.getNode("/what/source").data())
+        self.assertEqual("IMAGE", nodelist.getNode("/what/object").data())
+        self.assertEqual("H5rad 2.3", nodelist.getNode("/what/version").data())
 
-    #Where
-    self.assertEqual("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", nodelist.getNode("/where/projdef").data())
-    self.assertEqual(240, nodelist.getNode("/where/xsize").data())
-    self.assertEqual(240, nodelist.getNode("/where/ysize").data())
-    self.assertAlmostEqual(2000.0, nodelist.getNode("/where/xscale").data(), 4)
-    self.assertAlmostEqual(2000.0, nodelist.getNode("/where/yscale").data(), 4)
+        #Where
+        self.assertEqual("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", nodelist.getNode("/where/projdef").data())
+        self.assertEqual(240, nodelist.getNode("/where/xsize").data())
+        self.assertEqual(240, nodelist.getNode("/where/ysize").data())
+        self.assertAlmostEqual(2000.0, nodelist.getNode("/where/xscale").data(), 4)
+        self.assertAlmostEqual(2000.0, nodelist.getNode("/where/yscale").data(), 4)
 
-    self.assertAlmostEqual(9.1714, nodelist.getNode("/where/LL_lon").data(), 4)
-    self.assertAlmostEqual(54.1539, nodelist.getNode("/where/LL_lat").data(), 4)
-    self.assertAlmostEqual(8.7327, nodelist.getNode("/where/UL_lon").data(), 4)
-    self.assertAlmostEqual(58.4408, nodelist.getNode("/where/UL_lat").data(), 4)
-    self.assertAlmostEqual(16.9418, nodelist.getNode("/where/UR_lon").data(), 4)
-    self.assertAlmostEqual(58.4419, nodelist.getNode("/where/UR_lat").data(), 4)
-    self.assertAlmostEqual(16.5068, nodelist.getNode("/where/LR_lon").data(), 4)
-    self.assertAlmostEqual(54.1549, nodelist.getNode("/where/LR_lat").data(), 4)
+        self.assertAlmostEqual(9.1714, nodelist.getNode("/where/LL_lon").data(), 4)
+        self.assertAlmostEqual(54.1539, nodelist.getNode("/where/LL_lat").data(), 4)
+        self.assertAlmostEqual(8.7327, nodelist.getNode("/where/UL_lon").data(), 4)
+        self.assertAlmostEqual(58.4408, nodelist.getNode("/where/UL_lat").data(), 4)
+        self.assertAlmostEqual(16.9418, nodelist.getNode("/where/UR_lon").data(), 4)
+        self.assertAlmostEqual(58.4419, nodelist.getNode("/where/UR_lat").data(), 4)
+        self.assertAlmostEqual(16.5068, nodelist.getNode("/where/LR_lon").data(), 4)
+        self.assertAlmostEqual(54.1549, nodelist.getNode("/where/LR_lat").data(), 4)
 
-    #dataset1
-    self.assertEqual("DBZH", nodelist.getNode("/dataset1/data1/what/quantity").data())
-    self.assertEqual("100000", nodelist.getNode("/dataset1/what/starttime").data())
-    self.assertEqual("20091010", nodelist.getNode("/dataset1/what/startdate").data())
-    self.assertEqual("100000", nodelist.getNode("/dataset1/what/endtime").data())
-    self.assertEqual("20091010", nodelist.getNode("/dataset1/what/enddate").data())
-    self.assertAlmostEqual(1.0, nodelist.getNode("/dataset1/data1/what/gain").data(), 4)
-    self.assertAlmostEqual(0.0, nodelist.getNode("/dataset1/data1/what/offset").data(), 4)
-    self.assertAlmostEqual(255.0, nodelist.getNode("/dataset1/data1/what/nodata").data(), 4)
-    self.assertAlmostEqual(0.0, nodelist.getNode("/dataset1/data1/what/undetect").data(), 4)
+        #dataset1
+        self.assertEqual("DBZH", nodelist.getNode("/dataset1/data1/what/quantity").data())
+        self.assertEqual("100000", nodelist.getNode("/dataset1/what/starttime").data())
+        self.assertEqual("20091010", nodelist.getNode("/dataset1/what/startdate").data())
+        self.assertEqual("100000", nodelist.getNode("/dataset1/what/endtime").data())
+        self.assertEqual("20091010", nodelist.getNode("/dataset1/what/enddate").data())
+        self.assertAlmostEqual(1.0, nodelist.getNode("/dataset1/data1/what/gain").data(), 4)
+        self.assertAlmostEqual(0.0, nodelist.getNode("/dataset1/data1/what/offset").data(), 4)
+        self.assertAlmostEqual(255.0, nodelist.getNode("/dataset1/data1/what/nodata").data(), 4)
+        self.assertAlmostEqual(0.0, nodelist.getNode("/dataset1/data1/what/undetect").data(), 4)
 
-    self.assertEqual(numpy.uint8, nodelist.getNode("/dataset1/data1/data").data().dtype)
-    self.assertEqual("IMAGE", nodelist.getNode("/dataset1/data1/data/CLASS").data())
-    self.assertEqual("1.2", nodelist.getNode("/dataset1/data1/data/IMAGE_VERSION").data())
+        self.assertEqual(numpy.uint8, nodelist.getNode("/dataset1/data1/data").data().dtype)
+        self.assertEqual("IMAGE", nodelist.getNode("/dataset1/data1/data/CLASS").data())
+        self.assertEqual("1.2", nodelist.getNode("/dataset1/data1/data/IMAGE_VERSION").data())
+    finally:
+        _projection.setDefaultLonLatPcsDef("+proj=longlat +ellps=WGS84 +datum=WGS84") # Reset to not cause problems with other test cases
 
   def test_load_cartesian_image2(self):
-    obj = _raveio.open(self.FIXTURE_CARTESIAN_IMAGE)
-    self.assertEqual(_raveio.RaveIO_ODIM_Version_2_1, obj.read_version)
-    self.assertEqual(_raveio.RaveIO_ODIM_H5rad_Version_2_1, obj.h5radversion)
-    self.assertEqual(_rave.Rave_ObjectType_IMAGE, obj.objectType)
+    try:
+        _projection.setDefaultLonLatPcsDef("+proj=longlat +ellps=WGS84")
+        obj = _raveio.open(self.FIXTURE_CARTESIAN_IMAGE)
+        self.assertEqual(_raveio.RaveIO_ODIM_Version_2_1, obj.read_version)
+        self.assertEqual(_raveio.RaveIO_ODIM_H5rad_Version_2_1, obj.h5radversion)
+        self.assertEqual(_rave.Rave_ObjectType_IMAGE, obj.objectType)
 
-    image = obj.object
-    self.assertEqual(_rave.Rave_ObjectType_IMAGE, image.objectType)
-    self.assertEqual(_rave.Rave_ProductType_CAPPI, image.product)
-    self.assertEqual("100000", image.time)
-    self.assertEqual("20100101", image.date)
-    self.assertEqual("PLC:123", image.source)
-    self.assertEqual("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", image.projection.definition)
-    self.assertAlmostEqual(-240000.0, image.areaextent[0], 4)
-    self.assertAlmostEqual(-240000.0, image.areaextent[1], 4)
-    self.assertAlmostEqual(240000.0, image.areaextent[2], 4)  # Since AE should be projected(UR) - xscale
-    self.assertAlmostEqual(240000.0, image.areaextent[3], 4)  # Since AE should be projected(UR) - yscale
-    self.assertAlmostEqual(2000.0, image.xscale, 4)
-    self.assertAlmostEqual(2000.0, image.yscale, 4)
-    self.assertEqual(240, image.xsize)
-    self.assertEqual(240, image.ysize)
+        image = obj.object
+        self.assertEqual(_rave.Rave_ObjectType_IMAGE, image.objectType)
+        self.assertEqual(_rave.Rave_ProductType_CAPPI, image.product)
+        self.assertEqual("100000", image.time)
+        self.assertEqual("20100101", image.date)
+        self.assertEqual("PLC:123", image.source)
+        self.assertEqual("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", image.projection.definition)
+        self.assertAlmostEqual(-240000.0, image.areaextent[0], 4)
+        self.assertAlmostEqual(-240000.0, image.areaextent[1], 4)
+        self.assertAlmostEqual(240000.0, image.areaextent[2], 4)  # Since AE should be projected(UR) - xscale
+        self.assertAlmostEqual(240000.0, image.areaextent[3], 4)  # Since AE should be projected(UR) - yscale
+        self.assertAlmostEqual(2000.0, image.xscale, 4)
+        self.assertAlmostEqual(2000.0, image.yscale, 4)
+        self.assertEqual(240, image.xsize)
+        self.assertEqual(240, image.ysize)
+    finally:
+        _projection.setDefaultLonLatPcsDef("+proj=longlat +ellps=WGS84 +datum=WGS84") # Reset to not cause problems with other test cases
 
     param = image.getParameter("DBZH")
     self.assertEqual("DBZH", param.quantity)
@@ -1187,69 +1199,74 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEqual(240, numpy.shape(qf2d)[1])
 
   def test_load_cartesian_volume2(self):
-    obj = _raveio.open(self.FIXTURE_CARTESIAN_VOLUME)
-    self.assertEqual(_raveio.RaveIO_ODIM_Version_2_1, obj.read_version)
-    self.assertEqual(_raveio.RaveIO_ODIM_H5rad_Version_2_1, obj.h5radversion)
-    self.assertEqual(_rave.Rave_ObjectType_CVOL, obj.objectType)
+    try:
+        _projection.setDefaultLonLatPcsDef("+proj=longlat +ellps=WGS84")
 
-    cvol = obj.object
-    self.assertEqual("100000", cvol.time)
-    self.assertEqual("20091010", cvol.date)
-    self.assertEqual(_rave.Rave_ObjectType_CVOL, cvol.objectType)
-    self.assertEqual("PLC:123", cvol.source)
-    self.assertAlmostEqual(2000.0, cvol.xscale, 4)
-    self.assertAlmostEqual(2000.0, cvol.yscale, 4)
-    self.assertEqual("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", cvol.projection.definition)
-    self.assertAlmostEqual(-240000.0, cvol.areaextent[0], 4)
-    self.assertAlmostEqual(-240000.0, cvol.areaextent[1], 4)
-    self.assertAlmostEqual(240000.0, cvol.areaextent[2], 4)  # Since AE should be projected(UR) - xscale
-    self.assertAlmostEqual(240000.0, cvol.areaextent[3], 4)  # Since AE should be projected(UR) - yscale
+        obj = _raveio.open(self.FIXTURE_CARTESIAN_VOLUME)
+        self.assertEqual(_raveio.RaveIO_ODIM_Version_2_1, obj.read_version)
+        self.assertEqual(_raveio.RaveIO_ODIM_H5rad_Version_2_1, obj.h5radversion)
+        self.assertEqual(_rave.Rave_ObjectType_CVOL, obj.objectType)
 
-    self.assertEqual(2, cvol.getNumberOfImages())
+        cvol = obj.object
+        self.assertEqual("100000", cvol.time)
+        self.assertEqual("20091010", cvol.date)
+        self.assertEqual(_rave.Rave_ObjectType_CVOL, cvol.objectType)
+        self.assertEqual("PLC:123", cvol.source)
+        self.assertAlmostEqual(2000.0, cvol.xscale, 4)
+        self.assertAlmostEqual(2000.0, cvol.yscale, 4)
+        self.assertEqual("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", cvol.projection.definition)
+        self.assertAlmostEqual(-240000.0, cvol.areaextent[0], 4)
+        self.assertAlmostEqual(-240000.0, cvol.areaextent[1], 4)
+        self.assertAlmostEqual(240000.0, cvol.areaextent[2], 4)  # Since AE should be projected(UR) - xscale
+        self.assertAlmostEqual(240000.0, cvol.areaextent[3], 4)  # Since AE should be projected(UR) - yscale
 
-    image = cvol.getImage(0)
-    self.assertEqual(_rave.Rave_ProductType_CAPPI, image.product)
-    self.assertEqual(240, image.xsize)
-    self.assertEqual(240, image.ysize)
+        self.assertEqual(2, cvol.getNumberOfImages())
 
-    param = image.getParameter("DBZH")
-    self.assertEqual(numpy.uint8, param.getData().dtype)
-    self.assertAlmostEqual(1.0, param.gain, 4)
-    self.assertAlmostEqual(0.0, param.offset, 4)
-    self.assertAlmostEqual(255.0, param.nodata, 4)
-    self.assertAlmostEqual(0.0, param.undetect, 4)
-    self.assertEqual(240, numpy.shape(param.getData())[0])
-    self.assertEqual(240, numpy.shape(param.getData())[1])
+        image = cvol.getImage(0)
+        self.assertEqual(_rave.Rave_ProductType_CAPPI, image.product)
+        self.assertEqual(240, image.xsize)
+        self.assertEqual(240, image.ysize)
 
-    image = cvol.getImage(1)
-    self.assertEqual(_rave.Rave_ProductType_CAPPI, image.product)
-    self.assertEqual(240, image.xsize)
-    self.assertEqual(240, image.ysize)
-    self.assertEqual("110000", image.starttime)
-    self.assertEqual("20110101", image.startdate)
-    self.assertEqual("110005", image.endtime)
-    self.assertEqual("20110101", image.enddate)
+        param = image.getParameter("DBZH")
+        self.assertEqual(numpy.uint8, param.getData().dtype)
+        self.assertAlmostEqual(1.0, param.gain, 4)
+        self.assertAlmostEqual(0.0, param.offset, 4)
+        self.assertAlmostEqual(255.0, param.nodata, 4)
+        self.assertAlmostEqual(0.0, param.undetect, 4)
+        self.assertEqual(240, numpy.shape(param.getData())[0])
+        self.assertEqual(240, numpy.shape(param.getData())[1])
 
-    param = image.getParameter("MMH")
-    self.assertAlmostEqual(1.0, param.gain, 4)
-    self.assertAlmostEqual(0.0, param.offset, 4)
-    self.assertAlmostEqual(255.0, param.nodata, 4)
-    self.assertAlmostEqual(0.0, param.undetect, 4)
-    self.assertEqual(numpy.uint8, param.getData().dtype)
-    self.assertEqual(240, numpy.shape(param.getData())[0])
-    self.assertEqual(240, numpy.shape(param.getData())[1])
+        image = cvol.getImage(1)
+        self.assertEqual(_rave.Rave_ProductType_CAPPI, image.product)
+        self.assertEqual(240, image.xsize)
+        self.assertEqual(240, image.ysize)
+        self.assertEqual("110000", image.starttime)
+        self.assertEqual("20110101", image.startdate)
+        self.assertEqual("110005", image.endtime)
+        self.assertEqual("20110101", image.enddate)
 
-    self.assertEqual(2, image.getNumberOfQualityFields())
-    qf = image.getQualityField(0)
-    qf2 = image.getQualityField(1)
-    self.assertEqual("a quality field", qf.getAttribute("what/sthis"))
-    qfd = qf.getData()
-    self.assertEqual(240, numpy.shape(qfd)[0])
-    self.assertEqual(240, numpy.shape(qfd)[1])
-    self.assertEqual("another quality field", qf2.getAttribute("what/sthat"))
-    qf2d = qf2.getData()
-    self.assertEqual(240, numpy.shape(qf2d)[0])
-    self.assertEqual(240, numpy.shape(qf2d)[1])
+        param = image.getParameter("MMH")
+        self.assertAlmostEqual(1.0, param.gain, 4)
+        self.assertAlmostEqual(0.0, param.offset, 4)
+        self.assertAlmostEqual(255.0, param.nodata, 4)
+        self.assertAlmostEqual(0.0, param.undetect, 4)
+        self.assertEqual(numpy.uint8, param.getData().dtype)
+        self.assertEqual(240, numpy.shape(param.getData())[0])
+        self.assertEqual(240, numpy.shape(param.getData())[1])
+
+        self.assertEqual(2, image.getNumberOfQualityFields())
+        qf = image.getQualityField(0)
+        qf2 = image.getQualityField(1)
+        self.assertEqual("a quality field", qf.getAttribute("what/sthis"))
+        qfd = qf.getData()
+        self.assertEqual(240, numpy.shape(qfd)[0])
+        self.assertEqual(240, numpy.shape(qfd)[1])
+        self.assertEqual("another quality field", qf2.getAttribute("what/sthat"))
+        qf2d = qf2.getData()
+        self.assertEqual(240, numpy.shape(qf2d)[0])
+        self.assertEqual(240, numpy.shape(qf2d)[1])
+    finally:
+        _projection.setDefaultLonLatPcsDef("+proj=longlat +ellps=WGS84 +datum=WGS84") # Reset to not cause problems with other test cases
 
 
   def test_save_polar_volume(self):

@@ -322,12 +322,16 @@ class PyCartesianTest(unittest.TestCase):
       self.assertEqual(y, result)
 
   def test_getExtremeLonLatBoundaries(self):
-    obj = _raveio.open(self.CARTESIAN_FIXTURE).object
-    ul,lr = obj.getExtremeLonLatBoundaries()
-    self.assertAlmostEqual(8.73067, ul[0]*180.0/math.pi, 4)
-    self.assertAlmostEqual(58.4598, ul[1]*180.0/math.pi, 4)
-    self.assertAlmostEqual(16.9439, lr[0]*180.0/math.pi, 4)
-    self.assertAlmostEqual(54.1719, lr[1]*180.0/math.pi, 4)
+    _projection.setDefaultLonLatPcsDef("+proj=longlat +ellps=WGS84")
+    try:
+        obj = _raveio.open(self.CARTESIAN_FIXTURE).object
+        ul,lr = obj.getExtremeLonLatBoundaries()
+        self.assertAlmostEqual(8.73067, ul[0]*180.0/math.pi, 4)
+        self.assertAlmostEqual(58.4598, ul[1]*180.0/math.pi, 4)
+        self.assertAlmostEqual(16.9439, lr[0]*180.0/math.pi, 4)
+        self.assertAlmostEqual(54.1719, lr[1]*180.0/math.pi, 4)
+    finally:
+        _projection.setDefaultLonLatPcsDef("+proj=longlat +ellps=WGS84 +datum=WGS84")
 
   def test_projection(self):
     obj = _cartesian.new()

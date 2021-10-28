@@ -172,7 +172,7 @@ void Projection_setDefaultLonLatPcsDef(const char* pcsdef)
 const char* Projection_getDefaultLonLatPcsDef(void)
 {
   if (strcmp(lon_lat_pcsdef, "")==0) {
-    strcpy(lon_lat_pcsdef, "+proj=longlat +ellps=WGS84"); /* Do not specify +datum=WGS84, then PROJ.4 will not work properly in pj_transform */
+    strcpy(lon_lat_pcsdef, "+proj=longlat +ellps=WGS84 +datum=WGS84");
   }
   return (const char*)lon_lat_pcsdef;
 }

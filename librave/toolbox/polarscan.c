@@ -144,7 +144,7 @@ static int PolarScan_constructor(RaveCoreObject* obj)
   scan->rayWidth = 0.0;
 
   if (scan->projection != NULL) {
-    if(!Projection_init(scan->projection, "lonlat", "lonlat", "+proj=latlong +ellps=WGS84 +towgs84=0,0,0")) {
+    if(!Projection_init(scan->projection, "lonlat", "lonlat", Projection_getDefaultLonLatPcsDef())) {
       goto error;
     }
   }

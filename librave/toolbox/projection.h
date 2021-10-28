@@ -58,8 +58,7 @@ int Projection_getDebugLevel(void);
 const char* Projection_getProjVersion(void);
 
 /**
- * Sets the default lon/lat pcs definition to use. Default is '+proj=longlat +ellps=WGS84'
- * since PROJ.4 will be different from PROJ >= 6 if specifying +datum=WGS84 as well.
+ * Sets the default lon/lat pcs definition to use. Default is '+proj=longlat +ellps=WGS84 +datum=WGS84'
   * @param[in] pcsdef - A proj string, not longer than 1023 chars
  */
 void Projection_setDefaultLonLatPcsDef(const char* pcsdef);

@@ -82,7 +82,7 @@ class PyProjectionPipelineTest(unittest.TestCase):
     self.assertAlmostEqual(56.3675, xy[1], 3)
 
   def test_createDefaultLonLatPipeline(self):
-    other = _projection.new("gnom","gnom","+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84")
+    other = _projection.new("gnom","gnom","+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84 +nadgrids=@null")
 
     pipeline = _projectionpipeline.createDefaultLonLatPipeline(other)
     
