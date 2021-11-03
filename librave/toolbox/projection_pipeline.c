@@ -144,6 +144,18 @@ ProjectionPipeline_t* ProjectionPipeline_createPipeline(Projection_t* first, Pro
   return result;
 }
 
+ProjectionPipeline_t* ProjectionPipeline_createPipelineFromDef(const char* first, const char* second)
+{
+  ProjectionPipeline_t* result = NULL;
+  result = RAVE_OBJECT_NEW(&ProjectionPipeline_TYPE);
+  if (result != NULL) {
+    if (!ProjectionPipeline_initFromDef(result, first, second)) {
+      RAVE_OBJECT_RELEASE(result);
+    }
+  }
+  return result;
+}
+
 ProjectionPipeline_t* ProjectionPipeline_createDefaultLonLatPipeline(Projection_t* other)
 {
   Projection_t* lonlatproj = Projection_createDefaultLonLatProjection();
@@ -154,6 +166,13 @@ ProjectionPipeline_t* ProjectionPipeline_createDefaultLonLatPipeline(Projection_
   RAVE_OBJECT_RELEASE(lonlatproj);
   return pipeline;
 }
+
+
+ProjectionPipeline_t* ProjectionPipeline_createDefaultLonLatPipelineFromDef(const char* other)
+{
+  return ProjectionPipeline_createPipelineFromDef(Projection_getDefaultLonLatProjDef(), other);
+}
+
 
 int ProjectionPipeline_init(ProjectionPipeline_t *pipeline, Projection_t *first,
     Projection_t *second)
@@ -166,6 +185,10 @@ int ProjectionPipeline_init(ProjectionPipeline_t *pipeline, Projection_t *first,
     RAVE_ERROR0("One of first or second was NULL when initializing");
     return 0;
   }
+
+  return ProjectionPipeline_initFromDef(pipeline, Projection_getDefinition(first), Projection_getDefinition(second));
+
+#ifdef KALLE
 
   /* If we are using proj4 api, then original projections will be used. If on other hand
    * we are using new proj api. We need to create the actual pipeline.
@@ -199,6 +222,67 @@ int ProjectionPipeline_init(ProjectionPipeline_t *pipeline, Projection_t *first,
 #ifndef USE_PROJ4_API
 done:
 #endif
+  return result;
+#endif
+}
+
+int ProjectionPipeline_initFromDef(ProjectionPipeline_t *pipeline, const char* first,
+    const char *second)
+{
+  int result = 0;
+  Projection_t *firstPj = NULL, *secondPj = NULL;
+  RAVE_ASSERT((pipeline != NULL), "pipeline was NULL");
+  RAVE_ASSERT((pipeline->initialized == 0), "pipeline was already initalized");
+
+  if (first == NULL || second == NULL) {
+    RAVE_ERROR0("One of first or second was NULL when initializing");
+    return 0;
+  }
+
+  firstPj = Projection_create("firstPj", "first projection", first);
+  secondPj = Projection_create("secondPj", "second projection", second);
+  if (firstPj == NULL) {
+    RAVE_ERROR1("Failed to create first projection from %s", first);
+    goto done;
+  }
+  if (secondPj == NULL) {
+    RAVE_ERROR1("Failed to create second projection from %s", second);
+    goto done;
+  }
+
+  /* If we are using proj4 api, then original projections will be used. If on other hand
+   * we are using new proj api. We need to create the actual pipeline.
+   */
+#ifndef USE_PROJ4_API
+  {
+    PJ *p = NULL;
+    PJ_CONTEXT* context = proj_context_create();
+    if (context == NULL) {
+      RAVE_ERROR0("Failed to create context for projection");
+      goto done;
+    }
+    proj_log_level(context, Projection_getDebugLevel());
+    p = proj_create_crs_to_crs(context, first, second, NULL);
+    if (p == NULL) {
+      RAVE_ERROR2("Failed to create crs_to_crs_projection: %d, %s", proj_errno(0), proj_errno_string(proj_errno(0)));
+      proj_context_destroy(context);
+      goto done;
+    }
+
+    pipeline->pj = p;
+    pipeline->context = context;
+  }
+#endif
+  pipeline->first = RAVE_OBJECT_COPY(firstPj);
+  pipeline->second = RAVE_OBJECT_COPY(secondPj);
+  pipeline->firstIsLatlong = Projection_isLatLong(pipeline->first);
+  pipeline->secondIsLatlong = Projection_isLatLong(pipeline->second);
+  pipeline->initialized = 1;
+  result = 1;
+
+done:
+  RAVE_OBJECT_RELEASE(firstPj);
+  RAVE_OBJECT_RELEASE(secondPj);
   return result;
 }
 

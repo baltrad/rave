@@ -51,6 +51,25 @@ class PyProjectionPipelineTest(unittest.TestCase):
     self.assertEqual(first.definition, obj.first.definition)
     self.assertEqual(second.definition, obj.second.definition)
 
+  def test_new_fromDef(self):
+    obj = _projectionpipeline.new("+proj=latlon +ellps=WGS84", "+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84")
+    
+    self.assertEqual("+proj=latlon +ellps=WGS84", obj.first.definition)
+    self.assertEqual("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84", obj.second.definition)
+
+  def test_new_badValue(self):
+    try:
+        obj = _projectionpipeline.new("+proj=latlon +ellps=WGS84", 123)
+        self.fail("Expected AttributeError")
+    except AttributeError:
+        pass
+
+    try:
+        obj = _projectionpipeline.new(123, "+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84")
+        self.fail("Expected AttributeError")
+    except AttributeError:
+        pass
+
   def test_attribute_visibility(self):
     first = _projection.new("x", "y", "+proj=latlong +ellps=WGS84 +datum=WGS84")
     second = _projection.new("gnom","gnom","+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84")
@@ -89,6 +108,20 @@ class PyProjectionPipelineTest(unittest.TestCase):
     xy = pipeline.fwd(deg2rad((12.8544, 56.3675)))
     self.assertAlmostEqual(0.0, xy[0], 4)
     self.assertAlmostEqual(0.0, xy[1], 4)
+
+  def test_createDefaultLonLatPipeline_fromDef(self):
+    pipeline = _projectionpipeline.createDefaultLonLatPipeline("+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84 +nadgrids=@null")
+
+    xy = pipeline.fwd(deg2rad((12.8544, 56.3675)))
+    self.assertAlmostEqual(0.0, xy[0], 4)
+    self.assertAlmostEqual(0.0, xy[1], 4)
+
+  def test_createDefaultLonLatPipeline_badValue(self):
+    try:
+        pipeline = _projectionpipeline.createDefaultLonLatPipeline(123)
+        self.fail("Expected AttributeError")
+    except AttributeError as e:
+        pass
 
 if __name__=="__main__":
   unittest.main()

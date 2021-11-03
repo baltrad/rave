@@ -996,7 +996,7 @@ class PyRaveIOTest(unittest.TestCase):
 
   def test_load_cartesian_volume(self):
     try:
-        _projection.setDefaultLonLatPcsDef("+proj=longlat +ellps=WGS84")
+        _projection.setDefaultLonLatProjDef("+proj=longlat +ellps=WGS84")
         obj = _raveio.open(self.FIXTURE_CVOL_CAPPI)
         self.assertEqual(_raveio.RaveIO_ODIM_Version_2_0, obj.read_version)
         self.assertEqual(_raveio.RaveIO_ODIM_H5rad_Version_2_0, obj.h5radversion)
@@ -1032,7 +1032,7 @@ class PyRaveIOTest(unittest.TestCase):
         self.assertEqual(240, param.xsize)
         self.assertEqual(240, param.ysize)
     finally:
-        _projection.setDefaultLonLatPcsDef("+proj=longlat +ellps=WGS84 +datum=WGS84") # Reset to not cause problems with other test cases
+        _projection.setDefaultLonLatProjDef("+proj=longlat +ellps=WGS84 +datum=WGS84") # Reset to not cause problems with other test cases
 
   def test_load_cartesian_volume_20_save_23(self):
     obj = _raveio.open(self.FIXTURE_CVOL_CAPPI)
@@ -1098,7 +1098,7 @@ class PyRaveIOTest(unittest.TestCase):
 
   def test_load_cartesian_volume_save_cartesian_image(self):
     try:
-        _projection.setDefaultLonLatPcsDef("+proj=longlat +ellps=WGS84")
+        _projection.setDefaultLonLatProjDef("+proj=longlat +ellps=WGS84")
         obj = _raveio.open(self.FIXTURE_CVOL_CAPPI)
         image = obj.object.getImage(0)
         ios = _raveio.new()
@@ -1150,11 +1150,11 @@ class PyRaveIOTest(unittest.TestCase):
         self.assertEqual("IMAGE", nodelist.getNode("/dataset1/data1/data/CLASS").data())
         self.assertEqual("1.2", nodelist.getNode("/dataset1/data1/data/IMAGE_VERSION").data())
     finally:
-        _projection.setDefaultLonLatPcsDef("+proj=longlat +ellps=WGS84 +datum=WGS84") # Reset to not cause problems with other test cases
+        _projection.setDefaultLonLatProjDef("+proj=longlat +ellps=WGS84 +datum=WGS84") # Reset to not cause problems with other test cases
 
   def test_load_cartesian_image2(self):
     try:
-        _projection.setDefaultLonLatPcsDef("+proj=longlat +ellps=WGS84")
+        _projection.setDefaultLonLatProjDef("+proj=longlat +ellps=WGS84")
         obj = _raveio.open(self.FIXTURE_CARTESIAN_IMAGE)
         self.assertEqual(_raveio.RaveIO_ODIM_Version_2_1, obj.read_version)
         self.assertEqual(_raveio.RaveIO_ODIM_H5rad_Version_2_1, obj.h5radversion)
@@ -1176,7 +1176,7 @@ class PyRaveIOTest(unittest.TestCase):
         self.assertEqual(240, image.xsize)
         self.assertEqual(240, image.ysize)
     finally:
-        _projection.setDefaultLonLatPcsDef("+proj=longlat +ellps=WGS84 +datum=WGS84") # Reset to not cause problems with other test cases
+        _projection.setDefaultLonLatProjDef("+proj=longlat +ellps=WGS84 +datum=WGS84") # Reset to not cause problems with other test cases
 
     param = image.getParameter("DBZH")
     self.assertEqual("DBZH", param.quantity)
@@ -1200,7 +1200,7 @@ class PyRaveIOTest(unittest.TestCase):
 
   def test_load_cartesian_volume2(self):
     try:
-        _projection.setDefaultLonLatPcsDef("+proj=longlat +ellps=WGS84")
+        _projection.setDefaultLonLatProjDef("+proj=longlat +ellps=WGS84")
 
         obj = _raveio.open(self.FIXTURE_CARTESIAN_VOLUME)
         self.assertEqual(_raveio.RaveIO_ODIM_Version_2_1, obj.read_version)
@@ -1266,7 +1266,7 @@ class PyRaveIOTest(unittest.TestCase):
         self.assertEqual(240, numpy.shape(qf2d)[0])
         self.assertEqual(240, numpy.shape(qf2d)[1])
     finally:
-        _projection.setDefaultLonLatPcsDef("+proj=longlat +ellps=WGS84 +datum=WGS84") # Reset to not cause problems with other test cases
+        _projection.setDefaultLonLatProjDef("+proj=longlat +ellps=WGS84 +datum=WGS84") # Reset to not cause problems with other test cases
 
 
   def test_save_polar_volume(self):

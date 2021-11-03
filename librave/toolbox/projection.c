@@ -45,9 +45,9 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 static int proj_debug_level = 0;
 
 /**
- * The default pcsdef to be used when creating default lon lat projection
+ * The default proj def to be used when creating default lon lat projection
  */
-static char lon_lat_pcsdef[1024];
+static char lon_lat_projdef[1024];
 
 /**
  * Represents one projection
@@ -162,19 +162,19 @@ strcpy(result, pj_release);
 }
 
 
-void Projection_setDefaultLonLatPcsDef(const char* pcsdef)
+void Projection_setDefaultLonLatProjDef(const char* projdef)
 {
-  if (pcsdef != NULL && strlen(pcsdef) < 1023) {
-    strcpy(lon_lat_pcsdef, pcsdef);
+  if (projdef != NULL && strlen(projdef) < 1023) {
+    strcpy(lon_lat_projdef, projdef);
   }
 }
 
-const char* Projection_getDefaultLonLatPcsDef(void)
+const char* Projection_getDefaultLonLatProjDef(void)
 {
-  if (strcmp(lon_lat_pcsdef, "")==0) {
-    strcpy(lon_lat_pcsdef, "+proj=longlat +ellps=WGS84 +datum=WGS84");
+  if (strcmp(lon_lat_projdef, "")==0) {
+    strcpy(lon_lat_projdef, "+proj=longlat +ellps=WGS84 +datum=WGS84");
   }
-  return (const char*)lon_lat_pcsdef;
+  return (const char*)lon_lat_projdef;
 }
 
 
@@ -246,7 +246,7 @@ Projection_t* Projection_createDefaultLonLatProjection(void)
   Projection_t* result = NULL;
   result = RAVE_OBJECT_NEW(&Projection_TYPE);
   if (result != NULL) {
-    if (!Projection_init(result, "defaultLonLat", "default lon/lat projection", Projection_getDefaultLonLatPcsDef())) {
+    if (!Projection_init(result, "defaultLonLat", "default lon/lat projection", Projection_getDefaultLonLatProjDef())) {
       RAVE_OBJECT_RELEASE(result);
     }
   }

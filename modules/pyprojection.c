@@ -212,25 +212,25 @@ static PyObject* _pyprojection_getProjVersion(PyObject* self, PyObject* args)
 }
 
 
-static PyObject* _pyprojection_setDefaultLonLatPcsDef(PyObject* self, PyObject* args)
+static PyObject* _pyprojection_setDefaultLonLatProjDef(PyObject* self, PyObject* args)
 {
-  char* defaultPcsDef=NULL;
-  if (!PyArg_ParseTuple(args, "s", &defaultPcsDef)) {
+  char* defaultProjDef=NULL;
+  if (!PyArg_ParseTuple(args, "s", &defaultProjDef)) {
     return NULL;
   }
-  if (defaultPcsDef == NULL || strlen(defaultPcsDef) >= 1024) {
-    raiseException_returnNULL(PyExc_AttributeError, "Pcsdef must be less than 1024 characters");
+  if (defaultProjDef == NULL || strlen(defaultProjDef) >= 1024) {
+    raiseException_returnNULL(PyExc_AttributeError, "projdef must be less than 1024 characters");
   }
-  Projection_setDefaultLonLatPcsDef(defaultPcsDef);
+  Projection_setDefaultLonLatProjDef(defaultProjDef);
   Py_RETURN_NONE;
 }
 
-static PyObject* _pyprojection_getDefaultLonLatPcsDef(PyObject* self, PyObject* args)
+static PyObject* _pyprojection_getDefaultLonLatProjDef(PyObject* self, PyObject* args)
 {
   if (!PyArg_ParseTuple(args, "")) {
     return NULL;
   }
-  return PyString_FromString(Projection_getDefaultLonLatPcsDef());
+  return PyString_FromString(Projection_getDefaultLonLatProjDef());
 }
 
 static PyObject* _pyprojection_createDefaultLonLatProjection(PyObject* self, PyObject* args)
@@ -544,14 +544,14 @@ static PyMethodDef functions[] = {
     "getProjVersion() -> proj version\n\n"
     "Returns the Proj version or unknown if it couldn't be identified\n\n"
   },
-  {"setDefaultLonLatPcsDef", (PyCFunction)_pyprojection_setDefaultLonLatPcsDef, 1,
-    "setDefaultLonLatPcsDef(str)\n\n"
-    "Sets the default lon/lat pcs definition to use when creating lon/lat projection internally\n\n"
+  {"setDefaultLonLatProjDef", (PyCFunction)_pyprojection_setDefaultLonLatProjDef, 1,
+    "setDefaultLonLatProjDef(str)\n\n"
+    "Sets the default lon/lat proj definition to use when creating lon/lat projection internally\n\n"
     "str - the pcs definition (max 1023 char long)"
   },
-  {"getDefaultLonLatPcsDef", (PyCFunction)_pyprojection_getDefaultLonLatPcsDef, 1,
-    "getDefaultLonLatPcsDef(str) -> pcs definition str\n\n"
-    "Returns the default lon/lat pcs definition to use when creating lon/lat projection internally\n\n"
+  {"getDefaultLonLatProjDef", (PyCFunction)_pyprojection_getDefaultLonLatProjDef, 1,
+    "getDefaultLonLatProjDef(str) -> proj definition str\n\n"
+    "Returns the default lon/lat proj definition to use when creating lon/lat projection internally\n\n"
   },
   {"createDefaultLonLatProjection", (PyCFunction)_pyprojection_createDefaultLonLatProjection, 1,
     "createDefaultLonLatProjection() -> default lon/lat projection\n\n"

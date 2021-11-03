@@ -253,15 +253,15 @@ class PyProjectionTest(unittest.TestCase):
     a = _projection.getProjVersion()
     self.assertTrue(len(a) > 0)
 
-  def test_getDefaultLonLatPcsDef(self):
-    self.assertEqual("+proj=longlat +ellps=WGS84 +datum=WGS84", _projection.getDefaultLonLatPcsDef())
+  def test_getDefaultLonLatProjDef(self):
+    self.assertEqual("+proj=longlat +ellps=WGS84 +datum=WGS84", _projection.getDefaultLonLatProjDef())
 
-  def test_setDefaultLonLatPcsDef(self):
-    _projection.setDefaultLonLatPcsDef("+proj=longlat +ellps=WGS84")
+  def test_setDefaultLonLatProjDef(self):
+    _projection.setDefaultLonLatProjDef("+proj=longlat +ellps=WGS84")
     try:
-        self.assertEqual("+proj=longlat +ellps=WGS84", _projection.getDefaultLonLatPcsDef())
+        self.assertEqual("+proj=longlat +ellps=WGS84", _projection.getDefaultLonLatProjDef())
     finally:
-        _projection.setDefaultLonLatPcsDef("+proj=longlat +ellps=WGS84 +datum=WGS84") # Reset to not cause problems with other test cases
+        _projection.setDefaultLonLatProjDef("+proj=longlat +ellps=WGS84 +datum=WGS84") # Reset to not cause problems with other test cases
 
   def test_createDefaultLonLatProjection(self):
     p = _projection.createDefaultLonLatProjection()

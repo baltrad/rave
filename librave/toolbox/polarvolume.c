@@ -76,7 +76,7 @@ static int PolarVolume_constructor(RaveCoreObject* obj)
   // Always initialize to default projection for lon/lat calculations
   this->projection = RAVE_OBJECT_NEW(&Projection_TYPE);
   if (this->projection != NULL) {
-    if(!Projection_init(this->projection, "lonlat", "lonlat", Projection_getDefaultLonLatPcsDef())) {
+    if(!Projection_init(this->projection, "lonlat", "lonlat", Projection_getDefaultLonLatProjDef())) {
       goto error;
     }
   }

@@ -47,6 +47,14 @@ extern RaveCoreObjectType ProjectionPipeline_TYPE;
 ProjectionPipeline_t* ProjectionPipeline_createPipeline(Projection_t* first, Projection_t* second);
 
 /**
+ * Creates a pipeline from one projection to another.
+ * @param[in] first - first projection definition
+ * @param[in] second - second projection definition
+ * @return the pipeline on success otherwise NULL
+ */
+ProjectionPipeline_t* ProjectionPipeline_createPipelineFromDef(const char* first, const char* second);
+
+/**
  * Creates a default pipeline used for translating between lon/lat and the other projection.
  * More or less same as writing:
  * ProjectionPipeline_createPipeline(Projection_createDefaultLonLatProjection(), other)
@@ -57,12 +65,31 @@ ProjectionPipeline_t* ProjectionPipeline_createPipeline(Projection_t* first, Pro
 ProjectionPipeline_t* ProjectionPipeline_createDefaultLonLatPipeline(Projection_t* other);
 
 /**
+ * Creates a default pipeline used for translating between lon/lat and the other projection
+ * where other is defined as a string.
+ * More or less same as writing:
+ * ProjectionPipeline_createPipelineFromDef(Projection_getDefaultLonLatProjDef(), other)
+ *
+ * @param[in] other - the other proj definition
+ * @returns the pipeline on success otherwise NULL
+ */
+ProjectionPipeline_t* ProjectionPipeline_createDefaultLonLatPipelineFromDef(const char* other);
+
+/**
  * Initializes a pipeline with the projections
  * @param[in] first - first projection
  * @param[in] second - second projection
  * @return 1 on success otherwise NULL
  */
 int ProjectionPipeline_init(ProjectionPipeline_t* pipeline, Projection_t* first, Projection_t* second);
+
+/**
+ * Initializes a pipeline with the projection definitions
+ * @param[in] first - first projection definition
+ * @param[in] second - second projection definition
+ * @return 1 on success otherwise NULL
+ */
+int ProjectionPipeline_initFromDef(ProjectionPipeline_t *pipeline, const char* first, const char *second);
 
 /**
  * Returns the first projection.

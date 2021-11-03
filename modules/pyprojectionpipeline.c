@@ -140,23 +140,15 @@ static PyObject* _pyprojectionpipeline_new(PyObject* self, PyObject* args)
   PyObject *first=NULL, *second=NULL;
   PyProjectionPipeline* result = NULL;
   ProjectionPipeline_t* pipeline = NULL;
-  PyProjection *firstPyProjection = NULL, *secondPyProjection = NULL;
   if (!PyArg_ParseTuple(args, "OO", &first, &second)) {
     return NULL;
   }
-  if (!PyProjection_Check(first) || !PyProjection_Check(second)) {
-    raiseException_returnNULL(PyExc_AttributeError, "Must provide 2 projections when creating a pipeline");
-  }
-
-  firstPyProjection = (PyProjection*)first;
-  secondPyProjection = (PyProjection*)second;
-
-  pipeline = RAVE_OBJECT_NEW(&ProjectionPipeline_TYPE);
-  if (pipeline == NULL) {
-    raiseException_returnNULL(PyExc_RuntimeError, "Could not allocate memory");
-  }
-  if (!ProjectionPipeline_init(pipeline, firstPyProjection->projection, secondPyProjection->projection)) {
-    raiseException_gotoTag(done, PyExc_RuntimeError, "Could not initialize pipeline");
+  if (PyProjection_Check(first) && PyProjection_Check(second)) {
+    pipeline = ProjectionPipeline_createPipeline(((PyProjection*)first)->projection, ((PyProjection*)second)->projection);
+  } else if (PyString_Check(first) && PyString_Check(second)) {
+    pipeline = ProjectionPipeline_createPipelineFromDef(PyString_AsString(first), PyString_AsString(second));
+  } else {
+    raiseException_returnNULL(PyExc_AttributeError, "Must provide 2 projections or 2 projection definitions when creating a pipeline");
   }
 
   result = PyProjectionPipeline_New(pipeline);
@@ -177,17 +169,18 @@ static PyObject* _pyprojectionpipeline_createDefaultLonLatPipeline(PyObject* sel
   PyObject *other=NULL;
   PyProjectionPipeline* result = NULL;
   ProjectionPipeline_t* pipeline = NULL;
-  PyProjection *pyProjection = NULL;
   if (!PyArg_ParseTuple(args, "O", &other)) {
     return NULL;
   }
-  if (!PyProjection_Check(other)) {
-    raiseException_returnNULL(PyExc_AttributeError, "Must provide 1 projection when creating the default lon/lat pipeline");
+
+  if (PyProjection_Check(other)) {
+    pipeline = ProjectionPipeline_createDefaultLonLatPipeline(((PyProjection*)other)->projection);
+  } else if (PyString_Check(other)) {
+    pipeline = ProjectionPipeline_createDefaultLonLatPipelineFromDef(PyString_AsString(other));
+  } else {
+    raiseException_returnNULL(PyExc_AttributeError, "Must provide 1 projection or projection definition (str) when creating the default lon/lat pipeline");
   }
 
-  pyProjection = (PyProjection*)other;
-
-  pipeline = ProjectionPipeline_createDefaultLonLatPipeline(pyProjection->projection);
   if (pipeline != NULL) {
     result = PyProjectionPipeline_New(pipeline);
   } else {

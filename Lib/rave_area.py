@@ -28,7 +28,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @date 2011-06-28
 
 import os, string
-import rave_projection, _arearegistry, _area, _projection, Proj
+import rave_projection, _arearegistry, _area, _projection, _projectionpipeline, Proj
 import rave_xml
 from rave_defines import RAVECONFIG, UTF8, AREA_REGISTRY
 import _polarscan, _polarvolume
@@ -251,6 +251,15 @@ def describe(id):
     print("\tSouth-east corner lon/lat: %f, %f" % (LR_lon, LR_lat))
 
 
+##
+# Translates lonlat (as radians) into surface coordinates according to specified pcs_id
+#
+def llToSc(lonlat, pcs_id):
+    import rave_projection
+    projdef = ' '.join(rave_projection.pcs(pcs_id).definition)
+    pipeline = _projectionpipeline.createDefaultLonLatPipeline(projdef)
+    return pipeline.fwd(lonlat)
+
 ## Calculates the corner coordinates in lon/lat based on an area's extent.
 # NOTE: the corners in lon/lat are the true outside corners of each pixel,
 # whereas the extent always represents the position of the lower-left corner
@@ -262,13 +271,13 @@ def MakeCornersFromExtent(id):
     a = _registry[id]
     extent = a.extent
 
-    p = Proj.Proj(a.pcs.definition)
+    pipeline = _projectionpipeline.createDefaultLonLatPipeline(' '.join(a.pcs.definition))
 
-    LL_lon, LL_lat = Proj.r2d(p.invproj((extent[0], extent[1])))
-    UR_lon, UR_lat = Proj.r2d(p.invproj((extent[2]+a.xscale,
+    LL_lon, LL_lat = Proj.r2d(pipeline.inv((extent[0], extent[1])))
+    UR_lon, UR_lat = Proj.r2d(pipeline.inv((extent[2]+a.xscale,
                                          extent[3]+a.yscale)))
-    UL_lon, UL_lat = Proj.r2d(p.invproj((extent[0], extent[3]+a.yscale)))
-    LR_lon, LR_lat = Proj.r2d(p.invproj((extent[2]+a.xscale, extent[1])))
+    UL_lon, UL_lat = Proj.r2d(pipeline.inv((extent[0], extent[3]+a.yscale)))
+    LR_lon, LR_lat = Proj.r2d(pipeline.inv((extent[2]+a.xscale, extent[1])))
     return (LL_lon, LL_lat), (UR_lon, UR_lat), (UL_lon, UL_lat), (LR_lon, LR_lat)
 
 
@@ -388,6 +397,11 @@ def MakeAreaFromPolarObjects(objects, proj_id='llwgs84', xscale=2000.0, yscale=2
 
     return A
 
+def llToSc(lonlat, pcs_id):
+    import rave_projection
+    projdef = ' '.join(rave_projection.pcs(pcs_id).definition)
+    pipeline = _projectionpipeline.createDefaultLonLatPipeline(projdef)
+    return pipeline.fwd(lonlat)
 
 ## Helper for defining new areas.
 # @param scan PolarScanCore object
@@ -415,9 +429,8 @@ def MakeSingleAreaFromSCAN(scan, pcsid, xscale, yscale):
     az = 0.0  # Let's not and say we did ...
     while az < 360.0:
         latr, lonr = pn.daToLl(maxR, az*Proj.dr)
-        herec = lonr*Proj.rd, latr*Proj.rd
 
-        thislon, thislat = Proj.c2s([herec], pcsid)[0]
+        thislon, thislat = llToSc((lonr,latr), pcsid)
 
         if thislon < minx: minx = thislon
         if thislon > maxx: maxx = thislon
