@@ -83,6 +83,7 @@ static const struct OdimVersionToStrTypeMap ODIM_VERSION_STR_MAP[] = {
     {RaveIO_ODIM_Version_2_1, RAVE_ODIM_VERSION_2_1_STR},
     {RaveIO_ODIM_Version_2_2, RAVE_ODIM_VERSION_2_2_STR},
     {RaveIO_ODIM_Version_2_3, RAVE_ODIM_VERSION_2_3_STR},
+    {RaveIO_ODIM_Version_2_4, RAVE_ODIM_VERSION_2_4_STR},
     {-2, NULL}
 };
 
@@ -93,6 +94,7 @@ static const struct OdimVersionToStrTypeMap ODIM_VERSION_H5RAD_STR_MAP[] = {
     {RaveIO_ODIM_Version_2_1, RAVE_ODIM_H5RAD_VERSION_2_1_STR},
     {RaveIO_ODIM_Version_2_2, RAVE_ODIM_H5RAD_VERSION_2_2_STR},
     {RaveIO_ODIM_Version_2_3, RAVE_ODIM_H5RAD_VERSION_2_3_STR},
+    {RaveIO_ODIM_Version_2_4, RAVE_ODIM_H5RAD_VERSION_2_4_STR},
     {-2, NULL}
 };
 

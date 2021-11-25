@@ -368,3 +368,20 @@ done:
   }
   return result;
 }
+
+int RaveUtilities_isSourceValid(const char* source, RaveIO_ODIM_Version version)
+{
+  int result = 0;
+  if (source != NULL) {
+    if (version >= RaveIO_ODIM_Version_2_4) {
+      if (strstr(source, "NOD:") != NULL || strstr(source, "ORG:") != NULL) {
+        result = 1;
+      } else {
+        RAVE_WARNING2("Source is not valid according to rules for version=%d, source=%s", version, source);
+      }
+    } else {
+      result = 1;
+    }
+  }
+  return result;
+}

@@ -34,7 +34,8 @@ typedef enum RaveIO_ODIM_Version {
   RaveIO_ODIM_Version_2_0 = 0,        /**< ODIM 2.0 */
   RaveIO_ODIM_Version_2_1 = 1,        /**< ODIM 2.1 */
   RaveIO_ODIM_Version_2_2 = 2,        /**< ODIM 2.2 */
-  RaveIO_ODIM_Version_2_3 = 3         /**< ODIM 2.3, The default version */
+  RaveIO_ODIM_Version_2_3 = 3,        /**< ODIM 2.3 */
+  RaveIO_ODIM_Version_2_4 = 4,        /**< ODIM 2.4, The default version */
 } RaveIO_ODIM_Version;
 
 /**
@@ -45,7 +46,8 @@ typedef enum RaveIO_ODIM_H5rad_Version {
   RaveIO_ODIM_H5rad_Version_2_0 = 0,  /**< ODIM 2.0 */
   RaveIO_ODIM_H5rad_Version_2_1 = 1,  /**< ODIM 2.1 */
   RaveIO_ODIM_H5rad_Version_2_2 = 2,  /**< ODIM 2.2 */
-  RaveIO_ODIM_H5rad_Version_2_3 = 3   /**< ODIM 2.3, The default version */
+  RaveIO_ODIM_H5rad_Version_2_3 = 3,  /**< ODIM 2.3 */
+  RaveIO_ODIM_H5rad_Version_2_4 = 4,  /**< ODIM 2.4, The default version */
 } RaveIO_ODIM_H5rad_Version;
 
 /**
@@ -69,6 +71,7 @@ typedef enum Rave_ObjectType {
   Rave_ObjectType_SCAN,           /**< Polar scan */
   Rave_ObjectType_RAY,            /**< Single polar ray */
   Rave_ObjectType_AZIM,           /**< Azimuthal object */
+  Rave_ObjectType_ELEV,           /**< Elevational object */
   Rave_ObjectType_IMAGE,          /**< 2-D cartesian image */
   Rave_ObjectType_COMP,           /**< Cartesian composite image(s) */
   Rave_ObjectType_XSEC,           /**< 2-D vertical cross section(s) */

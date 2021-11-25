@@ -44,6 +44,8 @@ typedef struct CartesianOdimArg {
 struct _CartesianOdimIO_t {
   RAVE_OBJECT_HEAD /** Always on top */
   RaveIO_ODIM_Version version;
+  int strict; /**< if writing should be validated strictly or not */
+  char error_message[1024];                /**< if an error occurs during writing an error message might give you the reason */
 };
 
 /*@{ Private functions */
@@ -52,7 +54,10 @@ struct _CartesianOdimIO_t {
  */
 static int CartesianOdimIO_constructor(RaveCoreObject* obj)
 {
-  ((CartesianOdimIO_t*)obj)->version = RaveIO_ODIM_Version_2_3;
+  ((CartesianOdimIO_t*)obj)->version = RaveIO_ODIM_Version_2_4;
+  ((CartesianOdimIO_t*)obj)->strict = 1;
+  strcpy(((CartesianOdimIO_t*)obj)->error_message, "");
+
   return 1;
 }
 
@@ -62,6 +67,8 @@ static int CartesianOdimIO_constructor(RaveCoreObject* obj)
 static int CartesianOdimIO_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj)
 {
   ((CartesianOdimIO_t*)obj)->version = ((CartesianOdimIO_t*)srcobj)->version;
+  ((CartesianOdimIO_t*)obj)->strict = ((CartesianOdimIO_t*)srcobj)->strict;
+  strcpy(((CartesianOdimIO_t*)obj)->error_message, ((CartesianOdimIO_t*)srcobj)->error_message);
   return 1;
 }
 
@@ -946,6 +953,25 @@ RaveIO_ODIM_Version CartesianOdimIO_getVersion(CartesianOdimIO_t* self)
   RAVE_ASSERT((self != NULL), "self == NULL");
   return self->version;
 }
+
+void CartesianOdimIO_setStrict(CartesianOdimIO_t* self, int strict)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  self->strict = strict;
+}
+
+int CartesianOdimIO_isStrict(CartesianOdimIO_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return self->strict;
+}
+
+const char* CartesianOdimIO_getErrorMessage(CartesianOdimIO_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return (const char*)self->error_message;
+}
+
 int CartesianOdimIO_readCartesian(CartesianOdimIO_t* self, LazyNodeListReader_t* lazyReader, Cartesian_t* cartesian)
 {
   int result = 0;
@@ -1067,8 +1093,14 @@ int CartesianOdimIO_fillImage(CartesianOdimIO_t* self, HL_NodeList* nodelist, Ca
   RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
   RAVE_ASSERT((cartesian != NULL), "cartesian == NULL");
 
-  if (!CartesianOdimIO_isValidImage(cartesian) &&
-      !CartesianOdimIO_isValidVolumeImage(cartesian)) {
+  strcpy(self->error_message, "");
+  if (!CartesianOdimIO_isValidImageAddMsg(cartesian, self->error_message, 1024) &&
+      !CartesianOdimIO_isValidVolumeImageAddMsg(cartesian, self->error_message, 1024)) {
+    goto done;
+  }
+
+  if (!CartesianOdimIO_validateCartesianHowAttributes(self, cartesian)) {
+    RAVE_ERROR0("Could not validate cartesian how-attributes");
     goto done;
   }
 
@@ -1112,6 +1144,10 @@ int CartesianOdimIO_fillImage(CartesianOdimIO_t* self, HL_NodeList* nodelist, Ca
   }
 
   source = RaveUtilities_handleSourceVersion(Cartesian_getSource(cartesian), self->version);
+  if (self->strict && !RaveUtilities_isSourceValid(source, self->version)) {
+    strcpy(self->error_message, "what/source is not valid, missing ORG or NOD?");
+    goto done;
+  }
 
   if (!RaveUtilities_addStringAttributeToList(attributes, "what/date", Cartesian_getDate(cartesian)) ||
       !RaveUtilities_addStringAttributeToList(attributes, "what/time", Cartesian_getTime(cartesian)) ||
@@ -1207,7 +1243,12 @@ int CartesianOdimIO_fillVolume(CartesianOdimIO_t* self, HL_NodeList* nodelist, C
   RAVE_ASSERT((volume != NULL), "volume == NULL");
 
   // First verify that no bogus data is entered into the system.
-  if (!CartesianOdimIO_isValidVolume(volume)) {
+  if (!CartesianOdimIO_isValidVolumeAddMsg(volume, self->error_message, 1024)) {
+    goto done;
+  }
+
+  if (!CartesianOdimIO_validateVolumeHowAttributes(self, volume)) {
+    RAVE_ERROR0("Could not validate volume how-attributes");
     goto done;
   }
 
@@ -1230,6 +1271,10 @@ int CartesianOdimIO_fillVolume(CartesianOdimIO_t* self, HL_NodeList* nodelist, C
   }
 
   source = RaveUtilities_handleSourceVersion(CartesianVolume_getSource(volume), self->version);
+  if (self->strict && !RaveUtilities_isSourceValid(source, self->version)) {
+    strcpy(self->error_message, "what/source is not valid, missing ORG or NOD?");
+    goto done;
+  }
 
   if (!RaveUtilities_addStringAttributeToList(attributes, "what/date", CartesianVolume_getDate(volume)) ||
       !RaveUtilities_addStringAttributeToList(attributes, "what/time", CartesianVolume_getTime(volume)) ||
@@ -1282,7 +1327,7 @@ done:
   return result;
 }
 
-int CartesianOdimIO_isValidImage(Cartesian_t* cartesian)
+int CartesianOdimIO_isValidImageAddMsg(Cartesian_t* cartesian, char* msg, int maxlen)
 {
   int result = 0;
   Projection_t* projection = NULL;
@@ -1292,11 +1337,17 @@ int CartesianOdimIO_isValidImage(Cartesian_t* cartesian)
   if (Cartesian_getDate(cartesian) == NULL ||
       Cartesian_getTime(cartesian) == NULL ||
       Cartesian_getSource(cartesian) == NULL) {
+    if (msg != NULL && maxlen > 0) {
+      strncpy(msg, "Date, Time and Source must be set", maxlen);
+    }
     RAVE_INFO0("Date, Time and Source must be set");
     goto done;
   }
 
   if ((projection = Cartesian_getProjection(cartesian)) == NULL) {
+    if (msg != NULL && maxlen > 0) {
+      strncpy(msg, "Projection must be defined for cartesian", maxlen);
+    }
     RAVE_INFO0("Projection must be defined for cartesian");
     goto done;
   }
@@ -1305,16 +1356,25 @@ int CartesianOdimIO_isValidImage(Cartesian_t* cartesian)
       Cartesian_getYSize(cartesian) == 0 ||
       Cartesian_getXScale(cartesian) == 0.0 ||
       Cartesian_getYScale(cartesian) == 0.0) {
+    if (msg != NULL && maxlen > 0) {
+      strncpy(msg, "x/y sizes and scales must be defined", maxlen);
+    }
     RAVE_INFO0("x/y sizes and scales must be defined");
     goto done;
   }
 
   if (Cartesian_getProduct(cartesian) == Rave_ProductType_UNDEFINED) {
+    if (msg != NULL && maxlen > 0) {
+      strncpy(msg, "product type must be defined", maxlen);
+    }
     RAVE_INFO0("product type must be defined");
     goto done;
   }
 
   if (Cartesian_getParameterCount(cartesian) <= 0) {
+    if (msg != NULL && maxlen > 0) {
+      strncpy(msg, "Must be at least on parameter in a cartesian product", maxlen);
+    }
     RAVE_INFO0("Must be at least on parameter in a cartesian product");
     goto done;
   }
@@ -1323,9 +1383,15 @@ int CartesianOdimIO_isValidImage(Cartesian_t* cartesian)
 done:
   RAVE_OBJECT_RELEASE(projection);
   return result;
+
 }
 
-int CartesianOdimIO_isValidVolumeImage(Cartesian_t* cartesian)
+int CartesianOdimIO_isValidImage(Cartesian_t* cartesian)
+{
+  return CartesianOdimIO_isValidImageAddMsg(cartesian, NULL, 0);
+}
+
+int CartesianOdimIO_isValidVolumeImageAddMsg(Cartesian_t* cartesian, char* msg, int maxlen)
 {
   int result = 0;
 
@@ -1335,6 +1401,9 @@ int CartesianOdimIO_isValidVolumeImage(Cartesian_t* cartesian)
       Cartesian_getStartTime(cartesian) == NULL ||
       Cartesian_getEndDate(cartesian) == NULL ||
       Cartesian_getEndTime(cartesian) == NULL) {
+    if (msg != NULL && maxlen > 0) {
+      strncpy(msg, "start and end date/time must be set", maxlen);
+    }
     RAVE_INFO0("start and end date/time must be set");
     goto done;
   }
@@ -1343,17 +1412,70 @@ int CartesianOdimIO_isValidVolumeImage(Cartesian_t* cartesian)
       Cartesian_getYSize(cartesian) == 0 ||
       Cartesian_getXScale(cartesian) == 0.0 ||
       Cartesian_getYScale(cartesian) == 0.0) {
+    if (msg != NULL && maxlen > 0) {
+      strncpy(msg, "x/y sizes and scales must be defined", maxlen);
+    }
     RAVE_INFO0("x/y sizes and scales must be defined");
     goto done;
   }
 
   if (Cartesian_getProduct(cartesian) == Rave_ProductType_UNDEFINED) {
+    if (msg != NULL && maxlen > 0) {
+      strncpy(msg, "product type must be defined", maxlen);
+    }
     RAVE_INFO0("product type must be defined");
     goto done;
   }
   if (Cartesian_getParameterCount(cartesian) <= 0) {
+    if (msg != NULL && maxlen > 0) {
+      strncpy(msg, "Must at least exist one parameter for a cartesian product", maxlen);
+    }
     RAVE_INFO0("Must at least exist one parameter for a cartesian product");
     goto done;
+  }
+
+  result = 1;
+done:
+  return result;
+
+}
+
+
+int CartesianOdimIO_isValidVolumeImage(Cartesian_t* cartesian)
+{
+  return CartesianOdimIO_isValidVolumeImageAddMsg(cartesian, NULL, 0);
+}
+
+int CartesianOdimIO_isValidVolumeAddMsg(CartesianVolume_t* volume, char* msg, int maxlen)
+{
+  int result = 0;
+  int ncartesians = 0;
+  int i = 0;
+  RAVE_ASSERT((volume != NULL), "volume == NULL");
+  if (CartesianVolume_getDate(volume) == NULL ||
+      CartesianVolume_getTime(volume) == NULL ||
+      CartesianVolume_getSource(volume) == NULL) {
+    if (msg != NULL && maxlen > 0) {
+      strncpy(msg, "date, time and source MUST be defined", maxlen);
+    }
+    RAVE_INFO0("date, time and source MUST be defined");
+    goto done;
+  }
+
+  ncartesians = CartesianVolume_getNumberOfImages(volume);
+  if (ncartesians <= 0) {
+    if (msg != NULL && maxlen > 0) {
+      strncpy(msg, "a cartesian volume must at least contains one product", maxlen);
+    }
+    RAVE_INFO0("a cartesian volume must at least contains one product");
+    goto done;
+  }
+
+  result = 1;
+  for (i = 0; result == 1 && i < ncartesians; i++) {
+    Cartesian_t* cartesian = CartesianVolume_getImage(volume, i);
+    result = CartesianOdimIO_isValidVolumeImageAddMsg(cartesian, msg, maxlen);
+    RAVE_OBJECT_RELEASE(cartesian);
   }
 
   result = 1;
@@ -1363,32 +1485,53 @@ done:
 
 int CartesianOdimIO_isValidVolume(CartesianVolume_t* volume)
 {
+  return CartesianOdimIO_isValidVolumeAddMsg(volume, NULL, 0);
+}
+
+int CartesianOdimIO_validateVolumeHowAttributes(CartesianOdimIO_t* self, CartesianVolume_t* volume)
+{
   int result = 0;
-  int ncartesians = 0;
-  int i = 0;
-  RAVE_ASSERT((volume != NULL), "volume == NULL");
-  if (CartesianVolume_getDate(volume) == NULL ||
-      CartesianVolume_getTime(volume) == NULL ||
-      CartesianVolume_getSource(volume) == NULL) {
-    RAVE_INFO0("date, time and source MUST be defined");
-    goto done;
+  RAVE_ASSERT((self != NULL), "self == NULL");
+
+  if (!self->strict) {
+    return 1;
   }
 
-  ncartesians = CartesianVolume_getNumberOfImages(volume);
-  if (ncartesians <= 0) {
-    RAVE_INFO0("a cartesian volume must at least contains one product");
-    goto done;
+  if (self->version >= RaveIO_ODIM_Version_2_4) {
+    int gotSimulated = CartesianVolume_hasAttribute(volume, "how/simulated");
+    if (!gotSimulated) {
+      int i = 0, nrimages = CartesianVolume_getNumberOfImages(volume);
+      gotSimulated = 1;
+      for (i = 0; i < nrimages && gotSimulated; i++) {
+        Cartesian_t* image = CartesianVolume_getImage(volume, i);
+        gotSimulated = Cartesian_hasAttribute(image, "how/simulated");
+        RAVE_OBJECT_RELEASE(image);
+      }
+    }
+    if (!gotSimulated) {
+      RAVE_ERROR0("Failed to validate how attributes for volume. Missing required attribute in either volume or image");
+      strcpy(self->error_message, "Failed to validate how attributes for volume. Missing required attribute in either volume or image");
+    }
+    result = gotSimulated;
   }
+  return result;
+}
 
-  result = 1;
-  for (i = 0; result == 1 && i < ncartesians; i++) {
-    Cartesian_t* cartesian = CartesianVolume_getImage(volume, i);
-    result = CartesianOdimIO_isValidVolumeImage(cartesian);
-    RAVE_OBJECT_RELEASE(cartesian);
+int CartesianOdimIO_validateCartesianHowAttributes(CartesianOdimIO_t* self, Cartesian_t* image)
+{
+  int result = 0;
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  if (!self->strict) {
+    return 1;
   }
-
-  result = 1;
-done:
+  if (self->version >= RaveIO_ODIM_Version_2_4) {
+    int gotSimulated = Cartesian_hasAttribute(image, "how/simulated");
+    if (!gotSimulated) {
+      RAVE_ERROR0("Failed to validate how attributes for cartesian image. Missing required attribute.");
+      strcpy(self->error_message, "Failed to validate how attributes for volume. Missing required attribute.");
+    }
+    result = gotSimulated;
+  }
   return result;
 }
 

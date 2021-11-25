@@ -191,6 +191,13 @@ class PyPolarVolumeTest(unittest.TestCase):
     self.assertTrue(obj.hasAttribute("how/something"))
     self.assertTrue(obj.hasAttribute("how/grp/something"))
 
+  def test_hasAttribute(self):
+    obj = _polarvolume.new()
+
+    obj.addAttribute("how/something", 1.0)
+    self.assertTrue(obj.hasAttribute("how/something"))
+    self.assertFalse(obj.hasAttribute("how/somethingelse"))
+
   def test_addScan(self):
     obj = _polarvolume.new()
     scan = _polarscan.new()

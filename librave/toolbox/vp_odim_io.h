@@ -55,6 +55,30 @@ void VpOdimIO_setVersion(VpOdimIO_t* self, RaveIO_ODIM_Version version);
 RaveIO_ODIM_Version VpOdimIO_getVersion(VpOdimIO_t* self);
 
 /**
+ * If writing should be done strictly. From ODIM H5 2.4 several how-attributes are mandatory. If
+ * any of these are missing and strict is set to true, then the writing will fail.
+ * @param[in] self - self
+ * @param[in] strict - if writing should be performed strictly or not
+ */
+void VpOdimIO_setStrict(VpOdimIO_t* self, int strict);
+
+/**
+ * If writing should be done strictly. From ODIM H5 2.4 several how-attributes are mandatory. If
+ * any of these are missing and strict is set to true, then the writing will fail.
+ * @param[in] self - self
+ * @returns if writing should be performed strictly or not
+ */
+int VpOdimIO_isStrict(VpOdimIO_t* self);
+
+/**
+ * If an error occurs during writing, you might get an indication for why
+ * by checking the error message.
+ * @param[in] self - self
+ * @returns the error message (will be an empty string if nothing to report).
+ */
+const char* VpOdimIO_getErrorMessage(VpOdimIO_t* self);
+
+/**
  * Reads a vp from the nodelist and sets the data in the vp.
  * @param[in] self - self
  * @param[in] nodelist - the hdf5 node list
@@ -71,5 +95,13 @@ int VpOdimIO_read(VpOdimIO_t* self, LazyNodeListReader_t* lazyReader, VerticalPr
  * @return 1 on success otherwise 0
  */
 int VpOdimIO_fill(VpOdimIO_t* self, VerticalProfile_t* vp, HL_NodeList* nodelist);
+
+/**
+ * Validates a vertical profile according to strictness and version in order to verify if it contains necessary information.
+ * @param[in] self - self
+ * @param[in] vp - the vertical profile to validate
+ * @return 1 if valid otherwise 0
+ */
+int VpOdimIO_validateVpHowAttributes(VpOdimIO_t* self, VerticalProfile_t* vp);
 
 #endif

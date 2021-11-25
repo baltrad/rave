@@ -56,6 +56,30 @@ void CartesianOdimIO_setVersion(CartesianOdimIO_t* self, RaveIO_ODIM_Version ver
 RaveIO_ODIM_Version CartesianOdimIO_getVersion(CartesianOdimIO_t* self);
 
 /**
+ * If writing should be done strictly. From ODIM H5 2.4 several how-attributes are mandatory. If
+ * any of these are missing and strict is set to true, then the writing will fail.
+ * @param[in] self - self
+ * @param[in] strict - if writing should be performed strictly or not
+ */
+void CartesianOdimIO_setStrict(CartesianOdimIO_t* self, int strict);
+
+/**
+ * If writing should be done strictly. From ODIM H5 2.4 several how-attributes are mandatory. If
+ * any of these are missing and strict is set to true, then the writing will fail.
+ * @param[in] self - self
+ * @returns if writing should be performed strictly or not
+ */
+int CartesianOdimIO_isStrict(CartesianOdimIO_t* self);
+
+/**
+ * If an error occurs during writing, you might get an indication for why
+ * by checking the error message.
+ * @param[in] self - self
+ * @returns the error message (will be an empty string if nothing to report).
+ */
+const char* CartesianOdimIO_getErrorMessage(CartesianOdimIO_t* self);
+
+/**
  * Reads a cartesian from the nodelist and sets the data in the cartesian.
  * @param[in] self - self
  * @param[in] lazyReader - the wrapper around the hdf5 node list
@@ -91,9 +115,22 @@ int CartesianOdimIO_fillImage(CartesianOdimIO_t* self, HL_NodeList* nodelist, Ca
  */
 int CartesianOdimIO_fillVolume(CartesianOdimIO_t* self, HL_NodeList* nodelist, CartesianVolume_t* volume);
 
+
 /**
  * Validates an image in order to verify if it contains necessary information
  * for writing.
+ * @param[in] self - self
+ * @param[in] cartesian - the cartesian product to validate
+ * @param[in] msg - message array to get indication what is wrong
+ * @param[in] maxlen - max length of message array
+ * @return 1 if valid otherwise 0
+ */
+int CartesianOdimIO_isValidImageAddMsg(Cartesian_t* cartesian, char* msg, int maxlen);
+
+/**
+ * Validates an image in order to verify if it contains necessary information
+ * for writing.
+ * @param[in] self - self
  * @param[in] cartesian - the cartesian product to validate
  * @return 1 if valid otherwise 0
  */
@@ -102,6 +139,18 @@ int CartesianOdimIO_isValidImage(Cartesian_t* cartesian);
 /**
  * Validates an image belonging to a volume in order to verify if it
  * contains necessary information for writing.
+ * @param[in] self - self
+ * @param[in] cartesian - the cartesian product to validate
+ * @param[in] msg - message array to get indication what is wrong
+ * @param[in] maxlen - max length of message array
+ * @return 1 if valid otherwise 0
+ */
+int CartesianOdimIO_isValidVolumeImageAddMsg(Cartesian_t* cartesian, char* msg, int maxlen);
+
+/**
+ * Validates an image belonging to a volume in order to verify if it
+ * contains necessary information for writing.
+ * @param[in] self - self
  * @param[in] cartesian - the cartesian product to validate
  * @return 1 if valid otherwise 0
  */
@@ -110,9 +159,37 @@ int CartesianOdimIO_isValidVolumeImage(Cartesian_t* cartesian);
 /**
  * Validates an volume in order to verify if it contains necessary information
  * for writing.
+ * @param[in] self - self
  * @param[in] volume - the volume to validate
  * @return 1 if valid otherwise 0
  */
+int CartesianOdimIO_isValidVolumeAddMsg(CartesianVolume_t* volume, char* msg, int maxlen);
+
+/**
+ * Validates an volume in order to verify if it contains necessary information
+ * for writing.
+ * @param[in] self - self
+ * @param[in] volume - the volume to validate
+ * @param[in] msg - message array to get indication what is wrong
+ * @param[in] maxlen - max length of message array
+ * @return 1 if valid otherwise 0
+ */
 int CartesianOdimIO_isValidVolume(CartesianVolume_t* volume);
+
+/**
+ * Validates a volume according to strictness and version in order to verify if it contains necessary information.
+ * @param[in] self - self
+ * @param[in] volume - the volume to validate
+ * @return 1 if valid otherwise 0
+ */
+int CartesianOdimIO_validateVolumeHowAttributes(CartesianOdimIO_t* self, CartesianVolume_t* volume);
+
+/**
+ * Validates an image according to strictness and version in order to verify if it contains necessary information.
+ * @param[in] self - self
+ * @param[in] image - the image to validate
+ * @return 1 if valid otherwise 0
+ */
+int CartesianOdimIO_validateCartesianHowAttributes(CartesianOdimIO_t* self, Cartesian_t* image);
 
 #endif /* CARTESIAN_ODIM_IO_H */

@@ -154,4 +154,15 @@ int RaveUtilities_isLegacyProjEnabled(void);
  */
 char* RaveUtilities_handleSourceVersion(const char* source, RaveIO_ODIM_Version version);
 
+/**
+ * Verifies if the source is valid according to ODIM version rules. Currently
+ * the only restriction is for version >= 2.4 which says that either NOD or ORG must
+ * exist in the file depending on object type. We will not care about object type
+ * and only check if one or both of NOD or ORG exists.
+ * @param[in] source - the source to check
+ * @param[in] version - the version we are testing against.
+ * @returns 1 if source is valid, otherwise 0
+ */
+int RaveUtilities_isSourceValid(const char* source, RaveIO_ODIM_Version version);
+
 #endif /* RAVE_UTILITIES_H */

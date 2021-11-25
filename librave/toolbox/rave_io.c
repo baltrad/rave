@@ -62,10 +62,12 @@ struct _RaveIO_t {
   RaveIO_ODIM_Version read_version;       /**< the read odim version */
   RaveIO_ODIM_H5rad_Version h5radversion; /**< the h5rad object version */
   RaveIO_ODIM_FileFormat fileFormat;      /**< the file format */
+  int strict;                             /**< if strict writing should be enforced, from 2.4, several how-attributes are required. If setting this to true, this will be enforced */
   char* filename;                         /**< the filename */
   HL_Compression* compression;            /**< the compression to use */
   HL_FileCreationProperty* property;       /**< the file creation properties */
   char* bufrTableDir;                      /**< the bufr table dir */
+  char error_message[1024];                /**< if an error occurs during writing an error message might give you the reason */
 };
 
 /*@{ Constants */
@@ -73,12 +75,14 @@ static const char RaveIO_ODIM_Version_2_0_STR[] = "ODIM_H5/V2_0";
 static const char RaveIO_ODIM_Version_2_1_STR[] = "ODIM_H5/V2_1";
 static const char RaveIO_ODIM_Version_2_2_STR[] = "ODIM_H5/V2_2";
 static const char RaveIO_ODIM_Version_2_3_STR[] = "ODIM_H5/V2_3";
+static const char RaveIO_ODIM_Version_2_4_STR[] = "ODIM_H5/V2_4";
 
 
 static const char RaveIO_ODIM_H5rad_Version_2_0_STR[] = "H5rad 2.0";
 static const char RaveIO_ODIM_H5rad_Version_2_1_STR[] = "H5rad 2.1";
 static const char RaveIO_ODIM_H5rad_Version_2_2_STR[] = "H5rad 2.2";
 static const char RaveIO_ODIM_H5rad_Version_2_3_STR[] = "H5rad 2.3";
+static const char RaveIO_ODIM_H5rad_Version_2_4_STR[] = "H5rad 2.4";
 
 /*@} End of Constants */
 
@@ -88,14 +92,16 @@ static int RaveIO_constructor(RaveCoreObject* obj)
   RaveIO_t* raveio = (RaveIO_t*)obj;
   int result = 0;
   raveio->object = NULL;
-  raveio->version = RaveIO_ODIM_Version_2_3;
+  raveio->version = RaveIO_ODIM_Version_2_4;
   raveio->read_version = RaveIO_ODIM_Version_UNDEFINED;
-  raveio->h5radversion = RaveIO_ODIM_H5rad_Version_2_3;
+  raveio->h5radversion = RaveIO_ODIM_H5rad_Version_2_4;
+  raveio->strict = 0;
   raveio->fileFormat = RaveIO_ODIM_FileFormat_UNDEFINED;
   raveio->filename = NULL;
   raveio->compression = HLCompression_new(CT_ZLIB);
   raveio->property = HLFileCreationProperty_new();
   raveio->bufrTableDir = NULL;
+  strcpy(raveio->error_message, "");
   if (raveio->compression == NULL || raveio->property == NULL) {
     RAVE_ERROR0("Failed to create compression or file creation properties");
     goto done;
@@ -158,6 +164,8 @@ static RaveIO_ODIM_Version RaveIOInternal_getOdimVersion(HL_NodeList* nodelist)
     result = RaveIO_ODIM_Version_2_2;
   } else if (strcmp(RaveIO_ODIM_Version_2_3_STR, version) == 0) {
     result = RaveIO_ODIM_Version_2_3;
+  } else if (strcmp(RaveIO_ODIM_Version_2_4_STR, version) == 0) {
+    result = RaveIO_ODIM_Version_2_4;
   }
 done:
   return result;
@@ -186,6 +194,8 @@ static RaveIO_ODIM_H5rad_Version RaveIOInternal_getH5radVersion(HL_NodeList* nod
     result = RaveIO_ODIM_H5rad_Version_2_2;
   } else if (strcmp(RaveIO_ODIM_H5rad_Version_2_3_STR, version) == 0) {
     result = RaveIO_ODIM_H5rad_Version_2_3;
+  } else if (strcmp(RaveIO_ODIM_H5rad_Version_2_4_STR, version) == 0) {
+    result = RaveIO_ODIM_H5rad_Version_2_4;
   }
 done:
   return result;
@@ -269,13 +279,17 @@ static PolarVolume_t* RaveIOInternal_loadPolarVolume(LazyNodeListReader_t* reade
  * @param[in] nodelist - the nodelist the nodes should be added to
  * @returns 1 on success otherwise 0
  */
-static int RaveIOInternal_addPolarVolumeToNodeList(PolarVolume_t* object, HL_NodeList* nodelist, RaveIO_ODIM_Version version)
+static int RaveIOInternal_addPolarVolumeToNodeList(RaveIO_t* raveio, PolarVolume_t* object, HL_NodeList* nodelist, RaveIO_ODIM_Version version)
 {
   int result = 0;
   PolarOdimIO_t* odimio = RAVE_OBJECT_NEW(&PolarOdimIO_TYPE);
   if (odimio != NULL) {
     PolarOdimIO_setVersion(odimio, version);
+    PolarOdimIO_setStrict(odimio, raveio->strict);
     result = PolarOdimIO_fillVolume(odimio, object, nodelist);
+    if (!result) {
+      strcpy(raveio->error_message, PolarOdimIO_getErrorMessage(odimio));
+    }
   }
   RAVE_OBJECT_RELEASE(odimio);
   return result;
@@ -287,13 +301,17 @@ static int RaveIOInternal_addPolarVolumeToNodeList(PolarVolume_t* object, HL_Nod
  * @param[in] nodelist - the nodelist the nodes should be added to
  * @returns 1 on success otherwise 0
  */
-static int RaveIOInternal_addScanToNodeList(PolarScan_t* object, HL_NodeList* nodelist, RaveIO_ODIM_Version version)
+static int RaveIOInternal_addScanToNodeList(RaveIO_t* raveio, PolarScan_t* object, HL_NodeList* nodelist, RaveIO_ODIM_Version version)
 {
   int result = 0;
   PolarOdimIO_t* odimio = RAVE_OBJECT_NEW(&PolarOdimIO_TYPE);
   if (odimio != NULL) {
     PolarOdimIO_setVersion(odimio, version);
+    PolarOdimIO_setStrict(odimio, raveio->strict);
     result = PolarOdimIO_fillScan(odimio, object, nodelist);
+    if (!result) {
+      strcpy(raveio->error_message, PolarOdimIO_getErrorMessage(odimio));
+    }
   }
   RAVE_OBJECT_RELEASE(odimio);
   return result;
@@ -346,7 +364,7 @@ static RaveCoreObject* RaveIOInternal_loadCartesianVolume(LazyNodeListReader_t* 
  * @param[in] version - the version we want to write the ODIM file as
  * @returns 1 on success otherwise 0
  */
-static int RaveIOInternal_addCartesianVolumeToNodeList(CartesianVolume_t* cvol, HL_NodeList* nodelist, RaveIO_ODIM_Version version)
+static int RaveIOInternal_addCartesianVolumeToNodeList(RaveIO_t* raveio, CartesianVolume_t* cvol, HL_NodeList* nodelist, RaveIO_ODIM_Version version)
 {
   int result = 0;
   CartesianOdimIO_t* odimio = NULL;
@@ -354,7 +372,11 @@ static int RaveIOInternal_addCartesianVolumeToNodeList(CartesianVolume_t* cvol, 
   odimio = RAVE_OBJECT_NEW(&CartesianOdimIO_TYPE);
   if (odimio != NULL) {
     CartesianOdimIO_setVersion(odimio, version);
+    CartesianOdimIO_setStrict(odimio, raveio->strict);
     result = CartesianOdimIO_fillVolume(odimio, nodelist, cvol);
+    if (!result) {
+      strcpy(raveio->error_message, CartesianOdimIO_getErrorMessage(odimio));
+    }
   }
 
   RAVE_OBJECT_RELEASE(odimio);
@@ -369,7 +391,7 @@ static int RaveIOInternal_addCartesianVolumeToNodeList(CartesianVolume_t* cvol, 
  * @param[in] version - the version we want to write the ODIM file as
  * @returns 1 on success otherwise 0
  */
-static int RaveIOInternal_addCartesianToNodeList(Cartesian_t* image, HL_NodeList* nodelist, RaveIO_ODIM_Version version)
+static int RaveIOInternal_addCartesianToNodeList(RaveIO_t* raveio, Cartesian_t* image, HL_NodeList* nodelist, RaveIO_ODIM_Version version)
 {
   int result = 0;
   CartesianOdimIO_t* odimio = NULL;
@@ -377,7 +399,11 @@ static int RaveIOInternal_addCartesianToNodeList(Cartesian_t* image, HL_NodeList
   odimio = RAVE_OBJECT_NEW(&CartesianOdimIO_TYPE);
   if (odimio != NULL) {
     CartesianOdimIO_setVersion(odimio, version);
+    CartesianOdimIO_setStrict(odimio, raveio->strict);
     result = CartesianOdimIO_fillImage(odimio, nodelist, image);
+    if (!result) {
+      strcpy(raveio->error_message, CartesianOdimIO_getErrorMessage(odimio));
+    }
   }
 
   RAVE_OBJECT_RELEASE(odimio);
@@ -408,7 +434,7 @@ static RaveCoreObject* RaveIOInternal_loadVP(LazyNodeListReader_t* lazyReader)
  * @param[in] nodelist - the nodelist the nodes should be added to
  * @returns 1 on success otherwise 0
  */
-static int RaveIOInternal_addVPToNodeList(VerticalProfile_t* vp, HL_NodeList* nodelist, RaveIO_ODIM_Version version)
+static int RaveIOInternal_addVPToNodeList(RaveIO_t* raveio, VerticalProfile_t* vp, HL_NodeList* nodelist, RaveIO_ODIM_Version version)
 {
   int result = 0;
   VpOdimIO_t* odimio = NULL;
@@ -416,6 +442,7 @@ static int RaveIOInternal_addVPToNodeList(VerticalProfile_t* vp, HL_NodeList* no
   odimio = RAVE_OBJECT_NEW(&VpOdimIO_TYPE);
   if (odimio != NULL) {
     VpOdimIO_setVersion(odimio, version);
+    VpOdimIO_setStrict(odimio, raveio->strict);
     result = VpOdimIO_fill(odimio, vp, nodelist);
   }
 
@@ -481,7 +508,7 @@ static int RaveIOInternal_loadHDF5(RaveIO_t* raveio, int lazyLoading, const char
   if (object != NULL) {
     RAVE_OBJECT_RELEASE(raveio->object);
     raveio->object = RAVE_OBJECT_COPY(object);
-    raveio->version = RaveIO_ODIM_Version_2_3;
+    raveio->version = RaveIO_ODIM_Version_2_4;
     raveio->read_version = version;
     raveio->h5radversion = h5radversion;
     raveio->fileFormat = RaveIO_ODIM_FileFormat_HDF5;
@@ -613,15 +640,19 @@ int RaveIO_save(RaveIO_t* raveio, const char* filename)
   int result = 0;
   RAVE_ASSERT((raveio != NULL), "raveio == NULL");
 
+  strcpy(raveio->error_message, "");
+
   if (filename != NULL) {
     if (!RaveIO_setFilename(raveio, filename)) {
       RAVE_ERROR0("Failed to set filename before saving");
+      strcpy(raveio->error_message, "Failed to set filename before saving");
       return 0;
     }
   }
 
   if (raveio->filename == NULL) {
     RAVE_ERROR0("Atempting to save an object without a filename");
+    strcpy(raveio->error_message, "Atempting to save an object without a filename");
     return 0;
   }
 
@@ -642,22 +673,25 @@ int RaveIO_save(RaveIO_t* raveio, const char* filename)
           result = RaveHL_createStringValue(nodelist, RaveIO_ODIM_Version_2_2_STR, "/Conventions");
         } else if (raveio->version == RaveIO_ODIM_Version_2_3) {
           result = RaveHL_createStringValue(nodelist, RaveIO_ODIM_Version_2_3_STR, "/Conventions");
+        } else if (raveio->version == RaveIO_ODIM_Version_2_4) {
+          result = RaveHL_createStringValue(nodelist, RaveIO_ODIM_Version_2_4_STR, "/Conventions");
         } else {
           RAVE_ERROR1("Can not select %d as RaveIO_ODIM_Version", raveio->version);
+          sprintf(raveio->error_message, "Can not select %d as RaveIO_ODIM_Version", raveio->version);
           result = 0;
         }
 
         if (result == 1) {
           if (RAVE_OBJECT_CHECK_TYPE(raveio->object, &PolarVolume_TYPE)) {
-            result = RaveIOInternal_addPolarVolumeToNodeList((PolarVolume_t*)raveio->object, nodelist, raveio->version);
+            result = RaveIOInternal_addPolarVolumeToNodeList(raveio, (PolarVolume_t*)raveio->object, nodelist, raveio->version);
           } else if (RAVE_OBJECT_CHECK_TYPE(raveio->object, &CartesianVolume_TYPE)) {
-            result = RaveIOInternal_addCartesianVolumeToNodeList((CartesianVolume_t*)raveio->object, nodelist, raveio->version);
+            result = RaveIOInternal_addCartesianVolumeToNodeList(raveio, (CartesianVolume_t*)raveio->object, nodelist, raveio->version);
           } else if (RAVE_OBJECT_CHECK_TYPE(raveio->object, &Cartesian_TYPE)) {
-            result = RaveIOInternal_addCartesianToNodeList((Cartesian_t*)raveio->object, nodelist, raveio->version);
+            result = RaveIOInternal_addCartesianToNodeList(raveio, (Cartesian_t*)raveio->object, nodelist, raveio->version);
           } else if (RAVE_OBJECT_CHECK_TYPE(raveio->object, &PolarScan_TYPE)) {
-            result = RaveIOInternal_addScanToNodeList((PolarScan_t*)raveio->object, nodelist, raveio->version);
+            result = RaveIOInternal_addScanToNodeList(raveio, (PolarScan_t*)raveio->object, nodelist, raveio->version);
           } else if (RAVE_OBJECT_CHECK_TYPE(raveio->object, &VerticalProfile_TYPE)) {
-            result = RaveIOInternal_addVPToNodeList((VerticalProfile_t*)raveio->object, nodelist, raveio->version);
+            result = RaveIOInternal_addVPToNodeList(raveio, (VerticalProfile_t*)raveio->object, nodelist, raveio->version);
           } else {
             RAVE_ERROR0("No io support for provided object");
             result = 0;
@@ -791,6 +825,22 @@ int RaveIO_setFileFormat(RaveIO_t* raveio, RaveIO_ODIM_FileFormat format)
   return 1;
 }
 
+void RaveIO_setStrict(RaveIO_t* raveio, int strict)
+{
+  RAVE_ASSERT((raveio != NULL), "raveio == NULL");
+  if (strict) {
+    raveio->strict = 1;
+  } else {
+    raveio->strict = 0;
+  }
+}
+
+int RaveIO_isStrict(RaveIO_t* raveio)
+{
+  RAVE_ASSERT((raveio != NULL), "raveio == NULL");
+  return raveio->strict;
+}
+
 void RaveIO_setCompressionLevel(RaveIO_t* raveio, int lvl)
 {
   RAVE_ASSERT((raveio != NULL), "raveio == NULL");
@@ -904,6 +954,13 @@ const char* RaveIO_getBufrTableDir(RaveIO_t* raveio)
   RAVE_ASSERT((raveio != NULL), "raveio == NULL");
   return (const char*)raveio->bufrTableDir;
 }
+
+const char* RaveIO_getErrorMessage(RaveIO_t* raveio)
+{
+  RAVE_ASSERT((raveio != NULL), "raveio == NULL");
+  return (const char*)raveio->error_message;
+}
+
 
 int RaveIO_supports(RaveIO_ODIM_FileFormat format)
 {

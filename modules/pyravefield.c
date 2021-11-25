@@ -361,18 +361,11 @@ done:
 
 static PyObject* _pyravefield_hasAttribute(PyRaveField* self, PyObject* args)
 {
-  RaveAttribute_t* attribute = NULL;
   char* name = NULL;
-  long result = 0;
   if (!PyArg_ParseTuple(args, "s", &name)) {
     return NULL;
   }
-  attribute = RaveField_getAttribute(self->field, name);
-  if (attribute != NULL) {
-    result = 1;
-  }
-  RAVE_OBJECT_RELEASE(attribute);
-  return PyBool_FromLong(result);
+  return PyBool_FromLong(RaveField_hasAttribute(self->field, name));
 }
 
 static PyObject* _pyravefield_getAttributeNames(PyRaveField* self, PyObject* args)

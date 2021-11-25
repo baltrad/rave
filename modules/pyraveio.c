@@ -275,6 +275,7 @@ static struct PyMethodDef _pyraveio_methods[] =
   {"objectType", NULL},
   {"filename", NULL},
   {"object", NULL},
+  {"strict", NULL},
   {"compression_level", NULL},
   {"fcp_userblock", NULL},
   {"fcp_sizes", NULL},
@@ -283,6 +284,7 @@ static struct PyMethodDef _pyraveio_methods[] =
   {"fcp_metablocksize", NULL},
   {"file_format", NULL},
   {"bufr_table_dir", NULL},
+  {"error_message", NULL},
   {"close", (PyCFunction) _pyraveio_close, 1, "close()\n\n"
                                               "Resets this instance and closes the opened object.\n"},
   {"load", (PyCFunction) _pyraveio_load, 1,   "load()\n\n"
@@ -335,6 +337,8 @@ static PyObject* _pyraveio_getattro(PyRaveIO* self, PyObject* name)
     } else {
       Py_RETURN_NONE;
     }
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("strict", name) == 0) {
+    return PyBool_FromLong(RaveIO_isStrict(self->raveio));
   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("compression_level", name) == 0) {
     return PyInt_FromLong(RaveIO_getCompressionLevel(self->raveio));
   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("fcp_userblock", name) == 0) {
@@ -356,6 +360,12 @@ static PyObject* _pyraveio_getattro(PyRaveIO* self, PyObject* name)
   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("bufr_table_dir", name) == 0) {
     if (RaveIO_getBufrTableDir(self->raveio) != NULL) {
       return PyString_FromString(RaveIO_getBufrTableDir(self->raveio));
+    } else {
+      Py_RETURN_NONE;
+    }
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("error_message", name) == 0) {
+    if (RaveIO_getErrorMessage(self->raveio) != NULL) {
+      return PyString_FromString(RaveIO_getErrorMessage(self->raveio));
     } else {
       Py_RETURN_NONE;
     }
@@ -414,6 +424,16 @@ static int _pyraveio_setattro(PyRaveIO* self, PyObject* name, PyObject* val)
       RaveIO_setObject(self->raveio, (RaveCoreObject*)((PyVerticalProfile*)val)->vp);
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "Can only save objects of type : cartesian, polarscan, polarvolume or verticalprofile");
+    }
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("strict", name) == 0) {
+    if (PyBool_Check(val)) {
+      if (PyObject_IsTrue(val)) {
+        RaveIO_setStrict(self->raveio, 1);
+      } else {
+        RaveIO_setStrict(self->raveio, 0);
+      }
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError, "strict should be a boolean");
     }
   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("compression_level", name) == 0) {
     if (PyInt_Check(val)) {
@@ -604,9 +624,11 @@ static PyMethodDef functions[] = {
       "new() -> new instance of the RaveIOCore object\n\n"
       "Creates a new instance of the RaveIOCore object"},
   {"open", (PyCFunction)_pyraveio_open, 1,
-      "open(filename) -> a RaveIOCore instance with a loaded object.\n\n"
+      "open(filename[,lazy_loading[,preload_quantities]]) -> a RaveIOCore instance with a loaded object.\n\n"
       "Opens a file that is supported by raveio and loads the structure.\n\n"
-      "filename - a filename pointing to a file supported by raveio."},
+      "filename - a filename pointing to a file supported by raveio.\n"
+      "lazy_loading - a boolean if file should be lazy loaded or not. If True, then only meta data is read.\n"
+      "preload_quantities - a comma-separated list of quantities for which data should be loaded immediately. E.g. \"DBZH,TH\".\n\n"},
   {"supports", (PyCFunction)_pyraveio_supports, 1,
       "supports(format) -> True or False depending if format supported or not\n\n"
       "Returns if the raveio supports the requested file format.\n\n"
@@ -708,12 +730,14 @@ MOD_INIT(_raveio)
   add_long_constant(dictionary, "RaveIO_ODIM_Version_2_1", RaveIO_ODIM_Version_2_1);
   add_long_constant(dictionary, "RaveIO_ODIM_Version_2_2", RaveIO_ODIM_Version_2_2);
   add_long_constant(dictionary, "RaveIO_ODIM_Version_2_3", RaveIO_ODIM_Version_2_3);
+  add_long_constant(dictionary, "RaveIO_ODIM_Version_2_4", RaveIO_ODIM_Version_2_4);
 
   add_long_constant(dictionary, "RaveIO_ODIM_H5rad_Version_UNDEFINED", RaveIO_ODIM_H5rad_Version_UNDEFINED);
   add_long_constant(dictionary, "RaveIO_ODIM_H5rad_Version_2_0", RaveIO_ODIM_H5rad_Version_2_0);
   add_long_constant(dictionary, "RaveIO_ODIM_H5rad_Version_2_1", RaveIO_ODIM_H5rad_Version_2_1);
   add_long_constant(dictionary, "RaveIO_ODIM_H5rad_Version_2_2", RaveIO_ODIM_H5rad_Version_2_2);
   add_long_constant(dictionary, "RaveIO_ODIM_H5rad_Version_2_3", RaveIO_ODIM_H5rad_Version_2_3);
+  add_long_constant(dictionary, "RaveIO_ODIM_H5rad_Version_2_4", RaveIO_ODIM_H5rad_Version_2_4);
 
   add_long_constant(dictionary, "RaveIO_ODIM_FileFormat_UNDEFINED", RaveIO_ODIM_FileFormat_UNDEFINED);
   add_long_constant(dictionary, "RaveIO_ODIM_FileFormat_HDF5", RaveIO_ODIM_FileFormat_HDF5);

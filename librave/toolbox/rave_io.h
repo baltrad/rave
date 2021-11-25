@@ -173,6 +173,28 @@ RaveIO_ODIM_H5rad_Version RaveIO_getH5radVersion(RaveIO_t* raveio);
  */
 RaveIO_ODIM_FileFormat RaveIO_getFileFormat(RaveIO_t* raveio);
 
+/**
+ * If writing should be done strictly. From ODIM H5 2.4 several how-attributes are mandatory. If
+ * any of these are missing and strict is set to true, then the writing will fail.
+ * @param[in] raveio - self
+ * @param[in] strict - if writing should be performed strictly or not
+ */
+void RaveIO_setStrict(RaveIO_t* raveio, int strict);
+
+/**
+ * If writing should be done strictly. From ODIM H5 2.4 several how-attributes are mandatory. If
+ * any of these are missing and strict is set to true, then the writing will fail.
+ * @param[in] raveio - self
+ * @returns if writing should be performed strictly or not
+ */
+int RaveIO_isStrict(RaveIO_t* raveio);
+
+/**
+ * Sets what file format to use.
+ * @param[in] raveio - self
+ * @param[in] format - the file format to use
+ * @returns 1 on success otherwise 0
+ */
 int RaveIO_setFileFormat(RaveIO_t* raveio, RaveIO_ODIM_FileFormat format);
 
 /**
@@ -282,10 +304,20 @@ int RaveIO_setBufrTableDir(RaveIO_t* raveio, const char* dname);
 const char* RaveIO_getBufrTableDir(RaveIO_t* raveio);
 
 /**
+ * If an error occurs during writing, you might get an indication for why
+ * by checking the error message.
+ * @param[in] raveio - rave io
+ * @returns the error message (will be an empty string if nothing to report).
+ */
+const char* RaveIO_getErrorMessage(RaveIO_t* raveio);
+
+/**
  * Returns if the raveio supports the provided file format.
  * @param[in] format - the inquiried file format
  * @return 1 if rave io supports the format, otherwise 0
  */
 int RaveIO_supports(RaveIO_ODIM_FileFormat format);
+
+
 
 #endif

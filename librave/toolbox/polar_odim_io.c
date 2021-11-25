@@ -37,6 +37,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 struct _PolarOdimIO_t {
   RAVE_OBJECT_HEAD /** Always on top */
   RaveIO_ODIM_Version version;
+  int strict; /**< if strict writing should be enforced or not */
+  char error_message[1024];                /**< if an error occurs during writing an error message might give you the reason */
 };
 
 /*@{ Private functions */
@@ -45,7 +47,9 @@ struct _PolarOdimIO_t {
  */
 static int PolarOdimIO_constructor(RaveCoreObject* obj)
 {
-  ((PolarOdimIO_t*)obj)->version = RaveIO_ODIM_Version_2_3;
+  ((PolarOdimIO_t*)obj)->version = RaveIO_ODIM_Version_2_4;
+  ((PolarOdimIO_t*)obj)->strict = 0;
+  strcpy(((PolarOdimIO_t*)obj)->error_message, "");
   return 1;
 }
 
@@ -58,6 +62,8 @@ static int PolarOdimIO_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srco
   PolarOdimIO_t* src = (PolarOdimIO_t*)srcobj;
 
   self->version = src->version;
+  self->strict = src->strict;
+  strcpy(self->error_message, src->error_message);
 
   return 1;
 }
@@ -772,7 +778,7 @@ static void PolarOdimIOInternal_removeVolumeAttributesFromList(RaveObjectList_t*
   }
 }
 
-static int PolarOdimIOInternal_addVolumeScan(PolarScan_t* scan, HL_NodeList* nodelist, PolarVolume_t* volume, const char* fmt, ...)
+static int PolarOdimIOInternal_addVolumeScan(PolarScan_t* scan, HL_NodeList* nodelist, PolarVolume_t* volume, int scan_index, const char* fmt, ...)
 {
   int result = 0;
   RaveObjectList_t* attributes = NULL;
@@ -781,7 +787,6 @@ static int PolarOdimIOInternal_addVolumeScan(PolarScan_t* scan, HL_NodeList* nod
   va_list ap;
   char name[1024];
   int nName = 0;
-
   RAVE_ASSERT((scan != NULL), "scan == NULL");
   RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
   RAVE_ASSERT((volume != NULL), "volume == NULL");
@@ -816,7 +821,6 @@ static int PolarOdimIOInternal_addVolumeScan(PolarScan_t* scan, HL_NodeList* nod
       goto done;
     }
   }
-
 
   if (!RaveUtilities_replaceStringAttributeInList(attributes, "what/product", "SCAN") ||
       !RaveUtilities_replaceLongAttributeInList(attributes, "where/a1gate", PolarScan_getA1gate(scan)) ||
@@ -864,7 +868,6 @@ static int PolarOdimIOInternal_translateScan(PolarOdimIO_t* self, PolarScan_t* s
   if (self->version < RaveIO_ODIM_Version_2_3) {
     /* We are reading something older than 2.3 so we need to be prepared to convert attributes */
 
-
   }
   return 1;
 }
@@ -884,6 +887,122 @@ RaveIO_ODIM_Version PolarOdimIO_getVersion(PolarOdimIO_t* self)
 {
   RAVE_ASSERT((self != NULL), "self == NULL");
   return self->version;
+}
+
+void PolarOdimIO_setStrict(PolarOdimIO_t* self, int strict)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  self->strict = strict;
+}
+
+int PolarOdimIO_isStrict(PolarOdimIO_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return self->strict;
+}
+
+const char* PolarOdimIO_getErrorMessage(PolarOdimIO_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return (const char*)self->error_message;
+}
+
+static int PolarOdimIOInternal_checkAttributeRecursive(PolarVolume_t* vol, const char* attrname)
+{
+  int result = 1;
+  int i = 0, nrscans = 0;
+  PolarScan_t* scan = NULL;
+  if (PolarVolume_hasAttribute(vol, attrname)) {
+    return result;
+  }
+  nrscans = PolarVolume_getNumberOfScans(vol);
+  for (i = 0; i < nrscans && result; i++) {
+    scan = PolarVolume_getScan(vol, i);
+    if (!PolarScan_hasAttribute(scan, attrname)) {
+      result = 0; /* If attribute is missing in one of scan, then it's not complete */
+    }
+    RAVE_OBJECT_RELEASE(scan);
+  }
+  return result;
+}
+
+int PolarOdimIO_validateVolumeHowAttributes(PolarOdimIO_t* self, PolarVolume_t* volume)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  if (!self->strict) {
+    return 1;
+  }
+  if (self->version >= RaveIO_ODIM_Version_2_4) {
+    int gotSimulated = PolarOdimIOInternal_checkAttributeRecursive(volume, "how/simulated");
+    int gotWavelength = PolarOdimIOInternal_checkAttributeRecursive(volume, "how/wavelength");
+    int gotFrequency = PolarOdimIOInternal_checkAttributeRecursive(volume, "how/frequency");
+    int gotPulsewidth =  PolarOdimIOInternal_checkAttributeRecursive(volume, "how/pulsewidth");
+    int gotRXlossH =  PolarOdimIOInternal_checkAttributeRecursive(volume, "how/RXlossH");
+    int gotantgainH =  PolarOdimIOInternal_checkAttributeRecursive(volume, "how/antgainH");
+    int gotbeamwH =  PolarOdimIOInternal_checkAttributeRecursive(volume, "how/beamwH");
+    int gotradconstH =  PolarOdimIOInternal_checkAttributeRecursive(volume, "how/radconstH");
+    int gotNI =  PolarOdimIOInternal_checkAttributeRecursive(volume, "how/NI");
+    int gotstartazA =  PolarOdimIOInternal_checkAttributeRecursive(volume, "how/startazA");
+    int gotstopazA =  PolarOdimIOInternal_checkAttributeRecursive(volume, "how/stopazA");
+    int gotScanIndex = PolarOdimIOInternal_checkAttributeRecursive(volume, "how/scan_index");
+    if (!gotSimulated || (!gotWavelength && !gotFrequency) || !gotPulsewidth || !gotRXlossH ||
+        !gotantgainH || !gotbeamwH || !gotradconstH ||
+        !gotNI || !gotstartazA || !gotstopazA || !gotScanIndex) {
+      if (!gotSimulated) strcpy(self->error_message, "Missing attribute how/simulated");
+      if (!gotWavelength && !gotFrequency) strcpy(self->error_message, "Missing attribute how/wavelength or how/frequency");
+      if (!gotPulsewidth) strcpy(self->error_message, "Missing attribute how/pulsewidth");
+      if (!gotRXlossH) strcpy(self->error_message, "Missing attribute how/RXlossH");
+      if (!gotantgainH) strcpy(self->error_message, "Missing attribute how/antgainH");
+      if (!gotbeamwH) strcpy(self->error_message, "Missing attribute how/beamwH");
+      if (!gotradconstH) strcpy(self->error_message, "Missing attribute how/radconstH");
+      if (!gotNI) strcpy(self->error_message, "Missing attribute how/NI");
+      if (!gotstartazA) strcpy(self->error_message, "Missing attribute how/startazA");
+      if (!gotstopazA) strcpy(self->error_message, "Missing attribute how/stopazA");
+      if (!gotScanIndex) strcpy(self->error_message, "Missing attribute how/scan_index in one of scans");
+      RAVE_ERROR0("Failed to validate how attributes for volume. Missing required attribute in either volume or scan\n");
+      return 0;
+    }
+  }
+  return 1;
+}
+
+int PolarOdimIO_validateScanHowAttributes(PolarOdimIO_t* self, PolarScan_t* scan)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  if (!self->strict) {
+    return 1;
+  }
+
+  if (self->version >= RaveIO_ODIM_Version_2_4) {
+    int gotSimulated = PolarScan_hasAttribute(scan, "how/simulated");
+    int gotWavelength = PolarScan_hasAttribute(scan, "how/wavelength");
+    int gotFrequency = PolarScan_hasAttribute(scan, "how/frequency");
+    int gotPulsewidth =  PolarScan_hasAttribute(scan, "how/pulsewidth");
+    int gotRXlossH =  PolarScan_hasAttribute(scan, "how/RXlossH");
+    int gotantgainH =  PolarScan_hasAttribute(scan, "how/antgainH");
+    int gotbeamwH =  PolarScan_hasAttribute(scan, "how/beamwH");
+    int gotradconstH =  PolarScan_hasAttribute(scan, "how/radconstH");
+    int gotNI =  PolarScan_hasAttribute(scan, "how/NI");
+    int gotstartazA =  PolarScan_hasAttribute(scan, "how/startazA");
+    int gotstopazA =  PolarScan_hasAttribute(scan, "how/stopazA");
+    if (!gotSimulated || (!gotWavelength && !gotFrequency) || !gotPulsewidth || !gotRXlossH ||
+        !gotantgainH || !gotbeamwH || !gotradconstH || !gotNI || !gotstartazA || !gotstopazA) {
+      if (!gotSimulated) strcpy(self->error_message, "Missing attribute how/simulated");
+      if (!gotWavelength && !gotFrequency) strcpy(self->error_message, "Missing attribute how/wavelength or how/frequency");
+      if (!gotPulsewidth) strcpy(self->error_message, "Missing attribute how/pulsewidth");
+      if (!gotRXlossH) strcpy(self->error_message, "Missing attribute how/RXlossH");
+      if (!gotantgainH) strcpy(self->error_message, "Missing attribute how/antgainH");
+      if (!gotbeamwH) strcpy(self->error_message, "Missing attribute how/beamwH");
+      if (!gotradconstH) strcpy(self->error_message, "Missing attribute how/radconstH");
+      if (!gotNI) strcpy(self->error_message, "Missing attribute how/NI");
+      if (!gotstartazA) strcpy(self->error_message, "Missing attribute how/startazA");
+      if (!gotstopazA) strcpy(self->error_message, "Missing attribute how/stopazA");
+      RAVE_ERROR0("Failed to validate how attributes for scan. Missing required attribute\n");
+      return 0;
+    }
+  }
+  return 1;
+
 }
 
 
@@ -984,10 +1103,16 @@ int PolarOdimIO_fillScan(PolarOdimIO_t* self, PolarScan_t* scan, HL_NodeList* no
   RAVE_ASSERT((scan != NULL), "scan == NULL");
   RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
 
+  strcpy(self->error_message, "");
   if (!RaveHL_hasNodeByName(nodelist, "/Conventions")) {
     if (!RaveHL_createStringValue(nodelist, RaveHL_getOdimVersionString(self->version), "/Conventions")) {
       goto done;
     }
+  }
+
+  if (!PolarOdimIO_validateScanHowAttributes(self, scan)) {
+    RAVE_ERROR0("How attributes are not correct according to strict mandatory");
+    goto done;
   }
 
   attributes = PolarScan_getAttributeValues(scan);
@@ -1004,6 +1129,10 @@ int PolarOdimIO_fillScan(PolarOdimIO_t* self, PolarScan_t* scan, HL_NodeList* no
   }
 
   source = RaveUtilities_handleSourceVersion(PolarScan_getSource(scan), self->version);
+  if (self->strict && !RaveUtilities_isSourceValid(source, self->version)) {
+    strcpy(self->error_message, "what/source is not valid, missing ORG or NOD?");
+    goto done;
+  }
 
   if (!RaveUtilities_replaceDoubleAttributeInList(attributes, "how/beamwH", PolarScan_getBeamwH(scan)*180.0/M_PI) ||
       !RaveUtilities_replaceDoubleAttributeInList(attributes, "how/beamwidth", PolarScan_getBeamwH(scan)*180.0/M_PI) ||
@@ -1084,10 +1213,16 @@ int PolarOdimIO_fillVolume(PolarOdimIO_t* self, PolarVolume_t* volume, HL_NodeLi
   RAVE_ASSERT((volume != NULL), "volume == NULL");
   RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
 
+  strcpy(self->error_message, "");
   if (!RaveHL_hasNodeByName(nodelist, "/Conventions")) {
     if (!RaveHL_createStringValue(nodelist, RaveHL_getOdimVersionString(self->version), "/Conventions")) {
       goto done;
     }
+  }
+
+  if (!PolarOdimIO_validateVolumeHowAttributes(self, volume)) {
+    RAVE_ERROR0("How attributes are not correct according to strict mandatory");
+    goto done;
   }
 
   attributes = PolarVolume_getAttributeValues(volume);
@@ -1104,6 +1239,10 @@ int PolarOdimIO_fillVolume(PolarOdimIO_t* self, PolarVolume_t* volume, HL_NodeLi
   }
 
   source = RaveUtilities_handleSourceVersion(PolarVolume_getSource(volume), self->version);
+  if (self->strict && !RaveUtilities_isSourceValid(source, self->version)) {
+    strcpy(self->error_message, "what/source is not valid, missing ORG or NOD?");
+    goto done;
+  }
 
   if (!RaveUtilities_replaceDoubleAttributeInList(attributes, "how/beamwH", PolarVolume_getBeamwH(volume)*180.0/M_PI) ||
       !RaveUtilities_replaceDoubleAttributeInList(attributes, "how/beamwidth", PolarVolume_getBeamwH(volume)*180.0/M_PI) ||
@@ -1113,7 +1252,8 @@ int PolarOdimIO_fillVolume(PolarOdimIO_t* self, PolarVolume_t* volume, HL_NodeLi
       !RaveUtilities_replaceStringAttributeInList(attributes, "what/source", source) ||
       !RaveUtilities_replaceDoubleAttributeInList(attributes, "where/height", PolarVolume_getHeight(volume)) ||
       !RaveUtilities_replaceDoubleAttributeInList(attributes, "where/lat", PolarVolume_getLatitude(volume)*180.0/M_PI) ||
-      !RaveUtilities_replaceDoubleAttributeInList(attributes, "where/lon", PolarVolume_getLongitude(volume)*180.0/M_PI)) {
+      !RaveUtilities_replaceDoubleAttributeInList(attributes, "where/lon", PolarVolume_getLongitude(volume)*180.0/M_PI) ||
+      !RaveUtilities_replaceLongAttributeInList(attributes, "how/scan_count", PolarVolume_getNumberOfScans(volume))) {
     goto done;
   }
 
@@ -1132,7 +1272,7 @@ int PolarOdimIO_fillVolume(PolarOdimIO_t* self, PolarVolume_t* volume, HL_NodeLi
   for (index = 0; result == 1 && index < nrscans; index++) {
     PolarScan_t* scan = PolarVolume_getScan(volume, index);
     if (scan != NULL) {
-      result = PolarOdimIOInternal_addVolumeScan(scan, nodelist, volume, "/dataset%d", (index+1));
+      result = PolarOdimIOInternal_addVolumeScan(scan, nodelist, volume, (index+1), "/dataset%d", (index+1));
     } else {
       result = 0;
     }

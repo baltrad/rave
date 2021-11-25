@@ -184,7 +184,8 @@ RAVESCANSUN_OUT = None
 
 # Rave IO default writing version
 #RaveIO_ODIM_Version_2_2 = 2,        /**< ODIM 2.2 */
-#RaveIO_ODIM_Version_2_3 = 3         /**< ODIM 2.3, The default version */
+#RaveIO_ODIM_Version_2_3 = 3         /**< ODIM 2.3 */
+#RaveIO_ODIM_Version_2_4 = 4         /**< ODIM 2.4, The default version */
 RAVE_IO_DEFAULT_VERSION = 2
 
 if __name__ == "__main__":

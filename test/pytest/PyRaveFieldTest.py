@@ -69,6 +69,13 @@ class PyRaveFieldTest(unittest.TestCase):
     self.assertTrue(obj.hasAttribute("how/something"))
     self.assertTrue(obj.hasAttribute("how/grp/something"))
 
+  def test_hasAttribute(self):
+    obj = _ravefield.new()
+
+    obj.addAttribute("how/something", 1.0)
+    self.assertTrue(obj.hasAttribute("how/something"))
+    self.assertFalse(obj.hasAttribute("how/somethingelse"))
+
   def test_bad_names(self):
     obj = _ravefield.new()
     BAD_NAMES = ["xyz/is", "what", "is"]

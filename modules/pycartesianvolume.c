@@ -341,18 +341,11 @@ done:
 
 static PyObject* _pycartesianvolume_hasAttribute(PyCartesianVolume* self, PyObject* args)
 {
-  RaveAttribute_t* attribute = NULL;
   char* name = NULL;
-  long result = 0;
   if (!PyArg_ParseTuple(args, "s", &name)) {
     return NULL;
   }
-  attribute = CartesianVolume_getAttribute(self->cvol, name);
-  if (attribute != NULL) {
-    result = 1;
-  }
-  RAVE_OBJECT_RELEASE(attribute);
-  return PyBool_FromLong(result);
+  return PyBool_FromLong(CartesianVolume_hasAttribute(self->cvol, name));
 }
 
 static PyObject* _pycartesianvolume_getAttributeNames(PyCartesianVolume* self, PyObject* args)

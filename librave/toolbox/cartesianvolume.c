@@ -45,8 +45,8 @@ struct _CartesianVolume_t {
   Projection_t* projection;     /**< this volumes projection definition */
   double xscale;                /**< x scale */
   double yscale;                /**< y scale */
-  double zscale;                /**< z scale, introduced with ODIM 2.3 */
-  double zstart;                /**< Height in meters above mean sea level of the lowest pixel in the Z dimension, introduced with ODIM 2.3 */
+  double zscale;                /**< z scale, introduced with ODIM 2.3, marked for DEPRECATION in 2.4 */
+  double zstart;                /**< Height in meters above mean sea level of the lowest pixel in the Z dimension, introduced with ODIM 2.3. Marked for DEPRECATION in 2.4 */
   double llX;                   /**< lower left x-coordinate */
   double llY;                   /**< lower left y-coordinate */
   double urX;                   /**< upper right x-coordinate */
@@ -456,6 +456,12 @@ RaveAttribute_t* CartesianVolume_getAttribute(CartesianVolume_t* cvol,  const ch
     return NULL;
   }
   return (RaveAttribute_t*)RaveObjectHashTable_get(cvol->attrs, name);
+}
+
+int CartesianVolume_hasAttribute(CartesianVolume_t* cvol,  const char* name)
+{
+  RAVE_ASSERT((cvol != NULL), "cvol == NULL");
+  return RaveObjectHashTable_exists(cvol->attrs, name);
 }
 
 RaveList_t* CartesianVolume_getAttributeNames(CartesianVolume_t* cvol)

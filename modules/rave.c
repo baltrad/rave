@@ -585,12 +585,14 @@ MOD_INIT(_rave)
   add_long_constant(dictionary, "RaveIO_ODIM_Version_2_1", RaveIO_ODIM_Version_2_1);
   add_long_constant(dictionary, "RaveIO_ODIM_Version_2_2", RaveIO_ODIM_Version_2_2);
   add_long_constant(dictionary, "RaveIO_ODIM_Version_2_3", RaveIO_ODIM_Version_2_3);
+  add_long_constant(dictionary, "RaveIO_ODIM_Version_2_4", RaveIO_ODIM_Version_2_4);
 
   add_long_constant(dictionary, "RaveIO_ODIM_H5rad_Version_UNDEFINED", RaveIO_ODIM_H5rad_Version_UNDEFINED);
   add_long_constant(dictionary, "RaveIO_ODIM_H5rad_Version_2_0", RaveIO_ODIM_H5rad_Version_2_0);
   add_long_constant(dictionary, "RaveIO_ODIM_H5rad_Version_2_1", RaveIO_ODIM_H5rad_Version_2_1);
   add_long_constant(dictionary, "RaveIO_ODIM_H5rad_Version_2_2", RaveIO_ODIM_H5rad_Version_2_2);
   add_long_constant(dictionary, "RaveIO_ODIM_H5rad_Version_2_3", RaveIO_ODIM_H5rad_Version_2_3);
+  add_long_constant(dictionary, "RaveIO_ODIM_H5rad_Version_2_4", RaveIO_ODIM_H5rad_Version_2_4);
 
   add_long_constant(dictionary, "Rave_ObjectType_UNDEFINED", Rave_ObjectType_UNDEFINED);
   add_long_constant(dictionary, "Rave_ObjectType_PVOL", Rave_ObjectType_PVOL);

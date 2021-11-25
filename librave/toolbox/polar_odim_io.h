@@ -57,6 +57,46 @@ void PolarOdimIO_setVersion(PolarOdimIO_t* self, RaveIO_ODIM_Version version);
 RaveIO_ODIM_Version PolarOdimIO_getVersion(PolarOdimIO_t* self);
 
 /**
+ * If writing should be done strictly. From ODIM H5 2.4 several how-attributes are mandatory. If
+ * any of these are missing and strict is set to true, then the writing will fail.
+ * @param[in] self - self
+ * @param[in] strict - if writing should be performed strictly or not
+ */
+void PolarOdimIO_setStrict(PolarOdimIO_t* self, int strict);
+
+/**
+ * If writing should be done strictly. From ODIM H5 2.4 several how-attributes are mandatory. If
+ * any of these are missing and strict is set to true, then the writing will fail.
+ * @param[in] self - self
+ * @returns if writing should be performed strictly or not
+ */
+int PolarOdimIO_isStrict(PolarOdimIO_t* self);
+
+/**
+ * If an error occurs during writing, you might get an indication for why
+ * by checking the error message.
+ * @param[in] raveio - rave io
+ * @returns the error message (will be an empty string if nothing to report).
+ */
+const char* PolarOdimIO_getErrorMessage(PolarOdimIO_t* self);
+
+/**
+ * Validates if the attributes in the polar volume are valid according to the version rules and strictness.
+ * @param[in] self - self
+ * @param[in] volume - the volume to validate
+ * @return 1 if valid, otherwise 0
+ */
+int PolarOdimIO_validateVolumeHowAttributes(PolarOdimIO_t* self, PolarVolume_t* volume);
+
+/**
+ * Validates if the attributes in the polar scan are valid according to the version rules and strictness.
+ * @param[in] self - self
+ * @param[in] scan - the scan to validate
+ * @return 1 if valid, otherwise 0
+ */
+int PolarOdimIO_validateScanHowAttributes(PolarOdimIO_t* self, PolarScan_t* scan);
+
+/**
  * Reads a scan from the nodelist and sets the data in the scan.
  * @param[in] self - self
  * @param[in] nodelist - the hdf5 node list

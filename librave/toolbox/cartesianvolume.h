@@ -268,6 +268,14 @@ int CartesianVolume_addAttribute(CartesianVolume_t* cvol, RaveAttribute_t* attri
 RaveAttribute_t* CartesianVolume_getAttribute(CartesianVolume_t* cvol,  const char* name);
 
 /**
+ * Returns if the specified attribute exists in the how-attributes or not.
+ * @param[in] cvol - self
+ * @param[in] name - the name of the attribute
+ * @returns 1 if it exists, otherwise 0
+ */
+int CartesianVolume_hasAttribute(CartesianVolume_t* cvol,  const char* name);
+
+/**
  * Returns a list of attribute names. Release with \@ref #RaveList_freeAndDestroy.
  * @param[in] pvol - self
  * @returns a list of attribute names

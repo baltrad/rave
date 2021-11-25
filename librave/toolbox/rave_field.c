@@ -290,6 +290,12 @@ RaveAttribute_t* RaveField_getAttribute(RaveField_t* field, const char* name)
   return (RaveAttribute_t*)RaveObjectHashTable_get(field->attrs, name);
 }
 
+int RaveField_hasAttribute(RaveField_t* field, const char* name)
+{
+  RAVE_ASSERT((field != NULL), "field == NULL");
+  return RaveObjectHashTable_exists(field->attrs, name);
+}
+
 RaveList_t* RaveField_getAttributeNames(RaveField_t* field)
 {
   RAVE_ASSERT((field != NULL), "field == NULL");

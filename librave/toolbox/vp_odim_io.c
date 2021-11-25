@@ -42,6 +42,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 struct _VpOdimIO_t {
   RAVE_OBJECT_HEAD /** Always on top */
   RaveIO_ODIM_Version version;
+  int strict; /**< If strict compliance should be enforced for some attributes */
+  char error_message[1024];                /**< if an error occurs during writing an error message might give you the reason */
 };
 
 /*@{ Private functions */
@@ -50,7 +52,9 @@ struct _VpOdimIO_t {
  */
 static int VpOdimIO_constructor(RaveCoreObject* obj)
 {
-  ((VpOdimIO_t*)obj)->version = RaveIO_ODIM_Version_2_3;
+  ((VpOdimIO_t*)obj)->version = RaveIO_ODIM_Version_2_4;
+  ((VpOdimIO_t*)obj)->strict = 0;
+  strcpy(((VpOdimIO_t*)obj)->error_message, "");
   return 1;
 }
 
@@ -60,6 +64,8 @@ static int VpOdimIO_constructor(RaveCoreObject* obj)
 static int VpOdimIO_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj)
 {
   ((VpOdimIO_t*)obj)->version = ((VpOdimIO_t*)srcobj)->version;
+  ((VpOdimIO_t*)obj)->strict = ((VpOdimIO_t*)srcobj)->strict;
+  strcpy(((VpOdimIO_t*)obj)->error_message, ((VpOdimIO_t*)srcobj)->error_message);
   return 1;
 }
 
@@ -447,6 +453,24 @@ RaveIO_ODIM_Version VpOdimIO_getVersion(VpOdimIO_t* self)
   return self->version;
 }
 
+void VpOdimIO_setStrict(VpOdimIO_t* self, int strict)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  self->strict = strict;
+}
+
+int VpOdimIO_isStrict(VpOdimIO_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return self->strict;
+}
+
+const char* VpOdimIO_getErrorMessage(VpOdimIO_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return (const char*)self->error_message;
+}
+
 int VpOdimIO_read(VpOdimIO_t* self, LazyNodeListReader_t* lazyReader, VerticalProfile_t* vp)
 {
   int result = 0;
@@ -495,6 +519,13 @@ int VpOdimIO_fill(VpOdimIO_t* self, VerticalProfile_t* vp, HL_NodeList* nodelist
   RAVE_ASSERT((vp != NULL), "vp == NULL");
   RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
 
+  strcpy(self->error_message, "");
+
+  if (!VpOdimIO_validateVpHowAttributes(self, vp)) {
+    RAVE_ERROR0("Could not validate vertical profile how-attributes");
+    goto done;
+  }
+
   if (!RaveHL_hasNodeByName(nodelist, "/Conventions")) {
     if (!RaveHL_createStringValue(nodelist, RaveHL_getOdimVersionString(self->version), "/Conventions")) {
       goto done;
@@ -515,6 +546,10 @@ int VpOdimIO_fill(VpOdimIO_t* self, VerticalProfile_t* vp, HL_NodeList* nodelist
   }
 
   source = RaveUtilities_handleSourceVersion(VerticalProfile_getSource(vp), self->version);
+  if (self->strict && !RaveUtilities_isSourceValid(source, self->version)) {
+    strcpy(self->error_message, "what/source is not valid, missing ORG or NOD?");
+    goto done;
+  }
 
   if (!RaveUtilities_replaceStringAttributeInList(attributes, "what/date", VerticalProfile_getDate(vp)) ||
       !RaveUtilities_replaceStringAttributeInList(attributes, "what/time", VerticalProfile_getTime(vp)) ||
@@ -611,6 +646,42 @@ done:
   RAVE_FREE(source);
   return result;
 }
+
+int VpOdimIO_validateVpHowAttributes(VpOdimIO_t* self, VerticalProfile_t* vp)
+{
+  int result = 0;
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  if (!self->strict) {
+    return 1;
+  }
+  if (self->version >= RaveIO_ODIM_Version_2_4) {
+    int gotSimulated = VerticalProfile_hasAttribute(vp, "how/simulated");
+    if (!gotSimulated) {
+      RaveObjectList_t* fields = VerticalProfile_getFields(vp);
+      if (fields != NULL) {
+        int i = 0, nrfields = 0;
+        gotSimulated = 1;
+        nrfields = RaveObjectList_size(fields);
+        for (i = 0; i < nrfields && gotSimulated; i++) {
+          RaveField_t* field = RaveObjectList_get(fields, i);
+          gotSimulated = RaveField_hasAttribute(field, "how/simulated");
+          RAVE_OBJECT_RELEASE(field);
+        }
+      } else {
+        RAVE_ERROR0("Failed to validate vertical profile");
+        gotSimulated = 0;
+      }
+      RAVE_OBJECT_RELEASE(fields);
+    }
+    if (!gotSimulated) {
+      RAVE_ERROR0("Failed to validate how attributes for cartesian image. Missing required attribute.");
+      strcpy(self->error_message, "Failed to validate how attributes for cartesian image. Missing required attribute how/simulated");
+    }
+    result = gotSimulated;
+  }
+  return result;
+}
+
 
 /*@} End of Interface functions */
 

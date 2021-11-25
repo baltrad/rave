@@ -161,6 +161,14 @@ int RaveField_addAttribute(RaveField_t* field,  RaveAttribute_t* attribute);
 RaveAttribute_t* RaveField_getAttribute(RaveField_t* field, const char* name);
 
 /**
+ * Returns if the specified attribute exists.
+ * @param[in] field - self
+ * @param[in] name - the name of the attribute
+ * @returns 1 if attribute exists, otherwise 0
+ */
+int RaveField_hasAttribute(RaveField_t* field, const char* name);
+
+/**
  * Returns a list of attribute names. Release with \@ref #RaveList_freeAndDestroy.
  * @param[in] field - self
  * @returns a list of attribute names
