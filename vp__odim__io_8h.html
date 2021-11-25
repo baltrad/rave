@@ -74,12 +74,24 @@ Functions</h2></td></tr>
 <tr class="memitem:a081a4db3b2155a3d2cc68a06c78532ae"><td class="memItemLeft" align="right" valign="top"><a class="el" href="rave__types_8h.html#a290d5190c397951897071d66bfaf35e0">RaveIO_ODIM_Version</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="vp__odim__io_8h.html#a081a4db3b2155a3d2cc68a06c78532ae">VpOdimIO_getVersion</a> (<a class="el" href="vp__odim__io_8h.html#acbca51198af1024fbee5e32212a32661">VpOdimIO_t</a> *self)</td></tr>
 <tr class="memdesc:a081a4db3b2155a3d2cc68a06c78532ae"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the version that this io class handles.  <a href="vp__odim__io_8h.html#a081a4db3b2155a3d2cc68a06c78532ae">More...</a><br /></td></tr>
 <tr class="separator:a081a4db3b2155a3d2cc68a06c78532ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af1d4f89754a7f853db5f7a08eb72df67"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="vp__odim__io_8h.html#af1d4f89754a7f853db5f7a08eb72df67">VpOdimIO_setStrict</a> (<a class="el" href="vp__odim__io_8h.html#acbca51198af1024fbee5e32212a32661">VpOdimIO_t</a> *self, int strict)</td></tr>
+<tr class="memdesc:af1d4f89754a7f853db5f7a08eb72df67"><td class="mdescLeft">&#160;</td><td class="mdescRight">If writing should be done strictly.  <a href="vp__odim__io_8h.html#af1d4f89754a7f853db5f7a08eb72df67">More...</a><br /></td></tr>
+<tr class="separator:af1d4f89754a7f853db5f7a08eb72df67"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a454719f964ff7587e8a1bb8aa8ce5d9b"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="vp__odim__io_8h.html#a454719f964ff7587e8a1bb8aa8ce5d9b">VpOdimIO_isStrict</a> (<a class="el" href="vp__odim__io_8h.html#acbca51198af1024fbee5e32212a32661">VpOdimIO_t</a> *self)</td></tr>
+<tr class="memdesc:a454719f964ff7587e8a1bb8aa8ce5d9b"><td class="mdescLeft">&#160;</td><td class="mdescRight">If writing should be done strictly.  <a href="vp__odim__io_8h.html#a454719f964ff7587e8a1bb8aa8ce5d9b">More...</a><br /></td></tr>
+<tr class="separator:a454719f964ff7587e8a1bb8aa8ce5d9b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acbc3274f8022db6e80b8c92b2f67c9fe"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="vp__odim__io_8h.html#acbc3274f8022db6e80b8c92b2f67c9fe">VpOdimIO_getErrorMessage</a> (<a class="el" href="vp__odim__io_8h.html#acbca51198af1024fbee5e32212a32661">VpOdimIO_t</a> *self)</td></tr>
+<tr class="memdesc:acbc3274f8022db6e80b8c92b2f67c9fe"><td class="mdescLeft">&#160;</td><td class="mdescRight">If an error occurs during writing, you might get an indication for why by checking the error message.  <a href="vp__odim__io_8h.html#acbc3274f8022db6e80b8c92b2f67c9fe">More...</a><br /></td></tr>
+<tr class="separator:acbc3274f8022db6e80b8c92b2f67c9fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a79eb371090b215aae164e657a6599049"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="vp__odim__io_8h.html#a79eb371090b215aae164e657a6599049">VpOdimIO_read</a> (<a class="el" href="vp__odim__io_8h.html#acbca51198af1024fbee5e32212a32661">VpOdimIO_t</a> *self, <a class="el" href="struct__LazyNodeListReader__t.html">LazyNodeListReader_t</a> *lazyReader, <a class="el" href="vertical__profile_8h.html#a7a81c89eb999009c0a76f192e5382458">VerticalProfile_t</a> *vp)</td></tr>
 <tr class="memdesc:a79eb371090b215aae164e657a6599049"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reads a vp from the nodelist and sets the data in the vp.  <a href="vp__odim__io_8h.html#a79eb371090b215aae164e657a6599049">More...</a><br /></td></tr>
 <tr class="separator:a79eb371090b215aae164e657a6599049"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adb1b8e0f909dbfff9cf5a9a295c2becf"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="vp__odim__io_8h.html#adb1b8e0f909dbfff9cf5a9a295c2becf">VpOdimIO_fill</a> (<a class="el" href="vp__odim__io_8h.html#acbca51198af1024fbee5e32212a32661">VpOdimIO_t</a> *self, <a class="el" href="vertical__profile_8h.html#a7a81c89eb999009c0a76f192e5382458">VerticalProfile_t</a> *vp, HL_NodeList *nodelist)</td></tr>
 <tr class="memdesc:adb1b8e0f909dbfff9cf5a9a295c2becf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Fills a nodelist with information about a vertical profile.  <a href="vp__odim__io_8h.html#adb1b8e0f909dbfff9cf5a9a295c2becf">More...</a><br /></td></tr>
 <tr class="separator:adb1b8e0f909dbfff9cf5a9a295c2becf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac7e990e914567f87544845b62a69273d"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="vp__odim__io_8h.html#ac7e990e914567f87544845b62a69273d">VpOdimIO_validateVpHowAttributes</a> (<a class="el" href="vp__odim__io_8h.html#acbca51198af1024fbee5e32212a32661">VpOdimIO_t</a> *self, <a class="el" href="vertical__profile_8h.html#a7a81c89eb999009c0a76f192e5382458">VerticalProfile_t</a> *vp)</td></tr>
+<tr class="memdesc:ac7e990e914567f87544845b62a69273d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Validates a vertical profile according to strictness and version in order to verify if it contains necessary information.  <a href="vp__odim__io_8h.html#ac7e990e914567f87544845b62a69273d">More...</a><br /></td></tr>
+<tr class="separator:ac7e990e914567f87544845b62a69273d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
 Variables</h2></td></tr>
@@ -155,6 +167,33 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a id="acbc3274f8022db6e80b8c92b2f67c9fe" name="acbc3274f8022db6e80b8c92b2f67c9fe"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acbc3274f8022db6e80b8c92b2f67c9fe">&#9670;&nbsp;</a></span>VpOdimIO_getErrorMessage()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char * VpOdimIO_getErrorMessage </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="vp__odim__io_8h.html#acbca51198af1024fbee5e32212a32661">VpOdimIO_t</a> *&#160;</td>
+          <td class="paramname"><em>self</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>If an error occurs during writing, you might get an indication for why by checking the error message. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the error message (will be an empty string if nothing to report). </dd></dl>
+
+</div>
+</div>
 <a id="a081a4db3b2155a3d2cc68a06c78532ae" name="a081a4db3b2155a3d2cc68a06c78532ae"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a081a4db3b2155a3d2cc68a06c78532ae">&#9670;&nbsp;</a></span>VpOdimIO_getVersion()</h2>
 
@@ -179,6 +218,33 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>- the odim version </dd></dl>
+
+</div>
+</div>
+<a id="a454719f964ff7587e8a1bb8aa8ce5d9b" name="a454719f964ff7587e8a1bb8aa8ce5d9b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a454719f964ff7587e8a1bb8aa8ce5d9b">&#9670;&nbsp;</a></span>VpOdimIO_isStrict()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int VpOdimIO_isStrict </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="vp__odim__io_8h.html#acbca51198af1024fbee5e32212a32661">VpOdimIO_t</a> *&#160;</td>
+          <td class="paramname"><em>self</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>If writing should be done strictly. </p>
+<p >From ODIM H5 2.4 several how-attributes are mandatory. If any of these are missing and strict is set to true, then the writing will fail. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>if writing should be performed strictly or not </dd></dl>
 
 </div>
 </div>
@@ -227,6 +293,43 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a id="af1d4f89754a7f853db5f7a08eb72df67" name="af1d4f89754a7f853db5f7a08eb72df67"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af1d4f89754a7f853db5f7a08eb72df67">&#9670;&nbsp;</a></span>VpOdimIO_setStrict()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void VpOdimIO_setStrict </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="vp__odim__io_8h.html#acbca51198af1024fbee5e32212a32661">VpOdimIO_t</a> *&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>strict</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>If writing should be done strictly. </p>
+<p >From ODIM H5 2.4 several how-attributes are mandatory. If any of these are missing and strict is set to true, then the writing will fail. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">strict</td><td>- if writing should be performed strictly or not </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="a5959c75d9fecb753d237960dc52a0d22" name="a5959c75d9fecb753d237960dc52a0d22"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a5959c75d9fecb753d237960dc52a0d22">&#9670;&nbsp;</a></span>VpOdimIO_setVersion()</h2>
 
@@ -261,6 +364,44 @@ Variables</h2></td></tr>
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a id="ac7e990e914567f87544845b62a69273d" name="ac7e990e914567f87544845b62a69273d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac7e990e914567f87544845b62a69273d">&#9670;&nbsp;</a></span>VpOdimIO_validateVpHowAttributes()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int VpOdimIO_validateVpHowAttributes </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="vp__odim__io_8h.html#acbca51198af1024fbee5e32212a32661">VpOdimIO_t</a> *&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="vertical__profile_8h.html#a7a81c89eb999009c0a76f192e5382458">VerticalProfile_t</a> *&#160;</td>
+          <td class="paramname"><em>vp</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Validates a vertical profile according to strictness and version in order to verify if it contains necessary information. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">vp</td><td>- the vertical profile to validate </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>1 if valid otherwise 0 </dd></dl>
 
 </div>
 </div>

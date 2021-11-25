@@ -125,8 +125,14 @@ Functions</h2></td></tr>
 <tr class="memitem:a9d4f911312fb99221f5598c53fae9071"><td class="memItemLeft" align="right" valign="top"><a class="el" href="rave__io_8h.html#a41465da7edb2fb9cb9ded0a0e565a5f7">RaveIO_ODIM_FileFormat</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="rave__io_8h.html#a9d4f911312fb99221f5598c53fae9071">RaveIO_getFileFormat</a> (<a class="el" href="rave__io_8h.html#a7d5e574535a94c690276d809dd8d0e3e">RaveIO_t</a> *raveio)</td></tr>
 <tr class="memdesc:a9d4f911312fb99221f5598c53fae9071"><td class="mdescLeft">&#160;</td><td class="mdescRight">Will return the file format that this file was read as.  <a href="rave__io_8h.html#a9d4f911312fb99221f5598c53fae9071">More...</a><br /></td></tr>
 <tr class="separator:a9d4f911312fb99221f5598c53fae9071"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a226ef0871fbe021e02dd8dd764fa1490"><td class="memItemLeft" align="right" valign="top"><a id="a226ef0871fbe021e02dd8dd764fa1490" name="a226ef0871fbe021e02dd8dd764fa1490"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>RaveIO_setFileFormat</b> (<a class="el" href="rave__io_8h.html#a7d5e574535a94c690276d809dd8d0e3e">RaveIO_t</a> *raveio, <a class="el" href="rave__io_8h.html#a41465da7edb2fb9cb9ded0a0e565a5f7">RaveIO_ODIM_FileFormat</a> format)</td></tr>
+<tr class="memitem:a1357a9c3016be18dadd82ea335dcefe8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="rave__io_8h.html#a1357a9c3016be18dadd82ea335dcefe8">RaveIO_setStrict</a> (<a class="el" href="rave__io_8h.html#a7d5e574535a94c690276d809dd8d0e3e">RaveIO_t</a> *raveio, int strict)</td></tr>
+<tr class="memdesc:a1357a9c3016be18dadd82ea335dcefe8"><td class="mdescLeft">&#160;</td><td class="mdescRight">If writing should be done strictly.  <a href="rave__io_8h.html#a1357a9c3016be18dadd82ea335dcefe8">More...</a><br /></td></tr>
+<tr class="separator:a1357a9c3016be18dadd82ea335dcefe8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af5602436579c5e15bfbc7ebe9076648f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="rave__io_8h.html#af5602436579c5e15bfbc7ebe9076648f">RaveIO_isStrict</a> (<a class="el" href="rave__io_8h.html#a7d5e574535a94c690276d809dd8d0e3e">RaveIO_t</a> *raveio)</td></tr>
+<tr class="memdesc:af5602436579c5e15bfbc7ebe9076648f"><td class="mdescLeft">&#160;</td><td class="mdescRight">If writing should be done strictly.  <a href="rave__io_8h.html#af5602436579c5e15bfbc7ebe9076648f">More...</a><br /></td></tr>
+<tr class="separator:af5602436579c5e15bfbc7ebe9076648f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a226ef0871fbe021e02dd8dd764fa1490"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="rave__io_8h.html#a226ef0871fbe021e02dd8dd764fa1490">RaveIO_setFileFormat</a> (<a class="el" href="rave__io_8h.html#a7d5e574535a94c690276d809dd8d0e3e">RaveIO_t</a> *raveio, <a class="el" href="rave__io_8h.html#a41465da7edb2fb9cb9ded0a0e565a5f7">RaveIO_ODIM_FileFormat</a> format)</td></tr>
+<tr class="memdesc:a226ef0871fbe021e02dd8dd764fa1490"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets what file format to use.  <a href="rave__io_8h.html#a226ef0871fbe021e02dd8dd764fa1490">More...</a><br /></td></tr>
 <tr class="separator:a226ef0871fbe021e02dd8dd764fa1490"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad6f5d8e98bec2d74ed10744bd4575565"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="rave__io_8h.html#ad6f5d8e98bec2d74ed10744bd4575565">RaveIO_setCompressionLevel</a> (<a class="el" href="rave__io_8h.html#a7d5e574535a94c690276d809dd8d0e3e">RaveIO_t</a> *raveio, int lvl)</td></tr>
 <tr class="memdesc:ad6f5d8e98bec2d74ed10744bd4575565"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the compression level.  <a href="rave__io_8h.html#ad6f5d8e98bec2d74ed10744bd4575565">More...</a><br /></td></tr>
@@ -170,6 +176,9 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>RaveIO_setFileFormat</
 <tr class="memitem:a5ebd5972d55e4cc0444728703933866b"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="rave__io_8h.html#a5ebd5972d55e4cc0444728703933866b">RaveIO_getBufrTableDir</a> (<a class="el" href="rave__io_8h.html#a7d5e574535a94c690276d809dd8d0e3e">RaveIO_t</a> *raveio)</td></tr>
 <tr class="memdesc:a5ebd5972d55e4cc0444728703933866b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the bufr table directory.  <a href="rave__io_8h.html#a5ebd5972d55e4cc0444728703933866b">More...</a><br /></td></tr>
 <tr class="separator:a5ebd5972d55e4cc0444728703933866b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2ed30bcc2b5a706ba01f6cf5b3ca322e"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="rave__io_8h.html#a2ed30bcc2b5a706ba01f6cf5b3ca322e">RaveIO_getErrorMessage</a> (<a class="el" href="rave__io_8h.html#a7d5e574535a94c690276d809dd8d0e3e">RaveIO_t</a> *raveio)</td></tr>
+<tr class="memdesc:a2ed30bcc2b5a706ba01f6cf5b3ca322e"><td class="mdescLeft">&#160;</td><td class="mdescRight">If an error occurs during writing, you might get an indication for why by checking the error message.  <a href="rave__io_8h.html#a2ed30bcc2b5a706ba01f6cf5b3ca322e">More...</a><br /></td></tr>
+<tr class="separator:a2ed30bcc2b5a706ba01f6cf5b3ca322e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a51158e1f9ef3176427b1353408718d3a"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="rave__io_8h.html#a51158e1f9ef3176427b1353408718d3a">RaveIO_supports</a> (<a class="el" href="rave__io_8h.html#a41465da7edb2fb9cb9ded0a0e565a5f7">RaveIO_ODIM_FileFormat</a> format)</td></tr>
 <tr class="memdesc:a51158e1f9ef3176427b1353408718d3a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns if the raveio supports the provided file format.  <a href="rave__io_8h.html#a51158e1f9ef3176427b1353408718d3a">More...</a><br /></td></tr>
 <tr class="separator:a51158e1f9ef3176427b1353408718d3a"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -323,6 +332,33 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the compression level </dd></dl>
+
+</div>
+</div>
+<a id="a2ed30bcc2b5a706ba01f6cf5b3ca322e" name="a2ed30bcc2b5a706ba01f6cf5b3ca322e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2ed30bcc2b5a706ba01f6cf5b3ca322e">&#9670;&nbsp;</a></span>RaveIO_getErrorMessage()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char * RaveIO_getErrorMessage </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="rave__io_8h.html#a7d5e574535a94c690276d809dd8d0e3e">RaveIO_t</a> *&#160;</td>
+          <td class="paramname"><em>raveio</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>If an error occurs during writing, you might get an indication for why by checking the error message. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">raveio</td><td>- rave io </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the error message (will be an empty string if nothing to report). </dd></dl>
 
 </div>
 </div>
@@ -684,6 +720,33 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a id="af5602436579c5e15bfbc7ebe9076648f" name="af5602436579c5e15bfbc7ebe9076648f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af5602436579c5e15bfbc7ebe9076648f">&#9670;&nbsp;</a></span>RaveIO_isStrict()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int RaveIO_isStrict </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="rave__io_8h.html#a7d5e574535a94c690276d809dd8d0e3e">RaveIO_t</a> *&#160;</td>
+          <td class="paramname"><em>raveio</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>If writing should be done strictly. </p>
+<p >From ODIM H5 2.4 several how-attributes are mandatory. If any of these are missing and strict is set to true, then the writing will fail. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">raveio</td><td>- self </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>if writing should be performed strictly or not </dd></dl>
+
+</div>
+</div>
 <a id="a014e6de1818c1b5cf07c387710fef6db" name="a014e6de1818c1b5cf07c387710fef6db"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a014e6de1818c1b5cf07c387710fef6db">&#9670;&nbsp;</a></span>RaveIO_load()</h2>
 
@@ -886,6 +949,44 @@ Variables</h2></td></tr>
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a id="a226ef0871fbe021e02dd8dd764fa1490" name="a226ef0871fbe021e02dd8dd764fa1490"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a226ef0871fbe021e02dd8dd764fa1490">&#9670;&nbsp;</a></span>RaveIO_setFileFormat()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int RaveIO_setFileFormat </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="rave__io_8h.html#a7d5e574535a94c690276d809dd8d0e3e">RaveIO_t</a> *&#160;</td>
+          <td class="paramname"><em>raveio</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="rave__io_8h.html#a41465da7edb2fb9cb9ded0a0e565a5f7">RaveIO_ODIM_FileFormat</a>&#160;</td>
+          <td class="paramname"><em>format</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Sets what file format to use. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">raveio</td><td>- self </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">format</td><td>- the file format to use </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>1 on success otherwise 0 </dd></dl>
 
 </div>
 </div>
@@ -1152,6 +1253,43 @@ Variables</h2></td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">raveio</td><td>- self </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">sz</td><td>- same as sizes.sizeof_size </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">addr</td><td>- same as sizes.sizeof_addr </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a1357a9c3016be18dadd82ea335dcefe8" name="a1357a9c3016be18dadd82ea335dcefe8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1357a9c3016be18dadd82ea335dcefe8">&#9670;&nbsp;</a></span>RaveIO_setStrict()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void RaveIO_setStrict </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="rave__io_8h.html#a7d5e574535a94c690276d809dd8d0e3e">RaveIO_t</a> *&#160;</td>
+          <td class="paramname"><em>raveio</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>strict</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>If writing should be done strictly. </p>
+<p >From ODIM H5 2.4 several how-attributes are mandatory. If any of these are missing and strict is set to true, then the writing will fail. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">raveio</td><td>- self </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">strict</td><td>- if writing should be performed strictly or not </td></tr>
   </table>
   </dd>
 </dl>

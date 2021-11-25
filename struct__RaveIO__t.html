@@ -66,6 +66,9 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a0c5e96eec5fdccbd73fc647906aa1987"><td class="memItemLeft" align="right" valign="top"><a class="el" href="rave__io_8h.html#a41465da7edb2fb9cb9ded0a0e565a5f7">RaveIO_ODIM_FileFormat</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct__RaveIO__t.html#a0c5e96eec5fdccbd73fc647906aa1987">fileFormat</a></td></tr>
 <tr class="memdesc:a0c5e96eec5fdccbd73fc647906aa1987"><td class="mdescLeft">&#160;</td><td class="mdescRight">the file format  <a href="struct__RaveIO__t.html#a0c5e96eec5fdccbd73fc647906aa1987">More...</a><br /></td></tr>
 <tr class="separator:a0c5e96eec5fdccbd73fc647906aa1987"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abcafa936e08f0428fe2d5b81df91a940"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct__RaveIO__t.html#abcafa936e08f0428fe2d5b81df91a940">strict</a></td></tr>
+<tr class="memdesc:abcafa936e08f0428fe2d5b81df91a940"><td class="mdescLeft">&#160;</td><td class="mdescRight">if strict writing should be enforced, from 2.4, several how-attributes are required.  <a href="struct__RaveIO__t.html#abcafa936e08f0428fe2d5b81df91a940">More...</a><br /></td></tr>
+<tr class="separator:abcafa936e08f0428fe2d5b81df91a940"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af7147ef581da7ea5d3a43d794333eccd"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct__RaveIO__t.html#af7147ef581da7ea5d3a43d794333eccd">filename</a></td></tr>
 <tr class="memdesc:af7147ef581da7ea5d3a43d794333eccd"><td class="mdescLeft">&#160;</td><td class="mdescRight">the filename  <a href="struct__RaveIO__t.html#af7147ef581da7ea5d3a43d794333eccd">More...</a><br /></td></tr>
 <tr class="separator:af7147ef581da7ea5d3a43d794333eccd"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -78,6 +81,9 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:ae7d89ebb4190fc7661c272377bb96e91"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct__RaveIO__t.html#ae7d89ebb4190fc7661c272377bb96e91">bufrTableDir</a></td></tr>
 <tr class="memdesc:ae7d89ebb4190fc7661c272377bb96e91"><td class="mdescLeft">&#160;</td><td class="mdescRight">the bufr table dir  <a href="struct__RaveIO__t.html#ae7d89ebb4190fc7661c272377bb96e91">More...</a><br /></td></tr>
 <tr class="separator:ae7d89ebb4190fc7661c272377bb96e91"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3c771b99619233523294a508ff32b309"><td class="memItemLeft" align="right" valign="top">char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct__RaveIO__t.html#a3c771b99619233523294a508ff32b309">error_message</a> [1024]</td></tr>
+<tr class="memdesc:a3c771b99619233523294a508ff32b309"><td class="mdescLeft">&#160;</td><td class="mdescRight">if an error occurs during writing an error message might give you the reason  <a href="struct__RaveIO__t.html#a3c771b99619233523294a508ff32b309">More...</a><br /></td></tr>
+<tr class="separator:a3c771b99619233523294a508ff32b309"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p >Defines the structure for the RaveIO in a volume. </p>
@@ -111,6 +117,22 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>the compression to use </p>
+
+</div>
+</div>
+<a id="a3c771b99619233523294a508ff32b309" name="a3c771b99619233523294a508ff32b309"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3c771b99619233523294a508ff32b309">&#9670;&nbsp;</a></span>error_message</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">char _RaveIO_t::error_message[1024]</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>if an error occurs during writing an error message might give you the reason </p>
 
 </div>
 </div>
@@ -208,6 +230,23 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>the read odim version </p>
+
+</div>
+</div>
+<a id="abcafa936e08f0428fe2d5b81df91a940" name="abcafa936e08f0428fe2d5b81df91a940"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abcafa936e08f0428fe2d5b81df91a940">&#9670;&nbsp;</a></span>strict</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int _RaveIO_t::strict</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>if strict writing should be enforced, from 2.4, several how-attributes are required. </p>
+<p >If setting this to true, this will be enforced </p>
 
 </div>
 </div>

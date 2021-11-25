@@ -76,6 +76,21 @@ Functions</h2></td></tr>
 <tr class="memitem:a5e7968a6df290b572de958f14466c0e6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="rave__types_8h.html#a290d5190c397951897071d66bfaf35e0">RaveIO_ODIM_Version</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="polar__odim__io_8c.html#a5e7968a6df290b572de958f14466c0e6">PolarOdimIO_getVersion</a> (<a class="el" href="polar__odim__io_8h.html#a6972b2ed831b9338104d9c36dd01333b">PolarOdimIO_t</a> *self)</td></tr>
 <tr class="memdesc:a5e7968a6df290b572de958f14466c0e6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the version that this io class handles.  <a href="polar__odim__io_8c.html#a5e7968a6df290b572de958f14466c0e6">More...</a><br /></td></tr>
 <tr class="separator:a5e7968a6df290b572de958f14466c0e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8795cc37024e9a89cac9e8008cc11706"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="polar__odim__io_8c.html#a8795cc37024e9a89cac9e8008cc11706">PolarOdimIO_setStrict</a> (<a class="el" href="polar__odim__io_8h.html#a6972b2ed831b9338104d9c36dd01333b">PolarOdimIO_t</a> *self, int strict)</td></tr>
+<tr class="memdesc:a8795cc37024e9a89cac9e8008cc11706"><td class="mdescLeft">&#160;</td><td class="mdescRight">If writing should be done strictly.  <a href="polar__odim__io_8c.html#a8795cc37024e9a89cac9e8008cc11706">More...</a><br /></td></tr>
+<tr class="separator:a8795cc37024e9a89cac9e8008cc11706"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a620fca1d26c557641287478e2a684e18"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="polar__odim__io_8c.html#a620fca1d26c557641287478e2a684e18">PolarOdimIO_isStrict</a> (<a class="el" href="polar__odim__io_8h.html#a6972b2ed831b9338104d9c36dd01333b">PolarOdimIO_t</a> *self)</td></tr>
+<tr class="memdesc:a620fca1d26c557641287478e2a684e18"><td class="mdescLeft">&#160;</td><td class="mdescRight">If writing should be done strictly.  <a href="polar__odim__io_8c.html#a620fca1d26c557641287478e2a684e18">More...</a><br /></td></tr>
+<tr class="separator:a620fca1d26c557641287478e2a684e18"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a01acdf9a6c73151eaeb0e676b4a3e092"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="polar__odim__io_8c.html#a01acdf9a6c73151eaeb0e676b4a3e092">PolarOdimIO_getErrorMessage</a> (<a class="el" href="polar__odim__io_8h.html#a6972b2ed831b9338104d9c36dd01333b">PolarOdimIO_t</a> *self)</td></tr>
+<tr class="memdesc:a01acdf9a6c73151eaeb0e676b4a3e092"><td class="mdescLeft">&#160;</td><td class="mdescRight">If an error occurs during writing, you might get an indication for why by checking the error message.  <a href="polar__odim__io_8c.html#a01acdf9a6c73151eaeb0e676b4a3e092">More...</a><br /></td></tr>
+<tr class="separator:a01acdf9a6c73151eaeb0e676b4a3e092"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abfbfcf9a13bce5c576e7ffe1ac52dd9a"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="polar__odim__io_8c.html#abfbfcf9a13bce5c576e7ffe1ac52dd9a">PolarOdimIO_validateVolumeHowAttributes</a> (<a class="el" href="polar__odim__io_8h.html#a6972b2ed831b9338104d9c36dd01333b">PolarOdimIO_t</a> *self, <a class="el" href="polarvolume_8h.html#a275c1e5d1e61accfd21135da054ad086">PolarVolume_t</a> *volume)</td></tr>
+<tr class="memdesc:abfbfcf9a13bce5c576e7ffe1ac52dd9a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Validates if the attributes in the polar volume are valid according to the version rules and strictness.  <a href="polar__odim__io_8c.html#abfbfcf9a13bce5c576e7ffe1ac52dd9a">More...</a><br /></td></tr>
+<tr class="separator:abfbfcf9a13bce5c576e7ffe1ac52dd9a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acf83eca0ea090793e0eec6a7acce1359"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="polar__odim__io_8c.html#acf83eca0ea090793e0eec6a7acce1359">PolarOdimIO_validateScanHowAttributes</a> (<a class="el" href="polar__odim__io_8h.html#a6972b2ed831b9338104d9c36dd01333b">PolarOdimIO_t</a> *self, <a class="el" href="polarscan_8h.html#ab18af0ebcfc65c3148c7e8bee5455c57">PolarScan_t</a> *scan)</td></tr>
+<tr class="memdesc:acf83eca0ea090793e0eec6a7acce1359"><td class="mdescLeft">&#160;</td><td class="mdescRight">Validates if the attributes in the polar scan are valid according to the version rules and strictness.  <a href="polar__odim__io_8c.html#acf83eca0ea090793e0eec6a7acce1359">More...</a><br /></td></tr>
+<tr class="separator:acf83eca0ea090793e0eec6a7acce1359"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a58795b58a10f252b7bd6d828c740575f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="polar__odim__io_8c.html#a58795b58a10f252b7bd6d828c740575f">PolarOdimIO_readScan</a> (<a class="el" href="polar__odim__io_8h.html#a6972b2ed831b9338104d9c36dd01333b">PolarOdimIO_t</a> *self, <a class="el" href="struct__LazyNodeListReader__t.html">LazyNodeListReader_t</a> *lazyReader, <a class="el" href="polarscan_8h.html#ab18af0ebcfc65c3148c7e8bee5455c57">PolarScan_t</a> *scan)</td></tr>
 <tr class="memdesc:a58795b58a10f252b7bd6d828c740575f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reads a scan from the nodelist and sets the data in the scan.  <a href="polar__odim__io_8c.html#a58795b58a10f252b7bd6d828c740575f">More...</a><br /></td></tr>
 <tr class="separator:a58795b58a10f252b7bd6d828c740575f"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -190,6 +205,33 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a id="a01acdf9a6c73151eaeb0e676b4a3e092" name="a01acdf9a6c73151eaeb0e676b4a3e092"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a01acdf9a6c73151eaeb0e676b4a3e092">&#9670;&nbsp;</a></span>PolarOdimIO_getErrorMessage()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char * PolarOdimIO_getErrorMessage </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="polar__odim__io_8h.html#a6972b2ed831b9338104d9c36dd01333b">PolarOdimIO_t</a> *&#160;</td>
+          <td class="paramname"><em>self</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>If an error occurs during writing, you might get an indication for why by checking the error message. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">raveio</td><td>- rave io </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the error message (will be an empty string if nothing to report). </dd></dl>
+
+</div>
+</div>
 <a id="a5e7968a6df290b572de958f14466c0e6" name="a5e7968a6df290b572de958f14466c0e6"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a5e7968a6df290b572de958f14466c0e6">&#9670;&nbsp;</a></span>PolarOdimIO_getVersion()</h2>
 
@@ -214,6 +256,33 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>- the odim version </dd></dl>
+
+</div>
+</div>
+<a id="a620fca1d26c557641287478e2a684e18" name="a620fca1d26c557641287478e2a684e18"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a620fca1d26c557641287478e2a684e18">&#9670;&nbsp;</a></span>PolarOdimIO_isStrict()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int PolarOdimIO_isStrict </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="polar__odim__io_8h.html#a6972b2ed831b9338104d9c36dd01333b">PolarOdimIO_t</a> *&#160;</td>
+          <td class="paramname"><em>self</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>If writing should be done strictly. </p>
+<p >From ODIM H5 2.4 several how-attributes are mandatory. If any of these are missing and strict is set to true, then the writing will fail. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>if writing should be performed strictly or not </dd></dl>
 
 </div>
 </div>
@@ -307,6 +376,43 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a id="a8795cc37024e9a89cac9e8008cc11706" name="a8795cc37024e9a89cac9e8008cc11706"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8795cc37024e9a89cac9e8008cc11706">&#9670;&nbsp;</a></span>PolarOdimIO_setStrict()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void PolarOdimIO_setStrict </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="polar__odim__io_8h.html#a6972b2ed831b9338104d9c36dd01333b">PolarOdimIO_t</a> *&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>strict</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>If writing should be done strictly. </p>
+<p >From ODIM H5 2.4 several how-attributes are mandatory. If any of these are missing and strict is set to true, then the writing will fail. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">strict</td><td>- if writing should be performed strictly or not </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="a357a36625ecf9ea6ecd36187de2280a3" name="a357a36625ecf9ea6ecd36187de2280a3"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a357a36625ecf9ea6ecd36187de2280a3">&#9670;&nbsp;</a></span>PolarOdimIO_setVersion()</h2>
 
@@ -341,6 +447,82 @@ Variables</h2></td></tr>
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a id="acf83eca0ea090793e0eec6a7acce1359" name="acf83eca0ea090793e0eec6a7acce1359"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acf83eca0ea090793e0eec6a7acce1359">&#9670;&nbsp;</a></span>PolarOdimIO_validateScanHowAttributes()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int PolarOdimIO_validateScanHowAttributes </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="polar__odim__io_8h.html#a6972b2ed831b9338104d9c36dd01333b">PolarOdimIO_t</a> *&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="polarscan_8h.html#ab18af0ebcfc65c3148c7e8bee5455c57">PolarScan_t</a> *&#160;</td>
+          <td class="paramname"><em>scan</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Validates if the attributes in the polar scan are valid according to the version rules and strictness. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">scan</td><td>- the scan to validate </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>1 if valid, otherwise 0 </dd></dl>
+
+</div>
+</div>
+<a id="abfbfcf9a13bce5c576e7ffe1ac52dd9a" name="abfbfcf9a13bce5c576e7ffe1ac52dd9a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abfbfcf9a13bce5c576e7ffe1ac52dd9a">&#9670;&nbsp;</a></span>PolarOdimIO_validateVolumeHowAttributes()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int PolarOdimIO_validateVolumeHowAttributes </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="polar__odim__io_8h.html#a6972b2ed831b9338104d9c36dd01333b">PolarOdimIO_t</a> *&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="polarvolume_8h.html#a275c1e5d1e61accfd21135da054ad086">PolarVolume_t</a> *&#160;</td>
+          <td class="paramname"><em>volume</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Validates if the attributes in the polar volume are valid according to the version rules and strictness. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">volume</td><td>- the volume to validate </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>1 if valid, otherwise 0 </dd></dl>
 
 </div>
 </div>

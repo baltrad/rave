@@ -110,6 +110,9 @@ Functions</h2></td></tr>
 <tr class="memitem:ae3f5be370c96ed5ca3f20eab8730cff0"><td class="memItemLeft" align="right" valign="top"><a class="el" href="rave__attribute_8h.html#af6c25bb8521123e600ef452e2e2b58dd">RaveAttribute_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="rave__field_8c.html#ae3f5be370c96ed5ca3f20eab8730cff0">RaveField_getAttribute</a> (<a class="el" href="rave__field_8h.html#a54b17ce798506570a3d68f25207e3730">RaveField_t</a> *field, const char *name)</td></tr>
 <tr class="memdesc:ae3f5be370c96ed5ca3f20eab8730cff0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the rave attribute that is named accordingly.  <a href="rave__field_8c.html#ae3f5be370c96ed5ca3f20eab8730cff0">More...</a><br /></td></tr>
 <tr class="separator:ae3f5be370c96ed5ca3f20eab8730cff0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5baccff4ac5c76344ab37fd09591ae92"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="rave__field_8c.html#a5baccff4ac5c76344ab37fd09591ae92">RaveField_hasAttribute</a> (<a class="el" href="rave__field_8h.html#a54b17ce798506570a3d68f25207e3730">RaveField_t</a> *field, const char *name)</td></tr>
+<tr class="memdesc:a5baccff4ac5c76344ab37fd09591ae92"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns if the specified attribute exists.  <a href="rave__field_8c.html#a5baccff4ac5c76344ab37fd09591ae92">More...</a><br /></td></tr>
+<tr class="separator:a5baccff4ac5c76344ab37fd09591ae92"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3b99e99c36be35a1c08ec1480770f452"><td class="memItemLeft" align="right" valign="top"><a class="el" href="rave__list_8h.html#ad2ea2f1cc27c63aa76beb80b6535c3ef">RaveList_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="rave__field_8c.html#a3b99e99c36be35a1c08ec1480770f452">RaveField_getAttributeNames</a> (<a class="el" href="rave__field_8h.html#a54b17ce798506570a3d68f25207e3730">RaveField_t</a> *field)</td></tr>
 <tr class="memdesc:a3b99e99c36be35a1c08ec1480770f452"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a list of attribute names.  <a href="rave__field_8c.html#a3b99e99c36be35a1c08ec1480770f452">More...</a><br /></td></tr>
 <tr class="separator:a3b99e99c36be35a1c08ec1480770f452"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -641,6 +644,44 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the ysize / number of rays </dd></dl>
+
+</div>
+</div>
+<a id="a5baccff4ac5c76344ab37fd09591ae92" name="a5baccff4ac5c76344ab37fd09591ae92"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5baccff4ac5c76344ab37fd09591ae92">&#9670;&nbsp;</a></span>RaveField_hasAttribute()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int RaveField_hasAttribute </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="rave__field_8h.html#a54b17ce798506570a3d68f25207e3730">RaveField_t</a> *&#160;</td>
+          <td class="paramname"><em>field</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>name</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Returns if the specified attribute exists. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">field</td><td>- self </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>- the name of the attribute </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>1 if attribute exists, otherwise 0 </dd></dl>
 
 </div>
 </div>
