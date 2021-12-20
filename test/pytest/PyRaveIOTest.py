@@ -778,6 +778,120 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEqual("IMAGE", nodelist.getNode("/dataset1/data1/data/CLASS").data())
     self.assertEqual("1.2", nodelist.getNode("/dataset1/data1/data/IMAGE_VERSION").data())
 
+  def test_save_cartesian_bessel_legacy_mode(self):
+    if not _rave.isLegacyProjEnabled():
+        # No meaning to try legacy mode if it has been disabled on compile time
+        return
+
+    os.environ["RAVE_USE_CARTESIAN_LEGACY_EXTENT"]="yes"
+    try:
+      image = _cartesian.new()
+      image.time = "100000"
+      image.date = "20100101"
+      image.objectType = _rave.Rave_ObjectType_IMAGE
+      image.source = "PLC:123"
+      image.xscale = 2000.0
+      image.yscale = 2000.0
+      image.areaextent = (-745231.940399, -3995729.577395, 1066768.059601, -1747729.577395)
+      image.projection = _projection.new("x","y","+proj=stere +ellps=bessel +lat_0=90 +lon_0=14 +lat_ts=60 +datum=WGS84")
+      image.product = _rave.Rave_ProductType_CAPPI
+      image.prodname = None
+
+      param = _cartesianparam.new()
+      param.quantity = "DBZH"
+      param.gain = 1.0
+      param.offset = 0.0
+      param.nodata = 255.0
+      param.undetect = 0.0
+      data = numpy.zeros((906,1124),numpy.uint8)
+      param.setData(data)
+
+      image.addParameter(param)
+
+      ios = _raveio.new()
+      ios.object = image
+      ios.filename = self.TEMPORARY_FILE #self.TEMPORARY_FILE
+      ios.save()
+
+      # Verify result
+      nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+      nodelist.selectAll()
+      nodelist.fetch()
+
+
+      LL_lat = 52.3548
+      LL_lon = 3.43531
+      LR_lat = 51.7426
+      LR_lon = 28.948
+      UL_lat = 71.9126
+      UL_lon = -9.0934
+      UR_lat = 70.5325
+      UR_lon = 45.3988
+
+      self.assertAlmostEqual(LL_lat, nodelist.getNode("/where/LL_lat").data(), 4)
+      self.assertAlmostEqual(LL_lon, nodelist.getNode("/where/LL_lon").data(), 4)
+      self.assertAlmostEqual(LR_lat, nodelist.getNode("/where/LR_lat").data(), 4)
+      self.assertAlmostEqual(LR_lon, nodelist.getNode("/where/LR_lon").data(), 4)
+      self.assertAlmostEqual(UL_lat, nodelist.getNode("/where/UL_lat").data(), 4)
+      self.assertAlmostEqual(UL_lon, nodelist.getNode("/where/UL_lon").data(), 4)
+      self.assertAlmostEqual(UR_lat, nodelist.getNode("/where/UR_lat").data(), 4)
+      self.assertAlmostEqual(UR_lon, nodelist.getNode("/where/UR_lon").data(), 4)
+    finally:
+      if "RAVE_USE_CARTESIAN_LEGACY_EXTENT" in os.environ:
+          del os.environ["RAVE_USE_CARTESIAN_LEGACY_EXTENT"]
+
+  def test_save_cartesian_bessel(self):
+    image = _cartesian.new()
+    image.time = "100000"
+    image.date = "20100101"
+    image.objectType = _rave.Rave_ObjectType_IMAGE
+    image.source = "PLC:123"
+    image.xscale = 2000.0
+    image.yscale = 2000.0
+    image.areaextent = (-745244.228412, -3995795.462356, 1066755.771588, -1747795.462356)
+    image.projection = _projection.new("x","y","+proj=stere +ellps=bessel +lat_0=90 +lon_0=14 +lat_ts=60 +towgs84=0,0,0")
+    image.product = _rave.Rave_ProductType_CAPPI
+    image.prodname = None
+
+    param = _cartesianparam.new()
+    param.quantity = "DBZH"
+    param.gain = 1.0
+    param.offset = 0.0
+    param.nodata = 255.0
+    param.undetect = 0.0
+    data = numpy.zeros((906,1124),numpy.uint8)
+    param.setData(data)
+
+    image.addParameter(param)
+
+    ios = _raveio.new()
+    ios.object = image
+    ios.filename = self.TEMPORARY_FILE #self.TEMPORARY_FILE
+    ios.save()
+
+    # Verify result
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+
+    LL_lat = 52.3548
+    LL_lon = 3.43531
+    LR_lat = 51.7427
+    LR_lon = 28.9476
+    UL_lat = 71.9123
+    UL_lon = -9.09296
+    UR_lat = 70.5324
+    UR_lon = 45.3975
+
+    self.assertAlmostEqual(LL_lat, nodelist.getNode("/where/LL_lat").data(), 4)
+    self.assertAlmostEqual(LL_lon, nodelist.getNode("/where/LL_lon").data(), 4)
+    self.assertAlmostEqual(LR_lat, nodelist.getNode("/where/LR_lat").data(), 4)
+    self.assertAlmostEqual(LR_lon, nodelist.getNode("/where/LR_lon").data(), 4)
+    self.assertAlmostEqual(UL_lat, nodelist.getNode("/where/UL_lat").data(), 4)
+    self.assertAlmostEqual(UL_lon, nodelist.getNode("/where/UL_lon").data(), 4)
+    self.assertAlmostEqual(UR_lat, nodelist.getNode("/where/UR_lat").data(), 4)
+    self.assertAlmostEqual(UR_lon, nodelist.getNode("/where/UR_lon").data(), 4)
+
   def test_write_read_cartesian_withHowSubgroups(self):
     image = _cartesian.new()
     image.time = "100000"
@@ -3894,6 +4008,36 @@ class PyRaveIOTest(unittest.TestCase):
     data = vol.getScan(0).getParameter("DBZH").getData()
     self.assertTrue(data is not None)
     self.assertEqual(58, data[0][2])
+
+  def test_read_scan_with_lazyio_shift(self):
+    scan = _raveio.open(self.FIXTURE_SEHEM_SCAN_0_5, True).object
+    scan.shiftData(-1)
+    original = list(scan.getParameter("DBZH").getData()[0:10,0])
+    self.assertTrue(original == [114,117,115,116,116,112,114,112,114, 117])
+
+  def test_read_scan_with_lazyio_shift_2(self):
+    scan = _raveio.open(self.FIXTURE_SEHEM_SCAN_0_5, True).object
+    field = _ravefield.new()
+    field.setData(scan.getParameter("DBZH").getData())
+    field.addAttribute("how/task", "se.nisses.test")
+    scan.addQualityField(field)
+    rio = _raveio.new()
+    rio.object = scan
+    rio.save(self.TEMPORARY_FILE)
+
+    scan = _raveio.open(self.TEMPORARY_FILE, True).object
+    scan.shiftData(-1)
+    original = list(scan.getParameter("DBZH").getData()[0:10,0])
+    qoriginal = list(scan.getQualityField(0).getData()[0:10,0])
+    self.assertTrue(original == [114,117,115,116,116,112,114,112,114, 117])
+    self.assertTrue(qoriginal == [114,117,115,116,116,112,114,112,114, 117])
+
+  def test_read_scan_with_lazyio_shift_after_dataaccess(self):
+    scan = _raveio.open(self.FIXTURE_SEHEM_SCAN_0_5, True).object
+    scan.getParameter("DBZH").getData()
+    scan.shiftData(-1)
+    original = list(scan.getParameter("DBZH").getData()[0:10,0])
+    self.assertTrue(original == [114,117,115,116,116,112,114,112,114, 117])
 
   def test_read_cartesian_with_lazyio(self):
     obj = _raveio.open(self.FIXTURE_CARTESIAN_IMAGE)

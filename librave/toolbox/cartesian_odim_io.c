@@ -31,6 +31,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include <math.h>
 #include <string.h>
 #include "projection_pipeline.h"
+#include <stdlib.h>
+
 typedef struct CartesianOdimArg {
   LazyNodeListReader_t* lazyReader; /**< the lazy node list reader */
   HL_NodeList* nodelist;
@@ -79,6 +81,24 @@ static int CartesianOdimIO_copyconstructor(RaveCoreObject* obj, RaveCoreObject* 
 static void CartesianOdimIO_destructor(RaveCoreObject* obj)
 {
 }
+
+
+/**
+ * Checks if an environment variable has been set indicating that the cartesian legacy extent calculation
+ * should be performed. Environment variable RAVE_USE_CARTESIAN_LEGACY_EXTENT. Value = yes or true indicates
+ * that it should be used, otherwise it will not be used.
+ * return 1 if legacy extent should be used otherwise 0
+ */
+static int CartesianOdimIOInternal_useCartesianLegacyExtent(void) {
+  char* useCartesianLegacyExtent = getenv("RAVE_USE_CARTESIAN_LEGACY_EXTENT");
+  if (RaveUtilities_isLegacyProjEnabled() && useCartesianLegacyExtent != NULL) {
+    if (strcasecmp("yes", useCartesianLegacyExtent)==0 || strcasecmp("true", useCartesianLegacyExtent)==0) {
+      return 1;
+    }
+  }
+  return 0;
+}
+
 
 /**
  * Gets the nodename/attribute value if nodename/data<index>/attribute doesn't exist.
@@ -365,7 +385,12 @@ static int CartesianOdimIOInternal_createExtent(RaveObjectHashTable_t* attrs, Pr
   *urX = 0.0;
   *urY = 0.0;
 
-  pipeline = ProjectionPipeline_createDefaultLonLatPipeline(projection);
+  if (CartesianOdimIOInternal_useCartesianLegacyExtent()) {
+    /* Legacy variant excludes the +datum=WGS84 when calculating the extent when using pj_fwd and pj_inv */
+    pipeline = ProjectionPipeline_createPipelineFromDef("+proj=longlat +ellps=WGS84", Projection_getDefinition(projection));
+  } else {
+    pipeline = ProjectionPipeline_createDefaultLonLatPipeline(projection);
+  }
   if (pipeline == NULL) {
     RAVE_ERROR0("Could not create default lon/lat pipeline");
     goto done;
@@ -904,7 +929,13 @@ int CartesianOdimIOInternal_addLonLatExtentToAttributeList(RaveObjectList_t* att
   double UL_lat = 0.0, UL_lon = 0.0, UR_lat = 0.0, UR_lon = 0.0;
   ProjectionPipeline_t* pipeline = NULL;
 
-  pipeline = ProjectionPipeline_createDefaultLonLatPipeline(projection);
+  if (CartesianOdimIOInternal_useCartesianLegacyExtent()) {
+    /* Legacy variant excludes the +datum=WGS84 when calculating the extent when using pj_fwd and pj_inv */
+    pipeline = ProjectionPipeline_createPipelineFromDef("+proj=longlat +ellps=WGS84", Projection_getDefinition(projection));
+  } else {
+    pipeline = ProjectionPipeline_createDefaultLonLatPipeline(projection);
+  }
+
   if (pipeline == NULL) {
     RAVE_ERROR0("Could not create default lon/lat pipeline");
     goto done;

@@ -696,7 +696,7 @@ int PolarScanParam_shiftData(PolarScanParam_t* param, int nrays)
 {
   int result = 0;
   RAVE_ASSERT((param != NULL), "param == NULL");
-  result = RaveData2D_circshiftData(param->data, 0, nrays);
+  result = RaveData2D_circshiftData(PolarScanParamInternal_ensureData2D(param), 0, nrays);
   if (result) {
     int i = 0;
     int nrqualityfields = PolarScanParam_getNumberOfQualityFields(param);

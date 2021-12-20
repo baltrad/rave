@@ -387,7 +387,7 @@ RaveField_t* RaveField_concatX(RaveField_t* field, RaveField_t* other)
 int RaveField_circshiftData(RaveField_t* field, int nx, int ny)
 {
   RAVE_ASSERT((field != NULL), "field == NULL");
-  return RaveData2D_circshiftData(field->data, nx, ny);
+  return RaveData2D_circshiftData(RaveFieldInternal_ensureData2D(field), nx, ny);
 }
 
 /*@} End of Interface functions */
