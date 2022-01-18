@@ -9,6 +9,7 @@
 #include "hlhdf_read.h"
 #include "hlhdf_nodelist.h"
 #include "hlhdf_node.h"
+#include "hlhdf_alloc.h"
 #include <string.h>
 #include "rave_debug.h"
 #include "rave_hlhdf_utilities.h"
@@ -44,7 +45,9 @@ static void LazyNodeListReader_destructor(RaveCoreObject* obj)
   if (self->nodelist != NULL) {
     HLNodeList_free(self->nodelist);
   }
-  RAVE_FREE(self->filename);
+  if (self->filename != NULL) {
+    HLHDF_FREE(self->filename);
+  }
 }
 
 /*@} End of Private functions */
@@ -56,7 +59,7 @@ int LazyNodeListReader_init(LazyNodeListReader_t* self, HL_NodeList* nodelist)
   RAVE_ASSERT((self != NULL), "self == NULL");
   if (nodelist != NULL && self->nodelist == NULL) {
     self->nodelist = nodelist;
-    self->filename = RAVE_STRDUP(HLNodeList_getFileName(self->nodelist));
+    self->filename = HLNodeList_getFileName(self->nodelist);
     return 1;
   }
   return 0;

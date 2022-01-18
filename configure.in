@@ -869,6 +869,12 @@ if [[ ! -f $HLHDF_HLDEF_MK_FILE ]]; then
   AC_MSG_ERROR("There is no mkfile $HLHDF_HLDEF_MK_FILE")
 fi
 
+TEST_MD=`cat "$HLHDF_HLDEF_MK_FILE" | egrep -e "^OPTS=" | grep "DHLHDF_MEMORY_DEBUG"`
+if [[ "$TEST_MD" != "" ]]; then
+  PYOPT="$PYOPT -DHLHDF_MEMORY_DEBUG"
+fi
+
+
 AC_SUBST(PYCC)
 AC_SUBST(PY_INCLUDES)
 AC_SUBST(PY_SITEPACK)

@@ -4908,6 +4908,12 @@ if [ ! -f $HLHDF_HLDEF_MK_FILE ]; then
   as_fn_error $? "\"There is no mkfile $HLHDF_HLDEF_MK_FILE\"" "$LINENO" 5
 fi
 
+TEST_MD=`cat "$HLHDF_HLDEF_MK_FILE" | egrep -e "^OPTS=" | grep "DHLHDF_MEMORY_DEBUG"`
+if [ "$TEST_MD" != "" ]; then
+  PYOPT="$PYOPT -DHLHDF_MEMORY_DEBUG"
+fi
+
+
 
 
 
