@@ -27,6 +27,7 @@
 .PHONY=install
 install:
 	@mkdir -p "${DESTDIR}${prefix}/bin"
+ifeq ($(COMPILE_FOR_PYTHON), yes)	
 	@./fix_shebang.sh ${PYTHON_BIN} area_registry "${DESTDIR}${prefix}/bin"
 	@./fix_shebang.sh ${PYTHON_BIN} odim_injector "${DESTDIR}${prefix}/bin"
 	@./fix_shebang.sh ${PYTHON_BIN} odim_injector.sh "${DESTDIR}${prefix}/bin"
@@ -49,6 +50,7 @@ install:
 	@./fix_shebang.sh ${PYTHON_BIN} create_tile_definition "${DESTDIR}${prefix}/bin"
 	@./fix_shebang.sh ${PYTHON_BIN} create_acrr_composites "${DESTDIR}${prefix}/bin"
 	@./fix_shebang.sh ${PYTHON_BIN} merge_files "${DESTDIR}${prefix}/bin"
+endif	
 	
 .PHONY:clean
 clean: ;

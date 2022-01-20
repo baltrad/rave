@@ -15,6 +15,12 @@ MAKEDEPEND=gcc -MM $(CFLAGS) -o $(DF).d $<
 DEPDIR=.dep
 DF=$(DEPDIR)/$(*F)
 
+# We reset TARGETS and INSTALL_HEADERS if we shouldn't compile for python. That way we don't need to destroy anything
+ifeq ($(COMPILE_FOR_PYTHON), no)
+LIBRAVEPYAPI=
+INSTALL_HEADERS=
+endif
+
 # Get the dependencies in place, could be commented out if
 # dependency generation not is supported by the compiler.
 

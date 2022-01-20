@@ -273,6 +273,13 @@ TARGETS += $(TARGET_22) $(TARGET_23) $(TARGET_32)
 INSTALL_HEADERS += pyprojectionregistry.h pyarearegistry.h
 endif
 
+# We reset TARGETS and INSTALL_HEADERS if we shouldn't compile for python. That way we don't need to destroy anything
+ifeq ($(COMPILE_FOR_PYTHON), no)
+TARGETS=
+INSTALL_HEADERS=
+endif
+
+
 MAKECDEPEND=$(CC) -MM $(CFLAGS) -MT '$(@D)/$(@F)' -o $(DF).d $<
 
 DEPDIR=.dep
