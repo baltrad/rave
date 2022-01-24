@@ -48,6 +48,7 @@ all: $(LIBRAVEPYAPI)
 $(LIBRAVEPYAPI): $(DEPDIR) $(RAVEOBJS)
 	$(LDSHARED) -o $@ $(RAVEOBJS)
 
+ifeq ($(COMPILE_FOR_PYTHON), yes)
 .PHONY=install
 install:
 	@"$(HLHDF_INSTALL_BIN)" -f -o -C $(LIBRAVEPYAPI) "${DESTDIR}$(prefix)/lib/$(LIBRAVEPYAPI)"
@@ -55,6 +56,11 @@ install:
 	do \
 		"$(HLHDF_INSTALL_BIN)" -f -o -m644 -C $$i "${DESTDIR}$(prefix)/include/$$i"; \
 	done
+else
+.PHONY=install
+install:
+	:
+endif
 
 .PHONY=clean
 clean:

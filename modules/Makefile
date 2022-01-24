@@ -421,6 +421,7 @@ $(TARGET_41): $(DEPDIR) $(OBJECTS_41) ../librave/toolbox/libravetoolbox.so ../li
 $(TARGET_42): $(DEPDIR) $(OBJECTS_42) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_42) $(LDFLAGS) $(LIBRARIES)
 
+ifeq ($(COMPILE_FOR_PYTHON), yes)
 .PHONY=install
 install:
 	@mkdir -p ${DESTDIR}${prefix}/Lib
@@ -433,6 +434,11 @@ install:
 	do \
 		"$(HLHDF_INSTALL_BIN)" -f -o -m644 -C $$i "${DESTDIR}$(prefix)/include/python/$$i"; \
 	done
+else
+.PHONY=install
+install:
+	:
+endif
 
 .PHONY=clean
 clean:

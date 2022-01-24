@@ -24,6 +24,7 @@
 ###########################################################################
 -include ../def.mk
 
+ifeq ($(COMPILE_FOR_PYTHON), yes)
 .PHONY=install
 install:
 	@mkdir -p "${DESTDIR}${prefix}/Lib"
@@ -40,6 +41,11 @@ install:
 	@-mkdir -p "${DESTDIR}$(SITEPACK_PYTHON)"
 	@echo "$(prefix)/Lib" > "${DESTDIR}${prefix}/etc/rave.pth"
 	@-echo "$(prefix)/Lib" > "${DESTDIR}$(SITEPACK_PYTHON)/rave.pth"
+else
+.PHONY=install
+install:
+	:
+endif
 
 .PHONY:clean
 clean: ;
