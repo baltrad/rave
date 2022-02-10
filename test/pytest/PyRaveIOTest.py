@@ -1694,7 +1694,7 @@ class PyRaveIOTest(unittest.TestCase):
     scan2 = _polarscan.new()
     scan2.elangle = 0.5 * math.pi / 180.0
     scan2.a1gate = 1
-    scan2.rstart = 1000.0
+    scan2.rstart = 1.0
     scan2.rscale = 2000.0
     dbzhParam = _polarscanparam.new()
     dbzhParam.nodata = 255.0
@@ -2408,6 +2408,37 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEqual(len(attr), len(expected))
     for i in range(len(expected)):
       self.assertAlmostEqual(attr[i], expected[i], 2)
+
+  def test_save_scan_rstart_version_2_4(self):
+    obj = _raveio.open(self.FIXTURE_VOLUME).object.getScan(0)
+    obj.rstart = 0.5
+    rio = _raveio.new()
+    rio.object = obj
+
+    rio.save(self.TEMPORARY_FILE)
+    
+    # Verify data
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+    
+    self.assertAlmostEqual(500.0, nodelist.getNode("/dataset1/where/rstart").data(), 4)
+
+  def test_save_scan_rstart_version_2_3(self):
+    obj = _raveio.open(self.FIXTURE_VOLUME).object.getScan(0)
+    obj.rstart = 0.5
+    rio = _raveio.new()
+    rio.object = obj
+    rio.version = _rave.RaveIO_ODIM_Version_2_3
+
+    rio.save(self.TEMPORARY_FILE)
+    
+    # Verify data
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+    
+    self.assertAlmostEqual(0.5, nodelist.getNode("/dataset1/where/rstart").data(), 4)
 
   def test_write_scan_with_array(self):
     obj = _raveio.open(self.FIXTURE_VOLUME)

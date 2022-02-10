@@ -1238,24 +1238,32 @@ PolarObservation* PolarVolume_getCorrectedValuesAtHeight(PolarVolume_t* self, do
   PolarObservationLinkedList* pbitptr = NULL;
 
   RAVE_ASSERT((self != NULL), "self == NULL");
+
   nScans = RaveObjectList_size(self->scans);
   for (scanIndex = 0; scanIndex < nScans; scanIndex++) {
     PolarScan_t* scan = (PolarScan_t*)RaveObjectList_get(self->scans, scanIndex);
     double rscale = PolarScan_getRscale(scan);
+    double rstart = PolarScan_getRstart(scan);
     double elangle = PolarScan_getElangle(scan);
     double rl = 0.0, ru = 0.0, dl = 0.0, du = 0.0;
     int bi = 0, bEnd = 0, ri = 0, rEnd = 0;
+    if (rscale == 0.0) {
+      RAVE_ERROR0("rscale is 0.0 which will result in division by zero. Bail out!");
+      RAVE_OBJECT_RELEASE(scan);
+      goto done;
+    }
     PolarNavigator_ehToRd(self->navigator, elangle, height-gap/2.0, &rl, &dl);
     PolarNavigator_ehToRd(self->navigator, elangle, height+gap/2.0, &ru, &du);
     rEnd = PolarScan_getNrays(scan);
-    bEnd = (int) ru / rscale;
+    bEnd = (int) ((ru - rstart) / rscale);
 
     for (ri = 0; ri < rEnd; ri++) {
-      for (bi = (int) rl / rscale; bi < bEnd; bi++) {
+      for (bi = (int) ((rl - rstart) / rscale); bi < bEnd; bi++) {
         PolarObservationLinkedList* pbit = RAVE_MALLOC(sizeof(PolarObservationLinkedList));
         if (pbit == NULL) {
           RAVE_CRITICAL0("Failed to allocate memory for polar observation information");
           RaveTypes_FreePolarObservationLinkedList(polist);
+          RAVE_OBJECT_RELEASE(scan);
           polist = NULL;
           goto done;
         }

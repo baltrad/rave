@@ -613,7 +613,7 @@ double PolarScan_getMaxDistance(PolarScan_t* scan)
 
   if (scan->maxdistance < 0.0) {
     scan->maxdistance = 0.0;
-    PolarNavigator_reToDh(scan->navigator, (scan->nbins+1) * scan->rscale, scan->elangle, &scan->maxdistance, &h);
+    PolarNavigator_reToDh(scan->navigator, (scan->nbins+1) * scan->rscale + scan->rstart*1000.0, scan->elangle, &scan->maxdistance, &h);
   }
 
   return scan->maxdistance;
@@ -1351,7 +1351,11 @@ int PolarScan_getAzimuthAndRangeFromIndex(PolarScan_t* scan, int bin, int ray, d
   RAVE_ASSERT((scan != NULL), "scan == NULL");
   RAVE_ASSERT((a != NULL), "a == NULL");
   RAVE_ASSERT((r != NULL), "r == NULL");
-  *r = bin * scan->rscale;
+
+  if (bin < 0 || bin >= scan->nbins || ray < 0 || ray >= scan->nrays) {
+    return 0;
+  }
+  *r = bin * scan->rscale + scan->rstart*1000.0;
   *a = (2*M_PI/scan->nrays)*ray;
   return 1;
 }
@@ -1917,7 +1921,7 @@ static RaveField_t* PolarScanInternal_getHeightOrDistanceField(PolarScan_t* self
 
   for (i = 0; i < self->nbins; i++) {
     double d = 0.0, h = 0.0;
-    PolarNavigator_reToDh(self->navigator, i*self->rscale, self->elangle, &d, &h);
+    PolarNavigator_reToDh(self->navigator, i*self->rscale + self->rstart*1000.0, self->elangle, &d, &h);
     if (ftype == 0) {
       RaveField_setValue(f, i, 0, d);
     } else {

@@ -386,6 +386,27 @@ static PyObject* _pypolarscan_getRange(PyPolarScan* self, PyObject* args)
 }
 
 /**
+ * Calculates the range from a specific range and ray index
+ * @param[in] self - this instance
+ * @param[in] args - a tuple with range index as an integer and ray index as an integer
+ * @return the range or an exception if outside boundaries
+ */
+static PyObject* _pypolarscan_getAzimuthAndRangeFromIndex(PyPolarScan* self, PyObject* args)
+{
+  int binindex = -1, rayindex = -1;
+  double azimuth = 0.0, range = 0.0;
+  if (!PyArg_ParseTuple(args, "(ii)", &binindex, &rayindex)) {
+    return NULL;
+  }
+  if (!PolarScan_getAzimuthAndRangeFromIndex(self->scan, binindex, rayindex, &azimuth, &range)) {
+    raiseException_returnNULL(PyExc_IndexError, "bin or ray index out of bounds");
+  }
+  return Py_BuildValue("(dd)", azimuth, range);
+}
+
+
+
+/**
  * Sets the value at the specified ray and bin index.
  * @param[in] self - this instance
  * @param[in] args - bin index, ray index.
@@ -1333,6 +1354,11 @@ static struct PyMethodDef _pypolarscan_methods[] =
   {"getRange", (PyCFunction) _pypolarscan_getRange, 1,
     "getRange(index) -> range in meters\n\n"
     "Calculates the range from a specific range index. Will return the range or a negative value if index is out of bounds.\n"
+    "index - the index in the ray"
+  },
+  {"getAzimuthAndRangeFromIndex", (PyCFunction) _pypolarscan_getAzimuthAndRangeFromIndex, 1,
+    "getAzimuthAndRangeFromIndex(binindex,rayindex) -> range in meters and azimuth in radians\n\n"
+    "Calculates the range and azimuth from a specific range & ray index index. Will return the range or a negative value if index is out of bounds.\n"
     "index - the index in the ray"
   },
   {"setValue", (PyCFunction) _pypolarscan_setValue, 1,

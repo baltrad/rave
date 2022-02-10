@@ -309,6 +309,11 @@ static int PolarOdimIOInternal_loadDsScanAttribute(void* object, RaveAttribute_t
       if (!(result = RaveAttribute_getDouble(attribute, &value))) {
         RAVE_ERROR0("Failed to extract where/rstart as a double");
       }
+      if (result) {
+        if (((OdimIoUtilityArg*)object)->version >= RaveIO_ODIM_Version_2_4) {
+          value /= 1000.0;
+        }
+      }
       PolarScan_setRstart(scan, value);
     } else if (strcasecmp("what/startdate", name)==0) {
       char* value = NULL;
@@ -532,7 +537,7 @@ fail:
  * @param[in] ... - the varargs
  * @return 1 on success otherwise 0
  */
-static int PolarOdimIOInternal_fillScanDataset(LazyNodeListReader_t* lazyReader, PolarScan_t* scan, const char* fmt, ...)
+static int PolarOdimIOInternal_fillScanDataset(PolarOdimIO_t* self, LazyNodeListReader_t* lazyReader, PolarScan_t* scan, const char* fmt, ...)
 {
   int result = 0;
   OdimIoUtilityArg arg;
@@ -557,7 +562,7 @@ static int PolarOdimIOInternal_fillScanDataset(LazyNodeListReader_t* lazyReader,
   arg.lazyReader = lazyReader;
   arg.nodelist = LazyNodeListReader_getHLNodeList(lazyReader);
   arg.object = (RaveCoreObject*)scan;
-
+  arg.version = self->version;
   if (!RaveHL_loadAttributesAndData(arg.nodelist,
                                     &arg,
                                     PolarOdimIOInternal_loadDsScanAttribute,
@@ -778,11 +783,12 @@ static void PolarOdimIOInternal_removeVolumeAttributesFromList(RaveObjectList_t*
   }
 }
 
-static int PolarOdimIOInternal_addVolumeScan(PolarScan_t* scan, HL_NodeList* nodelist, PolarVolume_t* volume, int scan_index, const char* fmt, ...)
+static int PolarOdimIOInternal_addVolumeScan(PolarOdimIO_t* self, PolarScan_t* scan, HL_NodeList* nodelist, PolarVolume_t* volume, int scan_index, const char* fmt, ...)
 {
   int result = 0;
   RaveObjectList_t* attributes = NULL;
   RaveObjectList_t* qualityfields = NULL;
+  double rstartFactor = 1.0;
 
   va_list ap;
   char name[1024];
@@ -822,13 +828,17 @@ static int PolarOdimIOInternal_addVolumeScan(PolarScan_t* scan, HL_NodeList* nod
     }
   }
 
+  if (self->version >= RaveIO_ODIM_Version_2_4) {
+    /* From 2.4 they have changed unit of rstart from km to meter */
+    rstartFactor *= 1000.0;
+  }
   if (!RaveUtilities_replaceStringAttributeInList(attributes, "what/product", "SCAN") ||
       !RaveUtilities_replaceLongAttributeInList(attributes, "where/a1gate", PolarScan_getA1gate(scan)) ||
       !RaveUtilities_replaceDoubleAttributeInList(attributes, "where/elangle", PolarScan_getElangle(scan)*180.0/M_PI) ||
       !RaveUtilities_replaceLongAttributeInList(attributes, "where/nbins", PolarScan_getNbins(scan)) ||
       !RaveUtilities_replaceLongAttributeInList(attributes, "where/nrays", PolarScan_getNrays(scan)) ||
       !RaveUtilities_replaceDoubleAttributeInList(attributes, "where/rscale", PolarScan_getRscale(scan)) ||
-      !RaveUtilities_replaceDoubleAttributeInList(attributes, "where/rstart", PolarScan_getRstart(scan)) ||
+      !RaveUtilities_replaceDoubleAttributeInList(attributes, "where/rstart", PolarScan_getRstart(scan) * rstartFactor) ||
       !RaveUtilities_replaceStringAttributeInList(attributes, "what/startdate", PolarScan_getStartDate(scan)) ||
       !RaveUtilities_replaceStringAttributeInList(attributes, "what/starttime", PolarScan_getStartTime(scan)) ||
       !RaveUtilities_replaceStringAttributeInList(attributes, "what/enddate", PolarScan_getEndDate(scan)) ||
@@ -1034,7 +1044,7 @@ int PolarOdimIO_readScan(PolarOdimIO_t* self, LazyNodeListReader_t* lazyReader, 
     goto done;
   }
 
-  if (!PolarOdimIOInternal_fillScanDataset(lazyReader, scan, "/dataset1")) {
+  if (!PolarOdimIOInternal_fillScanDataset(self, lazyReader, scan, "/dataset1")) {
     RAVE_ERROR0("Failed to fill scan");
     goto done;
   }
@@ -1077,7 +1087,7 @@ int PolarOdimIO_readVolume(PolarOdimIO_t* self, LazyNodeListReader_t* lazyReader
   while (result == 1 && RaveHL_hasNodeByName(arg.nodelist, "/dataset%d", pindex)) {
     PolarScan_t* scan = RAVE_OBJECT_NEW(&PolarScan_TYPE);
     if (scan != NULL) {
-      result = PolarOdimIOInternal_fillScanDataset(lazyReader, scan, "/dataset%d", pindex);
+      result = PolarOdimIOInternal_fillScanDataset(self, lazyReader, scan, "/dataset%d", pindex);
       if (result == 1) {
         result = PolarVolume_addScan(volume, scan);
       }
@@ -1098,6 +1108,7 @@ int PolarOdimIO_fillScan(PolarOdimIO_t* self, PolarScan_t* scan, HL_NodeList* no
   RaveObjectList_t* attributes = NULL;
   RaveObjectList_t* qualityfields = NULL;
   char* source = NULL;
+  double rstartFactor = 1.0;
 
   RAVE_ASSERT((self != NULL), "self == NULL");
   RAVE_ASSERT((scan != NULL), "scan == NULL");
@@ -1165,13 +1176,19 @@ int PolarOdimIO_fillScan(PolarOdimIO_t* self, PolarScan_t* scan, HL_NodeList* no
   if (attributes == NULL) {
     goto done;
   }
+
+  if (self->version >= RaveIO_ODIM_Version_2_4) {
+    /* From 2.4 they have changed unit of rstart from km to meter */
+    rstartFactor *= 1000.0;
+  }
+
   if (!RaveUtilities_replaceStringAttributeInList(attributes, "what/product", "SCAN") ||
       !RaveUtilities_replaceLongAttributeInList(attributes, "where/a1gate", PolarScan_getA1gate(scan)) ||
       !RaveUtilities_replaceDoubleAttributeInList(attributes, "where/elangle", PolarScan_getElangle(scan)*180.0/M_PI) ||
       !RaveUtilities_replaceLongAttributeInList(attributes, "where/nbins", PolarScan_getNbins(scan)) ||
       !RaveUtilities_replaceLongAttributeInList(attributes, "where/nrays", PolarScan_getNrays(scan)) ||
       !RaveUtilities_replaceDoubleAttributeInList(attributes, "where/rscale", PolarScan_getRscale(scan)) ||
-      !RaveUtilities_replaceDoubleAttributeInList(attributes, "where/rstart", PolarScan_getRstart(scan)) ||
+      !RaveUtilities_replaceDoubleAttributeInList(attributes, "where/rstart", PolarScan_getRstart(scan)*rstartFactor) ||
       !RaveUtilities_replaceStringAttributeInList(attributes, "what/startdate", PolarScan_getStartDate(scan)) ||
       !RaveUtilities_replaceStringAttributeInList(attributes, "what/starttime", PolarScan_getStartTime(scan)) ||
       !RaveUtilities_replaceStringAttributeInList(attributes, "what/enddate", PolarScan_getEndDate(scan)) ||
@@ -1272,7 +1289,7 @@ int PolarOdimIO_fillVolume(PolarOdimIO_t* self, PolarVolume_t* volume, HL_NodeLi
   for (index = 0; result == 1 && index < nrscans; index++) {
     PolarScan_t* scan = PolarVolume_getScan(volume, index);
     if (scan != NULL) {
-      result = PolarOdimIOInternal_addVolumeScan(scan, nodelist, volume, (index+1), "/dataset%d", (index+1));
+      result = PolarOdimIOInternal_addVolumeScan(self, scan, nodelist, volume, (index+1), "/dataset%d", (index+1));
     } else {
       result = 0;
     }

@@ -1372,6 +1372,42 @@ class PyPolarScanTest(unittest.TestCase):
         self.assertEqual(tval[1][1], result[1])
       else:
         self.fail("Unexpected result")
+
+  def test_getAzimuthAndRangeFromIndex(self):
+    obj = _polarscan.new()
+    param = _polarscanparam.new()
+    param.nodata = 255.0
+    param.undetect = 0.0
+    param.quantity = "DBZH"
+    obj.rscale = 1000.0
+    obj.rstart = 0.0
+    a=numpy.arange(120)
+    a=numpy.array(a.astype(numpy.float64),numpy.float64)
+    a=numpy.reshape(a,(12,10)).astype(numpy.float64)
+    param.setData(a)
+    obj.addParameter(param)
+    
+    result = obj.getAzimuthAndRangeFromIndex((5,4))
+    self.assertEqual(120.0*math.pi/180.0, result[0], 4)
+    self.assertEqual(5000.0, result[1], 4)
+    
+  def test_getAzimuthAndRangeFromIndex_rstart(self):
+    obj = _polarscan.new()
+    param = _polarscanparam.new()
+    param.nodata = 255.0
+    param.undetect = 0.0
+    param.quantity = "DBZH"
+    obj.rscale = 1000.0
+    obj.rstart = 1.5
+    a=numpy.arange(120)
+    a=numpy.array(a.astype(numpy.float64),numpy.float64)
+    a=numpy.reshape(a,(12,10)).astype(numpy.float64)
+    param.setData(a)
+    obj.addParameter(param)
+    
+    result = obj.getAzimuthAndRangeFromIndex((5,4))
+    self.assertEqual(120.0*math.pi/180.0, result[0], 4)
+    self.assertEqual(6500.0, result[1], 4)        
     
   def test_getValueAtAzimuthAndRange(self):
     obj = _polarscan.new()
@@ -2255,7 +2291,36 @@ class PyPolarScanTest(unittest.TestCase):
     self.assertEqual(10, f.xsize)
     for i in range(10):
       self.assertAlmostEqual(expected[i], f.getValue(i, 0)[1], 4)
+
+  def test_getDistanceField_rstart(self):
+    polnav = _polarnav.new()
+    polnav.lat0 = 60.0 * math.pi / 180.0
+    polnav.lon0 = 12.0 * math.pi / 180.0
+    polnav.alt0 = 0.0
     
+    expected = []
+    for i in range(10):
+      expected.append(polnav.reToDh(100.0 * i + 500.0, (math.pi / 180.0)*0.5)[0])
+        
+    obj = _polarscan.new()
+    obj.longitude = polnav.lon0 # We want same settings as the polar navigator so that we can test result
+    obj.latitude = polnav.lat0
+    obj.height = polnav.alt0
+        
+    obj.rscale = 100.0
+    obj.rstart = 0.5
+    obj.elangle = (math.pi / 180.0)*0.5
+    param = _polarscanparam.new()
+    param.quantity="DBZH"    
+    data = numpy.zeros((5, 10), numpy.int8)
+    param.setData(data)
+    obj.addParameter(param)
+    
+    f = obj.getDistanceField()
+    self.assertEqual(10, f.xsize)
+    for i in range(10):
+      self.assertAlmostEqual(expected[i], f.getValue(i, 0)[1], 4)    
+
   def test_getHeightField(self):
     polnav = _polarnav.new()
     polnav.lat0 = 60.0 * math.pi / 180.0
@@ -2283,7 +2348,36 @@ class PyPolarScanTest(unittest.TestCase):
     self.assertEqual(10, f.xsize)
     for i in range(10):
       self.assertAlmostEqual(expected[i], f.getValue(i, 0)[1], 4)
+
+  def test_getHeightField_rstart(self):
+    polnav = _polarnav.new()
+    polnav.lat0 = 60.0 * math.pi / 180.0
+    polnav.lon0 = 12.0 * math.pi / 180.0
+    polnav.alt0 = 0.0
+    
+    expected = []
+    for i in range(10):
+      expected.append(polnav.reToDh(100.0 * i + 500.0, (math.pi / 180.0)*0.5)[1])
         
+    obj = _polarscan.new()
+    obj.longitude = polnav.lon0 # We want same settings as the polar navigator so that we can test result
+    obj.latitude = polnav.lat0
+    obj.height = polnav.alt0
+        
+    obj.rscale = 100.0
+    obj.rstart = 0.5
+    obj.elangle = (math.pi / 180.0)*0.5
+    param = _polarscanparam.new()
+    param.quantity="DBZH"    
+    data = numpy.zeros((5, 10), numpy.int8)
+    param.setData(data)
+    obj.addParameter(param)
+    
+    f = obj.getHeightField()
+    self.assertEqual(10, f.xsize)
+    for i in range(10):
+      self.assertAlmostEqual(expected[i], f.getValue(i, 0)[1], 4)
+
   def test_getMaxDistance(self):
     obj = _polarscan.new()
     obj.longitude = 60.0 * math.pi / 180.0
@@ -2297,6 +2391,21 @@ class PyPolarScanTest(unittest.TestCase):
     param.setData(data)
     obj.addParameter(param)
     self.assertAlmostEqual(10999.45, obj.getMaxDistance(), 2)
+
+  def test_getMaxDistance_rstart(self):
+    obj = _polarscan.new()
+    obj.longitude = 60.0 * math.pi / 180.0
+    obj.latitude = 12.0 * math.pi / 180.0
+    obj.height = 0.0
+    obj.rscale = 1000.0
+    obj.rstart = 2.0
+    obj.elangle = (math.pi / 180.0)*0.5
+    param = _polarscanparam.new()
+    param.quantity="DBZH"    
+    data = numpy.zeros((10, 10), numpy.int8)
+    param.setData(data)
+    obj.addParameter(param)
+    self.assertAlmostEqual(12999.32, obj.getMaxDistance(), 2)
         
   def test_getDistance(self):
     obj = _polarscan.new()
