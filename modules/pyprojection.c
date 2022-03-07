@@ -427,9 +427,9 @@ MOD_DIR_FORWARD_DECLARE(PyProjection);
  */
 static struct PyMethodDef _pyprojection_methods[] =
 {
-  {"id", NULL},
-  {"description", NULL},
-  {"definition", NULL},
+  {"id", NULL, METH_VARARGS},
+  {"description", NULL, METH_VARARGS},
+  {"definition", NULL, METH_VARARGS},
   {"transform", (PyCFunction) _pyprojection_transform, 1,
     "transform(tgtproj, (x,y[,z]) -> (x,y[,z])\n\n"
     "Projects a coordinate pair into the new projection coordinate system. In some projections, z will also be needed and in those cases, the returned value will also contain a z (height)."

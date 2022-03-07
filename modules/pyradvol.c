@@ -71,10 +71,16 @@ static PyObject *ErrorObject;
  */
 static int getInt(PyObject* ino, const char* astr) {
   PyObject* o = NULL;
-  int i;
+  int i=0;
   o = PyObject_GetAttrString(ino, astr);
-  i = (int)PyInt_AsLong(o);
-  Py_CLEAR(o);
+  if (o != NULL) {
+    if (PyLong_Check(o)) {
+      i = (int)PyLong_AsLong(o);
+    } else if (PyFloat_Check(o)) {
+      i = (int)PyFloat_AsDouble(o);
+    }
+    Py_CLEAR(o);
+  }
   return i;
 }
 

@@ -225,9 +225,9 @@ static PyObject* _pyacrr_accumulate(PyAcrr* self, PyObject* args)
  */
 static struct PyMethodDef _pyacrr_methods[] =
 {
-  {"nodata", NULL},
-  {"undetect", NULL},
-  {"quality_field_name", NULL},
+  {"nodata", NULL, METH_VARARGS},
+  {"undetect", NULL, METH_VARARGS},
+  {"quality_field_name", NULL, METH_VARARGS},
   {"isInitialized", (PyCFunction) _pyacrr_isInitialized, 1,
     "isInitialized()\n\n"
     "Checks if this instance has been initialized. Will occur at first call to sum(..)"},

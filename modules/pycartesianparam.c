@@ -617,14 +617,14 @@ done:
  */
 static struct PyMethodDef _pycartesianparam_methods[] =
 {
-  {"xsize", NULL},
-  {"ysize", NULL},
-  {"quantity", NULL},
-  {"gain", NULL},
-  {"offset", NULL},
-  {"nodata", NULL},
-  {"undetect", NULL},
-  {"datatype", NULL},
+  {"xsize", NULL, METH_VARARGS},
+  {"ysize", NULL, METH_VARARGS},
+  {"quantity", NULL, METH_VARARGS},
+  {"gain", NULL, METH_VARARGS},
+  {"offset", NULL, METH_VARARGS},
+  {"nodata", NULL, METH_VARARGS},
+  {"undetect", NULL, METH_VARARGS},
+  {"datatype", NULL, METH_VARARGS},
   {"setData", (PyCFunction) _pycartesianparam_setData, 1,
     "setData(array)\n\n"
     "Initializes the parameter with a datafield as defined by a 2-dimensional numpy array and datatype.\n\n"

@@ -146,20 +146,20 @@ static PyObject* _pyradardefinition_new(PyObject* self, PyObject* args)
  */
 static struct PyMethodDef _pyradardefinition_methods[] =
 {
-  {"id", NULL},
-  {"description", NULL},
-  {"longitude", NULL},
-  {"latitude", NULL},
-  {"height", NULL},
-  {"elangles", NULL},
-  {"nrays", NULL},
-  {"nbins", NULL},
-  {"scale", NULL},
-  {"beamwidth", NULL},
-  {"beamwH", NULL},
-  {"beamwV", NULL},
-  {"wavelength", NULL},
-  {"projection", NULL},
+  {"id", NULL, METH_VARARGS},
+  {"description", NULL, METH_VARARGS},
+  {"longitude", NULL, METH_VARARGS},
+  {"latitude", NULL, METH_VARARGS},
+  {"height", NULL, METH_VARARGS},
+  {"elangles", NULL, METH_VARARGS},
+  {"nrays", NULL, METH_VARARGS},
+  {"nbins", NULL, METH_VARARGS},
+  {"scale", NULL, METH_VARARGS},
+  {"beamwidth", NULL, METH_VARARGS},
+  {"beamwH", NULL, METH_VARARGS},
+  {"beamwV", NULL, METH_VARARGS},
+  {"wavelength", NULL, METH_VARARGS},
+  {"projection", NULL, METH_VARARGS},
   {NULL, NULL } /* sentinel */
 };
 

@@ -296,12 +296,12 @@ static PyObject* _pypolarnavigator_reToDh(PyPolarNavigator* self, PyObject* args
  */
 static struct PyMethodDef _pypolarnavigator_methods[] =
 {
-  {"poleradius", NULL},
-  {"equatorradius", NULL},
-  {"lon0", NULL},
-  {"lat0", NULL},
-  {"alt0", NULL},
-  {"dndh", NULL},
+  {"poleradius", NULL, METH_VARARGS},
+  {"equatorradius", NULL, METH_VARARGS},
+  {"lon0", NULL, METH_VARARGS},
+  {"lat0", NULL, METH_VARARGS},
+  {"alt0", NULL, METH_VARARGS},
+  {"dndh", NULL, METH_VARARGS},
   {"getEarthRadius", (PyCFunction) _pypolarnavigator_getEarthRadius, 1,
     "getEarthRadius(lat) -> earth radius in meters as float\n\n"
     "Returns the earth radius at the specified latitude in meters\n\n"

@@ -357,7 +357,7 @@ static PyObject* _pyarearegistry_load(PyObject* self, PyObject* args)
  */
 static struct PyMethodDef _pyarearegistry_methods[] =
 {
-  {"pregistry", NULL},
+  {"pregistry", NULL, METH_VARARGS},
   {"add", (PyCFunction) _pyarearegistry_add, 1,
        "add(area)\n\n"
        "Adds an area definition of type AreaCore to the registry\n\n"

@@ -5,8 +5,7 @@ Radar Analysis and Visualization Environment
 Anders Henja and Daniel Michelson
 Swedish Meteorological and Hydrological Institute
 
-January 2012
-
+March 2022
 
 <caveats> 
 RAVE has been developed on Ubuntu starting at version 8.04, and OSX. 
@@ -35,12 +34,9 @@ without influencing RAVE, to the furthest extent possible.
 VERIFIED SYSTEMS
 
 RAVE is known to work on the following 64-bit systems:
-Ubuntu 8.04 through 11.10
-Debian 6 (Squeeze)
-CentOS 5.3, 5.4, 5.5 (Final), and 5.7 (Final)
-Red Hat Enterprise 6
+Ubuntu 8.04 through 21.10
+CentOS 7, RedHat 7, CentOS Stream 8 and RedHat 8 (Final)
 Mac OSX 10.5 (Leopard), 10.6 (Snow Leopard), 10.8 (Mountain Lion)
-
 
 
 ZLIB (optional)
@@ -50,74 +46,39 @@ and the Python Imaging Library. Versions prior to 1.2.3 may contain a security
 vulnerability. You should therefore verify the version on your system
 before continuing. If you need to upgrade, get it at http://www.zlib.net/ .
 
-
-Tcl and Tk 8.5.5
+Python >= 3.6 
 ----------------
-If your IT department is as paranoid as ours, then your computers are
-almost useless and you have to do more work yourself to get them to work
-properly. A simple visualizer in RAVE relies on the Tkinter module, which
-in turn is dependent on Tcl/Tk being available on your computer. It it's
-not there already, download from http://www.tcl.tk/ and install with by:
+The simplest way to install Python is to use the one shipped with the OS you are running.
+Typically, "sudo apt-get install python3..." or "sudo yum install python3..."
+If this is not possible you will have to download Python from python.org
+RAVE has been verified to run on Python 3.6 up to 3.9. We still have kept the backward 
+compatibility for Python 2.7 but this is nothing we actively maintain.
 
-$ ./configure --prefix=<where you want it> --enable-shared --enable-64bit (optional) 
-$ make
-$ make install
-
-Update your $PATH and $LD_LIBRARY_PATH in your .cshrc or .bash_profile .
-
-
-Python 2.6 final
-----------------
-Download Python from python.org .
-We stick with Python 2.6 and maybe 2.7. The migration to 3.0 will come later.
-
-$ ./configure --prefix=<where you want it> --enable-shared
-Important: --with-universal-archs=32-bit or --with-universal-archs=64-bit
-depending on your OS. You may have to specify this if you're running a
-32-bit OS on a 64-bit machine. Maybe...
-Or, to play it safe, use --with-universal-archs=all
+$ ./configure --prefix=<where you want it> 
 
 $ make
 $ make test
 $ make install
 
-NOTE for 64-bit platforms: after building and installing Python, you have
-to edit <prefix>/lib/python2.6/config/Makefile . Line 59 (of my
-installation) contains the declaration of compiler options "OPT". Add
--fPIC to the end of the list. (In some of the packages we compile later,
-this option will be used twise but that's OK.)
-
 Modify your $PATH in a .cshrc or .bash_profile so you don't run the wrong
 Python.  
 
-
-Numeric Python (NumPy) 1.2.1
+Numeric Python (NumPy) 1.14.2 (or higher)
 ----------------------------
-Get NumPy from http://numpy.scipy.org/ .
+Like with Python, preferred way to install NumPy is to use the version shipped with the OS.
+Usually "sudo apt-get install python3-numpy" or "sudo yum install python3-numpy". If that doesn't
+work use pip3 with: pip3 install "numpy==1.14.2"
 
-<python prefix from above>/bin/python setup.py install
-Now wasn't that fun!
-
-
-Python Imaging Library 1.1.6
+PILLOW 5.0.0 (or higher)
 ----------------------------
-Get PIL from http://www.pythonware.com/products/pil/ .
-
-$ sh BUILDME
-(The "selftest.py" script might fail if you don't have JPEG installed. You
-don't need JPEG for RAVE.)
-
-$ <python prefix from above>/bin/python setup.py install
-
+Like with Python, preferred way to install Pillow (PIL) is to use the version shipped with the OS.
+Usually "sudo apt-get install python3-pillow" or "sudo yum install python3-pillow". If that doesn't
+work use pip3 with: pip3 install "pillow==5.0.0"
 
 HDF5 1.8.5-patch1 or higher
 ---------------------------
-See the README-HDF5 file about how the HDF5 file format is dealt with in RAVE.
-
-Download HDF5 from hdfgroup.org .
-The use of 1.8.x is mandatory. Previous versions will not work.
-
-HDF5 will determine if you're running a 32- or 64-bit OS.
+Use the OS-supported version of hdf5 and install that. If you for some reason can't use that
+you can download the software from hdfgroup and build it.
 
 $ ./configure --prefix=<where you want it>
 Useful but optional features: --enable-fortran --enable-cxx
@@ -128,7 +89,6 @@ $ make check
 $ make install
 $ (optionally) make check-install
 
-
 LD_LIBRARY_PATH (reminder!)
 ---------------
 Make sure your LD_LIBRARY_PATH points to the correct locations of Python
@@ -137,13 +97,14 @@ and HDF5! If you miss this step, then weirdness will happen!
 
 HL-HDF and PyHL
 ---------------
-Download the hlhdf.git package from git.baltrad.eu and follow the 
+Download the hlhdf.git package from https://github.com/baltrad/hlhdf.git and follow the 
 directives in the INSTALL file.
 
 
-PROJ.4 4.7.0
+PROJ.4 >= 4.7.0 or PROJ >= 6
 ------------
-Download PROJ.4 from http://trac.osgeo.org/proj/ .
+PROJ usually comes with the OS in some way and is the preferred software to use. If that doesn't work
+you can download PROJ from https://proj.org/.
 
 $ ./configure --prefix=<where you want it>
 $ make
@@ -151,20 +112,6 @@ $ make install
 
 Add <prefix>/lib to your LD_LIBRARY PATH and <prefix>/bin to your PATH if
 you want to use the binary tools.
-
-
-cURL and PycURL 7.19.0 or higher
---------------------------------
-Download cURL from curl.haxx.se.
-
-$ ./configure
-$ make
-$ make install
-
-Download PycURL from http://pycurl.sourceforge.net/ .
-
-$ <python prefix from above>/bin/python setup.py install
-
 
 RAVE
 ----

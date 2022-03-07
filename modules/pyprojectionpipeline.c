@@ -244,8 +244,8 @@ MOD_DIR_FORWARD_DECLARE(PyProjectionPipeline);
  */
 static struct PyMethodDef _pyprojectionpipeline_methods[] =
 {
-  {"first", NULL},
-  {"second", NULL},
+  {"first", NULL, METH_VARARGS},
+  {"second", NULL, METH_VARARGS},
   {"fwd", (PyCFunction) _pyprojectionpipeline_fwd, 1,
     "fwd((u,v)) -> u/v\n\n"
     "Translates a coordinate pair from first projection to second.\n\n"

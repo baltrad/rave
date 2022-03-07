@@ -49,9 +49,9 @@ class rave_pgf_quality_registry_mgr_element(Element):
   # @param cls - the plugin class, should be a subclass of rave_quality_plugin
   def add_plugin(self, name, module, cls):
     e = Element("quality-plugin", {})
-    e.set("name", name)
-    e.set("module", module)
     e.set("class", cls)
+    e.set("module", module)
+    e.set("name", name)
     e.tail = "\n"
     if len(self) > 0:
       e.tail = list(self)[len(list(self))-1].tail

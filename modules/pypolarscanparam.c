@@ -673,14 +673,14 @@ static PyObject* _pypolarscanparam_clone(PyPolarScanParam* self, PyObject* args)
  */
 static struct PyMethodDef _pypolarscanparam_methods[] =
 {
-  {"nbins", NULL},
-  {"nrays", NULL},
-  {"quantity", NULL},
-  {"gain", NULL},
-  {"offset", NULL},
-  {"nodata", NULL},
-  {"undetect", NULL},
-  {"datatype", NULL},
+  {"nbins", NULL, METH_VARARGS},
+  {"nrays", NULL, METH_VARARGS},
+  {"quantity", NULL, METH_VARARGS},
+  {"gain", NULL, METH_VARARGS},
+  {"offset", NULL, METH_VARARGS},
+  {"nodata", NULL, METH_VARARGS},
+  {"undetect", NULL, METH_VARARGS},
+  {"datatype", NULL, METH_VARARGS},
   {"setData", (PyCFunction) _pypolarscanparam_setData, 1,
     "setData(array)\n\n"
     "Initializes the parameter with a datafield as defined by a 2-dimensional numpy array and datatype.\n\n"

@@ -71,6 +71,7 @@ class rave_pgf_quality_registry_mgr_test(unittest.TestCase):
   <quality-plugin class="nisses_plugin" module="nisses_module" name="nisse" />
 </rave-pgf-quality-registry>
 """
+    self.maxDiff=None
     self.assertEqual(expected, classUnderTest.tostring())    
 
   def test_remove_plugin(self):

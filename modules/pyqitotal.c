@@ -289,9 +289,9 @@ static PyObject* _pyqitotal_minimum(PyQITotal* self, PyObject* args)
  */
 static struct PyMethodDef _pyqitotal_methods[] =
 {
-  {"gain", NULL},
-  {"offset", NULL},
-  {"datatype", NULL},
+  {"gain", NULL, METH_VARARGS},
+  {"offset", NULL, METH_VARARGS},
+  {"datatype", NULL, METH_VARARGS},
   {"setWeight", (PyCFunction) _pyqitotal_setWeight, 1,
        "setWeight(howtask, weight)\n\n"
        "Sets the weight for the specified how/task identifier.\n\n"

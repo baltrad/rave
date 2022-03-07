@@ -247,9 +247,9 @@ static PyObject* _pydetectionrange_analyze(PyDetectionRange* self, PyObject* arg
  */
 static struct PyMethodDef _pydetectionrange_methods[] =
 {
-  {"lookupPath", NULL},
-  {"analysis_minrange", NULL},
-  {"analysis_maxrange", NULL},
+  {"lookupPath", NULL, METH_VARARGS},
+  {"analysis_minrange", NULL, METH_VARARGS},
+  {"analysis_maxrange", NULL, METH_VARARGS},
   {"top", (PyCFunction) _pydetectionrange_top, 1,
     "top(pvol, scale, threshold[, quantity]) -> polar scan" // Odd|s", &object, &scale, &threshold, &paramname
     "Creates the echo top as a scan with the parameters quantity set to HGHT.\n\n"

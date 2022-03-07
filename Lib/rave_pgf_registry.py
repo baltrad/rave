@@ -55,14 +55,14 @@ class PGF_Registry(BaltradMessageXML.BltXML):
     def register(self, name, module, function, Help="",
                  strings="", ints="", floats="", seqs=""):
         e = BaltradMessageXML.BltXML(name)
-        e.set("module", module)
         e.set("function", function)
         e.set("help", Help)
+        e.set("module", module)
         a = e.subelement("arguments")
-        if len(strings) > 0: a.set("strings", strings)
-        if len(ints) > 0: a.set("ints", ints)
         if len(floats) > 0: a.set("floats", floats)
+        if len(ints) > 0: a.set("ints", ints)
         if len(seqs) > 0: a.set("seqs", seqs)
+        if len(strings) > 0: a.set("strings", strings)
 
         self.append(e.getelement())
         self.save()

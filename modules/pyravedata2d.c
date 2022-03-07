@@ -573,11 +573,11 @@ MOD_DIR_FORWARD_DECLARE(PyRaveData2D);
  */
 static struct PyMethodDef _pyravedata2d_methods[] =
 {
-  {"xsize", NULL},
-  {"ysize", NULL},
-  {"datatype", NULL},
-  {"nodata", NULL},
-  {"useNodata", NULL},
+  {"xsize", NULL, METH_VARARGS},
+  {"ysize", NULL, METH_VARARGS},
+  {"datatype", NULL, METH_VARARGS},
+  {"nodata", NULL, METH_VARARGS},
+  {"useNodata", NULL, METH_VARARGS},
   {"setData", (PyCFunction) _pyravedata2d_setData, 1,
     "setData(numpyarray)\n\n"
     "Initializes the data with the numpy array\n\n"
@@ -812,8 +812,8 @@ PyTypeObject PyRaveData2D_Type =
   0, /*tp_iter*/
   0, /*tp_iternext*/
   _pyravedata2d_methods, /*tp_methods*/
-  0,                    /*tp_members*/
-  0,                      /*tp_getset*/
+  0                    , /*tp_members*/
+  0,                     /*tp_getset*/
   0,                      /*tp_base*/
   0,                      /*tp_dict*/
   0,                      /*tp_descr_get*/

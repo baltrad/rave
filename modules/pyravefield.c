@@ -463,9 +463,9 @@ MOD_DIR_FORWARD_DECLARE(PyRaveField);
  */
 static struct PyMethodDef _pyravefield_methods[] =
 {
-  {"xsize", NULL},
-  {"ysize", NULL},
-  {"datatype", NULL},
+  {"xsize", NULL, METH_VARARGS},
+  {"ysize", NULL, METH_VARARGS},
+  {"datatype", NULL, METH_VARARGS},
   {"setData", (PyCFunction) _pyravefield_setData, 1,
     "setData(array)\n\n"
     "Initializes the parameter with a datafield as defined by a 2-dimensional numpy array and datatype.\n\n"

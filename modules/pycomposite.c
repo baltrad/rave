@@ -377,15 +377,15 @@ done:
  */
 static struct PyMethodDef _pycomposite_methods[] =
 {
-  {"height", NULL},
-  {"elangle", NULL},
-  {"range", NULL},
-  {"product", NULL},
-  {"selection_method", NULL},
-  {"interpolation_method", NULL},
-  {"date", NULL},
-  {"time", NULL},
-  {"quality_indicator_field_name", NULL},
+  {"height", NULL, METH_VARARGS},
+  {"elangle", NULL, METH_VARARGS},
+  {"range", NULL, METH_VARARGS},
+  {"product", NULL, METH_VARARGS},
+  {"selection_method", NULL, METH_VARARGS},
+  {"interpolation_method", NULL, METH_VARARGS},
+  {"date", NULL, METH_VARARGS},
+  {"time", NULL, METH_VARARGS},
+  {"quality_indicator_field_name", NULL, METH_VARARGS},
   {"addParameter", (PyCFunction)_pycomposite_addParameter, 1,
     "addParameter(quantity, gain, offset, minvalue)\n\n" // "sddd", &
     "Adds one parameter (quantity) that should be processed in the run.\n\n"

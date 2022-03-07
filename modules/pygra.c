@@ -180,13 +180,13 @@ static PyObject* _pygra_apply(PyGra* self, PyObject* args)
  */
 static struct PyMethodDef _pygra_methods[] =
 {
-  {"A", NULL},
-  {"B", NULL},
-  {"C", NULL},
-  {"upperThreshold", NULL},
-  {"lowerThreshold", NULL},
-  {"zrA", NULL},
-  {"zrb", NULL},
+  {"A", NULL, METH_VARARGS},
+  {"B", NULL, METH_VARARGS},
+  {"C", NULL, METH_VARARGS},
+  {"upperThreshold", NULL, METH_VARARGS},
+  {"lowerThreshold", NULL, METH_VARARGS},
+  {"zrA", NULL, METH_VARARGS},
+  {"zrb", NULL, METH_VARARGS},
   {"apply", (PyCFunction) _pygra_apply, 1,
     "apply(distanceField, cartesian_parameter) -> cartesian parameter\n\n"
     "Applies the coefficients on the parameter field. The distance field dimensions must match the parameter dimensions.\n"

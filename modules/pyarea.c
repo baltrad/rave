@@ -146,15 +146,15 @@ static PyObject* _pyarea_new(PyObject* self, PyObject* args)
  */
 static struct PyMethodDef _pyarea_methods[] =
 {
-  {"id", NULL},
-  {"description", NULL},
-  {"xsize", NULL},
-  {"ysize", NULL},
-  {"xscale", NULL},
-  {"yscale", NULL},
-  {"extent", NULL},
-  {"projection", NULL},
-  {"pcsid", NULL},
+  {"id", NULL, METH_VARARGS},
+  {"description", NULL, METH_VARARGS},
+  {"xsize", NULL, METH_VARARGS},
+  {"ysize", NULL, METH_VARARGS},
+  {"xscale", NULL, METH_VARARGS},
+  {"yscale", NULL, METH_VARARGS},
+  {"extent", NULL, METH_VARARGS},
+  {"projection", NULL, METH_VARARGS},
+  {"pcsid", NULL, METH_VARARGS},
   {NULL, NULL } /* sentinel */
 };
 

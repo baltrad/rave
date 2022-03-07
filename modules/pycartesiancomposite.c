@@ -242,15 +242,15 @@ done:
  */
 static struct PyMethodDef _pycartesiancomposite_methods[] =
 {
-  {"date", NULL},
-  {"time", NULL},
-  {"quantity", NULL},
-  {"offset", NULL},
-  {"gain", NULL},
-  {"nodata", NULL},
-  {"undetect", NULL},
-  {"method", NULL},
-  {"distance_field", NULL},
+  {"date", NULL, METH_VARARGS},
+  {"time", NULL, METH_VARARGS},
+  {"quantity", NULL, METH_VARARGS},
+  {"offset", NULL, METH_VARARGS},
+  {"gain", NULL, METH_VARARGS},
+  {"nodata", NULL, METH_VARARGS},
+  {"undetect", NULL, METH_VARARGS},
+  {"method", NULL, METH_VARARGS},
+  {"distance_field", NULL, METH_VARARGS},
   {"add", (PyCFunction)_pycartesiancomposite_add, 1,
     "add(object)\n\n"
     "Adds a CartesianCore object to this composite object.\n\n"

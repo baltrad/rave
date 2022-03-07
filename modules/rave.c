@@ -536,10 +536,12 @@ static void add_long_constant(PyObject* dictionary, const char* name, long value
 MOD_INIT(_rave)
 {
   PyObject *module=NULL,*dictionary=NULL;
+
   MOD_INIT_DEF(module, "_rave", _rave_module_doc, functions);
   if (module == NULL) {
     return MOD_INIT_ERROR;
   }
+
   dictionary = PyModule_GetDict(module);
   ErrorObject = PyErr_NewException("_rave.error", NULL, NULL);
   if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {

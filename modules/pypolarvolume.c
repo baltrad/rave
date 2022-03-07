@@ -760,17 +760,17 @@ fail:
  */
 static struct PyMethodDef _pypolarvolume_methods[] =
 {
-  {"longitude", NULL},
-  {"latitude", NULL},
-  {"height", NULL},
-  {"time", NULL},
-  {"date", NULL},
-  {"source", NULL},
-  {"paramname", NULL},
-  {"beamwidth", NULL},
-  {"beamwH", NULL},
-  {"beamwV", NULL},
-  {"use_azimuthal_nav_information", NULL},
+  {"longitude", NULL, METH_VARARGS},
+  {"latitude", NULL, METH_VARARGS},
+  {"height", NULL, METH_VARARGS},
+  {"time", NULL, METH_VARARGS},
+  {"date", NULL, METH_VARARGS},
+  {"source", NULL, METH_VARARGS},
+  {"paramname", NULL, METH_VARARGS},
+  {"beamwidth", NULL, METH_VARARGS},
+  {"beamwH", NULL, METH_VARARGS},
+  {"beamwV", NULL, METH_VARARGS},
+  {"use_azimuthal_nav_information", NULL, METH_VARARGS},
   {"getDistance", (PyCFunction) _pypolarvolume_getDistance, 1,
     "getDistance((lon,lat)) --> distance from origin of this volume to the specified lon/lat pair\n\n"
     "Returns the distance in meters along the surface from the radar to the specified lon/lat coordinate pair.\n\n"

@@ -410,19 +410,19 @@ static PyObject* _pycartesianvolume_clone(PyCartesianVolume* self, PyObject* arg
  */
 static struct PyMethodDef _pycartesianvolume_methods[] =
 {
-  {"time", NULL},
-  {"date", NULL},
-  {"source", NULL},
-  {"objectType", NULL},
-  {"xscale", NULL},
-  {"yscale", NULL},
-  {"zscale", NULL},
-  {"zstart", NULL},
-  {"xsize", NULL},
-  {"ysize", NULL},
-  {"zsize", NULL},
-  {"projection", NULL},
-  {"areaextent", NULL},
+  {"time", NULL, METH_VARARGS},
+  {"date", NULL, METH_VARARGS},
+  {"source", NULL, METH_VARARGS},
+  {"objectType", NULL, METH_VARARGS},
+  {"xscale", NULL, METH_VARARGS},
+  {"yscale", NULL, METH_VARARGS},
+  {"zscale", NULL, METH_VARARGS},
+  {"zstart", NULL, METH_VARARGS},
+  {"xsize", NULL, METH_VARARGS},
+  {"ysize", NULL, METH_VARARGS},
+  {"zsize", NULL, METH_VARARGS},
+  {"projection", NULL, METH_VARARGS},
+  {"areaextent", NULL, METH_VARARGS},
   {"addImage", (PyCFunction) _pycartesianvolume_addImage, 1,
     "addImage(cartesian)\n\n"
     "Adds a cartesian object to the volume. When adding the first object, xsize/ysize will be set. Then the following objects that are added has to have same xsize & ysize"

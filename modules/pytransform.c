@@ -418,7 +418,7 @@ done:
  */
 static struct PyMethodDef _pytransform_methods[] =
 {
-  {"method", NULL},
+  {"method", NULL, METH_VARARGS},
   {"ppi", (PyCFunction) _pytransform_ppi, 1,
     "ppi(scan, cartesian)\n\n"
     "DEPRECATED. Use _composite instead.\n"
