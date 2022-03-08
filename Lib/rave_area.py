@@ -33,7 +33,7 @@ import rave_xml
 from rave_defines import RAVECONFIG, UTF8, AREA_REGISTRY
 import _polarscan, _polarvolume
 
-got_arearegistry=False
+got_arearegistry=True
 try:
     import _arearegistry
 except:
