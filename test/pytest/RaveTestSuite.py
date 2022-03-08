@@ -25,6 +25,8 @@ Test suite for rave
 '''
 import unittest, os
 
+import _rave
+
 from PyRaveTest import *
 from BaltradMessageXMLTest import *
 from rave_pgf_registry_test import *
@@ -68,7 +70,10 @@ from rave_overshooting_quality_plugin_test import *
 from rave_distance_quality_plugin_test import *
 from rave_height_quality_plugin_test import *
 from rave_dealias_quality_plugin_test import *
-from rave_radvol_quality_plugin_test import *
+
+if _rave.isXmlSupported():
+  from rave_radvol_quality_plugin_test import *
+
 from qitotal_options_test import *
 from rave_qitotal_quality_plugin_test import *
 from rave_pgf_quality_registry_mgr_test import *

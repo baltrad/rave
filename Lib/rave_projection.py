@@ -28,7 +28,14 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 
 import os, string
 import Proj
-import _projection, _projectionregistry
+import _projection
+
+got_projregistry=True
+try:
+    import _projectionregistry
+except:
+    got_projregistry=False
+    
 from rave_defines import RAVECONFIG, UTF8, PROJECTION_REGISTRY
 
 ## There's only one official projection registry, but this module allows 
@@ -173,6 +180,8 @@ init()
 # @param definition PROJ.4 string containing the new projection's definition
 # @param filename Full path to the XML file containing the projection registry 
 def add(id, description, definition, filename=PROJECTION_REGISTRY):
+    if not got_projregistry:
+        raise Exception("Can not use projection registry")
     reg = _projectionregistry.load(filename)
     reg.removeByName(id)  # Is silent if entry doesn't exist
     reg.add(_projection.new(id, description, definition))
@@ -183,6 +192,8 @@ def add(id, description, definition, filename=PROJECTION_REGISTRY):
 # @param id String containing the identifier of the projection to remove
 # @param filename Full path to the XML file containing the projection registry
 def remove(id, filename=PROJECTION_REGISTRY):
+    if not got_projregistry:
+        raise Exception("Can not use projection registry")
     reg = _projectionregistry.load(filename)
     reg.removeByName(id)
     reg.write(filename)
@@ -192,6 +203,8 @@ def remove(id, filename=PROJECTION_REGISTRY):
 # This is a bit overworked, but it bridges the gap between old and new interfaces.
 # @param filename Complete path of the XML file to which to write the contents of the registry.
 def write(filename=PROJECTION_REGISTRY):
+    if not got_projregistry:
+        raise Exception("Can not use projection registry")
     check = []  # Used to avoid duplicate entries
     new_registry = _projectionregistry.new()
     for p in keys():

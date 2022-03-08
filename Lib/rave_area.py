@@ -28,10 +28,16 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @date 2011-06-28
 
 import os, string
-import rave_projection, _arearegistry, _area, _projection, _projectionpipeline, Proj
+import rave_projection, _area, _projection, _projectionpipeline, Proj
 import rave_xml
 from rave_defines import RAVECONFIG, UTF8, AREA_REGISTRY
 import _polarscan, _polarvolume
+
+got_arearegistry=False
+try:
+    import _arearegistry
+except:
+    got_arearegistry=False
 
 ## There's only one official area registry, but this module allows 
 # greater flexibility as long as files use the same naming convention.
@@ -183,6 +189,8 @@ def makearg(parent, id, text, Type=None):
 # @param yscale float Y scale in PCS space (commonly expressed in meters)
 # @param filename Full path to the XML file containing the registry
 def add(id, description, projection_id, extent, xsize, ysize, xscale, yscale, filename=AREA_REGISTRY):
+    if not got_arearegistry:
+        raise Exception("Can not use area registry")
     reg = _arearegistry.load(filename)
     reg.removeByName(id)  # Is silent if entry doesn't exist
     a = _area.new()
@@ -207,6 +215,8 @@ def add(id, description, projection_id, extent, xsize, ysize, xscale, yscale, fi
 # @param id String containing the identifier of the area to remove
 # @param filename Full path to the XML file containing the area registry
 def remove(id, filename=AREA_REGISTRY):
+    if not got_arearegistry:
+        raise Exception("Can not use area registry")
     reg = _arearegistry.load(filename)
     reg.removeByName(id)
     reg.write(filename)
@@ -217,6 +227,10 @@ def remove(id, filename=AREA_REGISTRY):
 # @param filename Complete path of the XML file to which to write the contents of the registry.
 def write(filename=AREA_REGISTRY):
     check = []  # Used to avoid duplicate entries
+
+    if not got_arearegistry:
+        raise Exception("Can not use area registry")
+    
     new_registry = _arearegistry.new()
     for k, i in items():
         if k not in check:
