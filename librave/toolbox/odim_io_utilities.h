@@ -46,36 +46,68 @@ typedef struct OdimIoUtilityArg {
 } OdimIoUtilityArg;
 
 /**
+ * Converts the data in the rave attribute if required to be compliant with the actual version.
+ * This means that if any how attribute has got a different unit, then it will be translated into the internally
+ * supported unit
+ * @param[in] attrname - name of the attribute
+ * @param[in] origversion - version of read file
+ * @param[in] inattr - the attribute with data. Internal value will be modified if required-
+ * @returns 1 on success
+ */
+int OdimIoUtilities_convertHowAttributeToInternalRave(const char* attrname, RaveIO_ODIM_Version origversion, RaveAttribute_t* inattr);
+
+/**
+ * Converts the data unit in the rave attribute from internal rave to output version.
+ * This means that if any how attribute has got a different unit, then it will be translated into the outversion unit
+ * @param[in] attrname - name of the attribute
+ * @param[in] outversion - version of file to be written
+ * @param[in] inattr - the attribute with data. Internal value will be modified if required-
+ * @returns 1 on success
+ */
+int OdimIoUtilities_convertHowAttributeFromInternalRave(const char* attrname, RaveIO_ODIM_Version outversion, RaveAttribute_t* inattr);
+
+/**
+ * Converts a list of rave attributes from internal format to output format
+ * @param[in] attributes - the attributes
+ * @param[in] outversion - version of file to be written
+ * @returns 1 on success
+ */
+int OdimIoUtilities_convertHowAttributesFromInternalRave(RaveObjectList_t* attributes, RaveIO_ODIM_Version outversion);
+
+/**
  * Adds a rave field to a nodelist.
  *
  * @param[in] field - the field
  * @param[in] nodelist - the hlhdf node list
+ * @param[in] outversion - the version of file to be written
  * @param[in] fmt - the varargs format string
  * @param[in] ... - the varargs
  * @return 1 on success otherwise 0
  */
-int OdimIoUtilities_addRaveField(RaveField_t* field, HL_NodeList* nodelist, const char* fmt, ...);
+int OdimIoUtilities_addRaveField(RaveField_t* field, HL_NodeList* nodelist, RaveIO_ODIM_Version outversion, const char* fmt, ...);
 
 /**
  * Adds a list of quality fields (RaveField_t) to a nodelist.
  *
  * @param[in] fields - the list of fields
  * @param[in] nodelist - the hlhdf node list
+ * @param[in] outversion - the version of file to be written
  * @param[in] fmt - the varargs format string
  * @param[in] ... - the varargs
  * @return 1 on success otherwise 0
  */
-int OdimIoUtilities_addQualityFields(RaveObjectList_t* fields, HL_NodeList* nodelist, const char* fmt, ...);
+int OdimIoUtilities_addQualityFields(RaveObjectList_t* fields, HL_NodeList* nodelist, RaveIO_ODIM_Version outversion, const char* fmt, ...);
 
 /**
  * Loads a rave field. A rave field can be just about anything with a mapping
  * between attributes and a dataset.
  * @param[in] lazyReader - the wrapper around the hlhdf node list
+ * @param[in] version - version of the file read
  * @param[in] fmt - the variable argument list string format
  * @param[in] ... - the variable argument list
  * @return a rave field on success otherwise NULL
  */
-RaveField_t* OdimIoUtilities_loadField(LazyNodeListReader_t* lazyReader, const char* fmt, ...);
+RaveField_t* OdimIoUtilities_loadField(LazyNodeListReader_t* lazyReader, RaveIO_ODIM_Version version, const char* fmt, ...);
 
 /**
  * Gets the specified id from the source string, for example. If source string contains CMT:abc,NOD:selek,RAD:se50 then if id = NOD: buf will be filled with selek

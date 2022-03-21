@@ -27,6 +27,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_alloc.h"
 #include "rave_hlhdf_utilities.h"
 #include <string.h>
+#include <math.h>
 
 /*@{ Private functions */
 
@@ -42,13 +43,15 @@ static int OdimIoUtilitiesInternal_loadFieldAttribute(void* object, RaveAttribut
   RaveField_t* field = NULL;
   const char* name;
   int result = 0;
-
+  RaveIO_ODIM_Version version = RaveIO_ODIM_Version_2_4;
   RAVE_ASSERT((object != NULL), "object == NULL");
   RAVE_ASSERT((attribute != NULL), "attribute == NULL");
 
   field = (RaveField_t*)((OdimIoUtilityArg*)object)->object;
   name = RaveAttribute_getName(attribute);
+  version = (RaveIO_ODIM_Version)((OdimIoUtilityArg*)object)->version;
   if (name != NULL) {
+    OdimIoUtilities_convertHowAttributeToInternalRave(name, version, attribute);
     result = RaveField_addAttribute(field, attribute);
   }
 
@@ -89,8 +92,95 @@ static int OdimIoUtilitiesInternal_loadFieldDataset(void* object, hsize_t xsize,
 /*@} End of Private functions */
 
 /*@{ Interface functions */
+int OdimIoUtilities_convertHowAttributeToInternalRave(const char* attrname, RaveIO_ODIM_Version origversion, RaveAttribute_t* inattr)
+{
+  if (origversion < RaveIO_ODIM_Version_2_4) {
+    return 1;
+  }
 
-int OdimIoUtilities_addRaveField(RaveField_t* field, HL_NodeList* nodelist, const char* fmt, ...)
+  if (RaveAttribute_getFormat(inattr) == RaveAttribute_Format_Double) {
+    double v = 0.0;
+    RaveAttribute_getDouble(inattr, &v);
+    if (strcasecmp("how/gasattn", attrname) == 0) {
+      RaveAttribute_setDouble(inattr, v * 1000.0); /* dB/m => dB/km */
+    } else if (strcasecmp("how/minrange", attrname)==0 ||
+        strcasecmp("how/maxrange", attrname)==0 ||
+        strcasecmp("how/melting_layer_top_A", attrname)==0 ||
+        strcasecmp("how/melting_layer_bottom_A", attrname)==0) {
+      RaveAttribute_setDouble(inattr, v / 1000.0); /* m => km */
+    } else if (strcasecmp("how/nomTXpower", attrname) == 0 ||
+        strcasecmp("how/peakpwr", attrname) == 0 ||
+        strcasecmp("how/avgpwr", attrname) == 0) {
+      RaveAttribute_setDouble(inattr, pow(10.0, (v - 30.0)/10.0)/1000.0);
+    }
+  } else if (RaveAttribute_getFormat(inattr) == RaveAttribute_Format_DoubleArray && strcasecmp("how/TXpower", attrname) == 0) {
+    double* darr = NULL;
+    int nlen = 0, i = 0;
+    RaveAttribute_getDoubleArray(inattr, &darr, &nlen);
+    for (i = 0; i < nlen; i++) {
+      darr[i] = pow(10.0, (darr[i] - 30.0)/10.0)/1000.0;
+    }
+  }
+
+  return 1;
+}
+
+int OdimIoUtilities_convertHowAttributeFromInternalRave(const char* attrname, RaveIO_ODIM_Version outversion, RaveAttribute_t* inattr)
+{
+  if (outversion < RaveIO_ODIM_Version_2_4) {
+    return 1;
+  }
+  /* Since all attribute units within rave are according to old . We have to change unit to old one */
+  if (RaveAttribute_getFormat(inattr) == RaveAttribute_Format_Double) {
+    double v = 0.0;
+    RaveAttribute_getDouble(inattr, &v);
+    if (strcasecmp("how/gasattn", attrname) == 0) {
+      RaveAttribute_setDouble(inattr, v / 1000.0); /* dB/km => dB/m */
+    } else if (strcasecmp("how/minrange", attrname)==0 ||
+        strcasecmp("how/maxrange", attrname)==0 ||
+        strcasecmp("how/melting_layer_top_A", attrname)==0 ||
+        strcasecmp("how/melting_layer_bottom_A", attrname)==0) {
+      RaveAttribute_setDouble(inattr, v * 1000.0); /* km => m */
+    } else if (strcasecmp("how/nomTXpower", attrname) == 0 ||
+        strcasecmp("how/peakpwr", attrname) == 0 ||
+        strcasecmp("how/avgpwr", attrname) == 0) {
+      if (v > 0) {
+        RaveAttribute_setDouble(inattr, 10*log10(1000.0*v)+30); /* kW => dBm */
+      }
+    }
+  } else if (RaveAttribute_getFormat(inattr) == RaveAttribute_Format_DoubleArray && strcasecmp("how/TXpower", attrname) == 0) {
+    double* darr = NULL;
+    int nlen = 0, i = 0;
+    RaveAttribute_getDoubleArray(inattr, &darr, &nlen);
+    for (i = 0; i < nlen; i++) {
+      if (darr[i] > 0) {
+        darr[i] = 10 * log10(1000.0*darr[i]) + 30; /* kW => dBm */
+      }
+    }
+  }
+
+  return 1;
+}
+
+int OdimIoUtilities_convertHowAttributesFromInternalRave(RaveObjectList_t* attributes, RaveIO_ODIM_Version outversion)
+{
+  int i = 0;
+  int nlen = 0;
+  if (outversion < RaveIO_ODIM_Version_2_4) {
+    return 1;
+  }
+  nlen = RaveObjectList_size(attributes);
+  for (i = 0; i < nlen; i++) {
+    RaveAttribute_t* attr = (RaveAttribute_t*)RaveObjectList_get(attributes, i);
+    if (attr != NULL) {
+      OdimIoUtilities_convertHowAttributeFromInternalRave(RaveAttribute_getName(attr), outversion, attr);
+    }
+    RAVE_OBJECT_RELEASE(attr);
+  }
+  return 1;
+}
+
+int OdimIoUtilities_addRaveField(RaveField_t* field, HL_NodeList* nodelist, RaveIO_ODIM_Version version, const char* fmt, ...)
 {
   int result = 0;
   va_list ap;
@@ -116,6 +206,8 @@ int OdimIoUtilities_addRaveField(RaveField_t* field, HL_NodeList* nodelist, cons
   }
 
   attributes = RaveField_getAttributeValues(field);
+
+  OdimIoUtilities_convertHowAttributesFromInternalRave(attributes, version);
 
   if (attributes == NULL || !RaveHL_addAttributes(nodelist, attributes, name)) {
     goto done;
@@ -145,7 +237,7 @@ done:
  * @param[in] ... - the varargs
  * @return 1 on success otherwise 0
  */
-int OdimIoUtilities_addQualityFields(RaveObjectList_t* fields, HL_NodeList* nodelist, const char* fmt, ...)
+int OdimIoUtilities_addQualityFields(RaveObjectList_t* fields, HL_NodeList* nodelist, RaveIO_ODIM_Version version, const char* fmt, ...)
 {
   int result = 0;
   va_list ap;
@@ -171,7 +263,7 @@ int OdimIoUtilities_addQualityFields(RaveObjectList_t* fields, HL_NodeList* node
   for (pindex = 0; result == 1 && pindex < nrfields; pindex++) {
     RaveField_t* field = (RaveField_t*)RaveObjectList_get(fields, pindex);
     if (field != NULL) {
-      result = OdimIoUtilities_addRaveField(field, nodelist, "%s/quality%d", name, (pindex+1));
+      result = OdimIoUtilities_addRaveField(field, nodelist, version, "%s/quality%d", name, (pindex+1));
     } else {
       result = 0;
     }
@@ -186,11 +278,12 @@ done:
  * Loads a rave field. A rave field can be just about anything with a mapping
  * between attributes and a dataset.
  * @param[in] nodelist - the hlhdf node list
+ * @param[in] nodelist - version of the file read
  * @param[in] fmt - the variable argument list string format
  * @param[in] ... - the variable argument list
  * @return a rave field on success otherwise NULL
  */
-RaveField_t* OdimIoUtilities_loadField(LazyNodeListReader_t* lazyReader, const char* fmt, ...)
+RaveField_t* OdimIoUtilities_loadField(LazyNodeListReader_t* lazyReader, RaveIO_ODIM_Version version, const char* fmt, ...)
 {
   OdimIoUtilityArg arg;
   RaveField_t* field = NULL;
@@ -218,6 +311,7 @@ RaveField_t* OdimIoUtilities_loadField(LazyNodeListReader_t* lazyReader, const c
   arg.lazyReader = lazyReader;
   arg.nodelist = LazyNodeListReader_getHLNodeList(lazyReader);
   arg.object = (RaveCoreObject*)field;
+  arg.version = version;
 
   if (!RaveHL_loadAttributesAndData(arg.nodelist, &arg,
                                     OdimIoUtilitiesInternal_loadFieldAttribute,

@@ -32,7 +32,5 @@ from PyCompositeTest import *
 from PyCartesianCompositeTest import *
 from MeanTest import *
 
-#from PyRaveIOTest import *
-
 if __name__ == '__main__':
   unittest.main()

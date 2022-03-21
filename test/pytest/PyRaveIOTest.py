@@ -3768,6 +3768,907 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertAlmostEqual(7.9, obj.object.getImage(1).getParameter("CCORH").getAttribute("how/zcalH"), 2)
     self.assertAlmostEqual(8.0, obj.object.getImage(1).getParameter("CCORH").getAttribute("how/nsampleH"), 2)
 
+  def testReadAndConvertV24_how_attributes_SCAN(self):
+    nodelist = _pyhl.nodelist()
+    self.addGroupNode(nodelist, "/what")
+    self.addGroupNode(nodelist, "/where")
+    self.addGroupNode(nodelist, "/how")
+
+    self.addGroupNode(nodelist, "/dataset1")
+    self.addGroupNode(nodelist, "/dataset1/what")
+    self.addGroupNode(nodelist, "/dataset1/data1")
+    self.addGroupNode(nodelist, "/dataset1/data1/how")
+    self.addGroupNode(nodelist, "/dataset1/data1/what")
+    self.addGroupNode(nodelist, "/dataset1/quality1")
+    self.addGroupNode(nodelist, "/dataset1/quality1/how")
+    self.addGroupNode(nodelist, "/dataset1/data1/quality1")
+    self.addGroupNode(nodelist, "/dataset1/data1/quality1/how")
+
+    self.addAttributeNode(nodelist, "/Conventions", "string", "ODIM_H5/V2_4")
+    self.addAttributeNode(nodelist, "/what/date", "string", "20100101")
+    self.addAttributeNode(nodelist, "/what/time", "string", "101500")
+    self.addAttributeNode(nodelist, "/what/source", "string", "PLC:123")
+    self.addAttributeNode(nodelist, "/what/object", "string", "SCAN")
+    self.addAttributeNode(nodelist, "/what/version", "string", "H5rad 2.3")
+
+    self.addAttributeNode(nodelist, "/where/height", "double", 100.0)
+    self.addAttributeNode(nodelist, "/where/lon", "double", 13.5)
+    self.addAttributeNode(nodelist, "/where/lat", "double", 61.0)
+
+    self.addAttributeNode(nodelist, "/how/gasattn", "double", 0.0221)
+    self.addAttributeNode(nodelist, "/how/nomTXpower", "double", 85.6832)
+    self.addAttributeNode(nodelist, "/how/nsampleH", "double", 2.2)
+    self.addAttributeNode(nodelist, "/how/nsampleV", "double", 2.2)
+    self.addAttributeNode(nodelist, "/how/melting_layer_top_A", "double", 2200)
+    self.addAttributeNode(nodelist, "/how/melting_layer_bottom_A", "double", 2200)
+    self.addAttributeNode(nodelist, "/how/peakpwr", "double", 85.7310)
+    self.addAttributeNode(nodelist, "/how/avgpwr", "double", 85.7194)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/gasattn", "double", 0.0231)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/nomTXpower", "double", 85.6832)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/nsampleH", "double", 23.2)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/nsampleV", "double", 23.2)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/melting_layer_top_A", "double", 23200)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/melting_layer_bottom_A", "double", 23200)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/peakpwr", "double", 85.7322)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/avgpwr", "double", 85.7206)
+    self.addAttributeNode(nodelist, "/dataset1/quality1/how/nsampleH", "double", 1.1)
+    self.addAttributeNode(nodelist, "/dataset1/quality1/how/nsampleV", "double", 1.1)
+    self.addAttributeNode(nodelist, "/dataset1/quality1/how/melting_layer_top_A", "double", 1100)
+    self.addAttributeNode(nodelist, "/dataset1/quality1/how/melting_layer_bottom_A", "double", 1100)
+    self.addAttributeNode(nodelist, "/dataset1/quality1/how/peakpwr", "double", 85.6949)
+    self.addAttributeNode(nodelist, "/dataset1/quality1/how/avgpwr", "double", 85.7206)
+
+    self.addAttributeNode(nodelist, "/dataset1/data1/quality1/how/nsampleH", "double", 2.1)
+    self.addAttributeNode(nodelist, "/dataset1/data1/quality1/how/nsampleV", "double", 2.1)
+    self.addAttributeNode(nodelist, "/dataset1/data1/quality1/how/melting_layer_top_A", "double", 2100)
+    self.addAttributeNode(nodelist, "/dataset1/data1/quality1/how/melting_layer_bottom_A", "double", 2100)
+    self.addAttributeNode(nodelist, "/dataset1/data1/quality1/how/peakpwr", "double", 85.7183)
+    self.addAttributeNode(nodelist, "/dataset1/data1/quality1/how/avgpwr", "double", 85.6949)
+
+    self.addAttributeNode(nodelist, "/dataset1/what/startdate", "string", "20100101")
+    self.addAttributeNode(nodelist, "/dataset1/what/starttime", "string", "101010")
+    self.addAttributeNode(nodelist, "/dataset1/what/enddate", "string", "20100101")
+    self.addAttributeNode(nodelist, "/dataset1/what/endtime", "string", "101011")
+    self.addAttributeNode(nodelist, "/dataset1/what/product", "string", "SCAN")
+
+    self.addAttributeNode(nodelist, "/dataset1/data1/what/gain", "double", 1.0)
+    self.addAttributeNode(nodelist, "/dataset1/data1/what/offset", "double", 0.0)
+    self.addAttributeNode(nodelist, "/dataset1/data1/what/nodata", "double", 255.0)
+    self.addAttributeNode(nodelist, "/dataset1/data1/what/undetect", "double", 255.0)
+    self.addAttributeNode(nodelist, "/dataset1/data1/what/quantity", "string", "DBZH")
+
+    dset = numpy.arange(100)
+    dset=numpy.array(dset.astype(numpy.uint8),numpy.uint8)
+    dset=numpy.reshape(dset,(10,10)).astype(numpy.uint8)
+
+    self.addDatasetNode(nodelist, "/dataset1/data1/data", "uchar", (10,10), dset)
+
+    nodelist.write(self.TEMPORARY_FILE, 6)
+    os.sync(); os.sync()
+
+    obj = _raveio.open(self.TEMPORARY_FILE).object
+    self.assertAlmostEqual(22.1, obj.getAttribute("how/gasattn"), 4)
+    self.assertAlmostEqual(370.1008, obj.getAttribute("how/nomTXpower"), 4)
+    self.assertAlmostEqual(2.2, obj.getAttribute("how/nsampleH"), 4)
+    self.assertAlmostEqual(2.2, obj.getAttribute("how/nsampleV"), 4)
+    self.assertAlmostEqual(2.2, obj.getAttribute("how/melting_layer_top_A"), 4)
+    self.assertAlmostEqual(2.2, obj.getAttribute("how/melting_layer_bottom_A"), 4)
+    self.assertAlmostEqual(374.1967, obj.getAttribute("how/peakpwr"), 4)
+    self.assertAlmostEqual(373.1986, obj.getAttribute("how/avgpwr"), 4)
+    
+    param = obj.getParameter("DBZH")
+    self.assertAlmostEqual(23.1, param.getAttribute("how/gasattn"), 4)
+    self.assertAlmostEqual(370.1008, param.getAttribute("how/nomTXpower"), 4)
+    self.assertAlmostEqual(23.2, param.getAttribute("how/nsampleH"), 4)
+    self.assertAlmostEqual(23.2, param.getAttribute("how/nsampleV"), 4)
+    self.assertAlmostEqual(23.2, param.getAttribute("how/melting_layer_top_A"), 4)
+    self.assertAlmostEqual(23.2, param.getAttribute("how/melting_layer_bottom_A"), 4)
+    self.assertAlmostEqual(374.3001, param.getAttribute("how/peakpwr"), 4)
+    self.assertAlmostEqual(373.3017, param.getAttribute("how/avgpwr"), 4)
+    
+    qfield = obj.getQualityField(0)
+    self.assertAlmostEqual(1.1, qfield.getAttribute("how/nsampleH"), 4)
+    self.assertAlmostEqual(1.1, qfield.getAttribute("how/nsampleV"), 4)
+    self.assertAlmostEqual(1.1, qfield.getAttribute("how/melting_layer_top_A"), 4)
+    self.assertAlmostEqual(1.1, qfield.getAttribute("how/melting_layer_bottom_A"), 4)
+    self.assertAlmostEqual(371.0992, qfield.getAttribute("how/peakpwr"), 4)
+    self.assertAlmostEqual(373.3017, qfield.getAttribute("how/avgpwr"), 4)
+
+    qfield = param.getQualityField(0)
+    self.assertAlmostEqual(2.1, qfield.getAttribute("how/nsampleH"), 4)
+    self.assertAlmostEqual(2.1, qfield.getAttribute("how/nsampleV"), 4)
+    self.assertAlmostEqual(2.1, qfield.getAttribute("how/melting_layer_top_A"), 4)
+    self.assertAlmostEqual(2.1, qfield.getAttribute("how/melting_layer_bottom_A"), 4)
+    self.assertAlmostEqual(373.1041, qfield.getAttribute("how/peakpwr"), 4)
+    self.assertAlmostEqual(371.0992, qfield.getAttribute("how/avgpwr"), 4)
+
+  def testReadAndConvertV24_how_attributes_VOLUME(self):
+    nodelist = _pyhl.nodelist()
+    self.addGroupNode(nodelist, "/what")
+    self.addGroupNode(nodelist, "/where")
+    self.addGroupNode(nodelist, "/how")
+
+    self.addGroupNode(nodelist, "/dataset1")
+    self.addGroupNode(nodelist, "/dataset1/what")
+    self.addGroupNode(nodelist, "/dataset1/how")
+    self.addGroupNode(nodelist, "/dataset1/data1")
+    self.addGroupNode(nodelist, "/dataset1/data1/how")
+    self.addGroupNode(nodelist, "/dataset1/data1/what")
+    self.addGroupNode(nodelist, "/dataset1/quality1")
+    self.addGroupNode(nodelist, "/dataset1/quality1/how")
+
+    self.addGroupNode(nodelist, "/dataset1/data1/quality1")
+    self.addGroupNode(nodelist, "/dataset1/data1/quality1/how")
+
+    self.addGroupNode(nodelist, "/dataset2")
+    self.addGroupNode(nodelist, "/dataset2/what")
+    self.addGroupNode(nodelist, "/dataset2/data1")
+    self.addGroupNode(nodelist, "/dataset2/data1/how")
+    self.addGroupNode(nodelist, "/dataset2/data1/what")
+
+    self.addAttributeNode(nodelist, "/Conventions", "string", "ODIM_H5/V2_4")
+    self.addAttributeNode(nodelist, "/what/date", "string", "20100101")
+    self.addAttributeNode(nodelist, "/what/time", "string", "101500")
+    self.addAttributeNode(nodelist, "/what/source", "string", "PLC:123")
+    self.addAttributeNode(nodelist, "/what/object", "string", "PVOL")
+    self.addAttributeNode(nodelist, "/what/version", "string", "H5rad 2.3")
+
+    self.addAttributeNode(nodelist, "/where/height", "double", 100.0)
+    self.addAttributeNode(nodelist, "/where/lon", "double", 13.5)
+    self.addAttributeNode(nodelist, "/where/lat", "double", 61.0)
+
+    self.addAttributeNode(nodelist, "/how/gasattn", "double", 0.0221)
+    self.addAttributeNode(nodelist, "/how/nomTXpower", "double", 85.6832)
+    self.addAttributeNode(nodelist, "/how/nsampleH", "double", 2.2)
+    self.addAttributeNode(nodelist, "/how/nsampleV", "double", 2.2)
+    self.addAttributeNode(nodelist, "/how/melting_layer_top_A", "double", 2200)
+    self.addAttributeNode(nodelist, "/how/melting_layer_bottom_A", "double", 2200)
+    self.addAttributeNode(nodelist, "/how/peakpwr", "double", 85.7310)
+    self.addAttributeNode(nodelist, "/how/avgpwr", "double", 85.7194)
+
+    self.addAttributeNode(nodelist, "/dataset1/how/gasattn", "double", 0.0211)
+    self.addAttributeNode(nodelist, "/dataset1/how/nomTXpower", "double", 85.6949)
+    self.addAttributeNode(nodelist, "/dataset1/how/nsampleH", "double", 23.1)
+    self.addAttributeNode(nodelist, "/dataset1/how/nsampleV", "double", 23.1)
+    self.addAttributeNode(nodelist, "/dataset1/how/melting_layer_top_A", "double", 23100)
+    self.addAttributeNode(nodelist, "/dataset1/how/melting_layer_bottom_A", "double", 23100)
+    self.addAttributeNode(nodelist, "/dataset1/how/peakpwr", "double", 85.7426)
+    self.addAttributeNode(nodelist, "/dataset1/how/avgpwr", "double", 85.7310)
+    
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/gasattn", "double", 0.0231)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/nomTXpower", "double", 85.6832)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/nsampleH", "double", 23.2)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/nsampleV", "double", 23.2)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/melting_layer_top_A", "double", 23200)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/melting_layer_bottom_A", "double", 23200)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/peakpwr", "double", 85.7322)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/avgpwr", "double", 85.7206)
+    
+    self.addAttributeNode(nodelist, "/dataset1/quality1/how/nsampleH", "double", 1.1)
+    self.addAttributeNode(nodelist, "/dataset1/quality1/how/nsampleV", "double", 1.1)
+    self.addAttributeNode(nodelist, "/dataset1/quality1/how/melting_layer_top_A", "double", 1100)
+    self.addAttributeNode(nodelist, "/dataset1/quality1/how/melting_layer_bottom_A", "double", 1100)
+    self.addAttributeNode(nodelist, "/dataset1/quality1/how/peakpwr", "double", 85.7183)
+    self.addAttributeNode(nodelist, "/dataset1/quality1/how/avgpwr", "double", 85.6949)
+
+    self.addAttributeNode(nodelist, "/dataset1/data1/quality1/how/nsampleH", "double", 2.2)
+    self.addAttributeNode(nodelist, "/dataset1/data1/quality1/how/nsampleV", "double", 2.2)
+    self.addAttributeNode(nodelist, "/dataset1/data1/quality1/how/melting_layer_top_A", "double", 2200)
+    self.addAttributeNode(nodelist, "/dataset1/data1/quality1/how/melting_layer_bottom_A", "double", 2200)
+    self.addAttributeNode(nodelist, "/dataset1/data1/quality1/how/peakpwr", "double", 85.6949)
+    self.addAttributeNode(nodelist, "/dataset1/data1/quality1/how/avgpwr", "double", 85.6961)
+    
+    self.addAttributeNode(nodelist, "/dataset1/what/product", "string", "SCAN")
+    self.addAttributeNode(nodelist, "/dataset1/data1/what/quantity", "string", "DBZH")
+
+    self.addAttributeNode(nodelist, "/dataset2/data1/how/gasattn", "double", 23.1)
+    self.addAttributeNode(nodelist, "/dataset2/data1/how/nomTXpower", "double", 370.1)
+    self.addAttributeNode(nodelist, "/dataset2/data1/how/nsampleH", "double", 23.2)
+    self.addAttributeNode(nodelist, "/dataset2/data1/how/nsampleV", "double", 23.2)
+    self.addAttributeNode(nodelist, "/dataset2/data1/how/melting_layer_top_A", "double", 23.2)
+    self.addAttributeNode(nodelist, "/dataset2/data1/how/melting_layer_bottom_A", "double", 23.2)
+    self.addAttributeNode(nodelist, "/dataset2/data1/how/peakpwr", "double", 374.3)
+    self.addAttributeNode(nodelist, "/dataset2/data1/how/avgpwr", "double", 373.3)
+    self.addAttributeNode(nodelist, "/dataset2/what/product", "string", "SCAN")
+    self.addAttributeNode(nodelist, "/dataset2/data1/what/quantity", "string", "DBZH")
+
+    dset = numpy.arange(100)
+    dset=numpy.array(dset.astype(numpy.uint8),numpy.uint8)
+    dset=numpy.reshape(dset,(10,10)).astype(numpy.uint8)
+    self.addDatasetNode(nodelist, "/dataset1/data1/data", "uchar", (10,10), dset)
+
+    dset = numpy.arange(100)
+    dset=numpy.array(dset.astype(numpy.uint8),numpy.uint8)
+    dset=numpy.reshape(dset,(10,10)).astype(numpy.uint8)
+    self.addDatasetNode(nodelist, "/dataset2/data1/data", "uchar", (10,10), dset)
+
+    nodelist.write(self.TEMPORARY_FILE, 6)
+    os.sync(); os.sync()
+
+    obj = _raveio.open(self.TEMPORARY_FILE).object
+    self.assertAlmostEqual(22.1, obj.getAttribute("how/gasattn"), 4)
+    self.assertAlmostEqual(370.1008, obj.getAttribute("how/nomTXpower"), 4)
+    self.assertAlmostEqual(2.2, obj.getAttribute("how/nsampleH"), 4)
+    self.assertAlmostEqual(2.2, obj.getAttribute("how/nsampleV"), 4)
+    self.assertAlmostEqual(2.2, obj.getAttribute("how/melting_layer_top_A"), 4)
+    self.assertAlmostEqual(2.2, obj.getAttribute("how/melting_layer_bottom_A"), 4)
+    self.assertAlmostEqual(374.1967, obj.getAttribute("how/peakpwr"), 4)
+    self.assertAlmostEqual(373.1986, obj.getAttribute("how/avgpwr"), 4)
+  
+    scan1 = obj.getScan(0)
+    self.assertAlmostEqual(21.1, scan1.getAttribute("how/gasattn"), 4)
+    self.assertAlmostEqual(371.0992, scan1.getAttribute("how/nomTXpower"), 4)
+    self.assertAlmostEqual(23.1, scan1.getAttribute("how/nsampleH"), 4)
+    self.assertAlmostEqual(23.1, scan1.getAttribute("how/nsampleV"), 4)
+    self.assertAlmostEqual(23.1, scan1.getAttribute("how/melting_layer_top_A"), 4)
+    self.assertAlmostEqual(23.1, scan1.getAttribute("how/melting_layer_bottom_A"), 4)
+    self.assertAlmostEqual(375.1976, scan1.getAttribute("how/peakpwr"), 4)
+    self.assertAlmostEqual(374.1967, scan1.getAttribute("how/avgpwr"), 4)
+    
+    qfield = scan1.getQualityField(0)
+    self.assertAlmostEqual(1.1, qfield.getAttribute("how/nsampleH"), 4)
+    self.assertAlmostEqual(1.1, qfield.getAttribute("how/nsampleV"), 4)
+    self.assertAlmostEqual(1.1, qfield.getAttribute("how/melting_layer_top_A"), 4)
+    self.assertAlmostEqual(1.1, qfield.getAttribute("how/melting_layer_bottom_A"), 4)
+    self.assertAlmostEqual(373.1041, qfield.getAttribute("how/peakpwr"), 4)
+    self.assertAlmostEqual(371.0992, qfield.getAttribute("how/avgpwr"), 4)
+    
+    param1 = scan1.getParameter("DBZH")
+    self.assertAlmostEqual(23.1, param1.getAttribute("how/gasattn"), 4)
+    self.assertAlmostEqual(370.1008, param1.getAttribute("how/nomTXpower"), 4)
+    self.assertAlmostEqual(23.2, param1.getAttribute("how/nsampleH"), 4)
+    self.assertAlmostEqual(23.2, param1.getAttribute("how/nsampleV"), 4)
+    self.assertAlmostEqual(23.2, param1.getAttribute("how/melting_layer_top_A"), 4)
+    self.assertAlmostEqual(23.2, param1.getAttribute("how/melting_layer_bottom_A"), 4)
+    self.assertAlmostEqual(374.3001, param1.getAttribute("how/peakpwr"), 4)
+    self.assertAlmostEqual(373.3017, param1.getAttribute("how/avgpwr"), 4)
+
+    qfield = param1.getQualityField(0)
+    self.assertAlmostEqual(2.2, qfield.getAttribute("how/nsampleH"), 4)
+    self.assertAlmostEqual(2.2, qfield.getAttribute("how/nsampleV"), 4)
+    self.assertAlmostEqual(2.2, qfield.getAttribute("how/melting_layer_top_A"), 4)
+    self.assertAlmostEqual(2.2, qfield.getAttribute("how/melting_layer_bottom_A"), 4)
+    self.assertAlmostEqual(371.0992, qfield.getAttribute("how/peakpwr"), 4)
+    self.assertAlmostEqual(371.2017, qfield.getAttribute("how/avgpwr"), 4)
+    
+  def test_write_scan_with_converted_howAttributes(self):
+    obj = _raveio.open(self.FIXTURE_VOLUME)
+    vol = obj.object
+    
+    scan = vol.getScan(0)
+    scan.addAttribute("how/gasattn", 22.1)
+    scan.addAttribute("how/nomTXpower", 370.1008)
+    scan.addAttribute("how/nsampleH", 2.2)
+    scan.addAttribute("how/nsampleV", 2.3)
+    scan.addAttribute("how/melting_layer_top_A", 2.2)
+    scan.addAttribute("how/melting_layer_bottom_A", 2.3)
+    scan.addAttribute("how/peakpwr", 374.1967)
+    scan.addAttribute("how/avgpwr", 373.1986)
+
+    scan.removeParametersExcept(["DBZH"])
+    param = scan.getParameter("DBZH")
+    param.addAttribute("how/gasattn", 22.1)
+    param.addAttribute("how/nomTXpower", 370.1008)
+    param.addAttribute("how/nsampleH", 2.2)
+    param.addAttribute("how/nsampleV", 2.3)
+    param.addAttribute("how/melting_layer_top_A", 2.2)
+    param.addAttribute("how/melting_layer_bottom_A", 2.3)
+    param.addAttribute("how/peakpwr", 374.1967)
+    param.addAttribute("how/avgpwr", 373.1986)
+
+    field = _ravefield.new()
+    field.setData(scan.getParameter("DBZH").getData())
+    field.addAttribute("how/gasattn", 22.1)
+    field.addAttribute("how/nomTXpower", 370.1008)
+    field.addAttribute("how/nsampleH", 2.2)
+    field.addAttribute("how/nsampleV", 2.3)
+    field.addAttribute("how/melting_layer_top_A", 2.2)
+    field.addAttribute("how/melting_layer_bottom_A", 2.3)
+    field.addAttribute("how/peakpwr", 374.1967)
+    field.addAttribute("how/avgpwr", 373.1986)
+    scan.addQualityField(field)
+
+    param.addQualityField(field)
+    
+    obj = _raveio.new()
+    obj.object = scan
+    obj.filename = self.TEMPORARY_FILE
+    obj.save()
+    import shutil
+    shutil.copy(self.TEMPORARY_FILE, "/tmp/slask.h5")
+
+    # Verify data
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+    
+    self.assertAlmostEqual(0.0221, nodelist.getNode("/how/gasattn").data(), 4)
+    self.assertAlmostEqual(85.6832, nodelist.getNode("/how/nomTXpower").data(), 4)
+    self.assertAlmostEqual(2.2, nodelist.getNode("/how/nsampleH").data(), 4)
+    self.assertAlmostEqual(2.3, nodelist.getNode("/how/nsampleV").data(), 4)
+    self.assertAlmostEqual(2200, nodelist.getNode("/how/melting_layer_top_A").data(), 4)
+    self.assertAlmostEqual(2300, nodelist.getNode("/how/melting_layer_bottom_A").data(), 4)
+    self.assertAlmostEqual(85.7310, nodelist.getNode("/how/peakpwr").data(), 4)
+    self.assertAlmostEqual(85.7194, nodelist.getNode("/how/avgpwr").data(), 4)
+
+    self.assertAlmostEqual(0.0221, nodelist.getNode("/dataset1/data1/how/gasattn").data(), 4)
+    self.assertAlmostEqual(85.6832, nodelist.getNode("/dataset1/data1/how/nomTXpower").data(), 4)
+    self.assertAlmostEqual(2.2, nodelist.getNode("/dataset1/data1/how/nsampleH").data(), 4)
+    self.assertAlmostEqual(2.3, nodelist.getNode("/dataset1/data1/how/nsampleV").data(), 4)
+    self.assertAlmostEqual(2200, nodelist.getNode("/dataset1/data1/how/melting_layer_top_A").data(), 4)
+    self.assertAlmostEqual(2300, nodelist.getNode("/dataset1/data1/how/melting_layer_bottom_A").data(), 4)
+    self.assertAlmostEqual(85.7310, nodelist.getNode("/dataset1/data1/how/peakpwr").data(), 4)
+    self.assertAlmostEqual(85.7194, nodelist.getNode("/dataset1/data1/how/avgpwr").data(), 4)
+
+    self.assertAlmostEqual(0.0221, nodelist.getNode("/dataset1/quality1/how/gasattn").data(), 4)
+    self.assertAlmostEqual(85.6832, nodelist.getNode("/dataset1/quality1/how/nomTXpower").data(), 4)
+    self.assertAlmostEqual(2.2, nodelist.getNode("/dataset1/quality1/how/nsampleH").data(), 4)
+    self.assertAlmostEqual(2.3, nodelist.getNode("/dataset1/quality1/how/nsampleV").data(), 4)
+    self.assertAlmostEqual(2200, nodelist.getNode("/dataset1/quality1/how/melting_layer_top_A").data(), 4)
+    self.assertAlmostEqual(2300, nodelist.getNode("/dataset1/quality1/how/melting_layer_bottom_A").data(), 4)
+    self.assertAlmostEqual(85.7310, nodelist.getNode("/dataset1/quality1/how/peakpwr").data(), 4)
+    self.assertAlmostEqual(85.7194, nodelist.getNode("/dataset1/quality1/how/avgpwr").data(), 4)
+
+    self.assertAlmostEqual(0.0221, nodelist.getNode("/dataset1/data1/quality1/how/gasattn").data(), 4)
+    self.assertAlmostEqual(85.6832, nodelist.getNode("/dataset1/data1/quality1/how/nomTXpower").data(), 4)
+    self.assertAlmostEqual(2.2, nodelist.getNode("/dataset1/data1/quality1/how/nsampleH").data(), 4)
+    self.assertAlmostEqual(2.3, nodelist.getNode("/dataset1/data1/quality1/how/nsampleV").data(), 4)
+    self.assertAlmostEqual(2200, nodelist.getNode("/dataset1/data1/quality1/how/melting_layer_top_A").data(), 4)
+    self.assertAlmostEqual(2300, nodelist.getNode("/dataset1/data1/quality1/how/melting_layer_bottom_A").data(), 4)
+    self.assertAlmostEqual(85.7310, nodelist.getNode("/dataset1/data1/quality1/how/peakpwr").data(), 4)
+    self.assertAlmostEqual(85.7194, nodelist.getNode("/dataset1/data1/quality1/how/avgpwr").data(), 4)
+    
+  def test_write_volume_with_converted_howAttributes(self):
+    obj = _raveio.open(self.FIXTURE_VOLUME)
+    vol = obj.object
+    
+    scan = vol.getScan(0)
+    scan.addAttribute("how/gasattn", 22.1)
+    scan.addAttribute("how/nomTXpower", 370.1008)
+    scan.addAttribute("how/nsampleH", 2.2)
+    scan.addAttribute("how/nsampleV", 2.3)
+    scan.addAttribute("how/melting_layer_top_A", 2.2)
+    scan.addAttribute("how/melting_layer_bottom_A", 2.3)
+    scan.addAttribute("how/peakpwr", 374.1967)
+    scan.addAttribute("how/avgpwr", 373.1986)
+
+    scan.removeParametersExcept(["DBZH"])
+    param = scan.getParameter("DBZH")
+    param.addAttribute("how/gasattn", 22.1)
+    param.addAttribute("how/nomTXpower", 370.1008)
+    param.addAttribute("how/nsampleH", 2.2)
+    param.addAttribute("how/nsampleV", 2.3)
+    param.addAttribute("how/melting_layer_top_A", 2.2)
+    param.addAttribute("how/melting_layer_bottom_A", 2.3)
+    param.addAttribute("how/peakpwr", 374.1967)
+    param.addAttribute("how/avgpwr", 373.1986)
+
+    field = _ravefield.new()
+    field.setData(scan.getParameter("DBZH").getData())
+    field.addAttribute("how/gasattn", 22.1)
+    field.addAttribute("how/nomTXpower", 370.1008)
+    field.addAttribute("how/nsampleH", 2.2)
+    field.addAttribute("how/nsampleV", 2.3)
+    field.addAttribute("how/melting_layer_top_A", 2.2)
+    field.addAttribute("how/melting_layer_bottom_A", 2.3)
+    field.addAttribute("how/peakpwr", 374.1967)
+    field.addAttribute("how/avgpwr", 373.1986)
+    scan.addQualityField(field)
+
+    param.addQualityField(field)
+    
+    obj = _raveio.new()
+    obj.object = vol
+    obj.filename = self.TEMPORARY_FILE
+    obj.save()
+
+    # Verify data
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+
+    self.assertAlmostEqual(0.0221, nodelist.getNode("/dataset1/how/gasattn").data(), 4)
+    self.assertAlmostEqual(85.6832, nodelist.getNode("/dataset1/how/nomTXpower").data(), 4)
+    self.assertAlmostEqual(2.2, nodelist.getNode("/dataset1/how/nsampleH").data(), 4)
+    self.assertAlmostEqual(2.3, nodelist.getNode("/dataset1/how/nsampleV").data(), 4)
+    self.assertAlmostEqual(2200, nodelist.getNode("/dataset1/how/melting_layer_top_A").data(), 4)
+    self.assertAlmostEqual(2300, nodelist.getNode("/dataset1/how/melting_layer_bottom_A").data(), 4)
+    self.assertAlmostEqual(85.7310, nodelist.getNode("/dataset1/how/peakpwr").data(), 4)
+    self.assertAlmostEqual(85.7194, nodelist.getNode("/dataset1/how/avgpwr").data(), 4)
+
+    self.assertAlmostEqual(0.0221, nodelist.getNode("/dataset1/data1/how/gasattn").data(), 4)
+    self.assertAlmostEqual(85.6832, nodelist.getNode("/dataset1/data1/how/nomTXpower").data(), 4)
+    self.assertAlmostEqual(2.2, nodelist.getNode("/dataset1/data1/how/nsampleH").data(), 4)
+    self.assertAlmostEqual(2.3, nodelist.getNode("/dataset1/data1/how/nsampleV").data(), 4)
+    self.assertAlmostEqual(2200, nodelist.getNode("/dataset1/data1/how/melting_layer_top_A").data(), 4)
+    self.assertAlmostEqual(2300, nodelist.getNode("/dataset1/data1/how/melting_layer_bottom_A").data(), 4)
+    self.assertAlmostEqual(85.7310, nodelist.getNode("/dataset1/data1/how/peakpwr").data(), 4)
+    self.assertAlmostEqual(85.7194, nodelist.getNode("/dataset1/data1/how/avgpwr").data(), 4)
+
+    self.assertAlmostEqual(0.0221, nodelist.getNode("/dataset1/quality1/how/gasattn").data(), 4)
+    self.assertAlmostEqual(85.6832, nodelist.getNode("/dataset1/quality1/how/nomTXpower").data(), 4)
+    self.assertAlmostEqual(2.2, nodelist.getNode("/dataset1/quality1/how/nsampleH").data(), 4)
+    self.assertAlmostEqual(2.3, nodelist.getNode("/dataset1/quality1/how/nsampleV").data(), 4)
+    self.assertAlmostEqual(2200, nodelist.getNode("/dataset1/quality1/how/melting_layer_top_A").data(), 4)
+    self.assertAlmostEqual(2300, nodelist.getNode("/dataset1/quality1/how/melting_layer_bottom_A").data(), 4)
+    self.assertAlmostEqual(85.7310, nodelist.getNode("/dataset1/quality1/how/peakpwr").data(), 4)
+    self.assertAlmostEqual(85.7194, nodelist.getNode("/dataset1/quality1/how/avgpwr").data(), 4)
+
+    self.assertAlmostEqual(0.0221, nodelist.getNode("/dataset1/data1/quality1/how/gasattn").data(), 4)
+    self.assertAlmostEqual(85.6832, nodelist.getNode("/dataset1/data1/quality1/how/nomTXpower").data(), 4)
+    self.assertAlmostEqual(2.2, nodelist.getNode("/dataset1/data1/quality1/how/nsampleH").data(), 4)
+    self.assertAlmostEqual(2.3, nodelist.getNode("/dataset1/data1/quality1/how/nsampleV").data(), 4)
+    self.assertAlmostEqual(2200, nodelist.getNode("/dataset1/data1/quality1/how/melting_layer_top_A").data(), 4)
+    self.assertAlmostEqual(2300, nodelist.getNode("/dataset1/data1/quality1/how/melting_layer_bottom_A").data(), 4)
+    self.assertAlmostEqual(85.7310, nodelist.getNode("/dataset1/data1/quality1/how/peakpwr").data(), 4)
+    self.assertAlmostEqual(85.7194, nodelist.getNode("/dataset1/data1/quality1/how/avgpwr").data(), 4)
+
+  def test_write_vp_convertedHow_odim24(self):
+    vp = _verticalprofile.new()
+    vp.date="20100101"
+    vp.time="120000"
+    vp.source="PLC:1234"
+    vp.longitude = 10.0 * math.pi / 180.0
+    vp.latitude = 15.0 * math.pi / 180.0
+    vp.setLevels(10)
+    vp.height = 100.0
+    vp.interval = 5.0
+    vp.minheight = 10.0
+    vp.maxheight = 20.0
+    f1 = _ravefield.new()
+    f1.setData(numpy.zeros((10,1), numpy.uint8))
+    f1.addAttribute("what/quantity", "ff")
+    
+    f1.addAttribute("how/gasattn", 22.1)
+    f1.addAttribute("how/nomTXpower", 370.1008)
+    f1.addAttribute("how/nsampleH", 2.2)
+    f1.addAttribute("how/nsampleV", 2.3)
+    f1.addAttribute("how/melting_layer_top_A", 2.2)
+    f1.addAttribute("how/melting_layer_bottom_A", 2.3)
+    f1.addAttribute("how/peakpwr", 374.1967)
+    f1.addAttribute("how/avgpwr", 373.1986)
+    
+    vp.addField(f1)
+
+    obj = _raveio.new()
+    obj.object = vp
+    obj.filename = self.TEMPORARY_FILE2
+    obj.version = _raveio.RaveIO_ODIM_Version_2_4
+    obj.save()
+
+    # Verify written data
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE2)
+    nodelist.selectAll()
+    nodelist.fetch()
+    
+    self.assertAlmostEqual(0.0221, nodelist.getNode("/dataset1/data1/how/gasattn").data(), 4)
+    self.assertAlmostEqual(85.6832, nodelist.getNode("/dataset1/data1/how/nomTXpower").data(), 4)
+    self.assertAlmostEqual(2.2, nodelist.getNode("/dataset1/data1/how/nsampleH").data(), 4)
+    self.assertAlmostEqual(2.3, nodelist.getNode("/dataset1/data1/how/nsampleV").data(), 4)
+    self.assertAlmostEqual(2200, nodelist.getNode("/dataset1/data1/how/melting_layer_top_A").data(), 4)
+    self.assertAlmostEqual(2300, nodelist.getNode("/dataset1/data1/how/melting_layer_bottom_A").data(), 4)
+    self.assertAlmostEqual(85.7310, nodelist.getNode("/dataset1/data1/how/peakpwr").data(), 4)
+    self.assertAlmostEqual(85.7194, nodelist.getNode("/dataset1/data1/how/avgpwr").data(), 4)
+
+  def test_read_vp_convertedHow_odim24(self):
+    nodelist = _pyhl.nodelist()
+    self.addGroupNode(nodelist, "/what")
+    self.addGroupNode(nodelist, "/where")
+    self.addGroupNode(nodelist, "/how")
+
+    self.addGroupNode(nodelist, "/dataset1")
+    self.addGroupNode(nodelist, "/dataset1/what")
+    self.addGroupNode(nodelist, "/dataset1/how")
+    self.addGroupNode(nodelist, "/dataset1/data1")
+    self.addGroupNode(nodelist, "/dataset1/data1/how")
+    self.addGroupNode(nodelist, "/dataset1/data1/what")
+
+    self.addAttributeNode(nodelist, "/Conventions", "string", "ODIM_H5/V2_4")
+    self.addAttributeNode(nodelist, "/what/date", "string", "20100101")
+    self.addAttributeNode(nodelist, "/what/time", "string", "101500")
+    self.addAttributeNode(nodelist, "/what/source", "string", "PLC:123")
+    self.addAttributeNode(nodelist, "/what/object", "string", "VP")
+    self.addAttributeNode(nodelist, "/what/version", "string", "H5rad 2.3")
+
+    self.addAttributeNode(nodelist, "/where/height", "double", 100.0)
+    self.addAttributeNode(nodelist, "/where/lon", "double", 13.5)
+    self.addAttributeNode(nodelist, "/where/lat", "double", 61.0)
+    self.addAttributeNode(nodelist, "/where/interval", "double", 5)
+    self.addAttributeNode(nodelist, "/where/levels", "int", 10)
+    self.addAttributeNode(nodelist, "/where/minheight", "double", 10.0)
+    self.addAttributeNode(nodelist, "/where/maxheight", "double", 20.0)
+
+    self.addAttributeNode(nodelist, "/how/gasattn", "double", 0.0221)
+    self.addAttributeNode(nodelist, "/how/nomTXpower", "double", 85.6832)
+    self.addAttributeNode(nodelist, "/how/nsampleH", "double", 2.2)
+    self.addAttributeNode(nodelist, "/how/nsampleV", "double", 2.2)
+    self.addAttributeNode(nodelist, "/how/melting_layer_top_A", "double", 2200)
+    self.addAttributeNode(nodelist, "/how/melting_layer_bottom_A", "double", 2200)
+    self.addAttributeNode(nodelist, "/how/peakpwr", "double", 85.7310)
+    self.addAttributeNode(nodelist, "/how/avgpwr", "double", 85.7194)
+    
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/gasattn", "double", 0.0221)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/nomTXpower", "double", 85.6832)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/nsampleH", "double", 2.2)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/nsampleV", "double", 2.2)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/melting_layer_top_A", "double", 2200)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/melting_layer_bottom_A", "double", 2200)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/peakpwr", "double", 85.7310)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/avgpwr", "double", 85.7194)
+
+    
+    self.addAttributeNode(nodelist, "/dataset1/data1/what/quantity", "string", "ff")
+    dset = numpy.arange(10)
+    dset=numpy.array(dset.astype(numpy.uint8),numpy.uint8)
+    dset=numpy.reshape(dset,(10,1)).astype(numpy.uint8)    
+    self.addDatasetNode(nodelist, "/dataset1/data1/data", "uchar", (10,1), dset)
+    
+    nodelist.write(self.TEMPORARY_FILE, 6)
+    
+    rio = _raveio.open(self.TEMPORARY_FILE)
+
+    vp = rio.object    
+
+    self.assertAlmostEqual(22.1, vp.getAttribute("how/gasattn"), 4)
+    self.assertAlmostEqual(370.1008, vp.getAttribute("how/nomTXpower"), 4)
+    self.assertAlmostEqual(2.2, vp.getAttribute("how/nsampleH"), 4)
+    self.assertAlmostEqual(2.2, vp.getAttribute("how/nsampleV"), 4)
+    self.assertAlmostEqual(2.2, vp.getAttribute("how/melting_layer_top_A"), 4)
+    self.assertAlmostEqual(2.2, vp.getAttribute("how/melting_layer_bottom_A"), 4)
+    self.assertAlmostEqual(374.1967, vp.getAttribute("how/peakpwr"), 4)
+    self.assertAlmostEqual(373.1986, vp.getAttribute("how/avgpwr"), 4)
+
+    param = vp.getField("ff")
+    self.assertAlmostEqual(22.1, param.getAttribute("how/gasattn"), 4)
+    self.assertAlmostEqual(370.1008, param.getAttribute("how/nomTXpower"), 4)
+    self.assertAlmostEqual(2.2, param.getAttribute("how/nsampleH"), 4)
+    self.assertAlmostEqual(2.2, param.getAttribute("how/nsampleV"), 4)
+    self.assertAlmostEqual(2.2, param.getAttribute("how/melting_layer_top_A"), 4)
+    self.assertAlmostEqual(2.2, param.getAttribute("how/melting_layer_bottom_A"), 4)
+    self.assertAlmostEqual(374.1967, param.getAttribute("how/peakpwr"), 4)
+    self.assertAlmostEqual(373.1986, param.getAttribute("how/avgpwr"), 4)
+
+  def test_save_cartesian_24_howAttributes(self):
+    image = _cartesian.new() #XYZ
+    image.time = "100000"
+    image.date = "20100101"
+    image.objectType = _rave.Rave_ObjectType_IMAGE
+    image.source = "PLC:123,WIGOS:0-123-1-123456,ORG:82"
+    image.xscale = 2000.0
+    image.yscale = 2000.0
+    image.areaextent = (-240000.0, -240000.0, 240000.0, 240000.0)
+    image.projection = _projection.new("x","y","+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84")
+    image.product = _rave.Rave_ProductType_CAPPI
+    image.prodname = "My Product"
+    image.addAttribute("how/gasattn", 22.1)
+    image.addAttribute("how/nomTXpower", 370.1008)
+    image.addAttribute("how/TXpower", numpy.asarray([370.1008,371.1008,372.1008]))
+    image.addAttribute("how/nsampleH", 2.2)
+    image.addAttribute("how/nsampleV", 2.3)
+    image.addAttribute("how/melting_layer_top_A", 2.2)
+    image.addAttribute("how/melting_layer_bottom_A", 2.3)
+    image.addAttribute("how/peakpwr", 374.1967)
+    image.addAttribute("how/avgpwr", 373.1986)
+    
+    param = _cartesianparam.new()
+    param.quantity = "DBZH"
+    param.gain = 1.0
+    param.offset = 0.0
+    param.nodata = 255.0
+    param.undetect = 0.0
+    data = numpy.zeros((240,240),numpy.uint8)
+    param.setData(data)
+    param.addAttribute("how/gasattn", 22.1)
+    param.addAttribute("how/nomTXpower", 370.1008)
+    param.addAttribute("how/nsampleH", 2.2)
+    param.addAttribute("how/nsampleV", 2.3)
+    param.addAttribute("how/melting_layer_top_A", 2.2)
+    param.addAttribute("how/melting_layer_bottom_A", 2.3)
+    param.addAttribute("how/peakpwr", 374.1967)
+    param.addAttribute("how/avgpwr", 373.1986)
+
+    image.addParameter(param)
+
+    ios = _raveio.new()
+    ios.object = image
+    ios.filename = self.TEMPORARY_FILE
+    ios.save()
+
+    # Verify result
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+
+    txPower = nodelist.getNode("/how/TXpower").data()
+    self.assertAlmostEqual(85.6832, txPower[0], 4)
+    self.assertAlmostEqual(85.6949, txPower[1], 4)
+    self.assertAlmostEqual(85.7066, txPower[2], 4)
+    
+    self.assertAlmostEqual(0.0221, nodelist.getNode("/how/gasattn").data(), 4)
+    self.assertAlmostEqual(85.6832, nodelist.getNode("/how/nomTXpower").data(), 4)
+    self.assertAlmostEqual(2.2, nodelist.getNode("/how/nsampleH").data(), 4)
+    self.assertAlmostEqual(2.3, nodelist.getNode("/how/nsampleV").data(), 4)
+    self.assertAlmostEqual(2200, nodelist.getNode("/how/melting_layer_top_A").data(), 4)
+    self.assertAlmostEqual(2300, nodelist.getNode("/how/melting_layer_bottom_A").data(), 4)
+    self.assertAlmostEqual(85.7310, nodelist.getNode("/how/peakpwr").data(), 4)
+    self.assertAlmostEqual(85.7194, nodelist.getNode("/how/avgpwr").data(), 4)    
+
+    self.assertAlmostEqual(0.0221, nodelist.getNode("/dataset1/data1/how/gasattn").data(), 4)
+    self.assertAlmostEqual(85.6832, nodelist.getNode("/dataset1/data1/how/nomTXpower").data(), 4)
+    self.assertAlmostEqual(2.2, nodelist.getNode("/dataset1/data1/how/nsampleH").data(), 4)
+    self.assertAlmostEqual(2.3, nodelist.getNode("/dataset1/data1/how/nsampleV").data(), 4)
+    self.assertAlmostEqual(2200, nodelist.getNode("/dataset1/data1/how/melting_layer_top_A").data(), 4)
+    self.assertAlmostEqual(2300, nodelist.getNode("/dataset1/data1/how/melting_layer_bottom_A").data(), 4)
+    self.assertAlmostEqual(85.7310, nodelist.getNode("/dataset1/data1/how/peakpwr").data(), 4)
+    self.assertAlmostEqual(85.7194, nodelist.getNode("/dataset1/data1/how/avgpwr").data(), 4)    
+
+  def test_save_cartesian_volume_24_howAttributes(self):
+    vol = _cartesianvolume.new()
+    vol.time = "100000"
+    vol.date = "20100101"
+    vol.objectType = _rave.Rave_ObjectType_CVOL
+    vol.source = "PLC:123,WIGOS:0-123-1-123456,ORG:82"
+    
+    image = _cartesian.new() #XYZ
+    image.time = "100000"
+    image.date = "20100101"
+    image.objectType = _rave.Rave_ObjectType_IMAGE
+    image.source = "PLC:123,WIGOS:0-123-1-123456,ORG:82"
+    image.xscale = 2000.0
+    image.yscale = 2000.0
+    image.areaextent = (-240000.0, -240000.0, 240000.0, 240000.0)
+    image.projection = _projection.new("x","y","+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84")
+    image.product = _rave.Rave_ProductType_CAPPI
+    image.prodname = "My Product"
+    image.addAttribute("how/gasattn", 22.1)
+    image.addAttribute("how/nomTXpower", 370.1008)
+    image.addAttribute("how/TXpower", numpy.asarray([370.1008,371.1008,372.1008]))
+    image.addAttribute("how/nsampleH", 2.2)
+    image.addAttribute("how/nsampleV", 2.3)
+    image.addAttribute("how/melting_layer_top_A", 2.2)
+    image.addAttribute("how/melting_layer_bottom_A", 2.3)
+    image.addAttribute("how/peakpwr", 374.1967)
+    image.addAttribute("how/avgpwr", 373.1986)
+    
+    vol.addImage(image)
+    
+    param = _cartesianparam.new()
+    param.quantity = "DBZH"
+    param.gain = 1.0
+    param.offset = 0.0
+    param.nodata = 255.0
+    param.undetect = 0.0
+    data = numpy.zeros((240,240),numpy.uint8)
+    param.setData(data)
+    param.addAttribute("how/gasattn", 22.1)
+    param.addAttribute("how/nomTXpower", 370.1008)
+    param.addAttribute("how/nsampleH", 2.2)
+    param.addAttribute("how/nsampleV", 2.3)
+    param.addAttribute("how/melting_layer_top_A", 2.2)
+    param.addAttribute("how/melting_layer_bottom_A", 2.3)
+    param.addAttribute("how/peakpwr", 374.1967)
+    param.addAttribute("how/avgpwr", 373.1986)
+
+    image.addParameter(param)
+
+    ios = _raveio.new()
+    ios.object = vol
+    ios.filename = self.TEMPORARY_FILE
+    ios.save()
+
+    # Verify result
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+
+    txPower = nodelist.getNode("/dataset1/how/TXpower").data()
+    self.assertAlmostEqual(85.6832, txPower[0], 4)
+    self.assertAlmostEqual(85.6949, txPower[1], 4)
+    self.assertAlmostEqual(85.7066, txPower[2], 4)
+    
+    self.assertAlmostEqual(0.0221, nodelist.getNode("/dataset1/how/gasattn").data(), 4)
+    self.assertAlmostEqual(85.6832, nodelist.getNode("/dataset1/how/nomTXpower").data(), 4)
+    self.assertAlmostEqual(2.2, nodelist.getNode("/dataset1/how/nsampleH").data(), 4)
+    self.assertAlmostEqual(2.3, nodelist.getNode("/dataset1/how/nsampleV").data(), 4)
+    self.assertAlmostEqual(2200, nodelist.getNode("/dataset1/how/melting_layer_top_A").data(), 4)
+    self.assertAlmostEqual(2300, nodelist.getNode("/dataset1/how/melting_layer_bottom_A").data(), 4)
+    self.assertAlmostEqual(85.7310, nodelist.getNode("/dataset1/how/peakpwr").data(), 4)
+    self.assertAlmostEqual(85.7194, nodelist.getNode("/dataset1/how/avgpwr").data(), 4)    
+
+    self.assertAlmostEqual(0.0221, nodelist.getNode("/dataset1/data1/how/gasattn").data(), 4)
+    self.assertAlmostEqual(85.6832, nodelist.getNode("/dataset1/data1/how/nomTXpower").data(), 4)
+    self.assertAlmostEqual(2.2, nodelist.getNode("/dataset1/data1/how/nsampleH").data(), 4)
+    self.assertAlmostEqual(2.3, nodelist.getNode("/dataset1/data1/how/nsampleV").data(), 4)
+    self.assertAlmostEqual(2200, nodelist.getNode("/dataset1/data1/how/melting_layer_top_A").data(), 4)
+    self.assertAlmostEqual(2300, nodelist.getNode("/dataset1/data1/how/melting_layer_bottom_A").data(), 4)
+    self.assertAlmostEqual(85.7310, nodelist.getNode("/dataset1/data1/how/peakpwr").data(), 4)
+    self.assertAlmostEqual(85.7194, nodelist.getNode("/dataset1/data1/how/avgpwr").data(), 4)    
+
+  def testReadAndConvertV24_IMAGE(self):
+    nodelist = _pyhl.nodelist()
+    self.addGroupNode(nodelist, "/what")
+    self.addGroupNode(nodelist, "/where")
+    self.addGroupNode(nodelist, "/how")
+
+    self.addGroupNode(nodelist, "/dataset1")
+    self.addGroupNode(nodelist, "/dataset1/what")
+    self.addGroupNode(nodelist, "/dataset1/how")
+    self.addGroupNode(nodelist, "/dataset1/data1")
+    self.addGroupNode(nodelist, "/dataset1/data1/how")
+    self.addGroupNode(nodelist, "/dataset1/data1/what")
+
+    self.addAttributeNode(nodelist, "/Conventions", "string", "ODIM_H5/V2_4")
+    self.addAttributeNode(nodelist, "/what/date", "string", "20100101")
+    self.addAttributeNode(nodelist, "/what/time", "string", "101500")
+    self.addAttributeNode(nodelist, "/what/source", "string", "PLC:123")
+    self.addAttributeNode(nodelist, "/what/object", "string", "IMAGE")
+    self.addAttributeNode(nodelist, "/what/version", "string", "H5rad 2.1")
+
+    self.addAttributeNode(nodelist, "/where/LL_lat", "double", 54.1539)
+    self.addAttributeNode(nodelist, "/where/LL_lon", "double", 9.1714)
+    self.addAttributeNode(nodelist, "/where/LR_lat", "double", 54.1539)
+    self.addAttributeNode(nodelist, "/where/LR_lon", "double", 16.5374)
+    self.addAttributeNode(nodelist, "/where/UL_lat", "double", 58.4587)
+    self.addAttributeNode(nodelist, "/where/UL_lon", "double", 8.73067)
+    self.addAttributeNode(nodelist, "/where/UR_lat", "double", 58.4587)
+    self.addAttributeNode(nodelist, "/where/UR_lon", "double", 16.9781)
+    self.addAttributeNode(nodelist, "/where/projdef", "string", "+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84")
+    self.addAttributeNode(nodelist, "/where/xscale", "double", 2000.0)
+    self.addAttributeNode(nodelist, "/where/xsize", "int", 240)
+    self.addAttributeNode(nodelist, "/where/yscale", "double", 2000.0)
+    self.addAttributeNode(nodelist, "/where/ysize", "int", 240)
+
+    self.addAttributeNode(nodelist, "/how/gasattn", "double", 0.0231)
+    self.addAttributeNode(nodelist, "/how/nomTXpower", "double", 85.6832)
+    self.addAttributeNode(nodelist, "/how/nsampleH", "double", 23.2)
+    self.addAttributeNode(nodelist, "/how/nsampleV", "double", 23.2)
+    self.addAttributeNode(nodelist, "/how/melting_layer_top_A", "double", 23200)
+    self.addAttributeNode(nodelist, "/how/melting_layer_bottom_A", "double", 23200)
+    self.addAttributeNode(nodelist, "/how/peakpwr", "double", 85.7322)
+    self.addAttributeNode(nodelist, "/how/avgpwr", "double", 85.7206)
+
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/gasattn", "double", 0.0231)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/nomTXpower", "double", 85.6832)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/nsampleH", "double", 23.2)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/nsampleV", "double", 23.2)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/melting_layer_top_A", "double", 23200)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/melting_layer_bottom_A", "double", 23200)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/peakpwr", "double", 85.7322)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/avgpwr", "double", 85.7206)
+
+    dset = numpy.arange(100)
+    dset=numpy.array(dset.astype(numpy.uint8),numpy.uint8)
+    dset=numpy.reshape(dset,(10,10)).astype(numpy.uint8)
+
+    self.addDatasetNode(nodelist, "/dataset1/data1/data", "uchar", (10,10), dset)
+    self.addAttributeNode(nodelist, "/dataset1/data1/what/quantity", "string", "DBZH")
+
+    nodelist.write(self.TEMPORARY_FILE, 6)
+    
+    rio = _raveio.open(self.TEMPORARY_FILE)
+    image = rio.object
+    
+    self.assertAlmostEqual(23.1, image.getAttribute("how/gasattn"), 4)
+    self.assertAlmostEqual(370.1008, image.getAttribute("how/nomTXpower"), 4)
+    self.assertAlmostEqual(23.2, image.getAttribute("how/nsampleH"), 4)
+    self.assertAlmostEqual(23.2, image.getAttribute("how/nsampleV"), 4)
+    self.assertAlmostEqual(23.2, image.getAttribute("how/melting_layer_top_A"), 4)
+    self.assertAlmostEqual(23.2, image.getAttribute("how/melting_layer_bottom_A"), 4)
+    self.assertAlmostEqual(374.3001, image.getAttribute("how/peakpwr"), 4)
+    self.assertAlmostEqual(373.3017, image.getAttribute("how/avgpwr"), 4)
+    
+    param = image.getParameter("DBZH")
+    self.assertAlmostEqual(23.1, param.getAttribute("how/gasattn"), 4)
+    self.assertAlmostEqual(370.1008, param.getAttribute("how/nomTXpower"), 4)
+    self.assertAlmostEqual(23.2, param.getAttribute("how/nsampleH"), 4)
+    self.assertAlmostEqual(23.2, param.getAttribute("how/nsampleV"), 4)
+    self.assertAlmostEqual(23.2, param.getAttribute("how/melting_layer_top_A"), 4)
+    self.assertAlmostEqual(23.2, param.getAttribute("how/melting_layer_bottom_A"), 4)
+    self.assertAlmostEqual(374.3001, param.getAttribute("how/peakpwr"), 4)
+    self.assertAlmostEqual(373.3017, param.getAttribute("how/avgpwr"), 4)
+
+  def testReadAndConvertV24_COMP(self):
+    nodelist = _pyhl.nodelist()
+    self.addGroupNode(nodelist, "/what")
+    self.addGroupNode(nodelist, "/where")
+    self.addGroupNode(nodelist, "/how")
+
+    self.addGroupNode(nodelist, "/dataset1")
+    self.addGroupNode(nodelist, "/dataset1/what")
+    self.addGroupNode(nodelist, "/dataset1/how")
+    self.addGroupNode(nodelist, "/dataset1/data1")
+    self.addGroupNode(nodelist, "/dataset1/data1/how")
+    self.addGroupNode(nodelist, "/dataset1/data1/what")
+
+    self.addAttributeNode(nodelist, "/Conventions", "string", "ODIM_H5/V2_4")
+    self.addAttributeNode(nodelist, "/what/date", "string", "20100101")
+    self.addAttributeNode(nodelist, "/what/time", "string", "101500")
+    self.addAttributeNode(nodelist, "/what/source", "string", "PLC:123")
+    self.addAttributeNode(nodelist, "/what/object", "string", "CVOL")
+    self.addAttributeNode(nodelist, "/what/version", "string", "H5rad 2.1")
+
+    self.addAttributeNode(nodelist, "/where/LL_lat", "double", 54.1539)
+    self.addAttributeNode(nodelist, "/where/LL_lon", "double", 9.1714)
+    self.addAttributeNode(nodelist, "/where/LR_lat", "double", 54.1539)
+    self.addAttributeNode(nodelist, "/where/LR_lon", "double", 16.5374)
+    self.addAttributeNode(nodelist, "/where/UL_lat", "double", 58.4587)
+    self.addAttributeNode(nodelist, "/where/UL_lon", "double", 8.73067)
+    self.addAttributeNode(nodelist, "/where/UR_lat", "double", 58.4587)
+    self.addAttributeNode(nodelist, "/where/UR_lon", "double", 16.9781)
+    self.addAttributeNode(nodelist, "/where/projdef", "string", "+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84")
+    self.addAttributeNode(nodelist, "/where/xscale", "double", 2000.0)
+    self.addAttributeNode(nodelist, "/where/xsize", "int", 240)
+    self.addAttributeNode(nodelist, "/where/yscale", "double", 2000.0)
+    self.addAttributeNode(nodelist, "/where/ysize", "int", 240)
+
+    self.addAttributeNode(nodelist, "/how/gasattn", "double", 0.0231)
+    self.addAttributeNode(nodelist, "/how/nomTXpower", "double", 85.6832)
+    self.addAttributeNode(nodelist, "/how/nsampleH", "double", 23.2)
+    self.addAttributeNode(nodelist, "/how/nsampleV", "double", 23.2)
+    self.addAttributeNode(nodelist, "/how/melting_layer_top_A", "double", 23200)
+    self.addAttributeNode(nodelist, "/how/melting_layer_bottom_A", "double", 23200)
+    self.addAttributeNode(nodelist, "/how/peakpwr", "double", 85.7322)
+    self.addAttributeNode(nodelist, "/how/avgpwr", "double", 85.7206)
+
+    self.addAttributeNode(nodelist, "/dataset1/how/gasattn", "double", 0.0231)
+    self.addAttributeNode(nodelist, "/dataset1/how/nomTXpower", "double", 85.6832)
+    self.addAttributeNode(nodelist, "/dataset1/how/nsampleH", "double", 23.2)
+    self.addAttributeNode(nodelist, "/dataset1/how/nsampleV", "double", 23.2)
+    self.addAttributeNode(nodelist, "/dataset1/how/melting_layer_top_A", "double", 23200)
+    self.addAttributeNode(nodelist, "/dataset1/how/melting_layer_bottom_A", "double", 23200)
+    self.addAttributeNode(nodelist, "/dataset1/how/peakpwr", "double", 85.7322)
+    self.addAttributeNode(nodelist, "/dataset1/how/avgpwr", "double", 85.7206)
+    
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/gasattn", "double", 0.0231)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/nomTXpower", "double", 85.6832)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/nsampleH", "double", 23.2)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/nsampleV", "double", 23.2)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/melting_layer_top_A", "double", 23200)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/melting_layer_bottom_A", "double", 23200)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/peakpwr", "double", 85.7322)
+    self.addAttributeNode(nodelist, "/dataset1/data1/how/avgpwr", "double", 85.7206)
+
+    dset = numpy.arange(100)
+    dset=numpy.array(dset.astype(numpy.uint8),numpy.uint8)
+    dset=numpy.reshape(dset,(10,10)).astype(numpy.uint8)
+
+    self.addDatasetNode(nodelist, "/dataset1/data1/data", "uchar", (10,10), dset)
+    self.addAttributeNode(nodelist, "/dataset1/data1/what/quantity", "string", "DBZH")
+
+    nodelist.write(self.TEMPORARY_FILE, 6)
+    
+    rio = _raveio.open(self.TEMPORARY_FILE)
+    cvol = rio.object
+    
+    self.assertAlmostEqual(23.1, cvol.getAttribute("how/gasattn"), 4)
+    self.assertAlmostEqual(370.1008, cvol.getAttribute("how/nomTXpower"), 4)
+    self.assertAlmostEqual(23.2, cvol.getAttribute("how/nsampleH"), 4)
+    self.assertAlmostEqual(23.2, cvol.getAttribute("how/nsampleV"), 4)
+    self.assertAlmostEqual(23.2, cvol.getAttribute("how/melting_layer_top_A"), 4)
+    self.assertAlmostEqual(23.2, cvol.getAttribute("how/melting_layer_bottom_A"), 4)
+    self.assertAlmostEqual(374.3001, cvol.getAttribute("how/peakpwr"), 4)
+    self.assertAlmostEqual(373.3017, cvol.getAttribute("how/avgpwr"), 4)
+    
+    img = cvol.getImage(0)
+    self.assertAlmostEqual(23.1, img.getAttribute("how/gasattn"), 4)
+    self.assertAlmostEqual(370.1008, img.getAttribute("how/nomTXpower"), 4)
+    self.assertAlmostEqual(23.2, img.getAttribute("how/nsampleH"), 4)
+    self.assertAlmostEqual(23.2, img.getAttribute("how/nsampleV"), 4)
+    self.assertAlmostEqual(23.2, img.getAttribute("how/melting_layer_top_A"), 4)
+    self.assertAlmostEqual(23.2, img.getAttribute("how/melting_layer_bottom_A"), 4)
+    self.assertAlmostEqual(374.3001, img.getAttribute("how/peakpwr"), 4)
+    self.assertAlmostEqual(373.3017, img.getAttribute("how/avgpwr"), 4)
+    
+    param = img.getParameter("DBZH")
+    self.assertAlmostEqual(23.1, param.getAttribute("how/gasattn"), 4)
+    self.assertAlmostEqual(370.1008, param.getAttribute("how/nomTXpower"), 4)
+    self.assertAlmostEqual(23.2, param.getAttribute("how/nsampleH"), 4)
+    self.assertAlmostEqual(23.2, param.getAttribute("how/nsampleV"), 4)
+    self.assertAlmostEqual(23.2, param.getAttribute("how/melting_layer_top_A"), 4)
+    self.assertAlmostEqual(23.2, param.getAttribute("how/melting_layer_bottom_A"), 4)
+    self.assertAlmostEqual(374.3001, param.getAttribute("how/peakpwr"), 4)
+    self.assertAlmostEqual(373.3017, param.getAttribute("how/avgpwr"), 4)
+    
   def test_read_22_write_23_scan(self):
     rio = _raveio.open(self.FIXTURE_SEHEM_SCAN_0_5)
     self.assertEqual(_raveio.RaveIO_ODIM_Version_2_2, rio.read_version)
