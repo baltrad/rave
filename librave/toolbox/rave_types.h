@@ -38,6 +38,10 @@ typedef enum RaveIO_ODIM_Version {
   RaveIO_ODIM_Version_2_4 = 4,        /**< ODIM 2.4, The default version */
 } RaveIO_ODIM_Version;
 
+#ifndef RAVEIO_API_ODIM_VERSION
+#define RAVEIO_API_ODIM_VERSION RaveIO_ODIM_Version_2_3
+#endif
+
 /**
  * The /what/version in a ODIM HDF5 file
  */

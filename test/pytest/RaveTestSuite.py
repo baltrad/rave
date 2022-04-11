@@ -44,6 +44,7 @@ from PyCartesianVolumeTest import *
 from PyVerticalProfileTest import *
 from PyRaveFieldTest import *
 from PyRaveData2DTest import *
+from PyAttributeTableTest import *
 from PyTransformTest import *
 
 from PyProjectionTest import *

@@ -101,7 +101,6 @@ static int VpOdimIOInternal_loadRootAttribute(void* object, RaveAttribute_t* att
       goto done;
     }
     result = VerticalProfile_setDate(vp, value);
-    
   } else if (strcasecmp("what/time", name)==0) {
     char* value = NULL;
     if (!RaveAttribute_getString(attribute, &value)) {
@@ -109,8 +108,6 @@ static int VpOdimIOInternal_loadRootAttribute(void* object, RaveAttribute_t* att
       goto done;
     }
     result = VerticalProfile_setTime(vp, value);
-    
-    
   } else if (strcasecmp("what/source", name)==0) {
     char* value = NULL;
     if (!RaveAttribute_getString(attribute, &value)) {
@@ -118,8 +115,6 @@ static int VpOdimIOInternal_loadRootAttribute(void* object, RaveAttribute_t* att
       goto done;
     }
     result = VerticalProfile_setSource(vp, value);
-    
-      
   } else if (strcasecmp("where/lon", name)==0) {
     double value = 0.0;
     if (!(result = RaveAttribute_getDouble(attribute, &value))) {
@@ -127,8 +122,6 @@ static int VpOdimIOInternal_loadRootAttribute(void* object, RaveAttribute_t* att
       goto done;
     }
     VerticalProfile_setLongitude(vp, value * M_PI/180.0);
-    
-    
   } else if (strcasecmp("where/lat", name)==0) {
     double value = 0.0;
     if (!(result = RaveAttribute_getDouble(attribute, &value))) {
@@ -136,8 +129,6 @@ static int VpOdimIOInternal_loadRootAttribute(void* object, RaveAttribute_t* att
       goto done;
     }
     VerticalProfile_setLatitude(vp, value * M_PI/180.0);
-    
-    
   } else if (strcasecmp("where/height", name)==0) {
     double value = 0.0;
     if (!(result = RaveAttribute_getDouble(attribute, &value))) {
@@ -145,8 +136,6 @@ static int VpOdimIOInternal_loadRootAttribute(void* object, RaveAttribute_t* att
       goto done;
     }
     VerticalProfile_setHeight(vp, value);
-    
-    
   } else if (strcasecmp("where/levels", name)==0) {
     long value = 0;
     if (!(result = RaveAttribute_getLong(attribute, &value))) {
@@ -154,8 +143,6 @@ static int VpOdimIOInternal_loadRootAttribute(void* object, RaveAttribute_t* att
       goto done;
     }
     VerticalProfile_setLevels(vp, value);
-    
-    
   } else if (strcasecmp("where/interval", name)==0) {
     double value = 0.0;
     if (!(result = RaveAttribute_getDouble(attribute, &value))) {
@@ -163,7 +150,6 @@ static int VpOdimIOInternal_loadRootAttribute(void* object, RaveAttribute_t* att
       goto done;
     }
     VerticalProfile_setInterval(vp, value);
-    
   } else if (strcasecmp("where/minheight", name)==0) {
     double value = 0.0;
     if (!(result = RaveAttribute_getDouble(attribute, &value))) {
@@ -179,12 +165,10 @@ static int VpOdimIOInternal_loadRootAttribute(void* object, RaveAttribute_t* att
       goto done;
     }
     VerticalProfile_setMaxheight(vp, value);
-           
   } else if (strcasecmp("what/object", name) == 0) {
     result = 1;
   } else {
-    OdimIoUtilities_convertHowAttributeToInternalRave(name, version, attribute);
-    VerticalProfile_addAttribute(vp, attribute);
+    VerticalProfile_addAttributeVersion(vp, attribute, version);
     result = 1;
   }
 
@@ -215,7 +199,6 @@ static int VpOdimIOInternal_loadDsAttribute(void* object, RaveAttribute_t* attri
   
   /* The following functions added by Ulf to be able to access the new
      attributes starttime, endtime, startdate, enddate and product */
-  
   if (name != NULL) {
     if (strcasecmp("what/starttime", name)==0) {
       char* value = NULL;
@@ -264,8 +247,7 @@ static int VpOdimIOInternal_loadDsAttribute(void* object, RaveAttribute_t* attri
       }
       result = 1;
     } else {
-      OdimIoUtilities_convertHowAttributeToInternalRave(name, version, attribute);
-      VerticalProfile_addAttribute(vp, attribute);
+      VerticalProfile_addAttributeVersion(vp, attribute, version);
       result = 1;
     }
   }
@@ -370,11 +352,10 @@ static int VpOdimIOInternal_addParameter(VpOdimIO_t* self, RaveField_t* field, H
       goto done;
     }
   }
-  if ((attributes = RaveField_getAttributeValues(field)) == NULL) {
+  if ((attributes = RaveField_getAttributeValuesVersion(field, self->version)) == NULL) {
     goto done;
   }
 
-  OdimIoUtilities_convertHowAttributesFromInternalRave(attributes, self->version);
   if (!RaveHL_addAttributes(nodelist, attributes, name)) {
     goto done;
   }
@@ -539,7 +520,7 @@ int VpOdimIO_fill(VpOdimIO_t* self, VerticalProfile_t* vp, HL_NodeList* nodelist
     }
   }
 
-  attributes = VerticalProfile_getAttributeValues(vp);
+  attributes = VerticalProfile_getAttributeValuesVersion(vp, self->version);
   if (attributes != NULL) {
     const char* objectType = RaveTypes_getStringFromObjectType(Rave_ObjectType_VP);
     if (!RaveUtilities_addStringAttributeToList(attributes, "what/object", objectType) ||
@@ -570,13 +551,12 @@ int VpOdimIO_fill(VpOdimIO_t* self, VerticalProfile_t* vp, HL_NodeList* nodelist
       !RaveUtilities_replaceDoubleAttributeInList(attributes, "where/lon", VerticalProfile_getLongitude(vp)*180.0/M_PI)) {
     goto done;
   }
+
   if (!VerticalProfile_hasAttribute(vp, "how/software")) {
     if (!RaveUtilities_addStringAttributeToList(attributes, "how/software", "BALTRAD")) {
       RAVE_ERROR0("Failed to add how/software to attributes");
     }
   }
-
-  OdimIoUtilities_convertHowAttributesFromInternalRave(attributes, self->version);
 
   if (attributes == NULL || !RaveHL_addAttributes(nodelist, attributes, "")) {
     goto done;
@@ -603,8 +583,6 @@ int VpOdimIO_fill(VpOdimIO_t* self, VerticalProfile_t* vp, HL_NodeList* nodelist
       }
     }
   }
-
-  OdimIoUtilities_convertHowAttributesFromInternalRave(attributes, self->version);
 
   if (!RaveHL_addAttributes(nodelist, attributes, "/dataset1")) {
     goto done;

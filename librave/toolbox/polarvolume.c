@@ -30,6 +30,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_alloc.h"
 #include "raveobject_hashtable.h"
 #include "rave_utilities.h"
+#include "rave_attribute_table.h"
+
 #include <string.h>
 #include <float.h>
 #include <math.h>
@@ -48,7 +50,7 @@ struct _PolarVolume_t {
   PolarNavigator_t* navigator; /**< a polar navigator */
   RaveObjectList_t* scans;  /**< the list of scans */
   RaveDateTime_t* datetime; /**< the date / time */
-  RaveObjectHashTable_t* attrs; /**< the attributes */
+  RaveAttributeTable_t* attrs; /**< the attributes */
   char* source;             /**< the source string */
   char* paramname;          /**< the default parameter */
   double beamwH;            /**< the horizontal beamwidth, default bw is 1.0 * M_PI/180.0 */
@@ -70,7 +72,7 @@ static int PolarVolume_constructor(RaveCoreObject* obj)
   this->paramname = NULL;
   this->beamwH = 1.0 * M_PI/180.0;
   this->beamwV = 1.0 * M_PI/180.0;
-  this->attrs = RAVE_OBJECT_NEW(&RaveObjectHashTable_TYPE);
+  this->attrs = RAVE_OBJECT_NEW(&RaveAttributeTable_TYPE);
   this->datetime = RAVE_OBJECT_NEW(&RaveDateTime_TYPE);
 
   // Always initialize to default projection for lon/lat calculations
@@ -986,8 +988,14 @@ int PolarVolume_isTransformable(PolarVolume_t* pvol)
   return result;
 }
 
-int PolarVolume_addAttribute(PolarVolume_t* pvol,
-  RaveAttribute_t* attribute)
+int PolarVolume_addAttribute(PolarVolume_t* pvol, RaveAttribute_t* attribute)
+{
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
+  return PolarVolume_addAttributeVersion(pvol, attribute, RAVEIO_API_ODIM_VERSION);
+}
+
+int PolarVolume_addAttributeVersion(PolarVolume_t* pvol,
+  RaveAttribute_t* attribute, RaveIO_ODIM_Version version)
 {
   const char* name = NULL;
   char* aname = NULL;
@@ -1004,7 +1012,7 @@ int PolarVolume_addAttribute(PolarVolume_t* pvol,
     }
     if ((strcasecmp("how", gname)==0 && RaveAttributeHelp_validateHowGroupAttributeName(gname, aname)) ||
         ((strcasecmp("what", gname)==0 || strcasecmp("where", gname)==0) && strchr(aname, '/') == NULL)) {
-      result = RaveObjectHashTable_put(pvol->attrs, name, (RaveCoreObject*)attribute);
+      result = RaveAttributeTable_addAttributeVersion(pvol->attrs, attribute, version, NULL);
     }
   }
 
@@ -1014,15 +1022,20 @@ done:
   return result;
 }
 
-RaveAttribute_t* PolarVolume_getAttribute(PolarVolume_t* pvol,
-  const char* name)
+RaveAttribute_t* PolarVolume_getAttribute(PolarVolume_t* pvol, const char* name)
+{
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
+  return PolarVolume_getAttributeVersion(pvol, name, RAVEIO_API_ODIM_VERSION);
+}
+
+RaveAttribute_t* PolarVolume_getAttributeVersion(PolarVolume_t* pvol, const char* name, RaveIO_ODIM_Version version)
 {
   RAVE_ASSERT((pvol != NULL), "pvol == NULL");
   if (name == NULL) {
     RAVE_ERROR0("Trying to get an attribute with NULL name");
     return NULL;
   }
-  return (RaveAttribute_t*)RaveObjectHashTable_get(pvol->attrs, name);
+  return RaveAttributeTable_getAttributeVersion(pvol->attrs, name, version);
 }
 
 void PolarVolume_removeAttribute(PolarVolume_t* pvol, const char* attrname)
@@ -1040,7 +1053,7 @@ void PolarVolume_removeAttribute(PolarVolume_t* pvol, const char* attrname)
         RAVE_ERROR1("Not possible to validate how/group attribute name %s", attrname);
         goto done;
       }
-      RaveCoreObject* attr = RaveObjectHashTable_remove(pvol->attrs, attrname);
+      RaveAttribute_t* attr = RaveAttributeTable_removeAttribute(pvol->attrs, attrname);
       RAVE_OBJECT_RELEASE(attr);
     }
   }
@@ -1053,36 +1066,31 @@ done:
 RaveList_t* PolarVolume_getAttributeNames(PolarVolume_t* pvol)
 {
   RAVE_ASSERT((pvol != NULL), "pvol == NULL");
-  return RaveObjectHashTable_keys(pvol->attrs);
+  return PolarVolume_getAttributeNamesVersion(pvol, RAVEIO_API_ODIM_VERSION);
+}
+
+RaveList_t* PolarVolume_getAttributeNamesVersion(PolarVolume_t* pvol, RaveIO_ODIM_Version version)
+{
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
+  return RaveAttributeTable_getAttributeNamesVersion(pvol->attrs, version);
 }
 
 int PolarVolume_hasAttribute(PolarVolume_t* pvol, const char* name)
 {
   RAVE_ASSERT((pvol != NULL), "pvol == NULL");
-  return RaveObjectHashTable_exists(pvol->attrs, name);
+  return RaveAttributeTable_hasAttribute(pvol->attrs, name);
 }
 
 RaveObjectList_t* PolarVolume_getAttributeValues(PolarVolume_t* pvol)
 {
-  RaveObjectList_t* result = NULL;
-  RaveObjectList_t* tableattrs = NULL;
-
   RAVE_ASSERT((pvol != NULL), "pvol == NULL");
-  tableattrs = RaveObjectHashTable_values(pvol->attrs);
-  if (tableattrs == NULL) {
-    goto error;
-  }
-  result = RAVE_OBJECT_CLONE(tableattrs);
-  if (result == NULL) {
-    goto error;
-  }
+  return PolarVolume_getAttributeValuesVersion(pvol, RAVEIO_API_ODIM_VERSION);
+}
 
-  RAVE_OBJECT_RELEASE(tableattrs);
-  return result;
-error:
-  RAVE_OBJECT_RELEASE(result);
-  RAVE_OBJECT_RELEASE(tableattrs);
-  return NULL;
+RaveObjectList_t* PolarVolume_getAttributeValuesVersion(PolarVolume_t* pvol, RaveIO_ODIM_Version version)
+{
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
+  return RaveAttributeTable_getValuesVersion(pvol->attrs, version);
 }
 
 int PolarVolume_isValid(PolarVolume_t* pvol)

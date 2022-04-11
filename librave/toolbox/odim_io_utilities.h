@@ -30,6 +30,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_object.h"
 #include "rave_types.h"
 #include "raveobject_list.h"
+#include "raveobject_hashtable.h"
 #include "hlhdf.h"
 #include <stdarg.h>
 
@@ -46,33 +47,24 @@ typedef struct OdimIoUtilityArg {
 } OdimIoUtilityArg;
 
 /**
- * Converts the data in the rave attribute if required to be compliant with the actual version.
- * This means that if any how attribute has got a different unit, then it will be translated into the internally
- * supported unit
- * @param[in] attrname - name of the attribute
- * @param[in] origversion - version of read file
- * @param[in] inattr - the attribute with data. Internal value will be modified if required-
- * @returns 1 on success
+ * Converts the gain and offset so that quantity is adjusted for ODIM version to be written.
+ * @param[in] quantity - the quantity that is affected
+ * @param[in] version - ODIM version that should be written
+ * @param[in,out] gain - the gain. Will be adjusted according to needs
+ * @param[in,out] offset - the offset. Will be adjusted according to needs
+ * @return 1 on success
  */
-int OdimIoUtilities_convertHowAttributeToInternalRave(const char* attrname, RaveIO_ODIM_Version origversion, RaveAttribute_t* inattr);
+int OdimIoUtilities_convertGainOffsetFromInternalRave(const char* quantity, RaveIO_ODIM_Version version, double* gain, double* offset);
 
 /**
- * Converts the data unit in the rave attribute from internal rave to output version.
- * This means that if any how attribute has got a different unit, then it will be translated into the outversion unit
- * @param[in] attrname - name of the attribute
- * @param[in] outversion - version of file to be written
- * @param[in] inattr - the attribute with data. Internal value will be modified if required-
- * @returns 1 on success
+ * Converts the gain and offset so that quantity is adjusted for the internally used quantity.
+ * @param[in] quantity - the quantity that is affected
+ * @param[in] version - ODIM version that should be written
+ * @param[in,out] gain - the gain. Will be adjusted according to needs
+ * @param[in,out] offset - the offset. Will be adjusted according to needs
+ * @return 1 on success
  */
-int OdimIoUtilities_convertHowAttributeFromInternalRave(const char* attrname, RaveIO_ODIM_Version outversion, RaveAttribute_t* inattr);
-
-/**
- * Converts a list of rave attributes from internal format to output format
- * @param[in] attributes - the attributes
- * @param[in] outversion - version of file to be written
- * @returns 1 on success
- */
-int OdimIoUtilities_convertHowAttributesFromInternalRave(RaveObjectList_t* attributes, RaveIO_ODIM_Version outversion);
+int OdimIoUtilities_convertGainOffsetToInternalRave(const char* quantity, RaveIO_ODIM_Version version, double* gain, double* offset);
 
 /**
  * Adds a rave field to a nodelist.

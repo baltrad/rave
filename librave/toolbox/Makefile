@@ -29,7 +29,7 @@ endif
 RAVESOURCES= polar.c raveutil.c rave_transform.c rave_alloc.c rave_debug.c polarvolume.c \
              polarscan.c polarscanparam.c cartesian.c cartesianparam.c cartesianvolume.c transform.c projection.c projection_pipeline.c polarnav.c \
              rave_io.c rave_list.c rave_object.c raveobject_list.c area.c rave_datetime.c \
-             rave_types.c rave_data2d.c composite.c rave_attribute.c cartesiancomposite.c \
+             rave_types.c rave_data2d.c composite.c rave_attribute.c rave_attribute_table.c cartesiancomposite.c \
              rave_utilities.c rave_field.c radardefinition.c rave_hlhdf_utilities.c cartesian_odim_io.c \
              polar_odim_io.c raveobject_hashtable.c detection_range.c odim_io_utilities.c poo_composite_algorithm.c rave_acrr.c \
              vertical_profile.c vp_odim_io.c dealias.c odc_hac.c rave_qitotal.c rave_gra.c ctfilter.c bitmap_generator.c \
@@ -50,7 +50,7 @@ endif
 INSTALL_HEADERS= polar.h rave_transform.h raveutil.h rave_alloc.h polarvolume.h polarscan.h \
                  polarscanparam.h cartesian.h cartesianparam.h cartesianvolume.h transform.h projection.h projection_pipeline.h polarnav.h rave_io.h \
                  rave_list.h rave_object.h raveobject_list.h area.h rave_datetime.h \
-                 rave_types.h rave_data2d.h composite.h rave_attribute.h cartesiancomposite.h \
+                 rave_types.h rave_data2d.h composite.h rave_attribute.h rave_attribute_table.h cartesiancomposite.h \
                  rave_utilities.h rave_field.h radardefinition.h rave_hlhdf_utilities.h \
                  cartesian_odim_io.h rave_debug.h polar_odim_io.h \
                  raveobject_hashtable.h detection_range.h odim_io_utilities.h composite_algorithm.h poo_composite_algorithm.h rave_acrr.h \

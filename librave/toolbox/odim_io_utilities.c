@@ -31,6 +31,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 
 /*@{ Private functions */
 
+#define SPEED_OF_LIGHT 299792458  /* m/s */
+
 /**
  * Called when an attribute belonging to a rave field
  * is found.
@@ -43,7 +45,8 @@ static int OdimIoUtilitiesInternal_loadFieldAttribute(void* object, RaveAttribut
   RaveField_t* field = NULL;
   const char* name;
   int result = 0;
-  RaveIO_ODIM_Version version = RaveIO_ODIM_Version_2_4;
+  RaveIO_ODIM_Version version;
+
   RAVE_ASSERT((object != NULL), "object == NULL");
   RAVE_ASSERT((attribute != NULL), "attribute == NULL");
 
@@ -51,8 +54,7 @@ static int OdimIoUtilitiesInternal_loadFieldAttribute(void* object, RaveAttribut
   name = RaveAttribute_getName(attribute);
   version = (RaveIO_ODIM_Version)((OdimIoUtilityArg*)object)->version;
   if (name != NULL) {
-    OdimIoUtilities_convertHowAttributeToInternalRave(name, version, attribute);
-    result = RaveField_addAttribute(field, attribute);
+    result = RaveField_addAttributeVersion(field, attribute, version);
   }
 
   return result;
@@ -92,91 +94,45 @@ static int OdimIoUtilitiesInternal_loadFieldDataset(void* object, hsize_t xsize,
 /*@} End of Private functions */
 
 /*@{ Interface functions */
-int OdimIoUtilities_convertHowAttributeToInternalRave(const char* attrname, RaveIO_ODIM_Version origversion, RaveAttribute_t* inattr)
+int OdimIoUtilities_convertGainOffsetFromInternalRave(const char* quantity, RaveIO_ODIM_Version version, double* gain, double* offset)
 {
-  if (origversion < RaveIO_ODIM_Version_2_4) {
+  if (quantity == NULL || gain == NULL || offset == NULL) {
+    return 0;
+  }
+
+  if (version < RaveIO_ODIM_Version_2_4) {
     return 1;
   }
 
-  if (RaveAttribute_getFormat(inattr) == RaveAttribute_Format_Double) {
-    double v = 0.0;
-    RaveAttribute_getDouble(inattr, &v);
-    if (strcasecmp("how/gasattn", attrname) == 0) {
-      RaveAttribute_setDouble(inattr, v * 1000.0); /* dB/m => dB/km */
-    } else if (strcasecmp("how/minrange", attrname)==0 ||
-        strcasecmp("how/maxrange", attrname)==0 ||
-        strcasecmp("how/melting_layer_top_A", attrname)==0 ||
-        strcasecmp("how/melting_layer_bottom_A", attrname)==0) {
-      RaveAttribute_setDouble(inattr, v / 1000.0); /* m => km */
-    } else if (strcasecmp("how/nomTXpower", attrname) == 0 ||
-        strcasecmp("how/peakpwr", attrname) == 0 ||
-        strcasecmp("how/avgpwr", attrname) == 0) {
-      RaveAttribute_setDouble(inattr, pow(10.0, (v - 30.0)/10.0)/1000.0);
-    }
-  } else if (RaveAttribute_getFormat(inattr) == RaveAttribute_Format_DoubleArray && strcasecmp("how/TXpower", attrname) == 0) {
-    double* darr = NULL;
-    int nlen = 0, i = 0;
-    RaveAttribute_getDoubleArray(inattr, &darr, &nlen);
-    for (i = 0; i < nlen; i++) {
-      darr[i] = pow(10.0, (darr[i] - 30.0)/10.0)/1000.0;
-    }
+  if (strcasecmp("HGHT", quantity) == 0) {
+    *gain = (*gain)*1000.0;
+    *offset = (*offset)*1000.0;
+  } else if (strcasecmp("MESH", quantity) == 0) {
+    *gain = (*gain)*10.0;
+    *offset = (*offset)*10.0;
   }
 
   return 1;
 }
 
-int OdimIoUtilities_convertHowAttributeFromInternalRave(const char* attrname, RaveIO_ODIM_Version outversion, RaveAttribute_t* inattr)
+int OdimIoUtilities_convertGainOffsetToInternalRave(const char* quantity, RaveIO_ODIM_Version version, double* gain, double* offset)
 {
-  if (outversion < RaveIO_ODIM_Version_2_4) {
-    return 1;
-  }
-  /* Since all attribute units within rave are according to old . We have to change unit to old one */
-  if (RaveAttribute_getFormat(inattr) == RaveAttribute_Format_Double) {
-    double v = 0.0;
-    RaveAttribute_getDouble(inattr, &v);
-    if (strcasecmp("how/gasattn", attrname) == 0) {
-      RaveAttribute_setDouble(inattr, v / 1000.0); /* dB/km => dB/m */
-    } else if (strcasecmp("how/minrange", attrname)==0 ||
-        strcasecmp("how/maxrange", attrname)==0 ||
-        strcasecmp("how/melting_layer_top_A", attrname)==0 ||
-        strcasecmp("how/melting_layer_bottom_A", attrname)==0) {
-      RaveAttribute_setDouble(inattr, v * 1000.0); /* km => m */
-    } else if (strcasecmp("how/nomTXpower", attrname) == 0 ||
-        strcasecmp("how/peakpwr", attrname) == 0 ||
-        strcasecmp("how/avgpwr", attrname) == 0) {
-      if (v > 0) {
-        RaveAttribute_setDouble(inattr, 10*log10(1000.0*v)+30); /* kW => dBm */
-      }
-    }
-  } else if (RaveAttribute_getFormat(inattr) == RaveAttribute_Format_DoubleArray && strcasecmp("how/TXpower", attrname) == 0) {
-    double* darr = NULL;
-    int nlen = 0, i = 0;
-    RaveAttribute_getDoubleArray(inattr, &darr, &nlen);
-    for (i = 0; i < nlen; i++) {
-      if (darr[i] > 0) {
-        darr[i] = 10 * log10(1000.0*darr[i]) + 30; /* kW => dBm */
-      }
-    }
+  if (quantity == NULL || gain == NULL || offset == NULL) {
+    return 0;
   }
 
-  return 1;
-}
-
-int OdimIoUtilities_convertHowAttributesFromInternalRave(RaveObjectList_t* attributes, RaveIO_ODIM_Version outversion)
-{
-  int i = 0;
-  int nlen = 0;
-  if (outversion < RaveIO_ODIM_Version_2_4) {
+  if (version < RaveIO_ODIM_Version_2_4) {
     return 1;
   }
-  nlen = RaveObjectList_size(attributes);
-  for (i = 0; i < nlen; i++) {
-    RaveAttribute_t* attr = (RaveAttribute_t*)RaveObjectList_get(attributes, i);
-    if (attr != NULL) {
-      OdimIoUtilities_convertHowAttributeFromInternalRave(RaveAttribute_getName(attr), outversion, attr);
-    }
-    RAVE_OBJECT_RELEASE(attr);
+
+  if (strcasecmp("HGHT", quantity) == 0) {
+    *gain = (*gain)/1000.0;
+    *offset = (*offset)/1000.0;
+  } else if (strcasecmp("MESH", quantity) == 0) {
+    *gain = (*gain)/10.0;
+    *offset = (*offset)/10.0;
   }
+
   return 1;
 }
 
@@ -205,9 +161,7 @@ int OdimIoUtilities_addRaveField(RaveField_t* field, HL_NodeList* nodelist, Rave
     }
   }
 
-  attributes = RaveField_getAttributeValues(field);
-
-  OdimIoUtilities_convertHowAttributesFromInternalRave(attributes, version);
+  attributes = RaveField_getAttributeValuesVersion(field, version);
 
   if (attributes == NULL || !RaveHL_addAttributes(nodelist, attributes, name)) {
     goto done;
