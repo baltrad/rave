@@ -63,6 +63,7 @@ $(function() {
 <code>#include &quot;<a class="el" href="rave__utilities_8h_source.html">rave_utilities.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="rave__types_8h_source.html">rave_types.h</a>&quot;</code><br />
 <code>#include &lt;string.h&gt;</code><br />
+<code>#include &quot;<a class="el" href="rave__attribute__table_8h_source.html">rave_attribute_table.h</a>&quot;</code><br />
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
@@ -147,15 +148,27 @@ Functions</h2></td></tr>
 <tr class="memitem:a5483ecfbfab1cc5382ea5ebb43390c57"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cartesianparam_8c.html#a5483ecfbfab1cc5382ea5ebb43390c57">CartesianParam_addAttribute</a> (<a class="el" href="cartesianparam_8h.html#aa73fd3138313ae20c7fe25166b3720ad">CartesianParam_t</a> *self, <a class="el" href="rave__attribute_8h.html#af6c25bb8521123e600ef452e2e2b58dd">RaveAttribute_t</a> *attribute)</td></tr>
 <tr class="memdesc:a5483ecfbfab1cc5382ea5ebb43390c57"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a rave attribute to the cartesian product.  <a href="cartesianparam_8c.html#a5483ecfbfab1cc5382ea5ebb43390c57">More...</a><br /></td></tr>
 <tr class="separator:a5483ecfbfab1cc5382ea5ebb43390c57"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adc332c10537b4ab30208b2dc3a65945b"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cartesianparam_8c.html#adc332c10537b4ab30208b2dc3a65945b">CartesianParam_addAttributeVersion</a> (<a class="el" href="cartesianparam_8h.html#aa73fd3138313ae20c7fe25166b3720ad">CartesianParam_t</a> *self, <a class="el" href="rave__attribute_8h.html#af6c25bb8521123e600ef452e2e2b58dd">RaveAttribute_t</a> *attribute, <a class="el" href="rave__types_8h.html#a290d5190c397951897071d66bfaf35e0">RaveIO_ODIM_Version</a> version)</td></tr>
+<tr class="memdesc:adc332c10537b4ab30208b2dc3a65945b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a rave attribute of specified version to the cartesian product.  <a href="cartesianparam_8c.html#adc332c10537b4ab30208b2dc3a65945b">More...</a><br /></td></tr>
+<tr class="separator:adc332c10537b4ab30208b2dc3a65945b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acac972b4cc24efe3184d7433f27b3420"><td class="memItemLeft" align="right" valign="top"><a class="el" href="rave__attribute_8h.html#af6c25bb8521123e600ef452e2e2b58dd">RaveAttribute_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cartesianparam_8c.html#acac972b4cc24efe3184d7433f27b3420">CartesianParam_getAttribute</a> (<a class="el" href="cartesianparam_8h.html#aa73fd3138313ae20c7fe25166b3720ad">CartesianParam_t</a> *self, const char *name)</td></tr>
 <tr class="memdesc:acac972b4cc24efe3184d7433f27b3420"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the rave attribute that is named accordingly.  <a href="cartesianparam_8c.html#acac972b4cc24efe3184d7433f27b3420">More...</a><br /></td></tr>
 <tr class="separator:acac972b4cc24efe3184d7433f27b3420"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a694fa75808bee7d867b323178c35f46c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="rave__attribute_8h.html#af6c25bb8521123e600ef452e2e2b58dd">RaveAttribute_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cartesianparam_8c.html#a694fa75808bee7d867b323178c35f46c">CartesianParam_getAttributeVersion</a> (<a class="el" href="cartesianparam_8h.html#aa73fd3138313ae20c7fe25166b3720ad">CartesianParam_t</a> *self, const char *name, <a class="el" href="rave__types_8h.html#a290d5190c397951897071d66bfaf35e0">RaveIO_ODIM_Version</a> version)</td></tr>
+<tr class="memdesc:a694fa75808bee7d867b323178c35f46c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the rave attribute in specified version.  <a href="cartesianparam_8c.html#a694fa75808bee7d867b323178c35f46c">More...</a><br /></td></tr>
+<tr class="separator:a694fa75808bee7d867b323178c35f46c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a11cbaaa9f4cb7db1c6dc8b0130239243"><td class="memItemLeft" align="right" valign="top"><a class="el" href="rave__list_8h.html#ad2ea2f1cc27c63aa76beb80b6535c3ef">RaveList_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cartesianparam_8c.html#a11cbaaa9f4cb7db1c6dc8b0130239243">CartesianParam_getAttributeNames</a> (<a class="el" href="cartesianparam_8h.html#aa73fd3138313ae20c7fe25166b3720ad">CartesianParam_t</a> *self)</td></tr>
 <tr class="memdesc:a11cbaaa9f4cb7db1c6dc8b0130239243"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a list of attribute names.  <a href="cartesianparam_8c.html#a11cbaaa9f4cb7db1c6dc8b0130239243">More...</a><br /></td></tr>
 <tr class="separator:a11cbaaa9f4cb7db1c6dc8b0130239243"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa4ab619e0d159e22578e86029c63664e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="rave__list_8h.html#ad2ea2f1cc27c63aa76beb80b6535c3ef">RaveList_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cartesianparam_8c.html#aa4ab619e0d159e22578e86029c63664e">CartesianParam_getAttributeNamesVersion</a> (<a class="el" href="cartesianparam_8h.html#aa73fd3138313ae20c7fe25166b3720ad">CartesianParam_t</a> *self, <a class="el" href="rave__types_8h.html#a290d5190c397951897071d66bfaf35e0">RaveIO_ODIM_Version</a> version)</td></tr>
+<tr class="memdesc:aa4ab619e0d159e22578e86029c63664e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a list of attribute names for specified version.  <a href="cartesianparam_8c.html#aa4ab619e0d159e22578e86029c63664e">More...</a><br /></td></tr>
+<tr class="separator:aa4ab619e0d159e22578e86029c63664e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4ba95ae3d7540556a492a5cbe98ce262"><td class="memItemLeft" align="right" valign="top"><a class="el" href="raveobject__list_8h.html#abdac48af2ac58989ba91c33c2a1c79d0">RaveObjectList_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cartesianparam_8c.html#a4ba95ae3d7540556a492a5cbe98ce262">CartesianParam_getAttributeValues</a> (<a class="el" href="cartesianparam_8h.html#aa73fd3138313ae20c7fe25166b3720ad">CartesianParam_t</a> *self)</td></tr>
 <tr class="memdesc:a4ba95ae3d7540556a492a5cbe98ce262"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a list of attribute values that should be stored for this cartesian product.  <a href="cartesianparam_8c.html#a4ba95ae3d7540556a492a5cbe98ce262">More...</a><br /></td></tr>
 <tr class="separator:a4ba95ae3d7540556a492a5cbe98ce262"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac66dd18b2e6e8545fed6f32fc52ec615"><td class="memItemLeft" align="right" valign="top"><a class="el" href="raveobject__list_8h.html#abdac48af2ac58989ba91c33c2a1c79d0">RaveObjectList_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cartesianparam_8c.html#ac66dd18b2e6e8545fed6f32fc52ec615">CartesianParam_getAttributeValuesVersion</a> (<a class="el" href="cartesianparam_8h.html#aa73fd3138313ae20c7fe25166b3720ad">CartesianParam_t</a> *self, <a class="el" href="rave__types_8h.html#a290d5190c397951897071d66bfaf35e0">RaveIO_ODIM_Version</a> version)</td></tr>
+<tr class="memdesc:ac66dd18b2e6e8545fed6f32fc52ec615"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a list of attribute values in specified version for this product.  <a href="cartesianparam_8c.html#ac66dd18b2e6e8545fed6f32fc52ec615">More...</a><br /></td></tr>
+<tr class="separator:ac66dd18b2e6e8545fed6f32fc52ec615"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5fad1aa34ee473494f1f2de1b73d716b"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cartesianparam_8c.html#a5fad1aa34ee473494f1f2de1b73d716b">CartesianParam_hasAttribute</a> (<a class="el" href="cartesianparam_8h.html#aa73fd3138313ae20c7fe25166b3720ad">CartesianParam_t</a> *self, const char *name)</td></tr>
 <tr class="memdesc:a5fad1aa34ee473494f1f2de1b73d716b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns if the cartesian product has got the specified attribute.  <a href="cartesianparam_8c.html#a5fad1aa34ee473494f1f2de1b73d716b">More...</a><br /></td></tr>
 <tr class="separator:a5fad1aa34ee473494f1f2de1b73d716b"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -220,6 +233,51 @@ Variables</h2></td></tr>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">attribute</td><td>- the attribute </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>1 on success otherwise 0 </dd></dl>
+
+</div>
+</div>
+<a id="adc332c10537b4ab30208b2dc3a65945b" name="adc332c10537b4ab30208b2dc3a65945b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adc332c10537b4ab30208b2dc3a65945b">&#9670;&nbsp;</a></span>CartesianParam_addAttributeVersion()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int CartesianParam_addAttributeVersion </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="cartesianparam_8h.html#aa73fd3138313ae20c7fe25166b3720ad">CartesianParam_t</a> *&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="rave__attribute_8h.html#af6c25bb8521123e600ef452e2e2b58dd">RaveAttribute_t</a> *&#160;</td>
+          <td class="paramname"><em>attribute</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="rave__types_8h.html#a290d5190c397951897071d66bfaf35e0">RaveIO_ODIM_Version</a>&#160;</td>
+          <td class="paramname"><em>version</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Adds a rave attribute of specified version to the cartesian product. </p>
+<p >If attribute maps to the member attributes it will be used to set the specific member instead. NOTE! This method is usually only used internally. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">attribute</td><td>- the attribute </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">version</td><td>- the attribute version </td></tr>
   </table>
   </dd>
 </dl>
@@ -389,6 +447,44 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a id="aa4ab619e0d159e22578e86029c63664e" name="aa4ab619e0d159e22578e86029c63664e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa4ab619e0d159e22578e86029c63664e">&#9670;&nbsp;</a></span>CartesianParam_getAttributeNamesVersion()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="rave__list_8h.html#ad2ea2f1cc27c63aa76beb80b6535c3ef">RaveList_t</a> * CartesianParam_getAttributeNamesVersion </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="cartesianparam_8h.html#aa73fd3138313ae20c7fe25166b3720ad">CartesianParam_t</a> *&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="rave__types_8h.html#a290d5190c397951897071d66bfaf35e0">RaveIO_ODIM_Version</a>&#160;</td>
+          <td class="paramname"><em>version</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Returns a list of attribute names for specified version. </p>
+<p >Release with @ref <a class="el" href="rave__list_8h.html#af265c888c2d5e1cf52bad82768f60d6e" title="This is a specialized version that can be used to destroy the list when it contains single pointers a...">RaveList_freeAndDestroy</a>. NOTE! This method is usually only used internally. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">version</td><td>- the attribute version </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>a list of attribute names </dd></dl>
+
+</div>
+</div>
 <a id="a4ba95ae3d7540556a492a5cbe98ce262" name="a4ba95ae3d7540556a492a5cbe98ce262"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a4ba95ae3d7540556a492a5cbe98ce262">&#9670;&nbsp;</a></span>CartesianParam_getAttributeValues()</h2>
 
@@ -409,11 +505,93 @@ Variables</h2></td></tr>
 <p >Corresponding members will also be added as attribute values. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">otype</td><td>- what type of attributes that should be returned, if it is for a cartesian image or a image belonging to a cartesian volume </td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>a list of RaveAttributes. </dd></dl>
+
+</div>
+</div>
+<a id="ac66dd18b2e6e8545fed6f32fc52ec615" name="ac66dd18b2e6e8545fed6f32fc52ec615"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac66dd18b2e6e8545fed6f32fc52ec615">&#9670;&nbsp;</a></span>CartesianParam_getAttributeValuesVersion()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="raveobject__list_8h.html#abdac48af2ac58989ba91c33c2a1c79d0">RaveObjectList_t</a> * CartesianParam_getAttributeValuesVersion </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="cartesianparam_8h.html#aa73fd3138313ae20c7fe25166b3720ad">CartesianParam_t</a> *&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="rave__types_8h.html#a290d5190c397951897071d66bfaf35e0">RaveIO_ODIM_Version</a>&#160;</td>
+          <td class="paramname"><em>version</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Returns a list of attribute values in specified version for this product. </p>
+<p >Corresponding members will also be added as attribute values. NOTE! This method is usually only used internally. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">version</td><td>- the attribute version </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>a list of RaveAttributes. </dd></dl>
+
+</div>
+</div>
+<a id="a694fa75808bee7d867b323178c35f46c" name="a694fa75808bee7d867b323178c35f46c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a694fa75808bee7d867b323178c35f46c">&#9670;&nbsp;</a></span>CartesianParam_getAttributeVersion()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="rave__attribute_8h.html#af6c25bb8521123e600ef452e2e2b58dd">RaveAttribute_t</a> * CartesianParam_getAttributeVersion </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="cartesianparam_8h.html#aa73fd3138313ae20c7fe25166b3720ad">CartesianParam_t</a> *&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="rave__types_8h.html#a290d5190c397951897071d66bfaf35e0">RaveIO_ODIM_Version</a>&#160;</td>
+          <td class="paramname"><em>version</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Returns the rave attribute in specified version. </p>
+<p >NOTE! This method is usually only used internally. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>- the name of the attribute </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">version</td><td>- the attribute version </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the attribute if found otherwise NULL </dd></dl>
 
 </div>
 </div>

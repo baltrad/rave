@@ -58,6 +58,7 @@ $(function() {
 <code>#include &quot;<a class="el" href="rave__object_8h_source.html">rave_object.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="rave__types_8h_source.html">rave_types.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="raveobject__list_8h_source.html">raveobject_list.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="raveobject__hashtable_8h_source.html">raveobject_hashtable.h</a>&quot;</code><br />
 <code>#include &quot;hlhdf.h&quot;</code><br />
 <code>#include &lt;stdarg.h&gt;</code><br />
 </div>
@@ -77,15 +78,12 @@ Typedefs</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a3bc69ffa8f8679da5a14d4247553b597"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="odim__io__utilities_8h.html#a3bc69ffa8f8679da5a14d4247553b597">OdimIoUtilities_convertHowAttributeToInternalRave</a> (const char *attrname, <a class="el" href="rave__types_8h.html#a290d5190c397951897071d66bfaf35e0">RaveIO_ODIM_Version</a> origversion, <a class="el" href="rave__attribute_8h.html#af6c25bb8521123e600ef452e2e2b58dd">RaveAttribute_t</a> *inattr)</td></tr>
-<tr class="memdesc:a3bc69ffa8f8679da5a14d4247553b597"><td class="mdescLeft">&#160;</td><td class="mdescRight">Converts the data in the rave attribute if required to be compliant with the actual version.  <a href="odim__io__utilities_8h.html#a3bc69ffa8f8679da5a14d4247553b597">More...</a><br /></td></tr>
-<tr class="separator:a3bc69ffa8f8679da5a14d4247553b597"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a639cf7cfc6950f051dc17aafb901d8c2"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="odim__io__utilities_8h.html#a639cf7cfc6950f051dc17aafb901d8c2">OdimIoUtilities_convertHowAttributeFromInternalRave</a> (const char *attrname, <a class="el" href="rave__types_8h.html#a290d5190c397951897071d66bfaf35e0">RaveIO_ODIM_Version</a> outversion, <a class="el" href="rave__attribute_8h.html#af6c25bb8521123e600ef452e2e2b58dd">RaveAttribute_t</a> *inattr)</td></tr>
-<tr class="memdesc:a639cf7cfc6950f051dc17aafb901d8c2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Converts the data unit in the rave attribute from internal rave to output version.  <a href="odim__io__utilities_8h.html#a639cf7cfc6950f051dc17aafb901d8c2">More...</a><br /></td></tr>
-<tr class="separator:a639cf7cfc6950f051dc17aafb901d8c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a32d8f277f999454912dc428478165ae5"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="odim__io__utilities_8h.html#a32d8f277f999454912dc428478165ae5">OdimIoUtilities_convertHowAttributesFromInternalRave</a> (<a class="el" href="raveobject__list_8h.html#abdac48af2ac58989ba91c33c2a1c79d0">RaveObjectList_t</a> *attributes, <a class="el" href="rave__types_8h.html#a290d5190c397951897071d66bfaf35e0">RaveIO_ODIM_Version</a> outversion)</td></tr>
-<tr class="memdesc:a32d8f277f999454912dc428478165ae5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Converts a list of rave attributes from internal format to output format.  <a href="odim__io__utilities_8h.html#a32d8f277f999454912dc428478165ae5">More...</a><br /></td></tr>
-<tr class="separator:a32d8f277f999454912dc428478165ae5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a13c5cac96bcdd799ab9a840d3e5d390c"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="odim__io__utilities_8h.html#a13c5cac96bcdd799ab9a840d3e5d390c">OdimIoUtilities_convertGainOffsetFromInternalRave</a> (const char *quantity, <a class="el" href="rave__types_8h.html#a290d5190c397951897071d66bfaf35e0">RaveIO_ODIM_Version</a> version, double *gain, double *offset)</td></tr>
+<tr class="memdesc:a13c5cac96bcdd799ab9a840d3e5d390c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Converts the gain and offset so that quantity is adjusted for ODIM version to be written.  <a href="odim__io__utilities_8h.html#a13c5cac96bcdd799ab9a840d3e5d390c">More...</a><br /></td></tr>
+<tr class="separator:a13c5cac96bcdd799ab9a840d3e5d390c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1dae5e257ef56b176b4f11977a8d9067"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="odim__io__utilities_8h.html#a1dae5e257ef56b176b4f11977a8d9067">OdimIoUtilities_convertGainOffsetToInternalRave</a> (const char *quantity, <a class="el" href="rave__types_8h.html#a290d5190c397951897071d66bfaf35e0">RaveIO_ODIM_Version</a> version, double *gain, double *offset)</td></tr>
+<tr class="memdesc:a1dae5e257ef56b176b4f11977a8d9067"><td class="mdescLeft">&#160;</td><td class="mdescRight">Converts the gain and offset so that quantity is adjusted for the internally used quantity.  <a href="odim__io__utilities_8h.html#a1dae5e257ef56b176b4f11977a8d9067">More...</a><br /></td></tr>
+<tr class="separator:a1dae5e257ef56b176b4f11977a8d9067"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a943ddbd4eeecd5b29b1c812a734b7bb5"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="odim__io__utilities_8h.html#a943ddbd4eeecd5b29b1c812a734b7bb5">OdimIoUtilities_addRaveField</a> (<a class="el" href="rave__field_8h.html#a54b17ce798506570a3d68f25207e3730">RaveField_t</a> *field, HL_NodeList *nodelist, <a class="el" href="rave__types_8h.html#a290d5190c397951897071d66bfaf35e0">RaveIO_ODIM_Version</a> outversion, const char *fmt,...)</td></tr>
 <tr class="memdesc:a943ddbd4eeecd5b29b1c812a734b7bb5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a rave field to a nodelist.  <a href="odim__io__utilities_8h.html#a943ddbd4eeecd5b29b1c812a734b7bb5">More...</a><br /></td></tr>
 <tr class="separator:a943ddbd4eeecd5b29b1c812a734b7bb5"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -252,29 +250,35 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a639cf7cfc6950f051dc17aafb901d8c2" name="a639cf7cfc6950f051dc17aafb901d8c2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a639cf7cfc6950f051dc17aafb901d8c2">&#9670;&nbsp;</a></span>OdimIoUtilities_convertHowAttributeFromInternalRave()</h2>
+<a id="a13c5cac96bcdd799ab9a840d3e5d390c" name="a13c5cac96bcdd799ab9a840d3e5d390c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a13c5cac96bcdd799ab9a840d3e5d390c">&#9670;&nbsp;</a></span>OdimIoUtilities_convertGainOffsetFromInternalRave()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">int OdimIoUtilities_convertHowAttributeFromInternalRave </td>
+          <td class="memname">int OdimIoUtilities_convertGainOffsetFromInternalRave </td>
           <td>(</td>
           <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>attrname</em>, </td>
+          <td class="paramname"><em>quantity</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype"><a class="el" href="rave__types_8h.html#a290d5190c397951897071d66bfaf35e0">RaveIO_ODIM_Version</a>&#160;</td>
-          <td class="paramname"><em>outversion</em>, </td>
+          <td class="paramname"><em>version</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="rave__attribute_8h.html#af6c25bb8521123e600ef452e2e2b58dd">RaveAttribute_t</a> *&#160;</td>
-          <td class="paramname"><em>inattr</em>&#160;</td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname"><em>gain</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname"><em>offset</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -284,50 +288,13 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Converts the data unit in the rave attribute from internal rave to output version. </p>
-<p >This means that if any how attribute has got a different unit, then it will be translated into the outversion unit </p><dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">attrname</td><td>- name of the attribute </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">outversion</td><td>- version of file to be written </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">inattr</td><td>- the attribute with data. Internal value will be modified if required- </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>1 on success </dd></dl>
-
-</div>
-</div>
-<a id="a32d8f277f999454912dc428478165ae5" name="a32d8f277f999454912dc428478165ae5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a32d8f277f999454912dc428478165ae5">&#9670;&nbsp;</a></span>OdimIoUtilities_convertHowAttributesFromInternalRave()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int OdimIoUtilities_convertHowAttributesFromInternalRave </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="raveobject__list_8h.html#abdac48af2ac58989ba91c33c2a1c79d0">RaveObjectList_t</a> *&#160;</td>
-          <td class="paramname"><em>attributes</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="rave__types_8h.html#a290d5190c397951897071d66bfaf35e0">RaveIO_ODIM_Version</a>&#160;</td>
-          <td class="paramname"><em>outversion</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Converts a list of rave attributes from internal format to output format. </p>
+<p>Converts the gain and offset so that quantity is adjusted for ODIM version to be written. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">attributes</td><td>- the attributes </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">outversion</td><td>- version of file to be written </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">quantity</td><td>- the quantity that is affected </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">version</td><td>- ODIM version that should be written </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">gain</td><td>- the gain. Will be adjusted according to needs </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">offset</td><td>- the offset. Will be adjusted according to needs </td></tr>
   </table>
   </dd>
 </dl>
@@ -335,29 +302,35 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a3bc69ffa8f8679da5a14d4247553b597" name="a3bc69ffa8f8679da5a14d4247553b597"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3bc69ffa8f8679da5a14d4247553b597">&#9670;&nbsp;</a></span>OdimIoUtilities_convertHowAttributeToInternalRave()</h2>
+<a id="a1dae5e257ef56b176b4f11977a8d9067" name="a1dae5e257ef56b176b4f11977a8d9067"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1dae5e257ef56b176b4f11977a8d9067">&#9670;&nbsp;</a></span>OdimIoUtilities_convertGainOffsetToInternalRave()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">int OdimIoUtilities_convertHowAttributeToInternalRave </td>
+          <td class="memname">int OdimIoUtilities_convertGainOffsetToInternalRave </td>
           <td>(</td>
           <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>attrname</em>, </td>
+          <td class="paramname"><em>quantity</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype"><a class="el" href="rave__types_8h.html#a290d5190c397951897071d66bfaf35e0">RaveIO_ODIM_Version</a>&#160;</td>
-          <td class="paramname"><em>origversion</em>, </td>
+          <td class="paramname"><em>version</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="rave__attribute_8h.html#af6c25bb8521123e600ef452e2e2b58dd">RaveAttribute_t</a> *&#160;</td>
-          <td class="paramname"><em>inattr</em>&#160;</td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname"><em>gain</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname"><em>offset</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -367,12 +340,13 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Converts the data in the rave attribute if required to be compliant with the actual version. </p>
-<p >This means that if any how attribute has got a different unit, then it will be translated into the internally supported unit </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Converts the gain and offset so that quantity is adjusted for the internally used quantity. </p>
+<dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">attrname</td><td>- name of the attribute </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">origversion</td><td>- version of read file </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">inattr</td><td>- the attribute with data. Internal value will be modified if required- </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">quantity</td><td>- the quantity that is affected </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">version</td><td>- ODIM version that should be written </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">gain</td><td>- the gain. Will be adjusted according to needs </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">offset</td><td>- the offset. Will be adjusted according to needs </td></tr>
   </table>
   </dd>
 </dl>

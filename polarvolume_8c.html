@@ -62,6 +62,7 @@ $(function() {
 <code>#include &quot;<a class="el" href="rave__alloc_8h_source.html">rave_alloc.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="raveobject__hashtable_8h_source.html">raveobject_hashtable.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="rave__utilities_8h_source.html">rave_utilities.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="rave__attribute__table_8h_source.html">rave_attribute_table.h</a>&quot;</code><br />
 <code>#include &lt;string.h&gt;</code><br />
 <code>#include &lt;float.h&gt;</code><br />
 <code>#include &lt;math.h&gt;</code><br />
@@ -215,21 +216,33 @@ Functions</h2></td></tr>
 <tr class="memitem:ab2e687974281bdf4436f60ad8b0086f2"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="polarvolume_8c.html#ab2e687974281bdf4436f60ad8b0086f2">PolarVolume_addAttribute</a> (<a class="el" href="polarvolume_8h.html#a275c1e5d1e61accfd21135da054ad086">PolarVolume_t</a> *pvol, <a class="el" href="rave__attribute_8h.html#af6c25bb8521123e600ef452e2e2b58dd">RaveAttribute_t</a> *attribute)</td></tr>
 <tr class="memdesc:ab2e687974281bdf4436f60ad8b0086f2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a rave attribute to the volume.  <a href="polarvolume_8c.html#ab2e687974281bdf4436f60ad8b0086f2">More...</a><br /></td></tr>
 <tr class="separator:ab2e687974281bdf4436f60ad8b0086f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a81b248c07bec07b48fe1b8d32861ef0f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="polarvolume_8c.html#a81b248c07bec07b48fe1b8d32861ef0f">PolarVolume_addAttributeVersion</a> (<a class="el" href="polarvolume_8h.html#a275c1e5d1e61accfd21135da054ad086">PolarVolume_t</a> *pvol, <a class="el" href="rave__attribute_8h.html#af6c25bb8521123e600ef452e2e2b58dd">RaveAttribute_t</a> *attribute, <a class="el" href="rave__types_8h.html#a290d5190c397951897071d66bfaf35e0">RaveIO_ODIM_Version</a> version)</td></tr>
+<tr class="memdesc:a81b248c07bec07b48fe1b8d32861ef0f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a rave attribute to the volume using version as well.  <a href="polarvolume_8c.html#a81b248c07bec07b48fe1b8d32861ef0f">More...</a><br /></td></tr>
+<tr class="separator:a81b248c07bec07b48fe1b8d32861ef0f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acc13f01690b7a7345d0c260e37ed8748"><td class="memItemLeft" align="right" valign="top"><a class="el" href="rave__attribute_8h.html#af6c25bb8521123e600ef452e2e2b58dd">RaveAttribute_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="polarvolume_8c.html#acc13f01690b7a7345d0c260e37ed8748">PolarVolume_getAttribute</a> (<a class="el" href="polarvolume_8h.html#a275c1e5d1e61accfd21135da054ad086">PolarVolume_t</a> *pvol, const char *name)</td></tr>
 <tr class="memdesc:acc13f01690b7a7345d0c260e37ed8748"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the rave attribute that is named accordingly.  <a href="polarvolume_8c.html#acc13f01690b7a7345d0c260e37ed8748">More...</a><br /></td></tr>
 <tr class="separator:acc13f01690b7a7345d0c260e37ed8748"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad5a0675a0a40c0dbfbb8bbd0cd0174bf"><td class="memItemLeft" align="right" valign="top"><a class="el" href="rave__attribute_8h.html#af6c25bb8521123e600ef452e2e2b58dd">RaveAttribute_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="polarvolume_8c.html#ad5a0675a0a40c0dbfbb8bbd0cd0174bf">PolarVolume_getAttributeVersion</a> (<a class="el" href="polarvolume_8h.html#a275c1e5d1e61accfd21135da054ad086">PolarVolume_t</a> *pvol, const char *name, <a class="el" href="rave__types_8h.html#a290d5190c397951897071d66bfaf35e0">RaveIO_ODIM_Version</a> version)</td></tr>
+<tr class="memdesc:ad5a0675a0a40c0dbfbb8bbd0cd0174bf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the rave attribute that is named accordingly for specified version.  <a href="polarvolume_8c.html#ad5a0675a0a40c0dbfbb8bbd0cd0174bf">More...</a><br /></td></tr>
+<tr class="separator:ad5a0675a0a40c0dbfbb8bbd0cd0174bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a15f40c9f3cc573140ae53316525e97fe"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="polarvolume_8c.html#a15f40c9f3cc573140ae53316525e97fe">PolarVolume_removeAttribute</a> (<a class="el" href="polarvolume_8h.html#a275c1e5d1e61accfd21135da054ad086">PolarVolume_t</a> *pvol, const char *attrname)</td></tr>
 <tr class="memdesc:a15f40c9f3cc573140ae53316525e97fe"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes a rave attribute from the volume.  <a href="polarvolume_8c.html#a15f40c9f3cc573140ae53316525e97fe">More...</a><br /></td></tr>
 <tr class="separator:a15f40c9f3cc573140ae53316525e97fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aff728decd89160a25367ee9d4bb7f419"><td class="memItemLeft" align="right" valign="top"><a class="el" href="rave__list_8h.html#ad2ea2f1cc27c63aa76beb80b6535c3ef">RaveList_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="polarvolume_8c.html#aff728decd89160a25367ee9d4bb7f419">PolarVolume_getAttributeNames</a> (<a class="el" href="polarvolume_8h.html#a275c1e5d1e61accfd21135da054ad086">PolarVolume_t</a> *pvol)</td></tr>
 <tr class="memdesc:aff728decd89160a25367ee9d4bb7f419"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a list of attribute names.  <a href="polarvolume_8c.html#aff728decd89160a25367ee9d4bb7f419">More...</a><br /></td></tr>
 <tr class="separator:aff728decd89160a25367ee9d4bb7f419"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a82aaf4b5b189bc291338f0bfb3972e9f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="rave__list_8h.html#ad2ea2f1cc27c63aa76beb80b6535c3ef">RaveList_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="polarvolume_8c.html#a82aaf4b5b189bc291338f0bfb3972e9f">PolarVolume_getAttributeNamesVersion</a> (<a class="el" href="polarvolume_8h.html#a275c1e5d1e61accfd21135da054ad086">PolarVolume_t</a> *pvol, <a class="el" href="rave__types_8h.html#a290d5190c397951897071d66bfaf35e0">RaveIO_ODIM_Version</a> version)</td></tr>
+<tr class="memdesc:a82aaf4b5b189bc291338f0bfb3972e9f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a list of attribute names for specified version.  <a href="polarvolume_8c.html#a82aaf4b5b189bc291338f0bfb3972e9f">More...</a><br /></td></tr>
+<tr class="separator:a82aaf4b5b189bc291338f0bfb3972e9f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac4d08536460c3091d9a8b087d3338596"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="polarvolume_8c.html#ac4d08536460c3091d9a8b087d3338596">PolarVolume_hasAttribute</a> (<a class="el" href="polarvolume_8h.html#a275c1e5d1e61accfd21135da054ad086">PolarVolume_t</a> *pvol, const char *name)</td></tr>
 <tr class="memdesc:ac4d08536460c3091d9a8b087d3338596"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns if the volume has the specified attribute or not.  <a href="polarvolume_8c.html#ac4d08536460c3091d9a8b087d3338596">More...</a><br /></td></tr>
 <tr class="separator:ac4d08536460c3091d9a8b087d3338596"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aec136b6b058cb09812eed5794e30f46e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="raveobject__list_8h.html#abdac48af2ac58989ba91c33c2a1c79d0">RaveObjectList_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="polarvolume_8c.html#aec136b6b058cb09812eed5794e30f46e">PolarVolume_getAttributeValues</a> (<a class="el" href="polarvolume_8h.html#a275c1e5d1e61accfd21135da054ad086">PolarVolume_t</a> *pvol)</td></tr>
 <tr class="memdesc:aec136b6b058cb09812eed5794e30f46e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a list of attribute values that should be stored for this volume.  <a href="polarvolume_8c.html#aec136b6b058cb09812eed5794e30f46e">More...</a><br /></td></tr>
 <tr class="separator:aec136b6b058cb09812eed5794e30f46e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab1d2a94fd4395fbd5680aac9d1dc5cbe"><td class="memItemLeft" align="right" valign="top"><a class="el" href="raveobject__list_8h.html#abdac48af2ac58989ba91c33c2a1c79d0">RaveObjectList_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="polarvolume_8c.html#ab1d2a94fd4395fbd5680aac9d1dc5cbe">PolarVolume_getAttributeValuesVersion</a> (<a class="el" href="polarvolume_8h.html#a275c1e5d1e61accfd21135da054ad086">PolarVolume_t</a> *pvol, <a class="el" href="rave__types_8h.html#a290d5190c397951897071d66bfaf35e0">RaveIO_ODIM_Version</a> version)</td></tr>
+<tr class="memdesc:ab1d2a94fd4395fbd5680aac9d1dc5cbe"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a list of attribute values in specified version for attributes that has been set in this volume.  <a href="polarvolume_8c.html#ab1d2a94fd4395fbd5680aac9d1dc5cbe">More...</a><br /></td></tr>
+<tr class="separator:ab1d2a94fd4395fbd5680aac9d1dc5cbe"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2e482d5cf8b88011ef81ea4706f0ac07"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="polarvolume_8c.html#a2e482d5cf8b88011ef81ea4706f0ac07">PolarVolume_isValid</a> (<a class="el" href="polarvolume_8h.html#a275c1e5d1e61accfd21135da054ad086">PolarVolume_t</a> *pvol)</td></tr>
 <tr class="memdesc:a2e482d5cf8b88011ef81ea4706f0ac07"><td class="mdescLeft">&#160;</td><td class="mdescRight">Validates the volume regarding storage.  <a href="polarvolume_8c.html#a2e482d5cf8b88011ef81ea4706f0ac07">More...</a><br /></td></tr>
 <tr class="separator:a2e482d5cf8b88011ef81ea4706f0ac07"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -317,6 +330,51 @@ Variables</h2></td></tr>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">pvol</td><td>- self </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">attribute</td><td>- the attribute </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>1 on success otherwise 0 </dd></dl>
+
+</div>
+</div>
+<a id="a81b248c07bec07b48fe1b8d32861ef0f" name="a81b248c07bec07b48fe1b8d32861ef0f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a81b248c07bec07b48fe1b8d32861ef0f">&#9670;&nbsp;</a></span>PolarVolume_addAttributeVersion()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int PolarVolume_addAttributeVersion </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="polarvolume_8h.html#a275c1e5d1e61accfd21135da054ad086">PolarVolume_t</a> *&#160;</td>
+          <td class="paramname"><em>pvol</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="rave__attribute_8h.html#af6c25bb8521123e600ef452e2e2b58dd">RaveAttribute_t</a> *&#160;</td>
+          <td class="paramname"><em>attribute</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="rave__types_8h.html#a290d5190c397951897071d66bfaf35e0">RaveIO_ODIM_Version</a>&#160;</td>
+          <td class="paramname"><em>version</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Adds a rave attribute to the volume using version as well. </p>
+<p >NOTE! This method is usually only used internally. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">pvol</td><td>- self </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">attribute</td><td>- the attribute </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">version</td><td>- version of attribute requested </td></tr>
   </table>
   </dd>
 </dl>
@@ -567,6 +625,44 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a id="a82aaf4b5b189bc291338f0bfb3972e9f" name="a82aaf4b5b189bc291338f0bfb3972e9f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a82aaf4b5b189bc291338f0bfb3972e9f">&#9670;&nbsp;</a></span>PolarVolume_getAttributeNamesVersion()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="rave__list_8h.html#ad2ea2f1cc27c63aa76beb80b6535c3ef">RaveList_t</a> * PolarVolume_getAttributeNamesVersion </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="polarvolume_8h.html#a275c1e5d1e61accfd21135da054ad086">PolarVolume_t</a> *&#160;</td>
+          <td class="paramname"><em>pvol</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="rave__types_8h.html#a290d5190c397951897071d66bfaf35e0">RaveIO_ODIM_Version</a>&#160;</td>
+          <td class="paramname"><em>version</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Returns a list of attribute names for specified version. </p>
+<p >Release with @ref <a class="el" href="rave__list_8h.html#af265c888c2d5e1cf52bad82768f60d6e" title="This is a specialized version that can be used to destroy the list when it contains single pointers a...">RaveList_freeAndDestroy</a>. NOTE! This method is usually only used internally. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">pvol</td><td>- self </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">version</td><td>- version of attribute requested </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>a list of attribute names </dd></dl>
+
+</div>
+</div>
 <a id="aec136b6b058cb09812eed5794e30f46e" name="aec136b6b058cb09812eed5794e30f46e"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aec136b6b058cb09812eed5794e30f46e">&#9670;&nbsp;</a></span>PolarVolume_getAttributeValues()</h2>
 
@@ -591,6 +687,89 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>a list of RaveAttributes. </dd></dl>
+
+</div>
+</div>
+<a id="ab1d2a94fd4395fbd5680aac9d1dc5cbe" name="ab1d2a94fd4395fbd5680aac9d1dc5cbe"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab1d2a94fd4395fbd5680aac9d1dc5cbe">&#9670;&nbsp;</a></span>PolarVolume_getAttributeValuesVersion()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="raveobject__list_8h.html#abdac48af2ac58989ba91c33c2a1c79d0">RaveObjectList_t</a> * PolarVolume_getAttributeValuesVersion </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="polarvolume_8h.html#a275c1e5d1e61accfd21135da054ad086">PolarVolume_t</a> *&#160;</td>
+          <td class="paramname"><em>pvol</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="rave__types_8h.html#a290d5190c397951897071d66bfaf35e0">RaveIO_ODIM_Version</a>&#160;</td>
+          <td class="paramname"><em>version</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Returns a list of attribute values in specified version for attributes that has been set in this volume. </p>
+<p >NOTE! This method is usually only used internally. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">pvol</td><td>- self </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">version</td><td>- version of attribute requested </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>a list of RaveAttributes. </dd></dl>
+
+</div>
+</div>
+<a id="ad5a0675a0a40c0dbfbb8bbd0cd0174bf" name="ad5a0675a0a40c0dbfbb8bbd0cd0174bf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad5a0675a0a40c0dbfbb8bbd0cd0174bf">&#9670;&nbsp;</a></span>PolarVolume_getAttributeVersion()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="rave__attribute_8h.html#af6c25bb8521123e600ef452e2e2b58dd">RaveAttribute_t</a> * PolarVolume_getAttributeVersion </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="polarvolume_8h.html#a275c1e5d1e61accfd21135da054ad086">PolarVolume_t</a> *&#160;</td>
+          <td class="paramname"><em>pvol</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="rave__types_8h.html#a290d5190c397951897071d66bfaf35e0">RaveIO_ODIM_Version</a>&#160;</td>
+          <td class="paramname"><em>version</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Returns the rave attribute that is named accordingly for specified version. </p>
+<p >NOTE! This method is usually only used internally. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">pvol</td><td>- self </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>- the name of the attribute </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">version</td><td>- version of attribute requested </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the attribute if found otherwise NULL </dd></dl>
 
 </div>
 </div>
