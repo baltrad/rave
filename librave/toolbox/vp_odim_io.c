@@ -78,6 +78,92 @@ static void VpOdimIO_destructor(RaveCoreObject* obj)
 }
 
 /**
+ * Locates an attribute with specified name in the list of attributes.
+ * @param[in] attributes - list of attributes
+ * @param[in] name - name of attributes searched for
+ * @return attribute if found, otherwise NULL
+ */
+static RaveAttribute_t* VpOdimIOInternal_getAttribute(RaveObjectList_t* attributes, const char* name)
+{
+  int nlen = RaveObjectList_size(attributes);
+  int i = 0;
+  for (i = 0; i <nlen; i++) {
+    RaveAttribute_t* attr = (RaveAttribute_t*)RaveObjectList_get(attributes, i);
+    const char* attrname = RaveAttribute_getName(attr);
+    if (strcmp(attrname, name) == 0) {
+      return attr;
+    }
+    RAVE_OBJECT_RELEASE(attr);
+  }
+  return NULL;
+}
+
+/**
+ * Uppdates gain & offset for fields that are affected. Currently, HGHT and MESH.
+ * @param[in] self - self
+ * @param[in] attributes - list of attributes affected
+ * @param[in] fromInternal - If 0, then translation if to internal format. If 1, then from internal format.
+ */
+static int VpOdimIOInternal_updateGainOffset(VpOdimIO_t* self, RaveObjectList_t* attributes, int fromInternal)
+{
+  RaveAttribute_t* quantityAttr = NULL;
+  RaveAttribute_t* gainAttr = NULL;
+  RaveAttribute_t* offsetAttr = NULL;
+  int result = 0;
+
+  if (self->version < RaveIO_ODIM_Version_2_4) {
+    return 1;
+  }
+
+  quantityAttr = VpOdimIOInternal_getAttribute(attributes, "what/quantity");
+  if (quantityAttr != NULL && RaveAttribute_getFormat(quantityAttr) == RaveAttribute_Format_String) {
+    char* value = NULL;
+    double gain=1.0, offset=0.0;
+    RaveAttribute_getString(quantityAttr, &value);
+    if (value != NULL && (strcasecmp("HGHT", value)==0 || strcasecmp("MESH", value)==0)) {
+      gainAttr = VpOdimIOInternal_getAttribute(attributes, "what/gain");
+      offsetAttr = VpOdimIOInternal_getAttribute(attributes, "what/offset");
+      if (gainAttr == NULL) {
+        RaveAttribute_t* newattr = RaveAttributeHelp_createDouble("what/gain", 1.0);
+        if (newattr == NULL) {
+          goto done;
+        }
+        gainAttr = RAVE_OBJECT_COPY(newattr);
+        RaveObjectList_add(attributes, (RaveCoreObject*)newattr);
+        RAVE_OBJECT_RELEASE(newattr);
+      }
+      if (offsetAttr == NULL) {
+        RaveAttribute_t* newattr = RaveAttributeHelp_createDouble("what/gain", 0.0);
+        if (newattr == NULL) {
+          goto done;
+        }
+        offsetAttr = RAVE_OBJECT_COPY(newattr);
+        RaveObjectList_add(attributes, (RaveCoreObject*)newattr);
+        RAVE_OBJECT_RELEASE(newattr);
+      }
+      RaveAttribute_getDouble(gainAttr, &gain);
+      RaveAttribute_getDouble(offsetAttr, &offset);
+      if (fromInternal) {
+        OdimIoUtilities_convertGainOffsetFromInternalRave((const char*)value, self->version, &gain, &offset);
+      } else {
+        OdimIoUtilities_convertGainOffsetToInternalRave((const char*)value, self->version, &gain, &offset);
+      }
+      RaveAttribute_setDouble(gainAttr, gain);
+      RaveAttribute_setDouble(offsetAttr, offset);
+      RAVE_OBJECT_RELEASE(gainAttr);
+      RAVE_OBJECT_RELEASE(offsetAttr);
+    }
+  }
+
+  result = 1;
+done:
+  RAVE_OBJECT_RELEASE(quantityAttr);
+  RAVE_OBJECT_RELEASE(gainAttr);
+  RAVE_OBJECT_RELEASE(offsetAttr);
+  return result;
+}
+
+/**
  * Vp root attributes.
  * @param[in] object - the OdimIoUtilityArg pointing to a polar scan
  * @param[in] attribute - the attribute found
@@ -306,7 +392,14 @@ static int VpOdimIOInternal_fillVpDataset(VpOdimIO_t* self, LazyNodeListReader_t
   while (result == 1 && RaveHL_hasNodeByName(arg.nodelist, "%s/data%d", name, pindex)) {
     RaveField_t* field = OdimIoUtilities_loadField(lazyReader, self->version, "%s/data%d", name, pindex);
     if (field != NULL) {
-      result = VerticalProfile_addField(vp, field);
+      RaveObjectList_t* attributes = RaveField_getInternalAttributeValues(field);
+      if (attributes != NULL) {
+        result = VpOdimIOInternal_updateGainOffset(self, attributes, 0);
+      }
+      if (result) {
+        result = VerticalProfile_addField(vp, field);
+      }
+      RAVE_OBJECT_RELEASE(attributes);
     } else {
       result = 0;
     }
@@ -355,6 +448,8 @@ static int VpOdimIOInternal_addParameter(VpOdimIO_t* self, RaveField_t* field, H
   if ((attributes = RaveField_getAttributeValuesVersion(field, self->version)) == NULL) {
     goto done;
   }
+
+  VpOdimIOInternal_updateGainOffset(self, attributes, 1);
 
   if (!RaveHL_addAttributes(nodelist, attributes, name)) {
     goto done;

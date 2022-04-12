@@ -147,7 +147,7 @@ RaveList_t* RaveAttributeTable_getAttributeNames(RaveAttributeTable_t* self);
 RaveList_t* RaveAttributeTable_getAttributeNamesVersion(RaveAttributeTable_t* self, RaveIO_ODIM_Version version);
 
 /**
- * Returns the values for the table. Note, it is not cloned values
+ * Returns the values for the table. Note, it is cloned values
  * but references to them.
  * @param[in] self - self
  * @returns a list of values
@@ -155,13 +155,21 @@ RaveList_t* RaveAttributeTable_getAttributeNamesVersion(RaveAttributeTable_t* se
 RaveObjectList_t* RaveAttributeTable_getValues(RaveAttributeTable_t* self);
 
 /**
- * Returns the values for the table. Note, it is not cloned values
+ * Returns the values for the table. Note, it is cloned values
  * but references to them.
  * @param[in] self - self
  * @param[in] version - the version of the attribute names to return
  * @returns a list of values
  */
 RaveObjectList_t* RaveAttributeTable_getValuesVersion(RaveAttributeTable_t* self, RaveIO_ODIM_Version version);
+
+
+/**
+ * Returns the internal values for the table. Note, it is not cloned values but references to them.
+ * @param[in] self - self
+ * @returns a list of values
+ */
+RaveObjectList_t* RaveAttributeTable_getInternalValues(RaveAttributeTable_t* self);
 
 /**
  * Performs a circular shift of an array attribute. if nx < 0, then shift is performed counter clockwise, if nx > 0, shift is performed clock wise, if 0, no shift is performed.

@@ -3071,6 +3071,85 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEqual(60, numpy.shape(data)[0])
     self.assertEqual(1, numpy.shape(data)[1])
 
+  def getVpFieldName(self, nodelist, quantity):
+    ctr = 1
+    nodenames = nodelist.getNodeNames().keys()
+    while True:
+      nodename = "/dataset1/data%d/what/quantity"%ctr
+      if nodename in nodenames:
+        node = nodelist.getNode(nodename)
+        if node.data() == quantity:
+          return "/dataset1/data%d"%ctr
+      if "/dataset1/data%d"%ctr not in nodenames:
+          break
+      ctr = ctr + 1
+    return None
+
+  def test_read_vp_write_2_3(self):
+    # Read the new version of VP
+    vp = _raveio.open(self.FIXTURE_VP_NEW_VERSION).object
+    
+    rio = _raveio.new()
+    rio.object = vp
+    rio.version = _raveio.RaveIO_ODIM_Version_2_3
+    rio.save(self.TEMPORARY_FILE)
+    
+    # Verify written data
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+
+    vpfield = self.getVpFieldName(nodelist, "HGHT")
+    self.assertTrue(vpfield is not None)
+    self.assertAlmostEqual(1.0, nodelist.getNode("%s/what/gain"%vpfield).data(), 4)
+    self.assertAlmostEqual(0.0, nodelist.getNode("%s/what/offset"%vpfield).data(), 4)
+
+    vpfield = self.getVpFieldName(nodelist, "n")
+    self.assertTrue(vpfield is not None)
+    self.assertAlmostEqual(1.0, nodelist.getNode("%s/what/gain"%vpfield).data(), 4)
+    self.assertAlmostEqual(0.0, nodelist.getNode("%s/what/offset"%vpfield).data(), 4)
+    
+  def test_read_vp_write_2_4(self):
+    # Read the new version of VP
+    vp = _raveio.open(self.FIXTURE_VP_NEW_VERSION).object
+    
+    rio = _raveio.new()
+    rio.object = vp
+    rio.version = _raveio.RaveIO_ODIM_Version_2_4
+    rio.save(self.TEMPORARY_FILE)
+    
+    # Verify written data
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+
+    vpfield = self.getVpFieldName(nodelist, "HGHT")
+    self.assertTrue(vpfield is not None)
+    self.assertAlmostEqual(1000.0, nodelist.getNode("%s/what/gain"%vpfield).data(), 4)
+    self.assertAlmostEqual(0.0, nodelist.getNode("%s/what/offset"%vpfield).data(), 4)
+
+    vpfield = self.getVpFieldName(nodelist, "n")
+    self.assertTrue(vpfield is not None)
+    self.assertAlmostEqual(1.0, nodelist.getNode("%s/what/gain"%vpfield).data(), 4)
+    self.assertAlmostEqual(0.0, nodelist.getNode("%s/what/offset"%vpfield).data(), 4)
+
+  def test_write_2_4_read(self):
+    # Read the new version of VP
+    vp = _raveio.open(self.FIXTURE_VP_NEW_VERSION).object
+    
+    rio = _raveio.new()
+    rio.object = vp
+    rio.version = _raveio.RaveIO_ODIM_Version_2_4
+    rio.save(self.TEMPORARY_FILE)
+    
+    # Verify written data
+    vp = _raveio.open(self.TEMPORARY_FILE).object
+    self.assertAlmostEqual(1.0, vp.getHGHT().getAttribute("what/gain"), 4)
+    self.assertAlmostEqual(0.0, vp.getHGHT().getAttribute("what/offset"), 4)
+
+    self.assertAlmostEqual(1.0, vp.getField("n").getAttribute("what/gain"), 4)
+    self.assertAlmostEqual(0.0, vp.getField("n").getAttribute("what/offset"), 4)
+
   def test_write_vp_new_version(self):
     vp = _verticalprofile.new()
     vp.date="20100101"

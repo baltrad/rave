@@ -211,6 +211,14 @@ RaveObjectList_t* RaveField_getAttributeValues(RaveField_t* field);
 RaveObjectList_t* RaveField_getAttributeValuesVersion(RaveField_t* field, RaveIO_ODIM_Version version);
 
 /**
+ * Returns a reference to the internally stored attributes.
+ * NOTE! This method is usually only used internally.
+ * @param[in] field - self
+ * @returns a list of RaveAttributes.
+ */
+RaveObjectList_t* RaveField_getInternalAttributeValues(RaveField_t* field);
+
+/**
  * Removes all attributes from the field.
  */
 void RaveField_removeAttributes(RaveField_t* field);

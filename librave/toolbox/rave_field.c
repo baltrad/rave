@@ -327,6 +327,12 @@ RaveObjectList_t* RaveField_getAttributeValuesVersion(RaveField_t* field, RaveIO
   return RaveAttributeTable_getValuesVersion(field->attrs, version);
 }
 
+RaveObjectList_t* RaveField_getInternalAttributeValues(RaveField_t* field)
+{
+  RAVE_ASSERT((field != NULL), "field == NULL");
+  return RaveAttributeTable_getInternalValues(field->attrs);
+}
+
 void RaveField_removeAttributes(RaveField_t* field)
 {
   RAVE_ASSERT((field != NULL), "field == NULL");

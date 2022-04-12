@@ -508,14 +508,20 @@ RaveList_t* RaveAttributeTable_getAttributeNamesVersion(RaveAttributeTable_t* se
 
 RaveObjectList_t* RaveAttributeTable_getValues(RaveAttributeTable_t* self)
 {
+  RAVE_ASSERT((self != NULL), "self == NULL");
   return RaveAttributeTable_getValuesVersion(self, self->version);
 }
 
 RaveObjectList_t* RaveAttributeTable_getValuesVersion(RaveAttributeTable_t* self, RaveIO_ODIM_Version version)
 {
-  RaveObjectList_t* values = RaveObjectHashTable_values(self->attributes);
-  RaveObjectList_t* rlist = RAVE_OBJECT_NEW(&RaveObjectList_TYPE);
+  RaveObjectList_t* values = NULL;
+  RaveObjectList_t* rlist = NULL;
   RaveObjectList_t* result = NULL;
+
+  RAVE_ASSERT((self != NULL), "self == NULL");
+
+  values = RaveObjectHashTable_values(self->attributes);
+  rlist = RAVE_OBJECT_NEW(&RaveObjectList_TYPE);
 
   if (values != NULL && rlist != NULL) {
     int nlen = RaveObjectList_size(values), i = 0;
@@ -534,11 +540,17 @@ RaveObjectList_t* RaveAttributeTable_getValuesVersion(RaveAttributeTable_t* self
     }
   }
 
-  result = RAVE_OBJECT_COPY(rlist);
+  result = RAVE_OBJECT_CLONE(rlist);
 fail:
   RAVE_OBJECT_RELEASE(rlist);
   RAVE_OBJECT_RELEASE(values);
   return result;
+}
+
+RaveObjectList_t* RaveAttributeTable_getInternalValues(RaveAttributeTable_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return RaveObjectHashTable_values(self->attributes);
 }
 
 int RaveAttributeTable_shiftAttribute(RaveAttributeTable_t* self, const char* name, int nx)
