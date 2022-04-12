@@ -131,6 +131,9 @@ Functions</h2></td></tr>
 <tr class="memitem:a298a51e96fbb29a6e70c554c74a763fc"><td class="memItemLeft" align="right" valign="top"><a class="el" href="raveobject__list_8h.html#abdac48af2ac58989ba91c33c2a1c79d0">RaveObjectList_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="rave__field_8h.html#a298a51e96fbb29a6e70c554c74a763fc">RaveField_getAttributeValuesVersion</a> (<a class="el" href="rave__field_8h.html#a54b17ce798506570a3d68f25207e3730">RaveField_t</a> *field, <a class="el" href="rave__types_8h.html#a290d5190c397951897071d66bfaf35e0">RaveIO_ODIM_Version</a> version)</td></tr>
 <tr class="memdesc:a298a51e96fbb29a6e70c554c74a763fc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a list of attribute values that has been set for this field and version.  <a href="rave__field_8h.html#a298a51e96fbb29a6e70c554c74a763fc">More...</a><br /></td></tr>
 <tr class="separator:a298a51e96fbb29a6e70c554c74a763fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeb441cfcacb54c8270b26150ca287780"><td class="memItemLeft" align="right" valign="top"><a class="el" href="raveobject__list_8h.html#abdac48af2ac58989ba91c33c2a1c79d0">RaveObjectList_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="rave__field_8h.html#aeb441cfcacb54c8270b26150ca287780">RaveField_getInternalAttributeValues</a> (<a class="el" href="rave__field_8h.html#a54b17ce798506570a3d68f25207e3730">RaveField_t</a> *field)</td></tr>
+<tr class="memdesc:aeb441cfcacb54c8270b26150ca287780"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a reference to the internally stored attributes.  <a href="rave__field_8h.html#aeb441cfcacb54c8270b26150ca287780">More...</a><br /></td></tr>
+<tr class="separator:aeb441cfcacb54c8270b26150ca287780"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a69323388b5cf7d6fd6d4781cc72f9412"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="rave__field_8h.html#a69323388b5cf7d6fd6d4781cc72f9412">RaveField_removeAttributes</a> (<a class="el" href="rave__field_8h.html#a54b17ce798506570a3d68f25207e3730">RaveField_t</a> *field)</td></tr>
 <tr class="memdesc:a69323388b5cf7d6fd6d4781cc72f9412"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes all attributes from the field.  <a href="rave__field_8h.html#a69323388b5cf7d6fd6d4781cc72f9412">More...</a><br /></td></tr>
 <tr class="separator:a69323388b5cf7d6fd6d4781cc72f9412"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -689,6 +692,33 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the data type </dd></dl>
+
+</div>
+</div>
+<a id="aeb441cfcacb54c8270b26150ca287780" name="aeb441cfcacb54c8270b26150ca287780"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aeb441cfcacb54c8270b26150ca287780">&#9670;&nbsp;</a></span>RaveField_getInternalAttributeValues()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="raveobject__list_8h.html#abdac48af2ac58989ba91c33c2a1c79d0">RaveObjectList_t</a> * RaveField_getInternalAttributeValues </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="rave__field_8h.html#a54b17ce798506570a3d68f25207e3730">RaveField_t</a> *&#160;</td>
+          <td class="paramname"><em>field</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Returns a reference to the internally stored attributes. </p>
+<p >NOTE! This method is usually only used internally. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">field</td><td>- self </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>a list of RaveAttributes. </dd></dl>
 
 </div>
 </div>

@@ -110,6 +110,9 @@ Functions</h2></td></tr>
 <tr class="memitem:a1f2cc21902fe1e6553118870c6b99da7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="raveobject__list_8h.html#abdac48af2ac58989ba91c33c2a1c79d0">RaveObjectList_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="rave__attribute__table_8h.html#a1f2cc21902fe1e6553118870c6b99da7">RaveAttributeTable_getValuesVersion</a> (<a class="el" href="rave__attribute__table_8h.html#ad3846f995e24d0aba6a187b9bb4eaae5">RaveAttributeTable_t</a> *self, <a class="el" href="rave__types_8h.html#a290d5190c397951897071d66bfaf35e0">RaveIO_ODIM_Version</a> version)</td></tr>
 <tr class="memdesc:a1f2cc21902fe1e6553118870c6b99da7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the values for the table.  <a href="rave__attribute__table_8h.html#a1f2cc21902fe1e6553118870c6b99da7">More...</a><br /></td></tr>
 <tr class="separator:a1f2cc21902fe1e6553118870c6b99da7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6cf5dbac70c0f419e5257b3be24fd208"><td class="memItemLeft" align="right" valign="top"><a class="el" href="raveobject__list_8h.html#abdac48af2ac58989ba91c33c2a1c79d0">RaveObjectList_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="rave__attribute__table_8h.html#a6cf5dbac70c0f419e5257b3be24fd208">RaveAttributeTable_getInternalValues</a> (<a class="el" href="rave__attribute__table_8h.html#ad3846f995e24d0aba6a187b9bb4eaae5">RaveAttributeTable_t</a> *self)</td></tr>
+<tr class="memdesc:a6cf5dbac70c0f419e5257b3be24fd208"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the internal values for the table.  <a href="rave__attribute__table_8h.html#a6cf5dbac70c0f419e5257b3be24fd208">More...</a><br /></td></tr>
+<tr class="separator:a6cf5dbac70c0f419e5257b3be24fd208"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae73d89dddee87eb4b82222f390204757"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="rave__attribute__table_8h.html#ae73d89dddee87eb4b82222f390204757">RaveAttributeTable_shiftAttribute</a> (<a class="el" href="rave__attribute__table_8h.html#ad3846f995e24d0aba6a187b9bb4eaae5">RaveAttributeTable_t</a> *self, const char *name, int nx)</td></tr>
 <tr class="memdesc:ae73d89dddee87eb4b82222f390204757"><td class="mdescLeft">&#160;</td><td class="mdescRight">Performs a circular shift of an array attribute.  <a href="rave__attribute__table_8h.html#ae73d89dddee87eb4b82222f390204757">More...</a><br /></td></tr>
 <tr class="separator:ae73d89dddee87eb4b82222f390204757"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -446,6 +449,33 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a id="a6cf5dbac70c0f419e5257b3be24fd208" name="a6cf5dbac70c0f419e5257b3be24fd208"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6cf5dbac70c0f419e5257b3be24fd208">&#9670;&nbsp;</a></span>RaveAttributeTable_getInternalValues()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="raveobject__list_8h.html#abdac48af2ac58989ba91c33c2a1c79d0">RaveObjectList_t</a> * RaveAttributeTable_getInternalValues </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="rave__attribute__table_8h.html#ad3846f995e24d0aba6a187b9bb4eaae5">RaveAttributeTable_t</a> *&#160;</td>
+          <td class="paramname"><em>self</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Returns the internal values for the table. </p>
+<p >Note, it is not cloned values but references to them. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>a list of values </dd></dl>
+
+</div>
+</div>
 <a id="a07eb790b0ad8ea2e1575872b85609d23" name="a07eb790b0ad8ea2e1575872b85609d23"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a07eb790b0ad8ea2e1575872b85609d23">&#9670;&nbsp;</a></span>RaveAttributeTable_getValues()</h2>
 
@@ -463,7 +493,7 @@ Variables</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Returns the values for the table. </p>
-<p >Note, it is not cloned values but references to them. </p><dl class="params"><dt>Parameters</dt><dd>
+<p >Note, it is cloned values but references to them. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
   </table>
@@ -500,7 +530,7 @@ Variables</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Returns the values for the table. </p>
-<p >Note, it is not cloned values but references to them. </p><dl class="params"><dt>Parameters</dt><dd>
+<p >Note, it is cloned values but references to them. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">version</td><td>- the version of the attribute names to return </td></tr>
