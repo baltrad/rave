@@ -6,6 +6,7 @@ import sys
 import time
 import datetime
 import base64
+import json
 if sys.version_info < (3,):
   import httplib
   import urlparse
@@ -52,10 +53,11 @@ class BaltradFrame(object):
     try:
       conn.request("POST", query, data, headers)
       response = conn.getresponse()
+      body = response.read()
     finally:
       conn.close();
       
-    return response.status, response.reason, response.read()
+    return response.status, response.reason, body, response
   
   def send_file(self, path):
     uri = "%s/post_file.htm"%self._dex_uri
@@ -66,7 +68,9 @@ class BaltradFrame(object):
     fp = open(path, 'rb')
     
     try:
-      return self._post(host, query, fp, headers)
+      status, reason, body, response = self._post(host, query, fp, headers)
+      body=json.dumps({"message":response.getheader("Baltrad-Message"), "uuid":response.getheader("Baltrad-Stored-UUID")})
+      return status, reason, body
     finally:
       fp.close()
 
@@ -74,8 +78,12 @@ class BaltradFrame(object):
     uri = "%s/post_message.htm"%self._dex_uri
     (host, query) = self._split_uri(uri)
     headers = self._generate_headers(uri)
+    
+    status, reason, body, response = self._post(host, query, fp, headers)
 
-    return self._post(host, query, message, headers)
+    body=json.dumps({"message":response.getheader("Baltrad-Message"), "uuid":response.getheader("Baltrad-Stored-UUID")})
+    
+    return status, reason, body
 
 def inject_file(path, dex_uri, dex_privatekey=DEX_PRIVATEKEY, dex_nodename=DEX_NODENAME):
   return BaltradFrame(dex_uri, dex_privatekey, dex_nodename).send_file(path)
