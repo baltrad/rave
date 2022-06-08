@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "rave_alloc.h"
+#include "rave_debug.h"
 
 /**
  * Radius at the equator
@@ -104,9 +105,9 @@ void daToLl(Position* src, Position* tgt)
   double evalDist;
 
   if (cos(src->lat0) == 0.0) {
-    printf("When trying to translate length and azimuth\n");
-    printf("to longitude and latitude\n");
-    printf("cos(original latitude) would result in division by zero.\n");
+    Rave_printf("When trying to translate length and azimuth\n");
+    Rave_printf("to longitude and latitude\n");
+    Rave_printf("cos(original latitude) would result in division by zero.\n");
     return;
   }
 
@@ -122,12 +123,12 @@ void dhToRe(Position* src, Position* tgt)
   double height;
   double R_earth = getEarthRadius(src->lat0);
 
-  if (abs(src->dndh + 1.0 / R_earth) < 1.0e-9 * (src->dndh)) {
+  if (fabs(src->dndh + 1.0 / R_earth) < 1.0e-9 * (src->dndh)) {
     /* The rays and the earth-surface are modelled as being straight lines.*/
     height = src->alt - src->alt0;
     tgt->range = sqrt(height * height + src->distance * src->distance);
 
-    if (abs(src->distance) < 1.0) {
+    if (fabs(src->distance) < 1.0) {
       tgt->elevation = atan(height / src->distance);
     } else {
       tgt->elevation = M_PI / 2.0;
@@ -162,7 +163,7 @@ void deToRh(Position* src, Position* tgt)
 
   double R_earth = getEarthRadius(src->lat0);
 
-  if (abs(1.0 / R_earth + src->dndh) < 1.0e-9 * (src->dndh)) {
+  if (fabs(1.0 / R_earth + src->dndh) < 1.0e-9 * (src->dndh)) {
     h = src->alt - src->alt0;
     tgt->range = sqrt(h * h + src->distance * src->distance);
     tgt->alt = src->alt0 + (tgt->range * sin(src->elevation));
@@ -187,7 +188,7 @@ void reToDh(Position* src, Position* tgt)
 
   R_earth = getEarthRadius(src->lat0);
 
-  if (abs(src->dndh + 1.0 / R_earth) < 1.0e-9 * (src->dndh)) {
+  if (fabs(src->dndh + 1.0 / R_earth) < 1.0e-9 * (src->dndh)) {
     /*Straight lines*/
     tgt->alt = src->alt0 + src->range * sin(src->elevation);
     tgt->distance = src->range * cos(src->elevation);
@@ -218,7 +219,7 @@ void ehToRd(Position* src, Position* tgt)
   if (tmpValue < 1.0e-9 * (src->dndh)) {
     /*Straight lines*/
     if (sin(src->elevation) == 0.0) {
-      printf("Trying to divide by zero");
+      Rave_printf("Trying to divide by zero");
       return;
     }
     tgt->range = (src->alt - src->alt0) / sin(src->elevation);
