@@ -57,6 +57,8 @@
     <fikes plc="Kesälahti" rad="FI50" wmo="02995"></fikes>
     <fipet plc="Petäjävesi" rad="FI51" wmo="02775"></fipet>
     <finur plc="Nurmes" rad="FI52" wmo="00000"></finur>
+    <fivih plc="Vihti" rad="FI53" wmo="00000"></fivih>
+    <fikan plc="Kankaanpää" rad="FI54" wmo="00000"></fikan>
   </fi>
   <fr CCCC="LFPW" org="84">
     <frabb plc="Abbeville" rad="FR40" wmo="07005"></frabb>
