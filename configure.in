@@ -162,8 +162,8 @@ if [[ "$COMPILE_FOR_PYTHON" = "yes" ]]; then
   PY_INCLUDES="-I$PY_PATH_INCLUDES -I$PY_PATH_PLAT_INCLUDES"
   AC_MSG_RESULT([$PY_INCLUDES])
 
-  AC_MSG_CHECKING([for python lib site-packages])
-  TMP_SITEPACK=`$PYBIN -c "import sysconfig; print(sysconfig.get_path(\"purelib\") or '')"`
+  AC_MSG_CHECKING([for python lib platform site-packages])
+  TMP_SITEPACK=`$PYBIN -c "import sysconfig; print(sysconfig.get_path(\"platlib\") or '')"`
   if [[ "$TMP_SITEPACK" != "" ]]; then
     PY_SITEPACK="$TMP_SITEPACK"
   else
