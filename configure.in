@@ -25,109 +25,105 @@ case $withval in
        ;;
 esac
 
-
-dnl It is possible to turn on memory debugging within RAVE
-PYBIN=python
+# Allow specify of enable-py3support for backward compatibility but if it is disabled we will fail configuration
 py3support=yes
 AC_ARG_ENABLE(py3support,
   [  --enable-py3support     Builds rave with support for python3.],
   py3support=$enableval)
-  
 if [[ "$COMPILE_FOR_PYTHON" = "yes" ]]; then
-  if [[ "x$py3support" = "xyes" ]]; then
-    PYOPT="$PYOPT -DPY3_SUPPORT"
-    PYBIN=python3
+  if [[ "x$py3support" != "xyes" ]]; then
+    AC_MSG_ERROR([Only python3 is supported])
   fi
 fi
 
-AC_ARG_WITH(py3bin, [  --with-py3bin=python3  What python 3 binary to use],
-		    ,withval=python3)
+# --enable-py3support 
+# --with-py3bin=python3.6 
+# --with-py3bin-config=python3.6-config 
+# --with-python-makefile=/usr/lib64/python3.6/config-3.6m-x86_64-linux-gnu/Makefile
+PYBIN=
+AC_ARG_WITH(py3bin, [  --with-py3bin=python3 What python binary to use],
+		    ,withval=)
 if [[ "$COMPILE_FOR_PYTHON" = "yes" ]]; then
-  if [[ "$PYBIN" = "python3" ]]; then
-    AC_MSG_CHECKING(what python3 binary to use)
-    if [[ "$withval" != "python3" ]]; then
-      PYBIN=$withval
+  PYBINSTOTEST="python3 python"
+  if [[ "$withval" != "" ]]; then
+    PYBINSTOTEST=$withval
+  fi
+  AC_MSG_CHECKING([what python binary to use])
+  for pybin in $PYBINSTOTEST; do
+    which $pybin >> /dev/null 2>&1
+    if [[ $? -eq 0 ]]; then
+      PYVER=`$pybin -c "import sys; print(sys.version_info[[0]])"`
+      PY_MIN_VER=`$pybin -c "import sys; print(sys.version_info[[1]])"`
+      if [[ $? -eq 0 ]]; then
+        if [[ "$PYVER" = "" -o "$PY_MIN_VER" = "" ]]; then
+          AC_MSG_ERROR([Could not identify python versions Major=$PYVER Minor=$PY_MIN_VER])
+        fi
+        
+        if [[ $PYVER -ge 3 -a $PY_MIN_VER -ge 2 ]]; then
+          PYBIN=$pybin
+          break
+        fi
+      fi
     fi
-    AC_MSG_RESULT($PYBIN)
+  done
+  if [[ "$PYBIN" != "" ]]; then
+    AC_MSG_RESULT([$PYBIN])
+  else
+    AC_MSG_ERROR([Could not identify proper python binary. Must be >= 3.2])
   fi
-fi
-
-if [[ "$COMPILE_FOR_PYTHON" = "yes" ]]; then
-PYVERSION=`$PYBIN -c "import sys; print(sys.version[[:3]])"`
-PY_EXEC_INSTALLDIR=`$PYBIN -c "import sys; print(sys.exec_prefix)"`
-fi
+fi  
 
 PY_PYTHON_BIN="$PYBIN"
 
-PYCONFIG_BIN="python-config"
-AC_ARG_WITH(py3bin-config, [  --with-py3bin-config=python3-config  What python 3 config binary to use],
-		    ,withval=default)
 if [[ "$COMPILE_FOR_PYTHON" = "yes" ]]; then
-  if [[ "$py3support" = "yes" ]]; then
-    if [[ "$withval" = "default" ]]; then
-      PYCONFIG_BIN="$PYBIN-config"
-    else
-      PYCONFIG_BIN="$withval"
-    fi
-  fi
-fi
-
-if [[ "$COMPILE_FOR_PYTHON" = "yes" ]]; then
-AC_MSG_CHECKING(for python Makefile)
+  AC_MSG_CHECKING([for python version])
+  PYVERSION=`$PYBIN -c "import sysconfig; print(sysconfig.get_python_version())"`
+  AC_MSG_RESULT([$PYVERSION])
+  
+  AC_MSG_CHECKING([for python exec dir])
+  PY_EXEC_INSTALLDIR=`$PYBIN -c "import sysconfig; print(sysconfig.get_config_var(\"exec_prefix\"))"`
+  AC_MSG_RESULT([$PY_EXEC_INSTALLDIR])
 fi
 
 PY_CONFIG_MAKE=
-
 AC_ARG_WITH(python-makefile, [  --with-python-makefile=Makefile  Where the makefile used for building python can be found],
 		    ,withval=no)
 if [[ "$COMPILE_FOR_PYTHON" = "yes" ]]; then
-
+  AC_MSG_CHECKING(for python Makefile)
   if [[ "$withval" != "no" ]]; then
     if [[ -f $withval ]]; then
       PY_CONFIG_MAKE="$withval"
     fi
   fi
 
-
-  PY_CONFIGDIR=`$PYCONFIG_BIN --configdir`
-  if test $? -eq 0; then
-    if [[ "x$PY_CONFIG_MAKE" = "x" ]]; then
-      if [[ -f "$PY_CONFIGDIR/Makefile" ]]; then
-        PY_CONFIG_MAKE="$PY_CONFIGDIR/Makefile"
-      fi
-    fi
-  fi
-
   if [[ "x$PY_CONFIG_MAKE" = "x" ]]; then
-    PY_CONFIG_MAKE="$PY_EXEC_INSTALLDIR/lib/python$PYVERSION/config/Makefile"
-    if [[ ! -f "$PY_CONFIG_MAKE" ]]; then
-      PY_CONFIG_MAKE="$PY_EXEC_INSTALLDIR/lib64/python$PYVERSION/config/Makefile"
-    fi
+    PY_CONFIG_MAKE=`$PYBIN -c "import sysconfig; print(sysconfig.get_makefile_filename() or '')"`
   fi
 
   if [[ ! -f "$PY_CONFIG_MAKE" ]]; then
     AC_MSG_ERROR(Could not successfully find the python Makefile)
   fi
+  
   AC_MSG_RESULT($PY_CONFIG_MAKE)
 
+fi
 
+
+if [[ "$COMPILE_FOR_PYTHON" = "yes" ]]; then
   #
   # Extract what compiler the python binary was compiled with
   #
-  AC_MSG_CHECKING("for the compiler used for generating python")
+  AC_MSG_CHECKING([for the compiler used for generating python])
 
-  PYCC=
+  PYCC=`$PYBIN -c "import sysconfig; print(sysconfig.get_config_var(\"CC\") or '')"`
 
-  PYCC=`cat $PY_CONFIG_MAKE | sed -n "/^CC=/p" | sed -e "s/CC=//g" | awk '{print $1}'`
-  AC_MSG_RESULT("$PYCC")
-  #CC=$PYCC
+  AC_MSG_RESULT([$PYCC])
 
   dnl Later on we are going to check for pthread support but since we know that
   dnl python might determine pthread flags we can at least see what python
   dnl came up with.
-
   AC_MSG_CHECKING(if python CC defines pthread usage)
-  PYPTHREADCC=`cat $PY_CONFIG_MAKE | sed -n "/^CC=/p" | sed -e "s/CC=//g" | grep "pthread"`
+  PYPTHREADCC=`echo $PYCC | grep "pthread"`
   PYGOTPTHREAD=no
   if [[ "$PYPTHREADCC" != "" ]]; then
     PYGOTPTHREAD=yes
@@ -154,32 +150,38 @@ PYCCSHARED=
 PYDEFS=
 
 if [[ "$COMPILE_FOR_PYTHON" = "yes" ]]; then
-  AC_MSG_CHECKING("for python includes")
-  PY_INCLUDES="$PY_EXEC_INSTALLDIR/include/python$PYVERSION"
-  AC_MSG_RESULT("$PY_INCLUDES")
-  PY_INCLUDES="-I$PY_INCLUDES"
-  PY_INCLUDES=`$PYCONFIG_BIN --includes`
+  AC_MSG_CHECKING([for python includes])
+  PY_PATH_INCLUDES=`$PYBIN -c "import sysconfig; print(sysconfig.get_path(\"include\") or '')"`
+  AC_MSG_RESULT([$PY_PATH_INCLUDES])
 
-  AC_MSG_CHECKING("for python lib site-packages")
-  TMP_SITEPACK=`$PYBIN -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1))"`
+  AC_MSG_CHECKING([for platform specific python includes])
+  PY_PATH_PLAT_INCLUDES=`$PYBIN -c "import sysconfig; print(sysconfig.get_path(\"platinclude\") or '')"`
+  AC_MSG_RESULT([$PY_PATH_PLAT_INCLUDES])
+
+  AC_MSG_CHECKING([for python include directives])
+  PY_INCLUDES="-I$PY_PATH_INCLUDES -I$PY_PATH_PLAT_INCLUDES"
+  AC_MSG_RESULT([$PY_INCLUDES])
+
+  AC_MSG_CHECKING([for python lib site-packages])
+  TMP_SITEPACK=`$PYBIN -c "import sysconfig; print(sysconfig.get_path(\"purelib\") or '')"`
   if [[ "$TMP_SITEPACK" != "" ]]; then
     PY_SITEPACK="$TMP_SITEPACK"
   else
-    PY_SITEPACK="$PY_EXEC_INSTALLDIR/lib/python$PYVERSION/site-packages"
+    AC_MSG_ERROR([Failed to identify site-packages])
   fi
-  AC_MSG_RESULT("$PY_SITEPACK")
+  AC_MSG_RESULT([$PY_SITEPACK])
 
   dnl Checks for typedefs, structures and compiler characteristics
-  AC_MSG_CHECKING("for python options")
-  PYOPT=`cat $PY_CONFIG_MAKE | sed -n "/^OPT=/p" | sed -n -e"s/^OPT=[[ 	]]*\(.*\)/\1/p"`
-  AC_MSG_RESULT("$PYOPT")
+  AC_MSG_CHECKING([for python options])
+  PYOPT=`$PYBIN -c "import sysconfig; print(sysconfig.get_config_var(\"OPT\") or '')"`
+  AC_MSG_RESULT([$PYOPT])
 
-  AC_MSG_CHECKING("for ldflags")
-  PYLDFLAGS=`cat $PY_CONFIG_MAKE | sed -n "/^LDFLAGS=/p" | sed -n -e"s/^LDFLAGS=[[ 	]]*\(.*\)/\1/p"`
-  AC_MSG_RESULT("$PYLDFLAGS")
+  AC_MSG_CHECKING([for ldflags])
+  PYLDFLAGS=`$PYBIN -c "import sysconfig; print(sysconfig.get_config_var(\"LDFLAGS\") or '')"`
+  AC_MSG_RESULT([$PYLDFLAGS])
 
-  AC_MSG_CHECKING("for ldshared")
-  PYLDSHARED=`cat $PY_CONFIG_MAKE | sed -n "/^LDSHARED=/p" | sed -n -e"s/^LDSHARED=[[ 	]]*\(.*\)/\1/p"`
+  AC_MSG_CHECKING([for ldshared])
+  PYLDSHARED=`$PYBIN -c "import sysconfig; print(sysconfig.get_config_var(\"LDSHARED\") or '')"`
 
   # Special hack for mac osx.
   ISMACOS=no
@@ -195,15 +197,15 @@ if [[ "$COMPILE_FOR_PYTHON" = "yes" ]]; then
   if [[ "x$ISMACOS" = "xyes" ]]; then
     PYLDSHARED=`echo $PYLDSHARED | sed -e "s/[[ \t]]-bundle[[ \t]]/ -dynamiclib /g"`
   fi
-  AC_MSG_RESULT("$PYLDSHARED")
+  AC_MSG_RESULT([$PYLDSHARED])
 
-  AC_MSG_CHECKING("for ccshared")
-  PYCCSHARED=`cat $PY_CONFIG_MAKE | sed -n "/^CCSHARED=/p" | sed -n -e"s/^CCSHARED=[[ 	]]*\(.*\)/\1/p"`
-  AC_MSG_RESULT("$PYCCSHARED")
+  AC_MSG_CHECKING([for ccshared])
+  PYCCSHARED=`$PYBIN -c "import sysconfig; print(sysconfig.get_config_var(\"CCSHARED\") or '')"`
+  AC_MSG_RESULT([$PYCCSHARED])
 
-  AC_MSG_CHECKING("for defs")
-  PYDEFS=`cat $PY_CONFIG_MAKE | sed -n "/^DEFS=/p" | sed -n -e"s/^DEFS=[[ 	]]*\(.*\)/\1/p"`
-  AC_MSG_RESULT("$PYDEFS")
+  AC_MSG_CHECKING([for defs])
+  PYDEFS=`$PYBIN -c "import sysconfig; print(sysconfig.get_config_var(\"DEFS\") or '')"`
+  AC_MSG_RESULT([$PYDEFS])
 
 else #if COMPILE_FOR_PYTHON
   # If we are building without python support, then we still want to use a similar way to identify compiler flags as when running Python.
@@ -572,10 +574,6 @@ fi
 fi
 
 AC_CHECK_LIB(c,itrunc,GOT_ITRUNC=,GOT_ITRUNC=-DCREATE_ITRUNC)
-
-dnl Checks for header files.
-AC_HEADER_STDC
-AC_CHECK_HEADERS(math.h stdlib.h)
 
 dnl Checking for proj is a bit more complicated now since we have two different style of proj-library and we want to do our
 dnl best to identify the proper one.
@@ -1203,7 +1201,7 @@ fi
 
 
 AC_MSG_CHECKING(if pthread support is default)
-AC_TRY_RUN([
+AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #include <pthread.h>
 void* runme(void*p){return NULL;}
 int main(int argc, char** argv) {
@@ -1212,7 +1210,7 @@ int main(int argc, char** argv) {
     return 1;
   (void)pthread_detach(p);
   return 0;
-}],try_result=yes,try_result=no,try_result=no)
+}]])],[try_result=yes],[try_result=no],[try_result=no])
 AC_MSG_RESULT($try_result)
 PTHREAD_SUPPORT_DEFAULT=$try_result
 
@@ -1224,7 +1222,7 @@ if [[ "$PTHREAD_SUPPORT_DEFAULT" != "yes" ]]; then
 saved_CC="$CC"
 CC="$CC -pthread"
 AC_MSG_CHECKING(if -pthread option is required)
-AC_TRY_RUN([
+AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #include <pthread.h>
 void* runme(void*p){return NULL;}
 int main(int argc, char** argv) {
@@ -1233,7 +1231,7 @@ int main(int argc, char** argv) {
     return 1;
   (void)pthread_detach(p);
   return 0;
-}],try_result=yes,try_result=no,try_result=no)
+}]])],[try_result=yes],[try_result=no],[try_result=no])
 AC_MSG_RESULT($try_result)
 CC="$saved_CC"
 if [[ "$try_result" != "no" ]]; then
