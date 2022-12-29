@@ -196,7 +196,7 @@ void fill_meta(PolarScan_t* scan, PolarScanParam_t* param, SCANMETA *meta)
 
    /* Don't overwrite metadata attributes in "meta" because they may already be populated by fill_toplevelmeta */
    if (!getDoubleAttribute((RaveCoreObject*)scan, "how/wavelength", &tmpd)) {
-     RAVE_WARNING2("Scan elevation %2.1f: No how/wavelength attribute. Using %2.3f degrees.\n", meta->elev, meta->wavelength);
+     RAVE_WARNING2("Scan elevation %2.1f: No how/wavelength attribute. Using %2.3f m.\n", meta->elev, meta->wavelength);
    } else meta->wavelength = tmpd/100.0;  /* cm to m */
 
    if (!getDoubleAttribute((RaveCoreObject*)scan, "how/rpm", &tmpd)) {
