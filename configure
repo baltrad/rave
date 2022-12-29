@@ -3528,9 +3528,9 @@ printf %s "checking for python include directives... " >&6; }
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $PY_INCLUDES" >&5
 printf "%s\n" "$PY_INCLUDES" >&6; }
 
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for python lib site-packages" >&5
-printf %s "checking for python lib site-packages... " >&6; }
-  TMP_SITEPACK=`$PYBIN -c "import sysconfig; print(sysconfig.get_path(\"purelib\") or '')"`
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for python lib platform site-packages" >&5
+printf %s "checking for python lib platform site-packages... " >&6; }
+  TMP_SITEPACK=`$PYBIN -c "import sysconfig; print(sysconfig.get_path(\"platlib\") or '')"`
   if [ "$TMP_SITEPACK" != "" ]; then
     PY_SITEPACK="$TMP_SITEPACK"
   else
