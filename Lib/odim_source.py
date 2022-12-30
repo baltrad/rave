@@ -33,7 +33,7 @@ import xml.etree.ElementTree as ET
 # NOD uses the WMO number as the look-up 
 # CCCC will be the same for all radars from a given country, so there'll be
 # a lot of redundancy, but this is needed to create Odyssey file strings.
-NOD, WMO, RAD, PLC, CCCC = {None:None}, {None:None}, {None:None}, {None:None}, {None:None}
+NOD, WMO, RAD, PLC, CCCC, WIGOS = {None:None}, {None:None}, {None:None}, {None:None}, {None:None}, {None:None}
 SOURCE = {None:None}
 
 initialized = 0
@@ -75,17 +75,25 @@ def init():
                 PLC[nod] = plc
             else:
                 plc = None
+            if "wigos" in keys:
+                wigos = radar.attrib["wigos"]
+                WIGOS[nod] = wigos
+            else:
+                wigos = None
+                
             if wmo not in ("00000", None): 
                 NOD[wmo] = nod
                 SOURCE[nod] = u"NOD:%s" % nod
                 if wmo: SOURCE[nod] += ",WMO:%s" % wmo
                 if rad: SOURCE[nod] += ",RAD:%s" % rad
                 if plc: SOURCE[nod] += ",PLC:%s" % plc
+                if wigos: SOURCE[nod] += ",WIGOS:%s" % wigos
             else:
                 SOURCE[nod] = u"NOD:%s" % nod
                 if rad: SOURCE[nod] += ",RAD:%s" % rad
                 if org and wmo!=None: SOURCE[nod] += ",ORG:%s" % org
                 if plc: SOURCE[nod] += ",PLC:%s" % plc
+                if wigos: SOURCE[nod] += ",WIGOS:%s" % wigos
     initialized = 1
 
 
@@ -141,7 +149,7 @@ class ODIM_Source:
         self.source = src
         if not isinstance(self.source,bytes) and self.source is not None:
           self.source = bytes(self.source, UTF8)
-        self.wmo = self.nod = self.rad = self.plc = self.org = self.cty = self.cmt = None
+        self.wmo = self.nod = self.rad = self.plc = self.org = self.cty = self.cmt = self.wigos = None
         if self.source: self.split_source()
 
     ## Splits the input string into identifier values        
@@ -157,7 +165,11 @@ class ODIM_Source:
             elif prefix == b'org': self.org = value.decode(UTF8)
             elif prefix == b'cty': self.cty = value.decode(UTF8)
             elif prefix == b'cmt': self.cmt = value.decode(UTF8) 
+            elif prefix == b'wigos': self.wigos = value.decode(UTF8) 
 
+    def __str__(self):
+        return "ODIM_Source(nod=%s, wmo=%s, rad=%s, plc=%s, org=%s, cty=%s, cmt=%s, wigos=%s" % \
+            (self.nod or "", self.wmo or "", self.rad or "", self.plc or "", self.org or "", self.cty or "", self.cmt or "", self.wigos or "")
 
 ## Convenience function. Gets the NOD identifier from /what/source .
 # Assumes that the NOD is there or can be looked up based on the WMO identifier.

@@ -50,8 +50,8 @@ def Validate(rio):
         odim_source.CheckSource(rio.object)
         s = odim_source.ODIM_Source(rio.object.source)
         if not s.nod: raise AttributeError()
-        if not s.wmo:
-            rio.object.source = odim_source.SOURCE[s.nod].encode(UTF8)
+        if not s.wmo and not s.wigos:
+            rio.object.source = odim_source.SOURCE[s.nod]
     except:
         rio.object.source=repair_odim_source(rio.object)
         s = odim_source.ODIM_Source(rio.object.source)
@@ -87,69 +87,70 @@ def repair_odim_source(obj):
     source = obj.source
     # France - Falaise
     if obj.source == 'WMO:07027':
-        return odim_source.SOURCE["frcae"].encode(UTF8)
+        return odim_source.SOURCE["frcae"]
     # France - Nancy
     elif obj.source == 'WMO:07180':
-        return odim_source.SOURCE["frnan"].encode(UTF8)
+        return odim_source.SOURCE["frnan"]
     # France - Nimes
     elif obj.source == 'WMO:07645':
-        return odim_source.SOURCE["frnim"].encode(UTF8)
+        return odim_source.SOURCE["frnim"]
     # France - Arcis
     elif obj.source == 'WMO:07168':
-        return odim_source.SOURCE["frtro"].encode(UTF8)
+        return odim_source.SOURCE["frtro"]
     # France - Sembadel
     elif obj.source == 'WMO:07471':
-        return odim_source.SOURCE["frlep"].encode(UTF8)
+        return odim_source.SOURCE["frlep"]
     # Cerceda - Spain
     elif obj.source[:9] == 'WMO:08007':
-        return odim_source.SOURCE["escor"].encode(UTF8)
+        return odim_source.SOURCE["escor"]
     # Almeria - Spain
     elif obj.source[:9] == 'WMO:08489':
-        return odim_source.SOURCE["esalm"].encode(UTF8)
+        return odim_source.SOURCE["esalm"]
     # Spain - Sierra de Fuentes, a k a Badajoz
     elif obj.source[:9] == "WMO:08262":
-        return odim_source.SOURCE["esbad"].encode(UTF8)
+        return odim_source.SOURCE["esbad"]
     # Spain - Autilla Pino, a k a Valladolid
     elif obj.source[:9] == "WMO:08262":
-        return odim_source.SOURCE["eslid"].encode(UTF8)
+        return odim_source.SOURCE["eslid"]
     # Spain - Aguion, a k a Santander
     elif obj.source[:9] == "WMO:08019":
-        return odim_source.SOURCE["essan"].encode(UTF8)
+        return odim_source.SOURCE["essan"]
     # Jersey
     elif obj.source == 'WMO:00897':
-        return odim_source.SOURCE["ukjer"].encode(UTF8)
+        return odim_source.SOURCE["ukjer"]
     # Keflavik
     elif obj.source == 'WMO:0,PLC:Keflavik':
         obj.height = 45.0
-        return odim_source.SOURCE["iskef"].encode(UTF8)
+        return odim_source.SOURCE["iskef"]
     # Dublin
     elif obj.source == 'WMO:03696':
-        return odim_source.SOURCE["iedub"].encode(UTF8)
+        return odim_source.SOURCE["iedub"]
     # Essen
     elif obj.source == 'WMO:10412':
-        return odim_source.SOURCE["deess"].encode(UTF8)
+        return odim_source.SOURCE["deess"]
     # KNMI:
     elif len(source.split(";")) == 2 or source[:6] == "RAD:NL":
         #source = re.sub(";", ",", source)  # no longer needed
         source = re.sub("PLC", "NOD", source)
         s = odim_source.ODIM_Source(source)
-        return odim_source.SOURCE[s.nod].encode(UTF8)
+        return odim_source.SOURCE[s.nod]
     # met.no
     elif re.search("1438", obj.source):
-        return odim_source.SOURCE["nohgb"].encode(UTF8)
+        return odim_source.SOURCE["nohgb"]
     elif re.search("1104", obj.source):
-        return odim_source.SOURCE["norst"].encode(UTF8)
+        return odim_source.SOURCE["norst"]
     elif re.search("1405", obj.source):
-        return odim_source.SOURCE["nobml"].encode(UTF8)
+        return odim_source.SOURCE["nobml"]
     elif obj.source == 'WMO:01079,NOD:nober,PLC:Berlev\xe5g':
-        return odim_source.SOURCE["nober"].encode(UTF8)
+        return odim_source.SOURCE["nober"]
     # Serbia
     elif obj.source == "WMO:0,PLC:Samos":
-        return odim_source.SOURCE["rssam"].encode(UTF8)
+        return odim_source.SOURCE["rssam"]
     # Iceland
     elif obj.source == "WMO:0,PLC:Teigsbjarg":
-        return odim_source.SOURCE["istgb"].encode(UTF8)
+        return odim_source.SOURCE["istgb"]
 
+    return source
 
 ## Manages the conversion of datasets from float64 to uint8.
 # @param rio RAVE I/O object
