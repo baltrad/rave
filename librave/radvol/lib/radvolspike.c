@@ -289,7 +289,7 @@ static int RadvolSpikeInternal_addTaskArgs(RadvolSpike_t* self)
   int result = 0;
   char task_args[1000];
   
-  sprintf(task_args, "SPIKE: SPIKE_QI=%3.1f, SPIKE_QIUn=%3.1f, SPIKE_ACovFrac=%3.1f, SPIKE_AAzim=%d, SPIKE_AVarAzim=%8.1f, SPIKE_ABeam=%d, SPIKE_AVarBeam=%3.1f, SPIKE_AFrac=%4.2f, SPIKE_BDiff=%4.1f, SPIKE_BAzim=%d, SPIKE_BFrac=%4.2f", 
+  snprintf(task_args, 1000, "SPIKE: SPIKE_QI=%3.1f, SPIKE_QIUn=%3.1f, SPIKE_ACovFrac=%3.1f, SPIKE_AAzim=%d, SPIKE_AVarAzim=%8.1f, SPIKE_ABeam=%d, SPIKE_AVarBeam=%3.1f, SPIKE_AFrac=%4.2f, SPIKE_BDiff=%4.1f, SPIKE_BAzim=%d, SPIKE_BFrac=%4.2f", 
           self->SPIKE_QI, self->SPIKE_QIUn, self->SPIKE_ACovFrac, self->SPIKE_AAzim, self->SPIKE_AVarAzim, self->SPIKE_ABeam, self->SPIKE_AVarBeam, self->SPIKE_AFrac, self->SPIKE_BDiff, self->SPIKE_BAzim, self->SPIKE_BFrac);
   if (Radvol_setTaskArgs(self->radvol, task_args)) {
     result = 1;

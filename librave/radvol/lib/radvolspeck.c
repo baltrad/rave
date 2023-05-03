@@ -160,7 +160,7 @@ static int RadvolSpeckInternal_addTaskArgs(RadvolSpeck_t* self)
   int result = 0;
   char task_args[1000];
   
-  sprintf(task_args, "SPECK: SPECK_QI=%3.1f, SPECK_QIUn=%3.1f, SPECK_AGrid=%d, SPECK_ANum=%d, SPECK_AStep=%d, SPECK_BGrid=%d, SPECK_BNum=%d, SPECK_BStep=%d", 
+  snprintf(task_args, 1000, "SPECK: SPECK_QI=%3.1f, SPECK_QIUn=%3.1f, SPECK_AGrid=%d, SPECK_ANum=%d, SPECK_AStep=%d, SPECK_BGrid=%d, SPECK_BNum=%d, SPECK_BStep=%d", 
           self->SPECK_QI, self->SPECK_QIUn, self->SPECK_AGrid, self->SPECK_ANum, self->SPECK_AStep, self->SPECK_BGrid, self->SPECK_BNum, self->SPECK_BStep);
   if (Radvol_setTaskArgs(self->radvol, task_args)) {
     result = 1;

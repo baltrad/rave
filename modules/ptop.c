@@ -1226,9 +1226,9 @@ static PyObject* _ptop_transform(PyObject* self, PyObject* args)
   for (i = 0, wasok = 0; i < tw.nelev && wasok == 0; i++) {
     wasok |= !GetIntFromSequence(ipo, i, &tw.scan[i]);
     if (strcmp(tw.obj, "PVOL") == 0) {
-      sprintf(tmpstr, "/scan%d/where/angle", tw.scan[i]);
+      snprintf(tmpstr, 100, "/scan%d/where/angle", tw.scan[i]);
     } else if (strcmp(tw.obj, "SCAN") == 0) {
-      sprintf(tmpstr, "/where/angle");
+      snprintf(tmpstr, 100, "/where/angle");
     }
     wasok |= !GetDoubleFromINFO(in, tmpstr, &tw.elev[i]);
     //    printf("in(w): scan %d, angle %f\n",tw.scan[i],tw.elev[i]);
@@ -1238,9 +1238,9 @@ static PyObject* _ptop_transform(PyObject* self, PyObject* args)
   for (i = 0, wasok = 0; i < tw.nelev_so && wasok == 0; i++) {
     wasok |= !GetIntFromSequence(opo, i, &tw.scan_so[i]);
     if (strcmp(tw.obj, "PVOL") == 0) {
-      sprintf(tmpstr, "/scan%d/where/angle", tw.scan_so[i]);
+      snprintf(tmpstr, 100, "/scan%d/where/angle", tw.scan_so[i]);
     } else if (strcmp(tw.obj, "SCAN") == 0) {
-      sprintf(tmpstr, "/where/angle");
+      snprintf(tmpstr, 100, "/where/angle");
     }
     wasok |= !GetDoubleFromINFO(out, tmpstr, &tw.elev_so[i]);
     //    printf("so(w): scan %d, angle %f\n",tw.scan_so[i],tw.elev_so[i]);
@@ -1264,9 +1264,9 @@ static PyObject* _ptop_transform(PyObject* self, PyObject* args)
     for (i = 0, wasok = 0; i < tw.nelev && wasok == 0; i++) {
       wasok |= !GetIntFromSequence(ipoz, i, &tw.scanT[i]);
       if (strcmp(tw.obj, "PVOL") == 0) {
-        sprintf(tmpstr, "/scan%d/where/angle", tw.scanT[i]);
+        snprintf(tmpstr, 100, "/scan%d/where/angle", tw.scanT[i]);
       } else if (strcmp(tw.obj, "SCAN") == 0) {
-        sprintf(tmpstr, "/where/angle");
+        snprintf(tmpstr, 100, "/where/angle");
       }
       wasok |= !GetDoubleFromINFO(inz, tmpstr, &tw.elevT[i]);
       tw.elevT[i] *= DEG_TO_RAD;
@@ -1275,9 +1275,9 @@ static PyObject* _ptop_transform(PyObject* self, PyObject* args)
     for (i = 0, wasok = 0; i < tw.nelev_so && wasok == 0; i++) {
       wasok |= !GetIntFromSequence(opoz, i, &tw.scanT_so[i]);
       if (strcmp(tw.obj, "PVOL") == 0) {
-        sprintf(tmpstr, "/scan%d/where/angle", tw.scanT_so[i]);
+        snprintf(tmpstr, 100, "/scan%d/where/angle", tw.scanT_so[i]);
       } else if (strcmp(tw.obj, "SCAN") == 0) {
-        sprintf(tmpstr, "/where/angle");
+        snprintf(tmpstr, 100, "/where/angle");
       }
       wasok |= !GetDoubleFromINFO(outz, tmpstr, &tw.elevT_so[i]);
       tw.elevT_so[i] *= DEG_TO_RAD;
@@ -1375,26 +1375,26 @@ static PyObject* _ptop_transform(PyObject* self, PyObject* args)
     tw.dndh = (-3.9e-5) / 1000; /*To get same value in m^-1*/
   }
 
-  sprintf(tmpstr, "/scan%d/what/gain", tw.scan[0]);
+  snprintf(tmpstr, 100, "/scan%d/what/gain", tw.scan[0]);
   if (!GetDoubleFromINFO(out, tmpstr, &tw.slopew)) {
     PyErr_SetString(PyExc_TypeError, "store_slope not specified\n");
     return NULL;
   }
 
-  sprintf(tmpstr, "/scan%d/what/offset", tw.scan[0]);
+  snprintf(tmpstr, 100, "/scan%d/what/offset", tw.scan[0]);
   if (!GetDoubleFromINFO(out, tmpstr, &tw.ordw)) {
     PyErr_SetString(PyExc_TypeError, "store_ord not specified\n");
     return NULL;
   }
 
   if (tw.gotZ) {
-    sprintf(tmpstr, "/scan%d/what/gain", tw.scanZ[0]);
+    snprintf(tmpstr, 100, "/scan%d/what/gain", tw.scanZ[0]);
     if (!GetDoubleFromINFO(outz, tmpstr, &tw.slopez)) {
       PyErr_SetString(PyExc_TypeError, "store_slope (Z) not specified\n");
       return NULL;
     }
 
-    sprintf(tmpstr, "/scan%d/what/offset", tw.scanZ[0]);
+    snprintf(tmpstr, 100, "/scan%d/what/offset", tw.scanZ[0]);
     if (!GetDoubleFromINFO(outz, tmpstr, &tw.ordz)) {
       PyErr_SetString(PyExc_TypeError, "store_ord (Z) not specified\n");
       return NULL;
@@ -1485,14 +1485,14 @@ static PyObject* _ptop_transform(PyObject* self, PyObject* args)
 
   /* Assume that nodata is the same for src and dest pvols. */
   /* The following might leak some references - check! */
-  sprintf(tmpstr, "/scan%d/what/nodata", tw.scan[0]);
+  snprintf(tmpstr, 100, "/scan%d/what/nodata", tw.scan[0]);
   if (!GetDoubleFromINFO(in, tmpstr, &tw.nodata)) {
     PyErr_SetString(PyExc_TypeError, "nodata for input winds not specified\n");
     return NULL;
   }
 
   if (tw.gotZ) {
-    sprintf(tmpstr, "/scan%d/what/nodata", tw.scanZ[0]);
+    snprintf(tmpstr, 100, "/scan%d/what/nodata", tw.scanZ[0]);
     if (!GetDoubleFromINFO(inz, tmpstr, &tw.nodataZ)) {
       PyErr_SetString(PyExc_TypeError,
                       "nodata for input reflectivities not specified\n");

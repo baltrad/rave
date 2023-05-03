@@ -165,7 +165,7 @@ static int RadvolBroadInternal_addTaskArgs(RadvolBroad_t* self)
   int result = 0;
   char task_args[1000];
   
-  sprintf(task_args, "BROAD: BROAD_LhQI1=%3.1f, BROAD_LhQI0=%3.1f, BROAD_LvQI1=%3.1f, BROAD_LvQI0=%3.1f, BROAD_Pulse=%4.2f", 
+  snprintf(task_args, 1000, "BROAD: BROAD_LhQI1=%3.1f, BROAD_LhQI0=%3.1f, BROAD_LvQI1=%3.1f, BROAD_LvQI0=%3.1f, BROAD_Pulse=%4.2f", 
           self->BROAD_LhQI1, self->BROAD_LhQI0, self->BROAD_LvQI1, self->BROAD_LvQI0, self->BROAD_Pulse);
   if (Radvol_setTaskArgs(self->radvol, task_args)) {
     result = 1;

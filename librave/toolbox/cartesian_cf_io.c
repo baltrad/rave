@@ -246,12 +246,12 @@ static int CartesianCfIOInternal_addGlobalAttributes(CartesianCfIO_t* self, int 
     RAVE_INFO0("Could not find NOD or CMT in source\n");
     if (!OdimIoUtilities_getIdFromSource(Cartesian_getSource(cartesian), "PLC:", tmpid, 256)) {
       if (OdimIoUtilities_getIdFromSource(Cartesian_getSource(cartesian), "WMO:", tmpid, 256)) {
-        sprintf(areaid, "WMO:%s", tmpid);
+        snprintf(areaid, 256, "WMO:%s", tmpid);
       } else {
         goto done;
       }
     } else {
-      sprintf(areaid, "PLC:%s", tmpid);
+      snprintf(areaid, 256, "PLC:%s", tmpid);
     }
   }
 
@@ -810,7 +810,7 @@ static int CartesianCfIOInternal_addProjectionDefinition(int ncid, Cartesian_t* 
     size_t n = 0;
     size_t i = 0;
     if (!OdimIoUtilities_getNodOrCmtFromSource(Cartesian_getSource(cartesian), areaid, 256)) {
-      sprintf(areaid, "projection_def");
+      snprintf(areaid, 256, "projection_def");
     }
     if (nc_def_var(ncid, areaid, NC_INT, 0, NULL, projvarid)) {
       RAVE_ERROR0("Failed to create projection definition %d");

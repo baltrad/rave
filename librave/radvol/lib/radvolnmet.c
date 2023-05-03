@@ -161,7 +161,7 @@ static int RadvolNmetInternal_addTaskArgs(RadvolNmet_t* self)
   int result = 0;
   char task_args[1000];
 
-  sprintf(task_args, "NMET: NMET_QI=%4.2f, NMET_QIUn=%4.2f, NMET_AReflMin=%5.2f, NMET_AReflMax=%5.2f, NMET_AAltMin=%4.1f, NMET_AAltMax=%4.1f, NMET_ADet=%4.2f, NMET_BAlt=%4.1f",
+  snprintf(task_args, 1000, "NMET: NMET_QI=%4.2f, NMET_QIUn=%4.2f, NMET_AReflMin=%5.2f, NMET_AReflMax=%5.2f, NMET_AAltMin=%4.1f, NMET_AAltMax=%4.1f, NMET_ADet=%4.2f, NMET_BAlt=%4.1f",
           self->NMET_QI, self->NMET_QIUn, self->NMET_AReflMin, self->NMET_AReflMax, self->NMET_AAltMin, self->NMET_AAltMax, self->NMET_ADet, self->NMET_BAlt);
   if (Radvol_setTaskArgs(self->radvol, task_args)) {
     result = 1;

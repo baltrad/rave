@@ -380,7 +380,7 @@ static int AreaRegistryInternal_addArgsToNode(Area_t* area, SimpleXmlNode_t* are
   argNode = SimpleXmlNode_create(areadefNode, "arg");
   if (argNode != NULL) {
     char xsize[32];
-    sprintf(xsize, "%ld", Area_getXSize(area));
+    snprintf(xsize, 32, "%ld", Area_getXSize(area));
     if (!SimpleXmlNode_addAttribute(argNode, "id", "xsize") ||
         !SimpleXmlNode_addAttribute(argNode, "type", "int") ||
         !SimpleXmlNode_setText(argNode, xsize, strlen(xsize))) {
@@ -396,7 +396,7 @@ static int AreaRegistryInternal_addArgsToNode(Area_t* area, SimpleXmlNode_t* are
   argNode = SimpleXmlNode_create(areadefNode, "arg");
   if (argNode != NULL) {
     char ysize[32];
-    sprintf(ysize, "%ld", Area_getYSize(area));
+    snprintf(ysize, 32, "%ld", Area_getYSize(area));
     if (!SimpleXmlNode_addAttribute(argNode, "id", "ysize") ||
         !SimpleXmlNode_addAttribute(argNode, "type", "int") ||
         !SimpleXmlNode_setText(argNode, ysize, strlen(ysize))) {
@@ -412,7 +412,7 @@ static int AreaRegistryInternal_addArgsToNode(Area_t* area, SimpleXmlNode_t* are
   argNode = SimpleXmlNode_create(areadefNode, "arg");
   if (argNode != NULL) {
     char xscale[32];
-    sprintf(xscale, "%lf", Area_getXScale(area));
+    snprintf(xscale, 32, "%lf", Area_getXScale(area));
     if (!SimpleXmlNode_addAttribute(argNode, "id", "xscale") ||
         !SimpleXmlNode_addAttribute(argNode, "type", "float") ||
         !SimpleXmlNode_setText(argNode, xscale, strlen(xscale))) {
@@ -428,7 +428,7 @@ static int AreaRegistryInternal_addArgsToNode(Area_t* area, SimpleXmlNode_t* are
   argNode = SimpleXmlNode_create(areadefNode, "arg");
   if (argNode != NULL) {
     char yscale[32];
-    sprintf(yscale, "%lf", Area_getYScale(area));
+    snprintf(yscale, 32, "%lf", Area_getYScale(area));
     if (!SimpleXmlNode_addAttribute(argNode, "type", "float") ||
         !SimpleXmlNode_addAttribute(argNode, "id", "yscale") ||
         !SimpleXmlNode_setText(argNode, yscale, strlen(yscale))) {
@@ -446,7 +446,7 @@ static int AreaRegistryInternal_addArgsToNode(Area_t* area, SimpleXmlNode_t* are
     double llX = 0.0, llY = 0.0, urX = 0.0, urY = 0.0;
     char extent[512];
     Area_getExtent(area, &llX, &llY, &urX, &urY);
-    if (sprintf(extent, "%lf, %lf, %lf, %lf", llX, llY, urX, urY) >= 511) {
+    if (snprintf(extent, 512, "%lf, %lf, %lf, %lf", llX, llY, urX, urY) >= 511) {
       RAVE_ERROR0("Extent became too large, can not complete writing");
       goto done;
     }

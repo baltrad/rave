@@ -287,13 +287,13 @@ static int RaveBufrIOInternal_addAttributeToPolarScanParam(void* kvalue, RaveAtt
   return PolarScanParam_addAttribute((PolarScanParam_t*)kvalue, raveattr);
 }
 
-static void RaveBufrIOInternal_getDateTimeStrings(varfl* vv, int* ii, char* datestr, char* timestr) {
+static void RaveBufrIOInternal_getDateTimeStrings(varfl* vv, int* ii, char* datestr, char* timestr, int len) {
   int year, month, day, hour, minute, second;
   int i = *ii;
   year = (int)vv[i++]; month = (int)vv[i++]; day = (int)vv[i++];
   hour = (int)vv[i++]; minute = (int)vv[i++]; second = (int)vv[i++];
-  sprintf(datestr, "%04d%02d%02d", year, month, day);
-  sprintf(timestr, "%02d%02d%02d", hour, minute, second);
+  snprintf(datestr, len, "%04d%02d%02d", year, month, day);
+  snprintf(timestr, len, "%02d%02d%02d", hour, minute, second);
   *ii = i;
 }
 
@@ -427,7 +427,7 @@ static int RaveBufrIOInternal_polarVolumeCallback(varfl val, int ind)
           RAVE_ERROR0("Failed to get wmostat\n");
           goto done;
         }
-        sprintf(source, "WMO:%02d%03d",wmoblock, wmostat);
+        snprintf(source, 16, "WMO:%02d%03d",wmoblock, wmostat);
         if (!PolarVolume_setSource((PolarVolume_t*)raveObject, source)) {
           goto done;
         }
@@ -461,8 +461,8 @@ static int RaveBufrIOInternal_polarVolumeCallback(varfl val, int ind)
         }
         year = (int)vv[i++]; month = (int)vv[i++]; day = (int)vv[i++];
         hour = (int)vv[i++]; minute = (int)vv[i++]; second = (int)vv[i++];
-        sprintf(datestr, "%04d%02d%02d", year, month, day);
-        sprintf(timestr, "%02d%02d%02d", hour, minute, second);
+        snprintf(datestr, 16, "%04d%02d%02d", year, month, day);
+        snprintf(timestr, 16, "%02d%02d%02d", hour, minute, second);
 
         if (!PolarScan_setStartDate(scan, datestr) ||
             !PolarScan_setStartTime(scan, timestr)) {
@@ -471,8 +471,8 @@ static int RaveBufrIOInternal_polarVolumeCallback(varfl val, int ind)
 
         year = (int)vv[i++]; month = (int)vv[i++]; day = (int)vv[i++];
         hour = (int)vv[i++]; minute = (int)vv[i++]; second = (int)vv[i++];
-        sprintf(datestr, "%04d%02d%02d", year, month, day);
-        sprintf(timestr, "%02d%02d%02d", hour, minute, second);
+        snprintf(datestr, 16, "%04d%02d%02d", year, month, day);
+        snprintf(timestr, 16, "%02d%02d%02d", hour, minute, second);
 
         if (!PolarScan_setEndDate(scan, datestr) ||
             !PolarScan_setEndTime(scan, timestr)) {
@@ -585,12 +585,12 @@ static int RaveBufrIOInternal_polarVolumeCallback(varfl val, int ind)
           goto done;
         }
         RaveBufrIOInternal_addHowToObject(vv, &i, scan, RaveBufrIOInternal_addAttributeToPolarScan);
-        RaveBufrIOInternal_getDateTimeStrings(vv, &i, datestr, timestr);
+        RaveBufrIOInternal_getDateTimeStrings(vv, &i, datestr, timestr, 16);
         if (!PolarScan_setStartDate(scan, datestr) ||
             !PolarScan_setStartTime(scan, timestr)) {
           goto done;
         }
-        RaveBufrIOInternal_getDateTimeStrings(vv, &i, datestr, timestr);
+        RaveBufrIOInternal_getDateTimeStrings(vv, &i, datestr, timestr, 16);
         if (!PolarScan_setEndDate(scan, datestr) ||
             !PolarScan_setEndTime(scan, timestr)) {
           goto done;
@@ -736,8 +736,8 @@ static RaveCoreObject* RaveBufrIOInternal_read(RaveBufrIO_t* self, bufr_t* msg)
     if (RAVE_OBJECT_CHECK_TYPE(raveObject, &PolarVolume_TYPE)) {
       char ndate[10];
       char ntime[10];
-      sprintf(ndate, "%04d%02d%02d", (s1.year < 50 ? s1.year+2000 : s1.year), s1.mon, s1.day);
-      sprintf(ntime, "%02d%02d%02d", s1.hour, s1.min, s1.sec);
+      snprintf(ndate, 10, "%04d%02d%02d", (s1.year < 50 ? s1.year+2000 : s1.year), s1.mon, s1.day);
+      snprintf(ntime, 10, "%02d%02d%02d", s1.hour, s1.min, s1.sec);
       if (!PolarVolume_setDate((PolarVolume_t*)raveObject, ndate) ||
           !PolarVolume_setTime((PolarVolume_t*)raveObject, ntime)) {
         RAVE_ERROR0("Failed to set date/time");

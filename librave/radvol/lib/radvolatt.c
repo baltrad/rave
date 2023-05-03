@@ -199,7 +199,7 @@ static int RadvolAttInternal_addTaskArgs(RadvolAtt_t* self)
   int result = 0;
   char task_args[1000];
  
-  sprintf(task_args, "ATT: ATT_QI1=%3.1f, ATT_QI0=%3.1f, ATT_QIUn=%3.1f, ATT_a=%7.4f, ATT_b=%5.2f, ATT_ZRa=%4.1f, ATT_ZRb=%4.1f, ATT_Refl=%4.1f, ATT_Last=%4.1f, ATT_Sum=%4.1f",
+  snprintf(task_args, 1000, "ATT: ATT_QI1=%3.1f, ATT_QI0=%3.1f, ATT_QIUn=%3.1f, ATT_a=%7.4f, ATT_b=%5.2f, ATT_ZRa=%4.1f, ATT_ZRb=%4.1f, ATT_Refl=%4.1f, ATT_Last=%4.1f, ATT_Sum=%4.1f",
           self->ATT_QI1, self->ATT_QI0, self->ATT_QIUn, self->ATT_a, self->ATT_b, self->ATT_ZRa, self->ATT_ZRb, self->ATT_Refl, self->ATT_Last, self->ATT_Sum);
   if (Radvol_setTaskArgs(self->radvol, task_args)) {
     result = 1;
