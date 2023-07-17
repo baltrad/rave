@@ -306,6 +306,7 @@ static Projection_t* ProjectionInternal_createCrsPipeline(Projection_t* projecti
     goto done;
   }
   proj_log_level(context, Projection_getDebugLevel());
+	/* PERFORMACE issue, se https://lists.osgeo.org/pipermail/proj/2019-February/008185.html */
   pj = proj_create_crs_to_crs(context, projection->definition, tgt->definition, NULL);
   if (pj == NULL) {
     RAVE_ERROR0("Failed to create crs to crs");
