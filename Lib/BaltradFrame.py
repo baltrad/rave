@@ -14,7 +14,7 @@ else:
   import http.client as httplib
   import urllib.parse as urlparse
   
-from keyczar import keyczar 
+from baltradcrypto.crypto import keyczarcrypto as keyczar 
 
 from rave_defines import DEX_NODENAME, DEX_PRIVATEKEY, DEX_SPOE
 
@@ -28,7 +28,7 @@ class BaltradFrame(object):
     self._dex_uri = dex_uri
     self._private_key = dex_privatekey
     self._nodename = dex_nodename
-    self._signer = keyczar.Signer.Read(dex_privatekey)
+    self._signer = keyczar.keyczar_signer.read(dex_privatekey)
   
   def _generate_headers(self, uri):
     datestr = datetime.datetime.now().strftime("%a, %e %B %Y %H:%M:%S")
