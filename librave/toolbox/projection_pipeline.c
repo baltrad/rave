@@ -188,7 +188,7 @@ int ProjectionPipeline_init(ProjectionPipeline_t *pipeline, Projection_t *first,
 
   return ProjectionPipeline_initFromDef(pipeline, Projection_getDefinition(first), Projection_getDefinition(second));
 
-#ifdef 0
+#if 0
 
   /* If we are using proj4 api, then original projections will be used. If on other hand
    * we are using new proj api. We need to create the actual pipeline.
