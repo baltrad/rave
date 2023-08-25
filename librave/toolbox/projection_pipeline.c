@@ -183,12 +183,12 @@ int ProjectionPipeline_init(ProjectionPipeline_t *pipeline, Projection_t *first,
 
   if (first == NULL || second == NULL) {
     RAVE_ERROR0("One of first or second was NULL when initializing");
-    return 0;
+    return result;
   }
 
   return ProjectionPipeline_initFromDef(pipeline, Projection_getDefinition(first), Projection_getDefinition(second));
 
-#ifdef KALLE
+#ifdef 0
 
   /* If we are using proj4 api, then original projections will be used. If on other hand
    * we are using new proj api. We need to create the actual pipeline.

@@ -26,8 +26,13 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_debug.h"
 #include "rave_alloc.h"
 #include <string.h>
-#define __USE_XOPEN
-#define _XOPEN_SOURCE
+/* should be defined in features.h */
+#ifndef __USE_XOPEN
+#	define __USE_XOPEN 1
+#endif
+#ifndef _XOPEN_SOURCE
+#	define _XOPEN_SOURCE 700
+#endif
 #include <time.h>
 #include <stdio.h>
 

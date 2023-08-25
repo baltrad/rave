@@ -84,11 +84,11 @@ class INFO(Element):
             raise AttributeError("No such attribute: %s" % path)
         else:
             t = this.get('type')
-            if t is 'int':
+            if t == 'int':
                 return int(this.text)
-            elif t is 'float':
+            elif t == 'float':
                 return float(this.text)
-            elif t is 'sequence':
+            elif t == 'sequence':
                 return eval(this.text)  # This might be tricky...
             elif t in ['dataset', None]:
                 return str(this.text).encode(ENCODING)
@@ -263,7 +263,7 @@ def CheckPath(path):
         raise IOError("Given path is None.")
     elif len(path) == 0:
         raise IOError("Zero-length path given.")
-    elif path[0] is not '/':
+    elif path[0] != '/':
         raise SyntaxError("Non-absolute path to element: %s\nAdd leading slash." % path)
     else:
         return path[1:]

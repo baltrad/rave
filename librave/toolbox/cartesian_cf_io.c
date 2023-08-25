@@ -29,8 +29,13 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "odim_io_utilities.h"
 #include "cartesiancomposite.h"
 #include "proj_wkt_helper.h"
-#define __USE_XOPEN
-#define _XOPEN_SOURCE
+/* should be defined in features.h */
+#ifndef __USE_XOPEN
+#	define __USE_XOPEN 1
+#endif
+#ifndef _XOPEN_SOURCE
+#	define _XOPEN_SOURCE 700
+#endif
 #include <time.h>
 #include <string.h>
 
@@ -240,18 +245,18 @@ static int CartesianCfIOInternal_addFloatAttribute(int ncid, int varid, const ch
 static int CartesianCfIOInternal_addGlobalAttributes(CartesianCfIO_t* self, int ncid, Cartesian_t* cartesian)
 {
   int result = 0;
-  char areaid[256];
-  if (!OdimIoUtilities_getNodOrCmtFromSource(Cartesian_getSource(cartesian), areaid, 256)) {
+  char areaid[260];
+  if (!OdimIoUtilities_getNodOrCmtFromSource(Cartesian_getSource(cartesian), areaid, sizeof(areaid))) {
     char tmpid[256];
     RAVE_INFO0("Could not find NOD or CMT in source\n");
-    if (!OdimIoUtilities_getIdFromSource(Cartesian_getSource(cartesian), "PLC:", tmpid, 256)) {
-      if (OdimIoUtilities_getIdFromSource(Cartesian_getSource(cartesian), "WMO:", tmpid, 256)) {
-        snprintf(areaid, 256, "WMO:%s", tmpid);
+    if (!OdimIoUtilities_getIdFromSource(Cartesian_getSource(cartesian), "PLC:", tmpid, sizeof(tmpid))) {
+      if (OdimIoUtilities_getIdFromSource(Cartesian_getSource(cartesian), "WMO:", tmpid, sizeof(tmpid))) {
+        snprintf(areaid, sizeof(areaid), "WMO:%s", tmpid);
       } else {
         goto done;
       }
     } else {
-      snprintf(areaid, 256, "PLC:%s", tmpid);
+      snprintf(areaid, sizeof(areaid), "PLC:%s", tmpid);
     }
   }
 

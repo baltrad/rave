@@ -241,7 +241,7 @@ class RAVE:
         from H5radHelper import type_val
         typ, val = type_val(self.info.find(path[1:]))
         self.info.delete(path)
-        if typ is 'dataset':
+        if typ == 'dataset':
             del(self.data[val])
 
 

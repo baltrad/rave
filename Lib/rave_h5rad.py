@@ -161,7 +161,7 @@ def TopLevelWhat(tag='what', **args):
             if k in STRINGS:
                 SubElement(E, k, attrib={}).text = i
                 del(STRINGS[STRINGS.index(k)])
-            elif k is 'sets':
+            elif k == 'sets':
                 SubElement(E, k, attrib={"type":"int"}).text = str(i)
                 INTS = []
             else:
@@ -338,7 +338,7 @@ def Where(tag='where', **args):
                     raise KeyError('Illegal key: "%s" for where' % str(k))
 
         # Cross sections, including RHIs, and side panels
-        elif obj is 'xsect':
+        elif obj == 'xsect':
             for k, i in args.items():
                 if k in INTS:
                     SubElement(E, k, attrib={"type":"int"}).text = str(i)
@@ -348,7 +348,7 @@ def Where(tag='where', **args):
                     del(XSECT_FLOATS[XSECT_FLOATS.index(k)])
 
         # Vertical profiles
-        elif obj is 'vp':
+        elif obj == 'vp':
             for k, i in args.items():
                 if k in VP_INTS:
                     SubElement(E, k, attrib={"type":"int"}).text = str(i)
@@ -357,7 +357,7 @@ def Where(tag='where', **args):
                     SubElement(E, k, attrib={"type":"float"}).text = str(i)
                     del(VP_FLOATS[VP_FLOATS.index(k)])
 
-        elif obj is 'thvp':
+        elif obj == 'thvp':
             for k, i in args.items():
                 if k in INTS:
                     SubElement(E, k, attrib={"type":"int"}).text = str(i)
@@ -379,19 +379,19 @@ def Where(tag='where', **args):
             for k in STRINGS + IMAGE_FLOATS:
                 SubElement(E, k, attrib={}).text = 'n/a'
 
-        elif obj is 'xsect':
+        elif obj == 'xsect':
             for k in XSECT_FLOATS:
                 SubElement(E, k, attrib={"type":"float"}).text = 'n/a'
 
-        elif obj is 'vp':
+        elif obj == 'vp':
             for k in VP_INTS + VP_FLOATS:
                 SubElement(E, k, attrib={}).text = str(0)
 
-        elif obj is 'thvp':
+        elif obj == 'thvp':
             for k in THVP_FLOATS:
                 SubElement(E, k, attrib={"type":"float"}).text = 'n/a'
 
-        if obj is not 'vp':
+        if obj != 'vp':
             for k in INTS:
                 SubElement(E, k, attrib={"type":"int"}).text = str(1)
 

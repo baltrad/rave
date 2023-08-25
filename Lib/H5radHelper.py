@@ -95,26 +95,26 @@ def h5type(value):
 
 
 def seth5attr(e, attr_to_val_dict, h5typ, attribute, value):
-    if h5typ is not "string":
+    if h5typ != "string":
         e.attrib["type"] = h5typ
     else:
         try:
             del e.attrib["type"]
         except KeyError:
             pass
-    if h5typ is "sequence":
+    if h5typ == "sequence":
         # convert list to string
         nodes = []
         for n in value:
             node = str(n).strip()
             nodes.append(("'"+node+"'"))
         text = ", ".join(nodes)
-    elif h5typ is "dataset":
+    elif h5typ == "dataset":
         attr_to_val_dict[attribute] = value
         text = attribute
     elif h5typ in ["int", "long", "llong", "float", "double"]:
         text = str(value)
-    elif h5typ is "string":
+    elif h5typ == "string":
         text = value
     else:
         raise ValueError("Illegal type")
@@ -137,5 +137,5 @@ def addelem(root, attribute):
 
 
 
-if __name__ is "__main__":
+if __name__ == "__main__":
     print(__doc__)
