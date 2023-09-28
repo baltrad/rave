@@ -13,8 +13,14 @@ if sys.version_info < (3,):
 else:
   import http.client as httplib
   import urllib.parse as urlparse
-  
-from baltradcrypto.crypto import keyczarcrypto as keyczar 
+
+original_keyczar=False
+try:
+  from baltradcrypto.crypto import keyczarcrypto as keyczar 
+except:
+  from keyczar import keyczar
+  original_keyczar=True
+
 
 from rave_defines import DEX_NODENAME, DEX_PRIVATEKEY, DEX_SPOE
 
@@ -28,13 +34,21 @@ class BaltradFrame(object):
     self._dex_uri = dex_uri
     self._private_key = dex_privatekey
     self._nodename = dex_nodename
-    self._signer = keyczar.keyczar_signer.read(dex_privatekey)
+    self._signer = None
+    if original_keyczar:
+      self._signer = keyczar.Signer.Read(dex_privatekey)
+    else:
+      self._signer = keyczar.keyczar_signer.read(dex_privatekey)
   
   def _generate_headers(self, uri):
     datestr = datetime.datetime.now().strftime("%a, %e %B %Y %H:%M:%S")
     contentMD5 = base64.b64encode(uri.encode("utf-8"))
     message = (b"POST" + b'\n' + uri.encode("utf-8") + b'\n' + b"application/x-hdf5" + b'\n' + contentMD5 + b'\n' + datestr.encode("utf-8"))
-    signature = self._signer.Sign(message)
+    if original_keyczar:    
+      signature = self._signer.Sign(message)
+    else:
+      signature = self._signer.sign(message)
+
     headers = {"Node-Name": self._nodename, 
                "Content-Type": "application/x-hdf5",
                "Content-MD5": contentMD5, 

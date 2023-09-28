@@ -25,7 +25,11 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 
 from rave_defines import BDB_CONFIG_FILE, DEX_NODENAME
 import string, os, traceback, tempfile, shutil, contextlib
-from radar_utils import jprops
+try:
+  from baltradutils import jprops
+except:
+  import jprops
+
 import _raveio
 import rave_pgf_logger
 import rave_tempfile

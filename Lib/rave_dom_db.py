@@ -28,7 +28,12 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import absolute_import
 
 import contextlib
-from radar_utils import jprops
+
+try:
+  from baltradutils import jprops
+except:
+  import jprops
+
 import datetime
 from sqlalchemy import engine, event
 from sqlalchemy.orm import mapper, sessionmaker
