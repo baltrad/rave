@@ -32,21 +32,24 @@ import multiprocessing.pool
 ## Inherit Process
 #  @param Process object
 class NonDaemonProcess(multiprocessing.Process):
-    # make 'daemon' attribute always return False
-    def _get_daemon(self):
+    @property
+    def daemon(self):
         return False
-    def _set_daemon(self, value):
-        pass
-    daemon = property(_get_daemon, _set_daemon)
 
+    @daemon.setter
+    def daemon(self, value):
+        pass
+
+class NonDaemonContext(type(multiprocessing.get_context())):
+    Process = NonDaemonProcess
 
 ## We sub-class multiprocessing.pool.Pool instead of multiprocessing.Pool
 #  because the latter is only a wrapper function, not a proper class.
 # @param Pool with our NonDaemonicProcess
 class RavePool(multiprocessing.pool.Pool):
-    Process = NonDaemonProcess
-
-
+    def __init__(self, *args, **kwargs):
+        kwargs['context'] = NonDaemonContext()
+        super(RavePool, self).__init__(*args, **kwargs)
 
 if __name__ == "__main__":
     pass
