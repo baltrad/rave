@@ -47,7 +47,7 @@ class BaltradFrame(object):
     if original_keyczar:    
       signature = self._signer.Sign(message)
     else:
-      signature = self._signer.sign(message)
+      signature = self._signer.sign(message.decode('utf-8'))
 
     headers = {"Node-Name": self._nodename, 
                "Content-Type": "application/x-hdf5",
