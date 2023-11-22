@@ -27,9 +27,9 @@
     <czbrd plc="Brdy-Praha" rad="CZ60" wmo="11480"></czbrd>
   </cz>
   <dk CCCC="EKMI" org="94">
-    <dkste plc="Stevns" rad="DN41" wmo="06173"></dkste>
+    <dkste plc="Stevns" rad="DN41" wmo="06177"></dkste>
     <dkrom plc="Rømø" rad="DN42" wmo="06096"></dkrom>
-    <dksin plc="Sindal" rad="DN43" wmo="06034"></dksin>
+    <dksin plc="Sindal" rad="DN43" wmo="06036"></dksin>
     <dkbor plc="Bornholm" rad="DN44" wmo="06194"></dkbor>
     <dkvir plc="Virring" rad="DN45" wmo="06103"></dkvir>
     <dkaal plc="Aalborg" rad="DN99" wmo="00000"></dkaal>
