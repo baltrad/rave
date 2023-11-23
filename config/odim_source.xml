@@ -172,7 +172,7 @@
     <nober plc="Berlevåg" rad="NO40" wmo="01079"></nober>
     <noosl plc="Oslo" rad="NO41" wmo="01499"></noosl>
     <nohgb plc="Hægebostad" rad="NO42" wmo="01438"></nohgb>
-    <norsa plc="Rissa" rad="NO43" wmo="01247"></norsa>
+    <norsa plc="Rissa" rad="NO34" wmo="01247"></norsa>
     <norst plc="Røst" rad="NO90" wmo="01104"></norst>
     <nobml plc="Bømlo" rad="NO91" wmo="01405"></nobml>
     <noand plc="Andøya" rad="NO92" wmo="01018"></noand>
@@ -181,6 +181,7 @@
     <nohur plc="Hurum" rad="NO39" wmo="01498"></nohur>
     <nosmn plc="Sømna" rad="NO44" wmo="01136"></nosmn>
     <nohfj plc="Hafjell" rad="NO45" wmo="01377"></nohfj>
+    <norsg plc="Rassegalvarri" rad="NO43" wmo="00000"></norsg>
   </no>
   <pl CCCC="SOWR" org="220">
     <plleg plc="Legionowo" rad="PL41" wmo="12374"></plleg>
