@@ -101,7 +101,6 @@ def generate(ifstr):
         endval = time.time()
 
         pload = rio.object
-
         pload = QC(pload)
         endqc = time.time()
 
@@ -127,13 +126,9 @@ def generate(ifstr):
         rave_pgf_logger.log(logger, "info", "%s: OK" % fstr)
 
         return ifstr, "OK", (readt, validt, qct, writet)
-    except Exception:
-        err_msg = traceback.format_exc()
-        if delete:
-            os.rename(ifstr, os.path.join(opath, fstr))
-        else:
-            shutil.copyfile(ifstr, os.path.join(opath, fstr))
-        rave_pgf_logger.log(logger, "error", "%s: %s" % (fstr, err_msg))
+    except OSError as err_msg:
+        os.remove(ifstr)
+        rave_pgf_logger.log(logger, "error", "%s: %s - Deleting file." % (fstr, err_msg))
         return ifstr, err_msg
   
 
