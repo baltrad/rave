@@ -161,7 +161,11 @@ int OdimIoUtilities_addRaveField(RaveField_t* field, HL_NodeList* nodelist, Rave
     }
   }
 
-  attributes = RaveField_getAttributeValuesVersion(field, version);
+  if (version == RaveIO_ODIM_Version_UNDEFINED) {
+    attributes = RaveField_getAttributeValues(field);
+  } else {
+    attributes = RaveField_getAttributeValuesVersion(field, version);
+  }
 
   if (attributes == NULL || !RaveHL_addAttributes(nodelist, attributes, name)) {
     goto done;

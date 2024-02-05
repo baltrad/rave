@@ -111,6 +111,7 @@ from PyPgfLoggerTest import *
 from rave_util_test import *
 from RaveOdimSourceTest import *
 from PyBitmapGeneratorTest import *
+from PyRaveIOCacheTest import *
 
 #
 # Unless RAVE_TESTDB_URI has been set we don't want to run the dom db tests
