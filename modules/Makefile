@@ -13,7 +13,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Lesser General Public License for more details.
 # 
-# You should have received a copy of the GNU Lesser General Public License
+# You should have received a copy of the GNU Lesser General Pub_38lic License
 # along with beamb.  If not, see <http://www.gnu.org/licenses/>.
 # ------------------------------------------------------------------------
 # 
@@ -213,9 +213,9 @@ SOURCE_37= pyctfilter.c
 OBJECTS_37= $(SOURCE_37:.c=.o)
 TARGET_37= _ctfilter.so
 
-#SOURCE_38= pyvprcorrection.c
-#OBJECTS_38= $(SOURCE_38:.c=.o)
-#TARGET_38= _vprcorrection.so
+SOURCE_38= pyacqva.c
+OBJECTS_38= $(SOURCE_38:.c=.o)
+TARGET_38= _acqva.so
 
 SOURCE_39= pybitmapgenerator.c
 OBJECTS_39= $(SOURCE_39:.c=.o)
@@ -242,7 +242,7 @@ TARGETS=$(TARGET_1) $(TARGET_2) $(TARGET_3) $(TARGET_4) $(TARGET_5) $(TARGET_6) 
 		$(TARGET_14) $(TARGET_15) $(TARGET_16) $(TARGET_17) $(TARGET_18) $(TARGET_19) \
 		$(TARGET_20) $(TARGET_21) $(TARGET_24) $(TARGET_25) \
 		$(TARGET_26) $(TARGET_27) $(TARGET_28) $(TARGET_29) $(TARGET_30) $(TARGET_31) \
-		$(TARGET_33) $(TARGET_34) $(TARGET_35) $(TARGET_36) $(TARGET_37) \
+		$(TARGET_33) $(TARGET_34) $(TARGET_35) $(TARGET_36) $(TARGET_37) $(TARGET_38) \
 		$(TARGET_39) $(TARGET_40) $(TARGET_41) $(TARGET_42) $(TARGET_43)
 
 INSTALL_HEADERS= pyarea.h \
@@ -271,7 +271,8 @@ INSTALL_HEADERS= pyarea.h \
 				 pyravedata2d.h \
 				 pylazynodelistreader.h \
 				 pyprojectionpipeline.h \
-				 pyraveattributetable.h
+				 pyraveattributetable.h \
+				 pyacqva.h
 
 ifeq ($(EXPAT_SUPPRESSED), no)
 TARGETS += $(TARGET_22) $(TARGET_23) $(TARGET_32)

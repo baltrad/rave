@@ -1,0 +1,182 @@
+#!/usr/bin/env python3
+'''
+Copyright (C) 2024 - Swedish Meteorological and Hydrological Institute (SMHI)
+
+This file is part of RAVE.
+
+RAVE is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+RAVE is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+See the GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
+'''
+## Command-line tool for validating acqva-composites
+
+## @file
+## @author Anders Henja, SMHI
+## @date 2024-01-24
+import _acqva
+import _raveio
+import _area, _projection, _polarvolume, _polarscan, _polarscanparam, _ravefield, _pycomposite, area_registry
+import math, sys, os
+import _rave
+from matplotlib import pyplot as plt
+import matplotlib.animation as animation
+
+DEFAULT_CLUTTERMAP_DIR="/projects/baltrad/acqva_testdata/cluttermap/"
+
+# QCVOL_DIR="/projects/baltrad/acqva_testdata/qcvol"
+
+class acqva_composite:
+    def __init__(self, blank=False):
+        self._blank = blank
+
+    def create(self, files, area, use_ppi=False):
+        if use_ppi:
+            generator = _pycomposite.new()
+            generator.addParameter("DBZH", 0.4, -30, -30)
+            generator.selection_method = _pycomposite.SelectionMethod_HEIGHT
+            generator.product = _rave.Rave_ProductType_PPI
+            generator.elangle = 0.5*math.pi/180.0
+        else:
+            generator = _acqva.new()
+            generator.addParameter("DBZH", 0.4, -30)
+
+        ctr = 1
+
+        for f in files:
+            fo = _raveio.open(f).object
+            if not use_ppi:
+                self.add_cluttermap(fo)
+
+            if self._blank:
+                for i in range(fo.getNumberOfScans()):
+                    d = fo.getScan(i).getParameter("DBZH").getData()
+                    d[:][:] = ctr*200
+                    ctr = ctr + 1
+                    fo.getScan(i).getParameter("DBZH").setData(d)
+
+            generator.add(fo)
+            generator.date=fo.date
+            generator.time=fo.time
+        
+        result = generator.generate(area, ["se.smhi.composite.distance.radar", "se.smhi.composite.height.radar", "se.smhi.composite.index.radar"])
+        result.source = "ORG:82,CMT:%s"%area.id
+        result.product = _rave.Rave_ProductType_PPI
+        return result
+
+    def get_scan_elangle_cluttermap(self, cluttermap, elangle):
+        for i in range(cluttermap.getNumberOfScans()):
+            cmapscan = cluttermap.getScan(i)
+            if math.isclose(cmapscan.elangle, elangle):
+                qfield = _ravefield.new()
+                qfield.addAttribute("how/task", "se.smhi.acqva")
+                qfield.setData(cmapscan.getParameter("ACQVA").getData())
+                return qfield
+        print("Could not apply cluttermap for this")
+        return None
+
+    def add_cluttermap(self, pvol):
+        items=pvol.source.split(",")
+        cmap = None
+        for item in items:
+            if item.startswith("NOD:"):
+                nod = item.split(":")[1]
+                cmap = _raveio.open("%s/%s.h5"%(DEFAULT_CLUTTERMAP_DIR, nod)).object
+                break
+        if cmap:
+            for i in range(pvol.getNumberOfScans()):
+                scan = pvol.getScan(i)
+                qfield = self.get_scan_elangle_cluttermap(cmap, scan.elangle)
+                if qfield:
+                    scan.addOrReplaceQualityField(qfield)
+        else:
+            print("No cluttermap available for pvol: %s"%pvol.source)
+
+
+def viewresult(obj, ppi=False, blank=False):
+    f, axarr = plt.subplots(1,4)
+    axarr[0].imshow(obj.getParameter("DBZH").getData(), interpolation='nearest')
+    if ppi:
+        prodtitle = "PPI"
+    else:
+        prodtitle = "ACQVA"
+
+    if blank:
+        prodtitle = prodtitle + "(B)"
+
+    axarr[0].set_title(prodtitle)
+    axarr[1].imshow(obj.getParameter("DBZH").getQualityFieldByHowTask("se.smhi.composite.height.radar").getData(), interpolation='nearest')
+    axarr[1].set_title("Height")
+    axarr[2].imshow(obj.getParameter("DBZH").getQualityFieldByHowTask("se.smhi.composite.distance.radar").getData(), interpolation='nearest')
+    axarr[2].set_title("Distance")
+    axarr[3].imshow(obj.getParameter("DBZH").getQualityFieldByHowTask("se.smhi.composite.index.radar").getData(), interpolation='nearest')
+    axarr[3].set_title("Index")
+    plt.show()
+
+def create_default_area():
+    a = _area.new()
+    a.id = "angvax"
+    a.xsize = 460
+    a.ysize = 644
+    a.xscale = 2000.0
+    a.yscale = 2000.0
+    a.extent = (967050.466009, 7207120.949408, 1887050.466009, 8495120.949408)
+    a.projection = _projection.new("x", "y", "+proj=merc +lat_ts=0 +lon_0=0 +k=1.0 +R=6378137.0 +nadgrids=@null +no_defs")
+    return a
+
+
+if __name__=="__main__":
+    from optparse import OptionParser
+
+    description = "Creates composites using either the acqva algorithm or the classical ppi+height to compare the results.\n" \
+        "Note that it only handles polar volumes due to the way acqva is implemented."
+
+    usage = "%prog [options] <files>"
+    parser = OptionParser(usage=usage, description=description)
+
+    parser.add_option("--area", dest="area", default="angvax",
+                      help="Specifies the area to use. Default is to use angvax.")
+
+    parser.add_option("--ppi", dest="ppi", action="store_true", default=False,
+                      help="If specified, the generated composite will be created using standard ppi+height")
+
+    parser.add_option("--output", dest="output", default=None,
+                      help="The name of the resulting filename. If not specified, --view must be specified.")
+
+    parser.add_option("--view", dest="view", action="store_true", default=False,
+                      help="If result should be viewed. If not specified, --output must be specified.")
+
+    parser.add_option("--blank", dest="blank", action="store_true", default=False,
+                      help="Sets each scan to a blank value so that it is possible to see what values has been used in the product generation.")
+
+    (options, args) = parser.parse_args()
+  
+    if len(args) < 1:
+        parser.print_usage()
+        sys.exit(1)
+  
+    if options.area == "angvax":
+        area = create_default_area()
+    else:
+        area = area_registry.area_registry().getarea(options.area)
+
+    _rave.setDebugLevel(_rave.Debug_RAVE_SPEWDEBUG)
+
+    generator = acqva_composite(options.blank)
+    result = generator.create(args, area, options.ppi)
+
+    if options.output:
+        output = _raveio.new()
+        output.object = result
+        output.save(options.output)
+
+    if options.view:
+        viewresult(result, options.ppi, options.blank)

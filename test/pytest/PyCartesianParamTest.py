@@ -380,8 +380,8 @@ class PyCartesianParamTest(unittest.TestCase):
      
     #test int
     a=numpy.arange(120)
-    a=numpy.array(a.astype(numpy.int),numpy.int)
-    a=numpy.reshape(a,(12,10)).astype(numpy.int)  
+    a=numpy.array(a.astype(numpy.int32),numpy.int32)
+    a=numpy.reshape(a,(12,10)).astype(numpy.int32)  
     obj.setData(a)
      
     obj.setConvertedValue((0,1), -1.75)
