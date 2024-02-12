@@ -63,6 +63,7 @@ $(function() {
 <code>#include &quot;<a class="el" href="raveobject__list_8h_source.html">raveobject_list.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="rave__attribute_8h_source.html">rave_attribute.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="rave__field_8h_source.html">rave_field.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="rave__legend_8h_source.html">rave_legend.h</a>&quot;</code><br />
 </div>
 <p><a href="cartesianparam_8h_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
@@ -194,6 +195,15 @@ Functions</h2></td></tr>
 <tr class="memitem:a2740c710956eb00ce7eacf10e96deda3" id="r_a2740c710956eb00ce7eacf10e96deda3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="rave__field_8h.html#a54b17ce798506570a3d68f25207e3730">RaveField_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2740c710956eb00ce7eacf10e96deda3">CartesianParam_getQualityFieldByHowTask</a> (<a class="el" href="#aa73fd3138313ae20c7fe25166b3720ad">CartesianParam_t</a> *self, const char *value)</td></tr>
 <tr class="memdesc:a2740c710956eb00ce7eacf10e96deda3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a quality field based on the value of how/task that should be a string.  <br /></td></tr>
 <tr class="separator:a2740c710956eb00ce7eacf10e96deda3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adf903cf1c7b9cf6d1ba1dbb0a5babb88" id="r_adf903cf1c7b9cf6d1ba1dbb0a5babb88"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#adf903cf1c7b9cf6d1ba1dbb0a5babb88">CartesianParam_setLegend</a> (<a class="el" href="#aa73fd3138313ae20c7fe25166b3720ad">CartesianParam_t</a> *self, <a class="el" href="rave__legend_8h.html#aeef10ad065b8d47fce136bd823bf2f02">RaveLegend_t</a> *legend)</td></tr>
+<tr class="memdesc:adf903cf1c7b9cf6d1ba1dbb0a5babb88"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the legend associated with this parameter.  <br /></td></tr>
+<tr class="separator:adf903cf1c7b9cf6d1ba1dbb0a5babb88"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8c8f9b5de399c50237b9209fcfa8e601" id="r_a8c8f9b5de399c50237b9209fcfa8e601"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8c8f9b5de399c50237b9209fcfa8e601">CartesianParam_hasLegend</a> (<a class="el" href="#aa73fd3138313ae20c7fe25166b3720ad">CartesianParam_t</a> *self)</td></tr>
+<tr class="memdesc:a8c8f9b5de399c50237b9209fcfa8e601"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns if there is a legend associated with this parameter or not.  <br /></td></tr>
+<tr class="separator:a8c8f9b5de399c50237b9209fcfa8e601"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a08c88804b3e28800dbe97ef87fce668a" id="r_a08c88804b3e28800dbe97ef87fce668a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="rave__legend_8h.html#aeef10ad065b8d47fce136bd823bf2f02">RaveLegend_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a08c88804b3e28800dbe97ef87fce668a">CartesianParam_getLegend</a> (<a class="el" href="#aa73fd3138313ae20c7fe25166b3720ad">CartesianParam_t</a> *self)</td></tr>
+<tr class="memdesc:a08c88804b3e28800dbe97ef87fce668a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the legend associated with this parameter.  <br /></td></tr>
+<tr class="separator:a08c88804b3e28800dbe97ef87fce668a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
 Variables</h2></td></tr>
@@ -675,6 +685,32 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a id="a08c88804b3e28800dbe97ef87fce668a" name="a08c88804b3e28800dbe97ef87fce668a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a08c88804b3e28800dbe97ef87fce668a">&#9670;&#160;</a></span>CartesianParam_getLegend()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="rave__legend_8h.html#aeef10ad065b8d47fce136bd823bf2f02">RaveLegend_t</a> * CartesianParam_getLegend </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="#aa73fd3138313ae20c7fe25166b3720ad">CartesianParam_t</a> *</td>          <td class="paramname"><span class="paramname"><em>self</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Returns the legend associated with this parameter. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the legend or NULL if none is set </dd></dl>
+
+</div>
+</div>
 <a id="aeca5bd37f3cdc6e1a520ed06646c864c" name="aeca5bd37f3cdc6e1a520ed06646c864c"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aeca5bd37f3cdc6e1a520ed06646c864c">&#9670;&#160;</a></span>CartesianParam_getMean()</h2>
 
@@ -1094,6 +1130,32 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a id="a8c8f9b5de399c50237b9209fcfa8e601" name="a8c8f9b5de399c50237b9209fcfa8e601"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8c8f9b5de399c50237b9209fcfa8e601">&#9670;&#160;</a></span>CartesianParam_hasLegend()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int CartesianParam_hasLegend </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="#aa73fd3138313ae20c7fe25166b3720ad">CartesianParam_t</a> *</td>          <td class="paramname"><span class="paramname"><em>self</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Returns if there is a legend associated with this parameter or not. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the 1 if there is a legend set, otherwise 0 </dd></dl>
+
+</div>
+</div>
 <a id="a7a54a7813848f751bb8e1eb1b7cc6775" name="a7a54a7813848f751bb8e1eb1b7cc6775"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a7a54a7813848f751bb8e1eb1b7cc6775">&#9670;&#160;</a></span>CartesianParam_isTransformable()</h2>
 
@@ -1322,6 +1384,36 @@ Variables</h2></td></tr>
 <p>On any requests to receive data, the lazy dataset will be used to populate the internal data field. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname"></td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="adf903cf1c7b9cf6d1ba1dbb0a5babb88" name="adf903cf1c7b9cf6d1ba1dbb0a5babb88"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adf903cf1c7b9cf6d1ba1dbb0a5babb88">&#9670;&#160;</a></span>CartesianParam_setLegend()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void CartesianParam_setLegend </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="#aa73fd3138313ae20c7fe25166b3720ad">CartesianParam_t</a> *</td>          <td class="paramname"><span class="paramname"><em>self</em>, </span></td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="rave__legend_8h.html#aeef10ad065b8d47fce136bd823bf2f02">RaveLegend_t</a> *</td>          <td class="paramname"><span class="paramname"><em>legend</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Sets the legend associated with this parameter. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">legend</td><td>- the legend </td></tr>
   </table>
   </dd>
 </dl>

@@ -198,6 +198,15 @@ Functions</h2></td></tr>
 <tr class="memitem:abca589043d21abd666db3fd590c759ad" id="r_abca589043d21abd666db3fd590c759ad"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#abca589043d21abd666db3fd590c759ad">PolarScanParam_shiftData</a> (<a class="el" href="polarscanparam_8h.html#aaf44d7db9941f6f7e9a9116fcb28e8dd">PolarScanParam_t</a> *param, int nrays)</td></tr>
 <tr class="memdesc:abca589043d21abd666db3fd590c759ad"><td class="mdescLeft">&#160;</td><td class="mdescRight">Performs a circular shift of the dataset and the attributes that are associated with the rays.  <br /></td></tr>
 <tr class="separator:abca589043d21abd666db3fd590c759ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2d17602957807c291ae7b54b0f73bfbf" id="r_a2d17602957807c291ae7b54b0f73bfbf"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2d17602957807c291ae7b54b0f73bfbf">PolarScanParam_setLegend</a> (<a class="el" href="polarscanparam_8h.html#aaf44d7db9941f6f7e9a9116fcb28e8dd">PolarScanParam_t</a> *self, <a class="el" href="rave__legend_8h.html#aeef10ad065b8d47fce136bd823bf2f02">RaveLegend_t</a> *legend)</td></tr>
+<tr class="memdesc:a2d17602957807c291ae7b54b0f73bfbf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the legend associated with this parameter.  <br /></td></tr>
+<tr class="separator:a2d17602957807c291ae7b54b0f73bfbf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa85e88a988baf1b6f8659b36e900dd7b" id="r_aa85e88a988baf1b6f8659b36e900dd7b"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa85e88a988baf1b6f8659b36e900dd7b">PolarScanParam_hasLegend</a> (<a class="el" href="polarscanparam_8h.html#aaf44d7db9941f6f7e9a9116fcb28e8dd">PolarScanParam_t</a> *self)</td></tr>
+<tr class="memdesc:aa85e88a988baf1b6f8659b36e900dd7b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns if there is a legend associated with this parameter or not.  <br /></td></tr>
+<tr class="separator:aa85e88a988baf1b6f8659b36e900dd7b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1b5bdf33d28090defbfedaab174b5a4d" id="r_a1b5bdf33d28090defbfedaab174b5a4d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="rave__legend_8h.html#aeef10ad065b8d47fce136bd823bf2f02">RaveLegend_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1b5bdf33d28090defbfedaab174b5a4d">PolarScanParam_getLegend</a> (<a class="el" href="polarscanparam_8h.html#aaf44d7db9941f6f7e9a9116fcb28e8dd">PolarScanParam_t</a> *self)</td></tr>
+<tr class="memdesc:a1b5bdf33d28090defbfedaab174b5a4d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the legend associated with this parameter.  <br /></td></tr>
+<tr class="separator:a1b5bdf33d28090defbfedaab174b5a4d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
 Variables</h2></td></tr>
@@ -733,6 +742,32 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a id="a1b5bdf33d28090defbfedaab174b5a4d" name="a1b5bdf33d28090defbfedaab174b5a4d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1b5bdf33d28090defbfedaab174b5a4d">&#9670;&#160;</a></span>PolarScanParam_getLegend()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="rave__legend_8h.html#aeef10ad065b8d47fce136bd823bf2f02">RaveLegend_t</a> * PolarScanParam_getLegend </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="polarscanparam_8h.html#aaf44d7db9941f6f7e9a9116fcb28e8dd">PolarScanParam_t</a> *</td>          <td class="paramname"><span class="paramname"><em>self</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Returns the legend associated with this parameter. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the legend or NULL if none is set </dd></dl>
+
+</div>
+</div>
 <a id="a7799d642e51cfbeba39ed9df74ebc305" name="a7799d642e51cfbeba39ed9df74ebc305"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a7799d642e51cfbeba39ed9df74ebc305">&#9670;&#160;</a></span>PolarScanParam_getNbins()</h2>
 
@@ -1077,6 +1112,32 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a id="aa85e88a988baf1b6f8659b36e900dd7b" name="aa85e88a988baf1b6f8659b36e900dd7b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa85e88a988baf1b6f8659b36e900dd7b">&#9670;&#160;</a></span>PolarScanParam_hasLegend()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int PolarScanParam_hasLegend </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="polarscanparam_8h.html#aaf44d7db9941f6f7e9a9116fcb28e8dd">PolarScanParam_t</a> *</td>          <td class="paramname"><span class="paramname"><em>self</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Returns if there is a legend associated with this parameter or not. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the 1 if there is a legend set, otherwise 0 </dd></dl>
+
+</div>
+</div>
 <a id="af44c3d20747eea1421e034035d70c032" name="af44c3d20747eea1421e034035d70c032"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#af44c3d20747eea1421e034035d70c032">&#9670;&#160;</a></span>PolarScanParam_removeQualityField()</h2>
 
@@ -1240,6 +1301,36 @@ Variables</h2></td></tr>
 <p>On any requests to receive data, the lazy dataset will be used to populate the internal data field. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname"></td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a2d17602957807c291ae7b54b0f73bfbf" name="a2d17602957807c291ae7b54b0f73bfbf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2d17602957807c291ae7b54b0f73bfbf">&#9670;&#160;</a></span>PolarScanParam_setLegend()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void PolarScanParam_setLegend </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="polarscanparam_8h.html#aaf44d7db9941f6f7e9a9116fcb28e8dd">PolarScanParam_t</a> *</td>          <td class="paramname"><span class="paramname"><em>self</em>, </span></td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="rave__legend_8h.html#aeef10ad065b8d47fce136bd823bf2f02">RaveLegend_t</a> *</td>          <td class="paramname"><span class="paramname"><em>legend</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Sets the legend associated with this parameter. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">legend</td><td>- the legend </td></tr>
   </table>
   </dd>
 </dl>

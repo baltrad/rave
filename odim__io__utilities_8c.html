@@ -57,6 +57,8 @@ $(function() {
 <code>#include &quot;<a class="el" href="rave__debug_8h_source.html">rave_debug.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="rave__alloc_8h_source.html">rave_alloc.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="rave__hlhdf__utilities_8h_source.html">rave_hlhdf_utilities.h</a>&quot;</code><br />
+<code>#include &quot;hlhdf_compound_utils.h&quot;</code><br />
+<code>#include &quot;<a class="el" href="rave__legend_8h_source.html">rave_legend.h</a>&quot;</code><br />
 <code>#include &lt;string.h&gt;</code><br />
 <code>#include &lt;math.h&gt;</code><br />
 </div><table class="memberdecls">
@@ -65,6 +67,12 @@ Macros</h2></td></tr>
 <tr class="memitem:a7b5cb503d827fae6b26874e21254d68f" id="r_a7b5cb503d827fae6b26874e21254d68f"><td class="memItemLeft" align="right" valign="top"><a id="a7b5cb503d827fae6b26874e21254d68f" name="a7b5cb503d827fae6b26874e21254d68f"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>SPEED_OF_LIGHT</b>&#160;&#160;&#160;299792458  /* m/s */</td></tr>
 <tr class="separator:a7b5cb503d827fae6b26874e21254d68f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6942e5bee2ed4b1772781ceb3a58ae7f" id="r_a6942e5bee2ed4b1772781ceb3a58ae7f"><td class="memItemLeft" align="right" valign="top"><a id="a6942e5bee2ed4b1772781ceb3a58ae7f" name="a6942e5bee2ed4b1772781ceb3a58ae7f"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>DEFAULT_MINKEYLEN</b>&#160;&#160;&#160;64</td></tr>
+<tr class="separator:a6942e5bee2ed4b1772781ceb3a58ae7f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a26b301c591901665b1c60d103fb440ad" id="r_a26b301c591901665b1c60d103fb440ad"><td class="memItemLeft" align="right" valign="top"><a id="a26b301c591901665b1c60d103fb440ad" name="a26b301c591901665b1c60d103fb440ad"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>DEFAULT_MINVALUELEN</b>&#160;&#160;&#160;32</td></tr>
+<tr class="separator:a26b301c591901665b1c60d103fb440ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
@@ -83,12 +91,18 @@ Functions</h2></td></tr>
 <tr class="memitem:a2881c79882bfcf3e6894e7f193ca6429" id="r_a2881c79882bfcf3e6894e7f193ca6429"><td class="memItemLeft" align="right" valign="top"><a class="el" href="rave__field_8h.html#a54b17ce798506570a3d68f25207e3730">RaveField_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2881c79882bfcf3e6894e7f193ca6429">OdimIoUtilities_loadField</a> (<a class="el" href="struct__LazyNodeListReader__t.html">LazyNodeListReader_t</a> *lazyReader, <a class="el" href="rave__types_8h.html#a290d5190c397951897071d66bfaf35e0">RaveIO_ODIM_Version</a> version, const char *fmt,...)</td></tr>
 <tr class="memdesc:a2881c79882bfcf3e6894e7f193ca6429"><td class="mdescLeft">&#160;</td><td class="mdescRight">Loads a rave field.  <br /></td></tr>
 <tr class="separator:a2881c79882bfcf3e6894e7f193ca6429"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a65418f0f6666b1f03223c5b9890250bd" id="r_a65418f0f6666b1f03223c5b9890250bd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="rave__legend_8h.html#aeef10ad065b8d47fce136bd823bf2f02">RaveLegend_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a65418f0f6666b1f03223c5b9890250bd">OdimIOUtilities_loadLegend</a> (<a class="el" href="struct__LazyNodeListReader__t.html">LazyNodeListReader_t</a> *lazyReader, <a class="el" href="rave__types_8h.html#a290d5190c397951897071d66bfaf35e0">RaveIO_ODIM_Version</a> version, const char *fmt,...)</td></tr>
+<tr class="memdesc:a65418f0f6666b1f03223c5b9890250bd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Loads a rave legend.  <br /></td></tr>
+<tr class="separator:a65418f0f6666b1f03223c5b9890250bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7c69ec543ded350ab78f9e6d49fd562b" id="r_a7c69ec543ded350ab78f9e6d49fd562b"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7c69ec543ded350ab78f9e6d49fd562b">OdimIoUtilities_getIdFromSource</a> (const char *source, const char *id, char *buf, size_t buflen)</td></tr>
 <tr class="memdesc:a7c69ec543ded350ab78f9e6d49fd562b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets the specified id from the source string, for example.  <br /></td></tr>
 <tr class="separator:a7c69ec543ded350ab78f9e6d49fd562b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a544441ca659f5e6e0ef30182aa0aca1a" id="r_a544441ca659f5e6e0ef30182aa0aca1a"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a544441ca659f5e6e0ef30182aa0aca1a">OdimIoUtilities_getNodOrCmtFromSource</a> (const char *source, char *buf, size_t buflen)</td></tr>
 <tr class="memdesc:a544441ca659f5e6e0ef30182aa0aca1a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Like <a class="el" href="#a7c69ec543ded350ab78f9e6d49fd562b">OdimIoUtilities_getIdFromSource</a> but will first check NOD: and then CMT:  <br /></td></tr>
 <tr class="separator:a544441ca659f5e6e0ef30182aa0aca1a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afe7067ef647fbf54129e23412e7b5d32" id="r_afe7067ef647fbf54129e23412e7b5d32"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#afe7067ef647fbf54129e23412e7b5d32">OdimIoUtilities_createLegend</a> (<a class="el" href="rave__legend_8h.html#aeef10ad065b8d47fce136bd823bf2f02">RaveLegend_t</a> *legend, HL_NodeList *nodelist, <a class="el" href="rave__types_8h.html#a290d5190c397951897071d66bfaf35e0">RaveIO_ODIM_Version</a> version, const char *fmt,...)</td></tr>
+<tr class="memdesc:afe7067ef647fbf54129e23412e7b5d32"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a legend (RaveLegend_t) to a nodelist.  <br /></td></tr>
+<tr class="separator:afe7067ef647fbf54129e23412e7b5d32"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Utilities when working with ODIM H5 files. </p>
@@ -278,6 +292,55 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="afe7067ef647fbf54129e23412e7b5d32" name="afe7067ef647fbf54129e23412e7b5d32"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afe7067ef647fbf54129e23412e7b5d32">&#9670;&#160;</a></span>OdimIoUtilities_createLegend()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int OdimIoUtilities_createLegend </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="rave__legend_8h.html#aeef10ad065b8d47fce136bd823bf2f02">RaveLegend_t</a> *</td>          <td class="paramname"><span class="paramname"><em>legend</em>, </span></td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">HL_NodeList *</td>          <td class="paramname"><span class="paramname"><em>nodelist</em>, </span></td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="rave__types_8h.html#a290d5190c397951897071d66bfaf35e0">RaveIO_ODIM_Version</a></td>          <td class="paramname"><span class="paramname"><em>version</em>, </span></td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>fmt</em>, </span></td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>...</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Adds a legend (RaveLegend_t) to a nodelist. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">legend</td><td>- the legend </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nodelist</td><td>- the hlhdf node list </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">outversion</td><td>- the version of file to be written </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">fmt</td><td>- the varargs format string </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">...</td><td>- the varargs </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>1 on success otherwise 0 </dd></dl>
+
+</div>
+</div>
 <a id="a7c69ec543ded350ab78f9e6d49fd562b" name="a7c69ec543ded350ab78f9e6d49fd562b"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a7c69ec543ded350ab78f9e6d49fd562b">&#9670;&#160;</a></span>OdimIoUtilities_getIdFromSource()</h2>
 
@@ -399,6 +462,49 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>a rave field on success otherwise NULL </dd></dl>
+
+</div>
+</div>
+<a id="a65418f0f6666b1f03223c5b9890250bd" name="a65418f0f6666b1f03223c5b9890250bd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a65418f0f6666b1f03223c5b9890250bd">&#9670;&#160;</a></span>OdimIOUtilities_loadLegend()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="rave__legend_8h.html#aeef10ad065b8d47fce136bd823bf2f02">RaveLegend_t</a> * OdimIOUtilities_loadLegend </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="struct__LazyNodeListReader__t.html">LazyNodeListReader_t</a> *</td>          <td class="paramname"><span class="paramname"><em>lazyReader</em>, </span></td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="rave__types_8h.html#a290d5190c397951897071d66bfaf35e0">RaveIO_ODIM_Version</a></td>          <td class="paramname"><span class="paramname"><em>version</em>, </span></td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>fmt</em>, </span></td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>...</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Loads a rave legend. </p>
+<p>The compound type should have been written in a dataset according to the specification. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">lazyReader</td><td>- the wrapper around the hlhdf node list </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">version</td><td>- version of the file read </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">fmt</td><td>- the variable argument list string format </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">...</td><td>- the variable argument list </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>a rave legend on success otherwise NULL </dd></dl>
 
 </div>
 </div>

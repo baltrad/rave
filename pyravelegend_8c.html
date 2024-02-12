@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.10.0"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>RAVE: /github/workspace/modules/pycartesianparam.c File Reference</title>
+<title>RAVE: /github/workspace/modules/pyravelegend.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -48,11 +48,11 @@ $(function() {
 <a href="#define-members">Macros</a> &#124;
 <a href="#func-members">Functions</a> &#124;
 <a href="#var-members">Variables</a>  </div>
-  <div class="headertitle"><div class="title">pycartesianparam.c File Reference</div></div>
+  <div class="headertitle"><div class="title">pyravelegend.c File Reference</div></div>
 </div><!--header-->
 <div class="contents">
 
-<p>Python version of the Cartesian Parameter API.  
+<p>Python version of the RaveLegend API.  
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &quot;pyravecompat.h&quot;</code><br />
 <code>#include &lt;limits.h&gt;</code><br />
@@ -60,19 +60,17 @@ $(function() {
 <code>#include &lt;stdio.h&gt;</code><br />
 <code>#include &lt;string.h&gt;</code><br />
 <code>#include &quot;<a class="el" href="pyrave__debug_8h_source.html">pyrave_debug.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="pycartesianparam_8h_source.html">pycartesianparam.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="pyravefield_8h_source.html">pyravefield.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="rave__legend_8h_source.html">rave_legend.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="pyravelegend_8h_source.html">pyravelegend.h</a>&quot;</code><br />
-<code>#include &quot;arrayobject.h&quot;</code><br />
 <code>#include &quot;<a class="el" href="rave__alloc_8h_source.html">rave_alloc.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="raveutil_8h_source.html">raveutil.h</a>&quot;</code><br />
 <code>#include &quot;rave.h&quot;</code><br />
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="define-members" name="define-members"></a>
 Macros</h2></td></tr>
-<tr class="memitem:a418e2a535fd4143294a4ec6fb77a3946" id="r_a418e2a535fd4143294a4ec6fb77a3946"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a418e2a535fd4143294a4ec6fb77a3946">PYCARTESIANPARAM_MODULE</a></td></tr>
-<tr class="memdesc:a418e2a535fd4143294a4ec6fb77a3946"><td class="mdescLeft">&#160;</td><td class="mdescRight">to get correct part of <a class="el" href="pycartesianparam_8h.html" title="Python version of the Cartesian API.">pycartesianparam.h</a>  <br /></td></tr>
-<tr class="separator:a418e2a535fd4143294a4ec6fb77a3946"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad54dbec9de0c434f1536070ec4e14533" id="r_ad54dbec9de0c434f1536070ec4e14533"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad54dbec9de0c434f1536070ec4e14533">PYRAVELEGEND_MODULE</a></td></tr>
+<tr class="memdesc:ad54dbec9de0c434f1536070ec4e14533"><td class="mdescLeft">&#160;</td><td class="mdescRight">to get correct part of <a class="el" href="pyravelegend_8h.html" title="Python version of the RaveField API.">pyravelegend.h</a>  <br /></td></tr>
+<tr class="separator:ad54dbec9de0c434f1536070ec4e14533"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7e30095579331fe0846ee2481b556736" id="r_a7e30095579331fe0846ee2481b556736"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7e30095579331fe0846ee2481b556736">raiseException_gotoTag</a>(tag,  type,  msg)&#160;&#160;&#160;{PyErr_SetString(type, msg); goto tag;}</td></tr>
 <tr class="memdesc:a7e30095579331fe0846ee2481b556736"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets a python exception and goto tag.  <br /></td></tr>
 <tr class="separator:a7e30095579331fe0846ee2481b556736"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -82,40 +80,43 @@ Macros</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a4dce864fe4f91538c4f6a2b2584bd667" id="r_a4dce864fe4f91538c4f6a2b2584bd667"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4dce864fe4f91538c4f6a2b2584bd667">PYRAVE_DEBUG_MODULE</a> (&quot;_cartesianparam&quot;)</td></tr>
-<tr class="memdesc:a4dce864fe4f91538c4f6a2b2584bd667"><td class="mdescLeft">&#160;</td><td class="mdescRight">Debug this module.  <br /></td></tr>
-<tr class="separator:a4dce864fe4f91538c4f6a2b2584bd667"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af16c9983876f889145518b6da0208ec8" id="r_af16c9983876f889145518b6da0208ec8"><td class="memItemLeft" align="right" valign="top"><a id="af16c9983876f889145518b6da0208ec8" name="af16c9983876f889145518b6da0208ec8"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>PyDoc_STRVAR</b> (_pycartesianparam_type_doc, &quot;The cartesian parameter represents one cartesian parameter (quantity). The cartesian parameter is the data keeper &quot; &quot;for the cartesian object. The member attributes within the cartesian parameter represents the data content in some way. &quot; &quot;Since the parameter probably should contain a lot of attributes as defined in the ODIM H5 specification, these can be &quot; &quot;added within the attribute mapping (how/, what/, where/) groups. E.g. addAttribute(\&quot;how/sthis\&quot;, 1.2).\n&quot; &quot;A list of avilable member attributes are described below. For information about member functions, check each functions doc.\n&quot; &quot;\n&quot; &quot;xsize            - The xsize of the area represented. ReadOnly, initialization occurs when setting data using setData().\n&quot; &quot;ysize            - The ysize of the area represented. ReadOnly, initialization occurs when setting data using setData().\n&quot; &quot;quantity         - The quantity that this parameter represents, like DBZH, TH, ...\n&quot; &quot;gain             - The gain value to use when scaling the value.\n&quot; &quot;offset           - The offset to use when scaling the value.\n&quot; &quot;nodata           - The value that represents a nodata (no coverage, ...)\n&quot; &quot;undetect         - The value that represents undetect (coverage, but no hit)\n&quot; &quot;datatype         - The data type. ReadOnly, initialization occurs when setting data using setData().\n&quot; &quot;legend           - The legend if any.&quot; &quot;\n&quot; &quot;Usage:\n&quot; &quot; import _cartesianparam, numpy\n&quot; &quot; p = _cartesianparam.new()\n&quot; &quot; p.setData(numpy.zeros((11,10), numpy.uint8))\n&quot; &quot; p.nodata = 255\n&quot; &quot; p.undetect = 0\n&quot; &quot; p.quantity = \&quot;DBZH\&quot;\n&quot; &quot; p.setValue((1,1), 10)&quot;)</td></tr>
-<tr class="separator:af16c9983876f889145518b6da0208ec8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5af42ff6c65c92cf007692b9d1fbe4db" id="r_a5af42ff6c65c92cf007692b9d1fbe4db"><td class="memItemLeft" align="right" valign="top"><a id="a5af42ff6c65c92cf007692b9d1fbe4db" name="a5af42ff6c65c92cf007692b9d1fbe4db"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>MOD_INIT</b> (_cartesianparam)</td></tr>
-<tr class="separator:a5af42ff6c65c92cf007692b9d1fbe4db"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a051a58b8db4e02ec5e74d63436dcd5b5" id="r_a051a58b8db4e02ec5e74d63436dcd5b5"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a051a58b8db4e02ec5e74d63436dcd5b5">PYRAVE_DEBUG_MODULE</a> (&quot;_ravelegend&quot;)</td></tr>
+<tr class="memdesc:a051a58b8db4e02ec5e74d63436dcd5b5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Debug this module.  <br /></td></tr>
+<tr class="separator:a051a58b8db4e02ec5e74d63436dcd5b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a08d563bb00087b5f319bcd68510a8c22" id="r_a08d563bb00087b5f319bcd68510a8c22"><td class="memItemLeft" align="right" valign="top"><a id="a08d563bb00087b5f319bcd68510a8c22" name="a08d563bb00087b5f319bcd68510a8c22"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>MOD_DIR_FORWARD_DECLARE</b> (<a class="el" href="structPyRaveLegend.html">PyRaveLegend</a>)</td></tr>
+<tr class="separator:a08d563bb00087b5f319bcd68510a8c22"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af0a2c2be1010a9b1a98cea4345c9b689" id="r_af0a2c2be1010a9b1a98cea4345c9b689"><td class="memItemLeft" align="right" valign="top"><a id="af0a2c2be1010a9b1a98cea4345c9b689" name="af0a2c2be1010a9b1a98cea4345c9b689"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>PyDoc_STRVAR</b> (_pyravelegend_type_doc, &quot;A data container that is used as for defining legends that should be associated to various rave objects.\n\n&quot; &quot;\n&quot; &quot;Usage:\n&quot; &quot; import _ravelegend\n&quot; &quot; legend = _ravelegend.new()\n&quot; &quot; legend.addValue(\&quot;KEY_1\&quot;, \&quot;V1\&quot;)\n&quot;)</td></tr>
+<tr class="separator:af0a2c2be1010a9b1a98cea4345c9b689"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acb7889dc13c125fc5c5a29fe55be5657" id="r_acb7889dc13c125fc5c5a29fe55be5657"><td class="memItemLeft" align="right" valign="top"><a id="acb7889dc13c125fc5c5a29fe55be5657" name="acb7889dc13c125fc5c5a29fe55be5657"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>MOD_INIT</b> (_ravelegend)</td></tr>
+<tr class="separator:acb7889dc13c125fc5c5a29fe55be5657"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
 Variables</h2></td></tr>
-<tr class="memitem:ae8942493d161aefeb0b8996dbd330b4d" id="r_ae8942493d161aefeb0b8996dbd330b4d"><td class="memItemLeft" align="right" valign="top"><a id="ae8942493d161aefeb0b8996dbd330b4d" name="ae8942493d161aefeb0b8996dbd330b4d"></a>
-PyTypeObject&#160;</td><td class="memItemRight" valign="bottom"><b>PyCartesianParam_Type</b></td></tr>
-<tr class="separator:ae8942493d161aefeb0b8996dbd330b4d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4a14fd2740d71cda8512c97158179af7" id="r_a4a14fd2740d71cda8512c97158179af7"><td class="memItemLeft" align="right" valign="top"><a id="a4a14fd2740d71cda8512c97158179af7" name="a4a14fd2740d71cda8512c97158179af7"></a>
+PyTypeObject&#160;</td><td class="memItemRight" valign="bottom"><b>PyRaveLegend_Type</b></td></tr>
+<tr class="separator:a4a14fd2740d71cda8512c97158179af7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Python version of the Cartesian Parameter API. </p>
+<div class="textblock"><p>Python version of the RaveLegend API. </p>
 <dl class="section author"><dt>Author</dt><dd>Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI) </dd></dl>
-<dl class="section date"><dt>Date</dt><dd>2012-02-07 </dd></dl>
+<dl class="section date"><dt>Date</dt><dd>2024-02-10 </dd></dl>
 </div><h2 class="groupheader">Macro Definition Documentation</h2>
-<a id="a418e2a535fd4143294a4ec6fb77a3946" name="a418e2a535fd4143294a4ec6fb77a3946"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a418e2a535fd4143294a4ec6fb77a3946">&#9670;&#160;</a></span>PYCARTESIANPARAM_MODULE</h2>
+<a id="ad54dbec9de0c434f1536070ec4e14533" name="ad54dbec9de0c434f1536070ec4e14533"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad54dbec9de0c434f1536070ec4e14533">&#9670;&#160;</a></span>PYRAVELEGEND_MODULE</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define PYCARTESIANPARAM_MODULE</td>
+          <td class="memname">#define PYRAVELEGEND_MODULE</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>to get correct part of <a class="el" href="pycartesianparam_8h.html" title="Python version of the Cartesian API.">pycartesianparam.h</a> </p>
+<p>to get correct part of <a class="el" href="pyravelegend_8h.html" title="Python version of the RaveField API.">pyravelegend.h</a> </p>
 
 </div>
 </div>
@@ -171,8 +172,8 @@ PyTypeObject&#160;</td><td class="memItemRight" valign="bottom"><b>PyCartesianPa
 </div>
 </div>
 <h2 class="groupheader">Function Documentation</h2>
-<a id="a4dce864fe4f91538c4f6a2b2584bd667" name="a4dce864fe4f91538c4f6a2b2584bd667"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4dce864fe4f91538c4f6a2b2584bd667">&#9670;&#160;</a></span>PYRAVE_DEBUG_MODULE()</h2>
+<a id="a051a58b8db4e02ec5e74d63436dcd5b5" name="a051a58b8db4e02ec5e74d63436dcd5b5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a051a58b8db4e02ec5e74d63436dcd5b5">&#9670;&#160;</a></span>PYRAVE_DEBUG_MODULE()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -180,7 +181,7 @@ PyTypeObject&#160;</td><td class="memItemRight" valign="bottom"><b>PyCartesianPa
         <tr>
           <td class="memname">PYRAVE_DEBUG_MODULE </td>
           <td>(</td>
-          <td class="paramtype">&quot;_cartesianparam&quot;</td>          <td class="paramname"><span class="paramname"></span></td><td>)</td>
+          <td class="paramtype">&quot;_ravelegend&quot;</td>          <td class="paramname"><span class="paramname"></span></td><td>)</td>
           <td></td>
         </tr>
       </table>
