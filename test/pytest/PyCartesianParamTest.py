@@ -27,7 +27,7 @@ import unittest
 import os
 import _cartesianparam
 import _rave
-import _ravefield
+import _ravefield, _ravelegend
 import string
 import numpy
 
@@ -46,7 +46,7 @@ class PyCartesianParamTest(unittest.TestCase):
   
   def test_attribute_visibility(self):
     attrs = ['xsize', 'ysize', 'quantity', 'gain', 'offset', 'nodata', 
-     'undetect', 'datatype']
+     'undetect', 'datatype', 'legend']
     obj = _cartesianparam.new()
     alist = dir(obj)
     for a in attrs:
@@ -108,7 +108,31 @@ class PyCartesianParamTest(unittest.TestCase):
       d = numpy.zeros((10,10), type[0])
       obj.setData(d)
       self.assertEqual(type[1], obj.datatype)
-    
+
+  def test_legend(self):
+    LEGEND = [
+        ("NONE", "0"),
+        ("GROUNDCLUTTER", "1"),
+        ("SEACLUTTER", "2")
+    ]
+    obj = _cartesianparam.new()
+    legend = _ravelegend.new()
+    legend.legend = LEGEND
+    obj.legend = legend
+    self.assertEqual(LEGEND, obj.legend.legend)
+
+    obj.legend = None
+    self.assertEqual(None, obj.legend)
+
+  def test_legend_badvalue(self):
+    obj = _cartesianparam.new()
+    try:
+      obj.legend = [("1","3")]
+      self.fail("Expected TypeError")
+    except TypeError:
+      pass
+
+
   def test_quantity(self):
     obj = _cartesianparam.new()
     self.assertEqual(None, obj.quantity)

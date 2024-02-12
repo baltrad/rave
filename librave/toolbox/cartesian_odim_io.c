@@ -23,6 +23,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @date 2010-09-09
  */
 #include "cartesian_odim_io.h"
+#include "cartesianparam.h"
 #include "rave_hlhdf_utilities.h"
 #include "rave_debug.h"
 #include "rave_alloc.h"
@@ -626,6 +627,17 @@ static CartesianParam_t* CartesianOdimIOInternal_loadCartesianParameter(Cartesia
     RAVE_ERROR1("Failed to load data and attributes for %s", nodeName);
   }
 
+  if (RaveHL_hasNodeByName(arg.nodelist, "%s/legend", nodeName)) {
+    RaveLegend_t* legend = OdimIOUtilities_loadLegend(lazyReader, self->version, "%s/legend", nodeName);
+    if (legend != NULL) {
+      CartesianParam_setLegend(param, legend);
+      RAVE_OBJECT_RELEASE(legend);
+    } else {
+      RAVE_ERROR0("Failed to load legend for parameter");
+      goto done;
+    }
+  }
+
   pindex = 1;
   while (RaveHL_hasNodeByName(arg.nodelist, "%s/quality%d", nodeName, pindex)) {
     field = OdimIoUtilities_loadField(lazyReader, self->version, "%s/quality%d", nodeName, pindex);
@@ -660,6 +672,7 @@ static int CartesianOdimIOInternal_addParameterToNodeList(CartesianOdimIO_t* sel
   char nodeName[1024];
   RaveObjectList_t* attributes = NULL;
   RaveObjectList_t* qualityfields = NULL;
+  RaveLegend_t* legend = NULL;
   va_list ap;
   int n = 0;
   double gain=1.0, offset=0.0;
@@ -713,6 +726,14 @@ static int CartesianOdimIOInternal_addParameterToNodeList(CartesianOdimIO_t* sel
     goto done;
   }
 
+  if (CartesianParam_hasLegend(param)) {
+    legend = CartesianParam_getLegend(param);
+    if (!OdimIoUtilities_createLegend(legend, nodelist, self->version, "%s/legend", nodeName)) {
+      goto done;
+    }
+    RAVE_OBJECT_RELEASE(legend);
+  }
+
   if ((qualityfields = CartesianParam_getQualityFields(param)) == NULL) {
     goto done;
   }
@@ -723,6 +744,8 @@ static int CartesianOdimIOInternal_addParameterToNodeList(CartesianOdimIO_t* sel
 done:
   RAVE_OBJECT_RELEASE(qualityfields);
   RAVE_OBJECT_RELEASE(attributes);
+  RAVE_OBJECT_RELEASE(legend);
+
   return result;
 }
 

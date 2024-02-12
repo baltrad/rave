@@ -33,6 +33,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_list.h"
 #include "raveobject_list.h"
 #include "rave_field.h"
+#include "rave_legend.h"
 
 /**
  * Defines a Polar Scan

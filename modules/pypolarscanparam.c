@@ -38,6 +38,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave.h"
 #include "pyravefield.h"
 #include "pyravedata2d.h"
+#include "pyravelegend.h"
 
 /**
  * Debug this module
@@ -681,6 +682,7 @@ static struct PyMethodDef _pypolarscanparam_methods[] =
   {"nodata", NULL, METH_VARARGS},
   {"undetect", NULL, METH_VARARGS},
   {"datatype", NULL, METH_VARARGS},
+  {"legend", NULL, METH_VARARGS},
   {"setData", (PyCFunction) _pypolarscanparam_setData, 1,
     "setData(array)\n\n"
     "Initializes the parameter with a datafield as defined by a 2-dimensional numpy array and datatype.\n\n"
@@ -803,6 +805,16 @@ static PyObject* _pypolarscanparam_getattro(PyPolarScanParam* self, PyObject* na
     return PyFloat_FromDouble(PolarScanParam_getUndetect(self->scanparam));
   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("datatype", name) == 0) {
     return PyInt_FromLong(PolarScanParam_getDataType(self->scanparam));
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "legend") == 0) {
+    RaveLegend_t* legend = PolarScanParam_getLegend(self->scanparam);
+    PyObject* result = NULL;
+    if (legend != NULL) {
+      result = (PyObject*)PyRaveLegend_New(legend);
+      RAVE_OBJECT_RELEASE(legend);
+      return result;
+    } else {
+      Py_RETURN_NONE;
+    }
   }
 
   return PyObject_GenericGetAttr((PyObject*)self, name);
@@ -851,6 +863,14 @@ static int _pypolarscanparam_setattro(PyPolarScanParam* self, PyObject* name, Py
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "undetect must be of type float");
     }
+ } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "legend") == 0) {
+    if (PyRaveLegend_Check(val)) {
+      PolarScanParam_setLegend(self->scanparam, ((PyRaveLegend*)val)->legend);
+    } else if (val == Py_None) {
+      PolarScanParam_setLegend(self->scanparam, NULL);
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError, "legend must be of RaveLegendCore type");  
+    }    
   } else {
     raiseException_gotoTag(done, PyExc_AttributeError, PY_RAVE_ATTRO_NAME_TO_STRING(name));
   }
@@ -977,6 +997,7 @@ MOD_INIT(_polarscanparam)
   import_array(); /*To make sure I get access to Numeric*/
   import_ravedata2d();
   import_pyravefield();
+  import_pyravelegend();
   PYRAVE_DEBUG_INITIALIZE;
   return MOD_INIT_SUCCESS(module);
 }

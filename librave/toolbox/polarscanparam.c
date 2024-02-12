@@ -42,6 +42,7 @@ struct _PolarScanParam_t {
   RAVE_OBJECT_HEAD /** Always on top */
   RaveData2D_t* data; /**< data ptr */
   LazyDataset_t* lazyDataset; /**< the lazy dataset */
+  RaveLegend_t* legend; /** < the legend*/
   char* quantity;    /**< what does this data represent */
   double gain;       /**< gain when scaling */
   double offset;     /**< offset when scaling */
@@ -68,6 +69,7 @@ static int PolarScanParam_constructor(RaveCoreObject* obj)
   this->nodata = 0.0L;
   this->undetect = 0.0L;
   this->lazyDataset = NULL;
+  this->legend = NULL;
   if (this->data == NULL || this->attrs == NULL || this->qualityfields == NULL) {
     goto error;
   }
@@ -107,12 +109,22 @@ static int PolarScanParam_copyconstructor(RaveCoreObject* obj, RaveCoreObject* s
   this->data = RAVE_OBJECT_CLONE(PolarScanParamInternal_ensureData2D(src));
   this->attrs = RAVE_OBJECT_CLONE(src->attrs);
   this->qualityfields = RAVE_OBJECT_CLONE(src->qualityfields);
+  this->legend = NULL;
   this->quantity = NULL;
   this->lazyDataset = NULL;
   if (this->data == NULL || this->attrs == NULL || this->qualityfields == NULL) {
     RAVE_ERROR0("data, attrs or qualityfields NULL");
     goto error;
   }
+
+  if (src->legend != NULL) {
+    this->legend = RAVE_OBJECT_CLONE(src->legend);
+    if (this->legend == NULL) {
+      RAVE_ERROR0("Could not clone legend");
+      goto error;
+    }
+  }
+
   if (!PolarScanParam_setQuantity(this, PolarScanParam_getQuantity(src))) {
     RAVE_ERROR0("Failed to duplicate quantity");
     goto error;
@@ -128,6 +140,7 @@ error:
   RAVE_OBJECT_RELEASE(this->data);
   RAVE_OBJECT_RELEASE(this->attrs);
   RAVE_OBJECT_RELEASE(this->qualityfields);
+  RAVE_OBJECT_RELEASE(this->legend);
   RAVE_FREE(this->quantity);
   return 0;
 }
@@ -142,6 +155,7 @@ static void PolarScanParam_destructor(RaveCoreObject* obj)
   RAVE_OBJECT_RELEASE(this->attrs);
   RAVE_OBJECT_RELEASE(this->qualityfields);
   RAVE_OBJECT_RELEASE(this->lazyDataset);
+  RAVE_OBJECT_RELEASE(this->legend);
   RAVE_FREE(this->quantity);
 }
 
@@ -716,6 +730,26 @@ int PolarScanParam_shiftData(PolarScanParam_t* param, int nrays)
   }
   return result;
 }
+
+void PolarScanParam_setLegend(PolarScanParam_t* self, RaveLegend_t* legend)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  RAVE_OBJECT_RELEASE(self->legend);
+  self->legend = RAVE_OBJECT_COPY(legend);
+}
+
+int PolarScanParam_hasLegend(PolarScanParam_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return self->legend != NULL;
+}
+
+RaveLegend_t* PolarScanParam_getLegend(PolarScanParam_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return RAVE_OBJECT_COPY(self->legend);
+}
+
 
 /*@} End of Interface functions */
 

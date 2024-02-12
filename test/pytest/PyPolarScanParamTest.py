@@ -27,7 +27,7 @@ import unittest
 import os
 import _polarscanparam
 import _rave
-import _ravefield
+import _ravefield, _ravelegend
 import string
 import numpy
 import math
@@ -47,7 +47,7 @@ class PyPolarScanParamTest(unittest.TestCase):
 
   def test_attribute_visibility(self):
     attrs = ['nbins', 'nrays', 'quantity', 'gain', 'offset', 'nodata',
-             'undetect', 'datatype']
+             'undetect', 'datatype', 'legend']
     obj = _polarscanparam.new()
     alist = dir(obj)
     for a in attrs:
@@ -188,6 +188,29 @@ class PyPolarScanParamTest(unittest.TestCase):
     except TypeError:
       pass
     self.assertAlmostEqual(0.0, obj.undetect, 4)
+
+  def test_legend(self):
+    LEGEND = [
+        ("NONE", "0"),
+        ("GROUNDCLUTTER", "1"),
+        ("SEACLUTTER", "2")
+    ]
+    obj = _polarscanparam.new()
+    legend = _ravelegend.new()
+    legend.legend = LEGEND
+    obj.legend = legend
+    self.assertEqual(LEGEND, obj.legend.legend)
+
+    obj.legend = None
+    self.assertEqual(None, obj.legend)
+
+  def test_legend_badvalue(self):
+    obj = _polarscanparam.new()
+    try:
+      obj.legend = [("1","3")]
+      self.fail("Expected TypeError")
+    except TypeError:
+      pass
 
   def test_getValue(self):
     obj = _polarscanparam.new()

@@ -38,6 +38,7 @@ import _polarscan
 import _polarscanparam
 import _rave
 import _ravefield
+import _ravelegend
 import _verticalprofile
 import string
 import numpy
@@ -658,6 +659,98 @@ class PyRaveIOTest(unittest.TestCase):
     #Just verify that we can read it as well
     obj = _raveio.open(self.TEMPORARY_FILE).object
     self.assertEqual(None, obj.prodname)
+
+  def test_save_cartesian_22_legend(self):
+    image = _cartesian.new()
+    image.time = "100000"
+    image.date = "20100101"
+    image.objectType = _rave.Rave_ObjectType_IMAGE
+    image.source = "PLC:123,WIGOS:0-123-1-123456"
+    image.xscale = 2000.0
+    image.yscale = 2000.0
+    image.areaextent = (-240000.0, -240000.0, 240000.0, 240000.0)
+    image.projection = _projection.new("x","y","+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84")
+    image.product = _rave.Rave_ProductType_CAPPI
+    image.prodname = "My Product"
+
+    param = _cartesianparam.new()
+    param.quantity = "DBZH"
+    param.gain = 1.0
+    param.offset = 0.0
+    param.nodata = 255.0
+    param.undetect = 0.0
+    data = numpy.zeros((240,240),numpy.uint8)
+    param.setData(data)
+
+    LEGEND = [
+        ("NONE", "0"),
+        ("GROUNDCLUTTER", "1"),
+        ("SEACLUTTER", "2")
+    ]
+    legend = _ravelegend.new()
+    legend.legend = LEGEND
+    param.legend = legend    
+
+    image.addParameter(param)
+
+    ios = _raveio.new()
+    ios.object = image
+    ios.version = _raveio.RaveIO_ODIM_Version_2_2
+    ios.filename = self.TEMPORARY_FILE
+    ios.save()
+
+    # Python API of HLHDF does not support reading of arrays of compound datatypes
+    # so we can only verify that we have managed to write legend by checking the
+    # data read using the rave API
+    obj = _raveio.open(self.TEMPORARY_FILE).object
+
+    self.assertEqual(LEGEND, obj.getParameter("DBZH").legend.legend)
+
+  def test_save_cartesian_22_lazy_load_legend(self):
+    image = _cartesian.new()
+    image.time = "100000"
+    image.date = "20100101"
+    image.objectType = _rave.Rave_ObjectType_IMAGE
+    image.source = "PLC:123,WIGOS:0-123-1-123456"
+    image.xscale = 2000.0
+    image.yscale = 2000.0
+    image.areaextent = (-240000.0, -240000.0, 240000.0, 240000.0)
+    image.projection = _projection.new("x","y","+proj=gnom +R=6371000.0 +lat_0=56.3675 +lon_0=12.8544 +datum=WGS84")
+    image.product = _rave.Rave_ProductType_CAPPI
+    image.prodname = "My Product"
+
+    param = _cartesianparam.new()
+    param.quantity = "DBZH"
+    param.gain = 1.0
+    param.offset = 0.0
+    param.nodata = 255.0
+    param.undetect = 0.0
+    data = numpy.zeros((240,240),numpy.uint8)
+    param.setData(data)
+
+    LEGEND = [
+        ("NONE", "0"),
+        ("GROUNDCLUTTER", "1"),
+        ("SEACLUTTER", "2")
+    ]
+    legend = _ravelegend.new()
+    legend.legend = LEGEND
+    param.legend = legend    
+
+    image.addParameter(param)
+
+    ios = _raveio.new()
+    ios.object = image
+    ios.version = _raveio.RaveIO_ODIM_Version_2_2
+    ios.filename = self.TEMPORARY_FILE
+    ios.save()
+
+    # Python API of HLHDF does not support reading of arrays of compound datatypes
+    # so we can only verify that we have managed to write legend by checking the
+    # data read using the rave API
+    obj = _raveio.open(self.TEMPORARY_FILE, True).object
+
+    self.assertEqual(LEGEND, obj.getParameter("DBZH").legend.legend)
 
   def test_save_cartesian_SURF(self):
     image = _cartesian.new()
@@ -2439,6 +2532,46 @@ class PyRaveIOTest(unittest.TestCase):
     nodelist.fetch()
     
     self.assertAlmostEqual(0.5, nodelist.getNode("/dataset1/where/rstart").data(), 4)
+
+  def test_save_scan_legend(self):
+    LEGEND = [
+        ("NONE", "0"),
+        ("GROUNDCLUTTER", "1"),
+        ("SEACLUTTER", "2")
+    ]
+    obj = _raveio.open(self.FIXTURE_VOLUME).object.getScan(0)
+    legend = _ravelegend.new()
+    legend.legend = LEGEND
+    obj.getParameter("DBZH").legend = legend
+
+    rio = _raveio.new()
+    rio.object = obj
+
+    rio.save(self.TEMPORARY_FILE)
+    
+    # Verify that we can read legend
+    obj = _raveio.open(self.TEMPORARY_FILE).object
+    self.assertEqual(LEGEND, obj.getParameter("DBZH").legend.legend)
+
+  def test_save_scan_legend_lazy_loading(self):
+    LEGEND = [
+        ("NONE", "0"),
+        ("GROUNDCLUTTER", "1"),
+        ("SEACLUTTER", "2")
+    ]
+    obj = _raveio.open(self.FIXTURE_VOLUME).object.getScan(0)
+    legend = _ravelegend.new()
+    legend.legend = LEGEND
+    obj.getParameter("DBZH").legend = legend
+
+    rio = _raveio.new()
+    rio.object = obj
+
+    rio.save(self.TEMPORARY_FILE)
+    
+    # Verify that we can read legend using lazy loading
+    obj = _raveio.open(self.TEMPORARY_FILE, True).object
+    self.assertEqual(LEGEND, obj.getParameter("DBZH").legend.legend)
 
   def test_write_scan_with_array(self):
     obj = _raveio.open(self.FIXTURE_VOLUME)

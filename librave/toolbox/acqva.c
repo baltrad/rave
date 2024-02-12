@@ -1393,7 +1393,6 @@ Cartesian_t* Acqva_generate(Acqva_t* self, Area_t* area, RaveList_t* qualityflag
           } else {
             double dist = 0.0;
             double maxdist = 0.0;
-            double rdist = 0.0;
 
             if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
               dist = PolarVolume_getDistance((PolarVolume_t*)obj, olon, olat);

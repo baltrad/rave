@@ -35,6 +35,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "raveobject_list.h"
 #include "rave_attribute.h"
 #include "rave_field.h"
+#include "rave_legend.h"
 
 /**
  * Defines a Cartesian product
@@ -369,5 +370,27 @@ RaveObjectList_t* CartesianParam_getQualityFields(CartesianParam_t* self);
  * @return the field if found otherwise NULL
  */
 RaveField_t* CartesianParam_getQualityFieldByHowTask(CartesianParam_t* self, const char* value);
+
+/**
+ * Sets the legend associated with this parameter
+ * @param[in] self - self
+ * @param[in] legend - the legend
+ */
+void CartesianParam_setLegend(CartesianParam_t* self, RaveLegend_t* legend);
+
+/**
+ * Returns if there is a legend associated with this parameter or not
+ * @param[in] self - self
+ * @return the 1 if there is a legend set, otherwise 0
+ */
+int CartesianParam_hasLegend(CartesianParam_t* self);
+
+/**
+ * Returns the legend associated with this parameter.
+ * @param[in] self - self
+ * @return the legend or NULL if none is set
+ */
+RaveLegend_t* CartesianParam_getLegend(CartesianParam_t* self);
+
 
 #endif

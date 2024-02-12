@@ -232,7 +232,6 @@ static int RaveIOCacheInternal_addRaveFieldToNodeList(RaveIOCache_t* raveio, Rav
 RaveField_t* RaveIOCache_loadField(RaveIOCache_t* iocache, const char* filename, const char* fieldname)
 {
   RaveField_t* result = NULL;
-  HL_NodeList* nodelist = NULL;
   LazyNodeListReader_t* lazyReader = NULL;
   char sfieldname[512];
 

@@ -380,4 +380,25 @@ int PolarScanParam_convertDataDoubleToUchar(PolarScanParam_t* param);
  */
 int PolarScanParam_shiftData(PolarScanParam_t* param, int nrays);
 
+/**
+ * Sets the legend associated with this parameter
+ * @param[in] self - self
+ * @param[in] legend - the legend
+ */
+void PolarScanParam_setLegend(PolarScanParam_t* self, RaveLegend_t* legend);
+
+/**
+ * Returns if there is a legend associated with this parameter or not
+ * @param[in] self - self
+ * @return the 1 if there is a legend set, otherwise 0
+ */
+int PolarScanParam_hasLegend(PolarScanParam_t* self);
+
+/**
+ * Returns the legend associated with this parameter.
+ * @param[in] self - self
+ * @return the legend or NULL if none is set
+ */
+RaveLegend_t* PolarScanParam_getLegend(PolarScanParam_t* self);
+
 #endif

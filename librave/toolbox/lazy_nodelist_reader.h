@@ -12,6 +12,7 @@
 #include "hlhdf_nodelist.h"
 #include "hlhdf_node.h"
 #include "rave_data2d.h"
+#include "rave_legend.h"
 #include "rave_alloc.h"
 #include "rave_list.h"
 #include "rave_attribute.h"
@@ -60,6 +61,14 @@ int LazyNodeListReader_preloadQuantities(LazyNodeListReader_t* self, const char*
  * @returns the dataset as a rave data 2d type or NULL if it couldn't be found
  */
 RaveData2D_t* LazyNodeListReader_getDataset(LazyNodeListReader_t* self, const char* datasetname);
+
+/**
+ * Gets a dataset as a rave legend instance from loader.
+ * @param[in] self - self
+ * @param[in] datasetname - name of the dataset to be fetched
+ * @returns the dataset as a rave legend type or NULL if it couldn't be found
+ */
+RaveLegend_t* LazyNodeListReader_getLegend(LazyNodeListReader_t* self, const char* datasetname);
 
 /**
  * Gets an attribute instance from loader.

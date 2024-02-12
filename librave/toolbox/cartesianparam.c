@@ -49,7 +49,7 @@ struct _CartesianParam_t {
   double undetect;   /**< undetect */
 
   RaveData2D_t* data;   /**< 2 dimensional data array */
-
+  RaveLegend_t* legend; /**< the legend */
   LazyDataset_t* lazyDataset; /**< the lazy dataset */
 
   RaveAttributeTable_t* attrs; /**< attributes */
@@ -69,6 +69,7 @@ static int CartesianParam_constructor(RaveCoreObject* obj)
   this->nodata = 0.0;
   this->undetect = 0.0;
   this->lazyDataset = NULL;
+  this->legend = NULL;
   this->data = RAVE_OBJECT_NEW(&RaveData2D_TYPE);
   this->attrs = RAVE_OBJECT_NEW(&RaveAttributeTable_TYPE);
   this->qualityfields = RAVE_OBJECT_NEW(&RaveObjectList_TYPE);
@@ -117,6 +118,7 @@ static int CartesianParam_copyconstructor(RaveCoreObject* obj, RaveCoreObject* s
   this->undetect = src->undetect;
   this->quantity = NULL;
   this->data = NULL;
+  this->legend = NULL;
   this->lazyDataset = NULL;
 
   CartesianParam_setQuantity(this, CartesianParam_getQuantity(src));
@@ -129,10 +131,18 @@ static int CartesianParam_copyconstructor(RaveCoreObject* obj, RaveCoreObject* s
     goto fail;
   }
 
+  if (src->legend != NULL) {
+    this->legend = RAVE_OBJECT_CLONE(src->legend);
+    if (this->legend == NULL) {
+      goto fail;
+    }
+  }
+
   return 1;
 fail:
   RAVE_FREE(this->quantity);
   RAVE_OBJECT_RELEASE(this->data);
+  RAVE_OBJECT_RELEASE(this->legend);
   RAVE_OBJECT_RELEASE(this->attrs);
   RAVE_OBJECT_RELEASE(this->qualityfields);
   return 0;
@@ -149,6 +159,7 @@ static void CartesianParam_destructor(RaveCoreObject* obj)
   if (cartesian != NULL) {
     RAVE_FREE(cartesian->quantity);
     RAVE_OBJECT_RELEASE(cartesian->data);
+    RAVE_OBJECT_RELEASE(cartesian->legend);
     RAVE_OBJECT_RELEASE(cartesian->lazyDataset);
     RAVE_OBJECT_RELEASE(cartesian->attrs);
     RAVE_OBJECT_RELEASE(cartesian->qualityfields);
@@ -539,6 +550,25 @@ RaveField_t* CartesianParam_getQualityFieldByHowTask(CartesianParam_t* self, con
     RAVE_OBJECT_RELEASE(field);
   }
   return result;
+}
+
+void CartesianParam_setLegend(CartesianParam_t* self, RaveLegend_t* legend)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  RAVE_OBJECT_RELEASE(self->legend);
+  self->legend = RAVE_OBJECT_COPY(legend);
+}
+
+int CartesianParam_hasLegend(CartesianParam_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return self->legend != NULL;
+}
+
+RaveLegend_t* CartesianParam_getLegend(CartesianParam_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return RAVE_OBJECT_COPY(self->legend);
 }
 
 /*@} End of Interface functions */

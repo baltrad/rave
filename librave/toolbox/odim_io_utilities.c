@@ -26,12 +26,17 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_debug.h"
 #include "rave_alloc.h"
 #include "rave_hlhdf_utilities.h"
+#include "hlhdf_compound_utils.h"
+#include "rave_legend.h"
 #include <string.h>
 #include <math.h>
 
 /*@{ Private functions */
 
 #define SPEED_OF_LIGHT 299792458  /* m/s */
+
+#define DEFAULT_MINKEYLEN 64
+#define DEFAULT_MINVALUELEN 32
 
 /**
  * Called when an attribute belonging to a rave field
@@ -284,6 +289,35 @@ fail:
   return result;
 }
 
+RaveLegend_t* OdimIOUtilities_loadLegend(LazyNodeListReader_t* lazyReader, RaveIO_ODIM_Version version, const char* fmt, ...)
+{
+  RaveLegend_t* legend = NULL;
+  RaveLegend_t* result = NULL;
+  va_list ap;
+  char name[1024];
+  int nName = 0;
+  RAVE_ASSERT((lazyReader != NULL), "lazyReader == NULL");
+  RAVE_ASSERT((fmt != NULL), "fmt == NULL");
+
+  va_start(ap, fmt);
+  nName = vsnprintf(name, 1024, fmt, ap);
+  va_end(ap);
+  if (nName < 0 || nName >= 1024) {
+    RAVE_ERROR0("NodeName would evaluate to more than 1024 characters.");
+    goto fail;
+  }
+  
+  legend = LazyNodeListReader_getLegend(lazyReader, name);
+  if (legend == NULL) {
+    goto fail;
+  }
+
+  result = RAVE_OBJECT_COPY(legend);
+fail:
+  RAVE_OBJECT_RELEASE(legend);
+  return result;
+}
+
 
 int OdimIoUtilities_getIdFromSource(const char* source, const char* id, char* buf, size_t buflen)
 {
@@ -316,5 +350,121 @@ int OdimIoUtilities_getNodOrCmtFromSource(const char* source, char* buf, size_t 
   result = OdimIoUtilities_getIdFromSource(source, "NOD:", buf, buflen);
   if (!result)
     result = OdimIoUtilities_getIdFromSource(source, "CMT:", buf, buflen);
+  return result;
+}
+
+
+int OdimIoUtilities_createLegend(RaveLegend_t* legend, HL_NodeList* nodelist, RaveIO_ODIM_Version version, const char* fmt, ...)
+{
+  int result = 0;
+  va_list ap;
+  char name[1024];
+  int nName = 0;
+  int keylen = 0, valuelen = 0, entrylen = 0, nentries = 0, i = 0;
+  hsize_t dims[1] = {0};
+  hid_t type_id = -1;
+  hid_t strkey_id = -1;
+  hid_t strval_id = -1;
+  HL_Node* node = NULL;
+
+  char* datatowrite = NULL;
+  char* legendentry = NULL;
+
+  RAVE_ASSERT((legend != NULL), "legend == NULL");
+  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
+  RAVE_ASSERT((fmt != NULL), "fmt == NULL");
+
+  if (RaveLegend_size(legend) <= 0) {
+    RAVE_INFO0("Legend does not contain any entries, leaving without doing anything");
+    return 1;
+  }
+
+  va_start(ap, fmt);
+  nName = vsnprintf(name, 1024, fmt, ap);
+  va_end(ap);
+  if (nName < 0 || nName >= 1024) {
+    RAVE_ERROR0("NodeName would evaluate to more than 1024 characters.");
+    goto done;
+  }
+
+  keylen = RaveLegend_maxKeyLength(legend) + 1;     /* +1 to include newline */
+  valuelen = RaveLegend_maxValueLength(legend) + 1;
+
+  if (keylen < DEFAULT_MINKEYLEN) {
+    keylen = DEFAULT_MINKEYLEN;
+  }
+
+  if (valuelen < DEFAULT_MINVALUELEN) {
+    valuelen = DEFAULT_MINVALUELEN;
+  }
+
+  entrylen = keylen + valuelen;
+  nentries = RaveLegend_size(legend);
+  dims[0] = nentries;
+  
+  strkey_id =   H5Tcopy(H5T_C_S1);
+  strval_id =   H5Tcopy(H5T_C_S1);
+  if (strkey_id < 0 || strval_id < 0) {
+    RAVE_ERROR0("Failed to copy string types to be added to compound");
+    goto done;
+  }
+  H5Tset_size(strkey_id, keylen);
+  H5Tset_size(strval_id, valuelen);
+
+  type_id = createCompoundType(sizeof(char)*(entrylen));
+  if (type_id < 0) {
+    RAVE_ERROR0("Failed to create compound type definition");
+    goto done;
+  }
+
+  if(addAttributeToCompoundType(type_id, "key", 0, strkey_id) < 0) {
+    RAVE_ERROR0("Could not add key to compound type legend");
+    goto done;
+  }
+
+  if(addAttributeToCompoundType(type_id,"value", keylen, strval_id) < 0) {
+    RAVE_ERROR0("Could not add value to compound type legend");
+    goto done;
+  }
+
+  legendentry = RAVE_MALLOC(sizeof(char) * entrylen);
+  datatowrite = RAVE_MALLOC(sizeof(char) * entrylen * nentries);
+
+  for (i = 0; i < nentries; i++) {
+    memset(legendentry, 0, sizeof(char) * entrylen);
+    snprintf(legendentry, entrylen, "%s", RaveLegend_getNameAt(legend, i));
+    snprintf(legendentry+keylen, entrylen-keylen, "%s", RaveLegend_getValueAt(legend, i));
+    memcpy(datatowrite+(i*entrylen), legendentry, sizeof(char)*entrylen);
+  }
+
+  node = HLNode_newDataset(name);
+  if (node == NULL) {
+    RAVE_ERROR0("Failed to allocate memory for legend");
+    goto done;
+  }
+
+  if (!HLNode_setArrayValue(node,(size_t)sizeof(char)*entrylen, 1, dims, (unsigned char*)datatowrite, "compound", type_id)) {
+    HLNode_free(node);
+    goto done;
+  }
+
+  if (!HLNodeList_addNode(nodelist, node)) {
+    RAVE_CRITICAL1("Failed to add dataset node with name %s", name);
+    HLNode_free(node);
+    goto done;
+  }
+
+  result = 1;
+done:
+  if (type_id >= 0) {
+    H5Tclose(type_id);
+  }
+  if (strkey_id >= 0) {
+    H5Tclose(strkey_id);
+  }
+  if (strval_id >= 0) {
+    H5Tclose(strval_id);
+  }
+
   return result;
 }

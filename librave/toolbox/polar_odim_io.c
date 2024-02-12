@@ -518,6 +518,17 @@ static PolarScanParam_t* PolarOdimIOInternal_loadScanParam(PolarOdimIO_t* self, 
     goto fail;
   }
 
+  if (RaveHL_hasNodeByName(arg.nodelist, "%s/legend", name)) {
+    RaveLegend_t* legend = OdimIOUtilities_loadLegend(lazyReader, self->version, "%s/legend", name);
+    if (legend != NULL) {
+      PolarScanParam_setLegend(param, legend);
+      RAVE_OBJECT_RELEASE(legend);
+    } else {
+      RAVE_ERROR0("Failed to load legend for parameter");
+      goto fail;
+    }
+  }
+
   /* Adjust quantities to support different units depending on ODIM version */
   gain = PolarScanParam_getGain(param);
   offset = PolarScanParam_getOffset(param);
@@ -637,6 +648,7 @@ static int PolarOdimIOInternal_addParameter(PolarOdimIO_t* self, PolarScanParam_
   int nName = 0;
   RaveObjectList_t* qualityfields = NULL;
   double gain=1.0, offset=0.0;
+  RaveLegend_t* legend = NULL;
 
   RAVE_ASSERT((param != NULL), "param == NULL");
   RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
@@ -685,6 +697,14 @@ static int PolarOdimIOInternal_addParameter(PolarOdimIO_t* self, PolarScanParam_
     goto done;
   }
 
+  if (PolarScanParam_hasLegend(param)) {
+    legend = PolarScanParam_getLegend(param);
+    if (!OdimIoUtilities_createLegend(legend, nodelist, self->version, "%s/legend", name)) {
+      goto done;
+    }
+    RAVE_OBJECT_RELEASE(legend);
+  }
+
   if ((qualityfields = PolarScanParam_getQualityFields(param)) == NULL) {
     goto done;
   }
@@ -694,6 +714,8 @@ static int PolarOdimIOInternal_addParameter(PolarOdimIO_t* self, PolarScanParam_
 done:
   RAVE_OBJECT_RELEASE(attributes);
   RAVE_OBJECT_RELEASE(qualityfields);
+  RAVE_OBJECT_RELEASE(legend);
+
   return result;
 }
 

@@ -34,7 +34,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "pycartesianparam.h"
 
 #include "pyravefield.h"
-
+#include "pyravelegend.h"
 #include "arrayobject.h"
 #include <arrayobject.h>
 #include "rave_alloc.h"
@@ -625,6 +625,7 @@ static struct PyMethodDef _pycartesianparam_methods[] =
   {"nodata", NULL, METH_VARARGS},
   {"undetect", NULL, METH_VARARGS},
   {"datatype", NULL, METH_VARARGS},
+  {"legend", NULL, METH_VARARGS},
   {"setData", (PyCFunction) _pycartesianparam_setData, 1,
     "setData(array)\n\n"
     "Initializes the parameter with a datafield as defined by a 2-dimensional numpy array and datatype.\n\n"
@@ -743,6 +744,16 @@ static PyObject* _pycartesianparam_getattro(PyCartesianParam* self, PyObject* na
     return PyFloat_FromDouble(CartesianParam_getUndetect(self->param));
   } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "datatype") == 0) {
     return PyInt_FromLong(CartesianParam_getDataType(self->param));
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "legend") == 0) {
+    RaveLegend_t* legend = CartesianParam_getLegend(self->param);
+    PyObject* result = NULL;
+    if (legend != NULL) {
+      result = (PyObject*)PyRaveLegend_New(legend);
+      RAVE_OBJECT_RELEASE(legend);
+      return result;
+    } else {
+      Py_RETURN_NONE;
+    }
   }
 
   return PyObject_GenericGetAttr((PyObject*)self, name);
@@ -791,6 +802,14 @@ static int _pycartesianparam_setattro(PyCartesianParam* self, PyObject *name, Py
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "undetect must be of type float");
     }
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "legend") == 0) {
+    if (PyRaveLegend_Check(val)) {
+      CartesianParam_setLegend(self->param, ((PyRaveLegend*)val)->legend);
+    } else if (val == Py_None) {
+      CartesianParam_setLegend(self->param, NULL);
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError, "legend must be of type RaveLegendCore");  
+    }
   } else {
     raiseException_gotoTag(done, PyExc_AttributeError, PY_RAVE_ATTRO_NAME_TO_STRING(name));
   }
@@ -818,6 +837,7 @@ PyDoc_STRVAR(_pycartesianparam_type_doc,
     "nodata           - The value that represents a nodata (no coverage, ...)\n"
     "undetect         - The value that represents undetect (coverage, but no hit)\n"
     "datatype         - The data type. ReadOnly, initialization occurs when setting data using setData().\n"
+    "legend           - The legend if any."
     "\n"
     "Usage:\n"
     " import _cartesianparam, numpy\n"
@@ -916,6 +936,7 @@ MOD_INIT(_cartesianparam)
   }
 
   import_array(); /*To make sure I get access to Numeric*/
+  import_pyravelegend();
   import_pyravefield();
   PYRAVE_DEBUG_INITIALIZE;
   return MOD_INIT_SUCCESS(module);

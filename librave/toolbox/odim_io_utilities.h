@@ -33,6 +33,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "raveobject_hashtable.h"
 #include "hlhdf.h"
 #include <stdarg.h>
+#include "rave_legend.h"
 
 /**
  * Struct that can be used when passing around objects and associated nodelist
@@ -102,6 +103,16 @@ int OdimIoUtilities_addQualityFields(RaveObjectList_t* fields, HL_NodeList* node
 RaveField_t* OdimIoUtilities_loadField(LazyNodeListReader_t* lazyReader, RaveIO_ODIM_Version version, const char* fmt, ...);
 
 /**
+ * Loads a rave legend. The compound type should have been written in a dataset according to the specification.
+ * @param[in] lazyReader - the wrapper around the hlhdf node list
+ * @param[in] version - version of the file read
+ * @param[in] fmt - the variable argument list string format
+ * @param[in] ... - the variable argument list
+ * @return a rave legend on success otherwise NULL
+ */
+RaveLegend_t* OdimIOUtilities_loadLegend(LazyNodeListReader_t* lazyReader, RaveIO_ODIM_Version version, const char* fmt, ...);
+
+/**
  * Gets the specified id from the source string, for example. If source string contains CMT:abc,NOD:selek,RAD:se50 then if id = NOD: buf will be filled with selek
  * @param[in] source - the what/source string
  * @param[in] id - the id to search for ended with a :, for example NOD:
@@ -120,5 +131,18 @@ int OdimIoUtilities_getIdFromSource(const char* source, const char* id, char* bu
  * @returns 1 if id was found and did fit into buf, otherwise 0
  */
 int OdimIoUtilities_getNodOrCmtFromSource(const char* source, char* buf, size_t buflen);
+
+/**
+ * Adds a legend (RaveLegend_t) to a nodelist.
+ *
+ * @param[in] legend - the legend
+ * @param[in] nodelist - the hlhdf node list
+ * @param[in] outversion - the version of file to be written
+ * @param[in] fmt - the varargs format string
+ * @param[in] ... - the varargs
+ * @return 1 on success otherwise 0
+ */
+int OdimIoUtilities_createLegend(RaveLegend_t* legend, HL_NodeList* nodelist, RaveIO_ODIM_Version version, const char* fmt, ...);
+
 
 #endif /* ODIM_IO_UTILITIES_H */
