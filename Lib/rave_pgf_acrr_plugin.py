@@ -116,7 +116,8 @@ def generate(files, arguments):
   hours = 1
   N = 5
   applygra = False
-  
+  productid = None
+
   #Accept is the required limit for how many nodata-pixels that are allowed in order for the
   #data to be accumulated
   #If we expect to have 10 observations and an accept limit of 20, then it can be 0, 1 or 2 observations
@@ -143,6 +144,9 @@ def generate(files, arguments):
     N = int(args["N"])
   if "applygra" in args:
     applygra = True
+  if "productid" in args:
+    if args["productid"]:
+      productid = args["productid"]
   
   if distancefield == "eu.baltrad.composite.quality.distance.radar":
     distancefield = "se.smhi.composite.distance.radar"
@@ -241,6 +245,9 @@ def generate(files, arguments):
       
     gra_field.quantity = result.quantity + "_CORR"
     img.addParameter(gra_field)
+
+  if productid:
+    img.addAttribute("how/product_id", productid)
 
   ios = _raveio.new()
   ios.object = img
