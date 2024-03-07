@@ -154,6 +154,18 @@ RAVE_TILE_REGISTRY=os.path.join(RAVEETC, 'rave_tile_registry.xml')
 # left for handling the result.
 RAVE_TILE_COMPOSITING_PROCESSES=None
 
+# Timeout in seconds when waiting for a tile to be completed. If no timeout is specified (None)
+# the wait will be indefinite. However, the recommended timeout is somewhere between
+# 1 and 15 minutes depending on the load you are expecting. The reason for this timeout
+# is that if the process creating a tile crashes (like OOM) the complete PGF will hang
+# for ever. Defined in seconds!
+RAVE_TILE_COMPOSITING_TIMEOUT=290
+
+# If a tile is missing due to a timeout it is possible to either allow that behavior and
+# ignore the problem like if all files was missing or else let a runtime error be thrown
+# which will result in a missing composite.
+RAVE_TILE_COMPOSITING_ALLOW_MISSING_TILES=False
+
 # Max number of process to use when executing the quality controls. Default is 4 but this
 # should probably be tuned depending on how many files that needs to be quality controled
 # and number of available cores. 

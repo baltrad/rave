@@ -29,13 +29,13 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 import rave_tile_registry
 import compositing
 import multiprocessing, rave_mppool
-import math, os
+import math, os, time
 import rave_pgf_logger
 import area_registry
 import numpy
 import _rave, _area, _pycomposite, _projection, _raveio, _polarscan, _polarvolume, _transform, _cartesianvolume
 from rave_defines import CENTER_ID, GAIN, OFFSET
-from rave_defines import RAVE_TILE_COMPOSITING_PROCESSES, RAVE_QUALITY_CONTROL_PROCESSES
+from rave_defines import RAVE_TILE_COMPOSITING_PROCESSES, RAVE_TILE_COMPOSITING_TIMEOUT, RAVE_QUALITY_CONTROL_PROCESSES, RAVE_TILE_COMPOSITING_ALLOW_MISSING_TILES
 import rave_tempfile
 import odim_source
 
@@ -137,6 +137,7 @@ class multi_composite_arguments(object):
   # @return a filename pointing to the tile
   def generate(self, dd, dt, tid):
     comp = compositing.compositing()
+    starttime = time.time()
     comp.xscale = self.xscale
     comp.yscale = self.yscale
     comp.detectors = self.detectors
@@ -164,7 +165,7 @@ class multi_composite_arguments(object):
     comp.dump = self.dump
     comp.dumppath = self.dumppath
     comp.radar_index_mapping = self.radar_index_mapping
-    
+
     pyarea = _area.new()
     pyarea.id = "tiled area subset %s"%tid
     pyarea.xsize = self.area_definition.xsize
@@ -175,11 +176,13 @@ class multi_composite_arguments(object):
     pyarea.projection = _projection.new("dynamic pcsid", "dynamic pcs name", self.area_definition.pcsdef)    
     
     logger.info("Generating composite for tile %s"%self.area_definition.id)
+
     result = comp.generate(dd, dt, pyarea)
     
     if result == None:
+      totaltime = time.time() - starttime
       logger.info("No composite for tile %s could be generated.", self.area_definition.id)
-      return (tid, None)
+      return (tid, None, totaltime)
     else:
       logger.info("Finished generating composite for tile %s", self.area_definition.id)      
       
@@ -189,8 +192,10 @@ class multi_composite_arguments(object):
     rio.object = result
     rio.filename = outfile
     rio.save()
+
+    totaltime = time.time() - starttime
   
-    return (tid, rio.filename)
+    return (tid, rio.filename, totaltime)
 
 ##
 # The actual compositing instance forwarding requests to the tilers.
@@ -503,13 +508,41 @@ class tiled_compositing(object):
     if nrprocesses == ncpucores and ncpucores > 1:
       nrprocesses = nrprocesses - 1 # We always want to leave at least one core for something else
     
-    pool = multiprocessing.Pool(nrprocesses)
+    pending_jobs = []
+    with multiprocessing.Pool(nrprocesses) as pool:
+      for arg in args:
+        pending_jobs.append(pool.apply_async(comp_generate, [arg], callback=results.append))
+
+      for pj in pending_jobs:
+        pj.wait(timeout=RAVE_TILE_COMPOSITING_TIMEOUT)
+
+    processing_ok = False
+
+    # Clean up results and remove None
+    results = [r for r in results if r is not None]
+
+    if len(results) == len(args):
+      processing_ok = True
+    else:
+      processed_areas = []
+      for r in results:
+        processed_areas.append(r[0])
+      for a in args:
+        if not a[3] in processed_areas:
+          self.logger.error("No answer from subprocess when generating composite tile with areaid: %s"%a[3])
+          # Either we want to hide this fact from user and create as much of the composite as possible or else we just want
+          # the product to dissapear since something ugly might have happened during processing.
+          if RAVE_TILE_COMPOSITING_ALLOW_MISSING_TILES:
+            results.append((a[3], None, float(RAVE_TILE_COMPOSITING_TIMEOUT)))
+          else:
+            raise RuntimeError("No answer from subprocess when generating composite tile with areaid: %s"%a[3])
     
-    r = pool.map_async(comp_generate, args, callback=results.append)
-    
-    r.wait()
-    pool.terminate()
-    pool.join()
+    results = [results] # To get same behavior as map_async
+
+    if len(results) > 0:
+      for v in results[0]:
+        self.logger.info("Tile with areaid: %s took %f seconds to process"%(v[0],v[2]))
+
 
     self.logger.info("Finished processing tiles, combining tiles")
     objects = []
