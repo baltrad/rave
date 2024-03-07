@@ -163,12 +163,6 @@ RAVE_TILE_COMPOSITING_PROCESSES=None
 # See: https://docs.python.org/3/library/multiprocessing.html#multiprocessing.pool.Pool
 RAVE_MULTIPROCESSING_MAX_TASKS_PER_WORKER: int = 1
 
-# The maximum duration, in seconds, that a tile processing job is allowed to run.
-# Setting this timeout helps ensure that no single compositing task exceeds a reasonable execution time.
-# Default is 280 s - a compositing task should not take more than 5 minutes.
-# Adjust this setting based on performance assessments and operational requirements.
-RAVE_TILE_JOB_TIMEOUT_SECONDS: int = 280
-
 
 # Max number of process to use when executing the quality controls. Default is 4 but this
 # should probably be tuned depending on how many files that needs to be quality controled
