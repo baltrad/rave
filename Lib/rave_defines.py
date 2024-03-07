@@ -23,7 +23,9 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @author Daniel Michelson, SMHI
 ## @date 2011-06-27
 
-import sys, os, datetime
+import sys
+import os
+import datetime
 import rave_defines
 
 ## PATHS
@@ -159,12 +161,19 @@ RAVE_TILE_COMPOSITING_PROCESSES=None
 # 1 and 15 minutes depending on the load you are expecting. The reason for this timeout
 # is that if the process creating a tile crashes (like OOM) the complete PGF will hang
 # for ever. Defined in seconds!
-RAVE_TILE_COMPOSITING_TIMEOUT=290
+RAVE_TILE_COMPOSITING_TIMEOUT: int = 290
 
 # If a tile is missing due to a timeout it is possible to either allow that behavior and
 # ignore the problem like if all files was missing or else let a runtime error be thrown
 # which will result in a missing composite.
 RAVE_TILE_COMPOSITING_ALLOW_MISSING_TILES=False
+
+# Maximum number of tasks that a single worker process in a multiprocessing pool is allowed to execute
+# before it is terminated and replaced by a new process.
+# Used for managing resource utilization by preventing long-running processes.
+# Adjust this setting based on your workload characteristics and resource availability.
+# See: https://docs.python.org/3/library/multiprocessing.html#multiprocessing.pool.Pool
+RAVE_MULTIPROCESSING_MAX_TASKS_PER_WORKER: int = 100
 
 # Max number of process to use when executing the quality controls. Default is 4 but this
 # should probably be tuned depending on how many files that needs to be quality controled
