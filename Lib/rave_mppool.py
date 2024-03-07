@@ -28,6 +28,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 import multiprocessing
 import multiprocessing.pool
 
+from rave_defines import RAVE_MULTIPROCESSING_MAX_TASKS_PER_WORKER
 
 ## Inherit Process
 #  @param Process object
@@ -48,7 +49,11 @@ class NonDaemonContext(type(multiprocessing.get_context())):
 # @param Pool with our NonDaemonicProcess
 class RavePool(multiprocessing.pool.Pool):
     def __init__(self, *args, **kwargs):
+        self._maxtasksperchild = kwargs.pop('maxtasksperchild', RAVE_MULTIPROCESSING_MAX_TASKS_PER_WORKER)
+        
         kwargs['context'] = NonDaemonContext()
+        kwargs['maxtasksperchild'] = self._maxtasksperchild
+        
         super(RavePool, self).__init__(*args, **kwargs)
 
 if __name__ == "__main__":

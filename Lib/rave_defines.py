@@ -23,7 +23,9 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @author Daniel Michelson, SMHI
 ## @date 2011-06-27
 
-import sys, os, datetime
+import sys
+import os
+import datetime
 import rave_defines
 
 ## PATHS
@@ -153,6 +155,20 @@ RAVE_TILE_REGISTRY=os.path.join(RAVEETC, 'rave_tile_registry.xml')
 # cores that are available. If number of cores > 1, then there will always be one core
 # left for handling the result.
 RAVE_TILE_COMPOSITING_PROCESSES=None
+
+# Maximum number of tasks that a single worker process in a multiprocessing pool is allowed to execute
+# before it is terminated and replaced by a new process.
+# Used for managing resource utilization by preventing long-running processes.
+# Adjust this setting based on your workload characteristics and resource availability.
+# See: https://docs.python.org/3/library/multiprocessing.html#multiprocessing.pool.Pool
+RAVE_MULTIPROCESSING_MAX_TASKS_PER_WORKER: int = 1
+
+# The maximum duration, in seconds, that a tile processing job is allowed to run.
+# Setting this timeout helps ensure that no single compositing task exceeds a reasonable execution time.
+# Default is 280 s - a compositing task should not take more than 5 minutes.
+# Adjust this setting based on performance assessments and operational requirements.
+RAVE_TILE_JOB_TIMEOUT_SECONDS: int = 280
+
 
 # Max number of process to use when executing the quality controls. Default is 4 but this
 # should probably be tuned depending on how many files that needs to be quality controled
