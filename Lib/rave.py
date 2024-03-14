@@ -311,7 +311,7 @@ class RAVE:
 
         Returns:
         """
-        self.info, self.data, self._h5nodes = rave_IO.rave_open(filename)
+        self.info, self.data, self._h5nodes = rave_IO.open(filename)
         self.__file__ = filename
 
     def read_metadata(self, filename):
