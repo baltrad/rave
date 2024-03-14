@@ -29,39 +29,43 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @author Daniel Michelson, SMHI
 ## @date 2013-01-25
 
+# Module/Project:
 import _raveio
 import odc_hac
 
 ravebdb = None
 try:
-  import rave_bdb
-  ravebdb = rave_bdb.rave_bdb()
+    import rave_bdb
+    ravebdb = rave_bdb.rave_bdb()
 except:
-  pass
+    pass
+
 
 ## Creates a dictionary from a RAVE argument list
 # @param arglist the argument list
 # @return a dictionary
 def arglist2dict(arglist):
-  result={}
-  for i in range(0, len(arglist), 2):
-    result[arglist[i]] = arglist[i+1]
-  return result
+    result = {}
+    for i in range(0, len(arglist), 2):
+        result[arglist[i]] = arglist[i + 1]
+    return result
 
 
 ## Increments HAC file(s) for the given object.
-# @param files the list of files to be used for generating the volume. Should be only one, normally.
-# @param arguments the arguments defining the volume. Should be empty in this first version; the desired quantity can be added later.
+# @param files the list of files to be used for generating the volume.
+#        Should be only one, normally.
+# @param arguments the arguments defining the volume.
+#        Should be empty in this first version; the desired quantity can be added later.
 def generate(files, arguments):
-  args = arglist2dict(arguments)
-  
-  for fname in files:
-    obj = None
-    if ravebdb != None:
-      obj = ravebdb.get_rave_object(fname)
-    else:
-      obj = _raveio.open(fname).object
+    args = arglist2dict(arguments)
 
-    odc_hac.hacIncrement(obj)
-  
-  return None
+    for fname in files:
+        obj = None
+        if ravebdb != None:
+            obj = ravebdb.get_rave_object(fname)
+        else:
+            obj = _raveio.open(fname).object
+
+        odc_hac.hacIncrement(obj)
+
+    return None
