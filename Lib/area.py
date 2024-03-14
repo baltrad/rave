@@ -26,7 +26,11 @@ Proj module.
 The area definitions are loaded from configuration file(s) given
 by the AREAS variable.
 """
+
+# Standard python libs:
 import os, string
+
+# Module/Project:
 import pcs
 import rave_xml
 from rave_defines import RAVECONFIG, ENCODING
@@ -42,6 +46,7 @@ _registry = {}
 
 def keys():
     return _registry.keys()
+
 
 def items():
     return _registry.items()
@@ -71,10 +76,10 @@ def init():
     from xml.etree import ElementTree
 
     global initialized
-    if initialized: return
+    if initialized:
+        return
 
     for fstr in glob.glob(AREAS):
-
         E = ElementTree.parse(fstr)
 
         for e in E.findall('area'):
@@ -82,15 +87,19 @@ def init():
             this.Id = e.get('id')
             this.name = e.find('description').text.encode(ENCODING)
             this.getArgs(e.find('areadef'))
-            if hasattr(this, 'size'): this.xsize = this.ysize = this.size
-            if hasattr(this, 'scale'): this.xscale = this.yscale = this.scale
+            if hasattr(this, 'size'):
+                this.xsize = this.ysize = this.size
+            if hasattr(this, 'scale'):
+                this.xscale = this.yscale = this.scale
 
             register(this)
 
     initialized = 1
 
+
 # --------------------------------------------------------------------
 # Object factory
+
 
 def area(Id):
     if type(Id) != str:
@@ -99,8 +108,7 @@ def area(Id):
 
 
 def register(A):
-    A.validate(["Id", "name", "pcs", "extent",
-                "xsize", "ysize", "xscale", "yscale"])
+    A.validate(["Id", "name", "pcs", "extent", "xsize", "ysize", "xscale", "yscale"])
     A.pcs = pcs.pcs(str(A.pcs.decode(ENCODING)))
     _registry[A.Id] = A
 
@@ -113,6 +121,7 @@ import radar  # initialize radar-specific areas last due to cross-dependency
 
 # --------------------------------------------------------------------
 # HELPER for defining new areas based on existing ones
+
 
 # Input:
 # in_areaid - a string containing the input area identifier
@@ -131,43 +140,47 @@ def area_from_area(in_areaid, maxR, azimuths, scale, pcsid):
 
     dr = numpy.pi / 180.0
 
-    minlon =  10e100
+    minlon = 10e100
     maxlon = -10e100
-    minlat =  10e100
+    minlat = 10e100
     maxlat = -10e100
 
     in_area = area(in_areaid)
 
-    azres = 360.0/azimuths  # DOUBLE azimuths argument for better accuracy
-    az = 0.5*azres  # Start properly: half an aziumuth gate from north
+    azres = 360.0 / azimuths  # DOUBLE azimuths argument for better accuracy
+    az = 0.5 * azres  # Start properly: half an aziumuth gate from north
     while az < 360.0:
         alpha = az * dr
 
         hlon = maxR * numpy.sin(alpha)
         hlat = maxR * numpy.cos(alpha)
 
-        herec = Proj.s2c([(hlon,hlat)], in_area.pcs)
+        herec = Proj.s2c([(hlon, hlat)], in_area.pcs)
         thislon, thislat = Proj.c2s(herec, pcsid)[0]
 
-        if thislon < minlon: minlon = thislon
-        if thislon > maxlon: maxlon = thislon
-        if thislat < minlat: minlat = thislat
-        if thislat > maxlat: maxlat = thislat
+        if thislon < minlon:
+            minlon = thislon
+        if thislon > maxlon:
+            maxlon = thislon
+        if thislat < minlat:
+            minlat = thislat
+        if thislat > maxlat:
+            maxlat = thislat
 
-        az+=azres
+        az += azres
 
     # Expand to nearest pixel
-    dx = (maxlon-minlon) / scale
-    dx = (1.0-(dx-int(dx))) / 2.0 * scale
+    dx = (maxlon - minlon) / scale
+    dx = (1.0 - (dx - int(dx))) / 2.0 * scale
     if dx > 0.0:
-        maxlon+=(2*dx)
-    dy = (maxlat-minlat) / scale
-    dy = (1.0-(dy-int(dy))) / 2.0 * scale
+        maxlon += 2 * dx
+    dy = (maxlat - minlat) / scale
+    dy = (1.0 - (dy - int(dy))) / 2.0 * scale
     if dy > 0.0:
-        maxlat+=(2*dy)
+        maxlat += 2 * dy
 
-    xsize = int(round((maxlon-minlon)/scale, 0))
-    ysize = int(round((maxlat-minlat)/scale, 0))
+    xsize = int(round((maxlon - minlon) / scale, 0))
+    ysize = int(round((maxlat - minlat) / scale, 0))
 
     A = Element("area")
     A_Id = in_areaid.split('_')[0] + '_' + pcsid
@@ -179,18 +192,20 @@ def area_from_area(in_areaid, maxR, azimuths, scale, pcsid):
     arg = makearg(areadef, 'xsize', str(xsize), 'int')
     arg = makearg(areadef, 'ysize', str(ysize), 'int')
     arg = makearg(areadef, 'scale', str(scale), 'float')
-    arg = makearg(areadef, 'extent',
-                  "%f, %f, %f, %f" % (minlon, minlat, maxlon-dx, maxlat-dy),
-                  'sequence')
+    arg = makearg(areadef, 'extent', "%f, %f, %f, %f" % (minlon, minlat, maxlon - dx, maxlat - dy), 'sequence')
     prettyprint(A)
+
+
 #    return A_Id, xsize, ysize, scale, (minlon, minlat, maxlon, maxlat)
 
 
 def makearg(parent, id, text, Type=None):
     from xml.etree.ElementTree import SubElement
+
     arg = SubElement(parent, 'arg')
     arg.set('id', id)
-    if Type: arg.set('type', Type)
+    if Type:
+        arg.set('type', Type)
     arg.text = text
     return arg
 
