@@ -20,30 +20,36 @@ rave.py
 Contains initialization functions for RAVE and fundamental class definitions,
 along with methods for general product generation.
 """
-import sys, os
+# Standard python libs:
+import sys
+import os
 
+# Baltrad project libs:
+import _pyhl
+
+# Module/Project:
 import rave_IO, rave_info, rave_transform
 import area
-import _pyhl
 from rave_defines import *
+
 
 class RAVE:
     """
     Fundamental RAVE class
-    
+
     Arguments:
 
     Returns:
     """
-    
+
     def __init__(self, filename=None, **args):
         """
         Initializes a RAVE object.
-        
+
         Arguments:
 
         Returns:
-        """        
+        """
         self._fcp = None  # HDF5 file-creation properties
 
         if filename is not None:
@@ -51,7 +57,7 @@ class RAVE:
 
         else:
             import rave_info
-            
+
             self.info = rave_info.INFO("h5rad", version=H5RAD_VERSION)
             self.data = {}
             self._h5nodes = None  # Only used when reading from HDF5 file
@@ -60,11 +66,9 @@ class RAVE:
             if len(args.keys()):
                 self.new(args)
 
-
     def __repr__(self):
         """Internal method; don't bother asking..."""
         return "<RAVE object at %x>" % id(self)
-
 
     def new(self, args):
         """
@@ -72,12 +76,12 @@ class RAVE:
         from rave_h5rad import TopLevelWhat, Where
 
         radarid = areaid = None
-        sets = 0         # Defaults which should be overridden
-        typecode = 'B'   # where appropriate.
+        sets = 0  # Defaults which should be overridden
+        typecode = 'B'  # where appropriate.
         nodata = 255.0
-##        undetect = 0
-##        gain = 1.0
-##        offset = 0.0
+        ##undetect = 0
+        ##gain = 1.0
+        ##offset = 0.0
 
         if len(args) > 0:
             for k, i in args.items():
@@ -91,12 +95,12 @@ class RAVE:
                     typecode = i
                 elif k == 'nodata':
                     nodata = float(i)
-##                elif k == 'undetect':
-##                    undetect = i
-##                elif k == 'gain':
-##                    gain = i
-##                elif k == 'offset':
-##                    offset = i
+                ##elif k == 'undetect':
+                ##                    undetect = i
+                ##elif k == 'gain':
+                ##                    gain = i
+                ##elif k == 'offset':
+                ##                    offset = i
                 else:
                     raise KeyError("Unrecognized argument: %s" % k)
         else:
@@ -115,35 +119,33 @@ class RAVE:
             else:
                 p = a.pcs
 
-            self.info.insert(1, TopLevelWhat(obj = 'image',
-                                             sets = sets,
-                                             version = 'H5rad 1.2'))
-            self.info.insert(1, Where(obj = 'image',
-                                      xsize = a.xsize,
-                                      ysize = a.ysize,
-                                      xscale = a.xscale,
-                                      yscale = a.yscale,
-                                      projdef = p.tostring()))
+            self.info.insert(1, TopLevelWhat(obj='image', sets=sets, version='H5rad 1.2'))
+            self.info.insert(
+                1,
+                Where(
+                    obj='image', xsize=a.xsize, ysize=a.ysize, xscale=a.xscale, yscale=a.yscale, projdef=p.tostring()
+                ),
+            )
             self.set('/how/software', 'RAVE')
             self.set('/how/area', areaid)
             prefix = 'image'
 
-            if not sets: sets = 1
+            if not sets:
+                sets = 1
             for i in range(sets):
-                self.addDataset(prefix, i+1, typecode,
-                                a.xsize, a.ysize, nodata)
-            
+                self.addDataset(prefix, i + 1, typecode, a.xsize, a.ysize, nodata)
+
         elif radarid:
             import radar
+
             r = radar.radar(radarid)
             xsize, ysize = r.bins, r.rays
             prefix = 'scan'
-            if not sets: sets = len(r.angles)
+            if not sets:
+                sets = len(r.angles)
             # Keep working...
 
-
-    def addDataset(self, prefix='image', set=1, typecode='B',
-                   xsize=None, ysize=None, initval=None, **args):
+    def addDataset(self, prefix='image', set=1, typecode='B', xsize=None, ysize=None, initval=None, **args):
         """
         Adds a complete dataset to the object.
         A new dataset Group is added to INFO and a new array is added to .data.
@@ -158,12 +160,10 @@ class RAVE:
 
         if sets >= set:
             xsize, ysize = self.get('/where/xsize'), self.get('/where/ysize')
-            set = sets+1  # failsafe
+            set = sets + 1  # failsafe
 
-        self.data[prefix + str(set)] = DatasetArray(xsize, ysize,
-                                                    typecode, initval)
-        self.info.addDataset(prefix='/'+prefix, set=set, **args)
-
+        self.data[prefix + str(set)] = DatasetArray(xsize, ysize, typecode, initval)
+        self.info.addDataset(prefix='/' + prefix, set=set, **args)
 
     def typecode(self, set=1):
         """
@@ -177,30 +177,29 @@ class RAVE:
         prefix = self.data.keys()[0][:-1]
         return self.data[prefix + str(set)].dtype.char
 
-
     def get(self, path):
         """
         Get the contents of an infoset element. This method can be used to
         get scalar attributes as well as dataset data.
-        
+
         Arguments:
           string path: the element to find. This is given in the infoset
                        format "/path/name".
 
         Returns: The value of the element, or None if the attribute is
                  unavailable.
-        """        
+        """
         from H5radHelper import findelem, geth5attr
+
         e = findelem(self.info, path)
         if e is None:
             return None
         return geth5attr(e, self.data)
 
-
     def set(self, path, value):
         """
-        Creates and sets the value of a new infoset element. 
-        
+        Creates and sets the value of a new infoset element.
+
         Arguments:
           string path: This is given in the infoset format, ie. "/path/name".
                        If the payload already exists, it will be modified with
@@ -212,7 +211,7 @@ class RAVE:
 
         Returns: Nothing if successful, a ValueError exception if the data
                  type is invalid or the payload is illegal.
-        """        
+        """
         from H5radHelper import h5type, findelem, seth5attr, addelem
         from xml.etree.ElementTree import Element
 
@@ -226,7 +225,6 @@ class RAVE:
             e = addelem(self.info, path)
         seth5attr(e, self.data, h5typ, path, value)
 
-
     def delete(self, path):
         """
         Deletes the infoset element specified by "path".
@@ -239,6 +237,7 @@ class RAVE:
                  the data type is invalid or the payload is illegal.
         """
         from H5radHelper import type_val
+
         typ, val = type_val(self.info.find(path[1:]))
         self.info.delete(path)
         if typ == 'dataset':
@@ -258,7 +257,6 @@ class RAVE:
         """
         return self.info.find(path[1:]).get(key)
 
-
     def putattribute(self, path, value, typ):
         """
         This is just a mapping to the same method in rave_info.INFO
@@ -276,28 +274,26 @@ class RAVE:
         """
         self.info.put(path[1:], value, typ)
 
-
     def setattribute(self, path, key, value):
         """
         Sets the Element (at 'path') attribute 'key' to 'value'.
         Same as self.info.find(path).set(key, value)
-        
+
         Arguments:
             string path: path to Element
             string key: key of Element's attribute
             string value: item to be the value of this Element's attribute
-            
+
         Returns: nothing, the Element's attribute is set.
         """
         self.info.find(path[1:]).set(key, value)
-
 
     def eval(self, path=None):
         """
         This is just a mapping to the same method in rave_info.INFO
         Evaluates the attribute given by "path" and returns it as its proper
         type.
-        
+
         Arguments:
           string path: the attribute's path. If this path doesn't exist in this
                        INFO object, then an AttributeError exception is raised.
@@ -307,18 +303,16 @@ class RAVE:
         """
         return self.info.eval(path)
 
-
     def open(self, filename):
         """
         Opens a RAVE object from file.
-        
+
         Arguments:
 
         Returns:
         """
-        self.info, self.data, self._h5nodes = rave_IO.open(filename)
+        self.info, self.data, self._h5nodes = rave_IO.rave_open(filename)
         self.__file__ = filename
-
 
     def read_metadata(self, filename):
         """
@@ -333,7 +327,6 @@ class RAVE:
         self.info, self._h5nodes = rave_IO.get_metadataRAVE(filename)
         self.data = {}
         self.__file__ = filename
-
 
     def read_dataset(self, index=1):
         """
@@ -367,7 +360,6 @@ class RAVE:
                 else:
                     counter += 1
 
-
     def read_datasets(self, indices=None):
         """
         Reads datasets into self.
@@ -386,13 +378,10 @@ class RAVE:
             for i in indices:
                 self.read_dataset(i)
 
-
-    def set_fcp(self, userblock=0, sizes=(4,4),
-                sym_k=(1,1), istore_k=1,
-                meta_block_size=0):
+    def set_fcp(self, userblock=0, sizes=(4, 4), sym_k=(1, 1), istore_k=1, meta_block_size=0):
         """
         Optimizes default HDF5 file-creation properties when writing new files.
-        
+
         Arguments:
           int userblock:
           tuple of two ints sizes:
@@ -415,34 +404,31 @@ class RAVE:
         if meta_block_size is not None:
             self._fcp.meta_block_size = meta_block_size
 
-
     def save(self, filename):
         """
         Writes the RAVE object to file.
-        
+
         Arguments:
 
         Returns:
         """
         ID = ""
-        a = _pyhl.nodelist() # top level
+        a = _pyhl.nodelist()  # top level
         rave_IO.traverse_save(self.info, a, ID, self.data)
         if self._fcp is None:
             self.set_fcp()
         a.write(filename, self._fcp)
 
-
     def asXML(self, filename=None):
         """
         Outputs a metadata representation of a RAVE object to XML
         with line breaks, either to file or to stdout.
-        
+
         Arguments:
 
         Returns:
         """
         self.info.asXML(filename)
-
 
     def pureXML(self, filename, encoding=ENCODING):
         """
@@ -455,26 +441,25 @@ class RAVE:
         """
         self.info.pureXML(filename)
 
-
     def ql(self, index=0, pal=None):
         """
         QuickLook visualization of a dataset given by its index.
         """
         import subprocess
         import rave_ql, rave_tempfile
-        
+
         keys = self.data.keys()
         if len(keys) < index:
             raise IndexError("Don't have that many datasets.")
 
         keys.sort()
-#        prefix = keys[0][:-1]  # Determines 'image', 'scan', or 'profile'.
+        # prefix = keys[0][:-1]  # Determines 'image', 'scan', or 'profile'.
         prefix = keys[0]  # Determines 'image', 'scan', or 'profile'.
 
         title = "QuickLook"
         if self.__file__ is not None:
             title = '%s of %s' % (title, self.__file__)
-#        key = prefix + str(index)
+        #        key = prefix + str(index)
         key = prefix
         title = "%s : %s" % (title, key)
 
@@ -483,10 +468,13 @@ class RAVE:
 
             try:
                 quant = self.eval(key + '/what/quantity')
-                if quant == 'DBZ': pal = rave_win_colors.continuous_dBZ
-                elif quant == 'VRAD': pal = rave_win_colors.continuous_MS
+                if quant == 'DBZ':
+                    pal = rave_win_colors.continuous_dBZ
+                elif quant == 'VRAD':
+                    pal = rave_win_colors.continuous_MS
                 # Add more palettes for different variables.
-                else: raise KeyError
+                else:
+                    raise KeyError
             except:
                 pal = rave_ql.palette
 
@@ -503,10 +491,9 @@ class RAVE:
         try:
             retcode = subprocess.call(command, shell=True)
             if retcode < 0:
-                sys.stderr.write("Child was terminated by signal %d"%retcode)
+                sys.stderr.write("Child was terminated by signal %d" % retcode)
         except OSError as e:
-            sys.stderr.write("Could not show: %s"%e.__str__())
-
+            sys.stderr.write("Could not show: %s" % e.__str__())
 
     def MakeExtentFromCorners(self):
         """
@@ -533,9 +520,7 @@ class RAVE:
         URs = p.proj(Proj.d2r(UR))
 
         xscale, yscale = self.get('/where/xscale'), self.get('/where/yscale')
-        self.set('/how/extent', (LLs[0], LLs[1],
-                                 URs[0]-xscale, URs[1]-yscale))
-
+        self.set('/how/extent', (LLs[0], LLs[1], URs[0] - xscale, URs[1] - yscale))
 
     def MakeCornersFromExtent(self):
         """
@@ -552,21 +537,19 @@ class RAVE:
         p = Proj.Proj(projdef.split())
 
         xscale, yscale = self.get('/where/xscale'), self.get('/where/yscale')
-        LL_lon, LL_lat = Proj.r2d(p.invproj((extent[0],extent[1])))
-        UR_lon, UR_lat = Proj.r2d(p.invproj((extent[2]+xscale,
-                                             extent[3]+yscale)))
+        LL_lon, LL_lat = Proj.r2d(p.invproj((extent[0], extent[1])))
+        UR_lon, UR_lat = Proj.r2d(p.invproj((extent[2] + xscale, extent[3] + yscale)))
         self.set('/where/LL_lon', LL_lon)
         self.set('/where/LL_lat', LL_lat)
         self.set('/where/UR_lon', UR_lon)
         self.set('/where/UR_lat', UR_lat)
-
 
     def MakeCornersFromArea(self, areaid=None):
         if not areaid:
             raise AttributeError("Missing areaid argument")
 
         import Proj, pcs
-        from types import StringType
+        from types import StringType #FLAGGED
 
         a = area.area(areaid)
         if type(a.pcs) is StringType:
@@ -574,22 +557,19 @@ class RAVE:
         else:
             p = a.pcs
 
-        LL = Proj.r2d(p.invproj((a.extent[0],a.extent[1])))
-        UR = Proj.r2d(p.invproj((a.extent[2]+a.xscale,
-                                 a.extent[3]+a.yscale)))
+        LL = Proj.r2d(p.invproj((a.extent[0], a.extent[1])))
+        UR = Proj.r2d(p.invproj((a.extent[2] + a.xscale, a.extent[3] + a.yscale)))
         self.set('/where/LL_lon', LL[0])
         self.set('/where/LL_lat', LL[1])
         self.set('/where/UR_lon', UR[0])
         self.set('/where/UR_lat', UR[1])
-
 
     def transform(self, areaid, method=rave_transform.NEAREST, radius=None):
         """
         Simple wrapper to rave_transform.transform() for
         cartesian-to-cartesian transformation.
         """
-        return rave_transform.transform(self, areaid, method=method,
-                                        radius=radius)
+        return rave_transform.transform(self, areaid, method=method, radius=radius)
 
 
 #
@@ -681,7 +661,7 @@ def get_metadataRAVE(filename=None):
 
 
 
-__all__ = ['RAVE','open','get_metadata','get_metadataXML', 'get_metadataRAVE']
+__all__ = ['RAVE', 'open', 'get_metadata', 'get_metadataXML', 'get_metadataRAVE']
 
 
 if __name__ == "__main__":
