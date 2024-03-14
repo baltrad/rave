@@ -23,16 +23,19 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @author Daniel Michelson, SMHI
 ## @date 2010-07-20
 
-import os, string
+# Standard python libs:
+import os
+import string
+from xml.etree import ElementTree as ET
+
+# Module/Project:
 from rave_defines import RAVECONFIG
 import BaltradMessageXML
-from xml.etree import ElementTree as ET
 from rave_defines import GENREG, REGFILE, UTF8
 
 
 ## Registry containing product generation algorithm information.
 class PGF_Registry(BaltradMessageXML.BltXML):
-
     ## Constructor
     # @param tag string of the root Element, should always be GENREG
     # @param encoding string character encoding name, should probably always
@@ -40,7 +43,7 @@ class PGF_Registry(BaltradMessageXML.BltXML):
     # @param filename string, optional file name from which to read registry.
     # @param msg string, optional XML string containing registry to parse.
     def __init__(self, tag=GENREG, encoding=UTF8, filename=None, msg=None):
-      super(PGF_Registry, self).__init__(tag, encoding, filename, msg)
+        super(PGF_Registry, self).__init__(tag, encoding, filename, msg)
 
     ## Creates a registry entry for a given algorithm.
     # @param name string algorithm's name.
@@ -52,29 +55,32 @@ class PGF_Registry(BaltradMessageXML.BltXML):
     # @param floats string of comma-separated argument names that are floats.
     # @param seqs string of comma-separated argument names that are sequences.
     # @return nothing, the Element is appended to the registry.
-    def register(self, name, module, function, Help="",
-                 strings="", ints="", floats="", seqs=""):
+    def register(self, name, module, function, Help="", strings="", ints="", floats="", seqs=""):
         e = BaltradMessageXML.BltXML(name)
         e.set("function", function)
         e.set("help", Help)
         e.set("module", module)
         a = e.subelement("arguments")
-        if len(floats) > 0: a.set("floats", floats)
-        if len(ints) > 0: a.set("ints", ints)
-        if len(seqs) > 0: a.set("seqs", seqs)
-        if len(strings) > 0: a.set("strings", strings)
+        if len(floats) > 0:
+            a.set("floats", floats)
+        if len(ints) > 0:
+            a.set("ints", ints)
+        if len(seqs) > 0:
+            a.set("seqs", seqs)
+        if len(strings) > 0:
+            a.set("strings", strings)
 
         self.append(e.getelement())
         self.save()
-
 
     ## Checks whether an algorithm is registered.
     # @param algorithm string name of the algorithm to check.
     # @return boolean True or False.
     def is_registered(self, algorithm):
-        if self.find(algorithm): return True
-        else: return False
-
+        if self.find(algorithm):
+            return True
+        else:
+            return False
 
     ## De-registers an algorithm from the registry.
     # @param name string, name of the item to de-register.
@@ -83,7 +89,6 @@ class PGF_Registry(BaltradMessageXML.BltXML):
         if e:
             self.remove(e)
         self.save()
-
 
     ## @return string a help text comprising the names of each registered
     # algorithm and its descriptive text.
