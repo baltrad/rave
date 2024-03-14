@@ -4,11 +4,11 @@
 # Author(s): Daniel Michelson and Günther Haase
 # Copyright: SMHI, 1999, 2000-
 # History: 
-#	  1999-12-?? dmichels first version with single volumes
-#	  2000-04-26 dmichels modified for use with new _ptop which uses
-#			      wind and reflectivity volumes.
-#         2008-03-04 ghaase   adjustments to handle HDF5 file format
-#         2008-11-04 dmichels further tweaks prior to release
+#     1999-12-?? dmichels first version with single volumes
+#     2000-04-26 dmichels modified for use with new _ptop which uses
+#                         wind and reflectivity volumes.
+#     2008-03-04 ghaase   adjustments to handle HDF5 file format
+#     2008-11-04 dmichels further tweaks prior to release
 """
 rave_so.py - RAVE super-observations (SO). Defines new, generalized, pvol
              instances on the fly and feeds them to ptop for transformation.
@@ -16,11 +16,22 @@ rave_so.py - RAVE super-observations (SO). Defines new, generalized, pvol
 
              Input must be polar volume or scan files containing both Z and V.
 """
-import sys, os
+# Standard python libs:
+import sys
+import os
+
+# Third-party:
+from numpy import *
+from numpy import greater
+from numpy import minimum
+from numpy import where
+
+
+# Module/Project:
 import rave, rave_tempfile
 import _ptop
+
 from rave_h5rad import DatasetArray
-from numpy import *
 
 
 USE_SINGLE_ELEV = 1
@@ -50,7 +61,7 @@ def newSO(ipvol, opvol, aavg, ravg, maxelev):
                 divisible by aavg.
       int ravg: Radial resolution [m] of the SO. Note: ravg must be divisible
                 by the distance [m] betweeen two successive range bins
-                (xscale). 
+                (xscale).
       int maxelev: Maximum elevation angle [degrees] used for SO production.
 
     Returns:
@@ -58,52 +69,51 @@ def newSO(ipvol, opvol, aavg, ravg, maxelev):
       pyobject opvol: output pvol (SO)
     """
     
-    if (ravg % ipvol.get('/where/xscale') == 0.0):
+    if ravg % ipvol.get('/where/xscale') == 0.0:
         ravg = int(ravg / ipvol.get('/where/xscale'))
     else:
         raise IOError("Invalid radial integration length.")
-
-    if (ipvol.get('/where/ysize') % float(aavg) == 0.0) and \
-       (ipvol.get('/where/xsize') % float(ravg) == 0.0):   
+    
+    if (ipvol.get('/where/ysize') % float(aavg) == 0.0) and (ipvol.get('/where/xsize') % float(ravg) == 0.0):
         beamwidth = ipvol.get('/how/beamwidth')
         oscan = []
         
         # Only select non-overlapping scans.
         iscan = ipvol.get('/how/scan')
         if ipvol.get('/scan%s/where/angle' % iscan[0]) > maxelev:
-          raise IOError("Invalid elevation angles.")
+            raise IOError("Invalid elevation angles.")
         for s in range(len(iscan)):
-          if iscan[s] == iscan[0]:
-            oscan.append(iscan[s])
-          elif abs(ipvol.get('/scan%s/where/angle' % iscan[s])-
-                   ipvol.get('/scan%s/where/angle'%oscan[-1])) >= beamwidth/2.0 \
-                   and ipvol.get('/scan%s/where/angle' % iscan[s]) <= maxelev:
-            oscan.append(iscan[s])
-        #oscan.sort()
+            if iscan[s] == iscan[0]:
+                oscan.append(iscan[s])
+            elif (
+                abs(ipvol.get('/scan%s/where/angle' % iscan[s]) - ipvol.get('/scan%s/where/angle' % oscan[-1]))
+                >= beamwidth / 2.0
+                and ipvol.get('/scan%s/where/angle' % iscan[s]) <= maxelev
+            ):
+                oscan.append(iscan[s])
+        # oscan.sort()
         ipvol.set('/how/scan', oscan)
-
+        
         # Prepare output volume.
         opvol.set('/where/ysize', ipvol.get('/where/ysize') / aavg)
         opvol.set('/where/xsize', ipvol.get('/where/xsize') / ravg)
-        opvol.set('/where/xscale', ipvol.get('/where/xscale') * ravg) # must be in m!    
-
+        opvol.set('/where/xscale', ipvol.get('/where/xscale') * ravg)  # must be in m!
+        
         # Add required info attributes
-        opvol.set('/how/transform_weighting', NO_ZERO_WEIGHTS)    
-        opvol.set('/how/i_method', UNIFORM) # imethod
+        opvol.set('/how/transform_weighting', NO_ZERO_WEIGHTS)
+        opvol.set('/how/i_method', UNIFORM)  # imethod
         opvol.set('/how/scan', oscan)
-        opvol.set('/how/elev_usage', USE_SINGLE_ELEV) # elevUsage
-        opvol.set('/how/rs', [0.0] * opvol.get('/where/xsize')) # search radii
-
-        A = DatasetArray(xsize=opvol.get('/where/xsize'),
-                         ysize=opvol.get('/where/ysize'), \
-                         typecode='d', initval=None)
+        opvol.set('/how/elev_usage', USE_SINGLE_ELEV)  # elevUsage
+        opvol.set('/how/rs', [0.0] * opvol.get('/where/xsize'))  # search radii
+        
+        A = DatasetArray(xsize=opvol.get('/where/xsize'), ysize=opvol.get('/where/ysize'), typecode='d', initval=None)
         for i in oscan:
             opvol.set('/scan%s/data' % str(i), A)
-
+        
         tmpfile = rave_tempfile.mktemp()
         os.close(tmpfile[0])  # tempfile.mkstemp() opens the file for us
         opvol.set('/how/tmpfile', tmpfile[1])
-
+        
         return ipvol, opvol
     else:
         raise IOError("Invalid integration lengths.")
@@ -130,7 +140,7 @@ def transform(iw, ow, iz, oz, aavg, ravg, maxelev):
                 divisible by aavg.
       int ravg: Radial resolution [m] of the SO. Note: ravg must be divisible
                 by the distance [m] betweeen two successive range bins
-                (xscale). 
+                (xscale).
       int maxelev: Maximum elevation angle [degrees] used for SO production.
 
     Returns:
@@ -144,20 +154,20 @@ def transform(iw, ow, iz, oz, aavg, ravg, maxelev):
         _ptop.transform(iw, ow, iz, oz)
         return ow, oz
     else:
-      _ptop.transform(iw, ow, None, None)
-
+        _ptop.transform(iw, ow, None, None)
+    
     return ow, None
 
 
 # -----------------------------------------------------------------------------
 # HELPER FUNCTION
 
-def makeSO(fstr, ofstr, aavg, ravg, maxelev):
 
+def makeSO(fstr, ofstr, aavg, ravg, maxelev):
     """
-    Prepares a SO: Opens the SO file and writes the main header. Extracts wind 
+    Prepares a SO: Opens the SO file and writes the main header. Extracts wind
     and reflectivity scans from the HDF5 files and converts data quantity from
-    dBZ to Z. 
+    dBZ to Z.
 
     Arguments:
       string fstr: String of the HDF5 file to be used for SO production.
@@ -167,89 +177,88 @@ def makeSO(fstr, ofstr, aavg, ravg, maxelev):
                 divisible by aavg.
       int ravg: Radial resolution [m] of the SO. Note: ravg must be divisible
                 by the distance [m] betweeen two successive range bins
-                (xscale). 
+                (xscale).
       int maxelev: Maximum elevation angle [degrees] used for SO production.
 
     Returns: Nothing if successful.
     """
     this = rave.open(fstr)
-
+    
     # Extract wind and reflectivity scans
     DATE, TIME = this.get('/what/date'), this.get('/what/time')
-
+    
     # Open the output superob file and write the main header.
     fd = open(ofstr, 'w')
     fd.write("SUPEROB %s %s\n" % (DATE, TIME[:4]))
-
+    
     sets = this.get('/what/sets')
     iwscan, izscan = [], []
-
+    
     # Read the same data four times, for input and output, and for Z and V
     iw = rave.open(fstr)
     ow = rave.open(fstr)
     iz = rave.open(fstr)
     oz = rave.open(fstr)
-
+    
     for s in range(sets):
-
         # Ignore spectral width or whatever else may be there except these:
-        if this.get('/scan%s/what/quantity' % (s+1)) == 'VRAD':
-            iwscan.append(s+1)
-        if this.get('/scan%s/what/quantity' % (s+1)) == 'DBZ':
-            izscan.append(s+1)
-
+        if this.get('/scan%s/what/quantity' % (s + 1)) == 'VRAD':
+            iwscan.append(s + 1)
+        if this.get('/scan%s/what/quantity' % (s + 1)) == 'DBZ':
+            izscan.append(s + 1)
+    
     # Sort scan lists (low -> high elevation angles)
     iwangle, izangle, iwscans, izscans = [], [], [], []
     for s in range(len(iwscan)):
-	    iwangle.append(this.get('/scan%s/where/angle' % iwscan[s]))
-	    izangle.append(this.get('/scan%s/where/angle' % izscan[s]))
+        iwangle.append(this.get('/scan%s/where/angle' % iwscan[s]))
+        izangle.append(this.get('/scan%s/where/angle' % izscan[s]))
     iwangle.sort()
     izangle.sort()
     for a in range(len(iwangle)):
-      for s in range(len(iwscan)):
-        if iwangle[a]==this.get('/scan%s/where/angle' % iwscan[s]):
-          iwscans.append(iwscan[s])
-        if izangle[a]==this.get('/scan%s/where/angle' % izscan[s]):
-          izscans.append(izscan[s])
+        for s in range(len(iwscan)):
+            if iwangle[a] == this.get('/scan%s/where/angle' % iwscan[s]):
+                iwscans.append(iwscan[s])
+            if izangle[a] == this.get('/scan%s/where/angle' % izscan[s]):
+                izscans.append(izscan[s])
     iwscan = iwscans
     izscan = izscans
-
-    #iwscan.sort()
-    #izscan.sort()
-
+    
+    # iwscan.sort()
+    # izscan.sort()
+    
     iw.set('/how/scan', iwscan)
     iz.set('/how/scan', izscan)
-
+    
     # save wind data as 'f'-type
     for s in range(len(iwscan)):
         scan = iw.get('/how/scan')[s]
         arrw = iw.get('/scan%s/data' % scan)
         iw.set('/scan%s/data' % scan, arrw.astype(float))
-
+    
     # convert data quantity from dBZ to Z. Modify the object instead of
     # returning a new one. The lowest possible Z value is truncated to 0.
     for s in range(len(izscan)):
         scan = iz.get('/how/scan')[s]
         offset = iz.get('/scan%s/what/offset' % scan)
         gain = iz.get('/scan%s/what/gain' % scan)
-
+        
         arrz = iz.get('/scan%s/data' % scan)
         arrz = offset + arrz * gain
         minz = minimum.reduce(arrz.flat)
-        arrz = where(greater(arrz, minz), 10**(arrz/10.0), 0.0)
+        arrz = where(greater(arrz, minz), 10 ** (arrz / 10.0), 0.0)
         iz.set('/scan%s/data' % scan, arrz.astype(float))
-
-        nodata = iz.get('/scan%s/what/nodata' % scan)            
+        
+        nodata = iz.get('/scan%s/what/nodata' % scan)
         nodata = offset + nodata * gain
-        nodata = 10**(nodata/10.0)
+        nodata = 10 ** (nodata / 10.0)
         iz.set('/scan%s/what/nodata' % scan, nodata)
-
+        
         iz.set('/scan%s/what/quantity' % scan, 'Z')
-                    
+    
     # Perform the transform.
-    #ow, oz = transform(iw, ow, None, None, aavg, ravg, maxelev)        
+    # ow, oz = transform(iw, ow, None, None, aavg, ravg, maxelev)
     ow, oz = transform(iw, ow, iz, oz, aavg, ravg, maxelev)
-                 
+    
     # Open the resulting tmpfile and append its contents to the
     # superob file. Then delete the tmpfile.
     tmpfile = ow.get('/how/tmpfile')
@@ -265,7 +274,7 @@ def makeSO(fstr, ofstr, aavg, ravg, maxelev):
         os.remove(tmpfile)
 
 
-__all__ =  ['newSO', 'transform', 'makeSO']
+__all__ = ['newSO', 'transform', 'makeSO']
 
 if __name__ == "__main__":
     print(__doc__)
