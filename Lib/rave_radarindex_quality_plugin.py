@@ -23,36 +23,44 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 # will take care of it.
 #
 
-## 
+##
 # @file
 # @author Anders Henja, SMHI
 # @date 2016-12-21
 
+
+# Module/Project:
 from rave_quality_plugin import rave_quality_plugin
 from rave_quality_plugin import QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY
 
-class rave_radarindex_quality_plugin(rave_quality_plugin):
-  ##
-  # Default constructor
-  def __init__(self):
-    super(rave_radarindex_quality_plugin, self).__init__()
-  
-  ##
-  # @return a list containing the string se.smhi.composite.distance.radar
-  def getQualityFields(self):
-    return ["se.smhi.composite.index.radar"]
-  
-  ##
-  # @param obj: A rave object that should be processed, bogus in this case.
-  # @param reprocess_quality_flag: Not used
-  # @param arguments: Not used
-  # @return: obj - without doing anything to it
-  def process(self, obj, reprocess_quality_flag=True, quality_control_mode=QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY, arguments=None):
-    return obj, self.getQualityFields()
 
-  ##
-  # @return: The distance information - dummy
-  #
-  def algorithm(self):
-    return None
-  
+class rave_radarindex_quality_plugin(rave_quality_plugin):
+    ##
+    # Default constructor
+    def __init__(self):
+        super(rave_radarindex_quality_plugin, self).__init__()
+
+    ##
+    # @return a list containing the string se.smhi.composite.distance.radar
+    def getQualityFields(self):
+        return ["se.smhi.composite.index.radar"]
+
+    ##
+    # @param obj: A rave object that should be processed, bogus in this case.
+    # @param reprocess_quality_flag: Not used
+    # @param arguments: Not used
+    # @return: obj - without doing anything to it
+    def process(
+        self,
+        obj,
+        reprocess_quality_flag=True,
+        quality_control_mode=QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY,
+        arguments=None,
+    ):
+        return obj, self.getQualityFields()
+
+    ##
+    # @return: The distance information - dummy
+    #
+    def algorithm(self):
+        return None
