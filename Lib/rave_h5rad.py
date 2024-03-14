@@ -27,7 +27,11 @@ information model and implementation specification for weather radar data.
 COST 717 Working Document WDF_02_200204_1.
 Available at http://www.smhi.se/cost717/doc/WDF_02_200204_1.pdf
 """
-from xml.etree.ElementTree import  Element, SubElement
+
+# Standard python libs:
+from xml.etree.ElementTree import Element, SubElement
+
+# Module/Project:
 import rave_info
 from rave_defines import H5RAD_VERSION
 
