@@ -25,34 +25,40 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @author Anders Henja, SMHI
 ## @date 2018-01-24
 
+# Standard python libs:
+import string
+import math
+import datetime
+import logging
+
+# Module/Project:
 import _cartesian, _cartesianvolume
 import _rave
 import _raveio
-import string
 import rave_tempfile
 import odim_source
-import math, datetime
 import rave_pgf_quality_registry
-import logging
 import rave_pgf_logger
 
 logger = rave_pgf_logger.create_logger()
 
 ravebdb = None
 try:
-  import rave_bdb
-  ravebdb = rave_bdb.rave_bdb()
+    import rave_bdb
+    ravebdb = rave_bdb.rave_bdb()
 except:
-  pass
+    pass
+
 
 ## Creates a dictionary from a rave argument list
-#@param arglist the argument list
-#@return a dictionary
+# @param arglist the argument list
+# @return a dictionary
 def arglist2dict(arglist):
-  result={}
-  for i in range(0, len(arglist), 2):
-    result[arglist[i]] = arglist[i+1]
-  return result
+    result = {}
+    for i in range(0, len(arglist), 2):
+        result[arglist[i]] = arglist[i + 1]
+    return result
+
 
 ##
 # Converts a string into a number, either int or float
@@ -61,49 +67,51 @@ def arglist2dict(arglist):
 # @throws ValueError if value not could be translated
 #
 def strToNumber(sval):
-  try:
-    return float(sval)
-  except ValueError as e:
-    return int(sval)
+    try:
+        return float(sval)
+    except ValueError as e:
+        return int(sval)
+
 
 ##
 # Exports a CF convention file
 #
 def generate(files, arguments):
-  args = arglist2dict(arguments)
+    args = arglist2dict(arguments)
 
-  if not _rave.isCFConventionSupported():
-    logger.info("CF Conventions is not supported, ignoring export")
+    if not _rave.isCFConventionSupported():
+        logger.info("CF Conventions is not supported, ignoring export")
+        return None
+
+    if len(files) != 1:
+        raise AttributeError("Must provide one file to export")
+
+    if not "filename" in args.keys():
+        raise AttributeError("Must specify name of file to export")
+
+    obj = None
+    if ravebdb is not None:
+        obj = ravebdb.get_rave_object(files[0])
+    else:
+        rio = _raveio.open(files[0])
+        obj = rio.object
+
+    if not _cartesianvolume.isCartesianVolume(obj) and not _cartesian.isCartesian(obj):
+        raise AttributeError("Must call plugin with cartesian products")
+
+    filename = args["filename"]
+
+    rio = _raveio.new()
+    rio.object = obj
+    rio.file_format = _raveio.RaveIO_FileFormat_CF
+    rio.save(filename)
+
     return None
 
-  if len(files) != 1:
-    raise AttributeError("Must provide one file to export");
 
-  if not "filename" in args.keys():
-    raise AttributeError("Must specify name of file to export")
+if __name__ == "__main__":
+    import sys
 
-  obj = None
-  if ravebdb != None:
-    obj = ravebdb.get_rave_object(files[0])
-  else:
-    rio = _raveio.open(files[0])
-    obj = rio.object
-
-  if not _cartesianvolume.isCartesianVolume(obj) and not _cartesian.isCartesian(obj):
-    raise AttributeError("Must call plugin with cartesian products")
-  
-  filename = args["filename"]
-
-  rio = _raveio.new()
-  rio.object = obj
-  rio.file_format=_raveio.RaveIO_FileFormat_CF;
-  rio.save(filename)
-
-  return None
-
-if __name__=="__main__":
-  import sys
-  args=["filename",sys.argv[2]]
-  fname = sys.argv[1]
-  generate([fname], args)
-  
+    args = ["filename", sys.argv[2]]
+    fname = sys.argv[1]
+    generate([fname], args)
