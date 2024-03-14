@@ -17,7 +17,7 @@ You should have received a copy of the GNU Lesser General Public License
 along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
-## Plugin for scanning a polar volume for sun hits, using the RAVE product 
+## Plugin for scanning a polar volume for sun hits, using the RAVE product
 ## generation framework.
 ## Register in the RAVE PGF with: % pgf_registry -a -H http://<host>:<port>/RAVE
 ## --name=eu.baltrad.beast.generatescansun -m rave_pgf_scansun_plugin -f generate
@@ -30,9 +30,12 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @author Ulf E. Nordh, SMHI
 ## @date 2018-12-06. Updated so that an alternative output path (RAVESCANSUN_OUT) can be used instead of RAVEETC.
 ##                   The alternative path (RAVESCANSUN_OUT) must be defined in rave_defines.py
-##                   The plugin will use RAVESCANSUN_OUT if it is defined, otherwise it will use RAVEETC.  
+##                   The plugin will use RAVESCANSUN_OUT if it is defined, otherwise it will use RAVEETC.
 
+# Standard python libs:
 import os
+
+# Module/Project:
 from rave_defines import RAVEETC
 import odim_source
 import _scansun
@@ -43,25 +46,26 @@ import rave_pgf_logger
 # otherwise the default RAVEETC is used
 scansun_outputpath = None
 try:
-  from rave_defines import RAVESCANSUN_OUT
-  scansun_outputpath = RAVESCANSUN_OUT
+    from rave_defines import RAVESCANSUN_OUT
+    scansun_outputpath = RAVESCANSUN_OUT
 except:
-  pass
+    pass
 
 if scansun_outputpath is None:
-  scansun_outputpath = RAVEETC
+    scansun_outputpath = RAVEETC
 
 ravebdb = None
 try:
-  import rave_bdb
-  ravebdb = rave_bdb.rave_bdb()
+    import rave_bdb
+    ravebdb = rave_bdb.rave_bdb()
 except:
-  pass
+    pass
 
 HEADER = "#Date    Time        Elevatn Azimuth   ElevSun   AzimSun    N  dBSunFlux   SunMean SunStdd   ZdrMean ZdrStdd  Refl  ZDR\n"
 FORMAT = "%08i %010.3f  %7.3f %7.2f   %7.4f  %7.4f    %4i  %9.2f %9.2f  %6.3f %9.2f  %6.3f  %s   %s\n"
 
 logger = rave_pgf_logger.create_logger()
+
 
 ## Convenience function. Gets the NOD identifier from /what/source string.
 # Assumes that the NOD is there or can be looked up based on the WMO identifier.
@@ -69,25 +73,30 @@ logger = rave_pgf_logger.create_logger()
 # @param obj input SCAN or PVOL object
 # @return the NOD identifier or 'n/a'
 def NODfromSourceString(source):
-  S = odim_source.ODIM_Source(source)
-  if S.nod: return S.nod
-  else:
-    try:
-      return odim_source.NOD[S.wmo]
-    except KeyError:
-      return None
+    S = odim_source.ODIM_Source(source)
+    if S.nod:
+        return S.nod
+    else:
+        try:
+            return odim_source.NOD[S.wmo]
+        except KeyError:
+            return None
 
-## Creates a file name, preferably containing the NOD identifier for that radar. 
-# If it can't be found, converts the whole /what/source string to a file string. 
+
+## Creates a file name, preferably containing the NOD identifier for that radar.
+# If it can't be found, converts the whole /what/source string to a file string.
 # If its parent directory doesn't exist, it is created.
 # @param source string containing the full value of /what/source
 # @return string containing the complete path to a file
 def Source2File(isource):
     source = NODfromSourceString(isource)
-    if not source: source = isource.replace(';','_').replace(',','_').replace(':','-')
+    if not source:
+        source = isource.replace(';', '_').replace(',', '_').replace(':', '-')
     path = os.path.join(scansun_outputpath, "scansun")
-    if not os.path.isdir(path): os.makedirs(path)
+    if not os.path.isdir(path):
+        os.makedirs(path)
     return os.path.join(str(path), str(source) + '.scansun')
+
 
 ## Writes hits to file
 # @param source string containing the full value of /what/source
@@ -98,11 +107,12 @@ def writeHits(source, hits):
 
     if os.path.getsize(ofstr) == 0:
         fd.write(HEADER)
-        
+
     for hit in hits:
         fd.write(FORMAT % hit)
 
     fd.close()
+
 
 ## Performs the sun scan.
 # @param files list of files to scan. Keep in mind that each file can be
@@ -110,25 +120,25 @@ def writeHits(source, hits):
 # @return nothing
 def generate(files, arguments):
     for ifstr in files:
-      fname = None
-      removeme = None
-      if os.path.exists(ifstr):
-        fname = ifstr
-      else:
-        fname = ravebdb.get_file(ifstr)
-        removeme = fname
+        fname = None
+        removeme = None
+        if os.path.exists(ifstr):
+            fname = ifstr
+        else:
+            fname = ravebdb.get_file(ifstr)
+            removeme = fname
 
-      try:      
-        source, hits = _scansun.scansun(fname)
-      finally:
-        if removeme != None and os.path.exists(removeme):
-          os.unlink(removeme)
+        try:
+            source, hits = _scansun.scansun(fname)
+        finally:
+            if removeme != None and os.path.exists(removeme):
+                os.unlink(removeme)
 
-      if len(hits) > 0:
-          writeHits(source, hits)
+        if len(hits) > 0:
+            writeHits(source, hits)
 
     return None
 
+
 if __name__ == '__main__':
     pass
-  
