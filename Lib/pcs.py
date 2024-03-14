@@ -26,7 +26,11 @@ by the PROJECTIONS variable.
 
 TODO: Restructure this module like the 'area' and 'radar' modules.
 """
+
+# Standard python libs:
 import os
+
+# Module/Project:
 import Proj
 from rave_defines import RAVECONFIG, ENCODING
 
@@ -38,15 +42,16 @@ PROJECTIONS = os.path.join(RAVECONFIG, '*projections.xml')
 
 initialized = 0
 
+
 def init():
     import glob
     from xml.etree import ElementTree
 
     global initialized
-    if initialized: return
+    if initialized:
+        return
 
-    for fstr in glob.glob(PROJECTIONS):    
-
+    for fstr in glob.glob(PROJECTIONS):
         E = ElementTree.parse(fstr)
 
         for e in E.findall('projection'):
@@ -61,14 +66,19 @@ def init():
 # --------------------------------------------------------------------
 # Registry
 
+
 class interface:
     name = None
+
     def proj(ll):
         pass
+
     def invproj(sxy):
         pass
 
+
 _registry = {}
+
 
 def register(id, pcs):
     # validate
@@ -78,8 +88,10 @@ def register(id, pcs):
     pcs.id = id
     _registry[id] = pcs
 
+
 def keys():
     return _registry.keys()
+
 
 def items():
     return _registry.items()
@@ -88,15 +100,17 @@ def items():
 # --------------------------------------------------------------------
 # Object factory
 
+
 def pcs(Id):
     if type(Id) != str:
-        print("TYPE=%s"%str(type(Id)))
+        print("TYPE=%s" % str(type(Id)))
         raise KeyError("Argument 'Id' not a string")
     return _registry[Id]
 
 
 # --------------------------------------------------------------------
 # USGS PROJ 4.3.3 and higher interface (requires Proj.py, _proj.so)
+
 
 class usgs:
     def __init__(self, name, definition):
@@ -117,13 +131,16 @@ class usgs:
     def tostring(self):
         o = ''
         for s in self.definition:
-            if len(o): o += " " + s
-            else: o = s
+            if len(o):
+                o += " " + s
+            else:
+                o = s
         return o
 
 
 # --------------------------------------------------------------------
 # Register function for pre-defined pcs definitions in PROJECTIONS
+
 
 def define(id, name, definition):
     p = usgs(name, definition)
@@ -136,7 +153,8 @@ init()
 
 
 if __name__ == "__main__":
-    import pcs # cannot use myself, due to recursive import
+    import pcs  # cannot use myself, due to recursive import
+
     for id in pcs.keys():
         p = pcs.pcs(id)
-        print("%s, %s, %s"%(id, p.name, str(p)))
+        print("%s, %s, %s" % (id, p.name, str(p)))
