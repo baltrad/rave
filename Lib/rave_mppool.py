@@ -24,11 +24,13 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @author Daniel Michelson, SMHI
 ## @date 2014-09-30
 
-
+# Standard python libs:
 import multiprocessing
 import multiprocessing.pool
 
+# Module/Project:
 from rave_defines import RAVE_MULTIPROCESSING_MAX_TASKS_PER_WORKER
+
 
 ## Inherit Process
 #  @param Process object
@@ -41,8 +43,10 @@ class NonDaemonProcess(multiprocessing.Process):
     def daemon(self, value):
         pass
 
+
 class NonDaemonContext(type(multiprocessing.get_context())):
     Process = NonDaemonProcess
+
 
 ## We sub-class multiprocessing.pool.Pool instead of multiprocessing.Pool
 #  because the latter is only a wrapper function, not a proper class.
@@ -50,11 +54,12 @@ class NonDaemonContext(type(multiprocessing.get_context())):
 class RavePool(multiprocessing.pool.Pool):
     def __init__(self, *args, **kwargs):
         self._maxtasksperchild = kwargs.pop('maxtasksperchild', RAVE_MULTIPROCESSING_MAX_TASKS_PER_WORKER)
-        
+
         kwargs['context'] = NonDaemonContext()
         kwargs['maxtasksperchild'] = self._maxtasksperchild
-        
+
         super(RavePool, self).__init__(*args, **kwargs)
+
 
 if __name__ == "__main__":
     pass
