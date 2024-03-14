@@ -24,12 +24,17 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @author Daniel Michelson, SMHI
 ## @date 2014-04-02
 
-import sys, os, copy
+# Standard python libs:
+import sys
+import os
+import copy
 from xml.etree import ElementTree as ET
+
+# Module/Project:
 import rave_defines
 import odim_source
 
-## Contains site-specific argument settings 
+## Contains site-specific argument settings
 CONFIG_FILE = os.path.join(rave_defines.RAVECONFIG, "radvol_params.xml")
 
 initialized = 0
@@ -37,39 +42,56 @@ initialized = 0
 ARGS = {}  # Empty dictionary to be filled with site-specific options/arguments
 
 # Parameters that are integers. All others are floats.
-INTS = ("DBZHtoTH", 
-        "BROAD_QIOn", "BROAD_QCOn", 
-        "SPIKE_QIOn", "SPIKE_QCOn", "SPIKE_AAzim", "SPIKE_AVarAzim", "SPIKE_ABeam", "SPIKE_AVarBeam", "SPIKE_BAzim" 
-        "NMET_QIOn", "NMET_QCOn", 
-        "SPECK_QIOn", "SPECK_QCOn", 
-        "BLOCK_QIOn", "BLOCK_QCOn", 
-        "ATT_QIOn", "ATT_QCOn")
+INTS = (
+    "DBZHtoTH",
+    "BROAD_QIOn",
+    "BROAD_QCOn",
+    "SPIKE_QIOn",
+    "SPIKE_QCOn",
+    "SPIKE_AAzim",
+    "SPIKE_AVarAzim",
+    "SPIKE_ABeam",
+    "SPIKE_AVarBeam",
+    "SPIKE_BAzim" "NMET_QIOn", ###FIXME?
+    "NMET_QCOn",
+    "SPECK_QIOn",
+    "SPECK_QCOn",
+    "BLOCK_QIOn",
+    "BLOCK_QCOn",
+    "ATT_QIOn",
+    "ATT_QCOn",
+)
 
 
 ## Initializes the ARGS dictionary by reading content from XML file
 def init():
     global initialized
-    if initialized: return
+    if initialized:
+        return
     
     C = ET.parse(CONFIG_FILE)
     OPTIONS = C.getroot()
-
+    
     default = OPTIONS.find("default")
     default_opts = options()
     for e in list(default):
-        if    e.tag in INTS: default_opts.__setattr__(e.tag, int(e.text))
-        else: default_opts.__setattr__(e.tag, float(e.text))
+        if e.tag in INTS:
+            default_opts.__setattr__(e.tag, int(e.text))
+        else:
+            default_opts.__setattr__(e.tag, float(e.text))
     ARGS["default"] = default_opts
-
+    
     for site in list(OPTIONS):
         if site.tag != "default":
             opts = copy.deepcopy(default_opts)
-        
+            
             for e in list(site):
-                if    e.tag in INTS: opts.__setattr__(e.tag, int(e.text))
-                else: opts.__setattr__(e.tag, float(e.text))
-
-            ARGS[site.tag] = opts                
+                if e.tag in INTS:
+                    opts.__setattr__(e.tag, int(e.text))
+                else:
+                    opts.__setattr__(e.tag, float(e.text))
+            
+            ARGS[site.tag] = opts
     initialized = 1
 
 
@@ -99,7 +121,6 @@ def proof():
 
 ## Initialize
 init()
-
 
 if __name__ == "__main__":
     pass
