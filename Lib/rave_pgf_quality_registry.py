@@ -31,57 +31,66 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #   <quality-plugin name="rave-overshooting" class="rave_overshooting_quality_plugin" />
 # </rave-pgf-composite-quality-registry>
 
-## 
+##
 # @file
 # @author Anders Henja, SMHI
 # @date 2011-11-04
 
-from rave_defines import QUALITY_REGISTRY
+# Standard python libs:
 import xml.etree.ElementTree as ET
+
+# Module/Project:
+from rave_defines import QUALITY_REGISTRY
+
 
 _initialized = False
 _registry = {}
+
 
 ##
 # Initializes the registry by reading the xml file with the plugin
 # definitions.
 #
 def init():
-  global _initialized
-  if _initialized: return
-  import imp
-    
-  O = ET.parse(QUALITY_REGISTRY)
-  registry = O.getroot()
-  for plugin in list(registry):
-    name, module, c = plugin.attrib["name"], plugin.attrib["module"], plugin.attrib["class"]
-    fd, pathname, description = imp.find_module(module)
-    fmodule = imp.load_module(module, fd, pathname, description)
-    try:
-      fd.close()  # File descriptor is returned open, so close it.
-    except:
-      pass
-    inst = getattr(fmodule, c)
-    _registry[name] = inst()
-  
-  _initialized = True
+    global _initialized
+    if _initialized:
+        return
+    import imp
+
+    O = ET.parse(QUALITY_REGISTRY)
+    registry = O.getroot()
+    for plugin in list(registry):
+        name, module, c = plugin.attrib["name"], plugin.attrib["module"], plugin.attrib["class"]
+        fd, pathname, description = imp.find_module(module)
+        fmodule = imp.load_module(module, fd, pathname, description)
+        try:
+            fd.close()  # File descriptor is returned open, so close it.
+        except:
+            pass
+        inst = getattr(fmodule, c)
+        _registry[name] = inst()
+
+    _initialized = True
+
 
 ##
 # Adds a plugin to the registry. Used for debugging
 # and testing purposes.
 #
 def add_plugin(name, plug):
-  _registry[name] = plug
+    _registry[name] = plug
+
 
 ##
 # Removes a plugin from the registry. Used for debugging
 # and testing purposes
 #
 def remove_plugin(name):
-  try:
-    del _registry[name]
-  except:
-    pass   
+    try:
+        del _registry[name]
+    except:
+        pass
+
 
 ##
 # Load the registry
@@ -90,16 +99,14 @@ init()
 
 ##
 # Return the plugin with the given name or None if no such
-# plugin exists.  
+# plugin exists.
 def get_plugin(name):
-  if name in _registry.keys():
-    return _registry[name]
-  return None
+    if name in _registry.keys():
+        return _registry[name]
+    return None
+
 
 ##
 # Return all registered plugin names
 def get_plugins():
-  return _registry.keys()
-    
-
-    
+    return _registry.keys()
