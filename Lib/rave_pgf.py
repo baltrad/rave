@@ -326,7 +326,8 @@ class RavePGF:
     # be parsed into their corrects formats, ie. int, float, list, etc.
     # @return string either "OK" or an error with a corresponding Traceback
     def _generate(self, algorithm, files, arguments):
-        import rave_pgf_verify, rave_pgf_protocol
+        import rave_pgf_verify
+        import rave_pgf_protocol
         
         err_msg = None
         
