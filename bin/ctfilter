@@ -24,31 +24,42 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @author Daniel Michelson, SMHI
 ## @date 2014-03-28
 
-import sys, os
-import _rave, _raveio
-import rave_ctfilter
+# Standard python libs:
+import os
+import sys
 
+# Module/Project:
+import _rave
+import _raveio
+import rave_ctfilter
 
 if __name__ == "__main__":
     from optparse import OptionParser
 
     description = "SAF-NWC MSG cloud-top residual non-precipitation filter"
-
+    # fmt: off
     usage = "usage: %prog -i <input_file> [-o <output_file> -q <quantity> -p <path> -t <template> -I <image_index>] [h]"
     parser = OptionParser(usage=usage, description=description)
 
-    parser.add_option("-i", "--input", dest="ifile", help="Input file name of the radar image to filter")
+    parser.add_option("-i", "--input", dest="ifile", 
+                      help="Input file name of the radar image to filter")
 
-    parser.add_option("-o", "--output", dest="ofile", help="Output file name. If not given, input file will be overwritten.")
+    parser.add_option("-o", "--output", dest="ofile", 
+                      help="Output file name. If not given, input file will be overwritten.")
 
-    parser.add_option("-q", "--quantity", dest="quantity", default="DBZH", help="Quantity to filter. Defaults to DBZH.")
+    parser.add_option("-q", "--quantity", dest="quantity", default="DBZH", 
+                      help="Quantity to filter. Defaults to DBZH.")
 
-    parser.add_option("-p", "--path", dest="path", help="Input path to the directory containing CT products")
+    parser.add_option("-p", "--path", dest="path",
+                      help="Input path to the directory containing CT products")
 
-    parser.add_option("-t", "--template", dest="template", help="CT file name template. Defaults to EUMETSAT standard used with files available through EUMETCAST.")
+    parser.add_option("-t", "--template", dest="template", 
+                      help="CT file name template. "
+                           "Defaults to EUMETSAT standard used with files available through EUMETCAST.")
 
-    parser.add_option("-I", "--image", dest="image", type="int", default=0, help="If a composite, which image index to read. Defaults to 0.")
-
+    parser.add_option("-I", "--image", dest="image", type="int", default=0, 
+                      help="If a composite, which image index to read. Defaults to 0.")
+    # fmt: on
     (options, args) = parser.parse_args()
 
     if not options.ifile:
