@@ -23,10 +23,12 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @author Daniel Michelson, SMHI
 ## @date 2012-11-20
 
+# Standard python libs:
 import sys
-import _raveio
-import _dealias
 
+# Module/Project:
+import _dealias
+import _raveio
 
 if __name__ == "__main__":
     from optparse import OptionParser
@@ -35,10 +37,12 @@ if __name__ == "__main__":
 
     usage = "usage: %prog -i <infile> [-o <outfile>] [h]"
     parser = OptionParser(usage=usage, description=description)
-
-    parser.add_option("-i", "--input", dest="ifile", help="Input file name")
-    parser.add_option("-o", "--output", dest="ofile", help="Output file name. If not specified, input file will be overwritten.")
-
+    # fmt: off
+    parser.add_option("-i", "--input", dest="ifile",
+                      help="Input file name")
+    parser.add_option("-o", "--output", dest="ofile",
+                      help="Output file name. If not specified, input file will be overwritten.")
+    # fmt: on
     (options, args) = parser.parse_args()
 
     if not options.ifile:
