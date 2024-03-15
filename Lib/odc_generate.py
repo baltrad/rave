@@ -23,20 +23,23 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @file
 ## @author Daniel Michelson, SMHI
 ## @date 2012-11-05
+
 # Standard python libs:
-import sys
-import os
 import glob
-import time
 import logging
 import multiprocessing
+import os
+import sys
+import time
 
 # Module/Project:
+import _pycomposite
+import _rave
+import _raveio
+import compositing
 import odc_polarQC
 import rave_pgf_logger
-import _rave, _raveio
-import _pycomposite
-import compositing, tiled_compositing
+import tiled_compositing
 
 
 ## Coordinates all data processing
@@ -49,7 +52,7 @@ def generate(options):
         raise IOError("Input path does not exist.")
     elif not (os.access(options.ipath, os.R_OK) and os.access(options.ipath, os.W_OK)):
         raise IOError("Input path exists but you lack read/write permission.")
-    
+
     if not os.path.isdir(options.opath):
         try:
             os.makedirs(options.opath)
@@ -57,15 +60,15 @@ def generate(options):
             raise IOError("Cannot create output directory.")
     elif not os.access(options.opath, os.W_OK):
         raise IOError("Output directory exists but you lack write permission.")
-    
+
     fstrs = glob.glob(options.ipath + '/*')
     if not len(fstrs):
         raise IOError("Empty input directory? Exiting.")
-    
+
     # Initialize logger
     logger = logging.getLogger("ODC")
     rave_pgf_logger.init_logger(logger)
-    
+
     # Compositing includes QC. Therefore do not do QC separately. This composite config is hard wired.
     if options.areaid:
         comp = compositing.compositing()
@@ -87,15 +90,15 @@ def generate(options):
         rio.save(os.path.join(options.opath, options.ofile))
         after = time.time()
         logger.info("odc_area tiled composite: %3.1f sec using %i PVOLs" % ((after - start), len(fstrs)))
-    
+
     else:
         odc_polarQC.opath = options.opath
         odc_polarQC.algorithm_ids = options.qc.split(',')
         odc_polarQC.delete = options.delete
         odc_polarQC.check = options.check
-        
+
         results = odc_polarQC.multi_generate(fstrs, options.procs)
-        
+
         # Log benchmarking results.
         allreads, allvalids, allqcs, allwrites = 0.0, 0.0, 0.0, 0.0
         n = 0  # counter for number of successfully processed files
@@ -110,10 +113,10 @@ def generate(options):
                 n += 1
             if result[1] == "EXISTS":
                 exists += 1
-        
+
         if not options.procs:
             options.procs = multiprocessing.cpu_count()
-        
+
         totalt = allreads + allvalids + allqcs + allwrites
         if totalt > 0.0:
             readt = allreads / totalt * 100
@@ -121,8 +124,9 @@ def generate(options):
             qct = allqcs / totalt * 100
             writet = allwrites / totalt * 100
             runt = time.time() - start
-    
+            #fmt: off
             logger.info("Processed %i of %i files in %2.1f (%2.1f) s using %i workers. Breakdown: %2.1f%% read, %2.1f%% validation, %2.1f%% QC, %2.1f%% write. Ignored %i files already processed." % (n, len(fstrs), runt, totalt, options.procs, readt, validt, qct, writet, exists))
+            #fmt: on
         elif exists:
             logger.info("Ignored %i files already processed." % exists)
         else:
