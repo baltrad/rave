@@ -23,17 +23,21 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @file
 ## @author Daniel Michelson, SMHI
 ## @date 2012-11-05
+
 # Standard python libs:
-import sys, os, time, traceback, shutil
 import logging
 import multiprocessing
+import os
+import shutil
+import sys
+import time
+import traceback
 
 # Module/Project:
 import _raveio
-import rave_pgf_quality_registry
-import rave_pgf_logger
 import odc_fixIO
-
+import rave_pgf_logger
+import rave_pgf_quality_registry
 
 opath = '/dev/shm/odc'  # command-line options will override these variables
 algorithm_ids = None
@@ -84,28 +88,28 @@ def MakeCheckOfstr(ifstr):
 def generate(ifstr):
     logger = logging.getLogger("ODC")
     rave_pgf_logger.init_logger(logger)
-
+    
     ofstr, done = MakeCheckOfstr(ifstr)
     path, fstr = os.path.split(ifstr)
-
+    
     if check and done:
         if delete:
             os.remove(ifstr)
         rave_pgf_logger.log(logger, "debug", "%s: EXISTS" % fstr)
         return ifstr, "EXISTS"
-
+    
     try:
         startread = time.time()
         rio = _raveio.open(ifstr)
         endread = time.time()
-
+        
         odc_fixIO.Validate(rio)
         endval = time.time()
-
+        
         pload = rio.object
         pload = QC(pload)
         endqc = time.time()
-
+        
         # Hard-wire for no compression and optimized file-creation properties.
         rio.compression_level = 0
         rio.fcp_istorek = 1
@@ -113,20 +117,20 @@ def generate(ifstr):
         rio.fcp_sizes = (4, 4)
         rio.fcp_symk = (1, 1)
         rio.fcp_userblock = 0
-
+        
         rio.object = pload
         rio.save(ofstr)
         endwrite = time.time()
-
+        
         readt = endread - startread
         validt = endval - endread
         qct = endqc - endval
         writet = endwrite - endqc
-
+        
         if delete:
             os.remove(ifstr)  # Clean-up input directory one file at a time.
         rave_pgf_logger.log(logger, "info", "%s: OK" % fstr)
-
+        
         return ifstr, "OK", (readt, validt, qct, writet)
     except OSError as err_msg:
         os.remove(ifstr)
@@ -140,11 +144,11 @@ def generate(ifstr):
 #  @return list of returned tuples from \ref generate
 def multi_generate(fstrs, procs=None):
     pool = multiprocessing.Pool(procs)
-
+    
     results = []
     r = pool.map_async(generate, fstrs, chunksize=1, callback=results.append)
     r.wait()
-
+    
     return results[0]
 
 
