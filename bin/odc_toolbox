@@ -24,9 +24,12 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @author Daniel Michelson, SMHI
 ## @date 2012-11-05
 
-import sys, types
-from odc_generate import generate
+# Standard python libs:
+import sys
+import types
 
+# Module/Project:
+from odc_generate import generate
 
 if __name__ == "__main__":
     from optparse import OptionParser
@@ -35,7 +38,7 @@ if __name__ == "__main__":
 
     usage = "usage: %prog -i <inpath> -o <outpath> -q <algorithm-list> [-p <processes>] [h]"
     parser = OptionParser(usage=usage, description=description)
-
+    # fmt: off
     parser.add_option("-i", "--ipath", dest="ipath",
                       help="Input path containing polar data.")
 
@@ -43,7 +46,9 @@ if __name__ == "__main__":
                       help="Output path for writing data.")
 
     parser.add_option("-q", "--qc", dest="qc",
-                      help="Comma-separated list of which QC algorithms to run, e.g. 'ropo,beamb'. No white spaces between these names. For compositing, this executable hard-wires a quality-based composite algorithm where the last QC algorithm in the chain should be qi-total.")
+                      help="Comma-separated list of which QC algorithms to run, e.g. 'ropo,beamb'. "
+                           "No white spaces between these names. "
+                           "For compositing, this executable hard-wires a quality-based composite algorithm where the last QC algorithm in the chain should be qi-total.")
 
     parser.add_option("-d", "--delete", action="store_false", dest="delete",
                       help="Deletes input files following their processing.")
@@ -52,7 +57,9 @@ if __name__ == "__main__":
                       help="Checks for the presence of output files. If an output file already exists, do nothing and move on to the next.")
 
     parser.add_option("-p", "--procs", dest="procs", type="int", default=0,
-                      help="Number of concurrent worker processes to run. Defaults to the maximum number of logical CPUs supported on your hardware, but can be constrained or raised as you wish. Use off-line for benchmarking.")
+                      help="Number of concurrent worker processes to run. "
+                           "Defaults to the maximum number of logical CPUs supported on your hardware, but can be constrained or raised as you wish. "
+                           "Use off-line for benchmarking.")
 
     parser.add_option("-D", "--write-pvols", action="store_true", dest="dump",
                       help="Write quality-controlled PVOLs to output path.")
@@ -65,10 +72,11 @@ if __name__ == "__main__":
 
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose",
                       help="If the different steps should be displayed. I.e. verbose information.")
-
+    # fmt: on
     (options, args) = parser.parse_args()
 
-    if options.procs == 0: options.procs=None
+    if options.procs == 0:
+        options.procs = None
 
     if not options.ipath or not options.opath or not options.qc:
         parser.print_help()
