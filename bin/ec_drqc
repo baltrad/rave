@@ -36,9 +36,17 @@ import ec_drqc
 # @param object containing command-line arguments
 def main(options):
     rio = _raveio.open(options.ifile)
-    ec_drqc.drQC(rio.object, options.param_name, options.zdr_offset,
-                 options.kernely, options.kernelx, options.param_thresh,
-                 options.dr_thresh, options.keepDR)
+    ec_drqc.drQC(
+        rio.object, 
+        options.temperature_profile_file, 
+        options.param_name, 
+        options.zdr_offset,
+        options.kernely, 
+        options.kernelx, 
+        options.param_thresh,
+        options.dr_thresh, 
+        options.keepDR
+    )
     rio.save(options.ofile)
 
 
@@ -56,6 +64,11 @@ if __name__=="__main__":
 
     parser.add_option("-o", "--outfile", dest="ofile",
                       help="Name of output file to write.")
+    
+    parser.add_option("--temperature_profile", 
+                      dest="temperature_profile_file", 
+                      default=None,
+                      help="Specify a height-temperature profile from a ASCII file. Default is None")
     
     parser.add_option("-p", "--parameter", dest="param_name", default="DBZH",
                       help="ODIM quantity/parameter name to QC. Defaults to DBZH.")

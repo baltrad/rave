@@ -130,8 +130,10 @@ def drQC(pobject, profile_fstr=None, param_name="DBZH",
          kernely=2, kernelx=2, 
          param_thresh=35.0, dr_thresh=-12.0, Tw=True, keepDR=True):
 
-    if profile_fstr: profile = ec_temperatureProfile.readProfile(profile_fstr)
-    else: profile = None
+    if profile_fstr is not None:
+        profile = ec_temperatureProfile.readProfile(profile_fstr)
+    else:
+        profile = None
     
     if _polarvolume.isPolarVolume(pobject):
         nscans = pobject.getNumberOfScans(pobject)
