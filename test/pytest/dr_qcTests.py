@@ -46,7 +46,7 @@ class dr_qcTest(unittest.TestCase):
         ZDR, RHOHV, zdr_offset = 0.0, 0.9, 1.0
         reference = -12.52
         result = _dr_qc.drCalculate(ZDR, RHOHV, zdr_offset)
-        self.assertAlmostEquals(result, reference, 2)
+        self.assertAlmostEqual(result, reference, 2)
 
     # Should fail because we remove RHOHV which is required
     def test_drDeriveParameter_noParam(self):
@@ -106,8 +106,8 @@ class dr_qcTest(unittest.TestCase):
         status = different(scan, ref_scan, "DBZH")
         self.assertFalse(status)
         param = scan.getParameter("DR")
-        self.assertEquals(ec_drqc.TASK, param.getAttribute("how/task"))
-        self.assertEquals("param_name=DBZH zdr_offset=0.00 kernely=3 kernelx=3 param_thresh=35.0 dr_thresh=-12.0", param.getAttribute("how/task_args"))
+        self.assertEqual(ec_drqc.TASK, param.getAttribute("how/task"))
+        self.assertEqual("param_name=DBZH zdr_offset=0.00 kernely=3 kernelx=3 param_thresh=35.0 dr_thresh=-12.0", param.getAttribute("how/task_args"))
 
 
 # Helper function to determine whether two parameter arrays differ

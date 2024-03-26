@@ -10,7 +10,7 @@
 # History:     2009-06-15 Created by Anders Henja
 #              2017-08-25 Modified by Daniel Michelson
 ############################################################
-SCRFILE=`python -c "import os;print(os.path.abspath(\"$0\"))"`
+SCRFILE=`python3 -c "import os;print(os.path.abspath(\"$0\"))"`
 SCRIPTPATH=`dirname "$SCRFILE"`
 
 RES=255
