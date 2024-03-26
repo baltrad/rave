@@ -38,6 +38,7 @@ ifeq ($(COMPILE_FOR_PYTHON), yes)
 	@./fix_shebang.sh ${PYTHON_BIN} rave_pgf "${DESTDIR}${prefix}/bin"
 	@./fix_shebang.sh ${PYTHON_BIN} show "${DESTDIR}${prefix}/bin"
 	@./fix_shebang.sh ${PYTHON_BIN} sunpos "${DESTDIR}${prefix}/bin"
+	@./fix_shebang.sh ${PYTHON_BIN} ec_drqc "${DESTDIR}${prefix}/bin"
 	@./fix_shebang.sh ${PYTHON_BIN} dealias "${DESTDIR}${prefix}/bin"
 	@./fix_shebang.sh ${PYTHON_BIN} radvol "${DESTDIR}${prefix}/bin"
 	@./fix_shebang.sh ${PYTHON_BIN} odc_toolbox "${DESTDIR}${prefix}/bin"

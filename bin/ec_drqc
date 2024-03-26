@@ -1,0 +1,91 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2019 The Crown (i.e. Her Majesty the Queen in Right of Canada)
+
+This file is an add-on to RAVE.
+
+RAVE is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+RAVE and this software are distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+See the GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
+
+'''
+##
+#  Depolarization ratio based quality control.
+
+
+## 
+# @file
+# @author Daniel Michelson, Environment and Climate Change Canada
+# @date 2019-04-27
+
+import sys, os, errno
+import _raveio
+import ec_drqc
+
+
+## Derives polarization ratio and performs quality control with it.
+# @param object containing command-line arguments
+def main(options):
+    rio = _raveio.open(options.ifile)
+    ec_drqc.drQC(rio.object, options.param_name, options.zdr_offset,
+                 options.kernely, options.kernelx, options.param_thresh,
+                 options.dr_thresh, options.keepDR)
+    rio.save(options.ofile)
+
+
+if __name__=="__main__":
+    from optparse import OptionParser
+
+    description = "Derives depolarization ratio and uses it to quality control radar observations"
+
+    usage = "usage: %prog -i <input file> -o <output file> [-p <parameter> -z <zdr_offset> -y <kernel size Y> -x <kernel size X> -t <parameter threshold> -d <depolarization ratio threshold> -k <store the depolarization ratio>] [h]"
+
+    parser = OptionParser(usage=usage, description=description)
+
+    parser.add_option("-i", "--infile", dest="ifile",
+                      help="Name of input file to quality control. Must contain a polar volume or scan with ZDR and RHOHV besides the parameter to QC.")
+
+    parser.add_option("-o", "--outfile", dest="ofile",
+                      help="Name of output file to write.")
+    
+    parser.add_option("-p", "--parameter", dest="param_name", default="DBZH",
+                      help="ODIM quantity/parameter name to QC. Defaults to DBZH.")
+
+    parser.add_option("-z", "--zdr_offset", dest="zdr_offset", type="float", 
+                      default=0.0,
+                      help="ZDR offset in dB. Defaults to 0.0")
+
+    parser.add_option("-y", "--kernely", dest="kernely", type="int", default=2,
+                      help="Number of rays in each direction around the centre bin used for the speckle filter kernel. Defaults to 2.")
+
+    parser.add_option("-x", "--kernelx", dest="kernelx", type="int", default=2,
+                      help="Number of range bins in each direction around the centre bin used for the speckle filter kernel. Defaults to 2.")
+
+    parser.add_option("-t", "--param_thresh", dest="param_thresh", type="float",
+                      default=35.0,
+                      help="Threshold below which the chosen radar parameter values will be analyzed. Above this threshold, values are considered to be legitimate precipitation. Default value is 35.0 dBZ assuming reflectivity.")
+
+    parser.add_option("-d", "--dr_thresh", dest="dr_thresh", type="float", 
+                      default=-12.0,
+                      help="Depolarization ratio threshold, below which radar observations are considered to be legitimate precipitation. Default value is -12 dB.")
+
+    parser.add_option("-k", "--keepDR", dest="keepDR", default="store_true",
+                      help="Whether (True) or not (False) to keep and store the derived depolarization ratio parameter. Defaults to True.")
+    
+    (options, args) = parser.parse_args()
+
+    if not options.ifile or not options.ofile:
+        parser.print_help()
+        sys.exit()
+        
+    
+    main(options)
