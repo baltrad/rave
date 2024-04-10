@@ -29,6 +29,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "odim_io_utilities.h"
 #include "cartesiancomposite.h"
 #include "proj_wkt_helper.h"
+#include "projection_pipeline.h"
 /* should be defined in features.h */
 #ifndef __USE_XOPEN
 #	define __USE_XOPEN 1
@@ -706,6 +707,7 @@ static int CartesianCfIOInternal_createSurfaceInformation(Cartesian_t* cartesian
   int result = 0;
   Projection_t* lonlatPJ = NULL;
   Projection_t* cartesianPJ = NULL;
+  ProjectionPipeline_t* pipeline = NULL;
   lonlatPJ = RAVE_OBJECT_NEW(&Projection_TYPE);
   if (lonlatPJ == NULL || !Projection_init(lonlatPJ, "lonlat", "lonlat", "+proj=latlong +ellps=WGS84 +datum=WGS84")) {
     RAVE_ERROR0("Failed to allocate memory or initialize lonlat projection");
@@ -718,6 +720,12 @@ static int CartesianCfIOInternal_createSurfaceInformation(Cartesian_t* cartesian
     goto done;
   }
 
+  pipeline = ProjectionPipeline_createPipeline(cartesianPJ, lonlatPJ);
+  if (pipeline == NULL) {
+    RAVE_ERROR0("Failed to create pipeline");
+    goto done;
+  }
+
   for (y = ysize - 1; y >= 0; y--) {
     double herey = Cartesian_getLocationY(cartesian, y);
     *yarr = herey;
@@ -726,7 +734,7 @@ static int CartesianCfIOInternal_createSurfaceInformation(Cartesian_t* cartesian
       double herex = Cartesian_getLocationX(cartesian, x);
       double olon,olat;
       xarr[x] = herex;
-      if (!Projection_transformx(cartesianPJ, lonlatPJ, herex, herey, 0.0, &olon, &olat, NULL)) {
+      if (!ProjectionPipeline_fwd(pipeline, herex, herey, &olon, &olat)) {
         RAVE_ERROR0("Transform failed");
         goto done;
       }
@@ -738,6 +746,7 @@ static int CartesianCfIOInternal_createSurfaceInformation(Cartesian_t* cartesian
   }
   result = 1;
 done:
+  RAVE_OBJECT_RELEASE(pipeline);
   RAVE_OBJECT_RELEASE(cartesianPJ);
   RAVE_OBJECT_RELEASE(lonlatPJ);
   return result;
