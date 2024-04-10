@@ -28,6 +28,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
+#include "rave_object.h"
 #include "raveutil.h"
 #include "rave.h"
 #include "rave_types.h"
@@ -239,6 +240,24 @@ static PyObject* _rave_setDebugLevel(PyObject* self, PyObject* args)
   Py_RETURN_NONE;
 }
 
+static PyObject* _rave_setTrackObjectCreation(PyObject* self, PyObject* args)
+{
+  int track = 0;
+  if (!PyArg_ParseTuple(args, "i", &track)) {
+    return NULL;
+  }
+  RaveCoreObject_setTrackObjects(track);
+  Py_RETURN_NONE;  
+}
+
+static PyObject* _rave_getTrackObjectCreation(PyObject* self, PyObject* args)
+{
+  if (!PyArg_ParseTuple(args, "")) {
+    return NULL;
+  }
+  return PyInt_FromLong(RaveCoreObject_getTrackObjects());
+}
+
 /**
  * Simple helper to compare two rave date time pairs.
  * @param[in] self - self
@@ -400,6 +419,14 @@ static PyMethodDef functions[] = {
     "  + Debug_RAVE_ERROR        - Errors\n"
     "  + Debug_RAVE_CRITICAL     - Critical errors, typically if this occur, it probably ends with a crash\n"
     "  + Debug_RAVE_SILENT       - Don't display anything (default)\n"
+  },
+  {"setTrackObjectCreation", (PyCFunction)_rave_setTrackObjectCreation, 1,
+    "setTrackObjectCreation(boolean)\n\n"
+    "Sets object creation should be monitored or not\n"
+  },
+  {"getTrackObjectCreation", (PyCFunction)_rave_getTrackObjectCreation, 1,
+    "getTrackObjectCreation()\n\n"
+    "Returns if object creation is monitored or not\n"
   },
   {"compare_datetime", (PyCFunction) _rave_compare_datetime, 1,
     "compare_datetime(d1,t1,d2,t2) -> an integer\n\n"

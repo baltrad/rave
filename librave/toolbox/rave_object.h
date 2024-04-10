@@ -231,6 +231,17 @@ void* RaveCoreObject_getBindingData(RaveCoreObject* src);
 int RaveCoreObject_isCloneable(RaveCoreObject* src);
 
 /**
+ * Will track object creation and destruction.
+ * @param[in] track - if object creation / destruction should be tracked
+*/
+void RaveCoreObject_setTrackObjects(int track);
+
+/**
+ * @returns if object creation / destruction is tracked.
+*/
+int RaveCoreObject_getTrackObjects();
+
+/**
  * Print current status of object creation.
  */
 void RaveCoreObject_printCurrentObjectStatus(void);
