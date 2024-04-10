@@ -145,6 +145,11 @@ Functions</h2></td></tr>
 <tr class="memitem:a8a9b044df75acb869f2bb7babbe4e95c" id="r_a8a9b044df75acb869f2bb7babbe4e95c"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8a9b044df75acb869f2bb7babbe4e95c">RaveCoreObject_isCloneable</a> (<a class="el" href="#a46a2f0574ec46db3626c123be570c7ed">RaveCoreObject</a> *src)</td></tr>
 <tr class="memdesc:a8a9b044df75acb869f2bb7babbe4e95c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns if this object is possible to clone or not.  <br /></td></tr>
 <tr class="separator:a8a9b044df75acb869f2bb7babbe4e95c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab6f1e86a79ab92f8f90c86016d8f4bd2" id="r_ab6f1e86a79ab92f8f90c86016d8f4bd2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab6f1e86a79ab92f8f90c86016d8f4bd2">RaveCoreObject_setTrackObjects</a> (int track)</td></tr>
+<tr class="memdesc:ab6f1e86a79ab92f8f90c86016d8f4bd2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Will track object creation and destruction.  <br /></td></tr>
+<tr class="separator:ab6f1e86a79ab92f8f90c86016d8f4bd2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1f0faa5272eeb7e907b86735d8c97fa9" id="r_a1f0faa5272eeb7e907b86735d8c97fa9"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1f0faa5272eeb7e907b86735d8c97fa9">RaveCoreObject_getTrackObjects</a> ()</td></tr>
+<tr class="separator:a1f0faa5272eeb7e907b86735d8c97fa9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac4af3b359048761e6df1124d9df2b475" id="r_ac4af3b359048761e6df1124d9df2b475"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac4af3b359048761e6df1124d9df2b475">RaveCoreObject_printCurrentObjectStatus</a> (void)</td></tr>
 <tr class="memdesc:ac4af3b359048761e6df1124d9df2b475"><td class="mdescLeft">&#160;</td><td class="mdescRight">Print current status of object creation.  <br /></td></tr>
 <tr class="separator:ac4af3b359048761e6df1124d9df2b475"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -391,7 +396,7 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 <b>Value:</b><div class="fragment"><div class="line">  <a class="code hl_function" href="#a4883f3a8484a8de9fae5e214f54939f9">RaveCoreObject_release</a>((<a class="code hl_struct" href="struct__raveobject.html">RaveCoreObject</a>*)(obj), __FILE__, __LINE__); \</div>
 <div class="line">  (obj) = NULL;</div>
-<div class="ttc" id="arave__object_8h_html_a4883f3a8484a8de9fae5e214f54939f9"><div class="ttname"><a href="#a4883f3a8484a8de9fae5e214f54939f9">RaveCoreObject_release</a></div><div class="ttdeci">void RaveCoreObject_release(RaveCoreObject *obj, const char *filename, int lineno)</div><div class="ttdoc">Decrements the reference counter and if reference counts gets to 0, the destructor that was provided ...</div><div class="ttdef"><b>Definition</b> rave_object.c:139</div></div>
+<div class="ttc" id="arave__object_8h_html_a4883f3a8484a8de9fae5e214f54939f9"><div class="ttname"><a href="#a4883f3a8484a8de9fae5e214f54939f9">RaveCoreObject_release</a></div><div class="ttdeci">void RaveCoreObject_release(RaveCoreObject *obj, const char *filename, int lineno)</div><div class="ttdoc">Decrements the reference counter and if reference counts gets to 0, the destructor that was provided ...</div><div class="ttdef"><b>Definition</b> rave_object.c:145</div></div>
 <div class="ttc" id="astruct__raveobject_html"><div class="ttname"><a href="struct__raveobject.html">_raveobject</a></div><div class="ttdoc">The basic raveobject that contains the header information for all rave objects.</div><div class="ttdef"><b>Definition</b> rave_object.h:42</div></div>
 </div><!-- fragment -->
 <p>Releases the provided object once (i.e. </p>
@@ -614,6 +619,24 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="a1f0faa5272eeb7e907b86735d8c97fa9" name="a1f0faa5272eeb7e907b86735d8c97fa9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1f0faa5272eeb7e907b86735d8c97fa9">&#9670;&#160;</a></span>RaveCoreObject_getTrackObjects()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int RaveCoreObject_getTrackObjects </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<dl class="section return"><dt>Returns</dt><dd>if object creation / destruction is tracked. </dd></dl>
+
+</div>
+</div>
 <a id="a8a9b044df75acb869f2bb7babbe4e95c" name="a8a9b044df75acb869f2bb7babbe4e95c"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a8a9b044df75acb869f2bb7babbe4e95c">&#9670;&#160;</a></span>RaveCoreObject_isCloneable()</h2>
 
@@ -745,6 +768,31 @@ Functions</h2></td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">obj</td><td>- the object to release (including the object itself) </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">filename</td><td>- the filename that this operation was performed in </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">lineno</td><td>- the linenumber that this operation was performed in </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ab6f1e86a79ab92f8f90c86016d8f4bd2" name="ab6f1e86a79ab92f8f90c86016d8f4bd2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab6f1e86a79ab92f8f90c86016d8f4bd2">&#9670;&#160;</a></span>RaveCoreObject_setTrackObjects()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void RaveCoreObject_setTrackObjects </td>
+          <td>(</td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>track</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Will track object creation and destruction. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">track</td><td>- if object creation / destruction should be tracked </td></tr>
   </table>
   </dd>
 </dl>
