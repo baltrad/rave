@@ -32,6 +32,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 static long objectsCreated = 0;
 static long objectsDestroyed = 0;
 
+static int trackObjects = 0;
+
 /**
  * Heap structure when allocating rave objects
  */
@@ -61,55 +63,59 @@ static heapobject* RaveCoreObjectInternal_createHeapEntry(RaveCoreObject* obj, c
 
 static void RaveCoreObjectInternal_objCreated(RaveCoreObject* obj, const char* filename, int lineno)
 {
-  heapobject* entry = NULL;
+  if (trackObjects) {
+    heapobject* entry = NULL;
 
-  entry = RaveCoreObjectInternal_createHeapEntry(obj, filename, lineno);
+    entry = RaveCoreObjectInternal_createHeapEntry(obj, filename, lineno);
 
-  if (entry == NULL) {
-    RAVE_CRITICAL0("Could not create heap entry");
-    return;
-  }
+    if (entry == NULL) {
+      RAVE_CRITICAL0("Could not create heap entry");
+      return;
+    }
 
-  if (OBJECT_HEAP == NULL) {
-    OBJECT_HEAP = entry;
-    LAST_OBJECT_HEAP = entry;
-  } else {
-    LAST_OBJECT_HEAP->next = entry;
-    entry->prev = LAST_OBJECT_HEAP;
-    LAST_OBJECT_HEAP = entry;
+    if (OBJECT_HEAP == NULL) {
+      OBJECT_HEAP = entry;
+      LAST_OBJECT_HEAP = entry;
+    } else {
+      LAST_OBJECT_HEAP->next = entry;
+      entry->prev = LAST_OBJECT_HEAP;
+      LAST_OBJECT_HEAP = entry;
+    }
   }
 }
 
 static void RaveCoreObjectInternal_objDestroyed(RaveCoreObject* obj)
 {
-  heapobject* ho = OBJECT_HEAP;
-  while (ho != NULL && ho->obj != obj) {
-    ho = ho->next;
-  }
-  if (ho != NULL && ho->obj == obj) {
-    if (ho == OBJECT_HEAP) {
-      if (ho->next != NULL) {
-        ho->next->prev = NULL;
-        OBJECT_HEAP = ho->next;
+  if (trackObjects) {
+    heapobject* ho = OBJECT_HEAP;
+    while (ho != NULL && ho->obj != obj) {
+      ho = ho->next;
+    }
+    if (ho != NULL && ho->obj == obj) {
+      if (ho == OBJECT_HEAP) {
+        if (ho->next != NULL) {
+          ho->next->prev = NULL;
+          OBJECT_HEAP = ho->next;
+        } else {
+          OBJECT_HEAP = NULL;
+          LAST_OBJECT_HEAP = NULL;
+        }
+        RAVE_FREE(ho);
+      } else if (ho == LAST_OBJECT_HEAP) {
+        if (ho->prev != NULL) {
+          ho->prev->next = NULL;
+          LAST_OBJECT_HEAP = ho->prev;
+        }
+        RAVE_FREE(ho);
       } else {
-        OBJECT_HEAP = NULL;
-        LAST_OBJECT_HEAP = NULL;
+        if (ho->next != NULL) {
+          ho->next->prev = ho->prev;
+        }
+        if (ho->prev != NULL) {
+          ho->prev->next = ho->next;
+        }
+        RAVE_FREE(ho)
       }
-      RAVE_FREE(ho);
-    } else if (ho == LAST_OBJECT_HEAP) {
-      if (ho->prev != NULL) {
-        ho->prev->next = NULL;
-        LAST_OBJECT_HEAP = ho->prev;
-      }
-      RAVE_FREE(ho);
-    } else {
-      if (ho->next != NULL) {
-        ho->next->prev = ho->prev;
-      }
-      if (ho->prev != NULL) {
-        ho->prev->next = ho->next;
-      }
-      RAVE_FREE(ho)
     }
   }
 }
@@ -237,16 +243,33 @@ void RaveCoreObject_printCurrentObjectStatus(void)
 
 void RaveCoreObject_printStatistics(void)
 {
-  Rave_printf("Objects created: %ld\n", objectsCreated);
-  Rave_printf("Objects deleted: %ld\n", objectsDestroyed);
-  Rave_printf("Objects pending: %ld\n", objectsCreated - objectsDestroyed);
+  if (trackObjects) {
+    Rave_printf("Objects created: %ld\n", objectsCreated);
+    Rave_printf("Objects deleted: %ld\n", objectsDestroyed);
+    Rave_printf("Objects pending: %ld\n", objectsCreated - objectsDestroyed);
 
-  if (OBJECT_HEAP != NULL) {
-    heapobject* ho = OBJECT_HEAP;
-    while (ho != NULL) {
-      Rave_printf("%s at %s:%d has not been released (refcnt = %d)\n",
-              ho->obj->roh_type->name, ho->filename, ho->lineno, ho->obj->roh_refCnt);
-      ho = ho->next;
+    if (OBJECT_HEAP != NULL) {
+      heapobject* ho = OBJECT_HEAP;
+      while (ho != NULL) {
+        Rave_printf("%s at %s:%d has not been released (refcnt = %d)\n",
+                ho->obj->roh_type->name, ho->filename, ho->lineno, ho->obj->roh_refCnt);
+        ho = ho->next;
+      }
     }
   }
 }
+
+void RaveCoreObject_setTrackObjects(int track)
+{
+  if (track != 0) {
+    trackObjects = 1;
+  } else {
+    trackObjects = 0;
+  }
+}
+
+int RaveCoreObject_getTrackObjects()
+{
+  return trackObjects;
+}
+
