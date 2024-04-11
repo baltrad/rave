@@ -256,6 +256,15 @@ void RaveCoreObject_printStatistics(void)
         ho = ho->next;
       }
     }
+  } else {
+    if (objectsCreated != objectsDestroyed) {
+      Rave_printf("WARNING!!!!\n");
+      Rave_printf("WARNING!!!!\n");
+      Rave_printf("Object creation problem, consider turning on object tracking to see cause\n");
+      Rave_printf("Objects created: %ld\n", objectsCreated);
+      Rave_printf("Objects deleted: %ld\n", objectsDestroyed);
+      Rave_printf("Objects pending: %ld\n", objectsCreated - objectsDestroyed);
+    }
   }
 }
 
