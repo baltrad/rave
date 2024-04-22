@@ -173,7 +173,9 @@ RAVE_TILE_COMPOSITING_ALLOW_MISSING_TILES=False
 # Used for managing resource utilization by preventing long-running processes.
 # Adjust this setting based on your workload characteristics and resource availability.
 # See: https://docs.python.org/3/library/multiprocessing.html#multiprocessing.pool.Pool
-RAVE_MULTIPROCESSING_MAX_TASKS_PER_WORKER: int = 100
+# Max tasks per worker must be a positive integer (>0) or None. If None it means that
+# the worker will work indefinitely.
+RAVE_MULTIPROCESSING_MAX_TASKS_PER_WORKER=None
 
 # Max number of process to use when executing the quality controls. Default is 4 but this
 # should probably be tuned depending on how many files that needs to be quality controled
