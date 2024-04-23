@@ -70,10 +70,14 @@ def strToNumber(sval):
 # Exports a CF convention file
 #
 def generate(files, arguments):
+  mpname = multiprocessing.current_process().name
+  entertime = time.time()
+  logger.info(f"[{mpname}] rave_pgf_cf_exporter_plugin.generate: Enter.")
+
   args = arglist2dict(arguments)
 
   if not _rave.isCFConventionSupported():
-    logger.info("CF Conventions is not supported, ignoring export")
+    logger.info(f"[{mpname}] rave_pgf_cf_exporter_plugin.generate: CF Conventions is not supported, ignoring export")
     return None
 
   if len(files) != 1:
@@ -98,6 +102,9 @@ def generate(files, arguments):
   rio.object = obj
   rio.file_format=_raveio.RaveIO_FileFormat_CF;
   rio.save(filename)
+
+  exectime = int((time.time() - entertime)*1000)
+  logger.info(f"[{mpname}] rave_pgf_cf_exporter_plugin.generate: Exit. Generated in {exectime}.")
 
   return None
 

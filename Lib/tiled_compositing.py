@@ -136,6 +136,8 @@ class multi_composite_arguments(object):
   # @param tid: the area identifier (only used for identification purpose, actual area is taken from the area_definition)
   # @return a filename pointing to the tile
   def generate(self, dd, dt, tid):
+    mpname = multiprocessing.current_process().name
+
     comp = compositing.compositing()
     starttime = time.time()
     comp.xscale = self.xscale
@@ -175,16 +177,16 @@ class multi_composite_arguments(object):
     pyarea.extent = self.area_definition.extent
     pyarea.projection = _projection.new("dynamic pcsid", "dynamic pcs name", self.area_definition.pcsdef)    
     
-    logger.info("Generating composite for tile %s"%self.area_definition.id)
+    logger.debug(f"[{mpname}] multi_composite_arguments.generate: Generating composite tile={self.area_definition.id}")
 
     result = comp.generate(dd, dt, pyarea)
     
     if result == None:
       totaltime = time.time() - starttime
-      logger.info("No composite for tile %s could be generated.", self.area_definition.id)
+      logger.info(f"[{mpname}] multi_composite_arguments.generate: No composite for tile={self.area_definition.id} could be generated.")
       return (tid, None, totaltime)
     else:
-      logger.info("Finished generating composite for tile %s", self.area_definition.id)      
+      logger.debug(f"[{mpname}] multi_composite_arguments.generate: Finished generating composite for tile={self.area_definition.id}.")      
       
     fileno, outfile = rave_tempfile.mktemp(suffix='.h5', close="True")
   
@@ -226,6 +228,7 @@ class tiled_compositing(object):
     self.how_tasks = ""
     self.number_of_quality_control_processes = RAVE_QUALITY_CONTROL_PROCESSES
     self._do_remove_temporary_files=False
+    self.mpname = multiprocessing.current_process().name
 
   ##
   # Fetches the file objects and if self.preprocess_qc is True performs the quality controls.
@@ -234,7 +237,7 @@ class tiled_compositing(object):
   # @return (a dictionary with filenames as keys and objects as values, and a string with all included nodes names) 
   #
   def _fetch_file_objects(self):
-    self.logger.info("Fetching (and processing) %d files for tiled compositing"%len(self.compositing.filenames))
+    self.logger.debug(f"[{self.mpname}] tiled_compositing.fetch_file_objects: Fetching (and processing) {len(self.compositing.filenames)} files for tiled compositing")
 
     result, nodes, how_tasks, all_files_malfunc = self.compositing.fetch_objects()
     if self.preprocess_qc:
@@ -245,9 +248,9 @@ class tiled_compositing(object):
         self.compositing.filenames = result.keys()
         self._do_remove_temporary_files=True
       except Exception:
-        self.logger.exception("Failed to create temporary files. will not preprocess qc.")
+        self.logger.exception(f"[{self.mpname}] tiled_compositing.fetch_file_objects: Failed to create temporary files. will not preprocess qc.")
 
-    self.logger.info("Finished fetching (and processing) %d files for tiled compositing"%len(self.compositing.filenames))
+    self.logger.debug(f"[{self.mpname}] tiled_compositing.fetch_file_objects: Finished fetching (and processing) {len(self.compositing.filenames)} files for tiled compositing")
 
     return (result, nodes, how_tasks, all_files_malfunc)
 
@@ -259,7 +262,7 @@ class tiled_compositing(object):
   # @return (a dictionary with filenames as keys and objects as values, and a string with all included nodes names)
   # 
   def _fetch_file_objects_mp(self):
-    self.logger.info("MP Fetching (and processing) %d files for tiled compositing"%len(self.compositing.filenames))
+    self.logger.info(f"[{self.mpname}] tiled_compositing.fetch_file_objects: Fetching (and processing) %d files for tiled compositing"%len(self.compositing.filenames))
     args = []
     ncpucores = multiprocessing.cpu_count()
 
@@ -304,15 +307,15 @@ class tiled_compositing(object):
     for r in results[0]:
       filenames.extend(r[0])
       if r[1] == False:
-        self.logger.info("MP quality control processing of %s failed."%str(r[2]))
+        self.logger.info(f"[{self.mpname}] tiled_compositing.fetch_file_objects: quality control processing of %s failed."%str(r[2]))
     
     self.compositing.filenames = filenames
     self._do_remove_temporary_files=True
     
     result, nodes, how_tasks, all_files_malfunc = self.compositing.fetch_objects()
     
-    self.logger.info("MP Fetching (and processing) %d files for tiled compositing"%len(self.compositing.filenames))
-    
+    self.logger.debug(f"[{self.mpname}] tiled_compositing.fetch_file_objects: Finished fetching (and processing) {len(self.compositing.filenames)} files for tiled compositing")
+
     return (result, nodes, how_tasks, all_files_malfunc)
 
 
@@ -386,7 +389,7 @@ class tiled_compositing(object):
     return args
   
   def _add_files_to_argument_list(self, args, tiled_areas):
-    self.logger.info("Distributing polar objects among %d tiles"%len(args))
+    self.logger.debug(f"[{self.mpname}] tiled_compositing._add_files_to_argument_list: Distributing polar objects among {len(args)} tiles")
 
     # Loop through tile areas
     for i in range(len(tiled_areas)):
@@ -403,7 +406,7 @@ class tiled_compositing(object):
             scan = v
             
             if self.compositing.quantity not in scan.getParameterNames():
-                self.logger.info("Quantity %s not in data from %s" % (self.compositing.quantity, scan.source))
+                self.logger.info(f"[{self.mpname}] tiled_compositing._add_files_to_argument_list: Quantity {self.compositing.quantity} not in data from {scan.source}")
                 continue
 
             bi = scan.nbins - 1
@@ -420,9 +423,9 @@ class tiled_compositing(object):
                         break # No need to continue
 
     for idx in range(len(args)):
-      self.logger.info("Tile %s contains %d files and dimensions %i x %i"%(args[idx][0].area_definition.id, len(args[idx][0].filenames), args[idx][0].area_definition.xsize, args[idx][0].area_definition.ysize))
+      self.logger.info(f"[{self.mpname}] tiled_compositing._add_files_to_argument_list: Tile {args[idx][0].area_definition.id} contains  {len(args[idx][0].filenames)} files and dimensions {args[idx][0].area_definition.xsize} x {args[idx][0].area_definition.ysize}")
       
-    self.logger.info("Finished splitting polar object")
+    self.logger.debug(f"[{self.mpname}] tiled_compositing._add_files_to_argument_list: Finished splitting polar object")
   
   def _add_radar_index_value_to_argument_list(self, args):
     ctr = 1
@@ -458,7 +461,7 @@ class tiled_compositing(object):
       break
     
     if dtstr is None or ddstr is None:
-      self.logger.info("Could not determine any date and time string")
+      self.logger.info(f"[{self.mpname}] tiled_compositing._ensure_date_and_time_on_args: Could not determine any date and time string")
       return False
     
     for arg in args:
@@ -480,6 +483,8 @@ class tiled_compositing(object):
   # @param dt: time
   # @param area: the area id
   def generate(self, dd, dt, area=None):
+    starttime = time.time()
+
     pyarea = my_area_registry.getarea(area)
 
     if self.preprocess_qc and self.mp_process_qc and self.number_of_quality_control_processes > 1:
@@ -488,7 +493,7 @@ class tiled_compositing(object):
       self.file_objects, self.nodes, self.how_tasks, all_files_malfunc = self._fetch_file_objects()
       
     if all_files_malfunc:
-      self.logger.info("Content of all provided files were marked as 'malfunc'. Since option 'ignore_malfunc' is set, no composite is generated!")
+      self.logger.info("[{self.mpname}] tiled_compositing.generate: Content of all provided files were marked as 'malfunc'. Since option 'ignore_malfunc' is set, no composite is generated!")
       return None
 
     args = self._create_arguments(dd, dt, pyarea)
@@ -529,28 +534,29 @@ class tiled_compositing(object):
         processed_areas.append(r[0])
       for a in args:
         if not a[3] in processed_areas:
-          self.logger.error("No answer from subprocess when generating composite tile with areaid: %s"%a[3])
+          self.logger.error(f"[{self.mpname}] tiled_compositing.generate: No answer from subprocess when generating composite tile with areaid: {a[3]}")
           # Either we want to hide this fact from user and create as much of the composite as possible or else we just want
           # the product to dissapear since something ugly might have happened during processing.
           if RAVE_TILE_COMPOSITING_ALLOW_MISSING_TILES:
             results.append((a[3], None, float(RAVE_TILE_COMPOSITING_TIMEOUT)))
           else:
-            raise RuntimeError("No answer from subprocess when generating composite tile with areaid: %s"%a[3])
+            raise RuntimeError(f"No answer from subprocess when generating composite tile with areaid: {a[3]}")
     
     results = [results] # To get same behavior as map_async
 
     if len(results) > 0:
       for v in results[0]:
-        self.logger.info("Tile with areaid: %s took %f seconds to process"%(v[0],v[2]))
+        self.logger.info(f"[{self.mpname}] tiled_compositing.generate: Tile with areaid: {v[0]} took {v[2]} seconds to process")
 
 
-    self.logger.info("Finished processing tiles, combining tiles")
+    self.logger.info(f"[{self.mpname}] tiled_compositing.generate: Finished processing, combining tiles")
+
     objects = []
     try:
       for v in results[0]:
         tile_file = v[1]
         if tile_file == None:
-          self.logger.warn("No partial composite for tile area %s was created. This tile will therefore not be included in complete composite.", v[0])
+          self.logger.warn(f"[{self.mpname}] tiled_compositing.generate: No partial composite for tile area {v[0]} was created. This tile will therefore not be included in complete composite.")
         else:
           o = _raveio.open(tile_file).object
           if _cartesianvolume.isCartesianVolume(o):
@@ -560,7 +566,7 @@ class tiled_compositing(object):
         
       t = _transform.new()
 
-      self.logger.debug("Combining %d tiles into one composite for area %s.", len(objects), area)
+      self.logger.debug(f"[{self.mpname}] tiled_compositing.generate: Combining {len(objects)} tiles into one composite for area {area}.")
 
       result = t.combine_tiles(pyarea, objects)
       
@@ -570,8 +576,10 @@ class tiled_compositing(object):
       
       if self.how_tasks != "":
         result.addAttribute('how/task', self.how_tasks)
-          
-      self.logger.info("Tiles combined")
+      
+      totaltime = int((time.time() - starttime)*1000)
+
+      self.logger.info(f"[{self.mpname}] tiled_compositing.generate: Tiled compositing took {totaltime} ms to execute.")
       
       return result
     finally:
@@ -580,7 +588,7 @@ class tiled_compositing(object):
           try:
             os.unlink(fname)
           except:
-            logger.info("Failed to remove temporary file: %s"%fname)
+            logger.warn(f"[{self.mpname}] tiled_compositing.generate: Failed to remove temporary file: {fname}")
       
       if results != None:
         for v in results[0]:
@@ -588,7 +596,8 @@ class tiled_compositing(object):
             try:
               os.unlink(v[1])
             except Exception:
-              logger.exception("Failed to unlink %s"%v[1])
+              logger.exception("Failed to unlink {v[1]}")
+
     return None
 
 ##
@@ -597,10 +606,16 @@ class tiled_compositing(object):
 # @return result of multi_composite_arguments.generate
 #
 def comp_generate(args):
+  mpname = multiprocessing.current_process().name
+  starttime = time.time()
+  logger.info(f"[{mpname}] tiled_compositing.comp_generate. Starting generation of tile {args[3]} - {args[1]}{args[2]}")
   try:
-    return args[0].generate(args[1], args[2], args[3])
+    result = args[0].generate(args[1], args[2], args[3])
+    etime = int((time.time() - starttime)*1000)
+    logger.info(f"[{mpname}] tiled_compositing.comp_generate. Finished creating tile in {etime} ms")
+    return result
   except Exception:
-    logger.exception("Failed to call composite generator in tiler")
+    logger.exception(f"[{mpname}] tiled_compositing.comp_generate: Failed to call composite generator in tiler")
   return None
 
 ##
@@ -616,6 +631,8 @@ def execute_quality_control(args):
     comp.detectors.extend(detectors)
     comp.reprocess_quality_field = reprocess_quality_field
     comp.ignore_malfunc = ignore_malfunc
+
+    logger.info(f"[{mpname}] tiled_compositing.execute_quality_control: Starting QC of {len(comp.filenames)} objects.")
     
     objects, nodes, how_tasks, all_files_malfunc = comp.fetch_objects()
     
@@ -628,7 +645,7 @@ def execute_quality_control(args):
       status = False
     result = (objects.keys(), status, nodes)
   except Exception:
-    logger.exception("Failed to run quality control")
+    logger.exception(f"[{mpname}] tiled_compositing.execute_quality_control: Failed to run quality control")
   return result
 
 if __name__=="__main__":

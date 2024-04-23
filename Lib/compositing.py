@@ -39,6 +39,8 @@ import _bitmapgenerator
 
 import string
 import datetime
+import multiprocessing
+import time
 import math
 import tempfile
 import rave_pgf_logger
@@ -85,6 +87,7 @@ class compositing(object):
   ##
   # Constructor
   def __init__(self, rbdb=None):
+    self.mpname = multiprocessing.current_process().name
     self.ravebdb = rbdb
     if self.ravebdb is None:
       self.ravebdb = ravebdb
@@ -193,22 +196,23 @@ class compositing(object):
     self._debug_generate_info(area)
  
     if self.verbose:
-      self.logger.info("Fetching objects and applying quality plugins")
+      self.logger.info(f"[{self.mpname}] compositing.generate: Fetching objects and applying quality plugins")
     
-    self.logger.debug("Generating composite with date and time %sT%s for area %s", dd, dt, area)
+    self.logger.debug(f"[{self.mpname}] compositing.generate: Generating composite with date and time {dd}T{dt} for area {area}")
     
     objects, nodes, how_tasks, all_files_malfunc = self.fetch_objects()
     
     if all_files_malfunc:
-      self.logger.info("Content of all provided files were marked as 'malfunc'. Since option 'ignore_malfunc' is set, no composite is generated!")
+      self.logger.info(f"[{self.mpname}] compositing.generate: Content of all provided files were marked as 'malfunc'. Since option 'ignore_malfunc' is set, no composite is generated!")
       return None
     
     objects, algorithm, qfields = self.quality_control_objects(objects)
     
-    self.logger.debug("Quality controls for composite generation: %s", (",".join(qfields)))
+    qccontrols=",".join(qfields)
+    self.logger.debug(f"[{self.mpname}] compositing.generate: Quality controls for composite generation: {qccontrols}")
     
     if len(objects) == 0:
-      self.logger.info("No objects provided to the composite generator. No composite will be generated!")
+      self.logger.info(f"[{self.mpname}] compositing.generate: No objects provided to the composite generator. No composite will be generated!")
       return None
 
     objects=list(objects.values())
@@ -224,7 +228,7 @@ class compositing(object):
         pyarea = my_area_registry.getarea(area)
     else:
       if self.verbose:
-        self.logger.info("Determining best fit for area")
+        self.logger.info(f"[{self.mpname}] compositing.generate: Determining best fit for area")
       A = rave_area.MakeAreaFromPolarObjects(objects, self.pcsid, self.xscale, self.yscale)
 
       pyarea = _area.new()
@@ -285,7 +289,7 @@ class compositing(object):
       self._update_generator_with_prodpar(generator)
     
     if self.verbose:
-      self.logger.info("Generating cartesian composite")
+      self.logger.info(f"[{self.mpname}] compositing.generate: Generating cartesian composite")
     
     generator.applyRadarIndexMapping(self.radar_index_mapping)
     
@@ -293,20 +297,20 @@ class compositing(object):
     
     if self.applyctfilter:
       if self.verbose:
-        self.logger.debug("Applying ct filter")
+        self.logger.debug(f"[{self.mpname}] compositing.generate: Applying ct filter")
       rave_ctfilter.ctFilter(result, self.quantity)
     
     if self.applygra:
       if not "se.smhi.composite.distance.radar" in qfields:
-        self.logger.info("Trying to apply GRA analysis without specifying a quality plugin specifying the se.smhi.composite.distance.radar q-field, disabling...")
+        self.logger.info(f"[{self.mpname}] compositing.generate: Trying to apply GRA analysis without specifying a quality plugin specifying the se.smhi.composite.distance.radar q-field, disabling...")
       else:
         if self.verbose:
-          self.logger.info("Applying GRA analysis (ZR A = %f, ZR b = %f)"%(self.zr_A, self.zr_b))
+          self.logger.info(f"[{self.mpname}] compositing.generate: Applying GRA analysis (ZR A = {self.zr_A}, ZR b = {self.zr_b})")
         grafield = self._apply_gra(result, dd, dt)
         if grafield:
           result.addParameter(grafield)
         else:
-          self.logger.warn("Failed to generate gra field....")
+          self.logger.warn(f"[{self.mpname}] compositing.generate: Failed to generate gra field....")
     
     # Hack to create a BRDR field if the qfields contains se.smhi.composite.index.radar
     if "se.smhi.composite.index.radar" in qfields:
@@ -317,7 +321,7 @@ class compositing(object):
       
     if self.applygapfilling:
       if self.verbose:
-        self.logger.debug("Applying gap filling")
+        self.logger.debug(f"[{self.mpname}] compositing.generate: Applying gap filling")
       t = _transform.new()
       gap_filled = t.fillGap(result)
       result.getParameter(self.quantity).setData(gap_filled.getParameter(self.quantity).getData())
@@ -335,13 +339,13 @@ class compositing(object):
         else:
           result.source="%s,CMT:%s"%(self.remove_CMT_from_source(result.source), plc)
       except:
-        self.logger.exception("Failed to get source from object")
+        self.logger.exception(f"[{self.mpname}] compositing.generate: Failed to get source from object")
         
     if how_tasks != "":
       result.addAttribute('how/task', how_tasks)
 
     if self.verbose:
-      self.logger.debug("Returning resulting composite image")
+      self.logger.debug(f"[{self.mpname}] compositing.generate: Returning resulting composite image")
 
     return result
 
@@ -456,7 +460,7 @@ class compositing(object):
         is_pvol = _polarvolume.isPolarVolume(obj)
         
       if not is_scan and not is_pvol:
-        self.logger.warn("Input file %s is neither polar scan or volume, ignoring.", fname)
+        self.logger.warn(f"[{self.mpname}] compositing.fetch_objects: Input file {fname} is neither polar scan or volume, ignoring.")
         continue
       
       # Force azimuthal nav information usage if requested
@@ -465,7 +469,7 @@ class compositing(object):
       if self.ignore_malfunc:
         obj = rave_util.remove_malfunc(obj)
         if obj is None:
-          self.logger.info("Input file %s detected as 'malfunc', ignoring.", fname)
+          self.logger.info(f"[{self.mpname}] compositing.fetch_objects: Input file {fname} detected as 'malfunc', ignoring.")
           malfunc_files += 1
           continue
       
@@ -479,10 +483,10 @@ class compositing(object):
       objects[fname] = obj
           
       if is_scan:
-        self.logger.debug("Scan used in composite generation - UUID: %s, Node: %s, Nominal date and time: %sT%s", fname, node, obj.date, obj.time)
+        self.logger.debug(f"[{self.mpname}] compositing.fetch_objects: Scan used in composite generation - UUID: {fname}, Node: {node}, Nominal date and time: {obj.date}T{obj.time}")
         self.add_how_task_from_scan(obj, tasks)
       elif is_pvol:
-        self.logger.debug("PVOL used in composite generation - UUID: %s, Node: %s, Nominal date and time: %sT%s", fname, node, obj.date, obj.time)
+        self.logger.debug(f"[{self.mpname}] compositing.fetch_objects: PVOL used in composite generation - UUID: {fname}, Node: {node}, Nominal date and time: {obj.date}T{obj.time}")
         for i in range(obj.getNumberOfScans()):
           scan = obj.getScan(i)
           self.add_how_task_from_scan(scan, tasks)
@@ -543,12 +547,13 @@ class compositing(object):
     try:
       coeff = db.get_newest_gra_coefficient(agedt, nowdt)
       if coeff and not math.isnan(coeff.a) and not math.isnan(coeff.b) and not math.isnan(coeff.c):
-        logger.info("Reusing gra coefficients from %s %s"%(coeff.date, coeff.time))
+        logger.info(f"[{self.mpname}] compositing.get_backup_gra_coefficient: Reusing gra coefficients from {coeff.date} {coeff.time}")
         return coeff.significant, coeff.points, coeff.loss, coeff.r, coeff.r_significant, coeff.corr_coeff, coeff.a, coeff.b, coeff.c, coeff.mean, coeff.stddev
     except Exception:
       logger.exception("Failed to aquire coefficients")
 
-    logger.warn("Could not aquire coefficients newer than %s, defaulting to climatologic"%agedt.strftime("%Y%m%d %H:%M:%S"))
+    dtstr = agedt.strftime("%Y%m%d %H:%M:%S")
+    logger.warn(f"[{self.mpname}] compositing.get_backup_gra_coefficient: Could not aquire coefficients newer than {dtstr}, defaulting to climatologic")
     return "False", 0, 0, 0.0, "False", 0.0, DEFAULTA, DEFAULTB, DEFAULTC, 0.0, 0.0
   
   ##
@@ -559,7 +564,7 @@ class compositing(object):
   # @return the gra field with the applied corrections
   def _apply_gra(self, result, d, t):
     if nodomdb:
-      self.logger.info("Could not load rave_dom_db, probably due to missing dependencies like jprops or sqlalchemy, ignoring gra correction")
+      self.logger.info(f"[{self.mpname}] compositing._apply_gra: Could not load rave_dom_db, probably due to missing dependencies like jprops or sqlalchemy, ignoring gra correction")
       return
     
     try:
@@ -579,12 +584,12 @@ class compositing(object):
       grac = db.get_gra_coefficient(dt)
       if grac != None and not math.isnan(grac.a) and not math.isnan(grac.b) and not math.isnan(grac.c):
         if self.verbose:
-          self.logger.debug("Applying gra coefficients from database")
+          self.logger.debug(f"[{self.mpname}] compositing._apply_gra: Applying gra coefficients from database")
         gra.A = grac.a
         gra.B = grac.b
         gra.C = grac.c
       else:
-        self.logger.info("Could not find coefficients for given time, trying to get aged or climatologic coefficients")
+        self.logger.info(f"[{self.mpname}] compositing._apply_gra: Could not find coefficients for given time, trying to get aged or climatologic coefficients")
         nowdt = datetime.datetime(int(d[:4]), int(d[4:6]), int(d[6:]), int(t[:2]), int(t[2:4]), 0)
         agedt = nowdt - datetime.timedelta(seconds=3600 * 48) # 2 days back
         sig,pts,loss,r,rsig,corr,gra.A,gra.B,gra.C,mean,dev = self.get_backup_gra_coefficient(db, agedt, nowdt)
@@ -595,9 +600,7 @@ class compositing(object):
       gra_field.quantity = self.quantity + "_CORR"
       return gra_field
     except Exception:
-      import traceback
-      traceback.print_exc()
-      self.logger.error("Failed to apply gra coefficients", exc_info=1)
+      self.logger.error(f"[{self.mpname}] compositing._apply_gra: Failed to apply gra coefficients", exc_info=1)
     return None    
   
   ##

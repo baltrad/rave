@@ -38,7 +38,8 @@ class algorithm_job(object):
     self._date = self.get_string_from_arguments(arguments, "--date", None)
     self._time = self.get_string_from_arguments(arguments, "--time", None)
     self._mergeable = "--merge=true" in arguments
-    
+    self._addedtime = time.time()  # This value should be overwritten when job is added to queue
+
   def get_arg_from_arguments(self, arguments, key):
     for arg in arguments:
       o = re.match(key+"=([^$]+)", arg)
@@ -95,6 +96,9 @@ class algorithm_job(object):
     if self._jobdone != None:
       self._jobdone(self._jobid)
 
+  def addedtime(self):
+    return self._addedtime
+
   def __eq__(self, other):
     if other == None:
       return False
@@ -130,10 +134,31 @@ class algorithm_job(object):
   def __repr__(self):
     return "%s"%self.__str__()
 
-def run_algorithm(func, jobid, algorithm, files, arguments):
+worker_ctr = 0
+
+def worker_initfunction():
+  mpname = multiprocessing.current_process().name
+  logger.info(f"[{mpname}] algorithm_runner.worker_initfunction: Initialized worker.")
+
+def worker_jobctr():
+  global worker_ctr
+  worker_ctr += 1
+  return worker_ctr
+
+def run_algorithm(func, jobid, algorithm, files, arguments, addedtime=0):
+  sttime = time.time()
+  mpname = multiprocessing.current_process().name
   try:
-    return func(jobid, algorithm, files, arguments)
+    logger.info(f"[{mpname}] algorithm_runner.run_algorithm: Worker processing job number {worker_jobctr()}.")
+    result = func(jobid, algorithm, files, arguments)
+    exectime = int((time.time() - sttime)*1000)
+    delay = 0
+    if addedtime:
+      delay = int((time.time() - addedtime)*1000)
+    logger.info(f"[{mpname}] algorithm_runner.run_algorithm: Finished with ID={jobid}, algorithm={algorithm}. Total exec time={exectime} ms, including queue={delay} ms.")
+    return result
   except Exception:
+    logger.exception(f"[{mpname}] algorithm_runner.run_algorithm Failure in operation.")
     return None
 
 ##
@@ -149,7 +174,7 @@ class algorithm_runner(object):
   def __init__(self, nrprocesses):
     self.lock = threading.Lock()
     self.queue = queue.PriorityQueue()
-    self.pool = RavePool(nrprocesses)
+    self.pool = RavePool(nrprocesses, initializer=worker_initfunction)
     self.nrprocesses = nrprocesses
     self.running_jobs = 0
     super(algorithm_runner, self).__init__()
@@ -162,6 +187,7 @@ class algorithm_runner(object):
   # its contant will be replaced (files and arguments).
   #
   def add(self, func, jobid, algorithm, files, arguments, jobdone=None):
+    mpname = multiprocessing.current_process().name
     self.lock.acquire()
     try:
       a = algorithm_job(func, jobid, algorithm, files, arguments, jobdone)
@@ -170,7 +196,7 @@ class algorithm_runner(object):
       if a.mergeable():
         for qi in self.queue.queue:
           if qi.date() != None and qi.time() != None and qi == a:
-            logger.debug("[algorithm_runner] Merging %s with %s"%(a.jobid(), qi.jobid()))
+            logger.debug(f"[{mpname}] algorithm_runner.add: Merging {a.jobid()} with {qi.jobid()}")
             qi.jobdone() # We must let invoker know that this job is done
             qi.setJobid(jobid)
             qi.setArguments(arguments)
@@ -179,8 +205,9 @@ class algorithm_runner(object):
             break
 
       if a != None:
+        a._addedtime = time.time()
         self.queue.put(a)
-        logger.debug("[algorithm_runner] Added job (%s) - %s to queue, queue size = %d"%(a.jobid(), a.algorithm(), self.queue.qsize()))
+        logger.info(f"[{mpname}] algorithm_runner.add: Queued job ID={a.jobid()} queue_size={self.queue.qsize()}")
       self._handle_queue()
     finally:
       self.lock.release()
@@ -189,11 +216,12 @@ class algorithm_runner(object):
   # Invoked by the async pool on answer
   #
   def async_callback(self, arg):
+    mpname = multiprocessing.current_process().name
     self.lock.acquire()
     try:
       self.queue.task_done()
       self.running_jobs = self.running_jobs - 1
-      logger.debug("[algorithm_runner] Finished with job %s"%(str(arg)))
+      logger.info(f"[{mpname}] algorithm_runner.async_callback: Finished with job %s"%(str(arg)))
       self._handle_queue()
     finally:
       self.lock.release()
@@ -203,18 +231,20 @@ class algorithm_runner(object):
   # method. Will increase running jobs with 1 if job added async to pool
   #
   def _handle_queue(self):
+    mpname = multiprocessing.current_process().name
     if self.running_jobs < self.nrprocesses:
       job = None
       try:
         job = self.queue.get(False)
       except queue.Empty:
         pass
+
       if job:
-        self.pool.apply_async(run_algorithm, (job.func(), job.jobid(), job.algorithm(), job.files(), job.arguments()), callback=self.async_callback)
+        self.pool.apply_async(run_algorithm, (job.func(), job.jobid(), job.algorithm(), job.files(), job.arguments(), job.addedtime()), callback=self.async_callback)
         self.running_jobs = self.running_jobs + 1
-        logger.info("[algorithm_runner] Applied job %s, currently %d jobs running and %d in queue"%(str(job.jobid()), self.running_jobs, self.queue.qsize()))
+        logger.info(f"[{mpname}] algorithm_runner._handle_queue: Applied job ID={job.jobid()}. Running jobs={self.running_jobs}, queued jobs={self.queue.qsize()}")
       else:
-        logger.debug("[algorithm_runner] Queue empty")
+        logger.debug(f"[{mpname}] algorithm_runner._handle_queue: Queue empty")
 
   ##
   # Shutsdown and waits for pool to terminate

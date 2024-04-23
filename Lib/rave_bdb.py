@@ -29,7 +29,7 @@ try:
   from baltradutils import jprops
 except:
   import jprops
-
+import multiprocessing
 import _raveio
 import rave_pgf_logger
 import rave_tempfile
@@ -110,6 +110,7 @@ class rave_bdb(object):
     '''
     if self.initialized == False:
       try:
+        print(self.config)
         if 'baltrad.bdb.server.uri' in self.config:
           uri = self.config['baltrad.bdb.server.uri']
           self.database = rest.RestfulDatabase(uri, self.load_auth_provider())
@@ -135,12 +136,13 @@ class rave_bdb(object):
     :return a rave object on success
     :raises an exception if the rave object not can be returned
     '''
+    mpname = multiprocessing.current_process().name
     if os.path.exists(fname):
       return _raveio.open(fname, lazy_loading, preloadedQuantities).object
     
     # Fix to avoid unessecary loading if rave is running on same server as bdb which is storing files in fs.
     if self.fs_path is not None and os.path.exists("%s"%self.path_from_uuid(fname)):
-      logger.info("Using path directly from storage %s"%self.path_from_uuid(fname))
+      logger.info(f"[{mpname}] rave_bdb.path_from_uuid: Using path directly from storage {self.path_from_uuid(fname)}")
       return _raveio.open("%s"%self.path_from_uuid(fname), lazy_loading, preloadedQuantities).object
 
     content = self.get_database().get_file_content(fname)

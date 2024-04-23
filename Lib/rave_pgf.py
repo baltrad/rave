@@ -25,7 +25,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys, os, traceback, string, types
 from copy import deepcopy as copy
-import logging
+import logging, time
+
 import multiprocessing
 import rave_pgf_logger
 import rave_pgf_registry
@@ -163,26 +164,25 @@ class RavePGF():
     # the result is referred to as a 'job'.
     self.queue.queue_job(algorithm, files, arguments, jobid)
     mod_name, func_name = algorithm.get('module'), algorithm.get('function')
-    self.logger.debug("%s: ID=%s Queued %s.%s" % (self.name, jobid, mod_name, func_name))
+    self.logger.info(f"[{self.name}] RavePGF._queue_job: ID={jobid}, {mod_name}.{func_name}")
     self._job_counter += 1
     self._jobid = "%i-%i" % (self._pid, self._job_counter)
-
 
   ## Dumps the job queue to XML file. Called automatically when the server
   # is stopped.
   # @param filename string file name to white to dump the queue
   def _dump_queue(self, filename=rave_pgf_qtools.QFILE):
-    self.logger.info("%s: Dumping job queue containing %i jobs" % (self.name, self.queue.qsize()))
+    self.logger.info(f"[{self.name}] RavePGF._dump_queue: Dumping job queue containing {self.queue.qsize()} jobs")
     self.queue.dump()
 
 
   ## Loads the job queue from XML file. Called automatically when the server
   # is started, even if the queue is empty.
   def _load_queue(self):
-    self.logger.info("%s: Loading job queue", self.name)
+    self.logger.info(f"[{self.name}] RavePGF._load_queue: Loading job queue")
     self.queue.load()
     if self.queue.qsize() > 0:
-      self.logger.warning("%s: Running %i jobs from dumped queue on file." % (self.name, self.queue.qsize()))
+      self.logger.warning(f"[{self.name}] RavePGF._load_queue: Loaded queue size {self.queue.qsize()}")
 
 
   ## Internal executor of the product generation algorithm queue, according to
@@ -192,7 +192,6 @@ class RavePGF():
     if self.queue.qsize() > 0:
       for jobid, job in self.queue.items():
         algorithm, files, arguments = rave_pgf_qtools.split(job) 
-        #result = self.pool.apply_async(generate, (jobid, algorithm.tag, files, arguments))
         self.runner.add(generate, jobid, algorithm.tag, files, arguments, self.job_done)
 
 
@@ -208,7 +207,7 @@ class RavePGF():
     import imp
     mod_name, func_name = algorithm.get('module'), algorithm.get('function')
 
-    self.logger.debug("%s: ID=%s Running %s.%s" % (self.name, self._jobid, mod_name, func_name))
+    self.logger.info(f"[{self.name}] RavePGF._run: Running ID={self._jobid} method {mod_name}.{func_name}")
 
     fd, pathname, description = imp.find_module(mod_name)
     module = imp.load_module(mod_name, fd, pathname, description)
@@ -216,7 +215,7 @@ class RavePGF():
     func = getattr(module, func_name)
     outfile = func(files, arguments)
 
-    self.logger.info("%s: ID=%s Finished %s.%s" % (self.name, self._jobid, mod_name, func_name))
+    self.logger.info(f"[{self.name}] RavePGF._run: Finished ID={self._jobid} method {mod_name}.{func_name}")
 
     return outfile
 
@@ -240,20 +239,16 @@ class RavePGF():
       algorithm_entry = copy(self._algorithm_registry.find(algorithm))
       if not algorithm_entry:
         raise LookupError('Algorithm "%s" not in registry' % algorithm)
-          
+
       # Format job. This queue will only ever have one entry; it is thus used
       # for conveniently formatting the job, not for actually queueing.
       self._queue_job(algorithm_entry, files, arguments, jobid)
-      # Write job to resilient queue on disk.
-      #self._dump_queue()  # Really necessary each time?
 
-      self.logger.info("%s: ID=%s Dispatching request for %s" % (self.name, jobid, algorithm))
+      self.logger.info(f"[{self.name}] RavePGF.generate: ID={jobid} added job with algorithm={algorithm} to runner queue.")
+
       self.runner.add(generate, jobid, algorithm, files, arguments, self.job_done)
-      #result = self.pool.apply_async(generate, (jobid, algorithm, files, arguments))
     except Exception:
-      #err_msg = traceback.format_exc()
-      #self.logger.error("%s: ID=%s failed. Check this out:\n%s" % (self.name, jobid, err_msg))
-      self.logger.exception("%s: ID=%s failed. Check this out:" % (self.name, jobid))
+      self.logger.exception(f"[%{self.name}] RavePGF.generate: ID={jobid} failed. Check this out:")
 
     if err_msg: return err_msg        
     return "OK"
@@ -316,8 +311,11 @@ class RavePGF():
     import rave_pgf_verify, rave_pgf_protocol
     err_msg = None
 
+    st = time.time()
+
     algorithm = algorithm.lower()
-    self.logger.debug("%s: Request for generate algorithm: %s" % (self.name, algorithm))
+
+    self.logger.info(f"[{self.name}] RavePGF._generate: Request ID={self._jobid}, algorithm={algorithm}, {arguments}.")
 
     outfile = None
     
@@ -340,31 +338,30 @@ class RavePGF():
 
       outfile = self._run(algorithm_entry, files, arguments)  # Don't queue, just do it! 
 
-      if outfile != None:
-        self.logger.debug("%s: ID=%s one job run, outfile=%s" % (self.name, self._jobid, outfile))
-      else:
-        self.logger.debug("%s: ID=%s one job run, no output file" % (self.name, self._jobid))
-      
+      self.logger.info(f"[{self.name}] RavePGF._generate: Done running ID={self._jobid} algorithm={algorithm}, outfile={outfile}.")
       # Inject the result if it is a file
-      if outfile != None:
+      if outfile is not None:
         BaltradFrame.inject_file(outfile, DEX_SPOE)
-        # Log the result
-        self.logger.debug("%s: ID=%s Injected %s" % (self.name, self._jobid, outfile))
-        
-    except Exception:
-      # the 'err' itself is pretty useless
-      #err_msg = traceback.format_exc()
-      #self.logger.error("%s: ID=%s failed. Check this out:\n%s" % (self.name, self._jobid, err_msg))
-      self.logger.exception("%s: ID=%s failed. Check this out:" % (self.name, self._jobid))
+        self.logger.debug(f"[{self.name}] RavePGF._generate: ID={self._jobid} Injected outfile={outfile}.")
 
-    if outfile != None:
-      if os.path.isfile(outfile): os.remove(outfile)
+    except Exception:
+      err_msg = traceback.format_exc()
+      self.logger.exception(f"[{self.name}] RavePGF._generate: Request with ID={self._jobid}, algorithm={algorithm} failed.")
+
+    try:
+      if outfile != None:
+        if os.path.isfile(outfile): 
+          os.remove(outfile)
+    except:
+      self.logger.exception(f"[{self.name}] RavePGF._generate: Request with ID={self._jobid}, algorithm={algorithm} failed.")
     
+    result = "OK"
     if err_msg != None:
-      self.logger.debug("%s: ID=%s Returning: %s" % (self.name, self._jobid, err_msg))
-      return err_msg
-    self.logger.debug("%s: ID=%s Returning: OK" % (self.name, self._jobid))
-    return "OK"
+      result = err_msg
+
+    totaltime = int(1000.0*(time.time() - st))
+    self.logger.info(f"[{self.name}] RavePGF._generate: Request with ID={self._jobid} returning '{result}' after {totaltime} ms.")
+    return result
 
 
   # Removes a job from the queue
@@ -372,10 +369,9 @@ class RavePGF():
   def job_done(self, jobid):
     msg = self.queue.task_done(jobid)
     if msg != "OK":
-      self.logger.error("%s: %s" % (self.name, msg))
+      self.logger.error(f"[{self.name}] RavePGF.job_done: Dequed ID={jobid} with error {msg}.")
     else:
-      self.logger.debug("%s: ID=%s Dequeued job" % (self.name, jobid))
-
+      self.logger.debug(f"[{self.name}] RavePGF.job_done: Dequed ID={jobid}.")
 
   ##
   # Executes a shell escape command

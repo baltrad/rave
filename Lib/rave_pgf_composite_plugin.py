@@ -28,7 +28,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @file
 ## @author Anders Henja, SMHI
 ## @date 2010-10-15
-import string
+import string, time
+import multiprocessing
 import rave_tempfile
 import rave_pgf_logger
 import _raveio
@@ -98,6 +99,10 @@ def strToNumber(sval):
 #@param arguments the arguments defining the composite
 #@return a temporary h5 file with the composite
 def generate(files, arguments):
+  mpname = multiprocessing.current_process().name
+  entertime = time.time()
+  logger.info(f"[{mpname}] rave_pgf_composite_plugin.generate: Enter.")
+
   args = arglist2dict(arguments)
   
   comp = compositing(ravebdb)
@@ -148,7 +153,7 @@ def generate(files, arguments):
       else:
         # interpolation for other quantities than DBZH has not been tested, therefore not yet considered 
         # supported. Should in theory work, but the setting of minvalue must be adjusted for the quantity
-        logger.info("Interpolation method %s is currently only supported for quantity DBZH. Provided quantity: %s. No composite generated." % (interpolation_method, comp.quantity))
+        logger.info(f"[{mpname}] rave_pgf_composite_plugin.generate: Interpolation method {interpolation_method} is currently only supported for quantity DBZH. Provided quantity: {comp.quantity}. No composite generated.")
         return None
   
   if "qitotal_field" in args.keys():
@@ -191,7 +196,7 @@ def generate(files, arguments):
   result = comp.generate(args["date"], args["time"], args["area"])
   
   if result == None:
-    logger.info("No composite could be generated.")
+    logger.info(f"[{mpname}] rave_pgf_composite_plugin.generate: No composite could be generated.")
     return None
   
   _, outfile = rave_tempfile.mktemp(suffix='.h5', close="True")
@@ -201,7 +206,10 @@ def generate(files, arguments):
   rio.filename = outfile
   rio.version = RAVE_IO_DEFAULT_VERSION
   rio.save()
-  
+  exectime = int((time.time() - entertime)*1000)
+  areaname=args["area"]
+  logger.info(f"[{mpname}] rave_pgf_composite_plugin.generate: Exit. Area={areaname} generated in {exectime}.")
+
   return outfile
   
   

@@ -24,7 +24,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @file
 ## @author Daniel Michelson, SMHI
 ## @date 2014-04-01
-import string
+import string, time
+import multiprocessing
 import datetime
 import rave_tempfile
 import logging
@@ -78,6 +79,10 @@ def strToNumber(sval):
 #@param arguments the arguments defining the composite
 #@return a temporary h5 file with the composite
 def generate(files, arguments):
+  mpname = multiprocessing.current_process().name
+  entertime = time.time()
+  logger.info(f"[{mpname}] rave_pgf_site2D_plugin.generate: Enter.")
+
   args = arglist2dict(arguments)
   
   comp = compositing(ravebdb)
@@ -85,7 +90,7 @@ def generate(files, arguments):
     raise AttributeError("Input files list must contain only one file string")
 
   comp.filenames = files
-  
+
   if "anomaly-qc" in args.keys():
     comp.detectors = args["anomaly-qc"].split(",")
 
@@ -157,7 +162,7 @@ def generate(files, arguments):
   result = comp.generate(None, None, areaid)
   
   if result == None:
-    logger.info("No site2D-composite could be generated.")
+    logger.info(f"[{mpname}] rave_pgf_site2D_plugin.generate: No site2D-composite could be generated.")
     return None
 
   result.objectType = _rave.Rave_ObjectType_IMAGE 
@@ -169,6 +174,9 @@ def generate(files, arguments):
   rio.filename = outfile
   rio.version = RAVE_IO_DEFAULT_VERSION
   rio.save()
+
+  exectime = int((time.time() - entertime)*1000)
+  logger.info(f"[{mpname}] rave_pgf_site2D_plugin.generate: Exit. Area={areaid} generated in {exectime}.")
 
   return outfile
 
