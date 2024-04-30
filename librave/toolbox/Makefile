@@ -2,7 +2,7 @@
 
 CFLAGS=	$(OPTS) $(CCSHARED) $(DEFS) $(CREATE_ITRUNC) \
 	-I. $(NUMPY_INCLUDE_DIR) $(INCLUDE_PYTHON) -I$(HLHDF_INCLUDE_DIR) $(PROJ_INCLUDE_DIR) \
-	$(ZLIB_INCDIR) $(HDF5_INCDIR)
+	$(ZLIB_INCDIR) $(HDF5_INCDIR) -I../tnc
 
 ifeq ($(EXPAT_SUPPRESSED), no)
 CFLAGS+= $(EXPAT_INCLUDE_DIR) -DRAVE_XML_SUPPORTED
@@ -32,7 +32,7 @@ RAVESOURCES= polar.c raveutil.c rave_transform.c rave_alloc.c rave_debug.c polar
              rave_types.c rave_data2d.c composite.c rave_attribute.c rave_attribute_table.c cartesiancomposite.c \
              rave_utilities.c rave_field.c radardefinition.c rave_hlhdf_utilities.c cartesian_odim_io.c \
              polar_odim_io.c raveobject_hashtable.c detection_range.c odim_io_utilities.c poo_composite_algorithm.c rave_acrr.c \
-             vertical_profile.c vp_odim_io.c dealias.c odc_hac.c rave_qitotal.c rave_gra.c ctfilter.c bitmap_generator.c \
+             vertical_profile.c vp_odim_io.c dealias.c odc_hac.c rave_vpr_correction.c rave_qitotal.c rave_gra.c ctfilter.c bitmap_generator.c \
              proj_wkt_helper.c lazy_nodelist_reader.c lazy_dataset.c acqva.c rave_iocache.c rave_legend.c
 
 ifeq ($(EXPAT_SUPPRESSED), no)
@@ -54,7 +54,7 @@ INSTALL_HEADERS= polar.h rave_transform.h raveutil.h rave_alloc.h polarvolume.h 
                  rave_utilities.h rave_field.h radardefinition.h rave_hlhdf_utilities.h \
                  cartesian_odim_io.h rave_debug.h polar_odim_io.h \
                  raveobject_hashtable.h detection_range.h odim_io_utilities.h composite_algorithm.h poo_composite_algorithm.h rave_acrr.h \
-                 vertical_profile.h vp_odim_io.h dealias.h odc_hac.h  rave_qitotal.h rave_gra.h ctfilter.h  bitmap_generator.h \
+                 vertical_profile.h vp_odim_io.h dealias.h odc_hac.h  rave_vpr_correction.h rave_qitotal.h rave_gra.h ctfilter.h  bitmap_generator.h \
                  proj_wkt_helper.h lazy_nodelist_reader.h lazy_dataset.h rave_proj.h acqva.h rave_iocache.h rave_legend.h
 
 ifeq ($(EXPAT_SUPPRESSED), no)

@@ -46,7 +46,8 @@ from PyRaveFieldTest import *
 from PyRaveData2DTest import *
 from PyAttributeTableTest import *
 from PyTransformTest import *
-
+    
+from PyVprCorrectionTest import *
 from PyProjectionTest import *
 from PyProjectionPipelineTest import *
 
