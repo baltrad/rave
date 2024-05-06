@@ -169,6 +169,30 @@ int Composite_setInterpolationMethod(Composite_t* self, CompositeInterpolationMe
 CompositeInterpolationMethod_t Composite_getInterpolationMethod(Composite_t* self);
 
 /**
+ * Sets if undetect should be used in the interpolation. This requires proper setting of minvalue in the parameter list.
+ * The recommended way is to threat undetect and nodata in the same way since Undetect only represents that nothing has been
+ * detected. If not interpolation should be performed using undetect the following behaviour will be done.
+ *
+ * If all values are UNDETECT, then result will be UNDETECT.
+ * If only one value is DATA, then use that value.
+ * If more than one value is DATA, then interpolation.
+ * If all values are NODATA, then NODATA.
+ * If all values are either NODATA or UNDETECT, then UNDETECT.
+ * 
+ * @param[in] self - self
+ * @param[in] interpolateUndetect - If interpolation should be used on undetect or not
+ * @return 1 on success otherwise 0
+ */
+void Composite_setInterpolateUndetect(Composite_t* self, int interpolateUndetect);
+
+/**
+ * Returns the if interpolation should be performed using undetect or not.
+ * @param[in] self - self
+ * @return if undetect should be used in interpolation or not
+ */
+int Composite_getInterpolateUndetect(Composite_t* self);
+
+/**
  * Sets the height that should be used when generating a
  * composite as CAPPI, PCAPPI or PMAX.
  * @param[in] composite - self
