@@ -245,13 +245,18 @@ SOURCE_45= pyravelegend.c
 OBJECTS_45= $(SOURCE_45:.c=.o)
 TARGET_45= _ravelegend.so
 
+SOURCE_46= pypolarnavinfo.c
+OBJECTS_46= $(SOURCE_46:.c=.o)
+TARGET_46= _pypolarnavinfo.so
+
 TARGETS=$(TARGET_1) $(TARGET_2) $(TARGET_3) $(TARGET_4) $(TARGET_5) $(TARGET_6) \
 		$(TARGET_7) $(TARGET_8) $(TARGET_9) $(TARGET_10) $(TARGET_11) $(TARGET_12) $(TARGET_13) \
 		$(TARGET_14) $(TARGET_15) $(TARGET_16) $(TARGET_17) $(TARGET_18) $(TARGET_19) \
 		$(TARGET_20) $(TARGET_21) $(TARGET_24) $(TARGET_25) \
 		$(TARGET_26) $(TARGET_27) $(TARGET_28) $(TARGET_29) $(TARGET_30) $(TARGET_31) \
 		$(TARGET_33) $(TARGET_34) $(TARGET_35) $(TARGET_36) $(TARGET_37) $(TARGET_38) \
-		$(TARGET_39) $(TARGET_40) $(TARGET_41) $(TARGET_42) $(TARGET_43) $(TARGET_44) $(TARGET_45)
+		$(TARGET_39) $(TARGET_40) $(TARGET_41) $(TARGET_42) $(TARGET_43) $(TARGET_44) $(TARGET_45) \
+		$(TARGET_46)
 
 INSTALL_HEADERS= pyarea.h \
 				 pycartesian.h \
@@ -282,7 +287,8 @@ INSTALL_HEADERS= pyarea.h \
 				 pyraveattributetable.h \
 				 pyacqva.h \
 				 pyiocache.h \
-				 pyravelegend.h
+				 pyravelegend.h \
+				 pypolarnavinfo.h
 
 ifeq ($(EXPAT_SUPPRESSED), no)
 TARGETS += $(TARGET_22) $(TARGET_23) $(TARGET_32)
@@ -446,6 +452,9 @@ $(TARGET_44): $(DEPDIR) $(OBJECTS_44) ../librave/toolbox/libravetoolbox.so ../li
 $(TARGET_45): $(DEPDIR) $(OBJECTS_45) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_45) $(LDFLAGS) $(LIBRARIES)
 
+$(TARGET_46): $(DEPDIR) $(OBJECTS_46) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
+	$(LDSHARED) -o $@ $(OBJECTS_46) $(LDFLAGS) $(LIBRARIES)
+
 ifeq ($(COMPILE_FOR_PYTHON), yes)
 .PHONY=install
 install:
@@ -537,3 +546,4 @@ endif
 -include $(SOURCE_43:%.c=$(DEPDIR)/%.P)
 -include $(SOURCE_44:%.c=$(DEPDIR)/%.P)
 -include $(SOURCE_45:%.c=$(DEPDIR)/%.P)
+-include $(SOURCE_46:%.c=$(DEPDIR)/%.P)

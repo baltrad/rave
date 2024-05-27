@@ -384,6 +384,8 @@ static PolarNavigationInfo* PolarScan_getNavigationInfo(
   memcpy(navinfo, sourceNavinfo, sizeof(PolarNavigationInfo));
 
   navinfo->elevation = PolarScan_getElangle(scan); // So that we get exact scan elevation angle instead
+  navinfo->beamwH = scan->beamwH;
+  navinfo->beamwV = scan->beamwV;
 
   double dummydistance = 0.0;
   // To get the actual height
@@ -1433,6 +1435,8 @@ void PolarScan_getLonLatNavigationInfo(PolarScan_t* scan, double lon, double lat
   info->height = 0.0L;
   info->actual_height = 0.0L;
   info->elevation = scan->elangle;
+  info->beamwH = scan->beamwH;
+  info->beamwV = scan->beamwV;
 
   info->otype = Rave_ObjectType_SCAN;
   info->ei = -1;

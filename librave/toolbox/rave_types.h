@@ -168,6 +168,8 @@ typedef struct PolarNavigationInfo {
   double azimuth; /**< azimutal offset in radians */
   double actual_azimuth; /**< actual azimutal offset in radians */
   double elevation; /**< elevation angle in radians */
+  double beamwH; /**< horizontal beamwidth */
+  double beamwV; /**< horizontal beamwidth */
 
   Rave_ObjectType otype; /**< specifies if the data is from a scan or volume (default Rave_ObjectType_UNDEFINED) */
   int ei;         /**< elevation index in case of volumes (-1 meaning no elevation index found/calculated) */

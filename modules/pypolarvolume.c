@@ -23,6 +23,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @date 2009-12-08
  */
 #include "pyravecompat.h"
+#include "rave_types.h"
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
@@ -34,6 +35,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "pypolarscan.h"
 #include "pyrave_debug.h"
 #include "pyravefield.h"
+#include "pypolarnavinfo.h"
 #include "rave_alloc.h"
 #include "rave.h"
 
@@ -755,6 +757,42 @@ fail:
   return NULL;
 }
 
+static PyObject* _pypolarvolume_getVerticalLonLatNavigationInfo(PyPolarVolume* self, PyObject* args)
+{
+  double lon = 0.0L, lat = 0.0L;
+  PyObject* result = NULL;
+
+  PolarNavigationInfo* navinfo = NULL;
+  int nrNavInfo = 0, i = 0;
+
+  if (!PyArg_ParseTuple(args, "dd", &lon,&lat)) {
+    return NULL;
+  }
+  navinfo = PolarVolume_getVerticalLonLatNavigationInfo(self->pvol, lon, lat, &nrNavInfo);
+  if (navinfo != NULL) {
+    result = PyList_New(0);
+
+    for (i = 0; i < nrNavInfo; i++) {
+      PolarNavigationInfo info = navinfo[i];
+      PyObject* pyobj = (PyObject*)PyPolarNavigationInfo_New(info);
+      if (pyobj != NULL) {
+        if (PyList_Append(result, pyobj) != 0) {
+          Py_DECREF(pyobj);
+          goto fail;
+        }
+        Py_DECREF(pyobj);
+      } else {
+        goto fail;
+      }
+    }
+  }
+  return result;
+fail:
+  Py_XDECREF(result);
+  return NULL;
+
+}
+
 /**
  * All methods a polar volume can have
  */
@@ -899,6 +937,10 @@ static struct PyMethodDef _pypolarvolume_methods[] =
   {"removeParametersExcept", (PyCFunction) _pypolarvolume_removeParametersExcept, 1,
     "removeParametersExcept(parameterlist)\n\n"
     "Removes all parameters in all scans belonging to this volume except the ones specified in the list.\n\n"
+  },
+  {"getVerticalLonLatNavigationInfo", (PyCFunction) _pypolarvolume_getVerticalLonLatNavigationInfo, 1,
+    "getVerticalLonLatNavigationInfo(lon,lat)\n\n"
+    "Returns all vertical lon/lat navigation information for the specified lon/lat. If ai/ri = -1, then this value is out of range in some way..\n\n"
   },
   {"clone", (PyCFunction) _pypolarvolume_clone, 1,
     "clone() -> PolarVolumeCore\n\n"
@@ -1200,6 +1242,7 @@ MOD_INIT(_polarvolume)
   }
 
   import_array(); /*To make sure I get access to Numeric*/
+  import_pypolarnavinfo();
   import_pypolarscan();
   import_pyravefield();
   PYRAVE_DEBUG_INITIALIZE;

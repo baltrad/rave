@@ -227,6 +227,15 @@ class acqva_static_item(object):
 
         return result
 
+class acqva_coordinate_item(object):
+    def __init__(self, lon, lat, mean_sea_level, height, stype, radius, name):
+        self.lon = lon
+        self.lat = lat
+        self.mean_sea_level = mean_sea_level
+        self.height = height
+        self.type = stype
+        self.radius = radius
+        self.name = name
 
 class acqva_static_source(object):
     def __init__(self, source, geometry=None):
@@ -260,7 +269,7 @@ class acqva_cluttermap_generator(object):
     """
     def __init__(self, configfile=None):
         self._configfile = configfile
-        self._config = self.parse_config(self._configfile)
+        self._volumeconfig, self._coordinatecfg = self.parse_config(self._configfile)
 
     def parse_config(self, configfile):
         """ Loads and validates the acqva static cluttermap definition. 
@@ -271,8 +280,10 @@ class acqva_cluttermap_generator(object):
         if configfile:
             with open(configfile, "r") as fp:
                 config = json.load(fp)
-                return self.jsonmap_to_config(config)
-        return {}
+                volumecfg = self.jsonmap_to_volumecfg(config)
+                coordinatecfg = self.jsonmap_to_coordinatecfg(config)
+                return volumecfg, coordinatecfg
+        return {}, {}
 
     def parse_float_tuple(self, values):
         result = []
@@ -300,7 +311,7 @@ class acqva_cluttermap_generator(object):
                 raise ParserException(f"Could not parse int tuple% {values}")
         return None
 
-    def jsonmap_to_config(self, config):
+    def jsonmap_to_volumecfg(self, config):
         """ Translates a json map according to format definition into a structure of objects..
         :config: a json structure according to spec
         :return: the object mapping
@@ -331,6 +342,28 @@ class acqva_cluttermap_generator(object):
                     rays = self.parse_int_tuple(item["rays"])
                 source.add(acqva_static_item(elangles, scans, ranges, bins, azimuths, rays))
             result[x] = source
+        return result
+
+    def jsonmap_to_coordinatecfg(self, config):
+        """ Translates a json map according to format definition into a structure of objects..
+        :config: a json structure according to spec
+        :return: the coordinate cfg
+        :throws: Exception if there are problems with configuration
+        """
+        result = []
+        if not "acqva_static_coodinates" in config:
+            return result
+        statics = config["acqva_static_coordinates"]
+        for x in statics:
+            #"longitude":12.8517, "latitude":56.5675, "mean_sea_level":123.0, "height":250, "type":"Windmill", "radius":0.0, "name":""
+            lon = x["longitude"]
+            lat = x["latitude"]
+            mean_sea_level = x["mean_sea_level"]
+            height = x["height"]
+            st = x["type"]
+            radius = x["radius"]
+            name = x["name"]
+            result.add(acqva_coordinate_item(lon,lat,mean_sea_level,height,st,radius,name))
         return result
 
     def copy_volume(self, volume, source):
@@ -378,14 +411,14 @@ class acqva_cluttermap_generator(object):
         if nod is None:
             raise GeneratorException("File is missing NOD in source and no NOD specified")
 
-        if nod not in self._config:
+        if nod not in self._volumeconfig:
             return None
 
         volume.sortByElevations(1)
         
         result = self.copy_volume(volume, f"NOD:{nod}")
 
-        cfg = self._config[nod]
+        cfg = self._volumeconfig[nod]
         for item in cfg.items():
             scans = item.create_scans(result)
             for si in scans:
@@ -397,6 +430,12 @@ class acqva_cluttermap_generator(object):
                     for rayi in rays:
                         for bini in bins:
                             parameter.setValue((bini, rayi), 255)
+
+        #    def __init__(self, lon, lat, mean_sea_level, height, stype, radius, name):
+
+        #for item in self._coordinatecfg:
+            
+
         return result
 
 

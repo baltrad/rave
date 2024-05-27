@@ -274,6 +274,12 @@ int PolarVolume_indexOf(PolarVolume_t* pvol, PolarScan_t* scan);
 void PolarVolume_getLonLatNavigationInfo(PolarVolume_t* pvol, double lon, double lat, double height, PolarNavigationInfo* info);
 
 /**
+ * Returns an array of navigation info for all scans at the specified lon/lat.
+ *
+ */
+PolarNavigationInfo* PolarVolume_getVerticalLonLatNavigationInfo(PolarVolume_t* pvol, double lon, double lat, int *nrNavInfo);
+
+/**
  * Fetches the value nearest to the specified position.
  * @param[in] pvol - the polar volume (MAY NOT BE NULL)
  * @param[in] lon  - the longitude (in radians)
@@ -626,6 +632,7 @@ int PolarVolume_useAzimuthalNavInformation(PolarVolume_t* self);
  * @return 1 on success otherwise 0
  */
 int PolarVolume_removeParametersExcept(PolarVolume_t* self, RaveList_t* parameters);
+
 
 
 #endif
