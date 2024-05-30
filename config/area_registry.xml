@@ -1,83 +1,1752 @@
-<?xml version='1.0' encoding='iso-8859-1'?>
 <areas>
-<area id="nrd2km">
-  <description>Nordic, all radars, 2 km</description>
-  <areadef>
-    <arg id="pcs">ps14e60n</arg>
-    <arg id="xsize" type="int">848</arg>
-    <arg id="ysize" type="int">1104</arg>
-    <arg id="scale" type="float">2000</arg>
-    <arg id="extent" type="sequence">-738816.513333,-3995515.596160,955183.48666699999,-1787515.59616</arg>
-  </areadef>
-</area>
-<area id="swegmaps_2000">
-  <description>SWERAD, Google Maps, 2 km</description>
-  <areadef>
-    <arg id="pcs">gmaps</arg>
-    <arg id="xsize" type="int">1022</arg>
-    <arg id="ysize" type="int">1916</arg>
-    <arg id="scale" type="float">2000</arg>
-    <arg id="extent" type="sequence">971337.728807, 7196461.17902, 3015337.72881, 11028461.179</arg>
-  </areadef>
-</area>
-<area id="bltgmaps_4000">
-  <description>BALTRAD, Google Maps, 4 km</description>
-  <areadef>
-    <arg id="pcs">gmaps</arg>
-    <arg id="xsize" type="int">780</arg>
-    <arg id="ysize" type="int">1240</arg>
-    <arg id="scale" type="float">4000</arg>
-    <arg id="extent" type="sequence">525528.78317, 6068461.179, 3645528.78317, 11028461.179</arg>
-  </areadef>
-</area>
-<area id="fingmaps_2000">
-  <description>FINRAD, Google Maps, 2 km</description>
-  <areadef>
-    <arg id="pcs">gmaps</arg>
-    <arg id="xsize" type="int">870</arg>
-    <arg id="ysize" type="int">1466</arg>
-    <arg id="scale" type="float">2000</arg>
-    <arg id="extent" type="sequence">1905528.78317, 7940461.179, 3645528.78317, 10872461.179</arg>
-  </areadef>
-</area>
-<area id="polgmaps_2000">
-  <description>POLRAD, Google Maps, 2 km</description>
-  <areadef>
-    <arg id="pcs">gmaps</arg>
-    <arg id="xsize" type="int">754</arg>
-    <arg id="ysize" type="int">810</arg>
-    <arg id="scale" type="float">2000</arg>
-    <arg id="extent" type="sequence">1335807.096179,6065547.928434,2843807.096179,7685547.928434</arg>
-  </areadef>
-</area>
-<area id="baltrad_lambert">
-<description>Azimuthal Equal Area area for all BALTRAD radars</description>
-<areadef>
-<arg id="pcs">laea20e60n</arg>
-<arg id="xsize" type="int">815</arg>
-<arg id="ysize" type="int">1195</arg>
-<arg id="scale" type="float">2000</arg>
-<arg id="extent" type="sequence">-994211.85388,-1291605.15396,635788.14612,1098394.84604</arg>
-</areadef>
-</area>
-<area id="baltex_lambert">
-<description>Azimuthal Equal Area area for BALTEX Region</description>
-<areadef>
-<arg id="pcs">laea20e60n</arg>
-<arg id="xsize" type="int">835</arg>
-<arg id="ysize" type="int">1134</arg>
-<arg id="scale" type="float">2000</arg>
-<arg id="extent" type="sequence">-726561.013648, -1221494.00295,943438.986352, 1046505.99705</arg>
-</areadef>
-</area>
-<area id="odc_area">
-<description>Odyssey composite area</description>
-<areadef>
-<arg id="pcs">odc_laea</arg>
-<arg id="xsize" type="int">1900</arg>
-<arg id="ysize" type="int">2200</arg>
-<arg id="scale" type="float">2000</arg>
-<arg id="extent" type="sequence">-1950002.529151, -2300001.025971, 1849997.470849, 2099998.974029</arg>
-</areadef>
-</area>
+  <area id="neu2km">
+    <description>
+      Extended arome domain, projection laea15e60n, xscale = yscale = 2000 m
+    </description>
+    <areadef>
+      <arg id="pcs">
+        laea15e60n
+      </arg>
+      <arg type="int" id="xsize">
+        931
+      </arg>
+      <arg type="int" id="ysize">
+        1403
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        -797658.537258, -1325125.642605, 1064341.462742, 1480874.357395
+      </arg>
+    </areadef>
+  </area>
+  <area id="neu1km">
+    <description>
+      Extended arome domain, projection laea15e60n, xscale = yscale = 1000 m
+    </description>
+    <areadef>
+      <arg id="pcs">
+        laea15e60n
+      </arg>
+      <arg type="int" id="xsize">
+        1862
+      </arg>
+      <arg type="int" id="ysize">
+        2806
+      </arg>
+      <arg type="float" id="xscale">
+        1000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        1000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        -797658.537258, -1325125.642605, 1064341.462742, 1480874.357395
+      </arg>
+    </areadef>
+  </area>
+  <area id="swe2km-N2">
+    <description>
+      Swedish PPI composite, adjusted to N2
+    </description>
+    <areadef>
+      <arg id="pcs">
+        ps14e60n
+      </arg>
+      <arg type="int" id="xsize">
+        454
+      </arg>
+      <arg type="int" id="ysize">
+        877
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        -317204.664763, -3857625.873749, 590795.335237, -2103625.873749
+      </arg>
+    </areadef>
+  </area>
+  <area id="mes2km-N2">
+    <description>
+      Rotated lon/lat, adjusted to N2
+    </description>
+    <areadef>
+      <arg id="pcs">
+        rot10w30s
+      </arg>
+      <arg type="int" id="xsize">
+        1476
+      </arg>
+      <arg type="int" id="ysize">
+        1608
+      </arg>
+      <arg type="float" id="xscale">
+        1845.752197
+      </arg>
+      <arg type="float" id="yscale">
+        1846.334351
+      </arg>
+      <arg type="sequence" id="extent">
+        1067435.760463, -1278764.768179, 3791766.087781, 1690140.582193
+      </arg>
+    </areadef>
+  </area>
+  <area id="nrd2km-N2">
+    <description>
+      Nordic, all radars, 2 km, adjusted to N2
+    </description>
+    <areadef>
+      <arg id="pcs">
+        ps14e60n
+      </arg>
+      <arg type="int" id="xsize">
+        848
+      </arg>
+      <arg type="int" id="ysize">
+        1104
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        -738828.697527, -3995581.488213, 957171.302473, -1787581.488213
+      </arg>
+    </areadef>
+  </area>
+  <area id="bltgmaps4km">
+    <description>
+      BALTRAD, Google Maps, 4 km
+    </description>
+    <areadef>
+      <arg id="pcs">
+        gmaps
+      </arg>
+      <arg type="int" id="xsize">
+        780
+      </arg>
+      <arg type="int" id="ysize">
+        1240
+      </arg>
+      <arg type="float" id="xscale">
+        4000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        4000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        525528.783170, 6068461.179000, 3645528.783170, 11028461.179000
+      </arg>
+    </areadef>
+  </area>
+  <area id="fingmaps2km">
+    <description>
+      FINRAD, Google Maps, 2 km
+    </description>
+    <areadef>
+      <arg id="pcs">
+        gmaps
+      </arg>
+      <arg type="int" id="xsize">
+        870
+      </arg>
+      <arg type="int" id="ysize">
+        1466
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        1905528.783170, 7940461.179000, 3645528.783170, 10872461.179000
+      </arg>
+    </areadef>
+  </area>
+  <area id="polgmaps2km">
+    <description>
+      POLRAD, Google Maps, 2 km
+    </description>
+    <areadef>
+      <arg id="pcs">
+        gmaps
+      </arg>
+      <arg type="int" id="xsize">
+        754
+      </arg>
+      <arg type="int" id="ysize">
+        810
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        1335807.096179, 6065547.928434, 2843807.096179, 7685547.928434
+      </arg>
+    </areadef>
+  </area>
+  <area id="baltradLambert2km">
+    <description>
+      Azimuthal Equal Area area for all BALTRAD radars
+    </description>
+    <areadef>
+      <arg id="pcs">
+        laea20e60n
+      </arg>
+      <arg type="int" id="xsize">
+        815
+      </arg>
+      <arg type="int" id="ysize">
+        1195
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        -994211.853880, -1291605.153960, 635788.146120, 1098394.846040
+      </arg>
+    </areadef>
+  </area>
+  <area id="baltexLambert2km">
+    <description>
+      Azimuthal Equal Area area for BALTEX Region
+    </description>
+    <areadef>
+      <arg id="pcs">
+        laea20e60n
+      </arg>
+      <arg type="int" id="xsize">
+        835
+      </arg>
+      <arg type="int" id="ysize">
+        1134
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        -726561.013648, -1221494.002950, 943438.986352, 1046505.997050
+      </arg>
+    </areadef>
+  </area>
+  <area id="odcArea2km">
+    <description>
+      Odyssey composite area
+    </description>
+    <areadef>
+      <arg id="pcs">
+        odc_laea
+      </arg>
+      <arg type="int" id="xsize">
+        1900
+      </arg>
+      <arg type="int" id="ysize">
+        2200
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        -1950002.529151, -2300001.025971, 1849997.470849, 2099998.974029
+      </arg>
+    </areadef>
+  </area>
+  <area id="kaa-gmaps">
+    <description>
+      Karlskrona gmaps
+    </description>
+    <areadef>
+      <arg id="pcs">
+        gmaps
+      </arg>
+      <arg type="int" id="xsize">
+        436
+      </arg>
+      <arg type="int" id="ysize">
+        437
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        1301237.025991, 7191823.316587, 2173237.025991, 8065823.316587
+      </arg>
+    </areadef>
+  </area>
+  <area id="hem-gmaps">
+    <description>
+      Hemse (Ase) gmaps
+    </description>
+    <areadef>
+      <arg id="pcs">
+        gmaps
+      </arg>
+      <arg type="int" id="xsize">
+        438
+      </arg>
+      <arg type="int" id="ysize">
+        438
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        1599633.958684, 7387484.759294, 2495633.958684, 8283484.759294
+      </arg>
+    </areadef>
+  </area>
+  <area id="atv-gmaps">
+    <description>
+      Atvidaberg gmaps
+    </description>
+    <areadef>
+      <arg id="pcs">
+        gmaps
+      </arg>
+      <arg type="int" id="xsize">
+        458
+      </arg>
+      <arg type="int" id="ysize">
+        459
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        1315362.490167, 7543439.254587, 2231362.490167, 8461439.254587
+      </arg>
+    </areadef>
+  </area>
+  <area id="vax-gmaps">
+    <description>
+      Vara gmaps
+    </description>
+    <areadef>
+      <arg id="pcs">
+        gmaps
+      </arg>
+      <arg type="int" id="xsize">
+        460
+      </arg>
+      <arg type="int" id="ysize">
+        460
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        967050.466009, 7575120.949408, 1887050.466009, 8495120.949408
+      </arg>
+    </areadef>
+  </area>
+  <area id="lek-gmaps">
+    <description>
+      Leksand gmaps
+    </description>
+    <areadef>
+      <arg id="pcs">
+        gmaps
+      </arg>
+      <arg type="int" id="xsize">
+        495
+      </arg>
+      <arg type="int" id="ysize">
+        495
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        1160184.478354, 8083975.859139, 2150184.478354, 9073975.859139
+      </arg>
+    </areadef>
+  </area>
+  <area id="huv-gmaps">
+    <description>
+      Hudiksvall gmaps
+    </description>
+    <areadef>
+      <arg id="pcs">
+        gmaps
+      </arg>
+      <arg type="int" id="xsize">
+        508
+      </arg>
+      <arg type="int" id="ysize">
+        509
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        1352174.130725, 8267705.370497, 2368174.130725, 9285705.370497
+      </arg>
+    </areadef>
+  </area>
+  <area id="osd-gmaps">
+    <description>
+      Ostersund gmaps
+    </description>
+    <areadef>
+      <arg id="pcs">
+        gmaps
+      </arg>
+      <arg type="int" id="xsize">
+        538
+      </arg>
+      <arg type="int" id="ysize">
+        539
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        1104456.424882, 8653744.698793, 2180456.424882, 9731744.698793
+      </arg>
+    </areadef>
+  </area>
+  <area id="oer-gmaps">
+    <description>
+      Ornskoldsvik gmaps
+    </description>
+    <areadef>
+      <arg id="pcs">
+        gmaps
+      </arg>
+      <arg type="int" id="xsize">
+        544
+      </arg>
+      <arg type="int" id="ysize">
+        546
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        1504465.345267, 8732664.742433, 2592465.345267, 9824664.742433
+      </arg>
+    </areadef>
+  </area>
+  <area id="lla-gmaps">
+    <description>
+      Lulea gmaps
+    </description>
+    <areadef>
+      <arg id="pcs">
+        gmaps
+      </arg>
+      <arg type="int" id="xsize">
+        581
+      </arg>
+      <arg type="int" id="ysize">
+        583
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        1852816.843786, 9163055.412463, 3014816.843786, 10329055.412463
+      </arg>
+    </areadef>
+  </area>
+  <area id="kir-gmaps">
+    <description>
+      Kiruna gmaps
+    </description>
+    <areadef>
+      <arg id="pcs">
+        gmaps
+      </arg>
+      <arg type="int" id="xsize">
+        637
+      </arg>
+      <arg type="int" id="ysize">
+        639
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        1657702.353003, 9750843.472642, 2931702.353003, 11028843.472642
+      </arg>
+    </areadef>
+  </area>
+  <area id="krn-gmaps">
+    <description>
+      Kiruna gmaps
+    </description>
+    <areadef>
+      <arg id="pcs">
+        gmaps
+      </arg>
+      <arg type="int" id="xsize">
+        637
+      </arg>
+      <arg type="int" id="ysize">
+        639
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        1657702.353003, 9750843.472642, 2931702.353003, 11028843.472642
+      </arg>
+    </areadef>
+  </area>
+  <area id="baa-gmaps">
+    <description>
+      Balsta gmaps
+    </description>
+    <areadef>
+      <arg id="pcs">
+        gmaps
+      </arg>
+      <arg type="int" id="xsize">
+        478
+      </arg>
+      <arg type="int" id="ysize">
+        479
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        1478979.964354, 7849360.834815, 2434979.964354, 8807360.834815
+      </arg>
+    </areadef>
+  </area>
+  <area id="arl-gmaps">
+    <description>
+      Arlanda gmaps
+    </description>
+    <areadef>
+      <arg id="pcs">
+        gmaps
+      </arg>
+      <arg type="int" id="xsize">
+        479
+      </arg>
+      <arg type="int" id="ysize">
+        480
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        1518005.352393, 7857583.743426, 2476005.352393, 8817583.743426
+      </arg>
+    </areadef>
+  </area>
+  <area id="ang_gmaps">
+    <description>
+      Angelholm gmaps
+    </description>
+    <areadef>
+      <arg id="pcs">
+        gmaps
+      </arg>
+      <arg type="int" id="xsize">
+        437
+      </arg>
+      <arg type="int" id="ysize">
+        437
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        992971.309146, 7207161.288603, 1866971.309146, 8081161.288603
+      </arg>
+    </areadef>
+  </area>
+  <area id="ang-ps14e60n">
+    <description>
+      Angelholm Polarstereographic Area for Angelholm, def with BLT
+    </description>
+    <areadef>
+      <arg id="pcs">
+        ps14e60n
+      </arg>
+      <arg type="int" id="xsize">
+        248
+      </arg>
+      <arg type="int" id="ysize">
+        248
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        -320563.356613, -3854536.858922, 175436.643387, -3358536.858922
+      </arg>
+    </areadef>
+  </area>
+  <area id="arl-ps14e60n">
+    <description>
+      Polar Stereographic Area for Arlanda, def with BLT
+    </description>
+    <areadef>
+      <arg id="pcs">
+        ps14e60n
+      </arg>
+      <arg type="int" id="xsize">
+        244
+      </arg>
+      <arg type="int" id="ysize">
+        244
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        -20746.194296, -3473673.011301, 467253.805704, -2985673.011301
+      </arg>
+    </areadef>
+  </area>
+  <area id="hem-ps14e60n">
+    <description>
+      Polar Stereographic Area for Hemse (Ase), def with BLT
+    </description>
+    <areadef>
+      <arg id="pcs">
+        ps14e60n
+      </arg>
+      <arg type="int" id="xsize">
+        247
+      </arg>
+      <arg type="int" id="ysize">
+        246
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        21774.404903, -3736218.514125, 515774.404903, -3244218.514125
+      </arg>
+    </areadef>
+  </area>
+  <area id="huv-ps14e60n">
+    <description>
+      Polar Stereographic Area for Hudiksvall, def with BLT
+    </description>
+    <areadef>
+      <arg id="pcs">
+        ps14e60n
+      </arg>
+      <arg type="int" id="xsize">
+        242
+      </arg>
+      <arg type="int" id="ysize">
+        242
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        -98481.302848, -3262259.492959, 385518.697152, -2778259.492959
+      </arg>
+    </areadef>
+  </area>
+  <area id="kir-ps14e60n">
+    <description>
+      Polar Stereographic Area for Kiruna, def with BLT
+    </description>
+    <areadef>
+      <arg id="pcs">
+        ps14e60n
+      </arg>
+      <arg type="int" id="xsize">
+        237
+      </arg>
+      <arg type="int" id="ysize">
+        236
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        34921.051896, -2573053.475462, 508921.051896, -2101053.475462
+      </arg>
+    </areadef>
+  </area>
+  <area id="krn-ps14e60n">
+    <description>
+      Polar Stereographic Area for Kiruna, def with BLT
+    </description>
+    <areadef>
+      <arg id="pcs">
+        ps14e60n
+      </arg>
+      <arg type="int" id="xsize">
+        237
+      </arg>
+      <arg type="int" id="ysize">
+        236
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        34921.051896, -2573053.475462, 508921.051896, -2101053.475462
+      </arg>
+    </areadef>
+  </area>
+  <area id="kaa-ps14e60n">
+    <description>
+      Polar Stereographic Area for Karlskrona, def with BLT
+    </description>
+    <areadef>
+      <arg id="pcs">
+        ps14e60n
+      </arg>
+      <arg type="int" id="xsize">
+        248
+      </arg>
+      <arg type="int" id="ysize">
+        248
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        -146303.593443, -3861913.729881, 349696.406557, -3365913.729881
+      </arg>
+    </areadef>
+  </area>
+  <area id="lek-ps14e60n">
+    <description>
+      Polar Stereographic Area for Leksand, def with BLT
+    </description>
+    <areadef>
+      <arg id="pcs">
+        ps14e60n
+      </arg>
+      <arg type="int" id="xsize">
+        243
+      </arg>
+      <arg type="int" id="ysize">
+        243
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        -195269.305803, -3361093.524010, 290730.694197, -2875093.524010
+      </arg>
+    </areadef>
+  </area>
+  <area id="lla-ps14e60n">
+    <description>
+      Polar Stereographic Area for Lulea, def with BLT
+    </description>
+    <areadef>
+      <arg id="pcs">
+        ps14e60n
+      </arg>
+      <arg type="int" id="xsize">
+        239
+      </arg>
+      <arg type="int" id="ysize">
+        238
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        117397.832007, -2813754.658542, 595397.832007, -2337754.658542
+      </arg>
+    </areadef>
+  </area>
+  <area id="osd-ps14e60n">
+    <description>
+      Polar Stereographic Area for Ostersund, def with BLT
+    </description>
+    <areadef>
+      <arg id="pcs">
+        ps14e60n
+      </arg>
+      <arg type="int" id="xsize">
+        242
+      </arg>
+      <arg type="int" id="ysize">
+        240
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        -206018.209971, -3073593.942984, 277981.790029, -2593593.942984
+      </arg>
+    </areadef>
+  </area>
+  <area id="oer-ps14e60n">
+    <description>
+      Polar Stereographic Area for Örnsköldsvik, def with BLT
+    </description>
+    <areadef>
+      <arg id="pcs">
+        ps14e60n
+      </arg>
+      <arg type="int" id="xsize">
+        241
+      </arg>
+      <arg type="int" id="ysize">
+        240
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        -26768.615073, -3028150.792254, 455231.384927, -2548150.792254
+      </arg>
+    </areadef>
+  </area>
+  <area id="atv-ps14e60n">
+    <description>
+      Polar Stereographic Area for Atvidaberg, def with BLT
+    </description>
+    <areadef>
+      <arg id="pcs">
+        ps14e60n
+      </arg>
+      <arg type="int" id="xsize">
+        246
+      </arg>
+      <arg type="int" id="ysize">
+        245
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        -130791.354761, -3653102.167969, 361208.645239, -3163102.167969
+      </arg>
+    </areadef>
+  </area>
+  <area id="vax-ps14e60n">
+    <description>
+      Polar Stereographic Area for Vara, def with BLT
+    </description>
+    <areadef>
+      <arg id="pcs">
+        ps14e60n
+      </arg>
+      <arg type="int" id="xsize">
+        246
+      </arg>
+      <arg type="int" id="ysize">
+        245
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        -316094.993424, -3637678.402516, 175905.006576, -3147678.402516
+      </arg>
+    </areadef>
+  </area>
+  <area id="baa-ps14e60n">
+    <description>
+      Polar Stereographic Area for Balsta
+    </description>
+    <areadef>
+      <arg id="pcs">
+        ps14e60n
+      </arg>
+      <arg type="int" id="xsize">
+        245
+      </arg>
+      <arg type="int" id="ysize">
+        244
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        -42905.100404, -3479800.641852, 447094.899596, -2991800.641852
+      </arg>
+    </areadef>
+  </area>
+  <area id="swe2km">
+    <description>
+      Polar Stereographic Area for Sweden, def with BLT
+    </description>
+    <areadef>
+      <arg id="pcs">
+        ps14e60n
+      </arg>
+      <arg type="int" id="xsize">
+        458
+      </arg>
+      <arg type="int" id="ysize">
+        881
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        -320609.756890, -3863069.699880, 595390.243110, -2101069.699880
+      </arg>
+    </areadef>
+  </area>
+  <area id="swegmaps2km">
+    <description>
+      Google Maps Area for Sweden
+    </description>
+    <areadef>
+      <arg id="pcs">
+        gmaps
+      </arg>
+      <arg type="int" id="xsize">
+        1024
+      </arg>
+      <arg type="int" id="ysize">
+        1919
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        966816.843786, 7190843.472642, 3014816.843786, 11028843.472642
+      </arg>
+    </areadef>
+  </area>
+  <area id="swegmaps2km_qcomp">
+    <description>
+      Google Maps Area for Sweden, for use with the quality based composite
+    </description>
+    <areadef>
+      <arg id="pcs">
+        gmaps
+      </arg>
+      <arg type="int" id="xsize">
+        1024
+      </arg>
+      <arg type="int" id="ysize">
+        1919
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        966816.843786, 7190843.472642, 3014816.843786, 11028843.472642
+      </arg>
+    </areadef>
+  </area>
+  <area id="swegmaps2km_osdtest">
+    <description>
+      Google Maps Area for Sweden, def with BLT
+    </description>
+    <areadef>
+      <arg id="pcs">
+        gmaps
+      </arg>
+      <arg type="int" id="xsize">
+        1024
+      </arg>
+      <arg type="int" id="ysize">
+        1919
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        966816.843786, 7190843.472642, 3014816.843786, 11028843.472642
+      </arg>
+    </areadef>
+  </area>
+  <area id="swegmaps2km_huvtest">
+    <description>
+      Google Maps Area for Sweden, def with BLT
+    </description>
+    <areadef>
+      <arg id="pcs">
+        gmaps
+      </arg>
+      <arg type="int" id="xsize">
+        1024
+      </arg>
+      <arg type="int" id="ysize">
+        1919
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        966816.843786, 7190843.472642, 3014816.843786, 11028843.472642
+      </arg>
+    </areadef>
+  </area>
+  <area id="swegmaps2km_vaxangtest">
+    <description>
+      Google Maps Area for Sweden, def with BLT
+    </description>
+    <areadef>
+      <arg id="pcs">
+        gmaps
+      </arg>
+      <arg type="int" id="xsize">
+        1024
+      </arg>
+      <arg type="int" id="ysize">
+        1919
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        966816.843786, 7190843.472642, 3014816.843786, 11028843.472642
+      </arg>
+    </areadef>
+  </area>
+  <area id="nrd2km">
+    <description>
+      Polar Stereographic Area for the nordic region
+    </description>
+    <areadef>
+      <arg id="pcs">
+        ps14e60n
+      </arg>
+      <arg type="int" id="xsize">
+        906
+      </arg>
+      <arg type="int" id="ysize">
+        1124
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        -745244.228412, -3995795.462356, 1066755.771588, -1747795.462356
+      </arg>
+    </areadef>
+  </area>
+  <area id="blt2km">
+    <description>
+      Polar Stereographic Area for the baltic region
+    </description>
+    <areadef>
+      <arg id="pcs">
+        ps14e60n
+      </arg>
+      <arg type="int" id="xsize">
+        906
+      </arg>
+      <arg type="int" id="ysize">
+        1124
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        -745244.228412, -3995795.462356, 1066755.771588, -1747795.462356
+      </arg>
+    </areadef>
+  </area>
+  <area id="blt2km_gra">
+    <description>
+      Polar Stereographic Area for the baltic region
+    </description>
+    <areadef>
+      <arg id="pcs">
+        ps14e60n
+      </arg>
+      <arg type="int" id="xsize">
+        906
+      </arg>
+      <arg type="int" id="ysize">
+        1124
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        -745244.228412, -3995795.462356, 1066755.771588, -1747795.462356
+      </arg>
+    </areadef>
+  </area>
+  <area id="bltgmaps2km">
+    <description>
+      Google Maps area for the Baltic region
+    </description>
+    <areadef>
+      <arg id="pcs">
+        gmaps
+      </arg>
+      <arg type="int" id="xsize">
+        1951
+      </arg>
+      <arg type="int" id="ysize">
+        2586
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        51814.361270, 6865570.605829, 3953814.361270, 12037570.605829
+      </arg>
+    </areadef>
+  </area>
+  <area id="bltgmaps2km_qcomp">
+    <description>
+      Google Maps area for the Baltic region
+    </description>
+    <areadef>
+      <arg id="pcs">
+        gmaps
+      </arg>
+      <arg type="int" id="xsize">
+        1951
+      </arg>
+      <arg type="int" id="ysize">
+        2586
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        51814.361270, 6865570.605829, 3953814.361270, 12037570.605829
+      </arg>
+    </areadef>
+  </area>
+  <area id="atv_ps14e60n_1000m">
+    <description>
+      Polar Stereographic Area for Atvidaberg
+    </description>
+    <areadef>
+      <arg id="pcs">
+        ps14e60n
+      </arg>
+      <arg type="int" id="xsize">
+        490
+      </arg>
+      <arg type="int" id="ysize">
+        488
+      </arg>
+      <arg type="float" id="xscale">
+        1000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        1000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        -129791.337751, -3652102.157524, 360208.662249, -3164102.157524
+      </arg>
+    </areadef>
+  </area>
+  <area id="swegmaps2km_sebaa">
+    <description>
+      Google Maps Area for Sweden, def with BLT
+    </description>
+    <areadef>
+      <arg id="pcs">
+        gmaps
+      </arg>
+      <arg type="int" id="xsize">
+        1024
+      </arg>
+      <arg type="int" id="ysize">
+        1919
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        966816.843786, 7190843.472642, 3014816.843786, 11028843.472642
+      </arg>
+    </areadef>
+  </area>
+  <area id="swegmaps2km_sebaa_searl">
+    <description>
+      Google Maps Area for Sweden, def with BLT
+    </description>
+    <areadef>
+      <arg id="pcs">
+        gmaps
+      </arg>
+      <arg type="int" id="xsize">
+        1024
+      </arg>
+      <arg type="int" id="ysize">
+        1919
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        966816.843786, 7190843.472642, 3014816.843786, 11028843.472642
+      </arg>
+    </areadef>
+  </area>
+  <area id="atv-ps14e60n_500m">
+    <description>
+      Polar Stereographic Projection for Atvidaberg, with resolution of 500m, def with BLT
+    </description>
+    <areadef>
+      <arg id="pcs">
+        ps14e60n
+      </arg>
+      <arg type="int" id="xsize">
+        978
+      </arg>
+      <arg type="int" id="ysize">
+        974
+      </arg>
+      <arg type="float" id="xscale">
+        500.000000
+      </arg>
+      <arg type="float" id="yscale">
+        500.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        -129291.329245, -3651602.152298, 359708.670755, -3164602.152298
+      </arg>
+    </areadef>
+  </area>
+  <area id="arl-ps14e60n_500m">
+    <description>
+      Polar Stereographic Projection for Arlanda, with resolution of 500m, def with BLT
+    </description>
+    <areadef>
+      <arg id="pcs">
+        ps14e60n
+      </arg>
+      <arg type="int" id="xsize">
+        970
+      </arg>
+      <arg type="int" id="ysize">
+        967
+      </arg>
+      <arg type="float" id="xscale">
+        500.000000
+      </arg>
+      <arg type="float" id="yscale">
+        500.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        -19246.168036, -3470672.976742, 465753.831964, -2987172.976742
+      </arg>
+    </areadef>
+  </area>
+  <area id="ang-ps14e60n_500m">
+    <description>
+      Polar Stereographic Projection for Angelholm, with resolution of 500m, def with BLT
+    </description>
+    <areadef>
+      <arg id="pcs">
+        ps14e60n
+      </arg>
+      <arg type="int" id="xsize">
+        986
+      </arg>
+      <arg type="int" id="ysize">
+        983
+      </arg>
+      <arg type="float" id="xscale">
+        500.000000
+      </arg>
+      <arg type="float" id="yscale">
+        500.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        -319063.333174, -3851536.830720, 173936.666826, -3360036.830720
+      </arg>
+    </areadef>
+  </area>
+  <area id="vax-ps14e60n_500m">
+    <description>
+      Polar Stereographic Projection for Vara, with resolution of 500m, def with BLT
+    </description>
+    <areadef>
+      <arg id="pcs">
+        ps14e60n
+      </arg>
+      <arg type="int" id="xsize">
+        977
+      </arg>
+      <arg type="int" id="ysize">
+        974
+      </arg>
+      <arg type="float" id="xscale">
+        500.000000
+      </arg>
+      <arg type="float" id="yscale">
+        500.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        -314094.959848, -3636178.387533, 174405.040152, -3149178.387533
+      </arg>
+    </areadef>
+  </area>
+  <area id="lla-ps14e60n_500m">
+    <description>
+      Polar Stereographic Projection for Lulea, with resolution of 500m, def with BLT
+    </description>
+    <areadef>
+      <arg id="pcs">
+        ps14e60n
+      </arg>
+      <arg type="int" id="xsize">
+        948
+      </arg>
+      <arg type="int" id="ysize">
+        945
+      </arg>
+      <arg type="float" id="xscale">
+        500.000000
+      </arg>
+      <arg type="float" id="yscale">
+        500.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        119897.878938, -2811754.629189, 593897.878938, -2339254.629189
+      </arg>
+    </areadef>
+  </area>
+  <area id="hem-ps14e60n_500m">
+    <description>
+      Polar Stereographic Projection for Hemse, with resolution of 500m, def with BLT
+    </description>
+    <areadef>
+      <arg id="pcs">
+        ps14e60n
+      </arg>
+      <arg type="int" id="xsize">
+        981
+      </arg>
+      <arg type="int" id="ysize">
+        978
+      </arg>
+      <arg type="float" id="xscale">
+        500.000000
+      </arg>
+      <arg type="float" id="yscale">
+        500.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        23786.259860, -3734728.356216, 514286.259860, -3245728.356216
+      </arg>
+    </areadef>
+  </area>
+  <area id="baa-ps14e60n_500m">
+    <description>
+      Polar Stereographic Projection for Balsta, with resolution of 500m, def with BLT
+    </description>
+    <areadef>
+      <arg id="pcs">
+        ps14e60n
+      </arg>
+      <arg type="int" id="xsize">
+        971
+      </arg>
+      <arg type="int" id="ysize">
+        967
+      </arg>
+      <arg type="float" id="xscale">
+        500.000000
+      </arg>
+      <arg type="float" id="yscale">
+        500.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        -39905.047928, -3476800.607545, 445594.952072, -2993300.607545
+      </arg>
+    </areadef>
+  </area>
+  <area id="krn-ps14e60n_500m">
+    <description>
+      Polar Stereographic Projection for Kiruna, with resolution of 500m, def with BLT
+    </description>
+    <areadef>
+      <arg id="pcs">
+        ps14e60n
+      </arg>
+      <arg type="int" id="xsize">
+        941
+      </arg>
+      <arg type="int" id="ysize">
+        937
+      </arg>
+      <arg type="float" id="xscale">
+        500.000000
+      </arg>
+      <arg type="float" id="yscale">
+        500.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        36921.089970, -2571053.444502, 507421.089970, -2102553.444502
+      </arg>
+    </areadef>
+  </area>
+  <area id="huv-ps14e60n_500m">
+    <description>
+      Polar Stereographic Projection for Hudiksvall, with resolution of 500m, def with BLT
+    </description>
+    <areadef>
+      <arg id="pcs">
+        ps14e60n
+      </arg>
+      <arg type="int" id="xsize">
+        962
+      </arg>
+      <arg type="int" id="ysize">
+        959
+      </arg>
+      <arg type="float" id="xscale">
+        500.000000
+      </arg>
+      <arg type="float" id="yscale">
+        500.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        -96979.645958, -3259259.037420, 384020.354042, -2779759.037420
+      </arg>
+    </areadef>
+  </area>
+  <area id="kaa-ps14e60n_500m">
+    <description>
+      Polar Stereographic Projection for Karlskrona, with resolution of 500m, def with BLT
+    </description>
+    <areadef>
+      <arg id="pcs">
+        ps14e60n
+      </arg>
+      <arg type="int" id="xsize">
+        986
+      </arg>
+      <arg type="int" id="ysize">
+        983
+      </arg>
+      <arg type="float" id="xscale">
+        500.000000
+      </arg>
+      <arg type="float" id="yscale">
+        500.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        -144808.029902, -3858909.396255, 348191.970098, -3367409.396255
+      </arg>
+    </areadef>
+  </area>
+  <area id="lek-ps14e60n_500m">
+    <description>
+      Polar Stereographic Projection for Leksand, with resolution of 500m, def with BLT
+    </description>
+    <areadef>
+      <arg id="pcs">
+        ps14e60n
+      </arg>
+      <arg type="int" id="xsize">
+        966
+      </arg>
+      <arg type="int" id="ysize">
+        963
+      </arg>
+      <arg type="float" id="xscale">
+        500.000000
+      </arg>
+      <arg type="float" id="yscale">
+        500.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        -193772.737664, -3358089.336357, 289227.262336, -2876589.336357
+      </arg>
+    </areadef>
+  </area>
+  <area id="oer-ps14e60n_500m">
+    <description>
+      Polar Stereographic Projection for Ornskoldsvik, with resolution of 500m, def with BLT
+    </description>
+    <areadef>
+      <arg id="pcs">
+        ps14e60n
+      </arg>
+      <arg type="int" id="xsize">
+        955
+      </arg>
+      <arg type="int" id="ysize">
+        951
+      </arg>
+      <arg type="float" id="xscale">
+        500.000000
+      </arg>
+      <arg type="float" id="yscale">
+        500.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        -23769.113593, -3025153.779008, 453730.886407, -2549653.779008
+      </arg>
+    </areadef>
+  </area>
+  <area id="osd-ps14e60n_500m">
+    <description>
+      Polar Stereographic Projection for Ostersund, with resolution of 500m, def with BLT
+    </description>
+    <areadef>
+      <arg id="pcs">
+        ps14e60n
+      </arg>
+      <arg type="int" id="xsize">
+        956
+      </arg>
+      <arg type="int" id="ysize">
+        952
+      </arg>
+      <arg type="float" id="xscale">
+        500.000000
+      </arg>
+      <arg type="float" id="yscale">
+        500.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        -201517.697130, -3071106.710020, 276482.302870, -2595106.710020
+      </arg>
+    </areadef>
+  </area>
+  <area id="osd-cappierror-ps14e60n_500m">
+    <description>
+      Polar Stereographic Projection for Ostersund, with resolution of 500m, def with BLT
+    </description>
+    <areadef>
+      <arg id="pcs">
+        ps14e60n
+      </arg>
+      <arg type="int" id="xsize">
+        100
+      </arg>
+      <arg type="int" id="ysize">
+        100
+      </arg>
+      <arg type="float" id="xscale">
+        500.000000
+      </arg>
+      <arg type="float" id="yscale">
+        500.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        5700000, 4480000, 5840000, 45700000
+      </arg>
+    </areadef>
+  </area>
+  <area id="blt2km_ext">
+    <description>
+      Polar stereographic area for the Baltic region w Germany included
+    </description>
+    <areadef>
+      <arg id="pcs">
+        ps14e60n
+      </arg>
+      <arg type="int" id="xsize">
+        906
+      </arg>
+      <arg type="int" id="ysize">
+        1243
+      </arg>
+      <arg type="float" id="xscale">
+        2000.000000
+      </arg>
+      <arg type="float" id="yscale">
+        2000.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        -745243.887182, -4233797.448141, 1066756.112818, -1747797.448141
+      </arg>
+    </areadef>
+  </area>
+  <area id="swe05km">
+    <description>
+      Polar Stereographic Area for Sweden with resolution 500 m
+    </description>
+    <areadef>
+      <arg id="pcs">
+        ps14e60n
+      </arg>
+      <arg type="int" id="xsize">
+        1832
+      </arg>
+      <arg type="int" id="ysize">
+        3524
+      </arg>
+      <arg type="float" id="xscale">
+        500.000000
+      </arg>
+      <arg type="float" id="yscale">
+        500.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        -320609.756890, -3863069.699880, 595390.243110, -2101069.699880
+      </arg>
+    </areadef>
+  </area>
+  <area id="swegmaps05km">
+    <description>
+      Google Maps Area for Sweden with resolution 500 m
+    </description>
+    <areadef>
+      <arg id="pcs">
+        gmaps
+      </arg>
+      <arg type="int" id="xsize">
+        4096
+      </arg>
+      <arg type="int" id="ysize">
+        7676
+      </arg>
+      <arg type="float" id="xscale">
+        500.000000
+      </arg>
+      <arg type="float" id="yscale">
+        500.000000
+      </arg>
+      <arg type="sequence" id="extent">
+        966816.843786, 7190843.472642, 3014816.843786, 11028843.472642
+      </arg>
+    </areadef>
+  </area>      
 </areas>

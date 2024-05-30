@@ -25,6 +25,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "composite.h"
 #include "polarvolume.h"
 #include "raveobject_list.h"
+#include "rave_types.h"
 #include "rave_debug.h"
 #include "rave_alloc.h"
 #include "rave_datetime.h"
@@ -46,6 +47,7 @@ struct _Composite_t {
   Rave_ProductType ptype; /**< the product type, default PCAPPI */
   CompositeSelectionMethod_t method; /**< selection method, default CompositeSelectionMethod_NEAREST */
   CompositeInterpolationMethod_t interpolationMethod; /**< interpolation method, default CompositeInterpolationMethod_NEAREST */
+  int interpolateUndetect; /**< If undetect should be used during interpolation or not. Requires a properly set minvalue.*/
   double height; /**< the height when generating pcapppi, cappi, pmax default 1000 */
   double elangle; /**< the elevation angle when generating ppi, default 0.0 */
   double range;  /*< the range when generating pmax, default = 500000 meters */
@@ -464,6 +466,7 @@ static int Composite_constructor(RaveCoreObject* obj)
   this->ptype = Rave_ProductType_PCAPPI;
   this->method = CompositeSelectionMethod_NEAREST;
   this->interpolationMethod = CompositeInterpolationMethod_NEAREST;
+  this->interpolateUndetect = 1;
   this->height = 1000.0;
   this->elangle = 0.0;
   this->range = 500000.0;
@@ -496,6 +499,8 @@ static int Composite_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj
   Composite_t* src = (Composite_t*)srcobj;
   this->ptype = src->ptype;
   this->method = src->method;
+  this->interpolationMethod = src->interpolationMethod;
+  this->interpolateUndetect = src->interpolateUndetect;
   this->height = src->height;
   this->elangle = src->elangle;
   this->range = src->range;
@@ -1430,18 +1435,36 @@ static int CompositeInternal_combineValuePosInDimension(
         double totalWeight = weight1 + weight2;
         weight1 = 1.0 - (weight1 / totalWeight); // inverted weight
         weight2 = 1.0 - (weight2 / totalWeight); // inverted weight
-
-        // update value pos 1
-        valuePos1->value = (valuePos2->value * weight2) + (valuePos1->value * weight1);
-        valuePos1->qivalue = (valuePos2->qivalue * weight2) + (valuePos1->qivalue * weight1);
-
-        if (valuePos2->type == RaveValueType_DATA || valuePos1->type == RaveValueType_DATA) {
-          // if any of the positions has data, set the overall type to DATA
-          valuePos1->type = RaveValueType_DATA;
-        } else if (valuePos2->type == RaveValueType_UNDETECT || valuePos1->type == RaveValueType_UNDETECT) {
-          valuePos1->type = RaveValueType_UNDETECT;
-        } else {
-          valuePos1->type = RaveValueType_NODATA;
+        if (composite->interpolateUndetect) { /* Legacy interpolation */
+          // update value pos 1
+          valuePos1->value = (valuePos2->value * weight2) + (valuePos1->value * weight1);
+          valuePos1->qivalue = (valuePos2->qivalue * weight2) + (valuePos1->qivalue * weight1);
+          
+          if (valuePos2->type == RaveValueType_DATA || valuePos1->type == RaveValueType_DATA) {
+            // if any of the positions has data, set the overall type to DATA
+            valuePos1->type = RaveValueType_DATA;
+          } else if (valuePos2->type == RaveValueType_UNDETECT || valuePos1->type == RaveValueType_UNDETECT) {
+            valuePos1->type = RaveValueType_UNDETECT;
+          } else {
+            valuePos1->type = RaveValueType_NODATA;
+          }
+        } else { /* Interpolation where we threat both undetect and nodata specially */
+          if (valuePos1->type == RaveValueType_DATA && valuePos2->type == RaveValueType_DATA) {
+            valuePos1->value = (valuePos2->value * weight2) + (valuePos1->value * weight1);
+            valuePos1->qivalue = (valuePos2->qivalue * weight2) + (valuePos1->qivalue * weight1);
+            valuePos1->type = RaveValueType_DATA;
+          } else if (valuePos1->type == RaveValueType_DATA || valuePos2->type == RaveValueType_DATA) {
+            if (valuePos2->type == RaveValueType_DATA) {
+              valuePos1->value = valuePos2->value;
+              valuePos1->type = RaveValueType_DATA;
+            } else {
+              /* valuePos1 already have correct information so do nothing*/
+            }
+          } else if (valuePos1->type == RaveValueType_NODATA && valuePos2->type == RaveValueType_NODATA) {
+            valuePos1->type = RaveValueType_NODATA;
+          } else if (valuePos1->type == RaveValueType_UNDETECT || valuePos2->type == RaveValueType_UNDETECT) {
+            valuePos1->type = RaveValueType_UNDETECT;
+          }
         }
       }
 
@@ -1746,7 +1769,7 @@ static int CompositeInternal_setValuesInValuePos(
       return 0;
     }
 
-    if (valuePos->value == RaveValueType_UNDETECT) {
+    if (valuePos->type == RaveValueType_UNDETECT) {
       CompositingParameter_t* param = CompositeInternal_getParameterByName(composite, quantity);
       valuePos->value = param->minvalue;
     }
@@ -2588,6 +2611,18 @@ CompositeInterpolationMethod_t Composite_getInterpolationMethod(Composite_t* sel
   return self->interpolationMethod;
 }
 
+void Composite_setInterpolateUndetect(Composite_t* self, int interpolateUndetect)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  self->interpolateUndetect = interpolateUndetect;
+}
+
+int Composite_getInterpolateUndetect(Composite_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return self->interpolateUndetect;
+}
+
 void Composite_setHeight(Composite_t* composite, double height)
 {
   RAVE_ASSERT((composite != NULL), "composite == NULL");
@@ -2837,13 +2872,17 @@ Cartesian_t* Composite_generate(Composite_t* composite, Area_t* area, RaveList_t
       }
       pipeline = ProjectionPipeline_createPipeline(projection, objproj);
       RAVE_OBJECT_RELEASE(objproj);
-      RAVE_OBJECT_RELEASE(obj);
       if (pipeline == NULL || !RaveObjectList_add(pipelines, (RaveCoreObject*)pipeline)) {
         RAVE_ERROR0("Failed to create pipeline");
         RAVE_OBJECT_RELEASE(pipeline);
+        RAVE_OBJECT_RELEASE(obj);
         goto fail;
       }
+      if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
+        PolarVolume_sortByElevations((PolarVolume_t*)obj, 1);
+      }
       RAVE_OBJECT_RELEASE(pipeline);
+      RAVE_OBJECT_RELEASE(obj);
     }
   }
 
@@ -2869,9 +2908,17 @@ Cartesian_t* Composite_generate(Composite_t* composite, Area_t* area, RaveList_t
 
         if (pipeline != NULL) {
           /* We will go from surface coords into the lonlat projection assuming that a polar volume uses a lonlat projection*/
+          /* Changes behavior/output depending on debug level. 
+           * If line: Rave_printf("pipeline: herex %f, herey %f, index %i \n", herex,herey,i); 
+           * is commented or not.  
+           * Compiler optimization or wild pointer. 
+           * FLAGGED!
+           */
+          /*Rave_printf("pipeline: herex %f, herey %f, index %i \n", herex,herey,i);*/
           if (!ProjectionPipeline_fwd(pipeline, herex, herey, &olon, &olat)) {
             RAVE_WARNING0("Failed to transform from composite into polar coordinates");
           } else {
+            fprintf(stderr, "pipeline: herex %f, herey %f, index %i \n", herex,herey,i);
             double dist = 0.0;
             double maxdist = 0.0;
             double rdist = 0.0;
@@ -2883,6 +2930,8 @@ Cartesian_t* Composite_generate(Composite_t* composite, Area_t* area, RaveList_t
               dist = PolarScan_getDistance((PolarScan_t*)obj, olon, olat);
               maxdist = PolarScan_getMaxDistance((PolarScan_t*)obj);
             }
+            /* is this OK, init just in case */
+            fprintf(stderr, "radar: dist %f, maxdist %f, index %i \n", dist,maxdist,i);
             if (dist <= maxdist) {
               int noOfValuePositions = CompositeInternal_getValuePositions(composite, obj, olon, olat,
                                                                            interpolationDimensions,

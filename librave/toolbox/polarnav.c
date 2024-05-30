@@ -198,6 +198,7 @@ double PolarNavigator_getDistance(PolarNavigator_t* polnav, double lat, double l
   RAVE_ASSERT((polnav != NULL), "polnav was NULL");
   dLon = (lon - polnav->lon0) * cos(polnav->lat0);
   dLat = lat - polnav->lat0;
+  Rave_printf("PolarNavigator_getDistance: dLon %f, dLat %f, lon %f, lat %f \n", dLon, dLat, lon, lat);
 
   distance = sqrt(dLon * dLon + dLat * dLat) * PolarNavigator_getEarthRadiusOrigin(polnav);
 
