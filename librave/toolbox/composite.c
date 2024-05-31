@@ -1746,7 +1746,7 @@ static int CompositeInternal_setValuesInValuePos(
       return 0;
     }
 
-    if (valuePos->value == RaveValueType_UNDETECT) {
+    if (valuePos->type == RaveValueType_UNDETECT) {
       CompositingParameter_t* param = CompositeInternal_getParameterByName(composite, quantity);
       valuePos->value = param->minvalue;
     }
