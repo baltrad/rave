@@ -288,7 +288,7 @@ static int internal_transform_proj(PJ* p1, PJ* p2, double* x, double* y)
 #else
   PJ* pj = NULL;
   PJ_CONTEXT* context = NULL;
-  PJ_COORD inc,outc;
+  PJ_COORD inc = {0}, outc = {0};
 
   inc.uv.u = *x;
   inc.uv.v = *y;
@@ -514,7 +514,7 @@ TransformWeight* get_cressman_weights_2d(int x, int y, UV here_s,
       }
 #else
       {
-        PJ_COORD inpc, outpc, outcorner;
+        PJ_COORD inpc = {0}, outpc = {0}, outcorner = {0};
         inpc.uv = near_s;
         outpc = proj_trans(tw->outpj, PJ_INV, inpc);
         outcorner = proj_trans(tw->inpj, PJ_FWD, outpc);
