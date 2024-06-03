@@ -627,7 +627,7 @@ static PyObject* _nearest_composite(PyObject* self, PyObject* args)
     here_c = pj_fwd(here, wrap.proj);
 #else
     {
-      PJ_COORD pjhere, pjhere_c;
+      PJ_COORD pjhere = {0}, pjhere_c = {0};
       pjhere.uv = here;
       pjhere_c = proj_trans(wrap.proj, PJ_FWD, pjhere);
       here_c = pjhere_c.uv;
@@ -779,7 +779,7 @@ static PyObject* _lowest_composite(PyObject* self, PyObject* args)
     here_c = pj_fwd(here, wrap.proj);
 #else
     {
-      PJ_COORD pjhere, pjhere_c;
+      PJ_COORD pjhere = {0}, pjhere_c = {0};
       pjhere.uv = here;
       pjhere_c = proj_trans(wrap.proj, PJ_FWD, pjhere);
       here_c = pjhere_c.uv;

@@ -1,0 +1,45 @@
+{
+  "acqva_static_volume": {
+    "seang": {
+      "__comment__":"Example on how a static definition can look like",
+      "geometry":{
+        "__comment__":"Not supported yet",
+        "elangles":[0.5, 1.0, 1.5, 2.0, 2.5, 4.0, 8.0, 14.0, 24.0, 40.0]
+      },
+      "blockings":[
+        { "scans":"0 -> 2",
+          "bins":"0 -> 10",
+          "rays":"300 -> 50",
+          "blocked":true
+        },
+        { "scans":"0 -> 3",
+          "bins":"0 -> 20",
+          "rays":"10 -> 50",
+          "blocked":true
+        },
+        { "elangles":"1.0",
+          "bins":"0 -> 20",
+          "rays":"10 -> 50",
+          "blocked":true
+        },
+        { "elangles":"0.0 -> 2.0",
+          "bins":"0 -> 20",
+          "rays":"10 -> 50",
+          "blocked":true
+        },
+        { "elangles":"40.0 -> 50.0",
+          "bins":"0 -> 20",
+          "azimuths":"10 -> 50",
+          "blocked":true
+        },
+        { "elangles":"40.0 -> 50.0",
+          "ranges":"0 -> 20000",
+          "azimuths":"10 -> 50"
+        }
+      ]
+    }
+  },
+  "acqva_static_coordinates": [
+    {"longitude":12.8517, "latitude":56.5675, "mean_sea_level":123.0, "height":250, "type":"Windmill", "radius":0.0, "name":""}
+  ]
+}

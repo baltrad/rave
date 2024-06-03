@@ -311,7 +311,7 @@ int ProjectionPipeline_fwd(ProjectionPipeline_t* pipeline, double inu, double in
 #else
   {
     /* Proj > 4 calculates in degrees instead of radians.. */
-    PJ_COORD in,out;
+    PJ_COORD in = {0}, out = {0};
     in.uv.u = inu;
     in.uv.v = inv;
     if (pipeline->firstIsLatlong) {
@@ -344,7 +344,7 @@ int ProjectionPipeline_inv(ProjectionPipeline_t* pipeline, double inu, double in
 #else
   {
     /* Proj > 4 calculates in degrees instead of radians.. */
-    PJ_COORD in,out;
+    PJ_COORD in = {0}, out = {0};
     in.uv.u = inu;
     in.uv.v = inv;
     if (pipeline->secondIsLatlong) {

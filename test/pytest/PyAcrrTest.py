@@ -209,6 +209,10 @@ class PyAcrrTest(unittest.TestCase):
     self.assertEqual("ACRR", result.quantity)
     self.assertAlmostEqual(ACRR_NO_DATA, result.nodata, 4)
     self.assertAlmostEqual(UNDETECT, result.undetect, 4)
+    self.assertAlmostEqual(200.0, result.getAttribute("how/zr_a"), 4)
+    self.assertAlmostEqual(1.6, result.getAttribute("how/zr_b"), 4)
+    self.assertEqual(2, result.getAttribute("how/ACCnum"))
+
     
     refAcrr = [ACRR_NO_DATA, 1.0, 0.5, 0.5]
     refDist = self.calculateAvgDistanceField([distance_field1, distance_field2], DEFAULT_DISTANCE_GAIN)

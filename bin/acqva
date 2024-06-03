@@ -1,0 +1,69 @@
+#!/usr/bin/env python3
+'''
+Copyright (C) 2024- Swedish Meteorological and Hydrological Institute (SMHI)
+
+This file is part of RAVE.
+
+RAVE is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+RAVE is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+See the GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
+'''
+
+## Script that can be used for acqva-related operations.
+
+## @file
+## @author Anders Henja, SMHI
+## @date 2024-05-20
+import os, sys
+import _raveio
+
+import acqva_cluttermap_generator
+
+PROJECT_ROOT=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DEFAULT_CONFIG=f"{PROJECT_ROOT}/config/acqva_static.json"
+
+if __name__=="__main__":
+    from optparse import OptionParser
+
+    usage = "usage: %prog --config=configfile --template=<pvol> [options] cluttermap\n"
+    usage += "Creates a acqva cluttermap from a template volume."
+
+    parser = OptionParser(usage=usage)
+
+    parser.add_option("--config", dest="config", default=DEFAULT_CONFIG,
+                        help="Configuration with all volume informatioon required to generate a cluttermap.")
+
+    parser.add_option("--template", dest="template", default=None,
+                        help="The polar volume to use as template for the cluttermap.")
+
+    parser.add_option("--output", dest="output", default=None,
+                        help="The name of the file to be created.")
+
+    (options, args) = parser.parse_args()
+
+    if len(args) != 1 or options.template is None:
+        parser.print_usage()
+        sys.exit(1)
+
+    generator = acqva_cluttermap_generator.acqva_cluttermap_generator(options.config)
+
+    result = generator.create(_raveio.open(options.template).object)
+
+    outputname = options.output
+    if outputname is None:
+        nod = result.source.split(":")[1]
+        outputname = f"{nod}_cluttermap.h5"
+
+    rio = _raveio.new()
+    rio.object = result
+    rio.save(outputname)
+
