@@ -1649,31 +1649,6 @@
       </arg>
     </areadef>
   </area>
-  <area id="osd-cappierror-ps14e60n_500m">
-    <description>
-      Polar Stereographic Projection for Ostersund, with resolution of 500m, def with BLT
-    </description>
-    <areadef>
-      <arg id="pcs">
-        ps14e60n
-      </arg>
-      <arg type="int" id="xsize">
-        100
-      </arg>
-      <arg type="int" id="ysize">
-        100
-      </arg>
-      <arg type="float" id="xscale">
-        500.000000
-      </arg>
-      <arg type="float" id="yscale">
-        500.000000
-      </arg>
-      <arg type="sequence" id="extent">
-        5700000, 4480000, 5840000, 45700000
-      </arg>
-    </areadef>
-  </area>
   <area id="blt2km_ext">
     <description>
       Polar stereographic area for the Baltic region w Germany included

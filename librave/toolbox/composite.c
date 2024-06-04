@@ -3033,7 +3033,6 @@ static int CompositeInternal_interpolateBetweenRadars(
   int noOfResultPositions = 1;
   
   double * values = RAVE_MALLOC(sizeof(double) * values_vector->nradars);
-  double * weights= RAVE_MALLOC(sizeof(double) * values_vector->nradars);
   double * qivalues = RAVE_MALLOC(sizeof(double) * values_vector->nradars);
   double * radardists = RAVE_MALLOC(sizeof(double) * values_vector->nradars);
   int * radarindexes = RAVE_MALLOC(sizeof(int) * values_vector->nradars);
@@ -3048,10 +3047,6 @@ static int CompositeInternal_interpolateBetweenRadars(
         continue;
       }
       values[valid_value_index] = values_vector->valuesVector[i][j].value;
-      weights[valid_value_index] = values_vector->valuesVector[i][j].radardist;
-      if (CompositeInternal_isQuadraticInterpolation(composite)) {
-        weights[valid_value_index] = pow(weights[valid_value_index], 2);
-      }
       qivalues[valid_value_index] = values_vector->valuesVector[i][j].qivalue;
       vtypes[valid_value_index] = values_vector->valuesVector[i][j].vtype;
       radardists[valid_value_index] = values_vector->valuesVector[i][j].radardist;
@@ -3101,7 +3096,6 @@ static int CompositeInternal_interpolateBetweenRadars(
   } /* end nparam */
   /* clean up */
   RAVE_FREE(values);
-  RAVE_FREE(weights);
   RAVE_FREE(qivalues);
   RAVE_FREE(radardists);
   RAVE_FREE(radarindexes);
@@ -3123,7 +3117,6 @@ static int CompositInternal_getAndInterpolateRadarDataForCAPPI(Composite_t* comp
                                                                int nparam,
                                                                int nradars)
 {
-  double rad2deg = 57.2957795131;
   int radars_with_data = 0;
   int last_radar_index_with_data = -1;
   for (int i = 0; i < nradars; i++) {
