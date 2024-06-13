@@ -90,6 +90,12 @@ Variables</h2></td></tr>
 <tr class="memitem:ad5c8085b8aa5682511f9966618566b71" id="r_ad5c8085b8aa5682511f9966618566b71"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad5c8085b8aa5682511f9966618566b71">NOD</a></td></tr>
 <tr class="memdesc:ad5c8085b8aa5682511f9966618566b71"><td class="mdescLeft">&#160;</td><td class="mdescRight">Dictionaries containing look-ups for identifiers except CTY.  <br /></td></tr>
 <tr class="separator:ad5c8085b8aa5682511f9966618566b71"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae0c73f7869fdfce5feaafcf6c88b4a57" id="r_ae0c73f7869fdfce5feaafcf6c88b4a57"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae0c73f7869fdfce5feaafcf6c88b4a57">WNOD</a></td></tr>
+<tr class="memdesc:ae0c73f7869fdfce5feaafcf6c88b4a57"><td class="mdescLeft">&#160;</td><td class="mdescRight">Dictionaries containing look-ups for identifiers except CTY.  <br /></td></tr>
+<tr class="separator:ae0c73f7869fdfce5feaafcf6c88b4a57"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa2004cdd53811385ad3df5e16d794400" id="r_aa2004cdd53811385ad3df5e16d794400"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa2004cdd53811385ad3df5e16d794400">RNOD</a></td></tr>
+<tr class="memdesc:aa2004cdd53811385ad3df5e16d794400"><td class="mdescLeft">&#160;</td><td class="mdescRight">Dictionaries containing look-ups for identifiers except CTY.  <br /></td></tr>
+<tr class="separator:aa2004cdd53811385ad3df5e16d794400"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6939467e29e327643e93156cc9005bed" id="r_a6939467e29e327643e93156cc9005bed"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a6939467e29e327643e93156cc9005bed">WMO</a></td></tr>
 <tr class="memdesc:a6939467e29e327643e93156cc9005bed"><td class="mdescLeft">&#160;</td><td class="mdescRight">Dictionaries containing look-ups for identifiers except CTY.  <br /></td></tr>
 <tr class="separator:a6939467e29e327643e93156cc9005bed"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -194,7 +200,7 @@ along with RAVE.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
 </div><div class="memdoc">
 
 <p>Convenience function. </p>
-<p>Gets the NOD identifier from /what/source . Assumes that the NOD is there or can be looked up based on the WMO identifier. If WMO isn't there either, then a 'n/a' (not available) is returned. </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Gets the NOD identifier from /what/source . Assumes that the NOD is there or can be looked up based on the WMO or WIGOS identifier. If neither can be found, then a 'n/a' (not available) is returned. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">obj</td><td>input SCAN or PVOL object </td></tr>
   </table>
@@ -302,6 +308,23 @@ along with RAVE.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
 
 </div>
 </div>
+<a id="aa2004cdd53811385ad3df5e16d794400" name="aa2004cdd53811385ad3df5e16d794400"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa2004cdd53811385ad3df5e16d794400">&#9670;&#160;</a></span>RNOD</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">Lib.odim_source.RNOD</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Dictionaries containing look-ups for identifiers except CTY. </p>
+<p>WMO, RAD, PLC, and SOURCE all use the NOD as the look-up NOD uses the WMO number as the look-up CCCC will be the same for all radars from a given country, so there'll be a lot of redundancy, but this is needed to create Odyssey file strings. </p>
+
+</div>
+</div>
 <a id="ad747e48a7099dc3ceb6eea146571d848" name="ad747e48a7099dc3ceb6eea146571d848"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ad747e48a7099dc3ceb6eea146571d848">&#9670;&#160;</a></span>WIGOS</h2>
 
@@ -327,6 +350,23 @@ along with RAVE.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
       <table class="memname">
         <tr>
           <td class="memname">Lib.odim_source.WMO</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Dictionaries containing look-ups for identifiers except CTY. </p>
+<p>WMO, RAD, PLC, and SOURCE all use the NOD as the look-up NOD uses the WMO number as the look-up CCCC will be the same for all radars from a given country, so there'll be a lot of redundancy, but this is needed to create Odyssey file strings. </p>
+
+</div>
+</div>
+<a id="ae0c73f7869fdfce5feaafcf6c88b4a57" name="ae0c73f7869fdfce5feaafcf6c88b4a57"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae0c73f7869fdfce5feaafcf6c88b4a57">&#9670;&#160;</a></span>WNOD</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">Lib.odim_source.WNOD</td>
         </tr>
       </table>
 </div><div class="memdoc">
