@@ -33,7 +33,7 @@ import xml.etree.ElementTree as ET
 # NOD uses the WMO number as the look-up 
 # CCCC will be the same for all radars from a given country, so there'll be
 # a lot of redundancy, but this is needed to create Odyssey file strings.
-NOD, WMO, RAD, PLC, CCCC, WIGOS = {None:None}, {None:None}, {None:None}, {None:None}, {None:None}, {None:None}
+NOD, WNOD, RNOD, WMO, RAD, PLC, CCCC, WIGOS = {None:None}, {None:None}, {None:None}, {None:None}, {None:None}, {None:None}, {None:None}, {None:None}
 SOURCE = {None:None}
 
 initialized = 0
@@ -75,12 +75,13 @@ def init():
                 PLC[nod] = plc
             else:
                 plc = None
+
             if "wigos" in keys:
                 wigos = radar.attrib["wigos"]
                 WIGOS[nod] = wigos
             else:
                 wigos = None
-                
+
             if wmo not in ("00000", None): 
                 NOD[wmo] = nod
                 SOURCE[nod] = u"NOD:%s" % nod
@@ -94,6 +95,13 @@ def init():
                 if org and wmo!=None: SOURCE[nod] += ",ORG:%s" % org
                 if plc: SOURCE[nod] += ",PLC:%s" % plc
                 if wigos: SOURCE[nod] += ",WIGOS:%s" % wigos
+
+            if wigos is not None:
+                WNOD[wigos] = nod
+
+            if rad is not None:
+                RNOD[rad] = nod
+
     initialized = 1
 
 
@@ -172,18 +180,20 @@ class ODIM_Source:
             (self.nod or "", self.wmo or "", self.rad or "", self.plc or "", self.org or "", self.cty or "", self.cmt or "", self.wigos or "")
 
 ## Convenience function. Gets the NOD identifier from /what/source .
-# Assumes that the NOD is there or can be looked up based on the WMO identifier.
-# If WMO isn't there either, then a 'n/a' (not available) is returned.
+# Assumes that the NOD is there or can be looked up based on the WMO or WIGOS identifier.
+# If neither can be found, then a 'n/a' (not available) is returned.
 # @param obj input SCAN or PVOL object
 # @return the NOD identifier or 'n/a'
 def NODfromSource(obj):
-  S = ODIM_Source(obj.source)
-  if S.nod: return S.nod
-  else:
-    try:
-      return NOD[S.wmo]
-    except KeyError:
-      return 'n/a'
+    S = ODIM_Source(obj.source)
+    if S.nod: 
+        return S.nod
+    elif S.wmo is not None and S.wmo in NOD:
+        return NOD[S.wmo]
+    elif S.wigos is not None and S.wigos in WNOD:
+        return WNOD[S.wigos]
+
+    return 'n/a'
 
 
 ## Convenience function. Checks and, if necessary, reformats a complete /what/source attribute .
@@ -192,16 +202,20 @@ def NODfromSource(obj):
 def CheckSource(inobj):
     S = ODIM_Source(inobj.source)
     if not S.nod:
-        try:
+        if S.wmo is not None and S.wmo in NOD:
             S.nod = NOD[S.wmo]
-            if SOURCE[S.nod] is not None:
-              if use_source_encoding:
+        elif S.wigos is not None and S.wigos in WNOD:
+            S.nod = WNOD[S.wigos]
+        elif S.rad is not None and S.rad in RNOD:
+            S.nod = RNOD[S.rad]
+        else:
+            return
+        
+        if SOURCE[S.nod] is not None:
+            if use_source_encoding:
                 inobj.source = SOURCE[S.nod].encode(UTF8)
-              else:
+            else:
                 inobj.source = SOURCE[S.nod]
-        except Exception as e:
-            import traceback
-            traceback.print_exc()
 
 
 if __name__ == "__main__":

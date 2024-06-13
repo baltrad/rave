@@ -63,7 +63,7 @@ class PgfVolumePluginTest(unittest.TestCase):
     self.assertAlmostEqual(14.0, volume.getScan(3).elangle * 180.0/math.pi, 4)
     self.assertAlmostEqual(24.0, volume.getScan(4).elangle * 180.0/math.pi, 4)
     self.assertAlmostEqual(40.0, volume.getScan(5).elangle * 180.0/math.pi, 4)
-    self.assertEqual("NOD:sella,WMO:02092,RAD:SE41,PLC:Lule\xc3\xa5", volume.source)
+    self.assertEqual("NOD:sella,WMO:02092,RAD:SE41,PLC:Lule\xc3\xa5,WIGOS:0-20000-0-2092", volume.source)
 
   # Where's the test?
   def testGenerateVolumeAndSave(self):

@@ -2573,6 +2573,58 @@ class PyRaveIOTest(unittest.TestCase):
     obj = _raveio.open(self.TEMPORARY_FILE, True).object
     self.assertEqual(LEGEND, obj.getParameter("DBZH").legend.legend)
 
+  def test_save_scan_wigos_2_2(self):
+    obj = _raveio.open(self.FIXTURE_VOLUME).object.getScan(0)
+    original_source = obj.source
+    obj.source = obj.source+",WIGOS:0-20000-0-2606"
+
+    rio = _raveio.new()
+    rio.object = obj
+    rio.version = _rave.RaveIO_ODIM_Version_2_2
+    rio.save(self.TEMPORARY_FILE)
+    
+    # Verify data
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+
+    src = nodelist.getNode("/what/source").data()
+    self.assertEqual(original_source, src)
+
+  def test_save_scan_wigos_2_3(self):
+    obj = _raveio.open(self.FIXTURE_VOLUME).object.getScan(0)
+    obj.source = obj.source+",WIGOS:0-20000-0-2606"
+
+    rio = _raveio.new()
+    rio.object = obj
+    rio.version = _rave.RaveIO_ODIM_Version_2_3
+    rio.save(self.TEMPORARY_FILE)
+    
+    # Verify data
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+
+    src = nodelist.getNode("/what/source").data()
+    self.assertEqual(obj.source, src)
+
+  def test_save_scan_wigos_2_4(self):
+    obj = _raveio.open(self.FIXTURE_VOLUME).object.getScan(0)
+    obj.source = obj.source+",WIGOS:0-20000-0-2606"
+
+    rio = _raveio.new()
+    rio.object = obj
+    rio.version = _rave.RaveIO_ODIM_Version_2_4
+    rio.save(self.TEMPORARY_FILE)
+    
+    # Verify data
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+
+    src = nodelist.getNode("/what/source").data()
+    self.assertEqual(obj.source, src)
+
   def test_write_scan_with_array(self):
     obj = _raveio.open(self.FIXTURE_VOLUME)
     vol = obj.object

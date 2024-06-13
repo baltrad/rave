@@ -52,7 +52,6 @@ from PyProjectionPipelineTest import *
 
 from PyProjTest import *
 from PyRaveIOTest import *
-
 from PyLazyNodeListReaderTest import *
 from PyPolarNavTest import *
 from PyAreaTest import *
