@@ -73,6 +73,7 @@ $(function(){ initResizable(false); });
 <div class="textblock"><code>#include &quot;<a class="el" href="composite_8h_source.html">composite.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="polarvolume_8h_source.html">polarvolume.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="raveobject__list_8h_source.html">raveobject_list.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="rave__types_8h_source.html">rave_types.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="rave__debug_8h_source.html">rave_debug.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="rave__alloc_8h_source.html">rave_alloc.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="rave__datetime_8h_source.html">rave_datetime.h</a>&quot;</code><br />
@@ -98,6 +99,8 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structCompositeValues__t.html">CompositeValues_t</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Structure for keeping track on values / parameter.  <a href="structCompositeValues__t.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structCompositeValuesVector__t.html">CompositeValuesVector_t</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="define-members" name="define-members"></a>
@@ -135,6 +138,9 @@ typedef struct <a class="el" href="structCompositeRadarItem.html">CompositeRadar
 <tr class="memitem:a03295af81f7670e8d22c223f4b5264fb" id="r_a03295af81f7670e8d22c223f4b5264fb"><td class="memItemLeft" align="right" valign="top">typedef struct CompositeValues_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a03295af81f7670e8d22c223f4b5264fb">CompositeValues_t</a></td></tr>
 <tr class="memdesc:a03295af81f7670e8d22c223f4b5264fb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Structure for keeping track on values / parameter.  <br /></td></tr>
 <tr class="separator:a03295af81f7670e8d22c223f4b5264fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adcd58e525449cf37846539756ef4d9c1" id="r_adcd58e525449cf37846539756ef4d9c1"><td class="memItemLeft" align="right" valign="top"><a id="adcd58e525449cf37846539756ef4d9c1" name="adcd58e525449cf37846539756ef4d9c1"></a>
+typedef struct CompositeValuesVector_t&#160;</td><td class="memItemRight" valign="bottom"><b>CompositeValuesVector_t</b></td></tr>
+<tr class="separator:adcd58e525449cf37846539756ef4d9c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a75487b42393804cb49f388466566162b" id="r_a75487b42393804cb49f388466566162b"><td class="memItemLeft" align="right" valign="top">typedef enum <a class="el" href="#ac103a7c8b8e43347959fae2d8add735e">CompositeInterpolationDimension_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a75487b42393804cb49f388466566162b">CompositeInterpolationDimension_t</a></td></tr>
 <tr class="memdesc:a75487b42393804cb49f388466566162b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Direction in which to perform interpolation.  <br /></td></tr>
 <tr class="separator:a75487b42393804cb49f388466566162b"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -184,6 +190,12 @@ Functions</h2></td></tr>
 <tr class="memitem:addbce54ae1b96a37142ceecd401b4b98" id="r_addbce54ae1b96a37142ceecd401b4b98"><td class="memItemLeft" align="right" valign="top"><a class="el" href="composite_8h.html#a033c984f0d2dc380932c78aba82f37dc">CompositeInterpolationMethod_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#addbce54ae1b96a37142ceecd401b4b98">Composite_getInterpolationMethod</a> (<a class="el" href="composite_8h.html#a0b7d6e2d30e3bfd5c465930546ee2069">Composite_t</a> *self)</td></tr>
 <tr class="memdesc:addbce54ae1b96a37142ceecd401b4b98"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the interpolation method.  <br /></td></tr>
 <tr class="separator:addbce54ae1b96a37142ceecd401b4b98"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0872a0a83eb1aac298795f21119b483b" id="r_a0872a0a83eb1aac298795f21119b483b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0872a0a83eb1aac298795f21119b483b">Composite_setInterpolateUndetect</a> (<a class="el" href="composite_8h.html#a0b7d6e2d30e3bfd5c465930546ee2069">Composite_t</a> *self, int interpolateUndetect)</td></tr>
+<tr class="memdesc:a0872a0a83eb1aac298795f21119b483b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets if undetect should be used in the interpolation.  <br /></td></tr>
+<tr class="separator:a0872a0a83eb1aac298795f21119b483b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8361081f806f27cd9b36086076dc6f69" id="r_a8361081f806f27cd9b36086076dc6f69"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8361081f806f27cd9b36086076dc6f69">Composite_getInterpolateUndetect</a> (<a class="el" href="composite_8h.html#a0b7d6e2d30e3bfd5c465930546ee2069">Composite_t</a> *self)</td></tr>
+<tr class="memdesc:a8361081f806f27cd9b36086076dc6f69"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the if interpolation should be performed using undetect or not.  <br /></td></tr>
+<tr class="separator:a8361081f806f27cd9b36086076dc6f69"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a58d46b2e6ce66eb6624de3f0231b436c" id="r_a58d46b2e6ce66eb6624de3f0231b436c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a58d46b2e6ce66eb6624de3f0231b436c">Composite_setHeight</a> (<a class="el" href="composite_8h.html#a0b7d6e2d30e3bfd5c465930546ee2069">Composite_t</a> *composite, double height)</td></tr>
 <tr class="memdesc:a58d46b2e6ce66eb6624de3f0231b436c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the height that should be used when generating a composite as CAPPI, PCAPPI or PMAX.  <br /></td></tr>
 <tr class="separator:a58d46b2e6ce66eb6624de3f0231b436c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -723,6 +735,32 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a id="a8361081f806f27cd9b36086076dc6f69" name="a8361081f806f27cd9b36086076dc6f69"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8361081f806f27cd9b36086076dc6f69">&#9670;&#160;</a></span>Composite_getInterpolateUndetect()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int Composite_getInterpolateUndetect </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="composite_8h.html#a0b7d6e2d30e3bfd5c465930546ee2069">Composite_t</a> *</td>          <td class="paramname"><span class="paramname"><em>self</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Returns the if interpolation should be performed using undetect or not. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>if undetect should be used in interpolation or not </dd></dl>
+
+</div>
+</div>
 <a id="addbce54ae1b96a37142ceecd401b4b98" name="addbce54ae1b96a37142ceecd401b4b98"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#addbce54ae1b96a37142ceecd401b4b98">&#9670;&#160;</a></span>Composite_getInterpolationMethod()</h2>
 
@@ -1148,6 +1186,39 @@ Variables</h2></td></tr>
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a id="a0872a0a83eb1aac298795f21119b483b" name="a0872a0a83eb1aac298795f21119b483b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0872a0a83eb1aac298795f21119b483b">&#9670;&#160;</a></span>Composite_setInterpolateUndetect()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void Composite_setInterpolateUndetect </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="composite_8h.html#a0b7d6e2d30e3bfd5c465930546ee2069">Composite_t</a> *</td>          <td class="paramname"><span class="paramname"><em>self</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>interpolateUndetect</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Sets if undetect should be used in the interpolation. </p>
+<p>This requires proper setting of minvalue in the parameter list. The recommended way is to threat undetect and nodata in the same way since Undetect only represents that nothing has been detected. If not interpolation should be performed using undetect the following behaviour will be done.</p>
+<p>If all values are UNDETECT, then result will be UNDETECT. If only one value is DATA, then use that value. If more than one value is DATA, then interpolation. If all values are NODATA, then NODATA. If all values are either NODATA or UNDETECT, then UNDETECT.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">interpolateUndetect</td><td>- If interpolation should be used on undetect or not </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>1 on success otherwise 0 </dd></dl>
 
 </div>
 </div>
