@@ -655,7 +655,7 @@ void PolarVolume_getLonLatNavigationInfo(PolarVolume_t* pvol, double lon, double
 
 PolarNavigationInfo* PolarVolume_getVerticalLonLatNavigationInfo(PolarVolume_t* pvol, double lon, double lat, int *nrNavInfo)
 {
-  int nrScans = 0, i = 0, nrInfos = 0;
+  int nrScans = 0, i = 0;
   double dist = 0.0, maxdist = 0.0;
   PolarScan_t* scan = NULL;
   PolarNavigationInfo *result = NULL, *pnarr = NULL;

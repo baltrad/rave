@@ -22,6 +22,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Daniel Michelson (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2014-03-27
  */
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION 
 #include "pyravecompat.h"
 #include "arrayobject.h"
 #include "rave.h"

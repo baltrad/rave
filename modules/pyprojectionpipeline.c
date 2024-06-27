@@ -152,8 +152,6 @@ static PyObject* _pyprojectionpipeline_new(PyObject* self, PyObject* args)
   }
 
   result = PyProjectionPipeline_New(pipeline);
-
-done:
   RAVE_OBJECT_RELEASE(pipeline);
   return (PyObject*)result;
 }

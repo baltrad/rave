@@ -29,6 +29,7 @@ import _raveio
 import _dealias
 import _polarscan, _polarscanparam
 from numpy import *
+import math
 
 class PyDealiasTest(unittest.TestCase):
     FIXTURE = "fixtures/var-20111127T194500Z.h5"

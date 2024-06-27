@@ -27,7 +27,7 @@ Tests functionality for managing ODIM /what/source identifiers.
 import unittest
 import _raveio
 import odim_source
-from numpy import unicode
+
 import sys as system
 
 use_unicode_variant=True
@@ -65,7 +65,7 @@ class RaveOdimSourceTest(unittest.TestCase):
 
     def testUnicode(self):
         s = odim_source.SOURCE[self.MYNOD]
-        self.assertTrue(type(s), unicode)
+        self.assertTrue(type(s), str)
         self.assertEqual(s.encode('UTF-8'), self.regular_string)
 
     def testODIM_Source(self):

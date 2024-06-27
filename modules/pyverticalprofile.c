@@ -27,6 +27,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * Uppdated code with new vertical profile field definitions (HGHT, n, UWND, VWND)
  * and functions for accessing starttime, endtime, startdate, endate and product
  */
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION 
 #include "pyravecompat.h"
 #include <limits.h>
 #include <math.h>
@@ -718,9 +719,9 @@ static PyObject* _pyverticalprofile_getAttribute(PyVerticalProfile* self, PyObje
       npy_intp dims[1];
       RaveAttribute_getLongArray(attribute, &value, &len);
       dims[0] = len;
-      result = PyArray_SimpleNew(1, dims, PyArray_LONG);
+      result = PyArray_SimpleNew(1, dims, NPY_LONG);
       for (i = 0; i < len; i++) {
-        *((long*) PyArray_GETPTR1(result, i)) = value[i];
+        *((long*) PyArray_GETPTR1((PyArrayObject*)result, i)) = value[i];
       }
     } else if (format == RaveAttribute_Format_DoubleArray) {
       double* value = NULL;
@@ -729,9 +730,9 @@ static PyObject* _pyverticalprofile_getAttribute(PyVerticalProfile* self, PyObje
       npy_intp dims[1];
       RaveAttribute_getDoubleArray(attribute, &value, &len);
       dims[0] = len;
-      result = PyArray_SimpleNew(1, dims, PyArray_DOUBLE);
+      result = PyArray_SimpleNew(1, dims, NPY_DOUBLE);
       for (i = 0; i < len; i++) {
-        *((double*) PyArray_GETPTR1(result, i)) = value[i];
+        *((double*) PyArray_GETPTR1((PyArrayObject*)result, i)) = value[i];
       }
     } else {
       RAVE_CRITICAL1("Undefined format on requested attribute %s", name);

@@ -22,7 +22,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2024-01-18
  */
-
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <Python.h>
 #include "pyravecompat.h"
 #include <limits.h>
@@ -436,8 +436,6 @@ static struct PyMethodDef _pyacqva_methods[] =
  */
 static PyObject* _pyacqva_getattro(PyAcqva* self, PyObject* name)
 {
-  PyObject* res = NULL;
-
   if (PY_COMPARE_STRING_WITH_ATTRO_NAME("date", name) == 0) {
     if (Acqva_getDate(self->acqva) != NULL) {
       return PyString_FromString(Acqva_getDate(self->acqva));
@@ -575,6 +573,7 @@ static PyMethodDef functions[] = {
  * @param[in] name - the name of the constant
  * @param[in] value - the value
  */
+ /* TEMP DISABLED
 static void add_long_constant(PyObject* dictionary, const char* name, long value)
 {
   PyObject* tmp = NULL;
@@ -584,6 +583,7 @@ static void add_long_constant(PyObject* dictionary, const char* name, long value
   }
   Py_XDECREF(tmp);
 }
+*/
 
 MOD_INIT(_acqva)
 {

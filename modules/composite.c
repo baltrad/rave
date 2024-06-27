@@ -4,6 +4,7 @@
  * @author Daniel Michelson (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2006-
  */
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION 
 #include <pyravecompat.h>
 #include <arrayobject.h>
 #include "rave.h"
@@ -583,8 +584,8 @@ static PyObject* _nearest_composite(PyObject* self, PyObject* args)
   wrap.outxsize = array_stride_xsize_2d(outrave.data);
   wrap.bitmapa = array_data_2d(outrave.bitmap);
 
-  dey = outrave.data->dimensions[0];
-  dex = outrave.data->dimensions[1];
+  dey = PyArray_DIMS(outrave.data)[0];
+  dex = PyArray_DIMS(outrave.data)[1];
   wrap.maxx = dex;
   wrap.maxy = dey;
 
@@ -609,8 +610,8 @@ static PyObject* _nearest_composite(PyObject* self, PyObject* args)
     }
     wrap.rad[i].ux = (int) ((istruct.lowleft.u - wrap.ux) / wrap.xscale);
     wrap.rad[i].uy = (int) ((wrap.uy - istruct.uppright.v) / wrap.yscale);
-    wrap.rad[i].maxy = wrap.rad[i].data->dimensions[0];
-    wrap.rad[i].maxx = wrap.rad[i].data->dimensions[1];
+    wrap.rad[i].maxy = PyArray_DIMS(wrap.rad[i].data)[0];
+    wrap.rad[i].maxx = PyArray_DIMS(wrap.rad[i].data)[1];
     if (!GetDoubleFromINFO(po, "/how/lon_0", &here.u)) {
       Raise(PyExc_AttributeError,"No /how/lon_0 in an input image.");
       return NULL;
@@ -728,8 +729,8 @@ static PyObject* _lowest_composite(PyObject* self, PyObject* args)
   wrap.outxsize = array_stride_xsize_2d(outrave.data);
   wrap.bitmapa = array_data_2d(outrave.bitmap);
 
-  dey = outrave.data->dimensions[0];
-  dex = outrave.data->dimensions[1];
+  dey = PyArray_DIMS(outrave.data)[0];
+  dex = PyArray_DIMS(outrave.data)[1];
   wrap.maxx = dex;
   wrap.maxy = dey;
 
@@ -761,8 +762,8 @@ static PyObject* _lowest_composite(PyObject* self, PyObject* args)
     }
     wrap.rad[i].ux = (int) ((istruct.lowleft.u - wrap.ux) / wrap.xscale);
     wrap.rad[i].uy = (int) ((wrap.uy - istruct.uppright.v) / wrap.yscale);
-    wrap.rad[i].maxy = wrap.rad[i].data->dimensions[0];
-    wrap.rad[i].maxx = wrap.rad[i].data->dimensions[1];
+    wrap.rad[i].maxy = PyArray_DIMS(wrap.rad[i].data)[0];
+    wrap.rad[i].maxx = PyArray_DIMS(wrap.rad[i].data)[1];
     if (!GetDoubleFromINFO(po, "/how/lon_0", &here.u)) {
       Raise(PyExc_AttributeError,"No /how/lon_0 in an input image.");
       return NULL;

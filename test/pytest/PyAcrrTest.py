@@ -27,7 +27,7 @@ import unittest
 import _acrr
 import _cartesianparam, _ravefield
 import string
-from numpy import array, reshape, uint8
+from numpy import array, reshape, uint8, int16
 
 NO_DATA = 255.0
 UNDETECT = 0.0
@@ -240,7 +240,7 @@ class PyAcrrTest(unittest.TestCase):
     
     d1 = _ravefield.new()
     d1.addAttribute("what/gain", DEFAULT_DISTANCE_GAIN)
-    d1.setData(reshape(array(distance_field1, uint8), (2,2)))
+    d1.setData(reshape(array(distance_field1, int16), (2,2)))
     d1.addAttribute("how/task", "se.smhi.composite.distance.radar")
 
     p1.addQualityField(d1)
@@ -252,7 +252,7 @@ class PyAcrrTest(unittest.TestCase):
 
     d2 = _ravefield.new()
     d2.addAttribute("what/gain", DEFAULT_DISTANCE_GAIN)
-    d2.setData(reshape(array(distance_field2, uint8), (2,2)))
+    d2.setData(reshape(array(distance_field2, int16), (2,2)))
     d2.addAttribute("how/task", "se.smhi.composite.distance.radar")
 
     p2.addQualityField(d2)

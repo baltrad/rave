@@ -22,6 +22,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2012-02-07
  */
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION 
 #include "pyravecompat.h"
 #include <limits.h>
 #include <math.h>
@@ -215,7 +216,7 @@ static PyObject* _pycartesianparam_getData(PyCartesianParam* self, PyObject* arg
     raiseException_returnNULL(PyExc_IOError, "cartesian parameter does not have any data");
   }
 
-  if (arrtype == PyArray_NOTYPE) {
+  if (arrtype == NPY_NOTYPE) {
     raiseException_returnNULL(PyExc_IOError, "Could not translate data type");
   }
   result = PyArray_SimpleNew(2, dims, arrtype);
@@ -223,8 +224,8 @@ static PyObject* _pycartesianparam_getData(PyCartesianParam* self, PyObject* arg
     raiseException_returnNULL(PyExc_MemoryError, "Could not create resulting array");
   }
   if (result != NULL) {
-    int nbytes = xsize*ysize*PyArray_ITEMSIZE(result);
-    memcpy(((PyArrayObject*)result)->data, (unsigned char*)CartesianParam_getData(self->param), nbytes);
+    int nbytes = xsize*ysize*PyArray_ITEMSIZE((PyArrayObject*)result);
+    memcpy(PyArray_DATA((PyArrayObject*)result), (unsigned char*)CartesianParam_getData(self->param), nbytes);
   }
   return result;
 }
@@ -421,9 +422,9 @@ static PyObject* _pycartesianparam_getAttribute(PyCartesianParam* self, PyObject
       npy_intp dims[1];
       RaveAttribute_getLongArray(attribute, &value, &len);
       dims[0] = len;
-      result = PyArray_SimpleNew(1, dims, PyArray_LONG);
+      result = PyArray_SimpleNew(1, dims, NPY_LONG);
       for (i = 0; i < len; i++) {
-        *((long*) PyArray_GETPTR1(result, i)) = value[i];
+        *((long*) PyArray_GETPTR1((PyArrayObject*)result, i)) = value[i];
       }
     } else if (format == RaveAttribute_Format_DoubleArray) {
       double* value = NULL;
@@ -432,9 +433,9 @@ static PyObject* _pycartesianparam_getAttribute(PyCartesianParam* self, PyObject
       npy_intp dims[1];
       RaveAttribute_getDoubleArray(attribute, &value, &len);
       dims[0] = len;
-      result = PyArray_SimpleNew(1, dims, PyArray_DOUBLE);
+      result = PyArray_SimpleNew(1, dims, NPY_DOUBLE);
       for (i = 0; i < len; i++) {
-        *((double*) PyArray_GETPTR1(result, i)) = value[i];
+        *((double*) PyArray_GETPTR1((PyArrayObject*)result, i)) = value[i];
       }
     } else {
       RAVE_CRITICAL1("Undefined format on requested attribute %s", name);

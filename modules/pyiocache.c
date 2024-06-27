@@ -197,7 +197,7 @@ static PyObject* _pyraveiocache_saveField(PyObject* self, PyObject* args)
   RaveIOCache_t* iocache = NULL;
   PyRaveField* pyfield = NULL;
   PyObject* pyobj = NULL;
-  RaveField_t* field = NULL;
+
   int result = 0;
 
   if (!PyArg_ParseTuple(args, "Os", &pyobj, &filename)) {
@@ -420,6 +420,7 @@ static PyMethodDef functions[] = {
  * @param[in] name - the name of the constant
  * @param[in] value - the value
  */
+ /* Temporary disabled
 static void add_long_constant(PyObject* dictionary, const char* name, long value)
 {
   PyObject* tmp = NULL;
@@ -429,6 +430,7 @@ static void add_long_constant(PyObject* dictionary, const char* name, long value
   }
   Py_XDECREF(tmp);
 }
+*/
 
 PyDoc_STRVAR(_pyraveiocache_module_doc,
     "This class provides functionality for reading and writing cache files used within RAVE.\n"

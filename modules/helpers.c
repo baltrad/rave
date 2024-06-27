@@ -4,6 +4,7 @@
  * @author Daniel Michelson (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2006-
  */
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION 
 #include <pyravecompat.h>
 #include <arrayobject.h>
 #include "rave.h"
@@ -93,8 +94,8 @@ static PyObject* _common_gain_offset(PyObject* self, PyObject* args)
     return NULL;
   }
 
-  for (y = 0; y < inrave.data->dimensions[0]; y++) {
-    for (x = 0; x < inrave.data->dimensions[1]; x++) {
+  for (y = 0; y < PyArray_DIMS(inrave.data)[0]; y++) {
+    for (x = 0; x < PyArray_DIMS(inrave.data)[1]; x++) {
 
       raw = get_array_item_2d(indata, x, y, intype, instridex);
 

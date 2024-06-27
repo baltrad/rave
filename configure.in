@@ -930,12 +930,31 @@ if [[ "$COMPILE_FOR_PYTHON" = "yes" ]]; then
 		elif [[ -f $numpy_inc/numpy/core/include/numpy/arrayobject.h ]]; then
 		    numpy_inc_app="/numpy/core/include/numpy"
 		    FOUND_NUMPY_INC=yes
+    else
+      TEST_INCLUDE=`$PYBIN -c "import numpy; print(numpy.get_include())"`
+      if test "x" != "x$TEST_INCLUDE"; then
+        if [[ -f "$TEST_INCLUDE/arrayobject.h" ]]; then
+          numpy_inc="$TEST_INCLUDE"
+          numpy_inc_app=
+          FOUND_NUMPY_INC=yes
+        elif [[ -f "$TEST_INCLUDE/numpy/arrayobject.h" ]]; then
+          numpy_inc="$TEST_INCLUDE"
+          numpy_inc_app=/numpy
+          FOUND_NUMPY_INC=yes
+        fi
+      fi
 		fi
 		if test "xyes" != "x$FOUND_NUMPY_INC"; then
 			AC_MSG_ERROR(Could not locate arrayobject.h)
 		fi
-		NUMPY_INCLUDE_DIR="-I$numpy_inc$numpy_inc_app"
-		;;
+    NUMPYDIR=`basename $numpy_inc$numpy_inc_app`
+    if [[ "$NUMPYDIR" = "numpy" ]]; then
+      NUMPYBASEDIR=`dirname $numpy_inc$numpy_inc_app`
+		  NUMPY_INCLUDE_DIR="-I$NUMPYBASEDIR -I$NUMPYBASEDIR/numpy"
+    else
+      NUMPY_INCLUDE_DIR="-I$NUMPYBASEDIR -I$numpy_inc$numpy_inc_app"
+    fi		
+    ;;
   esac
 fi
 

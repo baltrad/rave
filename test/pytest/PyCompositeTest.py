@@ -153,7 +153,7 @@ class PyCompositeTest(unittest.TestCase):
   def test_new(self):
     obj = _pycomposite.new()
     self.assertNotEqual(-1, str(type(obj)).find("CompositeCore"))
- 
+
   def test_attribute_visibility(self):
     attrs = ['height', 'range', 'elangle', 'product', 'date', 'time', 'selection_method', 'quality_indicator_field_name']
     obj = _pycomposite.new()
@@ -476,7 +476,7 @@ class PyCompositeTest(unittest.TestCase):
     result = generator.generate(a, ["fi.fmi.ropo.detector.classification", "se.smhi.detector.beamblockage", "se.smhi.composite.distance.radar"])
      
     return result
-   
+
   def validate_sehem_distance_field(self, param):
     distance_field = param.getQualityFieldByHowTask("se.smhi.composite.distance.radar")
     self.assertEqual(3, distance_field.getData()[494][500], "Wrong quality value at position in composite.")
@@ -527,7 +527,7 @@ class PyCompositeTest(unittest.TestCase):
      
     dbzh_param = result.getParameter("DBZH")
     data = dbzh_param.getData()
-    value_sum = 0
+    value_sum = 0.0
     no_of_values = 0
     max_value = max(EVEN_RANGE_DUMMY_VALUE, UNEVEN_RANGE_DUMMY_VALUE)
     min_value = min(EVEN_RANGE_DUMMY_VALUE, UNEVEN_RANGE_DUMMY_VALUE)
@@ -567,7 +567,7 @@ class PyCompositeTest(unittest.TestCase):
     self.assertEqual(252, beamb_field.getData()[194][490], "Wrong quality value at position in composite.")
      
     self.validate_sehem_distance_field(dbzh_param)
- 
+
   def test_linear_azimuth_interpolation_cappi(self):
     height = 2600
     azimuth_gain = 1.0
@@ -577,7 +577,7 @@ class PyCompositeTest(unittest.TestCase):
      
     dbzh_param = result.getParameter("DBZH")
     data = dbzh_param.getData()
-    value_sum = 0
+    value_sum = 0.0
     no_of_values = 0
     max_value = max(EVEN_AZIMUTH_DUMMY_VALUE, UNEVEN_AZIMUTH_DUMMY_VALUE)
     min_value = min(EVEN_AZIMUTH_DUMMY_VALUE, UNEVEN_AZIMUTH_DUMMY_VALUE)
@@ -637,7 +637,7 @@ class PyCompositeTest(unittest.TestCase):
      
     dbzh_param = result.getParameter("DBZH")
     data = dbzh_param.getData()
-    value_sum = 0
+    value_sum = 0.0
     no_of_values = 0
     max_value = max(EVEN_AZIMUTH_DUMMY_VALUE, UNEVEN_AZIMUTH_DUMMY_VALUE, EVEN_RANGE_DUMMY_VALUE, UNEVEN_RANGE_DUMMY_VALUE)
     min_value = min(EVEN_AZIMUTH_DUMMY_VALUE, UNEVEN_AZIMUTH_DUMMY_VALUE, EVEN_RANGE_DUMMY_VALUE, UNEVEN_RANGE_DUMMY_VALUE)
@@ -689,7 +689,7 @@ class PyCompositeTest(unittest.TestCase):
      
     dbzh_param = result.getParameter("DBZH")
     data = dbzh_param.getData()
-    value_sum = 0
+    value_sum = 0.0
     no_of_values = 0
     values = []
     for x in range(310, 670):
