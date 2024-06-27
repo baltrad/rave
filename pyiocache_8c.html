@@ -101,8 +101,8 @@ Functions</h2></td></tr>
 <tr class="memitem:a6e9aef6e99dd85220e7f80ad6fae17b3" id="r_a6e9aef6e99dd85220e7f80ad6fae17b3"><td class="memItemLeft" align="right" valign="top"><a id="a6e9aef6e99dd85220e7f80ad6fae17b3" name="a6e9aef6e99dd85220e7f80ad6fae17b3"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>PyDoc_STRVAR</b> (_pyraveiocache_doc, &quot;This instance wraps the IO-routines used when writing and/or reading static fields using RAVE.\n&quot; &quot;\n&quot; &quot; * compression_level- The compression level beeing used. Range between 0 and 9 where 0 means no compression and 9 means highest compression.\n&quot; &quot;                      Compression level 1 is lowest compression ratio but fastest and level 9 is highest compression ratio but slowest.\n &quot; &quot;\n&quot; &quot;The below fcp_&lt;members&gt; are all used for optimizing the file storage. Please refer to HDF5 documentation for more information.\n&quot; &quot; * fcp_userblock    - Integer value.&quot; &quot;\n&quot; &quot; * fcp_sizes        - Sizes must be a tuple containing 2 integers representing (size, addr).\n&quot; &quot;\n&quot; &quot; * fcp_symk         - Symk must be a tuple containing 2 integers representing (ik, lk).\n&quot; &quot;\n&quot; &quot; * fcp_istorek      - Integer value.\n&quot; &quot;\n&quot; &quot; * fcp_metablocksize- Integer value.\n&quot; &quot;\n&quot;)</td></tr>
 <tr class="separator:a6e9aef6e99dd85220e7f80ad6fae17b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6afbaa42986365f68b22e1b2995dfd4b" id="r_a6afbaa42986365f68b22e1b2995dfd4b"><td class="memItemLeft" align="right" valign="top"><a id="a6afbaa42986365f68b22e1b2995dfd4b" name="a6afbaa42986365f68b22e1b2995dfd4b"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>PyDoc_STRVAR</b> (_pyraveiocache_module_doc, &quot;This class provides functionality for reading and writing cache files used within RAVE.\n&quot; &quot;\n&quot; &quot;This documentation will only provide information about H5 since this is the format used for static data fields in rave.\n&quot; &quot;\n&quot; &quot;To read a cache-file:\n&quot; &quot;&gt;&gt;&gt; import _iocache\n&quot; &quot;&gt;&gt;&gt; obj = _iocache.loadField(\&quot;/var/cache/baltrad/clutter/seang.h5\&quot;)\n&quot; &quot;\n&quot;)</td></tr>
+<tr class="memitem:a6afbaa42986365f68b22e1b2995dfd4b" id="r_a6afbaa42986365f68b22e1b2995dfd4b"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a6afbaa42986365f68b22e1b2995dfd4b">PyDoc_STRVAR</a> (_pyraveiocache_module_doc, &quot;This class provides functionality for reading and writing cache files used within RAVE.\n&quot; &quot;\n&quot; &quot;This documentation will only provide information about H5 since this is the format used for static data fields in rave.\n&quot; &quot;\n&quot; &quot;To read a cache-file:\n&quot; &quot;&gt;&gt;&gt; import _iocache\n&quot; &quot;&gt;&gt;&gt; obj = _iocache.loadField(\&quot;/var/cache/baltrad/clutter/seang.h5\&quot;)\n&quot; &quot;\n&quot;)</td></tr>
+<tr class="memdesc:a6afbaa42986365f68b22e1b2995dfd4b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds constants to the dictionary (probably the modules dictionary).  <br /></td></tr>
 <tr class="separator:a6afbaa42986365f68b22e1b2995dfd4b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9a673e4b8dd7308541934351da628543" id="r_a9a673e4b8dd7308541934351da628543"><td class="memItemLeft" align="right" valign="top"><a id="a9a673e4b8dd7308541934351da628543" name="a9a673e4b8dd7308541934351da628543"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>MOD_INIT</b> (_iocache)</td></tr>
@@ -187,6 +187,42 @@ PyTypeObject&#160;</td><td class="memItemRight" valign="bottom"><b>PyRaveIOCache
 </div>
 </div>
 <h2 class="groupheader">Function Documentation</h2>
+<a id="a6afbaa42986365f68b22e1b2995dfd4b" name="a6afbaa42986365f68b22e1b2995dfd4b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6afbaa42986365f68b22e1b2995dfd4b">&#9670;&#160;</a></span>PyDoc_STRVAR()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">PyDoc_STRVAR </td>
+          <td>(</td>
+          <td class="paramtype">_pyraveiocache_module_doc</td>          <td class="paramname"><span class="paramname"><em></em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&quot;This class provides functionality for reading and writing cache files used within RAVE.\n&quot; &quot;\n&quot; &quot;This documentation will only provide information about H5 since this is the format used for static data fields in rave.\n&quot; &quot;\n&quot; &quot;To read a cache-file:\n&quot; &quot;&gt;&gt;</td>          <td class="paramname"><span class="paramname"><em></em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">import _iocache\n&quot; &quot;&gt; &gt;</td>          <td class="paramname"><span class="paramname"><em></em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Adds constants to the dictionary (probably the modules dictionary). </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">dictionary</td><td>- the dictionary the long should be added to </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>- the name of the constant </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">value</td><td>- the value </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="a6ae9e325944371435b0a3378a2496d3c" name="a6ae9e325944371435b0a3378a2496d3c"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a6ae9e325944371435b0a3378a2496d3c">&#9670;&#160;</a></span>PYRAVE_DEBUG_MODULE()</h2>
 

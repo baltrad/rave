@@ -85,6 +85,9 @@ $(function(){ initResizable(false); });
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="define-members" name="define-members"></a>
 Macros</h2></td></tr>
+<tr class="memitem:ab6e6ee86736f9ebb56e74ae21bf3ff8a" id="r_ab6e6ee86736f9ebb56e74ae21bf3ff8a"><td class="memItemLeft" align="right" valign="top"><a id="ab6e6ee86736f9ebb56e74ae21bf3ff8a" name="ab6e6ee86736f9ebb56e74ae21bf3ff8a"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>NPY_NO_DEPRECATED_API</b>&#160;&#160;&#160;NPY_1_7_API_VERSION</td></tr>
+<tr class="separator:ab6e6ee86736f9ebb56e74ae21bf3ff8a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a434d268c3360bfcaab19367233246218" id="r_a434d268c3360bfcaab19367233246218"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a434d268c3360bfcaab19367233246218">PYACQVA_MODULE</a></td></tr>
 <tr class="memdesc:a434d268c3360bfcaab19367233246218"><td class="mdescLeft">&#160;</td><td class="mdescRight">to get correct part of <a class="el" href="pyacqva_8h.html" title="Python version of the Acqva API.">pyacqva.h</a>  <br /></td></tr>
 <tr class="separator:a434d268c3360bfcaab19367233246218"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -103,8 +106,8 @@ Functions</h2></td></tr>
 <tr class="memitem:a593f91cf56f6422fd6967db92a584b72" id="r_a593f91cf56f6422fd6967db92a584b72"><td class="memItemLeft" align="right" valign="top"><a id="a593f91cf56f6422fd6967db92a584b72" name="a593f91cf56f6422fd6967db92a584b72"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>PyDoc_STRVAR</b> (_pyacqva_type_doc, &quot;The acqva type provides the possibility to create cartesian composites from a number of polar objects using the ACQVA methodology.\n&quot; &quot;To generate the composite, one or many polar scans or polar volumes has to be added to the generator. Then generate should be called with the expected area and an optional list of how/task quality field names.\n&quot; &quot;There are a few attributes that can be set besides the functions.\n&quot; &quot; date                         - The nominal date as a string in format YYYYMMDD\n&quot; &quot; time                         - The nominal time as a string in format HHmmss\n&quot; &quot;\n&quot; &quot;Usage:\n&quot; &quot; import _pyacqva\n&quot; &quot; generator = _pyacqva.new()\n&quot; &quot; generator.date = \&quot;20200201\&quot;\n&quot; &quot; generator.date = \&quot;100000\&quot;\n&quot; &quot; generator.addParameter(\&quot;DBZH\&quot;, 2.0, 3.0)\n&quot; &quot; generator.add(_rave.open(\&quot;se1_pvol_20200201100000.h5\&quot;).object)\n&quot; &quot; generator.add(_rave.open(\&quot;se2_pvol_20200201100000.h5\&quot;).object)\n&quot; &quot; generator.add(_rave.open(\&quot;se3_pvol_20200201100000.h5\&quot;).object)\n&quot; &quot; result = generator.generate(myarea, [\&quot;se.smhi.composite.distance.radar\&quot;,\&quot;pl.imgw.radvolqc.spike\&quot;])\n&quot;)</td></tr>
 <tr class="separator:a593f91cf56f6422fd6967db92a584b72"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a48fa085acecf80d793a06409ac2c8e9a" id="r_a48fa085acecf80d793a06409ac2c8e9a"><td class="memItemLeft" align="right" valign="top"><a id="a48fa085acecf80d793a06409ac2c8e9a" name="a48fa085acecf80d793a06409ac2c8e9a"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>MOD_INIT</b> (_acqva)</td></tr>
+<tr class="memitem:a48fa085acecf80d793a06409ac2c8e9a" id="r_a48fa085acecf80d793a06409ac2c8e9a"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a48fa085acecf80d793a06409ac2c8e9a">MOD_INIT</a> (_acqva)</td></tr>
+<tr class="memdesc:a48fa085acecf80d793a06409ac2c8e9a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds constants to the dictionary (probably the modules dictionary).  <br /></td></tr>
 <tr class="separator:a48fa085acecf80d793a06409ac2c8e9a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
@@ -186,6 +189,33 @@ PyTypeObject&#160;</td><td class="memItemRight" valign="bottom"><b>PyAcqva_Type<
 </div>
 </div>
 <h2 class="groupheader">Function Documentation</h2>
+<a id="a48fa085acecf80d793a06409ac2c8e9a" name="a48fa085acecf80d793a06409ac2c8e9a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a48fa085acecf80d793a06409ac2c8e9a">&#9670;&#160;</a></span>MOD_INIT()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">MOD_INIT </td>
+          <td>(</td>
+          <td class="paramtype">_acqva</td>          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Adds constants to the dictionary (probably the modules dictionary). </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">dictionary</td><td>- the dictionary the long should be added to </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>- the name of the constant </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">value</td><td>- the value </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="a86231e75894850f2f86f805a9c4ffcf2" name="a86231e75894850f2f86f805a9c4ffcf2"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a86231e75894850f2f86f805a9c4ffcf2">&#9670;&#160;</a></span>PYRAVE_DEBUG_MODULE()</h2>
 
