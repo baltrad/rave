@@ -24,8 +24,10 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @date 2009-10-20
  */
 #include "transform.h"
+#include "cartesian.h"
 #include "projection.h"
 #include "projection_pipeline.h"
+#include "rave_attribute.h"
 #include "rave_debug.h"
 #include "rave_alloc.h"
 #include "rave_utilities.h"
@@ -656,6 +658,14 @@ static int TransformInternal_addTileToParameter(Transform_t* self, Cartesian_t* 
   CartesianParam_setUndetect(targetParameter, CartesianParam_getUndetect(sourceParameter));
   CartesianParam_setGain(targetParameter, CartesianParam_getGain(sourceParameter));
   CartesianParam_setOffset(targetParameter, CartesianParam_getOffset(sourceParameter));
+
+  if (!Cartesian_hasAttribute(target, "what/prodpar") && Cartesian_hasAttribute(source, "what/prodpar")) {
+    RaveAttribute_t* attr = Cartesian_getAttribute(source, "what/prodpar");
+    if (attr != NULL) {
+      Cartesian_addAttribute(target, attr);
+    }
+    RAVE_OBJECT_RELEASE(attr);
+  }
 
   xscale = Cartesian_getXScale(target);
   yscale = Cartesian_getYScale(target);
