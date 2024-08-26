@@ -418,27 +418,24 @@ class acqva_cluttermap_generator(object):
         if nod is None:
             raise GeneratorException("File is missing NOD in source and no NOD specified")
 
-        if nod not in self._volumeconfig:
-            return None
-
         volume.sortByElevations(1)
         
         result = self.copy_volume(volume, f"NOD:{nod}")
 
-        cfg = self._volumeconfig[nod]
-        for item in cfg.items():
-            scans = item.create_scans(result)
-            for si in scans:
-                if si >= 0 and si < result.getNumberOfScans():
-                    scan = result.getScan(si)
-                    rays = item.create_rays(scan)
-                    bins = item.create_bins(scan)
-                    parameter = scan.getParameter("ACQVA")
-                    for rayi in rays:
-                        for bini in bins:
-                            parameter.setValue((bini, rayi), 255)
+        if nod in self._volumeconfig:
+            cfg = self._volumeconfig[nod]
+            for item in cfg.items():
+                scans = item.create_scans(result)
+                for si in scans:
+                    if si >= 0 and si < result.getNumberOfScans():
+                        scan = result.getScan(si)
+                        rays = item.create_rays(scan)
+                        bins = item.create_bins(scan)
+                        parameter = scan.getParameter("ACQVA")
+                        for rayi in rays:
+                            for bini in bins:
+                                parameter.setValue((bini, rayi), 255)
 
-        #print(self._coordinatecfg)
         for c in self._coordinatecfg:
             lon = c.lon * math.pi / 180.0
             lat = c.lat * math.pi / 180.0
