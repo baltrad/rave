@@ -37,6 +37,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include <string.h>
 #include <float.h>
 #include <math.h>
+#include <stdio.h>
+
 /**
  * This is the default parameter value that should be used when working
  * with scans.
@@ -678,6 +680,8 @@ PolarNavigationInfo* PolarVolume_getVerticalLonLatNavigationInfo(PolarVolume_t* 
     if (maxdist > dist) {
       if (!PolarScan_getNearestNavigationInfo(scan, lon, lat, &pnarr[i])) {
         pnarr[i].ai = pnarr[i].ei = pnarr[i].ri = -1;
+      } else {
+        pnarr[i].ei = i;
       }
     }
 

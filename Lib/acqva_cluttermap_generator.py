@@ -351,7 +351,7 @@ class acqva_cluttermap_generator(object):
         :throws: Exception if there are problems with configuration
         """
         result = []
-        if not "acqva_static_coodinates" in config:
+        if not "acqva_static_coordinates" in config:
             return result
         statics = config["acqva_static_coordinates"]
         for x in statics:
@@ -363,7 +363,7 @@ class acqva_cluttermap_generator(object):
             st = x["type"]
             radius = x["radius"]
             name = x["name"]
-            result.add(acqva_coordinate_item(lon,lat,mean_sea_level,height,st,radius,name))
+            result.append(acqva_coordinate_item(lon,lat,mean_sea_level,height,st,radius,name))
         return result
 
     def copy_volume(self, volume, source):
@@ -371,6 +371,10 @@ class acqva_cluttermap_generator(object):
         result = _polarvolume.new()
         result.date = dt.strftime("%Y%m%d")
         result.time = dt.strftime("%H%M%S")
+        result.longitude = volume.longitude
+        result.latitude = volume.latitude
+        result.height = volume.height
+
         result.source = source
         nscans = volume.getNumberOfScans()
         for i in range(nscans):
@@ -379,6 +383,9 @@ class acqva_cluttermap_generator(object):
             newscan.elangle = scan.elangle
             newscan.rscale = scan.rscale
             newscan.rstart = scan.rstart
+            newscan.longitude = scan.longitude
+            newscan.latitude = scan.latitude
+            newscan.height = scan.height
             newscan.startdate = result.date
             newscan.enddate = result.date
             newscan.starttime = result.time
@@ -431,10 +438,15 @@ class acqva_cluttermap_generator(object):
                         for bini in bins:
                             parameter.setValue((bini, rayi), 255)
 
-        #    def __init__(self, lon, lat, mean_sea_level, height, stype, radius, name):
-
-        #for item in self._coordinatecfg:
-            
+        #print(self._coordinatecfg)
+        for c in self._coordinatecfg:
+            lon = c.lon * math.pi / 180.0
+            lat = c.lat * math.pi / 180.0
+            navinfos = result.getVerticalLonLatNavigationInfo(lon,lat)
+            for v in navinfos:
+                if v.ei >= 0 and v.ri >= 0:
+                    if  v.actual_height < c.mean_sea_level+c.height:
+                        result.getScan(v.ei).getParameter("ACQVA").setValue((v.ri, v.ai), 255)
 
         return result
 
