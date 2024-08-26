@@ -199,6 +199,18 @@ Functions</h2></td></tr>
 <tr class="memitem:a1654f486997575266975265ba9e4fe68" id="r_a1654f486997575266975265ba9e4fe68"><td class="memItemLeft" align="right" valign="top">long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1654f486997575266975265ba9e4fe68">Cartesian_getIndexY</a> (<a class="el" href="cartesian_8h.html#ab5a79e35a1b35277a4ce2abba3acada0">Cartesian_t</a> *cartesian, double y)</td></tr>
 <tr class="memdesc:a1654f486997575266975265ba9e4fe68"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the y index Evaluated as: (upperRight.y - y)/yscale.  <br /></td></tr>
 <tr class="separator:a1654f486997575266975265ba9e4fe68"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abd35b71ca42c021a8ac46896635f81a7" id="r_abd35b71ca42c021a8ac46896635f81a7"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#abd35b71ca42c021a8ac46896635f81a7">Cartesian_getLonLatFromXY</a> (<a class="el" href="cartesian_8h.html#ab5a79e35a1b35277a4ce2abba3acada0">Cartesian_t</a> *self, int x, int y, double *lon, double *lat)</td></tr>
+<tr class="memdesc:abd35b71ca42c021a8ac46896635f81a7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Converts a x/y position into lon/lat.  <br /></td></tr>
+<tr class="separator:abd35b71ca42c021a8ac46896635f81a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aafde322ef89dbb1cc6885b064ff9ee8c" id="r_aafde322ef89dbb1cc6885b064ff9ee8c"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aafde322ef89dbb1cc6885b064ff9ee8c">Cartesian_getLonLatFromXYLocation</a> (<a class="el" href="cartesian_8h.html#ab5a79e35a1b35277a4ce2abba3acada0">Cartesian_t</a> *self, double x, double y, double *lon, double *lat)</td></tr>
+<tr class="memdesc:aafde322ef89dbb1cc6885b064ff9ee8c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Converts a x/y cartesian coordinate into lon/lat.  <br /></td></tr>
+<tr class="separator:aafde322ef89dbb1cc6885b064ff9ee8c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2f59a44018ad44439c526434d32e3399" id="r_a2f59a44018ad44439c526434d32e3399"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2f59a44018ad44439c526434d32e3399">Cartesian_getXYFromLonLat</a> (<a class="el" href="cartesian_8h.html#ab5a79e35a1b35277a4ce2abba3acada0">Cartesian_t</a> *self, double lon, double lat, int *x, int *y)</td></tr>
+<tr class="memdesc:a2f59a44018ad44439c526434d32e3399"><td class="mdescLeft">&#160;</td><td class="mdescRight">Converts a lon/lat position into a x/y position.  <br /></td></tr>
+<tr class="separator:a2f59a44018ad44439c526434d32e3399"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a31c6c6df953c272fc87e33d722a55769" id="r_a31c6c6df953c272fc87e33d722a55769"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a31c6c6df953c272fc87e33d722a55769">Cartesian_getXYLocationFromLonLat</a> (<a class="el" href="cartesian_8h.html#ab5a79e35a1b35277a4ce2abba3acada0">Cartesian_t</a> *self, double lon, double lat, double *x, double *y)</td></tr>
+<tr class="memdesc:a31c6c6df953c272fc87e33d722a55769"><td class="mdescLeft">&#160;</td><td class="mdescRight">Converts a lon/lat position into a x/y cartesian coordinate.  <br /></td></tr>
+<tr class="separator:a31c6c6df953c272fc87e33d722a55769"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2db82069c61c086e952203f2dd498e24" id="r_a2db82069c61c086e952203f2dd498e24"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2db82069c61c086e952203f2dd498e24">Cartesian_setDefaultParameter</a> (<a class="el" href="cartesian_8h.html#ab5a79e35a1b35277a4ce2abba3acada0">Cartesian_t</a> *cartesian, const char *name)</td></tr>
 <tr class="memdesc:a2db82069c61c086e952203f2dd498e24"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the default parameter.  <br /></td></tr>
 <tr class="separator:a2db82069c61c086e952203f2dd498e24"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -1274,6 +1286,102 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a id="abd35b71ca42c021a8ac46896635f81a7" name="abd35b71ca42c021a8ac46896635f81a7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abd35b71ca42c021a8ac46896635f81a7">&#9670;&#160;</a></span>Cartesian_getLonLatFromXY()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int Cartesian_getLonLatFromXY </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="cartesian_8h.html#ab5a79e35a1b35277a4ce2abba3acada0">Cartesian_t</a> *</td>          <td class="paramname"><span class="paramname"><em>self</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>x</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>y</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double *</td>          <td class="paramname"><span class="paramname"><em>lon</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double *</td>          <td class="paramname"><span class="paramname"><em>lat</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Converts a x/y position into lon/lat. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">x</td><td>- the x position, should &gt;= 0 and &lt; xsize. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">y</td><td>- the y position, should &gt;= 0 and &lt; ysize. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">lon</td><td>- the lon coordinate </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">lat</td><td>- the lat coordinate </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>1 on success, otherwise 0 </dd></dl>
+
+</div>
+</div>
+<a id="aafde322ef89dbb1cc6885b064ff9ee8c" name="aafde322ef89dbb1cc6885b064ff9ee8c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aafde322ef89dbb1cc6885b064ff9ee8c">&#9670;&#160;</a></span>Cartesian_getLonLatFromXYLocation()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int Cartesian_getLonLatFromXYLocation </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="cartesian_8h.html#ab5a79e35a1b35277a4ce2abba3acada0">Cartesian_t</a> *</td>          <td class="paramname"><span class="paramname"><em>self</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double</td>          <td class="paramname"><span class="paramname"><em>x</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double</td>          <td class="paramname"><span class="paramname"><em>y</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double *</td>          <td class="paramname"><span class="paramname"><em>lon</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double *</td>          <td class="paramname"><span class="paramname"><em>lat</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Converts a x/y cartesian coordinate into lon/lat. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">x</td><td>- the x position, should be inside x-extent </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">y</td><td>- the y position, should be inside y-extent. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">lon</td><td>- the lon coordinate </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">lat</td><td>- the lat coordinate </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>1 on success, otherwise 0 </dd></dl>
+
+</div>
+</div>
 <a id="abbdadc907fd82caad1ec8bf6511a7900" name="abbdadc907fd82caad1ec8bf6511a7900"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#abbdadc907fd82caad1ec8bf6511a7900">&#9670;&#160;</a></span>Cartesian_getMean()</h2>
 
@@ -2039,6 +2147,102 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the xsize </dd></dl>
+
+</div>
+</div>
+<a id="a2f59a44018ad44439c526434d32e3399" name="a2f59a44018ad44439c526434d32e3399"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2f59a44018ad44439c526434d32e3399">&#9670;&#160;</a></span>Cartesian_getXYFromLonLat()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int Cartesian_getXYFromLonLat </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="cartesian_8h.html#ab5a79e35a1b35277a4ce2abba3acada0">Cartesian_t</a> *</td>          <td class="paramname"><span class="paramname"><em>self</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double</td>          <td class="paramname"><span class="paramname"><em>lon</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double</td>          <td class="paramname"><span class="paramname"><em>lat</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int *</td>          <td class="paramname"><span class="paramname"><em>x</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int *</td>          <td class="paramname"><span class="paramname"><em>y</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Converts a lon/lat position into a x/y position. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">lon</td><td>- the lon coordinate </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">lat</td><td>- the lat coordinate </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">x</td><td>- the x position, will be &gt;= 0 and &lt; xsize. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">y</td><td>- the y position, will be &gt;= 0 and &lt; ysize. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>1 on success, otherwise 0 </dd></dl>
+
+</div>
+</div>
+<a id="a31c6c6df953c272fc87e33d722a55769" name="a31c6c6df953c272fc87e33d722a55769"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a31c6c6df953c272fc87e33d722a55769">&#9670;&#160;</a></span>Cartesian_getXYLocationFromLonLat()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int Cartesian_getXYLocationFromLonLat </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="cartesian_8h.html#ab5a79e35a1b35277a4ce2abba3acada0">Cartesian_t</a> *</td>          <td class="paramname"><span class="paramname"><em>self</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double</td>          <td class="paramname"><span class="paramname"><em>lon</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double</td>          <td class="paramname"><span class="paramname"><em>lat</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double *</td>          <td class="paramname"><span class="paramname"><em>x</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double *</td>          <td class="paramname"><span class="paramname"><em>y</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Converts a lon/lat position into a x/y cartesian coordinate. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">lon</td><td>- the lon coordinate </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">lat</td><td>- the lat coordinate </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">x</td><td>- the cartesian x coordinate, should be inside x-extent. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">y</td><td>- the cartesian y coordinate, should be inside y-extent. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>1 on success, otherwise 0 </dd></dl>
 
 </div>
 </div>
