@@ -321,6 +321,79 @@ class PyCartesianTest(unittest.TestCase):
       result = obj.getIndexY(value)
       self.assertEqual(y, result)
 
+  def test_getLonLatFromXY(self):
+    obj = _cartesian.new()
+    area = _area.new()
+    area.xsize = 906
+    area.ysize = 1124
+    area.xscale = 2000.0
+    area.yscale = 2000.0
+    area.extent = (-745244.228412, -3995795.462356, 1066755.771588, -1747795.462356)
+    area.projection = _projection.new("x", "y", "+proj=stere +ellps=bessel +lat_0=90 +lon_0=14 +lat_ts=60 +towgs84=0,0,0")
+    obj.init(area)
+
+    lon, lat = obj.getLonLatFromXY(0,0)
+    self.assertAlmostEqual(-9.09296*math.pi/180.0, lon, 4)
+    self.assertAlmostEqual(71.9123*math.pi/180.0, lat, 4)
+
+    lon, lat = obj.getLonLatFromXY(905,1123)
+    self.assertAlmostEqual(28.9280*math.pi/180.0, lon, 4)
+    self.assertAlmostEqual(51.7637*math.pi/180.0, lat, 4)
+
+  def test_getXYFromLonLat(self):
+    obj = _cartesian.new()
+    area = _area.new()
+    area.xsize = 906
+    area.ysize = 1124
+    area.xscale = 2000.0
+    area.yscale = 2000.0
+    area.extent = (-745244.228412, -3995795.462356, 1066755.771588, -1747795.462356)
+    area.projection = _projection.new("x", "y", "+proj=stere +ellps=bessel +lat_0=90 +lon_0=14 +lat_ts=60 +towgs84=0,0,0")
+    obj.init(area)
+
+    x, y = obj.getXYFromLonLat(-9.09296*math.pi/180.0,71.9123*math.pi/180.0)
+    self.assertEqual(0, x)
+    self.assertEqual(0, y)
+
+    x, y = obj.getXYFromLonLat(28.9280*math.pi/180.0,51.7637*math.pi/180.0)
+    self.assertEqual(905, x)
+    self.assertEqual(1123, y)
+
+  def test_getLonLatFromXYLocation(self):
+    obj = _cartesian.new()
+    area = _area.new()
+    area.xsize = 906
+    area.ysize = 1124
+    area.xscale = 2000.0
+    area.yscale = 2000.0
+    area.extent = (-745244.228412, -3995795.462356, 1066755.771588, -1747795.462356)
+    area.projection = _projection.new("x", "y", "+proj=stere +ellps=bessel +lat_0=90 +lon_0=14 +lat_ts=60 +towgs84=0,0,0")
+    obj.init(area)
+
+    lon, lat = obj.getLonLatFromXYLocation(-745244.22,-1747795.462)
+    self.assertAlmostEqual(-9.09296*math.pi/180.0, lon, 4)
+    self.assertAlmostEqual(71.9123*math.pi/180.0, lat, 4)
+
+    lon, lat = obj.getLonLatFromXYLocation(1066755.771588,-1747795.462356)
+    self.assertAlmostEqual(45.3975*math.pi/180.0, lon, 4)
+    self.assertAlmostEqual(70.5324*math.pi/180.0, lat, 4)
+
+  def test_getXYLocationFromLonLat(self):
+    obj = _cartesian.new()
+    area = _area.new()
+    area.xsize = 906
+    area.ysize = 1124
+    area.xscale = 2000.0
+    area.yscale = 2000.0
+    area.extent = (-745244.228412, -3995795.462356, 1066755.771588, -1747795.462356)
+    area.projection = _projection.new("x", "y", "+proj=stere +ellps=bessel +lat_0=90 +lon_0=14 +lat_ts=60 +towgs84=0,0,0")
+    obj.init(area)
+
+    x, y = obj.getXYLocationFromLonLat(-9.09296*math.pi/180.0, 71.9123*math.pi/180.0)
+    self.assertAlmostEqual(-745244.228412, x, 2)
+    self.assertAlmostEqual(-1747795.462, y, 2)
+
+
   def test_getExtremeLonLatBoundaries(self):
     _projection.setDefaultLonLatProjDef("+proj=longlat +ellps=WGS84")
     try:

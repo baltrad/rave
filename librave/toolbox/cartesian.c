@@ -615,6 +615,61 @@ long Cartesian_getIndexY(Cartesian_t* cartesian, double y)
   return (long)((cartesian->urY - y)/cartesian->yscale);
 }
 
+int Cartesian_getLonLatFromXY(Cartesian_t* self, int x, int y, double* lon, double* lat)
+{
+  RAVE_ASSERT((self != NULL), "self was NULL");
+  if (x < 0 || x >= self->xsize || y < 0 || y >= self->ysize || lon == NULL || lat == NULL) {
+    RAVE_WARNING0("Either is x/y out of range or lon/lat is not defined");
+    return 0;
+  }
+  return CartesianInternal_getLonLatFromXY(self, x, y, lon, lat);
+}
+
+int Cartesian_getLonLatFromXYLocation(Cartesian_t* self, double x, double y, double* lon, double* lat)
+{
+  RAVE_ASSERT((self != NULL), "self was NULL");
+  if (x < self->llX || x > self->urX+self->xscale  || y < self->llY || y > self->urY+self->yscale || lon == NULL || lat == NULL) {
+    RAVE_WARNING0("Either the x/y coordinate is out of range or lon/lat is not defined");
+    return 0;
+  }
+  return ProjectionPipeline_inv(self->pipeline, x, y, lon, lat);
+}
+
+int Cartesian_getXYFromLonLat(Cartesian_t* self, double lon, double lat, int* x, int* y)
+{
+  int result = 0;
+  int ox=0,oy=0;
+  RAVE_ASSERT((self != NULL), "self was NULL");
+  if (x == NULL || y == NULL) {
+    RAVE_WARNING0("x or y is not defined");
+    return 0;
+  }
+  result = CartesianInternal_getXYFromLonLat(self, lon, lat, &ox, &oy);
+  if (result) {
+    if (ox < 0 || ox >= self->xsize || oy < 0 || oy >= self->ysize) {
+      RAVE_WARNING0("ox or oy out of range");
+      result = 0;
+    } else {
+      *x = ox;
+      *y = oy;
+    }
+  }
+  return result;
+}
+
+int Cartesian_getXYLocationFromLonLat(Cartesian_t* self, double lon, double lat, double* x, double* y)
+{
+  int result = 0;
+  int xp = 0, yp = 0;
+  RAVE_ASSERT((self != NULL), "self was NULL");
+  result = Cartesian_getXYFromLonLat(self, lon, lat, &xp, &yp);
+  if (result) {
+    *x = xp * self->xscale + self->llX;
+    *y = yp * self->yscale + self->urY;
+  }
+  return result;
+}
+
 int Cartesian_setDefaultParameter(Cartesian_t* cartesian, const char* name)
 {
   int result = 0;

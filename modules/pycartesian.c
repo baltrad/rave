@@ -22,6 +22,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2009-12-10
  */
+#include "cartesian.h"
+
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION 
 #include "pyravecompat.h"
 #include <limits.h>
@@ -258,6 +260,58 @@ static PyObject* _pycartesian_getExtremeLonLatBoundaries(PyCartesian* self, PyOb
     raiseException_returnNULL(PyExc_ValueError, "Could not get extreme boundaries for cartesian product");
   }
   return Py_BuildValue("(dd)(dd)",ulLon,ulLat,lrLon,lrLat);
+}
+
+static PyObject* _pycartesian_getLonLatFromXY(PyCartesian* self, PyObject* args)
+{
+  int x=0, y=0;
+  double lon=0.0, lat=0.0;
+  if (!PyArg_ParseTuple(args, "ii", &x, &y)) {
+    return NULL;
+  }
+  if (!Cartesian_getLonLatFromXY(self->cartesian, x, y,&lon, &lat)) {
+    raiseException_returnNULL(PyExc_ValueError, "Failed to calculate lon/lat from x/y. Outside boundaries?");
+  }
+  return Py_BuildValue("dd", lon, lat);
+}
+
+static PyObject* _pycartesian_getLonLatFromXYLocation(PyCartesian* self, PyObject* args)
+{
+  double lon=0.0, lat=0.0;
+  double lx=0.0,ly=0.0;
+  if (!PyArg_ParseTuple(args, "dd", &lx, &ly)) {
+    return NULL;
+  }
+  if (!Cartesian_getLonLatFromXYLocation(self->cartesian, lx, ly,&lon, &lat)) {
+    raiseException_returnNULL(PyExc_ValueError, "Failed to calculate lon/lat from x/y coordinate. Outside boundaries?");
+  }
+  return Py_BuildValue("dd", lon, lat);
+}
+
+static PyObject* _pycartesian_getXYFromLonLat(PyCartesian* self, PyObject* args)
+{
+  double lon=0.0, lat=0.0;
+  int x=0, y=0;
+  if (!PyArg_ParseTuple(args, "dd", &lon, &lat)) {
+    return NULL;
+  }
+  if (!Cartesian_getXYFromLonLat(self->cartesian, lon, lat ,&x, &y)) {
+    raiseException_returnNULL(PyExc_ValueError, "Failed to calculate x/y from lon/lat coordinate. Outside boundaries?");
+  }
+  return Py_BuildValue("ii", x, y);
+}
+
+static PyObject* _pycartesian_getXYLocationFromLonLat(PyCartesian* self, PyObject* args)
+{
+  double lon=0.0, lat=0.0;
+  double x=0.0, y=0.0;
+  if (!PyArg_ParseTuple(args, "dd", &lon, &lat)) {
+    return NULL;
+  }
+  if (!Cartesian_getXYLocationFromLonLat(self->cartesian, lon, lat ,&x, &y)) {
+    raiseException_returnNULL(PyExc_ValueError, "Failed to calculate x/y coordinate from lon/lat coordinate. Outside boundaries?");
+  }
+  return Py_BuildValue("dd", x, y);  
 }
 
 /**
@@ -1093,6 +1147,30 @@ static struct PyMethodDef _pycartesian_methods[] =
     "getIndexY(y) -> y index\n\n"
     "Returns the index within the area as identified by a y-coordinate. Evaluated as: (upperRight.y - y)/yscale \n\n"
     "y - The y coordinate in the area."
+  },
+  {"getLonLatFromXY", (PyCFunction) _pycartesian_getLonLatFromXY, 1,
+    "getLonLatFromXY(x,y) -> lon,lat\n\n"
+    "Returns the lon lat from the x/y position \n\n"
+    "x - The x position.\n"
+    "y - The y position."
+  },
+  {"getLonLatFromXYLocation", (PyCFunction) _pycartesian_getLonLatFromXYLocation, 1,
+    "getLonLatFromXYLocation(x,y) -> lon,lat\n\n"
+    "Returns the lon lat from the x/y coordinate \n\n"
+    "x - The cartesian x coordinate.\n"
+    "y - The cartesian y coordinate."
+  },
+  {"getXYFromLonLat", (PyCFunction) _pycartesian_getXYFromLonLat, 1,
+    "getXYFromLonLat(lon,lat) -> x,y\n\n"
+    "Converts a lon/lat position into a x/y position \n\n"
+    "lon - The lon coordinate.\n"
+    "lat - The lat coordinate."
+  },
+  {"getXYLocationFromLonLat", (PyCFunction) _pycartesian_getXYLocationFromLonLat, 1,
+    "getXYLocationFromLonLat(lon,lat) -> x,y\n\n"
+    "Converts a lon/lat position into a x/y cartesian coordinate \n\n"
+    "lon - The lon coordinate.\n"
+    "lat - The lat coordinate."
   },
   {"getExtremeLonLatBoundaries", (PyCFunction) _pycartesian_getExtremeLonLatBoundaries, 1,
     "getExtremeLonLatBoundaries() -> (ullon, ullat),(lrlon,lrlat)\n\n"

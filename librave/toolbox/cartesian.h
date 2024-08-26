@@ -338,6 +338,46 @@ long Cartesian_getIndexX(Cartesian_t* cartesian, double x);
 long Cartesian_getIndexY(Cartesian_t* cartesian, double y);
 
 /**
+ * Converts a x/y position into lon/lat.
+ * @param[in] x - the x position, should >= 0 and < xsize.
+ * @param[in] y - the y position, should >= 0 and < ysize.
+ * @param[out] lon - the lon coordinate
+ * @param[out] lat - the lat coordinate
+ * @return 1 on success, otherwise 0
+ */
+int Cartesian_getLonLatFromXY(Cartesian_t* self, int x, int y, double* lon, double* lat);
+
+/**
+ * Converts a x/y cartesian coordinate into lon/lat.
+ * @param[in] x - the x position, should be inside x-extent
+ * @param[in] y - the y position, should be inside y-extent.
+ * @param[out] lon - the lon coordinate
+ * @param[out] lat - the lat coordinate
+ * @return 1 on success, otherwise 0
+ */
+int Cartesian_getLonLatFromXYLocation(Cartesian_t* self, double x, double y, double* lon, double* lat);
+
+/**
+ * Converts a lon/lat position into a x/y position
+ * @param[in] lon - the lon coordinate
+ * @param[in] lat - the lat coordinate
+ * @param[out] x - the x position, will be >= 0 and < xsize.
+ * @param[out] y - the y position, will be >= 0 and < ysize.
+ * @return 1 on success, otherwise 0
+ */
+int Cartesian_getXYFromLonLat(Cartesian_t* self, double lon, double lat, int* x, int* y);
+
+/**
+ * Converts a lon/lat position into a x/y cartesian coordinate
+ * @param[in] lon - the lon coordinate
+ * @param[in] lat - the lat coordinate
+ * @param[out] x - the cartesian x coordinate, should be inside x-extent.
+ * @param[out] y - the cartesian y coordinate, should be inside y-extent.
+ * @return 1 on success, otherwise 0
+ */
+int Cartesian_getXYLocationFromLonLat(Cartesian_t* self, double lon, double lat, double* x, double* y);
+
+/**
  * Sets the default parameter
  * @param[in] self - self
  * @param[in] name - the quantity, e.g. DBZH
