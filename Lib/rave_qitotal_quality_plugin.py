@@ -31,18 +31,28 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 
 import odim_source
 import qitotal_options
-import _polarscan, _polarvolume, _qitotal, _rave
+import _polarscan, _polarvolume, _qitotal, _rave, _ravefield
 
 from rave_quality_plugin import rave_quality_plugin
 from rave_quality_plugin import QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY
 
 from rave_defines import QITOTAL_METHOD
+import numpy
+
 ## Contains site-specific argument settings 
 
 QITOTAL_DTYPE  = _rave.RaveDataType_UCHAR
+QITOTAL_NP_DTYPE = numpy.uint8
 QITOTAL_GAIN   = 1.0/255.0
 QITOTAL_OFFSET = 0.0
-#QITOTAL_METHOD = "minimum"
+
+##
+# If no quality fields are available for the generation of a qi_total field then
+# there are 3 variants that is possible to select
+# 0 = No field is created
+# 1 = A field initialized with 0 is created
+# 2 = A field initialized with 1 (255) is created
+QITOTAL_DEFAULT_FIELD_MODE=2
 
 class rave_qitotal_quality_plugin(rave_quality_plugin):
   ##
@@ -87,7 +97,18 @@ class rave_qitotal_quality_plugin(rave_quality_plugin):
         method = getattr(qitotal, QITOTAL_METHOD)
         result = method(qitotalfields)
         scan.addOrReplaceQualityField(result)
-    
+    else:
+      if QITOTAL_DEFAULT_FIELD_MODE > 0:
+        df = _ravefield.new()
+        datafield = numpy.zeros((scan.nrays, scan.nbins), QITOTAL_NP_DTYPE)
+        if QITOTAL_DEFAULT_FIELD_MODE == 2:
+          datafield = datafield + 255
+        df.setData(datafield)
+        df.addAttribute("how/task", "pl.imgw.quality.qi_total")
+        df.addAttribute("how/task_args", "method:%s"%QITOTAL_METHOD)
+        df.addAttribute("what/gain", QITOTAL_GAIN)
+        df.addAttribute("what/offset", QITOTAL_OFFSET)
+        scan.addOrReplaceQualityField(df)
 
   ##
   # @param obj: A rave object that should be processed, bogus in this case.
