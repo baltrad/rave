@@ -23,7 +23,11 @@ along with HLHDF.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include "odc_hac.h"
-
+#include "polarscan.h"
+#include "rave_attribute.h"
+#include "rave_field.h"
+#include "rave_types.h"
+#include <stdio.h>
 
 int hacFilter(PolarScan_t* scan, RaveField_t* hac, char* quant) {
   PolarScanParam_t* param = NULL;
@@ -39,34 +43,85 @@ int hacFilter(PolarScan_t* scan, RaveField_t* hac, char* quant) {
   nrays = PolarScan_getNrays(scan);
 
   if (PolarScan_hasParameter(scan, quant)) {
-     param = PolarScan_getParameter(scan, quant);
-     qind = PolarScan_getQualityFieldByHowTask(scan, "eu.opera.odc.hac");
-     nodata = PolarScanParam_getNodata(param);
+    param = PolarScan_getParameter(scan, quant);
+    qind = PolarScan_getQualityFieldByHowTask(scan, "eu.opera.odc.hac");
+    nodata = PolarScanParam_getNodata(param);
 
-     attr = RaveField_getAttribute(qind, "how/task_args");
-     RaveAttribute_getDouble(attr, &thresh);
-     RAVE_OBJECT_RELEASE(attr);
-     attr = RaveField_getAttribute(hac, "how/count");
-     RaveAttribute_getLong(attr, &N);
-     
-     for (ir=0; ir<nrays; ir++) {
-       for (ib=0; ib<nbins; ib++) {
-         rvt = PolarScanParam_getValue(param, ib, ir, &val);
+    if (qind == NULL) {
+      qind = RAVE_OBJECT_NEW(&RaveField_TYPE);
+      if (qind != NULL) { // (scan.nrays, scan.nbins)
+        if (!RaveField_createData(qind, nrays, nbins, RaveDataType_UCHAR)) {
+          RAVE_ERROR0("Failed to create data field");
+          goto done;
+        }
+        attr = RaveAttributeHelp_createString("how/task", "eu.opera.odc.hac");
+        if (attr == NULL) {
+          RAVE_ERROR0("Failed to add how/task to quality field");
+          goto done;
+        }
+        if (!RaveField_addAttribute(qind, attr)) {
+          RAVE_ERROR0("Failed to add attribute to qfield");
+          goto done;
+        }
+        RAVE_OBJECT_RELEASE(attr);
+        if (!PolarScan_addQualityField(scan, qind)) {
+          RAVE_ERROR0("Failed to add hac quality field to scan");
+          goto done;
+        }
+      } else {
+        RAVE_ERROR0("Failed to create rave data field");
+        goto done;
+      }
+    }
 
-         if (rvt==RaveValueType_DATA) {
-           RaveField_getValue(hac, ib, ir, &ni);
-           Pi = 100 * (ni/(double)N);
+    attr = RaveField_getAttribute(qind, "how/task_args");
+    if (attr == NULL) {
+      thresh = 60.0;
+      attr = RaveAttributeHelp_createDouble("how/task_args", thresh);
+      if (attr == NULL || !RaveField_addAttribute(qind, attr)) {
+        RAVE_ERROR0("Failed to add how/task_args to quality field");
+        goto done;
+      }
+    } else {
+      RaveAttribute_getDouble(attr, &thresh);
+    }
+    RAVE_OBJECT_RELEASE(attr);
+    
+    attr = RaveAttributeHelp_createDouble("what/offset", 0.0);
+    if (attr == NULL || !RaveField_addAttribute(qind, attr)) {
+      RAVE_ERROR0("Failed to add what/offset to quality field");
+      goto done;
+    }
+    RAVE_OBJECT_RELEASE(attr);
 
-           if (Pi > thresh) {
-             PolarScanParam_setValue(param, ib, ir, nodata);
-             RaveField_setValue(qind, ib, ir, val);
-           }
-         }
-       }
-     }
+    attr = RaveAttributeHelp_createDouble("what/gain", 1.0/255.0);
+    if (attr == NULL || !RaveField_addAttribute(qind, attr)) {
+      RAVE_ERROR0("Failed to add what/gain to quality field");
+      goto done;
+    }
+    RAVE_OBJECT_RELEASE(attr);
 
-     retval = 1;
+    attr = RaveField_getAttribute(hac, "how/count");
+    RaveAttribute_getLong(attr, &N);
+      
+    for (ir=0; ir<nrays; ir++) {
+      for (ib=0; ib<nbins; ib++) {
+        rvt = PolarScanParam_getValue(param, ib, ir, &val);
+        RaveField_setValue(qind, ib, ir, 255);
+        if (rvt==RaveValueType_DATA) {
+          RaveField_getValue(hac, ib, ir, &ni);
+          Pi = 100 * (ni/(double)N);
+          if (Pi > thresh) {
+            PolarScanParam_setValue(param, ib, ir, nodata);
+            RaveField_setValue(qind, ib, ir, 0);
+          }
+        }
+      }
+    }
+
+    retval = 1;
   }
+done:
   RAVE_OBJECT_RELEASE(param);
   RAVE_OBJECT_RELEASE(qind);
   RAVE_OBJECT_RELEASE(attr);

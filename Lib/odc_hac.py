@@ -156,6 +156,7 @@ class HAC:
                 self.thresh = ARGS["default"].thresh
             ## Got site-specific threshold?
 
+            
             qind = _ravefield.new()
             qind.setData(zeros(hac_data.shape, uint8))
             qind.addAttribute("how/task", "eu.opera.odc.hac")
