@@ -27,6 +27,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #define RAVE_ATTRIBUTE_H
 #include "rave_object.h"
 #include "rave_types.h"
+#include <stdarg.h>
 
 typedef enum RaveAttribute_Format {
   RaveAttribute_Format_Undefined = -1, /**< Undefined */
@@ -263,6 +264,15 @@ RaveAttribute_t* RaveAttributeHelp_createDoubleArray(const char* name, double* v
  */
 RaveAttribute_t* RaveAttributeHelp_createArrayFromData(const char* name, void* value, int len, RaveDataType type);
 
+/**
+ * Creates a string from the provided varargs expression.
+ * @param[in] name - the name of the attribute
+ * @param[in] fmt  - the varargs string format
+ * @param[in] len - the number of items in the array
+ * @param[in] type - the data type
+ * @return a rave attribute on success otherwise NULL
+ */
+RaveAttribute_t* RaveAttributeHelp_createStringFmt(const char* name, const char* fmt, ...);
 
 #endif /* RAVE_ATTRIBUTE_H */
 
