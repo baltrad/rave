@@ -78,6 +78,7 @@ $(function(){ initResizable(false); });
 <code>#include &quot;<a class="el" href="raveobject__hashtable_8h_source.html">raveobject_hashtable.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="rave__data2d_8h_source.html">rave_data2d.h</a>&quot;</code><br />
 <code>#include &lt;errno.h&gt;</code><br />
+<code>#include &lt;stdio.h&gt;</code><br />
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
@@ -168,6 +169,9 @@ Functions</h2></td></tr>
 <tr class="memitem:a96ef3a8d4ca148f7065f8af60df4b2d1" id="r_a96ef3a8d4ca148f7065f8af60df4b2d1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="rave__attribute_8h.html#af6c25bb8521123e600ef452e2e2b58dd">RaveAttribute_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a96ef3a8d4ca148f7065f8af60df4b2d1">RaveAttributeHelp_createArrayFromData</a> (const char *name, void *value, int len, <a class="el" href="rave__types_8h.html#a6e2bc3369b60fb199fa2ff4306eeb423">RaveDataType</a> type)</td></tr>
 <tr class="memdesc:a96ef3a8d4ca148f7065f8af60df4b2d1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates an array from the provided data with the specified type and converts it into an appropriate array type.  <br /></td></tr>
 <tr class="separator:a96ef3a8d4ca148f7065f8af60df4b2d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5bcffee3b602ebea7d53bb9664f1b9e3" id="r_a5bcffee3b602ebea7d53bb9664f1b9e3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="rave__attribute_8h.html#af6c25bb8521123e600ef452e2e2b58dd">RaveAttribute_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a5bcffee3b602ebea7d53bb9664f1b9e3">RaveAttributeHelp_createStringFmt</a> (const char *name, const char *fmt,...)</td></tr>
+<tr class="memdesc:a5bcffee3b602ebea7d53bb9664f1b9e3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a string from the provided varargs expression.  <br /></td></tr>
+<tr class="separator:a5bcffee3b602ebea7d53bb9664f1b9e3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
 Variables</h2></td></tr>
@@ -953,6 +957,44 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a id="a5bcffee3b602ebea7d53bb9664f1b9e3" name="a5bcffee3b602ebea7d53bb9664f1b9e3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5bcffee3b602ebea7d53bb9664f1b9e3">&#9670;&#160;</a></span>RaveAttributeHelp_createStringFmt()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="rave__attribute_8h.html#af6c25bb8521123e600ef452e2e2b58dd">RaveAttribute_t</a> * RaveAttributeHelp_createStringFmt </td>
+          <td>(</td>
+          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>name</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>fmt</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>...</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Creates a string from the provided varargs expression. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>- the name of the attribute </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">fmt</td><td>- the varargs string format </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">len</td><td>- the number of items in the array </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">type</td><td>- the data type </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>a rave attribute on success otherwise NULL </dd></dl>
+
+</div>
+</div>
 <a id="a7bb915609ff34605fc8dfc32f90076e2" name="a7bb915609ff34605fc8dfc32f90076e2"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a7bb915609ff34605fc8dfc32f90076e2">&#9670;&#160;</a></span>RaveAttributeHelp_extractGroupAndName()</h2>
 
@@ -1040,7 +1082,7 @@ Variables</h2></td></tr>
 <div class="line">  RaveAttribute_destructor,</div>
 <div class="line">  RaveAttribute_copyconstructor</div>
 <div class="line">}</div>
-<div class="ttc" id="arave__attribute_8h_html_af6c25bb8521123e600ef452e2e2b58dd"><div class="ttname"><a href="rave__attribute_8h.html#af6c25bb8521123e600ef452e2e2b58dd">RaveAttribute_t</a></div><div class="ttdeci">struct _RaveAttribute_t RaveAttribute_t</div><div class="ttdoc">Defines a rave attribute.</div><div class="ttdef"><b>Definition</b> rave_attribute.h:43</div></div>
+<div class="ttc" id="arave__attribute_8h_html_af6c25bb8521123e600ef452e2e2b58dd"><div class="ttname"><a href="rave__attribute_8h.html#af6c25bb8521123e600ef452e2e2b58dd">RaveAttribute_t</a></div><div class="ttdeci">struct _RaveAttribute_t RaveAttribute_t</div><div class="ttdoc">Defines a rave attribute.</div><div class="ttdef"><b>Definition</b> rave_attribute.h:44</div></div>
 </div><!-- fragment -->
 <p>Type definition to use when creating a rave object. </p>
 
