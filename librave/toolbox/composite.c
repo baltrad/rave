@@ -698,7 +698,8 @@ static CompositeValuesVector_t * CompositeInternal_createCompositeValuesVector(i
       RAVE_CRITICAL0("Failed to allocate memory for composite values");
       return NULL;
     } else {
-      for (int i = 0; i < nradars; i++) {
+      int i = 0;
+      for (i = 0; i < nradars; i++) {
         result->valuesVector[i] = CompositeInternal_createCompositeValues(nparam);
       }
       result->nradars = nradars;
@@ -709,12 +710,13 @@ static CompositeValuesVector_t * CompositeInternal_createCompositeValuesVector(i
 
 static CompositeValuesVector_t * CompositeInternal_deleteCompositeValuesVector(CompositeValuesVector_t * v, int nparam)
 {
+  int i = 0, j = 0;
   if (v == NULL) {
     return NULL;
   }
   CompositeValuesVector_t * result = NULL;
-  for (int j = 0; j < v->nradars; j++) {
-    for (int i = 0; v->valuesVector[j] != NULL && i < nparam; i++) {
+  for (j = 0; j < v->nradars; j++) {
+    for (i = 0; v->valuesVector[j] != NULL && i < nparam; i++) {
       if (v->valuesVector[j][i].parameter != NULL) {
         RAVE_OBJECT_RELEASE(v->valuesVector[j][i].parameter);
       }
@@ -735,7 +737,8 @@ static CompositeValuesVector_t * CompositeInternal_deleteCompositeValuesVector(C
  */
 static void CompositeInternal_resetCompositeValuesVector(Composite_t* composite, int nparam, CompositeValuesVector_t* p)
 {
-  for (int j = 0; j < p->nradars; j++) {
+  int j = 0;
+  for (j = 0; j < p->nradars; j++) {
     CompositeInternal_resetCompositeValues(composite, nparam, p->valuesVector[j]);
   }
 }
@@ -2894,7 +2897,8 @@ static int CompositeInternal_initProjectionAndVolume(Composite_t* composite,
                                                      RaveObjectList_t* pipelines,
                                                      int nradars)
 {
-  for (int i = 0; i < nradars; i++) {
+  int i = 0;
+  for (i = 0; i < nradars; i++) {
     RaveCoreObject* obj = Composite_get(composite, i);
     if (obj != NULL) {
       Projection_t* objproj = CompositeInternal_getProjection(obj);
@@ -2949,7 +2953,8 @@ static int CompositInternal_getAndInterpolateRadarData(Composite_t* composite,
                                                        int nparam,
                                                        int nradars)
 {
-  for (int i = 0; i < nradars; i++) {
+  int i = 0;
+  for (i = 0; i < nradars; i++) {
     RaveCoreObject* obj = NULL;
     ProjectionPipeline_t* pipeline = NULL;
     obj = Composite_get(composite, i);
@@ -2975,6 +2980,7 @@ static int CompositInternal_getAndInterpolateRadarData(Composite_t* composite,
         }
         /* Initialize just in case */
         if (dist <= maxdist) {
+          int cindex = 0;
           int noOfValuePositions = CompositeInternal_getValuePositions(composite, obj, *olon, *olat,
                                                                        interpolationDimensions,
                                                                        valuePositions);
@@ -2986,7 +2992,7 @@ static int CompositInternal_getAndInterpolateRadarData(Composite_t* composite,
               dist = CompositeInternal_getValuePositionsLowestHeight(valuePositions, noOfValuePositions);
             }
 
-            for (int cindex = 0; cindex < nparam; cindex++) {
+            for (cindex = 0; cindex < nparam; cindex++) {
               RaveValueType otype = RaveValueType_NODATA;
               double ovalue = 0.0, qivalue = 0.0;
 
@@ -3106,6 +3112,7 @@ static int CompositeInternal_interpolateBetweenRadars(Composite_t* composite,
   double* minheight_dists = NULL;
   int* radarindexes = NULL;
   int* vtypes = NULL;
+  int j = 0, i = 0;
 
   values = RAVE_MALLOC(sizeof(double) * values_vector->nradars);
   if (values == NULL) {
@@ -3138,10 +3145,10 @@ static int CompositeInternal_interpolateBetweenRadars(Composite_t* composite,
     goto clean_up;
   }
   /* For every parameter, interpolate for every radar that has data */
-  for (int j = 0; j < nparam; j++) {
+  for (j = 0; j < nparam; j++) {
     /* Skip radars with NODATA */
     int valid_value_index = 0;
-    for (int i = 0; i < values_vector->nradars; i++) {
+    for (i = 0; i < values_vector->nradars; i++) {
       if (values_vector->valuesVector[i][j].vtype == RaveValueType_NODATA) {
         continue;
       }
@@ -3159,7 +3166,8 @@ static int CompositeInternal_interpolateBetweenRadars(Composite_t* composite,
       double maxval = -30.0;
       double mindist = 0;
       int index;
-      for (int k = 0; k < valid_value_index; k++) {
+      int k = 0;
+      for (k = 0; k < valid_value_index; k++) {
         if (composite->method == CompositeSelectionMethod_HEIGHT) {
           /* Always use max value for quality information */
           /* Get the index that has the maximum quality value */
@@ -3283,7 +3291,8 @@ static int CompositInternal_getAndInterpolateRadarDataForCAPPI(Composite_t* comp
 {
   int radars_with_data = 0;
   int last_radar_index_with_data = -1;
-  for (int i = 0; i < nradars; i++) {
+  int i = 0;
+  for (i = 0; i < nradars; i++) {
     RaveCoreObject* obj = NULL;
     ProjectionPipeline_t* pipeline = NULL;
     obj = Composite_get(composite, i);
@@ -3315,7 +3324,8 @@ static int CompositInternal_getAndInterpolateRadarDataForCAPPI(Composite_t* comp
                                                                        valuePositions);
           if (noOfValuePositions <= 0) {
             /* here we may have overlap between radars at the same coordinate */
-            for (int cindex = 0; cindex < nparam; cindex++) {
+            int cindex = 0;
+            for (cindex = 0; cindex < nparam; cindex++) {
               RaveValueType otype = RaveValueType_NODATA;
               double ovalue = 0.0, qivalue = 0.0;
               cvalues_vector->valuesVector[i][cindex].vtype = otype;
@@ -3334,6 +3344,7 @@ static int CompositInternal_getAndInterpolateRadarDataForCAPPI(Composite_t* comp
               }
             }
           } else {
+            int cindex = 0;
             /* Remember distance to radar */
             rdist = dist;
 
@@ -3342,7 +3353,7 @@ static int CompositInternal_getAndInterpolateRadarDataForCAPPI(Composite_t* comp
               dist = fabs(valuePositions[0].navinfo.actual_height - composite->height);
             }
 
-            for (int cindex = 0; cindex < nparam; cindex++) {
+            for (cindex = 0; cindex < nparam; cindex++) {
               RaveValueType otype = RaveValueType_NODATA;
               double ovalue = 0.0, qivalue = 0.0;
 
@@ -3446,7 +3457,7 @@ Cartesian_t* Composite_generate(Composite_t* composite, Area_t* area, RaveList_t
   CompositeValuesVector_t * cvalues_vector = NULL;
   RaveObjectList_t* pipelines = NULL;
   int interpolationDimensions[NO_OF_COMPOSITE_INTERPOLATION_DIMENSIONS] = {0};
-  int x = 0, y = 0, i = 0, xsize = 0, ysize = 0, nradars = 0;
+  int x = 0, y = 0, i = 0, j = 0, xsize = 0, ysize = 0, nradars = 0;
   int nqualityflags = 0;
   int nparam = 0;
 
@@ -3506,7 +3517,7 @@ Cartesian_t* Composite_generate(Composite_t* composite, Area_t* area, RaveList_t
   }
   
   /* Init vector */
-  for (int j = 0; j < cvalues_vector->nradars; j++) {
+  for (j = 0; j < cvalues_vector->nradars; j++) {
     for (i = 0; i < nparam; i++) {
       const char* name = Composite_getParameter(composite, i, NULL, NULL);
       cvalues_vector->valuesVector[j][i].parameter = Cartesian_getParameter(result, name); // Keep track on parameters
