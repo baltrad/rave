@@ -38,8 +38,6 @@ HLHDF_LDPATH=`fgrep HLHDF_LIB_DIR "${DEF_MK_FILE}" | sed -e"s/\(HLHDF_LIB_DIR=[ 
 
 PROJ_LDPATH=`fgrep PROJ_LIB_DIR "${DEF_MK_FILE}" | sed -e"s/\(PROJ_LIB_DIR=[ \t]*\)//" | sed -e"s/-L//"`
 
-BNAME=`$PYTHON_BIN -c 'from distutils import util; import sys; print("lib.%s-%s" % (util.get_platform(), sys.version[0:3]))'`
-
 RBPATH="${SCRIPTPATH}/../Lib:${SCRIPTPATH}/../modules"
 RAVE_LDPATH="${SCRIPTPATH}/../librave/tnc:${SCRIPTPATH}/../librave/toolbox:${SCRIPTPATH}/../librave/pyapi:${SCRIPTPATH}/../librave/scansun:${SCRIPTPATH}/../librave/radvol/lib"
 XRUNNERPATH="${SCRIPTPATH}/../test/lib"

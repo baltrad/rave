@@ -239,7 +239,7 @@ void RaveCoreObject_setTrackObjects(int track);
 /**
  * @returns if object creation / destruction is tracked.
 */
-int RaveCoreObject_getTrackObjects();
+int RaveCoreObject_getTrackObjects(void);
 
 /**
  * Print current status of object creation.

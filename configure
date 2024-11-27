@@ -738,9 +738,6 @@ ac_subst_files=''
 ac_user_opts='
 enable_option_checking
 with_python
-enable_py3support
-with_py3bin
-with_python_makefile
 with_proj
 with_legacy_proj
 with_new_proj
@@ -1381,15 +1378,13 @@ Optional Features:
   --disable-option-checking  ignore unrecognized --enable/--with options
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
-  --enable-py3support     Builds rave with support for python3.
   --enable-debug-memory     Turns on the rave memory debugging. This should usually not be activated.
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
-  --with-python=(yes|no)     Compile for python
-  --with-py3bin=python3 What python binary to use
-  --with-python-makefile=Makefile  Where the makefile used for building python can be found
+  --with-python=yes|no|<python binary>
+                          name of python binary or full path to python binary
   --with-proj=ROOT or INC,LIB       Use proj and try to identify version automatically. First tries proj >= 6 and then proj.4 or 5
   --with-legacy-proj=ROOT or INC,LIB       Use the legacy proj library (default disabled)
   --with-new-proj=ROOT or INC,LIB       Use the new proj library (default disabled)
@@ -1570,6 +1565,39 @@ fi
 
 } # ac_fn_c_try_cpp
 
+# ac_fn_c_check_header_compile LINENO HEADER VAR INCLUDES
+# -------------------------------------------------------
+# Tests whether HEADER exists and can be compiled using the include files in
+# INCLUDES, setting the cache variable VAR accordingly.
+ac_fn_c_check_header_compile ()
+{
+  as_lineno=${as_lineno-"$1"} as_lineno_stack=as_lineno_stack=$as_lineno_stack
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $2" >&5
+printf %s "checking for $2... " >&6; }
+if eval test \${$3+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+$4
+#include <$2>
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"
+then :
+  eval "$3=yes"
+else $as_nop
+  eval "$3=no"
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
+fi
+eval ac_res=\$$3
+	       { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_res" >&5
+printf "%s\n" "$ac_res" >&6; }
+  eval $as_lineno_stack; ${as_lineno_stack:+:} unset as_lineno
+
+} # ac_fn_c_check_header_compile
+
 # ac_fn_c_try_link LINENO
 # -----------------------
 # Try to link conftest.$ac_ext, and return whether this succeeded.
@@ -1616,39 +1644,6 @@ fi
   as_fn_set_status $ac_retval
 
 } # ac_fn_c_try_link
-
-# ac_fn_c_check_header_compile LINENO HEADER VAR INCLUDES
-# -------------------------------------------------------
-# Tests whether HEADER exists and can be compiled using the include files in
-# INCLUDES, setting the cache variable VAR accordingly.
-ac_fn_c_check_header_compile ()
-{
-  as_lineno=${as_lineno-"$1"} as_lineno_stack=as_lineno_stack=$as_lineno_stack
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $2" >&5
-printf %s "checking for $2... " >&6; }
-if eval test \${$3+y}
-then :
-  printf %s "(cached) " >&6
-else $as_nop
-  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-$4
-#include <$2>
-_ACEOF
-if ac_fn_c_try_compile "$LINENO"
-then :
-  eval "$3=yes"
-else $as_nop
-  eval "$3=no"
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
-fi
-eval ac_res=\$$3
-	       { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_res" >&5
-printf "%s\n" "$ac_res" >&6; }
-  eval $as_lineno_stack; ${as_lineno_stack:+:} unset as_lineno
-
-} # ac_fn_c_check_header_compile
 
 # ac_fn_c_try_run LINENO
 # ----------------------
@@ -2381,160 +2376,299 @@ if test "${prefix}" = "NONE"; then
 	prefix=/usr/local/rave
 fi
 
+#
+# SYNOPSIS
+#
+#   CHECK_PYTHON()
+#
+#   Optional argument 'keepvar' that will indicate to the script that CPPFLAGS & LDFLAGS should be restored after
+#   macro has been run.
+#
+# DESCRIPTION
+#
+#   Macro for identifying python config
+#
+#   The macro provides two options.
+#
+#   --with-python=[yes | no | path]
+#                        where path should be name of python binary, either absolute path or just the binary, like python3.
+#                        If path is specified, then this path will be used for an atempt to compile the code.
+#                        Default is yes and to use python3.
+#
+#
+#   This macro will atempt to identify and extract all variables that are necessary to compile and build a python c module.
+#   It has only been verified for python3. It assumes that python3 sysconfig exists.
+#
+#   The following variables will be set.
+#   - PYTHON_SUPPRESSED    If python should not be checked for (--with-python=no)
+#   PYTHON_FOUND=yes|no
+#   PYTHON_CHECK_OK=yes|no
+#   PYTHON_BINARY=
+#   PYTHON_VERSION=
+#   PYTHON_CC=
+#   PYTHON_INCLUDE=
+#   PYTHON_SITEPACK=
+#   PYTHON_LIBDIR=
+#   PYTHON_OPTS=
+#   PYTHON_LDFLAGS=
+#   PYTHON_LDSHARED=
+#   PYTHON_CCSHARED=
+#
+# LICENSE
+#   Copyright (c) 2024 Anders Henja (anders@henjab.se)
+#
+#   Copying and distribution of this file, with or without modification, are
+#   permitted in any medium without royalty provided the copyright notice
+#   and this notice are preserved. This file is offered as-is, without any
+#   warranty.
+
+
+
 LIBS=-lm
 
 
 
+PYTHON_FOUND=no
+PYTHON_CHECK_OK=yes
+PYTHON_BINARY=
+PYTHON_VERSION=
+PYTHON_CC=
+PYTHON_INCLUDE=
+PYTHON_SITEPACK=
+PYTHON_LIBDIR=
+PYTHON_OPTS=
+PYTHON_LDFLAGS=
+PYTHON_LDSHARED=
+PYTHON_CCSHARED=
+PYTHON_SUPPRESSED=no
+
+check_python_with_python=
+check_python_python_path=python3
+
+# Add a default --with-python configuration option.
+
 # Check whether --with-python was given.
 if test ${with_python+y}
 then :
-  withval=$with_python;
+  withval=$with_python;  if test "$withval" = "no" -o "$withval" = "yes"; then
+      check_python_with_python="$withval"
+    else
+      check_python_with_python="yes"
+      check_python_python_path="$withval"
+    fi
+
 else $as_nop
-  withval=yes
+  check_python_with_python="yes"
+
 fi
 
-COMPILE_FOR_PYTHON=yes
-case $withval in
-  no)
-       COMPILE_FOR_PYTHON=no
-       ;;
-  *)
-       ;;
-esac
 
-# Allow specify of enable-py3support for backward compatibility but if it is disabled we will fail configuration
-py3support=yes
-# Check whether --enable-py3support was given.
-if test ${enable_py3support+y}
-then :
-  enableval=$enable_py3support; py3support=$enableval
-fi
+if [ "$check_python_with_python" != "no" ]; then
+  PYTHON_FOUND=yes
 
-if [ "$COMPILE_FOR_PYTHON" = "yes" ]; then
-  if [ "x$py3support" != "xyes" ]; then
-    as_fn_error $? "Only python3 is supported" "$LINENO" 5
-  fi
-fi
-
-# --enable-py3support
-# --with-py3bin=python3.6
-# --with-py3bin-config=python3.6-config
-# --with-python-makefile=/usr/lib64/python3.6/config-3.6m-x86_64-linux-gnu/Makefile
-PYBIN=
-
-# Check whether --with-py3bin was given.
-if test ${with_py3bin+y}
-then :
-  withval=$with_py3bin;
-else $as_nop
-  withval=
-fi
-
-if [ "$COMPILE_FOR_PYTHON" = "yes" ]; then
-  PYBINSTOTEST="python3 python"
-  if [ "$withval" != "" ]; then
-    PYBINSTOTEST=$withval
-  fi
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking what python binary to use" >&5
-printf %s "checking what python binary to use... " >&6; }
-  for pybin in $PYBINSTOTEST; do
-    which $pybin >> /dev/null 2>&1
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking if we can identify a python executable" >&5
+printf %s "checking if we can identify a python executable... " >&6; }
+  which "$check_python_python_path" >> /dev/null 2>&1
+  if [ $? -eq 0 ]; then
+    X=`"$check_python_python_path" -c "import sys" >> /dev/null 2>&1`
     if [ $? -eq 0 ]; then
-      PYVER=`$pybin -c "import sys; print(sys.version_info[0])"`
-      PY_MIN_VER=`$pybin -c "import sys; print(sys.version_info[1])"`
-      if [ $? -eq 0 ]; then
-        if [ "$PYVER" = "" -o "$PY_MIN_VER" = "" ]; then
-          as_fn_error $? "Could not identify python versions Major=$PYVER Minor=$PY_MIN_VER" "$LINENO" 5
-        fi
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: Yes" >&5
+printf "%s\n" "Yes" >&6; }
+    else
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: No" >&5
+printf "%s\n" "No" >&6; }
+      PYTHON_FOUND=no
+    fi
+  else
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: No" >&5
+printf "%s\n" "No" >&6; }
+    PYTHON_FOUND=no
+  fi
 
-        if [ $PYVER -ge 3 -a $PY_MIN_VER -ge 2 ]; then
-          PYBIN=$pybin
-          break
+  if [ "$PYTHON_FOUND" = "yes" ]; then
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking python binary path" >&5
+printf %s "checking python binary path... " >&6; }
+    PYTHON_BINARY="$check_python_python_path"
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $PYTHON_BINARY" >&5
+printf "%s\n" "$PYTHON_BINARY" >&6; }
+
+
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking Python version" >&5
+printf %s "checking Python version... " >&6; }
+    PYTHON_VERSION=`"$check_python_python_path" -c "import sys;v=sys.version_info;print('%d.%d.%d'%(v.major, v.minor, v.micro))"`
+    if [ $? -eq 0 ]; then
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $PYTHON_VERSION" >&5
+printf "%s\n" "$PYTHON_VERSION" >&6; }
+    else
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: failed" >&5
+printf "%s\n" "$as_me: WARNING: failed" >&2;}
+      PYTHON_CHECK_OK=no
+    fi
+
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for python compiler" >&5
+printf %s "checking for python compiler... " >&6; }
+    PYTHON_CC=`"$PYTHON_BINARY" -c "import sysconfig; print(sysconfig.get_config_var('CC') or '')"`
+    if [ $? -eq 0 ]; then
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $PYTHON_CC" >&5
+printf "%s\n" "$PYTHON_CC" >&6; }
+    else
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: failed" >&5
+printf "%s\n" "$as_me: WARNING: failed" >&2;}
+      PYTHON_CHECK_OK=no
+    fi
+
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for python include path" >&5
+printf %s "checking for python include path... " >&6; }
+    P_INCLUDE=`"$PYTHON_BINARY" -c "import sysconfig; print(sysconfig.get_path('include') or '')"`
+    if [ $? -eq 0 ]; then
+      P_INCLUDE="-I$P_INCLUDE"
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $P_INCLUDE" >&5
+printf "%s\n" "$P_INCLUDE" >&6; }
+    else
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: failed" >&5
+printf "%s\n" "$as_me: WARNING: failed" >&2;}
+      PYTHON_CHECK_OK=no
+    fi
+
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for python plat include path" >&5
+printf %s "checking for python plat include path... " >&6; }
+    PLAT_INCLUDE=`"$PYTHON_BINARY" -c "import sysconfig; print(sysconfig.get_path('platinclude') or '')"`
+    if [ $? -eq 0 ]; then
+      if [ "$PLAT_INCLUDE" != "" ]; then
+        PLAT_INCLUDE="-I$PLAT_INCLUDE"
+        if [ "$PLAT_INCLUDE" = "$P_INCLUDE" ]; then
+          PLAT_INCLUDE=""
         fi
       fi
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $PLAT_INCLUDE" >&5
+printf "%s\n" "$PLAT_INCLUDE" >&6; }
+    else
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: failed" >&5
+printf "%s\n" "$as_me: WARNING: failed" >&2;}
+      PYTHON_CHECK_OK=no
     fi
-  done
-  if [ "$PYBIN" != "" ]; then
-    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $PYBIN" >&5
-printf "%s\n" "$PYBIN" >&6; }
-  else
-    as_fn_error $? "Could not identify proper python binary. Must be >= 3.2" "$LINENO" 5
-  fi
-fi
 
-PY_PYTHON_BIN="$PYBIN"
+    PYTHON_INCLUDE="$P_INCLUDE $PLAT_INCLUDE"
 
-if [ "$COMPILE_FOR_PYTHON" = "yes" ]; then
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for python version" >&5
-printf %s "checking for python version... " >&6; }
-  PYVERSION=`$PYBIN -c "import sysconfig; print(sysconfig.get_python_version())"`
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $PYVERSION" >&5
-printf "%s\n" "$PYVERSION" >&6; }
-
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for python exec dir" >&5
-printf %s "checking for python exec dir... " >&6; }
-  PY_EXEC_INSTALLDIR=`$PYBIN -c "import sysconfig; print(sysconfig.get_config_var(\"exec_prefix\"))"`
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $PY_EXEC_INSTALLDIR" >&5
-printf "%s\n" "$PY_EXEC_INSTALLDIR" >&6; }
-fi
-
-PY_CONFIG_MAKE=
-
-# Check whether --with-python-makefile was given.
-if test ${with_python_makefile+y}
-then :
-  withval=$with_python_makefile;
-else $as_nop
-  withval=no
-fi
-
-if [ "$COMPILE_FOR_PYTHON" = "yes" ]; then
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for python Makefile" >&5
-printf %s "checking for python Makefile... " >&6; }
-  if [ "$withval" != "no" ]; then
-    if [ -f $withval ]; then
-      PY_CONFIG_MAKE="$withval"
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for python site package path" >&5
+printf %s "checking for python site package path... " >&6; }
+    PYTHON_SITEPACK=`"$PYTHON_BINARY" -c "import sysconfig; print(sysconfig.get_path('platlib') or '')"`
+    if [ $? -eq 0 ]; then
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $PYTHON_SITEPACK" >&5
+printf "%s\n" "$PYTHON_SITEPACK" >&6; }
+    else
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: failed" >&5
+printf "%s\n" "$as_me: WARNING: failed" >&2;}
+      PYTHON_CHECK_OK=no
     fi
+
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for python library dir" >&5
+printf %s "checking for python library dir... " >&6; }
+    PYTHON_LIBDIR=`"$PYTHON_BINARY" -c "import sysconfig; print(sysconfig.get_config_var('LIBDIR') or '')"`
+    if [ $? -eq 0 ]; then
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $PYTHON_LIBDIR" >&5
+printf "%s\n" "$PYTHON_LIBDIR" >&6; }
+    else
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: failed" >&5
+printf "%s\n" "$as_me: WARNING: failed" >&2;}
+      PYTHON_CHECK_OK=no
+    fi
+
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for python options" >&5
+printf %s "checking for python options... " >&6; }
+    PYTHON_OPTS=`"$PYTHON_BINARY" -c "import sysconfig; print(sysconfig.get_config_var('OPT') or '')"`
+    if [ $? -eq 0 ]; then
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $PYTHON_OPTS" >&5
+printf "%s\n" "$PYTHON_OPTS" >&6; }
+    else
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: failed" >&5
+printf "%s\n" "$as_me: WARNING: failed" >&2;}
+      PYTHON_CHECK_OK=no
+    fi
+
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for python ldflags" >&5
+printf %s "checking for python ldflags... " >&6; }
+    PYTHON_LDFLAGS=`"$PYTHON_BINARY" -c "import sysconfig; print(sysconfig.get_config_var('LDFLAGS') or '')"`
+    if [ $? -eq 0 ]; then
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $PYTHON_LDFLAGS" >&5
+printf "%s\n" "$PYTHON_LDFLAGS" >&6; }
+    else
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: failed" >&5
+printf "%s\n" "$as_me: WARNING: failed" >&2;}
+      PYTHON_CHECK_OK=no
+    fi
+
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for python ldshared" >&5
+printf %s "checking for python ldshared... " >&6; }
+    PYTHON_LDSHARED=`"$PYTHON_BINARY" -c "import sysconfig; print(sysconfig.get_config_var('LDSHARED') or '')"`
+    if [ $? -eq 0 ]; then
+    # Special hack for mac osx.
+    check_python_ismacos=no
+    case `uname -s` in
+      Darwin*)
+        check_python_ismacos=yes
+        ;;
+      darwin*)
+        check_python_ismacos=yes
+        ;;
+      esac
+      if [ "$check_python_ismacos" = "yes" ]; then
+        PYTHON_LDSHARED=`echo $PYTHON_LDSHARED | sed -e "s/[ \t]-bundle[ \t]/ -dynamiclib /g"`
+      fi
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $PYTHON_LDSHARED" >&5
+printf "%s\n" "$PYTHON_LDSHARED" >&6; }
+    else
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: failed" >&5
+printf "%s\n" "$as_me: WARNING: failed" >&2;}
+      PYTHON_CHECK_OK=no
+    fi
+
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for python ccshared" >&5
+printf %s "checking for python ccshared... " >&6; }
+    PYTHON_CCSHARED=`"$PYTHON_BINARY" -c "import sysconfig; print(sysconfig.get_config_var('CCSHARED') or '')"`
+    if [ $? -eq 0 ]; then
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $PYTHON_CCSHARED" >&5
+printf "%s\n" "$PYTHON_CCSHARED" >&6; }
+    else
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: failed" >&5
+printf "%s\n" "$as_me: WARNING: failed" >&2;}
+      PYTHON_CHECK_OK=no
+    fi
+
   fi
-
-  if [ "x$PY_CONFIG_MAKE" = "x" ]; then
-    PY_CONFIG_MAKE=`$PYBIN -c "import sysconfig; print(sysconfig.get_makefile_filename() or '')"`
-  fi
-
-  if [ ! -f "$PY_CONFIG_MAKE" ]; then
-    as_fn_error $? "Could not successfully find the python Makefile" "$LINENO" 5
-  fi
-
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $PY_CONFIG_MAKE" >&5
-printf "%s\n" "$PY_CONFIG_MAKE" >&6; }
-
+else
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: Python check suppressed" >&5
+printf "%s\n" "$as_me: Python check suppressed" >&6;}
+  PYTHON_SUPPRESSED=yes
 fi
 
 
-if [ "$COMPILE_FOR_PYTHON" = "yes" ]; then
-  #
-  # Extract what compiler the python binary was compiled with
-  #
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for the compiler used for generating python" >&5
-printf %s "checking for the compiler used for generating python... " >&6; }
 
-  PYCC=`$PYBIN -c "import sysconfig; print(sysconfig.get_config_var(\"CC\") or '')"`
 
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $PYCC" >&5
-printf "%s\n" "$PYCC" >&6; }
+PYBIN=
+PY_PYTHON_BIN=
+PYCC=$CC
+PY_INCLUDES=
+PY_SITEPACK=
+PYOPT=
+PYLDFLAGS=
+PYLDSHARED=
+PYCCSHARED=
+PYDEFS=
 
-        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking if python CC defines pthread usage" >&5
-printf %s "checking if python CC defines pthread usage... " >&6; }
-  PYPTHREADCC=`echo $PYCC | grep "pthread"`
-  PYGOTPTHREAD=no
-  if [ "$PYPTHREADCC" != "" ]; then
-    PYGOTPTHREAD=yes
-  fi
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $PYGOTPTHREAD" >&5
-printf "%s\n" "$PYGOTPTHREAD" >&6; }
-
-fi #if COMPILE_FOR_PYTHON
-
+if [ "$PYTHON_FOUND" = "yes" ]; then
+  PYBIN=$PYTHON_BINARY
+  PY_PYTHON_BIN=$PYTHON_BINARY
+  PYCC=$PYTHON_CC
+  PY_INCLUDES=$PYTHON_INCLUDE
+  PY_SITEPACK=$PYTHON_SITEPACK
+  PYOPT=$PYTHON_OPTS
+  PYLDFLAGS=$PYTHON_LDFLAGS
+  PYLDSHARED=$PYTHON_LDSHARED
+  PYCCSHARED=$PYTHON_CCSHARED
+  PYDEFS=
+  COMPILE_FOR_PYTHON=yes
+fi
 
 if test -n "$ac_tool_prefix"; then
   # Extract the first word of "${ac_tool_prefix}ranlib", so it can be a program name with args.
@@ -3499,92 +3633,7 @@ done
 test -n "$AR" || AR="ar"
 
 
-PYCC=$CC
-
-PY_INCLUDES=
-PY_SITEPACK=
-PYOPT=
-PYLDFLAGS=
-PYLDSHARED=
-PYCCSHARED=
-PYDEFS=
-
-if [ "$COMPILE_FOR_PYTHON" = "yes" ]; then
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for python includes" >&5
-printf %s "checking for python includes... " >&6; }
-  PY_PATH_INCLUDES=`$PYBIN -c "import sysconfig; print(sysconfig.get_path(\"include\") or '')"`
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $PY_PATH_INCLUDES" >&5
-printf "%s\n" "$PY_PATH_INCLUDES" >&6; }
-
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for platform specific python includes" >&5
-printf %s "checking for platform specific python includes... " >&6; }
-  PY_PATH_PLAT_INCLUDES=`$PYBIN -c "import sysconfig; print(sysconfig.get_path(\"platinclude\") or '')"`
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $PY_PATH_PLAT_INCLUDES" >&5
-printf "%s\n" "$PY_PATH_PLAT_INCLUDES" >&6; }
-
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for python include directives" >&5
-printf %s "checking for python include directives... " >&6; }
-  PY_INCLUDES="-I$PY_PATH_INCLUDES -I$PY_PATH_PLAT_INCLUDES"
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $PY_INCLUDES" >&5
-printf "%s\n" "$PY_INCLUDES" >&6; }
-
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for python lib platform site-packages" >&5
-printf %s "checking for python lib platform site-packages... " >&6; }
-  TMP_SITEPACK=`$PYBIN -c "import sysconfig; print(sysconfig.get_path(\"platlib\") or '')"`
-  if [ "$TMP_SITEPACK" != "" ]; then
-    PY_SITEPACK="$TMP_SITEPACK"
-  else
-    as_fn_error $? "Failed to identify site-packages" "$LINENO" 5
-  fi
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $PY_SITEPACK" >&5
-printf "%s\n" "$PY_SITEPACK" >&6; }
-
-    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for python options" >&5
-printf %s "checking for python options... " >&6; }
-  PYOPT=`$PYBIN -c "import sysconfig; print(sysconfig.get_config_var(\"OPT\") or '')"`
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $PYOPT" >&5
-printf "%s\n" "$PYOPT" >&6; }
-
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for ldflags" >&5
-printf %s "checking for ldflags... " >&6; }
-  PYLDFLAGS=`$PYBIN -c "import sysconfig; print(sysconfig.get_config_var(\"LDFLAGS\") or '')"`
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $PYLDFLAGS" >&5
-printf "%s\n" "$PYLDFLAGS" >&6; }
-
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for ldshared" >&5
-printf %s "checking for ldshared... " >&6; }
-  PYLDSHARED=`$PYBIN -c "import sysconfig; print(sysconfig.get_config_var(\"LDSHARED\") or '')"`
-
-  # Special hack for mac osx.
-  ISMACOS=no
-  case `uname -s` in
-    Darwin*)
-      ISMACOS=yes
-      ;;
-    darwin*)
-      ISMACOS=yes
-      ;;
-  esac
-
-  if [ "x$ISMACOS" = "xyes" ]; then
-    PYLDSHARED=`echo $PYLDSHARED | sed -e "s/[ \t]-bundle[ \t]/ -dynamiclib /g"`
-  fi
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $PYLDSHARED" >&5
-printf "%s\n" "$PYLDSHARED" >&6; }
-
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for ccshared" >&5
-printf %s "checking for ccshared... " >&6; }
-  PYCCSHARED=`$PYBIN -c "import sysconfig; print(sysconfig.get_config_var(\"CCSHARED\") or '')"`
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $PYCCSHARED" >&5
-printf "%s\n" "$PYCCSHARED" >&6; }
-
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for defs" >&5
-printf %s "checking for defs... " >&6; }
-  PYDEFS=`$PYBIN -c "import sysconfig; print(sysconfig.get_config_var(\"DEFS\") or '')"`
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $PYDEFS" >&5
-printf "%s\n" "$PYDEFS" >&6; }
-
-else #if COMPILE_FOR_PYTHON
+if [ "$PYTHON_SUPPRESSED" != "yes" ]; then
   # If we are building without python support, then we still want to use a similar way to identify compiler flags as when running Python.
   # This part has been taken from python config-file since we still want the same behaviour regardless if we are building for python or not.
   #
@@ -3980,49 +4029,6 @@ printf "%s\n" "$have_O2" >&6; }
 fi
 
 fi
-
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for itrunc in -lc" >&5
-printf %s "checking for itrunc in -lc... " >&6; }
-if test ${ac_cv_lib_c_itrunc+y}
-then :
-  printf %s "(cached) " >&6
-else $as_nop
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lc  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-char itrunc ();
-int
-main (void)
-{
-return itrunc ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"
-then :
-  ac_cv_lib_c_itrunc=yes
-else $as_nop
-  ac_cv_lib_c_itrunc=no
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.beam \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_c_itrunc" >&5
-printf "%s\n" "$ac_cv_lib_c_itrunc" >&6; }
-if test "x$ac_cv_lib_c_itrunc" = xyes
-then :
-  GOT_ITRUNC=
-else $as_nop
-  GOT_ITRUNC=-DCREATE_ITRUNC
-fi
-
 
 
 # Check whether --with-proj was given.
