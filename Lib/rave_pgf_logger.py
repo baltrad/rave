@@ -66,7 +66,8 @@ def init_logger(logger, level=LOGLEVEL):
         # The default formatter contains fractions of a second in the time.
         formatter = logging.Formatter('%(asctime)-15s %(levelname)-8s %(message)s')
         handler.setFormatter(formatter)
-        handler.lock = multiprocessing.RLock()
+        if sys.version_info.major > 3 or (sys.version_info.major == 3 and sys.version_info.minor < 9):
+            handler.lock = multiprocessing.RLock()        
         logger.addHandler(handler)
 
 
