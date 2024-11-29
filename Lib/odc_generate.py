@@ -31,7 +31,7 @@ import rave_pgf_logger
 import _rave, _raveio
 import _pycomposite
 import compositing, tiled_compositing
-
+from rave_defines import LOGLEVEL, LOGFILE
 
 ## Coordinates all data processing
 # @param options object passed directly from the parsed command-line arguments
@@ -59,7 +59,20 @@ def generate(options):
 
     # Initialize logger
     logger = logging.getLogger("ODC")
-    rave_pgf_logger.init_logger(logger)
+
+    loglevel = LOGLEVEL
+    logfile = LOGFILE
+    if options.verbose:
+        loglevel="debug"
+    if options.logfile:
+        logfile=options.logfile
+
+    rave_pgf_logger.init_logger(logger, loglevel, logfile)
+    if options.stdout:
+        formatter = logging.Formatter('%(asctime)-15s %(levelname)-8s %(message)s')
+        handler = logging.StreamHandler(sys.stdout)
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
 
     # Compositing includes QC. Therefore do not do QC separately. This composite config is hard wired.
     if options.areaid:

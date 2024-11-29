@@ -54,10 +54,10 @@ tempfile.tempdir = ''
 ## Initializes the system logger.
 # @param logger an instance returned by \ref logging.getLogger()
 # @param level int log level
-def init_logger(logger, level=LOGLEVEL):
+def init_logger(logger, level=LOGLEVEL, logfile=LOGFILE):
     logger.setLevel(LOGLEVELS[level])
     if not len(logger.handlers):
-        handler = logging.handlers.RotatingFileHandler(LOGFILE,
+        handler = logging.handlers.RotatingFileHandler(logfile,
                                                        maxBytes = LOGFILESIZE,
                                                        backupCount = LOGFILES)
         # This formatter removes the fractions of a second in the time.

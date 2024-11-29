@@ -26,7 +26,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys, types
 from odc_generate import generate
-
+from rave_defines import LOGFILE
 
 if __name__ == "__main__":
     from optparse import OptionParser
@@ -65,6 +65,12 @@ if __name__ == "__main__":
 
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose",
                       help="If the different steps should be displayed. I.e. verbose information.")
+
+    parser.add_option("--logfile", dest="logfile", default=LOGFILE,
+                      help="Defines where the logging should be added in using default log behavior.")
+
+    parser.add_option("--stdout", action="store_true", dest="stdout", default=False,
+                      help="If stdout is specified, logging will be sent to stdout instead of a logfile.")
 
     (options, args) = parser.parse_args()
 
