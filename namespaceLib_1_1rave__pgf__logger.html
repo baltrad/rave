@@ -78,9 +78,9 @@ Classes</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a9c04084e77cff5223e35037ccd1450cd" id="r_a9c04084e77cff5223e35037ccd1450cd"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a9c04084e77cff5223e35037ccd1450cd">init_logger</a> (logger, level=LOGLEVEL)</td></tr>
-<tr class="memdesc:a9c04084e77cff5223e35037ccd1450cd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initializes the system logger.  <br /></td></tr>
-<tr class="separator:a9c04084e77cff5223e35037ccd1450cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3ca8ba07a5d68872dd360c96065e3cb4" id="r_a3ca8ba07a5d68872dd360c96065e3cb4"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a3ca8ba07a5d68872dd360c96065e3cb4">init_logger</a> (logger, level=LOGLEVEL, logfile=LOGFILE)</td></tr>
+<tr class="memdesc:a3ca8ba07a5d68872dd360c96065e3cb4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initializes the system logger.  <br /></td></tr>
+<tr class="separator:a3ca8ba07a5d68872dd360c96065e3cb4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aed868e5448d1c6f033a3672e21d3f2fb" id="r_aed868e5448d1c6f033a3672e21d3f2fb"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aed868e5448d1c6f033a3672e21d3f2fb">log</a> (logger, level, msg)</td></tr>
 <tr class="memdesc:aed868e5448d1c6f033a3672e21d3f2fb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Locks, logs, and unlocks, with rudimentary level filtering.  <br /></td></tr>
 <tr class="separator:aed868e5448d1c6f033a3672e21d3f2fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -141,8 +141,8 @@ See the GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with RAVE.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
 </pre> </div><h2 class="groupheader">Function Documentation</h2>
-<a id="a9c04084e77cff5223e35037ccd1450cd" name="a9c04084e77cff5223e35037ccd1450cd"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9c04084e77cff5223e35037ccd1450cd">&#9670;&#160;</a></span>init_logger()</h2>
+<a id="a3ca8ba07a5d68872dd360c96065e3cb4" name="a3ca8ba07a5d68872dd360c96065e3cb4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3ca8ba07a5d68872dd360c96065e3cb4">&#9670;&#160;</a></span>init_logger()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -155,7 +155,12 @@ along with RAVE.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>level</em></span><span class="paramdefsep"> = </span><span class="paramdefval">LOGLEVEL</span>&#160;)</td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>level</em></span><span class="paramdefsep"> = </span><span class="paramdefval">LOGLEVEL</span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>logfile</em></span><span class="paramdefsep"> = </span><span class="paramdefval">LOGFILE</span>&#160;)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -198,7 +203,7 @@ along with RAVE.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
 <p>Locks, logs, and unlocks, with rudimentary level filtering. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">logger</td><td>the logger object initialized with <a class="el" href="#a9c04084e77cff5223e35037ccd1450cd">init_logger()</a> </td></tr>
+    <tr><td class="paramname">logger</td><td>the logger object initialized with <a class="el" href="#a3ca8ba07a5d68872dd360c96065e3cb4">init_logger()</a> </td></tr>
     <tr><td class="paramname">level</td><td>string log level </td></tr>
     <tr><td class="paramname">msg</td><td>string log message </td></tr>
   </table>
