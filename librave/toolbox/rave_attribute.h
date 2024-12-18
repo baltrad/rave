@@ -39,6 +39,21 @@ typedef enum RaveAttribute_Format {
 } RaveAttribute_Format;
 
 /**
+ * Represents one scan in a volume.
+ */
+struct _RaveAttribute_t {
+  RAVE_OBJECT_HEAD /** Always on top */
+  char* name;    /**< the source string */
+  RaveAttribute_Format format;  /**< the attribute format */
+  char* sdata;    /**< the string value */
+  long ldata;       /**< the long value */
+  double ddata;     /**< the double value */
+  long* ldataarray; /**< the long array */
+  double* ddataarray; /**< the double array */
+  int arraylen;     /**< length of arrays */
+};
+
+/**
  * Defines a rave attribute
  */
 typedef struct _RaveAttribute_t RaveAttribute_t;

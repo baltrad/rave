@@ -3,17 +3,22 @@
 CFLAGS=	$(OPTS) $(CCSHARED) $(DEFS) $(CREATE_ITRUNC) \
 	-I. $(NUMPY_INCLUDE_DIR) $(INCLUDE_PYTHON) -I$(HLHDF_INCLUDE_DIR) $(PROJ_INCLUDE_DIR) \
 	$(ZLIB_INCDIR) $(HDF5_INCDIR)
+	
+LDFLAGS+= -L. -L$(HLHDF_LIB_DIR) $(PROJ_LIB_DIR) $(HDF5_LIBDIR) $(ZLIB_LIBDIR)
 
 ifeq ($(EXPAT_SUPPRESSED), no)
 CFLAGS+= $(EXPAT_INCLUDE_DIR) -DRAVE_XML_SUPPORTED
+LDFLAGS+= $(EXPAT_LIB_DIR)
 endif
 
 ifeq ($(BUFR_SUPPRESSED), no)
 CFLAGS+= $(BUFR_INCLUDE_DIR) -DRAVE_BUFR_SUPPORTED
+LDFLAGS+= $(BUFR_LIB_DIR)
 endif
 
 ifeq ($(NETCDF_SUPPRESSED),no)
 CFLAGS+= $(NETCDF_INCLUDE_DIR)
+LDFLAGS+= $(NETCDF_LIB_DIR)
 ifeq ($(CF_SUPPRESSED), no)
 CFLAGS+= -DRAVE_CF_SUPPORTED
 endif
@@ -55,7 +60,7 @@ INSTALL_HEADERS= polar.h rave_transform.h raveutil.h rave_alloc.h polarvolume.h 
                  cartesian_odim_io.h rave_debug.h polar_odim_io.h \
                  raveobject_hashtable.h detection_range.h odim_io_utilities.h composite_algorithm.h poo_composite_algorithm.h rave_acrr.h \
                  vertical_profile.h vp_odim_io.h dealias.h odc_hac.h  rave_qitotal.h rave_gra.h ctfilter.h  bitmap_generator.h \
-                 proj_wkt_helper.h lazy_nodelist_reader.h lazy_dataset.h rave_proj.h acqva.h rave_iocache.h rave_legend.h
+                 proj_wkt_helper.h lazy_nodelist_reader.h lazy_dataset.h rave_proj.h acqva.h rave_iocache.h rave_legend.h compositing.h optparse.h odim_source.h
 
 ifeq ($(EXPAT_SUPPRESSED), no)
 INSTALL_HEADERS+= arearegistry.h projectionregistry.h rave_simplexml.h 
@@ -72,7 +77,26 @@ endif
 RAVEOBJS=	$(RAVESOURCES:.c=.o)
 LIBRAVETOOLBOX=	libravetoolbox.so
 
-MAKEDEPEND=gcc -MM $(CFLAGS) -o $(DF).d $<
+RADARCOMPSOURCES=compositing.cpp optparse.cpp odim_source.cpp
+RADARCOMPOBJS=	$(RADARCOMPSOURCES:.cpp=.o)
+RADARCOMPMAIN= radarcomp_main.cpp
+RADARCOMPBIN= radarcomp_c
+RADARCOMPLIBS= -lravetoolbox -lhlhdf -lproj
+ifeq ($(BUFR_SUPPRESSED), no)
+RADARCOMPLIBS+= -lOperaBufr
+endif 
+ifeq ($(NETCDF_SUPPRESSED), no)
+RADARCOMPLIBS+= -lnetcdf
+endif 
+ifeq ($(EXPAT_SUPPRESSED), no)
+RADARCOMPLIBS+= -lexpat
+endif
+
+ifeq ($(GOT_PTHREAD_SUPPORT), yes)
+RADARCOMPLIBS+= -lpthread
+endif
+
+MAKEDEPEND=g++ -MM $(CFLAGS) -o $(DF).d $<
 DEPDIR=.dep
 DF=$(DEPDIR)/$(*F)
 # --------------------------------------------------------------------
@@ -80,12 +104,12 @@ DF=$(DEPDIR)/$(*F)
 
 # Contains dependency generation as well, so if you are not using
 # gcc, comment out everything until the $(CC) statement.
-%.o : %.c
+%.o : %.c %.cpp
 	@$(MAKEDEPEND); \
-	cp $(DF).d $(DF).P; \
-	sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
-		-e '/^$$/ d' -e 's/$$/ :/' < $(DF).d >> $(DF).P; \
-	\rm -f $(DF).d
+# 	cp $(DF).d $(DF).P; \
+# 	sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
+# 		-e '/^$$/ d' -e 's/$$/ :/' < $(DF).d >> $(DF).P; \
+# 	\rm -f $(DF).d
 	$(CC) -c $(CFLAGS) $<
 
 # Ensures that the .dep directory exists
@@ -94,10 +118,15 @@ $(DEPDIR):
 	+@[ -d $@ ] || mkdir -p $@
 
 .PHONY=all
-all:		$(LIBRAVETOOLBOX)
+all:		$(LIBRAVETOOLBOX) bin
 
 $(LIBRAVETOOLBOX): $(DEPDIR) $(RAVEOBJS)
 	$(LDSHARED) -o $@ $(RAVEOBJS)
+	
+	
+.PHONY=bin
+bin: 
+	g++ $(OPTS) $(DEFS) $(CREATE_ITRUNC) $(CFLAGS) $(LDFLAGS) -o $(RADARCOMPBIN) $(RADARCOMPMAIN) $(RADARCOMPSOURCES) $(RADARCOMPLIBS)
 
 .PHONY=install
 install:
@@ -106,10 +135,11 @@ install:
 	do \
 		"$(HLHDF_INSTALL_BIN)" -f -o -m644 -C $$i "${DESTDIR}$(prefix)/include/$$i"; \
 	done
+	"$(HLHDF_INSTALL_BIN)" -f -o -C $(RADARCOMPBIN) "${DESTDIR}$(prefix)/bin/$(RADARCOMPBIN)";
 
 .PHONY=clean
 clean:
-		@\rm -f *.o core *~
+		@\rm -f *.o core *~ $(RADARCOMPBIN)
 		@\rm -fr $(DEPDIR)
 
 .PHONY=distclean		 
@@ -117,4 +147,5 @@ distclean:	clean
 		@\rm -f *.so config.log config.status config.cache def.mk
 
 # NOTE! This ensures that the dependencies are setup at the right time so this should not be moved
--include $(RAVESOURCES:%.c=$(DEPDIR)/%.P)
+-include $(RADARCOMPSOURCES:%.cpp=$(DEPDIR)/%.d)
+-include $(RAVESOURCES:%.c=$(DEPDIR)/%.d)

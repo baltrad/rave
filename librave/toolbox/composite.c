@@ -39,24 +39,6 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 
 #define MAX_NO_OF_SURROUNDING_POSITIONS 8 // pow(2, NO_OF_COMPOSITE_INTERPOLATION_DIMENSIONS)
 
-/**
- * Represents the cartesian product.
- */
-struct _Composite_t {
-  RAVE_OBJECT_HEAD /** Always on top */
-  Rave_ProductType ptype; /**< the product type, default PCAPPI */
-  CompositeSelectionMethod_t method; /**< selection method, default CompositeSelectionMethod_NEAREST */
-  CompositeInterpolationMethod_t interpolationMethod; /**< interpolation method, default CompositeInterpolationMethod_NEAREST */
-  int interpolateUndetect; /**< If undetect should be used during interpolation or not. Requires a properly set minvalue.*/
-  double height; /**< the height when generating pcapppi, cappi, pmax default 1000 */
-  double elangle; /**< the elevation angle when generating ppi, default 0.0 */
-  double range;  /*< the range when generating pmax, default = 500000 meters */
-  RaveList_t* parameters; /**< the parameters to generate */
-  RaveDateTime_t* datetime;  /**< the date and time */
-  RaveList_t* objectList;
-  CompositeAlgorithm_t* algorithm; /**< the specific algorithm */
-  char* qiFieldName; /**< the Quality Indicator field name to use when determining the radar usage */
-};
 
 typedef struct CompositeRadarItem {
   RaveCoreObject* object;

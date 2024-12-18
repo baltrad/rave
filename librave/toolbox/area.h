@@ -30,6 +30,29 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_object.h"
 
 /**
+ * Represents the area
+ */
+struct _Area_t {
+  RAVE_OBJECT_HEAD /** Always on top */
+  
+  char* id;        /**< the id */
+  char* description; /**< the description */
+  char* pcsid;     /**< the pcs id */
+  // Where
+  long xsize;      /**< xsize */
+  long ysize;      /**< ysize */
+  double xscale;   /**< xscale */
+  double yscale;   /**< yscale */
+  
+  double llX;      /**< lower left x-coordinate */
+  double llY;      /**< lower left y-coordinate */
+  double urX;      /**< upper right x-coordinate */
+  double urY;      /**< upper right y-coordinate */
+  
+  Projection_t* projection; /**< the projection that is used for this area */
+};
+
+/**
  * Defines a Geographical Area
  */
 typedef struct _Area_t Area_t;
