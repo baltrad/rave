@@ -12,6 +12,9 @@ extern "C" {
 #include "rave_attribute.h"
 #include "polarscan.h"
 #include "polarvolume.h"
+#include "arearegistry.h"
+#include "area.h"
+#include "projectionregistry.h"
 }
 
 #include <math.h>
@@ -488,105 +491,41 @@ extern "C" {
       return 0;
     }
     
-    // Area manipulation
-    Area_t* test_area = 0;
+    //# Projection and area registries
+    // Hard coded standard installation
+    std::string RAVECONFIG="/usr/lib/rave/config/";
+    std::string PROJECTION_REGISTRY = RAVECONFIG + "projection_registry.xml";
+    std::string AREA_REGISTRY = RAVECONFIG + "area_registry.xml";
     
-    test_area = (Area_t*)RAVE_OBJECT_NEW(&Area_TYPE);
-    if (test_area== NULL) {
-      RAVE_CRITICAL0("Failed to allocate memory for area.");
+    
+    ProjectionRegistry_t* proj_registry = ProjectionRegistry_load(PROJECTION_REGISTRY.c_str());
+    if (proj_registry == 0) {
+      RAVE_CRITICAL0("Failed to create projection registry for composite.");
+      RAVE_OBJECT_RELEASE(generator);
       return 0;
     }
-    Area_setID(test_area, area.c_str());
-    Area_setDescription(test_area, "Polar Stereographic Area for nordic fjalls");
-    Area_setPcsid(test_area, "ps14e60n");
-    Area_setXSize(test_area, 1645);
-    Area_setYSize(test_area, 2314);
-    Area_setXScale(test_area, 500.0);
-    Area_setYScale(test_area, 500.0);
-    Area_setExtent(test_area, -315069.657548, -3259550.003929, 507430.342452, -2102550.003929);
-    // The projection
-    Projection_t* projection = NULL;
-    
-    projection = (Projection_t*)RAVE_OBJECT_NEW(&Projection_TYPE);
-    if (projection == NULL) {
-      RAVE_CRITICAL0("Failed to create projection");
-      RAVE_OBJECT_RELEASE(test_area);
+    AreaRegistry_t* area_registry = AreaRegistry_load(AREA_REGISTRY.c_str(), proj_registry);
+    if (area_registry == 0) {
+      RAVE_CRITICAL0("Failed to create area registry for composite.");
+      RAVE_OBJECT_RELEASE(proj_registry);
       RAVE_OBJECT_RELEASE(generator);
       return 0;
     }
     
-    if(!Projection_init(projection, "ps14e60n", "Polar Stereographic 14E, 60N", "+proj=stere +ellps=bessel +lat_0=90 +lon_0=14 +lat_ts=60 +towgs84=0,0,0")) {
-      RAVE_ERROR0("Could not initialize projection");
-      RAVE_OBJECT_RELEASE(projection);
-      RAVE_OBJECT_RELEASE(test_area);
-      RAVE_OBJECT_RELEASE(generator);
-      return 0;
-    }
-    Area_setProjection(test_area, projection);
-    /* Use a fixed area for testing for now */
-    /* fjallvader05km */
-    /*
-     * <area id="fjallvader05km">
-     *    <description>
-     *      Polar Stereographic Area for nordic fjalls
-     *    </description>
-     *    <areadef>
-     *      <arg id="pcs">
-     *        ps14e60n
-     *      </arg>
-     *      <arg type="int" id="xsize">
-     *        1645
-     *      </arg>
-     *      <arg type="int" id="ysize">
-     *        2314
-     *      </arg>
-     *      <arg type="float" id="xscale">
-     *        500.000000
-     *      </arg>
-     *      <arg type="float" id="yscale">
-     *        500.000000
-     *      </arg>
-     *      <arg type="sequence" id="extent">
-     *        -315069.657548, -3259550.003929, 507430.342452, -2102550.003929
-     *      </arg>
-     *    </areadef>
-     *  </area>
-     * 
-     */
+    Area_t* the_area = 0;
     
-    /*
     if (area.length()) {
-      if _area.isArea(area):
-        pyarea = area
-      else:
-        pyarea = my_area_registry.getarea(area)
+       the_area = AreaRegistry_getByName(area_registry, area.c_str());
     }
-    else:
-        if self.verbose:
-          self.logger.info(f"[{self.mpname}] compositing.generate: Determining best fit for area")
-        A = rave_area.MakeAreaFromPolarObjects(objects, self.pcsid, self.xscale, self.yscale)
-          
-        pyarea = _area.new()
-        pyarea.id = "auto-generated best-fit"
-        pyarea.xsize = A.xsize
-        pyarea.ysize = A.ysize
-        pyarea.xscale = A.xscale
-        pyarea.yscale = A.yscale
-        pyarea.extent = A.extent
-        pcs = rave_projection.pcs(A.pcs)
-        pcsname = pcs.name
-        if not is_py27:
-          pcsname = pcsname.decode()
-        pyarea.projection = _projection.new(pcs.id, pcsname, ' '.join(pcs.definition))
-            
-        if len(objects) == 1:
-          try:
-            tmpid = odim_source.NODfromSource(objects[0])
-            pyarea.id = "auto_%s_%s"%(A.pcs, tmpid)
-          except:
-            pass
     
-    */
+    if (the_area==0) {
+      RAVE_CRITICAL1("Failed to get area %s from area registry.", area.c_str());
+      RAVE_OBJECT_RELEASE(proj_registry);
+      RAVE_OBJECT_RELEASE(area_registry);
+      RAVE_OBJECT_RELEASE(generator);
+      return 0;
+    }
+    
     Composite_addParameter(generator, quantity.c_str(), gain, offset, minvalue);
     Composite_setProduct(generator, product);
     if (algorithm != 0)
@@ -595,7 +534,9 @@ extern "C" {
     radar_index_mapping = (RaveObjectHashTable_t*)RAVE_OBJECT_NEW(&RaveObjectHashTable_TYPE);
     if (radar_index_mapping == 0) {
       RAVE_CRITICAL0("Failed to allocate memory for radar_index_mapping.");
-      RAVE_OBJECT_RELEASE(test_area);
+      RAVE_OBJECT_RELEASE(the_area);
+      RAVE_OBJECT_RELEASE(proj_registry);
+      RAVE_OBJECT_RELEASE(area_registry);
       RAVE_OBJECT_RELEASE(generator);
       return 0;
     }
@@ -659,7 +600,7 @@ extern "C" {
     // Composite_applyRadarIndexMapping(Composite_t* composite, RaveObjectHashTable_t* mapping);
     Composite_applyRadarIndexMapping(generator, radar_index_mapping);
     //generator.applyRadarIndexMapping(self.radar_index_mapping)
-    Cartesian_t* result = Composite_generate(generator, test_area, 0);
+    Cartesian_t* result = Composite_generate(generator, the_area, 0);
     
     if (applyctfilter) {
       if (verbose)
@@ -713,7 +654,9 @@ extern "C" {
       RAVE_DEBUG0("[radarcomp_c] compositing.generate: Returning resulting composite image");
    
     RAVE_OBJECT_RELEASE(radar_index_mapping);
-    RAVE_OBJECT_RELEASE(test_area); 
+    RAVE_OBJECT_RELEASE(the_area);
+    RAVE_OBJECT_RELEASE(proj_registry);
+    RAVE_OBJECT_RELEASE(area_registry);
     RAVE_OBJECT_RELEASE(generator);
     return result;
   }
