@@ -1,5 +1,6 @@
-#ifndef _compositing_h
-#define _compositing_h
+#ifndef _tiled_compositing_h
+#define _tiled_compositing_h
+#include "compositing.h"
 extern "C" {
   #include "rave_types.h"
   #include "rave_io.h"
@@ -25,18 +26,18 @@ extern const char * AREA_REGISTRY;
 extern const char * RAVE_TILE_REGISTRY;
 
 /**
- \ brie*f Compositing
+ \ brie*f TiledCompositing
  
- # Compositing class instance
+ # TiledCompositing class instance
  */
 
 // FIXME: logger class
-class Compositing  {
+class TiledCompositing  {
 public:
-  Compositing();
-  ~Compositing();
-  void init();
-  Cartesian_t* generate( std::string dd, std::string dt, std::string area="");
+  TiledCompositing();
+  ~TiledCompositing();
+  void init(Compositing * c, bool preprocess_qc=false, bool mp_process_qc=false, bool mp_process_qc_split_evenly=false);
+  Cartesian_t* generate( std::string dd, std::string dt, std::string area);
   /*# Removes CMT:<...> from the string
   # @param[in] str - the string from which CMT should be removed
   # @return the source with CMT removed
@@ -69,7 +70,7 @@ private:
   # @param dt: time in format HHMMSS
   # @param area: the area to use for the cartesian image. If none is specified, a best fit will be atempted.
   */
-  Cartesian_t* _generate(std::string dd, std::string dt, std::string area="");
+  Cartesian_t* _generate(std::string dd, std::string dt, std::string area);
   /*#
   # Dumps the objects on the ingoing polar objects onto the file system. The names will contain a unique identifier
   # to allow for duplicate versions of the same object.
@@ -96,6 +97,14 @@ private:
   float _strToNumber(std::string sval);
 
 public:
+  Compositing * compositing;
+  bool preprocess_qc;
+  bool mp_process_qc;
+  bool mp_process_qc_split_evenly;
+  int number_of_quality_control_processes;
+  bool _do_remove_temporary_files;
+  std::string _nodes;
+  std::string _how_tasks;
   std::string mpname;
   void * ravebdb;
   std::string pcsid;

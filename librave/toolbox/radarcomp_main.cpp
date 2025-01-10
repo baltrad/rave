@@ -15,11 +15,14 @@
  along with HLHDF.  If not, see <http://www.gnu.org/licenses/>.
  ------------------------------------------------------------------------*/
 #include "compositing.h"
+#include "tiled_compositing.h"
 extern "C" {
 #include "rave_object.h"
 #include "rave_debug.h"
 #include "composite.h"
 #include "rave_io.h"
+#include "tiledef.h"
+#include "tileregistry.h"
 }
 
 #include "optparse.h"
@@ -30,6 +33,19 @@ extern "C" {
 #include <sstream>
 #include <iostream>
 #include <hlhdf.h>
+
+/*
+ * From rave_defines.py, RAVEROOT hardcoded for now
+ */
+const char * RAVEROOT = "/usr/lib/rave";
+const char * RAVECONFIG = "/config/";
+const char * RAVEETC = "/etc/";
+
+const char * PROJECTION_REGISTRY = "projection_registry.xml";
+const char * AREA_REGISTRY = "area_registry.xml";
+const char * RAVE_TILE_REGISTRY= "rave_tile_registry.xml";
+
+
 
 /** Main function for a binary for running KNMI's sun scanning functionality
  * @file
@@ -91,28 +107,51 @@ int Radarcomp(optparse::OptionParser & parser) {
   comp.reprocess_quality_field = false;
   if ((bool)std::stoi(parser.get_option("reprocess_quality_fields")))
      comp.reprocess_quality_field = true;
-                  
-  if (!(parser.get_option("area").empty()) && !((bool)std::stoi(parser.get_option("noMultiprocessing")))) {
-    RAVE_INFO0("Tiled_compositing not implemented yet, using standard compositing");
-    /*
-    if rave_tile_registry.has_tiled_area(options.area):
-      preprocess_qc = False
-      mp_process_qc = False
-      mp_process_qc_split_evenly = False
-      if options.preprocess_qc:
-        preprocess_qc = True
-      if options.preprocess_qc_mp:
-        preprocess_qc = True
-        mp_process_qc = True
-      if options.mp_process_qc_split_evenly:
-        mp_process_qc_split_evenly = True
-      comp = tiled_compositing(comp, preprocess_qc, mp_process_qc, mp_process_qc_split_evenly)
-      comp.number_of_quality_control_processes = options.number_of_quality_control_processes
-      */
+  
+  std::string areaid = parser.get_option("area");
+  if (areaid.length() == 0) {
+     RAVE_CRITICAL0("Compositing with no area given is not supported.");
+     return 1;
+  }
+  Cartesian_t* result = 0;               
+  if (!((bool)std::stoi(parser.get_option("noMultiprocessing")))) {
+    
+    std::string rave_tile_registry_path = std::string(RAVEROOT) + std::string(RAVEETC) + std::string(RAVE_TILE_REGISTRY);
+    
+    TileRegistry_t* tile_registry = TileRegistry_load(rave_tile_registry_path.c_str());
+    if (tile_registry == 0) {
+      RAVE_CRITICAL0("Failed to create tile registry for composite.");
+      return 0;
+    }
+    RaveObjectList_t * the_tiles = TileRegistry_getByArea(tile_registry, areaid.c_str());
+    if (RaveObjectList_size(the_tiles) != 0) {
+      RAVE_INFO1("Area %s found in tile registry for composite.", areaid.c_str());
+      bool preprocess_qc = false;
+      bool mp_process_qc = false;
+      bool mp_process_qc_split_evenly = false;
+      if ((bool)std::stoi(parser.get_option("preprocess_qc"))) {
+        preprocess_qc = true;
+      }
+      if ((bool)std::stoi(parser.get_option("preprocess_qc_mp"))) {
+        preprocess_qc = true;
+        mp_process_qc = true;
+      }
+      if ((bool)std::stoi(parser.get_option("mp_process_qc_split_evenly"))) {
+        mp_process_qc_split_evenly = true;
+      }
+      TiledCompositing tiled_comp = TiledCompositing();
+      tiled_comp.init(&comp, preprocess_qc,mp_process_qc,mp_process_qc_split_evenly);
+      RAVE_INFO0("Tiled_compositing not implemented yet, using standard compositing");
+      result = tiled_comp.generate(parser.get_option("date"), parser.get_option("time"), parser.get_option("area"));
+    } else {
+      result = comp.generate(parser.get_option("date"), parser.get_option("time"), parser.get_option("area"));
+    }
+    RAVE_OBJECT_RELEASE(tile_registry);
+    RAVE_OBJECT_RELEASE(the_tiles);
+  } else {
+    result = comp.generate(parser.get_option("date"), parser.get_option("time"), parser.get_option("area"));
   }
   // result is Cartesian_t*
-
-  Cartesian_t* result = comp.generate(parser.get_option("date"), parser.get_option("time"), parser.get_option("area"));
   
   if ((bool)std::stoi(parser.get_option("imageType")))
     Cartesian_setObjectType(result, Rave_ObjectType::Rave_ObjectType_IMAGE);
@@ -131,14 +170,6 @@ int Radarcomp(optparse::OptionParser & parser) {
   RaveIO_close(rio);
   RAVE_OBJECT_RELEASE(result);
   RAVE_OBJECT_RELEASE(rio);
-/*                              
-  rio = _raveio.new()
-  rio.object = result
-  rio.filename = options.outfile
-                              
-  if comp.verbose:
-    print("Saving %s"%rio.filename)
-  rio.save()*/
   return 0;
 }
 

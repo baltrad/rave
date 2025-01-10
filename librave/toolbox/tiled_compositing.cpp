@@ -1,3 +1,4 @@
+#include "tiled_compositing.h"
 #include "compositing.h"
 #include "odim_source.h"
 
@@ -23,73 +24,46 @@ extern "C" {
 #include <iostream>
 #include <map>
 
+const int RAVE_QUALITY_CONTROL_PROCESSES=4;
 
-  Compositing::Compositing(){
-    init();
+
+  TiledCompositing::TiledCompositing(){
   }
   
-  Compositing::~Compositing() {
+  TiledCompositing::~TiledCompositing() {
   }
   
-  void Compositing::init(){
+  void TiledCompositing::init(Compositing * c, bool preprocess_qc, bool mp_process_qc, bool mp_process_qc_split_evenly){
     //self.mpname = multiprocessing.current_process().name
+    compositing = c;
+    /*# If preprocess_qc = False, then the tile generators will take care of the preprocessing of the tiles
+    # otherwise, the files will be qc-processed, written to disk and these filepaths will be sent to the
+    # tile generators instead. Might or might not improve performance depending on file I/O etc..*/
+    preprocess_qc = preprocess_qc;
+    mp_process_qc = mp_process_qc;
+    mp_process_qc_split_evenly = mp_process_qc_split_evenly;
+    verbose = c->verbose;
+    //self.logger = logger
+    //self.file_objects = {}
+    _nodes = "";
+    _how_tasks = "";
+    number_of_quality_control_processes = RAVE_QUALITY_CONTROL_PROCESSES;
+    _do_remove_temporary_files=false;
     mpname="";
-    ravebdb = 0;
-
-      pcsid = "gmaps";
-      xscale = 2000.0;
-      yscale = 2000.0;
-      // No need to init std::vector.
-      //detectors = []
-      //filenames = []
-      ignore_malfunc = false;
-      //prodpar = "1000.0";
-      product = Rave_ProductType::Rave_ProductType_PCAPPI;
-      height = 1000.0;
-      elangle = 0.0;
-      range = 200000.0;
-      selection_method = CompositeSelectionMethod_t::CompositeSelectionMethod_NEAREST;
-      interpolation_method = CompositeInterpolationMethod_t::CompositeInterpolationMethod_NEAREST;
-      // Defined in rave_quality_plugin.py.
-      quality_control_mode = "analyze_and_apply";
-      //qitotal_field
-      applygra = false;
-      zr_A = 200.0;
-      zr_b = 1.6;    
-      applygapfilling = false;
-      applyctfilter = false;
-      quantity = "DBZH";
-      // Defined in rave_defines.py
-      // Default gain and offset values for linear transformation between raw and dBZ
-      //GAIN = 0.4
-      //OFFSET = -30.0
-      gain = 0.4;
-      offset = -30.0;
-      minvalue = -30.0;
-      reprocess_quality_field=false;
-      verbose = false;
-      logger = 0;
-      dumppath = "";
-      dump = false;
-      use_site_source = false;
-      use_azimuthal_nav_information = true;
-      //radar_index_mapping = {}
-      use_lazy_loading=true;
-      use_lazy_loading_preloads=true;
   }
   
-  Cartesian_t* Compositing::generate( std::string dd, std::string dt, std::string area){
-    return _generate(dd, dt, area);
+  Cartesian_t* TiledCompositing::generate( std::string dd, std::string dt, std::string area){
+    return compositing->generate(dd, dt, area);
   }
   /*# Removes CMT:<...> from the string
    # @param[in] str - the string from wh*ich CMT should be removed
    # @return the source with CMT removed
    #*/
-  std::string Compositing::remove_CMT_from_source(std::string str) {
+  std::string TiledCompositing::remove_CMT_from_source(std::string str) {
     return str;
   }
   
-  void Compositing::set_product_from_string(std::string prodstr){
+  void TiledCompositing::set_product_from_string(std::string prodstr){
     //prodstr = prodstr.lower()
     std::transform(prodstr.begin(), prodstr.end(), prodstr.begin(),[](unsigned char c){ return std::tolower(c); });
     
@@ -108,7 +82,7 @@ extern "C" {
         product = Rave_ProductType::Rave_ProductType_PCAPPI;
     }
   }
-  void Compositing::set_method_from_string(std::string methstr){
+  void TiledCompositing::set_method_from_string(std::string methstr){
     
     std::transform(methstr.begin(), methstr.end(), methstr.begin(),[](unsigned char c){ return std::toupper(c); });
     
@@ -121,7 +95,7 @@ extern "C" {
         selection_method = CompositeSelectionMethod_t::CompositeSelectionMethod_NEAREST;
     }
   }
-  void Compositing::set_interpolation_method_from_string(std::string methstr){
+  void TiledCompositing::set_interpolation_method_from_string(std::string methstr){
     
     std::transform(methstr.begin(), methstr.end(), methstr.begin(),[](unsigned char c){ return std::toupper(c); });
     
@@ -146,7 +120,7 @@ extern "C" {
         interpolation_method = CompositeInterpolationMethod_t::CompositeInterpolationMethod_NEAREST;
     }
   }
-  void Compositing::set_quality_control_mode_from_string(std::string modestr){
+  void TiledCompositing::set_quality_control_mode_from_string(std::string modestr){
     
     std::transform(modestr.begin(), modestr.end(), modestr.begin(),[](unsigned char c){ return std::tolower(c); });
     
@@ -158,7 +132,7 @@ extern "C" {
     }
   };
   
-  std::map<std::string,RaveCoreObject*> Compositing::quality_control_objects(
+  std::map<std::string,RaveCoreObject*> TiledCompositing::quality_control_objects(
     std::map<std::string,RaveCoreObject*> &objects,
     CompositeAlgorithm_t* algorithm,
     std::string&qfields) {
@@ -199,7 +173,7 @@ extern "C" {
    # Generates the objects that should b*e used in the compositing.
    # returns a triplet with [objects], nodes (as comma separated string), 'how/tasks' (as comma separated string)
    #*/
-  std::map<std::string,RaveCoreObject*> Compositing::fetch_objects(std::string & nodes, std::string & how_tasks, bool &all_files_malfunc){
+  std::map<std::string,RaveCoreObject*> TiledCompositing::fetch_objects(std::string & nodes, std::string & how_tasks, bool &all_files_malfunc){
     nodes = "";
     std::map<std::string,RaveCoreObject*> objects;
     std::string tasks;
@@ -302,7 +276,7 @@ extern "C" {
                               
     return objects;
   }
-  void Compositing::add_how_task_from_scan(PolarScan_t * scan, std::string &tasks) {
+  void TiledCompositing::add_how_task_from_scan(PolarScan_t * scan, std::string &tasks) {
     if (PolarScan_hasAttribute(scan,"how/task")) {
       RaveAttribute_t *attr = PolarScan_getAttribute(scan, "how/task");
       if (attr != 0) {
@@ -313,14 +287,14 @@ extern "C" {
       }
     }
   }
-  void Compositing::create_filename(void * pobj) {
+  void TiledCompositing::create_filename(void * pobj) {
   }
-  void Compositing::get_backup_gra_coefficient(void * db, std::string agedt, std::string nowdt){
+  void TiledCompositing::get_backup_gra_coefficient(void * db, std::string agedt, std::string nowdt){
   }
-  void Compositing::test_func(std::string a) {
+  void TiledCompositing::test_func(std::string a) {
   }
   
-  bool Compositing::_get_malfunc_from_obj(RaveCoreObject*obj, bool is_polar) {
+  bool TiledCompositing::_get_malfunc_from_obj(RaveCoreObject*obj, bool is_polar) {
   
     if (is_polar) {
       if (PolarVolume_hasAttribute((PolarVolume_t*)obj,"how/malfunc")) 
@@ -336,7 +310,7 @@ extern "C" {
     }
   }
   
-  RaveCoreObject * Compositing::_remove_malfunc_from_volume(RaveCoreObject *obj, bool is_polar) {
+  RaveCoreObject * TiledCompositing::_remove_malfunc_from_volume(RaveCoreObject *obj, bool is_polar) {
     // FIXME: memory handling correct?  
     RaveCoreObject*result = obj;
     if (is_polar) {
@@ -366,7 +340,7 @@ extern "C" {
     return result;
   }
           
-  RaveCoreObject * Compositing::_remove_malfunc(RaveCoreObject*obj, bool is_polar)
+  RaveCoreObject * TiledCompositing::_remove_malfunc(RaveCoreObject*obj, bool is_polar)
   {
     RaveCoreObject*result = obj;
     if (is_polar) {
@@ -384,7 +358,7 @@ extern "C" {
   }
   
 
-  void Compositing::_debug_generate_info(std::string  area) {
+  void TiledCompositing::_debug_generate_info(std::string  area) {
     if (verbose) {
       RAVE_DEBUG1("Generating cartesian image from %d files",filenames.size());
       // loop over detectors.
@@ -425,7 +399,7 @@ extern "C" {
    # @param dt: time in format HHMMSS
    # @param area: the area to use for the cartesian image. If none is specified, a best fit will be atempted.
    */
-  Cartesian_t* Compositing::_generate(std::string dd, std::string dt, std::string area) {
+  Cartesian_t* TiledCompositing::_generate(std::string dd, std::string dt, std::string area) {
     _debug_generate_info(area);
     if (verbose) {
       RAVE_INFO1("Fetching objects and applying quality plugins", mpname.c_str());
@@ -648,7 +622,7 @@ extern "C" {
    # Dumps the objects on the ingoing po*lar objects onto the file system. The names will contain a unique identifier
    # to allow for duplicate versions of the same object.
    # @param objects the objects to write to disk */
-  void Compositing::_dump_objects(std::vector<RaveCoreObject*> & vobjects){
+  void TiledCompositing::_dump_objects(std::vector<RaveCoreObject*> & vobjects){
     // Implement later
   }
   /*#
@@ -657,13 +631,13 @@ extern "C" {
    # @param d: the date string representing now (YYYYmmdd)
    # @param t: the time string representing now (HHMMSS)
    # @return the gra field with the applied corrections */
-  CartesianParam_t * Compositing::_apply_gra(Cartesian_t* result, std::string d, std::string t) {
+  CartesianParam_t * TiledCompositing::_apply_gra(Cartesian_t* result, std::string d, std::string t) {
     return 0;
   }
   /*#
    # @return the string representation o*f the selection method
    */
-  std::string Compositing::_selection_method_repr() {
+  std::string TiledCompositing::_selection_method_repr() {
     if (selection_method == CompositeSelectionMethod_t::CompositeSelectionMethod_NEAREST)
       return "NEAREST_RADAR";
     else if (selection_method == CompositeSelectionMethod_t::CompositeSelectionMethod_HEIGHT)
@@ -672,7 +646,7 @@ extern "C" {
   }
   /*#
    # @return the string representation o*f the interpolation method */
-  std::string Compositing::_interpolation_method_repr() {
+  std::string TiledCompositing::_interpolation_method_repr() {
     if (interpolation_method == CompositeInterpolationMethod_t::CompositeInterpolationMethod_NEAREST)
       return "NEAREST_VALUE";
     else if (interpolation_method == CompositeInterpolationMethod_t::CompositeInterpolationMethod_LINEAR_HEIGHT)
@@ -693,7 +667,7 @@ extern "C" {
   }
   /*#
    # @return the string representation o*f the product type   */
-  std::string Compositing::_product_repr() {
+  std::string TiledCompositing::_product_repr() {
     
     if (product == Rave_ProductType::Rave_ProductType_PPI)
       return "ppi";
@@ -710,7 +684,7 @@ extern "C" {
     }
   }
   
-  void Compositing::_update_generator_with_prodpar(Composite_t* generator) {
+  void TiledCompositing::_update_generator_with_prodpar(Composite_t* generator) {
     if (prodpar.length() != 0) { 
       if ((product == Rave_ProductType::Rave_ProductType_CAPPI) || (product==Rave_ProductType::Rave_ProductType_PCAPPI)) {
         generator->height = _strToNumber(prodpar);
@@ -738,6 +712,6 @@ extern "C" {
     }
   }
   
-  float Compositing::_strToNumber(std::string sval) {
+  float TiledCompositing::_strToNumber(std::string sval) {
     return std::stof(sval);
   }
