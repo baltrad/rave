@@ -138,5 +138,12 @@ try:
 except:
   pass
 
+from PyCompositeArgumentsTest import *
+from PyCompositeGeneratorTest import *
+#from PyLegacyCompositeGeneratorFactoryTest import *
+from PyAcqvaCompositeGeneratorFactoryTest import *
+from PyOdimSourceTest import *
+from PyOdimSourcesTest import *
+
 if __name__ == '__main__':
   unittest.main()
