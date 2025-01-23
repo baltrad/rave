@@ -31,11 +31,15 @@ import _projection
 import _polarscan
 import _polarvolume
 import _rave
+import _odimsources
 import string
 import math
 
 class PyCompositeArgumentsTest(unittest.TestCase):
+  FIXTURE="fixtures/odim_sources_fixture.xml"
+
   
+
   def setUp(self):
     pass
 
@@ -278,3 +282,88 @@ class PyCompositeArgumentsTest(unittest.TestCase):
     self.assertEqual("se.smhi.something.else", obj.getQualityFlagAt(0))
     obj.removeQualityFlag("se.smhi.something.else")
     self.assertEqual(0, obj.getNumberOfQualityFlags())
+
+  def test_createRadarIndex(self):
+    obj = _compositearguments.new()
+    self.assertEqual(0, len(obj.getRadarIndexKeys()))
+    v = obj.createRadarIndex("NOD:sekkr")
+    self.assertEqual(1, v)
+    self.assertEqual(1, len(obj.getRadarIndexKeys()))
+    v = obj.createRadarIndex("NOD:sella")
+    self.assertEqual(2, v)
+    self.assertEqual(2, len(obj.getRadarIndexKeys()))
+
+  def test_createRadarIndex_duplicate(self):
+    obj = _compositearguments.new()
+    v = obj.createRadarIndex("NOD:sekkr")
+    self.assertEqual(1, v)
+    self.assertEqual(1, len(obj.getRadarIndexKeys()))
+    v = obj.createRadarIndex("NOD:sekkr")
+    self.assertEqual(1, v)
+    self.assertEqual(1, len(obj.getRadarIndexKeys()))
+
+  def test_getRadarIndexValue(self):
+    obj = _compositearguments.new()
+    obj.createRadarIndex("NOD:sekkr")
+    obj.createRadarIndex("NOD:sella")
+    obj.createRadarIndex("NOD:seatv")
+
+    self.assertEqual(1, obj.getRadarIndexValue("NOD:sekkr"))
+    self.assertEqual(2, obj.getRadarIndexValue("NOD:sella"))
+    self.assertEqual(3, obj.getRadarIndexValue("NOD:seatv"))
+
+  def test_getRadarIndexKeys(self):
+    obj = _compositearguments.new()
+    obj.createRadarIndex("NOD:sekkr")
+    obj.createRadarIndex("NOD:sella")
+    obj.createRadarIndex("NOD:seatv")
+
+    keys = obj.getRadarIndexKeys()
+    self.assertEqual(3, len(keys))
+    self.assertTrue("NOD:sekkr" in keys)
+    self.assertTrue("NOD:sella" in keys)
+    self.assertTrue("NOD:seatv" in keys)
+
+  def test_createRadarIndexMapping_3(self):
+    obj = _compositearguments.new()
+
+    obj.addObject(self.create_polarscan("NOD:sekrn", "20250123","100000"))
+    obj.addObject(self.create_polarscan("NOD:sella", "20250123","100000"))
+    obj.addObject(self.create_polarscan("NOD:seatv", "20250123","100000"))
+
+    obj.sources = _odimsources.load(self.FIXTURE)
+    
+    obj.createRadarIndexMapping()
+
+    keys = obj.getRadarIndexKeys()
+    self.assertEqual(3, len(keys))
+    self.assertTrue("NOD:sekrn" in keys)
+    self.assertTrue("NOD:sella" in keys)
+    self.assertTrue("NOD:seatv" in keys)
+
+
+  def test_createRadarIndexMapping_4(self):
+    obj = _compositearguments.new()
+
+    obj.addObject(self.create_polarscan("NOD:sekrn", "20250123","100000"))
+    obj.addObject(self.create_polarscan("NOD:sella", "20250123","100000"))
+    obj.addObject(self.create_polarscan("NOD:seatv", "20250123","100000"))
+    obj.addObject(self.create_polarscan("NOD:dksin", "20250123","100000"))
+
+    obj.sources = _odimsources.load(self.FIXTURE)
+
+    obj.createRadarIndexMapping()
+
+    keys = obj.getRadarIndexKeys()
+    self.assertEqual(4, len(keys))
+    self.assertTrue("NOD:sekrn" in keys)
+    self.assertTrue("NOD:sella" in keys)
+    self.assertTrue("NOD:seatv" in keys)
+    self.assertTrue("NOD:dksin" in keys)
+
+  def create_polarscan(self, src, dt, tt):
+    result = _polarscan.new()
+    result.source = src
+    result.date = dt
+    result.time = tt
+    return result

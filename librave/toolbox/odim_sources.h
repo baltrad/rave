@@ -28,6 +28,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_object.h"
 #include "odim_source.h"
 #include "rave_list.h"
+
 /**
  * Defines the odim sources
  */

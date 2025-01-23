@@ -120,6 +120,16 @@ void CompositeUtils_freeCompositeValueParameters(CompositeUtilValue_t** cvalues,
 Projection_t* CompositeUtils_getProjection(RaveCoreObject* obj);
 
 /**
+ * Tries to get the source from the provided RaveCoreObject. Currently supported object types
+ * are PolarScan, PolarVolume, Cartesian and CartesianVolume.
+ * @param[in] obj - the object
+ * @param[in,out] source - the source
+ * @param[in] nlen - length of source array
+ * @return string length (excluding the terminating \0)
+ */
+int CompositeUtils_getObjectSource(RaveCoreObject* obj, char* source, int nlen);
+
+/**
  * Creates the binding between radar objects and the pipelines that are relevant when creating composites.
  * @param[in] arguments - the arguments (containing the radar objects)
  * @param[in] cartesian - the target composite 

@@ -36,6 +36,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #define PYCOMPOSITEARGUMENTS_MODULE        /**< to get correct part of pycompositearguments.h */
 #include "pycompositearguments.h"
 #include "pypolarvolume.h"
+#include "pyodimsources.h"
 #include "pypolarscan.h"
 #include "pyarea.h"
 #include "rave_alloc.h"
@@ -581,11 +582,89 @@ static PyObject* _pycompositearguments_getNumberOfQualityFlags(PyCompositeArgume
   return PyLong_FromLong(CompositeArguments_getNumberOfQualityFlags(self->args));
 }
 
+static PyObject* _pycompositearguments_createRadarIndexMapping(PyCompositeArguments* self, PyObject* args)
+{
+  if (!PyArg_ParseTuple(args, "")) {
+    return NULL;
+  }
+  if (!CompositeArguments_createRadarIndexMapping(self->args)) {
+    raiseException_returnNULL(PyExc_RuntimeError, "Failed to create radar index mapping");
+  }
+  Py_RETURN_NONE;
+}
+
+static PyObject* _pycompositearguments_getRadarIndexKeys(PyCompositeArguments* self, PyObject* args)
+{
+  RaveList_t* nodkeys = NULL;
+  PyObject* result = NULL;
+
+  if (!PyArg_ParseTuple(args, "")) {
+    return NULL;
+  }
+  nodkeys = CompositeArguments_getRadarIndexKeys(self->args);
+  if (nodkeys != NULL) {
+    int i = 0;
+    int n = RaveList_size(nodkeys);
+    result = PyList_New(0);
+    for (i = 0; result != NULL && i < n; i++) {
+      char* name = RaveList_get(nodkeys, i);
+      if (name != NULL) {
+        PyObject* pynamestr = PyString_FromString(name);
+        if (pynamestr == NULL) {
+          goto fail;
+        }
+        if (PyList_Append(result, pynamestr) != 0) {
+          Py_DECREF(pynamestr);
+          goto fail;
+        }
+        Py_DECREF(pynamestr);
+      }
+    }
+  }
+
+  RaveList_freeAndDestroy(&nodkeys);
+  return result;
+fail:
+  RaveList_freeAndDestroy(&nodkeys);
+  Py_XDECREF(result);
+  return NULL;
+}
+
+static PyObject* _pycompositearguments_getRadarIndexValue(PyCompositeArguments* self, PyObject* args)
+{
+  char* nod = NULL;
+  int result = 0;
+  if (!PyArg_ParseTuple(args, "s", &nod)) {
+    return NULL;
+  }
+  result = CompositeArguments_getRadarIndexValue(self->args, nod);
+  if (result > 0) {
+    return PyLong_FromLong(result);
+  }
+  raiseException_returnNULL(PyExc_KeyError, "No such nod");
+}
+
+static PyObject* _pycompositearguments_createRadarIndex(PyCompositeArguments* self, PyObject* args)
+{
+  char* nod = NULL;
+  int v = 0;
+  if (!PyArg_ParseTuple(args, "s", &nod)) {
+    return NULL;
+  }
+  v = CompositeArguments_createRadarIndex(self->args, (const char*)nod);
+  if (v > 0) {
+    return PyLong_FromLong(v);
+  }
+  raiseException_returnNULL(PyExc_RuntimeError, "Failed to create radar index");
+}
+
+
 /**
  * All methods a cartesian product can have
  */
 static struct PyMethodDef _pycompositearguments_methods[] =
 {
+  {"sources", NULL, METH_VARARGS},
   {"area", NULL, METH_VARARGS},
   {"product", NULL, METH_VARARGS},
   {"time", NULL, METH_VARARGS},
@@ -671,7 +750,25 @@ static struct PyMethodDef _pycompositearguments_methods[] =
     "getNumberOfQualityFlags() -> int\n\n"
     "Returns the number of quality flags.\n"
   },
-  
+  {"createRadarIndexMapping", (PyCFunction)_pycompositearguments_createRadarIndexMapping, 1,
+    "createRadarIndexMapping(sources)\n\n"
+    "Creates a radar index mapping from the provided sources and the existing objects.\n"
+    "sources - a OdimSourcesCore instance with mapped sources"
+  },
+  {"getRadarIndexKeys", (PyCFunction)_pycompositearguments_getRadarIndexKeys, 1,
+    "getRadarIndexKeys() -> list of keys\n\n"
+    "Returns the currently mapped keys (NOD:xxxxx).\n"
+  },
+  {"getRadarIndexValue", (PyCFunction)_pycompositearguments_getRadarIndexValue, 1,
+    "getRadarIndexValue(key) -> index\n\n"
+    "Returns the index value for provided key\n"
+    "key - the nod key (NOD:xxxxx)\n"
+  },
+  {"createRadarIndex", (PyCFunction)_pycompositearguments_createRadarIndex, 1,
+    "createRadarIndex(key) -> index\n\n"
+    "Creates a radar index for provided key or returns the existing radar index value if it already has been set.\n"
+    "key - the nod key (NOD:xxxxx)\n"
+  },
 
   {NULL, NULL } /* sentinel */
 };
@@ -683,7 +780,16 @@ static struct PyMethodDef _pycompositearguments_methods[] =
 
 static PyObject* _pycompositearguments_getattro(PyCompositeArguments* self, PyObject* name)
 {
-  if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "area") == 0) {
+  if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "sources") == 0) {
+    OdimSources_t* sources = CompositeArguments_getSources(self->args);
+    if (sources != NULL) {
+      PyOdimSources* result = PyOdimSources_New(sources);
+      RAVE_OBJECT_RELEASE(sources);
+      return (PyObject*)result;
+    } else {
+      Py_RETURN_NONE;
+    }
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "area") == 0) {
     Area_t* area = CompositeArguments_getArea(self->args);
     if (area != NULL) {
       PyArea* result = PyArea_New(area);
@@ -735,7 +841,16 @@ static int _pycompositearguments_setattro(PyCompositeArguments* self, PyObject* 
   if (name == NULL) {
     goto done;
   }
-  if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "area") == 0) {
+  if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "sources") == 0) {
+    if (PyOdimSources_Check(val)) {
+      CompositeArguments_setSources(self->args, ((PyOdimSources*)val)->sources);
+    } else if (val == Py_None) {
+      CompositeArguments_setSources(self->args, NULL);
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError,
+          "sources must be of OdimSourcesCore type or None");
+    }
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "area") == 0) {
     if (PyArea_Check(val)) {
       CompositeArguments_setArea(self->args, ((PyArea*)val)->area);
     } else if (val == Py_None) {
@@ -1072,6 +1187,7 @@ MOD_INIT(_compositearguments)
   import_pyarea();
   import_pypolarvolume();
   import_pypolarscan();
+  import_odimsources();
   import_array(); /*To make sure I get access to Numeric*/
   PYRAVE_DEBUG_INITIALIZE;
   return MOD_INIT_SUCCESS(module);

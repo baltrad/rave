@@ -195,6 +195,40 @@ Projection_t* CompositeUtils_getProjection(RaveCoreObject* obj)
   return result;
 }
 
+int CompositeUtils_getObjectSource(RaveCoreObject* obj, char* source, int nlen)
+{
+  int result = 0;
+  if (obj != NULL) {
+    memset(source, 0, sizeof(char)*nlen);
+    if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
+      const char* objsrc = PolarVolume_getSource((PolarVolume_t*)obj);
+      if (objsrc != NULL && strlen(objsrc) < nlen - 1) {
+        strncpy(source, objsrc, nlen);
+        result = strlen(source);
+      }
+     } else if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarScan_TYPE)) {
+      const char* objsrc = PolarScan_getSource((PolarScan_t*)obj);
+      if (objsrc != NULL && strlen(objsrc) < nlen - 1) {
+        strncpy(source, objsrc, nlen);
+        result = strlen(source);
+      }
+    } else if (RAVE_OBJECT_CHECK_TYPE(obj, &Cartesian_TYPE)) {
+      const char* objsrc = Cartesian_getSource((Cartesian_t*)obj);
+      if (objsrc != NULL && strlen(objsrc) < nlen - 1) {
+        strncpy(source, objsrc, nlen);
+        result = strlen(source);
+      }
+    } else if (RAVE_OBJECT_CHECK_TYPE(obj, &CartesianVolume_TYPE)) {
+      const char* objsrc = CartesianVolume_getSource((CartesianVolume_t*)obj);
+      if (objsrc != NULL && strlen(objsrc) < nlen - 1) {
+        strncpy(source, objsrc, nlen);
+        result = strlen(source);
+      }
+    }
+  }
+  return result;
+}
+
 CompositeRaveObjectBinding_t* CompositeUtils_createRaveObjectBinding(CompositeArguments_t* arguments, Cartesian_t* cartesian, int* nobjects)
 {
   CompositeRaveObjectBinding_t* result = NULL;

@@ -32,6 +32,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_datetime.h"
 #include "rave_attribute.h"
 #include "raveobject_list.h"
+#include "odim_sources.h"
 
 /**
  * Defines a Geographical Area
@@ -55,6 +56,7 @@ typedef enum Rave_CompositingMethod {
   Rave_CompositingProduct_UNDEFINED  /**< Not defined*/
 } Rave_CompositingProduct;
 
+
 /**
  * Converts a method into a string.
  * @param[in] method - the \ref Rave_CompositingMethod
@@ -68,6 +70,20 @@ const char* CompositeArguments_productToString(Rave_CompositingProduct product);
  * @returns the \ref Rave_CompositingMethod or Rave_CompositingMethod_UNDEFINED if not possible to translate
  */
 Rave_CompositingProduct CompositeArguments_stringToProduct(const char* product);
+
+/**
+ * Sets the sources registry for lookup purposes
+ * @param[in] args - self
+ * @param[in] sources - the sources
+ */
+void CompositeArguments_setSources(CompositeArguments_t* args, OdimSources_t* sources);
+
+/**
+ * Returns the sources registry.
+ * @param[in] args - self
+ * @return the odim sources or NULL if none is set
+ */
+OdimSources_t* CompositeArguments_getSources(CompositeArguments_t* args);
 
 /**
  * Sets the compositing method to use when creating the composite. Note, this should be
@@ -358,5 +374,38 @@ int CompositeArguments_getNumberOfQualityFlags(CompositeArguments_t* args);
  * @return quality flag on success, otherwise NULL
  */
 const char* CompositeArguments_getQualityFlagAt(CompositeArguments_t* args, int index);
+
+/**
+ * Creates the radar index mapping from the objects and the sources. If no sources
+ * instance a best effort will be done creating the index mapping.
+ *
+ * @param[in] args - self
+ * @return 1 on success, otherwise 0
+ */
+int CompositeArguments_createRadarIndexMapping(CompositeArguments_t* args);
+
+/**
+ * Returns the registered radar indexes.
+ * @param[in] args - self
+ * @return a list of keys
+ */
+RaveList_t* CompositeArguments_getRadarIndexKeys(CompositeArguments_t* args);
+
+/**
+ * Returns the index for the specified key.
+ * @param[in] args - self
+ * @param[in] key - the key
+ * @return the radar index (1..N). Will return 1 if not found 
+ */
+int CompositeArguments_getRadarIndexValue(CompositeArguments_t* args, const char* key);
+
+/**
+ * Creates a radar index value for the specified key. If there already is a key the
+ * currently set index will be returned.
+ * @param[in] args - self
+ * @param[in] key - the key
+ * @return the index value created or the existing value for the key or 0 on failure.
+ */
+int CompositeArguments_createRadarIndex(CompositeArguments_t* args, const char* key);
 
 #endif /* COMPOSITE_ARGUMENTS_H */

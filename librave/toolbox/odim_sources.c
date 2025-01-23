@@ -26,6 +26,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "odim_source.h"
 #include "rave_debug.h"
 #include "rave_alloc.h"
+#include "rave_list.h"
 #include "rave_object.h"
 #include "raveobject_list.h"
 #include "raveobject_hashtable.h"
@@ -184,7 +185,6 @@ int OdimSources_add(OdimSources_t* self, OdimSource_t* source)
   if (source != NULL) {
     if (OdimSource_getNod(source) != NULL) {
       result = RaveObjectHashTable_put(self->nod, OdimSource_getNod(source), (RaveCoreObject*)source); 
-
       if (OdimSource_getWigos(source) != NULL) {
         if (RaveObjectHashTable_exists(self->wigos, OdimSource_getWigos(source)) || !RaveObjectHashTable_put(self->wigos, OdimSource_getWigos(source), (RaveCoreObject*)source)) {
           RAVE_WARNING1("Failed to add wigos to odim sources WIGOS: %s", OdimSource_getWigos(source));

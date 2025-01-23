@@ -23,8 +23,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2025-12-10
  */
-#ifndef AREA_H
-#define AREA_H
+#ifndef ODIMSOURCE_H
+#define ODIMSOURCE_H
 #include "rave_object.h"
 
 /**
@@ -170,4 +170,4 @@ const char* OdimSource_getOrg(OdimSource_t* self);
  */
 const char* OdimSource_getSource(OdimSource_t* self);
 
-#endif /* AREA_H */
+#endif /* ODIMSOURCE_H */
