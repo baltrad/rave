@@ -328,6 +328,15 @@ int CompositeArguments_getNumberOfObjects(CompositeArguments_t* args);
 RaveCoreObject* CompositeArguments_getObject(CompositeArguments_t* args, int index);
 
 /**
+ * Returns the objects radar index at specified index. Requires that radar mapping
+ * has been applied and that there exists some sort of mapping.
+ * @param[in] args - self
+ * @param[in] index -position in list of objects
+ * @return the radar index or 0 on failure
+ */
+int CompositeArguments_getObjectRadarIndexValue(CompositeArguments_t* args, int index);
+
+/**
  * Adds a quality flag that should be generated during processing.
  * @param[in] args - self
  * @param[in] flag - the quality flag that should be passed on

@@ -156,6 +156,32 @@ char* OdimSource_getIdFromOdimSource(const char* source, const char* id)
   return result;
 }
 
+char* OdimSource_getIdFromOdimSourceInclusive(const char* source, const char* id)
+{
+  char* result = NULL;
+  if (source != NULL && id != NULL) {
+    char* p = strstr(source, id);
+    if (p != NULL) {
+      int len = 0;
+      char* pbrk = NULL;
+      len = strlen(p);
+      pbrk = strpbrk((const char*)p, ",");
+
+      if (pbrk != NULL) {
+        len = pbrk - p;
+      }
+
+      result = RAVE_MALLOC(sizeof(char) * (len + 1));
+      if (result != NULL) {
+        strncpy(result, p, len);
+        result[len] = '\0';
+      }
+    }
+  }
+  return result;
+}
+
+
 OdimSource_t* OdimSource_create(const char* nod, const char* wmo, const char* wigos, const char* plc, const char* rad, const char* cccc, const char* org)
 {
   OdimSource_t *result = NULL, *source = NULL;

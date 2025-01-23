@@ -194,7 +194,7 @@ static void AcqvaCompositeGeneratorFactoryInternal_fillQualityInformation(
         } else if (strcmp(HEIGHT_ABOVE_SEA_HOW_TASK, name) == 0) {
           value = cvalues->navinfo.actual_height / HEIGHT_RESOLUTION;
         } else if (strcmp(RADAR_INDEX_HOW_TASK, name) == 0) {
-          //value = (double)Acqva_getRadarIndexValue(self, radarindex);
+          value = (double)CompositeArguments_getObjectRadarIndexValue(arguments, radarindex);
         } else {
           // if (AcqvaInternal_getQualityValueAtPosition(self, obj, quantity, name, &cvalues->navinfo, &value)) {
           //   value = (value - ACQVA_QUALITY_FIELDS_OFFSET) / ACQVA_QUALITY_FIELDS_GAIN;

@@ -658,6 +658,20 @@ static PyObject* _pycompositearguments_createRadarIndex(PyCompositeArguments* se
   raiseException_returnNULL(PyExc_RuntimeError, "Failed to create radar index");
 }
 
+static PyObject* _pycompositearguments_getObjectRadarIndexValue(PyCompositeArguments* self, PyObject* args)
+{
+  int index = 0;
+  int result = 0;
+  if (!PyArg_ParseTuple(args, "i", &index)) {
+    return NULL;
+  }
+  result = CompositeArguments_getObjectRadarIndexValue(self->args, index);
+  if (result > 0) {
+    return PyLong_FromLong(result);
+  }
+  raiseException_returnNULL(PyExc_KeyError, "No such index");
+}
+
 
 /**
  * All methods a cartesian product can have
@@ -768,6 +782,11 @@ static struct PyMethodDef _pycompositearguments_methods[] =
     "createRadarIndex(key) -> index\n\n"
     "Creates a radar index for provided key or returns the existing radar index value if it already has been set.\n"
     "key - the nod key (NOD:xxxxx)\n"
+  },
+  {"getObjectRadarIndexValue", (PyCFunction)_pycompositearguments_getObjectRadarIndexValue, 1,
+    "getObjectRadarIndexValue(index) -> value\n\n"
+    "Returns the index value for provided object index\n"
+    "index - the index of the object in the object list\n"
   },
 
   {NULL, NULL } /* sentinel */

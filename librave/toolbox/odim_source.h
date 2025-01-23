@@ -39,9 +39,15 @@ extern RaveCoreObjectType OdimSource_TYPE;
 
 /**
  * Extracts an ID from the ODIM source string. For example if the source is "NOD:sekkr,WMO:01234".
- * Then the call OdimSource_getIdFromOdimSource(source, "WMO") will return 01234
+ * Then the call OdimSource_getIdFromOdimSource(source, "WMO:") will return 01234
  */
 char* OdimSource_getIdFromOdimSource(const char* source, const char* id);
+
+/**
+ * Extracts an ID from the ODIM source string inclusive the identifier. For example if the source is "NOD:sekkr,WMO:01234".
+ * Then the call OdimSource_getIdFromOdimSource(source, "WMO:") will return WMO:01234
+ */
+char* OdimSource_getIdFromOdimSourceInclusive(const char* source, const char* id);
 
 /**
  * Utility function to create a complete OdimSource_t in one line.
