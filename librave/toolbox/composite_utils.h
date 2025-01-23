@@ -192,4 +192,16 @@ int CompositeUtils_addGainAndOffsetToField(RaveField_t* field, double gain, doub
  * @return the created field on success otherwise NULL
  */
 RaveField_t* CompositeUtils_createQualityField(const char* howtaskvaluestr, int xsize, int ysize, RaveDataType datatype, double gain, double offset);
+
+/**
+ * Gets the quality value at the specified position for the specified quantity and quality field in a polar object.
+ * @param[in] obj - the object (Must be PolarScan or PolarVolume)
+ * @param[in] quantity - the quantity
+ * @param[in] qualityField - the quality field
+ * @param[in] nav - the navigation information
+ * @param[out] value - the value
+ * @return 1 on success or 0 if value not could be retrieved
+ */
+int CompositeUtils_getPolarQualityValueAtPosition(RaveCoreObject* obj, const char* quantity, const char* qualityField, PolarNavigationInfo* nav, double* value);
+
 #endif /* COMPOSITE_UTILS_H */

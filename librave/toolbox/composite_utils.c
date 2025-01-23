@@ -457,3 +457,32 @@ error:
   return NULL;
 
 }
+
+int CompositeUtils_getPolarQualityValueAtPosition(RaveCoreObject* obj, const char* quantity, const char* qualityField, PolarNavigationInfo* nav, double* value)
+{
+  int result = 0;
+  if (nav == NULL || value == NULL || qualityField == NULL) {
+    RAVE_ERROR0("nav, value and qualityField must all be provided");
+    return 0;
+  }
+  *value = 0.0;
+
+  if (obj != NULL) {
+    if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarScan_TYPE)) {
+      if (!PolarScan_getQualityValueAt((PolarScan_t*)obj, quantity, nav->ri, nav->ai, qualityField, 1, value)) {
+        *value = 0.0;
+      }
+    } else if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
+      if (!PolarVolume_getQualityValueAt((PolarVolume_t*)obj, quantity, nav->ei, nav->ri, nav->ai, qualityField, 1, value)) {
+        *value = 0.0;
+      }
+    } else {
+      RAVE_WARNING0("Unsupported object type");
+      goto done;
+    }
+  }
+
+  result = 1;
+done:
+  return result;  
+}

@@ -57,6 +57,10 @@ typedef struct _AcqvaCompositeGeneratorFactory_t {
 /** The name of the task for indexing the radars used */
 #define RADAR_INDEX_HOW_TASK "se.smhi.composite.index.radar"
 
+#define DEFAULT_QUALITY_FIELDS_GAIN   (1.0/UCHAR_MAX)
+
+#define DEFAULT_QUALITY_FIELDS_OFFSET 0.0
+
 static CompositeQualityFlagSettings_t ACQVA_QUALITY_FLAG_DEFINITIONS[] = {
   {DISTANCE_TO_RADAR_HOW_TASK, RaveDataType_UCHAR, 0.0, DISTANCE_TO_RADAR_RESOLUTION},
   {HEIGHT_ABOVE_SEA_HOW_TASK, RaveDataType_UCHAR, 0.0, HEIGHT_RESOLUTION},
@@ -196,9 +200,9 @@ static void AcqvaCompositeGeneratorFactoryInternal_fillQualityInformation(
         } else if (strcmp(RADAR_INDEX_HOW_TASK, name) == 0) {
           value = (double)CompositeArguments_getObjectRadarIndexValue(arguments, radarindex);
         } else {
-          // if (AcqvaInternal_getQualityValueAtPosition(self, obj, quantity, name, &cvalues->navinfo, &value)) {
-          //   value = (value - ACQVA_QUALITY_FIELDS_OFFSET) / ACQVA_QUALITY_FIELDS_GAIN;
-          // }
+          if (CompositeUtils_getPolarQualityValueAtPosition(obj, quantity, name, &cvalues->navinfo, &value)) {
+             value = (value - DEFAULT_QUALITY_FIELDS_OFFSET) / DEFAULT_QUALITY_FIELDS_GAIN;
+          }
         }
         RaveField_setValue(field, x, y, value);
       }
@@ -336,7 +340,7 @@ Cartesian_t* AcqvaCompositeGeneratorFactory_generate(CompositeGeneratorFactory_t
         CartesianParam_setConvertedValue(cvalues[cindex].parameter, x, y, vvalue, vtype);
         if ((vtype == RaveValueType_DATA || vtype == RaveValueType_UNDETECT) &&
             cvalues[cindex].radarindex >= 0 && nqualityflags > 0) {
-//          AcqvaInternal_fillQualityInformation(self, x, y, &cvalues[cindex]);
+          AcqvaCompositeGeneratorFactoryInternal_fillQualityInformation(arguments, x, y, &cvalues[cindex]);
         }        
       }
     }
