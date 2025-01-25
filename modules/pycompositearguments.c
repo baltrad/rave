@@ -549,6 +549,43 @@ static PyObject* _pycompositearguments_getQualityFlagAt(PyCompositeArguments* se
   return Py_BuildValue("s", qualityflagname);
 }
 
+static PyObject* _pycompositearguments_getQualityFlags(PyCompositeArguments* self, PyObject* args)
+{
+  RaveList_t* qualityflags = NULL;
+  PyObject* result = NULL;
+  
+  if (!PyArg_ParseTuple(args, "")) {
+    return NULL;
+  }
+  qualityflags = CompositeArguments_getQualityFlags(self->args);
+  if (qualityflags != NULL) {
+    int i = 0;
+    int n = RaveList_size(qualityflags);
+    result = PyList_New(0);
+    for (i = 0; result != NULL && i < n; i++) {
+      char* name = RaveList_get(qualityflags, i);
+      if (name != NULL) {
+        PyObject* pynamestr = PyString_FromString(name);
+        if (pynamestr == NULL) {
+          goto fail;
+        }
+        if (PyList_Append(result, pynamestr) != 0) {
+          Py_DECREF(pynamestr);
+          goto fail;
+        }
+        Py_DECREF(pynamestr);
+      }
+    }
+  }
+
+  RaveList_freeAndDestroy(&qualityflags);
+  return result;
+fail:
+  RaveList_freeAndDestroy(&qualityflags);
+  Py_XDECREF(result);
+  return NULL;
+}
+
 static PyObject* _pycompositearguments_removeQualityFlag(PyCompositeArguments* self, PyObject* args)
 {
   char* qualityflag = NULL;
@@ -681,6 +718,7 @@ static struct PyMethodDef _pycompositearguments_methods[] =
   {"sources", NULL, METH_VARARGS},
   {"area", NULL, METH_VARARGS},
   {"product", NULL, METH_VARARGS},
+  {"product_type", NULL, METH_VARARGS},
   {"time", NULL, METH_VARARGS},
   {"date", NULL, METH_VARARGS},
   {"height", NULL, METH_VARARGS},
@@ -749,6 +787,10 @@ static struct PyMethodDef _pycompositearguments_methods[] =
     "getQualityFlagAt(index)\n\n"
     "Returns the quality flag at specified position.\n"
     "index - the index of the quality field"
+  },
+  {"getQualityFlags", (PyCFunction)_pycompositearguments_getQualityFlags, 1,
+    "getQualityFlags()\n\n"
+    "Returns a complete list of quality flags."
   },
   {"removeQualityFlag", (PyCFunction)_pycompositearguments_removeQualityFlag, 1,
     "removeQualityFlag(qualityname)\n\n"
@@ -823,6 +865,9 @@ static PyObject* _pycompositearguments_getattro(PyCompositeArguments* self, PyOb
     } else {
       return PyString_FromString(CompositeArguments_getProduct(self->args));
     }
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "product_type") == 0) {
+    Rave_ProductType t = CompositeArguments_getProductType(self->args);
+    return PyLong_FromLong(t);
   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("time", name) == 0) {
     if (CompositeArguments_getTime(self->args) != NULL) {
       return PyString_FromString(CompositeArguments_getTime(self->args));
@@ -1050,6 +1095,7 @@ PyDoc_STRVAR(_pycompositearguments_type_doc,
     "                                PPI requires elevation angle\n"
     "                                CAPPI, PCAPPI and PMAX requires height above sea level\n"
     "                                PMAX also requires range in meters\n"
+    " product_type                 - This is a read-only attribute that will return the product strings corresponding Rave_ProductType if possible.\n"
     " selection_method             - The selection method to use when there are more than one radar covering same point. I.e. if for example taking distance to radar or height above sea level. Currently the following methods are available\n"
     "       _pycomposite.SelectionMethod_NEAREST - Value from the nearest radar is selected.\n"
     "       _pycomposite.SelectionMethod_HEIGHT  - Value from radar which scan is closest to the sea level at current point.\n"

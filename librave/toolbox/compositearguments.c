@@ -70,6 +70,22 @@ static const char* RAVE_COMPOSITE_PRODUCT_STRINGS[] =
   /*UNDEFINED*/
 };
 
+typedef struct ProductTypeMapping_t {
+  const char* productString;
+  Rave_ProductType productType;
+} ProductTypeMapping_t;
+
+static ProductTypeMapping_t PRODUCT_TYPE_MAPPING[] = {
+  {"PPI", Rave_ProductType_PPI},
+  {"CAPPI", Rave_ProductType_CAPPI},
+  {"PCAPPI", Rave_ProductType_PCAPPI},
+  {"ETOP", Rave_ProductType_ETOP},
+  {"MAX", Rave_ProductType_MAX},
+  {"RR", Rave_ProductType_RR},
+  {"PMAX", Rave_ProductType_PMAX},
+  {NULL, Rave_ProductType_UNDEFINED}
+};
+
 /**
  * Structure for keeping track on parameters that should be composited.
  */
@@ -499,6 +515,21 @@ const char* CompositeArguments_getProduct(CompositeArguments_t* args)
   return (const char*)args->product;
 }
 
+Rave_ProductType CompositeArguments_getProductType(CompositeArguments_t* args)
+{
+  RAVE_ASSERT((args != NULL), "args == NULL");
+  if (args->product != NULL) {
+    int ctr = 0;
+    while (PRODUCT_TYPE_MAPPING[ctr].productType != Rave_ProductType_UNDEFINED) {
+      if (strcmp(PRODUCT_TYPE_MAPPING[ctr].productString, args->product) == 0) {
+        return PRODUCT_TYPE_MAPPING[ctr].productType;
+      }
+      ctr++;
+    }
+  }
+  return Rave_ProductType_UNDEFINED;
+}
+
 int CompositeArguments_setArea(CompositeArguments_t* args, Area_t* area)
 {
   RAVE_ASSERT((args != NULL), "args == NULL");
@@ -895,6 +926,33 @@ int CompositeArguments_removeQualityFlagAt(CompositeArguments_t* args, int index
     result = 1;
   }
   return result;
+}
+
+RaveList_t* CompositeArguments_getQualityFlags(CompositeArguments_t* args)
+{
+  RaveList_t* result = NULL;
+
+  RAVE_ASSERT((args != NULL), "args == NULL");
+  result = RAVE_OBJECT_NEW(&RaveList_TYPE);
+  if (result != NULL) {
+    int i = 0;
+    int nlen = RaveList_size(args->qualityflags);
+    for (i = 0; i < nlen; i++) {
+      const char* qflag = (const char*)RaveList_get(args->qualityflags, i);
+      if (qflag != NULL) {
+        char* t = RAVE_STRDUP(qflag);
+        if (t == NULL || !RaveList_add(result, t)) {
+          RAVE_ERROR0("Failed to add item to rave list");
+          RAVE_FREE(t);
+          goto fail;
+        }
+      }
+    }
+  }
+  return result;
+fail:
+  RaveList_freeAndDestroy(&result);
+  return NULL;
 }
 
 static char* CompositeArgumentsInternal_getAnyIdFromSource(const char* source)

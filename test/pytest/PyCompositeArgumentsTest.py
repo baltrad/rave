@@ -84,6 +84,16 @@ class PyCompositeArgumentsTest(unittest.TestCase):
     except ValueError:
       pass
 
+  def test_product_type(self):
+    obj = _compositearguments.new()
+    self.assertEqual(_rave.Rave_ProductType_UNDEFINED, obj.product_type)
+    obj.product = "PPI"
+    self.assertEqual(_rave.Rave_ProductType_PPI, obj.product_type)
+    obj.product = "CAPPI"
+    self.assertEqual(_rave.Rave_ProductType_CAPPI, obj.product_type)
+    obj.product = "ACQVA"
+    self.assertEqual(_rave.Rave_ProductType_UNDEFINED, obj.product_type)
+
   def test_time(self):
     obj = _compositearguments.new()
     self.assertEqual(None, obj.time)
@@ -262,6 +272,15 @@ class PyCompositeArgumentsTest(unittest.TestCase):
     self.assertEqual(2, obj.getNumberOfQualityFlags())
     self.assertEqual("se.smhi.something", obj.getQualityFlagAt(0))
     self.assertEqual("se.smhi.something.else", obj.getQualityFlagAt(1))
+
+  def test_getQualityFlags(self):
+    obj = _compositearguments.new()
+    obj.addQualityFlag("se.smhi.something")
+    obj.addQualityFlag("se.smhi.something.else")
+    flags = obj.getQualityFlags()
+    self.assertEqual(2, len(flags))
+    self.assertEqual("se.smhi.something", flags[0])
+    self.assertEqual("se.smhi.something.else", flags[1])
 
   def test_removeQualityFlagAt(self):
     obj = _compositearguments.new()

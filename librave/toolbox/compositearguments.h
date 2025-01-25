@@ -111,6 +111,15 @@ int CompositeArguments_setProduct(CompositeArguments_t* args, const char* produc
 const char* CompositeArguments_getProduct(CompositeArguments_t* args);
 
 /**
+ * In some cases it is possible to translate a \ref Rave_CompositingProduct into a \ref Rave_ProductType.
+ * If it is possible, then the product type is returned, otherwise UNDEFINED is returned.
+ * @param[in] args - self
+ * @return the Product Type
+ * 
+ */
+Rave_ProductType CompositeArguments_getProductType(CompositeArguments_t* args);
+
+/**
  * Sets the area to use when creating the composite.
  * @param[in] args - self
  * @param[in] area - the area
@@ -383,6 +392,13 @@ int CompositeArguments_getNumberOfQualityFlags(CompositeArguments_t* args);
  * @return quality flag on success, otherwise NULL
  */
 const char* CompositeArguments_getQualityFlagAt(CompositeArguments_t* args, int index);
+
+/**
+ * Returns a full list of all set quality flags. Remember to call RaveList_freeAndDestroy
+ * @param[in] args - self
+ * @return a rave list of strings defining the quality flags
+ */
+RaveList_t* CompositeArguments_getQualityFlags(CompositeArguments_t* args);
 
 /**
  * Creates the radar index mapping from the objects and the sources. If no sources

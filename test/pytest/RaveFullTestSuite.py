@@ -30,6 +30,7 @@ import _rave
 from RaveTestSuite import *
 from PyCompositeTest import *
 from PyCartesianCompositeTest import *
+from PyLegacyCompositeGeneratorFactoryITest import *
 from MeanTest import *
 
 if __name__ == '__main__':

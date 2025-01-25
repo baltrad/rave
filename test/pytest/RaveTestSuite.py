@@ -140,7 +140,8 @@ except:
 
 from PyCompositeArgumentsTest import *
 from PyCompositeGeneratorTest import *
-#from PyLegacyCompositeGeneratorFactoryTest import *
+from PyLegacyCompositeGeneratorFactoryTest import *
+#from PyLegacyCompositeGeneratorFactoryITest import *
 from PyAcqvaCompositeGeneratorFactoryTest import *
 from PyOdimSourceTest import *
 from PyOdimSourcesTest import *

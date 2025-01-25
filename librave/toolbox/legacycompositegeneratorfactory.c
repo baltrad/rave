@@ -26,13 +26,16 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "compositearguments.h"
 #include "polarvolume.h"
 #include "rave_attribute.h"
+#include "rave_list.h"
 #include "rave_object.h"
 #include "raveobject_list.h"
 #include "rave_types.h"
 #include "rave_debug.h"
 #include "rave_alloc.h"
 #include "rave_utilities.h"
+#include "composite.h"
 #include <strings.h>
+#include <string.h>
 
 static const char* SUPPORTED_PRODUCTS[]={
   "PPI",
@@ -47,6 +50,26 @@ typedef struct _LegacyCompositeGeneratorFactory_t {
   RAVE_OBJECT_HEAD /**< Always on top */
   COMPOSITE_GENERATOR_FACTORY_HEAD /**< composite generator plugin specifics */
 } LegacyCompositeGeneratorFactory_t;
+
+
+typedef struct InterpolationMethodMapping_t {
+  const char* methodstr;
+  CompositeInterpolationMethod_t method;
+} InterpolationMethodMapping_t;
+
+static InterpolationMethodMapping_t INTERPOLATION_MAPPING[] = {
+  {"NEAREST", CompositeInterpolationMethod_NEAREST},
+  {"LINEAR_HEIGHT", CompositeInterpolationMethod_LINEAR_HEIGHT},
+  {"LINEAR_RANGE", CompositeInterpolationMethod_LINEAR_RANGE},
+  {"LINEAR_AZIMUTH", CompositeInterpolationMethod_LINEAR_AZIMUTH},
+  {"LINEAR_RANGE_AND_AZIMUTH", CompositeInterpolationMethod_LINEAR_RANGE_AND_AZIMUTH},
+  {"LINEAR_3D", CompositeInterpolationMethod_LINEAR_3D},
+  {"QUADRATIC_HEIGHT", CompositeInterpolationMethod_QUADRATIC_HEIGHT},
+  {"QUADRATIC_3D", CompositeInterpolationMethod_QUADRATIC_3D},
+  {NULL, CompositeInterpolationMethod_NEAREST}
+};
+
+
 /*@{ Private functions */
 /**
  * Constructor.
@@ -87,6 +110,19 @@ static void LegacyCompositeGeneratorFactory_destructor(RaveCoreObject* obj)
 {
   //LegacyCompositeGeneratorFactory_t* this = (LegacyCompositeGeneratorFactory_t*)obj;
 }
+
+static CompositeInterpolationMethod_t LegacyCompositeGeneratorFactoryInternal_getInterpolationMethod(const char* method)
+{
+  int ctr = 0;
+  while (INTERPOLATION_MAPPING[ctr].methodstr != NULL) {
+    if (strcasecmp(INTERPOLATION_MAPPING[ctr].methodstr, method) == 0) {
+      return INTERPOLATION_MAPPING[ctr].method;
+    }
+    ctr++;
+  }
+  return CompositeInterpolationMethod_NEAREST;
+}
+
 /*@} End of Private functions */
 
 /*@{ Interface functions */
@@ -137,7 +173,121 @@ int LegacyCompositeGeneratorFactory_canHandle(CompositeGeneratorFactory_t* self,
  */
 Cartesian_t* LegacyCompositeGeneratorFactory_generate(CompositeGeneratorFactory_t* self, CompositeArguments_t* arguments)
 {
-  return NULL;
+  Composite_t* composite = NULL;
+  Cartesian_t* result = NULL;
+  RaveAttribute_t* attr = NULL;
+  Area_t* area = NULL;
+  RaveList_t* qualityflags = NULL;
+
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  if (arguments == NULL) {
+    RAVE_ERROR0("Must provide arguments when generating the composite");
+    return NULL;
+  }
+  area = CompositeArguments_getArea(arguments);
+  if (area == NULL) {
+    RAVE_ERROR0("Missing area in arguments");
+    return NULL;
+  }
+
+  composite = RAVE_OBJECT_NEW(&Composite_TYPE);
+  if (composite != NULL) {
+    int i = 0;
+    int nobjects = CompositeArguments_getNumberOfObjects(arguments);
+    int nrparams = CompositeArguments_getParameterCount(arguments);
+    Rave_ProductType prodtype = CompositeArguments_getProductType(arguments);
+
+    if (prodtype == Rave_ProductType_UNDEFINED) {
+      if (CompositeArguments_getProduct(arguments) != NULL) {
+        RAVE_ERROR1("Can't support product: %s\n", CompositeArguments_getProduct(arguments));
+        goto done;
+      } else {
+        RAVE_ERROR0("No product has been set\n");
+        goto done;
+      }
+    }
+    Composite_setProduct(composite, prodtype);
+
+    Composite_setSelectionMethod(composite, CompositeSelectionMethod_NEAREST);
+    attr = CompositeArguments_getArgument(arguments, "selection_method");
+    if (attr != NULL) {
+      char* v = NULL;
+      if (RaveAttribute_getString(attr, &v)) {
+        if (strcasecmp("HEIGHT_ABOVE_SEALEVEL", v) == 0) {
+          Composite_setSelectionMethod(composite, CompositeSelectionMethod_HEIGHT);
+        }
+      }
+      RAVE_OBJECT_RELEASE(attr);
+    }
+
+    Composite_setInterpolationMethod(composite, CompositeInterpolationMethod_NEAREST);
+    attr = CompositeArguments_getArgument(arguments, "interpolation_method");
+    if (attr != NULL) {
+      char* v = NULL;
+      if (RaveAttribute_getString(attr, &v)) {
+        Composite_setInterpolationMethod(composite, LegacyCompositeGeneratorFactoryInternal_getInterpolationMethod(v));
+      }
+      RAVE_OBJECT_RELEASE(attr);
+    }
+
+    attr = CompositeArguments_getArgument(arguments, "quality_indicator_field");
+    if (attr != NULL) {
+      char* v = NULL;
+      if (RaveAttribute_getString(attr, &v)) {
+        Composite_setQualityIndicatorFieldName(composite, v);
+      }
+      RAVE_OBJECT_RELEASE(attr);
+    }
+
+    Composite_setHeight(composite, CompositeArguments_getHeight(arguments));
+    Composite_setElevationAngle(composite, CompositeArguments_getElevationAngle(arguments));
+    Composite_setRange(composite, CompositeArguments_getRange(arguments));
+
+    attr = CompositeArguments_getArgument(arguments, "quality_indicator_field");
+    if (attr != NULL) {
+      char* v = NULL;
+      if (RaveAttribute_getString(attr, &v)) {
+        Composite_setQualityIndicatorFieldName(composite, v);
+      }
+      RAVE_OBJECT_RELEASE(attr);
+    }
+
+    for (i = 0; i < nrparams; i++) {
+      double gain = 0.0, offset = 0.0, nodata = 0.0, undetect = 0.0;
+      RaveDataType datatype = RaveDataType_UCHAR;
+      const char* quantity = CompositeArguments_getParameterAtIndex(arguments, i, &gain, &offset, &datatype, &nodata, &undetect);
+      if (!Composite_addParameter(composite, quantity, gain, offset, -30.0)) {
+        RAVE_ERROR0("Could not add parameter to composite generator");
+        goto done;
+      }
+    }
+
+    for (i = 0; i < nobjects; i++) {
+      RaveCoreObject* object = CompositeArguments_getObject(arguments, i);
+      if (object == NULL || !Composite_add(composite, object)) {
+        RAVE_ERROR0("Failed to add object to composite");
+        RAVE_OBJECT_RELEASE(object);
+        goto done;
+      }
+      RAVE_OBJECT_RELEASE(object);
+    }
+    
+    Composite_setTime(composite, CompositeArguments_getTime(arguments));
+    Composite_setDate(composite, CompositeArguments_getDate(arguments));
+
+    qualityflags = CompositeArguments_getQualityFlags(arguments);
+
+    result = Composite_generate(composite, area, qualityflags);
+  }
+done:
+  RAVE_OBJECT_RELEASE(composite);
+  RAVE_OBJECT_RELEASE(attr);
+  RAVE_OBJECT_RELEASE(area);
+  if (qualityflags != NULL) {
+    RaveList_freeAndDestroy(&qualityflags);
+  }
+
+  return result;
 }
 
 /**
