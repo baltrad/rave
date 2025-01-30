@@ -277,6 +277,14 @@ SOURCE_53= pyodimsources.c
 OBJECTS_53= $(SOURCE_53:.c=.o)
 TARGET_53= _odimsources.so
 
+SOURCE_54= pycompositefilter.c
+OBJECTS_54= $(SOURCE_54:.c=.o)
+TARGET_54= _compositefilter.so
+
+SOURCE_55= pycompositefactorymanager.c
+OBJECTS_55= $(SOURCE_55:.c=.o)
+TARGET_55= _compositefactorymanager.so
+
 TARGETS=$(TARGET_1) $(TARGET_2) $(TARGET_3) $(TARGET_4) $(TARGET_5) $(TARGET_6) \
 		$(TARGET_7) $(TARGET_8) $(TARGET_9) $(TARGET_10) $(TARGET_11) $(TARGET_12) $(TARGET_13) \
 		$(TARGET_14) $(TARGET_15) $(TARGET_16) $(TARGET_17) $(TARGET_18) $(TARGET_19) \
@@ -285,7 +293,7 @@ TARGETS=$(TARGET_1) $(TARGET_2) $(TARGET_3) $(TARGET_4) $(TARGET_5) $(TARGET_6) 
 		$(TARGET_33) $(TARGET_34) $(TARGET_35) $(TARGET_36) $(TARGET_37) $(TARGET_38) \
 		$(TARGET_39) $(TARGET_40) $(TARGET_41) $(TARGET_42) $(TARGET_43) $(TARGET_44) $(TARGET_45) \
 		$(TARGET_46) $(TARGET_47) $(TARGET_48) $(TARGET_49) $(TARGET_50) $(TARGET_51) \
-		$(TARGET_52) $(TARGET_53)
+		$(TARGET_52) $(TARGET_53) $(TARGET_54) $(TARGET_55)
 
 INSTALL_HEADERS= pyarea.h \
 				 pycartesian.h \
@@ -325,7 +333,9 @@ INSTALL_HEADERS= pyarea.h \
 				 pycompositearguments.h \
 				 pyacqvacompositegeneratorfactory.h \
 				 pyodimsource.h \
-				 pyodimsources.h
+				 pyodimsources.h \
+				 pycompositefilter.h \
+				 pycompositefactorymanager.h
 
 ifeq ($(EXPAT_SUPPRESSED), no)
 TARGETS += $(TARGET_22) $(TARGET_23) $(TARGET_32)
@@ -513,6 +523,12 @@ $(TARGET_52): $(DEPDIR) $(OBJECTS_52) ../librave/toolbox/libravetoolbox.so ../li
 $(TARGET_53): $(DEPDIR) $(OBJECTS_53) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_53) $(LDFLAGS) $(LIBRARIES)
 
+$(TARGET_54): $(DEPDIR) $(OBJECTS_54) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
+	$(LDSHARED) -o $@ $(OBJECTS_54) $(LDFLAGS) $(LIBRARIES)
+
+$(TARGET_55): $(DEPDIR) $(OBJECTS_55) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
+	$(LDSHARED) -o $@ $(OBJECTS_55) $(LDFLAGS) $(LIBRARIES)
+
 ifeq ($(COMPILE_FOR_PYTHON), yes)
 .PHONY=install
 install:
@@ -612,3 +628,4 @@ endif
 -include $(SOURCE_51:%.c=$(DEPDIR)/%.P)
 -include $(SOURCE_52:%.c=$(DEPDIR)/%.P)
 -include $(SOURCE_53:%.c=$(DEPDIR)/%.P)
+-include $(SOURCE_54:%.c=$(DEPDIR)/%.P)

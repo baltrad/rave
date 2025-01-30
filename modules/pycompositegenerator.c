@@ -23,6 +23,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @date 2024"-12-05
  */
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#include "compositefactorymanager.h"
 #include "pyravecompat.h"
 #include <limits.h>
 #include <math.h>
@@ -34,7 +35,9 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #define PYCOMPOSITEGENERATOR_MODULE        /**< to get correct part of pycompositegenerator.h */
 #include "pycompositegenerator.h"
 #include "pycompositegeneratorfactory.h"
+#include "pycompositefactorymanager.h"
 #include "pycompositearguments.h"
+#include "pycompositefilter.h"
 #include "pypolarvolume.h"
 #include "pypolarscan.h"
 #include "pycartesian.h"
@@ -157,11 +160,34 @@ static PyObject* _pycompositegenerator_new(PyObject* self, PyObject* args)
  */
 static PyObject* _pycompositegenerator_create(PyObject* self, PyObject* args)
 {
-  CompositeGenerator_t* generator = CompositeGenerator_create();
-  PyCompositeGenerator* result = NULL;
-  if (generator != NULL) {
-    result = PyCompositeGenerator_New(generator);
+  PyObject* pymanager = NULL;
+  PyObject* result = NULL;
+  char* filename = NULL;
+  CompositeFactoryManager_t* manager = NULL;
+  CompositeGenerator_t* generator = NULL;
+
+  if (!PyArg_ParseTuple(args, "|Oz", &pymanager, &filename)) {
+    return NULL;
   }
+
+  if (pymanager != NULL && !PyCompositeFactoryManager_Check(pymanager)) {
+    raiseException_returnNULL(PyExc_ValueError, "Argument is <FactoryManager or None>, <filename or None>");
+  }
+  if (pymanager != NULL) {
+    manager = ((PyCompositeFactoryManager*)pymanager)->manager;
+  }
+
+  if (manager != NULL && CompositeFactoryManager_size(manager) == 0) {
+    raiseException_gotoTag(done, PyExc_ValueError, "The manager must at least contain one factory");
+  }
+
+  generator = CompositeGenerator_create(manager, filename);
+  if (generator != NULL) {
+    result = (PyObject*)PyCompositeGenerator_New(generator);
+  } else {
+    raiseException_gotoTag(done, PyExc_RuntimeError, "Could not create composite generator");
+  }
+done:
   RAVE_OBJECT_RELEASE(generator);
   return (PyObject*)result;
 }
@@ -169,8 +195,9 @@ static PyObject* _pycompositegenerator_create(PyObject* self, PyObject* args)
 static PyObject* _pycompositegenerator_register(PyCompositeGenerator* self, PyObject* args)
 {
   char* id = NULL;
-  PyObject* pyfactory = NULL;
-  if (!PyArg_ParseTuple(args, "sO", &id, &pyfactory)) {
+  PyObject *pyfactory = NULL, *pyfilters = NULL;
+  RaveObjectList_t* filters = NULL;
+  if (!PyArg_ParseTuple(args, "sO|O", &id, &pyfactory, &pyfilters)) {
     return NULL;
   }
 
@@ -178,11 +205,39 @@ static PyObject* _pycompositegenerator_register(PyCompositeGenerator* self, PyOb
     raiseException_returnNULL(PyExc_TypeError, "object must be a CompositeGeneratorFactory");
   }
 
-  if (!CompositeGenerator_register(self->generator, id, ((PyCompositeGeneratorFactory*)pyfactory)->factory)) {
-    raiseException_returnNULL(PyExc_AttributeError, "Could not add factory to generator");
+  if (pyfilters != NULL) {
+    if(!PyList_Check(pyfilters)) {
+      raiseException_returnNULL(PyExc_TypeError, "Filters must be provided as a list");
+    } else {
+      Py_ssize_t nfilters = PyObject_Length(pyfilters);
+      filters = RAVE_OBJECT_NEW(&RaveObjectList_TYPE);
+      if (filters == NULL) {
+        raiseException_gotoTag(fail, PyExc_MemoryError, "Failed to create object list");
+      }
+      int i = 0;
+      for (i = 0; i < nfilters; i++) {
+        PyObject* pyfilter = PyList_GetItem(pyfilters, i);
+        if (pyfilter != NULL) {
+          if (!PyCompositeFilter_Check(pyfilter)) {
+            raiseException_gotoTag(fail, PyExc_AttributeError, "list of filters must only contain CompositeFilterCore instances");
+          }
+          if (!RaveObjectList_add(filters, (RaveCoreObject*)((PyCompositeFilter*)pyfilter)->filter)) {
+            raiseException_gotoTag(fail, PyExc_AttributeError, "Could not add composite filter to filers list");
+          }
+        }
+      }
+    }
   }
 
+  if (!CompositeGenerator_register(self->generator, id, ((PyCompositeGeneratorFactory*)pyfactory)->factory, filters)) {
+    raiseException_gotoTag(fail, PyExc_AttributeError, "Could not add factory to generator");
+  }
+
+  RAVE_OBJECT_RELEASE(filters);
   Py_RETURN_NONE;
+fail:
+  RAVE_OBJECT_RELEASE(filters);
+  return NULL;
 }
 
 static PyObject* _pycompositegenerator_getFactoryIDs(PyCompositeGenerator* self, PyObject* args)
@@ -241,7 +296,8 @@ static PyObject* _pycompositegenerator_generate(PyCompositeGenerator* self, PyOb
   Cartesian_t* cartesian = NULL;
 
   if (!PyArg_ParseTuple(args, "O", &pyargs)) {
-    return NULL;
+    return NULL;  fprintf(stderr, "SET %p\n", PyCompositeFilter_API[PyCompositeFilter_Type_NUM]);
+
   }
 
   if (!PyCompositeArguments_Check(pyargs)) {
@@ -257,6 +313,31 @@ static PyObject* _pycompositegenerator_generate(PyCompositeGenerator* self, PyOb
 
   return result;
 }
+
+static PyObject* _pycompositegenerator_identify(PyCompositeGenerator* self, PyObject* args)
+{
+  PyObject* pyargs = NULL;
+  PyObject* result = NULL;
+  CompositeGeneratorFactory_t* factory = NULL;
+
+  if (!PyArg_ParseTuple(args, "O", &pyargs)) {
+    return NULL;
+  }
+
+  if (!PyCompositeArguments_Check(pyargs)) {
+    raiseException_returnNULL(PyExc_AttributeError, "Expects a CompositeArgument object as argument");
+  }
+
+  factory = CompositeGenerator_identify(self->generator, ((PyCompositeArguments*)pyargs)->args);
+  if (factory != NULL) {
+    result = (PyObject*)PyCompositeGeneratorFactory_New(factory);
+  } else {
+    PyErr_SetString(PyExc_ValueError, "Could not identify factory");
+  }
+  RAVE_OBJECT_RELEASE(factory);
+  return result;
+}
+
 
 /**
  * All methods a cartesian product can have
@@ -278,7 +359,11 @@ static struct PyMethodDef _pycompositegenerator_methods[] =
     "Removes a factory from the generator.\n\n"
     "id         - unique identifier for the factory\n"
   },
-
+  {"identify", (PyCFunction)_pycompositegenerator_identify, 1,
+    "identify(arguments)\n\n" // "sddd", &
+    "Identifies the factory to be used.\n\n"
+    "arguments - A CompositeArgumentsCore instance"
+  },
   {"generate", (PyCFunction)_pycompositegenerator_generate, 1,
     "generate()\n\n" // "sddd", &
     "Runs the composite generator.\n\n"
@@ -303,107 +388,6 @@ static PyObject* _pycompositegenerator_getattro(PyCompositeGenerator* self, PyOb
 static int _pycompositegenerator_setattro(PyCompositeGenerator* self, PyObject* name, PyObject* val)
 {
   int result = -1;
-//   if (name == NULL) {
-//     goto done;
-//   }
-//   if (PY_COMPARE_STRING_WITH_ATTRO_NAME("height", name) == 0) {
-//     if (PyFloat_Check(val)) {
-//       Composite_setHeight(self->composite, PyFloat_AsDouble(val));
-//     } else if (PyLong_Check(val)) {
-//       Composite_setHeight(self->composite, PyLong_AsDouble(val));
-//     } else if (PyInt_Check(val)) {
-//       Composite_setHeight(self->composite, (double)PyInt_AsLong(val));
-//     } else {
-//       raiseException_gotoTag(done, PyExc_TypeError,"height must be of type float");
-//     }
-//   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("elangle", name) == 0) {
-//     if (PyFloat_Check(val)) {
-//       Composite_setElevationAngle(self->composite, PyFloat_AsDouble(val));
-//     } else if (PyLong_Check(val)) {
-//       Composite_setElevationAngle(self->composite, PyLong_AsDouble(val));
-//     } else if (PyInt_Check(val)) {
-//       Composite_setElevationAngle(self->composite, (double)PyInt_AsLong(val));
-//     } else {
-//       raiseException_gotoTag(done, PyExc_TypeError, "elangle must be a float or decimal value")
-//     }
-//   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("range", name) == 0) {
-//     if (PyFloat_Check(val)) {
-//       Composite_setRange(self->composite, PyFloat_AsDouble(val));
-//     } else if (PyLong_Check(val)) {
-//       Composite_setRange(self->composite, PyLong_AsDouble(val));
-//     } else if (PyInt_Check(val)) {
-//       Composite_setRange(self->composite, (double)PyInt_AsLong(val));
-//     } else {
-//       raiseException_gotoTag(done, PyExc_TypeError, "range must be a float or decimal value")
-//     }
-//   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("product", name) == 0) {
-//     if (PyInt_Check(val)) {
-//       Composite_setProduct(self->composite, PyInt_AsLong(val));
-//     } else {
-//       raiseException_gotoTag(done, PyExc_TypeError, "product must be a valid product type")
-//     }
-//   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("selection_method", name) == 0) {
-//     if (!PyInt_Check(val) || !Composite_setSelectionMethod(self->composite, PyInt_AsLong(val))) {
-//       raiseException_gotoTag(done, PyExc_ValueError, "not a valid selection method");
-//     }
-//   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("interpolation_method", name) == 0) {
-//     if (!PyInt_Check(val) || !Composite_setInterpolationMethod(self->composite, PyInt_AsLong(val))) {
-//       raiseException_gotoTag(done, PyExc_ValueError, "not a valid interpolation method");
-//     }
-//   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("interpolate_undetect", name) == 0) {
-//     if (PyBool_Check(val)) {
-//       if (PyObject_IsTrue(val)) {
-//         Composite_setInterpolateUndetect(self->composite, 1);
-//       } else {
-//         Composite_setInterpolateUndetect(self->composite, 0);
-//       }
-//     } else {
-//       raiseException_gotoTag(done, PyExc_ValueError, "interpolate_undetect must be a bool");
-//     }
-//   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("time", name) == 0) {
-//     if (PyString_Check(val)) {
-//       if (!Composite_setTime(self->composite, PyString_AsString(val))) {
-//         raiseException_gotoTag(done, PyExc_ValueError, "time must be in the format HHmmss");
-//       }
-//     } else if (val == Py_None) {
-//       Composite_setTime(self->composite, NULL);
-//     } else {
-//       raiseException_gotoTag(done, PyExc_ValueError,"time must be of type string");
-//     }
-//   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("date", name) == 0) {
-//     if (PyString_Check(val)) {
-//       if (!Composite_setDate(self->composite, PyString_AsString(val))) {
-//         raiseException_gotoTag(done, PyExc_ValueError, "date must be in the format YYYYMMSS");
-//       }
-//     } else if (val == Py_None) {
-//       Composite_setDate(self->composite, NULL);
-//     } else {
-//       raiseException_gotoTag(done, PyExc_ValueError,"date must be of type string");
-//     }
-//   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("quality_indicator_field_name", name) == 0) {
-//     if (PyString_Check(val)) {
-//       if (!Composite_setQualityIndicatorFieldName(self->composite, PyString_AsString(val))) {
-//         raiseException_gotoTag(done, PyExc_MemoryError, "Failed to set quality indicator field name");
-//       }
-//     } else if (val == Py_None) {
-//       Composite_setQualityIndicatorFieldName(self->composite, NULL);
-//     } else {
-//       raiseException_gotoTag(done, PyExc_ValueError, "quality_indicator_field_name must be a string");
-//     }
-//   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("algorithm", name) == 0) {
-//     if (val == Py_None) {
-//       Composite_setAlgorithm(self->composite, NULL);
-//     } else if (PyCompositeAlgorithm_Check(val)) {
-//       Composite_setAlgorithm(self->composite, ((PyCompositeAlgorithm*)val)->algorithm);
-//     } else {
-//       raiseException_gotoTag(done, PyExc_TypeError, "algorithm must either be None or a CompositeAlgorithm");
-//     }
-//   } else {
-//     raiseException_gotoTag(done, PyExc_AttributeError, PY_RAVE_ATTRO_NAME_TO_STRING(name));
-//   }
-
-//   result = 0;
-// done:
   return result;
 }
 
@@ -531,22 +515,6 @@ static PyMethodDef functions[] = {
   {NULL,NULL} /*Sentinel*/
 };
 
-/**
- * Adds constants to the dictionary (probably the modules dictionary).
- * @param[in] dictionary - the dictionary the long should be added to
- * @param[in] name - the name of the constant
- * @param[in] value - the value
- */
-// static void add_long_constant(PyObject* dictionary, const char* name, long value)
-// {
-//   PyObject* tmp = NULL;
-//   tmp = PyInt_FromLong(value);
-//   if (tmp != NULL) {
-//     PyDict_SetItemString(dictionary, name, tmp);
-//   }
-//   Py_XDECREF(tmp);
-// }
-
 MOD_INIT(_compositegenerator)
 {
   PyObject *module=NULL,*dictionary=NULL;
@@ -576,14 +544,18 @@ MOD_INIT(_compositegenerator)
     return MOD_INIT_ERROR;
   }
 
+  import_array(); /*To make sure I get access to Numeric*/
   import_compositegeneratorfactory();
+  import_compositefactorymanager();
   import_compositearguments();
+  import_compositefilter();
   import_pypolarvolume();
   import_pypolarscan();
   import_pycartesian();
   import_pyarea();
-  import_array(); /*To make sure I get access to Numeric*/
+
   PYRAVE_DEBUG_INITIALIZE;
+
   return MOD_INIT_SUCCESS(module);
 }
 /*@} End of Module setup */

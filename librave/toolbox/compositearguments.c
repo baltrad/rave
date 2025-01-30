@@ -646,6 +646,13 @@ int CompositeArguments_addArgument(CompositeArguments_t* args, RaveAttribute_t* 
   return result;
 }
 
+void CompositeArguments_removeArgument(CompositeArguments_t* args, const char* name)
+{
+  RaveCoreObject* obj = NULL;
+  RAVE_ASSERT((args != NULL), "args == NULL");
+  obj = RaveObjectHashTable_remove(args->arguments, name);
+  RAVE_OBJECT_RELEASE(obj);
+}
 
 RaveAttribute_t* CompositeArguments_getArgument(CompositeArguments_t* args, const char* name)
 {

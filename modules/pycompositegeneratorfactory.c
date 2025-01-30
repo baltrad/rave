@@ -139,6 +139,20 @@ static PyObject* _pycompositegeneratorfactory_getName(PyCompositeGeneratorFactor
   return PyString_FromString(CompositeGeneratorFactory_getName(self->factory));
 }
 
+
+/**
+ * Returns the default id of this composite generator plugin
+ * @param[in] self - self
+ * @param[in] args - N/A
+ * @return the name of this algorithm
+ */
+static PyObject* _pycompositegeneratorfactory_getDefaultId(PyCompositeGeneratorFactory* self, PyObject* args)
+{
+  if (!PyArg_ParseTuple(args, "")) {
+    return NULL;
+  }
+  return PyString_FromString(CompositeGeneratorFactory_getDefaultId(self->factory));
+}
 /**
  * Returns if this factory can handle provided arguments
  * @param[in] self - self
@@ -208,6 +222,7 @@ static PyObject* _pycompositegeneratorfactory_generate(PyCompositeGeneratorFacto
 static struct PyMethodDef _pycompositegeneratorfactory_methods[] =
 {
   {"getName", (PyCFunction) _pycompositegeneratorfactory_getName, 1},
+  {"getDefaultId", (PyCFunction) _pycompositegeneratorfactory_getDefaultId, 1},
   {"canHandle", (PyCFunction) _pycompositegeneratorfactory_canHandle, 1},
   {"create", (PyCFunction) _pycompositegeneratorfactory_create, 1},
   {"generate", (PyCFunction) _pycompositegeneratorfactory_generate, 1},
@@ -313,9 +328,9 @@ MOD_INIT(_compositegeneratorfactory)
     return MOD_INIT_ERROR;
   }
 
-  PYRAVE_DEBUG_INITIALIZE;
   import_compositearguments();
   import_pycartesian();
+  PYRAVE_DEBUG_INITIALIZE;
   return MOD_INIT_SUCCESS(module);
 }
 /*@} End of Module setup */

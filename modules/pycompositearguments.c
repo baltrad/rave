@@ -239,6 +239,16 @@ done:
   return result;
 }
 
+static PyObject* _pycompositearguments_removeArgument(PyCompositeArguments* self, PyObject* args)
+{
+  char* name = NULL;
+  if (!PyArg_ParseTuple(args, "s", &name)) {
+    return NULL;
+  }
+  CompositeArguments_removeArgument(self->args, name);
+  Py_RETURN_NONE;
+}
+
 static PyObject* _pycompositearguments_getArgument(PyCompositeArguments* self, PyObject* args)
 {
   RaveAttribute_t* attribute = NULL;
@@ -553,7 +563,7 @@ static PyObject* _pycompositearguments_getQualityFlags(PyCompositeArguments* sel
 {
   RaveList_t* qualityflags = NULL;
   PyObject* result = NULL;
-  
+
   if (!PyArg_ParseTuple(args, "")) {
     return NULL;
   }
@@ -731,6 +741,11 @@ static struct PyMethodDef _pycompositearguments_methods[] =
     "Currently, double, long, string and 1-dimensional arrays are supported.\n\n"
     "name  - Name of the argument.\n"
     "value - Value to be associated with the name. Currently, double, long, string and 1-dimensional arrays are supported."
+  },
+  {"removeArgument", (PyCFunction) _pycompositearguments_removeArgument, 1,
+    "addArgument(name) \n\n"
+    "Removes an argument.\n"
+    "name  - Name of the argument."
   },
   {"getArgument", (PyCFunction) _pycompositearguments_getArgument, 1,
     "getArgument(name) -> value \n\n"

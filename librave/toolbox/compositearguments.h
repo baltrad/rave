@@ -236,6 +236,13 @@ const char* CompositeArguments_getStrategy(CompositeArguments_t* args);
 int CompositeArguments_addArgument(CompositeArguments_t* args, RaveAttribute_t* argument);
 
 /**
+ * Removes the rave argument that is named accordingly.
+ * @param[in] args - self
+ * @param[in] name - the name of the argument
+ */
+void CompositeArguments_removeArgument(CompositeArguments_t* args, const char* name);
+
+/**
  * Returns the rave argument that is named accordingly.
  * @param[in] args - self
  * @param[in] name - the name of the argument

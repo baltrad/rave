@@ -68,6 +68,10 @@ class PyAcqvaCompositeGeneratorFactoryTest(unittest.TestCase):
     obj = _acqvacompositegeneratorfactory.new()
     self.assertEqual("AcqvaCompositeGenerator", obj.getName())
 
+  def test_getDefaultId(self):
+    obj = _acqvacompositegeneratorfactory.new()
+    self.assertEqual("acqva", obj.getDefaultId())
+
   def test_canHandle_products(self):
     classUnderTest = _acqvacompositegeneratorfactory.new()
     args = _compositearguments.new()

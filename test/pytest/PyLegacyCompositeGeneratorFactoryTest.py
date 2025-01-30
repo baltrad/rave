@@ -52,6 +52,10 @@ class PyLegacyCompositeGeneratorFactoryTest(unittest.TestCase):
     obj = _legacycompositegeneratorfactory.new()
     self.assertEqual("LegacyCompositeGenerator", obj.getName())
 
+  def test_getDefaultId(self):
+    obj = _legacycompositegeneratorfactory.new()
+    self.assertEqual("legacy", obj.getDefaultId())
+
   def test_canHandle_products(self):
     # Rave_ProductType_MAX & NEAREST
     # Rave_ProductType_PMAX & NEAREST

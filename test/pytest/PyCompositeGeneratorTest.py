@@ -27,16 +27,19 @@ import unittest
 import os
 import _compositearguments
 import _compositegenerator
+import _compositefilter
 import _area
 import _projection
 import _polarscan
 import _polarvolume
 import _legacycompositegeneratorfactory
 import _acqvacompositegeneratorfactory
+import _compositefactorymanager
 import string
 import math
 
 class PyCompositeGeneratorTest(unittest.TestCase):
+  GENERATOR_FIXTURE="fixtures/composite_generator_factories.xml"
   def setUp(self):
     pass
 
@@ -47,22 +50,6 @@ class PyCompositeGeneratorTest(unittest.TestCase):
     obj = _compositegenerator.new()
     iscorrect = str(type(obj)).find("CompositeGeneratorCore")
     self.assertNotEqual(-1, iscorrect)
-
-  def create_area(self, areaid):
-    area = _area.new()
-    if areaid == "eua_gmaps":
-      area.id = "eua_gmaps"
-      area.xsize = 800
-      area.ysize = 1090
-      area.xscale = 6223.0
-      area.yscale = 6223.0
-      #               llX           llY            urX        urY
-      area.extent = (-3117.83526,-6780019.83039,4975312.43200,3215.41216)
-      area.projection = _projection.new("x", "y", "+proj=merc +lat_ts=0 +lon_0=0 +k=1.0 +x_0=1335833 +y_0=-11000715 +a=6378137.0 +b=6378137.0 +no_defs +datum=WGS84")
-    else:
-      raise Exception("No such area")
-    
-    return area
 
   def test_generate_bad_argument(self):
     obj = _compositegenerator.new()
@@ -75,18 +62,42 @@ class PyCompositeGeneratorTest(unittest.TestCase):
 
   def test_create(self):
     obj = _compositegenerator.create()
-    ids = obj.getFactoryIDs()
+    ids = obj.getFactoryIDs() # The factories ID in default case should be what the compositegeneratorfactories has set as defaultID
+
     self.assertEqual(2, len(ids))
     self.assertTrue("legacy" in ids)
     self.assertTrue("acqva" in ids)
 
-  def test_new_no_factories(self):
-    obj = _compositegenerator.new()
+  def test_create_with_manager(self):
+    manager = _compositefactorymanager.new()
+    manager.remove("LegacyCompositeGenerator")
+    obj = _compositegenerator.create(manager)
     ids = obj.getFactoryIDs()
-    self.assertEqual(0, len(ids))
+    self.assertEqual(1, len(ids))
+    self.assertTrue("acqva" in ids)
 
-  def test_register(self):
+  def test_create_with_empty_manager(self):
+    manager = _compositefactorymanager.new()
+    manager.remove("LegacyCompositeGenerator")
+    manager.remove("AcqvaCompositeGenerator")
+    try:
+      _compositegenerator.create(manager)
+      self.fail("Expected ValueError")
+    except ValueError:
+      pass
+
+  def test_create_with_manager_and_xml(self):
+    manager = _compositefactorymanager.new()
+    obj = _compositegenerator.create(manager, self.GENERATOR_FIXTURE)
+    ids = obj.getFactoryIDs()
+    self.assertEqual(3, len(ids))
+    self.assertTrue("acqva" in ids)
+    self.assertTrue("legacy" in ids)
+    self.assertTrue("legacy2" in ids)
+
+  def test_register_without_filter(self):
     obj = _compositegenerator.new()
+    self.assertEqual(0, len(obj.getFactoryIDs()))
     obj.register("1", _legacycompositegeneratorfactory.new())
     self.assertEqual(1, len(obj.getFactoryIDs()))
     obj.register("2", _acqvacompositegeneratorfactory.new())
@@ -94,37 +105,62 @@ class PyCompositeGeneratorTest(unittest.TestCase):
     self.assertTrue("1" in obj.getFactoryIDs())
     self.assertTrue("2" in obj.getFactoryIDs())
 
-  def test_uregister(self):
-    obj = _compositegenerator.new()
-    obj.register("1", _legacycompositegeneratorfactory.new())
-    obj.register("2", _acqvacompositegeneratorfactory.new())
-    obj.unregister("1")
-    self.assertEqual(1, len(obj.getFactoryIDs()))
-    self.assertTrue("2" in obj.getFactoryIDs())
-    obj.unregister("2")
-    self.assertEqual(0, len(obj.getFactoryIDs()))
+    args = _compositearguments.new()
+    args.product = "PCAPPI"
+    factory = obj.identify(args)
+    self.assertEqual("LegacyCompositeGenerator", factory.getName())
 
-  def Xtest_generate(self):
-    obj = _compositegenerator.create()
-    obj.register("legacy", _legacycompositegeneratorfactory.new())
+    args.product = "ACQVA"
+    factory = obj.identify(args)
+    self.assertEqual("AcqvaCompositeGenerator", factory.getName())
+
+  def test_register_with_filter(self):
+    obj = _compositegenerator.new()
+    filter1 = _compositefilter.new()
+    filter1.products = ["ACQVA"]
+
+    filter2 = _compositefilter.new()
+    filter2.products = ["PPI"]
+
+    obj.register("1", _legacycompositegeneratorfactory.new(), [filter1])
+    obj.register("2", _acqvacompositegeneratorfactory.new(), [filter2])
 
     args = _compositearguments.new()
-    args.area = self.create_area("eua_gmaps")
-    args.product = "PPI"
-    args.elangle = 0.0
-    args.time = "120000"
-    args.date = "20090501"
-    #args.strategy = "acqva"
-    args.addParameter("DBZH", 0.1, -30.0)
-    #args.quality_flags = ["se.smhi.composite.distance.radar"]
+    args.product = "ACQVA"
+    factory = obj.identify(args)
+    self.assertEqual("LegacyCompositeGenerator", factory.getName())
 
-    # arguments are usualy method specific in some way
-    args.addArgument("selection_method", "HEIGHT_ABOVE_SEALEVEL")
-    args.addArgument("interpolation_method", "NEAREST")
+  # def test_uregister(self):
+  #   obj = _compositegenerator.new()
+  #   obj.register("1", _legacycompositegeneratorfactory.new())
+  #   obj.register("2", _acqvacompositegeneratorfactory.new())
+  #   obj.unregister("1")
+  #   self.assertEqual(1, len(obj.getFactoryIDs()))
+  #   self.assertTrue("2" in obj.getFactoryIDs())
+  #   obj.unregister("2")
+  #   self.assertEqual(0, len(obj.getFactoryIDs()))
 
-    # args.addObject(_raveio.open(....).object)
-    # args.addObject(_raveio.open(....).object)
-    # args.addObject(_raveio.open(....).object)
+  # def Xtest_generate(self):
+  #   obj = _compositegenerator.create()
+  #   obj.register("legacy", _legacycompositegeneratorfactory.new())
 
-    result = obj.generate(args)
+  #   args = _compositearguments.new()
+  #   args.area = self.create_area("eua_gmaps")
+  #   args.product = "PPI"
+  #   args.elangle = 0.0
+  #   args.time = "120000"
+  #   args.date = "20090501"
+  #   #args.strategy = "acqva"
+  #   args.addParameter("DBZH", 0.1, -30.0)
+  #   #args.quality_flags = ["se.smhi.composite.distance.radar"]
+
+  #   # arguments are usualy method specific in some way
+  #   args.addArgument("selection_method", "HEIGHT_ABOVE_SEALEVEL")
+  #   args.addArgument("interpolation_method", "NEAREST")
+
+  #   # args.addObject(_raveio.open(....).object)
+  #   # args.addObject(_raveio.open(....).object)
+  #   # args.addObject(_raveio.open(....).object)
+
+  #   result = obj.generate(args)
 

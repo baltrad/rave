@@ -51,6 +51,11 @@ extern RaveCoreObjectType AcqvaCompositeGeneratorFactory_TYPE;
 const char* AcqvaCompositeGeneratorFactory_getName(CompositeGeneratorFactory_t* self);
 
 /**
+ * @returns the default id of this factory
+ */
+const char* AcqvaCompositeGeneratorFactory_getDefaultId(CompositeGeneratorFactory_t* self);
+
+/**
  * @returns if this factory can handle the generator request or not
  */
 int AcqvaCompositeGeneratorFactory_canHandle(CompositeGeneratorFactory_t* self, CompositeArguments_t* arguments);

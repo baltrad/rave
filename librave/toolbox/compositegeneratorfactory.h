@@ -40,9 +40,14 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 struct _CompositeGeneratorFactory_t;
 
 /**
- * @returns the unique name for this composite generator plugin
+ * @returns the unique name for this composite generator factory
  */
 typedef const char*(*composite_generator_factory_getName_fun)(struct _CompositeGeneratorFactory_t* self);
+
+/**
+ * @returns the default id for this this composite generator factory
+ */
+typedef const char*(*composite_generator_factory_getDefaultId_fun)(struct _CompositeGeneratorFactory_t* self);
 
 /**
  * @returns if this factory can handle the generator request
@@ -68,6 +73,7 @@ typedef struct _CompositeGeneratorFactory_t*(*composite_generator_factory_create
  */
 #define COMPOSITE_GENERATOR_FACTORY_HEAD \
   composite_generator_factory_getName_fun getName; \
+  composite_generator_factory_getDefaultId_fun getDefaultId; \
   composite_generator_factory_canHandle_fun canHandle; \
   composite_generator_factory_generate_fun generate; \
   composite_generator_factory_create_fun create;
@@ -87,6 +93,14 @@ typedef struct _CompositeGeneratorFactory_t {
  */
 #define CompositeGeneratorFactory_getName(self) \
   ((CompositeGeneratorFactory_t*)self)->getName((CompositeGeneratorFactory_t*)self)
+
+/**
+ * Macro expansion for calling the default id function
+ * @param[in] self - self
+ * @returns the default id for this factory
+ */
+#define CompositeGeneratorFactory_getDefaultId(self) \
+  ((CompositeGeneratorFactory_t*)self)->getDefaultId((CompositeGeneratorFactory_t*)self)
 
 /**
  * Macro expansion if this plugin supports generate or not

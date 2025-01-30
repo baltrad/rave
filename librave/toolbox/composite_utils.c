@@ -486,3 +486,34 @@ int CompositeUtils_getPolarQualityValueAtPosition(RaveCoreObject* obj, const cha
 done:
   return result;  
 }
+
+RaveList_t* CompositeUtils_cloneRaveListStrings(RaveList_t* inlist)
+{
+  RaveList_t *result = NULL, *tmplist = NULL;
+
+  if (inlist != NULL) {
+    tmplist = RAVE_OBJECT_NEW(&RaveList_TYPE);
+    if (tmplist != NULL) {
+      int nlen = 0, i = 0;
+      nlen = RaveList_size(inlist);
+      for (i = 0; i < nlen; i++) {
+        char* str = RAVE_STRDUP((const char*)RaveList_get(inlist, i));
+        if (str == NULL) {
+          RAVE_ERROR0("Could not duplicate string");
+          goto fail;
+        }
+        if (!RaveList_add(tmplist, str)) {
+          goto fail;
+        }
+      }
+    }
+  }
+
+  result = tmplist;
+  tmplist = NULL;
+fail:
+  if (tmplist != NULL) {
+    RaveList_freeAndDestroy(&tmplist);
+  }
+  return result;
+}

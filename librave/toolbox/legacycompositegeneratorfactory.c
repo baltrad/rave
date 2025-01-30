@@ -36,6 +36,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "composite.h"
 #include <strings.h>
 #include <string.h>
+#include <stdio.h>
 
 static const char* SUPPORTED_PRODUCTS[]={
   "PPI",
@@ -79,6 +80,7 @@ static int LegacyCompositeGeneratorFactory_constructor(RaveCoreObject* obj)
 {
   LegacyCompositeGeneratorFactory_t* this = (LegacyCompositeGeneratorFactory_t*)obj;
   this->getName = LegacyCompositeGeneratorFactory_getName;
+  this->getDefaultId = LegacyCompositeGeneratorFactory_getDefaultId;
   this->canHandle = LegacyCompositeGeneratorFactory_canHandle;
   this->generate = LegacyCompositeGeneratorFactory_generate;
   this->create = LegacyCompositeGeneratorFactory_create;
@@ -93,8 +95,8 @@ static int LegacyCompositeGeneratorFactory_constructor(RaveCoreObject* obj)
 static int LegacyCompositeGeneratorFactory_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj)
 {
   LegacyCompositeGeneratorFactory_t* this = (LegacyCompositeGeneratorFactory_t*)obj;
-  //LegacyCompositeGeneratorFactory_t* src = (LegacyCompositeGeneratorFactory_t*)srcobj;
   this->getName = LegacyCompositeGeneratorFactory_getName;
+  this->getDefaultId = LegacyCompositeGeneratorFactory_getDefaultId;
   this->canHandle = LegacyCompositeGeneratorFactory_canHandle;
   this->generate = LegacyCompositeGeneratorFactory_generate;
   this->create = LegacyCompositeGeneratorFactory_create;
@@ -133,6 +135,15 @@ static CompositeInterpolationMethod_t LegacyCompositeGeneratorFactoryInternal_ge
 const char* LegacyCompositeGeneratorFactory_getName(CompositeGeneratorFactory_t* self)
 {
   return "LegacyCompositeGenerator";
+}
+
+
+/**
+ * @returns the default id of this factory
+ */
+const char* LegacyCompositeGeneratorFactory_getDefaultId(CompositeGeneratorFactory_t* self)
+{
+  return "legacy";
 }
 
 /**
@@ -297,8 +308,6 @@ done:
  */
 CompositeGeneratorFactory_t* LegacyCompositeGeneratorFactory_create(CompositeGeneratorFactory_t* self)
 {
-  LegacyCompositeGeneratorFactory_t* result = NULL;
-
   RAVE_ASSERT((self != NULL), "self == NULL");
   if (RAVE_OBJECT_CHECK_TYPE(self, &LegacyCompositeGeneratorFactory_TYPE)) {
     return RAVE_OBJECT_CLONE(self);

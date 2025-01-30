@@ -47,9 +47,14 @@ typedef struct _LegacyCompositeGeneratorFactory_t LegacyCompositeGeneratorFactor
 extern RaveCoreObjectType LegacyCompositeGeneratorFactory_TYPE;
 
 /**
- * @returns the name of this plugin
+ * @returns the name of this factory
  */
 const char* LegacyCompositeGeneratorFactory_getName(CompositeGeneratorFactory_t* self);
+
+/**
+ * @returns the default id of this factory
+ */
+const char* LegacyCompositeGeneratorFactory_getDefaultId(CompositeGeneratorFactory_t* self);
 
 /**
  * @returns if this factory can handle the generator request or not

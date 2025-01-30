@@ -139,7 +139,9 @@ except:
   pass
 
 from PyCompositeArgumentsTest import *
+from PyCompositeFilterTest import *
 from PyCompositeGeneratorTest import *
+from PyCompositeFactoryManagerTest import *
 from PyLegacyCompositeGeneratorFactoryTest import *
 #from PyLegacyCompositeGeneratorFactoryITest import *
 from PyAcqvaCompositeGeneratorFactoryTest import *

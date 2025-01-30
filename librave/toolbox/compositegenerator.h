@@ -28,6 +28,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "cartesian.h"
 #include "compositegeneratorfactory.h"
+#include "compositefactorymanager.h"
 #include "compositearguments.h"
 #include "rave_object.h"
 #include "rave_types.h"
@@ -46,20 +47,23 @@ typedef struct _CompositeGenerator_t CompositeGenerator_t;
 extern RaveCoreObjectType CompositeGenerator_TYPE;
 
 /**
- * Creates a default composite generator with all generators provided by rave-toolbox.
- * This should probably be refactored into a compositemanager but for now this is good enough.
+ * Creates a composite generator containing both factory manager and intialized with a factory filter.
+ * @param[in] manager - the factory manager. May be NULL and then the default factory manager will be created
+ * @param[in] filename - the filename to load. May be NULL and then no filters will be set
+ * @return the generator
  * @return an initialized composite generator
  */
-CompositeGenerator_t* CompositeGenerator_create(void);
+CompositeGenerator_t* CompositeGenerator_create(CompositeFactoryManager_t* manager, const char* filename);
 
 /**
  * Registers a generator factory in the the generator.
  * @param[in] generator - self
  * @param[in] id - the id of the factory
  * @param[in] facgtory - the actual factory
+ * @param[in] filters - the filters matching this factory
  * @return 1 if factory added successfully, otherwise 0
  */
-int CompositeGenerator_register(CompositeGenerator_t* generator, const char* id, CompositeGeneratorFactory_t* factory);
+int CompositeGenerator_register(CompositeGenerator_t* generator, const char* id, CompositeGeneratorFactory_t* factory, RaveObjectList_t* filters);
 
 /**
  * Returns a list of registered factory ids.
@@ -75,6 +79,14 @@ RaveList_t* CompositeGenerator_getFactoryIDs(CompositeGenerator_t* generator);
  * @param[in] id - the id of the factory to remove
  */
 void CompositeGenerator_unregister(CompositeGenerator_t* generator, const char* id);
+
+/**
+ * Will identify the candidate factory from the provided arguments.
+ * @param[in] generator - self
+ * @param[in] arguments - the arguments
+ * @returns the identified factory or NULL if nothing found
+ */
+CompositeGeneratorFactory_t* CompositeGenerator_identify(CompositeGenerator_t* generator, CompositeArguments_t* arguments);
 
 /**
  * Generates a composite according to the configured parameters in the composite structure.

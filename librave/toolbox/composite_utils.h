@@ -204,4 +204,11 @@ RaveField_t* CompositeUtils_createQualityField(const char* howtaskvaluestr, int 
  */
 int CompositeUtils_getPolarQualityValueAtPosition(RaveCoreObject* obj, const char* quantity, const char* qualityField, PolarNavigationInfo* nav, double* value);
 
+/**
+ * Clones a RaveList of strings.
+ * @param[in] inlist - the list to clone
+ * @return the cloned list on success, otherwise NULL
+ */
+RaveList_t* CompositeUtils_cloneRaveListStrings(RaveList_t* inlist);
+
 #endif /* COMPOSITE_UTILS_H */

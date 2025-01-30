@@ -76,6 +76,7 @@ static int AcqvaCompositeGeneratorFactory_constructor(RaveCoreObject* obj)
 {
   AcqvaCompositeGeneratorFactory_t* this = (AcqvaCompositeGeneratorFactory_t*)obj;
   this->getName = AcqvaCompositeGeneratorFactory_getName;
+  this->getDefaultId = AcqvaCompositeGeneratorFactory_getDefaultId;
   this->canHandle = AcqvaCompositeGeneratorFactory_canHandle;
   this->generate = AcqvaCompositeGeneratorFactory_generate;
   this->create = AcqvaCompositeGeneratorFactory_create;
@@ -90,8 +91,8 @@ static int AcqvaCompositeGeneratorFactory_constructor(RaveCoreObject* obj)
 static int AcqvaCompositeGeneratorFactory_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj)
 {
   AcqvaCompositeGeneratorFactory_t* this = (AcqvaCompositeGeneratorFactory_t*)obj;
-  //AcqvaCompositeGeneratorFactory_t* src = (AcqvaCompositeGeneratorFactory_t*)srcobj;
   this->getName = AcqvaCompositeGeneratorFactory_getName;
+  this->getDefaultId = AcqvaCompositeGeneratorFactory_getDefaultId;
   this->canHandle = AcqvaCompositeGeneratorFactory_canHandle;
   this->generate = AcqvaCompositeGeneratorFactory_generate;
   this->create = AcqvaCompositeGeneratorFactory_create;
@@ -221,6 +222,14 @@ static void AcqvaCompositeGeneratorFactoryInternal_fillQualityInformation(
 const char* AcqvaCompositeGeneratorFactory_getName(CompositeGeneratorFactory_t* self)
 {
   return "AcqvaCompositeGenerator";
+}
+
+/**
+ * @returns the default id of this factory
+ */
+const char* AcqvaCompositeGeneratorFactory_getDefaultId(CompositeGeneratorFactory_t* self)
+{
+  return "acqva";
 }
 
 int AcqvaCompositeGeneratorFactory_canHandle(CompositeGeneratorFactory_t* self, CompositeArguments_t* arguments)
