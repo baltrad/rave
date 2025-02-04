@@ -148,5 +148,7 @@ from PyAcqvaCompositeGeneratorFactoryTest import *
 from PyOdimSourceTest import *
 from PyOdimSourcesTest import *
 
+from PyRateCompositeGeneratorFactoryTest import *
+
 if __name__ == '__main__':
   unittest.main()

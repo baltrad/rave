@@ -285,6 +285,10 @@ SOURCE_55= pycompositefactorymanager.c
 OBJECTS_55= $(SOURCE_55:.c=.o)
 TARGET_55= _compositefactorymanager.so
 
+SOURCE_56= pyratecompositegeneratorfactory.c
+OBJECTS_56= $(SOURCE_56:.c=.o)
+TARGET_56= _ratecompositegeneratorfactory.so
+
 TARGETS=$(TARGET_1) $(TARGET_2) $(TARGET_3) $(TARGET_4) $(TARGET_5) $(TARGET_6) \
 		$(TARGET_7) $(TARGET_8) $(TARGET_9) $(TARGET_10) $(TARGET_11) $(TARGET_12) $(TARGET_13) \
 		$(TARGET_14) $(TARGET_15) $(TARGET_16) $(TARGET_17) $(TARGET_18) $(TARGET_19) \
@@ -293,7 +297,7 @@ TARGETS=$(TARGET_1) $(TARGET_2) $(TARGET_3) $(TARGET_4) $(TARGET_5) $(TARGET_6) 
 		$(TARGET_33) $(TARGET_34) $(TARGET_35) $(TARGET_36) $(TARGET_37) $(TARGET_38) \
 		$(TARGET_39) $(TARGET_40) $(TARGET_41) $(TARGET_42) $(TARGET_43) $(TARGET_44) $(TARGET_45) \
 		$(TARGET_46) $(TARGET_47) $(TARGET_48) $(TARGET_49) $(TARGET_50) $(TARGET_51) \
-		$(TARGET_52) $(TARGET_53) $(TARGET_54) $(TARGET_55)
+		$(TARGET_52) $(TARGET_53) $(TARGET_54) $(TARGET_55) $(TARGET_56)
 
 INSTALL_HEADERS= pyarea.h \
 				 pycartesian.h \
@@ -329,13 +333,11 @@ INSTALL_HEADERS= pyarea.h \
 				 pypolarnavinfo.h \
 				 pycompositegenerator.h \
 				 pycompositegeneratorfactory.h \
-				 pylegacycompositegeneratorfactory.h \
 				 pycompositearguments.h \
-				 pyacqvacompositegeneratorfactory.h \
 				 pyodimsource.h \
 				 pyodimsources.h \
 				 pycompositefilter.h \
-				 pycompositefactorymanager.h
+				 pycompositefactorymanager.h 
 
 ifeq ($(EXPAT_SUPPRESSED), no)
 TARGETS += $(TARGET_22) $(TARGET_23) $(TARGET_32)
@@ -528,6 +530,9 @@ $(TARGET_54): $(DEPDIR) $(OBJECTS_54) ../librave/toolbox/libravetoolbox.so ../li
 
 $(TARGET_55): $(DEPDIR) $(OBJECTS_55) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_55) $(LDFLAGS) $(LIBRARIES)
+
+$(TARGET_56): $(DEPDIR) $(OBJECTS_56) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
+	$(LDSHARED) -o $@ $(OBJECTS_56) $(LDFLAGS) $(LIBRARIES)
 
 ifeq ($(COMPILE_FOR_PYTHON), yes)
 .PHONY=install
