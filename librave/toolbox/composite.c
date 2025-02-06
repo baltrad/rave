@@ -455,6 +455,8 @@ static int Composite_constructor(RaveCoreObject* obj)
   this->method = CompositeSelectionMethod_NEAREST;
   this->interpolationMethod = CompositeInterpolationMethod_NEAREST;
   this->interpolateUndetect = 1;
+  // For backward compatibility
+  this->sortPolarVolume = 1;
   this->height = 1000.0;
   this->elangle = 0.0;
   this->range = 500000.0;
@@ -489,6 +491,7 @@ static int Composite_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj
   this->method = src->method;
   this->interpolationMethod = src->interpolationMethod;
   this->interpolateUndetect = src->interpolateUndetect;
+  this->sortPolarVolume = src->sortPolarVolume;
   this->height = src->height;
   this->elangle = src->elangle;
   this->range = src->range;
@@ -2714,6 +2717,18 @@ int Composite_getInterpolateUndetect(Composite_t* self)
   return self->interpolateUndetect;
 }
 
+void Composite_setSortPolarVolume(Composite_t* self, int sortPolarVolume)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  self->sortPolarVolume = sortPolarVolume;
+}
+
+int Composite_getSortPolarVolume(Composite_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return self->sortPolarVolume;
+}
+
 void Composite_setHeight(Composite_t* composite, double height)
 {
   RAVE_ASSERT((composite != NULL), "composite == NULL");
@@ -2899,7 +2914,9 @@ static int CompositeInternal_initProjectionAndVolume(Composite_t* composite,
         return 0;
       }
       if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
-        PolarVolume_sortByElevations((PolarVolume_t*)obj, 1);
+        if (Composite_getSortPolarVolume(composite)) {
+          PolarVolume_sortByElevations((PolarVolume_t*)obj, 1);
+        }
       }
       RAVE_OBJECT_RELEASE(pipeline);
       RAVE_OBJECT_RELEASE(obj);
@@ -2955,7 +2972,9 @@ static int CompositInternal_getAndInterpolateRadarData(Composite_t* composite,
         if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
           dist = PolarVolume_getDistance((PolarVolume_t*)obj, *olon, *olat);
           maxdist = PolarVolume_getMaxDistance((PolarVolume_t*)obj);
-          PolarVolume_sortByElevations((PolarVolume_t*)obj, 1);
+          if (Composite_getSortPolarVolume(composite)) {
+            PolarVolume_sortByElevations((PolarVolume_t*)obj, 1);
+          }
         } else if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarScan_TYPE)) {
           dist = PolarScan_getDistance((PolarScan_t*)obj, *olon, *olat);
           maxdist = PolarScan_getMaxDistance((PolarScan_t*)obj);

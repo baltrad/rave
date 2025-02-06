@@ -155,7 +155,6 @@ static TileDef_t* TileRegistryInternal_createTileFromNode(TileRegistry_t* self, 
       
       const char* idstr = SimpleXmlNode_getAttribute(node, "id");
       if (idstr != NULL) {
-        RAVE_DEBUG1("id: %s", idstr);
         if (!TileDef_setID(tiledef, idstr)) {
           RAVE_ERROR1("Failed to allocate memory for tileid = %s", idstr);
           goto done;
@@ -167,7 +166,7 @@ static TileDef_t* TileRegistryInternal_createTileFromNode(TileRegistry_t* self, 
       
       const char* extentstr = SimpleXmlNode_getAttribute(node, "extent");
       if (extentstr != NULL) {
-        RAVE_DEBUG1("exstent: %s", extentstr);
+        //RAVE_DEBUG1("exstent: %s", extentstr);
         double llx=0.0,lly=0.0,urx=0.0,ury=0.0;
         if (!TileRegistryInternal_parseExtent(extentstr, &llx,&lly,&urx,&ury)) {
           RAVE_ERROR1("Failed to parse extent for tiledef %s", idstr);
@@ -208,13 +207,13 @@ static int TileRegistryInternal_loadRegistry(TileRegistry_t* self, const char* f
   }
 
   nrchildren = SimpleXmlNode_getNumberOfChildren(node);
-  RAVE_DEBUG1("nrchildren: %d", nrchildren);
+  //RAVE_DEBUG1("nrchildren: %d", nrchildren);
   for (i = 0; i < nrchildren; i++) {
     SimpleXmlNode_t* child = SimpleXmlNode_getChild(node, i);
     if (child != NULL && SimpleXmlNode_getName(child) != NULL && strcasecmp("area", SimpleXmlNode_getName(child)) == 0) {
       ntiledefs = SimpleXmlNode_getNumberOfChildren(child);
       const char* areaid = SimpleXmlNode_getAttribute(child, "id");
-      RAVE_DEBUG1("areid: %s", areaid);
+      //RAVE_DEBUG1("areid: %s", areaid);
       for (int j = 0; j < ntiledefs; j++) {
         SimpleXmlNode_t* tile = SimpleXmlNode_getChild(child, j);
         if (tile != NULL && SimpleXmlNode_getName(tile) != NULL && strcasecmp("tile", SimpleXmlNode_getName(tile)) == 0) {
@@ -434,7 +433,7 @@ RaveObjectList_t * TileRegistry_getByArea(TileRegistry_t* self, const char* area
       TileDef_t* tiledef = (TileDef_t*)RaveObjectList_get(self->tiledefs, i);
       if (tiledef != NULL &&
         TileDef_getAreaID(tiledef) != NULL &&
-        strcmp(areaid, TileDef_getID(tiledef))==0) {
+        strcmp(areaid, TileDef_getAreaID(tiledef))==0) {
           RaveObjectList_add(result, (RaveCoreObject*)tiledef);
         }
         RAVE_OBJECT_RELEASE(tiledef);

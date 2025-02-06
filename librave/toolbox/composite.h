@@ -87,6 +87,7 @@ struct _Composite_t {
   CompositeSelectionMethod_t method; /**< selection method, default CompositeSelectionMethod_NEAREST */
   CompositeInterpolationMethod_t interpolationMethod; /**< interpolation method, default CompositeInterpolationMethod_NEAREST */
   int interpolateUndetect; /**< If undetect should be used during interpolation or not. Requires a properly set minvalue.*/
+  int sortPolarVolume; /**< If sorting should be used or not during compositing. Sorting is not thread safe.*/
   double height; /**< the height when generating pcapppi, cappi, pmax default 1000 */
   double elangle; /**< the elevation angle when generating ppi, default 0.0 */
   double range;  /*< the range when generating pmax, default = 500000 meters */
@@ -212,6 +213,23 @@ void Composite_setInterpolateUndetect(Composite_t* self, int interpolateUndetect
  * @return if undetect should be used in interpolation or not
  */
 int Composite_getInterpolateUndetect(Composite_t* self);
+
+/**
+ * Sets if sorting of the polar volume should be used.
+ *
+ * @param[in] self - self
+ * @param[in] sortPolarVolume - If sorting should be used or not.
+ * @return 1 on success otherwise 0
+ */
+void Composite_setSortPolarVolume(Composite_t* self, int sortPolarVolume);
+
+/**
+ * Returns if sorting should be used or not.
+ * @param[in] self - self
+ * @return if sorting should be used or not.
+ */
+int Composite_getSortPolarVolume(Composite_t* self);
+
 
 /**
  * Sets the height that should be used when generating a

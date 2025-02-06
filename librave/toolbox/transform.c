@@ -172,6 +172,7 @@ int TransformInternal_verifyCombineTilesObjects(RaveObjectList_t* tiles)
   for (i = 0; i < ntiles; i++) {
     o = RaveObjectList_get(tiles, i);
     if (!RAVE_OBJECT_CHECK_TYPE(o, &Cartesian_TYPE)) {
+      RAVE_ERROR1("Object %d not cartesian type",i);
       goto done;
     }
     if (parameterNames == NULL) {

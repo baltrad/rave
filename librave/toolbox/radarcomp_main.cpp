@@ -53,7 +53,41 @@ const char * RAVE_TILE_REGISTRY= "rave_tile_registry.xml";
  * @date 2024-12-09
  */
 int Radarcomp(optparse::OptionParser & parser) {
+  // Init Area, Projection and Tile registry.
+  //# Projection and area registries
+  // Hard coded standard installation
+  std::string projection_registry_path = std::string(RAVEROOT) + std::string(RAVECONFIG) + std::string(PROJECTION_REGISTRY);
+  
+  ProjectionRegistry_t* proj_registry = ProjectionRegistry_load(projection_registry_path.c_str());
+  if (proj_registry == 0) {
+    RAVE_CRITICAL0("Failed to create projection registry for composite.");
+    return 0;
+  }
+  
+  std::string area_registry_path = std::string(RAVEROOT) + std::string(RAVECONFIG) + std::string(AREA_REGISTRY);
+  
+  AreaRegistry_t* area_registry = AreaRegistry_load(area_registry_path.c_str(), proj_registry);
+  if (area_registry == 0) {
+    RAVE_CRITICAL0("Failed to create area registry for composite.");
+    RAVE_OBJECT_RELEASE(proj_registry);
+    return 0;
+  }
+  
+  std::string rave_tile_registry_path = std::string(RAVEROOT) + std::string(RAVEETC) + std::string(RAVE_TILE_REGISTRY);
+  
+  TileRegistry_t* tile_registry = TileRegistry_load(rave_tile_registry_path.c_str());
+  if (tile_registry == 0) {
+    RAVE_CRITICAL0("Failed to create tile registry for composite.");
+    RAVE_OBJECT_RELEASE(proj_registry);
+    RAVE_OBJECT_RELEASE(area_registry);
+    return 0;
+  }
+  
   Compositing comp = Compositing();
+  
+  comp.proj_registry = proj_registry;
+  comp.area_registry = area_registry;
+  comp.tile_registry = tile_registry;
   // Split infiles and detectors
   std::vector<std::string> fparts;
   std::istringstream f(parser.get_option("infiles"));
@@ -81,23 +115,27 @@ int Radarcomp(optparse::OptionParser & parser) {
   comp.xscale = std::stof(parser.get_option("scale"));
   comp.yscale = std::stof(parser.get_option("scale"));
   comp.set_interpolation_method_from_string(parser.get_option("interpolation_method"));
-  comp.use_azimuthal_nav_information == !((bool)std::stoi(parser.get_option("disable_azimuthal_navigation")));
+  comp.use_azimuthal_nav_information == !( parser.get_option("disable_azimuthal_navigation") == "1");
   comp.zr_A = std::stof(parser.get_option("zr_A"));
   comp.zr_b = std::stof(parser.get_option("zr_b"));
-  
-  if ((bool)std::stoi(parser.get_option("gf")))
+  comp.applygapfilling = false;
+  if (parser.get_option("gf") == "1")
     comp.applygapfilling = true;
-  if ((bool)std::stoi(parser.get_option("ctfilter")))
+  comp.applyctfilter = false;
+  if (parser.get_option("ctfilter") == "1")
     comp.applyctfilter = true;
-  if ((bool)std::stoi(parser.get_option("grafilter")))
+  comp.applygra = false;
+  if (parser.get_option("grafilter") == "1")
     comp.applygra = true;
-  if ((bool)std::stoi(parser.get_option("ignore_malfunc")))
+  comp.ignore_malfunc = false;
+  if (parser.get_option("ignore_malfunc") == "1")
     comp.ignore_malfunc = true;
-  if ((bool)std::stoi(parser.get_option("verbose")))
+  comp.verbose = false;
+  if (parser.get_option("verbose") == "1")
     comp.verbose = true;
             
   if (comp.verbose)
-    Rave_setDebugLevel(Rave_Debug::RAVE_SPEWDEBUG);
+    Rave_setDebugLevel(Rave_Debug::RAVE_DEBUG);
     //comp.logger = rave_pgf_logger.rave_pgf_stdout_client("debug")
     
   else
@@ -105,8 +143,13 @@ int Radarcomp(optparse::OptionParser & parser) {
     //comp.logger = rave_pgf_logger.rave_pgf_stdout_client("info")
                 
   comp.reprocess_quality_field = false;
-  if ((bool)std::stoi(parser.get_option("reprocess_quality_fields")))
+  if (parser.get_option("reprocess_quality_fields") == "1")
      comp.reprocess_quality_field = true;
+
+  // Defaults, not modyfiable from options.
+  // Always true
+  comp.use_lazy_loading=true;
+  comp.use_lazy_loading_preloads=true;
   
   std::string areaid = parser.get_option("area");
   if (areaid.length() == 0) {
@@ -114,46 +157,47 @@ int Radarcomp(optparse::OptionParser & parser) {
      return 1;
   }
   Cartesian_t* result = 0;               
-  if (!((bool)std::stoi(parser.get_option("noMultiprocessing")))) {
-    
-    std::string rave_tile_registry_path = std::string(RAVEROOT) + std::string(RAVEETC) + std::string(RAVE_TILE_REGISTRY);
-    
-    TileRegistry_t* tile_registry = TileRegistry_load(rave_tile_registry_path.c_str());
-    if (tile_registry == 0) {
-      RAVE_CRITICAL0("Failed to create tile registry for composite.");
-      return 0;
-    }
-    RaveObjectList_t * the_tiles = TileRegistry_getByArea(tile_registry, areaid.c_str());
-    if (RaveObjectList_size(the_tiles) != 0) {
+  if (!(parser.get_option("noMultiprocessing") == "1")) {
+    RAVE_INFO1("Area %s check in tile registry for composite.", areaid.c_str());
+    RaveObjectList_t * the_tiles = TileRegistry_getByArea(comp.tile_registry, areaid.c_str());
+    if (RaveObjectList_size(the_tiles) > 0) {
       RAVE_INFO1("Area %s found in tile registry for composite.", areaid.c_str());
       bool preprocess_qc = false;
       bool mp_process_qc = false;
       bool mp_process_qc_split_evenly = false;
-      if ((bool)std::stoi(parser.get_option("preprocess_qc"))) {
+      if (parser.get_option("preprocess_qc") == "1") {
         preprocess_qc = true;
       }
-      if ((bool)std::stoi(parser.get_option("preprocess_qc_mp"))) {
+      if (parser.get_option("preprocess_qc_mp") == "1") {
         preprocess_qc = true;
         mp_process_qc = true;
       }
-      if ((bool)std::stoi(parser.get_option("mp_process_qc_split_evenly"))) {
+      if (parser.get_option("mp_process_qc_split_evenly") == "1") {
         mp_process_qc_split_evenly = true;
       }
       TiledCompositing tiled_comp = TiledCompositing();
       tiled_comp.init(&comp, preprocess_qc,mp_process_qc,mp_process_qc_split_evenly);
-      RAVE_INFO0("Tiled_compositing not implemented yet, using standard compositing");
       result = tiled_comp.generate(parser.get_option("date"), parser.get_option("time"), parser.get_option("area"));
     } else {
       result = comp.generate(parser.get_option("date"), parser.get_option("time"), parser.get_option("area"));
     }
-    RAVE_OBJECT_RELEASE(tile_registry);
     RAVE_OBJECT_RELEASE(the_tiles);
   } else {
     result = comp.generate(parser.get_option("date"), parser.get_option("time"), parser.get_option("area"));
   }
   // result is Cartesian_t*
+    if (proj_registry) {
+      RAVE_OBJECT_RELEASE(proj_registry);
+    }
+    if (area_registry) {
+      RAVE_OBJECT_RELEASE(area_registry);
+    }
+    if (tile_registry) {
+      RAVE_OBJECT_RELEASE(tile_registry);
+    }
+
   
-  if ((bool)std::stoi(parser.get_option("imageType")))
+  if (parser.get_option("imageType") == "1")
     Cartesian_setObjectType(result, Rave_ObjectType::Rave_ObjectType_IMAGE);
   
   RaveIO_t* rio = (RaveIO_t*)RAVE_OBJECT_NEW(&RaveIO_TYPE);
@@ -168,6 +212,7 @@ int Radarcomp(optparse::OptionParser & parser) {
     RAVE_INFO1("Saving %s",RaveIO_getFilename(rio));
   RaveIO_save(rio, 0);
   RaveIO_close(rio);
+
   RAVE_OBJECT_RELEASE(result);
   RAVE_OBJECT_RELEASE(rio);
   return 0;

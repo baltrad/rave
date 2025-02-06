@@ -1,17 +1,22 @@
 #ifndef _compositing_h
 #define _compositing_h
+
 extern "C" {
   #include "rave_types.h"
   #include "rave_io.h"
   #include "rave_object.h"
   #include "composite.h"
   #include "polarscan.h"
+  #include "arearegistry.h"
+  #include "tileregistry.h"
 }
 
 #include <stdlib.h>
 #include <string>
 #include <vector>
 #include <map>
+#include <functional>
+#include <mutex>
 
 /*
  * From rave_defines.py, RAVEROOT hardcoded for now
@@ -36,7 +41,7 @@ public:
   Compositing();
   ~Compositing();
   void init();
-  Cartesian_t* generate( std::string dd, std::string dt, std::string area="");
+  Cartesian_t* generate( std::string dd, std::string dt, std::string areaid, Area_t * area = 0);
   /*# Removes CMT:<...> from the string
   # @param[in] str - the string from which CMT should be removed
   # @return the source with CMT removed
@@ -52,7 +57,7 @@ public:
   # returns a triplet with [objects], nodes (as comma separated string), 'how/tasks' (as comma separated string)
   #*/
   std::map<std::string,RaveCoreObject*> fetch_objects(std::string & nodes, std::string & how_tasks, bool &all_files_malfunc);
-  void add_how_task_from_scan(PolarScan_t * scan, std::string &tasks);
+  void add_how_task_from_scan(PolarScan_t * scan, std::vector<std::string> &tasks);
   void create_filename(void * pobj);
   void get_backup_gra_coefficient(void * db, std::string agedt, std::string nowdt);
   void test_func(std::string a);
@@ -69,7 +74,7 @@ private:
   # @param dt: time in format HHMMSS
   # @param area: the area to use for the cartesian image. If none is specified, a best fit will be atempted.
   */
-  Cartesian_t* _generate(std::string dd, std::string dt, std::string area="");
+  Cartesian_t* _generate(std::string dd, std::string dt, std::string areaid="", Area_t * area = 0);
   /*#
   # Dumps the objects on the ingoing polar objects onto the file system. The names will contain a unique identifier
   # to allow for duplicate versions of the same object.
@@ -133,6 +138,14 @@ public:
   //std::map <std::string,int> radar_index_mapping;
   bool use_lazy_loading;
   bool use_lazy_loading_preloads;
+  
+  ProjectionRegistry_t* proj_registry;
+  AreaRegistry_t* area_registry;
+  TileRegistry_t* tile_registry;
+
+  std::map<std::string,RaveCoreObject*> file_objects;
+
+  static std::mutex mutex;
   
 };
 #endif

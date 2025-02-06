@@ -386,6 +386,7 @@ static struct PyMethodDef _pycomposite_methods[] =
   {"selection_method", NULL, METH_VARARGS},
   {"interpolation_method", NULL, METH_VARARGS},
   {"interpolate_undetect", NULL, METH_VARARGS},
+  {"sort_polarvolume", NULL, METH_VARARGS},
   {"date", NULL, METH_VARARGS},
   {"time", NULL, METH_VARARGS},
   {"quality_indicator_field_name", NULL, METH_VARARGS},
@@ -462,6 +463,8 @@ static PyObject* _pycomposite_getattro(PyComposite* self, PyObject* name)
     return PyInt_FromLong(Composite_getInterpolationMethod(self->composite));
   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("interpolate_undetect", name) == 0) {
     return PyBool_FromLong(Composite_getInterpolateUndetect(self->composite));
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("sort_polarvolume", name) == 0) {
+    return PyBool_FromLong(Composite_getSortPolarVolume(self->composite));
   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("algorithm", name) == 0) {
     CompositeAlgorithm_t* algorithm = Composite_getAlgorithm(self->composite);
     if (algorithm != NULL) {
@@ -556,6 +559,16 @@ static int _pycomposite_setattro(PyComposite* self, PyObject* name, PyObject* va
     } else {
       raiseException_gotoTag(done, PyExc_ValueError, "interpolate_undetect must be a bool");
     }
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("sort_polarvolume", name) == 0) {
+    if (PyBool_Check(val)) {
+      if (PyObject_IsTrue(val)) {
+        Composite_setSortPolarVolume(self->composite, 1);
+      } else {
+        Composite_setSortPolarVolume(self->composite, 0);
+      }
+    } else {
+      raiseException_gotoTag(done, PyExc_ValueError, "sort_polarvolume must be a bool");
+    }
   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("time", name) == 0) {
     if (PyString_Check(val)) {
       if (!Composite_setTime(self->composite, PyString_AsString(val))) {
@@ -645,6 +658,9 @@ PyDoc_STRVAR(_pycomposite_type_doc,
     "                                * If more than one value is DATA, then interpolation.\n"
     "                                * If all values are NODATA, then NODATA.\n"
     "                                * If all values are either NODATA or UNDETECT, then UNDETECT.\n"
+    ""
+    " sort_polarvolume              - If sorting of polar volume should be used or not.\n"
+    "                                * Sorting is not thread safe. Default is 1 for backward kompatibility.\n"
     ""
     " date                         - The nominal date as a string in format YYYYMMDD\n"
     " time                         - The nominal time as a string in format HHmmss\n"

@@ -23,6 +23,7 @@ extern "C" {
 #include <iostream>
 #include <map>
 
+  std::mutex Compositing::mutex;
 
   Compositing::Compositing(){
     init();
@@ -76,10 +77,13 @@ extern "C" {
       //radar_index_mapping = {}
       use_lazy_loading=true;
       use_lazy_loading_preloads=true;
+      proj_registry = 0;
+      area_registry = 0;
+      tile_registry = 0;
   }
   
-  Cartesian_t* Compositing::generate( std::string dd, std::string dt, std::string area){
-    return _generate(dd, dt, area);
+  Cartesian_t* Compositing::generate( std::string dd, std::string dt, std::string areaid, Area_t * area ){
+    return _generate(dd, dt, areaid, area);
   }
   /*# Removes CMT:<...> from the string
    # @param[in] str - the string from wh*ich CMT should be removed
@@ -198,36 +202,55 @@ extern "C" {
   /*#
    # Generates the objects that should b*e used in the compositing.
    # returns a triplet with [objects], nodes (as comma separated string), 'how/tasks' (as comma separated string)
+   # If the file_objects map is empty we must use a mutex when we read from disk
    #*/
   std::map<std::string,RaveCoreObject*> Compositing::fetch_objects(std::string & nodes, std::string & how_tasks, bool &all_files_malfunc){
     nodes = "";
+    how_tasks = "";
     std::map<std::string,RaveCoreObject*> objects;
-    std::string tasks;
-    int malfunc_files = 0;
+    std::vector<std::string> tasks;
+    size_t malfunc_files = 0;
     
     std::string preload_quantity;
     if (use_lazy_loading && use_lazy_loading_preloads) {
       preload_quantity=quantity;
     }
-    std::string fname;  
+
+    std::string fname;
     for (std::string fname : filenames) {
+         // Check if files already read, tiled compositing only for now.
         RaveCoreObject*obj = 0;
-        try {
-          if (ravebdb != 0) {
-            // ravebdb always 0 in first version.
-            //obj = self.ravebdb.get_rave_object(fname, self.use_lazy_loading, preload_quantity)
-          }
-          else {
-            RaveIO_t* instance = RaveIO_open(fname.c_str(), use_lazy_loading, preload_quantity.c_str());
-            obj = RaveIO_getObject(instance);
+        if (file_objects.size()) {
+          if (file_objects.count(fname)) {
+            obj = file_objects[fname];
           }
         }
-        catch (...) {
-          RAVE_ERROR1("Failed to open %s", fname.c_str());
-          //FIXME: Memory handling!
-          objects.clear();
-          return objects;
 
+        if (obj == 0) {
+          // Read from db or file system
+          try {
+            if (ravebdb != 0) {
+              // ravebdb always 0 in first version.
+              //obj = self.ravebdb.get_rave_object(fname, self.use_lazy_loading, preload_quantity)
+            }
+            else {
+              std::unique_lock<std::mutex> lock(mutex);
+              RaveIO_t* instance = RaveIO_open(fname.c_str(), use_lazy_loading, preload_quantity.c_str());
+              obj = RaveIO_getObject(instance);
+              RaveIO_close(instance);
+              // sortByElevations is not threadsafe
+              if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
+                PolarVolume_sortByElevations((PolarVolume_t*)obj, 1);
+              }
+            }
+          }
+          catch (...) {
+            RAVE_ERROR1("Failed to open %s", fname.c_str());
+            //FIXME: Memory handling!
+            objects.clear();
+            return objects;
+
+          }
         }
         bool is_scan = RAVE_OBJECT_CHECK_TYPE(obj, &PolarScan_TYPE);
         bool is_pvol;
@@ -243,18 +266,33 @@ extern "C" {
         }
                   
         // Force azimuthal nav information usage if requested
-        if (is_pvol)
-          PolarVolume_setUseAzimuthalNavInformation((PolarVolume_t*) obj, use_azimuthal_nav_information);
-        else if(is_scan)
-          PolarScan_setUseAzimuthalNavInformation((PolarScan_t*) obj, use_azimuthal_nav_information);
+        if (is_pvol) {
+          // The objects has not been processed before
+          if (file_objects.size() == 0) {
+            // Modify object, mutex needed
+            std::unique_lock<std::mutex> lock(mutex);
+            PolarVolume_setUseAzimuthalNavInformation((PolarVolume_t*) obj, use_azimuthal_nav_information);
+          }
+        }
+        else if(is_scan) {
+          if (file_objects.size() == 0) {
+            // Modify object, mutex needed
+            std::unique_lock<std::mutex> lock(mutex);
+            PolarScan_setUseAzimuthalNavInformation((PolarScan_t*) obj, use_azimuthal_nav_information);
+          }
+        }
                   
         if (ignore_malfunc) {
+          if (file_objects.size() == 0) {
+            // Modify object, mutex needed
+            std::unique_lock<std::mutex> lock(mutex);
             obj = _remove_malfunc(obj,is_pvol);
             if (obj == 0) {
               RAVE_INFO2("[%s] compositing.fetch_objects: Input file %s detected as 'malfunc', ignoring.",mpname.c_str(), fname.c_str());
               malfunc_files += 1;
               continue;
             }
+          }
         }
         std::string source;
         if (is_pvol)
@@ -270,11 +308,10 @@ extern "C" {
         } else if (odim_source.wigos.length()) {
           node=odim_source.wigos;
         }  
-                      
         if (nodes.length())
           nodes += "," + node;
         else
-          nodes += node;
+          nodes = node;
                           
         objects[fname] = obj;
                           
@@ -289,27 +326,42 @@ extern "C" {
             fname.c_str(), node.c_str(),
             PolarVolume_getDate((PolarVolume_t*)obj),
             PolarVolume_getTime((PolarVolume_t*)obj));
-          for (int i = 0; i < PolarVolume_getNumberOfScans((PolarVolume_t*) obj)-1; i++) {
+          for (int i = 0; i < PolarVolume_getNumberOfScans((PolarVolume_t*) obj); i++) {
             PolarScan_t * scan = PolarVolume_getScan((PolarVolume_t*) obj, i);
             add_how_task_from_scan(scan, tasks);
           }
         }
+
     }
-                              
-    how_tasks += "," + tasks;
+    for (std::string task : tasks) {
+      if(how_tasks.length()) {
+        how_tasks += "," + task;
+      } else {
+        how_tasks = task;
+      }
+    }
                               
     all_files_malfunc = ((filenames.size() > 0) && (malfunc_files == filenames.size()));
                               
     return objects;
   }
-  void Compositing::add_how_task_from_scan(PolarScan_t * scan, std::string &tasks) {
+
+  void Compositing::add_how_task_from_scan(PolarScan_t * scan, std::vector<std::string> &tasks) {
     if (PolarScan_hasAttribute(scan,"how/task")) {
       RaveAttribute_t *attr = PolarScan_getAttribute(scan, "how/task");
       if (attr != 0) {
         std::string how_task_string = attr->sdata;
         // duplicate check
-        if (!tasks.find(how_task_string))
-          tasks.append(how_task_string);
+        bool found = false;
+        for (std::string task : tasks) {
+          if (task==how_task_string) {
+            found = true;
+            break;
+          }
+        }
+        if (!found) {
+          tasks.push_back(how_task_string);
+        }
       }
     }
   }
@@ -425,21 +477,23 @@ extern "C" {
    # @param dt: time in format HHMMSS
    # @param area: the area to use for the cartesian image. If none is specified, a best fit will be atempted.
    */
-  Cartesian_t* Compositing::_generate(std::string dd, std::string dt, std::string area) {
-    _debug_generate_info(area);
+  Cartesian_t* Compositing::_generate( std::string dd, std::string dt, std::string areaid, Area_t * area ) {
+    _debug_generate_info(areaid);
     if (verbose) {
       RAVE_INFO1("Fetching objects and applying quality plugins", mpname.c_str());
     }
       
-    RAVE_DEBUG3("Generating composite with date and time %sT%s for area %s", dd.c_str(), dt.c_str(), area.c_str());
+    RAVE_DEBUG3("Generating composite with date and time %sT%s for area %s", dd.c_str(), dt.c_str(), areaid.c_str());
     
     // In C++, we can only return one datatype, not many as i python.
-    std::map<std::string,RaveCoreObject*> objects;
+    //std::map<std::string,RaveCoreObject*> objects;
     std::string nodes;
     std::string how_tasks;
     bool all_files_malfunc;
+
+
     
-    objects = fetch_objects(nodes,how_tasks,all_files_malfunc);
+    file_objects = fetch_objects(nodes,how_tasks,all_files_malfunc);
     
     if (all_files_malfunc) {
       RAVE_INFO0("[radarcomp_c] compositing.generate: Content of all provided files were marked as 'malfunc'. Since option 'ignore_malfunc' is set, no composite is generated!");
@@ -448,7 +502,8 @@ extern "C" {
     std::string qfields;
     // just a dummy for now.
     CompositeAlgorithm_t * algorithm = 0;
-    objects = quality_control_objects(objects,algorithm,qfields);
+    // FIXME: Mutex here when quality control has been implemented
+    file_objects = quality_control_objects(file_objects,algorithm,qfields);
     
     std::string qccontrols;
     if (qccontrols.length() == 0)
@@ -457,16 +512,19 @@ extern "C" {
       qccontrols+= "," + qfields;
     RAVE_DEBUG1("[radarcomp_c] compositing.generate: Quality controls for composite generation: %s", qccontrols.c_str());
       
-    if (objects.size() == 0) {
+    if (file_objects.size() == 0) {
       RAVE_INFO0("[radarcomp_c] compositing.generate: No objects provided to the composite generator. No composite will be generated!");
       return 0;
     }
     
     std::vector<RaveCoreObject*> vobjects;
         
-    for(auto const& obj: objects)
-      vobjects.push_back(obj.second);
-        
+    // Copy the objects to use in composite generator
+    // Increments the reference counter
+    for(auto & obj: file_objects) {
+      vobjects.push_back((RaveCoreObject*)RAVE_OBJECT_COPY(obj.second));
+    }
+
     if (dump)
       _dump_objects(vobjects);
     
@@ -476,37 +534,24 @@ extern "C" {
       return 0;
     }
     
-    //# Projection and area registries
-    // Hard coded standard installation
-    std::string projection_registry_path = std::string(RAVEROOT) + std::string(RAVECONFIG) + std::string(PROJECTION_REGISTRY);
-    std::string area_registry_path = std::string(RAVEROOT) + std::string(RAVECONFIG) + std::string(AREA_REGISTRY);
-    
-    
-    ProjectionRegistry_t* proj_registry = ProjectionRegistry_load(projection_registry_path.c_str());
-    if (proj_registry == 0) {
-      RAVE_CRITICAL0("Failed to create projection registry for composite.");
-      RAVE_OBJECT_RELEASE(generator);
-      return 0;
-    }
-    AreaRegistry_t* area_registry = AreaRegistry_load(area_registry_path.c_str(), proj_registry);
-    if (area_registry == 0) {
-      RAVE_CRITICAL0("Failed to create area registry for composite.");
-      RAVE_OBJECT_RELEASE(proj_registry);
-      RAVE_OBJECT_RELEASE(generator);
-      return 0;
-    }
     
     Area_t* the_area = 0;
     
-    if (area.length()) {
-       the_area = AreaRegistry_getByName(area_registry, area.c_str());
+    // first, search the area registry for area.
+    if (areaid.length()) {
+       the_area = AreaRegistry_getByName(area_registry, areaid.c_str());
+    } else if (area != 0) {
+      the_area = area;
     }
     
     if (the_area==0) {
-      RAVE_CRITICAL1("Failed to get area %s from area registry.", area.c_str());
-      RAVE_OBJECT_RELEASE(proj_registry);
-      RAVE_OBJECT_RELEASE(area_registry);
+      RAVE_CRITICAL1("Failed to get area %s from area registry.", areaid.c_str());
       RAVE_OBJECT_RELEASE(generator);
+      for (auto & k : file_objects) {
+        if (k.second) {
+          RAVE_OBJECT_RELEASE(k.second);
+        }
+      }
       return 0;
     }
     
@@ -519,14 +564,18 @@ extern "C" {
     if (radar_index_mapping == 0) {
       RAVE_CRITICAL0("Failed to allocate memory for radar_index_mapping.");
       RAVE_OBJECT_RELEASE(the_area);
-      RAVE_OBJECT_RELEASE(proj_registry);
-      RAVE_OBJECT_RELEASE(area_registry);
       RAVE_OBJECT_RELEASE(generator);
+      for (auto & k : file_objects) {
+        if (k.second) {
+          RAVE_OBJECT_RELEASE(k.second);
+        }
+      }
       return 0;
     }
     // Add the objects to composite
     int i = 0;
     for (auto const& o:vobjects) {
+      // NOTE: Composite_add increments the reference counter of o!
       Composite_add(generator, (RaveCoreObject*) o);
       //We want to ensure that we get a proper indexing of included radar
       std::string sourceid = PolarVolume_getSource((PolarVolume_t*) o);
@@ -581,11 +630,19 @@ extern "C" {
         
     if (verbose)
       RAVE_INFO0("[radarcomp_c] compositing.generate: Generating cartesian composite");
-    // Composite_applyRadarIndexMapping(Composite_t* composite, RaveObjectHashTable_t* mapping);
+
     Composite_applyRadarIndexMapping(generator, radar_index_mapping);
-    //generator.applyRadarIndexMapping(self.radar_index_mapping)
+    //FIXME: Here we sort the volumes which is not thread safe. Set the property to the composite generator.
+    Composite_setSortPolarVolume(generator, 0);
     Cartesian_t* result = Composite_generate(generator, the_area, 0);
-    
+
+    // Decrement the reference counter
+    for (auto & o:vobjects) {
+      if (o) {
+        RAVE_OBJECT_RELEASE(o);
+      }
+    }
+
     if (applyctfilter) {
       if (verbose)
         RAVE_DEBUG0("[{radarcomp_c}] compositing.generate: Applying ct filter");
@@ -639,9 +696,12 @@ extern "C" {
    
     RAVE_OBJECT_RELEASE(radar_index_mapping);
     RAVE_OBJECT_RELEASE(the_area);
-    RAVE_OBJECT_RELEASE(proj_registry);
-    RAVE_OBJECT_RELEASE(area_registry);
     RAVE_OBJECT_RELEASE(generator);
+    for (auto & k : file_objects) {
+        if (k.second) {
+          RAVE_OBJECT_RELEASE(k.second);
+        }
+    }
     return result;
   }
   /*#
