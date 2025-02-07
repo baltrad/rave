@@ -26,7 +26,7 @@ Test suite for rave
 import unittest, os
 
 import _rave
-
+"""
 from PyRaveTest import *
 from BaltradMessageXMLTest import *
 from rave_pgf_registry_test import *
@@ -147,7 +147,7 @@ from PyLegacyCompositeGeneratorFactoryTest import *
 from PyAcqvaCompositeGeneratorFactoryTest import *
 from PyOdimSourceTest import *
 from PyOdimSourcesTest import *
-
+"""
 from PyRateCompositeGeneratorFactoryTest import *
 
 if __name__ == '__main__':

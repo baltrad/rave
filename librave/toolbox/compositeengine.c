@@ -89,13 +89,70 @@ static void CompositeEngine_destructor(RaveCoreObject* obj)
 
 static int CompositeEngineInternal_getLonLat(void* extradata, RaveCoreObject* object, ProjectionPipeline_t* pipeline, double herex, double herey, double* olon, double* olat)
 {
-  fprintf(stderr, "DEFAULT: CompositeEngineInternal_getLonLat\n");
-  return 0;
+  return ProjectionPipeline_fwd(pipeline, herex, herey, olon, olat);
 }
 
 static int CompositeEngineInternal_selectRadarData(void* extradata, RaveCoreObject* object, double olon, double olat, CompositeUtilValue_t* cvalues, int ncvalues)
 {
-  fprintf(stderr, "DEFAULT: CompositeEngineInternal_selectRadarData\n");
+  double dist = 0.0, maxdist = 0.0, rdist = 0.0;
+  int cindex = 0;
+  
+  if (RAVE_OBJECT_CHECK_TYPE(object, &PolarVolume_TYPE)) {
+    dist = PolarVolume_getDistance((PolarVolume_t*)object, olon, olat);
+    maxdist = PolarVolume_getMaxDistance((PolarVolume_t*)object);
+  } else if (RAVE_OBJECT_CHECK_TYPE(object, &PolarScan_TYPE)) {
+    dist = PolarScan_getDistance((PolarScan_t*)object, olon, olat);
+    maxdist = PolarScan_getMaxDistance((PolarScan_t*)object);
+  }
+  if (dist <= maxdist) {
+    double originaldist = dist;
+    if (CompositeInternal_nearestPosition(composite, obj, olon, olat, &navinfo)) {
+      double originaldist = dist;
+      rdist = dist; /* Remember distance to radar */
+
+      if (composite->method == CompositeSelectionMethod_HEIGHT) {
+        dist = navinfo.actual_height;
+      }
+
+      for (cindex = 0; cindex < nparam; cindex++) {
+        RaveValueType otype = RaveValueType_NODATA;
+        double ovalue = 0.0, qivalue = 0.0;
+        CompositeInternal_getValueAtPosition(composite, obj, cvalues[cindex].name, &navinfo, &otype, &ovalue, &qivalue);
+
+        if (otype == RaveValueType_DATA || otype == RaveValueType_UNDETECT) {
+          if (cvalues[cindex].vtype != RaveValueType_DATA && cvalues[cindex].vtype != RaveValueType_UNDETECT) {
+            /* First time */
+            cvalues[cindex].vtype = otype;
+            cvalues[cindex].value = ovalue;
+            cvalues[cindex].mindist = dist;
+            cvalues[cindex].radardist = rdist;
+            cvalues[cindex].radarindex = i;
+            cvalues[cindex].navinfo = navinfo;
+            cvalues[cindex].qivalue = qivalue;
+          } else if (
+            composite->qiFieldName != NULL &&
+              ((qivalue > cvalues[cindex].qivalue) ||
+              (qivalue == cvalues[cindex].qivalue && dist < cvalues[cindex].mindist))) {
+            cvalues[cindex].vtype = otype;
+            cvalues[cindex].value = ovalue;
+            cvalues[cindex].mindist = dist;
+            cvalues[cindex].radardist = rdist;
+            cvalues[cindex].radarindex = i;
+            cvalues[cindex].navinfo = navinfo;
+            cvalues[cindex].qivalue = qivalue;
+          } else if (composite->qiFieldName == NULL && dist < cvalues[cindex].mindist) {
+            cvalues[cindex].vtype = otype;
+            cvalues[cindex].value = ovalue;
+            cvalues[cindex].mindist = dist;
+            cvalues[cindex].radardist = rdist;
+            cvalues[cindex].radarindex = i;
+            cvalues[cindex].navinfo = navinfo;
+            cvalues[cindex].qivalue = qivalue;
+          }
+        }
+      }
+    }
+  }
   return 0;
 }
 
