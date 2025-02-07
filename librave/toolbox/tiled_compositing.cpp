@@ -945,7 +945,7 @@ std::mutex multi_composite_arguments::mutex;
     //# Fix so that we get a valid place for /what/source and /how/nodes
     std::string source_string("ORG:82,CMT:");
     source_string += areaid;
-    Cartesian_setSource(result, source_string.c_str());;
+    Cartesian_setSource(result, source_string.c_str());
     //result.source = "%s,CMT:%s"%(ORG:82,areaid.c_str)
     RaveAttribute_t* nodes_attr = RaveAttributeHelp_createString("how/nodes", _nodes.c_str());
     if (nodes_attr != NULL) {

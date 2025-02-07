@@ -674,6 +674,10 @@ extern "C" {
       brdr_param.setData(brdr_field.getData())
       */
     }
+    //# Fix so that we get a valid place for /what/source and /how/nodes
+    std::string source_string("ORG:82,CMT:");
+    source_string += areaid;
+    Cartesian_setSource(result, source_string.c_str());
     RaveAttribute_t* nodes_attr = RaveAttributeHelp_createString("how/nodes", nodes.c_str());
     if (nodes_attr != NULL) {
       if (!Cartesian_addAttribute(result, nodes_attr)) {
