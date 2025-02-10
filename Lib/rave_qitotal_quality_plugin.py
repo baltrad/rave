@@ -57,9 +57,11 @@ QITOTAL_DEFAULT_FIELD_MODE=2
 class rave_qitotal_quality_plugin(rave_quality_plugin):
   ##
   # Default constructor
-  def __init__(self, qitotal_method=QITOTAL_METHOD):
+  def __init__(self, qitotal_method=None):
     super(rave_qitotal_quality_plugin, self).__init__()
-    self._qimethod = qitotal_method
+    self._qimethod = QITOTAL_METHOD
+    if qitotal_method is not None:
+      self._qimethod = qitotal_method
     self._qitotal_option_file = None # Mostly for test purpose
     
   ##
