@@ -57,8 +57,9 @@ QITOTAL_DEFAULT_FIELD_MODE=2
 class rave_qitotal_quality_plugin(rave_quality_plugin):
   ##
   # Default constructor
-  def __init__(self):
+  def __init__(self, qitotal_method=QITOTAL_METHOD):
     super(rave_qitotal_quality_plugin, self).__init__()
+    self._qimethod = qitotal_method
     self._qitotal_option_file = None # Mostly for test purpose
     
   ##
@@ -93,8 +94,8 @@ class rave_qitotal_quality_plugin(rave_quality_plugin):
         qitotal.setWeight(f.name(), f.weight())
         qitotalfields.append(qf)
     if len(qitotalfields) > 0:
-      if hasattr(qitotal, QITOTAL_METHOD):
-        method = getattr(qitotal, QITOTAL_METHOD)
+      if hasattr(qitotal, self._qimethod):
+        method = getattr(qitotal, self._qimethod)
         result = method(qitotalfields)
         scan.addOrReplaceQualityField(result)
     else:
@@ -105,7 +106,7 @@ class rave_qitotal_quality_plugin(rave_quality_plugin):
           datafield = datafield + 255
         df.setData(datafield)
         df.addAttribute("how/task", "pl.imgw.quality.qi_total")
-        df.addAttribute("how/task_args", "method:%s"%QITOTAL_METHOD)
+        df.addAttribute("how/task_args", "method:%s"%self._qimethod)
         df.addAttribute("what/gain", QITOTAL_GAIN)
         df.addAttribute("what/offset", QITOTAL_OFFSET)
         scan.addOrReplaceQualityField(df)
@@ -133,6 +134,23 @@ class rave_qitotal_quality_plugin(rave_quality_plugin):
   def algorithm(self):
     return None
   
-  
+class rave_qitotal_quality_minimum(rave_qitotal_quality_plugin):
+  ##
+  # Default constructor
+  def __init__(self):
+    super(rave_qitotal_quality_minimum, self).__init__("minimum")
+    
+class rave_qitotal_quality_additive(rave_qitotal_quality_plugin):
+  ##
+  # Default constructor
+  def __init__(self):
+    super(rave_qitotal_quality_additive, self).__init__("additive")
+
+class rave_qitotal_quality_multiplicative(rave_qitotal_quality_plugin):
+  ##
+  # Default constructor
+  def __init__(self):
+    super(rave_qitotal_quality_multiplicative, self).__init__("multiplicative")
+
 if __name__=="__main__":
   a = rave_qitotal_quality_plugin()
