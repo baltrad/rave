@@ -191,7 +191,7 @@ static int CompositeEngineInternal_nearestPosition(
   RAVE_ASSERT((arguments != NULL), "composite == NULL");
   RAVE_ASSERT((nav != NULL), "nav == NULL");
   
-  productType = CompositeArguments_getProductType(arguments);
+  productType = CompositeArguments_getCompositingProduct(arguments);
 
   if (object != NULL) {
     if (RAVE_OBJECT_CHECK_TYPE(object, &PolarScan_TYPE)) {
@@ -485,7 +485,7 @@ int CompositeEngineUtility_selectRadarData(CompositeEngine_t* engine, void* extr
       }
     }
   }
-  return 0;
+  return 1;
 }
 
 int CompositeEngineUtility_getPolarValueAtPosition(void* extradata, CompositeArguments_t* arguments, RaveCoreObject* object, const char* quantity, PolarNavigationInfo* navinfo, const char* qiFieldName, RaveValueType* otype, double* ovalue, double* qivalue)
@@ -669,6 +669,14 @@ Cartesian_t* CompositeEngine_generate(CompositeEngine_t* self, CompositeArgument
   if (pipelineBinding == NULL || nbindings != nradars) {
     RAVE_ERROR0("Could not create a proper pipeline binding");
     goto fail;
+  }
+
+  for (int i = 0; i < nbindings; i++) {
+    RaveCoreObject* obj = CompositeArguments_getObject(arguments, i);
+    if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
+      PolarVolume_sortByElevations((PolarVolume_t*)obj, 1);
+    }
+    RAVE_OBJECT_RELEASE(obj);
   }
 
   for (y = 0; y < ysize; y++) {

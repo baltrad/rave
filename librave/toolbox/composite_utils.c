@@ -81,6 +81,8 @@ Cartesian_t* CompositeUtils_createCartesianFromArguments(CompositeArguments_t* a
   }
   Cartesian_init(cartesian, area);
   Cartesian_setObjectType(cartesian, Rave_ObjectType_COMP);
+  Cartesian_setProduct(cartesian, CompositeArguments_getProductType(arguments));
+
   if (CompositeArguments_getTime(arguments) != NULL) {
     if (!Cartesian_setTime(cartesian, CompositeArguments_getTime(arguments))) {
       goto done;

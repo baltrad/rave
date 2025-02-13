@@ -125,8 +125,9 @@ class PyRateCompositeGeneratorFactoryTest(unittest.TestCase):
       self.assertEqual(False, classUnderTest.canHandle(args))
 
   def test_generate(self):
-    import _rave
-    _rave.setTrackObjectCreation(True)
+    #import _rave
+    #_rave.setTrackObjectCreation(True)
+    #_rave.setDebugLevel(_rave.Debug_RAVE_SPEWDEBUG)
     classUnderTest = _ratecompositegeneratorfactory.new()
 
     args = _compositearguments.new()
@@ -147,4 +148,9 @@ class PyRateCompositeGeneratorFactoryTest(unittest.TestCase):
     args.area = self.create_area("nrd2km")
     args.addParameter("RATE", 0.0, 1.0)  # This is actually using DBZH to calculate RATE
 
-    classUnderTest.generate(args)
+    result = classUnderTest.generate(args)
+
+    ios = _raveio.new()
+    ios.object = result
+    ios.filename = "rate_swecomposite_ppi.h5"
+    ios.save()
