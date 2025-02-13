@@ -44,6 +44,7 @@ struct _CompositeArguments_t {
   RAVE_OBJECT_HEAD /** Always on top */
   OdimSources_t* sources; /**< the sources registry */
   char* product; /**< the compositing product / method */
+  Rave_CompositingProduct compositingProduct; /**< the compositing product, tightly connected with product */
   Area_t* area; /**< the area */
   RaveDateTime_t* datetime;  /**< the date and time */
   double height; /**< the height when generating pcapppi, cappi, pmax default 1000 */
@@ -55,6 +56,7 @@ struct _CompositeArguments_t {
   RaveObjectList_t* objects; /**< the rave objects to be used in the compositing */
   RaveList_t* qualityflags; /**< the quality flags that should be generated */
   RaveObjectHashTable_t* radarIndexMapping; /**< the suggested radar index mapping */
+  char* qualityFieldName; /**< the quality field name used in quality based compositing */
 };
 
 static const char* RAVE_COMPOSITE_PRODUCT_STRINGS[] =
@@ -128,6 +130,7 @@ static int CompositeArgumentObjectEntry_copyconstructor(RaveCoreObject* obj, Rav
     }
   }
   this->radarIndexValue = src->radarIndexValue;
+  return 1;
 fail:
   RAVE_OBJECT_RELEASE(this->object);
   return 0;
@@ -322,6 +325,7 @@ static int CompositeArguments_constructor(RaveCoreObject* obj)
   CompositeArguments_t* this = (CompositeArguments_t*)obj;
   this->sources = NULL;
   this->product = NULL;
+  this->compositingProduct = Rave_CompositingProduct_UNDEFINED;
   this->area = NULL;
   this->datetime = RAVE_OBJECT_NEW(&RaveDateTime_TYPE);
   this->arguments = RAVE_OBJECT_NEW(&RaveObjectHashTable_TYPE);
@@ -329,7 +333,8 @@ static int CompositeArguments_constructor(RaveCoreObject* obj)
   this->objects = RAVE_OBJECT_NEW(&RaveObjectList_TYPE);
   this->qualityflags = RAVE_OBJECT_NEW(&RaveList_TYPE);
   this->radarIndexMapping = RAVE_OBJECT_NEW(&RaveObjectHashTable_TYPE);
-  
+  this->qualityFieldName = NULL;
+
   if (this->datetime == NULL || this->arguments == NULL || this->parameters == NULL || this->objects == NULL || this->qualityflags == NULL || this->radarIndexMapping == NULL) {
     goto fail;
   }
@@ -357,12 +362,14 @@ static int CompositeArguments_copyconstructor(RaveCoreObject* obj, RaveCoreObjec
   CompositeArguments_t* src = (CompositeArguments_t*)srcobj;
   this->sources = NULL;
   this->product = NULL;
+  this->compositingProduct = Rave_CompositingProduct_UNDEFINED;  
   this->area = NULL;
   this->datetime = NULL;
   this->strategy = NULL;
   this->arguments = NULL;
   this->qualityflags = NULL;
   this->radarIndexMapping = NULL;
+  this->qualityFieldName = NULL;
 
   if (src->sources != NULL) {
     this->sources = RAVE_OBJECT_CLONE(src->sources);
@@ -380,6 +387,7 @@ static int CompositeArguments_copyconstructor(RaveCoreObject* obj, RaveCoreObjec
       goto fail;
     }
   }
+  this->compositingProduct = src->compositingProduct;
   this->datetime = RAVE_OBJECT_CLONE(src->datetime);
   if (this->datetime == NULL) {
     goto fail;
@@ -413,6 +421,12 @@ static int CompositeArguments_copyconstructor(RaveCoreObject* obj, RaveCoreObjec
   if (this->radarIndexMapping == NULL) {
     goto fail;
   }
+  if (src->qualityFieldName != NULL) {
+    this->qualityFieldName = RAVE_STRDUP(src->qualityFieldName);
+    if (this->qualityFieldName == NULL) {
+      goto fail;
+    }
+  }  
   return 1;
 fail:
   RAVE_OBJECT_RELEASE(this->sources);
@@ -425,6 +439,7 @@ fail:
   RAVE_OBJECT_RELEASE(this->objects);
   RaveList_freeAndDestroy(&this->qualityflags);
   RAVE_OBJECT_RELEASE(this->radarIndexMapping);
+  RAVE_FREE(this->qualityFieldName);
   return 0;
 }
 
@@ -444,7 +459,8 @@ static void CompositeArguments_destructor(RaveCoreObject* obj)
   CompositeArgumentsInternal_freeParameterList(&this->parameters);
   RAVE_OBJECT_RELEASE(this->objects);
   RaveList_freeAndDestroy(&this->qualityflags);
-  RAVE_OBJECT_RELEASE(this->radarIndexMapping);  
+  RAVE_OBJECT_RELEASE(this->radarIndexMapping);
+  RAVE_FREE(this->qualityFieldName);  
 }
 
 /*@} End of Private functions */
@@ -476,6 +492,7 @@ Rave_CompositingProduct CompositeArguments_stringToProduct(const char* product)
 void CompositeArguments_setSources(CompositeArguments_t* args, OdimSources_t* sources)
 {
   RAVE_ASSERT((args != NULL), "args == NULL");
+
   RAVE_OBJECT_RELEASE(args->sources);
   args->sources = RAVE_OBJECT_COPY(sources);
 }
@@ -499,12 +516,14 @@ int CompositeArguments_setProduct(CompositeArguments_t* args, const char* produc
     RAVE_FREE(args->product);
     args->product = NULL;
   }
+  args->compositingProduct = Rave_CompositingProduct_UNDEFINED;
   if (product != NULL) {
     args->product = RAVE_STRDUP(product);
     if (args->product == NULL) {
       RAVE_ERROR0("Failed to set product");
       return 0;
     }
+    args->compositingProduct = CompositeArguments_stringToProduct(args->product);
   }
   return 1;
 }
@@ -513,6 +532,12 @@ const char* CompositeArguments_getProduct(CompositeArguments_t* args)
 {
   RAVE_ASSERT((args != NULL), "args == NULL");
   return (const char*)args->product;
+}
+
+Rave_CompositingProduct CompositeArguments_getCompositingProduct(CompositeArguments_t* args)
+{
+  RAVE_ASSERT((args != NULL), "args == NULL");
+  return args->compositingProduct;
 }
 
 Rave_ProductType CompositeArguments_getProductType(CompositeArguments_t* args)
@@ -838,6 +863,30 @@ RaveObjectList_t* CompositeArguments_getObjects(CompositeArguments_t* args)
 done:
   return result;
 }
+
+int CompositeArguments_setQIFieldName(CompositeArguments_t* args, const char* fieldname)
+{
+  RAVE_ASSERT((args != NULL), "args == NULL");
+  if (args->qualityFieldName != NULL) {
+    RAVE_FREE(args->qualityFieldName);
+    args->qualityFieldName = NULL;
+  }
+  if (fieldname != NULL) {
+    args->qualityFieldName = RAVE_STRDUP(fieldname);
+    if (args->qualityFieldName == NULL) {
+      RAVE_ERROR0("Failed to set quality field name");
+      return 0;
+    }
+  }
+  return 1;
+}
+
+const char* CompositeArguments_getQIFieldName(CompositeArguments_t* args)
+{
+  RAVE_ASSERT((args != NULL), "args == NULL");
+  return (const char*)args->qualityFieldName;
+}
+
 
 int CompositeArguments_addQualityFlag(CompositeArguments_t* args, const char* flag)
 {

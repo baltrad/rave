@@ -84,6 +84,27 @@ class PyCompositeArgumentsTest(unittest.TestCase):
     except ValueError:
       pass
 
+  def test_compositing_product(self):
+    obj = _compositearguments.new()
+    self.assertEqual(_compositearguments.Rave_CompositingProduct_UNDEFINED, obj.compositing_product)
+    obj.product = "PPI"
+    self.assertEqual(_compositearguments.Rave_CompositingProduct_PPI, obj.compositing_product)
+    obj.product = "CAPPI"
+    self.assertEqual(_compositearguments.Rave_CompositingProduct_CAPPI, obj.compositing_product)
+    obj.product = "ACQVA"
+    self.assertEqual(_compositearguments.Rave_CompositingProduct_ACQVA, obj.compositing_product)
+    obj.product = "SIG"
+    self.assertEqual(_compositearguments.Rave_CompositingProduct_UNDEFINED, obj.compositing_product)
+    obj.product = "PPI"
+    obj.product = None
+    self.assertEqual(_compositearguments.Rave_CompositingProduct_UNDEFINED, obj.compositing_product)
+
+    try:
+      obj.compositing_product = _compositearguments.Rave_CompositingProduct_ACQVA
+      self.fail("Expected AttributeError")
+    except AttributeError:
+      pass
+
   def test_product_type(self):
     obj = _compositearguments.new()
     self.assertEqual(_rave.Rave_ProductType_UNDEFINED, obj.product_type)
@@ -426,6 +447,21 @@ class PyCompositeArgumentsTest(unittest.TestCase):
     self.assertEqual(obj.getRadarIndexValue("RAD:SE50"), obj.getObjectRadarIndexValue(1))
     self.assertEqual(obj.getRadarIndexValue("WMO:01234"), obj.getObjectRadarIndexValue(2))
     self.assertEqual(obj.getRadarIndexValue("NOD:dksin"), obj.getObjectRadarIndexValue(3))
+
+  def test_qiFieldName(self):
+    obj = _compositearguments.new()
+    self.assertTrue(obj.qiFieldName is None)
+    obj.qiFieldName = "se.test.this"
+    self.assertEqual("se.test.this", obj.qiFieldName)
+    obj.qiFieldName = "se.test.that"
+    self.assertEqual("se.test.that", obj.qiFieldName)
+    obj.qiFieldName = None
+    self.assertTrue(obj.qiFieldName is None)
+    try:
+      obj.qiFieldName = 123
+      fail("Expected ValueError")
+    except ValueError:
+      pass
 
   def create_polarscan(self, src, dt, tt):
     result = _polarscan.new()

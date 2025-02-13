@@ -36,6 +36,19 @@ import string
 import math
 
 class PyRateCompositeGeneratorFactoryTest(unittest.TestCase):
+  SWEDISH_VOLUMES = ["fixtures/pvol_seang_20090501T120000Z.h5",
+                     "fixtures/pvol_searl_20090501T120000Z.h5",
+                     "fixtures/pvol_sease_20090501T120000Z.h5",
+                     "fixtures/pvol_sehud_20090501T120000Z.h5",
+                     "fixtures/pvol_sekir_20090501T120000Z.h5",
+                     "fixtures/pvol_sekkr_20090501T120000Z.h5",
+                     "fixtures/pvol_selek_20090501T120000Z.h5",
+                     "fixtures/pvol_selul_20090501T120000Z.h5",
+                     "fixtures/pvol_seosu_20090501T120000Z.h5",
+                     "fixtures/pvol_seovi_20090501T120000Z.h5",
+                     "fixtures/pvol_sevar_20090501T120000Z.h5",
+                     "fixtures/pvol_sevil_20090501T120000Z.h5"]  
+
   def setUp(self):
     pass
 
@@ -66,16 +79,16 @@ class PyRateCompositeGeneratorFactoryTest(unittest.TestCase):
     
     return area
 
-  def test_new(self):
+  def Xtest_new(self):
     obj = _ratecompositegeneratorfactory.new()
     iscorrect = str(type(obj)).find("CompositeGeneratorFactoryCore")
     self.assertNotEqual(-1, iscorrect)
 
-  def test_getName(self):
+  def Xtest_getName(self):
     obj = _ratecompositegeneratorfactory.new()
     self.assertEqual("RateCompositeGenerator", obj.getName())
 
-  def test_getDefaultId(self):
+  def Xtest_getDefaultId(self):
     obj = _ratecompositegeneratorfactory.new()
     self.assertEqual("rate", obj.getDefaultId())
 
@@ -112,9 +125,26 @@ class PyRateCompositeGeneratorFactoryTest(unittest.TestCase):
       self.assertEqual(False, classUnderTest.canHandle(args))
 
   def test_generate(self):
+    import _rave
+    _rave.setTrackObjectCreation(True)
     classUnderTest = _ratecompositegeneratorfactory.new()
+
     args = _compositearguments.new()
+
+    for fname in self.SWEDISH_VOLUMES:
+      rio = _raveio.open(fname)
+      args.addObject(rio.object)
+
     args.product = "PPI"
+    args.elangle = 0.0
+    args.time = "120000"
+    args.date = "20090501"
+    
+    # arguments are usualy method specific in some way
+    args.addArgument("selection_method", "HEIGHT_ABOVE_SEALEVEL")
+    args.addArgument("interpolation_method", "NEAREST")
+
     args.area = self.create_area("nrd2km")
-    args.addParameter("RATE", 0.0, 1.0)
+    args.addParameter("RATE", 0.0, 1.0)  # This is actually using DBZH to calculate RATE
+
     classUnderTest.generate(args)

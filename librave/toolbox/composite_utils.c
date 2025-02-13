@@ -146,6 +146,7 @@ CompositeUtilValue_t* CompositeUtils_createCompositeValues(CompositeArguments_t*
         return NULL;
       }
       result[i].parameter = parameter;
+      result[i].name = (const char*)CompositeArguments_getParameterName(arguments, i);
     }
     *nentries = nparam;
   }
@@ -160,7 +161,6 @@ void CompositeUtils_resetCompositeValues(CompositeArguments_t* arguments, Compos
       cvalues[i].mindist = 1e10;
       cvalues[i].radarindex = -1;
       cvalues[i].vtype = RaveValueType_NODATA;
-      cvalues[i].name = (const char*)CompositeArguments_getParameterName(arguments, i);
     }
   }
 }
@@ -172,6 +172,9 @@ void CompositeUtils_freeCompositeValueParameters(CompositeUtilValue_t** cvalues,
     int i = 0;
     for (i = 0; i < nparam; i++) {
       RAVE_OBJECT_RELEASE((*cvalues)[i].parameter);
+      if ((*cvalues)[i].extraptr != NULL) {
+        RAVE_FREE((*cvalues)[i].extraptr);
+      }
     }
     RAVE_FREE(*cvalues);
     *cvalues = NULL;
@@ -337,7 +340,7 @@ void CompositeUtils_getQualityFlagSettings(CompositeQualityFlagSettings_t* setti
 }
 
 
-int CompositeUtils_addQualityFlagsToCartesian(CompositeArguments_t* arguments, Cartesian_t* cartesian, CompositeQualityFlagSettings_t* settings, int* nqualityflags)
+int CompositeUtils_addQualityFlagsToCartesian(CompositeArguments_t* arguments, Cartesian_t* cartesian, CompositeQualityFlagSettings_t* settings)
 {
   int xsize = 0, ysize = 0, i = 0, j = 0, nparam = 0, nqfields = 0;
   RaveField_t* field = NULL;
@@ -458,6 +461,42 @@ error:
 
 }
 
+int CompositeUtils_getPolarValueAtPosition(RaveCoreObject* obj, const char* quantity, PolarNavigationInfo* nav, const char* qiFieldName, RaveValueType* type, double* value, double* qualityValue)
+{
+  int result = 0;
+  RAVE_ASSERT((nav != NULL), "nav == NULL");
+  RAVE_ASSERT((type != NULL), "type == NULL");
+  RAVE_ASSERT((value != NULL), "value == NULL");
+  if (qualityValue != NULL) {
+    *qualityValue = 0.0;
+  }
+
+  if (obj != NULL) {
+    if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarScan_TYPE)) {
+      *type = PolarScan_getConvertedParameterValue((PolarScan_t*)obj, quantity, nav->ri, nav->ai, value);
+      if (qiFieldName != NULL && qualityValue != NULL) {
+        if (!PolarScan_getQualityValueAt((PolarScan_t*)obj, quantity, nav->ri, nav->ai, qiFieldName, 0, qualityValue)) {
+          *qualityValue = 0.0;
+        }
+      }
+    } else if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
+      *type = PolarVolume_getConvertedParameterValueAt((PolarVolume_t*)obj, quantity, nav->ei, nav->ri, nav->ai, value);
+      if (qiFieldName != NULL && qualityValue != NULL) {
+        if (!PolarVolume_getQualityValueAt((PolarVolume_t*)obj, quantity, nav->ei, nav->ri, nav->ai, qiFieldName, 0, qualityValue)) {
+          *qualityValue = 0.0;
+        }
+      }
+    } else {
+      RAVE_WARNING0("Unsupported object type");
+      goto done;
+    }
+  }
+
+  result = 1;
+done:
+  return result;
+}
+
 int CompositeUtils_getPolarQualityValueAtPosition(RaveCoreObject* obj, const char* quantity, const char* qualityField, PolarNavigationInfo* nav, double* value)
 {
   int result = 0;
@@ -485,6 +524,48 @@ int CompositeUtils_getPolarQualityValueAtPosition(RaveCoreObject* obj, const cha
   result = 1;
 done:
   return result;  
+}
+
+int CompositeUtils_getVerticalMaxValue(
+  RaveCoreObject* object,
+  const char* quantity,
+  const char* qiFieldName,
+  double lon,
+  double lat,
+  RaveValueType* vtype,
+  double* vvalue,
+  PolarNavigationInfo* navinfo,
+  double* qiv)
+{
+  RaveCoreObject* obj = NULL;
+  PolarNavigationInfo info;
+
+  RAVE_ASSERT((object != NULL) , "object == NULL");
+  RAVE_ASSERT((vtype != NULL), "vtype == NULL");
+  RAVE_ASSERT((vvalue != NULL), "vvalue == NULL");
+
+  if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarScan_TYPE)) {
+    *vtype = PolarScan_getNearestConvertedParameterValue((PolarScan_t*)obj, quantity, lon, lat, vvalue, &info);
+    if (qiFieldName != NULL && qiv != NULL) {
+      if (!PolarScan_getQualityValueAt((PolarScan_t*)obj, quantity, info.ri, info.ai, qiFieldName, 0, qiv)) {
+        *qiv = 0.0;
+      }
+    }
+  } else {
+    *vtype = PolarVolume_getConvertedVerticalMaxValue((PolarVolume_t*)obj, quantity, lon, lat, vvalue, &info);
+    if (qiFieldName != NULL && qiv != NULL) {
+      if (!PolarVolume_getQualityValueAt((PolarVolume_t*)obj, quantity, info.ei, info.ri, info.ai, qiFieldName, 0, qiv)) {
+        *qiv = 0.0;
+      }
+    }
+  }
+
+  if (navinfo != NULL) {
+    *navinfo = info;
+  }
+
+  RAVE_OBJECT_RELEASE(obj);
+  return 1;
 }
 
 RaveList_t* CompositeUtils_cloneRaveListStrings(RaveList_t* inlist)

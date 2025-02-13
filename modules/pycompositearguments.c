@@ -22,8 +22,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2024"-12-13
  */
-#include "rave_types.h"
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#include "rave_types.h"
 #include "compositearguments.h"
 #include "pyravecompat.h"
 #include <limits.h>
@@ -728,6 +728,7 @@ static struct PyMethodDef _pycompositearguments_methods[] =
   {"sources", NULL, METH_VARARGS},
   {"area", NULL, METH_VARARGS},
   {"product", NULL, METH_VARARGS},
+  {"compositing_product", NULL, METH_VARARGS},
   {"product_type", NULL, METH_VARARGS},
   {"time", NULL, METH_VARARGS},
   {"date", NULL, METH_VARARGS},
@@ -735,6 +736,7 @@ static struct PyMethodDef _pycompositearguments_methods[] =
   {"elangle", NULL, METH_VARARGS},
   {"range", NULL, METH_VARARGS},
   {"strategy", NULL, METH_VARARGS},
+  {"qiFieldName", NULL, METH_VARARGS},
   {"addArgument", (PyCFunction) _pycompositearguments_addArgument, 1,
     "addArgument(name, value) \n\n"
     "Adds an argument.\n"
@@ -880,6 +882,9 @@ static PyObject* _pycompositearguments_getattro(PyCompositeArguments* self, PyOb
     } else {
       return PyString_FromString(CompositeArguments_getProduct(self->args));
     }
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "compositing_product") == 0) {
+    Rave_CompositingProduct t = CompositeArguments_getCompositingProduct(self->args);
+    return PyLong_FromLong(t);
   } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "product_type") == 0) {
     Rave_ProductType t = CompositeArguments_getProductType(self->args);
     return PyLong_FromLong(t);
@@ -906,6 +911,12 @@ static PyObject* _pycompositearguments_getattro(PyCompositeArguments* self, PyOb
       Py_RETURN_NONE;
     } else {
       return PyString_FromString(CompositeArguments_getStrategy(self->args));
+    }
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "qiFieldName") == 0) {
+    if (CompositeArguments_getQIFieldName(self->args) == NULL) {
+      Py_RETURN_NONE;
+    } else {
+      return PyString_FromString(CompositeArguments_getQIFieldName(self->args));
     }
   }
   return PyObject_GenericGetAttr((PyObject*)self, name);
@@ -1008,75 +1019,20 @@ static int _pycompositearguments_setattro(PyCompositeArguments* self, PyObject* 
     } else {
       raiseException_gotoTag(done, PyExc_ValueError,"strategy must be a string or None");
     }
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "qiFieldName") == 0) {
+    if (PyString_Check(val)) {
+      if (!CompositeArguments_setQIFieldName(self->args, PyString_AsString(val))) {
+        raiseException_gotoTag(done, PyExc_ValueError, "Failed to set qiFieldName");
+      }
+    } else if (val == Py_None) {
+      CompositeArguments_setQIFieldName(self->args, NULL);
+    } else {
+      raiseException_gotoTag(done, PyExc_ValueError,"qiFieldName must be a string");
+    }
+
   } else {
     raiseException_gotoTag(done, PyExc_AttributeError, PY_RAVE_ATTRO_NAME_TO_STRING(name));
   }
-
-//   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("product", name) == 0) {
-//     if (PyInt_Check(val)) {
-//       Composite_setProduct(self->composite, PyInt_AsLong(val));
-//     } else {
-//       raiseException_gotoTag(done, PyExc_TypeError, "product must be a valid product type")
-//     }
-//   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("selection_method", name) == 0) {
-//     if (!PyInt_Check(val) || !Composite_setSelectionMethod(self->composite, PyInt_AsLong(val))) {
-//       raiseException_gotoTag(done, PyExc_ValueError, "not a valid selection method");
-//     }
-//   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("interpolation_method", name) == 0) {
-//     if (!PyInt_Check(val) || !Composite_setInterpolationMethod(self->composite, PyInt_AsLong(val))) {
-//       raiseException_gotoTag(done, PyExc_ValueError, "not a valid interpolation method");
-//     }
-//   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("interpolate_undetect", name) == 0) {
-//     if (PyBool_Check(val)) {
-//       if (PyObject_IsTrue(val)) {
-//         Composite_setInterpolateUndetect(self->composite, 1);
-//       } else {
-//         Composite_setInterpolateUndetect(self->composite, 0);
-//       }
-//     } else {
-//       raiseException_gotoTag(done, PyExc_ValueError, "interpolate_undetect must be a bool");
-//     }
-//   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("time", name) == 0) {
-//     if (PyString_Check(val)) {
-//       if (!Composite_setTime(self->composite, PyString_AsString(val))) {
-//         raiseException_gotoTag(done, PyExc_ValueError, "time must be in the format HHmmss");
-//       }
-//     } else if (val == Py_None) {
-//       Composite_setTime(self->composite, NULL);
-//     } else {
-//       raiseException_gotoTag(done, PyExc_ValueError,"time must be of type string");
-//     }
-//   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("date", name) == 0) {
-//     if (PyString_Check(val)) {
-//       if (!Composite_setDate(self->composite, PyString_AsString(val))) {
-//         raiseException_gotoTag(done, PyExc_ValueError, "date must be in the format YYYYMMSS");
-//       }
-//     } else if (val == Py_None) {
-//       Composite_setDate(self->composite, NULL);
-//     } else {
-//       raiseException_gotoTag(done, PyExc_ValueError,"date must be of type string");
-//     }
-//   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("quality_indicator_field_name", name) == 0) {
-//     if (PyString_Check(val)) {
-//       if (!Composite_setQualityIndicatorFieldName(self->composite, PyString_AsString(val))) {
-//         raiseException_gotoTag(done, PyExc_MemoryError, "Failed to set quality indicator field name");
-//       }
-//     } else if (val == Py_None) {
-//       Composite_setQualityIndicatorFieldName(self->composite, NULL);
-//     } else {
-//       raiseException_gotoTag(done, PyExc_ValueError, "quality_indicator_field_name must be a string");
-//     }
-//   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("algorithm", name) == 0) {
-//     if (val == Py_None) {
-//       Composite_setAlgorithm(self->composite, NULL);
-//     } else if (PyCompositeAlgorithm_Check(val)) {
-//       Composite_setAlgorithm(self->composite, ((PyCompositeAlgorithm*)val)->algorithm);
-//     } else {
-//       raiseException_gotoTag(done, PyExc_TypeError, "algorithm must either be None or a CompositeAlgorithm");
-//     }
-//   } else {
-//     raiseException_gotoTag(done, PyExc_AttributeError, PY_RAVE_ATTRO_NAME_TO_STRING(name));
-//   }
 
   result = 0;
 done:
@@ -1225,15 +1181,15 @@ static PyMethodDef functions[] = {
  * @param[in] name - the name of the constant
  * @param[in] value - the value
  */
-// static void add_long_constant(PyObject* dictionary, const char* name, long value)
-// {
-//   PyObject* tmp = NULL;
-//   tmp = PyInt_FromLong(value);
-//   if (tmp != NULL) {
-//     PyDict_SetItemString(dictionary, name, tmp);
-//   }
-//   Py_XDECREF(tmp);
-// }
+static void add_long_constant(PyObject* dictionary, const char* name, long value)
+{
+  PyObject* tmp = NULL;
+  tmp = PyInt_FromLong(value);
+  if (tmp != NULL) {
+    PyDict_SetItemString(dictionary, name, tmp);
+  }
+  Py_XDECREF(tmp);
+}
 
 MOD_INIT(_compositearguments)
 {
@@ -1263,6 +1219,16 @@ MOD_INIT(_compositearguments)
     Py_FatalError("Can't define _compositearguments.error");
     return MOD_INIT_ERROR;
   }
+
+  add_long_constant(dictionary, "Rave_CompositingProduct_PPI", Rave_CompositingProduct_PPI);
+  add_long_constant(dictionary, "Rave_CompositingProduct_CAPPI", Rave_CompositingProduct_CAPPI);
+  add_long_constant(dictionary, "Rave_CompositingProduct_PCAPPI", Rave_CompositingProduct_PCAPPI);
+  add_long_constant(dictionary, "Rave_CompositingProduct_ETOP", Rave_CompositingProduct_ETOP);
+  add_long_constant(dictionary, "Rave_CompositingProduct_MAX", Rave_CompositingProduct_MAX);
+  add_long_constant(dictionary, "Rave_CompositingProduct_RR", Rave_CompositingProduct_RR);
+  add_long_constant(dictionary, "Rave_CompositingProduct_PMAX", Rave_CompositingProduct_PMAX);
+  add_long_constant(dictionary, "Rave_CompositingProduct_ACQVA", Rave_CompositingProduct_ACQVA);
+  add_long_constant(dictionary, "Rave_CompositingProduct_UNDEFINED", Rave_CompositingProduct_UNDEFINED);
 
   import_pyarea();
   import_pypolarvolume();

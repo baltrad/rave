@@ -277,7 +277,7 @@ Cartesian_t* AcqvaCompositeGeneratorFactory_generate(CompositeGeneratorFactory_t
   nradars = CompositeArguments_getNumberOfObjects(arguments);
   nqualityflags = CompositeArguments_getNumberOfQualityFlags(arguments);
 
-  if (!CompositeUtils_addQualityFlagsToCartesian(arguments, cartesian, ACQVA_QUALITY_FLAG_DEFINITIONS, &nqualityflags)) {
+  if (!CompositeUtils_addQualityFlagsToCartesian(arguments, cartesian, ACQVA_QUALITY_FLAG_DEFINITIONS)) {
     RAVE_ERROR0("Failed to add quality flags to product");
     goto fail;
   }

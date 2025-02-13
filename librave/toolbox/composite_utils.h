@@ -36,6 +36,22 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include <strings.h>
 
 /**
+ * Function pointer that can be used if you want to redirect a call to getting polar value data to a specific function for a specific quantity.
+ *
+ * @param[in] extradata - the extradata passed to the \ref CompositeEngine_generate function.
+ * @param[in] arguments -the arguments used when calling \ref CompositeEngine_generate function.
+ * @param[in] object - the rave object to process
+ * @param[in] quantity - the quantity
+ * @param[in] navinfo - navigation info for position in radar data
+ * @param[in] qiFieldName - name of the quality field if that also should be retrieved
+ * @param[out] otype - the rave type of value
+ * @param[out] ovalue - the value
+ * @param[out] qivalue - the quality value
+ * @return 1 on success otherwise 0
+ */
+typedef int(*composite_utils_getPolarValueAtPosition_fun)(void* extradata, CompositeArguments_t* arguments, RaveCoreObject* object, const char* quantity, PolarNavigationInfo* navinfo, const char* qiFieldName, RaveValueType* otype, double* ovalue, double* qivalue);
+
+/**
  * This structure can be used to keep track of what value that should be used
  * when calculating what value to be used for a position.
  */
@@ -48,6 +64,14 @@ typedef struct CompositeUtilValue_t {
   const char* name;   /**< name of quantity */
   PolarNavigationInfo navinfo; /**< the navigation info */
   CartesianParam_t* parameter; /**< the cartesian parameter */
+  double qivalue;     /**< quality value */
+  double extra1;      /**< extra value 1 */
+  double extra2;      /**< extra value 2 */
+  double extra3;      /**< extra value 3 */
+  double extra4;      /**< extra value 4 */
+  void* extraptr;     /**< extra pointer, this memory need to be allocated using RAVE_MALLOC and will be released when this object is freed but not when reset. */
+  composite_utils_getPolarValueAtPosition_fun getPolarValueAtPosition; /**< specific get polar value at position  */
+  void* extradata; /**< will be provided to the extradata pointer in the function call */
 } CompositeUtilValue_t;
 
 /**
@@ -131,6 +155,7 @@ int CompositeUtils_getObjectSource(RaveCoreObject* obj, char* source, int nlen);
 
 /**
  * Creates the binding between radar objects and the pipelines that are relevant when creating composites.
+ * The order of the binding will be the same as the objects in the arguments at time the object is 
  * @param[in] arguments - the arguments (containing the radar objects)
  * @param[in] cartesian - the target composite 
  * @param[out] nobject - the number of items in the returned array
@@ -160,7 +185,6 @@ void CompositeUtils_getQualityFlagSettings(CompositeQualityFlagSettings_t* setti
  * Creates all quality flags specified in the arguments and add them to the cartesian product.
  * @param[in] arguments - the arguments (containing the list of quality flags)
  * @param[in] cartesian - the product to which the quality fields should be added
- * @param[out] nqualityflags - the number of quality flags added (may be NULL). Can also be retrieved by CompositeArguments_getNumberOfArguments().
  * @param[in] settings - the settings of specific quality flags. Should be defined as 
  * CompositeQualityFlagSettings_t settings[] = {
  *   {<qualityflag>, <datatype>, <offset>, <gain>},
@@ -170,7 +194,7 @@ void CompositeUtils_getQualityFlagSettings(CompositeQualityFlagSettings_t* setti
  * since the loop will break at the first qualityflag == NULL.
  * @return 1 on success otherwise 0
  */
-int CompositeUtils_addQualityFlagsToCartesian(CompositeArguments_t* arguments, Cartesian_t* cartesian, CompositeQualityFlagSettings_t* settings, int* nqualityflags);
+int CompositeUtils_addQualityFlagsToCartesian(CompositeArguments_t* arguments, Cartesian_t* cartesian, CompositeQualityFlagSettings_t* settings);
 
 /**
  * Adds what/gain and what/offset to the RaveField.
@@ -194,6 +218,19 @@ int CompositeUtils_addGainAndOffsetToField(RaveField_t* field, double gain, doub
 RaveField_t* CompositeUtils_createQualityField(const char* howtaskvaluestr, int xsize, int ysize, RaveDataType datatype, double gain, double offset);
 
 /**
+ * Gets the value(s) at the specified position for the specified quantity.
+ * @param[in] obj - the object
+ * @param[in] quantity - the quantity
+ * @param[in] nav - the navigation information
+ * @param[in] qiFieldName - the name of the quality field (may be NULL)
+ * @param[out] type - the value type
+ * @param[out] value - the value
+ * @param[out] qualityValue - the quality value, may be NULL
+ * @return 1 on success or 0 if value not could be retrieved
+ */
+int CompositeUtils_getPolarValueAtPosition(RaveCoreObject* obj, const char* quantity, PolarNavigationInfo* nav, const char* qiFieldName, RaveValueType* type, double* value, double* qualityValue);
+
+/**
  * Gets the quality value at the specified position for the specified quantity and quality field in a polar object.
  * @param[in] obj - the object (Must be PolarScan or PolarVolume)
  * @param[in] quantity - the quantity
@@ -203,6 +240,34 @@ RaveField_t* CompositeUtils_createQualityField(const char* howtaskvaluestr, int 
  * @return 1 on success or 0 if value not could be retrieved
  */
 int CompositeUtils_getPolarQualityValueAtPosition(RaveCoreObject* obj, const char* quantity, const char* qualityField, PolarNavigationInfo* nav, double* value);
+
+/**
+ * Returns the vertical max value for the specified quantity at the provided lon/lat position.
+ * If no suitable value is found, vtype and vvalue will be left as is.
+ *
+ * @param[in] object - the polar object (MUST NOT BE NULL)
+ * @param[in] quantity - the parameter
+ * @param[in] qiFieldName - the quality field name (if qiv should be set), may be NULL
+ * @param[in] lon - longitude in radians
+ * @param[in] lat - latitude in radians
+ * @param[out] vtype - the value type (MUST NOT BE NULL)
+ * @param[out] vvalue - the value (MUST NOT BE NULL)
+ * @param[out] navinfo - the navigation information (MAY BE NULL)
+ * @param[out] qiv - the quality value (MAY BE NULL)
+ * @return 1 on success or 0 on failure.
+ */
+int CompositeUtils_getVerticalMaxValue(
+  RaveCoreObject* object,
+  const char* quantity,
+  const char* qiFieldName,
+  double lon,
+  double lat,
+  RaveValueType* vtype,
+  double* vvalue,
+  PolarNavigationInfo* navinfo,
+  double* qiv);
+
+
 
 /**
  * Clones a RaveList of strings.

@@ -44,7 +44,7 @@ typedef struct _CompositeArguments_t CompositeArguments_t;
  */
 extern RaveCoreObjectType CompositeArguments_TYPE;
 
-typedef enum Rave_CompositingMethod {
+typedef enum Rave_CompositingProduct {
   Rave_CompositingProduct_PPI,    /**< PPI */
   Rave_CompositingProduct_CAPPI,  /**< CAPPI */
   Rave_CompositingProduct_PCAPPI, /**< PCAPPI */
@@ -109,6 +109,13 @@ int CompositeArguments_setProduct(CompositeArguments_t* args, const char* produc
  * @returns the compositing product
  */
 const char* CompositeArguments_getProduct(CompositeArguments_t* args);
+
+/**
+ * If the product could be translated to a compositing product, this will be returned.
+ * @param[in] args - self
+ * @return the compositing product
+ */
+Rave_CompositingProduct CompositeArguments_getCompositingProduct(CompositeArguments_t* args);
 
 /**
  * In some cases it is possible to translate a \ref Rave_CompositingProduct into a \ref Rave_ProductType.
@@ -351,6 +358,22 @@ RaveCoreObject* CompositeArguments_getObject(CompositeArguments_t* args, int ind
  * @return the radar index or 0 on failure
  */
 int CompositeArguments_getObjectRadarIndexValue(CompositeArguments_t* args, int index);
+
+/**
+ * If a quality field based algorithm is implemented, this field can be set to indicate
+ * what field to use. If not enough it is also possible to use arguments.
+ * @param[in] args - self
+ * @param[in] fieldname - name of quality field to use
+ * @return 1 if possible to set, otherwise 0
+ */
+int CompositeArguments_setQIFieldName(CompositeArguments_t* args, const char* fieldname);
+
+/**
+ * Returns the name of the field to use when implementing a quality based compositing.
+ * @param[in] args - self
+ * @return the quality field name or NULL
+ */
+const char* CompositeArguments_getQIFieldName(CompositeArguments_t* args);
 
 /**
  * Adds a quality flag that should be generated during processing.

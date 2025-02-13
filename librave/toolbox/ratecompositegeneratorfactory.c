@@ -45,27 +45,7 @@ typedef struct _RateCompositeGeneratorFactory_t {
   CompositeEngine_t* engine; /**< the compositing engine */
 } RateCompositeGeneratorFactory_t;
 
-
-typedef struct InterpolationMethodMapping_t {
-  const char* methodstr;
-  CompositeInterpolationMethod_t method;
-} InterpolationMethodMapping_t;
-
-static InterpolationMethodMapping_t INTERPOLATION_MAPPING[] = {
-  {"NEAREST", CompositeInterpolationMethod_NEAREST},
-  {"LINEAR_HEIGHT", CompositeInterpolationMethod_LINEAR_HEIGHT},
-  {"LINEAR_RANGE", CompositeInterpolationMethod_LINEAR_RANGE},
-  {"LINEAR_AZIMUTH", CompositeInterpolationMethod_LINEAR_AZIMUTH},
-  {"LINEAR_RANGE_AND_AZIMUTH", CompositeInterpolationMethod_LINEAR_RANGE_AND_AZIMUTH},
-  {"LINEAR_3D", CompositeInterpolationMethod_LINEAR_3D},
-  {"QUADRATIC_HEIGHT", CompositeInterpolationMethod_QUADRATIC_HEIGHT},
-  {"QUADRATIC_3D", CompositeInterpolationMethod_QUADRATIC_3D},
-  {NULL, CompositeInterpolationMethod_NEAREST}
-};
-
-int RateCompositeGeneratorFactory_getLonLat(void* extradata, RaveCoreObject* object, ProjectionPipeline_t* pipeline, double herex, double herey, double* olon, double* olat);
-
-int RateCompositeGeneratorFactory_selectRadarData(void* extradata, RaveCoreObject* object, double olon, double olat, CompositeUtilValue_t* cvalues, int ncvalues);
+int RateCompositeGeneratorFactory_getPolarValueAtPosition(void* extradata, CompositeArguments_t* arguments, RaveCoreObject* object, const char* quantity, PolarNavigationInfo* navinfo, const char* qiFieldName, RaveValueType* otype, double* ovalue, double* qivalue);
 
 /*@{ Private functions */
 /**
@@ -86,13 +66,8 @@ static int RateCompositeGeneratorFactory_constructor(RaveCoreObject* obj)
     goto fail;
   }
 
-  if (!CompositeEngine_setLonLatFunction(this->engine, &RateCompositeGeneratorFactory_getLonLat)) {
-    RAVE_ERROR0("Failed to set lon lat function!!!!");
-    goto fail;
-  }
-
-  if (!CompositeEngine_setSelectRadarDataFunction(this->engine, &RateCompositeGeneratorFactory_selectRadarData)) {
-    RAVE_ERROR0("Failed to set select radar data function!!!!");
+  if (!CompositeEngine_registerPolarValueAtPositionFunction(this->engine, "RATE", RateCompositeGeneratorFactory_getPolarValueAtPosition)) {
+    RAVE_ERROR0("Failed to set getPolarValueAtPosition function for RATE");
     goto fail;
   }
 
@@ -122,13 +97,8 @@ static int RateCompositeGeneratorFactory_copyconstructor(RaveCoreObject* obj, Ra
     goto fail;
   }
 
-  if (!CompositeEngine_setLonLatFunction(this->engine, &RateCompositeGeneratorFactory_getLonLat)) {
-    RAVE_ERROR0("Failed to set lon lat function!!!!");
-    goto fail;
-  }
-
-  if (!CompositeEngine_setSelectRadarDataFunction(this->engine, &RateCompositeGeneratorFactory_selectRadarData)) {
-    RAVE_ERROR0("Failed to set select radar data function!!!!");
+  if (!CompositeEngine_registerPolarValueAtPositionFunction(this->engine, "RATE", RateCompositeGeneratorFactory_getPolarValueAtPosition)) {
+    RAVE_ERROR0("Failed to set getPolarValueAtPosition function for RATE");
     goto fail;
   }
 
@@ -148,29 +118,22 @@ static void RateCompositeGeneratorFactory_destructor(RaveCoreObject* obj)
   RAVE_OBJECT_RELEASE(this->engine);
 }
 
-static CompositeInterpolationMethod_t RateCompositeGeneratorFactoryInternal_getInterpolationMethod(const char* method)
+int RateCompositeGeneratorFactory_getPolarValueAtPosition(void* extradata, CompositeArguments_t* arguments, RaveCoreObject* object, const char* quantity, PolarNavigationInfo* navinfo, const char* qiFieldName, RaveValueType* otype, double* ovalue, double* qivalue)
 {
-  int ctr = 0;
-  while (INTERPOLATION_MAPPING[ctr].methodstr != NULL) {
-    if (strcasecmp(INTERPOLATION_MAPPING[ctr].methodstr, method) == 0) {
-      return INTERPOLATION_MAPPING[ctr].method;
-    }
-    ctr++;
+  RateCompositeGeneratorFactory_t* self = (RateCompositeGeneratorFactory_t*)extradata;
+  int result = 0;
+  if (quantity == NULL) {
+    return 0;
   }
-  return CompositeInterpolationMethod_NEAREST;
+  if (strcasecmp("RATE", quantity) == 0) {
+    result = CompositeEngineUtility_getPolarValueAtPosition(extradata, arguments, object, "DBZH", navinfo, qiFieldName, otype, ovalue, qivalue);
+  } else {
+    result = CompositeEngineUtility_getPolarValueAtPosition(extradata, arguments, object, quantity, navinfo, qiFieldName, otype, ovalue, qivalue);
+  }
+
+  return result;
 }
 
-int RateCompositeGeneratorFactory_getLonLat(void* extradata, RaveCoreObject* object, ProjectionPipeline_t* pipeline, double herex, double herey, double* olon, double* olat)
-{
-  fprintf(stderr, "Getting lon/lat data\n");
-  return 0;
-}
-
-int RateCompositeGeneratorFactory_selectRadarData(void* extradata, RaveCoreObject* object, double olon, double olat, CompositeUtilValue_t* cvalues, int ncvalues)
-{
-  fprintf(stderr, "Getting select radar data\n");
-  return 0;
-}
 
 /*@} End of Private functions */
 
@@ -183,7 +146,6 @@ const char* RateCompositeGeneratorFactory_getName(CompositeGeneratorFactory_t* s
 {
   return "RateCompositeGenerator";
 }
-
 
 /**
  * @returns the default id of this factory
@@ -213,121 +175,6 @@ int RateCompositeGeneratorFactory_canHandle(CompositeGeneratorFactory_t* self, C
 Cartesian_t* RateCompositeGeneratorFactory_generate(CompositeGeneratorFactory_t* self, CompositeArguments_t* arguments)
 {
   return CompositeEngine_generate(((RateCompositeGeneratorFactory_t*)self)->engine, arguments, (void*)self);
-//   Composite_t* composite = NULL;
-//   Cartesian_t* result = NULL;
-//   RaveAttribute_t* attr = NULL;
-//   Area_t* area = NULL;
-//   RaveList_t* qualityflags = NULL;
-
-//   RAVE_ASSERT((self != NULL), "self == NULL");
-//   if (arguments == NULL) {
-//     RAVE_ERROR0("Must provide arguments when generating the composite");
-//     return NULL;
-//   }
-//   area = CompositeArguments_getArea(arguments);
-//   if (area == NULL) {
-//     RAVE_ERROR0("Missing area in arguments");
-//     return NULL;
-//   }
-
-//   composite = RAVE_OBJECT_NEW(&Composite_TYPE);
-//   if (composite != NULL) {
-//     int i = 0;
-//     int nobjects = CompositeArguments_getNumberOfObjects(arguments);
-//     int nrparams = CompositeArguments_getParameterCount(arguments);
-//     Rave_ProductType prodtype = CompositeArguments_getProductType(arguments);
-
-//     if (prodtype == Rave_ProductType_UNDEFINED) {
-//       if (CompositeArguments_getProduct(arguments) != NULL) {
-//         RAVE_ERROR1("Can't support product: %s\n", CompositeArguments_getProduct(arguments));
-//         goto done;
-//       } else {
-//         RAVE_ERROR0("No product has been set\n");
-//         goto done;
-//       }
-//     }
-//     Composite_setProduct(composite, prodtype);
-
-//     Composite_setSelectionMethod(composite, CompositeSelectionMethod_NEAREST);
-//     attr = CompositeArguments_getArgument(arguments, "selection_method");
-//     if (attr != NULL) {
-//       char* v = NULL;
-//       if (RaveAttribute_getString(attr, &v)) {
-//         if (strcasecmp("HEIGHT_ABOVE_SEALEVEL", v) == 0) {
-//           Composite_setSelectionMethod(composite, CompositeSelectionMethod_HEIGHT);
-//         }
-//       }
-//       RAVE_OBJECT_RELEASE(attr);
-//     }
-
-//     Composite_setInterpolationMethod(composite, CompositeInterpolationMethod_NEAREST);
-//     attr = CompositeArguments_getArgument(arguments, "interpolation_method");
-//     if (attr != NULL) {
-//       char* v = NULL;
-//       if (RaveAttribute_getString(attr, &v)) {
-//         Composite_setInterpolationMethod(composite, LegacyCompositeGeneratorFactoryInternal_getInterpolationMethod(v));
-//       }
-//       RAVE_OBJECT_RELEASE(attr);
-//     }
-
-//     attr = CompositeArguments_getArgument(arguments, "quality_indicator_field");
-//     if (attr != NULL) {
-//       char* v = NULL;
-//       if (RaveAttribute_getString(attr, &v)) {
-//         Composite_setQualityIndicatorFieldName(composite, v);
-//       }
-//       RAVE_OBJECT_RELEASE(attr);
-//     }
-
-//     Composite_setHeight(composite, CompositeArguments_getHeight(arguments));
-//     Composite_setElevationAngle(composite, CompositeArguments_getElevationAngle(arguments));
-//     Composite_setRange(composite, CompositeArguments_getRange(arguments));
-
-//     attr = CompositeArguments_getArgument(arguments, "quality_indicator_field");
-//     if (attr != NULL) {
-//       char* v = NULL;
-//       if (RaveAttribute_getString(attr, &v)) {
-//         Composite_setQualityIndicatorFieldName(composite, v);
-//       }
-//       RAVE_OBJECT_RELEASE(attr);
-//     }
-
-//     for (i = 0; i < nrparams; i++) {
-//       double gain = 0.0, offset = 0.0, nodata = 0.0, undetect = 0.0;
-//       RaveDataType datatype = RaveDataType_UCHAR;
-//       const char* quantity = CompositeArguments_getParameterAtIndex(arguments, i, &gain, &offset, &datatype, &nodata, &undetect);
-//       if (!Composite_addParameter(composite, quantity, gain, offset, -30.0)) {
-//         RAVE_ERROR0("Could not add parameter to composite generator");
-//         goto done;
-//       }
-//     }
-
-//     for (i = 0; i < nobjects; i++) {
-//       RaveCoreObject* object = CompositeArguments_getObject(arguments, i);
-//       if (object == NULL || !Composite_add(composite, object)) {
-//         RAVE_ERROR0("Failed to add object to composite");
-//         RAVE_OBJECT_RELEASE(object);
-//         goto done;
-//       }
-//       RAVE_OBJECT_RELEASE(object);
-//     }
-    
-//     Composite_setTime(composite, CompositeArguments_getTime(arguments));
-//     Composite_setDate(composite, CompositeArguments_getDate(arguments));
-
-//     qualityflags = CompositeArguments_getQualityFlags(arguments);
-
-//     result = Composite_generate(composite, area, qualityflags);
-//   }
-// done:
-//   RAVE_OBJECT_RELEASE(composite);
-//   RAVE_OBJECT_RELEASE(attr);
-//   RAVE_OBJECT_RELEASE(area);
-//   if (qualityflags != NULL) {
-//     RaveList_freeAndDestroy(&qualityflags);
-//   }
-
-//   return result;
 }
 
 /**
