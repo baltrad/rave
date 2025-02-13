@@ -17,7 +17,7 @@ You should have received a copy of the GNU Lesser General Public License
 along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ------------------------------------------------------------------------*/
 /**
- * Python version of the Rate composite handling as a factory.
+ * Python version of the Nearest composite handling as a factory.
  * @file
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2025-01-31
@@ -30,12 +30,12 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "pyrave_debug.h"
 #include "pycompositegeneratorfactory.h"
 #include "rave_alloc.h"
-#include "ratecompositegeneratorfactory.h"
+#include "nearestcompositegeneratorfactory.h"
 
 /**
  * This modules name
  */
-PYRAVE_DEBUG_MODULE("_ratecompositegeneratorfactory");
+PYRAVE_DEBUG_MODULE("_nearestcompositegeneratorfactory");
 
 /**
  * Sets a python exception and goto tag
@@ -55,16 +55,16 @@ PYRAVE_DEBUG_MODULE("_ratecompositegeneratorfactory");
 static PyObject *ErrorObject;
 
 /*@{ PooCompositeAlgorithm */
-static PyObject* _ratecompositegeneratorfactory_new(PyObject* self, PyObject* args)
+static PyObject* _nearestcompositegeneratorfactory_new(PyObject* self, PyObject* args)
 {
-  RateCompositeGeneratorFactory_t* factory = NULL;
+  NearestCompositeGeneratorFactory_t* factory = NULL;
   PyObject* result = NULL;
 
   if (!PyArg_ParseTuple(args, "")) {
     return NULL;
   }
   
-  factory = RAVE_OBJECT_NEW(&RateCompositeGeneratorFactory_TYPE);
+  factory = RAVE_OBJECT_NEW(&NearestCompositeGeneratorFactory_TYPE);
   if (factory != NULL) {
     result = (PyObject*)PyCompositeGeneratorFactory_New((CompositeGeneratorFactory_t*)factory);
   }
@@ -78,21 +78,21 @@ static PyObject* _ratecompositegeneratorfactory_new(PyObject* self, PyObject* ar
 
 /*@{ Module setup */
 static PyMethodDef functions[] = {
-  {"new", (PyCFunction)_ratecompositegeneratorfactory_new, 1},
+  {"new", (PyCFunction)_nearestcompositegeneratorfactory_new, 1},
   {NULL, NULL} /*Sentinel*/
 };
 
-MOD_INIT(_ratecompositegeneratorfactory)
+MOD_INIT(_nearestcompositegeneratorfactory)
 {
   PyObject *module=NULL,*dictionary=NULL;
-  MOD_INIT_DEF(module, "_ratecompositegeneratorfactory", NULL/*doc*/, functions);
+  MOD_INIT_DEF(module, "_nearestcompositegeneratorfactory", NULL/*doc*/, functions);
   if (module == NULL) {
     return MOD_INIT_ERROR;
   }
   dictionary = PyModule_GetDict(module);
-  ErrorObject = PyErr_NewException("_ratecompositegeneratorfactory.error", NULL, NULL);
+  ErrorObject = PyErr_NewException("_nearestcompositegeneratorfactory.error", NULL, NULL);
   if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
-    Py_FatalError("Can't define _ratecompositegeneratorfactory.error");
+    Py_FatalError("Can't define _nearestcompositegeneratorfactory.error");
     return MOD_INIT_ERROR;
   }
 

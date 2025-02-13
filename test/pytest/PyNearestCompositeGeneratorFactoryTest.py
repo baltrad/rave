@@ -30,12 +30,12 @@ import _area
 import _projection
 import _polarscan
 import _polarvolume
-import _ratecompositegeneratorfactory
+import _nearestcompositegeneratorfactory
 import _raveio
 import string
 import math
 
-class PyRateCompositeGeneratorFactoryTest(unittest.TestCase):
+class PyNearestCompositeGeneratorFactoryTest(unittest.TestCase):
   SWEDISH_VOLUMES = ["fixtures/pvol_seang_20090501T120000Z.h5",
                      "fixtures/pvol_searl_20090501T120000Z.h5",
                      "fixtures/pvol_sease_20090501T120000Z.h5",
@@ -79,56 +79,54 @@ class PyRateCompositeGeneratorFactoryTest(unittest.TestCase):
     
     return area
 
-  def Xtest_new(self):
-    obj = _ratecompositegeneratorfactory.new()
+  def test_new(self):
+    obj = _nearestcompositegeneratorfactory.new()
     iscorrect = str(type(obj)).find("CompositeGeneratorFactoryCore")
     self.assertNotEqual(-1, iscorrect)
 
-  def Xtest_getName(self):
-    obj = _ratecompositegeneratorfactory.new()
-    self.assertEqual("RateCompositeGenerator", obj.getName())
+  def test_getName(self):
+    obj = _nearestcompositegeneratorfactory.new()
+    self.assertEqual("NearestCompositeGenerator", obj.getName())
 
-  def Xtest_getDefaultId(self):
-    obj = _ratecompositegeneratorfactory.new()
-    self.assertEqual("rate", obj.getDefaultId())
+  def test_getDefaultId(self):
+    obj = _nearestcompositegeneratorfactory.new()
+    self.assertEqual("nearest", obj.getDefaultId())
 
-  def Xtest_canHandle_products(self):
+  def test_canHandle_products(self):
     # Rave_ProductType_MAX & NEAREST
     # Rave_ProductType_PMAX & NEAREST
-    #
-    # Rave_ProductType_MAX
-    # Rave_ProductType_PPI
-    # Rave_ProductType_PCAPPI
-    # Rave_ProductType_CAPPI
-
-    classUnderTest = _legacycompositegeneratorfactory.new()
-    for product in ["PPI", "PCAPPI", "CAPPI"]:
+    # Rave_ProductType_PPI & NEAREST
+    # Rave_ProductType_PCAPPI & NEAREST
+    # Rave_ProductType_CAPPI & NEAREST
+    # 
+    classUnderTest = _nearestcompositegeneratorfactory.new()
+    for product in ["MAX", "PMAX", "PPI", "PCAPPI", "CAPPI"]:
       args = _compositearguments.new()
       args.product = product
       self.assertEqual(True, classUnderTest.canHandle(args))
 
-    for product in ["MAX", "PMAX"]:
+    for product in ["MAX", "PMAX", "PPI", "PCAPPI", "CAPPI"]:
       args = _compositearguments.new()
       args.product = product
       args.addArgument("interpolation_method", "NEAREST")
       self.assertEqual(True, classUnderTest.canHandle(args))
+
+    for product in ["MAX", "PMAX", "PPI", "PCAPPI", "CAPPI"]:
+      args = _compositearguments.new()
+      args.product = product
+      args.addArgument("interpolation_method", "3D")
+      self.assertEqual(False, classUnderTest.canHandle(args))
 
     for product in ["SCAN", "ETOP", "RHI"]:
       args = _compositearguments.new()
       args.product = product
       self.assertEqual(False, classUnderTest.canHandle(args))
 
-    for product in ["MAX", "PMAX"]:
-      args = _compositearguments.new()
-      args.product = product
-      args.addArgument("interpolation_method", "3D")
-      self.assertEqual(False, classUnderTest.canHandle(args))
-
   def test_generate(self):
     #import _rave
     #_rave.setTrackObjectCreation(True)
     #_rave.setDebugLevel(_rave.Debug_RAVE_SPEWDEBUG)
-    classUnderTest = _ratecompositegeneratorfactory.new()
+    classUnderTest = _nearestcompositegeneratorfactory.new()
 
     args = _compositearguments.new()
 

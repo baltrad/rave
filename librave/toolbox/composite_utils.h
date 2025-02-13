@@ -65,11 +65,6 @@ typedef struct CompositeUtilValue_t {
   PolarNavigationInfo navinfo; /**< the navigation info */
   CartesianParam_t* parameter; /**< the cartesian parameter */
   double qivalue;     /**< quality value */
-  double extra1;      /**< extra value 1 */
-  double extra2;      /**< extra value 2 */
-  double extra3;      /**< extra value 3 */
-  double extra4;      /**< extra value 4 */
-  void* extraptr;     /**< extra pointer, this memory need to be allocated using RAVE_MALLOC and will be released when this object is freed but not when reset. */
   composite_utils_getPolarValueAtPosition_fun getPolarValueAtPosition; /**< specific get polar value at position  */
   void* extradata; /**< will be provided to the extradata pointer in the function call */
 } CompositeUtilValue_t;

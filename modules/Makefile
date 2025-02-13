@@ -285,9 +285,9 @@ SOURCE_55= pycompositefactorymanager.c
 OBJECTS_55= $(SOURCE_55:.c=.o)
 TARGET_55= _compositefactorymanager.so
 
-SOURCE_56= pyratecompositegeneratorfactory.c
+SOURCE_56= pynearestcompositegeneratorfactory.c
 OBJECTS_56= $(SOURCE_56:.c=.o)
-TARGET_56= _ratecompositegeneratorfactory.so
+TARGET_56= _nearestcompositegeneratorfactory.so
 
 TARGETS=$(TARGET_1) $(TARGET_2) $(TARGET_3) $(TARGET_4) $(TARGET_5) $(TARGET_6) \
 		$(TARGET_7) $(TARGET_8) $(TARGET_9) $(TARGET_10) $(TARGET_11) $(TARGET_12) $(TARGET_13) \

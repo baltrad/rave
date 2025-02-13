@@ -17,14 +17,14 @@ You should have received a copy of the GNU Lesser General Public License
 along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ------------------------------------------------------------------------*/
 /**
- * The RATE composite factory
+ * The NEAREST composite factory
  *
  * @file
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
- * @date 2025-10-10
+ * @date 2025-01-10
  */
-#ifndef RATE_COMPOSITE_GENERATOR_FACTORY_H
-#define RATE_COMPOSITE_GENERATOR_FACTORY_H
+#ifndef NEAREST_COMPOSITE_GENERATOR_FACTORY_H
+#define NEAREST_COMPOSITE_GENERATOR_FACTORY_H
 
 #include "compositearguments.h"
 #include "compositegeneratorfactory.h"
@@ -38,37 +38,37 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 /**
  * Defines a Composite generator plugin
  */
-typedef struct _RateCompositeGeneratorFactory_t RateCompositeGeneratorFactory_t;
+typedef struct _NearestCompositeGeneratorFactory_t NearestCompositeGeneratorFactory_t;
 
 /**
  * Type definition to use when creating a rave object.
  */
-extern RaveCoreObjectType RateCompositeGeneratorFactory_TYPE;
+extern RaveCoreObjectType NearestCompositeGeneratorFactory_TYPE;
 
 /**
  * @returns the name of this factory
  */
-const char* RateCompositeGeneratorFactory_getName(CompositeGeneratorFactory_t* self);
+const char* NearestCompositeGeneratorFactory_getName(CompositeGeneratorFactory_t* self);
 
 /**
  * @returns the default id of this factory
  */
-const char* RateCompositeGeneratorFactory_getDefaultId(CompositeGeneratorFactory_t* self);
+const char* NearestCompositeGeneratorFactory_getDefaultId(CompositeGeneratorFactory_t* self);
 
 /**
  * @returns if this factory can handle the generator request or not
  */
-int RateCompositeGeneratorFactory_canHandle(CompositeGeneratorFactory_t* self, CompositeArguments_t* arguments);
+int NearestCompositeGeneratorFactory_canHandle(CompositeGeneratorFactory_t* self, CompositeArguments_t* arguments);
 
 /**
  * @returns the result from the generation
  */
-Cartesian_t* RateCompositeGeneratorFactory_generate(CompositeGeneratorFactory_t* self, CompositeArguments_t* arguments);
+Cartesian_t* NearestCompositeGeneratorFactory_generate(CompositeGeneratorFactory_t* self, CompositeArguments_t* arguments);
 
 /**
  * The factory creation method.
  * @return a new instance of the factory on success
  */
-CompositeGeneratorFactory_t* RateCompositeGeneratorFactory_create(CompositeGeneratorFactory_t* self);
+CompositeGeneratorFactory_t* NearestCompositeGeneratorFactory_create(CompositeGeneratorFactory_t* self);
 
-#endif /* RATE_COMPOSITE_GENERATOR_FACTORY_H */
+#endif /* NEAREST_COMPOSITE_GENERATOR_FACTORY_H */

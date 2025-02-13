@@ -147,7 +147,7 @@ from PyLegacyCompositeGeneratorFactoryITest import *
 from PyAcqvaCompositeGeneratorFactoryTest import *
 from PyOdimSourceTest import *
 from PyOdimSourcesTest import *
-from PyRateCompositeGeneratorFactoryTest import *
+from PyNearestCompositeGeneratorFactoryTest import *
 
 if __name__ == '__main__':
   unittest.main()

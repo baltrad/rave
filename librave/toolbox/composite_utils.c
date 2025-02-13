@@ -174,9 +174,6 @@ void CompositeUtils_freeCompositeValueParameters(CompositeUtilValue_t** cvalues,
     int i = 0;
     for (i = 0; i < nparam; i++) {
       RAVE_OBJECT_RELEASE((*cvalues)[i].parameter);
-      if ((*cvalues)[i].extraptr != NULL) {
-        RAVE_FREE((*cvalues)[i].extraptr);
-      }
     }
     RAVE_FREE(*cvalues);
     *cvalues = NULL;
