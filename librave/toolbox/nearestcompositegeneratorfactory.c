@@ -137,11 +137,6 @@ static void NearestCompositeGeneratorFactory_destructor(RaveCoreObject* obj)
   RAVE_OBJECT_RELEASE(this->engine);
 }
 
-int NearestCompositeGeneratorFactory_getPolarValueAtPositionEngine(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, RaveCoreObject* object, const char* quantity, PolarNavigationInfo* navinfo, const char* qiFieldName, RaveValueType* otype, double* ovalue, double* qivalue)
-{
-  return CompositeEngineUtility_getPolarValueAtPosition(engine, extradata, arguments, object, quantity, navinfo, qiFieldName, otype, ovalue, qivalue);
-}
-
 int NearestCompositeGeneratorFactory_getPolarValueAtPosition(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, RaveCoreObject* object, const char* quantity, PolarNavigationInfo* navinfo, const char* qiFieldName, RaveValueType* otype, double* ovalue, double* qivalue)
 {
   NearestCompositeGeneratorFactory_t* self = (NearestCompositeGeneratorFactory_t*)extradata;
@@ -151,7 +146,11 @@ int NearestCompositeGeneratorFactory_getPolarValueAtPosition(CompositeEngine_t* 
     return 0;
   }
 
-  result = CompositeEngineUtility_getPolarValueAtPosition(engine, extradata, arguments, object, "DBZH", navinfo, qiFieldName, otype, ovalue, qivalue);
+  if (strcasecmp("RATE", quantity) == 0) {
+    result = CompositeEngineUtility_getPolarValueAtPosition(engine, extradata, arguments, object, "DBZH", navinfo, qiFieldName, otype, ovalue, qivalue);
+  } else {
+    result = CompositeEngineUtility_getPolarValueAtPosition(engine, extradata, arguments, object, "DBZH", navinfo, qiFieldName, otype, ovalue, qivalue);
+  }
 
   return result;
 }
@@ -196,7 +195,7 @@ int NearestCompositeGeneratorFactory_canHandle(CompositeGeneratorFactory_t* self
       return 0;
     }
   }
-  
+
   attr = CompositeArguments_getArgument(arguments, "interpolation_method");
   if (attr != NULL) {
     char* value = NULL;

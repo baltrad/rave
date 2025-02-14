@@ -44,18 +44,25 @@ class PyCompositeFactoryManagerTest(unittest.TestCase):
   def test_getRegisteredFactoryNames_initialized(self):
     obj = _compositefactorymanager.new()
     names = obj.getRegisteredFactoryNames()
-    self.assertTrue(2, len(names))
+    self.assertTrue(3, len(names))
     self.assertTrue("LegacyCompositeGenerator" in names)
     self.assertTrue("AcqvaCompositeGenerator" in names)
+    self.assertTrue("NearestCompositeGenerator" in names)
 
   def test_remove(self):
     obj = _compositefactorymanager.new()
     obj.remove("LegacyCompositeGenerator")
     names = obj.getRegisteredFactoryNames()
-    self.assertEqual(1, len(names))
+    self.assertEqual(2, len(names))
     self.assertTrue("AcqvaCompositeGenerator" in names)
+    self.assertTrue("NearestCompositeGenerator" in names)
 
     obj.remove("AcqvaCompositeGenerator")
+    names = obj.getRegisteredFactoryNames()
+    self.assertEqual(1, len(names))
+
+    self.assertTrue("NearestCompositeGenerator" in names)
+    obj.remove("NearestCompositeGenerator")
     names = obj.getRegisteredFactoryNames()
     self.assertEqual(0, len(names))
 
@@ -63,6 +70,7 @@ class PyCompositeFactoryManagerTest(unittest.TestCase):
     obj = _compositefactorymanager.new()
     obj.remove("LegacyCompositeGenerator")
     obj.remove("AcqvaCompositeGenerator")
+    obj.remove("NearestCompositeGenerator")
 
     obj.add(_legacycompositegeneratorfactory.new())
     names = obj.getRegisteredFactoryNames()
@@ -93,14 +101,17 @@ class PyCompositeFactoryManagerTest(unittest.TestCase):
 
     self.assertEqual(True, obj.isRegistered("LegacyCompositeGenerator"))
     self.assertEqual(True, obj.isRegistered("AcqvaCompositeGenerator"))
+    self.assertEqual(True, obj.isRegistered("NearestCompositeGenerator"))
     self.assertEqual(False, obj.isRegistered("NoSuchGenerator"))
     obj.remove("AcqvaCompositeGenerator")
     self.assertEqual(False, obj.isRegistered("AcqvaCompositeGenerator"))
 
   def test_size(self):
     obj = _compositefactorymanager.new()
-    self.assertEqual(2, obj.size())
+    self.assertEqual(3, obj.size())
     obj.remove("AcqvaCompositeGenerator")
-    self.assertEqual(1, obj.size())
+    self.assertEqual(2, obj.size())
     obj.remove("LegacyCompositeGenerator")
+    self.assertEqual(1, obj.size())
+    obj.remove("NearestCompositeGenerator")
     self.assertEqual(0, obj.size())

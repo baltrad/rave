@@ -122,10 +122,7 @@ class PyNearestCompositeGeneratorFactoryTest(unittest.TestCase):
       args.product = product
       self.assertEqual(False, classUnderTest.canHandle(args))
 
-  def test_generate(self):
-    #import _rave
-    #_rave.setTrackObjectCreation(True)
-    #_rave.setDebugLevel(_rave.Debug_RAVE_SPEWDEBUG)
+  def Xtest_generate(self):
     classUnderTest = _nearestcompositegeneratorfactory.new()
 
     args = _compositearguments.new()

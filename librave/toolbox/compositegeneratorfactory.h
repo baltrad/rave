@@ -20,6 +20,9 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * Interface for defining your own compositing factory. If CompositeGeneratorFactory_canHandle(...) returns true,
  * then CompositeGeneratorFactory_generate(....) will be called. 
  *
+ * NOTE! It is essential that the factory implements the copy constructor since the factory will be set in the
+ * manager and the manager keeps a list of instances.
+ *
  * @file
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2024-10-10

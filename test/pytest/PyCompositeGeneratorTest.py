@@ -64,13 +64,15 @@ class PyCompositeGeneratorTest(unittest.TestCase):
     obj = _compositegenerator.create()
     ids = obj.getFactoryIDs() # The factories ID in default case should be what the compositegeneratorfactories has set as defaultID
 
-    self.assertEqual(2, len(ids))
+    self.assertEqual(3, len(ids))
     self.assertTrue("legacy" in ids)
     self.assertTrue("acqva" in ids)
+    self.assertTrue("nearest" in ids)
 
   def test_create_with_manager(self):
     manager = _compositefactorymanager.new()
     manager.remove("LegacyCompositeGenerator")
+    manager.remove("NearestCompositeGenerator")
     obj = _compositegenerator.create(manager)
     ids = obj.getFactoryIDs()
     self.assertEqual(1, len(ids))
@@ -80,6 +82,8 @@ class PyCompositeGeneratorTest(unittest.TestCase):
     manager = _compositefactorymanager.new()
     manager.remove("LegacyCompositeGenerator")
     manager.remove("AcqvaCompositeGenerator")
+    manager.remove("NearestCompositeGenerator")
+
     try:
       _compositegenerator.create(manager)
       self.fail("Expected ValueError")

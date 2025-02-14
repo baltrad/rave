@@ -33,6 +33,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include <string.h>
 #include <strings.h>
 
+#include "nearestcompositegeneratorfactory.h"
 #include "legacycompositegeneratorfactory.h"
 #include "acqvacompositegeneratorfactory.h"
 
@@ -57,6 +58,13 @@ static int CompositeFactoryManagerInternal_createDefault(CompositeFactoryManager
 
   /** Legacy composite handling */
   factory = RAVE_OBJECT_NEW(&LegacyCompositeGeneratorFactory_TYPE);
+  if (factory == NULL || !CompositeFactoryManager_add(manager, factory)) {
+    goto fail;
+  }
+  RAVE_OBJECT_RELEASE(factory);
+
+  /** Nearest composite handling */
+  factory = RAVE_OBJECT_NEW(&NearestCompositeGeneratorFactory_TYPE);
   if (factory == NULL || !CompositeFactoryManager_add(manager, factory)) {
     goto fail;
   }
