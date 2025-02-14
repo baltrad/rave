@@ -278,7 +278,7 @@ int RaveValue_getDouble(RaveValue_t* self, double* value)
   return result;
 }
 
-long RaveValue_toDouble(RaveValue_t* self)
+double RaveValue_toDouble(RaveValue_t* self)
 {
   RAVE_ASSERT((self != NULL), "attr == NULL");
   return self->doubleValue;

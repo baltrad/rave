@@ -150,7 +150,7 @@ int RaveValue_getDouble(RaveValue_t* self, double* value);
  * @param[in] self - self
  * @return the double value or -
  */
-long RaveValue_toDouble(RaveValue_t* self);
+double RaveValue_toDouble(RaveValue_t* self);
 
 /**
  * Creates a string array rave value.
