@@ -78,9 +78,9 @@ RAVEOBJS=	$(RAVESOURCES:.c=.o)
 LIBRAVETOOLBOX=	libravetoolbox.so
 
 RADARCOMPSOURCES=tiled_compositing.cpp compositing.cpp optparse.cpp odim_source.cpp
-RADARCOMPOBJS=	$(RADARCOMPSOURCES:.cpp=.o)
-RADARCOMPMAIN= radarcomp_main.cpp
-RADARCOMPBIN= radarcomp_c
+RADARCOMPOBJS=$(RADARCOMPSOURCES:.cpp=.o)
+RADARCOMPMAIN=radarcomp_main.cpp
+RADARCOMPBIN=radarcomp_c
 RADARCOMPLIBS= -lravetoolbox -lhlhdf -lproj
 ifeq ($(BUFR_SUPPRESSED), no)
 RADARCOMPLIBS+= -lOperaBufr

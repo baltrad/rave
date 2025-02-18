@@ -8,19 +8,15 @@ extern "C" {
 #include "rave_io.h"
 #include "rave_object.h"
 #include "rave_types.h"
-#include "rave_datetime.h"
-#include "rave_attribute.h"
 #include "polarscan.h"
 #include "polarvolume.h"
 #include "arearegistry.h"
-#include "area.h"
-#include "projectionregistry.h"
 }
 
 #include <math.h>
+
 #include <algorithm>
 #include <sstream>
-#include <iostream>
 #include <map>
 
   std::mutex Compositing::mutex;
@@ -85,10 +81,11 @@ extern "C" {
   Cartesian_t* Compositing::generate( std::string dd, std::string dt, std::string areaid, Area_t * area ){
     return _generate(dd, dt, areaid, area);
   }
-  /*# Removes CMT:<...> from the string
-   # @param[in] str - the string from wh*ich CMT should be removed
-   # @return the source with CMT removed
-   #*/
+  /**
+   * @brief Removes CMT:<...> from the string
+   * @param[in] str - the string from wh*ich CMT should be removed
+   * @return the source with CMT removed
+   **/
   std::string Compositing::remove_CMT_from_source(std::string str) {
     return str;
   }
@@ -112,7 +109,7 @@ extern "C" {
         product = Rave_ProductType::Rave_ProductType_PCAPPI;
     }
   }
-  void Compositing::set_method_from_string(std::string methstr){
+  void Compositing::set_method_from_string(std::string methstr) {
     
     std::transform(methstr.begin(), methstr.end(), methstr.begin(),[](unsigned char c){ return std::toupper(c); });
     
@@ -125,7 +122,8 @@ extern "C" {
         selection_method = CompositeSelectionMethod_t::CompositeSelectionMethod_NEAREST;
     }
   }
-  void Compositing::set_interpolation_method_from_string(std::string methstr){
+
+  void Compositing::set_interpolation_method_from_string(std::string methstr) {
     
     std::transform(methstr.begin(), methstr.end(), methstr.begin(),[](unsigned char c){ return std::toupper(c); });
     
@@ -150,18 +148,18 @@ extern "C" {
         interpolation_method = CompositeInterpolationMethod_t::CompositeInterpolationMethod_NEAREST;
     }
   }
-  void Compositing::set_quality_control_mode_from_string(std::string modestr){
-    
+
+void Compositing::set_quality_control_mode_from_string(std::string modestr){
     std::transform(modestr.begin(), modestr.end(), modestr.begin(),[](unsigned char c){ return std::tolower(c); });
-    
+
     if ((modestr == "analyze" ) || (modestr == "analyze_and_apply")) {
       quality_control_mode = modestr;
     } else {
       RAVE_WARNING1("Invalid quality control mode (%s), only supported modes are analyze_and_apply or analyze, default analyze_and_apply will be used!",modestr.c_str());
       quality_control_mode = "analyze_and_apply";
     }
-  };
-  
+};
+
   std::map<std::string,RaveCoreObject*> Compositing::quality_control_objects(
     std::map<std::string,RaveCoreObject*> &objects,
     CompositeAlgorithm_t* algorithm,
@@ -243,13 +241,11 @@ extern "C" {
                 PolarVolume_sortByElevations((PolarVolume_t*)obj, 1);
               }
             }
-          }
-          catch (...) {
+          } catch (...) {
             RAVE_ERROR1("Failed to open %s", fname.c_str());
             //FIXME: Memory handling!
             objects.clear();
             return objects;
-
           }
         }
         bool is_scan = RAVE_OBJECT_CHECK_TYPE(obj, &PolarScan_TYPE);
@@ -273,8 +269,7 @@ extern "C" {
             std::unique_lock<std::mutex> lock(mutex);
             PolarVolume_setUseAzimuthalNavInformation((PolarVolume_t*) obj, use_azimuthal_nav_information);
           }
-        }
-        else if(is_scan) {
+        } else if(is_scan) {
           if (file_objects.size() == 0) {
             // Modify object, mutex needed
             std::unique_lock<std::mutex> lock(mutex);
@@ -295,10 +290,11 @@ extern "C" {
           }
         }
         std::string source;
-        if (is_pvol)
+        if (is_pvol) {
           source = PolarVolume_getSource((PolarVolume_t*)obj);
-        else
+        } else {
           source = PolarScan_getSource((PolarScan_t*)obj);
+        }
         ODIM_Source odim_source(source);
         std::string node = "n/a";
         if (odim_source.nod.length()) { 
@@ -307,12 +303,13 @@ extern "C" {
           node=odim_source.wmo;
         } else if (odim_source.wigos.length()) {
           node=odim_source.wigos;
-        }  
-        if (nodes.length())
+        }
+        if (nodes.length()) {
           nodes += "," + node;
-        else
+        } else {
           nodes = node;
-                          
+        }
+
         objects[fname] = obj;
                           
         if (is_scan) {
@@ -350,7 +347,10 @@ extern "C" {
     if (PolarScan_hasAttribute(scan,"how/task")) {
       RaveAttribute_t *attr = PolarScan_getAttribute(scan, "how/task");
       if (attr != 0) {
-        std::string how_task_string = attr->sdata;
+        char* tmps;
+        RaveAttribute_getString(attr, &tmps);
+        std::string how_task_string = tmps;
+        //std::string how_task_string = attr->sdata;
         // duplicate check
         bool found = false;
         for (std::string task : tasks) {
@@ -490,8 +490,6 @@ extern "C" {
     std::string nodes;
     std::string how_tasks;
     bool all_files_malfunc;
-
-
     
     file_objects = fetch_objects(nodes,how_tasks,all_files_malfunc);
     
@@ -525,9 +523,10 @@ extern "C" {
       vobjects.push_back((RaveCoreObject*)RAVE_OBJECT_COPY(obj.second));
     }
 
-    if (dump)
+    if (dump) {
       _dump_objects(vobjects);
-    
+    }
+
     Composite_t* generator = (Composite_t *)RAVE_OBJECT_NEW(&Composite_TYPE);
     if (generator == 0) {
       RAVE_CRITICAL0("Failed to allocate memory for composite.");
@@ -557,8 +556,9 @@ extern "C" {
     
     Composite_addParameter(generator, quantity.c_str(), gain, offset, minvalue);
     Composite_setProduct(generator, product);
-    if (algorithm != 0)
-      generator->algorithm = algorithm;
+    if (algorithm != 0) {
+      Composite_setAlgorithm(generator, algorithm);
+    }
     // FIXME: Create RaveObjectHashTable_t* object
     radar_index_mapping = (RaveObjectHashTable_t*)RAVE_OBJECT_NEW(&RaveObjectHashTable_TYPE);
     if (radar_index_mapping == 0) {
@@ -596,7 +596,8 @@ extern "C" {
         }
         RAVE_OBJECT_RELEASE(attr);
       }
-    } 
+    }
+    // clang-format off
     /*
     for (int i = 0; i < nrObjects; i++) {
       char* sourceId = MyCode_extractSourceFromRadar(myobjects[i]);   // Returnerar WMO:12345 eller NOD:seang eller något sådant. Finns kod i composite.c hur man extraherar sådan information från volymer/scan
@@ -608,6 +609,7 @@ extern "C" {
       }
       RAVE_OBJECT_RELEASE(attr);
     }*/
+    // clang-format on
     Composite_setSelectionMethod(generator, selection_method);
     Composite_setInterpolationMethod(generator, interpolation_method);
     std::string date = PolarVolume_getDate((PolarVolume_t*)vobjects[0]);
@@ -621,13 +623,15 @@ extern "C" {
     Composite_setHeight(generator, height);
     Composite_setElevationAngle(generator, elangle);
     Composite_setRange(generator, height);
-    
-    if (!qitotal_field.empty())
+
+    if (!qitotal_field.empty()) {
       Composite_setQualityIndicatorFieldName(generator, qitotal_field.c_str());
-      
-    if (!prodpar.empty())
+    }
+
+    if (!prodpar.empty()) {
       _update_generator_with_prodpar(generator);
-        
+    }
+
     if (verbose)
       RAVE_INFO0("[radarcomp_c] compositing.generate: Generating cartesian composite");
 
@@ -648,7 +652,7 @@ extern "C" {
         RAVE_DEBUG0("[{radarcomp_c}] compositing.generate: Applying ct filter");
       RAVE_INFO1("[{radarcomp_c}] compositing.generate: Applying ct filter for %s not implemented", quantity.c_str());
     }
-    
+
     if (applygra) {
       if (qfields.find("se.smhi.composite.distance.radar")== std::string::npos) {
         RAVE_INFO0("[radarcomp_c] compositing.generate: Trying to apply GRA analysis without specifying a quality plugin specifying the se.smhi.composite.distance.radar q-field, disabling...");
@@ -663,16 +667,18 @@ extern "C" {
         }
       }
     }
-    
+
     //Hack to create a BRDR field if the qfields contains se.smhi.composite.index.radar
     if (qfields.find("se.smhi.composite.index.radar")!= std::string::npos) {
       RAVE_INFO0("[radarcomp_c] compositing.generate: Trying to create a BRDR field not implemented yet!");
+      // clang-format off
       /*
       bitmapgen = _bitmapgenerator.new()
       brdr_field = bitmapgen.create_intersect(result.getParameter(self.quantity), "se.smhi.composite.index.radar")
       brdr_param = result.createParameter("BRDR", _rave.RaveDataType_UCHAR)
       brdr_param.setData(brdr_field.getData())
       */
+      // clang-format off
     }
     //# Fix so that we get a valid place for /what/source and /how/nodes
     std::string source_string("ORG:82,CMT:");
@@ -694,10 +700,11 @@ extern "C" {
       }
       RAVE_OBJECT_RELEASE(tasks_attr);
     }
-    
-    if (verbose)
-      RAVE_DEBUG0("[radarcomp_c] compositing.generate: Returning resulting composite image");
-   
+
+    if (verbose) {
+          RAVE_DEBUG0("[radarcomp_c] compositing.generate: Returning resulting composite image");
+    }
+
     RAVE_OBJECT_RELEASE(radar_index_mapping);
     RAVE_OBJECT_RELEASE(the_area);
     RAVE_OBJECT_RELEASE(generator);
@@ -728,31 +735,33 @@ extern "C" {
    # @return the string representation o*f the selection method
    */
   std::string Compositing::_selection_method_repr() {
-    if (selection_method == CompositeSelectionMethod_t::CompositeSelectionMethod_NEAREST)
-      return "NEAREST_RADAR";
-    else if (selection_method == CompositeSelectionMethod_t::CompositeSelectionMethod_HEIGHT)
-      return "HEIGHT_ABOVE_SEALEVEL";
+    if (selection_method == CompositeSelectionMethod_t::CompositeSelectionMethod_NEAREST) {
+        return "NEAREST_RADAR";
+    } else if (selection_method == CompositeSelectionMethod_t::CompositeSelectionMethod_HEIGHT) {
+        return "HEIGHT_ABOVE_SEALEVEL";
+    }
     return "Unknown";
   }
   /*#
    # @return the string representation o*f the interpolation method */
   std::string Compositing::_interpolation_method_repr() {
-    if (interpolation_method == CompositeInterpolationMethod_t::CompositeInterpolationMethod_NEAREST)
+    if (interpolation_method == CompositeInterpolationMethod_t::CompositeInterpolationMethod_NEAREST) {
       return "NEAREST_VALUE";
-    else if (interpolation_method == CompositeInterpolationMethod_t::CompositeInterpolationMethod_LINEAR_HEIGHT)
+    } else if (interpolation_method == CompositeInterpolationMethod_t::CompositeInterpolationMethod_LINEAR_HEIGHT) {
       return "LINEAR_HEIGHT";
-    else if (interpolation_method == CompositeInterpolationMethod_t::CompositeInterpolationMethod_LINEAR_RANGE)
+    } else if (interpolation_method == CompositeInterpolationMethod_t::CompositeInterpolationMethod_LINEAR_RANGE) {
       return "LINEAR_RANGE";
-    else if (interpolation_method == CompositeInterpolationMethod_t::CompositeInterpolationMethod_LINEAR_AZIMUTH)
+    } else if (interpolation_method == CompositeInterpolationMethod_t::CompositeInterpolationMethod_LINEAR_AZIMUTH) {
       return "LINEAR_AZIMUTH";
-    else if (interpolation_method == CompositeInterpolationMethod_t::CompositeInterpolationMethod_LINEAR_RANGE_AND_AZIMUTH)
+    } else if (interpolation_method == CompositeInterpolationMethod_t::CompositeInterpolationMethod_LINEAR_RANGE_AND_AZIMUTH) {
       return "LINEAR_RANGE_AND_AZIMUTH";
-    else if (interpolation_method == CompositeInterpolationMethod_t::CompositeInterpolationMethod_LINEAR_3D)
+    } else if (interpolation_method == CompositeInterpolationMethod_t::CompositeInterpolationMethod_LINEAR_3D) {
       return "LINEAR_3D";
-    else if (interpolation_method == CompositeInterpolationMethod_t::CompositeInterpolationMethod_QUADRATIC_HEIGHT)
+    } else if (interpolation_method == CompositeInterpolationMethod_t::CompositeInterpolationMethod_QUADRATIC_HEIGHT) {
       return "QUADRATIC_HEIGHT";
-    else if (interpolation_method == CompositeInterpolationMethod_t::CompositeInterpolationMethod_QUADRATIC_3D)
+    } else if (interpolation_method == CompositeInterpolationMethod_t::CompositeInterpolationMethod_QUADRATIC_3D) {
       return "QUADRATIC_3D";
+    }
     return "Unknown";
   }
   /*#
@@ -773,35 +782,35 @@ extern "C" {
       return "unknown";
     }
   }
-  
+
   void Compositing::_update_generator_with_prodpar(Composite_t* generator) {
-    if (prodpar.length() != 0) { 
+    if (prodpar.length() != 0) {
       if ((product == Rave_ProductType::Rave_ProductType_CAPPI) || (product==Rave_ProductType::Rave_ProductType_PCAPPI)) {
-        generator->height = _strToNumber(prodpar);
+          Composite_setHeight(generator, _strToNumber(prodpar));
       }
       else if (product ==  Rave_ProductType::Rave_ProductType_PMAX) {
           std::vector<std::string> pp;
           std::istringstream f(prodpar);
-          std::string s;    
+          std::string s;
           while (getline(f, s, ',')) {
             pp.push_back(s);
           }
           // FIXME: Do we need to strip withspaces?
           if (pp.size() == 2) {
-            generator->height = _strToNumber(pp[0]);
-            generator->range = _strToNumber(pp[1]);
+            Composite_setHeight(generator, _strToNumber(pp[0]));
+            Composite_setRange(generator, _strToNumber(pp[1]));
           }
           else if (pp.size() == 1) {
-            generator->height = _strToNumber(pp[0]);
+            Composite_setHeight(generator, _strToNumber(pp[0]));
           }
       }
       else if (product == Rave_ProductType::Rave_ProductType_PPI) {
             float v = _strToNumber(prodpar);
-            generator->elangle = v * M_PI / 180.0;
+            Composite_setElevationAngle(generator, v * M_PI / 180.0);
       }
     }
   }
-  
+
   float Compositing::_strToNumber(std::string sval) {
     return std::stof(sval);
   }

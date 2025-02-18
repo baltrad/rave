@@ -1,97 +1,99 @@
 /* --------------------------------------------------------------------
  C *opyright (C) 2024 Swedish Meteorological and Hydrological Institute, SMHI,
- 
+
  This is free software: you can redistribute it and/or modify
  it under the terms of the GNU Lesser General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
  (at your option) any later version.
- 
+
  This software is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU Lesser General Public License for more details.
- 
+
  You should have received a copy of the GNU Lesser General Public License
  along with HLHDF.  If not, see <http://www.gnu.org/licenses/>.
  ------------------------------------------------------------------------*/
 #include "compositing.h"
 #include "tiled_compositing.h"
+#include "optparse.h"
+
 extern "C" {
 #include "rave_object.h"
 #include "rave_debug.h"
 #include "composite.h"
 #include "rave_io.h"
-#include "tiledef.h"
 #include "tileregistry.h"
+#include <hlhdf.h>
 }
 
-#include "optparse.h"
 #include <stdio.h>
 #include <stdlib.h>
+
 #include <string>
 #include <vector>
 #include <sstream>
-#include <iostream>
-#include <hlhdf.h>
 
 /*
  * From rave_defines.py, RAVEROOT hardcoded for now
  */
-const char * RAVEROOT = "/usr/lib/rave";
-const char * RAVECONFIG = "/config/";
-const char * RAVEETC = "/etc/";
+const char* RAVEROOT = "/usr/lib/rave";
+const char* RAVECONFIG = "/config/";
+const char* RAVEETC = "/etc/";
 
-const char * PROJECTION_REGISTRY = "projection_registry.xml";
-const char * AREA_REGISTRY = "area_registry.xml";
-const char * RAVE_TILE_REGISTRY= "rave_tile_registry.xml";
+const char* PROJECTION_REGISTRY = "projection_registry.xml";
+const char* AREA_REGISTRY = "area_registry.xml";
+const char* RAVE_TILE_REGISTRY = "rave_tile_registry.xml";
 
 
-
-/** Main function for a binary for running KNMI's sun scanning functionality
+/**
+ * Main function for a binary for running KNMI's sun scanning functionality
  * @file
  * @author Yngve Einarsson, SMHI
  * @date 2024-12-09
  */
-int Radarcomp(optparse::OptionParser & parser) {
+int Radarcomp(optparse::OptionParser & parser)
+{
   // Init Area, Projection and Tile registry.
-  //# Projection and area registries
+  // # Projection and area registries
   // Hard coded standard installation
+  // clang-format off
   std::string projection_registry_path = std::string(RAVEROOT) + std::string(RAVECONFIG) + std::string(PROJECTION_REGISTRY);
-  
+  // clang-format on
   ProjectionRegistry_t* proj_registry = ProjectionRegistry_load(projection_registry_path.c_str());
   if (proj_registry == 0) {
     RAVE_CRITICAL0("Failed to create projection registry for composite.");
-    return 0;
+    return 1;
   }
-  
+
   std::string area_registry_path = std::string(RAVEROOT) + std::string(RAVECONFIG) + std::string(AREA_REGISTRY);
-  
+
   AreaRegistry_t* area_registry = AreaRegistry_load(area_registry_path.c_str(), proj_registry);
   if (area_registry == 0) {
     RAVE_CRITICAL0("Failed to create area registry for composite.");
     RAVE_OBJECT_RELEASE(proj_registry);
-    return 0;
+    return 1;
   }
-  
+
   std::string rave_tile_registry_path = std::string(RAVEROOT) + std::string(RAVEETC) + std::string(RAVE_TILE_REGISTRY);
-  
+
   TileRegistry_t* tile_registry = TileRegistry_load(rave_tile_registry_path.c_str());
   if (tile_registry == 0) {
     RAVE_CRITICAL0("Failed to create tile registry for composite.");
     RAVE_OBJECT_RELEASE(proj_registry);
     RAVE_OBJECT_RELEASE(area_registry);
-    return 0;
+    return 1;
   }
-  
+
   Compositing comp = Compositing();
-  
+
   comp.proj_registry = proj_registry;
   comp.area_registry = area_registry;
   comp.tile_registry = tile_registry;
   // Split infiles and detectors
   std::vector<std::string> fparts;
   std::istringstream f(parser.get_option("infiles"));
-  std::string s;    
+  std::string s;
   while (getline(f, s, ',')) {
     fparts.push_back(s);
   }
@@ -115,51 +117,58 @@ int Radarcomp(optparse::OptionParser & parser) {
   comp.xscale = std::stof(parser.get_option("scale"));
   comp.yscale = std::stof(parser.get_option("scale"));
   comp.set_interpolation_method_from_string(parser.get_option("interpolation_method"));
-  comp.use_azimuthal_nav_information == !( parser.get_option("disable_azimuthal_navigation") == "1");
+  comp.use_azimuthal_nav_information = !(parser.get_option("disable_azimuthal_navigation") == "1");
   comp.zr_A = std::stof(parser.get_option("zr_A"));
   comp.zr_b = std::stof(parser.get_option("zr_b"));
   comp.applygapfilling = false;
-  if (parser.get_option("gf") == "1")
+  if (parser.get_option("gf") == "1") {
     comp.applygapfilling = true;
+  }
   comp.applyctfilter = false;
-  if (parser.get_option("ctfilter") == "1")
+  if (parser.get_option("ctfilter") == "1") {
     comp.applyctfilter = true;
+  }
   comp.applygra = false;
-  if (parser.get_option("grafilter") == "1")
+  if (parser.get_option("grafilter") == "1") {
     comp.applygra = true;
+  }
   comp.ignore_malfunc = false;
-  if (parser.get_option("ignore_malfunc") == "1")
+  if (parser.get_option("ignore_malfunc") == "1") {
     comp.ignore_malfunc = true;
+  }
   comp.verbose = false;
-  if (parser.get_option("verbose") == "1")
+  if (parser.get_option("verbose") == "1") {
     comp.verbose = true;
-            
-  if (comp.verbose)
+  }
+
+  if (comp.verbose) {
     Rave_setDebugLevel(Rave_Debug::RAVE_DEBUG);
-    //comp.logger = rave_pgf_logger.rave_pgf_stdout_client("debug")
-    
-  else
+    // comp.logger = rave_pgf_logger.rave_pgf_stdout_client("debug")
+  } else {
+    // comp.logger = rave_pgf_logger.rave_pgf_stdout_client("info")
     Rave_setDebugLevel(Rave_Debug::RAVE_INFO);
-    //comp.logger = rave_pgf_logger.rave_pgf_stdout_client("info")
-                
+  }
+
+
   comp.reprocess_quality_field = false;
-  if (parser.get_option("reprocess_quality_fields") == "1")
-     comp.reprocess_quality_field = true;
+  if (parser.get_option("reprocess_quality_fields") == "1") {
+    comp.reprocess_quality_field = true;
+  }
 
   // Defaults, not modyfiable from options.
   // Always true
-  comp.use_lazy_loading=true;
-  comp.use_lazy_loading_preloads=true;
-  
+  comp.use_lazy_loading = true;
+  comp.use_lazy_loading_preloads = true;
+
   std::string areaid = parser.get_option("area");
   if (areaid.length() == 0) {
-     RAVE_CRITICAL0("Compositing with no area given is not supported.");
-     return 1;
+    RAVE_CRITICAL0("Compositing with no area given is not supported.");
+    return 1;
   }
-  Cartesian_t* result = 0;               
+  Cartesian_t* result = 0;
   if (!(parser.get_option("noMultiprocessing") == "1")) {
     RAVE_INFO1("Area %s check in tile registry for composite.", areaid.c_str());
-    RaveObjectList_t * the_tiles = TileRegistry_getByArea(comp.tile_registry, areaid.c_str());
+    RaveObjectList_t* the_tiles = TileRegistry_getByArea(comp.tile_registry, areaid.c_str());
     if (RaveObjectList_size(the_tiles) > 0) {
       RAVE_INFO1("Area %s found in tile registry for composite.", areaid.c_str());
       bool preprocess_qc = false;
@@ -176,7 +185,7 @@ int Radarcomp(optparse::OptionParser & parser) {
         mp_process_qc_split_evenly = true;
       }
       TiledCompositing tiled_comp = TiledCompositing();
-      tiled_comp.init(&comp, preprocess_qc,mp_process_qc,mp_process_qc_split_evenly);
+      tiled_comp.init(&comp, preprocess_qc, mp_process_qc, mp_process_qc_split_evenly);
       result = tiled_comp.generate(parser.get_option("date"), parser.get_option("time"), parser.get_option("area"));
     } else {
       result = comp.generate(parser.get_option("date"), parser.get_option("time"), parser.get_option("area"));
@@ -186,20 +195,21 @@ int Radarcomp(optparse::OptionParser & parser) {
     result = comp.generate(parser.get_option("date"), parser.get_option("time"), parser.get_option("area"));
   }
   // result is Cartesian_t*
-    if (proj_registry) {
-      RAVE_OBJECT_RELEASE(proj_registry);
-    }
-    if (area_registry) {
-      RAVE_OBJECT_RELEASE(area_registry);
-    }
-    if (tile_registry) {
-      RAVE_OBJECT_RELEASE(tile_registry);
-    }
+  if (proj_registry) {
+    RAVE_OBJECT_RELEASE(proj_registry);
+  }
+  if (area_registry) {
+    RAVE_OBJECT_RELEASE(area_registry);
+  }
+  if (tile_registry) {
+    RAVE_OBJECT_RELEASE(tile_registry);
+  }
 
-  
-  if (parser.get_option("imageType") == "1")
+
+  if (parser.get_option("imageType") == "1") {
     Cartesian_setObjectType(result, Rave_ObjectType::Rave_ObjectType_IMAGE);
-  
+  }
+
   RaveIO_t* rio = (RaveIO_t*)RAVE_OBJECT_NEW(&RaveIO_TYPE);
   if (rio == 0) {
     RAVE_CRITICAL0("Failed to allocate memory for raveIO.");
@@ -208,8 +218,9 @@ int Radarcomp(optparse::OptionParser & parser) {
   }
   RaveIO_setObject(rio, (RaveCoreObject*)result);
   RaveIO_setFilename(rio, parser.get_option("outfile").c_str());
- if (comp.verbose)
-    RAVE_INFO1("Saving %s",RaveIO_getFilename(rio));
+  if (comp.verbose) {
+    RAVE_INFO1("Saving %s", RaveIO_getFilename(rio));
+  }
   RaveIO_save(rio, 0);
   RaveIO_close(rio);
 
@@ -218,13 +229,12 @@ int Radarcomp(optparse::OptionParser & parser) {
   return 0;
 }
 
-
-
-int main(int argc,char *argv[]) {
-  
+int main(int argc, char* argv[])
+{
   Rave_initializeDebugger();
   Rave_setDebugLevel(Rave_Debug::RAVE_SPEWDEBUG);
-  
+
+  // clang-format off
   std::string usage("usage: radarcomp_c -i <infile(s)> -o <outfile> [-a <area>] [args] [h]");
   usage += "\nGenerates weather radar composites directly from polar scans and volumes. If area is omitted, a best fit will be performed.";
   usage += "\nIn that case, specify pcs, xscale and yscale to get an appropriate image.";
@@ -359,27 +369,29 @@ int main(int argc,char *argv[]) {
   parser.add_option("-dn", "--disable_azimuthal_navigation", "disable_azimuthal_navigation",
                     "If this flag is set, then azimuthal navigation won't be used when creating the composite.",
                     optparse::STORE_TRUE, optparse::BOOL, "0");
+  // clang-format on
+
   try {
-    parser.parse_args(argc,argv);
-  }
-  catch (optparse::OptionError &e) {
+    parser.parse_args(argc, argv);
+  } catch (optparse::OptionError & e) {
     RAVE_ERROR1("Option error, terminate: %s", e.what());
     exit(1);
-  }
-  catch (...) {
+  } catch (...) {
     RAVE_ERROR0("Unexpected exception, terminate");
     exit(1);
   }
+
+  int result = 0;
+
   if ((parser.get_option("infiles").length() != 0) && (parser.get_option("outfile").length() != 0)) {
     printf("Radarcomp--->\n");
-    int result = Radarcomp(parser); 
+    result = Radarcomp(parser);
     printf("Radarcomp <---\n");
+  } else {
+    std::ostringstream o;
+    parser.help(o);
+    printf("%s", o.str().c_str());
   }
-  else {
-      std::ostringstream o;
-      parser.help(o);
-      std::cerr << o.str();
-  }
-  
-  exit(0);
+
+  exit(result);
 }
