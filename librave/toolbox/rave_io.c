@@ -51,6 +51,25 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_bufr_io.h"
 #endif
 
+
+/**
+ * Defines the structure for the RaveIO in a volume.
+ */
+struct _RaveIO_t {
+  RAVE_OBJECT_HEAD /** Always on top */
+  RaveCoreObject* object;                 /**< the object */
+  RaveIO_ODIM_Version version;            /**< the odim version */
+  RaveIO_ODIM_Version read_version;       /**< the read odim version */
+  RaveIO_ODIM_H5rad_Version h5radversion; /**< the h5rad object version */
+  RaveIO_ODIM_FileFormat fileFormat;      /**< the file format */
+  int strict;                             /**< if strict writing should be enforced, from 2.4, several how-attributes are required. If setting this to true, this will be enforced */
+  char* filename;                         /**< the filename */
+  HL_Compression* compression;            /**< the compression to use */
+  HL_FileCreationProperty* property;       /**< the file creation properties */
+  char* bufrTableDir;                      /**< the bufr table dir */
+  char error_message[1024];                /**< if an error occurs during writing an error message might give you the reason */
+};
+
 /*@{ Constants */
 static const char RaveIO_ODIM_Version_2_0_STR[] = "ODIM_H5/V2_0";
 static const char RaveIO_ODIM_Version_2_1_STR[] = "ODIM_H5/V2_1";

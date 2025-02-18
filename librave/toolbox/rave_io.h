@@ -29,7 +29,6 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "rave_object.h"
 #include "rave_types.h"
-#include <hlhdf.h>
 
 /**
  * The file format of the data that has been read.
@@ -43,24 +42,6 @@ typedef enum RaveIO_ODIM_FileFormat {
   RaveIO_ODIM_FileFormat_BUFR = 1,       /**< BUFR */
   RaveIO_FileFormat_CF = 2               /** CF Conventions / Radial */
 } RaveIO_ODIM_FileFormat;
-
-/**
- * Defines the structure for the RaveIO in a volume.
- */
-struct _RaveIO_t {
-  RAVE_OBJECT_HEAD /** Always on top */
-  RaveCoreObject* object;                 /**< the object */
-  RaveIO_ODIM_Version version;            /**< the odim version */
-  RaveIO_ODIM_Version read_version;       /**< the read odim version */
-  RaveIO_ODIM_H5rad_Version h5radversion; /**< the h5rad object version */
-  RaveIO_ODIM_FileFormat fileFormat;      /**< the file format */
-  int strict;                             /**< if strict writing should be enforced, from 2.4, several how-attributes are required. If setting this to true, this will be enforced */
-  char* filename;                         /**< the filename */
-  HL_Compression* compression;            /**< the compression to use */
-  HL_FileCreationProperty* property;       /**< the file creation properties */
-  char* bufrTableDir;                      /**< the bufr table dir */
-  char error_message[1024];                /**< if an error occurs during writing an error message might give you the reason */
-};
 
 /**
  * Defines a Rave IO instance
