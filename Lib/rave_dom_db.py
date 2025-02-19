@@ -328,7 +328,7 @@ class rave_db(object):
       if enddt != None:
         q = q.filter(observation.date + observation.time <= enddt)
         
-      no_of_observations = q.delete()
+      no_of_observations = q.delete(synchronize_session=False)
       s.commit()
       
       return no_of_observations
@@ -385,7 +385,7 @@ class rave_db(object):
         q = s.query(grapoint).filter(grapoint.date + grapoint.time >= dt)
         q = q.filter(grapoint.date + grapoint.time <= edt)
          
-      pts = q.delete()
+      pts = q.delete(synchronize_session=False)
       s.commit()
       return pts
     
