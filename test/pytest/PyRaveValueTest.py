@@ -95,6 +95,13 @@ class PyRaveValueTest(unittest.TestCase):
     classUnderTest.value = None
     self.assertEqual(None, classUnderTest.value)
 
+  def test_value_long_array_from_tuple(self):
+    classUnderTest = _ravevalue.new()
+    classUnderTest.value = (1,2,3)
+    self.assertTrue(set([1,2,3]) == set(classUnderTest.value))
+    classUnderTest.value = None
+    self.assertEqual(None, classUnderTest.value)
+  
   def test_value_double_array(self):
     classUnderTest = _ravevalue.new()
     classUnderTest.value = [1.0,2.0,3.0]
@@ -104,3 +111,75 @@ class PyRaveValueTest(unittest.TestCase):
     self.assertEqual(3.0, classUnderTest.value[2], 4)
     classUnderTest.value = None
     self.assertEqual(None, classUnderTest.value)
+  
+  def test_value_hashtable_rave_values_doubles(self):
+    classUnderTest = _ravevalue.new()
+    classUnderTest.value = {"a":1.1, "b":2.1, "c":3.1}
+
+    self.assertTrue("a" in classUnderTest.value)
+    self.assertEqual(1.1, classUnderTest.value["a"], 4)
+
+    self.assertTrue("b" in classUnderTest.value)
+    self.assertEqual(2.1, classUnderTest.value["b"], 4)
+
+    self.assertTrue("c" in classUnderTest.value)
+    self.assertEqual(3.1, classUnderTest.value["c"], 4)
+
+  def test_value_hashtable_rave_values_strings(self):
+    classUnderTest = _ravevalue.new()
+    classUnderTest.value = {"a":"a string", "b":"b string", "c":"c string"}
+
+    self.assertTrue("a" in classUnderTest.value)
+    self.assertEqual("a string", classUnderTest.value["a"])
+
+    self.assertTrue("b" in classUnderTest.value)
+    self.assertEqual("b string", classUnderTest.value["b"])
+
+    self.assertTrue("c" in classUnderTest.value)
+    self.assertEqual("c string", classUnderTest.value["c"])
+
+  def test_value_hashtable_rave_values_tuple(self):
+    classUnderTest = _ravevalue.new()
+    classUnderTest.value = {"a":(1.1,2.2), "b":(3.1,3.2), "c":(4.1,4.2,4.3)}
+
+    self.assertTrue("a" in classUnderTest.value)
+    value = classUnderTest.value["a"]
+    self.assertEqual(1.1, value[0], 4)
+    self.assertEqual(2.2, value[1], 4)
+
+    self.assertTrue("b" in classUnderTest.value)
+    value = classUnderTest.value["b"]
+    self.assertEqual(3.1, value[0], 4)
+    self.assertEqual(3.2, value[1], 4)
+
+    self.assertTrue("c" in classUnderTest.value)
+    value = classUnderTest.value["c"]
+    self.assertEqual(4.1, value[0], 4)
+    self.assertEqual(4.2, value[1], 4)
+    self.assertEqual(4.3, value[2], 4)
+
+
+  def test_value_hashtable_rave_values_hashtable(self):
+    classUnderTest = _ravevalue.new()
+
+    classUnderTest.value = {"a":{"zr_a":0.1, "zr_b":1.2}, "b":{"zr_a":1.1, "zr_b":2.2}}
+
+    self.assertEqual(0.1, classUnderTest.value["a"]["zr_a"], 4)
+    self.assertEqual(1.2, classUnderTest.value["a"]["zr_b"], 4)    
+
+    self.assertEqual(1.1, classUnderTest.value["b"]["zr_a"], 4)
+    self.assertEqual(2.2, classUnderTest.value["b"]["zr_b"], 4)    
+
+  def test_new_from_long(self):
+    classUnderTest = _ravevalue.new(33)
+    self.assertEqual(33, classUnderTest.value)
+
+
+  def test_new_from_double(self):
+    classUnderTest = _ravevalue.new(2.1)
+    self.assertEqual(2.1, classUnderTest.value, 4)
+
+  def test_new_from_tuple(self):
+    classUnderTest = _ravevalue.new((2.1, 3.2))
+    self.assertEqual(2.1, classUnderTest.value[0], 4)
+    self.assertEqual(3.2, classUnderTest.value[1], 4)

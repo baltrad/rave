@@ -138,7 +138,25 @@ static void _pyravevalue_dealloc(PyRaveValue* obj)
  */
 static PyObject* _pyravevalue_new(PyObject* self, PyObject* args)
 {
-  PyRaveValue* result = PyRaveValue_New(NULL);
+  PyObject* pyobj = NULL;
+  RaveValue_t* ravevalue = NULL;
+
+  PyRaveValue* result = NULL;
+  if (!PyArg_ParseTuple(args, "|O", &pyobj)) {
+    return NULL;
+  }
+
+  if (pyobj != NULL) {
+    ravevalue = PyRaveApi_RaveValueFromObject(pyobj);
+    if (ravevalue == NULL) {
+      return NULL;
+    }
+  }
+
+  result = PyRaveValue_New(ravevalue);
+  
+  RAVE_OBJECT_RELEASE(ravevalue);
+
   return (PyObject*)result;
 }
 
@@ -159,55 +177,6 @@ static PyObject* _pyravevalue_getattro(PyRaveValue* self, PyObject* name)
 {
   if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "value") == 0) {
     return PyRaveApi_RaveValueToObject(self->value);
-    // if (RaveValue_type(self->value) == RaveValue_Type_Undefined) {
-    //   Py_RETURN_NONE;
-    // } else if (RaveValue_type(self->value) == RaveValue_Type_String) {
-    //   return PyString_FromString(RaveValue_toString(self->value));
-    // } else if (RaveValue_type(self->value) == RaveValue_Type_Long) {
-    //   return PyLong_FromLong(RaveValue_toLong(self->value));
-    // } else if (RaveValue_type(self->value) == RaveValue_Type_Double) {
-    //   return PyFloat_FromDouble(RaveValue_toDouble(self->value));
-    // } else if (RaveValue_type(self->value) == RaveValue_Type_StringArray || RaveValue_type(self->value) == RaveValue_Type_LongArray || RaveValue_type(self->value) == RaveValue_Type_DoubleArray) {
-    //   PyObject* result = NULL;
-    //   int i = 0, arraylen = 0;
-    //   char** sarray = NULL;
-    //   double* darray = NULL;
-    //   long* larray = NULL;
-
-    //   if (RaveValue_type(self->value) == RaveValue_Type_StringArray) {
-    //     RaveValue_getStringArray(self->value, &sarray, &arraylen);
-    //   } else if (RaveValue_type(self->value) == RaveValue_Type_LongArray) {
-    //     RaveValue_getLongArray(self->value, &larray, &arraylen);
-    //   } else {
-    //     RaveValue_getDoubleArray(self->value, &darray, &arraylen);
-    //   }
-
-    //   result = PyList_New(0);
-    //   if (result == NULL) {
-    //     raiseException_returnNULL(PyExc_MemoryError, "Could not allocate memory for list");
-    //   }
-    //   for (i = 0; i < arraylen; i++) {
-    //     PyObject* obj = NULL;
-    //     if (sarray != NULL) {
-    //       obj = PyString_FromString(sarray[i]);
-    //     } else if (larray != NULL) {
-    //       obj = PyInt_FromLong(larray[i]);
-    //     } else {
-    //       obj = PyFloat_FromDouble(darray[i]);
-    //     }
-    //     if (obj == NULL) {
-    //       Py_XDECREF(result);
-    //       raiseException_returnNULL(PyExc_MemoryError, "failed to create value object");
-    //     }
-    //     if (PyList_Append(result, obj) != 0) {
-    //       Py_XDECREF(result);
-    //       Py_XDECREF(obj);
-    //       raiseException_returnNULL(PyExc_MemoryError, "failed to create value object");
-    //     }
-    //     Py_DECREF(obj);        
-    //   }
-    //   return result;
-    // }
   }
   return PyObject_GenericGetAttr((PyObject*)self, name);
 }
@@ -225,92 +194,7 @@ static int _pyravevalue_setattro(PyRaveValue *self, PyObject *name, PyObject *va
     if (!PyRaveApi_UpdateRaveValue(val, self->value)) {
       goto done;
     }
-    // if (val == Py_None) {
-    //   RaveValue_reset(self->value);
-    // } else if (PyString_Check(val)) {
-    //   if (!RaveValue_setString(self->value, PyString_AsString(val))) {
-    //     raiseException_gotoTag(done, PyExc_MemoryError, "Failed to set string");
-    //   }
-    // } else if (PyInt_Check(val)) {
-    //   RaveValue_setLong(self->value, PyInt_AsLong(val));
-    // } else if (PyFloat_Check(val)) {
-    //   RaveValue_setDouble(self->value, PyFloat_AsDouble(val));
-    // } else if (PyList_Check(val)) {
-    //   Py_ssize_t nvalues = PyObject_Length(val);
-    //   int i = 0;
-    //   RaveValue_Type vtype = RaveValue_Type_Undefined;
-    //   if (nvalues > 0) {
-    //     for (i = 0; i < nvalues; i++) {
-    //       PyObject* pyobj = PyList_GetItem(val, i);  /* We don't need to release this since it is internal pointer.*/
-    //       if (PyFloat_Check(pyobj)) {
-    //         if (vtype == RaveValue_Type_Undefined || vtype == RaveValue_Type_LongArray) {
-    //           vtype = RaveValue_Type_DoubleArray;
-    //         } else if (vtype == RaveValue_Type_DoubleArray) {
-    //           // NO OP
-    //         } else {
-    //           raiseException_gotoTag(done, PyExc_ValueError, "List can only contain floats, doubles and strings and all items in list must be of same type")
-    //         }
-    //       } else if (PyInt_Check(pyobj)) {
-    //         if (vtype == RaveValue_Type_Undefined ) {
-    //           vtype = RaveValue_Type_LongArray;
-    //         } else if (vtype == RaveValue_Type_DoubleArray || vtype == RaveValue_Type_LongArray) {
-    //           // NO OP
-    //         } else {
-    //           raiseException_gotoTag(done, PyExc_ValueError, "List can only contain floats, doubles and strings and all items in list must be of same type")
-    //         }
-    //       } else if (PyString_Check(pyobj)) {
-    //         if (vtype == RaveValue_Type_Undefined) {
-    //           vtype = RaveValue_Type_StringArray;
-    //         } else if (vtype == RaveValue_Type_StringArray) {
-    //           // NO OP
-    //         } else {
-    //           raiseException_gotoTag(done, PyExc_ValueError, "List can only contain floats, doubles and strings and all items in list must be of same type")
-    //         }
-    //       } else {
-    //         raiseException_gotoTag(done, PyExc_ValueError, "List can only contain floats, doubles and strings and all items in list must be of same type")
-    //       }
-    //     }
 
-    //     if (vtype == RaveValue_Type_LongArray) {
-    //       long* larray = RAVE_MALLOC(sizeof(long)*nvalues);
-    //       for (i = 0; i < nvalues; i++) {
-    //         PyObject* pyobj = PyList_GetItem(val, i);  /* We don't need to release this since it is internal pointer.*/
-    //         larray[i] = PyInt_AsLong(pyobj);
-    //       }
-    //       if (!RaveValue_setLongArray(self->value, larray, nvalues)) {
-    //         RAVE_FREE(larray);
-    //         raiseException_gotoTag(done, PyExc_MemoryError, "Failed to set list");
-    //       }
-    //       RAVE_FREE(larray);
-    //     } else if (vtype == RaveValue_Type_DoubleArray) {
-    //       double* darray = RAVE_MALLOC(sizeof(double)*nvalues);
-    //       for (i = 0; i < nvalues; i++) {
-    //         PyObject* pyobj = PyList_GetItem(val, i);  /* We don't need to release this since it is internal pointer.*/
-    //         if (PyFloat_Check(pyobj)) {
-    //           darray[i] = PyFloat_AsDouble(pyobj);
-    //         } else {
-    //           darray[i] = (double)PyInt_AsLong(pyobj);
-    //         }
-    //       }
-    //       if (!RaveValue_setDoubleArray(self->value, darray, nvalues)) {
-    //         RAVE_FREE(darray);
-    //         raiseException_gotoTag(done, PyExc_MemoryError, "Failed to set list");
-    //       }
-    //       RAVE_FREE(darray);
-    //     } else if (vtype == RaveValue_Type_StringArray) {
-    //       char** sarray = RAVE_MALLOC(sizeof(char*)*nvalues);
-    //       for (i = 0; i < nvalues; i++) {
-    //         PyObject* pyobj = PyList_GetItem(val, i);  /* We don't need to release this since it is internal pointer.*/
-    //         sarray[i] = (char*)PyString_AsString(pyobj);
-    //       }
-    //       if (!RaveValue_setStringArray(self->value, (const char**)sarray, nvalues)) {
-    //         RAVE_FREE(sarray);
-    //         raiseException_gotoTag(done, PyExc_MemoryError, "Failed to set list");
-    //       }
-    //       RAVE_FREE(sarray);
-    //     }
-    //   }
-    // }
   } else {
     raiseException_gotoTag(done, PyExc_AttributeError,
         PY_RAVE_ATTRO_NAME_TO_STRING(name));

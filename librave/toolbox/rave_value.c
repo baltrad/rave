@@ -43,6 +43,7 @@ struct _RaveValue_t {
   long* longArray;     /**< the long array */
   double* doubleArray; /**< the double array */
   char** stringArray;  /**< the string array */
+  RaveObjectHashTable_t* hashtable; /**< the hash table */
   int arraylen;        /**< length of arrays */
 };
 
@@ -74,6 +75,7 @@ static int RaveValue_constructor(RaveCoreObject* obj)
   this->longArray = NULL;
   this->doubleArray = NULL;
   this->stringArray = NULL;
+  this->hashtable = NULL;
   this->arraylen = 0;
   return 1;
 }
@@ -90,6 +92,7 @@ static int RaveValue_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj
   this->longArray = NULL;
   this->doubleArray = NULL;
   this->stringArray = NULL;
+  this->hashtable = NULL;
 
   if (src->stringValue != NULL && !RaveValue_setString(this, (const char*)src->stringValue)) {
     RAVE_ERROR0("Failed to clone string");
@@ -111,12 +114,21 @@ static int RaveValue_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj
     goto fail;
   }
 
+  if (src->hashtable != NULL) {
+    this->hashtable = RAVE_OBJECT_CLONE(src->hashtable);
+    if (this->hashtable == NULL) {
+      RAVE_ERROR0("Failed to clone hashtable");
+      goto fail;
+    }
+  }
+
   return 1;
 fail:
   RAVE_FREE(this->stringValue);
   RAVE_FREE(this->longArray);
   RAVE_FREE(this->doubleArray);
   RaveValueInternal_freeStringArray(&this->stringArray, this->arraylen);
+  RAVE_OBJECT_RELEASE(this->hashtable);
   return 0;
 }
 
@@ -129,7 +141,8 @@ static void RaveValue_destructor(RaveCoreObject* obj)
   RAVE_FREE(this->stringValue);
   RAVE_FREE(this->longArray);
   RAVE_FREE(this->doubleArray);
-  
+  RaveValueInternal_freeStringArray(&this->stringArray, this->arraylen);
+  RAVE_OBJECT_RELEASE(this->hashtable);
 }
 
 /*@} End of Private functions */
@@ -150,7 +163,8 @@ void RaveValue_reset(RaveValue_t* self)
   self->doubleValue = 0.0;
   RAVE_FREE(self->longArray);
   RAVE_FREE(self->doubleArray);
-  RaveValueInternal_freeStringArray(&self->stringArray, self->arraylen);  
+  RaveValueInternal_freeStringArray(&self->stringArray, self->arraylen); 
+  RAVE_OBJECT_RELEASE(self->hashtable); 
   self->arraylen = 0;
 
 }
@@ -434,6 +448,35 @@ int RaveValue_getDoubleArray(RaveValue_t* self, double** value, int* len)
   }
   return result;
 }
+
+int RaveValue_setHashTable(RaveValue_t* self, RaveObjectHashTable_t* table)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  RaveValue_reset(self);
+  if (table != NULL) {
+    self->hashtable = RAVE_OBJECT_COPY(table);
+    self->type = RaveValue_Type_Hashtable;
+  }
+  return 1;
+}
+
+int RaveValue_getHashTable(RaveValue_t* self, RaveObjectHashTable_t** table)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  if (self->type == RaveValue_Type_Hashtable) {
+    RAVE_OBJECT_RELEASE(*table);
+    *table = RAVE_OBJECT_COPY(self->hashtable);
+    return 1;
+  }
+  return 0;
+}
+
+RaveObjectHashTable_t* RaveValue_toHashTable(RaveValue_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return RAVE_OBJECT_COPY(self->hashtable);
+}
+
 
 /*@} End of Interface functions */
 

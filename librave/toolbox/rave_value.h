@@ -26,6 +26,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef RAVE_VALUE_H
 #define RAVE_VALUE_H
 #include "rave_object.h"
+#include "raveobject_hashtable.h"
 #include <stdarg.h>
 
 typedef enum RaveValue_Type {
@@ -229,6 +230,29 @@ int RaveValue_setDoubleArray(RaveValue_t* self, double* value, int len);
  * @returns 1 on success or 0 if format of the data not is a double array
  */
 int RaveValue_getDoubleArray(RaveValue_t* self, double** value, int* len);
+
+/**
+ * Sets the value as a hash table.
+ * @param[in] self - self
+ * @param[in] table - the object hash table.
+ * @return 1 on success or 0 if not settable
+ */
+int RaveValue_setHashTable(RaveValue_t* self, RaveObjectHashTable_t* table);
+
+/**
+ * Returns the hash table if possible.
+ * @param[in] self
+ * @param[out] table - a reference to the hash table
+ * @return 1 if value is a hash table otherwise 0
+ */
+int RaveValue_getHashTable(RaveValue_t* self, RaveObjectHashTable_t** table);
+
+/**
+ * NOTE! It up to user to ensure that value actually is a hash table otherwise behavior will be undefined. 
+ * @param[in] self - self
+ * @return the hash table or NULL
+ */
+RaveObjectHashTable_t* RaveValue_toHashTable(RaveValue_t* self);
 
 #endif /* RAVE_VALUE_H */
 
