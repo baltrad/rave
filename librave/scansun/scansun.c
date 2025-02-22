@@ -212,8 +212,13 @@ void fill_meta(PolarScan_t* scan, PolarScanParam_t* param, SCANMETA *meta)
    } else meta->pulse = tmpd;
 
    if (!getDoubleAttribute((RaveCoreObject*)scan, "how/RXbandwidth", &tmpd)) {
-     RAVE_WARNING2("Scan elevation %2.1f: No how/RXbandwidth attribute. Using %1.2f MHz.\n", meta->elev, meta->CWIDTH/meta->pulse);
-     meta->bandwidth = CWIDTH/meta->pulse;
+     if (meta->pulse != 0.0) {
+      RAVE_WARNING2("Scan elevation %2.1f: No how/RXbandwidth attribute. Using %1.2f MHz.\n", meta->elev, CWIDTH/meta->pulse);
+      meta->bandwidth = CWIDTH/meta->pulse;
+     } else {
+      meta->bandwidth = 2.0;
+      RAVE_WARNING2("Scan elevation %2.1f: No how/RXbandwidth attribute and pulse = 0. Using %1.2f MHz.\n", meta->elev, meta->bandwidth);
+     }
    } else meta->bandwidth = tmpd;
 
    /* Would be possible that radar constants are found in individual quantity how,
