@@ -28,6 +28,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_attribute.h"
 #include "rave_list.h"
 #include "rave_object.h"
+#include "rave_properties.h"
 #include "raveobject_list.h"
 #include "rave_types.h"
 #include "rave_debug.h"
@@ -50,6 +51,7 @@ static const char* SUPPORTED_PRODUCTS[]={
 typedef struct _LegacyCompositeGeneratorFactory_t {
   RAVE_OBJECT_HEAD /**< Always on top */
   COMPOSITE_GENERATOR_FACTORY_HEAD /**< composite generator plugin specifics */
+  RaveProperties_t* properties; /**< the properties */
 } LegacyCompositeGeneratorFactory_t;
 
 
@@ -82,8 +84,11 @@ static int LegacyCompositeGeneratorFactory_constructor(RaveCoreObject* obj)
   this->getName = LegacyCompositeGeneratorFactory_getName;
   this->getDefaultId = LegacyCompositeGeneratorFactory_getDefaultId;
   this->canHandle = LegacyCompositeGeneratorFactory_canHandle;
+  this->setProperties = LegacyCompositeGeneratorFactory_setProperties;
+  this->getProperties = LegacyCompositeGeneratorFactory_getProperties;
   this->generate = LegacyCompositeGeneratorFactory_generate;
   this->create = LegacyCompositeGeneratorFactory_create;
+  this->properties = NULL;
   return 1;
 }
 
@@ -95,13 +100,26 @@ static int LegacyCompositeGeneratorFactory_constructor(RaveCoreObject* obj)
 static int LegacyCompositeGeneratorFactory_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj)
 {
   LegacyCompositeGeneratorFactory_t* this = (LegacyCompositeGeneratorFactory_t*)obj;
+  LegacyCompositeGeneratorFactory_t* src = (LegacyCompositeGeneratorFactory_t*)srcobj;
   this->getName = LegacyCompositeGeneratorFactory_getName;
   this->getDefaultId = LegacyCompositeGeneratorFactory_getDefaultId;
   this->canHandle = LegacyCompositeGeneratorFactory_canHandle;
+  this->setProperties = LegacyCompositeGeneratorFactory_setProperties;
+  this->getProperties = LegacyCompositeGeneratorFactory_getProperties;
   this->generate = LegacyCompositeGeneratorFactory_generate;
   this->create = LegacyCompositeGeneratorFactory_create;
-
+  this->properties = NULL;
+  if (src->properties != NULL) {
+    this->properties = RAVE_OBJECT_CLONE(src->properties);
+    if (this->properties == NULL) {
+      RAVE_ERROR0("Failed to clone properties");
+      goto fail;
+    }
+  }
   return 1;
+fail:
+  RAVE_OBJECT_RELEASE(this->properties);
+  return 0;
 }
 
 /**
@@ -110,7 +128,8 @@ static int LegacyCompositeGeneratorFactory_copyconstructor(RaveCoreObject* obj, 
  */
 static void LegacyCompositeGeneratorFactory_destructor(RaveCoreObject* obj)
 {
-  //LegacyCompositeGeneratorFactory_t* this = (LegacyCompositeGeneratorFactory_t*)obj;
+  LegacyCompositeGeneratorFactory_t* this = (LegacyCompositeGeneratorFactory_t*)obj;
+  RAVE_OBJECT_RELEASE(this->properties);
 }
 
 static CompositeInterpolationMethod_t LegacyCompositeGeneratorFactoryInternal_getInterpolationMethod(const char* method)
@@ -177,6 +196,24 @@ int LegacyCompositeGeneratorFactory_canHandle(CompositeGeneratorFactory_t* self,
   }
 
   return 1;
+}
+
+int LegacyCompositeGeneratorFactory_setProperties(CompositeGeneratorFactory_t* self, RaveProperties_t* properties)
+{
+  LegacyCompositeGeneratorFactory_t* factory = (LegacyCompositeGeneratorFactory_t*)self;
+  RAVE_ASSERT((factory != NULL), "self == NULL");
+  RAVE_OBJECT_RELEASE(factory->properties);
+  if (properties != NULL) {
+    factory->properties = RAVE_OBJECT_COPY(properties);
+  }
+  return 1;
+}
+
+RaveProperties_t* LegacyCompositeGeneratorFactory_getProperties(CompositeGeneratorFactory_t* self)
+{
+  LegacyCompositeGeneratorFactory_t* factory = (LegacyCompositeGeneratorFactory_t*)self;
+  RAVE_ASSERT((factory != NULL), "factory == NULL");
+  return RAVE_OBJECT_COPY(factory->properties);
 }
 
 /**

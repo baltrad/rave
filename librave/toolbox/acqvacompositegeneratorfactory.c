@@ -37,6 +37,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 typedef struct _AcqvaCompositeGeneratorFactory_t {
   RAVE_OBJECT_HEAD /**< Always on top */
   COMPOSITE_GENERATOR_FACTORY_HEAD /**< composite generator plugin specifics */
+  RaveProperties_t* properties; /**< the properties */
 } AcqvaCompositeGeneratorFactory_t;
 /*@{ Private functions */
 
@@ -78,8 +79,11 @@ static int AcqvaCompositeGeneratorFactory_constructor(RaveCoreObject* obj)
   this->getName = AcqvaCompositeGeneratorFactory_getName;
   this->getDefaultId = AcqvaCompositeGeneratorFactory_getDefaultId;
   this->canHandle = AcqvaCompositeGeneratorFactory_canHandle;
+  this->setProperties = AcqvaCompositeGeneratorFactory_setProperties;
+  this->getProperties = AcqvaCompositeGeneratorFactory_getProperties;
   this->generate = AcqvaCompositeGeneratorFactory_generate;
   this->create = AcqvaCompositeGeneratorFactory_create;
+  this->properties = NULL;
   return 1;
 }
 
@@ -91,13 +95,26 @@ static int AcqvaCompositeGeneratorFactory_constructor(RaveCoreObject* obj)
 static int AcqvaCompositeGeneratorFactory_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj)
 {
   AcqvaCompositeGeneratorFactory_t* this = (AcqvaCompositeGeneratorFactory_t*)obj;
+  AcqvaCompositeGeneratorFactory_t* src = (AcqvaCompositeGeneratorFactory_t*)srcobj;
   this->getName = AcqvaCompositeGeneratorFactory_getName;
   this->getDefaultId = AcqvaCompositeGeneratorFactory_getDefaultId;
   this->canHandle = AcqvaCompositeGeneratorFactory_canHandle;
+  this->setProperties = AcqvaCompositeGeneratorFactory_setProperties;
+  this->getProperties = AcqvaCompositeGeneratorFactory_getProperties;
   this->generate = AcqvaCompositeGeneratorFactory_generate;
   this->create = AcqvaCompositeGeneratorFactory_create;
-
+  this->properties = NULL;
+  if (src->properties != NULL) {
+    this->properties = RAVE_OBJECT_CLONE(src->properties);
+    if (this->properties == NULL) {
+      RAVE_ERROR0("Failed to clone properties");
+      goto fail;
+    }
+  }
   return 1;
+fail:
+  RAVE_OBJECT_RELEASE(this->properties);
+  return 0;
 }
 
 /**
@@ -106,7 +123,8 @@ static int AcqvaCompositeGeneratorFactory_copyconstructor(RaveCoreObject* obj, R
  */
 static void AcqvaCompositeGeneratorFactory_destructor(RaveCoreObject* obj)
 {
-  //AcqvaCompositeGeneratorFactory_t* this = (AcqvaCompositeGeneratorFactory_t*)obj;
+  AcqvaCompositeGeneratorFactory_t* this = (AcqvaCompositeGeneratorFactory_t*)obj;
+  RAVE_OBJECT_RELEASE(this->properties);
 }
 
 int AcqvaCompositeGeneratorFactoryInternal_findLowestUsableValue(CompositeGeneratorFactory_t* self, PolarVolume_t* pvol, 
@@ -245,6 +263,25 @@ int AcqvaCompositeGeneratorFactory_canHandle(CompositeGeneratorFactory_t* self, 
     return 0;
   }
   return 1;
+}
+
+int AcqvaCompositeGeneratorFactory_setProperties(CompositeGeneratorFactory_t* self, RaveProperties_t* properties)
+{
+  AcqvaCompositeGeneratorFactory_t* factory = (AcqvaCompositeGeneratorFactory_t*)self;
+  RAVE_ASSERT((factory != NULL), "self == NULL");
+  RAVE_OBJECT_RELEASE(factory->properties);
+  if (properties != NULL) {
+    factory->properties = RAVE_OBJECT_COPY(properties);
+  }
+
+  return 1;
+}
+
+RaveProperties_t* AcqvaCompositeGeneratorFactory_getProperties(CompositeGeneratorFactory_t* self)
+{
+  AcqvaCompositeGeneratorFactory_t* factory = (AcqvaCompositeGeneratorFactory_t*)self;
+  RAVE_ASSERT((factory != NULL), "factory == NULL");
+  return RAVE_OBJECT_COPY(factory->properties);
 }
 
 Cartesian_t* AcqvaCompositeGeneratorFactory_generate(CompositeGeneratorFactory_t* self, CompositeArguments_t* arguments)

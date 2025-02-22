@@ -51,6 +51,7 @@ struct _CompositeGenerator_t {
   RAVE_OBJECT_HEAD /** Always on top */
   RaveObjectList_t* factories; /**< the factory filters */
   CompositeFactoryManager_t* manager; /**< the factory manager */
+  RaveProperties_t* properties; /**< properties */
 };
 
 /*@{ Private CompositeFactoryEntry class */
@@ -145,6 +146,7 @@ static int CompositeGenerator_constructor(RaveCoreObject* obj)
   CompositeGenerator_t* this = (CompositeGenerator_t*)obj;
   this->factories = RAVE_OBJECT_NEW(&RaveObjectList_TYPE);
   this->manager = NULL;
+  this->properties = NULL;
 
   if (this->factories == NULL) {
     goto fail;
@@ -165,6 +167,7 @@ static int CompositeGenerator_copyconstructor(RaveCoreObject* obj, RaveCoreObjec
   CompositeGenerator_t* this = (CompositeGenerator_t*)obj;
   CompositeGenerator_t* src = (CompositeGenerator_t*)srcobj;
   this->factories = RAVE_OBJECT_CLONE(src->factories);
+  this->properties = NULL;
   if (this->factories == NULL) {
     goto fail;
   }
@@ -176,11 +179,18 @@ static int CompositeGenerator_copyconstructor(RaveCoreObject* obj, RaveCoreObjec
       goto fail;
     }
   }
-
+  if (src->properties != NULL) {
+    this->properties = RAVE_OBJECT_CLONE(src->properties);
+    if (this->properties == NULL) {
+      RAVE_ERROR0("Failed to clone properties");
+      goto fail;
+    }
+  }
   return 1;
 fail:
   RAVE_OBJECT_RELEASE(this->factories);
   RAVE_OBJECT_RELEASE(this->manager);
+  RAVE_OBJECT_RELEASE(this->properties);
   return 0;
 }
 
@@ -193,6 +203,7 @@ static void CompositeGenerator_destructor(RaveCoreObject* obj)
   CompositeGenerator_t* this = (CompositeGenerator_t*)obj;
   RAVE_OBJECT_RELEASE(this->factories);
   RAVE_OBJECT_RELEASE(this->manager);
+  RAVE_OBJECT_RELEASE(this->properties);
 }
 
 static int CompositeGeneratorInternal_loadXml(CompositeGenerator_t* generator, const char* filename)
@@ -394,6 +405,22 @@ fail:
   return NULL;
 }
 
+int CompositeGenerator_setProperties(CompositeGenerator_t* generator, RaveProperties_t* properties)
+{
+  RAVE_ASSERT((generator != NULL), "generator == NULL");
+  RAVE_OBJECT_RELEASE(generator->properties);
+  if (properties != NULL) {
+    generator->properties = RAVE_OBJECT_COPY(properties);
+  }
+  return 1;
+}
+
+RaveProperties_t* CompositeGenerator_getProperties(CompositeGenerator_t* generator)
+{
+  RAVE_ASSERT((generator != NULL), "generator == NULL");
+  return RAVE_OBJECT_COPY(generator->properties);
+}
+
 int CompositeGenerator_register(CompositeGenerator_t* generator, const char* id, CompositeGeneratorFactory_t* factory, RaveObjectList_t* filters)
 {
   CompositeFactoryEntry_t* factoryEntry = NULL;
@@ -553,6 +580,26 @@ CompositeGeneratorFactory_t* CompositeGenerator_identify(CompositeGenerator_t* g
   return factory;
 }
 
+CompositeGeneratorFactory_t* CompositeGenerator_createFactory(CompositeGenerator_t* generator, CompositeArguments_t* arguments)
+{
+  CompositeGeneratorFactory_t *factory = NULL, *result = NULL;
+  RAVE_ASSERT((generator != NULL), "generator == NULL");
+  factory = CompositeGenerator_identify(generator, arguments);
+  if (factory != NULL) {
+    result = CompositeGeneratorFactory_create(factory);
+    if (result != NULL) {
+      if (!CompositeGeneratorFactory_setProperties(result, generator->properties)) {
+        RAVE_OBJECT_RELEASE(result);
+        RAVE_ERROR0("Failed to initialize generator factory with properties");
+      }
+    }
+  }
+
+  RAVE_OBJECT_RELEASE(factory);
+  return result;
+}
+
+
 Cartesian_t* CompositeGenerator_generate(CompositeGenerator_t* generator, CompositeArguments_t* arguments)
 {
   Cartesian_t* result = NULL;
@@ -566,7 +613,11 @@ Cartesian_t* CompositeGenerator_generate(CompositeGenerator_t* generator, Compos
   if (factory != NULL) {
     CompositeGeneratorFactory_t* worker = CompositeGeneratorFactory_create(factory);
     if (worker != NULL) {
-      result = CompositeGeneratorFactory_generate(worker, arguments);
+      if (CompositeGeneratorFactory_setProperties(worker, generator->properties)) {
+        result = CompositeGeneratorFactory_generate(worker, arguments);
+      } else {
+        RAVE_ERROR0("Failed to initialize generator factory with properties");
+      }
     }
     RAVE_OBJECT_RELEASE(worker);
   }

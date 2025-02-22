@@ -61,6 +61,20 @@ const char* NearestCompositeGeneratorFactory_getDefaultId(CompositeGeneratorFact
 int NearestCompositeGeneratorFactory_canHandle(CompositeGeneratorFactory_t* self, CompositeArguments_t* arguments);
 
 /**
+ * Sets the factory with properties
+ * @param[in] self - self
+ * @param[in] properties - the properties
+ */
+ int NearestCompositeGeneratorFactory_setProperties(CompositeGeneratorFactory_t* self, RaveProperties_t* properties);
+
+ /**
+ * Returns properties from the factory
+ * @param[in] self - self
+ * @return properties - the properties
+ */
+ RaveProperties_t* NearestCompositeGeneratorFactory_getProperties(CompositeGeneratorFactory_t* self);
+
+/**
  * @returns the result from the generation
  */
 Cartesian_t* NearestCompositeGeneratorFactory_generate(CompositeGeneratorFactory_t* self, CompositeArguments_t* arguments);

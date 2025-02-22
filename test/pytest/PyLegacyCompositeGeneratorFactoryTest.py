@@ -35,6 +35,7 @@ import _legacycompositegeneratorfactory
 import _raveio
 import string
 import math
+import _raveproperties
 
 class PyLegacyCompositeGeneratorFactoryTest(unittest.TestCase):
   def setUp(self):
@@ -87,6 +88,15 @@ class PyLegacyCompositeGeneratorFactoryTest(unittest.TestCase):
       args.product = product
       args.addArgument("interpolation_method", "3D")
       self.assertEqual(False, classUnderTest.canHandle(args))
+
+  def test_properties(self):
+    classUnderTest = _legacycompositegeneratorfactory.new()
+    props = _raveproperties.new()
+    props.set("t.1", "YES")
+    classUnderTest.setProperties(props)
+    self.assertEqual("YES", classUnderTest.getProperties().get("t.1"))
+    classUnderTest.setProperties(None)
+    self.assertEqual(None, classUnderTest.getProperties())
 
   def test_create(self):
     classUnderTest = _legacycompositegeneratorfactory.new()

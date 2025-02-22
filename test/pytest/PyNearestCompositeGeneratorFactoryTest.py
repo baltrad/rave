@@ -34,6 +34,7 @@ import _nearestcompositegeneratorfactory
 import _raveio
 import string
 import math
+import _raveproperties
 
 class PyNearestCompositeGeneratorFactoryTest(unittest.TestCase):
   SWEDISH_VOLUMES = ["fixtures/pvol_seang_20090501T120000Z.h5",
@@ -121,6 +122,15 @@ class PyNearestCompositeGeneratorFactoryTest(unittest.TestCase):
       args = _compositearguments.new()
       args.product = product
       self.assertEqual(False, classUnderTest.canHandle(args))
+
+  def test_properties(self):
+    classUnderTest = _nearestcompositegeneratorfactory.new()
+    props = _raveproperties.new()
+    props.set("t.1", "YES")
+    classUnderTest.setProperties(props)
+    self.assertEqual("YES", classUnderTest.getProperties().get("t.1"))
+    classUnderTest.setProperties(None)
+    self.assertEqual(None, classUnderTest.getProperties())
 
   def Xtest_generate(self):
     classUnderTest = _nearestcompositegeneratorfactory.new()

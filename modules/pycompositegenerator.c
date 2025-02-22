@@ -33,6 +33,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "pyrave_debug.h"
 
 #define PYCOMPOSITEGENERATOR_MODULE        /**< to get correct part of pycompositegenerator.h */
+#include "pyraveproperties.h"
 #include "pycompositegenerator.h"
 #include "pycompositegeneratorfactory.h"
 #include "pycompositefactorymanager.h"
@@ -338,12 +339,37 @@ static PyObject* _pycompositegenerator_identify(PyCompositeGenerator* self, PyOb
   return result;
 }
 
+static PyObject* _pycompositegenerator_createFactory(PyCompositeGenerator* self, PyObject* args)
+{
+  PyObject* pyargs = NULL;
+  PyObject* result = NULL;
+  CompositeGeneratorFactory_t* factory = NULL;
+
+  if (!PyArg_ParseTuple(args, "O", &pyargs)) {
+    return NULL;
+  }
+
+  if (!PyCompositeArguments_Check(pyargs)) {
+    raiseException_returnNULL(PyExc_AttributeError, "Expects a CompositeArgument object as argument");
+  }
+
+  factory = CompositeGenerator_createFactory(self->generator, ((PyCompositeArguments*)pyargs)->args);
+  if (factory != NULL) {
+    result = (PyObject*)PyCompositeGeneratorFactory_New(factory);
+  } else {
+    PyErr_SetString(PyExc_ValueError, "Could not create factory");
+  }
+  
+  RAVE_OBJECT_RELEASE(factory);
+  return result;
+}
 
 /**
  * All methods a cartesian product can have
  */
 static struct PyMethodDef _pycompositegenerator_methods[] =
 {
+  {"properties", NULL, METH_VARARGS},
   {"register", (PyCFunction)_pycompositegenerator_register, 1,
     "register(id, factory)\n\n" //
     "Add a factory to the generator.\n\n"
@@ -364,6 +390,11 @@ static struct PyMethodDef _pycompositegenerator_methods[] =
     "Identifies the factory to be used.\n\n"
     "arguments - A CompositeArgumentsCore instance"
   },
+  {"createFactory", (PyCFunction)_pycompositegenerator_createFactory, 1,
+    "createFactory(arguments)\n\n"
+    "Identifies and creates the factory to use, will set properties before returning instance.\n\n"
+    "arguments - A CompositeArgumentsCore instance"
+  },
   {"generate", (PyCFunction)_pycompositegenerator_generate, 1,
     "generate()\n\n" // "sddd", &
     "Runs the composite generator.\n\n"
@@ -379,6 +410,16 @@ static struct PyMethodDef _pycompositegenerator_methods[] =
 
 static PyObject* _pycompositegenerator_getattro(PyCompositeGenerator* self, PyObject* name)
 {
+  if (PY_COMPARE_STRING_WITH_ATTRO_NAME("properties", name) == 0) {
+    RaveProperties_t* properties = CompositeGenerator_getProperties(self->generator);
+    if (properties != NULL) {
+      PyObject* result = (PyObject*)PyRaveProperties_New(properties);
+      RAVE_OBJECT_RELEASE(properties);
+      return result;
+    } else {
+      Py_RETURN_NONE;
+    }
+  }
   return PyObject_GenericGetAttr((PyObject*)self, name);
 }
 
@@ -388,6 +429,20 @@ static PyObject* _pycompositegenerator_getattro(PyCompositeGenerator* self, PyOb
 static int _pycompositegenerator_setattro(PyCompositeGenerator* self, PyObject* name, PyObject* val)
 {
   int result = -1;
+  if (name == NULL) {
+    goto done;
+  }
+  if (PY_COMPARE_STRING_WITH_ATTRO_NAME("properties", name) == 0) {
+    if (val == Py_None) {
+      CompositeGenerator_setProperties(self->generator, NULL);
+    } else if (PyRaveProperties_Check(val)) {
+      CompositeGenerator_setProperties(self->generator, ((PyRaveProperties*)val)->properties);
+    } else {
+      raiseException_gotoTag(done, PyExc_ValueError,"properties must be of type RavePropertiesCore or None");
+    }
+  }
+  result = 0;
+done:
   return result;
 }
 
@@ -408,7 +463,7 @@ PyDoc_STRVAR(_pycompositegenerator_type_doc,
     "                                CAPPI, PCAPPI and PMAX requires height above sea level\n"
     "                                PMAX also requires range in meters\n"
     " selection_method             - The selection method to use when there are more than one radar covering same point. I.e. if for example taking distance to radar or height above sea level. Currently the following methods are available\n"
-    "       _pycomposite.SelectionMethod_NEAREST - Value from the nearest radar is selected.\n"
+    "       _pycomposite.SelectionMethod_NEAREST - Value from the nearepropertiesst radar is selected.\n"
     "       _pycomposite.SelectionMethod_HEIGHT  - Value from radar which scan is closest to the sea level at current point.\n"
     " interpolation_method         - Interpolation method is used to choose how to interpolate the surrounding values. The default behaviour is NEAREST.\n"
     "       _pycomposite.InterpolationMethod_NEAREST                  - Nearest value is used\n"
@@ -427,7 +482,7 @@ PyDoc_STRVAR(_pycompositegenerator_type_doc,
     "                                                                   power of 2 are used in value interpolation.\n"
     ""
     " interpolate_undetect         - If undetect should be used in interpolation or not.\n"
-    "                                If undetect not should be included in the interpolation, the behavior will be the following:\n"
+    "                                If undetect not should be includepropertiesd in the interpolation, the behavior will be the following:\n"
     "                                * If all values are UNDETECT, then result will be UNDETECT.\n"
     "                                * If only one value is DATA, then use that value.\n"
     "                                * If more than one value is DATA, then interpolation.\n"
@@ -486,7 +541,8 @@ PyTypeObject PyCompositeGenerator_Type =
   0,                            /*tp_weaklistoffset*/
   0,                            /*tp_iter*/
   0,                            /*tp_iternext*/
-  _pycompositegenerator_methods,              /*tp_methods*/
+  _pycompositegenerator_methods,              /*tp_methods    RAVE_OBJECT_RELEASE(factory);
+  */
   0,                            /*tp_members*/
   0,                            /*tp_getset*/
   0,                            /*tp_base*/
@@ -537,7 +593,7 @@ MOD_INIT(_compositegenerator)
   c_api_object = PyCapsule_New(PyCompositeGenerator_API, PyCompositeGenerator_CAPSULE_NAME, NULL);
   dictionary = PyModule_GetDict(module);
   PyDict_SetItemString(dictionary, "_C_API", c_api_object);
-
+  
   ErrorObject = PyErr_NewException("_compositegenerator.error", NULL, NULL);
   if (ErrorObject == NULL || PyDict_SetItemString(dictionary, "error", ErrorObject) != 0) {
     Py_FatalError("Can't define _compositegenerator.error");
@@ -545,6 +601,8 @@ MOD_INIT(_compositegenerator)
   }
 
   import_array(); /*To make sure I get access to Numeric*/
+  
+  import_raveproperties();
   import_compositegeneratorfactory();
   import_compositefactorymanager();
   import_compositearguments();

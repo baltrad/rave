@@ -33,6 +33,7 @@ import _projection
 import _polarscan
 import _polarvolume
 import _acqvacompositegeneratorfactory
+import _raveproperties
 import string
 import math
 
@@ -88,6 +89,15 @@ class PyAcqvaCompositeGeneratorFactoryTest(unittest.TestCase):
     obj = classUnderTest.create()
     self.assertEqual("AcqvaCompositeGenerator", obj.getName())
     self.assertTrue(classUnderTest != obj)
+
+  def test_properties(self):
+    classUnderTest = _acqvacompositegeneratorfactory.new()
+    props = _raveproperties.new()
+    props.set("t.1", "YES")
+    classUnderTest.setProperties(props)
+    self.assertEqual("YES", classUnderTest.getProperties().get("t.1"))
+    classUnderTest.setProperties(None)
+    self.assertEqual(None, classUnderTest.getProperties())
 
   def test_generate(self):
     classUnderTest = _acqvacompositegeneratorfactory.new()

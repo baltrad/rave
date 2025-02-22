@@ -84,4 +84,4 @@ void RaveProperties_remove(RaveProperties_t* self, const char* name);
  */
  int RaveProperties_size(RaveProperties_t* self);
 
-#endif /* AREAREGISTRY_H */
+#endif /* RAVE_PROPERTIES */

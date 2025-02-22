@@ -29,6 +29,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_attribute.h"
 #include "rave_list.h"
 #include "rave_object.h"
+#include "rave_properties.h"
 #include "raveobject_list.h"
 #include "rave_types.h"
 #include "rave_debug.h"
@@ -43,6 +44,7 @@ typedef struct _NearestCompositeGeneratorFactory_t {
   RAVE_OBJECT_HEAD /**< Always on top */
   COMPOSITE_GENERATOR_FACTORY_HEAD /**< composite generator plugin specifics */
   CompositeEngine_t* engine; /**< the compositing engine */
+  RaveProperties_t* properties; /**< the properties */
 } NearestCompositeGeneratorFactory_t;
 
 static const char* SUPPORTED_PRODUCTS[]={
@@ -67,8 +69,12 @@ static int NearestCompositeGeneratorFactory_constructor(RaveCoreObject* obj)
   this->getName = NearestCompositeGeneratorFactory_getName;
   this->getDefaultId = NearestCompositeGeneratorFactory_getDefaultId;
   this->canHandle = NearestCompositeGeneratorFactory_canHandle;
+  this->setProperties = NearestCompositeGeneratorFactory_setProperties;
+  this->getProperties = NearestCompositeGeneratorFactory_getProperties;
   this->generate = NearestCompositeGeneratorFactory_generate;
   this->create = NearestCompositeGeneratorFactory_create;
+  this->properties = NULL;
+
   this->engine = RAVE_OBJECT_NEW(&CompositeEngine_TYPE);
   if (this->engine == NULL) {
     RAVE_ERROR0("Failed to create compositing engine");
@@ -103,8 +109,12 @@ static int NearestCompositeGeneratorFactory_copyconstructor(RaveCoreObject* obj,
   this->getName = NearestCompositeGeneratorFactory_getName;
   this->getDefaultId = NearestCompositeGeneratorFactory_getDefaultId;
   this->canHandle = NearestCompositeGeneratorFactory_canHandle;
+  this->setProperties = NearestCompositeGeneratorFactory_setProperties;
+  this->getProperties = NearestCompositeGeneratorFactory_getProperties;
   this->generate = NearestCompositeGeneratorFactory_generate;
   this->create = NearestCompositeGeneratorFactory_create;
+  this->properties = NULL;
+
   this->engine = RAVE_OBJECT_CLONE(src->engine);
   if (this->engine == NULL) {
     RAVE_ERROR0("Failed to clone compositing engine");
@@ -121,9 +131,18 @@ static int NearestCompositeGeneratorFactory_copyconstructor(RaveCoreObject* obj,
     goto fail;
   }
 
+  if (src->properties != NULL) {
+    this->properties = RAVE_OBJECT_CLONE(src->properties);
+    if (this->properties == NULL) {
+      RAVE_ERROR0("Failed to clone properties");
+      goto fail;
+    }
+  }
+
   return 1;
 fail:
   RAVE_OBJECT_RELEASE(this->engine);
+  RAVE_OBJECT_RELEASE(this->properties);
   return 0;
 }
 
@@ -135,11 +154,12 @@ static void NearestCompositeGeneratorFactory_destructor(RaveCoreObject* obj)
 {
   NearestCompositeGeneratorFactory_t* this = (NearestCompositeGeneratorFactory_t*)obj;
   RAVE_OBJECT_RELEASE(this->engine);
+  RAVE_OBJECT_RELEASE(this->properties);
 }
 
 int NearestCompositeGeneratorFactory_getPolarValueAtPosition(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, RaveCoreObject* object, const char* quantity, PolarNavigationInfo* navinfo, const char* qiFieldName, RaveValueType* otype, double* ovalue, double* qivalue)
 {
-  NearestCompositeGeneratorFactory_t* self = (NearestCompositeGeneratorFactory_t*)extradata;
+  // NearestCompositeGeneratorFactory_t* self = (NearestCompositeGeneratorFactory_t*)extradata;
   int result = 0;
 
   if (quantity == NULL) {
@@ -208,6 +228,24 @@ int NearestCompositeGeneratorFactory_canHandle(CompositeGeneratorFactory_t* self
 fail:
   RAVE_OBJECT_RELEASE(attr);
   return result;
+}
+
+int NearestCompositeGeneratorFactory_setProperties(CompositeGeneratorFactory_t* self, RaveProperties_t* properties)
+{
+  NearestCompositeGeneratorFactory_t* factory = (NearestCompositeGeneratorFactory_t*)self;
+  RAVE_ASSERT((factory != NULL), "self == NULL");
+  RAVE_OBJECT_RELEASE(factory->properties);
+  if (properties != NULL) {
+    factory->properties = RAVE_OBJECT_COPY(properties);
+  }
+  return 1;
+}
+
+RaveProperties_t* NearestCompositeGeneratorFactory_getProperties(CompositeGeneratorFactory_t* self)
+{
+  NearestCompositeGeneratorFactory_t* factory = (NearestCompositeGeneratorFactory_t*)self;
+  RAVE_ASSERT((factory != NULL), "factory == NULL");
+  return RAVE_OBJECT_COPY(factory->properties);
 }
 
 /**

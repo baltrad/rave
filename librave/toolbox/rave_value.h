@@ -84,7 +84,7 @@ int RaveValue_setString(RaveValue_t* self, const char* value);
  * @param[out] value - the internal 0-terminated string, DO NOT RELEASE memory
  * @returns 1 on success or 0 if format of the data not is a string
  */
-int RaveAttribute_getString(RaveValue_t* self, char** value);
+int RaveValue_getString(RaveValue_t* self, char** value);
 
 /**
  * Returns the string value. NOTE! It up to user to ensure that value actually is a string otherwise behavior will be undefined. 

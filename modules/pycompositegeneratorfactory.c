@@ -32,6 +32,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 
 #define PYCOMPOSITEGENERATORFACTORY_MODULE    /**< to get correct part in pycompositegeneratorfactory.h */
 #include "pycompositegeneratorfactory.h"
+#include "pyraveproperties.h"
 #include "rave_alloc.h"
 #include "pycompositearguments.h"
 #include "pycartesian.h"
@@ -193,6 +194,47 @@ static PyObject* _pycompositegeneratorfactory_create(PyCompositeGeneratorFactory
   return result;
 }
 
+static PyObject* _pycompositegeneratorfactory_setProperties(PyCompositeGeneratorFactory* self, PyObject* args)
+{
+  PyObject* pyproperties = NULL;
+
+  if (!PyArg_ParseTuple(args, "O", &pyproperties)) {
+    return NULL;
+  }
+  if (pyproperties == Py_None) {
+    if (!CompositeGeneratorFactory_setProperties(self->factory, NULL)) {
+      raiseException_returnNULL(PyExc_ValueError, "Could not initialize factory without properties");
+    }
+  } else if (PyRaveProperties_Check(pyproperties)) {
+    if (!CompositeGeneratorFactory_setProperties(self->factory, ((PyRaveProperties*)pyproperties)->properties)) {
+      raiseException_returnNULL(PyExc_ValueError, "Could not initialize factory with properties");
+    }
+  } else {
+    raiseException_returnNULL(PyExc_ValueError, "Must provide a rave properties object or None");
+  }
+  Py_RETURN_NONE;
+}
+
+static PyObject* _pycompositegeneratorfactory_getProperties(PyCompositeGeneratorFactory* self, PyObject* args)
+{
+  PyObject* pyproperties = NULL;
+  RaveProperties_t* properties = NULL;
+
+  if (!PyArg_ParseTuple(args, "")) {
+    return NULL;
+  }
+
+  properties = CompositeGeneratorFactory_getProperties(self->factory);
+  if (properties == NULL) {
+    Py_RETURN_NONE;
+  } else {
+    pyproperties = (PyObject*)PyRaveProperties_New(properties);
+    RAVE_OBJECT_RELEASE(properties);
+    return pyproperties;
+  }
+}
+
+
 static PyObject* _pycompositegeneratorfactory_generate(PyCompositeGeneratorFactory* self, PyObject* args)
 {
   PyObject* result = NULL;
@@ -225,6 +267,8 @@ static struct PyMethodDef _pycompositegeneratorfactory_methods[] =
   {"getDefaultId", (PyCFunction) _pycompositegeneratorfactory_getDefaultId, 1},
   {"canHandle", (PyCFunction) _pycompositegeneratorfactory_canHandle, 1},
   {"create", (PyCFunction) _pycompositegeneratorfactory_create, 1},
+  {"setProperties", (PyCFunction) _pycompositegeneratorfactory_setProperties, 1},
+  {"getProperties", (PyCFunction) _pycompositegeneratorfactory_getProperties, 1},
   {"generate", (PyCFunction) _pycompositegeneratorfactory_generate, 1},
   {NULL, NULL } /* sentinel */
 };
@@ -330,6 +374,7 @@ MOD_INIT(_compositegeneratorfactory)
 
   import_compositearguments();
   import_pycartesian();
+  import_raveproperties();
   PYRAVE_DEBUG_INITIALIZE;
   return MOD_INIT_SUCCESS(module);
 }

@@ -35,6 +35,7 @@ import _polarvolume
 import _legacycompositegeneratorfactory
 import _acqvacompositegeneratorfactory
 import _compositefactorymanager
+import _raveproperties
 import string
 import math
 
@@ -133,6 +134,34 @@ class PyCompositeGeneratorTest(unittest.TestCase):
     args.product = "ACQVA"
     factory = obj.identify(args)
     self.assertEqual("LegacyCompositeGenerator", factory.getName())
+
+  def test_properties(self):
+    classUnderTest = _compositegenerator.new()
+    properties = _raveproperties.new()
+    properties.set("t.1", "YES")
+    classUnderTest.properties = properties
+    self.assertEqual("YES", classUnderTest.properties.get("t.1"))
+
+  def test_createFactory(self):
+    classUnderTest = _compositegenerator.create()
+    properties = _raveproperties.new()
+    properties.set("t.1", "YES")
+    classUnderTest.properties = properties
+
+    args = _compositearguments.new()
+    args.product = "PCAPPI"
+
+    factory = classUnderTest.createFactory(args)
+    self.assertEqual("YES", factory.getProperties().get("t.1"))
+
+  def test_createFactory_noproperties(self):
+    classUnderTest = _compositegenerator.create()
+
+    args = _compositearguments.new()
+    args.product = "PCAPPI"
+
+    factory = classUnderTest.createFactory(args)
+    self.assertEqual(None, factory.getProperties())
 
   # def test_uregister(self):
   #   obj = _compositegenerator.new()

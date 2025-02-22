@@ -36,6 +36,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_types.h"
 #include "raveobject_list.h"
 #include "rave_field.h"
+#include "rave_properties.h"
 
 /**
  * Forward declaration of struct
@@ -58,6 +59,16 @@ typedef const char*(*composite_generator_factory_getDefaultId_fun)(struct _Compo
 typedef int(*composite_generator_factory_canHandle_fun)(struct _CompositeGeneratorFactory_t* self, CompositeArguments_t* arguments);
 
 /**
+ * Sets properties in the factory
+ */
+typedef int(*composite_generator_factory_setProperties_fun)(struct _CompositeGeneratorFactory_t* self, RaveProperties_t* properties);
+
+/**
+ * @return properties from the factory
+ */
+ typedef RaveProperties_t*(*composite_generator_factory_getProperties_fun)(struct _CompositeGeneratorFactory_t* self);
+
+/**
  * @returns the result from the generation
  */
 typedef Cartesian_t*(*composite_generator_factory_generate_fun)(struct _CompositeGeneratorFactory_t* self, CompositeArguments_t* arguments);
@@ -78,6 +89,8 @@ typedef struct _CompositeGeneratorFactory_t*(*composite_generator_factory_create
   composite_generator_factory_getName_fun getName; \
   composite_generator_factory_getDefaultId_fun getDefaultId; \
   composite_generator_factory_canHandle_fun canHandle; \
+  composite_generator_factory_setProperties_fun setProperties; \
+  composite_generator_factory_getProperties_fun getProperties; \
   composite_generator_factory_generate_fun generate; \
   composite_generator_factory_create_fun create;
 
@@ -111,6 +124,23 @@ typedef struct _CompositeGeneratorFactory_t {
 #define CompositeGeneratorFactory_canHandle(self, args) \
     ((CompositeGeneratorFactory_t*)self)->canHandle((CompositeGeneratorFactory_t*)self, args)
 
+/**
+ * Macro expansion for calling the set properties function
+ * @param[in] self - self
+ * @param[in] properties - properties
+ * @returns 1 on success otherwise 0
+ */
+#define CompositeGeneratorFactory_setProperties(self, properties) \
+((CompositeGeneratorFactory_t*)self)->setProperties((CompositeGeneratorFactory_t*)self, properties)
+
+/**
+ * Macro expansion for calling the get properties function
+ * @param[in] self - self
+ * @returns the properties or NULL
+ */
+ #define CompositeGeneratorFactory_getProperties(self) \
+ ((CompositeGeneratorFactory_t*)self)->getProperties((CompositeGeneratorFactory_t*)self)
+ 
 /**
  * Macro expansion for calling the generate function
  * @param[in] self - self

@@ -61,6 +61,20 @@ const char* AcqvaCompositeGeneratorFactory_getDefaultId(CompositeGeneratorFactor
 int AcqvaCompositeGeneratorFactory_canHandle(CompositeGeneratorFactory_t* self, CompositeArguments_t* arguments);
 
 /**
+ * Sets the factory with properties
+ * @param[in] self - self
+ * @param[in] properties - the properties
+ */
+ int AcqvaCompositeGeneratorFactory_setProperties(CompositeGeneratorFactory_t* self, RaveProperties_t* properties);
+
+ /**
+ * Returns properties from the factory
+ * @param[in] self - self
+ * @return properties - the properties
+ */
+ RaveProperties_t* AcqvaCompositeGeneratorFactory_getProperties(CompositeGeneratorFactory_t* self);
+
+/**
  * @returns the result from the generation
  */
 Cartesian_t* AcqvaCompositeGeneratorFactory_generate(CompositeGeneratorFactory_t* self, CompositeArguments_t* arguments);

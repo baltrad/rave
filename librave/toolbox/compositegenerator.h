@@ -33,6 +33,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_object.h"
 #include "rave_types.h"
 #include "raveobject_hashtable.h"
+#include "rave_properties.h"
 #include "limits.h"
 
 
@@ -54,6 +55,20 @@ extern RaveCoreObjectType CompositeGenerator_TYPE;
  * @return an initialized composite generator
  */
 CompositeGenerator_t* CompositeGenerator_create(CompositeFactoryManager_t* manager, const char* filename);
+
+/**
+ * Sets properties to the generator.
+ * NOTE! These properties will be passed to the used factory in the generate function using the initialize method.
+ * @param[in] generator - self
+ * @param[in] properties - the properties
+ * @return 1 on success otherwise 0
+ */
+int CompositeGenerator_setProperties(CompositeGenerator_t* generator, RaveProperties_t* properties);
+
+/**
+ * @return the properties (can be NULL)
+ */
+RaveProperties_t* CompositeGenerator_getProperties(CompositeGenerator_t* generator);
 
 /**
  * Registers a generator factory in the the generator.
@@ -87,6 +102,14 @@ void CompositeGenerator_unregister(CompositeGenerator_t* generator, const char* 
  * @returns the identified factory or NULL if nothing found
  */
 CompositeGeneratorFactory_t* CompositeGenerator_identify(CompositeGenerator_t* generator, CompositeArguments_t* arguments);
+
+/**
+ * Will identify the factory, create a new instance of this factory and set the properties before returning it.
+ * @param[in] generator - self
+ * @param[in] arguments - the arguments
+ * @returns the identified factory or NULL if nothing found
+ */
+CompositeGeneratorFactory_t* CompositeGenerator_createFactory(CompositeGenerator_t* generator, CompositeArguments_t* arguments);
 
 /**
  * Generates a composite according to the configured parameters in the composite structure.
