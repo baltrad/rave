@@ -27,6 +27,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #define RAVE_PROPERTIES_H
 #include "rave_value.h"
 #include "rave_object.h"
+#include "odim_sources.h"
 
 /**
  * Defines the area registry
@@ -83,5 +84,18 @@ void RaveProperties_remove(RaveProperties_t* self, const char* name);
  * @return the number of properties
  */
  int RaveProperties_size(RaveProperties_t* self);
+
+ /**
+  * Sets the odim sources to the rave properties
+  * @param[in] self - self
+  * @param[in] sources - the odim sources
+  */
+ void RaveProperties_setOdimSources(RaveProperties_t* self, OdimSources_t* sources);
+
+ /**
+  * @param[in] self - self
+  * @return the odim sources
+  */
+ OdimSources_t* RaveProperties_getOdimSources(RaveProperties_t* self);
 
 #endif /* RAVE_PROPERTIES */

@@ -26,6 +26,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_debug.h"
 #include "rave_alloc.h"
 #include "raveobject_hashtable.h"
+#include "odim_sources.h"
 //#include "rave_simplexml.h"
 //#include "rave_utilities.h"
 //#include "expat.h"
@@ -37,6 +38,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 struct _RaveProperties_t {
   RAVE_OBJECT_HEAD /** Always on top */
   RaveObjectHashTable_t* properties; /**< the property mapping */
+  OdimSources_t* sources; /**< odim sources */
 };
 
 /*@{ Private functions */
@@ -46,6 +48,7 @@ struct _RaveProperties_t {
 static int RaveProperties_constructor(RaveCoreObject* obj)
 {
   RaveProperties_t* this = (RaveProperties_t*)obj;
+  this->sources = NULL;
   this->properties = RAVE_OBJECT_NEW(&RaveObjectHashTable_TYPE);
   if (this->properties == NULL) {
     goto error;
@@ -64,15 +67,22 @@ static int RaveProperties_copyconstructor(RaveCoreObject* obj, RaveCoreObject* s
 {
   RaveProperties_t* this = (RaveProperties_t*)obj;
   RaveProperties_t* src = (RaveProperties_t*)srcobj;
-
+  this->sources = NULL;
   this->properties = RAVE_OBJECT_CLONE(src->properties);
-
   if (this->properties == NULL) {
     goto error;
+  }
+  if (src->sources != NULL) {
+    this->sources = RAVE_OBJECT_CLONE(src->sources);
+    if (this->sources == NULL) {
+      RAVE_ERROR0("Failed to clone sources");
+      goto error;
+    }
   }
   return 1;
 error:
   RAVE_OBJECT_RELEASE(this->properties);
+  RAVE_OBJECT_RELEASE(this->sources);
   return 0;
 }
 
@@ -83,6 +93,7 @@ static void RaveProperties_destructor(RaveCoreObject* obj)
 {
   RaveProperties_t* this = (RaveProperties_t*)obj;
   RAVE_OBJECT_RELEASE(this->properties);
+  RAVE_OBJECT_RELEASE(this->sources);
 }
 /*@} End of Private functions */
 
@@ -121,6 +132,24 @@ int RaveProperties_size(RaveProperties_t* self)
 {
   RAVE_ASSERT((self != NULL), "self == NULL");
   return RaveObjectHashTable_size(self->properties);
+}
+
+void RaveProperties_setOdimSources(RaveProperties_t* self, OdimSources_t* sources)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  RAVE_OBJECT_RELEASE(self->sources);
+  if (sources != NULL) {
+    self->sources = RAVE_OBJECT_COPY(sources);
+  }
+}
+
+OdimSources_t* RaveProperties_getOdimSources(RaveProperties_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  if (self->sources != NULL) {
+    return RAVE_OBJECT_COPY(self->sources);
+  }
+  return NULL;
 }
 
 /*@} End of Interface functions */

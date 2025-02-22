@@ -34,6 +34,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 
 #define PYRAVEPROPERTIES_MODULE
 #include "pyraveproperties.h"
+#include "pyodimsources.h"
 #include "pyravevalue.h"
 #include "rave_alloc.h"
 
@@ -290,6 +291,7 @@ static PyObject* _pyraveproperties_get(PyRaveProperties* self, PyObject* args)
  */
 static struct PyMethodDef _pyraveproperties_methods[] =
 {
+  {"sources", NULL, METH_VARARGS},
   {"set", (PyCFunction) _pyraveproperties_set, 1,
        "set(key, value)\n\n"
        "Sets a key-value in the properties.\n\n"
@@ -316,6 +318,17 @@ static struct PyMethodDef _pyraveproperties_methods[] =
  */
 static PyObject* _pyraveproperties_getattro(PyRaveProperties* self, PyObject* name)
 {
+  if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "sources") == 0) {
+    OdimSources_t* sources = RaveProperties_getOdimSources(self->properties);
+    PyObject* result = NULL;
+    if (sources != NULL) {
+      result = (PyObject*)PyOdimSources_New(sources);
+      RAVE_OBJECT_RELEASE(sources);
+      return result;
+    } else {
+      Py_RETURN_NONE;
+    }
+  }
   return PyObject_GenericGetAttr((PyObject*)self, name);
 }
 
@@ -325,6 +338,22 @@ static PyObject* _pyraveproperties_getattro(PyRaveProperties* self, PyObject* na
 static int _pyraveproperties_setattro(PyRaveProperties* self, PyObject* name, PyObject* val)
 {
   int result = -1;
+  if (name == NULL) {
+    goto done;
+  }
+
+  if (PY_COMPARE_STRING_WITH_ATTRO_NAME("sources", name)==0) {
+    if (val == Py_None) {
+      RaveProperties_setOdimSources(self->properties, NULL);
+    } else if (PyOdimSources_Check(val)) {
+      RaveProperties_setOdimSources(self->properties, ((PyOdimSources*)val)->sources);
+    } else {
+      raiseException_gotoTag(done, PyExc_ValueError, "sources must be OdimSourcesCore or None");
+    }
+  }
+
+  result = 0;
+done:
   return result;
 }
 /*@} End of RaveProperties */
@@ -449,6 +478,7 @@ MOD_INIT(_raveproperties)
   }
 
   import_ravevalue();
+  import_odimsources();
   PYRAVE_DEBUG_INITIALIZE;
   return MOD_INIT_SUCCESS(module);
 }

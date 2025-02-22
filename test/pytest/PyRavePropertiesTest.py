@@ -25,7 +25,7 @@ Tests the py rave value module.
 '''
 import unittest
 import os
-import _ravevalue, _raveproperties
+import _ravevalue, _raveproperties, _odimsources
 import string
 import math
 
@@ -103,3 +103,9 @@ class PyRavePropertiesTest(unittest.TestCase):
     self.assertFalse(classUnderTest.hasProperty("property.1"))
     classUnderTest.remove("property.4")
     self.assertEqual(0, classUnderTest.size())
+
+  def test_sources(self):
+    classUnderTest = _raveproperties.new()
+    self.assertTrue(classUnderTest.sources is None)
+    classUnderTest.sources = _odimsources.new()
+    self.assertTrue(classUnderTest.sources is not None)
