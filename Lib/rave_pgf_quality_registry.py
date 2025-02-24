@@ -49,18 +49,13 @@ _registry = {}
 def init():
   global _initialized
   if _initialized: return
-  import imp
+  import importlib
     
   O = ET.parse(QUALITY_REGISTRY)
   registry = O.getroot()
   for plugin in list(registry):
     name, module, c = plugin.attrib["name"], plugin.attrib["module"], plugin.attrib["class"]
-    fd, pathname, description = imp.find_module(module)
-    fmodule = imp.load_module(module, fd, pathname, description)
-    try:
-      fd.close()  # File descriptor is returned open, so close it.
-    except:
-      pass
+    fmodule = importlib.import_module(module)
     inst = getattr(fmodule, c)
     _registry[name] = inst()
   
