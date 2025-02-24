@@ -34,7 +34,7 @@ import _nearestcompositegeneratorfactory
 import _raveio
 import string
 import math
-import _raveproperties
+import _raveproperties, _odimsources
 
 class PyNearestCompositeGeneratorFactoryTest(unittest.TestCase):
   SWEDISH_VOLUMES = ["fixtures/pvol_seang_20090501T120000Z.h5",
@@ -49,6 +49,8 @@ class PyNearestCompositeGeneratorFactoryTest(unittest.TestCase):
                      "fixtures/pvol_seovi_20090501T120000Z.h5",
                      "fixtures/pvol_sevar_20090501T120000Z.h5",
                      "fixtures/pvol_sevil_20090501T120000Z.h5"]  
+
+  ODIMSOURCES_FIXTURE="fixtures/odim_sources_fixture.xml"
 
   def setUp(self):
     pass
@@ -133,7 +135,19 @@ class PyNearestCompositeGeneratorFactoryTest(unittest.TestCase):
     self.assertEqual(None, classUnderTest.getProperties())
 
   def Xtest_generate(self):
+    import _rave
+    _rave.setDebugLevel(_rave.Debug_RAVE_SPEWDEBUG)
     classUnderTest = _nearestcompositegeneratorfactory.new()
+    odimsources = _odimsources.load(self.ODIMSOURCES_FIXTURE)
+
+
+    properties = _raveproperties.new()
+    properties.sources = odimsources
+    properties.set("rave.rate.zr.coefficients",
+      {"sella":(200.0, 1.6), "sekrn": (200.0, 1.6)}
+    )
+
+    classUnderTest.setProperties(properties)
 
     args = _compositearguments.new()
 

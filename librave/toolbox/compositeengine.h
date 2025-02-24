@@ -27,6 +27,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "projection_pipeline.h"
 #include "rave_object.h"
+#include "rave_properties.h"
 #include "rave_types.h"
 #include "cartesian.h"
 #include "composite_utils.h"
@@ -69,18 +70,27 @@ extern RaveCoreObjectType CompositeEngine_TYPE;
 #define COMPOSITE_ENGINE_DEFAULT_QUALITY_FIELDS_OFFSET 0.0
 
 /**
+ * Binding for associating rave objects with pipelines, sources and other miscellaneous information.
+ */
+typedef struct CompositeEngineObjectBinding_t {
+  RaveCoreObject* object; /**< the rave object */
+  ProjectionPipeline_t* pipeline; /**< the projection pipeline */
+  OdimSource_t* source; /**< the source associated with the object */
+  RaveValue_t* value;   /**< a rave value, can be used to cache information */
+} CompositeEngineObjectBinding_t;
+
+/**
  * Function pointer used during composite generation (\ref CompositeEngine_generate).
  * Called when translating a surface coordinate into a lon/lat position. Will be called for each pixel in the resulting cartesian product.
  * @param[in] engine - self
  * @param[in] extradata - the extradata passed to the \ref CompositeEngine_generate function.
- * @param[in] object - the object corresponding to the pipeline
- * @param[in] pipeline - between cartesian->polar object.
+ * @param[in] binding - the object binding
  * @param[in] herex - the surface x coordinate
  * @param[in] herey - the surface y coordinate
  * @param[out] olon - out longitude in radians
  * @param[out] olat - out latitude in radians
  */
-typedef int(*composite_engine_getLonLat_fun)(CompositeEngine_t* engine, void* extradata, RaveCoreObject* object, ProjectionPipeline_t* pipeline, double herex, double herey, double* olon, double* olat);
+typedef int(*composite_engine_getLonLat_fun)(CompositeEngine_t* engine, void* extradata, CompositeEngineObjectBinding_t* binding, double herex, double herey, double* olon, double* olat);
 
 /**
  * Function pointer used during composite generation (\ref CompositeEngine_generate).
@@ -88,21 +98,20 @@ typedef int(*composite_engine_getLonLat_fun)(CompositeEngine_t* engine, void* ex
  * @param[in] engine - self
  * @param[in] extradata - the extradata passed to the \ref CompositeEngine_generate function.
  * @param[in] arguments -the arguments used when calling \ref CompositeEngine_generate function.
- * @param[in] object - the rave object to process
- * @param[in] 
+ * @param[in] binding - the object binding
  * @param[in] herex - the surface x coordinate
  * @param[in] herey - the surface y coordinate
  * @param[out] olon - out longitude in radians
  * @param[out] olat - out latitude in radians
  */
-typedef int(*composite_engine_selectRadarData_fun)(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, RaveCoreObject* object, int index, double olon, double olat, struct CompositeEngineRadarData_t* cvalues, int ncvalues);
+typedef int(*composite_engine_selectRadarData_fun)(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* binding, int index, double olon, double olat, struct CompositeEngineRadarData_t* cvalues, int ncvalues);
 
 /**
  * Function pointer used during composite generation (\ref CompositeEngine_generate) from the default selectRadarData function. This function is
  * registered for each quantity. 
  * @param[in] extradata - the extradata passed to the \ref CompositeEngine_generate function.
  * @param[in] arguments -the arguments used when calling \ref CompositeEngine_generate function.
- * @param[in] object - the rave object to process
+ * @param[in] binding - the object binding
  * @param[in] quantity - the quantity
  * @param[in] navinfo - navigation info for position in radar data
  * @param[in] qiFieldName - name of the quality field if that also should be retrieved
@@ -111,12 +120,21 @@ typedef int(*composite_engine_selectRadarData_fun)(CompositeEngine_t* engine, vo
  * @param[out] qivalue - the quality value
  * @return 1 on success otherwise 0
  */
-typedef int(*composite_engine_getPolarValueAtPosition_fun)(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, RaveCoreObject* object, const char* quantity, PolarNavigationInfo* navinfo, const char* qiFieldName, RaveValueType* otype, double* ovalue, double* qivalue);
+typedef int(*composite_engine_getPolarValueAtPosition_fun)(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* binding, const char* quantity, PolarNavigationInfo* navinfo, const char* qiFieldName, RaveValueType* otype, double* ovalue, double* qivalue);
 
+/**
+ * Sets the radar data in the cartesian product
+ */
 typedef int(*composite_engine_setRadarData_fun)(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, Cartesian_t* cartesian, double olon, double olat, long x, long y, struct CompositeEngineRadarData_t* cvalues, int ncvalues);
 
+/**
+ * Adds quality flags to the cartesian product
+ */
 typedef int(*composite_engine_addQualityFlagsToCartesian_fun)(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, Cartesian_t* cartesian);
 
+/**
+ * Fills the quality information in the cartesian product
+ */
 typedef int(*composite_engine_fillQualityInformation_fun)(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, long x, long y, CartesianParam_t* param, double radardist, int radarindex, PolarNavigationInfo* info);
 
 typedef struct CompositeEngineRadarData_t {
@@ -145,7 +163,7 @@ typedef struct CompositeEngineRadarData_t {
  * @param[out] olat - the latitude
  * @return 1 on success otherwise 0
  */
-int CompositeEngineFunction_getLonLat(CompositeEngine_t* self, void* extradata, RaveCoreObject* object, ProjectionPipeline_t* pipeline, double herex, double herey, double* olon, double* olat);
+int CompositeEngineFunction_getLonLat(CompositeEngine_t* self, void* extradata, CompositeEngineObjectBinding_t* binding, double herex, double herey, double* olon, double* olat);
 
 /**
  * @param[in] self - self
@@ -158,7 +176,7 @@ int CompositeEngineFunction_getLonLat(CompositeEngine_t* self, void* extradata, 
  * @param[in,out] cvalues - the composite values that should be filled in
  * @param[in] ncvalues - number of values in cvalues
  */
-int CompositeEngineFunction_selectRadarData(CompositeEngine_t* self, void* extradata, CompositeArguments_t* arguments, RaveCoreObject* object, int index, double olon, double olat, CompositeEngineRadarData_t* cvalues, int ncvalues);
+int CompositeEngineFunction_selectRadarData(CompositeEngine_t* self, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* binding, int index, double olon, double olat, CompositeEngineRadarData_t* cvalues, int ncvalues);
 
 /**
  * @param[in] self - self
@@ -250,7 +268,7 @@ int CompositeEngine_setFillQualityInformationFunction(CompositeEngine_t* self, c
  * @param[out] olat - the latitude in radians
  * @return 1 on success otherwise 0
  */
-int CompositeEngineUtility_getLonLat(CompositeEngine_t* engine, RaveCoreObject* object, ProjectionPipeline_t* pipeline, double herex, double herey, double* olon, double* olat);
+int CompositeEngineUtility_getLonLat(CompositeEngine_t* engine, CompositeEngineObjectBinding_t* binding, double herex, double herey, double* olon, double* olat);
 
 /**
  * Fetches the radar data for specified position using NEAREST.
@@ -264,12 +282,12 @@ int CompositeEngineUtility_getLonLat(CompositeEngine_t* engine, RaveCoreObject* 
  * @param[in] ncvalues - number of entries in cvalues
  * @return 1 on success otherwise 0
  */
-int CompositeEngineUtility_selectRadarData(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, RaveCoreObject* object, int index, double olon, double olat, CompositeEngineRadarData_t* cvalues, int ncvalues);
+int CompositeEngineUtility_selectRadarData(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* binding, int index, double olon, double olat, CompositeEngineRadarData_t* cvalues, int ncvalues);
 
 /**
  * Fetches the polar value from specified position for specified quantity. 
  */
-int CompositeEngineUtility_getPolarValueAtPosition(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, RaveCoreObject* object, const char* quantity, PolarNavigationInfo* navinfo, const char* qiFieldName, RaveValueType* otype, double* ovalue, double* qivalue);
+int CompositeEngineUtility_getPolarValueAtPosition(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* binding, const char* quantity, PolarNavigationInfo* navinfo, const char* qiFieldName, RaveValueType* otype, double* ovalue, double* qivalue);
 
 /**
  * Sets the radar data for specified position using NEAREST. Will also invoke fillQualityInformation function.
@@ -342,6 +360,37 @@ void CompositeEngineUtility_resetRadarData(CompositeArguments_t* arguments, Comp
  * @param[in] nparam - number of entries in the array
  */
 void CompositeEngineUtility_freeRadarData(CompositeEngineRadarData_t** cvalues, int nparam);
+
+/**
+ * Creates the binding between radar objects, pipelines, sources and other values that are relevant when creating composites.
+ * The order of the binding will be the same as the objects in the arguments at time the object is 
+ * @param[in] arguments - the arguments (containing the radar objects)
+ * @param[in] cartesian - the target composite 
+ * @param[out] nobject - the number of items in the returned array
+ * @param[in] sources - an OPTIONAL odim sources (MAY BE NULL). When creating binding, if possible to identify the odim source it will be attached to the binding.
+ * @return the array of bindings or NULL on failure
+ */
+ CompositeEngineObjectBinding_t* CompositeEngineUtility_createObjectBinding(CompositeArguments_t* arguments, Cartesian_t* cartesian, int* nobjects, OdimSources_t* sources);
+
+ /**
+  * Releases the objects and then deallocates the array
+  * @param[in,out] arr - the array to release
+  * @param[in] nobjects - number of items in array
+  */
+ void CompositeEngineUtility_releaseObjectBinding(CompositeEngineObjectBinding_t** arr, int nobjects);
+
+/**
+ * Sets the properties in this engine
+ * @param[in] self - self
+ * @param[in] properties - the properties to use
+ */
+void CompositeEngine_setProperties(CompositeEngine_t* self, RaveProperties_t* properties);
+
+/**
+ * @param[in] self - self
+ * @return the properties or NULL
+ */
+RaveProperties_t* CompositeEngine_getProperties(CompositeEngine_t* self);
 
 /**
  * Generates the composite using a basic approach

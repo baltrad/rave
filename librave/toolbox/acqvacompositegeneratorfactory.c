@@ -319,7 +319,7 @@ Cartesian_t* AcqvaCompositeGeneratorFactory_generate(CompositeGeneratorFactory_t
     goto fail;
   }
 
-  pipelineBinding = CompositeUtils_createRaveObjectBinding(arguments, cartesian, &nbindings);
+  pipelineBinding = CompositeUtils_createRaveObjectBinding(arguments, cartesian, &nbindings, NULL);
   if (pipelineBinding == NULL || nbindings != nradars) {
     RAVE_ERROR0("Could not create a proper pipeline binding");
     goto fail;

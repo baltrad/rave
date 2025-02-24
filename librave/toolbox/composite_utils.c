@@ -231,7 +231,7 @@ int CompositeUtils_getObjectSource(RaveCoreObject* obj, char* source, int nlen)
   return result;
 }
 
-CompositeRaveObjectBinding_t* CompositeUtils_createRaveObjectBinding(CompositeArguments_t* arguments, Cartesian_t* cartesian, int* nobjects)
+CompositeRaveObjectBinding_t* CompositeUtils_createRaveObjectBinding(CompositeArguments_t* arguments, Cartesian_t* cartesian, int* nobjects, OdimSources_t* sources)
 {
   CompositeRaveObjectBinding_t* result = NULL;
   Projection_t* projection = NULL;
@@ -260,6 +260,8 @@ CompositeRaveObjectBinding_t* CompositeUtils_createRaveObjectBinding(CompositeAr
     if (object != NULL) {
       Projection_t* objproj = CompositeUtils_getProjection(object);
       ProjectionPipeline_t* pipeline = NULL;
+      OdimSource_t* source = NULL;
+      char strsrc[512];
 
       if (objproj == NULL) {
         RAVE_ERROR0("Object does not have a projection");
@@ -273,10 +275,19 @@ CompositeRaveObjectBinding_t* CompositeUtils_createRaveObjectBinding(CompositeAr
         RAVE_OBJECT_RELEASE(objproj);
         goto fail;
       }
+      if (sources != NULL && CompositeUtils_getObjectSource(object, strsrc, 512)) {
+        source = OdimSources_identify(sources, (const char*)strsrc);
+        if (source != NULL) {
+          RAVE_SPEWDEBUG1("NOD: %s", OdimSource_getNod(source));
+        }
+      }
+
       result[i].object = RAVE_OBJECT_COPY(object);
       result[i].pipeline = RAVE_OBJECT_COPY(pipeline);
+      result[i].source = RAVE_OBJECT_COPY(source);
       RAVE_OBJECT_RELEASE(pipeline);
       RAVE_OBJECT_RELEASE(objproj);
+      RAVE_OBJECT_RELEASE(source);
     }
     RAVE_OBJECT_RELEASE(object);
   }
@@ -304,6 +315,7 @@ void CompositeUtils_releaseRaveObjectBinding(CompositeRaveObjectBinding_t** arr,
     for (i = 0; i < nobjects; i++) {
       RAVE_OBJECT_RELEASE((*arr)[i].object);
       RAVE_OBJECT_RELEASE((*arr)[i].pipeline);
+      RAVE_OBJECT_RELEASE((*arr)[i].source)
     }
     RAVE_FREE(*arr);
     *arr = NULL;

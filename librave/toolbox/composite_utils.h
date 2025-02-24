@@ -76,6 +76,7 @@ typedef struct CompositeUtilValue_t {
 typedef struct CompositeRaveObjectBinding_t {
   RaveCoreObject* object; /**< the rave object */
   ProjectionPipeline_t* pipeline; /**< the projection pipeline */
+  OdimSource_t* source; /**< the source associated with the object */
 } CompositeRaveObjectBinding_t;
 
 /**
@@ -154,9 +155,10 @@ int CompositeUtils_getObjectSource(RaveCoreObject* obj, char* source, int nlen);
  * @param[in] arguments - the arguments (containing the radar objects)
  * @param[in] cartesian - the target composite 
  * @param[out] nobject - the number of items in the returned array
+ * @param[in] sources - an OPTIONAL odim sources (MAY BE NULL). When creating binding, if possible to identify the odim source it will be attached to the binding.
  * @return the array of bindings or NULL on failure
  */
-CompositeRaveObjectBinding_t* CompositeUtils_createRaveObjectBinding(CompositeArguments_t* arguments, Cartesian_t* cartesian, int* nobjects);
+CompositeRaveObjectBinding_t* CompositeUtils_createRaveObjectBinding(CompositeArguments_t* arguments, Cartesian_t* cartesian, int* nobjects, OdimSources_t* sources);
 
 /**
  * Releases the objects and then deallocates the array

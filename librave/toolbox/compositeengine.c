@@ -26,6 +26,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "composite_utils.h"
 #include "compositearguments.h"
 #include "polarvolume.h"
+#include "rave_properties.h"
 #include "raveobject_hashtable.h"
 #include "raveobject_list.h"
 #include "rave_types.h"
@@ -52,6 +53,7 @@ struct _CompositeEngine_t {
   composite_engine_addQualityFlagsToCartesian_fun addQualityFlagsToCartesian;
   composite_engine_fillQualityInformation_fun fillQualityInformation;
   RaveObjectHashTable_t* polarValueAtPositionMapping;
+  RaveProperties_t* properties;
 };
 
 static CompositeQualityFlagSettings_t COMPOSITE_ENGINE_QUALITY_FLAG_DEFINITIONS[] = {
@@ -102,11 +104,11 @@ RaveCoreObjectType CompositeEnginePolarValueFunction_TYPE = {
 /*@{ Private functions */
 
 
-static int CompositeEngineInternal_getLonLat(CompositeEngine_t* engine, void* extradata, RaveCoreObject* object, ProjectionPipeline_t* pipeline, double herex, double herey, double* olon, double* olat);
+static int CompositeEngineInternal_getLonLat(CompositeEngine_t* engine, void* extradata, CompositeEngineObjectBinding_t* binding, double herex, double herey, double* olon, double* olat);
 
-static int CompositeEngineInternal_selectRadarData(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, RaveCoreObject* object, int index, double olon, double olat, CompositeEngineRadarData_t* cvalues, int ncvalues);
+static int CompositeEngineInternal_selectRadarData(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* binding, int index, double olon, double olat, CompositeEngineRadarData_t* cvalues, int ncvalues);
 
-static int CompositeEngineInternal_getPolarValueAtPosition(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, RaveCoreObject* object, const char* quantity, PolarNavigationInfo* navinfo, const char* qiFieldName, RaveValueType* otype, double* ovalue, double* qivalue);
+static int CompositeEngineInternal_getPolarValueAtPosition(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* binding, const char* quantity, PolarNavigationInfo* navinfo, const char* qiFieldName, RaveValueType* otype, double* ovalue, double* qivalue);
 
 static int CompositeEngineInternal_setRadarData(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, Cartesian_t* cartesian, double olon, double olat, long x, long y, CompositeEngineRadarData_t* cvalues, int ncvalues);
 
@@ -127,6 +129,8 @@ static int CompositeEngine_constructor(RaveCoreObject* obj)
   this->setRadarData = CompositeEngineInternal_setRadarData;
   this->addQualityFlagsToCartesian = CompositeEngineInternal_addQualityFlagsToCartesian;
   this->fillQualityInformation = CompositeEngineInternal_fillQualityInformation;
+  this->properties = NULL;
+
   this->polarValueAtPositionMapping = RAVE_OBJECT_NEW(&RaveObjectHashTable_TYPE);
   if (this->polarValueAtPositionMapping == NULL) {
     RAVE_ERROR0("Failed to allocate memory for mapping");
@@ -150,12 +154,26 @@ static int CompositeEngine_copyconstructor(RaveCoreObject* obj, RaveCoreObject* 
   this->setRadarData = src->setRadarData;
   this->addQualityFlagsToCartesian = src->addQualityFlagsToCartesian;
   this->fillQualityInformation = src->fillQualityInformation;
+  this->properties = NULL;
+
   this->polarValueAtPositionMapping = RAVE_OBJECT_CLONE(src->polarValueAtPositionMapping);
   if (this->polarValueAtPositionMapping == NULL) {
     RAVE_ERROR0("Failed to allocate memory for mapping");
-    return 0;
+    goto fail;
+  }
+
+  if (src->properties != NULL) {
+    this->properties = RAVE_OBJECT_CLONE(src->properties);
+    if (this->properties == NULL) {
+      RAVE_ERROR0("Failed to clone properties");
+      goto fail;
+    }
   }
   return 1;
+fail:
+  RAVE_OBJECT_RELEASE(this->polarValueAtPositionMapping);
+  RAVE_OBJECT_RELEASE(this->properties);
+  return 0;
 }
 
 /**
@@ -166,6 +184,7 @@ static void CompositeEngine_destructor(RaveCoreObject* obj)
 {
   CompositeEngine_t* this = (CompositeEngine_t*)obj;
   RAVE_OBJECT_RELEASE(this->polarValueAtPositionMapping);
+  RAVE_OBJECT_RELEASE(this->properties);
 }
 
 /**
@@ -232,19 +251,19 @@ done:
 }
 
 /*@{ Composite Engine internal function pointers */
-static int CompositeEngineInternal_getLonLat(CompositeEngine_t* engine, void* extradata, RaveCoreObject* object, ProjectionPipeline_t* pipeline, double herex, double herey, double* olon, double* olat)
+static int CompositeEngineInternal_getLonLat(CompositeEngine_t* engine, void* extradata, CompositeEngineObjectBinding_t* binding, double herex, double herey, double* olon, double* olat)
 {
-  return CompositeEngineUtility_getLonLat(engine, object, pipeline, herex, herey, olon, olat);
+  return CompositeEngineUtility_getLonLat(engine, binding, herex, herey, olon, olat);
 }
 
-static int CompositeEngineInternal_selectRadarData(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, RaveCoreObject* object, int index, double olon, double olat, CompositeEngineRadarData_t* cvalues, int ncvalues)
+static int CompositeEngineInternal_selectRadarData(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* binding, int index, double olon, double olat, CompositeEngineRadarData_t* cvalues, int ncvalues)
 {
-  return CompositeEngineUtility_selectRadarData(engine, extradata, arguments, object, index, olon, olat, cvalues, ncvalues);
+  return CompositeEngineUtility_selectRadarData(engine, extradata, arguments, binding, index, olon, olat, cvalues, ncvalues);
 }
 
-static int CompositeEngineInternal_getPolarValueAtPosition(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, RaveCoreObject* object, const char* quantity, PolarNavigationInfo* navinfo, const char* qiFieldName, RaveValueType* otype, double* ovalue, double* qivalue)
+static int CompositeEngineInternal_getPolarValueAtPosition(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* binding, const char* quantity, PolarNavigationInfo* navinfo, const char* qiFieldName, RaveValueType* otype, double* ovalue, double* qivalue)
 {
-  return CompositeEngineUtility_getPolarValueAtPosition(engine, extradata, arguments, object, quantity, navinfo, qiFieldName, otype, ovalue, qivalue);
+  return CompositeEngineUtility_getPolarValueAtPosition(engine, extradata, arguments, binding, quantity, navinfo, qiFieldName, otype, ovalue, qivalue);
 }
 
 static int CompositeEngineInternal_setRadarData(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, Cartesian_t* cartesian, double olon, double olat, long x, long y, CompositeEngineRadarData_t* cvalues, int ncvalues)
@@ -361,19 +380,19 @@ int CompositeEngine_setFillQualityInformationFunction(CompositeEngine_t* self, c
 
 /*@{ Composite Engine functions called from generate */
 
-int CompositeEngineFunction_getLonLat(CompositeEngine_t* self, void* extradata, RaveCoreObject* object, ProjectionPipeline_t* pipeline, double herex, double herey, double* olon, double* olat)
+int CompositeEngineFunction_getLonLat(CompositeEngine_t* self, void* extradata, CompositeEngineObjectBinding_t* binding, double herex, double herey, double* olon, double* olat)
 {
-  return self->getLonLat(self, extradata, object, pipeline, herex, herey, olon, olat);
+  return self->getLonLat(self, extradata, binding, herex, herey, olon, olat);
 }
 
-int CompositeEngineFunction_selectRadarData(CompositeEngine_t* self, void* extradata, CompositeArguments_t* arguments, RaveCoreObject* object, int index, double olon, double olat, CompositeEngineRadarData_t* cvalues, int ncvalues)
+int CompositeEngineFunction_selectRadarData(CompositeEngine_t* self, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* binding, int index, double olon, double olat, CompositeEngineRadarData_t* cvalues, int ncvalues)
 {
-  return self->selectRadarData(self, extradata, arguments, object, index, olon, olat, cvalues, ncvalues);
+  return self->selectRadarData(self, extradata, arguments, binding, index, olon, olat, cvalues, ncvalues);
 }
 
-int CompositeEngineFunction_getPolarValueAtPosition(CompositeEngine_t* self, void* extradata, CompositeArguments_t* arguments, RaveCoreObject* object, const char* quantity, PolarNavigationInfo* navinfo, const char* qiFieldName, RaveValueType* otype, double* ovalue, double* qivalue)
+int CompositeEngineFunction_getPolarValueAtPosition(CompositeEngine_t* self, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* binding, const char* quantity, PolarNavigationInfo* navinfo, const char* qiFieldName, RaveValueType* otype, double* ovalue, double* qivalue)
 {
-  return self->getPolarValueAtPosition(self, extradata, arguments, object, quantity, navinfo, qiFieldName, otype, ovalue, qivalue);
+  return self->getPolarValueAtPosition(self, extradata, arguments, binding, quantity, navinfo, qiFieldName, otype, ovalue, qivalue);
 }
 
 int CompositeEngineFunction_setRadarData(CompositeEngine_t* self, void* extradata, CompositeArguments_t* arguments, Cartesian_t* cartesian, double olon, double olat, long x, long y, CompositeEngineRadarData_t* cvalues, int ncvalues)
@@ -394,12 +413,12 @@ int CompositeEngineFunction_fillQualityInformation(CompositeEngine_t* self, void
 
 /*@{ Composite Engine utility functions */
 
-int CompositeEngineUtility_getLonLat(CompositeEngine_t* engine, RaveCoreObject* object, ProjectionPipeline_t* pipeline, double herex, double herey, double* olon, double* olat)
+int CompositeEngineUtility_getLonLat(CompositeEngine_t* engine, CompositeEngineObjectBinding_t* binding, double herex, double herey, double* olon, double* olat)
 {
-  return ProjectionPipeline_fwd(pipeline, herex, herey, olon, olat);
+  return ProjectionPipeline_fwd(binding->pipeline, herex, herey, olon, olat);
 }
 
-int CompositeEngineUtility_selectRadarData(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, RaveCoreObject* object, int index, double olon, double olat, CompositeEngineRadarData_t* cvalues, int ncvalues)
+int CompositeEngineUtility_selectRadarData(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* binding, int index, double olon, double olat, CompositeEngineRadarData_t* cvalues, int ncvalues)
 {
   double dist = 0.0, maxdist = 0.0, rdist = 0.0;
   int cindex = 0;
@@ -413,12 +432,12 @@ int CompositeEngineUtility_selectRadarData(CompositeEngine_t* engine, void* extr
     return 0;
   }
 
-  if (RAVE_OBJECT_CHECK_TYPE(object, &PolarVolume_TYPE)) {
-    dist = PolarVolume_getDistance((PolarVolume_t*)object, olon, olat);
-    maxdist = PolarVolume_getMaxDistance((PolarVolume_t*)object);
-  } else if (RAVE_OBJECT_CHECK_TYPE(object, &PolarScan_TYPE)) {
-    dist = PolarScan_getDistance((PolarScan_t*)object, olon, olat);
-    maxdist = PolarScan_getMaxDistance((PolarScan_t*)object);
+  if (RAVE_OBJECT_CHECK_TYPE(binding->object, &PolarVolume_TYPE)) {
+    dist = PolarVolume_getDistance((PolarVolume_t*)binding->object, olon, olat);
+    maxdist = PolarVolume_getMaxDistance((PolarVolume_t*)binding->object);
+  } else if (RAVE_OBJECT_CHECK_TYPE(binding->object, &PolarScan_TYPE)) {
+    dist = PolarScan_getDistance((PolarScan_t*)binding->object, olon, olat);
+    maxdist = PolarScan_getMaxDistance((PolarScan_t*)binding->object);
   }
 
   qiFieldName = CompositeArguments_getQIFieldName(arguments);
@@ -435,7 +454,7 @@ int CompositeEngineUtility_selectRadarData(CompositeEngine_t* engine, void* extr
   RAVE_OBJECT_RELEASE(selectionMethodAttr);
 
   if (dist <= maxdist) {
-    if (CompositeEngineInternal_nearestPosition(arguments, object, olon, olat, &navinfo)) {
+    if (CompositeEngineInternal_nearestPosition(arguments, binding->object, olon, olat, &navinfo)) {
       rdist = dist; /* Remember distance to radar */
 
       if (useHeightSelection) {
@@ -446,9 +465,9 @@ int CompositeEngineUtility_selectRadarData(CompositeEngine_t* engine, void* extr
         RaveValueType otype = RaveValueType_NODATA;
         double ovalue = 0.0, qivalue = 0.0;
         if (cvalues[cindex].getPolarValueAtPosition != NULL) {
-          cvalues[cindex].getPolarValueAtPosition(engine, extradata, arguments, object, cvalues[cindex].name, &navinfo, qiFieldName, &otype, &ovalue, &qivalue);
+          cvalues[cindex].getPolarValueAtPosition(engine, extradata, arguments, binding, cvalues[cindex].name, &navinfo, qiFieldName, &otype, &ovalue, &qivalue);
         } else {
-          CompositeEngineUtility_getPolarValueAtPosition(engine, extradata, arguments, object, cvalues[cindex].name, &navinfo, qiFieldName, &otype, &ovalue, &qivalue);
+          CompositeEngineUtility_getPolarValueAtPosition(engine, extradata, arguments, binding, cvalues[cindex].name, &navinfo, qiFieldName, &otype, &ovalue, &qivalue);
         }
 
         if (otype == RaveValueType_DATA || otype == RaveValueType_UNDETECT) {
@@ -488,9 +507,9 @@ int CompositeEngineUtility_selectRadarData(CompositeEngine_t* engine, void* extr
   return 1;
 }
 
-int CompositeEngineUtility_getPolarValueAtPosition(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, RaveCoreObject* object, const char* quantity, PolarNavigationInfo* navinfo, const char* qiFieldName, RaveValueType* otype, double* ovalue, double* qivalue)
+int CompositeEngineUtility_getPolarValueAtPosition(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* binding, const char* quantity, PolarNavigationInfo* navinfo, const char* qiFieldName, RaveValueType* otype, double* ovalue, double* qivalue)
 {
-  return CompositeUtils_getPolarValueAtPosition(object, quantity, navinfo, qiFieldName, otype, ovalue, qivalue);  
+  return CompositeUtils_getPolarValueAtPosition(binding->object, quantity, navinfo, qiFieldName, otype, ovalue, qivalue);  
 }
 
 int CompositeEngineUtility_setRadarData(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, Cartesian_t* cartesian, double olon, double olat, long x, long y, CompositeEngineRadarData_t* cvalues, int ncvalues)
@@ -620,12 +639,28 @@ int CompositeEngineUtility_fillQualityInformation(CompositeEngine_t* self, Compo
 }
 /*@} End of Composite Engine utility functions */
 
+void CompositeEngine_setProperties(CompositeEngine_t* self, RaveProperties_t* properties)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  RAVE_OBJECT_RELEASE(self->properties);
+  if (properties != NULL) {
+    self->properties = RAVE_OBJECT_COPY(properties);
+  }
+}
+
+RaveProperties_t* CompositeEngine_getProperties(CompositeEngine_t* self)
+{
+  return RAVE_OBJECT_COPY(self->properties);
+}
+
 
 Cartesian_t* CompositeEngine_generate(CompositeEngine_t* self, CompositeArguments_t* arguments, void* extradata)
 {
   Cartesian_t *cartesian = NULL, *result = NULL;
   CompositeEngineRadarData_t* cvalues = NULL;
-  CompositeRaveObjectBinding_t* pipelineBinding = NULL;
+  CompositeEngineObjectBinding_t* bindings = NULL;
+  OdimSources_t* sources = NULL;
+
   int x = 0, y = 0, i = 0, xsize = 0, ysize = 0, nradars = 0, nbindings = 0;
   int nentries = 0;
 
@@ -664,11 +699,14 @@ Cartesian_t* CompositeEngine_generate(CompositeEngine_t* self, CompositeArgument
     goto fail;
   }
 
-  pipelineBinding = CompositeUtils_createRaveObjectBinding(arguments, cartesian, &nbindings);
-  if (pipelineBinding == NULL || nbindings != nradars) {
+  sources = RaveProperties_getOdimSources(self->properties);
+  bindings = CompositeEngineUtility_createObjectBinding(arguments, cartesian, &nbindings, sources);
+  if (bindings == NULL || nbindings != nradars) {
     RAVE_ERROR0("Could not create a proper pipeline binding");
     goto fail;
   }
+
+
 
   for (int i = 0; i < nbindings; i++) {
     RaveCoreObject* obj = CompositeArguments_getObject(arguments, i);
@@ -687,10 +725,10 @@ Cartesian_t* CompositeEngine_generate(CompositeEngine_t* self, CompositeArgument
 
       for (i = 0; i < nbindings; i++) {
         /* We will go from surface coords into the lonlat projection assuming that a polar volume uses a lonlat projection*/
-        if (!CompositeEngineFunction_getLonLat(self, extradata, pipelineBinding[i].object, pipelineBinding[i].pipeline, herex, herey, &olon, &olat)) {
+        if (!CompositeEngineFunction_getLonLat(self, extradata, &bindings[i], herex, herey, &olon, &olat)) {
           RAVE_WARNING0("Failed to get radar data for wanted coordinate");
         } else {
-          if (!CompositeEngineFunction_selectRadarData(self, extradata, arguments, pipelineBinding[i].object, i, olon, olat, cvalues, nentries)) {
+          if (!CompositeEngineFunction_selectRadarData(self, extradata, arguments, &bindings[i], i, olon, olat, cvalues, nentries)) {
             RAVE_ERROR0("Failed to get radar data");
           }
         }
@@ -704,7 +742,8 @@ Cartesian_t* CompositeEngine_generate(CompositeEngine_t* self, CompositeArgument
 fail:
   RAVE_OBJECT_RELEASE(cartesian);
   CompositeEngineUtility_freeRadarData(&cvalues, nentries);
-  CompositeUtils_releaseRaveObjectBinding(&pipelineBinding, nbindings);
+  CompositeEngineUtility_releaseObjectBinding(&bindings, nbindings);
+  RAVE_OBJECT_RELEASE(sources);
   return result;
 }
 
@@ -767,6 +806,95 @@ void CompositeEngineUtility_freeRadarData(CompositeEngineRadarData_t** cvalues, 
   }
 }
 
+CompositeEngineObjectBinding_t* CompositeEngineUtility_createObjectBinding(CompositeArguments_t* arguments, Cartesian_t* cartesian, int* nobjects, OdimSources_t* sources)
+{
+  CompositeEngineObjectBinding_t* result = NULL;
+  Projection_t* projection = NULL;
+
+  int i = 0, nlen = 0;
+
+  if (arguments == NULL || cartesian == NULL || nobjects == NULL) {
+    RAVE_ERROR0("Must provide arguments, cartesian and nobjects must be provided");
+    return NULL;
+  }
+  projection = Cartesian_getProjection(cartesian);
+  if (projection == NULL) {
+    RAVE_ERROR0("Cartesian must have a projection");
+    return NULL;
+  }
+
+  nlen = CompositeArguments_getNumberOfObjects(arguments);
+  result = RAVE_MALLOC(sizeof(CompositeEngineObjectBinding_t)* nlen);
+  if (result == NULL) {
+    RAVE_ERROR0("Failed to allocate array for object bindings");
+    goto fail;
+  }
+  memset(result, 0, sizeof(CompositeEngineObjectBinding_t)*nlen);
+  for (i = 0; i < nlen; i++) {
+    RaveCoreObject* object = CompositeArguments_getObject(arguments, i);
+    if (object != NULL) {
+      Projection_t* objproj = CompositeUtils_getProjection(object);
+      ProjectionPipeline_t* pipeline = NULL;
+      OdimSource_t* source = NULL;
+      char strsrc[512];
+
+      if (objproj == NULL) {
+        RAVE_ERROR0("Object does not have a projection");
+        RAVE_OBJECT_RELEASE(object);
+        goto fail;
+      }
+      pipeline = ProjectionPipeline_createPipeline(projection, objproj);
+      if (pipeline == NULL) {
+        RAVE_ERROR0("Failed to create pipeline");
+        RAVE_OBJECT_RELEASE(object);
+        RAVE_OBJECT_RELEASE(objproj);
+        goto fail;
+      }
+      if (sources != NULL && CompositeUtils_getObjectSource(object, strsrc, 512)) {
+        source = OdimSources_identify(sources, (const char*)strsrc);
+        if (source != NULL) {
+          RAVE_INFO2("Identified source string: %s -> NOD:%s", strsrc, OdimSource_getNod(source));
+        } else {
+          RAVE_WARNING1("Could not identify source string: %s", strsrc);
+        }
+      }
+
+      result[i].object = RAVE_OBJECT_COPY(object);
+      result[i].pipeline = RAVE_OBJECT_COPY(pipeline);
+      result[i].source = RAVE_OBJECT_COPY(source);
+      RAVE_OBJECT_RELEASE(pipeline);
+      RAVE_OBJECT_RELEASE(objproj);
+      RAVE_OBJECT_RELEASE(source);
+    }
+    RAVE_OBJECT_RELEASE(object);
+  }
+  *nobjects = nlen;
+  RAVE_OBJECT_RELEASE(projection);
+  return result;
+fail:
+  RAVE_OBJECT_RELEASE(projection);
+  CompositeEngineUtility_releaseObjectBinding(&result, nlen);
+  return NULL;
+}
+
+void CompositeEngineUtility_releaseObjectBinding(CompositeEngineObjectBinding_t** arr, int nobjects)
+{
+  int i = 0;
+  if (arr == NULL) {
+    RAVE_ERROR0("Nothing to release");
+    return;
+  }
+  if (*arr != NULL) {
+    for (i = 0; i < nobjects; i++) {
+      RAVE_OBJECT_RELEASE((*arr)[i].object);
+      RAVE_OBJECT_RELEASE((*arr)[i].pipeline);
+      RAVE_OBJECT_RELEASE((*arr)[i].source)
+      RAVE_OBJECT_RELEASE((*arr)[i].value)
+    }
+    RAVE_FREE(*arr);
+    *arr = NULL;
+  }
+}
 
 /*@} End of Interface functions */
 

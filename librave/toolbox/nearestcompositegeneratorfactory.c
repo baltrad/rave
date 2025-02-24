@@ -30,11 +30,14 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_list.h"
 #include "rave_object.h"
 #include "rave_properties.h"
+#include "rave_value.h"
+#include "raveobject_hashtable.h"
 #include "raveobject_list.h"
 #include "rave_types.h"
 #include "rave_debug.h"
 #include "rave_alloc.h"
 #include "rave_utilities.h"
+#include "raveutil.h"
 #include "composite.h"
 #include <strings.h>
 #include <string.h>
@@ -44,7 +47,6 @@ typedef struct _NearestCompositeGeneratorFactory_t {
   RAVE_OBJECT_HEAD /**< Always on top */
   COMPOSITE_GENERATOR_FACTORY_HEAD /**< composite generator plugin specifics */
   CompositeEngine_t* engine; /**< the compositing engine */
-  RaveProperties_t* properties; /**< the properties */
 } NearestCompositeGeneratorFactory_t;
 
 static const char* SUPPORTED_PRODUCTS[]={
@@ -56,7 +58,7 @@ static const char* SUPPORTED_PRODUCTS[]={
   NULL
 };
 
-int NearestCompositeGeneratorFactory_getPolarValueAtPosition(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, RaveCoreObject* object, const char* quantity, PolarNavigationInfo* navinfo, const char* qiFieldName, RaveValueType* otype, double* ovalue, double* qivalue);
+int NearestCompositeGeneratorFactory_getPolarValueAtPosition(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* binding, const char* quantity, PolarNavigationInfo* navinfo, const char* qiFieldName, RaveValueType* otype, double* ovalue, double* qivalue);
 
 /*@{ Private functions */
 /**
@@ -73,7 +75,6 @@ static int NearestCompositeGeneratorFactory_constructor(RaveCoreObject* obj)
   this->getProperties = NearestCompositeGeneratorFactory_getProperties;
   this->generate = NearestCompositeGeneratorFactory_generate;
   this->create = NearestCompositeGeneratorFactory_create;
-  this->properties = NULL;
 
   this->engine = RAVE_OBJECT_NEW(&CompositeEngine_TYPE);
   if (this->engine == NULL) {
@@ -113,7 +114,6 @@ static int NearestCompositeGeneratorFactory_copyconstructor(RaveCoreObject* obj,
   this->getProperties = NearestCompositeGeneratorFactory_getProperties;
   this->generate = NearestCompositeGeneratorFactory_generate;
   this->create = NearestCompositeGeneratorFactory_create;
-  this->properties = NULL;
 
   this->engine = RAVE_OBJECT_CLONE(src->engine);
   if (this->engine == NULL) {
@@ -131,18 +131,9 @@ static int NearestCompositeGeneratorFactory_copyconstructor(RaveCoreObject* obj,
     goto fail;
   }
 
-  if (src->properties != NULL) {
-    this->properties = RAVE_OBJECT_CLONE(src->properties);
-    if (this->properties == NULL) {
-      RAVE_ERROR0("Failed to clone properties");
-      goto fail;
-    }
-  }
-
   return 1;
 fail:
   RAVE_OBJECT_RELEASE(this->engine);
-  RAVE_OBJECT_RELEASE(this->properties);
   return 0;
 }
 
@@ -154,24 +145,63 @@ static void NearestCompositeGeneratorFactory_destructor(RaveCoreObject* obj)
 {
   NearestCompositeGeneratorFactory_t* this = (NearestCompositeGeneratorFactory_t*)obj;
   RAVE_OBJECT_RELEASE(this->engine);
-  RAVE_OBJECT_RELEASE(this->properties);
 }
 
-int NearestCompositeGeneratorFactory_getPolarValueAtPosition(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, RaveCoreObject* object, const char* quantity, PolarNavigationInfo* navinfo, const char* qiFieldName, RaveValueType* otype, double* ovalue, double* qivalue)
+int NearestCompositeGeneratorFactory_getPolarValueAtPosition(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* binding, const char* quantity, PolarNavigationInfo* navinfo, const char* qiFieldName, RaveValueType* otype, double* ovalue, double* qivalue)
 {
-  // NearestCompositeGeneratorFactory_t* self = (NearestCompositeGeneratorFactory_t*)extradata;
+  NearestCompositeGeneratorFactory_t* self = (NearestCompositeGeneratorFactory_t*)extradata;
+  RaveProperties_t* properties = NULL;
   int result = 0;
-
+  
   if (quantity == NULL) {
     return 0;
   }
-
+  properties = CompositeEngine_getProperties(engine);
   if (strcasecmp("RATE", quantity) == 0) {
-    result = CompositeEngineUtility_getPolarValueAtPosition(engine, extradata, arguments, object, "DBZH", navinfo, qiFieldName, otype, ovalue, qivalue);
+    double zr_a = 200.0, zr_b = 1.6;
+    if (binding->source != NULL && binding->value == NULL) {
+      /* We create a cache by looking up the zr-coefficients for the object and store it in the binding value so that we only
+       * have to do it once.
+       */
+      if (properties != NULL) {
+        RaveValue_t* value = RaveProperties_get(properties, "rave.rate.zr.coefficients");
+        if (value != NULL && RaveValue_type(value) == RaveValue_Type_Hashtable) {
+          RaveObjectHashTable_t* rates = RaveValue_toHashTable(value);
+          if (RaveObjectHashTable_exists(rates, OdimSource_getNod(binding->source))) {
+            RaveValue_t* zr = (RaveValue_t*)RaveObjectHashTable_get(rates, OdimSource_getNod(binding->source));
+            if (zr != NULL && RaveValue_type(zr) == RaveValue_Type_DoubleArray) {
+              double* v = NULL;
+              int len = 0;
+              RaveValue_getDoubleArray(zr, &v, &len);
+              if (len == 2) {
+                binding->value = RAVE_OBJECT_COPY(zr);
+              } else {
+                RAVE_ERROR1("rave.rate.zr.coefficients coefficient for %s could not be read, should be (zr_a, zr_b)", OdimSource_getNod(binding->source));
+              }
+            }
+            RAVE_OBJECT_RELEASE(zr);
+          }
+          RAVE_OBJECT_RELEASE(rates);
+        }
+        RAVE_OBJECT_RELEASE(value);
+      }
+    } else if (binding->value != NULL) {
+      double* v = NULL;
+      int len = 0;
+      RaveValue_getDoubleArray(binding->value, &v, &len);
+      zr_a = v[0];
+      zr_b = v[1];
+    }
+    result = CompositeEngineUtility_getPolarValueAtPosition(engine, extradata, arguments, binding, "DBZH", navinfo, qiFieldName, otype, ovalue, qivalue);
+    if (*otype == RaveValueType_DATA) {
+      double rr = dBZ2R(*ovalue, zr_a, zr_b);
+      *ovalue = rr;
+    }
   } else {
-    result = CompositeEngineUtility_getPolarValueAtPosition(engine, extradata, arguments, object, "DBZH", navinfo, qiFieldName, otype, ovalue, qivalue);
+    result = CompositeEngineUtility_getPolarValueAtPosition(engine, extradata, arguments, binding, "DBZH", navinfo, qiFieldName, otype, ovalue, qivalue);
   }
 
+  RAVE_OBJECT_RELEASE(properties);
   return result;
 }
 
@@ -234,10 +264,7 @@ int NearestCompositeGeneratorFactory_setProperties(CompositeGeneratorFactory_t* 
 {
   NearestCompositeGeneratorFactory_t* factory = (NearestCompositeGeneratorFactory_t*)self;
   RAVE_ASSERT((factory != NULL), "self == NULL");
-  RAVE_OBJECT_RELEASE(factory->properties);
-  if (properties != NULL) {
-    factory->properties = RAVE_OBJECT_COPY(properties);
-  }
+  CompositeEngine_setProperties(factory->engine, properties);
   return 1;
 }
 
@@ -245,7 +272,7 @@ RaveProperties_t* NearestCompositeGeneratorFactory_getProperties(CompositeGenera
 {
   NearestCompositeGeneratorFactory_t* factory = (NearestCompositeGeneratorFactory_t*)self;
   RAVE_ASSERT((factory != NULL), "factory == NULL");
-  return RAVE_OBJECT_COPY(factory->properties);
+  return CompositeEngine_getProperties(factory->engine);
 }
 
 /**
