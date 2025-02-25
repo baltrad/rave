@@ -42,7 +42,6 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  */
 struct _CompositeArguments_t {
   RAVE_OBJECT_HEAD /** Always on top */
-  OdimSources_t* sources; /**< the sources registry */
   char* product; /**< the compositing product / method */
   Rave_CompositingProduct compositingProduct; /**< the compositing product, tightly connected with product */
   Area_t* area; /**< the area */
@@ -323,7 +322,6 @@ fail:
 static int CompositeArguments_constructor(RaveCoreObject* obj)
 {
   CompositeArguments_t* this = (CompositeArguments_t*)obj;
-  this->sources = NULL;
   this->product = NULL;
   this->compositingProduct = Rave_CompositingProduct_UNDEFINED;
   this->area = NULL;
@@ -360,7 +358,6 @@ static int CompositeArguments_copyconstructor(RaveCoreObject* obj, RaveCoreObjec
 {
   CompositeArguments_t* this = (CompositeArguments_t*)obj;
   CompositeArguments_t* src = (CompositeArguments_t*)srcobj;
-  this->sources = NULL;
   this->product = NULL;
   this->compositingProduct = Rave_CompositingProduct_UNDEFINED;  
   this->area = NULL;
@@ -371,12 +368,6 @@ static int CompositeArguments_copyconstructor(RaveCoreObject* obj, RaveCoreObjec
   this->radarIndexMapping = NULL;
   this->qualityFieldName = NULL;
 
-  if (src->sources != NULL) {
-    this->sources = RAVE_OBJECT_CLONE(src->sources);
-    if (this->sources == NULL) {
-      goto fail;
-    }
-  }
   this->area = RAVE_OBJECT_CLONE(src->area);
   if (this->area == NULL) {
     goto fail;
@@ -429,7 +420,6 @@ static int CompositeArguments_copyconstructor(RaveCoreObject* obj, RaveCoreObjec
   }  
   return 1;
 fail:
-  RAVE_OBJECT_RELEASE(this->sources);
   RAVE_FREE(this->product);
   RAVE_OBJECT_RELEASE(this->area);
   RAVE_OBJECT_RELEASE(this->datetime);
@@ -450,7 +440,6 @@ fail:
 static void CompositeArguments_destructor(RaveCoreObject* obj)
 {
   CompositeArguments_t* this = (CompositeArguments_t*)obj;
-  RAVE_OBJECT_RELEASE(this->sources);
   RAVE_FREE(this->product);
   RAVE_OBJECT_RELEASE(this->area);
   RAVE_OBJECT_RELEASE(this->datetime);
@@ -487,25 +476,6 @@ Rave_CompositingProduct CompositeArguments_stringToProduct(const char* product)
     }
   }
   return Rave_CompositingProduct_UNDEFINED;
-}
-
-void CompositeArguments_setSources(CompositeArguments_t* args, OdimSources_t* sources)
-{
-  RAVE_ASSERT((args != NULL), "args == NULL");
-
-  RAVE_OBJECT_RELEASE(args->sources);
-  args->sources = RAVE_OBJECT_COPY(sources);
-}
-
-/**
- * Returns the sources registry.
- * @param[in] args - self
- * @return the odim sources or NULL if none is set
- */
-OdimSources_t* CompositeArguments_getSources(CompositeArguments_t* args)
-{
-  RAVE_ASSERT((args != NULL), "args == NULL");
-  return RAVE_OBJECT_COPY(args->sources);
 }
 
 
@@ -1048,7 +1018,7 @@ static char* CompositeArgumentsInternal_getAnyIdFromSource(const char* source)
   return result;
 }
 
-int CompositeArguments_createRadarIndexMapping(CompositeArguments_t* args)
+int CompositeArguments_createRadarIndexMapping(CompositeArguments_t* args, OdimSources_t* sources)
 {
   int i = 0, nobjects = 0;
   int result = 1;
@@ -1056,13 +1026,13 @@ int CompositeArguments_createRadarIndexMapping(CompositeArguments_t* args)
   RAVE_ASSERT((args != NULL), "args == NULL");
   nobjects = CompositeArguments_getNumberOfObjects(args);
   RaveObjectHashTable_clear(args->radarIndexMapping);
-  if (args->sources != NULL) {
+  if (sources != NULL) {
     int ctr = 1;
     for (i = 0; result && i < nobjects; i++) {
       CompositeArgumentObjectEntry_t* entry = (CompositeArgumentObjectEntry_t*)RaveObjectList_get(args->objects, i);
       char srcbuff[1024];
       if (CompositeUtils_getObjectSource(entry->object, srcbuff, 1024) > 0) {
-        OdimSource_t* source = OdimSources_identify(args->sources, (const char*)srcbuff);
+        OdimSource_t* source = OdimSources_identify(sources, (const char*)srcbuff);
         if (source != NULL) {
           char nodbuff[16];
           snprintf(nodbuff, 16, "NOD:%s", OdimSource_getNod(source));

@@ -384,9 +384,9 @@ class PyCompositeArgumentsTest(unittest.TestCase):
     obj.addObject(self.create_polarscan("NOD:sella", "20250123","100000"))
     obj.addObject(self.create_polarscan("NOD:seatv", "20250123","100000"))
 
-    obj.sources = _odimsources.load(self.FIXTURE)
+    sources = _odimsources.load(self.FIXTURE)
     
-    obj.createRadarIndexMapping()
+    obj.createRadarIndexMapping(sources)
 
     keys = obj.getRadarIndexKeys()
     self.assertEqual(3, len(keys))
@@ -403,9 +403,9 @@ class PyCompositeArgumentsTest(unittest.TestCase):
     obj.addObject(self.create_polarscan("NOD:seatv", "20250123","100000"))
     obj.addObject(self.create_polarscan("NOD:dksin", "20250123","100000"))
 
-    obj.sources = _odimsources.load(self.FIXTURE)
+    sources = _odimsources.load(self.FIXTURE)
 
-    obj.createRadarIndexMapping()
+    obj.createRadarIndexMapping(sources)
 
     keys = obj.getRadarIndexKeys()
     self.assertEqual(4, len(keys))
@@ -439,9 +439,7 @@ class PyCompositeArgumentsTest(unittest.TestCase):
     obj.addObject(self.create_polarscan("NOD:seatv", "20250123","100000"))
     obj.addObject(self.create_polarscan("NOD:dksin", "20250123","100000"))
 
-    obj.sources = _odimsources.load(self.FIXTURE)
-
-    obj.createRadarIndexMapping()
+    obj.createRadarIndexMapping(_odimsources.load(self.FIXTURE))
 
     self.assertEqual(obj.getRadarIndexValue("NOD:sekrn"), obj.getObjectRadarIndexValue(0))
     self.assertEqual(obj.getRadarIndexValue("NOD:sella"), obj.getObjectRadarIndexValue(1))

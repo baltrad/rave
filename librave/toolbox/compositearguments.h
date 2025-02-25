@@ -72,20 +72,6 @@ const char* CompositeArguments_productToString(Rave_CompositingProduct product);
 Rave_CompositingProduct CompositeArguments_stringToProduct(const char* product);
 
 /**
- * Sets the sources registry for lookup purposes
- * @param[in] args - self
- * @param[in] sources - the sources
- */
-void CompositeArguments_setSources(CompositeArguments_t* args, OdimSources_t* sources);
-
-/**
- * Returns the sources registry.
- * @param[in] args - self
- * @return the odim sources or NULL if none is set
- */
-OdimSources_t* CompositeArguments_getSources(CompositeArguments_t* args);
-
-/**
  * Sets the compositing method to use when creating the composite. Note, this should be
  * set as a const char since a plugin might be able to provide support for a non-predefined
  * method. 
@@ -448,9 +434,10 @@ int CompositeArguments_hasQualityFlag(CompositeArguments_t* args, const char* na
  * instance a best effort will be done creating the index mapping.
  *
  * @param[in] args - self
+ * @param[in] sources - the odim sources
  * @return 1 on success, otherwise 0
  */
-int CompositeArguments_createRadarIndexMapping(CompositeArguments_t* args);
+int CompositeArguments_createRadarIndexMapping(CompositeArguments_t* args, OdimSources_t* sources);
 
 /**
  * Returns the registered radar indexes.

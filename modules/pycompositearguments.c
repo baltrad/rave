@@ -640,11 +640,19 @@ static PyObject* _pycompositearguments_getNumberOfQualityFlags(PyCompositeArgume
 
 static PyObject* _pycompositearguments_createRadarIndexMapping(PyCompositeArguments* self, PyObject* args)
 {
-  if (!PyArg_ParseTuple(args, "")) {
+  PyObject* pyobj = NULL;
+
+  if (!PyArg_ParseTuple(args, "|O", &pyobj)) {
     return NULL;
   }
-  if (!CompositeArguments_createRadarIndexMapping(self->args)) {
-    raiseException_returnNULL(PyExc_RuntimeError, "Failed to create radar index mapping");
+  if (pyobj != NULL && PyOdimSources_Check(pyobj)) {
+    if (!CompositeArguments_createRadarIndexMapping(self->args, ((PyOdimSources*)pyobj)->sources)) {
+      raiseException_returnNULL(PyExc_RuntimeError, "Failed to create radar index mapping using sources");
+    }
+  } else if (pyobj == NULL || pyobj == Py_None) {
+    if (!CompositeArguments_createRadarIndexMapping(self->args, NULL)) {
+      raiseException_returnNULL(PyExc_RuntimeError, "Failed to create radar index mapping");
+    }
   }
   Py_RETURN_NONE;
 }
@@ -734,7 +742,6 @@ static PyObject* _pycompositearguments_getObjectRadarIndexValue(PyCompositeArgum
  */
 static struct PyMethodDef _pycompositearguments_methods[] =
 {
-  {"sources", NULL, METH_VARARGS},
   {"area", NULL, METH_VARARGS},
   {"product", NULL, METH_VARARGS},
   {"compositing_product", NULL, METH_VARARGS},
@@ -872,16 +879,7 @@ static struct PyMethodDef _pycompositearguments_methods[] =
 
 static PyObject* _pycompositearguments_getattro(PyCompositeArguments* self, PyObject* name)
 {
-  if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "sources") == 0) {
-    OdimSources_t* sources = CompositeArguments_getSources(self->args);
-    if (sources != NULL) {
-      PyOdimSources* result = PyOdimSources_New(sources);
-      RAVE_OBJECT_RELEASE(sources);
-      return (PyObject*)result;
-    } else {
-      Py_RETURN_NONE;
-    }
-  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "area") == 0) {
+  if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "area") == 0) {
     Area_t* area = CompositeArguments_getArea(self->args);
     if (area != NULL) {
       PyArea* result = PyArea_New(area);
@@ -945,16 +943,7 @@ static int _pycompositearguments_setattro(PyCompositeArguments* self, PyObject* 
   if (name == NULL) {
     goto done;
   }
-  if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "sources") == 0) {
-    if (PyOdimSources_Check(val)) {
-      CompositeArguments_setSources(self->args, ((PyOdimSources*)val)->sources);
-    } else if (val == Py_None) {
-      CompositeArguments_setSources(self->args, NULL);
-    } else {
-      raiseException_gotoTag(done, PyExc_TypeError,
-          "sources must be of OdimSourcesCore type or None");
-    }
-  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "area") == 0) {
+  if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "area") == 0) {
     if (PyArea_Check(val)) {
       CompositeArguments_setArea(self->args, ((PyArea*)val)->area);
     } else if (val == Py_None) {
