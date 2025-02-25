@@ -1011,6 +1011,24 @@ fail:
   return NULL;
 }
 
+int CompositeArguments_hasQualityFlag(CompositeArguments_t* args, const char* name)
+{
+  int i = 0, nlen = 0;
+  RAVE_ASSERT((args != NULL), "args == NULL");
+  if (name == NULL) {
+    return 0;
+  }
+
+  nlen = RaveList_size(args->qualityflags);
+  for (i = 0; i < nlen; i++) {
+    const char* qflag = (const char*)RaveList_get(args->qualityflags, i);
+    if (qflag != NULL && strcasecmp(name, qflag) == 0) {
+      return 1;
+    }
+  }
+  return 0;
+}
+
 static char* CompositeArgumentsInternal_getAnyIdFromSource(const char* source)
 {
   char* result = NULL;

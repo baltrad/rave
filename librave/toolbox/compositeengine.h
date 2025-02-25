@@ -80,6 +80,28 @@ typedef struct CompositeEngineObjectBinding_t {
 } CompositeEngineObjectBinding_t;
 
 /**
+ * Will be called before the looping over the cartesian product will be done.
+ * Gives the user a possibility to perform some final initializations or checks
+ * @param[in] engine - self
+ * @param[in] extradata - the extradata passed to the \ref CompositeEngine_generate function.
+ * @param[in] arguments - the arguments
+ * @param[in] bindings - the bindings
+ * @param[in] nbindings  - number of bindings
+ * @return 0 on failure (and generation will terminate), 1 on success
+ */
+typedef int(*composite_engine_onStarting_fun)(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* bindings, int nbindings);
+
+/**
+ * Will be called after the looping over the cartesian product has finished
+ * Gives the user a possibility to perform some final cleanups and checks
+ * @param[in] engine - self
+ * @param[in] extradata - the extradata passed to the \ref CompositeEngine_generate function.
+ * @param[in] arguments - the arguments
+ * @return 0 on failure (and generation will terminate), 1 on success
+ */
+ typedef int(*composite_engine_onFinished_fun)(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments);
+
+/**
  * Function pointer used during composite generation (\ref CompositeEngine_generate).
  * Called when translating a surface coordinate into a lon/lat position. Will be called for each pixel in the resulting cartesian product.
  * @param[in] engine - self
@@ -133,10 +155,18 @@ typedef int(*composite_engine_setRadarData_fun)(CompositeEngine_t* engine, void*
 typedef int(*composite_engine_addQualityFlagsToCartesian_fun)(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, Cartesian_t* cartesian);
 
 /**
+ * @return the quality value at specified position (navinfo ei,ri,ai).
+ */
+typedef int(*composite_engine_getQualityValue_fun)(CompositeEngine_t* self, void* extradata, CompositeArguments_t* args, RaveCoreObject* obj, const char* qfieldname, PolarNavigationInfo* navinfo, double* v);
+
+/**
  * Fills the quality information in the cartesian product
  */
 typedef int(*composite_engine_fillQualityInformation_fun)(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, long x, long y, CartesianParam_t* param, double radardist, int radarindex, PolarNavigationInfo* info);
 
+/**
+ * Contains information required when determining what data point to use.
+ */
 typedef struct CompositeEngineRadarData_t {
   RaveValueType vtype; /**< value type */
   double value;       /**< value */
@@ -150,6 +180,153 @@ typedef struct CompositeEngineRadarData_t {
   composite_engine_getPolarValueAtPosition_fun getPolarValueAtPosition; /**< specific get polar value at position  */
   void* extradata; /**< will be provided to the extradata pointer in the function call */
 } CompositeEngineRadarData_t;
+
+/*@{ Composite engine utility functions */
+/**
+ * Calculates the lon/lat coordinate using the provided pipeline.
+ * @param[in] engine - the engine
+ * @param[in] object - the object
+ * @param[in] pipeline - the pipeline
+ * @param[in] herex - the x surface coordinate
+ * @param[in] herey - the y surface coordinate
+ * @param[out] olon - the longitude in radians
+ * @param[out] olat - the latitude in radians
+ * @return 1 on success otherwise 0
+ */
+int CompositeEngineUtility_getLonLat(CompositeEngine_t* engine, CompositeEngineObjectBinding_t* binding, double herex, double herey, double* olon, double* olat);
+
+/**
+ * Fetches the radar data for specified position using NEAREST.
+ * @param[in] engine - the engine
+ * @param[in] arguments - the arguments
+ * @param[in] object - the object
+ * @param[in] index - the index in object list (this has to be set in order to get proper radar indexing)
+ * @param[out] olon - the longitude in radians
+ * @param[out] olat - the latitude in radians
+ * @param[in,out] cvalues - the composite parameter values
+ * @param[in] ncvalues - number of entries in cvalues
+ * @return 1 on success otherwise 0
+ */
+int CompositeEngineUtility_selectRadarData(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* binding, int index, double olon, double olat, CompositeEngineRadarData_t* cvalues, int ncvalues);
+ 
+/**
+ * Fetches the polar value from specified position for specified quantity. 
+ */
+int CompositeEngineUtility_getPolarValueAtPosition(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* binding, const char* quantity, PolarNavigationInfo* navinfo, const char* qiFieldName, RaveValueType* otype, double* ovalue, double* qivalue);
+ 
+/**
+ * Sets the radar data for specified position using NEAREST. Will also invoke fillQualityInformation function.
+ * @param[in] engine - the engine
+ * @param[in] extradata - the extradata passed to the fillQualityInformation
+ * @param[in] arguments - the arguments
+ * @param[in] cartesian - the cartesian to fill
+ * @param[in] olon - the longitude in radians
+ * @param[in] olat - the latitude in radians
+ * @param[in] x - the x position in cartesian
+ * @param[in] y - the y position in cartesian
+ * @param[in] cvalues - the composite parameter values
+ * @param[in] ncvalues - number of entries in cvalues
+ * @return 1 on success otherwise 0
+ */
+int CompositeEngineUtility_setRadarData(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, Cartesian_t* cartesian, double olon, double olat, long x, long y, CompositeEngineRadarData_t* cvalues, int ncvalues);
+ 
+/**
+ * Creates the quality fields in the cartesian product using arguments and default parameters.
+ * The default configuration for the quality flags is:
+ * static CompositeQualityFlagSettings_t COMPOSITE_ENGINE_QUALITY_FLAG_DEFINITIONS[] = {
+ *   {COMPOSITE_ENGINE_DISTANCE_TO_RADAR_HOW_TASK, RaveDataType_UCHAR, 0.0, COMPOSITE_ENGINE_DISTANCE_TO_RADAR_RESOLUTION},
+ *   {COMPOSITE_ENGINE_HEIGHT_ABOVE_SEA_HOW_TASK, RaveDataType_UCHAR, 0.0, COMPOSITE_ENGINE_HEIGHT_RESOLUTION},
+ *   {COMPOSITE_ENGINE_RADAR_INDEX_HOW_TASK, RaveDataType_UCHAR, 0.0, 1.0},
+ *   {NULL, RaveDataType_UNDEFINED, 0.0, 0.0}
+ * };
+ * @param[in] engine - the engine
+ * @param[in] arguments - the arguments
+ * @param[in] cartesian - the cartesian to fill
+ * @return 1 on success otherwise 0
+ */
+int CompositeEngineUtility_addQualityFlagsToCartesian(CompositeEngine_t* engine, CompositeArguments_t* arguments, Cartesian_t* cartesian);
+ 
+/**
+ * Fills the quality information for the provided parameter. 
+ * @param[in] engine - the engine
+ * @param[in] extradata - the extradata, typically the data passed to the generate function.
+ * @param[in] arguments - the arguments
+ * @param[in] x - the x position in cartesian
+ * @param[in] y - the y position in cartesian
+ * @param[in] param - the cartesian parameter to fill
+ * @param[in] radardist - the distance to the radar for the specified point
+ * @param[in] radarindex - the radar index in list of objects affected
+ * @param[in] navinfo - the navigation info used
+ * @return 1 on success otherwise 0
+ */
+int CompositeEngineUtility_fillQualityInformation(CompositeEngine_t* self, void* extradata, CompositeArguments_t* arguments, long x, long y, CartesianParam_t* param, double radardist, int radarindex, PolarNavigationInfo* navinfo);
+ 
+/**
+ * Creates an array of CompositeEngineRadarData_t. The array length will be the same as number of
+ * parameters and the parameter in the struct will be associated with corresponding parameter
+ * in the cartesian product.
+ * @param[in] arguments - the arguments structure
+ * @param[in] cartesian - the cartesian that was created from the arguments
+ * @param[in] nentries - number of entries in the returned array
+ * @return the array on success or NULL on failure
+ */
+CompositeEngineRadarData_t* CompositeEngineUtility_createRadarData(CompositeArguments_t* arguments, Cartesian_t* cartesian, int* nentries);
+ 
+/**
+ * Resets the array of CompositeEngineRadarData_t except the CartesianParam parameter.
+ * @param[in] arguments - the arguments structure
+ * @param[in] cvalues - pointer at the array
+ * @param[in] nparam - number of parameters
+ */
+void CompositeEngineUtility_resetRadarData(CompositeArguments_t* arguments, CompositeEngineRadarData_t* cvalues, int nentries);
+ 
+/**
+ * Frees the CompositeEngineRadarData_t and ensures that all associated parameters are released.
+ * @param[in,out] cvalues - the cvalue struct.
+ * @param[in] nparam - number of entries in the array
+ */
+void CompositeEngineUtility_freeRadarData(CompositeEngineRadarData_t** cvalues, int nparam);
+ 
+/**
+ * Creates the binding between radar objects, pipelines, sources and other values that are relevant when creating composites.
+ * The order of the binding will be the same as the objects in the arguments at time the object is 
+ * @param[in] arguments - the arguments (containing the radar objects)
+ * @param[in] cartesian - the target composite 
+ * @param[out] nobject - the number of items in the returned array
+ * @param[in] sources - an OPTIONAL odim sources (MAY BE NULL). When creating binding, if possible to identify the odim source it will be attached to the binding.
+ * @return the array of bindings or NULL on failure
+ */
+CompositeEngineObjectBinding_t* CompositeEngineUtility_createObjectBinding(CompositeArguments_t* arguments, Cartesian_t* cartesian, int* nobjects, OdimSources_t* sources);
+ 
+/**
+* Releases the objects and then deallocates the array
+* @param[in,out] arr - the array to release
+* @param[in] nobjects - number of items in array
+*/
+void CompositeEngineUtility_releaseObjectBinding(CompositeEngineObjectBinding_t** arr, int nobjects);
+ 
+/*@} End of Composite engine utility functions */
+
+/*@{ Composite engine functions that will delegate to the registered function pointers */
+/**
+ * Delegates to the onStarting function pointer.
+ * @param[in] self - self
+ * @param[in] extradata - the extradata, normally the calling instance
+ * @param[in] arguments - the arguments
+ * @param[in] bindings - the bindings
+ * @param[in] nbindings - number of bindings
+ * @return 1 on success, 0 on failure and will terminate generation
+ */
+int CompositeEngineFunction_onStarting(CompositeEngine_t* self, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* bindings, int nbindings);
+
+/**
+ * Delegates to the onFinished function pointer.
+ * @param[in] self - self
+ * @param[in] extradata - the extradata, normally the calling instance
+ * @param[in] arguments - the arguments
+ * @return 1 on success, 0 on failure and will terminate generation
+ */
+ int CompositeEngineFunction_onFinished(CompositeEngine_t* self, void* extradata, CompositeArguments_t* arguments);
 
 /**
  * This delegates the call to the set lon-lat function.
@@ -203,6 +380,16 @@ int CompositeEngineFunction_setRadarData(CompositeEngine_t* self, void* extradat
  */
 int CompositeEngineFunction_addQualityFlagsToCartesian(CompositeEngine_t* self, void* extradata, CompositeArguments_t* arguments, Cartesian_t* cartesian);
 
+
+/**
+ * Returns the quality value at specified polar navigation info.
+ * @param[in] self - self
+ * @param[in] extradata - the extradata, normally the calling instance
+ * @param[in] arguments - the arguments
+ * @param[in] cartesian - the cartesian object to write to
+ */
+int CompositeEngineFunction_getQualityValue(CompositeEngine_t* self, void* extradata, CompositeArguments_t* args, RaveCoreObject* obj, const char* qfieldname, PolarNavigationInfo* navinfo, double* v);
+
 /**
  * Fills the quality information into the product
 
@@ -213,6 +400,19 @@ int CompositeEngineFunction_addQualityFlagsToCartesian(CompositeEngine_t* self, 
  * @return 1 on success otherwise false;
  */
 int CompositeEngineFunction_fillQualityInformation(CompositeEngine_t* self, void* extradata, CompositeArguments_t* arguments, long x, long y, CartesianParam_t* param, double radardist, int radarindex, PolarNavigationInfo* info);
+
+/*@} End of Composite engine functions that will delegate to the registered function pointers */
+
+/*@{ Composite engine instance methods */
+/**
+ * Sets the on starting function.
+ */
+int CompositeEngine_setOnStartingFunction(CompositeEngine_t* self, composite_engine_onStarting_fun onStarting);
+
+/**
+ * Sets the on finished function.
+ */
+ int CompositeEngine_setOnFinishedFunction(CompositeEngine_t* self, composite_engine_onFinished_fun onFinished);
 
 /**
  * Sets the lon-lat function. Default is to use standard vol/scan information.
@@ -253,131 +453,15 @@ int CompositeEngine_setSetRadarDataFunction(CompositeEngine_t* self, composite_e
 int CompositeEngine_setAddQualityFlagsToCartesianFunction(CompositeEngine_t* self, composite_engine_addQualityFlagsToCartesian_fun addQualityFlagsToCartesian);
 
 /**
+ * The get quality value function
+ */
+ int CompositeEngine_setGetQualityValueFunction(CompositeEngine_t* self, composite_engine_getQualityValue_fun getQualityValue);
+
+/**
  * The fill quality information function
  */
 int CompositeEngine_setFillQualityInformationFunction(CompositeEngine_t* self, composite_engine_fillQualityInformation_fun fillQualityInformation);
 
-/**
- * Calculates the lon/lat coordinate using the provided pipeline.
- * @param[in] engine - the engine
- * @param[in] object - the object
- * @param[in] pipeline - the pipeline
- * @param[in] herex - the x surface coordinate
- * @param[in] herey - the y surface coordinate
- * @param[out] olon - the longitude in radians
- * @param[out] olat - the latitude in radians
- * @return 1 on success otherwise 0
- */
-int CompositeEngineUtility_getLonLat(CompositeEngine_t* engine, CompositeEngineObjectBinding_t* binding, double herex, double herey, double* olon, double* olat);
-
-/**
- * Fetches the radar data for specified position using NEAREST.
- * @param[in] engine - the engine
- * @param[in] arguments - the arguments
- * @param[in] object - the object
- * @param[in] index - the index in object list (this has to be set in order to get proper radar indexing)
- * @param[out] olon - the longitude in radians
- * @param[out] olat - the latitude in radians
- * @param[in,out] cvalues - the composite parameter values
- * @param[in] ncvalues - number of entries in cvalues
- * @return 1 on success otherwise 0
- */
-int CompositeEngineUtility_selectRadarData(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* binding, int index, double olon, double olat, CompositeEngineRadarData_t* cvalues, int ncvalues);
-
-/**
- * Fetches the polar value from specified position for specified quantity. 
- */
-int CompositeEngineUtility_getPolarValueAtPosition(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* binding, const char* quantity, PolarNavigationInfo* navinfo, const char* qiFieldName, RaveValueType* otype, double* ovalue, double* qivalue);
-
-/**
- * Sets the radar data for specified position using NEAREST. Will also invoke fillQualityInformation function.
- * @param[in] engine - the engine
- * @param[in] extradata - the extradata passed to the fillQualityInformation
- * @param[in] arguments - the arguments
- * @param[in] cartesian - the cartesian to fill
- * @param[in] olon - the longitude in radians
- * @param[in] olat - the latitude in radians
- * @param[in] x - the x position in cartesian
- * @param[in] y - the y position in cartesian
- * @param[in] cvalues - the composite parameter values
- * @param[in] ncvalues - number of entries in cvalues
- * @return 1 on success otherwise 0
- */
-int CompositeEngineUtility_setRadarData(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, Cartesian_t* cartesian, double olon, double olat, long x, long y, CompositeEngineRadarData_t* cvalues, int ncvalues);
-
-/**
- * Creates the quality fields in the cartesian product using arguments and default parameters.
- * The default configuration for the quality flags is:
- * static CompositeQualityFlagSettings_t COMPOSITE_ENGINE_QUALITY_FLAG_DEFINITIONS[] = {
- *   {COMPOSITE_ENGINE_DISTANCE_TO_RADAR_HOW_TASK, RaveDataType_UCHAR, 0.0, COMPOSITE_ENGINE_DISTANCE_TO_RADAR_RESOLUTION},
- *   {COMPOSITE_ENGINE_HEIGHT_ABOVE_SEA_HOW_TASK, RaveDataType_UCHAR, 0.0, COMPOSITE_ENGINE_HEIGHT_RESOLUTION},
- *   {COMPOSITE_ENGINE_RADAR_INDEX_HOW_TASK, RaveDataType_UCHAR, 0.0, 1.0},
- *   {NULL, RaveDataType_UNDEFINED, 0.0, 0.0}
- * };
- * @param[in] engine - the engine
- * @param[in] arguments - the arguments
- * @param[in] cartesian - the cartesian to fill
- * @return 1 on success otherwise 0
- */
-int CompositeEngineUtility_addQualityFlagsToCartesian(CompositeEngine_t* engine, CompositeArguments_t* arguments, Cartesian_t* cartesian);
-
-/**
- * Fills the quality information for the provided parameter. 
- * @param[in] engine - the engine
- * @param[in] arguments - the arguments
- * @param[in] x - the x position in cartesian
- * @param[in] y - the y position in cartesian
- * @param[in] param - the cartesian parameter to fill
- * @param[in] radardist - the distance to the radar for the specified point
- * @param[in] radarindex - the radar index in list of objects affected
- * @param[in] navinfo - the navigation info used
- * @return 1 on success otherwise 0
- */
-int CompositeEngineUtility_fillQualityInformation(CompositeEngine_t* self, CompositeArguments_t* arguments, long x, long y, CartesianParam_t* param, double radardist, int radarindex, PolarNavigationInfo* navinfo);
-
-/**
- * Creates an array of CompositeEngineRadarData_t. The array length will be the same as number of
- * parameters and the parameter in the struct will be associated with corresponding parameter
- * in the cartesian product.
- * @param[in] arguments - the arguments structure
- * @param[in] cartesian - the cartesian that was created from the arguments
- * @param[in] nentries - number of entries in the returned array
- * @return the array on success or NULL on failure
- */
-CompositeEngineRadarData_t* CompositeEngineUtility_createRadarData(CompositeArguments_t* arguments, Cartesian_t* cartesian, int* nentries);
-
-/**
- * Resets the array of CompositeEngineRadarData_t except the CartesianParam parameter.
- * @param[in] arguments - the arguments structure
- * @param[in] cvalues - pointer at the array
- * @param[in] nparam - number of parameters
- */
-void CompositeEngineUtility_resetRadarData(CompositeArguments_t* arguments, CompositeEngineRadarData_t* cvalues, int nentries);
-
-/**
- * Frees the CompositeEngineRadarData_t and ensures that all associated parameters are released.
- * @param[in,out] cvalues - the cvalue struct.
- * @param[in] nparam - number of entries in the array
- */
-void CompositeEngineUtility_freeRadarData(CompositeEngineRadarData_t** cvalues, int nparam);
-
-/**
- * Creates the binding between radar objects, pipelines, sources and other values that are relevant when creating composites.
- * The order of the binding will be the same as the objects in the arguments at time the object is 
- * @param[in] arguments - the arguments (containing the radar objects)
- * @param[in] cartesian - the target composite 
- * @param[out] nobject - the number of items in the returned array
- * @param[in] sources - an OPTIONAL odim sources (MAY BE NULL). When creating binding, if possible to identify the odim source it will be attached to the binding.
- * @return the array of bindings or NULL on failure
- */
- CompositeEngineObjectBinding_t* CompositeEngineUtility_createObjectBinding(CompositeArguments_t* arguments, Cartesian_t* cartesian, int* nobjects, OdimSources_t* sources);
-
- /**
-  * Releases the objects and then deallocates the array
-  * @param[in,out] arr - the array to release
-  * @param[in] nobjects - number of items in array
-  */
- void CompositeEngineUtility_releaseObjectBinding(CompositeEngineObjectBinding_t** arr, int nobjects);
 
 /**
  * Sets the properties in this engine
@@ -393,8 +477,20 @@ void CompositeEngine_setProperties(CompositeEngine_t* self, RaveProperties_t* pr
 RaveProperties_t* CompositeEngine_getProperties(CompositeEngine_t* self);
 
 /**
+ * Registers a definition for a quality flag so that correct datatype, offset and gain are used.
+ * @param[in] self - self
+ * @param[in] qualityFieldName - the quality flags name
+ * @param[in] datatype - the datatype
+ * @param[in] offset - offset
+ * @param[in] gain - gain
+ * @return 1 on success, otherwise 0
+ */
+int CompositeEngine_registerQualityFlagDefinition(CompositeEngine_t* self, const char* qualityFieldName, RaveDataType datatype, double offset, double gain);
+
+/**
  * Generates the composite using a basic approach
  */
 Cartesian_t* CompositeEngine_generate(CompositeEngine_t* self, CompositeArguments_t* arguments, void* extradata);
+/*@} End of Composite engine instance methods */
 
 #endif /* COMPOSITEENGINE_H */

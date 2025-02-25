@@ -137,9 +137,9 @@ class PyNearestCompositeGeneratorFactoryTest(unittest.TestCase):
   def Xtest_generate(self):
     import _rave
     _rave.setDebugLevel(_rave.Debug_RAVE_SPEWDEBUG)
+    _rave.setTrackObjectCreation(True)
     classUnderTest = _nearestcompositegeneratorfactory.new()
     odimsources = _odimsources.load(self.ODIMSOURCES_FIXTURE)
-
 
     properties = _raveproperties.new()
     properties.sources = odimsources
@@ -163,6 +163,8 @@ class PyNearestCompositeGeneratorFactoryTest(unittest.TestCase):
     # arguments are usualy method specific in some way
     args.addArgument("selection_method", "HEIGHT_ABOVE_SEALEVEL")
     args.addArgument("interpolation_method", "NEAREST")
+
+    args.addQualityFlag("se.smhi.detector.poo")
 
     args.area = self.create_area("nrd2km")
     args.addParameter("RATE", 0.0, 1.0)  # This is actually using DBZH to calculate RATE

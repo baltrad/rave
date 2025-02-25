@@ -46,14 +46,18 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  */
 struct _CompositeEngine_t {
   RAVE_OBJECT_HEAD /** Always on top */
+  composite_engine_onStarting_fun onStarting;
+  composite_engine_onFinished_fun onFinished;
   composite_engine_getLonLat_fun getLonLat;
   composite_engine_selectRadarData_fun selectRadarData;
   composite_engine_getPolarValueAtPosition_fun getPolarValueAtPosition;
   composite_engine_setRadarData_fun setRadarData;
   composite_engine_addQualityFlagsToCartesian_fun addQualityFlagsToCartesian;
+  composite_engine_getQualityValue_fun getQualityValue;
   composite_engine_fillQualityInformation_fun fillQualityInformation;
   RaveObjectHashTable_t* polarValueAtPositionMapping;
   RaveProperties_t* properties;
+  RaveObjectHashTable_t* qualityFlagDefinitions;
 };
 
 static CompositeQualityFlagSettings_t COMPOSITE_ENGINE_QUALITY_FLAG_DEFINITIONS[] = {
@@ -97,12 +101,13 @@ RaveCoreObjectType CompositeEnginePolarValueFunction_TYPE = {
     CompositeEnginePolarValueFunction_destructor,
     CompositeEnginePolarValueFunction_copyconstructor
 };
-
-
-/*@] End of Private CompositeEnginePolarValueFunction class */
+/*@} End of Private CompositeEnginePolarValueFunction class */
 
 /*@{ Private functions */
 
+static int CompositeEngineInternal_onStarting(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* bindings, int nbindings);
+
+static int CompositeEngineInternal_onFinished(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments);
 
 static int CompositeEngineInternal_getLonLat(CompositeEngine_t* engine, void* extradata, CompositeEngineObjectBinding_t* binding, double herex, double herey, double* olon, double* olat);
 
@@ -112,9 +117,21 @@ static int CompositeEngineInternal_getPolarValueAtPosition(CompositeEngine_t* en
 
 static int CompositeEngineInternal_setRadarData(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, Cartesian_t* cartesian, double olon, double olat, long x, long y, CompositeEngineRadarData_t* cvalues, int ncvalues);
 
+static int CompositeEngineInternal_getQualityValue(CompositeEngine_t* self, void* extradata, CompositeArguments_t* args, RaveCoreObject* obj, const char* qfieldname, PolarNavigationInfo* navinfo, double* v);
+
 static int CompositeEngineInternal_addQualityFlagsToCartesian(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, Cartesian_t* cartesian);
 
 static int CompositeEngineInternal_fillQualityInformation(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, long x, long y, CartesianParam_t* param, double radardist, int radarindex, PolarNavigationInfo* info);
+
+
+
+/**
+ * Registers the default quality flag definitions.
+ */
+static int CompositeEngineInternal_registerDefaultQualityFlagDefinitions(CompositeEngine_t* engine)
+{
+  return CompositeUtils_registerQualityFlagDefinitionFromSettings(engine->qualityFlagDefinitions, COMPOSITE_ENGINE_QUALITY_FLAG_DEFINITIONS);
+}
 
 /**
  * Constructor.
@@ -123,20 +140,34 @@ static int CompositeEngineInternal_fillQualityInformation(CompositeEngine_t* eng
 static int CompositeEngine_constructor(RaveCoreObject* obj)
 {
   CompositeEngine_t* this = (CompositeEngine_t*)obj;
+  this->onStarting = CompositeEngineInternal_onStarting;
+  this->onFinished = CompositeEngineInternal_onFinished;
   this->getLonLat = CompositeEngineInternal_getLonLat;
   this->selectRadarData = CompositeEngineInternal_selectRadarData;
   this->getPolarValueAtPosition = CompositeEngineInternal_getPolarValueAtPosition;
   this->setRadarData = CompositeEngineInternal_setRadarData;
   this->addQualityFlagsToCartesian = CompositeEngineInternal_addQualityFlagsToCartesian;
+  this->getQualityValue = CompositeEngineInternal_getQualityValue;
   this->fillQualityInformation = CompositeEngineInternal_fillQualityInformation;
   this->properties = NULL;
+  this->qualityFlagDefinitions = NULL;
 
   this->polarValueAtPositionMapping = RAVE_OBJECT_NEW(&RaveObjectHashTable_TYPE);
-  if (this->polarValueAtPositionMapping == NULL) {
+  this->qualityFlagDefinitions = RAVE_OBJECT_NEW(&RaveObjectHashTable_TYPE);
+  if (this->polarValueAtPositionMapping == NULL || this->qualityFlagDefinitions == NULL) {
     RAVE_ERROR0("Failed to allocate memory for mapping");
-    return 0;
+    goto fail;
   }
+
+  if (!CompositeEngineInternal_registerDefaultQualityFlagDefinitions(this)) {
+    goto fail;
+  }
+
   return 1;
+fail:
+  RAVE_OBJECT_RELEASE(this->polarValueAtPositionMapping);
+  RAVE_OBJECT_RELEASE(this->qualityFlagDefinitions);
+  return 0;
 }
 
 /**
@@ -148,16 +179,20 @@ static int CompositeEngine_copyconstructor(RaveCoreObject* obj, RaveCoreObject* 
 {
   CompositeEngine_t* this = (CompositeEngine_t*)obj;
   CompositeEngine_t* src = (CompositeEngine_t*)srcobj;
+  this->onStarting = src->onStarting;
+  this->onFinished = src->onFinished;
   this->getLonLat = src->getLonLat;
   this->selectRadarData = src->selectRadarData;
   this->getPolarValueAtPosition = src->getPolarValueAtPosition; 
   this->setRadarData = src->setRadarData;
   this->addQualityFlagsToCartesian = src->addQualityFlagsToCartesian;
+  this->getQualityValue = src->getQualityValue;
   this->fillQualityInformation = src->fillQualityInformation;
   this->properties = NULL;
 
   this->polarValueAtPositionMapping = RAVE_OBJECT_CLONE(src->polarValueAtPositionMapping);
-  if (this->polarValueAtPositionMapping == NULL) {
+  this->qualityFlagDefinitions = RAVE_OBJECT_CLONE(src->qualityFlagDefinitions);
+  if (this->polarValueAtPositionMapping == NULL  || this->qualityFlagDefinitions == NULL) {
     RAVE_ERROR0("Failed to allocate memory for mapping");
     goto fail;
   }
@@ -172,6 +207,7 @@ static int CompositeEngine_copyconstructor(RaveCoreObject* obj, RaveCoreObject* 
   return 1;
 fail:
   RAVE_OBJECT_RELEASE(this->polarValueAtPositionMapping);
+  RAVE_OBJECT_RELEASE(this->qualityFlagDefinitions);
   RAVE_OBJECT_RELEASE(this->properties);
   return 0;
 }
@@ -185,6 +221,7 @@ static void CompositeEngine_destructor(RaveCoreObject* obj)
   CompositeEngine_t* this = (CompositeEngine_t*)obj;
   RAVE_OBJECT_RELEASE(this->polarValueAtPositionMapping);
   RAVE_OBJECT_RELEASE(this->properties);
+  RAVE_OBJECT_RELEASE(this->qualityFlagDefinitions);
 }
 
 /**
@@ -251,6 +288,16 @@ done:
 }
 
 /*@{ Composite Engine internal function pointers */
+static int CompositeEngineInternal_onStarting(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* bindings, int nbindings)
+{
+  return 1;
+}
+
+static int CompositeEngineInternal_onFinished(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments)
+{
+  return 1;
+}
+
 static int CompositeEngineInternal_getLonLat(CompositeEngine_t* engine, void* extradata, CompositeEngineObjectBinding_t* binding, double herex, double herey, double* olon, double* olat)
 {
   return CompositeEngineUtility_getLonLat(engine, binding, herex, herey, olon, olat);
@@ -273,16 +320,42 @@ static int CompositeEngineInternal_setRadarData(CompositeEngine_t* engine, void*
 
 static int CompositeEngineInternal_addQualityFlagsToCartesian(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, Cartesian_t* cartesian)
 {
-  return CompositeUtils_addQualityFlagsToCartesian(arguments, cartesian, COMPOSITE_ENGINE_QUALITY_FLAG_DEFINITIONS);
+  return CompositeUtils_addQualityFlagsToCartesian(arguments, cartesian, engine->qualityFlagDefinitions);
+}
+
+static int CompositeEngineInternal_getQualityValue(CompositeEngine_t* self, void* extradata, CompositeArguments_t* args, RaveCoreObject* obj, const char* qfieldname, PolarNavigationInfo* navinfo, double* v)
+{
+  return 0;
 }
 
 static int CompositeEngineInternal_fillQualityInformation(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, long x, long y, CartesianParam_t* param, double radardist, int radarindex, PolarNavigationInfo* info)
 {
-  return CompositeEngineUtility_fillQualityInformation(engine, arguments, x, y, param, radardist, radarindex, info);
+  return CompositeEngineUtility_fillQualityInformation(engine, extradata, arguments, x, y, param, radardist, radarindex, info);
 }
 /*@} End of Composite Engine internal function pointers */
 
 /*@{ Composite Engine function pointer setters */
+
+int CompositeEngine_setOnStartingFunction(CompositeEngine_t* self, composite_engine_onStarting_fun onStarting)
+{
+  if (onStarting != NULL) {
+    self->onStarting = onStarting;
+  } else {
+    self->onStarting = CompositeEngineInternal_onStarting;
+  }
+  return 1;
+}
+
+int CompositeEngine_setOnFinishedFunction(CompositeEngine_t* self, composite_engine_onFinished_fun onFinished)
+{
+  if (onFinished != NULL) {
+    self->onFinished = onFinished;
+  } else {
+    self->onFinished = CompositeEngineInternal_onFinished;
+  }
+  return 1;
+}
+
 
 int CompositeEngine_setLonLatFunction(CompositeEngine_t* self, composite_engine_getLonLat_fun getLonLat)
 {
@@ -367,6 +440,17 @@ int CompositeEngine_setAddQualityFlagsToCartesianFunction(CompositeEngine_t* sel
   return 1;
 }
 
+
+int CompositeEngine_setGetQualityValueFunction(CompositeEngine_t* self, composite_engine_getQualityValue_fun getQualityValue)
+{
+  if (getQualityValue != NULL) {
+    self->getQualityValue = getQualityValue;
+  } else {
+    self->getQualityValue = CompositeEngineInternal_getQualityValue;
+  }
+  return 1;  
+}
+
 int CompositeEngine_setFillQualityInformationFunction(CompositeEngine_t* self, composite_engine_fillQualityInformation_fun fillQualityInformation)
 {
   if (fillQualityInformation != NULL) {
@@ -379,6 +463,16 @@ int CompositeEngine_setFillQualityInformationFunction(CompositeEngine_t* self, c
 /*@} End of Composite Engine function pointer setters */
 
 /*@{ Composite Engine functions called from generate */
+
+int CompositeEngineFunction_onStarting(CompositeEngine_t* self, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* bindings, int nbindings)
+{
+  return self->onStarting(self, extradata, arguments, bindings, nbindings);
+}
+
+int CompositeEngineFunction_onFinished(CompositeEngine_t* self, void* extradata, CompositeArguments_t* arguments)
+{
+  return self->onFinished(self, extradata, arguments);
+}
 
 int CompositeEngineFunction_getLonLat(CompositeEngine_t* self, void* extradata, CompositeEngineObjectBinding_t* binding, double herex, double herey, double* olon, double* olat)
 {
@@ -403,6 +497,11 @@ int CompositeEngineFunction_setRadarData(CompositeEngine_t* self, void* extradat
 int CompositeEngineFunction_addQualityFlagsToCartesian(CompositeEngine_t* self, void* extradata, CompositeArguments_t* arguments, Cartesian_t* cartesian)
 {
   return self->addQualityFlagsToCartesian(self, extradata, arguments, cartesian);
+}
+
+int CompositeEngineFunction_getQualityValue(CompositeEngine_t* self, void* extradata, CompositeArguments_t* args, RaveCoreObject* obj, const char* qfieldname, PolarNavigationInfo* navinfo, double* v)
+{
+  return self->getQualityValue(self, extradata, args, obj, qfieldname, navinfo, v);
 }
 
 int CompositeEngineFunction_fillQualityInformation(CompositeEngine_t* self, void* extradata, CompositeArguments_t* arguments, long x, long y, CartesianParam_t* param, double radardist, int radarindex, PolarNavigationInfo* info)
@@ -575,10 +674,10 @@ int CompositeEngineUtility_setRadarData(CompositeEngine_t* engine, void* extrada
 
 int CompositeEngineUtility_addQualityFlagsToCartesian(CompositeEngine_t* engine, CompositeArguments_t* arguments, Cartesian_t* cartesian)
 {
-  return !CompositeUtils_addQualityFlagsToCartesian(arguments, cartesian, COMPOSITE_ENGINE_QUALITY_FLAG_DEFINITIONS);
+  return CompositeUtils_addQualityFlagsToCartesian(arguments, cartesian, engine->qualityFlagDefinitions);
 }
 
-int CompositeEngineUtility_fillQualityInformation(CompositeEngine_t* self, CompositeArguments_t* arguments, long x, long y, CartesianParam_t* param, double radardist, int radarindex, PolarNavigationInfo* navinfo)
+int CompositeEngineUtility_fillQualityInformation(CompositeEngine_t* self, void* extradata, CompositeArguments_t* arguments, long x, long y, CartesianParam_t* param, double radardist, int radarindex, PolarNavigationInfo* navinfo)
 {
   int nfields = 0, i = 0;
   const char* quantity;
@@ -611,6 +710,8 @@ int CompositeEngineUtility_fillQualityInformation(CompositeEngine_t* self, Compo
           RaveField_setValue(field, x, y, radardist/COMPOSITE_ENGINE_DISTANCE_TO_RADAR_RESOLUTION);
         } else if (strcmp(COMPOSITE_ENGINE_RADAR_INDEX_HOW_TASK, name) == 0) {
           RaveField_setValue(field, x, y, (double)CompositeArguments_getObjectRadarIndexValue(arguments, radarindex));
+        } else if (CompositeEngineFunction_getQualityValue(self, extradata, arguments, obj, name, navinfo, &v)) {
+          RaveField_setValue(field, x, y, (double)v);
         } else {
           if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
             if (navinfo->ei >= 0 && navinfo->ri >= 0 && navinfo->ai >= 0 ) {
@@ -650,9 +751,15 @@ void CompositeEngine_setProperties(CompositeEngine_t* self, RaveProperties_t* pr
 
 RaveProperties_t* CompositeEngine_getProperties(CompositeEngine_t* self)
 {
+  RAVE_ASSERT((self != NULL), "self == NULL");
   return RAVE_OBJECT_COPY(self->properties);
 }
 
+int CompositeEngine_registerQualityFlagDefinition(CompositeEngine_t* self, const char* qualityFieldName, RaveDataType datatype, double offset, double gain)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return CompositeUtils_registerQualityFlagDefinition(self->qualityFlagDefinitions, qualityFieldName, datatype, offset, gain);
+}
 
 Cartesian_t* CompositeEngine_generate(CompositeEngine_t* self, CompositeArguments_t* arguments, void* extradata)
 {
@@ -706,14 +813,16 @@ Cartesian_t* CompositeEngine_generate(CompositeEngine_t* self, CompositeArgument
     goto fail;
   }
 
-
-
   for (int i = 0; i < nbindings; i++) {
     RaveCoreObject* obj = CompositeArguments_getObject(arguments, i);
     if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
       PolarVolume_sortByElevations((PolarVolume_t*)obj, 1);
     }
     RAVE_OBJECT_RELEASE(obj);
+  }
+
+  if (!CompositeEngineFunction_onStarting(self, extradata, arguments, bindings, nbindings)) {
+    goto fail;
   }
 
   for (y = 0; y < ysize; y++) {
@@ -735,6 +844,10 @@ Cartesian_t* CompositeEngine_generate(CompositeEngine_t* self, CompositeArgument
       }
       CompositeEngineFunction_setRadarData(self, extradata, arguments, cartesian, olon, olat, x, y, cvalues, nentries);
     }
+  }
+
+  if (!CompositeEngineFunction_onFinished(self, extradata, arguments)) {
+    goto fail;
   }
 
   result = RAVE_OBJECT_COPY(cartesian);

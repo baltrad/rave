@@ -294,6 +294,21 @@ class PyCompositeArgumentsTest(unittest.TestCase):
     self.assertEqual("se.smhi.something", obj.getQualityFlagAt(0))
     self.assertEqual("se.smhi.something.else", obj.getQualityFlagAt(1))
 
+  def test_hasQualityFlag(self):
+    obj = _compositearguments.new()
+    obj.addQualityFlag("se.smhi.something")
+    obj.addQualityFlag("se.smhi.something.else")
+    self.assertTrue(obj.hasQualityFlag("se.smhi.something"))
+    self.assertTrue(obj.hasQualityFlag("se.smhi.something.else"))
+    self.assertFalse(obj.hasQualityFlag("se.smhi.some.thing"))
+    self.assertFalse(obj.hasQualityFlag("se.smhi.some"))
+
+    flags = obj.getQualityFlags()
+    self.assertEqual(2, len(flags))
+    self.assertEqual("se.smhi.something", flags[0])
+    self.assertEqual("se.smhi.something.else", flags[1])
+
+
   def test_getQualityFlags(self):
     obj = _compositearguments.new()
     obj.addQualityFlag("se.smhi.something")

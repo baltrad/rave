@@ -23,6 +23,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @date 2024-10-10
  */
 #include "nearestcompositegeneratorfactory.h"
+#include "cartesian.h"
 #include "compositearguments.h"
 #include "compositeengine.h"
 #include "polarvolume.h"
@@ -47,6 +48,7 @@ typedef struct _NearestCompositeGeneratorFactory_t {
   RAVE_OBJECT_HEAD /**< Always on top */
   COMPOSITE_GENERATOR_FACTORY_HEAD /**< composite generator plugin specifics */
   CompositeEngine_t* engine; /**< the compositing engine */
+  RaveObjectHashTable_t* poofields; /**< if poo quality field should be created, cash it here */
 } NearestCompositeGeneratorFactory_t;
 
 static const char* SUPPORTED_PRODUCTS[]={
@@ -58,7 +60,15 @@ static const char* SUPPORTED_PRODUCTS[]={
   NULL
 };
 
-int NearestCompositeGeneratorFactory_getPolarValueAtPosition(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* binding, const char* quantity, PolarNavigationInfo* navinfo, const char* qiFieldName, RaveValueType* otype, double* ovalue, double* qivalue);
+#define HOWTASK_POO_GAIN 1.0/UCHAR_MAX
+#define HOWTASK_POO_OFFSET 0.0
+#define HOWTASK_POO_DATATYPE RaveDataType_UCHAR
+
+static int NearestCompositeGeneratorFactory_onStarting(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* bindings, int nbindings);
+
+static int NearestCompositeGeneratorFactory_getPolarValueAtPosition(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* binding, const char* quantity, PolarNavigationInfo* navinfo, const char* qiFieldName, RaveValueType* otype, double* ovalue, double* qivalue);
+
+static int NearestCompositeGeneratorFactory_getQualityValue(CompositeEngine_t* self, void* extradata, CompositeArguments_t* args, RaveCoreObject* obj, const char* qfieldname, PolarNavigationInfo* navinfo, double* v);
 
 /*@{ Private functions */
 /**
@@ -75,10 +85,16 @@ static int NearestCompositeGeneratorFactory_constructor(RaveCoreObject* obj)
   this->getProperties = NearestCompositeGeneratorFactory_getProperties;
   this->generate = NearestCompositeGeneratorFactory_generate;
   this->create = NearestCompositeGeneratorFactory_create;
+  this->poofields = NULL;
 
   this->engine = RAVE_OBJECT_NEW(&CompositeEngine_TYPE);
   if (this->engine == NULL) {
     RAVE_ERROR0("Failed to create compositing engine");
+    goto fail;
+  }
+
+  if (!CompositeEngine_setOnStartingFunction(this->engine, NearestCompositeGeneratorFactory_onStarting)) {
+    RAVE_ERROR0("Failed to set the onStarting function");
     goto fail;
   }
 
@@ -89,6 +105,16 @@ static int NearestCompositeGeneratorFactory_constructor(RaveCoreObject* obj)
 
   if (!CompositeEngine_registerPolarValueAtPositionFunction(this->engine, "RATE", NearestCompositeGeneratorFactory_getPolarValueAtPosition)) {
     RAVE_ERROR0("Failed to set getPolarValueAtPosition function for RATE");
+    goto fail;
+  }
+
+  if (!CompositeEngine_setGetQualityValueFunction(this->engine, NearestCompositeGeneratorFactory_getQualityValue)) {
+    RAVE_ERROR0("Failed to set getQualityValue function for NEAREST");
+    goto fail;
+  }
+
+  if (!CompositeEngine_registerQualityFlagDefinition(this->engine, "se.smhi.detector.poo", HOWTASK_POO_DATATYPE, HOWTASK_POO_OFFSET, HOWTASK_POO_GAIN)) {
+    RAVE_ERROR0("Failed to register quality flag definition for: se.smhi.detector.poo");
     goto fail;
   }
 
@@ -114,10 +140,24 @@ static int NearestCompositeGeneratorFactory_copyconstructor(RaveCoreObject* obj,
   this->getProperties = NearestCompositeGeneratorFactory_getProperties;
   this->generate = NearestCompositeGeneratorFactory_generate;
   this->create = NearestCompositeGeneratorFactory_create;
+  this->poofields = NULL;
 
   this->engine = RAVE_OBJECT_CLONE(src->engine);
   if (this->engine == NULL) {
     RAVE_ERROR0("Failed to clone compositing engine");
+    goto fail;
+  }
+
+  if (src->poofields != NULL) {
+    this->poofields = RAVE_OBJECT_CLONE(src->poofields);
+    if (this->poofields == NULL) {
+      RAVE_ERROR0("Failed to clone poo fields");
+      goto fail;
+    }
+  }
+
+  if (!CompositeEngine_setOnStartingFunction(this->engine, NearestCompositeGeneratorFactory_onStarting)) {
+    RAVE_ERROR0("Failed to set the onStarting function");
     goto fail;
   }
 
@@ -131,9 +171,15 @@ static int NearestCompositeGeneratorFactory_copyconstructor(RaveCoreObject* obj,
     goto fail;
   }
 
+  if (!CompositeEngine_setGetQualityValueFunction(this->engine, NearestCompositeGeneratorFactory_getQualityValue)) {
+    RAVE_ERROR0("Failed to set getQualityValue function for NEAREST");
+    goto fail;
+  }
+
   return 1;
 fail:
   RAVE_OBJECT_RELEASE(this->engine);
+  RAVE_OBJECT_RELEASE(this->poofields);
   return 0;
 }
 
@@ -145,11 +191,80 @@ static void NearestCompositeGeneratorFactory_destructor(RaveCoreObject* obj)
 {
   NearestCompositeGeneratorFactory_t* this = (NearestCompositeGeneratorFactory_t*)obj;
   RAVE_OBJECT_RELEASE(this->engine);
+  RAVE_OBJECT_RELEASE(this->poofields);
 }
 
-int NearestCompositeGeneratorFactory_getPolarValueAtPosition(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* binding, const char* quantity, PolarNavigationInfo* navinfo, const char* qiFieldName, RaveValueType* otype, double* ovalue, double* qivalue)
+/**
+ * Will traverse all objects in the list and atempt to find a scan that contains a
+ * quality field that has got a how/task value == se.smhi.detector.poo.
+ * All scans that contains such a field will get a scan set in the resulting
+ * hash table with the quality data set as the default (and only) parameter.
+ * @param[in] composite - the composite
+ * @return a hash table
+ */
+ static RaveObjectHashTable_t* CompositeEngineUtility_getQualityScanFields(CompositeEngine_t* engine, CompositeEngineObjectBinding_t* bindings, int nbindings, const char* qualityFieldName)
+ {
+   RaveObjectHashTable_t* result = NULL;
+   RaveObjectHashTable_t* scans = NULL;
+   int i = 0;
+   int status = 1;
+ 
+   scans = RAVE_OBJECT_NEW(&RaveObjectHashTable_TYPE);
+   if (scans == NULL) {
+     RAVE_ERROR0("Failed to allocate memory for object hash table");
+     goto done;
+   }
+ 
+   for (i = 0; status == 1 && i < nbindings; i++) {
+     if (RAVE_OBJECT_CHECK_TYPE(bindings[i].object, &PolarScan_TYPE)) {
+       RaveField_t* field = PolarScan_findAnyQualityFieldByHowTask((PolarScan_t*)bindings[i].object, qualityFieldName);
+       if (field != NULL) {
+         PolarScan_t* scan = PolarScan_createFromScanAndField((PolarScan_t*)bindings[i].object, field);
+         if (scan == NULL || !RaveObjectHashTable_put(scans, PolarScan_getSource(scan), (RaveCoreObject*)scan)) {
+           RAVE_ERROR0("Failed to add poo scan to hash table");
+           status = 0;
+         }
+         RAVE_OBJECT_RELEASE(scan);
+       }
+       RAVE_OBJECT_RELEASE(field);
+     } else if (RAVE_OBJECT_CHECK_TYPE(bindings[i].object, &PolarVolume_TYPE)) {
+       PolarScan_t* pooscan = PolarVolume_findAnyScanWithQualityFieldByHowTask((PolarVolume_t*)bindings[i].object, qualityFieldName);
+       if (pooscan != NULL) {
+         RaveField_t* field = PolarScan_findAnyQualityFieldByHowTask(pooscan, qualityFieldName);
+         if (field != NULL) {
+           PolarScan_t* scan = PolarScan_createFromScanAndField(pooscan, field);
+           if (scan == NULL || !RaveObjectHashTable_put(scans, PolarScan_getSource(scan), (RaveCoreObject*)scan)) {
+             RAVE_ERROR0("Failed to scan to hash table");
+             status = 0;
+           }
+           RAVE_OBJECT_RELEASE(scan);
+         }
+         RAVE_OBJECT_RELEASE(field);
+       }
+       RAVE_OBJECT_RELEASE(pooscan);
+     }
+   }
+   result = RAVE_OBJECT_COPY(scans);
+done:
+   RAVE_OBJECT_RELEASE(scans);
+   return result;
+}
+
+static int NearestCompositeGeneratorFactory_onStarting(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* bindings, int nbindings)
 {
   NearestCompositeGeneratorFactory_t* self = (NearestCompositeGeneratorFactory_t*)extradata;
+
+  RAVE_OBJECT_RELEASE(self->poofields);
+  if (CompositeArguments_hasQualityFlag(arguments, "se.smhi.detector.poo")) {
+    self->poofields = CompositeEngineUtility_getQualityScanFields(engine, bindings, nbindings, "se.smhi.detector.poo");
+  }
+
+  return 1;
+}
+
+static int NearestCompositeGeneratorFactory_getPolarValueAtPosition(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* binding, const char* quantity, PolarNavigationInfo* navinfo, const char* qiFieldName, RaveValueType* otype, double* ovalue, double* qivalue)
+{
+  /*NearestCompositeGeneratorFactory_t* self = (NearestCompositeGeneratorFactory_t*)extradata;*/
   RaveProperties_t* properties = NULL;
   int result = 0;
   
@@ -205,6 +320,46 @@ int NearestCompositeGeneratorFactory_getPolarValueAtPosition(CompositeEngine_t* 
   return result;
 }
 
+static int NearestCompositeGeneratorFactory_getQualityValue(CompositeEngine_t* self, void* extradata, CompositeArguments_t* args, RaveCoreObject* obj, const char* qfieldname, PolarNavigationInfo* navinfo, double* v)
+{
+  int result = 0;
+  PolarScan_t* pooscan = NULL;
+  NearestCompositeGeneratorFactory_t* this = (NearestCompositeGeneratorFactory_t*)extradata;
+
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  RAVE_ASSERT((obj != NULL), "obj == NULL");
+  RAVE_ASSERT((navinfo != NULL), "navinfo == NULL");
+
+  if (strcmp("se.smhi.detector.poo", qfieldname) == 0) {
+    /* We know how to handle poo */
+    if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE) && navinfo->ei >= 0 && navinfo->ri >= 0 && navinfo->ai >= 0) {
+      const char* source = PolarVolume_getSource((PolarVolume_t*)obj);
+      if (source != NULL) {
+        pooscan = (PolarScan_t*)RaveObjectHashTable_get(this->poofields, source);
+      }
+    } else if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarScan_TYPE) && navinfo->ri >= 0 && navinfo->ai >= 0) {
+      const char* source = PolarScan_getSource((PolarScan_t*)obj);
+      if (source != NULL ) {
+        pooscan = (PolarScan_t*)RaveObjectHashTable_get(this->poofields, source);
+      }
+    }
+    if (pooscan != NULL) {
+      double value = 0.0;
+      RaveValueType t = PolarScan_getNearest(pooscan, navinfo->lon, navinfo->lat, 1, &value);
+
+      if (t != RaveValueType_DATA) {
+        value = 0.0;
+      }
+
+      *v = (value - HOWTASK_POO_OFFSET) / HOWTASK_POO_GAIN;
+
+      result = 1;
+    }
+  }
+
+  RAVE_OBJECT_RELEASE(pooscan);
+  return result;
+}
 
 /*@} End of Private functions */
 

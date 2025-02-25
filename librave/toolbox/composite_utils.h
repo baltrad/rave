@@ -79,16 +79,39 @@ typedef struct CompositeRaveObjectBinding_t {
   OdimSource_t* source; /**< the source associated with the object */
 } CompositeRaveObjectBinding_t;
 
-/**
- * Can be used to define if a quality flag requires different gain/offset or datatype than the default values
- * which are: UCHAR, offset=0.0 and gain = 255/UCHAR_MAX
- */
 typedef struct CompositeQualityFlagSettings_t {
-  const char* qualityFieldName;
+  char* qualityFieldName;
   RaveDataType datatype;
   double offset;
   double gain;
 } CompositeQualityFlagSettings_t;
+
+/**
+ * Can be used to define if a quality flag requires different gain/offset or datatype than the default values
+ * which are: UCHAR, offset=0.0 and gain = 255/UCHAR_MAX
+ */
+typedef struct CompositeQualityFlagDefinition_t {
+  RAVE_OBJECT_HEAD /** Always on top */
+  char* qualityFieldName;
+  RaveDataType datatype;
+  double offset;
+  double gain;
+} CompositeQualityFlagDefinition_t;
+
+/**
+ * Allow CompositeQualityFlagDefinition to be instantiated like any RaveCoreObject.
+ */
+extern RaveCoreObjectType CompositeQualityFlagDefinition_TYPE;
+
+/**
+ * Utility function to create a quality flag setting instance
+ */
+ int CompositeUtils_registerQualityFlagDefinition(RaveObjectHashTable_t* qualityFlags, const char* qualityFieldName, RaveDataType datatype, double offset, double gain);
+
+ /**
+  * Initiates the hash table of quality flags with the settings
+  */
+ int CompositeUtils_registerQualityFlagDefinitionFromSettings(RaveObjectHashTable_t* qualityFlags, CompositeQualityFlagSettings_t* settings);
 
 /**
  * Validates the arguments so that it is possible to create a cartesian product
@@ -182,6 +205,15 @@ void CompositeUtils_getQualityFlagSettings(CompositeQualityFlagSettings_t* setti
  * Creates all quality flags specified in the arguments and add them to the cartesian product.
  * @param[in] arguments - the arguments (containing the list of quality flags)
  * @param[in] cartesian - the product to which the quality fields should be added
+ * @param[in] definitions - the definitions of specific quality flags. Values in hash table should be CompositeQualityFlagDefinition_t
+ * @return 1 on success otherwise 0
+ */
+ int CompositeUtils_addQualityFlagsToCartesian(CompositeArguments_t* arguments, Cartesian_t* cartesian, RaveObjectHashTable_t* definitions);
+
+/**
+ * Creates all quality flags specified in the arguments and add them to the cartesian product.
+ * @param[in] arguments - the arguments (containing the list of quality flags)
+ * @param[in] cartesian - the product to which the quality fields should be added
  * @param[in] settings - the settings of specific quality flags. Should be defined as 
  * CompositeQualityFlagSettings_t settings[] = {
  *   {<qualityflag>, <datatype>, <offset>, <gain>},
@@ -191,7 +223,7 @@ void CompositeUtils_getQualityFlagSettings(CompositeQualityFlagSettings_t* setti
  * since the loop will break at the first qualityflag == NULL.
  * @return 1 on success otherwise 0
  */
-int CompositeUtils_addQualityFlagsToCartesian(CompositeArguments_t* arguments, Cartesian_t* cartesian, CompositeQualityFlagSettings_t* settings);
+int CompositeUtils_addQualityFlagsToCartesianFromSettings(CompositeArguments_t* arguments, Cartesian_t* cartesian, CompositeQualityFlagSettings_t* settings);
 
 /**
  * Adds what/gain and what/offset to the RaveField.

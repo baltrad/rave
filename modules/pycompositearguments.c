@@ -596,6 +596,15 @@ fail:
   return NULL;
 }
 
+static PyObject* _pycompositearguments_hasQualityFlag(PyCompositeArguments* self, PyObject* args)
+{
+  char* name = NULL;
+  if (!PyArg_ParseTuple(args, "s", &name)) {
+    return NULL;
+  }
+  return PyLong_FromLong(CompositeArguments_hasQualityFlag(self->args, (const char*)name));
+}
+
 static PyObject* _pycompositearguments_removeQualityFlag(PyCompositeArguments* self, PyObject* args)
 {
   char* qualityflag = NULL;
@@ -804,6 +813,11 @@ static struct PyMethodDef _pycompositearguments_methods[] =
     "getQualityFlagAt(index)\n\n"
     "Returns the quality flag at specified position.\n"
     "index - the index of the quality field"
+  },
+  {"hasQualityFlag", (PyCFunction)_pycompositearguments_hasQualityFlag, 1,
+    "hasQualityFlag(name)\n\n"
+    "Returns if the specified flag exists or not in list of flags.\n"
+    "True if found otherwise False"
   },
   {"getQualityFlags", (PyCFunction)_pycompositearguments_getQualityFlags, 1,
     "getQualityFlags()\n\n"

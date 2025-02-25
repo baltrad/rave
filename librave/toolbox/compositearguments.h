@@ -351,6 +351,12 @@ int CompositeArguments_getNumberOfObjects(CompositeArguments_t* args);
 RaveCoreObject* CompositeArguments_getObject(CompositeArguments_t* args, int index);
 
 /**
+ * param[in] args - self
+ * @return the list of objects
+ */
+RaveObjectList_t* CompositeArguments_getObjects(CompositeArguments_t* args);
+
+/**
  * Returns the objects radar index at specified index. Requires that radar mapping
  * has been applied and that there exists some sort of mapping.
  * @param[in] args - self
@@ -429,6 +435,13 @@ const char* CompositeArguments_getQualityFlagAt(CompositeArguments_t* args, int 
  * @return a rave list of strings defining the quality flags
  */
 RaveList_t* CompositeArguments_getQualityFlags(CompositeArguments_t* args);
+
+/**
+ * @param[in] args - self
+ * @param[in] name - the name of the quality flag
+ * @return 1 if the list of quality flags contains the specified name otherwise 0
+ */
+int CompositeArguments_hasQualityFlag(CompositeArguments_t* args, const char* name);
 
 /**
  * Creates the radar index mapping from the objects and the sources. If no sources

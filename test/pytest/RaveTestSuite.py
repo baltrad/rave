@@ -147,9 +147,7 @@ from PyLegacyCompositeGeneratorFactoryTest import *
 from PyAcqvaCompositeGeneratorFactoryTest import *
 from PyOdimSourceTest import *
 from PyOdimSourcesTest import *
-
 from PyNearestCompositeGeneratorFactoryTest import *
-
 from PyRaveValueTest import *
 from PyRavePropertiesTest import *
 

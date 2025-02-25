@@ -32,10 +32,115 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_types.h"
 #include "polarvolume.h"
 #include "polarscan.h"
+#include "raveobject_hashtable.h"
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
 #include <limits.h>
+
+/*@{ CompositeQualityFlagDefinition definition */
+static int CompositeQualityFlagDefinition_constructor(RaveCoreObject* obj)
+{
+  CompositeQualityFlagDefinition_t* this = (CompositeQualityFlagDefinition_t*)obj;
+  this->qualityFieldName = NULL;
+  this->datatype = RaveDataType_UNDEFINED;
+  this->gain = 1.0;
+  this->offset = 0.0;
+  return 1;
+}
+static int CompositeQualityFlagDefinition_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj)
+{
+  CompositeQualityFlagDefinition_t* this = (CompositeQualityFlagDefinition_t*)obj;
+  CompositeQualityFlagDefinition_t* src = (CompositeQualityFlagDefinition_t*)srcobj;
+  this->qualityFieldName = NULL;
+  this->datatype = src->datatype;
+  this->gain = src->gain;
+  this->offset = src->offset;
+  if (src->qualityFieldName != NULL) {
+    this->qualityFieldName = RAVE_STRDUP(src->qualityFieldName);
+    if (this->qualityFieldName == NULL) {
+      RAVE_ERROR0("Failed to duplicate quality field name");
+      goto fail;
+    }
+  }
+  return 1;
+fail:
+  RAVE_FREE(this->qualityFieldName);
+  return 0;
+}
+
+static void CompositeQualityFlagDefinition_destructor(RaveCoreObject* obj)
+{
+  CompositeQualityFlagDefinition_t* this = (CompositeQualityFlagDefinition_t*)obj;
+  RAVE_FREE(this->qualityFieldName);
+}
+
+RaveCoreObjectType CompositeQualityFlagDefinition_TYPE = {
+  "CompositeQualityFlagDefinition",
+  sizeof(CompositeQualityFlagDefinition_t),
+  CompositeQualityFlagDefinition_constructor,
+  CompositeQualityFlagDefinition_destructor,
+  CompositeQualityFlagDefinition_copyconstructor
+};
+
+/**
+ * Utility function to create and register a quality flag definition in the hash table of quality flag definitions.
+ */
+int CompositeUtils_registerQualityFlagDefinition(RaveObjectHashTable_t* qualityFlags, const char* qualityFieldName, RaveDataType datatype, double offset, double gain)
+{
+  CompositeQualityFlagDefinition_t* definition = NULL;
+  int result = 0;
+
+  if (qualityFieldName == NULL) {
+    RAVE_ERROR0("Must specify quality field name to use this function");
+    return 0;
+  }
+  if (qualityFlags == NULL) {
+    RAVE_ERROR0("Must provide a qualityFlags instance to register the quality flag definition in");
+    return 0;
+  }
+
+  definition = RAVE_OBJECT_NEW(&CompositeQualityFlagDefinition_TYPE);
+  if (definition != NULL) {
+    definition->datatype = datatype;
+    definition->offset = offset;
+    definition->gain = gain;
+    definition->qualityFieldName = RAVE_STRDUP(qualityFieldName);
+    if (definition->qualityFieldName == NULL) {
+      RAVE_ERROR0("Failed to duplicate quality field name");
+      goto fail;
+    }
+  }
+
+  result = RaveObjectHashTable_put(qualityFlags, qualityFieldName, (RaveCoreObject*)definition);
+fail:
+  RAVE_OBJECT_RELEASE(definition);
+  return result;
+}
+
+int CompositeUtils_registerQualityFlagDefinitionFromSettings(RaveObjectHashTable_t* qualityFlags, CompositeQualityFlagSettings_t* settings)
+{
+  int ctr = 0;
+  if (qualityFlags == NULL) {
+    RAVE_ERROR0("Must provide quality flags");
+    return 0;
+  }
+
+  if (settings != NULL) {
+    while (settings[ctr].qualityFieldName != NULL) {
+      if (!CompositeUtils_registerQualityFlagDefinition(qualityFlags, settings[ctr].qualityFieldName, settings[ctr].datatype, settings[ctr].offset, settings[ctr].gain)) {
+        RAVE_ERROR0("Could not register quality flag definitions");
+        goto fail;
+      }
+      ctr++;
+    }
+  }
+  return 1;
+fail:
+  return 0;
+}
+/*@} End of CompositeQualityFlagSettings definition */
+ 
 
 int CompositeUtils_isValidCartesianArguments(CompositeArguments_t* arguments)
 {
@@ -350,16 +455,15 @@ void CompositeUtils_getQualityFlagSettings(CompositeQualityFlagSettings_t* setti
   }
 }
 
-
-int CompositeUtils_addQualityFlagsToCartesian(CompositeArguments_t* arguments, Cartesian_t* cartesian, CompositeQualityFlagSettings_t* settings)
+int CompositeUtils_addQualityFlagsToCartesian(CompositeArguments_t* arguments, Cartesian_t* cartesian, RaveObjectHashTable_t* qualityFlagDefinitions)
 {
   int xsize = 0, ysize = 0, i = 0, j = 0, nparam = 0, nqfields = 0;
   RaveField_t* field = NULL;
   CartesianParam_t* param = NULL;
   int result = 0;
 
-  if (arguments == NULL || cartesian == NULL) {
-    RAVE_ERROR0("Must provide arguments and cartesian");
+  if (arguments == NULL || cartesian == NULL || qualityFlagDefinitions == NULL) {
+    RAVE_ERROR0("Must provide arguments, cartesian and quality flag definitions");
     return 0;
   }
 
@@ -373,8 +477,11 @@ int CompositeUtils_addQualityFlagsToCartesian(CompositeArguments_t* arguments, C
     const char* howtaskvaluestr = (const char*)CompositeArguments_getQualityFlagAt(arguments, i);
     double gain = 1.0/UCHAR_MAX, offset = 0.0;
     RaveDataType datatype = RaveDataType_UCHAR;
-    if (settings != NULL) {
-      CompositeUtils_getQualityFlagSettings(settings, howtaskvaluestr, &offset, &gain, &datatype);
+    CompositeQualityFlagDefinition_t* definition = (CompositeQualityFlagDefinition_t*)RaveObjectHashTable_get(qualityFlagDefinitions, howtaskvaluestr);
+    if (definition != NULL) {
+      offset = definition->offset;
+      gain = definition->gain;
+      datatype = definition->datatype;
     }
     field = CompositeUtils_createQualityField(howtaskvaluestr, xsize, ysize, datatype, gain, offset);
     if (field != NULL) {
@@ -385,6 +492,7 @@ int CompositeUtils_addQualityFlagsToCartesian(CompositeArguments_t* arguments, C
           if (cfield == NULL ||
               !CartesianParam_addQualityField(param, cfield)) {
             RAVE_OBJECT_RELEASE(cfield);
+            RAVE_OBJECT_RELEASE(definition);
             RAVE_ERROR0("Failed to add quality field");
             goto done;
           }
@@ -395,13 +503,37 @@ int CompositeUtils_addQualityFlagsToCartesian(CompositeArguments_t* arguments, C
     } else {
       RAVE_WARNING1("Could not create quality field for: %s", howtaskvaluestr);
     }
-
+    RAVE_OBJECT_RELEASE(definition);
     RAVE_OBJECT_RELEASE(field);
   }
   result = 1;
 done:
   RAVE_OBJECT_RELEASE(field);
   RAVE_OBJECT_RELEASE(param);
+  return result;  
+}
+
+int CompositeUtils_addQualityFlagsToCartesianFromSettings(CompositeArguments_t* arguments, Cartesian_t* cartesian, CompositeQualityFlagSettings_t* settings)
+{
+  int result = 0;
+  RaveObjectHashTable_t* definitions = NULL;
+  if (arguments == NULL || cartesian == NULL) {
+    RAVE_ERROR0("Must provide arguments and cartesian");
+    return 0;
+  }
+  definitions = RAVE_OBJECT_NEW(&RaveObjectHashTable_TYPE);
+  if (definitions == NULL) {
+    RAVE_ERROR0("Failed to allocate memory");
+    return 0;
+  }
+  if (!CompositeUtils_registerQualityFlagDefinitionFromSettings(definitions, settings)) {
+    RAVE_ERROR0("Failed to create definitions from settings");
+    goto fail;
+  }
+
+  result = 1;
+fail:
+  RAVE_OBJECT_RELEASE(definitions);
   return result;
 }
 

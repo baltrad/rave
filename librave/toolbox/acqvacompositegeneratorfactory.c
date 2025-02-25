@@ -83,6 +83,7 @@ static int AcqvaCompositeGeneratorFactory_constructor(RaveCoreObject* obj)
   this->getProperties = AcqvaCompositeGeneratorFactory_getProperties;
   this->generate = AcqvaCompositeGeneratorFactory_generate;
   this->create = AcqvaCompositeGeneratorFactory_create;
+
   this->properties = NULL;
   return 1;
 }
@@ -314,7 +315,7 @@ Cartesian_t* AcqvaCompositeGeneratorFactory_generate(CompositeGeneratorFactory_t
   nradars = CompositeArguments_getNumberOfObjects(arguments);
   nqualityflags = CompositeArguments_getNumberOfQualityFlags(arguments);
 
-  if (!CompositeUtils_addQualityFlagsToCartesian(arguments, cartesian, ACQVA_QUALITY_FLAG_DEFINITIONS)) {
+  if (!CompositeUtils_addQualityFlagsToCartesianFromSettings(arguments, cartesian, ACQVA_QUALITY_FLAG_DEFINITIONS)) {
     RAVE_ERROR0("Failed to add quality flags to product");
     goto fail;
   }
