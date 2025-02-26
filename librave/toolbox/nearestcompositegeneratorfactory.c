@@ -23,6 +23,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @date 2024-10-10
  */
 #include "nearestcompositegeneratorfactory.h"
+#include "compositeenginefunctions.h"
 #include "cartesian.h"
 #include "composite_utils.h"
 #include "compositearguments.h"
@@ -208,71 +209,33 @@ static void NearestCompositeGeneratorFactory_destructor(RaveCoreObject* obj)
 static int NearestCompositeGeneratorFactory_onStarting(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* bindings, int nbindings)
 {
   NearestCompositeGeneratorFactory_t* self = (NearestCompositeGeneratorFactory_t*)extradata;
+  int result = 0;
   RaveProperties_t* properties = CompositeEngine_getProperties(engine);
-
+  if (!CompositeEngineFunctions_prepareRATE(engine, arguments, bindings, nbindings)) {
+    RAVE_ERROR0("Failed to prepare RATE coefficients");
+    goto fail;
+  }
   CompositeEngineQcHandler_initialize(self->overshooting, extradata, properties, arguments, bindings, nbindings);
 
+  result = 1;
+fail:
   RAVE_OBJECT_RELEASE(properties);
-
-  return 1;
+  return result;
 }
 
 static int NearestCompositeGeneratorFactory_getPolarValueAtPosition(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* binding, const char* quantity, PolarNavigationInfo* navinfo, const char* qiFieldName, RaveValueType* otype, double* ovalue, double* qivalue)
 {
-  /*NearestCompositeGeneratorFactory_t* self = (NearestCompositeGeneratorFactory_t*)extradata;*/
-  RaveProperties_t* properties = NULL;
   int result = 0;
   
   if (quantity == NULL) {
     return 0;
   }
-  properties = CompositeEngine_getProperties(engine);
   if (strcasecmp("RATE", quantity) == 0) {
-    double zr_a = 200.0, zr_b = 1.6;
-    if (binding->source != NULL && binding->value == NULL) {
-      /* We create a cache by looking up the zr-coefficients for the object and store it in the binding value so that we only
-       * have to do it once.
-       */
-      if (properties != NULL) {
-        RaveValue_t* value = RaveProperties_get(properties, "rave.rate.zr.coefficients");
-        if (value != NULL && RaveValue_type(value) == RaveValue_Type_Hashtable) {
-          RaveObjectHashTable_t* rates = RaveValue_toHashTable(value);
-          if (RaveObjectHashTable_exists(rates, OdimSource_getNod(binding->source))) {
-            RaveValue_t* zr = (RaveValue_t*)RaveObjectHashTable_get(rates, OdimSource_getNod(binding->source));
-            if (zr != NULL && RaveValue_type(zr) == RaveValue_Type_DoubleArray) {
-              double* v = NULL;
-              int len = 0;
-              RaveValue_getDoubleArray(zr, &v, &len);
-              if (len == 2) {
-                binding->value = RAVE_OBJECT_COPY(zr);
-              } else {
-                RAVE_ERROR1("rave.rate.zr.coefficients coefficient for %s could not be read, should be (zr_a, zr_b)", OdimSource_getNod(binding->source));
-              }
-            }
-            RAVE_OBJECT_RELEASE(zr);
-          }
-          RAVE_OBJECT_RELEASE(rates);
-        }
-        RAVE_OBJECT_RELEASE(value);
-      }
-    } else if (binding->value != NULL) {
-      double* v = NULL;
-      int len = 0;
-      RaveValue_getDoubleArray(binding->value, &v, &len);
-      zr_a = v[0];
-      zr_b = v[1];
-    }
-    /* We calculate RATE using DBZH */
-    result = CompositeEngineUtility_getPolarValueAtPosition(engine, extradata, arguments, binding, "DBZH", navinfo, qiFieldName, otype, ovalue, qivalue);
-    if (*otype == RaveValueType_DATA) {
-      double rr = dBZ2R(*ovalue, zr_a, zr_b);
-      *ovalue = rr;
-    }
+    result = CompositeEngineFunctions_getRATEValueAtPosition(engine, extradata, arguments, binding, quantity, navinfo, qiFieldName, otype, ovalue, qivalue);
   } else {
     result = CompositeEngineUtility_getPolarValueAtPosition(engine, extradata, arguments, binding, quantity, navinfo, qiFieldName, otype, ovalue, qivalue);
   }
 
-  RAVE_OBJECT_RELEASE(properties);
   return result;
 }
 

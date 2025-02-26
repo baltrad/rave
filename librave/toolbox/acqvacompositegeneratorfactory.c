@@ -23,6 +23,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @date 2025-01-14
  */
 #include "acqvacompositegeneratorfactory.h"
+#include "compositeenginefunctions.h"
 #include "composite_utils.h"
 #include "compositearguments.h"
 #include "compositeengine.h"
@@ -67,6 +68,8 @@ static int AcqvaCompositeGeneratorFactory_getQualityValue(CompositeEngine_t* sel
 static int AcqvaCompositeGeneratorFactory_constructor(RaveCoreObject* obj)
 {
   AcqvaCompositeGeneratorFactory_t* this = (AcqvaCompositeGeneratorFactory_t*)obj;
+  CompositeQualityFlagDefinition_t* definition = NULL;
+
   this->getName = AcqvaCompositeGeneratorFactory_getName;
   this->getDefaultId = AcqvaCompositeGeneratorFactory_getDefaultId;
   this->canHandle = AcqvaCompositeGeneratorFactory_canHandle;
@@ -103,10 +106,19 @@ static int AcqvaCompositeGeneratorFactory_constructor(RaveCoreObject* obj)
     goto fail;
   }
 
+  definition = CompositeEngineQcHandler_getFlagDefinition(this->overshooting);
+  if (definition == NULL || ! CompositeEngine_registerQualityFlagDefinition(this->engine, definition)) {
+    RAVE_ERROR0("Failed to register overshooting definition");
+    goto fail;
+  }
+  RAVE_OBJECT_RELEASE(definition);
+
   return 1;
 fail:
   RAVE_OBJECT_RELEASE(this->engine);
   RAVE_OBJECT_RELEASE(this->overshooting);
+  RAVE_OBJECT_RELEASE(definition);
+
   return 0;
 }
 
@@ -177,13 +189,20 @@ static void AcqvaCompositeGeneratorFactory_destructor(RaveCoreObject* obj)
 static int AcqvaCompositeGeneratorFactory_onStarting(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* bindings, int nbindings)
 {
   AcqvaCompositeGeneratorFactory_t* self = (AcqvaCompositeGeneratorFactory_t*)extradata;
+  int result = 0;
+
   RaveProperties_t* properties = CompositeEngine_getProperties(engine);
+  if (!CompositeEngineFunctions_prepareRATE(engine, arguments, bindings, nbindings)) {
+    RAVE_ERROR0("Failed to prepare RATE coefficients");
+    goto fail;
+  }
 
   CompositeEngineQcHandler_initialize(self->overshooting, extradata, properties, arguments, bindings, nbindings);
 
+  result = 1;
+fail:
   RAVE_OBJECT_RELEASE(properties);
-
-  return 1;
+  return result;
 }
 
 /**
@@ -266,7 +285,14 @@ static int AcqvaCompositeGeneratorFactoryInternal_selectRadarData(CompositeEngin
       for (cindex = 0; cindex < ncvalues; cindex++) {
         RaveValueType otype = RaveValueType_NODATA;
         double v = 0.0;
-        otype = PolarVolume_getConvertedParameterValueAt((PolarVolume_t*)binding->object, cvalues[cindex].name, eindex, bin, ray, &v);
+        if (strcasecmp("RATE", cvalues[cindex].name) == 0) {
+          otype = PolarVolume_getConvertedParameterValueAt((PolarVolume_t*)binding->object, "DBZH", eindex, bin, ray, &v);
+          if (otype == RaveValueType_DATA) {
+            v = CompositeEngineFunction_convertDbzToRate(binding, otype, v, DEFAULT_ZR_A, DEFAULT_ZR_B);
+          }
+        } else {
+          otype = PolarVolume_getConvertedParameterValueAt((PolarVolume_t*)binding->object, cvalues[cindex].name, eindex, bin, ray, &v);
+        }
         if (otype != RaveValueType_NODATA) {
           if (cvalues[cindex].mindist > height) {
             cvalues[cindex].mindist = height;
@@ -292,7 +318,7 @@ static int AcqvaCompositeGeneratorFactory_getQualityValue(CompositeEngine_t* sel
   RAVE_ASSERT((obj != NULL), "obj == NULL");
   RAVE_ASSERT((navinfo != NULL), "navinfo == NULL");
 
-  if (strcmp("se.smhi.detector.poo", qfieldname) == 0) {
+  if (strcasecmp("se.smhi.detector.poo", qfieldname) == 0) {
     result = CompositeEngineQcHandler_getQualityValue(this->overshooting, extradata, args, obj, quantity, qfieldname, navinfo,  v);
   }
 
