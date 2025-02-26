@@ -32,6 +32,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "cartesian.h"
 #include "composite_utils.h"
 #include "compositearguments.h"
+#include "compositeenginebase.h"
 #include "limits.h"
 
 /**
@@ -68,16 +69,6 @@ extern RaveCoreObjectType CompositeEngine_TYPE;
 #define COMPOSITE_ENGINE_DEFAULT_QUALITY_FIELDS_GAIN   (1.0/UCHAR_MAX)
 
 #define COMPOSITE_ENGINE_DEFAULT_QUALITY_FIELDS_OFFSET 0.0
-
-/**
- * Binding for associating rave objects with pipelines, sources and other miscellaneous information.
- */
-typedef struct CompositeEngineObjectBinding_t {
-  RaveCoreObject* object; /**< the rave object */
-  ProjectionPipeline_t* pipeline; /**< the projection pipeline */
-  OdimSource_t* source; /**< the source associated with the object */
-  RaveValue_t* value;   /**< a rave value, can be used to cache information */
-} CompositeEngineObjectBinding_t;
 
 /**
  * Will be called before the looping over the cartesian product will be done.
@@ -157,7 +148,7 @@ typedef int(*composite_engine_addQualityFlagsToCartesian_fun)(CompositeEngine_t*
 /**
  * @return the quality value at specified position (navinfo ei,ri,ai).
  */
-typedef int(*composite_engine_getQualityValue_fun)(CompositeEngine_t* self, void* extradata, CompositeArguments_t* args, RaveCoreObject* obj, const char* qfieldname, PolarNavigationInfo* navinfo, double* v);
+typedef int(*composite_engine_getQualityValue_fun)(CompositeEngine_t* self, void* extradata, CompositeArguments_t* args, RaveCoreObject* obj, const char* quantity, const char* qfieldname, PolarNavigationInfo* navinfo, double* v);
 
 /**
  * Fills the quality information in the cartesian product
@@ -287,24 +278,6 @@ void CompositeEngineUtility_resetRadarData(CompositeArguments_t* arguments, Comp
  */
 void CompositeEngineUtility_freeRadarData(CompositeEngineRadarData_t** cvalues, int nparam);
  
-/**
- * Creates the binding between radar objects, pipelines, sources and other values that are relevant when creating composites.
- * The order of the binding will be the same as the objects in the arguments at time the object is 
- * @param[in] arguments - the arguments (containing the radar objects)
- * @param[in] cartesian - the target composite 
- * @param[out] nobject - the number of items in the returned array
- * @param[in] sources - an OPTIONAL odim sources (MAY BE NULL). When creating binding, if possible to identify the odim source it will be attached to the binding.
- * @return the array of bindings or NULL on failure
- */
-CompositeEngineObjectBinding_t* CompositeEngineUtility_createObjectBinding(CompositeArguments_t* arguments, Cartesian_t* cartesian, int* nobjects, OdimSources_t* sources);
- 
-/**
-* Releases the objects and then deallocates the array
-* @param[in,out] arr - the array to release
-* @param[in] nobjects - number of items in array
-*/
-void CompositeEngineUtility_releaseObjectBinding(CompositeEngineObjectBinding_t** arr, int nobjects);
- 
 /*@} End of Composite engine utility functions */
 
 /*@{ Composite engine functions that will delegate to the registered function pointers */
@@ -388,7 +361,7 @@ int CompositeEngineFunction_addQualityFlagsToCartesian(CompositeEngine_t* self, 
  * @param[in] arguments - the arguments
  * @param[in] cartesian - the cartesian object to write to
  */
-int CompositeEngineFunction_getQualityValue(CompositeEngine_t* self, void* extradata, CompositeArguments_t* args, RaveCoreObject* obj, const char* qfieldname, PolarNavigationInfo* navinfo, double* v);
+int CompositeEngineFunction_getQualityValue(CompositeEngine_t* self, void* extradata, CompositeArguments_t* args, RaveCoreObject* obj, const char* quantity, const char* qfieldname, PolarNavigationInfo* navinfo, double* v);
 
 /**
  * Fills the quality information into the product
@@ -479,13 +452,10 @@ RaveProperties_t* CompositeEngine_getProperties(CompositeEngine_t* self);
 /**
  * Registers a definition for a quality flag so that correct datatype, offset and gain are used.
  * @param[in] self - self
- * @param[in] qualityFieldName - the quality flags name
- * @param[in] datatype - the datatype
- * @param[in] offset - offset
- * @param[in] gain - gain
+ * @param[in] definition - the definition
  * @return 1 on success, otherwise 0
  */
-int CompositeEngine_registerQualityFlagDefinition(CompositeEngine_t* self, const char* qualityFieldName, RaveDataType datatype, double offset, double gain);
+int CompositeEngine_registerQualityFlagDefinition(CompositeEngine_t* self, CompositeQualityFlagDefinition_t* definition);
 
 /**
  * Generates the composite using a basic approach

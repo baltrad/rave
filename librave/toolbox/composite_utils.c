@@ -83,16 +83,41 @@ RaveCoreObjectType CompositeQualityFlagDefinition_TYPE = {
   CompositeQualityFlagDefinition_copyconstructor
 };
 
-/**
- * Utility function to create and register a quality flag definition in the hash table of quality flag definitions.
- */
-int CompositeUtils_registerQualityFlagDefinition(RaveObjectHashTable_t* qualityFlags, const char* qualityFieldName, RaveDataType datatype, double offset, double gain)
+CompositeQualityFlagDefinition_t* CompositeUtils_createQualityFlagDefinition(const char* qualityFieldName, RaveDataType datatype, double offset, double gain)
 {
-  CompositeQualityFlagDefinition_t* definition = NULL;
-  int result = 0;
+  CompositeQualityFlagDefinition_t* result = NULL;
 
   if (qualityFieldName == NULL) {
     RAVE_ERROR0("Must specify quality field name to use this function");
+    return 0;
+  }
+
+  result = RAVE_OBJECT_NEW(&CompositeQualityFlagDefinition_TYPE);
+  if (result != NULL) {
+    result->datatype = datatype;
+    result->offset = offset;
+    result->gain = gain;
+    result->qualityFieldName = RAVE_STRDUP(qualityFieldName);
+    if (result->qualityFieldName == NULL) {
+      RAVE_ERROR0("Failed to duplicate quality field name");
+      goto fail;
+    }
+  }
+  return result;
+fail:
+  RAVE_OBJECT_RELEASE(result);
+  return NULL;
+}
+
+/**
+ * Utility function to create and register a quality flag definition in the hash table of quality flag definitions.
+ */
+int CompositeUtils_registerQualityFlagDefinition(RaveObjectHashTable_t* qualityFlags, CompositeQualityFlagDefinition_t* definition)
+{
+  int result = 0;
+
+  if (definition->qualityFieldName == NULL) {
+    RAVE_ERROR0("Definition must contain a quality field name");
     return 0;
   }
   if (qualityFlags == NULL) {
@@ -100,20 +125,28 @@ int CompositeUtils_registerQualityFlagDefinition(RaveObjectHashTable_t* qualityF
     return 0;
   }
 
-  definition = RAVE_OBJECT_NEW(&CompositeQualityFlagDefinition_TYPE);
-  if (definition != NULL) {
-    definition->datatype = datatype;
-    definition->offset = offset;
-    definition->gain = gain;
-    definition->qualityFieldName = RAVE_STRDUP(qualityFieldName);
-    if (definition->qualityFieldName == NULL) {
-      RAVE_ERROR0("Failed to duplicate quality field name");
-      goto fail;
-    }
-  }
+  result = RaveObjectHashTable_put(qualityFlags, definition->qualityFieldName, (RaveCoreObject*)definition);
 
-  result = RaveObjectHashTable_put(qualityFlags, qualityFieldName, (RaveCoreObject*)definition);
-fail:
+  return result;
+}
+
+int CompositeUtils_registerQualityFlagDefinitionFromArguments(RaveObjectHashTable_t* qualityFlags, const char* qualityFieldName, RaveDataType datatype, double offset, double gain)
+{
+  int result = 0;
+  CompositeQualityFlagDefinition_t* definition = NULL;
+
+  if (qualityFieldName == NULL) {
+    RAVE_ERROR0("Must provide a quality field name");
+    return 0;
+  }
+  if (qualityFlags == NULL) {
+    RAVE_ERROR0("Must provide a qualityFlags instance to register the quality flag definition in");
+    return 0;
+  }
+  definition = CompositeUtils_createQualityFlagDefinition(qualityFieldName, datatype, offset, gain);
+  if (definition != NULL) {
+    result = CompositeUtils_registerQualityFlagDefinition(qualityFlags, definition);
+  }
   RAVE_OBJECT_RELEASE(definition);
   return result;
 }
@@ -128,7 +161,7 @@ int CompositeUtils_registerQualityFlagDefinitionFromSettings(RaveObjectHashTable
 
   if (settings != NULL) {
     while (settings[ctr].qualityFieldName != NULL) {
-      if (!CompositeUtils_registerQualityFlagDefinition(qualityFlags, settings[ctr].qualityFieldName, settings[ctr].datatype, settings[ctr].offset, settings[ctr].gain)) {
+      if (!CompositeUtils_registerQualityFlagDefinitionFromArguments(qualityFlags, settings[ctr].qualityFieldName, settings[ctr].datatype, settings[ctr].offset, settings[ctr].gain)) {
         RAVE_ERROR0("Could not register quality flag definitions");
         goto fail;
       }

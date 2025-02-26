@@ -104,9 +104,24 @@ typedef struct CompositeQualityFlagDefinition_t {
 extern RaveCoreObjectType CompositeQualityFlagDefinition_TYPE;
 
 /**
+ * Creates a flag definition from field name, datatype, offset and gain
+ * @param[in] qualityFieldName - the name of the quality field
+ * @param[in] datatype - datatype of the field
+ * @param[in] offset - the offset
+ ' @param[in] gain - the gain
+ * @return the definition on success otherwise NULL
+ */
+CompositeQualityFlagDefinition_t* CompositeUtils_createQualityFlagDefinition(const char* qualityFieldName, RaveDataType datatype, double offset, double gain);
+
+/**
  * Utility function to create a quality flag setting instance
  */
- int CompositeUtils_registerQualityFlagDefinition(RaveObjectHashTable_t* qualityFlags, const char* qualityFieldName, RaveDataType datatype, double offset, double gain);
+int CompositeUtils_registerQualityFlagDefinition(RaveObjectHashTable_t* qualityFlags, CompositeQualityFlagDefinition_t* definition);
+
+/**
+ * Utility function to register a quality flag definition
+ */
+int CompositeUtils_registerQualityFlagDefinitionFromArguments(RaveObjectHashTable_t* qualityFlags, const char* qualityFieldName, RaveDataType datatype, double offset, double gain);
 
  /**
   * Initiates the hash table of quality flags with the settings

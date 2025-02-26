@@ -25,6 +25,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "acqvacompositegeneratorfactory.h"
 #include "composite_utils.h"
 #include "compositearguments.h"
+#include "compositeengine.h"
+#include "compositeengineqc.h"
 #include "polarvolume.h"
 #include "raveobject_list.h"
 #include "rave_types.h"
@@ -34,40 +36,29 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include <stdio.h>
 #include <string.h>
 
+
+
 typedef struct _AcqvaCompositeGeneratorFactory_t {
   RAVE_OBJECT_HEAD /**< Always on top */
   COMPOSITE_GENERATOR_FACTORY_HEAD /**< composite generator plugin specifics */
-  RaveProperties_t* properties; /**< the properties */
+  CompositeEngine_t* engine; /**<the engine */
+  CompositeEngineOvershootingQcHandler_t* overshooting;
 } AcqvaCompositeGeneratorFactory_t;
 /*@{ Private functions */
 
+static int AcqvaCompositeGeneratorFactory_onStarting(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* bindings, int nbindings);
 
-/** The resolution to use for scaling the distance from pixel to used radar. */
-/** By multiplying the values in the distance field by 2000, we get the value in unit meters. */
-#define DISTANCE_TO_RADAR_RESOLUTION 2000.0
+/**
+ * The function locating the lowest usable data value
+ */
+static int AcqvaCompositeGeneratorFactoryInternal_selectRadarData(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* binding, int index, double olon, double olat, struct CompositeEngineRadarData_t* cvalues, int ncvalues);
 
-/** Same for height, scaled to 100 m resolution up to 25.5 km */
-#define HEIGHT_RESOLUTION 100.0
+static int AcqvaCompositeGeneratorFactory_getQualityValue(CompositeEngine_t* self, void* extradata, CompositeArguments_t* args, RaveCoreObject* obj, const char* quantity, const char* qfieldname, PolarNavigationInfo* navinfo, double* v);
 
-/** The name of the task for specifying distance to radar */
-#define DISTANCE_TO_RADAR_HOW_TASK "se.smhi.composite.distance.radar"
-
-/** The name of the task for specifying height above sea level */
-#define HEIGHT_ABOVE_SEA_HOW_TASK "se.smhi.composite.height.radar"
-
-/** The name of the task for indexing the radars used */
-#define RADAR_INDEX_HOW_TASK "se.smhi.composite.index.radar"
-
-#define DEFAULT_QUALITY_FIELDS_GAIN   (1.0/UCHAR_MAX)
-
-#define DEFAULT_QUALITY_FIELDS_OFFSET 0.0
-
-static CompositeQualityFlagSettings_t ACQVA_QUALITY_FLAG_DEFINITIONS[] = {
-  {DISTANCE_TO_RADAR_HOW_TASK, RaveDataType_UCHAR, 0.0, DISTANCE_TO_RADAR_RESOLUTION},
-  {HEIGHT_ABOVE_SEA_HOW_TASK, RaveDataType_UCHAR, 0.0, HEIGHT_RESOLUTION},
-  {RADAR_INDEX_HOW_TASK, RaveDataType_UCHAR, 0.0, 1.0},
-  {NULL, RaveDataType_UNDEFINED, 0.0, 0.0}
-};
+/**
+ * The quality field that contains the acqva information.
+ */
+#define ACQVA_QUALITY_FIELD_NAME "se.smhi.acqva"
 
 /**
  * Constructor.
@@ -83,9 +74,40 @@ static int AcqvaCompositeGeneratorFactory_constructor(RaveCoreObject* obj)
   this->getProperties = AcqvaCompositeGeneratorFactory_getProperties;
   this->generate = AcqvaCompositeGeneratorFactory_generate;
   this->create = AcqvaCompositeGeneratorFactory_create;
+  this->engine = NULL;
+  this->overshooting = NULL;
+  this->engine = RAVE_OBJECT_NEW(&CompositeEngine_TYPE);
+  if (this->engine == NULL) {
+    RAVE_ERROR0("Failed to create compositing engine");
+    goto fail;
+  }
 
-  this->properties = NULL;
+  this->overshooting = RAVE_OBJECT_NEW(&CompositeEngineOvershootingQcHandler_TYPE);
+  if (this->overshooting == NULL) {
+    RAVE_ERROR0("Failed to create overshooting handler");
+    goto fail;
+  }
+
+  if (!CompositeEngine_setOnStartingFunction(this->engine, AcqvaCompositeGeneratorFactory_onStarting)) {
+    RAVE_ERROR0("Failed to set the onStarting function");
+    goto fail;
+  }
+
+  if (!CompositeEngine_setSelectRadarDataFunction(this->engine, AcqvaCompositeGeneratorFactoryInternal_selectRadarData)) {
+    RAVE_ERROR0("Failed to set selectRadarData function");
+    goto fail;
+  }
+
+  if (!CompositeEngine_setGetQualityValueFunction(this->engine, AcqvaCompositeGeneratorFactory_getQualityValue)) {
+    RAVE_ERROR0("Failed to set getQualityValue function for NEAREST");
+    goto fail;
+  }
+
   return 1;
+fail:
+  RAVE_OBJECT_RELEASE(this->engine);
+  RAVE_OBJECT_RELEASE(this->overshooting);
+  return 0;
 }
 
 /**
@@ -104,17 +126,40 @@ static int AcqvaCompositeGeneratorFactory_copyconstructor(RaveCoreObject* obj, R
   this->getProperties = AcqvaCompositeGeneratorFactory_getProperties;
   this->generate = AcqvaCompositeGeneratorFactory_generate;
   this->create = AcqvaCompositeGeneratorFactory_create;
-  this->properties = NULL;
-  if (src->properties != NULL) {
-    this->properties = RAVE_OBJECT_CLONE(src->properties);
-    if (this->properties == NULL) {
-      RAVE_ERROR0("Failed to clone properties");
-      goto fail;
-    }
+  this->engine = NULL;
+  this->overshooting = NULL;
+
+  this->engine = RAVE_OBJECT_CLONE(src->engine);
+  if (this->engine == NULL) {
+    RAVE_ERROR0("Failed to clone compositing engine");
+    goto fail;
   }
+
+  this->overshooting = RAVE_OBJECT_CLONE(src->overshooting);
+  if (this->overshooting == NULL) {
+    RAVE_ERROR0("Failed to clone overshooting handler");
+    goto fail;
+  }
+
+  if (!CompositeEngine_setOnStartingFunction(this->engine, AcqvaCompositeGeneratorFactory_onStarting)) {
+    RAVE_ERROR0("Failed to set the onStarting function");
+    goto fail;
+  }
+
+  if (!CompositeEngine_setSelectRadarDataFunction(this->engine, AcqvaCompositeGeneratorFactoryInternal_selectRadarData)) {
+    RAVE_ERROR0("Failed to set selectRadarData function");
+    goto fail;
+  }
+
+  if (!CompositeEngine_setGetQualityValueFunction(this->engine, AcqvaCompositeGeneratorFactory_getQualityValue)) {
+    RAVE_ERROR0("Failed to set getQualityValue function for NEAREST");
+    goto fail;
+  }
+
   return 1;
 fail:
-  RAVE_OBJECT_RELEASE(this->properties);
+  RAVE_OBJECT_RELEASE(this->engine);
+  RAVE_OBJECT_RELEASE(this->overshooting);
   return 0;
 }
 
@@ -125,11 +170,41 @@ fail:
 static void AcqvaCompositeGeneratorFactory_destructor(RaveCoreObject* obj)
 {
   AcqvaCompositeGeneratorFactory_t* this = (AcqvaCompositeGeneratorFactory_t*)obj;
-  RAVE_OBJECT_RELEASE(this->properties);
+  RAVE_OBJECT_RELEASE(this->engine);
+  RAVE_OBJECT_RELEASE(this->overshooting);
 }
 
-int AcqvaCompositeGeneratorFactoryInternal_findLowestUsableValue(CompositeGeneratorFactory_t* self, PolarVolume_t* pvol, 
-  double lon, double lat, const char* qfieldname, double* height, 
+static int AcqvaCompositeGeneratorFactory_onStarting(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* bindings, int nbindings)
+{
+  AcqvaCompositeGeneratorFactory_t* self = (AcqvaCompositeGeneratorFactory_t*)extradata;
+  RaveProperties_t* properties = CompositeEngine_getProperties(engine);
+
+  CompositeEngineQcHandler_initialize(self->overshooting, extradata, properties, arguments, bindings, nbindings);
+
+  RAVE_OBJECT_RELEASE(properties);
+
+  return 1;
+}
+
+/**
+ * Identifies the lowest possible value to use in this volume. It will use the quality field named
+ * ACQVA_QUALITY_FIELD_NAME. If found quality value at specified lon/lat is != 0, it will assume
+ * that the value is usable. Note, this requires that the volume is sorted in asacending order.
+ * 
+ * @param[in] self - self
+ * @param[in] pvol - the polar volume
+ * @param[in] lon - the longitude
+ * @param[in] lat - the latitude
+ * @param[out] height - the height for the found position (only set if value found)
+ * @param[out] elangle - the elevation angle for the found position (only set if value found)
+ * @param[out] ray - the azimuth index for the found position (only set if value found)
+ * @param[out] bin - the bin index for the found position (only set if value found)
+ * @param[out] eindex - the elevation index in the vollume for the found position (only set if value found)
+ * @param[in,out] navinfo  - all the relevant navinfo for the found value
+ * @return 1 if value is found, otherwise 0
+ */
+static int AcqvaCompositeGeneratorFactoryInternal_findLowestUsableValue(AcqvaCompositeGeneratorFactory_t* self, PolarVolume_t* pvol, 
+  double lon, double lat, double* height, 
   double* elangle, int* ray, int* bin, int* eindex, PolarNavigationInfo* outnavinfo)
 {
   int nrelevs = 0, i = 0, found = 0;
@@ -144,7 +219,7 @@ int AcqvaCompositeGeneratorFactoryInternal_findLowestUsableValue(CompositeGenera
     PolarScan_t* scan = PolarVolume_getScan(pvol, i);
     if (PolarScan_getNearestNavigationInfo(scan, lon, lat, &navinfo)) {
       double v = 0.0;
-      if (PolarScan_getQualityValueAt(scan, NULL, navinfo.ri, navinfo.ai, qfieldname, 1, &v)) {
+      if (PolarScan_getQualityValueAt(scan, NULL, navinfo.ri, navinfo.ai, ACQVA_QUALITY_FIELD_NAME, 1, &v)) {
         if (v != 0.0) {
           *height = navinfo.actual_height;
           *elangle = navinfo.elevation;
@@ -162,76 +237,66 @@ int AcqvaCompositeGeneratorFactoryInternal_findLowestUsableValue(CompositeGenera
 }
 
 /**
- * Uses the navigation information of the value positions and fills all 
- * associated cartesian quality with the composite objects quality fields. If
- * there is more than one value position in the valuePositions-array, an 
- * an interpolation of the quality value will be performed, along the dimensions
- * defined in the interpolationDimensions-array.
- * 
- * @param[in] composite - self
- * @param[in] x - x coordinate
- * @param[in] y - y coordinate
- * @param[in] cvalues - the composite values
- * @param[in] interpolationDimensions - dimensions to perform interpolation in                      
+ * Assumes that the binding contains a polar volume. If the polar volume contains a usable value (located from bottom and up) it will
+ * compare the values height with the previously stored minimum distance. If the new height is closer to the ground, then this value
+ * and navigation information will be saved. 
+ * @param[in] engine - self
+ * @param[in] arguments - the arguments
+ * @param[in] binding - the binding between volume, pipeline and other miscellaneous values
+ * @param[in] index - the index of the object. The binding is basically &bindings[index].
+ * @param[in] olon - the longitude for data
+ * @param[in] olat - the latitude for data
+ * @param[in] cvalues - the array of cartesian parameter values
+ * @param[in] ncvalues - number of items in the array cvalues
+ * @return always 1
  */
-static void AcqvaCompositeGeneratorFactoryInternal_fillQualityInformation(
-  CompositeArguments_t* arguments,
-  int x,
-  int y,
-  CompositeUtilValue_t* cvalues)
+static int AcqvaCompositeGeneratorFactoryInternal_selectRadarData(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* binding, int index, double olon, double olat, struct CompositeEngineRadarData_t* cvalues, int ncvalues)
 {
-  int nfields = 0, i = 0;
-  const char* quantity;
-  CartesianParam_t* param = NULL;
-  double radardist = 0;
-  int radarindex = 0;
+  double dist = 0.0, maxdist = 0.0;
+  AcqvaCompositeGeneratorFactory_t* self = (AcqvaCompositeGeneratorFactory_t*)extradata;
 
-  RAVE_ASSERT((arguments != NULL), "self == NULL");
-  RAVE_ASSERT((cvalues != NULL), "cvalues == NULL");
+  dist = PolarVolume_getDistance((PolarVolume_t*)binding->object, olon, olat);
+  maxdist = PolarVolume_getMaxDistance((PolarVolume_t*)binding->object);
 
-  param = cvalues->parameter;
-  radardist = cvalues->radardist;
-  radarindex = cvalues->radarindex;
-
-  nfields = CartesianParam_getNumberOfQualityFields(param);
-  quantity = CartesianParam_getQuantity(param);
-
-  for (i = 0; i < nfields; i++) {
-    RaveField_t* field = NULL;
-    RaveAttribute_t* attribute = NULL;
-    char* name = NULL;
-    double value = 0.0;
-
-    field = CartesianParam_getQualityField(param, i);
-    if (field != NULL) {
-      attribute = RaveField_getAttribute(field, "how/task");
-    }
-    if (attribute != NULL) {
-      RaveAttribute_getString(attribute, &name);
-    }
-
-    if (name != NULL) {
-      RaveCoreObject* obj = CompositeArguments_getObject(arguments, radarindex);
-      if (obj != NULL) {
-        if (strcmp(DISTANCE_TO_RADAR_HOW_TASK, name) == 0) {
-          value = radardist/DISTANCE_TO_RADAR_RESOLUTION;
-        } else if (strcmp(HEIGHT_ABOVE_SEA_HOW_TASK, name) == 0) {
-          value = cvalues->navinfo.actual_height / HEIGHT_RESOLUTION;
-        } else if (strcmp(RADAR_INDEX_HOW_TASK, name) == 0) {
-          value = (double)CompositeArguments_getObjectRadarIndexValue(arguments, radarindex);
-        } else {
-          if (CompositeUtils_getPolarQualityValueAtPosition(obj, quantity, name, &cvalues->navinfo, &value)) {
-             value = (value - DEFAULT_QUALITY_FIELDS_OFFSET) / DEFAULT_QUALITY_FIELDS_GAIN;
+  if (dist <= maxdist) {
+    double height=0.0, elangle=0.0;
+    int ray=0, bin=0, eindex=0, cindex = 0;
+    PolarNavigationInfo navinfo;
+    if (AcqvaCompositeGeneratorFactoryInternal_findLowestUsableValue(self, (PolarVolume_t*)binding->object, olon, olat, &height, &elangle, &ray, &bin, &eindex, &navinfo)) {
+      for (cindex = 0; cindex < ncvalues; cindex++) {
+        RaveValueType otype = RaveValueType_NODATA;
+        double v = 0.0;
+        otype = PolarVolume_getConvertedParameterValueAt((PolarVolume_t*)binding->object, cvalues[cindex].name, eindex, bin, ray, &v);
+        if (otype != RaveValueType_NODATA) {
+          if (cvalues[cindex].mindist > height) {
+            cvalues[cindex].mindist = height;
+            cvalues[cindex].value = v;
+            cvalues[cindex].vtype = otype;
+            cvalues[cindex].navinfo = navinfo;
+            cvalues[cindex].radarindex = index;
+            cvalues[cindex].radardist = cvalues[cindex].navinfo.actual_range;
           }
         }
-        RaveField_setValue(field, x, y, value);
       }
-      RAVE_OBJECT_RELEASE(obj);
     }
-
-    RAVE_OBJECT_RELEASE(field);
-    RAVE_OBJECT_RELEASE(attribute);
   }
+  return 1;
+}
+
+static int AcqvaCompositeGeneratorFactory_getQualityValue(CompositeEngine_t* self, void* extradata, CompositeArguments_t* args, RaveCoreObject* obj, const char* quantity, const char* qfieldname, PolarNavigationInfo* navinfo, double* v)
+{
+  int result = 0;
+  AcqvaCompositeGeneratorFactory_t* this = (AcqvaCompositeGeneratorFactory_t*)extradata;
+
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  RAVE_ASSERT((obj != NULL), "obj == NULL");
+  RAVE_ASSERT((navinfo != NULL), "navinfo == NULL");
+
+  if (strcmp("se.smhi.detector.poo", qfieldname) == 0) {
+    result = CompositeEngineQcHandler_getQualityValue(this->overshooting, extradata, args, obj, quantity, qfieldname, navinfo,  v);
+  }
+
+  return result;
 }
 
 /*@} End of Private functions */
@@ -270,11 +335,7 @@ int AcqvaCompositeGeneratorFactory_setProperties(CompositeGeneratorFactory_t* se
 {
   AcqvaCompositeGeneratorFactory_t* factory = (AcqvaCompositeGeneratorFactory_t*)self;
   RAVE_ASSERT((factory != NULL), "self == NULL");
-  RAVE_OBJECT_RELEASE(factory->properties);
-  if (properties != NULL) {
-    factory->properties = RAVE_OBJECT_COPY(properties);
-  }
-
+  CompositeEngine_setProperties(factory->engine, properties);
   return 1;
 }
 
@@ -282,123 +343,24 @@ RaveProperties_t* AcqvaCompositeGeneratorFactory_getProperties(CompositeGenerato
 {
   AcqvaCompositeGeneratorFactory_t* factory = (AcqvaCompositeGeneratorFactory_t*)self;
   RAVE_ASSERT((factory != NULL), "factory == NULL");
-  return RAVE_OBJECT_COPY(factory->properties);
+  return CompositeEngine_getProperties(factory->engine);
 }
 
 Cartesian_t* AcqvaCompositeGeneratorFactory_generate(CompositeGeneratorFactory_t* self, CompositeArguments_t* arguments)
 {
-  Cartesian_t *cartesian = NULL, *result = NULL;
-  CompositeUtilValue_t* cvalues = NULL;
-  CompositeRaveObjectBinding_t* pipelineBinding = NULL;
-  int x = 0, y = 0, i = 0, xsize = 0, ysize = 0, nradars = 0, nbindings = 0, nqualityflags = 0;
-  int nentries = 0;
+  int i = 0, nobjects = 0;
 
-  RAVE_ASSERT((self != NULL), "self == NULL");
-
-  if (!CompositeUtils_isValidCartesianArguments(arguments)) {
-    RAVE_ERROR0("Ensure that cartesian arguments are valid");
-    return NULL;
-  }
-
-  cartesian = CompositeUtils_createCartesianFromArguments(arguments);
-  if (cartesian == NULL) {
-    goto fail;
-  }
-
-  cvalues = CompositeUtils_createCompositeValues(arguments, cartesian, &nentries);
-  if (cvalues == NULL) {
-    goto fail;
-  }
-
-  xsize = Cartesian_getXSize(cartesian);
-  ysize = Cartesian_getYSize(cartesian);
-  nradars = CompositeArguments_getNumberOfObjects(arguments);
-  nqualityflags = CompositeArguments_getNumberOfQualityFlags(arguments);
-
-  if (!CompositeUtils_addQualityFlagsToCartesianFromSettings(arguments, cartesian, ACQVA_QUALITY_FLAG_DEFINITIONS)) {
-    RAVE_ERROR0("Failed to add quality flags to product");
-    goto fail;
-  }
-
-  pipelineBinding = CompositeUtils_createRaveObjectBinding(arguments, cartesian, &nbindings, NULL);
-  if (pipelineBinding == NULL || nbindings != nradars) {
-    RAVE_ERROR0("Could not create a proper pipeline binding");
-    goto fail;
-  }
-
-  for (y = 0; y < ysize; y++) {
-    double herey = Cartesian_getLocationY(cartesian, y);
-    for (x = 0; x < xsize; x++) {
-      int cindex = 0;
-      double herex = Cartesian_getLocationX(cartesian, x);
-      double olon = 0.0, olat = 0.0;
-      CompositeUtils_resetCompositeValues(arguments, cvalues, nentries);
-
-      for (i = 0; i < nbindings; i++) {
-        RaveCoreObject* obj = NULL;
-        ProjectionPipeline_t* pipeline = NULL;
-        obj = RAVE_OBJECT_COPY(pipelineBinding[i].object);
-        pipeline = RAVE_OBJECT_COPY(pipelineBinding[i].pipeline);
-
-        /* We will go from surface coords into the lonlat projection assuming that a polar volume uses a lonlat projection*/
-        if (!ProjectionPipeline_fwd(pipeline, herex, herey, &olon, &olat)) {
-          RAVE_WARNING0("Failed to transform from composite into polar coordinates");
-        } else {
-          double dist = 0.0;
-          double maxdist = 0.0;
-          if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
-            dist = PolarVolume_getDistance((PolarVolume_t*)obj, olon, olat);
-            maxdist = PolarVolume_getMaxDistance((PolarVolume_t*)obj);
-          } else {
-            RAVE_ERROR0("ACQVA currently only handles polar volumes");
-            goto fail;
-          }
-          if (dist <= maxdist) {
-            double height=0.0, elangle=0.0;
-            int ray=0, bin=0, eindex=0;
-            PolarNavigationInfo navinfo;
-            if (AcqvaCompositeGeneratorFactoryInternal_findLowestUsableValue(self, (PolarVolume_t*)obj, 
-              olon, olat, "se.smhi.acqva", &height, &elangle, &ray, &bin, &eindex, &navinfo)) {
-              for (cindex = 0; cindex < nentries; cindex++) {
-                RaveValueType otype = RaveValueType_NODATA;
-                double v = 0.0;
-                otype = PolarVolume_getConvertedParameterValueAt((PolarVolume_t*)obj, cvalues[cindex].name, eindex, bin, ray, &v);
-                if (otype != RaveValueType_NODATA) {
-                  if (cvalues[cindex].mindist > height) {
-                    cvalues[cindex].mindist = height;
-                    cvalues[cindex].value = v;
-                    cvalues[cindex].vtype = otype;
-                    cvalues[cindex].navinfo = navinfo;
-                    cvalues[cindex].radarindex = i;
-                    cvalues[cindex].radardist = cvalues[cindex].navinfo.actual_range;
-                  }
-                }
-              }
-            }
-          }
-        }
-        RAVE_OBJECT_RELEASE(pipeline);
-        RAVE_OBJECT_RELEASE(obj);
-      }
-
-      for (cindex = 0; cindex < nentries; cindex++) {
-        double vvalue = cvalues[cindex].value;
-        int vtype = cvalues[cindex].vtype;
-        CartesianParam_setConvertedValue(cvalues[cindex].parameter, x, y, vvalue, vtype);
-        if ((vtype == RaveValueType_DATA || vtype == RaveValueType_UNDETECT) &&
-            cvalues[cindex].radarindex >= 0 && nqualityflags > 0) {
-          AcqvaCompositeGeneratorFactoryInternal_fillQualityInformation(arguments, x, y, &cvalues[cindex]);
-        }        
-      }
+  nobjects = CompositeArguments_getNumberOfObjects(arguments);
+  for (i = 0; i < nobjects; i++) {
+    RaveCoreObject* obj = CompositeArguments_getObject(arguments, i);
+    if (!RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
+      RAVE_ERROR0("Acqva can only process volumes");
+      RAVE_OBJECT_RELEASE(obj);
+      return NULL;
     }
+    RAVE_OBJECT_RELEASE(obj);
   }
-
-  result = RAVE_OBJECT_COPY(cartesian);
-fail:
-  RAVE_OBJECT_RELEASE(cartesian);
-  CompositeUtils_freeCompositeValueParameters(&cvalues, nentries);
-  CompositeUtils_releaseRaveObjectBinding(&pipelineBinding, nbindings);
-  return result;
+  return CompositeEngine_generate(((AcqvaCompositeGeneratorFactory_t*)self)->engine, arguments, (void*)self);
 }
 
 CompositeGeneratorFactory_t* AcqvaCompositeGeneratorFactory_create(CompositeGeneratorFactory_t* self)

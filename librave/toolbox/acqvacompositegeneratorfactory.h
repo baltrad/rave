@@ -29,6 +29,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "compositearguments.h"
 #include "compositegeneratorfactory.h"
 #include "compositegenerator.h"
+#include "compositeengine.h"
 #include "cartesian.h"
 #include "rave_object.h"
 #include "rave_types.h"

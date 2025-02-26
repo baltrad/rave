@@ -151,6 +151,5 @@ from PyNearestCompositeGeneratorFactoryTest import *
 from PyRaveValueTest import *
 from PyRavePropertiesTest import *
 
-
 if __name__ == '__main__':
   unittest.main()
