@@ -76,6 +76,7 @@ int CompositeEngineFunctions_prepareRATE(CompositeEngine_t* engine, CompositeArg
       }
     }
   }
+  RAVE_OBJECT_RELEASE(properties);
   return 1;
 }
 

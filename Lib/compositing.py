@@ -52,6 +52,8 @@ import rave_area
 import odim_source
 import rave_projection
 import rave_quality_plugin
+import compositegenerator
+
 from rave_quality_plugin import QUALITY_CONTROL_MODE_ANALYZE, QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY   
 
 from rave_defines import CENTER_ID, GAIN, OFFSET
@@ -98,6 +100,7 @@ class compositing(object):
     self.filenames = []
     self.ignore_malfunc = False
     self.prodpar = None
+    self.prodstr = None
     self.product = _rave.Rave_ProductType_PCAPPI
     self.height = 1000.0
     self.elangle = 0.0
@@ -125,6 +128,7 @@ class compositing(object):
     self.radar_index_mapping = {}
     self.use_lazy_loading=True
     self.use_lazy_loading_preloads=True
+    self.use_legacy_compositing=True
     
   def generate(self, dd, dt, area=None):
     return self._generate(dd, dt, area)
@@ -135,6 +139,7 @@ class compositing(object):
       self.logger.debug("Detectors = %s"%str(self.detectors))
       self.logger.debug("Quality control mode = %s"%str(self.quality_control_mode))
       self.logger.debug("Product = %s"%self._product_repr())
+      self.logger.debug("Prodstr = %s"%self.prodstr)
       self.logger.debug("Quantity = %s"%self.quantity)
       self.logger.debug("Range = %f"%self.range)
       self.logger.debug("Gain = %f, Offset = %f, Minvalue = %f"%(self.gain, self.offset, self.minvalue))
@@ -152,6 +157,7 @@ class compositing(object):
       self.logger.debug("Use site source = %s"%str(self.use_site_source))
       self.logger.debug("Use lazy loading = %s"%str(self.use_lazy_loading))
       self.logger.debug("Use lazy loading preload = %s"%str(self.use_lazy_loading_preloads))
+      self.logger.debug("Use legacy compositing = %s"%str(self.use_legacy_compositing))
       
       if area is not None:
         self.logger.debug("Area = %s"%area)
@@ -220,7 +226,6 @@ class compositing(object):
     if self.dump:
       self._dump_objects(objects)
 
-    generator = _pycomposite.new()
     if area is not None:
       if _area.isArea(area):
         pyarea = area
@@ -251,50 +256,90 @@ class compositing(object):
         except:
           pass
     
-    generator.addParameter(self.quantity, self.gain, self.offset, self.minvalue)
-    generator.product = self.product
-    if algorithm is not None:
-      generator.algorithm = algorithm
+    # START OF COMPOSITING PART
+    if self.use_legacy_compositing:
+      generator = _pycomposite.new()
+      generator.addParameter(self.quantity, self.gain, self.offset, self.minvalue)
+      if algorithm is not None:
+        generator.algorithm = algorithm
       
-    for o in objects:
-      generator.add(o)
-      # We want to ensure that we get a proper indexing of included radar
-      sourceid = o.source
-      try:
-        osource = odim_source.ODIM_Source(o.source)
-        if osource.wmo:
-          sourceid = "WMO:%s"%osource.wmo
-        elif osource.rad:
-          sourceid = "RAD:%s"%osource.rad
-        elif osource.nod:
-          sourceid = "NOD:%s"%osource.nod
-      except:
-        pass
+      for o in objects:
+        generator.add(o)
+        # We want to ensure that we get a proper indexing of included radar
+        sourceid = o.source
+        try:
+          osource = odim_source.ODIM_Source(o.source)
+          if osource.wmo:
+            sourceid = "WMO:%s"%osource.wmo
+          elif osource.rad:
+            sourceid = "RAD:%s"%osource.rad
+          elif osource.nod:
+            sourceid = "NOD:%s"%osource.nod
+        except:
+          pass
       
-      if not sourceid in self.radar_index_mapping.keys():
-        self.radar_index_mapping[sourceid] = self.get_next_radar_index()
+        if not sourceid in self.radar_index_mapping.keys():
+          self.radar_index_mapping[sourceid] = self.get_next_radar_index()
     
-    generator.selection_method = self.selection_method
-    generator.interpolation_method = self.interpolation_method
-    generator.date=o.date if dd is None else dd 
-    generator.time=o.time if dt is None else dt
-    generator.height = self.height
-    generator.elangle = self.elangle
-    generator.range = self.range
+      generator.selection_method = self.selection_method
+      generator.interpolation_method = self.interpolation_method
+      generator.date=o.date if dd is None else dd 
+      generator.time=o.time if dt is None else dt
+      generator.height = self.height
+      generator.elangle = self.elangle
+      generator.range = self.range
     
-    if self.qitotal_field is not None:
-      generator.quality_indicator_field_name = self.qitotal_field
+      if self.qitotal_field is not None:
+        generator.quality_indicator_field_name = self.qitotal_field
     
-    if self.prodpar is not None:
-      self._update_generator_with_prodpar(generator)
+      if self.prodpar is not None:
+        self._update_generator_with_prodpar(generator)
+
+      generator.applyRadarIndexMapping(self.radar_index_mapping)
     
-    if self.verbose:
-      self.logger.info(f"[{self.mpname}] compositing.generate: Generating cartesian composite")
-    
-    generator.applyRadarIndexMapping(self.radar_index_mapping)
-    
-    result = generator.generate(pyarea, qfields)
-    
+      generator.product = self.product
+
+      if self.verbose:
+        self.logger.info(f"[{self.mpname}] compositing.generate: Generating cartesian composite")
+
+      result = generator.generate(pyarea, qfields)
+    else:
+      ##
+      # This is the new composite handling where factories and filters are used to determine
+      # how a composite should be generated
+      ##    
+      cgenerator = compositegenerator.Generator()
+
+      arguments = cgenerator.create_arguments()
+
+      for o in objects:
+        arguments.addObject(o)
+
+      for q in qfields:
+        arguments.addQualityFlag(q)
+
+      arguments.area = pyarea
+      arguments.date=o.date if dd is None else dd 
+      arguments.time=o.time if dt is None else dt
+      arguments.addParameter(self.quantity, self.gain, self.offset)
+      arguments.product = self.prodstr.upper()
+      arguments.addArgument("selection_method", self._selection_method_repr())
+      imethod = self._interpolation_method_repr()
+      if imethod == "NEAREST_VALUE":
+        imethod = "NEAREST"
+      arguments.addArgument("interpolation_method",imethod)
+      arguments.height = self.height
+      arguments.elangle = self.elangle
+      arguments.range = self.range
+      arguments.qiFieldName = self.qitotal_field
+
+      cgenerator.update_arguments_with_prodpar(arguments, self.prodpar)
+
+      result = cgenerator.generate(arguments)
+
+    # END OF COMPOSITING PART
+
+
     if self.applyctfilter:
       if self.verbose:
         self.logger.debug(f"[{self.mpname}] compositing.generate: Applying ct filter")
@@ -351,7 +396,7 @@ class compositing(object):
 
   def set_product_from_string(self, prodstr):
     prodstr = prodstr.lower()
-
+    self.prodstr = prodstr
     if prodstr == "ppi":
       self.product = _rave.Rave_ProductType_PPI
     elif prodstr == "cappi":
@@ -362,6 +407,8 @@ class compositing(object):
       self.product = _rave.Rave_ProductType_PMAX
     elif prodstr == "max":
       self.product = _rave.Rave_ProductType_MAX
+    elif prodstr == "acqva":
+      self.product = _rave.Rave_ProductType_COMP
     else:
       raise ValueError("Only supported product types are ppi, cappi, pcappi, pmax and max")    
   
@@ -644,6 +691,8 @@ class compositing(object):
       return "pmax"
     elif self.product == _rave.Rave_ProductType_MAX:
       return "max"
+    elif self.product == _rave.Rave_ProductType_COMP:
+      return "comp"
     else:
       return "unknown"
       

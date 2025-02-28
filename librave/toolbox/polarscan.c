@@ -892,6 +892,20 @@ void PolarScan_removeQualityField(PolarScan_t* scan, int index)
   RAVE_OBJECT_RELEASE(field);
 }
 
+void PolarScan_removeQualityFieldByHowTask(PolarScan_t* scan, const char* qname)
+{
+  int i = 0, nfields = 0;
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+  nfields = PolarScan_getNumberOfQualityFields(scan);
+  for (i = nfields-1; i >=0; i--) {
+    RaveField_t* field = (RaveField_t*)RaveObjectList_get(scan->qualityfields, i);
+    if (field != NULL && RaveField_hasAttributeStringValue(field, "how/task", qname)) {
+      PolarScan_removeQualityField(scan, i);
+    }
+    RAVE_OBJECT_RELEASE(field);
+  }
+}
+
 RaveObjectList_t* PolarScan_getQualityFields(PolarScan_t* scan)
 {
   RAVE_ASSERT((scan != NULL), "scan == NULL");

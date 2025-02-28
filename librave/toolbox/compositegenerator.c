@@ -23,11 +23,13 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @date 2024-10-10
  */
 #include "compositegenerator.h"
+#include "cartesian.h"
 #include "compositearguments.h"
 #include "compositefactorymanager.h"
 #include "compositefilter.h"
 #include "compositegeneratorfactory.h"
 #include "polarvolume.h"
+#include "rave_attribute.h"
 #include "rave_list.h"
 #include "rave_object.h"
 #include "raveobject_hashtable.h"
@@ -615,6 +617,18 @@ Cartesian_t* CompositeGenerator_generate(CompositeGenerator_t* generator, Compos
     if (worker != NULL) {
       if (CompositeGeneratorFactory_setProperties(worker, generator->properties)) {
         result = CompositeGeneratorFactory_generate(worker, arguments);
+        if (result != NULL) {
+          RaveAttribute_t* attr = RaveAttributeHelp_createStringFmt("how/comment", "factory:%s", CompositeGeneratorFactory_getName(worker));
+          if (attr != NULL) {
+            Cartesian_addAttribute(result, attr);
+          }
+          RAVE_OBJECT_RELEASE(attr);
+          attr = RaveAttributeHelp_createStringFmt("how/software", "BALTRAD");
+          if (attr != NULL) {
+            Cartesian_addAttribute(result, attr);
+          }
+          RAVE_OBJECT_RELEASE(attr);
+        }
       } else {
         RAVE_ERROR0("Failed to initialize generator factory with properties");
       }

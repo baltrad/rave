@@ -23,12 +23,20 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @date 2025-01-14
  */
 #include "acqvacompositegeneratorfactory.h"
+#include "cartesian.h"
+#include "compositeenginebase.h"
 #include "compositeenginefunctions.h"
 #include "composite_utils.h"
 #include "compositearguments.h"
 #include "compositeengine.h"
 #include "compositeengineqc.h"
+#include "polarscan.h"
+#include "polarscanparam.h"
 #include "polarvolume.h"
+#include "rave_attribute.h"
+#include "rave_field.h"
+#include "rave_properties.h"
+#include "rave_value.h"
 #include "raveobject_list.h"
 #include "rave_types.h"
 #include "rave_debug.h"
@@ -36,7 +44,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_utilities.h"
 #include <stdio.h>
 #include <string.h>
-
+#include "rave_io.h"
 
 
 typedef struct _AcqvaCompositeGeneratorFactory_t {
@@ -48,6 +56,8 @@ typedef struct _AcqvaCompositeGeneratorFactory_t {
 /*@{ Private functions */
 
 static int AcqvaCompositeGeneratorFactory_onStarting(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* bindings, int nbindings);
+
+static int AcqvaCompositeGeneratorFactory_onFinished(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* bindings, int nbindings);
 
 /**
  * The function locating the lowest usable data value
@@ -93,6 +103,11 @@ static int AcqvaCompositeGeneratorFactory_constructor(RaveCoreObject* obj)
 
   if (!CompositeEngine_setOnStartingFunction(this->engine, AcqvaCompositeGeneratorFactory_onStarting)) {
     RAVE_ERROR0("Failed to set the onStarting function");
+    goto fail;
+  }
+
+  if (!CompositeEngine_setOnFinishedFunction(this->engine, AcqvaCompositeGeneratorFactory_onFinished)) {
+    RAVE_ERROR0("Failed to set the onFinished function");
     goto fail;
   }
 
@@ -158,6 +173,11 @@ static int AcqvaCompositeGeneratorFactory_copyconstructor(RaveCoreObject* obj, R
     goto fail;
   }
 
+  if (!CompositeEngine_setOnFinishedFunction(this->engine, AcqvaCompositeGeneratorFactory_onFinished)) {
+    RAVE_ERROR0("Failed to set the onFinished function");
+    goto fail;
+  }
+
   if (!CompositeEngine_setSelectRadarDataFunction(this->engine, AcqvaCompositeGeneratorFactoryInternal_selectRadarData)) {
     RAVE_ERROR0("Failed to set selectRadarData function");
     goto fail;
@@ -186,6 +206,107 @@ static void AcqvaCompositeGeneratorFactory_destructor(RaveCoreObject* obj)
   RAVE_OBJECT_RELEASE(this->overshooting);
 }
 
+PolarVolume_t* AcqvaCompositeGeneratorFactoryInternal_loadCluttermap(const char* cluttermap_dir, OdimSource_t* source)
+{
+  RaveIO_t* rio = NULL;
+  PolarVolume_t* result = NULL;
+  if (OdimSource_getNod(source) != NULL) {
+    char buff[512];
+    snprintf(buff, 512, "%s/%s.h5", cluttermap_dir, OdimSource_getNod(source));
+    rio = RaveIO_open(buff, 0, NULL);
+    if (rio == NULL) {
+      RAVE_ERROR1("Could not identify cluttermap '%s'", buff);
+      goto fail;
+    }
+    if (RaveIO_getObjectType(rio) == Rave_ObjectType_PVOL) {
+      result = (PolarVolume_t*)RaveIO_getObject(rio);
+    }
+  } else {
+    RAVE_ERROR0("OdimSource does not contain NOD");
+  }
+
+fail:
+  RAVE_OBJECT_RELEASE(rio);
+  return result;
+}
+
+static int AcqvaCompositeGeneratorFactoryInternal_updateWithCluttermaps(AcqvaCompositeGeneratorFactory_t* self, RaveProperties_t* properties, CompositeEngineObjectBinding_t* bindings, int nbindings)
+{
+  int i = 0;
+  int failed = 0;
+  const char* cluttermap_dir = NULL;
+
+  if (RaveProperties_hasProperty(properties, "rave.acqva.cluttermap.dir")) {
+    RaveValue_t* property = RaveProperties_get(properties, "rave.acqva.cluttermap.dir");
+    if (RaveValue_type(property) == RaveValue_Type_String) {
+      cluttermap_dir = RaveValue_toString(property);
+    }
+    RAVE_OBJECT_RELEASE(property);
+  }
+
+  for (i = 0; !failed && i < nbindings; i++) {
+    int nscans = 0, j = 0;
+    PolarVolume_t* cluttermap = NULL;
+    /* We can only update volume if we have sources, a cluttermap dir and a mapping object */
+    if (bindings[i].source != NULL && cluttermap_dir != NULL) {
+      cluttermap = AcqvaCompositeGeneratorFactoryInternal_loadCluttermap(cluttermap_dir, bindings[i].source);
+    }
+    nscans = PolarVolume_getNumberOfScans((PolarVolume_t*)bindings[i].object);
+    for (j = 0; !failed && j < nscans; j++) {
+      PolarScan_t* scan = PolarVolume_getScan((PolarVolume_t*)bindings[i].object, j);
+      RaveField_t* qfield = PolarScan_getQualityFieldByHowTask(scan, ACQVA_QUALITY_FIELD_NAME);
+      if (qfield == NULL && cluttermap != NULL) {
+        PolarScan_t* cmapscan = PolarVolume_getScanClosestToElevation(cluttermap, PolarScan_getElangle(scan), 0);
+        if (cmapscan != NULL && fabs(PolarScan_getElangle(scan) - PolarScan_getElangle(cmapscan)) < 0.0001) {
+          PolarScanParam_t* param = PolarScan_getParameter(cmapscan, "ACQVA");
+          if (param != NULL) {
+            qfield = PolarScanParam_toField(param);
+            if (qfield != NULL) {
+              RaveAttribute_t* attr = RaveAttributeHelp_createString("how/task", ACQVA_QUALITY_FIELD_NAME);
+              if (attr == NULL || !RaveField_addAttribute(qfield, attr)) {
+                RAVE_ERROR0("Could not create rave attribute");
+                failed = 1;
+              }
+              RAVE_OBJECT_RELEASE(attr);
+
+              attr = RaveAttributeHelp_createString("how/acqva_remove_me", "YES");
+              if (attr == NULL || !RaveField_addAttribute(qfield, attr)) {
+                RAVE_ERROR0("Could not create rave attribute");
+                failed = 1;
+              }
+              RAVE_OBJECT_RELEASE(attr);
+
+              if (!PolarScan_addQualityField(scan, qfield)) {
+                RAVE_ERROR0("Failed to add ACQVA quality field to scan");
+                failed = 1;
+              }
+            }
+          } else {
+            RAVE_ERROR0("No ACQVA parameter in cluttermap");
+            failed = 1;
+          }
+          RAVE_OBJECT_RELEASE(param);
+        } else {
+          RAVE_ERROR1("Could not find a matching scan for %s", OdimSource_getNod(bindings[i].source));
+          failed = 1;
+        }
+        RAVE_OBJECT_RELEASE(cmapscan);
+      } else if (qfield == NULL) {
+        RAVE_ERROR1("Can not create ACQVA product since %s does not have any cluttermap associated", OdimSource_getNod(bindings[i].source));
+        failed = 1;
+      }
+      RAVE_OBJECT_RELEASE(qfield);
+      RAVE_OBJECT_RELEASE(scan);
+    }
+    RAVE_OBJECT_RELEASE(cluttermap);
+  }
+
+  if (failed) {
+    return 0;
+  }
+  return 1;
+}
+
 static int AcqvaCompositeGeneratorFactory_onStarting(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* bindings, int nbindings)
 {
   AcqvaCompositeGeneratorFactory_t* self = (AcqvaCompositeGeneratorFactory_t*)extradata;
@@ -197,12 +318,38 @@ static int AcqvaCompositeGeneratorFactory_onStarting(CompositeEngine_t* engine, 
     goto fail;
   }
 
+  if (!AcqvaCompositeGeneratorFactoryInternal_updateWithCluttermaps(self, properties, bindings, nbindings)) {
+    RAVE_ERROR0("Failed to update volumes with cluttermaps");
+    goto fail;;
+  }
+
   CompositeEngineQcHandler_initialize(self->overshooting, extradata, properties, arguments, bindings, nbindings);
 
   result = 1;
 fail:
   RAVE_OBJECT_RELEASE(properties);
   return result;
+}
+
+static int AcqvaCompositeGeneratorFactory_onFinished(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* bindings, int nbindings)
+{
+  //AcqvaCompositeGeneratorFactory_t* self = (AcqvaCompositeGeneratorFactory_t*)extradata;
+  int i = 0;
+  for (i = 0; i < nbindings; i++) {
+    int j = 0, nscans = PolarVolume_getNumberOfScans((PolarVolume_t*)bindings[i].object);
+    for (j = 0; j < nscans; j++) {
+      PolarScan_t* scan = PolarVolume_getScan((PolarVolume_t*)bindings[i].object, j);
+      if (scan != NULL) {
+        RaveField_t* qfield = PolarScan_getQualityFieldByHowTask(scan, ACQVA_QUALITY_FIELD_NAME);
+        if (qfield != NULL && RaveField_hasAttribute(qfield, "how/acqva_remove_me")) {
+          PolarScan_removeQualityFieldByHowTask(scan, ACQVA_QUALITY_FIELD_NAME);
+        }
+        RAVE_OBJECT_RELEASE(qfield);
+      }
+      RAVE_OBJECT_RELEASE(scan);
+    }
+  }
+  return 1;
 }
 
 /**
@@ -375,6 +522,7 @@ RaveProperties_t* AcqvaCompositeGeneratorFactory_getProperties(CompositeGenerato
 Cartesian_t* AcqvaCompositeGeneratorFactory_generate(CompositeGeneratorFactory_t* self, CompositeArguments_t* arguments)
 {
   int i = 0, nobjects = 0;
+  Cartesian_t* result = NULL;
 
   nobjects = CompositeArguments_getNumberOfObjects(arguments);
   for (i = 0; i < nobjects; i++) {
@@ -386,7 +534,11 @@ Cartesian_t* AcqvaCompositeGeneratorFactory_generate(CompositeGeneratorFactory_t
     }
     RAVE_OBJECT_RELEASE(obj);
   }
-  return CompositeEngine_generate(((AcqvaCompositeGeneratorFactory_t*)self)->engine, arguments, (void*)self);
+  result = CompositeEngine_generate(((AcqvaCompositeGeneratorFactory_t*)self)->engine, arguments, (void*)self);
+  if (result != NULL) {
+    Cartesian_setProduct(result, Rave_ProductType_COMP);
+  }
+  return result;
 }
 
 CompositeGeneratorFactory_t* AcqvaCompositeGeneratorFactory_create(CompositeGeneratorFactory_t* self)

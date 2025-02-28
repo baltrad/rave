@@ -1,0 +1,25 @@
+<rave-composite-generator>
+  <factory name="acqva" factory_class="AcqvaCompositeGenerator">
+    <filter>
+      <products>ACQVA</products>
+      <interpolation_methods>NEAREST</interpolation_methods>
+    </filter>
+  </factory>
+  <factory name="nearest" factory_class="NearestCompositeGenerator">
+    <filter>
+      <products>PPI,CAPPI,PCAPPI</products>
+      <interpolation_methods>NEAREST</interpolation_methods>
+    </filter>
+    <filter>
+      <products>MAX,PMAX</products>
+      <interpolation_methods>NEAREST</interpolation_methods>
+    </filter>
+  </factory>
+  <factory name="legacy" factory_class="LegacyCompositeGenerator">
+    <filter>
+      <products>PPI,CAPPI,PCAPPI</products>
+      <interpolation_methods>NEAREST,LINEAR_HEIGHT,LINEAR_RANGE,LINEAR_AZMIUTH,LINEAR_RANGE_AND_AZIMUTH,LINEAR_3D,QUADRATIC_HEIGHT,QUADRATIC_3D</interpolation_methods>
+    </filter>
+  </factory>
+</rave-composite-generator>
+

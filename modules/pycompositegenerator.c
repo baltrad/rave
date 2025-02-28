@@ -312,6 +312,7 @@ static PyObject* _pycompositegenerator_generate(PyCompositeGenerator* self, PyOb
     PyErr_SetString(PyExc_RuntimeError, "Failed to create cartesian product");
   }
 
+  RAVE_OBJECT_RELEASE(cartesian);
   return result;
 }
 

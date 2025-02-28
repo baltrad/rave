@@ -53,6 +53,9 @@ def main(options):
   comp.zr_A = options.zr_A
   comp.zr_b = options.zr_b
 
+  if options.enable_composite_factories:
+    comp.use_legacy_compositing = False
+
   if options.gf:
     comp.applygapfilling = True
   if options.ctfilter:
@@ -222,7 +225,10 @@ if __name__ == "__main__":
 
   parser.add_option("--disable_azimuthal_navigation", action="store_true", dest="disable_azimuthal_navigation",
                     help="If this flag is set, then azimuthal navigation won't be used when creating the composite.")
-                    
+
+  parser.add_option("--enable_composite_factories", action="store_true", dest="enable_composite_factories", default=False,
+                    help="If this flag is set then the compositing will be performed using the new factory methods. Otherwise legacy handling will be used.")
+
   (options, args) = parser.parse_args()
 
   if options.infiles != None and options.outfile != None:

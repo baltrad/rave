@@ -88,9 +88,11 @@ typedef int(*composite_engine_onStarting_fun)(CompositeEngine_t* engine, void* e
  * @param[in] engine - self
  * @param[in] extradata - the extradata passed to the \ref CompositeEngine_generate function.
  * @param[in] arguments - the arguments
+ * @param[in] bindings - the bindings
+ * @param[in] nbindings  - number of bindings
  * @return 0 on failure (and generation will terminate), 1 on success
  */
- typedef int(*composite_engine_onFinished_fun)(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments);
+ typedef int(*composite_engine_onFinished_fun)(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* bindings, int nbindings);
 
 /**
  * Function pointer used during composite generation (\ref CompositeEngine_generate).
@@ -299,7 +301,7 @@ int CompositeEngineFunction_onStarting(CompositeEngine_t* self, void* extradata,
  * @param[in] arguments - the arguments
  * @return 1 on success, 0 on failure and will terminate generation
  */
- int CompositeEngineFunction_onFinished(CompositeEngine_t* self, void* extradata, CompositeArguments_t* arguments);
+ int CompositeEngineFunction_onFinished(CompositeEngine_t* self, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* bindings, int nbindings);
 
 /**
  * This delegates the call to the set lon-lat function.

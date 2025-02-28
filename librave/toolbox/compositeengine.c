@@ -107,7 +107,7 @@ RaveCoreObjectType CompositeEnginePolarValueFunction_TYPE = {
 
 static int CompositeEngineInternal_onStarting(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* bindings, int nbindings);
 
-static int CompositeEngineInternal_onFinished(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments);
+static int CompositeEngineInternal_onFinished(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* bindings, int nbindings);
 
 static int CompositeEngineInternal_getLonLat(CompositeEngine_t* engine, void* extradata, CompositeEngineObjectBinding_t* binding, double herex, double herey, double* olon, double* olat);
 
@@ -293,7 +293,7 @@ static int CompositeEngineInternal_onStarting(CompositeEngine_t* engine, void* e
   return 1;
 }
 
-static int CompositeEngineInternal_onFinished(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments)
+static int CompositeEngineInternal_onFinished(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* bindings, int nbindings)
 {
   return 1;
 }
@@ -469,9 +469,9 @@ int CompositeEngineFunction_onStarting(CompositeEngine_t* self, void* extradata,
   return self->onStarting(self, extradata, arguments, bindings, nbindings);
 }
 
-int CompositeEngineFunction_onFinished(CompositeEngine_t* self, void* extradata, CompositeArguments_t* arguments)
+int CompositeEngineFunction_onFinished(CompositeEngine_t* self, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* bindings, int nbindings)
 {
-  return self->onFinished(self, extradata, arguments);
+  return self->onFinished(self, extradata, arguments, bindings, nbindings);
 }
 
 int CompositeEngineFunction_getLonLat(CompositeEngine_t* self, void* extradata, CompositeEngineObjectBinding_t* binding, double herex, double herey, double* olon, double* olat)
@@ -853,7 +853,7 @@ Cartesian_t* CompositeEngine_generate(CompositeEngine_t* self, CompositeArgument
     }
   }
 
-  if (!CompositeEngineFunction_onFinished(self, extradata, arguments)) {
+  if (!CompositeEngineFunction_onFinished(self, extradata, arguments, bindings, nbindings)) {
     goto fail;
   }
 
