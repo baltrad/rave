@@ -618,7 +618,7 @@ Cartesian_t* CompositeGenerator_generate(CompositeGenerator_t* generator, Compos
       if (CompositeGeneratorFactory_setProperties(worker, generator->properties)) {
         result = CompositeGeneratorFactory_generate(worker, arguments);
         if (result != NULL) {
-          RaveAttribute_t* attr = RaveAttributeHelp_createStringFmt("how/comment", "factory:%s", CompositeGeneratorFactory_getName(worker));
+          RaveAttribute_t* attr = RaveAttributeHelp_createStringFmt("how/product_parameters/factory", "%s", CompositeGeneratorFactory_getName(worker));
           if (attr != NULL) {
             Cartesian_addAttribute(result, attr);
           }
