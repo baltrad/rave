@@ -38,6 +38,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include <strings.h>
 #include <string.h>
 #include <stdio.h>
+#include "poo_composite_algorithm.h"
 
 static const char* SUPPORTED_PRODUCTS[]={
   "PPI",
@@ -226,6 +227,7 @@ Cartesian_t* LegacyCompositeGeneratorFactory_generate(CompositeGeneratorFactory_
   RaveAttribute_t* attr = NULL;
   Area_t* area = NULL;
   RaveList_t* qualityflags = NULL;
+  CompositeAlgorithm_t* algorithm = NULL;
 
   RAVE_ASSERT((self != NULL), "self == NULL");
   if (arguments == NULL) {
@@ -323,12 +325,20 @@ Cartesian_t* LegacyCompositeGeneratorFactory_generate(CompositeGeneratorFactory_
     Composite_setTime(composite, CompositeArguments_getTime(arguments));
     Composite_setDate(composite, CompositeArguments_getDate(arguments));
 
+    algorithm = RAVE_OBJECT_NEW(&PooCompositeAlgorithm_TYPE);
+    if (algorithm == NULL) {
+      RAVE_ERROR0("Failed to add poo algorithm to composite generator");
+      goto done;
+    }
+    Composite_setAlgorithm(composite, algorithm);
+
     qualityflags = CompositeArguments_getQualityFlags(arguments);
 
     result = Composite_generate(composite, area, qualityflags);
   }
 done:
   RAVE_OBJECT_RELEASE(composite);
+  RAVE_OBJECT_RELEASE(algorithm);
   RAVE_OBJECT_RELEASE(attr);
   RAVE_OBJECT_RELEASE(area);
   if (qualityflags != NULL) {

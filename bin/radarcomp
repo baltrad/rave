@@ -56,6 +56,8 @@ def main(options):
   if options.enable_composite_factories:
     comp.use_legacy_compositing = False
 
+  comp.strategy = options.strategy
+
   if options.gf:
     comp.applygapfilling = True
   if options.ctfilter:
@@ -228,6 +230,9 @@ if __name__ == "__main__":
 
   parser.add_option("--enable_composite_factories", action="store_true", dest="enable_composite_factories", default=False,
                     help="If this flag is set then the compositing will be performed using the new factory methods. Otherwise legacy handling will be used.")
+
+  parser.add_option("--strategy", dest="strategy", default=None,
+                    help="Can be used to force a specific composite factory to be used. For example acqva, nearest or legacy.")
 
   (options, args) = parser.parse_args()
 

@@ -128,7 +128,9 @@ class multi_composite_arguments(object):
     self.dump = False
     self.dumppath = None
     self.radar_index_mapping = {}
-  
+    self.use_legacy_compositing=True
+    self.strategy = None
+
   ##
   # Generate function. Basically same as calling compositing.generate but the pyarea is created from the
   # area definition.
@@ -169,6 +171,8 @@ class multi_composite_arguments(object):
     comp.dump = self.dump
     comp.dumppath = self.dumppath
     comp.radar_index_mapping = self.radar_index_mapping
+    comp.use_legacy_compositing = self.use_legacy_compositing
+    comp.strategy = self.strategy
 
     pyarea = _area.new()
     pyarea.id = "tiled area subset %s"%tid
@@ -353,6 +357,8 @@ class tiled_compositing(object):
     a.dumppath = self.compositing.dumppath
     a.reprocess_quality_field = self.compositing.reprocess_quality_field
     a.area_definition = adef
+    a.use_legacy_compositing=self.use_legacy_compositing
+    a.strategy=self.strategy
     
     return a
   

@@ -44,7 +44,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 
 /*@{ Probability of overshooting quality control functions  */
 
-#define HOWTASK_POO_GAIN 1.0/UCHAR_MAX
+#define HOWTASK_POO_GAIN (1.0/UCHAR_MAX)
 
 #define HOWTASK_POO_OFFSET 0.0
 
@@ -91,7 +91,7 @@ static int CompositeEngineOvershootingQcHandler_copyconstructor(RaveCoreObject* 
   this->initialize = CompositeEngineOvershootingQcHandler_initialize;
   this->getFlagDefinition = CompositeEngineOvershootingQcHandler_getFlagDefinition;
   this->poofields = NULL;
-  
+
   if (src->poofields != NULL) {
     this->poofields = RAVE_OBJECT_CLONE(src->poofields);
     if (this->poofields == NULL) {
@@ -156,7 +156,6 @@ static int CompositeEngineOvershootingQcHandler_getQualityValue(CompositeEngineQ
     if (pooscan != NULL) {
       double value = 0.0;
       RaveValueType t = PolarScan_getNearest(pooscan, navinfo->lon, navinfo->lat, 1, &value);
-
       if (t != RaveValueType_DATA) {
         value = 0.0;
       }
@@ -220,12 +219,12 @@ RaveCoreObjectType CompositeEngineOvershootingQcHandler_TYPE = {
        if (scan != NULL) {
          RaveField_t* field = PolarScan_findAnyQualityFieldByHowTask(scan, qualityFieldName);
          if (field != NULL) {
-           PolarScan_t* scan = PolarScan_createFromScanAndField(scan, field);
-           if (scan == NULL || !RaveObjectHashTable_put(scans, PolarScan_getSource(scan), (RaveCoreObject*)scan)) {
+           PolarScan_t* newscan = PolarScan_createFromScanAndField(scan, field);
+           if (newscan == NULL || !RaveObjectHashTable_put(scans, PolarScan_getSource(newscan), (RaveCoreObject*)newscan)) {
              RAVE_ERROR0("Failed to scan to hash table");
              status = 0;
            }
-           RAVE_OBJECT_RELEASE(scan);
+           RAVE_OBJECT_RELEASE(newscan);
          }
          RAVE_OBJECT_RELEASE(field);
        }

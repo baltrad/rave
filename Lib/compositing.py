@@ -129,7 +129,8 @@ class compositing(object):
     self.use_lazy_loading=True
     self.use_lazy_loading_preloads=True
     self.use_legacy_compositing=True
-    
+    self.strategy = None
+
   def generate(self, dd, dt, area=None):
     return self._generate(dd, dt, area)
 
@@ -158,7 +159,8 @@ class compositing(object):
       self.logger.debug("Use lazy loading = %s"%str(self.use_lazy_loading))
       self.logger.debug("Use lazy loading preload = %s"%str(self.use_lazy_loading_preloads))
       self.logger.debug("Use legacy compositing = %s"%str(self.use_legacy_compositing))
-      
+      self.logger.debug("Strategy = %s"%str(self.strategy))
+
       if area is not None:
         self.logger.debug("Area = %s"%area)
       else:
@@ -324,6 +326,7 @@ class compositing(object):
       arguments.addParameter(self.quantity, self.gain, self.offset)
       arguments.product = self.prodstr.upper()
       arguments.addArgument("selection_method", self._selection_method_repr())
+      arguments.strategy = self.strategy
       imethod = self._interpolation_method_repr()
       if imethod == "NEAREST_VALUE":
         imethod = "NEAREST"
