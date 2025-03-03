@@ -236,7 +236,7 @@ static int AcqvaCompositeGeneratorFactoryInternal_updateWithCluttermaps(AcqvaCom
   int failed = 0;
   const char* cluttermap_dir = NULL;
 
-  if (RaveProperties_hasProperty(properties, "rave.acqva.cluttermap.dir")) {
+  if (properties != NULL && RaveProperties_hasProperty(properties, "rave.acqva.cluttermap.dir")) {
     RaveValue_t* property = RaveProperties_get(properties, "rave.acqva.cluttermap.dir");
     if (RaveValue_type(property) == RaveValue_Type_String) {
       cluttermap_dir = RaveValue_toString(property);
@@ -292,7 +292,11 @@ static int AcqvaCompositeGeneratorFactoryInternal_updateWithCluttermaps(AcqvaCom
         }
         RAVE_OBJECT_RELEASE(cmapscan);
       } else if (qfield == NULL) {
-        RAVE_ERROR1("Can not create ACQVA product since %s does not have any cluttermap associated", OdimSource_getNod(bindings[i].source));
+        if (bindings[i].source != NULL) {
+          RAVE_ERROR1("Can not create ACQVA product since %s does not have any cluttermap associated", OdimSource_getNod(bindings[i].source));
+        } else {
+          RAVE_ERROR0("Can not create ACQVA product since there is no cluttermap associated");
+        }
         failed = 1;
       }
       RAVE_OBJECT_RELEASE(qfield);

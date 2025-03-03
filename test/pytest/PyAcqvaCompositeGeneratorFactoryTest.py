@@ -30,12 +30,11 @@ import _compositegenerator
 import _area
 import _raveio
 import _projection
-import _polarscan
-import _polarvolume
+import _polarscan, _polarvolume, _ravefield
 import _acqvacompositegeneratorfactory
 import _raveproperties
 import string
-import math
+import math, numpy
 
 class PyAcqvaCompositeGeneratorFactoryTest(unittest.TestCase):
   def setUp(self):
@@ -108,9 +107,20 @@ class PyAcqvaCompositeGeneratorFactoryTest(unittest.TestCase):
     args.date = "20090501"
     args.addParameter("DBZH", 0.1, -30.0)
 
-    args.addObject(_raveio.open("fixtures/pvol_seang_20090501T120000Z.h5").object)
-    args.addObject(_raveio.open("fixtures/pvol_searl_20090501T120000Z.h5").object)
-    #args.quality_flags = ["se.smhi.composite.distance.radar"]
+    seang = _raveio.open("fixtures/pvol_seang_20090501T120000Z.h5").object
+    searl = _raveio.open("fixtures/pvol_searl_20090501T120000Z.h5").object
+
+    for v in [seang, searl]:
+      for i in range(v.getNumberOfScans()):
+        scan = v.getScan(i)
+        qdata = numpy.ones(scan.getParameter("DBZH").getData().shape, 'b')
+        qfield = _ravefield.new()
+        qfield.setData(qdata)
+        qfield.addAttribute("how/task", "se.smhi.acqva")
+        scan.addQualityField(qfield)
+      args.addObject(v)
+
+    args.addQualityFlag("se.smhi.composite.distance.radar")
 
     result = classUnderTest.generate(args);
     rio = _raveio.new()

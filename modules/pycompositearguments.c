@@ -23,6 +23,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @date 2024"-12-13
  */
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#include "pyraveapi.h"
+#include "rave_value.h"
 #include "rave_types.h"
 #include "compositearguments.h"
 #include "pyravecompat.h"
@@ -657,6 +659,69 @@ static PyObject* _pycompositearguments_createRadarIndexMapping(PyCompositeArgume
   Py_RETURN_NONE;
 }
 
+static PyObject* _pycompositearguments_getRadarIndexMapping(PyCompositeArguments* self, PyObject* args)
+{
+  PyObject* pyobj = NULL;
+  RaveValue_t* value = NULL;
+  RaveObjectHashTable_t* table = NULL;
+
+  if (!PyArg_ParseTuple(args, "")) {
+    return NULL;
+  }
+
+  value = RAVE_OBJECT_NEW(&RaveValue_TYPE);
+  if (value != NULL) {
+    table = CompositeArguments_getRadarIndexMapping(self->args);
+    if (table == NULL || !RaveValue_setHashTable(value, table)) {
+      raiseException_gotoTag(fail, PyExc_RuntimeError, "Failed to create rave hash table");
+    }
+    pyobj = PyRaveApi_RaveValueToObject(value);
+    if (pyobj == NULL) {
+      goto fail;
+    }
+  }
+
+fail:
+  RAVE_OBJECT_RELEASE(value);
+  RAVE_OBJECT_RELEASE(table);
+  return pyobj;
+}
+
+static PyObject* _pycompositearguments_updateRadarIndexMapping(PyCompositeArguments* self, PyObject* args)
+{
+  PyObject* pyobj = NULL;
+  PyObject* pysources = NULL;
+  OdimSources_t* sources = NULL;
+
+  RaveValue_t* ravevalue = NULL;
+  RaveObjectHashTable_t* table = NULL;
+
+  if (!PyArg_ParseTuple(args, "O|O", &pyobj, &pysources)) {
+    return NULL;
+  }
+  if (PyOdimSources_Check(pysources)) {
+    sources = RAVE_OBJECT_COPY(((PyOdimSources*)pysources)->sources);
+  }
+  ravevalue = PyRaveApi_RaveValueFromObject(pyobj);
+  if (ravevalue == NULL && RaveValue_type(ravevalue) != RaveValue_Type_Hashtable) {
+    goto fail;
+  }
+  table = RaveValue_toHashTable(ravevalue);
+  if (!CompositeArguments_updateRadarIndexMapping(self->args, table, sources)) {
+    raiseException_gotoTag(fail, PyExc_RuntimeError, "Could not set radar index mapping");
+  }
+
+  RAVE_OBJECT_RELEASE(ravevalue);
+  RAVE_OBJECT_RELEASE(table);
+  RAVE_OBJECT_RELEASE(sources);
+  Py_RETURN_NONE;
+fail:
+  RAVE_OBJECT_RELEASE(ravevalue);
+  RAVE_OBJECT_RELEASE(table);
+  RAVE_OBJECT_RELEASE(sources);
+  return NULL;
+}
+
 static PyObject* _pycompositearguments_getRadarIndexKeys(PyCompositeArguments* self, PyObject* args)
 {
   RaveList_t* nodkeys = NULL;
@@ -848,6 +913,13 @@ static struct PyMethodDef _pycompositearguments_methods[] =
     "createRadarIndexMapping(sources)\n\n"
     "Creates a radar index mapping from the provided sources and the existing objects.\n"
     "sources - a OdimSourcesCore instance with mapped sources"
+  },
+  {"getRadarIndexMapping", (PyCFunction)_pycompositearguments_getRadarIndexMapping, 1,
+    "getRadarIndexMapping()\n\n"
+    "Returns the radar index mapping."
+  },
+  {"updateRadarIndexMapping", (PyCFunction)_pycompositearguments_updateRadarIndexMapping, 1,
+    "updateRadarIndexMapping(mapping, sources)\n"
   },
   {"getRadarIndexKeys", (PyCFunction)_pycompositearguments_getRadarIndexKeys, 1,
     "getRadarIndexKeys() -> list of keys\n\n"

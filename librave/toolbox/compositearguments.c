@@ -24,6 +24,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "compositearguments.h"
 #include "composite_utils.h"
+#include "odim_source.h"
 #include "rave_attribute.h"
 #include "rave_datetime.h"
 #include "rave_debug.h"
@@ -31,8 +32,10 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_list.h"
 #include "rave_object.h"
 #include "rave_types.h"
+#include "rave_value.h"
 #include "raveobject_hashtable.h"
 #include "raveobject_list.h"
+#include "rave_value.h"
 #include <string.h>
 #include <strings.h>
 #include <stdio.h>
@@ -1037,24 +1040,23 @@ int CompositeArguments_createRadarIndexMapping(CompositeArguments_t* args, OdimS
           char nodbuff[16];
           snprintf(nodbuff, 16, "NOD:%s", OdimSource_getNod(source));
           if (!RaveObjectHashTable_exists(args->radarIndexMapping, nodbuff)) {
-            RaveAttribute_t* attrctr = RaveAttributeHelp_createLong("index", (long)ctr);
-            if (attrctr != NULL) {
-              if (!RaveObjectHashTable_put(args->radarIndexMapping, nodbuff, (RaveCoreObject*)attrctr)) {
+            RaveValue_t* index = RaveValue_createLong((long)ctr);
+            if (index != NULL) {
+              if (!RaveObjectHashTable_put(args->radarIndexMapping, nodbuff, (RaveCoreObject*)index)) {
                 RAVE_ERROR0("Failed to add radar index counter");
                 result = 0;
               } else {
                 entry->radarIndexValue = ctr++;
               }
             }
-            RAVE_OBJECT_RELEASE(attrctr);
+            RAVE_OBJECT_RELEASE(index);
           } else {
-            RaveAttribute_t* attrctr = (RaveAttribute_t*)RaveObjectHashTable_get(args->radarIndexMapping, nodbuff);
-            if (attrctr != NULL) {
-              long v = 0;
-              RaveAttribute_getLong(attrctr, &v);
+            RaveValue_t* index = (RaveValue_t*)RaveObjectHashTable_get(args->radarIndexMapping, nodbuff);
+            if (index != NULL) {
+              long v = RaveValue_toLong(index);
               entry->radarIndexValue = (int)v;
             }
-            RAVE_OBJECT_RELEASE(attrctr);
+            RAVE_OBJECT_RELEASE(index);
           }
         }
         RAVE_OBJECT_RELEASE(source);
@@ -1069,24 +1071,26 @@ int CompositeArguments_createRadarIndexMapping(CompositeArguments_t* args, OdimS
       if (CompositeUtils_getObjectSource(entry->object, source, 1024)) {
         char* key = CompositeArgumentsInternal_getAnyIdFromSource(source);
         if (!RaveObjectHashTable_exists(args->radarIndexMapping, key)) {
-          RaveAttribute_t* attrctr = RaveAttributeHelp_createLong("index", (long)ctr);
-          if (attrctr != NULL) {
-            if (!RaveObjectHashTable_put(args->radarIndexMapping, key, (RaveCoreObject*)attrctr)) {
+          RaveValue_t* index = RaveValue_createLong((long)ctr);
+          if (index != NULL) {
+            if (!RaveObjectHashTable_put(args->radarIndexMapping, key, (RaveCoreObject*)index)) {
               RAVE_ERROR0("Failed to add radar index counter");
               result = 0;
             } else {
               entry->radarIndexValue = ctr++;
             }
+          } else {
+            RAVE_ERROR0("Failed to create index");
+            result = 0;
           }
-          RAVE_OBJECT_RELEASE(attrctr);
+          RAVE_OBJECT_RELEASE(index);
         } else {
-            RaveAttribute_t* attrctr = (RaveAttribute_t*)RaveObjectHashTable_get(args->radarIndexMapping, key);
-            if (attrctr != NULL) {
-              long v = 0;
-              RaveAttribute_getLong(attrctr, &v);
+          RaveValue_t* index = (RaveValue_t*)RaveObjectHashTable_get(args->radarIndexMapping, key);
+            if (index != NULL) {
+              long v = RaveValue_toLong(index);
               entry->radarIndexValue = (int)v;
             }
-            RAVE_OBJECT_RELEASE(attrctr);
+            RAVE_OBJECT_RELEASE(index);
         }
         RAVE_FREE(key);
       }
@@ -1101,6 +1105,106 @@ int CompositeArguments_createRadarIndexMapping(CompositeArguments_t* args, OdimS
   return result;
 }
 
+RaveObjectHashTable_t* CompositeArguments_getRadarIndexMapping(CompositeArguments_t* args)
+{
+  RAVE_ASSERT((args != NULL), "args == NULL");
+  return RAVE_OBJECT_COPY(args->radarIndexMapping);
+}
+
+static int CompositeArgumentsInternal_cmpRaveValueLongs(const void* a, const void* b) 
+{
+  RaveValue_t* rvA = *(RaveValue_t**)a;
+  RaveValue_t* rvB = *(RaveValue_t**)b;
+  double longA = RaveValue_toLong(rvA);
+  double longB = RaveValue_toLong(rvB);
+  if (longA < longB) {
+    return -1;
+  } else if (longA > longB) {
+    return 1;
+  }
+  return 0;
+}
+
+int CompositeArguments_updateRadarIndexMapping(CompositeArguments_t* args, RaveObjectHashTable_t* mapping, OdimSources_t* sources)
+{
+  int i = 0, nobjects = 0;
+  int result = 1;
+
+  RAVE_ASSERT((args != NULL), "args == NULL");
+
+  if (mapping != NULL) {
+    RAVE_OBJECT_RELEASE(args->radarIndexMapping);
+    args->radarIndexMapping = RAVE_OBJECT_COPY(mapping);
+  }
+
+  nobjects = RaveObjectList_size(args->objects);
+  for (i = 0; result && i < nobjects; i++) {
+    CompositeArgumentObjectEntry_t* entry = (CompositeArgumentObjectEntry_t*)RaveObjectList_get(args->objects, i);
+    char srcbuff[1024];
+    if (CompositeUtils_getObjectSource(entry->object, srcbuff, 1024) > 0) {
+      OdimSource_t* source = NULL;
+      char identifier[128];
+      memset(identifier, 0, sizeof(identifier));
+      if (sources != NULL) {
+        source = OdimSources_identify(sources, (const char*)srcbuff);
+        if (source != NULL && OdimSource_getNod(source) != NULL) {
+          snprintf(identifier, 128, "NOD:%s", OdimSource_getNod(source));
+        }
+      }
+      if (strcmp(identifier, "") == 0) {
+        char* key = CompositeArgumentsInternal_getAnyIdFromSource(srcbuff);
+        if (key != NULL) {
+          strncpy(identifier, key, 127);
+        } 
+        RAVE_FREE(key);
+      }
+
+      if (strcmp(identifier, "") == 0) {
+        RAVE_ERROR0("Can not identify the source to get a mapping");
+        result = 0;
+      }
+
+      if (result) {
+        if (RaveObjectHashTable_exists(args->radarIndexMapping, identifier)) {
+          RaveValue_t* value = (RaveValue_t*)RaveObjectHashTable_get(args->radarIndexMapping, identifier);
+          entry->radarIndexValue = RaveValue_toLong(value);
+          RAVE_OBJECT_RELEASE(value);
+        } else {
+          /* We must add a new value to the mapping, locate lowest possible value starting at 1 */
+          RaveObjectList_t* values = RaveObjectHashTable_values(args->radarIndexMapping);
+          RaveValue_t* index = NULL;
+          int ctr = 1, j = 0, nvalues = 0, found = 0;
+          if (values != NULL) {
+            RaveObjectList_sort(values, CompositeArgumentsInternal_cmpRaveValueLongs);
+          }
+          nvalues = RaveObjectList_size(values);
+          for (j = 0; !found && j < nvalues; j++) {
+            RaveValue_t* iv = (RaveValue_t*)RaveObjectList_get(values, j);
+            if (RaveValue_toLong(iv) != ctr) {
+              found = 1;
+            } else {
+              ctr++;
+            }
+            RAVE_OBJECT_RELEASE(iv);
+          }
+          RAVE_OBJECT_RELEASE(values);
+          index = RaveValue_createLong((long)ctr);
+          if (index == NULL || !RaveObjectHashTable_put(args->radarIndexMapping, identifier, (RaveCoreObject*)index)) {
+            RAVE_ERROR1("Failed to create index for %s", identifier);
+            result = 0;
+          }
+          entry->radarIndexValue = ctr;
+          RAVE_OBJECT_RELEASE(index);
+        }
+      }
+      RAVE_OBJECT_RELEASE(source);
+    }
+    RAVE_OBJECT_RELEASE(entry);
+  }
+  return result;
+}
+
+
 RaveList_t* CompositeArguments_getRadarIndexKeys(CompositeArguments_t* args)
 {
   RAVE_ASSERT((args != NULL), "args == NULL");
@@ -1110,35 +1214,33 @@ RaveList_t* CompositeArguments_getRadarIndexKeys(CompositeArguments_t* args)
 int CompositeArguments_getRadarIndexValue(CompositeArguments_t* args, const char* key)
 {
   int result = 0;
-  RaveAttribute_t* attr = NULL;
+  RaveValue_t* index = NULL;
   RAVE_ASSERT((args != NULL), "args == NULL");
-  attr = (RaveAttribute_t*)RaveObjectHashTable_get(args->radarIndexMapping, key);
-  if (attr != NULL) {
-    long v = 0;
-    RaveAttribute_getLong(attr, &v);
+  index = (RaveValue_t*)RaveObjectHashTable_get(args->radarIndexMapping, key);
+  if (index != NULL) {
+    long v = RaveValue_toLong(index);
     result = (int)v;
   }
-  RAVE_OBJECT_RELEASE(attr);
+  RAVE_OBJECT_RELEASE(index);
   return result;
 }
 
 int CompositeArguments_createRadarIndex(CompositeArguments_t* args, const char* key)
 {
   int result = 0;
-  RaveAttribute_t* attr = NULL;
+  RaveValue_t* index = NULL;
   RAVE_ASSERT((args != NULL), "args == NULL");
 
-  attr = (RaveAttribute_t*)RaveObjectHashTable_get(args->radarIndexMapping, key);
-  if (attr != NULL) {
-    long v = 0;
-    RaveAttribute_getLong(attr, &v);
+  index = (RaveValue_t*)RaveObjectHashTable_get(args->radarIndexMapping, key);
+  if (index != NULL) {
+    long v = RaveValue_toLong(index);
     result = (int)v;
   } else {
     int sz = RaveObjectHashTable_size(args->radarIndexMapping);
     int ctr = sz + 1;
-    RaveAttribute_t* attrctr = RaveAttributeHelp_createLong("index", (long)ctr);
-    if (attrctr != NULL) {
-      if (!RaveObjectHashTable_put(args->radarIndexMapping, key, (RaveCoreObject*)attrctr)) {
+    RaveValue_t* ravevalue = RaveValue_createLong((long)ctr);
+    if (ravevalue != NULL) {
+      if (!RaveObjectHashTable_put(args->radarIndexMapping, key, (RaveCoreObject*)ravevalue)) {
         RAVE_ERROR0("Failed to add radar index counter");
         result = 0;
       }
@@ -1146,9 +1248,9 @@ int CompositeArguments_createRadarIndex(CompositeArguments_t* args, const char* 
     } else {
       RAVE_ERROR0("Failed to create long attribute for radar index");
     }
-    RAVE_OBJECT_RELEASE(attrctr);
+    RAVE_OBJECT_RELEASE(ravevalue);
   }
-  RAVE_OBJECT_RELEASE(attr);
+  RAVE_OBJECT_RELEASE(index);
   return result;
 }
 

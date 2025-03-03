@@ -32,6 +32,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_datetime.h"
 #include "rave_attribute.h"
 #include "raveobject_list.h"
+#include "raveobject_hashtable.h"
 #include "odim_sources.h"
 
 /**
@@ -438,6 +439,22 @@ int CompositeArguments_hasQualityFlag(CompositeArguments_t* args, const char* na
  * @return 1 on success, otherwise 0
  */
 int CompositeArguments_createRadarIndexMapping(CompositeArguments_t* args, OdimSources_t* sources);
+
+/**
+ * Returns the radar index mapping.
+ * @param[in] args - self
+ * @return the radar index mapping
+ */
+RaveObjectHashTable_t* CompositeArguments_getRadarIndexMapping(CompositeArguments_t* args);
+
+/**
+ * Updates the radar index mapping
+ * @param[in] args - self
+ * @param[in] mapping - the mapping.
+ * @param[in] sources - the odim sources.
+ * @return 1 on success otherwise 0
+ */
+int CompositeArguments_updateRadarIndexMapping(CompositeArguments_t* args, RaveObjectHashTable_t* mapping, OdimSources_t* sources);
 
 /**
  * Returns the registered radar indexes.

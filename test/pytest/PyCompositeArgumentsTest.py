@@ -461,6 +461,60 @@ class PyCompositeArgumentsTest(unittest.TestCase):
     self.assertEqual(obj.getRadarIndexValue("WMO:01234"), obj.getObjectRadarIndexValue(2))
     self.assertEqual(obj.getRadarIndexValue("NOD:dksin"), obj.getObjectRadarIndexValue(3))
 
+  def test_radarIndexMappingMultipleUsage(self):
+    obj = _compositearguments.new()
+    sources = _odimsources.load(self.FIXTURE)
+
+    obj.addObject(self.create_polarscan("NOD:sekrn", "20250123","100000"))
+    obj.addObject(self.create_polarscan("NOD:sella", "20250123","100000"))
+    obj.addObject(self.create_polarscan("NOD:seatv", "20250123","100000"))
+    obj.addObject(self.create_polarscan("NOD:dksin", "20250123","100000"))
+
+    obj.createRadarIndexMapping(sources)
+
+    mapping = obj.getRadarIndexMapping()
+
+    seq1 = _compositearguments.new()
+    seq1.addObject(self.create_polarscan("NOD:sekrn", "20250123","100000"))
+    seq1.addObject(self.create_polarscan("NOD:seatv", "20250123","100000"))
+    seq1.addObject(self.create_polarscan("NOD:dksin", "20250123","100000"))
+    seq1.updateRadarIndexMapping(mapping, sources)
+    self.assertEqual(obj.getRadarIndexValue("NOD:sekrn"), seq1.getObjectRadarIndexValue(0))
+    self.assertEqual(obj.getRadarIndexValue("NOD:seatv"), seq1.getObjectRadarIndexValue(1))
+    self.assertEqual(obj.getRadarIndexValue("NOD:dksin"), seq1.getObjectRadarIndexValue(2))
+
+    seq2 = _compositearguments.new()
+    seq2.addObject(self.create_polarscan("NOD:sella", "20250123","100000"))
+    seq2.addObject(self.create_polarscan("NOD:dksin", "20250123","100000"))
+    seq2.updateRadarIndexMapping(mapping, sources)
+    self.assertEqual(obj.getRadarIndexValue("NOD:sella"), seq2.getObjectRadarIndexValue(0))
+    self.assertEqual(obj.getRadarIndexValue("NOD:dksin"), seq2.getObjectRadarIndexValue(1))
+
+
+  def test_radarIndexMappingMultipleUsage_missingItem(self):
+    obj = _compositearguments.new()
+    sources = _odimsources.load(self.FIXTURE)
+
+    obj.addObject(self.create_polarscan("NOD:sekrn", "20250123","100000"))
+    obj.addObject(self.create_polarscan("NOD:sella", "20250123","100000"))
+    obj.addObject(self.create_polarscan("NOD:seatv", "20250123","100000"))
+    obj.addObject(self.create_polarscan("NOD:dksin", "20250123","100000"))
+
+    obj.createRadarIndexMapping(sources)
+
+    mapping = obj.getRadarIndexMapping()
+
+    seq1 = _compositearguments.new()
+    seq1.addObject(self.create_polarscan("NOD:sekrn", "20250123","100000"))
+    seq1.addObject(self.create_polarscan("NOD:seatv", "20250123","100000"))
+    seq1.addObject(self.create_polarscan("NOD:sekkr", "20250123","100000"))
+    seq1.updateRadarIndexMapping(mapping, sources)
+
+    self.assertEqual(obj.getRadarIndexValue("NOD:sekrn"), seq1.getObjectRadarIndexValue(0))
+    self.assertEqual(obj.getRadarIndexValue("NOD:seatv"), seq1.getObjectRadarIndexValue(1))
+    self.assertEqual(5, seq1.getObjectRadarIndexValue(2))
+
+  
   def test_qiFieldName(self):
     obj = _compositearguments.new()
     self.assertTrue(obj.qiFieldName is None)

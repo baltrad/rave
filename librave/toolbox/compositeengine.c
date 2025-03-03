@@ -325,6 +325,7 @@ static int CompositeEngineInternal_addQualityFlagsToCartesian(CompositeEngine_t*
 
 static int CompositeEngineInternal_getQualityValue(CompositeEngine_t* self, void* extradata, CompositeArguments_t* args, RaveCoreObject* obj, const char* quantity, const char* qfieldname, PolarNavigationInfo* navinfo, double* v)
 {
+  /* Return 0 since we want the default behavior to handle the quality flag, see \ref CompositeEngineUtility_fillQualityInformation */
   return 0;
 }
 
