@@ -79,11 +79,23 @@ typedef struct CompositeRaveObjectBinding_t {
   OdimSource_t* source; /**< the source associated with the object */
 } CompositeRaveObjectBinding_t;
 
+/**
+ * Settings if there is a which to create an array of settings from which to create quality flag definitions.
+ * In that case, the format of the array should be:
+ * static CompositeQualityFlagSettings_t COMPOSITE_ENGINE_QUALITY_FLAG_DEFINITIONS[] = {
+ *  {"se.smhi.composite.distance.radar", RaveDataType_UCHAR, 0.0, 2000.0},
+ *  {"se.smhi.composite.height.radar", RaveDataType_UCHAR, 0.0, 100.0},
+ *  {"se.smhi.composite.index.radar", RaveDataType_UCHAR, 0.0, 1.0},
+ *  {NULL, RaveDataType_UNDEFINED, 0.0, 0.0}
+ * };
+ *
+ * @NOTE: that the array ends with NULL, UNDEFINED which is an indication of end of array
+ */
 typedef struct CompositeQualityFlagSettings_t {
-  char* qualityFieldName;
-  RaveDataType datatype;
-  double offset;
-  double gain;
+  char* qualityFieldName; /**< quality field name */
+  RaveDataType datatype; /**< data field type */
+  double offset; /**< offset */
+  double gain; /**< gain */
 } CompositeQualityFlagSettings_t;
 
 /**
@@ -158,7 +170,7 @@ CompositeUtilValue_t* CompositeUtils_createCompositeValues(CompositeArguments_t*
  * Resets the array of composite values except the CartesianParam parameter.
  * @param[in] arguments - the arguments structure
  * @param[in] cvalues - pointer at the array
- * @param[in] nparam - number of parameters
+ * @param[in] nentries - number of cvalues
  */
 void CompositeUtils_resetCompositeValues(CompositeArguments_t* arguments, CompositeUtilValue_t* cvalues, int nentries);
 
@@ -192,7 +204,7 @@ int CompositeUtils_getObjectSource(RaveCoreObject* obj, char* source, int nlen);
  * The order of the binding will be the same as the objects in the arguments at time the object is 
  * @param[in] arguments - the arguments (containing the radar objects)
  * @param[in] cartesian - the target composite 
- * @param[out] nobject - the number of items in the returned array
+ * @param[out] nobjects - the number of items in the returned array
  * @param[in] sources - an OPTIONAL odim sources (MAY BE NULL). When creating binding, if possible to identify the odim source it will be attached to the binding.
  * @return the array of bindings or NULL on failure
  */
@@ -231,7 +243,7 @@ void CompositeUtils_getQualityFlagSettings(CompositeQualityFlagSettings_t* setti
  * @param[in] cartesian - the product to which the quality fields should be added
  * @param[in] settings - the settings of specific quality flags. Should be defined as 
  * CompositeQualityFlagSettings_t settings[] = {
- *   {<qualityflag>, <datatype>, <offset>, <gain>},
+ *   {qualityflag, datatype, offset, gain},
  *   ....
  *   {NULL, RaveDataType_UNDEFINED, 0.0, 0.0}
  * };

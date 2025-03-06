@@ -66,8 +66,10 @@ extern RaveCoreObjectType CompositeEngine_TYPE;
 /** The name of the task for indexing the radars used */
 #define COMPOSITE_ENGINE_RADAR_INDEX_HOW_TASK "se.smhi.composite.index.radar"
 
+/** Default gain for quality fields without type definition */
 #define COMPOSITE_ENGINE_DEFAULT_QUALITY_FIELDS_GAIN   (1.0/UCHAR_MAX)
 
+/** Default offset for quality fields without type definition */
 #define COMPOSITE_ENGINE_DEFAULT_QUALITY_FIELDS_OFFSET 0.0
 
 /**
@@ -113,11 +115,13 @@ typedef int(*composite_engine_getLonLat_fun)(CompositeEngine_t* engine, void* ex
  * @param[in] engine - self
  * @param[in] extradata - the extradata passed to the \ref CompositeEngine_generate function.
  * @param[in] arguments -the arguments used when calling \ref CompositeEngine_generate function.
- * @param[in] binding - the object binding
- * @param[in] herex - the surface x coordinate
- * @param[in] herey - the surface y coordinate
- * @param[out] olon - out longitude in radians
- * @param[out] olat - out latitude in radians
+ * @param[in] binding - the object binding (Not an array)
+ * @param[in] index - the index of the binding (index of this binding)
+ * @param[in] olon - longitude in radians
+ * @param[in] olat - latitude in radians
+ * @param[in,out] cvalues - the parameter values array to be filled
+ * @param[in] ncvalues - number of values in the cvalues array
+ @return 1 on success otherwise 0
  */
 typedef int(*composite_engine_selectRadarData_fun)(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* binding, int index, double olon, double olat, struct CompositeEngineRadarData_t* cvalues, int ncvalues);
 
@@ -178,8 +182,7 @@ typedef struct CompositeEngineRadarData_t {
 /**
  * Calculates the lon/lat coordinate using the provided pipeline.
  * @param[in] engine - the engine
- * @param[in] object - the object
- * @param[in] pipeline - the pipeline
+ * @param[in] binding - the object binding
  * @param[in] herex - the x surface coordinate
  * @param[in] herey - the y surface coordinate
  * @param[out] olon - the longitude in radians
@@ -192,7 +195,7 @@ int CompositeEngineUtility_getLonLat(CompositeEngine_t* engine, CompositeEngineO
  * Fetches the radar data for specified position using NEAREST.
  * @param[in] engine - the engine
  * @param[in] arguments - the arguments
- * @param[in] object - the object
+ * @param[in] binding - the object binding
  * @param[in] index - the index in object list (this has to be set in order to get proper radar indexing)
  * @param[out] olon - the longitude in radians
  * @param[out] olat - the latitude in radians
@@ -241,7 +244,7 @@ int CompositeEngineUtility_addQualityFlagsToCartesian(CompositeEngine_t* engine,
  
 /**
  * Fills the quality information for the provided parameter. 
- * @param[in] engine - the engine
+ * @param[in] self - the engine
  * @param[in] extradata - the extradata, typically the data passed to the generate function.
  * @param[in] arguments - the arguments
  * @param[in] x - the x position in cartesian
@@ -269,7 +272,7 @@ CompositeEngineRadarData_t* CompositeEngineUtility_createRadarData(CompositeArgu
  * Resets the array of CompositeEngineRadarData_t except the CartesianParam parameter.
  * @param[in] arguments - the arguments structure
  * @param[in] cvalues - pointer at the array
- * @param[in] nparam - number of parameters
+ * @param[in] nentries - number of entries
  */
 void CompositeEngineUtility_resetRadarData(CompositeArguments_t* arguments, CompositeEngineRadarData_t* cvalues, int nentries);
  
@@ -299,6 +302,8 @@ int CompositeEngineFunction_onStarting(CompositeEngine_t* self, void* extradata,
  * @param[in] self - self
  * @param[in] extradata - the extradata, normally the calling instance
  * @param[in] arguments - the arguments
+ * @param[in] bindings - the object binding array
+ * @param[in] nbindings - the number of objects in the array
  * @return 1 on success, 0 on failure and will terminate generation
  */
  int CompositeEngineFunction_onFinished(CompositeEngine_t* self, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* bindings, int nbindings);
@@ -307,8 +312,7 @@ int CompositeEngineFunction_onStarting(CompositeEngine_t* self, void* extradata,
  * This delegates the call to the set lon-lat function.
  * @param[in] self - self
  * @param[in] extradata - the extradata, normally the calling instance
- * @param[in] object - the object to use for getting lon/lat
- * @param[in] pipeline - the projection pipeline
+ * @param[in] binding - the object binding to use for getting lon/lat
  * @param[in] herex - cartesian surface x
  * @param[in] herey - cartesian surface y
  * @param[out] olon - the longitude
@@ -321,7 +325,7 @@ int CompositeEngineFunction_getLonLat(CompositeEngine_t* self, void* extradata, 
  * @param[in] self - self
  * @param[in] extradata - the extradata, normally the calling instance
  * @param[in] arguments - the arguments
- * @param[in] object - the object to use for getting lon/lat
+ * @param[in] binding - the object binding to use for getting the data
  * @param[in] index - index of the object in the list (used for radarindexing)
  * @param[in] olon - the longitude
  * @param[in] olat - the latitude
@@ -329,6 +333,21 @@ int CompositeEngineFunction_getLonLat(CompositeEngine_t* self, void* extradata, 
  * @param[in] ncvalues - number of values in cvalues
  */
 int CompositeEngineFunction_selectRadarData(CompositeEngine_t* self, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* binding, int index, double olon, double olat, CompositeEngineRadarData_t* cvalues, int ncvalues);
+
+/**
+ * @param[in] self - self
+ * @param[in] extradata - the extradata, normally the calling instance
+ * @param[in] arguments - the arguments
+ * @param[in] binding - the object binding
+ * @param[in] quantity - the parameter from which to get the value
+ * @param[in] navinfo - the polar navigation info of value
+ * @param[in] qiFieldName - if a quality value should be fetched at same time
+ * @param[out] otype - value type of value found
+ * @param[out] ovalue - the value
+ * @param[out] qivalue - the quality value if requested.
+ * @return 1 on success otherwise 0
+ */
+ int CompositeEngineFunction_getPolarValueAtPosition(CompositeEngine_t* self, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* binding, const char* quantity, PolarNavigationInfo* navinfo, const char* qiFieldName, RaveValueType* otype, double* ovalue, double* qivalue);
 
 /**
  * @param[in] self - self
@@ -360,8 +379,13 @@ int CompositeEngineFunction_addQualityFlagsToCartesian(CompositeEngine_t* self, 
  * Returns the quality value at specified polar navigation info.
  * @param[in] self - self
  * @param[in] extradata - the extradata, normally the calling instance
- * @param[in] arguments - the arguments
- * @param[in] cartesian - the cartesian object to write to
+ * @param[in] args - the arguments
+ * @param[in] obj - the object from which to pick the value
+ * @param[in] quantity - the parameter from which to pick value
+ * @param[in] qfieldname - the how/task value of the quality field
+ * @param[in] navinfo - the polar navigation info
+ * @param[out] v - the found quality value
+ * @return 1 on success otherwise 0
  */
 int CompositeEngineFunction_getQualityValue(CompositeEngine_t* self, void* extradata, CompositeArguments_t* args, RaveCoreObject* obj, const char* quantity, const char* qfieldname, PolarNavigationInfo* navinfo, double* v);
 
@@ -371,7 +395,10 @@ int CompositeEngineFunction_getQualityValue(CompositeEngine_t* self, void* extra
  * @param[in] self - self
  * @param[in] extradata - the extradata, normally the calling instance
  * @param[in] arguments - the arguments
- * @param[in] cartesian - the cartesian object to write to
+ * @param[in] x - the x position in the cartesian parameter
+ * @param[in] y - the y position in the cartesian parameter
+ * @param[in] radardist - the distance to the radar
+ * @param[in] radarindex - index of radar affecting this position
  * @return 1 on success otherwise false;
  */
 int CompositeEngineFunction_fillQualityInformation(CompositeEngine_t* self, void* extradata, CompositeArguments_t* arguments, long x, long y, CartesianParam_t* param, double radardist, int radarindex, PolarNavigationInfo* info);

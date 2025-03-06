@@ -50,11 +50,14 @@ typedef int(*composite_engine_qc_handler_getQualityValue_fun)(struct _CompositeE
 
 typedef CompositeQualityFlagDefinition_t*(*composite_engine_qc_handler_getFlagDefinition_fun)(struct _CompositeEngineQcHandler_t* self);
 
+/**
+ * Header to add to all subclasses of this instance. Should be placed below the RAVE_OBJECT_HEAD. See implementation of \ref CompositeEngineQcHandler_t.
+ */
 #define COMPOSITE_ENGINE_QC_HANDLER_HEAD \
-  composite_engine_qc_handler_getQualityFieldName_fun getQualityFieldName; \
-  composite_engine_qc_handler_initialize_fun initialize; \
-  composite_engine_qc_handler_getQualityValue_fun getQualityValue; \
-  composite_engine_qc_handler_getFlagDefinition_fun getFlagDefinition;
+  composite_engine_qc_handler_getQualityFieldName_fun getQualityFieldName; /**< the supported name */\
+  composite_engine_qc_handler_initialize_fun initialize; /**< the initialization function */\
+  composite_engine_qc_handler_getQualityValue_fun getQualityValue; /**< gets the quality value at specified position */ \
+  composite_engine_qc_handler_getFlagDefinition_fun getFlagDefinition; /**< returns the flag definition for this quality field */
 
 /**
  * CompositeEngineQcHandler
@@ -97,6 +100,8 @@ typedef struct _CompositeEngineQcHandler_t {
  #define CompositeEngineQcHandler_getFlagDefinition(self) \
    ((CompositeEngineQcHandler_t*)self)->getFlagDefinition((CompositeEngineQcHandler_t*)self)
 
+/*@{ End of CompositeEngineQcHandler  */
+
 /*@{ Probability of overshooting quality control functions  */
 typedef struct _CompositeEngineOvershootingQcHandler_t CompositeEngineOvershootingQcHandler_t;
 
@@ -114,7 +119,9 @@ extern RaveCoreObjectType CompositeEngineOvershootingQcHandler_TYPE;
  * quality field that has got a how/task value == qualityFieldName.
  * All scans that contains such a field will get a scan set in the resulting
  * hash table with the quality data set as the default (and only) parameter.
- * @param[in] composite - the composite
+ * @param[in] bindings - the bindings array
+ * @param[in] nbindings - number of bindings in array
+ * @param[in] qualifyFieldName - name of quality field that is searched for
  * @return a hash table
  */
  RaveObjectHashTable_t* CompositeEngineQc_getQualityScanFields(CompositeEngineObjectBinding_t* bindings, int nbindings, const char* qualityFieldName);

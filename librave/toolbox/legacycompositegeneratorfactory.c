@@ -49,6 +49,9 @@ static const char* SUPPORTED_PRODUCTS[]={
   NULL
 };
 
+/**
+ * The Legacy composite generator factory. Uses \ref Composite_t to provide the functionality
+ */
 typedef struct _LegacyCompositeGeneratorFactory_t {
   RAVE_OBJECT_HEAD /**< Always on top */
   COMPOSITE_GENERATOR_FACTORY_HEAD /**< composite generator plugin specifics */

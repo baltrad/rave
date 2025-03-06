@@ -438,10 +438,6 @@ fail:
   return NULL;
 }
 
-/**
- * Releases the objects and then deallocates the array
- * @param[in,out] arr - the array to release
- */
 void CompositeUtils_releaseRaveObjectBinding(CompositeRaveObjectBinding_t** arr, int nobjects)
 {
   int i = 0;

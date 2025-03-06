@@ -46,18 +46,18 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  */
 struct _CompositeEngine_t {
   RAVE_OBJECT_HEAD /** Always on top */
-  composite_engine_onStarting_fun onStarting;
-  composite_engine_onFinished_fun onFinished;
-  composite_engine_getLonLat_fun getLonLat;
-  composite_engine_selectRadarData_fun selectRadarData;
-  composite_engine_getPolarValueAtPosition_fun getPolarValueAtPosition;
-  composite_engine_setRadarData_fun setRadarData;
-  composite_engine_addQualityFlagsToCartesian_fun addQualityFlagsToCartesian;
-  composite_engine_getQualityValue_fun getQualityValue;
-  composite_engine_fillQualityInformation_fun fillQualityInformation;
-  RaveObjectHashTable_t* polarValueAtPositionMapping;
-  RaveProperties_t* properties;
-  RaveObjectHashTable_t* qualityFlagDefinitions;
+  composite_engine_onStarting_fun onStarting; /**< Called just before the compositing loop is started. I.e. after basic setup like creating quality flags, object bindings ... */
+  composite_engine_onFinished_fun onFinished; /**< Called just after the compositing loop has finished. */
+  composite_engine_getLonLat_fun getLonLat;   /**< Calculates the lon/lat from the x/y surface coordinate */
+  composite_engine_selectRadarData_fun selectRadarData; /**< From the lon/lat the wanted radar data is returned */
+  composite_engine_getPolarValueAtPosition_fun getPolarValueAtPosition; /**< gets a polar value at specified position */
+  composite_engine_setRadarData_fun setRadarData; /**< sets the radar data in the composite */
+  composite_engine_addQualityFlagsToCartesian_fun addQualityFlagsToCartesian; /**< adds quality flags to the cartesian product */
+  composite_engine_getQualityValue_fun getQualityValue; /**< returns the quality value at specified location */
+  composite_engine_fillQualityInformation_fun fillQualityInformation; /**< fills the quality fields */
+  RaveObjectHashTable_t* polarValueAtPositionMapping; /**< a mapping between requested quantity and a call for getPolarValueAtPosition */
+  RaveProperties_t* properties; /**< properties that is required to setup the factory and engine */
+  RaveObjectHashTable_t* qualityFlagDefinitions; /**< the quality flag definitions */
 };
 
 static CompositeQualityFlagSettings_t COMPOSITE_ENGINE_QUALITY_FLAG_DEFINITIONS[] = {

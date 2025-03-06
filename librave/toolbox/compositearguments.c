@@ -74,11 +74,17 @@ static const char* RAVE_COMPOSITE_PRODUCT_STRINGS[] =
   /*UNDEFINED*/
 };
 
+/**
+ * Mapping between a product string and the \ref Rave_ProductType which is a mapping to ODIM.
+ */
 typedef struct ProductTypeMapping_t {
-  const char* productString;
-  Rave_ProductType productType;
+  const char* productString; /**< the product string used by the factories */
+  Rave_ProductType productType; /**< the product type used when writing ODIM files */
 } ProductTypeMapping_t;
 
+/**
+ * The mapping between composite product strings and the \ref Rave_ProductType
+ */
 static ProductTypeMapping_t PRODUCT_TYPE_MAPPING[] = {
   {"PPI", Rave_ProductType_PPI},
   {"CAPPI", Rave_ProductType_CAPPI},
@@ -113,6 +119,11 @@ typedef struct CompositeArgumentObjectEntry_t {
   int radarIndexValue; /**< the mapped index */
 } CompositeArgumentObjectEntry_t;
 
+/**
+ * Constructor for the entry
+ * @param[in] obj - the allocated object
+ * @return 1 if success, otherwise 0
+ */
 static int CompositeArgumentObjectEntry_constructor(RaveCoreObject* obj)
 {
   CompositeArgumentObjectEntry_t* this = (CompositeArgumentObjectEntry_t*)obj;
@@ -120,6 +131,13 @@ static int CompositeArgumentObjectEntry_constructor(RaveCoreObject* obj)
   this->radarIndexValue = 0;
   return 1;
 }
+
+/**
+ * Constructor for the entry
+ * @param[in] obj - the allocated object
+ * @param[in] srcobj - the object to clone
+ * @return 1 if success, otherwise 0
+ */
 static int CompositeArgumentObjectEntry_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj)
 {
   CompositeArgumentObjectEntry_t* this = (CompositeArgumentObjectEntry_t*)obj;
@@ -137,12 +155,19 @@ fail:
   RAVE_OBJECT_RELEASE(this->object);
   return 0;
 }
+
+/**
+ * Destructor
+ */
 static void CompositeArgumentObjectEntry_destructor(RaveCoreObject* obj)
 {
   CompositeArgumentObjectEntry_t* this = (CompositeArgumentObjectEntry_t*)obj;
   RAVE_OBJECT_RELEASE(this->object);
 }
 
+/**
+ * A composite argument object entry that that keeps track of added objects.
+ */
 RaveCoreObjectType CompositeArgumentObjectEntry_TYPE = {
     "CompositeArgumentObjectEntry",
     sizeof(CompositeArgumentObjectEntry_t),

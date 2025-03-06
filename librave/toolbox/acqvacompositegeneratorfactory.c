@@ -47,11 +47,14 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_io.h"
 
 
+/**
+ * The Acqva Composite Generator Factory
+ */
 typedef struct _AcqvaCompositeGeneratorFactory_t {
   RAVE_OBJECT_HEAD /**< Always on top */
   COMPOSITE_GENERATOR_FACTORY_HEAD /**< composite generator plugin specifics */
   CompositeEngine_t* engine; /**<the engine */
-  CompositeEngineOvershootingQcHandler_t* overshooting;
+  CompositeEngineOvershootingQcHandler_t* overshooting; /**< the QC handler used for POO/Overshooting */
 } AcqvaCompositeGeneratorFactory_t;
 /*@{ Private functions */
 
@@ -206,11 +209,17 @@ static void AcqvaCompositeGeneratorFactory_destructor(RaveCoreObject* obj)
   RAVE_OBJECT_RELEASE(this->overshooting);
 }
 
-PolarVolume_t* AcqvaCompositeGeneratorFactoryInternal_loadCluttermap(const char* cluttermap_dir, OdimSource_t* source)
+/**
+ * Loads the clutter map associated with the odim source
+ * @param[in] cluttermap_dir - the directory where the cluttermap files can be found
+ * @param[in] source - the source for which we want to load the cluttermap
+ * @return the cluttermap as a \ref PolarVolume_t if possible, otherwise NULL
+ */
+static PolarVolume_t* AcqvaCompositeGeneratorFactoryInternal_loadCluttermap(const char* cluttermap_dir, OdimSource_t* source)
 {
   RaveIO_t* rio = NULL;
   PolarVolume_t* result = NULL;
-  if (OdimSource_getNod(source) != NULL) {
+  if (source != NULL && OdimSource_getNod(source) != NULL) {
     char buff[512];
     snprintf(buff, 512, "%s/%s.h5", cluttermap_dir, OdimSource_getNod(source));
     rio = RaveIO_open(buff, 0, NULL);
@@ -230,6 +239,14 @@ fail:
   return result;
 }
 
+/**
+ * Updates all polar objects in the binding with the associated clutter map.
+ * @param[in] self - self
+ * @param[in] properties - the rave properties
+ * @param[in] bindings - an array of bindings between polar objects, projections and other misc information
+ * @parma[in] nbindings - length of array
+ * @return 1 on success otherwise 0
+ */
 static int AcqvaCompositeGeneratorFactoryInternal_updateWithCluttermaps(AcqvaCompositeGeneratorFactory_t* self, RaveProperties_t* properties, CompositeEngineObjectBinding_t* bindings, int nbindings)
 {
   int i = 0;
@@ -311,6 +328,16 @@ static int AcqvaCompositeGeneratorFactoryInternal_updateWithCluttermaps(AcqvaCom
   return 1;
 }
 
+/**
+ * Called before actual compositing starts. Will update all polar objects in the bindings with the associated cluttermaps.
+ * will also enable the possibility to create RATE products and product overshooting fields.
+ * @param[in] engine - the engine calling this function
+ * @param[in] extradata - the caller (this instance)
+ * @param[in] arguments - the arguments
+ * @param[in] bindings - the bindings
+ * @param[in] nbindings - number of bindings
+ * @return 1 on success otherwise 0
+ */
 static int AcqvaCompositeGeneratorFactory_onStarting(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* bindings, int nbindings)
 {
   AcqvaCompositeGeneratorFactory_t* self = (AcqvaCompositeGeneratorFactory_t*)extradata;
@@ -335,6 +362,15 @@ fail:
   return result;
 }
 
+/**
+ * Cleanup, will remove all acqva cluttermaps that was added in onStarting.
+ * @param[in] engine - the engine calling this function
+ * @param[in] extradata - the caller (this instance)
+ * @param[in] arguments - the arguments
+ * @param[in] bindings - the bindings
+ * @param[in] nbindings - number of bindings
+ * @return 1 on success otherwise 0
+ */
 static int AcqvaCompositeGeneratorFactory_onFinished(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* bindings, int nbindings)
 {
   //AcqvaCompositeGeneratorFactory_t* self = (AcqvaCompositeGeneratorFactory_t*)extradata;
@@ -460,6 +496,18 @@ static int AcqvaCompositeGeneratorFactoryInternal_selectRadarData(CompositeEngin
   return 1;
 }
 
+/**
+ * Returns the quality value from the overshooting quantity field
+ * @param[in] engine - the engine calling this function
+ * @param[in] extradata - the caller (this instance)
+ * @param[in] args - the arguments
+ * @param[in] obj - the polar object from which the data should be gotten
+ * @param[in] quantity - the quantity affected
+ * @param[in] qfieldname - name of the quality field
+ * @param[in] navinfo - the navigation infor required to get the value
+ * @param[out] v - the gotten value
+ * @return 1 on success otherwise 0
+ */
 static int AcqvaCompositeGeneratorFactory_getQualityValue(CompositeEngine_t* self, void* extradata, CompositeArguments_t* args, RaveCoreObject* obj, const char* quantity, const char* qfieldname, PolarNavigationInfo* navinfo, double* v)
 {
   int result = 0;

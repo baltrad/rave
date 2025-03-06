@@ -29,6 +29,9 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_types.h"
 #include <stdarg.h>
 
+/**
+ * Types of values a rave attribute can have
+ */
 typedef enum RaveAttribute_Format {
   RaveAttribute_Format_Undefined = -1, /**< Undefined */
   RaveAttribute_Format_String = 0,     /**< String */
@@ -114,7 +117,6 @@ int RaveAttribute_setDoubleArray(RaveAttribute_t* attr, double* value, int len);
  * Sets the attribute with the array from the provided data with the specified type and converts it into an
  * appropriate array type.
  * @param[in] attr - self
- * @param[in] name - the name of the attribute
  * @param[in] value - the data
  * @param[in] len - the number of items in the array
  * @param[in] type - the data type
@@ -174,7 +176,7 @@ int RaveAttribute_shiftArray(RaveAttribute_t* attr, int nx);
 
 /**
  * Helper function for extracting the group and name part from a
- * string with the format <group>/<name>.
+ * string with the format &lt;group&gt;/&lt;name&gt;.
  * @param[in] attrname - the string that should get group and name extracted
  * @param[out] group   - the group name (allocated memory so free it)
  * @param[out] name    - the attr name (allocated memory so free it)
@@ -268,8 +270,7 @@ RaveAttribute_t* RaveAttributeHelp_createArrayFromData(const char* name, void* v
  * Creates a string from the provided varargs expression.
  * @param[in] name - the name of the attribute
  * @param[in] fmt  - the varargs string format
- * @param[in] len - the number of items in the array
- * @param[in] type - the data type
+ * @param[in] ... - the varargs
  * @return a rave attribute on success otherwise NULL
  */
 RaveAttribute_t* RaveAttributeHelp_createStringFmt(const char* name, const char* fmt, ...);

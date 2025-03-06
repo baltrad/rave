@@ -30,7 +30,9 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include <math.h>
 #include <stdio.h>
 
-
+/**
+ * Speed of light in meters / second
+ */
 #define SPEED_OF_LIGHT 299792458  /* m/s */
 
 /**
@@ -78,6 +80,12 @@ static void RaveAttributeTable_destructor(RaveCoreObject* obj)
   RAVE_OBJECT_RELEASE(attr->attributes);
 }
 
+/**
+ * Returns the attribute with specified name.
+ * @param[in] self - self
+ * @param[in] attrname - the attribute to return
+ * @return the rave attribute if found, otherwise NULL
+ */
 RaveAttribute_t* RaveAttributeTableInternal_getAttribute(RaveAttributeTable_t* self, const char* attrname)
 {
   RAVE_ASSERT((self != NULL), "self == NULL");

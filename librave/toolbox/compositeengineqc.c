@@ -44,14 +44,29 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 
 /*@{ Probability of overshooting quality control functions  */
 
+/**
+ * Overshooting quality field gain
+ */
 #define HOWTASK_POO_GAIN (1.0/UCHAR_MAX)
 
-#define HOWTASK_POO_OFFSET 0.0
+/**
+ * Overshooting quality field offset
+ */
+ #define HOWTASK_POO_OFFSET 0.0
 
+/**
+ * Overshooting quality data type
+ */
 #define HOWTASK_POO_DATATYPE RaveDataType_UCHAR
 
+/**
+ * Overshooting quality field how/task name
+ */
 #define HOWTASK_POO_NAME "se.smhi.detector.poo"
 
+/**
+ * The QC overshooting handler when generating poo fields.
+ */
 typedef struct _CompositeEngineOvershootingQcHandler_t {
   RAVE_OBJECT_HEAD /**< Always on top */
   COMPOSITE_ENGINE_QC_HANDLER_HEAD /**< the qc handler head */

@@ -45,6 +45,10 @@ typedef struct _CompositeArguments_t CompositeArguments_t;
  */
 extern RaveCoreObjectType CompositeArguments_TYPE;
 
+/**
+ * The predefined types of composites that Rave is aware of but not necessarily support.
+ * Should be extended whenever there is need for a new compositing method.
+ */
 typedef enum Rave_CompositingProduct {
   Rave_CompositingProduct_PPI,    /**< PPI */
   Rave_CompositingProduct_CAPPI,  /**< CAPPI */
@@ -60,15 +64,15 @@ typedef enum Rave_CompositingProduct {
 
 /**
  * Converts a method into a string.
- * @param[in] method - the \ref Rave_CompositingMethod
- * @returns a const char defining the string
+ * @param[in] product - the \ref Rave_CompositingProduct
+ * @returns a const char defining the product
  */
 const char* CompositeArguments_productToString(Rave_CompositingProduct product);
 
 /**
  * Converts a string into a product.
- * @param[in] method - the string
- * @returns the \ref Rave_CompositingMethod or Rave_CompositingMethod_UNDEFINED if not possible to translate
+ * @param[in] product - the string
+ * @returns the \ref Rave_CompositingProduct or Rave_CompositingProduct_UNDEFINED if not possible to translate
  */
 Rave_CompositingProduct CompositeArguments_stringToProduct(const char* product);
 
@@ -193,7 +197,7 @@ double CompositeArguments_getElevationAngle(CompositeArguments_t* args);
  * this range, the PCAPPI value is used instead.
  *
  * @param[in] args - self
- * @param[in] angle - the range in meters
+ * @param[in] range - the range in meters
  */
 void CompositeArguments_setRange(CompositeArguments_t* args, double range);
 
@@ -288,14 +292,14 @@ int CompositeArguments_getParameter(CompositeArguments_t* args, const char* para
 
 /**
  * Returns the number of parameters to be processed
- * @param[in] composite - self
+ * @param[in] args - self
  * @return the number of parameters
  */
 int CompositeArguments_getParameterCount(CompositeArguments_t* args);
 
 /**
  * Returns the parameter at specified index
- * @param[in] composite - self
+ * @param[in] args - self
  * @param[in] index - the index
  * @param[out] gain - the gain to be used for the parameter (MAY BE NULL)
  * @param[out] offset - the offset to be used for the parameter (MAY BE NULL)
@@ -308,7 +312,7 @@ const char* CompositeArguments_getParameterAtIndex(CompositeArguments_t* args, i
 
 /**
  * Returns the parameter name at specified index.
- * @param[in] composite - self
+ * @param[in] args - self
  * @param[in] index - the index
  * @return the parameter name if found, NULL otherwise
  */
@@ -385,7 +389,7 @@ int CompositeArguments_addQualityFlag(CompositeArguments_t* args, const char* fl
  */
 int CompositeArguments_setQualityFlags(CompositeArguments_t* args, const char* flags[], int nrflags);
 
-/*
+/**
  * Removes the quality flag with provided name
  * @param[in] args - self
  * @param[in] flag - the quality flag that should be removed
@@ -393,7 +397,7 @@ int CompositeArguments_setQualityFlags(CompositeArguments_t* args, const char* f
  */
 int CompositeArguments_removeQualityFlag(CompositeArguments_t* args, const char* flag);
 
-/*
+/**
  * Removes the quality flag at specified index
  * @param[in] args - self
  * @param[in] index - the index
