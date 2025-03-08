@@ -260,6 +260,7 @@ class compositing(object):
     
     # START OF COMPOSITING PART
     if self.use_legacy_compositing:
+      logger.info("Using legacy compositing")          
       generator = _pycomposite.new()
       generator.addParameter(self.quantity, self.gain, self.offset, self.minvalue)
       if algorithm is not None:
@@ -309,7 +310,8 @@ class compositing(object):
       ##
       # This is the new composite handling where factories and filters are used to determine
       # how a composite should be generated
-      ##    
+      ##
+      logger.info("Using composite generator factories")    
       cgenerator = compositegenerator.Generator()
 
       arguments = cgenerator.create_arguments()
