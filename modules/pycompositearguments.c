@@ -321,7 +321,7 @@ static PyObject* _pycompositearguments_addParameter(PyCompositeArguments* self, 
   double gain = 1.0, offset = 0.0;
   RaveDataType datatype = RaveDataType_UCHAR;
   double nodata = 255.0, undetect = 0.0;
-  if (!PyArg_ParseTuple(args, "sdd|ddd", &quantity, &gain, &offset, &datatype, &nodata, &undetect)) {
+  if (!PyArg_ParseTuple(args, "sdd|idd", &quantity, &gain, &offset, &datatype, &nodata, &undetect)) {
     return NULL;
   }
   if (!CompositeArguments_addParameter(self->args, quantity, gain, offset, datatype, nodata, undetect)) {

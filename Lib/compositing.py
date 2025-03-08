@@ -56,7 +56,7 @@ import compositegenerator
 
 from rave_quality_plugin import QUALITY_CONTROL_MODE_ANALYZE, QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY   
 
-from rave_defines import CENTER_ID, GAIN, OFFSET
+from rave_defines import CENTER_ID, GAIN, OFFSET, FACTORY_GAIN_OFFSET_TABLE
 from rave_defines import DEFAULTA, DEFAULTB, DEFAULTC
 
 logger = rave_pgf_logger.create_logger()
@@ -323,7 +323,13 @@ class compositing(object):
       arguments.area = pyarea
       arguments.date=o.date if dd is None else dd 
       arguments.time=o.time if dt is None else dt
-      arguments.addParameter(self.quantity, self.gain, self.offset)
+
+      if self.quantity in FACTORY_GAIN_OFFSET_TABLE:
+        paramcfg = FACTORY_GAIN_OFFSET_TABLE[self.quantity]
+        arguments.addParameter(self.quantity, paramcfg[0], paramcfg[1], paramcfg[2], paramcfg[3], paramcfg[4])
+      else:
+        arguments.addParameter(self.quantity, self.gain, self.offset)
+
       arguments.product = self.prodstr.upper()
       arguments.addArgument("selection_method", self._selection_method_repr())
       arguments.strategy = self.strategy
