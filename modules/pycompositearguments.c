@@ -533,6 +533,14 @@ static PyObject* _pycompositearguments_setQualityFlags(PyCompositeArguments* sel
       raiseException_gotoTag(done, PyExc_RuntimeError, "Could not set quality flags");
     }
   }
+  if (flags != NULL) {
+    for (i = 0; i < nnames; i++) {
+      if (flags[i] != NULL) {
+        RAVE_FREE(flags[i]);
+      }
+    }
+    RAVE_FREE(flags);
+  }
   Py_RETURN_NONE;
 done:
   if (flags != NULL) {
