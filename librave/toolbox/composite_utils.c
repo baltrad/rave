@@ -24,6 +24,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "composite_utils.h"
 #include "cartesian.h"
+#include "cartesianparam.h"
 #include "cartesianvolume.h"
 #include "compositearguments.h"
 #include "projection_pipeline.h"
@@ -244,8 +245,8 @@ Cartesian_t* CompositeUtils_createCartesianFromArguments(CompositeArguments_t* a
     if (cp == NULL) {
       goto done;
     }
-    CartesianParam_setNodata(cp, 255.0);
-    CartesianParam_setUndetect(cp, 0.0);
+    CartesianParam_setNodata(cp, nodata);
+    CartesianParam_setUndetect(cp, undetect);
     CartesianParam_setGain(cp, gain);
     CartesianParam_setOffset(cp, offset);
     RAVE_OBJECT_RELEASE(cp);

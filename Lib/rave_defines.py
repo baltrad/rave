@@ -78,7 +78,7 @@ OFFSET = -30.0
 
 FACTORY_GAIN_OFFSET_TABLE = {
     "DBZH":(GAIN, OFFSET, _rave.RaveDataType_UCHAR, 255.0, 0.0),
-    "RATE":(0.0, 1.0, _rave.RaveDataType_DOUBLE, -1.0, 0.0)
+    "RATE":(1.0, 0.0, _rave.RaveDataType_DOUBLE, -1.0, 0.0)
 }
 
 # Default Z-R coefficients, legacy from BALTEX Working Group on Radar
