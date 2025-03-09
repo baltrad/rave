@@ -36,7 +36,7 @@ import _raveproperties
 import string
 import math, numpy
 
-class PyAcqvaCompositeGeneratorFactoryTest(unittest.TestCase):
+class PyAcqvaCompositeGeneratorFactoryITest(unittest.TestCase):
   def setUp(self):
     pass
 
@@ -59,41 +59,33 @@ class PyAcqvaCompositeGeneratorFactoryTest(unittest.TestCase):
     
     return area
 
-  def test_new(self):
-    obj = _acqvacompositegeneratorfactory.new()
-    iscorrect = str(type(obj)).find("CompositeGeneratorFactoryCore")
-    self.assertNotEqual(-1, iscorrect)
-
-  def test_getName(self):
-    obj = _acqvacompositegeneratorfactory.new()
-    self.assertEqual("AcqvaCompositeGenerator", obj.getName())
-
-  def test_getDefaultId(self):
-    obj = _acqvacompositegeneratorfactory.new()
-    self.assertEqual("acqva", obj.getDefaultId())
-
-  def test_canHandle_products(self):
+  def test_generate(self):
     classUnderTest = _acqvacompositegeneratorfactory.new()
     args = _compositearguments.new()
-    args.product = "ACQVA"
-    self.assertEqual(True, classUnderTest.canHandle(args))
+    args.area = self.create_area("eua_gmaps")
+    args.product = "PPI"
+    args.time = "120000"
+    args.date = "20090501"
+    args.addParameter("DBZH", 0.1, -30.0)
 
-    for product in ["PPI", "PCAPPI", "CAPPI", "SCAN", "ETOP"]:
-      args = _compositearguments.new()
-      args.product = product
-      self.assertEqual(False, classUnderTest.canHandle(args))
+    seang = _raveio.open("fixtures/pvol_seang_20090501T120000Z.h5").object
+    searl = _raveio.open("fixtures/pvol_searl_20090501T120000Z.h5").object
 
-  def test_create(self):
-    classUnderTest = _acqvacompositegeneratorfactory.new()
-    obj = classUnderTest.create()
-    self.assertEqual("AcqvaCompositeGenerator", obj.getName())
-    self.assertTrue(classUnderTest != obj)
+    for v in [seang, searl]:
+      for i in range(v.getNumberOfScans()):
+        scan = v.getScan(i)
+        qdata = numpy.ones(scan.getParameter("DBZH").getData().shape, 'b')
+        qfield = _ravefield.new()
+        qfield.setData(qdata)
+        qfield.addAttribute("how/task", "se.smhi.acqva")
+        scan.addQualityField(qfield)
+      args.addObject(v)
 
-  def test_properties(self):
-    classUnderTest = _acqvacompositegeneratorfactory.new()
-    props = _raveproperties.new()
-    props.set("t.1", "YES")
-    classUnderTest.setProperties(props)
-    self.assertEqual("YES", classUnderTest.getProperties().get("t.1"))
-    classUnderTest.setProperties(None)
-    self.assertEqual(None, classUnderTest.getProperties())
+    args.addQualityFlag("se.smhi.composite.distance.radar")
+
+    result = classUnderTest.generate(args);
+    rio = _raveio.new()
+    rio.object = result
+    rio.save("acqva_factory_test.h5")
+
+

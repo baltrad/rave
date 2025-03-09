@@ -1,5 +1,5 @@
 '''
-Copyright (C) 2024 Swedish Meteorological and Hydrological Institute, SMHI,
+Copyright (C) 2025 Swedish Meteorological and Hydrological Institute, SMHI,
 
 This file is part of RAVE.
 
@@ -17,12 +17,12 @@ You should have received a copy of the GNU Lesser General Public License
 along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ------------------------------------------------------------------------*/
 
-Integration tests for the legacy composite generatory factory to verify that it generates composites
+Integration tests for the nearest composite generatory factory to verify that it generates composites
 properly.
 
 @file
 @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
-@date 2025-01-25
+@date 2025-03-09
 '''
 import unittest
 import os
@@ -32,13 +32,13 @@ import _area
 import _projection
 import _polarscan
 import _polarvolume
-import _legacycompositegeneratorfactory
+import _nearestcompositegeneratorfactory
 import _raveio
 import _rave
 import string
 import math
 
-class PyLegacyCompositeGeneratorFactoryITest(unittest.TestCase):
+class PyNearestCompositeGeneratorFactoryITest(unittest.TestCase):
   SWEDISH_VOLUMES = ["fixtures/pvol_seang_20090501T120000Z.h5",
                      "fixtures/pvol_searl_20090501T120000Z.h5",
                      "fixtures/pvol_sease_20090501T120000Z.h5",
@@ -52,7 +52,7 @@ class PyLegacyCompositeGeneratorFactoryITest(unittest.TestCase):
                      "fixtures/pvol_sevar_20090501T120000Z.h5",
                      "fixtures/pvol_sevil_20090501T120000Z.h5"]  
 
-  TEMPORARY_FILE="legacy_composite_generator_itest.h5"
+  TEMPORARY_FILE="nearest_composite_generator_itest.h5"
 
   def setUp(self):
     try:
@@ -93,7 +93,7 @@ class PyLegacyCompositeGeneratorFactoryITest(unittest.TestCase):
     return area
 
   def test_generate_ppi(self):
-    obj = _legacycompositegeneratorfactory.new()
+    obj = _nearestcompositegeneratorfactory.new()
 
     args = _compositearguments.new()
     for fname in self.SWEDISH_VOLUMES:
@@ -120,17 +120,17 @@ class PyLegacyCompositeGeneratorFactoryITest(unittest.TestCase):
 
     ios = _raveio.new()
     ios.object = result
-    ios.filename = "legacy_swecomposite_ppi.h5"
+    ios.filename = "nearest_swecomposite_ppi.h5"
     ios.save()
 
   def test_generate_ppi_with_all_param_settings(self):
-    obj = _legacycompositegeneratorfactory.new()
+    obj = _nearestcompositegeneratorfactory.new()
 
     args = _compositearguments.new()
     for fname in self.SWEDISH_VOLUMES:
       rio = _raveio.open(fname)
       args.addObject(rio.object)
-    args.addParameter("DBZH", 1.0, 0.0, _rave.RaveDataType_DOUBLE, 255.0, 0.0)  # Legacy only supports UCHAR so DOUBLE will be UCHAR when verifying
+    args.addParameter("DBZH", 1.0, 0.0, _rave.RaveDataType_DOUBLE, 255.0, 0.0)
     args.product = "PPI"
     args.elangle = 0.0
     args.time = "120000"
@@ -153,11 +153,37 @@ class PyLegacyCompositeGeneratorFactoryITest(unittest.TestCase):
     self.assertAlmostEqual(0.0, param.offset, 4)
     self.assertAlmostEqual(255.0, param.nodata, 4)
     self.assertAlmostEqual(0.0, param.undetect, 4)
-    self.assertEqual(_rave.RaveDataType_UCHAR, param.datatype)
+    self.assertEqual(_rave.RaveDataType_DOUBLE, param.datatype)
 
+  def test_generate_ppi_RATE(self):
+    obj = _nearestcompositegeneratorfactory.new()
+
+    args = _compositearguments.new()
+    for fname in self.SWEDISH_VOLUMES:
+      rio = _raveio.open(fname)
+      args.addObject(rio.object)
+    args.addParameter("RATE", 1.0, 0.0, _rave.RaveDataType_DOUBLE, 255.0, 0.0)
+    args.product = "PPI"
+    args.elangle = 0.0
+    args.time = "120000"
+    args.date = "20090501"
+    args.area = self.create_area("nrd2km")
+
+    # arguments are usualy method specific in some way
+    args.addArgument("selection_method", "HEIGHT_ABOVE_SEALEVEL")
+    args.addArgument("interpolation_method", "NEAREST")
+
+    result = obj.generate(args)
+
+    self.assertEqual(True, result.hasParameter("RATE"))
+    param = result.getParameter("RATE")
+    self.assertEqual(_rave.Rave_ProductType_PPI, result.product)
+    self.assertAlmostEqual(0.0, result.getAttribute("what/prodpar"), 4)
+    self.assertEqual("120000", result.time)
+    self.assertEqual("20090501", result.date)
 
   def test_generate_pcappi(self):
-    obj = _legacycompositegeneratorfactory.new()
+    obj = _nearestcompositegeneratorfactory.new()
 
     args = _compositearguments.new()
     for fname in self.SWEDISH_VOLUMES:
@@ -185,6 +211,6 @@ class PyLegacyCompositeGeneratorFactoryITest(unittest.TestCase):
 
     ios = _raveio.new()
     ios.object = result
-    ios.filename = "legacy_swecomposite_pcappi.h5"
+    ios.filename = "nearest_swecomposite_pcappi.h5"
     ios.save()
 

@@ -27,11 +27,13 @@ import unittest
 
 import _rave
 
+from MeanTest import *
 from RaveTestSuite import *
 from PyCompositeTest import *
 from PyCartesianCompositeTest import *
 from PyLegacyCompositeGeneratorFactoryITest import *
-from MeanTest import *
+from PyNearestCompositeGeneratorFactoryITest import *
+from PyAcqvaCompositeGeneratorFactoryITest import *
 
 if __name__ == '__main__':
   unittest.main()

@@ -30,6 +30,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "projection_pipeline.h"
 #include "rave_debug.h"
 #include "rave_alloc.h"
+#include "rave_object.h"
 #include "rave_types.h"
 #include "polarvolume.h"
 #include "polarscan.h"
@@ -200,6 +201,8 @@ Cartesian_t* CompositeUtils_createCartesianFromArguments(CompositeArguments_t* a
 {
   Area_t* area = NULL;
   Cartesian_t *cartesian = NULL, *result = NULL;
+  RaveAttribute_t* prodpar = NULL;
+
   int nparam = 0, i = 0;
 
   if (arguments == NULL) {
@@ -218,7 +221,24 @@ Cartesian_t* CompositeUtils_createCartesianFromArguments(CompositeArguments_t* a
   if (cartesian == NULL) {
     goto done;
   }
+
   Cartesian_init(cartesian, area);
+
+  Rave_CompositingProduct cproduct = CompositeArguments_getCompositingProduct(arguments);
+  if (cproduct == Rave_CompositingProduct_CAPPI || cproduct == Rave_CompositingProduct_PCAPPI) {
+    prodpar = RaveAttributeHelp_createDouble("what/prodpar", CompositeArguments_getHeight(arguments));
+  } else if (cproduct == Rave_CompositingProduct_PMAX) {
+    char s[256];
+    snprintf(s, 256, "%f,%f",CompositeArguments_getHeight(arguments),CompositeArguments_getRange(arguments));
+    prodpar = RaveAttributeHelp_createString("what/prodpar", s);
+  } else {
+    prodpar = RaveAttributeHelp_createDouble("what/prodpar", CompositeArguments_getElevationAngle(arguments) * 180.0/M_PI);
+  }
+
+  if (!Cartesian_addAttribute(cartesian, prodpar)) {
+    goto done;
+  }
+
   Cartesian_setObjectType(cartesian, Rave_ObjectType_COMP);
   Cartesian_setProduct(cartesian, CompositeArguments_getProductType(arguments));
 
@@ -256,6 +276,7 @@ Cartesian_t* CompositeUtils_createCartesianFromArguments(CompositeArguments_t* a
 done:
   RAVE_OBJECT_RELEASE(cartesian);
   RAVE_OBJECT_RELEASE(area);
+  RAVE_OBJECT_RELEASE(prodpar);
   return result;
 }
 
