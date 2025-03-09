@@ -271,6 +271,9 @@ Functions</h2></td></tr>
 <tr class="memitem:aba5ed638d22c3f8e6cb29fc232acd672" id="r_aba5ed638d22c3f8e6cb29fc232acd672"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aba5ed638d22c3f8e6cb29fc232acd672">PolarScan_removeQualityField</a> (<a class="el" href="#ab18af0ebcfc65c3148c7e8bee5455c57">PolarScan_t</a> *scan, int index)</td></tr>
 <tr class="memdesc:aba5ed638d22c3f8e6cb29fc232acd672"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes the quality field at the specified location.  <br /></td></tr>
 <tr class="separator:aba5ed638d22c3f8e6cb29fc232acd672"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a61ac840cac3981d847c2fc0495b71b0d" id="r_a61ac840cac3981d847c2fc0495b71b0d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a61ac840cac3981d847c2fc0495b71b0d">PolarScan_removeQualityFieldByHowTask</a> (<a class="el" href="#ab18af0ebcfc65c3148c7e8bee5455c57">PolarScan_t</a> *scan, const char *qname)</td></tr>
+<tr class="memdesc:a61ac840cac3981d847c2fc0495b71b0d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes the quality field with the specified how/task value.  <br /></td></tr>
+<tr class="separator:a61ac840cac3981d847c2fc0495b71b0d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adcf725d689617b58090f8e003ff5cdf9" id="r_adcf725d689617b58090f8e003ff5cdf9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="raveobject__list_8h.html#abdac48af2ac58989ba91c33c2a1c79d0">RaveObjectList_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#adcf725d689617b58090f8e003ff5cdf9">PolarScan_getQualityFields</a> (<a class="el" href="#ab18af0ebcfc65c3148c7e8bee5455c57">PolarScan_t</a> *scan)</td></tr>
 <tr class="memdesc:adcf725d689617b58090f8e003ff5cdf9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns all quality fields belonging to this scan.  <br /></td></tr>
 <tr class="separator:adcf725d689617b58090f8e003ff5cdf9"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -3321,6 +3324,36 @@ Variables</h2></td></tr>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">scan</td><td>- self </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">index</td><td>- the index </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a61ac840cac3981d847c2fc0495b71b0d" name="a61ac840cac3981d847c2fc0495b71b0d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a61ac840cac3981d847c2fc0495b71b0d">&#9670;&#160;</a></span>PolarScan_removeQualityFieldByHowTask()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void PolarScan_removeQualityFieldByHowTask </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="#ab18af0ebcfc65c3148c7e8bee5455c57">PolarScan_t</a> *</td>          <td class="paramname"><span class="paramname"><em>scan</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>qname</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Removes the quality field with the specified how/task value. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">scan</td><td>- self </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">qname</td><td>- the quality field name. </td></tr>
   </table>
   </dd>
 </dl>

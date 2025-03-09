@@ -92,6 +92,7 @@ Classes</h2></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Represents the cartesian product.  <a href="struct__Acqva__t.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAcqvaCompositeRadarItem.html">AcqvaCompositeRadarItem</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Keeps track of what object has what radar index value.  <a href="structAcqvaCompositeRadarItem.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAcqvaCompositingParameter__t.html">AcqvaCompositingParameter_t</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Structure for keeping track on parameters that should be composited.  <a href="structAcqvaCompositingParameter__t.html#details">More...</a><br /></td></tr>
@@ -123,8 +124,8 @@ Macros</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="typedef-members" name="typedef-members"></a>
 Typedefs</h2></td></tr>
-<tr class="memitem:aa6adde9b348f52e26fa99689c2e1e592" id="r_aa6adde9b348f52e26fa99689c2e1e592"><td class="memItemLeft" align="right" valign="top"><a id="aa6adde9b348f52e26fa99689c2e1e592" name="aa6adde9b348f52e26fa99689c2e1e592"></a>
-typedef struct <a class="el" href="structAcqvaCompositeRadarItem.html">AcqvaCompositeRadarItem</a>&#160;</td><td class="memItemRight" valign="bottom"><b>AcqvaCompositeRadarItem_t</b></td></tr>
+<tr class="memitem:aa6adde9b348f52e26fa99689c2e1e592" id="r_aa6adde9b348f52e26fa99689c2e1e592"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structAcqvaCompositeRadarItem.html">AcqvaCompositeRadarItem</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa6adde9b348f52e26fa99689c2e1e592">AcqvaCompositeRadarItem_t</a></td></tr>
+<tr class="memdesc:aa6adde9b348f52e26fa99689c2e1e592"><td class="mdescLeft">&#160;</td><td class="mdescRight">Keeps track of what object has what radar index value.  <br /></td></tr>
 <tr class="separator:aa6adde9b348f52e26fa99689c2e1e592"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a60ce89a4d02a57e41eb2d6fad4a2f03f" id="r_a60ce89a4d02a57e41eb2d6fad4a2f03f"><td class="memItemLeft" align="right" valign="top">typedef struct AcqvaCompositingParameter_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a60ce89a4d02a57e41eb2d6fad4a2f03f">AcqvaCompositingParameter_t</a></td></tr>
 <tr class="memdesc:a60ce89a4d02a57e41eb2d6fad4a2f03f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Structure for keeping track on parameters that should be composited.  <br /></td></tr>
@@ -192,6 +193,7 @@ Variables</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Provides functionality for creating composites according to the acqva method. </p>
+<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000001">Deprecated</a></b></dt><dd></dd></dl>
 <dl class="section author"><dt>Author</dt><dd>Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI) </dd></dl>
 <dl class="section date"><dt>Date</dt><dd>2024-01-17 </dd></dl>
 </div><h2 class="groupheader">Macro Definition Documentation</h2>
@@ -277,6 +279,22 @@ Variables</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Typedef Documentation</h2>
+<a id="aa6adde9b348f52e26fa99689c2e1e592" name="aa6adde9b348f52e26fa99689c2e1e592"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa6adde9b348f52e26fa99689c2e1e592">&#9670;&#160;</a></span>AcqvaCompositeRadarItem_t</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef struct <a class="el" href="structAcqvaCompositeRadarItem.html">AcqvaCompositeRadarItem</a> <a class="el" href="#aa6adde9b348f52e26fa99689c2e1e592">AcqvaCompositeRadarItem_t</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Keeps track of what object has what radar index value. </p>
+
+</div>
+</div>
 <a id="a40237755d2d05198449c76d2cb59960b" name="a40237755d2d05198449c76d2cb59960b"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a40237755d2d05198449c76d2cb59960b">&#9670;&#160;</a></span>AcqvaCompositeValuePosition_t</h2>
 
@@ -791,7 +809,7 @@ Variables</h2></td></tr>
 <div class="line">    Acqva_destructor,</div>
 <div class="line">    Acqva_copyconstructor</div>
 <div class="line">}</div>
-<div class="ttc" id="aacqva_8h_html_a61bb0a2c0c5c69b0deee30b2bddb37ef"><div class="ttname"><a href="acqva_8h.html#a61bb0a2c0c5c69b0deee30b2bddb37ef">Acqva_t</a></div><div class="ttdeci">struct _Acqva_t Acqva_t</div><div class="ttdoc">Defines a Acqva composite generator.</div><div class="ttdef"><b>Definition</b> acqva.h:41</div></div>
+<div class="ttc" id="aacqva_8h_html_a61bb0a2c0c5c69b0deee30b2bddb37ef"><div class="ttname"><a href="acqva_8h.html#a61bb0a2c0c5c69b0deee30b2bddb37ef">Acqva_t</a></div><div class="ttdeci">struct _Acqva_t Acqva_t</div><div class="ttdoc">Defines a Acqva composite generator.</div><div class="ttdef"><b>Definition</b> acqva.h:42</div></div>
 </div><!-- fragment -->
 <p>Type definition to use when creating a rave object. </p>
 

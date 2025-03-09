@@ -76,8 +76,8 @@ $(function(){ initResizable(false); });
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="typedef-members" name="typedef-members"></a>
 Typedefs</h2></td></tr>
-<tr class="memitem:a59499178b9951625d0bbd13c4108d91e" id="r_a59499178b9951625d0bbd13c4108d91e"><td class="memItemLeft" align="right" valign="top"><a id="a59499178b9951625d0bbd13c4108d91e" name="a59499178b9951625d0bbd13c4108d91e"></a>
-typedef enum <a class="el" href="#a2c502883d467a1a5cbb36d4801aa1446">RaveAttribute_Format</a>&#160;</td><td class="memItemRight" valign="bottom"><b>RaveAttribute_Format</b></td></tr>
+<tr class="memitem:a59499178b9951625d0bbd13c4108d91e" id="r_a59499178b9951625d0bbd13c4108d91e"><td class="memItemLeft" align="right" valign="top">typedef enum <a class="el" href="#a2c502883d467a1a5cbb36d4801aa1446">RaveAttribute_Format</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a59499178b9951625d0bbd13c4108d91e">RaveAttribute_Format</a></td></tr>
+<tr class="memdesc:a59499178b9951625d0bbd13c4108d91e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Types of values a rave attribute can have.  <br /></td></tr>
 <tr class="separator:a59499178b9951625d0bbd13c4108d91e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af6c25bb8521123e600ef452e2e2b58dd" id="r_af6c25bb8521123e600ef452e2e2b58dd"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="struct__RaveAttribute__t.html">_RaveAttribute_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af6c25bb8521123e600ef452e2e2b58dd">RaveAttribute_t</a></td></tr>
 <tr class="memdesc:af6c25bb8521123e600ef452e2e2b58dd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Defines a rave attribute.  <br /></td></tr>
@@ -95,6 +95,7 @@ Enumerations</h2></td></tr>
 , <a class="el" href="#a2c502883d467a1a5cbb36d4801aa1446ab0a8fce37fd2b02ef12e0b977e8cb3d9">RaveAttribute_Format_DoubleArray</a> = 4
 <br />
  }</td></tr>
+<tr class="memdesc:a2c502883d467a1a5cbb36d4801aa1446"><td class="mdescLeft">&#160;</td><td class="mdescRight">Types of values a rave attribute can have.  <a href="#a2c502883d467a1a5cbb36d4801aa1446">More...</a><br /></td></tr>
 <tr class="separator:a2c502883d467a1a5cbb36d4801aa1446"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
@@ -190,6 +191,22 @@ Variables</h2></td></tr>
 <dl class="section author"><dt>Author</dt><dd>Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI) </dd></dl>
 <dl class="section date"><dt>Date</dt><dd>2010-06-03 </dd></dl>
 </div><h2 class="groupheader">Typedef Documentation</h2>
+<a id="a59499178b9951625d0bbd13c4108d91e" name="a59499178b9951625d0bbd13c4108d91e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a59499178b9951625d0bbd13c4108d91e">&#9670;&#160;</a></span>RaveAttribute_Format</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef enum <a class="el" href="#a2c502883d467a1a5cbb36d4801aa1446">RaveAttribute_Format</a> <a class="el" href="#a2c502883d467a1a5cbb36d4801aa1446">RaveAttribute_Format</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Types of values a rave attribute can have. </p>
+
+</div>
+</div>
 <a id="af6c25bb8521123e600ef452e2e2b58dd" name="af6c25bb8521123e600ef452e2e2b58dd"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#af6c25bb8521123e600ef452e2e2b58dd">&#9670;&#160;</a></span>RaveAttribute_t</h2>
 
@@ -218,6 +235,8 @@ Variables</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>Types of values a rave attribute can have. </p>
 <table class="fieldtable">
 <tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a2c502883d467a1a5cbb36d4801aa1446a2f53b63d9bfadd61ef44ed2b0decbc97" name="a2c502883d467a1a5cbb36d4801aa1446a2f53b63d9bfadd61ef44ed2b0decbc97"></a>RaveAttribute_Format_Undefined&#160;</td><td class="fielddoc"><p>Undefined. </p>
 </td></tr>
@@ -488,7 +507,6 @@ Variables</h2></td></tr>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">attr</td><td>- self </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>- the name of the attribute </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">value</td><td>- the data </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">len</td><td>- the number of items in the array </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">type</td><td>- the data type </td></tr>
@@ -1021,8 +1039,7 @@ Variables</h2></td></tr>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>- the name of the attribute </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">fmt</td><td>- the varargs string format </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">len</td><td>- the number of items in the array </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">type</td><td>- the data type </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">...</td><td>- the varargs </td></tr>
   </table>
   </dd>
 </dl>

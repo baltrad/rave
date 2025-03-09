@@ -68,6 +68,7 @@ $(function(){ initResizable(false); });
 <div class="textblock"><code>#include &quot;<a class="el" href="rave__attribute_8h_source.html">rave_attribute.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="raveobject__list_8h_source.html">raveobject_list.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="raveobject__hashtable_8h_source.html">raveobject_hashtable.h</a>&quot;</code><br />
+<code>#include &lt;strings.h&gt;</code><br />
 </div>
 <p><a href="rave__utilities_8h_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
@@ -103,9 +104,18 @@ Functions</h2></td></tr>
 <tr class="memitem:a08ce05395291026f83b6305db38efb32" id="r_a08ce05395291026f83b6305db38efb32"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a08ce05395291026f83b6305db38efb32">RaveUtilities_trimText</a> (const char *str, int len)</td></tr>
 <tr class="memdesc:a08ce05395291026f83b6305db38efb32"><td class="mdescLeft">&#160;</td><td class="mdescRight">Trims the text from all leading and trailing whitespaces.  <br /></td></tr>
 <tr class="separator:a08ce05395291026f83b6305db38efb32"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a31169c16570c4f7fbf9d7e3f83e6d180" id="r_a31169c16570c4f7fbf9d7e3f83e6d180"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a31169c16570c4f7fbf9d7e3f83e6d180">RaveUtilities_toLower</a> (const char *str, int len)</td></tr>
+<tr class="memdesc:a31169c16570c4f7fbf9d7e3f83e6d180"><td class="mdescLeft">&#160;</td><td class="mdescRight">Translates a string to lower case.  <br /></td></tr>
+<tr class="separator:a31169c16570c4f7fbf9d7e3f83e6d180"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1375b01191dc78ec4f961a79545ac9f8" id="r_a1375b01191dc78ec4f961a79545ac9f8"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1375b01191dc78ec4f961a79545ac9f8">RaveUtilities_toUpper</a> (const char *str, int len)</td></tr>
+<tr class="memdesc:a1375b01191dc78ec4f961a79545ac9f8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Translates a string to upper case.  <br /></td></tr>
+<tr class="separator:a1375b01191dc78ec4f961a79545ac9f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae6037ba774b305b0424c365603bb2c28" id="r_ae6037ba774b305b0424c365603bb2c28"><td class="memItemLeft" align="right" valign="top"><a class="el" href="rave__list_8h.html#ad2ea2f1cc27c63aa76beb80b6535c3ef">RaveList_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae6037ba774b305b0424c365603bb2c28">RaveUtilities_getTrimmedTokens</a> (const char *str, int c)</td></tr>
 <tr class="memdesc:ae6037ba774b305b0424c365603bb2c28"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a list of tokens delimited by 'c'.  <br /></td></tr>
 <tr class="separator:ae6037ba774b305b0424c365603bb2c28"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7cf5d1a3886a40c382e3592ba006ff67" id="r_a7cf5d1a3886a40c382e3592ba006ff67"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7cf5d1a3886a40c382e3592ba006ff67">RaveUtilities_arrayContains</a> (const char *arr[], const char *str, int casecmp)</td></tr>
+<tr class="memdesc:a7cf5d1a3886a40c382e3592ba006ff67"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if the array arr contains the string str.  <br /></td></tr>
+<tr class="separator:a7cf5d1a3886a40c382e3592ba006ff67"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9a11e22d2c2405fdfc3d82702822f6f7" id="r_a9a11e22d2c2405fdfc3d82702822f6f7"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a9a11e22d2c2405fdfc3d82702822f6f7">RaveUtilities_isXmlSupported</a> (void)</td></tr>
 <tr class="memdesc:a9a11e22d2c2405fdfc3d82702822f6f7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns if xml support is activated or not since expat support is optional and ought to be tested.  <br /></td></tr>
 <tr class="separator:a9a11e22d2c2405fdfc3d82702822f6f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -235,6 +245,42 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>1 on success otherwise 0 </dd></dl>
+
+</div>
+</div>
+<a id="a7cf5d1a3886a40c382e3592ba006ff67" name="a7cf5d1a3886a40c382e3592ba006ff67"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7cf5d1a3886a40c382e3592ba006ff67">&#9670;&#160;</a></span>RaveUtilities_arrayContains()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int RaveUtilities_arrayContains </td>
+          <td>(</td>
+          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>arr</em></span>[], </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>str</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>casecmp</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Checks if the array arr contains the string str. </p>
+<p>It is also possible to specify if string comparison should be done using case or not. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">arr</td><td>- An array that has NULL at last entry </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">str</td><td>- the string to check for </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">casecmp</td><td>- If case should be used or not. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -593,6 +639,68 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>1 on success otherwise 0 </dd></dl>
+
+</div>
+</div>
+<a id="a31169c16570c4f7fbf9d7e3f83e6d180" name="a31169c16570c4f7fbf9d7e3f83e6d180"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a31169c16570c4f7fbf9d7e3f83e6d180">&#9670;&#160;</a></span>RaveUtilities_toLower()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">char * RaveUtilities_toLower </td>
+          <td>(</td>
+          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>str</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>len</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Translates a string to lower case. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">str</td><td>- the string to convert </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">len</td><td>- the length of the string to convert </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>a new string. Remember to free. </dd></dl>
+
+</div>
+</div>
+<a id="a1375b01191dc78ec4f961a79545ac9f8" name="a1375b01191dc78ec4f961a79545ac9f8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1375b01191dc78ec4f961a79545ac9f8">&#9670;&#160;</a></span>RaveUtilities_toUpper()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">char * RaveUtilities_toUpper </td>
+          <td>(</td>
+          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>str</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>len</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Translates a string to upper case. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">str</td><td>- the string to convert </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">len</td><td>- the length of the string to convert </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>a new string. Remember to free. </dd></dl>
 
 </div>
 </div>
