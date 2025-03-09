@@ -58,6 +58,9 @@ struct _Composite_t {
   char* qiFieldName; /**< the Quality Indicator field name to use when determining the radar usage */
 };
 
+/**
+ * Keeps track of polar object and radar index value
+ */
 typedef struct CompositeRadarItem {
   RaveCoreObject* object;
   int radarIndexValue;
@@ -101,6 +104,9 @@ typedef struct CompositeValues_t {
   CompositeValuePosition_t valuePositions[MAX_NO_OF_SURROUNDING_POSITIONS]; /**< value positions array */
 } CompositeValues_t;
 
+/**
+ * How many values for interpolation
+ */
 typedef struct CompositeValuesVector_t {
   CompositeValues_t * * valuesVector;
   int nradars;

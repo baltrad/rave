@@ -60,6 +60,9 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #define TEXT_LATITUDE "latitude"
 #define TEXT_TIME "time"
 
+/**
+ * Mapping between quantities in ODIM and the definition used by CF
+ */
 typedef struct QuantityNodataUndetectMapping {
   char* quantity;
   float nodata;

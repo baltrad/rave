@@ -177,6 +177,18 @@ def generate(files, arguments):
   #if options.gf: Activate gap filling for rule
   #  comp.applygapfilling = True
   
+
+  # If user passes on a strategy != "", then the legacy compositing will be disabled
+  # if "strategy" == "any"
+  if "options" in args:
+    options = args["options"].split(",")
+    for o in options:
+      if o.startswith("factory:"):
+        strategy = o.replace("factory:", "")
+        comp.use_legacy_compositing = False
+        if strategy != "any":
+          comp.strategy = strategy
+
   # Optional cloud-type residual non-precip filter
   if "ctfilter" in args:
     if eval(args["ctfilter"]):

@@ -38,3 +38,5 @@ test/pytest/swemaxcomposite.h5
 test/pytest/swemulticomposite.h5
 test/pytest/swepseudomaxcomposite.h5
 
+/nbproject/
+/.ropeproject/

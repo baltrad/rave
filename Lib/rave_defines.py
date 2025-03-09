@@ -27,6 +27,7 @@ import sys
 import os
 import datetime
 import rave_defines
+import _rave
 
 ## PATHS
 #
@@ -74,6 +75,11 @@ ARRAYTYPES = {'b':'char', 'B':'uchar', 'I':'int', 'h':'short',
 # Default gain and offset values for linear transformation between raw and dBZ
 GAIN = 0.4
 OFFSET = -30.0
+
+FACTORY_GAIN_OFFSET_TABLE = {
+    "DBZH":(GAIN, OFFSET, _rave.RaveDataType_UCHAR, 255.0, 0.0),
+    "RATE":(1.0, 0.0, _rave.RaveDataType_DOUBLE, -1.0, 0.0)
+}
 
 # Default Z-R coefficients, legacy from BALTEX Working Group on Radar
 ZR_A = 200.0

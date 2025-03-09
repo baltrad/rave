@@ -1,0 +1,32 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<radar-db author="Author">
+  <se CCCC="ESWI" org="82">
+    <sekrn plc="Kiruna" rad="SE40" wmo="02032" wigos="0-20000-0-2032"></sekrn>
+    <sella plc="Luleå" rad="SE41" wmo="02092" wigos="0-20000-0-2092"></sella>
+    <seosd plc="Östersund" rad="SE42" wmo="02200" wigos="0-20000-0-2200"></seosd>
+    <seoer plc="Örnsköldsvik" rad="SE43" wmo="02262" wigos="0-20000-0-2262"></seoer>
+    <sehuv plc="Hudiksvall" rad="SE44" wmo="02334" wigos="0-20000-0-2334"></sehuv>
+    <selek plc="Leksand" rad="SE45" wmo="02430" wigos="0-20000-0-2430"></selek>
+    <sehem plc="Hemse (Ase)" rad="SE47" wmo="02588" wigos="0-20000-0-2588"></sehem>
+    <seatv plc="Åtvidaberg (Vilebo)" rad="SE48" wmo="02570" wigos="0-20000-0-2570"></seatv>
+    <sevax plc="Vara" rad="SE49" wmo="02600" wigos="0-20000-0-2600"></sevax>
+    <seang plc="Ängelholm" rad="SE50" wmo="02606" wigos="0-20000-0-2606"></seang>
+    <sekaa plc="Karlskrona" rad="SE51" wmo="02666" wigos="0-20000-0-2666"></sekaa>
+    <sebaa plc="Bålsta" rad="SE52" wmo="00000" wigos="0-21010-0-724"></sebaa>
+  </se>
+  <dk CCCC="EKMI" org="94">
+    <dkste plc="Stevns" rad="DN41" wmo="06177"></dkste>
+    <dkrom plc="Rømø" rad="DN42" wmo="06096"></dkrom>
+    <dksin plc="Sindal" rad="DN43" wmo="06036"></dksin>
+    <dkbor plc="Bornholm" rad="DN44" wmo="06194"></dkbor>
+    <dkvir plc="Virring" rad="DN45" wmo="06103"></dkvir>
+    <dkaal plc="Aalborg" rad="DN99" wmo="00000"></dkaal>
+    <dkaar plc="Aarhus" rad="DN98" wmo="00000"></dkaar>
+    <dkhvi plc="Hvidovre" rad="DN97" wmo="00000"></dkhvi>
+    <dkvej plc="Vejle" rad="DN96" wmo="00000"></dkvej>
+    <dkvix plc="Virring" rad="DN95" wmo="00000"></dkvix>
+    <dkode plc="Odense" rad="DN94" wmo="00000"></dkode>
+    <dkege plc="Egedal" rad="DN93" wmo="00000"></dkege>
+    <dkhor plc="Horsholm" rad="DN92" wmo="00000"></dkhor>
+  </dk>
+</radar-db>

@@ -488,6 +488,13 @@ int PolarScan_getNumberOfQualityFields(PolarScan_t* scan);
 void PolarScan_removeQualityField(PolarScan_t* scan, int index);
 
 /**
+ * Removes the quality field with the specified how/task value
+ * @param[in] scan - self
+ * @param[in] qname - the quality field name.
+ */
+ void PolarScan_removeQualityFieldByHowTask(PolarScan_t* scan, const char* qname);
+
+/**
  * Returns all quality fields belonging to this scan. The returned
  * object is only a reference so do not modify it.
  * @param[in] scan - self
