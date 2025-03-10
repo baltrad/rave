@@ -357,8 +357,8 @@ class tiled_compositing(object):
     a.dumppath = self.compositing.dumppath
     a.reprocess_quality_field = self.compositing.reprocess_quality_field
     a.area_definition = adef
-    a.use_legacy_compositing=self.use_legacy_compositing
-    a.strategy=self.strategy
+    a.use_legacy_compositing=self.compositing.use_legacy_compositing
+    a.strategy=self.compositing.strategy
     
     return a
   
