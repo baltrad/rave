@@ -205,14 +205,9 @@ class RavePGF():
   # @return the result from the algorithm, either filename or None
   def _run(self, algorithm, files, arguments):
     import importlib
-    #import importlib.util
     mod_name, func_name = algorithm.get('module'), algorithm.get('function')
 
     self.logger.info(f"[{self.name}] RavePGF._run: Running ID={self._jobid} method {mod_name}.{func_name}")
-
-    #spec = importlib.util.find_spec(mod_name)
-    #if spec is None:
-    #  raise ImportError(f"Module {mod_name} not found")
 
     module = importlib.import_module(mod_name)
     func = getattr(module, func_name)
