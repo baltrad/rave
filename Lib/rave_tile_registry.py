@@ -155,8 +155,9 @@ def create_tile_definition_for_area(aid, tiles):
 #
 def init():
   global _initialized
-  if _initialized: return
-  import imp
+  if _initialized:
+    return
+  import importlib
     
   O = ET.parse(RAVE_TILE_REGISTRY)
   registry = O.getroot()
