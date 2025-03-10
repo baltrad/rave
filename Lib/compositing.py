@@ -366,7 +366,7 @@ class compositing(object):
         if grafield:
           result.addParameter(grafield)
         else:
-          self.logger.warn(f"[{self.mpname}] compositing.generate: Failed to generate gra field....")
+          self.logger.warning(f"[{self.mpname}] compositing.generate: Failed to generate gra field....")
     
     # Hack to create a BRDR field if the qfields contains se.smhi.composite.index.radar
     if "se.smhi.composite.index.radar" in qfields:
@@ -518,7 +518,7 @@ class compositing(object):
         is_pvol = _polarvolume.isPolarVolume(obj)
         
       if not is_scan and not is_pvol:
-        self.logger.warn(f"[{self.mpname}] compositing.fetch_objects: Input file {fname} is neither polar scan or volume, ignoring.")
+        self.logger.warning(f"[{self.mpname}] compositing.fetch_objects: Input file {fname} is neither polar scan or volume, ignoring.")
         continue
       
       # Force azimuthal nav information usage if requested
@@ -611,7 +611,7 @@ class compositing(object):
       logger.exception("Failed to aquire coefficients")
 
     dtstr = agedt.strftime("%Y%m%d %H:%M:%S")
-    logger.warn(f"[{self.mpname}] compositing.get_backup_gra_coefficient: Could not aquire coefficients newer than {dtstr}, defaulting to climatologic")
+    logger.warning(f"[{self.mpname}] compositing.get_backup_gra_coefficient: Could not aquire coefficients newer than {dtstr}, defaulting to climatologic")
     return "False", 0, 0, 0.0, "False", 0.0, DEFAULTA, DEFAULTB, DEFAULTC, 0.0, 0.0
   
   ##

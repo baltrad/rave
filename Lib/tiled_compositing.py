@@ -565,7 +565,7 @@ class tiled_compositing(object):
       for v in results[0]:
         tile_file = v[1]
         if tile_file == None:
-          self.logger.warn(f"[{self.mpname}] tiled_compositing.generate: No partial composite for tile area {v[0]} was created. This tile will therefore not be included in complete composite.")
+          self.logger.warning(f"[{self.mpname}] tiled_compositing.generate: No partial composite for tile area {v[0]} was created. This tile will therefore not be included in complete composite.")
         else:
           o = _raveio.open(tile_file).object
           if _cartesianvolume.isCartesianVolume(o):
@@ -597,7 +597,7 @@ class tiled_compositing(object):
           try:
             os.unlink(fname)
           except:
-            logger.warn(f"[{self.mpname}] tiled_compositing.generate: Failed to remove temporary file: {fname}")
+            logger.warning(f"[{self.mpname}] tiled_compositing.generate: Failed to remove temporary file: {fname}")
       
       if results != None:
         for v in results[0]:
