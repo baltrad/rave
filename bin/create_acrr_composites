@@ -137,7 +137,7 @@ def generate_comp(filepath, pattern, fdate, ftime, areaid="allbltgmaps_4000", op
     return filename
   files = glob.glob("%s/%s"%(filepath, pattern)) #se*_pvol*.h5
   if len(files) == 0:
-    logger.warn("No files found for %s/%s"%(filepath, pattern))
+    logger.warning("No files found for %s/%s"%(filepath, pattern))
     return filename
   comp = compositing(ravebdb)
   comp.height = height
@@ -267,7 +267,7 @@ def generate_acrr(files, opath, areaid, etime, edate, startdt, enddt, zr_a=200.0
       raise AttributeError("Scale or projdef inconsistancy for used area")
     par = obj.getParameter(quantity)
     if par == None:
-      logger.warn("Could not find parameter (%s) for %s %s"%(acrr_quantity, obj.date, obj.time))
+      logger.warning("Could not find parameter (%s) for %s %s"%(acrr_quantity, obj.date, obj.time))
     else:
       pdfield = par.getQualityFieldByHowTask(distancefield) 
       if pdfield != None:
@@ -363,7 +363,7 @@ def generate_gra(files, opath, areaid, etime, edate, startdt, enddt, zr_a=200.0,
 
     par = obj.getParameter(quantity)
     if par == None:
-      logger.warn("Could not find parameter (%s) for %s %s"%(quantity, obj.date, obj.time))
+      logger.warning("Could not find parameter (%s) for %s %s"%(quantity, obj.date, obj.time))
     else:
       if par.getQualityFieldByHowTask(distancefield) != None:
         acrr.sum(par, zr_a, zr_b)
@@ -380,7 +380,7 @@ def generate_gra(files, opath, areaid, etime, edate, startdt, enddt, zr_a=200.0,
   
   points = matcher.match(acrrproduct, acc_period=interval, quantity="ACRR", how_task=distancefield, offset_hours=interval)
   if len(points) == 0:
-    logger.warn("Could not find any matching observations")
+    logger.warning("Could not find any matching observations")
     return None
   
   logger.info("Matched %d points between acrr product and observation db"%len(points))
@@ -535,4 +535,3 @@ if __name__=="__main__":
                                   options.pattern, options.applygra, zr_a=ZR_a, zr_b=ZR_b)
 
     
-  
