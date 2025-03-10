@@ -108,7 +108,7 @@ def get_backup_gra_coefficient(db, maxage):
     logger.exception(f"[{mpname}] rave_pgf_gra_plugin.get_backup_gra_coefficient: Failed to aquire coefficients")
 
   dtstr = maxage.strftime("%Y%m%d %H:%M:%S")
-  logger.warn(f"[{mpname}] rave_pgf_gra_plugin.get_backup_gra_coefficient: Could not aquire coefficients newer than {dtstr}, defaulting to climatologic")
+  logger.warning(f"[{mpname}] rave_pgf_gra_plugin.get_backup_gra_coefficient: Could not aquire coefficients newer than {dtstr}, defaulting to climatologic")
   return "False", 0, 0, 0.0, "False", 0.0, DEFAULTA, DEFAULTB, DEFAULTC, 0.0, 0.0
   
 ## Creates a composite
@@ -123,7 +123,7 @@ def calculate_gra_coefficient(distancefield, interval, adjustmentfile, etime, ed
   logger.info(f"[{mpname}] rave_pgf_gra_plugin.calculate_gra_coefficient: Matching observations")
   points = matcher.match(acrrproduct, acc_period=interval, quantity="ACRR", how_task=distancefield)
   if len(points) == 0:
-    logger.warn(f"[{mpname}] rave_pgf_gra_plugin.calculate_gra_coefficient: Could not find any matching observations")
+    logger.warning(f"[{mpname}] rave_pgf_gra_plugin.calculate_gra_coefficient: Could not find any matching observations")
   else:
     logger.info(f"[{mpname}] rave_pgf_gra_plugin.calculate_gra_coefficient: Matched {len(points)} points between acrr product and observation db")
     db.merge(points)
@@ -252,7 +252,7 @@ def generate(files, arguments):
 
     par = obj.getParameter(quantity)
     if par == None:
-      logger.warn(f"[{mpname}] rave_pgf_gra_plugin.generate: Could not find parameter ({quantity}) for {obj.date} {obj.time}")
+      logger.warning(f"[{mpname}] rave_pgf_gra_plugin.generate: Could not find parameter ({quantity}) for {obj.date} {obj.time}")
     else:
       if par.getQualityFieldByHowTask(distancefield) != None:
         acrr.sum(par, zr_a, zr_b)
@@ -271,7 +271,7 @@ def generate(files, arguments):
     logger.info(f"[{mpname}] rave_pgf_gra_plugin.generate: Coefficients calculated")
   except OperationalError as e:
     if "server closed the connection unexpectedly" in e.message:
-      logger.warn(f"[{mpname}] rave_pgf_gra_plugin.generate: Got indication that connection reseted at server side, retrying gra coefficient generation")
+      logger.warning(f"[{mpname}] rave_pgf_gra_plugin.generate: Got indication that connection reseted at server side, retrying gra coefficient generation")
       calculate_gra_coefficient(distancefield, interval, adjustmentfile, etime, edate, acrrproduct, db)
 
   exectime = int((time.time() - entertime)*1000)
