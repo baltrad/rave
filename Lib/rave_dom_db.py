@@ -216,12 +216,12 @@ class rave_db(object):
   def psql_invalidate(self, dbapi_conn, connection_rec, exception):
     if exception != None and isinstance(exception, OperationalError):
       if "server closed the connection unexpectedly" in exception.message:
-        logger.warn("Got invalidation message indicating that there has been connection problems. Recreating pool.")
+        logger.warning("Got invalidation message indicating that there has been connection problems. Recreating pool.")
         self._engine.dispose()
     elif exception != None and isinstance(exception,  psycopg2.OperationalError):
-      logger.warn("psycopg2,OperationalError will be tested")
+      logger.warning("psycopg2,OperationalError will be tested")
       if "server closed the connection unexpectedly" in exception.message:
-        logger.warn("Got invalidation message indicating that there has been connection problems. Recreating pool.")
+        logger.warning("Got invalidation message indicating that there has been connection problems. Recreating pool.")
         self._engine.dispose()
 
   ##
