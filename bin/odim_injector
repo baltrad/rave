@@ -198,20 +198,20 @@ def MAIN(in_file, janitor=False, uri=DEX_SPOE):
               if os.path.isfile(in_file):
                 removed = remove_file(in_file)
             else:
-              pyinotify.log.warn(in_file + " not ODIM_H5, removed.")
+              pyinotify.log.warning(in_file + " not ODIM_H5, removed.")
               removed = remove_file(in_file)
           except Exception as e:
             pyinotify.log.error("%s" % e)
             removed = remove_file(in_file)
 
       else:
-        pyinotify.log.warn(in_file + " not HDF5, removed.")
+        pyinotify.log.warning(in_file + " not HDF5, removed.")
         removed = remove_file(in_file)
     else:
-      pyinotify.log.warn(in_file + " is zero length, removed.")
+      pyinotify.log.warning(in_file + " is zero length, removed.")
       removed = remove_file(in_file)
   else:
-    pyinotify.log.warn(in_file + " not a regular file, ignored.")
+    pyinotify.log.warning(in_file + " not a regular file, ignored.")
     
   return removed
 
