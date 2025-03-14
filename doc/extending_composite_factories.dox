@@ -1,0 +1,130 @@
+/** \page extending_composite_factories Extending composite factories
+\section extending_compositing_introduction Introduction
+
+Due to requirements for new variants of composite algorithms, let it be interpolated variants, other quality based ones or generating quantities
+that are derived from other ones we had to reconsider the compositing approach in order to support different scenarios.
+As described in \ref Compositing the system is built from factories, managers, filters and other miscellaneous functionality. In this page
+we will go more in-depth on how to create new factories and what to consider when developing them.
+
+\section extending_compositing_factories Factories
+
+A factory can be seen as a producer that implements a number of features in order to return the requested composite. All factories can be seen as subclasses to 
+\ref CompositeGeneratorFactory_t. In reality, it's just function pointers that are redirected but the concept is similar. When implementing your own factory you
+will set the function pointers in the constructors and copy-constructors to ensure that the correct functions will be called.
+
+The base class is defined in \ref CompositeGeneratorFactory_t and is defined as
+
+\verbatim
+typedef struct _CompositeGeneratorFactory_t {
+  RAVE_OBJECT_HEAD /**< Always on top */
+  COMPOSITE_GENERATOR_FACTORY_HEAD /**< composite specifics */
+} CompositeGeneratorFactory_t;
+\endverbatim
+
+Then when defining your own structure you will use the same top-section and then extend your structure with all factory-specific items. For example, \ref AcqvaCompositeGeneratorFactory_t is
+defined as
+
+\verbatim
+typedef struct _AcqvaCompositeGeneratorFactory_t {
+  RAVE_OBJECT_HEAD /**< Always on top */
+  COMPOSITE_GENERATOR_FACTORY_HEAD /**< composite generator plugin specifics */
+  CompositeEngine_t* engine; /**<the engine */
+  CompositeEngineOvershootingQcHandler_t* overshooting; /**< the QC handler used for POO/Overshooting */
+} AcqvaCompositeGeneratorFactory_t;
+\endverbatim
+
+The relevant part when defining the factory is to set all function pointers that are defined by  the  <b>COMPOSITE_GENERATOR_FACTORY_HEAD</b>. These are
+
+- getName - of type \ref composite_generator_factory_getName_fun
+  Returns the name of the factory, e.g. LegacyCompositeFactory. Is used when defining filters to know what factory to use.
+
+- getDefaultId - of type \ref composite_generator_factory_getDefaultId_fun
+  Returns the default id for this factory. Can be used when autogenerating filters etc. E.g. \"legacy\".
+
+- canHandle - of type \ref composite_generator_factory_canHandle_fun
+  Checks the provided arguments if this factory can handle the request. Note that when using filters this function is not used.
+
+- setProperties - of type \ref composite_generator_factory_setProperties_fun
+  Sets the properties instance so that the factory can be initialized properly.
+
+- setProperties - of type \ref composite_generator_factory_getProperties_fun
+  Returns the properties that has been set in the factory.
+
+- create - of type \ref composite_generator_factory_create_fun
+  This function creates an instance of self. This function is used by \ref CompositeGenerator_t during generation to ensure that there is a unique instance during processing.
+
+- generate - of type \ref composite_generator_factory_generate_fun
+  Is called when executing the composite generation and as such is the factory method.
+
+All above methods has to be implemented by the factory but most of them is usually just one-liners. As mentioned earlier, the constructor and copy-constructor should ensure
+that the function pointers are set properly. In the following code snippet the start of ACQVAs constructor can be seen.
+
+\verbatim
+static int AcqvaCompositeGeneratorFactory_constructor(RaveCoreObject* obj)
+{
+  AcqvaCompositeGeneratorFactory_t* this = (AcqvaCompositeGeneratorFactory_t*)obj;
+  CompositeQualityFlagDefinition_t* definition = NULL;
+
+  this->getName = AcqvaCompositeGeneratorFactory_getName;
+  this->getDefaultId = AcqvaCompositeGeneratorFactory_getDefaultId;
+  this->canHandle = AcqvaCompositeGeneratorFactory_canHandle;
+  this->setProperties = AcqvaCompositeGeneratorFactory_setProperties;
+  this->getProperties = AcqvaCompositeGeneratorFactory_getProperties;
+  this->generate = AcqvaCompositeGeneratorFactory_generate;
+  this->create = AcqvaCompositeGeneratorFactory_create;
+  this->engine = NULL;
+  this->overshooting = NULL;
+  this->engine = RAVE_OBJECT_NEW(&CompositeEngine_TYPE);
+  if (this->engine == NULL) {
+    RAVE_ERROR0("Failed to create compositing engine");
+    goto fail;
+  }
+  ....
+}
+\endverbatim
+
+Most function pointers will be set straight away since they usually are unique to the factory. At the end a member called engine is allocated which is a generic compositing engine that
+is executing a predefined sequence of operations that are typical for the composite creation in the rave toolbox. This engine will help when implementing the \ref composite_generator_factory_generate_fun function 
+and will be explained in \ref extending_compositing_factories_engine.
+
+\subsection extending_compositing_factories_getName getName
+
+As described earlier, <b>getName</b> returns a name that identifies the factory and can be seen as a class name. The implementation usually looks like
+
+\verbatim
+const char* AcqvaCompositeGeneratorFactory_getName(CompositeGeneratorFactory_t* self)
+{
+  return "AcqvaCompositeGenerator";
+}
+\endverbatim
+
+
+\subsection extending_compositing_factories_canHandle canHandle
+
+The function <b>canHandle</b> should check the arguments for all relevant information that it needs to be able to produce a composite. The first thing to verify will most likely
+be to verify that the product name is supported, like PPI, PCAPPI or other product names like ACQVA. In the case of ACQVA we only verify that the product name is supported at the
+time of writing this documentation.
+
+\verbatim
+int AcqvaCompositeGeneratorFactory_canHandle(CompositeGeneratorFactory_t* self, CompositeArguments_t* arguments)
+{
+  const char* productid;
+
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  if (arguments == NULL) {
+    return 0;
+  }
+  productid = CompositeArguments_getProduct(arguments);
+  if (productid == NULL || strcasecmp("ACQVA", productid) != 0) {
+    return 0;
+  }
+  return 1;
+}
+\endverbatim
+
+
+\section extending_compositing_factories_engine A generic composite engine
+
+
+
+*/
