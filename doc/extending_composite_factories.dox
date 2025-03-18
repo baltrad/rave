@@ -122,9 +122,161 @@ int AcqvaCompositeGeneratorFactory_canHandle(CompositeGeneratorFactory_t* self, 
 }
 \endverbatim
 
+\subsection extending_compositing_factories_generate generate
 
-\section extending_compositing_factories_engine A generic composite engine
+The generate function is the actual factory of the cartesian product. There are several approaches to implement this functionality but if you are using the \ref extending_compositing_factories_engine it might look
+something like
 
+\verbatim
+Cartesian_t* AcqvaCompositeGeneratorFactory_generate(CompositeGeneratorFactory_t* self, CompositeArguments_t* arguments)
+{
+  int i = 0, nobjects = 0;
+  Cartesian_t* result = NULL;
+
+  nobjects = CompositeArguments_getNumberOfObjects(arguments);
+  for (i = 0; i < nobjects; i++) {
+    RaveCoreObject* obj = CompositeArguments_getObject(arguments, i);
+    if (!RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
+      RAVE_ERROR0("Acqva can only process volumes");
+      RAVE_OBJECT_RELEASE(obj);
+      return NULL;
+    }
+    RAVE_OBJECT_RELEASE(obj);
+  }
+  result = CompositeEngine_generate(((AcqvaCompositeGeneratorFactory_t*)self)->engine, arguments, (void*)self);
+  if (result != NULL) {
+    Cartesian_setProduct(result, Rave_ProductType_COMP);
+  }
+  return result;
+}
+\endverbatim
+
+\section extending_compositing_factories_engine Composite Engine
+
+The composite engine is basically a boiler plate implementation of a composite generator where it is possible to exchange parts of the compositing with your own implementation. For example to replace
+how data is retrieved from the polar objects or how to set data in the generated composite. This replacement is done by setting various function pointers in the engine before starting the composite
+generation.
+
+When calling \ref CompositeEngine_generate, the first thing that happens is that a number of structures is created and initiated. For example \ref CompositeEngineObjectBinding_t which is a binding
+between in-objects, projection pipelines and other information that is relevant during the processing. Another thing that happens is that the cartesian product is initiated with parameters and
+quality fields. After that a sequence of operations will be performed which will be described in the following subsections.
+
+Before describing the different functions that can be overridden the basic concept for the generation will be described. The loop will originate from the cartesian area where the cartesian coordinates
+are translated into lon/lat that then will be used to navigate and retrieve the data from the source polar objects.
+
+The first step calculates x and y pixel position in the cartesian product into the surface coordinates herex and herey. These surface coordinates will then be translated into a lon/lat
+coordinate. 
+\verbatim
+  for (y = 0; y < ysize; y++) {
+    double herey = Cartesian_getLocationY(cartesian, y);
+    for (x = 0; x < xsize; x++) {
+      double herex = Cartesian_getLocationX(cartesian, x);
+      ....
+      for (i = 0; i < nbindings; i++) {
+        if (!CompositeEngineFunction_getLonLat(self, extradata, &bindings[i], herex, herey, &olon, &olat)) {
+\endverbatim
+
+When the lon/lat coordinate has been calculated, the selectRadarData function is called to extract the relevant data to be used for the cartesian product.
+
+\verbatim
+ if (!CompositeEngineFunction_selectRadarData(self, extradata, arguments, &bindings[i], i, olon, olat, cvalues, nentries)) {
+    RAVE_ERROR0("Failed to get radar data");
+ }
+\endverbatim
+
+Finally, after the data has been retrieved from the polar objects the data is set in the cartesian product.
+
+\verbatim
+  CompositeEngineFunction_setRadarData(self, extradata, arguments, cartesian, olon, olat, x, y, cvalues, nentries);
+\endverbatim
+
+
+\subsection extending_compositing_factories_engine_onstarting onStarting
+
+The onStarting  \ref composite_engine_onStarting_fun will be called right before the loop over the cartesian area begins. When for example preparing the data for the calculations or if
+some precalculations has to be performed. An example on how it can be used is
+
+\verbatim
+static int NearestCompositeGeneratorFactory_onStarting(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* bindings, int nbindings)
+{
+  NearestCompositeGeneratorFactory_t* self = (NearestCompositeGeneratorFactory_t*)extradata;
+  int result = 0;
+  RaveProperties_t* properties = CompositeEngine_getProperties(engine);
+  if (!CompositeEngineFunctions_prepareRATE(engine, arguments, bindings, nbindings)) {
+    RAVE_ERROR0("Failed to prepare RATE coefficients");
+    goto fail;
+  }
+  CompositeEngineQcHandler_initialize(self->overshooting, extradata, properties, arguments, bindings, nbindings);
+
+  result = 1;
+fail:
+  RAVE_OBJECT_RELEASE(properties);
+  return result;
+}
+\endverbatim
+
+\subsection extending_compositing_factories_engine_onfinished onFinished
+
+The onFinished \ref composite_engine_onFinished_fun is called after the actual compositing loop has been executed and is the final step during the composite generation. This is a good
+place to put cleanup of various files and other miscellaneous data that has been created during the compositing.
+
+
+\subsection extending_compositing_factories_engine_getlonlat getLonLat
+
+Used to calculate the longitude and latitude from the surface coordinates. This can be practical to use if you are interested in developing an alternative approach to nearest when identifying
+coordinates.
+
+
+\subsection extending_compositing_factories_engine_selectradardata selectRadarData
+
+This is the function that fetches the value that should be used in the composite. Since the user might want to create more than parameter during the process it is important to observe that cvalues is 
+an array of parameter information and that the ncvalues is the number of elements in the array. See description of \ref composite_engine_selectRadarData_fun for more information.
+
+A typical example on how it can be used is in the ACQVA generation where the data is selected based on hight above ground together with a specific quality field instead of the traditional compositing
+techniques used in radar products.
+
+\verbatim
+static int AcqvaCompositeGeneratorFactoryInternal_selectRadarData(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, 
+  CompositeEngineObjectBinding_t* binding, int index, double olon, double olat, struct CompositeEngineRadarData_t* cvalues, int ncvalues)
+{
+  double dist = 0.0, maxdist = 0.0;
+  AcqvaCompositeGeneratorFactory_t* self = (AcqvaCompositeGeneratorFactory_t*)extradata;
+
+  dist = PolarVolume_getDistance((PolarVolume_t*)binding->object, olon, olat);
+  maxdist = PolarVolume_getMaxDistance((PolarVolume_t*)binding->object);
+
+  if (dist <= maxdist) {
+    double height=0.0, elangle=0.0;
+    int ray=0, bin=0, eindex=0, cindex = 0;
+    PolarNavigationInfo navinfo;
+    if (AcqvaCompositeGeneratorFactoryInternal_findLowestUsableValue(self, (PolarVolume_t*)binding->object, olon, olat, &height, &elangle, &ray, &bin, &eindex, &navinfo)) {
+      for (cindex = 0; cindex < ncvalues; cindex++) {
+        RaveValueType otype = RaveValueType_NODATA;
+        double v = 0.0;
+        if (strcasecmp("RATE", cvalues[cindex].name) == 0) {
+          otype = PolarVolume_getConvertedParameterValueAt((PolarVolume_t*)binding->object, "DBZH", eindex, bin, ray, &v);
+          if (otype == RaveValueType_DATA) {
+            v = CompositeEngineFunction_convertDbzToRate(binding, otype, v, DEFAULT_ZR_A, DEFAULT_ZR_B);
+          }
+        } else {
+          otype = PolarVolume_getConvertedParameterValueAt((PolarVolume_t*)binding->object, cvalues[cindex].name, eindex, bin, ray, &v);
+        }
+        if (otype != RaveValueType_NODATA) {
+          if (cvalues[cindex].mindist > height) {
+            cvalues[cindex].mindist = height;
+            cvalues[cindex].value = v;
+            cvalues[cindex].vtype = otype;
+            cvalues[cindex].navinfo = navinfo;
+            cvalues[cindex].radarindex = index;
+            cvalues[cindex].radardist = cvalues[cindex].navinfo.actual_range;
+          }
+        }
+      }
+    }
+  }
+  return 1;
+}
+\endverbatim
 
 
 */
