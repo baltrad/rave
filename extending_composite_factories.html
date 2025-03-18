@@ -106,7 +106,7 @@ Factories</h1>
   }
   ....
 }
-</pre><p>Most function pointers will be set straight away since they usually are unique to the factory. At the end a member called engine is allocated which is a generic compositing engine that is executing a predefined sequence of operations that are typical for the composite creation in the rave toolbox. This engine will help when implementing the <a class="el" href="compositegeneratorfactory_8h.html#a53680dbfdeb5070ca3636a319b7bd916">composite_generator_factory_generate_fun</a> function and will be explained in <a class="el" href="#extending_compositing_factories_engine">A generic composite engine</a>.</p>
+</pre><p>Most function pointers will be set straight away since they usually are unique to the factory. At the end a member called engine is allocated which is a generic compositing engine that is executing a predefined sequence of operations that are typical for the composite creation in the rave toolbox. This engine will help when implementing the <a class="el" href="compositegeneratorfactory_8h.html#a53680dbfdeb5070ca3636a319b7bd916">composite_generator_factory_generate_fun</a> function and will be explained in <a class="el" href="#extending_compositing_factories_engine">Composite Engine</a>.</p>
 <h2><a class="anchor" id="extending_compositing_factories_getName"></a>
 getName</h2>
 <p>As described earlier, <b>getName</b> returns a name that identifies the factory and can be seen as a class name. The implementation usually looks like</p>
@@ -131,9 +131,118 @@ canHandle</h2>
   }
   return 1;
 }
+</pre><h2><a class="anchor" id="extending_compositing_factories_generate"></a>
+generate</h2>
+<p>The generate function is the actual factory of the cartesian product. There are several approaches to implement this functionality but if you are using the <a class="el" href="#extending_compositing_factories_engine">Composite Engine</a> it might look something like</p>
+<pre class="fragment">Cartesian_t* AcqvaCompositeGeneratorFactory_generate(CompositeGeneratorFactory_t* self, CompositeArguments_t* arguments)
+{
+  int i = 0, nobjects = 0;
+  Cartesian_t* result = NULL;
+
+  nobjects = CompositeArguments_getNumberOfObjects(arguments);
+  for (i = 0; i &lt; nobjects; i++) {
+    RaveCoreObject* obj = CompositeArguments_getObject(arguments, i);
+    if (!RAVE_OBJECT_CHECK_TYPE(obj, &amp;PolarVolume_TYPE)) {
+      RAVE_ERROR0("Acqva can only process volumes");
+      RAVE_OBJECT_RELEASE(obj);
+      return NULL;
+    }
+    RAVE_OBJECT_RELEASE(obj);
+  }
+  result = CompositeEngine_generate(((AcqvaCompositeGeneratorFactory_t*)self)-&gt;engine, arguments, (void*)self);
+  if (result != NULL) {
+    Cartesian_setProduct(result, Rave_ProductType_COMP);
+  }
+  return result;
+}
 </pre><h1><a class="anchor" id="extending_compositing_factories_engine"></a>
-A generic composite engine</h1>
-</div></div><!-- contents -->
+Composite Engine</h1>
+<p>The composite engine is basically a boiler plate implementation of a composite generator where it is possible to exchange parts of the compositing with your own implementation. For example to replace how data is retrieved from the polar objects or how to set data in the generated composite. This replacement is done by setting various function pointers in the engine before starting the composite generation.</p>
+<p>When calling <a class="el" href="compositeengine_8c.html#a9516c033f24f5c7de235c2edc9885b46">CompositeEngine_generate</a>, the first thing that happens is that a number of structures is created and initiated. For example <a class="el" href="structCompositeEngineObjectBinding__t.html">CompositeEngineObjectBinding_t</a> which is a binding between in-objects, projection pipelines and other information that is relevant during the processing. Another thing that happens is that the cartesian product is initiated with parameters and quality fields. After that a sequence of operations will be performed which will be described in the following subsections.</p>
+<p>Before describing the different functions that can be overridden the basic concept for the generation will be described. The loop will originate from the cartesian area where the cartesian coordinates are translated into lon/lat that then will be used to navigate and retrieve the data from the source polar objects.</p>
+<p>The first step calculates x and y pixel position in the cartesian product into the surface coordinates herex and herey. These surface coordinates will then be translated into a lon/lat coordinate. </p><pre class="fragment">  for (y = 0; y &lt; ysize; y++) {
+    double herey = Cartesian_getLocationY(cartesian, y);
+    for (x = 0; x &lt; xsize; x++) {
+      double herex = Cartesian_getLocationX(cartesian, x);
+      ....
+      for (i = 0; i &lt; nbindings; i++) {
+        if (!CompositeEngineFunction_getLonLat(self, extradata, &amp;bindings[i], herex, herey, &amp;olon, &amp;olat)) {
+</pre><p>When the lon/lat coordinate has been calculated, the selectRadarData function is called to extract the relevant data to be used for the cartesian product.</p>
+<pre class="fragment"> if (!CompositeEngineFunction_selectRadarData(self, extradata, arguments, &amp;bindings[i], i, olon, olat, cvalues, nentries)) {
+    RAVE_ERROR0("Failed to get radar data");
+ }
+</pre><p>Finally, after the data has been retrieved from the polar objects the data is set in the cartesian product.</p>
+<pre class="fragment">  CompositeEngineFunction_setRadarData(self, extradata, arguments, cartesian, olon, olat, x, y, cvalues, nentries);
+</pre><h2><a class="anchor" id="extending_compositing_factories_engine_onstarting"></a>
+onStarting</h2>
+<p>The onStarting <a class="el" href="compositeengine_8h.html#ab7cea79fe73d9f96924c6c556bab211f">composite_engine_onStarting_fun</a> will be called right before the loop over the cartesian area begins. When for example preparing the data for the calculations or if some precalculations has to be performed. An example on how it can be used is</p>
+<pre class="fragment">static int NearestCompositeGeneratorFactory_onStarting(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* bindings, int nbindings)
+{
+  NearestCompositeGeneratorFactory_t* self = (NearestCompositeGeneratorFactory_t*)extradata;
+  int result = 0;
+  RaveProperties_t* properties = CompositeEngine_getProperties(engine);
+  if (!CompositeEngineFunctions_prepareRATE(engine, arguments, bindings, nbindings)) {
+    RAVE_ERROR0("Failed to prepare RATE coefficients");
+    goto fail;
+  }
+  CompositeEngineQcHandler_initialize(self-&gt;overshooting, extradata, properties, arguments, bindings, nbindings);
+
+  result = 1;
+fail:
+  RAVE_OBJECT_RELEASE(properties);
+  return result;
+}
+</pre><h2><a class="anchor" id="extending_compositing_factories_engine_onfinished"></a>
+onFinished</h2>
+<p>The onFinished <a class="el" href="compositeengine_8h.html#ac3a93e494f17d8189084aa55b7d1ae16">composite_engine_onFinished_fun</a> is called after the actual compositing loop has been executed and is the final step during the composite generation. This is a good place to put cleanup of various files and other miscellaneous data that has been created during the compositing.</p>
+<h2><a class="anchor" id="extending_compositing_factories_engine_getlonlat"></a>
+getLonLat</h2>
+<p>Used to calculate the longitude and latitude from the surface coordinates. This can be practical to use if you are interested in developing an alternative approach to nearest when identifying coordinates.</p>
+<h2><a class="anchor" id="extending_compositing_factories_engine_selectradardata"></a>
+selectRadarData</h2>
+<p>This is the function that fetches the value that should be used in the composite. Since the user might want to create more than parameter during the process it is important to observe that cvalues is an array of parameter information and that the ncvalues is the number of elements in the array. See description of <a class="el" href="compositeengine_8h.html#a0b14aadd4bccd6e15ef69757fab8cb02">composite_engine_selectRadarData_fun</a> for more information.</p>
+<p>A typical example on how it can be used is in the ACQVA generation where the data is selected based on hight above ground together with a specific quality field instead of the traditional compositing techniques used in radar products.</p>
+<pre class="fragment">static int AcqvaCompositeGeneratorFactoryInternal_selectRadarData(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, 
+  CompositeEngineObjectBinding_t* binding, int index, double olon, double olat, struct CompositeEngineRadarData_t* cvalues, int ncvalues)
+{
+  double dist = 0.0, maxdist = 0.0;
+  AcqvaCompositeGeneratorFactory_t* self = (AcqvaCompositeGeneratorFactory_t*)extradata;
+
+  dist = PolarVolume_getDistance((PolarVolume_t*)binding-&gt;object, olon, olat);
+  maxdist = PolarVolume_getMaxDistance((PolarVolume_t*)binding-&gt;object);
+
+  if (dist &lt;= maxdist) {
+    double height=0.0, elangle=0.0;
+    int ray=0, bin=0, eindex=0, cindex = 0;
+    PolarNavigationInfo navinfo;
+    if (AcqvaCompositeGeneratorFactoryInternal_findLowestUsableValue(self, (PolarVolume_t*)binding-&gt;object, olon, olat, &amp;height, &amp;elangle, &amp;ray, &amp;bin, &amp;eindex, &amp;navinfo)) {
+      for (cindex = 0; cindex &lt; ncvalues; cindex++) {
+        RaveValueType otype = RaveValueType_NODATA;
+        double v = 0.0;
+        if (strcasecmp("RATE", cvalues[cindex].name) == 0) {
+          otype = PolarVolume_getConvertedParameterValueAt((PolarVolume_t*)binding-&gt;object, "DBZH", eindex, bin, ray, &amp;v);
+          if (otype == RaveValueType_DATA) {
+            v = CompositeEngineFunction_convertDbzToRate(binding, otype, v, DEFAULT_ZR_A, DEFAULT_ZR_B);
+          }
+        } else {
+          otype = PolarVolume_getConvertedParameterValueAt((PolarVolume_t*)binding-&gt;object, cvalues[cindex].name, eindex, bin, ray, &amp;v);
+        }
+        if (otype != RaveValueType_NODATA) {
+          if (cvalues[cindex].mindist &gt; height) {
+            cvalues[cindex].mindist = height;
+            cvalues[cindex].value = v;
+            cvalues[cindex].vtype = otype;
+            cvalues[cindex].navinfo = navinfo;
+            cvalues[cindex].radarindex = index;
+            cvalues[cindex].radardist = cvalues[cindex].navinfo.actual_range;
+          }
+        }
+      }
+    }
+  }
+  return 1;
+}
+</pre> </div></div><!-- contents -->
 </div><!-- PageDoc -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
