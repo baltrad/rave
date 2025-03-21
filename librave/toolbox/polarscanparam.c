@@ -64,7 +64,7 @@ static int PolarScanParam_constructor(RaveCoreObject* obj)
   this->attrs = RAVE_OBJECT_NEW(&RaveAttributeTable_TYPE);
   this->qualityfields = RAVE_OBJECT_NEW(&RaveObjectList_TYPE);
   this->quantity = NULL;
-  this->gain = 0.0L;
+  this->gain = 1.0L;
   this->offset = 0.0L;
   this->nodata = 0.0L;
   this->undetect = 0.0L;
@@ -189,7 +189,11 @@ const char* PolarScanParam_getQuantity(PolarScanParam_t* scanparam)
 void PolarScanParam_setGain(PolarScanParam_t* scanparam, double gain)
 {
   RAVE_ASSERT((scanparam != NULL), "scanparam == NULL");
-  scanparam->gain = gain;
+  if (gain != 0.0) {
+    scanparam->gain = gain;
+  } else {
+    RAVE_ERROR0("Trying to set gain to 0.0");
+  }
 }
 
 double PolarScanParam_getGain(PolarScanParam_t* scanparam)

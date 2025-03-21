@@ -58,6 +58,7 @@ struct _CompositeEngine_t {
   RaveObjectHashTable_t* polarValueAtPositionMapping; /**< a mapping between requested quantity and a call for getPolarValueAtPosition */
   RaveProperties_t* properties; /**< properties that is required to setup the factory and engine */
   RaveObjectHashTable_t* qualityFlagDefinitions; /**< the quality flag definitions */
+  int debug;
 };
 
 static CompositeQualityFlagSettings_t COMPOSITE_ENGINE_QUALITY_FLAG_DEFINITIONS[] = {
@@ -151,6 +152,7 @@ static int CompositeEngine_constructor(RaveCoreObject* obj)
   this->fillQualityInformation = CompositeEngineInternal_fillQualityInformation;
   this->properties = NULL;
   this->qualityFlagDefinitions = NULL;
+  this->debug = 0;
 
   this->polarValueAtPositionMapping = RAVE_OBJECT_NEW(&RaveObjectHashTable_TYPE);
   this->qualityFlagDefinitions = RAVE_OBJECT_NEW(&RaveObjectHashTable_TYPE);
@@ -189,6 +191,7 @@ static int CompositeEngine_copyconstructor(RaveCoreObject* obj, RaveCoreObject* 
   this->getQualityValue = src->getQualityValue;
   this->fillQualityInformation = src->fillQualityInformation;
   this->properties = NULL;
+  this->debug = src->debug;
 
   this->polarValueAtPositionMapping = RAVE_OBJECT_CLONE(src->polarValueAtPositionMapping);
   this->qualityFlagDefinitions = RAVE_OBJECT_CLONE(src->qualityFlagDefinitions);
@@ -723,7 +726,6 @@ int CompositeEngineUtility_fillQualityInformation(CompositeEngine_t* self, void*
               valuefetched = PolarScan_getQualityValueAt((PolarScan_t*)obj, quantity, navinfo->ri, navinfo->ai, name, 1, &v);
             }
           }
-
           if (valuefetched) {
             v = (v - COMPOSITE_ENGINE_DEFAULT_QUALITY_FIELDS_OFFSET) / COMPOSITE_ENGINE_DEFAULT_QUALITY_FIELDS_GAIN;
           }
@@ -925,6 +927,15 @@ void CompositeEngineUtility_freeRadarData(CompositeEngineRadarData_t** cvalues, 
     RAVE_FREE(*cvalues);
     *cvalues = NULL;
   }
+}
+void CompositeEngine_setDebug(CompositeEngine_t* self, int debug)
+{
+  self->debug = debug;
+}
+
+int CompositeEngine_getDebug(CompositeEngine_t* self)
+{
+  return self->debug;
 }
 
 /*@} End of Interface functions */

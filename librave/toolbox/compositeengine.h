@@ -490,6 +490,21 @@ int CompositeEngine_registerQualityFlagDefinition(CompositeEngine_t* self, Compo
  * Generates the composite using a basic approach
  */
 Cartesian_t* CompositeEngine_generate(CompositeEngine_t* self, CompositeArguments_t* arguments, void* extradata);
+
+/**
+ * Useful when debugging parts of processing when using the composite engine.
+ * @param[in] self - self
+ * @param[in] debug - 1 if debug should be set otherwise 0
+ */
+void CompositeEngine_setDebug(CompositeEngine_t* self, int debug);
+
+/**
+ * Returns if debug has been set or not
+ * @param[in] self - self
+ * @return 1 if debug should be set otherwise 0
+ */
+ int CompositeEngine_getDebug(CompositeEngine_t* self);
+ 
 /*@} End of Composite engine instance methods */
 
 #endif /* COMPOSITEENGINE_H */

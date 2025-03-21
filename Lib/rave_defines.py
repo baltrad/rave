@@ -156,6 +156,14 @@ QUALITY_REGISTRY=os.path.join(RAVEETC, 'rave_pgf_quality_registry.xml')
 
 RAVE_TILE_REGISTRY=os.path.join(RAVEETC, 'rave_tile_registry.xml')
 
+# The name of the composite generator filter file containing the settings for factories.
+COMPOSITE_GENERATOR_FILTER_FILENAME = os.path.join(RAVECONFIG, 'composite_generator_filter.xml')
+
+# The location where the cluttermaps can be found when using ACQVA
+# The names of the cluttermaps should be in the format <nod>.h5, for example
+# seang.h5, ...
+ACQVA_CLUTTERMAP_DIR = "/var/lib/baltrad/rave/acqva/cluttermap"
+
 # Max number of processes to use when performing the composite tiling. If None, then
 # the number of processes will be set to number of tiles or less depending on how many
 # cores that are available. If number of cores > 1, then there will always be one core

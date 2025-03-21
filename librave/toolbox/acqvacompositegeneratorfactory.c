@@ -414,6 +414,7 @@ static int AcqvaCompositeGeneratorFactoryInternal_findLowestUsableValue(AcqvaCom
   double* elangle, int* ray, int* bin, int* eindex, PolarNavigationInfo* outnavinfo)
 {
   int nrelevs = 0, i = 0, found = 0;
+
   RAVE_ASSERT((self != NULL), "self == NULL");
   if (pvol == NULL) {
     RAVE_ERROR0("Providing pvol == NULL");

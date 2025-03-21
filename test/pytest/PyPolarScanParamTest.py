@@ -127,19 +127,19 @@ class PyPolarScanParamTest(unittest.TestCase):
 
   def test_gain(self):
     obj = _polarscanparam.new()
-    self.assertAlmostEqual(0.0, obj.gain, 4)
+    self.assertAlmostEqual(1.0, obj.gain, 4)
     obj.gain = 10.0
     self.assertAlmostEqual(10.0, obj.gain, 4)
 
   def test_gain_typeError(self):
     obj = _polarscanparam.new()
-    self.assertAlmostEqual(0.0, obj.gain, 4)
+    self.assertAlmostEqual(1.0, obj.gain, 4)
     try:
       obj.gain = 10
       self.fail("Expected TypeError")
     except TypeError:
       pass
-    self.assertAlmostEqual(0.0, obj.gain, 4)
+    self.assertAlmostEqual(1.0, obj.gain, 4)
 
   def test_offset(self):
     obj = _polarscanparam.new()

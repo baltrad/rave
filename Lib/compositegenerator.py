@@ -25,9 +25,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 import os, sys, math
 import _compositefactorymanager, _compositegenerator, _compositearguments, _raveproperties, _odimsources
 import _rave
-#from rave_defines import COMPOSITE_GENERATOR_FILTER_FILENAME
 
-COMPOSITE_GENERATOR_FILTER_FILENAME="/projects/baltrad/rave/config/composite_generator_filter.xml"
+from rave_defines import COMPOSITE_GENERATOR_FILTER_FILENAME, ACQVA_CLUTTERMAP_DIR, ODIM_SOURCE_FILE
 
 class Generator(object):
   def __init__(self, generatorfilter=COMPOSITE_GENERATOR_FILTER_FILENAME):
@@ -84,9 +83,9 @@ class Generator(object):
 
   def load_properties(self):
     properties = _raveproperties.new()
-    properties.set("rave.acqva.cluttermap.dir", "/projects/baltrad/support/Erad2024_Acqva/data_2024070200/cluttermap")
-    properties.set("rave.rate.zr.coefficients", {"sella":(200.0, 1.6), "sekrn": (200.0, 1.6)})
-    properties.sources = _odimsources.load("/projects/baltrad/rave/config/odim_source.xml")  # To be able to do NOD lookup of cluttermap
+    properties.set("rave.acqva.cluttermap.dir", "/projects/baltrad/laser-data/cluttermaps")
+    #properties.set("rave.rate.zr.coefficients", {"sella":(200.0, 1.6), "sekrn": (200.0, 1.6)})
+    properties.sources = _odimsources.load(ODIM_SOURCE_FILE)  # To be able to do NOD lookup of cluttermap
     return properties
 
   def generate(self, arguments):
