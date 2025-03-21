@@ -240,6 +240,12 @@ Functions</h2></td></tr>
 <tr class="memitem:a9516c033f24f5c7de235c2edc9885b46" id="r_a9516c033f24f5c7de235c2edc9885b46"><td class="memItemLeft" align="right" valign="top"><a class="el" href="cartesian_8h.html#ab5a79e35a1b35277a4ce2abba3acada0">Cartesian_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a9516c033f24f5c7de235c2edc9885b46">CompositeEngine_generate</a> (<a class="el" href="#a9d75d249cbe47f4d38360a926086f631">CompositeEngine_t</a> *self, <a class="el" href="compositearguments_8h.html#a7d9ab330f246a7676fb99eebe0287cac">CompositeArguments_t</a> *arguments, void *extradata)</td></tr>
 <tr class="memdesc:a9516c033f24f5c7de235c2edc9885b46"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generates the composite using a basic approach.  <br /></td></tr>
 <tr class="separator:a9516c033f24f5c7de235c2edc9885b46"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae3810b9b89347473e81c8c5668c6aae9" id="r_ae3810b9b89347473e81c8c5668c6aae9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae3810b9b89347473e81c8c5668c6aae9">CompositeEngine_setDebug</a> (<a class="el" href="#a9d75d249cbe47f4d38360a926086f631">CompositeEngine_t</a> *self, int debug)</td></tr>
+<tr class="memdesc:ae3810b9b89347473e81c8c5668c6aae9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Useful when debugging parts of processing when using the composite engine.  <br /></td></tr>
+<tr class="separator:ae3810b9b89347473e81c8c5668c6aae9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a28e1904d878bd65fb3766eaaa2074749" id="r_a28e1904d878bd65fb3766eaaa2074749"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a28e1904d878bd65fb3766eaaa2074749">CompositeEngine_getDebug</a> (<a class="el" href="#a9d75d249cbe47f4d38360a926086f631">CompositeEngine_t</a> *self)</td></tr>
+<tr class="memdesc:a28e1904d878bd65fb3766eaaa2074749"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns if debug has been set or not.  <br /></td></tr>
+<tr class="separator:a28e1904d878bd65fb3766eaaa2074749"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
 Variables</h2></td></tr>
@@ -634,6 +640,32 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a id="a28e1904d878bd65fb3766eaaa2074749" name="a28e1904d878bd65fb3766eaaa2074749"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a28e1904d878bd65fb3766eaaa2074749">&#9670;&#160;</a></span>CompositeEngine_getDebug()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int CompositeEngine_getDebug </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="#a9d75d249cbe47f4d38360a926086f631">CompositeEngine_t</a> *</td>          <td class="paramname"><span class="paramname"><em>self</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Returns if debug has been set or not. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>1 if debug should be set otherwise 0 </dd></dl>
+
+</div>
+</div>
 <a id="a98c46df2ef8958bab5446f834d3258c4" name="a98c46df2ef8958bab5446f834d3258c4"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a98c46df2ef8958bab5446f834d3258c4">&#9670;&#160;</a></span>CompositeEngine_getProperties()</h2>
 
@@ -746,6 +778,36 @@ Variables</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Sets the add quality flags to cartesian that will add the quality flags to the cartesian product. </p>
+
+</div>
+</div>
+<a id="ae3810b9b89347473e81c8c5668c6aae9" name="ae3810b9b89347473e81c8c5668c6aae9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae3810b9b89347473e81c8c5668c6aae9">&#9670;&#160;</a></span>CompositeEngine_setDebug()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void CompositeEngine_setDebug </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="#a9d75d249cbe47f4d38360a926086f631">CompositeEngine_t</a> *</td>          <td class="paramname"><span class="paramname"><em>self</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>debug</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Useful when debugging parts of processing when using the composite engine. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">debug</td><td>- 1 if debug should be set otherwise 0 </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
