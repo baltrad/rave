@@ -209,6 +209,9 @@ Functions</h2></td></tr>
 <tr class="memitem:aba712f3461fc64322a72a5e12522cd45" id="r_aba712f3461fc64322a72a5e12522cd45"><td class="memItemLeft" align="right" valign="top"><a class="el" href="rave__object_8h.html#a46a2f0574ec46db3626c123be570c7ed">RaveCoreObject</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aba712f3461fc64322a72a5e12522cd45">CompositeArguments_getObject</a> (<a class="el" href="#a7d9ab330f246a7676fb99eebe0287cac">CompositeArguments_t</a> *args, int index)</td></tr>
 <tr class="memdesc:aba712f3461fc64322a72a5e12522cd45"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the object at specified index.  <br /></td></tr>
 <tr class="separator:aba712f3461fc64322a72a5e12522cd45"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a40eb713919e00d334d089ddea9f5106c" id="r_a40eb713919e00d334d089ddea9f5106c"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a40eb713919e00d334d089ddea9f5106c">CompositeArguments_removeObject</a> (<a class="el" href="#a7d9ab330f246a7676fb99eebe0287cac">CompositeArguments_t</a> *args, int index)</td></tr>
+<tr class="memdesc:a40eb713919e00d334d089ddea9f5106c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes object at specified index.  <br /></td></tr>
+<tr class="separator:a40eb713919e00d334d089ddea9f5106c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3ea2a5e93af63f131db55db2aae72cbb" id="r_a3ea2a5e93af63f131db55db2aae72cbb"><td class="memItemLeft" align="right" valign="top"><a class="el" href="raveobject__list_8h.html#abdac48af2ac58989ba91c33c2a1c79d0">RaveObjectList_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a3ea2a5e93af63f131db55db2aae72cbb">CompositeArguments_getObjects</a> (<a class="el" href="#a7d9ab330f246a7676fb99eebe0287cac">CompositeArguments_t</a> *args)</td></tr>
 <tr class="memdesc:a3ea2a5e93af63f131db55db2aae72cbb"><td class="mdescLeft">&#160;</td><td class="mdescRight">param[in] args - self  <br /></td></tr>
 <tr class="separator:a3ea2a5e93af63f131db55db2aae72cbb"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -1472,6 +1475,36 @@ Variables</h2></td></tr>
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a id="a40eb713919e00d334d089ddea9f5106c" name="a40eb713919e00d334d089ddea9f5106c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a40eb713919e00d334d089ddea9f5106c">&#9670;&#160;</a></span>CompositeArguments_removeObject()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int CompositeArguments_removeObject </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="#a7d9ab330f246a7676fb99eebe0287cac">CompositeArguments_t</a> *</td>          <td class="paramname"><span class="paramname"><em>args</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>index</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Removes object at specified index. </p>
+<p>param[in] args - self </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">index</td><td>- position in list of objects </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>1 on success otherwise 0 </dd></dl>
 
 </div>
 </div>
