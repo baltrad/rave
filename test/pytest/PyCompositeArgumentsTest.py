@@ -243,6 +243,42 @@ class PyCompositeArgumentsTest(unittest.TestCase):
     self.assertAlmostEqual(255.0, nodata, 4)
     self.assertAlmostEqual(0.0, undetect, 4)
 
+  def test_parameter_removeParameter(self):
+    obj = _compositearguments.new()
+    obj.addParameter("DBZH", 1.0, 0.0)
+    obj.addParameter("TH", 2.0, 1.0)
+    obj.addParameter("ABC", 2.0, 1.0)
+    self.assertEqual(3, obj.getParameterCount())
+
+    obj.removeParameter("TH")
+
+    self.assertEqual(2, obj.getParameterCount())
+    self.assertTrue(obj.hasParameter("DBZH"))
+    self.assertTrue(obj.hasParameter("ABC"))
+    obj.removeParameter("TH")
+    self.assertEqual(2, obj.getParameterCount())
+
+    (gain, offset, datatype, nodata, undetect) = obj.getParameter("DBZH")
+    self.assertAlmostEqual(1.0, gain, 4)
+    self.assertAlmostEqual(0.0, offset, 4)
+    self.assertEqual(_rave.RaveDataType_UCHAR, datatype)
+    self.assertAlmostEqual(255.0, nodata, 4)
+    self.assertAlmostEqual(0.0, undetect, 4)
+
+    (gain, offset, datatype, nodata, undetect) = obj.getParameter("ABC")
+    self.assertAlmostEqual(2.0, gain, 4)
+    self.assertAlmostEqual(1.0, offset, 4)
+    self.assertEqual(_rave.RaveDataType_UCHAR, datatype)
+    self.assertAlmostEqual(255.0, nodata, 4)
+    self.assertAlmostEqual(0.0, undetect, 4)
+
+    obj.removeParameter("ABC")
+    self.assertTrue(obj.hasParameter("DBZH"))
+    self.assertEqual(1, obj.getParameterCount())
+
+    obj.removeParameter("DBZH")
+    self.assertEqual(0, obj.getParameterCount())
+
   def test_addObject_scan(self):
     obj = _compositearguments.new()
     s1 = _polarscan.new()

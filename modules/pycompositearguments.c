@@ -347,6 +347,24 @@ static PyObject* _pycompositearguments_hasParameter(PyCompositeArguments* self, 
 }
 
 /**
+ * Removes the parameter with specified quantity
+ * @param[in] self - self
+ * @param[in] args - <quantity as a string>
+ * @return None
+ */
+ static PyObject* _pycompositearguments_removeParameter(PyCompositeArguments* self, PyObject* args)
+ {
+   char* quantity = NULL;
+   if (!PyArg_ParseTuple(args, "s", &quantity)) {
+     return NULL;
+   }
+   CompositeArguments_removeParameter(self->args, quantity);
+   Py_RETURN_NONE;
+ }
+ 
+
+
+/**
  * Returns the parameter value for specified quantity.
  * @param[in] self - self
  * @param[in] args - <index as int>
@@ -876,6 +894,11 @@ static struct PyMethodDef _pycompositearguments_methods[] =
   {"hasParameter", (PyCFunction)_pycompositearguments_hasParameter, 1,
     "hasParameter(quantity) -> boolean\n\n"
     "Returns if this composite generator is going to process specified parameter\n\n"
+    "quantity   - the parameter quantity"
+  },
+  {"removeParameter", (PyCFunction)_pycompositearguments_removeParameter, 1,
+    "removeParameter(quantity)\n\n"
+    "Removes the parameter with specified quantity\n\n"
     "quantity   - the parameter quantity"
   },
   {"getParameter", (PyCFunction)_pycompositearguments_getParameter, 1,

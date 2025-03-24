@@ -278,6 +278,13 @@ int CompositeArguments_addParameter(CompositeArguments_t* args, const char* quan
 int CompositeArguments_hasParameter(CompositeArguments_t* args, const char* quantity);
 
 /**
+ * Removes the parameter with specified quantity
+ * @param[in] args - self
+ * @param[in] quantity - the parameter quantity
+ */
+void CompositeArguments_removeParameter(CompositeArguments_t* args, const char* quantity);
+
+/**
  * Returns the parameter at specified index
  * @param[in] args - self
  * @param[in] parameter - the name of the parameter

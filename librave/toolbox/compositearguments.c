@@ -729,6 +729,29 @@ int CompositeArguments_hasParameter(CompositeArguments_t* args, const char* para
   return result;  
 }
 
+void CompositeArguments_removeParameter(CompositeArguments_t* args, const char* parameter)
+{
+  RAVE_ASSERT((args != NULL), "args == NULL");
+  if (parameter != NULL) {
+    int i = 0;
+    int indexToRemove = -1;
+    int len = RaveList_size(args->parameters);
+    for (i = 0; indexToRemove == -1 && i < len ; i++) {
+      CompositeArgumentParameter_t* s = RaveList_get(args->parameters, i);
+      if (s != NULL && s->name != NULL && strcmp(parameter, s->name) == 0) {
+        indexToRemove = i;
+      }
+    }
+    if (indexToRemove >= 0) {
+      CompositeArgumentParameter_t* s = RaveList_remove(args->parameters, indexToRemove);
+      if (s != NULL) {
+        CompositeArgumentsInternal_freeParameter(s);
+      }
+      s = NULL;
+    }
+  }
+}
+
 int CompositeArguments_getParameter(CompositeArguments_t* args, const char* parameter, double* gain, double* offset, RaveDataType* datatype, double* nodata, double* undetect)
 {
   int result = 0;
