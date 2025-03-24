@@ -840,6 +840,19 @@ RaveCoreObject* CompositeArguments_getObject(CompositeArguments_t* args, int ind
   return result;
 }
 
+int CompositeArguments_removeObject(CompositeArguments_t* args, int index)
+{
+  CompositeArgumentObjectEntry_t* entry = NULL;
+  int result = 0;
+  RAVE_ASSERT((args != NULL), "args == NULL");
+  entry = (CompositeArgumentObjectEntry_t*)RaveObjectList_remove(args->objects, index);
+  if (entry != NULL) {
+    result = 1;
+  }
+  RAVE_OBJECT_RELEASE(entry);
+  return result;
+}
+
 RaveObjectList_t* CompositeArguments_getObjects(CompositeArguments_t* args)
 {
   RaveObjectList_t* result = NULL;

@@ -576,7 +576,6 @@ Cartesian_t* AcqvaCompositeGeneratorFactory_generate(CompositeGeneratorFactory_t
 {
   int i = 0, nobjects = 0;
   Cartesian_t* result = NULL;
-
   nobjects = CompositeArguments_getNumberOfObjects(arguments);
   for (i = 0; i < nobjects; i++) {
     RaveCoreObject* obj = CompositeArguments_getObject(arguments, i);

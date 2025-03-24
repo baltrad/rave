@@ -483,6 +483,29 @@ static PyObject* _pycompositearguments_getObject(PyCompositeArguments* self, PyO
   return res;
 }
 
+/**
+ * Removes the object as specified index
+ * @param[in] self - self
+ * @param[in] args - index
+ * @return the object at specified index or IndexError
+ */
+ static PyObject* _pycompositearguments_removeObject(PyCompositeArguments* self, PyObject* args)
+ {
+   int index = 0;
+ 
+   if(!PyArg_ParseTuple(args, "i", &index)) {
+     return NULL;
+   }
+   if (index >= 0 && index < CompositeArguments_getNumberOfObjects(self->args)) {
+     if (!CompositeArguments_removeObject(self->args, index)) {
+      raiseException_returnNULL(PyExc_RuntimeError, "Could not remove object");
+     }
+   } else {
+    raiseException_returnNULL(PyExc_IndexError, "Out of range");
+   }
+   Py_RETURN_NONE;
+ }
+ 
 static PyObject* _pycompositearguments_addQualityFlag(PyCompositeArguments* self, PyObject* args)
 {
   char* qualityflag = NULL;
@@ -878,6 +901,10 @@ static struct PyMethodDef _pycompositearguments_methods[] =
   {"getObject", (PyCFunction)_pycompositearguments_getObject, 1,
     "getObject(index) -> object\n\n"
     "Returns the object at provided position."
+  },
+  {"removeObject", (PyCFunction)_pycompositearguments_removeObject, 1,
+    "removeObject(index) -> None\n\n"
+    "Removes the object at specified position"
   },
   {"addQualityFlag", (PyCFunction)_pycompositearguments_addQualityFlag, 1,
     "addQualityFlag(qualityname)\n\n"

@@ -553,6 +553,7 @@ CompositeGeneratorFactory_t* CompositeGenerator_identify(CompositeGenerator_t* g
       if (!useCanHandle) {
         for (i = 0; factory == NULL && i < leni; i++) {
           CompositeFactoryEntry_t* cfentry = (CompositeFactoryEntry_t*)RaveObjectList_get(generator->factories, i);
+
           int j = 0, lenj = RaveObjectList_size(cfentry->filters);
           if (lenj == 0) {
             factory = RAVE_OBJECT_COPY(cfentry->factory);

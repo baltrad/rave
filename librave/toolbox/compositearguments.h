@@ -342,6 +342,14 @@ int CompositeArguments_getNumberOfObjects(CompositeArguments_t* args);
 RaveCoreObject* CompositeArguments_getObject(CompositeArguments_t* args, int index);
 
 /**
+ * Removes object at specified index.
+ * param[in] args - self
+ * @param[in] index - position in list of objects
+ * @return 1 on success otherwise 0
+ */
+int CompositeArguments_removeObject(CompositeArguments_t* args, int index);
+
+/**
  * param[in] args - self
  * @return the list of objects
  */
