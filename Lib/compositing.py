@@ -732,7 +732,7 @@ class compositing(object):
               generator.height = self._strToNumber(pp[0].strip())
             except ValueError:
               pass
-      elif generator.product in [_rave.Rave_ProductType_PPI]:
+      elif self.product in [_rave.Rave_ProductType_PPI]:
         try:
           v = self._strToNumber(self.prodpar)
           generator.elangle = v * math.pi / 180.0

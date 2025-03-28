@@ -232,7 +232,7 @@ fail:
 static int NearestCompositeGeneratorFactory_getPolarValueAtPosition(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* binding, const char* quantity, PolarNavigationInfo* navinfo, const char* qiFieldName, RaveValueType* otype, double* ovalue, double* qivalue)
 {
   int result = 0;
-  
+
   if (quantity == NULL) {
     return 0;
   }

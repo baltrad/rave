@@ -570,7 +570,7 @@ int CompositeEngineUtility_selectRadarData(CompositeEngine_t* engine, void* extr
         if (cvalues[cindex].getPolarValueAtPosition != NULL) {
           cvalues[cindex].getPolarValueAtPosition(engine, extradata, arguments, binding, cvalues[cindex].name, &navinfo, qiFieldName, &otype, &ovalue, &qivalue);
         } else {
-          CompositeEngineUtility_getPolarValueAtPosition(engine, extradata, arguments, binding, cvalues[cindex].name, &navinfo, qiFieldName, &otype, &ovalue, &qivalue);
+          CompositeEngineFunction_getPolarValueAtPosition(engine, extradata, arguments, binding, cvalues[cindex].name, &navinfo, qiFieldName, &otype, &ovalue, &qivalue);
         }
 
         if (otype == RaveValueType_DATA || otype == RaveValueType_UNDETECT) {
@@ -830,7 +830,6 @@ Cartesian_t* CompositeEngine_generate(CompositeEngine_t* self, CompositeArgument
     }
     RAVE_OBJECT_RELEASE(obj);
   }
-
   if (!CompositeEngineFunction_onStarting(self, extradata, arguments, bindings, nbindings)) {
     goto fail;
   }
