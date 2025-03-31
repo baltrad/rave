@@ -2,7 +2,7 @@
 #include "thread_pool_executor.hpp"
 #include "cartesian.h"
 #include "compositing.h"
-#include "odim_source.h"
+
 #include "raveobject_list.h"
 
 extern "C" {
@@ -21,6 +21,7 @@ extern "C" {
 #include "tileregistry.h"
 #include "cartesianvolume.h"
 #include "transform.h"
+#include "odim_source.h"
 }
 
 #include <sys/sysinfo.h>
@@ -750,16 +751,16 @@ void TiledCompositing::_add_radar_index_value_to_argument_list(std::vector<args_
     } else if (is_volume) {
       vsource.assign(PolarVolume_getSource((PolarVolume_t*)v));
     }
-    // Create ODIM_Sourece class.
-    ODIM_Source odim_source(vsource);
+
     // Set default
     sourceid = vsource;
-    if (odim_source.nod.length()) {
-      sourceid = "NOD:" + odim_source.nod;
-    } else if (odim_source.wmo.length()) {
-      sourceid = "WMO:" + odim_source.wmo;
-    } else if (odim_source.rad.length()) {
-      sourceid = "RAD:" + odim_source.rad;
+
+    if (OdimSource_getIdFromOdimSourceInclusive(vsource.c_str(), "NOD") != NULL) {
+      sourceid = OdimSource_getIdFromOdimSourceInclusive(vsource.c_str(), "NOD");
+    } else if (OdimSource_getIdFromOdimSourceInclusive(vsource.c_str(), "WMO") != NULL) {
+      sourceid = OdimSource_getIdFromOdimSourceInclusive(vsource.c_str(), "WMO");
+    } else if (OdimSource_getIdFromOdimSourceInclusive(vsource.c_str(), "RAD") != NULL) {
+      sourceid = OdimSource_getIdFromOdimSourceInclusive(vsource.c_str(), "RAD");
     }
 
     for (auto & arg : args) {

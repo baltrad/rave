@@ -1,5 +1,4 @@
 #include "compositing.h"
-#include "odim_source.h"
 
 extern "C" {
 #include "rave_attribute.h"
@@ -11,6 +10,7 @@ extern "C" {
 #include "polarscan.h"
 #include "polarvolume.h"
 #include "arearegistry.h"
+#include "odim_source.h"
 }
 
 #include <math.h>
@@ -295,15 +295,15 @@ void Compositing::set_quality_control_mode_from_string(std::string modestr){
         } else {
           source = PolarScan_getSource((PolarScan_t*)obj);
         }
-        ODIM_Source odim_source(source);
         std::string node = "n/a";
-        if (odim_source.nod.length()) { 
-          node= odim_source.nod;
-        } else if (odim_source.wmo.length()) {
-          node=odim_source.wmo;
-        } else if (odim_source.wigos.length()) {
-          node=odim_source.wigos;
+        if (OdimSource_getIdFromOdimSource(source.c_str(), "NOD") != NULL) {
+          node = OdimSource_getIdFromOdimSource(source.c_str(), "NOD");
+        } else if (OdimSource_getIdFromOdimSource(source.c_str(), "WMO") != NULL) {
+          node = OdimSource_getIdFromOdimSource(source.c_str(), "WMO");
+        } else if (OdimSource_getIdFromOdimSource(source.c_str(), "WIGOS") != NULL) {
+          node = OdimSource_getIdFromOdimSource(source.c_str(), "WIGOS");
         }
+
         if (nodes.length()) {
           nodes += "," + node;
         } else {
@@ -579,14 +579,14 @@ void Compositing::set_quality_control_mode_from_string(std::string modestr){
       Composite_add(generator, (RaveCoreObject*) o);
       //We want to ensure that we get a proper indexing of included radar
       std::string sourceid = PolarVolume_getSource((PolarVolume_t*) o);
-      ODIM_Source odim_source(sourceid);
-      if (odim_source.nod.length()) { 
-        sourceid = "NOD:" + odim_source.nod;
-      } else if (odim_source.wmo.length()) {
-        sourceid = "WMO:" + odim_source.wmo;
-      } else if (odim_source.rad.length()) {
-        sourceid = "RAD:" + odim_source.rad;
+      if (OdimSource_getIdFromOdimSourceInclusive(sourceid.c_str(), "NOD") != NULL) {
+        sourceid = OdimSource_getIdFromOdimSourceInclusive(sourceid.c_str(), "NOD");
+      } else if (OdimSource_getIdFromOdimSourceInclusive(sourceid.c_str(), "WMO") != NULL) {
+        sourceid = OdimSource_getIdFromOdimSourceInclusive(sourceid.c_str(), "WMO");
+      } else if (OdimSource_getIdFromOdimSourceInclusive(sourceid.c_str(), "RAD") != NULL) {
+        sourceid = OdimSource_getIdFromOdimSourceInclusive(sourceid.c_str(), "RAD");
       }
+
       if(!RaveObjectHashTable_exists(radar_index_mapping, sourceid.c_str())) {
         RaveAttribute_t* attr = RaveAttributeHelp_createLong(sourceid.c_str(), i+1);
         if (attr != NULL) {
