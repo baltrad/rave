@@ -19,6 +19,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 /**
  * Python version of the Acqva API.
  * @file
+ * @deprecated {Will be removed in the future in favor of Acqva Composite Factory}
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2024-01-18
  */

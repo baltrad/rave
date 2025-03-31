@@ -204,14 +204,12 @@ class RavePGF():
   # @param arguments list of verified arguments to pass to the generator
   # @return the result from the algorithm, either filename or None
   def _run(self, algorithm, files, arguments):
-    import imp
+    import importlib
     mod_name, func_name = algorithm.get('module'), algorithm.get('function')
 
     self.logger.info(f"[{self.name}] RavePGF._run: Running ID={self._jobid} method {mod_name}.{func_name}")
 
-    fd, pathname, description = imp.find_module(mod_name)
-    module = imp.load_module(mod_name, fd, pathname, description)
-    fd.close()  # File descriptor is returned open, so close it.
+    module = importlib.import_module(mod_name)
     func = getattr(module, func_name)
     outfile = func(files, arguments)
 

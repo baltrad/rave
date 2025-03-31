@@ -98,7 +98,7 @@ def get_backup_gra_coefficient(db, agedt, nowdt):
   except Exception:
     logger.exception("Failed to aquire coefficients")
 
-  logger.warn("Could not aquire coefficients newer than %s, defaulting to climatologic"%agedt.strftime("%Y%m%d %H:%M:%S"))
+  logger.warning("Could not aquire coefficients newer than %s, defaulting to climatologic"%agedt.strftime("%Y%m%d %H:%M:%S"))
   return "False", 0, 0, 0.0, "False", 0.0, DEFAULTA, DEFAULTB, DEFAULTC, 0.0, 0.0
 
 ## Creates a composite
@@ -200,7 +200,7 @@ def generate(files, arguments):
 
     par = obj.getParameter(quantity)
     if par == None:
-      logger.warn("Could not find parameter (%s) for %s %s"%(quantity, obj.date, obj.time))
+      logger.warning("Could not find parameter (%s) for %s %s"%(quantity, obj.date, obj.time))
     else:
       if par.getQualityFieldByHowTask(distancefield) != None:
         acrr.sum(par, zr_a, zr_b)

@@ -72,7 +72,7 @@ class fm12_importer(object):
       except:
         os.kill(int(c), signal.SIGKILL)
     except:
-      self._logger.warn("Failed to kill daemon. Check pid!")
+      self._logger.warning("Failed to kill daemon. Check pid!")
       print("Could not kill daemon. Check pid.")
     finally:
       os.remove(self.pidfile)

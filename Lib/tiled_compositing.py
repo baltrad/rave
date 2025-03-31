@@ -106,6 +106,7 @@ class multi_composite_arguments(object):
     self.ignore_malfunc = False
     self.prodpar = None
     self.product = _rave.Rave_ProductType_PCAPPI
+    self.prodstr = "PCAPPI"
     self.height = 1000.0
     self.elangle = 0.0
     self.range = 200000.0
@@ -127,7 +128,9 @@ class multi_composite_arguments(object):
     self.dump = False
     self.dumppath = None
     self.radar_index_mapping = {}
-  
+    self.use_legacy_compositing=True
+    self.strategy = None
+
   ##
   # Generate function. Basically same as calling compositing.generate but the pyarea is created from the
   # area definition.
@@ -146,6 +149,7 @@ class multi_composite_arguments(object):
     comp.ignore_malfunc = self.ignore_malfunc
     comp.prodpar = self.prodpar
     comp.product = self.product
+    comp.prodstr = self.prodstr
     comp.height = self.height
     comp.elangle = self.elangle
     comp.range = self.range
@@ -167,6 +171,8 @@ class multi_composite_arguments(object):
     comp.dump = self.dump
     comp.dumppath = self.dumppath
     comp.radar_index_mapping = self.radar_index_mapping
+    comp.use_legacy_compositing = self.use_legacy_compositing
+    comp.strategy = self.strategy
 
     pyarea = _area.new()
     pyarea.id = "tiled area subset %s"%tid
@@ -331,6 +337,7 @@ class tiled_compositing(object):
     a.ignore_malfunc = self.compositing.ignore_malfunc
     a.prodpar = self.compositing.prodpar
     a.product = self.compositing.product
+    a.prodstr = self.compositing.prodstr
     a.height = self.compositing.height
     a.elangle = self.compositing.elangle
     a.range = self.compositing.range
@@ -350,6 +357,8 @@ class tiled_compositing(object):
     a.dumppath = self.compositing.dumppath
     a.reprocess_quality_field = self.compositing.reprocess_quality_field
     a.area_definition = adef
+    a.use_legacy_compositing=self.compositing.use_legacy_compositing
+    a.strategy=self.compositing.strategy
     
     return a
   
@@ -556,7 +565,7 @@ class tiled_compositing(object):
       for v in results[0]:
         tile_file = v[1]
         if tile_file == None:
-          self.logger.warn(f"[{self.mpname}] tiled_compositing.generate: No partial composite for tile area {v[0]} was created. This tile will therefore not be included in complete composite.")
+          self.logger.warning(f"[{self.mpname}] tiled_compositing.generate: No partial composite for tile area {v[0]} was created. This tile will therefore not be included in complete composite.")
         else:
           o = _raveio.open(tile_file).object
           if _cartesianvolume.isCartesianVolume(o):
@@ -588,7 +597,7 @@ class tiled_compositing(object):
           try:
             os.unlink(fname)
           except:
-            logger.warn(f"[{self.mpname}] tiled_compositing.generate: Failed to remove temporary file: {fname}")
+            logger.warning(f"[{self.mpname}] tiled_compositing.generate: Failed to remove temporary file: {fname}")
       
       if results != None:
         for v in results[0]:

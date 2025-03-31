@@ -216,12 +216,12 @@ class rave_db(object):
   def psql_invalidate(self, dbapi_conn, connection_rec, exception):
     if exception != None and isinstance(exception, OperationalError):
       if "server closed the connection unexpectedly" in exception.message:
-        logger.warn("Got invalidation message indicating that there has been connection problems. Recreating pool.")
+        logger.warning("Got invalidation message indicating that there has been connection problems. Recreating pool.")
         self._engine.dispose()
     elif exception != None and isinstance(exception,  psycopg2.OperationalError):
-      logger.warn("psycopg2,OperationalError will be tested")
+      logger.warning("psycopg2,OperationalError will be tested")
       if "server closed the connection unexpectedly" in exception.message:
-        logger.warn("Got invalidation message indicating that there has been connection problems. Recreating pool.")
+        logger.warning("Got invalidation message indicating that there has been connection problems. Recreating pool.")
         self._engine.dispose()
 
   ##
@@ -328,7 +328,7 @@ class rave_db(object):
       if enddt != None:
         q = q.filter(observation.date + observation.time <= enddt)
         
-      no_of_observations = q.delete()
+      no_of_observations = q.delete(synchronize_session=False)
       s.commit()
       
       return no_of_observations
@@ -385,7 +385,7 @@ class rave_db(object):
         q = s.query(grapoint).filter(grapoint.date + grapoint.time >= dt)
         q = q.filter(grapoint.date + grapoint.time <= edt)
          
-      pts = q.delete()
+      pts = q.delete(synchronize_session=False)
       s.commit()
       return pts
     

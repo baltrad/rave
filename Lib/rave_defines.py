@@ -27,6 +27,7 @@ import sys
 import os
 import datetime
 import rave_defines
+import _rave
 
 ## PATHS
 #
@@ -74,6 +75,11 @@ ARRAYTYPES = {'b':'char', 'B':'uchar', 'I':'int', 'h':'short',
 # Default gain and offset values for linear transformation between raw and dBZ
 GAIN = 0.4
 OFFSET = -30.0
+
+FACTORY_GAIN_OFFSET_TABLE = {
+    "DBZH":(GAIN, OFFSET, _rave.RaveDataType_UCHAR, 255.0, 0.0),
+    "RATE":(1.0, 0.0, _rave.RaveDataType_DOUBLE, -1.0, 0.0)
+}
 
 # Default Z-R coefficients, legacy from BALTEX Working Group on Radar
 ZR_A = 200.0
@@ -149,6 +155,14 @@ ODIM_SOURCE_FILE = os.path.join(RAVECONFIG, 'odim_source.xml')
 QUALITY_REGISTRY=os.path.join(RAVEETC, 'rave_pgf_quality_registry.xml')
 
 RAVE_TILE_REGISTRY=os.path.join(RAVEETC, 'rave_tile_registry.xml')
+
+# The name of the composite generator filter file containing the settings for factories.
+COMPOSITE_GENERATOR_FILTER_FILENAME = os.path.join(RAVECONFIG, 'composite_generator_filter.xml')
+
+# The location where the cluttermaps can be found when using ACQVA
+# The names of the cluttermaps should be in the format <nod>.h5, for example
+# seang.h5, ...
+ACQVA_CLUTTERMAP_DIR = "/var/lib/baltrad/rave/acqva/cluttermap"
 
 # Max number of processes to use when performing the composite tiling. If None, then
 # the number of processes will be set to number of tiles or less depending on how many

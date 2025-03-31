@@ -266,7 +266,6 @@ int PooCompositeAlgorithm_fillQualityInformation(CompositeAlgorithm_t* self,
       double v = 0.0;
       double convertedval = 0.0;
       RaveValueType t = PolarScan_getNearest(pooscan, navinfo->lon, navinfo->lat, 1, &v);
-
       if (t != RaveValueType_DATA) {
         v = 0.0;
       }

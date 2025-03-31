@@ -28,6 +28,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_attribute.h"
 #include "raveobject_list.h"
 #include "raveobject_hashtable.h"
+#include <strings.h>
 
 #ifdef _MSC_VER
 #ifndef strncasecmp
@@ -125,6 +126,22 @@ int RaveUtilities_iswhitespace(char c);
 char* RaveUtilities_trimText(const char* str, int len);
 
 /**
+ * Translates a string to lower case.
+ * @param[in] str - the string to convert
+ * @param[in] len - the length of the string to convert
+ * @return a new string. Remember to free.
+ */
+char* RaveUtilities_toLower(const char* str, int len);
+
+/**
+ * Translates a string to upper case.
+ * @param[in] str - the string to convert
+ * @param[in] len - the length of the string to convert
+ * @return a new string. Remember to free.
+ */
+char* RaveUtilities_toUpper(const char* str, int len);
+
+/**
  * Returns a list of tokens delimited by 'c'. The tokens will
  * be trimmed from any leading and trailing whitespaces.
  * @param[in] str - the string to tokenize
@@ -132,6 +149,15 @@ char* RaveUtilities_trimText(const char* str, int len);
  * @returns a list of tokens, use @ref RaveList_freeAndDestroy to delete
  */
 RaveList_t* RaveUtilities_getTrimmedTokens(const char* str, int c);
+
+/**
+ * Checks if the array arr contains the string str. It is also possible
+ * to specify if string comparison should be done using case or not.
+ * @param[in] arr - An array that has NULL at last entry
+ * @param[in] str - the string to check for
+ * @param[in] casecmp - If case should be used or not.
+ */
+int RaveUtilities_arrayContains(const char* arr[], const char* str, int casecmp);
 
 /**
  * Returns if xml support is activated or not since expat support

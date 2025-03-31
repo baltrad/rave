@@ -133,6 +133,14 @@ def generate(files, arguments):
   if "yscale" in args.keys():
     comp.yscale = float(args["yscale"])
   
+  if "options" in args:
+    options = args["options"].split(",")
+    for o in options:
+      if o.startswith("factory:"):
+        strategy = o.replace("factory:", "")
+        comp.use_legacy_compositing = False
+        if strategy != "any":
+          comp.strategy = strategy
   #if options.gf: Activate gap filling for rule
   #  comp.applygapfilling = True
   

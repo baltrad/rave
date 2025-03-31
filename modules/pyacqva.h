@@ -19,6 +19,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 /**
  * Python version of the Acqva API.
  * @file
+ * @deprecated 
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2024-01-18
  */
@@ -28,6 +29,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * A composite generator
+ * @deprecated {Will be removed in the future in favor of PyAcqvaCompositeGeneratorFactory}
  */
 typedef struct {
   PyObject_HEAD; /*Always has to be on top*/
