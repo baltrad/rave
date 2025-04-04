@@ -1,0 +1,111 @@
+/*
+Copyright (C) 2025- Swedish Meteorological and Hydrological Institute (SMHI)
+
+This file is part of RAVE.
+
+RAVE is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+RAVE is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+See the GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
+
+*/
+//## C++ implementation to composite generator functionality.
+
+//## @file
+//## @author Anders Henja and Yngve Einarsson, SMHI
+//## @date 2025-04-01
+//import os, sys, math
+//import _compositefactorymanager, _compositegenerator, _compositearguments, _raveproperties, _odimsources
+//import _rave
+
+#include "generator.h"
+#include "rave_defines.h"
+
+extern "C" {
+#include "rave_object.h"
+#include "compositefactorymanager.h"
+#include "compositegenerator.h"
+#include "compositearguments.h"
+#include "rave_properties.h"
+#include "odim_sources.h"
+}
+
+#include <sstream>
+#include <cstring>
+
+Generator::Generator() {
+    _manager=0;
+    _generator=0;
+};
+Generator::~Generator() {
+    if (_manager != 0) {
+        RAVE_OBJECT_RELEASE(_manager);
+    }
+    if (_generator != 0) {
+        RAVE_OBJECT_RELEASE(_generator);
+    }
+};
+
+void Generator::init(std::string generatorfilter){
+    _manager = (CompositeFactoryManager_t *)RAVE_OBJECT_NEW(&CompositeFactoryManager_TYPE);
+    //self._manager = _compositefactorymanager.new()
+    _generator = CompositeGenerator_create(_manager, generatorfilter.c_str());
+    //self._generator = _compositegenerator.create(self._manager, generatorfilter)
+    CompositeGenerator_setProperties(_generator, load_properties());
+    //self._generator.properties = self.load_properties()
+
+};
+
+CompositeArguments_t * Generator::create_arguments(){
+    return (CompositeArguments_t *)RAVE_OBJECT_NEW(&CompositeArguments_TYPE);
+};
+
+Cartesian_t * Generator::generate(CompositeArguments_t* arguments){
+    return CompositeGenerator_generate(_generator, arguments);
+};
+
+void Generator::update_arguments_with_prodpar(CompositeArguments_t * arguments, std::string prodpar) {
+    if (prodpar.length() != 0) {
+        if ((!strcmp(CompositeArguments_getProduct(arguments),"CAPPI")) || (!strcmp(CompositeArguments_getProduct(arguments),"PCAPPI"))) {
+            CompositeArguments_setHeight(arguments, _strToNumber(prodpar));
+        }
+        else if (!strcmp(CompositeArguments_getProduct(arguments),"PMAX")) {
+            std::vector<std::string> pp;
+            std::istringstream f(prodpar);
+            std::string s;
+            while (getline(f, s, ',')) {
+                pp.push_back(s);
+            }
+            // FIXME: Do we need to strip withspaces?
+            if (pp.size() == 2) {
+                CompositeArguments_setHeight(arguments, _strToNumber(pp[0]));
+                CompositeArguments_setRange(arguments, _strToNumber(pp[1]));
+            } else if (pp.size() == 1) {
+                CompositeArguments_setHeight(arguments, _strToNumber(pp[0]));
+            }
+        }
+        else if (!strcmp(CompositeArguments_getProduct(arguments),"PPI")) {
+            float v = _strToNumber(prodpar);
+            CompositeArguments_setElevationAngle(arguments, v * M_PI / 180.0);
+        }
+    }
+};
+
+RaveProperties_t * Generator::load_properties(){
+    RaveProperties_t * properties = (RaveProperties_t *)RAVE_OBJECT_NEW(&RaveProperties_TYPE);
+    RaveValue_t* value = RaveValue_createString("/projects/baltrad/laser-data/cluttermaps");
+    RaveProperties_set(properties, "rave.acqva.cluttermap.dir", value);
+    //#properties.set("rave.rate.zr.coefficients", {"sella":(200.0, 1.6), "sekrn": (200.0, 1.6)})
+    RaveProperties_setOdimSources(properties, OdimSources_load(ODIM_SOURCE_FILE.c_str()));
+    //properties.sources = _odimsources.load(ODIM_SOURCE_FILE)  //# To be able to do NOD lookup of cluttermap
+    return properties;
+};
+

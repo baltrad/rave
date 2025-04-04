@@ -2,6 +2,7 @@
 #include "thread_pool_executor.hpp"
 #include "cartesian.h"
 #include "compositing.h"
+#include "rave_defines.h"
 
 #include "raveobject_list.h"
 
@@ -39,37 +40,6 @@ extern "C" {
 #include <mutex>
 
 
-/**
- * Max number of process to use when executing the quality controls.
- * Default is 4 but this should probably be tuned
- * depending on how many files that needs to be quality controled and number of available cores.
- */
-const int RAVE_QUALITY_CONTROL_PROCESSES = 4;
-
-/**
- * FIXME: ORIGINAL CODE IS IN PYTHON FIX THIS DESCRIPTION. THIS MIGHT NOT BE CORRECT.
- * Timeout in seconds when waiting for a tile to be completed.
- * If no timeout is specified (None) the wait will be indefinite.
- * However, the recommended timeout is somewhere between 1 and 15 minutes depending on the load you are expecting.
- * The reason for this timeout is that if the process creating a tile crashes (like OOM) the complete PGF will hang for ever.
- * Defined in seconds!
- */
-const int RAVE_TILE_COMPOSITING_TIMEOUT_SECONDS = 290;
-
-/**
- * FIXME: Python specific documentation. Does not align with C++ code.
- * If a tile is missing due to a timeout it is possible to either allow that behavior and
- * ignore the problem like if all files was missing or else let a runtime error be thrown
- * which will result in a missing composite.
- */
-const bool RAVE_TILE_COMPOSITING_ALLOW_MISSING_TILES=false;
-
-/**
- * Max number of processes to use when performing the composite tiling.
- * If 0, then the number of processes will be set to number of tiles or less depending on how many cores that are available.
- * If number of cores > 1, then there will always be one core left for handling the result.
- */
-const int RAVE_TILE_COMPOSITING_PROCESSES=0;
 
 std::mutex multi_composite_arguments::mutex;
 
@@ -623,6 +593,8 @@ multi_composite_arguments* TiledCompositing::_create_multi_composite_argument(ti
   a->area_definition = adef;
   a->use_lazy_loading = compositing->use_lazy_loading;
   a->use_lazy_loading_preloads = compositing->use_lazy_loading_preloads;
+  a->use_legacy_compositing = compositing->use_legacy_compositing;
+  a->strategy = compositing->strategy;
 
   return a;
 }
@@ -926,7 +898,7 @@ Cartesian_t* TiledCompositing::generate(std::string dd, std::string dt, std::str
     nrprocesses = nrprocesses - 1;  // # We always want to leave at least one core for something else
   }
   // INVOKE thread pool implementation.
-  thread_pool_executor executor(nrprocesses, nrprocesses, std::chrono::seconds(RAVE_TILE_COMPOSITING_TIMEOUT_SECONDS), ntiles);
+  thread_pool_executor executor(nrprocesses, nrprocesses, std::chrono::seconds(RAVE_TILE_COMPOSITING_TIMEOUT), ntiles);
   std::vector<std::future<result_from_tiler>> futures;
   for (size_t i = 0; i < args.size(); ++i) {
     futures.push_back(executor.submit(comp_generate, args[i]));
@@ -965,7 +937,7 @@ Cartesian_t* TiledCompositing::generate(std::string dd, std::string dt, std::str
         if (RAVE_TILE_COMPOSITING_ALLOW_MISSING_TILES) {
           result_from_tiler result;
           result.tileid = a.areaid;
-          result.totaltime = RAVE_TILE_COMPOSITING_TIMEOUT_SECONDS;
+          result.totaltime = RAVE_TILE_COMPOSITING_TIMEOUT;
           results.push_back(result);
         } else {
           RAVE_CRITICAL1("No answer from subprocess when generating composite tile with areaid: %s", a.areaid.c_str());

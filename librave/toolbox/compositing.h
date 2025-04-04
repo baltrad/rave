@@ -22,6 +22,7 @@ extern "C" {
 /**
  * From rave_defines.py, RAVEROOT hardcoded for now
  */
+/*
 extern const char* RAVEROOT;
 extern const char* RAVECONFIG;
 extern const char* RAVEETC;
@@ -29,7 +30,7 @@ extern const char* RAVEETC;
 extern const char* PROJECTION_REGISTRY;
 extern const char* AREA_REGISTRY;
 extern const char* RAVE_TILE_REGISTRY;
-
+*/
 /**
  * @brief Compositing
  * Compositing class instance
@@ -146,6 +147,9 @@ public:
   // std::map <std::string,int> radar_index_mapping;
   bool use_lazy_loading;
   bool use_lazy_loading_preloads;
+
+  bool use_legacy_compositing;
+  std::string strategy;
 
   ProjectionRegistry_t* proj_registry;
   AreaRegistry_t* area_registry;

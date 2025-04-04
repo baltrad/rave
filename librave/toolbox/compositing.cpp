@@ -1,6 +1,9 @@
 #include "compositing.h"
+#include "rave_defines.h"
+#include "generator.h"
 
 extern "C" {
+#include "compositearguments.h"
 #include "rave_attribute.h"
 #include "composite.h"
 #include "rave_debug.h"
@@ -73,6 +76,8 @@ extern "C" {
       //radar_index_mapping = {}
       use_lazy_loading=true;
       use_lazy_loading_preloads=true;
+      use_legacy_compositing=true;
+      //strategy; empty for now
       proj_registry = 0;
       area_registry = 0;
       tile_registry = 0;
@@ -296,12 +301,12 @@ void Compositing::set_quality_control_mode_from_string(std::string modestr){
           source = PolarScan_getSource((PolarScan_t*)obj);
         }
         std::string node = "n/a";
-        if (OdimSource_getIdFromOdimSource(source.c_str(), "NOD") != NULL) {
-          node = OdimSource_getIdFromOdimSource(source.c_str(), "NOD");
-        } else if (OdimSource_getIdFromOdimSource(source.c_str(), "WMO") != NULL) {
-          node = OdimSource_getIdFromOdimSource(source.c_str(), "WMO");
-        } else if (OdimSource_getIdFromOdimSource(source.c_str(), "WIGOS") != NULL) {
-          node = OdimSource_getIdFromOdimSource(source.c_str(), "WIGOS");
+        if (OdimSource_getIdFromOdimSource(source.c_str(), "NOD:") != NULL) {
+          node = OdimSource_getIdFromOdimSource(source.c_str(), "NOD:");
+        } else if (OdimSource_getIdFromOdimSource(source.c_str(), "WMO:") != NULL) {
+          node = OdimSource_getIdFromOdimSource(source.c_str(), "WMO:");
+        } else if (OdimSource_getIdFromOdimSource(source.c_str(), "WIGOS:") != NULL) {
+          node = OdimSource_getIdFromOdimSource(source.c_str(), "WIGOS:");
         }
 
         if (nodes.length()) {
@@ -482,7 +487,7 @@ void Compositing::set_quality_control_mode_from_string(std::string modestr){
     if (verbose) {
       RAVE_INFO1("Fetching objects and applying quality plugins", mpname.c_str());
     }
-      
+
     RAVE_DEBUG3("Generating composite with date and time %sT%s for area %s", dd.c_str(), dt.c_str(), areaid.c_str());
     
     // In C++, we can only return one datatype, not many as i python.
@@ -509,14 +514,14 @@ void Compositing::set_quality_control_mode_from_string(std::string modestr){
     else
       qccontrols+= "," + qfields;
     RAVE_DEBUG1("[radarcomp_c] compositing.generate: Quality controls for composite generation: %s", qccontrols.c_str());
-      
+
     if (file_objects.size() == 0) {
       RAVE_INFO0("[radarcomp_c] compositing.generate: No objects provided to the composite generator. No composite will be generated!");
       return 0;
     }
-    
+
     std::vector<RaveCoreObject*> vobjects;
-        
+
     // Copy the objects to use in composite generator
     // Increments the reference counter
     for(auto & obj: file_objects) {
@@ -526,120 +531,196 @@ void Compositing::set_quality_control_mode_from_string(std::string modestr){
     if (dump) {
       _dump_objects(vobjects);
     }
-
-    Composite_t* generator = (Composite_t *)RAVE_OBJECT_NEW(&Composite_TYPE);
-    if (generator == 0) {
-      RAVE_CRITICAL0("Failed to allocate memory for composite.");
-      return 0;
-    }
-    
-    
+    Composite_t* generator = 0;
+    Cartesian_t* result = 0;
     Area_t* the_area = 0;
-    
-    // first, search the area registry for area.
-    if (areaid.length()) {
-       the_area = AreaRegistry_getByName(area_registry, areaid.c_str());
-    } else if (area != 0) {
-      the_area = area;
-    }
-    
-    if (the_area==0) {
-      RAVE_CRITICAL1("Failed to get area %s from area registry.", areaid.c_str());
-      RAVE_OBJECT_RELEASE(generator);
-      for (auto & k : file_objects) {
-        if (k.second) {
-          RAVE_OBJECT_RELEASE(k.second);
-        }
-      }
-      return 0;
-    }
-    
-    Composite_addParameter(generator, quantity.c_str(), gain, offset, minvalue);
-    Composite_setProduct(generator, product);
-    if (algorithm != 0) {
-      Composite_setAlgorithm(generator, algorithm);
-    }
-    // FIXME: Create RaveObjectHashTable_t* object
-    radar_index_mapping = (RaveObjectHashTable_t*)RAVE_OBJECT_NEW(&RaveObjectHashTable_TYPE);
-    if (radar_index_mapping == 0) {
-      RAVE_CRITICAL0("Failed to allocate memory for radar_index_mapping.");
-      RAVE_OBJECT_RELEASE(the_area);
-      RAVE_OBJECT_RELEASE(generator);
-      for (auto & k : file_objects) {
-        if (k.second) {
-          RAVE_OBJECT_RELEASE(k.second);
-        }
-      }
-      return 0;
-    }
-    // Add the objects to composite
-    int i = 0;
-    for (auto const& o:vobjects) {
-      // NOTE: Composite_add increments the reference counter of o!
-      Composite_add(generator, (RaveCoreObject*) o);
-      //We want to ensure that we get a proper indexing of included radar
-      std::string sourceid = PolarVolume_getSource((PolarVolume_t*) o);
-      if (OdimSource_getIdFromOdimSourceInclusive(sourceid.c_str(), "NOD") != NULL) {
-        sourceid = OdimSource_getIdFromOdimSourceInclusive(sourceid.c_str(), "NOD");
-      } else if (OdimSource_getIdFromOdimSourceInclusive(sourceid.c_str(), "WMO") != NULL) {
-        sourceid = OdimSource_getIdFromOdimSourceInclusive(sourceid.c_str(), "WMO");
-      } else if (OdimSource_getIdFromOdimSourceInclusive(sourceid.c_str(), "RAD") != NULL) {
-        sourceid = OdimSource_getIdFromOdimSourceInclusive(sourceid.c_str(), "RAD");
+    if (use_legacy_compositing) {
+      RAVE_INFO0("Using legacy compositing");
+      generator = (Composite_t *)RAVE_OBJECT_NEW(&Composite_TYPE);
+      if (generator == 0) {
+        RAVE_CRITICAL0("Failed to allocate memory for composite.");
+        return 0;
       }
 
-      if(!RaveObjectHashTable_exists(radar_index_mapping, sourceid.c_str())) {
-        RaveAttribute_t* attr = RaveAttributeHelp_createLong(sourceid.c_str(), i+1);
-        if (attr != NULL) {
-          if (!RaveObjectHashTable_put(radar_index_mapping, sourceid.c_str(), (RaveCoreObject*)attr)) {
-            RAVE_ERROR0("Failed to add attribute to radar index mapping");
+      // first, search the area registry for area.
+      if (areaid.length()) {
+        the_area = AreaRegistry_getByName(area_registry, areaid.c_str());
+      } else if (area != 0) {
+        the_area = area;
+      }
+
+      if (the_area==0) {
+        RAVE_CRITICAL1("Failed to get area %s from area registry.", areaid.c_str());
+        RAVE_OBJECT_RELEASE(generator);
+        for (auto & k : file_objects) {
+          if (k.second) {
+            RAVE_OBJECT_RELEASE(k.second);
           }
         }
-        RAVE_OBJECT_RELEASE(attr);
+        return 0;
       }
-    }
-    // clang-format off
-    /*
-    for (int i = 0; i < nrObjects; i++) {
-      char* sourceId = MyCode_extractSourceFromRadar(myobjects[i]);   // Returnerar WMO:12345 eller NOD:seang eller något sådant. Finns kod i composite.c hur man extraherar sådan information från volymer/scan
-      RaveAttribute_t* attr = RaveAttribute_createLong(sourceid, i+1);
-      if (attr != NULL) {
-        if (!RaveObjectHashTable_put(sourceid, attr)) {
-          RAVE_ERROR0("Failed to add attribute to radar index mapping");
+
+      Composite_addParameter(generator, quantity.c_str(), gain, offset, minvalue);
+      Composite_setProduct(generator, product);
+      if (algorithm != 0) {
+        Composite_setAlgorithm(generator, algorithm);
+      }
+      // FIXME: Create RaveObjectHashTable_t* object
+      radar_index_mapping = (RaveObjectHashTable_t*)RAVE_OBJECT_NEW(&RaveObjectHashTable_TYPE);
+      if (radar_index_mapping == 0) {
+        RAVE_CRITICAL0("Failed to allocate memory for radar_index_mapping.");
+        RAVE_OBJECT_RELEASE(the_area);
+        RAVE_OBJECT_RELEASE(generator);
+        for (auto & k : file_objects) {
+          if (k.second) {
+            RAVE_OBJECT_RELEASE(k.second);
+          }
+        }
+        return 0;
+      }
+      // Add the objects to composite
+      int i = 0;
+      for (auto const& o:vobjects) {
+        // NOTE: Composite_add increments the reference counter of o!
+        Composite_add(generator, (RaveCoreObject*) o);
+        //We want to ensure that we get a proper indexing of included radar
+        std::string sourceid = PolarVolume_getSource((PolarVolume_t*) o);
+        if (OdimSource_getIdFromOdimSourceInclusive(sourceid.c_str(), "NOD") != NULL) {
+          sourceid = OdimSource_getIdFromOdimSourceInclusive(sourceid.c_str(), "NOD");
+        } else if (OdimSource_getIdFromOdimSourceInclusive(sourceid.c_str(), "WMO") != NULL) {
+          sourceid = OdimSource_getIdFromOdimSourceInclusive(sourceid.c_str(), "WMO");
+        } else if (OdimSource_getIdFromOdimSourceInclusive(sourceid.c_str(), "RAD") != NULL) {
+          sourceid = OdimSource_getIdFromOdimSourceInclusive(sourceid.c_str(), "RAD");
+        }
+
+        if(!RaveObjectHashTable_exists(radar_index_mapping, sourceid.c_str())) {
+          RaveAttribute_t* attr = RaveAttributeHelp_createLong(sourceid.c_str(), i+1);
+          if (attr != NULL) {
+            if (!RaveObjectHashTable_put(radar_index_mapping, sourceid.c_str(), (RaveCoreObject*)attr)) {
+              RAVE_ERROR0("Failed to add attribute to radar index mapping");
+            }
+          }
+          RAVE_OBJECT_RELEASE(attr);
         }
       }
-      RAVE_OBJECT_RELEASE(attr);
+      // clang-format off
+      /*
+       * for (int i = 0; i < nrObjects; i++) {
+       *   char* sourceId = MyCode_extractSourceFromRadar(myobjects[i]);   // Returnerar WMO:12345 eller NOD:seang eller något sådant. Finns kod i composite.c hur man extraherar sådan information från volymer/scan
+       *   RaveAttribute_t* attr = RaveAttribute_createLong(sourceid, i+1);
+       *   if (attr != NULL) {
+       *     if (!RaveObjectHashTable_put(sourceid, attr)) {
+       *       RAVE_ERROR0("Failed to add attribute to radar index mapping");
+    }
+    }
+    RAVE_OBJECT_RELEASE(attr);
     }*/
-    // clang-format on
-    Composite_setSelectionMethod(generator, selection_method);
-    Composite_setInterpolationMethod(generator, interpolation_method);
-    std::string date = PolarVolume_getDate((PolarVolume_t*)vobjects[0]);
-    std::string time = PolarVolume_getTime((PolarVolume_t*)vobjects[0]);
-    if (dd.length())
-      date=dd;
-    if (dt.length())
-      time=dt;
-    Composite_setDate(generator, date.c_str());
-    Composite_setTime(generator, time.c_str());
-    Composite_setHeight(generator, height);
-    Composite_setElevationAngle(generator, elangle);
-    Composite_setRange(generator, height);
+      // clang-format on
+      Composite_setSelectionMethod(generator, selection_method);
+      Composite_setInterpolationMethod(generator, interpolation_method);
+      std::string date = PolarVolume_getDate((PolarVolume_t*)vobjects[0]);
+      std::string time = PolarVolume_getTime((PolarVolume_t*)vobjects[0]);
+      if (dd.length())
+        date=dd;
+      if (dt.length())
+        time=dt;
+      Composite_setDate(generator, date.c_str());
+      Composite_setTime(generator, time.c_str());
+      Composite_setHeight(generator, height);
+      Composite_setElevationAngle(generator, elangle);
+      Composite_setRange(generator, height);
 
-    if (!qitotal_field.empty()) {
-      Composite_setQualityIndicatorFieldName(generator, qitotal_field.c_str());
-    }
+      if (!qitotal_field.empty()) {
+        Composite_setQualityIndicatorFieldName(generator, qitotal_field.c_str());
+      }
 
-    if (!prodpar.empty()) {
-      _update_generator_with_prodpar(generator);
-    }
+      if (!prodpar.empty()) {
+        _update_generator_with_prodpar(generator);
+      }
 
-    if (verbose)
-      RAVE_INFO0("[radarcomp_c] compositing.generate: Generating cartesian composite");
+      if (verbose)
+        RAVE_INFO0("[radarcomp_c] compositing.generate: Generating cartesian composite");
 
-    Composite_applyRadarIndexMapping(generator, radar_index_mapping);
-    //FIXME: Here we sort the volumes which is not thread safe. Set the property to the composite generator.
-    Composite_setSortPolarVolume(generator, 0);
-    Cartesian_t* result = Composite_generate(generator, the_area, 0);
+      Composite_applyRadarIndexMapping(generator, radar_index_mapping);
+      //FIXME: Here we sort the volumes which is not thread safe. Set the property to the composite generator.
+      Composite_setSortPolarVolume(generator, 0);
+      result = Composite_generate(generator, the_area, 0);
+    } else {
+      //##
+      //# This is the new composite handling where factories and filters are used to determine
+      //# how a composite should be generated
+      //##
+      RAVE_INFO0("Using composite generator factories");
 
+      // first, search the area registry for area.
+      if (areaid.length()) {
+        the_area = AreaRegistry_getByName(area_registry, areaid.c_str());
+      } else if (area != 0) {
+        the_area = area;
+      }
+
+      if (the_area==0) {
+        RAVE_CRITICAL1("Failed to get area %s from area registry.", areaid.c_str());
+        for (auto & k : file_objects) {
+          if (k.second) {
+            RAVE_OBJECT_RELEASE(k.second);
+          }
+        }
+        return 0;
+      }
+
+      Generator cgenerator;
+      cgenerator.init(COMPOSITE_GENERATOR_FILTER_FILENAME);
+
+      CompositeArguments_t * arguments = cgenerator.create_arguments();
+
+      for (auto const& o:vobjects) {
+        CompositeArguments_addObject(arguments, o);
+      }
+
+      for (std::string d : detectors) {
+        CompositeArguments_addQualityFlag(arguments,d.c_str());
+      }
+
+      CompositeArguments_setArea(arguments, the_area);
+
+      std::string date = PolarVolume_getDate((PolarVolume_t*)vobjects[0]);
+      std::string time = PolarVolume_getTime((PolarVolume_t*)vobjects[0]);
+      if (dd.length())
+        date=dd;
+      if (dt.length())
+        time=dt;
+      CompositeArguments_setDate(arguments, date.c_str());
+      CompositeArguments_setTime(arguments, time.c_str());
+
+      if (FACTORY_GAIN_OFFSET_TABLE.count(quantity)) {
+        const struct gain_offset paramcfg = FACTORY_GAIN_OFFSET_TABLE.at(quantity);
+        CompositeArguments_addParameter(arguments, quantity.c_str(), paramcfg.gain, paramcfg.offset, paramcfg.data_type, paramcfg.nodata, paramcfg.undetect);
+      }
+      else {
+        // use some sensible defaults.
+        CompositeArguments_addParameter(arguments, quantity.c_str(), gain, offset, RaveDataType::RaveDataType_UCHAR, 255.0, 0.0);
+      }
+      std::string prodstr = _product_repr();
+      std::transform(prodstr.begin(), prodstr.end(), prodstr.begin(),[](unsigned char c){ return std::toupper(c); });
+      CompositeArguments_setProduct(arguments, prodstr.c_str());
+
+      CompositeArguments_addArgument(arguments,RaveAttributeHelp_createString("selection_method", _selection_method_repr().c_str()));
+
+      CompositeArguments_setStrategy(arguments,strategy.c_str());
+      std::string imethod = _interpolation_method_repr();
+      if (imethod == "NEAREST_VALUE") {
+        imethod = "NEAREST";
+      }
+      CompositeArguments_addArgument(arguments,RaveAttributeHelp_createString("interpolation_method",imethod.c_str()));
+      CompositeArguments_setHeight(arguments,height);
+      CompositeArguments_setElevationAngle(arguments,elangle);
+      CompositeArguments_setRange(arguments,range);
+      CompositeArguments_setQIFieldName(arguments,qitotal_field.c_str());
+      cgenerator.update_arguments_with_prodpar(arguments, prodpar);
+
+      result = cgenerator.generate(arguments);
+    } // end of use legacy computing
     // Decrement the reference counter
     for (auto & o:vobjects) {
       if (o) {
@@ -673,11 +754,11 @@ void Compositing::set_quality_control_mode_from_string(std::string modestr){
       RAVE_INFO0("[radarcomp_c] compositing.generate: Trying to create a BRDR field not implemented yet!");
       // clang-format off
       /*
-      bitmapgen = _bitmapgenerator.new()
-      brdr_field = bitmapgen.create_intersect(result.getParameter(self.quantity), "se.smhi.composite.index.radar")
-      brdr_param = result.createParameter("BRDR", _rave.RaveDataType_UCHAR)
-      brdr_param.setData(brdr_field.getData())
-      */
+       *   bitmapgen = _bitmapgenerator.new()
+       *   brdr_field = bitmapgen.create_intersect(result.getParameter(self.quantity), "se.smhi.composite.index.radar")
+       *   brdr_param = result.createParameter("BRDR", _rave.RaveDataType_UCHAR)
+       *   brdr_param.setData(brdr_field.getData())
+       */
       // clang-format off
     }
     //# Fix so that we get a valid place for /what/source and /how/nodes
@@ -702,16 +783,18 @@ void Compositing::set_quality_control_mode_from_string(std::string modestr){
     }
 
     if (verbose) {
-          RAVE_DEBUG0("[radarcomp_c] compositing.generate: Returning resulting composite image");
+      RAVE_DEBUG0("[radarcomp_c] compositing.generate: Returning resulting composite image");
     }
 
     RAVE_OBJECT_RELEASE(radar_index_mapping);
     RAVE_OBJECT_RELEASE(the_area);
-    RAVE_OBJECT_RELEASE(generator);
+    if (generator != 0) {
+      RAVE_OBJECT_RELEASE(generator);
+    }
     for (auto & k : file_objects) {
-        if (k.second) {
-          RAVE_OBJECT_RELEASE(k.second);
-        }
+      if (k.second) {
+        RAVE_OBJECT_RELEASE(k.second);
+      }
     }
     return result;
   }

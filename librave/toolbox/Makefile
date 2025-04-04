@@ -2,7 +2,7 @@
 
 CFLAGS=	$(OPTS) $(CCSHARED) $(DEFS) $(CREATE_ITRUNC) \
 	-I. $(NUMPY_INCLUDE_DIR) $(INCLUDE_PYTHON) -I$(HLHDF_INCLUDE_DIR) $(PROJ_INCLUDE_DIR) \
-	$(ZLIB_INCDIR) $(HDF5_INCDIR)
+	$(ZLIB_INCDIR) $(HDF5_INCDIR) -DDEBUG_RAVE
 	
 LDFLAGS+= -L. -L$(HLHDF_LIB_DIR) $(PROJ_LIB_DIR) $(HDF5_LIBDIR) $(ZLIB_LIBDIR)
 
@@ -66,7 +66,7 @@ INSTALL_HEADERS= polar.h rave_transform.h raveutil.h rave_alloc.h polarvolume.h 
                  proj_wkt_helper.h lazy_nodelist_reader.h lazy_dataset.h rave_proj.h acqva.h rave_iocache.h rave_legend.h compositing.h optparse.h odim_source.h tiledef.h \
                  compositegenerator.h compositearguments.h compositegeneratorfactory.h legacycompositegeneratorfactory.h \
 		 acqvacompositegeneratorfactory.h odim_source.h composite_utils.h compositefilter.h compositefactorymanager.h compositeenginebase.h compositeengineqc.h compositeengine.h compositeenginefunctions.h nearestcompositegeneratorfactory.h \
-		 rave_value.h rave_properties.h
+		 rave_value.h rave_properties.h rave_defines.h
 
 ifeq ($(EXPAT_SUPPRESSED), no)
 INSTALL_HEADERS+= tileregistry.h arearegistry.h projectionregistry.h rave_simplexml.h odim_sources.h
@@ -83,7 +83,7 @@ endif
 RAVEOBJS=	$(RAVESOURCES:.c=.o)
 LIBRAVETOOLBOX=	libravetoolbox.so
 
-RADARCOMPSOURCES=tiled_compositing.cpp compositing.cpp optparse.cpp
+RADARCOMPSOURCES=tiled_compositing.cpp compositing.cpp optparse.cpp generator.cpp
 RADARCOMPOBJS=$(RADARCOMPSOURCES:.cpp=.o)
 RADARCOMPMAIN=radarcomp_main.cpp
 RADARCOMPBIN=radarcomp_c

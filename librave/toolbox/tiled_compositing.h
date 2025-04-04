@@ -18,6 +18,7 @@ extern "C" {
 /*
  * From rave_defines.py, RAVEROOT hardcoded for now
  */
+/*
 extern const char* RAVEROOT;
 extern const char* RAVECONFIG;
 extern const char* RAVEETC;
@@ -25,7 +26,7 @@ extern const char* RAVEETC;
 extern const char* PROJECTION_REGISTRY;
 extern const char* AREA_REGISTRY;
 extern const char* RAVE_TILE_REGISTRY;
-
+*/
 
 typedef struct _result_from_tiler {
   std::string tileid;
@@ -110,6 +111,8 @@ public:
   std::map<std::string, RaveCoreObject*> _file_objects;
   bool use_lazy_loading;
   bool use_lazy_loading_preloads;
+  bool use_legacy_compositing;
+  std::string strategy;
 };
 
 typedef struct _args_to_tiler {

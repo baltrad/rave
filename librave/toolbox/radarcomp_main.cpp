@@ -17,6 +17,7 @@
 #include "compositing.h"
 #include "tiled_compositing.h"
 #include "optparse.h"
+#include "rave_defines.h"
 
 extern "C" {
 #include "rave_object.h"
@@ -37,6 +38,8 @@ extern "C" {
 /*
  * From rave_defines.py, RAVEROOT hardcoded for now
  */
+
+/*
 const char* RAVEROOT = "/usr/lib/rave";
 const char* RAVECONFIG = "/config/";
 const char* RAVEETC = "/etc/";
@@ -44,7 +47,7 @@ const char* RAVEETC = "/etc/";
 const char* PROJECTION_REGISTRY = "projection_registry.xml";
 const char* AREA_REGISTRY = "area_registry.xml";
 const char* RAVE_TILE_REGISTRY = "rave_tile_registry.xml";
-
+*/
 
 /**
  * Main function for a binary for running KNMI's sun scanning functionality
@@ -58,7 +61,7 @@ int Radarcomp(optparse::OptionParser & parser)
   // # Projection and area registries
   // Hard coded standard installation
   // clang-format off
-  std::string projection_registry_path = std::string(RAVEROOT) + std::string(RAVECONFIG) + std::string(PROJECTION_REGISTRY);
+  std::string projection_registry_path = PROJECTION_REGISTRY;
   // clang-format on
   ProjectionRegistry_t* proj_registry = ProjectionRegistry_load(projection_registry_path.c_str());
   if (proj_registry == 0) {
@@ -66,7 +69,7 @@ int Radarcomp(optparse::OptionParser & parser)
     return 1;
   }
 
-  std::string area_registry_path = std::string(RAVEROOT) + std::string(RAVECONFIG) + std::string(AREA_REGISTRY);
+  std::string area_registry_path = AREA_REGISTRY;
 
   AreaRegistry_t* area_registry = AreaRegistry_load(area_registry_path.c_str(), proj_registry);
   if (area_registry == 0) {
@@ -75,7 +78,7 @@ int Radarcomp(optparse::OptionParser & parser)
     return 1;
   }
 
-  std::string rave_tile_registry_path = std::string(RAVEROOT) + std::string(RAVEETC) + std::string(RAVE_TILE_REGISTRY);
+  std::string rave_tile_registry_path = RAVE_TILE_REGISTRY;
 
   TileRegistry_t* tile_registry = TileRegistry_load(rave_tile_registry_path.c_str());
   if (tile_registry == 0) {
@@ -120,6 +123,14 @@ int Radarcomp(optparse::OptionParser & parser)
   comp.use_azimuthal_nav_information = !(parser.get_option("disable_azimuthal_navigation") == "1");
   comp.zr_A = std::stof(parser.get_option("zr_A"));
   comp.zr_b = std::stof(parser.get_option("zr_b"));
+
+  comp.use_legacy_compositing = true;
+  if (parser.get_option("enable_composite_factories") == "1") {
+    comp.use_legacy_compositing = false;
+  }
+
+  comp.strategy = parser.get_option("strategy");
+
   comp.applygapfilling = false;
   if (parser.get_option("gf") == "1") {
     comp.applygapfilling = true;
@@ -369,6 +380,15 @@ int main(int argc, char* argv[])
   parser.add_option("-dn", "--disable_azimuthal_navigation", "disable_azimuthal_navigation",
                     "If this flag is set, then azimuthal navigation won't be used when creating the composite.",
                     optparse::STORE_TRUE, optparse::BOOL, "0");
+
+  parser.add_option("-ef", "--enable_composite_factories", "enable_composite_factories",
+                    "If this flag is set then the compositing will be performed using the new factory methods. Otherwise legacy handling will be used.",
+                    optparse::STORE_TRUE, optparse::BOOL, "1");
+
+  parser.add_option("-st", "--strategy", "strategy",
+                    "Can be used to force a specific composite factory to be used. For example 'acqva', 'nearest' or 'legacy'.",
+                    optparse::STORE, optparse::STRING, "legacy");
+
   // clang-format on
 
   try {
