@@ -37,8 +37,7 @@ extern "C" {
 #include <map>
 
 // FIXME: Make an intelligent function for getting RAVEROOT.
-//const std::string RAVEROOT="/usr/lib/rave";
-const std::string RAVEROOT="/data/utv_nb/baltrad/yngve/local/rave";
+const std::string RAVEROOT="/usr/lib/rave";
 
 const std::string RAVELIB = RAVEROOT + "/Lib";
 const std::string RAVECONFIG = RAVEROOT + "/config";
