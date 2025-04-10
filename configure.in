@@ -892,6 +892,97 @@ if [[ "$EXPAT_SUPPRESSED" = "no" ]]; then
   fi
 fi
 
+JSONC_INCLUDE_DIR=
+JSONC_LIB_DIR=
+GOT_JSONC_INC=no
+GOT_JSONC_LIB=no
+JSONC_SUPPRESSED=no
+AC_ARG_WITH(jsonc,[  --with-jsonc=ROOT or INC,LIB       Use the jsonc library],
+    ,withval=yes)
+case $withval in
+  yes)
+    # First try to use pkg-config
+    pkg-config json-c > /dev/null 2>&1
+    if [[ $? -eq 0 ]]; then
+      PKGJSONINC=`pkg-config --cflags json-c`
+      PKGJSONLIB=`pkg-config --libs-only-L json-c`
+      saved_CPPFLAGS="$CPPFLAGS"
+      CPPFLAGS="$CPPFLAGS $PKGJSONINC"
+      AC_CHECK_HEADERS(json.h,GOT_JSONC_INC=yes)
+      if [[ "$GOT_JSONC_INC" = "yes" ]]; then
+        JSONC_INCLUDE_DIR="$PKGJSONINC"
+      fi
+
+      saved_LDFLAGS="$LDFLAGS"
+      LDFLAGS="$LDFLAGS $PKGJSONLIB"
+      AC_CHECK_LIB(json-c,json_object_to_json_string,GOT_JSONC_LIB=yes)
+      if [[ "$GOT_JSONC_LIB" = "yes" ]]; then
+        JSONC_LIB_DIR="$PKGJSONLIB"
+      fi
+      CPPFLAGS="$saved_CPPFLAGS"
+      LDFLAGS="$saved_LDFLAGS"
+    else
+      AC_CHECK_HEADERS(json.h,GOT_JSONC_INC=yes)
+      AC_CHECK_LIB(json-c,json_object_to_json_string,GOT_JSONC_LIB=yes)
+    fi
+    if [[ "$GOT_JSONC_INC" = "no" -o "$GOT_JSONC_LIB" = "no" ]]; then
+      echo "Could not identify json-c, supressing json-c support"
+      JSONC_SUPPRESSED=yes
+    fi
+    ;;
+  no)
+    AC_MSG_CHECKING(for json-c lib)
+    AC_MSG_RESULT(suppressed)
+    JSONC_SUPPRESSED=yes
+    ;;
+  *)
+    if [[ "$withval" != "" ]]; then
+      if [[ "`echo $withval | grep ','`" = "" ]]; then
+        jsonc_inc=$withval/include
+        jsonc_lib=$withval/lib
+      else
+        jsonc_inc="`echo $withval |cut -f1 -d,`"
+        jsonc_lib="`echo $withval |cut -f2 -d,`"
+      fi
+      
+      if [[ "$jsonc_inc" != "" ]]; then
+        saved_CPPFLAGS="$CPPFLAGS"
+        CPPFLAGS="$CPPFLAGS -I$jsonc_inc"
+        AC_CHECK_HEADERS(json.h,GOT_JSONC_INC=yes)
+        if [[ "$GOT_JSONC_INC" = "yes" ]]; then
+          JSONC_INCLUDE_DIR="-I$jsonc_inc"
+        else
+          CPPFLAGS="$saved_CPPFLAGS"
+        fi
+      else
+        AC_CHECK_HEADERS(json.h,GOT_JSONC_INC=yes)
+      fi
+
+      if [[ "$jsonc_lib" != "" ]]; then
+        saved_LDFLAGS="$LDFLAGS"
+        LDFLAGS="$LDFLAGS -L$jsonc_lib"
+        AC_CHECK_LIB(json-c, json_object_to_json_string, GOT_JSONC_LIB=yes)
+        if [[ "$GOT_JSONC_LIB" = "yes" ]]; then
+          JSONC_LIB_DIR="-L$jsonc_lib"
+        else
+          LDFLAGS="$saved_LDFLAGS"
+        fi
+      else
+        AC_CHECK_LIB(json-c, json_object_to_json_string, GOT_JSONC_LIB=yes)
+      fi
+    else
+      AC_MSG_ERROR("Odd argument passed for json-cc")
+    fi
+    JSONC_SUPPRESSED=no
+    ;;
+esac
+
+if [[ "$JSONC_SUPPRESSED" = "no" ]]; then
+  if [[ "$GOT_JSONC_INC" = "no" -o "$GOT_JSONC_LIB" = "no" ]]; then
+    AC_MSG_ERROR("Could not successfully find the jsonc library")
+  fi
+fi
+
 dnl -----------------------------
 dnl Try to locate the numpy include file 'arrayobject.h' automatically,
 dnl if this does not succeed, then the user has to specify this argument
@@ -1330,6 +1421,11 @@ AC_SUBST(NUMPY_INCLUDE_DIR)
 AC_SUBST(EXPAT_INCLUDE_DIR)
 AC_SUBST(EXPAT_LIB_DIR)
 AC_SUBST(EXPAT_SUPPRESSED)
+
+# Substitute the jsonc arguments
+AC_SUBST(JSONC_INCLUDE_DIR)
+AC_SUBST(JSONC_LIB_DIR)
+AC_SUBST(JSONC_SUPPRESSED)
 
 # Substitute the jdk home arguments
 AC_SUBST(JDK_SUPRESSED)

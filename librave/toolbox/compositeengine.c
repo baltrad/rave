@@ -106,9 +106,9 @@ RaveCoreObjectType CompositeEnginePolarValueFunction_TYPE = {
 
 /*@{ Private functions */
 
-static int CompositeEngineInternal_onStarting(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* bindings, int nbindings);
+static int CompositeEngineInternal_onStarting(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, Cartesian_t* cartesian, CompositeEngineObjectBinding_t* bindings, int nbindings);
 
-static int CompositeEngineInternal_onFinished(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* bindings, int nbindings);
+static int CompositeEngineInternal_onFinished(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, Cartesian_t* cartesian, CompositeEngineObjectBinding_t* bindings, int nbindings);
 
 static int CompositeEngineInternal_getLonLat(CompositeEngine_t* engine, void* extradata, CompositeEngineObjectBinding_t* binding, double herex, double herey, double* olon, double* olat);
 
@@ -291,12 +291,12 @@ done:
 }
 
 /*@{ Composite Engine internal function pointers */
-static int CompositeEngineInternal_onStarting(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* bindings, int nbindings)
+static int CompositeEngineInternal_onStarting(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, Cartesian_t* cartesian, CompositeEngineObjectBinding_t* bindings, int nbindings)
 {
   return 1;
 }
 
-static int CompositeEngineInternal_onFinished(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* bindings, int nbindings)
+static int CompositeEngineInternal_onFinished(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, Cartesian_t* cartesian, CompositeEngineObjectBinding_t* bindings, int nbindings)
 {
   return 1;
 }
@@ -468,14 +468,14 @@ int CompositeEngine_setFillQualityInformationFunction(CompositeEngine_t* self, c
 
 /*@{ Composite Engine functions called from generate */
 
-int CompositeEngineFunction_onStarting(CompositeEngine_t* self, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* bindings, int nbindings)
+int CompositeEngineFunction_onStarting(CompositeEngine_t* self, void* extradata, CompositeArguments_t* arguments, Cartesian_t* cartesian, CompositeEngineObjectBinding_t* bindings, int nbindings)
 {
-  return self->onStarting(self, extradata, arguments, bindings, nbindings);
+  return self->onStarting(self, extradata, arguments, cartesian, bindings, nbindings);
 }
 
-int CompositeEngineFunction_onFinished(CompositeEngine_t* self, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* bindings, int nbindings)
+int CompositeEngineFunction_onFinished(CompositeEngine_t* self, void* extradata, CompositeArguments_t* arguments, Cartesian_t* cartesian, CompositeEngineObjectBinding_t* bindings, int nbindings)
 {
-  return self->onFinished(self, extradata, arguments, bindings, nbindings);
+  return self->onFinished(self, extradata, arguments, cartesian, bindings, nbindings);
 }
 
 int CompositeEngineFunction_getLonLat(CompositeEngine_t* self, void* extradata, CompositeEngineObjectBinding_t* binding, double herex, double herey, double* olon, double* olat)
@@ -830,7 +830,7 @@ Cartesian_t* CompositeEngine_generate(CompositeEngine_t* self, CompositeArgument
     }
     RAVE_OBJECT_RELEASE(obj);
   }
-  if (!CompositeEngineFunction_onStarting(self, extradata, arguments, bindings, nbindings)) {
+  if (!CompositeEngineFunction_onStarting(self, extradata, arguments, cartesian, bindings, nbindings)) {
     goto fail;
   }
 
@@ -855,7 +855,7 @@ Cartesian_t* CompositeEngine_generate(CompositeEngine_t* self, CompositeArgument
     }
   }
 
-  if (!CompositeEngineFunction_onFinished(self, extradata, arguments, bindings, nbindings)) {
+  if (!CompositeEngineFunction_onFinished(self, extradata, arguments, cartesian, bindings, nbindings)) {
     goto fail;
   }
 

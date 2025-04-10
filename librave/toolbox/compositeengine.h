@@ -78,11 +78,12 @@ extern RaveCoreObjectType CompositeEngine_TYPE;
  * @param[in] engine - self
  * @param[in] extradata - the extradata passed to the \ref CompositeEngine_generate function.
  * @param[in] arguments - the arguments
+ * @param[in] cartesian - the resulting cartesian product (modify before compositing loop)
  * @param[in] bindings - the bindings
  * @param[in] nbindings  - number of bindings
  * @return 0 on failure (and generation will terminate), 1 on success
  */
-typedef int(*composite_engine_onStarting_fun)(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* bindings, int nbindings);
+typedef int(*composite_engine_onStarting_fun)(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, Cartesian_t* cartesian, CompositeEngineObjectBinding_t* bindings, int nbindings);
 
 /**
  * Will be called after the looping over the cartesian product has finished
@@ -90,11 +91,12 @@ typedef int(*composite_engine_onStarting_fun)(CompositeEngine_t* engine, void* e
  * @param[in] engine - self
  * @param[in] extradata - the extradata passed to the \ref CompositeEngine_generate function.
  * @param[in] arguments - the arguments
+ * @param[in] cartesian - the resulting cartesian product (modify before compositing loop)
  * @param[in] bindings - the bindings
  * @param[in] nbindings  - number of bindings
  * @return 0 on failure (and generation will terminate), 1 on success
  */
- typedef int(*composite_engine_onFinished_fun)(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* bindings, int nbindings);
+ typedef int(*composite_engine_onFinished_fun)(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, Cartesian_t* cartesian, CompositeEngineObjectBinding_t* bindings, int nbindings);
 
 /**
  * Function pointer used during composite generation (\ref CompositeEngine_generate).
@@ -291,22 +293,24 @@ void CompositeEngineUtility_freeRadarData(CompositeEngineRadarData_t** cvalues, 
  * @param[in] self - self
  * @param[in] extradata - the extradata, normally the calling instance
  * @param[in] arguments - the arguments
+ * @param[in] cartesian - the resulting cartesian object (modify before actual composite loop)
  * @param[in] bindings - the bindings
  * @param[in] nbindings - number of bindings
  * @return 1 on success, 0 on failure and will terminate generation
  */
-int CompositeEngineFunction_onStarting(CompositeEngine_t* self, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* bindings, int nbindings);
+int CompositeEngineFunction_onStarting(CompositeEngine_t* self, void* extradata, CompositeArguments_t* arguments, Cartesian_t* cartesian, CompositeEngineObjectBinding_t* bindings, int nbindings);
 
 /**
  * Delegates to the onFinished function pointer.
  * @param[in] self - self
  * @param[in] extradata - the extradata, normally the calling instance
  * @param[in] arguments - the arguments
+ * @param[in] cartesian - the resulting cartesian object (modify after actual composite loop)
  * @param[in] bindings - the object binding array
  * @param[in] nbindings - the number of objects in the array
  * @return 1 on success, 0 on failure and will terminate generation
  */
- int CompositeEngineFunction_onFinished(CompositeEngine_t* self, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* bindings, int nbindings);
+ int CompositeEngineFunction_onFinished(CompositeEngine_t* self, void* extradata, CompositeArguments_t* arguments, Cartesian_t* cartesian, CompositeEngineObjectBinding_t* bindings, int nbindings);
 
 /**
  * This delegates the call to the set lon-lat function.

@@ -33,8 +33,10 @@ import _projection
 import _polarscan
 import _polarvolume
 import _nearestcompositegeneratorfactory
+import _raveproperties
 import _raveio
 import _rave
+import _odimsources
 import string
 import math
 
@@ -51,6 +53,8 @@ class PyNearestCompositeGeneratorFactoryITest(unittest.TestCase):
                      "fixtures/pvol_seovi_20090501T120000Z.h5",
                      "fixtures/pvol_sevar_20090501T120000Z.h5",
                      "fixtures/pvol_sevil_20090501T120000Z.h5"]  
+
+  ODIM_SOURCE_FIXTURE="fixtures/odim_sources_fixture.xml"
 
   TEMPORARY_FILE="nearest_composite_generator_itest.h5"
 
@@ -156,8 +160,12 @@ class PyNearestCompositeGeneratorFactoryITest(unittest.TestCase):
     self.assertEqual(_rave.RaveDataType_DOUBLE, param.datatype)
 
   def test_generate_ppi_RATE(self):
+    import _rave
+    _rave.setTrackObjectCreation(True)
     obj = _nearestcompositegeneratorfactory.new()
-
+    properties = _raveproperties.new()
+    properties.set("rave.rate.zr.coefficients", {"sekrn":(210.0, 1.7)})
+    properties.sources = _odimsources.load(self.ODIM_SOURCE_FIXTURE)
     args = _compositearguments.new()
     for fname in self.SWEDISH_VOLUMES:
       rio = _raveio.open(fname)
@@ -173,6 +181,8 @@ class PyNearestCompositeGeneratorFactoryITest(unittest.TestCase):
     args.addArgument("selection_method", "HEIGHT_ABOVE_SEALEVEL")
     args.addArgument("interpolation_method", "NEAREST")
 
+    obj.setProperties(properties)
+
     result = obj.generate(args)
 
     self.assertEqual(True, result.hasParameter("RATE"))
@@ -181,6 +191,7 @@ class PyNearestCompositeGeneratorFactoryITest(unittest.TestCase):
     self.assertAlmostEqual(0.0, result.getAttribute("what/prodpar"), 4)
     self.assertEqual("120000", result.time)
     self.assertEqual("20090501", result.date)
+    #print(param.getAttribute("how/product_parameters/json"))  #SHOW RATE ZR coefficients
 
   def test_generate_pcappi(self):
     obj = _nearestcompositegeneratorfactory.new()

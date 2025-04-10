@@ -663,6 +663,9 @@ BUFR_INCLUDE_DIR
 JDK_VERSION
 JDK_ROOT
 JDK_SUPRESSED
+JSONC_SUPPRESSED
+JSONC_LIB_DIR
+JSONC_INCLUDE_DIR
 EXPAT_SUPPRESSED
 EXPAT_LIB_DIR
 EXPAT_INCLUDE_DIR
@@ -745,6 +748,7 @@ with_proj
 with_legacy_proj
 with_new_proj
 with_expat
+with_jsonc
 with_numpy
 with_hlhdf
 with_jdk
@@ -1394,6 +1398,7 @@ Optional Packages:
   --with-legacy-proj=ROOT or INC,LIB       Use the legacy proj library (default disabled)
   --with-new-proj=ROOT or INC,LIB       Use the new proj library (default disabled)
   --with-expat=ROOT or INC,LIB       Use the expat library
+  --with-jsonc=ROOT or INC,LIB       Use the jsonc library
   --with-numpy=INC     Use the numpy include file
   --with-hlhdf=ROOT    Use the hlhdf library
   --with-jdk=jdkhome    Compile with java support
@@ -4793,6 +4798,298 @@ if [ "$EXPAT_SUPPRESSED" = "no" ]; then
   fi
 fi
 
+JSONC_INCLUDE_DIR=
+JSONC_LIB_DIR=
+GOT_JSONC_INC=no
+GOT_JSONC_LIB=no
+JSONC_SUPPRESSED=no
+
+# Check whether --with-jsonc was given.
+if test ${with_jsonc+y}
+then :
+  withval=$with_jsonc;
+else $as_nop
+  withval=yes
+fi
+
+case $withval in
+  yes)
+    # First try to use pkg-config
+    pkg-config json-c > /dev/null 2>&1
+    if [ $? -eq 0 ]; then
+      PKGJSONINC=`pkg-config --cflags json-c`
+      PKGJSONLIB=`pkg-config --libs-only-L json-c`
+      saved_CPPFLAGS="$CPPFLAGS"
+      CPPFLAGS="$CPPFLAGS $PKGJSONINC"
+             for ac_header in json.h
+do :
+  ac_fn_c_check_header_compile "$LINENO" "json.h" "ac_cv_header_json_h" "$ac_includes_default"
+if test "x$ac_cv_header_json_h" = xyes
+then :
+  printf "%s\n" "#define HAVE_JSON_H 1" >>confdefs.h
+ GOT_JSONC_INC=yes
+fi
+
+done
+      if [ "$GOT_JSONC_INC" = "yes" ]; then
+        JSONC_INCLUDE_DIR="$PKGJSONINC"
+      fi
+
+      saved_LDFLAGS="$LDFLAGS"
+      LDFLAGS="$LDFLAGS $PKGJSONLIB"
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for json_object_to_json_string in -ljson-c" >&5
+printf %s "checking for json_object_to_json_string in -ljson-c... " >&6; }
+if test ${ac_cv_lib_json_c_json_object_to_json_string+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-ljson-c  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+char json_object_to_json_string ();
+int
+main (void)
+{
+return json_object_to_json_string ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"
+then :
+  ac_cv_lib_json_c_json_object_to_json_string=yes
+else $as_nop
+  ac_cv_lib_json_c_json_object_to_json_string=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_json_c_json_object_to_json_string" >&5
+printf "%s\n" "$ac_cv_lib_json_c_json_object_to_json_string" >&6; }
+if test "x$ac_cv_lib_json_c_json_object_to_json_string" = xyes
+then :
+  GOT_JSONC_LIB=yes
+fi
+
+      if [ "$GOT_JSONC_LIB" = "yes" ]; then
+        JSONC_LIB_DIR="$PKGJSONLIB"
+      fi
+      CPPFLAGS="$saved_CPPFLAGS"
+      LDFLAGS="$saved_LDFLAGS"
+    else
+             for ac_header in json.h
+do :
+  ac_fn_c_check_header_compile "$LINENO" "json.h" "ac_cv_header_json_h" "$ac_includes_default"
+if test "x$ac_cv_header_json_h" = xyes
+then :
+  printf "%s\n" "#define HAVE_JSON_H 1" >>confdefs.h
+ GOT_JSONC_INC=yes
+fi
+
+done
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for json_object_to_json_string in -ljson-c" >&5
+printf %s "checking for json_object_to_json_string in -ljson-c... " >&6; }
+if test ${ac_cv_lib_json_c_json_object_to_json_string+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-ljson-c  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+char json_object_to_json_string ();
+int
+main (void)
+{
+return json_object_to_json_string ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"
+then :
+  ac_cv_lib_json_c_json_object_to_json_string=yes
+else $as_nop
+  ac_cv_lib_json_c_json_object_to_json_string=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_json_c_json_object_to_json_string" >&5
+printf "%s\n" "$ac_cv_lib_json_c_json_object_to_json_string" >&6; }
+if test "x$ac_cv_lib_json_c_json_object_to_json_string" = xyes
+then :
+  GOT_JSONC_LIB=yes
+fi
+
+    fi
+    if [ "$GOT_JSONC_INC" = "no" -o "$GOT_JSONC_LIB" = "no" ]; then
+      echo "Could not identify json-c, supressing json-c support"
+      JSONC_SUPPRESSED=yes
+    fi
+    ;;
+  no)
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for json-c lib" >&5
+printf %s "checking for json-c lib... " >&6; }
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: suppressed" >&5
+printf "%s\n" "suppressed" >&6; }
+    JSONC_SUPPRESSED=yes
+    ;;
+  *)
+    if [ "$withval" != "" ]; then
+      if [ "`echo $withval | grep ','`" = "" ]; then
+        jsonc_inc=$withval/include
+        jsonc_lib=$withval/lib
+      else
+        jsonc_inc="`echo $withval |cut -f1 -d,`"
+        jsonc_lib="`echo $withval |cut -f2 -d,`"
+      fi
+
+      if [ "$jsonc_inc" != "" ]; then
+        saved_CPPFLAGS="$CPPFLAGS"
+        CPPFLAGS="$CPPFLAGS -I$jsonc_inc"
+               for ac_header in json.h
+do :
+  ac_fn_c_check_header_compile "$LINENO" "json.h" "ac_cv_header_json_h" "$ac_includes_default"
+if test "x$ac_cv_header_json_h" = xyes
+then :
+  printf "%s\n" "#define HAVE_JSON_H 1" >>confdefs.h
+ GOT_JSONC_INC=yes
+fi
+
+done
+        if [ "$GOT_JSONC_INC" = "yes" ]; then
+          JSONC_INCLUDE_DIR="-I$jsonc_inc"
+        else
+          CPPFLAGS="$saved_CPPFLAGS"
+        fi
+      else
+               for ac_header in json.h
+do :
+  ac_fn_c_check_header_compile "$LINENO" "json.h" "ac_cv_header_json_h" "$ac_includes_default"
+if test "x$ac_cv_header_json_h" = xyes
+then :
+  printf "%s\n" "#define HAVE_JSON_H 1" >>confdefs.h
+ GOT_JSONC_INC=yes
+fi
+
+done
+      fi
+
+      if [ "$jsonc_lib" != "" ]; then
+        saved_LDFLAGS="$LDFLAGS"
+        LDFLAGS="$LDFLAGS -L$jsonc_lib"
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for json_object_to_json_string in -ljson-c" >&5
+printf %s "checking for json_object_to_json_string in -ljson-c... " >&6; }
+if test ${ac_cv_lib_json_c_json_object_to_json_string+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-ljson-c  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+char json_object_to_json_string ();
+int
+main (void)
+{
+return json_object_to_json_string ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"
+then :
+  ac_cv_lib_json_c_json_object_to_json_string=yes
+else $as_nop
+  ac_cv_lib_json_c_json_object_to_json_string=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_json_c_json_object_to_json_string" >&5
+printf "%s\n" "$ac_cv_lib_json_c_json_object_to_json_string" >&6; }
+if test "x$ac_cv_lib_json_c_json_object_to_json_string" = xyes
+then :
+  GOT_JSONC_LIB=yes
+fi
+
+        if [ "$GOT_JSONC_LIB" = "yes" ]; then
+          JSONC_LIB_DIR="-L$jsonc_lib"
+        else
+          LDFLAGS="$saved_LDFLAGS"
+        fi
+      else
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for json_object_to_json_string in -ljson-c" >&5
+printf %s "checking for json_object_to_json_string in -ljson-c... " >&6; }
+if test ${ac_cv_lib_json_c_json_object_to_json_string+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-ljson-c  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+char json_object_to_json_string ();
+int
+main (void)
+{
+return json_object_to_json_string ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"
+then :
+  ac_cv_lib_json_c_json_object_to_json_string=yes
+else $as_nop
+  ac_cv_lib_json_c_json_object_to_json_string=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_json_c_json_object_to_json_string" >&5
+printf "%s\n" "$ac_cv_lib_json_c_json_object_to_json_string" >&6; }
+if test "x$ac_cv_lib_json_c_json_object_to_json_string" = xyes
+then :
+  GOT_JSONC_LIB=yes
+fi
+
+      fi
+    else
+      as_fn_error $? "\"Odd argument passed for json-cc\"" "$LINENO" 5
+    fi
+    JSONC_SUPPRESSED=no
+    ;;
+esac
+
+if [ "$JSONC_SUPPRESSED" = "no" ]; then
+  if [ "$GOT_JSONC_INC" = "no" -o "$GOT_JSONC_LIB" = "no" ]; then
+    as_fn_error $? "\"Could not successfully find the jsonc library\"" "$LINENO" 5
+  fi
+fi
+
 
 # Check whether --with-numpy was given.
 if test ${with_numpy+y}
@@ -5532,6 +5829,11 @@ fi
 
 
 # Substitute the expat arguments
+
+
+
+
+# Substitute the jsonc arguments
 
 
 

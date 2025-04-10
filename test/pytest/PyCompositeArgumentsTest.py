@@ -414,6 +414,9 @@ class PyCompositeArgumentsTest(unittest.TestCase):
     self.assertTrue("NOD:seatv" in keys)
 
   def test_createRadarIndexMapping_3(self):
+    if not _rave.isXmlSupported():
+      return
+
     obj = _compositearguments.new()
 
     obj.addObject(self.create_polarscan("NOD:sekrn", "20250123","100000"))
@@ -432,6 +435,9 @@ class PyCompositeArgumentsTest(unittest.TestCase):
 
 
   def test_createRadarIndexMapping_4(self):
+    if not _rave.isXmlSupported():
+      return
+
     obj = _compositearguments.new()
 
     obj.addObject(self.create_polarscan("NOD:sekrn", "20250123","100000"))
@@ -468,6 +474,9 @@ class PyCompositeArgumentsTest(unittest.TestCase):
     self.assertTrue("NOD:dksin" in keys)
 
   def test_getObjectRadarIndexValue(self):
+    if not _rave.isXmlSupported():
+      return
+
     obj = _compositearguments.new()
 
     obj.addObject(self.create_polarscan("NOD:sekrn", "20250123","100000"))
@@ -498,6 +507,9 @@ class PyCompositeArgumentsTest(unittest.TestCase):
     self.assertEqual(obj.getRadarIndexValue("NOD:dksin"), obj.getObjectRadarIndexValue(3))
 
   def test_radarIndexMappingMultipleUsage(self):
+    if not _rave.isXmlSupported():
+      return
+
     obj = _compositearguments.new()
     sources = _odimsources.load(self.FIXTURE)
 
@@ -528,6 +540,9 @@ class PyCompositeArgumentsTest(unittest.TestCase):
 
 
   def test_radarIndexMappingMultipleUsage_missingItem(self):
+    if not _rave.isXmlSupported():
+      return
+
     obj = _compositearguments.new()
     sources = _odimsources.load(self.FIXTURE)
 

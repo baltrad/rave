@@ -363,6 +363,15 @@ int RaveUtilities_isXmlSupported(void)
 #endif
 }
 
+int RaveUtilities_isJsonSupported(void)
+{
+#ifdef RAVE_JSON_SUPPORTED
+  return 1;
+#else
+  return 0;
+#endif
+}
+
 int RaveUtilities_isCFConventionSupported(void)
 {
 #ifdef RAVE_CF_SUPPORTED

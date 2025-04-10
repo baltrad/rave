@@ -40,6 +40,12 @@ LDFLAGS+= -L../librave/radvol/lib $(EXPAT_LIB_DIR)
 EXPAT_LIBRARY=-lexpat
 endif
 
+ifeq ($(JSONC_SUPPRESSED), no)
+CFLAGS+= $(JSONC_INCLUDE_DIR) -DRAVE_JSON_SUPPORTED  
+LDFLAGS+= $(JSONC_LIB_DIR) 
+JSONC_LIBRARY=-ljson-c
+endif
+
 ifeq ($(BUFR_SUPPRESSED), no)
 CFLAGS+= $(BUFR_INCLUDE_DIR) -DRAVE_BUFR_SUPPORTED
 LDFLAGS+= $(BUFR_LIB_DIR)
@@ -60,7 +66,7 @@ CFLAGS+= -DPTHREAD_SUPPORTED
 PTHREAD_LIBRARY=-lpthread
 endif
 
-LIBRARIES= -lravetoolbox -lravepyapi -lhlhdf -lproj  $(EXPAT_LIBRARY) $(BUFR_LIBRARY) $(NETCDF_LIBRARY) $(PTHREAD_LIBRARY)
+LIBRARIES= -lravetoolbox -lravepyapi -lhlhdf -lproj  $(EXPAT_LIBRARY) $(JSONC_LIBRARY) $(BUFR_LIBRARY) $(NETCDF_LIBRARY) $(PTHREAD_LIBRARY)
 
 # --------------------------------------------------------------------
 # Fixed definitions

@@ -167,6 +167,14 @@ int RaveUtilities_arrayContains(const char* arr[], const char* str, int casecmp)
 int RaveUtilities_isXmlSupported(void);
 
 /**
+ * Returns if json support is activated or not since json-c support
+ * is optional and ought to be tested.
+ * @returns 0 if json isn't supported in the build, otherwise 1
+ */
+ int RaveUtilities_isJsonSupported(void);
+
+
+/**
  * Returns if CF convention IO support is activated or not.
  * @returns 0 if CF convention IO isn't supported in the build, otherwise 1
  */

@@ -58,9 +58,9 @@ typedef struct _AcqvaCompositeGeneratorFactory_t {
 } AcqvaCompositeGeneratorFactory_t;
 /*@{ Private functions */
 
-static int AcqvaCompositeGeneratorFactory_onStarting(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* bindings, int nbindings);
+static int AcqvaCompositeGeneratorFactory_onStarting(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, Cartesian_t* cartesian, CompositeEngineObjectBinding_t* bindings, int nbindings);
 
-static int AcqvaCompositeGeneratorFactory_onFinished(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* bindings, int nbindings);
+static int AcqvaCompositeGeneratorFactory_onFinished(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, Cartesian_t* cartesian, CompositeEngineObjectBinding_t* bindings, int nbindings);
 
 /**
  * The function locating the lowest usable data value
@@ -338,7 +338,7 @@ static int AcqvaCompositeGeneratorFactoryInternal_updateWithCluttermaps(AcqvaCom
  * @param[in] nbindings - number of bindings
  * @return 1 on success otherwise 0
  */
-static int AcqvaCompositeGeneratorFactory_onStarting(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* bindings, int nbindings)
+static int AcqvaCompositeGeneratorFactory_onStarting(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, Cartesian_t* cartesian, CompositeEngineObjectBinding_t* bindings, int nbindings)
 {
   AcqvaCompositeGeneratorFactory_t* self = (AcqvaCompositeGeneratorFactory_t*)extradata;
   int result = 0;
@@ -371,7 +371,7 @@ fail:
  * @param[in] nbindings - number of bindings
  * @return 1 on success otherwise 0
  */
-static int AcqvaCompositeGeneratorFactory_onFinished(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* bindings, int nbindings)
+static int AcqvaCompositeGeneratorFactory_onFinished(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, Cartesian_t* cartesian, CompositeEngineObjectBinding_t* bindings, int nbindings)
 {
   //AcqvaCompositeGeneratorFactory_t* self = (AcqvaCompositeGeneratorFactory_t*)extradata;
   int i = 0;
@@ -389,6 +389,11 @@ static int AcqvaCompositeGeneratorFactory_onFinished(CompositeEngine_t* engine, 
       RAVE_OBJECT_RELEASE(scan);
     }
   }
+  
+  if (Cartesian_hasParameter(cartesian, "RATE")) {
+    return CompositeEngineFunctions_updateRATECoefficients(arguments, cartesian, bindings, nbindings);
+  }
+  
   return 1;
 }
 

@@ -204,6 +204,18 @@ static PyObject* _rave_isxmlsupported(PyObject* self, PyObject* args)
 }
 
 /**
+ * Returns if json is supported or not in this build.
+ * @param[in] self - self
+ * @param[in] args - N/A
+ * @returns true if xml is supported otherwise false
+ */
+ static PyObject* _rave_isjsonsupported(PyObject* self, PyObject* args)
+ {
+   return PyBool_FromLong(RaveUtilities_isJsonSupported());
+ }
+ 
+
+/**
  * Returns if CF conventions is supported or not in this build.
  * @param[in] self - self
  * @param[in] args - N/A
@@ -400,6 +412,10 @@ static PyMethodDef functions[] = {
   {"isXmlSupported", (PyCFunction)_rave_isxmlsupported, 1,
     "isXmlSupported() -> a boolean\n\n"
     "Returns if this build of rave supports xml loading"
+  },
+  {"isJsonSupported", (PyCFunction)_rave_isjsonsupported, 1,
+    "isJsonSupported() -> a boolean\n\n"
+    "Returns if this build of rave supports json reading and writing"
   },
   {"isCFConventionSupported", (PyCFunction)_rave_isCFConventionSupported, 1,
     "isCFConventionSupported() -> a boolean\n\n"

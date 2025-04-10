@@ -69,7 +69,9 @@ static const char* SUPPORTED_PRODUCTS[]={
 /**
  * Handle on starting
  */
-static int NearestCompositeGeneratorFactory_onStarting(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* bindings, int nbindings);
+static int NearestCompositeGeneratorFactory_onStarting(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, Cartesian_t* cartesian, CompositeEngineObjectBinding_t* bindings, int nbindings);
+
+static int NearestCompositeGeneratorFactory_onFinished(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, Cartesian_t* cartesian, CompositeEngineObjectBinding_t* bindings, int nbindings);
 
 static int NearestCompositeGeneratorFactory_getPolarValueAtPosition(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* binding, const char* quantity, PolarNavigationInfo* navinfo, const char* qiFieldName, RaveValueType* otype, double* ovalue, double* qivalue);
 
@@ -109,6 +111,11 @@ static int NearestCompositeGeneratorFactory_constructor(RaveCoreObject* obj)
 
   if (!CompositeEngine_setOnStartingFunction(this->engine, NearestCompositeGeneratorFactory_onStarting)) {
     RAVE_ERROR0("Failed to set the onStarting function");
+    goto fail;
+  }
+
+  if (!CompositeEngine_setOnFinishedFunction(this->engine, NearestCompositeGeneratorFactory_onFinished)) {
+    RAVE_ERROR0("Failed to set the onFinished function");
     goto fail;
   }
 
@@ -179,6 +186,11 @@ static int NearestCompositeGeneratorFactory_copyconstructor(RaveCoreObject* obj,
     goto fail;
   }
 
+  if (!CompositeEngine_setOnFinishedFunction(this->engine, NearestCompositeGeneratorFactory_onFinished)) {
+    RAVE_ERROR0("Failed to set the onFinished function");
+    goto fail;
+  }
+
   if (!CompositeEngine_setDefaultPolarValueAtPositionFunction(this->engine, NearestCompositeGeneratorFactory_getPolarValueAtPosition)) {
     RAVE_ERROR0("Failed to set getPolarValueAtPosition function for ANY");
     goto fail;
@@ -212,7 +224,7 @@ static void NearestCompositeGeneratorFactory_destructor(RaveCoreObject* obj)
   RAVE_OBJECT_RELEASE(this->overshooting);
 }
 
-static int NearestCompositeGeneratorFactory_onStarting(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* bindings, int nbindings)
+static int NearestCompositeGeneratorFactory_onStarting(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, Cartesian_t* cartesian, CompositeEngineObjectBinding_t* bindings, int nbindings)
 {
   NearestCompositeGeneratorFactory_t* self = (NearestCompositeGeneratorFactory_t*)extradata;
   int result = 0;
@@ -228,6 +240,19 @@ fail:
   RAVE_OBJECT_RELEASE(properties);
   return result;
 }
+
+static int NearestCompositeGeneratorFactory_onFinished(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, Cartesian_t* cartesian, CompositeEngineObjectBinding_t* bindings, int nbindings)
+{
+  /*NearestCompositeGeneratorFactory_t* self = (NearestCompositeGeneratorFactory_t*)extradata;*/
+  int result = 0;
+  if (Cartesian_hasParameter(cartesian, "RATE")) {
+    result = CompositeEngineFunctions_updateRATECoefficients(arguments, cartesian, bindings, nbindings);
+  } else {
+    result = 1;
+  }
+  return result;
+}
+
 
 static int NearestCompositeGeneratorFactory_getPolarValueAtPosition(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* binding, const char* quantity, PolarNavigationInfo* navinfo, const char* qiFieldName, RaveValueType* otype, double* ovalue, double* qivalue)
 {
