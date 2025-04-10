@@ -175,7 +175,7 @@ Composite Engine</h1>
 <pre class="fragment">  CompositeEngineFunction_setRadarData(self, extradata, arguments, cartesian, olon, olat, x, y, cvalues, nentries);
 </pre><h2><a class="anchor" id="extending_compositing_factories_engine_onstarting"></a>
 onStarting</h2>
-<p>The onStarting <a class="el" href="compositeengine_8h.html#ab7cea79fe73d9f96924c6c556bab211f">composite_engine_onStarting_fun</a> will be called right before the loop over the cartesian area begins. When for example preparing the data for the calculations or if some precalculations has to be performed. An example on how it can be used is</p>
+<p>The onStarting <a class="el" href="compositeengine_8h.html#af80143ea60c8e5845b09479a1b31b48b">composite_engine_onStarting_fun</a> will be called right before the loop over the cartesian area begins. When for example preparing the data for the calculations or if some precalculations has to be performed. An example on how it can be used is</p>
 <pre class="fragment">static int NearestCompositeGeneratorFactory_onStarting(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* bindings, int nbindings)
 {
   NearestCompositeGeneratorFactory_t* self = (NearestCompositeGeneratorFactory_t*)extradata;
@@ -194,7 +194,7 @@ fail:
 }
 </pre><h2><a class="anchor" id="extending_compositing_factories_engine_onfinished"></a>
 onFinished</h2>
-<p>The onFinished <a class="el" href="compositeengine_8h.html#ac3a93e494f17d8189084aa55b7d1ae16">composite_engine_onFinished_fun</a> is called after the actual compositing loop has been executed and is the final step during the composite generation. This is a good place to put cleanup of various files and other miscellaneous data that has been created during the compositing.</p>
+<p>The onFinished <a class="el" href="compositeengine_8h.html#a3ee5e6c30f0e4358b01eba4dc5beb62e">composite_engine_onFinished_fun</a> is called after the actual compositing loop has been executed and is the final step during the composite generation. This is a good place to put cleanup of various files and other miscellaneous data that has been created during the compositing.</p>
 <h2><a class="anchor" id="extending_compositing_factories_engine_getlonlat"></a>
 getLonLat</h2>
 <p>Used to calculate the longitude and latitude from the surface coordinates. This can be practical to use if you are interested in developing an alternative approach to nearest when identifying coordinates.</p>
