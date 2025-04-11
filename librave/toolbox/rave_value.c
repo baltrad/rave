@@ -29,8 +29,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #ifdef RAVE_JSON_SUPPORTED
 #include <arraylist.h>
 #include <json_object.h>
-#include <json_types.h>
-#include <json-c/json.h>
+#include <json.h>
 #endif
 
 #include <string.h>
