@@ -204,6 +204,9 @@ Functions</h2></td></tr>
 <tr class="memitem:a1ac7f5588e2509f9b93cde88710bb479" id="r_a1ac7f5588e2509f9b93cde88710bb479"><td class="memItemLeft" align="right" valign="top"><a class="el" href="rave__value_8h.html#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1ac7f5588e2509f9b93cde88710bb479">RaveValueHash_get</a> (<a class="el" href="rave__value_8h.html#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> *self, const char *key)</td></tr>
 <tr class="memdesc:a1ac7f5588e2509f9b93cde88710bb479"><td class="mdescLeft">&#160;</td><td class="mdescRight">If rave value is hash, then this provides same functionality as <a class="el" href="raveobject__hashtable_8c.html#adcaec3ab9b0b169f4a788f7a64d64790">RaveObjectHashTable_get</a>.  <br /></td></tr>
 <tr class="separator:a1ac7f5588e2509f9b93cde88710bb479"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a34bebc53ae74b0fd20e174d2a5933765" id="r_a34bebc53ae74b0fd20e174d2a5933765"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a34bebc53ae74b0fd20e174d2a5933765">RaveValueHash_size</a> (<a class="el" href="rave__value_8h.html#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> *self)</td></tr>
+<tr class="memdesc:a34bebc53ae74b0fd20e174d2a5933765"><td class="mdescLeft">&#160;</td><td class="mdescRight">If rave value is hash, then this provides same functionality as <a class="el" href="raveobject__hashtable_8c.html#a635d77d0c563eb29e119f97c34b1fea0">RaveObjectHashTable_size</a>.  <br /></td></tr>
+<tr class="separator:a34bebc53ae74b0fd20e174d2a5933765"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a477c0747f56201d6001ddb56110bf3d0" id="r_a477c0747f56201d6001ddb56110bf3d0"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a477c0747f56201d6001ddb56110bf3d0">RaveValueHash_exists</a> (<a class="el" href="rave__value_8h.html#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> *self, const char *key)</td></tr>
 <tr class="memdesc:a477c0747f56201d6001ddb56110bf3d0"><td class="mdescLeft">&#160;</td><td class="mdescRight">If rave value is hash, then this provides same functionality as <a class="el" href="raveobject__hashtable_8c.html#ac9aa7dfaa697d56b60c004b58261b1be">RaveObjectHashTable_exists</a>.  <br /></td></tr>
 <tr class="separator:a477c0747f56201d6001ddb56110bf3d0"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -252,6 +255,9 @@ Functions</h2></td></tr>
 <tr class="memitem:ad4e4fc661d9e8b588416511e598177c1" id="r_ad4e4fc661d9e8b588416511e598177c1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="rave__value_8h.html#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad4e4fc661d9e8b588416511e598177c1">RaveValue_fromJSON</a> (const char *json)</td></tr>
 <tr class="memdesc:ad4e4fc661d9e8b588416511e598177c1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Support function for translating a json structure to a rave value.  <br /></td></tr>
 <tr class="separator:ad4e4fc661d9e8b588416511e598177c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a40efa752062387aef40707a9d25aa215" id="r_a40efa752062387aef40707a9d25aa215"><td class="memItemLeft" align="right" valign="top"><a class="el" href="rave__value_8h.html#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a40efa752062387aef40707a9d25aa215">RaveValue_loadJSON</a> (const char *filename)</td></tr>
+<tr class="memdesc:a40efa752062387aef40707a9d25aa215"><td class="mdescLeft">&#160;</td><td class="mdescRight">Loads a JSON object from a file.  <br /></td></tr>
+<tr class="separator:a40efa752062387aef40707a9d25aa215"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
 Variables</h2></td></tr>
@@ -963,6 +969,32 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>1 if possible otherwise 0 </dd></dl>
+
+</div>
+</div>
+<a id="a40efa752062387aef40707a9d25aa215" name="a40efa752062387aef40707a9d25aa215"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a40efa752062387aef40707a9d25aa215">&#9670;&#160;</a></span>RaveValue_loadJSON()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="rave__value_8h.html#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> * RaveValue_loadJSON </td>
+          <td>(</td>
+          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>filename</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Loads a JSON object from a file. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">filename</td><td>- the filename </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the read JSON object </dd></dl>
 
 </div>
 </div>
@@ -1695,6 +1727,32 @@ Variables</h2></td></tr>
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a id="a34bebc53ae74b0fd20e174d2a5933765" name="a34bebc53ae74b0fd20e174d2a5933765"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a34bebc53ae74b0fd20e174d2a5933765">&#9670;&#160;</a></span>RaveValueHash_size()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int RaveValueHash_size </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="rave__value_8h.html#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> *</td>          <td class="paramname"><span class="paramname"><em>self</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>If rave value is hash, then this provides same functionality as <a class="el" href="raveobject__hashtable_8c.html#a635d77d0c563eb29e119f97c34b1fea0">RaveObjectHashTable_size</a>. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the number of items in this self. </dd></dl>
 
 </div>
 </div>

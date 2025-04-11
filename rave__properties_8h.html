@@ -81,8 +81,11 @@ Typedefs</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:a59a86baa3ce8eb51eadd426e10c0bdb3" id="r_a59a86baa3ce8eb51eadd426e10c0bdb3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="#a488ca7ee6e76e495061b784f129d318c">RaveProperties_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a59a86baa3ce8eb51eadd426e10c0bdb3">RaveProperties_load</a> (const char *filename)</td></tr>
+<tr class="memdesc:a59a86baa3ce8eb51eadd426e10c0bdb3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Simplified loading function, takes filename pointing to a json file containing the properties to load.  <br /></td></tr>
+<tr class="separator:a59a86baa3ce8eb51eadd426e10c0bdb3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af4f9849022eac1b21fc95a04f770bd89" id="r_af4f9849022eac1b21fc95a04f770bd89"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af4f9849022eac1b21fc95a04f770bd89">RaveProperties_set</a> (<a class="el" href="#a488ca7ee6e76e495061b784f129d318c">RaveProperties_t</a> *self, const char *name, <a class="el" href="rave__value_8h.html#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> *value)</td></tr>
-<tr class="memdesc:af4f9849022eac1b21fc95a04f770bd89"><td class="mdescLeft">&#160;</td><td class="mdescRight">Simplified loading function, takes filename and a projection registry.  <br /></td></tr>
+<tr class="memdesc:af4f9849022eac1b21fc95a04f770bd89"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the property in the table.  <br /></td></tr>
 <tr class="separator:af4f9849022eac1b21fc95a04f770bd89"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a87fcb46c2b2acb94feb036118a57d805" id="r_a87fcb46c2b2acb94feb036118a57d805"><td class="memItemLeft" align="right" valign="top"><a class="el" href="rave__value_8h.html#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a87fcb46c2b2acb94feb036118a57d805">RaveProperties_get</a> (<a class="el" href="#a488ca7ee6e76e495061b784f129d318c">RaveProperties_t</a> *self, const char *name)</td></tr>
 <tr class="memdesc:a87fcb46c2b2acb94feb036118a57d805"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the value with specified name.  <br /></td></tr>
@@ -216,6 +219,32 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a id="a59a86baa3ce8eb51eadd426e10c0bdb3" name="a59a86baa3ce8eb51eadd426e10c0bdb3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a59a86baa3ce8eb51eadd426e10c0bdb3">&#9670;&#160;</a></span>RaveProperties_load()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="#a488ca7ee6e76e495061b784f129d318c">RaveProperties_t</a> * RaveProperties_load </td>
+          <td>(</td>
+          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>filename</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Simplified loading function, takes filename pointing to a json file containing the properties to load. </p>
+<p>Note that the configuration must be defined as a object, i.e. { } </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">filename</td><td>- the area file name </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the rave properties </dd></dl>
+
+</div>
+</div>
 <a id="a1d9816d2b9c4a937ab4437daff83e67b" name="a1d9816d2b9c4a937ab4437daff83e67b"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a1d9816d2b9c4a937ab4437daff83e67b">&#9670;&#160;</a></span>RaveProperties_remove()</h2>
 
@@ -270,15 +299,7 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Simplified loading function, takes filename and a projection registry. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">filename</td><td>- the area file name </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">pRegistry</td><td>- the projection registry </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>an area registry Sets the property in the table </dd></dl>
+<p>Sets the property in the table. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
