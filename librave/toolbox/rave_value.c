@@ -753,7 +753,6 @@ int RaveValueHash_put(RaveValue_t* self, const char* key, RaveValue_t* value)
 {
   int result = 0;
   RAVE_ASSERT((self != NULL), "self == NULL");
-
   if (self->type == RaveValue_Type_Hashtable) {
     result = RaveObjectHashTable_put(self->hashtable, key, (RaveCoreObject*)value);
   }
@@ -774,7 +773,16 @@ RaveValue_t* RaveValueHash_get(RaveValue_t* self, const char* key)
   }
   return obj;
 }
- 
+
+int RaveValueHash_size(RaveValue_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  if (self->type == RaveValue_Type_Hashtable) {
+    return RaveObjectHashTable_size(self->hashtable);
+  }
+  return 0;
+}
+
 int RaveValueHash_exists(RaveValue_t* self, const char* key)
 {
   int result = 0;
@@ -1138,6 +1146,21 @@ RaveValue_t* RaveValue_fromJSON(const char* json)
   return result;
 }
 
+RaveValue_t* RaveValue_loadJSON(const char* filename)
+{
+#ifdef RAVE_JSON_SUPPORTED
+  RaveValue_t* result = NULL;
+  json_object* root = json_object_from_file(filename);
+  if (root != NULL) {
+    result = RaveValueInternal_fromJsonObject(root);
+  }
+  json_object_put(root);
+  return result;
+#else
+  RAVE_WARNING0("RAVE not built with JSON support");
+  return NULL;
+#endif
+}
 
 /*@} End of Interface functions */
 

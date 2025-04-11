@@ -348,6 +348,14 @@ int RaveValueHash_put(RaveValue_t* self, const char* key, RaveValue_t* value);
  */
  RaveValue_t* RaveValueHash_get(RaveValue_t* self, const char* key);
 
+
+/**
+ * If rave value is hash, then this provides same functionality as \ref RaveObjectHashTable_size.
+ * @param[in] self - self
+ * @returns the number of items in this self.
+ */
+int RaveValueHash_size(RaveValue_t* self);
+
 /**
  * If rave value is hash, then this provides same functionality as \ref RaveObjectHashTable_exists.
  * @param[in] self - self
@@ -464,6 +472,13 @@ char* RaveValue_toJSON(RaveValue_t* self);
  * @return the rave value
  */
 RaveValue_t* RaveValue_fromJSON(const char* json);
+
+/**
+ * Loads a JSON object from a file. 
+ * @param[in] filename - the filename
+ * @return the read JSON object
+ */
+RaveValue_t* RaveValue_loadJSON(const char* filename);
 
 #endif /* RAVE_VALUE_H */
 

@@ -25,12 +25,14 @@ Tests the py rave value module.
 '''
 import unittest
 import os
-import _ravevalue, _raveproperties, _odimsources
+import _ravevalue, _raveproperties, _odimsources, _rave
 import string
 import math
 
 class PyRavePropertiesTest(unittest.TestCase):
-  
+  FIXTURE_WITHOUT_SOURCES="fixtures/rave_properties_without_sources.json"
+  FIXTURE_WITH_SOURCES="fixtures/rave_properties_with_sources.json"
+
   def setUp(self):
     pass
 
@@ -109,3 +111,23 @@ class PyRavePropertiesTest(unittest.TestCase):
     self.assertTrue(classUnderTest.sources is None)
     classUnderTest.sources = _odimsources.new()
     self.assertTrue(classUnderTest.sources is not None)
+
+  def test_load_properties_with_sources(self):
+    if _rave.isXmlSupported() and _rave.isJsonSupported():
+      result = _raveproperties.load(self.FIXTURE_WITH_SOURCES)
+      self.assertTrue(result.hasProperty("rave.acqva.cluttermap.dir"))
+      self.assertEqual("/var/lib/baltrad/rave/acqva/cluttermap", result.get("rave.acqva.cluttermap.dir"))
+      self.assertTrue(result.hasProperty("rave.rate.zr.coefficients"))
+      self.assertEqual(200.0, result.get("rave.rate.zr.coefficients")["sella"][0], 4)
+      self.assertEqual(1.6, result.get("rave.rate.zr.coefficients")["sekrn"][1], 4)
+      self.assertTrue(result.sources is not None)
+
+  def test_load_properties_without_sources(self):
+    if _rave.isXmlSupported() and _rave.isJsonSupported():
+      result = _raveproperties.load(self.FIXTURE_WITHOUT_SOURCES)
+      self.assertTrue(result.hasProperty("rave.acqva.cluttermap.dir"))
+      self.assertEqual("/var/lib/baltrad/rave/acqva/cluttermap", result.get("rave.acqva.cluttermap.dir"))
+      self.assertTrue(result.hasProperty("rave.rate.zr.coefficients"))
+      self.assertEqual(200.0, result.get("rave.rate.zr.coefficients")["sella"][0], 4)
+      self.assertEqual(1.6, result.get("rave.rate.zr.coefficients")["sekrn"][1], 4)
+      self.assertTrue(result.sources is None)

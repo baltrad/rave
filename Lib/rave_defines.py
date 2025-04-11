@@ -159,6 +159,9 @@ RAVE_TILE_REGISTRY=os.path.join(RAVEETC, 'rave_tile_registry.xml')
 # The name of the composite generator filter file containing the settings for factories.
 COMPOSITE_GENERATOR_FILTER_FILENAME = os.path.join(RAVECONFIG, 'composite_generator_filter.xml')
 
+# Where the generator property file can be found
+COMPOSITE_GENERATOR_PROPERTY_FILE = os.path.join(RAVECONFIG, 'rave_properties.json')
+
 # The location where the cluttermaps can be found when using ACQVA
 # The names of the cluttermaps should be in the format <nod>.h5, for example
 # seang.h5, ...

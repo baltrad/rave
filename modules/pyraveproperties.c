@@ -116,38 +116,6 @@ done:
   return result;
 }
 
-// /**
-//  * Opens a file that is supported by area registry
-//  * @param[in] filename - the area registry file to load
-//  * @param[in] pyprojregistry - the projection registry to be used in conjunction with the area registry
-//  * @return the py area registry on success.
-//  */
-// static PyAreaRegistry*
-// PyAreaRegistry_Load(const char* filename, PyProjectionRegistry* pyprojregistry)
-// {
-//   AreaRegistry_t* registry = NULL;
-//   PyAreaRegistry* result = NULL;
-//   ProjectionRegistry_t* projregistry = NULL;
-
-//   if (filename == NULL) {
-//     raiseException_returnNULL(PyExc_ValueError, "providing a filename that is NULL");
-//   }
-
-//   if (pyprojregistry != NULL) {
-//     projregistry = pyprojregistry->registry;
-//   }
-
-//   registry = AreaRegistry_load(filename, projregistry);
-//   if (registry == NULL) {
-//     raiseException_gotoTag(done, PyExc_IOError, "Failed to open file");
-//   }
-//   result = PyAreaRegistry_New(registry);
-
-// done:
-//   RAVE_OBJECT_RELEASE(registry);
-//   return result;
-// }
-
 /**
  * Deallocates the instance
  * @param[in] obj the object to deallocate.
@@ -176,6 +144,28 @@ static PyObject* _pyraveproperties_new(PyObject* self, PyObject* args)
   return (PyObject*)result;
 }
 
+/**
+ * Creates a new instance.
+ * @param[in] self this instance.
+ * @param[in] args arguments for creation (NOT USED).
+ * @return the object on success, otherwise NULL
+ */
+static PyObject* _pyraveproperties_load(PyObject* self, PyObject* args)
+{
+  RaveProperties_t* properties = NULL;
+  PyRaveProperties* result = NULL;
+  char* filename = NULL;
+  if (!PyArg_ParseTuple(args, "s", &filename)) {
+    return NULL;
+  }
+  properties = RaveProperties_load(filename);
+  if (properties != NULL) {
+    result = PyRaveProperties_New(properties);
+  }
+  RAVE_OBJECT_RELEASE(properties);
+  return (PyObject*)result;
+}
+ 
 /**
  * Associates a key with a value in the properties instance
  * @parma[in] self - this instance
@@ -414,30 +404,13 @@ PyTypeObject PyRaveProperties_Type =
 /*@{ Module setup */
 static PyMethodDef functions[] = {
   {"new", (PyCFunction)_pyraveproperties_new, 1,
-      "new() -> new instance of the RavePropertiesCore object\n\n"
-      "Creates a new instance of the RavePropertiesCore object"},
-  // {"load", (PyCFunction)_pyarearegistry_load, 1,
-  //     "load(filename [,projregistry]) -> area registry\n\n"
-  //     "Loads an area registry xml file. \n\n"
-  //     "filename     - the path to the file containing the area registry xml definition\n"
-  //     "projregistry - the projection registry is optional but will be helpful if getting areas from the registry\n\n"
-  //     "The format of the area registry file should be in the format:\n"
-  //     "<?xml version='1.0' encoding='iso-8859-1'?>\n"
-  //     "<areas>\n"
-  //     "  <area id=\"nrd2km\">\n"
-  //     "    <description>Nordic, all radars, 2 km</description>\n"
-  //     "    <areadef>\n"
-  //     "      <arg id=\"pcs\">ps14e60n</arg>\n"
-  //     "      <arg id=\"xsize\" type=\"int\">848</arg>\n"
-  //     "      <arg id=\"ysize\" type=\"int\">1104</arg>\n"
-  //     "      <arg id=\"scale\" type=\"float\">2000</arg>\n"
-  //     "      <!-- can also be xscale / yscale -->\n"
-  //     "      <arg id=\"extent\" type=\"sequence\">-738816.513333,-3995515.596160,955183.48666699999,-1787515.59616</arg>\n"
-  //     "    </areadef>\n"
-  //     "  </area>\n"
-  //     "  ...\n"
-  //     "</areas>"
-  // },
+    "new() -> new instance of the RavePropertiesCore object\n\n"
+    "Creates a new instance of the RavePropertiesCore object"},
+  {"load", (PyCFunction)_pyraveproperties_load, 1,
+    "load(filename) -> properties\n\n"
+    "Loads an json configuration file. \n\n"
+    "filename     - the path to the file containing the json configuration\n"
+  },
   {NULL,NULL} /*Sentinel*/
 };
 

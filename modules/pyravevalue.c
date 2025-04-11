@@ -278,6 +278,24 @@ static PyObject* _pyravevalue_fromJSON(PyObject* self, PyObject* args)
   return result;
 }
 
+static PyObject* _pyravevalue_loadJSON(PyObject* self, PyObject* args)
+{
+  char* filename = NULL;
+  PyObject* result = NULL;
+
+  RaveValue_t* rvalue = NULL;
+  if (!PyArg_ParseTuple(args,"s", &filename)) {
+    return NULL;
+  }
+  rvalue = RaveValue_loadJSON(filename);
+  if (rvalue != NULL) {
+    result = (PyObject*)PyRaveValue_New(rvalue);
+  } else {
+    raiseException_returnNULL(PyExc_IOError, "Could not load file");
+  }
+  RAVE_OBJECT_RELEASE(rvalue);
+  return result;
+}
 
 static PyObject* _pyravevalue_isRaveValue(PyObject* self, PyObject* args)
 {
@@ -357,6 +375,9 @@ static PyMethodDef functions[] = {
   {"fromJSON", (PyCFunction)_pyravevalue_fromJSON, 1,
     "fromJSON(str) -> new instance of the RaveValueCore object\n\n"
     "Creates a new instance of the RaveValueCore object assuming provided string is json formatted"},
+  {"loadJSON", (PyCFunction)_pyravevalue_loadJSON, 1,
+    "loadJSON(filename) -> read instance of the RaveValueCore object\n\n"
+    "Loads a JSON object from a file and creates a RaveValueCore object is possible"},
   {"isRaveValue", (PyCFunction)_pyravevalue_isRaveValue, 1,
     "isRaveValue(obj) -> True if object is a rave value, otherwise False\n\n"
     "Checks if the provided object is a python rave value object or not.\n\n"
