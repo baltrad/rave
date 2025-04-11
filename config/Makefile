@@ -25,9 +25,11 @@
 -include ../def.mk
 
 CONFIG_FILES=`ls -1 *.xml`
+CONFIG_FILES+= `ls -1 *.json`
 
 .PHONY=install
 install:
+  echo "$(CONFIG_FILES)"
 	@mkdir -p "${DESTDIR}${prefix}/config"
 	@for i in $(CONFIG_FILES) ; do \
 	    if [ ! -f ${DESTDIR}${prefix}/config/$$i ]; then \
