@@ -919,7 +919,7 @@ static json_object* RaveValueInternal_toJsonObject(RaveValue_t* self)
   } else if (RaveValue_type(self) == RaveValue_Type_Double) {
     obj = json_object_new_double(RaveValue_toDouble(self));
   } else if (RaveValue_type(self) == RaveValue_Type_Null) {
-    obj = json_object_new_null();
+    obj = NULL;
   } else if (RaveValue_type(self) == RaveValue_Type_String) {
     obj = json_object_new_string(RaveValue_toString(self));
   } else if (RaveValue_type(self) == RaveValue_Type_Hashtable) {
