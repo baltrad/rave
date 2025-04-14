@@ -1,5 +1,5 @@
 {
-  "rave.acqva.cluttermap.dir":"/var/lib/baltrad/rave/acqva/cluttermap",
+  "rave.acqva.cluttermap.dir":"/var/lib/baltrad/acqva/cluttermap",
   "rave.rate.zr.coefficients":{
     "sella":[200.0, 1.6], 
     "sekrn":[200.0,1.6]
