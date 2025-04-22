@@ -59,6 +59,7 @@
     <finur plc="Nurmes" rad="FI52" wmo="00000"></finur>
     <fivih plc="Vihti" rad="FI53" wmo="00000"></fivih>
     <fikan plc="Kankaanpää" rad="FI54" wmo="00000"></fikan>
+    <fikau plc="Kaunispää" rad="FI55" wmo="00000"></fikau>
   </fi>
   <fr CCCC="LFPW" org="84">
     <frabb plc="Abbeville" rad="FR40" wmo="07005"></frabb>
