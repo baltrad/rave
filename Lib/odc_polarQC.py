@@ -128,7 +128,10 @@ def generate(ifstr):
         return ifstr, "OK", (readt, validt, qct, writet)
     except OSError as err_msg:
         os.remove(ifstr)
-        rave_pgf_logger.log(logger, "error", "%s: %s - Deleting file." % (fstr, err_msg))
+        logger.error("%s: %s - Deleting file." % (fstr, err_msg))
+        return ifstr, err_msg
+    except Exception:
+        logger.exception("Failure during processing of file: %s"%fstr)
         return ifstr, err_msg
   
 
