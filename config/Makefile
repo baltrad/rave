@@ -25,6 +25,7 @@
 -include ../def.mk
 
 CONFIG_FILES=`ls -1 *.xml`
+CONFIG_FILES+=`ls -1 *.json`
 
 .PHONY=install
 install:

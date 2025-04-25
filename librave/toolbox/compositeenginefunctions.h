@@ -56,6 +56,16 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 int CompositeEngineFunctions_prepareRATE(CompositeEngine_t* engine, CompositeArguments_t* arguments, CompositeEngineObjectBinding_t* bindings, int nbindings);
 
 /**
+ * Updates the how/product_parameters - group for the cartesian parameter "RATE" if found.
+ * @param[in] arguments - the compositing arguments
+ * @param[in] cartesian - the cartesian product
+ * @param[in] bindings - the bindings
+ * @param[in] nbindings - number of bindings
+ * @return 1 on success otherwise 0
+ */
+int CompositeEngineFunctions_updateRATECoefficients(CompositeArguments_t* arguments, Cartesian_t* cartesian, CompositeEngineObjectBinding_t* bindings, int nbindings);
+
+/**
  * Each binding has got a member called value which is of type \ref RaveValue_t. This contains a zr-relationship for RATE products.
  * @param[in] binding - the binding where the value contains the individual ZR coefficients
  * @param[in] valuetype - the type of value (basically, if it is RaveValueType_DATA, the returned value will be the RR )

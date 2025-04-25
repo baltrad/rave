@@ -1,0 +1,9 @@
+{
+  "rave.acqva.cluttermap.dir":"/var/lib/baltrad/acqva/cluttermap",
+  "rave.rate.zr.coefficients":{
+    "sella":[200.0, 1.6], 
+    "sekrn":[200.0,1.6]
+  },
+  "odim.sources":"/etc/baltrad/rave/config/odim_source.xml"
+}
+

@@ -29,6 +29,7 @@ import _compositearguments
 import _compositegenerator
 import _compositefilter
 import _area
+import _rave
 import _projection
 import _polarscan
 import _polarvolume
@@ -92,6 +93,9 @@ class PyCompositeGeneratorTest(unittest.TestCase):
       pass
 
   def test_create_with_manager_and_xml(self):
+    if not _rave.isXmlSupported():
+      return
+
     manager = _compositefactorymanager.new()
     obj = _compositegenerator.create(manager, self.GENERATOR_FIXTURE)
     ids = obj.getFactoryIDs()

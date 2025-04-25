@@ -25,19 +25,18 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_properties.h"
 #include "rave_debug.h"
 #include "rave_alloc.h"
+#include "rave_value.h"
 #include "raveobject_hashtable.h"
 #include "odim_sources.h"
-//#include "rave_simplexml.h"
-//#include "rave_utilities.h"
-//#include "expat.h"
 #include <string.h>
+#include <stdio.h>
 
 /**
  * Represents the registry
  */
 struct _RaveProperties_t {
   RAVE_OBJECT_HEAD /** Always on top */
-  RaveObjectHashTable_t* properties; /**< the property mapping */
+  RaveValue_t* properties; /**< the property mapping as a rave value */
   OdimSources_t* sources; /**< odim sources */
 };
 
@@ -49,10 +48,11 @@ static int RaveProperties_constructor(RaveCoreObject* obj)
 {
   RaveProperties_t* this = (RaveProperties_t*)obj;
   this->sources = NULL;
-  this->properties = RAVE_OBJECT_NEW(&RaveObjectHashTable_TYPE);
+  this->properties = RaveValue_createHashTable(NULL);
   if (this->properties == NULL) {
     goto error;
   }
+
 
   return 1;
 error:
@@ -98,6 +98,38 @@ static void RaveProperties_destructor(RaveCoreObject* obj)
 /*@} End of Private functions */
 
 /*@{ Interface functions */
+RaveProperties_t* RaveProperties_load(const char* filename)
+{
+#ifdef RAVE_JSON_SUPPORTED
+  RaveProperties_t* result = NULL;
+  RaveValue_t* value = RaveValue_loadJSON(filename);
+  if (value != NULL && RaveValue_type(value) == RaveValue_Type_Hashtable) {
+    result = RAVE_OBJECT_NEW(&RaveProperties_TYPE);
+    if (result != NULL) {
+      RAVE_OBJECT_RELEASE(result->properties);
+      result->properties = RAVE_OBJECT_COPY(value);
+    }
+#ifdef RAVE_XML_SUPPORTED
+    if (RaveValueHash_exists(value, "odim.sources")) {
+      RaveValue_t* t = RaveValueHash_get(value, "odim.sources");
+      if (RaveValue_type(t) == RaveValue_Type_String) {
+        result->sources = OdimSources_load(RaveValue_toString(t));
+      }
+      RAVE_OBJECT_RELEASE(t);
+    }
+#endif    
+  } else {
+    RAVE_ERROR1("Could not load JSON file %s", filename);
+  }
+  RAVE_OBJECT_RELEASE(value);
+  return result;
+#else
+  RAVE_WARNING0("rave is not built with json support");
+  return NULL;
+#endif
+}
+
+
 int RaveProperties_set(RaveProperties_t* self, const char* name, RaveValue_t* value)
 {
   RAVE_ASSERT((self != NULL), "self == NULL");
@@ -105,33 +137,31 @@ int RaveProperties_set(RaveProperties_t* self, const char* name, RaveValue_t* va
     RAVE_ERROR0("Invalid arguments");
     return 0;
   }
-  return RaveObjectHashTable_put(self->properties, name, (RaveCoreObject*)value);
+  return RaveValueHash_put(self->properties, name, value);
 }
 
 RaveValue_t* RaveProperties_get(RaveProperties_t* self, const char* name)
 {
   RAVE_ASSERT((self != NULL), "self == NULL");
-  return (RaveValue_t*)RaveObjectHashTable_get(self->properties, name);
+  return RaveValueHash_get(self->properties, name);
 }
 
 int RaveProperties_hasProperty(RaveProperties_t* self, const char* name)
 {
   RAVE_ASSERT((self != NULL), "self == NULL");
-  return RaveObjectHashTable_exists(self->properties, name);
+  return RaveValueHash_exists(self->properties, name);
 }
 
 void RaveProperties_remove(RaveProperties_t* self, const char* name)
 {
-  RaveCoreObject* obj = NULL;
   RAVE_ASSERT((self != NULL), "self == NULL");
-  obj = RaveObjectHashTable_remove(self->properties, name);
-  RAVE_OBJECT_RELEASE(obj);
+  RaveValueHash_remove(self->properties, name);
 }
 
 int RaveProperties_size(RaveProperties_t* self)
 {
   RAVE_ASSERT((self != NULL), "self == NULL");
-  return RaveObjectHashTable_size(self->properties);
+  return RaveValueHash_size(self->properties);
 }
 
 void RaveProperties_setOdimSources(RaveProperties_t* self, OdimSources_t* sources)

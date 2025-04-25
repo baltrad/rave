@@ -11,6 +11,11 @@ SCANSUNINC+= $(EXPAT_INCLUDE_DIR)
 LDFLAGS+= $(EXPAT_LIB_DIR)
 endif
 
+ifeq ($(JSONC_SUPPRESSED), no)
+SCANSUNINC+= $(JSONC_INCLUDE_DIR)
+LDFLAGS+= $(JSONC_LIB_DIR)
+endif
+
 ifeq ($(BUFR_SUPPRESSED), no)
 SCANSUNINC+= $(BUFR_INCLUDE_DIR)
 LDFLAGS+= $(BUFR_LIB_DIR)
@@ -42,7 +47,9 @@ endif
 ifeq ($(EXPAT_SUPPRESSED), no)
 SCANSUNLIBS+= -lexpat
 endif
-
+ifeq ($(JSONC_SUPPRESSED), no)
+SCANSUNLIBS+= -ljson-c
+endif
 ifeq ($(GOT_PTHREAD_SUPPORT), yes)
 SCANSUNLIBS+= -lpthread
 endif

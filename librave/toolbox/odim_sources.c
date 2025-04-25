@@ -30,9 +30,13 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_object.h"
 #include "raveobject_list.h"
 #include "raveobject_hashtable.h"
+
+#ifdef RAVE_XML_SUPPORTED
 #include "rave_simplexml.h"
-#include "rave_utilities.h"
 #include "expat.h"
+#endif
+
+#include "rave_utilities.h"
 #include <string.h>
 
 /**
@@ -113,6 +117,7 @@ static void OdimSources_destructor(RaveCoreObject* obj)
   RAVE_OBJECT_RELEASE(this->plc);
 }
 
+#ifdef RAVE_XML_SUPPORTED
 static int OdimSourcesInternal_loadSources(OdimSources_t* sources, const char* filename)
 {
   SimpleXmlNode_t* node = NULL;
@@ -159,6 +164,7 @@ done:
   RAVE_OBJECT_RELEASE(node);
   return result;
 }
+#endif
 
 /*@} End of Private functions */
 
@@ -167,6 +173,7 @@ done:
 OdimSources_t* OdimSources_load(const char* filename)
 {
   OdimSources_t* result = NULL;
+#ifdef RAVE_XML_SUPPORTED  
   if (filename != NULL) {
     result = RAVE_OBJECT_NEW(&OdimSources_TYPE);
     if (result != NULL) {
@@ -175,6 +182,7 @@ OdimSources_t* OdimSources_load(const char* filename)
       }
     }
   }
+#endif  
   return result;
 }
 
@@ -256,7 +264,7 @@ OdimSource_t* OdimSources_identify(OdimSources_t* self, const char* sourcestr)
 {
   char *nod = NULL, *wmo = NULL, *wigos = NULL, *rad = NULL, *plc = NULL;
   OdimSource_t* result = NULL;
-  // RaveObjectList_t* sources = NULL;
+
   RAVE_ASSERT((self != NULL), "self == NULL");
   nod = OdimSource_getIdFromOdimSource(sourcestr, "NOD:");
   if (nod != NULL) {
@@ -283,44 +291,6 @@ OdimSource_t* OdimSources_identify(OdimSources_t* self, const char* sourcestr)
     if (result == NULL && plc != NULL) {
       result = OdimSources_get_plc(self, plc);
     }
-    // sources = RaveObjectHashTable_values(self->nod);
-
-
-    // if (sources != NULL) {
-    //   int i = 0, nlen = RaveObjectList_size(sources);
-    //   int foundSourceCtr = 0, foundDuplicateSourceCtr = 0;
-    //   OdimSource_t* foundSource = NULL;
-
-    //   for (i = 0; i < nlen; i++) {
-    //     OdimSource_t* source = (OdimSource_t*)RaveObjectList_get(sources, i);
-    //     int sourcectr = 0;
-    //     if (source != NULL) { 
-    //        sourcectr += (wigos != NULL && OdimSource_getWigos(source) != NULL && strcmp(wigos,OdimSource_getWigos(source)) == 0)?1:0;
-    //        sourcectr += (wmo != NULL && OdimSource_getWmo(source) != NULL && strcmp(wmo,OdimSource_getWmo(source)) == 0)?1:0;
-    //        sourcectr += (rad != NULL && OdimSource_getRad(source) != NULL && strcmp(rad,OdimSource_getRad(source)) == 0)?1:0;
-    //        sourcectr += (plc != NULL && OdimSource_getPlc(source) != NULL && strcmp(plc,OdimSource_getPlc(source)) == 0)?1:0;
-    //        if (sourcectr > foundSourceCtr) {
-    //         foundSourceCtr = sourcectr;
-    //         foundDuplicateSourceCtr = 0;
-    //         foundSource = RAVE_OBJECT_COPY(source);
-    //         if (returnFirstMatch) {
-    //           RAVE_OBJECT_RELEASE(source);
-    //           break;
-    //         }
-    //        } else if (sourcectr == foundSourceCtr) {
-    //         foundDuplicateSourceCtr = 1;
-    //        }
-    //     }
-    //     RAVE_OBJECT_RELEASE(source);
-    //   }
-    //   if (foundDuplicateSourceCtr) {
-    //     RAVE_ERROR0("Found at least two sources that matches source string. Don't know what to return.");
-    //     RAVE_OBJECT_RELEASE(foundSource);
-    //   }
-    //   result = RAVE_OBJECT_COPY(foundSource);
-    //   RAVE_OBJECT_RELEASE(foundSource);
-    // }
-    // RAVE_OBJECT_RELEASE(sources);
   }
   RAVE_FREE(nod);
   RAVE_FREE(wigos);

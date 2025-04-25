@@ -1,12 +1,11 @@
 #include "tiled_compositing.h"
 #include "thread_pool_executor.hpp"
-#include "cartesian.h"
 #include "compositing.h"
 #include "rave_defines.h"
 
-#include "raveobject_list.h"
-
 extern "C" {
+#include "raveobject_list.h"
+#include "cartesian.h"
 #include "rave_attribute.h"
 #include "composite.h"
 #include "rave_debug.h"

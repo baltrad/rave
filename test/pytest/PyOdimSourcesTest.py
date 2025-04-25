@@ -46,6 +46,9 @@ class PyOdimSourcesTest(unittest.TestCase):
     self.assertNotEqual(-1, isarea)
 
   def test_load(self):
+    if not _rave.isXmlSupported():
+      return
+
     expected_sources = ['seosd', 'dkvir', 'dkhor', 'sella', 'sekaa', 'dkaal', 'sebaa', 'dkege', 'seatv', 'dkste', 'dksin', 'seang', 'dkbor', 'dkhvi', 'sevax', 'dkrom', 'dkode', 'sehem', 'dkvej', 'dkvix', 'sekrn', 'dkaar', 'seoer', 'selek', 'sehuv']
 
     obj = _odimsources.load(self.FIXTURE)
@@ -57,6 +60,9 @@ class PyOdimSourcesTest(unittest.TestCase):
     self.assertEqual(0, len(unique_sources))
 
   def test_load_sekrn(self):
+    if not _rave.isXmlSupported():
+      return
+
     obj = _odimsources.load(self.FIXTURE)
     sekrn = obj.get("sekrn")
     self.assertEqual("sekrn", sekrn.nod)
@@ -68,6 +74,9 @@ class PyOdimSourcesTest(unittest.TestCase):
     self.assertEqual("82", sekrn.org)
 
   def test_load_dkaar(self):
+    if not _rave.isXmlSupported():
+      return
+
     obj = _odimsources.load(self.FIXTURE)
     site = obj.get("dkaar")
     self.assertEqual("dkaar", site.nod)
@@ -79,6 +88,9 @@ class PyOdimSourcesTest(unittest.TestCase):
     self.assertEqual("94", site.org)
 
   def test_get_nosuch_nod(self):
+    if not _rave.isXmlSupported():
+      return
+
     obj = _odimsources.load(self.FIXTURE)
     try:
       site = obj.get("fivan")
@@ -87,41 +99,65 @@ class PyOdimSourcesTest(unittest.TestCase):
       pass
 
   def test_get_wmo(self):
+    if not _rave.isXmlSupported():
+      return
+
     obj = _odimsources.load(self.FIXTURE)
     site = obj.get_wmo("02032")
     self.assertEqual("sekrn", site.nod)
 
   def test_get_wigos(self):
+    if not _rave.isXmlSupported():
+      return
+
     obj = _odimsources.load(self.FIXTURE)
     site = obj.get_wigos("0-20000-0-2032")
     self.assertEqual("sekrn", site.nod)
 
   def test_identify_source_byNOD(self):
+    if not _rave.isXmlSupported():
+      return
+
     obj = _odimsources.load(self.FIXTURE)
     site = obj.identify("NOD:sekrn")
     self.assertEqual("sekrn", site.nod)
 
   def test_identify_source_byWMO(self):
+    if not _rave.isXmlSupported():
+      return
+
     obj = _odimsources.load(self.FIXTURE)
     site = obj.identify("WMO:02032")
     self.assertEqual("sekrn", site.nod)
 
   def test_identify_source_byWIGOS(self):
+    if not _rave.isXmlSupported():
+      return
+
     obj = _odimsources.load(self.FIXTURE)
     site = obj.identify("WIGOS:0-20000-0-2032")
     self.assertEqual("sekrn", site.nod)
 
   def test_identify_source_byRAD(self):
+    if not _rave.isXmlSupported():
+      return
+
     obj = _odimsources.load(self.FIXTURE)
     site = obj.identify("RAD:SE40")
     self.assertEqual("sekrn", site.nod)
 
   def test_identify_source_byWIGOS_WMO(self):
+    if not _rave.isXmlSupported():
+      return
+
     obj = _odimsources.load(self.FIXTURE)
     site = obj.identify("WIGOS:0-20000-0-2032,WMO:02032")
     self.assertEqual("sekrn", site.nod)
 
   def test_identify_source_byWMO_RAD(self):
+    if not _rave.isXmlSupported():
+      return
+
     obj = _odimsources.load(self.FIXTURE)
     site = obj.identify("WMO:00000,RAD:DN99")
     self.assertEqual("dkaal", site.nod)

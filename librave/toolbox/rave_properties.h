@@ -40,12 +40,12 @@ typedef struct _RaveProperties_t RaveProperties_t;
 extern RaveCoreObjectType RaveProperties_TYPE;
 
 /**
- * Simplified loading function, takes filename and a projection registry
+ * Simplified loading function, takes filename pointing to a json file containing the properties to load.
+ * Note that the configuration must be defined as a object, i.e. { }
  * @param[in] filename - the area file name
- * @param[in] pRegistry - the projection registry
- * @returns an area registry
+ * @returns the rave properties
  */
-//RaveProperties_t* RaveProperties_load(const char* filename);
+RaveProperties_t* RaveProperties_load(const char* filename);
 
 /**
  * Sets the property in the table

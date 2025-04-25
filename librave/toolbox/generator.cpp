@@ -31,6 +31,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 
 extern "C" {
 #include "rave_object.h"
+#include "rave_debug.h"
 #include "compositefactorymanager.h"
 #include "compositegenerator.h"
 #include "compositearguments.h"
@@ -100,12 +101,24 @@ void Generator::update_arguments_with_prodpar(CompositeArguments_t * arguments, 
 };
 
 RaveProperties_t * Generator::load_properties(){
-    RaveProperties_t * properties = (RaveProperties_t *)RAVE_OBJECT_NEW(&RaveProperties_TYPE);
-    RaveValue_t* value = RaveValue_createString("/projects/baltrad/laser-data/cluttermaps");
-    RaveProperties_set(properties, "rave.acqva.cluttermap.dir", value);
-    //#properties.set("rave.rate.zr.coefficients", {"sella":(200.0, 1.6), "sekrn": (200.0, 1.6)})
-    RaveProperties_setOdimSources(properties, OdimSources_load(ODIM_SOURCE_FILE.c_str()));
-    //properties.sources = _odimsources.load(ODIM_SOURCE_FILE)  //# To be able to do NOD lookup of cluttermap
+    std::string composite_generator_property_file_path = _RAVEROOT + COMPOSITE_GENERATOR_PROPERTY_FILE;
+    RaveProperties_t * properties = RaveProperties_load(composite_generator_property_file_path.c_str());
+    if (properties == NULL) {
+        // Json file missing or not readable.
+        properties = (RaveProperties_t *)RAVE_OBJECT_NEW(&RaveProperties_TYPE);
+        if (properties == NULL) {
+            RAVE_CRITICAL0("Could not create properties!");
+            return NULL;
+        }
+        std::string acqva_cluttermap_dir_path = _RAVEROOT + ACQVA_CLUTTERMAP_DIR;
+        RaveValue_t* value = RaveValue_createString(acqva_cluttermap_dir_path.c_str());
+        RaveProperties_set(properties, "rave.acqva.cluttermap.dir", value);
+    }
+    OdimSources_t* odims = RaveProperties_getOdimSources(properties);
+    if (odims==NULL) {
+        std::string odim_source_file_path = _RAVEROOT + ODIM_SOURCE_FILE;
+        RaveProperties_setOdimSources(properties, OdimSources_load(odim_source_file_path.c_str()));
+    }
     return properties;
 };
 

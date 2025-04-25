@@ -36,8 +36,11 @@ extern "C" {
 #include <vector>
 #include <map>
 
-// FIXME: Make an intelligent function for getting RAVEROOT.
-const std::string RAVEROOT="/usr/lib/rave";
+extern std::string _RAVEROOT;
+
+// _RAVEROOT set in radarcomp_main.cpp at execution time.
+// Will be empty in compile time so _RAVEROOT must be added before for example RAVECONFIG to get av valid path.
+const std::string RAVEROOT=_RAVEROOT;
 
 const std::string RAVELIB = RAVEROOT + "/Lib";
 const std::string RAVECONFIG = RAVEROOT + "/config";
@@ -172,7 +175,10 @@ const std::string QUALITY_REGISTRY= RAVEETC + "/rave_pgf_quality_registry.xml";
 const std::string RAVE_TILE_REGISTRY=RAVEETC + "/rave_tile_registry.xml";
 
 //# The name of the composite generator filter file containing the settings for factories.
-const std::string COMPOSITE_GENERATOR_FILTER_FILENAME = RAVECONFIG +  "/composite_generator_filter.xml";
+const std::string COMPOSITE_GENERATOR_FILTER_FILENAME = RAVECONFIG + "/composite_generator_filter.xml";
+
+//# Where the generator property file can be found
+const std::string COMPOSITE_GENERATOR_PROPERTY_FILE = RAVECONFIG + "/rave_properties.json";
 
 //# The location where the cluttermaps can be found when using ACQVA
 //# The names of the cluttermaps should be in the format <nod>.h5, for example

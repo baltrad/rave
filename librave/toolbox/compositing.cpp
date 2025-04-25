@@ -670,7 +670,8 @@ void Compositing::set_quality_control_mode_from_string(std::string modestr){
       }
 
       Generator cgenerator;
-      cgenerator.init(COMPOSITE_GENERATOR_FILTER_FILENAME);
+      std::string composite_generator_filter_filename_path = _RAVEROOT + COMPOSITE_GENERATOR_FILTER_FILENAME;
+      cgenerator.init(composite_generator_filter_filename_path);
 
       CompositeArguments_t * arguments = cgenerator.create_arguments();
 

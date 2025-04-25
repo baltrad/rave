@@ -34,20 +34,11 @@ extern "C" {
 #include <string>
 #include <vector>
 #include <sstream>
+#include <iostream>
 
-/*
- * From rave_defines.py, RAVEROOT hardcoded for now
- */
 
-/*
-const char* RAVEROOT = "/usr/lib/rave";
-const char* RAVECONFIG = "/config/";
-const char* RAVEETC = "/etc/";
-
-const char* PROJECTION_REGISTRY = "projection_registry.xml";
-const char* AREA_REGISTRY = "area_registry.xml";
-const char* RAVE_TILE_REGISTRY = "rave_tile_registry.xml";
-*/
+// Global used in rave_defines.h to init RAVEROOT.
+std::string _RAVEROOT;
 
 /**
  * Main function for a binary for running KNMI's sun scanning functionality
@@ -57,11 +48,8 @@ const char* RAVE_TILE_REGISTRY = "rave_tile_registry.xml";
  */
 int Radarcomp(optparse::OptionParser & parser)
 {
-  // Init Area, Projection and Tile registry.
-  // # Projection and area registries
-  // Hard coded standard installation
   // clang-format off
-  std::string projection_registry_path = PROJECTION_REGISTRY;
+  std::string projection_registry_path = _RAVEROOT + PROJECTION_REGISTRY;
   // clang-format on
   ProjectionRegistry_t* proj_registry = ProjectionRegistry_load(projection_registry_path.c_str());
   if (proj_registry == 0) {
@@ -69,7 +57,7 @@ int Radarcomp(optparse::OptionParser & parser)
     return 1;
   }
 
-  std::string area_registry_path = AREA_REGISTRY;
+  std::string area_registry_path = _RAVEROOT + AREA_REGISTRY;
 
   AreaRegistry_t* area_registry = AreaRegistry_load(area_registry_path.c_str(), proj_registry);
   if (area_registry == 0) {
@@ -78,7 +66,7 @@ int Radarcomp(optparse::OptionParser & parser)
     return 1;
   }
 
-  std::string rave_tile_registry_path = RAVE_TILE_REGISTRY;
+  std::string rave_tile_registry_path = _RAVEROOT + RAVE_TILE_REGISTRY;
 
   TileRegistry_t* tile_registry = TileRegistry_load(rave_tile_registry_path.c_str());
   if (tile_registry == 0) {
@@ -242,8 +230,20 @@ int Radarcomp(optparse::OptionParser & parser)
 
 int main(int argc, char* argv[])
 {
+  // Get RAVEROOT from the realpath of the executable
+  char actualpath [PATH_MAX+1];
+  char * the_result = realpath(argv[0],actualpath);
+  if (the_result != NULL) {
+    _RAVEROOT = actualpath;
+    std::size_t pos = _RAVEROOT.find("/bin/radarcomp_c");
+    _RAVEROOT = _RAVEROOT.substr(0,pos);
+  } else {
+    // Fall back to default
+    _RAVEROOT = "/usr/lib/rave";
+  }
+
   Rave_initializeDebugger();
-  Rave_setDebugLevel(Rave_Debug::RAVE_SPEWDEBUG);
+  Rave_setDebugLevel(Rave_Debug::RAVE_DEBUG);
 
   // clang-format off
   std::string usage("usage: radarcomp_c -i <infile(s)> -o <outfile> [-a <area>] [args] [h]");

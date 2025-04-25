@@ -23,6 +23,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @date 2010-01-19
  */
 #include "composite.h"
+#include "polarscan.h"
 #include "polarvolume.h"
 #include "raveobject_list.h"
 #include "rave_types.h"

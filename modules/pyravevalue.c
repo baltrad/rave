@@ -160,12 +160,69 @@ static PyObject* _pyravevalue_new(PyObject* self, PyObject* args)
   return (PyObject*)result;
 }
 
+static PyObject* _pyravevalue_isStringArray(PyRaveValue* self, PyObject* args)
+{
+  if (!PyArg_ParseTuple(args, "")) {
+    return NULL;
+  }
+  return PyBool_FromLong(RaveValue_isStringArray(self->value));
+}
+
+static PyObject* _pyravevalue_isLongArray(PyRaveValue* self, PyObject* args)
+{
+  if (!PyArg_ParseTuple(args, "")) {
+    return NULL;
+  }
+  return PyBool_FromLong(RaveValue_isLongArray(self->value));
+}
+
+static PyObject* _pyravevalue_isDoubleArray(PyRaveValue* self, PyObject* args)
+{
+  if (!PyArg_ParseTuple(args, "")) {
+    return NULL;
+  }
+  return PyBool_FromLong(RaveValue_isDoubleArray(self->value));
+}
+
+static PyObject* _pyravevalue_toJSON(PyRaveValue* self, PyObject* args)
+{
+  char* jsonStr = NULL;
+  PyObject* result = NULL;
+
+  if (!PyArg_ParseTuple(args, "")) {
+    return NULL;
+  }
+  if (RaveValue_type(self->value) == RaveValue_Type_Undefined) {
+    Py_RETURN_NONE;
+  }
+
+  jsonStr = RaveValue_toJSON(self->value);
+  if (jsonStr == NULL) {
+    raiseException_returnNULL(PyExc_RuntimeError, "Could not create json string");
+  }
+  result = PyString_FromString(jsonStr);
+  RAVE_FREE(jsonStr);
+  return result;
+}
+
 /**
  * All methods a area can have
  */
 static struct PyMethodDef _pyravevalue_methods[] =
 {
   {"value", NULL, METH_VARARGS},
+  {"isStringArray", (PyCFunction) _pyravevalue_isStringArray, 1,
+    "isStringArray()\n\n"
+    "Returns if this instance can be represented as a string array or not.\n\n"},
+  {"isLongArray", (PyCFunction) _pyravevalue_isLongArray, 1,
+    "isLongArray()\n\n"
+    "Returns if this instance can be represented as a long array or not.\n\n"},
+  {"isDoubleArray", (PyCFunction) _pyravevalue_isDoubleArray, 1,
+    "isDoubleArray()\n\n"
+    "Returns if this instance can be represented as a double array or not.\n\n"},
+  {"toJSON", (PyCFunction) _pyravevalue_toJSON, 1,
+    "toJSON()\n\n"
+    "Returns the JSON representation of self.\n\n"},
   {NULL, NULL } /* sentinel */
 };
 
@@ -201,6 +258,42 @@ static int _pyravevalue_setattro(PyRaveValue *self, PyObject *name, PyObject *va
   }
   result = 0;
 done:
+  return result;
+}
+
+static PyObject* _pyravevalue_fromJSON(PyObject* self, PyObject* args)
+{
+  char* str = NULL;
+  PyObject* result = NULL;
+
+  RaveValue_t* rvalue = NULL;
+  if (!PyArg_ParseTuple(args,"s", &str)) {
+    return NULL;
+  }
+  rvalue = RaveValue_fromJSON(str);
+  if (rvalue != NULL) {
+    result = (PyObject*)PyRaveValue_New(rvalue);
+  }
+  RAVE_OBJECT_RELEASE(rvalue);
+  return result;
+}
+
+static PyObject* _pyravevalue_loadJSON(PyObject* self, PyObject* args)
+{
+  char* filename = NULL;
+  PyObject* result = NULL;
+
+  RaveValue_t* rvalue = NULL;
+  if (!PyArg_ParseTuple(args,"s", &filename)) {
+    return NULL;
+  }
+  rvalue = RaveValue_loadJSON(filename);
+  if (rvalue != NULL) {
+    result = (PyObject*)PyRaveValue_New(rvalue);
+  } else {
+    raiseException_returnNULL(PyExc_IOError, "Could not load file");
+  }
+  RAVE_OBJECT_RELEASE(rvalue);
   return result;
 }
 
@@ -277,12 +370,18 @@ PyTypeObject PyRaveValue_Type =
 /*@{ Module setup */
 static PyMethodDef functions[] = {
   {"new", (PyCFunction)_pyravevalue_new, 1,
-      "new() -> new instance of the RaveValueCore object\n\n"
-      "Creates a new instance of the RaveValueCore object"},
+    "new() -> new instance of the RaveValueCore object\n\n"
+    "Creates a new instance of the RaveValueCore object"},
+  {"fromJSON", (PyCFunction)_pyravevalue_fromJSON, 1,
+    "fromJSON(str) -> new instance of the RaveValueCore object\n\n"
+    "Creates a new instance of the RaveValueCore object assuming provided string is json formatted"},
+  {"loadJSON", (PyCFunction)_pyravevalue_loadJSON, 1,
+    "loadJSON(filename) -> read instance of the RaveValueCore object\n\n"
+    "Loads a JSON object from a file and creates a RaveValueCore object is possible"},
   {"isRaveValue", (PyCFunction)_pyravevalue_isRaveValue, 1,
-      "isRaveValue(obj) -> True if object is a rave value, otherwise False\n\n"
-      "Checks if the provided object is a python rave value object or not.\n\n"
-      "obj - the object to check."},
+    "isRaveValue(obj) -> True if object is a rave value, otherwise False\n\n"
+    "Checks if the provided object is a python rave value object or not.\n\n"
+    "obj - the object to check."},
   {NULL,NULL} /*Sentinel*/
 };
 
