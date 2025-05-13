@@ -316,6 +316,9 @@ Functions</h2></td></tr>
 <tr class="memitem:ac11203b8a747c45e01a1a80c12a9aa9c" id="r_ac11203b8a747c45e01a1a80c12a9aa9c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="rave__field_8h.html#a54b17ce798506570a3d68f25207e3730">RaveField_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac11203b8a747c45e01a1a80c12a9aa9c">Cartesian_findQualityFieldByHowTask</a> (<a class="el" href="cartesian_8h.html#ab5a79e35a1b35277a4ce2abba3acada0">Cartesian_t</a> *self, const char *value)</td></tr>
 <tr class="memdesc:ac11203b8a747c45e01a1a80c12a9aa9c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Same as Cartesian_getQualityFieldByHowTask but it first tries if there are any quality fields in the current parameter before checking self.  <br /></td></tr>
 <tr class="separator:ac11203b8a747c45e01a1a80c12a9aa9c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a81c6061851c9e066b46c5f2a11297793" id="r_a81c6061851c9e066b46c5f2a11297793"><td class="memItemLeft" align="right" valign="top"><a class="el" href="rave__field_8h.html#a54b17ce798506570a3d68f25207e3730">RaveField_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a81c6061851c9e066b46c5f2a11297793">Cartesian_findAnyQualityFieldByHowTask</a> (<a class="el" href="cartesian_8h.html#ab5a79e35a1b35277a4ce2abba3acada0">Cartesian_t</a> *self, const char *value)</td></tr>
+<tr class="memdesc:a81c6061851c9e066b46c5f2a11297793"><td class="mdescLeft">&#160;</td><td class="mdescRight">First checks if the quality field is in self, if not, the currently set parameter is checked and finally the other parameters.  <br /></td></tr>
+<tr class="separator:a81c6061851c9e066b46c5f2a11297793"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a21832ba7b6f40bb5897116df8441c831" id="r_a21832ba7b6f40bb5897116df8441c831"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a21832ba7b6f40bb5897116df8441c831">Cartesian_addParameter</a> (<a class="el" href="cartesian_8h.html#ab5a79e35a1b35277a4ce2abba3acada0">Cartesian_t</a> *self, <a class="el" href="cartesianparam_8h.html#aa73fd3138313ae20c7fe25166b3720ad">CartesianParam_t</a> *param)</td></tr>
 <tr class="memdesc:a21832ba7b6f40bb5897116df8441c831"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a parameter to the cartesian product.  <br /></td></tr>
 <tr class="separator:a21832ba7b6f40bb5897116df8441c831"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -519,6 +522,35 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the created parameter </dd></dl>
+
+</div>
+</div>
+<a id="a81c6061851c9e066b46c5f2a11297793" name="a81c6061851c9e066b46c5f2a11297793"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a81c6061851c9e066b46c5f2a11297793">&#9670;&#160;</a></span>Cartesian_findAnyQualityFieldByHowTask()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="rave__field_8h.html#a54b17ce798506570a3d68f25207e3730">RaveField_t</a> * Cartesian_findAnyQualityFieldByHowTask </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="cartesian_8h.html#ab5a79e35a1b35277a4ce2abba3acada0">Cartesian_t</a> *</td>          <td class="paramname"><span class="paramname"><em>self</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>value</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>First checks if the quality field is in self, if not, the currently set parameter is checked and finally the other parameters. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
