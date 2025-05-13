@@ -203,6 +203,8 @@ class compositing(object):
   def _generate(self, dd, dt, area=None):
     self._debug_generate_info(area)
  
+    work_date = dd
+    work_time = dt
     if self.verbose:
       self.logger.info(f"[{self.mpname}] compositing.generate: Fetching objects and applying quality plugins")
     
@@ -258,6 +260,7 @@ class compositing(object):
         except:
           pass
     
+
     # START OF COMPOSITING PART
     if self.use_legacy_compositing:
       logger.info("Using legacy compositing")          
@@ -286,8 +289,12 @@ class compositing(object):
     
       generator.selection_method = self.selection_method
       generator.interpolation_method = self.interpolation_method
-      generator.date=o.date if dd is None else dd 
-      generator.time=o.time if dt is None else dt
+      work_date = o.date if dd is None else dd
+      work_time = o.time if dt is None else dt
+
+      generator.date=work_date
+      generator.time=work_time
+
       generator.height = self.height
       generator.elangle = self.elangle
       generator.range = self.range
@@ -323,8 +330,11 @@ class compositing(object):
         arguments.addQualityFlag(q)
 
       arguments.area = pyarea
-      arguments.date=o.date if dd is None else dd 
-      arguments.time=o.time if dt is None else dt
+      work_date = o.date if dd is None else dd
+      work_time = o.time if dt is None else dt
+
+      arguments.date=work_date 
+      arguments.time=work_time
 
       if self.quantity in FACTORY_GAIN_OFFSET_TABLE:
         paramcfg = FACTORY_GAIN_OFFSET_TABLE[self.quantity]
@@ -362,7 +372,7 @@ class compositing(object):
       else:
         if self.verbose:
           self.logger.info(f"[{self.mpname}] compositing.generate: Applying GRA analysis (ZR A = {self.zr_A}, ZR b = {self.zr_b})")
-        grafield = self._apply_gra(result, dd, dt)
+        grafield = self._apply_gra(result, work_date, work_time)
         if grafield:
           result.addParameter(grafield)
         else:
@@ -651,8 +661,8 @@ class compositing(object):
         nowdt = datetime.datetime(int(d[:4]), int(d[4:6]), int(d[6:]), int(t[:2]), int(t[2:4]), 0)
         agedt = nowdt - datetime.timedelta(seconds=3600 * 48) # 2 days back
         sig,pts,loss,r,rsig,corr,gra.A,gra.B,gra.C,mean,dev = self.get_backup_gra_coefficient(db, agedt, nowdt)
-        
-      dfield = result.findQualityFieldByHowTask("se.smhi.composite.distance.radar")
+
+      dfield = result.findAnyQualityFieldByHowTask("se.smhi.composite.distance.radar")
       param = result.getParameter(self.quantity)
       gra_field = gra.apply(dfield, param)
       gra_field.quantity = self.quantity + "_CORR"

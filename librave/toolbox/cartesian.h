@@ -704,6 +704,12 @@ RaveField_t* Cartesian_getQualityFieldByHowTask(Cartesian_t* cartesian, const ch
 RaveField_t* Cartesian_findQualityFieldByHowTask(Cartesian_t* self, const char* value);
 
 /**
+ * First checks if the quality field is in self, if not, the currently set parameter is checked and finally the other parameters.
+ * @param[in] self - self
+ */
+ RaveField_t* Cartesian_findAnyQualityFieldByHowTask(Cartesian_t* self, const char* value);
+
+/**
  * Adds a parameter to the cartesian product. The quantity is used as unique
  * identifier which means that any existing one will be removed.
  * @param[in] self - self

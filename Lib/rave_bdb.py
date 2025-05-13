@@ -137,6 +137,7 @@ class rave_bdb(object):
     :raises an exception if the rave object not can be returned
     '''
     mpname = multiprocessing.current_process().name
+    print(f"fname={fname}")
     if os.path.exists(fname):
       return _raveio.open(fname, lazy_loading, preloadedQuantities).object
     

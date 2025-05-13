@@ -905,6 +905,39 @@ static PyObject* _pycartesian_findQualityFieldByHowTask(PyCartesian* self, PyObj
 }
 
 /**
+ * Finds the quality field with the specified how/task value by first checking in the current
+ * parameter and if there is no such quality field, then all other parameters are searched before
+ * trying self.
+ * @param[in] self - this instance
+ * @param[in] args - the how/task string value
+ * @returns the quality field or None if there is no such quality field
+ */
+ static PyObject* _pycartesian_findAnyQualityFieldByHowTask(PyCartesian* self, PyObject* args)
+ {
+   PyObject* result = NULL;
+   RaveField_t* field = NULL;
+ 
+   char* howtask = NULL;
+   if (!PyArg_ParseTuple(args, "s", &howtask)) {
+     return NULL;
+   }
+ 
+   field = Cartesian_findAnyQualityFieldByHowTask(self->cartesian, howtask);
+ 
+   if (field != NULL) {
+     result = (PyObject*)PyRaveField_New(field);
+   }
+ 
+   RAVE_OBJECT_RELEASE(field);
+ 
+   if (result != NULL) {
+     return result;
+   }
+ 
+   Py_RETURN_NONE;
+ }
+
+/**
  * Adds a parameter to the cartesian product.
  * @param[in] self - self
  * @param[in] args - an CartesianParamCore object
@@ -1306,6 +1339,11 @@ static struct PyMethodDef _pycartesian_methods[] =
   {"findQualityFieldByHowTask", (PyCFunction) _pycartesian_findQualityFieldByHowTask, 1,
     "findQualityFieldByHowTask(name) -> RaveFieldCore or None \n\n"
     "Tries to locate any quality field with  how/task attribute equal to name. First, the current parameters quality fields are checked and then self.\n\n"
+    "name  - The rave field with how/task name equal to name\n\n"
+  },
+  {"findAnyQualityFieldByHowTask", (PyCFunction) _pycartesian_findAnyQualityFieldByHowTask, 1,
+    "findAnyQualityFieldByHowTask(name) -> RaveFieldCore or None \n\n"
+    "Tries to locate any quality field with  how/task attribute equal to name. First self is checked, then the current parameters quality fields and finally the rest.\n\n"
     "name  - The rave field with how/task name equal to name\n\n"
   },
   {"addParameter", (PyCFunction)_pycartesian_addParameter, 1,
