@@ -5,14 +5,14 @@
   
   <!-- the area id must map to an area definition in area_registry.xml. This means that there can only be one tileset / area -->
   <!-- Example definition that splits up the swegmaps_2000 into 4 different tiles. Use bin/create_tile_definition for generating a suitable tileset -->
-
+  <!--
   <area id="swegmaps_2000"> 
     <tile id="ul" extent="971337.728807,9112461.1790100001,1993337.7288084999,11028461.179" />
     <tile id="ur" extent="1993337.7288084999,9112461.1790100001,3015337.72881,11028461.179" />
     <tile id="ll" extent="971337.728807,7196461.17902,1993337.7288084999,9112461.1790100001" />
     <tile id="lr" extent="1993337.7288084999,7196461.17902,3015337.72881,9112461.1790100001" />
   </area>
-
+  -->
 <area id="odc_area">
   <tile id="nw" extent="-1950002.529151, -100001.025971, -50002.529151, 2099998.974029" />
   <tile id="w"  extent="-1950002.529151, -900001.025971, -50002.529151, -100001.025971" />
