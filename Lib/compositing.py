@@ -207,11 +207,11 @@ class compositing(object):
     work_time = dt
     if self.verbose:
       self.logger.info(f"[{self.mpname}] compositing.generate: Fetching objects and applying quality plugins")
-    
+
     self.logger.debug(f"[{self.mpname}] compositing.generate: Generating composite with date and time {dd}T{dt} for area {area}")
-    
+
     objects, nodes, how_tasks, all_files_malfunc = self.fetch_objects()
-    
+
     if all_files_malfunc:
       self.logger.info(f"[{self.mpname}] compositing.generate: Content of all provided files were marked as 'malfunc'. Since option 'ignore_malfunc' is set, no composite is generated!")
       return None

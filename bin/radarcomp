@@ -33,6 +33,7 @@ import rave_tile_registry
 logger = rave_pgf_logger.rave_pgf_syslog_client()
 
 def main(options):
+  #_rave.setDebugLevel(_rave.Debug_RAVE_SPEWDEBUG)
   comp = compositing()
   comp.filenames = options.infiles.split(",")
   comp.detectors = options.qc.split(",")

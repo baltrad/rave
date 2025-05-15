@@ -186,7 +186,7 @@ class multi_composite_arguments(object):
     logger.debug(f"[{mpname}] multi_composite_arguments.generate: Generating composite tile={self.area_definition.id}")
 
     result = comp.generate(dd, dt, pyarea)
-    
+
     if result == None:
       totaltime = time.time() - starttime
       logger.info(f"[{mpname}] multi_composite_arguments.generate: No composite for tile={self.area_definition.id} could be generated.")
@@ -196,6 +196,7 @@ class multi_composite_arguments(object):
       
     fileno, outfile = rave_tempfile.mktemp(suffix='.h5', close="True")
   
+
     rio = _raveio.new()
     rio.object = result
     rio.filename = outfile
@@ -359,7 +360,7 @@ class tiled_compositing(object):
     a.area_definition = adef
     a.use_legacy_compositing=self.compositing.use_legacy_compositing
     a.strategy=self.compositing.strategy
-    
+
     return a
   
   ##
@@ -414,10 +415,6 @@ class tiled_compositing(object):
                 v = v.getScanWithMaxDistance()
             scan = v
             
-            if self.compositing.quantity not in scan.getParameterNames():
-                self.logger.info(f"[{self.mpname}] tiled_compositing._add_files_to_argument_list: Quantity {self.compositing.quantity} not in data from {scan.source}")
-                continue
-
             bi = scan.nbins - 1
             
             # Loop around the scan
@@ -500,7 +497,7 @@ class tiled_compositing(object):
       self.file_objects, self.nodes, self.how_tasks, all_files_malfunc = self._fetch_file_objects_mp()
     else:
       self.file_objects, self.nodes, self.how_tasks, all_files_malfunc = self._fetch_file_objects()
-      
+    
     if all_files_malfunc:
       self.logger.info("[{self.mpname}] tiled_compositing.generate: Content of all provided files were marked as 'malfunc'. Since option 'ignore_malfunc' is set, no composite is generated!")
       return None
