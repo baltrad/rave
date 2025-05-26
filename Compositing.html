@@ -265,7 +265,36 @@ radarcomp</h2>
  Will disable the old compositing in favor for the new variant.</li>
 <li>&ndash;strategy=[legacy|nearest|acqva] If the user wants to enfore a specific factory to override the filter handling in the <a class="el" href="compositegenerator_8h.html#aacaab9018ec5c764d08f49036d7bffe4">CompositeGenerator_t</a>. If not specified, then the filtering will be used.</li>
 </ul>
-<p>When using the composite factories it is now also possible to specify <b>&ndash;quantity=RATE</b>. _factories &ndash;qc=rave-overshooting &ndash;strategy=legacy </p>
+<p>When using the composite factories it is now also possible to specify <b>&ndash;quantity=RATE</b>. _factories &ndash;qc=rave-overshooting &ndash;strategy=legacy</p>
+<h1><a class="anchor" id="compositing_camethod"></a>
+how/camethod</h1>
+<p>When generating composites the attribute how/camethod will be added to the cartesian product so that the user know how the data has been selected. As described earlier there are number of different compositing factories delivered within RAVE and each of these will be responsible for ensuring that how/camethod is set appropriately.</p>
+<p>Since <a class="el" href="legacycompositegeneratorfactory_8c.html#a6a7d84d45936d9482c75b339d59d8784">LegacyCompositeGeneratorFactory_t</a> uses the same code as <a class="el" href="composite_8h.html#a0b7d6e2d30e3bfd5c465930546ee2069">Composite_t</a> the table will only contain <a class="el" href="legacycompositegeneratorfactory_8c.html#a6a7d84d45936d9482c75b339d59d8784" title="The Legacy composite generator factory.">LegacyCompositeGeneratorFactory_t</a> but the same behavior can be expected when using <a class="el" href="composite_8h.html#a0b7d6e2d30e3bfd5c465930546ee2069" title="Defines a Composite generator.">Composite_t</a> directly as well.</p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadLeft">Factory   </th><th class="markdownTableHeadLeft">Product   </th><th class="markdownTableHeadLeft">selection_method   </th><th class="markdownTableHeadLeft">interpolation_method   </th><th class="markdownTableHeadLeft">extra   </th><th class="markdownTableHeadLeft">how/camethod    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyLeft"><a class="el" href="legacycompositegeneratorfactory_8c.html#a6a7d84d45936d9482c75b339d59d8784">LegacyCompositeGeneratorFactory_t</a>   </td><td class="markdownTableBodyLeft">PPI / CAPPI / PCAPPI   </td><td class="markdownTableBodyLeft">NEAREST_RADAR   </td><td class="markdownTableBodyLeft">ANY   </td><td class="markdownTableBodyLeft">NO QCOMP   </td><td class="markdownTableBodyLeft">NEAREST    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyLeft"><a class="el" href="legacycompositegeneratorfactory_8c.html#a6a7d84d45936d9482c75b339d59d8784">LegacyCompositeGeneratorFactory_t</a>   </td><td class="markdownTableBodyLeft">MAX / PMAX   </td><td class="markdownTableBodyLeft">N/A   </td><td class="markdownTableBodyLeft">NEAREST   </td><td class="markdownTableBodyLeft">NO QCOMP   </td><td class="markdownTableBodyLeft">MAXIMUM    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyLeft"><a class="el" href="legacycompositegeneratorfactory_8c.html#a6a7d84d45936d9482c75b339d59d8784">LegacyCompositeGeneratorFactory_t</a>   </td><td class="markdownTableBodyLeft">PPI / CAPPI / PCAPPI   </td><td class="markdownTableBodyLeft">HEIGHT_ABOVE_SEALEVEL   </td><td class="markdownTableBodyLeft">ANY   </td><td class="markdownTableBodyLeft">NO QCOMP   </td><td class="markdownTableBodyLeft">MDE    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyLeft"><a class="el" href="legacycompositegeneratorfactory_8c.html#a6a7d84d45936d9482c75b339d59d8784">LegacyCompositeGeneratorFactory_t</a>   </td><td class="markdownTableBodyLeft">PPI / CAPPI / PCAPPI   </td><td class="markdownTableBodyLeft">N/A   </td><td class="markdownTableBodyLeft">ANY   </td><td class="markdownTableBodyLeft">QCOMP   </td><td class="markdownTableBodyLeft">QMAXIMUM    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyLeft">-   </td><td class="markdownTableBodyLeft">-   </td><td class="markdownTableBodyLeft">-   </td><td class="markdownTableBodyLeft">-   </td><td class="markdownTableBodyLeft">-   </td><td class="markdownTableBodyLeft">-    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyLeft"><a class="el" href="nearestcompositegeneratorfactory_8c.html#aee4e53a47bea2a540c3cdbe2a5e9a418">NearestCompositeGeneratorFactory_t</a>   </td><td class="markdownTableBodyLeft">PPI / CAPPI / PCAPPI   </td><td class="markdownTableBodyLeft">NEAREST_RADAR   </td><td class="markdownTableBodyLeft">N/A   </td><td class="markdownTableBodyLeft">N/A   </td><td class="markdownTableBodyLeft">NEAREST    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyLeft"><a class="el" href="nearestcompositegeneratorfactory_8c.html#aee4e53a47bea2a540c3cdbe2a5e9a418">NearestCompositeGeneratorFactory_t</a>   </td><td class="markdownTableBodyLeft">PPI / CAPPI / PCAPPI   </td><td class="markdownTableBodyLeft">HEIGHT_ABOVE_SEALEVEL   </td><td class="markdownTableBodyLeft">N/A   </td><td class="markdownTableBodyLeft">N/A   </td><td class="markdownTableBodyLeft">MDE    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyLeft"><a class="el" href="nearestcompositegeneratorfactory_8c.html#aee4e53a47bea2a540c3cdbe2a5e9a418">NearestCompositeGeneratorFactory_t</a>   </td><td class="markdownTableBodyLeft">MAX / PMAX   </td><td class="markdownTableBodyLeft">N/A   </td><td class="markdownTableBodyLeft">N/A   </td><td class="markdownTableBodyLeft">N/A   </td><td class="markdownTableBodyLeft">MAXIMUM    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyLeft">-   </td><td class="markdownTableBodyLeft">-   </td><td class="markdownTableBodyLeft">-   </td><td class="markdownTableBodyLeft">-   </td><td class="markdownTableBodyLeft">-   </td><td class="markdownTableBodyLeft">-    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyLeft"><a class="el" href="acqvacompositegeneratorfactory_8c.html#a8a5810d673a1d32d65188513708bf432">AcqvaCompositeGeneratorFactory_t</a>   </td><td class="markdownTableBodyLeft">ACQVA   </td><td class="markdownTableBodyLeft">N/A   </td><td class="markdownTableBodyLeft">N/A   </td><td class="markdownTableBodyLeft">N/A   </td><td class="markdownTableBodyLeft">QMAXIMUM   </td></tr>
+</table>
+<p>The <a class="el" href="legacycompositegeneratorfactory_8c.html#a6a7d84d45936d9482c75b339d59d8784">LegacyCompositeGeneratorFactory_t</a> can generate composites using the quality based compositing method that is using a specific quality flag indicator. If setting a quality flag in the composite arguments using the <a class="el" href="compositearguments_8c.html#a2888ad59d79bdab44193b1e21508d0d3">CompositeArguments_setQIFieldName</a>, the QCOMP generation will be used and in that situation it the selection_method will not be used. </p>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->
 <!-- start footer part -->

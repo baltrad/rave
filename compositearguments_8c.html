@@ -132,6 +132,9 @@ Functions</h2></td></tr>
 <tr class="memitem:a9196c55ddde81e2b224c37470aef90c7" id="r_a9196c55ddde81e2b224c37470aef90c7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="rave__types_8h.html#a40ec6d35c4a8f0ea1fb3f5d6cedd27a8">Rave_ProductType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a9196c55ddde81e2b224c37470aef90c7">CompositeArguments_getProductType</a> (<a class="el" href="compositearguments_8h.html#a7d9ab330f246a7676fb99eebe0287cac">CompositeArguments_t</a> *args)</td></tr>
 <tr class="memdesc:a9196c55ddde81e2b224c37470aef90c7"><td class="mdescLeft">&#160;</td><td class="mdescRight">In some cases it is possible to translate a <a class="el" href="compositearguments_8h.html#a8fdbd7204513dde42e6af81b287c9849">Rave_CompositingProduct</a> into a <a class="el" href="rave__types_8h.html#a40ec6d35c4a8f0ea1fb3f5d6cedd27a8">Rave_ProductType</a>.  <br /></td></tr>
 <tr class="separator:a9196c55ddde81e2b224c37470aef90c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aca7e46af1747c7ae0badd4367b6beeb0" id="r_aca7e46af1747c7ae0badd4367b6beeb0"><td class="memItemLeft" align="right" valign="top"><a class="el" href="compositearguments_8h.html#aef15ff5c47d35f7012adb40290b5fd55">Rave_Compositing_SelectionMethod</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aca7e46af1747c7ae0badd4367b6beeb0">CompositeArguments_getSelectionMethod</a> (<a class="el" href="compositearguments_8h.html#a7d9ab330f246a7676fb99eebe0287cac">CompositeArguments_t</a> *args)</td></tr>
+<tr class="memdesc:aca7e46af1747c7ae0badd4367b6beeb0"><td class="mdescLeft">&#160;</td><td class="mdescRight">If user has specified selection_method it might be possible to translate it into a selection method type that is easier to verify.  <br /></td></tr>
+<tr class="separator:aca7e46af1747c7ae0badd4367b6beeb0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3b383ed812c55f71986ac5af898941ae" id="r_a3b383ed812c55f71986ac5af898941ae"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a3b383ed812c55f71986ac5af898941ae">CompositeArguments_setArea</a> (<a class="el" href="compositearguments_8h.html#a7d9ab330f246a7676fb99eebe0287cac">CompositeArguments_t</a> *args, <a class="el" href="area_8h.html#a684f43f037f8102185d9a7585080b7e8">Area_t</a> *area)</td></tr>
 <tr class="memdesc:a3b383ed812c55f71986ac5af898941ae"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the area to use when creating the composite.  <br /></td></tr>
 <tr class="separator:a3b383ed812c55f71986ac5af898941ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -1262,6 +1265,26 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the range in meters </dd></dl>
+
+</div>
+</div>
+<a id="aca7e46af1747c7ae0badd4367b6beeb0" name="aca7e46af1747c7ae0badd4367b6beeb0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aca7e46af1747c7ae0badd4367b6beeb0">&#9670;&#160;</a></span>CompositeArguments_getSelectionMethod()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="compositearguments_8h.html#aef15ff5c47d35f7012adb40290b5fd55">Rave_Compositing_SelectionMethod</a> CompositeArguments_getSelectionMethod </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="compositearguments_8h.html#a7d9ab330f246a7676fb99eebe0287cac">CompositeArguments_t</a> *</td>          <td class="paramname"><span class="paramname"><em>args</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>If user has specified selection_method it might be possible to translate it into a selection method type that is easier to verify. </p>
+<p>If selection_method has not been set, the returned selection method is Rave_Compositing_SelectionMethod_UNDEFINED. If selection method is set but not can be translated, it is returned as Rave_Compositing_SelectionMethod_UNKNOWN. </p>
 
 </div>
 </div>
