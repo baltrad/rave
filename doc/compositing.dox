@@ -263,4 +263,31 @@ The radarcomp has been extended with new options.
 When using the composite factories it is now also possible to specify <b>--quantity=RATE</b>.
 _factories --qc=rave-overshooting --strategy=legacy
 
+\section compositing_camethod how/camethod
+
+When generating composites the attribute how/camethod will be added to the cartesian product so that the user know how the data has been selected. As
+described earlier there are number of different compositing factories delivered within RAVE and each of these will be responsible for ensuring that how/camethod
+is set appropriately.
+
+Since \ref LegacyCompositeGeneratorFactory_t uses the same code as \ref Composite_t the table will only contain LegacyCompositeGeneratorFactory_t but the same
+behavior can be expected when using Composite_t directly as well.
+
+Factory                                  |  Product               | selection_method        |  interpolation_method    |   extra      |  how/camethod
+:--------------------------------------- | :--------------------- | :---------------------- | :----------------------- | :----------- | :-------------
+\ref LegacyCompositeGeneratorFactory_t   |  PPI / CAPPI / PCAPPI  | NEAREST_RADAR           |  ANY                     | NO QCOMP     |  NEAREST
+\ref LegacyCompositeGeneratorFactory_t   |  MAX / PMAX            | N/A                     |  NEAREST                 | NO QCOMP     |  MAXIMUM
+\ref LegacyCompositeGeneratorFactory_t   |  PPI / CAPPI / PCAPPI  | HEIGHT_ABOVE_SEALEVEL   |  ANY                     | NO QCOMP     |  MDE
+\ref LegacyCompositeGeneratorFactory_t   |  PPI / CAPPI / PCAPPI  | N/A                     |  ANY                     | QCOMP        |  QMAXIMUM
+-|-|-|-|-|-
+\ref NearestCompositeGeneratorFactory_t  |  PPI / CAPPI / PCAPPI  | NEAREST_RADAR           |  N/A                     | N/A          |  NEAREST
+\ref NearestCompositeGeneratorFactory_t  |  PPI / CAPPI / PCAPPI  | HEIGHT_ABOVE_SEALEVEL   |  N/A                     | N/A          |  MDE
+\ref NearestCompositeGeneratorFactory_t  |  MAX / PMAX            | N/A                     |  N/A                     | N/A          |  MAXIMUM
+-|-|-|-|-|-
+\ref AcqvaCompositeGeneratorFactory_t    |  ACQVA                 | N/A                     |  N/A                     | N/A          |  QMAXIMUM
+
+
+The \ref LegacyCompositeGeneratorFactory_t can generate composites using the quality based compositing method that is using a specific quality flag indicator. If setting
+a quality flag in the composite arguments using the \ref CompositeArguments_setQIFieldName, the QCOMP generation will be used and in that situation it the selection_method will
+not be used.
+
 */

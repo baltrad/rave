@@ -2307,6 +2307,8 @@ static Cartesian_t* CompositeInternal_createCompositeImage(Composite_t* self, Ar
 {
   Cartesian_t *result = NULL, *cartesian = NULL;
   RaveAttribute_t* prodpar = NULL;
+  RaveAttribute_t* camethod = NULL;
+
   int nparam = 0, i = 0;
 
   RAVE_ASSERT((self != NULL), "self == NULL");
@@ -2334,6 +2336,28 @@ static Cartesian_t* CompositeInternal_createCompositeImage(Composite_t* self, Ar
     prodpar = RaveAttributeHelp_createDouble("what/prodpar", self->elangle * 180.0/M_PI);
   }
   if (prodpar == NULL) {
+    goto done;
+  }
+
+  /*
+   * how/camethod should be set depending on what product is generated.
+   */
+  if (self->qiFieldName != NULL) {
+    camethod = RaveAttributeHelp_createString("how/camethod", "QMAXIMUM");
+  } else if (self->ptype == Rave_ProductType_MAX || self->ptype == Rave_ProductType_PMAX) {
+    camethod = RaveAttributeHelp_createString("how/camethod", "MAXIMUM");
+  } else if (self->method == CompositeSelectionMethod_HEIGHT) {
+    camethod = RaveAttributeHelp_createString("how/camethod", "MDE");
+  } else if (self->method == CompositeSelectionMethod_NEAREST) {
+    camethod = RaveAttributeHelp_createString("how/camethod", "NEAREST");
+  } else if (self->interpolationMethod != CompositeInterpolationMethod_NEAREST) {
+    camethod = RaveAttributeHelp_createString("how/camethod", "INTERPOL");
+  } else {
+    RAVE_INFO0("Could not determine camethod from current settings");
+  }
+
+  if (camethod != NULL && !Cartesian_addAttribute(cartesian, camethod)) {
+    RAVE_ERROR0("Could not add how/camethod to cartesian product");
     goto done;
   }
 
@@ -2374,6 +2398,7 @@ static Cartesian_t* CompositeInternal_createCompositeImage(Composite_t* self, Ar
 done:
   RAVE_OBJECT_RELEASE(cartesian);
   RAVE_OBJECT_RELEASE(prodpar);
+  RAVE_OBJECT_RELEASE(camethod)
   return result;
 }
 

@@ -899,6 +899,7 @@ Cartesian_t* Transform_combine_tiles(Transform_t* self, Area_t* area, RaveObject
   Cartesian_t* combined = NULL;
   int ntiles = 0;
   RaveList_t* pNames = NULL;
+  RaveAttribute_t* camethod = NULL;
 
   RAVE_ASSERT((self != NULL), "self == NULL");
   if (area == NULL || tiles == NULL) {
@@ -930,6 +931,14 @@ Cartesian_t* Transform_combine_tiles(Transform_t* self, Area_t* area, RaveObject
     Cartesian_setEndTime(combined, Cartesian_getEndTime(ci));
     Cartesian_setProduct(combined, Cartesian_getProduct(ci));
     Cartesian_setObjectType(combined, Cartesian_getObjectType(ci));
+
+    if (Cartesian_hasAttribute(ci, "how/camethod")) {
+      camethod = Cartesian_getAttribute(ci, "how/camethod");
+      if (camethod != NULL && !Cartesian_addAttribute(ci, camethod)) {
+        RAVE_ERROR0("Could not add camethod to combined area");
+        goto done;
+      }
+    }
 
     nnames = RaveList_size(pNames);
     for (j = 0; j < nnames; j++) {
@@ -977,6 +986,7 @@ Cartesian_t* Transform_combine_tiles(Transform_t* self, Area_t* area, RaveObject
 done:
   RaveList_freeAndDestroy(&pNames);
   RAVE_OBJECT_RELEASE(combined);
+  RAVE_OBJECT_RELEASE(camethod);
   return result;
 }
 
