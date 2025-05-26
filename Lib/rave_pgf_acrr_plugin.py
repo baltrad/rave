@@ -161,6 +161,7 @@ def generate(files, arguments):
   acrr.quality_field_name = distancefield
 
   nodes = None
+  camethod = None
 
   for fname in files:
     obj = None
@@ -194,6 +195,9 @@ def generate(files, arguments):
     if obj.hasAttribute("how/nodes") and nodes == None:
       nodes = obj.getAttribute("how/nodes")
 
+    if obj.hasAttribute("how/camethod") and camethod is None:
+      camethod = obj.getAttribute("how/camethod")
+
     if obj.xscale != img.xscale or obj.yscale != img.yscale or \
       obj.projection.definition != img.projection.definition:
       raise AttributeError("Scale or projdef inconsistancy for used area")
@@ -211,6 +215,9 @@ def generate(files, arguments):
   fileno, outfile = rave_tempfile.mktemp(suffix='.h5', close="True")
   if nodes != None:
     img.addAttribute("how/nodes", nodes)
+
+  if not camethod is None:
+    img.addAttribute("how/camethod", camethod)
 
   img.addParameter(result)  
   
