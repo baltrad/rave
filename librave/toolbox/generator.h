@@ -47,7 +47,7 @@ class Generator {
 public:
     Generator();
     ~Generator();
-    void init(std::string generatorfilter);
+    int init(std::string generatorfilter);
     CompositeArguments_t * create_arguments();
     Cartesian_t * generate(CompositeArguments_t* arguments);
     void update_arguments_with_prodpar(CompositeArguments_t * arguments, std::string prodpar);

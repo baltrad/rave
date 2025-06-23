@@ -27,6 +27,23 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_alloc.h"
 #include <string.h>
 
+/**
+ * Represents the tiledef
+ */
+struct _TileDef_t {
+  RAVE_OBJECT_HEAD /** Always on top */
+
+  char* id;        /**< the id */
+  char* areaid;        /**< the areaid */
+
+  double llX;      /**< lower left x-coordinate */
+  double llY;      /**< lower left y-coordinate */
+  double urX;      /**< upper right x-coordinate */
+  double urY;      /**< upper right y-coordinate */
+
+};
+
+
 
 /*@{ Private functions */
 /**

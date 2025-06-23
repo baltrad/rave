@@ -31,14 +31,6 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_object.h"
 #include "raveobject_list.h"
 
-/**
- * Represents the registry
- */
-struct _TileRegistry_t {
-  RAVE_OBJECT_HEAD /** Always on top */
-  RaveObjectList_t* tiledefs; /**< the list of tiledefs */
-};
-
 
 /**
  * Defines the area registry

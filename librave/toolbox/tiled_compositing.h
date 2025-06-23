@@ -107,8 +107,7 @@ public:
   std::string dumppath;
   bool dump;
   RaveObjectHashTable_t* radar_index_mapping;
-  static std::mutex mutex;
-  std::map<std::string, RaveCoreObject*> _file_objects;
+  std::map<std::string, RaveCoreObject*> *_file_objects;
   bool use_lazy_loading;
   bool use_lazy_loading_preloads;
   bool use_legacy_compositing;
@@ -183,8 +182,8 @@ private:
 
   void _debug_generate_info(std::string area);
 
-  std::map<std::string, RaveCoreObject*> _fetch_file_objects(std::string & nodes, std::string & how_tasks, bool & all_files_malfunc);
-  std::map<std::string, RaveCoreObject*> _fetch_file_objects_mp(std::string & nodes, std::string & how_tasks, bool & all_files_malfunc);
+  int _fetch_file_objects(std::map<std::string, RaveCoreObject*> * objects,std::string & nodes, std::string & how_tasks, bool & all_files_malfunc);
+  int _fetch_file_objects_mp(std::map<std::string, RaveCoreObject*> * objects, std::string & nodes, std::string & how_tasks, bool & all_files_malfunc);
   /*#
   # Dumps the objects on the ingoing polar objects onto the file system. The names will contain a unique identifier
   # to allow for duplicate versions of the same object.
@@ -217,7 +216,6 @@ public:
   bool _mp_process_qc_split_evenly;
   int number_of_quality_control_processes;
   bool _do_remove_temporary_files;
-  std::map<std::string, RaveCoreObject*> file_objects;
   std::string _nodes;
   std::string _how_tasks;
   std::string mpname;

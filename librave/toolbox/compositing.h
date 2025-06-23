@@ -53,7 +53,7 @@ public:
   void set_method_from_string(std::string methstr);
   void set_interpolation_method_from_string(std::string methstr);
   void set_quality_control_mode_from_string(std::string modestr);
-  std::map<std::string, RaveCoreObject*> quality_control_objects(std::map<std::string, RaveCoreObject*> & objects,
+  std::map<std::string, RaveCoreObject*> * quality_control_objects(std::map<std::string, RaveCoreObject*> * objects,
                                                                  CompositeAlgorithm_t* algorithm,
                                                                  std::string & qfields);
   /**
@@ -61,7 +61,7 @@ public:
    * Generates the objects that should be used in the compositing.
    * returns a triplet with [objects], nodes (as comma separated string), 'how/tasks' (as comma separated string)
    */
-  std::map<std::string, RaveCoreObject*> fetch_objects(std::string & nodes, std::string & how_tasks, bool & all_files_malfunc);
+  int fetch_objects(std::map<std::string, RaveCoreObject*> * objects, std::string & nodes, std::string & how_tasks, bool & all_files_malfunc);
   void add_how_task_from_scan(PolarScan_t* scan, std::vector<std::string> & tasks);
   void create_filename(void* pobj);
   void get_backup_gra_coefficient(void* db, std::string agedt, std::string nowdt);
@@ -155,8 +155,6 @@ public:
   AreaRegistry_t* area_registry;
   TileRegistry_t* tile_registry;
 
-  std::map<std::string, RaveCoreObject*> file_objects;
-
-  static std::mutex mutex;
+  std::map<std::string, RaveCoreObject*> * tiled_file_objects;
 };
 #endif

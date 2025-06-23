@@ -1,5 +1,6 @@
 #include "tiled_compositing.h"
-#include "thread_pool_executor.hpp"
+// from https://github.com/bshoshany/thread-pool
+#include "BS_thread_pool.hpp"
 #include "compositing.h"
 #include "rave_defines.h"
 
@@ -39,8 +40,8 @@ extern "C" {
 #include <mutex>
 
 
-
-std::mutex multi_composite_arguments::mutex;
+extern std::mutex rave_io_mutex;
+extern std::map<std::string, RaveCoreObject*> * cache_file_objects;
 
 /**
  * FIXME: DEPRICATED documentation. This is taken from the Python code.
@@ -97,11 +98,22 @@ multi_composite_arguments::~multi_composite_arguments()
   if (radar_index_mapping != NULL) {
     RAVE_OBJECT_RELEASE(radar_index_mapping);
   }
-  for (auto & k : _file_objects) {
-    RaveCoreObject* v = k.second;
-    if (v != 0) {
-      RAVE_OBJECT_RELEASE(v)
+  if (_file_objects != nullptr){
+    for (auto & obj : *_file_objects) {
+      if (obj.second) {
+        if (RAVE_OBJECT_REFCNT(obj.second) > 1) {
+          RaveCoreObject_release((RaveCoreObject *)obj.second, __FILE__, __LINE__);
+        } else {
+          RAVE_OBJECT_RELEASE(obj.second);
+        }
+      }
     }
+    delete _file_objects;
+    _file_objects = nullptr;
+  }
+  if (area_definition != NULL) {
+    delete area_definition;
+    area_definition = NULL;
   }
 }
 
@@ -126,12 +138,14 @@ void multi_composite_arguments::init()
   offset = -30.0;
   minvalue = -30.0;
   reprocess_quality_field = false;
-  area_definition = 0;
+  area_definition = NULL;
   verbose = false;
   dump = false;
-  radar_index_mapping = 0;
+  radar_index_mapping = NULL;
   use_lazy_loading = false;
   use_lazy_loading_preloads = false;
+
+  _file_objects = new std::map<std::string, RaveCoreObject*>;
 }
 
 void multi_composite_arguments::set_area_definition(tiled_area_definition* areadef)
@@ -183,6 +197,8 @@ result_from_tiler multi_composite_arguments::generate(std::string dd, std::strin
   comp.radar_index_mapping = (RaveObjectHashTable_t*)RAVE_OBJECT_CLONE(radar_index_mapping);
   comp.use_lazy_loading = use_lazy_loading;
   comp.use_lazy_loading_preloads = use_lazy_loading_preloads;
+  comp.use_legacy_compositing=use_legacy_compositing;
+  comp.tiled_file_objects = _file_objects;
 
 
   Area_t* area = (Area_t*)RAVE_OBJECT_NEW(&Area_TYPE);
@@ -214,6 +230,7 @@ result_from_tiler multi_composite_arguments::generate(std::string dd, std::strin
     if (proj != NULL) {
       Projection_init(proj, "dynamic pcsid", "dynamic pcs name", area_definition->getPcsdef().c_str());
       Area_setProjection(area, proj);
+      RAVE_OBJECT_RELEASE(proj);
     }
   }
   RAVE_DEBUG2("[%s] multi_composite_arguments.generate: Generating composite tile=%s",
@@ -223,7 +240,7 @@ result_from_tiler multi_composite_arguments::generate(std::string dd, std::strin
   // NOTE: the tiled area is not in area_registry, call generate with dummy argument as areaid.
   std::string dummy_areaid;
   Cartesian_t* result = comp.generate(dd, dt, dummy_areaid, area);
-  if (result == 0) {
+  if (result == NULL) {
     std::time_t totaltime = std::time(0) - starttime;
     RAVE_INFO2("[%s] multi_composite_arguments.generate: No composite for tile=%s could be generated.",
                mpname.c_str(),
@@ -247,11 +264,12 @@ result_from_tiler multi_composite_arguments::generate(std::string dd, std::strin
 
     std::string outfile = tempname;
     outfile += ".h5";
-    std::unique_lock<std::mutex> lock(mutex);
+    std::unique_lock<std::mutex> lock(rave_io_mutex);
     RaveIO_t* rio = (RaveIO_t*)RAVE_OBJECT_NEW(&RaveIO_TYPE);
-    if (rio == 0) {
+    if (rio == NULL) {
       RAVE_CRITICAL0("Failed to allocate memory for raveIO.");
       RAVE_OBJECT_RELEASE(result);
+      RAVE_OBJECT_RELEASE(area);
       tile_result.tileid = tid;
       tile_result.filename.clear();
       tile_result.totaltime = 0;
@@ -264,7 +282,11 @@ result_from_tiler multi_composite_arguments::generate(std::string dd, std::strin
     }
     RaveIO_save(rio, 0);
     RaveIO_close(rio);
+    RAVE_OBJECT_RELEASE(rio);
     RAVE_OBJECT_RELEASE(result);
+    RAVE_OBJECT_RELEASE(area);
+    RAVE_OBJECT_RELEASE(radar_index_mapping);
+    RAVE_OBJECT_RELEASE(comp.radar_index_mapping);
     std::time_t totaltime = std::time(0) - starttime;
     tile_result.tileid = tid;
     tile_result.filename = outfile;
@@ -355,6 +377,7 @@ void TiledCompositing::init(Compositing* c,
   reprocess_quality_field = compositing->reprocess_quality_field;
   use_lazy_loading_preloads = compositing->use_lazy_loading_preloads;
   use_lazy_loading = compositing->use_lazy_loading;
+  use_legacy_compositing = compositing->use_legacy_compositing;
 }
 
 /**
@@ -366,13 +389,13 @@ void TiledCompositing::init(Compositing* c,
  *
  * @return (a dictionary with filenames as keys and objects as values, and a string with all included nodes names)
  */
-std::map<std::string, RaveCoreObject*> TiledCompositing::_fetch_file_objects_mp(std::string & nodes, std::string & how_tasks, bool & all_files_malfunc)
+int TiledCompositing::_fetch_file_objects_mp(std::map<std::string, RaveCoreObject*> * objects, std::string & nodes, std::string & how_tasks, bool & all_files_malfunc)
 {
   RAVE_INFO2("[%s] tiled_compositing.fetch_file_objects_mp: Fetching (and processing) %d files for tiled compositing",
              mpname.c_str(),
              compositing->filenames.size());
 
-  std::map<std::string, RaveCoreObject*> result;
+  int  result = 0;
 
   std::vector<args_to_qc> args;
   args_to_qc arg;
@@ -456,7 +479,7 @@ std::map<std::string, RaveCoreObject*> TiledCompositing::_fetch_file_objects_mp(
   compositing->filenames = filenames;
   _do_remove_temporary_files = true;
 
-  result = compositing->fetch_objects(nodes, how_tasks, all_files_malfunc);
+  result = compositing->fetch_objects(objects, nodes, how_tasks, all_files_malfunc);
 
   RAVE_DEBUG2(
     "[%s] tiled_compositing.fetch_file_objects_mp: Finished fetching (and processing) %d files for tiled compositing",
@@ -473,15 +496,15 @@ std::map<std::string, RaveCoreObject*> TiledCompositing::_fetch_file_objects_mp(
  *
  * @return (a dictionary with filenames as keys and objects as values, and a string with all included nodes names)
  */
-std::map<std::string, RaveCoreObject*> TiledCompositing::_fetch_file_objects(std::string & nodes, std::string & how_tasks, bool & all_files_malfunc)
+int TiledCompositing::_fetch_file_objects(std::map<std::string, RaveCoreObject*> * objects, std::string & nodes, std::string & how_tasks, bool & all_files_malfunc)
 {
   RAVE_DEBUG2("[%s] tiled_compositing.fetch_file_objects: Fetching (and processing) %d files for tiled compositing",
               mpname.c_str(),
               compositing->filenames.size());
 
-  std::map<std::string, RaveCoreObject*> result;
+  int result = 0;
 
-  result = compositing->fetch_objects(nodes, how_tasks, all_files_malfunc);
+  result = compositing->fetch_objects(objects, nodes, how_tasks, all_files_malfunc);
   if (_preprocess_qc) {
     RAVE_DEBUG0("quality_control_objects not implemented yet!");
     /*
@@ -551,7 +574,10 @@ RaveObjectList_t* TiledCompositing::_get_tiled_areas(Area_t* area)
       Area_setProjection(the_area, the_projection);
       Area_setExtent(the_area, llX, llY, urX, urY);
       RaveObjectList_add(tiledareas, (RaveCoreObject*)the_area);
+      RAVE_OBJECT_RELEASE(the_area);
+      RAVE_OBJECT_RELEASE(the_area);
     }
+    RAVE_OBJECT_RELEASE(ta);
   }
   RAVE_OBJECT_RELEASE(the_tiles);
   return tiledareas;
@@ -636,7 +662,7 @@ void TiledCompositing::_add_files_to_argument_list(std::vector<args_to_tiler> & 
 
     // # Loop through radars
     //   std::map<std::string,RaveCoreObject*> file_objects;
-    for (auto const & k : file_objects) {
+    for (auto const & k : * cache_file_objects) {
       RaveCoreObject* v = k.second;
       // Jump over garbage in map.
       bool is_scan = RAVE_OBJECT_CHECK_TYPE(v, &PolarScan_TYPE);
@@ -680,16 +706,20 @@ void TiledCompositing::_add_files_to_argument_list(std::vector<args_to_tiler> & 
           if (found) {
             break;
           } else {
+            //std::unique_lock<std::mutex> lock(rave_io_mutex);
             args[i].mcomp->_filenames.push_back(k.first);
-            // Copy the object for thread safety?
-            // RaveCoreObject * the_object = (RaveCoreObject *)RAVE_OBJECT_CLONE(k.second);
-            RaveCoreObject* the_object = (RaveCoreObject*)RAVE_OBJECT_COPY(k.second);
-            args[i].mcomp->_file_objects[k.first] = the_object;
+            // Copy the object for thread safety? Yes, I think so.
+            // Time consuming, why???
+            RaveCoreObject * the_object = (RaveCoreObject *)RAVE_OBJECT_CLONE(k.second);
+            //RaveCoreObject* the_object = (RaveCoreObject*)RAVE_OBJECT_COPY(k.second);
+            (*args[i].mcomp->_file_objects)[k.first] = the_object;
             break;
           }
         }
       }
     }
+    RAVE_OBJECT_RELEASE(ta);
+    RAVE_OBJECT_RELEASE(p);
   }
 
   // Info and debug print
@@ -707,7 +737,7 @@ void TiledCompositing::_add_files_to_argument_list(std::vector<args_to_tiler> & 
 void TiledCompositing::_add_radar_index_value_to_argument_list(std::vector<args_to_tiler> & args)
 {
   int ctr = 1;
-  for (auto const & k : file_objects) {
+  for (auto const & k : * cache_file_objects) {
     RaveCoreObject* v = k.second;
     // Jump over garbage in map.
     bool is_scan = RAVE_OBJECT_CHECK_TYPE(v, &PolarScan_TYPE);
@@ -726,12 +756,16 @@ void TiledCompositing::_add_radar_index_value_to_argument_list(std::vector<args_
     // Set default
     sourceid = vsource;
 
-    if (OdimSource_getIdFromOdimSourceInclusive(vsource.c_str(), "NOD") != NULL) {
-      sourceid = OdimSource_getIdFromOdimSourceInclusive(vsource.c_str(), "NOD");
-    } else if (OdimSource_getIdFromOdimSourceInclusive(vsource.c_str(), "WMO") != NULL) {
-      sourceid = OdimSource_getIdFromOdimSourceInclusive(vsource.c_str(), "WMO");
-    } else if (OdimSource_getIdFromOdimSourceInclusive(vsource.c_str(), "RAD") != NULL) {
-      sourceid = OdimSource_getIdFromOdimSourceInclusive(vsource.c_str(), "RAD");
+    char * the_sourceid = NULL;
+    if ((the_sourceid = OdimSource_getIdFromOdimSourceInclusive(vsource.c_str(), "NOD")) != NULL) {
+      sourceid = the_sourceid;
+      RAVE_FREE(the_sourceid);
+    } else if ((the_sourceid = OdimSource_getIdFromOdimSourceInclusive(vsource.c_str(), "WMO")) != NULL) {
+      sourceid = the_sourceid;
+      RAVE_FREE(the_sourceid);
+    } else if ((the_sourceid = OdimSource_getIdFromOdimSourceInclusive(vsource.c_str(), "RAD")) != NULL) {
+      sourceid = the_sourceid;
+      RAVE_FREE(the_sourceid);
     }
 
     for (auto & arg : args) {
@@ -764,7 +798,7 @@ bool TiledCompositing::_ensure_date_and_time_on_args(std::vector<args_to_tiler> 
 {
   std::string dtstr;
   std::string ddstr;
-  for (const auto & k : file_objects) {
+  for (const auto & k : * cache_file_objects) {
     RaveCoreObject* v = k.second;
     // Jump over garbage in map.
     bool is_scan = RAVE_OBJECT_CHECK_TYPE(v, &PolarScan_TYPE);
@@ -851,22 +885,23 @@ Cartesian_t* TiledCompositing::generate(std::string dd, std::string dt, std::str
   std::time_t starttime = std::time(0);
   // # Projection and area registries from compositing member object
 
-  Area_t* the_area = 0;
+  Area_t* the_area = NULL;
 
   if (areaid.length()) {
     the_area = AreaRegistry_getByName(compositing->area_registry, areaid.c_str());
   }
 
-  if (the_area == 0) {
+  if (the_area == NULL) {
     RAVE_CRITICAL1("Failed to get area %s from area registry.", areaid.c_str());
     return 0;
   }
 
   bool all_files_malfunc = false;
+  int fetch_result = 0;
   if (_preprocess_qc && _mp_process_qc && number_of_quality_control_processes > 1) {
-    file_objects = _fetch_file_objects_mp(_nodes, _how_tasks, all_files_malfunc);
+    fetch_result = _fetch_file_objects_mp(cache_file_objects, _nodes, _how_tasks, all_files_malfunc);
   } else {
-    file_objects = _fetch_file_objects(_nodes, _how_tasks, all_files_malfunc);
+    fetch_result = _fetch_file_objects(cache_file_objects, _nodes, _how_tasks, all_files_malfunc);
   }
   if (all_files_malfunc) {
     RAVE_INFO1("[%s] tiled_compositing.generate: Content of all provided files were marked as 'malfunc'. Since option "
@@ -896,20 +931,27 @@ Cartesian_t* TiledCompositing::generate(std::string dd, std::string dt, std::str
   if ((nrprocesses == ncpucores) && (ncpucores > 1)) {
     nrprocesses = nrprocesses - 1;  // # We always want to leave at least one core for something else
   }
-  // INVOKE thread pool implementation.
-  thread_pool_executor executor(nrprocesses, nrprocesses, std::chrono::seconds(RAVE_TILE_COMPOSITING_TIMEOUT), ntiles);
+
+  // From https://github.com/bshoshany/thread-pool
+
+  BS::thread_pool pool(nrprocesses);
   std::vector<std::future<result_from_tiler>> futures;
-  for (size_t i = 0; i < args.size(); ++i) {
-    futures.push_back(executor.submit(comp_generate, args[i]));
+  //for (size_t i = 0; i < args.size(); ++i) {
+  for (auto && arg : args) {
+    futures.push_back(pool.submit_task(
+      [arg]
+        {
+            return comp_generate(arg);
+        }
+      ));
   }
+
+  pool.wait();
 
   for (auto && future : futures) {
     result_from_tiler result = future.get();
     results.push_back(result);
   }
-
-  executor.shutdown();
-  executor.wait();
 
   bool processing_ok = false;
 
@@ -979,9 +1021,11 @@ Cartesian_t* TiledCompositing::generate(std::string dd, std::string dt, std::str
         }
         Cartesian_setObjectType(p, Rave_ObjectType::Rave_ObjectType_COMP);
         RaveObjectList_add(objects, (RaveCoreObject*)p);
+        RAVE_OBJECT_RELEASE(p);
       }
       RAVE_OBJECT_RELEASE(o);
       RaveIO_close(instance);
+      RAVE_OBJECT_RELEASE(instance);
     }
   }
   Transform_t* t = (Transform_t*)RAVE_OBJECT_NEW(&Transform_TYPE);
@@ -997,6 +1041,7 @@ Cartesian_t* TiledCompositing::generate(std::string dd, std::string dt, std::str
 
   Cartesian_t* result = Transform_combine_tiles(t, the_area, objects);
   RAVE_OBJECT_RELEASE(t);
+  RAVE_OBJECT_RELEASE(objects);
 
   // # Fix so that we get a valid place for /what/source and /how/nodes
   std::string source_string("ORG:82,CMT:");
@@ -1039,11 +1084,13 @@ Cartesian_t* TiledCompositing::generate(std::string dd, std::string dt, std::str
     delete arg.mcomp;
     arg.mcomp = 0;
   }
-
-  for (auto & k : file_objects) {
-    RaveCoreObject* v = k.second;
-    if (v != 0) {
-      RAVE_OBJECT_RELEASE(v);
+  for (auto & obj : *cache_file_objects) {
+    if (obj.second != NULL) {
+      if (RAVE_OBJECT_REFCNT(obj.second) > 1) {
+        RaveCoreObject_release((RaveCoreObject *)obj.second, __FILE__, __LINE__);
+      } else {
+        RAVE_OBJECT_RELEASE(obj.second);
+      }
     }
   }
 

@@ -32,6 +32,14 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "expat.h"
 #include <string.h>
 
+/**
+ * Represents the registry
+ */
+struct _TileRegistry_t {
+  RAVE_OBJECT_HEAD /** Always on top */
+  RaveObjectList_t* tiledefs; /**< the list of tiledefs */
+};
+
 
 /*@{ Private functions */
 /**

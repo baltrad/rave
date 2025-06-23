@@ -40,6 +40,13 @@ extern "C" {
 // Global used in rave_defines.h to init RAVEROOT.
 std::string _RAVEROOT;
 
+// Global mutex for protecting rave IO operations.
+std::mutex rave_io_mutex;
+
+// Global for keeping radar volumes in memory
+std::map<std::string, RaveCoreObject*> * cache_file_objects;
+
+
 /**
  * Main function for a binary for running KNMI's sun scanning functionality
  * @file
@@ -52,7 +59,7 @@ int Radarcomp(optparse::OptionParser & parser)
   std::string projection_registry_path = _RAVEROOT + PROJECTION_REGISTRY;
   // clang-format on
   ProjectionRegistry_t* proj_registry = ProjectionRegistry_load(projection_registry_path.c_str());
-  if (proj_registry == 0) {
+  if (proj_registry == NULL) {
     RAVE_CRITICAL0("Failed to create projection registry for composite.");
     return 1;
   }
@@ -60,7 +67,7 @@ int Radarcomp(optparse::OptionParser & parser)
   std::string area_registry_path = _RAVEROOT + AREA_REGISTRY;
 
   AreaRegistry_t* area_registry = AreaRegistry_load(area_registry_path.c_str(), proj_registry);
-  if (area_registry == 0) {
+  if (area_registry == NULL) {
     RAVE_CRITICAL0("Failed to create area registry for composite.");
     RAVE_OBJECT_RELEASE(proj_registry);
     return 1;
@@ -69,12 +76,14 @@ int Radarcomp(optparse::OptionParser & parser)
   std::string rave_tile_registry_path = _RAVEROOT + RAVE_TILE_REGISTRY;
 
   TileRegistry_t* tile_registry = TileRegistry_load(rave_tile_registry_path.c_str());
-  if (tile_registry == 0) {
+  if (tile_registry == NULL) {
     RAVE_CRITICAL0("Failed to create tile registry for composite.");
     RAVE_OBJECT_RELEASE(proj_registry);
     RAVE_OBJECT_RELEASE(area_registry);
     return 1;
   }
+
+  cache_file_objects = new std::map<std::string, RaveCoreObject*>;
 
   Compositing comp = Compositing();
 
@@ -164,7 +173,7 @@ int Radarcomp(optparse::OptionParser & parser)
     RAVE_CRITICAL0("Compositing with no area given is not supported.");
     return 1;
   }
-  Cartesian_t* result = 0;
+  Cartesian_t* result = NULL;
   if (!(parser.get_option("noMultiprocessing") == "1")) {
     RAVE_INFO1("Area %s check in tile registry for composite.", areaid.c_str());
     RaveObjectList_t* the_tiles = TileRegistry_getByArea(comp.tile_registry, areaid.c_str());
@@ -204,18 +213,31 @@ int Radarcomp(optparse::OptionParser & parser)
     RAVE_OBJECT_RELEASE(tile_registry);
   }
 
+  if (cache_file_objects != nullptr) {
+    for (auto & k : * cache_file_objects) {
+      if (k.second) {
+        RAVE_DEBUG1("Object ref count = %d ", RAVE_OBJECT_REFCNT(k.second));
+        RAVE_OBJECT_RELEASE(k.second);
+
+      }
+    }
+    delete cache_file_objects;
+    cache_file_objects = nullptr;
+  }
+
 
   if (parser.get_option("imageType") == "1") {
     Cartesian_setObjectType(result, Rave_ObjectType::Rave_ObjectType_IMAGE);
   }
 
   RaveIO_t* rio = (RaveIO_t*)RAVE_OBJECT_NEW(&RaveIO_TYPE);
-  if (rio == 0) {
+  if (rio == NULL) {
     RAVE_CRITICAL0("Failed to allocate memory for raveIO.");
     RAVE_OBJECT_RELEASE(result);
     return 1;
   }
   RaveIO_setObject(rio, (RaveCoreObject*)result);
+
   RaveIO_setFilename(rio, parser.get_option("outfile").c_str());
   if (comp.verbose) {
     RAVE_INFO1("Saving %s", RaveIO_getFilename(rio));
@@ -244,6 +266,17 @@ int main(int argc, char* argv[])
 
   Rave_initializeDebugger();
   Rave_setDebugLevel(Rave_Debug::RAVE_DEBUG);
+  // RaveCoreObject_setTrackObjects(1);
+  //
+  // // Memory debug
+  // if (atexit(rave_alloc_print_statistics) != 0) { // Kräver -DRAVE_MEMORY_DEBUG
+  //   fprintf(stderr, "Could not set atexit function");
+  // }
+  //
+  // if (atexit(RaveCoreObject_printStatistics) != 0) {
+  //   fprintf(stderr, "Could not set atexit function");
+  // }
+
 
   // clang-format off
   std::string usage("usage: radarcomp_c -i <infile(s)> -o <outfile> [-a <area>] [args] [h]");
@@ -383,7 +416,7 @@ int main(int argc, char* argv[])
 
   parser.add_option("-ef", "--enable_composite_factories", "enable_composite_factories",
                     "If this flag is set then the compositing will be performed using the new factory methods. Otherwise legacy handling will be used.",
-                    optparse::STORE_TRUE, optparse::BOOL, "1");
+                    optparse::STORE_TRUE, optparse::BOOL, "0");
 
   parser.add_option("-st", "--strategy", "strategy",
                     "Can be used to force a specific composite factory to be used. For example 'acqva', 'nearest' or 'legacy'.",
@@ -404,9 +437,9 @@ int main(int argc, char* argv[])
   int result = 0;
 
   if ((parser.get_option("infiles").length() != 0) && (parser.get_option("outfile").length() != 0)) {
-    printf("Radarcomp--->\n");
+    RAVE_INFO0("Enter Radarcomp--->\n");
     result = Radarcomp(parser);
-    printf("Radarcomp <---\n");
+    RAVE_INFO1("<--- Exit Radarcomp with code %d \n", result);
   } else {
     std::ostringstream o;
     parser.help(o);

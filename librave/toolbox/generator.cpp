@@ -43,25 +43,34 @@ extern "C" {
 #include <cstring>
 
 Generator::Generator() {
-    _manager=0;
-    _generator=0;
+    _manager=NULL;
+    _generator=NULL;
 };
 Generator::~Generator() {
-    if (_manager != 0) {
+    if (_manager != NULL) {
         RAVE_OBJECT_RELEASE(_manager);
     }
-    if (_generator != 0) {
+    if (_generator != NULL) {
         RAVE_OBJECT_RELEASE(_generator);
     }
 };
 
-void Generator::init(std::string generatorfilter){
+int Generator::init(std::string generatorfilter){
     _manager = (CompositeFactoryManager_t *)RAVE_OBJECT_NEW(&CompositeFactoryManager_TYPE);
-    //self._manager = _compositefactorymanager.new()
+    if (_manager == NULL) {
+        RAVE_CRITICAL0("Could not create CompositeFactoryManager!");
+        return 0;
+    }
     _generator = CompositeGenerator_create(_manager, generatorfilter.c_str());
-    //self._generator = _compositegenerator.create(self._manager, generatorfilter)
-    CompositeGenerator_setProperties(_generator, load_properties());
-    //self._generator.properties = self.load_properties()
+    if (_generator == NULL) {
+        RAVE_OBJECT_RELEASE(_manager);
+        RAVE_CRITICAL0("Could not create CompositeGenerator!");
+        return 0;
+    }
+    RaveProperties_t * the_props = load_properties();
+    CompositeGenerator_setProperties(_generator, the_props);
+    RAVE_OBJECT_RELEASE(the_props);
+    return 1;
 
 };
 
@@ -113,11 +122,13 @@ RaveProperties_t * Generator::load_properties(){
         std::string acqva_cluttermap_dir_path = _RAVEROOT + ACQVA_CLUTTERMAP_DIR;
         RaveValue_t* value = RaveValue_createString(acqva_cluttermap_dir_path.c_str());
         RaveProperties_set(properties, "rave.acqva.cluttermap.dir", value);
+        RAVE_OBJECT_RELEASE(value);
     }
     OdimSources_t* odims = RaveProperties_getOdimSources(properties);
     if (odims==NULL) {
         std::string odim_source_file_path = _RAVEROOT + ODIM_SOURCE_FILE;
         RaveProperties_setOdimSources(properties, OdimSources_load(odim_source_file_path.c_str()));
+        RAVE_OBJECT_RELEASE(odims);
     }
     return properties;
 };
