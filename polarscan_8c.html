@@ -401,6 +401,12 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>PolarScanInternal_cre
 <tr class="memitem:a9615a5cf7463669cb1de535e80820fe5" id="r_a9615a5cf7463669cb1de535e80820fe5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="rave__list_8h.html#ad2ea2f1cc27c63aa76beb80b6535c3ef">RaveList_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a9615a5cf7463669cb1de535e80820fe5">PolarScan_getAttributeNamesVersion</a> (<a class="el" href="polarscan_8h.html#ab18af0ebcfc65c3148c7e8bee5455c57">PolarScan_t</a> *scan, <a class="el" href="rave__types_8h.html#a290d5190c397951897071d66bfaf35e0">RaveIO_ODIM_Version</a> version)</td></tr>
 <tr class="memdesc:a9615a5cf7463669cb1de535e80820fe5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a list of attribute names for specified version.  <br /></td></tr>
 <tr class="separator:a9615a5cf7463669cb1de535e80820fe5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a20334ed246348a79201072d69ea42034" id="r_a20334ed246348a79201072d69ea42034"><td class="memItemLeft" align="right" valign="top"><a class="el" href="rave__list_8h.html#ad2ea2f1cc27c63aa76beb80b6535c3ef">RaveList_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a20334ed246348a79201072d69ea42034">PolarScan_getSubGroupAttributeNames</a> (<a class="el" href="polarscan_8h.html#ab18af0ebcfc65c3148c7e8bee5455c57">PolarScan_t</a> *scan)</td></tr>
+<tr class="memdesc:a20334ed246348a79201072d69ea42034"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a list of sub group attribute names.  <br /></td></tr>
+<tr class="separator:a20334ed246348a79201072d69ea42034"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac53856e77d03b90ad58d43c820793726" id="r_ac53856e77d03b90ad58d43c820793726"><td class="memItemLeft" align="right" valign="top"><a class="el" href="rave__list_8h.html#ad2ea2f1cc27c63aa76beb80b6535c3ef">RaveList_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac53856e77d03b90ad58d43c820793726">PolarScan_getSubGroupAttributeNamesVersion</a> (<a class="el" href="polarscan_8h.html#ab18af0ebcfc65c3148c7e8bee5455c57">PolarScan_t</a> *scan, <a class="el" href="rave__types_8h.html#a290d5190c397951897071d66bfaf35e0">RaveIO_ODIM_Version</a> version)</td></tr>
+<tr class="memdesc:ac53856e77d03b90ad58d43c820793726"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a list of sub group attribute names for specified version.  <br /></td></tr>
+<tr class="separator:ac53856e77d03b90ad58d43c820793726"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3d4ec0c936513a34b444acaf0b093cdd" id="r_a3d4ec0c936513a34b444acaf0b093cdd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="raveobject__list_8h.html#abdac48af2ac58989ba91c33c2a1c79d0">RaveObjectList_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a3d4ec0c936513a34b444acaf0b093cdd">PolarScan_getAttributeValues</a> (<a class="el" href="polarscan_8h.html#ab18af0ebcfc65c3148c7e8bee5455c57">PolarScan_t</a> *scan)</td></tr>
 <tr class="memdesc:a3d4ec0c936513a34b444acaf0b093cdd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a list of attribute values belonging to this scan.  <br /></td></tr>
 <tr class="separator:a3d4ec0c936513a34b444acaf0b093cdd"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -2851,6 +2857,63 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the start time (or NULL if there is none) </dd></dl>
+
+</div>
+</div>
+<a id="a20334ed246348a79201072d69ea42034" name="a20334ed246348a79201072d69ea42034"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a20334ed246348a79201072d69ea42034">&#9670;&#160;</a></span>PolarScan_getSubGroupAttributeNames()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="rave__list_8h.html#ad2ea2f1cc27c63aa76beb80b6535c3ef">RaveList_t</a> * PolarScan_getSubGroupAttributeNames </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="polarscan_8h.html#ab18af0ebcfc65c3148c7e8bee5455c57">PolarScan_t</a> *</td>          <td class="paramname"><span class="paramname"><em>scan</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Returns a list of sub group attribute names. </p>
+<p>Release with @ref <a class="el" href="rave__list_8c.html#af265c888c2d5e1cf52bad82768f60d6e" title="This is a specialized version that can be used to destroy the list when it contains single pointers a...">RaveList_freeAndDestroy</a>. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">scan</td><td>- self </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>a list of sub group attribute names </dd></dl>
+
+</div>
+</div>
+<a id="ac53856e77d03b90ad58d43c820793726" name="ac53856e77d03b90ad58d43c820793726"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac53856e77d03b90ad58d43c820793726">&#9670;&#160;</a></span>PolarScan_getSubGroupAttributeNamesVersion()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="rave__list_8h.html#ad2ea2f1cc27c63aa76beb80b6535c3ef">RaveList_t</a> * PolarScan_getSubGroupAttributeNamesVersion </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="polarscan_8h.html#ab18af0ebcfc65c3148c7e8bee5455c57">PolarScan_t</a> *</td>          <td class="paramname"><span class="paramname"><em>scan</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="rave__types_8h.html#a290d5190c397951897071d66bfaf35e0">RaveIO_ODIM_Version</a></td>          <td class="paramname"><span class="paramname"><em>version</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Returns a list of sub group attribute names for specified version. </p>
+<p>Release with @ref <a class="el" href="rave__list_8c.html#af265c888c2d5e1cf52bad82768f60d6e" title="This is a specialized version that can be used to destroy the list when it contains single pointers a...">RaveList_freeAndDestroy</a>. NOTE! This method is usually only used internally. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">scan</td><td>- self </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">version</td><td>- the attribute version </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>a list of sub group attribute names </dd></dl>
 
 </div>
 </div>

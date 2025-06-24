@@ -128,6 +128,15 @@ Functions</h2></td></tr>
 <tr class="memitem:a5d548a9d200a9205010c113087d5cd4f" id="r_a5d548a9d200a9205010c113087d5cd4f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="rave__list_8h.html#ad2ea2f1cc27c63aa76beb80b6535c3ef">RaveList_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a5d548a9d200a9205010c113087d5cd4f">RaveAttributeTable_getAttributeNamesVersion</a> (<a class="el" href="rave__attribute__table_8h.html#ad3846f995e24d0aba6a187b9bb4eaae5">RaveAttributeTable_t</a> *self, <a class="el" href="rave__types_8h.html#a290d5190c397951897071d66bfaf35e0">RaveIO_ODIM_Version</a> version)</td></tr>
 <tr class="memdesc:a5d548a9d200a9205010c113087d5cd4f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the keys for the table at the current state.  <br /></td></tr>
 <tr class="separator:a5d548a9d200a9205010c113087d5cd4f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a23b7bebc8bc0b50c0683b0a7a68da790" id="r_a23b7bebc8bc0b50c0683b0a7a68da790"><td class="memItemLeft" align="right" valign="top"><a class="el" href="rave__list_8h.html#ad2ea2f1cc27c63aa76beb80b6535c3ef">RaveList_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a23b7bebc8bc0b50c0683b0a7a68da790">RaveAttributeTable_getSubAttributeNames</a> (<a class="el" href="rave__attribute__table_8h.html#ad3846f995e24d0aba6a187b9bb4eaae5">RaveAttributeTable_t</a> *self)</td></tr>
+<tr class="memdesc:a23b7bebc8bc0b50c0683b0a7a68da790"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the keys that belongs to subgroups for the table at the current state.  <br /></td></tr>
+<tr class="separator:a23b7bebc8bc0b50c0683b0a7a68da790"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a91487a12e0efb35eaf0bb201300a4da3" id="r_a91487a12e0efb35eaf0bb201300a4da3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="rave__list_8h.html#ad2ea2f1cc27c63aa76beb80b6535c3ef">RaveList_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a91487a12e0efb35eaf0bb201300a4da3">RaveAttributeTable_getSubAttributeNamesVersion</a> (<a class="el" href="rave__attribute__table_8h.html#ad3846f995e24d0aba6a187b9bb4eaae5">RaveAttributeTable_t</a> *self, <a class="el" href="rave__types_8h.html#a290d5190c397951897071d66bfaf35e0">RaveIO_ODIM_Version</a> version)</td></tr>
+<tr class="memdesc:a91487a12e0efb35eaf0bb201300a4da3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the keys that belongs to subgroups for the table at the current state.  <br /></td></tr>
+<tr class="separator:a91487a12e0efb35eaf0bb201300a4da3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1578829b01195d9146e6c6646a682901" id="r_a1578829b01195d9146e6c6646a682901"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1578829b01195d9146e6c6646a682901">RaveAttributeTable_hasSubGroups</a> (<a class="el" href="rave__attribute__table_8h.html#ad3846f995e24d0aba6a187b9bb4eaae5">RaveAttributeTable_t</a> *self)</td></tr>
+<tr class="memdesc:a1578829b01195d9146e6c6646a682901"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns if the table contains subgroups or not.  <br /></td></tr>
+<tr class="separator:a1578829b01195d9146e6c6646a682901"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a07eb790b0ad8ea2e1575872b85609d23" id="r_a07eb790b0ad8ea2e1575872b85609d23"><td class="memItemLeft" align="right" valign="top"><a class="el" href="raveobject__list_8h.html#abdac48af2ac58989ba91c33c2a1c79d0">RaveObjectList_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a07eb790b0ad8ea2e1575872b85609d23">RaveAttributeTable_getValues</a> (<a class="el" href="rave__attribute__table_8h.html#ad3846f995e24d0aba6a187b9bb4eaae5">RaveAttributeTable_t</a> *self)</td></tr>
 <tr class="memdesc:a07eb790b0ad8ea2e1575872b85609d23"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the values for the table.  <br /></td></tr>
 <tr class="separator:a07eb790b0ad8ea2e1575872b85609d23"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -457,6 +466,63 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a id="a23b7bebc8bc0b50c0683b0a7a68da790" name="a23b7bebc8bc0b50c0683b0a7a68da790"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a23b7bebc8bc0b50c0683b0a7a68da790">&#9670;&#160;</a></span>RaveAttributeTable_getSubAttributeNames()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="rave__list_8h.html#ad2ea2f1cc27c63aa76beb80b6535c3ef">RaveList_t</a> * RaveAttributeTable_getSubAttributeNames </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="rave__attribute__table_8h.html#ad3846f995e24d0aba6a187b9bb4eaae5">RaveAttributeTable_t</a> *</td>          <td class="paramname"><span class="paramname"><em>self</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Returns the keys that belongs to subgroups for the table at the current state. </p>
+<p>Note, remember to deallocate keys appropriately after retrival or use the function @ref <a class="el" href="rave__list_8c.html#af265c888c2d5e1cf52bad82768f60d6e" title="This is a specialized version that can be used to destroy the list when it contains single pointers a...">RaveList_freeAndDestroy</a> that will take care of it for you. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>a list containing char* pointers. </dd></dl>
+
+</div>
+</div>
+<a id="a91487a12e0efb35eaf0bb201300a4da3" name="a91487a12e0efb35eaf0bb201300a4da3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a91487a12e0efb35eaf0bb201300a4da3">&#9670;&#160;</a></span>RaveAttributeTable_getSubAttributeNamesVersion()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="rave__list_8h.html#ad2ea2f1cc27c63aa76beb80b6535c3ef">RaveList_t</a> * RaveAttributeTable_getSubAttributeNamesVersion </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="rave__attribute__table_8h.html#ad3846f995e24d0aba6a187b9bb4eaae5">RaveAttributeTable_t</a> *</td>          <td class="paramname"><span class="paramname"><em>self</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="rave__types_8h.html#a290d5190c397951897071d66bfaf35e0">RaveIO_ODIM_Version</a></td>          <td class="paramname"><span class="paramname"><em>version</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Returns the keys that belongs to subgroups for the table at the current state. </p>
+<p>Note, remember to deallocate keys appropriately after retrival or use the function @ref <a class="el" href="rave__list_8c.html#af265c888c2d5e1cf52bad82768f60d6e" title="This is a specialized version that can be used to destroy the list when it contains single pointers a...">RaveList_freeAndDestroy</a> that will take care of it for you. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">version</td><td>- the version of the attribute names to return </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>a list containing char* pointers. </dd></dl>
+
+</div>
+</div>
 <a id="a07eb790b0ad8ea2e1575872b85609d23" name="a07eb790b0ad8ea2e1575872b85609d23"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a07eb790b0ad8ea2e1575872b85609d23">&#9670;&#160;</a></span>RaveAttributeTable_getValues()</h2>
 
@@ -568,6 +634,32 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>1 if the key exists, 0 if it doesn't </dd></dl>
+
+</div>
+</div>
+<a id="a1578829b01195d9146e6c6646a682901" name="a1578829b01195d9146e6c6646a682901"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1578829b01195d9146e6c6646a682901">&#9670;&#160;</a></span>RaveAttributeTable_hasSubGroups()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int RaveAttributeTable_hasSubGroups </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="rave__attribute__table_8h.html#ad3846f995e24d0aba6a187b9bb4eaae5">RaveAttributeTable_t</a> *</td>          <td class="paramname"><span class="paramname"><em>self</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Returns if the table contains subgroups or not. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">table</td><td>- self </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>1 if the table contains subgroups, 0 if it doesn't </dd></dl>
 
 </div>
 </div>
