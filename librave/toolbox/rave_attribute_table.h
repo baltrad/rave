@@ -112,6 +112,13 @@ int RaveAttributeTable_size(RaveAttributeTable_t* self);
 int RaveAttributeTable_hasAttribute(RaveAttributeTable_t* self, const char* key);
 
 /**
+ * Returns if the table contains subgroups or not
+ * @param[in] table - self
+ * @returns 1 if the table contains subgroups, 0 if it doesn't
+ */
+int RaveAttributeTable_hasSubGroups(RaveAttributeTable_t* self);
+
+/**
  * Removes the item with the specified key and returns it.
  * @param[in] self - the self
  * @param[in] key - the key
@@ -145,6 +152,27 @@ RaveList_t* RaveAttributeTable_getAttributeNames(RaveAttributeTable_t* self);
  * @returns a list containing char* pointers.
  */
 RaveList_t* RaveAttributeTable_getAttributeNamesVersion(RaveAttributeTable_t* self, RaveIO_ODIM_Version version);
+
+/**
+ * Returns the keys that belongs to subgroups for the table at the current state. Note,
+ * remember to deallocate keys appropriately after retrival or
+ * use the function \@ref #RaveList_freeAndDestroy that will
+ * take care of it for you.
+ * @param[in] self - self
+ * @returns a list containing char* pointers.
+ */
+RaveList_t* RaveAttributeTable_getSubAttributeNames(RaveAttributeTable_t* self);
+
+/**
+ * Returns the keys that belongs to subgroups for the table at the current state. Note,
+ * remember to deallocate keys appropriately after retrival or
+ * use the function \@ref #RaveList_freeAndDestroy that will
+ * take care of it for you.
+ * @param[in] self - self
+ * @param[in] version - the version of the attribute names to return
+ * @returns a list containing char* pointers.
+ */
+RaveList_t* RaveAttributeTable_getSubAttributeNamesVersion(RaveAttributeTable_t* self, RaveIO_ODIM_Version version);
 
 /**
  * Returns the values for the table. Note, it is cloned values

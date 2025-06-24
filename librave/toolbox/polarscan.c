@@ -1787,6 +1787,17 @@ RaveList_t* PolarScan_getAttributeNamesVersion(PolarScan_t* scan, RaveIO_ODIM_Ve
   return RaveAttributeTable_getAttributeNamesVersion(scan->attrs, version);
 }
 
+RaveList_t* PolarScan_getSubGroupAttributeNames(PolarScan_t* scan)
+{
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+  return PolarScan_getSubGroupAttributeNamesVersion(scan, RAVEIO_API_ODIM_VERSION);
+}
+
+RaveList_t* PolarScan_getSubGroupAttributeNamesVersion(PolarScan_t* scan, RaveIO_ODIM_Version version)
+{
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+  return RaveAttributeTable_getSubAttributeNamesVersion(scan->attrs, version);
+}
 
 RaveObjectList_t* PolarScan_getAttributeValues(PolarScan_t* scan)
 {
