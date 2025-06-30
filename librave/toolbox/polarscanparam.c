@@ -33,6 +33,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "raveobject_hashtable.h"
 #include "rave_utilities.h"
 #include "rave_attribute_table.h"
+#include <pthread.h>
+#include <stdio.h>
 #include <float.h>
 
 /**
@@ -50,6 +52,7 @@ struct _PolarScanParam_t {
   double undetect;   /**< undetect */
   RaveAttributeTable_t* attrs; /**< attributes */
   RaveObjectList_t* qualityfields; /**< quality fields */
+  pthread_mutex_t* ensure_data_lock;
 };
 
 /*@{ Private functions */
@@ -73,11 +76,19 @@ static int PolarScanParam_constructor(RaveCoreObject* obj)
   if (this->data == NULL || this->attrs == NULL || this->qualityfields == NULL) {
     goto error;
   }
+  this->ensure_data_lock = RAVE_MALLOC(sizeof(pthread_mutex_t));
+  if (this->ensure_data_lock != NULL) {
+    pthread_mutex_init(this->ensure_data_lock, NULL);
+  } else {
+    RAVE_ERROR0("Failed to create mutex");
+    goto error;
+  }
   return 1;
 error:
   RAVE_OBJECT_RELEASE(this->data);
   RAVE_OBJECT_RELEASE(this->attrs);
   RAVE_OBJECT_RELEASE(this->qualityfields);
+  RAVE_FREE(this->ensure_data_lock);
 
   return 0;
 }
@@ -88,16 +99,19 @@ error:
 static RaveData2D_t* PolarScanParamInternal_ensureData2D(PolarScanParam_t* scanparam)
 {
   if (scanparam->lazyDataset != NULL) {
-    RaveData2D_t* loaded = LazyDataset_get(scanparam->lazyDataset);
-    if (loaded != NULL) {
-      RAVE_DEBUG0("PolarScanParamInternal_ensureData2D: LazyDataset fetched");
-      RAVE_OBJECT_RELEASE(scanparam->data);
-      scanparam->data = RAVE_OBJECT_COPY(loaded);
-      RAVE_OBJECT_RELEASE(scanparam->lazyDataset);
-    } else {
-      RAVE_ERROR0("Failed to load dataset");
+    pthread_mutex_lock(scanparam->ensure_data_lock);
+    if (scanparam->lazyDataset != NULL) {
+      RaveData2D_t* loaded = LazyDataset_get(scanparam->lazyDataset);
+      if (loaded != NULL) {
+        RAVE_OBJECT_RELEASE(scanparam->data);
+        scanparam->data = RAVE_OBJECT_COPY(loaded);
+        RAVE_OBJECT_RELEASE(scanparam->lazyDataset);
+      } else {
+        RAVE_ERROR0("Failed to load dataset");
+      }
+      RAVE_OBJECT_RELEASE(loaded);
     }
-    RAVE_OBJECT_RELEASE(loaded);
+    pthread_mutex_unlock(scanparam->ensure_data_lock);
   }
   return scanparam->data;
 }
@@ -134,6 +148,13 @@ static int PolarScanParam_copyconstructor(RaveCoreObject* obj, RaveCoreObject* s
   this->offset = src->offset;
   this->nodata = src->nodata;
   this->undetect = src->undetect;
+  this->ensure_data_lock = RAVE_MALLOC(sizeof(pthread_mutex_t));
+  if (this->ensure_data_lock != NULL) {
+    pthread_mutex_init(this->ensure_data_lock, NULL);
+  } else {
+    RAVE_ERROR0("Failed to create mutex");
+    goto error;
+  }
   return 1;
 error:
   RAVE_ERROR0("Failed to clone polar scan parameter");
@@ -157,6 +178,7 @@ static void PolarScanParam_destructor(RaveCoreObject* obj)
   RAVE_OBJECT_RELEASE(this->lazyDataset);
   RAVE_OBJECT_RELEASE(this->legend);
   RAVE_FREE(this->quantity);
+  RAVE_FREE(this->ensure_data_lock);
 }
 
 /*@} End of Private functions */

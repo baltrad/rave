@@ -264,7 +264,7 @@ result_from_tiler multi_composite_arguments::generate(std::string dd, std::strin
 
     std::string outfile = tempname;
     outfile += ".h5";
-    std::unique_lock<std::mutex> lock(rave_io_mutex);
+    //std::unique_lock<std::mutex> lock(rave_io_mutex);
     RaveIO_t* rio = (RaveIO_t*)RAVE_OBJECT_NEW(&RaveIO_TYPE);
     if (rio == NULL) {
       RAVE_CRITICAL0("Failed to allocate memory for raveIO.");
@@ -712,6 +712,14 @@ void TiledCompositing::_add_files_to_argument_list(std::vector<args_to_tiler> & 
             // Time consuming, why???
             RaveCoreObject * the_object = (RaveCoreObject *)RAVE_OBJECT_CLONE(k.second);
             //RaveCoreObject* the_object = (RaveCoreObject*)RAVE_OBJECT_COPY(k.second);
+            // RaveIO_t* instance = RaveIO_open(k.first.c_str(), true, "DBZH");
+            // RaveCoreObject * the_object = RaveIO_getObject(instance);
+            // RaveIO_close(instance);
+            // RAVE_OBJECT_RELEASE(instance);
+            // // sortByElevations is not threadsafe
+            // if (RAVE_OBJECT_CHECK_TYPE(the_object, &PolarVolume_TYPE)) {
+            //   PolarVolume_sortByElevations((PolarVolume_t*)the_object, 1);
+            // }
             (*args[i].mcomp->_file_objects)[k.first] = the_object;
             break;
           }

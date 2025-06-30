@@ -34,7 +34,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include <string.h>
 #include "rave_attribute_table.h"
 #include <stdio.h>
-
+#include <pthread.h>
 /**
  * Represents the cartesian field product.
  */
@@ -55,6 +55,7 @@ struct _CartesianParam_t {
 
   RaveAttributeTable_t* attrs; /**< attributes */
   RaveObjectList_t* qualityfields; /**< quality fields */
+  pthread_mutex_t* ensure_data_lock;
 };
 
 /*@{ Private functions */
@@ -77,12 +78,19 @@ static int CartesianParam_constructor(RaveCoreObject* obj)
   if (this->data == NULL || this->attrs == NULL || this->qualityfields == NULL) {
     goto fail;
   }
-
+  this->ensure_data_lock = RAVE_MALLOC(sizeof(pthread_mutex_t));
+  if (this->ensure_data_lock != NULL) {
+    pthread_mutex_init(this->ensure_data_lock, NULL);
+  } else {
+    RAVE_ERROR0("Failed to create mutex");
+    goto fail;
+  }
   return 1;
 fail:
   RAVE_OBJECT_RELEASE(this->data);
   RAVE_OBJECT_RELEASE(this->attrs);
   RAVE_OBJECT_RELEASE(this->qualityfields);
+  RAVE_FREE(this->ensure_data_lock);
   return 0;
 }
 
@@ -92,16 +100,23 @@ fail:
  * @param[in] field - the rave field
  * @returns a loaded rave data 2D field
  */
+
 static RaveData2D_t* CartesianParamInternal_ensureData2D(CartesianParam_t* self)
 {
   if (self->lazyDataset != NULL) {
-    RaveData2D_t* loaded = LazyDataset_get(self->lazyDataset);
-    if (loaded != NULL) {
-      RAVE_OBJECT_RELEASE(self->data);
-      self->data = RAVE_OBJECT_COPY(loaded);
-      RAVE_OBJECT_RELEASE(self->lazyDataset);
+    pthread_mutex_lock(self->ensure_data_lock);
+    if (self->lazyDataset != NULL) {
+      RaveData2D_t* loaded = LazyDataset_get(self->lazyDataset);
+      if (loaded != NULL) {
+        RAVE_OBJECT_RELEASE(self->data);
+        self->data = RAVE_OBJECT_COPY(loaded);
+        RAVE_OBJECT_RELEASE(self->lazyDataset);
+      } else {
+        RAVE_ERROR0("Failed to load dataset");
+      }
+      RAVE_OBJECT_RELEASE(loaded);
     }
-    RAVE_OBJECT_RELEASE(loaded);
+    pthread_mutex_unlock(self->ensure_data_lock);
   }
   return self->data;
 }
@@ -138,7 +153,13 @@ static int CartesianParam_copyconstructor(RaveCoreObject* obj, RaveCoreObject* s
       goto fail;
     }
   }
-
+  this->ensure_data_lock = RAVE_MALLOC(sizeof(pthread_mutex_t));
+  if (this->ensure_data_lock != NULL) {
+    pthread_mutex_init(this->ensure_data_lock, NULL);
+  } else {
+    RAVE_ERROR0("Failed to create mutex");
+    goto fail;
+  }
   return 1;
 fail:
   RAVE_FREE(this->quantity);
@@ -164,6 +185,7 @@ static void CartesianParam_destructor(RaveCoreObject* obj)
     RAVE_OBJECT_RELEASE(cartesian->lazyDataset);
     RAVE_OBJECT_RELEASE(cartesian->attrs);
     RAVE_OBJECT_RELEASE(cartesian->qualityfields);
+    RAVE_FREE(cartesian->ensure_data_lock);
   }
 }
 

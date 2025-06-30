@@ -247,8 +247,9 @@ std::map<std::string,RaveCoreObject*> * Compositing::quality_control_objects(
               //obj = self.ravebdb.get_rave_object(fname, self.use_lazy_loading, preload_quantity)
             }
             else {
-              std::unique_lock<std::mutex> lock(rave_io_mutex);
+              //std::unique_lock<std::mutex> lock(rave_io_mutex);
               RaveIO_t* instance = RaveIO_open(fname.c_str(), use_lazy_loading, preload_quantity.c_str());
+              //RaveIO_t* instance = RaveIO_open(fname.c_str(), true, "DBZH");
               obj = RaveIO_getObject(instance);
               RaveIO_close(instance);
               RAVE_OBJECT_RELEASE(instance);

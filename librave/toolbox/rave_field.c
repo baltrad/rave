@@ -30,6 +30,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_utilities.h"
 #include "rave_attribute_table.h"
 #include <string.h>
+#include <pthread.h>
 /**
  * Represents the cartesian volume
  */
@@ -38,6 +39,7 @@ struct _RaveField_t {
   RaveData2D_t* data; /**< the data */
   LazyDataset_t* lazyDataset; /**< the lazy dataset */
   RaveAttributeTable_t* attrs; /**< attributes */
+  pthread_mutex_t* ensure_data_lock;
 };
 
 /*@{ Private functions */
@@ -53,10 +55,18 @@ static int RaveField_constructor(RaveCoreObject* obj)
   if (this->attrs == NULL || this->data == NULL) {
     goto error;
   }
+  this->ensure_data_lock = RAVE_MALLOC(sizeof(pthread_mutex_t));
+  if (this->ensure_data_lock != NULL) {
+    pthread_mutex_init(this->ensure_data_lock, NULL);
+  } else {
+    RAVE_ERROR0("Failed to create mutex");
+    goto error;
+  }
   return 1;
 error:
   RAVE_OBJECT_RELEASE(this->attrs);
   RAVE_OBJECT_RELEASE(this->data);
+  RAVE_FREE(this->ensure_data_lock);
   return 0;
 }
 
@@ -69,13 +79,19 @@ error:
 static RaveData2D_t* RaveFieldInternal_ensureData2D(RaveField_t* field)
 {
   if (field->lazyDataset != NULL) {
-    RaveData2D_t* loaded = LazyDataset_get(field->lazyDataset);
-    if (loaded != NULL) {
-      RAVE_OBJECT_RELEASE(field->data);
-      field->data = RAVE_OBJECT_COPY(loaded);
-      RAVE_OBJECT_RELEASE(field->lazyDataset);
+    pthread_mutex_lock(field->ensure_data_lock);
+    if (field->lazyDataset != NULL) {
+      RaveData2D_t* loaded = LazyDataset_get(field->lazyDataset);
+      if (loaded != NULL) {
+        RAVE_OBJECT_RELEASE(field->data);
+        field->data = RAVE_OBJECT_COPY(loaded);
+        RAVE_OBJECT_RELEASE(field->lazyDataset);
+      } else {
+        RAVE_ERROR0("Failed to load dataset");
+      }
+      RAVE_OBJECT_RELEASE(loaded);
     }
-    RAVE_OBJECT_RELEASE(loaded);
+    pthread_mutex_unlock(field->ensure_data_lock);
   }
   return field->data;
 }
@@ -92,6 +108,13 @@ static int RaveField_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj
   this->lazyDataset = NULL;
   if (this->data == NULL || this->attrs == NULL) {
     RAVE_ERROR0("Failed to duplicate data or attributes");
+    goto error;
+  }
+  this->ensure_data_lock = RAVE_MALLOC(sizeof(pthread_mutex_t));
+  if (this->ensure_data_lock != NULL) {
+    pthread_mutex_init(this->ensure_data_lock, NULL);
+  } else {
+    RAVE_ERROR0("Failed to create mutex");
     goto error;
   }
   return 1;
@@ -111,6 +134,7 @@ static void RaveField_destructor(RaveCoreObject* obj)
   RAVE_OBJECT_RELEASE(this->attrs);
   RAVE_OBJECT_RELEASE(this->data);
   RAVE_OBJECT_RELEASE(this->lazyDataset);
+  RAVE_FREE(this->ensure_data_lock);
 }
 
 
