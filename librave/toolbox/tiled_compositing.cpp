@@ -709,17 +709,8 @@ void TiledCompositing::_add_files_to_argument_list(std::vector<args_to_tiler> & 
             //std::unique_lock<std::mutex> lock(rave_io_mutex);
             args[i].mcomp->_filenames.push_back(k.first);
             // Copy the object for thread safety? Yes, I think so.
-            // Time consuming, why???
+            // You must read the object with flag
             RaveCoreObject * the_object = (RaveCoreObject *)RAVE_OBJECT_CLONE(k.second);
-            //RaveCoreObject* the_object = (RaveCoreObject*)RAVE_OBJECT_COPY(k.second);
-            // RaveIO_t* instance = RaveIO_open(k.first.c_str(), true, "DBZH");
-            // RaveCoreObject * the_object = RaveIO_getObject(instance);
-            // RaveIO_close(instance);
-            // RAVE_OBJECT_RELEASE(instance);
-            // // sortByElevations is not threadsafe
-            // if (RAVE_OBJECT_CHECK_TYPE(the_object, &PolarVolume_TYPE)) {
-            //   PolarVolume_sortByElevations((PolarVolume_t*)the_object, 1);
-            // }
             (*args[i].mcomp->_file_objects)[k.first] = the_object;
             break;
           }

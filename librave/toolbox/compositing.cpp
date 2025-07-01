@@ -248,7 +248,8 @@ std::map<std::string,RaveCoreObject*> * Compositing::quality_control_objects(
             }
             else {
               //std::unique_lock<std::mutex> lock(rave_io_mutex);
-              RaveIO_t* instance = RaveIO_open(fname.c_str(), use_lazy_loading, preload_quantity.c_str());
+              RaveIO_t* instance = RaveIO_open(fname.c_str(), false, preload_quantity.c_str());
+              // This will generate problems when cloning in another tread, always set preload to false.
               //RaveIO_t* instance = RaveIO_open(fname.c_str(), true, "DBZH");
               obj = RaveIO_getObject(instance);
               RaveIO_close(instance);
@@ -310,7 +311,6 @@ std::map<std::string,RaveCoreObject*> * Compositing::quality_control_objects(
               malfunc_files += 1;
               continue;
             }
-            RAVE_DEBUG1("Object ref count = %d ", RAVE_OBJECT_REFCNT(obj));
           }
         }
         std::string source;
@@ -692,7 +692,6 @@ std::map<std::string,RaveCoreObject*> * Compositing::quality_control_objects(
       // Here we decrement to 0 and release the objects.
       for (auto & obj:*local_objects) {
         if (obj.second != NULL) {
-          RAVE_DEBUG1("RefCnt = %d", RAVE_OBJECT_REFCNT(obj.second));
           if (RAVE_OBJECT_REFCNT(obj.second) > 1) {
             RaveCoreObject_release((RaveCoreObject*)obj.second, __FILE__, __LINE__);
           } else {
@@ -809,7 +808,6 @@ std::map<std::string,RaveCoreObject*> * Compositing::quality_control_objects(
       // Decrement the reference counter to 0, release the objects.
       for (auto & obj:*local_objects) {
         if (obj.second) {
-          RAVE_DEBUG1("RefCnt = %d", RAVE_OBJECT_REFCNT(obj.second));
           if (RAVE_OBJECT_REFCNT(obj.second) > 1) {
               RaveCoreObject_release((RaveCoreObject *)obj.second, __FILE__, __LINE__);
             } else {
@@ -822,7 +820,6 @@ std::map<std::string,RaveCoreObject*> * Compositing::quality_control_objects(
     // NOTE:Normally this will have no effect.
     for (auto & obj:*local_objects) {
       if (obj.second) {
-        RAVE_DEBUG1("RefCnt = %d", RAVE_OBJECT_REFCNT(obj.second));
         if (RAVE_OBJECT_REFCNT(obj.second) > 1) {
           RaveCoreObject_release((RaveCoreObject *)obj.second, __FILE__, __LINE__);
         } else {
@@ -895,7 +892,6 @@ std::map<std::string,RaveCoreObject*> * Compositing::quality_control_objects(
     // This should normally have no effect.
     for(auto & obj: *local_objects) {
       if (obj.second != NULL) {
-        RAVE_DEBUG1("RefCnt = %d", RAVE_OBJECT_REFCNT(obj.second));
         if (RAVE_OBJECT_REFCNT(obj.second) > 1) {
           RaveCoreObject_release((RaveCoreObject *)obj.second, __FILE__, __LINE__);
         } else {

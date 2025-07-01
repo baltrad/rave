@@ -96,7 +96,8 @@ error:
 /**
  * Ensures that we have got data in the data-table set
  */
-static RaveData2D_t* PolarScanParamInternal_ensureData2D(PolarScanParam_t* scanparam)
+
+static RaveData2D_t * PolarScanParamInternal_ensureData2D(PolarScanParam_t* scanparam)
 {
   if (scanparam->lazyDataset != NULL) {
     pthread_mutex_lock(scanparam->ensure_data_lock);
@@ -115,6 +116,25 @@ static RaveData2D_t* PolarScanParamInternal_ensureData2D(PolarScanParam_t* scanp
   }
   return scanparam->data;
 }
+// static RaveData2D_t* PolarScanParamInternal_ensureData2D(PolarScanParam_t* scanparam)
+// {
+//   if (scanparam->lazyDataset != NULL) {
+//     pthread_mutex_lock(scanparam->ensure_data_lock);
+//     if (scanparam->lazyDataset != NULL) {
+//       RaveData2D_t* loaded = LazyDataset_get(scanparam->lazyDataset);
+//       if (loaded != NULL) {
+//         RAVE_OBJECT_RELEASE(scanparam->data);
+//         scanparam->data = RAVE_OBJECT_COPY(loaded);
+//         RAVE_OBJECT_RELEASE(scanparam->lazyDataset);
+//       } else {
+//         RAVE_ERROR0("Failed to load dataset");
+//       }
+//       RAVE_OBJECT_RELEASE(loaded);
+//     }
+//     pthread_mutex_unlock(scanparam->ensure_data_lock);
+//   }
+//   return scanparam->data;
+// }
 
 static int PolarScanParam_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj)
 {
