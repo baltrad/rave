@@ -19,9 +19,11 @@ rave_transform.py
 
 Functionality for performing transformations between cartesian surfaces.
 """
+
+# Module/Project:
 import rave
 import _ctoc
-#import _h5rad
+# import _h5rad
 
 # transform algorithm constants
 NEAREST = 1
@@ -33,8 +35,7 @@ INVERSE = 6
 
 
 def transform(image, areaid, method=NEAREST, radius=None):
-    """
-    """
+    """ """
     # Initialize 'new' output image
     new = rave.RAVE(area=areaid, nodata=image.get('/image1/what/nodata'))
     image.info.CopyDatasetAttributes(new.info, ipath='/image1/what', oset=1)
@@ -42,7 +43,8 @@ def transform(image, areaid, method=NEAREST, radius=None):
     new.set('/what/time', image.get('/what/time'))
 
     image.set('/how/i_method', method)
-    if radius: image.set('/how/cressman_xy', float(radius))
+    if radius:
+        image.set('/how/cressman_xy', float(radius))
 
     sets = image.get('/what/sets')
     set = 2
@@ -53,25 +55,23 @@ def transform(image, areaid, method=NEAREST, radius=None):
         xsize, ysize = new.get('/where/xsize'), new.get('/where/ysize')
         initval = image.get('/image%i/what/nodata' % set)
 
-        new.addDataset(set=set, typecode=typecode, xsize=xsize,
-                       ysize=ysize, initval=initval)
-        image.info.CopyDatasetAttributes(new.info,
-                                         ipath='/image%i/what' % set,
-                                         oset=set)
+        new.addDataset(set=set, typecode=typecode, xsize=xsize, ysize=ysize, initval=initval)
+        image.info.CopyDatasetAttributes(new.info, ipath='/image%i/what' % set, oset=set)
         set += 1
 
     image.MakeExtentFromCorners()
     new.MakeCornersFromArea(areaid)
     new.MakeExtentFromCorners()
 
-#    _h5rad.read_h5rad(image, new)
+    #    _h5rad.read_h5rad(image, new)
     _ctoc.transform(image, new)
 
     # Clean up
     image.delete('/how/extent')
     new.delete('/how/extent')
     image.delete('/how/i_method')
-    if radius: image.delete('/how/cressman_xy')
+    if radius:
+        image.delete('/how/cressman_xy')
 
     return new
 

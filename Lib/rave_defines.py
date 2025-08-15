@@ -23,17 +23,21 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @author Daniel Michelson, SMHI
 ## @date 2011-06-27
 
+# Standard python libs:
 import sys
 import os
 import datetime
+
+# Module/Project:
 import rave_defines
 import _rave
 
 ## PATHS
 #
 RAVEROOT = os.path.split(os.path.split(rave_defines.__file__)[0])[0]
-if not RAVEROOT: RAVEROOT = '..'
-RAVELIB =  RAVEROOT + '/Lib'
+if not RAVEROOT:
+    RAVEROOT = '..'
+RAVELIB = RAVEROOT + '/Lib'
 RAVECONFIG = RAVEROOT + '/config'
 RAVEDB = RAVEROOT + '/db'
 RAVEBIN = RAVEROOT + '/bin'
@@ -63,14 +67,21 @@ UTF8 = 'UTF-8'
 
 # Default compression to use for DATASET nodes
 # szip is illegal with ODIM_H5
-COMPRESSION = "zlib" # use "none" (or None), "zlib", or "szip"
+COMPRESSION = "zlib"  # use "none" (or None), "zlib", or "szip"
 
 # Compression level for ZLIB (0-9)
-COMPRESSION_ZLIB_LEVEL = 6 # default
+COMPRESSION_ZLIB_LEVEL = 6  # default
 
 # Mapping between Numeric and HDF5 dataset types
-ARRAYTYPES = {'b':'char', 'B':'uchar', 'I':'int', 'h':'short',
-              'L':'long', 'f':'float', 'd':'double'}
+ARRAYTYPES = {
+    'b': 'char',
+    'B': 'uchar',
+    'I': 'int',
+    'h': 'short',
+    'L': 'long',
+    'f': 'float',
+    'd': 'double'
+}
 
 # Default gain and offset values for linear transformation between raw and dBZ
 GAIN = 0.4
@@ -91,7 +102,9 @@ DEFAULTA = 0.323868068019
 DEFAULTB = -0.00107776407064
 DEFAULTC = 1.77500903316e-05
 MERGETERMS = 20  # how many 12-hour SYNOP terms to merge: 10 days.
-TIMELIMIT_CLIMATOLOGIC_COEFF = 48 # how many hours back in time we can use generated gra coefficients before using the climatologic variant
+TIMELIMIT_CLIMATOLOGIC_COEFF = (
+    48  # how many hours back in time we can use generated gra coefficients before using the climatologic variant
+)
 
 # SAF-NWC MSG CT filter
 CT_FTEMPLATE = "SAFNWC_MSG?_CT___%s_FES_________.h5"
@@ -124,9 +137,9 @@ DEX_PRIVATEKEY = None
 BDB_CONFIG_FILE = None
 
 # The originating center id, used to indicate where a product has been generated.
-CENTER_ID = 'ORG:82' # Change this if your country is not Sweden.
+CENTER_ID = 'ORG:82'  # Change this if your country is not Sweden.
 
-GENREG  = 'generate-registry'  # root registry tag
+GENREG = 'generate-registry'  # root registry tag
 REGFILE = os.path.join(RAVEETC, 'rave_pgf_registry.xml')  # registry file
 
 QFILE = os.path.join(RAVEETC, 'rave_pgf_queue.xml')  # queue file
@@ -135,9 +148,9 @@ PGF_TAG = 'bltgenerate'  # used for sending files to the DEX
 # Logging - little of this is relevant if SysLog is used or the OS rotates the logs.
 LOGID = 'PGF[rave.baltrad.eu]'
 LOGPORT = 8089
-LOGFILE     = os.path.join(RAVEETC, "rave_pgf.log") # Default logger is to syslog.
+LOGFILE = os.path.join(RAVEETC, "rave_pgf.log")  # Default logger is to syslog.
 LOGFILESIZE = 5000000  # 5 Mb each
-LOGFILES    = 5
+LOGFILES = 5
 LOGFACILITY = "local3"
 LOGLEVEL = "info"
 LOGPIDFILE = os.path.join(RAVEETC, 'rave_pgf_log_server.pid')
@@ -147,14 +160,16 @@ if sys.platform == "darwin":
     SYSLOG = "/var/run/syslog"
 else:
     SYSLOG = "/dev/log"
-    
-LOGGER_TYPE="syslog" # Can be stdout or logfile but logfile might result in unordered log entries since there will be more than one process writing to same file
+
+# Can be stdout or logfile but logfile might result in unordered log entries since there will be more than one
+# process writing to same file
+LOGGER_TYPE = "syslog"
 
 ODIM_SOURCE_FILE = os.path.join(RAVECONFIG, 'odim_source.xml')
 
-QUALITY_REGISTRY=os.path.join(RAVEETC, 'rave_pgf_quality_registry.xml')
+QUALITY_REGISTRY = os.path.join(RAVEETC, 'rave_pgf_quality_registry.xml')
 
-RAVE_TILE_REGISTRY=os.path.join(RAVEETC, 'rave_tile_registry.xml')
+RAVE_TILE_REGISTRY = os.path.join(RAVEETC, 'rave_tile_registry.xml')
 
 # The name of the composite generator filter file containing the settings for factories.
 COMPOSITE_GENERATOR_FILTER_FILENAME = os.path.join(RAVECONFIG, 'composite_generator_filter.xml')
@@ -171,7 +186,7 @@ ACQVA_CLUTTERMAP_DIR = "/var/lib/baltrad/rave/acqva/cluttermap"
 # the number of processes will be set to number of tiles or less depending on how many
 # cores that are available. If number of cores > 1, then there will always be one core
 # left for handling the result.
-RAVE_TILE_COMPOSITING_PROCESSES=None
+RAVE_TILE_COMPOSITING_PROCESSES = None
 
 # Timeout in seconds when waiting for a tile to be completed. If no timeout is specified (None)
 # the wait will be indefinite. However, the recommended timeout is somewhere between
@@ -183,7 +198,7 @@ RAVE_TILE_COMPOSITING_TIMEOUT: int = 290
 # If a tile is missing due to a timeout it is possible to either allow that behavior and
 # ignore the problem like if all files was missing or else let a runtime error be thrown
 # which will result in a missing composite.
-RAVE_TILE_COMPOSITING_ALLOW_MISSING_TILES=False
+RAVE_TILE_COMPOSITING_ALLOW_MISSING_TILES = False
 
 # Maximum number of tasks that a single worker process in a multiprocessing pool is allowed to execute
 # before it is terminated and replaced by a new process.
@@ -196,24 +211,24 @@ RAVE_MULTIPROCESSING_MAX_TASKS_PER_WORKER=None
 
 # Max number of process to use when executing the quality controls. Default is 4 but this
 # should probably be tuned depending on how many files that needs to be quality controled
-# and number of available cores. 
-RAVE_QUALITY_CONTROL_PROCESSES=4
+# and number of available cores.
+RAVE_QUALITY_CONTROL_PROCESSES = 4
 
 # If the quality fields should be reprocessed or not if the input already contains a relevant how/task
-# quality field. 
-RAVE_PGF_QUALITY_FIELD_REPROCESSING=False
+# quality field.
+RAVE_PGF_QUALITY_FIELD_REPROCESSING = False
 
 # If the compositing should utilize azimuthal navigation or not (how/astart, how/startazA)
 #
-RAVE_PGF_AZIMUTHAL_NAVIGATION=True
+RAVE_PGF_AZIMUTHAL_NAVIGATION = True
 
 # If the compositing should use lazy loading or not
 #
-RAVE_PGF_COMPOSITING_USE_LAZY_LOADING=False
+RAVE_PGF_COMPOSITING_USE_LAZY_LOADING = False
 
 # If the compositing should use quantity preload when using lazy loading or not
 #
-RAVE_PGF_COMPOSITING_USE_LAZY_LOADING_PRELOADS=False
+RAVE_PGF_COMPOSITING_USE_LAZY_LOADING_PRELOADS = False
 
 # What algorithm that should be used when performing QI-total
 #
@@ -223,9 +238,9 @@ QITOTAL_METHOD = "minimum"
 RAVESCANSUN_OUT = None
 
 # Rave IO default writing version
-#RaveIO_ODIM_Version_2_2 = 2,        /**< ODIM 2.2 */
-#RaveIO_ODIM_Version_2_3 = 3         /**< ODIM 2.3 */
-#RaveIO_ODIM_Version_2_4 = 4         /**< ODIM 2.4, The default version */
+# RaveIO_ODIM_Version_2_2 = 2,        /**< ODIM 2.2 */
+# RaveIO_ODIM_Version_2_3 = 3         /**< ODIM 2.3 */
+# RaveIO_ODIM_Version_2_4 = 4         /**< ODIM 2.4, The default version */
 RAVE_IO_DEFAULT_VERSION = 2
 
 if __name__ == "__main__":

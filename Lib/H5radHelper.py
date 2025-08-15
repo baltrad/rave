@@ -21,10 +21,17 @@
 """
 
 """
+
+# Standard python libs:
 import string
-from numpy import ndarray
-from rave_defines import ENCODING
 from struct import calcsize
+
+# Third-party:
+from numpy import ndarray
+
+# Module/Project:
+from rave_defines import ENCODING
+
 
 # If a long is the same size as an int, ensure that longs are saved as llongs
 if calcsize('i') == calcsize('l') == 4:
@@ -41,6 +48,7 @@ def typeconv(typ, val):
     elif typ in ("string", "sequence", "dataset"):
         return val
 
+
 def findelem(root, attr):
     path = attr.split("/")[1:]
     e = root
@@ -50,18 +58,19 @@ def findelem(root, attr):
             break
     return e
 
+
 def geth5attr(e, dictionary):
     typ, val = type_val(e)
-
+    
     if typ == "dataset":
         dict_val = dictionary[val]
         if type(dict_val) is bytes:
-          dict_val = dict_val.decode(ENCODING)
+            dict_val = dict_val.decode(ENCODING)
         return dict_val
     elif typ == "sequence":
         nodes = val.split(",")
         for n in range(len(nodes)):
-            try:     # detects ints and floats but not strings
+            try:  # detects ints and floats but not strings
                 nodes[n] = eval(nodes[n].strip()[1:-1])
             except:  # fallback to string
                 nodes[n] = nodes[n].strip()[1:-1]
@@ -69,12 +78,14 @@ def geth5attr(e, dictionary):
     else:
         return typeconv(typ, val)
 
+
 def type_val(e):
     typ = e.get("type", "string")
     val = e.text
     if type(val) is bytes:
-      val = val.decode(ENCODING)
+        val = val.decode(ENCODING)
     return typ, val
+
 
 def h5type(value):
     if type(value) is int:
@@ -107,7 +118,7 @@ def seth5attr(e, attr_to_val_dict, h5typ, attribute, value):
         nodes = []
         for n in value:
             node = str(n).strip()
-            nodes.append(("'"+node+"'"))
+            nodes.append(("'" + node + "'"))
         text = ", ".join(nodes)
     elif h5typ == "dataset":
         attr_to_val_dict[attribute] = value
@@ -118,15 +129,16 @@ def seth5attr(e, attr_to_val_dict, h5typ, attribute, value):
         text = value
     else:
         raise ValueError("Illegal type")
-      
+    
     e.text = text.encode(ENCODING)
+
 
 def addelem(root, attribute):
     from xml.etree.ElementTree import SubElement
-
+    
     path = attribute.split("/")[1:]
     e = root
-#    result = None
+    # result = None
     for i in path:
         new = e.find(i)
         if new is None:
@@ -134,7 +146,6 @@ def addelem(root, attribute):
             new = SubElement(e, i)
         e = new
     return e
-
 
 
 if __name__ == "__main__":

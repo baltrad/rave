@@ -17,47 +17,58 @@ You should have received a copy of the GNU Lesser General Public License
 along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 '''
 ##
-# A quality plugin with scansun support 
+# A quality plugin with scansun support
 
-## 
+##
 # @file
 # @author Daniel Michelson, Environment and Climate Change Canada
 # @date 2015-12-16
 
+
+# Module/Project:
 from rave_quality_plugin import rave_quality_plugin
 from rave_quality_plugin import QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY
 
 import _polarscan, _polarvolume
 import rave_pgf_logger
 from rave_pgf_scansun_plugin import writeHits
+
 logger = rave_pgf_logger.create_logger()
 
-    
+
 class scansun_quality_plugin(rave_quality_plugin):
-  ##
-  # Default constructor
-  def __init__(self):
-    super(scansun_quality_plugin, self).__init__()
-  
-  ##
-  # @return a list containing the string nl.knmi.scansun
-  # This is just a placeholder. String won't be used in this case.
-  def getQualityFields(self):
-    return ["nl.knmi.scansun"]
-  
-  ##
-  # @param obj: A RAVE object that should be processed.
-  # @param reprocess_quality_flag: If quality flag should be reprocessed or not
-  # @param arguments: Not used
-  # @return: The modified object if this quality plugin has performed changes 
-  # to the object.
-  def process(self, obj, reprocess_quality_flag=True, quality_control_mode=QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY, arguments=None):
-    try:
-      import _scansun
-      if reprocess_quality_flag:  # scansun doesn't modify the payload, so there's no indicator that scansun has been run before.
-        source, hits = _scansun.scansunFromObject(obj)
-        if len(hits) > 0:
-          writeHits(source, hits)
-    except:
-      logger.exception("Failure during scansun processing")
-    return obj, self.getQualityFields()
+    ##
+    # Default constructor
+    def __init__(self):
+        super(scansun_quality_plugin, self).__init__()
+    
+    ##
+    # @return a list containing the string nl.knmi.scansun
+    # This is just a placeholder. String won't be used in this case.
+    def getQualityFields(self):
+        return ["nl.knmi.scansun"]
+    
+    ##
+    # @param obj: A RAVE object that should be processed.
+    # @param reprocess_quality_flag: If quality flag should be reprocessed or not
+    # @param arguments: Not used
+    # @return: The modified object if this quality plugin has performed changes
+    # to the object.
+    def process(
+        self,
+        obj,
+        reprocess_quality_flag=True,
+        quality_control_mode=QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY,
+        arguments=None,
+    ):
+        try:
+            import _scansun
+            
+            # scansun doesn't modify the payload, so there's no indicator that scansun has been run before.
+            if reprocess_quality_flag:
+                source, hits = _scansun.scansunFromObject(obj)
+                if len(hits) > 0:
+                    writeHits(source, hits)
+        except:
+            logger.exception("Failure during scansun processing")
+        return obj, self.getQualityFields()

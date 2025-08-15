@@ -24,11 +24,13 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @author Daniel Michelson, SMHI
 ## @date 2012-11-05
 
+# Third-party:
+from numpy import *
+
+# Module/Project:
 import _raveio
 import odim_source
 from rave_defines import UTF8
-from numpy import *
-
 
 ## Validate input file.
 # @param rio RAVE IO object read from file.
@@ -36,33 +38,34 @@ def Validate(rio):
     # Zero check: do we have a payload?
     if not rio.object:
         raise IOError("Failed to read file.")
-
+    
     # First ODIM violation fix: ODIM_BUFR cannot tell the difference between
     # a SCAN and a PVOL. ODIM_H5 can.
     if rio.objectType == _raveio.Rave_ObjectType_PVOL and rio.object.getNumberOfScans() == 1:
         DATE, TIME = rio.object.date, rio.object.time
         rio.object = rio.object.getScan(0)
         rio.object.date, rio.object.time = DATE, TIME
-
+    
     # Second (potential) ODIM violation: bad or incomplete value of /what/source
     # Harmonize, because bRopo looks up filter settings based on this attribute.
     try:
         odim_source.CheckSource(rio.object)
         s = odim_source.ODIM_Source(rio.object.source)
-        if not s.nod: raise AttributeError()
+        if not s.nod:
+            raise AttributeError()
         if not s.wmo and not s.wigos:
             rio.object.source = odim_source.SOURCE[s.nod]
     except:
-        rio.object.source=repair_odim_source(rio.object)
+        rio.object.source = repair_odim_source(rio.object)
         s = odim_source.ODIM_Source(rio.object.source)
-
+    
     # Third issue, not an ODIM violation as such: ODIM_BUFR returns datasets as
     # float64 arrays, which a massive waste of RAM. Harmonize to uint8.
     # Note: this is not a problem for the toolbox as such, but it is a problem
     # for Ropo because Ropo assumes uint8 data.
     if rio.file_format == _raveio.RaveIO_ODIM_FileFormat_BUFR:
         ConvertDatasets(rio)
-
+    
     # Step 4: combination of data and metadata fixes.
     # In one known instance, a country supplies TH but not DBZH data. bRopo
     # currently requires DBZH, so in these cases rename TH to DBZH.
@@ -83,7 +86,7 @@ def Validate(rio):
 # @return string containing correctly-formatted /what/source
 def repair_odim_source(obj):
     import re
-
+    
     source = obj.source
     # France - Falaise
     if obj.source == 'WMO:07027':
@@ -130,7 +133,7 @@ def repair_odim_source(obj):
         return odim_source.SOURCE["deess"]
     # KNMI:
     elif len(source.split(";")) == 2 or source[:6] == "RAD:NL":
-        #source = re.sub(";", ",", source)  # no longer needed
+        # source = re.sub(";", ",", source)  # no longer needed
         source = re.sub("PLC", "NOD", source)
         s = odim_source.ODIM_Source(source)
         return odim_source.SOURCE[s.nod]
@@ -149,8 +152,9 @@ def repair_odim_source(obj):
     # Iceland
     elif obj.source == "WMO:0,PLC:Teigsbjarg":
         return odim_source.SOURCE["istgb"]
-
+    
     return source
+
 
 ## Manages the conversion of datasets from float64 to uint8.
 # @param rio RAVE I/O object
@@ -169,7 +173,7 @@ def ConvertDatasets(rio):
 ## Converts 64-bit float to 8-bit uint, with standard scaling
 # @param param dataset containing physical parameter.
 def ConvertParam(param):
-    param.gain =     0.5
+    param.gain = 0.5
     param.offset = -32.0
     param.nodata = 255.0
     param.undetect = 0.0
@@ -181,7 +185,8 @@ def ConvertParam(param):
 def CheckScan(scan):
     if (scan.nbins * scan.rscale / 1000) < scan.rstart:
         scan.rstart /= 1000.0
-    if scan.rscale < 10.0: scan.rscale *= 1000  # Idiot test
+    if scan.rscale < 10.0:
+        scan.rscale *= 1000  # Idiot test
     if scan.hasParameter("TH") and not scan.hasParameter("DBZH"):
         dbzh = scan.getParameter("TH")
         dbzh.quantity = "DBZH"

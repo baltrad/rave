@@ -24,36 +24,43 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 # in COMPOSITE_QUALITY_REGISTRY manually.
 #
 
-## 
+##
 # @file
 # @author Daniel Michelson, SMHI
 # @date 2012-09-14
 
+# Module/Project:
 from rave_quality_plugin import rave_quality_plugin
 from rave_quality_plugin import QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY
 
-class rave_distance_quality_plugin(rave_quality_plugin):
-  ##
-  # Default constructor
-  def __init__(self):
-    super(rave_distance_quality_plugin, self).__init__()
-  
-  ##
-  # @return a list containing the string se.smhi.composite.distance.radar
-  def getQualityFields(self):
-    return ["se.smhi.composite.distance.radar"]
-  
-  ##
-  # @param obj: A rave object that should be processed, bogus in this case.
-  # @param reprocess_quality_flag: Not used
-  # @param arguments: Not used
-  # @return: obj - without doing anything to it
-  def process(self, obj, reprocess_quality_flag=True, quality_control_mode=QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY, arguments=None):
-    return obj, self.getQualityFields()
 
-  ##
-  # @return: The distance information - dummy
-  #
-  def algorithm(self):
-    return None
-  
+class rave_distance_quality_plugin(rave_quality_plugin):
+    ##
+    # Default constructor
+    def __init__(self):
+        super(rave_distance_quality_plugin, self).__init__()
+
+    ##
+    # @return a list containing the string se.smhi.composite.distance.radar
+    def getQualityFields(self):
+        return ["se.smhi.composite.distance.radar"]
+
+    ##
+    # @param obj: A rave object that should be processed, bogus in this case.
+    # @param reprocess_quality_flag: Not used
+    # @param arguments: Not used
+    # @return: obj - without doing anything to it
+    def process(
+        self,
+        obj,
+        reprocess_quality_flag=True,
+        quality_control_mode=QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY,
+        arguments=None,
+    ):
+        return obj, self.getQualityFields()
+
+    ##
+    # @return: The distance information - dummy
+    #
+    def algorithm(self):
+        return None

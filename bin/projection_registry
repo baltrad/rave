@@ -23,7 +23,10 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @author Daniel Michelson, SMHI
 ## @date 2011-06-27
 
+# Standard python libs:
 import sys
+
+# Module/Project:
 import rave_defines
 import rave_projection
 
@@ -33,13 +36,13 @@ import rave_projection
 # @param description String containing a description of the new projection
 # @param definition PROJ.4 string containing the new projection's definition
 def add(id, description, definition):
-	rave_projection.add(id, description, definition)
-	
+    rave_projection.add(id, description, definition)
+
 
 ## Lists the entries in the registry.
 def List():
     for id in rave_projection.keys():
-        rave_projection.describe(id)    
+        rave_projection.describe(id)
 
 
 ## Removes a projection from the registry.
@@ -52,7 +55,7 @@ if __name__ == "__main__":
     from optparse import OptionParser
 
     description = "Add/remove an entry in the projections registry, or list the registry contents."
-
+    # fmt: off
     usage = "usage: %prog -arl [-i <identifier> -d <'description'> -D <'PROJ.4 definition'>] [h]"
     parser = OptionParser(usage=usage, description=description)
 
@@ -65,8 +68,8 @@ if __name__ == "__main__":
     parser.add_option("-l", "--list", action="store_true", dest="list",
                       help="List the entries in the registry.")
 
-#    parser.add_option("-H", "--host", dest="host", default='http://%s:%i/RAVE' % (rave_defines.PGF_HOST, rave_defines.PGF_PORT),
-#                      help="URI of the running server. Don't forget to use the http(s):// prefix and /RAVE .")
+    # parser.add_option("-H", "--host", dest="host", default='http://%s:%i/RAVE' % (rave_defines.PGF_HOST, rave_defines.PGF_PORT),
+    #                   help="URI of the running server. Don't forget to use the http(s):// prefix and /RAVE .")
 
     parser.add_option("-i", "--identifier", dest="id",
                       help="Identifier string of the projection.")
@@ -76,7 +79,7 @@ if __name__ == "__main__":
 
     parser.add_option("-D", "--definition", dest="definition",
                       help="PROJ.4 definition of the projection.")
-
+    # fmt: on
     (options, args) = parser.parse_args()
 
     if not (options.add or options.remove or options.list):

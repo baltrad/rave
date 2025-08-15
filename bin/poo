@@ -23,38 +23,50 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @author Daniel Michelson, SMHI
 ## @date 2012-11-26
 
+# Standard python libs:
 import sys
-import _raveio
-import _polarvolume, _detectionrange
 
+# Module/Project:
+import _detectionrange
+import _polarvolume
+import _raveio
 
 if __name__ == "__main__":
     from optparse import OptionParser
 
     description = "Probability of Overshooting"
-
+    # fmt: off
     usage = "usage: %prog -i <infile> [-d <dBZN threshold>] [-o <outfile>] [h]"
     parser = OptionParser(usage=usage, description=description)
 
-    parser.add_option("-i", "--input", dest="ifile", help="Input file name")
+    parser.add_option("-i", "--input", dest="ifile",
+                      help="Input file name")
 
-    parser.add_option("-o", "--output", dest="ofile", help="Output file name. If not specified, input file will be overwritten.")
+    parser.add_option("-o", "--output", dest="ofile",
+                      help="Output file name. If not specified, input file will be overwritten.")
 
-    parser.add_option("-d", "--dbzn", dest="dbzn", default=-40.0, type="float", help="dBZN threshold used when generating echo-top field. Defaults to -40.")
+    parser.add_option("-d", "--dbzn", dest="dbzn", default=-40.0, type="float",
+                      help="dBZN threshold used when generating echo-top field. Defaults to -40.")
 
-    parser.add_option("-w", "--swidth", dest="swidth", default=60, type="int", help="Width of the floating average azimuthal sector. Defaults to 60 gates.")
+    parser.add_option("-w", "--swidth", dest="swidth", default=60, type="int",
+                      help="Width of the floating average azimuthal sector. Defaults to 60 gates.")
 
-    parser.add_option("-s", "--sortage", dest="sortage", default=0.1, type="float", help="Defines the higher portion of sorted ray to be analysed, typically 0.05 - 0.2. Defaults to 0.1.")
+    parser.add_option("-s", "--sortage", dest="sortage", default=0.1, type="float",
+                      help="Defines the higher portion of sorted ray to be analysed, typically 0.05 - 0.2. "
+                           "Defaults to 0.1.")
 
-    parser.add_option("-p", "--samplepoint", dest="samplepoint", default=0.5, type="float", help="Define the position to pick a representative TOP value from highest valid TOPs, typically near 0.5 (median) lower values (nearer to highest TOP, 0.15) used in noisier radars. Defaults to 0.5.")
-
+    parser.add_option("-p", "--samplepoint", dest="samplepoint", default=0.5, type="float",
+                      help="Define the position to pick a representative TOP value from highest valid TOPs, "
+                           "typically near 0.5 (median) lower values (nearer to highest TOP, 0.15) used in noisier radars. "
+                           "Defaults to 0.5.")
+    # fmt: on
     (options, args) = parser.parse_args()
 
     if not options.ifile:
         parser.print_help()
         sys.exit()
 
-    if not options.ofile: 
+    if not options.ofile:
         options.ofile = options.ifile
 
     rio = _raveio.open(options.ifile)
@@ -70,10 +82,8 @@ if __name__ == "__main__":
     maxscan = obj.getScanWithMaxDistance()
     topfield = drgenerator.top(obj, maxscan.rscale, options.dbzn)
     filterfield = drgenerator.filter(topfield)
-    poofield = drgenerator.analyze(filterfield, 
-                                   options.swidth,
-                                   options.sortage, 
-                                   options.samplepoint)  # poofield is a quality field, add it to maxscan
+    # poofield is a quality field, add it to maxscan
+    poofield = drgenerator.analyze(filterfield, options.swidth, options.sortage, options.samplepoint)
     maxscan.addQualityField(poofield)
     if ascending:
         obj.sortByElevations(1)

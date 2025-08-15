@@ -25,28 +25,38 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @author Daniel Michelson, SMHI
 ## @date 2014-10-19
 
-import sys, os
+# Standard python libs:
+import sys
+import os
 from copy import deepcopy as copy
-from rave_defines import RAVECONFIG
 import xml.etree.ElementTree as ET
+
+# Third-party:
 import numpy as np
+
+# Module/Project:
+from rave_defines import RAVECONFIG
 
 
 QUANTFILE = os.path.join(RAVECONFIG, "odim_quantities.xml")
 QUANTITIES = []
 initialized = 0
-bitl = list(np.zeros((128,), np.uint8))  # A 64-element long list of unsigned bytes. Used as an intermediate information holder.
+bitl = list(
+    np.zeros((128,), np.uint8)
+)  # A 64-element long list of unsigned bytes. Used as an intermediate information holder.
 
-use_long_type=False
+use_long_type = False
 if sys.version_info < (3,):
-    use_long_type=True
+    use_long_type = True
+
 
 ## Initializes QUANTITIES by reading content from XML file.
 #  This is done once, after which the QUANTITIES are available in memory.
 def init():
     global initialized, QUANTITIES
-    if initialized: return
-    
+    if initialized:
+        return
+
     C = ET.parse(QUANTFILE)
     QUANTS = C.getroot()
 
@@ -101,11 +111,11 @@ def q2hex(quants):
     b = copy(bitl)
     for q in quants:
         if q in QUANTITIES:
-          i = QUANTITIES.index(q)
-          b[i] = 1
+            i = QUANTITIES.index(q)
+            b[i] = 1
     bstr = hex(bitl2long(b))
     if bstr[-1] == "L":
-      bstr = bstr[:-1]
+        bstr = bstr[:-1]
     return bstr
 
 
@@ -126,9 +136,9 @@ def hex2q(h):
 # @returns long integer
 def bitl2long(bitl):
     out = 0
-    if use_long_type: #work around for python 2.7 / 3 difference
-      out = long(0)
-      
+    if use_long_type:  # work around for python 2.7 / 3 difference
+        out = long(0)
+
     for bit in bitl:
         out = (out << 1) | int(bit)
     return out
@@ -145,9 +155,10 @@ def long2bits(l):
 # @param hex string
 # @returns long integer
 def hex2long(h):
-    if use_long_type: #work around for python 2.7 / 3 difference
-      return int(long(h+"L", 16))
+    if use_long_type:  # work around for python 2.7 / 3 difference
+        return int(long(h + "L", 16))
     return int(h, 16)
+
 
 if __name__ == "__main__":
     pass

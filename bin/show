@@ -24,15 +24,17 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @author Daniel Michelson, SMHI
 ## @date 2012-01-17
 
+# Module/Project:
 import rave_win_colors
 
-
 ## Dictionary containing palettes
-PALS = {'DBZc' : rave_win_colors.continuous_dBZ,
-        'DBZd' : rave_win_colors.discrete_dBZ_BLT,
-        'MSc' : rave_win_colors.continuous_MS,
-        'MSd' : rave_win_colors.discrete_MS,
-        'BW' : rave_win_colors.continuous_RAW}
+PALS = {
+    'DBZc': rave_win_colors.continuous_dBZ,
+    'DBZd': rave_win_colors.discrete_dBZ_BLT,
+    'MSc' : rave_win_colors.continuous_MS,
+    'MSd' : rave_win_colors.discrete_MS,
+    'BW'  : rave_win_colors.continuous_RAW,
+}
 
 
 ## Main function. Uses "old" rave instead of _raveio to read data,
@@ -41,11 +43,12 @@ PALS = {'DBZc' : rave_win_colors.continuous_dBZ,
 # @param SET string path to the dataset to show
 # @param PAL string name of the palette with which to show the dataset
 def main(sourcefile, SET, PAL):
-    import rave, rave_ql
-
+    import rave
+    import rave_ql
+    
     this = rave.open(sourcefile)
     data = this.get(SET)
-
+    
     that = rave_ql.ql(data, pal=PALS[PAL])
     that.main()
 
@@ -53,12 +56,12 @@ def main(sourcefile, SET, PAL):
 if __name__ == "__main__":
     import sys
     from optparse import OptionParser
-
+    
     usage = "usage: %prog -i <infile> -d <dataset index> -p <palette name> [h]"
     usage += "\nPalette names:\tDBZc (continuous), DBZd (discrete)"
     usage += "\n\t\tMSc (continuous), MSd (discrete), BW (grayscale)"
     parser = OptionParser(usage=usage)
-
+    # fmt: off
     parser.add_option("-i", "--input", dest="infile",
                       help="Name of input file to display.")
 
@@ -69,10 +72,10 @@ if __name__ == "__main__":
     parser.add_option("-p", "--palette", dest="pal",
                       default="DBZc",
                       help="Name of color palette to apply (DBZ, VRAD).")
-
-
+    # fmt: on
+    
     (options, args) = parser.parse_args()
-
+    
     try:
         import pygtk
     except ImportError:
@@ -92,10 +95,9 @@ if __name__ == "__main__":
         parser.print_help()
         print("\nYou need Python compiled with threading support to run show.\nExiting ...")
         sys.exit(1)
-
-    if options.infile != None:
-
+    
+    if options.infile is not None:
         main(options.infile, SET=options.set, PAL=options.pal)
-
+    
     else:
         parser.print_help()

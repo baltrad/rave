@@ -23,51 +23,55 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @author Daniel Michelson, SMHI
 ## @date 2013-12-03
 
+# Third-party:
 from numpy import *
+
 
 ## Derives least-square fit of the "order" order
 # @param order int order
 # @param xl array of floats
 # @param yl array of floats
 # @return array
-def least_square_nth_degree(order,xl,yl):
-  if len(xl)!=len(yl):
-    raise AttributeError("Inconsistant number of points")
+def least_square_nth_degree(order, xl, yl):
+    if len(xl) != len(yl):
+        raise AttributeError("Inconsistant number of points")
 
-  n=len(xl)
+    n = len(xl)
 
-  x=array(xl).astype('d')
-  y=array(yl).astype('d')
+    x = array(xl).astype('d')
+    y = array(yl).astype('d')
 
-  x_sums=[]
+    x_sums = []
 
-  noofpowers=order*2+1 #+1 just to get it to loop from 0 to order*2 :)
-  for i in range(0,noofpowers):
-    x_sums.append(sum(power(x,float(i))))
+    noofpowers = order * 2 + 1  # +1 just to get it to loop from 0 to order*2 :)
+    for i in range(0, noofpowers):
+        x_sums.append(sum(power(x, float(i))))
 
-  A=zeros((order+1,order+1),'d')
-  for yy in range(0,order+1):
-    for xx in range(0,order+1):
-      A[yy][xx]=x_sums[yy+xx]
+    A = zeros((order + 1, order + 1), 'd')
+    for yy in range(0, order + 1):
+        for xx in range(0, order + 1):
+            A[yy][xx] = x_sums[yy + xx]
 
-  A_minus_1=linalg.inv(A)
-    
-  b=zeros((order+1,1),'d')
+    A_minus_1 = linalg.inv(A)
 
-  for i in range(0,order+1):
-    b[i]=sum(power(x,float(i))*y)
+    b = zeros((order + 1, 1), 'd')
 
-  return dot(A_minus_1,b)
+    for i in range(0, order + 1):
+        b[i] = sum(power(x, float(i)) * y)
+
+    return dot(A_minus_1, b)
+
 
 ## Calculates standard deviation
 # @param fgs array of floats
 # @return tuple of meanvalue,deviation
 def get_std_deviation(fgs):
-  meanvalue=sum(fgs)/float(len(fgs))
-  deviation=fgs-meanvalue
-  deviation=sqrt(sum(power(deviation,2))/float(len(deviation)))
-  return meanvalue,deviation
+    meanvalue = sum(fgs) / float(len(fgs))
+    deviation = fgs - meanvalue
+    deviation = sqrt(sum(power(deviation, 2)) / float(len(deviation)))
+    return meanvalue, deviation
 
-if __name__=="__main__":
-  print(str(least_square_nth_degree(1,[0.,1.,2.],[0.,1.,2.])))
-  print(str(least_square_nth_degree(2,[0.,1.,2.],[1.,0.,1.])))
+
+if __name__ == "__main__":
+    print(str(least_square_nth_degree(1, [0.0, 1.0, 2.0], [0.0, 1.0, 2.0])))
+    print(str(least_square_nth_degree(2, [0.0, 1.0, 2.0], [1.0, 0.0, 1.0])))

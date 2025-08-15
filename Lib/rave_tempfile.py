@@ -22,11 +22,15 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @author Daniel Michelson, SMHI
 ## @date 2010-07-19
 
-import os, tempfile
-import rave, rave_defines
+# Standard python libs:
+import os
+import tempfile
 import stat
 
-## Use shared memory space if available, Linux only. 
+# Module/Project:
+import rave, rave_defines
+
+## Use shared memory space if available, Linux only.
 if os.path.isdir("/dev/shm") and os.access('/dev/shm', os.W_OK):
     tempfile.tempdir = "/dev/shm/rave"
 else:
@@ -35,10 +39,11 @@ else:
 if os.path.isdir(tempfile.tempdir) is False:
     os.makedirs(tempfile.tempdir)
     # We always want 777 on tempfolder.
-    os.chmod(tempfile.tempdir, stat.S_IRWXU|stat.S_IRWXG|stat.S_IRWXO)
+    os.chmod(tempfile.tempdir, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
 
 ## The redefined template.
 RAVETEMP = tempfile.tempdir
+
 
 ## RAVE's tempfile constructor.
 # @param suffix string, can be e.g. '.h5' for HDF5 files
@@ -55,7 +60,6 @@ def mktemp(suffix='', close=False):
     if eval(close):
         os.close(t[0])
     return t
-
 
 
 if __name__ == "__main__":

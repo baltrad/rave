@@ -23,7 +23,11 @@ radar.py
 Module for defining polar areas and radar configurations based on the
 configuration information for specified radars.
 """
-import os, string
+# Standard python libs:
+import os
+import string
+
+# Module/Project:
 import rave_xml
 from rave_defines import RAVECONFIG, ENCODING
 
@@ -35,8 +39,10 @@ RADARS = os.path.join(RAVECONFIG, '*radars.xml')
 
 _registry = {}
 
+
 def keys():
     return _registry.keys()
+
 
 def items():
     return _registry.items()
@@ -46,6 +52,7 @@ def items():
 # Initialization
 
 initialized = 0
+
 
 class RADAR(rave_xml.xmlmap):
     def __init__(self):
@@ -66,10 +73,10 @@ def init():
     from xml.etree import ElementTree
 
     global initialized
-    if initialized: return
+    if initialized:
+        return
 
     for fstr in glob.glob(RADARS):
-
         E = ElementTree.parse(fstr)
 
         common = RADAR()
@@ -101,6 +108,7 @@ def init():
 # --------------------------------------------------------------------
 # Object factories
 
+
 def radar(Id):
     if type(Id) != str:
         raise KeyError("Argument 'Id' not a string")
@@ -108,8 +116,7 @@ def radar(Id):
 
 
 def register(P):
-    P.validate(["Id", "place", "lon", "lat", "height", "rays", "bins",
-                "angles", "xsize", "beamwidth"])
+    P.validate(["Id", "place", "lon", "lat", "height", "rays", "bins", "angles", "xsize", "beamwidth"])
     _registry[P.Id] = P
 
 
@@ -130,9 +137,9 @@ def MakeCartesianArea(proj, rad):
         rad.xsize, proj.max_range = xsizes, max_ranges
     else:
         a.xsize = a.ysize = proj.size
-        a.xscale = a.yscale = proj.max_range*1000*2 / proj.size
+        a.xscale = a.yscale = proj.max_range * 1000 * 2 / proj.size
         ex = 1000 * proj.max_range
-        a.extent = (-ex, -ex, ex-a.xscale, ex-a.yscale)
+        a.extent = (-ex, -ex, ex - a.xscale, ex - a.yscale)
         a.Id = rad.Id + "_%i" % int(proj.max_range)
         projtype = '+proj=' + str(proj.proj.decode(ENCODING))
         radius = '+R=' + str(proj.R)
@@ -142,7 +149,7 @@ def MakeCartesianArea(proj, rad):
         definition = [projtype, radius, lat, lon]
         name = "%s %s" % (rad.place, proj.proj)
         pcs.define(projid, name, definition)
-        #print "projid=%s, name=%s, definition=%s"%(projid,name,definition)
+        # print "projid=%s, name=%s, definition=%s"%(projid,name,definition)
         a.pcs = projid
         area._registry[a.Id] = a
 

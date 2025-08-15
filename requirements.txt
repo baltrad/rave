@@ -1,0 +1,6 @@
+pygrib
+numpy
+SQLAlchemy
+psycopg2
+mock
+setuptools

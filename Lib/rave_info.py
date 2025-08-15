@@ -17,21 +17,28 @@
 """
 rave_info.py - Metadata structures and ways to deal with them.
 """
-import sys, os, types
-
-#import cElementTree as ElementTree
+# Standard python libs:
+import sys
+import os
+import types
+# import cElementTree as ElementTree
 from xml.etree.ElementTree import Element
-#from xml.etree.ElementTree import _ElementInterface, ElementTree
+# from xml.etree.ElementTree import _ElementInterface, ElementTree
+
+
+# Module/Project:
 import rave_IO, rave_h5rad
 import H5radHelper
 from rave_defines import *
 
 # Stupid constants
-TYPES = {tuple : 'sequence',
-         list  : 'sequence',
-         str : 'string',
-         int   : 'int',
-         float : 'float'}
+TYPES = {
+    tuple: 'sequence',
+    list : 'sequence',
+    str  : 'string',
+    int  : 'int',
+    float: 'float'
+}
 
 
 class INFO(Element):
@@ -44,11 +51,11 @@ class INFO(Element):
 
     Returns:
     """
-
+    
     def __init__(self, tag="h5rad", attrib={}, **extra):
         """
         Initializes an INFO object.
-        
+
         Arguments:
 
         Returns:
@@ -57,20 +64,18 @@ class INFO(Element):
         self.attrib = attrib.copy()
         self.attrib.update(extra)
         self._children = []
-
-
+    
     def __repr__(self):
         """Internal method; don't bother asking..."""
         return "<INFO object at %x>" % id(self)
-
-
+    
     def eval(self, path=None):
         """
         Evaluates the attribute given by "path" and returns it as its proper
         type. This method queries the "type" attribute of the given Element
         and uses it to cast the Element's text properly.
         Opposite of the put() method.
-        
+
         Arguments:
           string path: the attribute's path. If this path doesn't exist in this
                        INFO object, then an AttributeError exception is raised.
@@ -94,8 +99,7 @@ class INFO(Element):
                 return str(this.text).encode(ENCODING)
             else:
                 raise TypeError('Unknown type "%s"' % t)
-
-
+    
     def parse(self, filename):
         """
         Reads the contents XML file and adds them to this instance.
@@ -108,17 +112,16 @@ class INFO(Element):
         """
         from xml.etree import ElementTree
         import rave_xml
-
+        
         E = ElementTree.ElementTree()
         E = E.parse(filename)
-
+        
         rave_xml.traverse_map(E, self)
-
-
+    
     def put(self, path, value):
         """
-        Creates and sets the value of a new infoset element. 
-        
+        Creates and sets the value of a new infoset element.
+
         Arguments:
           string path: This is given in the infoset format, ie. "/path/name".
                        If the payload already exists, it will be modified with
@@ -130,10 +133,10 @@ class INFO(Element):
 
         Returns: Nothing if successful, a ValueError exception if the data
                  type is invalid or the payload is illegal.
-        """        
+        """
         from H5radHelper import h5type, findelem, seth5attr, addelem
         from xml.etree.ElementTree import Element
-
+        
         h5typ = h5type(value)
         if not h5typ:
             raise ValueError("Unsupported type %s" % type(value))
@@ -143,8 +146,7 @@ class INFO(Element):
         if e is None:
             e = addelem(self, path)
         seth5attr(e, {}, h5typ, path, value)
-
-
+    
     def delete(self, path):
         """
         Deletes infoset element specified by "path".
@@ -155,7 +157,7 @@ class INFO(Element):
 
         Returns: Nothing if successful, otherwise exceptions cast by
                  the ElementTree module if the data type is invalid or the
-                 payload is illegal. 
+                 payload is illegal.
         """
         path = CheckPath(path)
         depth = path.split('/')
@@ -165,8 +167,7 @@ class INFO(Element):
             parentpath, childpath = os.path.split(path)
             parent = self.find(parentpath)
             parent.remove(parent.find(childpath))
-
-
+    
     def asXML(self, file=None, encoding=ENCODING):
         """
         Outputs a metadata representation of an INFO object to XML
@@ -180,14 +181,14 @@ class INFO(Element):
             rave_IO.prettyprint(self)
         else:
             import __builtin__
+            
             fd = __builtin__.open(file, 'w')
             sys.stdout = fd
             print("<?xml version='1.0' encoding='%s'?>" % encoding)
             rave_IO.prettyprint(self)
             fd.close()
             sys.stdout = sys.__stdout__
-
-
+    
     def pureXML(self, file, encoding=ENCODING):
         """
         Outputs a metadata representation of an INFO object to XML
@@ -199,8 +200,7 @@ class INFO(Element):
         """
         e = ElementTree(self)
         e.write(file=file, encoding=encoding)
-
-
+    
     def addDataset(self, prefix=None, set=None, **args):
         """
         Adds a dataset Group to this INFO.
@@ -212,15 +212,14 @@ class INFO(Element):
         prefix = CheckPath(prefix)
         if set is None:
             raise AttributeError("Need number for this dataset.")
-
+        
         else:
             newset = rave_h5rad.DatasetGroup(prefix=prefix, set=set, **args)
             self.append(newset)
             sets = self.eval('/what/sets')
             sets += 1
             self.put('/what/sets', sets)
-
-
+    
     def CopyDatasetAttributes(self, info, ipath='', oset=1):
         """
         Copies the contents of "self" to output "info" object, optionally
@@ -239,15 +238,16 @@ class INFO(Element):
         """
         opath, otag = os.path.split(ipath)
         opath = "%s%i" % (opath[:-1], oset)
-
+        
         for e in self.find(ipath[1:]).getiterator():
             if e.tag != otag:
                 path = os.path.join(opath, otag)
                 path = os.path.join(path, e.tag)
                 t = e.get('type')
-                if t:  info.put(path, eval(e.text.__str__()))
-                else:  info.put(path, e.text.__str__())
-
+                if t:
+                    info.put(path, eval(e.text.__str__()))
+                else:
+                    info.put(path, e.text.__str__())
 
 
 def CheckPath(path):
@@ -267,12 +267,9 @@ def CheckPath(path):
         raise SyntaxError("Non-absolute path to element: %s\nAdd leading slash." % path)
     else:
         return path[1:]
-        
-
 
 
 __all__ = ['INFO', 'CheckPath']
-
 
 if __name__ == "__main__":
     print(__doc__)
