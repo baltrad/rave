@@ -185,22 +185,25 @@ along with RAVE.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
         </tr>
       </table>
 </div><div class="memdoc">
-<b>Initial value:</b><div class="fragment"><div class="line"><span class="lineno">    1</span>= Table(<span class="stringliteral">&quot;rave_gra_coefficient&quot;</span>, meta,</div>
-<div class="line"><span class="lineno">    2</span>                           Column(<span class="stringliteral">&quot;area&quot;</span>, Text, nullable=<span class="keyword">False</span>),</div>
-<div class="line"><span class="lineno">    3</span>                           Column(<span class="stringliteral">&quot;date&quot;</span>, Date, nullable=<span class="keyword">False</span>),</div>
-<div class="line"><span class="lineno">    4</span>                           Column(<span class="stringliteral">&quot;time&quot;</span>, Time, nullable=<span class="keyword">False</span>),</div>
-<div class="line"><span class="lineno">    5</span>                           Column(<span class="stringliteral">&quot;significant&quot;</span>, Text, nullable=<span class="keyword">False</span>),</div>
-<div class="line"><span class="lineno">    6</span>                           Column(<span class="stringliteral">&quot;points&quot;</span>, Integer, nullable=<span class="keyword">False</span>),</div>
-<div class="line"><span class="lineno">    7</span>                           Column(<span class="stringliteral">&quot;loss&quot;</span>, Integer, nullable=<span class="keyword">False</span>),</div>
-<div class="line"><span class="lineno">    8</span>                           Column(<span class="stringliteral">&quot;r&quot;</span>, Float, nullable=<span class="keyword">False</span>),</div>
-<div class="line"><span class="lineno">    9</span>                           Column(<span class="stringliteral">&quot;r_significant&quot;</span>, Text, nullable=<span class="keyword">False</span>),</div>
-<div class="line"><span class="lineno">   10</span>                           Column(<span class="stringliteral">&quot;corr_coeff&quot;</span>, Float, nullable=<span class="keyword">False</span>),</div>
-<div class="line"><span class="lineno">   11</span>                           Column(<span class="stringliteral">&quot;a&quot;</span>, Float, nullable=<span class="keyword">False</span>),</div>
-<div class="line"><span class="lineno">   12</span>                           Column(<span class="stringliteral">&quot;b&quot;</span>, Float, nullable=<span class="keyword">False</span>),</div>
-<div class="line"><span class="lineno">   13</span>                           Column(<span class="stringliteral">&quot;c&quot;</span>, Float, nullable=<span class="keyword">False</span>),</div>
-<div class="line"><span class="lineno">   14</span>                           Column(<span class="stringliteral">&quot;mean&quot;</span>, Float, nullable=<span class="keyword">False</span>),</div>
-<div class="line"><span class="lineno">   15</span>                           Column(<span class="stringliteral">&quot;stddev&quot;</span>, Float, nullable=<span class="keyword">False</span>),</div>
-<div class="line"><span class="lineno">   16</span>                           PrimaryKeyConstraint(<span class="stringliteral">&quot;area&quot;</span>,<span class="stringliteral">&quot;date&quot;</span>,<span class="stringliteral">&quot;time&quot;</span>))</div>
+<b>Initial value:</b><div class="fragment"><div class="line"><span class="lineno">    1</span>=  Table(</div>
+<div class="line"><span class="lineno">    2</span>    <span class="stringliteral">&quot;rave_gra_coefficient&quot;</span>,</div>
+<div class="line"><span class="lineno">    3</span>    meta,</div>
+<div class="line"><span class="lineno">    4</span>    Column(<span class="stringliteral">&quot;area&quot;</span>, Text, nullable=<span class="keyword">False</span>),</div>
+<div class="line"><span class="lineno">    5</span>    Column(<span class="stringliteral">&quot;date&quot;</span>, Date, nullable=<span class="keyword">False</span>),</div>
+<div class="line"><span class="lineno">    6</span>    Column(<span class="stringliteral">&quot;time&quot;</span>, Time, nullable=<span class="keyword">False</span>),</div>
+<div class="line"><span class="lineno">    7</span>    Column(<span class="stringliteral">&quot;significant&quot;</span>, Text, nullable=<span class="keyword">False</span>),</div>
+<div class="line"><span class="lineno">    8</span>    Column(<span class="stringliteral">&quot;points&quot;</span>, Integer, nullable=<span class="keyword">False</span>),</div>
+<div class="line"><span class="lineno">    9</span>    Column(<span class="stringliteral">&quot;loss&quot;</span>, Integer, nullable=<span class="keyword">False</span>),</div>
+<div class="line"><span class="lineno">   10</span>    Column(<span class="stringliteral">&quot;r&quot;</span>, Float, nullable=<span class="keyword">False</span>),</div>
+<div class="line"><span class="lineno">   11</span>    Column(<span class="stringliteral">&quot;r_significant&quot;</span>, Text, nullable=<span class="keyword">False</span>),</div>
+<div class="line"><span class="lineno">   12</span>    Column(<span class="stringliteral">&quot;corr_coeff&quot;</span>, Float, nullable=<span class="keyword">False</span>),</div>
+<div class="line"><span class="lineno">   13</span>    Column(<span class="stringliteral">&quot;a&quot;</span>, Float, nullable=<span class="keyword">False</span>),</div>
+<div class="line"><span class="lineno">   14</span>    Column(<span class="stringliteral">&quot;b&quot;</span>, Float, nullable=<span class="keyword">False</span>),</div>
+<div class="line"><span class="lineno">   15</span>    Column(<span class="stringliteral">&quot;c&quot;</span>, Float, nullable=<span class="keyword">False</span>),</div>
+<div class="line"><span class="lineno">   16</span>    Column(<span class="stringliteral">&quot;mean&quot;</span>, Float, nullable=<span class="keyword">False</span>),</div>
+<div class="line"><span class="lineno">   17</span>    Column(<span class="stringliteral">&quot;stddev&quot;</span>, Float, nullable=<span class="keyword">False</span>),</div>
+<div class="line"><span class="lineno">   18</span>    PrimaryKeyConstraint(<span class="stringliteral">&quot;area&quot;</span>, <span class="stringliteral">&quot;date&quot;</span>, <span class="stringliteral">&quot;time&quot;</span>),</div>
+<div class="line"><span class="lineno">   19</span>)</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -215,18 +218,21 @@ along with RAVE.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
         </tr>
       </table>
 </div><div class="memdoc">
-<b>Initial value:</b><div class="fragment"><div class="line"><span class="lineno">    1</span>= Table(<span class="stringliteral">&quot;rave_grapoint&quot;</span>, meta,</div>
-<div class="line"><span class="lineno">    2</span>                    Column(<span class="stringliteral">&quot;date&quot;</span>, Date, nullable=<span class="keyword">False</span>),</div>
-<div class="line"><span class="lineno">    3</span>                    Column(<span class="stringliteral">&quot;time&quot;</span>, Time, nullable=<span class="keyword">False</span>),</div>
-<div class="line"><span class="lineno">    4</span>                    Column(<span class="stringliteral">&quot;radarvaluetype&quot;</span>, Integer, nullable=<span class="keyword">False</span>),</div>
-<div class="line"><span class="lineno">    5</span>                    Column(<span class="stringliteral">&quot;radarvalue&quot;</span>, Float, nullable=<span class="keyword">False</span>),</div>
-<div class="line"><span class="lineno">    6</span>                    Column(<span class="stringliteral">&quot;radardistance&quot;</span>, Float, nullable=<span class="keyword">False</span>),</div>
-<div class="line"><span class="lineno">    7</span>                    Column(<span class="stringliteral">&quot;longitude&quot;</span>, Float, nullable=<span class="keyword">False</span>),</div>
-<div class="line"><span class="lineno">    8</span>                    Column(<span class="stringliteral">&quot;latitude&quot;</span>, Float, nullable=<span class="keyword">False</span>),</div>
-<div class="line"><span class="lineno">    9</span>                    Column(<span class="stringliteral">&quot;observation&quot;</span>, Float, nullable=<span class="keyword">False</span>),</div>
-<div class="line"><span class="lineno">   10</span>                    Column(<span class="stringliteral">&quot;accumulation_period&quot;</span>, Integer, nullable=<span class="keyword">False</span>),</div>
-<div class="line"><span class="lineno">   11</span>                    Column(<span class="stringliteral">&quot;gr&quot;</span>, Float, nullable=<span class="keyword">False</span>),</div>
-<div class="line"><span class="lineno">   12</span>                    PrimaryKeyConstraint(<span class="stringliteral">&quot;date&quot;</span>,<span class="stringliteral">&quot;time&quot;</span>,<span class="stringliteral">&quot;longitude&quot;</span>,<span class="stringliteral">&quot;latitude&quot;</span>))</div>
+<b>Initial value:</b><div class="fragment"><div class="line"><span class="lineno">    1</span>=  Table(</div>
+<div class="line"><span class="lineno">    2</span>    <span class="stringliteral">&quot;rave_grapoint&quot;</span>,</div>
+<div class="line"><span class="lineno">    3</span>    meta,</div>
+<div class="line"><span class="lineno">    4</span>    Column(<span class="stringliteral">&quot;date&quot;</span>, Date, nullable=<span class="keyword">False</span>),</div>
+<div class="line"><span class="lineno">    5</span>    Column(<span class="stringliteral">&quot;time&quot;</span>, Time, nullable=<span class="keyword">False</span>),</div>
+<div class="line"><span class="lineno">    6</span>    Column(<span class="stringliteral">&quot;radarvaluetype&quot;</span>, Integer, nullable=<span class="keyword">False</span>),</div>
+<div class="line"><span class="lineno">    7</span>    Column(<span class="stringliteral">&quot;radarvalue&quot;</span>, Float, nullable=<span class="keyword">False</span>),</div>
+<div class="line"><span class="lineno">    8</span>    Column(<span class="stringliteral">&quot;radardistance&quot;</span>, Float, nullable=<span class="keyword">False</span>),</div>
+<div class="line"><span class="lineno">    9</span>    Column(<span class="stringliteral">&quot;longitude&quot;</span>, Float, nullable=<span class="keyword">False</span>),</div>
+<div class="line"><span class="lineno">   10</span>    Column(<span class="stringliteral">&quot;latitude&quot;</span>, Float, nullable=<span class="keyword">False</span>),</div>
+<div class="line"><span class="lineno">   11</span>    Column(<span class="stringliteral">&quot;observation&quot;</span>, Float, nullable=<span class="keyword">False</span>),</div>
+<div class="line"><span class="lineno">   12</span>    Column(<span class="stringliteral">&quot;accumulation_period&quot;</span>, Integer, nullable=<span class="keyword">False</span>),</div>
+<div class="line"><span class="lineno">   13</span>    Column(<span class="stringliteral">&quot;gr&quot;</span>, Float, nullable=<span class="keyword">False</span>),</div>
+<div class="line"><span class="lineno">   14</span>    PrimaryKeyConstraint(<span class="stringliteral">&quot;date&quot;</span>, <span class="stringliteral">&quot;time&quot;</span>, <span class="stringliteral">&quot;longitude&quot;</span>, <span class="stringliteral">&quot;latitude&quot;</span>),</div>
+<div class="line"><span class="lineno">   15</span>)</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -241,12 +247,15 @@ along with RAVE.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
         </tr>
       </table>
 </div><div class="memdoc">
-<b>Initial value:</b><div class="fragment"><div class="line"><span class="lineno">    1</span>= Table(<span class="stringliteral">&quot;rave_melting_layer&quot;</span>, meta,</div>
-<div class="line"><span class="lineno">    2</span>                         Column(<span class="stringliteral">&quot;nod&quot;</span>, Text, nullable=<span class="keyword">False</span>),</div>
-<div class="line"><span class="lineno">    3</span>                         Column(<span class="stringliteral">&quot;datetime&quot;</span>, DateTime, nullable=<span class="keyword">False</span>),</div>
-<div class="line"><span class="lineno">    4</span>                         Column(<span class="stringliteral">&quot;top&quot;</span>, Float, nullable=<span class="keyword">True</span>),</div>
-<div class="line"><span class="lineno">    5</span>                         Column(<span class="stringliteral">&quot;bottom&quot;</span>, Float, nullable=<span class="keyword">True</span>),</div>
-<div class="line"><span class="lineno">    6</span>                         PrimaryKeyConstraint(<span class="stringliteral">&quot;datetime&quot;</span>, <span class="stringliteral">&quot;nod&quot;</span>))</div>
+<b>Initial value:</b><div class="fragment"><div class="line"><span class="lineno">    1</span>=  Table(</div>
+<div class="line"><span class="lineno">    2</span>    <span class="stringliteral">&quot;rave_melting_layer&quot;</span>,</div>
+<div class="line"><span class="lineno">    3</span>    meta,</div>
+<div class="line"><span class="lineno">    4</span>    Column(<span class="stringliteral">&quot;nod&quot;</span>, Text, nullable=<span class="keyword">False</span>),</div>
+<div class="line"><span class="lineno">    5</span>    Column(<span class="stringliteral">&quot;datetime&quot;</span>, DateTime, nullable=<span class="keyword">False</span>),</div>
+<div class="line"><span class="lineno">    6</span>    Column(<span class="stringliteral">&quot;top&quot;</span>, Float, nullable=<span class="keyword">True</span>),</div>
+<div class="line"><span class="lineno">    7</span>    Column(<span class="stringliteral">&quot;bottom&quot;</span>, Float, nullable=<span class="keyword">True</span>),</div>
+<div class="line"><span class="lineno">    8</span>    PrimaryKeyConstraint(<span class="stringliteral">&quot;datetime&quot;</span>, <span class="stringliteral">&quot;nod&quot;</span>),</div>
+<div class="line"><span class="lineno">    9</span>)</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -261,29 +270,32 @@ along with RAVE.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
         </tr>
       </table>
 </div><div class="memdoc">
-<b>Initial value:</b><div class="fragment"><div class="line"><span class="lineno">    1</span>= Table(<span class="stringliteral">&quot;rave_observation&quot;</span>, meta,</div>
-<div class="line"><span class="lineno">    2</span>                       Column(<span class="stringliteral">&quot;station&quot;</span>, Text, nullable=<span class="keyword">True</span>),</div>
-<div class="line"><span class="lineno">    3</span>                       Column(<span class="stringliteral">&quot;country&quot;</span>, Text, nullable=<span class="keyword">True</span>),</div>
-<div class="line"><span class="lineno">    4</span>                       Column(<span class="stringliteral">&quot;type&quot;</span>, Integer, nullable=<span class="keyword">True</span>),</div>
-<div class="line"><span class="lineno">    5</span>                       Column(<span class="stringliteral">&quot;date&quot;</span>, Date, nullable=<span class="keyword">False</span>),</div>
-<div class="line"><span class="lineno">    6</span>                       Column(<span class="stringliteral">&quot;time&quot;</span>, Time, nullable=<span class="keyword">False</span>),</div>
-<div class="line"><span class="lineno">    7</span>                       Column(<span class="stringliteral">&quot;longitude&quot;</span>, Float, nullable=<span class="keyword">False</span>),</div>
-<div class="line"><span class="lineno">    8</span>                       Column(<span class="stringliteral">&quot;latitude&quot;</span>, Float, nullable=<span class="keyword">False</span>),</div>
-<div class="line"><span class="lineno">    9</span>                       Column(<span class="stringliteral">&quot;visibility&quot;</span>, Float, nullable=<span class="keyword">True</span>),</div>
-<div class="line"><span class="lineno">   10</span>                       Column(<span class="stringliteral">&quot;windtype&quot;</span>, Integer, nullable=<span class="keyword">True</span>),</div>
-<div class="line"><span class="lineno">   11</span>                       Column(<span class="stringliteral">&quot;cloudcover&quot;</span>, Integer, nullable=<span class="keyword">True</span>),</div>
-<div class="line"><span class="lineno">   12</span>                       Column(<span class="stringliteral">&quot;winddirection&quot;</span>, Float, nullable=<span class="keyword">True</span>),</div>
-<div class="line"><span class="lineno">   13</span>                       Column(<span class="stringliteral">&quot;windspeed&quot;</span>, Float, nullable=<span class="keyword">True</span>),</div>
-<div class="line"><span class="lineno">   14</span>                       Column(<span class="stringliteral">&quot;temperature&quot;</span>, Float, nullable=<span class="keyword">True</span>),</div>
-<div class="line"><span class="lineno">   15</span>                       Column(<span class="stringliteral">&quot;dewpoint&quot;</span>, Float, nullable=<span class="keyword">True</span>),</div>
-<div class="line"><span class="lineno">   16</span>                       Column(<span class="stringliteral">&quot;relativehumidity&quot;</span>, Float, nullable=<span class="keyword">True</span>),</div>
-<div class="line"><span class="lineno">   17</span>                       Column(<span class="stringliteral">&quot;pressure&quot;</span>, Float, nullable=<span class="keyword">True</span>),</div>
-<div class="line"><span class="lineno">   18</span>                       Column(<span class="stringliteral">&quot;sea_lvl_pressure&quot;</span>, Float, nullable=<span class="keyword">True</span>),</div>
-<div class="line"><span class="lineno">   19</span>                       Column(<span class="stringliteral">&quot;pressure_change&quot;</span>, Float, nullable=<span class="keyword">True</span>),</div>
-<div class="line"><span class="lineno">   20</span>                       Column(<span class="stringliteral">&quot;liquid_precipitation&quot;</span>, Float, nullable=<span class="keyword">True</span>),</div>
-<div class="line"><span class="lineno">   21</span>                       Column(<span class="stringliteral">&quot;accumulation_period&quot;</span>, Integer, nullable=<span class="keyword">True</span>),</div>
-<div class="line"><span class="lineno">   22</span>                       Column(<span class="stringliteral">&quot;valid_fields_bitmask&quot;</span>, Integer, nullable=<span class="keyword">True</span>),</div>
-<div class="line"><span class="lineno">   23</span>                       PrimaryKeyConstraint(<span class="stringliteral">&quot;station&quot;</span>, <span class="stringliteral">&quot;date&quot;</span>, <span class="stringliteral">&quot;time&quot;</span>, <span class="stringliteral">&quot;accumulation_period&quot;</span>))</div>
+<b>Initial value:</b><div class="fragment"><div class="line"><span class="lineno">    1</span>=  Table(</div>
+<div class="line"><span class="lineno">    2</span>    <span class="stringliteral">&quot;rave_observation&quot;</span>,</div>
+<div class="line"><span class="lineno">    3</span>    meta,</div>
+<div class="line"><span class="lineno">    4</span>    Column(<span class="stringliteral">&quot;station&quot;</span>, Text, nullable=<span class="keyword">True</span>),</div>
+<div class="line"><span class="lineno">    5</span>    Column(<span class="stringliteral">&quot;country&quot;</span>, Text, nullable=<span class="keyword">True</span>),</div>
+<div class="line"><span class="lineno">    6</span>    Column(<span class="stringliteral">&quot;type&quot;</span>, Integer, nullable=<span class="keyword">True</span>),</div>
+<div class="line"><span class="lineno">    7</span>    Column(<span class="stringliteral">&quot;date&quot;</span>, Date, nullable=<span class="keyword">False</span>),</div>
+<div class="line"><span class="lineno">    8</span>    Column(<span class="stringliteral">&quot;time&quot;</span>, Time, nullable=<span class="keyword">False</span>),</div>
+<div class="line"><span class="lineno">    9</span>    Column(<span class="stringliteral">&quot;longitude&quot;</span>, Float, nullable=<span class="keyword">False</span>),</div>
+<div class="line"><span class="lineno">   10</span>    Column(<span class="stringliteral">&quot;latitude&quot;</span>, Float, nullable=<span class="keyword">False</span>),</div>
+<div class="line"><span class="lineno">   11</span>    Column(<span class="stringliteral">&quot;visibility&quot;</span>, Float, nullable=<span class="keyword">True</span>),</div>
+<div class="line"><span class="lineno">   12</span>    Column(<span class="stringliteral">&quot;windtype&quot;</span>, Integer, nullable=<span class="keyword">True</span>),</div>
+<div class="line"><span class="lineno">   13</span>    Column(<span class="stringliteral">&quot;cloudcover&quot;</span>, Integer, nullable=<span class="keyword">True</span>),</div>
+<div class="line"><span class="lineno">   14</span>    Column(<span class="stringliteral">&quot;winddirection&quot;</span>, Float, nullable=<span class="keyword">True</span>),</div>
+<div class="line"><span class="lineno">   15</span>    Column(<span class="stringliteral">&quot;windspeed&quot;</span>, Float, nullable=<span class="keyword">True</span>),</div>
+<div class="line"><span class="lineno">   16</span>    Column(<span class="stringliteral">&quot;temperature&quot;</span>, Float, nullable=<span class="keyword">True</span>),</div>
+<div class="line"><span class="lineno">   17</span>    Column(<span class="stringliteral">&quot;dewpoint&quot;</span>, Float, nullable=<span class="keyword">True</span>),</div>
+<div class="line"><span class="lineno">   18</span>    Column(<span class="stringliteral">&quot;relativehumidity&quot;</span>, Float, nullable=<span class="keyword">True</span>),</div>
+<div class="line"><span class="lineno">   19</span>    Column(<span class="stringliteral">&quot;pressure&quot;</span>, Float, nullable=<span class="keyword">True</span>),</div>
+<div class="line"><span class="lineno">   20</span>    Column(<span class="stringliteral">&quot;sea_lvl_pressure&quot;</span>, Float, nullable=<span class="keyword">True</span>),</div>
+<div class="line"><span class="lineno">   21</span>    Column(<span class="stringliteral">&quot;pressure_change&quot;</span>, Float, nullable=<span class="keyword">True</span>),</div>
+<div class="line"><span class="lineno">   22</span>    Column(<span class="stringliteral">&quot;liquid_precipitation&quot;</span>, Float, nullable=<span class="keyword">True</span>),</div>
+<div class="line"><span class="lineno">   23</span>    Column(<span class="stringliteral">&quot;accumulation_period&quot;</span>, Integer, nullable=<span class="keyword">True</span>),</div>
+<div class="line"><span class="lineno">   24</span>    Column(<span class="stringliteral">&quot;valid_fields_bitmask&quot;</span>, Integer, nullable=<span class="keyword">True</span>),</div>
+<div class="line"><span class="lineno">   25</span>    PrimaryKeyConstraint(<span class="stringliteral">&quot;station&quot;</span>, <span class="stringliteral">&quot;date&quot;</span>, <span class="stringliteral">&quot;time&quot;</span>, <span class="stringliteral">&quot;accumulation_period&quot;</span>),</div>
+<div class="line"><span class="lineno">   26</span>)</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -298,16 +310,18 @@ along with RAVE.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
         </tr>
       </table>
 </div><div class="memdoc">
-<b>Initial value:</b><div class="fragment"><div class="line"><span class="lineno">    1</span>= Table(<span class="stringliteral">&quot;rave_wmo_station&quot;</span>, meta,</div>
-<div class="line"><span class="lineno">    2</span>                       Column(<span class="stringliteral">&quot;stationnumber&quot;</span>, Text, nullable=<span class="keyword">False</span>),</div>
-<div class="line"><span class="lineno">    3</span>                       Column(<span class="stringliteral">&quot;stationsubnumber&quot;</span>, Text, nullable=<span class="keyword">False</span>),</div>
-<div class="line"><span class="lineno">    4</span>                       Column(<span class="stringliteral">&quot;stationname&quot;</span>, Text, nullable=<span class="keyword">True</span>),</div>
-<div class="line"><span class="lineno">    5</span>                       Column(<span class="stringliteral">&quot;country&quot;</span>, Text, nullable=<span class="keyword">True</span>),</div>
-<div class="line"><span class="lineno">    6</span>                       Column(<span class="stringliteral">&quot;countrycode&quot;</span>, Text, nullable=<span class="keyword">True</span>),</div>
-<div class="line"><span class="lineno">    7</span>                       Column(<span class="stringliteral">&quot;longitude&quot;</span>, Float, nullable=<span class="keyword">True</span>),</div>
-<div class="line"><span class="lineno">    8</span>                       Column(<span class="stringliteral">&quot;latitude&quot;</span>, Float, nullable=<span class="keyword">True</span>),</div>
-<div class="line"><span class="lineno">    9</span>                       PrimaryKeyConstraint(<span class="stringliteral">&#39;stationnumber&#39;</span>,<span class="stringliteral">&#39;stationsubnumber&#39;</span>,name=<span class="stringliteral">&#39;pk_wmo_station&#39;</span>),</div>
-<div class="line"><span class="lineno">   10</span>)</div>
+<b>Initial value:</b><div class="fragment"><div class="line"><span class="lineno">    1</span>=  Table(</div>
+<div class="line"><span class="lineno">    2</span>    <span class="stringliteral">&quot;rave_wmo_station&quot;</span>,</div>
+<div class="line"><span class="lineno">    3</span>    meta,</div>
+<div class="line"><span class="lineno">    4</span>    Column(<span class="stringliteral">&quot;stationnumber&quot;</span>, Text, nullable=<span class="keyword">False</span>),</div>
+<div class="line"><span class="lineno">    5</span>    Column(<span class="stringliteral">&quot;stationsubnumber&quot;</span>, Text, nullable=<span class="keyword">False</span>),</div>
+<div class="line"><span class="lineno">    6</span>    Column(<span class="stringliteral">&quot;stationname&quot;</span>, Text, nullable=<span class="keyword">True</span>),</div>
+<div class="line"><span class="lineno">    7</span>    Column(<span class="stringliteral">&quot;country&quot;</span>, Text, nullable=<span class="keyword">True</span>),</div>
+<div class="line"><span class="lineno">    8</span>    Column(<span class="stringliteral">&quot;countrycode&quot;</span>, Text, nullable=<span class="keyword">True</span>),</div>
+<div class="line"><span class="lineno">    9</span>    Column(<span class="stringliteral">&quot;longitude&quot;</span>, Float, nullable=<span class="keyword">True</span>),</div>
+<div class="line"><span class="lineno">   10</span>    Column(<span class="stringliteral">&quot;latitude&quot;</span>, Float, nullable=<span class="keyword">True</span>),</div>
+<div class="line"><span class="lineno">   11</span>    PrimaryKeyConstraint(<span class="stringliteral">&#39;stationnumber&#39;</span>, <span class="stringliteral">&#39;stationsubnumber&#39;</span>, name=<span class="stringliteral">&#39;pk_wmo_station&#39;</span>),</div>
+<div class="line"><span class="lineno">   12</span>)</div>
 </div><!-- fragment -->
 </div>
 </div>

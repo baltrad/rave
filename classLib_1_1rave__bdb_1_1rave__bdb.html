@@ -170,8 +170,7 @@ be ignored.
         </tr>
       </table>
 </div><div class="memdoc">
-<pre class="fragment"> returns the database that provides connection to the bdb server
-</pre> 
+<pre class="fragment">returns the database that provides connection to the bdb server</pre> 
 </div>
 </div>
 <a id="aa9793fea4883736bbe86ec5e10bc4133" name="aa9793fea4883736bbe86ec5e10bc4133"></a>
@@ -192,8 +191,8 @@ be ignored.
         </tr>
       </table>
 </div><div class="memdoc">
-<pre class="fragment"> returns a file name to a file that can be accessed. The uuid should be an
-identifier in bdb. The returned filename will be a temporary file so it is 
+<pre class="fragment">returns a file name to a file that can be accessed. The uuid should be an
+identifier in bdb. The returned filename will be a temporary file so it is
 recommended to remove the file after usage.
 For example
   myname = None
@@ -237,7 +236,7 @@ For example
         </tr>
       </table>
 </div><div class="memdoc">
-<pre class="fragment"> returns the rave object as defined by the fname. If the fname is an existing file on the file system, then
+<pre class="fragment">returns the rave object as defined by the fname. If the fname is an existing file on the file system, then
 the file will be opened and returned as a rave object. If no fname can be found, an atempt to fetch the file from
 bdb is made. The fetched file will be returned as a rave object on success otherwise an exception will be raised.
 :param fname: the full file path or an bdb uuid
@@ -260,9 +259,9 @@ bdb is made. The fetched file will be returned as a rave object on success other
         </tr>
       </table>
 </div><div class="memdoc">
-<pre class="fragment"> loads the authorization provider, default is NoAuth but if noauth isn't found
+<pre class="fragment">loads the authorization provider, default is NoAuth but if noauth isn't found
 it will try with keyczar if it exists in the properties
-:param config: the java properties in a dictionary 
+:param config: the java properties in a dictionary
 </pre> 
 </div>
 </div>
