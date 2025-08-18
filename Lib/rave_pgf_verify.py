@@ -24,7 +24,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @author Daniel Michelson, SMHI
 ## @date 2010-07-21
 
-#import types
+# Standard python libs:
+# import types
 
 
 ## Convenience function for accessing arguments from an Element
@@ -33,8 +34,10 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 # "strings", "ints", "floats", or "sequences".
 def get_args(elem, name):
     entry = elem.get(name)
-    if entry: return entry.split(',')
-    else: return []
+    if entry:
+        return entry.split(',')
+    else:
+        return []
 
 
 ## Verifies arguments passed to a "generate" algorithm.
@@ -53,10 +56,10 @@ def verify_generate_args(args, algorithm_entry):
 
     # This loop will raise an IndexError if len(args) is odd.
     for i in range(0, len(args), 2):
-        key, value = args[i], args[i+1]
+        key, value = args[i], args[i + 1]
         if key not in All:
             return False
-        if key in strings and type(value) not in (str,bytes):
+        if key in strings and type(value) not in (str, bytes):
             return False
         if key in ints and type(value) != int:
             return False

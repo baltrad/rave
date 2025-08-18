@@ -18,7 +18,7 @@ You should have received a copy of the GNU Lesser General Public License
 along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-## Composites weather radar data directly from polar scans or volumes 
+## Composites weather radar data directly from polar scans or volumes
 
 ## @file
 ## @author Daniel Michelson, SMHI
@@ -32,212 +32,369 @@ import rave_tile_registry
 
 logger = rave_pgf_logger.rave_pgf_syslog_client()
 
+
 def main(options):
-  comp = compositing()
-  comp.filenames = options.infiles.split(",")
-  comp.detectors = options.qc.split(",")
-  comp.quantity = options.quantity
-  comp.set_product_from_string(options.product)
-  comp.range = options.range
-  comp.gain = options.gain
-  comp.offset = options.offset
-  comp.minvalue = options.minvalue
-  comp.prodpar = options.prodpar
-  comp.set_method_from_string(options.method)
-  comp.qitotal_field = options.qitotal_field
-  comp.pcsid = options.pcsid
-  comp.xscale = options.scale
-  comp.yscale = options.scale
-  comp.set_interpolation_method_from_string(options.interpolation_method)
-  comp.use_azimuthal_nav_information = not options.disable_azimuthal_navigation
-  comp.zr_A = options.zr_A
-  comp.zr_b = options.zr_b
+    # _rave.setDebugLevel(_rave.Debug_RAVE_SPEWDEBUG)
+    comp = compositing()
+    comp.filenames = options.infiles.split(",")
+    comp.detectors = options.qc.split(",")
+    comp.quantity = options.quantity
+    comp.set_product_from_string(options.product)
+    comp.range = options.range
+    comp.gain = options.gain
+    comp.offset = options.offset
+    comp.minvalue = options.minvalue
+    comp.prodpar = options.prodpar
+    comp.set_method_from_string(options.method)
+    comp.qitotal_field = options.qitotal_field
+    comp.pcsid = options.pcsid
+    comp.xscale = options.scale
+    comp.yscale = options.scale
+    comp.set_interpolation_method_from_string(options.interpolation_method)
+    comp.use_azimuthal_nav_information = not options.disable_azimuthal_navigation
+    comp.zr_A = options.zr_A
+    comp.zr_b = options.zr_b
 
-  if options.enable_composite_factories:
-    comp.use_legacy_compositing = False
+    if options.enable_composite_factories:
+        comp.use_legacy_compositing = False
 
-  comp.strategy = options.strategy
+    comp.strategy = options.strategy
 
-  if options.gf:
-    comp.applygapfilling = True
-  if options.ctfilter:
-    comp.applyctfilter = True
-  if options.grafilter:
-    comp.applygra = True
-  if options.ignore_malfunc:
-    comp.ignore_malfunc = True
-  if options.verbose:
-    comp.verbose = True
-  
-  if comp.verbose:
-    comp.logger = rave_pgf_logger.rave_pgf_stdout_client("debug")
-  else:
-    comp.logger = rave_pgf_logger.rave_pgf_stdout_client("info")
+    if options.gf:
+        comp.applygapfilling = True
+    if options.ctfilter:
+        comp.applyctfilter = True
+    if options.grafilter:
+        comp.applygra = True
+    if options.ignore_malfunc:
+        comp.ignore_malfunc = True
+    if options.verbose:
+        comp.verbose = True
 
-  comp.reprocess_quality_field = False
-  if options.reprocess_quality_fields:
-    comp.reprocess_quality_field = True
+    if comp.verbose:
+        comp.logger = rave_pgf_logger.rave_pgf_stdout_client("debug")
+    else:
+        comp.logger = rave_pgf_logger.rave_pgf_stdout_client("info")
 
-  if not options.area is None and options.noMultiprocessing is None:
-    if rave_tile_registry.has_tiled_area(options.area):
-      preprocess_qc = False
-      mp_process_qc = False
-      mp_process_qc_split_evenly = False
-      if options.preprocess_qc:
-        preprocess_qc = True
-      if options.preprocess_qc_mp:
-        preprocess_qc = True
-        mp_process_qc = True
-      if options.mp_process_qc_split_evenly:
-        mp_process_qc_split_evenly = True
-      comp = tiled_compositing(comp, preprocess_qc, mp_process_qc, mp_process_qc_split_evenly)
-      comp.number_of_quality_control_processes = options.number_of_quality_control_processes
-  result = comp.generate(options.date, options.time, options.area)
-  if options.imageType:
-    result.objectType = _rave.Rave_ObjectType_IMAGE 
-  
-  rio = _raveio.new()
-  rio.object = result
-  rio.filename = options.outfile
-  
-  if comp.verbose:
-    print("Saving %s"%rio.filename)
-  rio.save()
-  
+    comp.reprocess_quality_field = False
+    if options.reprocess_quality_fields:
+        comp.reprocess_quality_field = True
+
+    if not options.area is None and options.noMultiprocessing is None:
+        if rave_tile_registry.has_tiled_area(options.area):
+            preprocess_qc = False
+            mp_process_qc = False
+            mp_process_qc_split_evenly = False
+            if options.preprocess_qc:
+                preprocess_qc = True
+            if options.preprocess_qc_mp:
+                preprocess_qc = True
+                mp_process_qc = True
+            if options.mp_process_qc_split_evenly:
+                mp_process_qc_split_evenly = True
+            comp = tiled_compositing(comp, preprocess_qc, mp_process_qc, mp_process_qc_split_evenly)
+            comp.number_of_quality_control_processes = options.number_of_quality_control_processes
+    result = comp.generate(options.date, options.time, options.area)
+    if options.imageType:
+        result.objectType = _rave.Rave_ObjectType_IMAGE
+
+    rio = _raveio.new()
+    rio.object = result
+    rio.filename = options.outfile
+
+    if comp.verbose:
+        print("Saving %s" % rio.filename)
+    rio.save()
+
+
 if __name__ == "__main__":
-  import sys
-  from optparse import OptionParser
+    import sys
+    from optparse import OptionParser
 
-  usage = "usage: %prog -i <infile(s)> -o <outfile> [-a <area>] [args] [h]"
-  usage += "\nGenerates weather radar composites directly from polar scans and volumes. If area is omitted, a best fit will be performed."
-  usage += "\nIn that case, specify pcs, xscale and yscale to get an appropriate image."
-  parser = OptionParser(usage=usage)
+    usage = "usage: %prog -i <infile(s)> -o <outfile> [-a <area>] [args] [h]"
+    usage += "\nGenerates weather radar composites directly from polar scans and volumes. If area is omitted, a best fit will be performed."
+    usage += "\nIn that case, specify pcs, xscale and yscale to get an appropriate image."
+    parser = OptionParser(usage=usage)
 
-  parser.add_option("-i", "--input", dest="infiles",
-                    help="Name of input file(s) to composite, comma-separated in quotations.")
+    parser.add_option(
+        "-i", "--input", dest="infiles", help="Name of input file(s) to composite, comma-separated in quotations."
+    )
 
-  parser.add_option("-o", "--output", dest="outfile",
-                    help="Name of output file to write.")
+    parser.add_option("-o", "--output", dest="outfile", help="Name of output file to write.")
 
-  parser.add_option("-a", "--area", dest="area",
-                    help="Name of Cartesian area to which to generate the composite. If not specified, a best fit composite will be created.")
+    parser.add_option(
+        "-a",
+        "--area",
+        dest="area",
+        help="Name of Cartesian area to which to generate the composite. If not specified, a best fit composite will be created.",
+    )
 
-  parser.add_option("-c", "--pcsid", dest="pcsid",
-                    default="gmaps",
-                    help="Name of the pcsid to use if the area should be automatically generated from a best fit. Default is 'gmaps'.")
+    parser.add_option(
+        "-c",
+        "--pcsid",
+        dest="pcsid",
+        default="gmaps",
+        help="Name of the pcsid to use if the area should be automatically generated from a best fit. Default is 'gmaps'.",
+    )
 
-  parser.add_option("-s", "--scale", dest="scale",
-                    type="float", default=2000.0,
-                    help="The x/y-scale to use if the area should be automatically generated from a best fit. Default is 2000.0.")
+    parser.add_option(
+        "-s",
+        "--scale",
+        dest="scale",
+        type="float",
+        default=2000.0,
+        help="The x/y-scale to use if the area should be automatically generated from a best fit. Default is 2000.0.",
+    )
 
-  parser.add_option("-q", "--quantity", dest="quantity",
-                    default="DBZH",
-                    help="The radar parameter to composite. Default=DBZH.")
+    parser.add_option(
+        "-q", "--quantity", dest="quantity", default="DBZH", help="The radar parameter to composite. Default=DBZH."
+    )
 
-  parser.add_option("-p", "--product", dest="product",
-                    default="PCAPPI",
-                    help="The type of Cartesian product to generate [PPI, CAPPI, PCAPPI, PMAX]. Default=PCAPPI.")
+    parser.add_option(
+        "-p",
+        "--product",
+        dest="product",
+        default="PCAPPI",
+        help="The type of Cartesian product to generate [PPI, CAPPI, PCAPPI, PMAX]. Default=PCAPPI.",
+    )
 
-  parser.add_option("-P", "--prodpar", dest="prodpar",
-                    type="float", default=1000.0,
-                    help="Product parameter. For (P)CAPPIs it is the height of the desired layer. For PPIs, it is the elevation angle. Default=1000.0 (meters).")
+    parser.add_option(
+        "-P",
+        "--prodpar",
+        dest="prodpar",
+        type="float",
+        default=1000.0,
+        help="Product parameter. For (P)CAPPIs it is the height of the desired layer. For PPIs, it is the elevation angle. Default=1000.0 (meters).",
+    )
 
-  parser.add_option("-r", "--range", dest="range",
-                    type="float", default=200000.0,
-                    help="Maximum range to apply PMAX algorithm. Applies only to PMAX algorithm. Defaults to 200 km.")
+    parser.add_option(
+        "-r",
+        "--range",
+        dest="range",
+        type="float",
+        default=200000.0,
+        help="Maximum range to apply PMAX algorithm. Applies only to PMAX algorithm. Defaults to 200 km.",
+    )
 
-  parser.add_option("-g", "--gain", dest="gain",
-                    type="float", default=GAIN,
-                    help="Linear gain applied to output data. Default=as defined in rave_defines.py.")
+    parser.add_option(
+        "-g",
+        "--gain",
+        dest="gain",
+        type="float",
+        default=GAIN,
+        help="Linear gain applied to output data. Default=as defined in rave_defines.py.",
+    )
 
-  parser.add_option("-O", "--offset", dest="offset",
-                    type="float", default=OFFSET,
-                    help="Linear offset applied to output data. Default=as defined in rave_defines.py.")
-  
-  parser.add_option("--minvalue", dest="minvalue",
-                    type="float", default=-30.0,
-                    help="Minimum value that can be represented in composite. Relevant when interpolation is performed. Default=-30.0")
-  
-  parser.add_option("--interpolation_method", dest="interpolation_method",
-                    type="choice", choices=["NEAREST_VALUE", "LINEAR_HEIGHT", "LINEAR_RANGE", "LINEAR_AZIMUTH", "LINEAR_RANGE_AND_AZIMUTH", "LINEAR_3D", "QUADRATIC_HEIGHT", "QUADRATIC_3D"], default="NEAREST_VALUE",
-                    help="Interpolation method to use in composite generation. Default=NEAREST_VALUE")
+    parser.add_option(
+        "-O",
+        "--offset",
+        dest="offset",
+        type="float",
+        default=OFFSET,
+        help="Linear offset applied to output data. Default=as defined in rave_defines.py.",
+    )
 
-  parser.add_option("-d", "--date", dest="date",
-                    default=None,
-                    help="Nominal date of the composite to be written. Defaults to the nominal date of the last input file.")
+    parser.add_option(
+        "--minvalue",
+        dest="minvalue",
+        type="float",
+        default=-30.0,
+        help="Minimum value that can be represented in composite. Relevant when interpolation is performed. Default=-30.0",
+    )
 
-  parser.add_option("-t", "--time", dest="time",
-                    default=None,
-                    help="Nominal time of the composite to be written. Defaults to the nominal time of the last input file.")
+    parser.add_option(
+        "--interpolation_method",
+        dest="interpolation_method",
+        type="choice",
+        choices=[
+            "NEAREST_VALUE",
+            "LINEAR_HEIGHT",
+            "LINEAR_RANGE",
+            "LINEAR_AZIMUTH",
+            "LINEAR_RANGE_AND_AZIMUTH",
+            "LINEAR_3D",
+            "QUADRATIC_HEIGHT",
+            "QUADRATIC_3D",
+        ],
+        default="NEAREST_VALUE",
+        help="Interpolation method to use in composite generation. Default=NEAREST_VALUE",
+    )
 
-  parser.add_option("-m", "--method", dest="method",
-                    default="NEAREST_RADAR",
-                    help="Compositing algorithm to apply. Current choices are NEAREST_RADAR or HEIGHT_ABOVE_SEALEVEL. Default=NEAREST_RADAR.")
+    parser.add_option(
+        "-d",
+        "--date",
+        dest="date",
+        default=None,
+        help="Nominal date of the composite to be written. Defaults to the nominal date of the last input file.",
+    )
 
-  parser.add_option("-Q", "--qc", dest="qc",
-                    default="",
-                    help="Which quality-controls to apply. Comma-separated, no white spaces. Default=None")
+    parser.add_option(
+        "-t",
+        "--time",
+        dest="time",
+        default=None,
+        help="Nominal time of the composite to be written. Defaults to the nominal time of the last input file.",
+    )
 
-  parser.add_option("-G", "--gap-fill", action="store_true", dest="gf",
-                    help="Gap-fill small holes in output composite. Default=False")
+    parser.add_option(
+        "-m",
+        "--method",
+        dest="method",
+        default="NEAREST_RADAR",
+        help="Compositing algorithm to apply. Current choices are NEAREST_RADAR or HEIGHT_ABOVE_SEALEVEL. Default=NEAREST_RADAR.",
+    )
 
-  parser.add_option("-C", "--ctfilter", action="store_true", dest="ctfilter",
-                    help="Filter residual non-precipitation echoes using SAF-NWC cloud-type product. Default=False")
+    parser.add_option(
+        "-Q",
+        "--qc",
+        dest="qc",
+        default="",
+        help="Which quality-controls to apply. Comma-separated, no white spaces. Default=None",
+    )
 
-  parser.add_option("-A", "--applygra", action="store_true", dest="grafilter",
-                    help="Applies the GRA correction coefficients. Default=False")
+    parser.add_option(
+        "-G",
+        "--gap-fill",
+        action="store_true",
+        dest="gf",
+        help="Gap-fill small holes in output composite. Default=False",
+    )
 
-  parser.add_option("-y", "--zr_A", dest="zr_A",
-                    type="float", default="200.0",
-                    help="The ZR A coefficient to use for the gra correction. Default=200.0")
+    parser.add_option(
+        "-C",
+        "--ctfilter",
+        action="store_true",
+        dest="ctfilter",
+        help="Filter residual non-precipitation echoes using SAF-NWC cloud-type product. Default=False",
+    )
 
-  parser.add_option("-z", "--zr_b", dest="zr_b",
-                    type="float", default="1.6",
-                    help="The ZR b coefficient to use for the gra correction. Default=1.6")
+    parser.add_option(
+        "-A",
+        "--applygra",
+        action="store_true",
+        dest="grafilter",
+        help="Applies the GRA correction coefficients. Default=False",
+    )
 
-  parser.add_option("-F", "--qitotal_field", dest="qitotal_field",
-                    default=None, help="The QI-total field to use when creating the composite from the qi-total Default=Not used.")
+    parser.add_option(
+        "-y",
+        "--zr_A",
+        dest="zr_A",
+        type="float",
+        default="200.0",
+        help="The ZR A coefficient to use for the gra correction. Default=200.0",
+    )
 
-  parser.add_option("-I", "--ignore-malfunc", action="store_true", dest="ignore_malfunc",
-                    help="If scans/volumes contain malfunc information. Don't use them in the composite. Default is to always use everything.")
-  
-  parser.add_option("-V", "--verbose", action="store_true", dest="verbose",
-                    help="If the different steps should be displayed. I.e. verbose information.")
-  
-  parser.add_option("-T", "--imageType", action="store_true", dest="imageType",
-                    help="If the stored file should be saved as an IMAGE instead of a COMP (osite).")
-  
-  parser.add_option("-M", "--no-multiprocessing", action="store_true", dest="noMultiprocessing",
-                    help="Disable multiprocessing even if an entry exists in the tile_registry")
-  
-  parser.add_option("--preprocess_qc", action="store_true", dest="preprocess_qc",
-                    help="Preprocesses the quality fields and stores these as temporary files. This is really only useful when performing tiled processing.")
-  
-  parser.add_option("--preprocess_qc_mp", action="store_true", dest="preprocess_qc_mp",
-                    help="Preprocesses the quality fields in the provided files and uses multiprocessing to do this.")
-  
-  parser.add_option("--number_of_quality_control_processes", dest="number_of_quality_control_processes", default="4", type="int",
-                    help="Number of processes that should be used for performing the quality control. Default 4. Requires that --preprocess_qc_mp is used.")
-  
-  parser.add_option("--mp_process_qc_split_evenly", action="store_true", dest="mp_process_qc_split_evenly",
-                    help="Splits the incomming files evenly among the quality control processes. Requires that --preprocess_qc_mp is used.")
-  
-  parser.add_option("--reprocess_quality_fields", action="store_true", dest="reprocess_quality_fields",
-                    help="Reprocessed the quality fields even if they already exist in the object.")
+    parser.add_option(
+        "-z",
+        "--zr_b",
+        dest="zr_b",
+        type="float",
+        default="1.6",
+        help="The ZR b coefficient to use for the gra correction. Default=1.6",
+    )
 
-  parser.add_option("--disable_azimuthal_navigation", action="store_true", dest="disable_azimuthal_navigation",
-                    help="If this flag is set, then azimuthal navigation won't be used when creating the composite.")
+    parser.add_option(
+        "-F",
+        "--qitotal_field",
+        dest="qitotal_field",
+        default=None,
+        help="The QI-total field to use when creating the composite from the qi-total Default=Not used.",
+    )
 
-  parser.add_option("--enable_composite_factories", action="store_true", dest="enable_composite_factories", default=False,
-                    help="If this flag is set then the compositing will be performed using the new factory methods. Otherwise legacy handling will be used.")
+    parser.add_option(
+        "-I",
+        "--ignore-malfunc",
+        action="store_true",
+        dest="ignore_malfunc",
+        help="If scans/volumes contain malfunc information. Don't use them in the composite. Default is to always use everything.",
+    )
 
-  parser.add_option("--strategy", dest="strategy", default=None,
-                    help="Can be used to force a specific composite factory to be used. For example acqva, nearest or legacy.")
+    parser.add_option(
+        "-V",
+        "--verbose",
+        action="store_true",
+        dest="verbose",
+        help="If the different steps should be displayed. I.e. verbose information.",
+    )
 
-  (options, args) = parser.parse_args()
+    parser.add_option(
+        "-T",
+        "--imageType",
+        action="store_true",
+        dest="imageType",
+        help="If the stored file should be saved as an IMAGE instead of a COMP (osite).",
+    )
 
-  if options.infiles != None and options.outfile != None:
-    main(options)
-  else:
-    parser.print_help()
+    parser.add_option(
+        "-M",
+        "--no-multiprocessing",
+        action="store_true",
+        dest="noMultiprocessing",
+        help="Disable multiprocessing even if an entry exists in the tile_registry",
+    )
 
+    parser.add_option(
+        "--preprocess_qc",
+        action="store_true",
+        dest="preprocess_qc",
+        help="Preprocesses the quality fields and stores these as temporary files. This is really only useful when performing tiled processing.",
+    )
+
+    parser.add_option(
+        "--preprocess_qc_mp",
+        action="store_true",
+        dest="preprocess_qc_mp",
+        help="Preprocesses the quality fields in the provided files and uses multiprocessing to do this.",
+    )
+
+    parser.add_option(
+        "--number_of_quality_control_processes",
+        dest="number_of_quality_control_processes",
+        default="4",
+        type="int",
+        help="Number of processes that should be used for performing the quality control. Default 4. Requires that --preprocess_qc_mp is used.",
+    )
+
+    parser.add_option(
+        "--mp_process_qc_split_evenly",
+        action="store_true",
+        dest="mp_process_qc_split_evenly",
+        help="Splits the incomming files evenly among the quality control processes. Requires that --preprocess_qc_mp is used.",
+    )
+
+    parser.add_option(
+        "--reprocess_quality_fields",
+        action="store_true",
+        dest="reprocess_quality_fields",
+        help="Reprocessed the quality fields even if they already exist in the object.",
+    )
+
+    parser.add_option(
+        "--disable_azimuthal_navigation",
+        action="store_true",
+        dest="disable_azimuthal_navigation",
+        help="If this flag is set, then azimuthal navigation won't be used when creating the composite.",
+    )
+
+    parser.add_option(
+        "--enable_composite_factories",
+        action="store_true",
+        dest="enable_composite_factories",
+        default=False,
+        help="If this flag is set then the compositing will be performed using the new factory methods. Otherwise legacy handling will be used.",
+    )
+
+    parser.add_option(
+        "--strategy",
+        dest="strategy",
+        default=None,
+        help="Can be used to force a specific composite factory to be used. For example acqva, nearest or legacy.",
+    )
+
+    (options, args) = parser.parse_args()
+
+    if options.infiles != None and options.outfile != None:
+        main(options)
+    else:
+        parser.print_help()

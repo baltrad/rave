@@ -26,12 +26,15 @@ file format.
 OPERA Working Document WD_2008_03.
 Available at http://www.knmi.nl/opera/opera3/OPERA_2008_03_WP2.1a_InformationModel_UML_2.0.pdf
 """
-from xml.etree.ElementTree import  Element, SubElement
+# Standard python libs:
+from xml.etree.ElementTree import Element, SubElement
+
+# Module/Project:
 import rave_info
 from rave_defines import H5RAD_VERSION
 
 
-def Root(tag='h5rad', attrib={"version":H5RAD_VERSION}):
+def Root(tag='h5rad', attrib={"version": H5RAD_VERSION}):
     """
     This is the root element: an INFO object with the right version
     attribute and with a UNIDATA Conventions attribute.
@@ -48,7 +51,7 @@ def Root(tag='h5rad', attrib={"version":H5RAD_VERSION}):
     return this
 
 
-def Dataset(tag="data", attrib={"type":"dataset"}, prefix='image', set=1):
+def Dataset(tag="data", attrib={"type": "dataset"}, prefix='image', set=1):
     """
     Simple dataset representation in INFO.
 
@@ -62,7 +65,7 @@ def Dataset(tag="data", attrib={"type":"dataset"}, prefix='image', set=1):
       an Element instance denoting the presence of a dataset, eg.
       <data type="dataset">image1</data>
     """
-    if prefix in ["image","scan","profile"]:
+    if prefix in ["image", "scan", "profile"]:
         E = Element(tag=tag, attrib=attrib)
         E.text = prefix + str(set)
         return E
@@ -128,10 +131,9 @@ def DatasetArray(xsize=None, ysize=None, typecode='B', initval=None):
 
     else:
         if initval:
-            return (numpy.zeros((ysize, xsize))+initval).astype(typecode)
+            return (numpy.zeros((ysize, xsize)) + initval).astype(typecode)
         else:
             return numpy.zeros((ysize, xsize), typecode)
-
 
 
 def TopLevelWhat(tag='what', **args):
@@ -152,7 +154,7 @@ def TopLevelWhat(tag='what', **args):
 
     Returns: An Element containing top-level "what" attributes.
     """
-    STRINGS = ['obj','version','date','time']
+    STRINGS = ['obj', 'version', 'date', 'time']
     INTS = ['sets']
 
     E = Element(tag=tag)
@@ -163,10 +165,10 @@ def TopLevelWhat(tag='what', **args):
                 SubElement(E, k, attrib={}).text = i
                 del(STRINGS[STRINGS.index(k)])
             elif k == 'sets':
-                SubElement(E, k, attrib={"type":"int"}).text = str(i)
+                SubElement(E, k, attrib={"type": "int"}).text = str(i)
                 INTS = []
             else:
-                raise KeyError('Illegal key: "%s" for top-level what.'%str(k))
+                raise KeyError('Illegal key: "%s" for top-level what.' % str(k))
 
     for k in STRINGS + INTS:
         SubElement(E, k, attrib={}).text = 'n/a'
@@ -199,9 +201,8 @@ def DatasetWhat(tag='what', **args):
 
     Returns: An Element containing dataset-specific "what" attributes.
     """
-    STRINGS = ['product','quantity',
-               'startdate','starttime','enddate','endtime']
-    FLOATS = ['prodpar','gain','offset','nodata','undetect']
+    STRINGS = ['product', 'quantity', 'startdate', 'starttime', 'enddate', 'endtime']
+    FLOATS = ['prodpar', 'gain', 'offset', 'nodata', 'undetect']
 
     E = Element(tag=tag)
 
@@ -214,7 +215,7 @@ def DatasetWhat(tag='what', **args):
                 SubElement(E, k, attrib={"type":"float"}).text = str(i)
                 del(FLOATS[FLOATS.index(k)])
             else:
-                raise KeyError('Illegal key: "%s" for dataset-specific what.'%str(k))
+                raise KeyError('Illegal key: "%s" for dataset-specific what.' % str(k))
 
     for k in STRINGS + FLOATS:
         SubElement(E, k, attrib={}).text = 'n/a'
@@ -287,19 +288,29 @@ def Where(tag='where', **args):
                            00:00 UTC on the day defined by the "date"
                            Attribute in the "what" Group.
             float yoffset: Height of the first level of profile in meters.
-            
+
     Returns: An Element containing top-level "where" for the given object.
 
     """
-    INTS = ['xsize','ysize']
-    SCAN_FLOATS = ['lon','lat','height','angle','xscale']
-    IMAGE_FLOATS = ['xscale','yscale','LL_lon','LL_lat','UR_lon','UR_lat']
+    INTS = ['xsize', 'ysize']
+    SCAN_FLOATS = ['lon', 'lat', 'height', 'angle', 'xscale']
+    IMAGE_FLOATS = ['xscale', 'yscale', 'LL_lon', 'LL_lat', 'UR_lon', 'UR_lat']
     STRINGS = ['projdef']
-    XSECT_FLOATS = ['xscale','yscale','lon','lat','az_angle','range',
-                    'start_lon','start_lat','stop_lon','stop_lat']
-    VP_FLOATS = ['lon','lat','height','interval']
+    XSECT_FLOATS = [
+        'xscale',
+        'yscale',
+        'lon',
+        'lat',
+        'az_angle',
+        'range',
+        'start_lon',
+        'start_lat',
+        'stop_lon',
+        'stop_lat',
+    ]
+    VP_FLOATS = ['lon', 'lat', 'height', 'interval']
     VP_INT = ['levels']
-    THVP_FLOATS = ['lon','lat','height','xscale','yscale','xoffset','yoffset']
+    THVP_FLOATS = ['lon', 'lat', 'height', 'xscale', 'yscale', 'xoffset', 'yoffset']
     errmesg = 'Need to know object type to initialize "where" attributes.'
 
     E = Element(tag=tag)
@@ -309,10 +320,10 @@ def Where(tag='where', **args):
 
     elif len(args) > 0:
         obj = args['obj'].lower()
-        del(args['obj'])
+        del args['obj']
 
         # Polar scans and polar volumes
-        if obj in ['scan','pvol']:
+        if obj in ['scan', 'pvol']:
             for k, i in args.items():
                 if k in SCAN_FLOATS:
                     SubElement(E, k, attrib={"type":"float"}).text = str(i)
@@ -324,7 +335,7 @@ def Where(tag='where', **args):
                     raise KeyError('Illegal key: "%s" for where' % str(k))
 
         # Cartesian images, volumes, and composites (mosaics)
-        elif obj in ['image','comp','cvol']:
+        elif obj in ['image', 'comp', 'cvol']:
             for k, i in args.items():
                 if k in STRINGS:
                     SubElement(E, k, attrib={}).text = i
@@ -372,17 +383,17 @@ def Where(tag='where', **args):
 
         # Fill in the blanks
 
-        if obj in ['scan','pvol']:
+        if obj in ['scan', 'pvol']:
             for k in SCAN_FLOATS:
-                SubElement(E, k, attrib={"type":"float"}).text = 'n/a'
+                SubElement(E, k, attrib={"type": "float"}).text = 'n/a'
 
-        elif obj in ['image','comp','cvol']:
+        elif obj in ['image', 'comp', 'cvol']:
             for k in STRINGS + IMAGE_FLOATS:
                 SubElement(E, k, attrib={}).text = 'n/a'
 
         elif obj == 'xsect':
             for k in XSECT_FLOATS:
-                SubElement(E, k, attrib={"type":"float"}).text = 'n/a'
+                SubElement(E, k, attrib={"type": "float"}).text = 'n/a'
 
         elif obj == 'vp':
             for k in VP_INTS + VP_FLOATS:
@@ -390,17 +401,16 @@ def Where(tag='where', **args):
 
         elif obj == 'thvp':
             for k in THVP_FLOATS:
-                SubElement(E, k, attrib={"type":"float"}).text = 'n/a'
+                SubElement(E, k, attrib={"type": "float"}).text = 'n/a'
 
         if obj != 'vp':
             for k in INTS:
-                SubElement(E, k, attrib={"type":"int"}).text = str(1)
+                SubElement(E, k, attrib={"type": "int"}).text = str(1)
 
     return E
 
 
-__all__ = ['Root', 'Dataset','DatasetGroup','TopLevelWhat','DatasetWhat',
-           'Where']
+__all__ = ['Root', 'Dataset', 'DatasetGroup', 'TopLevelWhat', 'DatasetWhat', 'Where']
 
 
 if __name__ == "__main__":

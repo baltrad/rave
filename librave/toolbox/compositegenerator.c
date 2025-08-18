@@ -87,7 +87,7 @@ static int CompositeFactoryEntry_copyconstructor(RaveCoreObject* obj, RaveCoreOb
   CompositeFactoryEntry_t* this = (CompositeFactoryEntry_t*)obj;
   CompositeFactoryEntry_t* src = (CompositeFactoryEntry_t*)srcobj;
   this->name = NULL;
-  strcpy(this->name, src->factory_class);
+  strcpy(this->factory_class, src->factory_class);
   this->factory = NULL;
   this->filters = NULL;
 

@@ -17,26 +17,29 @@ You should have received a copy of the GNU Lesser General Public License
 along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-## 
+##
 # grib reader factory that provides the user with a reader.
+
 
 ## @file
 ## @author Anders Henja, SMHI
 ## @date 2015-03-03
 class grib_reader_factory(object):
-  def __init__(self, gribreaderfactory=None):
-    self.gribreaderfactory = gribreaderfactory
-    #if self.gribreader is not None:
-    #  self.gribreader = grib_reader.pygrib_grib_reader()
+    def __init__(self, gribreaderfactory=None):
+        self.gribreaderfactory = gribreaderfactory
+        # if self.gribreader is not None:
+        #  self.gribreader = grib_reader.pygrib_grib_reader()
 
-  def open(self, filename):
-    if self.gribreaderfactory is None:
-      from grib import grib_reader
-      return grib_reader.pygrib_grib_reader.openfile(filename)
-    return self.gribreaderfactory(filename)
+    def open(self, filename):
+        if self.gribreaderfactory is None:
+            from grib import grib_reader
+
+            return grib_reader.pygrib_grib_reader.openfile(filename)
+        return self.gribreaderfactory(filename)
+
 
 def get_factory(configfile=None):
-  if configfile is None:
-    return grib_reader_factory()
-  else:
-    raise Exception, "Dynamic configuration of grib reader not found"
+    if configfile is None:
+        return grib_reader_factory()
+    else:
+        raise Exception("Dynamic configuration of grib reader not found")

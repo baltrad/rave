@@ -193,7 +193,40 @@ class PyNearestCompositeGeneratorFactoryITest(unittest.TestCase):
     self.assertEqual("20090501", result.date)
     #print(param.getAttribute("how/product_parameters/json"))  #SHOW RATE ZR coefficients
 
-  def test_generate_pcappi(self):
+  def test_generate_pcappi_nearest(self):
+    obj = _nearestcompositegeneratorfactory.new()
+
+    args = _compositearguments.new()
+    for fname in self.SWEDISH_VOLUMES:
+      rio = _raveio.open(fname)
+      args.addObject(rio.object)
+    args.addParameter("DBZH", 1.0, 0.0)
+    args.product = "PCAPPI"
+    args.elangle = 0.0
+    args.height = 500.0
+    args.time = "120000"
+    args.date = "20090501"
+    args.area = self.create_area("nrd2km")
+
+    # arguments are usualy method specific in some way
+    args.addArgument("selection_method", "NEAREST")
+
+    result = obj.generate(args)
+
+    self.assertEqual(True, result.hasParameter("DBZH"))
+    self.assertEqual(_rave.Rave_ProductType_PCAPPI, result.product)
+    self.assertAlmostEqual(500.0, result.getAttribute("what/prodpar"), 4)
+    self.assertEqual("NEAREST", result.getAttribute("how/camethod"))
+    self.assertEqual("120000", result.time)
+    self.assertEqual("20090501", result.date)
+
+    ios = _raveio.new()
+    ios.object = result
+    ios.filename = "nearest_swecomposite_pcappi.h5"
+    ios.save()
+
+
+  def test_generate_pcappi_byheight(self):
     obj = _nearestcompositegeneratorfactory.new()
 
     args = _compositearguments.new()
@@ -210,18 +243,46 @@ class PyNearestCompositeGeneratorFactoryITest(unittest.TestCase):
 
     # arguments are usualy method specific in some way
     args.addArgument("selection_method", "HEIGHT_ABOVE_SEALEVEL")
-    args.addArgument("interpolation_method", "NEAREST")
 
     result = obj.generate(args)
 
     self.assertEqual(True, result.hasParameter("DBZH"))
     self.assertEqual(_rave.Rave_ProductType_PCAPPI, result.product)
     self.assertAlmostEqual(500.0, result.getAttribute("what/prodpar"), 4)
+    self.assertEqual("MDE", result.getAttribute("how/camethod"))
     self.assertEqual("120000", result.time)
     self.assertEqual("20090501", result.date)
 
     ios = _raveio.new()
     ios.object = result
-    ios.filename = "nearest_swecomposite_pcappi.h5"
+    ios.filename = "height_swecomposite_pcappi.h5"
     ios.save()
 
+  def test_generate_max(self):
+    obj = _nearestcompositegeneratorfactory.new()
+
+    args = _compositearguments.new()
+    for fname in self.SWEDISH_VOLUMES:
+      rio = _raveio.open(fname)
+      args.addObject(rio.object)
+    args.addParameter("DBZH", 1.0, 0.0)
+    args.product = "MAX"
+    args.time = "120000"
+    args.date = "20090501"
+    args.area = self.create_area("nrd2km")
+
+    # arguments are usualy method specific in some way
+    args.addArgument("selection_method", "HEIGHT_ABOVE_SEALEVEL")
+
+    result = obj.generate(args)
+
+    self.assertEqual(True, result.hasParameter("DBZH"))
+    self.assertEqual(_rave.Rave_ProductType_MAX, result.product)
+    self.assertEqual("MAXIMUM", result.getAttribute("how/camethod"))
+    self.assertEqual("120000", result.time)
+    self.assertEqual("20090501", result.date)
+
+    ios = _raveio.new()
+    ios.object = result
+    ios.filename = "max_swecomposite_pcappi.h5"
+    ios.save()

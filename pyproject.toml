@@ -1,0 +1,94 @@
+#[build-system]
+#requires = ["setuptools>=42", "wheel", "numpy>=1.14.2"]
+#build-backend = "setuptools.build_meta"
+
+
+[project]
+name = "RAVE"
+dynamic = ["version"]
+description = "Radar Analysis and Visualization Environment (RAVE) toolset for radar data analysis and visualization."
+readme = "README"
+authors = [
+  { name = "Anders Henja", email = "anders.henja@smhi.se" },
+  { name = "Daniel Michelson", email = "daniel.michelson@smhi.se" }
+]
+license = { file = "LICENSE" }
+keywords = ["radar", "visualization", "meteorology", "analysis", "baltrad"]
+classifiers = [
+  "Development Status :: TODO - TODO",
+  "Intended Audience :: Science/Research/Developers",
+  "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.6",
+  "Programming Language :: Python :: 3.7",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Topic :: Scientific/Engineering :: Data Analysis and Visualization"
+]
+
+
+[project.urls]
+Homepage = "http://baltrad.eu/"
+Documentation = "http://baltrad.eu/documentation.html"
+Source = "https://github.com/baltrad/rave"
+Tracker = "https://github.com/baltrad/rave/issues"
+Repository = "https://github.com/baltrad/rave"
+
+
+[project.optional-dependencies]
+Pillow = ["Pillow>=5.0.0"]
+PycURL = ["pycurl>=7.43.0"]
+
+[tool.setuptools.dynamic]
+install_requires = "setup.cfg"
+
+
+[tool.setuptools.scripts]
+
+
+
+
+
+
+
+
+
+[tool.isort]
+multi_line_output = 3
+include_trailing_comma = false
+line_length = 120
+known_third_party = ["SQLAlchemy", "psycopg2", "numpy", "pygrib", "pyinotify"]
+known_first_party = ["baltrad", "_rave*" , "_*"]
+sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
+
+src_paths = ["bin", "Lib"]
+
+
+[tool.ruff]
+
+exclude = [
+  "build/",
+  "c-examples/",
+  "config/",
+  "doc/",
+  "doxygen/",
+  "librave/",
+  "modules/",
+  "packaging/",
+  "templates/",
+  "*.c",
+  "*.h",
+]
+line-length = 120
+indent-width = 4
+
+target-version = "py39"
+
+[tool.ruff.format]
+quote-style = "preserve"
+indent-style = "space"
+skip-magic-trailing-comma = false
+docstring-code-format = false
+docstring-code-line-length = "dynamic"
+

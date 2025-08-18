@@ -553,6 +553,30 @@ Rave_ProductType CompositeArguments_getProductType(CompositeArguments_t* args)
   return Rave_ProductType_UNDEFINED;
 }
 
+Rave_Compositing_SelectionMethod CompositeArguments_getSelectionMethod(CompositeArguments_t* args)
+{
+  RaveAttribute_t* selectionMethod = NULL;
+  char* s = NULL;
+  Rave_Compositing_SelectionMethod result = Rave_Compositing_SelectionMethod_UNDEFINED;
+
+  RAVE_ASSERT((args != NULL), "args == NULL");
+  if (CompositeArguments_hasArgument(args, "selection_method")) {
+    selectionMethod = CompositeArguments_getArgument(args, "selection_method");
+    if (selectionMethod != NULL && RaveAttribute_getString(selectionMethod, &s) && s != NULL) {
+      if (strcasecmp("NEAREST", s) == 0 || strcasecmp("NEAREST_RADAR", s) == 0) {
+        result = Rave_Compositing_SelectionMethod_NEAREST;
+      } else if (strcasecmp("HEIGHT", s) == 0 || strcasecmp("HEIGHT_ABOVE_SEALEVEL", s) == 0) {
+        result = Rave_Compositing_SelectionMethod_HEIGHT_ABOVE_SEALEVEL;
+      } else {
+        result = Rave_Compositing_SelectionMethod_UNKNOWN;
+      }
+    }
+  }
+  RAVE_OBJECT_RELEASE(selectionMethod);
+  return result;
+}
+
+
 int CompositeArguments_setArea(CompositeArguments_t* args, Area_t* area)
 {
   RAVE_ASSERT((args != NULL), "args == NULL");

@@ -24,27 +24,29 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @author Daniel Michelson, SMHI
 ## @date 2010-07-25
 
+# Standard python libs:
 import sys
-if sys.version_info < (3,):
-  import SimpleXMLRPCServer
-  from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
-  from xmlrpclib import ServerProxy as XmlRpcServerProxy
-  import xmlrpclib as xmlrpc
-else:
-  import xmlrpc
-  from xmlrpc.client import ServerProxy as XmlRpcServerProxy
-  from xmlrpc.server import SimpleXMLRPCServer
-  from xmlrpc.server import SimpleXMLRPCRequestHandler
-
+if sys.version_info < (3,):  # isort: skip
+    import SimpleXMLRPCServer  # isort: skip
+    from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler  # isort: skip
+    from xmlrpclib import ServerProxy as XmlRpcServerProxy  # isort: skip
+else:  # isort: skip
+    import xmlrpc  # isort: skip
+    from xmlrpc.client import ServerProxy as XmlRpcServerProxy  # isort: skip
+    from xmlrpc.server import SimpleXMLRPCServer  # isort: skip
+    from xmlrpc.server import SimpleXMLRPCRequestHandler  # isort: skip
 
 if __name__ == "__main__":
     from optparse import OptionParser
 
-    description = "Prints the arguments associated with a method available on the server. This is not the same thing as an algorithm in the registry."
+    description = (
+        "Prints the arguments associated with a method available on the server. "
+        "This is not the same thing as an algorithm in the registry."
+    )
 
     usage = "usage: %prog -H http(s)://host:port/RAVE -m <method>"
     parser = OptionParser(usage=usage, description=description)
-
+    # fmt: off
     parser.add_option("-l", "--list", action="store_true", dest="list",
                       help="List available methods.")
 
@@ -53,7 +55,7 @@ if __name__ == "__main__":
 
     parser.add_option("-m", "--method", dest="method",
                       help="Name of the method you need help with.")
-
+    # fmt: on
     (options, args) = parser.parse_args()
 
     if not (options.host and (options.method or options.list)):

@@ -18,87 +18,90 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
 ## Area registry functionality for beeing able to provide the user with proper
-# rave py-c style area definitions. 
+# rave py-c style area definitions.
 # This registry will first try out the c-api registries for area and projections.
 # If this can not be found, then it will try the area registries and see if there
-# is anything there. 
-
-from rave_defines import AREA_REGISTRY, PROJECTION_REGISTRY
-import _rave, _area, _projection, area
+# is anything there.
+# Standard python libs:
 import string
+
+# Module/Project:
+import _rave, _area, _projection, area
+from rave_defines import AREA_REGISTRY, PROJECTION_REGISTRY
 
 ##
 # Area registry wrapper
 class area_registry(object):
-  _registry = {}
-  _arearegistryconfig=AREA_REGISTRY
-  _projregistryconfig=PROJECTION_REGISTRY
-  
-  ##
-  # Default sonstructor
-  def __init__(self, areg=AREA_REGISTRY, preg=PROJECTION_REGISTRY):
-    self._arearegistryconfig = areg
-    self._projregistryconfig = preg
-    self.reload()
+    _registry = {}
+    _arearegistryconfig = AREA_REGISTRY
+    _projregistryconfig = PROJECTION_REGISTRY
 
-  ##
-  # Reloads everything from the area registry
-  #
-  def reload(self):
-    self._registry = {}
-    if not _rave.isXmlSupported():
-      return
-    import _arearegistry, _projectionregistry
-    projreg = _projectionregistry.load(self._projregistryconfig)
-    areareg = _arearegistry.load(self._arearegistryconfig,projreg)
-    len = areareg.size()
-    for i in range(len):
-      a = areareg.get(i)
-      self._registry[a.id] = a
+    ##
+    # Default sonstructor
+    def __init__(self, areg=AREA_REGISTRY, preg=PROJECTION_REGISTRY):
+        self._arearegistryconfig = areg
+        self._projregistryconfig = preg
+        self.reload()
 
-  ##
-  # Loads the spcific area if it can be found in the projection registry
-  #
-  def _loadarea(self, areaid):
-    if not _rave.isXmlSupported():
-      return
-    import _arearegistry, _projectionregistry
-    projreg = _projectionregistry.load(self._projregistryconfig)
-    areareg = _arearegistry.load(self._arearegistryconfig,projreg)
-    try:
-      foundarea = areareg.getByName(areaid)
-      self._registry[foundarea.id] = foundarea
-    except IndexError:
-      pass     
+    ##
+    # Reloads everything from the area registry
+    #
+    def reload(self):
+        self._registry = {}
+        if not _rave.isXmlSupported():
+            return
+        import _arearegistry, _projectionregistry
 
-  ##
-  # Returns the wanted area if found, otherwise an exception will be thrown
-  #
-  def getarea(self, areaid):
-    if not areaid in self._registry.keys():
-      self._loadarea(areaid)
+        projreg = _projectionregistry.load(self._projregistryconfig)
+        areareg = _arearegistry.load(self._arearegistryconfig, projreg)
+        len = areareg.size()
+        for i in range(len):
+            a = areareg.get(i)
+            self._registry[a.id] = a
 
-    if areaid in self._registry.keys():
-      result = self._registry[areaid]
-    else:
-      a = area.area(areaid)
-      p = a.pcs
-      pyarea = _area.new()
-      pyarea.id = a.Id
-      pyarea.xsize = a.xsize
-      pyarea.ysize = a.ysize
-      pyarea.xscale = a.xscale
-      pyarea.yscale = a.yscale
-      pyarea.extent = a.extent
-      pyarea.projection = _projection.new(p.id, str(p.name), ' '.join(p.definition))
-      self._registry[pyarea.id] = pyarea
-      result = pyarea
-      
-    return result
+    ##
+    # Loads the spcific area if it can be found in the projection registry
+    #
+    def _loadarea(self, areaid):
+        if not _rave.isXmlSupported():
+            return
+        import _arearegistry, _projectionregistry
 
-  ##
-  # Returns all registered area ids
-  #
-  def get_area_names(self):
-    return self._registry.keys()
-  
+        projreg = _projectionregistry.load(self._projregistryconfig)
+        areareg = _arearegistry.load(self._arearegistryconfig, projreg)
+        try:
+            foundarea = areareg.getByName(areaid)
+            self._registry[foundarea.id] = foundarea
+        except IndexError:
+            pass
+
+    ##
+    # Returns the wanted area if found, otherwise an exception will be thrown
+    #
+    def getarea(self, areaid):
+        if not areaid in self._registry.keys():
+            self._loadarea(areaid)
+
+        if areaid in self._registry.keys():
+            result = self._registry[areaid]
+        else:
+            a = area.area(areaid)
+            p = a.pcs
+            pyarea = _area.new()
+            pyarea.id = a.Id
+            pyarea.xsize = a.xsize
+            pyarea.ysize = a.ysize
+            pyarea.xscale = a.xscale
+            pyarea.yscale = a.yscale
+            pyarea.extent = a.extent
+            pyarea.projection = _projection.new(p.id, str(p.name), ' '.join(p.definition))
+            self._registry[pyarea.id] = pyarea
+            result = pyarea
+
+        return result
+
+    ##
+    # Returns all registered area ids
+    #
+    def get_area_names(self):
+        return self._registry.keys()

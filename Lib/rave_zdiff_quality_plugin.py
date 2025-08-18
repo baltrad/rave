@@ -17,13 +17,14 @@ You should have received a copy of the GNU Lesser General Public License
 along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 '''
 ##
-# A quality plugin for enabling zdiff qc support 
+# A quality plugin for enabling zdiff qc support
 
-## 
+##
 # @file
 # @author Anders Henja, SMHI
 # @date 2015-04-09
 
+# Module/Project:
 from rave_quality_plugin import rave_quality_plugin
 from rave_quality_plugin import QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY
 
@@ -33,28 +34,35 @@ import _polarvolume, _polarscan
 
 logger = rave_pgf_logger.create_logger()
 
+
 class rave_zdiff_quality_plugin(rave_quality_plugin):
-  ##
-  # Default constructor
-  def __init__(self):
-    super(rave_zdiff_quality_plugin, self).__init__()
-  
-  ##
-  # @return a list containing the string eu.opera.odc.zdiff
-  def getQualityFields(self):
-    return ["eu.opera.odc.zdiff"]
-  
-  ##
-  # @param obj: A RAVE object that should be processed.
-  # @param reprocess_quality_flag: If quality flag should be reprocessed or not
-  # @param arguments: Not used
-  # @return: The modified object if this quality plugin has performed changes 
-  # to the object.
-  def process(self, obj, reprocess_quality_flag=True, quality_control_mode=QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY, arguments=None):
-    try:
-      if _polarscan.isPolarScan(obj) or _polarvolume.isPolarVolume(obj):
-        odc_hac.zdiff(obj)
-    except:
-      logger.exception("Failure during zdiff processing")
-      
-    return obj, self.getQualityFields()
+    ##
+    # Default constructor
+    def __init__(self):
+        super(rave_zdiff_quality_plugin, self).__init__()
+
+    ##
+    # @return a list containing the string eu.opera.odc.zdiff
+    def getQualityFields(self):
+        return ["eu.opera.odc.zdiff"]
+
+    ##
+    # @param obj: A RAVE object that should be processed.
+    # @param reprocess_quality_flag: If quality flag should be reprocessed or not
+    # @param arguments: Not used
+    # @return: The modified object if this quality plugin has performed changes
+    # to the object.
+    def process(
+        self,
+        obj,
+        reprocess_quality_flag=True,
+        quality_control_mode=QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY,
+        arguments=None,
+    ):
+        try:
+            if _polarscan.isPolarScan(obj) or _polarvolume.isPolarVolume(obj):
+                odc_hac.zdiff(obj)
+        except:
+            logger.exception("Failure during zdiff processing")
+
+        return obj, self.getQualityFields()

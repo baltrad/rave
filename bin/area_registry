@@ -23,7 +23,10 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @author Daniel Michelson, SMHI
 ## @date 2011-06-28
 
+# Standard python libs:
 import sys
+
+# Module/Project:
 import rave_area
 
 
@@ -39,7 +42,7 @@ import rave_area
 # @param xscale float X scale in PCS space (commonly expressed in meters)
 # @param yscale float Y scale in PCS space (commonly expressed in meters)
 def add_area(identifier, description, projection_id, extent, xsize, ysize, xscale, yscale):
-  rave_area.add(identifier, description, projection_id, extent, xsize, ysize, xscale, yscale)
+    rave_area.add(identifier, description, projection_id, extent, xsize, ysize, xscale, yscale)
 
 
 ## Creates a new AREA definition based on one or more ODIM_H5 PVOL and/or SCAN files.
@@ -49,36 +52,37 @@ def add_area(identifier, description, projection_id, extent, xsize, ysize, xscal
 # @param yscale float Y scale in PCS space (commonly expressed in meters)
 # @returns AREA object with geometry but without 'id' and 'name' information
 def make_area(files, projection_id, xscale, yscale, add=False, area_id=None, description=None):
-  import glob, re
-
-  if re.search("\*", files):  # If there's a wildcard, glob for files
-    files = glob.glob(files)
-  else:
-    files = files.split()
-  A = rave_area.MakeAreaFromPolarFiles(files, projection_id, xscale, yscale)
-  if area_id:
-    A.Id = area_id
-  else:
-    A.Id = "__PROVISIONAL__"
+    import glob
+    import re
     
-  if description:
-    A.name = description
-  else:
-    A.name = 'Area using projection with identifier "%s"' % projection_id
-
-  rave_area.register(A)
-  rave_area.describe(A.Id)
-  if add:
-    add_area(A.Id, description, projection_id, A.extent, A.xsize, A.ysize, xscale, yscale)
-  else:
-    del rave_area._registry[A.Id]
-    print('Run again with -a -i <identifier> -d <"description"> to add this area to the registry.')
+    if re.search("\*", files):  # If there's a wildcard, glob for files
+        files = glob.glob(files)
+    else:
+        files = files.split()
+    A = rave_area.MakeAreaFromPolarFiles(files, projection_id, xscale, yscale)
+    if area_id:
+        A.Id = area_id
+    else:
+        A.Id = "__PROVISIONAL__"
+    
+    if description:
+        A.name = description
+    else:
+        A.name = 'Area using projection with identifier "%s"' % projection_id
+    
+    rave_area.register(A)
+    rave_area.describe(A.Id)
+    if add:
+        add_area(A.Id, description, projection_id, A.extent, A.xsize, A.ysize, xscale, yscale)
+    else:
+        del rave_area._registry[A.Id]
+        print('Run again with -a -i <identifier> -d <"description"> to add this area to the registry.')
 
 
 ## Lists the entries in the registry.
 def List():
     for identifier in rave_area.keys():
-        rave_area.describe(identifier)    
+        rave_area.describe(identifier)
 
 
 ## Removes an area from the registry.
@@ -89,85 +93,125 @@ def remove(identifier):
 
 if __name__ == "__main__":
     from optparse import OptionParser
-
-    description = "Add/remove an entry in the Cartesian area registry, make a new area definition based on one or more ODIM_H5 PVOL or SCAN files, or list the registry contents."
-
-    usage = 'usage: %prog -larm [-i <identifier> -d <"description"> --files <"file1 file2 file3..."> --extent <"float,float,float,float"> --xsize <int> --ysize <int> --xscale <float> --yscale <float>] [h]'
+    
+    # fmt: off
+    description = ("Add/remove an entry in the Cartesian area registry, make a new area definition based on one or "
+                   "more ODIM_H5 PVOL or SCAN files, or list the registry contents.")
+    
+    usage = ('usage: %prog -larm [-i <identifier> -d <"description"> --files <"file1 file2 file3..."> --extent '
+             '<"float,float,float,float"> --xsize <int> --ysize <int> --xscale <float> --yscale <float>] [h]')
     parser = OptionParser(usage=usage, description=description)
-
+    
     parser.add_option("-a", "--add", action="store_true", dest="add",
-					help="Add an algorithm to the registry.")
-
-    parser.add_option("-r", "--remove", action="store_true", dest="remove", 
-					help="Remove an algorithm from the registry.")
-
+                      help="Add an algorithm to the registry.")
+    
+    parser.add_option("-r", "--remove", action="store_true", dest="remove",
+                      help="Remove an algorithm from the registry.")
+    
     parser.add_option("-l", "--list", action="store_true", dest="list",
-					help="List the entries in the registry.")
-
+                      help="List the entries in the registry.")
+    
     parser.add_option("-m", "--make", action="store_true", dest="make",
-					help="Make a new area definition based on one or more ODIM_H5 PVOL or SCAN files.")
-
+                      help="Make a new area definition based on one or more ODIM_H5 PVOL or SCAN files.")
+    
     parser.add_option("-i", "--identifier", dest="id",
-					help="Identifier string of the area.")
-
+                      help="Identifier string of the area.")
+    
     parser.add_option("-d", "--description", dest="desc",
-					help="Free-text description of the area. A description of more than one word must be written in quotation marks.")
-
+                      help="Free-text description of the area. A description of more than one word must be written in "
+                           "quotation marks.")
+    
     parser.add_option("--proj_id", dest="pcsid",
-					help="Identifier string of the projection used by this area. Check registered projections with 'projection_registry --list'")
-
-    parser.add_option("--files", dest="files", 
-					help="One or more complete file strings of ODIM_H5 polar volume or polar scan files. PVOL and SCAN files can be combined in the same list. Wildcards can be used in one search pattern. Several file strings must be written in quotation marks and separated by white spaces.")
-
+                      help="Identifier string of the projection used by this area. Check registered projections with "
+                           "'projection_registry --list'")
+    
+    parser.add_option("--files", dest="files",
+                      help="One or more complete file strings of ODIM_H5 polar volume or polar scan files. PVOL and "
+                           "SCAN files can be combined in the same list. Wildcards can be used in one search pattern. "
+                           "Several file strings must be written in quotation marks and separated by white spaces.")
+    
     parser.add_option("--extent", dest="extent",
-					help="String representation of a 4-tuple containing PCS coordinates for the lower-left and upper-right area corners 'LLx, LLx, URx, URy'. NOTE that upper-right coordinates represent the lower-left corner of the upper-right pixel. Must be written in quotation marks and separated by commas.")
+                      help="String representation of a 4-tuple containing PCS coordinates for the lower-left and upper-right area corners 'LLx, LLx, URx, URy'. "
+                           "NOTE that upper-right coordinates represent the lower-left corner of the upper-right pixel. "
+                           "Must be written in quotation marks and separated by commas.")
 
     parser.add_option("--xsize", dest="xsize",
-					help="The number of pixels in the X dimension.")
+                      help="The number of pixels in the X dimension.")
 
     parser.add_option("--ysize", dest="ysize",
-					help="The number of pixels in the Y dimension.")
+                      help="The number of pixels in the Y dimension.")
 
     parser.add_option("--xscale", dest="xscale",
-					help="The pixel resolution in PCS space (commonly meters) in the X dimension.")
-
+                      help="The pixel resolution in PCS space (commonly meters) in the X dimension.")
+    
     parser.add_option("--yscale", dest="yscale",
-					help="The pixel resolution in PCS space (commonly meters) in the Y dimension.")
-
+                      help="The pixel resolution in PCS space (commonly meters) in the Y dimension.")
+    # fmt: on
     (options, args) = parser.parse_args()
-
+    
     if not (options.add or options.remove or options.list or options.make):
         print("One of options --add, --remove, --list or --make must be provided!")
         parser.print_help()
         sys.exit()
-        
+    
     if options.add and not options.make:
-        if not (options.id and options.desc and options.pcsid and options.extent and options.xsize and options.ysize and options.xscale and options.yscale):
-            print("If option --add is used without make, all of the following options must also be provided: --identifier, --description, --proj_id, --extent, --xsize, --ysize, --xscale and --yscale!")
+        if not (
+            options.id
+            and options.desc
+            and options.pcsid
+            and options.extent
+            and options.xsize
+            and options.ysize
+            and options.xscale
+            and options.yscale
+        ):
+            print(
+                "If option --add is used without make, all of the following options must also be provided: "
+                "--identifier, --description, --proj_id, --extent, --xsize, --ysize, --xscale and --yscale!"
+            )
             parser.print_help()
             sys.exit()
     
     if options.make:
-      if not (options.files and options.pcsid and options.xscale and options.yscale):
-        print("If option --make is provided, all of the following options must also be provided: --files, --proj_id, --xscale and --yscale!")
+        if not (options.files and options.pcsid and options.xscale and options.yscale):
+            print(
+                "If option --make is provided, all of the following options must also be provided: --files, "
+                "--proj_id, --xscale and --yscale!"
+            )
+            parser.print_help()
+            sys.exit()
+    
+    if options.remove and not options.id:
+        print("If option --remove is provided, --identifier must also be provided!")
         parser.print_help()
         sys.exit()
-        
-    if options.remove and not options.id:
-      print("If option --remove is provided, --identifier must also be provided!")
-      parser.print_help()
-      sys.exit()
-
+    
     if options.remove:
         remove(options.id)
     elif options.list:
         List()
     elif options.add and not options.make:
-        add_area(options.id, options.desc, options.pcsid, rave_area.make_tuple(options.extent), 
-            int(options.xsize), int(options.ysize), float(options.xscale), float(options.yscale))
+        add_area(
+            options.id,
+            options.desc,
+            options.pcsid,
+            rave_area.make_tuple(options.extent),
+            int(options.xsize),
+            int(options.ysize),
+            float(options.xscale),
+            float(options.yscale),
+        )
     elif options.make:
         if options.add:
-            make_area(options.files, options.pcsid, float(options.xscale), float(options.yscale), add=True, area_id=options.id, description=options.desc)
+            make_area(
+                options.files,
+                options.pcsid,
+                float(options.xscale),
+                float(options.yscale),
+                add=True,
+                area_id=options.id,
+                description=options.desc,
+            )
         else:
             make_area(options.files, options.pcsid, float(options.xscale), float(options.yscale))
     else:

@@ -972,6 +972,22 @@ RaveList_t* PolarScan_getAttributeNames(PolarScan_t* scan);
 RaveList_t* PolarScan_getAttributeNamesVersion(PolarScan_t* scan, RaveIO_ODIM_Version version);
 
 /**
+ * Returns a list of sub group attribute names. Release with \@ref #RaveList_freeAndDestroy.
+ * @param[in] scan - self
+ * @returns a list of sub group attribute names
+ */
+RaveList_t* PolarScan_getSubGroupAttributeNames(PolarScan_t* scan);
+
+/**
+ * Returns a list of sub group attribute names for specified version. Release with \@ref #RaveList_freeAndDestroy.
+ * NOTE! This method is usually only used internally.
+ * @param[in] scan - self
+ * @param[in] version - the attribute version
+ * @returns a list of sub group attribute names
+ */
+RaveList_t* PolarScan_getSubGroupAttributeNamesVersion(PolarScan_t* scan, RaveIO_ODIM_Version version);
+
+/**
  * Returns a list of attribute values belonging to this scan.
  * @param[in] scan - self
  * @returns a list of RaveAttributes.

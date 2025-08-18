@@ -375,6 +375,9 @@ static int AcqvaCompositeGeneratorFactory_onFinished(CompositeEngine_t* engine, 
 {
   //AcqvaCompositeGeneratorFactory_t* self = (AcqvaCompositeGeneratorFactory_t*)extradata;
   int i = 0;
+  int result = 1;
+  RaveAttribute_t* camethod = NULL;
+
   for (i = 0; i < nbindings; i++) {
     int j = 0, nscans = PolarVolume_getNumberOfScans((PolarVolume_t*)bindings[i].object);
     for (j = 0; j < nscans; j++) {
@@ -391,10 +394,26 @@ static int AcqvaCompositeGeneratorFactory_onFinished(CompositeEngine_t* engine, 
   }
   
   if (Cartesian_hasParameter(cartesian, "RATE")) {
-    return CompositeEngineFunctions_updateRATECoefficients(arguments, cartesian, bindings, nbindings);
+    result = CompositeEngineFunctions_updateRATECoefficients(arguments, cartesian, bindings, nbindings);
   }
   
-  return 1;
+  if (result) {
+    camethod = RaveAttributeHelp_createString("how/camethod", "QMAXIMUM");
+    if (camethod == NULL) {
+      RAVE_ERROR0("Could not create how/camethod = QMAXIMUM");
+      result = 0;
+      goto done;
+    }
+    if (!Cartesian_addAttribute(cartesian, camethod)) {
+      RAVE_ERROR0("Could not add attribute how/camethod to cartesian product");
+      result = 0;
+      goto done;
+    }
+  }
+
+done:
+  RAVE_OBJECT_RELEASE(camethod);
+  return result;
 }
 
 /**

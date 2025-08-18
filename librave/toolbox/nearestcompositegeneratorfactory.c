@@ -245,11 +245,33 @@ static int NearestCompositeGeneratorFactory_onFinished(CompositeEngine_t* engine
 {
   /*NearestCompositeGeneratorFactory_t* self = (NearestCompositeGeneratorFactory_t*)extradata;*/
   int result = 0;
+  RaveAttribute_t* camethod = NULL;
+
   if (Cartesian_hasParameter(cartesian, "RATE")) {
     result = CompositeEngineFunctions_updateRATECoefficients(arguments, cartesian, bindings, nbindings);
   } else {
     result = 1;
   }
+
+  if (result) {
+    Rave_CompositingProduct cproduct = CompositeArguments_getCompositingProduct(arguments);
+    if (cproduct == Rave_CompositingProduct_MAX || cproduct == Rave_CompositingProduct_PMAX) {
+      camethod = RaveAttributeHelp_createString("how/camethod", "MAXIMUM");
+    } else {
+      Rave_Compositing_SelectionMethod smethod = CompositeArguments_getSelectionMethod(arguments);
+      if (smethod == Rave_Compositing_SelectionMethod_UNKNOWN || smethod == Rave_Compositing_SelectionMethod_UNDEFINED || smethod == Rave_Compositing_SelectionMethod_NEAREST) {
+        camethod = RaveAttributeHelp_createString("how/camethod", "NEAREST");
+      } else {
+        camethod = RaveAttributeHelp_createString("how/camethod", "MDE");
+      }
+    }
+    if (!Cartesian_addAttribute(cartesian, camethod)) {
+      RAVE_ERROR0("Could not add attribute how/camethod to cartesian product");
+      result = 0;
+    }
+  }
+
+  RAVE_OBJECT_RELEASE(camethod);
   return result;
 }
 

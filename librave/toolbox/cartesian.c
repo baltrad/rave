@@ -1127,6 +1127,35 @@ RaveField_t* Cartesian_findQualityFieldByHowTask(Cartesian_t* self, const char* 
   return result;
 }
 
+RaveField_t* Cartesian_findAnyQualityFieldByHowTask(Cartesian_t* self, const char* value)
+{
+  RaveField_t* result = NULL;
+
+  RAVE_ASSERT((self != NULL), "self == NULL");
+
+  result = Cartesian_getQualityFieldByHowTask(self, value);
+
+  if (result == NULL && self->currentParameter != NULL) {
+    result = CartesianParam_getQualityFieldByHowTask(self->currentParameter, value);
+  }
+
+  if (result == NULL) {
+    RaveObjectList_t* params = RaveObjectHashTable_values(self->parameters);
+    if (params != NULL) {
+      int nparams = 0, i = 0;
+      nparams = RaveObjectList_size(params);
+      for (i = 0; result == NULL && i < nparams; i++) {
+        CartesianParam_t* param = (CartesianParam_t*)RaveObjectList_get(params, i);
+        result = CartesianParam_getQualityFieldByHowTask(param, value);
+        RAVE_OBJECT_RELEASE(param);
+      }
+    }
+    RAVE_OBJECT_RELEASE(params);
+  }
+
+  return result;
+}
+
 int Cartesian_addParameter(Cartesian_t* self, CartesianParam_t* param)
 {
   int result = 0;

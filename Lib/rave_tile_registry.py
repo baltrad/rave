@@ -32,12 +32,12 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #   </area>
 # </rave-tile-registry>
 
-## 
+##
 # @file
 # @author Anders Henja, SMHI
 # @date 2011-11-04
 
-#from rave_defines import TILE_REGISTRY
+# from rave_defines import TILE_REGISTRY
 import xml.etree.ElementTree as ET
 import _area
 import rave_pgf_logger
@@ -53,20 +53,29 @@ _registry = {}
 
 my_area_registry = area_registry.area_registry()
 
-class tiledef(object):
-  def __init__(self, id, extent):
-    self.id = id
-    self.extent = tuple(extent)
 
-  def __repr__(self):
-    return "<tile id=\"%s\" extent=\"%f,%f,%f,%f\" />"%(self.id, self.extent[0],self.extent[1],self.extent[2],self.extent[3])
+class tiledef(object):
+    def __init__(self, id, extent):
+        self.id = id
+        self.extent = tuple(extent)
+
+    def __repr__(self):
+        return "<tile id=\"%s\" extent=\"%f,%f,%f,%f\" />" % (
+            self.id,
+            self.extent[0],
+            self.extent[1],
+            self.extent[2],
+            self.extent[3],
+        )
+
 
 ##
 # Returns if the area id is registered in the tile registry or not
 # @param aid: the area identifier (e.g. swegmaps_2000)
 # @return if the area id has got a tile definition or not
 def has_tiled_area(aid):
-  return aid in _registry
+    return aid in _registry
+
 
 ##
 # Get all the tiled areas belonging to the specified area. The area has to reside in the area_registry in order
@@ -74,67 +83,69 @@ def has_tiled_area(aid):
 # @param a the AreaCore (_area) instance
 # @return: a list of tiled area definitions
 def get_tiled_areas(a):
-  if not a.id in _registry:
-    raise KeyError("No such area (%s) with tiles defined"%a.id)
-  tiledareas=[]
-  
-  totalx, totaly = 0, 0
-  
-  for ta in _registry[a.id]:
-    pyarea = _area.new()
-    pyarea.id = "%s_%s"%(a.id, ta.id)
-    pyarea.xsize = int(round((ta.extent[2] - ta.extent[0]) / a.xscale))
-    pyarea.ysize = int(round((ta.extent[3] - ta.extent[1]) / a.yscale))
-    totalx = totalx + pyarea.xsize
-    totaly = totaly + pyarea.ysize
-    pyarea.xscale = a.xscale
-    pyarea.yscale = a.yscale
-    pyarea.projection = a.projection
-    pyarea.extent = ta.extent
-    tiledareas.append(pyarea)
+    if not a.id in _registry:
+        raise KeyError("No such area (%s) with tiles defined" % a.id)
+    tiledareas = []
 
-  return tiledareas    
+    totalx, totaly = 0, 0
+
+    for ta in _registry[a.id]:
+        pyarea = _area.new()
+        pyarea.id = "%s_%s" % (a.id, ta.id)
+        pyarea.xsize = int(round((ta.extent[2] - ta.extent[0]) / a.xscale))
+        pyarea.ysize = int(round((ta.extent[3] - ta.extent[1]) / a.yscale))
+        totalx = totalx + pyarea.xsize
+        totaly = totaly + pyarea.ysize
+        pyarea.xscale = a.xscale
+        pyarea.yscale = a.yscale
+        pyarea.projection = a.projection
+        pyarea.extent = ta.extent
+        tiledareas.append(pyarea)
+
+    return tiledareas
+
 
 ##
-# Creates the tiles for the specified area with the specified number of tiles. The tiles should be a 
+# Creates the tiles for the specified area with the specified number of tiles. The tiles should be a
 # tuple containing (nr of x-tiles, nr of y-tiles).
 # @param a: the name of the area as defined in the area registry
 # @param tiles: a tuple defining the tile definition (nr of x-tiles, nr of y-tiles)
 # @return the tile definition
 def generate_tiles_for_area(aid, tiles):
-  if len(tiles) != 2 or tiles[0] == 0 or tiles[1] == 0:
-    raise ValueError("tiles should be a tuple (nr of x-tiles, nr of y-tiles)")
-  a = my_area_registry.getarea(aid)
-  xdistance = a.extent[2]-a.extent[0]
-  ydistance = a.extent[3]-a.extent[1]
-  xtilesize = xdistance / float(tiles[0])
-  ytilesize = ydistance / float(tiles[1])
+    if len(tiles) != 2 or tiles[0] == 0 or tiles[1] == 0:
+        raise ValueError("tiles should be a tuple (nr of x-tiles, nr of y-tiles)")
+    a = my_area_registry.getarea(aid)
+    xdistance = a.extent[2] - a.extent[0]
+    ydistance = a.extent[3] - a.extent[1]
+    xtilesize = xdistance / float(tiles[0])
+    ytilesize = ydistance / float(tiles[1])
 
-  # We need to adjust area extents so that they are evenly dividable with xscale so that we don't get gaps when rounding
-  modxtilesize = math.floor(xtilesize / a.xscale) * a.xscale
-  xoffset = xtilesize - modxtilesize
-  xtilesize=modxtilesize
-  modytilesize = math.floor(ytilesize / a.yscale) * a.yscale
-  yoffset = ytilesize - modytilesize
-  ytilesize = modytilesize
+    # We need to adjust area extents so that they are evenly dividable with xscale so that we don't get gaps when rounding
+    modxtilesize = math.floor(xtilesize / a.xscale) * a.xscale
+    xoffset = xtilesize - modxtilesize
+    xtilesize = modxtilesize
+    modytilesize = math.floor(ytilesize / a.yscale) * a.yscale
+    yoffset = ytilesize - modytilesize
+    ytilesize = modytilesize
 
-  ulY = a.extent[3]
-  
-  result=[]
-  for y in range(tiles[1]):
-    ulY_end = ulY - ytilesize
-    if y == tiles[1] - 1:
-      ulY_end = ulY_end - (y+1)*yoffset
-    ulX = a.extent[0]
-    for x in range(tiles[0]):
-      ulX_end = ulX + xtilesize
-      if x == tiles[0] - 1:
-        ulX_end = ulX_end + (x+1)*xoffset
-      result.append(tiledef("%d_%d"%(y,x), (ulX,ulY_end,ulX_end,ulY)))
-      ulX = ulX_end
-    ulY = ulY_end
+    ulY = a.extent[3]
 
-  return result
+    result = []
+    for y in range(tiles[1]):
+        ulY_end = ulY - ytilesize
+        if y == tiles[1] - 1:
+            ulY_end = ulY_end - (y + 1) * yoffset
+        ulX = a.extent[0]
+        for x in range(tiles[0]):
+            ulX_end = ulX + xtilesize
+            if x == tiles[0] - 1:
+                ulX_end = ulX_end + (x + 1) * xoffset
+            result.append(tiledef("%d_%d" % (y, x), (ulX, ulY_end, ulX_end, ulY)))
+            ulX = ulX_end
+        ulY = ulY_end
+
+    return result
+
 
 ##
 # Creates an appropriate tile registry definition for the specified area with the
@@ -143,38 +154,40 @@ def generate_tiles_for_area(aid, tiles):
 # @param tiles: a tuple defining the tile definition (nr of x-tiles, nr of y-tiles)
 # @return the tile definition
 def create_tile_definition_for_area(aid, tiles):
-  tiledefs = generate_tiles_for_area(aid, tiles)
-  print("<area id=\"%s\"><!-- maps to an area definition in area_registry.xml -->"%aid)
-  for t in tiledefs:
-    print("  %s"%t)
-  print("</area>")
+    tiledefs = generate_tiles_for_area(aid, tiles)
+    print("<area id=\"%s\"><!-- maps to an area definition in area_registry.xml -->" % aid)
+    for t in tiledefs:
+        print("  %s" % t)
+    print("</area>")
+
 
 ##
 # Initializes the registry by reading the xml file with the plugin
 # definitions.
 #
 def init():
-  global _initialized
-  if _initialized:
-    return
-  import importlib
-    
-  O = ET.parse(RAVE_TILE_REGISTRY)
-  registry = O.getroot()
-  for adef in list(registry):
-    aid = adef.attrib["id"]
-    tiles=[]
-    for tdef in list(adef):
-      extent = [float(a.strip()) for a in tdef.attrib["extent"].split(",")]
-      td = tiledef(tdef.attrib["id"], extent)
-      tiles.append(td)
-    _registry[aid] = tiles
+    global _initialized
+    if _initialized:
+        return
+    import importlib
 
-  _initialized = True
+    O = ET.parse(RAVE_TILE_REGISTRY)
+    registry = O.getroot()
+    for adef in list(registry):
+        aid = adef.attrib["id"]
+        tiles = []
+        for tdef in list(adef):
+            extent = [float(a.strip()) for a in tdef.attrib["extent"].split(",")]
+            td = tiledef(tdef.attrib["id"], extent)
+            tiles.append(td)
+        _registry[aid] = tiles
+
+    _initialized = True
+
 
 ##
 # Load the registry
 init()
 
-if __name__=="__main__":
-  create_tile_definition_for_area("swegmaps_2000", (2,2))
+if __name__ == "__main__":
+    create_tile_definition_for_area("swegmaps_2000", (2, 2))

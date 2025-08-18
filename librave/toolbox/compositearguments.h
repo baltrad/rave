@@ -61,6 +61,12 @@ typedef enum Rave_CompositingProduct {
   Rave_CompositingProduct_UNDEFINED  /**< Not defined*/
 } Rave_CompositingProduct;
 
+typedef enum Rave_Compositing_SelectionMethod {
+  Rave_Compositing_SelectionMethod_NEAREST = 0,  /**< Nearest radar, string can be NEAREST and NEAREST_RADAR*/
+  Rave_Compositing_SelectionMethod_HEIGHT_ABOVE_SEALEVEL, /**< Closest to sea level, string can be HEIGHT or HEIGHT_ABOVE_SEALEVEL */
+  Rave_Compositing_SelectionMethod_UNKNOWN, /**< unknown translation */
+  Rave_Compositing_SelectionMethod_UNDEFINED /**< selection method is not defined */
+} Rave_Compositing_SelectionMethod;
 
 /**
  * Converts a method into a string.
@@ -116,6 +122,14 @@ Rave_CompositingProduct CompositeArguments_getCompositingProduct(CompositeArgume
  * 
  */
 Rave_ProductType CompositeArguments_getProductType(CompositeArguments_t* args);
+
+/**
+ * If user has specified selection_method it might be possible to translate it into a selection
+ * method type that is easier to verify.
+ * If selection_method has not been set, the returned selection method is Rave_Compositing_SelectionMethod_UNDEFINED.
+ * If selection method is set but not can be translated, it is returned as Rave_Compositing_SelectionMethod_UNKNOWN.
+ */
+Rave_Compositing_SelectionMethod CompositeArguments_getSelectionMethod(CompositeArguments_t* args);
 
 /**
  * Sets the area to use when creating the composite.

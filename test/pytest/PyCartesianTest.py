@@ -964,7 +964,6 @@ class PyCartesianTest(unittest.TestCase):
     self.assertEqual("se.task.3", obj.findQualityFieldByHowTask("se.task.3").getAttribute("how/task"))
     self.assertEqual(None, obj.findQualityFieldByHowTask("abc"))
 
-  
   def test_addParameter(self):
     obj = _cartesian.new()
     param = _cartesianparam.new()

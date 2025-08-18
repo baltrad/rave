@@ -928,6 +928,47 @@ fail:
 }
 
 /**
+ * Returns a list of sub group attribute names
+ * @param[in] self - this instance
+ * @param[in] args - N/A
+ * @returns a list of sub group attribute names
+ */
+static PyObject* _pypolarscan_getSubGroupAttributeNames(PyPolarScan* self, PyObject* args)
+{
+  RaveList_t* list = NULL;
+  PyObject* result = NULL;
+  int n = 0;
+  int i = 0;
+
+  list = PolarScan_getSubGroupAttributeNames(self->scan);
+  if (list == NULL) {
+    raiseException_returnNULL(PyExc_MemoryError, "Could not get attribute names");
+  }
+  n = RaveList_size(list);
+  result = PyList_New(0);
+  for (i = 0; result != NULL && i < n; i++) {
+    char* name = RaveList_get(list, i);
+    if (name != NULL) {
+      PyObject* pynamestr = PyString_FromString(name);
+      if (pynamestr == NULL) {
+        goto fail;
+      }
+      if (PyList_Append(result, pynamestr) != 0) {
+        Py_DECREF(pynamestr);
+        goto fail;
+      }
+      Py_DECREF(pynamestr);
+    }
+  }
+  RaveList_freeAndDestroy(&list);
+  return result;
+fail:
+  RaveList_freeAndDestroy(&list);
+  Py_XDECREF(result);
+  return NULL;
+}
+
+/**
  * Returns if the scan is valid or not (for storage purposes)
  * @param[in] self - this instance
  * @param[in] args - rave object type as integer
@@ -1497,6 +1538,10 @@ static struct PyMethodDef _pypolarscan_methods[] =
   {"getAttributeNames", (PyCFunction) _pypolarscan_getAttributeNames, 1,
     "getAttributeNames() -> array of names \n\n"
     "Returns the attribute names associated with this scan"
+  },
+  {"getSubGroupAttributeNames", (PyCFunction) _pypolarscan_getSubGroupAttributeNames, 1,
+    "getSubGroupAttributeNames() -> array of names \n\n"
+    "Returns the sub group attribute names associated with this scan"
   },
   {"isValid", (PyCFunction) _pypolarscan_isValid, 1,
     "isValid(otype) -> a boolean \n\n"

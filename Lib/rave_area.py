@@ -27,19 +27,23 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @author Daniel Michelson, SMHI, based on work originally contracted to Fredrik Lundh
 ## @date 2011-06-28
 
-import os, string
+# Standard python libs:
+import os
+import string
+
+# Module/Project:
 import rave_projection, _area, _projection, _projectionpipeline, Proj
 import rave_xml
 from rave_defines import RAVECONFIG, UTF8, AREA_REGISTRY
 import _polarscan, _polarvolume
 
-got_arearegistry=True
+got_arearegistry = True
 try:
     import _arearegistry
 except:
-    got_arearegistry=False
+    got_arearegistry = False
 
-## There's only one official area registry, but this module allows 
+## There's only one official area registry, but this module allows
 # greater flexibility as long as files use the same naming convention.
 AREAS = os.path.join(RAVECONFIG, '*area_registry.xml')
 
@@ -47,9 +51,11 @@ AREAS = os.path.join(RAVECONFIG, '*area_registry.xml')
 ## Empty registry to be filled
 _registry = {}
 
+
 ## Returns a list of keys in the registry
 def keys():
     return _registry.keys()
+
 
 ## Returns a list of tuples containing key:item pairs in the registry
 # where the key is the area's identifier and the item is its object.
@@ -62,6 +68,7 @@ def items():
 
 initialized = 0
 
+
 ## Area object
 class AREA(rave_xml.xmlmap):
     ## Dummy initializer
@@ -71,7 +78,7 @@ class AREA(rave_xml.xmlmap):
     ## Maps attributes from AREA instance 'common' which don't exist in 'self'
     ## @param common attribute
     def fromCommon(self, common):
-         for a in dir(common):
+        for a in dir(common):
             if not hasattr(self, a):
                 setattr(self, a, getattr(common, a))
 
@@ -82,10 +89,10 @@ def init():
     from xml.etree import ElementTree
 
     global initialized
-    if initialized: return
+    if initialized:
+        return
 
     for fstr in glob.glob(AREAS):
-
         E = ElementTree.parse(fstr)
 
         for e in E.findall('area'):
@@ -93,8 +100,10 @@ def init():
             this.Id = e.get('id')
             this.name = e.find('description').text.encode(UTF8)
             this.getArgs(e.find('areadef'))
-            if hasattr(this, 'size'): this.xsize = this.ysize = this.size
-            if hasattr(this, 'scale'): this.xscale = this.yscale = this.scale
+            if hasattr(this, 'size'):
+                this.xsize = this.ysize = this.size
+            if hasattr(this, 'scale'):
+                this.xscale = this.yscale = this.scale
 
             register(this)
 
@@ -103,7 +112,7 @@ def init():
 
 ## Returns the area instance corresponding with the given identifier
 # @param Id String identifier of the desired area
-# @returns an AREA instance representing the desired area 
+# @returns an AREA instance representing the desired area
 def area(Id):
     if not isinstance(Id, str):
         raise KeyError("Argument 'Id' not a string")
@@ -113,28 +122,40 @@ def area(Id):
 ## Registers a new AREA instance
 # @param A AREA instance
 def register(A):
-    A.validate(["Id", "name", "pcs", "extent",
-                "xsize", "ysize", "xscale", "yscale"])
-    
+    A.validate(["Id", "name", "pcs", "extent", "xsize", "ysize", "xscale", "yscale"])
+
     # Switch to strings
-    if isinstance(A.pcs, bytes): A.pcs = A.pcs.decode()
-    if isinstance(A.name, bytes): A.name = A.name.decode()
-    if isinstance(A.Id, bytes): A.Id = A.Id.decode()
-    if isinstance(A.xsize, bytes): A.xsize = A.xsize.decode()
-    if isinstance(A.ysize, bytes): A.ysize = A.ysize.decode()
-    if isinstance(A.xscale, bytes): A.xscale = A.xscale.decode()
-    if isinstance(A.yscale, bytes): A.yscale = A.yscale.decode()
-    if isinstance(A.extent, bytes): A.extent = A.extent.decode()
-    
+    if isinstance(A.pcs, bytes):
+        A.pcs = A.pcs.decode()
+    if isinstance(A.name, bytes):
+        A.name = A.name.decode()
+    if isinstance(A.Id, bytes):
+        A.Id = A.Id.decode()
+    if isinstance(A.xsize, bytes):
+        A.xsize = A.xsize.decode()
+    if isinstance(A.ysize, bytes):
+        A.ysize = A.ysize.decode()
+    if isinstance(A.xscale, bytes):
+        A.xscale = A.xscale.decode()
+    if isinstance(A.yscale, bytes):
+        A.yscale = A.yscale.decode()
+    if isinstance(A.extent, bytes):
+        A.extent = A.extent.decode()
+
     A.pcs = A.pcs.replace("\n", "").lstrip(" ").rstrip(" ")
     A.name = A.name.replace("\n", "").lstrip(" ").rstrip(" ")
-    
+
     # Likewise, rave_simplexml.c doesn't write argument types, so we must enforce them here.
-    if isinstance(A.xsize, str): A.xsize = int(A.xsize)
-    if isinstance(A.ysize, str): A.ysize = int(A.ysize)
-    if isinstance(A.xscale, str): A.xscale = float(A.xscale)
-    if isinstance(A.yscale, str): A.yscale = float(A.yscale)
-    if isinstance(A.extent, str): A.extent = make_tuple(A.extent)
+    if isinstance(A.xsize, str):
+        A.xsize = int(A.xsize)
+    if isinstance(A.ysize, str):
+        A.ysize = int(A.ysize)
+    if isinstance(A.xscale, str):
+        A.xscale = float(A.xscale)
+    if isinstance(A.yscale, str):
+        A.yscale = float(A.yscale)
+    if isinstance(A.extent, str):
+        A.extent = make_tuple(A.extent)
 
     A.pcs = rave_projection.pcs(A.pcs)
     _registry[A.Id] = A
@@ -142,9 +163,10 @@ def register(A):
 
 ## Convenience function for converting a text representation of a tuple to a tuple.
 # @param text Input string
-# @returns a tuple containing the converted string 
+# @returns a tuple containing the converted string
 def make_tuple(text):
     import re
+
     text = re.sub(" ", "", text)  # weed out spacebars
     L = []
     for item in text.split(','):
@@ -161,19 +183,22 @@ init()
 # @param parent parent XML element
 # @param id string identifier for the tag
 # @param text string containing a test representation of the SubElement's contents
-# @param Type can be any of 'float', 'int', or 'sequence'  
+# @param Type can be any of 'float', 'int', or 'sequence'
 # @returns the formatted SubElement
 def makearg(parent, id, text, Type=None):
     from xml.etree.ElementTree import SubElement
+
     arg = SubElement(parent, 'arg')
     arg.set('id', id)
-    if Type: arg.set('type', Type)
+    if Type:
+        arg.set('type', Type)
     arg.text = text
     return arg
 
 
 # --------------------------------------------------------------------
 # Using new APIs
+
 
 ## Adds a new area to the registry. If an existing entry with the same identifier exists,
 # it is overwritten.
@@ -200,11 +225,13 @@ def add(id, description, projection_id, extent, xsize, ysize, xscale, yscale, fi
     a.xsize, a.ysize = xsize, ysize
     a.xscale, a.yscale = xscale, yscale
     p = rave_projection.pcs(a.pcsid)
-    pid=p.id
-    pname=p.name
-    if isinstance(pid, bytes): pid = pid.decode()
-    if isinstance(pname, bytes): pname = pname.decode()
-   
+    pid = p.id
+    pname = p.name
+    if isinstance(pid, bytes):
+        pid = pid.decode()
+    if isinstance(pname, bytes):
+        pname = pname.decode()
+
     a.projection = _projection.new(pid, pname, " ".join(p.definition))
 
     reg.add(a)
@@ -230,7 +257,7 @@ def write(filename=AREA_REGISTRY):
 
     if not got_arearegistry:
         raise Exception("Can not use area registry")
-    
+
     new_registry = _arearegistry.new()
     for k, i in items():
         if k not in check:
@@ -240,7 +267,7 @@ def write(filename=AREA_REGISTRY):
             tmp.extent = i.extent
             tmp.xsize, tmp.ysize = i.xsize, i.ysize
             tmp.xscale, tmp.yscale = i.xscale, i.yscale
-            
+
             new_registry.add(tmp)
 
             check.append(k)
@@ -250,7 +277,7 @@ def write(filename=AREA_REGISTRY):
 
 
 ## Prints an area's characteristics to stdout
-# @param id The area's string identifier 
+# @param id The area's string identifier
 def describe(id):
     a = _registry[id]
     (LL_lon, LL_lat), (UR_lon, UR_lat), (UL_lon, UL_lat), (LR_lon, LR_lat) = MakeCornersFromExtent(id)
@@ -270,16 +297,18 @@ def describe(id):
 #
 def llToSc(lonlat, pcs_id):
     import rave_projection
+
     projdef = ' '.join(rave_projection.pcs(pcs_id).definition)
     pipeline = _projectionpipeline.createDefaultLonLatPipeline(projdef)
     return pipeline.fwd(lonlat)
+
 
 ## Calculates the corner coordinates in lon/lat based on an area's extent.
 # NOTE: the corners in lon/lat are the true outside corners of each pixel,
 # whereas the extent always represents the position of the lower-left corner
 # of each corner pixel.
 # @param id string identifying the area
-# @returns tuple of tuples containing floats with lon/lat coordinates for 
+# @returns tuple of tuples containing floats with lon/lat coordinates for
 # lower-left, upper-right, upper-left, and lower-right corner coordinates
 def MakeCornersFromExtent(id):
     a = _registry[id]
@@ -288,65 +317,67 @@ def MakeCornersFromExtent(id):
     pipeline = _projectionpipeline.createDefaultLonLatPipeline(' '.join(a.pcs.definition))
 
     LL_lon, LL_lat = Proj.r2d(pipeline.inv((extent[0], extent[1])))
-    UR_lon, UR_lat = Proj.r2d(pipeline.inv((extent[2]+a.xscale,
-                                         extent[3]+a.yscale)))
-    UL_lon, UL_lat = Proj.r2d(pipeline.inv((extent[0], extent[3]+a.yscale)))
-    LR_lon, LR_lat = Proj.r2d(pipeline.inv((extent[2]+a.xscale, extent[1])))
+    UR_lon, UR_lat = Proj.r2d(pipeline.inv((extent[2] + a.xscale, extent[3] + a.yscale)))
+    UL_lon, UL_lat = Proj.r2d(pipeline.inv((extent[0], extent[3] + a.yscale)))
+    LR_lon, LR_lat = Proj.r2d(pipeline.inv((extent[2] + a.xscale, extent[1])))
     return (LL_lon, LL_lat), (UR_lon, UR_lat), (UL_lon, UL_lat), (LR_lon, LR_lat)
 
 
-## Convenience function that automatically derives a new area from several input 
+## Convenience function that automatically derives a new area from several input
 # ODIM_H5 polar volume or scan files. Mandatory single input file will give an area
-# for that single site. If more files are given, the derived area will represent 
+# for that single site. If more files are given, the derived area will represent
 # the coverage of all these radars. Depending on the characteristics of the given
 # projection, different radars will determine the north, south, east, and west
 # edges of the derived area.
 # @param files List of file strings of input ODIM_H5 files
 # @param proj_id identifier string of the projection to use for this area
-# @param xscale float Horizontal X-dimension resolution in projection-specific units (commonly meters)  
-# @param yscale float Horizontal Y-dimension resolution in projection-specific units (commonly meters)  
+# @param xscale float Horizontal X-dimension resolution in projection-specific units (commonly meters)
+# @param yscale float Horizontal Y-dimension resolution in projection-specific units (commonly meters)
 # @returns Don't know
 def MakeAreaFromPolarFiles(files, proj_id='llwgs84', xscale=2000.0, yscale=2000.0):
     import _rave, _raveio
-    
+
     areas = []
     for fstr in files:
         io = _raveio.open(fstr)
         if io.objectType == _rave.Rave_ObjectType_PVOL:
-        # Assert ascending volume, assuming the scan with the longest range will be the one with the longest surface distance
+            # Assert ascending volume, assuming the scan with the longest range will be the one with the longest surface distance
             scan = io.object.getScanWithMaxDistance()
         elif io.objectType == _rave.Rave_ObjectType_SCAN:
             scan = io.object
         else:
             raise IOError("Input file %s is not a polar volume or scan" % fstr)
 
-        
         io.close()
         areas.append(MakeSingleAreaFromSCAN(scan, proj_id, xscale, yscale))
-    
-    minx =  10e100
+
+    minx = 10e100
     maxx = -10e100
-    miny =  10e100
+    miny = 10e100
     maxy = -10e100
 
     for a in areas:
-        if a.extent[0] < minx: minx = a.extent[0]
-        if a.extent[1] < miny: miny = a.extent[1]
-        if a.extent[2] > maxx: maxx = a.extent[2]
-        if a.extent[3] > maxy: maxy = a.extent[3]
+        if a.extent[0] < minx:
+            minx = a.extent[0]
+        if a.extent[1] < miny:
+            miny = a.extent[1]
+        if a.extent[2] > maxx:
+            maxx = a.extent[2]
+        if a.extent[3] > maxy:
+            maxy = a.extent[3]
 
     # Expand to nearest pixel - buffering by one pixel was done in MakeSingleAreaFromSCAN
-    dx = (maxx-minx) / xscale
-    dx = (1.0-(dx-int(dx))) * xscale
+    dx = (maxx - minx) / xscale
+    dx = (1.0 - (dx - int(dx))) * xscale
     if dx < xscale:
         minx -= dx
-    dy = (maxy-miny) / yscale
-    dy = (1.0-(dy-int(dy))) * yscale
+    dy = (maxy - miny) / yscale
+    dy = (1.0 - (dy - int(dy))) * yscale
     if dy < yscale:
         miny -= dy
 
-    xsize = int(round((maxx-minx)/xscale, 0))
-    ysize = int(round((maxy-miny)/yscale, 0))
+    xsize = int(round((maxx - minx) / xscale, 0))
+    ysize = int(round((maxy - miny) / yscale, 0))
 
     A = AREA()
     A.xsize, A.ysize, A.xscale, A.yscale = xsize, ysize, xscale, yscale
@@ -355,54 +386,59 @@ def MakeAreaFromPolarFiles(files, proj_id='llwgs84', xscale=2000.0, yscale=2000.
 
     return A
 
-## Convenience function that automatically derives a new area from several input 
+
+## Convenience function that automatically derives a new area from several input
 # ODIM_H5 polar volume or scan objects. Mandatory single input object will give an area
-# for that single site. If more objects are given, the derived area will represent 
+# for that single site. If more objects are given, the derived area will represent
 # the coverage of all these radars. Depending on the characteristics of the given
 # projection, different radars will determine the north, south, east, and west
 # edges of the derived area.
 # @param files List of polar objects
 # @param proj_id identifier string of the projection to use for this area
-# @param xscale float Horizontal X-dimension resolution in projection-specific units (commonly meters)  
-# @param yscale float Horizontal Y-dimension resolution in projection-specific units (commonly meters)  
+# @param xscale float Horizontal X-dimension resolution in projection-specific units (commonly meters)
+# @param yscale float Horizontal Y-dimension resolution in projection-specific units (commonly meters)
 # @returns Don't know
 def MakeAreaFromPolarObjects(objects, proj_id='llwgs84', xscale=2000.0, yscale=2000.0):
     import _rave, _raveio
-    
+
     areas = []
     for o in objects:
-      if _polarvolume.isPolarVolume(o):
-        scan = o.getScanWithMaxDistance()
-      elif _polarscan.isPolarScan(o):
-        scan = o
-      else:
-        raise IOError("Input object is not a polar scan or volume")
-      
-      areas.append(MakeSingleAreaFromSCAN(scan, proj_id, xscale, yscale))
-    
-    minx =  10e100
+        if _polarvolume.isPolarVolume(o):
+            scan = o.getScanWithMaxDistance()
+        elif _polarscan.isPolarScan(o):
+            scan = o
+        else:
+            raise IOError("Input object is not a polar scan or volume")
+
+        areas.append(MakeSingleAreaFromSCAN(scan, proj_id, xscale, yscale))
+
+    minx = 10e100
     maxx = -10e100
-    miny =  10e100
+    miny = 10e100
     maxy = -10e100
 
     for a in areas:
-        if a.extent[0] < minx: minx = a.extent[0]
-        if a.extent[1] < miny: miny = a.extent[1]
-        if a.extent[2] > maxx: maxx = a.extent[2]
-        if a.extent[3] > maxy: maxy = a.extent[3]
+        if a.extent[0] < minx:
+            minx = a.extent[0]
+        if a.extent[1] < miny:
+            miny = a.extent[1]
+        if a.extent[2] > maxx:
+            maxx = a.extent[2]
+        if a.extent[3] > maxy:
+            maxy = a.extent[3]
 
     # Expand to nearest pixel - buffering by one pixel was done in MakeSingleAreaFromSCAN
-    dx = (maxx-minx) / xscale
-    dx = (1.0-(dx-int(dx))) * xscale
+    dx = (maxx - minx) / xscale
+    dx = (1.0 - (dx - int(dx))) * xscale
     if dx < xscale:
         minx -= dx
-    dy = (maxy-miny) / yscale
-    dy = (1.0-(dy-int(dy))) * yscale
+    dy = (maxy - miny) / yscale
+    dy = (1.0 - (dy - int(dy))) * yscale
     if dy < yscale:
         miny -= dy
 
-    xsize = int(round((maxx-minx)/xscale, 0))
-    ysize = int(round((maxy-miny)/yscale, 0))
+    xsize = int(round((maxx - minx) / xscale, 0))
+    ysize = int(round((maxy - miny) / yscale, 0))
 
     A = AREA()
     A.xsize, A.ysize, A.xscale, A.yscale = xsize, ysize, xscale, yscale
@@ -411,17 +447,20 @@ def MakeAreaFromPolarObjects(objects, proj_id='llwgs84', xscale=2000.0, yscale=2
 
     return A
 
+
 def llToSc(lonlat, pcs_id):
     import rave_projection
+
     projdef = ' '.join(rave_projection.pcs(pcs_id).definition)
     pipeline = _projectionpipeline.createDefaultLonLatPipeline(projdef)
     return pipeline.fwd(lonlat)
 
+
 ## Helper for defining new areas.
 # @param scan PolarScanCore object
 # @param pcsid string containing the output projection identifier
-# @param xscale float Horizontal X-dimension resolution in projection-specific units (commonly meters)  
-# @param yscale float Horizontal Y-dimension resolution in projection-specific units (commonly meters)  
+# @param xscale float Horizontal X-dimension resolution in projection-specific units (commonly meters)
+# @param yscale float Horizontal Y-dimension resolution in projection-specific units (commonly meters)
 # @returns an XML Element
 def MakeSingleAreaFromSCAN(scan, pcsid, xscale, yscale):
     import numpy
@@ -433,40 +472,44 @@ def MakeSingleAreaFromSCAN(scan, pcsid, xscale, yscale):
     maxR = scan.nbins * scan.rscale
     nrays = scan.nrays * 2  # Doubled for greater accuracy
 
-    minx =  10e100
+    minx = 10e100
     maxx = -10e100
-    miny =  10e100
+    miny = 10e100
     maxy = -10e100
 
-    azres = 360.0/nrays
-    #az = 0.5*azres  # Start properly: half an azimuth gate from north
+    azres = 360.0 / nrays
+    # az = 0.5*azres  # Start properly: half an azimuth gate from north
     az = 0.0  # Let's not and say we did ...
     while az < 360.0:
-        latr, lonr = pn.daToLl(maxR, az*Proj.dr)
+        latr, lonr = pn.daToLl(maxR, az * Proj.dr)
 
-        thislon, thislat = llToSc((lonr,latr), pcsid)
+        thislon, thislat = llToSc((lonr, latr), pcsid)
 
-        if thislon < minx: minx = thislon
-        if thislon > maxx: maxx = thislon
-        if thislat < miny: miny = thislat
-        if thislat > maxy: maxy = thislat
+        if thislon < minx:
+            minx = thislon
+        if thislon > maxx:
+            maxx = thislon
+        if thislat < miny:
+            miny = thislat
+        if thislat > maxy:
+            maxy = thislat
 
-        az+=azres
+        az += azres
 
     # Expand to nearest pixel and buffer by one just to be sure
-    dx = (maxx-minx) / xscale
-    dx = (1.0-(dx-int(dx))) * xscale
+    dx = (maxx - minx) / xscale
+    dx = (1.0 - (dx - int(dx))) * xscale
     if dx < xscale:
         minx -= xscale + dx
         maxx += xscale
-    dy = (maxy-miny) / yscale
-    dy = (1.0-(dy-int(dy))) * yscale
+    dy = (maxy - miny) / yscale
+    dy = (1.0 - (dy - int(dy))) * yscale
     if dy < yscale:
         miny -= yscale + dy
         maxy += yscale
 
-    xsize = int(round((maxx-minx)/xscale, 0))
-    ysize = int(round((maxy-miny)/yscale, 0))
+    xsize = int(round((maxx - minx) / xscale, 0))
+    ysize = int(round((maxy - miny) / yscale, 0))
 
     A = AREA()
     A.xsize, A.ysize, A.xscale, A.yscale = xsize, ysize, xscale, yscale
@@ -477,7 +520,7 @@ def MakeSingleAreaFromSCAN(scan, pcsid, xscale, yscale):
 
 
 if __name__ == "__main__":
-    import rave_area # cannot use myself, due to recursive import
+    import rave_area  # cannot use myself, due to recursive import
+
     for id in rave_area.keys():
         describe(id)
-

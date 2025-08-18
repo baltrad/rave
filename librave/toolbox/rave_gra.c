@@ -280,7 +280,7 @@ CartesianParam_t* RaveGra_apply(RaveGra_t* self, RaveField_t* distance, Cartesia
   xsize = CartesianParam_getXSize(grafield);
   ysize = CartesianParam_getYSize(grafield);
   quantity = CartesianParam_getQuantity(grafield);
-  if (quantity != NULL && strcmp("ACRR", quantity) == 0) {
+  if (quantity != NULL && (strcmp("ACRR", quantity) == 0 || strcmp("RATE", quantity) == 0)) {
     applyGra = applyAcrr;
   }
   doffset = RaveGraInternal_getAttributeDoubleValueFromField(distance, "what/offset", 0.0);

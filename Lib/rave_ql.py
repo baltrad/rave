@@ -20,12 +20,12 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 
 # # rave_ql.py - A QuickLook viewer for 2-D NumPy arrays. Default palette is a
 #               continuous color scale which starts at black and ends at white,
-#               cycling through B,C,G,Y,R,M. If array's type is not 'B' (uint8) 
+#               cycling through B,C,G,Y,R,M. If array's type is not 'B' (uint8)
 #               then the array is scaled and converted to 'B' before viewing.
 #               This does not affect the original array.
 #
 #  Functionality:
-#               Pressing the 'h' or 'H' keys in the window will lauch a help 
+#               Pressing the 'h' or 'H' keys in the window will lauch a help
 #               panel.
 #               Pressing the 's' or 'S' keys in the window save the image to
 #               graphics file.
@@ -40,15 +40,20 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 # # @author Daniel Michelson, SMHI
 # # @date 2012-01-16
 
+
+# Module/Project:
 import sys
+import os
+import StringIO #?
+
 try:
-    import pygtk
+    import pygtk #?
 except ImportError:
     raise ImportError("This module requires PyGTK.")
 pygtk.require('2.0')
 
 try:
-    import gtk
+    import gtk #?
 except ImportError:
     raise ImportError("This module requires GTK.")
 
@@ -57,9 +62,11 @@ try:
 except ImportError:
     raise ImportError("You need Python compiled with threading support for the QuickLook module.")
 
-import os, StringIO
+# Third-party:
 import numpy
-import Image
+import Image #?
+
+# Module/Project:
 import rave_win_colors
 from rave_defines import RAVEICON
 
@@ -117,50 +124,50 @@ def Image_to_GdkPixbuf(image):
 
 # # QuickLook object
 class ql:
-
     # # Initializer
     # @param a NumPy array of almost any type (except complex)
     # @param pal PIL palette object
     # @param title string title for the window
     def __init__(self, a, pal=palette, title="QuickLook"):
-      self.data = a  # the array
-      self.scale_factor = 1  # for zooming & rescaling
+        self.data = a  # the array
+        self.scale_factor = 1  # for zooming & rescaling
 
-	    # linear scaling to 8-bits if necessary
-      if self.data.dtype.char != 'B':
-        self.data = stretch(self.data)
-	    
-        # Double conversion, first to PIL, then to a pixbuf
-        self.pil = array2pilp(self.data)
-        self.pil.putpalette(pal)
-        self.xsize, self.ysize = self.pil.size[0], self.pil.size[1]
+        # linear scaling to 8-bits if necessary
+        if self.data.dtype.char != 'B':
+            self.data = stretch(self.data)
 
-        self.pixbuf = Image_to_GdkPixbuf(self.pil)
+            # Double conversion, first to PIL, then to a pixbuf
+            self.pil = array2pilp(self.data)
+            self.pil.putpalette(pal)
+            self.xsize, self.ysize = self.pil.size[0], self.pil.size[1]
 
-        self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
-        self.window.set_title(title)
-        self.window.connect("delete_event", self.quit_ql)
-        self.window.connect("button_press_event", self.button_press_event)
-        self.window.connect("key_press_event", self.key_press_event)
-        self.window.set_border_width(0)
-        self.window.show()
+            self.pixbuf = Image_to_GdkPixbuf(self.pil)
 
-        # a horizontal box to hold the image
-        self.hbox = gtk.HBox()
-        self.hbox.show()
-        self.window.add(self.hbox)
+            self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+            self.window.set_title(title)
+            self.window.connect("delete_event", self.quit_ql)
+            self.window.connect("button_press_event", self.button_press_event)
+            self.window.connect("key_press_event", self.key_press_event)
+            self.window.set_border_width(0)
+            self.window.show()
 
-        self.image = gtk.Image()
-        self.image.set_from_pixbuf(self.pixbuf)
-#        self.image.show()
+            # a horizontal box to hold the image
+            self.hbox = gtk.HBox()
+            self.hbox.show()
+            self.window.add(self.hbox)
 
-        self.swin = gtk.ScrolledWindow()
-        self.hbox.pack_start(self.swin)
-        self.swin.add_with_viewport(self.image)
-        self.window.resize(min(self.xsize, max_win_dim) + scrollbar_width,
-                           min(self.ysize, max_win_dim) + scrollbar_width)
+            self.image = gtk.Image()
+            self.image.set_from_pixbuf(self.pixbuf)
+            #        self.image.show()
 
-        self.window.show_all()
+            self.swin = gtk.ScrolledWindow()
+            self.hbox.pack_start(self.swin)
+            self.swin.add_with_viewport(self.image)
+            self.window.resize(
+                min(self.xsize, max_win_dim) + scrollbar_width, min(self.ysize, max_win_dim) + scrollbar_width
+            )
+
+            self.window.show_all()
 
     # # Terminator. Invoked via signal delete_event.
     # @param widget object to terminate
@@ -183,7 +190,7 @@ class ql:
     # # OK selector
     # @param w widget object
     def file_ok_sel(self, w):
-#        self.filew.output_graphic = self.filew.get_filename()
+        # self.filew.output_graphic = self.filew.get_filename()
         if self.response == gtk.RESPONSE_OK:
             self.filew.output_graphic = self.filew.get_filename()
             self.save_pil()
@@ -194,9 +201,7 @@ class ql:
     # @param title string message title
     # @param buttons button formatter
     def simple_message(self, msg_type, title, message, buttons=gtk.BUTTONS_OK):
-        dialog = gtk.MessageDialog(type=msg_type,
-                                   message_format=title,
-                                   buttons=buttons)
+        dialog = gtk.MessageDialog(type=msg_type, message_format=title, buttons=buttons)
         dialog.format_secondary_text(message)
         dialog.run()
         dialog.destroy()
@@ -212,12 +217,11 @@ class ql:
 
     # # File-select widget for saving graphics images
     def file_select(self):
-        self.filew = gtk.FileChooserDialog(title="Save as...",
-                                           action=gtk.FILE_CHOOSER_ACTION_SAVE,
-                                           buttons=(gtk.STOCK_CANCEL,
-                                                    gtk.RESPONSE_CANCEL,
-                                                    gtk.STOCK_SAVE,
-                                                    gtk.RESPONSE_OK))
+        self.filew = gtk.FileChooserDialog(
+            title="Save as...",
+            action=gtk.FILE_CHOOSER_ACTION_SAVE,
+            buttons=(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL, gtk.STOCK_SAVE, gtk.RESPONSE_OK),
+        )
         self.filew.set_default_response(gtk.RESPONSE_OK)
         self.filew.set_do_overwrite_confirmation(True)
 
@@ -228,8 +232,9 @@ class ql:
                 self.save_pil()
                 self.filew.destroy()
             except:
-                self.simple_message(gtk.MESSAGE_ERROR, "PIL Error",
-                                   "Cannot save graphic. File name incompatible with PIL.")
+                self.simple_message(
+                    gtk.MESSAGE_ERROR, "PIL Error", "Cannot save graphic. File name incompatible with PIL."
+                )
                 self.filew.destroy()
                 self.file_select()
         else:
@@ -240,8 +245,7 @@ class ql:
         about = gtk.AboutDialog()
         about.set_name('About this software')
         about.set_program_name('BALTRAD Toolbox')
-        about.set_authors(['Daniel Michelson', 'Anders Henja',
-                           'Guenther Haase', 'Your Name Here'])
+        about.set_authors(['Daniel Michelson', 'Anders Henja', 'Guenther Haase', 'Your Name Here'])
         about.set_comments('RAVE Product Generation Framework for BALTRAD')
         # about.set_version('Third generation')
         about.set_website_label('baltrad.eu')
@@ -251,7 +255,7 @@ class ql:
     # # Manager of key pressings
     # @param widget the widget to manage
     # @param event the event to associate with the key pressing
-    def key_press_event(self, widget, event): 
+    def key_press_event(self, widget, event):
         if event.keyval in (gtk.keysyms.q, gtk.keysyms.Q):
             self.quit_ql(widget, event)
         elif event.keyval in (gtk.keysyms.s, gtk.keysyms.S):
@@ -259,17 +263,26 @@ class ql:
         elif event.keyval in (gtk.keysyms.a, gtk.keysyms.A):
             self.about_window()
         elif event.keyval in (gtk.keysyms.h, gtk.keysyms.H):
-            self.simple_message(gtk.MESSAGE_INFO, "Hot Keys and Buttons",
-                                'q\tQuit the QuickLook viewer.\n\ns\tSave the image to graphics file.\n\nh\tThis help dialog.\n\na\tAbout this software.\n\nLeft mouse button\t\tZoom in.\n\nRight mouse button\tZoom out.\n\nMiddle mouse button\tRestore original image size.',
-                                gtk.BUTTONS_CLOSE)
+            self.simple_message(
+                gtk.MESSAGE_INFO,
+                "Hot Keys and Buttons",
+                'q\tQuit the QuickLook viewer.\n\ns\tSave the image to graphics file.\n\nh\tThis help dialog.\n\na\tAbout this software.\n\nLeft mouse button\t\tZoom in.\n\nRight mouse button\tZoom out.\n\nMiddle mouse button\tRestore original image size.',
+                gtk.BUTTONS_CLOSE,
+            )
 
     # # Zoomer
     def zoom(self):
         if self.scale_factor != 1:
             if self.scale_factor < 1:
-                scaled_pixbuf = self.pixbuf.scale_simple(int(self.xsize * self.scale_factor) + 1, int(self.ysize * self.scale_factor) + 1, int(gtk.gdk.INTERP_BILINEAR))
+                scaled_pixbuf = self.pixbuf.scale_simple(
+                    int(self.xsize * self.scale_factor) + 1,
+                    int(self.ysize * self.scale_factor) + 1,
+                    int(gtk.gdk.INTERP_BILINEAR),
+                )
             else:
-                scaled_pixbuf = self.pixbuf.scale_simple(self.xsize * self.scale_factor, self.ysize * self.scale_factor, gtk.gdk.INTERP_BILINEAR)
+                scaled_pixbuf = self.pixbuf.scale_simple(
+                    self.xsize * self.scale_factor, self.ysize * self.scale_factor, gtk.gdk.INTERP_BILINEAR
+                )
         else:
             scaled_pixbuf = self.pixbuf
 
@@ -277,22 +290,22 @@ class ql:
         self.image.show()
 
         if self.scale_factor < 1:
-            self.window.resize(min(int(self.xsize * self.scale_factor),
-                                   max_win_dim) + 1 + scrollbar_width,
-                               min(int(self.ysize * self.scale_factor),
-                                   max_win_dim) + 1 + scrollbar_width)
+            self.window.resize(
+                min(int(self.xsize * self.scale_factor), max_win_dim) + 1 + scrollbar_width,
+                min(int(self.ysize * self.scale_factor), max_win_dim) + 1 + scrollbar_width,
+            )
         else:
             self.scale_factor = int(round(self.scale_factor))
-            self.window.resize(min(self.xsize * self.scale_factor,
-                                   max_win_dim) + scrollbar_width,
-                               min(self.ysize * self.scale_factor,
-                                   max_win_dim) + scrollbar_width)
+            self.window.resize(
+                min(self.xsize * self.scale_factor, max_win_dim) + scrollbar_width,
+                min(self.ysize * self.scale_factor, max_win_dim) + scrollbar_width,
+            )
         self.window.show_all()
 
     # # Button pressing manager
     # @param widget the widget to manage
     # @param event the event to associate with the button pressing
-    def button_press_event(self, widget, event): 
+    def button_press_event(self, widget, event):
         if event.button == 1:
             if self.scale_factor <= 1:
                 self.scale_factor *= 2

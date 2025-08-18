@@ -88,4 +88,7 @@ class PyAcqvaCompositeGeneratorFactoryITest(unittest.TestCase):
     rio.object = result
     rio.save("acqva_factory_test.h5")
 
+    self.assertEqual("QMAXIMUM", result.getAttribute("how/camethod"))
+
+
 
