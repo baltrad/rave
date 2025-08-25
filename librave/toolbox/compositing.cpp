@@ -247,7 +247,9 @@ std::map<std::string,RaveCoreObject*> * Compositing::quality_control_objects(
               //obj = self.ravebdb.get_rave_object(fname, self.use_lazy_loading, preload_quantity)
             }
             else {
-              //std::unique_lock<std::mutex> lock(rave_io_mutex);
+#ifndef USE_THREADSAFE_HDF5
+              std::unique_lock<std::mutex> lock(rave_io_mutex);
+#endif
               RaveIO_t* instance = RaveIO_open(fname.c_str(), false, preload_quantity.c_str());
               // This will generate problems when cloning in another tread, always set preload to false.
               //RaveIO_t* instance = RaveIO_open(fname.c_str(), true, "DBZH");
@@ -668,7 +670,7 @@ std::map<std::string,RaveCoreObject*> * Compositing::quality_control_objects(
       Composite_setTime(generator, time.c_str());
       Composite_setHeight(generator, height);
       Composite_setElevationAngle(generator, elangle);
-      Composite_setRange(generator, height);
+      Composite_setRange(generator, range);
 
       if (!qitotal_field.empty()) {
         Composite_setQualityIndicatorFieldName(generator, qitotal_field.c_str());
@@ -689,16 +691,6 @@ std::map<std::string,RaveCoreObject*> * Compositing::quality_control_objects(
 
       RAVE_OBJECT_RELEASE(generator);
       RAVE_OBJECT_RELEASE(radar_index_mapping);
-      // Here we decrement to 0 and release the objects.
-      for (auto & obj:*local_objects) {
-        if (obj.second != NULL) {
-          if (RAVE_OBJECT_REFCNT(obj.second) > 1) {
-            RaveCoreObject_release((RaveCoreObject*)obj.second, __FILE__, __LINE__);
-          } else {
-              RAVE_OBJECT_RELEASE(obj.second);
-          }
-        }
-      }
 
     } else {
       //##
@@ -805,28 +797,8 @@ std::map<std::string,RaveCoreObject*> * Compositing::quality_control_objects(
       RAVE_OBJECT_RELEASE(arguments);
       RAVE_OBJECT_RELEASE(selection_method_arg);
       RAVE_OBJECT_RELEASE(interpolation_method_arg);
-      // Decrement the reference counter to 0, release the objects.
-      for (auto & obj:*local_objects) {
-        if (obj.second) {
-          if (RAVE_OBJECT_REFCNT(obj.second) > 1) {
-              RaveCoreObject_release((RaveCoreObject *)obj.second, __FILE__, __LINE__);
-            } else {
-              RAVE_OBJECT_RELEASE(obj.second);
-            }
-        }
-      }
+
     } // end of use legacy computing
-    // Decrement the reference counter
-    // NOTE:Normally this will have no effect.
-    for (auto & obj:*local_objects) {
-      if (obj.second) {
-        if (RAVE_OBJECT_REFCNT(obj.second) > 1) {
-          RaveCoreObject_release((RaveCoreObject *)obj.second, __FILE__, __LINE__);
-        } else {
-          RAVE_OBJECT_RELEASE(obj.second);
-        }
-      }
-    }
 
     if (applyctfilter) {
       if (verbose)
@@ -889,16 +861,6 @@ std::map<std::string,RaveCoreObject*> * Compositing::quality_control_objects(
 
     RAVE_OBJECT_RELEASE(the_area);
 
-    // This should normally have no effect.
-    for(auto & obj: *local_objects) {
-      if (obj.second != NULL) {
-        if (RAVE_OBJECT_REFCNT(obj.second) > 1) {
-          RaveCoreObject_release((RaveCoreObject *)obj.second, __FILE__, __LINE__);
-        } else {
-          RAVE_OBJECT_RELEASE(obj.second);
-        }
-      }
-    }
     return result;
   }
   /*#

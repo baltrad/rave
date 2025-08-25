@@ -264,7 +264,9 @@ result_from_tiler multi_composite_arguments::generate(std::string dd, std::strin
 
     std::string outfile = tempname;
     outfile += ".h5";
-    //std::unique_lock<std::mutex> lock(rave_io_mutex);
+#ifndef USE_THREADSAFE_HDF5
+    std::unique_lock<std::mutex> lock(rave_io_mutex);
+#endif
     RaveIO_t* rio = (RaveIO_t*)RAVE_OBJECT_NEW(&RaveIO_TYPE);
     if (rio == NULL) {
       RAVE_CRITICAL0("Failed to allocate memory for raveIO.");
@@ -706,10 +708,9 @@ void TiledCompositing::_add_files_to_argument_list(std::vector<args_to_tiler> & 
           if (found) {
             break;
           } else {
-            //std::unique_lock<std::mutex> lock(rave_io_mutex);
             args[i].mcomp->_filenames.push_back(k.first);
             // Copy the object for thread safety? Yes, I think so.
-            // You must read the object with flag
+            // You must read the object with flag lazy loading false
             RaveCoreObject * the_object = (RaveCoreObject *)RAVE_OBJECT_CLONE(k.second);
             (*args[i].mcomp->_file_objects)[k.first] = the_object;
             break;
@@ -1082,15 +1083,6 @@ Cartesian_t* TiledCompositing::generate(std::string dd, std::string dt, std::str
     // The destructor takes care of releasing rave objects
     delete arg.mcomp;
     arg.mcomp = 0;
-  }
-  for (auto & obj : *cache_file_objects) {
-    if (obj.second != NULL) {
-      if (RAVE_OBJECT_REFCNT(obj.second) > 1) {
-        RaveCoreObject_release((RaveCoreObject *)obj.second, __FILE__, __LINE__);
-      } else {
-        RAVE_OBJECT_RELEASE(obj.second);
-      }
-    }
   }
 
   return result;
