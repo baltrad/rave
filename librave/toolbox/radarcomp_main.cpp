@@ -47,6 +47,10 @@ std::mutex rave_io_mutex;
 // Global for keeping radar volumes in memory
 std::map<std::string, RaveCoreObject*> * cache_file_objects;
 
+// Global for keeping tiled information in memory
+// The filenames and radar volumes for each tile
+std::map<std::string, std::map<std::string, RaveCoreObject*>> *tile_data_objects;
+
 
 /**
  * Main function for a binary for running KNMI's sun scanning functionality
@@ -85,6 +89,7 @@ int Radarcomp(optparse::OptionParser & parser)
   }
 
   cache_file_objects = new std::map<std::string, RaveCoreObject*>;
+  tile_data_objects = new std::map<std::string, std::map<std::string, RaveCoreObject*>>;
   Compositing comp = Compositing();
 
   comp.proj_registry = proj_registry;
@@ -260,13 +265,24 @@ int Radarcomp(optparse::OptionParser & parser)
   if (cache_file_objects != nullptr) {
     for (auto & k : * cache_file_objects) {
       if (k.second) {
-        RAVE_DEBUG1("Object ref count = %d ", RAVE_OBJECT_REFCNT(k.second));
         RAVE_OBJECT_RELEASE(k.second);
-
       }
     }
     delete cache_file_objects;
     cache_file_objects = nullptr;
+  }
+  if (tile_data_objects != nullptr) {
+    // The tiles map
+    for (auto & k : * tile_data_objects) {
+      // the individual tile data maps
+      for (auto & j : k.second) {
+        if (j.second) {
+          RAVE_OBJECT_RELEASE(j.second);
+        }
+      }
+    }
+    delete tile_data_objects;
+    tile_data_objects = nullptr;
   }
   return 0;
 }

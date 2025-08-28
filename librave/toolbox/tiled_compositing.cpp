@@ -42,6 +42,7 @@ extern "C" {
 
 extern std::mutex rave_io_mutex;
 extern std::map<std::string, RaveCoreObject*> * cache_file_objects;
+extern std::map<std::string, std::map<std::string, RaveCoreObject*>> *tile_data_objects;
 
 /**
  * FIXME: DEPRICATED documentation. This is taken from the Python code.
@@ -99,15 +100,8 @@ multi_composite_arguments::~multi_composite_arguments()
     RAVE_OBJECT_RELEASE(radar_index_mapping);
   }
   if (_file_objects != nullptr){
-    for (auto & obj : *_file_objects) {
-      if (obj.second) {
-        if (RAVE_OBJECT_REFCNT(obj.second) > 1) {
-          RaveCoreObject_release((RaveCoreObject *)obj.second, __FILE__, __LINE__);
-        } else {
-          RAVE_OBJECT_RELEASE(obj.second);
-        }
-      }
-    }
+    // Dont modify refcount for the local copy of pointer to radar volume,
+    // Just delete the _file_objects.
     delete _file_objects;
     _file_objects = nullptr;
   }
@@ -658,12 +652,29 @@ void TiledCompositing::_add_files_to_argument_list(std::vector<args_to_tiler> & 
   // # Loop through tile areas
   for (int i = 0; i < RaveObjectList_size(tiled_areas); i++) {
     Area_t* ta = (Area_t*)RaveObjectList_get(tiled_areas, i);
+    std::string tile_name = Area_getID(ta);
+    if (tile_data_objects->count(tile_name)) {
+      std::map<std::string,RaveCoreObject*> tmp_file_objects;
+      tmp_file_objects = (*tile_data_objects)[tile_name];
+      for (auto const & k : tmp_file_objects) {
+        RaveCoreObject* v = k.second;
+        args[i].mcomp->_filenames.push_back(k.first);
+        (*args[i].mcomp->_file_objects)[k.first] = v;
+      }
+      RAVE_DEBUG2("[%s] tiled_compositing._add_files_to_argument_list: Tile found in tile_data_objects: %s",
+              mpname.c_str(),
+              tile_name.c_str());
+      // check the next tile
+      RAVE_OBJECT_RELEASE(ta);
+      continue;
+    }
     Projection_t* p = Area_getProjection(ta);
     double llx, lly, urx, ury;
     Area_getExtent(ta, &llx, &lly, &urx, &ury);
 
-    // # Loop through radars
-    //   std::map<std::string,RaveCoreObject*> file_objects;
+    // # Loop through radars and tiles
+    std::map<std::string,RaveCoreObject*> tmp_file_objects;
+
     for (auto const & k : * cache_file_objects) {
       RaveCoreObject* v = k.second;
       // Jump over garbage in map.
@@ -708,11 +719,15 @@ void TiledCompositing::_add_files_to_argument_list(std::vector<args_to_tiler> & 
           if (found) {
             break;
           } else {
+            // std::map<std::string, std::map<std::string, RaveCoreObject*>> *tile_data_objects;
             args[i].mcomp->_filenames.push_back(k.first);
             // Copy the object for thread safety? Yes, I think so.
             // You must read the object with flag lazy loading false
             RaveCoreObject * the_object = (RaveCoreObject *)RAVE_OBJECT_CLONE(k.second);
             (*args[i].mcomp->_file_objects)[k.first] = the_object;
+            tmp_file_objects[k.first] = the_object;
+            std::string tile_name = Area_getID(ta);
+            (*tile_data_objects)[tile_name] = tmp_file_objects;
             break;
           }
         }

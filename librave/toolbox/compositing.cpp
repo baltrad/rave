@@ -24,6 +24,8 @@ extern "C" {
 
 extern std::mutex rave_io_mutex;
 extern std::map<std::string, RaveCoreObject*> * cache_file_objects;
+extern std::map<std::string, std::map<std::string, RaveCoreObject*>> *tile_data_objects;
+
 
   Compositing::Compositing(){
     std::unique_lock<std::mutex> lock(rave_io_mutex);
