@@ -3006,58 +3006,48 @@ static int CompositInternal_getAndInterpolateRadarData(Composite_t* composite,
   int i = 0;
   for (i = 0; i < nradars; i++) {
     RaveCoreObject* obj = NULL;
-    ProjectionPipeline_t* pipeline = NULL;
     obj = Composite_get(composite, i);
     if (obj != NULL) {
-      pipeline = (ProjectionPipeline_t*)RaveObjectList_get(pipelines, i);
-    }
-
-    if (pipeline != NULL) {
-      /* Transform from surface coords into lonlat projection assuming that a polar volume uses a lonlat projection */
-      if (!ProjectionPipeline_fwd(pipeline, herex, herey, olon, olat)) {
-        RAVE_WARNING0("Failed to transform from composite into polar coordinates");
-      } else {
-        double dist = 0.0;
-        double maxdist = 0.0;
-        double rdist = 0.0;
-        if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
-          dist = PolarVolume_getDistance((PolarVolume_t*)obj, *olon, *olat);
-          maxdist = PolarVolume_getMaxDistance((PolarVolume_t*)obj);
-          if (Composite_getSortPolarVolume(composite)) {
-            PolarVolume_sortByElevations((PolarVolume_t*)obj, 1);
-          }
-        } else if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarScan_TYPE)) {
-          dist = PolarScan_getDistance((PolarScan_t*)obj, *olon, *olat);
-          maxdist = PolarScan_getMaxDistance((PolarScan_t*)obj);
+      double dist = 0.0;
+      double maxdist = 0.0;
+      double rdist = 0.0;
+      if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
+        dist = PolarVolume_getDistance((PolarVolume_t*)obj, *olon, *olat);
+        maxdist = PolarVolume_getMaxDistance((PolarVolume_t*)obj);
+        if (Composite_getSortPolarVolume(composite)) {
+          PolarVolume_sortByElevations((PolarVolume_t*)obj, 1);
         }
-        /* Initialize just in case */
-        if (dist <= maxdist) {
-          int cindex = 0;
-          int noOfValuePositions = CompositeInternal_getValuePositions(composite, obj, *olon, *olat,
-                                                                       interpolationDimensions,
-                                                                       valuePositions);
-          if (noOfValuePositions > 0) {
-            /* Remember distance to radar */
-            rdist = dist;
+      } else if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarScan_TYPE)) {
+        dist = PolarScan_getDistance((PolarScan_t*)obj, *olon, *olat);
+        maxdist = PolarScan_getMaxDistance((PolarScan_t*)obj);
+      }
+      /* Initialize just in case */
+      if (dist <= maxdist) {
+        int cindex = 0;
+        int noOfValuePositions = CompositeInternal_getValuePositions(composite, obj, *olon, *olat,
+                                                                     interpolationDimensions,
+                                                                     valuePositions);
+        if (noOfValuePositions > 0) {
+          /* Remember distance to radar */
+          rdist = dist;
 
-            if (composite->method == CompositeSelectionMethod_HEIGHT) {
-              dist = CompositeInternal_getValuePositionsLowestHeight(valuePositions, noOfValuePositions);
-            }
+          if (composite->method == CompositeSelectionMethod_HEIGHT) {
+            dist = CompositeInternal_getValuePositionsLowestHeight(valuePositions, noOfValuePositions);
+          }
 
-            for (cindex = 0; cindex < nparam; cindex++) {
-              RaveValueType otype = RaveValueType_NODATA;
-              double ovalue = 0.0, qivalue = 0.0;
+          for (cindex = 0; cindex < nparam; cindex++) {
+            RaveValueType otype = RaveValueType_NODATA;
+            double ovalue = 0.0, qivalue = 0.0;
 
-              if (!CompositeInternal_getInterpolatedValue(composite, obj, interpolationDimensions,
-                                                          cvalues[cindex].name, NULL, valuePositions,
-                                                          noOfValuePositions,
-                                                          CompositeInternal_setValuesInValuePos,
-                                                          &otype, &ovalue,
-                                                          &qivalue)) {
-                RAVE_ERROR0("Interpolation failed.\n");
-                RAVE_OBJECT_RELEASE(obj);
-                RAVE_OBJECT_RELEASE(pipeline);
-                return 0;
+            if (!CompositeInternal_getInterpolatedValue(composite, obj, interpolationDimensions,
+              cvalues[cindex].name, NULL, valuePositions,
+              noOfValuePositions,
+              CompositeInternal_setValuesInValuePos,
+              &otype, &ovalue,
+              &qivalue)) {
+              RAVE_ERROR0("Interpolation failed.\n");
+            RAVE_OBJECT_RELEASE(obj);
+            return 0;
               }
 
               if (composite->algorithm != NULL && CompositeAlgorithm_supportsProcess(composite->algorithm)) {
@@ -3068,25 +3058,25 @@ static int CompositInternal_getAndInterpolateRadarData(Composite_t* composite,
                 // For other interpolation methods, where multiple positions have been collected,
                 // it depends on the composite algorithm how it handles the navigation info.
                 if (CompositeAlgorithm_process(composite->algorithm,
-                                               obj,
-                                               cvalues[cindex].name,
-                                               *olon,
-                                               *olat,
-                                               rdist,
-                                               &otype,
-                                               &ovalue,
-                                               &valuePositions[0].navinfo)) {
+                  obj,
+                  cvalues[cindex].name,
+                  *olon,
+                  *olat,
+                  rdist,
+                  &otype,
+                  &ovalue,
+                  &valuePositions[0].navinfo)) {
                   cvalues[cindex].vtype = otype;
-                  cvalues[cindex].value = ovalue;
-                  cvalues[cindex].mindist = dist;
-                  cvalues[cindex].radardist = rdist;
-                  cvalues[cindex].radarindex = i;
-                  cvalues[cindex].qivalue = qivalue;
-                  cvalues[cindex].noOfValuePositions = noOfValuePositions;
-                  memcpy(cvalues[cindex].valuePositions,
-                         valuePositions,
-                         sizeof(CompositeValuePosition_t) * MAX_NO_OF_SURROUNDING_POSITIONS);
-                }
+                cvalues[cindex].value = ovalue;
+                cvalues[cindex].mindist = dist;
+                cvalues[cindex].radardist = rdist;
+                cvalues[cindex].radarindex = i;
+                cvalues[cindex].qivalue = qivalue;
+                cvalues[cindex].noOfValuePositions = noOfValuePositions;
+                memcpy(cvalues[cindex].valuePositions,
+                       valuePositions,
+                       sizeof(CompositeValuePosition_t) * MAX_NO_OF_SURROUNDING_POSITIONS);
+                  }
               } else {
                 if (otype == RaveValueType_DATA || otype == RaveValueType_UNDETECT) {
                   if (cvalues[cindex].vtype != RaveValueType_DATA && cvalues[cindex].vtype != RaveValueType_UNDETECT) {
@@ -3102,39 +3092,37 @@ static int CompositInternal_getAndInterpolateRadarData(Composite_t* composite,
                            valuePositions,
                            sizeof(CompositeValuePosition_t) * MAX_NO_OF_SURROUNDING_POSITIONS);
                   } else if (composite->qiFieldName != NULL
-                             && ((qivalue > cvalues[cindex].qivalue)
-                             || (qivalue == cvalues[cindex].qivalue && dist < cvalues[cindex].mindist))) {
+                    && ((qivalue > cvalues[cindex].qivalue)
+                    || (qivalue == cvalues[cindex].qivalue && dist < cvalues[cindex].mindist))) {
                     cvalues[cindex].vtype = otype;
-                    cvalues[cindex].value = ovalue;
-                    cvalues[cindex].mindist = dist;
-                    cvalues[cindex].radardist = rdist;
-                    cvalues[cindex].radarindex = i;
-                    cvalues[cindex].qivalue = qivalue;
-                    cvalues[cindex].noOfValuePositions = noOfValuePositions;
-                    memcpy(cvalues[cindex].valuePositions,
-                           valuePositions,
-                           sizeof(CompositeValuePosition_t) * MAX_NO_OF_SURROUNDING_POSITIONS);
-                  } else if (composite->qiFieldName == NULL && dist < cvalues[cindex].mindist) {
-                    cvalues[cindex].vtype = otype;
-                    cvalues[cindex].value = ovalue;
-                    cvalues[cindex].mindist = dist;
-                    cvalues[cindex].radardist = rdist;
-                    cvalues[cindex].radarindex = i;
-                    cvalues[cindex].qivalue = qivalue;
-                    cvalues[cindex].noOfValuePositions = noOfValuePositions;
-                    memcpy(cvalues[cindex].valuePositions,
-                           valuePositions,
-                           sizeof(CompositeValuePosition_t) * MAX_NO_OF_SURROUNDING_POSITIONS);
-                  }
+                  cvalues[cindex].value = ovalue;
+                  cvalues[cindex].mindist = dist;
+                  cvalues[cindex].radardist = rdist;
+                  cvalues[cindex].radarindex = i;
+                  cvalues[cindex].qivalue = qivalue;
+                  cvalues[cindex].noOfValuePositions = noOfValuePositions;
+                  memcpy(cvalues[cindex].valuePositions,
+                         valuePositions,
+                         sizeof(CompositeValuePosition_t) * MAX_NO_OF_SURROUNDING_POSITIONS);
+                    } else if (composite->qiFieldName == NULL && dist < cvalues[cindex].mindist) {
+                      cvalues[cindex].vtype = otype;
+                      cvalues[cindex].value = ovalue;
+                      cvalues[cindex].mindist = dist;
+                      cvalues[cindex].radardist = rdist;
+                      cvalues[cindex].radarindex = i;
+                      cvalues[cindex].qivalue = qivalue;
+                      cvalues[cindex].noOfValuePositions = noOfValuePositions;
+                      memcpy(cvalues[cindex].valuePositions,
+                             valuePositions,
+                             sizeof(CompositeValuePosition_t) * MAX_NO_OF_SURROUNDING_POSITIONS);
+                    }
                 }
               }
-            }
           }
         }
       }
+      RAVE_OBJECT_RELEASE(obj);
     }
-    RAVE_OBJECT_RELEASE(obj);
-    RAVE_OBJECT_RELEASE(pipeline);
   }
   return 1;
 }
@@ -3339,91 +3327,82 @@ static int CompositInternal_getAndInterpolateRadarDataForCAPPI(Composite_t* comp
                                                                double* olon,
                                                                double* olat,
                                                                int nparam,
-                                                               int nradars)
+                                                               int nradars
+                                                               )
 {
   int radars_with_data = 0;
   int last_radar_index_with_data = -1;
   int i = 0;
   for (i = 0; i < nradars; i++) {
     RaveCoreObject* obj = NULL;
-    ProjectionPipeline_t* pipeline = NULL;
     obj = Composite_get(composite, i);
     if (obj != NULL) {
-      pipeline = (ProjectionPipeline_t*)RaveObjectList_get(pipelines, i);
-    }
+      double dist = 0.0;
+      double maxdist = 0.0;
+      double rdist = 0.0;
+      if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
+        dist = PolarVolume_getDistance((PolarVolume_t*)obj, *olon, *olat);
+        rdist = dist;
+        maxdist = PolarVolume_getMaxDistance((PolarVolume_t*)obj);
+      } else if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarScan_TYPE)) {
+        dist = PolarScan_getDistance((PolarScan_t*)obj, *olon, *olat);
+        maxdist = PolarScan_getMaxDistance((PolarScan_t*)obj);
+      }
 
-    if (pipeline != NULL) {
-      /* We will go from surface coords into the lonlat projection assuming that a polar volume uses a lonlat projection*/
-      if (!ProjectionPipeline_fwd(pipeline, herex, herey, olon, olat)) {
-        RAVE_WARNING0("Failed to transform from composite into polar coordinates");
-      } else {
-        double dist = 0.0;
-        double maxdist = 0.0;
-        double rdist = 0.0;
-        if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
-          dist = PolarVolume_getDistance((PolarVolume_t*)obj, *olon, *olat);
+      if (dist <= maxdist) {
+        int noOfValuePositions = CompositeInternal_getValuePositions(composite, obj,
+                                                                     *olon, *olat,
+                                                                     interpolationDimensions,
+                                                                     valuePositions);
+        if (noOfValuePositions <= 0) {
+          /* here we may have overlap between radars at the same coordinate */
+          int cindex = 0;
+          for (cindex = 0; cindex < nparam; cindex++) {
+            RaveValueType otype = RaveValueType_NODATA;
+            double ovalue = 0.0, qivalue = 0.0;
+            cvalues_vector->valuesVector[i][cindex].vtype = otype;
+            cvalues_vector->valuesVector[i][cindex].value = ovalue;
+            cvalues_vector->valuesVector[i][cindex].mindist = dist;
+            cvalues_vector->valuesVector[i][cindex].radardist = rdist;
+            cvalues_vector->valuesVector[i][cindex].radarindex = i;
+            cvalues_vector->valuesVector[i][cindex].qivalue = qivalue;
+            cvalues_vector->valuesVector[i][cindex].noOfValuePositions = noOfValuePositions;
+            memcpy(cvalues_vector->valuesVector[i][cindex].valuePositions,
+                   valuePositions,
+                   sizeof(CompositeValuePosition_t) * MAX_NO_OF_SURROUNDING_POSITIONS);
+            if (cindex == 0) {
+              radars_with_data++;
+              last_radar_index_with_data = i;
+            }
+          }
+        } else {
+          int cindex = 0;
+          /* Remember distance to radar */
           rdist = dist;
-          maxdist = PolarVolume_getMaxDistance((PolarVolume_t*)obj);
-        } else if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarScan_TYPE)) {
-          dist = PolarScan_getDistance((PolarScan_t*)obj, *olon, *olat);
-          maxdist = PolarScan_getMaxDistance((PolarScan_t*)obj);
-        }
 
-        if (dist <= maxdist) {
-          int noOfValuePositions = CompositeInternal_getValuePositions(composite, obj,
-                                                                       *olon, *olat,
-                                                                       interpolationDimensions,
-                                                                       valuePositions);
-          if (noOfValuePositions <= 0) {
-            /* here we may have overlap between radars at the same coordinate */
-            int cindex = 0;
-            for (cindex = 0; cindex < nparam; cindex++) {
-              RaveValueType otype = RaveValueType_NODATA;
-              double ovalue = 0.0, qivalue = 0.0;
-              cvalues_vector->valuesVector[i][cindex].vtype = otype;
-              cvalues_vector->valuesVector[i][cindex].value = ovalue;
-              cvalues_vector->valuesVector[i][cindex].mindist = dist;
-              cvalues_vector->valuesVector[i][cindex].radardist = rdist;
-              cvalues_vector->valuesVector[i][cindex].radarindex = i;
-              cvalues_vector->valuesVector[i][cindex].qivalue = qivalue;
-              cvalues_vector->valuesVector[i][cindex].noOfValuePositions = noOfValuePositions;
-              memcpy(cvalues_vector->valuesVector[i][cindex].valuePositions,
-                     valuePositions,
-                     sizeof(CompositeValuePosition_t) * MAX_NO_OF_SURROUNDING_POSITIONS);
-              if (cindex == 0) {
-                radars_with_data++;
-                last_radar_index_with_data = i;
-              }
-            }
-          } else {
-            int cindex = 0;
-            /* Remember distance to radar */
-            rdist = dist;
+          /* CAPPI (and maybe PCAPPI) should consider height to wanted level */
+          if (composite->method == CompositeSelectionMethod_HEIGHT) {
+            dist = fabs(valuePositions[0].navinfo.actual_height - composite->height);
+          }
 
-            /* CAPPI (and maybe PCAPPI) should consider height to wanted level */
-            if (composite->method == CompositeSelectionMethod_HEIGHT) {
-              dist = fabs(valuePositions[0].navinfo.actual_height - composite->height);
-            }
+          for (cindex = 0; cindex < nparam; cindex++) {
+            RaveValueType otype = RaveValueType_NODATA;
+            double ovalue = 0.0, qivalue = 0.0;
 
-            for (cindex = 0; cindex < nparam; cindex++) {
-              RaveValueType otype = RaveValueType_NODATA;
-              double ovalue = 0.0, qivalue = 0.0;
-
-              if (!CompositeInternal_getInterpolatedValue(composite,
-                                                          obj,
-                                                          interpolationDimensions,
-                                                          cvalues_vector->valuesVector[i][cindex].name,
-                                                          NULL,
-                                                          valuePositions,
-                                                          noOfValuePositions,
-                                                          CompositeInternal_setValuesInValuePos,
-                                                          &otype,
-                                                          &ovalue,
-                                                          &qivalue)) {
-                RAVE_ERROR0("Interpolation failed.\n");
-                RAVE_OBJECT_RELEASE(obj);
-                RAVE_OBJECT_RELEASE(pipeline);
-                return 0;
+            if (!CompositeInternal_getInterpolatedValue(composite,
+              obj,
+              interpolationDimensions,
+              cvalues_vector->valuesVector[i][cindex].name,
+              NULL,
+              valuePositions,
+              noOfValuePositions,
+              CompositeInternal_setValuesInValuePos,
+              &otype,
+              &ovalue,
+              &qivalue)) {
+              RAVE_ERROR0("Interpolation failed.\n");
+              RAVE_OBJECT_RELEASE(obj);
+              return 0;
               }
 
               if (composite->algorithm != NULL && CompositeAlgorithm_supportsProcess(composite->algorithm)) {
@@ -3433,29 +3412,29 @@ static int CompositInternal_getAndInterpolateRadarDataForCAPPI(Composite_t* comp
                 // For other interpolation methods, where multiple positions have been collected,
                 // it depends on the composite algorithm how it handles the navigation info.
                 if (CompositeAlgorithm_process(composite->algorithm,
-                                               obj,
-                                               cvalues_vector->valuesVector[i][cindex].name,
-                                               *olon,
-                                               *olat,
-                                               rdist,
-                                               &otype,
-                                               &ovalue,
-                                               &valuePositions[0].navinfo)) {
+                  obj,
+                  cvalues_vector->valuesVector[i][cindex].name,
+                  *olon,
+                  *olat,
+                  rdist,
+                  &otype,
+                  &ovalue,
+                  &valuePositions[0].navinfo)) {
                   cvalues_vector->valuesVector[i][cindex].vtype = otype;
-                  cvalues_vector->valuesVector[i][cindex].value = ovalue;
-                  cvalues_vector->valuesVector[i][cindex].mindist = dist;
-                  cvalues_vector->valuesVector[i][cindex].radardist = rdist;
-                  cvalues_vector->valuesVector[i][cindex].radarindex = i;
-                  cvalues_vector->valuesVector[i][cindex].qivalue = qivalue;
-                  cvalues_vector->valuesVector[i][cindex].noOfValuePositions = noOfValuePositions;
-                  memcpy(cvalues_vector->valuesVector[i][cindex].valuePositions,
-                         valuePositions,
-                         sizeof(CompositeValuePosition_t) * MAX_NO_OF_SURROUNDING_POSITIONS);
-                  if (cindex == 0) {
-                    radars_with_data++;
-                    last_radar_index_with_data = i;
-                  }
+                cvalues_vector->valuesVector[i][cindex].value = ovalue;
+                cvalues_vector->valuesVector[i][cindex].mindist = dist;
+                cvalues_vector->valuesVector[i][cindex].radardist = rdist;
+                cvalues_vector->valuesVector[i][cindex].radarindex = i;
+                cvalues_vector->valuesVector[i][cindex].qivalue = qivalue;
+                cvalues_vector->valuesVector[i][cindex].noOfValuePositions = noOfValuePositions;
+                memcpy(cvalues_vector->valuesVector[i][cindex].valuePositions,
+                       valuePositions,
+                       sizeof(CompositeValuePosition_t) * MAX_NO_OF_SURROUNDING_POSITIONS);
+                if (cindex == 0) {
+                  radars_with_data++;
+                  last_radar_index_with_data = i;
                 }
+                  }
               } else {
                 if (otype == RaveValueType_DATA || otype == RaveValueType_UNDETECT) {
                   cvalues_vector->valuesVector[i][cindex].vtype = otype;
@@ -3475,13 +3454,11 @@ static int CompositInternal_getAndInterpolateRadarDataForCAPPI(Composite_t* comp
                   }
                 }
               }
-            }
-          } /* noOfValuePositions > 0 */
-        }
+          }
+        } /* noOfValuePositions > 0 */
       }
+      RAVE_OBJECT_RELEASE(obj);
     }
-    RAVE_OBJECT_RELEASE(obj);
-    RAVE_OBJECT_RELEASE(pipeline);
   }
   /* The values_vector is now filled with data for each radar in composite, now we must interpolate if needed */
   /* check if interpolation needed */
@@ -3497,6 +3474,63 @@ static int CompositInternal_getAndInterpolateRadarDataForCAPPI(Composite_t* comp
     }
   }
   return 1;
+}
+
+/**
+ * @brief Check if a point in composite hits anay radar.
+ * @param composite - self
+ * @param pipelines - pipelines for transforming coordinates.
+ * @param herex - X coordinate in the composite space.
+ * @param herey - Y coordinate in the composite space.
+ * @param olon - Pointer to store the longitude.
+ * @param olat - Pointer to store the latitude.
+ * @param nradars - radars.
+ * @return 1 on success, 0 if no radar is found.
+ */
+
+int CompositeInternal_isInsideAnyRadar(Composite_t* composite,
+                                       RaveObjectList_t* pipelines,
+                                       double herex,
+                                       double herey,
+                                       double* olon,
+                                       double* olat,
+                                       int nradars)
+{
+
+  for (int i = 0; i < nradars; i++) {
+    RaveCoreObject* obj = NULL;
+    ProjectionPipeline_t* pipeline = NULL;
+    obj = Composite_get(composite, i);
+    if (obj != NULL) {
+      pipeline = (ProjectionPipeline_t*)RaveObjectList_get(pipelines, i);
+    }
+
+    if (pipeline != NULL) {
+      /* We will go from surface coords into the lonlat projection assuming that a polar volume uses a lonlat projection*/
+      if (!ProjectionPipeline_fwd(pipeline, herex, herey, olon, olat)) {
+        RAVE_WARNING0("Failed to transform from composite into polar coordinates");
+      } else {
+        double dist = 0.0;
+        double maxdist = 0.0;
+        if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
+          dist = PolarVolume_getDistance((PolarVolume_t*)obj, *olon, *olat);
+          maxdist = PolarVolume_getMaxDistance((PolarVolume_t*)obj);
+        } else if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarScan_TYPE)) {
+          dist = PolarScan_getDistance((PolarScan_t*)obj, *olon, *olat);
+          maxdist = PolarScan_getMaxDistance((PolarScan_t*)obj);
+        }
+
+        if (dist <= maxdist) {
+          RAVE_OBJECT_RELEASE(obj);
+          RAVE_OBJECT_RELEASE(pipeline);
+          return 1;
+        }
+      }
+    }
+    RAVE_OBJECT_RELEASE(obj);
+    RAVE_OBJECT_RELEASE(pipeline);
+  }
+  return 0;
 }
 
 
@@ -3615,14 +3649,17 @@ Cartesian_t* Composite_generate(Composite_t* composite, Area_t* area, RaveList_t
       if (composite->algorithm != NULL) {
         CompositeAlgorithm_reset(composite->algorithm, x, y);
       }
-      
-      if (composite->ptype == Rave_ProductType_CAPPI) {
-        if (!CompositInternal_getAndInterpolateRadarDataForCAPPI(composite, pipelines, cvalues, cvalues_vector, valuePositions, interpolationDimensions, herex, herey, &olon, &olat, nparam, nradars)) {
-          goto fail;
-        }
-      } else { 
-        if (!CompositInternal_getAndInterpolateRadarData(composite, pipelines, cvalues, valuePositions, interpolationDimensions, herex, herey, &olon, &olat, nparam, nradars)) {
-          goto fail;
+
+      /* check if point is inside any radar's max distance. */
+      if (CompositeInternal_isInsideAnyRadar(composite, pipelines, herex, herey, &olon, &olat, nradars)) {
+        if (composite->ptype == Rave_ProductType_CAPPI) {
+          if (!CompositInternal_getAndInterpolateRadarDataForCAPPI(composite, pipelines, cvalues, cvalues_vector, valuePositions, interpolationDimensions, herex, herey, &olon, &olat, nparam, nradars)) {
+            goto fail;
+          }
+        } else {
+          if (!CompositInternal_getAndInterpolateRadarData(composite, pipelines, cvalues, valuePositions, interpolationDimensions, herex, herey, &olon, &olat, nparam, nradars)) {
+            goto fail;
+          }
         }
       }
       for (cindex = 0; cindex < nparam; cindex++) {
