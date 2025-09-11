@@ -27,6 +27,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "hlhdf.h"
 #include "rave_utilities.h"
 #include "rave_types.h"
+#include "rave_value.h"
 #include <stdarg.h>
 
 /**
@@ -212,6 +213,16 @@ int RaveHL_createGroupUnlessExists(HL_NodeList* nodelist, const char* fmt, ...);
 int RaveHL_createStringValue(HL_NodeList* nodelist, const char* value, const char* fmt, ...);
 
 /**
+ * Adds a rave value in the nodelist as a hlhdf node.
+ * @param[in] nodelist - the node list
+ * @param[in] value - the 
+ * @param[in] fmt - the name of the attribute, specified as a varargs
+ * @param[in] ... - the varargs list
+ * @returns 1 on success otherwise 0
+ */
+int RaveHL_addRaveValue(HL_NodeList* nodelist, RaveValue_t* value, const char* fmt, ...);
+
+/**
  * Puts an attribute in the nodelist as a hlhdf node.
  * @param[in] nodelist - the node list
  * @param[in] attribute - the attribute, the name of the attribute will be used as attr-member
@@ -220,6 +231,13 @@ int RaveHL_createStringValue(HL_NodeList* nodelist, const char* value, const cha
  * @returns 1 on success otherwise 0
  */
 int RaveHL_addAttribute(HL_NodeList* nodelist, RaveAttribute_t* attribute, const char* fmt, ...);
+
+/**
+ * Extract all subgroups for an attribute name.
+ * @param[in] attrname - the attribute name
+ * @return the subgroups
+ */
+RaveList_t* RaveHL_extractSubGroups(const char* attrname);
 
 /**
  * Stores the attributes from the object into the nodelist

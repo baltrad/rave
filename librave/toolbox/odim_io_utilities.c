@@ -465,6 +465,96 @@ done:
   if (strval_id >= 0) {
     H5Tclose(strval_id);
   }
+  RAVE_FREE(legendentry);
+  RAVE_FREE(datatowrite);
+  return result;
+}
 
+int OdimIoUtilities_createSubGroups(const char* attrname, HL_NodeList* nodelist)
+{
+  RaveList_t* subgroups = NULL;
+  int result = 0;
+
+  if (attrname != NULL && nodelist != NULL) {
+    subgroups = RaveHL_extractSubGroups(attrname);
+    if (subgroups != NULL) {
+      int nsubs  = RaveList_size(subgroups);
+      int i = 0;
+
+      for (i = 0; i < nsubs; i++) {
+        const char* sname = (const char*)RaveList_get(subgroups, i);
+        if (sname != NULL && strcmp(sname, "") != 0) {
+          char nodename[2048];
+          snprintf(nodename, 2048, "/%s", sname);
+          if (!HLNodeList_hasNodeByName(nodelist, nodename)) {
+            if (!RaveHL_createGroupUnlessExists(nodelist, nodename)) {
+              RAVE_ERROR1("Failed to create group: %s", nodename);
+              goto fail;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  result = 1;
+fail:
+  if (subgroups != NULL) {
+    RaveList_freeAndDestroy(&subgroups);
+  }
+  return result;
+}
+
+int OdimIoUtilities_addValuesToFile(RaveValue_t* hashtable, HL_NodeList* nodelist)
+{
+  RaveList_t* keys = NULL;
+  int result = 0;
+
+  int nkeys = 0, i = 0;
+  if (hashtable == NULL || nodelist == NULL) {
+    RAVE_WARNING0("Must provide both rave value hashtable and nodelist");
+    return 0;
+  }
+  if (RaveValue_type(hashtable) != RaveValue_Type_Hashtable) {
+    RAVE_WARNING0("Rave value must be of hashtable type");
+    return 0;
+  }
+
+  keys = RaveValueHash_keys(hashtable);
+  if (keys != NULL) {
+    nkeys = RaveList_size(keys);
+    for (i = 0; i < nkeys; i++) {
+      const char* name = (const char*)RaveList_get(keys, i);
+      if (name != NULL) {
+        RaveValue_t* value = RaveValueHash_get(hashtable, name);
+        if (value != NULL) {
+          RaveValue_Type valuetype = RaveValue_type(value);
+          if (valuetype == RaveValue_Type_String ||
+              valuetype == RaveValue_Type_Double ||
+              valuetype == RaveValue_Type_Long) {
+            if (!OdimIoUtilities_createSubGroups(name, nodelist)) {
+              RAVE_ERROR1("Failed to create subgroups for %s", name);
+              RAVE_OBJECT_RELEASE(value);
+              goto fail;
+            }
+            if (!RaveHL_addRaveValue(nodelist, value, name)) {
+              RAVE_ERROR1("Failed to create attribute %s", name);
+              RAVE_OBJECT_RELEASE(value);
+              goto fail;
+            }
+          } else {
+            RAVE_WARNING1("Unsupported RaveValueType when adding values to file: %d", valuetype);
+          }
+          RAVE_OBJECT_RELEASE(value);
+        }
+      }
+    }
+  }
+
+  result = 1;
+fail:
+  if (keys != NULL) {
+    RaveList_freeAndDestroy(&keys);
+  }
   return result;
 }

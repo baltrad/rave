@@ -670,6 +670,148 @@ done:
   return result;
 }
 
+/**
+ * Adds a rave value in the nodelist as a hlhdf node.
+ * @param[in] nodelist - the node list
+ * @param[in] value - the 
+ * @param[in] fmt - the name of the attribute, specified as a varargs
+ * @param[in] ... - the varargs list
+ * @returns 1 on success otherwise 0
+ */
+int RaveHL_addRaveValue(HL_NodeList* nodelist, RaveValue_t* value, const char* fmt, ...)
+{
+  int result = 0;
+  char nodeName[1024];
+  va_list ap;
+  int n = 0;
+
+  RAVE_ASSERT((nodelist != NULL), "nodelist == NULL");
+  RAVE_ASSERT((value != NULL), "value == NULL");
+
+  va_start(ap, fmt);
+  n = vsnprintf(nodeName, 1024, fmt, ap);
+  va_end(ap);
+  if (n < 0 || n >= 1024) {
+    RAVE_ERROR0("Failed to generate name for data entry");
+    goto done;
+  }
+
+  if (!HLNodeList_hasNodeByName(nodelist, nodeName)) {
+    HL_Node* node = HLNode_newAttribute(nodeName);
+    if (node == NULL) {
+      RAVE_CRITICAL1("Failed to create an attribute with name %s", nodeName);
+      goto done;
+    }
+    if (RaveValue_type(value) == RaveValue_Type_String) {
+      const char* strvalue = RaveValue_toString(value);
+      if (strvalue != NULL) {
+        result = HLNode_setScalarValue(node, strlen(strvalue)+1, (unsigned char*)strvalue, "string", -1);
+      } else {
+        RAVE_WARNING1("Attribute %s is NULL and will be ignored", nodeName);
+        HLNode_free(node);
+        node = NULL;
+        result = 1;
+      }
+    } else if (RaveValue_type(value) == RaveValue_Type_Long) {
+      long longvalue = RaveValue_toLong(value);
+      result = HLNode_setScalarValue(node, sizeof(long), (unsigned char*)&longvalue, "long", -1);
+    } else if (RaveValue_type(value) == RaveValue_Type_Double) {
+      double doublevalue = RaveValue_toDouble(value);
+      result = HLNode_setScalarValue(node, sizeof(double), (unsigned char*)&doublevalue, "double", -1);
+    } else {
+      RAVE_ERROR1("Unsupported type of value passed to RaveHL_addRaveValue: %d", RaveValue_type(value));
+
+    }
+    if (result == 1 && node != NULL) {
+      result = HLNodeList_addNode(nodelist, node);
+      if (result == 0) {
+        HLNode_free(node);
+        node = NULL;
+        RAVE_ERROR1("Could not add node %s", nodeName);
+      }
+    }
+    
+  } else {
+    /* Since we can't replace node value we assume that everything is ok */
+    result = 1;
+  }
+
+  // attrname = RaveAttribute_getName(attribute);
+  // if (attrname != NULL) {
+  //   char attrNodeName[2048];
+  //   snprintf(attrNodeName, 2048, "%s/%s", nodeName, attrname);
+  //   if (!HLNodeList_hasNodeByName(nodelist, attrNodeName)) {
+  //     HL_Node* node = HLNode_newAttribute(attrNodeName);
+  //     if (node == NULL) {
+  //       RAVE_CRITICAL1("Failed to create an attribute with name %s", attrNodeName);
+  //       goto done;
+  //     }
+  //     if (RaveAttribute_getFormat(attribute) == RaveAttribute_Format_Long) {
+  //       long value;
+  //       RaveAttribute_getLong(attribute, &value);
+  //       result = HLNode_setScalarValue(node, sizeof(long), (unsigned char*)&value, "long", -1);
+  //     } else if (RaveAttribute_getFormat(attribute) == RaveAttribute_Format_Double) {
+  //       double value;
+  //       RaveAttribute_getDouble(attribute, &value);
+  //       result = HLNode_setScalarValue(node, sizeof(double), (unsigned char*)&value, "double", -1);
+  //     } else if (RaveAttribute_getFormat(attribute) == RaveAttribute_Format_String) {
+  //       char* value = NULL;
+  //       RaveAttribute_getString(attribute, &value);
+  //       if (value != NULL) {
+  //         result = HLNode_setScalarValue(node, strlen(value)+1, (unsigned char*)value, "string", -1);
+  //       } else {
+  //         RAVE_WARNING1("Attribute %s is NULL and will be ignored", attrNodeName);
+  //         HLNode_free(node);
+  //         node = NULL;
+  //         result = 1;
+  //       }
+  //     } else if (RaveAttribute_getFormat(attribute) == RaveAttribute_Format_LongArray) {
+  //       long* value = NULL;
+  //       int len = 0;
+  //       hsize_t dims = 0;
+  //       RaveAttribute_getLongArray(attribute, &value, &len);
+  //       dims = len;
+  //       if (value != NULL && len != 0) {
+  //         result = HLNode_setArrayValue(node, sizeof(long), 1, &dims, (unsigned char*)value, "long", -1);
+  //       } else {
+  //         RAVE_WARNING1("Attribute %s is NULL and will be ignored", attrNodeName);
+  //         HLNode_free(node);
+  //         node = NULL;
+  //         result = 1;
+  //       }
+  //     } else if (RaveAttribute_getFormat(attribute) == RaveAttribute_Format_DoubleArray) {
+  //       double* value = NULL;
+  //       int len = 0;
+  //       hsize_t dims = 0;
+  //       RaveAttribute_getDoubleArray(attribute, &value, &len);
+  //       dims = len;
+  //       if (value != NULL && len != 0) {
+  //         result = HLNode_setArrayValue(node, sizeof(double), 1, &dims, (unsigned char*)value, "double", -1);
+  //       } else {
+  //         RAVE_WARNING1("Attribute %s is NULL and will be ignored", attrNodeName);
+  //         HLNode_free(node);
+  //         node = NULL;
+  //         result = 1;
+  //       }
+  //     }
+  //     if (result == 1 && node != NULL) {
+  //       result = HLNodeList_addNode(nodelist, node);
+  //       if (result == 0) {
+  //         HLNode_free(node);
+  //         node = NULL;
+  //         RAVE_ERROR1("Could not add node %s", attrNodeName);
+  //       }
+  //     }
+  //   } else {
+  //     /* If attribute already has been added, we just count this as successful */
+  //     result = 1;
+  //   }
+  // }
+
+done:
+  return result;
+}
+
 RaveList_t* RaveHL_extractSubGroups(const char* attrname)
 {
   char* dup = RAVE_STRDUP(attrname);

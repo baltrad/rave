@@ -34,6 +34,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "hlhdf.h"
 #include <stdarg.h>
 #include "rave_legend.h"
+#include "rave_value.h"
 
 /**
  * Struct that can be used when passing around objects and associated nodelist
@@ -144,5 +145,12 @@ int OdimIoUtilities_getNodOrCmtFromSource(const char* source, char* buf, size_t 
  */
 int OdimIoUtilities_createLegend(RaveLegend_t* legend, HL_NodeList* nodelist, RaveIO_ODIM_Version version, const char* fmt, ...);
 
+/**
+ * Adds a number of attributes to the nodelist assuming that the RaveValue instance is of hashtable type.
+ * @param[in] hashtable - the rave value hashtable
+ * @param[in] nodelist - the nodelist that the values should be added to
+ * @return 1
+ */
+int OdimIoUtilities_addValuesToFile(RaveValue_t* hashtable, HL_NodeList* nodelist);
 
 #endif /* ODIM_IO_UTILITIES_H */
