@@ -340,8 +340,15 @@ static PyObject* _pyraveio_getattro(PyRaveIO* self, PyObject* name)
     } else {
       Py_RETURN_NONE;
     }
-  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("object", name) == 0) {
-
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("extras", name) == 0) {
+    RaveValue_t* value = RaveIO_getExtras(self->raveio);
+    if (value != NULL) {
+      PyObject* pyvalue = PyRaveApi_RaveValueToObject(value);
+      RAVE_OBJECT_RELEASE(value);
+      return pyvalue;
+    } else {
+      Py_RETURN_NONE;
+    }
   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("strict", name) == 0) {
     return PyBool_FromLong(RaveIO_isStrict(self->raveio));
   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("compression_level", name) == 0) {
