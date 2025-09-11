@@ -134,8 +134,11 @@ Functions</h2></td></tr>
 <tr class="memitem:a2ca12c1f80827950edcd8c286f1d5caa" id="r_a2ca12c1f80827950edcd8c286f1d5caa"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2ca12c1f80827950edcd8c286f1d5caa">RaveHL_addAttribute</a> (HL_NodeList *nodelist, <a class="el" href="rave__attribute_8h.html#af6c25bb8521123e600ef452e2e2b58dd">RaveAttribute_t</a> *attribute, const char *fmt,...)</td></tr>
 <tr class="memdesc:a2ca12c1f80827950edcd8c286f1d5caa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Puts an attribute in the nodelist as a hlhdf node.  <br /></td></tr>
 <tr class="separator:a2ca12c1f80827950edcd8c286f1d5caa"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab4536bfb94ff2252d5c55594898a6231" id="r_ab4536bfb94ff2252d5c55594898a6231"><td class="memItemLeft" align="right" valign="top"><a id="ab4536bfb94ff2252d5c55594898a6231" name="ab4536bfb94ff2252d5c55594898a6231"></a>
-<a class="el" href="rave__list_8h.html#ad2ea2f1cc27c63aa76beb80b6535c3ef">RaveList_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>RaveHL_extractSubGroups</b> (const char *attrname)</td></tr>
+<tr class="memitem:a8f8d0ed2139fb5e0e71a97887c1ac35e" id="r_a8f8d0ed2139fb5e0e71a97887c1ac35e"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8f8d0ed2139fb5e0e71a97887c1ac35e">RaveHL_addRaveValue</a> (HL_NodeList *nodelist, <a class="el" href="rave__value_8h.html#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> *value, const char *fmt,...)</td></tr>
+<tr class="memdesc:a8f8d0ed2139fb5e0e71a97887c1ac35e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a rave value in the nodelist as a hlhdf node.  <br /></td></tr>
+<tr class="separator:a8f8d0ed2139fb5e0e71a97887c1ac35e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab4536bfb94ff2252d5c55594898a6231" id="r_ab4536bfb94ff2252d5c55594898a6231"><td class="memItemLeft" align="right" valign="top"><a class="el" href="rave__list_8h.html#ad2ea2f1cc27c63aa76beb80b6535c3ef">RaveList_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab4536bfb94ff2252d5c55594898a6231">RaveHL_extractSubGroups</a> (const char *attrname)</td></tr>
+<tr class="memdesc:ab4536bfb94ff2252d5c55594898a6231"><td class="mdescLeft">&#160;</td><td class="mdescRight">Extract all subgroups for an attribute name.  <br /></td></tr>
 <tr class="separator:ab4536bfb94ff2252d5c55594898a6231"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8a4bbe1e138486f8e135ee2cf337ccf5" id="r_a8a4bbe1e138486f8e135ee2cf337ccf5"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8a4bbe1e138486f8e135ee2cf337ccf5">RaveHL_addAttributes</a> (HL_NodeList *nodelist, <a class="el" href="raveobject__list_8h.html#abdac48af2ac58989ba91c33c2a1c79d0">RaveObjectList_t</a> *attributes, const char *name)</td></tr>
 <tr class="memdesc:a8a4bbe1e138486f8e135ee2cf337ccf5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Stores the attributes from the object into the nodelist name/how/..., name/where/... and name/what/... If the groups name/how, name/where, name/what does not exist they will be created for you.  <br /></td></tr>
@@ -426,6 +429,49 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a id="a8f8d0ed2139fb5e0e71a97887c1ac35e" name="a8f8d0ed2139fb5e0e71a97887c1ac35e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8f8d0ed2139fb5e0e71a97887c1ac35e">&#9670;&#160;</a></span>RaveHL_addRaveValue()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int RaveHL_addRaveValue </td>
+          <td>(</td>
+          <td class="paramtype">HL_NodeList *</td>          <td class="paramname"><span class="paramname"><em>nodelist</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="rave__value_8h.html#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> *</td>          <td class="paramname"><span class="paramname"><em>value</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>fmt</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>...</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Adds a rave value in the nodelist as a hlhdf node. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">nodelist</td><td>- the node list </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">value</td><td>- the </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">fmt</td><td>- the name of the attribute, specified as a varargs </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">...</td><td>- the varargs list </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>1 on success otherwise 0 </dd></dl>
+
+</div>
+</div>
 <a id="ace69c38c5f4d907d3085be383c5a8a02" name="ace69c38c5f4d907d3085be383c5a8a02"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ace69c38c5f4d907d3085be383c5a8a02">&#9670;&#160;</a></span>RaveHL_convertAttributeName()</h2>
 
@@ -676,6 +722,32 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>1 on success otherwise 0 </dd></dl>
+
+</div>
+</div>
+<a id="ab4536bfb94ff2252d5c55594898a6231" name="ab4536bfb94ff2252d5c55594898a6231"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab4536bfb94ff2252d5c55594898a6231">&#9670;&#160;</a></span>RaveHL_extractSubGroups()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="rave__list_8h.html#ad2ea2f1cc27c63aa76beb80b6535c3ef">RaveList_t</a> * RaveHL_extractSubGroups </td>
+          <td>(</td>
+          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>attrname</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Extract all subgroups for an attribute name. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">attrname</td><td>- the attribute name </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the subgroups </dd></dl>
 
 </div>
 </div>

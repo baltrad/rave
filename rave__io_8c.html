@@ -87,6 +87,7 @@ $(function(){ initResizable(false); });
 <code>#include &quot;<a class="el" href="cartesian__odim__io_8h_source.html">cartesian_odim_io.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="polar__odim__io_8h_source.html">polar_odim_io.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="vp__odim__io_8h_source.html">vp_odim_io.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="odim__io__utilities_8h_source.html">odim_io_utilities.h</a>&quot;</code><br />
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
@@ -144,6 +145,12 @@ Functions</h2></td></tr>
 <tr class="memitem:a226ef0871fbe021e02dd8dd764fa1490" id="r_a226ef0871fbe021e02dd8dd764fa1490"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a226ef0871fbe021e02dd8dd764fa1490">RaveIO_setFileFormat</a> (<a class="el" href="rave__io_8h.html#a7d5e574535a94c690276d809dd8d0e3e">RaveIO_t</a> *raveio, <a class="el" href="rave__io_8h.html#a41465da7edb2fb9cb9ded0a0e565a5f7">RaveIO_ODIM_FileFormat</a> format)</td></tr>
 <tr class="memdesc:a226ef0871fbe021e02dd8dd764fa1490"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets what file format to use.  <br /></td></tr>
 <tr class="separator:a226ef0871fbe021e02dd8dd764fa1490"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a19788043d771a80721f17a711e54eda5" id="r_a19788043d771a80721f17a711e54eda5"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a19788043d771a80721f17a711e54eda5">RaveIO_setExtras</a> (<a class="el" href="rave__io_8h.html#a7d5e574535a94c690276d809dd8d0e3e">RaveIO_t</a> *raveio, <a class="el" href="rave__value_8h.html#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> *hashtable)</td></tr>
+<tr class="memdesc:a19788043d771a80721f17a711e54eda5"><td class="mdescLeft">&#160;</td><td class="mdescRight">When saving a file you can provide a set of extra attributes to be added to the /how-groups.  <br /></td></tr>
+<tr class="separator:a19788043d771a80721f17a711e54eda5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aabc5239d981d6c3581e93b83fc3e0776" id="r_aabc5239d981d6c3581e93b83fc3e0776"><td class="memItemLeft" align="right" valign="top"><a class="el" href="rave__value_8h.html#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aabc5239d981d6c3581e93b83fc3e0776">RaveIO_getExtras</a> (<a class="el" href="rave__io_8h.html#a7d5e574535a94c690276d809dd8d0e3e">RaveIO_t</a> *raveio)</td></tr>
+<tr class="memdesc:aabc5239d981d6c3581e93b83fc3e0776"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a RaveValue of type Hashtable with how-attributes or NULL.  <br /></td></tr>
+<tr class="separator:aabc5239d981d6c3581e93b83fc3e0776"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1357a9c3016be18dadd82ea335dcefe8" id="r_a1357a9c3016be18dadd82ea335dcefe8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1357a9c3016be18dadd82ea335dcefe8">RaveIO_setStrict</a> (<a class="el" href="rave__io_8h.html#a7d5e574535a94c690276d809dd8d0e3e">RaveIO_t</a> *raveio, int strict)</td></tr>
 <tr class="memdesc:a1357a9c3016be18dadd82ea335dcefe8"><td class="mdescLeft">&#160;</td><td class="mdescRight">If writing should be done strictly.  <br /></td></tr>
 <tr class="separator:a1357a9c3016be18dadd82ea335dcefe8"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -310,6 +317,32 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the error message (will be an empty string if nothing to report). </dd></dl>
+
+</div>
+</div>
+<a id="aabc5239d981d6c3581e93b83fc3e0776" name="aabc5239d981d6c3581e93b83fc3e0776"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aabc5239d981d6c3581e93b83fc3e0776">&#9670;&#160;</a></span>RaveIO_getExtras()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="rave__value_8h.html#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> * RaveIO_getExtras </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="rave__io_8h.html#a7d5e574535a94c690276d809dd8d0e3e">RaveIO_t</a> *</td>          <td class="paramname"><span class="paramname"><em>raveio</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Returns a RaveValue of type Hashtable with how-attributes or NULL. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">raveio</td><td>- self </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the rave value hashtable </dd></dl>
 
 </div>
 </div>
@@ -839,6 +872,38 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a id="a19788043d771a80721f17a711e54eda5" name="a19788043d771a80721f17a711e54eda5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a19788043d771a80721f17a711e54eda5">&#9670;&#160;</a></span>RaveIO_setExtras()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int RaveIO_setExtras </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="rave__io_8h.html#a7d5e574535a94c690276d809dd8d0e3e">RaveIO_t</a> *</td>          <td class="paramname"><span class="paramname"><em>raveio</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="rave__value_8h.html#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> *</td>          <td class="paramname"><span class="paramname"><em>hashtable</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>When saving a file you can provide a set of extra attributes to be added to the /how-groups. </p>
+<p>Note, that <a class="el" href="rave__value_8h.html#ace921c5dee194f65a043d93ac38a7039">RaveValue_Type</a> must be Hashtable and that all keys must belong to a how-group. No validation of strictness or any other thing is performed on these variables so ensure that they are compliant to the version you are writing.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">raveio</td><td>- self </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">hashtable</td><td>- the rave value hashtable </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>1 if value is hashtable or null and all keys in the hashtable belongs to a how-group </dd></dl>
+
+</div>
+</div>
 <a id="a226ef0871fbe021e02dd8dd764fa1490" name="a226ef0871fbe021e02dd8dd764fa1490"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a226ef0871fbe021e02dd8dd764fa1490">&#9670;&#160;</a></span>RaveIO_setFileFormat()</h2>
 
@@ -1229,7 +1294,7 @@ Variables</h2></td></tr>
 <div class="line">    RaveIO_constructor,</div>
 <div class="line">    RaveIO_destructor</div>
 <div class="line">}</div>
-<div class="ttc" id="arave__io_8h_html_a7d5e574535a94c690276d809dd8d0e3e"><div class="ttname"><a href="rave__io_8h.html#a7d5e574535a94c690276d809dd8d0e3e">RaveIO_t</a></div><div class="ttdeci">struct _RaveIO_t RaveIO_t</div><div class="ttdoc">Defines a Rave IO instance.</div><div class="ttdef"><b>Definition</b> rave_io.h:49</div></div>
+<div class="ttc" id="arave__io_8h_html_a7d5e574535a94c690276d809dd8d0e3e"><div class="ttname"><a href="rave__io_8h.html#a7d5e574535a94c690276d809dd8d0e3e">RaveIO_t</a></div><div class="ttdeci">struct _RaveIO_t RaveIO_t</div><div class="ttdoc">Defines a Rave IO instance.</div><div class="ttdef"><b>Definition</b> rave_io.h:50</div></div>
 </div><!-- fragment -->
 <p>Type definition to use when creating a rave object. </p>
 

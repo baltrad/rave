@@ -76,6 +76,7 @@ $(function(){ initResizable(false); });
 <code>#include &quot;hlhdf.h&quot;</code><br />
 <code>#include &lt;stdarg.h&gt;</code><br />
 <code>#include &quot;<a class="el" href="rave__legend_8h_source.html">rave_legend.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="rave__value_8h_source.html">rave_value.h</a>&quot;</code><br />
 </div>
 <p><a href="odim__io__utilities_8h_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
@@ -120,6 +121,9 @@ Functions</h2></td></tr>
 <tr class="memitem:afe7067ef647fbf54129e23412e7b5d32" id="r_afe7067ef647fbf54129e23412e7b5d32"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#afe7067ef647fbf54129e23412e7b5d32">OdimIoUtilities_createLegend</a> (<a class="el" href="rave__legend_8h.html#aeef10ad065b8d47fce136bd823bf2f02">RaveLegend_t</a> *legend, HL_NodeList *nodelist, <a class="el" href="rave__types_8h.html#a290d5190c397951897071d66bfaf35e0">RaveIO_ODIM_Version</a> version, const char *fmt,...)</td></tr>
 <tr class="memdesc:afe7067ef647fbf54129e23412e7b5d32"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a legend (<a class="el" href="rave__legend_8h.html#aeef10ad065b8d47fce136bd823bf2f02" title="Defines a attribute tablee.">RaveLegend_t</a>) to a nodelist.  <br /></td></tr>
 <tr class="separator:afe7067ef647fbf54129e23412e7b5d32"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1760536644df86d499b34d514d872e86" id="r_a1760536644df86d499b34d514d872e86"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1760536644df86d499b34d514d872e86">OdimIoUtilities_addValuesToFile</a> (<a class="el" href="rave__value_8h.html#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> *hashtable, HL_NodeList *nodelist)</td></tr>
+<tr class="memdesc:a1760536644df86d499b34d514d872e86"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a number of attributes to the nodelist assuming that the RaveValue instance is of hashtable type.  <br /></td></tr>
+<tr class="separator:a1760536644df86d499b34d514d872e86"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Utilities when working with ODIM H5 files. </p>
@@ -248,6 +252,37 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>1 on success otherwise 0 </dd></dl>
+
+</div>
+</div>
+<a id="a1760536644df86d499b34d514d872e86" name="a1760536644df86d499b34d514d872e86"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1760536644df86d499b34d514d872e86">&#9670;&#160;</a></span>OdimIoUtilities_addValuesToFile()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int OdimIoUtilities_addValuesToFile </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="rave__value_8h.html#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> *</td>          <td class="paramname"><span class="paramname"><em>hashtable</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">HL_NodeList *</td>          <td class="paramname"><span class="paramname"><em>nodelist</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Adds a number of attributes to the nodelist assuming that the RaveValue instance is of hashtable type. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">hashtable</td><td>- the rave value hashtable </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nodelist</td><td>- the nodelist that the values should be added to </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>1 </dd></dl>
 
 </div>
 </div>
