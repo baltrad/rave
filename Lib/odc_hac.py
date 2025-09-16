@@ -43,11 +43,13 @@ import _raveio, _ravefield
 import _polarvolume, _polarscan
 import _pyhl, _odc_hac
 import rave_defines
+from rave_defines import HACDATA_DIRECTORY, HAC_CONFIG_FILE
+
 import odim_source
 
 
-HACDATA = rave_defines.RAVEROOT + '/share/hac/data'
-CONFIG_FILE = rave_defines.RAVECONFIG + '/hac_options.xml'
+HACDATA = HACDATA_DIRECTORY
+CONFIG_FILE = HAC_CONFIG_FILE
 
 initialized = 0
 ARGS = {}
@@ -139,12 +141,12 @@ class HAC:
     # @param scan input SCAN object
     # @param param string of the quantity to filter
     # @param enough int lower threshold of the number of hits to accept in order to process
-    def hacFilter(self, scan, quant="DBZH", enough=100):
+    def hacFilter(self, scan, quant="DBZH", enough=100, hacdatafolder=HACDATA):
         NOD = odim_source.NODfromSource(scan)
 
         # If HAC files are missing, then this method will passively fail.
         try:
-            self.readHac(hacFile(scan, lastmonth=True))
+            self.readHac(hacFile(scan, lastmonth=True, hacdatafolder=hacdatafolder))
 
             if self.hac.getAttribute("how/count") < enough:
                 raise ValueError("Not enough hits in climatology for %s" % NOD)
@@ -174,10 +176,9 @@ class HAC:
     ## Increments the HAC with the hits in the current scan.
     # @param scan input SCAN object
     # @param param string of the quantity to filter
-    def hacIncrement(self, scan, quant="DBZH"):
+    def hacIncrement(self, scan, quant="DBZH", hacdatafolder=HACDATA):
         NOD = odim_source.NODfromSource(scan)
-        hacfile = hacFile(scan)
-
+        hacfile = hacFile(scan, hacdatafolder=hacdatafolder)
         try:
             try:
                 self.readHac(hacfile)
@@ -213,7 +214,7 @@ def lastMonth(YYYYMM):
 # /what/source must contain a valid NOD identifier.
 # @param lastmonth boolean specifying whether to read the previous month's file.
 # @returns string file string
-def hacFile(scan, lastmonth=False):
+def hacFile(scan, lastmonth=False, hacdatafolder=HACDATA):
     NOD = odim_source.NODfromSource(scan)
     CCCC = odim_source.CCCC[NOD]
     RAD = odim_source.RAD[NOD][2:]
@@ -225,20 +226,20 @@ def hacFile(scan, lastmonth=False):
     if lastmonth == True:
         YYYYMM = lastMonth(YYYYMM)
 
-    return HACDATA + "/%s_%s_%s_%s_%sx%s_hit-accum.hdf" % (YYYYMM, CCCC, RAD, elangle, rays, bins)
+    return hacdatafolder + "/%s_%s_%s_%s_%sx%s_hit-accum.hdf" % (YYYYMM, CCCC, RAD, elangle, rays, bins)
 
 
 ## Increments the HAC file(s) for the given object
 # @param obj input SCAN or PVOL, can also be a file string
-def hacIncrement(obj, quant="DBZH"):
+def hacIncrement(obj, quant="DBZH", hacdatafolder=HACDATA):
     if _polarvolume.isPolarVolume(obj):
-        incrementPvol(obj, quant)
+        incrementPvol(obj, quant, hacdatafolder)
     elif _polarscan.isPolarScan(obj):
-        incrementScan(obj, quant)
+        incrementScan(obj, quant, hacdatafolder)
     elif type(obj) == types.StringType:
         if os.path.isfile(obj) and os.path.getsize(obj):
             obj = _raveio.open(obj).object
-            hacIncrement(obj)
+            hacIncrement(obj, quant, hacdatafolder)
         else:
             raise TypeError("HAC incrementor received a string without a matching file, or file is empty")
     else:
@@ -247,44 +248,44 @@ def hacIncrement(obj, quant="DBZH"):
 
 ## Increments the HAC file for this scan. We will assume we only want to deal with DBZH.
 # @param scan polar scan object
-def incrementScan(scan, quant="DBZH"):
+def incrementScan(scan, quant="DBZH", hacdatafolder=HACDATA):
     hac = HAC()
-    hac.hacIncrement(scan, quant)
+    hac.hacIncrement(scan, quant, hacdatafolder=hacdatafolder)
 
 
 ## Increments all the HAC files for the scans in a volume, assuming we only wanty to deal with DBZH.
 # @param pvol polar volume object
-def incrementPvol(pvol, quant="DBZH"):
+def incrementPvol(pvol, quant="DBZH", hacdatafolder=HACDATA):
     for i in range(pvol.getNumberOfScans()):
         scan = pvol.getScan(i)
-        incrementScan(scan, quant)
+        incrementScan(scan, quant, hacdatafolder)
 
 
 ## Filters the given object
 # @param obj input SCAN or PVOL
-def hacFilter(obj, quant="DBZH"):
+def hacFilter(obj, quant="DBZH", hacdatafolder=HACDATA):
     if _polarvolume.isPolarVolume(obj):
-        filterPvol(obj, quant)
+        filterPvol(obj, quant, hacdatafolder)
     elif _polarscan.isPolarScan(obj):
-        filterScan(obj, quant)
+        filterScan(obj, quant, hacdatafolder)
     else:
         raise TypeError("HAC filter received neither SCAN nor PVOL as input")
 
 
 ## Filters this scan. We will assume we only want to deal with DBZH.
 # @param scan polar scan object
-def filterScan(scan, quant="DBZH"):
+def filterScan(scan, quant="DBZH", hacdatafolder=HACDATA):
     hac = HAC()
-    hac.hacFilter(scan, quant)
+    hac.hacFilter(scan, quant, hacdatafolder=hacdatafolder)
 
 
 ## Filters this scan. We will assume we only want to deal with DBZH.
 # @param scan polar scan object
-def filterPvol(pvol, quant="DBZH"):
+def filterPvol(pvol, quant="DBZH", hacdatafolder=HACDATA):
     hac = HAC()
     for i in range(pvol.getNumberOfScans()):
         scan = pvol.getScan(i)
-        hac.hacFilter(scan, quant)
+        hac.hacFilter(scan, quant, hacdatafolder=hacdatafolder)
 
 
 ## Multiprocesses the incrementation
