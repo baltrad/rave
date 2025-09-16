@@ -138,6 +138,8 @@ void multi_composite_arguments::init()
   radar_index_mapping = NULL;
   use_lazy_loading = false;
   use_lazy_loading_preloads = false;
+  use_legacy_compositing = true;
+  strategy = "nearest";
 
   _file_objects = new std::map<std::string, RaveCoreObject*>;
 }
@@ -192,6 +194,7 @@ result_from_tiler multi_composite_arguments::generate(std::string dd, std::strin
   comp.use_lazy_loading = use_lazy_loading;
   comp.use_lazy_loading_preloads = use_lazy_loading_preloads;
   comp.use_legacy_compositing=use_legacy_compositing;
+  comp.strategy=strategy;
   comp.tiled_file_objects = _file_objects;
 
 
@@ -374,6 +377,7 @@ void TiledCompositing::init(Compositing* c,
   use_lazy_loading_preloads = compositing->use_lazy_loading_preloads;
   use_lazy_loading = compositing->use_lazy_loading;
   use_legacy_compositing = compositing->use_legacy_compositing;
+  strategy = compositing->strategy;
 }
 
 /**
@@ -690,13 +694,6 @@ void TiledCompositing::_add_files_to_argument_list(std::vector<args_to_tiler> & 
         scan = PolarVolume_getScanWithMaxDistance((PolarVolume_t*)v);
       }
 
-      if (!PolarScan_hasParameter(scan, compositing->quantity.c_str())) {
-        RAVE_INFO3("[%s] tiled_compositing._add_files_to_argument_list: Quantity %s not in data from %s",
-                   mpname.c_str(),
-                   compositing->quantity.c_str(),
-                   PolarScan_getSource(scan));
-        continue;
-      }
       int bi = PolarScan_getNbins(scan) - 1;
 
       // # Loop around the scan
@@ -1057,6 +1054,8 @@ Cartesian_t* TiledCompositing::generate(std::string dd, std::string dt, std::str
   Cartesian_t* result = Transform_combine_tiles(t, the_area, objects);
   RAVE_OBJECT_RELEASE(t);
   RAVE_OBJECT_RELEASE(objects);
+
+  // We must fix the attribute how/product_parameters
 
   // # Fix so that we get a valid place for /what/source and /how/nodes
   std::string source_string("ORG:82,CMT:");
