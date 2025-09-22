@@ -120,6 +120,10 @@ TFILE_TEMPLATE = RAVECONFIG + "/t-critical.txt"
 PROJECTION_REGISTRY = os.path.join(RAVECONFIG, 'projection_registry.xml')
 AREA_REGISTRY = os.path.join(RAVECONFIG, 'area_registry.xml')
 
+# HAC
+HACDATA_DIRECTORY = os.path.join(RAVEROOT, 'share/hac/data')
+HAC_CONFIG_FILE = os.path.join(RAVECONFIG, 'hac_options.xml')
+
 # XML-RPC server variables
 PIDFILE = os.path.join(RAVEETC, 'rave_pgf_server.pid')
 PGF_HOST = 'localhost'

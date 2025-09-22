@@ -6006,6 +6006,72 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertTrue("BALTRAD", nodelist.getNode("/how/software").data())
     self.assertFalse("WIGOS:0-123-1-123456" in nodelist.getNode("/what/source").data())
 
+  def test_write_volume_with_extras_basic(self):
+    obj = _raveio.open(self.FIXTURE_SEHEM_PVOL).object
+
+    rio = _raveio.new()
+    rio.object = obj
+    rio.extras = {"/how/license":"CC BY 4.0",
+                  "/how/publisher_name":"Test publisher",
+                  "/how/publisher_type":"institution",
+                  "/how/publisher_email":"user@institution",
+                  "/how/publisher_url":"http://institution",
+                  "/how/publisher_institution":"publisher institution"}
+
+    rio.save(self.TEMPORARY_FILE)
+
+    # Verify result
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+
+    self.assertEqual("CC BY 4.0", nodelist.getNode("/how/license").data())
+    self.assertEqual("Test publisher", nodelist.getNode("/how/publisher_name").data())
+    self.assertEqual("institution", nodelist.getNode("/how/publisher_type").data())
+    self.assertEqual("user@institution", nodelist.getNode("/how/publisher_email").data())
+    self.assertEqual("http://institution", nodelist.getNode("/how/publisher_url").data())
+    self.assertEqual("publisher institution", nodelist.getNode("/how/publisher_institution").data())
+
+  def test_write_volume_with_extras_invalid_1(self):
+    obj = _raveio.open(self.FIXTURE_SEHEM_PVOL).object
+
+    rio = _raveio.new()
+    rio.object = obj
+    rio.extras = {"/where/license":"CC BY 4.0"}
+
+    try:
+      rio.save(self.TEMPORARY_FILE)
+      self.fail("Expected IOError")
+    except IOError:
+      pass
+
+  def test_write_volume_with_extras_invalid_2(self):
+    obj = _raveio.open(self.FIXTURE_SEHEM_PVOL).object
+
+    rio = _raveio.new()
+    rio.object = obj
+    rio.extras = {"/where/how/license":"CC BY 4.0"}
+
+    try:
+      rio.save(self.TEMPORARY_FILE)
+      self.fail("Expected IOError")
+    except IOError:
+      pass
+
+  def test_write_volume_with_extras_invalid_3(self):
+    obj = _raveio.open(self.FIXTURE_SEHEM_PVOL).object
+
+    rio = _raveio.new()
+    rio.object = obj
+    rio.extras = {"how/license":"CC BY 4.0"}
+
+    try:
+      rio.save(self.TEMPORARY_FILE)
+      self.fail("Expected IOError")
+    except IOError:
+      pass
+
+
   def testBufrTableDir(self):
     obj = _raveio.new()
     self.assertEqual(None, obj.bufr_table_dir)
