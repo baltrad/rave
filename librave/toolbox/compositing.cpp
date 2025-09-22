@@ -115,8 +115,10 @@ extern std::map<std::string, std::map<std::string, RaveCoreObject*>> *tile_data_
       product = Rave_ProductType::Rave_ProductType_PMAX;
     } else if (prodstr == "max") {
       product = Rave_ProductType::Rave_ProductType_MAX;
+    } else if (prodstr == "acqva") {
+      product = Rave_ProductType::Rave_ProductType_COMP;
     } else {
-        RAVE_WARNING0("Only supported product types are ppi, cappi, pcappi, pmax and max, default pcappi will be used!");
+        RAVE_WARNING0("Only supported product types are ppi, cappi, pcappi, pmax, max and acqva, default pcappi will be used!");
         product = Rave_ProductType::Rave_ProductType_PCAPPI;
     }
   }

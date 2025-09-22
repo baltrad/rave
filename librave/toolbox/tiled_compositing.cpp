@@ -1043,7 +1043,13 @@ Cartesian_t* TiledCompositing::generate(std::string dd, std::string dt, std::str
   Transform_t* t = (Transform_t*)RAVE_OBJECT_NEW(&Transform_TYPE);
   if (t == NULL) {
     RAVE_CRITICAL0("Failed to allocate memory for transform.");
-    // FIXME:Memory handling.
+    RAVE_OBJECT_RELEASE(objects);
+    RAVE_OBJECT_RELEASE(the_area);
+    for (auto & arg : args) {
+      // The destructor takes care of releasing rave objects
+      delete arg.mcomp;
+      arg.mcomp = 0;
+    }
     return 0;
   }
 
