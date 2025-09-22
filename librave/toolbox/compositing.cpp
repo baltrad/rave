@@ -794,7 +794,15 @@ std::map<std::string,RaveCoreObject*> * Compositing::quality_control_objects(
       CompositeArguments_setQIFieldName(arguments,qitotal_field.c_str());
       cgenerator.update_arguments_with_prodpar(arguments, prodpar);
 
-      result = cgenerator.generate(arguments);
+      // The handling of cluttermaps is not threadsafe
+      if (strategy == "acqva") {
+#ifndef USE_THREADSAFE_HDF5
+        std::unique_lock<std::mutex> lock(rave_io_mutex);
+#endif
+        result = cgenerator.generate(arguments);
+      } else {
+        result = cgenerator.generate(arguments);
+      }
       // NOTE: This decrements reference conter by one to one.
       RAVE_OBJECT_RELEASE(arguments);
       RAVE_OBJECT_RELEASE(selection_method_arg);
