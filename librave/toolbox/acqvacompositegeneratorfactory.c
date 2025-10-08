@@ -55,6 +55,8 @@ typedef struct _AcqvaCompositeGeneratorFactory_t {
   COMPOSITE_GENERATOR_FACTORY_HEAD /**< composite generator plugin specifics */
   CompositeEngine_t* engine; /**<the engine */
   CompositeEngineOvershootingQcHandler_t* overshooting; /**< the QC handler used for POO/Overshooting */
+  int allowMissingCluttermaps; /**< if we should allow cluttermaps to be missing or not. If we allow missing, the default behavior is always True for missing field/cluttermap */
+  int maxElevationIndex;       /**< max elevation index to use if cluttermaps at one point only contains "invalid" points */
 } AcqvaCompositeGeneratorFactory_t;
 /*@{ Private functions */
 
@@ -97,6 +99,8 @@ static int AcqvaCompositeGeneratorFactory_constructor(RaveCoreObject* obj)
     RAVE_ERROR0("Failed to create compositing engine");
     goto fail;
   }
+  this->allowMissingCluttermaps = 1;
+  this->maxElevationIndex = -1;
 
   this->overshooting = RAVE_OBJECT_NEW(&CompositeEngineOvershootingQcHandler_TYPE);
   if (this->overshooting == NULL) {
@@ -158,6 +162,8 @@ static int AcqvaCompositeGeneratorFactory_copyconstructor(RaveCoreObject* obj, R
   this->create = AcqvaCompositeGeneratorFactory_create;
   this->engine = NULL;
   this->overshooting = NULL;
+  this->allowMissingCluttermaps = src->allowMissingCluttermaps;
+  this->maxElevationIndex = src->maxElevationIndex;
 
   this->engine = RAVE_OBJECT_CLONE(src->engine);
   if (this->engine == NULL) {
@@ -215,27 +221,48 @@ static void AcqvaCompositeGeneratorFactory_destructor(RaveCoreObject* obj)
  * @param[in] source - the source for which we want to load the cluttermap
  * @return the cluttermap as a \ref PolarVolume_t if possible, otherwise NULL
  */
-static PolarVolume_t* AcqvaCompositeGeneratorFactoryInternal_loadCluttermap(const char* cluttermap_dir, OdimSource_t* source)
+static PolarVolume_t* AcqvaCompositeGeneratorFactoryInternal_loadCluttermap(const char* cluttermap_dir, int use_yearmonth, int use_default, const char* src_yearmonth, OdimSource_t* source)
 {
   RaveIO_t* rio = NULL;
   PolarVolume_t* result = NULL;
+
   if (source != NULL && OdimSource_getNod(source) != NULL) {
     char buff[512];
-    snprintf(buff, 512, "%s/%s.h5", cluttermap_dir, OdimSource_getNod(source));
-    rio = RaveIO_open(buff, 0, NULL);
-    if (rio == NULL) {
-      RAVE_ERROR1("Could not identify cluttermap '%s'", buff);
-      goto fail;
+    if (use_yearmonth && src_yearmonth != NULL && strlen(src_yearmonth) >= 6) {
+      int year=0, month=0;
+      if (sscanf(src_yearmonth, "%4d%2d", &year, &month) == 2) {
+        /* We want to use previous months cluttermap so calculate it */
+        if (month == 1) {
+          year = year - 1;
+          month = 12;
+        } else {
+          month = month - 1;
+        }
+        snprintf(buff, 512, "%s/%s_acqva_cluttermap_%4d%02d.h5", cluttermap_dir, OdimSource_getNod(source), year, month);
+        if (RaveIO_isHDFFile(buff)) {
+          rio = RaveIO_open(buff, 0, NULL);
+          if (rio != NULL && RaveIO_getObjectType(rio) == Rave_ObjectType_PVOL) {
+            result = (PolarVolume_t*)RaveIO_getObject(rio);
+          }
+          RAVE_OBJECT_RELEASE(rio);
+        }
+      }
     }
-    if (RaveIO_getObjectType(rio) == Rave_ObjectType_PVOL) {
-      result = (PolarVolume_t*)RaveIO_getObject(rio);
+
+    if (use_default && result == NULL) {
+      snprintf(buff, 512, "%s/%s.h5", cluttermap_dir, OdimSource_getNod(source));
+      if (RaveIO_isHDFFile(buff)) {
+        rio = RaveIO_open(buff, 0, NULL);
+        if (rio != NULL && RaveIO_getObjectType(rio) == Rave_ObjectType_PVOL) {
+          result = (PolarVolume_t*)RaveIO_getObject(rio);
+        }
+        RAVE_OBJECT_RELEASE(rio);
+      }
     }
   } else {
     RAVE_ERROR0("OdimSource does not contain NOD");
   }
 
-fail:
-  RAVE_OBJECT_RELEASE(rio);
   return result;
 }
 
@@ -252,6 +279,8 @@ static int AcqvaCompositeGeneratorFactoryInternal_updateWithCluttermaps(AcqvaCom
   int i = 0;
   int failed = 0;
   const char* cluttermap_dir = NULL;
+  int use_yearmonth = 1;
+  int use_default = 1;
 
   if (properties != NULL && RaveProperties_hasProperty(properties, "rave.acqva.cluttermap.dir")) {
     RaveValue_t* property = RaveProperties_get(properties, "rave.acqva.cluttermap.dir");
@@ -261,12 +290,30 @@ static int AcqvaCompositeGeneratorFactoryInternal_updateWithCluttermaps(AcqvaCom
     RAVE_OBJECT_RELEASE(property);
   }
 
+  if (properties != NULL && RaveProperties_hasProperty(properties, "rave.acqva.cluttermap.use_default")) {
+    RaveValue_t* property = RaveProperties_get(properties, "rave.acqva.cluttermap.use_default");
+    if (RaveValue_type(property) == RaveValue_Type_Boolean) {
+      use_default = RaveValue_toBoolean(property);
+    }
+    RAVE_OBJECT_RELEASE(property);
+  }
+
+  if (properties != NULL && RaveProperties_hasProperty(properties, "rave.acqva.cluttermap.use_yearmonth")) {
+    RaveValue_t* property = RaveProperties_get(properties, "rave.acqva.cluttermap.use_yearmonth");
+    if (RaveValue_type(property) == RaveValue_Type_Boolean) {
+      use_yearmonth = RaveValue_toBoolean(property);
+    }
+    RAVE_OBJECT_RELEASE(property);
+  }
+
   for (i = 0; !failed && i < nbindings; i++) {
     int nscans = 0, j = 0;
     PolarVolume_t* cluttermap = NULL;
+
     /* We can only update volume if we have sources, a cluttermap dir and a mapping object */
     if (bindings[i].source != NULL && cluttermap_dir != NULL) {
-      cluttermap = AcqvaCompositeGeneratorFactoryInternal_loadCluttermap(cluttermap_dir, bindings[i].source);
+      const char* src_yearmonth = PolarVolume_getDate((PolarVolume_t*)bindings[i].object);
+      cluttermap = AcqvaCompositeGeneratorFactoryInternal_loadCluttermap(cluttermap_dir, use_yearmonth, use_default, src_yearmonth, bindings[i].source);
     }
     nscans = PolarVolume_getNumberOfScans((PolarVolume_t*)bindings[i].object);
     for (j = 0; !failed && j < nscans; j++) {
@@ -299,22 +346,34 @@ static int AcqvaCompositeGeneratorFactoryInternal_updateWithCluttermaps(AcqvaCom
               }
             }
           } else {
-            RAVE_ERROR0("No ACQVA parameter in cluttermap");
-            failed = 1;
+            if (self->allowMissingCluttermaps) {
+              RAVE_INFO1("Allowing missing cluttermap for acqva parameter in cluttermap %s", PolarVolume_getSource((PolarVolume_t*)bindings[i].object));
+            } else {
+              RAVE_ERROR0("No ACQVA parameter in cluttermap");
+              failed = 1;
+            }
           }
           RAVE_OBJECT_RELEASE(param);
         } else {
-          RAVE_ERROR1("Could not find a matching scan for %s", OdimSource_getNod(bindings[i].source));
-          failed = 1;
+          if (self->allowMissingCluttermaps) {
+            RAVE_INFO1("Allowing missing scan for %s", PolarVolume_getSource((PolarVolume_t*)bindings[i].object));
+          } else {
+            RAVE_ERROR1("Could not find a matching scan for %s", OdimSource_getNod(bindings[i].source));
+            failed = 1;
+          }
         }
         RAVE_OBJECT_RELEASE(cmapscan);
       } else if (qfield == NULL) {
-        if (bindings[i].source != NULL) {
-          RAVE_ERROR1("Can not create ACQVA product since %s does not have any cluttermap associated", OdimSource_getNod(bindings[i].source));
+        if (self->allowMissingCluttermaps) {
+          RAVE_INFO1("Allowing missing cluttermaps for %s", PolarVolume_getSource((PolarVolume_t*)bindings[i].object));
         } else {
-          RAVE_ERROR0("Can not create ACQVA product since there is no cluttermap associated");
-        }
-        failed = 1;
+          if (bindings[i].source != NULL) {
+            RAVE_ERROR1("Can not create ACQVA product since %s does not have any cluttermap associated", OdimSource_getNod(bindings[i].source));
+          } else {
+            RAVE_ERROR0("Can not create ACQVA product since there is no cluttermap associated");
+          }
+          failed = 1;
+        }  
       }
       RAVE_OBJECT_RELEASE(qfield);
       RAVE_OBJECT_RELEASE(scan);
@@ -344,6 +403,25 @@ static int AcqvaCompositeGeneratorFactory_onStarting(CompositeEngine_t* engine, 
   int result = 0;
 
   RaveProperties_t* properties = CompositeEngine_getProperties(engine);
+  self->allowMissingCluttermaps = 1;
+  self->maxElevationIndex = -1;
+
+  if (properties != NULL && RaveProperties_hasProperty(properties, "rave.acqva.cluttermap.allow.missing")) {
+    RaveValue_t* v = RaveProperties_get(properties, "rave.acqva.cluttermap.allow.missing");
+    if (RaveValue_type(v) == RaveValue_Type_Boolean) {
+      self->allowMissingCluttermaps = RaveValue_toBoolean(v);
+    }
+    RAVE_OBJECT_RELEASE(v);
+  }
+
+  if (properties != NULL && RaveProperties_hasProperty(properties, "rave.acqva.max.elevation.index")) {
+    RaveValue_t* v = RaveProperties_get(properties, "rave.acqva.max.elevation.index");
+    if (RaveValue_type(v) == RaveValue_Type_Long) {
+      self->maxElevationIndex = RaveValue_toLong(v);
+    }
+    RAVE_OBJECT_RELEASE(v);
+  }
+
   if (!CompositeEngineFunctions_prepareRATE(engine, arguments, bindings, nbindings)) {
     RAVE_ERROR0("Failed to prepare RATE coefficients");
     goto fail;
@@ -431,11 +509,12 @@ done:
  * @param[out] bin - the bin index for the found position (only set if value found)
  * @param[out] eindex - the elevation index in the vollume for the found position (only set if value found)
  * @param[in,out] navinfo  - all the relevant navinfo for the found value
+ * @param[in,out] maxElevationCheckTriggered - If the maxElevationIndex has been set, then when loop reached specified index and no qv was found this will be set to 1.
  * @return 1 if value is found, otherwise 0
  */
 static int AcqvaCompositeGeneratorFactoryInternal_findLowestUsableValue(AcqvaCompositeGeneratorFactory_t* self, PolarVolume_t* pvol, 
   double lon, double lat, double* height, 
-  double* elangle, int* ray, int* bin, int* eindex, PolarNavigationInfo* outnavinfo)
+  double* elangle, int* ray, int* bin, int* eindex, PolarNavigationInfo* outnavinfo, int* maxElevationCheckTriggered)
 {
   int nrelevs = 0, i = 0, found = 0;
 
@@ -444,21 +523,29 @@ static int AcqvaCompositeGeneratorFactoryInternal_findLowestUsableValue(AcqvaCom
     RAVE_ERROR0("Providing pvol == NULL");
     return 0;
   }
+
+  if (maxElevationCheckTriggered != NULL) {
+    *maxElevationCheckTriggered = 0;
+  }
+
   nrelevs = PolarVolume_getNumberOfScans(pvol);
   for (i = 0; !found && i < nrelevs; i++) {
     PolarNavigationInfo navinfo;
     PolarScan_t* scan = PolarVolume_getScan(pvol, i);
     if (PolarScan_getNearestNavigationInfo(scan, lon, lat, &navinfo)) {
       double v = 0.0;
-      if (PolarScan_getQualityValueAt(scan, NULL, navinfo.ri, navinfo.ai, ACQVA_QUALITY_FIELD_NAME, 1, &v)) {
-        if (v != 0.0) {
-          *height = navinfo.actual_height;
-          *elangle = navinfo.elevation;
-          *ray = navinfo.ai;
-          *bin = navinfo.ri;
-          *eindex = i;
-          *outnavinfo = navinfo;
-          found = 1;
+      int qvresult = PolarScan_getQualityValueAt(scan, NULL, navinfo.ri, navinfo.ai, ACQVA_QUALITY_FIELD_NAME, 1, &v);
+      if ((qvresult != 0 && v != 0.0) || (self->allowMissingCluttermaps && qvresult == 0) || (self->maxElevationIndex == i)) {
+        /* If qvalue not could be retrieved, then we assume that it always is "good" */
+        *height = navinfo.actual_height;
+        *elangle = navinfo.elevation;
+        *ray = navinfo.ai;
+        *bin = navinfo.ri;
+        *eindex = i;
+        *outnavinfo = navinfo;
+        found = 1;
+        if (maxElevationCheckTriggered != NULL && (self->maxElevationIndex == i)) {
+          *maxElevationCheckTriggered = (qvresult == 0 || v == 0.0);
         }
       }
     }
@@ -493,7 +580,8 @@ static int AcqvaCompositeGeneratorFactoryInternal_selectRadarData(CompositeEngin
     double height=0.0, elangle=0.0;
     int ray=0, bin=0, eindex=0, cindex = 0;
     PolarNavigationInfo navinfo;
-    if (AcqvaCompositeGeneratorFactoryInternal_findLowestUsableValue(self, (PolarVolume_t*)binding->object, olon, olat, &height, &elangle, &ray, &bin, &eindex, &navinfo)) {
+    int maxElevationCheckTriggered = 0;
+    if (AcqvaCompositeGeneratorFactoryInternal_findLowestUsableValue(self, (PolarVolume_t*)binding->object, olon, olat, &height, &elangle, &ray, &bin, &eindex, &navinfo, &maxElevationCheckTriggered)) {
       for (cindex = 0; cindex < ncvalues; cindex++) {
         RaveValueType otype = RaveValueType_NODATA;
         double v = 0.0;

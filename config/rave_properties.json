@@ -1,5 +1,12 @@
 {
   "rave.acqva.cluttermap.dir":"/var/lib/baltrad/acqva/cluttermap",
+  "rave.acqva.cluttermap.allow.missing":true,
+  "__comment1__":"use_default checks for {rave.acqva.cluttermap.dir}/<source>.h5",
+  "rave.acqva.cluttermap.use_default":true,
+  "__comment2__":"use_yearmonth checks for {rave.acqva.cluttermap.dir}/<source>_acqva_cluttermap_<YYYYmm - 1>.h5.",
+  "__comment3__":"order is first to check for yearmonth if allowed, then for default",
+  "rave.acqva.cluttermap.use_yearmonth":true,
+  "rave.acqva.max.elevation.index":-1,
   "rave.rate.zr.coefficients":{
     "sella":[200.0, 1.6], 
     "sekrn":[200.0,1.6]

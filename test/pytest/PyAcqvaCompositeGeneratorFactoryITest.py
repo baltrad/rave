@@ -32,11 +32,13 @@ import _raveio
 import _projection
 import _polarscan, _polarvolume, _ravefield
 import _acqvacompositegeneratorfactory
-import _raveproperties
+import _raveproperties, _odimsources
 import string
 import math, numpy
 
 class PyAcqvaCompositeGeneratorFactoryITest(unittest.TestCase):
+  ODIM_SOURCE_FIXTURE="fixtures/odim_sources_fixture.xml"
+
   def setUp(self):
     pass
 
@@ -91,4 +93,58 @@ class PyAcqvaCompositeGeneratorFactoryITest(unittest.TestCase):
     self.assertEqual("QMAXIMUM", result.getAttribute("how/camethod"))
 
 
+  def Xtest_generate_no_maps(self):
+    classUnderTest = _acqvacompositegeneratorfactory.new()
+    args = _compositearguments.new()
+    args.area = self.create_area("eua_gmaps")
+    args.product = "PPI"
+    args.time = "120000"
+    args.date = "20090501"
+    args.addParameter("DBZH", 0.1, -30.0)
 
+    seang = _raveio.open("fixtures/pvol_seang_20090501T120000Z.h5").object
+    searl = _raveio.open("fixtures/pvol_searl_20090501T120000Z.h5").object
+
+    for v in [seang, searl]:
+      args.addObject(v)
+
+    args.addQualityFlag("se.smhi.composite.distance.radar")
+
+    result = classUnderTest.generate(args);
+    rio = _raveio.new()
+    rio.object = result
+    rio.save("acqva_factory_test_no_maps.h5")
+
+    self.assertEqual("QMAXIMUM", result.getAttribute("how/camethod"))
+
+  def Xtest_generate_with_cluttermaps(self):
+    classUnderTest = _acqvacompositegeneratorfactory.new()
+    args = _compositearguments.new()
+    args.area = self.create_area("eua_gmaps")
+    args.product = "PPI"
+    args.time = "120000"
+    args.date = "20090501"
+    args.addParameter("DBZH", 0.1, -30.0)
+
+    properties = _raveproperties.new()
+    properties.set("rave.acqva.cluttermap.dir", "/san1/acqva/cluttermaps",)
+    properties.set("rave.acqva.cluttermap.allow.missing", True)
+    properties.set("rave.acqva.cluttermap.use_default", True)
+    properties.set("rave.acqva.cluttermap.use_yearmonth", True)
+    properties.sources = _odimsources.load(self.ODIM_SOURCE_FIXTURE)
+    classUnderTest.setProperties(properties)
+
+    seang = _raveio.open("fixtures/pvol_seang_20090501T120000Z.h5").object
+    searl = _raveio.open("fixtures/pvol_searl_20090501T120000Z.h5").object
+
+    for v in [seang, searl]:
+      args.addObject(v)
+
+    args.addQualityFlag("se.smhi.composite.distance.radar")
+
+    result = classUnderTest.generate(args);
+    rio = _raveio.new()
+    rio.object = result
+    rio.save("acqva_factory_test_no_maps.h5")
+
+    self.assertEqual("QMAXIMUM", result.getAttribute("how/camethod"))

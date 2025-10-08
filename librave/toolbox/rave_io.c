@@ -662,6 +662,11 @@ done:
   return result;
 }
 
+int RaveIO_isHDFFile(const char* filename)
+{
+  return HL_isHDF5File(filename);
+}
+
 int RaveIO_load(RaveIO_t* raveio, int lazyLoading, const char* preloadQuantities)
 {
   int result = 0;

@@ -75,6 +75,13 @@ void RaveIO_close(RaveIO_t* raveio);
 RaveIO_t* RaveIO_open(const char* filename, int lazyLoading, const char* preloadQuantities);
 
 /**
+ * Checks if specified file is a HDF file or not.
+ * @param[in] filename - the filename
+ * @return 1 on success otherwise 0
+ */
+int RaveIO_isHDFFile(const char* filename);
+
+/**
  * Loads the HDF5 file into the raveio instance.
  * @param[in] raveio - self
  * @param[in] lazyLoading - if file should be loaded in lazy mode or not

@@ -29,11 +29,11 @@ import _rave
 from rave_defines import COMPOSITE_GENERATOR_FILTER_FILENAME, ACQVA_CLUTTERMAP_DIR, ODIM_SOURCE_FILE, COMPOSITE_GENERATOR_PROPERTY_FILE
 
 class Generator(object):
-  def __init__(self, generatorfilter=COMPOSITE_GENERATOR_FILTER_FILENAME):
+  def __init__(self, properties_file=COMPOSITE_GENERATOR_PROPERTY_FILE, generatorfilter=COMPOSITE_GENERATOR_FILTER_FILENAME):
     super(Generator, self).__init__()
     self._manager = _compositefactorymanager.new()
     self._generator = _compositegenerator.create(self._manager, generatorfilter)
-    self._generator.properties = self.load_properties()
+    self._generator.properties = self.load_properties(properties_file)
 
   def create_arguments(self):
     return _compositearguments.new()
@@ -81,9 +81,9 @@ class Generator(object):
         except ValueError:
           pass
 
-  def load_properties(self):
+  def load_properties(self, properties_file):
     try:
-      properties = _raveproperties.load(COMPOSITE_GENERATOR_PROPERTY_FILE)
+      properties = _raveproperties.load(properties_file)
     except:
       properties = _raveproperties.new()
       properties.set("rave.acqva.cluttermap.dir", ACQVA_CLUTTERMAP_DIR)
