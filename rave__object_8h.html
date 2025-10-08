@@ -221,7 +221,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<b>Value:</b><div class="fragment"><div class="line">  (((<a class="code hl_typedef" href="#a46a2f0574ec46db3626c123be570c7ed">RaveCoreObject</a>*)<span class="keyword">this</span>)-&gt;roh_type == type)</div>
+<b>Value:</b><div class="fragment"><div class="line">  (<span class="keyword">this</span> != NULL &amp;&amp; ((<a class="code hl_typedef" href="#a46a2f0574ec46db3626c123be570c7ed">RaveCoreObject</a>*)<span class="keyword">this</span>)-&gt;roh_type == type)</div>
 </div><!-- fragment -->
 <p>Checks if this object is of the specified type. </p>
 <p>For example <a class="el" href="#a23a245cafb73c053dad4f5923d1e5d2d" title="Checks if this object is of the specified type.">RAVE_OBJECT_CHECK_TYPE(obj, &amp;PolarScan_TYPE)</a>. </p><dl class="params"><dt>Parameters</dt><dd>

@@ -101,6 +101,9 @@ Functions</h2></td></tr>
 <tr class="memitem:a2453b75fea34e8d4327fe053ad1e9601" id="r_a2453b75fea34e8d4327fe053ad1e9601"><td class="memItemLeft" align="right" valign="top"><a class="el" href="#a7d5e574535a94c690276d809dd8d0e3e">RaveIO_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2453b75fea34e8d4327fe053ad1e9601">RaveIO_open</a> (const char *filename, int lazyLoading, const char *preloadQuantities)</td></tr>
 <tr class="memdesc:a2453b75fea34e8d4327fe053ad1e9601"><td class="mdescLeft">&#160;</td><td class="mdescRight">Opens a supported HDF5 file and loads it into the RaveIO instance.  <br /></td></tr>
 <tr class="separator:a2453b75fea34e8d4327fe053ad1e9601"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1544c24b02332a2b8a0abecadb95b11a" id="r_a1544c24b02332a2b8a0abecadb95b11a"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1544c24b02332a2b8a0abecadb95b11a">RaveIO_isHDFFile</a> (const char *filename)</td></tr>
+<tr class="memdesc:a1544c24b02332a2b8a0abecadb95b11a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if specified file is a HDF file or not.  <br /></td></tr>
+<tr class="separator:a1544c24b02332a2b8a0abecadb95b11a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a014e6de1818c1b5cf07c387710fef6db" id="r_a014e6de1818c1b5cf07c387710fef6db"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a014e6de1818c1b5cf07c387710fef6db">RaveIO_load</a> (<a class="el" href="#a7d5e574535a94c690276d809dd8d0e3e">RaveIO_t</a> *raveio, int lazyLoading, const char *preloadQuantities)</td></tr>
 <tr class="memdesc:a014e6de1818c1b5cf07c387710fef6db"><td class="mdescLeft">&#160;</td><td class="mdescRight">Loads the HDF5 file into the raveio instance.  <br /></td></tr>
 <tr class="separator:a014e6de1818c1b5cf07c387710fef6db"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -734,6 +737,32 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the user block </dd></dl>
+
+</div>
+</div>
+<a id="a1544c24b02332a2b8a0abecadb95b11a" name="a1544c24b02332a2b8a0abecadb95b11a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1544c24b02332a2b8a0abecadb95b11a">&#9670;&#160;</a></span>RaveIO_isHDFFile()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int RaveIO_isHDFFile </td>
+          <td>(</td>
+          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>filename</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Checks if specified file is a HDF file or not. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">filename</td><td>- the filename </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>1 on success otherwise 0 </dd></dl>
 
 </div>
 </div>
