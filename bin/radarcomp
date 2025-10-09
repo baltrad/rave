@@ -25,7 +25,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @date 2012-01-22
 from compositing import compositing
 from tiled_compositing import tiled_compositing
-from rave_defines import CENTER_ID, GAIN, OFFSET
+from rave_defines import CENTER_ID, GAIN, OFFSET, COMPOSITE_GENERATOR_PROPERTY_FILE
 import rave_pgf_logger
 import _raveio, _rave
 import rave_tile_registry
@@ -34,7 +34,7 @@ logger = rave_pgf_logger.rave_pgf_syslog_client()
 
 
 def main(options):
-    # _rave.setDebugLevel(_rave.Debug_RAVE_SPEWDEBUG)
+    #_rave.setDebugLevel(_rave.Debug_RAVE_SPEWDEBUG)
     comp = compositing()
     comp.filenames = options.infiles.split(",")
     comp.detectors = options.qc.split(",")
@@ -59,6 +59,7 @@ def main(options):
         comp.use_legacy_compositing = False
 
     comp.strategy = options.strategy
+    comp.properties_file = options.properties
 
     if options.gf:
         comp.applygapfilling = True
@@ -390,6 +391,13 @@ if __name__ == "__main__":
         dest="strategy",
         default=None,
         help="Can be used to force a specific composite factory to be used. For example acqva, nearest or legacy.",
+    )
+
+    parser.add_option(
+        "--properties",
+        dest="properties",
+        default=COMPOSITE_GENERATOR_PROPERTY_FILE,
+        help="Used to specify a rave properties file that is used by the different strategies.",
     )
 
     (options, args) = parser.parse_args()

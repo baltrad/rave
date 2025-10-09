@@ -61,7 +61,7 @@ import rave_quality_plugin
 import compositegenerator
 
 from rave_quality_plugin import QUALITY_CONTROL_MODE_ANALYZE, QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY
-
+from rave_defines import COMPOSITE_GENERATOR_PROPERTY_FILE
 from rave_defines import CENTER_ID, GAIN, OFFSET, FACTORY_GAIN_OFFSET_TABLE
 from rave_defines import DEFAULTA, DEFAULTB, DEFAULTC
 
@@ -138,6 +138,7 @@ class compositing(object):
         self.use_lazy_loading_preloads = True
         self.use_legacy_compositing = True
         self.strategy = None
+        self.properties_file = COMPOSITE_GENERATOR_PROPERTY_FILE
 
     def generate(self, dd, dt, area=None):
         return self._generate(dd, dt, area)
@@ -334,7 +335,7 @@ class compositing(object):
             # how a composite should be generated
             ##
             logger.info("Using composite generator factories")
-            cgenerator = compositegenerator.Generator()
+            cgenerator = compositegenerator.Generator(properties_file=self.properties_file)
 
             arguments = cgenerator.create_arguments()
 
