@@ -112,6 +112,9 @@ Functions</h2></td></tr>
 <tr class="memitem:a35bd63c120286968ee01e37c9a1c3ce6" id="r_a35bd63c120286968ee01e37c9a1c3ce6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a35bd63c120286968ee01e37c9a1c3ce6">RaveValue_createString</a> (const char *value)</td></tr>
 <tr class="memdesc:a35bd63c120286968ee01e37c9a1c3ce6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a string rave value.  <br /></td></tr>
 <tr class="separator:a35bd63c120286968ee01e37c9a1c3ce6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8d548a7d6cdc65ffad8f909e2737a8a5" id="r_a8d548a7d6cdc65ffad8f909e2737a8a5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8d548a7d6cdc65ffad8f909e2737a8a5">RaveValue_createStringFmt</a> (const char *fmt,...)</td></tr>
+<tr class="memdesc:a8d548a7d6cdc65ffad8f909e2737a8a5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a string rave value from a varargs list.  <br /></td></tr>
+<tr class="separator:a8d548a7d6cdc65ffad8f909e2737a8a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a097ba2b34b34662c3811935c5faf1051" id="r_a097ba2b34b34662c3811935c5faf1051"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a097ba2b34b34662c3811935c5faf1051">RaveValue_setString</a> (<a class="el" href="#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> *self, const char *value)</td></tr>
 <tr class="memdesc:a097ba2b34b34662c3811935c5faf1051"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets a string value in self.  <br /></td></tr>
 <tr class="separator:a097ba2b34b34662c3811935c5faf1051"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -253,6 +256,9 @@ Functions</h2></td></tr>
 <tr class="memitem:a9b3ac4eceb61b471185cb99811a728e2" id="r_a9b3ac4eceb61b471185cb99811a728e2"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a9b3ac4eceb61b471185cb99811a728e2">RaveValueList_insert</a> (<a class="el" href="#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> *self, int index, <a class="el" href="#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> *value)</td></tr>
 <tr class="memdesc:a9b3ac4eceb61b471185cb99811a728e2"><td class="mdescLeft">&#160;</td><td class="mdescRight">If rave value is list, then this provides same functionality as <a class="el" href="raveobject__list_8c.html#aec9f39cd5313cfb5a242d6f64fb7f671">RaveObjectList_insert</a>.  <br /></td></tr>
 <tr class="separator:a9b3ac4eceb61b471185cb99811a728e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a937de9c659d40a960ad6e8097235f5ca" id="r_a937de9c659d40a960ad6e8097235f5ca"><td class="memItemLeft" align="right" valign="top"><a class="el" href="#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a937de9c659d40a960ad6e8097235f5ca">RaveValueList_join</a> (<a class="el" href="#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> *self, const char *sep)</td></tr>
+<tr class="memdesc:a937de9c659d40a960ad6e8097235f5ca"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a rave value string from the list of strings and adds the separator between each entry.  <br /></td></tr>
+<tr class="separator:a937de9c659d40a960ad6e8097235f5ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad1ff6ce1b09a79ec4257a91bef6ed2db" id="r_ad1ff6ce1b09a79ec4257a91bef6ed2db"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad1ff6ce1b09a79ec4257a91bef6ed2db">RaveValueList_size</a> (<a class="el" href="#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> *self)</td></tr>
 <tr class="memdesc:ad1ff6ce1b09a79ec4257a91bef6ed2db"><td class="mdescLeft">&#160;</td><td class="mdescRight">If rave value is list, then this provides same functionality as <a class="el" href="raveobject__list_8c.html#a52a145305c0c2a87d44990f70d89adfe">RaveObjectList_size</a>.  <br /></td></tr>
 <tr class="separator:ad1ff6ce1b09a79ec4257a91bef6ed2db"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -605,6 +611,36 @@ Variables</h2></td></tr>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">value</td><td>- the string array </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">len</td><td>- the length of the array </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the value on success otherwise NULL </dd></dl>
+
+</div>
+</div>
+<a id="a8d548a7d6cdc65ffad8f909e2737a8a5" name="a8d548a7d6cdc65ffad8f909e2737a8a5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8d548a7d6cdc65ffad8f909e2737a8a5">&#9670;&#160;</a></span>RaveValue_createStringFmt()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> * RaveValue_createStringFmt </td>
+          <td>(</td>
+          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>fmt</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>...</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Creates a string rave value from a varargs list. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">value</td><td>- the string </td></tr>
   </table>
   </dd>
 </dl>
@@ -1944,6 +1980,37 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>1 on success otherwise 0 </dd></dl>
+
+</div>
+</div>
+<a id="a937de9c659d40a960ad6e8097235f5ca" name="a937de9c659d40a960ad6e8097235f5ca"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a937de9c659d40a960ad6e8097235f5ca">&#9670;&#160;</a></span>RaveValueList_join()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> * RaveValueList_join </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> *</td>          <td class="paramname"><span class="paramname"><em>self</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>sep</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Creates a rave value string from the list of strings and adds the separator between each entry. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- the list </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">sep</td><td>- the separator </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>a rave value string </dd></dl>
 
 </div>
 </div>
