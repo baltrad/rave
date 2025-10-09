@@ -763,10 +763,9 @@ RaveValue_t* RaveValueHash_get(RaveValue_t* self, const char* key)
 {
   RaveValue_t* obj = NULL;
   RAVE_ASSERT((self != NULL), "self == NULL");
-
   if (self->type == RaveValue_Type_Hashtable) {
     RaveCoreObject* t = RaveObjectHashTable_get(self->hashtable, key);
-    if (RAVE_OBJECT_CHECK_TYPE(t, &RaveValue_TYPE)) {
+    if (t != NULL && RAVE_OBJECT_CHECK_TYPE(t, &RaveValue_TYPE)) {
       obj = RAVE_OBJECT_COPY(t);
     }
     RAVE_OBJECT_RELEASE(t);
