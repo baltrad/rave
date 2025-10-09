@@ -541,6 +541,7 @@ static int AcqvaCompositeGeneratorFactoryInternal_findLowestUsableValue(AcqvaCom
         *elangle = navinfo.elevation;
         *ray = navinfo.ai;
         *bin = navinfo.ri;
+        navinfo.ei = i;
         *eindex = i;
         *outnavinfo = navinfo;
         found = 1;

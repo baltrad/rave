@@ -65,6 +65,7 @@ static CompositeQualityFlagSettings_t COMPOSITE_ENGINE_QUALITY_FLAG_DEFINITIONS[
   {COMPOSITE_ENGINE_DISTANCE_TO_RADAR_HOW_TASK, RaveDataType_UCHAR, 0.0, COMPOSITE_ENGINE_DISTANCE_TO_RADAR_RESOLUTION},
   {COMPOSITE_ENGINE_HEIGHT_ABOVE_SEA_HOW_TASK, RaveDataType_UCHAR, 0.0, COMPOSITE_ENGINE_HEIGHT_RESOLUTION},
   {COMPOSITE_ENGINE_RADAR_INDEX_HOW_TASK, RaveDataType_UCHAR, 0.0, 1.0},
+  {COMPOSITE_ENGINE_RADAR_ELEVATION_INDEX_HOW_TASK, RaveDataType_USHORT, 0.0, 1.0},  
   {NULL, RaveDataType_UNDEFINED, 0.0, 0.0}
 };
 
@@ -321,9 +322,255 @@ static int CompositeEngineInternal_setRadarData(CompositeEngine_t* engine, void*
   return CompositeEngineUtility_setRadarData(engine, extradata, arguments, cartesian, olon, olat, x, y, cvalues, ncvalues);
 }
 
+static RaveValue_t* CompositeEngineInternal_getIdFromSource(const char* source, const char* id)
+{
+  RaveValue_t* result = NULL;
+  char strvalue[512];
+
+  if (source != NULL && id != NULL) {
+    char* p = strstr(source, id);
+    if (p != NULL) {
+      int len = 0;
+      char* pbrk = NULL;
+      p += strlen(id);
+      len = strlen(p);
+      pbrk = strpbrk((const char*)p, ",");
+
+      if (pbrk != NULL) {
+        len = pbrk - p;
+      }
+      if (len < 512) {
+        strncpy(strvalue, p, len);
+        strvalue[len] = '\0';
+        result = RaveValue_createString(strvalue);
+      } else {
+        RAVE_ERROR0("Not enough space when creating id from source");
+      }
+    }
+  }
+  return result;
+}
+
+static RaveValue_t* CompositeEngineInternal_getAnyIdFromSource(const char* source)
+{
+  RaveValue_t* result = NULL;
+  result = CompositeEngineInternal_getIdFromSource(source, "WMO:");
+  if (result == NULL) {
+    result = CompositeEngineInternal_getIdFromSource(source, "RAD:");
+  }
+  if (result == NULL) {
+    result = CompositeEngineInternal_getIdFromSource(source, "NOD:");
+  }
+  if (result == NULL) {
+    result = CompositeEngineInternal_getIdFromSource(source, "CMT:");
+  }
+  return result;
+}
+
+static RaveValue_t* CompositeEngineInternal_createRadarIndexValue(RaveValue_t* srcid, long v)
+{
+  return RaveValue_createStringFmt("%s:%ld", RaveValue_toString(srcid), v);
+}
+
+static int CompositeEngineInternal_addRadarIndexToHowTaskArgs(CompositeArguments_t* arguments, RaveField_t* field)
+{
+  RaveValue_t* strlist = NULL;
+  RaveValue_t* srcid = NULL;
+  RaveValue_t* tmpv = NULL;
+  RaveValue_t* unknown_string = RaveValue_createString("Unknown");;
+  RaveValue_t* task_args_str = NULL;
+
+  RaveCoreObject* obj = NULL;
+
+  int result = 0;
+
+  if (unknown_string == NULL) {
+    return 0;
+  }
+
+  strlist = RaveValue_createList(NULL);
+  if (strlist != NULL) {
+    int nobjects = CompositeArguments_getNumberOfObjects(arguments);
+    int i = 0;
+    for (i = 0; i < nobjects; i++) {
+      obj = CompositeArguments_getObject(arguments, i);
+
+      if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarScan_TYPE)) {
+        srcid = CompositeEngineInternal_getAnyIdFromSource(PolarScan_getSource((PolarScan_t*)obj));
+      } else if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
+        srcid = CompositeEngineInternal_getAnyIdFromSource(PolarVolume_getSource((PolarVolume_t*)obj));
+      } else {
+        srcid = RAVE_OBJECT_COPY(unknown_string);
+      }
+
+      if (srcid != NULL) {
+        tmpv = CompositeEngineInternal_createRadarIndexValue(srcid, CompositeArguments_getObjectRadarIndexValue(arguments, i));
+        if (tmpv == NULL || !RaveValueList_add(strlist, tmpv)) {
+          goto done;
+        }
+        RAVE_OBJECT_RELEASE(tmpv);
+      }
+
+      RAVE_OBJECT_RELEASE(srcid);
+      RAVE_OBJECT_RELEASE(obj);
+    }
+
+    task_args_str = RaveValueList_join(strlist, ",");
+    if (task_args_str != NULL) {
+      RaveAttribute_t* attr = RaveAttributeHelp_createString("how/task_args", RaveValue_toString(task_args_str));
+      if (attr == NULL || !RaveField_addAttribute(field, attr)) {
+        RAVE_OBJECT_RELEASE(attr);
+        goto done;
+      }
+      RAVE_OBJECT_RELEASE(attr);
+    }
+  }
+  result = 1;
+
+done:
+  RAVE_OBJECT_RELEASE(tmpv);
+  RAVE_OBJECT_RELEASE(srcid);
+  RAVE_OBJECT_RELEASE(obj);
+  RAVE_OBJECT_RELEASE(strlist);
+  RAVE_OBJECT_RELEASE(unknown_string);
+  RAVE_OBJECT_RELEASE(task_args_str);
+  return result;
+}
+
+static int CompositeEngineInternal_addRadarElevationIndexProductParameter(CompositeEngine_t* engine, CompositeArguments_t* arguments, RaveField_t* field)
+{
+  OdimSources_t* sources = NULL;
+  OdimSource_t* source = NULL;
+  RaveValue_t* elevationindexes = NULL;
+  int result = 0;
+
+  if (engine->properties != NULL) {
+    sources = RaveProperties_getOdimSources(engine->properties);
+    if (sources != NULL) {
+      int nobjects = CompositeArguments_getNumberOfObjects(arguments);
+      int i = 0;
+      char strsrc[512];
+      elevationindexes = RaveValue_createHashTable(NULL);
+      if (elevationindexes == NULL) {
+        goto fail;
+      }
+
+      for (i = 0; i < nobjects; i++) {
+        RaveCoreObject* obj = CompositeArguments_getObject(arguments, i);
+        if (obj != NULL && CompositeUtils_getObjectSource(obj, strsrc, 512)) {
+          source = OdimSources_identify(sources, (const char*)strsrc);
+          if (source != NULL) {
+            RaveValue_t* elevations = RaveValue_createList(NULL);
+            if (elevations != NULL) {
+              if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
+                int j = 0, nelevations = PolarVolume_getNumberOfScans((PolarVolume_t*)obj);
+                for (j = 0; j < nelevations; j++) {
+                  PolarScan_t* scan = PolarVolume_getScan((PolarVolume_t*)obj, j);
+                  if (scan != NULL) {
+                    int ri = CompositeArguments_getObjectRadarIndexValue(arguments, i);
+                    RaveValue_t* ei = RaveValue_createLong(100*ri + j + 1);
+                    RaveValue_t* elangle = RaveValue_createDouble(PolarScan_getElangle(scan)*180.0/M_PI);
+                    RaveValue_t* eielanglelist = RaveValue_createList(NULL);
+                    if (ei != NULL && elangle != NULL && eielanglelist != NULL && 
+                        RaveValueList_add(eielanglelist, ei) && 
+                        RaveValueList_add(eielanglelist, elangle) && 
+                        RaveValueList_add(elevations, eielanglelist) &&
+                        RaveValueHash_put(elevationindexes, OdimSource_getNod(source), elevations)) {
+                      RAVE_DEBUG1("Added elevation index for %s", (const char*)strsrc);
+                    } else {
+                      RAVE_ERROR1("Could not add ei-elangle to radar elevation index for %s", (const char*)strsrc);
+                    }
+                    RAVE_OBJECT_RELEASE(ei);
+                    RAVE_OBJECT_RELEASE(elangle);
+                    RAVE_OBJECT_RELEASE(scan);
+                    RAVE_OBJECT_RELEASE(eielanglelist);
+                  }
+                }
+              } else if (RAVE_OBJECT_CHECK_TYPE(obj, &PolarScan_TYPE)) {
+                int ri = CompositeArguments_getObjectRadarIndexValue(arguments, i);
+                RaveValue_t* ei = RaveValue_createLong(100*ri + 1);
+                RaveValue_t* elangle = RaveValue_createDouble(PolarScan_getElangle((PolarScan_t*)obj)*180.0/M_PI);
+                RaveValue_t* eielanglelist = RaveValue_createList(NULL);
+                if (ei != NULL && elangle != NULL && eielanglelist != NULL && 
+                    RaveValueList_add(eielanglelist, ei) && 
+                    RaveValueList_add(eielanglelist, elangle) && 
+                    RaveValueList_add(elevations, eielanglelist) &&
+                    RaveValueHash_put(elevationindexes, OdimSource_getNod(source), elevations)) {
+                  RAVE_DEBUG1("Added elevation index for %s", (const char*)strsrc);
+                } else {
+                  RAVE_ERROR1("Could not add ei-elangle to radar elevation index for %s", (const char*)strsrc);
+                }
+                RAVE_OBJECT_RELEASE(ei);
+                RAVE_OBJECT_RELEASE(elangle);
+                RAVE_OBJECT_RELEASE(eielanglelist);
+              } else {
+                RAVE_ERROR0("Currently elevation index does not make sense for other objects than scan and volume");
+              }
+              RAVE_OBJECT_RELEASE(elevations);
+            } 
+          }
+          RAVE_OBJECT_RELEASE(source);
+        }
+        RAVE_OBJECT_RELEASE(obj);
+      }
+    } else {
+      RAVE_WARNING0("Will not add radar elevation index to quality field");
+    }
+  }
+  if (elevationindexes != NULL) {
+    char* json = RaveValue_toJSON(elevationindexes);
+    if (json != NULL) {
+      RaveAttribute_t* attr = RaveAttributeHelp_createString("how/product_parameters/radar_elevation_index", json);
+      if (attr == NULL || !RaveField_addAttribute(field, attr)) {
+        RAVE_ERROR0("Failed to add radar elevation index to product parameters");
+      }
+      RAVE_OBJECT_RELEASE(attr);
+      RAVE_FREE(json);
+    } else {
+      /* Probably no support for JSON so silently ignore it. */
+    }
+  }
+  result = 1;
+fail:
+  RAVE_OBJECT_RELEASE(sources);
+  RAVE_OBJECT_RELEASE(source);
+  RAVE_OBJECT_RELEASE(elevationindexes);
+  return result;
+}
+
 static int CompositeEngineInternal_addQualityFlagsToCartesian(CompositeEngine_t* engine, void* extradata, CompositeArguments_t* arguments, Cartesian_t* cartesian)
 {
-  return CompositeUtils_addQualityFlagsToCartesian(arguments, cartesian, engine->qualityFlagDefinitions);
+  int result = CompositeUtils_addQualityFlagsToCartesian(arguments, cartesian, engine->qualityFlagDefinitions);
+  if (result != 0) {
+    int nparam = CompositeArguments_getParameterCount(arguments);
+    int i = 0;
+    for (i = 0; i < nparam; i++) {
+      CartesianParam_t* param = Cartesian_getParameter(cartesian, CompositeArguments_getParameterName(arguments, i));
+      if (param != NULL) {
+        RaveField_t* radarIndexField = CartesianParam_getQualityFieldByHowTask(param, COMPOSITE_ENGINE_RADAR_INDEX_HOW_TASK);
+        if (radarIndexField != NULL) {
+          if (!CompositeEngineInternal_addRadarIndexToHowTaskArgs(arguments, radarIndexField)) {
+            RAVE_WARNING0("Failed to add how/task_args for radar index");
+          }
+        }
+        RAVE_OBJECT_RELEASE(radarIndexField);
+      }
+      RAVE_OBJECT_RELEASE(param);
+
+      param = Cartesian_getParameter(cartesian, CompositeArguments_getParameterName(arguments, i));
+      if (param != NULL) {
+        RaveField_t* radarElevationIndexField = CartesianParam_getQualityFieldByHowTask(param, COMPOSITE_ENGINE_RADAR_ELEVATION_INDEX_HOW_TASK);
+        if (radarElevationIndexField != NULL) {
+          if(!CompositeEngineInternal_addRadarElevationIndexProductParameter(engine, arguments, radarElevationIndexField)) {
+            RAVE_WARNING0("Failed to add radar elevation index to product parameters");
+          }
+        }
+        RAVE_OBJECT_RELEASE(radarElevationIndexField);
+      }
+      RAVE_OBJECT_RELEASE(param);
+    }
+  }
+  return result;
 }
 
 static int CompositeEngineInternal_getQualityValue(CompositeEngine_t* self, void* extradata, CompositeArguments_t* args, RaveCoreObject* obj, const char* quantity, const char* qfieldname, PolarNavigationInfo* navinfo, double* v)
@@ -714,6 +961,10 @@ int CompositeEngineUtility_fillQualityInformation(CompositeEngine_t* self, void*
           RaveField_setValue(field, x, y, radardist/COMPOSITE_ENGINE_DISTANCE_TO_RADAR_RESOLUTION);
         } else if (strcmp(COMPOSITE_ENGINE_RADAR_INDEX_HOW_TASK, name) == 0) {
           RaveField_setValue(field, x, y, (double)CompositeArguments_getObjectRadarIndexValue(arguments, radarindex));
+        } else if (strcmp(COMPOSITE_ENGINE_RADAR_ELEVATION_INDEX_HOW_TASK, name) == 0) {
+          int ri = CompositeArguments_getObjectRadarIndexValue(arguments, radarindex);
+          int elevation = ri * 100 + navinfo->ei + 1;
+          RaveField_setValue(field, x, y, (double)elevation);
         } else if (CompositeEngineFunction_getQualityValue(self, extradata, arguments, obj, quantity, name, navinfo, &v)) {
           RaveField_setValue(field, x, y, (double)v);
         } else {
@@ -808,11 +1059,6 @@ Cartesian_t* CompositeEngine_generate(CompositeEngine_t* self, CompositeArgument
   ysize = Cartesian_getYSize(cartesian);
   nradars = CompositeArguments_getNumberOfObjects(arguments);
 
-  if (!CompositeEngineFunction_addQualityFlagsToCartesian(self, extradata, arguments, cartesian)) {
-    RAVE_ERROR0("Failed to add quality flags to cartesian product");
-    goto fail;
-  }
-
   if (self->properties != NULL) {
     sources = RaveProperties_getOdimSources(self->properties);
   }
@@ -830,6 +1076,12 @@ Cartesian_t* CompositeEngine_generate(CompositeEngine_t* self, CompositeArgument
     }
     RAVE_OBJECT_RELEASE(obj);
   }
+
+  if (!CompositeEngineFunction_addQualityFlagsToCartesian(self, extradata, arguments, cartesian)) {
+    RAVE_ERROR0("Failed to add quality flags to cartesian product");
+    goto fail;
+  }
+
   if (!CompositeEngineFunction_onStarting(self, extradata, arguments, cartesian, bindings, nbindings)) {
     goto fail;
   }

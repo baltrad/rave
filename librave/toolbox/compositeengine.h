@@ -66,6 +66,9 @@ extern RaveCoreObjectType CompositeEngine_TYPE;
 /** The name of the task for indexing the radars used */
 #define COMPOSITE_ENGINE_RADAR_INDEX_HOW_TASK "se.smhi.composite.index.radar"
 
+/** The name of the task for indexing the elevations used */
+#define COMPOSITE_ENGINE_RADAR_ELEVATION_INDEX_HOW_TASK "se.smhi.composite.index.radar.elevation"
+
 /** Default gain for quality fields without type definition */
 #define COMPOSITE_ENGINE_DEFAULT_QUALITY_FIELDS_GAIN   (1.0/UCHAR_MAX)
 

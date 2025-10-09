@@ -64,3 +64,34 @@ class rave_radarindex_quality_plugin(rave_quality_plugin):
     #
     def algorithm(self):
         return None
+
+class rave_elevationindex_quality_plugin(rave_quality_plugin):
+    ##
+    # Default constructor
+    def __init__(self):
+        super(rave_elevationindex_quality_plugin, self).__init__()
+
+    ##
+    # @return a list containing the string se.smhi.composite.index.radar.elevation
+    def getQualityFields(self):
+        return ["se.smhi.composite.index.radar.elevation"]
+
+    ##
+    # @param obj: A rave object that should be processed, bogus in this case.
+    # @param reprocess_quality_flag: Not used
+    # @param arguments: Not used
+    # @return: obj - without doing anything to it
+    def process(
+        self,
+        obj,
+        reprocess_quality_flag=True,
+        quality_control_mode=QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY,
+        arguments=None,
+    ):
+        return obj, self.getQualityFields()
+
+    ##
+    # @return: The distance information - dummy
+    #
+    def algorithm(self):
+        return None

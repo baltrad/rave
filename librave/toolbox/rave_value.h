@@ -72,6 +72,13 @@ void RaveValue_reset(RaveValue_t* self);
 RaveValue_t* RaveValue_createString(const char* value);
 
 /**
+ * Creates a string rave value from a varargs list
+ * @param[in] value - the string
+ * @returns the value on success otherwise NULL
+ */
+RaveValue_t* RaveValue_createStringFmt(const char* fmt, ...);
+
+/**
  * Sets a string value in self
  * @param[in] self - self
  * @param[in] value - the value
@@ -430,6 +437,15 @@ int RaveValueList_add(RaveValue_t* self, RaveValue_t* value);
  * @return 1 on success otherwise 0
  */
 int RaveValueList_insert(RaveValue_t* self, int index, RaveValue_t* value);
+
+/**
+ * Creates a rave value string from the list of strings and adds the separator
+ * between each entry.
+ * @param[in] self - the list
+ * @param[in] sep - the separator
+ * @return a rave value string
+ */
+RaveValue_t* RaveValueList_join(RaveValue_t* self, const char* sep);
 
 /**
  * If rave value is list, then this provides same functionality as \ref RaveObjectList_size

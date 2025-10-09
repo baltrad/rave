@@ -547,6 +547,7 @@ int CompositeUtils_addQualityFlagsToCartesian(CompositeArguments_t* arguments, C
             RAVE_ERROR0("Failed to add quality field");
             goto done;
           }
+
           RAVE_OBJECT_RELEASE(cfield);
         }
         RAVE_OBJECT_RELEASE(param);

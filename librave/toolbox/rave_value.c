@@ -171,6 +171,23 @@ RaveValue_t* RaveValue_createString(const char* value)
   return result;
 }
 
+RaveValue_t* RaveValue_createStringFmt(const char* fmt, ...)
+{
+  char str[4096];
+  va_list ap;
+  int n = 0;
+
+  va_start(ap, fmt);
+  n = vsnprintf(str, 4096, fmt, ap);
+  va_end(ap);
+  if (n < 0 || n >= 4096) {
+    RAVE_ERROR0("Failed to generate name");
+    return NULL;
+  }
+
+  return RaveValue_createString(str);
+}
+
 int RaveValue_setString(RaveValue_t* self, const char* value)
 {
   char* tdata = NULL;
@@ -825,8 +842,18 @@ RaveValue_t* RaveValue_createList(RaveObjectList_t* rlist)
 {
   RaveValue_t* result = RAVE_OBJECT_NEW(&RaveValue_TYPE);
   if (result != NULL) {
-    if (!RaveValue_setList(result, rlist)) {
-      RAVE_OBJECT_RELEASE(result);
+    if (rlist != NULL) {
+      if (!RaveValue_setList(result, rlist)) {
+        RAVE_OBJECT_RELEASE(result);
+      }
+    } else {
+      RaveObjectList_t* nlist = RAVE_OBJECT_NEW(&RaveObjectList_TYPE);
+      if (nlist != NULL) {
+        if (!RaveValue_setList(result, nlist)) {
+          RAVE_OBJECT_RELEASE(result);
+        }
+      }
+      RAVE_OBJECT_RELEASE(nlist);
     }
   }
   return result;
@@ -878,6 +905,38 @@ int RaveValueList_insert(RaveValue_t* self, int index, RaveValue_t* value)
   if (self->type == RaveValue_Type_List) {
     result = RaveObjectList_insert(self->list, index, (RaveCoreObject*)value);
   }
+  return result;
+}
+
+RaveValue_t* RaveValueList_join(RaveValue_t* self, const char* sep)
+{
+  RaveValue_t *result = NULL, *tmpresult = NULL, *tmp = NULL;
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  if (self->type == RaveValue_Type_List) {
+    int sz = RaveValueList_size(self);
+    int i = 0;
+    for (i = 0; i < sz; i++) {
+      RaveValue_t* v = (RaveValue_t*)RaveValueList_get(self, i);
+      if (tmpresult == NULL) {
+        tmpresult = RAVE_OBJECT_COPY(v);
+      } else {
+        tmp = RaveValue_createStringFmt("%s,%s", RaveValue_toString(tmpresult), RaveValue_toString(v));
+        if (tmp != NULL) {
+          RAVE_OBJECT_RELEASE(tmpresult);
+          tmpresult = RAVE_OBJECT_COPY(tmp);
+          RAVE_OBJECT_RELEASE(tmp);
+        } else {
+          RAVE_OBJECT_RELEASE(v);
+          goto fail;
+        }
+      }
+      RAVE_OBJECT_RELEASE(v);
+    }
+    result = RAVE_OBJECT_COPY(tmpresult);
+  }
+fail:
+  RAVE_OBJECT_RELEASE(tmpresult);
+  RAVE_OBJECT_RELEASE(tmp);
   return result;
 }
 
