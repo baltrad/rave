@@ -959,6 +959,8 @@ int CompositeEngineUtility_fillQualityInformation(CompositeEngine_t* self, void*
       if (obj != NULL) {
         if (strcmp(COMPOSITE_ENGINE_DISTANCE_TO_RADAR_HOW_TASK, name) == 0) {
           RaveField_setValue(field, x, y, radardist/COMPOSITE_ENGINE_DISTANCE_TO_RADAR_RESOLUTION);
+        } else if (strcmp(COMPOSITE_ENGINE_HEIGHT_ABOVE_SEA_HOW_TASK, name) == 0) {
+          RaveField_setValue(field, x, y, navinfo->actual_height / COMPOSITE_ENGINE_HEIGHT_RESOLUTION);
         } else if (strcmp(COMPOSITE_ENGINE_RADAR_INDEX_HOW_TASK, name) == 0) {
           RaveField_setValue(field, x, y, (double)CompositeArguments_getObjectRadarIndexValue(arguments, radarindex));
         } else if (strcmp(COMPOSITE_ENGINE_RADAR_ELEVATION_INDEX_HOW_TASK, name) == 0) {
