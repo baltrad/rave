@@ -17,9 +17,10 @@ You should have received a copy of the GNU Lesser General Public License
 along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
+# TBD: Correct Copyright notice
+
 ##
-# A composite quality plugin for generating the probability of overshooting quality
-# field.
+# A composite quality plugin for generating the PIA quality field.
 #
 # This is no interactive registry, instead you will have to modify the xml file
 # in COMPOSITE_QUALITY_REGISTRY manually.
@@ -27,7 +28,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 # <?xml version='1.0' encoding='UTF-8'?>
 # <rave-pgf-composite-quality-registry>
 #   <quality-plugin name="ropo" class="ropo_pgf_composite_quality_plugin" />
-#   <quality-plugin name="rave-overshooting" class="rave_overshooting_quality_plugin" />
+#   <quality-plugin name="compute-pia" class="rave_pia_quality_plugin" />
 # </rave-pgf-composite-quality-registry>
 
 ##
@@ -38,7 +39,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 # Module/Project:
 from rave_quality_plugin import rave_quality_plugin
 from rave_quality_plugin import QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY
-from compute_pia import ComputePIA
+from compute_pia import ComputePIA,TASK
 
 import _polarscan, _polarscanparam, _polarvolume
 
@@ -50,14 +51,14 @@ class rave_pia_quality_plugin(rave_quality_plugin):
         super(rave_pia_quality_plugin, self).__init__()
 
     ##
-    # @return a list containing the string remco.van.de.beek.qc.compute_pia
+    # @return a list containing the string TASK
     def getQualityFields(self):
-        return ["remco.van.de.beek.qc.compute_pia"]
+        return [TASK]
 
     ##
     # @param obj: A rave object that should be processed.
     # @param reprocess_quality_flag: Specifies if the quality flag should be reprocessed or not.
-    #                                If False, then if possible the plugin should avoid generating the quality field again.
+    # If False, then if possible the plugin should avoid generating the quality field again.
     # @param arguments: Not used
     # @return: The modified object if this quality plugin has performed changes
     # to the object.

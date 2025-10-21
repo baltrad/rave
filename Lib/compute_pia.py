@@ -5,7 +5,7 @@ Created on Mon Aug 25 14:12:08 2025
 @author: Remco van de beek
 @author: Yngve Einarsson SMHI
 '''
-
+# TBD: Copyright notice
 import numpy as np
 import os
 import _raveio
@@ -29,8 +29,15 @@ PIAmax    = 10;                                    # Maximum PIA in Hitschfeld-B
 dtheta    = 1.875 * np.pi / 180;                   # Azimuth resolution [rad]
 dr        = 2;                                     # Range resolution [km]
 
-TASK = "remco.van.de.beek.qc.compute_pia"
+TASK = "se.smhi.qc.Hitschfeld-Bordan"
 targsfmt = "param_name=%s c_ZK=%2.2f d_ZK=%2.2f dBZmin=%i dbZmax=%i Rmin=%2.1f Rmax=%2.1f PIAmin=%2.1f PIAmax=%2.1f dtheta=%2.1f dr=%i"
+
+# Computes PIA based on Hitschfeld-Bordan algorithm. A single scan object is
+#  sent to the PIADeriveParameter function.
+# @param PolarScanCore object
+# @param string radar quantity name, defaults to DBZH
+# @param boolean reprocess_quality_flag
+# @param enum quality_control_mode
 
 def PIADeriveParameter(scan, param_name="DBZH",reprocess_quality_flag=True,
         quality_control_mode=QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY):
@@ -43,12 +50,15 @@ def PIADeriveParameter(scan, param_name="DBZH",reprocess_quality_flag=True,
     raw_data=offset+gain*raw_data #convert to dBZ
     dBZ=(raw_data)
 
-    ka        = ((10 ** (0.1 * raw_data)) / c) ** (1 / d)   # Apparent specific attenuation [dB/km]
-    PIA       = -10 * d * np.log10 (1 - 0.2 * np.log (10) / d * np.cumsum (ka, 1) * dr)
+    ka        = ((10.0 ** (0.1 * raw_data)) / c) ** (1.0 / d)   # Apparent specific attenuation [dB/km]
+    # FIXME: Check these to aviod RuntimeWarning: invalid value encountered in log10, debugprints needed
+    log10_in  = 1.0 - 0.2 * np.log (10.0) / d * np.cumsum (ka, 1) * dr
+    PIA       = -10.0 * d * np.log10 (log10_in)
 
     #Make certain no values above PIAmax are present and set nans due to exploding algorithm to PIAmax as well.
     PIA=np.nan_to_num(PIA,nan=10)
     PIA[PIA>PIAmax]=PIAmax
+    # Convert back
     PIA_DBZH = PIA/gain - offset
     param = _polarscanparam.new()
     param.quantity = "PIA"
@@ -58,20 +68,19 @@ def PIADeriveParameter(scan, param_name="DBZH",reprocess_quality_flag=True,
     param.undetect = DBZH.undetect
     param.setData(PIA_DBZH)
     scan.addParameter(param)
-    # FIXME: An exception occurs below...
+
     if reprocess_quality_flag or not scan.findQualityFieldByHowTask(TASK):
         piaf = _ravefield.new()
         piaf.setData(PIA_DBZH)
         piaf.addAttribute("how/task", TASK)
         targs = targsfmt % ("PIA", c, d, dBZmin, dBZmax, Rmin, Rmax, PIAmin, PIAmax, dtheta, dr)
-        piaf.addAttribute('how/task_args', targs)
+        piaf.addAttribute("how/task_args", targs)
         piaf.addAttribute("what/gain", gain)
         piaf.addAttribute("what/offset", offset)
-    #     piaf.nodata = DBZH.nodata
-    #     piaf.undetect = DBZH.undetect
         scan.addOrReplaceQualityField(piaf)
+
     #apply PIA
-    #if quality_control_mode==QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY:
+    if quality_control_mode==QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY:
         dBZ_pia=PIA+dBZ
         param_pia = _polarscanparam.new()
         param_pia.quantity = "DBZH"
@@ -79,10 +88,20 @@ def PIADeriveParameter(scan, param_name="DBZH",reprocess_quality_flag=True,
         param_pia.offset = offset
         param_pia.nodata = DBZH.nodata
         param_pia.undetect = DBZH.undetect
+        # Convert back to DBZH
         dbzh_pia = dBZ_pia/gain - offset
         param_pia.setData(dbzh_pia)
         scan.removeParameter("DBZH")
         scan.addParameter(param_pia)
+
+## Computes PIA based quality control. A single scan object is
+#  sent to the ComputePIAscan function. The scans comprising a polar volume are
+#  sent to the same function individually.
+# @param PolarScanCore object
+# @param string radar quantity name, defaults to DBZH
+# @param boolean whether (True) or not (False) to keep the derived PIA parameter
+# @param boolean reprocess_quality_flag
+# @param enum quality_control_mode
 
 
 def ComputePIAscan(scan, param_name="DBZH", keepPIA=True, reprocess_quality_flag=True,
@@ -95,20 +114,22 @@ def ComputePIAscan(scan, param_name="DBZH", keepPIA=True, reprocess_quality_flag
             PIADeriveParameter(scan,param_name,reprocess_quality_flag,quality_control_mode)
             PIA = scan.getParameter("PIA")
             if keepPIA:
-                PIA.addAttribute('how/task', TASK)
+                PIA.addAttribute("how/task", TASK)
                 targs = targsfmt % ("PIA", c, d, dBZmin, dBZmax, Rmin, Rmax, PIAmin, PIAmax, dtheta, dr)
-                PIA.addAttribute('how/task_args', targs)
+                PIA.addAttribute("how/task_args", targs)
         except AttributeError:
             pass
 
     if not keepPIA: scan.removeParameter("PIA")
 
-## Manages depolarization ratio based quality control. A single scan object is
-#  sent to the \ref drQCscan function. The scans comprising a polar volume are
+## Computes PIA based quality control. A single scan object is
+#  sent to the ComputePIA function. The scans comprising a polar volume are
 #  sent to the same function individually.
 # @param PolarVolumeCore or PolarScanCore object
 # @param string radar quantity name, defaults to DBZH
 # @param boolean whether (True) or not (False) to keep the derived PIA parameter
+# @param boolean reprocess_quality_flag
+# @param enum quality_control_mode
 def ComputePIA(pobject, param_name="DBZH", keepPIA=True, reprocess_quality_flag=True,
         quality_control_mode=QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY):
 
