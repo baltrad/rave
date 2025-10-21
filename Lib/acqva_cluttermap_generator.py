@@ -267,9 +267,16 @@ class acqva_static_source(object):
 class acqva_cluttermap_generator(object):
     """Support for creating static cluttermaps from a json configuration file. The format of the json file should be according to acqva_static.json.
     """
-    def __init__(self, configfile=None):
-        self._configfile = configfile
-        self._volumeconfig, self._coordinatecfg = self.parse_config(self._configfile)
+    def __init__(self, config=None):
+        if isinstance(config, str):
+            self._configfile = config
+            self._volumeconfig, self._coordinatecfg = self.parse_config(self._configfile)
+        elif isinstance(config, dict):
+            self._configfile = None
+            self._volumeconfig = self.jsonmap_to_volumecfg(config)
+            self._coordinatecfg = self.jsonmap_to_coordinatecfg(config)
+        else:
+            raise IOError("Only supports filename to a json config or a dictionary containing json config")
 
     def parse_config(self, configfile):
         """ Loads and validates the acqva static cluttermap definition. 
