@@ -1,11 +1,27 @@
 #!/usr/bin/env python
 '''
+Copyright (C) 2025- Swedish Meteorological and Hydrological Institute (SMHI)
+
+This file is part of RAVE.
+
+RAVE is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+RAVE is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+See the GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
+
 Created on Mon Aug 25 14:12:08 2025
 
 @author: Remco van de beek
 @author: Yngve Einarsson SMHI
 '''
-# TBD: Copyright notice
 
 import os
 import _raveio
@@ -20,7 +36,7 @@ from compute_pia import ComputePIA
 def main(options):
     rio = _raveio.open(options.ifile)
     ComputePIA(rio.object, options.param_name, options.keepPIA,options.reprocess_quality_fields,
-        QUALITY_CONTROL_MODE_ANALYZE)
+        options.quality_control_mode)
     rio.save(options.ofile)
 
 if __name__=="__main__":
