@@ -1,5 +1,5 @@
 '''
-Copyright (C) 2010- Swedish Meteorological and Hydrological Institute (SMHI)
+Copyright (C) 2025- Swedish Meteorological and Hydrological Institute (SMHI)
 
 This file is part of RAVE.
 
@@ -17,7 +17,7 @@ You should have received a copy of the GNU Lesser General Public License
 along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 
 '''
-# TBD: Correct Copyright notice
+
 
 ##
 # A composite quality plugin for generating the PIA quality field.
@@ -71,7 +71,7 @@ class rave_pia_quality_plugin(rave_quality_plugin):
     ):
         # Sanity check
         if obj is not None and _polarvolume.isPolarVolume(obj) or _polarscan.isPolarScan(obj):
-            ComputePIA(obj, "DBZH", True, reprocess_quality_flag=True, quality_control_mode=QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY)
+            ComputePIA(obj, "DBZH", True, reprocess_quality_flag, quality_control_mode)
         return obj, self.getQualityFields()
 
     ##
