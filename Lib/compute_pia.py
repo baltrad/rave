@@ -9,7 +9,9 @@ Created on Mon Aug 25 14:12:08 2025
 import numpy as np
 import os
 import _raveio
-import _polarscan, _polarscanparam, _polarvolume
+import _polarscan, _polarscanparam, _polarvolume, _ravefield
+
+from rave_quality_plugin import QUALITY_CONTROL_MODE_ANALYZE, QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY
 
 
 ######################################
@@ -30,7 +32,8 @@ dr        = 2;                                     # Range resolution [km]
 TASK = "remco.van.de.beek.qc.compute_pia"
 targsfmt = "param_name=%s c_ZK=%2.2f d_ZK=%2.2f dBZmin=%i dbZmax=%i Rmin=%2.1f Rmax=%2.1f PIAmin=%2.1f PIAmax=%2.1f dtheta=%2.1f dr=%i"
 
-def PIADeriveParameter(scan, param_name="DBZH"):
+def PIADeriveParameter(scan, param_name="DBZH",reprocess_quality_flag=True,
+        quality_control_mode=QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY):
 
     DBZH = scan.getParameter(param_name)
     gain = DBZH.gain
@@ -46,25 +49,50 @@ def PIADeriveParameter(scan, param_name="DBZH"):
     #Make certain no values above PIAmax are present and set nans due to exploding algorithm to PIAmax as well.
     PIA=np.nan_to_num(PIA,nan=10)
     PIA[PIA>PIAmax]=PIAmax
+    PIA_DBZH = PIA/gain - offset
     param = _polarscanparam.new()
     param.quantity = "PIA"
     param.gain = gain
     param.offset = offset
     param.nodata = DBZH.nodata
     param.undetect = DBZH.undetect
-    param.setData(PIA)
+    param.setData(PIA_DBZH)
     scan.addParameter(param)
+    # FIXME: An exception occurs below...
+    if reprocess_quality_flag or not scan.findQualityFieldByHowTask(TASK):
+        piaf = _ravefield.new()
+        piaf.setData(PIA_DBZH)
+        piaf.addAttribute("how/task", TASK)
+        targs = targsfmt % ("PIA", c, d, dBZmin, dBZmax, Rmin, Rmax, PIAmin, PIAmax, dtheta, dr)
+        piaf.addAttribute('how/task_args', targs)
+        piaf.addAttribute("what/gain", gain)
+        piaf.addAttribute("what/offset", offset)
+    #     piaf.nodata = DBZH.nodata
+    #     piaf.undetect = DBZH.undetect
+        scan.addOrReplaceQualityField(piaf)
     #apply PIA
-    #dBZ_pia=PIA+dBZ
+    #if quality_control_mode==QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY:
+        dBZ_pia=PIA+dBZ
+        param_pia = _polarscanparam.new()
+        param_pia.quantity = "DBZH"
+        param_pia.gain = gain
+        param_pia.offset = offset
+        param_pia.nodata = DBZH.nodata
+        param_pia.undetect = DBZH.undetect
+        dbzh_pia = dBZ_pia/gain - offset
+        param_pia.setData(dbzh_pia)
+        scan.removeParameter("DBZH")
+        scan.addParameter(param_pia)
 
 
-def ComputePIAscan(scan, param_name="DBZH", keepPIA=True):
+def ComputePIAscan(scan, param_name="DBZH", keepPIA=True, reprocess_quality_flag=True,
+    quality_control_mode=QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY):
 
 
     # Create PIA parameter if it's not already there
     if not scan.hasParameter("PIA"):
         try:
-            PIADeriveParameter(scan,param_name)
+            PIADeriveParameter(scan,param_name,reprocess_quality_flag,quality_control_mode)
             PIA = scan.getParameter("PIA")
             if keepPIA:
                 PIA.addAttribute('how/task', TASK)
@@ -81,16 +109,17 @@ def ComputePIAscan(scan, param_name="DBZH", keepPIA=True):
 # @param PolarVolumeCore or PolarScanCore object
 # @param string radar quantity name, defaults to DBZH
 # @param boolean whether (True) or not (False) to keep the derived PIA parameter
-def ComputePIA(pobject, param_name="DBZH", keepPIA=True):
+def ComputePIA(pobject, param_name="DBZH", keepPIA=True, reprocess_quality_flag=True,
+        quality_control_mode=QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY):
 
     if _polarvolume.isPolarVolume(pobject):
         nscans = pobject.getNumberOfScans(pobject)
         for n in range(nscans):
             scan = pobject.getScan(n)
-            ComputePIAscan(scan, param_name, keepPIA)
+            ComputePIAscan(scan, param_name, keepPIA, reprocess_quality_flag, quality_control_mode)
 
     elif _polarscan.isPolarScan(pobject):
-        ComputePIAscan(pobject, param_name, keepPIA)
+        ComputePIAscan(pobject, param_name, keepPIA, reprocess_quality_flag, quality_control_mode)
 
     else:
         raise IOError("Input object is neither polar volume nor scan")
@@ -100,7 +129,8 @@ def ComputePIA(pobject, param_name="DBZH", keepPIA=True):
 # @param object containing command-line arguments
 def main(options):
     rio = _raveio.open(options.ifile)
-    ComputePIA(rio.object, options.param_name, options.keepPIA)
+    ComputePIA(rio.object, options.param_name, options.keepPIA, options.reprocess_quality_fields,
+        QUALITY_CONTROL_MODE_ANALYZE)
     rio.save(options.ofile)
 
 if __name__=="__main__":
@@ -123,6 +153,13 @@ if __name__=="__main__":
 
     parser.add_option("-k", "--keepPIA", dest="keepPIA", default="store_true",
                       help="Whether (True) or not (False) to keep and store the PIA parameter. Defaults to True.")
+
+    parser.add_option(
+        "--reprocess_quality_fields",
+        action="store_true",
+        dest="reprocess_quality_fields",
+        help="Reprocessed the quality fields even if they already exist in the object.",
+    )
 
     (options, args) = parser.parse_args()
 

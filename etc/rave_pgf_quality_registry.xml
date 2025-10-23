@@ -19,4 +19,5 @@
   <quality-plugin name="scansun" class="scansun_quality_plugin" module="rave_scansun_quality_plugin" />
   <quality-plugin class="rave_radarindex_quality_plugin" module="rave_radarindex_quality_plugin" name="radar-index"/>
   <quality-plugin class="rave_elevationindex_quality_plugin" module="rave_radarindex_quality_plugin" name="elevation-index"/>
+  <quality-plugin class="rave_pia_quality_plugin" module="rave_pia_quality_plugin" name="compute-pia"/>
 </rave-pgf-quality-registry>
