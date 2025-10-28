@@ -41,6 +41,7 @@ from rave_defines import (
     RAVE_QUALITY_CONTROL_PROCESSES,
     RAVE_TILE_COMPOSITING_ALLOW_MISSING_TILES,
 )
+from rave_defines import COMPOSITE_GENERATOR_PROPERTY_FILE
 import rave_tempfile
 import odim_source
 
