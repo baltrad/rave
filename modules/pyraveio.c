@@ -258,7 +258,6 @@ static PyObject* _pyraveio_save(PyRaveIO* self, PyObject* args)
   if (!PyArg_ParseTuple(args, "|s", &filename)) {
     return NULL;
   }
-
   if (!RaveIO_save(self->raveio, filename)) {
     raiseException_returnNULL(PyExc_IOError, "Failed to save file");
   }

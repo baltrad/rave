@@ -786,6 +786,11 @@ static void PolarOdimIOInternal_removeVolumeAttributesFromList(RaveObjectList_t*
     RaveAttribute_t* attr = (RaveAttribute_t*)RaveObjectList_get(attributes, index);
     if (attr != NULL) {
       const char* name = RaveAttribute_getName(attr);
+      if (name != NULL && strcmp("how/scan_count", name) == 0) { /* We want to have duplicate of scan_count in both volume and scan part */
+        RAVE_OBJECT_RELEASE(attr);
+        continue;
+      }
+
       if (name != NULL && PolarVolume_hasAttribute(volume, name)) {
         RaveAttribute_t* pvolattr = PolarVolume_getAttribute(volume, name);
         if (pvolattr != NULL) {
@@ -828,7 +833,7 @@ static void PolarOdimIOInternal_removeVolumeAttributesFromList(RaveObjectList_t*
   }
 }
 
-static int PolarOdimIOInternal_addVolumeScan(PolarOdimIO_t* self, PolarScan_t* scan, HL_NodeList* nodelist, PolarVolume_t* volume, int scan_index, const char* fmt, ...)
+static int PolarOdimIOInternal_addVolumeScan(PolarOdimIO_t* self, PolarScan_t* scan, HL_NodeList* nodelist, PolarVolume_t* volume, const char* fmt, ...)
 {
   int result = 0;
   RaveObjectList_t* attributes = NULL;
@@ -918,6 +923,71 @@ done:
   return result;
 }
 
+
+static void PolarOdimIOInternal_getScanCountIndexFromScan(PolarScan_t* scan, long* scan_index, long* scan_count)
+{
+  RaveAttribute_t* scan_index_attr = NULL;
+  RaveAttribute_t* scan_count_attr = NULL;
+
+  if (scan == NULL || scan_index == NULL || scan_count == NULL) {
+    RAVE_ERROR0("Programming error.........");
+    return;
+  }
+  *scan_index = -1;
+  *scan_count = -1;
+  scan_count_attr = PolarScan_getAttribute(scan, "how/scan_count");
+  scan_index_attr = PolarScan_getAttribute(scan, "how/scan_index");
+  if (scan_count_attr != NULL) {
+    RaveAttribute_getLong(scan_count_attr, scan_count);
+  }
+  if (scan_index_attr != NULL) {
+    RaveAttribute_getLong(scan_index_attr, scan_index);
+  }
+  RAVE_OBJECT_RELEASE(scan_index_attr);
+  RAVE_OBJECT_RELEASE(scan_count_attr);
+}
+
+/** Will first atempt to get scan_count from the volume itself. If no such attribute,
+ * the scans will be looped over and first scan containing scan_count will be used.
+ * @paran[in] self - self
+ * @param[in] volume - the volume to check
+ * @return the scan count or -1 if nothing found
+ */
+static long PolarOdimIOInternal_getVolumeScanCount(PolarOdimIO_t* self, PolarVolume_t* volume)
+{
+  long result = -1;
+
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  if (volume == NULL) {
+    RAVE_ERROR0("Passing NULL as volume...");
+    goto done;
+  }
+  if (PolarVolume_hasAttribute(volume, "how/scan_count")) {
+    long volume_scan_count = -1;
+    RaveAttribute_t* attr = PolarVolume_getAttribute(volume, "how/scan_count");
+    if (attr != NULL && RaveAttribute_getLong(attr, &volume_scan_count)) {
+      result = volume_scan_count;
+    }
+    RAVE_OBJECT_RELEASE(attr);
+  } else {
+    int i = 0;
+    int nscans = PolarVolume_getNumberOfScans(volume);
+    for (i = 0; result == -1 && i < nscans; i++) {
+      PolarScan_t* scan = PolarVolume_getScan(volume, i);
+      long scan_index = -1, scan_count = -1;
+      if (scan != NULL) {
+        PolarOdimIOInternal_getScanCountIndexFromScan(scan, &scan_index, &scan_count);
+        if (scan_count > 0) {
+          result = scan_count;
+        }
+      }
+      RAVE_OBJECT_RELEASE(scan);
+    } 
+  }
+done:
+  return result;
+}
+
 /*@} End of Private functions */
 
 /*@{ Interface functions */
@@ -972,6 +1042,8 @@ static int PolarOdimIOInternal_checkAttributeRecursive(PolarVolume_t* vol, const
 
 int PolarOdimIO_validateVolumeHowAttributes(PolarOdimIO_t* self, PolarVolume_t* volume)
 {
+  long volume_scan_count = -1;
+  int nscans = 0, i = 0;
   RAVE_ASSERT((self != NULL), "self == NULL");
   if (!self->strict) {
     return 1;
@@ -1006,9 +1078,40 @@ int PolarOdimIO_validateVolumeHowAttributes(PolarOdimIO_t* self, PolarVolume_t* 
       RAVE_ERROR0("Failed to validate how attributes for volume. Missing required attribute in either volume or scan\n");
       return 0;
     }
+
+    volume_scan_count = PolarOdimIOInternal_getVolumeScanCount(self, volume);
+    if (volume_scan_count < 0) {
+      snprintf(self->error_message, 1024, "No how/scan_count exists in the volume");
+      RAVE_ERROR0(self->error_message);
+      return 0;
+    }
+    nscans = PolarVolume_getNumberOfScans(volume);
+    for (i = 0; i < nscans; i++) {
+      long scan_index = -1, scan_count = -1;
+      PolarScan_t* scan = PolarVolume_getScan(volume, i); 
+      if (scan == NULL) {
+        snprintf(self->error_message, 1024, "Problem getting scan from volume");
+        RAVE_ERROR0(self->error_message);
+        return 0;
+      }
+      PolarOdimIOInternal_getScanCountIndexFromScan(scan, &scan_index, &scan_count);
+      RAVE_OBJECT_RELEASE(scan);
+
+      if (scan_count != volume_scan_count) {
+        snprintf(self->error_message, 1024, "Volumes how/scan_count does not correspond to scan %d's how/scan_count", i);
+        RAVE_ERROR0(self->error_message);
+        return 0;
+      }
+      if (scan_index > volume_scan_count) {
+        snprintf(self->error_message, 1024, "how/scan_index for scan %d is greater than volume how/scan_count (%ld > %ld)", i, scan_index, volume_scan_count);
+        RAVE_ERROR0(self->error_message);
+        return 0;
+      }
+    }
   }
   return 1;
 }
+
 
 int PolarOdimIO_validateScanHowAttributes(PolarOdimIO_t* self, PolarScan_t* scan)
 {
@@ -1029,8 +1132,11 @@ int PolarOdimIO_validateScanHowAttributes(PolarOdimIO_t* self, PolarScan_t* scan
     int gotNI =  PolarScan_hasAttribute(scan, "how/NI");
     int gotstartazA =  PolarScan_hasAttribute(scan, "how/startazA");
     int gotstopazA =  PolarScan_hasAttribute(scan, "how/stopazA");
+    int gotscanIndex =  PolarScan_hasAttribute(scan, "how/scan_index");
+    int gotscanCount =  PolarScan_hasAttribute(scan, "how/scan_count");
     if (!gotSimulated || (!gotWavelength && !gotFrequency) || !gotPulsewidth || !gotRXlossH ||
-        !gotantgainH || !gotbeamwH || !gotradconstH || !gotNI || !gotstartazA || !gotstopazA) {
+        !gotantgainH || !gotbeamwH || !gotradconstH || !gotNI || !gotstartazA || !gotstopazA ||
+        !gotscanIndex || !gotscanCount) {
       if (!gotSimulated) strcpy(self->error_message, "Missing attribute how/simulated");
       if (!gotWavelength && !gotFrequency) strcpy(self->error_message, "Missing attribute how/wavelength or how/frequency");
       if (!gotPulsewidth) strcpy(self->error_message, "Missing attribute how/pulsewidth");
@@ -1041,6 +1147,8 @@ int PolarOdimIO_validateScanHowAttributes(PolarOdimIO_t* self, PolarScan_t* scan
       if (!gotNI) strcpy(self->error_message, "Missing attribute how/NI");
       if (!gotstartazA) strcpy(self->error_message, "Missing attribute how/startazA");
       if (!gotstopazA) strcpy(self->error_message, "Missing attribute how/stopazA");
+      if (!gotscanIndex) strcpy(self->error_message, "Missing attribute how/scan_index");
+      if (!gotscanCount) strcpy(self->error_message, "Missing attribute how/scan_count");
       RAVE_ERROR0("Failed to validate how attributes for scan. Missing required attribute\n");
       return 0;
     }
@@ -1249,6 +1357,8 @@ done:
 int PolarOdimIO_fillVolume(PolarOdimIO_t* self, PolarVolume_t* volume, HL_NodeList* nodelist)
 {
   int result = 0;
+  long volume_scan_count = -1;
+
   RaveObjectList_t* attributes = NULL;
   char* source = NULL;
 
@@ -1262,6 +1372,17 @@ int PolarOdimIO_fillVolume(PolarOdimIO_t* self, PolarVolume_t* volume, HL_NodeLi
   strcpy(self->error_message, "");
   if (!RaveHL_hasNodeByName(nodelist, "/Conventions")) {
     if (!RaveHL_createStringValue(nodelist, RaveHL_getOdimVersionString(self->version), "/Conventions")) {
+      goto done;
+    }
+  }
+
+  if (self->version >= RaveIO_ODIM_Version_2_2 && !PolarVolume_hasAttribute(volume, "how/scan_count")) {
+    /* We should make sure that there is a how/scan_count in the volumes root how group. However, if we can't find
+       a scan_count in the scans and we are in strict mod */
+    volume_scan_count = PolarOdimIOInternal_getVolumeScanCount(self, volume);
+    if (self->version >= RaveIO_ODIM_Version_2_4 && volume_scan_count < 0 && self->strict) {
+      snprintf(self->error_message, 1024, "No how/scan_count exists in the volume");
+      RAVE_ERROR0(self->error_message);
       goto done;
     }
   }
@@ -1291,6 +1412,15 @@ int PolarOdimIO_fillVolume(PolarOdimIO_t* self, PolarVolume_t* volume, HL_NodeLi
     goto done;
   }
 
+  if (self->version >= RaveIO_ODIM_Version_2_4) {
+    if (volume_scan_count > 0) {
+      if (!RaveUtilities_replaceLongAttributeInList(attributes, "how/scan_count", volume_scan_count)) {
+        snprintf(self->error_message, 1024, "Failed to add how/scan_count to attribute list");
+        goto done;
+      }
+    }
+  }
+
   if (!RaveUtilities_replaceDoubleAttributeInList(attributes, "how/beamwH", PolarVolume_getBeamwH(volume)*180.0/M_PI) ||
       !RaveUtilities_replaceDoubleAttributeInList(attributes, "how/beamwidth", PolarVolume_getBeamwH(volume)*180.0/M_PI) ||
       !RaveUtilities_replaceDoubleAttributeInList(attributes, "how/beamwV", PolarVolume_getBeamwV(volume)*180.0/M_PI) ||
@@ -1299,8 +1429,7 @@ int PolarOdimIO_fillVolume(PolarOdimIO_t* self, PolarVolume_t* volume, HL_NodeLi
       !RaveUtilities_replaceStringAttributeInList(attributes, "what/source", source) ||
       !RaveUtilities_replaceDoubleAttributeInList(attributes, "where/height", PolarVolume_getHeight(volume)) ||
       !RaveUtilities_replaceDoubleAttributeInList(attributes, "where/lat", PolarVolume_getLatitude(volume)*180.0/M_PI) ||
-      !RaveUtilities_replaceDoubleAttributeInList(attributes, "where/lon", PolarVolume_getLongitude(volume)*180.0/M_PI) ||
-      !RaveUtilities_replaceLongAttributeInList(attributes, "how/scan_count", PolarVolume_getNumberOfScans(volume))) {
+      !RaveUtilities_replaceDoubleAttributeInList(attributes, "where/lon", PolarVolume_getLongitude(volume)*180.0/M_PI)) {
     goto done;
   }
 
@@ -1319,7 +1448,7 @@ int PolarOdimIO_fillVolume(PolarOdimIO_t* self, PolarVolume_t* volume, HL_NodeLi
   for (index = 0; result == 1 && index < nrscans; index++) {
     PolarScan_t* scan = PolarVolume_getScan(volume, index);
     if (scan != NULL) {
-      result = PolarOdimIOInternal_addVolumeScan(self, scan, nodelist, volume, (index+1), "/dataset%d", (index+1));
+      result = PolarOdimIOInternal_addVolumeScan(self, scan, nodelist, volume, "/dataset%d", (index+1));
     } else {
       result = 0;
     }
