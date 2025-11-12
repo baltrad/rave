@@ -38,9 +38,9 @@ RAVESOURCES= polar.c raveutil.c rave_transform.c rave_alloc.c rave_debug.c polar
              polar_odim_io.c raveobject_hashtable.c detection_range.c odim_io_utilities.c poo_composite_algorithm.c rave_acrr.c \
              vertical_profile.c vp_odim_io.c dealias.c odc_hac.c rave_qitotal.c rave_gra.c ctfilter.c bitmap_generator.c \
              proj_wkt_helper.c lazy_nodelist_reader.c lazy_dataset.c acqva.c rave_iocache.c rave_legend.c compositegenerator.c \
-						 compositearguments.c legacycompositegeneratorfactory.c acqvacompositegeneratorfactory.c odim_source.c odim_sources.c \
-						 composite_utils.c compositefilter.c compositefactorymanager.c compositeenginebase.c compositeengineqc.c compositeengine.c compositeenginefunctions.c nearestcompositegeneratorfactory.c rave_value.c \
-						 rave_properties.c
+			 compositearguments.c legacycompositegeneratorfactory.c acqvacompositegeneratorfactory.c odim_source.c odim_sources.c \
+			 composite_utils.c compositefilter.c compositefactorymanager.c compositeenginebase.c compositeengineqc.c compositeengine.c compositeenginefunctions.c nearestcompositegeneratorfactory.c rave_value.c \
+			 rave_properties.c acqvafeaturemap.c
 
 ifeq ($(EXPAT_SUPPRESSED), no)
 RAVESOURCES += arearegistry.c projectionregistry.c rave_simplexml.c 
@@ -63,9 +63,9 @@ INSTALL_HEADERS= polar.h rave_transform.h raveutil.h rave_alloc.h polarvolume.h 
                  raveobject_hashtable.h detection_range.h odim_io_utilities.h composite_algorithm.h poo_composite_algorithm.h rave_acrr.h \
                  vertical_profile.h vp_odim_io.h dealias.h odc_hac.h  rave_qitotal.h rave_gra.h ctfilter.h  bitmap_generator.h \
                  proj_wkt_helper.h lazy_nodelist_reader.h lazy_dataset.h rave_proj.h acqva.h rave_iocache.h rave_legend.h \
-				 				 compositegenerator.h compositearguments.h compositegeneratorfactory.h legacycompositegeneratorfactory.h \
-								 acqvacompositegeneratorfactory.h odim_source.h odim_sources.h composite_utils.h compositefilter.h compositefactorymanager.h compositeenginebase.h compositeengineqc.h compositeengine.h compositeenginefunctions.h nearestcompositegeneratorfactory.h \
-								 rave_value.h rave_properties.h
+				 compositegenerator.h compositearguments.h compositegeneratorfactory.h legacycompositegeneratorfactory.h \
+				 acqvacompositegeneratorfactory.h odim_source.h odim_sources.h composite_utils.h compositefilter.h compositefactorymanager.h compositeenginebase.h compositeengineqc.h compositeengine.h compositeenginefunctions.h nearestcompositegeneratorfactory.h \
+				 rave_value.h rave_properties.h acqvafeaturemap.h
 
 ifeq ($(EXPAT_SUPPRESSED), no)
 INSTALL_HEADERS+= arearegistry.h projectionregistry.h rave_simplexml.h
