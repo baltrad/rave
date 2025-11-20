@@ -25,7 +25,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #import _polarscan, _polarscanparam, _polarvolume
 import _acqvafeaturemap
 import _raveio, _rave, _polarvolume
-import rave_pgf_logger
+import rave_pgf_logger, odim_source
 import json
 import math
 import numpy as np
@@ -437,6 +437,10 @@ class acqva_featuremap_generator(object):
             if t.startswith("NOD:"):
                 cfg["nod"] = t.split(":")[1]
                 break
+        
+        if "nod" not in cfg:
+            # Resort to odim sources instead
+            cfg["nod"] = odim_source.NODfromSource(volume)
 
         nscans = volume.getNumberOfScans()
         scancfg=[]
