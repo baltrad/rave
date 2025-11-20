@@ -26,7 +26,7 @@ import os, sys, math
 import _compositefactorymanager, _compositegenerator, _compositearguments, _raveproperties, _odimsources
 import _rave
 
-from rave_defines import COMPOSITE_GENERATOR_FILTER_FILENAME, ACQVA_CLUTTERMAP_DIR, ODIM_SOURCE_FILE, COMPOSITE_GENERATOR_PROPERTY_FILE
+from rave_defines import COMPOSITE_GENERATOR_FILTER_FILENAME, ACQVA_FEATUREMAP_DIR, ODIM_SOURCE_FILE, COMPOSITE_GENERATOR_PROPERTY_FILE
 
 class Generator(object):
   def __init__(self, properties_file=COMPOSITE_GENERATOR_PROPERTY_FILE, generatorfilter=COMPOSITE_GENERATOR_FILTER_FILENAME):
@@ -86,7 +86,7 @@ class Generator(object):
       properties = _raveproperties.load(properties_file)
     except:
       properties = _raveproperties.new()
-      properties.set("rave.acqva.cluttermap.dir", ACQVA_CLUTTERMAP_DIR)
+      properties.set("rave.acqva.featuremap.dir", ACQVA_FEATUREMAP_DIR)
     
     if not properties.sources:
       properties.sources = _odimsources.load(ODIM_SOURCE_FILE)

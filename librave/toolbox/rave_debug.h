@@ -196,6 +196,9 @@ Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_ERROR,msg,arg1,arg2,arg3)
 #define RAVE_ERROR4(msg,arg1,arg2,arg3,arg4) \
 Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_ERROR,msg,arg1,arg2,arg3,arg4)
 
+#define RAVE_ERROR5(msg,arg1,arg2,arg3,arg4,arg5) \
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_ERROR,msg,arg1,arg2,arg3,arg4,arg5)
+
 #define RAVE_CRITICAL0(msg) \
 Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_CRITICAL,msg)
 
@@ -331,6 +334,9 @@ Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_ERROR,msg,arg1,arg2,arg3)
 /** Error macro taking one text string and four arguments.*/
 #define RAVE_ERROR4(msg,arg1,arg2,arg3,arg4) \
 Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_ERROR,msg,arg1,arg2,arg3,arg4)
+
+#define RAVE_ERROR5(msg,arg1,arg2,arg3,arg4,arg5) \
+Rave_getDebugFunction()(__FILE__,__LINE__,RAVE_ERROR,msg,arg1,arg2,arg3,arg4,arg5)
 
 /** Critical macro taking one text string.*/
 #define RAVE_CRITICAL0(msg) \

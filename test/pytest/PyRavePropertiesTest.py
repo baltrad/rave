@@ -115,8 +115,8 @@ class PyRavePropertiesTest(unittest.TestCase):
   def test_load_properties_with_sources(self):
     if _rave.isXmlSupported() and _rave.isJsonSupported():
       result = _raveproperties.load(self.FIXTURE_WITH_SOURCES)
-      self.assertTrue(result.hasProperty("rave.acqva.cluttermap.dir"))
-      self.assertEqual("/var/lib/baltrad/rave/acqva/cluttermap", result.get("rave.acqva.cluttermap.dir"))
+      self.assertTrue(result.hasProperty("rave.acqva.featuremap.dir"))
+      self.assertEqual("/var/lib/baltrad/rave/acqva/featuremap", result.get("rave.acqva.featuremap.dir"))
       self.assertTrue(result.hasProperty("rave.rate.zr.coefficients"))
       self.assertEqual(200.0, result.get("rave.rate.zr.coefficients")["sella"][0], 4)
       self.assertEqual(1.6, result.get("rave.rate.zr.coefficients")["sekrn"][1], 4)
@@ -125,8 +125,8 @@ class PyRavePropertiesTest(unittest.TestCase):
   def test_load_properties_without_sources(self):
     if _rave.isXmlSupported() and _rave.isJsonSupported():
       result = _raveproperties.load(self.FIXTURE_WITHOUT_SOURCES)
-      self.assertTrue(result.hasProperty("rave.acqva.cluttermap.dir"))
-      self.assertEqual("/var/lib/baltrad/rave/acqva/cluttermap", result.get("rave.acqva.cluttermap.dir"))
+      self.assertTrue(result.hasProperty("rave.acqva.featuremap.dir"))
+      self.assertEqual("/var/lib/baltrad/rave/acqva/featuremap", result.get("rave.acqva.featuremap.dir"))
       self.assertTrue(result.hasProperty("rave.rate.zr.coefficients"))
       self.assertEqual(200.0, result.get("rave.rate.zr.coefficients")["sella"][0], 4)
       self.assertEqual(1.6, result.get("rave.rate.zr.coefficients")["sekrn"][1], 4)

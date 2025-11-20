@@ -26,6 +26,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "acqvafeaturemap.h"
 #include "rave_data2d.h"
 #include "rave_debug.h"
+#include "polarscanparam.h"
 #include <math.h>
 #include <string.h>
 #include "rave_hlhdf_utilities.h"
@@ -38,6 +39,7 @@ struct _AcqvaFeatureMap_t {
   double latitude;          /**< the latitude in radians */
   double longitude;         /**< the longitude in radians */
   double height;            /**< the height in meters */
+  RaveValue_t* attributes;  /**< the attributes */
   RaveDateTime_t* startdate;    /**< the start of the period */
   RaveDateTime_t* enddate;    /**< the end of the period */
   RaveObjectList_t* elevations; /**< the elevations */   
@@ -51,11 +53,14 @@ struct _AcqvaFeatureMapElevation_t {
 
 struct _AcqvaFeatureMapField_t {
   RAVE_OBJECT_HEAD          /** Always on top */
-  RaveData2D_t* data;        /**< the data field */
+  RaveData2D_t* data;       /**< the data field */
   double elangle;           /**< the elangle */
-  RaveDataType type;
-  long nbins;
-  long nrays;
+  double rscale;            /**< the scale of the bins */
+  double rstart;            /**< the rstart of the bins */
+  double beamwidth;         /**< the beamwidth in radians */
+  long nbins;               /**< the number of bins */
+  long nrays;               /**< the number of rays */
+  RaveValue_t* attributes;  /**< the attributes */
 };
 
 /*@{ Private functions */
@@ -72,7 +77,8 @@ static int AcqvaFeatureMap_constructor(RaveCoreObject* obj)
   this->elevations = RAVE_OBJECT_NEW(&RaveObjectList_TYPE);
   this->startdate = RAVE_OBJECT_NEW(&RaveDateTime_TYPE);
   this->enddate = RAVE_OBJECT_NEW(&RaveDateTime_TYPE);
-  if (this->elevations == NULL || this->startdate == NULL || this->enddate == NULL) {
+  this->attributes = RaveValue_createHashTable(NULL);
+  if (this->elevations == NULL || this->startdate == NULL || this->enddate == NULL || this->attributes == NULL) {
     goto fail;
   }
   return 1;
@@ -80,6 +86,7 @@ fail:
   RAVE_OBJECT_RELEASE(this->elevations);
   RAVE_OBJECT_RELEASE(this->startdate);
   RAVE_OBJECT_RELEASE(this->enddate);
+  RAVE_OBJECT_RELEASE(this->attributes);
   return 0;
 }
 
@@ -105,7 +112,8 @@ static int AcqvaFeatureMap_copyconstructor(RaveCoreObject* obj, RaveCoreObject* 
   }
   this->startdate = RAVE_OBJECT_CLONE(src->startdate);
   this->enddate = RAVE_OBJECT_CLONE(src->enddate);
-  if (this->startdate == NULL || this->enddate == NULL) {
+  this->attributes = RAVE_OBJECT_CLONE(src->attributes);
+  if (this->startdate == NULL || this->enddate == NULL || this->attributes == NULL) {
     goto fail;
   }
 
@@ -126,6 +134,7 @@ static void AcqvaFeatureMap_destructor(RaveCoreObject* obj)
   RAVE_OBJECT_RELEASE(this->elevations);
   RAVE_OBJECT_RELEASE(this->startdate);
   RAVE_OBJECT_RELEASE(this->enddate);
+  RAVE_OBJECT_RELEASE(this->attributes);
 }
 
 /**
@@ -174,13 +183,23 @@ static int AcqvaFeatureMapField_constructor(RaveCoreObject* obj)
 {
   AcqvaFeatureMapField_t* this = (AcqvaFeatureMapField_t*)obj;
   this->elangle = 0.0;
+  this->rscale = 0.0;
+  this->rstart = 0.0;
+  this->beamwidth = 0.0;
   this->nbins = 0;
   this->nrays = 0;
   this->data = RAVE_OBJECT_NEW(&RaveData2D_TYPE);
-  if (this->data == NULL) {
-    return 0;
+  this->attributes = RaveValue_createHashTable(NULL);
+
+  if (this->data == NULL || this->attributes == NULL) {
+    goto fail;
   }
+
   return 1;
+fail:
+  RAVE_OBJECT_RELEASE(this->data);
+  RAVE_OBJECT_RELEASE(this->attributes);
+  return 0;
 }
 
 /**
@@ -191,16 +210,22 @@ static int AcqvaFeatureMapField_copyconstructor(RaveCoreObject* obj, RaveCoreObj
   AcqvaFeatureMapField_t* this = (AcqvaFeatureMapField_t*)obj;
   AcqvaFeatureMapField_t* src = (AcqvaFeatureMapField_t*)srcobj;
   this->elangle = src->elangle;
-  this->data = NULL;
-  if (src->data != NULL) {
-    this->data = RAVE_OBJECT_CLONE(src->data);
-    if (this->data == NULL) {
-        return 0;
-    }
-  }
+  this->rscale = src->rscale;
+  this->rstart = src->rstart;
+  this->beamwidth = src->beamwidth;
   this->nbins = src->nbins;
   this->nrays = src->nrays;
+  this->data = RAVE_OBJECT_CLONE(src->data);
+  this->attributes = RAVE_OBJECT_CLONE(src->attributes);
+  if (this->data == NULL || this->attributes == NULL) {
+    goto fail;
+  }
+
   return 1;
+fail:
+  RAVE_OBJECT_RELEASE(this->data);
+  RAVE_OBJECT_RELEASE(this->attributes);
+  return 0;
 }
 
 /**
@@ -210,6 +235,68 @@ static void AcqvaFeatureMapField_destructor(RaveCoreObject* obj)
 {
   AcqvaFeatureMapField_t* this = (AcqvaFeatureMapField_t*)obj;
   RAVE_OBJECT_RELEASE(this->data);
+  RAVE_OBJECT_RELEASE(this->attributes);
+}
+
+static RaveObjectList_t* AcqvaFeatureMapInternal_createRaveValueHashAttributes(RaveValue_t* ravevalue)
+{
+  RaveObjectList_t *attributes = NULL, *result = NULL;;
+  RaveList_t* keys = NULL;
+  int nkeys = 0, i = 0;
+  RaveValue_t* value = NULL;
+
+  if (ravevalue == NULL) {
+    RAVE_ERROR0("Programming error, passing NULL ravevalue");
+    return NULL;
+  }
+
+  attributes = RAVE_OBJECT_NEW(&RaveObjectList_TYPE);
+  if (attributes == NULL) {
+    goto fail;
+  }
+
+  keys = RaveValueHash_keys(ravevalue);
+  if (keys != NULL) {
+    nkeys = RaveList_size(keys);
+    for (i = 0; i < nkeys; i++) {
+      const char* name = (const char*)RaveList_get(keys, i);
+      value = RaveValueHash_get(ravevalue, name);
+      if (value != NULL) {
+        RaveValue_Type valuetype = RaveValue_type(value);
+        if (valuetype == RaveValue_Type_String ||
+            valuetype == RaveValue_Type_Double ||
+            valuetype == RaveValue_Type_Long) {
+          RaveAttribute_t* attribute = NULL;    
+          if (valuetype == RaveValue_Type_String) {
+            attribute = RaveAttributeHelp_createString(name, RaveValue_toString(value));
+          } else if (valuetype == RaveValue_Type_Double) {
+            attribute = RaveAttributeHelp_createDouble(name, RaveValue_toDouble(value));
+          } else {
+            attribute = RaveAttributeHelp_createLong(name, RaveValue_toLong(value));
+          }
+
+          if (attribute == NULL || !RaveObjectList_add(attributes, (RaveCoreObject*)attribute)) {
+            RAVE_ERROR0("Could not add attribute to list");
+            RAVE_OBJECT_RELEASE(attribute);
+            goto fail;
+          }
+          RAVE_OBJECT_RELEASE(attribute);
+        } else {
+          RAVE_ERROR0("Unsupported value type");
+          goto fail;
+        }
+        RAVE_OBJECT_RELEASE(value);
+      }
+    }
+  }
+
+  result = RAVE_OBJECT_COPY(attributes);
+fail:
+  if (keys != NULL) {
+    RaveList_freeAndDestroy(&keys);
+  }
+  RAVE_OBJECT_RELEASE(attributes);
+  return result;
 }
 
 static int AcqvaFeatureMapInternal_fillNodeListWithField(AcqvaFeatureMapField_t* field, HL_NodeList* nodelist, const char* fmt, ...)
@@ -225,6 +312,11 @@ static int AcqvaFeatureMapInternal_fillNodeListWithField(AcqvaFeatureMapField_t*
     goto done;
   }
 
+  attributes = AcqvaFeatureMapInternal_createRaveValueHashAttributes(field->attributes);
+  if (attributes == NULL) {
+    goto done;
+  }
+
   va_start(ap, fmt);
   nName = vsnprintf(name, 1024, fmt, ap);
   va_end(ap);
@@ -233,12 +325,10 @@ static int AcqvaFeatureMapInternal_fillNodeListWithField(AcqvaFeatureMapField_t*
     goto done;
   }
 
-  attributes = RAVE_OBJECT_NEW(&RaveObjectList_TYPE);
-  if (attributes == NULL) {
-    goto done;
-  }
-
-  if (!RaveUtilities_addDoubleAttributeToList(attributes, "where/elangle", AcqvaFeatureMapField_getElangle(field)*180.0/M_PI)) {
+  if (!RaveUtilities_addDoubleAttributeToList(attributes, "where/elangle", AcqvaFeatureMapField_getElangle(field)*180.0/M_PI) ||
+      !RaveUtilities_addDoubleAttributeToList(attributes, "where/rscale", AcqvaFeatureMapField_getRscale(field)) ||
+      !RaveUtilities_addDoubleAttributeToList(attributes, "where/rstart", AcqvaFeatureMapField_getRstart(field)) ||
+      !RaveUtilities_addDoubleAttributeToList(attributes, "how/beamwidth", AcqvaFeatureMapField_getBeamwidth(field)*180.0/M_PI)) {
     goto done;
   }
 
@@ -331,7 +421,7 @@ static int AcqvaFeatureMapInternal_fillNodelist(AcqvaFeatureMap_t* self, HL_Node
   int ngroups = 0, gi = 0;
   RaveObjectList_t* attributes = NULL;
 
-  attributes = RAVE_OBJECT_NEW(&RaveObjectList_TYPE);
+  attributes = AcqvaFeatureMapInternal_createRaveValueHashAttributes(self->attributes);
   if (attributes == NULL) {
     goto fail;
   }
@@ -422,8 +512,33 @@ static int AcqvaFeatureMapInternal_loadRootAttributes(void* object, RaveAttribut
       }
       AcqvaFeatureMap_setHeight(featuremap, value);
     } else {
-      RAVE_INFO1("Unsupported attribute: %s", name);
-      result = 1;
+      RaveValue_t* value = NULL;
+      if (RaveAttribute_getFormat(attribute) == RaveAttribute_Format_String) {
+        char* strvalue = NULL;
+        RaveAttribute_getString(attribute, &strvalue);
+        if (strvalue == NULL || (value = RaveValue_createString(strvalue)) == NULL) {
+          goto done;
+        }
+      } else if (RaveAttribute_getFormat(attribute) == RaveAttribute_Format_Double) {
+        double dvalue = 0.0;
+        RaveAttribute_getDouble(attribute, &dvalue);
+        if ((value = RaveValue_createDouble(dvalue)) == NULL) {
+          goto done;
+        }
+      } else if (RaveAttribute_getFormat(attribute) == RaveAttribute_Format_Long) {
+        long lvalue = 0;
+        RaveAttribute_getLong(attribute, &lvalue);
+        if ((value = RaveValue_createLong(lvalue)) == NULL) {
+          goto done;
+        }
+      } else {
+        RAVE_INFO1("Unsupported attribute: %s", name);
+        result = 1;
+      }
+      if (value != NULL) {
+        result = AcqvaFeatureMap_addAttribute(featuremap, name, value);
+      }
+      RAVE_OBJECT_RELEASE(value);
     }
   }
 done:
@@ -447,9 +562,55 @@ static int AcqvaFeatureMapInternal_loadFieldAttributeFunc(void* object, RaveAttr
         goto done;
       }
       AcqvaFeatureMapField_setElangle(field, value * M_PI / 180.0);
+    } else if (strcasecmp("where/rscale", name)==0) {
+      double value = 0.0;
+      if (!(result = RaveAttribute_getDouble(attribute, &value))) {
+        RAVE_ERROR0("Failed to extract where/rscale as a double");
+        goto done;
+      }
+      AcqvaFeatureMapField_setRscale(field, value);
+    } else if (strcasecmp("where/rstart", name)==0) {
+      double value = 0.0;
+      if (!(result = RaveAttribute_getDouble(attribute, &value))) {
+        RAVE_ERROR0("Failed to extract where/rstart as a double");
+        goto done;
+      }
+      AcqvaFeatureMapField_setRstart(field, value);
+    } else if (strcasecmp("how/beamwidth", name)==0) {
+      double value = 0.0;
+      if (!(result = RaveAttribute_getDouble(attribute, &value))) {
+        RAVE_ERROR0("Failed to extract how/beamwidth as a double");
+        goto done;
+      }
+      AcqvaFeatureMapField_setBeamwidth(field, value * M_PI / 180.0);
     } else {
-      RAVE_INFO1("Unsupported attribute: %s", name);
-      result = 1;
+      RaveValue_t* value = NULL;
+      if (RaveAttribute_getFormat(attribute) == RaveAttribute_Format_String) {
+        char* strvalue = NULL;
+        RaveAttribute_getString(attribute, &strvalue);
+        if (strvalue == NULL || (value = RaveValue_createString(strvalue)) == NULL) {
+          goto done;
+        }
+      } else if (RaveAttribute_getFormat(attribute) == RaveAttribute_Format_Double) {
+        double dvalue = 0.0;
+        RaveAttribute_getDouble(attribute, &dvalue);
+        if ((value = RaveValue_createDouble(dvalue)) == NULL) {
+          goto done;
+        }
+      } else if (RaveAttribute_getFormat(attribute) == RaveAttribute_Format_Long) {
+        long lvalue = 0;
+        RaveAttribute_getLong(attribute, &lvalue);
+        if ((value = RaveValue_createLong(lvalue)) == NULL) {
+          goto done;
+        }
+      } else {
+        RAVE_INFO1("Unsupported attribute: %s", name);
+        result = 1;
+      }
+      if (value != NULL) {
+        result = AcqvaFeatureMapField_addAttribute(field, name, value);
+      }
+      RAVE_OBJECT_RELEASE(value);
     }
   }
 done:
@@ -516,7 +677,7 @@ static AcqvaFeatureMapElevation_t* AcqvaFeatureMapInternal_loadElevation(AcqvaFe
                                         AcqvaFeatureMapInternal_loadFieldAttributeFunc, 
                                         AcqvaFeatureMapInternal_loadFieldDataFunc, 
                                         "%s/data%d", name, pindex)) {
-        fprintf(stderr, "Failed to load attrs and data\n");
+        RAVE_ERROR0("Failed to load attributes and data");
         status = 0;
       }
 
@@ -763,14 +924,48 @@ const char* AcqvaFeatureMap_getEnddate(AcqvaFeatureMap_t* self)
   return RaveDateTime_getDate(self->enddate);
 }
 
-AcqvaFeatureMapField_t* AcqvaFeatureMap_createField(AcqvaFeatureMap_t* self, long nbins, long nrays, RaveDataType type, double elangle)
+int AcqvaFeatureMap_addAttribute(AcqvaFeatureMap_t* self, const char* name, RaveValue_t* value)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  if (name == NULL || value == NULL) {
+    RAVE_ERROR0("Invalid arguments");
+    return 0;
+  }
+
+  if (strncasecmp(name, "how/", 4) != 0) {
+    RAVE_ERROR0("Only how/ - attributes are currently allowed");
+    return 0;
+  }
+
+  return RaveValueHash_put(self->attributes, name, value);
+}
+
+int AcqvaFeatureMap_hasAttribute(AcqvaFeatureMap_t* self, const char* name)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return RaveValueHash_exists(self->attributes, name);
+}
+
+RaveValue_t* AcqvaFeatureMap_getAttribute(AcqvaFeatureMap_t* self, const char* name)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return RaveValueHash_get(self->attributes, name);
+}
+
+void AcqvaFeatureMap_removeAttribute(AcqvaFeatureMap_t* self, const char* name)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  RaveValueHash_remove(self->attributes, name);
+}
+
+AcqvaFeatureMapField_t* AcqvaFeatureMap_createField(AcqvaFeatureMap_t* self, long nbins, long nrays, RaveDataType type, double elangle, double rscale, double rstart, double beamwidth)
 {
   AcqvaFeatureMapElevation_t* elevation = NULL;
   AcqvaFeatureMapField_t *field = NULL, *result = NULL;
 
   RAVE_ASSERT((self != NULL), "self == NULL");
 
-  field = AcqvaFeatureMapField_createField(nbins, nrays, type, elangle);
+  field = AcqvaFeatureMapField_createField(nbins, nrays, type, elangle, rscale, rstart, beamwidth);
   if (field == NULL) {
     goto fail;
   }
@@ -874,7 +1069,7 @@ void AcqvaFeatureMap_removeElevation(AcqvaFeatureMap_t* self, int index)
 }
 
 
-AcqvaFeatureMapField_t* AcqvaFeatureMap_findField(AcqvaFeatureMap_t* self, long nbins, long nrays, double elangle)
+AcqvaFeatureMapField_t* AcqvaFeatureMap_findField(AcqvaFeatureMap_t* self, long nbins, long nrays, double elangle, double rscale, double rstart, double beamwidth)
 {
   AcqvaFeatureMapElevation_t *elevation = NULL;
   AcqvaFeatureMapField_t* result = NULL;
@@ -882,7 +1077,7 @@ AcqvaFeatureMapField_t* AcqvaFeatureMap_findField(AcqvaFeatureMap_t* self, long 
 
   elevation = AcqvaFeatureMap_findElevation(self, elangle);
   if (elevation != NULL) {
-    result = AcqvaFeatureMapElevation_find(elevation, nbins, nrays);
+    result = AcqvaFeatureMapElevation_find(elevation, nbins, nrays, rscale, rstart, beamwidth);
   }
   RAVE_OBJECT_RELEASE(elevation);
   return result;
@@ -934,9 +1129,9 @@ int AcqvaFeatureMapElevation_add(AcqvaFeatureMapElevation_t* self, AcqvaFeatureM
   }
 
   if (field != NULL) {
-    AcqvaFeatureMapField_t* alreadyField = AcqvaFeatureMapElevation_find(self, field->nbins, field->nrays);
+    AcqvaFeatureMapField_t* alreadyField = AcqvaFeatureMapElevation_find(self, field->nbins, field->nrays, field->rscale, field->rstart, field->beamwidth);
     if (alreadyField != NULL) {
-      RAVE_ERROR2("Field with dimension %ld x %ld  already exists", field->nbins, field->nrays);
+      RAVE_ERROR2("Field with dimension %ld x %ld already exists", field->nbins, field->nrays);
       RAVE_OBJECT_RELEASE(alreadyField);
       return 0;
     }
@@ -967,7 +1162,7 @@ void AcqvaFeatureMapElevation_remove(AcqvaFeatureMapElevation_t* self, int index
   RaveObjectList_release(self->fields, index);
 }
 
-AcqvaFeatureMapField_t* AcqvaFeatureMapElevation_find(AcqvaFeatureMapElevation_t* self, long nbins, long nrays)
+AcqvaFeatureMapField_t* AcqvaFeatureMapElevation_find(AcqvaFeatureMapElevation_t* self, long nbins, long nrays, double rscale, double rstart, double beamwidth)
 {
   int nfields = 0, i = 0;
   AcqvaFeatureMapField_t* result = NULL;
@@ -976,7 +1171,9 @@ AcqvaFeatureMapField_t* AcqvaFeatureMapElevation_find(AcqvaFeatureMapElevation_t
   nfields = RaveObjectList_size(self->fields);
   for (i = 0; result == NULL && i < nfields; i++) {
     AcqvaFeatureMapField_t* field = (AcqvaFeatureMapField_t*)RaveObjectList_get(self->fields, i);
-    if (field->nbins == nbins && field->nrays == nrays) {
+    if (field->nbins == nbins && field->nrays == nrays && (rscale <= 0.0 || fabs(rscale - AcqvaFeatureMapField_getRscale(field)) < 1e-4) &&
+        (rstart < 0.0 || fabs(rstart - AcqvaFeatureMapField_getRstart(field)) < 1e-4) &&
+        (beamwidth < 0.0 || fabs(beamwidth - AcqvaFeatureMapField_getBeamwidth(field)) < 1e-4)) {
       result = RAVE_OBJECT_COPY(field);
     }
     RAVE_OBJECT_RELEASE(field);
@@ -984,12 +1181,12 @@ AcqvaFeatureMapField_t* AcqvaFeatureMapElevation_find(AcqvaFeatureMapElevation_t
   return result;
 }
 
-int AcqvaFeatureMapElevation_has(AcqvaFeatureMapElevation_t* self, long nbins, long nrays)
+int AcqvaFeatureMapElevation_has(AcqvaFeatureMapElevation_t* self, long nbins, long nrays, double rscale, double rstart, double beamwidth)
 {
   int result = 0;
   RAVE_ASSERT((self != NULL), "self == NULL");
   AcqvaFeatureMapField_t* field = NULL;
-  field = AcqvaFeatureMapElevation_find(self, nbins, nrays);
+  field = AcqvaFeatureMapElevation_find(self, nbins, nrays, rscale, rstart, beamwidth);
   if (field != NULL) {
     result = 1;
   }
@@ -1013,6 +1210,45 @@ double AcqvaFeatureMapField_getElangle(AcqvaFeatureMapField_t* self)
   return self->elangle;
 }
 
+int AcqvaFeatureMapField_setRscale(AcqvaFeatureMapField_t* self, double rscale)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  self->rscale = rscale;
+  return 1;
+}
+
+double AcqvaFeatureMapField_getRscale(AcqvaFeatureMapField_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return self->rscale;
+}
+
+int AcqvaFeatureMapField_setRstart(AcqvaFeatureMapField_t* self, double rstart)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  self->rstart = rstart;
+  return 1;
+}
+
+double AcqvaFeatureMapField_getRstart(AcqvaFeatureMapField_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return self->rstart;  
+}
+
+int AcqvaFeatureMapField_setBeamwidth(AcqvaFeatureMapField_t* self, double beamwidth)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  self->beamwidth = beamwidth;
+  return 1;
+}
+
+double AcqvaFeatureMapField_getBeamwidth(AcqvaFeatureMapField_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return self->beamwidth;    
+}
+
 long AcqvaFeatureMapField_getNbins(AcqvaFeatureMapField_t* self)
 {
   RAVE_ASSERT((self != NULL), "self == NULL");
@@ -1029,6 +1265,40 @@ RaveDataType AcqvaFeatureMapField_getDatatype(AcqvaFeatureMapField_t* self)
 {
   RAVE_ASSERT((self != NULL), "self == NULL");
   return RaveData2D_getType(self->data);
+}
+
+int AcqvaFeatureMapField_addAttribute(AcqvaFeatureMapField_t* self, const char* name, RaveValue_t* value)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  if (name == NULL || value == NULL) {
+    RAVE_ERROR0("Invalid arguments");
+    return 0;
+  }
+
+  if (strncasecmp(name, "how/", 4) != 0) {
+    RAVE_ERROR0("Only how/ - attributes are currently allowed");
+    return 0;
+  }
+
+  return RaveValueHash_put(self->attributes, name, value);
+}
+
+int AcqvaFeatureMapField_hasAttribute(AcqvaFeatureMapField_t* self, const char* name)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return RaveValueHash_exists(self->attributes, name);
+}
+
+RaveValue_t* AcqvaFeatureMapField_getAttribute(AcqvaFeatureMapField_t* self, const char* name)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return RaveValueHash_get(self->attributes, name);
+}
+
+void AcqvaFeatureMapField_removeAttribute(AcqvaFeatureMapField_t* self, const char* name)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  RaveValueHash_remove(self->attributes, name);
 }
 
 int AcqvaFeatureMapField_createData(AcqvaFeatureMapField_t* self, long nbins, long nrays, RaveDataType type)
@@ -1088,7 +1358,93 @@ int AcqvaFeatureMapField_getValue(AcqvaFeatureMapField_t* self, int bin, int ray
   return result;
 }
 
-AcqvaFeatureMapField_t* AcqvaFeatureMapField_createField(long nbins, long nrays, RaveDataType type, double elangle)
+RaveField_t* AcqvaFeatureMapField_toRaveField(AcqvaFeatureMapField_t* self)
+{
+  RaveField_t *rfield = NULL, *result = NULL;
+  RaveAttribute_t* attr = NULL;
+  RaveData2D_t* datafield = NULL;
+
+  RAVE_ASSERT((self != NULL), "self == NULL");
+
+  rfield = RAVE_OBJECT_NEW(&RaveField_TYPE);
+  if (rfield == NULL) {
+    goto fail;
+  }
+
+  datafield = RAVE_OBJECT_CLONE(self->data);
+  if (datafield == NULL) {
+    goto fail;
+  }
+
+  if (!RaveField_setDatafield(rfield, datafield)) {
+    RAVE_ERROR0("Failed to set data field");
+    goto fail;
+  }
+
+  attr = RaveAttributeHelp_createDouble("what/gain", 1.0);
+  if (attr == NULL || !RaveField_addAttribute(rfield, attr)) {
+    goto fail;
+  }
+  RAVE_OBJECT_RELEASE(attr);
+  attr = RaveAttributeHelp_createDouble("what/offset", 0.0);
+  if (attr == NULL || !RaveField_addAttribute(rfield, attr)) {
+    goto fail;
+  }
+  RAVE_OBJECT_RELEASE(attr);
+
+  result = RAVE_OBJECT_COPY(rfield);
+fail:
+  RAVE_OBJECT_RELEASE(rfield);
+  RAVE_OBJECT_RELEASE(datafield);
+  RAVE_OBJECT_RELEASE(attr);
+  return result;
+}
+
+PolarScan_t* AcqvaFeatureMapField_toScan(AcqvaFeatureMapField_t* self, const char* quantity, double lon, double lat, double height)
+{
+  PolarScan_t *scan = NULL, *result = NULL;
+  PolarScanParam_t *param = NULL;
+  RaveData2D_t* datafield = NULL;
+
+  scan = RAVE_OBJECT_NEW(&PolarScan_TYPE);
+  param = RAVE_OBJECT_NEW(&PolarScanParam_TYPE);
+  datafield = RAVE_OBJECT_CLONE(self->data);
+
+  if (scan != NULL && param != NULL && datafield != NULL) {
+    PolarScan_setElangle(scan, self->elangle);
+    PolarScan_setRscale(scan, self->rscale);
+    PolarScan_setRstart(scan, self->rstart);
+    PolarScan_setBeamwidth(scan, self->beamwidth);
+    PolarScan_setLongitude(scan, lon);
+    PolarScan_setLatitude(scan, lat);
+    PolarScan_setHeight(scan, height);
+    if (!PolarScanParam_setData2D(param, datafield)) {
+      goto fail;
+    }
+    if (!PolarScanParam_setQuantity(param, quantity)) {
+      goto fail;
+    }
+    PolarScanParam_setOffset(param, 0.0);
+    PolarScanParam_setGain(param, 1.0);
+    PolarScanParam_setNodata(param, -1.0);
+    PolarScanParam_setUndetect(param, 0.0);
+    if (!PolarScan_addParameter(scan, param)) {
+      goto fail;
+    }
+  } else {
+    RAVE_ERROR0("Failed to allocate memory");
+    goto fail;
+  }
+
+  result = RAVE_OBJECT_COPY(scan);
+fail:
+  RAVE_OBJECT_RELEASE(scan);
+  RAVE_OBJECT_RELEASE(param);
+  RAVE_OBJECT_RELEASE(datafield);
+  return result;
+}
+
+AcqvaFeatureMapField_t* AcqvaFeatureMapField_createField(long nbins, long nrays, RaveDataType type, double elangle, double rscale, double rstart, double beamwidth)
 {
   AcqvaFeatureMapField_t *field = NULL, *result = NULL;
 
@@ -1102,7 +1458,20 @@ AcqvaFeatureMapField_t* AcqvaFeatureMapField_createField(long nbins, long nrays,
       RAVE_ERROR0("Could not set elangle in created field");
       goto fail;
     }
+    if (!AcqvaFeatureMapField_setRscale(field, rscale)) {
+      RAVE_ERROR0("Could not set rscale in created field");
+      goto fail;
+    }
+    if (!AcqvaFeatureMapField_setRstart(field, rstart)) {
+      RAVE_ERROR0("Could not set rstart in created field");
+      goto fail;
+    }
+    if (!AcqvaFeatureMapField_setBeamwidth(field, beamwidth)) {
+      RAVE_ERROR0("Could not set beamwidth in created field");
+      goto fail;
+    }
   }
+  
   result = RAVE_OBJECT_COPY(field);
 fail:
   RAVE_OBJECT_RELEASE(field);

@@ -152,6 +152,7 @@ from PyRaveValueTest import *
 from PyRavePropertiesTest import *
 from PyComputePIATest import *
 from PyAcqvaFeatureMapTest import *
+from acqva_featuremap_generator_test import *
 
 if __name__ == '__main__':
   unittest.main()

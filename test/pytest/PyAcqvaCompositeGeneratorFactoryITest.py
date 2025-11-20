@@ -117,7 +117,7 @@ class PyAcqvaCompositeGeneratorFactoryITest(unittest.TestCase):
 
     self.assertEqual("QMAXIMUM", result.getAttribute("how/camethod"))
 
-  def Xtest_generate_with_cluttermaps(self):
+  def test_generate_with_featuremaps(self):
     classUnderTest = _acqvacompositegeneratorfactory.new()
     args = _compositearguments.new()
     args.area = self.create_area("eua_gmaps")
@@ -127,10 +127,10 @@ class PyAcqvaCompositeGeneratorFactoryITest(unittest.TestCase):
     args.addParameter("DBZH", 0.1, -30.0)
 
     properties = _raveproperties.new()
-    properties.set("rave.acqva.cluttermap.dir", "/san1/acqva/cluttermaps",)
-    properties.set("rave.acqva.cluttermap.allow.missing", True)
-    properties.set("rave.acqva.cluttermap.use_default", True)
-    properties.set("rave.acqva.cluttermap.use_yearmonth", True)
+    properties.set("rave.acqva.featuremap.dir", "/san1/acqva/featuremaps",)
+    properties.set("rave.acqva.featuremap.allow.missing", True)
+    properties.set("rave.acqva.featuremap.use_default", True)
+    properties.set("rave.acqva.featuremap.use_yearmonth", True)
     properties.sources = _odimsources.load(self.ODIM_SOURCE_FIXTURE)
     classUnderTest.setProperties(properties)
 

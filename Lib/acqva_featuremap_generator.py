@@ -22,8 +22,9 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @file
 ## @author Anders Henja, SMHI
 ## @date 2024-04-27
-import _polarscan, _polarscanparam, _polarvolume
-import _raveio
+#import _polarscan, _polarscanparam, _polarvolume
+import _acqvafeaturemap
+import _raveio, _rave, _polarvolume
 import rave_pgf_logger
 import json
 import math
@@ -31,7 +32,7 @@ import numpy as np
 import re
 import datetime
 
-TUPLE_PATTERN=re.compile("\s*([+-]?[0-9]+(.[0-9]+)?)\s*(->\s*([+-]?[0-9]+(.[0-9]+)?))?\s*")
+TUPLE_PATTERN=re.compile(r"\s*([+-]?[0-9]+(.[0-9]+)?)\s*(->\s*([+-]?[0-9]+(.[0-9]+)?))?\s*")
 
 logger = rave_pgf_logger.create_logger()
 
@@ -116,28 +117,27 @@ class acqva_static_item(object):
 
         return json.dumps(result)
 
-    def create_scans(self, volume):
+    def create_elevation_indexes(self, featuremap):
         result = []
-        volume.sortByElevations(1)
         if self._scans:
             if len(self._scans) == 1:
-                if self._scans[0] >= 0 and self._scans[0] < volume.getNumberOfScans():
+                if self._scans[0] >= 0 and self._scans[0] < featuremap.getNumberOfElevations():
                     result.append(self._scans[0])
             else:
-                for i in range(volume.getNumberOfScans()):
+                for i in range(featuremap.getNumberOfElevations()):
                     if i >= self._scans[0] and i <= self._scans[1]:
                         result.append(i)
 
         if self._elangles:
             if len(self._elangles) == 1:
-                for i in range(volume.getNumberOfScans()):
-                    elangle = volume.getScan(i).elangle * 180.0 / math.pi
-                    if math.isclose(self._elangles[0], elangle, rel_tol=1e-03):
+                for i in range(featuremap.getNumberOfElevations()):
+                    elangle = featuremap.getElevation(i).elangle * 180.0 / math.pi
+                    if math.isclose(self._elangles[0], elangle, rel_tol=1e-04):
                         result.append(i)
                         break
             else:
-                for i in range(volume.getNumberOfScans()):
-                    elangle = volume.getScan(i).elangle * 180.0 / math.pi
+                for i in range(featuremap.getNumberOfElevations()):
+                    elangle = featuremap.getElevation(i).elangle * 180.0 / math.pi
                     if elangle >= self._elangles[0] and elangle <= self._elangles[1]:
                         result.append(i)
 
@@ -158,12 +158,12 @@ class acqva_static_item(object):
                 result.extend(range(0, r2))
         return result
 
-    def create_rays(self, scan):
+    def create_rays(self, field):
         result = []
-        nrays = scan.nrays
-        nbins = scan.nbins
+        nrays = field.nrays
+        nbins = field.nbins
 
-        beamwidth = 360.0 / nrays   # Can't use scan.beamwidth since that can be wider
+        beamwidth = 360.0 / nrays
 
         if self._rays:
             if len(self._rays) == 1:
@@ -186,11 +186,11 @@ class acqva_static_item(object):
 
         return result
 
-    def create_bins(self, scan):
+    def create_bins(self, field):
         result = []
-        nrays = scan.nrays
-        nbins = scan.nbins
-        rscale = scan.rscale
+        nrays = field.nrays
+        nbins = field.nbins
+        rscale = field.rscale
         if self._bins:
             if len(self._bins) == 1:
                 if (self._bins[0] > 0 and self._bins[0] < nbins ):
@@ -264,8 +264,8 @@ class acqva_static_source(object):
         return result
 
 
-class acqva_cluttermap_generator(object):
-    """Support for creating static cluttermaps from a json configuration file. The format of the json file should be according to acqva_static.json.
+class acqva_featuremap_generator(object):
+    """Support for creating static featuremaps from a json configuration file. The format of the json file should be according to acqva_static.json.
     """
     def __init__(self, config=None):
         if isinstance(config, str):
@@ -373,97 +373,141 @@ class acqva_cluttermap_generator(object):
             result.append(acqva_coordinate_item(lon,lat,mean_sea_level,height,st,radius,name))
         return result
 
-    def copy_volume(self, volume, source):
-        dt = datetime.datetime.now()
-        result = _polarvolume.new()
-        result.date = dt.strftime("%Y%m%d")
-        result.time = dt.strftime("%H%M%S")
+    @classmethod
+    def create_featuremap_from_volume(self, volume, nod, dt=None):
+        if dt is None:
+            dt = datetime.datetime.now()
+        result = _acqvafeaturemap.map()
+        result.startdate = dt.strftime("%Y%m%d")
+        result.enddate = dt.strftime("%Y%m%d")
         result.longitude = volume.longitude
         result.latitude = volume.latitude
         result.height = volume.height
+        result.nod = nod
 
-        result.source = source
         nscans = volume.getNumberOfScans()
         for i in range(nscans):
             scan = volume.getScan(i)
-            newscan = _polarscan.new()
-            newscan.elangle = scan.elangle
-            newscan.rscale = scan.rscale
-            newscan.rstart = scan.rstart
-            newscan.longitude = scan.longitude
-            newscan.latitude = scan.latitude
-            newscan.height = scan.height
-            newscan.startdate = result.date
-            newscan.enddate = result.date
-            newscan.starttime = result.time
-            newscan.endtime = result.time
-            param = _polarscanparam.new()
-            param.quantity = "ACQVA"
-            param.gain = 1.0
-            param.offset = 0.0
-            param.nodata = 255.0
-            param.undetect = 0.0            
-            data = np.ones(scan.getParameter("DBZH").getData().shape, np.uint8)
-            param.setData(data)
-            newscan.addParameter(param)
-            result.addScan(newscan)
+            param = scan.getParameter("DBZH")
+            data = param.getData()
+            field = result.createField((data.shape[1], data.shape[0]), _rave.RaveDataType_UCHAR, scan.elangle, scan.rscale)
         return result
 
-    def create(self, volume, nod=None):
-        if not _polarvolume.isPolarVolume(volume):
-            raise Exception("Must provide a polar volume")
+    @classmethod
+    def create_featuremap_from_config(self, cfg, nod=None, startdate=None, enddate=None):
+        dt = datetime.datetime.now()
+        result = _acqvafeaturemap.map()
+        result.longitude = cfg["longitude"] * math.pi / 180.0
+        result.latitude = cfg["latitude"] * math.pi / 180.0
+        result.height = cfg["height"]
+        result.nod = nod
+        if not nod:
+            result.nod = cfg["nod"]
 
-        src = volume.source
+        if startdate:
+            result.startdate = startdate
+        elif "startdate" in cfg:
+            result.startdate = cfg["startdate"]
+        else:
+            result.startdate = dt.strftime("%Y%m%d")
 
-        if nod is None:
-            toks = src.split(",")
-            for t in toks:
-                t = t.strip()
-                if t.startswith("NOD:"):
-                    nod = t.split(":")[1]
-                    break
-        if nod is None:
-            raise GeneratorException("File is missing NOD in source and no NOD specified")
+        if enddate:
+            result.enddate = enddate
+        elif "enddate" in cfg:
+            result.enddate = cfg["enddate"]
+        else:
+            result.enddate = dt.strftime("%Y%m%d")
+
+        for item in cfg["scans"]:
+            field = result.createField((item["nbins"], item["nrays"]), _rave.RaveDataType_UCHAR, item["elangle"] * math.pi / 180.0, item["rscale"], item["rstart"], item["beamwidth"]*math.pi / 180.0).fill(1)
+        return result
+
+    @classmethod
+    def create_volum_config_from_volume(self, volume):
+        cfg={}
+        cfg["longitude"] = round(volume.longitude * 180.0/math.pi, 5)
+        cfg["latitude"] = round(volume.latitude * 180.0/math.pi, 5)
+        cfg["height"] = round(volume.height, 5)
 
         volume.sortByElevations(1)
+
+        toks = volume.source.split(",")
+        for t in toks:
+            t = t.strip()
+            if t.startswith("NOD:"):
+                cfg["nod"] = t.split(":")[1]
+                break
+
+        nscans = volume.getNumberOfScans()
+        scancfg=[]
+        for i in range(nscans):
+            scan = volume.getScan(i)
+            scancfg.append({"nbins":scan.nbins, "nrays":scan.nrays, "elangle":round(scan.elangle * 180.0/math.pi, 5), "rscale":round(scan.rscale, 5), "rstart":round(scan.rstart, 5), "beamwidth":round(scan.beamwidth*180.0/math.pi, 5)})
+        cfg["scans"] = scancfg
+
+        return cfg
+
+    @classmethod
+    def merge_volume_config(self, cfg1, cfg2):
+        result = cfg1
+        if not math.isclose(cfg1["longitude"], cfg2["longitude"], rel_tol=1e-04) or \
+           not math.isclose(cfg1["longitude"], cfg2["longitude"], rel_tol=1e-04) or \
+           not math.isclose(cfg1["height"], cfg2["height"], rel_tol=1e-04) or \
+           cfg1["nod"] != cfg2["nod"]:
+           raise Exception("Can not merge files with different location")
+        for scan in cfg2["scans"]:
+            if scan not in cfg1["scans"]:
+                result["scans"].append(scan)
+        return result
+
+    def create(self, volorcfg, nod=None):
+        cfg = volorcfg
+        if _polarvolume.isPolarVolume(volorcfg):
+            cfg = self.create_volum_config_from_volume(volorcfg)
+
+        if not isinstance(cfg, dict):
+            raise Exception("Must provide either volume or a volume config")
         
-        result = self.copy_volume(volume, f"NOD:{nod}")
+        if nod is None:
+            nod = cfg["nod"]
+
+        featuremap = self.create_featuremap_from_config(cfg)
 
         if nod in self._volumeconfig:
             cfg = self._volumeconfig[nod]
             for item in cfg.items():
-                scans = item.create_scans(result)
-                for si in scans:
-                    if si >= 0 and si < result.getNumberOfScans():
-                        scan = result.getScan(si)
-                        rays = item.create_rays(scan)
-                        bins = item.create_bins(scan)
-                        parameter = scan.getParameter("ACQVA")
-                        for rayi in rays:
-                            for bini in bins:
-                                parameter.setValue((bini, rayi), 255)
+                eindexes = item.create_elevation_indexes(featuremap)
+                for ei in eindexes:
+                    if ei >= 0 and ei < featuremap.getNumberOfElevations():
+                        elevation = featuremap.getElevation(ei)
+                        for fi in range(elevation.size()):
+                            field = elevation.get(fi)
+                            rays = item.create_rays(field)
+                            bins = item.create_bins(field)
+                            for rayi in rays:
+                                for bini in bins:
+                                    field.setValue((bini, rayi), 0)
 
-        for c in self._coordinatecfg:
-            lon = c.lon * math.pi / 180.0
-            lat = c.lat * math.pi / 180.0
-            navinfos = result.getVerticalLonLatNavigationInfo(lon,lat)
-            for v in navinfos:
-                if v.ei >= 0 and v.ri >= 0:
-                    if  v.actual_height < c.mean_sea_level+c.height:
-                        result.getScan(v.ei).getParameter("ACQVA").setValue((v.ri, v.ai), 255)
+        # TEMPORARY COMMENTED SINCE IT WILL REQUIRE SOME WORK TO REFACTOR TO FEATUREMAP USAGE
+        #for c in self._coordinatecfg:
+        #    lon = c.lon * math.pi / 180.0
+        #    lat = c.lat * math.pi / 180.0
+        #    navinfos = volume.getVerticalLonLatNavigationInfo(lon,lat)
+        #    for v in navinfos:
+        #        if v.ei >= 0 and v.ri >= 0:
+        #            if  v.actual_height < c.mean_sea_level+c.height:
+        #                scan = volume.getScan(v.ei)
+        #                field = result.findField((scan.nbins, scan.nrays), scan.elangle, scan.rscale)
+        #                field.setValue((v.ri, v.ai), 255)
 
-        return result
+        return featuremap
 
 
 if __name__=="__main__":
-    generator = acqva_cluttermap_generator("/projects/baltrad/rave/config/acqva_static.json")
+    generator = acqva_featuremap_generator("/projects/baltrad/rave/config/acqva_static.json")
     #print(generator._config["seang"])
     #generator.create(_raveio.open("/projects/baltrad/rave/test/pytest/fixtures/sehem_pvol_pn215_20171204T071500Z_0x81540b.h5").object)
     result = generator.create(_raveio.open("/projects/baltrad/rave/test/pytest/fixtures/seang_qcvol_20120131T0000Z.h5").object)
-    rio = _raveio.new()
-    rio.object = result
-    rio.save("cluttermap.h5")
-    #print(create_rays([-20,20]))
-    #print(create_rays([0,20]))
-    #print(create_rays([340,20]))
-    #print(create_rays([20,340]))
+    result.startdate = "20250101"
+    result.enddate = "20250201"    
+    result.save("featuremap.h5")

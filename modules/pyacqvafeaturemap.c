@@ -25,6 +25,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
 #include "pyravecompat.h"
+#include "pyraveapi.h"
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>
@@ -35,7 +36,9 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #define PYACQVAFEATUREMAP_MODULE    /**< to get correct part in pyarea.h */
 #include "pyacqvafeaturemap.h"
 #include <arrayobject.h>
-
+#include "pyravefield.h"
+#include "pypolarscan.h"
+#include "pyravevalue.h"
 #include "rave_alloc.h"
 #include "rave.h"
 
@@ -164,20 +167,97 @@ static PyObject* _pyacqvafeaturemap_load(PyObject* self, PyObject* args)
   return (PyObject*)result;
 }
 
+static PyObject* _pyacqvafeaturemap_addAttribute(PyAcqvaFeatureMap* self, PyObject* args)
+{
+  PyObject* pyvalue = NULL;
+  RaveValue_t* value = NULL;
+
+  char* name = NULL;
+
+  if (!PyArg_ParseTuple(args, "sO", &name, &pyvalue)) {
+    return NULL;
+  }
+  if (PyRaveValue_Check(pyvalue)) {
+    if (!AcqvaFeatureMap_addAttribute(self->featuremap, name, ((PyRaveValue*)pyvalue)->value)) {
+      raiseException_gotoTag(fail, PyExc_MemoryError, "Could not set value");
+    }
+  } else {
+    value = PyRaveApi_RaveValueFromObject(pyvalue);
+    if (value != NULL) {
+      if (!AcqvaFeatureMap_addAttribute(self->featuremap, name, value)) {
+        raiseException_gotoTag(fail, PyExc_MemoryError, "Could not add attribute to map");
+      }
+    }
+  }
+
+  RAVE_OBJECT_RELEASE(value);
+  Py_RETURN_NONE;
+fail:
+  RAVE_OBJECT_RELEASE(value);
+  return NULL;
+}
+
+static PyObject* _pyacqvafeaturemap_hasAttribute(PyAcqvaFeatureMap* self, PyObject* args)
+{
+   char* name = NULL;
+ 
+   if (!PyArg_ParseTuple(args, "s", &name)) {
+     return NULL;
+   }
+   return PyBool_FromLong(AcqvaFeatureMap_hasAttribute(self->featuremap, name));
+}
+
+static PyObject* _pyacqvafeaturemap_getAttribute(PyAcqvaFeatureMap* self, PyObject* args)
+{
+  RaveValue_t* value = NULL;
+  PyObject* result = NULL;
+
+  char* name = NULL;
+
+  if (!PyArg_ParseTuple(args, "s", &name)) {
+    return NULL;
+  }
+  value = AcqvaFeatureMap_getAttribute(self->featuremap, name);
+  if (value != NULL) {
+    result = PyRaveApi_RaveValueToObject(value);
+  } else {
+    raiseException_returnNULL(PyExc_ValueError, "Could not find attribute");
+  }
+  RAVE_OBJECT_RELEASE(value);
+
+  return result;  
+}
+
+static PyObject* _pyacqvafeaturemap_removeAttribute(PyAcqvaFeatureMap* self, PyObject* args)
+{
+   char* name = NULL;
+ 
+   if (!PyArg_ParseTuple(args, "s", &name)) {
+     return NULL;
+   }
+   AcqvaFeatureMap_removeAttribute(self->featuremap, name);
+   Py_RETURN_NONE;
+}
+
 static PyObject* _pyacqvafeaturemap_createField(PyAcqvaFeatureMap* self, PyObject* args)
 {
   long nbins = 0, nrays = 0;
   int datatype = 0;
   double elangle = 0.0;
+  double rscale = 0.0;
+  double rstart = 0.0;
+  double beamwidth = 0.0;
   PyAcqvaFeatureMapField* result = NULL;
   AcqvaFeatureMapField_t* acqvafield = NULL;
 
-  if (!PyArg_ParseTuple(args, "(ll)id", &nbins, &nrays, &datatype, &elangle)) {
+  if (!PyArg_ParseTuple(args, "(ll)idddd", &nbins, &nrays, &datatype, &elangle, &rscale, &rstart, &beamwidth)) {
     return NULL;
   }
-  acqvafield = AcqvaFeatureMap_createField(self->featuremap, nbins, nrays, datatype, elangle);
+  acqvafield = AcqvaFeatureMap_createField(self->featuremap, nbins, nrays, datatype, elangle, rscale, rstart, beamwidth);
   if (acqvafield != NULL) {
     result = PyAcqvaFeatureMapField_New(acqvafield);
+  } else {
+    raiseException_returnNULL(PyExc_RuntimeError, "Could not create field");
   }
 
   RAVE_OBJECT_RELEASE(acqvafield);
@@ -187,14 +267,16 @@ static PyObject* _pyacqvafeaturemap_createField(PyAcqvaFeatureMap* self, PyObjec
 static PyObject* _pyacqvafeaturemap_findField(PyAcqvaFeatureMap* self, PyObject* args)
 {
   long nbins = 0, nrays = 0;
-  double elangle = 0.0;
+  double elangle = 0.0, rscale = 0.0;
+  double rstart = -1.0, beamwidth = -1.0;
+
   PyAcqvaFeatureMapField* result = NULL;
   AcqvaFeatureMapField_t* acqvafield = NULL;
 
-  if (!PyArg_ParseTuple(args, "(ll)d", &nbins, &nrays, &elangle)) {
+  if (!PyArg_ParseTuple(args, "(ll)d|ddd", &nbins, &nrays, &elangle, &rscale, &rstart, &beamwidth)) {
     return NULL;
   }
-  acqvafield = AcqvaFeatureMap_findField(self->featuremap, nbins, nrays, elangle);
+  acqvafield = AcqvaFeatureMap_findField(self->featuremap, nbins, nrays, elangle, rscale, rstart, beamwidth);
   if (acqvafield != NULL) {
     result = PyAcqvaFeatureMapField_New(acqvafield);
     RAVE_OBJECT_RELEASE(acqvafield);
@@ -298,12 +380,24 @@ static struct PyMethodDef _pyacqvafeaturemap_methods[] =
   {"height", NULL, METH_VARARGS},
   {"startdate", NULL, METH_VARARGS},
   {"enddate", NULL, METH_VARARGS},
+  {"addAttribute", (PyCFunction) _pyacqvafeaturemap_addAttribute, 1,
+    "addAttribute(name, value)\n\n"
+      "Adds the attribute to map."},
+  {"hasAttribute", (PyCFunction) _pyacqvafeaturemap_hasAttribute, 1,
+    "hasAttribute(name) -> boolean\n\n"
+      "Returns if attribute exists in map or not."},
+  {"getAttribute", (PyCFunction) _pyacqvafeaturemap_getAttribute, 1,
+    "getAttribute(name) -> value\n\n"
+      "Returns the value associated with name."},
+  {"removeAttribute", (PyCFunction) _pyacqvafeaturemap_removeAttribute, 1,
+    "removeAttribute(name)\n\n"
+      "Removes the attribute with name."},
   {"createField", (PyCFunction) _pyacqvafeaturemap_createField, 1,
-    "createField((nbins, nrays), datatype, elangle)\n\n"
+    "createField((nbins, nrays), datatype, elangle, rscale, rstart, beamwidth)\n\n"
       "Creates a field with specified nbins/nrays/datatype in the elevation group with elangle.\n"
       "If elevation group doesn't exit, the elevation group is also created."},
   {"findField", (PyCFunction) _pyacqvafeaturemap_findField, 1,
-    "findField((nbins, nrays), elangle) -> field\n\n"
+    "findField((nbins, nrays), elangle|,rscale) -> field\n\n"
       "Locates a field with specified elangle and nbins/nrays.\n"},
   {"createElevation", (PyCFunction) _pyacqvafeaturemap_createElevation, 1,
     "createElevation(elangle)\n\n"
@@ -539,7 +633,8 @@ static PyObject* _pyacqvafeaturemapelevation_add(PyAcqvaFeatureMapElevation* sel
 
   field = (PyAcqvaFeatureMapField*)inptr;
 
-  if (AcqvaFeatureMapElevation_has(self->elevation, AcqvaFeatureMapField_getNbins(field->field), AcqvaFeatureMapField_getNrays(field->field))) {
+  if (AcqvaFeatureMapElevation_has(self->elevation, AcqvaFeatureMapField_getNbins(field->field), AcqvaFeatureMapField_getNrays(field->field), AcqvaFeatureMapField_getRscale(field->field),
+                                   AcqvaFeatureMapField_getRstart(field->field), AcqvaFeatureMapField_getBeamwidth(field->field))) {
     raiseException_returnNULL(PyExc_AttributeError, "Elevation group already consists of a field with those dimensions");
   }
 
@@ -603,13 +698,13 @@ static PyObject* _pyacqvafeaturemapelevation_find(PyAcqvaFeatureMapElevation* se
 {
   AcqvaFeatureMapField_t* field = NULL;
   long nbins = 0, nrays = 0;
+  double rscale = 0.0, rstart = -1.0, beamwidth = -1.0;
   PyObject* result = NULL;
 
-  if (!PyArg_ParseTuple(args, "(ll)", &nbins, &nrays)) {
+  if (!PyArg_ParseTuple(args, "(ll)|ddd", &nbins, &nrays, &rscale, &rstart, &beamwidth)) {
     return NULL;
   }
-
-  field = AcqvaFeatureMapElevation_find(self->elevation, nbins, nrays);
+  field = AcqvaFeatureMapElevation_find(self->elevation, nbins, nrays, rscale, rstart, beamwidth);
   if (field != NULL) {
     result = (PyObject*)PyAcqvaFeatureMapField_New(field);
     RAVE_OBJECT_RELEASE(field);
@@ -771,14 +866,16 @@ static PyObject* _pyacqvafeaturemapfield_new(PyObject* self, PyObject* args)
   long nbins = 0, nrays = 0;
   int datatype = 0;
   double elangle = 0.0;
-  PyAcqvaFeatureMapField* result = NULL;
+  double rscale = 0.0;
+  double rstart = 0.0;
+  double beamwidth = 0.0;
 
-  if (!PyArg_ParseTuple(args, "|(ll)id", &nbins, &nrays, &datatype, &elangle)) {
+  PyAcqvaFeatureMapField* result = NULL;
+  if (!PyArg_ParseTuple(args, "|(ll)idddd", &nbins, &nrays, &datatype, &elangle, &rscale, &rstart, &beamwidth)) {
     return NULL;
   }
-
   if (nbins != 0 && nrays != 0) {
-    AcqvaFeatureMapField_t* field = AcqvaFeatureMapField_createField(nbins, nrays, datatype, elangle);
+    AcqvaFeatureMapField_t* field = AcqvaFeatureMapField_createField(nbins, nrays, datatype, elangle, rscale, rstart, beamwidth);
     if (field != NULL) {
       result = PyAcqvaFeatureMapField_New(field);
       RAVE_OBJECT_RELEASE(field);
@@ -789,6 +886,78 @@ static PyObject* _pyacqvafeaturemapfield_new(PyObject* self, PyObject* args)
     result = PyAcqvaFeatureMapField_New(NULL);
   }
   return (PyObject*)result;
+}
+
+static PyObject* _pyacqvafeaturemapfield_addAttribute(PyAcqvaFeatureMapField* self, PyObject* args)
+{
+  PyObject* pyvalue = NULL;
+  RaveValue_t* value = NULL;
+
+  char* name = NULL;
+
+  if (!PyArg_ParseTuple(args, "sO", &name, &pyvalue)) {
+    return NULL;
+  }
+  if (PyRaveValue_Check(pyvalue)) {
+    if (!AcqvaFeatureMapField_addAttribute(self->field, name, ((PyRaveValue*)pyvalue)->value)) {
+      raiseException_gotoTag(fail, PyExc_MemoryError, "Could not set value");
+    }
+  } else {
+    value = PyRaveApi_RaveValueFromObject(pyvalue);
+    if (value != NULL) {
+      if (!AcqvaFeatureMapField_addAttribute(self->field, name, value)) {
+        raiseException_gotoTag(fail, PyExc_MemoryError, "Could not add attribute to field");
+      }
+    }
+  }
+
+  RAVE_OBJECT_RELEASE(value);
+  Py_RETURN_NONE;
+fail:
+  RAVE_OBJECT_RELEASE(value);
+  return NULL;
+}
+
+static PyObject* _pyacqvafeaturemapfield_hasAttribute(PyAcqvaFeatureMapField* self, PyObject* args)
+{
+   char* name = NULL;
+ 
+   if (!PyArg_ParseTuple(args, "s", &name)) {
+     return NULL;
+   }
+   return PyBool_FromLong(AcqvaFeatureMapField_hasAttribute(self->field, name));
+}
+
+static PyObject* _pyacqvafeaturemapfield_getAttribute(PyAcqvaFeatureMapField* self, PyObject* args)
+{
+  RaveValue_t* value = NULL;
+  PyObject* result = NULL;
+
+  char* name = NULL;
+
+  if (!PyArg_ParseTuple(args, "s", &name)) {
+    return NULL;
+  }
+  value = AcqvaFeatureMapField_getAttribute(self->field, name);
+  if (value != NULL) {
+    result = PyRaveApi_RaveValueToObject(value);
+  } else {
+    raiseException_returnNULL(PyExc_ValueError, "Could not find attribute");
+  }
+  RAVE_OBJECT_RELEASE(value);
+
+  return result;  
+}
+
+static PyObject* _pyacqvafeaturemapfield_removeAttribute(PyAcqvaFeatureMapField* self, PyObject* args)
+{
+   char* name = NULL;
+ 
+   if (!PyArg_ParseTuple(args, "s", &name)) {
+     return NULL;
+   }
+   AcqvaFeatureMapField_removeAttribute(self->field, name);
+   Py_RETURN_NONE;
 }
 
 static PyObject* _pyacqvafeaturemapfield_createData(PyAcqvaFeatureMapField* self, PyObject* args)
@@ -853,6 +1022,10 @@ static PyObject* _pyacqvafeaturemapfield_getData(PyAcqvaFeatureMapField* self, P
   int arrtype = 0;
   void* data = NULL;
 
+  if (!PyArg_ParseTuple(args, "")) {
+    return NULL;
+  }
+
   nbins = AcqvaFeatureMapField_getNbins(self->field);
   nrays = AcqvaFeatureMapField_getNrays(self->field);
   type = AcqvaFeatureMapField_getDatatype(self->field);
@@ -898,7 +1071,7 @@ static PyObject* _pyacqvafeaturemapfield_fill(PyAcqvaFeatureMapField* self, PyOb
     raiseException_returnNULL(PyExc_ValueError, "Could not fill cells");
   }
 
-  Py_RETURN_NONE;
+  return (PyObject*)PyAcqvaFeatureMapField_New(self->field);
 }
 
 /**
@@ -942,15 +1115,70 @@ static PyObject* _pyacqvafeaturemapfield_setValue(PyAcqvaFeatureMapField* self, 
   Py_RETURN_NONE;
 }
 
+static PyObject* _pyacqvafeaturemapfield_toRaveField(PyAcqvaFeatureMapField* self, PyObject* args)
+{
+  RaveField_t* field = NULL;
+  PyRaveField* result = NULL;
+
+  if (!PyArg_ParseTuple(args, "")) {
+    return NULL;
+  }
+
+  field = AcqvaFeatureMapField_toRaveField(self->field);
+  if (field != NULL) {
+    result = PyRaveField_New(field);
+  } else {
+    PyErr_SetString(PyExc_RuntimeError, "Could not convert feature map to rave field");
+  }
+  RAVE_OBJECT_RELEASE(field);
+  return (PyObject*)result;
+}
+
+static PyObject* _pyacqvafeaturemapfield_toScan(PyAcqvaFeatureMapField* self, PyObject* args)
+{
+  PolarScan_t* scan = NULL;
+  PyPolarScan* result = NULL;
+  char* quantity = NULL;
+  double lon = 0.0, lat = 0.0, height = 0.0;
+
+  if (!PyArg_ParseTuple(args, "sddd", &quantity, &lon, &lat, &height)) {
+    return NULL;
+  }
+
+  scan = AcqvaFeatureMapField_toScan(self->field, quantity, lon, lat, height);
+  if (scan != NULL) {
+    result = PyPolarScan_New(scan);
+  } else {
+    PyErr_SetString(PyExc_RuntimeError, "Could not convert feature map to scan");
+  }
+  RAVE_OBJECT_RELEASE(scan);
+  return (PyObject*)result;
+}
+
 /**
  * All methods a featuremap elevation can have
  */
 static struct PyMethodDef _pyacqvafeaturemapfield_methods[] =
 {
   {"elangle", NULL, METH_VARARGS},
+  {"rscale", NULL, METH_VARARGS},
+  {"rstart", NULL, METH_VARARGS},
+  {"beamwidth", NULL, METH_VARARGS},
   {"nbins", NULL, METH_VARARGS},
   {"nrays", NULL, METH_VARARGS},
   {"datatype", NULL, METH_VARARGS},
+  {"addAttribute", (PyCFunction) _pyacqvafeaturemapfield_addAttribute, 1,
+    "addAttribute(name, value)\n\n"
+      "Adds the attribute to map."},
+  {"hasAttribute", (PyCFunction) _pyacqvafeaturemapfield_hasAttribute, 1,
+    "hasAttribute(name) -> boolean\n\n"
+      "Returns if attribute exists in field or not."},
+  {"getAttribute", (PyCFunction) _pyacqvafeaturemapfield_getAttribute, 1,
+    "getAttribute(name) -> value\n\n"
+      "Returns the value associated with name."},
+  {"removeAttribute", (PyCFunction) _pyacqvafeaturemapfield_removeAttribute, 1,
+    "removeAttribute(name)\n\n"
+      "Removes the attribute with name."},
   {"createData", (PyCFunction) _pyacqvafeaturemapfield_createData, 1,
        "createData((nbins, nrays), datatype)\n\n"
        "Creates the data array in the field\n\n"},
@@ -978,6 +1206,13 @@ static struct PyMethodDef _pyacqvafeaturemapfield_methods[] =
     "ray   - ray index\n"
     "value - the value that should be set at specified position."
   },
+  {"toRaveField", (PyCFunction) _pyacqvafeaturemapfield_toRaveField, 1,
+       "toRaveField()\n\n"
+       "Creates a rave field from a acqva featuremap\n\n"},
+  {"toScan", (PyCFunction) _pyacqvafeaturemapfield_toScan, 1,
+       "toScan(quantity, lon, lat)\n\n"
+       "Creates a scan from a acqva featuremap\n\n"},
+
   {NULL, NULL } /* sentinel */
 };
 
@@ -989,6 +1224,12 @@ static PyObject* _pyacqvafeaturemapfield_getattro(PyAcqvaFeatureMapField* self, 
 {
   if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "elangle") == 0) {
     return PyFloat_FromDouble(AcqvaFeatureMapField_getElangle(self->field));
+  } else  if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "rscale") == 0) {
+    return PyFloat_FromDouble(AcqvaFeatureMapField_getRscale(self->field));
+  } else  if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "rstart") == 0) {
+    return PyFloat_FromDouble(AcqvaFeatureMapField_getRstart(self->field));
+  } else  if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "beamwidth") == 0) {
+    return PyFloat_FromDouble(AcqvaFeatureMapField_getBeamwidth(self->field));
   } else  if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "nbins") == 0) {
     return PyLong_FromLong(AcqvaFeatureMapField_getNbins(self->field));
   } else  if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "nrays") == 0) {
@@ -1017,6 +1258,36 @@ static int _pyacqvafeaturemapfield_setattro(PyAcqvaFeatureMapField *self, PyObje
       AcqvaFeatureMapField_setElangle(self->field, (double)PyLong_AsLong(val));
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "elangle must be a number");
+    }
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "rscale") == 0) {
+    if (PyFloat_Check(val)) {
+      AcqvaFeatureMapField_setRscale(self->field, PyFloat_AsDouble(val));
+    } else if (PyInt_Check(val)) {
+      AcqvaFeatureMapField_setRscale(self->field, (double)PyInt_AsLong(val));
+    } else if (PyLong_AsLong(val)) {
+      AcqvaFeatureMapField_setRscale(self->field, (double)PyLong_AsLong(val));
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError, "rscale must be a number");
+    }
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "rstart") == 0) {
+    if (PyFloat_Check(val)) {
+      AcqvaFeatureMapField_setRstart(self->field, PyFloat_AsDouble(val));
+    } else if (PyInt_Check(val)) {
+      AcqvaFeatureMapField_setRstart(self->field, (double)PyInt_AsLong(val));
+    } else if (PyLong_AsLong(val)) {
+      AcqvaFeatureMapField_setRstart(self->field, (double)PyLong_AsLong(val));
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError, "rstart must be a number");
+    }
+  } else if (PY_COMPARE_ATTRO_NAME_WITH_STRING(name, "beamwidth") == 0) {
+    if (PyFloat_Check(val)) {
+      AcqvaFeatureMapField_setBeamwidth(self->field, PyFloat_AsDouble(val));
+    } else if (PyInt_Check(val)) {
+      AcqvaFeatureMapField_setBeamwidth(self->field, (double)PyInt_AsLong(val));
+    } else if (PyLong_AsLong(val)) {
+      AcqvaFeatureMapField_setBeamwidth(self->field, (double)PyLong_AsLong(val));
+    } else {
+      raiseException_gotoTag(done, PyExc_TypeError, "beamwidth must be a number");
     }
   } else {
     raiseException_gotoTag(done, PyExc_AttributeError,
@@ -1176,13 +1447,13 @@ PyTypeObject PyAcqvaFeatureMapField_Type =
 /*@{ Module setup */
 static PyMethodDef functions[] = {
   {"map", (PyCFunction)_pyacqvafeaturemap_new, 1,
-      "map(|(nbins,nrays),type) -> new instance of the AcqvaFeaturemapCore object\n\n"
+      "map() -> new instance of the AcqvaFeaturemapCore object\n\n"
       "Creates a new instance of the AcqvaFeaturemapCore object"},
   {"elevation", (PyCFunction)_pyacqvafeaturemapelevation_new, 1,
       "elevation() -> new instance of the AcqvaFeaturemapElevationCore object\n\n"
       "Creates a new instance of the AcqvaFeaturemapElevationCore object"},
   {"field", (PyCFunction)_pyacqvafeaturemapfield_new, 1,
-      "field() -> new instance of the AcqvaFeaturemapFieldCore object\n\n"
+      "field(|(nbins,nrays),type,elangle,rscale,rstart,beamwidth) -> new instance of the AcqvaFeaturemapFieldCore object\n\n"
       "Creates a new instance of the AcqvaFeaturemapFieldCore object"},
   {"load", (PyCFunction)_pyacqvafeaturemap_load, 1,
       "load(filename) -> loads the feature map with specified filename\n\n"
@@ -1231,6 +1502,9 @@ MOD_INIT(_acqvafeaturemap)
     return MOD_INIT_ERROR;
   }
   import_array(); /*To make sure I get access to Numeric*/
+  import_ravevalue();
+  import_pyravefield();
+  import_pypolarscan();
 
   PYRAVE_DEBUG_INITIALIZE;
   return MOD_INIT_SUCCESS(module);

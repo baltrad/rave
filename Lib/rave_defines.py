@@ -181,10 +181,10 @@ COMPOSITE_GENERATOR_FILTER_FILENAME = os.path.join(RAVECONFIG, 'composite_genera
 # Where the generator property file can be found
 COMPOSITE_GENERATOR_PROPERTY_FILE = os.path.join(RAVECONFIG, 'rave_properties.json')
 
-# The location where the cluttermaps can be found when using ACQVA
-# The names of the cluttermaps should be in the format <nod>.h5, for example
+# The location where the featuremaps can be found when using ACQVA
+# The names of the featuremaps should be in the format <nod>.h5, for example
 # seang.h5, ...
-ACQVA_CLUTTERMAP_DIR = "/var/lib/baltrad/rave/acqva/cluttermap"
+ACQVA_FEATUREMAP_DIR = "/var/lib/baltrad/rave/acqva/featuremap"
 
 # Max number of processes to use when performing the composite tiling. If None, then
 # the number of processes will be set to number of tiles or less depending on how many

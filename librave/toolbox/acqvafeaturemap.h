@@ -30,6 +30,9 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "raveobject_list.h"
 #include "rave_datetime.h"
 #include "rave_types.h"
+#include "rave_field.h"
+#include "rave_value.h"
+#include "polarscan.h"
 
 /**
  * Defines a feature map
@@ -165,15 +168,51 @@ int AcqvaFeatureMap_setEnddate(AcqvaFeatureMap_t* self, const char* date);
 const char* AcqvaFeatureMap_getEnddate(AcqvaFeatureMap_t* self);
 
 /**
+ * Adds an attribute to the feature map
+ * @param[in] self - self
+ * @param[in] name - the attribute, must start with how/
+ * @param[in] value - the value to set
+ * @return 1 if successful
+ */
+int AcqvaFeatureMap_addAttribute(AcqvaFeatureMap_t* self, const char* name, RaveValue_t* value);
+
+/**
+ * Returns if the attribute exists in the map or not
+ * @param[in] self - self
+ * @param[in] name - the attribute to look for
+ * @return 1 if found, otherwise 0
+ */
+int AcqvaFeatureMap_hasAttribute(AcqvaFeatureMap_t* self, const char* name);
+
+/**
+ * Returns the name with specified name
+ * @param[in] self - self
+ * @param[in] name - the attribute to look for
+ * @return the value if found otherwise NULL
+ */
+RaveValue_t* AcqvaFeatureMap_getAttribute(AcqvaFeatureMap_t* self, const char* name);
+
+/**
+ * Reomves the attribute with specified name from map
+ * @param[in] self - self
+ * @param[in] name - the attribute to remove
+ * @return 1 on success otherwise 0
+ */
+void AcqvaFeatureMap_removeAttribute(AcqvaFeatureMap_t* self, const char* name);
+
+/**
  * Creates a field in the feature map with wanted elevation angle and the geometry (nrays, nbins) and the field data is set to 1. 
  * @param[in] self - self
  * @param[in] nbins - number of bins
  * @param[in] nrays - number of rays
  * @param[in] type - the datatype
  * @param[in] elangle - the elevation angle of the field
- * ®return the field
+ * @param[in] rscale - scale of bins in meters
+ * @param[in] rstart - rstart in meters
+ * @param[in] beamwidth - beamwidth in radians
+ * @return the field
  */
-AcqvaFeatureMapField_t* AcqvaFeatureMap_createField(AcqvaFeatureMap_t* self, long nbins, long nrays, RaveDataType type, double elangle);
+AcqvaFeatureMapField_t* AcqvaFeatureMap_createField(AcqvaFeatureMap_t* self, long nbins, long nrays, RaveDataType type, double elangle, double rscale, double rstart, double beamwidth);
 
 /**
  * Adds a field (scan) to the feature map. The field must contain the elevation angle and the geometry (nrays, nbins). Offset
@@ -227,9 +266,12 @@ void AcqvaFeatureMap_removeElevation(AcqvaFeatureMap_t* self, int index);
  * @param[in] nrays - number of rays
  * @param[in] nbins - number of bins
  * @param[in] elangle - the elevation angle in radians
+ * @param[in] rscale - the rscale, if less than or equal to 0.0 it is not used
+ * @param[in] rstart - the rstart, if less than 0.0 it is not used
+ * @param[in] beamwidth - the beamwidth, if less than 0.0 it is not used
  * @return the rave field
  */
-AcqvaFeatureMapField_t* AcqvaFeatureMap_findField(AcqvaFeatureMap_t* self, long nbins, long nrays, double elangle);
+AcqvaFeatureMapField_t* AcqvaFeatureMap_findField(AcqvaFeatureMap_t* self, long nbins, long nrays, double elangle, double rscale, double rstart, double beamwidth);
 
 /**
  * Locates a matching field that is very close to elangle < 1e-4. 
@@ -290,18 +332,24 @@ void AcqvaFeatureMapElevation_remove(AcqvaFeatureMapElevation_t* self, int index
  * @param[in] self - self
  * @param[in] nrays - number of rays
  * @param[in] nbins - number of bins
+ * @param[in] rscale - the rscale, if less than or equal to 0.0 it is not used
+ * @param[in] rstart - the rstart, if less than 0.0 it is not used
+ * @param[in] beamwidth - the beamwidth, if less than 0.0 it is not used
  * @return the featuremap field
 */
-AcqvaFeatureMapField_t* AcqvaFeatureMapElevation_find(AcqvaFeatureMapElevation_t* self, long nbins, long nrays);
+AcqvaFeatureMapField_t* AcqvaFeatureMapElevation_find(AcqvaFeatureMapElevation_t* self, long nbins, long nrays, double rscale, double rstart, double beamwidth);
 
 /**
  * Locates a field that matches the nbins and nrays and returns true or false depending on if it exists
  * @param[in] self - self
  * @param[in] nrays - number of rays
  * @param[in] nbins - number of bins
+ * @param[in] rscale - the rscale, if less than or equal to 0.0 it is not used
+ * @param[in] rstart - the rstart, if less than 0.0 it is not used
+ * @param[in] beamwidth - the beamwidth, if less than 0.0 it is not used
  * @return true or false
 */
-int AcqvaFeatureMapElevation_has(AcqvaFeatureMapElevation_t* self, long nbins, long nrays);
+int AcqvaFeatureMapElevation_has(AcqvaFeatureMapElevation_t* self, long nbins, long nrays, double rscale, double rstart, double beamwidth);
 
 /**
  * Sets the elevation angle for this field
@@ -314,9 +362,55 @@ int AcqvaFeatureMapField_setElangle(AcqvaFeatureMapField_t* self, double elangle
 /**
  * Gets the elevation angle for this field
  * @param[in] self - self
- * @return the elevation angle of this group (in radians)
+ * @return the elevation angle of this field (in radians)
  */
 double AcqvaFeatureMapField_getElangle(AcqvaFeatureMapField_t* self);
+
+/**
+ * Sets the rscale for this field
+ * @param[in] self - self
+ * @param[in] rscale - the rscale of the bins in meters
+ * @return 1 if the rscale is possible to set
+ */
+int AcqvaFeatureMapField_setRscale(AcqvaFeatureMapField_t* self, double rscale);
+
+/**
+ * Gets the rscale for this field
+ * @param[in] self - self
+ * @return ther scale of this field in meters
+ */
+double AcqvaFeatureMapField_getRscale(AcqvaFeatureMapField_t* self);
+
+/**
+ * Sets the rstart for this field
+ * @param[in] self - self
+ * @param[in] rstart - the rstart of the bins in meters
+ * @return 1 if the rstart is possible to set
+ */
+int AcqvaFeatureMapField_setRstart(AcqvaFeatureMapField_t* self, double rstart);
+
+/**
+ * Gets the rstart for this field
+ * @param[in] self - self
+ * @return ther rstart of this field in meters
+ */
+double AcqvaFeatureMapField_getRstart(AcqvaFeatureMapField_t* self);
+
+/**
+ * Sets the beamwidth in radians
+ * @param[in] self - self
+ * @param[in] beamwidth - the beamwidth in radians
+ * @return 1 if the rstart is possible to set
+ */
+int AcqvaFeatureMapField_setBeamwidth(AcqvaFeatureMapField_t* self, double beamwidth);
+
+/**
+ * Gets the beamwidth for this field
+ * @param[in] self - self
+ * @return the beamwidth in radians
+ */
+double AcqvaFeatureMapField_getBeamwidth(AcqvaFeatureMapField_t* self);
+
 
 /**
  * @param[in] self - self
@@ -335,6 +429,40 @@ long AcqvaFeatureMapField_getNrays(AcqvaFeatureMapField_t* self);
  * @return data type
  */
 RaveDataType AcqvaFeatureMapField_getDatatype(AcqvaFeatureMapField_t* self);
+
+/**
+ * Adds an attribute to the feature map
+ * @param[in] self - self
+ * @param[in] name - the attribute, must start with how/
+ * @param[in] value - the value to set
+ * @return 1 if successful
+ */
+int AcqvaFeatureMapField_addAttribute(AcqvaFeatureMapField_t* self, const char* name, RaveValue_t* value);
+
+/**
+ * Returns if the attribute exists in the map or not
+ * @param[in] self - self
+ * @param[in] name - the attribute to look for
+ * @return 1 if found, otherwise 0
+ */
+int AcqvaFeatureMapField_hasAttribute(AcqvaFeatureMapField_t* self, const char* name);
+
+/**
+ * Returns the name with specified name
+ * @param[in] self - self
+ * @param[in] name - the attribute to look for
+ * @return the value if found otherwise NULL
+ */
+RaveValue_t* AcqvaFeatureMapField_getAttribute(AcqvaFeatureMapField_t* self, const char* name);
+
+/**
+ * Reomves the attribute with specified name from map
+ * @param[in] self - self
+ * @param[in] name - the attribute to remove
+ * @return 1 on success otherwise 0
+ */
+void AcqvaFeatureMapField_removeAttribute(AcqvaFeatureMapField_t* self, const char* name);
+
 
 /**
  * Creates a data field with specified geometry and type and will be initialized to 0
@@ -385,8 +513,30 @@ int AcqvaFeatureMapField_setValue(AcqvaFeatureMapField_t* self, int bin, int ray
 int AcqvaFeatureMapField_getValue(AcqvaFeatureMapField_t* self, int bin, int ray, double* v);
 
 /**
- * Creates a feature map field with wanted dimensions, type and elangle.
+ * Creates a rave field from a acqva featuremap field
+ * @param[in] self - self
+ * @return the rave field
  */
-AcqvaFeatureMapField_t* AcqvaFeatureMapField_createField(long nbins, long nrays, RaveDataType type, double elangle);
+RaveField_t* AcqvaFeatureMapField_toRaveField(AcqvaFeatureMapField_t* self);
+
+/**
+ * Creates a polar scan from a field definition.
+ * @param[in] self - self
+ * @return the rave field
+ */
+PolarScan_t* AcqvaFeatureMapField_toScan(AcqvaFeatureMapField_t* self, const char* param, double lon, double lat, double height);
+
+ /**
+ * Creates a field with wanted elevation angle and the geometry (nrays, nbins) and the field data is set to 1. 
+ * @param[in] nbins - number of bins
+ * @param[in] nrays - number of rays
+ * @param[in] type - the datatype
+ * @param[in] elangle - the elevation angle of the field
+ * @param[in] rscale - scale of bins in meters
+ * @param[in] rstart - rstart in meters
+ * @param[in] beamwidth - beamwidth in radians
+ * @return the field
+ */
+AcqvaFeatureMapField_t* AcqvaFeatureMapField_createField(long nbins, long nrays, RaveDataType type, double elangle, double rscale, double rstart, double beamwidth);
 
 #endif
