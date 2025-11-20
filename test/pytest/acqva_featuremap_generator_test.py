@@ -287,11 +287,12 @@ class acqva_featuremap_generator_test(unittest.TestCase):
     vol1.addScan(self.create_scan("DBZH", 480, 360, 1.5*math.pi/180.0, 500.0, 2.0, 3.0*math.pi/180.0))
 
     cfg1 = acqva_featuremap_generator.create_volum_config_from_volume(vol1)
+
     self.assertEqual(cfg1, {'longitude': 14.0, 'latitude': 60.0, 'height': 212.0, 'nod': 'seang', 
                             'scans': [
                               {'nbins': 480, 'nrays': 360, 'elangle': 0.5, 'rscale': 500.0, 'rstart': 0.0, 'beamwidth': 1.0}, 
-                              {'nbins': 480, 'nrays': 360, 'elangle': 1.0, 'rscale': 500.0, 'rstart': 1.0, 'beamwidth': 2.0}, 
-                              {'nbins': 480, 'nrays': 360, 'elangle': 1.5, 'rscale': 500.0, 'rstart': 2.0, 'beamwidth': 3.0}
+                              {'nbins': 480, 'nrays': 360, 'elangle': 1.0, 'rscale': 500.0, 'rstart': 1000.0, 'beamwidth': 2.0}, 
+                              {'nbins': 480, 'nrays': 360, 'elangle': 1.5, 'rscale': 500.0, 'rstart': 2000.0, 'beamwidth': 3.0}
                             ]
                            })
 
@@ -316,19 +317,20 @@ class acqva_featuremap_generator_test(unittest.TestCase):
 
     cfg1 = acqva_featuremap_generator.create_volum_config_from_volume(vol1)
     cfg2 = acqva_featuremap_generator.create_volum_config_from_volume(vol2)
+
     self.assertEqual(cfg1, {'longitude': 14.0, 'latitude': 60.0, 'height': 212.0, 'nod': 'seang', 
                             'scans': [
                               {'nbins': 480, 'nrays': 360, 'elangle': 0.5, 'rscale': 500.0, 'rstart': 0.0, 'beamwidth': 1.0}, 
-                              {'nbins': 480, 'nrays': 360, 'elangle': 1.0, 'rscale': 500.0, 'rstart': 1.0, 'beamwidth': 2.0}, 
-                              {'nbins': 480, 'nrays': 360, 'elangle': 1.5, 'rscale': 500.0, 'rstart': 2.0, 'beamwidth': 3.0}
+                              {'nbins': 480, 'nrays': 360, 'elangle': 1.0, 'rscale': 500.0, 'rstart': 1000.0, 'beamwidth': 2.0}, 
+                              {'nbins': 480, 'nrays': 360, 'elangle': 1.5, 'rscale': 500.0, 'rstart': 2000.0, 'beamwidth': 3.0}
                             ]
                            })
 
     self.assertEqual(cfg2, {'longitude': 14.0, 'latitude': 60.0, 'height': 212.0, 'nod': 'seang', 
                             'scans': [
-                              {'nbins': 480, 'nrays': 360, 'elangle': 1.0, 'rscale': 500.0, 'rstart': 1.0, 'beamwidth': 2.0}, 
-                              {'nbins': 480, 'nrays': 360, 'elangle': 2.0, 'rscale': 500.0, 'rstart': 1.0, 'beamwidth': 2.0}, 
-                              {'nbins': 480, 'nrays': 360, 'elangle': 4.0, 'rscale': 500.0, 'rstart': 2.0, 'beamwidth': 3.0}
+                              {'nbins': 480, 'nrays': 360, 'elangle': 1.0, 'rscale': 500.0, 'rstart': 1000.0, 'beamwidth': 2.0}, 
+                              {'nbins': 480, 'nrays': 360, 'elangle': 2.0, 'rscale': 500.0, 'rstart': 1000.0, 'beamwidth': 2.0}, 
+                              {'nbins': 480, 'nrays': 360, 'elangle': 4.0, 'rscale': 500.0, 'rstart': 2000.0, 'beamwidth': 3.0}
                             ]
                            })
 
@@ -337,9 +339,9 @@ class acqva_featuremap_generator_test(unittest.TestCase):
     self.assertEqual(merged, {'longitude': 14.0, 'latitude': 60.0, 'height': 212.0, 'nod': 'seang', 
                             'scans': [
                               {'nbins': 480, 'nrays': 360, 'elangle': 0.5, 'rscale': 500.0, 'rstart': 0.0, 'beamwidth': 1.0}, 
-                              {'nbins': 480, 'nrays': 360, 'elangle': 1.0, 'rscale': 500.0, 'rstart': 1.0, 'beamwidth': 2.0}, 
-                              {'nbins': 480, 'nrays': 360, 'elangle': 1.5, 'rscale': 500.0, 'rstart': 2.0, 'beamwidth': 3.0},
-                              {'nbins': 480, 'nrays': 360, 'elangle': 2.0, 'rscale': 500.0, 'rstart': 1.0, 'beamwidth': 2.0},
-                              {'nbins': 480, 'nrays': 360, 'elangle': 4.0, 'rscale': 500.0, 'rstart': 2.0, 'beamwidth': 3.0}
+                              {'nbins': 480, 'nrays': 360, 'elangle': 1.0, 'rscale': 500.0, 'rstart': 1000.0, 'beamwidth': 2.0}, 
+                              {'nbins': 480, 'nrays': 360, 'elangle': 1.5, 'rscale': 500.0, 'rstart': 2000.0, 'beamwidth': 3.0},
+                              {'nbins': 480, 'nrays': 360, 'elangle': 2.0, 'rscale': 500.0, 'rstart': 1000.0, 'beamwidth': 2.0},
+                              {'nbins': 480, 'nrays': 360, 'elangle': 4.0, 'rscale': 500.0, 'rstart': 2000.0, 'beamwidth': 3.0}
                             ]
                            })

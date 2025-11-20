@@ -1091,7 +1091,7 @@ AcqvaFeatureMapElevation_t* AcqvaFeatureMap_findElevation(AcqvaFeatureMap_t* sel
   ngroups = RaveObjectList_size(self->elevations);
   for (i = 0; result == NULL && i < ngroups; i++) {
     AcqvaFeatureMapElevation_t* group = (AcqvaFeatureMapElevation_t*)RaveObjectList_get(self->elevations, i);
-    if (fabs(group->elangle - elangle) < 1e-4) {
+    if (fabs(group->elangle * 180.0/ M_PI - elangle * 180.0/M_PI) < 1e-1) {
       result = RAVE_OBJECT_COPY(group);
     }
     RAVE_OBJECT_RELEASE(group);
@@ -1123,7 +1123,7 @@ int AcqvaFeatureMapElevation_add(AcqvaFeatureMapElevation_t* self, AcqvaFeatureM
     return 0;
   }
 
-  if (fabs(self->elangle - field->elangle) >= 1e-4) {
+  if (fabs(self->elangle * 180.0/M_PI - field->elangle*180.0/M_PI) >= 1e-1) {
     RAVE_ERROR0("Not same elevation angle");
     return 0;
   }

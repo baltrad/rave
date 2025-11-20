@@ -322,7 +322,7 @@ static int AcqvaCompositeGeneratorFactoryInternal_updateWithFeaturemaps(AcqvaCom
       RaveField_t* qfield = PolarScan_getQualityFieldByHowTask(scan, ACQVA_QUALITY_FIELD_NAME);
       if (qfield == NULL) {
         if (featuremap != NULL) {
-          AcqvaFeatureMapField_t* features = AcqvaFeatureMap_findField(featuremap, PolarScan_getNbins(scan), PolarScan_getNrays(scan), PolarScan_getElangle(scan), PolarScan_getRscale(scan), PolarScan_getRstart(scan), PolarScan_getBeamwidth(scan));
+          AcqvaFeatureMapField_t* features = AcqvaFeatureMap_findField(featuremap, PolarScan_getNbins(scan), PolarScan_getNrays(scan), PolarScan_getElangle(scan), PolarScan_getRscale(scan), PolarScan_getRstart(scan)*1000.0, PolarScan_getBeamwidth(scan));
           if (features != NULL) {
             qfield = AcqvaFeatureMapField_toRaveField(features);
             if (qfield != NULL) {

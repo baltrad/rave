@@ -442,7 +442,7 @@ class acqva_featuremap_generator(object):
         scancfg=[]
         for i in range(nscans):
             scan = volume.getScan(i)
-            scancfg.append({"nbins":scan.nbins, "nrays":scan.nrays, "elangle":round(scan.elangle * 180.0/math.pi, 5), "rscale":round(scan.rscale, 5), "rstart":round(scan.rstart, 5), "beamwidth":round(scan.beamwidth*180.0/math.pi, 5)})
+            scancfg.append({"nbins":scan.nbins, "nrays":scan.nrays, "elangle":round(scan.elangle * 180.0/math.pi, 1), "rscale":round(scan.rscale, 2), "rstart":round(scan.rstart*1000.0, 2), "beamwidth":round(scan.beamwidth*180.0/math.pi, 2)})
         cfg["scans"] = scancfg
 
         return cfg
@@ -452,7 +452,7 @@ class acqva_featuremap_generator(object):
         result = cfg1
         if not math.isclose(cfg1["longitude"], cfg2["longitude"], rel_tol=1e-04) or \
            not math.isclose(cfg1["longitude"], cfg2["longitude"], rel_tol=1e-04) or \
-           not math.isclose(cfg1["height"], cfg2["height"], rel_tol=1e-04) or \
+           not math.isclose(cfg1["height"], cfg2["height"], rel_tol=1e-02) or \
            cfg1["nod"] != cfg2["nod"]:
            raise Exception("Can not merge files with different location")
         for scan in cfg2["scans"]:
