@@ -71,6 +71,7 @@ $(function(){ initResizable(false); });
 <div class="textblock"><code>#include &quot;<a class="el" href="acqvafeaturemap_8h_source.html">acqvafeaturemap.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="rave__data2d_8h_source.html">rave_data2d.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="rave__debug_8h_source.html">rave_debug.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="polarscanparam_8h_source.html">polarscanparam.h</a>&quot;</code><br />
 <code>#include &lt;math.h&gt;</code><br />
 <code>#include &lt;string.h&gt;</code><br />
 <code>#include &quot;<a class="el" href="rave__hlhdf__utilities_8h_source.html">rave_hlhdf_utilities.h</a>&quot;</code><br />
@@ -134,9 +135,21 @@ Functions</h2></td></tr>
 <tr class="memitem:a8fba09b9482647c17fc5b9f0406b1686" id="r_a8fba09b9482647c17fc5b9f0406b1686"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8fba09b9482647c17fc5b9f0406b1686">AcqvaFeatureMap_getEnddate</a> (<a class="el" href="acqvafeaturemap_8h.html#ac774f48a2d5e20330e7d1e27a714178c">AcqvaFeatureMap_t</a> *self)</td></tr>
 <tr class="memdesc:a8fba09b9482647c17fc5b9f0406b1686"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the start date of the period this map represents.  <br /></td></tr>
 <tr class="separator:a8fba09b9482647c17fc5b9f0406b1686"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af4ac31203cf1a369ba5a8333f67043b8" id="r_af4ac31203cf1a369ba5a8333f67043b8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="acqvafeaturemap_8h.html#abfd10f340c781be5230fdda0809ad2c6">AcqvaFeatureMapField_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af4ac31203cf1a369ba5a8333f67043b8">AcqvaFeatureMap_createField</a> (<a class="el" href="acqvafeaturemap_8h.html#ac774f48a2d5e20330e7d1e27a714178c">AcqvaFeatureMap_t</a> *self, long nbins, long nrays, <a class="el" href="rave__types_8h.html#a6e2bc3369b60fb199fa2ff4306eeb423">RaveDataType</a> type, double elangle)</td></tr>
-<tr class="memdesc:af4ac31203cf1a369ba5a8333f67043b8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a field in the feature map with wanted elevation angle and the geometry (nrays, nbins) and the field data is set to 1.  <br /></td></tr>
-<tr class="separator:af4ac31203cf1a369ba5a8333f67043b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aecf037712c251ab4e33f4053cf3ee5be" id="r_aecf037712c251ab4e33f4053cf3ee5be"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aecf037712c251ab4e33f4053cf3ee5be">AcqvaFeatureMap_addAttribute</a> (<a class="el" href="acqvafeaturemap_8h.html#ac774f48a2d5e20330e7d1e27a714178c">AcqvaFeatureMap_t</a> *self, const char *name, <a class="el" href="rave__value_8h.html#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> *value)</td></tr>
+<tr class="memdesc:aecf037712c251ab4e33f4053cf3ee5be"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds an attribute to the feature map.  <br /></td></tr>
+<tr class="separator:aecf037712c251ab4e33f4053cf3ee5be"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5d40ab2f0fe845d65ad351b98b425e19" id="r_a5d40ab2f0fe845d65ad351b98b425e19"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a5d40ab2f0fe845d65ad351b98b425e19">AcqvaFeatureMap_hasAttribute</a> (<a class="el" href="acqvafeaturemap_8h.html#ac774f48a2d5e20330e7d1e27a714178c">AcqvaFeatureMap_t</a> *self, const char *name)</td></tr>
+<tr class="memdesc:a5d40ab2f0fe845d65ad351b98b425e19"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns if the attribute exists in the map or not.  <br /></td></tr>
+<tr class="separator:a5d40ab2f0fe845d65ad351b98b425e19"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae247f0d2e722d904657379ccfc3d62d3" id="r_ae247f0d2e722d904657379ccfc3d62d3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="rave__value_8h.html#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae247f0d2e722d904657379ccfc3d62d3">AcqvaFeatureMap_getAttribute</a> (<a class="el" href="acqvafeaturemap_8h.html#ac774f48a2d5e20330e7d1e27a714178c">AcqvaFeatureMap_t</a> *self, const char *name)</td></tr>
+<tr class="memdesc:ae247f0d2e722d904657379ccfc3d62d3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the name with specified name.  <br /></td></tr>
+<tr class="separator:ae247f0d2e722d904657379ccfc3d62d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acb4b594fbfedeb3c6a922fd8de88f4d7" id="r_acb4b594fbfedeb3c6a922fd8de88f4d7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#acb4b594fbfedeb3c6a922fd8de88f4d7">AcqvaFeatureMap_removeAttribute</a> (<a class="el" href="acqvafeaturemap_8h.html#ac774f48a2d5e20330e7d1e27a714178c">AcqvaFeatureMap_t</a> *self, const char *name)</td></tr>
+<tr class="memdesc:acb4b594fbfedeb3c6a922fd8de88f4d7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reomves the attribute with specified name from map.  <br /></td></tr>
+<tr class="separator:acb4b594fbfedeb3c6a922fd8de88f4d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa4cbe094cedd301986b41348452583c3" id="r_aa4cbe094cedd301986b41348452583c3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="acqvafeaturemap_8h.html#abfd10f340c781be5230fdda0809ad2c6">AcqvaFeatureMapField_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa4cbe094cedd301986b41348452583c3">AcqvaFeatureMap_createField</a> (<a class="el" href="acqvafeaturemap_8h.html#ac774f48a2d5e20330e7d1e27a714178c">AcqvaFeatureMap_t</a> *self, long nbins, long nrays, <a class="el" href="rave__types_8h.html#a6e2bc3369b60fb199fa2ff4306eeb423">RaveDataType</a> type, double elangle, double rscale, double rstart, double beamwidth)</td></tr>
+<tr class="memdesc:aa4cbe094cedd301986b41348452583c3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a field in the feature map with wanted elevation angle and the geometry (nrays, nbins) and the field data is set to 1.  <br /></td></tr>
+<tr class="separator:aa4cbe094cedd301986b41348452583c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab65b5dd617f559e785440875994828fc" id="r_ab65b5dd617f559e785440875994828fc"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab65b5dd617f559e785440875994828fc">AcqvaFeatureMap_addField</a> (<a class="el" href="acqvafeaturemap_8h.html#ac774f48a2d5e20330e7d1e27a714178c">AcqvaFeatureMap_t</a> *self, <a class="el" href="acqvafeaturemap_8h.html#abfd10f340c781be5230fdda0809ad2c6">AcqvaFeatureMapField_t</a> *field)</td></tr>
 <tr class="memdesc:ab65b5dd617f559e785440875994828fc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a field (scan) to the feature map.  <br /></td></tr>
 <tr class="separator:ab65b5dd617f559e785440875994828fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -155,9 +168,9 @@ Functions</h2></td></tr>
 <tr class="memitem:a04eaa5422bd48f6a6048c03c0c22829b" id="r_a04eaa5422bd48f6a6048c03c0c22829b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a04eaa5422bd48f6a6048c03c0c22829b">AcqvaFeatureMap_removeElevation</a> (<a class="el" href="acqvafeaturemap_8h.html#ac774f48a2d5e20330e7d1e27a714178c">AcqvaFeatureMap_t</a> *self, int index)</td></tr>
 <tr class="memdesc:a04eaa5422bd48f6a6048c03c0c22829b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes the elevation group at specified index.  <br /></td></tr>
 <tr class="separator:a04eaa5422bd48f6a6048c03c0c22829b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2fcc942f25fe07446d888fd4df655c6b" id="r_a2fcc942f25fe07446d888fd4df655c6b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="acqvafeaturemap_8h.html#abfd10f340c781be5230fdda0809ad2c6">AcqvaFeatureMapField_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2fcc942f25fe07446d888fd4df655c6b">AcqvaFeatureMap_findField</a> (<a class="el" href="acqvafeaturemap_8h.html#ac774f48a2d5e20330e7d1e27a714178c">AcqvaFeatureMap_t</a> *self, long nbins, long nrays, double elangle)</td></tr>
-<tr class="memdesc:a2fcc942f25fe07446d888fd4df655c6b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Locates a matching field that is very close to elangle &lt; 1e-4 with wanted nrays &amp; nbins.  <br /></td></tr>
-<tr class="separator:a2fcc942f25fe07446d888fd4df655c6b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9646f16e283310c35ab232a65860ab99" id="r_a9646f16e283310c35ab232a65860ab99"><td class="memItemLeft" align="right" valign="top"><a class="el" href="acqvafeaturemap_8h.html#abfd10f340c781be5230fdda0809ad2c6">AcqvaFeatureMapField_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a9646f16e283310c35ab232a65860ab99">AcqvaFeatureMap_findField</a> (<a class="el" href="acqvafeaturemap_8h.html#ac774f48a2d5e20330e7d1e27a714178c">AcqvaFeatureMap_t</a> *self, long nbins, long nrays, double elangle, double rscale, double rstart, double beamwidth)</td></tr>
+<tr class="memdesc:a9646f16e283310c35ab232a65860ab99"><td class="mdescLeft">&#160;</td><td class="mdescRight">Locates a matching field that is very close to elangle &lt; 1e-4 with wanted nrays &amp; nbins.  <br /></td></tr>
+<tr class="separator:a9646f16e283310c35ab232a65860ab99"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a34b403b2fe647ab8c1de38cdc23f2642" id="r_a34b403b2fe647ab8c1de38cdc23f2642"><td class="memItemLeft" align="right" valign="top"><a class="el" href="acqvafeaturemap_8h.html#aef9bcd169e2447aadf1bcb57c9ce719b">AcqvaFeatureMapElevation_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a34b403b2fe647ab8c1de38cdc23f2642">AcqvaFeatureMap_findElevation</a> (<a class="el" href="acqvafeaturemap_8h.html#ac774f48a2d5e20330e7d1e27a714178c">AcqvaFeatureMap_t</a> *self, double elangle)</td></tr>
 <tr class="memdesc:a34b403b2fe647ab8c1de38cdc23f2642"><td class="mdescLeft">&#160;</td><td class="mdescRight">Locates a matching field that is very close to elangle &lt; 1e-4.  <br /></td></tr>
 <tr class="separator:a34b403b2fe647ab8c1de38cdc23f2642"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -179,24 +192,54 @@ Functions</h2></td></tr>
 <tr class="memitem:a1100499f1eb847ab659943cdc4782f5a" id="r_a1100499f1eb847ab659943cdc4782f5a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1100499f1eb847ab659943cdc4782f5a">AcqvaFeatureMapElevation_remove</a> (<a class="el" href="acqvafeaturemap_8h.html#aef9bcd169e2447aadf1bcb57c9ce719b">AcqvaFeatureMapElevation_t</a> *self, int index)</td></tr>
 <tr class="memdesc:a1100499f1eb847ab659943cdc4782f5a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns field at index.  <br /></td></tr>
 <tr class="separator:a1100499f1eb847ab659943cdc4782f5a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aadfc49e1e21e94c289acac5c5d125014" id="r_aadfc49e1e21e94c289acac5c5d125014"><td class="memItemLeft" align="right" valign="top"><a class="el" href="acqvafeaturemap_8h.html#abfd10f340c781be5230fdda0809ad2c6">AcqvaFeatureMapField_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aadfc49e1e21e94c289acac5c5d125014">AcqvaFeatureMapElevation_find</a> (<a class="el" href="acqvafeaturemap_8h.html#aef9bcd169e2447aadf1bcb57c9ce719b">AcqvaFeatureMapElevation_t</a> *self, long nbins, long nrays)</td></tr>
-<tr class="memdesc:aadfc49e1e21e94c289acac5c5d125014"><td class="mdescLeft">&#160;</td><td class="mdescRight">Locates a field that matches the nbins and nrays.  <br /></td></tr>
-<tr class="separator:aadfc49e1e21e94c289acac5c5d125014"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae8dba33dde0a8d416671c8099f961380" id="r_ae8dba33dde0a8d416671c8099f961380"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae8dba33dde0a8d416671c8099f961380">AcqvaFeatureMapElevation_has</a> (<a class="el" href="acqvafeaturemap_8h.html#aef9bcd169e2447aadf1bcb57c9ce719b">AcqvaFeatureMapElevation_t</a> *self, long nbins, long nrays)</td></tr>
-<tr class="memdesc:ae8dba33dde0a8d416671c8099f961380"><td class="mdescLeft">&#160;</td><td class="mdescRight">Locates a field that matches the nbins and nrays and returns true or false depending on if it exists.  <br /></td></tr>
-<tr class="separator:ae8dba33dde0a8d416671c8099f961380"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5755c2564726d7e2bbc02aa4194f53f7" id="r_a5755c2564726d7e2bbc02aa4194f53f7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="acqvafeaturemap_8h.html#abfd10f340c781be5230fdda0809ad2c6">AcqvaFeatureMapField_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a5755c2564726d7e2bbc02aa4194f53f7">AcqvaFeatureMapElevation_find</a> (<a class="el" href="acqvafeaturemap_8h.html#aef9bcd169e2447aadf1bcb57c9ce719b">AcqvaFeatureMapElevation_t</a> *self, long nbins, long nrays, double rscale, double rstart, double beamwidth)</td></tr>
+<tr class="memdesc:a5755c2564726d7e2bbc02aa4194f53f7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Locates a field that matches the nbins and nrays.  <br /></td></tr>
+<tr class="separator:a5755c2564726d7e2bbc02aa4194f53f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3733cdc2a20865dde866086677894ae1" id="r_a3733cdc2a20865dde866086677894ae1"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a3733cdc2a20865dde866086677894ae1">AcqvaFeatureMapElevation_has</a> (<a class="el" href="acqvafeaturemap_8h.html#aef9bcd169e2447aadf1bcb57c9ce719b">AcqvaFeatureMapElevation_t</a> *self, long nbins, long nrays, double rscale, double rstart, double beamwidth)</td></tr>
+<tr class="memdesc:a3733cdc2a20865dde866086677894ae1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Locates a field that matches the nbins and nrays and returns true or false depending on if it exists.  <br /></td></tr>
+<tr class="separator:a3733cdc2a20865dde866086677894ae1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af8d09b68bb34046516fa482294a2222e" id="r_af8d09b68bb34046516fa482294a2222e"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af8d09b68bb34046516fa482294a2222e">AcqvaFeatureMapField_setElangle</a> (<a class="el" href="acqvafeaturemap_8h.html#abfd10f340c781be5230fdda0809ad2c6">AcqvaFeatureMapField_t</a> *self, double elangle)</td></tr>
 <tr class="memdesc:af8d09b68bb34046516fa482294a2222e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the elevation angle for this field.  <br /></td></tr>
 <tr class="separator:af8d09b68bb34046516fa482294a2222e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab52e6f03114554647def846304ada9e8" id="r_ab52e6f03114554647def846304ada9e8"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab52e6f03114554647def846304ada9e8">AcqvaFeatureMapField_getElangle</a> (<a class="el" href="acqvafeaturemap_8h.html#abfd10f340c781be5230fdda0809ad2c6">AcqvaFeatureMapField_t</a> *self)</td></tr>
 <tr class="memdesc:ab52e6f03114554647def846304ada9e8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets the elevation angle for this field.  <br /></td></tr>
 <tr class="separator:ab52e6f03114554647def846304ada9e8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7a120ee1c527714146f3098e13459178" id="r_a7a120ee1c527714146f3098e13459178"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7a120ee1c527714146f3098e13459178">AcqvaFeatureMapField_setRscale</a> (<a class="el" href="acqvafeaturemap_8h.html#abfd10f340c781be5230fdda0809ad2c6">AcqvaFeatureMapField_t</a> *self, double rscale)</td></tr>
+<tr class="memdesc:a7a120ee1c527714146f3098e13459178"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the rscale for this field.  <br /></td></tr>
+<tr class="separator:a7a120ee1c527714146f3098e13459178"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afd1391e89bb9cb1be485c327c196751e" id="r_afd1391e89bb9cb1be485c327c196751e"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#afd1391e89bb9cb1be485c327c196751e">AcqvaFeatureMapField_getRscale</a> (<a class="el" href="acqvafeaturemap_8h.html#abfd10f340c781be5230fdda0809ad2c6">AcqvaFeatureMapField_t</a> *self)</td></tr>
+<tr class="memdesc:afd1391e89bb9cb1be485c327c196751e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets the rscale for this field.  <br /></td></tr>
+<tr class="separator:afd1391e89bb9cb1be485c327c196751e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a07bab7faf8678d20499f42c34d012536" id="r_a07bab7faf8678d20499f42c34d012536"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a07bab7faf8678d20499f42c34d012536">AcqvaFeatureMapField_setRstart</a> (<a class="el" href="acqvafeaturemap_8h.html#abfd10f340c781be5230fdda0809ad2c6">AcqvaFeatureMapField_t</a> *self, double rstart)</td></tr>
+<tr class="memdesc:a07bab7faf8678d20499f42c34d012536"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the rstart for this field.  <br /></td></tr>
+<tr class="separator:a07bab7faf8678d20499f42c34d012536"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa84d57bf5154fdbc29af78ab393a37c3" id="r_aa84d57bf5154fdbc29af78ab393a37c3"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa84d57bf5154fdbc29af78ab393a37c3">AcqvaFeatureMapField_getRstart</a> (<a class="el" href="acqvafeaturemap_8h.html#abfd10f340c781be5230fdda0809ad2c6">AcqvaFeatureMapField_t</a> *self)</td></tr>
+<tr class="memdesc:aa84d57bf5154fdbc29af78ab393a37c3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets the rstart for this field.  <br /></td></tr>
+<tr class="separator:aa84d57bf5154fdbc29af78ab393a37c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a53da3c03903ece1978d1abecee8e6105" id="r_a53da3c03903ece1978d1abecee8e6105"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a53da3c03903ece1978d1abecee8e6105">AcqvaFeatureMapField_setBeamwidth</a> (<a class="el" href="acqvafeaturemap_8h.html#abfd10f340c781be5230fdda0809ad2c6">AcqvaFeatureMapField_t</a> *self, double beamwidth)</td></tr>
+<tr class="memdesc:a53da3c03903ece1978d1abecee8e6105"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the beamwidth in radians.  <br /></td></tr>
+<tr class="separator:a53da3c03903ece1978d1abecee8e6105"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a538004e5abd4ce8372136e05f0faa2cd" id="r_a538004e5abd4ce8372136e05f0faa2cd"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a538004e5abd4ce8372136e05f0faa2cd">AcqvaFeatureMapField_getBeamwidth</a> (<a class="el" href="acqvafeaturemap_8h.html#abfd10f340c781be5230fdda0809ad2c6">AcqvaFeatureMapField_t</a> *self)</td></tr>
+<tr class="memdesc:a538004e5abd4ce8372136e05f0faa2cd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets the beamwidth for this field.  <br /></td></tr>
+<tr class="separator:a538004e5abd4ce8372136e05f0faa2cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad8e9e5f6c0d318b8747ac71247233ae0" id="r_ad8e9e5f6c0d318b8747ac71247233ae0"><td class="memItemLeft" align="right" valign="top">long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad8e9e5f6c0d318b8747ac71247233ae0">AcqvaFeatureMapField_getNbins</a> (<a class="el" href="acqvafeaturemap_8h.html#abfd10f340c781be5230fdda0809ad2c6">AcqvaFeatureMapField_t</a> *self)</td></tr>
 <tr class="separator:ad8e9e5f6c0d318b8747ac71247233ae0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4eaa51e3f2e85a6cc6280c23d72f3641" id="r_a4eaa51e3f2e85a6cc6280c23d72f3641"><td class="memItemLeft" align="right" valign="top">long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4eaa51e3f2e85a6cc6280c23d72f3641">AcqvaFeatureMapField_getNrays</a> (<a class="el" href="acqvafeaturemap_8h.html#abfd10f340c781be5230fdda0809ad2c6">AcqvaFeatureMapField_t</a> *self)</td></tr>
 <tr class="separator:a4eaa51e3f2e85a6cc6280c23d72f3641"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7524ef97aa537ea91e2b869c7502ff39" id="r_a7524ef97aa537ea91e2b869c7502ff39"><td class="memItemLeft" align="right" valign="top"><a class="el" href="rave__types_8h.html#a6e2bc3369b60fb199fa2ff4306eeb423">RaveDataType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7524ef97aa537ea91e2b869c7502ff39">AcqvaFeatureMapField_getDatatype</a> (<a class="el" href="acqvafeaturemap_8h.html#abfd10f340c781be5230fdda0809ad2c6">AcqvaFeatureMapField_t</a> *self)</td></tr>
 <tr class="separator:a7524ef97aa537ea91e2b869c7502ff39"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a72896fec1c35a91ceb56c074c92dad7d" id="r_a72896fec1c35a91ceb56c074c92dad7d"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a72896fec1c35a91ceb56c074c92dad7d">AcqvaFeatureMapField_addAttribute</a> (<a class="el" href="acqvafeaturemap_8h.html#abfd10f340c781be5230fdda0809ad2c6">AcqvaFeatureMapField_t</a> *self, const char *name, <a class="el" href="rave__value_8h.html#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> *value)</td></tr>
+<tr class="memdesc:a72896fec1c35a91ceb56c074c92dad7d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds an attribute to the feature map.  <br /></td></tr>
+<tr class="separator:a72896fec1c35a91ceb56c074c92dad7d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4ae4aa4e44058dd57853163f47a99490" id="r_a4ae4aa4e44058dd57853163f47a99490"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4ae4aa4e44058dd57853163f47a99490">AcqvaFeatureMapField_hasAttribute</a> (<a class="el" href="acqvafeaturemap_8h.html#abfd10f340c781be5230fdda0809ad2c6">AcqvaFeatureMapField_t</a> *self, const char *name)</td></tr>
+<tr class="memdesc:a4ae4aa4e44058dd57853163f47a99490"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns if the attribute exists in the map or not.  <br /></td></tr>
+<tr class="separator:a4ae4aa4e44058dd57853163f47a99490"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac1e93e60e198b9659c8918e8b0fb99a9" id="r_ac1e93e60e198b9659c8918e8b0fb99a9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="rave__value_8h.html#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac1e93e60e198b9659c8918e8b0fb99a9">AcqvaFeatureMapField_getAttribute</a> (<a class="el" href="acqvafeaturemap_8h.html#abfd10f340c781be5230fdda0809ad2c6">AcqvaFeatureMapField_t</a> *self, const char *name)</td></tr>
+<tr class="memdesc:ac1e93e60e198b9659c8918e8b0fb99a9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the name with specified name.  <br /></td></tr>
+<tr class="separator:ac1e93e60e198b9659c8918e8b0fb99a9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a627ff5021ef56a713704ba2c2dcf187b" id="r_a627ff5021ef56a713704ba2c2dcf187b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a627ff5021ef56a713704ba2c2dcf187b">AcqvaFeatureMapField_removeAttribute</a> (<a class="el" href="acqvafeaturemap_8h.html#abfd10f340c781be5230fdda0809ad2c6">AcqvaFeatureMapField_t</a> *self, const char *name)</td></tr>
+<tr class="memdesc:a627ff5021ef56a713704ba2c2dcf187b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reomves the attribute with specified name from map.  <br /></td></tr>
+<tr class="separator:a627ff5021ef56a713704ba2c2dcf187b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af3251637f3dd48d26ba68081a8bdeb7c" id="r_af3251637f3dd48d26ba68081a8bdeb7c"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af3251637f3dd48d26ba68081a8bdeb7c">AcqvaFeatureMapField_createData</a> (<a class="el" href="acqvafeaturemap_8h.html#abfd10f340c781be5230fdda0809ad2c6">AcqvaFeatureMapField_t</a> *self, long nbins, long nrays, <a class="el" href="rave__types_8h.html#a6e2bc3369b60fb199fa2ff4306eeb423">RaveDataType</a> type)</td></tr>
 <tr class="memdesc:af3251637f3dd48d26ba68081a8bdeb7c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a data field with specified geometry and type and will be initialized to 0.  <br /></td></tr>
 <tr class="separator:af3251637f3dd48d26ba68081a8bdeb7c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -215,9 +258,15 @@ Functions</h2></td></tr>
 <tr class="memitem:ad939038e9dc236979568fee3396d3478" id="r_ad939038e9dc236979568fee3396d3478"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad939038e9dc236979568fee3396d3478">AcqvaFeatureMapField_getValue</a> (<a class="el" href="acqvafeaturemap_8h.html#abfd10f340c781be5230fdda0809ad2c6">AcqvaFeatureMapField_t</a> *self, int bin, int ray, double *v)</td></tr>
 <tr class="memdesc:ad939038e9dc236979568fee3396d3478"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets a value from the data field.  <br /></td></tr>
 <tr class="separator:ad939038e9dc236979568fee3396d3478"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acf6b206cee22c85f8bf2d01494c3c411" id="r_acf6b206cee22c85f8bf2d01494c3c411"><td class="memItemLeft" align="right" valign="top"><a class="el" href="acqvafeaturemap_8h.html#abfd10f340c781be5230fdda0809ad2c6">AcqvaFeatureMapField_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#acf6b206cee22c85f8bf2d01494c3c411">AcqvaFeatureMapField_createField</a> (long nbins, long nrays, <a class="el" href="rave__types_8h.html#a6e2bc3369b60fb199fa2ff4306eeb423">RaveDataType</a> type, double elangle)</td></tr>
-<tr class="memdesc:acf6b206cee22c85f8bf2d01494c3c411"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a feature map field with wanted dimensions, type and elangle.  <br /></td></tr>
-<tr class="separator:acf6b206cee22c85f8bf2d01494c3c411"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a94da646d938c3c6fd3df74353649fa9c" id="r_a94da646d938c3c6fd3df74353649fa9c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="rave__field_8h.html#a54b17ce798506570a3d68f25207e3730">RaveField_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a94da646d938c3c6fd3df74353649fa9c">AcqvaFeatureMapField_toRaveField</a> (<a class="el" href="acqvafeaturemap_8h.html#abfd10f340c781be5230fdda0809ad2c6">AcqvaFeatureMapField_t</a> *self)</td></tr>
+<tr class="memdesc:a94da646d938c3c6fd3df74353649fa9c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a rave field from a acqva featuremap field.  <br /></td></tr>
+<tr class="separator:a94da646d938c3c6fd3df74353649fa9c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5c77964f4082bbd7a4ade9b3611a7c77" id="r_a5c77964f4082bbd7a4ade9b3611a7c77"><td class="memItemLeft" align="right" valign="top"><a class="el" href="polarscan_8h.html#ab18af0ebcfc65c3148c7e8bee5455c57">PolarScan_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a5c77964f4082bbd7a4ade9b3611a7c77">AcqvaFeatureMapField_toScan</a> (<a class="el" href="acqvafeaturemap_8h.html#abfd10f340c781be5230fdda0809ad2c6">AcqvaFeatureMapField_t</a> *self, const char *quantity, double lon, double lat, double height)</td></tr>
+<tr class="memdesc:a5c77964f4082bbd7a4ade9b3611a7c77"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a polar scan from a field definition.  <br /></td></tr>
+<tr class="separator:a5c77964f4082bbd7a4ade9b3611a7c77"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6fa27d44be2e0374c4131b59be23f816" id="r_a6fa27d44be2e0374c4131b59be23f816"><td class="memItemLeft" align="right" valign="top"><a class="el" href="acqvafeaturemap_8h.html#abfd10f340c781be5230fdda0809ad2c6">AcqvaFeatureMapField_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a6fa27d44be2e0374c4131b59be23f816">AcqvaFeatureMapField_createField</a> (long nbins, long nrays, <a class="el" href="rave__types_8h.html#a6e2bc3369b60fb199fa2ff4306eeb423">RaveDataType</a> type, double elangle, double rscale, double rstart, double beamwidth)</td></tr>
+<tr class="memdesc:a6fa27d44be2e0374c4131b59be23f816"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a field with wanted elevation angle and the geometry (nrays, nbins) and the field data is set to 1.  <br /></td></tr>
+<tr class="separator:a6fa27d44be2e0374c4131b59be23f816"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
 Variables</h2></td></tr>
@@ -236,6 +285,43 @@ Variables</h2></td></tr>
 <dl class="section author"><dt>Author</dt><dd>Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI) </dd></dl>
 <dl class="section date"><dt>Date</dt><dd>2025-11-11 </dd></dl>
 </div><h2 class="groupheader">Function Documentation</h2>
+<a id="aecf037712c251ab4e33f4053cf3ee5be" name="aecf037712c251ab4e33f4053cf3ee5be"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aecf037712c251ab4e33f4053cf3ee5be">&#9670;&#160;</a></span>AcqvaFeatureMap_addAttribute()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int AcqvaFeatureMap_addAttribute </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="acqvafeaturemap_8h.html#ac774f48a2d5e20330e7d1e27a714178c">AcqvaFeatureMap_t</a> *</td>          <td class="paramname"><span class="paramname"><em>self</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>name</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="rave__value_8h.html#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> *</td>          <td class="paramname"><span class="paramname"><em>value</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Adds an attribute to the feature map. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>- the attribute, must start with how/ </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">value</td><td>- the value to set </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>1 if successful </dd></dl>
+
+</div>
+</div>
 <a id="a8bb009ca723941b5a769270a22bfb001" name="a8bb009ca723941b5a769270a22bfb001"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a8bb009ca723941b5a769270a22bfb001">&#9670;&#160;</a></span>AcqvaFeatureMap_addElevation()</h2>
 
@@ -326,8 +412,8 @@ Variables</h2></td></tr>
 
 </div>
 </div>
-<a id="af4ac31203cf1a369ba5a8333f67043b8" name="af4ac31203cf1a369ba5a8333f67043b8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af4ac31203cf1a369ba5a8333f67043b8">&#9670;&#160;</a></span>AcqvaFeatureMap_createField()</h2>
+<a id="aa4cbe094cedd301986b41348452583c3" name="aa4cbe094cedd301986b41348452583c3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa4cbe094cedd301986b41348452583c3">&#9670;&#160;</a></span>AcqvaFeatureMap_createField()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -355,7 +441,22 @@ Variables</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">double</td>          <td class="paramname"><span class="paramname"><em>elangle</em></span>&#160;)</td>
+          <td class="paramtype">double</td>          <td class="paramname"><span class="paramname"><em>elangle</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double</td>          <td class="paramname"><span class="paramname"><em>rscale</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double</td>          <td class="paramname"><span class="paramname"><em>rstart</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double</td>          <td class="paramname"><span class="paramname"><em>beamwidth</em></span>&#160;)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -367,10 +468,14 @@ Variables</h2></td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">nbins</td><td>- number of bins </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">nrays</td><td>- number of rays </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">type</td><td>- the datatype </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">elangle</td><td>- the elevation angle of the field ®return the field </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">elangle</td><td>- the elevation angle of the field </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">rscale</td><td>- scale of bins in meters </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">rstart</td><td>- rstart in meters </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">beamwidth</td><td>- beamwidth in radians </td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>the field </dd></dl>
 
 </div>
 </div>
@@ -405,8 +510,8 @@ Variables</h2></td></tr>
 
 </div>
 </div>
-<a id="a2fcc942f25fe07446d888fd4df655c6b" name="a2fcc942f25fe07446d888fd4df655c6b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2fcc942f25fe07446d888fd4df655c6b">&#9670;&#160;</a></span>AcqvaFeatureMap_findField()</h2>
+<a id="a9646f16e283310c35ab232a65860ab99" name="a9646f16e283310c35ab232a65860ab99"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9646f16e283310c35ab232a65860ab99">&#9670;&#160;</a></span>AcqvaFeatureMap_findField()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -429,7 +534,22 @@ Variables</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">double</td>          <td class="paramname"><span class="paramname"><em>elangle</em></span>&#160;)</td>
+          <td class="paramtype">double</td>          <td class="paramname"><span class="paramname"><em>elangle</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double</td>          <td class="paramname"><span class="paramname"><em>rscale</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double</td>          <td class="paramname"><span class="paramname"><em>rstart</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double</td>          <td class="paramname"><span class="paramname"><em>beamwidth</em></span>&#160;)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -441,10 +561,44 @@ Variables</h2></td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">nrays</td><td>- number of rays </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">nbins</td><td>- number of bins </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">elangle</td><td>- the elevation angle in radians </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">rscale</td><td>- the rscale, if less than or equal to 0.0 it is not used </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">rstart</td><td>- the rstart, if less than 0.0 it is not used </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">beamwidth</td><td>- the beamwidth, if less than 0.0 it is not used </td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the rave field </dd></dl>
+
+</div>
+</div>
+<a id="ae247f0d2e722d904657379ccfc3d62d3" name="ae247f0d2e722d904657379ccfc3d62d3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae247f0d2e722d904657379ccfc3d62d3">&#9670;&#160;</a></span>AcqvaFeatureMap_getAttribute()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="rave__value_8h.html#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> * AcqvaFeatureMap_getAttribute </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="acqvafeaturemap_8h.html#ac774f48a2d5e20330e7d1e27a714178c">AcqvaFeatureMap_t</a> *</td>          <td class="paramname"><span class="paramname"><em>self</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>name</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Returns the name with specified name. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>- the attribute to look for </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the value if found otherwise NULL </dd></dl>
 
 </div>
 </div>
@@ -661,6 +815,37 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a id="a5d40ab2f0fe845d65ad351b98b425e19" name="a5d40ab2f0fe845d65ad351b98b425e19"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5d40ab2f0fe845d65ad351b98b425e19">&#9670;&#160;</a></span>AcqvaFeatureMap_hasAttribute()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int AcqvaFeatureMap_hasAttribute </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="acqvafeaturemap_8h.html#ac774f48a2d5e20330e7d1e27a714178c">AcqvaFeatureMap_t</a> *</td>          <td class="paramname"><span class="paramname"><em>self</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>name</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Returns if the attribute exists in the map or not. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>- the attribute to look for </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>1 if found, otherwise 0 </dd></dl>
+
+</div>
+</div>
 <a id="a8d7bff4c4fad631e13ce811ab7098126" name="a8d7bff4c4fad631e13ce811ab7098126"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a8d7bff4c4fad631e13ce811ab7098126">&#9670;&#160;</a></span>AcqvaFeatureMap_load()</h2>
 
@@ -684,6 +869,37 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the feature map or NULL on failure </dd></dl>
+
+</div>
+</div>
+<a id="acb4b594fbfedeb3c6a922fd8de88f4d7" name="acb4b594fbfedeb3c6a922fd8de88f4d7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acb4b594fbfedeb3c6a922fd8de88f4d7">&#9670;&#160;</a></span>AcqvaFeatureMap_removeAttribute()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void AcqvaFeatureMap_removeAttribute </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="acqvafeaturemap_8h.html#ac774f48a2d5e20330e7d1e27a714178c">AcqvaFeatureMap_t</a> *</td>          <td class="paramname"><span class="paramname"><em>self</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>name</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Reomves the attribute with specified name from map. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>- the attribute to remove </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>1 on success otherwise 0 </dd></dl>
 
 </div>
 </div>
@@ -962,8 +1178,8 @@ Variables</h2></td></tr>
 
 </div>
 </div>
-<a id="aadfc49e1e21e94c289acac5c5d125014" name="aadfc49e1e21e94c289acac5c5d125014"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aadfc49e1e21e94c289acac5c5d125014">&#9670;&#160;</a></span>AcqvaFeatureMapElevation_find()</h2>
+<a id="a5755c2564726d7e2bbc02aa4194f53f7" name="a5755c2564726d7e2bbc02aa4194f53f7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5755c2564726d7e2bbc02aa4194f53f7">&#9670;&#160;</a></span>AcqvaFeatureMapElevation_find()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -981,7 +1197,22 @@ Variables</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">long</td>          <td class="paramname"><span class="paramname"><em>nrays</em></span>&#160;)</td>
+          <td class="paramtype">long</td>          <td class="paramname"><span class="paramname"><em>nrays</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double</td>          <td class="paramname"><span class="paramname"><em>rscale</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double</td>          <td class="paramname"><span class="paramname"><em>rstart</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double</td>          <td class="paramname"><span class="paramname"><em>beamwidth</em></span>&#160;)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -992,6 +1223,9 @@ Variables</h2></td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">nrays</td><td>- number of rays </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">nbins</td><td>- number of bins </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">rscale</td><td>- the rscale, if less than or equal to 0.0 it is not used </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">rstart</td><td>- the rstart, if less than 0.0 it is not used </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">beamwidth</td><td>- the beamwidth, if less than 0.0 it is not used </td></tr>
   </table>
   </dd>
 </dl>
@@ -1056,8 +1290,8 @@ Variables</h2></td></tr>
 
 </div>
 </div>
-<a id="ae8dba33dde0a8d416671c8099f961380" name="ae8dba33dde0a8d416671c8099f961380"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae8dba33dde0a8d416671c8099f961380">&#9670;&#160;</a></span>AcqvaFeatureMapElevation_has()</h2>
+<a id="a3733cdc2a20865dde866086677894ae1" name="a3733cdc2a20865dde866086677894ae1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3733cdc2a20865dde866086677894ae1">&#9670;&#160;</a></span>AcqvaFeatureMapElevation_has()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1075,7 +1309,22 @@ Variables</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">long</td>          <td class="paramname"><span class="paramname"><em>nrays</em></span>&#160;)</td>
+          <td class="paramtype">long</td>          <td class="paramname"><span class="paramname"><em>nrays</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double</td>          <td class="paramname"><span class="paramname"><em>rscale</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double</td>          <td class="paramname"><span class="paramname"><em>rstart</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double</td>          <td class="paramname"><span class="paramname"><em>beamwidth</em></span>&#160;)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -1086,6 +1335,9 @@ Variables</h2></td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">nrays</td><td>- number of rays </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">nbins</td><td>- number of bins </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">rscale</td><td>- the rscale, if less than or equal to 0.0 it is not used </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">rstart</td><td>- the rstart, if less than 0.0 it is not used </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">beamwidth</td><td>- the beamwidth, if less than 0.0 it is not used </td></tr>
   </table>
   </dd>
 </dl>
@@ -1181,6 +1433,43 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a id="a72896fec1c35a91ceb56c074c92dad7d" name="a72896fec1c35a91ceb56c074c92dad7d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a72896fec1c35a91ceb56c074c92dad7d">&#9670;&#160;</a></span>AcqvaFeatureMapField_addAttribute()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int AcqvaFeatureMapField_addAttribute </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="acqvafeaturemap_8h.html#abfd10f340c781be5230fdda0809ad2c6">AcqvaFeatureMapField_t</a> *</td>          <td class="paramname"><span class="paramname"><em>self</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>name</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="rave__value_8h.html#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> *</td>          <td class="paramname"><span class="paramname"><em>value</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Adds an attribute to the feature map. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>- the attribute, must start with how/ </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">value</td><td>- the value to set </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>1 if successful </dd></dl>
+
+</div>
+</div>
 <a id="af3251637f3dd48d26ba68081a8bdeb7c" name="af3251637f3dd48d26ba68081a8bdeb7c"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#af3251637f3dd48d26ba68081a8bdeb7c">&#9670;&#160;</a></span>AcqvaFeatureMapField_createData()</h2>
 
@@ -1224,8 +1513,8 @@ Variables</h2></td></tr>
 
 </div>
 </div>
-<a id="acf6b206cee22c85f8bf2d01494c3c411" name="acf6b206cee22c85f8bf2d01494c3c411"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#acf6b206cee22c85f8bf2d01494c3c411">&#9670;&#160;</a></span>AcqvaFeatureMapField_createField()</h2>
+<a id="a6fa27d44be2e0374c4131b59be23f816" name="a6fa27d44be2e0374c4131b59be23f816"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6fa27d44be2e0374c4131b59be23f816">&#9670;&#160;</a></span>AcqvaFeatureMapField_createField()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1248,12 +1537,40 @@ Variables</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">double</td>          <td class="paramname"><span class="paramname"><em>elangle</em></span>&#160;)</td>
+          <td class="paramtype">double</td>          <td class="paramname"><span class="paramname"><em>elangle</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double</td>          <td class="paramname"><span class="paramname"><em>rscale</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double</td>          <td class="paramname"><span class="paramname"><em>rstart</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double</td>          <td class="paramname"><span class="paramname"><em>beamwidth</em></span>&#160;)</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>Creates a feature map field with wanted dimensions, type and elangle. </p>
+<p>Creates a field with wanted elevation angle and the geometry (nrays, nbins) and the field data is set to 1. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">nbins</td><td>- number of bins </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nrays</td><td>- number of rays </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">type</td><td>- the datatype </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">elangle</td><td>- the elevation angle of the field </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">rscale</td><td>- scale of bins in meters </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">rstart</td><td>- rstart in meters </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">beamwidth</td><td>- beamwidth in radians </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the field </dd></dl>
 
 </div>
 </div>
@@ -1285,6 +1602,63 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>1 on success otherwise 0 </dd></dl>
+
+</div>
+</div>
+<a id="ac1e93e60e198b9659c8918e8b0fb99a9" name="ac1e93e60e198b9659c8918e8b0fb99a9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac1e93e60e198b9659c8918e8b0fb99a9">&#9670;&#160;</a></span>AcqvaFeatureMapField_getAttribute()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="rave__value_8h.html#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> * AcqvaFeatureMapField_getAttribute </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="acqvafeaturemap_8h.html#abfd10f340c781be5230fdda0809ad2c6">AcqvaFeatureMapField_t</a> *</td>          <td class="paramname"><span class="paramname"><em>self</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>name</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Returns the name with specified name. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>- the attribute to look for </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the value if found otherwise NULL </dd></dl>
+
+</div>
+</div>
+<a id="a538004e5abd4ce8372136e05f0faa2cd" name="a538004e5abd4ce8372136e05f0faa2cd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a538004e5abd4ce8372136e05f0faa2cd">&#9670;&#160;</a></span>AcqvaFeatureMapField_getBeamwidth()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double AcqvaFeatureMapField_getBeamwidth </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="acqvafeaturemap_8h.html#abfd10f340c781be5230fdda0809ad2c6">AcqvaFeatureMapField_t</a> *</td>          <td class="paramname"><span class="paramname"><em>self</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Gets the beamwidth for this field. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the beamwidth in radians </dd></dl>
 
 </div>
 </div>
@@ -1353,7 +1727,7 @@ Variables</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>the elevation angle of this group (in radians) </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>the elevation angle of this field (in radians) </dd></dl>
 
 </div>
 </div>
@@ -1405,6 +1779,58 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a id="afd1391e89bb9cb1be485c327c196751e" name="afd1391e89bb9cb1be485c327c196751e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afd1391e89bb9cb1be485c327c196751e">&#9670;&#160;</a></span>AcqvaFeatureMapField_getRscale()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double AcqvaFeatureMapField_getRscale </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="acqvafeaturemap_8h.html#abfd10f340c781be5230fdda0809ad2c6">AcqvaFeatureMapField_t</a> *</td>          <td class="paramname"><span class="paramname"><em>self</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Gets the rscale for this field. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>ther scale of this field in meters </dd></dl>
+
+</div>
+</div>
+<a id="aa84d57bf5154fdbc29af78ab393a37c3" name="aa84d57bf5154fdbc29af78ab393a37c3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa84d57bf5154fdbc29af78ab393a37c3">&#9670;&#160;</a></span>AcqvaFeatureMapField_getRstart()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double AcqvaFeatureMapField_getRstart </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="acqvafeaturemap_8h.html#abfd10f340c781be5230fdda0809ad2c6">AcqvaFeatureMapField_t</a> *</td>          <td class="paramname"><span class="paramname"><em>self</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Gets the rstart for this field. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>ther rstart of this field in meters </dd></dl>
+
+</div>
+</div>
 <a id="ad939038e9dc236979568fee3396d3478" name="ad939038e9dc236979568fee3396d3478"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ad939038e9dc236979568fee3396d3478">&#9670;&#160;</a></span>AcqvaFeatureMapField_getValue()</h2>
 
@@ -1445,6 +1871,99 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>1 on success otherwise 0 </dd></dl>
+
+</div>
+</div>
+<a id="a4ae4aa4e44058dd57853163f47a99490" name="a4ae4aa4e44058dd57853163f47a99490"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4ae4aa4e44058dd57853163f47a99490">&#9670;&#160;</a></span>AcqvaFeatureMapField_hasAttribute()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int AcqvaFeatureMapField_hasAttribute </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="acqvafeaturemap_8h.html#abfd10f340c781be5230fdda0809ad2c6">AcqvaFeatureMapField_t</a> *</td>          <td class="paramname"><span class="paramname"><em>self</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>name</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Returns if the attribute exists in the map or not. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>- the attribute to look for </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>1 if found, otherwise 0 </dd></dl>
+
+</div>
+</div>
+<a id="a627ff5021ef56a713704ba2c2dcf187b" name="a627ff5021ef56a713704ba2c2dcf187b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a627ff5021ef56a713704ba2c2dcf187b">&#9670;&#160;</a></span>AcqvaFeatureMapField_removeAttribute()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void AcqvaFeatureMapField_removeAttribute </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="acqvafeaturemap_8h.html#abfd10f340c781be5230fdda0809ad2c6">AcqvaFeatureMapField_t</a> *</td>          <td class="paramname"><span class="paramname"><em>self</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>name</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Reomves the attribute with specified name from map. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>- the attribute to remove </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>1 on success otherwise 0 </dd></dl>
+
+</div>
+</div>
+<a id="a53da3c03903ece1978d1abecee8e6105" name="a53da3c03903ece1978d1abecee8e6105"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a53da3c03903ece1978d1abecee8e6105">&#9670;&#160;</a></span>AcqvaFeatureMapField_setBeamwidth()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int AcqvaFeatureMapField_setBeamwidth </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="acqvafeaturemap_8h.html#abfd10f340c781be5230fdda0809ad2c6">AcqvaFeatureMapField_t</a> *</td>          <td class="paramname"><span class="paramname"><em>self</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double</td>          <td class="paramname"><span class="paramname"><em>beamwidth</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Sets the beamwidth in radians. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">beamwidth</td><td>- the beamwidth in radians </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>1 if the rstart is possible to set </dd></dl>
 
 </div>
 </div>
@@ -1517,6 +2036,68 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a id="a7a120ee1c527714146f3098e13459178" name="a7a120ee1c527714146f3098e13459178"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7a120ee1c527714146f3098e13459178">&#9670;&#160;</a></span>AcqvaFeatureMapField_setRscale()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int AcqvaFeatureMapField_setRscale </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="acqvafeaturemap_8h.html#abfd10f340c781be5230fdda0809ad2c6">AcqvaFeatureMapField_t</a> *</td>          <td class="paramname"><span class="paramname"><em>self</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double</td>          <td class="paramname"><span class="paramname"><em>rscale</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Sets the rscale for this field. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">rscale</td><td>- the rscale of the bins in meters </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>1 if the rscale is possible to set </dd></dl>
+
+</div>
+</div>
+<a id="a07bab7faf8678d20499f42c34d012536" name="a07bab7faf8678d20499f42c34d012536"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a07bab7faf8678d20499f42c34d012536">&#9670;&#160;</a></span>AcqvaFeatureMapField_setRstart()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int AcqvaFeatureMapField_setRstart </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="acqvafeaturemap_8h.html#abfd10f340c781be5230fdda0809ad2c6">AcqvaFeatureMapField_t</a> *</td>          <td class="paramname"><span class="paramname"><em>self</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double</td>          <td class="paramname"><span class="paramname"><em>rstart</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Sets the rstart for this field. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">rstart</td><td>- the rstart of the bins in meters </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>1 if the rstart is possible to set </dd></dl>
+
+</div>
+</div>
 <a id="a33d4411444a91891d267d319a788eddf" name="a33d4411444a91891d267d319a788eddf"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a33d4411444a91891d267d319a788eddf">&#9670;&#160;</a></span>AcqvaFeatureMapField_setValue()</h2>
 
@@ -1560,6 +2141,77 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a id="a94da646d938c3c6fd3df74353649fa9c" name="a94da646d938c3c6fd3df74353649fa9c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a94da646d938c3c6fd3df74353649fa9c">&#9670;&#160;</a></span>AcqvaFeatureMapField_toRaveField()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="rave__field_8h.html#a54b17ce798506570a3d68f25207e3730">RaveField_t</a> * AcqvaFeatureMapField_toRaveField </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="acqvafeaturemap_8h.html#abfd10f340c781be5230fdda0809ad2c6">AcqvaFeatureMapField_t</a> *</td>          <td class="paramname"><span class="paramname"><em>self</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Creates a rave field from a acqva featuremap field. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the rave field </dd></dl>
+
+</div>
+</div>
+<a id="a5c77964f4082bbd7a4ade9b3611a7c77" name="a5c77964f4082bbd7a4ade9b3611a7c77"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5c77964f4082bbd7a4ade9b3611a7c77">&#9670;&#160;</a></span>AcqvaFeatureMapField_toScan()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="polarscan_8h.html#ab18af0ebcfc65c3148c7e8bee5455c57">PolarScan_t</a> * AcqvaFeatureMapField_toScan </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="acqvafeaturemap_8h.html#abfd10f340c781be5230fdda0809ad2c6">AcqvaFeatureMapField_t</a> *</td>          <td class="paramname"><span class="paramname"><em>self</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>param</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double</td>          <td class="paramname"><span class="paramname"><em>lon</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double</td>          <td class="paramname"><span class="paramname"><em>lat</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double</td>          <td class="paramname"><span class="paramname"><em>height</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Creates a polar scan from a field definition. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the rave field </dd></dl>
+
+</div>
+</div>
 <h2 class="groupheader">Variable Documentation</h2>
 <a id="a598fbcf8a0fb5c37cb3a773355246e87" name="a598fbcf8a0fb5c37cb3a773355246e87"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a598fbcf8a0fb5c37cb3a773355246e87">&#9670;&#160;</a></span>AcqvaFeatureMap_TYPE</h2>
@@ -1579,7 +2231,7 @@ Variables</h2></td></tr>
 <div class="line">    AcqvaFeatureMap_destructor,</div>
 <div class="line">    AcqvaFeatureMap_copyconstructor</div>
 <div class="line">}</div>
-<div class="ttc" id="aacqvafeaturemap_8h_html_ac774f48a2d5e20330e7d1e27a714178c"><div class="ttname"><a href="acqvafeaturemap_8h.html#ac774f48a2d5e20330e7d1e27a714178c">AcqvaFeatureMap_t</a></div><div class="ttdeci">struct _AcqvaFeatureMap_t AcqvaFeatureMap_t</div><div class="ttdoc">Defines a feature map.</div><div class="ttdef"><b>Definition</b> acqvafeaturemap.h:37</div></div>
+<div class="ttc" id="aacqvafeaturemap_8h_html_ac774f48a2d5e20330e7d1e27a714178c"><div class="ttname"><a href="acqvafeaturemap_8h.html#ac774f48a2d5e20330e7d1e27a714178c">AcqvaFeatureMap_t</a></div><div class="ttdeci">struct _AcqvaFeatureMap_t AcqvaFeatureMap_t</div><div class="ttdoc">Defines a feature map.</div><div class="ttdef"><b>Definition</b> acqvafeaturemap.h:40</div></div>
 </div><!-- fragment -->
 <p>Type definition to use when creating a rave object. </p>
 
@@ -1603,7 +2255,7 @@ Variables</h2></td></tr>
 <div class="line">    AcqvaFeatureMapElevation_destructor,</div>
 <div class="line">    AcqvaFeatureMapElevation_copyconstructor</div>
 <div class="line">}</div>
-<div class="ttc" id="aacqvafeaturemap_8h_html_aef9bcd169e2447aadf1bcb57c9ce719b"><div class="ttname"><a href="acqvafeaturemap_8h.html#aef9bcd169e2447aadf1bcb57c9ce719b">AcqvaFeatureMapElevation_t</a></div><div class="ttdeci">struct _AcqvaFeatureMapElevation_t AcqvaFeatureMapElevation_t</div><div class="ttdoc">Defines a feature map elevation.</div><div class="ttdef"><b>Definition</b> acqvafeaturemap.h:43</div></div>
+<div class="ttc" id="aacqvafeaturemap_8h_html_aef9bcd169e2447aadf1bcb57c9ce719b"><div class="ttname"><a href="acqvafeaturemap_8h.html#aef9bcd169e2447aadf1bcb57c9ce719b">AcqvaFeatureMapElevation_t</a></div><div class="ttdeci">struct _AcqvaFeatureMapElevation_t AcqvaFeatureMapElevation_t</div><div class="ttdoc">Defines a feature map elevation.</div><div class="ttdef"><b>Definition</b> acqvafeaturemap.h:46</div></div>
 </div><!-- fragment -->
 <p>Type definition to use when creating a rave object. </p>
 
@@ -1627,7 +2279,7 @@ Variables</h2></td></tr>
 <div class="line">    AcqvaFeatureMapField_destructor,</div>
 <div class="line">    AcqvaFeatureMapField_copyconstructor</div>
 <div class="line">}</div>
-<div class="ttc" id="aacqvafeaturemap_8h_html_abfd10f340c781be5230fdda0809ad2c6"><div class="ttname"><a href="acqvafeaturemap_8h.html#abfd10f340c781be5230fdda0809ad2c6">AcqvaFeatureMapField_t</a></div><div class="ttdeci">struct _AcqvaFeatureMapField_t AcqvaFeatureMapField_t</div><div class="ttdoc">Defines a feature map field.</div><div class="ttdef"><b>Definition</b> acqvafeaturemap.h:48</div></div>
+<div class="ttc" id="aacqvafeaturemap_8h_html_abfd10f340c781be5230fdda0809ad2c6"><div class="ttname"><a href="acqvafeaturemap_8h.html#abfd10f340c781be5230fdda0809ad2c6">AcqvaFeatureMapField_t</a></div><div class="ttdeci">struct _AcqvaFeatureMapField_t AcqvaFeatureMapField_t</div><div class="ttdoc">Defines a feature map field.</div><div class="ttdef"><b>Definition</b> acqvafeaturemap.h:51</div></div>
 </div><!-- fragment -->
 <p>Type definition to use when creating a rave object. </p>
 
