@@ -63,6 +63,10 @@ struct _AcqvaFeatureMapField_t {
   RaveValue_t* attributes;  /**< the attributes */
 };
 
+#define ELEVATION_PRECISION 1e-2
+#define RANGE_PRECISION 1e-2
+#define BEAMWIDTH_PRECISION 1e-3
+
 /*@{ Private functions */
 /**
  * Constructor.
@@ -1091,7 +1095,7 @@ AcqvaFeatureMapElevation_t* AcqvaFeatureMap_findElevation(AcqvaFeatureMap_t* sel
   ngroups = RaveObjectList_size(self->elevations);
   for (i = 0; result == NULL && i < ngroups; i++) {
     AcqvaFeatureMapElevation_t* group = (AcqvaFeatureMapElevation_t*)RaveObjectList_get(self->elevations, i);
-    if (fabs(group->elangle * 180.0/ M_PI - elangle * 180.0/M_PI) < 1e-1) {
+    if (fabs(group->elangle * 180.0/ M_PI - elangle * 180.0/M_PI) < ELEVATION_PRECISION) {
       result = RAVE_OBJECT_COPY(group);
     }
     RAVE_OBJECT_RELEASE(group);
@@ -1122,8 +1126,7 @@ int AcqvaFeatureMapElevation_add(AcqvaFeatureMapElevation_t* self, AcqvaFeatureM
     RAVE_ERROR0("Must provide a field with data set");
     return 0;
   }
-
-  if (fabs(self->elangle * 180.0/M_PI - field->elangle*180.0/M_PI) >= 1e-1) {
+  if (fabs(self->elangle * 180.0/M_PI - field->elangle*180.0/M_PI) >= ELEVATION_PRECISION) {
     RAVE_ERROR0("Not same elevation angle");
     return 0;
   }
@@ -1171,9 +1174,10 @@ AcqvaFeatureMapField_t* AcqvaFeatureMapElevation_find(AcqvaFeatureMapElevation_t
   nfields = RaveObjectList_size(self->fields);
   for (i = 0; result == NULL && i < nfields; i++) {
     AcqvaFeatureMapField_t* field = (AcqvaFeatureMapField_t*)RaveObjectList_get(self->fields, i);
-    if (field->nbins == nbins && field->nrays == nrays && (rscale <= 0.0 || fabs(rscale - AcqvaFeatureMapField_getRscale(field)) < 1e-4) &&
-        (rstart < 0.0 || fabs(rstart - AcqvaFeatureMapField_getRstart(field)) < 1e-4) &&
-        (beamwidth < 0.0 || fabs(beamwidth - AcqvaFeatureMapField_getBeamwidth(field)) < 1e-4)) {
+    if (field->nbins == nbins && field->nrays == nrays && 
+        (rscale <= 0.0 || fabs(rscale - AcqvaFeatureMapField_getRscale(field)) < RANGE_PRECISION) &&
+        (rstart < 0.0 || fabs(rstart - AcqvaFeatureMapField_getRstart(field)) < RANGE_PRECISION) &&
+        (beamwidth < 0.0 || fabs(beamwidth - AcqvaFeatureMapField_getBeamwidth(field)) < BEAMWIDTH_PRECISION)) {
       result = RAVE_OBJECT_COPY(field);
     }
     RAVE_OBJECT_RELEASE(field);

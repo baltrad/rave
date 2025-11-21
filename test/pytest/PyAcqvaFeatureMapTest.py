@@ -461,6 +461,18 @@ class PyAcqvaFeatureMapTest(unittest.TestCase):
     result = obj.findElevation(0.4)
     self.assertEqual(None, result)
 
+  def test_map_findElevation_precision_test(self):
+    obj = _acqvafeaturemap.map()
+    e1 = obj.createElevation(0.1*math.pi/180.0)
+    e2 = obj.createElevation(0.2*math.pi/180.0)
+    f1 = obj.createField((1,360), _rave.RaveDataType_UCHAR, 0.1*math.pi/180.0, 500.0, 0.0, 1.0)
+    f2 = obj.createField((1,360), _rave.RaveDataType_UCHAR, 0.2*math.pi/180.0, 500.0, 0.0, 1.0)
+    try:
+      f2 = obj.createField((1,360), _rave.RaveDataType_UCHAR, 0.11*math.pi/180.0, 500.0, 0.0, 1.0)
+      self.fail("Expected RuntimeError")
+    except RuntimeError:
+      pass
+
   def test_map_createField(self):
     obj = _acqvafeaturemap.map()
     f1 = obj.createField((1,360), _rave.RaveDataType_UCHAR, 1.0, 500.0, 0.0, 1.0)
@@ -485,6 +497,11 @@ class PyAcqvaFeatureMapTest(unittest.TestCase):
     self.assertAlmostEqual(500.0, obj.getElevation(0).get(0).rscale, 4)
     self.assertAlmostEqual(1.0, obj.getElevation(0).get(1).elangle, 4)
     self.assertAlmostEqual(400.0, obj.getElevation(0).get(1).rscale, 4)
+
+  def test_map_createField_with_close_elangle(self):
+    obj = _acqvafeaturemap.map()
+    f1 = obj.createField((1,360), _rave.RaveDataType_UCHAR, 0.5*math.pi/180.0, 500.0, 0.0, 1.0)
+    f2 = obj.createField((1,360), _rave.RaveDataType_UCHAR, 0.6*math.pi/180.0, 500.0, 0.0, 1.0)
 
   def test_map_findField(self):
     obj = _acqvafeaturemap.map()
