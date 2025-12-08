@@ -28,10 +28,11 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 # <?xml version='1.0' encoding='UTF-8'?>
 # <rave-pgf-composite-quality-registry>
 #   <quality-plugin name="ropo" class="ropo_pgf_composite_quality_plugin" />
-#   <quality-plugin name="compute-pia" class="rave_pia_quality_plugin" />
+#   <quality-plugin name="pia" class="rave_pia_quality_plugin" />
 # </rave-pgf-composite-quality-registry>
 
 ##
+# 
 # @file
 # @author Yngve Einarsson, SMHI
 # @date 2025-10-13
@@ -40,20 +41,49 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 from rave_quality_plugin import rave_quality_plugin
 from rave_quality_plugin import QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY
 from compute_pia import ComputePIA,TASK
+import _polarscan, _polarscanparam, _polarvolume, _pia
 
-import _polarscan, _polarscanparam, _polarvolume
-
+# It is possible to use either native or python implenmentation of the PIA adjustment.
+USE_NATIVE_IMPLEMENTATION=True
 
 class rave_pia_quality_plugin(rave_quality_plugin):
     ##
     # Default constructor
     def __init__(self):
         super(rave_pia_quality_plugin, self).__init__()
+        self._HOWTASK=_pia.getHowTaskName()
+        self._process = self._process_native
+
+        if not USE_NATIVE_IMPLEMENTATION:
+            self._HOWTASK = TASK
+            self._process = self._process_python
 
     ##
     # @return a list containing the string TASK
     def getQualityFields(self):
-        return [TASK]
+        return [self._HOWTASK]
+
+    def _process_native(self, obj, reprocess_quality_flag, quality_control_mode, arguments):
+        """ Process PIA using the Native C implementation
+        """
+        applyPIA = (quality_control_mode == QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY)
+        addPIAParameter=True
+        pia = _pia.new()
+        if obj is not None and _polarvolume.isPolarVolume(obj) or _polarscan.isPolarScan(obj):
+            if _polarvolume.isPolarVolume(obj):
+                for i in range(obj.getNumberOfScans()):
+                    scan = obj.getScan(i)
+                    pia.process(scan, "DBZH", addPIAParameter, reprocess_quality_flag, applyPIA)
+            else:
+                pia.process(scan, "DBZH", addPIAParameter, reprocess_quality_flag, applyPIA)
+        return obj, self.getQualityFields()
+
+    def _process_python(self, obj, reprocess_quality_flag, quality_control_mode, arguments):
+        """ Process PIA using the Python implementation
+        """
+        if obj is not None and _polarvolume.isPolarVolume(obj) or _polarscan.isPolarScan(obj):
+            ComputePIA(obj, "DBZH", True, reprocess_quality_flag, quality_control_mode)
+        return obj, self.getQualityFields()
 
     ##
     # @param obj: A rave object that should be processed.
@@ -67,12 +97,9 @@ class rave_pia_quality_plugin(rave_quality_plugin):
         obj,
         reprocess_quality_flag=True,
         quality_control_mode=QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY,
-        arguments=None,
-    ):
-        # Sanity check
-        if obj is not None and _polarvolume.isPolarVolume(obj) or _polarscan.isPolarScan(obj):
-            ComputePIA(obj, "DBZH", True, reprocess_quality_flag, quality_control_mode)
-        return obj, self.getQualityFields()
+        arguments=None):
+
+        return self._process(obj, reprocess_quality_flag, quality_control_mode, arguments)
 
     ##
     # @return: Nothing for now

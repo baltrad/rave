@@ -40,7 +40,7 @@ RAVESOURCES= polar.c raveutil.c rave_transform.c rave_alloc.c rave_debug.c polar
              proj_wkt_helper.c lazy_nodelist_reader.c lazy_dataset.c acqva.c rave_iocache.c rave_legend.c compositegenerator.c \
 			 compositearguments.c legacycompositegeneratorfactory.c acqvacompositegeneratorfactory.c odim_source.c odim_sources.c \
 			 composite_utils.c compositefilter.c compositefactorymanager.c compositeenginebase.c compositeengineqc.c compositeengine.c compositeenginefunctions.c nearestcompositegeneratorfactory.c rave_value.c \
-			 rave_properties.c acqvafeaturemap.c
+			 rave_properties.c acqvafeaturemap.c ravepia.c
 
 ifeq ($(EXPAT_SUPPRESSED), no)
 RAVESOURCES += arearegistry.c projectionregistry.c rave_simplexml.c 
@@ -65,7 +65,7 @@ INSTALL_HEADERS= polar.h rave_transform.h raveutil.h rave_alloc.h polarvolume.h 
                  proj_wkt_helper.h lazy_nodelist_reader.h lazy_dataset.h rave_proj.h acqva.h rave_iocache.h rave_legend.h \
 				 compositegenerator.h compositearguments.h compositegeneratorfactory.h legacycompositegeneratorfactory.h \
 				 acqvacompositegeneratorfactory.h odim_source.h odim_sources.h composite_utils.h compositefilter.h compositefactorymanager.h compositeenginebase.h compositeengineqc.h compositeengine.h compositeenginefunctions.h nearestcompositegeneratorfactory.h \
-				 rave_value.h rave_properties.h acqvafeaturemap.h
+				 rave_value.h rave_properties.h acqvafeaturemap.h ravepia.h
 
 ifeq ($(EXPAT_SUPPRESSED), no)
 INSTALL_HEADERS+= arearegistry.h projectionregistry.h rave_simplexml.h

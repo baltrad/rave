@@ -307,6 +307,10 @@ SOURCE_59= pyacqvafeaturemap.c
 OBJECTS_59= $(SOURCE_59:.c=.o)
 TARGET_59= _acqvafeaturemap.so
 
+SOURCE_60= pypia.c
+OBJECTS_60= $(SOURCE_60:.c=.o)
+TARGET_60= _pia.so
+
 TARGETS=$(TARGET_1) $(TARGET_2) $(TARGET_3) $(TARGET_4) $(TARGET_5) $(TARGET_6) \
 		$(TARGET_7) $(TARGET_8) $(TARGET_9) $(TARGET_10) $(TARGET_11) $(TARGET_12) $(TARGET_13) \
 		$(TARGET_14) $(TARGET_15) $(TARGET_16) $(TARGET_17) $(TARGET_18) $(TARGET_19) \
@@ -316,7 +320,7 @@ TARGETS=$(TARGET_1) $(TARGET_2) $(TARGET_3) $(TARGET_4) $(TARGET_5) $(TARGET_6) 
 		$(TARGET_39) $(TARGET_40) $(TARGET_41) $(TARGET_42) $(TARGET_43) $(TARGET_44) $(TARGET_45) \
 		$(TARGET_46) $(TARGET_47) $(TARGET_48) $(TARGET_49) $(TARGET_50) $(TARGET_51) \
 		$(TARGET_52) $(TARGET_53) $(TARGET_54) $(TARGET_55) $(TARGET_56) $(TARGET_57) \
-		$(TARGET_58) $(TARGET_59)
+		$(TARGET_58) $(TARGET_59) $(TARGET_60)
 
 INSTALL_HEADERS= pyarea.h \
 				 pycartesian.h \
@@ -359,7 +363,8 @@ INSTALL_HEADERS= pyarea.h \
 				 pycompositefactorymanager.h \
 				 pyravevalue.h \
 				 pyraveproperties.h \
-				 pyacqvafeaturemap.h
+				 pyacqvafeaturemap.h \
+				 pypia.h
 
 ifeq ($(EXPAT_SUPPRESSED), no)
 TARGETS += $(TARGET_22) $(TARGET_23) $(TARGET_32)
@@ -565,6 +570,9 @@ $(TARGET_58): $(DEPDIR) $(OBJECTS_58) ../librave/toolbox/libravetoolbox.so ../li
 $(TARGET_59): $(DEPDIR) $(OBJECTS_59) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_59) $(LDFLAGS) $(LIBRARIES)
 
+$(TARGET_60): $(DEPDIR) $(OBJECTS_60) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
+	$(LDSHARED) -o $@ $(OBJECTS_60) $(LDFLAGS) $(LIBRARIES)
+
 ifeq ($(COMPILE_FOR_PYTHON), yes)
 .PHONY=install
 install:
@@ -668,5 +676,6 @@ endif
 -include $(SOURCE_55:%.c=$(DEPDIR)/%.P)
 -include $(SOURCE_56:%.c=$(DEPDIR)/%.P)
 -include $(SOURCE_57:%.c=$(DEPDIR)/%.P)
--include $(SOURCE_58:%.c=$(DEPDIR)/%.P)
+-include $(SOURCE_58:%.c=$(DEPDIR)/%.P)-include $(SOURCE_59:%.c=$(DEPDIR)/%.P)
 -include $(SOURCE_59:%.c=$(DEPDIR)/%.P)
+-include $(SOURCE_60:%.c=$(DEPDIR)/%.P)
