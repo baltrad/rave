@@ -256,7 +256,7 @@ PolarScanParam_t* RavePIA_createPIAParameter(RavePIA_t* self, PolarScan_t* scan,
   PIA = RavePIA_calculatePIA(self, scan, quantity, outDr);
   if (PIA != NULL) {
     param = RAVE_OBJECT_NEW(&PolarScanParam_TYPE);
-    if (param == NULL || !PolarScanParam_createData(param, nbins, nrays, RaveDataType_SHORT)) {
+    if (param == NULL || !PolarScanParam_createData(param, nbins, nrays, RaveDataType_DOUBLE)) {
       goto fail;
     }
     if (!PolarScanParam_setQuantity(param, "PIA")) {
@@ -350,7 +350,7 @@ int RavePIA_process(RavePIA_t* self, PolarScan_t* scan, const char* quantity, in
         RaveValueType vt = PolarScanParam_getConvertedValue(dbzh, bi, ri, &v);
         if (vt == RaveValueType_DATA) {
           RaveField_getValue(PIA, bi, ri, &pv);
-          PolarScanParam_setValue(dbzh, bi, ri, (v + pv - offset)/gain);
+          PolarScanParam_setValue(dbzh, bi, ri, ((v + pv - offset)/gain));
         }
       }
     }

@@ -143,7 +143,7 @@ class PIAHitschfeldBordan:
         result.nodata = scanparam.nodata                # Might be better to set both nodata and undetect to 0.0 since the PIA field always is calculated and if don't
                                                         # know what to do with a value with should probably add 0.0 anyway.
         result.undetect = scanparam.undetect
-        data = PIA_field / result.gain - result.offset
+        data = (PIA_field - result.offset) / result.gain
         result.setData(data)
         return result
 
@@ -180,7 +180,8 @@ class PIAHitschfeldBordan:
         if quality_control_mode==QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY:
             parameter = scan.getParameter(self._param_name)
             data = parameter.getData()
-            newdata = np.where(datatypes==DATA_TYPE, (data*parameter.gain + parameter.offset + PIA_field)/parameter.gain - parameter.offset, data)
+            datetype = data.dtype
+            newdata = np.where(datatypes==DATA_TYPE, (data*parameter.gain + parameter.offset + PIA_field - parameter.offset)/parameter.gain, data).astype(datetype)
             parameter.setData(newdata)
 
     def createHowTaskArgs(self, co_zk_power, exp_zk_power, PIAMax, dr):

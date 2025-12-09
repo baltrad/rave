@@ -49,12 +49,12 @@ USE_NATIVE_IMPLEMENTATION=True
 class rave_pia_quality_plugin(rave_quality_plugin):
     ##
     # Default constructor
-    def __init__(self):
+    def __init__(self, use_native=USE_NATIVE_IMPLEMENTATION):
         super(rave_pia_quality_plugin, self).__init__()
         self._HOWTASK=_pia.getHowTaskName()
         self._process = self._process_native
 
-        if not USE_NATIVE_IMPLEMENTATION:
+        if not use_native:
             self._HOWTASK = TASK
             self._process = self._process_python
 
@@ -75,7 +75,7 @@ class rave_pia_quality_plugin(rave_quality_plugin):
                     scan = obj.getScan(i)
                     pia.process(scan, "DBZH", addPIAParameter, reprocess_quality_flag, applyPIA)
             else:
-                pia.process(scan, "DBZH", addPIAParameter, reprocess_quality_flag, applyPIA)
+                pia.process(obj, "DBZH", addPIAParameter, reprocess_quality_flag, applyPIA)
         return obj, self.getQualityFields()
 
     def _process_python(self, obj, reprocess_quality_flag, quality_control_mode, arguments):
@@ -98,7 +98,7 @@ class rave_pia_quality_plugin(rave_quality_plugin):
         reprocess_quality_flag=True,
         quality_control_mode=QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY,
         arguments=None):
-
+        print(self._process)
         return self._process(obj, reprocess_quality_flag, quality_control_mode, arguments)
 
     ##

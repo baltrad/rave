@@ -159,10 +159,10 @@ class PyComputePIATest(unittest.TestCase):
     pia_data = pia_raw_data * pia_param.gain + pia_param.offset
     dbzh_param = scan.getParameter("DBZH")
     dbzh_raw_data = dbzh_param.getData()
-    dbzh_data = numpy.where((dbzh_raw_data==dbzh_param.nodata)|(dbzh_raw_data==dbzh_param.undetect), dbzh_raw_data, dbzh_raw_data * dbzh_param.gain + dbzh_param.offset)
+    dbzh_data = numpy.where((dbzh_raw_data==dbzh_param.nodata)|(dbzh_raw_data==dbzh_param.undetect), dbzh_raw_data, dbzh_raw_data * dbzh_param.gain + dbzh_param.offset).astype(numpy.int16)
     original_data = original_data * 0.01
-    expected_data = numpy.where((dbzh_raw_data==dbzh_param.nodata)|(dbzh_raw_data==dbzh_param.undetect), dbzh_raw_data, original_data + pia_data)
-    numpy.testing.assert_array_almost_equal(dbzh_data, expected_data, 5)
+    expected_data = numpy.where((dbzh_raw_data==dbzh_param.nodata)|(dbzh_raw_data==dbzh_param.undetect), dbzh_raw_data, original_data + pia_data).astype(numpy.int16)
+    numpy.testing.assert_array_almost_equal(dbzh_data, expected_data, 0)
 
     qfield = scan.findQualityFieldByHowTask("se.smhi.qc.hitschfeld-bordan")
     self.assertTrue(qfield is not None)

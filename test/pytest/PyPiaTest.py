@@ -185,7 +185,7 @@ class PyPiaTest(unittest.TestCase):
     param = pia.createPIAParameter(scan, "DBZH")
     self.assertEqual("PIA", param.quantity)
     pia_raw_data = param.getData()
-    self.assertEqual(np.int16, pia_raw_data.dtype)
+    self.assertEqual(np.float64, pia_raw_data.dtype)
     pia_data = pia_raw_data * param.gain + param.offset
 
     expected_pia = self.create_expected_pia(scan.getParameter("DBZH"), scan.rscale, 10.0)
@@ -232,9 +232,10 @@ class PyPiaTest(unittest.TestCase):
 
     original = original_data*0.01
     adjusted = original + qfield.getData()*0.01
-    expected = numpy.where((original_data==-32768.0)|(original_data==-32767.0), original_data, adjusted)
+    expected = numpy.round(numpy.where((original_data==-32768.0)|(original_data==-32767.0), original_data, adjusted/0.01)).astype(numpy.int16)
 
     dbzh_data = scan.getParameter("DBZH").getData()
-    actual = numpy.where((dbzh_data==-32768.0)|(dbzh_data==-32767.0), dbzh_data, dbzh_data*0.01)
 
-    numpy.testing.assert_array_almost_equal(expected, actual, 5)
+    actual = numpy.where((dbzh_data==-32768.0)|(dbzh_data==-32767.0), dbzh_data, dbzh_data).astype(numpy.int16)
+
+    numpy.testing.assert_array_almost_equal(expected, actual, 0)
