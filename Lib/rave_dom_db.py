@@ -135,6 +135,7 @@ rave_observation = Table(
 rave_gra_coefficient = Table(
     "rave_gra_coefficient",
     meta,
+    Column("identifier", Text, nullable=False),
     Column("area", Text, nullable=False),
     Column("date", Date, nullable=False),
     Column("time", Time, nullable=False),
@@ -149,21 +150,9 @@ rave_gra_coefficient = Table(
     Column("c", Float, nullable=False),
     Column("mean", Float, nullable=False),
     Column("stddev", Float, nullable=False),
-    PrimaryKeyConstraint("area", "date", "time"),
+    PrimaryKeyConstraint("identifier", "area", "date", "time"),
 )
 
-#                           self.radarvaluetype = rt
-#    self.radarvalue = rv
-#    self.radardistance = rd
-#    self.longitude = longitude
-#    self.latitude = latitude
-#    self.date = date
-#    self.time = time
-#    self.observation = liquid_precipitation
-#    self.accumulation_period = accumulation_period
-#    self.gr = -1
-#    if self.radarvaluetype == _rave.RaveValueType_DATA and self.radarvalue >= 0.1:
-#      self.gr = 10 * log10(self.observation / self.radarvalue)
 rave_grapoint = Table(
     "rave_grapoint",
     meta,
@@ -194,8 +183,6 @@ mapper(wmo_station, rave_wmo_station)
 mapper(observation, rave_observation)
 mapper(melting_layer, rave_melting_layer)
 
-# ,
-#        properties={"datetime" : column_property(sql.functions.concat(rave_observation.c.date,rave_observation.c.time))})
 mapper(gra_coefficient, rave_gra_coefficient)
 mapper(grapoint, rave_grapoint)
 
@@ -378,19 +365,28 @@ class rave_db(object):
             s.commit()
             return no_of_stations
 
-    def get_gra_coefficient(self, dt):
+    def get_gra_coefficient(self, dt, identifier=None):
         with self.get_session() as s:
             q = s.query(gra_coefficient).filter(gra_coefficient.date + gra_coefficient.time >= dt)
+            if identifier:
+                q = q.filter(gra_coefficient.identifier == identifier)
+            else:
+                q = q.filter(gra_coefficient.identifier == '')
             q = q.order_by(asc(gra_coefficient.date)).order_by(asc(gra_coefficient.time))
             return q.first()
 
     ## Return the most recent gra coefficient since dt
     # @param dt: From time when to search for coefficients
-    def get_newest_gra_coefficient(self, dt, dtmax=None):
+    def get_newest_gra_coefficient(self, dt, identifier=None, dtmax=None):
         with self.get_session() as s:
             q = s.query(gra_coefficient).filter(gra_coefficient.date + gra_coefficient.time >= dt)
             if dtmax != None:
                 q = q.filter(gra_coefficient.date + gra_coefficient.time <= dtmax)
+            if identifier:
+                q = q.filter(gra_coefficient.identifier == identifier)
+            else:
+                q = q.filter(gra_coefficient.identifier == '')
+
             q = q.order_by(desc(gra_coefficient.date + gra_coefficient.time))
             return q.first()
 

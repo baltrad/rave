@@ -131,14 +131,11 @@ def get_backup_gra_coefficient(db, maxage):
     )
     return "False", 0, 0, 0.0, "False", 0.0, DEFAULTA, DEFAULTB, DEFAULTC, 0.0, 0.0
 
-
 ## Creates a composite
 # @param files the list of files to be used for generating the composite
 # @param arguments the arguments defining the composite
 # @return a temporary h5 file with the composite
-
-
-def calculate_gra_coefficient(distancefield, interval, adjustmentfile, etime, edate, acrrproduct, db):
+def calculate_gra_coefficient(identifier, distancefield, interval, adjustmentfile, etime, edate, acrrproduct, db):
     mpname = multiprocessing.current_process().name
 
     matcher = obsmatcher.obsmatcher(db)
@@ -153,6 +150,10 @@ def calculate_gra_coefficient(distancefield, interval, adjustmentfile, etime, ed
             f"[{mpname}] rave_pgf_gra_plugin.calculate_gra_coefficient: Matched {len(points)} points between acrr product and observation db"
         )
         db.merge(points)
+    
+    if identifier is None:
+        identifier = "" # We don't want to store nulls as identifier, instead us empty string
+
     d = acrrproduct.date
     t = acrrproduct.time
     tlimit = datetime.datetime(int(d[:4]), int(d[4:6]), int(d[6:8]), int(t[0:2]), int(t[2:4]), int(t[4:6]))
@@ -163,7 +164,7 @@ def calculate_gra_coefficient(distancefield, interval, adjustmentfile, etime, ed
     db.delete_grapoints(dlimit)  # We don't want any points older than 12 hour * MERGETERMS back in time
     points = db.get_grapoints(tlimit)  # Get all gra points newer than interval*MERGETERMS hours back in time
     logger.info(
-        f"[{mpname}] rave_pgf_gra_plugin.calculate_gra_coefficient: Using {len(points)} number of points for calculating the gra coefficients"
+        f"[{mpname}] rave_pgf_gra_plugin.calculate_gra_coefficient [identifier={identifier}]: Using {len(points)} number of points for calculating the gra coefficients"
     )
     generate_backup_coeff = False
     if len(points) > 2:
@@ -198,14 +199,21 @@ def calculate_gra_coefficient(distancefield, interval, adjustmentfile, etime, ed
 
     logger.info(f"[{mpname}] rave_pgf_gra_plugin.calculate_gra_coefficient: Getting NOD source for acrr product")
 
-    # If we come here, store the coefficients in the database so that we can search for them when applying the coefficients
-    NOD = odim_source.NODfromSource(acrrproduct)
-    if not NOD:
-        NOD = ""
+    # Previously this was using NOD but most composite products does not have NOD for the area. Instead they are using CMT field (at least in rave)
+    areaid = ''
+    try:
+        odimsource = odim_source.ODIM_Source(acrrproduct.source)
+        if odimsource.cmt:
+            areaid = odimsource.cmt
+        elif odimsource.nod:
+            areaid = odimsource.nod
+    except:
+        logger.info(f"[{mpname}] rave_pgf_gra_plugin.calculate_gra_coefficient [identifier={identifier}]: Could not identify CMT or NOD in source")
 
-    logger.info(f"[{mpname}] rave_pgf_gra_plugin.calculate_gra_coefficient: Merging gra coefficients")
+    logger.info(f"[{mpname}] rave_pgf_gra_plugin.calculate_gra_coefficient [identifier={identifier}]: Merging gra coefficients")
     grac = gra_coefficient(
-        NOD,
+        identifier,
+        areaid,
         acrrproduct.date,
         acrrproduct.time,
         significant,
@@ -221,7 +229,7 @@ def calculate_gra_coefficient(distancefield, interval, adjustmentfile, etime, ed
         float(dev),
     )
     db.merge(grac)
-    logger.info(f"[{mpname}] rave_pgf_gra_plugin.calculate_gra_coefficient: Coefficients merged")
+    logger.info(f"[{mpname}] rave_pgf_gra_plugin.calculate_gra_coefficient [identifier={identifier}]: Coefficients merged")
 
 
 def generate(files, arguments):
@@ -239,6 +247,7 @@ def generate(files, arguments):
     interval = 12
     N = 13
     adjustmentfile = None
+    identifier = ""
 
     # Accept is the required limit for how many nodata-pixels that are allowed in order for the
     # data to be accumulated
@@ -266,6 +275,11 @@ def generate(files, arguments):
         N = int(args["N"])
     if "adjustmentfile" in args.keys():
         adjustmentfile = args["adjustmentfile"]
+    if "options" in args.keys():
+        options = args["options"].split(",")
+        for o in options:
+            if o.startswith("gra_id:"):
+                identifier = o.replace("gra_id:", "")
 
     if distancefield == "eu.baltrad.composite.quality.distance.radar":
         distancefield = "se.smhi.composite.distance.radar"
@@ -328,14 +342,14 @@ def generate(files, arguments):
 
     try:
         logger.info(f"[{mpname}] rave_pgf_gra_plugin.generate: Calculating gra coefficients")
-        calculate_gra_coefficient(distancefield, interval, adjustmentfile, etime, edate, acrrproduct, db)
+        calculate_gra_coefficient(identifier, distancefield, interval, adjustmentfile, etime, edate, acrrproduct, db)
         logger.info(f"[{mpname}] rave_pgf_gra_plugin.generate: Coefficients calculated")
     except OperationalError as e:
         if "server closed the connection unexpectedly" in e.message:
             logger.warning(
                 f"[{mpname}] rave_pgf_gra_plugin.generate: Got indication that connection reseted at server side, retrying gra coefficient generation"
             )
-            calculate_gra_coefficient(distancefield, interval, adjustmentfile, etime, edate, acrrproduct, db)
+            calculate_gra_coefficient(identifier, distancefield, interval, adjustmentfile, etime, edate, acrrproduct, db)
 
     exectime = int((time.time() - entertime) * 1000)
     logger.info(f"[{mpname}] rave_pgf_gra_plugin.generate: Exit. Coefficients generated in {exectime}.")

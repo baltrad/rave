@@ -129,6 +129,7 @@ class multi_composite_arguments(object):
         self.interpolation_method = _pycomposite.InterpolationMethod_NEAREST
         self.qitotal_field = None
         self.applygra = False
+        self.gra_id = None
         self.zr_A = 200.0
         self.zr_b = 1.6
         self.applygapfilling = False
@@ -173,6 +174,7 @@ class multi_composite_arguments(object):
         comp.interpolation_method = self.interpolation_method
         comp.qitotal_field = self.qitotal_field
         comp.applygra = self.applygra
+        comp.gra_id = self.gra_id
         comp.zr_A = self.zr_A
         comp.zr_b = self.zr_b
         comp.applygapfilling = self.applygapfilling
@@ -396,6 +398,7 @@ class tiled_compositing(object):
         a.interpolation_method = self.compositing.interpolation_method
         a.qitotal_field = self.compositing.qitotal_field
         a.applygra = self.compositing.applygra
+        a.gra_id = self.compositing.gra_id
         a.zr_A = self.compositing.zr_A
         a.zr_b = self.compositing.zr_b
         a.applygapfilling = self.compositing.applygapfilling

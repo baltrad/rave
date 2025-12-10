@@ -117,6 +117,7 @@ class compositing(object):
         self.interpolation_method = _pycomposite.InterpolationMethod_NEAREST
         self.quality_control_mode = rave_quality_plugin.QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY
         self.qitotal_field = None
+        self.gra_id = None
         self.applygra = False
         self.zr_A = 200.0
         self.zr_b = 1.6
@@ -158,6 +159,7 @@ class compositing(object):
             self.logger.debug("Interpolation method = %s" % str(self._interpolation_method_repr()))
             self.logger.debug("Gap filling = %s" % str(self.applygapfilling))
             self.logger.debug("Ct filtering = %s" % str(self.applyctfilter))
+            self.logger.debug("Gra id = %s" % str(self.gra_id))
             self.logger.debug("Gra filtering = %s" % str(self.applygra))
             self.logger.debug("Ignoring malfunc = %s" % str(self.ignore_malfunc))
             self.logger.debug("QI-total field = %s" % self.qitotal_field)
@@ -645,7 +647,7 @@ class compositing(object):
     #
     def get_backup_gra_coefficient(self, db, agedt, nowdt):
         try:
-            coeff = db.get_newest_gra_coefficient(agedt, nowdt)
+            coeff = db.get_newest_gra_coefficient(agedt, nowdt, identifier=self.gra_id)
             if coeff and not math.isnan(coeff.a) and not math.isnan(coeff.b) and not math.isnan(coeff.c):
                 logger.info(
                     f"[{self.mpname}] compositing.get_backup_gra_coefficient: Reusing gra coefficients from {coeff.date} {coeff.time}"
@@ -699,7 +701,7 @@ class compositing(object):
             gra.zrA = zrA
             gra.zrb = zrb
 
-            grac = db.get_gra_coefficient(dt)
+            grac = db.get_gra_coefficient(dt, identifier=self.gra_id)
             if grac != None and not math.isnan(grac.a) and not math.isnan(grac.b) and not math.isnan(grac.c):
                 if self.verbose:
                     self.logger.debug(

@@ -91,7 +91,7 @@ def arglist2dict(arglist):
 # dt - maxage <= found <= dt is located. If none is found, then the climatologic
 # coefficients are used instead.
 #
-def get_backup_gra_coefficient(db, agedt, nowdt):
+def get_backup_gra_coefficient(db, agedt, nowdt, identifier=None):
     try:
         coeff = db.get_newest_gra_coefficient(agedt, nowdt)
         if coeff and not math.isnan(coeff.a) and not math.isnan(coeff.b) and not math.isnan(coeff.c):
@@ -144,6 +144,7 @@ def generate(files, arguments):
     edate = args["date"]
 
     img = None
+    gra_id = None
 
     if "zra" in args.keys():
         zr_a = float(args["zra"])
@@ -164,6 +165,11 @@ def generate(files, arguments):
     if "productid" in args:
         if args["productid"]:
             productid = args["productid"]
+    if "options" in args:
+        options = args["options"].split(",")
+        for o in options:
+            elif o.startswith("gra_id:"):
+                gra_id = o.replace("gra_id:", "")
 
     if distancefield == "eu.baltrad.composite.quality.distance.radar":
         distancefield = "se.smhi.composite.distance.radar"
@@ -254,7 +260,7 @@ def generate(files, arguments):
         gra.zrA = zr_a
         gra.zrb = zr_b
 
-        grac = db.get_gra_coefficient(dt)
+        grac = db.get_gra_coefficient(dt, identifier=gra_id)
         if grac != None and not math.isnan(grac.a) and not math.isnan(grac.b) and not math.isnan(grac.c):
             logger.debug("Using gra coefficients from database, quantity: %s" % quantity)
             gra.A = grac.a
@@ -266,7 +272,7 @@ def generate(files, arguments):
                 int(edate[:4]), int(edate[4:6]), int(edate[6:]), int(etime[:2]), int(etime[2:4]), 0
             )
             agedt = nowdt - datetime.timedelta(seconds=3600 * 48)  # 2 days back
-            sig, pts, loss, r, rsig, corr, gra.A, gra.B, gra.C, mean, dev = get_backup_gra_coefficient(db, agedt, nowdt)
+            sig, pts, loss, r, rsig, corr, gra.A, gra.B, gra.C, mean, dev = get_backup_gra_coefficient(db, agedt, nowdt, identifier=gra_id)
 
         dfield = result.getQualityFieldByHowTask(distancefield)
 
