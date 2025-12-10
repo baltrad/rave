@@ -168,7 +168,7 @@ def generate(files, arguments):
     if "options" in args:
         options = args["options"].split(",")
         for o in options:
-            elif o.startswith("gra_id:"):
+            if o.startswith("gra_id:"):
                 gra_id = o.replace("gra_id:", "")
 
     if distancefield == "eu.baltrad.composite.quality.distance.radar":
