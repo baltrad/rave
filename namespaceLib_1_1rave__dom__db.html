@@ -188,22 +188,23 @@ along with RAVE.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
 <b>Initial value:</b><div class="fragment"><div class="line"><span class="lineno">    1</span>=  Table(</div>
 <div class="line"><span class="lineno">    2</span>    <span class="stringliteral">&quot;rave_gra_coefficient&quot;</span>,</div>
 <div class="line"><span class="lineno">    3</span>    meta,</div>
-<div class="line"><span class="lineno">    4</span>    Column(<span class="stringliteral">&quot;area&quot;</span>, Text, nullable=<span class="keyword">False</span>),</div>
-<div class="line"><span class="lineno">    5</span>    Column(<span class="stringliteral">&quot;date&quot;</span>, Date, nullable=<span class="keyword">False</span>),</div>
-<div class="line"><span class="lineno">    6</span>    Column(<span class="stringliteral">&quot;time&quot;</span>, Time, nullable=<span class="keyword">False</span>),</div>
-<div class="line"><span class="lineno">    7</span>    Column(<span class="stringliteral">&quot;significant&quot;</span>, Text, nullable=<span class="keyword">False</span>),</div>
-<div class="line"><span class="lineno">    8</span>    Column(<span class="stringliteral">&quot;points&quot;</span>, Integer, nullable=<span class="keyword">False</span>),</div>
-<div class="line"><span class="lineno">    9</span>    Column(<span class="stringliteral">&quot;loss&quot;</span>, Integer, nullable=<span class="keyword">False</span>),</div>
-<div class="line"><span class="lineno">   10</span>    Column(<span class="stringliteral">&quot;r&quot;</span>, Float, nullable=<span class="keyword">False</span>),</div>
-<div class="line"><span class="lineno">   11</span>    Column(<span class="stringliteral">&quot;r_significant&quot;</span>, Text, nullable=<span class="keyword">False</span>),</div>
-<div class="line"><span class="lineno">   12</span>    Column(<span class="stringliteral">&quot;corr_coeff&quot;</span>, Float, nullable=<span class="keyword">False</span>),</div>
-<div class="line"><span class="lineno">   13</span>    Column(<span class="stringliteral">&quot;a&quot;</span>, Float, nullable=<span class="keyword">False</span>),</div>
-<div class="line"><span class="lineno">   14</span>    Column(<span class="stringliteral">&quot;b&quot;</span>, Float, nullable=<span class="keyword">False</span>),</div>
-<div class="line"><span class="lineno">   15</span>    Column(<span class="stringliteral">&quot;c&quot;</span>, Float, nullable=<span class="keyword">False</span>),</div>
-<div class="line"><span class="lineno">   16</span>    Column(<span class="stringliteral">&quot;mean&quot;</span>, Float, nullable=<span class="keyword">False</span>),</div>
-<div class="line"><span class="lineno">   17</span>    Column(<span class="stringliteral">&quot;stddev&quot;</span>, Float, nullable=<span class="keyword">False</span>),</div>
-<div class="line"><span class="lineno">   18</span>    PrimaryKeyConstraint(<span class="stringliteral">&quot;area&quot;</span>, <span class="stringliteral">&quot;date&quot;</span>, <span class="stringliteral">&quot;time&quot;</span>),</div>
-<div class="line"><span class="lineno">   19</span>)</div>
+<div class="line"><span class="lineno">    4</span>    Column(<span class="stringliteral">&quot;identifier&quot;</span>, Text, nullable=<span class="keyword">False</span>),</div>
+<div class="line"><span class="lineno">    5</span>    Column(<span class="stringliteral">&quot;area&quot;</span>, Text, nullable=<span class="keyword">False</span>),</div>
+<div class="line"><span class="lineno">    6</span>    Column(<span class="stringliteral">&quot;date&quot;</span>, Date, nullable=<span class="keyword">False</span>),</div>
+<div class="line"><span class="lineno">    7</span>    Column(<span class="stringliteral">&quot;time&quot;</span>, Time, nullable=<span class="keyword">False</span>),</div>
+<div class="line"><span class="lineno">    8</span>    Column(<span class="stringliteral">&quot;significant&quot;</span>, Text, nullable=<span class="keyword">False</span>),</div>
+<div class="line"><span class="lineno">    9</span>    Column(<span class="stringliteral">&quot;points&quot;</span>, Integer, nullable=<span class="keyword">False</span>),</div>
+<div class="line"><span class="lineno">   10</span>    Column(<span class="stringliteral">&quot;loss&quot;</span>, Integer, nullable=<span class="keyword">False</span>),</div>
+<div class="line"><span class="lineno">   11</span>    Column(<span class="stringliteral">&quot;r&quot;</span>, Float, nullable=<span class="keyword">False</span>),</div>
+<div class="line"><span class="lineno">   12</span>    Column(<span class="stringliteral">&quot;r_significant&quot;</span>, Text, nullable=<span class="keyword">False</span>),</div>
+<div class="line"><span class="lineno">   13</span>    Column(<span class="stringliteral">&quot;corr_coeff&quot;</span>, Float, nullable=<span class="keyword">False</span>),</div>
+<div class="line"><span class="lineno">   14</span>    Column(<span class="stringliteral">&quot;a&quot;</span>, Float, nullable=<span class="keyword">False</span>),</div>
+<div class="line"><span class="lineno">   15</span>    Column(<span class="stringliteral">&quot;b&quot;</span>, Float, nullable=<span class="keyword">False</span>),</div>
+<div class="line"><span class="lineno">   16</span>    Column(<span class="stringliteral">&quot;c&quot;</span>, Float, nullable=<span class="keyword">False</span>),</div>
+<div class="line"><span class="lineno">   17</span>    Column(<span class="stringliteral">&quot;mean&quot;</span>, Float, nullable=<span class="keyword">False</span>),</div>
+<div class="line"><span class="lineno">   18</span>    Column(<span class="stringliteral">&quot;stddev&quot;</span>, Float, nullable=<span class="keyword">False</span>),</div>
+<div class="line"><span class="lineno">   19</span>    PrimaryKeyConstraint(<span class="stringliteral">&quot;identifier&quot;</span>, <span class="stringliteral">&quot;area&quot;</span>, <span class="stringliteral">&quot;date&quot;</span>, <span class="stringliteral">&quot;time&quot;</span>),</div>
+<div class="line"><span class="lineno">   20</span>)</div>
 </div><!-- fragment -->
 </div>
 </div>

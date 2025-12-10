@@ -118,12 +118,12 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a2317eaad31a919f6910f697bbcc60e91" id="r_a2317eaad31a919f6910f697bbcc60e91"><td class="memItemLeft" align="right" valign="top"><a id="a2317eaad31a919f6910f697bbcc60e91" name="a2317eaad31a919f6910f697bbcc60e91"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>delete_all_stations</b> (self)</td></tr>
 <tr class="separator:a2317eaad31a919f6910f697bbcc60e91"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad7c06132755157030c82faa8ae4ca279" id="r_ad7c06132755157030c82faa8ae4ca279"><td class="memItemLeft" align="right" valign="top"><a id="ad7c06132755157030c82faa8ae4ca279" name="ad7c06132755157030c82faa8ae4ca279"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>get_gra_coefficient</b> (self, dt)</td></tr>
-<tr class="separator:ad7c06132755157030c82faa8ae4ca279"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad30f137843eb3413d49a53f0ff118812" id="r_ad30f137843eb3413d49a53f0ff118812"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad30f137843eb3413d49a53f0ff118812">get_newest_gra_coefficient</a> (self, dt, dtmax=None)</td></tr>
-<tr class="memdesc:ad30f137843eb3413d49a53f0ff118812"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the most recent gra coefficient since dt.  <br /></td></tr>
-<tr class="separator:ad30f137843eb3413d49a53f0ff118812"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab6e926a506522202f6aff2d2d334ee4a" id="r_ab6e926a506522202f6aff2d2d334ee4a"><td class="memItemLeft" align="right" valign="top"><a id="ab6e926a506522202f6aff2d2d334ee4a" name="ab6e926a506522202f6aff2d2d334ee4a"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>get_gra_coefficient</b> (self, dt, identifier=None)</td></tr>
+<tr class="separator:ab6e926a506522202f6aff2d2d334ee4a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a94439060bed072e7641dcb00bfd0b316" id="r_a94439060bed072e7641dcb00bfd0b316"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a94439060bed072e7641dcb00bfd0b316">get_newest_gra_coefficient</a> (self, dt, identifier=None, dtmax=None)</td></tr>
+<tr class="memdesc:a94439060bed072e7641dcb00bfd0b316"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the most recent gra coefficient since dt.  <br /></td></tr>
+<tr class="separator:a94439060bed072e7641dcb00bfd0b316"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:add4e441321f45518c6a216268bd5bdfd" id="r_add4e441321f45518c6a216268bd5bdfd"><td class="memItemLeft" align="right" valign="top"><a id="add4e441321f45518c6a216268bd5bdfd" name="add4e441321f45518c6a216268bd5bdfd"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>get_grapoints</b> (self, dt, edt=None)</td></tr>
 <tr class="separator:add4e441321f45518c6a216268bd5bdfd"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -236,8 +236,8 @@ Protected Attributes</h2></td></tr>
 <pre class="fragment">get a context managed connection to the database</pre> 
 </div>
 </div>
-<a id="ad30f137843eb3413d49a53f0ff118812" name="ad30f137843eb3413d49a53f0ff118812"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad30f137843eb3413d49a53f0ff118812">&#9670;&#160;</a></span>get_newest_gra_coefficient()</h2>
+<a id="a94439060bed072e7641dcb00bfd0b316" name="a94439060bed072e7641dcb00bfd0b316"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a94439060bed072e7641dcb00bfd0b316">&#9670;&#160;</a></span>get_newest_gra_coefficient()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -251,6 +251,11 @@ Protected Attributes</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>dt</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>identifier</em></span><span class="paramdefsep"> = </span><span class="paramdefval">None</span>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
