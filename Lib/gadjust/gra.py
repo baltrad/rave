@@ -99,8 +99,8 @@ def general_correlation(points):
 
 class gra_coefficient(object):
     def __init__(
-        self, area, date, time, significant, points, loss, r, r_significant, corr_coeff, a, b, c, mean, stddev
-    ):
+        self, identifier, area, date, time, significant, points, loss, r, r_significant, corr_coeff, a, b, c, mean, stddev):
+        self.identifier = identifier
         self.area = area
         self.date = date
         self.time = time
