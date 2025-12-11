@@ -93,7 +93,7 @@ def arglist2dict(arglist):
 #
 def get_backup_gra_coefficient(db, agedt, nowdt, identifier=None):
     try:
-        coeff = db.get_newest_gra_coefficient(agedt, nowdt)
+        coeff = db.get_newest_gra_coefficient(agedt, nowdt, identifier)
         if coeff and not math.isnan(coeff.a) and not math.isnan(coeff.b) and not math.isnan(coeff.c):
             logger.info("Reusing gra coefficients from %s %s" % (coeff.date, coeff.time))
             return (
