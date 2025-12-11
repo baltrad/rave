@@ -241,10 +241,10 @@ PolarScanParam_t* RavePIA_createPIAParameter(RavePIA_t* self, PolarScan_t* scan,
     goto fail;
   }
 
-  gain = PolarScanParam_getGain(dbzhparam);
-  offset = PolarScanParam_getOffset(dbzhparam);
-  nodata = PolarScanParam_getNodata(dbzhparam);
-  undetect = PolarScanParam_getUndetect(dbzhparam);
+  gain = 0.001;
+  offset = 0.0;
+  nodata = 65536.0;
+  undetect = 0.0;
   nbins = PolarScanParam_getNbins(dbzhparam);
   nrays = PolarScanParam_getNrays(dbzhparam);
 
@@ -256,7 +256,7 @@ PolarScanParam_t* RavePIA_createPIAParameter(RavePIA_t* self, PolarScan_t* scan,
   PIA = RavePIA_calculatePIA(self, scan, quantity, outDr);
   if (PIA != NULL) {
     param = RAVE_OBJECT_NEW(&PolarScanParam_TYPE);
-    if (param == NULL || !PolarScanParam_createData(param, nbins, nrays, RaveDataType_DOUBLE)) {
+    if (param == NULL || !PolarScanParam_createData(param, nbins, nrays, RaveDataType_USHORT)) {
       goto fail;
     }
     if (!PolarScanParam_setQuantity(param, "PIA")) {

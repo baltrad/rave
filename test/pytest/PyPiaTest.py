@@ -185,7 +185,7 @@ class PyPiaTest(unittest.TestCase):
     param = pia.createPIAParameter(scan, "DBZH")
     self.assertEqual("PIA", param.quantity)
     pia_raw_data = param.getData()
-    self.assertEqual(np.float64, pia_raw_data.dtype)
+    self.assertEqual(np.uint16, pia_raw_data.dtype)
     pia_data = pia_raw_data * param.gain + param.offset
 
     expected_pia = self.create_expected_pia(scan.getParameter("DBZH"), scan.rscale, 10.0)
@@ -203,7 +203,7 @@ class PyPiaTest(unittest.TestCase):
     param = scan.getParameter("PIA")
     self.assertEqual("PIA", param.quantity)
     self.assertAlmostEqual(0.0, param.offset, 4)
-    self.assertAlmostEqual(0.01, param.gain, 4)
+    self.assertAlmostEqual(0.001, param.gain, 4)
 
     qfield = scan.getQualityFieldByHowTask("se.smhi.qc.hitschfeld-bordan")
     self.assertEqual("se.smhi.qc.hitschfeld-bordan", qfield.getAttribute("how/task"))
@@ -222,7 +222,7 @@ class PyPiaTest(unittest.TestCase):
     param = scan.getParameter("PIA")
     self.assertEqual("PIA", param.quantity)
     self.assertAlmostEqual(0.0, param.offset, 4)
-    self.assertAlmostEqual(0.01, param.gain, 4)
+    self.assertAlmostEqual(0.001, param.gain, 4)
 
     qfield = scan.getQualityFieldByHowTask("se.smhi.qc.hitschfeld-bordan")  # We verified PIA calc in test_create_parameter so we just assume that it is correct
 
@@ -231,7 +231,7 @@ class PyPiaTest(unittest.TestCase):
     numpy.testing.assert_array_almost_equal(param.getData(), qfield.getData(), 5)
 
     original = original_data*0.01
-    adjusted = original + qfield.getData()*0.01
+    adjusted = original + qfield.getData()*0.001
     expected = numpy.round(numpy.where((original_data==-32768.0)|(original_data==-32767.0), original_data, adjusted/0.01)).astype(numpy.int16)
 
     dbzh_data = scan.getParameter("DBZH").getData()
