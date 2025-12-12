@@ -144,6 +144,9 @@ def generate(files, arguments):
                 comp.use_legacy_compositing = False
                 if strategy != "any":
                     comp.strategy = strategy
+            elif o.startswith("gra_id:"):
+                comp.gra_id = o.replace("gra_id:", "")
+
     # if options.gf: Activate gap filling for rule
     #  comp.applygapfilling = True
 
