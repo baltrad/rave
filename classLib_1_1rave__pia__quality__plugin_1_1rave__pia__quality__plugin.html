@@ -82,6 +82,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a7ea29f58750b2b86c983ae9f23ec024a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac71a6dfbc9f50d22948f291af8a03e6a" id="r_ac71a6dfbc9f50d22948f291af8a03e6a"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac71a6dfbc9f50d22948f291af8a03e6a">getQualityFields</a> (self)</td></tr>
 <tr class="separator:ac71a6dfbc9f50d22948f291af8a03e6a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a46787762c80681b87c4c615a68317c13" id="r_a46787762c80681b87c4c615a68317c13"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a46787762c80681b87c4c615a68317c13">load_zk_coefficients</a> (self)</td></tr>
+<tr class="separator:a46787762c80681b87c4c615a68317c13"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9af04cdb43b1302874745c8722a46f32" id="r_a9af04cdb43b1302874745c8722a46f32"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a9af04cdb43b1302874745c8722a46f32">process</a> (self, obj, reprocess_quality_flag=True, quality_control_mode=QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY, arguments=None)</td></tr>
 <tr class="separator:a9af04cdb43b1302874745c8722a46f32"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5b67c64f2f6ec9ebf867fa86308e1438" id="r_a5b67c64f2f6ec9ebf867fa86308e1438"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a5b67c64f2f6ec9ebf867fa86308e1438">algorithm</a> (self)</td></tr>
@@ -106,6 +108,12 @@ Protected Attributes</h2></td></tr>
 <tr class="memitem:a07f99d25309aaf8aa47a73edc96cb67f" id="r_a07f99d25309aaf8aa47a73edc96cb67f"><td class="memItemLeft" align="right" valign="top"><a id="a07f99d25309aaf8aa47a73edc96cb67f" name="a07f99d25309aaf8aa47a73edc96cb67f"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>_process</b> = self._process_native</td></tr>
 <tr class="separator:a07f99d25309aaf8aa47a73edc96cb67f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae40db10756d0d6288c7ec8a3f0634532" id="r_ae40db10756d0d6288c7ec8a3f0634532"><td class="memItemLeft" align="right" valign="top"><a id="ae40db10756d0d6288c7ec8a3f0634532" name="ae40db10756d0d6288c7ec8a3f0634532"></a>
+float&#160;</td><td class="memItemRight" valign="bottom"><b>_coefficient_zk</b> = 7.34e5</td></tr>
+<tr class="separator:ae40db10756d0d6288c7ec8a3f0634532"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0efe589c62017255b4999768e874e59a" id="r_a0efe589c62017255b4999768e874e59a"><td class="memItemLeft" align="right" valign="top"><a id="a0efe589c62017255b4999768e874e59a" name="a0efe589c62017255b4999768e874e59a"></a>
+float&#160;</td><td class="memItemRight" valign="bottom"><b>_exponent_zk</b> = 1.344</td></tr>
+<tr class="separator:a0efe589c62017255b4999768e874e59a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a7ea29f58750b2b86c983ae9f23ec024a" name="a7ea29f58750b2b86c983ae9f23ec024a"></a>
@@ -260,6 +268,24 @@ Protected Attributes</h2></td></tr>
 
 <p>Reimplemented from <a class="el" href="classLib_1_1rave__quality__plugin_1_1rave__quality__plugin.html#aafd021b2e117ca6610118d6adf2321b8">Lib.rave_quality_plugin.rave_quality_plugin</a>.</p>
 
+</div>
+</div>
+<a id="a46787762c80681b87c4c615a68317c13" name="a46787762c80681b87c4c615a68317c13"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a46787762c80681b87c4c615a68317c13">&#9670;&#160;</a></span>load_zk_coefficients()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">Lib.rave_pia_quality_plugin.rave_pia_quality_plugin.load_zk_coefficients </td>
+          <td>(</td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>self</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<pre class="fragment"> Loads the zk coefficients that should be used when applying PIA
+</pre> 
 </div>
 </div>
 <a id="a9af04cdb43b1302874745c8722a46f32" name="a9af04cdb43b1302874745c8722a46f32"></a>
