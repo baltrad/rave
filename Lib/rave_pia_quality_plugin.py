@@ -41,7 +41,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 from rave_quality_plugin import rave_quality_plugin
 from rave_quality_plugin import QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY
 from compute_pia import ComputePIA,TASK
-import _polarscan, _polarscanparam, _polarvolume, _pia
+import _polarscan, _polarscanparam, _polarvolume, _pia, _raveproperties
+from rave_defines import COMPOSITE_GENERATOR_PROPERTY_FILE
 
 # It is possible to use either native or python implenmentation of the PIA adjustment.
 USE_NATIVE_IMPLEMENTATION=True
@@ -53,15 +54,32 @@ class rave_pia_quality_plugin(rave_quality_plugin):
         super(rave_pia_quality_plugin, self).__init__()
         self._HOWTASK=_pia.getHowTaskName()
         self._process = self._process_native
+        self._coefficient_zk = 7.34e5
+        self._exponent_zk = 1.344
 
         if not use_native:
             self._HOWTASK = TASK
             self._process = self._process_python
+        else:
+            self.load_zk_coefficients()
 
     ##
     # @return a list containing the string TASK
     def getQualityFields(self):
         return [self._HOWTASK]
+
+    def load_zk_coefficients(self):
+        """ Loads the zk coefficients that should be used when applying PIA
+        """
+        try:
+            props = _raveproperties.load(COMPOSITE_GENERATOR_PROPERTY_FILE)
+            if props.hasProperty("rave.pia.zk.cofficient") and props.hasProperty("rave.pia.zk.exponent"):
+                zk_c = props.get("rave.pia.zk.cofficient")
+                zk_e = props.get("rave.pia.zk.exponent")
+                self._coefficient_zk = zk_c
+                self._exponent_zk = zk_e
+        except:
+            pass
 
     def _process_native(self, obj, reprocess_quality_flag, quality_control_mode, arguments):
         """ Process PIA using the Native C implementation
@@ -69,6 +87,8 @@ class rave_pia_quality_plugin(rave_quality_plugin):
         applyPIA = (quality_control_mode == QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY)
         addPIAParameter=True
         pia = _pia.new()
+        pia.coeff_zk_power = self._coefficient_zk
+        pia.exp_zk_power = self._exponent_zk
         if obj is not None and _polarvolume.isPolarVolume(obj) or _polarscan.isPolarScan(obj):
             if _polarvolume.isPolarVolume(obj):
                 for i in range(obj.getNumberOfScans()):

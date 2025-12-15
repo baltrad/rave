@@ -11,6 +11,8 @@
     "sella":[200.0, 1.6], 
     "sekrn":[200.0,1.6]
   },
+  "rave.pia.zk.cofficient":6.57e5,
+  "rave.pia.zk.exponent":1.11,
   "odim.sources":"/etc/baltrad/rave/config/odim_source.xml"
 }
 
