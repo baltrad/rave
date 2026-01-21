@@ -25,40 +25,53 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @file
 ## @author Daniel Michelson, SMHI
 ## @date 2013-01-14
-
-import sys, os, time, glob, types
+# Standard python libs:
+import sys
+import os
+import time
+import glob
+import types
 import multiprocessing
+import xml.etree.ElementTree as ET
+
+# Third-party:
+from numpy import zeros, uint8, uint32
+
+# Module/Project:
+from Proj import rd
 import _raveio, _ravefield
 import _polarvolume, _polarscan
 import _pyhl, _odc_hac
 import rave_defines
+from rave_defines import HACDATA_DIRECTORY, HAC_CONFIG_FILE
+
 import odim_source
-from Proj import rd
-from numpy import zeros, uint8, uint32
-import xml.etree.ElementTree as ET
 
 
-HACDATA = rave_defines.RAVEROOT + '/share/hac/data'
-CONFIG_FILE = rave_defines.RAVECONFIG + '/hac_options.xml'
+HACDATA = HACDATA_DIRECTORY
+CONFIG_FILE = HAC_CONFIG_FILE
 
 initialized = 0
 ARGS = {}
 
+
 ## Initializes the ARGS dictionary by reading config from XML file
 def init():
     global initialized
-    if initialized: return
-    
+    if initialized:
+        return
+
     C = ET.parse(CONFIG_FILE)
     OPTIONS = C.getroot()
-    
+
     for site in list(OPTIONS):
         hac = HAC()
-        
-        for k in site.attrib.keys():
-            if   k == "threshold": hac.thresh = float(site.attrib[k])
 
-        ARGS[site.tag] = hac                
+        for k in site.attrib.keys():
+            if k == "threshold":
+                hac.thresh = float(site.attrib[k])
+
+        ARGS[site.tag] = hac
     initialized = 1
 
 
@@ -66,7 +79,6 @@ class HAC:
     def __init__(self):
         self.hac = None
         self.thresh = None
-
 
     ## Creates a HAC. Should be called only after a failed call to \ref readHac
     # @param fstr file string
@@ -80,7 +92,6 @@ class HAC:
         else:
             raise IOError("HAC file already exists: %s" % fstr)
 
-
     ## Reads a HAC HDF5 file and returns the dataset in it.
     # @param fstr file string
     def readHac(self, fstr):
@@ -91,12 +102,10 @@ class HAC:
             nodelist.fetch()
 
             self.hac = _ravefield.new()
-            self.hac.addAttribute("how/count",
-                                  nodelist.getNode("/accumulation_count").data())
+            self.hac.addAttribute("how/count", nodelist.getNode("/accumulation_count").data())
             self.hac.setData(nodelist.getNode("/hit_accum").data())
         else:
             raise IOError("No such HAC file: %s" % fstr)
-
 
     ## Writes a HAC to HDF5.
     # @param fstr file string
@@ -105,22 +114,21 @@ class HAC:
         nodelist = _pyhl.nodelist()
 
         node = _pyhl.node(_pyhl.ATTRIBUTE_ID, "/accumulation_count")
-        node.setScalarValue(-1,self.hac.getAttribute("how/count"),"long",-1)
+        node.setScalarValue(-1, self.hac.getAttribute("how/count"), "long", -1)
         nodelist.addNode(node)
 
         node = _pyhl.node(_pyhl.ATTRIBUTE_ID, "/validity_time_of_last_update")
-        node.setScalarValue(-1,int(time.time()),"long",-1)
+        node.setScalarValue(-1, int(time.time()), "long", -1)
         nodelist.addNode(node)
 
         node = _pyhl.node(_pyhl.DATASET_ID, "/hit_accum")
-        node.setArrayValue(-1,[self.hac.ysize, self.hac.xsize],
-                           self.hac.getData(),"uint",-1)
+        node.setArrayValue(-1, [self.hac.ysize, self.hac.xsize], self.hac.getData(), "uint", -1)
         nodelist.addNode(node)
 
         fcp = _pyhl.filecreationproperty()
         fcp.userblock = 0
-        fcp.sizes = (4,4)
-        fcp.sym_k = (1,1)
+        fcp.sizes = (4, 4)
+        fcp.sym_k = (1, 1)
         fcp.istore_k = 1
         fcp.meta_block_size = 0
 
@@ -129,17 +137,16 @@ class HAC:
             os.makedirs(path)
         nodelist.write(fstr, compression, fcp)
 
-
     ## Performs the filtering
     # @param scan input SCAN object
     # @param param string of the quantity to filter
     # @param enough int lower threshold of the number of hits to accept in order to process
-    def hacFilter(self, scan, quant="DBZH", enough=100):
+    def hacFilter(self, scan, quant="DBZH", enough=100, hacdatafolder=HACDATA):
         NOD = odim_source.NODfromSource(scan)
 
         # If HAC files are missing, then this method will passively fail.
         try:
-            self.readHac(hacFile(scan, lastmonth=True))
+            self.readHac(hacFile(scan, lastmonth=True, hacdatafolder=hacdatafolder))
 
             if self.hac.getAttribute("how/count") < enough:
                 raise ValueError("Not enough hits in climatology for %s" % NOD)
@@ -166,14 +173,12 @@ class HAC:
         except IOError:
             pass
 
-
     ## Increments the HAC with the hits in the current scan.
     # @param scan input SCAN object
     # @param param string of the quantity to filter
-    def hacIncrement(self, scan, quant="DBZH"):
+    def hacIncrement(self, scan, quant="DBZH", hacdatafolder=HACDATA):
         NOD = odim_source.NODfromSource(scan)
-        hacfile = hacFile(scan)
-
+        hacfile = hacFile(scan, hacdatafolder=hacdatafolder)
         try:
             try:
                 self.readHac(hacfile)
@@ -194,25 +199,26 @@ class HAC:
 
 ## Convenience functions
 
+
 ## Takes a year-month string and returns the previous month's equivalent string.
 # @param YYYYMM year-month string
 # @returns year-month string
 def lastMonth(YYYYMM):
-    tt = (int(YYYYMM[:4]), int(YYYYMM[4:6])-1, 1,0,0,0,0,0,-1)
+    tt = (int(YYYYMM[:4]), int(YYYYMM[4:6]) - 1, 1, 0, 0, 0, 0, 0, -1)
     newtt = time.localtime(time.mktime(tt))
     return time.strftime("%Y%m", newtt)
-    
+
 
 ## Derives a file string from the input object.
 # @param scan that must be an individual SCAN. This SCAN's
 # /what/source must contain a valid NOD identifier.
 # @param lastmonth boolean specifying whether to read the previous month's file.
 # @returns string file string
-def hacFile(scan, lastmonth=False):
+def hacFile(scan, lastmonth=False, hacdatafolder=HACDATA):
     NOD = odim_source.NODfromSource(scan)
     CCCC = odim_source.CCCC[NOD]
     RAD = odim_source.RAD[NOD][2:]
-    elangle = str(int(round(scan.elangle * rd * 10)*10)).zfill(5)
+    elangle = str(int(round(scan.elangle * rd * 10) * 10)).zfill(5)
     rays = str(scan.nrays).zfill(4)
     bins = str(scan.nbins).zfill(4)
 
@@ -220,68 +226,66 @@ def hacFile(scan, lastmonth=False):
     if lastmonth == True:
         YYYYMM = lastMonth(YYYYMM)
 
-    return HACDATA + "/%s_%s_%s_%s_%sx%s_hit-accum.hdf" % (YYYYMM, CCCC,
-                                                           RAD, elangle,
-                                                           rays, bins)
+    return hacdatafolder + "/%s_%s_%s_%s_%sx%s_hit-accum.hdf" % (YYYYMM, CCCC, RAD, elangle, rays, bins)
 
 
 ## Increments the HAC file(s) for the given object
 # @param obj input SCAN or PVOL, can also be a file string
-def hacIncrement(obj, quant="DBZH"):
+def hacIncrement(obj, quant="DBZH", hacdatafolder=HACDATA):
     if _polarvolume.isPolarVolume(obj):
-        incrementPvol(obj, quant)
+        incrementPvol(obj, quant, hacdatafolder)
     elif _polarscan.isPolarScan(obj):
-        incrementScan(obj, quant)
+        incrementScan(obj, quant, hacdatafolder)
     elif type(obj) == types.StringType:
         if os.path.isfile(obj) and os.path.getsize(obj):
             obj = _raveio.open(obj).object
-            hacIncrement(obj)
+            hacIncrement(obj, quant, hacdatafolder)
         else:
             raise TypeError("HAC incrementor received a string without a matching file, or file is empty")
     else:
         raise TypeError("HAC incrementor received neither SCAN nor PVOL as input object")
-    
+
 
 ## Increments the HAC file for this scan. We will assume we only want to deal with DBZH.
 # @param scan polar scan object
-def incrementScan(scan, quant="DBZH"):
+def incrementScan(scan, quant="DBZH", hacdatafolder=HACDATA):
     hac = HAC()
-    hac.hacIncrement(scan, quant)
+    hac.hacIncrement(scan, quant, hacdatafolder=hacdatafolder)
 
 
 ## Increments all the HAC files for the scans in a volume, assuming we only wanty to deal with DBZH.
 # @param pvol polar volume object
-def incrementPvol(pvol, quant="DBZH"):
+def incrementPvol(pvol, quant="DBZH", hacdatafolder=HACDATA):
     for i in range(pvol.getNumberOfScans()):
         scan = pvol.getScan(i)
-        incrementScan(scan, quant)
+        incrementScan(scan, quant, hacdatafolder)
 
 
 ## Filters the given object
 # @param obj input SCAN or PVOL
-def hacFilter(obj, quant="DBZH"):
+def hacFilter(obj, quant="DBZH", hacdatafolder=HACDATA):
     if _polarvolume.isPolarVolume(obj):
-        filterPvol(obj, quant)
+        filterPvol(obj, quant, hacdatafolder)
     elif _polarscan.isPolarScan(obj):
-        filterScan(obj, quant)
+        filterScan(obj, quant, hacdatafolder)
     else:
         raise TypeError("HAC filter received neither SCAN nor PVOL as input")
 
 
 ## Filters this scan. We will assume we only want to deal with DBZH.
 # @param scan polar scan object
-def filterScan(scan, quant="DBZH"):
+def filterScan(scan, quant="DBZH", hacdatafolder=HACDATA):
     hac = HAC()
-    hac.hacFilter(scan, quant)
+    hac.hacFilter(scan, quant, hacdatafolder=hacdatafolder)
 
 
 ## Filters this scan. We will assume we only want to deal with DBZH.
 # @param scan polar scan object
-def filterPvol(pvol, quant="DBZH"):
+def filterPvol(pvol, quant="DBZH", hacdatafolder=HACDATA):
     hac = HAC()
     for i in range(pvol.getNumberOfScans()):
         scan = pvol.getScan(i)
-        hac.hacFilter(scan, quant)
+        hac.hacFilter(scan, quant, hacdatafolder=hacdatafolder)
 
 
 ## Multiprocesses the incrementation
@@ -298,20 +302,21 @@ def multi_increment(fstrs, procs=None):
 
 ## Odds and ends below
 
+
 ## Z-diff quality indicator. Takes the difference between uncorrected and corrected reflectivities
 #  and derives a quality indicator out of it. The threshold is the maximum difference in dBZ
 #  giving the equivalent of zero quality.
-# @param scan Polar scan 
-# @param thresh float maximum Z-diff allowed 
+# @param scan Polar scan
+# @param thresh float maximum Z-diff allowed
 def zdiffScan(scan, thresh=40.0):
     if _polarscan.isPolarScan(scan):
         if not scan.hasParameter("DBZH") or not scan.hasParameter("TH"):
-          return 
+            return
         qind = _ravefield.new()
-        qind.setData(zeros((scan.nrays,scan.nbins), uint8))
+        qind.setData(zeros((scan.nrays, scan.nbins), uint8))
         qind.addAttribute("how/task", "eu.opera.odc.zdiff")
         qind.addAttribute("how/task_args", thresh)
-        qind.addAttribute("what/gain", 1/255.0)
+        qind.addAttribute("what/gain", 1 / 255.0)
         qind.addAttribute("what/offset", 0.0)
         scan.addQualityField(qind)
 
@@ -319,7 +324,7 @@ def zdiffScan(scan, thresh=40.0):
     else:
         raise TypeError("Input is expected to be a polar scan. Got something else.")
 
-    
+
 def zdiffPvol(pvol, thresh=40.0):
     if _polarvolume.isPolarVolume(pvol):
         for i in range(pvol.getNumberOfScans()):
@@ -328,13 +333,15 @@ def zdiffPvol(pvol, thresh=40.0):
     else:
         raise TypeError("Input is expected to be a polar volume. Got something else.")
 
+
 def zdiff(obj, thresh=40.0):
-  if _polarscan.isPolarScan(obj):
-    zdiffScan(obj, thresh)
-  elif _polarvolume.isPolarVolume(obj):
-    zdiffPvol(obj, thresh)
-  else:
-    raise TypeError("Input is expected to be a polar volume or scan") 
+    if _polarscan.isPolarScan(obj):
+        zdiffScan(obj, thresh)
+    elif _polarvolume.isPolarVolume(obj):
+        zdiffPvol(obj, thresh)
+    else:
+        raise TypeError("Input is expected to be a polar volume or scan")
+
 
 ## Initialize
 init()

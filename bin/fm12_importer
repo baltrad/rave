@@ -23,206 +23,229 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @author Anders Henja, SMHI
 ## @date 2013-11-08
 
-import sys, getopt, os, logging, logging.handlers
-from rave_dom import observation
-import fm12_importer
+# Standard python libs:
+import getopt
+import logging
+import logging.handlers
+import os
+import sys
+
+# Third-party:
 import pyinotify
+
+# Module/Project:
+import fm12_importer
+from rave_dom import observation
 
 MASK = pyinotify.IN_CLOSE_WRITE | pyinotify.IN_MOVED_TO
 
 sys.path.append(os.path.abspath(__file__))
 
-def Usage(brief=True,doexit=False):
-  print("Imports the fm12 synop observations into the rave observation database.")
-  print("Usage: %s [--monitored=<path>] [--uri=<pgsqluri>] [--conf=<conffile> ")
-  print("          [--uriproperty=<propname>]] [--file=<fm12 file>] ")
-  print("          [--logfile=<logfile>] [--verbose] ")
-  print("          [--janitor] [--catchup]")
-  print("          daemon | import | kill")
-  if brief == False:
-    print("  --uri=<pgsqluri> The postgresql uri to the dbhost. ")
-    print("        Default value [postgresql://baltrad:baltrad@127.0.0.1/baltrad]")
-    print("  --conf=<conffile> The configuration file containing the pgsql uri in a property. Used together with --uriproperty.")
-    print("        Default value [None]")
-    print("  --uriproperty=<propname>. If a configuration file has been specified, you can define what property that is containing the dburi.")
-    print("        Default value [rave.db.uri].")
-    print("  --file=<fm12 file> The fm12 defined synop file to import if not --monitored=<..> has been specified.")
-    print("  --logfile=<log file> The file that log messages should be written to")
-    print("  --verbose Print a more verbose debug information")
-    print("  --pidfile=<pidfile> The process id file. Default [./fm12_importer.pid]")
-    print("  --suffix=<suffix> Specifies a synop file-suffix for the files to handle at the monitored path. Files that does not have this suffix will be ignored.")
-    print("        If no suffix is provided, files with any type of suffix in the monitored directory will be handled.")
-    print("  --monitored=<path> a path to be monitored for synop files. [Default: None]")
-    print("  --janitor Remove files that arrive in the input directory.")
-    print("  --catchup Process all files that have collected in the input directory. Otherwise only act on new files arriving.")
-    print("")
-    print("  import - Will import the specified file (Requires --file=<file name>)")
-    print("  daemon - If the program should be run as a daemon. (Requires --monitored=<path>)")
-    print("  kill - Tries to kill a running daemon.")
+
+def Usage(brief=True, doexit=False):
+    print("Imports the fm12 synop observations into the rave observation database.")
+    print("Usage: %s [--monitored=<path>] [--uri=<pgsqluri>] [--conf=<conffile> ")
+    print("          [--uriproperty=<propname>]] [--file=<fm12 file>] ")
+    print("          [--logfile=<logfile>] [--verbose] ")
+    print("          [--janitor] [--catchup]")
+    print("          daemon | import | kill")
     
-  if doexit:
-    import sys
-    sys.exit(0)
+    # fmt: off
+    if brief == False:
+        print("  --uri=<pgsqluri> The postgresql uri to the dbhost. ")
+        print("        Default value [postgresql://baltrad:baltrad@127.0.0.1/baltrad]")
+        print("  --conf=<conffile> The configuration file containing the pgsql uri in a property. Used together with --uriproperty.")
+        print("        Default value [None]")
+        print("  --uriproperty=<propname>. If a configuration file has been specified, you can define what property that is containing the dburi.")
+        print("        Default value [rave.db.uri].")
+        print("  --file=<fm12 file> The fm12 defined synop file to import if not --monitored=<..> has been specified.")
+        print("  --logfile=<log file> The file that log messages should be written to")
+        print("  --verbose Print a more verbose debug information")
+        print("  --pidfile=<pidfile> The process id file. Default [./fm12_importer.pid]")
+        print("  --suffix=<suffix> Specifies a synop file-suffix for the files to handle at the monitored path. Files that does not have this suffix will be ignored.")
+        print("        If no suffix is provided, files with any type of suffix in the monitored directory will be handled.")
+        print("  --monitored=<path> a path to be monitored for synop files. [Default: None]")
+        print("  --janitor Remove files that arrive in the input directory.")
+        print("  --catchup Process all files that have collected in the input directory. Otherwise only act on new files arriving.")
+        print("")
+        print("  import - Will import the specified file (Requires --file=<file name>)")
+        print("  daemon - If the program should be run as a daemon. (Requires --monitored=<path>)")
+        print("  kill - Tries to kill a running daemon.")
+    
+    # fmt: on
+    if doexit:
+        import sys
+        
+        sys.exit(0)
+
 
 def init_logger(logger, logfile, loglevel, daemon):
-  logger.setLevel(loglevel)
-  if not daemon:
-    logger.addHandler(logging.StreamHandler(sys.stdout))
+    logger.setLevel(loglevel)
+    if not daemon:
+        logger.addHandler(logging.StreamHandler(sys.stdout))
     
-  if logfile != None:
-    handler = logging.handlers.RotatingFileHandler(logfile,
-                                                   maxBytes = 5000000,
-                                                   backupCount = 5)
-    formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s',
-                                  '%Y-%m-%d %H:%M:%S %Z')
-    handler.setFormatter(formatter)
-    
-    logger.addHandler(handler)
+    if logfile != None:
+        handler = logging.handlers.RotatingFileHandler(logfile, maxBytes=5000000, backupCount=5)
+        formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s', '%Y-%m-%d %H:%M:%S %Z')
+        handler.setFormatter(formatter)
+        
+        logger.addHandler(handler)
+
 
 # This class, and especially its method, overrides the default process
 # in (py)inotify
 class NotifierListener(pyinotify.ProcessEvent):
-  ## Initializer
-  # @param options variable options list
-  def __init__(self, importer, logger=None, suffix=None):
-    self.importer = importer
-    self.logger = logger
-    self.suffix = suffix
-    if self.suffix:
-      self.suffix = self.suffix.lstrip('.')
+    ## Initializer
+    # @param options variable options list
+    def __init__(self, importer, logger=None, suffix=None):
+        self.importer = importer
+        self.logger = logger
+        self.suffix = suffix
+        if self.suffix:
+            self.suffix = self.suffix.lstrip('.')
+    
+    ## Inherited from pyinotify. Reacts on when file is created and written
+    # @param event object containing a path, probably ...
+    def process_IN_CLOSE_WRITE(self, event):
+        if self.logger != None:
+            self.logger.debug("process_IN_CLOSE_WRITE")
+        if event.pathname != None and not os.path.basename(event.pathname).startswith("."):
+            if not suffix or event.pathname.endswith("." + self.suffix):
+                self.logger.info("IN_CLOSE_WRITE: Importing file %s" % event.pathname)
+                self.importer.import_file(event.pathname)
+    
+    ## Inherited from pyinotify. Reacts on renaming.
+    # @param event object containg path
+    def process_IN_MOVED_TO(self, event):
+        if self.logger != None:
+            self.logger.debug("process_IN_MOVED_TO")
+        if event.pathname != None and not os.path.basename(event.pathname).startswith("."):
+            if not suffix or event.pathname.endswith("." + self.suffix):
+                self.logger.info("IN_MOVED_TO: Importing file %s" % event.pathname)
+                self.importer.import_file(event.pathname)
 
-  ## Inherited from pyinotify. Reacts on when file is created and written
-  # @param event object containing a path, probably ...
-  def process_IN_CLOSE_WRITE(self, event):
-    if self.logger != None:
-      self.logger.debug("process_IN_CLOSE_WRITE")
-    if event.pathname != None and not os.path.basename(event.pathname).startswith("."):
-      if not suffix or event.pathname.endswith("." + self.suffix):
-        self.logger.info("IN_CLOSE_WRITE: Importing file %s"%event.pathname)
-        self.importer.import_file(event.pathname)
-
-  ## Inherited from pyinotify. Reacts on renaming.
-  # @param event object containg path
-  def process_IN_MOVED_TO(self, event):
-    if self.logger != None:
-      self.logger.debug("process_IN_MOVED_TO")
-    if event.pathname != None and not os.path.basename(event.pathname).startswith("."):
-      if not suffix or event.pathname.endswith("." + self.suffix):
-        self.logger.info("IN_MOVED_TO: Importing file %s"%event.pathname)
-        self.importer.import_file(event.pathname)
 
 if __name__ == "__main__":
-  optlist = []
-  args = []
-  try:
-    optlist, args = getopt.getopt(sys.argv[1:], '', 
-                                  ['uri=',
-                                   'conf=','uriproperty=',
-                                   'file=', 
-                                   'logfile=','verbose',
-                                   'pidfile=', 'suffix=', 
-                                   'monitored=',
-                                   'janitor','catchup', 
-                                   'help'])
-  except getopt.GetoptError as e:
-    Usage(True, e.__str__())
-    sys.exit(127)
-  
-  dburi="postgresql://baltrad:baltrad@127.0.0.1/baltrad"
-  cfgfile=None
-  uriproperty="rave.db.uri"
-  fname=None
-  logfile=None
-  pidfile="/tmp/fm12_importer.pid"
-  suffix=None
-  monitored_dir=None
-  runasdaemon=False
-  janitor=False
-  catchup=False
-  loglvl = logging.INFO
-  
-  for o, a in optlist:
-    if o == "--uri":
-      dburi=a
-    elif o == "--conf":
-      cfgfile = a
-    elif o == "--uriproperty":
-      uriproperty = a
-    elif o == "--conf":
-      cfgfile = a
-    elif o == "--file":
-      fname=a
-    elif o == "--logfile":
-      logfile = a
-    elif o == "--monitored":
-      monitored_dir=a
-    elif o == "--verbose":
-      loglvl = logging.DEBUG
-    elif o == "--janitor":
-      janitor = True
-    elif o == "--catchup":
-      catchup = True
-    elif o == "--pidfile":
-      pidfile = a
-    elif o == "--suffix":
-      suffix = a
-    elif o == "--help":
-      Usage(False,True)
-    else:
-      Usage(True,True)
-  
-  if len(args) <= 0:
-    Usage(True, True)
-
-  if not os.path.isabs(pidfile):
-    print("pidfile must be defined with an absolute path")
-    sys.exit()
-  
-  if cfgfile != None:
-    dburi = fm12_importer.get_dburi_from_conf(cfgfile, uriproperty)
-
-  if len(args) > 0 and args[0] == "daemon":
-    runasdaemon = True
-
-  ## Setup the logging fascility
-  logger = logging.getLogger("fm12_importer")
-  if runasdaemon:
-    logger = pyinotify.log
-  init_logger(logger, logfile, loglvl, runasdaemon)
-  
-  importer = fm12_importer.fm12_importer(dburi, monitored_dir, pidfile)
-  importer.set_logger(logger)
-  
-  if janitor:
-    logger.info("Activating janitor")
-    importer.janitor = janitor
-  if catchup:
-    logger.info("Activating catchup")
-    importer.docatchup = catchup
-    
-  if len(args) > 0 and args[0] == "kill":
-    importer.killme()
-    sys.exit()
-  elif importer.isalive():
-    logger.info("fm12_importer is already running")
-    sys.exit()
-  elif len(args) > 0 and args[0] == "import":
-    importer.import_file(fname)
-    sys.exit()
-  elif len(args) > 0 and args[0] == "daemon":
-    importer.catchup()
-
-    wm = pyinotify.WatchManager()
-    notifier = pyinotify.Notifier(wm, NotifierListener(importer, logger, suffix=suffix))
-    # Only act on closed files, or whatever's been moved into in_dir
-    wm.add_watch(importer.monitored_dir, MASK)
+    optlist = []
+    args = []
     try:
-      notifier.loop(daemonize=True, pid_file=importer.pidfile)
-    except Exception as e:
-      logger.exception("Caught exception when running notifier loop %s"%e.__str__())
-    except SystemExit as e:
-      logger.exception("Caught SystemExit when running notifier loop %s"%e.__str__())
-
-  else:
-    Usage(True,True)
-    sys.exit()
+        optlist, args = getopt.getopt(
+            sys.argv[1:],
+            '',
+            [
+                'uri=',
+                'conf=',
+                'uriproperty=',
+                'file=',
+                'logfile=',
+                'verbose',
+                'pidfile=',
+                'suffix=',
+                'monitored=',
+                'janitor',
+                'catchup',
+                'help',
+            ],
+        )
+    except getopt.GetoptError as e:
+        Usage(True, e.__str__())
+        sys.exit(127)
+    
+    dburi = "postgresql://baltrad:baltrad@127.0.0.1/baltrad"
+    cfgfile = None
+    uriproperty = "rave.db.uri"
+    fname = None
+    logfile = None
+    pidfile = "/tmp/fm12_importer.pid"
+    suffix = None
+    monitored_dir = None
+    runasdaemon = False
+    janitor = False
+    catchup = False
+    loglvl = logging.INFO
+    
+    for o, a in optlist:
+        if o == "--uri":
+            dburi = a
+        elif o == "--conf":
+            cfgfile = a
+        elif o == "--uriproperty":
+            uriproperty = a
+        elif o == "--conf":
+            cfgfile = a
+        elif o == "--file":
+            fname = a
+        elif o == "--logfile":
+            logfile = a
+        elif o == "--monitored":
+            monitored_dir = a
+        elif o == "--verbose":
+            loglvl = logging.DEBUG
+        elif o == "--janitor":
+            janitor = True
+        elif o == "--catchup":
+            catchup = True
+        elif o == "--pidfile":
+            pidfile = a
+        elif o == "--suffix":
+            suffix = a
+        elif o == "--help":
+            Usage(False, True)
+        else:
+            Usage(True, True)
+    
+    if len(args) <= 0:
+        Usage(True, True)
+    
+    if not os.path.isabs(pidfile):
+        print("pidfile must be defined with an absolute path")
+        sys.exit()
+    
+    if cfgfile != None:
+        dburi = fm12_importer.get_dburi_from_conf(cfgfile, uriproperty)
+    
+    if len(args) > 0 and args[0] == "daemon":
+        runasdaemon = True
+    
+    ## Setup the logging fascility
+    logger = logging.getLogger("fm12_importer")
+    if runasdaemon:
+        logger = pyinotify.log
+    init_logger(logger, logfile, loglvl, runasdaemon)
+    
+    importer = fm12_importer.fm12_importer(dburi, monitored_dir, pidfile)
+    importer.set_logger(logger)
+    
+    if janitor:
+        logger.info("Activating janitor")
+        importer.janitor = janitor
+    if catchup:
+        logger.info("Activating catchup")
+        importer.docatchup = catchup
+    
+    if len(args) > 0 and args[0] == "kill":
+        importer.killme()
+        sys.exit()
+    elif importer.isalive():
+        logger.info("fm12_importer is already running")
+        sys.exit()
+    elif len(args) > 0 and args[0] == "import":
+        importer.import_file(fname)
+        sys.exit()
+    elif len(args) > 0 and args[0] == "daemon":
+        importer.catchup()
+        
+        wm = pyinotify.WatchManager()
+        notifier = pyinotify.Notifier(wm, NotifierListener(importer, logger, suffix=suffix))
+        # Only act on closed files, or whatever's been moved into in_dir
+        wm.add_watch(importer.monitored_dir, MASK)
+        try:
+            notifier.loop(daemonize=True, pid_file=importer.pidfile)
+        except Exception as e:
+            logger.exception("Caught exception when running notifier loop %s" % e.__str__())
+        except SystemExit as e:
+            logger.exception("Caught SystemExit when running notifier loop %s" % e.__str__())
+    
+    else:
+        Usage(True, True)
+        sys.exit()

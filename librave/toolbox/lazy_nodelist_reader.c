@@ -218,7 +218,7 @@ RaveLegend_t* LazyNodeListReader_getLegend(LazyNodeListReader_t* self, const cha
       }
 
       data = HLNode_getData(node);
-      for (int i = 0; i < nlen; i++) {
+      for (i = 0; i < nlen; i++) {
         memset(key, 0, sizeof(key));
         memset(value, 0, sizeof(value));
         memset(entry, 0, sizeof(entry));

@@ -113,14 +113,6 @@ double R2raw(double R, double gain, double offset, double A, double b)
   return dbz2raw(dbz, gain, offset);
 }
 
-#if defined( CREATE_ITRUNC )
-int itrunc(double d)
-{
-  int a = (int)d;
-  return a;
-}
-#endif
-
 int mytrunc(double d)
 {
   int a;/* = (int)d;*/

@@ -24,14 +24,20 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @author Daniel Michelson, SMHI
 ## @date 2012-11-05
 
-import sys, os, time, traceback, shutil
+# Standard python libs:
 import logging
 import multiprocessing
-import _raveio
-import rave_pgf_quality_registry
-import rave_pgf_logger
-import odc_fixIO
+import os
+import shutil
+import sys
+import time
+import traceback
 
+# Module/Project:
+import _raveio
+import odc_fixIO
+import rave_pgf_logger
+import rave_pgf_quality_registry
 
 opath = '/dev/shm/odc'  # command-line options will override these variables
 algorithm_ids = None
@@ -51,7 +57,7 @@ def QC(pload):
             raise AttributeError("Could not find %s plugin." % a)
         pload = p.process(pload)
         if isinstance(pload, tuple):
-          pload, algorithm = pload[0],pload[1]
+            pload, algorithm = pload[0], pload[1]
     return pload
 
 
@@ -60,10 +66,10 @@ def QC(pload):
 # @return tuple containing output file string and a True/False on its presence.
 # Will return False if the input file has been copied to the output directory.
 def MakeCheckOfstr(ifstr):
-    path, fstr = os.path.split(ifstr)    
+    path, fstr = os.path.split(ifstr)
     ofstr = fstr.split('.')[0] + '.h5'
     ofstr = os.path.join(opath, ofstr)
-    newfile =  os.path.isfile(ofstr) and os.path.getsize(ofstr)
+    newfile = os.path.isfile(ofstr) and os.path.getsize(ofstr)
     # Check also if there's a copy of the input file in the output directory
     oldfile = os.path.join(opath, fstr)
     copied = os.path.isfile(oldfile) and os.path.getsize(oldfile)
@@ -71,8 +77,8 @@ def MakeCheckOfstr(ifstr):
         return ofstr, True
     else:
         return ofstr, False
-    
-    
+
+
 # -----------------------------------------------------------------------------
 ## Generator, includes gathering of timing information for benchmarking.
 # @param ifstr string of the input file
@@ -82,10 +88,10 @@ def MakeCheckOfstr(ifstr):
 def generate(ifstr):
     logger = logging.getLogger("ODC")
     rave_pgf_logger.init_logger(logger)
-
+    
     ofstr, done = MakeCheckOfstr(ifstr)
     path, fstr = os.path.split(ifstr)
-
+    
     if check and done:
         if delete:
             os.remove(ifstr)
@@ -96,41 +102,44 @@ def generate(ifstr):
         startread = time.time()
         rio = _raveio.open(ifstr)
         endread = time.time()
-
+        
         odc_fixIO.Validate(rio)
         endval = time.time()
-
+        
         pload = rio.object
         pload = QC(pload)
         endqc = time.time()
-
+        
         # Hard-wire for no compression and optimized file-creation properties.
         rio.compression_level = 0
         rio.fcp_istorek = 1
         rio.fcp_metablocksize = 0
-        rio.fcp_sizes = (4,4)
-        rio.fcp_symk = (1,1)
+        rio.fcp_sizes = (4, 4)
+        rio.fcp_symk = (1, 1)
         rio.fcp_userblock = 0
-
+        
         rio.object = pload
         rio.save(ofstr)
         endwrite = time.time()
-
+        
         readt = endread - startread
-        validt = endval- endread
+        validt = endval - endread
         qct = endqc - endval
         writet = endwrite - endqc
-
+        
         if delete:
             os.remove(ifstr)  # Clean-up input directory one file at a time.
         rave_pgf_logger.log(logger, "info", "%s: OK" % fstr)
-
+        
         return ifstr, "OK", (readt, validt, qct, writet)
     except OSError as err_msg:
         os.remove(ifstr)
-        rave_pgf_logger.log(logger, "error", "%s: %s - Deleting file." % (fstr, err_msg))
+        logger.error("%s: %s - Deleting file." % (fstr, err_msg))
         return ifstr, err_msg
-  
+    except Exception:
+        logger.exception("Failure during processing of file: %s"%fstr)
+        return ifstr, err_msg
+
 
 ## Distributes 'generate' among the available CPU cores on this machine.
 #  @param fstrs list of input file name strings
@@ -138,11 +147,11 @@ def generate(ifstr):
 #  @return list of returned tuples from \ref generate
 def multi_generate(fstrs, procs=None):
     pool = multiprocessing.Pool(procs)
-
+    
     results = []
     r = pool.map_async(generate, fstrs, chunksize=1, callback=results.append)
     r.wait()
-
+    
     return results[0]
 
 

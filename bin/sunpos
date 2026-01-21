@@ -23,7 +23,9 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @author Daniel Michelson, SMHI
 ## @date 2011-09-27
 
+# Standard python libs:
 import sys
+
 
 ## Main function.
 # @param options arguments object formatted by the option parser
@@ -33,12 +35,13 @@ def main(options):
 
     DATE, TIME = int(options.dt[:8]), int(options.dt[9:15])
     el, az, rel = _scansun.solar_elev_azim(float(options.lon), float(options.lat), DATE, TIME)
-    print("Azimuth: %2.3f\u00B0, Elevation: %2.3f\u00B0, Refracted elevation: %2.3f\u00B0" % (az, el, rel)) 
+    print("Azimuth: %2.3f\u00B0, Elevation: %2.3f\u00B0, Refracted elevation: %2.3f\u00B0" % (az, el, rel)) ##FLAGGED
 
 
 if __name__ == "__main__":
     from optparse import OptionParser
 
+    # fmt: off
     usage = "usage: %prog -e <longitude> -n <latitude> -d <date_time> [h]"
     usage += "\n\nCalculates the position of the sun based on a longitude/latitude"
     usage += "\nposition and a date/time stamp."
@@ -51,18 +54,22 @@ if __name__ == "__main__":
     parser = OptionParser(usage=usage)
 
     parser.add_option("-e", "--lon", dest="lon",
-                      help="Longitude position. Positions east of the Greenwich meridian are positive, west are negative. Fractions of a degree are expressed in hundredths and not minutes/seconds.")
+                      help="Longitude position. "
+                           "Positions east of the Greenwich meridian are positive, west are negative. "
+                           "Fractions of a degree are expressed in hundredths and not minutes/seconds.")
 
     parser.add_option("-n", "--lat", dest="lat",
-                      help="Latitude position. Positions north of the equator are positive, south are negative. Fractions of a degree are expressed in hundredths and not minutes/seconds.")
+                      help="Latitude position. Positions north of the equator are positive, south are negative. "
+                           "Fractions of a degree are expressed in hundredths and not minutes/seconds.")
 
     parser.add_option("-d", "--date-time", dest="dt",
-                      help="Date/time stamp in Universal Coordinated Time (UTC) expressed according to ISO 8601 as YYYYMMDDThhmmssZ")
-
+                      help="Date/time stamp in Universal Coordinated Time (UTC)"
+                           " expressed according to ISO 8601 as YYYYMMDDThhmmssZ")
+    # fmt: on
     (options, args) = parser.parse_args()
 
     if options.lon and options.lat and options.dt:
-        if ( type(eval(options.lon)) == type(eval(options.lat)) ) and len(options.dt) == 16:
+        if (type(eval(options.lon)) == type(eval(options.lat))) and len(options.dt) == 16:
             main(options)
 
     else:

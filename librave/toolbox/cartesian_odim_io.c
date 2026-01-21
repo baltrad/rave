@@ -34,12 +34,15 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "projection_pipeline.h"
 #include <stdlib.h>
 
+/**
+ * Class for handling Cartesian ODIM I/O-handling
+ */
 typedef struct CartesianOdimArg {
   LazyNodeListReader_t* lazyReader; /**< the lazy node list reader */
-  HL_NodeList* nodelist;
-  RaveCoreObject* object;
-  RaveObjectHashTable_t* attrs;
-  RaveIO_ODIM_Version version;
+  HL_NodeList* nodelist; /**< the node list */
+  RaveCoreObject* object; /**< the object that is beeing worked with */
+  RaveObjectHashTable_t* attrs; /**< attributes */
+  RaveIO_ODIM_Version version; /**< version of odim */
 } CartesianOdimArg;
 
 /**

@@ -29,6 +29,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "rave_object.h"
 #include "rave_types.h"
+#include "rave_value.h"
 
 /**
  * The file format of the data that has been read.
@@ -72,6 +73,13 @@ void RaveIO_close(RaveIO_t* raveio);
  * @returns The raveio instance on success, otherwise NULL.
  */
 RaveIO_t* RaveIO_open(const char* filename, int lazyLoading, const char* preloadQuantities);
+
+/**
+ * Checks if specified file is a HDF file or not.
+ * @param[in] filename - the filename
+ * @return 1 on success otherwise 0
+ */
+int RaveIO_isHDFFile(const char* filename);
 
 /**
  * Loads the HDF5 file into the raveio instance.
@@ -172,6 +180,25 @@ RaveIO_ODIM_H5rad_Version RaveIO_getH5radVersion(RaveIO_t* raveio);
  * @return the file format.
  */
 RaveIO_ODIM_FileFormat RaveIO_getFileFormat(RaveIO_t* raveio);
+
+/**
+ * When saving a file you can provide a set of extra attributes to be added to
+ * the /how-groups. Note, that RaveValue_Type must be Hashtable and that all keys
+ * must belong to a how-group. No validation of strictness or any other thing is performed
+ * on these variables so ensure that they are compliant to the version you are writing.
+ *
+ * @param[in] raveio - self
+ * @param[in] hashtable - the rave value hashtable
+ * @return 1 if value is hashtable or null and all keys in the hashtable belongs to a how-group
+ */
+int RaveIO_setExtras(RaveIO_t* raveio, RaveValue_t* hashtable);
+
+/**
+ * Returns a RaveValue of type Hashtable with how-attributes or NULL
+ * @param[in] raveio - self
+ * @return the rave value hashtable
+ */
+RaveValue_t* RaveIO_getExtras(RaveIO_t* raveio);
 
 /**
  * If writing should be done strictly. From ODIM H5 2.4 several how-attributes are mandatory. If

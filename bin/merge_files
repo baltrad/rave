@@ -23,180 +23,188 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @author Anders Henja, SMHI
 ## @date 2016-10-21
 
-import os,getopt,sys,errno
-import re, string, shutil
+# Standard python libs:
+import errno
 import fnmatch
-import polar_merger
+import getopt
+import os
+import re
+import shutil
+import string
+import sys
+
+# Module/Project:
 import _raveio
+import polar_merger
+
 
 class merge_files(object):
-  def __init__(self, indir, outdir, sources=None, ftype="SCAN", copy_ignored=False):
-    self.indir=indir
-    self.outdir=outdir
-    self.sources=sources
-    self.ftype=ftype.lower()
-    if self.ftype not in ["scan","pvol"]:
-      raise IOError("Not a valid type")
-    self.pattern = re.compile("[a-z0-9A-Z]+_[A-Za-z0-9]+_(([0-9\.]+)_)?[0-9]{8}T[0-9]{4}Z_0x[0-9]+.h5")
-    self.bnamepattern = re.compile("([a-z0-9A-Z]+_[A-Za-z0-9]+_(([0-9\.]+)_)?[0-9]{8}T[0-9]{4}Z)_0x[0-9]+.h5")
-    self.copy_ignored=copy_ignored
+    def __init__(self, indir, outdir, sources=None, ftype="SCAN", copy_ignored=False):
+        self.indir = indir
+        self.outdir = outdir
+        self.sources = sources
+        self.ftype = ftype.lower()
+        if self.ftype not in ["scan", "pvol"]:
+            raise IOError("Not a valid type")
+        self.pattern = re.compile("[a-z0-9A-Z]+_[A-Za-z0-9]+_(([0-9\.]+)_)?[0-9]{8}T[0-9]{4}Z_0x[0-9]+.h5")
+        self.bnamepattern = re.compile("([a-z0-9A-Z]+_[A-Za-z0-9]+_(([0-9\.]+)_)?[0-9]{8}T[0-9]{4}Z)_0x[0-9]+.h5")
+        self.copy_ignored = copy_ignored
 
-  ##
-  # Creates a directory with parents if necessary. If directory already exists nothing will
-  # happen.
-  # @param dname the name of the directory including parents
-  def make_dir(self, dname):
-    try:
-      os.makedirs(dname)
-    except OSError as e:
-      if e.errno == errno.EEXIST and os.path.isdir(dname):
-        pass
-      else:
-        raise
-
-  ##
-  # Reads all sources from the specified directory. Assumes the first 5 characters in the filenames
-  # is the NOD.
-  # @param root the directory to list
-  # @return a list of NOD:s
-  def read_sources(self, root):
-    sources=[]
-    files = [f for f in os.listdir(root) if os.path.isfile(os.path.join(root, f))]
-    for f in files:
-      if self.pattern.match(f):
-        nod=f[:5]
-        if nod not in sources:
-          sources.append(nod)
-    return sources    
-
-  ##
-  # Traverses through indir and all subdirectories and try to merge all files matching
-  # the base filename pattern.
-  #
-  def find_and_merge(self):
-    for root, d, files in os.walk(indir):
-      base=root[len(self.indir):]
-      if len(base)>0:
-        if base[0]=='/':
-          base=base[1:]
-
-      sources = self.sources
-      if sources is None:
-        sources = self.read_sources(root)
-
-      for src in sources:
-        pvols = []
-        scans = {}
-        for item in fnmatch.filter(files, "%s_%s_*.h5"%(src,self.ftype)):
-          m = self.pattern.match(item)
-          if m:
-            if m.group(2) is None:
-              pvols.append("%s/%s"%(root,item))
+    ##
+    # Creates a directory with parents if necessary. If directory already exists nothing will
+    # happen.
+    # @param dname the name of the directory including parents
+    def make_dir(self, dname):
+        try:
+            os.makedirs(dname)
+        except OSError as e:
+            if e.errno == errno.EEXIST and os.path.isdir(dname):
+                pass
             else:
-              if not scans.has_key(m.group(2)):
-                scans[m.group(2)]=[]
-              scans[m.group(2)].append("%s/%s"%(root,item))
-        if len(pvols)>1:
-          self._merge_polar_volumes(pvols, "%s/%s"%(self.outdir, base))
+                raise
 
-        if len(scans.keys())>0:
-          for k in scans.keys():
-            if len(scans[k]) > 1:
-              self._merge_polar_scans(scans[k], "%s/%s"%(self.outdir, base))
+    ##
+    # Reads all sources from the specified directory. Assumes the first 5 characters in the filenames
+    # is the NOD.
+    # @param root the directory to list
+    # @return a list of NOD:s
+    def read_sources(self, root):
+        sources = []
+        files = [f for f in os.listdir(root) if os.path.isfile(os.path.join(root, f))]
+        for f in files:
+            if self.pattern.match(f):
+                nod = f[:5]
+                if nod not in sources:
+                    sources.append(nod)
+        return sources
 
-  def copy_files(self, files, outdir):
-    for f in files:
-      try:
+    ##
+    # Traverses through indir and all subdirectories and try to merge all files matching
+    # the base filename pattern.
+    #
+    def find_and_merge(self):
+        for root, d, files in os.walk(indir):
+            base = root[len(self.indir) :]
+            if len(base) > 0:
+                if base[0] == '/':
+                    base = base[1:]
+
+            sources = self.sources
+            if sources is None:
+                sources = self.read_sources(root)
+
+            for src in sources:
+                pvols = []
+                scans = {}
+                for item in fnmatch.filter(files, "%s_%s_*.h5" % (src, self.ftype)):
+                    m = self.pattern.match(item)
+                    if m:
+                        if m.group(2) is None:
+                            pvols.append("%s/%s" % (root, item))
+                        else:
+                            if not scans.has_key(m.group(2)):
+                                scans[m.group(2)] = []
+                            scans[m.group(2)].append("%s/%s" % (root, item))
+                if len(pvols) > 1:
+                    self._merge_polar_volumes(pvols, "%s/%s" % (self.outdir, base))
+
+                if len(scans.keys()) > 0:
+                    for k in scans.keys():
+                        if len(scans[k]) > 1:
+                            self._merge_polar_scans(scans[k], "%s/%s" % (self.outdir, base))
+
+    def copy_files(self, files, outdir):
+        for f in files:
+            try:
+                self.make_dir(outdir)
+                shutil.copy(f, "%s/" % outdir)
+            except Exception as e:
+                print("Failed to copy %s to %s/" % (f, outdir))
+                import traceback
+
+                traceback.print_exc()
+
+    ##
+    # Merges polar volumes and places the result in outdir
+    # @param pvols a list of filenames pointing at polar voluemes
+    # @param outdir the directory where result should be placed
+    def _merge_polar_volumes(self, pvols, outdir):
+        import _rave
+
+        _rave.setDebugLevel(_rave.Debug_RAVE_SPEWDEBUG)
+        bname = os.path.basename(pvols[0])
+        bname = "%s.h5" % self.bnamepattern.match(bname).group(1)
+
         self.make_dir(outdir)
-        shutil.copy(f, "%s/"%outdir)
-      except Exception as e:
-        print("Failed to copy %s to %s/"%(f,outdir))
-        import traceback
-        traceback.print_exc()
-      
-    
 
-  ##
-  # Merges polar volumes and places the result in outdir
-  # @param pvols a list of filenames pointing at polar voluemes
-  # @param outdir the directory where result should be placed
-  def _merge_polar_volumes(self, pvols, outdir):
-    import _rave
-    _rave.setDebugLevel(_rave.Debug_RAVE_SPEWDEBUG)
-    bname = os.path.basename(pvols[0])
-    bname = "%s.h5"%self.bnamepattern.match(bname).group(1)
+        rio = _raveio.new()
+        try:
+            pm = polar_merger.polar_merger()
+            rio.object = pm.merge_files(pvols)
+            rio.save("%s/%s" % (outdir, bname))
+        except Exception as e:
+            print("Failed to merge %s" % str(pvols))
+            if self.copy_ignored:
+                self.copy_files(pvols, outdir)
 
-    self.make_dir(outdir)
+    ##
+    # Merges polar scans and places the result in outdir
+    # @param scans a list of filenames pointing at polar scans
+    # @param outdir the directory where result should be placed
+    def _merge_polar_scans(self, scans, outdir):
+        import _rave
 
-    rio = _raveio.new()
+        _rave.setDebugLevel(_rave.Debug_RAVE_SPEWDEBUG)
+        bname = os.path.basename(scans[0])
+        bname = "%s.h5" % self.bnamepattern.match(bname).group(1)
+
+        self.make_dir(outdir)
+
+        rio = _raveio.new()
+        try:
+            pm = polar_merger.polar_merger()
+            rio.object = pm.merge_files(scans)
+            rio.save("%s/%s" % (outdir, bname))
+        except Exception as e:
+            print("Failed to merge %s" % str(scans))
+            if self.copy_ignored:
+                self.copy_files(scans, outdir)
+
+
+if __name__ == "__main__":
+    # for root, d, files in os.walk("archive"):
+    #  for item in fnmatch.filter(files, "*.h5"):
+    #    print "%s/%s"%(root,item)
+    optlist = []
+    args = []
+    sources = None
+    ftype = "SCAN"
+    indir = "./archive"
+    outdir = "./out"
+    copy_ignored = False
     try:
-      pm = polar_merger.polar_merger()
-      rio.object = pm.merge_files(pvols)
-      rio.save("%s/%s"%(outdir, bname))
-    except Exception as e:
-      print("Failed to merge %s"%str(pvols))
-      if self.copy_ignored:
-        self.copy_files(pvols, outdir)
+        optlist, args = getopt.getopt(sys.argv[1:], '', ['indir=', 'outdir=', 'sources=', 'type=', 'copy-ignored'])
+    except getopt.GetoptError as e:
+        print(e.__str__())
+        sys.exit(127)
 
+    for o, a in optlist:
+        if o == "--indir":
+            indir = a
+        elif o == "--outdir":
+            outdir = a
+        elif o == "--sources":
+            sources = string.split(a, ',')
+        elif o == "--type":
+            if a.lower() in ["pvol", "scan"]:
+                ftype = a
+            else:
+                raise TypeError("type must be pvol or scan")
+        elif o == "--copy-ignored":
+            copy_ignored = True
 
-  ##
-  # Merges polar scans and places the result in outdir
-  # @param scans a list of filenames pointing at polar scans
-  # @param outdir the directory where result should be placed
-  def _merge_polar_scans(self, scans, outdir):
-    import _rave
-    _rave.setDebugLevel(_rave.Debug_RAVE_SPEWDEBUG)
-    bname = os.path.basename(scans[0])
-    bname = "%s.h5"%self.bnamepattern.match(bname).group(1)
+    if not os.path.exists(outdir):
+        raise IOError("Outdir %s does not exist" % outdir)
 
-    self.make_dir(outdir)
-
-    rio = _raveio.new()
-    try:
-      pm = polar_merger.polar_merger()
-      rio.object = pm.merge_files(scans)
-      rio.save("%s/%s"%(outdir, bname))
-    except Exception as e:
-      print("Failed to merge %s"%str(scans))
-      if self.copy_ignored:
-        self.copy_files(scans, outdir)
-
-if __name__=="__main__":
-  #for root, d, files in os.walk("archive"):
-  #  for item in fnmatch.filter(files, "*.h5"):
-  #    print "%s/%s"%(root,item)
-  optlist = []
-  args = []
-  sources=None
-  ftype="SCAN"
-  indir="./archive"
-  outdir="./out"
-  copy_ignored=False
-  try:
-    optlist, args = getopt.getopt(sys.argv[1:], '', 
-                                  ['indir=', 'outdir=', 'sources=','type=','copy-ignored'])
-  except getopt.GetoptError as e:
-    print(e.__str__())
-    sys.exit(127)
-
-  for o, a in optlist:
-    if o == "--indir":
-      indir=a
-    elif o == "--outdir":
-      outdir=a
-    elif o == "--sources":
-      sources = string.split(a,',')
-    elif o == "--type":
-      if a.lower() in ["pvol", "scan"]:
-        ftype = a
-      else:
-        raise TypeError("type must be pvol or scan")
-    elif o == "--copy-ignored":
-      copy_ignored=True
-
-  if not os.path.exists(outdir):
-    raise IOError("Outdir %s does not exist"%outdir)
- 
-  mf = merge_files(indir, outdir, sources, ftype, copy_ignored)
-  mf.find_and_merge()
-
+    mf = merge_files(indir, outdir, sources, ftype, copy_ignored)
+    mf.find_and_merge()

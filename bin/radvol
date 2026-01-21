@@ -23,12 +23,15 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @author Daniel Michelson, SMHI
 ## @date 2012-11-26
 
+# Standard python libs:
 import sys
-import _raveio
-import _radvol
-import _polarvolume, _polarscan
-import rave_radvol_realtime
 
+# Module/Project:
+import _polarscan
+import _polarvolume
+import _radvol
+import _raveio
+import rave_radvol_realtime
 
 if __name__ == "__main__":
     from optparse import OptionParser
@@ -38,20 +41,22 @@ if __name__ == "__main__":
     usage = "usage: %prog -i <infile> -absS [-o <outfile>] [h]"
     parser = OptionParser(usage=usage, description=description)
 
-    parser.add_option("-i", "--input", dest="ifile", help="Input file name")
+    parser.add_option("-i", "--input", dest="ifile",
+                      help="Input file name")
 
-    parser.add_option("-o", "--output", dest="ofile", help="Output file name. If not specified, input file will be overwritten.")
+    parser.add_option("-o", "--output", dest="ofile",
+                      help="Output file name. If not specified, input file will be overwritten.")
 
-    parser.add_option("-a", "--att", action="store_true", dest="att", 
+    parser.add_option("-a", "--att", action="store_true", dest="att",
                       help="Performs attenuation correction.")
 
-    parser.add_option("-b", "--broad", action="store_true", dest="broad", 
+    parser.add_option("-b", "--broad", action="store_true", dest="broad",
                       help="Performs broad assessment.")
 
-    parser.add_option("-s", "--speck", action="store_true", dest="speck", 
+    parser.add_option("-s", "--speck", action="store_true", dest="speck",
                       help="Performs speckle removal.")
 
-    parser.add_option("-S", "--spike", action="store_true", dest="spike", 
+    parser.add_option("-S", "--spike", action="store_true", dest="spike",
                       help="Performs spike removal.")
 
     parser.add_option("-n", "--nmet", action="store_true", dest="nmet", 
@@ -63,7 +68,7 @@ if __name__ == "__main__":
         parser.print_help()
         sys.exit()
 
-    if not options.ofile: 
+    if not options.ofile:
         options.ofile = options.ifile
 
     rio = _raveio.open(options.ifile)
@@ -85,7 +90,7 @@ if __name__ == "__main__":
         print("Input data not SCAN or PVOL. Exiting ...")
         sys.exit(-1)
 
-    rpars = rave_radvol_realtime.get_options(rio.object) 
+    rpars = rave_radvol_realtime.get_options(rio.object)
 
     if options.spike:
         _radvol.spikeRemoval(obj, rpars)
@@ -98,10 +103,10 @@ if __name__ == "__main__":
 
     if options.att:
         _radvol.attCorrection(obj, rpars)
-        
+
     if options.broad:
         _radvol.broadAssessment(obj, rpars)
-    
+
     if isScan:
         rio.object = obj.getScan(0)
     else:

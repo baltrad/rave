@@ -26,19 +26,23 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @author Daniel Michelson, SMHI, based on work originally contracted to Fredrik Lundh
 ## @date 2011-06-27
 
-import os, string
+# Standard python libs:
+import os
+import string
+
+# Module/Project:
 import Proj
 import _projection
 
-got_projregistry=True
+got_projregistry = True
 try:
     import _projectionregistry
 except:
-    got_projregistry=False
-    
+    got_projregistry = False
+
 from rave_defines import RAVECONFIG, UTF8, PROJECTION_REGISTRY
 
-## There's only one official projection registry, but this module allows 
+## There's only one official projection registry, but this module allows
 # greater flexibility as long as files use the same naming convention.
 PROJECTIONS = os.path.join(RAVECONFIG, '*projection_registry.xml')
 
@@ -55,10 +59,10 @@ def init():
     from xml.etree import ElementTree
 
     global initialized
-    if initialized: return
+    if initialized:
+        return
 
     for fstr in glob.glob(PROJECTIONS):
-
         E = ElementTree.parse(fstr)
 
         for e in E.findall('projection'):
@@ -73,7 +77,8 @@ def init():
 # --------------------------------------------------------------------
 # Registry
 
-## Object for interfacing with PROJ.4 
+
+## Object for interfacing with PROJ.4
 class interface:
     name = None
 
@@ -87,25 +92,30 @@ class interface:
     def invproj(sxy):
         pass
 
+
 ## Empty registry to be filled
 _registry = {}
 
-## Adds a projection to the registry 
+
+## Adds a projection to the registry
 # @param id Projection identifier (string)
-# @param pcs Projection object as returned by the usgs class 
+# @param pcs Projection object as returned by the usgs class
 def register(id, pcs):
     # validate
     for attr in ["name", "proj", "invproj"]:
         if not hasattr(pcs, attr):
             raise AttributeError("object lacks required attribute " + attr)
     pcs.id = id
-    # Ridiculous hack for trimming whacked XML strings from rave_simple_xml.c. Should be deprecated down the line.  
-    if pcs.name[:7] == '\n      ' and pcs.name[-5:] == '\n    ': pcs.name = pcs.name[7:len(pcs.name)-5]
+    # Ridiculous hack for trimming whacked XML strings from rave_simple_xml.c. Should be deprecated down the line.
+    if pcs.name[:7] == '\n      ' and pcs.name[-5:] == '\n    ':
+        pcs.name = pcs.name[7 : len(pcs.name) - 5]
     _registry[id] = pcs
+
 
 ## Returns a list of keys in the registry
 def keys():
     return _registry.keys()
+
 
 ## Returns a list of tuples containing key:item pairs in the registry
 # where the key is the projection identifier and the item is its usgs object.
@@ -117,7 +127,7 @@ def items():
 # @param Id Projection identifier (string)
 # @returns Projection object corresponding with the input identifier
 def pcs(Id):
-    if not isinstance(Id, str) and not isinstance(Id,unicode):
+    if not isinstance(Id, str) and not isinstance(Id, unicode):
         raise KeyError("Argument 'Id' not a string")
     return _registry[Id]
 
@@ -126,7 +136,7 @@ def pcs(Id):
 class usgs:
     ## Initializer
     # @param description string containing this projection's identifier
-    # @param definition PROJ.4 string containing the projection definition 
+    # @param definition PROJ.4 string containing the projection definition
     def __init__(self, description, definition):
         try:
             import Proj
@@ -153,15 +163,17 @@ class usgs:
     def tostring(self):
         o = ''
         for s in self.definition:
-            if len(o): o += " " + s
-            else: o = s
+            if len(o):
+                o += " " + s
+            else:
+                o = s
         return o
 
 
 ## Register utility function for pre-defined projection definitions in PROJECTIONS
 # @param id string containing this projection's identifier
 # @param description string containing a free-text description of this projection
-# @param definition PROJ.4 string containing the projection definition 
+# @param definition PROJ.4 string containing the projection definition
 def define(id, description, definition):
     p = usgs(description, definition)
     register(id, p)
@@ -178,7 +190,7 @@ init()
 # @param id String containing the identifier of the new projection
 # @param description String containing a description of the new projection
 # @param definition PROJ.4 string containing the new projection's definition
-# @param filename Full path to the XML file containing the projection registry 
+# @param filename Full path to the XML file containing the projection registry
 def add(id, description, definition, filename=PROJECTION_REGISTRY):
     if not got_projregistry:
         raise Exception("Can not use projection registry")
@@ -210,8 +222,7 @@ def write(filename=PROJECTION_REGISTRY):
     for p in keys():
         if p not in check:
             tmp = pcs(p)
-            new_registry.add(_projection.new(tmp.id, tmp.name, 
-                                             " ".join(tmp.definition)))
+            new_registry.add(_projection.new(tmp.id, tmp.name, " ".join(tmp.definition)))
             check.append(p)
         else:
             print("Duplicate entry for id %s. Ignored." % p)
@@ -219,7 +230,7 @@ def write(filename=PROJECTION_REGISTRY):
 
 
 ## Prints the identifier, description, and PROJ.4 definition to stdout
-# @param id The projection's string identifier 
+# @param id The projection's string identifier
 def describe(id):
     p = _registry[id]
     print("%s -\t%s" % (id, p.name.decode('utf-8')))
@@ -227,6 +238,7 @@ def describe(id):
 
 
 if __name__ == "__main__":
-    import rave_projection # cannot use myself, due to recursive import
+    import rave_projection  # cannot use myself, due to recursive import
+
     for id in rave_projection.keys():
         describe(id)

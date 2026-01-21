@@ -384,6 +384,8 @@ static PolarNavigationInfo* PolarScan_getNavigationInfo(
   memcpy(navinfo, sourceNavinfo, sizeof(PolarNavigationInfo));
 
   navinfo->elevation = PolarScan_getElangle(scan); // So that we get exact scan elevation angle instead
+  navinfo->beamwH = scan->beamwH;
+  navinfo->beamwV = scan->beamwV;
 
   double dummydistance = 0.0;
   // To get the actual height
@@ -888,6 +890,20 @@ void PolarScan_removeQualityField(PolarScan_t* scan, int index)
   RAVE_ASSERT((scan != NULL), "scan == NULL");
   field = (RaveField_t*)RaveObjectList_remove(scan->qualityfields, index);
   RAVE_OBJECT_RELEASE(field);
+}
+
+void PolarScan_removeQualityFieldByHowTask(PolarScan_t* scan, const char* qname)
+{
+  int i = 0, nfields = 0;
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+  nfields = PolarScan_getNumberOfQualityFields(scan);
+  for (i = nfields-1; i >=0; i--) {
+    RaveField_t* field = (RaveField_t*)RaveObjectList_get(scan->qualityfields, i);
+    if (field != NULL && RaveField_hasAttributeStringValue(field, "how/task", qname)) {
+      PolarScan_removeQualityField(scan, i);
+    }
+    RAVE_OBJECT_RELEASE(field);
+  }
 }
 
 RaveObjectList_t* PolarScan_getQualityFields(PolarScan_t* scan)
@@ -1433,6 +1449,8 @@ void PolarScan_getLonLatNavigationInfo(PolarScan_t* scan, double lon, double lat
   info->height = 0.0L;
   info->actual_height = 0.0L;
   info->elevation = scan->elangle;
+  info->beamwH = scan->beamwH;
+  info->beamwV = scan->beamwV;
 
   info->otype = Rave_ObjectType_SCAN;
   info->ei = -1;
@@ -1769,6 +1787,17 @@ RaveList_t* PolarScan_getAttributeNamesVersion(PolarScan_t* scan, RaveIO_ODIM_Ve
   return RaveAttributeTable_getAttributeNamesVersion(scan->attrs, version);
 }
 
+RaveList_t* PolarScan_getSubGroupAttributeNames(PolarScan_t* scan)
+{
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+  return PolarScan_getSubGroupAttributeNamesVersion(scan, RAVEIO_API_ODIM_VERSION);
+}
+
+RaveList_t* PolarScan_getSubGroupAttributeNamesVersion(PolarScan_t* scan, RaveIO_ODIM_Version version)
+{
+  RAVE_ASSERT((scan != NULL), "scan == NULL");
+  return RaveAttributeTable_getSubAttributeNamesVersion(scan->attrs, version);
+}
 
 RaveObjectList_t* PolarScan_getAttributeValues(PolarScan_t* scan)
 {

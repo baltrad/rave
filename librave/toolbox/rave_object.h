@@ -150,7 +150,7 @@ typedef struct _raveobjecttype {
  * @returns true if matching, otherwise false.
  */
 #define RAVE_OBJECT_CHECK_TYPE(this, type) \
-  (((RaveCoreObject*)this)->roh_type == type)
+  (this != NULL && ((RaveCoreObject*)this)->roh_type == type)
 
 
 /**
@@ -239,7 +239,7 @@ void RaveCoreObject_setTrackObjects(int track);
 /**
  * @returns if object creation / destruction is tracked.
 */
-int RaveCoreObject_getTrackObjects();
+int RaveCoreObject_getTrackObjects(void);
 
 /**
  * Print current status of object creation.

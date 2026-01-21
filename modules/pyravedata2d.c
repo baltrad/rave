@@ -22,6 +22,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2019-02-18
  */
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include "pyravecompat.h"
 #include <limits.h>
 #include <math.h>
@@ -221,7 +222,7 @@ static PyObject* _pyravedata2d_getData(PyRaveData2D* self, PyObject* args)
     raiseException_returnNULL(PyExc_IOError, "rave data2d field does not have any data");
   }
 
-  if (arrtype == PyArray_NOTYPE) {
+  if (arrtype == NPY_NOTYPE) {
     raiseException_returnNULL(PyExc_IOError, "Could not translate data type");
   }
   result = PyArray_SimpleNew(2, dims, arrtype);
@@ -229,8 +230,8 @@ static PyObject* _pyravedata2d_getData(PyRaveData2D* self, PyObject* args)
     raiseException_returnNULL(PyExc_MemoryError, "Could not create resulting array");
   }
   if (result != NULL) {
-    int nbytes = xsize*ysize*PyArray_ITEMSIZE(result);
-    memcpy(((PyArrayObject*)result)->data, (unsigned char*)RaveData2D_getData(self->field), nbytes);
+    int nbytes = xsize*ysize*PyArray_ITEMSIZE((PyArrayObject*)result);
+    memcpy(PyArray_DATA((PyArrayObject*)result), (unsigned char*)RaveData2D_getData(self->field), nbytes);
   }
   return result;
 }

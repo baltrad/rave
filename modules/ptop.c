@@ -13,6 +13,7 @@
  * @author Daniel Michelson (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2006-
  */
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION 
 #include <pyravecompat.h>
 #include <arrayobject.h>
 #include <limits.h>
@@ -1427,9 +1428,9 @@ static PyObject* _ptop_transform(PyObject* self, PyObject* args)
 
     if (i == 0) {
       tw.intype = array_type_2d(inrave.data);
-      tw.inxmax = inrave.data->dimensions[1];
-      tw.inymax = inrave.data->dimensions[0];
-      tw.inrsize = inrave.data->strides[0] / inrave.data->strides[1];
+      tw.inxmax = PyArray_DIMS(inrave.data)[1];
+      tw.inymax = PyArray_DIMS(inrave.data)[0];
+      tw.inrsize = PyArray_STRIDES(inrave.data)[0] / PyArray_STRIDES(inrave.data)[1];
       /*       printf("in(w): intype %c, inxmax %d, inymax %d, inrsize %d/%d\n", */
       /*              tw.intype,tw.inxmax,tw.inymax,inrave.data->strides[0],inrave.data->strides[1]); */
     }
@@ -1445,7 +1446,7 @@ static PyObject* _ptop_transform(PyObject* self, PyObject* args)
 
       if (i == 0) {
         tw.inztype = array_type_2d(inzrave.data);
-        tw.inzrsize = inzrave.data->strides[0] / inzrave.data->strides[1];
+        tw.inzrsize = PyArray_STRIDES(inzrave.data)[0] / PyArray_STRIDES(inzrave.data)[1];
         /* 	printf("in(z): inztype %c, inzrsize %d/%d\n", */
         /* 	       tw.inztype,inzrave.data->strides[0],inzrave.data->strides[1]); */
       }

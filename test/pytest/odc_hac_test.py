@@ -28,8 +28,8 @@ import os
 import math
 import string
 import _odc_hac, odc_hac, rave_zdiff_quality_plugin
-import _raveio, _ravefield
-import _polarscanparam,_polarvolume
+import _raveio, _ravefield, _rave
+import _polarscan,_polarscanparam,_polarvolume
 import numpy
 
 class odc_hac_test(unittest.TestCase):
@@ -139,7 +139,7 @@ class odc_hac_test(unittest.TestCase):
     scan1 = self.create_scan(3.0, 4.0, 53.0, 40.0)
     scan2 = self.create_scan(4.0, 3.0, 40.0, 53.0)
     scan2.elangle = 10.0 * math.pi / 180.0
-    
+
     pvol = _polarvolume.new()
     pvol.addScan(scan1)
     pvol.addScan(scan2)
@@ -163,7 +163,78 @@ class odc_hac_test(unittest.TestCase):
     fields = qp.getQualityFields()
     self.assertEqual(1, len(fields))
     self.assertEqual("eu.opera.odc.zdiff", fields[0])
-    
+
+  def test_odcFilter(self):
+    scan = self.create_odcFilter_scan()
+
+    hac = _ravefield.new()
+    hac.addAttribute("how/count", 4)
+    hac.setData(numpy.asarray([[1,2],[3,4]], numpy.int32))
+
+    _odc_hac.hacFilter(scan, hac, "DBZH")
+
+    qf = scan.getQualityFieldByHowTask("eu.opera.odc.hac")
+    self.assertTrue((numpy.asarray([[255,255],[0,0]], numpy.uint8) == scan.getQualityFieldByHowTask("eu.opera.odc.hac").getData()).all())
+    self.assertAlmostEqual(0.0, qf.getAttribute("what/offset"), 4)
+    self.assertAlmostEqual(1.0/255.0, qf.getAttribute("what/gain"), 4)
+    self.assertAlmostEqual(60.0, qf.getAttribute("how/task_args"), 4)
+
+  def test_odcFilter_addAttributes(self):
+    scan = self.create_odcFilter_scan(None)
+
+    hac = _ravefield.new()
+    hac.addAttribute("how/count", 4)
+    hac.setData(numpy.asarray([[1,2],[3,4]], numpy.int32))
+
+    _odc_hac.hacFilter(scan, hac, "DBZH")
+
+    qf = scan.getQualityFieldByHowTask("eu.opera.odc.hac")
+    self.assertTrue((numpy.asarray([[255,255],[0,0]], numpy.uint8) == scan.getQualityFieldByHowTask("eu.opera.odc.hac").getData()).all())
+    self.assertAlmostEqual(0.0, qf.getAttribute("what/offset"), 4)
+    self.assertAlmostEqual(1.0/255.0, qf.getAttribute("what/gain"), 4)
+    self.assertAlmostEqual(60.0, qf.getAttribute("how/task_args"), 4)
+
+  def test_odcFilter_addFieldAndAttributes(self):
+    scan = self.create_odcFilter_scan(None, False)
+
+    hac = _ravefield.new()
+    hac.addAttribute("how/count", 4)
+    hac.setData(numpy.asarray([[1,2],[3,4]], numpy.int32))
+
+    _odc_hac.hacFilter(scan, hac, "DBZH")
+
+    qf = scan.getQualityFieldByHowTask("eu.opera.odc.hac")
+    self.assertTrue((numpy.asarray([[255,255],[0,0]], numpy.uint8) == scan.getQualityFieldByHowTask("eu.opera.odc.hac").getData()).all())
+    self.assertAlmostEqual(0.0, qf.getAttribute("what/offset"), 4)
+    self.assertAlmostEqual(1.0/255.0, qf.getAttribute("what/gain"), 4)
+    self.assertAlmostEqual(60.0, qf.getAttribute("how/task_args"), 4)
+
+
+  def create_odcFilter_scan(self, thresh=60.0, addQualityField=True):
+    scan = _polarscan.new()
+
+    param = _polarscanparam.new()
+    param.quantity="DBZH"    
+    param.setData(numpy.asarray([[1,2],[3,4]], numpy.uint8))
+    scan.addParameter(param)
+
+    param = _polarscanparam.new()
+    param.quantity="TH"    
+    param.setData(numpy.asarray([[2,3],[4,5]], numpy.uint8))
+    scan.addParameter(param)
+
+    if addQualityField:
+      qind = _ravefield.new()
+      qind.setData(numpy.asarray([[2,2],[3,3]], numpy.uint8))
+      qind.addAttribute("how/task", "eu.opera.odc.hac")
+      if thresh is not None :
+        qind.addAttribute("how/task_args", thresh)
+
+      scan.addQualityField(qind)
+
+    return scan    
+
+
   def create_scan(self, dbzh0_0=3.0, dbzh0_1=4.0, th0_0=53.0, th0_1=40.0):
     scan = _raveio.open(self.SCAN_FIXTURE).object
     param_dbzh = scan.getParameter("DBZH")

@@ -4,6 +4,8 @@
  * @author Daniel Michelson (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2005-
  */
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION 
+//#define NO_IMPORT_ARRAY
 #include "h5rad.h"
 #include "pyravecompat.h"
 

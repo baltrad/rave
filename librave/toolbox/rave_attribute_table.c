@@ -30,7 +30,9 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include <math.h>
 #include <stdio.h>
 
-
+/**
+ * Speed of light in meters / second
+ */
 #define SPEED_OF_LIGHT 299792458  /* m/s */
 
 /**
@@ -78,6 +80,12 @@ static void RaveAttributeTable_destructor(RaveCoreObject* obj)
   RAVE_OBJECT_RELEASE(attr->attributes);
 }
 
+/**
+ * Returns the attribute with specified name.
+ * @param[in] self - self
+ * @param[in] attrname - the attribute to return
+ * @return the rave attribute if found, otherwise NULL
+ */
 RaveAttribute_t* RaveAttributeTableInternal_getAttribute(RaveAttributeTable_t* self, const char* attrname)
 {
   RAVE_ASSERT((self != NULL), "self == NULL");
@@ -504,6 +512,65 @@ RaveList_t* RaveAttributeTable_getAttributeNamesVersion(RaveAttributeTable_t* se
   rlist = RaveAttributeTableInternal_getInternalNames(self, version);
 
   return rlist;
+}
+
+RaveList_t* RaveAttributeTable_getSubAttributeNames(RaveAttributeTable_t* self)
+{
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  return RaveAttributeTable_getSubAttributeNamesVersion(self, self->version);
+}
+
+RaveList_t* RaveAttributeTable_getSubAttributeNamesVersion(RaveAttributeTable_t* self, RaveIO_ODIM_Version version)
+{
+  RaveList_t* rlist = NULL;
+  RaveList_t *result = NULL, *tmpresult = NULL;
+  RAVE_ASSERT((self != NULL), "self == NULL");
+
+  tmpresult = RAVE_OBJECT_NEW(&RaveList_TYPE);
+  if (tmpresult == NULL) {
+    RAVE_ERROR0("Failed to allocate list");
+    return NULL;
+  }
+
+  rlist = RaveObjectHashTable_keys(self->attributes);
+  if (rlist != NULL) {
+    int nlen = 0, i = 0;
+    nlen = RaveList_size(rlist);
+    for (i = 0; i < nlen; i++) {
+      char* name = (char*)RaveList_get(rlist, i);
+      char* tmp = strstr(name, "/");
+      if (tmp != NULL && strlen(tmp) > 0 && strstr(tmp+1, "/") != NULL) {
+        char* dup = RAVE_STRDUP(name);
+        if (dup == NULL || !RaveList_add(tmpresult, dup)) {
+          RAVE_ERROR0("Could not add name to subgroup name list");
+          RAVE_FREE(dup);
+          goto fail;
+        }
+      }
+    }
+  }
+
+  result = RAVE_OBJECT_COPY(tmpresult);
+fail:
+  if (rlist != NULL) {
+    RaveList_freeAndDestroy(&rlist);
+  }
+  RAVE_OBJECT_RELEASE(tmpresult);
+  return result;
+}
+
+int RaveAttributeTable_hasSubGroups(RaveAttributeTable_t* self)
+{
+  int result = 0;
+  RAVE_ASSERT((self != NULL), "self == NULL");
+  RaveList_t* attrs = RaveAttributeTable_getSubAttributeNames(self);
+  if (attrs != NULL && RaveList_size(attrs) > 0) {
+    result = 1;
+  }
+  if (attrs != NULL) {
+    RaveList_freeAndDestroy(&attrs);
+  }
+  return result;
 }
 
 RaveObjectList_t* RaveAttributeTable_getValues(RaveAttributeTable_t* self)

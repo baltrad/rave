@@ -22,7 +22,15 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @author Firstname Lastname, Affiliation
 ## @date YYYY-MM-DD
 
+
+# Standard python libs:
 import os
+
+
+# Third-party:
+
+
+# Module/Project:
 
 
 ## Function description (example)

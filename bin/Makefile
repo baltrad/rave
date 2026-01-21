@@ -51,6 +51,7 @@ ifeq ($(COMPILE_FOR_PYTHON), yes)
 	@./fix_shebang.sh ${PYTHON_BIN} create_tile_definition "${DESTDIR}${prefix}/bin"
 	@./fix_shebang.sh ${PYTHON_BIN} create_acrr_composites "${DESTDIR}${prefix}/bin"
 	@./fix_shebang.sh ${PYTHON_BIN} merge_files "${DESTDIR}${prefix}/bin"
+	@./fix_shebang.sh ${PYTHON_BIN} compute_and_add_pia "${DESTDIR}${prefix}/bin"
 endif	
 	
 .PHONY:clean

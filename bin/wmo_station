@@ -23,66 +23,71 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @author Anders Henja, SMHI
 ## @date 2013-11-08
 
-import sys, getopt
+# Standard python libs:
+import getopt
+import sys
 
-def Usage(brief=True,doexit=False):
-  print("Imports the wmo_stations from a wmo flatfile or prints information about a specific station.")
-  print("Usage: %s --uri=<pgsqluri> [--flatfile=<flatfile>] [--station=<station1,station2,...>] import|print")
-  if brief == False:
-    print("  --uri=<pgsqluri> The postgresql uri to the dbhost. ")
-    print("        Default value [postgresql://baltrad:baltrad@127.0.0.1/baltrad]")
-    print("  --flatfile=<flatfile> The WMO flatfile containing the wmo stations, specified on import")
-    print("        Default value [wmo_flatfile.txt]")
-    print("  --station=<station1,station2,...> A list of stations that should be printed.")
-  if doexit:
-    import sys
-    sys.exit(0)
+
+def Usage(brief=True, doexit=False):
+    # fmt: off
+    print("Imports the wmo_stations from a wmo flatfile or prints information about a specific station.")
+    print("Usage: %s --uri=<pgsqluri> [--flatfile=<flatfile>] [--station=<station1,station2,...>] import|print")
+    if brief == False:
+        print("  --uri=<pgsqluri> The postgresql uri to the dbhost. ")
+        print("        Default value [postgresql://baltrad:baltrad@127.0.0.1/baltrad]")
+        print("  --flatfile=<flatfile> The WMO flatfile containing the wmo stations, specified on import")
+        print("        Default value [wmo_flatfile.txt]")
+        print("  --station=<station1,station2,...> A list of stations that should be printed.")
+    # fmt: on
+    if doexit:
+      import sys
+      sys.exit(0)
+
 
 if __name__ == "__main__":
-  optlist = []
-  args = []
-  try:
-    optlist, args = getopt.getopt(sys.argv[1:], '', 
-                                  ['uri=','flatfile=','station=','help'])
-  except getopt.GetoptError as e:
-    Usage(True, e.__str__())
-    sys.exit(127)
-  
-  dburi="postgresql://baltrad:baltrad@127.0.0.1/baltrad"
-  flatfile="wmo_flatfile.txt"
-  stationlist=[]
-  
-  for o, a in optlist:
-    if o == "--uri":
-      dburi=a
-    elif o == "--flatfile":
-      flatfile=a
-    elif o == "--station":
-      stationlist=a.split(",")
-    elif o == "--help":
-      Usage(False,True)
+    optlist = []
+    args = []
+    try:
+        optlist, args = getopt.getopt(sys.argv[1:], '', ['uri=', 'flatfile=', 'station=', 'help'])
+    except getopt.GetoptError as e:
+        Usage(True, e.__str__())
+        sys.exit(127)
+
+    dburi = "postgresql://baltrad:baltrad@127.0.0.1/baltrad"
+    flatfile = "wmo_flatfile.txt"
+    stationlist = []
+
+    for o, a in optlist:
+        if o == "--uri":
+            dburi = a
+        elif o == "--flatfile":
+            flatfile = a
+        elif o == "--station":
+            stationlist = a.split(",")
+        elif o == "--help":
+            Usage(False, True)
+        else:
+            Usage(True, True)
+
+    if len(args) <= 0:
+        Usage(True, True)
+
+    if args[0] == "import":
+        import rave_dom_db
+        from rave_wmo_flatfile import rave_wmo_flatfile
+
+        db = rave_dom_db.create_db(dburi, True)
+
+        parser = rave_wmo_flatfile()
+        result = parser.parse(flatfile)
+        db.merge(result)
+    elif args[0] == "print":
+        import rave_dom_db
+
+        db = rave_dom_db.create_db(dburi, True)
+
+        for s in stationlist:
+            ws = db.get_station(s)
+            print(str(ws))
     else:
-      Usage(True,True)
-  
-  if len(args) <= 0:
-    Usage(True, True)
-  
-  if args[0] == "import":
-    from rave_wmo_flatfile import rave_wmo_flatfile
-    import rave_dom_db
-    
-    db = rave_dom_db.create_db(dburi, True)
-    
-    parser = rave_wmo_flatfile()
-    result = parser.parse(flatfile)
-    db.merge(result)
-  elif args[0] == "print":
-    import rave_dom_db
-    
-    db = rave_dom_db.create_db(dburi, True)
-    
-    for s in stationlist:
-      ws = db.get_station(s)
-      print(str(ws))
-  else:
-    Usage(True,True)
+        Usage(True, True)

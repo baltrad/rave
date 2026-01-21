@@ -5,6 +5,8 @@
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2009-08-07
  */
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION 
+//#define NO_IMPORT_ARRAY
 #include "rave.h"
 #include "h5rad.h"
 #include "polar.h"
@@ -32,22 +34,30 @@ void initialize_RaveObject(RaveObject* v)
 
 char array_type_2d(PyArrayObject* arr)
 {
-  return arr->descr->type;
+  PyArray_Descr *descr;
+  char ret;
+
+  descr = PyArray_DescrFromType(PyArray_TYPE(arr));
+  ret = descr->type;
+  Py_DECREF(descr);
+  
+  return ret;
+  //return PyArray_TYPE(arr);
 }
 
 int array_type_num_2d(PyArrayObject* arr)
 {
-  return arr->descr->type_num;
+  return PyArray_TYPE(arr);
 }
 
 int array_stride_xsize_2d(PyArrayObject* arr)
 {
-  return arr->strides[0] / arr->strides[1];
+  return PyArray_STRIDES(arr)[0] / PyArray_STRIDES(arr)[1];
 }
 
 unsigned char* array_data_2d(PyArrayObject* arr)
 {
-  return (unsigned char*) arr->data;
+  return (unsigned char*) PyArray_DATA(arr);
 }
 
 RaveDataType translate_pytype_to_ravetype(char type)
@@ -97,35 +107,35 @@ RaveDataType translate_pyarraytype_to_ravetype(int type)
 {
   RaveDataType result = RaveDataType_UNDEFINED;
   switch(type) {
-  case PyArray_CHAR:
-  case PyArray_BYTE:
+  case NPY_STRING:
+  case NPY_BYTE:
     result = RaveDataType_CHAR;
     break;
-  case PyArray_UBYTE:
+  case NPY_UBYTE:
     result = RaveDataType_UCHAR;
     break;
-  case PyArray_SHORT:
+  case NPY_SHORT:
     result = RaveDataType_SHORT;
     break;
-  case PyArray_USHORT:
+  case NPY_USHORT:
     result = RaveDataType_USHORT;
     break;
-  case PyArray_INT:
+  case NPY_INT:
     result = RaveDataType_INT;
     break;
-  case PyArray_UINT:
+  case NPY_UINT:
     result = RaveDataType_UINT;
     break;
-  case PyArray_LONG:
+  case NPY_LONG:
     result = RaveDataType_LONG;
     break;
-  case PyArray_ULONG:
+  case NPY_ULONG:
     result = RaveDataType_ULONG;
     break;
-  case PyArray_FLOAT:
+  case NPY_FLOAT:
     result = RaveDataType_FLOAT;
     break;
-  case PyArray_DOUBLE:
+  case NPY_DOUBLE:
     result = RaveDataType_DOUBLE;
     break;
   default:
@@ -137,40 +147,40 @@ RaveDataType translate_pyarraytype_to_ravetype(int type)
 
 int translate_ravetype_to_pyarraytype(RaveDataType type)
 {
-  int result = PyArray_NOTYPE;
+  int result = NPY_NOTYPE;
   switch(type) {
   case RaveDataType_CHAR:
-    result = PyArray_BYTE;
+    result = NPY_BYTE;
     break;
   case RaveDataType_UCHAR:
-    result = PyArray_UBYTE;
+    result = NPY_UBYTE;
     break;
   case RaveDataType_SHORT:
-    result = PyArray_SHORT;
+    result = NPY_SHORT;
     break;
   case RaveDataType_USHORT:
-    result = PyArray_USHORT;
+    result = NPY_USHORT;
     break;
   case RaveDataType_INT:
-    result = PyArray_INT;
+    result = NPY_INT;
     break;
   case RaveDataType_UINT:
-    result = PyArray_UINT;
+    result = NPY_UINT;
     break;
   case RaveDataType_LONG:
-    result = PyArray_LONG;
+    result = NPY_LONG;
     break;
   case RaveDataType_ULONG:
-    result = PyArray_ULONG;
+    result = NPY_ULONG;
     break;
   case RaveDataType_FLOAT:
-    result = PyArray_FLOAT;
+    result = NPY_FLOAT;
     break;
   case RaveDataType_DOUBLE:
-    result = PyArray_DOUBLE;
+    result = NPY_DOUBLE;
     break;
   default:
-    result = PyArray_NOTYPE;
+    result = NPY_NOTYPE;
     break;
   }
   return result;
@@ -181,40 +191,40 @@ int pyarraytype_from_type(char type)
 {
   switch (type) {
   case 'c': /* PyArray_CHAR */
-    return PyArray_CHAR;
+    return NPY_STRING;
     break;
   case '1': /* PyArray_SBYTE */
-    return PyArray_BYTE;
+    return NPY_BYTE;
     break;
   case 'b': /* PyArray_UBYTE */
-    return PyArray_UBYTE;
+    return NPY_UBYTE;
     break;
   case 'B': /* PyArray_UBYTE */
-    return PyArray_UBYTE;
+    return NPY_UBYTE;
     break;
   case 's': /* PyArray_SHORT */
-    return PyArray_SHORT;
+    return NPY_SHORT;
     break;
   case 'H':
-    return PyArray_USHORT;
+    return NPY_USHORT;
     break;
   case 'i': /* PyArray_INT */
-    return PyArray_INT;
+    return NPY_INT;
     break;
   case 'I': /* PyArray_UINT */
-    return PyArray_UINT;
+    return NPY_UINT;
     break;
   case 'l': /* PyArray_LONG */
-    return PyArray_LONG;
+    return NPY_LONG;
     break;
   case 'L': /* PyArray_ULONG */
-    return PyArray_ULONG;
+    return NPY_ULONG;
     break;
-  case 'f': /* PyArray_FLOAT */
-    return PyArray_FLOAT;
+  case 'f': /* PyArray_PyArrayFLOAT */
+    return NPY_FLOAT;
     break;
   case 'd': /* PyArray_DOUBLE */
-    return PyArray_DOUBLE;
+    return NPY_DOUBLE;
     break;
   case 'F': /* PyArray_CFLOAT */
   case 'D': /* PyArray_CDOUBLE */

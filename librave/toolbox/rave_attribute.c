@@ -32,6 +32,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "raveobject_hashtable.h"
 #include "rave_data2d.h"
 #include <errno.h>
+#include <stdio.h>
 
 /**
  * This is the default parameter value that should be used when working
@@ -609,6 +610,36 @@ RaveAttribute_t* RaveAttributeHelp_createArrayFromData(const char* name, void* v
   }
   return result;
 }
+
+RaveAttribute_t* RaveAttributeHelp_createStringFmt(const char* name, const char* fmt, ...)
+{
+  RaveAttribute_t* result = NULL;
+  char datastr[4096];
+  va_list ap;
+  int n = 0;
+
+  va_start(ap, fmt);
+  n = vsnprintf(datastr, 4096, fmt, ap);
+  va_end(ap);
+  if (n < 0 || n >= 4096) {
+    RAVE_ERROR0("Failed to generate name");
+    goto done;
+  }
+
+  datastr[n] = '\0';
+
+  result = RaveAttributeHelp_createNamedAttribute(name);
+  if (result != NULL) {
+    if (!RaveAttribute_setString(result, datastr)) {
+      RAVE_ERROR0("Failed to set string");
+      RAVE_OBJECT_RELEASE(result);
+      goto done;
+    }
+  }
+done:
+  return result;
+}
+
 
 /*@} End of Interface functions */
 

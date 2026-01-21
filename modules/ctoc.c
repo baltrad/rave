@@ -4,6 +4,7 @@
  * @author Daniel Michelson (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2006-
  */
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION 
 #include <pyravecompat.h>
 #include <arrayobject.h>
 #include "rave.h"
@@ -107,10 +108,10 @@ static PyObject* _ctoc_transform(PyObject* self, PyObject* args)
     trafo.R = sqrt((ostruct.xscale * ostruct.xscale + \
         ostruct.yscale * ostruct.yscale)) * cressxy;
 
-    for (y = 0; y < outrave.data->dimensions[0]; y++) {
+    for (y = 0; y < PyArray_DIMS(outrave.data)[0]; y++) {
       UV here_s;
       here_s.v = ostruct.uppright.v - ostruct.yscale * (y + 0.5);
-      for (x = 0; x < outrave.data->dimensions[1]; x++) {
+      for (x = 0; x < PyArray_DIMS(outrave.data)[1]; x++) {
         TransformWeight* w;
         double v;
         here_s.u = (ostruct.lowleft.u + ostruct.xscale * (x + 0.5));

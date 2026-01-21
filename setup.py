@@ -19,9 +19,13 @@
 """
 Distutils setup file for RAVE.
 """
-import sys, os
-import re, string
+import sys
+import os
+import re
+import string
 from distutils.core import setup, Extension
+from typing import Tuple, Optional, List
+
 
 NAME = "RAVE"
 VERSION = "2.0"  # should be the same as the CVS version
@@ -29,169 +33,171 @@ DESCRIPTION = "Radar Analysis and Visualization Environment"
 AUTHOR = "Daniel Michelson", "daniel.michelson@smhi.se"
 HOMEPAGE = "http://baltrad.eu/"
 
-MODULES = []
-
-
 ## USGS PROJ4
 #
 # Add prefix to USGS PROJ4 manually to this list if setup fails.
 PROJ4PREFIXES = ['/usr/local', '/usr', '/']
 prefixes = ['/usr/local', '/usr', '/']
 
-INCLUDE_DIRS, LIBRARY_DIRS = [], []
-
-import numpy
-INCLUDE_DIRS.append(os.path.join(os.path.split(numpy.__file__)[0],
-                                 'core/include/numpy'))
-LIBRARY_DIRS.append(os.path.join(os.path.split(numpy.__file__)[0],
-                                 'lib'))
-
+MODULES = []
+INCLUDE_DIRS = []
+LIBRARY_DIRS = []
 LIBRARIES = []
+
+try:
+    import numpy
+    
+    # INCLUDE_DIRS.append(numpy.get_include())
+    INCLUDE_DIRS.append(os.path.join(os.path.split(numpy.__file__)[0], 'core/include/numpy'))
+    LIBRARY_DIRS.append(os.path.join(os.path.split(numpy.__file__)[0], 'lib'))
+except ImportError:
+    print("Numpy must be installed to build RAVE.")
+    sys.exit(1)
+
 
 # Determine hlhdf and the other parts (using the same hlhdf information that was available
 # when compiling librave
-def get_param_value(pname,lines):
-  result = None
-  for line in lines:
-    g = re.match(pname+"=[ \t]*([^$]+)", line)
-    if g != None:
-      result = string.strip(g.group(1))
-      break
-  return result
-
-def extract_hlhdf_info(filename):
-  deffp = open(filename)
-  lines = deffp.readlines()
-  incdir = get_param_value("HLHDF_INCLUDE_DIR",lines)
-  libdir = get_param_value("HLHDF_LIB_DIR",lines)
-  hldefmk = get_param_value("HLHDF_HLDEF_MK_FILE",lines)
-
-  gg = re.match("([ \t]*-I)(.*)", incdir)
-  if gg != None:
-    incdir = gg.group(2)
-  gg = re.match("([ \t]*-L)(.*)", libdir)
-  if gg != None:
-    libdir = gg.group(2)
-
-  if os.path.isfile(incdir+"/hlhdf.h") and \
-     os.path.isfile(libdir+"/libhlhdf.so") and \
-     os.path.isfile(hldefmk):
-    return (incdir,libdir,hldefmk)
-  else:
-    raise IOError, "Failed to determine hlhdf settings"
-
-def get_szinfo_from_hlhdf(defmk):
-  fp = open(defmk)
-  lines = fp.readlines()
-  gotsz = get_param_value("GOT_SZ_COMPRESS",lines)
-  szinc = get_param_value("SZLIB_INCDIR", lines)
-  szlib = get_param_value("SZLIB_LIBDIR", lines)
-  if gotsz == "no":
+def get_param_value(param_name: str, lines: List[str]) -> Optional[str]:
+    pattern = re.compile(rf"{param_name}=[ \t]*([^$]+)")
+    for line in lines:
+        match = pattern.match(line)
+        if match is not None:
+            return match.group(1).strip()
     return None
-  else:
-    return (szinc,szlib)
 
-def get_zlibinfo_from_hlhdf(defmk):
-  fp = open(defmk)
-  lines = fp.readlines()
-  zlinc = get_param_value("ZLIB_INCDIR", lines)
-  zllib = get_param_value("ZLIB_LIBDIR", lines)
-  return (zlinc,zllib)
-
-def get_hdf5info_from_hlhdf(defmk):
-  fp = open(defmk)
-  lines = fp.readlines()
-  hdfinc = get_param_value("HDF5_INCDIR", lines)
-  hdflib = get_param_value("HDF5_LIBDIR", lines)
-  gg = re.match("([ \t]*-I)(.*)", hdfinc)
-  if gg != None:
-    hdfinc = gg.group(2)
-  gg = re.match("([ \t]*-L)(.*)", hdflib)
-  if gg != None:
-    hdflib = gg.group(2)  
-  return (hdfinc,hdflib)
-
-def get_expat_info_from_def(defmk):
-  fp = open(defmk)
-  lines = fp.readlines()
-  expatsup=get_param_value("EXPAT_SUPPRESSED", lines)
-  expatinc=get_param_value("EXPAT_INCLUDE_DIR", lines)
-  expatlib=get_param_value("EXPAT_LIB_DIR", lines)
-  if expatsup == None or expatsup == "":
-    expatsup = "yes"
+def extract_hlhdf_info(filename: str) -> Tuple[Optional[str], Optional[str], Optional[str]]:
+    deffp = open(filename)
+    lines = deffp.readlines()
+    incdir = get_param_value("HLHDF_INCLUDE_DIR", lines)
+    libdir = get_param_value("HLHDF_LIB_DIR", lines)
+    hldefmk = get_param_value("HLHDF_HLDEF_MK_FILE", lines)
     
-  gg = re.match("([ \t]*-I)(.*)", expatinc)
-  if gg != None:
-    expatinc = gg.group(2)
-  gg = re.match("([ \t]*-L)(.*)", expatlib)
-  if gg != None:
-    expatlib = gg.group(2)
-  return (expatsup, expatinc, expatlib)
-
-def get_bufr_info_from_def(defmk):
-  fp = open(defmk)
-  lines = fp.readlines()
-  bufrsup=get_param_value("BUFR_SUPPRESSED", lines)
-  bufrinc=get_param_value("BUFR_INCLUDE_DIR", lines)
-  bufrlib=get_param_value("BUFR_LIB_DIR", lines)
-  if bufrsup == None or bufrsup == "":
-    bufrsup = "yes"
+    gg = re.match("([ \t]*-I)(.*)", incdir)
+    if gg is not None:
+        incdir = gg.group(2)
+    gg = re.match("([ \t]*-L)(.*)", libdir)
+    if gg is not None:
+        libdir = gg.group(2)
     
-  gg = re.match("([ \t]*-I)(.*)", bufrinc)
-  if gg != None:
-    bufrinc = gg.group(2)
-  gg = re.match("([ \t]*-L)(.*)", bufrlib)
-  if gg != None:
-    bufrlib = gg.group(2)
-  return (bufrsup, bufrinc, bufrlib)
+    if os.path.isfile(incdir + "/hlhdf.h") and \
+        os.path.isfile(libdir + "/libhlhdf.so") and \
+        os.path.isfile(hldefmk):
+        return (incdir, libdir, hldefmk)
+    else:
+        raise IOError("Failed to determine hlhdf settings")
 
-def get_pthread_info_from_def(defmk):
-  fp = open(defmk)
-  lines = fp.readlines()
-  pthrsupport=get_param_value("GOT_PTHREAD_SUPPORT", lines)
-  if pthrsupport == None or pthrsupport == "":
-    pthrsupport = "no"
-  return pthrsupport
+def get_szinfo_from_hlhdf(defmk: str) -> Optional[Tuple[Optional[str], Optional[str]]]:
+    fp = open(defmk)
+    lines = fp.readlines()
+    gotsz = get_param_value("GOT_SZ_COMPRESS", lines)
+    szinc = get_param_value("SZLIB_INCDIR", lines)
+    szlib = get_param_value("SZLIB_LIBDIR", lines)
+    if gotsz == "no":
+        return None
+    else:
+        return (szinc, szlib)
 
-def get_proj4_dirs():
-  proot = os.getenv("PROJ4ROOT")
-  if proot is None:
-    princ = os.getenv("PROJ4INC")
-    prlib = os.getenv("PROJ4LIB")
-  else:
-    princ = "%s/include"%proot
-    prlib = "%s/lib"%proot
+def get_zlibinfo_from_hlhdf(defmk: str) -> Tuple[Optional[str], Optional[str]]:
+    fp = open(defmk)
+    lines = fp.readlines()
+    zlinc = get_param_value("ZLIB_INCDIR", lines)
+    zllib = get_param_value("ZLIB_LIBDIR", lines)
+    return (zlinc, zllib)
 
-  if princ is None or prlib is None:
-    for p in PROJ4PREFIXES:
-      if princ is None:
-        header = os.path.join(p, 'include/projects.h')
-        if os.path.isfile(header):
-          princ = p+'/include'
-          break
-    for p in PROJ4PREFIXES:
-      if prlib is None:
-        library = os.path.join(p, 'lib/libproj.so')
-        if not os.path.isfile(library):
-          library = os.path.join(p, 'lib/libproj.a')
-        if os.path.isfile(library):
-          prlib = p+'/lib'
-          break
+def get_hdf5info_from_hlhdf(defmk: str) -> Tuple[Optional[str], Optional[str]]:
+    fp = open(defmk)
+    lines = fp.readlines()
+    hdfinc = get_param_value("HDF5_INCDIR", lines)
+    hdflib = get_param_value("HDF5_LIBDIR", lines)
+    gg = re.match("([ \t]*-I)(.*)", hdfinc)
+    if gg is not None:
+        hdfinc = gg.group(2)
+    gg = re.match("([ \t]*-L)(.*)", hdflib)
+    if gg is not None:
+        hdflib = gg.group(2)
+    return (hdfinc, hdflib)
 
-  return princ,prlib
+def get_expat_info_from_def(defmk: str) -> Tuple[Optional[str], Optional[str], Optional[str]]:
+    fp = open(defmk)
+    lines = fp.readlines()
+    expatsup = get_param_value("EXPAT_SUPPRESSED", lines)
+    expatinc = get_param_value("EXPAT_INCLUDE_DIR", lines)
+    expatlib = get_param_value("EXPAT_LIB_DIR", lines)
+    if expatsup is None or expatsup == "":
+        expatsup = "yes"
+    
+    gg = re.match("([ \t]*-I)(.*)", expatinc)
+    if gg is not None:
+        expatinc = gg.group(2)
+    gg = re.match("([ \t]*-L)(.*)", expatlib)
+    if gg is not None:
+        expatlib = gg.group(2)
+    return (expatsup, expatinc, expatlib)
+
+def get_bufr_info_from_def(defmk: str) -> Tuple[Optional[str], Optional[str], Optional[str]]:
+    fp = open(defmk)
+    lines = fp.readlines()
+    bufrsup = get_param_value("BUFR_SUPPRESSED", lines)
+    bufrinc = get_param_value("BUFR_INCLUDE_DIR", lines)
+    bufrlib = get_param_value("BUFR_LIB_DIR", lines)
+    if bufrsup is None or bufrsup == "":
+        bufrsup = "yes"
+    
+    gg = re.match("([ \t]*-I)(.*)", bufrinc)
+    if gg is not None:
+        bufrinc = gg.group(2)
+    gg = re.match("([ \t]*-L)(.*)", bufrlib)
+    if gg is not None:
+        bufrlib = gg.group(2)
+    return (bufrsup, bufrinc, bufrlib)
+
+def get_pthread_info_from_def(defmk: str) -> str:
+    fp = open(defmk)
+    lines = fp.readlines()
+    pthrsupport = get_param_value("GOT_PTHREAD_SUPPORT", lines)
+    if pthrsupport is None or pthrsupport == "":
+        pthrsupport = "no"
+    return pthrsupport
+
+def get_proj4_dirs() -> Tuple[Optional[str], Optional[str]]:
+    proot = os.getenv("PROJ4ROOT")
+    if proot is None:
+        princ = os.getenv("PROJ4INC")
+        prlib = os.getenv("PROJ4LIB")
+    else:
+        princ = "%s/include" % proot
+        prlib = "%s/lib" % proot
+    
+    if princ is None or prlib is None:
+        for p in PROJ4PREFIXES:
+            if princ is None:
+                header = os.path.join(p, 'include/projects.h')
+                if os.path.isfile(header):
+                    princ = p + '/include'
+                    break
+        for p in PROJ4PREFIXES:
+            if prlib is None:
+                library = os.path.join(p, 'lib/libproj.so')
+                if not os.path.isfile(library):
+                    library = os.path.join(p, 'lib/libproj.a')
+                if os.path.isfile(library):
+                    prlib = p + '/lib'
+                    break
+    
+    return princ, prlib
 
 # Utility function for replacing configuration definitions
 # var = the name of the environment variable
 # lines = the contents of rave_defines.py read with readlines()
 # existing = the part of the (existing) definition that doesn't change
-def replace_def(var, lines, existing='%s\n'):
+def replace_def(var: str, lines: List[str], existing: str = '%s\n'):
     for l in range(len(lines)):
         if len(lines[l]) > len(var):
             if lines[l][:len(var)] == var:
                 lines[l] = var + ' = ' + existing % os.getenv(var)
 
 # Continuing ...
-incdir,libdir,hldefmk = extract_hlhdf_info("./librave/def.mk")
+incdir, libdir, hldefmk = extract_hlhdf_info("./librave/def.mk")
 INCLUDE_DIRS.append(incdir)
 LIBRARY_DIRS.append(libdir)
 
@@ -199,27 +205,27 @@ szinfo = get_szinfo_from_hlhdf(hldefmk)
 zlibinfo = get_zlibinfo_from_hlhdf(hldefmk)
 hdfinfo = get_hdf5info_from_hlhdf(hldefmk)
 
-if hdfinfo[0] != None and hdfinfo[0] != "":
-  INCLUDE_DIRS.append(hdfinfo[0])
-if hdfinfo[1] != None and hdfinfo[1] != "":
-  LIBRARY_DIRS.append(hdfinfo[1])
+if hdfinfo[0] is not None and hdfinfo[0] != "":
+    INCLUDE_DIRS.append(hdfinfo[0])
+if hdfinfo[1] is not None and hdfinfo[1] != "":
+    LIBRARY_DIRS.append(hdfinfo[1])
 
-if szinfo != None:
-  if szinfo[0] != None and szinfo[0] != "":
-    INCLUDE_DIRS.append(szinfo[0])
-  if szinfo[1] != None and szinfo[1] != "":
-    LIBRARY_DIRS.append(szinfo[1])
+if szinfo is not None:
+    if szinfo[0] is not None and szinfo[0] != "":
+        INCLUDE_DIRS.append(szinfo[0])
+    if szinfo[1] is not None and szinfo[1] != "":
+        LIBRARY_DIRS.append(szinfo[1])
 
-if zlibinfo[0] != None and zlibinfo[0] != "":
-  INCLUDE_DIRS.append(zlibinfo[0])
-if zlibinfo[1] != None and zlibinfo[1] != "":
-  LIBRARY_DIRS.append(zlibinfo[1])
+if zlibinfo[0] is not None and zlibinfo[0] != "":
+    INCLUDE_DIRS.append(zlibinfo[0])
+if zlibinfo[1] is not None and zlibinfo[1] != "":
+    LIBRARY_DIRS.append(zlibinfo[1])
 
-projincdir,projlibdir = get_proj4_dirs()
+projincdir, projlibdir = get_proj4_dirs()
 
-if projincdir=='' and projlibdir=='':
-    print '\tCould not find USGS PROJ4.'
-    sys.exit()  
+if projincdir == '' and projlibdir == '':
+    print('\tCould not find USGS PROJ4.')
+    sys.exit()
 
 if projincdir != '':
     INCLUDE_DIRS.append(projincdir)
@@ -227,20 +233,20 @@ if projincdir != '':
 if projlibdir != '':
     LIBRARY_DIRS.append(projlibdir)
 
-expatsuppressed,expatinc,expatlib = get_expat_info_from_def("./librave/def.mk")
+expatsuppressed, expatinc, expatlib = get_expat_info_from_def("./librave/def.mk")
 
 if expatsuppressed == "no":
-  if expatinc != '':
-    INCLUDE_DIRS.append(expatinc)
-  if expatlib != '':
-    LIBRARY_DIRS.append(expatlib)
+    if expatinc != '':
+        INCLUDE_DIRS.append(expatinc)
+    if expatlib != '':
+        LIBRARY_DIRS.append(expatlib)
 
-bufrsuppressed,bufrinc,bufrlib = get_bufr_info_from_def("./librave/def.mk")
+bufrsuppressed, bufrinc, bufrlib = get_bufr_info_from_def("./librave/def.mk")
 if bufrsuppressed == "no":
-  if bufrinc != '':
-    INCLUDE_DIRS.append(bufrinc)
-  if bufrlib != '':
-    LIBRARY_DIRS.append(bufrlib)
+    if bufrinc != '':
+        INCLUDE_DIRS.append(bufrinc)
+    if bufrlib != '':
+        LIBRARY_DIRS.append(bufrlib)
 
 pthrsupported = get_pthread_info_from_def("./librave/def.mk")
 
@@ -249,20 +255,19 @@ LIBRARIES.append("hlhdf")
 LIBRARIES.append("hdf5")
 
 if bufrsuppressed == "no":
-  LIBRARIES.append("OperaBufr")
-  
+    LIBRARIES.append("OperaBufr")
+
 if expatsuppressed == "no":
-  LIBRARIES.append("expat")
+    LIBRARIES.append("expat")
 
 LIBRARIES.append("z")
 
-#print "LIBDIR: " + `LIBRARY_DIRS`
-if szinfo != None:
-  LIBRARIES.append("sz")
+# print("LIBDIR: " + `LIBRARY_DIRS`)
+if szinfo is not None:
+    LIBRARIES.append("sz")
 
 if pthrsupported == "yes":
-  LIBRARIES.append("pthread")
-  
+    LIBRARIES.append("pthread")
 
 MODULES.append(
     Extension(
@@ -270,8 +275,8 @@ MODULES.append(
         include_dirs=INCLUDE_DIRS,
         library_dirs=LIBRARY_DIRS,
         libraries=LIBRARIES
-        )
     )
+)
 
 ## RAVE modules
 #
@@ -281,8 +286,8 @@ MODULES.append(
         include_dirs=INCLUDE_DIRS,
         library_dirs=LIBRARY_DIRS,
         libraries=LIBRARIES
-        )
     )
+)
 
 INCLUDE_DIRS.append('./librave/transform')
 INCLUDE_DIRS.append('./librave/pyapi')
@@ -298,24 +303,24 @@ MODULES.append(
         include_dirs=INCLUDE_DIRS,
         library_dirs=LIBRARY_DIRS,
         libraries=LIBRARIES
-        )
     )
+)
 MODULES.append(
     Extension(
         "_ctoc", ["modules/ctoc.c"],
         include_dirs=INCLUDE_DIRS,
         library_dirs=LIBRARY_DIRS,
         libraries=LIBRARIES
-        )
     )
+)
 MODULES.append(
     Extension(
         "_composite", ["modules/composite.c"],
         include_dirs=INCLUDE_DIRS,
         library_dirs=LIBRARY_DIRS,
         libraries=LIBRARIES
-        )
     )
+)
 
 MODULES.append(
     Extension(
@@ -323,8 +328,8 @@ MODULES.append(
         include_dirs=INCLUDE_DIRS,
         library_dirs=LIBRARY_DIRS,
         libraries=LIBRARIES
-        )
     )
+)
 
 MODULES.append(
     Extension(
@@ -332,8 +337,8 @@ MODULES.append(
         include_dirs=INCLUDE_DIRS,
         library_dirs=LIBRARY_DIRS,
         libraries=LIBRARIES
-        )
     )
+)
 
 MODULES.append(
     Extension(
@@ -341,8 +346,8 @@ MODULES.append(
         include_dirs=INCLUDE_DIRS,
         library_dirs=LIBRARY_DIRS,
         libraries=LIBRARIES
-        )
     )
+)
 
 MODULES.append(
     Extension(
@@ -350,8 +355,8 @@ MODULES.append(
         include_dirs=INCLUDE_DIRS,
         library_dirs=LIBRARY_DIRS,
         libraries=LIBRARIES
-        )
     )
+)
 
 MODULES.append(
     Extension(
@@ -359,8 +364,8 @@ MODULES.append(
         include_dirs=INCLUDE_DIRS,
         library_dirs=LIBRARY_DIRS,
         libraries=LIBRARIES
-        )
     )
+)
 
 MODULES.append(
     Extension(
@@ -368,8 +373,8 @@ MODULES.append(
         include_dirs=INCLUDE_DIRS,
         library_dirs=LIBRARY_DIRS,
         libraries=LIBRARIES
-        )
     )
+)
 
 MODULES.append(
     Extension(
@@ -377,8 +382,8 @@ MODULES.append(
         include_dirs=INCLUDE_DIRS,
         library_dirs=LIBRARY_DIRS,
         libraries=LIBRARIES
-        )
     )
+)
 
 MODULES.append(
     Extension(
@@ -386,8 +391,8 @@ MODULES.append(
         include_dirs=INCLUDE_DIRS,
         library_dirs=LIBRARY_DIRS,
         libraries=LIBRARIES
-        )
     )
+)
 
 MODULES.append(
     Extension(
@@ -395,8 +400,8 @@ MODULES.append(
         include_dirs=INCLUDE_DIRS,
         library_dirs=LIBRARY_DIRS,
         libraries=LIBRARIES
-        )
     )
+)
 
 MODULES.append(
     Extension(
@@ -404,8 +409,8 @@ MODULES.append(
         include_dirs=INCLUDE_DIRS,
         library_dirs=LIBRARY_DIRS,
         libraries=LIBRARIES
-        )
     )
+)
 
 MODULES.append(
     Extension(
@@ -413,8 +418,8 @@ MODULES.append(
         include_dirs=INCLUDE_DIRS,
         library_dirs=LIBRARY_DIRS,
         libraries=LIBRARIES
-        )
     )
+)
 
 MODULES.append(
     Extension(
@@ -422,8 +427,8 @@ MODULES.append(
         include_dirs=INCLUDE_DIRS,
         library_dirs=LIBRARY_DIRS,
         libraries=LIBRARIES
-        )
     )
+)
 
 MODULES.append(
     Extension(
@@ -431,8 +436,8 @@ MODULES.append(
         include_dirs=INCLUDE_DIRS,
         library_dirs=LIBRARY_DIRS,
         libraries=LIBRARIES
-        )
     )
+)
 
 MODULES.append(
     Extension(
@@ -440,8 +445,8 @@ MODULES.append(
         include_dirs=INCLUDE_DIRS,
         library_dirs=LIBRARY_DIRS,
         libraries=LIBRARIES
-        )
     )
+)
 
 MODULES.append(
     Extension(
@@ -449,8 +454,8 @@ MODULES.append(
         include_dirs=INCLUDE_DIRS,
         library_dirs=LIBRARY_DIRS,
         libraries=LIBRARIES
-        )
     )
+)
 
 MODULES.append(
     Extension(
@@ -458,8 +463,8 @@ MODULES.append(
         include_dirs=INCLUDE_DIRS,
         library_dirs=LIBRARY_DIRS,
         libraries=LIBRARIES
-        )
     )
+)
 
 MODULES.append(
     Extension(
@@ -467,27 +472,27 @@ MODULES.append(
         include_dirs=INCLUDE_DIRS,
         library_dirs=LIBRARY_DIRS,
         libraries=LIBRARIES
-        )
     )
+)
 
 if expatsuppressed == "no":
-  MODULES.append(
-    Extension(
-      "_projectionregistry", ["modules/pyprojectionregistry.c"],
-      include_dirs=INCLUDE_DIRS,
-      library_dirs=LIBRARY_DIRS,
-      libraries=LIBRARIES
+    MODULES.append(
+        Extension(
+            "_projectionregistry", ["modules/pyprojectionregistry.c"],
+            include_dirs=INCLUDE_DIRS,
+            library_dirs=LIBRARY_DIRS,
+            libraries=LIBRARIES
+        )
     )
-  )
-
-  MODULES.append(
-    Extension(
-      "_arearegistry", ["modules/pyarearegistry.c"],
-      include_dirs=INCLUDE_DIRS,
-      library_dirs=LIBRARY_DIRS,
-      libraries=LIBRARIES
+    
+    MODULES.append(
+        Extension(
+            "_arearegistry", ["modules/pyarearegistry.c"],
+            include_dirs=INCLUDE_DIRS,
+            library_dirs=LIBRARY_DIRS,
+            libraries=LIBRARIES
+        )
     )
-  )
 
 MODULES.append(
     Extension(
@@ -495,8 +500,8 @@ MODULES.append(
         include_dirs=INCLUDE_DIRS,
         library_dirs=LIBRARY_DIRS,
         libraries=LIBRARIES
-        )
     )
+)
 
 INCLUDE_DIRS.append('./librave/scansun')
 LIBRARY_DIRS.append('./librave/scansun')
@@ -508,8 +513,8 @@ MODULES.append(
         include_dirs=INCLUDE_DIRS,
         library_dirs=LIBRARY_DIRS,
         libraries=LIBRARIES
-        )
     )
+)
 
 MODULES.append(
     Extension(
@@ -517,8 +522,8 @@ MODULES.append(
         include_dirs=INCLUDE_DIRS,
         library_dirs=LIBRARY_DIRS,
         libraries=LIBRARIES
-        )
     )
+)
 
 MODULES.append(
     Extension(
@@ -526,20 +531,20 @@ MODULES.append(
         include_dirs=INCLUDE_DIRS,
         library_dirs=LIBRARY_DIRS,
         libraries=LIBRARIES
-        )
     )
+)
 # build!
 
 if __name__ == "__main__":
-  import glob, distutils.sysconfig
-
-  rroot = os.getenv('RAVEROOT')
-  if rroot is None:
-    rroot="/opt/rave"
-    print "No RAVEROOT environment variable set. Will use /opt/rave\n"
-  rlib = rroot + '/Lib'
-
-  setup(
+    import glob, distutils.sysconfig
+    
+    rroot = os.getenv('RAVEROOT')
+    if rroot is None:
+        rroot = "/opt/rave"
+        print("No RAVEROOT environment variable set. Will use /opt/rave\n")
+    rlib = rroot + '/Lib'
+    
+    setup(
         name=NAME,
         version=VERSION,
         author=AUTHOR[0],
@@ -547,62 +552,67 @@ if __name__ == "__main__":
         description=DESCRIPTION,
         url=HOMEPAGE,
         packages=[""],  # one entry for each subdirectory
-        extra_path = rlib,  # all modules go here
+        extra_path=rlib,  # all modules go here
         package_dir={"": "Lib"},  # all Python modules are here
-        data_files=[(rroot+'/config', glob.glob('config/*.xml')),
-                    (rroot+'/include', glob.glob('librave/*.h')),
-                    (rroot+'/include/python', glob.glob('modules/*.h')),
-                    (rroot+'/lib', glob.glob('librave/*.so')),
-                    (rroot+'/mkf', ['librave/def.mk']),
-                    (rroot+'/bin', glob.glob('bin/*[!CVS]*')),
-                    (rroot+'/etc', glob.glob('etc/*')),
-                    (rroot+'/tmp', []),
-                    (rroot, ['rave.xbm','COPYING','COPYING.LESSER','LICENSE'])],
-        ext_modules = MODULES
-        )
-
-  # distutils doesn't allow flexible planting of .pth files,
-  # so we have to create it under extra_path and then ship it to
-  # where the default interpreter will find it.
+        data_files=[
+            (rroot + '/config', glob.glob('config/*.xml')),
+            (rroot + '/include', glob.glob('librave/*.h')),
+            (rroot + '/include/python', glob.glob('modules/*.h')),
+            (rroot + '/lib', glob.glob('librave/*.so')),
+            (rroot + '/mkf', ['librave/def.mk']),
+            (rroot + '/bin', glob.glob('bin/*[!CVS]*')),
+            (rroot + '/etc', glob.glob('etc/*')),
+            (rroot + '/tmp', []),
+            (rroot, ['rave.xbm', 'COPYING', 'COPYING.LESSER', 'LICENSE'])
+        ],
+        ext_modules=MODULES
+    )
     
-  # Only perform this operation during installation
-  isinstalling = 0
-  for item in sys.argv:
-    if item=="install":
-      isinstalling = 1
-  if isinstalling:
-    source = rlib + '.pth'
-    dest = distutils.sysconfig.get_python_lib() + '/rave.pth'
-    print "Moving %s to %s" % (source, dest)
-    try:
-      os.rename(source, dest)  # doesn't work in some environments
-    except:
-      import shutil
-      try:
-        shutil.copyfile(source, dest)
-        os.unlink(source)
-      except:
-        print "Failed to plant rave.pth file in your Python distribution's site-packages directory. This may not matter, but you should probably check..."
-
-    # Replace default definitions with ones given at build time
-    fd = open(rlib + '/rave_defines.py')
-    defs = fd.readlines()
-    fd.close()
-    if os.getenv('PGF_HOST'): 
-      replace_def('PGF_HOST', defs, '"%s"\n')
-    if os.getenv('PGF_PORT'): 
-      replace_def('PGF_PORT', defs)
-    if os.getenv('LOGPORT'):
-      replace_def('LOGPORT', defs)
-    if os.getenv('DEX_SPOE'): 
-      replace_def('DEX_SPOE', defs, '"http://%s/BaltradDex"\n')
-    if os.getenv('CENTER_ID'): 
-      replace_def('CENTER_ID', defs, '"ORG:%s"\n')  
-    if os.getenv('DEX_NODENAME'):
-      replace_def('DEX_NODENAME', defs, '"%s"\n')
-    if os.getenv("DEX_PRIVATEKEY"):
-      replace_def('DEX_PRIVATEKEY', defs, '"%s"\n')
-    fd = open(rlib + '/rave_defines.py', 'w')
-    for d in defs:
-      fd.write(d)
-    fd.close()
+    # distutils doesn't allow flexible planting of .pth files,
+    # so we have to create it under extra_path and then ship it to
+    # where the default interpreter will find it.
+    
+    # Only perform this operation during installation
+    isinstalling = False
+    for item in sys.argv:
+        if item == "install":
+            isinstalling = True
+            
+    if isinstalling:
+        source = rlib + '.pth'
+        dest = distutils.sysconfig.get_python_lib() + '/rave.pth'
+        print("Moving %s to %s" % (source, dest))
+        try:
+            os.rename(source, dest)  # doesn't work in some environments
+        except:
+            import shutil
+            
+            try:
+                shutil.copyfile(source, dest)
+                os.unlink(source)
+            except:
+                print("Failed to plant rave.pth file in your Python distribution's site-packages directory. "
+                      "This may not matter, but you should probably check...")
+        
+        # Replace default definitions with ones given at build time
+        fd = open(rlib + '/rave_defines.py')
+        defs = fd.readlines()
+        fd.close()
+        if os.getenv('PGF_HOST'):
+            replace_def('PGF_HOST', defs, '"%s"\n')
+        if os.getenv('PGF_PORT'):
+            replace_def('PGF_PORT', defs)
+        if os.getenv('LOGPORT'):
+            replace_def('LOGPORT', defs)
+        if os.getenv('DEX_SPOE'):
+            replace_def('DEX_SPOE', defs, '"http://%s/BaltradDex"\n')
+        if os.getenv('CENTER_ID'):
+            replace_def('CENTER_ID', defs, '"ORG:%s"\n')
+        if os.getenv('DEX_NODENAME'):
+            replace_def('DEX_NODENAME', defs, '"%s"\n')
+        if os.getenv("DEX_PRIVATEKEY"):
+            replace_def('DEX_PRIVATEKEY', defs, '"%s"\n')
+        fd = open(rlib + '/rave_defines.py', 'w')
+        for d in defs:
+            fd.write(d)
+        fd.close()

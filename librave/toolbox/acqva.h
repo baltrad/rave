@@ -19,6 +19,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 /**
  * Provides functionality for creating composites according to the acqva method
  * @file
+ * @deprecated
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2024-01-17
  */

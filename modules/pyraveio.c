@@ -23,6 +23,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @date 2009-12-10
  */
 #include "pyravecompat.h"
+#include "pyraveapi.h"
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>
@@ -36,6 +37,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "pypolarscan.h"
 #include "pycartesianvolume.h"
 #include "pyverticalprofile.h"
+#include "pyravevalue.h"
 #include "pyrave_debug.h"
 #include "rave_alloc.h"
 #include "hlhdf.h"
@@ -256,7 +258,6 @@ static PyObject* _pyraveio_save(PyRaveIO* self, PyObject* args)
   if (!PyArg_ParseTuple(args, "|s", &filename)) {
     return NULL;
   }
-
   if (!RaveIO_save(self->raveio, filename)) {
     raiseException_returnNULL(PyExc_IOError, "Failed to save file");
   }
@@ -275,6 +276,7 @@ static struct PyMethodDef _pyraveio_methods[] =
   {"objectType", NULL, METH_VARARGS},
   {"filename", NULL, METH_VARARGS},
   {"object", NULL, METH_VARARGS},
+  {"extras", NULL, METH_VARARGS},
   {"strict", NULL, METH_VARARGS},
   {"compression_level", NULL, METH_VARARGS},
   {"fcp_userblock", NULL, METH_VARARGS},
@@ -334,6 +336,15 @@ static PyObject* _pyraveio_getattro(PyRaveIO* self, PyObject* name)
       }
       RAVE_OBJECT_RELEASE(object);
       return res;
+    } else {
+      Py_RETURN_NONE;
+    }
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("extras", name) == 0) {
+    RaveValue_t* value = RaveIO_getExtras(self->raveio);
+    if (value != NULL) {
+      PyObject* pyvalue = PyRaveApi_RaveValueToObject(value);
+      RAVE_OBJECT_RELEASE(value);
+      return pyvalue;
     } else {
       Py_RETURN_NONE;
     }
@@ -424,6 +435,25 @@ static int _pyraveio_setattro(PyRaveIO* self, PyObject* name, PyObject* val)
       RaveIO_setObject(self->raveio, (RaveCoreObject*)((PyVerticalProfile*)val)->vp);
     } else {
       raiseException_gotoTag(done, PyExc_TypeError, "Can only save objects of type : cartesian, polarscan, polarvolume or verticalprofile");
+    }
+  } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("extras", name) == 0) {
+    if (PyRaveValue_Check(val)) {
+      if (!RaveIO_setExtras(self->raveio, ((PyRaveValue*)val)->value)) {
+        raiseException_gotoTag(done, PyExc_TypeError, "Rave value must be of hashtable type");  
+      }
+    } else if (val == Py_None) {
+      RaveIO_setExtras(self->raveio, NULL);
+    } else {
+      RaveValue_t* value = PyRaveApi_RaveValueFromObject(val);
+      if (value != NULL) {
+        if (!RaveIO_setExtras(self->raveio, value)) {
+          RAVE_OBJECT_RELEASE(value);
+          raiseException_gotoTag(done, PyExc_TypeError, "Rave value must be of hashtable type");  
+        }
+        RAVE_OBJECT_RELEASE(value);
+      } else {
+        raiseException_gotoTag(done, PyExc_TypeError, "Rave value must be of hashtable type");  
+      }
     }
   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("strict", name) == 0) {
     if (PyBool_Check(val)) {
@@ -766,6 +796,7 @@ MOD_INIT(_raveio)
   import_pyverticalprofile();
   import_pycartesianvolume();
   import_pycartesian();
+  import_ravevalue();
   PYRAVE_DEBUG_INITIALIZE;
   return MOD_INIT_SUCCESS(module);
 }

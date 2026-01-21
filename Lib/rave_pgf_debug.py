@@ -24,15 +24,15 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 
 
 def debugme(files, args):
-  import rave
-  import rave_tempfile
+    import rave
+    import rave_tempfile
 
-  fileno, outfile = rave_tempfile.mktemp(suffix='.h5', close="True")
+    fileno, outfile = rave_tempfile.mktemp(suffix='.h5', close="True")
 
-  this = rave.open(files[0])
-  this.save(outfile)
+    this = rave.open(files[0])
+    this.save(outfile)
 
-  return outfile
+    return outfile
 
 
 if __name__ == "__main__":

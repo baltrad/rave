@@ -277,7 +277,7 @@ void RaveCoreObject_setTrackObjects(int track)
   }
 }
 
-int RaveCoreObject_getTrackObjects()
+int RaveCoreObject_getTrackObjects(void)
 {
   return trackObjects;
 }

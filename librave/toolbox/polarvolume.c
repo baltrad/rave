@@ -24,6 +24,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "polarvolume.h"
 #include "polarnav.h"
+#include "polarscan.h"
+#include "rave_types.h"
 #include "raveobject_list.h"
 #include "rave_datetime.h"
 #include "rave_debug.h"
@@ -35,6 +37,8 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include <string.h>
 #include <float.h>
 #include <math.h>
+#include <stdio.h>
+
 /**
  * This is the default parameter value that should be used when working
  * with scans.
@@ -649,6 +653,49 @@ void PolarVolume_getLonLatNavigationInfo(PolarVolume_t* pvol, double lon, double
 
   PolarNavigator_llToDa(pvol->navigator, lat, lon, &info->distance, &info->azimuth);
   PolarNavigator_dhToRe(pvol->navigator, info->distance, info->height, &info->range, &info->elevation);
+}
+
+PolarNavigationInfo* PolarVolume_getVerticalLonLatNavigationInfo(PolarVolume_t* pvol, double lon, double lat, int *nrNavInfo)
+{
+  int nrScans = 0, i = 0;
+  double dist = 0.0, maxdist = 0.0;
+  PolarScan_t* scan = NULL;
+  PolarNavigationInfo *result = NULL, *pnarr = NULL;
+
+  RAVE_ASSERT((pvol != NULL), "pvol == NULL");
+  dist = PolarVolume_getDistance(pvol, lon, lat);
+
+  nrScans = PolarVolume_getNumberOfScans(pvol);
+
+  pnarr = RAVE_MALLOC(sizeof(PolarNavigationInfo)*nrScans);
+  if (pnarr == NULL) {
+    goto done;
+  }
+  memset(pnarr, 0, sizeof(PolarNavigationInfo)*nrScans);
+  for (i = 0; i < nrScans; i++) {
+    pnarr[i].ai = pnarr[i].ei = pnarr[i].ri = -1;
+    scan = PolarVolume_getScan(pvol, i);
+    maxdist = PolarScan_getMaxDistance(scan);
+
+    if (maxdist > dist) {
+      if (!PolarScan_getNearestNavigationInfo(scan, lon, lat, &pnarr[i])) {
+        pnarr[i].ai = pnarr[i].ei = pnarr[i].ri = -1;
+      } else {
+        pnarr[i].ei = i;
+      }
+    }
+
+    RAVE_OBJECT_RELEASE(scan);
+  }
+
+  if (nrNavInfo != NULL) {
+    *nrNavInfo = nrScans;
+  }
+  result = pnarr;
+  pnarr = NULL;
+done:
+  RAVE_FREE(pnarr);
+  return result;
 }
 
 RaveValueType PolarVolume_getNearest(PolarVolume_t* pvol, double lon, double lat, double height, int insidee, double* v)

@@ -26,21 +26,25 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @author Daniel Michelson, SMHI
 ## @date 2010-07-23
 
-import os, sys
+# Standard python libs:
+import os
+import sys
 import traceback
-#import xmlrpclib
-from xml.etree import ElementTree as ET
-from rave_defines import QFILE
 import threading
+from xml.etree import ElementTree as ET
+# import xmlrpclib
 if sys.version_info < (3,):
-  from xmlrpclib import dumps as xmldumps
-  from xmlrpclib import loads as xmlloads
-  import Queue
+    from xmlrpclib import dumps as xmldumps
+    from xmlrpclib import loads as xmlloads
+    import Queue
 else:
-  from xmlrpc.client import dumps as xmldumps
-  from xmlrpc.client  import loads as xmlloads
-  import queue as Queue
-  
+    from xmlrpc.client import dumps as xmldumps
+    from xmlrpc.client import loads as xmlloads
+    import queue as Queue
+
+# Module/Project:
+from rave_defines import QFILE
+
 
 ## Job queue Exception
 class PGF_JobQueue_isFull_Error(Exception):
@@ -49,10 +53,9 @@ class PGF_JobQueue_isFull_Error(Exception):
 
 ## Queue object based on a dictionary
 class PGF_JobQueue(dict):
-
     # Initializer
     # @parameter maxsize int maximum number of jobs allowed in the queue, defaults to 0
-    # which means unlimited. 
+    # which means unlimited.
     def __init__(self, maxsize=0):
         self.maxsize = maxsize
         self.lock = threading.Lock()
@@ -72,13 +75,11 @@ class PGF_JobQueue(dict):
             else:
                 raise PGF_JobQueue_isFull_Error
         finally:
-          self.lock.release() 
+            self.lock.release()
 
-
-    # @returns the number of jobs in the queue 
+    # @returns the number of jobs in the queue
     def qsize(self):
         return self.__len__()
-
 
     # Removes a job from the queue
     # @param jobid string containing the job identifier
@@ -92,8 +93,7 @@ class PGF_JobQueue(dict):
             else:
                 return "Job queue does not have job ID=%s" % jobid
         finally:
-          self.lock.release()
-
+            self.lock.release()
 
     # Dumps the queue to XML file
     # @param filename string of the file to which to dump the queue
@@ -108,16 +108,16 @@ class PGF_JobQueue(dict):
             fd.write(q + ET.tostring(root).decode('utf-8'))
             fd.close()
         finally:
-          self.lock.release()
-
+            self.lock.release()
 
     # Loads the queue from XML file
     # @param filename string of the file from which to load the queue
     def load(self, filename=QFILE):
         from xml.parsers.expat import ExpatError
+
         if os.path.isfile(filename):
             try:
-                elems =  ET.parse(filename).getroot()
+                elems = ET.parse(filename).getroot()
             except Exception:
                 err_msg = traceback.format_exc()
                 print("Error trying to read PGF job queue: %sIgnoring, using empty job queue." % err_msg)
@@ -127,7 +127,8 @@ class PGF_JobQueue(dict):
 
 
 def pgf_dumps(val):
-  return xmldumps(val)
+    return xmldumps(val)
+
 
 ## Adds Elements containing files and arguments to the message.
 # @param algorithm Element in a \ref rave_pgf_registry.PGF_Registry instance.
@@ -162,6 +163,7 @@ def List2Element(inlist, tagname):
     e.tag = tagname  # xmlrpc.dumps creates tagname 'params' by default.
     return e
 
+
 ## Convenience function for retrieving a Python list from an Element.
 # @param elem Element containing the list to retrieve.
 # @param tagname string the name of the tag to read.
@@ -171,8 +173,8 @@ def Element2List(elem, tagname):
     tag = e.tag
     e.tag = 'params'  # xmlrpc.loads won't accept any other tagname. Hack...
     l = list(xmlloads(ET.tostring(e))[0])
-    e.tag = tag       # put back original tag
-    return l 
+    e.tag = tag  # put back original tag
+    return l
 
 
 if __name__ == "__main__":

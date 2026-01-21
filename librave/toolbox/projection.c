@@ -355,7 +355,7 @@ int Projection_transform(Projection_t* projection, Projection_t* tgt, double* x,
       RAVE_ERROR0("Failed to create crs to crs\n");
       result = 0;
     } else {
-      PJ_COORD c, outc;
+      PJ_COORD c = {0}, outc = {0};
       c.xyz.x = *x;
       c.xyz.y = *y;
       c.xyz.z = 0.0;
@@ -420,7 +420,7 @@ int Projection_transformx(Projection_t* projection, Projection_t* tgt,
     RAVE_ERROR0("Failed to create crs to crs\n");
     result = 0;
   } else {
-    PJ_COORD c, outc;
+    PJ_COORD c = {0}, outc = {0};
     c.xyz.x = vx;
     c.xyz.y = vy;
     c.xyz.z = vz;
@@ -470,7 +470,7 @@ int Projection_inv(Projection_t* projection, double x, double y, double* lon, do
   }
 #else
   {
-    PJ_COORD in,out;
+    PJ_COORD in = {0}, out = {0};
     in.uv.u = x;
     in.uv.v = y;
     in.v[2]=0.0;
@@ -499,7 +499,7 @@ int Projection_fwd(Projection_t* projection, double lon, double lat, double* x, 
     *y = out.v;
   }
 #else
-  PJ_COORD in,out;
+  PJ_COORD in = {0}, out = {0};
   in.uv.u = lon;
   in.uv.v = lat;
   out = proj_trans(projection->pj, PJ_FWD, in);

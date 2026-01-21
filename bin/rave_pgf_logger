@@ -23,31 +23,40 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @author Daniel Michelson, SMHI
 ## @date 2014-03-14
 
+# Standard python libs:
 import sys
-import rave_pgf_logger
-from rave_defines import PGF_HOST, LOGPORT, LOGLEVEL, LOGFILE, LOGPIDFILE
 
+# Module/Project:
+import rave_pgf_logger
+from rave_defines import LOGFILE, LOGLEVEL, LOGPIDFILE, LOGPORT, PGF_HOST
 
 if __name__ == "__main__":
     from optparse import OptionParser
 
     description = "RAVE TCP Logger server"
-
+    # fmt: off
     usage = "usage: %prog -a start|stop|status|restart|fg [-H <host> -p <port> -l <level> -P <pidfile> -L <logfile> -f <foreground>] [h]"
     parser = OptionParser(usage=usage, description=description)
 
-    parser.add_option("-a", "--argument", dest="arg", help="start|stop|status|restart|fg, where fg instructs to run in the foreground instead of daemonizing.")
+    parser.add_option("-a", "--argument", dest="arg",
+                      help="start|stop|status|restart|fg, "
+                           "where fg instructs to run in the foreground instead of daemonizing.")
 
-    parser.add_option("-H", "--host", dest="host", default=PGF_HOST, help="Host, defaults to the PGF host.")
+    parser.add_option("-H", "--host", dest="host", default=PGF_HOST,
+                      help="Host, defaults to the PGF host.")
 
-    parser.add_option("-p", "--port", dest="port", type="int", default=LOGPORT, help="Port, defaults to 8090.")
+    parser.add_option("-p", "--port", dest="port", type="int", default=LOGPORT,
+                      help="Port, defaults to 8090.")
 
-    parser.add_option("-P", "--pidfile", dest="pidfile", default=LOGPIDFILE, help="Log PID file. Change only for testing.")
+    parser.add_option("-P", "--pidfile", dest="pidfile", default=LOGPIDFILE,
+                      help="Log PID file. Change only for testing.")
 
-    parser.add_option("-l", "--level", dest="level", default=LOGLEVEL, help="Log level, defaults to INFO.")
+    parser.add_option("-l", "--level", dest="level", default=LOGLEVEL,
+                      help="Log level, defaults to INFO.")
 
-    parser.add_option("-L", "--logfile", dest="logfile", help="Log file name. Change only for testing.")
-
+    parser.add_option("-L", "--logfile", dest="logfile",
+                      help="Log file name. Change only for testing.")
+    # fmt: on
     (options, args) = parser.parse_args()
 
     if not options.arg:
@@ -70,11 +79,12 @@ if __name__ == "__main__":
 
     if ARG == 'start':
         if this.status() == "not running":
-            if options.port: this.port = options.port
+            if options.port:
+                this.port = options.port
             print("Starting log TCP server on %s:%i" % (options.host, options.port))
             this.start()
         else:
-            print("Log TCP server already running on %s:%i" % (options.host, options.port)) 
+            print("Log TCP server already running on %s:%i" % (options.host, options.port))
 
     if ARG == 'restart':
         this.restart()

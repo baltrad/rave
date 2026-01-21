@@ -83,10 +83,16 @@ PyObject* PyRaveAPI_StringOrUnicode_FromASCII(const char *buffer);
     PyModuleDef_HEAD_INIT, name, doc, -1, methods, }; \
     ob = PyModule_Create(&moduledef);
 
+#if PY_VERSION_HEX < 0x030900A4 && !defined(Py_SET_TYPE)
+static inline void _Py_SET_TYPE(PyObject *ob, PyTypeObject *type)
+{ ob->ob_type = type; }
+#define Py_SET_TYPE(ob, type) _Py_SET_TYPE((PyObject*)(ob), type)
+#endif
+
 #define MOD_INIT_CREATE_CAPI(ptr, name) PyCapsule_New(ptr, name, NULL)
 #define MOD_INIT_IS_CAPI(ptr) PyCapsule_CheckExact(ptr)
 #define MOD_INIT_GET_CAPI(ptr, name) PyCapsule_GetPointer(ptr, name)
-#define MOD_INIT_SETUP_TYPE(itype, otype) Py_TYPE(&itype) = otype
+#define MOD_INIT_SETUP_TYPE(itype, otype) Py_SET_TYPE(&itype, otype)
 #define MOD_INIT_VERIFY_TYPE_READY(type) if (PyType_Ready(type) < 0) return MOD_INIT_ERROR
 
 #else

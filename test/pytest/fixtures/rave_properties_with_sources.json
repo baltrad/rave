@@ -1,0 +1,9 @@
+{
+  "rave.acqva.featuremap.dir":"/var/lib/baltrad/rave/acqva/featuremap",
+  "rave.rate.zr.coefficients":{
+    "sella":[200.0, 1.6], 
+    "sekrn":[200.0,1.6]
+  },
+  "odim.sources":"fixtures/odim_sources_fixture.xml"
+}
+

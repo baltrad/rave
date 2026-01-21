@@ -17,8 +17,8 @@ You should have received a copy of the GNU Lesser General Public License
 along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-## 
-# Abstract way of handling grib files. Default reader is provided that uses the 
+##
+# Abstract way of handling grib files. Default reader is provided that uses the
 # pygrib API.
 
 ## @file

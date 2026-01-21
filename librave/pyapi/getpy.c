@@ -4,6 +4,8 @@
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 1998-
  */
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+//#define NO_IMPORT_ARRAY
 #include "getpy.h"
 #include "pyravecompat.h"
 #include "rave_alloc.h"

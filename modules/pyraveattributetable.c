@@ -22,6 +22,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
  * @author Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI)
  * @date 2022-03-30
  */
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION 
 #include "pyravecompat.h"
 #include <limits.h>
 #include <math.h>
@@ -168,9 +169,9 @@ static PyObject* _pyattributeinternal_createPyAttributeTuple(RaveAttribute_t* at
     npy_intp dims[1];
     RaveAttribute_getLongArray(attr, &value, &len);
     dims[0] = len;
-    arr = PyArray_SimpleNew(1, dims, PyArray_LONG);
+    arr = PyArray_SimpleNew(1, dims, NPY_LONG);
     for (i = 0; i < len; i++) {
-      *((long*) PyArray_GETPTR1(arr, i)) = value[i];
+      *((long*) PyArray_GETPTR1((PyArrayObject*)arr, i)) = value[i];
     }
     result = Py_BuildValue("(sO)", RaveAttribute_getName(attr), (PyObject*)arr);
     Py_XDECREF(arr);
@@ -182,9 +183,9 @@ static PyObject* _pyattributeinternal_createPyAttributeTuple(RaveAttribute_t* at
     npy_intp dims[1];
     RaveAttribute_getDoubleArray(attr, &value, &len);
     dims[0] = len;
-    arr = PyArray_SimpleNew(1, dims, PyArray_DOUBLE);
+    arr = PyArray_SimpleNew(1, dims, NPY_DOUBLE);
     for (i = 0; i < len; i++) {
-      *((double*) PyArray_GETPTR1(arr, i)) = value[i];
+      *((double*) PyArray_GETPTR1((PyArrayObject*)arr, i)) = value[i];
     }
     result = Py_BuildValue("(sO)", RaveAttribute_getName(attr), (PyObject*)arr);
     Py_XDECREF(arr);
@@ -282,9 +283,9 @@ static PyObject* _pyattributetable_addAttribute(PyRaveAttributeTable* self, PyOb
       npy_intp dims[1];
       RaveAttribute_getLongArray(translated, &value, &len);
       dims[0] = len;
-      arr = PyArray_SimpleNew(1, dims, PyArray_LONG);
+      arr = PyArray_SimpleNew(1, dims, NPY_LONG);
       for (i = 0; i < len; i++) {
-        *((long*) PyArray_GETPTR1(arr, i)) = value[i];
+        *((long*) PyArray_GETPTR1((PyArrayObject*)arr, i)) = value[i];
       }
       result = Py_BuildValue("(sO)", RaveAttribute_getName(translated), (PyObject*)arr);
       Py_XDECREF(arr);
@@ -296,9 +297,9 @@ static PyObject* _pyattributetable_addAttribute(PyRaveAttributeTable* self, PyOb
       npy_intp dims[1];
       RaveAttribute_getDoubleArray(translated, &value, &len);
       dims[0] = len;
-      arr = PyArray_SimpleNew(1, dims, PyArray_DOUBLE);
+      arr = PyArray_SimpleNew(1, dims, NPY_DOUBLE);
       for (i = 0; i < len; i++) {
-        *((double*) PyArray_GETPTR1(arr, i)) = value[i];
+        *((double*) PyArray_GETPTR1((PyArrayObject*)arr, i)) = value[i];
       }
       result = Py_BuildValue("(sO)", RaveAttribute_getName(translated), (PyObject*)arr);
       Py_XDECREF(arr);
@@ -358,9 +359,9 @@ static PyObject* _pyattributetable_getAttribute(PyRaveAttributeTable* self, PyOb
       npy_intp dims[1];
       RaveAttribute_getLongArray(attribute, &value, &len);
       dims[0] = len;
-      result = PyArray_SimpleNew(1, dims, PyArray_LONG);
+      result = PyArray_SimpleNew(1, dims, NPY_LONG);
       for (i = 0; i < len; i++) {
-        *((long*) PyArray_GETPTR1(result, i)) = value[i];
+        *((long*) PyArray_GETPTR1((PyArrayObject*)result, i)) = value[i];
       }
     } else if (format == RaveAttribute_Format_DoubleArray) {
       double* value = NULL;
@@ -369,9 +370,9 @@ static PyObject* _pyattributetable_getAttribute(PyRaveAttributeTable* self, PyOb
       npy_intp dims[1];
       RaveAttribute_getDoubleArray(attribute, &value, &len);
       dims[0] = len;
-      result = PyArray_SimpleNew(1, dims, PyArray_DOUBLE);
+      result = PyArray_SimpleNew(1, dims, NPY_DOUBLE);
       for (i = 0; i < len; i++) {
-        *((double*) PyArray_GETPTR1(result, i)) = value[i];
+        *((double*) PyArray_GETPTR1((PyArrayObject*)result, i)) = value[i];
       }
     } else {
       RAVE_CRITICAL1("Undefined format on requested attribute %s", name);
@@ -449,6 +450,19 @@ static PyObject* _pyattributetable_hasAttribute(PyRaveAttributeTable* self, PyOb
   return PyBool_FromLong((long)RaveAttributeTable_hasAttribute(self->table, name));
 }
 
+/**
+ * Returns if there exists any sub groups
+ * @param[in] self - this instance
+ * @param[in] args - name
+ * @returns True if subgroups exists otherwise False
+ */
+static PyObject* _pyattributetable_hasSubGroups(PyRaveAttributeTable* self, PyObject* args)
+{
+  if (!PyArg_ParseTuple(args, "")) {
+    return NULL;
+  }
+  return PyBool_FromLong((long)RaveAttributeTable_hasSubGroups(self->table));
+}
 static PyObject* _pyattributetable_shiftAttribute(PyRaveAttributeTable* self, PyObject* args)
 {
   char* name = NULL;
@@ -510,6 +524,51 @@ fail:
   Py_XDECREF(result);
   return NULL;
 }
+
+static PyObject* _pyattributetable_getSubAttributeNames(PyRaveAttributeTable* self, PyObject* args)
+{
+  RaveList_t* list = NULL;
+  PyObject* result = NULL;
+  int n = 0;
+  int i = 0;
+  RaveIO_ODIM_Version version = RaveIO_ODIM_Version_UNDEFINED;
+
+  if (!PyArg_ParseTuple(args, "|i", &version)) {
+    return NULL;
+  }
+  if (version != RaveIO_ODIM_Version_UNDEFINED) {
+    list = RaveAttributeTable_getSubAttributeNamesVersion(self->table, version);
+  } else {
+    list = RaveAttributeTable_getSubAttributeNames(self->table);
+  }
+
+  if (list == NULL) {
+    raiseException_returnNULL(PyExc_MemoryError, "Could not get attribute names");
+  }
+  n = RaveList_size(list);
+  result = PyList_New(0);
+  for (i = 0; result != NULL && i < n; i++) {
+    char* name = RaveList_get(list, i);
+    if (name != NULL) {
+      PyObject* pynamestr = PyString_FromString(name);
+      if (pynamestr == NULL) {
+        goto fail;
+      }
+      if (PyList_Append(result, pynamestr) != 0) {
+        Py_DECREF(pynamestr);
+        goto fail;
+      }
+      Py_DECREF(pynamestr);
+    }
+  }
+  RaveList_freeAndDestroy(&list);
+  return result;
+fail:
+  RaveList_freeAndDestroy(&list);
+  Py_XDECREF(result);
+  return NULL;
+}
+
 
 static PyObject* _pyattributetable_getValues(PyRaveAttributeTable* self, PyObject* args)
 {
@@ -598,6 +657,10 @@ static struct PyMethodDef _pyattributetable_methods[] =
     "name  - Name of the attribute should be in format ^(how|what|where)/[A-Za-z0-9_.]$. E.g how/something, what/sthis.\n"
     "        In the case of how-groups, it is also possible to specify subgroups, like how/subgroup/attr or how/subgroup/subgroup/attr.\n"
   },
+  {"hasSubGroups", (PyCFunction) _pyattributetable_hasSubGroups, 1,
+    "hasSubGroups() -> boolean \n\n"
+    "Returns if this table has sub groups or not"
+  },
   {"shiftAttribute", (PyCFunction) _pyattributetable_shiftAttribute, 1,
     "shiftAttribute(name, nx) \n\n"
     "Performs a circular shift of an array attribute. if nx < 0, then shift is performed counter clockwise, if nx > 0, shift is performed clock wise, if 0, no shift is performed.\n\n"
@@ -609,6 +672,10 @@ static struct PyMethodDef _pyattributetable_methods[] =
     "getAttributeNames(|version) -> array of names \n\n"
     "version - optional, specified version of names to be returned.\n"
     "Returns the attribute names associated with this table and eventual version"
+  },
+  {"getSubAttributeNames", (PyCFunction) _pyattributetable_getSubAttributeNames, 1,
+    "getSubAttributeNames(|version) -> array of names \n\n"
+    "Returns the attribute names that are placed in subgroups (i.e. if there is an entry xxx/yyy below the top level-group)"
   },
   {"getValues", (PyCFunction) _pyattributetable_getValues, 1,
     "getValues(|version) -> array of tuples (name,value) \n\n"

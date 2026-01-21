@@ -257,7 +257,7 @@ class PyTransformTest(unittest.TestCase):
     ul.addQualityField(self.create_quality_field(2,2,numpy.uint8, 19, "se.some.how.task.2"))
     ul.getParameter("DBZH").addQualityField(self.create_quality_field(2,2,numpy.uint8, 23, "se.some.how.task.1"))
     ul.getParameter("DBZH").addQualityField(self.create_quality_field(2,2,numpy.uint8, 24, "se.some.how.task.2"))
-    
+    ul.addAttribute("what/prodpar", 0.5)
     ur = self.create_cartesian_with_parameter(2, 2, pyarea.xscale, pyarea.yscale, 
                                               (1993337.7288084999,9112461.1790100001,3015337.72881,11028461.179),
                                               pyarea.projection.definition,
@@ -266,6 +266,7 @@ class PyTransformTest(unittest.TestCase):
     ur.addQualityField(self.create_quality_field(2,2,numpy.uint8, 20, "se.some.how.task.2"))
     ur.getParameter("DBZH").addQualityField(self.create_quality_field(2,2,numpy.uint8, 25, "se.some.how.task.1"))
     ur.getParameter("DBZH").addQualityField(self.create_quality_field(2,2,numpy.uint8, 26, "se.some.how.task.2"))
+    ur.addAttribute("what/prodpar", 0.5)
     
     ll = self.create_cartesian_with_parameter(2, 2, pyarea.xscale, pyarea.yscale, 
                                               (971337.728807,7196461.17902,1993337.7288084999,9112461.1790100001),
@@ -275,6 +276,7 @@ class PyTransformTest(unittest.TestCase):
     ll.addQualityField(self.create_quality_field(2,2,numpy.uint8, 21, "se.some.how.task.2"))
     ll.getParameter("DBZH").addQualityField(self.create_quality_field(2,2,numpy.uint8, 27, "se.some.how.task.1"))
     ll.getParameter("DBZH").addQualityField(self.create_quality_field(2,2,numpy.uint8, 28, "se.some.how.task.2"))
+    ll.addAttribute("what/prodpar", 0.5)
     
     lr = self.create_cartesian_with_parameter(2, 2, pyarea.xscale, pyarea.yscale, 
                                               (1993337.7288084999,7196461.17902,3015337.72881,9112461.1790100001),
@@ -284,6 +286,7 @@ class PyTransformTest(unittest.TestCase):
     lr.addQualityField(self.create_quality_field(2,2,numpy.uint8, 22, "se.some.how.task.2"))
     lr.getParameter("DBZH").addQualityField(self.create_quality_field(2,2,numpy.uint8, 29, "se.some.how.task.1"))
     lr.getParameter("DBZH").addQualityField(self.create_quality_field(2,2,numpy.uint8, 30, "se.some.how.task.2"))
+    lr.addAttribute("what/prodpar", 0.5)
     
     t = _transform.new()
     result = t.combine_tiles(pyarea, [ul,ur,ll,lr])
@@ -310,7 +313,8 @@ class PyTransformTest(unittest.TestCase):
     self.assertEqual(ul.endtime, result.endtime)
     self.assertEqual(ul.product, result.product)
     self.assertEqual(ul.objectType, result.objectType)
-    
+    self.assertAlmostEqual(0.5, result.getAttribute("what/prodpar"), 4)
+
     self.assertEqual([[2,2,3,3],[2,2,3,3],[4,4,5,5],[4,4,5,5]], param.getData().tolist())
     self.assertEqual([[15,15,16,16],[15,15,16,16],[17,17,18,18],[17,17,18,18]], qf1.getData().tolist())
     self.assertEqual([[19,19,20,20],[19,19,20,20],[21,21,22,22],[21,21,22,22]], qf2.getData().tolist())

@@ -29,6 +29,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_alloc.h"
 #include <string.h>
 #include <stdio.h>
+#include <ctype.h>
 
 int RaveUtilities_addLongAttributeToList(RaveObjectList_t* l, const char* name, long value)
 {
@@ -238,6 +239,38 @@ char* RaveUtilities_trimText(const char* str, int len)
   return result;
 }
 
+char* RaveUtilities_toLower(const char* str, int len)
+{
+  char* result = NULL;
+  if (str != NULL) {
+    result = RAVE_MALLOC(sizeof(char)*(len + 1));
+    if (result != NULL) {
+      int i = 0;
+      for (i = 0; i < len; i++) {
+        result[i] = tolower(result[i]);
+      }
+
+    }
+  }
+  return result;
+}
+
+char* RaveUtilities_toUpper(const char* str, int len)
+{
+  char* result = NULL;
+  if (str != NULL) {
+    result = RAVE_MALLOC(sizeof(char)*(len + 1));
+    if (result != NULL) {
+      int i = 0;
+      for (i = 0; i < len; i++) {
+        result[i] = toupper(result[i]);
+      }
+
+    }
+  }
+  return result;
+}
+
 RaveList_t* RaveUtilities_getTrimmedTokens(const char* str, int c)
 {
   RaveList_t* result = RAVE_OBJECT_NEW(&RaveList_TYPE);
@@ -299,9 +332,40 @@ done:
   return result;
 }
 
+int RaveUtilities_arrayContains(const char* arr[], const char* str, int casecmp)
+{
+  int result = 0;
+  if (arr != NULL && str != NULL) {
+    int i = 0;
+    while (result == 0 && arr[i] != NULL) {
+      if (!casecmp) {
+        if (strcasecmp(arr[i], str) == 0) {
+          result = 1;
+        }
+      } else {
+        if (strcmp(arr[i], str) == 0) {
+          result = 1;
+        }
+      }
+      i++;
+    }
+  }
+  return result; 
+}
+
+
 int RaveUtilities_isXmlSupported(void)
 {
 #ifdef RAVE_XML_SUPPORTED
+  return 1;
+#else
+  return 0;
+#endif
+}
+
+int RaveUtilities_isJsonSupported(void)
+{
+#ifdef RAVE_JSON_SUPPORTED
   return 1;
 #else
   return 0;

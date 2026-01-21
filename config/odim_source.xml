@@ -59,6 +59,7 @@
     <finur plc="Nurmes" rad="FI52" wmo="00000"></finur>
     <fivih plc="Vihti" rad="FI53" wmo="00000"></fivih>
     <fikan plc="Kankaanpää" rad="FI54" wmo="00000"></fikan>
+    <fikau plc="Kaunispää" rad="FI55" wmo="00000"></fikau>
   </fi>
   <fr CCCC="LFPW" org="84">
     <frabb plc="Abbeville" rad="FR40" wmo="07005"></frabb>
@@ -258,18 +259,18 @@
     <eslpa plc="Artenara" rad="SP60" wmo="60028"></eslpa>
   </es>
   <se CCCC="ESWI" org="82">
-    <sekrn plc="Kiruna" rad="SE40" wmo="02032"></sekrn>
-    <sella plc="Luleå" rad="SE41" wmo="02092"></sella>
-    <seosd plc="Östersund" rad="SE42" wmo="02200"></seosd>
-    <seoer plc="Örnsköldsvik" rad="SE43" wmo="02262"></seoer>
-    <sehuv plc="Hudiksvall" rad="SE44" wmo="02334"></sehuv>
-    <selek plc="Leksand" rad="SE45" wmo="02430"></selek>
-    <sehem plc="Hemse (Ase)" rad="SE47" wmo="02588"></sehem>
-    <seatv plc="Åtvidaberg (Vilebo)" rad="SE48" wmo="02570"></seatv>
-    <sevax plc="Vara" rad="SE49" wmo="02600"></sevax>
-    <seang plc="Ängelholm" rad="SE50" wmo="02606"></seang>
-    <sekaa plc="Karlskrona" rad="SE51" wmo="02666"></sekaa>
-    <sebaa plc="Bålsta" rad="SE52" wmo="00000"></sebaa>
+    <sekrn plc="Kiruna" rad="SE40" wmo="02032" wigos="0-20000-0-2032"></sekrn>
+    <sella plc="Luleå" rad="SE41" wmo="02092" wigos="0-20000-0-2092"></sella>
+    <seosd plc="Östersund" rad="SE42" wmo="02200" wigos="0-20000-0-2200"></seosd>
+    <seoer plc="Örnsköldsvik" rad="SE43" wmo="02262" wigos="0-20000-0-2262"></seoer>
+    <sehuv plc="Hudiksvall" rad="SE44" wmo="02334" wigos="0-20000-0-2334"></sehuv>
+    <selek plc="Leksand" rad="SE45" wmo="02430" wigos="0-20000-0-2430"></selek>
+    <sehem plc="Hemse (Ase)" rad="SE47" wmo="02588" wigos="0-20000-0-2588"></sehem>
+    <seatv plc="Åtvidaberg (Vilebo)" rad="SE48" wmo="02570" wigos="0-20000-0-2570"></seatv>
+    <sevax plc="Vara" rad="SE49" wmo="02600" wigos="0-20000-0-2600"></sevax>
+    <seang plc="Ängelholm" rad="SE50" wmo="02606" wigos="0-20000-0-2606"></seang>
+    <sekaa plc="Karlskrona" rad="SE51" wmo="02666" wigos="0-20000-0-2666"></sekaa>
+    <sebaa plc="Bålsta" rad="SE52" wmo="00000" wigos="0-21010-0-724"></sebaa>
   </se>
   <ch CCCC="LSSW" org="215">
     <chalb plc="Albis" rad="SW41" wmo="06661"></chalb>

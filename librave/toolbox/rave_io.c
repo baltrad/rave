@@ -42,6 +42,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "cartesian_odim_io.h"
 #include "polar_odim_io.h"
 #include "vp_odim_io.h"
+#include "odim_io_utilities.h"
 
 #ifdef RAVE_CF_SUPPORTED
 #include "cartesian_cf_io.h"
@@ -62,6 +63,7 @@ struct _RaveIO_t {
   RaveIO_ODIM_Version read_version;       /**< the read odim version */
   RaveIO_ODIM_H5rad_Version h5radversion; /**< the h5rad object version */
   RaveIO_ODIM_FileFormat fileFormat;      /**< the file format */
+  RaveValue_t* extras;                    /**< the extra how attributes */
   int strict;                             /**< if strict writing should be enforced, from 2.4, several how-attributes are required. If setting this to true, this will be enforced */
   char* filename;                         /**< the filename */
   HL_Compression* compression;            /**< the compression to use */
@@ -96,6 +98,7 @@ static int RaveIO_constructor(RaveCoreObject* obj)
   raveio->read_version = RaveIO_ODIM_Version_UNDEFINED;
   raveio->h5radversion = RaveIO_ODIM_H5rad_Version_2_4;
   raveio->strict = 0;
+  raveio->extras = NULL;
   raveio->fileFormat = RaveIO_ODIM_FileFormat_UNDEFINED;
   raveio->filename = NULL;
   raveio->compression = HLCompression_new(CT_ZLIB);
@@ -136,6 +139,7 @@ static void RaveIO_destructor(RaveCoreObject* obj)
   if (raveio != NULL) {
     RaveIO_close(raveio);
   }
+  RAVE_OBJECT_RELEASE(raveio->extras);
   HLCompression_free(raveio->compression);
   HLFileCreationProperty_free(raveio->property);
   RAVE_FREE(raveio->bufrTableDir);
@@ -455,6 +459,51 @@ static int RaveIOInternal_addVPToNodeList(RaveIO_t* raveio, VerticalProfile_t* v
   return result;
 }
 
+static int RaveIOInternal_validateExtras(RaveIO_t* raveio)
+{
+  int result = 1;
+  if (raveio->extras != NULL) {
+    if (RaveValue_type(raveio->extras) == RaveValue_Type_Hashtable) {
+      int i = 0, nkeys = 0;
+      RaveList_t* keys = RaveValueHash_keys(raveio->extras);
+      if (keys != NULL) {
+        nkeys = RaveList_size(keys);
+        for (i = 0; result == 1 && i < nkeys; i++) {
+          const char* name = (const char*)RaveList_get(keys, i);
+          if (strlen(name) > 0 && name[0]=='/' && strstr(name, "/how/") != NULL && 
+              strstr(name, "/where/") == NULL && strstr(name, "/what/") == NULL) {
+            RaveValue_t* value = RaveValueHash_get(raveio->extras, name);
+            RaveValue_Type valuetype = RaveValue_type(value);
+            if (valuetype != RaveValue_Type_String &&
+                valuetype != RaveValue_Type_Long &&
+                valuetype != RaveValue_Type_Double) {
+                  RAVE_ERROR0("Values in extras must either be string, long or double");
+                  result = 0;
+            }
+            RAVE_OBJECT_RELEASE(value);
+          } else {
+            RAVE_ERROR0("Name must belong to a how group and neither /where/ or /what/ is allowed");
+            result = 0;
+          }
+        }
+        RaveList_freeAndDestroy(&keys);
+      } else {
+        RAVE_ERROR0("Could not get keys from hash");
+        result = 0;
+      }
+    }
+  }
+  return result;
+}
+
+static int RaveIOInternal_addExtrasToNodeList(RaveIO_t* raveio, HL_NodeList* nodelist)
+{
+  if (raveio->extras != NULL && nodelist != NULL) {
+    return OdimIoUtilities_addValuesToFile(raveio->extras, nodelist);
+  }
+  return 0;
+}
+
 static int RaveIOInternal_loadHDF5(RaveIO_t* raveio, int lazyLoading, const char* preloadQuantities)
 {
   HL_NodeList* nodelist = NULL;
@@ -613,6 +662,11 @@ done:
   return result;
 }
 
+int RaveIO_isHDFFile(const char* filename)
+{
+  return HL_isHDF5File(filename);
+}
+
 int RaveIO_load(RaveIO_t* raveio, int lazyLoading, const char* preloadQuantities)
 {
   int result = 0;
@@ -665,6 +719,10 @@ int RaveIO_save(RaveIO_t* raveio, const char* filename)
   }
 
   if (raveio->object != NULL && raveio->fileFormat == RaveIO_ODIM_FileFormat_HDF5) {
+    if (raveio->extras != NULL && !RaveIOInternal_validateExtras(raveio)) {
+      return 0;
+    }
+
     if (RAVE_OBJECT_CHECK_TYPE(raveio->object, &Cartesian_TYPE) ||
         RAVE_OBJECT_CHECK_TYPE(raveio->object, &PolarVolume_TYPE) ||
         RAVE_OBJECT_CHECK_TYPE(raveio->object, &CartesianVolume_TYPE) ||
@@ -701,6 +759,11 @@ int RaveIO_save(RaveIO_t* raveio, const char* filename)
             result = 0;
           }
         }
+
+        if (result == 1 && raveio->extras != NULL) {
+          result = RaveIOInternal_addExtrasToNodeList(raveio, nodelist);
+        }
+
         if (result == 1) {
           result = HLNodeList_setFileName(nodelist, raveio->filename);
         }
@@ -828,6 +891,27 @@ int RaveIO_setFileFormat(RaveIO_t* raveio, RaveIO_ODIM_FileFormat format)
   raveio->fileFormat = format;
   return 1;
 }
+
+int RaveIO_setExtras(RaveIO_t* raveio, RaveValue_t* hashtable)
+{
+  RAVE_ASSERT((raveio != NULL), "raveio == NULL");
+  if (hashtable != NULL) {
+    if (RaveValue_type(hashtable) != RaveValue_Type_Hashtable) {
+      RAVE_ERROR0("RaveValue must be a hashtable for extras");
+      return 0;
+    }
+  }
+  RAVE_OBJECT_RELEASE(raveio->extras);
+  raveio->extras = RAVE_OBJECT_COPY(hashtable);
+  return 1;
+}
+
+RaveValue_t* RaveIO_getExtras(RaveIO_t* raveio)
+{
+  RAVE_ASSERT((raveio != NULL), "raveio == NULL");
+  return RAVE_OBJECT_COPY(raveio->extras);
+}
+
 
 void RaveIO_setStrict(RaveIO_t* raveio, int strict)
 {

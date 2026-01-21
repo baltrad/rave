@@ -40,6 +40,12 @@ LDFLAGS+= -L../librave/radvol/lib $(EXPAT_LIB_DIR)
 EXPAT_LIBRARY=-lexpat
 endif
 
+ifeq ($(JSONC_SUPPRESSED), no)
+CFLAGS+= $(JSONC_INCLUDE_DIR) -DRAVE_JSON_SUPPORTED  
+LDFLAGS+= $(JSONC_LIB_DIR) 
+JSONC_LIBRARY=-ljson-c
+endif
+
 ifeq ($(BUFR_SUPPRESSED), no)
 CFLAGS+= $(BUFR_INCLUDE_DIR) -DRAVE_BUFR_SUPPORTED
 LDFLAGS+= $(BUFR_LIB_DIR)
@@ -60,7 +66,7 @@ CFLAGS+= -DPTHREAD_SUPPORTED
 PTHREAD_LIBRARY=-lpthread
 endif
 
-LIBRARIES= -lravetoolbox -lravepyapi -lhlhdf -lproj  $(EXPAT_LIBRARY) $(BUFR_LIBRARY) $(NETCDF_LIBRARY) $(PTHREAD_LIBRARY)
+LIBRARIES= -lravetoolbox -lravepyapi -lhlhdf -lproj  $(EXPAT_LIBRARY) $(JSONC_LIBRARY) $(BUFR_LIBRARY) $(NETCDF_LIBRARY) $(PTHREAD_LIBRARY)
 
 # --------------------------------------------------------------------
 # Fixed definitions
@@ -245,9 +251,69 @@ SOURCE_45= pyravelegend.c
 OBJECTS_45= $(SOURCE_45:.c=.o)
 TARGET_45= _ravelegend.so
 
-SOURCE_46= pydr_qc.c
+SOURCE_46= pypolarnavinfo.c
 OBJECTS_46= $(SOURCE_46:.c=.o)
-TARGET_46= _dr_qc.so
+TARGET_46= _pypolarnavinfo.so
+
+SOURCE_47= pycompositegenerator.c
+OBJECTS_47= $(SOURCE_47:.c=.o)
+TARGET_47= _compositegenerator.so
+
+SOURCE_48= pycompositegeneratorfactory.c
+OBJECTS_48= $(SOURCE_48:.c=.o)
+TARGET_48= _compositegeneratorfactory.so
+
+SOURCE_49= pylegacycompositegeneratorfactory.c
+OBJECTS_49= $(SOURCE_49:.c=.o)
+TARGET_49= _legacycompositegeneratorfactory.so
+
+SOURCE_50= pycompositearguments.c
+OBJECTS_50= $(SOURCE_50:.c=.o)
+TARGET_50= _compositearguments.so
+
+SOURCE_51= pyacqvacompositegeneratorfactory.c
+OBJECTS_51= $(SOURCE_51:.c=.o)
+TARGET_51= _acqvacompositegeneratorfactory.so
+
+SOURCE_52= pyodimsource.c
+OBJECTS_52= $(SOURCE_52:.c=.o)
+TARGET_52= _odimsource.so
+
+SOURCE_53= pyodimsources.c
+OBJECTS_53= $(SOURCE_53:.c=.o)
+TARGET_53= _odimsources.so
+
+SOURCE_54= pycompositefilter.c
+OBJECTS_54= $(SOURCE_54:.c=.o)
+TARGET_54= _compositefilter.so
+
+SOURCE_55= pycompositefactorymanager.c
+OBJECTS_55= $(SOURCE_55:.c=.o)
+TARGET_55= _compositefactorymanager.so
+
+SOURCE_56= pynearestcompositegeneratorfactory.c
+OBJECTS_56= $(SOURCE_56:.c=.o)
+TARGET_56= _nearestcompositegeneratorfactory.so
+
+SOURCE_57= pyravevalue.c
+OBJECTS_57= $(SOURCE_57:.c=.o)
+TARGET_57= _ravevalue.so
+
+SOURCE_58= pyraveproperties.c
+OBJECTS_58= $(SOURCE_58:.c=.o)
+TARGET_58= _raveproperties.so
+
+SOURCE_59= pyacqvafeaturemap.c
+OBJECTS_59= $(SOURCE_59:.c=.o)
+TARGET_59= _acqvafeaturemap.so
+
+SOURCE_60= pypia.c
+OBJECTS_60= $(SOURCE_60:.c=.o)
+TARGET_60= _pia.so
+
+SOURCE_61= pydr_qc.c
+OBJECTS_61= $(SOURCE_61:.c=.o)
+TARGET_61= _dr_qc.so
 
 TARGETS=$(TARGET_1) $(TARGET_2) $(TARGET_3) $(TARGET_4) $(TARGET_5) $(TARGET_6) \
 		$(TARGET_7) $(TARGET_8) $(TARGET_9) $(TARGET_10) $(TARGET_11) $(TARGET_12) $(TARGET_13) \
@@ -255,8 +321,10 @@ TARGETS=$(TARGET_1) $(TARGET_2) $(TARGET_3) $(TARGET_4) $(TARGET_5) $(TARGET_6) 
 		$(TARGET_20) $(TARGET_21) $(TARGET_24) $(TARGET_25) \
 		$(TARGET_26) $(TARGET_27) $(TARGET_28) $(TARGET_29) $(TARGET_30) $(TARGET_31) \
 		$(TARGET_33) $(TARGET_34) $(TARGET_35) $(TARGET_36) $(TARGET_37) $(TARGET_38) \
-		$(TARGET_39) $(TARGET_40) $(TARGET_41) $(TARGET_42) $(TARGET_43) $(TARGET_44) $(TARGET_45) $(TARGET_46)
-
+		$(TARGET_39) $(TARGET_40) $(TARGET_41) $(TARGET_42) $(TARGET_43) $(TARGET_44) $(TARGET_45) \
+		$(TARGET_46) $(TARGET_47) $(TARGET_48) $(TARGET_49) $(TARGET_50) $(TARGET_51) \
+		$(TARGET_52) $(TARGET_53) $(TARGET_54) $(TARGET_55) $(TARGET_56) $(TARGET_57) \
+		$(TARGET_58) $(TARGET_59) $(TARGET_60) $(TARGET_61)
 
 INSTALL_HEADERS= pyarea.h \
 				 pycartesian.h \
@@ -278,6 +346,7 @@ INSTALL_HEADERS= pyarea.h \
 				 pyacrr.h \
 				 pyverticalprofile.h \
 				 pycartesiancomposite.h \
+				 pycartesiangenerator.h \
 				 pyqitotal.h \
 				 pygra.h \
 				 pybitmapgenerator.h \
@@ -288,7 +357,19 @@ INSTALL_HEADERS= pyarea.h \
 				 pyacqva.h \
 				 pyiocache.h \
 				 pyravelegend.h \
-				 pydrqc_compat.h
+				 pydrqc_compat.h \
+				 pypolarnavinfo.h \
+				 pycompositegenerator.h \
+				 pycompositegeneratorfactory.h \
+				 pycompositearguments.h \
+				 pyodimsource.h \
+				 pyodimsources.h \
+				 pycompositefilter.h \
+				 pycompositefactorymanager.h \
+				 pyravevalue.h \
+				 pyraveproperties.h \
+				 pyacqvafeaturemap.h \
+				 pypia.h
 
 ifeq ($(EXPAT_SUPPRESSED), no)
 TARGETS += $(TARGET_22) $(TARGET_23) $(TARGET_32)
@@ -455,6 +536,54 @@ $(TARGET_45): $(DEPDIR) $(OBJECTS_45) ../librave/toolbox/libravetoolbox.so ../li
 $(TARGET_46): $(DEPDIR) $(OBJECTS_46) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_46) $(LDFLAGS) $(LIBRARIES)
 
+$(TARGET_46): $(DEPDIR) $(OBJECTS_46) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
+	$(LDSHARED) -o $@ $(OBJECTS_46) $(LDFLAGS) $(LIBRARIES)
+
+$(TARGET_47): $(DEPDIR) $(OBJECTS_47) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
+	$(LDSHARED) -o $@ $(OBJECTS_47) $(LDFLAGS) $(LIBRARIES)
+
+$(TARGET_48): $(DEPDIR) $(OBJECTS_48) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
+	$(LDSHARED) -o $@ $(OBJECTS_48) $(LDFLAGS) $(LIBRARIES)
+
+$(TARGET_49): $(DEPDIR) $(OBJECTS_49) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
+	$(LDSHARED) -o $@ $(OBJECTS_49) $(LDFLAGS) $(LIBRARIES)
+
+$(TARGET_50): $(DEPDIR) $(OBJECTS_50) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
+	$(LDSHARED) -o $@ $(OBJECTS_50) $(LDFLAGS) $(LIBRARIES)
+
+$(TARGET_51): $(DEPDIR) $(OBJECTS_51) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
+	$(LDSHARED) -o $@ $(OBJECTS_51) $(LDFLAGS) $(LIBRARIES)
+
+$(TARGET_52): $(DEPDIR) $(OBJECTS_52) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
+	$(LDSHARED) -o $@ $(OBJECTS_52) $(LDFLAGS) $(LIBRARIES)
+
+$(TARGET_53): $(DEPDIR) $(OBJECTS_53) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
+	$(LDSHARED) -o $@ $(OBJECTS_53) $(LDFLAGS) $(LIBRARIES)
+
+$(TARGET_54): $(DEPDIR) $(OBJECTS_54) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
+	$(LDSHARED) -o $@ $(OBJECTS_54) $(LDFLAGS) $(LIBRARIES)
+
+$(TARGET_55): $(DEPDIR) $(OBJECTS_55) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
+	$(LDSHARED) -o $@ $(OBJECTS_55) $(LDFLAGS) $(LIBRARIES)
+
+$(TARGET_56): $(DEPDIR) $(OBJECTS_56) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
+	$(LDSHARED) -o $@ $(OBJECTS_56) $(LDFLAGS) $(LIBRARIES)
+
+$(TARGET_57): $(DEPDIR) $(OBJECTS_57) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
+	$(LDSHARED) -o $@ $(OBJECTS_57) $(LDFLAGS) $(LIBRARIES)
+
+$(TARGET_58): $(DEPDIR) $(OBJECTS_58) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
+	$(LDSHARED) -o $@ $(OBJECTS_58) $(LDFLAGS) $(LIBRARIES)
+
+$(TARGET_59): $(DEPDIR) $(OBJECTS_59) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
+	$(LDSHARED) -o $@ $(OBJECTS_59) $(LDFLAGS) $(LIBRARIES)
+
+$(TARGET_60): $(DEPDIR) $(OBJECTS_60) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
+	$(LDSHARED) -o $@ $(OBJECTS_60) $(LDFLAGS) $(LIBRARIES)
+
+$(TARGET_61): $(DEPDIR) $(OBJECTS_61) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
+	$(LDSHARED) -o $@ $(OBJECTS_61) $(LDFLAGS) $(LIBRARIES)
+
 ifeq ($(COMPILE_FOR_PYTHON), yes)
 .PHONY=install
 install:
@@ -547,3 +676,19 @@ endif
 -include $(SOURCE_44:%.c=$(DEPDIR)/%.P)
 -include $(SOURCE_45:%.c=$(DEPDIR)/%.P)
 -include $(SOURCE_46:%.c=$(DEPDIR)/%.P)
+-include $(SOURCE_47:%.c=$(DEPDIR)/%.P)
+-include $(SOURCE_48:%.c=$(DEPDIR)/%.P)
+-include $(SOURCE_49:%.c=$(DEPDIR)/%.P)
+-include $(SOURCE_50:%.c=$(DEPDIR)/%.P)
+-include $(SOURCE_51:%.c=$(DEPDIR)/%.P)
+-include $(SOURCE_52:%.c=$(DEPDIR)/%.P)
+-include $(SOURCE_53:%.c=$(DEPDIR)/%.P)
+-include $(SOURCE_54:%.c=$(DEPDIR)/%.P)
+-include $(SOURCE_55:%.c=$(DEPDIR)/%.P)
+-include $(SOURCE_56:%.c=$(DEPDIR)/%.P)
+-include $(SOURCE_57:%.c=$(DEPDIR)/%.P)
+-include $(SOURCE_58:%.c=$(DEPDIR)/%.P)
+-include $(SOURCE_59:%.c=$(DEPDIR)/%.P)
+-include $(SOURCE_59:%.c=$(DEPDIR)/%.P)
+-include $(SOURCE_60:%.c=$(DEPDIR)/%.P)
+-include $(SOURCE_61:%.c=$(DEPDIR)/%.P)

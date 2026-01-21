@@ -23,11 +23,12 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @author Daniel Michelson, SMHI
 ## @date 2010-07-25
 
+# Standard python libs:
 import sys
 if sys.version_info < (3,):
-  from xmlrpclib import ServerProxy
+    from xmlrpclib import ServerProxy
 else:
-  from xmlrpc.client import ServerProxy
+    from xmlrpc.client import ServerProxy
 
 
 ## Adds an algorithm to the registry. It will be replaced if it's already there.
@@ -63,10 +64,11 @@ def remove(server, name):
 
 if __name__ == "__main__":
     from optparse import OptionParser
+
     import rave_defines
 
     description = "Add or remove an entry in the algorithm registry, or list the registry contents."
-
+    # fmt: off
     usage = "usage: %prog -arl -H http(s)://host:port/RAVE -n <name> -m <module> -f <function> -d <description> -s <strings> -i <ints> -F <floats> -S <sequences> [h]"
     parser = OptionParser(usage=usage, description=description)
 
@@ -82,7 +84,8 @@ if __name__ == "__main__":
     parser.add_option("-l", "--list", action="store_true", dest="list",
                       help="List the entries in the registry.")
 
-    parser.add_option("-H", "--host", dest="host", default='http://%s:%i/RAVE' % (rave_defines.PGF_HOST, rave_defines.PGF_PORT),
+    parser.add_option("-H", "--host", dest="host",
+                      default='http://%s:%i/RAVE' % (rave_defines.PGF_HOST, rave_defines.PGF_PORT),
                       help="URI of the running server. Don't forget to use the http(s):// prefix and /RAVE .")
 
     parser.add_option("-n", "--name", dest="name",
@@ -108,7 +111,7 @@ if __name__ == "__main__":
 
     parser.add_option("-S", "--sequences", dest="seqs", default="",
                       help="Comma-separated list of sequence argument names.")
-
+    # fmt: on
     (options, args) = parser.parse_args()
 
     if not (options.add or options.remove or options.list or options.query):
@@ -140,9 +143,17 @@ if __name__ == "__main__":
         List(server)
 
     elif options.add:
-        add(server, options.name, options.module, options.func,
-            options.descr, options.strings, options.ints, options.floats,
-            options.seqs)
+        add(
+            server,
+            options.name,
+            options.module,
+            options.func,
+            options.descr,
+            options.strings,
+            options.ints,
+            options.floats,
+            options.seqs,
+        )
     elif options.query:
         List(server, options.name)
 

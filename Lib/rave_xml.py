@@ -19,16 +19,21 @@ rave_xml.py
 
 Helpers for parsing and managing XML tags and attributes.
 """
+# Standard python libs:
 import re
+
+# Module/Project:
 from rave_defines import ENCODING
+
 
 class xmlmap:
     """
     This is a generic container object designed to hold contents of
     simple XML-based objects passed from ElementTree space. The contents of
     a single Element is mapped to an xmlmap instance. This is useful for
-    managing configuration information from config-files. 
+    managing configuration information from config-files.
     """
+
     def __init__(self, E=None):
         if E:
             self.getArgs(E)
@@ -46,7 +51,7 @@ class xmlmap:
     def validate(self, attrs):
         for attr in attrs:
             if not hasattr(self, attr):
-                raise AttributeError("object lacks mandatory attribute "+attr)
+                raise AttributeError("object lacks mandatory attribute " + attr)
 
 
 def add(o, e):
@@ -90,7 +95,7 @@ def append(o, i, t, text):
     else:
         tmp.append(text)
     setattr(o, i, tmp)
-    
+
 
 def traverse_map(E, info, ID=''):
     """
@@ -101,15 +106,15 @@ def traverse_map(E, info, ID=''):
 
     for e in E.getchildren():
         if e.getchildren():
-            IDA = ID + "/"+ e.tag
+            IDA = ID + "/" + e.tag
             traverse_map(e, info, ID=IDA)
         else:
             IDA = ID + "/" + e.tag
             typ = e.get("type", "string")
-            if typ == 'dataset': continue
+            if typ == 'dataset':
+                continue
             value = H5radHelper.geth5attr(e, {})
             info.put(IDA, value)
-
 
 
 __all__ = ["xmlmap", "add", "append"]

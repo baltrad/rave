@@ -52,7 +52,6 @@ from PyProjectionPipelineTest import *
 
 from PyProjTest import *
 from PyRaveIOTest import *
-
 from PyLazyNodeListReaderTest import *
 from PyPolarNavTest import *
 from PyAreaTest import *
@@ -138,6 +137,24 @@ try:
   from grib_reader_test import *
 except:
   pass
+
+from PyCompositeArgumentsTest import *
+from PyCompositeFilterTest import *
+from PyCompositeGeneratorTest import *
+from PyCompositeFactoryManagerTest import *
+from PyLegacyCompositeGeneratorFactoryTest import *
+####from PyLegacyCompositeGeneratorFactoryITest import *
+from PyAcqvaCompositeGeneratorFactoryTest import *
+from PyOdimSourceTest import *
+from PyOdimSourcesTest import *
+from PyNearestCompositeGeneratorFactoryTest import *
+from PyRaveValueTest import *
+from PyRavePropertiesTest import *
+from PyComputePIATest import *
+from PyPiaTest import *
+from PyAcqvaFeatureMapTest import *
+
+from acqva_featuremap_generator_test import *
 
 if __name__ == '__main__':
   unittest.main()

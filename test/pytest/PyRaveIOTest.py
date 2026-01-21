@@ -2095,7 +2095,10 @@ class PyRaveIOTest(unittest.TestCase):
     obj.addAttribute("how/radconstH", 1.1)
     obj.addAttribute("how/NI", 1.1)
     obj.addAttribute("how/startazA", numpy.arange(0.0,360.0,1.0))
-    obj.addAttribute("how/stopazA", numpy.arange(0.0,360.0,1.0))    
+    obj.addAttribute("how/stopazA", numpy.arange(0.0,360.0,1.0)) 
+    obj.addAttribute("how/scan_count", 10)
+    obj.addAttribute("how/scan_index", 1)
+
     ios = _raveio.new()
     ios.object = obj
     ios.filename = self.TEMPORARY_FILE
@@ -2573,6 +2576,58 @@ class PyRaveIOTest(unittest.TestCase):
     obj = _raveio.open(self.TEMPORARY_FILE, True).object
     self.assertEqual(LEGEND, obj.getParameter("DBZH").legend.legend)
 
+  def test_save_scan_wigos_2_2(self):
+    obj = _raveio.open(self.FIXTURE_VOLUME).object.getScan(0)
+    original_source = obj.source
+    obj.source = obj.source+",WIGOS:0-20000-0-2606"
+
+    rio = _raveio.new()
+    rio.object = obj
+    rio.version = _rave.RaveIO_ODIM_Version_2_2
+    rio.save(self.TEMPORARY_FILE)
+    
+    # Verify data
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+
+    src = nodelist.getNode("/what/source").data()
+    self.assertEqual(original_source, src)
+
+  def test_save_scan_wigos_2_3(self):
+    obj = _raveio.open(self.FIXTURE_VOLUME).object.getScan(0)
+    obj.source = obj.source+",WIGOS:0-20000-0-2606"
+
+    rio = _raveio.new()
+    rio.object = obj
+    rio.version = _rave.RaveIO_ODIM_Version_2_3
+    rio.save(self.TEMPORARY_FILE)
+    
+    # Verify data
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+
+    src = nodelist.getNode("/what/source").data()
+    self.assertEqual(obj.source, src)
+
+  def test_save_scan_wigos_2_4(self):
+    obj = _raveio.open(self.FIXTURE_VOLUME).object.getScan(0)
+    obj.source = obj.source+",WIGOS:0-20000-0-2606"
+
+    rio = _raveio.new()
+    rio.object = obj
+    rio.version = _rave.RaveIO_ODIM_Version_2_4
+    rio.save(self.TEMPORARY_FILE)
+    
+    # Verify data
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+
+    src = nodelist.getNode("/what/source").data()
+    self.assertEqual(obj.source, src)
+
   def test_write_scan_with_array(self):
     obj = _raveio.open(self.FIXTURE_VOLUME)
     vol = obj.object
@@ -2683,23 +2738,314 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertAlmostEqual(1.0, ddata[1], 2)
     self.assertAlmostEqual(5.0, ddata[5], 2)
 
-  def test_write_volume_scan_count_scan_index(self):
+  def test_write_scan_count_index_missing_strict(self):
     obj = _raveio.open(self.FIXTURE_VOLUME)
     vol = obj.object
 
-    self.assertFalse(vol.hasAttribute("how/scan_count"))
+    def add_dummy_attribute_to_scan(scan, names):
+      for n in names:
+        scan.addAttribute(n, 0)
 
-    obj = _raveio.new()
-    obj.object = vol
-    obj.filename = self.TEMPORARY_FILE
-    obj.save()
+    # Add some mandatory attributes when saving strict
+    scan = vol.getScan(0)
+    scan.addAttribute("how/scan_index", 1)
+    add_dummy_attribute_to_scan(scan, ["how/stopazA", "how/startazA", "how/NI", "how/radconstH", "how/beamwH", "how/antgainH", "how/RXlossH", "how/pulsewidth", "how/frequency", "how/simulated"])
+    scan.source = "NOD:seang"
+    scan.removeAttribute("how/scan_count")
+
+    rio = _raveio.new()
+    rio.object = scan
+    rio.strict = True
+    rio.filename = self.TEMPORARY_FILE
+    try:
+      rio.save()
+      self.fail("Expected IOError since scan_count is missing")
+    except IOError as e:
+      self.assertEqual("Missing attribute how/scan_count", rio.error_message)
+
+    scan.addAttribute("how/scan_count", 10)
+    scan.removeAttribute("how/scan_index")
+    try:
+      rio.save()
+      self.fail("Expected IOError since scan_index is missing")
+    except IOError as e:
+      self.assertEqual("Missing attribute how/scan_index", rio.error_message)
+
+    scan.addAttribute("how/scan_index", 1)
+    scan.addAttribute("how/scan_count", 10)
+
+    # Can check 
+    rio.save()
 
     # Verify data
     nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
     nodelist.selectAll()
     nodelist.fetch()
-
+    self.assertEqual(1, nodelist.getNode("/how/scan_index").data())
     self.assertEqual(10, nodelist.getNode("/how/scan_count").data())
+
+  def test_write_scan_count_index_missing_not_strict(self):
+    obj = _raveio.open(self.FIXTURE_VOLUME)
+    vol = obj.object
+
+    def add_dummy_attribute_to_scan(scan, names):
+      for n in names:
+        scan.addAttribute(n, 0)
+
+    # Add some mandatory attributes when saving strict
+    scan = vol.getScan(0)
+    scan.addAttribute("how/scan_index", 1)
+    add_dummy_attribute_to_scan(scan, ["how/stopazA", "how/startazA", "how/NI", "how/radconstH", "how/beamwH", "how/antgainH", "how/RXlossH", "how/pulsewidth", "how/frequency", "how/simulated"])
+    scan.source = "NOD:seang"
+    scan.removeAttribute("how/scan_count")
+
+    rio = _raveio.new()
+    rio.object = scan
+    rio.strict = False
+    rio.filename = self.TEMPORARY_FILE
+    rio.save()
+
+    # Verify data
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+    self.assertEqual(1, nodelist.getNode("/how/scan_index").data())
+    self.assertFalse("/how/scan_count" in nodelist.getNodeNames())
+
+  def test_write_volume_scan_count_missing_strict(self):
+    obj = _raveio.open(self.FIXTURE_VOLUME)
+    vol = obj.object
+
+    def add_dummy_attribute_to_scan(scan, names):
+      for n in names:
+        scan.addAttribute(n, 0)
+
+    # Add some mandatory attributes when saving strict
+    vol.source = "NOD:seang"
+    for si in range(vol.getNumberOfScans()):
+      scan = vol.getScan(si)
+      scan.addAttribute("how/scan_index", si + 1)
+      add_dummy_attribute_to_scan(scan, ["how/stopazA", "how/startazA", "how/NI", "how/radconstH", "how/beamwH", "how/antgainH", "how/RXlossH", "how/pulsewidth", "how/frequency", "how/simulated"])
+      scan.source = "NOD:seang"
+
+    self.assertFalse(vol.hasAttribute("how/scan_count"))
+
+    rio = _raveio.new()
+    rio.object = vol
+    rio.strict = True
+    rio.filename = self.TEMPORARY_FILE
+    try:
+      rio.save()
+      self.fail("Expected IOError since scan_count is missing")
+    except IOError as e:
+      self.assertEqual("No how/scan_count exists in the volume", rio.error_message)
+
+    # Can check 
+    rio.strict = False
+    rio.save()
+
+    # Verify data
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    self.assertFalse("/how/scan_count" in nodelist.getNodeNames())
+
+  def test_write_volume_scan_count_in_scan(self):
+    obj = _raveio.open(self.FIXTURE_VOLUME)
+    vol = obj.object
+
+    def add_dummy_attribute_to_scan(scan, names):
+      for n in names:
+        scan.addAttribute(n, 0)
+
+    # Add some mandatory attributes when saving strict
+    vol.source = "NOD:seang"
+    for si in range(vol.getNumberOfScans()):
+      scan = vol.getScan(si)
+      scan.addAttribute("how/scan_index", si + 1)
+      scan.addAttribute("how/scan_count", 10)
+      add_dummy_attribute_to_scan(scan, ["how/stopazA", "how/startazA", "how/NI", "how/radconstH", "how/beamwH", "how/antgainH", "how/RXlossH", "how/pulsewidth", "how/frequency", "how/simulated"])
+      scan.source = "NOD:seang"
+
+    self.assertFalse(vol.hasAttribute("how/scan_count"))
+
+    rio = _raveio.new()
+    rio.object = vol
+    rio.strict = True
+    rio.filename = self.TEMPORARY_FILE
+    rio.save()
+
+    # Verify data
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+    self.assertEqual(10, nodelist.getNode("/how/scan_count").data())
+
+  def test_write_volume_scan_count_in_volume_not_strict(self):
+    obj = _raveio.open(self.FIXTURE_VOLUME)
+    vol = obj.object
+
+    def add_dummy_attribute_to_scan(scan, names):
+      for n in names:
+        scan.addAttribute(n, 0)
+
+    # Add some mandatory attributes when saving strict
+    vol.source = "NOD:seang"
+    for si in range(vol.getNumberOfScans()):
+      scan = vol.getScan(si)
+      scan.addAttribute("how/scan_index", si + 1)
+      scan.addAttribute("how/scan_count", 11)
+      add_dummy_attribute_to_scan(scan, ["how/stopazA", "how/startazA", "how/NI", "how/radconstH", "how/beamwH", "how/antgainH", "how/RXlossH", "how/pulsewidth", "how/frequency", "how/simulated"])
+      scan.source = "NOD:seang"
+    vol.addAttribute("how/scan_count", 10)
+
+    rio = _raveio.new()
+    rio.object = vol
+    rio.strict = False
+    rio.filename = self.TEMPORARY_FILE
+    rio.save()
+
+    # Verify data
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+    self.assertEqual(10, nodelist.getNode("/how/scan_count").data())
+
+  def test_write_volume_scan_count_in_volume_and_different_scan_count_in_scan_strict(self):
+    obj = _raveio.open(self.FIXTURE_VOLUME)
+    vol = obj.object
+
+    def add_dummy_attribute_to_scan(scan, names):
+      for n in names:
+        scan.addAttribute(n, 0)
+
+    # Add some mandatory attributes when saving strict
+    vol.source = "NOD:seang"
+    for si in range(vol.getNumberOfScans()):
+      scan = vol.getScan(si)
+      scan.addAttribute("how/scan_index", si + 1)
+      scan.addAttribute("how/scan_count", 11)
+      add_dummy_attribute_to_scan(scan, ["how/stopazA", "how/startazA", "how/NI", "how/radconstH", "how/beamwH", "how/antgainH", "how/RXlossH", "how/pulsewidth", "how/frequency", "how/simulated"])
+      scan.source = "NOD:seang"
+    vol.addAttribute("how/scan_count", 10)
+
+    rio = _raveio.new()
+    rio.object = vol
+    rio.strict = True
+    rio.filename = self.TEMPORARY_FILE
+    try:
+      rio.save()
+      self.fail("Expected IOError since scan_count must be same in volume and scans")
+    except IOError as e:
+      pass
+
+  def test_write_volume_missing_scan_index_strict(self):
+    obj = _raveio.open(self.FIXTURE_VOLUME)
+    vol = obj.object
+
+    def add_dummy_attribute_to_scan(scan, names):
+      for n in names:
+        scan.addAttribute(n, 0)
+
+    # Add some mandatory attributes when saving strict
+    vol.source = "NOD:seang"
+    for si in range(vol.getNumberOfScans()):
+      scan = vol.getScan(si)
+      scan.addAttribute("how/scan_index", si + 1)
+      scan.addAttribute("how/scan_count", 10)
+      add_dummy_attribute_to_scan(scan, ["how/stopazA", "how/startazA", "how/NI", "how/radconstH", "how/beamwH", "how/antgainH", "how/RXlossH", "how/pulsewidth", "how/frequency", "how/simulated"])
+      scan.source = "NOD:seang"
+
+    vol.getScan(4).removeAttribute("how/scan_index")
+    vol.addAttribute("how/scan_count", 10)
+
+    rio = _raveio.new()
+    rio.object = vol
+    rio.strict = True
+    rio.filename = self.TEMPORARY_FILE
+    try:
+      rio.save()
+      self.fail("Expected IOError since scan_index must be available in all scans")
+    except IOError as e:
+      self.assertEqual("Missing attribute how/scan_index in one of scans", rio.error_message)
+
+  def test_write_volume_too_high_scan_index_strict(self):
+    obj = _raveio.open(self.FIXTURE_VOLUME)
+    vol = obj.object
+
+    def add_dummy_attribute_to_scan(scan, names):
+      for n in names:
+        scan.addAttribute(n, 0)
+
+    # Add some mandatory attributes when saving strict
+    vol.source = "NOD:seang"
+    for si in range(vol.getNumberOfScans()):
+      scan = vol.getScan(si)
+      scan.addAttribute("how/scan_index", si + 1)
+      scan.addAttribute("how/scan_count", 10)
+      add_dummy_attribute_to_scan(scan, ["how/stopazA", "how/startazA", "how/NI", "how/radconstH", "how/beamwH", "how/antgainH", "how/RXlossH", "how/pulsewidth", "how/frequency", "how/simulated"])
+      scan.source = "NOD:seang"
+
+    vol.getScan(4).addAttribute("how/scan_index", 15)
+    vol.addAttribute("how/scan_count", 10)
+
+    rio = _raveio.new()
+    rio.object = vol
+    rio.strict = True
+    rio.filename = self.TEMPORARY_FILE
+    try:
+      rio.save()
+      self.fail("Expected IOError since all scan_index must be <= scan_count")
+    except IOError as e:
+      self.assertEqual("how/scan_index for scan 4 is greater than volume how/scan_count (15 > 10)", rio.error_message)
+
+  def test_write_volume_too_high_scan_index_not_strict(self):
+    obj = _raveio.open(self.FIXTURE_VOLUME)
+    vol = obj.object
+
+    def add_dummy_attribute_to_scan(scan, names):
+      for n in names:
+        scan.addAttribute(n, 0)
+
+    # Add some mandatory attributes when saving strict
+    vol.source = "NOD:seang"
+    for si in range(vol.getNumberOfScans()):
+      scan = vol.getScan(si)
+      scan.addAttribute("how/scan_index", si + 1)
+      scan.addAttribute("how/scan_count", 10)
+      add_dummy_attribute_to_scan(scan, ["how/stopazA", "how/startazA", "how/NI", "how/radconstH", "how/beamwH", "how/antgainH", "how/RXlossH", "how/pulsewidth", "how/frequency", "how/simulated"])
+      scan.source = "NOD:seang"
+
+    vol.getScan(4).addAttribute("how/scan_index", 15)
+    vol.addAttribute("how/scan_count", 10)
+
+    rio = _raveio.new()
+    rio.object = vol
+    rio.strict = False
+    rio.filename = self.TEMPORARY_FILE
+    rio.save()
+
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+    self.assertEqual(10, nodelist.getNode("/how/scan_count").data())
+    self.assertEqual(1, nodelist.getNode("/dataset1/how/scan_index").data())
+    self.assertEqual(2, nodelist.getNode("/dataset2/how/scan_index").data())
+    self.assertEqual(3, nodelist.getNode("/dataset3/how/scan_index").data())
+    self.assertEqual(4, nodelist.getNode("/dataset4/how/scan_index").data())
+    self.assertEqual(15, nodelist.getNode("/dataset5/how/scan_index").data())
+    self.assertEqual(6, nodelist.getNode("/dataset6/how/scan_index").data())
+    self.assertEqual(7, nodelist.getNode("/dataset7/how/scan_index").data())
+    self.assertEqual(8, nodelist.getNode("/dataset8/how/scan_index").data())
+    self.assertEqual(9, nodelist.getNode("/dataset9/how/scan_index").data())
+    self.assertEqual(10, nodelist.getNode("/dataset1/how/scan_count").data())
+    self.assertEqual(10, nodelist.getNode("/dataset2/how/scan_count").data())
+    self.assertEqual(10, nodelist.getNode("/dataset3/how/scan_count").data())
+    self.assertEqual(10, nodelist.getNode("/dataset4/how/scan_count").data())
+    self.assertEqual(10, nodelist.getNode("/dataset5/how/scan_count").data())
+    self.assertEqual(10, nodelist.getNode("/dataset6/how/scan_count").data())
+    self.assertEqual(10, nodelist.getNode("/dataset7/how/scan_count").data())
+    self.assertEqual(10, nodelist.getNode("/dataset8/how/scan_count").data())
+    self.assertEqual(10, nodelist.getNode("/dataset9/how/scan_count").data())
+    self.assertEqual(10, nodelist.getNode("/dataset10/how/scan_count").data())
 
   def test_write_volume_strict_2_3_success(self):
     obj = _raveio.open(self.FIXTURE_VOLUME)
@@ -2711,7 +3057,10 @@ class PyRaveIOTest(unittest.TestCase):
     obj.version = _rave.RaveIO_ODIM_Version_2_3
     obj.strict = True
 
-    obj.save()
+    try:
+      obj.save()
+    except:
+      print(obj.error_message)
 
   def test_write_volume_strict_2_4_failure(self):
     obj = _raveio.open(self.FIXTURE_VOLUME)
@@ -2742,6 +3091,7 @@ class PyRaveIOTest(unittest.TestCase):
         scan.addAttribute("how/radconstH", 1.1)
         scan.addAttribute("how/NI", 1.1)
         scan.addAttribute("how/scan_index", i+1)
+        scan.addAttribute("how/scan_count", nrscans)
         scan.addAttribute("how/startazA", numpy.arange(0.0,360.0,1.0))
         scan.addAttribute("how/stopazA", numpy.arange(0.0,360.0,1.0))
     vol.source = vol.source + ",NOD:seang"
@@ -2766,6 +3116,7 @@ class PyRaveIOTest(unittest.TestCase):
         scan.addAttribute("how/radconstH", 1.1)
         scan.addAttribute("how/NI", 1.1)
         scan.addAttribute("how/scan_index", i+1)
+        scan.addAttribute("how/scan_count", nrscans)
         scan.addAttribute("how/startazA", numpy.arange(0.0,360.0,1.0))
         scan.addAttribute("how/stopazA", numpy.arange(0.0,360.0,1.0))
     vol.source = "WMO:00000"
@@ -5953,6 +6304,72 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertEqual("H5rad 2.2", nodelist.getNode("/what/version").data())
     self.assertTrue("BALTRAD", nodelist.getNode("/how/software").data())
     self.assertFalse("WIGOS:0-123-1-123456" in nodelist.getNode("/what/source").data())
+
+  def test_write_volume_with_extras_basic(self):
+    obj = _raveio.open(self.FIXTURE_SEHEM_PVOL).object
+
+    rio = _raveio.new()
+    rio.object = obj
+    rio.extras = {"/how/license":"CC BY 4.0",
+                  "/how/publisher_name":"Test publisher",
+                  "/how/publisher_type":"institution",
+                  "/how/publisher_email":"user@institution",
+                  "/how/publisher_url":"http://institution",
+                  "/how/publisher_institution":"publisher institution"}
+
+    rio.save(self.TEMPORARY_FILE)
+
+    # Verify result
+    nodelist = _pyhl.read_nodelist(self.TEMPORARY_FILE)
+    nodelist.selectAll()
+    nodelist.fetch()
+
+    self.assertEqual("CC BY 4.0", nodelist.getNode("/how/license").data())
+    self.assertEqual("Test publisher", nodelist.getNode("/how/publisher_name").data())
+    self.assertEqual("institution", nodelist.getNode("/how/publisher_type").data())
+    self.assertEqual("user@institution", nodelist.getNode("/how/publisher_email").data())
+    self.assertEqual("http://institution", nodelist.getNode("/how/publisher_url").data())
+    self.assertEqual("publisher institution", nodelist.getNode("/how/publisher_institution").data())
+
+  def test_write_volume_with_extras_invalid_1(self):
+    obj = _raveio.open(self.FIXTURE_SEHEM_PVOL).object
+
+    rio = _raveio.new()
+    rio.object = obj
+    rio.extras = {"/where/license":"CC BY 4.0"}
+
+    try:
+      rio.save(self.TEMPORARY_FILE)
+      self.fail("Expected IOError")
+    except IOError:
+      pass
+
+  def test_write_volume_with_extras_invalid_2(self):
+    obj = _raveio.open(self.FIXTURE_SEHEM_PVOL).object
+
+    rio = _raveio.new()
+    rio.object = obj
+    rio.extras = {"/where/how/license":"CC BY 4.0"}
+
+    try:
+      rio.save(self.TEMPORARY_FILE)
+      self.fail("Expected IOError")
+    except IOError:
+      pass
+
+  def test_write_volume_with_extras_invalid_3(self):
+    obj = _raveio.open(self.FIXTURE_SEHEM_PVOL).object
+
+    rio = _raveio.new()
+    rio.object = obj
+    rio.extras = {"how/license":"CC BY 4.0"}
+
+    try:
+      rio.save(self.TEMPORARY_FILE)
+      self.fail("Expected IOError")
+    except IOError:
+      pass
+
 
   def testBufrTableDir(self):
     obj = _raveio.new()

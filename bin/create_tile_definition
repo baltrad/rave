@@ -24,33 +24,33 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @date 2014-09-28
 
 if __name__ == "__main__":
-  import sys
-  from optparse import OptionParser
-  import rave_tile_registry
-  
-  description = "Creates a xml-entry that can be added to the rave_tile_registry.xml."
- 
-  usage = 'usage: %prog -c --area <areaid> --xsize <int> --ysize <int> [h]'
-  parser = OptionParser(usage=usage, description=description)
+    import sys
+    from optparse import OptionParser
 
-  parser.add_option("--area", dest="areaid",
-					help="The area id that these tiles should be used for.")
+    import rave_tile_registry
 
-  parser.add_option("--xsize", dest="xsize", 
-					help="Number of tiles in x-direction. Must be > 0")
+    description = "Creates a xml-entry that can be added to the rave_tile_registry.xml."
 
-  parser.add_option("--ysize", dest="ysize", 
-					help="Number of tiles in y-direction. Must be > 0")
+    usage = 'usage: %prog -c --area <areaid> --xsize <int> --ysize <int> [h]'
+    parser = OptionParser(usage=usage, description=description)
 
-  (options, args) = parser.parse_args()
-  
-  if not options.areaid or not options.xsize or not options.ysize:
-  	parser.print_help()
-  	sys.exit()
-  
-  if int(options.xsize) <= 0 or int(options.ysize) <= 0:
-    print("xsize or ysize <= 0")
-    sys.exit()
+    parser.add_option("--area", dest="areaid",
+                      help="The area id that these tiles should be used for.")
 
-  rave_tile_registry.create_tile_definition_for_area(options.areaid, (int(options.xsize),int(options.ysize)))
-  
+    parser.add_option("--xsize", dest="xsize",
+                      help="Number of tiles in x-direction. Must be > 0")
+
+    parser.add_option("--ysize", dest="ysize",
+                      help="Number of tiles in y-direction. Must be > 0")
+
+    (options, args) = parser.parse_args()
+
+    if not options.areaid or not options.xsize or not options.ysize:
+        parser.print_help()
+        sys.exit()
+
+    if int(options.xsize) <= 0 or int(options.ysize) <= 0:
+        print("xsize or ysize <= 0")
+        sys.exit()
+
+    rave_tile_registry.create_tile_definition_for_area(options.areaid, (int(options.xsize), int(options.ysize)))

@@ -33,6 +33,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_types.h"
 #include <string.h>
 #include "rave_attribute_table.h"
+#include <stdio.h>
 
 /**
  * Represents the cartesian field product.

@@ -1,0 +1,293 @@
+/** \page Compositing
+\section compositing_summary Summary
+
+In 2025 a new approach to compositing has been added to the toolbox to simplify addition of new algorithms and also to be able to reuse code.
+Instead of having one compositing class (composite.c) that handles all types of compositing the new approach is to use various composite factories
+and various classes for passing on arguments and properties as well as different utility functions. In this first version the focus has been to
+get a proper structure and getting the nearest algorithms to work like before. We have kept the old legacy code which means that it still is
+possible to generate all previous products.
+
+\section compositing_overview Overview
+
+The new class hierarchy for the new compositing can be visualized according to \ref Figure 1
+
+\image html new_composite_generator.png Figure 1: Compositing class overview
+
+
+\subsection compositing_classes Classes
+
+- \ref CompositeArguments_t \n
+  Container class for all arguments that should be passed to the composite generator. Contains scans and volumes, area definition, type of product and more.\n\n
+
+- \ref CompositeFilter_t \n
+  Is used to match a filter against \ref CompositeArguments_t in order to identify and choose the correct generator factory.\n\n
+
+- \ref CompositeGenerator_t \n
+  Generator class that will pass on the arguments and properties to the appropriate factory method by using \ref CompositeFilter_t and the \ref CompositeFactoryManager_t.\n\n
+
+- \ref CompositeGeneratorFactory_t \n
+  Interface class that should be implemented by all factories.\n\n
+
+- \ref AcqvaCompositeGeneratorFactory_t \n
+  Implementation of the \ref CompositeGeneratorFactory_t that implements that ACQVA algorithm using nearest.\n\n
+
+- \ref NearestCompositeGeneratorFactory_t \n
+  Implementation of the \ref CompositeGeneratorFactory_t that implements the standard algorithms PPI, CAPPI, PCAPPI, MAX and PMAX using nearest.\n\n
+
+- \ref LegacyCompositeGeneratorFactory_t \n
+  Implementation of the \ref CompositeGeneratorFactory_t that is encapsulating the legacy \ref Composite_t implementation and supports
+  several different interpolation methods as well as nearest for PPI, CAPPI, PCAPPI, MAX and PMAX. MAX and PMAX are still only supporting nearest.\n\n
+
+- \ref CompositeFactoryManager_t \n
+  Contains a registry of \ref CompositeGeneratorFactory_t instances.\n\n
+
+- \ref CompositeEngine_t \n
+  A generic composite generator class where various functions can be replaced with different implementations for getting and setting data when creating composites.\n\n
+
+- \ref CompositeEngineQcHandler_t \n
+  A base class used to add various qc handlers for creating fields within the composite.\n\n
+
+- \ref CompositeEngineOvershootQcHandler_t \n
+  An implementation of \ref CompositeEngineQcHandler_t that handles the Probability of Overshooting quality field. Successor to the \ref PooCompositeAlgorithm_t behavior used in \ref Composite_t\n\n
+
+- \ref RaveProperties_t \n
+  A container for different properties that is used to configure the system.\n\n
+
+- \ref OdimSources_t \n
+  Used to keep track of all available sources. Possibility to load the odim_sources.xml.\n\n
+
+- \ref OdimSource_t \n
+  One odim source supporting nod, wmo, wigos, rad, plc, ...\n\n
+
+\subsection compositing_introduction Introduction
+
+The introduction will be done using programming examples in python. The same functionality can be achieved using the C-API.
+
+\subsubsection compositing_composite_arguments Composite Arguments
+
+When creating a composite it usually requires a number of polar objects, an area definition, a product type, information about what quantities that should be generated as well as some other information like elevation angles, 
+interpolation methods, what quality fields that should be added and more. This means that we first will have to create a composite argument. All examples will be written in python but the same is possible using the C-API.
+
+\verbatim
+  import math
+  import _compositearguments, _raveio
+
+  args = _compositearguments.new()
+  args.product = "PPI"
+  args.elangle = 0.5 * math.pi / 180.0
+  args.date = "20250304"
+  args.time = "100000"
+  args.addParameter("DBZH", 0.4, -30.0)
+  args.addQualityFlag("se.smhi.composite.distance.radar")
+  for f in filenames:
+    args.addObject(_raveio.open(f).object)
+
+\endverbatim
+
+\subsubsection compositing_composite_generator_factory Composite Generator Factory
+
+There are a number of composite generator factories that supports different product geneneration algorithms like what product to generate (PPI, CAPPI, ...), what interpolation method to use (NEAREST, BILLINEAR, ...), what quantities that can be 
+managed (DBZH, TH, RATE, ...). It is up to the implementation to decide how this should be supported and what can be supported. For example the \ref AcqvaCompositeGeneratorFactory_t only supports product type ACQVA using the nearest value while
+the \ref LegacyCompositeGeneratorFactory_t supports PPI, CAPPI, PCAPPI, MAX and PMAX for a number of different interpolation methods as well as selection methods.
+
+- \ref AcqvaCompositeGeneratorFactory_t
+  The ACQVA composite generator that uses quality fields called se.smhi.acqva where the fields identify if a pixel is assumed to be valid or not.
+
+- \ref NearestCompositeGeneratorFactory_t
+  A composite generator factory used for producing composites using the nearest approach. Supports PPI,CAPPI and PCAPPI, MAX and PMAX. Selection method for both nearest to ground and nearest to radar.
+
+- \ref LegacyCompositeGeneratorFactory_t
+  Forwards the calls to the legacy \ref Composite_t class.
+
+\subsubsection compositing_composite_filter Composite Filter
+
+In order for the composite generator to to correct decisions we will have to define a number of filters that will forward the call to the appropriate factory method. The filtering is straight forward so that it will
+match the filter against a composite arguments instance. If there is a match we know that it should use the factory with provided name (factory_class). The current default configuration for filters and factories is:
+
+\verbatim
+<rave-composite-generator>
+  <factory name="acqva" factory_class="AcqvaCompositeGenerator">
+    <filter>
+      <products>ACQVA</products>
+      <interpolation_methods>NEAREST</interpolation_methods>
+    </filter>
+  </factory>
+  <factory name="nearest" factory_class="NearestCompositeGenerator">
+    <filter>
+      <products>PPI,CAPPI,PCAPPI,MAX,PMAX</products>
+      <interpolation_methods>NEAREST</interpolation_methods>
+    </filter>
+  </factory>
+  <factory name="legacy" factory_class="LegacyCompositeGenerator">
+    <filter>
+      <products>PPI,CAPPI,PCAPPI</products>
+      <interpolation_methods>NEAREST,LINEAR_HEIGHT,LINEAR_RANGE,LINEAR_AZMIUTH,LINEAR_RANGE_AND_AZIMUTH,LINEAR_3D,QUADRATIC_HEIGHT,QUADRATIC_3D</interpolation_methods>
+    </filter>
+  </factory>
+</rave-composite-generator>
+\endverbatim
+
+The factory_class identifies what factory to use while the name is used for identifying a filter. Each \b factory can contain a number of <b>filter</b>s. This is useful when separating products and other information like in the case of the LegacyCompositeGenerator since it
+only allows PMAX and MAX using NEAREST while PPI, CAPPI and PCAPPI also can be generated using other interpolation methods. The procedure for finding the factory is not open to the users but it basically is performed according to this example code.
+
+\verbatim
+  for key in entries.keys():
+    if entries[key].filter.match(args):
+    if filter.match(args):
+      return factorymanager.get(entries[key].factory_class)
+\endverbatim
+
+\subsubsection compositing_rave_properties Rave Properties
+
+It is essential that the factories can get required configuration values in a general way which is why \ref RaveProperties_t is used. It supports basic values like strings, longs and doubles. It also supports hashtables, lists and possibly other value types. RaveProperties_t also
+contains a \ref OdimSources_t reference. For information on what properties that are available please refer to \ref compositing_raveproperties.
+
+\verbatim
+  properties = _raveproperties.new()
+  properties.set("string.option", "this is a string")
+  properties.set("one.level.hash", {"a", 1.1, "b", 2.2})
+  properties.set("two.level.hash", {"seang":{"a", 1.1, "b", 2.2}, "seatv":{"a":99.0, "b":0.0}})
+  properties.set("list.value", ["1", "2", "3])
+
+\endverbatim
+
+
+\subsubsection compositing_composite_generator Composite Generator 
+
+When creating composites it is assumed that the class composite generator passes on the arguments to the correct composite generator factory. To achieve this, the \ref CompositeFilter_t and \ref CompositeFactoryManager_t is combined in the \ref CompositeGenerator_t. It is possible
+to create a composite generator using the default factory manager or your own factory manager. When creating the composite generator it is also possible to provide a compsite filter xml file that connects the factories with the filters. By using the information previously defined
+in this document we can combine all these classes into a working composite generator.
+
+\verbatim
+  # Create the generator
+  generator = _compositegenerator.create(None, "/etc/baltrad/rave/config/composite_generator_filter.xml")
+  properties = _raveproperties.new()
+  properties.set("rave.acqva.cluttermap.dir", "/var/lib/baltrad/rave/cluttermap")
+  properties.set("rave.rate.zr.coefficients", {"sella":(200.0, 1.6), "sekrn": (200.0, 1.6)})
+  properties.sources = _odimsources.load("/etc/baltrad/rave/config/odim_source.xml")  # To be able to do NOD lookup of cluttermap
+  generator.properties = properties
+
+  # Create the arguments
+  args = _compositearguments.new()
+  for f in filenames:
+    args.addObject(_raveio.open(f).object)
+  args.product = "PPI"
+  args.elangle = 0.5
+  args.area = composite_area
+  args.date = "20250305"
+  args.time = "100000"
+  args.addParameter("DBZH", 0.4, -30.0)
+  args.addArgument("interpolation_method", "NEAREST")
+
+  result = generator.generate(args)
+
+  rio = _raveio.new()
+  rio.object = result
+  rio.save("out_composite.h5")
+
+\endverbatim
+
+\subsection compositing_raveproperties Rave Properties
+
+Different parts of the system requires different configuration.
+
+\subsubsection compositing_raveproperties_cluttermap_dir rave.acqva.cluttermap.dir (product = ACQVA)
+
+Specifies where to find the cluttermap values used when creating the ACQVA composite. Should be a directory and files in there should be polar volumes named
+&lt;nod&gt;.h5, for example seatv.ht. ACQVA will use /what/source for determining the NOD during processing and fill the volumes with the quality fields from
+the cluttermap.
+
+\verbatim
+  properties.set("rave.acqva.cluttermap.dir", "/var/lib/baltrad/rave/cluttermap")
+\endverbatim
+
+The cluttermap content should be saved as a polar volume where each SCAN should have a matching elevation angle and the parameter should be ACQVA
+
+\verbatim
+/dataset1                                is a group
+/dataset1/data1                          is a group
+/dataset1/data1/data                     is a dataset
+/dataset1/data1/data/CLASS               is an attribute
+/dataset1/data1/data/IMAGE_VERSION       is an attribute
+/dataset1/data1/what                     is a group
+/dataset1/data1/what/gain                is an attribute
+/dataset1/data1/what/nodata              is an attribute
+/dataset1/data1/what/offset              is an attribute
+/dataset1/data1/what/quantity            is an attribute
+/dataset1/data1/what/undetect            is an attribute
+/dataset1/what                           is a group
+/dataset1/what/enddate                   is an attribute
+/dataset1/what/endtime                   is an attribute
+/dataset1/what/product                   is an attribute
+/dataset1/what/startdate                 is an attribute
+/dataset1/what/starttime                 is an attribute
+/dataset1/where                          is a group
+/dataset1/where/a1gate                   is an attribute
+/dataset1/where/elangle                  is an attribute
+/dataset1/where/nbins                    is an attribute
+/dataset1/where/nrays                    is an attribute
+/dataset1/where/rscale                   is an attribute
+/dataset1/where/rstart                   is an attribute
+/dataset2                                is a group
+/dataset2/data1                          is a group
+...
+\endverbatim
+
+
+\subsubsection compositing_raveproperties_zr_coefficients Property: rave.rate.zr.coefficients (quantity = RATE)
+
+Individual ZR coefficients for each source used when generating RATE products. If not specified, the zr-coefficients will fall back
+on the Marshall - Palmer ZR coefficients.
+
+Defined as a hash table with "source": (zr_a, zr_b).
+
+\verbatim
+  properties.set("rave.rate.zr.coefficients", {"sella":(200.0, 1.6), "sekrn": (200.0, 1.6)})
+\endverbatim
+
+\subsection compositing_radarcomp radarcomp
+
+The radarcomp script has been extended with a couple of arguments that will allow the user to use the new compositing factory method instead of the legacy handling.
+The old \ref Composite_t handling will still be the default behavior until the factory methods has been evaluated and verified to provide the same or better support
+for generating composites. However, there are a couple of products that the old compositing method will not be able to handle which means that in those situations
+the new factory method has to be used. These are when RATE or ACQVA composites should be created.
+
+The radarcomp has been extended with new options.
+
+- --enable_composite_factories\n
+  Will disable the old compositing in favor for the new variant.
+
+- --strategy=[legacy|nearest|acqva]
+  If the user wants to enfore a specific factory to override the filter handling in the \ref CompositeGenerator_t. If not specified, then the filtering will be used.
+
+When using the composite factories it is now also possible to specify <b>--quantity=RATE</b>.
+_factories --qc=rave-overshooting --strategy=legacy
+
+\section compositing_camethod how/camethod
+
+When generating composites the attribute how/camethod will be added to the cartesian product so that the user know how the data has been selected. As
+described earlier there are number of different compositing factories delivered within RAVE and each of these will be responsible for ensuring that how/camethod
+is set appropriately.
+
+Since \ref LegacyCompositeGeneratorFactory_t uses the same code as \ref Composite_t the table will only contain LegacyCompositeGeneratorFactory_t but the same
+behavior can be expected when using Composite_t directly as well.
+
+Factory                                  |  Product               | selection_method        |  interpolation_method    |   extra      |  how/camethod
+:--------------------------------------- | :--------------------- | :---------------------- | :----------------------- | :----------- | :-------------
+\ref LegacyCompositeGeneratorFactory_t   |  PPI / CAPPI / PCAPPI  | NEAREST_RADAR           |  ANY                     | NO QCOMP     |  NEAREST
+\ref LegacyCompositeGeneratorFactory_t   |  MAX / PMAX            | N/A                     |  NEAREST                 | NO QCOMP     |  MAXIMUM
+\ref LegacyCompositeGeneratorFactory_t   |  PPI / CAPPI / PCAPPI  | HEIGHT_ABOVE_SEALEVEL   |  ANY                     | NO QCOMP     |  MDE
+\ref LegacyCompositeGeneratorFactory_t   |  PPI / CAPPI / PCAPPI  | N/A                     |  ANY                     | QCOMP        |  QMAXIMUM
+-|-|-|-|-|-
+\ref NearestCompositeGeneratorFactory_t  |  PPI / CAPPI / PCAPPI  | NEAREST_RADAR           |  N/A                     | N/A          |  NEAREST
+\ref NearestCompositeGeneratorFactory_t  |  PPI / CAPPI / PCAPPI  | HEIGHT_ABOVE_SEALEVEL   |  N/A                     | N/A          |  MDE
+\ref NearestCompositeGeneratorFactory_t  |  MAX / PMAX            | N/A                     |  N/A                     | N/A          |  MAXIMUM
+-|-|-|-|-|-
+\ref AcqvaCompositeGeneratorFactory_t    |  ACQVA                 | N/A                     |  N/A                     | N/A          |  QMAXIMUM
+
+
+The \ref LegacyCompositeGeneratorFactory_t can generate composites using the quality based compositing method that is using a specific quality flag indicator. If setting
+a quality flag in the composite arguments using the \ref CompositeArguments_setQIFieldName, the QCOMP generation will be used and in that situation it the selection_method will
+not be used.
+
+*/

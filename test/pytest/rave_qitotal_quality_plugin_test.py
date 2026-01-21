@@ -32,10 +32,11 @@ import rave_qitotal_quality_plugin
 import _raveio, _ravefield, _rave
 
 rave_qitotal_quality_plugin.QITOTAL_DTYPE = _rave.RaveDataType_DOUBLE
+rave_qitotal_quality_plugin.QITOTAL_NP_DTYPE = numpy.float64
 rave_qitotal_quality_plugin.QITOTAL_GAIN = 1.0
 rave_qitotal_quality_plugin.QITOTAL_OFFSET = 0.0 
 rave_qitotal_quality_plugin.QITOTAL_METHOD = "additive"
-
+rave_qitotal_quality_plugin.QITOTAL_DEFAULT_FIELD_MODE = 2
 
 class rave_qitotal_quality_plugin_test(unittest.TestCase):
   VOLUME_FIXTURE = "fixtures/pvol_sekir_20090501T120000Z.h5"
@@ -47,6 +48,9 @@ class rave_qitotal_quality_plugin_test(unittest.TestCase):
   def setUp(self):
     self.classUnderTest = rave_qitotal_quality_plugin.rave_qitotal_quality_plugin()
     self.classUnderTest._qitotal_option_file = self.OPTIONS_FIXTURE
+    rave_qitotal_quality_plugin.QITOTAL_DEFAULT_FIELD_MODE = 2
+    rave_qitotal_quality_plugin.QITOTAL_DTYPE = _rave.RaveDataType_DOUBLE
+    rave_qitotal_quality_plugin.QITOTAL_NP_DTYPE = numpy.float64
     
   def tearDown(self):
     self.classUnderTest = None
@@ -80,6 +84,61 @@ class rave_qitotal_quality_plugin_test(unittest.TestCase):
     self.assertTrue(field != None)
     self.assertAlmostEqual(1.7, field.getValue(0,0)[1], 4)
     self.assertAlmostEqual(1.7, field.getValue(10,10)[1], 4)
+
+  def test_process_scan_default_field_mode_0(self):
+    rave_qitotal_quality_plugin.QITOTAL_DEFAULT_FIELD_MODE = 0
+    rave_qitotal_quality_plugin.QITOTAL_DTYPE = _rave.RaveDataType_UCHAR
+    rave_qitotal_quality_plugin.QITOTAL_NP_DTYPE = numpy.uint8
+
+    scan = _raveio.open(self.SCAN_FIXTURE).object
+    
+    result, qfield = self.classUnderTest.process(scan)
+
+    try:
+      field = result.getQualityFieldByHowTask("pl.imgw.quality.qi_total")
+      self.fail("Expected NameError")
+    except NameError:
+      pass
+
+  def test_process_scan_default_field_mode_1(self):
+    rave_qitotal_quality_plugin.QITOTAL_DEFAULT_FIELD_MODE = 1
+    rave_qitotal_quality_plugin.QITOTAL_DTYPE = _rave.RaveDataType_UCHAR
+    rave_qitotal_quality_plugin.QITOTAL_NP_DTYPE = numpy.uint8
+
+    scan = _raveio.open(self.SCAN_FIXTURE).object
+    
+    result, qfield = self.classUnderTest.process(scan)
+
+    field = result.getQualityFieldByHowTask("pl.imgw.quality.qi_total")
+
+    self.assertEqual(qfield, ["pl.imgw.quality.qi_total"], "Wrong qfield returned from process")
+    npfield = numpy.zeros((scan.nrays, scan.nbins), numpy.float64)
+    self.assertTrue((npfield == field.getData()).all())
+    self.assertEqual("pl.imgw.quality.qi_total", field.getAttribute("how/task"))
+    self.assertEqual("method:%s"%rave_qitotal_quality_plugin.QITOTAL_METHOD, field.getAttribute("how/task_args"))
+    self.assertAlmostEqual(rave_qitotal_quality_plugin.QITOTAL_GAIN, field.getAttribute("what/gain"), 4)
+    self.assertAlmostEqual(rave_qitotal_quality_plugin.QITOTAL_OFFSET, field.getAttribute("what/offset"), 4)
+
+
+  def test_process_scan_default_field_mode_2(self):
+    rave_qitotal_quality_plugin.QITOTAL_DEFAULT_FIELD_MODE = 2
+    rave_qitotal_quality_plugin.QITOTAL_DTYPE = _rave.RaveDataType_UCHAR
+    rave_qitotal_quality_plugin.QITOTAL_NP_DTYPE = numpy.uint8
+
+    scan = _raveio.open(self.SCAN_FIXTURE).object
+    
+    result, qfield = self.classUnderTest.process(scan)
+
+    field = result.getQualityFieldByHowTask("pl.imgw.quality.qi_total")
+
+    self.assertEqual(qfield, ["pl.imgw.quality.qi_total"], "Wrong qfield returned from process")
+    npfield = numpy.zeros((scan.nrays, scan.nbins), numpy.float64)
+    npfield = npfield + 255
+    self.assertTrue((npfield == field.getData()).all())
+    self.assertEqual("pl.imgw.quality.qi_total", field.getAttribute("how/task"))
+    self.assertEqual("method:%s"%rave_qitotal_quality_plugin.QITOTAL_METHOD, field.getAttribute("how/task_args"))
+    self.assertAlmostEqual(rave_qitotal_quality_plugin.QITOTAL_GAIN, field.getAttribute("what/gain"), 4)
+    self.assertAlmostEqual(rave_qitotal_quality_plugin.QITOTAL_OFFSET, field.getAttribute("what/offset"), 4)
 
   def test_process_scan_reprocess_false(self):
     scan = _raveio.open(self.SCAN_FIXTURE).object
@@ -166,7 +225,11 @@ class rave_qitotal_quality_plugin_test(unittest.TestCase):
     self.assertAlmostEqual(7.4, field.getValue(10,10)[1], 4)
     
     for i in range(3, nscans):
-      self.assertEqual(None, result.getScan(i).findQualityFieldByHowTask("pl.imgw.quality.qi_total"))
+      scan = result.getScan(i)
+      npfield = numpy.zeros((scan.nrays, scan.nbins), numpy.float64)
+      npfield = npfield + 255
+      field = result.getScan(i).findQualityFieldByHowTask("pl.imgw.quality.qi_total")
+      self.assertTrue((npfield == field.getData()).all())
 
   def createQualityField(self, nrays, nbins, zv, howtask):
     qfdata = numpy.zeros((nrays, nbins), numpy.int8)
