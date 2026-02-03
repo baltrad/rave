@@ -75,6 +75,21 @@ void RaveIO_close(RaveIO_t* raveio);
 RaveIO_t* RaveIO_open(const char* filename, int lazyLoading, const char* preloadQuantities);
 
 /**
+ * Opens a supported file object and loads it into the RaveIO instance.
+ * Same as:
+ * RaveIO_t* instance = RAVE_OBJECT_NEW(&RaveIO_TYPE);
+ * RaveIO_setFilename(instance, filename);
+ * RaveIO_setFileObjectOverride(instance, 1);
+ * RaveIO_loadFileObject(instance);
+ *
+ * @param[in] filename - the HDF5 file to open
+ * @param[in] lazyLoading - if file should be loaded in lazy mode or not
+ * @param[in] preloadQuantities - if lazy loading, then these quantities will be loaded immediately.
+ * @returns The raveio instance on success, otherwise NULL.
+ */
+RaveIO_t* RaveIO_openFileObject(const char* filename, int lazyLoading, const char* preloadQuantities);
+
+/**
  * Checks if specified file is a HDF file or not.
  * @param[in] filename - the filename
  * @return 1 on success otherwise 0
@@ -180,6 +195,22 @@ RaveIO_ODIM_H5rad_Version RaveIO_getH5radVersion(RaveIO_t* raveio);
  * @return the file format.
  */
 RaveIO_ODIM_FileFormat RaveIO_getFileFormat(RaveIO_t* raveio);
+
+/**
+ * Sets if file object loading should be forced or not. If set and regardless if
+ * object type is known, the object loaded will be a file object structure.
+ * @param[in] raveio - self
+ * @param[in] override - if override should occur or not
+ */
+void RaveIO_setFileObjectLoading(RaveIO_t* raveio, int override);
+
+/**
+ * Returns if file object loading should be forced or not. If set and regardless if
+ * object type is known, the object loaded will be a file object structure.
+ * @param[in] raveio - self
+ * @return if override should occur or not
+ */
+int RaveIO_getFileObjectLoading(RaveIO_t* raveio);
 
 /**
  * When saving a file you can provide a set of extra attributes to be added to

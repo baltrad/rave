@@ -63,11 +63,28 @@ static const char RaveTypes_ObjectType_CVOL_STR[]= "CVOL";
 static const char RaveTypes_ObjectType_SCAN_STR[]= "SCAN";
 static const char RaveTypes_ObjectType_RAY_STR[]= "RAY";
 static const char RaveTypes_ObjectType_AZIM_STR[]= "AZIM";
+static const char RaveTypes_ObjectType_ELEV_STR[]= "ELEV";
 static const char RaveTypes_ObjectType_IMAGE_STR[]= "IMAGE";
 static const char RaveTypes_ObjectType_COMP_STR[]= "COMP";
 static const char RaveTypes_ObjectType_XSEC_STR[]= "XSEC";
 static const char RaveTypes_ObjectType_VP_STR[]= "VP";
 static const char RaveTypes_ObjectType_PIC_STR[]= "PIC";
+
+/**
+ * Data type constants
+ */
+static const char RaveDataType_UNDEFINED_STR[]= "UNDEFINED";
+static const char RaveDataType_CHAR_STR[]= "CHAR";
+static const char RaveDataType_UCHAR_STR[]= "UCHAR";
+static const char RaveDataType_SHORT_STR[]= "SHORT";
+static const char RaveDataType_USHORT_STR[]= "USHORT";
+static const char RaveDataType_INT_STR[]= "INT";
+static const char RaveDataType_UINT_STR[]= "UINT";
+static const char RaveDataType_LONG_STR[]= "LONG";
+static const char RaveDataType_ULONG_STR[]= "ULONG";
+static const char RaveDataType_FLOAT_STR[]= "FLOAT";
+static const char RaveDataType_DOUBLE_STR[]= "DOUBLE";
+
 /*@{ Constants */
 
 /**
@@ -84,6 +101,14 @@ struct RaveTypes_ProductMapping {
 struct RaveIO_ObjectTypeMapping {
   Rave_ObjectType type;  /**< the object type */
   const char* str;       /**< the string representation */
+};
+
+/**
+ * Mapping between a data type and the corresponding string
+ */
+struct RaveIO_DataTypeMapping {
+  RaveDataType type;  /**< the data type */
+  const char* str;    /**< the string representation */
 };
 
 /**
@@ -126,12 +151,29 @@ static const struct RaveIO_ObjectTypeMapping OBJECT_TYPE_MAPPING[] =
   {Rave_ObjectType_SCAN, RaveTypes_ObjectType_SCAN_STR},
   {Rave_ObjectType_RAY, RaveTypes_ObjectType_RAY_STR},
   {Rave_ObjectType_AZIM, RaveTypes_ObjectType_AZIM_STR},
+  {Rave_ObjectType_ELEV, RaveTypes_ObjectType_ELEV_STR},
   {Rave_ObjectType_IMAGE, RaveTypes_ObjectType_IMAGE_STR},
   {Rave_ObjectType_COMP, RaveTypes_ObjectType_COMP_STR},
   {Rave_ObjectType_XSEC, RaveTypes_ObjectType_XSEC_STR},
   {Rave_ObjectType_VP, RaveTypes_ObjectType_VP_STR},
   {Rave_ObjectType_PIC, RaveTypes_ObjectType_PIC_STR},
   {Rave_ObjectType_ENDOFTYPES, NULL}
+};
+
+static const struct RaveIO_DataTypeMapping DATA_TYPE_MAPPING[] =
+{
+  {RaveDataType_UNDEFINED, RaveDataType_UNDEFINED_STR},
+  {RaveDataType_CHAR, RaveDataType_CHAR_STR},
+  {RaveDataType_UCHAR, RaveDataType_UCHAR_STR},
+  {RaveDataType_SHORT, RaveDataType_SHORT_STR},
+  {RaveDataType_USHORT, RaveDataType_USHORT_STR},
+  {RaveDataType_INT, RaveDataType_INT_STR},
+  {RaveDataType_UINT, RaveDataType_UINT_STR},
+  {RaveDataType_LONG, RaveDataType_LONG_STR},
+  {RaveDataType_ULONG, RaveDataType_ULONG_STR},
+  {RaveDataType_FLOAT, RaveDataType_FLOAT_STR},
+  {RaveDataType_DOUBLE, RaveDataType_DOUBLE_STR},
+  {RaveDataType_LAST, NULL},
 };
 
 /*@} End of Constants */
@@ -163,6 +205,18 @@ int get_ravetype_size(RaveDataType type)
   default:
     return -1;
   }
+}
+
+const char* RaveTypes_getDataTypeName(RaveDataType type)
+{
+  int index = 0;
+  while (DATA_TYPE_MAPPING[index].str != NULL) {
+    if (DATA_TYPE_MAPPING[index].type == type) {
+      return DATA_TYPE_MAPPING[index].str;
+    }
+    index++;
+  }
+  return NULL;
 }
 
 Rave_ProductType RaveTypes_getProductTypeFromString(const char* name)
@@ -222,6 +276,7 @@ const char* RaveTypes_getStringFromObjectType(Rave_ObjectType type)
   }
   return NULL;
 }
+
 
 void RaveTypes_FreePolarObservationLinkedList(PolarObservationLinkedList* obs)
 {

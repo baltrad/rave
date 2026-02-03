@@ -165,6 +165,15 @@ RaveAttribute_t* RaveHL_createAttribute(HL_Node* node);
 RaveAttribute_t* RaveHL_getAttribute(HL_NodeList* nodelist, const char* fmt, ...);
 
 /**
+ * Creates a rave value from a HLHDF node value.
+ * Node must contain data that can be translated to long, double or strings otherwise
+ * NULL will be returned.
+ * @param[in] node - the HLHDF node
+ * @returns the rave value on success otherwise NULL
+ */
+RaveValue_t* RaveHL_createValue(HL_Node* node);
+
+/**
  * Verifies if the file contains a node with the name as specified by the variable
  * argument list.
  * @param[in] nodelist - the hlhdf nodelist

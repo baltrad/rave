@@ -156,5 +156,7 @@ from PyAcqvaFeatureMapTest import *
 
 from acqva_featuremap_generator_test import *
 
+from PyFileObjectTest import *
+
 if __name__ == '__main__':
   unittest.main()

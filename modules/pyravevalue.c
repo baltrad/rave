@@ -205,11 +205,109 @@ static PyObject* _pyravevalue_toJSON(PyRaveValue* self, PyObject* args)
   return result;
 }
 
+static PyObject* _pyravevalue_tokenize(PyRaveValue* self, PyObject* args)
+{
+  int delim = ',';
+  PyObject* result = NULL;
+  RaveValue_t* strlist = NULL;
+
+  if (!PyArg_ParseTuple(args, "|i", &delim)) {
+    return NULL;
+  }
+  if (RaveValue_type(self->value) != RaveValue_Type_String) {
+    raiseException_returnNULL(PyExc_AttributeError, "Can only tokenize string");
+  }
+  strlist = RaveValueString_tokenize(self->value, delim);
+  if (strlist != NULL) {
+    result = (PyObject*)PyRaveValue_New(strlist);
+  }
+  RAVE_OBJECT_RELEASE(strlist);
+  return result;
+}
+
+static PyObject* _pyravevalue__getitem__(PyObject* _self, PyObject* args)
+{
+  RaveValue_t* value = NULL;
+  PyRaveValue* self = (PyRaveValue*)_self;
+  PyObject* result = NULL;
+  if (RaveValue_type(self->value) == RaveValue_Type_Hashtable) {
+    if (PyString_Check(args)) {
+      if (RaveValueHash_exists(self->value, PyString_AsString(args))) {
+        value = RaveValueHash_get(self->value, PyString_AsString(args));
+      } else {
+        raiseException_gotoTag(fail, PyExc_KeyError, "Not found");  
+      }
+    } else {
+      raiseException_gotoTag(fail, PyExc_AttributeError, "Must provide string as key when value is a hash");
+    }
+  } else if (RaveValue_type(self->value) == RaveValue_Type_List) {
+    if (PyLong_Check(args) || PyInt_Check(args)) {
+      long index = PyLong_AsLong(args);
+      if (index >= 0 && index < RaveValueList_size(self->value)) {
+        value = RaveValueList_get(self->value, index);
+      } else {
+        raiseException_gotoTag(fail, PyExc_IndexError, "Out of bounds");
+      }
+    }
+  } else {
+    raiseException_gotoTag(fail, PyExc_RuntimeError, "Only subscriptable rave value types are hash and list");
+  }
+  result = PyRaveApi_RaveValueToObject(value);  
+fail:
+  RAVE_OBJECT_RELEASE(value);
+  return result;
+}
+
+
+int _pyravevalue__setitem__(PyObject *_self, PyObject *key, PyObject *value) {
+  PyRaveValue* self = (PyRaveValue*)_self;
+  if (RaveValue_type(self->value) == RaveValue_Type_Hashtable) {
+    if (PyString_Check(key)) {
+      if (value == NULL) { /* If value = NULL, then assume removal of key from hash */
+        RaveValueHash_remove(self->value, PyString_AsString(key));
+      } else {
+        RaveValue_t* v = PyRaveApi_RaveValueFromObject(value);
+        if (v != NULL) {
+          RaveValueHash_put(self->value, PyString_AsString(key), v);
+          RAVE_OBJECT_RELEASE(v);
+        } else {
+          raiseException_gotoTag(fail, PyExc_RuntimeError, "Could not set rave value hash");
+        }
+      }
+    } else {
+      raiseException_gotoTag(fail, PyExc_AttributeError, "Must provide string as key when value is a hash");
+    }
+  } else if (RaveValue_type(self->value) == RaveValue_Type_List) {
+    if (PyLong_Check(key) || PyInt_Check(key)) {
+      long index = PyLong_AsLong(key);
+      if (index >= 0 && index <= RaveValueList_size(self->value)) {
+        RaveValue_t* v = PyRaveApi_RaveValueFromObject(value);
+        if (v != NULL) {
+          RaveValueList_insert(self->value, index, v);
+          RAVE_OBJECT_RELEASE(v);
+        } else {
+          raiseException_gotoTag(fail, PyExc_RuntimeError, "Could not set rave value list");
+        }
+      } else {
+        raiseException_gotoTag(fail, PyExc_IndexError, "Out of bounds");
+      }
+    }
+  } else {
+    raiseException_gotoTag(fail, PyExc_RuntimeError, "Only subscriptable rave value types are hash and list");
+  }
+
+  return 0;
+fail:
+  return 1;
+}
+
 /**
  * All methods a area can have
  */
 static struct PyMethodDef _pyravevalue_methods[] =
 {
+  {"__getitem__", (PyCFunction) _pyravevalue__getitem__, METH_O | METH_COEXIST},
+  {"__setitem__", (PyCFunction) _pyravevalue__setitem__, METH_O | METH_COEXIST},
   {"value", NULL, METH_VARARGS},
   {"isStringArray", (PyCFunction) _pyravevalue_isStringArray, 1,
     "isStringArray()\n\n"
@@ -223,7 +321,43 @@ static struct PyMethodDef _pyravevalue_methods[] =
   {"toJSON", (PyCFunction) _pyravevalue_toJSON, 1,
     "toJSON()\n\n"
     "Returns the JSON representation of self.\n\n"},
+  {"tokenize", (PyCFunction) _pyravevalue_tokenize, 1,
+    "tokenize(delim)\n\n"
+    "Returns a rave string value as tokens.\n\n"},
   {NULL, NULL } /* sentinel */
+};
+
+// Returns the number of items in the dictionary.
+long int _pyravevalue_len(PyObject *self) {
+  return RaveValueHash_size(((PyRaveValue*)self)->value);
+}
+
+int _ravevalue__contains__(PyObject *_self, PyObject *key) {
+  if (RaveValue_type(((PyRaveValue*)_self)->value) == RaveValue_Type_Hashtable) {
+    if (PyString_Check(key)) {
+      const char* name = PyString_AsString(key);
+      return RaveValueHash_exists(((PyRaveValue*)_self)->value, name);
+    }
+  }
+
+  return 0;
+}
+static PyMappingMethods _pyravevalue_mappingmethods = {
+    .mp_length = (lenfunc)_pyravevalue_len,
+    .mp_subscript = _pyravevalue__getitem__,
+    .mp_ass_subscript = _pyravevalue__setitem__
+};
+
+/* Hack to implement "key in dict" */
+static PySequenceMethods _pyravevalue_sequencemethods = {
+    .sq_length = _pyravevalue_len,
+    .sq_concat = 0,
+    .sq_repeat = 0,
+    .sq_item = 0,
+    .sq_ass_item = 0,
+    .sq_contains = _ravevalue__contains__,
+    .sq_inplace_concat = 0,
+    .sq_inplace_repeat = 0,
 };
 
 /**
@@ -335,15 +469,15 @@ PyTypeObject PyRaveValue_Type =
   0,                            /*tp_compare*/
   0,                            /*tp_repr*/
   0,                            /*tp_as_number */
-  0,
-  0,                            /*tp_as_mapping */
+  &_pyravevalue_sequencemethods, /*tp as sequence */
+  &_pyravevalue_mappingmethods,  /*tp_as_mapping */
   0,                            /*tp_hash*/
   (ternaryfunc)0,               /*tp_call*/
   (reprfunc)0,                  /*tp_str*/
   (getattrofunc)_pyravevalue_getattro, /*tp_getattro*/
   (setattrofunc)_pyravevalue_setattro, /*tp_setattro*/
   0,                            /*tp_as_buffer*/
-  Py_TPFLAGS_DEFAULT, /*tp_flags*/
+  Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
   _pyravevalue_doc,                  /*tp_doc*/
   (traverseproc)0,              /*tp_traverse*/
   (inquiry)0,                   /*tp_clear*/
