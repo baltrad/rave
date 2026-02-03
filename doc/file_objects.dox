@@ -25,6 +25,7 @@ The first thing to do when creating a HDF5 file from scratch is to define some d
 and will not require a lot of work to understand. The saving is done like always when using the _raveio api so that hasn't changed.
 The object to use is \b _fileobject \b.
 
+
 \verbatim
   import _raveio, _fileobject, _rave
 
