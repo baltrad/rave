@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.13.2"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>RAVE: /github/workspace/modules/pyravevalue.c File Reference</title>
+<title>RAVE: /github/workspace/modules/pyfileobject.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -61,28 +61,33 @@ $(function(){ initResizable(false); });
 <a href="#define-members">Macros</a> &#124;
 <a href="#func-members">Functions</a> &#124;
 <a href="#var-members">Variables</a>  </div>
-  <div class="headertitle"><div class="title">pyravevalue.c File Reference</div></div>
+  <div class="headertitle"><div class="title">pyfileobject.c File Reference</div></div>
 </div><!--header-->
 <div class="contents">
 
-<p>Python version of the RaveValue API.  
+<p>Python version of the FileObject API.  
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &quot;pyravecompat.h&quot;</code><br />
-<code>#include &quot;pyraveapi.h&quot;</code><br />
 <code>#include &lt;limits.h&gt;</code><br />
 <code>#include &lt;math.h&gt;</code><br />
 <code>#include &lt;stdio.h&gt;</code><br />
 <code>#include &lt;string.h&gt;</code><br />
 <code>#include &quot;<a class="el" href="pyrave__debug_8h_source.html">pyrave_debug.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="rave__value_8h_source.html">rave_value.h</a>&quot;</code><br />
+<code>#include &quot;rave.h&quot;</code><br />
+<code>#include &quot;<a class="el" href="pyfileobject_8h_source.html">pyfileobject.h</a>&quot;</code><br />
+<code>#include &lt;arrayobject.h&gt;</code><br />
 <code>#include &quot;<a class="el" href="pyravevalue_8h_source.html">pyravevalue.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="rave__alloc_8h_source.html">rave_alloc.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="pyravedata2d_8h_source.html">pyravedata2d.h</a>&quot;</code><br />
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="define-members" name="define-members"></a>
 Macros</h2></td></tr>
-<tr class="memitem:a536c20d1214f866c832d3eb05100ea11" id="r_a536c20d1214f866c832d3eb05100ea11"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a536c20d1214f866c832d3eb05100ea11">PYRAVEVALUE_MODULE</a></td></tr>
-<tr class="memdesc:a536c20d1214f866c832d3eb05100ea11"><td class="mdescLeft">&#160;</td><td class="mdescRight">to get correct part in <a class="el" href="pyravevalue_8h.html" title="Python version of the Rave Value API.">pyravevalue.h</a>  <br /></td></tr>
-<tr class="separator:a536c20d1214f866c832d3eb05100ea11"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab6e6ee86736f9ebb56e74ae21bf3ff8a" id="r_ab6e6ee86736f9ebb56e74ae21bf3ff8a"><td class="memItemLeft" align="right" valign="top"><a id="ab6e6ee86736f9ebb56e74ae21bf3ff8a" name="ab6e6ee86736f9ebb56e74ae21bf3ff8a"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>NPY_NO_DEPRECATED_API</b>&#160;&#160;&#160;NPY_1_7_API_VERSION</td></tr>
+<tr class="separator:ab6e6ee86736f9ebb56e74ae21bf3ff8a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6d8f6bdc9018a6134051f9e9b4fcb3b7" id="r_a6d8f6bdc9018a6134051f9e9b4fcb3b7"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a6d8f6bdc9018a6134051f9e9b4fcb3b7">PYFILEOBJECT_MODULE</a></td></tr>
+<tr class="memdesc:a6d8f6bdc9018a6134051f9e9b4fcb3b7"><td class="mdescLeft">&#160;</td><td class="mdescRight">to get correct part in <a class="el" href="pyfileobject_8h.html" title="Python version of the FileObject API.">pyfileobject.h</a>  <br /></td></tr>
+<tr class="separator:a6d8f6bdc9018a6134051f9e9b4fcb3b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7e30095579331fe0846ee2481b556736" id="r_a7e30095579331fe0846ee2481b556736"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7e30095579331fe0846ee2481b556736">raiseException_gotoTag</a>(tag,  type,  msg)</td></tr>
 <tr class="memdesc:a7e30095579331fe0846ee2481b556736"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets a python exception and goto tag.  <br /></td></tr>
 <tr class="separator:a7e30095579331fe0846ee2481b556736"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -92,49 +97,40 @@ Macros</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a3ea307c50f36b5c9617d1c94e8f14673" id="r_a3ea307c50f36b5c9617d1c94e8f14673"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a3ea307c50f36b5c9617d1c94e8f14673">PYRAVE_DEBUG_MODULE</a> (&quot;_ravevalue&quot;)</td></tr>
-<tr class="memdesc:a3ea307c50f36b5c9617d1c94e8f14673"><td class="mdescLeft">&#160;</td><td class="mdescRight">Debug this module.  <br /></td></tr>
-<tr class="separator:a3ea307c50f36b5c9617d1c94e8f14673"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa81e6ced99930cc818b2504ad1101389" id="r_aa81e6ced99930cc818b2504ad1101389"><td class="memItemLeft" align="right" valign="top"><a id="aa81e6ced99930cc818b2504ad1101389" name="aa81e6ced99930cc818b2504ad1101389"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>_pyravevalue__setitem__</b> (PyObject *_self, PyObject *key, PyObject *value)</td></tr>
-<tr class="separator:aa81e6ced99930cc818b2504ad1101389"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3182b1a1b2048d6722ede1df2694815d" id="r_a3182b1a1b2048d6722ede1df2694815d"><td class="memItemLeft" align="right" valign="top"><a id="a3182b1a1b2048d6722ede1df2694815d" name="a3182b1a1b2048d6722ede1df2694815d"></a>
-long int&#160;</td><td class="memItemRight" valign="bottom"><b>_pyravevalue_len</b> (PyObject *self)</td></tr>
-<tr class="separator:a3182b1a1b2048d6722ede1df2694815d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acf85edca9091866ebda83bcc13aa0235" id="r_acf85edca9091866ebda83bcc13aa0235"><td class="memItemLeft" align="right" valign="top"><a id="acf85edca9091866ebda83bcc13aa0235" name="acf85edca9091866ebda83bcc13aa0235"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>_ravevalue__contains__</b> (PyObject *_self, PyObject *key)</td></tr>
-<tr class="separator:acf85edca9091866ebda83bcc13aa0235"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3e2fe12de839a75e165a300ca25850e1" id="r_a3e2fe12de839a75e165a300ca25850e1"><td class="memItemLeft" align="right" valign="top"><a id="a3e2fe12de839a75e165a300ca25850e1" name="a3e2fe12de839a75e165a300ca25850e1"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>PyDoc_STRVAR</b> (_pyravevalue_doc, &quot;This class provides generic value object.\n&quot; &quot;\n&quot; &quot;Only member is value\n\n&quot; &quot;\n&quot;)</td></tr>
-<tr class="separator:a3e2fe12de839a75e165a300ca25850e1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae553049e728b1b22196672981da45ff6" id="r_ae553049e728b1b22196672981da45ff6"><td class="memItemLeft" align="right" valign="top"><a id="ae553049e728b1b22196672981da45ff6" name="ae553049e728b1b22196672981da45ff6"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>MOD_INIT</b> (_ravevalue)</td></tr>
-<tr class="separator:ae553049e728b1b22196672981da45ff6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a541009e73e99cd32fef84d6eaeea0622" id="r_a541009e73e99cd32fef84d6eaeea0622"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a541009e73e99cd32fef84d6eaeea0622">PYRAVE_DEBUG_MODULE</a> (&quot;_fileobject&quot;)</td></tr>
+<tr class="memdesc:a541009e73e99cd32fef84d6eaeea0622"><td class="mdescLeft">&#160;</td><td class="mdescRight">Debug this module.  <br /></td></tr>
+<tr class="separator:a541009e73e99cd32fef84d6eaeea0622"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a49d116901dbe96b9663b0abb928c7555" id="r_a49d116901dbe96b9663b0abb928c7555"><td class="memItemLeft" align="right" valign="top"><a id="a49d116901dbe96b9663b0abb928c7555" name="a49d116901dbe96b9663b0abb928c7555"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>PyDoc_STRVAR</b> (_pyfileobject_module_doc, &quot;Performs the path integrated attenuation according to the Hitchfeld-Bordan method\n\n&quot; &quot;Usage:\n&quot; &quot; import _pia\n&quot; &quot; pia = _pia.new()\n&quot; &quot; scan = _raveio.open(\&quot;qcvol.h5\&quot;).object.getScan(0)\n&quot; &quot; pia.process(scan, \&quot;DBZH\&quot;, True, True, True) # Booleans are addparam, reprocessquality, apply\n\n&quot;)</td></tr>
+<tr class="separator:a49d116901dbe96b9663b0abb928c7555"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a675bb9f4663d7527786b39cdca38b1cd" id="r_a675bb9f4663d7527786b39cdca38b1cd"><td class="memItemLeft" align="right" valign="top"><a id="a675bb9f4663d7527786b39cdca38b1cd" name="a675bb9f4663d7527786b39cdca38b1cd"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>MOD_INIT</b> (_fileobject)</td></tr>
+<tr class="separator:a675bb9f4663d7527786b39cdca38b1cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
 Variables</h2></td></tr>
-<tr class="memitem:ae70ecd4fa1d3b3383746d3d821d8e62e" id="r_ae70ecd4fa1d3b3383746d3d821d8e62e"><td class="memItemLeft" align="right" valign="top"><a id="ae70ecd4fa1d3b3383746d3d821d8e62e" name="ae70ecd4fa1d3b3383746d3d821d8e62e"></a>
-PyTypeObject&#160;</td><td class="memItemRight" valign="bottom"><b>PyRaveValue_Type</b></td></tr>
-<tr class="separator:ae70ecd4fa1d3b3383746d3d821d8e62e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a883f913f9a24cba09aedc72dceadb538" id="r_a883f913f9a24cba09aedc72dceadb538"><td class="memItemLeft" align="right" valign="top"><a id="a883f913f9a24cba09aedc72dceadb538" name="a883f913f9a24cba09aedc72dceadb538"></a>
+PyTypeObject&#160;</td><td class="memItemRight" valign="bottom"><b>PyFileObject_Type</b></td></tr>
+<tr class="separator:a883f913f9a24cba09aedc72dceadb538"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Python version of the RaveValue API. </p>
+<div class="textblock"><p>Python version of the FileObject API. </p>
 <dl class="section author"><dt>Author</dt><dd>Anders Henja (Swedish Meteorological and Hydrological Institute, SMHI) </dd></dl>
-<dl class="section date"><dt>Date</dt><dd>2025-02-14 </dd></dl>
+<dl class="section date"><dt>Date</dt><dd>2025-12-19 </dd></dl>
 </div><h2 class="groupheader">Macro Definition Documentation</h2>
-<a id="a536c20d1214f866c832d3eb05100ea11" name="a536c20d1214f866c832d3eb05100ea11"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a536c20d1214f866c832d3eb05100ea11">&#9670;&#160;</a></span>PYRAVEVALUE_MODULE</h2>
+<a id="a6d8f6bdc9018a6134051f9e9b4fcb3b7" name="a6d8f6bdc9018a6134051f9e9b4fcb3b7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6d8f6bdc9018a6134051f9e9b4fcb3b7">&#9670;&#160;</a></span>PYFILEOBJECT_MODULE</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define PYRAVEVALUE_MODULE</td>
+          <td class="memname">#define PYFILEOBJECT_MODULE</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>to get correct part in <a class="el" href="pyravevalue_8h.html" title="Python version of the Rave Value API.">pyravevalue.h</a> </p>
+<p>to get correct part in <a class="el" href="pyfileobject_8h.html" title="Python version of the FileObject API.">pyfileobject.h</a> </p>
 
 </div>
 </div>
@@ -192,8 +188,8 @@ PyTypeObject&#160;</td><td class="memItemRight" valign="bottom"><b>PyRaveValue_T
 </div>
 </div>
 <h2 class="groupheader">Function Documentation</h2>
-<a id="a3ea307c50f36b5c9617d1c94e8f14673" name="a3ea307c50f36b5c9617d1c94e8f14673"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3ea307c50f36b5c9617d1c94e8f14673">&#9670;&#160;</a></span>PYRAVE_DEBUG_MODULE()</h2>
+<a id="a541009e73e99cd32fef84d6eaeea0622" name="a541009e73e99cd32fef84d6eaeea0622"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a541009e73e99cd32fef84d6eaeea0622">&#9670;&#160;</a></span>PYRAVE_DEBUG_MODULE()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -201,7 +197,7 @@ PyTypeObject&#160;</td><td class="memItemRight" valign="bottom"><b>PyRaveValue_T
         <tr>
           <td class="memname">PYRAVE_DEBUG_MODULE </td>
           <td>(</td>
-          <td class="paramtype">&quot;_ravevalue&quot;</td>          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td class="paramtype">&quot;_fileobject&quot;</td>          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
           <td></td>
         </tr>
       </table>

@@ -87,6 +87,7 @@ $(function(){ initResizable(false); });
 <code>#include &quot;<a class="el" href="cartesian__odim__io_8h_source.html">cartesian_odim_io.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="polar__odim__io_8h_source.html">polar_odim_io.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="vp__odim__io_8h_source.html">vp_odim_io.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="file__object__odim__io_8h_source.html">file_object_odim_io.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="odim__io__utilities_8h_source.html">odim_io_utilities.h</a>&quot;</code><br />
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
@@ -103,6 +104,9 @@ Functions</h2></td></tr>
 <tr class="memitem:a2453b75fea34e8d4327fe053ad1e9601" id="r_a2453b75fea34e8d4327fe053ad1e9601"><td class="memItemLeft" align="right" valign="top"><a class="el" href="rave__io_8h.html#a7d5e574535a94c690276d809dd8d0e3e">RaveIO_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2453b75fea34e8d4327fe053ad1e9601">RaveIO_open</a> (const char *filename, int lazyLoading, const char *preloadQuantities)</td></tr>
 <tr class="memdesc:a2453b75fea34e8d4327fe053ad1e9601"><td class="mdescLeft">&#160;</td><td class="mdescRight">Opens a supported HDF5 file and loads it into the RaveIO instance.  <br /></td></tr>
 <tr class="separator:a2453b75fea34e8d4327fe053ad1e9601"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a825a454f4d00f9e165813e44b447a604" id="r_a825a454f4d00f9e165813e44b447a604"><td class="memItemLeft" align="right" valign="top"><a class="el" href="rave__io_8h.html#a7d5e574535a94c690276d809dd8d0e3e">RaveIO_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a825a454f4d00f9e165813e44b447a604">RaveIO_openFileObject</a> (const char *filename, int lazyLoading, const char *preloadQuantities)</td></tr>
+<tr class="memdesc:a825a454f4d00f9e165813e44b447a604"><td class="mdescLeft">&#160;</td><td class="mdescRight">Opens a supported file object and loads it into the RaveIO instance.  <br /></td></tr>
+<tr class="separator:a825a454f4d00f9e165813e44b447a604"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1544c24b02332a2b8a0abecadb95b11a" id="r_a1544c24b02332a2b8a0abecadb95b11a"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1544c24b02332a2b8a0abecadb95b11a">RaveIO_isHDFFile</a> (const char *filename)</td></tr>
 <tr class="memdesc:a1544c24b02332a2b8a0abecadb95b11a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if specified file is a HDF file or not.  <br /></td></tr>
 <tr class="separator:a1544c24b02332a2b8a0abecadb95b11a"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -148,6 +152,12 @@ Functions</h2></td></tr>
 <tr class="memitem:a226ef0871fbe021e02dd8dd764fa1490" id="r_a226ef0871fbe021e02dd8dd764fa1490"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a226ef0871fbe021e02dd8dd764fa1490">RaveIO_setFileFormat</a> (<a class="el" href="rave__io_8h.html#a7d5e574535a94c690276d809dd8d0e3e">RaveIO_t</a> *raveio, <a class="el" href="rave__io_8h.html#a41465da7edb2fb9cb9ded0a0e565a5f7">RaveIO_ODIM_FileFormat</a> format)</td></tr>
 <tr class="memdesc:a226ef0871fbe021e02dd8dd764fa1490"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets what file format to use.  <br /></td></tr>
 <tr class="separator:a226ef0871fbe021e02dd8dd764fa1490"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad88724ff887813651b4878b1b6cd126a" id="r_ad88724ff887813651b4878b1b6cd126a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad88724ff887813651b4878b1b6cd126a">RaveIO_setFileObjectLoading</a> (<a class="el" href="rave__io_8h.html#a7d5e574535a94c690276d809dd8d0e3e">RaveIO_t</a> *raveio, int override)</td></tr>
+<tr class="memdesc:ad88724ff887813651b4878b1b6cd126a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets if file object loading should be forced or not.  <br /></td></tr>
+<tr class="separator:ad88724ff887813651b4878b1b6cd126a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a649f083c25477fca8aab0982633aca4d" id="r_a649f083c25477fca8aab0982633aca4d"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a649f083c25477fca8aab0982633aca4d">RaveIO_getFileObjectLoading</a> (<a class="el" href="rave__io_8h.html#a7d5e574535a94c690276d809dd8d0e3e">RaveIO_t</a> *raveio)</td></tr>
+<tr class="memdesc:a649f083c25477fca8aab0982633aca4d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns if file object loading should be forced or not.  <br /></td></tr>
+<tr class="separator:a649f083c25477fca8aab0982633aca4d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a19788043d771a80721f17a711e54eda5" id="r_a19788043d771a80721f17a711e54eda5"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a19788043d771a80721f17a711e54eda5">RaveIO_setExtras</a> (<a class="el" href="rave__io_8h.html#a7d5e574535a94c690276d809dd8d0e3e">RaveIO_t</a> *raveio, <a class="el" href="rave__value_8h.html#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> *hashtable)</td></tr>
 <tr class="memdesc:a19788043d771a80721f17a711e54eda5"><td class="mdescLeft">&#160;</td><td class="mdescRight">When saving a file you can provide a set of extra attributes to be added to the /how-groups.  <br /></td></tr>
 <tr class="separator:a19788043d771a80721f17a711e54eda5"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -398,6 +408,32 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the current filename </dd></dl>
+
+</div>
+</div>
+<a id="a649f083c25477fca8aab0982633aca4d" name="a649f083c25477fca8aab0982633aca4d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a649f083c25477fca8aab0982633aca4d">&#9670;&#160;</a></span>RaveIO_getFileObjectLoading()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int RaveIO_getFileObjectLoading </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="rave__io_8h.html#a7d5e574535a94c690276d809dd8d0e3e">RaveIO_t</a> *</td>          <td class="paramname"><span class="paramname"><em>raveio</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Returns if file object loading should be forced or not. </p>
+<p>If set and regardless if object type is known, the object loaded will be a file object structure. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">raveio</td><td>- self </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>if override should occur or not </dd></dl>
 
 </div>
 </div>
@@ -808,6 +844,44 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a id="a825a454f4d00f9e165813e44b447a604" name="a825a454f4d00f9e165813e44b447a604"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a825a454f4d00f9e165813e44b447a604">&#9670;&#160;</a></span>RaveIO_openFileObject()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="rave__io_8h.html#a7d5e574535a94c690276d809dd8d0e3e">RaveIO_t</a> * RaveIO_openFileObject </td>
+          <td>(</td>
+          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>filename</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>lazyLoading</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>preloadQuantities</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Opens a supported file object and loads it into the RaveIO instance. </p>
+<p>Same as: RaveIO_t* instance = <a class="el" href="rave__object_8h.html#a00fd96dfc33dfd5e76f437e2d6f3dba2" title="Creates a new instance of a specified object type, should be implemented within the object itself unt...">RAVE_OBJECT_NEW(&amp;RaveIO_TYPE)</a>; RaveIO_setFilename(instance, filename); RaveIO_setFileObjectOverride(instance, 1); RaveIO_loadFileObject(instance);</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">filename</td><td>- the HDF5 file to open </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">lazyLoading</td><td>- if file should be loaded in lazy mode or not </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">preloadQuantities</td><td>- if lazy loading, then these quantities will be loaded immediately. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The raveio instance on success, otherwise NULL. </dd></dl>
+
+</div>
+</div>
 <a id="ab3a776ac0da8189a495d13c393422599" name="ab3a776ac0da8189a495d13c393422599"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ab3a776ac0da8189a495d13c393422599">&#9670;&#160;</a></span>RaveIO_save()</h2>
 
@@ -992,6 +1066,36 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>1 on success, otherwise 0 </dd></dl>
+
+</div>
+</div>
+<a id="ad88724ff887813651b4878b1b6cd126a" name="ad88724ff887813651b4878b1b6cd126a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad88724ff887813651b4878b1b6cd126a">&#9670;&#160;</a></span>RaveIO_setFileObjectLoading()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void RaveIO_setFileObjectLoading </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="rave__io_8h.html#a7d5e574535a94c690276d809dd8d0e3e">RaveIO_t</a> *</td>          <td class="paramname"><span class="paramname"><em>raveio</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>override</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Sets if file object loading should be forced or not. </p>
+<p>If set and regardless if object type is known, the object loaded will be a file object structure. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">raveio</td><td>- self </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">override</td><td>- if override should occur or not </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>

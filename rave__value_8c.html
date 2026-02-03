@@ -108,6 +108,15 @@ Functions</h2></td></tr>
 <tr class="memitem:a58a11f8cb9491db1c7e52930f7f39de0" id="r_a58a11f8cb9491db1c7e52930f7f39de0"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a58a11f8cb9491db1c7e52930f7f39de0">RaveValue_toString</a> (<a class="el" href="rave__value_8h.html#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> *self)</td></tr>
 <tr class="memdesc:a58a11f8cb9491db1c7e52930f7f39de0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the string value.  <br /></td></tr>
 <tr class="separator:a58a11f8cb9491db1c7e52930f7f39de0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a85bfba5b7538557fa82c774775c28970" id="r_a85bfba5b7538557fa82c774775c28970"><td class="memItemLeft" align="right" valign="top"><a id="a85bfba5b7538557fa82c774775c28970" name="a85bfba5b7538557fa82c774775c28970"></a>
+<a class="el" href="rave__value_8h.html#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>RaveValueString_trim</b> (<a class="el" href="rave__value_8h.html#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> *self)</td></tr>
+<tr class="separator:a85bfba5b7538557fa82c774775c28970"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa86e38e8b5678ab08053f94bd8dca01a" id="r_aa86e38e8b5678ab08053f94bd8dca01a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="rave__value_8h.html#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa86e38e8b5678ab08053f94bd8dca01a">RaveValueString_substring</a> (<a class="el" href="rave__value_8h.html#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> *self, int start, int len)</td></tr>
+<tr class="memdesc:aa86e38e8b5678ab08053f94bd8dca01a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a substring from self.  <br /></td></tr>
+<tr class="separator:aa86e38e8b5678ab08053f94bd8dca01a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3e62bd5a5f93f02b04fd7156a9e7ab52" id="r_a3e62bd5a5f93f02b04fd7156a9e7ab52"><td class="memItemLeft" align="right" valign="top"><a class="el" href="rave__value_8h.html#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a3e62bd5a5f93f02b04fd7156a9e7ab52">RaveValueString_tokenize</a> (<a class="el" href="rave__value_8h.html#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> *self, int delim)</td></tr>
+<tr class="memdesc:a3e62bd5a5f93f02b04fd7156a9e7ab52"><td class="mdescLeft">&#160;</td><td class="mdescRight">Tokenizes a string into a string array of tokens.  <br /></td></tr>
+<tr class="separator:a3e62bd5a5f93f02b04fd7156a9e7ab52"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac9b17cf86d77dbfd4f76ecab6cf3510e" id="r_ac9b17cf86d77dbfd4f76ecab6cf3510e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="rave__value_8h.html#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac9b17cf86d77dbfd4f76ecab6cf3510e">RaveValue_createLong</a> (long value)</td></tr>
 <tr class="memdesc:ac9b17cf86d77dbfd4f76ecab6cf3510e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a long rave value.  <br /></td></tr>
 <tr class="separator:ac9b17cf86d77dbfd4f76ecab6cf3510e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -2000,6 +2009,74 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the size of the list </dd></dl>
+
+</div>
+</div>
+<a id="aa86e38e8b5678ab08053f94bd8dca01a" name="aa86e38e8b5678ab08053f94bd8dca01a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa86e38e8b5678ab08053f94bd8dca01a">&#9670;&#160;</a></span>RaveValueString_substring()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="rave__value_8h.html#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> * RaveValueString_substring </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="rave__value_8h.html#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> *</td>          <td class="paramname"><span class="paramname"><em>self</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>start</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>len</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Creates a substring from self. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">start</td><td>- the start position to create string from </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">len</td><td>- the number of bytes to copy (if start + len is &gt;= length of string, then only string from start -&gt; end is copied) </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>a substring </dd></dl>
+
+</div>
+</div>
+<a id="a3e62bd5a5f93f02b04fd7156a9e7ab52" name="a3e62bd5a5f93f02b04fd7156a9e7ab52"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3e62bd5a5f93f02b04fd7156a9e7ab52">&#9670;&#160;</a></span>RaveValueString_tokenize()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="rave__value_8h.html#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> * RaveValueString_tokenize </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="rave__value_8h.html#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> *</td>          <td class="paramname"><span class="paramname"><em>self</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>delim</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Tokenizes a string into a string array of tokens. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">self</td><td>- self </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">delim</td><td>- the delimiter </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>a string array (list of strings) </dd></dl>
 
 </div>
 </div>

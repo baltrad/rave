@@ -143,6 +143,9 @@ Functions</h2></td></tr>
 <tr class="memitem:a7421ff4b8d3fdb8ab603f3044ade0bd3" id="r_a7421ff4b8d3fdb8ab603f3044ade0bd3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="rave__attribute_8h.html#af6c25bb8521123e600ef452e2e2b58dd">RaveAttribute_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7421ff4b8d3fdb8ab603f3044ade0bd3">RaveHL_getAttribute</a> (HL_NodeList *nodelist, const char *fmt,...)</td></tr>
 <tr class="memdesc:a7421ff4b8d3fdb8ab603f3044ade0bd3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Tries to find the node as defined by the varargs string and then create a rave attribute from it.  <br /></td></tr>
 <tr class="separator:a7421ff4b8d3fdb8ab603f3044ade0bd3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7c2363ccdfc732df495bcfeebeea249a" id="r_a7c2363ccdfc732df495bcfeebeea249a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="rave__value_8h.html#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7c2363ccdfc732df495bcfeebeea249a">RaveHL_createValue</a> (HL_Node *node)</td></tr>
+<tr class="memdesc:a7c2363ccdfc732df495bcfeebeea249a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a rave value from a HLHDF node value.  <br /></td></tr>
+<tr class="separator:a7c2363ccdfc732df495bcfeebeea249a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9d881a3ed48a413c55124e3cf0792667" id="r_a9d881a3ed48a413c55124e3cf0792667"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a9d881a3ed48a413c55124e3cf0792667">RaveHL_hasNodeByName</a> (HL_NodeList *nodelist, const char *fmt,...)</td></tr>
 <tr class="memdesc:a9d881a3ed48a413c55124e3cf0792667"><td class="mdescLeft">&#160;</td><td class="mdescRight">Verifies if the file contains a node with the name as specified by the variable argument list.  <br /></td></tr>
 <tr class="separator:a9d881a3ed48a413c55124e3cf0792667"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -865,6 +868,32 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>1 on success otherwise 0 </dd></dl>
+
+</div>
+</div>
+<a id="a7c2363ccdfc732df495bcfeebeea249a" name="a7c2363ccdfc732df495bcfeebeea249a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7c2363ccdfc732df495bcfeebeea249a">&#9670;&#160;</a></span>RaveHL_createValue()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="rave__value_8h.html#ab9b6b48fd779c959b1b1bd0b6c3a4684">RaveValue_t</a> * RaveHL_createValue </td>
+          <td>(</td>
+          <td class="paramtype">HL_Node *</td>          <td class="paramname"><span class="paramname"><em>node</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Creates a rave value from a HLHDF node value. </p>
+<p>Node must contain data that can be translated to long, double or strings otherwise NULL will be returned. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">node</td><td>- the HLHDF node </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the rave value on success otherwise NULL </dd></dl>
 
 </div>
 </div>

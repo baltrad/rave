@@ -108,7 +108,16 @@ Macros</h2></td></tr>
 <tr class="memitem:a40adf0b61354432046f1002854c20395" id="r_a40adf0b61354432046f1002854c20395"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a40adf0b61354432046f1002854c20395">PyRaveIO_Open_PROTO</a>&#160;&#160;&#160;(const char* filename, int lazyLoading, const char* preloadQuantities)</td></tr>
 <tr class="memdesc:a40adf0b61354432046f1002854c20395"><td class="mdescLeft">&#160;</td><td class="mdescRight">argument prototype for Open  <br /></td></tr>
 <tr class="separator:a40adf0b61354432046f1002854c20395"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a15f76b3d7119e4e36018145e503d5468" id="r_a15f76b3d7119e4e36018145e503d5468"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a15f76b3d7119e4e36018145e503d5468">PyRaveIO_API_pointers</a>&#160;&#160;&#160;4</td></tr>
+<tr class="memitem:a38094a319f69a194ab87a892b59d02cc" id="r_a38094a319f69a194ab87a892b59d02cc"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a38094a319f69a194ab87a892b59d02cc">PyRaveIO_OpenFileObject_NUM</a>&#160;&#160;&#160;4</td></tr>
+<tr class="memdesc:a38094a319f69a194ab87a892b59d02cc"><td class="mdescLeft">&#160;</td><td class="mdescRight">index for Open  <br /></td></tr>
+<tr class="separator:a38094a319f69a194ab87a892b59d02cc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac6376ce5a4babfb7a57500417a096839" id="r_ac6376ce5a4babfb7a57500417a096839"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac6376ce5a4babfb7a57500417a096839">PyRaveIO_OpenFileObject_RETURN</a>&#160;&#160;&#160;<a class="el" href="structPyRaveIO.html">PyRaveIO</a>*</td></tr>
+<tr class="memdesc:ac6376ce5a4babfb7a57500417a096839"><td class="mdescLeft">&#160;</td><td class="mdescRight">return type for Open  <br /></td></tr>
+<tr class="separator:ac6376ce5a4babfb7a57500417a096839"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a78cf2d59f7e0a8044320e5e4091a13de" id="r_a78cf2d59f7e0a8044320e5e4091a13de"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a78cf2d59f7e0a8044320e5e4091a13de">PyRaveIO_OpenFileObject_PROTO</a>&#160;&#160;&#160;(const char* filename, int lazyLoading, const char* preloadQuantities)</td></tr>
+<tr class="memdesc:a78cf2d59f7e0a8044320e5e4091a13de"><td class="mdescLeft">&#160;</td><td class="mdescRight">argument prototype for Open  <br /></td></tr>
+<tr class="separator:a78cf2d59f7e0a8044320e5e4091a13de"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a15f76b3d7119e4e36018145e503d5468" id="r_a15f76b3d7119e4e36018145e503d5468"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a15f76b3d7119e4e36018145e503d5468">PyRaveIO_API_pointers</a>&#160;&#160;&#160;5</td></tr>
 <tr class="memdesc:a15f76b3d7119e4e36018145e503d5468"><td class="mdescLeft">&#160;</td><td class="mdescRight">Total number of C API pointers.  <br /></td></tr>
 <tr class="separator:a15f76b3d7119e4e36018145e503d5468"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8ba59efe3b4a3d57eb98acb69b62df7c" id="r_a8ba59efe3b4a3d57eb98acb69b62df7c"><td class="memItemLeft" align="right" valign="top"><a id="a8ba59efe3b4a3d57eb98acb69b62df7c" name="a8ba59efe3b4a3d57eb98acb69b62df7c"></a>
@@ -123,6 +132,9 @@ Macros</h2></td></tr>
 <tr class="memitem:a4fdd80e54ac4340d28aa88aa4cf46820" id="r_a4fdd80e54ac4340d28aa88aa4cf46820"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4fdd80e54ac4340d28aa88aa4cf46820">PyRaveIO_Open</a>&#160;&#160;&#160;  (*(<a class="el" href="#a2ba1bd5b08d675a1461876badac361b0">PyRaveIO_Open_RETURN</a> (*)<a class="el" href="#a40adf0b61354432046f1002854c20395">PyRaveIO_Open_PROTO</a>) PyRaveIO_API[<a class="el" href="#acfe0dad92c259594995338f807ffee48">PyRaveIO_Open_NUM</a>])</td></tr>
 <tr class="memdesc:a4fdd80e54ac4340d28aa88aa4cf46820"><td class="mdescLeft">&#160;</td><td class="mdescRight">Opens a rave io instance.  <br /></td></tr>
 <tr class="separator:a4fdd80e54ac4340d28aa88aa4cf46820"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adf919d2115d6246254bf499465433500" id="r_adf919d2115d6246254bf499465433500"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#adf919d2115d6246254bf499465433500">PyRaveIO_OpenFileObject</a>&#160;&#160;&#160;  (*(<a class="el" href="#ac6376ce5a4babfb7a57500417a096839">PyRaveIO_OpenFileObject_RETURN</a> (*)<a class="el" href="#a78cf2d59f7e0a8044320e5e4091a13de">PyRaveIO_OpenFileObject_PROTO</a>) PyRaveIO_API[<a class="el" href="#a38094a319f69a194ab87a892b59d02cc">PyRaveIO_OpenFileObject_NUM</a>])</td></tr>
+<tr class="memdesc:adf919d2115d6246254bf499465433500"><td class="mdescLeft">&#160;</td><td class="mdescRight">Opens a rave io instance.  <br /></td></tr>
+<tr class="separator:adf919d2115d6246254bf499465433500"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1b42ca547a5db18d7e3b621366a6dab9" id="r_a1b42ca547a5db18d7e3b621366a6dab9"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1b42ca547a5db18d7e3b621366a6dab9">PyRaveIO_Check</a>(op)</td></tr>
 <tr class="memdesc:a1b42ca547a5db18d7e3b621366a6dab9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if the object is a python rave io.  <br /></td></tr>
 <tr class="separator:a1b42ca547a5db18d7e3b621366a6dab9"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -165,7 +177,7 @@ Macros</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define PyRaveIO_API_pointers&#160;&#160;&#160;4</td>
+          <td class="memname">#define PyRaveIO_API_pointers&#160;&#160;&#160;5</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -393,6 +405,77 @@ Macros</h2></td></tr>
       <table class="memname">
         <tr>
           <td class="memname">#define PyRaveIO_Open_RETURN&#160;&#160;&#160;<a class="el" href="structPyRaveIO.html">PyRaveIO</a>*</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>return type for Open </p>
+
+</div>
+</div>
+<a id="adf919d2115d6246254bf499465433500" name="adf919d2115d6246254bf499465433500"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adf919d2115d6246254bf499465433500">&#9670;&#160;</a></span>PyRaveIO_OpenFileObject</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define PyRaveIO_OpenFileObject&#160;&#160;&#160;  (*(<a class="el" href="#ac6376ce5a4babfb7a57500417a096839">PyRaveIO_OpenFileObject_RETURN</a> (*)<a class="el" href="#a78cf2d59f7e0a8044320e5e4091a13de">PyRaveIO_OpenFileObject_PROTO</a>) PyRaveIO_API[<a class="el" href="#a38094a319f69a194ab87a892b59d02cc">PyRaveIO_OpenFileObject_NUM</a>])</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Opens a rave io instance. </p>
+<p>Release this object with Py_DECREF. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">filename</td><td>- the filename. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the <a class="el" href="structPyRaveIO.html" title="The RaveIO.">PyRaveIO</a> instance. </dd></dl>
+
+</div>
+</div>
+<a id="a38094a319f69a194ab87a892b59d02cc" name="a38094a319f69a194ab87a892b59d02cc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a38094a319f69a194ab87a892b59d02cc">&#9670;&#160;</a></span>PyRaveIO_OpenFileObject_NUM</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define PyRaveIO_OpenFileObject_NUM&#160;&#160;&#160;4</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>index for Open </p>
+
+</div>
+</div>
+<a id="a78cf2d59f7e0a8044320e5e4091a13de" name="a78cf2d59f7e0a8044320e5e4091a13de"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a78cf2d59f7e0a8044320e5e4091a13de">&#9670;&#160;</a></span>PyRaveIO_OpenFileObject_PROTO</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define PyRaveIO_OpenFileObject_PROTO&#160;&#160;&#160;(const char* filename, int lazyLoading, const char* preloadQuantities)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>argument prototype for Open </p>
+
+</div>
+</div>
+<a id="ac6376ce5a4babfb7a57500417a096839" name="ac6376ce5a4babfb7a57500417a096839"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac6376ce5a4babfb7a57500417a096839">&#9670;&#160;</a></span>PyRaveIO_OpenFileObject_RETURN</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define PyRaveIO_OpenFileObject_RETURN&#160;&#160;&#160;<a class="el" href="structPyRaveIO.html">PyRaveIO</a>*</td>
         </tr>
       </table>
 </div><div class="memdoc">
