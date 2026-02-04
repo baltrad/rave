@@ -105,6 +105,7 @@ class compositing(object):
         self.xscale = 2000.0
         self.yscale = 2000.0
         self.detectors = []
+        self.detector_arguments = None
         self.filenames = []
         self.ignore_malfunc = False
         self.prodpar = None
@@ -501,7 +502,7 @@ class compositing(object):
             for d in self.detectors:
                 p = rave_pgf_quality_registry.get_plugin(d)
                 if p != None:
-                    process_result = p.process(obj, self.reprocess_quality_field, self.quality_control_mode)
+                    process_result = p.process(obj, self.reprocess_quality_field, self.quality_control_mode, arguments=self.detector_arguments)
                     if isinstance(process_result, tuple):
                         obj = process_result[0]
                         detector_qfields = process_result[1]

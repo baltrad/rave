@@ -117,6 +117,7 @@ class multi_composite_arguments(object):
         self.xscale = 2000.0
         self.yscale = 2000.0
         self.detectors = []
+        self.detector_arguments = None        
         self.filenames = []
         self.ignore_malfunc = False
         self.prodpar = None
@@ -163,6 +164,7 @@ class multi_composite_arguments(object):
         comp.xscale = self.xscale
         comp.yscale = self.yscale
         comp.detectors = self.detectors
+        comp.detector_arguments = self.detector_arguments
         comp.ignore_malfunc = self.ignore_malfunc
         comp.prodpar = self.prodpar
         comp.product = self.product
@@ -387,6 +389,7 @@ class tiled_compositing(object):
         a.xscale = self.compositing.xscale
         a.yscale = self.compositing.yscale
         a.detectors = self.compositing.detectors
+        a.detector_arguments = self.compositing.detector_arguments
         a.ignore_malfunc = self.compositing.ignore_malfunc
         a.prodpar = self.compositing.prodpar
         a.product = self.compositing.product

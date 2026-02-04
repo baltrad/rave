@@ -88,11 +88,15 @@ def NODfromSourceString(source):
 # If its parent directory doesn't exist, it is created.
 # @param source string containing the full value of /what/source
 # @return string containing the complete path to a file
-def Source2File(isource):
+def Source2File(isource, scansunfolder=None):
     source = NODfromSourceString(isource)
     if not source:
         source = isource.replace(';', '_').replace(',', '_').replace(':', '-')
-    path = os.path.join(scansun_outputpath, "scansun")
+    if scansunfolder is None:
+        path = os.path.join(scansun_outputpath, "scansun")
+    else:
+        path = scansunfolder
+
     if not os.path.isdir(path):
         os.makedirs(path)
     return os.path.join(str(path), str(source) + '.scansun')
@@ -101,10 +105,11 @@ def Source2File(isource):
 ## Writes hits to file
 # @param source string containing the full value of /what/source
 # @param list containing sun hits
-def writeHits(source, hits):
-    ofstr = Source2File(source)
-    fd = open(ofstr, 'a')
+def writeHits(source, hits, scansunfolder=None):
+    ofstr = Source2File(source, scansunfolder)
 
+    fd = open(ofstr, 'a')
+    logger.info("Checking file %s"%ofstr)
     if os.path.getsize(ofstr) == 0:
         fd.write(HEADER)
 
