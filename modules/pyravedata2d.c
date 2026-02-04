@@ -266,6 +266,77 @@ static PyObject* _pyravedata2d_getValue(PyRaveData2D* self, PyObject* args)
   return Py_BuildValue("(id)", result, value);
 }
 
+long int _pyravedata2d_len(PyObject *self) {
+  return 0;
+}
+
+static PyObject* _pyravedata2d__getitem__(PyObject* _self, PyObject* args)
+{
+  long x = 0, y = 0;
+  double value = 0.0L;
+  int result = 0;
+  RaveDataType datatype;
+
+  PyRaveData2D* self = (PyRaveData2D*)_self;
+  if (!PyArg_ParseTuple(args, "ll", &y, &x)) { /* We have y,x to follow numpys way of indexing to not confuse users */
+    return NULL;
+  }
+
+  if (x < 0 || x >= RaveData2D_getXsize(self->field) || y < 0 || y >= RaveData2D_getYsize(self->field)) {
+    raiseException_returnNULL(PyExc_IndexError, "Out of bounds");
+  }
+
+  datatype = RaveData2D_getType(self->field);
+  result = RaveData2D_getValue(self->field, x, y, &value);
+
+  if (datatype == RaveDataType_CHAR ||
+      datatype == RaveDataType_UCHAR ||
+      datatype == RaveDataType_SHORT ||
+      datatype == RaveDataType_USHORT ||
+      datatype == RaveDataType_INT ||
+      datatype == RaveDataType_UINT ||
+      datatype == RaveDataType_LONG ||
+      datatype == RaveDataType_ULONG) {
+    return PyLong_FromLong((long)value);
+  } else if (datatype == RaveDataType_FLOAT || datatype == RaveDataType_DOUBLE) {
+    return PyFloat_FromDouble(value);
+  } else {
+    raiseException_returnNULL(PyExc_RuntimeError, "Undefined datatype in array");
+  }
+  return NULL;  
+}
+
+int _pyravedata2d__setitem__(PyObject *_self, PyObject *args, PyObject *value) 
+{
+  PyRaveData2D* self = (PyRaveData2D*)_self;
+  long x = 0, y = 0;
+  int result = 0;
+
+  if (!PyArg_ParseTuple(args, "ll", &y, &x)) { /* We have y,x to follow numpys way of indexing to not confuse users */
+    return 0;
+  }
+
+  if (x < 0 || x >= RaveData2D_getXsize(self->field) || y < 0 || y >= RaveData2D_getYsize(self->field)) {
+    raiseException_gotoTag(fail, PyExc_IndexError, "Out of bounds");
+  }
+
+  if (PyLong_Check(value)) {
+    if (!RaveData2D_setValue(self->field, x, y, (double)PyLong_AsLong(value))) {
+      raiseException_gotoTag(fail, PyExc_RuntimeError, "Problem setting value");
+    }
+  } else if (PyFloat_Check(value)) {
+    if (!RaveData2D_setValue(self->field, x, y, (double)PyFloat_AsDouble(value))) {
+      raiseException_gotoTag(fail, PyExc_RuntimeError, "Problem setting value");
+    }
+  } else {
+    raiseException_gotoTag(fail, PyExc_ValueError, "Only valid values are integers and floats");
+  }
+
+  return 0;
+fail:
+  return 1;
+}
+
 /**
  * Concatenates two fields x-wise.
  * @param[in] self - self
@@ -574,6 +645,8 @@ MOD_DIR_FORWARD_DECLARE(PyRaveData2D);
  */
 static struct PyMethodDef _pyravedata2d_methods[] =
 {
+  {"__getitem__", (PyCFunction) _pyravedata2d__getitem__, METH_O | METH_COEXIST},
+  {"__setitem__", (PyCFunction) _pyravedata2d__setitem__, METH_O | METH_COEXIST},
   {"xsize", NULL, METH_VARARGS},
   {"ysize", NULL, METH_VARARGS},
   {"datatype", NULL, METH_VARARGS},
@@ -702,6 +775,13 @@ static struct PyMethodDef _pyravedata2d_methods[] =
   {NULL, NULL } /* sentinel */
 };
 
+static PyMappingMethods _pyravedata2d_mappingmethods = {
+    .mp_length = (lenfunc)_pyravedata2d_len,
+    .mp_subscript = _pyravedata2d__getitem__,
+    .mp_ass_subscript = _pyravedata2d__setitem__
+};
+
+
 MOD_DIR_FUNCTION(PyRaveData2D, _pyravedata2d_methods)
 
 /**
@@ -797,7 +877,7 @@ PyTypeObject PyRaveData2D_Type =
   0, /*tp_repr*/
   0, /*tp_as_number */
   0, /*tp_as_sequence */
-  0, /*tp_as_mapping */
+  &_pyravedata2d_mappingmethods,  /*tp_as_mapping */
   (hashfunc)0, /*tp_hash*/
   (ternaryfunc)0, /*tp_call*/
   (reprfunc)0, /*tp_str*/

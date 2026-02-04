@@ -83,6 +83,32 @@ class PyRaveRaveData2DTest(unittest.TestCase):
       for y in range(obj.ysize):
         self.assertAlmostEqual(2.0, obj.getValue(x,y)[1], 4);
 
+  def test_setitem(self):
+    obj = _ravedata2d.new()
+    obj.setData(numpy.zeros((10,10), numpy.uint8))
+    obj[0,1] = 1
+    obj[0,2] = 2
+    obj[3,0] = 3
+    obj[4,0] = 4
+
+    self.assertAlmostEqual(1, obj.getValue(1,0)[1], 4)
+    self.assertAlmostEqual(2, obj.getValue(2,0)[1], 4)
+    self.assertAlmostEqual(3, obj.getValue(0,3)[1], 4)
+    self.assertAlmostEqual(4, obj.getValue(0,4)[1], 4)
+
+  def test_getitem(self):
+    obj = _ravedata2d.new()
+    obj.setData(numpy.zeros((10,10), numpy.uint8))
+    obj.setValue(1, 0, 1.0)
+    obj.setValue(2, 0, 2.0)
+    obj.setValue(0, 3, 3.0)
+    obj.setValue(0, 4, 4.0)
+
+    self.assertEqual(1, obj[0,1])
+    self.assertEqual(2, obj[0,2])
+    self.assertEqual(3, obj[3,0])
+    self.assertEqual(4, obj[4,0])
+
   def test_concatx(self):
     obj = _ravedata2d.new()
     obj.setData(numpy.zeros((10,10), numpy.uint8))
