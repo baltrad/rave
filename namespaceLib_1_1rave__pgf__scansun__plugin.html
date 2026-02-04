@@ -69,12 +69,12 @@ Functions</h2></td></tr>
 <tr class="memitem:a9dd6ed1161d326a4423eb71688c516f5" id="r_a9dd6ed1161d326a4423eb71688c516f5"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a9dd6ed1161d326a4423eb71688c516f5">NODfromSourceString</a> (source)</td></tr>
 <tr class="memdesc:a9dd6ed1161d326a4423eb71688c516f5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convenience function.  <br /></td></tr>
 <tr class="separator:a9dd6ed1161d326a4423eb71688c516f5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aaf87f633b7b461c67b3ac062567e7749" id="r_aaf87f633b7b461c67b3ac062567e7749"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aaf87f633b7b461c67b3ac062567e7749">Source2File</a> (isource)</td></tr>
-<tr class="memdesc:aaf87f633b7b461c67b3ac062567e7749"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a file name, preferably containing the NOD identifier for that radar.  <br /></td></tr>
-<tr class="separator:aaf87f633b7b461c67b3ac062567e7749"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7570c91712a85381b1865cd8e25f83fc" id="r_a7570c91712a85381b1865cd8e25f83fc"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7570c91712a85381b1865cd8e25f83fc">writeHits</a> (source, hits)</td></tr>
-<tr class="memdesc:a7570c91712a85381b1865cd8e25f83fc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Writes hits to file.  <br /></td></tr>
-<tr class="separator:a7570c91712a85381b1865cd8e25f83fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0f2c9c640a01edbf0b2f9c41d4ae1529" id="r_a0f2c9c640a01edbf0b2f9c41d4ae1529"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0f2c9c640a01edbf0b2f9c41d4ae1529">Source2File</a> (isource, scansunfolder=None)</td></tr>
+<tr class="memdesc:a0f2c9c640a01edbf0b2f9c41d4ae1529"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a file name, preferably containing the NOD identifier for that radar.  <br /></td></tr>
+<tr class="separator:a0f2c9c640a01edbf0b2f9c41d4ae1529"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a64ffaf52511f3682bcd4bf03fca4f477" id="r_a64ffaf52511f3682bcd4bf03fca4f477"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a64ffaf52511f3682bcd4bf03fca4f477">writeHits</a> (source, hits, scansunfolder=None)</td></tr>
+<tr class="memdesc:a64ffaf52511f3682bcd4bf03fca4f477"><td class="mdescLeft">&#160;</td><td class="mdescRight">Writes hits to file.  <br /></td></tr>
+<tr class="separator:a64ffaf52511f3682bcd4bf03fca4f477"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2dec3ec46d932198bc456562f3bd4c9c" id="r_a2dec3ec46d932198bc456562f3bd4c9c"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2dec3ec46d932198bc456562f3bd4c9c">generate</a> (files, arguments)</td></tr>
 <tr class="memdesc:a2dec3ec46d932198bc456562f3bd4c9c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Performs the sun scan.  <br /></td></tr>
 <tr class="separator:a2dec3ec46d932198bc456562f3bd4c9c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -171,8 +171,8 @@ along with RAVE.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
 
 </div>
 </div>
-<a id="aaf87f633b7b461c67b3ac062567e7749" name="aaf87f633b7b461c67b3ac062567e7749"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aaf87f633b7b461c67b3ac062567e7749">&#9670;&#160;</a></span>Source2File()</h2>
+<a id="a0f2c9c640a01edbf0b2f9c41d4ae1529" name="a0f2c9c640a01edbf0b2f9c41d4ae1529"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0f2c9c640a01edbf0b2f9c41d4ae1529">&#9670;&#160;</a></span>Source2File()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -180,8 +180,12 @@ along with RAVE.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
         <tr>
           <td class="memname">Lib.rave_pgf_scansun_plugin.Source2File </td>
           <td>(</td>
-          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>isource</em></span></td><td>)</td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>isource</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>scansunfolder</em></span><span class="paramdefsep"> = </span><span class="paramdefval">None</span>&#160;)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -197,8 +201,8 @@ along with RAVE.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
 
 </div>
 </div>
-<a id="a7570c91712a85381b1865cd8e25f83fc" name="a7570c91712a85381b1865cd8e25f83fc"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7570c91712a85381b1865cd8e25f83fc">&#9670;&#160;</a></span>writeHits()</h2>
+<a id="a64ffaf52511f3682bcd4bf03fca4f477" name="a64ffaf52511f3682bcd4bf03fca4f477"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a64ffaf52511f3682bcd4bf03fca4f477">&#9670;&#160;</a></span>writeHits()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -211,7 +215,12 @@ along with RAVE.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>hits</em></span>&#160;)</td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>hits</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>scansunfolder</em></span><span class="paramdefsep"> = </span><span class="paramdefval">None</span>&#160;)</td>
         </tr>
       </table>
 </div><div class="memdoc">
