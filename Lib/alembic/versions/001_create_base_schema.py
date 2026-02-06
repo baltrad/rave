@@ -1,4 +1,5 @@
 from sqlalchemy import Column, MetaData, PrimaryKeyConstraint, Table
+from alembic import op
 
 from sqlalchemy.types import (
     Date,
@@ -7,6 +8,9 @@ from sqlalchemy.types import (
     Text,
     Time
 )
+
+revision = '001'
+down_revision = None
 
 meta = MetaData()
 
@@ -73,18 +77,6 @@ rave_gra_coefficient = Table(
     PrimaryKeyConstraint("area", "date", "time"),
 )
 
-#                           self.radarvaluetype = rt
-#    self.radarvalue = rv
-#    self.radardistance = rd
-#    self.longitude = longitude
-#    self.latitude = latitude
-#    self.date = date
-#    self.time = time
-#    self.observation = liquid_precipitation
-#    self.accumulation_period = accumulation_period
-#    self.gr = -1
-#    if self.radarvaluetype == _rave.RaveValueType_DATA and self.radarvalue >= 0.1:
-#      self.gr = 10 * log10(self.observation / self.radarvalue)
 rave_grapoint = Table(
     "rave_grapoint",
     meta,
@@ -102,11 +94,12 @@ rave_grapoint = Table(
 )
 
 
-def upgrade(migrate_engine):
-    meta.bind = migrate_engine
+def upgrade():
+    meta.bind = op.get_context().connection.engine
     meta.create_all()
 
-
-def downgrade(migrate_engine):
-    meta.bind = migrate_engine
-    meta.drop_all()
+def downgrade():
+    op.drop_table("rave_grapoint")
+    op.drop_table("rave_gra_coefficient")
+    op.drop_table("rave_observation")
+    op.drop_table("rave_wmo_station")

@@ -35,13 +35,12 @@ except:
     import jprops
 
 import datetime
-from sqlalchemy import engine, event
-from sqlalchemy.orm import mapper, sessionmaker
+from sqlalchemy import engine, event, inspect
+from sqlalchemy.orm import registry, sessionmaker
 import rave_pgf_logger
 
-import migrate.versioning.api
-import migrate.versioning.repository
-from migrate import exceptions as migrateexc
+from alembic.config import Config
+from alembic import command
 
 
 from sqlalchemy import (
@@ -66,27 +65,17 @@ import psycopg2
 
 logger = rave_pgf_logger.create_logger()
 
-MIGRATION_REPO_PATH = os.path.join(os.path.dirname(__file__), "ravemigrate")
-
+ALEMBIC_REPO_PATH = os.path.join(os.path.dirname(__file__), "alembic")
 
 def psql_set_extra_float_digits(dbapi_con, con_record):
     cursor = dbapi_con.cursor()
     cursor.execute("SET extra_float_digits=2")
     dbapi_con.commit()
 
-
-# def psql_checkout(dbapi_conn, connection_rec, connection_proxy):
-#    logger.info("CHECKOUT")
-
-# def psql_checkin(dbapi_conn, connection_rec):
-#    logger.info("CHECKIN")
-
-# def psql_reset(dbapi_conn, connection_rec):
-#    logger.info("RESETING")
-
-# We use sqlalchemy for creating the tables. If we need to upgrade
-# later on, migrate the code to sqlalchemy-migrate.
+# We use sqlalchemy for creating the tables..
 meta = MetaData()
+
+mapper_registry = registry()
 
 rave_wmo_station = Table(
     "rave_wmo_station",
@@ -179,12 +168,11 @@ rave_melting_layer = Table(
     PrimaryKeyConstraint("datetime", "nod"),
 )
 
-mapper(wmo_station, rave_wmo_station)
-mapper(observation, rave_observation)
-mapper(melting_layer, rave_melting_layer)
-
-mapper(gra_coefficient, rave_gra_coefficient)
-mapper(grapoint, rave_grapoint)
+mapper_registry.map_imperatively(wmo_station, rave_wmo_station)
+mapper_registry.map_imperatively(observation, rave_observation)
+mapper_registry.map_imperatively(melting_layer, rave_melting_layer)
+mapper_registry.map_imperatively(gra_coefficient, rave_gra_coefficient)
+mapper_registry.map_imperatively(grapoint, rave_grapoint)
 
 dburipool = {}
 
@@ -224,29 +212,42 @@ class rave_db(object):
                 )
                 self._engine.dispose()
 
-    ##
-    # Creates the tables if they don't exist
+    def migrate_to_alembic(self):
+        try:
+            # Handle migration from sqlalchemy migrate to alembic. We get the current version from ravedb_migrate and
+            # converts it into a value that can be handled by alembic and stamps it. After that it's up to alembic
+            # to handle rest of migration in create_alembic (if any)
+            if inspect(self._engine).has_table('ravedb_migrate_version'):
+                alembic_cfg = Config()
+                alembic_cfg.set_main_option("script_location", ALEMBIC_REPO_PATH)
+                alembic_cfg.set_main_option("sqlalchemy.url", str(self._engine.url))
+
+                dbversion = self._engine.execute("select version from ravedb_migrate_version").fetchone()['version']
+                command.stamp(alembic_cfg, "%03d"%dbversion)
+                metadata = MetaData()
+                ravedb_migrate = Table('ravedb_migrate_version', metadata)
+                metadata.tables['ravedb_migrate_version'].drop(self._engine)
+        except:
+            logger.exception("Failed to migrate database versioning to alembic")
+
+    def create_alembic(self):
+        alembic_cfg = Config()
+        alembic_cfg.set_main_option("script_location", ALEMBIC_REPO_PATH)
+        alembic_cfg.set_main_option("sqlalchemy.url", str(self._engine.url))
+        command.upgrade(alembic_cfg, "head")
+
     def create(self):
-        repo = migrate.versioning.repository.Repository(MIGRATION_REPO_PATH)
+        self.migrate_to_alembic()
+        self.create_alembic()
 
-        # try setting up version control for the databases created before
-        # we started using sqlalchemy-migrate
-        try:
-            migrate.versioning.api.version_control(self._engine, repo, version=0)
-        except migrateexc.DatabaseAlreadyControlledError:
-            pass
+    def drop_alembic(self):
+        alembic_cfg = Config()
+        alembic_cfg.set_main_option("script_location", ALEMBIC_REPO_PATH)
+        alembic_cfg.set_main_option("sqlalchemy.url", str(self._engine.url))
+        command.downgrade(alembic_cfg, "base")
 
-        migrate.versioning.api.upgrade(self._engine, repo)
-
-    ##
-    # Drops the database tables if they exist
     def drop(self):
-        repo = migrate.versioning.repository.Repository(MIGRATION_REPO_PATH)
-        try:
-            migrate.versioning.api.downgrade(self._engine, repo, 0)
-            migrate.versioning.api.drop_version_control(self._engine, repo)
-        except migrateexc.DatabaseNotControlledError:
-            pass
+        self.drop_alembic()
 
     ##
     # Adds an object to the associated table
@@ -417,7 +418,7 @@ class rave_db(object):
             s.commit()
             return pts
 
-    def get_latest_melting_layer(self, nod, hours=None, ct=datetime.datetime.utcnow()):
+    def get_latest_melting_layer(self, nod, hours=None, ct=datetime.datetime.now(datetime.UTC)):
         with self.get_session() as s:
             q = s.query(melting_layer).filter(melting_layer.nod == nod)
             if hours is not None:
@@ -466,3 +467,6 @@ def create_db_from_conf(configfile=BDB_CONFIG_FILE, create_schema=True):
         propname = "baltrad.bdb.server.backend.sqla.uri"
 
     return create_db(properties[propname], create_schema)
+
+if __name__=="__main__":
+    a=create_db_from_conf("/etc/baltrad/bltnode.properties")
