@@ -76,12 +76,12 @@ Inheritance diagram for Lib.gadjust.grapoint.grapoint:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ad03fcf504857b81f29716d5ae9d88c8b" id="r_ad03fcf504857b81f29716d5ae9d88c8b"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad03fcf504857b81f29716d5ae9d88c8b">__init__</a> (self, rt, rv, rd, longitude, latitude, date, time, liquid_precipitation, accumulation_period)</td></tr>
-<tr class="memdesc:ad03fcf504857b81f29716d5ae9d88c8b"><td class="mdescLeft">&#160;</td><td class="mdescRight">The constructor.  <br /></td></tr>
-<tr class="separator:ad03fcf504857b81f29716d5ae9d88c8b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abb72502eed6baa0ede3fc1525bf8b4dc" id="r_abb72502eed6baa0ede3fc1525bf8b4dc"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#abb72502eed6baa0ede3fc1525bf8b4dc">from_observation</a> (cls, rt, rv, rd, obs)</td></tr>
-<tr class="memdesc:abb72502eed6baa0ede3fc1525bf8b4dc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a gra point from the radar information and a observation instance.  <br /></td></tr>
-<tr class="separator:abb72502eed6baa0ede3fc1525bf8b4dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aca919e5a67b213c844eedf635f0988c5" id="r_aca919e5a67b213c844eedf635f0988c5"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aca919e5a67b213c844eedf635f0988c5">__init__</a> (self, rt, rv, rd, longitude, latitude, date, time, liquid_precipitation, accumulation_period, identifier=None)</td></tr>
+<tr class="memdesc:aca919e5a67b213c844eedf635f0988c5"><td class="mdescLeft">&#160;</td><td class="mdescRight">The constructor.  <br /></td></tr>
+<tr class="separator:aca919e5a67b213c844eedf635f0988c5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a34464ea42afee834e2108cc24b458a4c" id="r_a34464ea42afee834e2108cc24b458a4c"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a34464ea42afee834e2108cc24b458a4c">from_observation</a> (cls, rt, rv, rd, obs, identifier=None)</td></tr>
+<tr class="memdesc:a34464ea42afee834e2108cc24b458a4c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a gra point from the radar information and a observation instance.  <br /></td></tr>
+<tr class="separator:a34464ea42afee834e2108cc24b458a4c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -112,6 +112,9 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:add417c34ce4bd4b368b64cd4dfbb2de9" id="r_add417c34ce4bd4b368b64cd4dfbb2de9"><td class="memItemLeft" align="right" valign="top"><a id="add417c34ce4bd4b368b64cd4dfbb2de9" name="add417c34ce4bd4b368b64cd4dfbb2de9"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>accumulation_period</b> = accumulation_period</td></tr>
 <tr class="separator:add417c34ce4bd4b368b64cd4dfbb2de9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a72048f6c437ce92729062a435f3c093d" id="r_a72048f6c437ce92729062a435f3c093d"><td class="memItemLeft" align="right" valign="top"><a id="a72048f6c437ce92729062a435f3c093d" name="a72048f6c437ce92729062a435f3c093d"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>identifier</b> = identifier</td></tr>
+<tr class="separator:a72048f6c437ce92729062a435f3c093d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af5397c70902f8441a3d8069e20ccf3d1" id="r_af5397c70902f8441a3d8069e20ccf3d1"><td class="memItemLeft" align="right" valign="top"><a id="af5397c70902f8441a3d8069e20ccf3d1" name="af5397c70902f8441a3d8069e20ccf3d1"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>gr</b> = -1</td></tr>
 <tr class="separator:af5397c70902f8441a3d8069e20ccf3d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -120,8 +123,8 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gr</b> = -1</td></tr>
 <div class="textblock"><p>Represents one point to be used in the gra adjustment. </p>
 <p>Contains both information related to the radar and the observation </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="ad03fcf504857b81f29716d5ae9d88c8b" name="ad03fcf504857b81f29716d5ae9d88c8b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad03fcf504857b81f29716d5ae9d88c8b">&#9670;&#160;</a></span>__init__()</h2>
+<a id="aca919e5a67b213c844eedf635f0988c5" name="aca919e5a67b213c844eedf635f0988c5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aca919e5a67b213c844eedf635f0988c5">&#9670;&#160;</a></span>__init__()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -174,7 +177,12 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gr</b> = -1</td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>accumulation_period</em></span>&#160;)</td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>accumulation_period</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>identifier</em></span><span class="paramdefsep"> = </span><span class="paramdefval">None</span>&#160;)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -196,8 +204,8 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gr</b> = -1</td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="abb72502eed6baa0ede3fc1525bf8b4dc" name="abb72502eed6baa0ede3fc1525bf8b4dc"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#abb72502eed6baa0ede3fc1525bf8b4dc">&#9670;&#160;</a></span>from_observation()</h2>
+<a id="a34464ea42afee834e2108cc24b458a4c" name="a34464ea42afee834e2108cc24b458a4c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a34464ea42afee834e2108cc24b458a4c">&#9670;&#160;</a></span>from_observation()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -225,7 +233,12 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gr</b> = -1</td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>obs</em></span>&#160;)</td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>obs</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>identifier</em></span><span class="paramdefsep"> = </span><span class="paramdefval">None</span>&#160;)</td>
         </tr>
       </table>
 </div><div class="memdoc">

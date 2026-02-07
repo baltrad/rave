@@ -107,6 +107,9 @@ Variables</h2></td></tr>
 <tr class="memitem:a0a80651d1ff424cdc2f55f62e3bf31a5" id="r_a0a80651d1ff424cdc2f55f62e3bf31a5"><td class="memItemLeft" align="right" valign="top"><a id="a0a80651d1ff424cdc2f55f62e3bf31a5" name="a0a80651d1ff424cdc2f55f62e3bf31a5"></a>
 dict&#160;</td><td class="memItemRight" valign="bottom"><b>dburipool</b> = {}</td></tr>
 <tr class="separator:a0a80651d1ff424cdc2f55f62e3bf31a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a96f33c962c2fd29debbe80e005bdfdf8" id="r_a96f33c962c2fd29debbe80e005bdfdf8"><td class="memItemLeft" align="right" valign="top"><a id="a96f33c962c2fd29debbe80e005bdfdf8" name="a96f33c962c2fd29debbe80e005bdfdf8"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>db</b> = <a class="el" href="#a79d9cf30c87b68cad5a8ef178c5d47c7">create_db_from_conf</a>(&quot;/etc/baltrad/bltnode.properties&quot;)</td></tr>
+<tr class="separator:a96f33c962c2fd29debbe80e005bdfdf8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><pre class="fragment">Copyright (C) 2010- Swedish Meteorological and Hydrological Institute (SMHI)
@@ -232,8 +235,9 @@ along with RAVE.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
 <div class="line"><span class="lineno">   11</span>    Column(<span class="stringliteral">&quot;observation&quot;</span>, Float, nullable=<span class="keyword">False</span>),</div>
 <div class="line"><span class="lineno">   12</span>    Column(<span class="stringliteral">&quot;accumulation_period&quot;</span>, Integer, nullable=<span class="keyword">False</span>),</div>
 <div class="line"><span class="lineno">   13</span>    Column(<span class="stringliteral">&quot;gr&quot;</span>, Float, nullable=<span class="keyword">False</span>),</div>
-<div class="line"><span class="lineno">   14</span>    PrimaryKeyConstraint(<span class="stringliteral">&quot;date&quot;</span>, <span class="stringliteral">&quot;time&quot;</span>, <span class="stringliteral">&quot;longitude&quot;</span>, <span class="stringliteral">&quot;latitude&quot;</span>),</div>
-<div class="line"><span class="lineno">   15</span>)</div>
+<div class="line"><span class="lineno">   14</span>    Column(<span class="stringliteral">&quot;identifier&quot;</span>, Text, nullable=<span class="keyword">True</span>),</div>
+<div class="line"><span class="lineno">   15</span>    PrimaryKeyConstraint(<span class="stringliteral">&quot;date&quot;</span>, <span class="stringliteral">&quot;time&quot;</span>, <span class="stringliteral">&quot;longitude&quot;</span>, <span class="stringliteral">&quot;latitude&quot;</span>),</div>
+<div class="line"><span class="lineno">   16</span>)</div>
 </div><!-- fragment -->
 </div>
 </div>
