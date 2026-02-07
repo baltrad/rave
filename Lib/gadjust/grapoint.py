@@ -40,7 +40,7 @@ class grapoint(object):
     # @param time the time of the observation
     # @param liquid_prcipitation the amount of rain
     # @param accumulation_period the time during which the precipitation has been measured
-    def __init__(self, rt, rv, rd, longitude, latitude, date, time, liquid_precipitation, accumulation_period):
+    def __init__(self, rt, rv, rd, longitude, latitude, date, time, liquid_precipitation, accumulation_period, identifier=None):
         self.radarvaluetype = rt
         self.radarvalue = rv
         self.radardistance = rd
@@ -50,6 +50,7 @@ class grapoint(object):
         self.time = time
         self.observation = liquid_precipitation
         self.accumulation_period = accumulation_period
+        self.identifier = identifier
         self.gr = -1
         if self.radarvaluetype == _rave.RaveValueType_DATA and self.radarvalue >= MIN_RMM:
             self.gr = float(10.0 * log10(self.observation / self.radarvalue))
@@ -61,7 +62,7 @@ class grapoint(object):
     # @param obs the rave_dom observation object
     #
     @classmethod
-    def from_observation(cls, rt, rv, rd, obs):
+    def from_observation(cls, rt, rv, rd, obs, identifier=None):
         return grapoint(
             rt,
             rv,
@@ -72,4 +73,5 @@ class grapoint(object):
             obs.time,
             obs.liquid_precipitation,
             obs.accumulation_period,
+            identifier
         )
