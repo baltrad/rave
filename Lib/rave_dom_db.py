@@ -401,7 +401,7 @@ class rave_db(object):
             q = q.order_by(asc(grapoint.date)).order_by(asc(grapoint.time))
             return q.all()
 
-    def delete_grapoints(self, dt, edt=None):
+    def delete_grapoints(self, dt, edt=None, identifier=None):
         with self.get_session() as s:
             q = s.query(grapoint).filter(grapoint.date + grapoint.time <= dt)
             if edt is not None:
