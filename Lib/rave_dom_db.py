@@ -166,8 +166,8 @@ rave_grapoint = Table(
     Column("observation", Float, nullable=False),
     Column("accumulation_period", Integer, nullable=False),
     Column("gr", Float, nullable=False),
-    Column("identifier", Text, nullable=True),
-    PrimaryKeyConstraint("date", "time", "longitude", "latitude"),
+    Column("identifier", Text, nullable=False),
+    PrimaryKeyConstraint("identifier", "date", "time", "longitude", "latitude"),
 )
 
 rave_melting_layer = Table(
@@ -391,17 +391,20 @@ class rave_db(object):
             q = q.order_by(desc(gra_coefficient.date + gra_coefficient.time))
             return q.first()
 
-    def get_grapoints(self, dt, edt=None, identifier=None):
+    def get_grapoints(self, dt, edt=None, identifier=""):
         with self.get_session() as s:
             q = s.query(grapoint).filter(grapoint.date + grapoint.time >= dt)
             if edt is not None:
                 q = q.filter(grapoint.date + grapoint.time <= edt)
-            if identifier:
-                q = q.filter(grapoint.identifier == identifier)
+
+            if not identifier:
+                identifier=""
+            q = q.filter(grapoint.identifier == identifier)
+
             q = q.order_by(asc(grapoint.date)).order_by(asc(grapoint.time))
             return q.all()
 
-    def delete_grapoints(self, dt, edt=None, identifier=None):
+    def delete_grapoints(self, dt, edt=None, identifier=""):
         with self.get_session() as s:
             q = s.query(grapoint).filter(grapoint.date + grapoint.time <= dt)
             if edt is not None:
@@ -409,8 +412,10 @@ class rave_db(object):
                 q = s.query(grapoint).filter(grapoint.date + grapoint.time >= dt)
                 q = q.filter(grapoint.date + grapoint.time <= edt)
 
-            if identifier:
-                q = q.filter(grapoint.identifier == identifier)
+            if not identifier:
+                identifier=""
+            q = q.filter(grapoint.identifier == identifier)
+
             pts = q.delete(synchronize_session=False)
             s.commit()
             return pts

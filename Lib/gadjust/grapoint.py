@@ -50,7 +50,10 @@ class grapoint(object):
         self.time = time
         self.observation = liquid_precipitation
         self.accumulation_period = accumulation_period
-        self.identifier = identifier
+        if not identifier:
+            self.identifier = ""
+        else:
+            self.identifier = identifier
         self.gr = -1
         if self.radarvaluetype == _rave.RaveValueType_DATA and self.radarvalue >= MIN_RMM:
             self.gr = float(10.0 * log10(self.observation / self.radarvalue))

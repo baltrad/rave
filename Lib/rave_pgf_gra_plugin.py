@@ -139,6 +139,10 @@ def calculate_gra_coefficient(identifier, distancefield, interval, adjustmentfil
     mpname = multiprocessing.current_process().name
 
     matcher = obsmatcher.obsmatcher(db)
+
+    if identifier is None:
+        identifier = "" # We don't want to store nulls as identifier, instead us empty string
+
     logger.info(f"[{mpname}] rave_pgf_gra_plugin.calculate_gra_coefficient: Matching observations")
     points = matcher.match(acrrproduct, acc_period=interval, quantity="ACRR", how_task=distancefield, identifier=identifier)
     if len(points) == 0:
@@ -161,9 +165,6 @@ def calculate_gra_coefficient(identifier, distancefield, interval, adjustmentfil
     logger.info(f"[{mpname}] rave_pgf_gra_plugin.calculate_gra_coefficient: Deleting old observations")
     db.delete_grapoints(dlimit, identifier=identifier)  # We don't want any points older than 12 hour * MERGETERMS back in time
     points = db.get_grapoints(tlimit, identifier=identifier)  # Get all gra points newer than interval*MERGETERMS hours back in time
-
-    if identifier is None:
-        identifier = "" # We don't want to store nulls as identifier, instead us empty string
 
     logger.info(
         f"[{mpname}] rave_pgf_gra_plugin.calculate_gra_coefficient [identifier={identifier}]: Using {len(points)} number of points for calculating the gra coefficients"

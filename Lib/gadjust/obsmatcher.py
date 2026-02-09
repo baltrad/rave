@@ -90,8 +90,8 @@ class obsmatcher(object):
         for obs in obses:
             if obs.accumulation_period == acc_period:
                 xpts = xpts + 1
-                time, value = image.getConvertedValueAtLonLat((obs.longitude * dr, obs.latitude * dr))
-                if time in [_rave.RaveValueType_DATA, _rave.RaveValueType_UNDETECT]:
+                vt, value = image.getConvertedValueAtLonLat((obs.longitude * dr, obs.latitude * dr))
+                if vt in [_rave.RaveValueType_DATA, _rave.RaveValueType_UNDETECT]:
                     xptst = xptst + 1
                     distance = image.getConvertedQualityValueAtLonLat((obs.longitude * dr, obs.latitude * dr), how_task)
                     # distance is in unit meters in the product, for grapoints it should be stored in unit km. Thus, we convert below
