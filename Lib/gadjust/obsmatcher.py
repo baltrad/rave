@@ -63,7 +63,7 @@ class obsmatcher(object):
     # @param how_task - the name of the distance field. Default is se.smhi.composite.distance.radar
     # @param offset_hours - as default matching is performed from nominal time until now, if offset_hours > 0 then matching is performed
     # between nominal time and nominal time + offset_hours
-    def match(self, image, acc_period=12, quantity="ACRR", how_task="se.smhi.composite.distance.radar", offset_hours=0, identifier=identifier):
+    def match(self, image, acc_period=12, quantity="ACRR", how_task="se.smhi.composite.distance.radar", offset_hours=0, identifier=None):
         ul, lr = image.getExtremeLonLatBoundaries()
         distance = image.date
         time = image.time
