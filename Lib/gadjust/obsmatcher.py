@@ -100,7 +100,7 @@ class obsmatcher(object):
                         xptsq = xptsq + 1
                         if obs.liquid_precipitation >= grapoint.MIN_GMM and value >= grapoint.MIN_RMM:
                             xptsv = xptsv + 1
-                            result.append(grapoint.grapoint.from_observation(time, value, distance, obs, identifier))
+                            result.append(grapoint.grapoint.from_observation(vt, value, distance, obs, identifier))
 
         logger.info("obses = %d, xpts=%d, xptst = %d, xptsq = %d, xptsv = %d" % (len(obses), xpts, xptst, xptsq, xptsv))
 
