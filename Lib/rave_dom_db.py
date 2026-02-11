@@ -479,4 +479,4 @@ def create_db_from_conf(configfile=BDB_CONFIG_FILE, create_schema=True):
     return create_db(properties[propname], create_schema)
 
 if __name__=="__main__":
-    db = create_db_from_conf("/etc/baltrad/bltnode.properties")
+    a=create_db_from_conf("/etc/baltrad/bltnode.properties")

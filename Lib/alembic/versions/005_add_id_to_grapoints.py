@@ -7,7 +7,6 @@ down_revision = '004'
 
 def upgrade():
     op.add_column("rave_grapoint", Column("identifier", Text, nullable=True))
-
     key_name = inspect(op.get_context().connection.engine).get_pk_constraint('rave_grapoint')['name']
     op.drop_constraint(key_name, 'rave_grapoint')
 
@@ -19,6 +18,7 @@ def upgrade():
 
 def downgrade():
     key_name = inspect(op.get_context().connection.engine).get_pk_constraint('rave_grapoint')['name']
+
     op.drop_constraint(key_name, 'rave_grapoint')
 
     op.drop_column("rave_grapoint", "identifier")
