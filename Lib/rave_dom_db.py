@@ -181,7 +181,9 @@ dburipool = {}
 # Class for connecting with the database
 class rave_db(object):
     def __init__(self, engine_or_url):
+        self._url = None
         if isinstance(engine_or_url, str):
+            self._url = engine_or_url
             self._engine = engine.create_engine(engine_or_url, echo=False)
         else:
             self._engine = engine_or_url
@@ -220,7 +222,7 @@ class rave_db(object):
             if inspect(self._engine).has_table('ravedb_migrate_version'):
                 alembic_cfg = Config()
                 alembic_cfg.set_main_option("script_location", ALEMBIC_REPO_PATH)
-                alembic_cfg.set_main_option("sqlalchemy.url", str(self._engine.url))
+                alembic_cfg.set_main_option("sqlalchemy.url", self._url)
 
                 dbversion = self._engine.execute("select version from ravedb_migrate_version").fetchone()['version']
                 command.stamp(alembic_cfg, "%03d"%dbversion)
@@ -233,7 +235,7 @@ class rave_db(object):
     def create_alembic(self):
         alembic_cfg = Config()
         alembic_cfg.set_main_option("script_location", ALEMBIC_REPO_PATH)
-        alembic_cfg.set_main_option("sqlalchemy.url", str(self._engine.url))
+        alembic_cfg.set_main_option("sqlalchemy.url", self._url)
         command.upgrade(alembic_cfg, "head")
 
     def create(self):
@@ -243,7 +245,7 @@ class rave_db(object):
     def drop_alembic(self):
         alembic_cfg = Config()
         alembic_cfg.set_main_option("script_location", ALEMBIC_REPO_PATH)
-        alembic_cfg.set_main_option("sqlalchemy.url", str(self._engine.url))
+        alembic_cfg.set_main_option("sqlalchemy.url", self._url)
         command.downgrade(alembic_cfg, "base")
 
     def drop(self):
