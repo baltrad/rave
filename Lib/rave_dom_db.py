@@ -35,7 +35,7 @@ except:
     import jprops
 
 import datetime
-from sqlalchemy import engine, event, inspect
+from sqlalchemy import engine, event, inspect, sql
 from sqlalchemy.orm import registry, sessionmaker
 import rave_pgf_logger
 
@@ -224,7 +224,9 @@ class rave_db(object):
                 alembic_cfg.set_main_option("script_location", ALEMBIC_REPO_PATH)
                 alembic_cfg.set_main_option("sqlalchemy.url", self._url)
 
-                dbversion = self._engine.execute("select version from ravedb_migrate_version").fetchone()['version']
+                with self.get_connection() as conn:
+                    dbversion = conn.execute(sql.text("select version from ravedb_migrate_version")).scalar()
+
                 command.stamp(alembic_cfg, "%03d"%dbversion)
                 metadata = MetaData()
                 ravedb_migrate = Table('ravedb_migrate_version', metadata)
