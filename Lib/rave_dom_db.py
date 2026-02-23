@@ -422,7 +422,7 @@ class rave_db(object):
             s.commit()
             return pts
 
-    def get_latest_melting_layer(self, nod, hours=None, ct=datetime.datetime.now(datetime.UTC)):
+    def get_latest_melting_layer(self, nod, hours=None, ct=datetime.datetime.now(datetime.timezone.utc)):
         with self.get_session() as s:
             q = s.query(melting_layer).filter(melting_layer.nod == nod)
             if hours is not None:
@@ -435,7 +435,7 @@ class rave_db(object):
     def remove_old_melting_layers(self, ct=None):
         with self.get_session() as s:
             if ct is None:
-                ct = datetime.datetime.utcnow() - datetime.timedelta(hours=168)
+                ct = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=168)
             q = s.query(melting_layer).filter(melting_layer.datetime < ct)
             pts = q.delete()
             s.commit()
