@@ -511,6 +511,17 @@ done:
   return result;
 }
 
+static PyObject* _pyfileobject_isFileObject(PyObject* self, PyObject* args)
+{
+  PyObject* inobj = NULL;
+  if (!PyArg_ParseTuple(args,"O", &inobj)) {
+    return NULL;
+  }
+  if (PyFileObject_Check(inobj)) {
+    return PyBool_FromLong(1);
+  }
+  return PyBool_FromLong(0);
+}
 /*@} End of Gra */
 
 /*@{ Documentation about the type */
@@ -577,6 +588,11 @@ static PyMethodDef functions[] = {
     "new() -> new instance of the FileObjectCore object\n\n"
     "Creates a new instance of the FileObjectCore object"
   },
+  {"isFileObject", (PyCFunction)_pyfileobject_isFileObject, 1,
+    "isFileObject(object) -> boolean\n\n"
+    "Checks if provided object is of FileObjectCore type or not.\n\n"
+    "object - the object to check"
+  },  
   {NULL,NULL} /*Sentinel*/
 };
 
