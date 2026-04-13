@@ -23,33 +23,27 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 ## @author Daniel Michelson, SMHI
 ## @date 2010-07-08
 # Standard python libs:
-import logging
-import multiprocessing
 import os
 import sys
 import traceback
 
-if sys.version_info < (3,):
-    from SimpleXMLRPCServer import SimpleXMLRPCServer
-    from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
-    from xmlrpclib import ServerProxy
-else:
-    import xmlrpc
-    from xmlrpc.server import SimpleXMLRPCServer
-    from xmlrpc.server import SimpleXMLRPCRequestHandler
-    from xmlrpc.client import ServerProxy
-    from xmlrpc.server import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
-
+import xmlrpc
+from xmlrpc.server import SimpleXMLRPCServer
+from xmlrpc.server import SimpleXMLRPCRequestHandler
+from xmlrpc.client import ServerProxy
+from xmlrpc.server import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
 
 # Module/Project:
-import rave_mppool
+import lockfile
 import rave_pgf_logger
 import rave_pgf_qtools
 import rave_pgf_registry
 from algorithm_runner import algorithm_runner
-from rave_daemon import Daemon
 from rave_defines import LOGLEVEL, PGF_HOST, PGF_PORT, PIDFILE, REGFILE, STDOE, PGFs
-
+import daemon
+from daemon.pidfile import TimeoutPIDLockFile
+import lockfile
+import signal
 
 ## Stub class for allowing server POSTs only to one place, providing
 # rudimentary security.
@@ -57,23 +51,15 @@ class RequestHandler(SimpleXMLRPCRequestHandler):
     rpc_paths = ('/RAVE',)
 
 
-## The server that implements the product generation framework in \ref RavePGF.
-class rave_pgf_server(Daemon):
-    ## Constructor
-    # @param host URI to the host for this server.
-    # @param port int port number to the host for this server.
-    # @param stdin string path to where to direct stdin
-    # @param stdout string path to where to direct stdout
-    # @param stderr string path to where to direct stderr
+class rave_pgf_server:
     def __init__(self, host=PGF_HOST, port=PGF_PORT, stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
-        super(rave_pgf_server, self).__init__(PIDFILE, stdin, stdout, stderr)
         self.host = host
         self.port = port
 
     ## Determines whether the server is running or not.
     def status(self):
-        if os.path.isfile(self.pidfile):
-            fd = open(self.pidfile)
+        if os.path.isfile(PIDFILE):
+            fd = open(PIDFILE)
             c = fd.read()
             fd.close()
             try:
@@ -83,36 +69,90 @@ class rave_pgf_server(Daemon):
                 return "not running"
         else:
             return "not running"
+        
+    def _isprocessrunning(self, pid):
+        return os.path.exists("/proc/%d" % pid)
 
-    ## Runs the server.
-    # Creates an instance of a SimpleXMLRPCServer (from the Python standard
-    # library), registers a \ref RavePGF instance, and then serves.
-    # Note that the start(), stop(), and restart() methods are inherited from
-    # \ref Daemon , but you can call fg() to run the server in the
-    # foreground, ie. not daemonize, which is useful for debugging.
-    def run(self):
-        import atexit
-
-        from rave_pgf import RavePGF
+    def start(self, foreground=False):
+        pidfile=TimeoutPIDLockFile(PIDFILE, acquire_timeout=1.0)
 
         self.server = SimpleXMLRPCServer((self.host, self.port), requestHandler=RequestHandler, allow_none=True)
 
-        self.server.register_instance(RavePGF())
-        self.server.instance.logger = rave_pgf_logger.rave_pgf_syslog_client()  # Shouldn't be necessary
-        self.server.instance.logger.info("%s: Starting PGF server..." % self.server.instance.name)
-        self.server.instance._algorithm_registry = rave_pgf_registry.PGF_Registry(filename=REGFILE)
-        self.server.instance.queue = rave_pgf_qtools.PGF_JobQueue()
-        self.server.instance._load_queue()
-        self.server.instance.runner = algorithm_runner(PGFs)
-        # self.server.instance.pool = rave_mppool.RavePool(PGFs)
+        daemon_ctx = daemon.DaemonContext(
+            files_preserve=[self.server.fileno()],
+            working_directory="/",
+            chroot_directory=None,
+            stdout=sys.stdout if foreground else None,
+            stderr=sys.stderr if foreground else None,
+            detach_process=not foreground,
+            prevent_core=False,
+            pidfile=pidfile,
+            signal_map={
+                signal.SIGHUP: self.shutdown_handler,
+                signal.SIGTERM: self.shutdown_handler,
+            }            
+        )
+    
+        # try locking the pidfile to report possible errors to the user
+        tryagain = False
+        try:
+            with pidfile:
+                pass
+        except lockfile.AlreadyLocked:
+            tryagain = True
+        except lockfile.LockFailed:
+            tryagain = True
+        except lockfile.LockTimeout:
+            tryagain = True
 
-        self.server.register_introspection_functions()
-        atexit.register(self.server.instance._dump_queue)
+        if tryagain:
+            pid = lockfile.pidlockfile.read_pid_from_pidfile(PIDFILE)
+            if pid != None and not self._isprocessrunning(pid):
+                try:
+                    message = "pidfile exists but it seems like process is not running, probably due to an uncontrolled shutdown. Resetting.\n"
+                    sys.stderr.write(message)
+                    os.remove(PIDFILE)
+                except:
+                    pass
+    
+            try:
+                with pidfile:
+                    pass
+            except lockfile.AlreadyLocked:
+                raise SystemExit("pidfile already locked: %s" % PIDFILE)
+            except lockfile.LockFailed:
+                raise SystemExit("failed to lock pidfile: %s" % PIDFILE)
+            except lockfile.LockTimeout:
+                raise SystemExit("lock timeout on pidfile: %s" % PIDFILE)
 
-        self.server.instance._run_all_jobs()
+        with daemon_ctx:
+            from rave_pgf import RavePGF
 
-        self.server.serve_forever()
+            self.server.register_instance(RavePGF())
+            self.server.instance.logger = rave_pgf_logger.rave_pgf_syslog_client()  # Shouldn't be necessary
+            self.server.instance.logger.info("%s: Starting PGF server... (%s:%d)" % (self.server.instance.name, self.host, self.port))
+            self.server.instance._algorithm_registry = rave_pgf_registry.PGF_Registry(filename=REGFILE)
+            self.server.instance.queue = rave_pgf_qtools.PGF_JobQueue()
+            self.server.instance._load_queue()
+            self.server.instance.runner = algorithm_runner(PGFs)
 
+            self.server.register_introspection_functions()
+
+            self.server.instance._run_all_jobs()
+
+            self.server.serve_forever()
+
+    def shutdown_handler(self, signum, frame):
+        if hasattr(self, 'server') and hasattr(self.server, 'instance'):
+            try:
+                self.server.instance.stop()
+            except Exception:
+                self.server.instance.logger.warning("%s: Failed to stop runner with error message: %s" % (self.server.instance.name, traceback.format_exc()))
+            try:
+                self.server.server_close()
+            except:
+                pass
+        sys.exit(0)
 
 if __name__ == "__main__":
     prog = "rave_pgf"
@@ -130,25 +170,24 @@ if __name__ == "__main__":
 
     this = rave_pgf_server()
 
-    if ARG == 'stop':
+    if ARG == 'stop' or ARG == 'restart':
+        import signal
         if os.path.isfile(PIDFILE):
-            # Then, dump the job queue via client connection, then stop
+            fd = open(PIDFILE)
+            c = fd.read()
+            fd.close()
             try:
-                server = ServerProxy("http://%s:%i/RAVE" % (PGF_HOST, PGF_PORT), verbose=False)
-                response = server.flush("Killing me softly")
+                os.kill(int(c), signal.SIGHUP)
+                os.remove(PIDFILE)
             except Exception:
                 err_msg = traceback.format_exc()
-                print("Could not connect to server with error message: %s" % err_msg)
-        this.stop()
+                print("Could not stop server with error message: %s" % err_msg)
 
-    if ARG == 'start':
+    if ARG == 'start' or ARG == 'restart':
         this.start()
-
-    if ARG == 'restart':
-        this.restart()
 
     if ARG == 'status':
         print("%s is %s" % (prog, this.status()))
 
     if ARG == 'fg':
-        this.run()
+        this.start(foreground=True)
