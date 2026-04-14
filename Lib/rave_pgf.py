@@ -130,13 +130,20 @@ class RavePGF:
         self._algorithm_registry.deregister(name)
         return "De-registered %s" % name
 
-    def stop(self):
-        self.logger.info("%s: Stopping PGF server..." % self.name)
-        self._dump_queue()
-        self.logger.info("Queue dumped")
-        if self.runner:
-            self.logger.info("Terminating runner...")
-            self.runner.terminate()
+    ## Public method for dumping queue to file.
+    # @param stupid_password A rudimentary safeguard against sabotage.
+    # @return string
+    def flush(self, stupid_password):
+        if stupid_password == "Killing me softly":
+            self._dump_queue()
+            if self.pool:
+                self.pool.terminate()
+            if self.runner:
+                self.runner.terminate()
+            return "Killed softly"
+        else:
+            self.logger.warning("%s: Security breach? Did some scoundrel just try to shut us down?" % self.name)
+            return ""
 
     ## Queue a job for processing. All jobs are calls to the \ref generate method.
     # @param algorithm, an Element object that contains all the information
