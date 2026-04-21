@@ -729,6 +729,21 @@ static int TransformInternal_addTileToParameter(Transform_t* self, Cartesian_t* 
           RAVE_OBJECT_RELEASE(tgtHowTaskArgAttr);
           RAVE_OBJECT_RELEASE(srcHowTaskArgAttr);
           RAVE_OBJECT_RELEASE(mergedHowTaskArgAttr);
+        } else {
+          RaveAttribute_t* tgtHowTaskArgAttr = RaveField_getAttribute(targetField, "how/task_args");
+          RaveAttribute_t* srcHowTaskArgAttr = RaveField_getAttribute(sourceField, "how/task_args");
+          char *tgtHowTaskArgValue = NULL, *srcHowTaskArgValue = NULL;
+          if (tgtHowTaskArgAttr != NULL) {
+            RaveAttribute_getString(tgtHowTaskArgAttr, &tgtHowTaskArgValue);
+          }
+          if (srcHowTaskArgAttr != NULL) {
+            RaveAttribute_getString(srcHowTaskArgAttr, &srcHowTaskArgValue);
+          }
+          if (tgtHowTaskArgValue != NULL && srcHowTaskArgValue != NULL && strcmp(tgtHowTaskArgValue, srcHowTaskArgValue) == 0) {
+            RaveField_addAttribute(targetField, srcHowTaskArgAttr);
+          }
+          RAVE_OBJECT_RELEASE(tgtHowTaskArgAttr);
+          RAVE_OBJECT_RELEASE(srcHowTaskArgAttr);
         }
       }
       RAVE_OBJECT_RELEASE(sourceField);
@@ -893,6 +908,83 @@ static int TransformInternal_addQualityFieldDataFromTileToCartesian(Transform_t*
   return result;
 }
 
+static RaveAttribute_t* TransformInternal_getParamStringAttributeFromCartesian(Transform_t* self, Cartesian_t* cart, const char* pname, const char* attrName)
+{
+  char* strvalue = NULL;
+  CartesianParam_t* param = NULL;
+  RaveAttribute_t *attr = NULL, *result = NULL;
+
+  if (self == NULL || cart == NULL || pname == NULL || attrName == NULL) {
+    RAVE_ERROR0("Not valid parameters");
+    return NULL;
+  }
+
+  param = Cartesian_getParameter(cart, pname);
+  if (param != NULL) {
+    attr = CartesianParam_getAttribute(param, attrName);
+    if (attr != NULL && RaveAttribute_getString(attr, &strvalue)) {
+      result = RAVE_OBJECT_COPY(attr);
+    }
+    RAVE_OBJECT_RELEASE(attr);
+  }
+
+  RAVE_OBJECT_RELEASE(param);
+  return result;
+}
+
+static RaveAttribute_t* TransformInternal_createParamStringAttributeFromTiles(Transform_t* self, RaveObjectList_t* tiles, const char* pname, const char* attrName)
+{
+  int ntiles = 0, k = 0;
+  RaveAttribute_t *attr = NULL, *result = NULL, *oattr = NULL;
+  Cartesian_t *cartesian = NULL, *ocartesian = NULL;
+  char *strvalue = NULL, *ostrvalue;
+
+  if (self == NULL || tiles == NULL || pname == NULL || attrName == NULL) {
+    RAVE_ERROR0("Not valid parameters");
+    return 0;
+  }
+
+  ntiles = RaveObjectList_size(tiles);
+  if (ntiles > 0) {
+    cartesian = (Cartesian_t*)RaveObjectList_get(tiles, 0);
+    if (cartesian == NULL) {
+      RAVE_ERROR0("Failed to get cartesian tile");
+      goto done;
+    }
+    attr = TransformInternal_getParamStringAttributeFromCartesian(self, cartesian, pname, attrName);
+    if (attr != NULL) {
+      RaveAttribute_getString(attr, &strvalue);
+
+      for (k = 1; k < ntiles; k++) {
+        ocartesian = (Cartesian_t*)RaveObjectList_get(tiles, 0);
+        if (ocartesian != NULL) {
+          oattr = TransformInternal_getParamStringAttributeFromCartesian(self, ocartesian, pname, attrName);
+          if (oattr != NULL) {
+            RaveAttribute_getString(oattr, &ostrvalue);
+            if (strcmp(strvalue, ostrvalue) != 0) {
+              goto done;
+            }
+          } else {
+            goto done;
+          }
+          RAVE_OBJECT_RELEASE(oattr);
+        } else {
+          goto done;
+        }
+        RAVE_OBJECT_RELEASE(ocartesian);
+      }
+    }
+  }
+  result = RAVE_OBJECT_COPY(attr);
+done:
+  RAVE_OBJECT_RELEASE(attr);
+  RAVE_OBJECT_RELEASE(oattr);
+  RAVE_OBJECT_RELEASE(cartesian);
+  RAVE_OBJECT_RELEASE(ocartesian);
+
+  return result;
+}
+
 Cartesian_t* Transform_combine_tiles(Transform_t* self, Area_t* area, RaveObjectList_t* tiles)
 {
   Cartesian_t* result = NULL;
@@ -949,8 +1041,18 @@ Cartesian_t* Transform_combine_tiles(Transform_t* self, Area_t* area, RaveObject
         if (cp == NULL ||
             !TransformInternal_createParameterQualtiyFieldFromTile(self, cp, p)) {
           RAVE_ERROR1("Failed to create parameter %s in the combined area", pname);
+          RAVE_OBJECT_RELEASE(cp);
         } else {
           int k = 0;
+
+          RaveAttribute_t* howTaskArgs = TransformInternal_createParamStringAttributeFromTiles(self, tiles, pname, "how/task_args");
+          if (howTaskArgs != NULL) {
+            if (!CartesianParam_addAttribute(cp, howTaskArgs)) {
+              RAVE_ERROR0("Failed to add how/task_args to combined parameter");
+            }
+          }
+          RAVE_OBJECT_RELEASE(howTaskArgs);
+
           for (k = 0; k < ntiles; k++) {
             Cartesian_t* tile = (Cartesian_t*)RaveObjectList_get(tiles, k);
             if (!TransformInternal_addTileToParameter(self, combined, tile, pname)) {

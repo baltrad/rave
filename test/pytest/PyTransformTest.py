@@ -208,7 +208,7 @@ class PyTransformTest(unittest.TestCase):
     self.assertEqual(1, data[2][2])
     data = result.getParameter("TH").getData() 
     self.assertEqual(2, data[2][2])
-  
+
   def create_cartesian_with_parameter(self, xsize, ysize, xscale, yscale, extent, projstr, dtype, value, quantity):
     obj = _cartesian.new()
     a = _area.new()
@@ -232,14 +232,16 @@ class PyTransformTest(unittest.TestCase):
     
     return obj
   
-  def create_quality_field(self, xsize, ysize, dtype, value, howtask):
+  def create_quality_field(self, xsize, ysize, dtype, value, howtask, howtaskargs=None):
     obj = _ravefield.new()
     data = numpy.zeros((ysize, xsize), dtype)
     data = data + value
     obj.setData(data)
     obj.addAttribute("how/task", howtask)
+    if howtaskargs is not None:
+      obj.addAttribute("how/task_args", howtaskargs)
     return obj
-  
+
   def test_combine_tiles(self):
     pyarea = _area.new()
     pyarea.extent = (971337.728807, 7196461.17902, 3015337.72881, 11028461.179)
@@ -385,4 +387,73 @@ class PyTransformTest(unittest.TestCase):
     param = result.getParameter("TH")
     self.assertEqual([[12,12,13,13],[12,12,13,13],[14,14,15,15],[14,14,15,15]], param.getData().tolist())
     self.assertEqual([[32,32,33,33],[32,32,33,33],[34,34,35,35],[34,34,35,35]], param.getQualityFieldByHowTask("se.some.how.task.1").getData().tolist())
+
+  def test_combine_tiles_task_args(self):
+    pyarea = _area.new()
+    pyarea.extent = (971337.728807, 7196461.17902, 3015337.72881, 11028461.179)
+    pyarea.xscale = 511000.0
+    pyarea.yscale = 958000.0
+    pyarea.xsize = 4
+    pyarea.ysize = 4
+    pyarea.projection = _projection.new("x", "y", "+proj=merc +lat_ts=0 +lon_0=0 +k=1.0 +R=6378137.0 +nadgrids=@null +no_defs")
+
+    ul = self.create_cartesian_with_parameter(2, 2, pyarea.xscale, pyarea.yscale, 
+                                              (971337.728807,9112461.1790100001,1993337.7288084999,11028461.179),
+                                              pyarea.projection.definition,
+                                              numpy.uint8, [2], ["DBZH"])
+    ul.addAttribute("how/task_args", "arg=q,arg2=r")
+    ul.addQualityField(self.create_quality_field(2,2,numpy.uint8, 15, "se.some.how.task.1", "arg1=foo,arg2=bar"))
+    ul.addQualityField(self.create_quality_field(2,2,numpy.uint8, 19, "se.some.how.task.2", "arg1=foo"))
+    ul.getParameter("DBZH").addQualityField(self.create_quality_field(2,2,numpy.uint8, 23, "se.some.how.task.1", "arg1=foo,arg2=bar"))
+    ul.getParameter("DBZH").addQualityField(self.create_quality_field(2,2,numpy.uint8, 24, "se.some.how.task.2", "arg1=foo"))
+    ul.addAttribute("what/prodpar", 0.5)
+    ul.getParameter("DBZH").addAttribute("how/task_args", "arg=q,arg2=r")
+    ur = self.create_cartesian_with_parameter(2, 2, pyarea.xscale, pyarea.yscale, 
+                                              (1993337.7288084999,9112461.1790100001,3015337.72881,11028461.179),
+                                              pyarea.projection.definition,
+                                              numpy.uint8, [3], ["DBZH"])
+    ur.addAttribute("how/task_args", "arg=q,arg2=r")
+    ur.addQualityField(self.create_quality_field(2,2,numpy.uint8, 16, "se.some.how.task.1", "arg1=foo,arg2=bar"))
+    ur.addQualityField(self.create_quality_field(2,2,numpy.uint8, 20, "se.some.how.task.2", "arg1=foo"))
+    ur.getParameter("DBZH").addQualityField(self.create_quality_field(2,2,numpy.uint8, 25, "se.some.how.task.1", "arg1=foo,arg2=bar"))
+    ur.getParameter("DBZH").addQualityField(self.create_quality_field(2,2,numpy.uint8, 26, "se.some.how.task.2", "arg1=foo"))
+    ur.getParameter("DBZH").addAttribute("how/task_args", "arg=q,arg2=r")
+    ur.addAttribute("what/prodpar", 0.5)
     
+    ll = self.create_cartesian_with_parameter(2, 2, pyarea.xscale, pyarea.yscale, 
+                                              (971337.728807,7196461.17902,1993337.7288084999,9112461.1790100001),
+                                              pyarea.projection.definition,
+                                              numpy.uint8, [4], ["DBZH"])
+    ll.addAttribute("how/task_args", "arg=q,arg2=r")
+    ll.addQualityField(self.create_quality_field(2,2,numpy.uint8, 17, "se.some.how.task.1", "arg1=foo,arg2=bar"))
+    ll.addQualityField(self.create_quality_field(2,2,numpy.uint8, 21, "se.some.how.task.2"))
+    ll.getParameter("DBZH").addQualityField(self.create_quality_field(2,2,numpy.uint8, 27, "se.some.how.task.1", "arg1=foo,arg2=bar"))
+    ll.getParameter("DBZH").addQualityField(self.create_quality_field(2,2,numpy.uint8, 28, "se.some.how.task.2", "arg1=foo"))
+    ll.getParameter("DBZH").addAttribute("how/task_args", "arg=q,arg2=r")
+    ll.addAttribute("what/prodpar", 0.5)
+    
+    lr = self.create_cartesian_with_parameter(2, 2, pyarea.xscale, pyarea.yscale, 
+                                              (1993337.7288084999,7196461.17902,3015337.72881,9112461.1790100001),
+                                              pyarea.projection.definition,
+                                              numpy.uint8, [5], ["DBZH"])
+    lr.addAttribute("how/task_args", "arg=q,arg2=r")
+    lr.addQualityField(self.create_quality_field(2,2,numpy.uint8, 18, "se.some.how.task.1", "arg1=foo,arg2=bar"))
+    lr.addQualityField(self.create_quality_field(2,2,numpy.uint8, 22, "se.some.how.task.2", "arg1=foo"))
+    lr.getParameter("DBZH").addQualityField(self.create_quality_field(2,2,numpy.uint8, 29, "se.some.how.task.1", "arg1=foo,arg2=bar"))
+    lr.getParameter("DBZH").addQualityField(self.create_quality_field(2,2,numpy.uint8, 30, "se.some.how.task.2", "arg1=foo"))
+    lr.getParameter("DBZH").addAttribute("how/task_args", "arg=q,arg2=r")
+    lr.addAttribute("what/prodpar", 0.5)
+    
+    t = _transform.new()
+    result = t.combine_tiles(pyarea, [ul,ur,ll,lr])
+    param = result.getParameter("DBZH")
+    qf1 = result.getQualityFieldByHowTask("se.some.how.task.1")
+    qf2 = result.getQualityFieldByHowTask("se.some.how.task.2")
+    pqf1 = param.getQualityFieldByHowTask("se.some.how.task.1")
+    pqf2 = param.getQualityFieldByHowTask("se.some.how.task.2")
+
+    self.assertEqual(param.getAttribute("how/task_args"), "arg=q,arg2=r")
+    self.assertEqual(qf1.getAttribute("how/task_args"), "arg1=foo,arg2=bar")
+    self.assertEqual(qf2.getAttribute("how/task_args"), "arg1=foo")
+    self.assertEqual(pqf1.getAttribute("how/task_args"), "arg1=foo,arg2=bar")
+    self.assertEqual(pqf2.getAttribute("how/task_args"), "arg1=foo")
