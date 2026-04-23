@@ -1026,7 +1026,7 @@ Cartesian_t* Transform_combine_tiles(Transform_t* self, Area_t* area, RaveObject
 
     if (Cartesian_hasAttribute(ci, "how/camethod")) {
       camethod = Cartesian_getAttribute(ci, "how/camethod");
-      if (camethod != NULL && !Cartesian_addAttribute(ci, camethod)) {
+      if (camethod != NULL && !Cartesian_addAttribute(combined, camethod)) {
         RAVE_ERROR0("Could not add camethod to combined area");
         goto done;
       }

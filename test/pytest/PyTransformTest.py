@@ -457,3 +457,41 @@ class PyTransformTest(unittest.TestCase):
     self.assertEqual(qf2.getAttribute("how/task_args"), "arg1=foo")
     self.assertEqual(pqf1.getAttribute("how/task_args"), "arg1=foo,arg2=bar")
     self.assertEqual(pqf2.getAttribute("how/task_args"), "arg1=foo")
+
+
+  def test_combine_tiles_camethod(self):
+    pyarea = _area.new()
+    pyarea.extent = (971337.728807, 7196461.17902, 3015337.72881, 11028461.179)
+    pyarea.xscale = 511000.0
+    pyarea.yscale = 958000.0
+    pyarea.xsize = 4
+    pyarea.ysize = 4
+    pyarea.projection = _projection.new("x", "y", "+proj=merc +lat_ts=0 +lon_0=0 +k=1.0 +R=6378137.0 +nadgrids=@null +no_defs")
+
+    ul = self.create_cartesian_with_parameter(2, 2, pyarea.xscale, pyarea.yscale, 
+                                              (971337.728807,9112461.1790100001,1993337.7288084999,11028461.179),
+                                              pyarea.projection.definition,
+                                              numpy.uint8, [2], ["DBZH"])
+    ul.addAttribute("how/camethod", "QMAXIMUM")
+    ur = self.create_cartesian_with_parameter(2, 2, pyarea.xscale, pyarea.yscale, 
+                                              (1993337.7288084999,9112461.1790100001,3015337.72881,11028461.179),
+                                              pyarea.projection.definition,
+                                              numpy.uint8, [3], ["DBZH"])
+    ur.addAttribute("how/camethod", "QMAXIMUM")
+    ll = self.create_cartesian_with_parameter(2, 2, pyarea.xscale, pyarea.yscale, 
+                                              (971337.728807,7196461.17902,1993337.7288084999,9112461.1790100001),
+                                              pyarea.projection.definition,
+                                              numpy.uint8, [4], ["DBZH"])
+    ll.addAttribute("how/camethod", "QMAXIMUM")
+
+    lr = self.create_cartesian_with_parameter(2, 2, pyarea.xscale, pyarea.yscale, 
+                                              (1993337.7288084999,7196461.17902,3015337.72881,9112461.1790100001),
+                                              pyarea.projection.definition,
+                                              numpy.uint8, [5], ["DBZH"])
+    lr.addAttribute("how/camethod", "QMAXIMUM")
+    
+    t = _transform.new()
+    result = t.combine_tiles(pyarea, [ul,ur,ll,lr])
+    param = result.getParameter("DBZH")
+
+    self.assertEqual(result.getAttribute("how/camethod"), "QMAXIMUM")
