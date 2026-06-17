@@ -850,6 +850,7 @@ int RaveHL_addRaveValue(HL_NodeList* nodelist, RaveValue_t* value, const char* f
             node = NULL;
             result = 1;
           }
+          RAVE_FREE(varr);
         }
       } else if (RaveValue_isDoubleArray(value)) {
         double* varr = NULL;
@@ -867,6 +868,7 @@ int RaveHL_addRaveValue(HL_NodeList* nodelist, RaveValue_t* value, const char* f
             node = NULL;
             result = 1;
           }
+          RAVE_FREE(varr);
         }
       }
     } else {

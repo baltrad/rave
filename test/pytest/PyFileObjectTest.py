@@ -218,7 +218,7 @@ class PyFileObjectTest(unittest.TestCase):
     self.assertFalse("/dataset4" in fileobj)
     self.assertFalse("/dataset4/data1" in fileobj)
     self.assertFalse("/dataset4/data1/q1" in fileobj)
-
+  
   def test_groups(self):
     fileobj = _fileobject.new()
     fileobj.create("/dataset1/data1")
@@ -355,7 +355,7 @@ class PyFileObjectTest(unittest.TestCase):
     self.assertEqual(360, fileobj["/dataset1/data1/data"].ysize)
     self.assertEqual(_rave.RaveDataType_UCHAR, fileobj["/dataset1/data1/data"].datatype)
     self.assertEqual((360, 480), fileobj["/dataset1/data1/data"].data.getData().shape)
-
+  
   def test_load_save_fileObject_scan(self):
     fileobj=_raveio.openFileObject(self.FIXTURE_SCAN, False).object
     rio = _raveio.new()
