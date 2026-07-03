@@ -37,6 +37,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "pypolarscan.h"
 #include "pycartesianvolume.h"
 #include "pyverticalprofile.h"
+#include "pyfileobject.h"
 #include "pyravevalue.h"
 #include "pyrave_debug.h"
 #include "rave_alloc.h"
@@ -149,6 +150,33 @@ done:
 }
 
 /**
+ * Opens a file object
+ * @param[in] self this instance.
+ * @param[in] args arguments for creation. (A string identifying the file)
+ * @return the object on success, otherwise NULL
+ */
+static PyRaveIO*
+PyRaveIO_OpenFileObject(const char* filename, int lazyLoading, const char* preloadQuantities)
+{
+  RaveIO_t* raveio = NULL;
+  PyRaveIO* result = NULL;
+
+  if (filename == NULL) {
+    raiseException_returnNULL(PyExc_ValueError, "providing a filename that is NULL");
+  }
+
+  raveio = RaveIO_openFileObject(filename, lazyLoading, preloadQuantities);
+  if (raveio == NULL) {
+    raiseException_gotoTag(done, PyExc_IOError, "Failed to open file");
+  }
+  result = PyRaveIO_New(raveio);
+
+done:
+  RAVE_OBJECT_RELEASE(raveio);
+  return result;
+}
+
+/**
  * Deallocates the RaveIO
  * @param[in] obj the object to deallocate.
  */
@@ -193,6 +221,26 @@ static PyObject* _pyraveio_open(PyObject* self, PyObject* args)
     return NULL;
   }
   result = PyRaveIO_Open(filename, lazyLoading, preloadQuantities);
+  return (PyObject*)result;
+}
+
+/**
+ * Opens a file that is supported by raveio
+ * @param[in] self this instance.
+ * @param[in] args arguments for creation (filename as a string)
+ * @return the object on success, otherwise NULL
+ */
+static PyObject* _pyraveio_openFileObject(PyObject* self, PyObject* args)
+{
+  PyRaveIO* result = NULL;
+
+  char* filename = NULL;
+  int lazyLoading = 0;
+  char* preloadQuantities = NULL;
+  if (!PyArg_ParseTuple(args, "s|iz", &filename, &lazyLoading, &preloadQuantities)) {
+    return NULL;
+  }
+  result = PyRaveIO_OpenFileObject(filename, lazyLoading, preloadQuantities);
   return (PyObject*)result;
 }
 
@@ -331,6 +379,8 @@ static PyObject* _pyraveio_getattro(PyRaveIO* self, PyObject* name)
         res = (PyObject*)PyCartesianVolume_New((CartesianVolume_t*)object);
       } else if (RAVE_OBJECT_CHECK_TYPE(object, &VerticalProfile_TYPE)) {
         res = (PyObject*)PyVerticalProfile_New((VerticalProfile_t*)object);
+      } else if (RAVE_OBJECT_CHECK_TYPE(object, &FileObject_TYPE)) {
+        res = (PyObject*)PyFileObject_New((FileObject_t*)object);
       } else {
         PyErr_SetString(PyExc_NotImplementedError, "support lacking for object type");
       }
@@ -433,8 +483,10 @@ static int _pyraveio_setattro(PyRaveIO* self, PyObject* name, PyObject* val)
       RaveIO_setObject(self->raveio, (RaveCoreObject*)((PyCartesianVolume*)val)->cvol);
     } else if (PyVerticalProfile_Check(val)) {
       RaveIO_setObject(self->raveio, (RaveCoreObject*)((PyVerticalProfile*)val)->vp);
+    } else if (PyFileObject_Check(val)) {
+      RaveIO_setObject(self->raveio, (RaveCoreObject*)((PyFileObject*)val)->fobj);
     } else {
-      raiseException_gotoTag(done, PyExc_TypeError, "Can only save objects of type : cartesian, polarscan, polarvolume or verticalprofile");
+      raiseException_gotoTag(done, PyExc_TypeError, "Can only save objects of type : cartesian, polarscan, polarvolume, verticalprofile or fileobject");
     }
   } else if (PY_COMPARE_STRING_WITH_ATTRO_NAME("extras", name) == 0) {
     if (PyRaveValue_Check(val)) {
@@ -659,6 +711,12 @@ static PyMethodDef functions[] = {
       "filename - a filename pointing to a file supported by raveio.\n"
       "lazy_loading - a boolean if file should be lazy loaded or not. If True, then only meta data is read.\n"
       "preload_quantities - a comma-separated list of quantities for which data should be loaded immediately. E.g. \"DBZH,TH\".\n\n"},
+  {"openFileObject", (PyCFunction)_pyraveio_openFileObject, 1,
+      "openFileObject(filename[,lazy_loading[,preload_quantities]]) -> a RaveIOCore instance with a loaded object.\n\n"
+      "Opens a file by reading it as a file object structure which means that it will not be mapped to a rave polar or cartesian object\n\n"
+      "filename - a filename pointing to a file supported by raveio.\n"
+      "lazy_loading - a boolean if file should be lazy loaded or not. If True, then only meta data is read.\n"
+      "preload_quantities - a comma-separated list of quantities for which data should be loaded immediately. E.g. \"DBZH,TH\".\n\n"},
   {"supports", (PyCFunction)_pyraveio_supports, 1,
       "supports(format) -> True or False depending if format supported or not\n\n"
       "Returns if the raveio supports the requested file format.\n\n"
@@ -743,6 +801,8 @@ MOD_INIT(_raveio)
   PyRaveIO_API[PyRaveIO_Type_NUM] = (void*)&PyRaveIO_Type;
   PyRaveIO_API[PyRaveIO_GetNative_NUM] = (void *)PyRaveIO_GetNative;
   PyRaveIO_API[PyRaveIO_New_NUM] = (void*)PyRaveIO_New;
+  PyRaveIO_API[PyRaveIO_Open_NUM] = (void*)PyRaveIO_Open;
+  PyRaveIO_API[PyRaveIO_OpenFileObject_NUM] = (void*)PyRaveIO_OpenFileObject;
 
   c_api_object = PyCapsule_New(PyRaveIO_API, PyRaveIO_CAPSULE_NAME, NULL);
   dictionary = PyModule_GetDict(module);
@@ -794,6 +854,7 @@ MOD_INIT(_raveio)
   import_pypolarvolume();
   import_pypolarscan();
   import_pyverticalprofile();
+  import_fileobject();
   import_pycartesianvolume();
   import_pycartesian();
   import_ravevalue();

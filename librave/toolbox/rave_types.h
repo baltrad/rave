@@ -202,6 +202,13 @@ typedef struct PolarObservationLinkedList {
 int get_ravetype_size(RaveDataType type);
 
 /**
+ * Returns the data type name as a string from the data type.
+ * @param[in] type - the type
+ * @return the string name
+ */
+const char* RaveTypes_getDataTypeName(RaveDataType type);
+
+/**
  * Translates the string representation of the product type into the
  * enum.
  * @param[in] name - the string representation of the product type

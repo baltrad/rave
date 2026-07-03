@@ -42,6 +42,7 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "cartesian_odim_io.h"
 #include "polar_odim_io.h"
 #include "vp_odim_io.h"
+#include "file_object_odim_io.h"
 #include "odim_io_utilities.h"
 
 #ifdef RAVE_CF_SUPPORTED
@@ -63,6 +64,7 @@ struct _RaveIO_t {
   RaveIO_ODIM_Version read_version;       /**< the read odim version */
   RaveIO_ODIM_H5rad_Version h5radversion; /**< the h5rad object version */
   RaveIO_ODIM_FileFormat fileFormat;      /**< the file format */
+  int fileObjectLoading;                 /**< if set, the file will always be read into a file object structure if possible */
   RaveValue_t* extras;                    /**< the extra how attributes */
   int strict;                             /**< if strict writing should be enforced, from 2.4, several how-attributes are required. If setting this to true, this will be enforced */
   char* filename;                         /**< the filename */
@@ -98,6 +100,7 @@ static int RaveIO_constructor(RaveCoreObject* obj)
   raveio->read_version = RaveIO_ODIM_Version_UNDEFINED;
   raveio->h5radversion = RaveIO_ODIM_H5rad_Version_2_4;
   raveio->strict = 0;
+  raveio->fileObjectLoading = 0;
   raveio->extras = NULL;
   raveio->fileFormat = RaveIO_ODIM_FileFormat_UNDEFINED;
   raveio->filename = NULL;
@@ -250,6 +253,24 @@ static PolarScan_t* RaveIOInternal_loadScan(LazyNodeListReader_t* lazyReader, Ra
       }
     }
     RAVE_OBJECT_RELEASE(scan);
+  }
+  RAVE_OBJECT_RELEASE(odimio);
+  return result;
+}
+
+/**
+ * Loads a individual polar scan
+ * @param[in] nodelist - the node list
+ * @param[in] fmt - the varargs name of the scan to load
+ * @returns a polar scan on success otherwise NULL
+ */
+static FileObject_t* RaveIOInternal_loadFileObject(LazyNodeListReader_t* lazyReader, RaveIO_ODIM_Version version)
+{
+  FileObject_t* result = NULL;
+  FileObjectOdimIO_t* odimio = RAVE_OBJECT_NEW(&FileObjectOdimIO_TYPE);
+  if (odimio != NULL) {
+    FileObjectOdimIO_setVersion(odimio, version);
+    result = FileObjectOdimIO_read(odimio, lazyReader);
   }
   RAVE_OBJECT_RELEASE(odimio);
   return result;
@@ -459,6 +480,25 @@ static int RaveIOInternal_addVPToNodeList(RaveIO_t* raveio, VerticalProfile_t* v
   return result;
 }
 
+static int RaveIOInternal_addFileObjectToNodeList(RaveIO_t* raveio, FileObject_t* fobj, HL_NodeList* nodelist, RaveIO_ODIM_Version version)
+{
+  int result = 0;
+  FileObjectOdimIO_t* odimio = NULL;
+
+  odimio = RAVE_OBJECT_NEW(&FileObjectOdimIO_TYPE);
+  if (odimio != NULL) {
+    FileObjectOdimIO_setVersion(odimio, version);
+    result = FileObjectOdimIO_fill(odimio, fobj, nodelist);
+  }
+
+  RAVE_OBJECT_RELEASE(odimio);
+
+  return result;
+
+}
+
+
+
 static int RaveIOInternal_validateExtras(RaveIO_t* raveio)
 {
   int result = 1;
@@ -543,19 +583,25 @@ static int RaveIOInternal_loadHDF5(RaveIO_t* raveio, int lazyLoading, const char
   h5radversion = RaveIOInternal_getH5radVersion(nodelist);
   objectType = RaveIOInternal_getObjectType(nodelist);
 
-  if (objectType == Rave_ObjectType_CVOL || objectType == Rave_ObjectType_COMP) {
-    object = (RaveCoreObject*)RaveIOInternal_loadCartesianVolume(lazyReader, version);
-  } else if (objectType == Rave_ObjectType_IMAGE) {
-    object = (RaveCoreObject*)RaveIOInternal_loadCartesian(lazyReader, version);
-  } else if (objectType == Rave_ObjectType_PVOL) {
-    object = (RaveCoreObject*)RaveIOInternal_loadPolarVolume(lazyReader, version);
-  } else if (objectType == Rave_ObjectType_SCAN) {
-    object = (RaveCoreObject*)RaveIOInternal_loadScan(lazyReader, version);
-  } else if (objectType == Rave_ObjectType_VP) {
-    object = (RaveCoreObject*)RaveIOInternal_loadVP(lazyReader, version);
+  if (!raveio->fileObjectLoading) {
+    if (objectType == Rave_ObjectType_CVOL || objectType == Rave_ObjectType_COMP) {
+      object = (RaveCoreObject*)RaveIOInternal_loadCartesianVolume(lazyReader, version);
+    } else if (objectType == Rave_ObjectType_IMAGE) {
+      object = (RaveCoreObject*)RaveIOInternal_loadCartesian(lazyReader, version);
+    } else if (objectType == Rave_ObjectType_PVOL) {
+      object = (RaveCoreObject*)RaveIOInternal_loadPolarVolume(lazyReader, version);
+    } else if (objectType == Rave_ObjectType_SCAN) {
+      object = (RaveCoreObject*)RaveIOInternal_loadScan(lazyReader, version);
+    } else if (objectType == Rave_ObjectType_VP) {
+      object = (RaveCoreObject*)RaveIOInternal_loadVP(lazyReader, version);
+    } else if (objectType == Rave_ObjectType_ELEV) {
+      object = (RaveCoreObject*)RaveIOInternal_loadFileObject(lazyReader, version);
+    } else {
+      RAVE_ERROR1("Currently, RaveIO does not support the object type as defined by '%s'", raveio->filename);
+      goto done;
+    }
   } else {
-    RAVE_ERROR1("Currently, RaveIO does not support the object type as defined by '%s'", raveio->filename);
-    goto done;
+    object = (RaveCoreObject*)RaveIOInternal_loadFileObject(lazyReader, version);
   }
 
   if (object != NULL) {
@@ -651,6 +697,38 @@ RaveIO_t* RaveIO_open(const char* filename, int lazyLoading, const char* preload
     RAVE_OBJECT_RELEASE(result);
     goto done;
   }
+
+  if (!RaveIO_load(result, lazyLoading, preloadQuantities)) {
+    RAVE_WARNING0("Failed to load file");
+    RAVE_OBJECT_RELEASE(result);
+    goto done;
+  }
+
+done:
+  return result;
+}
+
+RaveIO_t* RaveIO_openFileObject(const char* filename, int lazyLoading, const char* preloadQuantities)
+{
+  RaveIO_t* result = NULL;
+
+  if (filename == NULL) {
+    goto done;
+  }
+
+  result = RAVE_OBJECT_NEW(&RaveIO_TYPE);
+  if (result == NULL) {
+    RAVE_CRITICAL0("Failed to create raveio instance");
+    goto done;
+  }
+
+  if (!RaveIO_setFilename(result, filename)) {
+    RAVE_CRITICAL0("Failed to set filename");
+    RAVE_OBJECT_RELEASE(result);
+    goto done;
+  }
+
+  RaveIO_setFileObjectLoading(result, 1);
 
   if (!RaveIO_load(result, lazyLoading, preloadQuantities)) {
     RAVE_WARNING0("Failed to load file");
@@ -760,6 +838,23 @@ int RaveIO_save(RaveIO_t* raveio, const char* filename)
           }
         }
 
+        if (result == 1 && raveio->extras != NULL) {
+          result = RaveIOInternal_addExtrasToNodeList(raveio, nodelist);
+        }
+
+        if (result == 1) {
+          result = HLNodeList_setFileName(nodelist, raveio->filename);
+        }
+
+        if (result == 1) {
+          result = HLNodeList_write(nodelist, raveio->property, raveio->compression);
+        }
+      }
+      HLNodeList_free(nodelist);
+    } else if (RAVE_OBJECT_CHECK_TYPE(raveio->object, &FileObject_TYPE)) {
+      HL_NodeList* nodelist = HLNodeList_new();
+      if (nodelist != NULL) {
+        result = RaveIOInternal_addFileObjectToNodeList(raveio, (FileObject_t*)raveio->object, nodelist, raveio->version);
         if (result == 1 && raveio->extras != NULL) {
           result = RaveIOInternal_addExtrasToNodeList(raveio, nodelist);
         }
@@ -891,6 +986,19 @@ int RaveIO_setFileFormat(RaveIO_t* raveio, RaveIO_ODIM_FileFormat format)
   raveio->fileFormat = format;
   return 1;
 }
+
+void RaveIO_setFileObjectLoading(RaveIO_t* raveio, int override)
+{
+  RAVE_ASSERT((raveio != NULL), "raveio == NULL");
+  raveio->fileObjectLoading = override;
+}
+
+int RaveIO_getFileObjectLoading(RaveIO_t* raveio)
+{
+  RAVE_ASSERT((raveio != NULL), "raveio == NULL");
+  return raveio->fileObjectLoading;
+}
+
 
 int RaveIO_setExtras(RaveIO_t* raveio, RaveValue_t* hashtable)
 {

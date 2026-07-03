@@ -57,7 +57,7 @@ typedef struct _AcqvaCompositeGeneratorFactory_t {
   CompositeEngine_t* engine; /**<the engine */
   CompositeEngineOvershootingQcHandler_t* overshooting; /**< the QC handler used for POO/Overshooting */
   int allowMissingFeaturemaps; /**< if we should allow featuremaps to be missing or not. If we allow missing, the default behavior is always True for missing field/featuremaps */
-  int maxElevationIndex;       /**< max elevation index to use if cluttermaps at one point only contains "invalid" points */
+  int maxElevationIndex;       /**< max elevation index to use if featuremaps at one point only contains "invalid" points */
 } AcqvaCompositeGeneratorFactory_t;
 /*@{ Private functions */
 
@@ -217,10 +217,10 @@ static void AcqvaCompositeGeneratorFactory_destructor(RaveCoreObject* obj)
 }
 
 /**
- * Loads the clutter map associated with the odim source
- * @param[in] cluttermap_dir - the directory where the cluttermap files can be found
- * @param[in] source - the source for which we want to load the cluttermap
- * @return the cluttermap as a \ref PolarVolume_t if possible, otherwise NULL
+ * Loads the feature map associated with the odim source
+ * @param[in] featuremap_dir - the directory where the featuremap files can be found
+ * @param[in] source - the source for which we want to load the featuremap
+ * @return the featuremap as a \ref PolarVolume_t if possible, otherwise NULL
  */
 static AcqvaFeatureMap_t* AcqvaCompositeGeneratorFactoryInternal_loadFeaturemap(const char* featuremap_dir, int use_yearmonth, int use_default, const char* src_yearmonth, OdimSource_t* source)
 {
@@ -231,7 +231,7 @@ static AcqvaFeatureMap_t* AcqvaCompositeGeneratorFactoryInternal_loadFeaturemap(
     if (use_yearmonth && src_yearmonth != NULL && strlen(src_yearmonth) >= 6) {
       int year=0, month=0;
       if (sscanf(src_yearmonth, "%4d%2d", &year, &month) == 2) {
-        /* We want to use previous months cluttermap so calculate it */
+        /* We want to use previous months featuremap so calculate it */
         if (month == 1) {
           year = year - 1;
           month = 12;
@@ -352,7 +352,7 @@ static int AcqvaCompositeGeneratorFactoryInternal_updateWithFeaturemaps(AcqvaCom
           RAVE_OBJECT_RELEASE(features);
         } else {
           if (self->allowMissingFeaturemaps) {
-            RAVE_INFO1("Allowing missing cluttermap for acqva parameter in featuremap %s", PolarVolume_getSource((PolarVolume_t*)bindings[i].object));
+            RAVE_INFO1("Allowing missing featuremap for acqva parameter in featuremap %s", PolarVolume_getSource((PolarVolume_t*)bindings[i].object));
           } else {
             RAVE_ERROR1("No featuremap for %s", PolarVolume_getSource((PolarVolume_t*)bindings[i].object));
             failed = 1;
@@ -372,7 +372,7 @@ static int AcqvaCompositeGeneratorFactoryInternal_updateWithFeaturemaps(AcqvaCom
 }
 
 /**
- * Called before actual compositing starts. Will update all polar objects in the bindings with the associated cluttermaps.
+ * Called before actual compositing starts. Will update all polar objects in the bindings with the associated featuremaps.
  * will also enable the possibility to create RATE products and product overshooting fields.
  * @param[in] engine - the engine calling this function
  * @param[in] extradata - the caller (this instance)
@@ -390,8 +390,8 @@ static int AcqvaCompositeGeneratorFactory_onStarting(CompositeEngine_t* engine, 
   self->allowMissingFeaturemaps = 1;
   self->maxElevationIndex = -1;
 
-  if (properties != NULL && RaveProperties_hasProperty(properties, "rave.acqva.cluttermap.allow.missing")) {
-    RaveValue_t* v = RaveProperties_get(properties, "rave.acqva.cluttermap.allow.missing");
+  if (properties != NULL && RaveProperties_hasProperty(properties, "rave.acqva.featuremap.allow.missing")) {
+    RaveValue_t* v = RaveProperties_get(properties, "rave.acqva.featuremap.allow.missing");
     if (RaveValue_type(v) == RaveValue_Type_Boolean) {
       self->allowMissingFeaturemaps = RaveValue_toBoolean(v);
     }
@@ -412,7 +412,7 @@ static int AcqvaCompositeGeneratorFactory_onStarting(CompositeEngine_t* engine, 
   }
 
   if (!AcqvaCompositeGeneratorFactoryInternal_updateWithFeaturemaps(self, properties, bindings, nbindings)) {
-    RAVE_ERROR0("Failed to update volumes with cluttermaps");
+    RAVE_ERROR0("Failed to update volumes with feature maps");
     goto fail;;
   }
 
@@ -425,7 +425,7 @@ fail:
 }
 
 /**
- * Cleanup, will remove all acqva cluttermaps that was added in onStarting.
+ * Cleanup, will remove all acqva featuremaps that was added in onStarting.
  * @param[in] engine - the engine calling this function
  * @param[in] extradata - the caller (this instance)
  * @param[in] arguments - the arguments

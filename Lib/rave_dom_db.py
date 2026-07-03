@@ -35,13 +35,12 @@ except:
     import jprops
 
 import datetime
-from sqlalchemy import engine, event
-from sqlalchemy.orm import mapper, sessionmaker
+from sqlalchemy import engine, event, inspect, sql
+from sqlalchemy.orm import registry, sessionmaker
 import rave_pgf_logger
 
-import migrate.versioning.api
-import migrate.versioning.repository
-from migrate import exceptions as migrateexc
+from alembic.config import Config
+from alembic import command
 
 
 from sqlalchemy import (
@@ -66,27 +65,17 @@ import psycopg2
 
 logger = rave_pgf_logger.create_logger()
 
-MIGRATION_REPO_PATH = os.path.join(os.path.dirname(__file__), "ravemigrate")
-
+ALEMBIC_REPO_PATH = os.path.join(os.path.dirname(__file__), "alembic")
 
 def psql_set_extra_float_digits(dbapi_con, con_record):
     cursor = dbapi_con.cursor()
     cursor.execute("SET extra_float_digits=2")
     dbapi_con.commit()
 
-
-# def psql_checkout(dbapi_conn, connection_rec, connection_proxy):
-#    logger.info("CHECKOUT")
-
-# def psql_checkin(dbapi_conn, connection_rec):
-#    logger.info("CHECKIN")
-
-# def psql_reset(dbapi_conn, connection_rec):
-#    logger.info("RESETING")
-
-# We use sqlalchemy for creating the tables. If we need to upgrade
-# later on, migrate the code to sqlalchemy-migrate.
+# We use sqlalchemy for creating the tables..
 meta = MetaData()
+
+mapper_registry = registry()
 
 rave_wmo_station = Table(
     "rave_wmo_station",
@@ -166,7 +155,8 @@ rave_grapoint = Table(
     Column("observation", Float, nullable=False),
     Column("accumulation_period", Integer, nullable=False),
     Column("gr", Float, nullable=False),
-    PrimaryKeyConstraint("date", "time", "longitude", "latitude"),
+    Column("identifier", Text, nullable=False),
+    PrimaryKeyConstraint("identifier", "date", "time", "longitude", "latitude"),
 )
 
 rave_melting_layer = Table(
@@ -179,12 +169,11 @@ rave_melting_layer = Table(
     PrimaryKeyConstraint("datetime", "nod"),
 )
 
-mapper(wmo_station, rave_wmo_station)
-mapper(observation, rave_observation)
-mapper(melting_layer, rave_melting_layer)
-
-mapper(gra_coefficient, rave_gra_coefficient)
-mapper(grapoint, rave_grapoint)
+mapper_registry.map_imperatively(wmo_station, rave_wmo_station)
+mapper_registry.map_imperatively(observation, rave_observation)
+mapper_registry.map_imperatively(melting_layer, rave_melting_layer)
+mapper_registry.map_imperatively(gra_coefficient, rave_gra_coefficient)
+mapper_registry.map_imperatively(grapoint, rave_grapoint)
 
 dburipool = {}
 
@@ -193,7 +182,9 @@ dburipool = {}
 # Class for connecting with the database
 class rave_db(object):
     def __init__(self, engine_or_url):
+        self._url = None
         if isinstance(engine_or_url, str):
+            self._url = engine_or_url
             self._engine = engine.create_engine(engine_or_url, echo=False)
         else:
             self._engine = engine_or_url
@@ -224,29 +215,44 @@ class rave_db(object):
                 )
                 self._engine.dispose()
 
-    ##
-    # Creates the tables if they don't exist
+    def migrate_to_alembic(self):
+        try:
+            # Handle migration from sqlalchemy migrate to alembic. We get the current version from ravedb_migrate and
+            # converts it into a value that can be handled by alembic and stamps it. After that it's up to alembic
+            # to handle rest of migration in create_alembic (if any)
+            if inspect(self._engine).has_table('ravedb_migrate_version'):
+                alembic_cfg = Config()
+                alembic_cfg.set_main_option("script_location", ALEMBIC_REPO_PATH)
+                alembic_cfg.set_main_option("sqlalchemy.url", self._url)
+
+                with self.get_connection() as conn:
+                    dbversion = conn.execute(sql.text("select version from ravedb_migrate_version")).scalar()
+
+                command.stamp(alembic_cfg, "%03d"%dbversion)
+                metadata = MetaData()
+                ravedb_migrate = Table('ravedb_migrate_version', metadata)
+                metadata.tables['ravedb_migrate_version'].drop(self._engine)
+        except:
+            logger.exception("Failed to migrate database versioning to alembic")
+
+    def create_alembic(self):
+        alembic_cfg = Config()
+        alembic_cfg.set_main_option("script_location", ALEMBIC_REPO_PATH)
+        alembic_cfg.set_main_option("sqlalchemy.url", self._url)
+        command.upgrade(alembic_cfg, "head")
+
     def create(self):
-        repo = migrate.versioning.repository.Repository(MIGRATION_REPO_PATH)
+        self.migrate_to_alembic()
+        self.create_alembic()
 
-        # try setting up version control for the databases created before
-        # we started using sqlalchemy-migrate
-        try:
-            migrate.versioning.api.version_control(self._engine, repo, version=0)
-        except migrateexc.DatabaseAlreadyControlledError:
-            pass
+    def drop_alembic(self):
+        alembic_cfg = Config()
+        alembic_cfg.set_main_option("script_location", ALEMBIC_REPO_PATH)
+        alembic_cfg.set_main_option("sqlalchemy.url", self._url)
+        command.downgrade(alembic_cfg, "base")
 
-        migrate.versioning.api.upgrade(self._engine, repo)
-
-    ##
-    # Drops the database tables if they exist
     def drop(self):
-        repo = migrate.versioning.repository.Repository(MIGRATION_REPO_PATH)
-        try:
-            migrate.versioning.api.downgrade(self._engine, repo, 0)
-            migrate.versioning.api.drop_version_control(self._engine, repo)
-        except migrateexc.DatabaseNotControlledError:
-            pass
+        self.drop_alembic()
 
     ##
     # Adds an object to the associated table
@@ -390,21 +396,30 @@ class rave_db(object):
             q = q.order_by(desc(gra_coefficient.date + gra_coefficient.time))
             return q.first()
 
-    def get_grapoints(self, dt, edt=None):
+    def get_grapoints(self, dt, edt=None, identifier=""):
         with self.get_session() as s:
             q = s.query(grapoint).filter(grapoint.date + grapoint.time >= dt)
             if edt is not None:
                 q = q.filter(grapoint.date + grapoint.time <= edt)
+
+            if not identifier:
+                identifier=""
+            q = q.filter(grapoint.identifier == identifier)
+
             q = q.order_by(asc(grapoint.date)).order_by(asc(grapoint.time))
             return q.all()
 
-    def delete_grapoints(self, dt, edt=None):
+    def delete_grapoints(self, dt, edt=None, identifier=""):
         with self.get_session() as s:
             q = s.query(grapoint).filter(grapoint.date + grapoint.time <= dt)
             if edt is not None:
                 # If edt is specified, we want to delete within specified range
                 q = s.query(grapoint).filter(grapoint.date + grapoint.time >= dt)
                 q = q.filter(grapoint.date + grapoint.time <= edt)
+
+            if not identifier:
+                identifier=""
+            q = q.filter(grapoint.identifier == identifier)
 
             pts = q.delete(synchronize_session=False)
             s.commit()
@@ -417,7 +432,7 @@ class rave_db(object):
             s.commit()
             return pts
 
-    def get_latest_melting_layer(self, nod, hours=None, ct=datetime.datetime.utcnow()):
+    def get_latest_melting_layer(self, nod, hours=None, ct=datetime.datetime.now(datetime.timezone.utc)):
         with self.get_session() as s:
             q = s.query(melting_layer).filter(melting_layer.nod == nod)
             if hours is not None:
@@ -430,7 +445,7 @@ class rave_db(object):
     def remove_old_melting_layers(self, ct=None):
         with self.get_session() as s:
             if ct is None:
-                ct = datetime.datetime.utcnow() - datetime.timedelta(hours=168)
+                ct = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=168)
             q = s.query(melting_layer).filter(melting_layer.datetime < ct)
             pts = q.delete()
             s.commit()
@@ -466,3 +481,6 @@ def create_db_from_conf(configfile=BDB_CONFIG_FILE, create_schema=True):
         propname = "baltrad.bdb.server.backend.sqla.uri"
 
     return create_db(properties[propname], create_schema)
+
+if __name__=="__main__":
+    a=create_db_from_conf("/etc/baltrad/bltnode.properties")

@@ -1376,6 +1376,11 @@ int PolarOdimIO_fillVolume(PolarOdimIO_t* self, PolarVolume_t* volume, HL_NodeLi
     }
   }
 
+  if (PolarVolume_getNumberOfScans(volume) <= 0) {
+    RAVE_ERROR0("A volume must contain at least one scan");
+    goto done;
+  }
+
   if (self->version >= RaveIO_ODIM_Version_2_2 && !PolarVolume_hasAttribute(volume, "how/scan_count")) {
     /* We should make sure that there is a how/scan_count in the volumes root how group. However, if we can't find
        a scan_count in the scans and we are in strict mod */

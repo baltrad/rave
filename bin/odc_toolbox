@@ -110,6 +110,13 @@ if __name__ == "__main__":
         help="If stdout is specified, logging will be sent to stdout instead of a logfile.",
     )
 
+    parser.add_option(
+        "--scansunfolder",
+        dest="scansunfolder",
+        default=None,
+        help="Where scansun files should be placed when the scansun plugin is run.",
+    )
+
     (options, args) = parser.parse_args()
 
     if options.procs == 0:

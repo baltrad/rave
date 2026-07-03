@@ -2040,6 +2040,24 @@ class PyRaveIOTest(unittest.TestCase):
     self.assertTrue("/dataset3/how/beamwidth" not in nodenames)
     self.assertTrue("/dataset4/how/beamwidth" not in nodenames)
 
+  def test_save_polar_volume_no_scans(self):
+    obj = _polarvolume.new()
+    obj.time = "100000"
+    obj.date = "20091010"
+    obj.source = "PLC:123"
+    obj.longitude = 12.0 * math.pi/180.0
+    obj.latitude = 60.0 * math.pi/180.0
+    obj.height = 0.0
+
+    ios = _raveio.new()
+    ios.object = obj
+    ios.filename = self.TEMPORARY_FILE
+    try:
+      ios.save()
+      self.fail("Expected IOError")
+    except IOError:
+      pass
+
   def test_save_polar_scan_beamwH(self):
     obj = _polarscan.new()
     obj.time = "100000"

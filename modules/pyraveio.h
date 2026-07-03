@@ -48,8 +48,12 @@ typedef struct {
 #define PyRaveIO_Open_RETURN PyRaveIO*          /**< return type for Open */
 #define PyRaveIO_Open_PROTO (const char* filename, int lazyLoading, const char* preloadQuantities) /**< argument prototype for Open */
 
+#define PyRaveIO_OpenFileObject_NUM 4                     /**< index for Open */
+#define PyRaveIO_OpenFileObject_RETURN PyRaveIO*          /**< return type for Open */
+#define PyRaveIO_OpenFileObject_PROTO (const char* filename, int lazyLoading, const char* preloadQuantities) /**< argument prototype for Open */
 
-#define PyRaveIO_API_pointers 4                 /**< Total number of C API pointers */
+
+#define PyRaveIO_API_pointers 5                 /**< Total number of C API pointers */
 
 #define PyRaveIO_CAPSULE_NAME "_raveio._C_API"
 
@@ -68,6 +72,9 @@ static PyRaveIO_New_RETURN PyRaveIO_New PyRaveIO_New_PROTO;
 
 /** Prototype for PyRaveIO modules Open function */
 static PyRaveIO_Open_RETURN PyRaveIO_Open PyRaveIO_Open_PROTO;
+
+/** Prototype for PyRaveIO modules Open function */
+static PyRaveIO_OpenFileObject_RETURN PyRaveIO_OpenFileObject PyRaveIO_OpenFileObject_PROTO;
 
 #else
 /** static pointer containing the pointers to function pointers and other definitions */
@@ -97,6 +104,14 @@ static void **PyRaveIO_API;
  */
 #define PyRaveIO_Open \
   (*(PyRaveIO_Open_RETURN (*)PyRaveIO_Open_PROTO) PyRaveIO_API[PyRaveIO_Open_NUM])
+
+/**
+ * Opens a rave io instance. Release this object with Py_DECREF.
+ * @param[in] filename - the filename.
+ * @returns the PyRaveIO instance.
+ */
+#define PyRaveIO_OpenFileObject \
+  (*(PyRaveIO_OpenFileObject_RETURN (*)PyRaveIO_OpenFileObject_PROTO) PyRaveIO_API[PyRaveIO_OpenFileObject_NUM])
 
 /**
  * Checks if the object is a python rave io.

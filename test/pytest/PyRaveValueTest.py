@@ -69,6 +69,44 @@ class PyRaveValueTest(unittest.TestCase):
     classUnderTest.value = None
     self.assertEqual(None, classUnderTest.value)
 
+  def test_value_string_tokenize_1(self):
+    classUnderTest = _ravevalue.new()
+    classUnderTest.value = "Testing,Tokenizer,With,Comma"
+    result = classUnderTest.tokenize()
+    self.assertEqual(4, len(result.value))
+    self.assertEqual("Testing", result.value[0])
+    self.assertEqual("Tokenizer", result.value[1])
+    self.assertEqual("With", result.value[2])
+    self.assertEqual("Comma", result.value[3])
+
+  def test_value_string_tokenize_2(self):
+    classUnderTest = _ravevalue.new()
+    classUnderTest.value = "Testing,Tokenizer,,With,Comma"
+    result = classUnderTest.tokenize()
+    self.assertEqual(5, len(result.value))
+    self.assertEqual("Testing", result.value[0])
+    self.assertEqual("Tokenizer", result.value[1])
+    self.assertEqual("", result.value[2])
+    self.assertEqual("With", result.value[3])
+    self.assertEqual("Comma", result.value[4])
+
+  def test_value_string_tokenize_3(self):
+    classUnderTest = _ravevalue.new()
+    classUnderTest.value = ",,,With,"
+    result = classUnderTest.tokenize()
+    self.assertEqual(5, len(result.value))
+    self.assertEqual("", result.value[0])
+    self.assertEqual("", result.value[1])
+    self.assertEqual("", result.value[2])
+    self.assertEqual("With", result.value[3])
+    self.assertEqual("", result.value[4])
+
+  def test_value_string_tokenize_4(self):
+    classUnderTest = _ravevalue.new()
+    classUnderTest.value = ""
+    result = classUnderTest.tokenize()
+    self.assertEqual(0, len(result.value))
+
   def test_value_long(self):
     classUnderTest = _ravevalue.new()
     classUnderTest.value = 1

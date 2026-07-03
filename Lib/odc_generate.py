@@ -92,6 +92,7 @@ def generate(options):
         comp.product = _rave.Rave_ProductType_MAX
         comp.selection_method = _pycomposite.SelectionMethod_HEIGHT
         comp.detectors = options.qc.split(',')  # E.g. ["ropo","beamb","radvol-broad","qi-total"]
+        comp.detector_arguments={"scansunfolder":"/tmp"}
         comp.qitotal_field = "pl.imgw.quality.qi_total"  # qi-total must be in comp.detectors !!
         comp.gain = 0.5
         comp.offset = -32.0
@@ -112,7 +113,8 @@ def generate(options):
         odc_polarQC.algorithm_ids = options.qc.split(',')
         odc_polarQC.delete = options.delete
         odc_polarQC.check = options.check
-
+        if options.scansunfolder:
+            odc_polarQC.qc_arguments = {"scansunfolder":options.scansunfolder}
         results = odc_polarQC.multi_generate(fstrs, options.procs)
 
         # Log benchmarking results.

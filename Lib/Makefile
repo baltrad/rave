@@ -31,10 +31,9 @@ install:
 	@cp -v -f *.py "${DESTDIR}${prefix}/Lib/"
 	@mkdir -p "${DESTDIR}${prefix}/Lib/gadjust"
 	@cp -v -f gadjust/*.py "${DESTDIR}${prefix}/Lib/gadjust/"
-	@mkdir -p "${DESTDIR}${prefix}/Lib/ravemigrate/versions"
-	@cp -v -f ravemigrate/*.py "${DESTDIR}${prefix}/Lib/ravemigrate/"
-	@cp -v -f ravemigrate/migrate.cfg "${DESTDIR}${prefix}/Lib/ravemigrate/"
-	@cp -v -f ravemigrate/versions/*.py "${DESTDIR}${prefix}/Lib/ravemigrate/versions/"
+	@mkdir -p "${DESTDIR}${prefix}/Lib/alembic/versions"
+	@cp -v -f alembic/*.py "${DESTDIR}${prefix}/Lib/alembic/"
+	@cp -v -f alembic/versions/*.py "${DESTDIR}${prefix}/Lib/alembic/versions/"
 	@\rm -fr "${prefix}/Lib/migrate" # We can't have directory "migrate" since it conflicts with sqlalchemy migrate. If rave would have been separate package then there wouldn't have been any problems
 	@./make_script_update_config.sh "${DESTDIR}${prefix}/Lib/rave_defines.py"
 	@mkdir -p "${DESTDIR}${prefix}/etc"

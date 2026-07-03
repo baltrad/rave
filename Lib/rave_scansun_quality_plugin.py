@@ -65,10 +65,12 @@ class scansun_quality_plugin(rave_quality_plugin):
             import _scansun
             
             # scansun doesn't modify the payload, so there's no indicator that scansun has been run before.
-            if reprocess_quality_flag:
-                source, hits = _scansun.scansunFromObject(obj)
-                if len(hits) > 0:
-                    writeHits(source, hits)
+            source, hits = _scansun.scansunFromObject(obj)
+            scansunfolder = None
+            if arguments is not None and "scansunfolder" in arguments:
+                scansunfolder = arguments["scansunfolder"]
+            if len(hits) > 0:
+                writeHits(source, hits, scansunfolder)
         except:
             logger.exception("Failure during scansun processing")
         return obj, self.getQualityFields()

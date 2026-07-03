@@ -106,6 +106,22 @@ class gadjust_obsmatcher_test(unittest.TestCase):
     self.assertEqual(0, len(result))
     
 
+  def test_match_4(self):
+    acrrmock = mock.Mock(date="20101010",time="121500")
+    acrrmock.getExtremeLonLatBoundaries.return_value = ((0.1,0.2),(0.3,0.4))
+    
+    self.dbmock.get_observations_in_bbox.return_value = [observation("01234","S",observation.SYNOP, "20101010", "001500", 13.0, 60.0, accumulation_period=12)]
+    acrrmock.getConvertedValueAtLonLat.return_value = (1,48.0)
+    acrrmock.getQualityValueAtLonLat.return_value = 200.0
+    
+    result = self.classUnderTest.match(acrrmock, 12)
+    
+    # Expects
+    expected_acrrmock_calls=[mock.call.getExtremeLonLatBoundaries(), 
+                             mock.call.getConvertedValueAtLonLat((13.0*math.pi/180.0, 60.0*math.pi/180.0))]
+    self.assertTrue(expected_acrrmock_calls == acrrmock.mock_calls)
+    self.assertEqual(0, len(result))
+
   def Xtest_match_2(self):
     acrrmock = mock.Mock(date="20101010",time="121500")
     acrrmock.getExtremeLonLatBoundaries.return_value = ((0.1,0.2),(0.3,0.4))

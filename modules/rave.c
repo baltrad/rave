@@ -646,6 +646,7 @@ MOD_INIT(_rave)
   add_long_constant(dictionary, "Rave_ObjectType_SCAN", Rave_ObjectType_SCAN);
   add_long_constant(dictionary, "Rave_ObjectType_RAY", Rave_ObjectType_RAY);
   add_long_constant(dictionary, "Rave_ObjectType_AZIM", Rave_ObjectType_AZIM);
+  add_long_constant(dictionary, "Rave_ObjectType_ELEV", Rave_ObjectType_ELEV);
   add_long_constant(dictionary, "Rave_ObjectType_IMAGE", Rave_ObjectType_IMAGE);
   add_long_constant(dictionary, "Rave_ObjectType_COMP", Rave_ObjectType_COMP);
   add_long_constant(dictionary, "Rave_ObjectType_XSEC", Rave_ObjectType_XSEC);

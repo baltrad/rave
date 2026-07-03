@@ -43,7 +43,7 @@ opath = '/dev/shm/odc'  # command-line options will override these variables
 algorithm_ids = None
 delete = False
 check = True
-
+qc_arguments = None
 
 # -----------------------------------------------------------------------------
 ## Run Quality Controls
@@ -55,7 +55,7 @@ def QC(pload):
         p = rave_pgf_quality_registry.get_plugin(a)
         if not p:
             raise AttributeError("Could not find %s plugin." % a)
-        pload = p.process(pload)
+        pload = p.process(pload, arguments=qc_arguments)
         if isinstance(pload, tuple):
             pload, algorithm = pload[0], pload[1]
     return pload

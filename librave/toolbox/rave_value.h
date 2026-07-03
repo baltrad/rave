@@ -101,6 +101,25 @@ int RaveValue_getString(RaveValue_t* self, char** value);
  */
 const char* RaveValue_toString(RaveValue_t* self);
 
+RaveValue_t* RaveValueString_trim(RaveValue_t* self);
+
+/**
+ * Creates a substring from self
+ * @param[in] self - self
+ * @param[in] start - the start position to create string from
+ * @param[in] len - the number of bytes to copy (if start + len is >= length of string, then only string from start -> end is copied)
+ * @return a substring
+ */
+RaveValue_t* RaveValueString_substring(RaveValue_t* self, int start, int len);
+
+/**
+ * Tokenizes a string into a string array of tokens.
+ * @param[in] self - self
+ * @param[in] delim - the delimiter
+ * @return a string array (list of strings)
+ */
+RaveValue_t* RaveValueString_tokenize(RaveValue_t* self, int delim);
+
 /**
  * Creates a long rave value.
  * @param[in] value - the long

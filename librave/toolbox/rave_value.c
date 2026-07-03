@@ -53,6 +53,7 @@ struct _RaveValue_t {
   int booleanValue;    /**< the boolean value */
   RaveObjectHashTable_t* hashtable; /**< the hash table */
   RaveObjectList_t* list; /**< the rave list */
+  RaveData2D_t* data2d; /**< the data 2d instance */
 };
 
 /*@{ Private functions */
@@ -83,6 +84,7 @@ static int RaveValue_constructor(RaveCoreObject* obj)
   this->booleanValue = 0;
   this->hashtable = NULL;
   this->list = NULL;
+  this->data2d = NULL;
   return 1;
 }
 
@@ -97,6 +99,7 @@ static int RaveValue_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj
   this->stringValue = NULL;
   this->hashtable = NULL;
   this->list = NULL;
+  this->data2d = NULL;
 
   if (src->stringValue != NULL && !RaveValue_setString(this, (const char*)src->stringValue)) {
     RAVE_ERROR0("Failed to clone string");
@@ -119,11 +122,20 @@ static int RaveValue_copyconstructor(RaveCoreObject* obj, RaveCoreObject* srcobj
     }
   }
 
+  if (src->data2d != NULL) {
+    this->data2d = RAVE_OBJECT_CLONE(src->data2d);
+    if (this->data2d == NULL) {
+      RAVE_ERROR0("Failed to clone data 2d");
+      goto fail;
+    }
+  }
+
   return 1;
 fail:
   RAVE_FREE(this->stringValue);
   RAVE_OBJECT_RELEASE(this->hashtable);
   RAVE_OBJECT_RELEASE(this->list);
+  RAVE_OBJECT_RELEASE(this->data2d);
   return 0;
 }
 
@@ -136,6 +148,7 @@ static void RaveValue_destructor(RaveCoreObject* obj)
   RAVE_FREE(this->stringValue);
   RAVE_OBJECT_RELEASE(this->hashtable);
   RAVE_OBJECT_RELEASE(this->list);
+  RAVE_OBJECT_RELEASE(this->data2d);
 }
 
 /*@} End of Private functions */
@@ -157,6 +170,7 @@ void RaveValue_reset(RaveValue_t* self)
   self->booleanValue = 0;
   RAVE_OBJECT_RELEASE(self->hashtable); 
   RAVE_OBJECT_RELEASE(self->list);
+  RAVE_OBJECT_RELEASE(self->data2d);
 }
 
 
@@ -227,6 +241,173 @@ const char* RaveValue_toString(RaveValue_t* self)
 {
   RAVE_ASSERT((self != NULL), "attr == NULL");
   return (const char*)self->stringValue;
+}
+
+static int RaveValueInternal_iswhitespace(char c)
+{
+  return (c == ' ' || c == '\t' || c == '\r' || c == '\n');
+}
+
+
+RaveValue_t* RaveValueString_trim(RaveValue_t* self)
+{
+  RaveValue_t* result = NULL;
+  if (self->type != RaveValue_Type_String) {
+    RAVE_ERROR0("Can't trim a rave value that is not a string");
+    return NULL;
+  }
+
+  if (self->stringValue != NULL) {
+    int newsize = 0;
+    int len = strlen(self->stringValue);
+    int index = 0;
+    int startpos = 0;
+    char* str = NULL;
+
+    while (index < len  && RaveValueInternal_iswhitespace(self->stringValue[index])) {
+      index++;
+    }
+    startpos = index;
+
+    index = len-1;
+    while (index > 0 && RaveValueInternal_iswhitespace(self->stringValue[index])) {
+      index--;
+    }
+    index++;
+
+    newsize = (index-startpos);
+    if (newsize < 0) {
+      newsize = 0;
+    }
+
+    result = RAVE_OBJECT_NEW(&RaveValue_TYPE);
+    if (result == NULL) {
+      RAVE_ERROR0("Failed to allocate memory");
+      return NULL;
+    }
+
+    str = RAVE_MALLOC((newsize + 1)*sizeof(char));
+    if (str != NULL) {
+      if (startpos < len && startpos + newsize < (len + 1)) {
+        strncpy(str, &self->stringValue[startpos], newsize);
+      }
+      str[newsize]='\0';
+      result->stringValue = str;
+      result->type = RaveValue_Type_String;
+    } else {
+      RAVE_ERROR0("Failed to allocate memory");
+      RAVE_OBJECT_RELEASE(result);
+    }
+  }
+
+  return result;
+}
+
+RaveValue_t* RaveValueString_substring(RaveValue_t* self, int start, int len)
+{
+  RaveValue_t* result = NULL;
+  char* tmpstr = NULL;
+  int slen = 0;
+  int bytestocopy = 0;
+
+  if (self->type != RaveValue_Type_String) {
+    RAVE_ERROR0("Can't create substring from a rave value that is not a string");
+    return NULL;
+  }
+  slen = strlen(self->stringValue);
+
+  if (start < 0 || start > slen) {
+    RAVE_ERROR0("Must specify start index >= 0 and less than length of string");
+    return NULL;
+  }
+  bytestocopy = len;
+  if (start + len >= slen) {
+    bytestocopy = slen - start;
+  }
+  tmpstr = RAVE_MALLOC(sizeof(char)*(bytestocopy + 1));
+  if (tmpstr == NULL) {
+    RAVE_ERROR0("Failed to allocate memory");
+    goto done;
+  }
+  strncpy(tmpstr, self->stringValue + start, bytestocopy);
+  tmpstr[bytestocopy] = '\0';
+
+  result = RAVE_OBJECT_NEW(&RaveValue_TYPE);
+  if (result != NULL) {
+    result->stringValue = tmpstr;
+    result->type = RaveValue_Type_String;
+  } else {
+    RAVE_ERROR0("Failed to allocate memory");
+    RAVE_FREE(tmpstr);
+    goto done;
+  }
+
+done:
+  return result;
+}
+
+RaveValue_t* RaveValueString_tokenize(RaveValue_t* self, int delim)
+{
+  RaveValue_t* result = NULL;
+  RaveValue_t *list = NULL;
+  RaveValue_t *tmpstr = NULL;
+
+  if (self->type != RaveValue_Type_String) {
+    RAVE_ERROR0("Can't tokenize a rave value that is not a string");
+    return NULL;
+  }
+
+  list = RaveValue_createList(NULL);
+  if (list != NULL) {
+    char* startptr = (char*)self->stringValue;
+    char* endptr = NULL;
+
+    if (*startptr == '\0') {
+      result = RAVE_OBJECT_COPY(list);
+      goto done;
+    }
+
+    while (*startptr != '\0') {
+      endptr = strchr(startptr, delim);
+      if (endptr != NULL) {
+        int len = (endptr - startptr);
+        tmpstr = RaveValueString_substring(self, (startptr - self->stringValue), len);
+        if (tmpstr == NULL || !RaveValueList_add(list, tmpstr)) {
+          RAVE_ERROR0("Failed to add token to list");
+          goto done;
+        }
+        RAVE_OBJECT_RELEASE(tmpstr);
+        startptr += len;
+        /* We might have a delimiter at end of string which
+         * should result it yet another token.
+         */
+        if (*startptr == delim && *(startptr+1) == '\0') {
+          tmpstr = RaveValue_createString("");
+          if (tmpstr == NULL || !RaveValueList_add(list, tmpstr)) {
+            RAVE_ERROR0("Failed to allocate empty string");
+            goto done;
+          }
+        }
+        startptr++;
+        RAVE_OBJECT_RELEASE(tmpstr);
+      } else {
+        int len = strlen(startptr);
+        tmpstr = RaveValueString_substring(self, (startptr - self->stringValue), len);
+        if (tmpstr == NULL || !RaveValueList_add(list, tmpstr)) {
+          RAVE_ERROR0("Failed to add token to list");
+          goto done;
+        }
+        startptr += len;
+        RAVE_OBJECT_RELEASE(tmpstr);
+      }
+    }
+  }
+
+  result = RAVE_OBJECT_COPY(list);
+done:
+  RAVE_OBJECT_RELEASE(tmpstr);
+  RAVE_OBJECT_RELEASE(list);
+  return result;
 }
 
 RaveValue_t* RaveValue_createLong(long value)
