@@ -114,8 +114,8 @@ static int RaveIO_constructor(RaveCoreObject* obj)
   }
   raveio->compression->level = (int)6;
   raveio->property->userblock = (hsize_t)0;
-  raveio->property->sizes.sizeof_size = (size_t)8;
-  raveio->property->sizes.sizeof_addr = (size_t)8;
+  raveio->property->sizes.sizeof_size = (size_t)4;
+  raveio->property->sizes.sizeof_addr = (size_t)4;
   raveio->property->sym_k.ik = (int)1;
   raveio->property->sym_k.lk = (int)1;
   raveio->property->istore_k = (long)1;
