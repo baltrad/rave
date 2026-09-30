@@ -673,11 +673,12 @@ Cartesian_t* AcqvaCompositeGeneratorFactory_generate(CompositeGeneratorFactory_t
 {
   int i = 0, nobjects = 0;
   Cartesian_t* result = NULL;
+  RAVE_INFO0("ENTER: AcqvaCompositeGeneratorFactory_generate");
   nobjects = CompositeArguments_getNumberOfObjects(arguments);
   for (i = 0; i < nobjects; i++) {
     RaveCoreObject* obj = CompositeArguments_getObject(arguments, i);
     if (!RAVE_OBJECT_CHECK_TYPE(obj, &PolarVolume_TYPE)) {
-      RAVE_ERROR0("Acqva can only process volumes");
+      RAVE_ERROR0("Acqva can only process volumes. Exiting generate.");
       RAVE_OBJECT_RELEASE(obj);
       return NULL;
     }
@@ -687,6 +688,7 @@ Cartesian_t* AcqvaCompositeGeneratorFactory_generate(CompositeGeneratorFactory_t
   if (result != NULL) {
     Cartesian_setProduct(result, Rave_ProductType_COMP);
   }
+  RAVE_INFO0("EXIT: AcqvaCompositeGeneratorFactory_generate");
   return result;
 }
 

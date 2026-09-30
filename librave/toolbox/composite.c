@@ -3495,6 +3495,8 @@ Cartesian_t* Composite_generate(Composite_t* composite, Area_t* area, RaveList_t
 
   RAVE_ASSERT((composite != NULL), "composite == NULL");
   
+  RAVE_INFO0("ENTER: Composite_generate");
+
   CompositeInternal_setInterpolationDimensionsArray(composite, interpolationDimensions);
 
   if (composite->ptype == Rave_ProductType_MAX && composite->interpolationMethod != CompositeInterpolationMethod_NEAREST) {
@@ -3504,7 +3506,9 @@ Cartesian_t* Composite_generate(Composite_t* composite, Area_t* area, RaveList_t
   }
 
   if (composite->ptype == Rave_ProductType_MAX) { // Special handling of the max algorithm.
-    return Composite_nearest_max(composite, area, qualityflags);
+    result = Composite_nearest_max(composite, area, qualityflags);
+    RAVE_INFO0("EXIT: Composite_generate");
+    return result;
   }
 
   if (area == NULL) {
@@ -3644,6 +3648,7 @@ Cartesian_t* Composite_generate(Composite_t* composite, Area_t* area, RaveList_t
   RAVE_FREE(cvalues);
   RAVE_OBJECT_RELEASE(projection);
   RAVE_OBJECT_RELEASE(pipelines);
+  RAVE_INFO0("EXIT: Composite_generate");
   return result;
 fail:
   CompositeInternal_deleteCompositeValuesVector(cvalues_vector,nparam);
@@ -3654,6 +3659,7 @@ fail:
   RAVE_OBJECT_RELEASE(projection);
   RAVE_OBJECT_RELEASE(pipelines);
   RAVE_OBJECT_RELEASE(result);
+  RAVE_INFO0("EXIT: Composite_generate");
   return result;
 }
 

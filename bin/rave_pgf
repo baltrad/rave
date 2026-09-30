@@ -46,10 +46,11 @@ import rave_mppool
 import rave_pgf_logger
 import rave_pgf_qtools
 import rave_pgf_registry
+import _rave
 from algorithm_runner import algorithm_runner
 from rave_daemon import Daemon
 from rave_defines import LOGLEVEL, PGF_HOST, PGF_PORT, PIDFILE, REGFILE, STDOE, PGFs
-
+from rave_defines import TOOLBOX_LOGTYPE, TOOLBOX_LOGFILE, TOOLBOX_LOGID, TOOLBOX_LOGFACILITY
 
 ## Stub class for allowing server POSTs only to one place, providing
 # rudimentary security.
@@ -96,6 +97,20 @@ class rave_pgf_server(Daemon):
         from rave_pgf import RavePGF
 
         self.server = SimpleXMLRPCServer((self.host, self.port), requestHandler=RequestHandler, allow_none=True)
+
+        # The C-code has it's own log handling to not conflict with the python part
+        if TOOLBOX_LOGTYPE == "logfile":
+            if TOOLBOX_LOGFILE is not None:
+                _rave.setLogOutputFile(TOOLBOX_LOGFILE)
+            else:
+                raise Exception("Specified logfile as c-logtype but not setting a logfile")
+        elif TOOLBOX_LOGTYPE == "syslog":
+            _rave.setLogOutputSyslog(TOOLBOX_LOGID, TOOLBOX_LOGFACILITY)
+        else:
+            _rave.setLogOutputStderr()
+
+        _rave.setDebugLevel(_rave.Debug_RAVE_INFO)
+        _rave.logMessage(_rave.Debug_RAVE_INFO, "Rave-C logging configured")
 
         self.server.register_instance(RavePGF())
         self.server.instance.logger = rave_pgf_logger.rave_pgf_syslog_client()  # Shouldn't be necessary

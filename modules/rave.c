@@ -253,6 +253,97 @@ static PyObject* _rave_setDebugLevel(PyObject* self, PyObject* args)
   Py_RETURN_NONE;
 }
 
+/**
+ * Sets log output to stderr
+ * @param[in] self - self
+ * @param[in] args - N/A
+ * @return None
+ */
+static PyObject* _rave_setLogOutputStderr(PyObject* self, PyObject* args)
+{
+  Rave_setLogOutputStderr();
+  Py_RETURN_NONE;
+}
+
+/**
+ * Sets log output to a file
+ * @param[in] self - self
+ * @param[in] args - the name of the file to log to
+ * @return None
+ */
+static PyObject* _rave_setLogOutputFile(PyObject* self, PyObject* args)
+{
+  char* filename = NULL;
+  if (!PyArg_ParseTuple(args, "s", &filename)) {
+    return NULL;
+  }
+  if (!Rave_setLogOutputFile(filename)) {
+    raiseException_returnNULL(PyExc_IOError, "Failed to open debug output file");
+  }
+  Py_RETURN_NONE;
+}
+
+/**
+ * Sets log output to syslog
+ * @param[in] self - self
+ * @param[in] args - the logid to prefix each syslog message with, and the syslog facility name
+ *                    to use ("user", or "local0".."local7").
+ * @return None
+ */
+static PyObject* _rave_setLogOutputSyslog(PyObject* self, PyObject* args)
+{
+  char* logid = NULL;
+  char* facility = NULL;
+  if (!PyArg_ParseTuple(args, "ss", &logid, &facility)) {
+    return NULL;
+  }
+  Rave_setLogOutputSyslog(logid, facility);
+  Py_RETURN_NONE;
+}
+
+/**
+ * Writes a message of wanted level to the rave logger.
+ * @param[in] self - self
+ * @param[in] args - the loglevel, the message
+ * @return None
+ */
+static PyObject* _rave_logMessage(PyObject* self, PyObject* args)
+{
+  char* message = NULL;
+  int level = RAVE_DEBUG;
+  if (!PyArg_ParseTuple(args, "is", &level, &message)) {
+    return NULL;
+  }
+
+  switch (level) {
+    case RAVE_SPEWDEBUG:
+      RAVE_SPEWDEBUG0(message);
+      break;
+    case RAVE_DEBUG:
+      RAVE_DEBUG0(message);
+      break;
+    case RAVE_DEPRECATED:
+      RAVE_DEPRECATED0(message);
+      break;
+    case RAVE_INFO:
+      RAVE_INFO0(message);
+      break;
+    case RAVE_WARNING:
+      RAVE_WARNING0(message);
+      break;
+    case RAVE_ERROR:
+      RAVE_ERROR0(message);
+      break;
+    case RAVE_CRITICAL:
+      RAVE_CRITICAL0(message);
+      break;
+    default:
+      break;
+  }
+
+  Py_RETURN_NONE;
+}
+
 static PyObject* _rave_setTrackObjectCreation(PyObject* self, PyObject* args)
 {
   int track = 0;
@@ -436,6 +527,22 @@ static PyMethodDef functions[] = {
     "  + Debug_RAVE_ERROR        - Errors\n"
     "  + Debug_RAVE_CRITICAL     - Critical errors, typically if this occur, it probably ends with a crash\n"
     "  + Debug_RAVE_SILENT       - Don't display anything (default)\n"
+  },
+  {"setLogOutputStderr", (PyCFunction)_rave_setLogOutputStderr, 1,
+    "setLogOutputStderr()\n\n"
+    "Sets output to print on stderr.\n"
+  },
+  {"setLogOutputFile", (PyCFunction)_rave_setLogOutputFile, 1,
+    "setLogOutputFile(filename)\n\n"
+    "Sets output to use a log file.\n"
+  },
+  {"setLogOutputSyslog", (PyCFunction)_rave_setLogOutputSyslog, 1,
+    "setLogOutputSyslog(logid, facility)\n\n"
+    "Sets output to use syslog. facility is a name: \"user\", or \"local0\"..\"local7\".\n"
+  },
+  {"logMessage", (PyCFunction)_rave_logMessage, 1,
+    "logMessage(level, message)\n\n"
+    "Prints the log message as defined by level and mesage.\n"
   },
   {"setTrackObjectCreation", (PyCFunction)_rave_setTrackObjectCreation, 1,
     "setTrackObjectCreation(boolean)\n\n"

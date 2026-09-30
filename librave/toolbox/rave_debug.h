@@ -43,6 +43,16 @@ typedef enum Rave_Debug {
 } Rave_Debug;
 
 /**
+ * Where the default debug function should route its printouts.
+ * @ingroup rave_c_apis
+ */
+typedef enum Rave_LogOutput {
+  RAVE_LOG_OUTPUT_STDERR=0, /**< Printouts go to stderr. This is the default. */
+  RAVE_LOG_OUTPUT_FILE,     /**< Printouts go to a log file, see @ref Rave_setLogOutputFile */
+  RAVE_LOG_OUTPUT_SYSLOG    /**< Printouts go to syslog, see @ref Rave_setLogOutputSyslog */
+} Rave_LogOutput;
+
+/**
  * The debugger function.
  * @param[in] filename - the name of the file
  * @param[in] lineno - the line number
@@ -88,6 +98,36 @@ void Rave_setDebugFunction(rave_dbgfun dbgfun);
  * @returns the currently set debugger function
  */
 rave_dbgfun Rave_getDebugFunction(void);
+
+/**
+ * Sets the default debug function's printouts to use stderr. This is the default behaviour.
+ * @ingroup rave_c_apis
+ */
+void Rave_setLogOutputStderr(void);
+
+/**
+ * Sets the default debug function's printouts to use a log file. The file is opened for
+ * appending (O_APPEND) and kept open, which makes it safe to call this once in a parent
+ * process before forking off.
+ * @ingroup rave_c_apis
+ * @param[in] filename - the name of the file to log to
+ * @returns 1 on success, otherwise 0. On failure
+ */
+int Rave_setLogOutputFile(const char* filename);
+
+/**
+ * Sets the default debug function's printouts to use syslog.
+ * @ingroup rave_c_apis
+ * @param[in] logid - identity prefixed onto every syslog message (the openlog ident), e.g. "PGF[rave.baltrad.eu]". If NULL, "rave" is used.
+ * @param[in] facility - the syslog facility to log with, as a name: "user", or "local0".."local7".
+ *                        Case-insensitive; Default fallback is user if not reckognized
+ */
+void Rave_setLogOutputSyslog(const char* logid, const char* facility);
+
+/**
+ * @returns the debug output currently configured
+ */
+Rave_LogOutput Rave_getLogOutput(void);
 
 /**
  * @defgroup DebugMacros Macros for debugging and error reporting that is used in RAVE.
