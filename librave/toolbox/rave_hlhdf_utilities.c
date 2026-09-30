@@ -911,7 +911,6 @@ RaveList_t* RaveHL_extractSubGroups(const char* attrname)
         strcat(currentGroupName, "/");
         strcat(currentGroupName, dup);
       }
-      RAVE_INFO1("Adding group: %s\n", currentGroupName);
       RaveList_add(result, (char*)RAVE_STRDUP(currentGroupName));
       dup = tmp;
       tmp = strstr(dup, "/");
