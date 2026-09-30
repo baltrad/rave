@@ -161,6 +161,10 @@ LOGPIDFILE = os.path.join(RAVEETC, 'rave_pgf_log_server.pid')
 SYSLOG_FORMAT = "%(name)s: %(levelname)-8s %(message)s"
 LOGFILE_FORMAT = "%(asctime)-15s %(levelname)-8s %(message)s"
 
+# Can be stdout or logfile but logfile might result in unordered log entries since there will be more than one
+# process writing to same file
+LOGGER_TYPE = "syslog"
+
 TOOLBOX_LOGTYPE = "stderr"  # Can be "logfile, stderr and syslog". If nothing specified it is assumed stderr.
 TOOLBOX_LOGFILE = None
 TOOLBOX_LOGLEVEL = "info"
@@ -171,10 +175,6 @@ if sys.platform == "darwin":
     SYSLOG = "/var/run/syslog"
 else:
     SYSLOG = "/dev/log"
-
-# Can be stdout or logfile but logfile might result in unordered log entries since there will be more than one
-# process writing to same file
-LOGGER_TYPE = "syslog"
 
 ODIM_SOURCE_FILE = os.path.join(RAVECONFIG, 'odim_source.xml')
 
