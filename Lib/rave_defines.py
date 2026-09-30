@@ -161,7 +161,7 @@ LOGPIDFILE = os.path.join(RAVEETC, 'rave_pgf_log_server.pid')
 SYSLOG_FORMAT = "%(name)s: %(levelname)-8s %(message)s"
 LOGFILE_FORMAT = "%(asctime)-15s %(levelname)-8s %(message)s"
 
-TOOLBOX_LOGTYPE = "syslog"  # Can be "logfile, stderr and syslog". If nothing specified it is assumed stderr.
+TOOLBOX_LOGTYPE = "stderr"  # Can be "logfile, stderr and syslog". If nothing specified it is assumed stderr.
 TOOLBOX_LOGFILE = None
 TOOLBOX_LOGLEVEL = "info"
 TOOLBOX_LOGID = "rave[rave.baltrad.eu]"
