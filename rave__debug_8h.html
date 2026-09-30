@@ -190,6 +190,9 @@ Functions</h2></td></tr>
 <tr class="memitem:a4315152776a710b6e3bcdbc8bf08a370" id="r_a4315152776a710b6e3bcdbc8bf08a370"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a4315152776a710b6e3bcdbc8bf08a370">Rave_setDebugLevel</a> (<a class="el" href="#a8895ff5703ad09d158397527c9d2c3b6">Rave_Debug</a> lvl)</td></tr>
 <tr class="memdesc:a4315152776a710b6e3bcdbc8bf08a370"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the debug level.  <br /></td></tr>
 <tr class="memitem:a16831f659e46f43124d93079d50b0f8f" id="r_a16831f659e46f43124d93079d50b0f8f"><td class="memItemLeft"><a class="el" href="#a8895ff5703ad09d158397527c9d2c3b6">Rave_Debug</a>&#160;</td><td class="memItemRight"><a class="el" href="#a16831f659e46f43124d93079d50b0f8f">Rave_getDebugLevel</a> (void)</td></tr>
+<tr class="memitem:a0e2a3d7f718800fc40a69c90debebc4e" id="r_a0e2a3d7f718800fc40a69c90debebc4e"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a0e2a3d7f718800fc40a69c90debebc4e">Rave_setLogLevel</a> (const char *lvl)</td></tr>
+<tr class="memdesc:a0e2a3d7f718800fc40a69c90debebc4e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the log level.  <br /></td></tr>
+<tr class="memitem:acb503d9839773f24f0beeb5d252b2e8c" id="r_acb503d9839773f24f0beeb5d252b2e8c"><td class="memItemLeft">const char *&#160;</td><td class="memItemRight"><a class="el" href="#acb503d9839773f24f0beeb5d252b2e8c">Rave_getLogLevel</a> (void)</td></tr>
 <tr class="memitem:a8ad6c0fb9538d92f2f275d1857f040c5" id="r_a8ad6c0fb9538d92f2f275d1857f040c5"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a8ad6c0fb9538d92f2f275d1857f040c5">Rave_setDebugFunction</a> (<a class="el" href="#a643eecf103ebf4def2bc104ffdd26add">rave_dbgfun</a> dbgfun)</td></tr>
 <tr class="memdesc:a8ad6c0fb9538d92f2f275d1857f040c5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the debug function where the debug printouts should be routed.  <br /></td></tr>
 <tr class="memitem:a07d1e1dd92a75474bab1dee6e08d4a0c" id="r_a07d1e1dd92a75474bab1dee6e08d4a0c"><td class="memItemLeft"><a class="el" href="#a643eecf103ebf4def2bc104ffdd26add">rave_dbgfun</a>&#160;</td><td class="memItemRight"><a class="el" href="#a07d1e1dd92a75474bab1dee6e08d4a0c">Rave_getDebugFunction</a> (void)</td></tr>
@@ -265,7 +268,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <b>Value:</b><div class="fragment"><div class="line"><a class="code hl_function" href="#a07d1e1dd92a75474bab1dee6e08d4a0c">Rave_getDebugFunction</a>()(__FILE__,__LINE__,<a class="code hl_enumvalue" href="#a8895ff5703ad09d158397527c9d2c3b6a106a3d0328f0ac65bf8161f032e51d2f">RAVE_CRITICAL</a>,msg)</div>
-<div class="ttc" id="arave__debug_8h_html_a07d1e1dd92a75474bab1dee6e08d4a0c"><div class="ttname"><a href="#a07d1e1dd92a75474bab1dee6e08d4a0c">Rave_getDebugFunction</a></div><div class="ttdeci">rave_dbgfun Rave_getDebugFunction(void)</div><div class="ttdef"><b>Definition</b> rave_debug.c:239</div></div>
+<div class="ttc" id="arave__debug_8h_html_a07d1e1dd92a75474bab1dee6e08d4a0c"><div class="ttname"><a href="#a07d1e1dd92a75474bab1dee6e08d4a0c">Rave_getDebugFunction</a></div><div class="ttdeci">rave_dbgfun Rave_getDebugFunction(void)</div><div class="ttdef"><b>Definition</b> rave_debug.c:286</div></div>
 </div><!-- fragment -->
 <p>Critical macro taking one text string. </p>
 
@@ -1569,6 +1572,24 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="acb503d9839773f24f0beeb5d252b2e8c" name="acb503d9839773f24f0beeb5d252b2e8c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acb503d9839773f24f0beeb5d252b2e8c">&#9670;&#160;</a></span>Rave_getLogLevel()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char * Rave_getLogLevel </td>
+          <td>(</td>
+          <td class="paramtype">void</td>          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<dl class="section return"><dt>Returns</dt><dd>the current rave log level </dd></dl>
+
+</div>
+</div>
 <a id="a43f18b33f8f61131f1da8a680aa969da" name="a43f18b33f8f61131f1da8a680aa969da"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a43f18b33f8f61131f1da8a680aa969da">&#9670;&#160;</a></span>Rave_getLogOutput()</h2>
 
@@ -1680,6 +1701,32 @@ Functions</h2></td></tr>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">lvl</td><td>the debug level. See <a class="el" href="#a8895ff5703ad09d158397527c9d2c3b6" title="Rave_Debug">Rave_Debug</a>. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a0e2a3d7f718800fc40a69c90debebc4e" name="a0e2a3d7f718800fc40a69c90debebc4e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0e2a3d7f718800fc40a69c90debebc4e">&#9670;&#160;</a></span>Rave_setLogLevel()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void Rave_setLogLevel </td>
+          <td>(</td>
+          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>lvl</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Sets the log level. </p>
+<p>Must be one of spewdebug, debug, deprecated, info, warning, error, critical and silent. If string not can be identified, it falls back to silent</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">lvl</td><td>the log level. </td></tr>
   </table>
   </dd>
 </dl>
