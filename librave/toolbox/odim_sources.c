@@ -192,31 +192,50 @@ int OdimSources_add(OdimSources_t* self, OdimSource_t* source)
   RAVE_ASSERT((self != NULL), "self == NULL");
   if (source != NULL) {
     if (OdimSource_getNod(source) != NULL) {
-      result = RaveObjectHashTable_put(self->nod, OdimSource_getNod(source), (RaveCoreObject*)source); 
+      OdimSource_t* conflicting = NULL;
+      result = RaveObjectHashTable_put(self->nod, OdimSource_getNod(source), (RaveCoreObject*)source);
       if (OdimSource_getWigos(source) != NULL) {
-        if (RaveObjectHashTable_exists(self->wigos, OdimSource_getWigos(source)) || !RaveObjectHashTable_put(self->wigos, OdimSource_getWigos(source), (RaveCoreObject*)source)) {
-          RAVE_WARNING1("Failed to add wigos to odim sources WIGOS: %s", OdimSource_getWigos(source));
+        if (RaveObjectHashTable_exists(self->wigos, OdimSource_getWigos(source))) {
+          conflicting = RaveObjectHashTable_get(self->wigos, OdimSource_getWigos(source));
+        } else if (!RaveObjectHashTable_put(self->wigos, OdimSource_getWigos(source), (RaveCoreObject*)source)) {
+          RAVE_WARNING1("Failed to add wigos for %s", OdimSource_getSource(source));
         }
       }
 
       if (OdimSource_getWmo(source) != NULL && strcmp("00000", OdimSource_getWmo(source)) != 0) {
-        if (RaveObjectHashTable_exists(self->wmo,OdimSource_getWmo(source)) || !RaveObjectHashTable_put(self->wmo, OdimSource_getWmo(source), (RaveCoreObject*)source)) {
-          RAVE_WARNING1("Failed to add wmo to odim sources WMO: %s", OdimSource_getWmo(source));
+        if (RaveObjectHashTable_exists(self->wmo,OdimSource_getWmo(source))) {
+          if (conflicting == NULL) {
+            conflicting = RaveObjectHashTable_get(self->wmo, OdimSource_getWmo(source));
+          }
+        } else if (!RaveObjectHashTable_put(self->wmo, OdimSource_getWmo(source), (RaveCoreObject*)source)) {
+          RAVE_WARNING1("Failed to add wmo for %s", OdimSource_getSource(source));
         }
       }
 
       if (OdimSource_getRad(source) != NULL) {
-        if (RaveObjectHashTable_exists(self->rad,OdimSource_getRad(source)) || !RaveObjectHashTable_put(self->rad, OdimSource_getRad(source), (RaveCoreObject*)source)) {
-          RAVE_WARNING1("Failed to add rad to odim sources RAD: %s", OdimSource_getRad(source));
+        if (RaveObjectHashTable_exists(self->rad,OdimSource_getRad(source))) {
+          if (conflicting == NULL) {
+            conflicting = RaveObjectHashTable_get(self->rad, OdimSource_getRad(source));
+          }
+        } else if (!RaveObjectHashTable_put(self->rad, OdimSource_getRad(source), (RaveCoreObject*)source)) {
+          RAVE_WARNING1("Failed to add rad for %s", OdimSource_getSource(source));
         }
       }
 
       if (OdimSource_getPlc(source) != NULL) {
-        if (RaveObjectHashTable_exists(self->plc, OdimSource_getPlc(source)) || !RaveObjectHashTable_put(self->plc, OdimSource_getPlc(source), (RaveCoreObject*)source)) {
-          RAVE_WARNING1("Failed to add plc to odim sources PLC: %s", OdimSource_getPlc(source));
+        if (RaveObjectHashTable_exists(self->plc,OdimSource_getPlc(source))) {
+          if (conflicting == NULL) {
+            conflicting = RaveObjectHashTable_get(self->plc, OdimSource_getPlc(source));
+          }
+        } else if (!RaveObjectHashTable_put(self->plc, OdimSource_getPlc(source), (RaveCoreObject*)source)) {
+          RAVE_WARNING1("Failed to add plc for %s", OdimSource_getSource(source));
         }
       }
 
+      if (conflicting != NULL) {
+        RAVE_WARNING2("Conflicting source '%s'. Conflicting with: '%s'", OdimSource_getSource(source), OdimSource_getSource(conflicting));
+      }
+      RAVE_OBJECT_RELEASE(conflicting);
     } else {
       RAVE_ERROR0("Must specify nod in source to be able to add to registry");
     }
