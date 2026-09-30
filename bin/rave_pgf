@@ -50,7 +50,7 @@ import _rave
 from algorithm_runner import algorithm_runner
 from rave_daemon import Daemon
 from rave_defines import LOGLEVEL, PGF_HOST, PGF_PORT, PIDFILE, REGFILE, STDOE, PGFs
-from rave_defines import TOOLBOX_LOGTYPE, TOOLBOX_LOGFILE, TOOLBOX_LOGID, TOOLBOX_LOGFACILITY
+from rave_defines import TOOLBOX_LOGTYPE, TOOLBOX_LOGFILE, TOOLBOX_LOGID, TOOLBOX_LOGFACILITY, TOOLBOX_LOGLEVEL
 
 ## Stub class for allowing server POSTs only to one place, providing
 # rudimentary security.
@@ -109,7 +109,8 @@ class rave_pgf_server(Daemon):
         else:
             _rave.setLogOutputStderr()
 
-        _rave.setDebugLevel(_rave.Debug_RAVE_INFO)
+        _rave.setLogLevel(TOOLBOX_LOGLEVEL)
+
         _rave.logMessage(_rave.Debug_RAVE_INFO, "Rave-C logging configured")
 
         self.server.register_instance(RavePGF())

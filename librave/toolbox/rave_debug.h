@@ -88,6 +88,19 @@ void Rave_setDebugLevel(Rave_Debug lvl);
 Rave_Debug Rave_getDebugLevel(void);
 
 /**
+ * Sets the log level. Must be one of spewdebug, debug, deprecated, info, warning, error, critical and silent.
+ * If string not can be identified, it falls back to silent
+ * @ingroup hlhdf_c_apis
+ * @param[in] lvl the log level.
+ */
+void Rave_setLogLevel(const char* lvl);
+
+/**
+ * @returns the current rave log level
+ */
+const char* Rave_getLogLevel(void);
+
+/**
  * Sets the debug function where the debug printouts should be routed.
  * @ingroup hlhdf_c_apis
  * @param[in] rave_dbgfun The debug function.

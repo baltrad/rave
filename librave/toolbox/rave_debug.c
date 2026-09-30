@@ -230,6 +230,53 @@ Rave_Debug Rave_getDebugLevel(void)
   return raveDebugLevel;
 }
 
+/**
+ * Shared name<->value table for Rave_setLogLevel/Rave_getLogLevel, so the two
+ * can't drift out of sync with each other.
+ */
+static const struct {
+  const char* name;
+  Rave_Debug value;
+} RAVE_LOG_LEVELS[] = {
+  {"spewdebug", RAVE_SPEWDEBUG},
+  {"debug", RAVE_DEBUG},
+  {"deprecated", RAVE_DEPRECATED},
+  {"info", RAVE_INFO},
+  {"warning", RAVE_WARNING},
+  {"error", RAVE_ERROR},
+  {"critical", RAVE_CRITICAL},
+  {"silent", RAVE_SILENT}
+};
+#define RAVE_NLOG_LEVELS (sizeof(RAVE_LOG_LEVELS) / sizeof(RAVE_LOG_LEVELS[0]))
+
+void Rave_setLogLevel(const char* lvl)
+{
+  size_t i;
+  Rave_Debug value = RAVE_SILENT;
+  if (lvl != NULL) {
+    for (i = 0; i < RAVE_NLOG_LEVELS; i++) {
+      if (strcasecmp(lvl, RAVE_LOG_LEVELS[i].name) == 0) {
+        value = RAVE_LOG_LEVELS[i].value;
+        break;
+      }
+    }
+  }
+  Rave_setDebugLevel(value);
+}
+
+const char* Rave_getLogLevel(void)
+{
+  size_t i;
+  Rave_Debug value = Rave_getDebugLevel();
+  for (i = 0; i < RAVE_NLOG_LEVELS; i++) {
+    if (RAVE_LOG_LEVELS[i].value == value) {
+      return RAVE_LOG_LEVELS[i].name;
+    }
+  }
+  return "silent";
+}
+
+
 void Rave_setDebugFunction(rave_dbgfun dbgfun)
 {
   Rave_initializeDebugger();

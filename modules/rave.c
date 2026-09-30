@@ -254,6 +254,35 @@ static PyObject* _rave_setDebugLevel(PyObject* self, PyObject* args)
 }
 
 /**
+ * Sets a specific log level
+ * @param[in] self - self
+ * @param[in] args - the debug level as an integer
+ * @return None
+ */
+static PyObject* _rave_setLogLevel(PyObject* self, PyObject* args)
+{
+  char* lvl = NULL;
+  if (!PyArg_ParseTuple(args, "z", &lvl)) {
+    return NULL;
+  }
+  Rave_setLogLevel(lvl);
+  Py_RETURN_NONE;
+}
+
+/**
+ * Returns the log level
+ * @param[in] self - self
+ * @return the log level as a string
+ */
+static PyObject* _rave_getLogLevel(PyObject* self, PyObject* args)
+{
+  if (!PyArg_ParseTuple(args, "")) {
+    return NULL;
+  }
+  return PyString_FromString(Rave_getLogLevel());
+}
+
+/**
  * Sets log output to stderr
  * @param[in] self - self
  * @param[in] args - N/A
@@ -527,6 +556,22 @@ static PyMethodDef functions[] = {
     "  + Debug_RAVE_ERROR        - Errors\n"
     "  + Debug_RAVE_CRITICAL     - Critical errors, typically if this occur, it probably ends with a crash\n"
     "  + Debug_RAVE_SILENT       - Don't display anything (default)\n"
+  },
+  {"setLogLevel", (PyCFunction)_rave_setLogLevel, 1,
+    "setLogLevel(level)\n\n"
+    "Sets the log level as a string to use when running the rave c modules. Can be one of:\n"
+    "Same as converting a string to a int and using the setDebugLevel.\n"
+    "  + spewdebug    - This provides a lot of debuginformation, most which probably is not interesting\n"
+    "  + debug        - Basic debug information\n"
+    "  + deprecated   - Print information from deprecated functions\n"
+    "  + info         - Information\n"
+    "  + warning      - Warnings\n"
+    "  + error        - Errors\n"
+    "  + critical     - Critical errors, typically if this occur, it probably ends with a crash\n"
+    "  + silent       - Don't display anything (default)\n"
+  },
+  {"getLogLevel", (PyCFunction)_rave_getLogLevel, 1,
+    "getLogLevel() -> log level (spewdebug, debug, deprecated, info, warning, error, critical and silen)\n\n"
   },
   {"setLogOutputStderr", (PyCFunction)_rave_setLogOutputStderr, 1,
     "setLogOutputStderr()\n\n"
