@@ -155,6 +155,8 @@ Macros</h2></td></tr>
 Typedefs</h2></td></tr>
 <tr class="memitem:a18edd2a9c455498934bf3e48ff298f08" id="r_a18edd2a9c455498934bf3e48ff298f08"><td class="memItemLeft">typedef enum <a class="el" href="#a8895ff5703ad09d158397527c9d2c3b6">Rave_Debug</a>&#160;</td><td class="memItemRight"><a class="el" href="#a18edd2a9c455498934bf3e48ff298f08">Rave_Debug</a></td></tr>
 <tr class="memdesc:a18edd2a9c455498934bf3e48ff298f08"><td class="mdescLeft">&#160;</td><td class="mdescRight">Debug levels.  <br /></td></tr>
+<tr class="memitem:a556a70673437037b62809cdb451f9e6c" id="r_a556a70673437037b62809cdb451f9e6c"><td class="memItemLeft">typedef enum <a class="el" href="#a1e11b1a6d5628cf1b8bd45d23b66c886">Rave_LogOutput</a>&#160;</td><td class="memItemRight"><a class="el" href="#a556a70673437037b62809cdb451f9e6c">Rave_LogOutput</a></td></tr>
+<tr class="memdesc:a556a70673437037b62809cdb451f9e6c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Where the default debug function should route its printouts.  <br /></td></tr>
 <tr class="memitem:a643eecf103ebf4def2bc104ffdd26add" id="r_a643eecf103ebf4def2bc104ffdd26add"><td class="memItemLeft">typedef void(*&#160;</td><td class="memItemRight"><a class="el" href="#a643eecf103ebf4def2bc104ffdd26add">rave_dbgfun</a>) (const char *filename, int lineno, <a class="el" href="#a8895ff5703ad09d158397527c9d2c3b6">Rave_Debug</a> lvl, const char *fmt,...)</td></tr>
 <tr class="memdesc:a643eecf103ebf4def2bc104ffdd26add"><td class="mdescLeft">&#160;</td><td class="mdescRight">The debugger function.  <br /></td></tr>
 </table><table class="memberdecls">
@@ -173,6 +175,11 @@ Enumerations</h2></td></tr>
 <br />
  }</td></tr>
 <tr class="memdesc:a8895ff5703ad09d158397527c9d2c3b6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Debug levels.  <a href="#a8895ff5703ad09d158397527c9d2c3b6">More...</a><br /></td></tr>
+<tr class="memitem:a1e11b1a6d5628cf1b8bd45d23b66c886" id="r_a1e11b1a6d5628cf1b8bd45d23b66c886"><td class="memItemLeft">enum &#160;</td><td class="memItemRight"><a class="el" href="#a1e11b1a6d5628cf1b8bd45d23b66c886">Rave_LogOutput</a> { <a class="el" href="#a1e11b1a6d5628cf1b8bd45d23b66c886a090c4361b99f3d371a05738c49e44391">RAVE_LOG_OUTPUT_STDERR</a> =0
+, <a class="el" href="#a1e11b1a6d5628cf1b8bd45d23b66c886ab5f34e430b233d1b3d205d065562049e">RAVE_LOG_OUTPUT_FILE</a>
+, <a class="el" href="#a1e11b1a6d5628cf1b8bd45d23b66c886ac14b4fec6ba5f02bf1305ddc9a63942b">RAVE_LOG_OUTPUT_SYSLOG</a>
+ }</td></tr>
+<tr class="memdesc:a1e11b1a6d5628cf1b8bd45d23b66c886"><td class="mdescLeft">&#160;</td><td class="mdescRight">Where the default debug function should route its printouts.  <a href="#a1e11b1a6d5628cf1b8bd45d23b66c886">More...</a><br /></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
@@ -186,6 +193,13 @@ Functions</h2></td></tr>
 <tr class="memitem:a8ad6c0fb9538d92f2f275d1857f040c5" id="r_a8ad6c0fb9538d92f2f275d1857f040c5"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a8ad6c0fb9538d92f2f275d1857f040c5">Rave_setDebugFunction</a> (<a class="el" href="#a643eecf103ebf4def2bc104ffdd26add">rave_dbgfun</a> dbgfun)</td></tr>
 <tr class="memdesc:a8ad6c0fb9538d92f2f275d1857f040c5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the debug function where the debug printouts should be routed.  <br /></td></tr>
 <tr class="memitem:a07d1e1dd92a75474bab1dee6e08d4a0c" id="r_a07d1e1dd92a75474bab1dee6e08d4a0c"><td class="memItemLeft"><a class="el" href="#a643eecf103ebf4def2bc104ffdd26add">rave_dbgfun</a>&#160;</td><td class="memItemRight"><a class="el" href="#a07d1e1dd92a75474bab1dee6e08d4a0c">Rave_getDebugFunction</a> (void)</td></tr>
+<tr class="memitem:af99facf048c1ef2b78a6596ac2566c44" id="r_af99facf048c1ef2b78a6596ac2566c44"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#af99facf048c1ef2b78a6596ac2566c44">Rave_setLogOutputStderr</a> (void)</td></tr>
+<tr class="memdesc:af99facf048c1ef2b78a6596ac2566c44"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the default debug function's printouts to use stderr.  <br /></td></tr>
+<tr class="memitem:a8b2dd8293b9883e204b1fa2cc7ea641a" id="r_a8b2dd8293b9883e204b1fa2cc7ea641a"><td class="memItemLeft">int&#160;</td><td class="memItemRight"><a class="el" href="#a8b2dd8293b9883e204b1fa2cc7ea641a">Rave_setLogOutputFile</a> (const char *filename)</td></tr>
+<tr class="memdesc:a8b2dd8293b9883e204b1fa2cc7ea641a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the default debug function's printouts to use a log file.  <br /></td></tr>
+<tr class="memitem:ace4e6bceda93e1033e762da701047bb0" id="r_ace4e6bceda93e1033e762da701047bb0"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#ace4e6bceda93e1033e762da701047bb0">Rave_setLogOutputSyslog</a> (const char *logid, const char *facility)</td></tr>
+<tr class="memdesc:ace4e6bceda93e1033e762da701047bb0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the default debug function's printouts to use syslog.  <br /></td></tr>
+<tr class="memitem:a43f18b33f8f61131f1da8a680aa969da" id="r_a43f18b33f8f61131f1da8a680aa969da"><td class="memItemLeft"><a class="el" href="#a1e11b1a6d5628cf1b8bd45d23b66c886">Rave_LogOutput</a>&#160;</td><td class="memItemRight"><a class="el" href="#a43f18b33f8f61131f1da8a680aa969da">Rave_getLogOutput</a> (void)</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Defines the functions for debugging rave. </p>
@@ -251,7 +265,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <b>Value:</b><div class="fragment"><div class="line"><a class="code hl_function" href="#a07d1e1dd92a75474bab1dee6e08d4a0c">Rave_getDebugFunction</a>()(__FILE__,__LINE__,<a class="code hl_enumvalue" href="#a8895ff5703ad09d158397527c9d2c3b6a106a3d0328f0ac65bf8161f032e51d2f">RAVE_CRITICAL</a>,msg)</div>
-<div class="ttc" id="arave__debug_8h_html_a07d1e1dd92a75474bab1dee6e08d4a0c"><div class="ttname"><a href="#a07d1e1dd92a75474bab1dee6e08d4a0c">Rave_getDebugFunction</a></div><div class="ttdeci">rave_dbgfun Rave_getDebugFunction(void)</div><div class="ttdef"><b>Definition</b> rave_debug.c:144</div></div>
+<div class="ttc" id="arave__debug_8h_html_a07d1e1dd92a75474bab1dee6e08d4a0c"><div class="ttname"><a href="#a07d1e1dd92a75474bab1dee6e08d4a0c">Rave_getDebugFunction</a></div><div class="ttdeci">rave_dbgfun Rave_getDebugFunction(void)</div><div class="ttdef"><b>Definition</b> rave_debug.c:239</div></div>
 </div><!-- fragment -->
 <p>Critical macro taking one text string. </p>
 
@@ -1440,6 +1454,22 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="a556a70673437037b62809cdb451f9e6c" name="a556a70673437037b62809cdb451f9e6c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a556a70673437037b62809cdb451f9e6c">&#9670;&#160;</a></span>Rave_LogOutput</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef enum <a class="el" href="#a1e11b1a6d5628cf1b8bd45d23b66c886">Rave_LogOutput</a> <a class="el" href="#a1e11b1a6d5628cf1b8bd45d23b66c886">Rave_LogOutput</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Where the default debug function should route its printouts. </p>
+
+</div>
+</div>
 <a name="doc-enum-members" id="doc-enum-members"></a><h2 id="header-doc-enum-members" class="groupheader">Enumeration Type Documentation</h2>
 <a id="a8895ff5703ad09d158397527c9d2c3b6" name="a8895ff5703ad09d158397527c9d2c3b6"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a8895ff5703ad09d158397527c9d2c3b6">&#9670;&#160;</a></span>Rave_Debug</h2>
@@ -1472,6 +1502,31 @@ Functions</h2></td></tr>
 <tr><td class="fieldname"><a id="a8895ff5703ad09d158397527c9d2c3b6a106a3d0328f0ac65bf8161f032e51d2f" name="a8895ff5703ad09d158397527c9d2c3b6a106a3d0328f0ac65bf8161f032e51d2f"></a>RAVE_CRITICAL&#160;</td><td class="fielddoc"><p>If this occurs, then something has gone very wrong or the code contains a bug, please report it to the HLHDF dev group for investigation. </p>
 </td></tr>
 <tr><td class="fieldname"><a id="a8895ff5703ad09d158397527c9d2c3b6aaf11b8a9f0faf383a10ec9146bc848a8" name="a8895ff5703ad09d158397527c9d2c3b6aaf11b8a9f0faf383a10ec9146bc848a8"></a>RAVE_SILENT&#160;</td><td class="fielddoc"><p>Turns of debugging. </p>
+</td></tr>
+</table>
+
+</div>
+</div>
+<a id="a1e11b1a6d5628cf1b8bd45d23b66c886" name="a1e11b1a6d5628cf1b8bd45d23b66c886"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1e11b1a6d5628cf1b8bd45d23b66c886">&#9670;&#160;</a></span>Rave_LogOutput</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum <a class="el" href="#a1e11b1a6d5628cf1b8bd45d23b66c886">Rave_LogOutput</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Where the default debug function should route its printouts. </p>
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a1e11b1a6d5628cf1b8bd45d23b66c886a090c4361b99f3d371a05738c49e44391" name="a1e11b1a6d5628cf1b8bd45d23b66c886a090c4361b99f3d371a05738c49e44391"></a>RAVE_LOG_OUTPUT_STDERR&#160;</td><td class="fielddoc"><p>Printouts go to stderr. </p>
+<p>This is the default. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a1e11b1a6d5628cf1b8bd45d23b66c886ab5f34e430b233d1b3d205d065562049e" name="a1e11b1a6d5628cf1b8bd45d23b66c886ab5f34e430b233d1b3d205d065562049e"></a>RAVE_LOG_OUTPUT_FILE&#160;</td><td class="fielddoc"><p>Printouts go to a log file, see <a class="el" href="#a8b2dd8293b9883e204b1fa2cc7ea641a" title="Rave_setLogOutputFile">Rave_setLogOutputFile</a>. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a1e11b1a6d5628cf1b8bd45d23b66c886ac14b4fec6ba5f02bf1305ddc9a63942b" name="a1e11b1a6d5628cf1b8bd45d23b66c886ac14b4fec6ba5f02bf1305ddc9a63942b"></a>RAVE_LOG_OUTPUT_SYSLOG&#160;</td><td class="fielddoc"><p>Printouts go to syslog, see <a class="el" href="#ace4e6bceda93e1033e762da701047bb0" title="Rave_setLogOutputSyslog">Rave_setLogOutputSyslog</a>. </p>
 </td></tr>
 </table>
 
@@ -1511,6 +1566,24 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <dl class="section return"><dt>Returns</dt><dd>the current rave debug level </dd></dl>
+
+</div>
+</div>
+<a id="a43f18b33f8f61131f1da8a680aa969da" name="a43f18b33f8f61131f1da8a680aa969da"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a43f18b33f8f61131f1da8a680aa969da">&#9670;&#160;</a></span>Rave_getLogOutput()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="#a1e11b1a6d5628cf1b8bd45d23b66c886">Rave_LogOutput</a> Rave_getLogOutput </td>
+          <td>(</td>
+          <td class="paramtype">void</td>          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<dl class="section return"><dt>Returns</dt><dd>the debug output currently configured </dd></dl>
 
 </div>
 </div>
@@ -1607,6 +1680,83 @@ Functions</h2></td></tr>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">lvl</td><td>the debug level. See <a class="el" href="#a8895ff5703ad09d158397527c9d2c3b6" title="Rave_Debug">Rave_Debug</a>. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a8b2dd8293b9883e204b1fa2cc7ea641a" name="a8b2dd8293b9883e204b1fa2cc7ea641a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8b2dd8293b9883e204b1fa2cc7ea641a">&#9670;&#160;</a></span>Rave_setLogOutputFile()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int Rave_setLogOutputFile </td>
+          <td>(</td>
+          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>filename</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Sets the default debug function's printouts to use a log file. </p>
+<p>The file is opened for appending (O_APPEND) and kept open, which makes it safe to call this once in a parent process before forking off.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">filename</td><td>- the name of the file to log to </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>1 on success, otherwise 0. On failure </dd></dl>
+
+</div>
+</div>
+<a id="af99facf048c1ef2b78a6596ac2566c44" name="af99facf048c1ef2b78a6596ac2566c44"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af99facf048c1ef2b78a6596ac2566c44">&#9670;&#160;</a></span>Rave_setLogOutputStderr()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void Rave_setLogOutputStderr </td>
+          <td>(</td>
+          <td class="paramtype">void</td>          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Sets the default debug function's printouts to use stderr. </p>
+<p>This is the default behaviour. </p>
+
+</div>
+</div>
+<a id="ace4e6bceda93e1033e762da701047bb0" name="ace4e6bceda93e1033e762da701047bb0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ace4e6bceda93e1033e762da701047bb0">&#9670;&#160;</a></span>Rave_setLogOutputSyslog()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void Rave_setLogOutputSyslog </td>
+          <td>(</td>
+          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>logid</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>facility</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Sets the default debug function's printouts to use syslog. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">logid</td><td>- identity prefixed onto every syslog message (the openlog ident), e.g. "PGF[rave.baltrad.eu]". If NULL, "rave" is used. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">facility</td><td>- the syslog facility to log with, as a name: "user", or "local0".."local7". Case-insensitive; Default fallback is user if not reckognized </td></tr>
   </table>
   </dd>
 </dl>
