@@ -25,7 +25,7 @@ Tests the py area module.
 '''
 import unittest
 import os
-import _odimsources
+import _odimsources, _odimsource
 import string
 import math
 import _rave
@@ -161,3 +161,56 @@ class PyOdimSourcesTest(unittest.TestCase):
     obj = _odimsources.load(self.FIXTURE)
     site = obj.identify("WMO:00000,RAD:DN99")
     self.assertEqual("dkaal", site.nod)
+
+  def test_add_conflicting_nod(self):
+    if not _rave.isXmlSupported():
+      return
+
+    reg = _odimsources.new()
+    reg.add(_odimsource.new("sekkr", "02032", "0-20000-0-2032", "Kiruna", "SE40", "ESWI", "82"))
+
+    try:
+      reg.add(_odimsource.new("sekkr", "02031", "0-20000-0-2031", "KirunaX", "SE40X", "ESWI", "82"))
+      self.fail("Expected MemoryError")
+    except MemoryError:
+      pass
+
+  def test_add_conflicting_wigos(self):
+    reg = _odimsources.new()
+    reg.add(_odimsource.new("sekkr", "02032", "0-20000-0-2032", "Kiruna", "SE40", "ESWI", "82"))
+    reg.add(_odimsource.new("seabc", "02031", "0-20000-0-2032", "KirunaX", "SE40X", "ESWI", "82"))
+
+    self.assertEqual("seabc", reg.get_wmo("02031").nod)
+    self.assertEqual("seabc", reg.get_plc("KirunaX").nod)
+    self.assertEqual("seabc", reg.get_rad("SE40X").nod)
+    self.assertEqual("sekkr", reg.get_wigos("0-20000-0-2032").nod)
+
+  def test_add_conflicting_wmo(self):
+    reg = _odimsources.new()
+    reg.add(_odimsource.new("sekkr", "02032", "0-20000-0-2032", "Kiruna", "SE40", "ESWI", "82"))
+    reg.add(_odimsource.new("seabc", "02032", "0-20000-0-2031", "KirunaX", "SE40X", "ESWI", "82"))
+
+    self.assertEqual("sekkr", reg.get_wmo("02032").nod)
+    self.assertEqual("seabc", reg.get_plc("KirunaX").nod)
+    self.assertEqual("seabc", reg.get_rad("SE40X").nod)
+    self.assertEqual("seabc", reg.get_wigos("0-20000-0-2031").nod)
+
+  def test_add_conflicting_rad(self):
+    reg = _odimsources.new()
+    reg.add(_odimsource.new("sekkr", "02032", "0-20000-0-2032", "Kiruna", "SE40", "ESWI", "82"))
+    reg.add(_odimsource.new("seabc", "02031", "0-20000-0-2031", "KirunaX", "SE40", "ESWI", "82"))
+
+    self.assertEqual("seabc", reg.get_wmo("02031").nod)
+    self.assertEqual("seabc", reg.get_plc("KirunaX").nod)
+    self.assertEqual("sekkr", reg.get_rad("SE40").nod)
+    self.assertEqual("seabc", reg.get_wigos("0-20000-0-2031").nod)
+
+  def test_add_conflicting_plc(self):
+    reg = _odimsources.new()
+    reg.add(_odimsource.new("sekkr", "02032", "0-20000-0-2032", "Kiruna", "SE40", "ESWI", "82"))
+    reg.add(_odimsource.new("seabc", "02031", "0-20000-0-2031", "Kiruna", "SE40X", "ESWI", "82"))
+
+    self.assertEqual("seabc", reg.get_wmo("02031").nod)
+    self.assertEqual("sekkr", reg.get_plc("Kiruna").nod)
+    self.assertEqual("seabc", reg.get_rad("SE40X").nod)
+    self.assertEqual("seabc", reg.get_wigos("0-20000-0-2031").nod)
