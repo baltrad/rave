@@ -307,6 +307,7 @@ static PyObject* _pyodimsource_isOdimSource(PyObject* self, PyObject* args)
   }
   return PyBool_FromLong(0);
 }
+
 /*@} End of Odim Source */
 
 /*@{ Documentation about the type */

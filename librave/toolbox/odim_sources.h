@@ -123,4 +123,16 @@ OdimSource_t* OdimSources_identify(OdimSources_t* self, const char* sourcestr);
  */
 RaveList_t* OdimSources_nods(OdimSources_t* self);
 
+/**
+ * Sets if conflicting entries should be shown in the log or not
+ * @param[in] v - if 0 then don't. Otherwise do.
+ */
+void OdimSources_setShowConflictingEntries(int v);
+
+/**
+ * Returns if conflicting entries should be shown in the log or not
+ * @param[in] v - if 0 then don't. Otherwise do.
+ */
+int OdimSources_getShowConflictingEntries();
+
 #endif /* AREAREGISTRY_H */

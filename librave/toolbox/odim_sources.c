@@ -39,6 +39,10 @@ along with RAVE.  If not, see <http://www.gnu.org/licenses/>.
 #include "rave_utilities.h"
 #include <string.h>
 
+
+static int show_conflicting_entries = 0;
+
+
 /**
  * Represents the odim sources registry
  */
@@ -210,7 +214,7 @@ int OdimSources_add(OdimSources_t* self, OdimSource_t* source)
         goto done;
       }
 
-      if (wigosexist || wmoexist || radexist || plcexist) {
+      if (show_conflicting_entries && (wigosexist || wmoexist || radexist || plcexist)) {
         if (wigosexist) {
           conflicting = (OdimSource_t*)RaveObjectHashTable_get(self->wigos, OdimSource_getWigos(source));
         } else if (wmoexist) {
@@ -342,6 +346,19 @@ RaveList_t* OdimSources_nods(OdimSources_t* self)
   return RaveObjectHashTable_keys(self->nod);
 }
 
+void OdimSources_setShowConflictingEntries(int v)
+{
+  if (v == 0) {
+    show_conflicting_entries = 0;
+  } else {
+    show_conflicting_entries = 1;
+  }
+}
+
+int OdimSources_getShowConflictingEntries()
+{
+  return show_conflicting_entries;
+}
 /*@} End of Interface functions */
 
 RaveCoreObjectType OdimSources_TYPE = {

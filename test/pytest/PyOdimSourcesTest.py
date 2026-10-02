@@ -214,3 +214,10 @@ class PyOdimSourcesTest(unittest.TestCase):
     self.assertEqual("sekkr", reg.get_plc("Kiruna").nod)
     self.assertEqual("seabc", reg.get_rad("SE40X").nod)
     self.assertEqual("seabc", reg.get_wigos("0-20000-0-2031").nod)
+
+  def test_show_conflicting_entries(self):
+    self.assertEqual(False, _odimsources.getShowConflictingEntries())
+    _odimsources.setShowConflictingEntries(True)
+    self.assertEqual(True, _odimsources.getShowConflictingEntries())
+    _odimsources.setShowConflictingEntries(False)
+    self.assertEqual(False, _odimsources.getShowConflictingEntries())

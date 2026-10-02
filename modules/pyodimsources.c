@@ -437,6 +437,40 @@ static PyObject* _pyodimsources_load(PyObject* self, PyObject* args)
 }
 
 /**
+ * Sets if conflicting entries should be shown or not.
+ * @param[in] args - a boolean
+ * @return None
+ */
+static PyObject* _pyodimsources_setShowConflictingEntries(PyObject* self, PyObject* args)
+{
+  PyObject* pybool = NULL;
+  int enable = 0;
+  if (!PyArg_ParseTuple(args,"O!", &PyBool_Type, &pybool)) {
+    return NULL;
+  }
+  enable = PyObject_IsTrue(pybool);
+  OdimSources_setShowConflictingEntries(enable);
+  Py_RETURN_NONE;
+}
+
+/**
+ * Returns if conflicting entries are shown or not
+ * @param[in] args - a boolean
+ * @return None
+ */
+static PyObject* _pyodimsources_getShowConflictingEntries(PyObject* self, PyObject* args)
+{
+  if (!PyArg_ParseTuple(args,"")) {
+    return NULL;
+  }
+  if (OdimSources_getShowConflictingEntries()) {
+    Py_RETURN_TRUE;
+  } else {
+    Py_RETURN_FALSE;
+  }
+}
+
+/**
  * All methods a registry can have
  */
 static struct PyMethodDef _pyodimsources_methods[] =
@@ -579,6 +613,13 @@ static PyMethodDef functions[] = {
       "  ....\n"
       "</radar-db>"
   },
+  {"setShowConflictingEntries", (PyCFunction)_pyodimsources_setShowConflictingEntries, 1,
+      "setShowConflictingEntries(enable) \n\n"
+      "Sets if conflicting entries should be shown or not.\n\n"
+      "enable - If False, then don't, otherwise do."},
+  {"getShowConflictingEntries", (PyCFunction)_pyodimsources_getShowConflictingEntries, 1,
+      "getShowConflictingEntries() -> boolean \n\n"
+      "Returns if conflicting entries should be shown or not."},
   {NULL,NULL} /*Sentinel*/
 };
 
