@@ -100,6 +100,10 @@ Functions</h2></td></tr>
 <tr class="memdesc:a37ed79d14cb6bac92810da57a85c4acf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the source with specified nod name.  <br /></td></tr>
 <tr class="memitem:a84c99a7d22df4628b25c9737f519605f" id="r_a84c99a7d22df4628b25c9737f519605f"><td class="memItemLeft"><a class="el" href="rave__list_8h.html#ad2ea2f1cc27c63aa76beb80b6535c3ef">RaveList_t</a> *&#160;</td><td class="memItemRight"><a class="el" href="#a84c99a7d22df4628b25c9737f519605f">OdimSources_nods</a> (<a class="el" href="#a72e997a53036847426b83c6d4b206b40">OdimSources_t</a> *self)</td></tr>
 <tr class="memdesc:a84c99a7d22df4628b25c9737f519605f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return all NODs that has been registered in this source registry.  <br /></td></tr>
+<tr class="memitem:af64803835e71af1af8c24e3773b07159" id="r_af64803835e71af1af8c24e3773b07159"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#af64803835e71af1af8c24e3773b07159">OdimSources_setShowConflictingEntries</a> (int v)</td></tr>
+<tr class="memdesc:af64803835e71af1af8c24e3773b07159"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets if conflicting entries should be shown in the log or not.  <br /></td></tr>
+<tr class="memitem:a57e6dd9c5da88321959e2de51b091281" id="r_a57e6dd9c5da88321959e2de51b091281"><td class="memItemLeft">int&#160;</td><td class="memItemRight"><a class="el" href="#a57e6dd9c5da88321959e2de51b091281">OdimSources_getShowConflictingEntries</a> ()</td></tr>
+<tr class="memdesc:a57e6dd9c5da88321959e2de51b091281"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns if conflicting entries should be shown in the log or not.  <br /></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-var-members" class="groupheader"><a id="var-members" name="var-members"></a>
 Variables</h2></td></tr>
@@ -315,6 +319,31 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a id="a57e6dd9c5da88321959e2de51b091281" name="a57e6dd9c5da88321959e2de51b091281"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a57e6dd9c5da88321959e2de51b091281">&#9670;&#160;</a></span>OdimSources_getShowConflictingEntries()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int OdimSources_getShowConflictingEntries </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Returns if conflicting entries should be shown in the log or not. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">v</td><td>- if 0 then don't. Otherwise do. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="a37ed79d14cb6bac92810da57a85c4acf" name="a37ed79d14cb6bac92810da57a85c4acf"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a37ed79d14cb6bac92810da57a85c4acf">&#9670;&#160;</a></span>OdimSources_identify()</h2>
 
@@ -396,6 +425,31 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>a list of nods (char* pointers). </dd></dl>
+
+</div>
+</div>
+<a id="af64803835e71af1af8c24e3773b07159" name="af64803835e71af1af8c24e3773b07159"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af64803835e71af1af8c24e3773b07159">&#9670;&#160;</a></span>OdimSources_setShowConflictingEntries()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void OdimSources_setShowConflictingEntries </td>
+          <td>(</td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>v</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Sets if conflicting entries should be shown in the log or not. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">v</td><td>- if 0 then don't. Otherwise do. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
