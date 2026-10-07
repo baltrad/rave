@@ -120,8 +120,8 @@ static int RadvolNmetInternal_readParams(RadvolNmet_t* self, Radvol_params_t* pa
   SimpleXmlNode_t* node = NULL;
 
   if (paramFileName == NULL) {
-      self->radvol->QCOn =     params->ATT_QCOn;
-      self->radvol->QIOn =     params->ATT_QIOn;
+      self->radvol->QCOn =     params->NMET_QCOn;
+      self->radvol->QIOn =     params->NMET_QIOn;
       self->radvol->DBZHtoTH = params->DBZHtoTH;
       self->NMET_QI =          params->NMET_QI;
       self->NMET_QIUn =        params->NMET_QIUn;

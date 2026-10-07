@@ -28,6 +28,7 @@ import rave_quality_chain_registry
 
 class rave_quality_chain_registry_test(unittest.TestCase):
   FIXTURE_XML = "fixtures/rave_quality_chain_registry_test.xml"
+  FIXTURE_XML_NODEFAULT = "fixtures/rave_quality_chain_registry_test_nodefault.xml"
   REAL_XML = "../../config/rave_quality_chain_registry.xml"
   classUnderTest = None
   
@@ -61,8 +62,9 @@ class rave_quality_chain_registry_test(unittest.TestCase):
     self.assertEqual("some sort of value", arguments["something"])
 
   def test_get_chain_not_found(self):
+    nodefault_registry = rave_quality_chain_registry.rave_quality_chain_registry(self.FIXTURE_XML_NODEFAULT)
     try:
-      chain = self.classUnderTest.get_chain("sesss")
+      chain = nodefault_registry.get_chain("sesss")
       self.fail("Expected LookupError")
     except LookupError:
       pass
@@ -80,6 +82,29 @@ class rave_quality_chain_registry_test(unittest.TestCase):
       self.fail("Expected LookupError")
     except LookupError:
       pass
+
+
+  def test_get_chain_default(self):
+    chain = self.classUnderTest.get_chain("nisse")
+    self.assertEqual("default", chain.source())
+
+  def test_get_chain_links_attribute(self):
+    chain = self.classUnderTest.get_chain("dkste")
+    self.assertEqual("dkste", chain.source())
+    x=",".join([item.refname() for item in chain.links()])
+    self.assertEqual("distance,scansun,hac-increment,ropo,beamb,hac-filter,qi-total", x)
+
+  def test_get_chain_default_links_attribute(self):
+    chain = self.classUnderTest.get_chain("nisse")
+    self.assertEqual("default", chain.source())
+    x=",".join([item.refname() for item in chain.links()])
+    self.assertEqual("distance,scansun,hac-increment,ropo,beamb,satfilter,hac-filter,qi-total", x)
+
+  def test_get_chain_sevax(self):
+    chain = self.classUnderTest.get_chain("sevax")
+    self.assertEqual("sevax", chain.source())
+    x=",".join([item.refname() for item in chain.links()])
+    self.assertEqual("rave-spike,radvol-att", x)
 
   def test_find_chains_bySource(self):
     chains = self.classUnderTest.find_chains("sekkr")
@@ -115,7 +140,7 @@ class rave_quality_chain_registry_test(unittest.TestCase):
   def test_find_chains_bySourceAndCategory_nothing_found(self):
     chains = self.classUnderTest.find_chains("sesss", "qpe")
     self.assertEqual(0, len(chains))
-    
+
   def test_real_qualityChainRegistryXml(self):
     realXmlClass = rave_quality_chain_registry.rave_quality_chain_registry(self.REAL_XML)
     

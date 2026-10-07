@@ -119,8 +119,8 @@ static int RadvolSpeckInternal_readParams(RadvolSpeck_t* self, Radvol_params_t* 
   SimpleXmlNode_t* node = NULL;
 
   if (paramFileName == NULL) {
-    self->radvol->QCOn =     params->ATT_QCOn;
-    self->radvol->QIOn =     params->ATT_QIOn;
+    self->radvol->QCOn =     params->SPECK_QCOn;
+    self->radvol->QIOn =     params->SPECK_QIOn;
     self->radvol->DBZHtoTH = params->DBZHtoTH;
     self->SPECK_QI =         params->SPECK_QI;
     self->SPECK_QIUn =       params->SPECK_QIUn;

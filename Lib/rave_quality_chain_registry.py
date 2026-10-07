@@ -28,13 +28,9 @@ import os
 import copy
 import xml.etree.ElementTree as ET
 
-CONFIG_FILE = os.path.join(
-    os.path.join(os.path.split(os.path.split(os.path.abspath(__file__))[0])[0], 'config'),
-    'rave_quality_chain_registry.xml',
-)
+from rave_defines import RAVE_QUALITY_CHAIN_REGISTRY_FILE
 
 initialized = 0
-
 
 class link(object):
     def __init__(self, refname, arguments=None):
@@ -46,7 +42,6 @@ class link(object):
 
     def arguments(self):
         return self._arguments
-
 
 class chain(object):
     def __init__(self, source, category, links=[]):
@@ -63,16 +58,20 @@ class chain(object):
     def links(self):
         return self._links
 
-
 class rave_quality_chain_registry(object):
-    def __init__(self, registryfile=CONFIG_FILE):
+    def __init__(self, registryfile=RAVE_QUALITY_CHAIN_REGISTRY_FILE):
         self.chains = self.load(registryfile)
 
-    def get_chain(self, source, category=None):
+    def get(self, source, category=None):
         result = self.find_chains(source, category)
+        if len(result) == 0:
+            result = self.find_chains("default", category)
         if len(result) != 1:
             raise LookupError("Number of found chains != 1")
         return result[0]
+
+    def get_chain(self, source, category=None):
+        return self.get(source, category)
 
     def find_chains(self, source, category=None):
         result = []
@@ -88,22 +87,29 @@ class rave_quality_chain_registry(object):
         return result
 
     def load(self, registryfile):
-        chainelements = ET.parse(registryfile).getroot().findall("chain")
+        chainelements = list(ET.parse(registryfile).getroot())
         chains = {}
         for ce in chainelements:
-            source = ce.attrib["source"]
-            category = ce.attrib["category"]
-            if source not in chains:
-                chains[source] = []
-            chains[source].append(self.create_chain(source, category, ce))
+            category = None
+            if "category" in ce.attrib:
+                category = ce.attrib["category"]
+            if ce.tag not in chains:
+                chains[ce.tag] = []
+            chains[ce.tag].append(self.create_chain(ce.tag, category, ce))
         return chains
 
     def create_chain(self, source, category, ce):
-        linkelements = ce.findall("link")
         links = []
+        if "links" in ce.attrib:
+            linknames = [item.strip() for item in ce.attrib["links"].split(",")]
+            for ln in linknames:
+                links.append(link(ln))
+
+        linkelements = ce.findall("link")
         for le in linkelements:
             refname = le.attrib["ref"]
             links.append(link(refname, self.create_link_arguments(le)))
+
         return chain(source, category, links)
 
     def create_link_arguments(self, le):

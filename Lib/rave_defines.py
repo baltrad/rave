@@ -180,6 +180,8 @@ ODIM_SOURCE_FILE = os.path.join(RAVECONFIG, 'odim_source.xml')
 
 QUALITY_REGISTRY = os.path.join(RAVEETC, 'rave_pgf_quality_registry.xml')
 
+RAVE_QUALITY_CHAIN_REGISTRY_FILE = os.path.join(RAVECONFIG, 'rave_quality_chain_registry.xml')
+
 RAVE_TILE_REGISTRY = os.path.join(RAVEETC, 'rave_tile_registry.xml')
 
 # The name of the composite generator filter file containing the settings for factories.

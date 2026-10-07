@@ -110,8 +110,8 @@ static int RadvolBroadInternal_readParams(RadvolBroad_t* self, Radvol_params_t* 
   SimpleXmlNode_t* node = NULL;
 
   if (paramFileName == NULL) {
-    self->radvol->QCOn =     params->ATT_QCOn;
-    self->radvol->QIOn =     params->ATT_QIOn;
+    self->radvol->QCOn =     params->BROAD_QCOn;
+    self->radvol->QIOn =     params->BROAD_QIOn;
     self->radvol->DBZHtoTH = params->DBZHtoTH;
     self->BROAD_LhQI1 =      params->BROAD_LhQI1;
     self->BROAD_LhQI0 =      params->BROAD_LhQI0;

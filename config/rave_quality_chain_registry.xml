@@ -1,11 +1,14 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <rave-quality-chain-registry>
-	<chain source="sekkr" category="insect_detection">
+	<default links="distance,scansun,hac-increment,ropo,beamb,satfilter,hac-filter,qi-total"></default>
+	<dkste links="distance,scansun,hac-increment,ropo,beamb,hac-filter,qi-total"></dkste>
+
+	<sekkr category="insect_detection">
 		<link ref="rave-overshooting">
 			<arguments>
 				<argument name="something">some sort of value</argument>
 			</arguments>
 		</link>
 		<link ref="radvol-spike" />
-	</chain>
+	</sekkr>
 </rave-quality-chain-registry>

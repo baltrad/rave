@@ -139,8 +139,8 @@ static int RadvolSpikeInternal_readParams(RadvolSpike_t* self, Radvol_params_t* 
   SimpleXmlNode_t* node = NULL;
 
   if (paramFileName == NULL) {
-    self->radvol->QCOn =     params->ATT_QCOn;
-    self->radvol->QIOn =     params->ATT_QIOn;
+    self->radvol->QCOn =     params->SPIKE_QCOn;
+    self->radvol->QIOn =     params->SPIKE_QIOn;
     self->radvol->DBZHtoTH = params->DBZHtoTH;
     self->SPIKE_QI =         params->SPIKE_QI;
     self->SPIKE_QIUn =       params->SPIKE_QIUn;
