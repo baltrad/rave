@@ -61,39 +61,39 @@ def arglist2dict(arglist):
 
 
 ##
-# Performs a quality control sequence on a volume
-# @param volume: the volume to perform the quality controls on
-# @param detectors: the detectors that should be run on the volume
+# Performs a quality control sequence on a object
+# @param obj: the scan or volume to perform the quality controls on
+# @param detectors: the detectors that should be run on the scan or volume
 #
-def perform_quality_control(volume, detectors, qc_mode):
+def perform_quality_control(obj, detectors, qc_mode):
     for d in detectors:
         p = rave_pgf_quality_registry.get_plugin(d)
         if p != None:
-            logger.debug("Processing volume with quality plugin %s. QC-mode: %s", d, qc_mode)
-            volume = p.process(volume, True, qc_mode)
-            if isinstance(volume, tuple):
-                volume, _ = volume[0], volume[1]
-    return volume
+            logger.debug("Processing scan or volume with quality plugin %s. QC-mode: %s", d, qc_mode)
+            obj = p.process(obj, True, qc_mode)
+            if isinstance(obj, tuple):
+                obj, _ = obj[0], obj[1]
+    return obj
 
 
-def generate_new_volume_with_qc(original_file, args):
+def generate_new_object_with_qc(original_file, args):
     logger.debug("Generating new volume with quality controls applied.")
 
     if ravebdb != None:
-        volume = ravebdb.get_rave_object(original_file)
+        obj = ravebdb.get_rave_object(original_file)
     else:
-        volume = _raveio.open(original_file).object
+        obj = _raveio.open(original_file).object
 
     if "remove-malfunc" in args.keys():
         try:
             if args["remove-malfunc"].lower() in ["true", "yes", "y", "1"]:
                 logger.debug(
-                    "Checking volume for malfunc tags. Will remove scans, or complete volume, if marked malfunc."
+                    "Checking object for malfunc tags. Will remove scans, or complete volume, if marked malfunc."
                 )
-                volume = rave_util.remove_malfunc(volume)
-                if volume == None:
+                obj = rave_util.remove_malfunc(obj)
+                if obj == None:
                     logger.info(
-                        "Malfunc volume! Since option 'remove_malfunc' is set, no new volume with QC applied will be generated!"
+                        "Malfunc! Since option 'remove_malfunc' is set, no new scan or volume with QC applied will be generated!"
                     )
                     return None
         except:
@@ -108,22 +108,22 @@ def generate_new_volume_with_qc(original_file, args):
     if "qc-mode" in args.keys():
         quality_control_mode = args["qc-mode"]
 
-    volume = perform_quality_control(volume, detectors, quality_control_mode)
+    obj = perform_quality_control(obj, detectors, quality_control_mode)
 
-    logger.debug("Quality controls applied on new volume: %s", (",".join(detectors)))
+    logger.debug("Quality controls applied on new scan/volume: %s", (",".join(detectors)))
 
     new_time = args.get('time')
     if new_time:
-        volume.time = new_time
+        obj.time = new_time
 
     new_date = args.get('date')
     if new_date:
-        volume.date = new_date
+        obj.date = new_date
 
-    return volume
+    return obj
 
 
-## Creates a new volume based on the incoming with quality controls applied to it
+## Handles both volume and scans based on the incoming with quality controls applied to it
 # @param files a list of files to apply quality controls on. currently assume only one file
 # @param arguments the arguments defining what quality controls to apply
 # @return a temporary h5 file with the volume
@@ -135,20 +135,20 @@ def generate(files, arguments):
     # should only be one file
     fname = files[0]
 
-    volume = generate_new_volume_with_qc(fname, args)
+    obj = generate_new_object_with_qc(fname, args)
 
-    if volume == None:
-        logger.info("No volume with QC applied could be generated!")
+    if obj == None:
+        logger.info("No volume or scan with QC applied could be generated!")
         return None
 
     _, outfile = rave_tempfile.mktemp(suffix='.h5', close="True")
 
     ios = _raveio.new()
-    ios.object = volume
+    ios.object = obj
     ios.filename = outfile
     ios.version = RAVE_IO_DEFAULT_VERSION
     ios.save()
 
-    logger.info("Generated new volume with QC applied.")
+    logger.info("Generated new volume or scan with QC applied.")
 
     return outfile

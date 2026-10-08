@@ -28,6 +28,8 @@ import rave_pgf_apply_qc_plugin
 import rave_quality_plugin, rave_pgf_quality_registry
 import mock
 import rave_overshooting_quality_plugin
+import rave_pia_quality_plugin
+import _polarvolume, _polarscan
 from rave_quality_plugin import QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY
 
 class rave_pgf_apply_qc_plugin_test(unittest.TestCase):
@@ -88,7 +90,7 @@ class rave_pgf_apply_qc_plugin_test(unittest.TestCase):
     self.assertTrue(expected_qc_check_2_calls == self.qc_check_2_mock.mock_calls)
     self.assertTrue(vol == result)
 
-  def test_generate_new_volume_with_qc(self):
+  def test_generate_new_object_with_qc_volume(self):
     rave_pgf_quality_registry.add_plugin("poo", rave_overshooting_quality_plugin.rave_overshooting_quality_plugin())
     
     expected_no_of_scans = 10
@@ -104,16 +106,41 @@ class rave_pgf_apply_qc_plugin_test(unittest.TestCase):
     args["anomaly-qc"] = QC_LIST
     args["remove-malfunc"] = "false"
      
-    result = rave_pgf_apply_qc_plugin.generate_new_volume_with_qc(filename, args)
+    result = rave_pgf_apply_qc_plugin.generate_new_object_with_qc(filename, args)
     
-    self.assertEquals(expected_no_of_scans, result.getNumberOfScans())
-    self.assertEquals(DATE, result.date)
-    self.assertEquals(TIME, result.time)
+    self.assertEqual(expected_no_of_scans, result.getNumberOfScans())
+    self.assertEqual(DATE, result.date)
+    self.assertEqual(TIME, result.time)
     
     # Overshooting quality plugin will only add quality field to the first scan
     self.assertTrue(result.getScan(0).findQualityFieldByHowTask("se.smhi.detector.poo") != None, "Quality field not found")
+
+  def test_generate_new_object_with_qc_scan(self):
+    rave_pgf_quality_registry.add_plugin("pia", rave_pia_quality_plugin.rave_pia_quality_plugin())
     
-  def test_generate_new_volume_with_qc__one_scan_malfunc(self):
+    expected_no_of_scans = 10
+    filename = "fixtures/sehem_scan_20200414T160000Z.h5"
+    
+    DATE = "20160415"
+    TIME = "100000"
+    QC_LIST = "pia"
+    
+    args={}
+    args["date"] = DATE
+    args["time"] = TIME
+    args["anomaly-qc"] = QC_LIST
+    args["remove-malfunc"] = "false"
+     
+    result = rave_pgf_apply_qc_plugin.generate_new_object_with_qc(filename, args)
+    
+    self.assertTrue(_polarscan.isPolarScan(result))
+    self.assertEqual(DATE, result.date)
+    self.assertEqual(TIME, result.time)
+    
+    # Overshooting quality plugin will only add quality field to the first scan
+    self.assertTrue(result.findQualityFieldByHowTask("se.smhi.qc.hitschfeld-bordan") != None, "Quality field not found")
+
+  def test_generate_new_object_with_qc__one_scan_malfunc(self):
     rave_pgf_quality_registry.add_plugin("poo", rave_overshooting_quality_plugin.rave_overshooting_quality_plugin())
     
     expected_no_of_scans = 9
@@ -129,16 +156,16 @@ class rave_pgf_apply_qc_plugin_test(unittest.TestCase):
     args["anomaly-qc"] = QC_LIST
     args["remove-malfunc"] = "true"
      
-    result = rave_pgf_apply_qc_plugin.generate_new_volume_with_qc(filename, args)
+    result = rave_pgf_apply_qc_plugin.generate_new_object_with_qc(filename, args)
     
-    self.assertEquals(expected_no_of_scans, result.getNumberOfScans())
-    self.assertEquals(DATE, result.date)
-    self.assertEquals(TIME, result.time)
+    self.assertEqual(expected_no_of_scans, result.getNumberOfScans())
+    self.assertEqual(DATE, result.date)
+    self.assertEqual(TIME, result.time)
     
     # Overshooting quality plugin will only add quality field to the first scan
     self.assertTrue(result.getScan(0).findQualityFieldByHowTask("se.smhi.detector.poo") != None, "Quality field not found")
 
-  def test_generate_new_volume_with_qc__volume_malfunc(self):
+  def test_generate_new_object_with_qc__volume_malfunc(self):
     rave_pgf_quality_registry.add_plugin("poo", rave_overshooting_quality_plugin.rave_overshooting_quality_plugin())
 
     filename = "fixtures/pvol_seovi_20170113T150000Z__volume_malfunc.h5"
@@ -153,11 +180,11 @@ class rave_pgf_apply_qc_plugin_test(unittest.TestCase):
     args["anomaly-qc"] = QC_LIST
     args["remove-malfunc"] = "true"
      
-    result = rave_pgf_apply_qc_plugin.generate_new_volume_with_qc(filename, args)
+    result = rave_pgf_apply_qc_plugin.generate_new_object_with_qc(filename, args)
     
-    self.assertEquals(result, None)
+    self.assertEqual(result, None)
     
-  def test_generate_new_volume_with_qc__all_scans_malfunc(self):
+  def test_generate_new_object_with_qc__all_scans_malfunc(self):
     rave_pgf_quality_registry.add_plugin("poo", rave_overshooting_quality_plugin.rave_overshooting_quality_plugin())
     
     filename = "fixtures/pvol_sevil_20170113T140000Z__all_scans_malfunc.h5"
@@ -172,7 +199,7 @@ class rave_pgf_apply_qc_plugin_test(unittest.TestCase):
     args["anomaly-qc"] = QC_LIST
     args["remove-malfunc"] = "true"
      
-    result = rave_pgf_apply_qc_plugin.generate_new_volume_with_qc(filename, args)
+    result = rave_pgf_apply_qc_plugin.generate_new_object_with_qc(filename, args)
     
-    self.assertEquals(result, None)
+    self.assertEqual(result, None)
 

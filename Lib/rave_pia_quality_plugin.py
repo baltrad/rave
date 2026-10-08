@@ -118,7 +118,6 @@ class rave_pia_quality_plugin(rave_quality_plugin):
         reprocess_quality_flag=True,
         quality_control_mode=QUALITY_CONTROL_MODE_ANALYZE_AND_APPLY,
         arguments=None):
-        print(self._process)
         return self._process(obj, reprocess_quality_flag, quality_control_mode, arguments)
 
     ##
