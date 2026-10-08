@@ -20,5 +20,5 @@
   <quality-plugin class="rave_radarindex_quality_plugin" module="rave_radarindex_quality_plugin" name="radar-index"/>
   <quality-plugin class="rave_elevationindex_quality_plugin" module="rave_radarindex_quality_plugin" name="elevation-index"/>
   <quality-plugin class="rave_pia_quality_plugin" module="rave_pia_quality_plugin" name="pia"/>
-  <quality-plugin class="rave_quality_chain_plugin" module="rave_quality_chain_plugin" name="qi-chain"/>
+  <quality-plugin class="rave_quality_chain_plugin" module="rave_quality_chain_plugin" name="qc-chain"/>
 </rave-pgf-quality-registry>
