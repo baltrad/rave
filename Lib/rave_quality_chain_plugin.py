@@ -69,23 +69,36 @@ class rave_quality_chain_plugin(rave_quality_plugin):
 
         algorithm = None
         qfields = []
+        qcchain=[]
         for link in chain.links():
             p = rave_pgf_quality_registry.get_plugin(link.refname())
             if p != None:
+                qcchain.append(link.refname())
                 try:
                     if link.arguments() is not None:
                         newargs = {}
                         if arguments != None:
                             newargs.update(arguments)
                         newargs.update(link.arguments())
-                        obj, plugin_qfield = p.process(obj, reprocess_quality_flag, quality_control_mode, newargs)
+                        process_result = p.process(obj, reprocess_quality_flag, quality_control_mode, newargs)
                     else:
-                        obj, plugin_qfield = p.process(obj, reprocess_quality_flag, quality_control_mode, arguments)
+                        process_result = p.process(obj, reprocess_quality_flag, quality_control_mode, arguments)
+
+                    if isinstance(process_result, tuple):
+                        obj, plugin_qfields = process_result[0], process_result[1]
+                    else:
+                        obj = process_result
+                        plugin_qfields = p.getQualityFields()
+
                     na = p.algorithm()
-                    qfields += plugin_qfield
+
+                    for qf in plugin_qfields:
+                        if qf not in qfields:
+                            qfields.append(qf)
+
                     if algorithm == None and na != None:  # Try to get the generator algorithm != None
                         algorithm = na
                 except Exception:
                     logger.exception("Caught exception when processing object")
-
+        logger.info("QC-chain: %s => qfields=%s"%(",".join(qcchain), qfields))
         return obj, qfields

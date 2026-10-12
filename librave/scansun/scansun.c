@@ -106,27 +106,27 @@ void fill_toplevelmeta(RaveCoreObject* object, SCANMETA *meta)
   PolarScan_t* scan = NULL;
 
   if (!getDoubleAttribute(object, "how/wavelength", &tmpd)) {
-    RAVE_WARNING1("No /how/wavelength attribute. Using default %2.3f m.\n", WAVELENGTH);
+    RAVE_DEBUG1("No /how/wavelength attribute. Using default %2.3f m.\n", WAVELENGTH);
     meta->wavelength = WAVELENGTH;
   } else meta->wavelength = tmpd/100.0;  /* cm to m */
 
   if (!getDoubleAttribute(object, "how/rpm", &tmpd)) {
-    RAVE_WARNING1("No /how/rpm attribute. Using default %2.1f deg/s.\n", ANTVEL);
+    RAVE_DEBUG1("No /how/rpm attribute. Using default %2.1f deg/s.\n", ANTVEL);
     meta->antvel = ANTVEL;
   } else meta->antvel = tmpd * 6.0;  /* 360degrees/60sec */
 
   if (!getDoubleAttribute(object, "how/astart", &tmpd)) {
-    RAVE_WARNING1("No /how/astart attribute. Using default %1.1f deg.\n", ASTART);
+    RAVE_DEBUG1("No /how/astart attribute. Using default %1.1f deg.\n", ASTART);
     meta->astart = ASTART;
   } else meta->astart = tmpd;
 
   if (!getDoubleAttribute(object, "how/pulsewidth", &tmpd)) {
-    RAVE_WARNING1("No /how/pulsewidth attribute. Using default %1.2f microseconds.\n", PULSEWIDTH);
+    RAVE_DEBUG1("No /how/pulsewidth attribute. Using default %1.2f microseconds.\n", PULSEWIDTH);
     meta->pulse = PULSEWIDTH;
   } else meta->pulse = tmpd;
 
   if (!getDoubleAttribute(object, "how/RXbandwidth", &tmpd)) {
-    RAVE_WARNING1("No /how/RXbandwidth attribute. Using default %1.2f MHz.\n", CWIDTH/meta->pulse);
+    RAVE_DEBUG1("No /how/RXbandwidth attribute. Using default %1.2f MHz.\n", CWIDTH/meta->pulse);
     meta->bandwidth = CWIDTH/meta->pulse;
   } else meta->bandwidth = tmpd;
 
@@ -139,33 +139,33 @@ void fill_toplevelmeta(RaveCoreObject* object, SCANMETA *meta)
   /* Use availability of quantities as a qualifier for determining which radar constant to look for */
   if ( (PolarScan_hasParameter(scan, "TH")) || (PolarScan_hasParameter(scan, "DBZH")) || (PolarScan_hasParameter(scan, "ZDR")) ) {
     if (!getDoubleAttribute(object, "how/radconstH", &tmpd)) {
-      RAVE_WARNING1("No /how/radconstH attribute. Using default %2.1f dB.\n", RADCNST);
+      RAVE_DEBUG1("No /how/radconstH attribute. Using default %2.1f dB.\n", RADCNST);
       meta->radcnst = RADCNST;
     } else meta->radcnst = tmpd;
 
     if (!getDoubleAttribute(object, "how/RXloss", &tmpd) && !getDoubleAttribute(object, "how/RXlossH", &tmpd)) {
-      RAVE_WARNING1("No /how/RXloss or /how/RXlossH attribute. Using default %2.1f dB.\n", RXLOSS);
+      RAVE_DEBUG1("No /how/RXloss or /how/RXlossH attribute. Using default %2.1f dB.\n", RXLOSS);
       meta->RXLoss = RXLOSS;
     } else meta->RXLoss = tmpd;
 
     if (!getDoubleAttribute(object, "how/antgain", &tmpd) && !getDoubleAttribute(object, "how/antgainH", &tmpd)) {
-      RAVE_WARNING1("No /how/antgain or /how/antgainH attribute. Using default %2.1f dB.\n", ANTGAIN);
+      RAVE_DEBUG1("No /how/antgain or /how/antgainH attribute. Using default %2.1f dB.\n", ANTGAIN);
       meta->AntGain = ANTGAIN;
     } else meta->AntGain = tmpd;
 
   } else if ( (PolarScan_hasParameter(scan, "TV")) || (PolarScan_hasParameter(scan, "DBZV")) ) {
     if (!getDoubleAttribute(object, "how/radconstV", &tmpd)) {
-      RAVE_WARNING1("No /how/radconstV attribute. Using default %2.1f dB.\n", RADCNST);
+      RAVE_DEBUG1("No /how/radconstV attribute. Using default %2.1f dB.\n", RADCNST);
       meta->radcnst = RADCNST;
     } else meta->radcnst = tmpd;
 
     if (!getDoubleAttribute(object, "how/RXloss", &tmpd) && !getDoubleAttribute(object, "how/RXlossV", &tmpd)) {
-      RAVE_WARNING1("No /how/RXloss or /how/RXlossV attribute. Using default %2.1f dB.\n", RXLOSS);
+      RAVE_DEBUG1("No /how/RXloss or /how/RXlossV attribute. Using default %2.1f dB.\n", RXLOSS);
       meta->RXLoss = RXLOSS;
     } else meta->RXLoss = tmpd;
 
     if (!getDoubleAttribute(object, "how/antgain", &tmpd) && !getDoubleAttribute(object, "how/antgainV", &tmpd)) {
-      RAVE_WARNING1("No /how/antgain or /how/antgainV attribute. Using default %2.1f dB.\n", ANTGAIN);
+      RAVE_DEBUG1("No /how/antgain or /how/antgainV attribute. Using default %2.1f dB.\n", ANTGAIN);
       meta->AntGain = ANTGAIN;
     } else meta->AntGain = tmpd;
   }
@@ -196,28 +196,28 @@ void fill_meta(PolarScan_t* scan, PolarScanParam_t* param, SCANMETA *meta)
 
    /* Don't overwrite metadata attributes in "meta" because they may already be populated by fill_toplevelmeta */
    if (!getDoubleAttribute((RaveCoreObject*)scan, "how/wavelength", &tmpd)) {
-     RAVE_WARNING2("Scan elevation %2.1f: No how/wavelength attribute. Using %2.3f m.\n", meta->elev, meta->wavelength);
+     RAVE_DEBUG2("Scan elevation %2.1f: No how/wavelength attribute. Using %2.3f m.\n", meta->elev, meta->wavelength);
    } else meta->wavelength = tmpd/100.0;  /* cm to m */
 
    if (!getDoubleAttribute((RaveCoreObject*)scan, "how/rpm", &tmpd)) {
-     RAVE_WARNING2("Scan elevation %2.1f: No how/rpm attribute. Using %2.1f deg/s.\n", meta->elev, meta->antvel);
+     RAVE_DEBUG2("Scan elevation %2.1f: No how/rpm attribute. Using %2.1f deg/s.\n", meta->elev, meta->antvel);
    } else meta->antvel = tmpd * 6.0;  /* 360degrees/60sec */
 
    if (!getDoubleAttribute((RaveCoreObject*)scan, "how/astart", &tmpd)) {
-     RAVE_WARNING2("Scan elevation %2.1f: No how/astart attribute. Using %1.2f deg.\n", meta->elev, meta->astart);
+     RAVE_DEBUG2("Scan elevation %2.1f: No how/astart attribute. Using %1.2f deg.\n", meta->elev, meta->astart);
    } else meta->astart = tmpd;
 
    if (!getDoubleAttribute((RaveCoreObject*)scan, "how/pulsewidth", &tmpd)) {
-     RAVE_WARNING2("Scan elevation %2.1f: No how/pulsewidth attribute. Using %2.2f microseconds.\n", meta->elev, meta->pulse);
+     RAVE_DEBUG2("Scan elevation %2.1f: No how/pulsewidth attribute. Using %2.2f microseconds.\n", meta->elev, meta->pulse);
    } else meta->pulse = tmpd;
 
    if (!getDoubleAttribute((RaveCoreObject*)scan, "how/RXbandwidth", &tmpd)) {
      if (meta->pulse != 0.0) {
-      RAVE_WARNING2("Scan elevation %2.1f: No how/RXbandwidth attribute. Using %1.2f MHz.\n", meta->elev, CWIDTH/meta->pulse);
+      RAVE_DEBUG2("Scan elevation %2.1f: No how/RXbandwidth attribute. Using %1.2f MHz.\n", meta->elev, CWIDTH/meta->pulse);
       meta->bandwidth = CWIDTH/meta->pulse;
      } else {
       meta->bandwidth = 2.0;
-      RAVE_WARNING2("Scan elevation %2.1f: No how/RXbandwidth attribute and pulse = 0. Using %1.2f MHz.\n", meta->elev, meta->bandwidth);
+      RAVE_DEBUG2("Scan elevation %2.1f: No how/RXbandwidth attribute and pulse = 0. Using %1.2f MHz.\n", meta->elev, meta->bandwidth);
      }
    } else meta->bandwidth = tmpd;
 
@@ -225,47 +225,47 @@ void fill_meta(PolarScan_t* scan, PolarScanParam_t* param, SCANMETA *meta)
     * but this implies unnecessarily replicated information, so we will only look at the scan level. */
    if ( (!strcmp(quant, "TH")) || (!strcmp(quant, "DBZH")) || (!strcmp(quant, "ZDR")) ) {
      if (!getDoubleAttribute((RaveCoreObject*)scan, "how/radconstH", &tmpd)) {
-       RAVE_WARNING2("Scan elevation %2.1f: No how/radconstH attribute. Using %2.1f dB.\n", meta->elev, meta->radcnst);
+       RAVE_DEBUG2("Scan elevation %2.1f: No how/radconstH attribute. Using %2.1f dB.\n", meta->elev, meta->radcnst);
      } else meta->radcnst = tmpd;
 
      if (!getDoubleAttribute((RaveCoreObject*)scan, "how/RXloss", &tmpd) && !getDoubleAttribute((RaveCoreObject*)scan, "how/RXlossH", &tmpd)) {
-       RAVE_WARNING2("Scan elevation %2.1f: No how/RXloss or how/RXlossH attribute. Using %2.1f dB.\n", meta->elev, meta->RXLoss);
+       RAVE_DEBUG2("Scan elevation %2.1f: No how/RXloss or how/RXlossH attribute. Using %2.1f dB.\n", meta->elev, meta->RXLoss);
      } else meta->RXLoss = tmpd;
 
      if (!getDoubleAttribute((RaveCoreObject*)scan, "how/antgain", &tmpd) && !getDoubleAttribute((RaveCoreObject*)scan, "how/antgainH", &tmpd)) {
-       RAVE_WARNING2("Scan elevation %2.1f: No how/antgain or how/antgainH attribute. Using %2.1f dB.\n", meta->elev, meta->AntGain);
+       RAVE_DEBUG2("Scan elevation %2.1f: No how/antgain or how/antgainH attribute. Using %2.1f dB.\n", meta->elev, meta->AntGain);
      } else meta->AntGain = tmpd;
 
    } else if ( (!strcmp(quant, "TV")) || (!strcmp(quant, "DBZV")) ) {
      if (!getDoubleAttribute((RaveCoreObject*)scan, "how/radconstV", &tmpd)) {
-       RAVE_WARNING2("Scan elevation %2.1f: No how/radconstV attribute. Using %2.1f dB.\n", meta->elev, meta->radcnst);
+       RAVE_DEBUG2("Scan elevation %2.1f: No how/radconstV attribute. Using %2.1f dB.\n", meta->elev, meta->radcnst);
      } else meta->radcnst = tmpd;
 
      if (!getDoubleAttribute((RaveCoreObject*)scan, "how/RXloss", &tmpd) && !getDoubleAttribute((RaveCoreObject*)scan, "how/RXlossV", &tmpd)) {
-       RAVE_WARNING2("Scan elevation %2.1f: No how/RXloss or how/RXlossV attribute. Using %2.1f dB.\n", meta->elev, meta->RXLoss);
+       RAVE_DEBUG2("Scan elevation %2.1f: No how/RXloss or how/RXlossV attribute. Using %2.1f dB.\n", meta->elev, meta->RXLoss);
      } else meta->RXLoss = tmpd;
 
      if (!getDoubleAttribute((RaveCoreObject*)scan, "how/antgain", &tmpd) && !getDoubleAttribute((RaveCoreObject*)scan, "how/antgainV", &tmpd)) {
-       RAVE_WARNING2("Scan elevation %2.1f: No how/antgain or how/antgainV attribute. Using %2.1f dB.\n", meta->elev, meta->AntGain);
+       RAVE_DEBUG2("Scan elevation %2.1f: No how/antgain or how/antgainV attribute. Using %2.1f dB.\n", meta->elev, meta->AntGain);
      } else meta->AntGain = tmpd;
    }
 
    /* Additional metadata arrays containing read-out angles and times */
    if (!getDoubleArrayAttribute(scan, "how/startazA", &meta->startazA, param)) {
-     RAVE_WARNING1("Scan elevation %2.1f: No how/startazA array attribute. Estimating azimuth angle from polar geometry.\n", meta->elev);
+     RAVE_DEBUG1("Scan elevation %2.1f: No how/startazA array attribute. Estimating azimuth angle from polar geometry.\n", meta->elev);
    } else {
      if (!getDoubleArrayAttribute(scan, "how/stopazA", &meta->stopazA, param)) {
-       RAVE_WARNING1("Scan elevation %2.1f: how/startazA found but not how/stopazA array attribute.\n", meta->elev);
+       RAVE_DEBUG1("Scan elevation %2.1f: how/startazA found but not how/stopazA array attribute.\n", meta->elev);
      }
    }
    if (!getDoubleArrayAttribute(scan, "how/elangles", &meta->elangles, param)) {
-     RAVE_WARNING1("Scan elevation %2.1f: No how/elangles array attribute. Using commanded elevation angle.\n", meta->elev);
+     RAVE_DEBUG1("Scan elevation %2.1f: No how/elangles array attribute. Using commanded elevation angle.\n", meta->elev);
    }
    if (!getDoubleArrayAttribute(scan, "how/startazT", &meta->startazT, param)) {
-     RAVE_WARNING1("Scan elevation %2.1f: No how/startazT array attribute.\n", meta->elev);
+     RAVE_DEBUG1("Scan elevation %2.1f: No how/startazT array attribute.\n", meta->elev);
    }
    if (!getDoubleArrayAttribute(scan, "how/stopazT", &meta->stopazT, param)) {
-     RAVE_WARNING1("Scan elevation %2.1f: No how/stopazT array attribute.\n", meta->elev);
+     RAVE_DEBUG1("Scan elevation %2.1f: No how/stopazT array attribute.\n", meta->elev);
    }
 
 return;
