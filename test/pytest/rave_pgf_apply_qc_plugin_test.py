@@ -26,7 +26,7 @@ Tests the PGF plugin for applying Quality Controls to an existing Polar Volume
 import unittest
 import rave_pgf_apply_qc_plugin
 import rave_quality_plugin, rave_pgf_quality_registry
-import mock
+from unittest import mock
 import rave_overshooting_quality_plugin
 import rave_pia_quality_plugin
 import _polarvolume, _polarscan

@@ -28,7 +28,7 @@ import _rave
 import compositing
 import _pycomposite
 import rave_quality_plugin, rave_pgf_quality_registry
-import mock
+from unittest import mock
 import math
 
 class scan_mock(mock.MagicMock):
