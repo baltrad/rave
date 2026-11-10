@@ -176,6 +176,28 @@ if [[ "$COMPILE_FOR_PYTHON" = "yes" ]]; then
   PYOPT=`$PYBIN -c "import sysconfig; print(sysconfig.get_config_var(\"OPT\") or '')"`
   AC_MSG_RESULT([$PYOPT])
 
+  dnl Checks for typedefs, structures and compiler characteristics
+  AC_MSG_CHECKING([for python cflags])
+  PYCFLAGS=`$PYBIN -c "import sysconfig; print(sysconfig.get_config_var(\"CFLAGS\") or '')"`
+  AC_MSG_RESULT([$PYCFLAGS])
+
+  # Since it seems like CFLAGS and OPTS can be combined in some situations we try to use all settings.
+  if [[ "$PYOPT" != "" ]]; then
+    MATCH=`echo "$PYCFLAGS" | grep -- "$PYOPT"`
+    if [[ "$MATCH" != "" ]]; then
+      PYOPT=$PYCFLAGS
+    else
+      PYOPT="$PYOPT $PYCFLAGS"
+    fi
+  fi
+
+  # Make sure we always get an optimization flag
+  if [[ "`echo $PYOPT | grep -- '-O'`" = "" ]]; then
+    PYOPT="$PYOPT -O2"
+  fi
+
+  AC_MSG_NOTICE([Using OPT: $PYOPT])
+
   AC_MSG_CHECKING([for ldflags])
   PYLDFLAGS=`$PYBIN -c "import sysconfig; print(sysconfig.get_config_var(\"LDFLAGS\") or '')"`
   AC_MSG_RESULT([$PYLDFLAGS])

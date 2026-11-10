@@ -3550,6 +3550,30 @@ printf %s "checking for python options... " >&6; }
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $PYOPT" >&5
 printf "%s\n" "$PYOPT" >&6; }
 
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for python cflags" >&5
+printf %s "checking for python cflags... " >&6; }
+  PYCFLAGS=`$PYBIN -c "import sysconfig; print(sysconfig.get_config_var(\"CFLAGS\") or '')"`
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $PYCFLAGS" >&5
+printf "%s\n" "$PYCFLAGS" >&6; }
+
+  # Since it seems like CFLAGS and OPTS can be combined in some situations we try to use all settings.
+  if [ "$PYOPT" != "" ]; then
+    MATCH=`echo "$PYCFLAGS" | grep -- "$PYOPT"`
+    if [ "$MATCH" != "" ]; then
+      PYOPT=$PYCFLAGS
+    else
+      PYOPT="$PYOPT $PYCFLAGS"
+    fi
+  fi
+
+  # Make sure we always get an optimization flag
+  if [ "`echo $PYOPT | grep -- '-O'`" = "" ]; then
+    PYOPT="$PYOPT -O2"
+  fi
+
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: Using OPT: $PYOPT" >&5
+printf "%s\n" "$as_me: Using OPT: $PYOPT" >&6;}
+
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for ldflags" >&5
 printf %s "checking for ldflags... " >&6; }
   PYLDFLAGS=`$PYBIN -c "import sysconfig; print(sysconfig.get_config_var(\"LDFLAGS\") or '')"`
