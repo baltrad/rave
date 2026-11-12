@@ -85,6 +85,8 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:af190568e10992b4bf4b3d01fd9411605"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds one job to be processed.  <br /></td></tr>
 <tr class="memitem:a982b30f0f5cc1062439eb013b3998d5c" id="r_a982b30f0f5cc1062439eb013b3998d5c"><td class="memItemLeft">&#160;</td><td class="memItemRight"><a class="el" href="#a982b30f0f5cc1062439eb013b3998d5c">async_callback</a> (self, arg)</td></tr>
 <tr class="memdesc:a982b30f0f5cc1062439eb013b3998d5c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Invoked by the async pool on answer.  <br /></td></tr>
+<tr class="memitem:a27c53d8ec53afe16a5822d07db6dc19b" id="r_a27c53d8ec53afe16a5822d07db6dc19b"><td class="memItemLeft">&#160;</td><td class="memItemRight"><a class="el" href="#a27c53d8ec53afe16a5822d07db6dc19b">async_error_callback</a> (self, exc)</td></tr>
+<tr class="memdesc:a27c53d8ec53afe16a5822d07db6dc19b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Invoked by the async pool if the job could not be run.  <br /></td></tr>
 <tr class="memitem:a1b24eb80b21086ddc9d58611dd3a0382" id="r_a1b24eb80b21086ddc9d58611dd3a0382"><td class="memItemLeft">&#160;</td><td class="memItemRight"><a class="el" href="#a1b24eb80b21086ddc9d58611dd3a0382">join</a> (self)</td></tr>
 <tr class="memdesc:a1b24eb80b21086ddc9d58611dd3a0382"><td class="mdescLeft">&#160;</td><td class="mdescRight">Shutsdown and waits for pool to terminate.  <br /></td></tr>
 <tr class="memitem:ab0cbfc13c74f3c06bbb6e34a2b08b0ae" id="r_ab0cbfc13c74f3c06bbb6e34a2b08b0ae"><td class="memItemLeft">&#160;</td><td class="memItemRight"><a class="el" href="#ab0cbfc13c74f3c06bbb6e34a2b08b0ae">terminate</a> (self)</td></tr>
@@ -141,7 +143,7 @@ Protected Member Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Runs one job from the queue. </p>
-<p>Synchronization must be performed before entering this method. Will increase running jobs with 1 if job added async to pool </p>
+<p>Synchronization must be performed before entering this method. Will increase running jobs with 1 if job added async to pool Called from <a class="el" href="#af190568e10992b4bf4b3d01fd9411605" title="Adds one job to be processed.">add()</a>, <a class="el" href="#a982b30f0f5cc1062439eb013b3998d5c" title="Invoked by the async pool on answer.">async_callback()</a> and <a class="el" href="#a27c53d8ec53afe16a5822d07db6dc19b" title="Invoked by the async pool if the job could not be run.">async_error_callback()</a> - only the latter two guard their caller against an exception escaping here, so this method must never let one through on its own. </p>
 
 </div>
 </div>
@@ -214,6 +216,31 @@ Protected Member Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Invoked by the async pool on answer. </p>
+<p>Wrap everything within a exception block since there is a risc that an exception will cause the pool to hang. See issue gh-83371: Fix deadlock when a Pool callback raises an exception (GH-155777) Might be the culprit for a really strange random bug that occurs once a year or something. </p>
+
+</div>
+</div>
+<a id="a27c53d8ec53afe16a5822d07db6dc19b" name="a27c53d8ec53afe16a5822d07db6dc19b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a27c53d8ec53afe16a5822d07db6dc19b">&#9670;&#160;</a></span>async_error_callback()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">Lib.algorithm_runner.algorithm_runner.async_error_callback </td>
+          <td>(</td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>self</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"></td>          <td class="paramname"><span class="paramname"><em>exc</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Invoked by the async pool if the job could not be run. </p>
+<p>Wrap everything within try/except since we don't want callback to cause pool failures. </p>
 
 </div>
 </div>
