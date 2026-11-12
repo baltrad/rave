@@ -246,22 +246,47 @@ class algorithm_runner(object):
             self.lock.release()
 
     ##
-    # Invoked by the async pool on answer
-    #
+    # Invoked by the async pool on answer. Wrap everything within a exception block since there is a risc
+    # that an exception will cause the pool to hang. See issue gh-83371: Fix deadlock when a Pool callback raises an exception (GH-155777)
+    # Might be the culprit for a really strange random bug that occurs once a year or something.
     def async_callback(self, arg):
         mpname = multiprocessing.current_process().name
-        self.lock.acquire()
         try:
-            self.queue.task_done()
-            self.running_jobs = self.running_jobs - 1
-            logger.info(f"[{mpname}] algorithm_runner.async_callback: Finished with job %s" % (str(arg)))
-            self._handle_queue()
-        finally:
-            self.lock.release()
+            self.lock.acquire()
+            try:
+                self.queue.task_done()
+                self.running_jobs = self.running_jobs - 1
+                logger.info(f"[{mpname}] algorithm_runner.async_callback: Finished with job %s" % (str(arg)))
+                self._handle_queue()
+            finally:
+                self.lock.release()
+        except Exception:
+            logger.exception(f"[{mpname}] algorithm_runner.async_callback: Failure while handling callback for job %s" % (str(arg)))
+
+    ##
+    # Invoked by the async pool if the job could not be run. Wrap everything within try/except since
+    # we don't want callback to cause pool failures.
+    #
+    def async_error_callback(self, exc):
+        mpname = multiprocessing.current_process().name
+        try:
+            self.lock.acquire()
+            try:
+                self.queue.task_done()
+                self.running_jobs = self.running_jobs - 1
+                logger.error(f"[{mpname}] algorithm_runner.async_error_callback: Job failed: {exc}")
+                self._handle_queue()
+            finally:
+                self.lock.release()
+        except Exception:
+            logger.exception(f"[{mpname}] algorithm_runner.async_error_callback: Failure while handling error callback")
 
     ##
     # Runs one job from the queue. Synchronization must be performed before entering this
     # method. Will increase running jobs with 1 if job added async to pool
+    # Called from add(), async_callback() and async_error_callback() - only the latter two
+    # guard their caller against an exception escaping here, so this method must never let
+    # one through on its own.
     #
     def _handle_queue(self):
         mpname = multiprocessing.current_process().name
@@ -273,22 +298,28 @@ class algorithm_runner(object):
                 pass
 
             if job:
-                self.pool.apply_async(
-                    run_algorithm,
-                    (
-                        job.func(),
-                        job.jobid(),
-                        job.algorithm(),
-                        job.files(),
-                        job.arguments(),
-                        job.addedtime(),
-                    ),
-                    callback=self.async_callback,
-                )
-                self.running_jobs = self.running_jobs + 1
-                logger.info(
-                    f"[{mpname}] algorithm_runner._handle_queue: Applied job ID={job.jobid()}. Running jobs={self.running_jobs}, queued jobs={self.queue.qsize()}"
-                )
+                try:
+                    self.pool.apply_async(
+                        run_algorithm,
+                        (
+                            job.func(),
+                            job.jobid(),
+                            job.algorithm(),
+                            job.files(),
+                            job.arguments(),
+                            job.addedtime(),
+                        ),
+                        callback=self.async_callback,
+                        error_callback=self.async_error_callback,
+                    )
+                    self.running_jobs = self.running_jobs + 1
+                    logger.info(
+                        f"[{mpname}] algorithm_runner._handle_queue: Applied job ID={job.jobid()}. Running jobs={self.running_jobs}, queued jobs={self.queue.qsize()}"
+                    )
+                except Exception:
+                    logger.exception(
+                        f"[{mpname}] algorithm_runner._handle_queue: Failed to dispatch job ID={job.jobid()}, discarding."
+                    )
             else:
                 logger.debug(f"[{mpname}] algorithm_runner._handle_queue: Queue empty")
 
