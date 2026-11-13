@@ -315,6 +315,11 @@ SOURCE_61= pyfileobject.c
 OBJECTS_61= $(SOURCE_61:.c=.o)
 TARGET_61= _fileobject.so
 
+# HOOF dealiasing (torus mapping) from operabaltrad
+SOURCE_62= pyhoofdealias.c
+OBJECTS_62= $(SOURCE_62:.c=.o)
+TARGET_62= _hoofdealias.so
+
 TARGETS=$(TARGET_1) $(TARGET_2) $(TARGET_3) $(TARGET_4) $(TARGET_5) $(TARGET_6) \
 		$(TARGET_7) $(TARGET_8) $(TARGET_9) $(TARGET_10) $(TARGET_11) $(TARGET_12) $(TARGET_13) \
 		$(TARGET_14) $(TARGET_15) $(TARGET_16) $(TARGET_17) $(TARGET_18) $(TARGET_19) \
@@ -324,7 +329,7 @@ TARGETS=$(TARGET_1) $(TARGET_2) $(TARGET_3) $(TARGET_4) $(TARGET_5) $(TARGET_6) 
 		$(TARGET_39) $(TARGET_40) $(TARGET_41) $(TARGET_42) $(TARGET_43) $(TARGET_44) $(TARGET_45) \
 		$(TARGET_46) $(TARGET_47) $(TARGET_48) $(TARGET_49) $(TARGET_50) $(TARGET_51) \
 		$(TARGET_52) $(TARGET_53) $(TARGET_54) $(TARGET_55) $(TARGET_56) $(TARGET_57) \
-		$(TARGET_58) $(TARGET_59) $(TARGET_60) $(TARGET_61)
+		$(TARGET_58) $(TARGET_59) $(TARGET_60) $(TARGET_61) $(TARGET_62)
 INSTALL_HEADERS= pyarea.h \
 				 pycartesian.h \
 				 pycartesianparam.h \
@@ -580,6 +585,9 @@ $(TARGET_60): $(DEPDIR) $(OBJECTS_60) ../librave/toolbox/libravetoolbox.so ../li
 $(TARGET_61): $(DEPDIR) $(OBJECTS_61) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
 	$(LDSHARED) -o $@ $(OBJECTS_61) $(LDFLAGS) $(LIBRARIES)
 
+$(TARGET_62): $(DEPDIR) $(OBJECTS_62) ../librave/toolbox/libravetoolbox.so ../librave/pyapi/libravepyapi.so
+	$(LDSHARED) -o $@ $(OBJECTS_62) $(LDFLAGS) $(LIBRARIES)
+
 ifeq ($(COMPILE_FOR_PYTHON), yes)
 .PHONY=install
 install:
@@ -687,3 +695,4 @@ endif
 -include $(SOURCE_59:%.c=$(DEPDIR)/%.P)
 -include $(SOURCE_60:%.c=$(DEPDIR)/%.P)
 -include $(SOURCE_61:%.c=$(DEPDIR)/%.P)
+-include $(SOURCE_62:%.c=$(DEPDIR)/%.P)
