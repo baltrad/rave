@@ -100,6 +100,8 @@ if mock_imported:
 from area_registry_test import *
 
 from PyDealiasTest import *
+from PyHoofDealiasTest import *
+from rave_hoofdealias_quality_plugin_test import *
 
 from PyRadvolTest import *
 from PyCtfilterTest import *
