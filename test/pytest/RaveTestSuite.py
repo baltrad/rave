@@ -158,5 +158,7 @@ from acqva_featuremap_generator_test import *
 from PyFileObjectTest import *
 from rave_pgf_apply_qc_plugin_test import *
 
+from rave_tempfile_test import *
+
 if __name__ == '__main__':
   unittest.main()

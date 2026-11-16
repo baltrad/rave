@@ -37,7 +37,7 @@ else:
     tempfile.tempdir = os.path.split(rave.__file__)[0] + '/../tmp'
 # Create the direcory if not already there.
 if os.path.isdir(tempfile.tempdir) is False:
-    os.makedirs(tempfile.tempdir)
+    os.makedirs(tempfile.tempdir, exist_ok=True)
     # We always want 777 on tempfolder.
     os.chmod(tempfile.tempdir, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
 
