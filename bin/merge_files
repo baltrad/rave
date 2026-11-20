@@ -56,7 +56,7 @@ class merge_files(object):
     # @param dname the name of the directory including parents
     def make_dir(self, dname):
         try:
-            os.makedirs(dname)
+            os.makedirs(dname, exist_ok=True)
         except OSError as e:
             if e.errno == errno.EEXIST and os.path.isdir(dname):
                 pass

@@ -134,7 +134,7 @@ class HAC:
 
         path = os.path.split(fstr)[0]
         if not os.path.isdir(path):
-            os.makedirs(path)
+            os.makedirs(path, exist_ok=True)
         nodelist.write(fstr, compression, fcp)
 
     ## Performs the filtering
