@@ -238,7 +238,7 @@ def apply_gra_correction(
         grac = db.get_gra_coefficient(dt)
         if gra_corrected_composite_path != None and not os.path.exists(gra_corrected_composite_path):
             logger.info("Creating path for storing corrected composites: %s" % gra_corrected_composite_path)
-            os.makedirs(gra_corrected_composite_path)
+            os.makedirs(gra_corrected_composite_path, exist_ok=True)
 
         if grac != None:
             logger.debug("Applying gra coefficients, quantity: %s" % quantity)

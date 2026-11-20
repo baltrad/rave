@@ -98,7 +98,7 @@ def Source2File(isource, scansunfolder=None):
         path = scansunfolder
 
     if not os.path.isdir(path):
-        os.makedirs(path)
+        os.makedirs(path, exist_ok=True)
     return os.path.join(str(path), str(source) + '.scansun')
 
 

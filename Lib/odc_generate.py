@@ -58,7 +58,7 @@ def generate(options):
 
     if not os.path.isdir(options.opath):
         try:
-            os.makedirs(options.opath)
+            os.makedirs(options.opath, exist_ok=True)
         except:
             raise IOError("Cannot create output directory.")
     elif not os.access(options.opath, os.W_OK):
